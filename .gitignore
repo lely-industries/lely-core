@@ -25,4 +25,6 @@ Makefile
 Makefile.in
 *~
 *.la
+*.lo
+*.o
 *.pc
