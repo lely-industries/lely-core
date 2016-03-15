@@ -1,4 +1,12 @@
 /autom4te.cache/
+/debian/*/
+!/debian/source
+/debian/files
+/debian/stamp-*
+/debian/*.debhelper.log
+/debian/*.postinst.debhelper
+/debian/*.postrm.debhelper
+/debian/*.substvars
 /doc/html/
 /doc/Doxyfile
 /m4/libtool.m4
@@ -8,12 +16,12 @@
 /m4/ltversion.m4
 /aclocal.m4
 /compile
-/config.guess
+/config.guess*
 /config.h
 /config.h.in
 /config.log
 /config.status
-/config.sub
+/config.sub*
 /configure
 /install-sh
 /missing
