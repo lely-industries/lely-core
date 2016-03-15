@@ -1,0 +1,42 @@
+Source: liblely-util
+Priority: extra
+Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
+Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen
+Standards-Version: 3.9.4
+Section: libs
+Homepage: http://www.lely.com
+
+Package: liblely-util1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-libc1 (= ${binary:Version})
+Multi-Arch: same
+Description: Utilities library
+ This package contains the shared library.
+
+Package: liblely-util1-dbg
+Section: debug
+Architecture: any
+Depends: liblely-util1 (= ${binary:Version})
+Multi-Arch: same
+Description: Utilities library debugging symbols
+ This package contains the debugging symbols.
+
+Package: liblely-util-dev
+Section: libdevel
+Architecture: any
+Depends: liblely-util1 (= ${binary:Version}),
+         liblely-libc-dev (= ${binary:Version})
+Suggests: liblely-util-doc
+Multi-Arch: same
+Description: Utilities library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-util-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: Utilities library documentation
+ This package contains doxygen generated documentation.
