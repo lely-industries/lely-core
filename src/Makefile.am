@@ -3,6 +3,7 @@ src += can.h
 if PLATFORM_WIN32
 src += can.rc
 endif
+src += msg.c
 
 lib_LTLIBRARIES = liblely-can.la
 liblely_can_la_CPPFLAGS = -I$(top_srcdir)/include $(liblely_libc_CFLAGS) $(liblely_util_CFLAGS)

@@ -25,6 +25,14 @@ AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 PKG_CHECK_MODULES([liblely_util], [liblely-util])
 
+AM_CONDITIONAL([NO_CANFD], [false])
+AC_ARG_ENABLE([canfd],
+	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
+AS_IF([test "x$enable_canfd" == "xno"], [
+	AM_CONDITIONAL([NO_CANFD], [true])
+	AC_DEFINE_UNQUOTED([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"

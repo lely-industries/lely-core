@@ -23,11 +23,13 @@
 /config.status
 /config.sub*
 /configure
+/depcomp
 /install-sh
 /missing
 /libtool
 /ltmain.sh
 /stamp-h1
+.deps
 .libs
 Makefile
 Makefile.in

@@ -21,7 +21,8 @@
 #ifndef LELY_CAN_CAN_H
 #define LELY_CAN_CAN_H
 
-#include <lely/libc/features.h>
+#include <lely/libc/libc.h>
+#include <lely/util/util.h>
 
 #ifndef LELY_CAN_EXTERN
 #ifdef DLL_EXPORT
