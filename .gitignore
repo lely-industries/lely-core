@@ -12,3 +12,4 @@
 /stamp-h1
 Makefile
 Makefile.in
+*.pc
