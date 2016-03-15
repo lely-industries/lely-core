@@ -1940,6 +1940,9 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             =
 
+PREDEFINED             += LELY_CAN_EXTERN=
+PREDEFINED             += LELY_CAN_EXPORT=
+
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
 # macro definition that is found in the sources will be used. Use the PREDEFINED
