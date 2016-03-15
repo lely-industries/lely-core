@@ -1,4 +1,6 @@
 inc =
+inc += lely/util/def/type.def
+inc += lely/util/cmp.h
 inc += lely/util/errnum.h
 inc += lely/util/util.h
 
