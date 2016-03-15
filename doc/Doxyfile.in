@@ -1946,6 +1946,7 @@ PREDEFINED             += __GNUC__=4
 PREDEFINED             += __GNUC_MINOR__=8
 
 PREDEFINED             += _POSIX_C_SOURCE=200809L
+PREDEFINED             += _POSIX_TIMERS=200809L
 
 PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_LIBC_EXTERN=

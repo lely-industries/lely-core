@@ -3,6 +3,7 @@ src += libc.h
 if PLATFORM_WIN32
 src += libc.rc
 endif
+src += time.c
 
 lib_LTLIBRARIES = liblely-libc.la
 liblely_libc_la_CPPFLAGS = -I$(top_srcdir)/include
