@@ -21,7 +21,7 @@
 #ifndef LELY_UTIL_UTIL_H
 #define LELY_UTIL_UTIL_H
 
-#include <lely/libc/features.h>
+#include <lely/libc/libc.h>
 
 #ifndef LELY_UTIL_EXTERN
 #ifdef DLL_EXPORT
@@ -33,6 +33,22 @@
 #else
 #define LELY_UTIL_EXTERN	extern
 #endif
+#endif
+
+#ifndef MIN
+/*!
+ * Returns the minimum of \a a and \a b. Guaranteed to return the opposite of
+ * MAX(), i.e., if MAX() returns \a a then MIN() returns \a b and vice versa.
+ */
+#define MIN(a, b)	((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+/*!
+ * Returns the maximum of \a a and \a b. Guaranteed to return the opposite of
+ * MIN().
+ */
+#define MAX(a, b)	((a) < (b) ? (b) : (a))
 #endif
 
 #endif
