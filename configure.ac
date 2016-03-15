@@ -13,9 +13,20 @@ AC_LANG(C)
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
 
-LT_INIT
+LT_INIT([win32-dll])
+LT_PROG_RC
+
+case "$host" in
+*-*-mingw*)
+	platform_win32=yes
+	;;
+esac
+AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
