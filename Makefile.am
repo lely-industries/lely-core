@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+SUBDIRS = doc
+
 dist =
 dist += LICENSE
 dist += NOTICE
