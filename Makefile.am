@@ -6,3 +6,6 @@ dist += NOTICE
 dist += README.md
 
 EXTRA_DIST = $(dist)
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(PACKAGE).pc
