@@ -1,4 +1,5 @@
 src =
+src += diag.c
 src += errnum.c
 src += pheap.c
 src += rbtree.c

@@ -1,6 +1,7 @@
 inc =
 inc += lely/util/def/type.def
 inc += lely/util/cmp.h
+inc += lely/util/diag.h
 inc += lely/util/errnum.h
 inc += lely/util/pheap.h
 inc += lely/util/rbtree.h
