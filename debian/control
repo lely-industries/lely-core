@@ -1,0 +1,40 @@
+Source: liblely-libc
+Priority: extra
+Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
+Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen
+Standards-Version: 3.9.4
+Section: libs
+Homepage: http://www.lely.com
+
+Package: liblely-libc1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
+Description: C11 and POSIX compatibility library
+ This package contains the shared library.
+
+Package: liblely-libc1-dbg
+Section: debug
+Architecture: any
+Depends: liblely-libc1 (= ${binary:Version})
+Multi-Arch: same
+Description: C11 and POSIX compatibility library debugging symbols
+ This package contains the debugging symbols.
+
+Package: liblely-libc-dev
+Section: libdevel
+Architecture: any
+Depends: liblely-libc1 (= ${binary:Version})
+Suggests: liblely-libc-doc
+Multi-Arch: same
+Description: C11 and POSIX compatibility library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-libc-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: C11 and POSIX compatibility library documentation
+ This package contains doxygen generated documentation.
