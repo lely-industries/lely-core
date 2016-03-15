@@ -51,5 +51,19 @@
 #define MAX(a, b)	((a) < (b) ? (b) : (a))
 #endif
 
+#ifndef structof
+/*!
+ * Obtains the address of a structure from the address of one of its members.
+ * This macro only works for plain old data structures (PODSs) and performs no
+ * type or NULL checking.
+ *
+ * \param ptr    a pointer to the member.
+ * \param type   the type of the structure.
+ * \param member the name of member.
+ */
+#define structof(ptr, type, member) \
+	((type *)((char *)(ptr) - offsetof(type, member)))
+#endif
+
 #endif
 
