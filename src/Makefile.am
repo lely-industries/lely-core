@@ -1,5 +1,6 @@
 src =
 src += errnum.c
+src += rbtree.c
 src += util.h
 if PLATFORM_WIN32
 src += util.rc
