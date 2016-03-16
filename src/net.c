@@ -1,0 +1,631 @@
+/*!\file
+ * This file is part of the CAN library; it contains the implementation of the
+ * CAN network interface.
+ *
+ * \see lely/can/net.h
+ *
+ * \copyright 2016 Lely Industries N.V.
+ *
+ * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "can.h"
+#include <lely/util/errnum.h>
+#include <lely/util/pheap.h>
+#include <lely/util/rbtree.h>
+#include <lely/util/time.h>
+#include <lely/can/net.h>
+
+#include <assert.h>
+#include <stdlib.h>
+
+//! A CAN network interface.
+struct __can_net {
+	//! The tree containing all timers.
+	struct pheap timer_heap;
+	//! The current time.
+	struct timespec time;
+	//! The time at which the next timer triggers.
+	struct timespec next;
+	//! A pointer to the callback function invoked by can_net_set_next().
+	can_timer_func_t *next_func;
+	//! A pointer to user-specified data for #next_func.
+	void *next_data;
+	//! The he tree containing all receivers.
+	struct rbtree recv_tree;
+	//! A pointer to the callback function invoked by can_net_send().
+	can_send_func_t *send_func;
+	//! A pointer to the user-specified data for #send_func.
+	void *send_data;
+};
+
+/*!
+ * Invokes the callback function if the time at which the next CAN timer
+ * triggers has been updated.
+ */
+static void can_net_set_next(can_net_t *net);
+
+//! A CAN timer.
+struct __can_timer {
+	//! The node of this timer in the tree of timers.
+	struct pnode node;
+	/*!
+	 * A pointer to the network interface with which this timer is
+	 * registered.
+	 */
+	can_net_t *net;
+	//! The time at which the timer should trigger.
+	struct timespec start;
+	//! The interval between successive triggers.
+	struct timespec interval;
+	//! A pointer to the callback function invoked by can_net_set_time().
+	can_timer_func_t *func;
+	//! A pointer to the user-specified data for #func.
+	void *data;
+};
+
+/*!
+ * The type of the key used to match CAN frame receivers to CAN frames. The key
+ * is a combination of the CAN identifier and the flags.
+ */
+#ifdef LELY_NO_CANFD
+typedef uint32_t can_recv_key_t;
+#else
+typedef uint64_t can_recv_key_t;
+#endif
+
+//! Computes a CAN receiver key from a CAN identifier and flags.
+static inline can_recv_key_t can_recv_key(uint32_t id, uint8_t flags);
+
+//! The function used to compare to CAN receiver keys.
+static int __cdecl can_recv_key_cmp(const void *p1, const void *p2);
+
+//! A CAN network receiver.
+struct __can_recv {
+	//! The node of this receiver in the tree of receivers.
+	struct rbnode node;
+	/*!
+	 * A pointer to the network interface with which this receiver is
+	 * registered.
+	 */
+	can_net_t *net;
+	//! The key used in #node.
+	can_recv_key_t key;
+	//! A pointer to the callback function invoked by can_net_recv().
+	can_recv_func_t *func;
+	//! A pointer to the user-specified data for #func.
+	void *data;
+};
+
+LELY_CAN_EXPORT void *
+__can_net_alloc(void)
+{
+	return malloc(sizeof(struct __can_net));
+}
+
+LELY_CAN_EXPORT void
+__can_net_free(void *ptr)
+{
+	free(ptr);
+}
+
+LELY_CAN_EXPORT struct __can_net *
+__can_net_init(struct __can_net *net)
+{
+	assert(net);
+
+	pheap_init(&net->timer_heap, &timespec_cmp);
+
+	net->time = (struct timespec){ 0, 0 };
+	net->next = (struct timespec){ 0, 0 };
+
+	net->next_func = NULL;
+	net->next_data = NULL;
+
+	rbtree_init(&net->recv_tree, &can_recv_key_cmp);
+
+	net->send_func = NULL;
+	net->send_data = NULL;
+
+	return net;
+}
+
+LELY_CAN_EXPORT void
+__can_net_fini(struct __can_net *net)
+{
+	assert(net);
+
+	rbtree_foreach(&net->recv_tree, node)
+		can_recv_stop(structof(node, can_recv_t, node));
+
+	struct pnode *node;
+	while ((node = pheap_first(&net->timer_heap)))
+		can_timer_stop(structof(node, can_timer_t, node));
+}
+
+LELY_CAN_EXPORT can_net_t *
+can_net_create(void)
+{
+	errc_t errc = 0;
+
+	can_net_t *net = __can_net_alloc();
+	if (__unlikely(!net)) {
+		errc = get_errc();
+		goto error_alloc_net;
+	}
+
+	if (__unlikely(!__can_net_init(net))) {
+		errc = get_errc();
+		goto error_init_net;
+	}
+
+	return net;
+
+error_init_net:
+	__can_net_free(net);
+error_alloc_net:
+	set_errc(errc);
+	return NULL;
+}
+
+LELY_CAN_EXPORT void
+can_net_destroy(can_net_t *net)
+{
+	if (net) {
+		__can_net_fini(net);
+		__can_net_free(net);
+	}
+}
+
+LELY_CAN_EXPORT void
+can_net_get_time(const can_net_t *net, struct timespec *tp)
+{
+	assert(net);
+
+	if (tp)
+		*tp = net->time;
+}
+
+LELY_CAN_EXPORT int
+can_net_set_time(can_net_t *net, const struct timespec *tp)
+{
+	assert(net);
+	assert(tp);
+
+	net->time = *tp;
+
+	errc_t errc = get_errc();
+	int result = 0;
+
+	// Keep processing the first timer until we're done.
+	struct pnode *node;
+	while ((node = pheap_first(&net->timer_heap))) {
+		can_timer_t *timer = structof(node, can_timer_t, node);
+		// If the timeout of the first timer is after the current time,
+		// we're done.
+		if (timespec_cmp(&timer->start, &net->time) > 0)
+			break;
+
+		// Requeue the timer before invoking the callback function.
+		pheap_remove(&net->timer_heap, &timer->node);
+		if (timer->interval.tv_sec || timer->interval.tv_nsec) {
+			timespec_add(&timer->start, &timer->interval);
+			pheap_insert(&net->timer_heap, &timer->node);
+		}
+
+		// Invoke the callback function and check the result.
+		if (timer->func && timer->func(&net->time, timer->data)
+				&& !result) {
+			// Store the first error that occurs.
+			errc = get_errc();
+			result = -1;
+		}
+	}
+
+	can_net_set_next(net);
+
+	set_errc(errc);
+	return result;
+}
+
+LELY_CAN_EXPORT void
+can_net_get_next_func(const can_net_t *net, can_timer_func_t **pfunc,
+		void **pdata)
+{
+	assert(net);
+
+	if (pfunc)
+		*pfunc = net->next_func;
+	if (pdata)
+		*pdata = net->next_data;
+}
+
+LELY_CAN_EXPORT void
+can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
+{
+	assert(net);
+
+	net->next_func = func;
+	net->next_data = data;
+}
+
+LELY_CAN_EXPORT int
+can_net_recv(can_net_t *net, const struct can_msg *msg)
+{
+	assert(net);
+	assert(msg);
+
+	errc_t errc = get_errc();
+	int result = 0;
+
+	// Loop over all matching receivers.
+	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
+	struct rbnode *node = rbtree_find(&net->recv_tree, &key);
+	while (node) {
+		can_recv_t *recv = structof(node, can_recv_t, node);
+		node = rbnode_next(node);
+		// Invoke the callback function and check the result.
+		if (recv->func && recv->func(msg, recv->data) && !result) {
+			// Store the first error that occurs.
+			errc = get_errc();
+			result = -1;
+		}
+		if (!node || net->recv_tree.cmp(&key, node->key))
+			break;
+	}
+
+	set_errc(errc);
+	return result;
+}
+
+LELY_CAN_EXPORT int
+can_net_send(can_net_t *net, const struct can_msg *msg)
+{
+	assert(net);
+	assert(msg);
+
+	if (__unlikely(!net->send_func)) {
+		set_errnum(ERRNUM_NOSYS);
+		return -1;
+	}
+
+	return net->send_func(msg, net->send_data);
+}
+
+LELY_CAN_EXPORT void
+can_net_get_send_func(const can_net_t *net, can_send_func_t **pfunc,
+		void **pdata)
+{
+	assert(net);
+
+	if (pfunc)
+		*pfunc = net->send_func;
+	if (pdata)
+		*pdata = net->send_data;
+}
+
+LELY_CAN_EXPORT void
+can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
+{
+	assert(net);
+
+	net->send_func = func;
+	net->send_data = data;
+}
+
+LELY_CAN_EXPORT void *
+__can_timer_alloc(void)
+{
+	return malloc(sizeof(struct __can_timer));
+}
+
+LELY_CAN_EXPORT void
+__can_timer_free(void *ptr)
+{
+	free(ptr);
+}
+
+LELY_CAN_EXPORT struct __can_timer *
+__can_timer_init(struct __can_timer *timer)
+{
+	assert(timer);
+
+	timer->node.key = &timer->start;
+
+	timer->net = NULL;
+
+	timer->start = (struct timespec){ 0, 0 };
+	timer->interval = (struct timespec){ 0, 0 };
+
+	timer->func = NULL;
+	timer->data = NULL;
+
+	return timer;
+}
+
+LELY_CAN_EXPORT void
+__can_timer_fini(struct __can_timer *timer)
+{
+	can_timer_stop(timer);
+}
+
+LELY_CAN_EXPORT can_timer_t *
+can_timer_create(void)
+{
+	errc_t errc = 0;
+
+	can_timer_t *timer = __can_timer_alloc();
+	if (__unlikely(!timer)) {
+		errc = get_errc();
+		goto error_alloc_timer;
+	}
+
+	if (__unlikely(!__can_timer_init(timer))) {
+		errc = get_errc();
+		goto error_init_timer;
+	}
+
+	return timer;
+
+error_init_timer:
+	__can_timer_free(timer);
+error_alloc_timer:
+	set_errc(errc);
+	return NULL;
+}
+
+LELY_CAN_EXPORT void
+can_timer_destroy(can_timer_t *timer)
+{
+	if (timer) {
+		__can_timer_fini(timer);
+		__can_timer_free(timer);
+	}
+}
+
+LELY_CAN_EXPORT void
+can_timer_get_func(const can_timer_t *timer, can_timer_func_t **pfunc,
+		void **pdata)
+{
+	assert(timer);
+
+	if (pfunc)
+		*pfunc = timer->func;
+	if (pdata)
+		*pdata = timer->data;
+}
+
+LELY_CAN_EXPORT void
+can_timer_set_func(can_timer_t *timer, can_timer_func_t *func, void *data)
+{
+	assert(timer);
+
+	timer->func = func;
+	timer->data = data;
+}
+
+LELY_CAN_EXPORT void
+can_timer_start(can_timer_t *timer, can_net_t *net,
+		const struct timespec *start, const struct timespec *interval)
+{
+	assert(timer);
+	assert(net);
+
+	can_timer_stop(timer);
+
+	if (!start && !interval)
+		return;
+
+	if (interval)
+		timer->interval = *interval;
+	else
+		timer->interval = (struct timespec){ 0, 0 };
+
+	if (start) {
+		timer->start = *start;
+	} else {
+		can_net_get_time(net, &timer->start);
+		timespec_add(&timer->start, &timer->interval);
+	}
+
+	timer->net = net;
+
+	pheap_insert(&timer->net->timer_heap, &timer->node);
+
+	can_net_set_next(timer->net);
+}
+
+LELY_CAN_EXPORT void
+can_timer_stop(can_timer_t *timer)
+{
+	assert(timer);
+
+	if (!timer->net)
+		return;
+
+	pheap_remove(&timer->net->timer_heap, &timer->node);
+
+	can_net_set_next(timer->net);
+	timer->net = NULL;
+
+	timer->start = (struct timespec){ 0, 0 };
+	timer->interval = (struct timespec){ 0, 0 };
+}
+
+LELY_CAN_EXPORT void
+can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
+{
+	if (timeout < 0) {
+		can_timer_stop(timer);
+	} else {
+		struct timespec start = { 0, 0 };
+		can_net_get_time(net, &start);
+		timespec_add_msec(&start, timeout);
+
+		can_timer_start(timer, net, &start, NULL);
+	}
+}
+
+LELY_CAN_EXPORT void *
+__can_recv_alloc(void)
+{
+	return malloc(sizeof(struct __can_recv));
+}
+
+LELY_CAN_EXPORT void
+__can_recv_free(void *ptr)
+{
+	free(ptr);
+}
+
+LELY_CAN_EXPORT struct __can_recv *
+__can_recv_init(struct __can_recv *recv)
+{
+	assert(recv);
+
+	rbnode_init(&recv->node, &recv->key);
+
+	recv->net = NULL;
+
+	recv->key = 0;
+
+	recv->func = NULL;
+	recv->data = NULL;
+
+	return recv;
+}
+
+LELY_CAN_EXPORT void
+__can_recv_fini(struct __can_recv *recv)
+{
+	can_recv_stop(recv);
+}
+
+LELY_CAN_EXPORT can_recv_t *
+can_recv_create(void)
+{
+	errc_t errc = 0;
+
+	can_recv_t *recv = __can_recv_alloc();
+	if (__unlikely(!recv)) {
+		errc = get_errc();
+		goto error_alloc_recv;
+	}
+
+	if (__unlikely(!__can_recv_init(recv))) {
+		errc = get_errc();
+		goto error_init_recv;
+	}
+
+	return recv;
+
+error_init_recv:
+	__can_recv_free(recv);
+error_alloc_recv:
+	set_errc(errc);
+	return NULL;
+}
+
+LELY_CAN_EXPORT void
+can_recv_destroy(can_recv_t *recv)
+{
+	if (recv) {
+		__can_recv_fini(recv);
+		__can_recv_free(recv);
+	}
+}
+
+LELY_CAN_EXPORT void
+can_recv_get_func(const can_recv_t *recv, can_recv_func_t **pfunc, void **pdata)
+{
+	assert(recv);
+
+	if (pfunc)
+		*pfunc = recv->func;
+	if (pdata)
+		*pdata = recv->data;
+}
+
+LELY_CAN_EXPORT void
+can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data)
+{
+	assert(recv);
+
+	recv->func = func;
+	recv->data = data;
+}
+
+LELY_CAN_EXPORT void
+can_recv_start(can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags)
+{
+	assert(recv);
+	assert(net);
+
+	can_recv_stop(recv);
+
+	recv->net = net;
+
+	recv->key = can_recv_key(id, flags);
+	rbtree_insert(&recv->net->recv_tree, &recv->node);
+}
+
+LELY_CAN_EXPORT void
+can_recv_stop(can_recv_t *recv)
+{
+	assert(recv);
+
+	if (!recv->net)
+		return;
+
+	rbtree_remove(&recv->net->recv_tree, &recv->node);
+
+	recv->net = NULL;
+}
+
+static void
+can_net_set_next(can_net_t *net)
+{
+	assert(net);
+
+	struct pnode *node = pheap_first(&net->timer_heap);
+	if (!node)
+		return;
+	can_timer_t *timer = structof(node, can_timer_t, node);
+
+	if (timespec_cmp(&net->next, &timer->start) <= 0)
+		return;
+
+	net->next = timer->start;
+	if (net->next_func)
+		net->next_func(&net->next, net->next_data);
+}
+
+static inline can_recv_key_t
+can_recv_key(uint32_t id, uint8_t flags)
+{
+	id &= (flags & CAN_FLAG_IDE) ? CAN_MASK_EID : CAN_MASK_BID;
+	return (can_recv_key_t)id | ((can_recv_key_t)flags << 29);
+}
+
+static int __cdecl
+can_recv_key_cmp(const void *p1, const void *p2)
+{
+#ifdef LELY_NO_CANFD
+	return uint32_cmp(p1, p2);
+#else
+	return uint64_cmp(p1, p2);
+#endif
+}
+
