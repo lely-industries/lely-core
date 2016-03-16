@@ -36,6 +36,7 @@ LELY_CAN_EXPORT void
 can_frame2can_msg(const struct can_frame *frame, struct can_msg *msg)
 {
 	assert(frame);
+	assert(!(frame->can_id & CAN_ERR_FLAG));
 	assert(msg);
 
 	memset(msg, 0, sizeof(*msg));
@@ -83,6 +84,7 @@ LELY_CAN_EXPORT void
 canfd_frame2can_msg(const struct canfd_frame *frame, struct can_msg *msg)
 {
 	assert(frame);
+	assert(!(frame->can_id & CAN_ERR_FLAG));
 	assert(msg);
 
 	memset(msg, 0, sizeof(*msg));
