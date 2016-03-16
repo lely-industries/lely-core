@@ -1,0 +1,46 @@
+Source: liblely-co
+Priority: extra
+Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
+Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen
+Standards-Version: 3.9.4
+Section: libs
+Homepage: http://www.lely.com
+
+Package: liblely-co1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-libc1 (= ${binary:Version}),
+         liblely-util1 (= ${binary:Version}),
+         liblely-can1 (= ${binary:Version})
+Multi-Arch: same
+Description: CANopen library
+ This package contains the shared library.
+
+Package: liblely-co1-dbg
+Section: debug
+Architecture: any
+Depends: liblely-co1 (= ${binary:Version})
+Multi-Arch: same
+Description: CANopen library debugging symbols
+ This package contains the debugging symbols.
+
+Package: liblely-co-dev
+Section: libdevel
+Architecture: any
+Depends: liblely-co1 (= ${binary:Version}),
+         liblely-libc-dev (= ${binary:Version}),
+         liblely-util-dev (= ${binary:Version}),
+         liblely-can-dev (= ${binary:Version})
+Suggests: liblely-co-doc
+Multi-Arch: same
+Description: CANopen library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-co-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: CANopen library documentation
+ This package contains doxygen generated documentation.
