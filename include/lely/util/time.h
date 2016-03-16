@@ -22,6 +22,7 @@
 #ifndef LELY_UTIL_TIME_H
 #define LELY_UTIL_TIME_H
 
+#include <lely/libc/stdint.h>
 #include <lely/libc/time.h>
 #include <lely/util/util.h>
 
