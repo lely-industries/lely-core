@@ -12,5 +12,6 @@ AM_SILENT_RULES([yes])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	Makefile
+	${PACKAGE}.pc
 ])
 AC_OUTPUT
