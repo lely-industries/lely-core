@@ -16,10 +16,14 @@ LT_INIT([win32-dll])
 LT_PROG_RC
 
 case "$host" in
+*linux*)
+	platform_linux=yes
+	;;
 *-*-mingw*)
 	platform_win32=yes
 	;;
 esac
+AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
@@ -30,7 +34,15 @@ AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
 AS_IF([test "x$enable_canfd" == "xno"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
-	AC_DEFINE_UNQUOTED([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
+	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
+])
+
+AM_CONDITIONAL([HAVE_SOCKET_CAN], [false])
+AS_IF([test "x$platform_linux" == "xyes"], [
+	AC_CHECK_HEADERS([linux/can.h], [
+		AM_CONDITIONAL([HAVE_SOCKET_CAN], [true])
+		AC_DEFINE([LELY_HAVE_SOCKET_CAN], [1], [Define to 1 if you have SocketCAN.])
+	])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
