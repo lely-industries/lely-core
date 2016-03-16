@@ -1940,6 +1940,7 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             =
 
+PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_CAN_EXTERN=
 PREDEFINED             += LELY_CAN_EXPORT=
 
