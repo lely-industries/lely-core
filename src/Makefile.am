@@ -3,6 +3,7 @@ src += co.h
 if PLATFORM_WIN32
 src += co.rc
 endif
+src += type.c
 
 lib_LTLIBRARIES = liblely-co.la
 liblely_co_la_CPPFLAGS = -I$(top_srcdir)/include $(liblely_libc_CFLAGS) $(liblely_util_CFLAGS) $(liblely_co_CFLAGS)
