@@ -37,5 +37,17 @@
 #endif
 #endif
 
+struct __co_obj;
+#ifndef __cplusplus
+//! An opaque CANopen object type.
+typedef struct __co_obj co_obj_t;
+#endif
+
+struct __co_sub;
+#ifndef __cplusplus
+//! An opaque CANopen sub-object type.
+typedef struct __co_sub co_sub_t;
+#endif
+
 #endif
 
