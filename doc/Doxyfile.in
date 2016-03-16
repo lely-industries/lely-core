@@ -1940,6 +1940,8 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             =
 
+PREDEFINED             += __STDC_VERSION__=199901L
+
 PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_CO_EXTERN=
 PREDEFINED             += LELY_CO_EXPORT=

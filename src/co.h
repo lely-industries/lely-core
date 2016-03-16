@@ -36,5 +36,22 @@
 #endif
 #endif
 
+#ifndef ALIGN
+/*!
+ * Rounds \a x up to the nearest multiple of \a a.
+ *
+ * Since the rounding is performed with a bitmask, \a a MUST be a power of two.
+ */
+#ifdef __GNUC__
+#define ALIGN(x, a)	__ALIGN_MASK((x), (__typeof__(x))(a) - 1)
+#else
+#define ALIGN(x, a)	__ALIGN_MASK((x), (a) - 1)
+#endif
+#endif
+
+#ifndef __ALIGN_MASK
+#define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
+#endif
+
 #endif
 
