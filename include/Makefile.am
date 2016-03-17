@@ -3,6 +3,7 @@ inc += lely/util/def/type.def
 inc += lely/util/config.h
 inc += lely/util/cmp.h
 inc += lely/util/diag.h
+inc += lely/util/endian.h
 inc += lely/util/errnum.h
 inc += lely/util/fbuf.h
 inc += lely/util/lex.h
