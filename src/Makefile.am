@@ -1,5 +1,6 @@
 src =
 src += config.c
+src += config_ini.c
 src += diag.c
 src += errnum.c
 src += fbuf.c

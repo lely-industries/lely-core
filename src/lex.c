@@ -35,6 +35,9 @@ lex_char(int c, const char *begin, const char *end, struct floc *at)
 	assert(begin);
 	assert(!end || end >= begin);
 
+	if (__unlikely(end && begin >= end))
+		return 0;
+
 	if (*begin != c)
 		return 0;
 

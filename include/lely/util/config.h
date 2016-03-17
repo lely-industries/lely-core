@@ -24,6 +24,8 @@
 
 #include <lely/util/util.h>
 
+#include <stddef.h>
+
 struct __config;
 #ifndef __cplusplus
 //! An opaque configuration type.
@@ -34,6 +36,9 @@ enum {
 	//! Section and key names are case-insensitive.
 	CONFIG_CASE = 1 << 0
 };
+
+// The file location struct from <lely/util/diag.h>.
+struct floc;
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,6 +97,36 @@ LELY_UTIL_EXTERN const char *config_get(const config_t *config,
  */
 LELY_UTIL_EXTERN const char *config_set(config_t *config,
 		const char *section, const char *key, const char *value);
+
+/*!
+ * Parses an INI file and adds the keys to a configuration struct.
+ *
+ * \returns the number of characters read. Parsing errors are reported with
+ * diag_at().
+ *
+ * \see config_parse_ini_text()
+ */
+LELY_UTIL_EXTERN size_t config_parse_ini_file(config_t *config,
+		const char *filename);
+
+/*!
+ * Parses a string in INI-format and adds the keys to a configuration struct.
+ *
+ * \param config a pointer to a configuration struct.
+ * \param begin  a pointer to the first character in the string.
+ * \param end    a pointer to one past the last character in the string (can be
+ *               NULL if the string is null-terminated).
+ * \param at     an optional pointer to the file location of \a begin (used for
+ *               diagnostic purposes). On exit, if `at != NULL`, *\a at points
+ *               to one past the last character parsed.
+ *
+ * \returns the number of characters read. Parsing errors are reported with
+ * diag_at().
+ *
+ * \see config_parse_ini_file()
+ */
+LELY_UTIL_EXTERN size_t config_parse_ini_text(config_t *config,
+		const char *begin, const char *end, struct floc *at);
 
 #ifdef __cplusplus
 }
