@@ -3,9 +3,11 @@ src += config.c
 src += diag.c
 src += errnum.c
 src += fbuf.c
+src += lex.c
 src += membuf.c
 src += pheap.c
 src += rbtree.c
+src += unicode.h
 src += util.h
 if PLATFORM_WIN32
 src += util.rc
