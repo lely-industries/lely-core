@@ -6,6 +6,7 @@ src += fbuf.c
 src += lex.c
 src += membuf.c
 src += pheap.c
+src += print.c
 src += rbtree.c
 src += unicode.h
 src += util.h

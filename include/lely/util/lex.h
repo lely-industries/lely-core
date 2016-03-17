@@ -40,10 +40,14 @@ static inline int __cdecl isbreak(int c);
 //! Returns 1 if \a c is an octal digit, and 0 otherwise.
 static inline int __cdecl isodigit(int c);
 
-//! Returns the octal digit corresponding to the character \a c.
+//! Returns the octal digit corresponding to the character \a c. \see otoc()
 static inline int ctoo(int c);
 
-//! Returns the hexadecimal digit corresponding to the character \a c.
+/*!
+ * Returns the hexadecimal digit corresponding to the character \a c.
+ *
+ * \see xtoc()
+ */
 static inline int ctox(int c);
 
 /*!
