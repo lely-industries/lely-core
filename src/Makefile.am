@@ -1,4 +1,5 @@
 src =
+src += config.c
 src += diag.c
 src += errnum.c
 src += pheap.c
