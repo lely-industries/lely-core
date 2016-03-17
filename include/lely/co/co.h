@@ -37,6 +37,12 @@
 #endif
 #endif
 
+struct __co_dev;
+#ifndef __cplusplus
+//! An opaque CANopen device type.
+typedef struct __co_dev co_dev_t;
+#endif
+
 struct __co_obj;
 #ifndef __cplusplus
 //! An opaque CANopen object type.

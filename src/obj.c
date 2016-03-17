@@ -23,6 +23,8 @@
 
 #include "co.h"
 #include <lely/util/errnum.h>
+#include <lely/co/dev.h>
+#include <lely/co/obj.h>
 #include "obj.h"
 
 #include <assert.h>
@@ -55,6 +57,8 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 {
 	assert(obj);
 
+	obj->node.key = &obj->idx;
+	obj->dev = NULL;
 	obj->idx = idx;
 
 	rbtree_init(&obj->tree, &uint8_cmp);
@@ -73,6 +77,8 @@ LELY_CO_EXPORT void
 __co_obj_fini(struct __co_obj *obj)
 {
 	assert(obj);
+
+	co_dev_remove_obj(obj->dev, obj);
 
 	co_obj_clear(obj);
 
@@ -96,6 +102,14 @@ co_obj_destroy(co_obj_t *obj)
 		__co_obj_fini(obj);
 		__co_obj_free(obj);
 	}
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_obj_get_dev(const co_obj_t *obj)
+{
+	assert(obj);
+
+	return obj->dev;
 }
 
 LELY_CO_EXPORT co_unsigned16_t
@@ -141,8 +155,8 @@ co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 	if (__unlikely(rbtree_find(&obj->tree, sub->node.key)))
 		return -1;
 
-	rbtree_insert(&obj->tree, &sub->node);
 	sub->obj = obj;
+	rbtree_insert(&sub->obj->tree, &sub->node);
 
 	co_obj_update(obj);
 
@@ -158,7 +172,7 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 	if (__unlikely(sub->obj != obj))
 		return -1;
 
-	rbtree_remove(&obj->tree, &sub->node);
+	rbtree_remove(&sub->obj->tree, &sub->node);
 	sub->obj = NULL;
 
 	co_val_fini(co_sub_get_type(sub), sub->val);
@@ -582,14 +596,12 @@ co_sub_get_pdo_mapping(const co_sub_t *sub)
 	return sub->pdo_mapping;
 }
 
-LELY_CO_EXPORT int
+LELY_CO_EXPORT void
 co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping)
 {
 	assert(sub);
 
 	sub->pdo_mapping = !!pdo_mapping;
-
-	return 0;
 }
 
 LELY_CO_EXPORT unsigned int
@@ -600,14 +612,12 @@ co_sub_get_flags(const co_sub_t *sub)
 	return sub->flags;
 }
 
-LELY_CO_EXPORT int
+LELY_CO_EXPORT void
 co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 {
 	assert(sub);
 
 	sub->flags = flags;
-
-	return 0;
 }
 
 static void

@@ -94,6 +94,9 @@ LELY_CO_EXTERN co_obj_t *co_obj_create(co_unsigned16_t idx);
 //! Destroys a CANopen object, including its sub-objects. \see co_obj_create()
 LELY_CO_EXTERN void co_obj_destroy(co_obj_t *obj);
 
+//! Returns a pointer to the CANopen device containing the specified object.
+LELY_CO_EXTERN co_dev_t *co_obj_get_dev(const co_obj_t *obj);
+
 //! Returns the index of a CANopen object.
 LELY_CO_EXTERN co_unsigned16_t co_obj_get_idx(const co_obj_t *obj);
 
@@ -455,25 +458,15 @@ LELY_CO_EXTERN int co_sub_get_pdo_mapping(const co_sub_t *sub);
 /*!
  * Enables or disables PDO mapping a CANopen sub-object.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- *
  * \see co_sub_get_pdo_mapping()
  */
-LELY_CO_EXTERN int co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping);
+LELY_CO_EXTERN void co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping);
 
 //! Returns the object flags of a CANopen sub-object. \see co_sub_set_flags()
 LELY_CO_EXTERN unsigned int co_sub_get_flags(const co_sub_t *sub);
 
-/*!
- * Sets the object flags of a CANopen sub-object.
- *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- *
- * \see co_sub_get_flags()
- */
-LELY_CO_EXTERN int co_sub_set_flags(co_sub_t *sub, unsigned int flags);
+//! Sets the object flags of a CANopen sub-object. \see co_sub_get_flags()
+LELY_CO_EXTERN void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
 
 #ifdef __cplusplus
 }

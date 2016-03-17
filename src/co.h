@@ -53,5 +53,8 @@
 #define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
 #endif
 
+//! The maximum number of nodes in a CANopen network.
+#define CO_NUM_NODES	127
+
 #endif
 

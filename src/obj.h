@@ -23,11 +23,14 @@
 
 #include "co.h"
 #include <lely/util/rbtree.h>
-#include <lely/co/obj.h>
 #include <lely/co/val.h>
 
 //! A CANopen object.
 struct __co_obj {
+	//! The node of this object in the tree of objects.
+	struct rbnode node;
+	//! A pointer to the CANopen device containing this object.
+	co_dev_t *dev;
 	//! The object index.
 	co_unsigned16_t idx;
 	//! The tree containing all the sub-objects.

@@ -3,6 +3,7 @@ src += co.h
 if PLATFORM_WIN32
 src += co.rc
 endif
+src += dev.c
 src += obj.c
 src += obj.h
 src += type.c
