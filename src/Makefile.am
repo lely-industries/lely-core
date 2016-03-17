@@ -3,6 +3,7 @@ src += config.c
 src += diag.c
 src += errnum.c
 src += fbuf.c
+src += membuf.c
 src += pheap.c
 src += rbtree.c
 src += util.h
