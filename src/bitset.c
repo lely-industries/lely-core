@@ -36,10 +36,10 @@ bitset_init(struct bitset *set, int size)
 {
 	assert(set);
 
-	size = MAX(1, (size + INT_BIT - 1) / INT_BIT);
+	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = malloc(size * sizeof(int));
-	if (__unlikely(!bits))
+	if (__unlikely(size && !bits))
 		return -1;
 
 	set->size = size;
@@ -69,10 +69,10 @@ bitset_resize(struct bitset *set, int size)
 {
 	assert(set);
 
-	size = MAX(1, (size + INT_BIT - 1) / INT_BIT);
+	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = realloc(set->bits, size * sizeof(int));
-	if (__unlikely(!bits))
+	if (__unlikely(size && !bits))
 		return 0;
 
 	// If the size increased, clear the new bits.
