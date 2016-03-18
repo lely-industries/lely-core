@@ -41,6 +41,18 @@ extern "C" {
 #endif
 
 /*!
+ * Finds the index of the first (least significant) bit set in \a i. Bits are
+ * numbered counting from 1.
+ *
+ * \returns the index of the first bit set, or 0 if \a i is 0.
+ */
+#if defined(__GNUC__) || __has_builtin(__builtin_ffs)
+static inline int __cdecl ffs(int i) { return __builtin_ffs(i); }
+#else
+LELY_LIBC_EXTERN int __cdecl ffs(int i);
+#endif
+
+/*!
  * Compares the string at \a s1 to the string at \a s2, ignoring differences in
  * case.
  *
