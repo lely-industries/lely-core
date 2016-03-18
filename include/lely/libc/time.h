@@ -38,6 +38,21 @@ struct timespec {
 };
 #endif
 
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
+		struct timespec *rmtp);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS
+
 #if !(__STDC_VERSION__ >= 201112L) && !defined(__USE_ISOC11)
 
 #ifndef TIME_UTC

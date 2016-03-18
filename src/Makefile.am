@@ -5,6 +5,9 @@ src += libc.rc
 endif
 src += stdlib.c
 src += strings.c
+if !NO_THREADS
+src += threads.c
+endif
 src += time.c
 
 lib_LTLIBRARIES = liblely-libc.la

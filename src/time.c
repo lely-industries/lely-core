@@ -21,13 +21,30 @@
  */
 
 #include "libc.h"
+#ifdef _WIN32
+#include <lely/libc/stdint.h>
+#endif
 #include <lely/libc/time.h>
+
+#ifdef _WIN32
+
+LELY_LIBC_EXPORT int __cdecl
+nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
+{
+	int64_t msec = rqtp->tv_sec * 1000 + rqtp->tv_nsec / 1000000;
+	if (__likely(msec > 0))
+		Sleep(msec);
+	// Since Sleep() cannot be interrupted, there is no remaining time.
+	if (rmtp)
+		*rmtp = (struct timespec){ 0, 0 };
+	return 0;
+}
+
+#endif
 
 #if !(__STDC_VERSION__ >= 201112L) && !defined(__USE_ISOC11)
 
 #ifdef _WIN32
-
-#include <lely/libc/stdint.h>
 
 LELY_LIBC_EXPORT int __cdecl
 timespec_get(struct timespec *ts, int base)
