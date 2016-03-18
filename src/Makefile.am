@@ -1,4 +1,5 @@
 src =
+src += bitset.c
 src += config.c
 src += config_ini.c
 src += diag.c
