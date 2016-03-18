@@ -3,6 +3,7 @@ src += libc.h
 if PLATFORM_WIN32
 src += libc.rc
 endif
+src += stdlib.c
 src += strings.c
 src += time.c
 
