@@ -42,5 +42,22 @@
 #include <unistd.h>
 #endif
 
+#ifndef ALIGNED_ALLOC_BITS
+/*!
+ * The minimum alignment (in bits) of heap-allocated objects. This corresponds
+ * to the number of least-significant bits in a pointer guaranteed to be zero.
+ */
+#if __WORDSIZE == 64
+#define ALIGNED_ALLOC_BITS	4
+#else
+#define ALIGNED_ALLOC_BITS	3
+#endif
+#endif
+
+#ifndef ALIGNED_ALLOC_SIZE
+//! The minimum alignment (in bytes) of heap-allocated objects.
+#define ALIGNED_ALLOC_SIZE	((size_t)(1 << (ALIGNED_ALLOC_BITS)))
+#endif
+
 #endif
 

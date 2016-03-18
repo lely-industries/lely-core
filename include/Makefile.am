@@ -9,6 +9,7 @@ inc += lely/util/fbuf.h
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h
+inc += lely/util/pool.h
 inc += lely/util/print.h
 inc += lely/util/rbtree.h
 inc += lely/util/time.h
