@@ -1,4 +1,5 @@
 inc =
+inc += lely/can/buf.h
 inc += lely/can/can.h
 inc += lely/can/msg.h
 inc += lely/can/net.h

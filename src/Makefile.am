@@ -1,4 +1,5 @@
 src =
+src += buf.c
 src += can.h
 if PLATFORM_WIN32
 src += can.rc

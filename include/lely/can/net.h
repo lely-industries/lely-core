@@ -26,20 +26,20 @@
 #include <lely/can/msg.h>
 
 struct __can_net;
-//! An opaque CAN network interface type.
 #ifndef __cplusplus
+//! An opaque CAN network interface type.
 typedef struct __can_net can_net_t;
 #endif
 
 struct __can_timer;
-//! An opaque CAN timer type.
 #ifndef __cplusplus
+//! An opaque CAN timer type.
 typedef struct __can_timer can_timer_t;
 #endif
 
 struct __can_recv;
-//! An opaque CAN frame receiver type.
 #ifndef __cplusplus
+//! An opaque CAN frame receiver type.
 typedef struct __can_recv can_recv_t;
 #endif
 
