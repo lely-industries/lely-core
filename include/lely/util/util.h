@@ -35,6 +35,23 @@
 #endif
 #endif
 
+#ifndef ALIGN
+/*!
+ * Rounds \a x up to the nearest multiple of \a a.
+ *
+ * Since the rounding is performed with a bitmask, \a a MUST be a power of two.
+ */
+#ifdef __GNUC__
+#define ALIGN(x, a)	__ALIGN_MASK((x), (__typeof__(x))(a) - 1)
+#else
+#define ALIGN(x, a)	__ALIGN_MASK((x), (a) - 1)
+#endif
+#endif
+
+#ifndef __ALIGN_MASK
+#define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
+#endif
+
 #ifndef MIN
 /*!
  * Returns the minimum of \a a and \a b. Guaranteed to return the opposite of
@@ -49,6 +66,14 @@
  * MIN().
  */
 #define MAX(a, b)	((a) < (b) ? (b) : (a))
+#endif
+
+#ifndef powerof2
+/*!
+ * Returns 1 if \a x is a power of two, and 0 otherwise. Note that zero is
+ * considered to be a power of two.
+ */
+#define powerof2(x)	(!((x) & ((x) - 1)))
 #endif
 
 #ifndef structof
