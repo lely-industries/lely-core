@@ -63,7 +63,8 @@ LELY_UTIL_EXTERN int bitset_size(const struct bitset *set);
  * \param size the requester size (in number of bits) of the set. This number is
  *             rounded up to the nearest multiple of `sizeof(int) * CHAR_BIT`.
  *
- * \returns the new size (in number of bits) of the bitset, or 0 on error.
+ * \returns the new size (in number of bits) of the bitset, or 0 on error. In
+ * the latter case, the error number can be obtained with get_errnum().
  */
 LELY_UTIL_EXTERN int bitset_resize(struct bitset *set, int size);
 

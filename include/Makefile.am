@@ -7,6 +7,7 @@ inc += lely/util/diag.h
 inc += lely/util/endian.h
 inc += lely/util/errnum.h
 inc += lely/util/fbuf.h
+inc += lely/util/idlist.h
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h

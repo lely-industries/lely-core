@@ -5,6 +5,7 @@ src += config_ini.c
 src += diag.c
 src += errnum.c
 src += fbuf.c
+src += idlist.c
 src += lex.c
 src += membuf.c
 src += page.h
