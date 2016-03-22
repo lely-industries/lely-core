@@ -1940,6 +1940,8 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             =
 
+PREDEFINED             += __STDC_VERSION__=199901L
+
 PREDEFINED             += _POSIX_C_SOURCE=200809L
 PREDEFINED             += _POSIX_MAPPED_FILES=200809L
 
@@ -1955,6 +1957,8 @@ PREDEFINED             += LELY_UTIL_EXPORT=
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 EXPAND_AS_DEFINED      =
+
+EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_LEX
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all refrences to function-like macros that are alone on a line, have an

@@ -27,6 +27,8 @@
 #include "unicode.h"
 
 #include <assert.h>
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 LELY_UTIL_EXPORT size_t
@@ -252,6 +254,106 @@ lex_c99_str(const char *begin, const char *end, struct floc *at)
 
 	return cp - begin;
 }
+
+LELY_UTIL_EXPORT size_t
+lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
+{
+	assert(begin);
+	assert(!end || end >= begin);
+
+	const char *cp = begin;
+
+	// Parse the optional sign.
+	if ((!end || cp < end) && (*cp == '+' || *cp == '-'))
+		cp++;
+
+	// Any number has to begin with either a digit, or a period followed by
+	// a digit.
+	if ((!end || cp < end) && isdigit((unsigned char)*cp)) {
+		cp++;
+	} else if ((!end || end - cp >= 2) && cp[0] == '.'
+			&& isdigit((unsigned char)cp[1])) {
+		cp += 2;
+	} else {
+		return 0;
+	}
+
+	while ((!end || cp < end) && *cp) {
+		if (*cp == 'e' || *cp == 'E' || *cp == 'p' || *cp == 'P') {
+			cp++;
+			// Exponents may contain a sign.
+			if (cp < end && (*cp == '+' || *cp == '-'))
+				cp++;
+		} else if (*cp == '.' || *cp == '_'
+				|| isalnum((unsigned char)*cp)) {
+			cp++;
+		} else {
+			break;
+		}
+	}
+
+	if (at)
+		floc_strninc(at, begin, cp - begin);
+
+	return cp - begin;
+}
+
+#define LELY_UTIL_DEFINE_LEX(type, suffix, strtov, min, max, pname) \
+	LELY_UTIL_EXPORT size_t \
+	lex_c99_##suffix(const char *begin, const char *end, struct floc *at, \
+			type *pname) \
+	{ \
+		size_t chars = lex_c99_pp_num(begin, end, NULL); \
+		if (!chars) \
+			return 0; \
+	\
+		char buf[chars + 1]; \
+		memcpy(buf, begin, chars); \
+		buf[chars] = '\0'; \
+	\
+		int errsv = errno; \
+		errno = 0; \
+	\
+		char *endptr; \
+		type result = strtov(buf, &endptr); \
+		chars = endptr - buf; \
+	\
+		if (__unlikely(min && errno == ERANGE && result == min)) { \
+			set_errnum(ERRNUM_RANGE); \
+			if (at) \
+				diag_at(DIAG_WARNING, get_errc(), at, #type " underflow"); \
+		} else if (__unlikely(errno == ERANGE && result == max)) { \
+			set_errnum(ERRNUM_RANGE); \
+			if (at) \
+				diag_at(DIAG_WARNING, get_errc(), at, #type " overflow"); \
+		} else if (!errno) { \
+			errno = errsv; \
+		} \
+	\
+		if (pname) \
+			*pname = result; \
+	\
+		if (at) \
+			floc_strninc(at, begin, chars); \
+	\
+		return chars; \
+	}
+#define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
+LELY_UTIL_DEFINE_LEX(long, long, strtov, LONG_MIN, LONG_MAX, pl)
+#undef strtov
+#define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
+LELY_UTIL_DEFINE_LEX(unsigned long, ulong, strtov, 0, ULONG_MAX, pul)
+#undef strtov
+#define strtov(nptr, endptr)	strtoll(nptr, endptr, 0)
+LELY_UTIL_DEFINE_LEX(long long, llong, strtov, LLONG_MIN, LLONG_MAX, pll)
+#undef strtov
+#define strtov(nptr, endptr)	strtoll(nptr, endptr, 0)
+LELY_UTIL_DEFINE_LEX(unsigned long long, ullong, strtov, 0, ULLONG_MAX, pull)
+#undef strtov
+LELY_UTIL_DEFINE_LEX(float, flt, strtof, -HUGE_VALF, HUGE_VALF, pf)
+LELY_UTIL_DEFINE_LEX(double, dbl, strtod, -HUGE_VAL, HUGE_VAL, pd)
+LELY_UTIL_DEFINE_LEX(long double, ldbl, strtold, -HUGE_VALL, HUGE_VALL, pld)
+#undef LELY_UTIL_DEFINE_LEX
 
 LELY_UTIL_EXPORT size_t
 lex_line_comment(const char *delim, const char *begin, const char *end,

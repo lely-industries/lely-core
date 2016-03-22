@@ -168,6 +168,52 @@ LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
 		struct floc *at);
 
 /*!
+ * Lexes a C99 preprocessing number from a memory buffer. Note that this does
+ * not necessarily correspond to a valid integer or floating-point constant.
+ *
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
+ * \param at    an optional pointer to the file location of \a begin (used for
+ *              diagnostic purposes). On success, if `at != NULL`, *\a at points
+ *              to one past the last character parsed. On error, *\a at is left
+ *              untouched.
+ *
+ * \returns the number of characters read.
+ */
+LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
+		struct floc *at);
+
+#define LELY_UTIL_DEFINE_LEX(type, suffix, strtov, pname) \
+	/*! Parses a C99 `type` from a memory buffer. The actual conversion is
+	performed by `strtov()`.
+	\param begin a pointer to the start of the buffer.
+	\param end   a pointer to the end of the buffer (can be NULL if the
+	             buffer is null-terminated).
+	\param at    an optional pointer to the file location of \a begin (used
+	             for diagnostic purposes). On success, if `at != NULL`,
+	             *\a at points to one past the last character parsed. On
+	             error, *\a at is left untouched.
+	\param pname the address at which to store the value. On success, if
+	             \a pname is not NULL, *\a pname contains the parsed value.
+	             On error, *\a pname is left untouched. On
+	             underflow/overflow, *\a pname contains the minimum/maximum
+	             value and get_errnum() returns #ERRNUM_RANGE.
+	\returns the number of characters read. */ \
+	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
+			const char *end, struct floc *at, type *pname);
+LELY_UTIL_DEFINE_LEX(long, long, strtol, pl)
+LELY_UTIL_DEFINE_LEX(unsigned long, ulong, strtoul, pul)
+#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
+LELY_UTIL_DEFINE_LEX(long long, llong, strtoll, pll)
+LELY_UTIL_DEFINE_LEX(unsigned long long, ullong, strtoull, pul)
+#endif
+LELY_UTIL_DEFINE_LEX(float, flt, strtof, pf)
+LELY_UTIL_DEFINE_LEX(double, dbl, strtod, pd)
+LELY_UTIL_DEFINE_LEX(long double, ldbl, strtold, pld)
+#undef LELY_UTIL_DEFINE_LEX
+
+/*!
  * Lexes a single line-comment (excluding the line break) starting with the
  * specified delimiter from a memory buffer.
  *
