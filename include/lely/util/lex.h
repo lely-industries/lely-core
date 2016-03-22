@@ -60,7 +60,7 @@ static inline int ctox(int c);
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read (at most one).
@@ -79,7 +79,7 @@ LELY_UTIL_EXTERN size_t lex_char(int c, const char *begin, const char *end,
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read.
@@ -95,7 +95,7 @@ LELY_UTIL_EXTERN size_t lex_ctype(int (__cdecl *ctype)(int),
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read (at most two).
@@ -112,7 +112,7 @@ LELY_UTIL_EXTERN size_t lex_break(const char *begin, const char *end,
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  * \param pc32  the address at which to store the Unicode character. On success,
  *              if \a pc32 is not NULL, *\a pc32 contains the UTF-32 encoded
@@ -135,7 +135,7 @@ LELY_UTIL_EXTERN size_t lex_utf8(const char *begin, const char *end,
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  * \param pc32  the address at which to store the escape sequence or Unicode
  *              character. On success, if \a pc32 is not NULL, *\a pc32 contains
@@ -158,7 +158,7 @@ LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read (including the quotes).
@@ -177,7 +177,7 @@ LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read.
@@ -186,17 +186,17 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
 		struct floc *at);
 
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, pname) \
-	/*! Parses a C99 `type` from a memory buffer. The actual conversion is
+	/*! Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
 	\param begin a pointer to the start of the buffer.
 	\param end   a pointer to the end of the buffer (can be NULL if the
 	             buffer is null-terminated).
 	\param at    an optional pointer to the file location of \a begin (used
 	             for diagnostic purposes). On success, if `at != NULL`,
-	             *\a at points to one past the last character parsed. On
+	             *\a at points to one past the last character lexed. On
 	             error, *\a at is left untouched.
 	\param pname the address at which to store the value. On success, if
-	             \a pname is not NULL, *\a pname contains the parsed value.
+	             \a pname is not NULL, *\a pname contains the lexed value.
 	             On error, *\a pname is left untouched. On
 	             underflow/overflow, *\a pname contains the minimum/maximum
 	             value and get_errnum() returns #ERRNUM_RANGE.
@@ -205,17 +205,17 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
 			const char *end, struct floc *at, type *pname);
 
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, strtov, pname) \
-	/*! Parses a C99 `type` from a memory buffer. The actual conversion is
+	/*! Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
 	\param begin a pointer to the start of the buffer.
 	\param end   a pointer to the end of the buffer (can be NULL if the
 	             buffer is null-terminated).
 	\param at    an optional pointer to the file location of \a begin (used
 	             for diagnostic purposes). On success, if `at != NULL`,
-	             *\a at points to one past the last character parsed. On
+	             *\a at points to one past the last character lexed. On
 	             error, *\a at is left untouched.
 	\param pname the address at which to store the value. On success, if
-	             \a pname is not NULL, *\a pname contains the parsed value.
+	             \a pname is not NULL, *\a pname contains the lexed value.
 	             On error, *\a pname is left untouched. On overflow,
 	             *\a pname contains the maximum value and get_errnum()
 	             returns #ERRNUM_RANGE.
@@ -237,16 +237,16 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 #undef LELY_UTIL_DEFINE_LEX_SIGNED
 
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, pname) \
-	/*! Parses a C99 `type` from a memory buffer.
+	/*! Lexes a C99 `type` from a memory buffer.
 	\param begin a pointer to the start of the buffer.
 	\param end   a pointer to the end of the buffer (can be NULL if the
 	             buffer is null-terminated).
 	\param at    an optional pointer to the file location of \a begin (used
 	             for diagnostic purposes). On success, if `at != NULL`,
-	             *\a at points to one past the last character parsed. On
+	             *\a at points to one past the last character lexed. On
 	             error, *\a at is left untouched.
 	\param pname the address at which to store the value. On success, if
-	             \a pname is not NULL, *\a pname contains the parsed value.
+	             \a pname is not NULL, *\a pname contains the lexed value.
 	             On error, *\a pname is left untouched. On
 	             underflow/overflow, *\a pname contains the minimum/maximum
 	             value and get_errnum() returns #ERRNUM_RANGE.
@@ -255,16 +255,16 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 			const char *end, struct floc *at, type *pname);
 
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, pname) \
-	/*! Parses a C99 `type` from a memory buffer.
+	/*! Lexes a C99 `type` from a memory buffer.
 	\param begin a pointer to the start of the buffer.
 	\param end   a pointer to the end of the buffer (can be NULL if the
 	             buffer is null-terminated).
 	\param at    an optional pointer to the file location of \a begin (used
 	             for diagnostic purposes). On success, if `at != NULL`,
-	             *\a at points to one past the last character parsed. On
+	             *\a at points to one past the last character lexed. On
 	             error, *\a at is left untouched.
 	\param pname the address at which to store the value. On success, if
-	             \a pname is not NULL, *\a pname contains the parsed value.
+	             \a pname is not NULL, *\a pname contains the lexed value.
 	             On error, *\a pname is left untouched. On overflow,
 	             *\a pname contains the maximum value and get_errnum()
 	             returns #ERRNUM_RANGE.
@@ -289,14 +289,14 @@ LELY_UTIL_DEFINE_LEX_UNSIGNED(uint64_t, u64, pu64)
  * specified delimiter from a memory buffer.
  *
  * \param delim a pointer to the delimiter indicating the start of a comment
- *              (can be NULL or pointing to the empty string to parse a line
+ *              (can be NULL or pointing to the empty string to lex a line
  *              unconditionally).
  * \param begin a pointer to the start of the buffer.
  * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
  *              null-terminated).
  * \param at    an optional pointer to the file location of \a begin (used for
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
- *              to one past the last character parsed. On error, *\a at is left
+ *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  *
  * \returns the number of characters read.
