@@ -321,6 +321,12 @@ LELY_UTIL_EXTERN int vsnprintf_diag_at(char *s, size_t n,
 		enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, va_list ap) __format_printf(6, 0);
 
+/*!
+ * Extracts the command name from a path. This function returns a pointer to the
+ * first character after the last separator ('/' or '\\') in \a path.
+ */
+LELY_UTIL_EXTERN const char *cmdname(const char *path);
+
 #ifdef __cplusplus
 }
 #endif

@@ -279,3 +279,20 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	return t;
 }
 
+LELY_UTIL_EXPORT const char *
+cmdname(const char *path)
+{
+	assert(path);
+
+	const char *cmd = path;
+	while (*cmd)
+		cmd++;
+#ifdef _WIN32
+	while (cmd >= path && *cmd != '\\')
+#else
+	while (cmd >= path && *cmd != '/')
+#endif
+		cmd--;
+	return ++cmd;
+}
+
