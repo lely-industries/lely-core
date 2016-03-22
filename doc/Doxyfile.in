@@ -1958,7 +1958,8 @@ PREDEFINED             += LELY_UTIL_EXPORT=
 
 EXPAND_AS_DEFINED      =
 
-EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_LEX
+EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_LEX_SIGNED
+EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_LEX_UNSIGNED
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all refrences to function-like macros that are alone on a line, have an
