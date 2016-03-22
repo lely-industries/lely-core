@@ -114,8 +114,9 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 				if ((chars = lex_c99_str(cp, end, at))) {
 					membuf_print_string(&value, cp, chars);
 					cp += chars;
-				} else if ((chars = lex_ctype(&isvalue, cp, end,
-						at))) {
+				} else {
+					chars = lex_ctype(&isvalue, cp, end,
+							at);
 					membuf_print_chars(&value, cp, chars);
 					cp += chars;
 				}
