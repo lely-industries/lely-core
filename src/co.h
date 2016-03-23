@@ -36,8 +36,5 @@
 #endif
 #endif
 
-//! The maximum number of nodes in a CANopen network.
-#define CO_NUM_NODES	127
-
 #endif
 

@@ -63,11 +63,23 @@
 //! Read-only access (constant value).
 #define CO_ACCESS_CONST	05
 
+//! The lower limit of the object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_MIN_NODEID	0x01
+
+//! The upper limit of the object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_MAX_NODEID	0x02
+
+//! The default object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_DEF_NODEID	0x04
+
+//! The current object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_VAL_NODEID	0x08
+
 //! Refuse read on scan.
-#define CO_OBJ_FLAGS_READ	0x1
+#define CO_OBJ_FLAGS_READ	0x10
 
 //! Refuse write on download.
-#define CO_OBJ_FLAGS_WRITE	0x2
+#define CO_OBJ_FLAGS_WRITE	0x20
 
 #ifdef __cplusplus
 extern "C" {

@@ -24,6 +24,9 @@
 
 #include <lely/co/type.h>
 
+//! The maximum number of nodes in a CANopen network.
+#define CO_NUM_NODES	127
+
 //! A bit rate of 10 kbit/s.
 #define CO_BAUD_10	0x01
 
@@ -77,8 +80,19 @@ LELY_CO_EXTERN co_dev_t *co_dev_create(co_unsigned8_t id);
  */
 LELY_CO_EXTERN void co_dev_destroy(co_dev_t *dev);
 
-//! Returns the Node-ID of a CANopen device.
+//! Returns the Node-ID of a CANopen device. \see co_dev_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_dev_get_id(const co_dev_t *dev);
+
+/*!
+ * Sets the Node-ID of a CANopen device. This function will also update any
+ * sub-object values of the form `$NODEID { "+" number }`.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_dev_get_id()
+ */
+LELY_CO_EXTERN int co_dev_set_id(co_dev_t *dev, co_unsigned8_t id);
 
 /*!
  * Retrieves a list of object indices in the object dictionary of a CANopen
@@ -224,6 +238,8 @@ LELY_CO_EXTERN int co_dev_set_order_code(co_dev_t *dev, const char *order_code);
  * Returns the supported bit rates of a CANopen device (any combination of
  * #CO_BAUD_10, #CO_BAUD_20, #CO_BAUD_50, #CO_BAUD_125, #CO_BAUD_250,
  * #CO_BAUD_500, #CO_BAUD_800 and #CO_BAUD_1000).
+ *
+ * \see co_dev_set_baud()
  */
 LELY_CO_EXTERN unsigned int co_dev_get_baud(const co_dev_t *dev);
 

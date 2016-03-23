@@ -54,6 +54,13 @@ struct __co_dev {
 	co_unsigned32_t dummy;
 };
 
+static void co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id,
+		co_unsigned8_t old_id);
+static void co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id,
+		co_unsigned8_t old_id);
+static void co_val_set_id(co_unsigned16_t type, void *val,
+		co_unsigned8_t new_id, co_unsigned8_t old_id);
+
 LELY_CO_EXPORT void *
 __co_dev_alloc(void)
 {
@@ -71,7 +78,7 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 {
 	assert(dev);
 
-	if (__unlikely(!id || id > CO_NUM_NODES)) {
+	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
 		set_errnum(ERRNUM_INVAL);
 		return NULL;
 	}
@@ -146,6 +153,24 @@ co_dev_get_id(const co_dev_t *dev)
 	assert(dev);
 
 	return dev->id;
+}
+
+LELY_CO_EXPORT int
+co_dev_set_id(co_dev_t *dev, co_unsigned8_t id)
+{
+	assert(dev);
+
+	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	rbtree_foreach(&dev->tree, node)
+		co_obj_set_id(structof(node, co_obj_t, node), id, dev->id);
+
+	dev->id = id;
+
+	return 0;
 }
 
 LELY_CO_EXPORT co_unsigned16_t
@@ -412,4 +437,47 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 	}
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
+
+static void
+co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)
+{
+	assert(obj);
+
+	rbtree_foreach(&obj->tree, node)
+		co_sub_set_id(structof(node, co_sub_t, node), new_id, old_id);
+}
+
+static void
+co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id)
+{
+	assert(sub);
+
+	unsigned int flags = co_sub_get_flags(sub);
+	co_unsigned16_t type = co_sub_get_type(sub);
+	if (flags & CO_OBJ_FLAGS_MIN_NODEID)
+		co_val_set_id(type, &sub->min, new_id, old_id);
+	if (flags & CO_OBJ_FLAGS_MAX_NODEID)
+		co_val_set_id(type, &sub->max, new_id, old_id);
+	if (flags & CO_OBJ_FLAGS_DEF_NODEID)
+		co_val_set_id(type, &sub->def, new_id, old_id);
+	if (flags & CO_OBJ_FLAGS_VAL_NODEID)
+		co_val_set_id(type, sub->val, new_id, old_id);
+}
+
+static void
+co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t new_id,
+		co_unsigned8_t old_id)
+{
+	assert(val);
+
+	union co_val *u = val;
+	switch (type) {
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
+	case CO_DEFTYPE_##a: \
+		u->c += new_id - old_id; \
+		break;
+#include <lely/co/def/basic.def>
+#undef LELY_CO_DEFINE_TYPE
+	}
+}
 
