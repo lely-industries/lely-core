@@ -302,7 +302,8 @@ LELY_CO_EXTERN int co_val_init_vs(char **val, const char *vs);
  *            octet in the string.
  * \param os  a pointer to the array of octets with which *\a val should be
  *            initialized (can be NULL).
- * \param n   the number of octets at \a os.
+ * \param n   the number of octets in the value to be created (and the number of
+ *            octets at \a os unless \a os is NULL).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -334,7 +335,8 @@ LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
  *            byte.
  * \param dom a pointer to the bytes with which *\a val should be initialized
  *            (can be NULL).
- * \param n   the number of bytes at \a dom.
+ * \param n   the number of bytes in the value to be created (and the number of
+ *            bytes at \a dom unless \a dom is NULL).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -459,6 +461,51 @@ LELY_CO_EXTERN size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
  */
 LELY_CO_EXTERN int co_val_cmp(co_unsigned16_t type, const void *v1,
 		const void *v2);
+
+/*!
+ * Reads a value of the specified data type from a memory buffer.
+ *
+ * \param type  the data type (in the range [1..27]). This MUST be the object
+ *              index of one of the static data types.
+ * \param val   the address at which to store the value. On success, if \a val
+ *              is not NULL, *\a val contains the read value. On error, *\a val
+ *              val is left untouched. In the case of strings or domains, \a val
+ *              MUST be the address of pointer. Note that this value is _not_
+ *              finalized before the read value is stored.
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer. For strings and domains, all
+ *              bytes between \a begin and \a end are considered to be part of
+ *              the value.
+ *
+ * \returns the number of bytes read, or 0 on error. In the latter case, the
+ * error number can be obtained with `get_errnum()`.
+ *
+ * \see co_val_write()
+ */
+LELY_CO_EXTERN size_t co_val_read(co_unsigned16_t type, void *val,
+		const uint8_t *begin, const uint8_t *end);
+
+/*!
+ * Writes a value of the specified data type to a memory buffer.
+ *
+ * \param type  the data type (in the range [1..27]). This MUST be the object
+ *              index of one of the static data types.
+ * \param val   the address of the value to be written. In case of string or
+ *              domains, this MUST be the address of pointer.
+ * \param begin a pointer to the start of the buffer. If \a begin is NULL,
+ *              nothing is written.
+ * \param end   a pointer to the end of the buffer. If \a end is not NULL, and
+ *              the buffer is too small (i.e., `end - begin` is less than the
+ *              return value), nothing is written.
+ *
+ * \returns the number of bytes that would have been written had the buffer been
+ * sufficiently large, or 0 on error. In the latter case, the error number can
+ * be obtained with `get_errnum()`.
+ *
+ * \see co_val_read()
+ */
+LELY_CO_EXTERN size_t co_val_write(co_unsigned16_t type, const void *val,
+		uint8_t *begin, uint8_t *end);
 
 /*!
  * Lexes a value of the specified data type from a memory buffer.

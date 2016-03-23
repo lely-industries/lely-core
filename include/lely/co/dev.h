@@ -24,6 +24,8 @@
 
 #include <lely/co/type.h>
 
+#include <stddef.h>
+
 //! The maximum number of nodes in a CANopen network.
 #define CO_NUM_NODES	127
 
@@ -283,6 +285,85 @@ LELY_CO_EXTERN void co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy);
 			co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
+
+/*!
+ * Reads a value from a memory buffer, in the concise DCF format, and stores it
+ * in a sub-object in the object dictionary of a CANopen device. If the
+ * sub-object does not exist, the value is discarded.
+ *
+ * \param dev     a pointer to a CANopen device.
+ * \param pidx    the address at which to store the object index (can be NULL).
+ * \param psubidx the address at which to store the object sub-index (can be
+ *                NULL).
+ * \param begin   a pointer to the start of the buffer.
+ * \param end     a pointer to the end of the buffer.
+ *
+ * \returns the number of bytes read on success (at least 7), or 0 on error.
+ *
+ * \see co_dev_write_sub()
+ */
+LELY_CO_EXTERN size_t co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx,
+		co_unsigned8_t *psubidx, const uint8_t *begin,
+		const uint8_t *end);
+
+/*!
+ * Loads the value of a sub-object from the object dictionary of a CANopen
+ * device, and writes it to a memory buffer, in the concise DCF format.
+ *
+ * \param dev    a pointer to a CANopen device.
+ * \param idx    the object index.
+ * \param subidx the object sub-index.
+ * \param begin  a pointer to the start of the buffer. If \a begin is NULL,
+ *               nothing is written.
+ * \param end    a pointer to the end of the buffer. If \a end is not NULL, and
+ *               the buffer is too small (i.e., `end - begin` is less than the
+ *               return value), nothing is written.
+ *
+ * \returns the number of bytes that would have been written had the buffer been
+ * sufficiently large, or 0 on error.
+ *
+ * \see co_dev_read_sub()
+ */
+LELY_CO_EXTERN size_t co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end);
+
+/*!
+ * Reads the values of a range of objects from a memory buffer, in the concise
+ * DCF format, and stores them in the object dictionary of a CANopen device. If
+ * an object does not exist, the value is discarded.
+ *
+ * \param dev  a pointer to a CANopen device.
+ * \param pmin the address at which to store the minimum object index (can be
+ *             NULL).
+ * \param pmax the address at which to store the maximum object index (can be
+ *             NULL).
+ * \param ptr  the address of a pointer to a DOMAIN value.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errnum().
+ *
+ * \see co_dev_read_dcf()
+ */
+LELY_CO_EXTERN int co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
+		co_unsigned16_t *pmax, void *const *ptr);
+
+/*!
+ * Loads the values of a range of objects in the object dictionary of a CANopen
+ * device, and writes them to a memory buffer, in the concise DCF format.
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param min the minimum object index.
+ * \param max the maximum object index.
+ * \param ptr the address of a pointer. On success, *\a ptr points to a DOMAIN
+ *            value.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errnum().
+ *
+ * \see co_dev_read_dcf()
+ */
+LELY_CO_EXTERN int co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
+		co_unsigned16_t max, void **ptr);
 
 #ifdef __cplusplus
 }

@@ -438,6 +438,193 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
+LELY_CO_EXPORT size_t
+co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
+		const uint8_t *begin, const uint8_t *end)
+{
+	if (__unlikely(!begin || !end || end - begin < 2 + 1 + 4))
+		return 0;
+
+	// Read the object index.
+	co_unsigned16_t idx;
+	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end)
+			!= 2))
+		return 0;
+	begin += 2;
+	// Read the object sub-index.
+	co_unsigned8_t subidx;
+	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end)
+			!= 1))
+		return 0;
+	begin += 1;
+	// Read the value size (in bytes).
+	co_unsigned32_t size;
+	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end)
+			!= 4))
+		return 0;
+	begin += 4;
+
+	if (__unlikely(end - begin < (ptrdiff_t)size))
+		return 0;
+
+	// Read the value into the sub-object, if it exists.
+	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+	if (sub) {
+		co_unsigned16_t type = co_sub_get_type(sub);
+		union co_val val;
+		co_val_init(type, &val);
+		if (__likely(co_val_read(type, &val, begin, end) == size)) {
+			co_sub_set_val(sub, co_val_addressof(type, &val),
+					co_val_sizeof(type, &val));
+			co_val_fini(type, &val);
+		}
+	}
+
+	if (pidx)
+		*pidx = idx;
+	if (psubidx)
+		*psubidx = subidx;
+
+	return 2 + 1 + 4 + size;
+}
+
+LELY_CO_EXPORT size_t
+co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		uint8_t *begin, uint8_t *end)
+{
+	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+	if (__unlikely(!sub))
+		return 0;
+	co_unsigned16_t type = co_sub_get_type(sub);
+	const void *val = co_sub_get_val(sub);
+
+	co_unsigned32_t size = co_val_write(type, val, NULL, NULL);
+
+	if (begin && (!end || end - begin >= (ptrdiff_t)(2 + 1 + 4 + size))) {
+		// Write the object index.
+		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED16, &idx,
+				begin, end) != 2))
+			return 0;
+		begin += 2;
+		// Write the object sub-index.
+		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED8, &subidx,
+				begin, end) != 1))
+			return 0;
+		begin += 1;
+		// Write the value size (in bytes).
+		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED32, &size,
+				begin, end) != 4))
+			return 0;
+		begin += 4;
+		// Write the value.
+		if (__unlikely(co_val_write(type, val, begin, end) != size))
+			return 0;
+	}
+
+	return 2 + 1 + 4 + size;
+}
+
+LELY_CO_EXPORT int
+co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
+		void *const *ptr)
+{
+	assert(dev);
+	assert(ptr);
+
+	co_unsigned16_t min = CO_UNSIGNED16_MAX;
+	co_unsigned16_t max = CO_UNSIGNED16_MIN;
+
+	size_t size = co_val_sizeof(CO_DEFTYPE_DOMAIN, ptr);
+	const uint8_t *begin = *ptr;
+	const uint8_t *end = begin + size;
+
+	// Read the total number of sub-indices.
+	co_unsigned32_t n;
+	size = co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
+	if (__unlikely(size != 4))
+		return 0;
+	begin += size;
+
+	for (size_t i = 0; i < n; i++) {
+		// Read the value of the sub-object.
+		co_unsigned16_t idx;
+		size = co_dev_read_sub(dev, &idx, NULL, begin, end);
+		if (__unlikely(!size))
+			return 0;
+
+		// Keep track of the index range.
+		min = MIN(min, idx);
+		max = MAX(max, idx);
+	}
+
+	if (pmin)
+		*pmin = min;
+	if (pmax)
+		*pmax = max;
+
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
+		void **ptr)
+{
+	assert(dev);
+	assert(ptr);
+
+	// Get the list of object indices.
+	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
+	co_unsigned16_t idx[maxidx];
+	maxidx = co_dev_get_idx(dev, maxidx, idx);
+
+	size_t size = 4;
+	co_unsigned32_t n = 0;
+
+	for (size_t i = 0; i < maxidx; i++) {
+		if (idx[i] < min || idx[i] > max)
+			continue;
+
+		// Get the list of object sub-indices.
+		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
+		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0, NULL);
+		co_unsigned8_t subidx[maxsubidx];
+		co_obj_get_subidx(obj, maxsubidx, subidx);
+
+		// Count the number of sub-objects and compute the size (in
+		// bytes).
+		for (size_t j = 0; j < maxsubidx; j++, n++)
+			size += co_dev_write_sub(dev, idx[i], subidx[j], NULL,
+					NULL);
+	}
+
+	// Create a DOMAIN for the concise DCF.
+	if (__unlikely(co_val_init_dom(ptr, NULL, size) == -1))
+		return -1;
+	uint8_t *begin = *ptr;
+	uint8_t *end = begin + size;
+
+	// Write the total number of sub-indices.
+	begin += co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
+
+	for (size_t i = 0; i < maxidx; i++) {
+		if (idx[i] < min || idx[i] > max)
+			continue;
+
+		// Get the list of object sub-indices.
+		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
+		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0, NULL);
+		co_unsigned8_t subidx[maxsubidx];
+		co_obj_get_subidx(obj, maxsubidx, subidx);
+
+		// Write the value of the sub-object.
+		for (size_t j = 0; j < maxsubidx; j++, n++)
+			begin += co_dev_write_sub(dev, idx[i], subidx[j], begin,
+					end);
+	}
+
+	return 0;
+}
+
 static void
 co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)
 {

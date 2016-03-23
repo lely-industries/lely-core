@@ -24,6 +24,8 @@
 
 #include <lely/co/type.h>
 
+#include <stddef.h>
+
 //! An object with no data fields.
 #define CO_OBJECT_NULL		0x00
 

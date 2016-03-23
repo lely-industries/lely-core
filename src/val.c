@@ -25,6 +25,7 @@
 #include <lely/libc/stdalign.h>
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
+#include <lely/util/endian.h>
 #include <lely/util/lex.h>
 #include <lely/co/val.h>
 
@@ -190,12 +191,13 @@ co_val_init_os(uint8_t **val, const uint8_t *os, size_t n)
 {
 	assert(val);
 
-	if (os && n) {
+	if (n) {
 		if (__unlikely(co_array_alloc(val, n + 1) == -1))
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
-		memcpy(*val, os, n);
+		if (os)
+			memcpy(*val, os, n);
 	} else {
 		*val = NULL;
 	}
@@ -227,12 +229,13 @@ co_val_init_dom(void **val, const void *dom, size_t n)
 {
 	assert(val);
 
-	if (dom && n) {
+	if (n) {
 		if (__unlikely(co_array_alloc(val, n) == -1))
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
-		memcpy(*val, dom, n);
+		if (dom)
+			memcpy(*val, dom, n);
 	} else {
 		*val = NULL;
 	}
@@ -330,6 +333,7 @@ co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 				return 0;
 			break;
 		default:
+			// We can never get here.
 			return 0;
 		}
 	} else {
@@ -390,6 +394,7 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 			cmp = memcmp(p1, p2, MIN(n1, n2));
 			break;
 		default:
+			// We can never get here.
 			return 0;
 		}
 		if (!cmp)
@@ -448,6 +453,396 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 		case CO_DEFTYPE_UNSIGNED64:
 			return uint64_cmp(v1, v2);
 		default:
+			return 0;
+		}
+	}
+}
+
+LELY_CO_EXPORT size_t
+co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
+		const uint8_t *end)
+{
+	assert(begin);
+	assert(!end || end >= begin);
+
+	size_t n = end - begin;
+
+	if (co_type_is_array(type)) {
+		if (val) {
+			switch (type) {
+			case CO_DEFTYPE_VISIBLE_STRING:
+				if (__unlikely(co_array_alloc(val, n + 1)
+						== -1))
+					return 0;
+				assert(*(char **)val);
+				co_array_init(val, n);
+				char *vs = *(char **)val;
+				memcpy(vs, begin, n);
+				break;
+			case CO_DEFTYPE_OCTET_STRING:
+				if (__unlikely(co_array_alloc(val, n + 1)
+						== -1))
+					return 0;
+				assert(*(uint8_t **)val);
+				co_array_init(val, n);
+				uint8_t *os = *(uint8_t **)val;
+				memcpy(os, begin, n);
+				break;
+			case CO_DEFTYPE_UNICODE_STRING:
+				if (__unlikely(co_array_alloc(val,
+						2 * (n / 2 + 1)) == -1))
+					return 0;
+				assert(*(char16_t **)val);
+				co_array_init(val, 2 * (n / 2));
+				char16_t *us = *(char16_t **)val;
+				for (size_t i = 0; i + 1 < n; i += 2)
+					us[i / 2] = ldle_u16(begin + i);
+				break;
+			case CO_DEFTYPE_DOMAIN:
+				if (__unlikely(co_array_alloc(val, n) == -1))
+					return 0;
+				assert(*(void **)val);
+				co_array_init(val, n);
+				void *dom = *(void **)val;
+				if (dom)
+					memcpy(dom, begin, n);
+				break;
+			default:
+				// We can never get here.
+				return 0;
+			}
+		}
+		return n;
+	} else {
+		union co_val *u = val;
+		switch (type) {
+		case CO_DEFTYPE_BOOLEAN:
+			if (__unlikely(n < 1))
+				return 0;
+			if (u)
+				u->b = !!*(const co_boolean_t *)begin;
+			return 1;
+		case CO_DEFTYPE_INTEGER8:
+			if (__unlikely(n < 1))
+				return 0;
+			if (u)
+				u->i8 = *(const co_integer8_t *)begin;
+			return 1;
+		case CO_DEFTYPE_INTEGER16:
+			if (__unlikely(n < 2))
+				return 0;
+			if (u)
+				u->i16 = ldle_i16(begin);
+			return 2;
+		case CO_DEFTYPE_INTEGER32:
+			if (__unlikely(n < 4))
+				return 0;
+			if (u)
+				u->i32 = ldle_i32(begin);
+			return 4;
+		case CO_DEFTYPE_UNSIGNED8:
+			if (__unlikely(n < 1))
+				return 0;
+			if (u)
+				u->u8 = *(const co_unsigned8_t *)begin;
+			return 1;
+		case CO_DEFTYPE_UNSIGNED16:
+			if (__unlikely(n < 2))
+				return 0;
+			if (u)
+				u->u16 = ldle_u16(begin);
+			return 2;
+		case CO_DEFTYPE_UNSIGNED32:
+			if (__unlikely(n < 4))
+				return 0;
+			if (u)
+				u->u32 = ldle_u32(begin);
+			return 4;
+		case CO_DEFTYPE_REAL32:
+			if (__unlikely(n < 4))
+				return 0;
+			if (u)
+				u->r32 = ldle_flt(begin);
+			return 4;
+		case CO_DEFTYPE_TIME_OF_DAY:
+			if (__unlikely(n < 6))
+				return 0;
+			if (u) {
+				u->t.ms = ldle_u32(begin)
+						& UINT32_C(0x0fffffff);
+				u->t.days = ldle_u16(begin + 4);
+			}
+			return 6;
+		case CO_DEFTYPE_TIME_DIFF:
+			if (__unlikely(n < 6))
+				return 0;
+			if (u) {
+				u->td.ms = ldle_u32(begin)
+						& UINT32_C(0x0fffffff);
+				u->td.days = ldle_u16(begin + 4);
+			}
+			return 6;
+		case CO_DEFTYPE_INTEGER24:
+			if (__unlikely(n < 3))
+				return 0;
+			if (u) {
+				co_unsigned24_t u24 = 0;
+				for (size_t i = 0; i < 3; i++)
+					u24 |= (co_unsigned24_t)*begin++
+							<< 8 * i;
+				u->i24 = (u24 & UINT32_C(0x00800000))
+						? -(co_integer24_t)u24
+						: (co_integer24_t)u24;
+			}
+			return 3;
+		case CO_DEFTYPE_REAL64:
+			if (__unlikely(n < 8))
+				return 0;
+			if (u)
+				u->r64 = ldle_dbl(begin);
+			return 8;
+		case CO_DEFTYPE_INTEGER40:
+			if (__unlikely(n < 5))
+				return 0;
+			if (u) {
+				co_unsigned40_t u40 = 0;
+				for (size_t i = 0; i < 5; i++)
+					u40 |= (co_unsigned40_t)*begin++
+							<< 8 * i;
+				u->i40 = (u40 & UINT64_C(0x0000008000000000))
+						? -(co_integer40_t)u40
+						: (co_integer40_t)u40;
+			}
+			return 5;
+		case CO_DEFTYPE_INTEGER48:
+			if (__unlikely(n < 6))
+				return 0;
+			if (u) {
+				co_unsigned48_t u48 = 0;
+				for (size_t i = 0; i < 6; i++)
+					u48 |= (co_unsigned48_t)*begin++
+							<< 8 * i;
+				u->i48 = (u48 & UINT64_C(0x0000800000000000))
+						? -(co_integer48_t)u48
+						: (co_integer48_t)u48;
+			}
+			return 6;
+		case CO_DEFTYPE_INTEGER56:
+			if (__unlikely(n < 7))
+				return 0;
+			if (u) {
+				co_unsigned56_t u56 = 0;
+				for (size_t i = 0; i < 7; i++)
+					u56 |= (co_unsigned56_t)*begin++
+							<< 8 * i;
+				u->i56 = (u56 & UINT64_C(0x0080000000000000))
+						? -(co_integer56_t)u56
+						: (co_integer56_t)u56;
+			}
+			return 7;
+		case CO_DEFTYPE_INTEGER64:
+			if (__unlikely(n < 8))
+				return 0;
+			if (u)
+				u->i64 = ldle_i64(begin);
+			return 8;
+		case CO_DEFTYPE_UNSIGNED24:
+			if (__unlikely(n < 3))
+				return 0;
+			if (u) {
+				u->u24 = 0;
+				for (size_t i = 0; i < 3; i++)
+					u->u24 |= (co_unsigned24_t)*begin++
+							<< 8 * i;
+			}
+			return 3;
+		case CO_DEFTYPE_UNSIGNED40:
+			if (__unlikely(n < 5))
+				return 0;
+			if (u) {
+				u->u40 = 0;
+				for (size_t i = 0; i < 5; i++)
+					u->u40 |= (co_unsigned40_t)*begin++
+							<< 8 * i;
+			}
+			return 5;
+		case CO_DEFTYPE_UNSIGNED48:
+			if (__unlikely(n < 6))
+				return 0;
+			if (u) {
+				u->u48 = 0;
+				for (size_t i = 0; i < 6; i++)
+					u->u48 |= (co_unsigned48_t)*begin++
+							<< 8 * i;
+			}
+			return 6;
+		case CO_DEFTYPE_UNSIGNED56:
+			if (__unlikely(n < 7))
+				return 0;
+			if (u) {
+				u->u56 = 0;
+				for (size_t i = 0; i < 7; i++)
+					u->u56 |= (co_unsigned56_t)*begin++
+							<< 8 * i;
+			}
+			return 7;
+		case CO_DEFTYPE_UNSIGNED64:
+			if (__unlikely(n < 8))
+				return 0;
+			if (u)
+				u->u64 = ldle_u64(begin);
+			return 8;
+		default:
+			set_errnum(ERRNUM_INVAL);
+			return 0;
+		}
+	}
+}
+
+LELY_CO_EXPORT size_t
+co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
+		uint8_t *end)
+{
+	assert(val);
+
+	if (co_type_is_array(type)) {
+		const void *ptr = co_val_addressof(type, val);
+		size_t n = co_val_sizeof(type, val);
+		if (!ptr || !n)
+			return 0;
+		if (begin && (!end || end - begin >= (ptrdiff_t)n)) {
+			switch (type) {
+			case CO_DEFTYPE_VISIBLE_STRING:
+				memcpy(begin, ptr, n);
+				break;
+			case CO_DEFTYPE_OCTET_STRING:
+				memcpy(begin, ptr, n);
+				break;
+			case CO_DEFTYPE_UNICODE_STRING:
+				n %= 2;
+				const char16_t *us = ptr;
+				for (size_t i = 0; i + 1 < n; i += 2)
+					stle_u16(begin + i, us[i / 2]);
+				break;
+			case CO_DEFTYPE_DOMAIN:
+				memcpy(begin, ptr, n);
+				break;
+			default:
+				// We can never get here.
+				return 0;
+			}
+		}
+		return n;
+	} else {
+		const union co_val *u = val;
+		switch (type) {
+		case CO_DEFTYPE_BOOLEAN:
+			if (begin && (!end || end - begin >= 1))
+				*(co_boolean_t *)begin = !!u->b;
+			return 1;
+		case CO_DEFTYPE_INTEGER8:
+			if (begin && (!end || end - begin >= 1))
+				*(co_integer8_t *)begin = u->i8;
+			return 1;
+		case CO_DEFTYPE_INTEGER16:
+			if (begin && (!end || end - begin >= 2))
+				stle_i16(begin, u->i16);
+			return 2;
+		case CO_DEFTYPE_INTEGER32:
+			if (begin && (!end || end - begin >= 4))
+				stle_i32(begin, u->i32);
+			return 4;
+		case CO_DEFTYPE_UNSIGNED8:
+			if (begin && (!end || end - begin >= 1))
+				*(co_unsigned8_t *)begin = u->u8;
+			return 1;
+		case CO_DEFTYPE_UNSIGNED16:
+			if (begin && (!end || end - begin >= 2))
+				stle_u16(begin, u->u16);
+			return 2;
+		case CO_DEFTYPE_UNSIGNED32:
+			if (begin && (!end || end - begin >= 4))
+				stle_u32(begin, u->u32);
+			return 4;
+		case CO_DEFTYPE_REAL32:
+			if (begin && (!end || end - begin >= 4))
+				stle_flt(begin, u->r32);
+			return 4;
+		case CO_DEFTYPE_TIME_OF_DAY:
+			if (begin && (!end || end - begin >= 6)) {
+				stle_u32(begin, u->t.ms & UINT32_C(0x0fffffff));
+				stle_u16(begin, u->t.days);
+			}
+			return 6;
+		case CO_DEFTYPE_TIME_DIFF:
+			if (begin && (!end || end - begin >= 6)) {
+				stle_u32(begin, u->td.ms
+						& UINT32_C(0x0fffffff));
+				stle_u16(begin, u->td.days);
+			}
+			return 6;
+		case CO_DEFTYPE_INTEGER24:
+			if (begin && (!end || end - begin >= 3)) {
+				for (size_t i = 0; i < 3; i++)
+					*begin++ = u->i24 >> 8 * i;
+			}
+			return 3;
+		case CO_DEFTYPE_REAL64:
+			if (begin && (!end || end - begin >= 8))
+				stle_dbl(begin, u->r64);
+			return 8;
+		case CO_DEFTYPE_INTEGER40:
+			if (begin && (!end || end - begin >= 5)) {
+				for (size_t i = 0; i < 5; i++)
+					*begin++ = u->i40 >> 8 * i;
+			}
+			return 5;
+		case CO_DEFTYPE_INTEGER48:
+			if (begin && (!end || end - begin >= 6)) {
+				for (size_t i = 0; i < 6; i++)
+					*begin++ = u->i48 >> 8 * i;
+			}
+			return 6;
+		case CO_DEFTYPE_INTEGER56:
+			if (begin && (!end || end - begin >= 7)) {
+				for (size_t i = 0; i < 7; i++)
+					*begin++ = u->i56 >> 8 * i;
+			}
+			return 7;
+		case CO_DEFTYPE_INTEGER64:
+			if (begin && (!end || end - begin >= 8))
+				stle_i64(begin, u->i64);
+			return 8;
+		case CO_DEFTYPE_UNSIGNED24:
+			if (begin && (!end || end - begin >= 3)) {
+				for (size_t i = 0; i < 3; i++)
+					*begin++ = u->u24 >> 8 * i;
+			}
+			return 3;
+		case CO_DEFTYPE_UNSIGNED40:
+			if (begin && (!end || end - begin >= 5)) {
+				for (size_t i = 0; i < 5; i++)
+					*begin++ = u->u40 >> 8 * i;
+			}
+			return 5;
+		case CO_DEFTYPE_UNSIGNED48:
+			if (begin && (!end || end - begin >= 6)) {
+				for (size_t i = 0; i < 6; i++)
+					*begin++ = u->u48 >> 8 * i;
+			}
+			return 6;
+		case CO_DEFTYPE_UNSIGNED56:
+			if (begin && (!end || end - begin >= 7)) {
+				for (size_t i = 0; i < 7; i++)
+					*begin++ = u->u56 >> 8 * i;
+			}
+			return 7;
+		case CO_DEFTYPE_UNSIGNED64:
+			if (begin && (!end || end - begin >= 8))
+				stle_u64(begin, u->u64);
+			return 8;
+		default:
+			set_errnum(ERRNUM_INVAL);
 			return 0;
 		}
 	}
