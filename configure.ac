@@ -56,6 +56,7 @@ AC_CONFIG_FILES([
 	doc/Makefile
 	include/Makefile
 	src/Makefile
+	tools/Makefile
 	Makefile
 	${PACKAGE}.pc
 ])

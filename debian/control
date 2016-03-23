@@ -44,3 +44,14 @@ Depends: ${misc:Depends}
 Multi-Arch: foreign
 Description: CANopen library documentation
  This package contains doxygen generated documentation.
+
+Package: liblely-co-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-libc1 (= ${binary:Version}),
+         liblely-util1 (= ${binary:Version}),
+         liblely-can1 (= ${binary:Version}),
+         liblely-co1 (= ${binary:Version})
+Multi-Arch: foreign
+Description: CANopen library tools
+ This package includes command-line tools.
