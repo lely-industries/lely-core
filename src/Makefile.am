@@ -9,6 +9,9 @@ endif
 src += dev.c
 src += obj.c
 src += obj.h
+if !NO_SDEV
+src += sdev.c
+endif
 src += type.c
 src += val.c
 

@@ -34,6 +34,14 @@ AS_IF([test "x$enable_dcf" == "xno"], [
 	AC_DEFINE([LELY_NO_DCF], [1], [Define to 1 if CANopen EDS/DCF support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_SDEV], [false])
+AC_ARG_ENABLE([sdev],
+	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
+AS_IF([test "x$enable_sdev" == "xno"], [
+	AM_CONDITIONAL([NO_SDEV], [true])
+	AC_DEFINE([LELY_NO_SDEV], [1], [Define to 1 if static device description support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
