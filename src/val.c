@@ -24,7 +24,8 @@
 #include "co.h"
 #include <lely/libc/stdalign.h>
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
+#include <lely/util/lex.h>
 #include <lely/co/val.h>
 
 #include <assert.h>
@@ -117,7 +118,7 @@ co_val_init(co_unsigned16_t type, void *val)
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
-		u->c = (co_##b##_t)CO_##a##_INIT;
+		u->c = (co_##b##_t)CO_##a##_INIT; \
 		return 0;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
@@ -136,7 +137,7 @@ co_val_init_min(co_unsigned16_t type, void *val)
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
-		u->c = (co_##b##_t)CO_##a##_MIN;
+		u->c = (co_##b##_t)CO_##a##_MIN; \
 		return 0;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
@@ -155,7 +156,7 @@ co_val_init_max(co_unsigned16_t type, void *val)
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
-		u->c = (co_##b##_t)CO_##a##_MAX;
+		u->c = (co_##b##_t)CO_##a##_MAX; \
 		return 0;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
@@ -296,7 +297,6 @@ co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 	default:
 		if (__unlikely(!ptr || co_type_sizeof(type) != n))
 			return 0;
-
 		memcpy(val, ptr, n);
 	}
 	return n;
@@ -451,6 +451,439 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 			return 0;
 		}
 	}
+}
+
+LELY_CO_EXPORT size_t
+co_val_lex(co_unsigned16_t type, void *val, const char *begin,
+		const char *end, struct floc *at)
+{
+	assert(val);
+	assert(begin);
+	assert(!end || end >= begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	union co_val u;
+	switch (type) {
+	case CO_DEFTYPE_BOOLEAN:
+		chars = lex_c99_u8(cp, end, NULL, &u.u8);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.u8 > CO_BOOLEAN_MAX)) {
+				u.u8 = CO_BOOLEAN_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"boolean truth value overflow");
+			}
+			if (val)
+				*(co_boolean_t *)val = u.u8;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER8:
+		chars = lex_c99_i8(cp, end, NULL, &u.i8);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i8 == INT8_MIN)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"8-bit signed integer underflow");
+			} else if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i8 == INT8_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"8-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer8_t *)val = u.i8;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER16:
+		chars = lex_c99_i16(cp, end, NULL, &u.i16);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i16 == INT16_MIN)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"16-bit signed integer underflow");
+			} else if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i16 == INT16_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"16-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer16_t *)val = u.i16;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER32:
+		chars = lex_c99_i32(cp, end, NULL, &u.i32);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i32 == INT32_MIN)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"32-bit signed integer underflow");
+			} else if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i32 == INT32_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"32-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer32_t *)val = u.i32;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED8:
+		chars = lex_c99_u8(cp, end, NULL, &u.u8);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u8 == UINT8_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"8-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned8_t *)val = u.u8;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED16:
+		chars = lex_c99_u16(cp, end, NULL, &u.u16);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u16 == UINT16_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"16-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned16_t *)val = u.u16;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED32:
+		chars = lex_c99_u32(cp, end, NULL, &u.u32);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u32 == UINT32_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"32-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned32_t *)val = u.u32;
+		}
+		break;
+	case CO_DEFTYPE_REAL32:
+		chars = lex_c99_u32(cp, end, NULL, &u.u32);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u32 == UINT32_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"32-bit unsigned integer overflow");
+			}
+			u.r32 = ((union { uint32_t u32; co_real32_t r32; })
+					{ u.u32 }).r32;
+			if (val)
+				*(co_real32_t *)val = u.r32;
+		}
+		break;
+	case CO_DEFTYPE_VISIBLE_STRING:
+		if (end) {
+			chars = end - cp;
+			if (val) {
+				// Copy the string to a temporary
+				// null-terminated buffer.
+				char buf[chars + 1];
+				strncpy(buf, cp, chars);
+				buf[chars] = '\0';
+				if (__unlikely(co_val_init_vs(val, buf)
+						== -1)) {
+					if (at)
+						diag_at(DIAG_ERROR, get_errc(),
+								at,
+								"unable to create value of type VISIBLE_STRING");
+					return 0;
+				}
+			}
+		} else {
+			chars = strlen(cp) + 1;
+			if (val && __unlikely(co_val_init_vs(val, cp) == -1)) {
+				if (at)
+					diag_at(DIAG_ERROR, get_errc(), at,
+							"unable to create value of type VISIBLE_STRING");
+				return 0;
+			}
+		}
+		cp += chars;
+		break;
+	case CO_DEFTYPE_OCTET_STRING: {
+		// Count the number of hexadecimal digits.
+		while ((!end || cp + chars < end)
+				&& isxdigit((unsigned char)cp[chars]))
+			chars++;
+		if (chars) {
+			// The number of octets is at most half the number of
+			// characters plus 1 for the terminating null byte.
+			co_unsigned8_t buf[chars / 2 + 1];
+			size_t n = 0;
+			while (isxdigit((unsigned char)*cp)) {
+				buf[n] = ctox(*cp++);
+				if (isxdigit((unsigned char)*cp)) {
+					buf[n] <<= 4;
+					buf[n++] |= ctox(*cp++);
+				}
+			}
+			if (val && __unlikely(co_val_init_os(val, buf, n)
+					== -1)) {
+				if (at)
+					diag_at(DIAG_ERROR, get_errc(), at,
+							"unable to create value of type OCTET_STRING");
+				return 0;
+			}
+		}
+		break;
+	}
+	case CO_DEFTYPE_UNICODE_STRING:
+		// TODO: Implement UNICODE_STRING.
+		set_errnum(ERRNUM_NOSYS);
+		if (at)
+			diag_at(DIAG_ERROR, get_errc(), at,
+					"cannot parse value of type UNICODE_STRING");
+		break;
+	case CO_DEFTYPE_TIME_OF_DAY:
+		// TODO: Implement TIME_OF_DAY.
+		set_errnum(ERRNUM_NOSYS);
+		if (at)
+			diag_at(DIAG_ERROR, get_errc(), at,
+					"cannot parse value of type TIME_OF_DAY");
+		break;
+	case CO_DEFTYPE_TIME_DIFF:
+		// TODO: Implement TIME_DIFFERENCE.
+		set_errnum(ERRNUM_NOSYS);
+		if (at)
+			diag_at(DIAG_ERROR, get_errc(), at,
+					"cannot parse value of type TIME_DIFFERENCE");
+		break;
+	case CO_DEFTYPE_DOMAIN:
+		// TODO: Implement DOMAIN.
+		set_errnum(ERRNUM_NOSYS);
+		if (at)
+			diag_at(DIAG_ERROR, get_errc(), at,
+					"cannot parse value of type DOMAIN");
+		break;
+	case CO_DEFTYPE_INTEGER24:
+		chars = lex_c99_i32(cp, end, NULL, &u.i32);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.i32 < CO_INTEGER24_MIN)) {
+				u.i32 = CO_INTEGER24_MIN;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"24-bit signed integer underflow");
+			} else if (__unlikely(u.i32 > CO_INTEGER24_MAX)) {
+				u.i32 = CO_INTEGER24_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"24-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer24_t *)val = u.i32;
+		}
+		break;
+	case CO_DEFTYPE_REAL64:
+		chars = lex_c99_u64(cp, end, NULL, &u.u64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u64 == UINT64_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"64-bit unsigned integer overflow");
+			}
+			u.r64 = ((union { uint64_t u64; co_real64_t r64; })
+					{ u.u64 }).r64;
+			if (val)
+				*(co_real64_t *)val = u.r64;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER40:
+		chars = lex_c99_i64(cp, end, NULL, &u.i64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.i64 < CO_INTEGER40_MIN)) {
+				u.i64 = CO_INTEGER40_MIN;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"40-bit signed integer underflow");
+			} else if (__unlikely(u.i64 > CO_INTEGER40_MAX)) {
+				u.i64 = CO_INTEGER40_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"40-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer40_t *)val = u.i64;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER48:
+		chars = lex_c99_i64(cp, end, NULL, &u.i64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.i64 < CO_INTEGER48_MIN)) {
+				u.i64 = CO_INTEGER48_MIN;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"48-bit signed integer underflow");
+			} else if (__unlikely(u.i64 > CO_INTEGER48_MAX)) {
+				u.i64 = CO_INTEGER48_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"48-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer48_t *)val = u.i64;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER56:
+		chars = lex_c99_i64(cp, end, NULL, &u.i64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.i64 < CO_INTEGER56_MIN)) {
+				u.i64 = CO_INTEGER56_MIN;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"56-bit signed integer underflow");
+			} else if (__unlikely(u.i64 > CO_INTEGER56_MAX)) {
+				u.i64 = CO_INTEGER56_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"56-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer56_t *)val = u.i64;
+		}
+		break;
+	case CO_DEFTYPE_INTEGER64:
+		chars = lex_c99_i64(cp, end, NULL, &u.i64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i64 == INT64_MIN)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"64-bit signed integer underflow");
+			} else if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.i64 == INT64_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"64-bit signed integer overflow");
+			}
+			if (val)
+				*(co_integer64_t *)val = u.i64;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED24:
+		chars = lex_c99_u32(cp, end, NULL, &u.u32);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.u32 > CO_UNSIGNED24_MAX)) {
+				u.u32 = CO_UNSIGNED24_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"24-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned24_t *)val = u.u32;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED40:
+		chars = lex_c99_u64(cp, end, NULL, &u.u64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.u64 > CO_UNSIGNED40_MAX)) {
+				u.u64 = CO_UNSIGNED40_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"40-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned40_t *)val = u.u64;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED48:
+		chars = lex_c99_u64(cp, end, NULL, &u.u64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.u64 > CO_UNSIGNED48_MAX)) {
+				u.u64 = CO_UNSIGNED48_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"48-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned48_t *)val = u.u64;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED56:
+		chars = lex_c99_u64(cp, end, NULL, &u.u64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(u.u64 > CO_UNSIGNED56_MAX)) {
+				u.u64 = CO_UNSIGNED56_MAX;
+				set_errnum(ERRNUM_RANGE);
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"56-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned56_t *)val = u.u64;
+		}
+		break;
+	case CO_DEFTYPE_UNSIGNED64:
+		chars = lex_c99_u64(cp, end, NULL, &u.u64);
+		if (chars) {
+			cp += chars;
+			if (__unlikely(get_errnum() == ERRNUM_RANGE
+					&& u.u64 == UINT64_MAX)) {
+				if (at)
+					diag_at(DIAG_WARNING, get_errc(), at,
+							"64-bit unsigned integer overflow");
+			}
+			if (val)
+				*(co_unsigned64_t *)val = u.u64;
+		}
+		break;
+	default:
+		if (at)
+			diag_at(DIAG_ERROR, 0, at, "cannot parse value of type 0x%04X",
+					type);
+		break;
+	}
+
+	if (at)
+		floc_strninc(at, cp, cp - begin);
+
+	return cp - begin;
 }
 
 static int

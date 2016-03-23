@@ -25,6 +25,7 @@
 #include <lely/co/type.h>
 
 #include <float.h>
+#include <stddef.h>
 
 //! The minimum value of a boolean truth value (false).
 #define CO_BOOLEAN_MIN		0
@@ -224,6 +225,9 @@ union co_val {
 	}).u.dom)
 
 #endif // __STDC_VERSION__ >= 199901L
+
+// The file location struct from <lely/util/diag.h>.
+struct floc;
 
 #ifdef __cplusplus
 extern "C" {
@@ -455,6 +459,29 @@ LELY_CO_EXTERN size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
  */
 LELY_CO_EXTERN int co_val_cmp(co_unsigned16_t type, const void *v1,
 		const void *v2);
+
+/*!
+ * Lexes a value of the specified data type from a memory buffer.
+ *
+ * \param type  the data type (in the range [1..27]). This MUST be the object
+ *              index of one of the static data types.
+ * \param val   the address at which to store the value. On success, if \a val
+ *              is not NULL, *\a val contains the lexed value. On error, *\a val
+ *              val is left untouched. In the case of strings or domains, \a val
+ *              MUST be the address of pointer. Note that this value is _not_
+ *              finalized before the parsed value is stored.
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
+ * \param at    an optional pointer to the file location of \a begin (used for
+ *              diagnostic purposes). On success, if `at != NULL`, *\a at points
+ *              to one past the last character lexed. On error, *\a at is left
+ *              untouched.
+ *
+ * \returns the number of characters read.
+ */
+LELY_CO_EXTERN size_t co_val_lex(co_unsigned16_t type, void *val,
+		const char *begin, const char *end, struct floc *at);
 
 #ifdef __cplusplus
 }
