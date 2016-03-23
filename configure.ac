@@ -26,6 +26,14 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 PKG_CHECK_MODULES([liblely_util], [liblely-util])
 PKG_CHECK_MODULES([liblely_can], [liblely-can])
 
+AM_CONDITIONAL([NO_DCF], [false])
+AC_ARG_ENABLE([dcf],
+	AS_HELP_STRING([--disable-dcf], [disable CANopen EDS/DCF support]))
+AS_IF([test "x$enable_dcf" == "xno"], [
+	AM_CONDITIONAL([NO_DCF], [true])
+	AC_DEFINE([LELY_NO_DCF], [1], [Define to 1 if CANopen EDS/DCF support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"

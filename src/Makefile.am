@@ -3,6 +3,9 @@ src += co.h
 if PLATFORM_WIN32
 src += co.rc
 endif
+if !NO_DCF
+src += dcf.c
+endif
 src += dev.c
 src += obj.c
 src += obj.h
