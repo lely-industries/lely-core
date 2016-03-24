@@ -61,5 +61,11 @@ struct __co_ssdo;
 typedef struct __co_ssdo co_ssdo_t;
 #endif
 
+struct __co_csdo;
+#ifndef __cplusplus
+//! An opaque CANopen Client-SDO type.
+typedef struct __co_csdo co_csdo_t;
+#endif
+
 #endif
 

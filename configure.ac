@@ -28,10 +28,10 @@ PKG_CHECK_MODULES([liblely_can], [liblely-can])
 
 AM_CONDITIONAL([NO_DCF], [false])
 AC_ARG_ENABLE([dcf],
-	AS_HELP_STRING([--disable-dcf], [disable CANopen EDS/DCF support]))
+	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
 AS_IF([test "x$enable_dcf" == "xno"], [
 	AM_CONDITIONAL([NO_DCF], [true])
-	AC_DEFINE([LELY_NO_DCF], [1], [Define to 1 if CANopen EDS/DCF support is disabled.])
+	AC_DEFINE([LELY_NO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
 ])
 
 AM_CONDITIONAL([NO_SDEV], [false])
@@ -40,6 +40,14 @@ AC_ARG_ENABLE([sdev],
 AS_IF([test "x$enable_sdev" == "xno"], [
 	AM_CONDITIONAL([NO_SDEV], [true])
 	AC_DEFINE([LELY_NO_SDEV], [1], [Define to 1 if static device description support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CSDO], [false])
+AC_ARG_ENABLE([csdo],
+	AS_HELP_STRING([--disable-csdo], [disable Client-SDO support]))
+AS_IF([test "x$enable_csdo" == "xno"], [
+	AM_CONDITIONAL([NO_CSDO], [true])
+	AC_DEFINE([LELY_NO_CSDO], [1], [Define to 1 if Client-SDO support is disabled.])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
