@@ -10,6 +10,9 @@ if !NO_CO_DCF
 src += dcf.c
 endif
 src += dev.c
+if !NO_CO_EMCY
+src += emcy.c
+endif
 src += obj.c
 src += obj.h
 if !NO_CO_RPDO

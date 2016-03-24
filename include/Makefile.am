@@ -9,6 +9,9 @@ if !NO_CO_DCF
 inc += lely/co/dcf.h
 endif
 inc += lely/co/dev.h
+if !NO_CO_EMCY
+inc += lely/co/emcy.h
+endif
 inc += lely/co/obj.h
 inc += lely/co/pdo.h
 if !NO_CO_RPDO

@@ -82,6 +82,14 @@ AS_IF([test "x$enable_time" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_TIME], [1], [Define to 1 if time stamp (TIME) object support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_EMCY], [false])
+AC_ARG_ENABLE([emcy],
+	AS_HELP_STRING([--disable-emcy], [disable emergency (EMCY) object support]))
+AS_IF([test "x$enable_emcy" == "xno"], [
+	AM_CONDITIONAL([NO_CO_EMCY], [true])
+	AC_DEFINE([LELY_NO_CO_EMCY], [1], [Define to 1 if emergency (EMCY) object support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
