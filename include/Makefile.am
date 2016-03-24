@@ -22,6 +22,9 @@ inc += lely/co/ssdo.h
 if !NO_CO_SYNC
 inc += lely/co/sync.h
 endif
+if !NO_CO_TIME
+inc += lely/co/time.h
+endif
 if !NO_CO_TPDO
 inc += lely/co/tpdo.h
 endif

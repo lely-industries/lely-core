@@ -85,5 +85,11 @@ struct __co_sync;
 typedef struct __co_sync co_sync_t;
 #endif
 
+struct __co_time;
+#ifndef __cplusplus
+//! An opaque CANopen TIME producer/consumer service type.
+typedef struct __co_time co_time_t;
+#endif
+
 #endif
 

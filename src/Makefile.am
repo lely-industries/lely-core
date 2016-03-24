@@ -24,6 +24,9 @@ src += ssdo.c
 if !NO_CO_SYNC
 src += sync.c
 endif
+if !NO_CO_TIME
+src += time.c
+endif
 if !NO_CO_TPDO
 src += tpdo.c
 endif

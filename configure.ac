@@ -74,6 +74,14 @@ AS_IF([test "x$enable_sync" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_SYNC], [1], [Define to 1 if synchronization (SYNC) object support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_TIME], [false])
+AC_ARG_ENABLE([time],
+	AS_HELP_STRING([--disable-time], [disable time stamp (TIME) object support]))
+AS_IF([test "x$enable_time" == "xno"], [
+	AM_CONDITIONAL([NO_CO_TIME], [true])
+	AC_DEFINE([LELY_NO_CO_TIME], [1], [Define to 1 if time stamp (TIME) object support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
