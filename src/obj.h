@@ -1,6 +1,8 @@
 /*!\file
  * This is the internal header file of the object dictionary.
  *
+ * \see lely/co/obj.h
+ *
  * \copyright 2016 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
@@ -71,7 +73,54 @@ struct __co_sub {
 	unsigned pdo_mapping:1;
 	//! The object flags.
 	unsigned flags:28;
+	//! A pointer to the download indication function.
+	co_sub_dn_ind_t *dn_ind;
+	//! A pointer to user-specified data for #dn_ind.
+	void *dn_data;
+	//! A pointer to the upload indication function.
+	co_sub_up_ind_t *up_ind;
+	//! A pointer to user-specified data for #up_ind.
+	void *up_data;
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*!
+ * Invokes the download indication function of a CANopen sub-object, registered
+ * with co_sub_set_dn_ind(). This is used for writing values to the object
+ * dictionary. If the indication function returns an error, or the
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is set, the value of the
+ * sub-object is left untouched.
+ *
+ * \param sub a pointer to a CANopen sub-object.
+ * \param req a pointer to a CANopen SDO download request. All members of
+ *            *\a req, except \a membuf, MUST be set by the caller. The
+ *            \a membuf MUST be initialized before the first invocation and MUST
+ *            only be used by the indication function.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+co_unsigned32_t co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req);
+
+/*!
+ * Invokes the upload indication function of a CANopen sub-object, registered
+ * with co_sub_set_up_ind(). This is used for reading values from the object
+ * dictionary.
+ *
+ * \param sub a pointer to a CANopen sub-object.
+ * \param req a pointer to a CANopen SDO upload request. The \a size member of
+ *            *\a req MUST be set to 0 on the first invocation. All members MUST
+ *            be initialized by the indication function.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+co_unsigned32_t co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -25,6 +25,7 @@
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
+#include <lely/co/sdo.h>
 #include "obj.h"
 
 #include <assert.h>
@@ -39,6 +40,14 @@ static void co_obj_update(co_obj_t *obj);
 
 //! Destroys all sub-objects.
 static void co_obj_clear(co_obj_t *obj);
+
+//! The default download indication function. \see co_sub_dn_ind_t
+static co_unsigned32_t default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+
+//! The default upload indication function. \see co_sub_up_ind_t
+static co_unsigned32_t default_sub_up_ind(const co_sub_t *sub,
+		struct co_sdo_req *req, void *data);
 
 LELY_CO_EXPORT void *
 __co_obj_alloc(void)
@@ -287,6 +296,24 @@ co_obj_sizeof_val(const co_obj_t *obj)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
+LELY_CO_EXPORT void
+co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
+{
+	assert(obj);
+
+	rbtree_foreach(&obj->tree, node)
+		co_sub_set_dn_ind(structof(node, co_sub_t, node), ind, data);
+}
+
+LELY_CO_EXPORT void
+co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
+{
+	assert(obj);
+
+	rbtree_foreach(&obj->tree, node)
+		co_sub_set_up_ind(structof(node, co_sub_t, node), ind, data);
+}
+
 LELY_CO_EXPORT void *
 __co_sub_alloc(void)
 {
@@ -322,6 +349,11 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	sub->access = CO_ACCESS_RW;
 	sub->pdo_mapping = 0;
 	sub->flags = 0;
+
+	sub->dn_ind = &default_sub_dn_ind;
+	sub->dn_data = NULL;
+	sub->up_ind = &default_sub_up_ind;
+	sub->up_data = NULL;
 
 	return sub;
 }
@@ -620,6 +652,92 @@ co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 	sub->flags = flags;
 }
 
+LELY_CO_EXPORT void
+co_sub_get_dn_ind(const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata)
+{
+	assert(sub);
+
+	if (pind)
+		*pind = sub->dn_ind;
+	if (pdata)
+		*pdata = sub->dn_data;
+}
+
+LELY_CO_EXPORT void
+co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
+{
+	assert(sub);
+
+	sub->dn_ind = ind ? ind : &default_sub_dn_ind;
+	sub->dn_data = ind ? data : NULL;
+}
+
+LELY_CO_EXPORT void
+co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
+{
+	assert(sub);
+
+	if (pind)
+		*pind = sub->up_ind;
+	if (pdata)
+		*pdata = sub->up_data;
+}
+
+LELY_CO_EXPORT void
+co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
+{
+	assert(sub);
+
+	sub->up_ind = ind ? ind : &default_sub_up_ind;
+	sub->up_data = ind ? data : NULL;
+}
+
+LELY_CO_EXPORT int
+co_sub_dn(co_sub_t *sub, void *val)
+{
+	assert(sub);
+
+	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
+		co_val_fini(sub->type, sub->val);
+		if (__unlikely(!co_val_move(sub->type, sub->val, val)))
+			return -1;
+	}
+
+	return 0;
+}
+
+co_unsigned32_t
+co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
+{
+	if (__unlikely(!sub))
+		return CO_SDO_AC_NO_SUB;
+
+	if (__unlikely(!(sub->access & CO_ACCESS_WO)))
+		return CO_SDO_AC_NO_WO;
+
+	if (__unlikely(!req))
+		return CO_SDO_AC_ERROR;
+
+	assert(sub->dn_ind);
+	return sub->dn_ind(sub, req, sub->dn_data);
+}
+
+co_unsigned32_t
+co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
+{
+	if (__unlikely(!sub))
+		return CO_SDO_AC_NO_SUB;
+
+	if (__unlikely(!(sub->access & CO_ACCESS_RO)))
+		return CO_SDO_AC_NO_RO;
+
+	if (__unlikely(!req))
+		return CO_SDO_AC_ERROR;
+
+	assert(sub->up_ind);
+	return sub->up_ind(sub, req, sub->up_data);
+}
+
 static void
 co_obj_update(co_obj_t *obj)
 {
@@ -671,5 +789,62 @@ co_obj_clear(co_obj_t *obj)
 
 	free(obj->val);
 	obj->val = NULL;
+}
+
+static co_unsigned32_t
+default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(req);
+	__unused_var(data);
+
+	co_unsigned32_t ac = 0;
+
+	// Read the value.
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+		goto error_req;
+
+	// Check whether the value is within bounds.
+	if (co_type_is_basic(type)) {
+		const void *ptr = co_val_addressof(type, &val);
+		const void *min = co_sub_addressof_min(sub);
+		const void *max = co_sub_addressof_max(sub);
+		if (__unlikely(co_val_cmp(type, min, max) > 0)) {
+			ac = CO_SDO_AC_PARAM_RANGE;
+			goto error_range;
+		}
+		if (__unlikely(co_val_cmp(type, ptr, max) > 0)) {
+			ac = CO_SDO_AC_PARAM_HI;
+			goto error_range;
+		}
+		if (__unlikely(co_val_cmp(type, ptr, min) < 0)) {
+			ac = CO_SDO_AC_PARAM_LO;
+			goto error_range;
+		}
+	}
+
+	co_sub_dn(sub, &val);
+error_range:
+	co_val_fini(type, &val);
+error_req:
+	return ac;
+}
+
+static co_unsigned32_t
+default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(req);
+	__unused_var(data);
+
+	const void *val = co_sub_get_val(sub);
+	if (__unlikely(!val))
+		return CO_SDO_AC_NO_DATA;
+
+	co_unsigned32_t ac = 0;
+	co_sdo_req_up(req, co_sub_get_type(sub), val, &ac);
+	return ac;
 }
 

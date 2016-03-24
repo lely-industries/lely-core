@@ -12,6 +12,7 @@ src += obj.h
 if !NO_SDEV
 src += sdev.c
 endif
+src += sdo.c
 src += type.c
 src += val.c
 

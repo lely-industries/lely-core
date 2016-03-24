@@ -83,9 +83,42 @@
 //! Refuse write on download.
 #define CO_OBJ_FLAGS_WRITE	0x20
 
+//! The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
+struct co_sdo_req;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * The type of a CANopen sub-object download indication function, invoked by an
+ * SDO download request or Receive-PDO indication.
+ *
+ * \param sub  a pointer to a CANopen sub-object, containing the new value.
+ * \param req  a pointer to a CANopen SDO download request. The \a size,
+ *             \a buf, \a nbyte and \a offset members of *\a req are set by the
+ *             caller.
+ * \param data a pointer to user-specified data.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+typedef co_unsigned32_t co_sub_dn_ind_t(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+
+/*!
+ * The type of a CANopen sub-object upload indication function, invoked by an
+ * SDO upload request.
+ *
+ * \param sub  a pointer to a CANopen sub-object, containing the new value.
+ * \param req  a pointer to a CANopen SDO upload request. On the first
+ *             invocation, the \a size member of *\a req is set to 0. All
+ *             members MUST be initialized by the indication function.
+ * \param data a pointer to user-specified data.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+typedef co_unsigned32_t co_sub_up_ind_t(const co_sub_t *sub,
+		struct co_sdo_req *req, void *data);
 
 LELY_CO_EXTERN void *__co_obj_alloc(void);
 LELY_CO_EXTERN void __co_obj_free(void *ptr);
@@ -220,6 +253,35 @@ LELY_CO_EXTERN size_t co_obj_sizeof_val(const co_obj_t *obj);
 			co_unsigned8_t subidx, co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
+
+/*!
+ * Sets the download indication function for a CANopen object. This function
+ * invokes co_sub_set_dn_ind() for all sub-objects.
+ *
+ * \param obj  a pointer to a CANopen object.
+ * \param ind  a pointer to the indication function. If \a ind is NULL, the
+ *             default indication function will be used.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a func.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errnum().
+ */
+LELY_CO_EXTERN void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind,
+		void *data);
+
+/*!
+ * Sets the upload indication function for a CANopen object. This function
+ * invokes co_sub_set_up_ind() for all sub-objects.
+ *
+ * \param obj  a pointer to a CANopen object.
+ * \param ind  a pointer to the indication function. If \a ind is NULL, the
+ *             default indication function will be used.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a func.
+ */
+LELY_CO_EXTERN void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind,
+		void *data);
 
 LELY_CO_EXTERN void *__co_sub_alloc(void);
 LELY_CO_EXTERN void __co_sub_free(void *ptr);
@@ -481,6 +543,81 @@ LELY_CO_EXTERN unsigned int co_sub_get_flags(const co_sub_t *sub);
 
 //! Sets the object flags of a CANopen sub-object. \see co_sub_get_flags()
 LELY_CO_EXTERN void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
+
+/*!
+ * Retrieves the download indication function for a CANopen sub-object.
+ *
+ * \param sub   a pointer to a CANopen sub-object.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_sub_set_dn_ind()
+ */
+LELY_CO_EXTERN void co_sub_get_dn_ind(const co_sub_t *sub,
+		co_sub_dn_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the download indication function for a CANopen sub-object. This function
+ * is invoked by co_sub_dn_ind().
+ *
+ * \param sub  a pointer to a CANopen sub-object.
+ * \param ind  a pointer to the indication function. If \a ind is NULL, the
+ *             default indication function will be used.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a func.
+ *
+ * \see co_sub_get_dn_ind()
+ */
+LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the upload indication function for a CANopen sub-object.
+ *
+ * \param sub   a pointer to a CANopen sub-object.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_sub_set_up_ind()
+ */
+LELY_CO_EXTERN void co_sub_get_up_ind(const co_sub_t *sub,
+		co_sub_up_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the upload indication function for a CANopen sub-object. This function
+ * is invoked by co_sub_up_ind().
+ *
+ * \param sub  a pointer to a CANopen sub-object.
+ * \param ind  a pointer to the indication function. If \a ind is NULL, the
+ *             default indication function will be used.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a func.
+ *
+ * \see co_sub_get_up_ind()
+ */
+LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
+		void *data);
+
+/*!
+ * Downloads (copies) a value into a CANopen sub-object if the
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. This
+ * function is invoked by the default download indication function.
+ *
+ * \param sub a pointer to a CANopen sub-object.
+ * \param val a pointer to the value to be written. In the case of strings or
+ *            domains, this MUST be the address of pointer (which is set to NULL
+ *            if the value is copied).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_val_move()
+ */
+LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
 
 #ifdef __cplusplus
 }
