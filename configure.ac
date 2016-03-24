@@ -58,6 +58,14 @@ AS_IF([test "x$enable_rpdo" == "xno"], [
 	AC_DEFINE([LELY_NO_RPDO], [1], [Define to 1 if Receive-PDO support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_TPDO], [false])
+AC_ARG_ENABLE([tpdo],
+	AS_HELP_STRING([--disable-tpdo], [disable Transmit-PDO support]))
+AS_IF([test "x$enable_tpdo" == "xno"], [
+	AM_CONDITIONAL([NO_TPDO], [true])
+	AC_DEFINE([LELY_NO_TPDO], [1], [Define to 1 if Transmit-PDO support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"

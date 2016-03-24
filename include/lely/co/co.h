@@ -73,5 +73,11 @@ struct __co_rpdo;
 typedef struct __co_rpdo co_rpdo_t;
 #endif
 
+struct __co_tpdo;
+#ifndef __cplusplus
+//! An opaque CANopen Transmit-PDO type.
+typedef struct __co_tpdo co_tpdo_t;
+#endif
+
 #endif
 

@@ -21,6 +21,9 @@ endif
 src += sdo.c
 src += sdo.h
 src += ssdo.c
+if !NO_TPDO
+src += tpdo.c
+endif
 src += type.c
 src += val.c
 
