@@ -55,5 +55,11 @@ struct __co_sub;
 typedef struct __co_sub co_sub_t;
 #endif
 
+struct __co_ssdo;
+#ifndef __cplusplus
+//! An opaque CANopen Server-SDO type.
+typedef struct __co_ssdo co_ssdo_t;
+#endif
+
 #endif
 

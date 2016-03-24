@@ -13,6 +13,8 @@ if !NO_SDEV
 src += sdev.c
 endif
 src += sdo.c
+src += sdo.h
+src += ssdo.c
 src += type.c
 src += val.c
 

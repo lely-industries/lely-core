@@ -11,6 +11,7 @@ if !NO_SDEV
 inc += lely/co/sdev.h
 endif
 inc += lely/co/sdo.h
+inc += lely/co/ssdo.h
 inc += lely/co/type.h
 inc += lely/co/val.h
 
