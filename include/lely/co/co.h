@@ -57,26 +57,32 @@ typedef struct __co_sub co_sub_t;
 
 struct __co_ssdo;
 #ifndef __cplusplus
-//! An opaque CANopen Server-SDO type.
+//! An opaque CANopen Server-SDO service type.
 typedef struct __co_ssdo co_ssdo_t;
 #endif
 
 struct __co_csdo;
 #ifndef __cplusplus
-//! An opaque CANopen Client-SDO type.
+//! An opaque CANopen Client-SDO service type.
 typedef struct __co_csdo co_csdo_t;
 #endif
 
 struct __co_rpdo;
 #ifndef __cplusplus
-//! An opaque CANopen Receive-PDO type.
+//! An opaque CANopen Receive-PDO service type.
 typedef struct __co_rpdo co_rpdo_t;
 #endif
 
 struct __co_tpdo;
 #ifndef __cplusplus
-//! An opaque CANopen Transmit-PDO type.
+//! An opaque CANopen Transmit-PDO service type.
 typedef struct __co_tpdo co_tpdo_t;
+#endif
+
+struct __co_sync;
+//! An opaque CANopen SYNC producer/consumer service type.
+#ifndef __cplusplus
+typedef struct __co_sync co_sync_t;
 #endif
 
 #endif

@@ -21,6 +21,9 @@ endif
 src += sdo.c
 src += sdo.h
 src += ssdo.c
+if !NO_SYNC
+src += sync.c
+endif
 if !NO_TPDO
 src += tpdo.c
 endif

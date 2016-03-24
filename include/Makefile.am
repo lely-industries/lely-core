@@ -19,6 +19,9 @@ inc += lely/co/sdev.h
 endif
 inc += lely/co/sdo.h
 inc += lely/co/ssdo.h
+if !NO_SYNC
+inc += lely/co/sync.h
+endif
 if !NO_TPDO
 inc += lely/co/tpdo.h
 endif

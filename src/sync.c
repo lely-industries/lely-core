@@ -1,0 +1,518 @@
+/*!\file
+ * This file is part of the CANopen library; it contains the implementation of
+ * the Synchronization (SYNC) object functions.
+ *
+ * \see lely/co/sync.h
+ *
+ * \copyright 2016 Lely Industries N.V.
+ *
+ * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "co.h"
+
+#ifndef LELY_NO_SYNC
+
+#include <lely/util/errnum.h>
+#include <lely/co/dev.h>
+#include <lely/co/obj.h>
+#include <lely/co/sdo.h>
+#include <lely/co/sync.h>
+#include <lely/co/val.h>
+
+#include <assert.h>
+#include <stdlib.h>
+
+//! A CANopen SYNC producer/consumer service.
+struct __co_sync {
+	//! A pointer to a CAN network interface.
+	can_net_t *net;
+	//! A pointer to a CANopen device.
+	co_dev_t *dev;
+	//! The SYNC COB-ID.
+	uint32_t cobid;
+	//! The communication cycle period (in microseconds).
+	co_unsigned32_t us;
+	//! The synchronous counter overflow value.
+	co_unsigned8_t max_cnt;
+	//! A pointer to the CAN frame receiver.
+	can_recv_t *recv;
+	//! A pointer to the CAN timer.
+	can_timer_t *timer;
+	//! The counter value.
+	co_unsigned8_t cnt;
+	//! A pointer to the indication function.
+	co_sync_ind_t *ind;
+	//! A pointer to user-specified data for #ind.
+	void *data;
+};
+
+/*!
+ * Updates and (de)activates a SYNC producer/consumer service. This function is
+ * invoked by the download indication functions when one of the SYNC
+ * configuration objects (1005, 1006 or 1019) is updated.
+ *
+ * \returns 0 on success, or -1 on error.
+ */
+static int co_sync_update(co_sync_t *sync);
+
+/*!
+ * The download indication function for (all sub-objects of) CANopen object 1005
+ * (COB-ID SYNC message).
+ *
+ * \see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+
+/*!
+ * The download indication function for (all sub-objects of) CANopen object 1006
+ * (Communication cycle period).
+ *
+ * \see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+
+/*!
+ * The download indication function for (all sub-objects of) CANopen object 1019
+ * (Synchronous counter overflow value).
+ *
+ * \see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+
+/*!
+ * The CAN receive callback function for a SYNC consumer service.
+ *
+ * \see can_recv_func_t
+ */
+static int co_sync_recv(const struct can_msg *msg, void *data);
+
+/*!
+ * The CAN timer callback function for a SYNC producer service.
+ *
+ * \see can_timer_func_t
+ */
+static int co_sync_timer(const struct timespec *tp, void *data);
+
+LELY_CO_EXPORT void *
+__co_sync_alloc(void)
+{
+	return malloc(sizeof(struct __co_sync));
+}
+
+LELY_CO_EXPORT void
+__co_sync_free(void *ptr)
+{
+	free(ptr);
+}
+
+LELY_CO_EXPORT struct __co_sync *
+__co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
+{
+	assert(sync);
+	assert(net);
+	assert(dev);
+
+	errc_t errc = 0;
+
+	sync->net = net;
+	sync->dev = dev;
+
+	// Retrieve the SYNC COB-ID.
+	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
+	if (__unlikely(!obj_1005)) {
+		errc = errnum2c(ERRNUM_NOSYS);
+		goto error_obj_1005;
+	}
+
+	sync->cobid = co_obj_get_val_u32(obj_1005, 0x00);
+
+	// Retrieve the communication cycle period (in microseconds).
+	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
+	sync->us = co_obj_get_val_u32(obj_1006, 0x00);
+
+	// Retrieve the synchronous counter overflow value.
+	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
+	sync->max_cnt = co_obj_get_val_u8(obj_1019, 0x00);
+
+	sync->recv = NULL;
+	sync->timer = NULL;
+
+	sync->cnt = 1;
+
+	sync->ind = NULL;
+	sync->data = NULL;
+
+	// Set the download indication function for the SYNC COB-ID object.
+	co_obj_set_dn_ind(obj_1005, &co_1005_dn_ind, sync);
+
+	// Set the download indication function for the communication cycle
+	// period object.
+	if (obj_1006)
+		co_obj_set_dn_ind(obj_1006, &co_1006_dn_ind, sync);
+
+	// Set the download indication function for the synchronous counter
+	// overflow value object.
+	if (obj_1019)
+		co_obj_set_dn_ind(obj_1019, &co_1019_dn_ind, sync);
+
+	if (__unlikely(co_sync_update(sync) == -1)) {
+		errc = get_errc();
+		goto error_update;
+	}
+
+	return sync;
+
+error_update:
+	if (obj_1019)
+		co_obj_set_dn_ind(obj_1019, NULL, NULL);
+	if (obj_1006)
+		co_obj_set_dn_ind(obj_1006, NULL, NULL);
+	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+error_obj_1005:
+	set_errc(errc);
+	return NULL;
+}
+
+LELY_CO_EXPORT void
+__co_sync_fini(struct __co_sync *sync)
+{
+	assert(sync);
+
+	// Remove the download indication function for the synchronous counter
+	// overflow value object.
+	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
+	if (obj_1019)
+		co_obj_set_dn_ind(obj_1019, NULL, NULL);
+
+	// Remove the download indication function for the communication cycle
+	// period object.
+	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
+	if (obj_1006)
+		co_obj_set_dn_ind(obj_1006, NULL, NULL);
+
+	// Remove the download indication function for the SYNC COB-ID object.
+	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
+	assert(obj_1005);
+	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+
+	can_timer_destroy(sync->timer);
+
+	can_recv_destroy(sync->recv);
+}
+
+LELY_CO_EXPORT co_sync_t *
+co_sync_create(can_net_t *net, co_dev_t *dev)
+{
+	errc_t errc = 0;
+
+	co_sync_t *sync = __co_sync_alloc();
+	if (__unlikely(!sync)) {
+		errc = get_errc();
+		goto error_alloc_sync;
+	}
+
+	if (__unlikely(!__co_sync_init(sync, net, dev))) {
+		errc = get_errc();
+		goto error_init_sync;
+	}
+
+	return sync;
+
+error_init_sync:
+	__co_sync_free(sync);
+error_alloc_sync:
+	set_errc(errc);
+	return NULL;
+}
+
+LELY_CO_EXPORT void
+co_sync_destroy(co_sync_t *sync)
+{
+	if (sync) {
+		__co_sync_fini(sync);
+		__co_sync_free(sync);
+	}
+}
+
+LELY_CO_EXPORT void
+co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind, void **pdata)
+{
+	assert(sync);
+
+	if (pind)
+		*pind = sync->ind;
+	if (pdata)
+		*pdata = sync->data;
+}
+
+LELY_CO_EXPORT void
+co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind, void *data)
+{
+	assert(sync);
+
+	sync->ind = ind;
+	sync->data = data;
+}
+
+static int
+co_sync_update(co_sync_t *sync)
+{
+	assert(sync);
+
+	if (sync->cobid & CO_SYNC_COBID_PRODUCER) {
+		if (sync->recv) {
+			can_recv_destroy(sync->recv);
+			sync->recv = NULL;
+		}
+		if (!sync->timer) {
+			sync->timer = can_timer_create();
+			if (__unlikely(!sync->timer))
+				return -1;
+			can_timer_set_func(sync->timer, co_sync_timer, sync);
+		}
+		if (sync->us) {
+			struct timespec interval = { 0, 1000 * sync->us };
+			can_timer_start(sync->timer, sync->net, NULL,
+					&interval);
+		}
+	} else {
+		if (sync->timer) {
+			can_timer_destroy(sync->timer);
+			sync->timer = NULL;
+		}
+	}
+
+	if (!sync->recv) {
+		sync->recv = can_recv_create();
+		if (__unlikely(!sync->recv))
+			return -1;
+		can_recv_set_func(sync->recv, &co_sync_recv, sync);
+	}
+	// Register the receiver under the specified CAN-ID.
+	uint32_t id = sync->cobid;
+	uint8_t flags = 0;
+	if (id & CO_SYNC_COBID_FRAME) {
+		id &= CAN_MASK_EID;
+		flags |= CAN_FLAG_IDE;
+	} else {
+		id &= CAN_MASK_BID;
+	}
+	can_recv_start(sync->recv, sync->net, id, flags);
+
+	return 0;
+}
+
+static co_unsigned32_t
+co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1005);
+	assert(req);
+	co_sync_t *sync = data;
+	assert(sync);
+
+	co_unsigned32_t ac = 0;
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+		return ac;
+
+	if (__unlikely(co_sub_get_subidx(sub))) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto error;
+	}
+
+	assert(type == CO_DEFTYPE_UNSIGNED32);
+	co_unsigned32_t cobid = val.u32;
+	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
+	if (cobid == cobid_old)
+		goto error;
+
+	// The CAN-ID cannot be changed while the producer is and remains
+	// active.
+	int active = cobid & CO_SYNC_COBID_PRODUCER;
+	int active_old = cobid_old & CO_SYNC_COBID_PRODUCER;
+	uint32_t canid = cobid & CAN_MASK_EID;
+	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	if (active && active_old && canid != canid_old) {
+		ac = CO_SDO_AC_PARAM_VAL;
+		goto error;
+	}
+
+	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	if (__unlikely(!(cobid & CO_SYNC_COBID_FRAME)
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+		ac = CO_SDO_AC_PARAM_VAL;
+		goto error;
+	}
+
+	sync->cobid = cobid;
+
+	co_sub_dn(sub, &val);
+	co_val_fini(type, &val);
+
+	co_sync_update(sync);
+	return 0;
+
+error:
+	co_val_fini(type, &val);
+	return ac;
+}
+
+static co_unsigned32_t
+co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1006);
+	assert(req);
+	co_sync_t *sync = data;
+	assert(sync);
+
+	co_unsigned32_t ac = 0;
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+		return ac;
+
+	if (__unlikely(co_sub_get_subidx(sub))) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto error;
+	}
+
+	assert(type == CO_DEFTYPE_UNSIGNED32);
+	co_unsigned32_t us = val.u32;
+	co_unsigned32_t us_old = co_sub_get_val_u32(sub);
+	if (us == us_old)
+		goto error;
+
+	sync->us = us;
+	sync->cnt = 1;
+
+	co_sub_dn(sub, &val);
+	co_val_fini(type, &val);
+
+	co_sync_update(sync);
+	return 0;
+
+error:
+	co_val_fini(type, &val);
+	return ac;
+}
+
+static co_unsigned32_t
+co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1019);
+	assert(req);
+	co_sync_t *sync = data;
+	assert(sync);
+
+	co_unsigned32_t ac = 0;
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+		return ac;
+
+	if (__unlikely(co_sub_get_subidx(sub))) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto error;
+	}
+
+	assert(type == CO_DEFTYPE_UNSIGNED8);
+	co_unsigned8_t max_cnt = val.u8;
+	co_unsigned8_t max_cnt_old = co_sub_get_val_u8(sub);
+	if (max_cnt == max_cnt_old)
+		goto error;
+
+	// The synchronous counter overflow value cannot be changed while the
+	// communication cycle period is non-zero.
+	if (__unlikely(sync->us)) {
+		ac = CO_SDO_AC_DATA_DEV;
+		goto error;
+	}
+
+	if (__unlikely(max_cnt == 1 || max_cnt > 240)) {
+		ac = CO_SDO_AC_PARAM_VAL;
+		goto error;
+	}
+
+	sync->max_cnt = max_cnt;
+
+	co_sub_dn(sub, &val);
+	co_val_fini(type, &val);
+
+	co_sync_update(sync);
+	return 0;
+
+error:
+	co_val_fini(type, &val);
+	return ac;
+}
+
+static int
+co_sync_recv(const struct can_msg *msg, void *data)
+{
+	assert(msg);
+	co_sync_t *sync = data;
+	assert(sync);
+
+	// Ignore remote and CAN FD format frames.
+	if (__unlikely((msg->flags & CAN_FLAG_RTR)
+			|| (msg->flags & CAN_FLAG_EDL)))
+		return 0;
+
+	co_unsigned8_t cnt = msg->len > 0 ? msg->data[0] : 0;
+
+	if (sync->ind)
+		sync->ind(sync, cnt, sync->data);
+
+	return 0;
+}
+
+static int
+co_sync_timer(const struct timespec *tp, void *data)
+{
+	__unused_var(tp);
+	co_sync_t *sync = data;
+	assert(sync);
+
+	struct can_msg msg = CAN_MSG_INIT;
+	msg.id = sync->cobid;
+	if (sync->cobid & CO_SYNC_COBID_FRAME) {
+		msg.id &= CAN_MASK_EID;
+		msg.flags |= CAN_FLAG_IDE;
+	} else {
+		msg.id &= CAN_MASK_BID;
+	}
+	if (sync->max_cnt) {
+		msg.len = 1;
+		msg.data[0] = sync->cnt;
+		sync->cnt = sync->cnt < sync->max_cnt ? sync->cnt + 1 : 1;
+	}
+	can_net_send(sync->net, &msg);
+
+	return 0;
+}
+
+#endif // !LELY_NO_SYNC
+
