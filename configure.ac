@@ -50,6 +50,14 @@ AS_IF([test "x$enable_csdo" == "xno"], [
 	AC_DEFINE([LELY_NO_CSDO], [1], [Define to 1 if Client-SDO support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_RPDO], [false])
+AC_ARG_ENABLE([rpdo],
+	AS_HELP_STRING([--disable-rpdo], [disable Receive-PDO support]))
+AS_IF([test "x$enable_rpdo" == "xno"], [
+	AM_CONDITIONAL([NO_RPDO], [true])
+	AC_DEFINE([LELY_NO_RPDO], [1], [Define to 1 if Receive-PDO support is disabled.])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"

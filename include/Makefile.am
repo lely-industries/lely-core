@@ -10,6 +10,10 @@ inc += lely/co/dcf.h
 endif
 inc += lely/co/dev.h
 inc += lely/co/obj.h
+inc += lely/co/pdo.h
+if !NO_RPDO
+inc += lely/co/rpdo.h
+endif
 if !NO_SDEV
 inc += lely/co/sdev.h
 endif

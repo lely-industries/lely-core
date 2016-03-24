@@ -12,6 +12,9 @@ endif
 src += dev.c
 src += obj.c
 src += obj.h
+if !NO_RPDO
+src += rpdo.c
+endif
 if !NO_SDEV
 src += sdev.c
 endif

@@ -67,5 +67,11 @@ struct __co_csdo;
 typedef struct __co_csdo co_csdo_t;
 #endif
 
+struct __co_rpdo;
+#ifndef __cplusplus
+//! An opaque CANopen Receive-PDO type.
+typedef struct __co_rpdo co_rpdo_t;
+#endif
+
 #endif
 
