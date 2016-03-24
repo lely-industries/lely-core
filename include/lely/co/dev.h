@@ -66,7 +66,7 @@ LELY_CO_EXTERN void __co_dev_fini(struct __co_dev *dev);
 /*!
  * Creates a new CANopen device.
  *
- * \param id the Node-ID of the device (in the range [1..127]).
+ * \param id the Node-ID of the device (in the range [1..127, 255]).
  *
  * \returns a pointer to a new CANopen device, or NULL on error. In the latter
  * case, the error number can be obtained with `get_errnum()`.

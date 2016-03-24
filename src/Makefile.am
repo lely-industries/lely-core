@@ -13,6 +13,11 @@ src += dev.c
 if !NO_CO_EMCY
 src += emcy.c
 endif
+src += nmt.c
+src += nmt_ec.c
+src += nmt_ec.h
+src += nmt_srv.c
+src += nmt_srv.h
 src += obj.c
 src += obj.h
 if !NO_CO_RPDO

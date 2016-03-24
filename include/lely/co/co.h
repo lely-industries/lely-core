@@ -97,5 +97,11 @@ struct __co_emcy;
 typedef struct __co_emcy co_emcy_t;
 #endif
 
+struct __co_nmt;
+#ifndef __cplusplus
+//! An opaque CANopen NMT master/slave service type.
+typedef struct __co_nmt co_nmt_t;
+#endif
+
 #endif
 
