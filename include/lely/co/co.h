@@ -80,8 +80,8 @@ typedef struct __co_tpdo co_tpdo_t;
 #endif
 
 struct __co_sync;
-//! An opaque CANopen SYNC producer/consumer service type.
 #ifndef __cplusplus
+//! An opaque CANopen SYNC producer/consumer service type.
 typedef struct __co_sync co_sync_t;
 #endif
 

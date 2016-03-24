@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CSDO
+#ifndef LELY_NO_CO_CSDO
 
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
@@ -2087,5 +2087,5 @@ co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg, uint8_t cs)
 	msg->data[0] = cs;
 }
 
-#endif // !LELY_NO_CSDO
+#endif // !LELY_NO_CO_CSDO
 

@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_SDEV
+#ifndef LELY_NO_CO_SDEV
 
 #include <lely/util/errnum.h>
 #include <lely/util/lex.h>
@@ -769,5 +769,5 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 	return t;
 }
 
-#endif // !LELY_NO_SDEV
+#endif // !LELY_NO_CO_SDEV
 

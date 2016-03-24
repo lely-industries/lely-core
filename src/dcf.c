@@ -24,7 +24,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_DCF
+#ifndef LELY_NO_CO_DCF
 
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
@@ -782,5 +782,5 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 	return n;
 }
 
-#endif // !LELY_NO_DCF
+#endif // !LELY_NO_CO_DCF
 

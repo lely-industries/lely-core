@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_RPDO
+#ifndef LELY_NO_CO_RPDO
 
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
@@ -787,5 +787,5 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	return 0;
 }
 
-#endif // !LELY_NO_RPDO
+#endif // !LELY_NO_CO_RPDO
 

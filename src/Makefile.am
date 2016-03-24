@@ -3,28 +3,28 @@ src += co.h
 if PLATFORM_WIN32
 src += co.rc
 endif
-if !NO_CSDO
+if !NO_CO_CSDO
 src += csdo.c
 endif
-if !NO_DCF
+if !NO_CO_DCF
 src += dcf.c
 endif
 src += dev.c
 src += obj.c
 src += obj.h
-if !NO_RPDO
+if !NO_CO_RPDO
 src += rpdo.c
 endif
-if !NO_SDEV
+if !NO_CO_SDEV
 src += sdev.c
 endif
 src += sdo.c
 src += sdo.h
 src += ssdo.c
-if !NO_SYNC
+if !NO_CO_SYNC
 src += sync.c
 endif
-if !NO_TPDO
+if !NO_CO_TPDO
 src += tpdo.c
 endif
 src += type.c

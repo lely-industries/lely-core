@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_TPDO
+#ifndef LELY_NO_CO_TPDO
 
 #include <lely/util/errnum.h>
 #include <lely/util/time.h>
@@ -922,5 +922,5 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	return 0;
 }
 
-#endif // !LELY_NO_TPDO
+#endif // !LELY_NO_CO_TPDO
 

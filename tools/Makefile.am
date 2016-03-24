@@ -1,6 +1,6 @@
 bin =
-if !NO_DCF
-if !NO_SDEV
+if !NO_CO_DCF
+if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
 endif

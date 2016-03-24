@@ -2,27 +2,27 @@ inc =
 inc += lely/co/def/basic.def
 inc += lely/co/def/type.def
 inc += lely/co/co.h
-if !NO_CSDO
+if !NO_CO_CSDO
 inc += lely/co/csdo.h
 endif
-if !NO_DCF
+if !NO_CO_DCF
 inc += lely/co/dcf.h
 endif
 inc += lely/co/dev.h
 inc += lely/co/obj.h
 inc += lely/co/pdo.h
-if !NO_RPDO
+if !NO_CO_RPDO
 inc += lely/co/rpdo.h
 endif
-if !NO_SDEV
+if !NO_CO_SDEV
 inc += lely/co/sdev.h
 endif
 inc += lely/co/sdo.h
 inc += lely/co/ssdo.h
-if !NO_SYNC
+if !NO_CO_SYNC
 inc += lely/co/sync.h
 endif
-if !NO_TPDO
+if !NO_CO_TPDO
 inc += lely/co/tpdo.h
 endif
 inc += lely/co/type.h

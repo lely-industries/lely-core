@@ -1,6 +1,6 @@
 /*!\file
  * This header file is part of the CANopen library; it contains the
- * Synchronization (SYNC) object declarations.
+ * synchronization (SYNC) object declarations.
  *
  * \copyright 2016 Lely Industries N.V.
  *

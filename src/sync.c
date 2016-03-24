@@ -1,6 +1,6 @@
 /*!\file
  * This file is part of the CANopen library; it contains the implementation of
- * the Synchronization (SYNC) object functions.
+ * the synchronization (SYNC) object functions.
  *
  * \see lely/co/sync.h
  *
@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_SYNC
+#ifndef LELY_NO_CO_SYNC
 
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
@@ -514,5 +514,5 @@ co_sync_timer(const struct timespec *tp, void *data)
 	return 0;
 }
 
-#endif // !LELY_NO_SYNC
+#endif // !LELY_NO_CO_SYNC
 

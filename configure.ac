@@ -26,52 +26,52 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 PKG_CHECK_MODULES([liblely_util], [liblely-util])
 PKG_CHECK_MODULES([liblely_can], [liblely-can])
 
-AM_CONDITIONAL([NO_DCF], [false])
+AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
 AS_IF([test "x$enable_dcf" == "xno"], [
-	AM_CONDITIONAL([NO_DCF], [true])
-	AC_DEFINE([LELY_NO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
+	AM_CONDITIONAL([NO_CO_DCF], [true])
+	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_SDEV], [false])
+AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
 AS_IF([test "x$enable_sdev" == "xno"], [
-	AM_CONDITIONAL([NO_SDEV], [true])
-	AC_DEFINE([LELY_NO_SDEV], [1], [Define to 1 if static device description support is disabled.])
+	AM_CONDITIONAL([NO_CO_SDEV], [true])
+	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_CSDO], [false])
+AM_CONDITIONAL([NO_CO_CSDO], [false])
 AC_ARG_ENABLE([csdo],
 	AS_HELP_STRING([--disable-csdo], [disable Client-SDO support]))
 AS_IF([test "x$enable_csdo" == "xno"], [
-	AM_CONDITIONAL([NO_CSDO], [true])
-	AC_DEFINE([LELY_NO_CSDO], [1], [Define to 1 if Client-SDO support is disabled.])
+	AM_CONDITIONAL([NO_CO_CSDO], [true])
+	AC_DEFINE([LELY_NO_CO_CSDO], [1], [Define to 1 if Client-SDO support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_RPDO], [false])
+AM_CONDITIONAL([NO_CO_RPDO], [false])
 AC_ARG_ENABLE([rpdo],
 	AS_HELP_STRING([--disable-rpdo], [disable Receive-PDO support]))
 AS_IF([test "x$enable_rpdo" == "xno"], [
-	AM_CONDITIONAL([NO_RPDO], [true])
-	AC_DEFINE([LELY_NO_RPDO], [1], [Define to 1 if Receive-PDO support is disabled.])
+	AM_CONDITIONAL([NO_CO_RPDO], [true])
+	AC_DEFINE([LELY_NO_CO_RPDO], [1], [Define to 1 if Receive-PDO support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_TPDO], [false])
+AM_CONDITIONAL([NO_CO_TPDO], [false])
 AC_ARG_ENABLE([tpdo],
 	AS_HELP_STRING([--disable-tpdo], [disable Transmit-PDO support]))
 AS_IF([test "x$enable_tpdo" == "xno"], [
-	AM_CONDITIONAL([NO_TPDO], [true])
-	AC_DEFINE([LELY_NO_TPDO], [1], [Define to 1 if Transmit-PDO support is disabled.])
+	AM_CONDITIONAL([NO_CO_TPDO], [true])
+	AC_DEFINE([LELY_NO_CO_TPDO], [1], [Define to 1 if Transmit-PDO support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_SYNC], [false])
+AM_CONDITIONAL([NO_CO_SYNC], [false])
 AC_ARG_ENABLE([sync],
-	AS_HELP_STRING([--disable-sync], [disable Synchronization (SYNC) object support]))
+	AS_HELP_STRING([--disable-sync], [disable synchronization (SYNC) object support]))
 AS_IF([test "x$enable_sync" == "xno"], [
-	AM_CONDITIONAL([NO_SYNC], [true])
-	AC_DEFINE([LELY_NO_SYNC], [1], [Define to 1 if Synchronization (SYNC) object support is disabled.])
+	AM_CONDITIONAL([NO_CO_SYNC], [true])
+	AC_DEFINE([LELY_NO_CO_SYNC], [1], [Define to 1 if synchronization (SYNC) object support is disabled.])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
