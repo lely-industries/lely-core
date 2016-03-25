@@ -24,6 +24,7 @@
 #define LELY_CO_INTERN_NMT_SRV_H
 
 #include "co.h"
+#include <lely/co/nmt.h>
 
 //! A CANopen NMT service manager.
 struct co_nmt_srv {

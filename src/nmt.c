@@ -28,11 +28,19 @@
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#ifndef LELY_NO_CO_NMT_MASTER
+#include "nmt_boot.h"
+#endif
 #include "nmt_ec.h"
 #include "nmt_srv.h"
 
 #include <assert.h>
 #include <stdlib.h>
+
+#ifndef LELY_CO_NMT_BOOT_TIMEOUT
+//! The SDO timeout (in milliseconds) for the NMT 'boot slave' process.
+#define LELY_CO_NMT_BOOT_TIMEOUT	100
+#endif
 
 //! An opaque CANopen NMT state type.
 typedef const struct co_nmt_state co_nmt_state_t;
@@ -53,6 +61,22 @@ struct co_nmt_state {
 	 * \returns a pointer to the next state.
 	 */
 	co_nmt_state_t *(*on_cs)(co_nmt_t *nmt, co_unsigned8_t cs);
+#ifndef LELY_NO_CO_NMT_MASTER
+	/*!
+	 * A pointer to the transition function invoked when an 'boot slave'
+	 * process completes.
+	 *
+	 * \param nmt a pointer to an NMT master service.
+	 * \param id  the Node-ID of the slave.
+	 * \param st  the state of the node (including the toggle bit).
+	 * \param es  the error status (in the range ['A'..'O'], or 0 on
+	 *            success).
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_state_t *(*on_boot)(co_nmt_t *nmt, co_unsigned8_t id,
+			co_unsigned8_t st, char es);
+#endif
 	//! A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_nmt_t *nmt);
 };
@@ -75,6 +99,10 @@ struct __co_nmt {
 	struct co_nmt_srv srv;
 	//! The NMT start-up value.
 	co_unsigned32_t startup;
+#ifndef LELY_NO_CO_NMT_MASTER
+	//! A flag specifying whether the NMT service is a master or a slave.
+	int master;
+#endif
 	//! A pointer to the CAN frame receiver for NMT messages.
 	can_recv_t *recv_000;
 	//! A pointer to the NMT command indication function.
@@ -116,6 +144,22 @@ struct __co_nmt {
 	co_nmt_st_ind_t *st_ind;
 	//! A pointer to user-specified data for #st_ind.
 	void *st_data;
+#ifndef LELY_NO_CO_NMT_MASTER
+	//! An array of pointers to the NMT 'boot slave' services.
+	co_nmt_boot_t *boot[CO_NUM_NODES];
+	//! A pointer to the NMT 'boot slave' indication function.
+	co_nmt_boot_ind_t *boot_ind;
+	//! A pointer to user-specified data for #boot_ind.
+	void *boot_data;
+	//! A pointer to the 'download software' indication function.
+	co_nmt_req_ind_t *dn_sw_ind;
+	//! A pointer to user-specified data for #dn_sw_ind.
+	void *dn_sw_data;
+	//! A pointer to the 'download configuration' indication function.
+	co_nmt_req_ind_t *dn_cfg_ind;
+	//! A pointer to user-specified data for #dn_cfg_ind.
+	void *dn_cfg_data;
+#endif
 };
 
 /*!
@@ -203,6 +247,34 @@ static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		void *data);
 
+#ifndef LELY_NO_CO_NMT_MASTER
+
+/*!
+ * The CANopen NMT 'boot slave' confirmation callback function.
+ *
+ * \see co_nmt_boot_ind_t
+ */
+static void co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es, void *data);
+
+/*!
+ * The CANopen NMT 'download software' indication function.
+ *
+ * \see co_nmt_req_ind_t
+ */
+static void co_nmt_dn_sw_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
+		void *data);
+
+/*!
+ * The CANopen NMT 'download configuration' indication function.
+ *
+ * \see co_nmt_req_ind_t
+ */
+static void co_nmt_dn_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
+		void *data);
+
+#endif
+
 /*!
  * Enters the specified state of an NMT master/slave service and invokes the
  * exit and entry functions.
@@ -220,6 +292,20 @@ static inline void co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next);
  */
 static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
+#ifndef LELY_NO_CO_NMT_MASTER
+/*!
+ * Invokes the 'boot slave completed' transition function of the current state
+ * of an NMT master service.
+ *
+ * \param nmt a pointer to an NMT master service.
+ * \param id  the Node-ID of the slave.
+ * \param st  the state of the node (including the toggle bit).
+ * \param es  the error status (in the range ['A'..'O'], or 0 on success).
+ */
+static inline void co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, char es);
+#endif
+
 //! The 'NMT command received' transition function of the 'initializing' state.
 static co_nmt_state_t *co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
@@ -227,6 +313,9 @@ static co_nmt_state_t *co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 static const co_nmt_state_t *co_nmt_init_state = &(co_nmt_state_t){
 	NULL,
 	&co_nmt_init_on_cs,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
 
@@ -237,6 +326,9 @@ static co_nmt_state_t *co_nmt_reset_node_on_enter(co_nmt_t *nmt);
 static const co_nmt_state_t *co_nmt_reset_node_state = &(co_nmt_state_t){
 	&co_nmt_reset_node_on_enter,
 	NULL,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
 
@@ -254,6 +346,9 @@ static co_nmt_state_t *co_nmt_reset_comm_on_cs(co_nmt_t *nmt,
 static const co_nmt_state_t *co_nmt_reset_comm_state = &(co_nmt_state_t){
 	&co_nmt_reset_comm_on_enter,
 	&co_nmt_reset_comm_on_cs,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
 
@@ -264,6 +359,9 @@ static co_nmt_state_t *co_nmt_preop_on_enter(co_nmt_t *nmt);
 static const co_nmt_state_t *co_nmt_preop_state = &(co_nmt_state_t){
 	&co_nmt_preop_on_enter,
 	NULL,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
 
@@ -273,10 +371,19 @@ static co_nmt_state_t *co_nmt_start_on_enter(co_nmt_t *nmt);
 //! The 'NMT command received' transition function of the 'operational' state.
 static co_nmt_state_t *co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
+#ifndef LELY_NO_CO_NMT_MASTER
+//! The 'boot slave completed' transition function of the 'operational' state.
+static co_nmt_state_t *co_nmt_start_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, char es);
+#endif
+
 //! The NMT 'operational' state.
 static const co_nmt_state_t *co_nmt_start_state = &(co_nmt_state_t){
 	&co_nmt_start_on_enter,
 	&co_nmt_start_on_cs,
+#ifndef LELY_NO_CO_NMT_MASTER
+	&co_nmt_start_on_boot,
+#endif
 	NULL
 };
 
@@ -290,16 +397,53 @@ static co_nmt_state_t *co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 static const co_nmt_state_t *co_nmt_stop_state = &(co_nmt_state_t){
 	&co_nmt_stop_on_enter,
 	&co_nmt_stop_on_cs,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+//! The entry function of the 'master boot-up procedure' state.
+static co_nmt_state_t *co_nmt_master_on_enter(co_nmt_t *nmt);
+
+/*!
+ * The 'NMT command received' transition function of the 'master boot-up
+ * procedure' state.
+ */
+static co_nmt_state_t *co_nmt_master_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
+
+/*!
+ * The 'boot slave completed' transition function of the 'master boot-up
+ * procedure' state.
+ */
+static co_nmt_state_t *co_nmt_master_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, char es);
+
+/*!
+ * The 'master boot-up procedure' state (see Fig. 1 & 2 in CiA DSP-302-2
+ * V4.1.0).
+ */
+static const co_nmt_state_t *co_nmt_master_state = &(co_nmt_state_t){
+	&co_nmt_master_on_enter,
+	&co_nmt_master_on_cs,
+	&co_nmt_master_on_boot,
+	NULL
+};
+
+#endif
 
 //! The entry function of the 'slave boot-up procedure' state.
 static co_nmt_state_t *co_nmt_slave_on_enter(co_nmt_t *nmt);
 
-//! The 'slave boot-up procedure' state (see Fig. 1 in CiA DSP-302 V3.2.1).
+//! The 'slave boot-up procedure' state (see Fig. 1 in CiA DSP-302-2 V3.2.1).
 static const co_nmt_state_t *co_nmt_slave_state = &(co_nmt_state_t){
 	&co_nmt_slave_on_enter,
 	NULL,
+#ifndef LELY_NO_CO_NMT_MASTER
+	NULL,
+#endif
 	NULL
 };
 
@@ -309,12 +453,46 @@ static co_nmt_state_t *co_nmt_autostart_on_enter(co_nmt_t *nmt);
 //! The 'NMT command received' transition function of the 'autostart' state.
 static co_nmt_state_t *co_nmt_autostart_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-//! The 'autostart' state (see Fig. 1 & 2 in CiA DSP-302 V3.2.1).
+#ifndef LELY_NO_CO_NMT_MASTER
+//! The 'boot slave completed' transition function of the 'autostart' state.
+static co_nmt_state_t *co_nmt_autostart_on_boot(co_nmt_t *nmt,
+		co_unsigned8_t id, co_unsigned8_t st, char es);
+#endif
+
+//! The 'autostart' state (see Fig. 1 & 2 in CiA DSP-302-2 V4.1.0).
 static const co_nmt_state_t *co_nmt_autostart_state = &(co_nmt_state_t){
 	&co_nmt_autostart_on_enter,
 	&co_nmt_autostart_on_cs,
+#ifndef LELY_NO_CO_NMT_MASTER
+	&co_nmt_autostart_on_boot,
+#endif
 	NULL
 };
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+/*!
+ * The 'NMT command received' transition function of the 'halt network boot-up'
+ * state.
+ */
+static co_nmt_state_t *co_nmt_halt_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
+
+/*!
+ * The 'boot slave completed' transition function of the 'halt network boot-up'
+ * state.
+ */
+static co_nmt_state_t *co_nmt_halt_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, char es);
+
+//! The 'halt network boot-up' state.
+static const co_nmt_state_t *co_nmt_halt_state = &(co_nmt_state_t){
+	NULL,
+	&co_nmt_halt_on_cs,
+	&co_nmt_halt_on_boot,
+	NULL
+};
+
+#endif
 
 //! Initializes the error control services. \see co_nmt_ec_fini()
 static void co_nmt_ec_init(co_nmt_t *nmt);
@@ -327,6 +505,37 @@ static void co_nmt_hb_init(co_nmt_t *nmt);
 
 //! Finalizes the heartbeat consumer services. \see co_nmt_hb_init()
 static void co_nmt_hb_fini(co_nmt_t *nmt);
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+/*!
+ * Starts the NMT 'boot slave' process.
+ *
+ * \returns 1 if at least one mandatory slave is booting, 0 if there are no
+ * mandatory slaves, or -1 if an error occurred for a mandatory slave.
+ *
+ * \see co_nmt_boot_fini()
+ */
+static int co_nmt_boot_init(co_nmt_t *nmt);
+
+// Stops the NMT 'boot slave' process. \see co_nmt_boot_init()
+static void co_nmt_boot_fini(co_nmt_t *nmt);
+
+/*!
+ * Processes the confirmation of a 'boot slave' process and notifies the user.
+ *
+ * \param nmt a pointer to an NMT master service.
+ * \param id  the Node-ID of the slave.
+ * \param st  the state of the node (including the toggle bit).
+ * \param es  the error status (in the range ['A'..'O'], or 0 on success).
+ *
+ * \returns 0 on success, or -1 if the 'boot slave' process failed and the slave
+ * is mandatory.
+ */
+static int co_nmt_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es);
+
+#endif
 
 /*!
  * Sends an NMT error control response message.
@@ -348,6 +557,31 @@ static int co_nmt_send_res(co_nmt_t *nmt, co_unsigned8_t st);
 
 //! The services enabled in the NMT 'stopped' state.
 #define CO_NMT_STOP_SRV	0
+
+#ifndef LELY_NO_CO_NMT_MASTER
+LELY_CO_EXPORT const char *
+co_nmt_es_str(char es)
+{
+	switch (es) {
+	case 'A': return "The slave no longer exists in the Network list";
+	case 'B': return "No response on access to Actual Device Type received";
+	case 'C': return "Actual Device Type of the slave node did not match";
+	case 'D': return "Actual Vendor ID of the slave node did not match";
+	case 'E':
+	case 'F': return "Slave node did not respond with its state";
+	case 'G': return "Application software version Date or Time were not configured";
+	case 'H': return "Automatic software update was not allowed";
+	case 'I': return "Automatic software update failed";
+	case 'J': return "Automatic configuration download failed";
+	case 'K': return "The slave node did not send its heartbeat message";
+	case 'L': return "Slave was initially operational";
+	case 'M': return "Actual Product Code of the slave node did not match";
+	case 'N': return "Actual Revision Number of the slave node did not match";
+	case 'O': return "Actual Serial Number of the slave node did not match";
+	default: return "Unknown error status";
+	}
+}
+#endif
 
 LELY_CO_EXPORT void *
 __co_nmt_alloc(void)
@@ -394,6 +628,9 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->state = co_nmt_init_state;
 
 	nmt->startup = 0;
+#ifndef LELY_NO_CO_NMT_MASTER
+	nmt->master = 0;
+#endif
 
 	// Create the CAN frame receiver for NMT messages.
 	nmt->recv_000 = can_recv_create();
@@ -425,6 +662,18 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->hb_data = NULL;
 	nmt->st_ind = NULL;
 	nmt->st_data = NULL;
+
+#ifndef LELY_NO_CO_NMT_MASTER
+	for (co_unsigned8_t i = 0; i < CO_NUM_NODES; i++)
+		nmt->boot[i] = NULL;
+
+	nmt->boot_ind = NULL;
+	nmt->boot_data = NULL;
+	nmt->dn_sw_ind = NULL;
+	nmt->dn_sw_data = NULL;
+	nmt->dn_cfg_ind = NULL;
+	nmt->dn_cfg_data = NULL;
+#endif
 
 	// Set the download indication function for the guard time.
 	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
@@ -505,12 +754,18 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	if (obj_100c)
 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
 
+#ifndef LELY_NO_CO_NMT_MASTER
+	co_nmt_boot_fini(nmt);
+#endif
+
 	co_nmt_hb_fini(nmt);
 
 	co_nmt_ec_fini(nmt);
 
 	can_timer_destroy(nmt->timer);
 	can_recv_destroy(nmt->recv_700);
+
+	can_recv_destroy(nmt->recv_000);
 
 	co_nmt_srv_fini(&nmt->srv);
 
@@ -633,6 +888,72 @@ co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data)
 	nmt->st_data = data;
 }
 
+#ifndef LELY_NO_CO_NMT_MASTER
+
+LELY_CO_EXPORT void
+co_nmt_get_boot_ind(const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->boot_ind;
+	if (pdata)
+		*pdata = nmt->boot_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->boot_ind = ind;
+	nmt->boot_data = data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_get_dn_sw_ind(const co_nmt_t *nmt, co_nmt_req_ind_t **pind,
+		void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->dn_sw_ind;
+	if (pdata)
+		*pdata = nmt->dn_sw_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_dn_sw_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->dn_sw_ind = ind;
+	nmt->dn_sw_data = data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_get_dn_cfg_ind(const co_nmt_t *nmt, co_nmt_req_ind_t **pind,
+		void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->dn_cfg_ind;
+	if (pdata)
+		*pdata = nmt->dn_cfg_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_dn_cfg_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->dn_cfg_ind = ind;
+	nmt->dn_cfg_data = data;
+}
+
+#endif // !LELY_NO_CO_NMT_MASTER
+
 LELY_CO_EXPORT co_unsigned8_t
 co_nmt_get_id(const co_nmt_t *nmt)
 {
@@ -663,6 +984,134 @@ co_nmt_get_state(const co_nmt_t *nmt)
 
 	return nmt->st & ~CO_NMT_ST_TOGGLE;
 }
+
+LELY_CO_EXPORT int
+co_nmt_is_master(const co_nmt_t *nmt)
+{
+#ifdef LELY_NO_CO_NMT_MASTER
+	__unused_var(nmt);
+
+	return 0;
+#else
+	assert(nmt);
+
+	return nmt->master;
+#endif
+}
+
+#ifndef LELY_NO_CO_NMT_MASTER
+LELY_CO_EXPORT int
+co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
+{
+	assert(nmt);
+
+	if (__unlikely(!nmt->master)) {
+		set_errnum(ERRNUM_PERM);
+		return -1;
+	}
+
+	switch (cs) {
+	case CO_NMT_CS_START:
+	case CO_NMT_CS_STOP:
+	case CO_NMT_CS_ENTER_PREOP:
+	case CO_NMT_CS_RESET_NODE:
+	case CO_NMT_CS_RESET_COMM:
+		break;
+	default:
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(id > CO_NUM_NODES)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	struct can_msg msg = CAN_MSG_INIT;
+	msg.id = 0x000;
+	msg.len = 2;
+	msg.data[0] = cs;
+	msg.data[1] = id;
+
+	return can_net_send(nmt->net, &msg);
+}
+#endif
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+LELY_CO_EXPORT int
+co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
+{
+	assert(nmt);
+
+	errc_t errc = 0;
+
+	if (__unlikely(!nmt->master)) {
+		errc = errnum2c(ERRNUM_PERM);
+		goto error_param;
+	}
+
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	if (!nmt->boot[id - 1]) {
+		nmt->boot[id - 1] = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
+		if (__unlikely(!nmt->boot[id - 1])) {
+			errc = get_errc();
+			goto error_create_boot;
+		}
+	}
+	co_nmt_boot_set_dn_sw_ind(nmt->boot[id - 1], &co_nmt_dn_sw_ind, NULL);
+	co_nmt_boot_set_dn_cfg_ind(nmt->boot[id - 1], &co_nmt_dn_cfg_ind, NULL);
+
+	if (__unlikely(co_nmt_boot_boot_req(nmt->boot[id - 1], id, timeout,
+			&co_nmt_boot_con, NULL) == -1)) {
+		errc = get_errc();
+		goto error_boot_req;
+	}
+
+	// Disable the heartbeat consumer service for the node.
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	for (size_t i = 0; i < nmt->nhb; i++) {
+		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
+		if (id != ((val >> 16) & 0xff))
+			continue;
+		co_nmt_hb_set_1016(nmt->hbs[i], 0, 0);
+	}
+
+	return 0;
+
+error_boot_req:
+	co_nmt_boot_destroy(nmt->boot[id - 1]);
+	nmt->boot[id - 1] = NULL;
+error_create_boot:
+error_param:
+	set_errc(errc);
+	return -1;
+}
+
+LELY_CO_EXPORT int
+co_nmt_req_res(co_nmt_t *nmt, co_unsigned8_t id, int res)
+{
+	assert(nmt);
+
+	if (__unlikely(!nmt->master)) {
+		set_errnum(ERRNUM_PERM);
+		return -1;
+	}
+
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	co_nmt_boot_req_res(nmt->boot[id - 1], res);
+	return 0;
+}
+
+#endif // !LELY_NO_CO_NMT_MASTER
 
 LELY_CO_EXPORT int
 co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
@@ -702,6 +1151,47 @@ co_nmt_comm_err_ind(co_nmt_t *nmt)
 		return 0;
 	}
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+LELY_CO_EXPORT int
+co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
+{
+	assert(nmt);
+
+	if (!nmt->master)
+		return 0;
+
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	co_unsigned32_t assignment = co_dev_get_val_u32(nmt->dev, 0x1f81, id);
+	// Ignore the error event if the slave is no longer in the network list.
+	if (!(assignment & 0x01))
+		return 0;
+	int mandatory = !!(assignment & 0x08);
+
+	if (mandatory && (nmt->startup & 0x40)) {
+		// If the slave is mandatory and bit 6 of the NMT start-up value
+		// is set, stop all nodes, including the master.
+		co_nmt_cs_req(nmt, CO_NMT_CS_STOP, 0);
+		return co_nmt_cs_ind(nmt, CO_NMT_CS_STOP);
+	} else if (mandatory && (nmt->startup & 0x10)) {
+		// If the slave is mandatory and bit 4 of the NMT start-up value
+		// is set, reset all nodes, including the master.
+		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_NODE, 0);
+		return co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE);
+	} else {
+		// If the slave is not mandatory, or bits 4 and 6 of the NMT
+		// start-up value are zero, reset the node individually.
+		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_NODE, id);
+		if (!(assignment & 0x04))
+			return 0;
+		return co_nmt_boot_req(nmt, id, LELY_CO_NMT_BOOT_TIMEOUT);
+	}
+}
+#endif
 
 LELY_CO_EXPORT co_rpdo_t *
 co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
@@ -1042,6 +1532,9 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 	assert(msg);
 	co_nmt_t *nmt = data;
 	assert(nmt);
+#ifndef LELY_NO_CO_NMT_MASTER
+	assert(!nmt->master);
+#endif
 
 	if (__unlikely(msg->len < 2))
 		return 0;
@@ -1060,7 +1553,7 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 static int
 co_nmt_recv_700(const struct can_msg *msg, void *data)
 {
-	assert(msg);
+	__unused_var(msg);
 	co_nmt_t *nmt = data;
 	assert(nmt);
 	assert(nmt->gt && nmt->ltf);
@@ -1139,10 +1632,69 @@ default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, void *data)
 	__unused_var(data);
 
 	if (state == CO_NMT_EC_OCCURRED) {
+#ifdef LELY_NO_CO_NMT_MASTER
 		__unused_var(id);
 		co_nmt_comm_err_ind(nmt);
+#else
+		if (co_nmt_is_master(nmt))
+			co_nmt_node_err_ind(nmt, id);
+		else
+			co_nmt_comm_err_ind(nmt);
+#endif
 	}
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+static void
+co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
+		void *data)
+{
+	assert(nmt);
+	assert(nmt->master);
+	assert(nmt->boot[id - 1]);
+	assert(id && id <= CO_NUM_NODES);
+	__unused_var(data);
+
+	co_nmt_boot_destroy(nmt->boot[id - 1]);
+	nmt->boot[id - 1] = NULL;
+
+	co_nmt_emit_boot(nmt, id, st, es);
+}
+
+static void
+co_nmt_dn_sw_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo, void *data)
+{
+	assert(nmt);
+	assert(nmt->master);
+	assert(nmt->boot[id - 1]);
+	assert(id && id <= CO_NUM_NODES);
+	assert(sdo);
+	__unused_var(data);
+
+	if (nmt->dn_sw_ind)
+		nmt->dn_sw_ind(nmt, id, sdo, nmt->dn_sw_data);
+	else
+		co_nmt_boot_req_res(nmt->boot[id - 1], -1);
+}
+
+static void
+co_nmt_dn_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo, void *data)
+{
+	assert(nmt);
+	assert(nmt->master);
+	assert(nmt->boot[id - 1]);
+	assert(id && id <= CO_NUM_NODES);
+	assert(sdo);
+	__unused_var(data);
+
+	if (nmt->dn_cfg_ind)
+		nmt->dn_cfg_ind(nmt, id, sdo, nmt->dn_cfg_data);
+	else
+		co_nmt_boot_req_res(nmt->boot[id - 1], -1);
+}
+
+#endif
 
 static inline void
 co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
@@ -1171,6 +1723,18 @@ co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	co_nmt_enter(nmt, nmt->state->on_cs(nmt, cs));
 }
 
+#ifndef LELY_NO_CO_NMT_MASTER
+static inline void
+co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
+{
+	assert(nmt);
+	assert(nmt->state);
+	assert(nmt->state->on_boot);
+
+	co_nmt_enter(nmt, nmt->state->on_boot(nmt, id, st, es));
+}
+#endif
+
 static co_nmt_state_t *
 co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
@@ -1190,6 +1754,11 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	nmt->st = CO_NMT_ST_BOOTUP;
+
+#ifndef LELY_NO_CO_NMT_MASTER
+	// Destroy the NMT 'boot slave' services.
+	co_nmt_boot_fini(nmt);
+#endif
 
 	// Disable all services.
 	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, 0);
@@ -1222,6 +1791,11 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	nmt->st = CO_NMT_ST_BOOTUP;
 
+#ifndef LELY_NO_CO_NMT_MASTER
+	// Destroy the NMT 'boot slave' services.
+	co_nmt_boot_fini(nmt);
+#endif
+
 	// Disable all services.
 	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, 0);
 
@@ -1249,9 +1823,15 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	// Load the NMT start-up value.
 	nmt->startup = co_dev_get_val_u32(nmt->dev, 0x1f80, 0x00);
+#ifndef LELY_NO_CO_NMT_MASTER
+	// Bit 0 of the NMT start-up value determines whether we are a
+	// master or a slave.
+	nmt->master = !!(nmt->startup & 0x01);
+#endif
 
 	// Start receiving NMT commands.
-	can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
+	if (!co_nmt_is_master(nmt))
+		can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
 
 	// Remain in the 'reset communication' state if the Node-ID is invalid.
 	if (nmt->id == 0xff)
@@ -1264,7 +1844,8 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	co_nmt_hb_init(nmt);
 
 	// Send the boot-up signal to notify the master we exist.
-	co_nmt_send_res(nmt, nmt->st);
+	if (!co_nmt_is_master(nmt))
+		co_nmt_send_res(nmt, nmt->st);
 
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_RESET_COMM, nmt->cs_data);
@@ -1301,7 +1882,11 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_ENTER_PREOP, nmt->cs_data);
 
+#ifdef LELY_NO_CO_NMT_MASTER
 	return co_nmt_slave_state;
+#else
+	return nmt->master ? co_nmt_master_state : co_nmt_slave_state;
+#endif
 }
 
 static co_nmt_state_t *
@@ -1313,6 +1898,13 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 
 	// Enable all services.
 	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, CO_NMT_START_SRV);
+
+#ifndef LELY_NO_CO_NMT_MASTER
+	// If we're the master and bit 3 of the NMT start-up value is 0 and bit
+	// 1 is 1, send the NMT start remote node command to all nodes.
+	if (nmt->master && !(nmt->startup & 0x08) && (nmt->startup & 0x02))
+		co_nmt_cs_req(nmt, CO_NMT_CS_START, 0);
+#endif
 
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_START, nmt->cs_data);
@@ -1338,6 +1930,19 @@ co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 		return NULL;
 	}
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+static co_nmt_state_t *
+co_nmt_start_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es)
+{
+	assert(nmt);
+
+	if (nmt->master)
+		co_nmt_boot_ind(nmt, id, st, es);
+	return NULL;
+}
+#endif
 
 static co_nmt_state_t *
 co_nmt_stop_on_enter(co_nmt_t *nmt)
@@ -1373,6 +1978,87 @@ co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 		return NULL;
 	}
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+static co_nmt_state_t *
+co_nmt_master_on_enter(co_nmt_t *nmt)
+{
+	assert(nmt);
+	assert(nmt->master);
+
+	// TODO: Implement flying master process.
+
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+
+	// Check if any node has the keep-alive bit set.
+	int keep = 0;
+	for (co_unsigned8_t id = 1; !keep && id <= CO_NUM_NODES; id++)
+		keep = (co_obj_get_val_u32(obj_1f81, id) & 0x11) == 0x11;
+
+	// Send the NMT 'reset communication' command to slaves with the
+	// keep-alive bit not set.
+	if (keep) {
+		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+			if ((co_obj_get_val_u32(obj_1f81, id) & 0x11) != 0x11)
+				co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, id);
+		}
+	} else {
+		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, 0);
+	}
+
+	// Start the 'boot slave' process.
+	switch (co_nmt_boot_init(nmt)) {
+	case -1:
+		// Halt the network boot-up procedure if the 'boot slave'
+		// process failed for a mandatory slave.
+		return co_nmt_halt_state;
+	case 0:
+		return co_nmt_autostart_state;
+	default:
+		// Wait for all mandatory slaves to finish booting.
+		return NULL;
+	}
+}
+
+static co_nmt_state_t *
+co_nmt_master_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
+{
+	__unused_var(nmt);
+
+	switch (cs) {
+	case CO_NMT_CS_RESET_NODE:
+		return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM:
+		return co_nmt_reset_comm_state;
+	default:
+		return NULL;
+	}
+}
+
+static co_nmt_state_t *
+co_nmt_master_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es)
+{
+	assert(nmt);
+	assert(nmt->master);
+
+	// If the 'boot slave' process failed for a mandatory slave, halt the
+	// network boot-up procedure.
+	if (__unlikely(co_nmt_boot_ind(nmt, id, st, es) == -1))
+		return co_nmt_halt_state;
+
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+
+	// Wait for any mandatory slaves that have not yet finished booting.
+	int wait = 0;
+	for (co_unsigned8_t id = 1; !wait && id <= CO_NUM_NODES; id++)
+		wait = (co_obj_get_val_u32(obj_1f81, id) & 0x0d) == 0x0d
+				&& nmt->boot[id - 1];
+	return wait ? NULL : co_nmt_autostart_state;
+}
+
+#endif // !LELY_NO_CO_NMT_MASTER
 
 static co_nmt_state_t *
 co_nmt_slave_on_enter(co_nmt_t *nmt)
@@ -1410,6 +2096,47 @@ co_nmt_autostart_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 		return NULL;
 	}
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+static co_nmt_state_t *
+co_nmt_autostart_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es)
+{
+	assert(nmt);
+
+	if (nmt->master)
+		co_nmt_boot_ind(nmt, id, st, es);
+	return NULL;
+}
+
+static co_nmt_state_t *
+co_nmt_halt_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
+{
+	__unused_var(nmt);
+
+	switch (cs) {
+	case CO_NMT_CS_RESET_NODE:
+		return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM:
+		return co_nmt_reset_comm_state;
+	default:
+		return NULL;
+	}
+}
+
+static co_nmt_state_t *
+co_nmt_halt_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es)
+{
+	assert(nmt);
+	assert(nmt->master);
+
+	co_nmt_boot_ind(nmt, id, st, es);
+	return NULL;
+}
+
+#endif
 
 static void
 co_nmt_ec_init(co_nmt_t *nmt)
@@ -1487,6 +2214,94 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 	nmt->hbs = NULL;
 	nmt->nhb = 0;
 }
+
+#ifndef LELY_NO_CO_NMT_MASTER
+
+static int
+co_nmt_boot_init(co_nmt_t *nmt)
+{
+	assert(nmt);
+	assert(nmt->master);
+
+	co_nmt_boot_fini(nmt);
+
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+
+	int res = 0;
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		co_unsigned32_t assignment = co_obj_get_val_u32(obj_1f81, id);
+		// Skip those slaves that are not in the network list (bit 0),
+		// or that we are not allowed to boot (bit 2).
+		if ((assignment & 0x05) != 0x05)
+			continue;
+		int mandatory = !!(assignment & 0x08);
+		// Start the 'boot slave' process.
+		if (__unlikely(co_nmt_boot_req(nmt, id,
+				LELY_CO_NMT_BOOT_TIMEOUT) == -1)) {
+			// Halt the network boot-up procedure if the 'boot
+			// slave' process failed for a mandatory slave.
+			if (mandatory)
+				res = -1;
+		} else if (!res && mandatory) {
+			// Wait for all mandatory slaves to finish booting.
+			res = 1;
+		}
+	}
+	return res;
+}
+
+static void
+co_nmt_boot_fini(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	for (co_unsigned8_t i = 0; i < CO_NUM_NODES; i++) {
+		co_nmt_boot_destroy(nmt->boot[i]);
+		nmt->boot[i] = NULL;
+	}
+}
+
+static int
+co_nmt_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
+{
+	assert(nmt);
+	assert(nmt->master);
+	assert(id && id <= CO_NUM_NODES);
+
+	co_unsigned32_t assignment = co_dev_get_val_u32(nmt->dev, 0x1f81, id);
+	int mandatory = (assignment & 0x09) == 0x09;
+
+	// If the master is allowed to start the nodes (bit 3 of the NMT
+	// start-up value) and has to start the slaves individually (bit 1) or
+	// is in the operational state, send the NMT 'start' command for this
+	// slave.
+	if (!es && ((nmt->startup & 0x0a) == 0x0a
+			|| co_nmt_get_state(nmt) == CO_NMT_ST_START))
+		co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
+
+	// Enable the heartbeat consumer service for the node.
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	for (size_t i = 0; i < nmt->nhb; i++) {
+		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
+		if (id != ((val >> 16) & 0xff))
+			continue;
+		co_nmt_hb_set_1016(nmt->hbs[i], id, val & 0xffff);
+		// If the error control service was successfully started,
+		// update the state of the node, which also sets the timeout for
+		// the next heartbeat message,
+		if (!es || es == 'L')
+			co_nmt_hb_set_st(nmt->hbs[i], st);
+	}
+
+	if (nmt->boot_ind)
+		nmt->boot_ind(nmt, id, st, es, nmt->boot_data);
+
+	// If the 'boot slave' process failed for a mandatory slave, return an
+	// error.
+	return es && es != 'L' && mandatory ? -1 : 0;
+}
+
+#endif
 
 static int
 co_nmt_send_res(co_nmt_t *nmt, co_unsigned8_t st)

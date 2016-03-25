@@ -141,6 +141,10 @@ void
 __co_nmt_hb_fini(struct __co_nmt_hb *hb)
 {
 	assert(hb);
+
+	can_timer_destroy(hb->timer);
+
+	can_recv_destroy(hb->recv);
 }
 
 co_nmt_hb_t *
