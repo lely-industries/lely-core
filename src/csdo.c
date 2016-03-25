@@ -602,7 +602,9 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 
 	// Find the SDO client parameter in the object dictionary.
-	co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + num - 1);
+	co_obj_t *obj_1280 = dev
+			? co_dev_find_obj(dev, 0x1280 + num - 1)
+			: NULL;
 	if (__unlikely(dev && !obj_1280)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
@@ -692,7 +694,9 @@ __co_csdo_fini(struct __co_csdo *sdo)
 
 	// Remove the download indication functions for the SDO parameter
 	// record.
-	co_obj_t *obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+	co_obj_t *obj_1280 = sdo->dev
+			? co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1)
+			: NULL;
 	if (obj_1280)
 		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 
