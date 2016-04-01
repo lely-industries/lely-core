@@ -512,7 +512,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 			|| (msg->flags & CAN_FLAG_EDL)))
 		return 0;
 
-	// Extract the parameters from the msg.
+	// Extract the parameters from the frame.
 	co_unsigned16_t eec = 0;
 	if (msg->len >= 2)
 		eec = ldle_u32(msg->data);
@@ -762,7 +762,7 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
 	if (cobid & CO_EMCY_COBID_VALID)
 		return 0;
 
-	// Create the msg.
+	// Create the frame.
 	struct can_msg msg = CAN_MSG_INIT;
 	msg.id = cobid;
 	if (cobid & CO_EMCY_COBID_FRAME) {

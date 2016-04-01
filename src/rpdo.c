@@ -137,7 +137,7 @@ static int co_rpdo_timer_swnd(const struct timespec *tp, void *data);
  * corresponding objects in the object dictionary.
  *
  * \param pdo a pointer to a Receive-PDO service.
- * \param msg a pointer to the received CAN msg.
+ * \param msg a pointer to the received CAN frame.
  *
  * \returns 0 on success, or an SDO abort code on error.
  */

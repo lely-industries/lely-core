@@ -67,7 +67,7 @@ struct co_csdo_state {
 	 * been received.
 	 *
 	 * \param sdo a pointer to a Client-SDO service.
-	 * \param msg a pointer to the received CAN msg.
+	 * \param msg a pointer to the received CAN frame.
 	 *
 	 * \returns a pointer to the next state.
 	 */
@@ -182,7 +182,7 @@ static inline void co_csdo_emit_time(co_csdo_t *sdo, const struct timespec *tp);
  * a Client-SDO service.
  *
  * \param sdo a pointer to a Client-SDO service.
- * \param msg a pointer to the received CAN msg.
+ * \param msg a pointer to the received CAN frame.
  */
 static inline void co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg);
 

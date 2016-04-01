@@ -184,7 +184,7 @@ static inline void co_nmt_boot_emit_time(co_nmt_boot_t *boot,
  * a 'boot slave' service.
  *
  * \param boot a pointer to a 'boot slave' service.
- * \param msg  a pointer to the received CAN msg.
+ * \param msg  a pointer to the received CAN frame.
  */
 static inline void co_nmt_boot_emit_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);

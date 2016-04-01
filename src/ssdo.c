@@ -62,7 +62,7 @@ struct co_ssdo_state {
 	 * been received.
 	 *
 	 * \param sdo a pointer to a Server-SDO service.
-	 * \param msg a pointer to the received CAN msg.
+	 * \param msg a pointer to the received CAN frame.
 	 *
 	 * \returns a pointer to the next state.
 	 */
@@ -166,7 +166,7 @@ static inline void co_ssdo_emit_time(co_ssdo_t *sdo, const struct timespec *tp);
  * a Server-SDO service.
  *
  * \param sdo a pointer to a Server-SDO service.
- * \param msg a pointer to the received CAN msg.
+ * \param msg a pointer to the received CAN frame.
  */
 static inline void co_ssdo_emit_recv(co_ssdo_t *sdo, const struct can_msg *msg);
 
@@ -378,7 +378,7 @@ static co_ssdo_state_t *co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /*!
  * Processes a download indication of a Server-SDO by checking access to the
- * requested sub-object and reading the data from the msg.
+ * requested sub-object and reading the data from the frame.
  *
  * \returns 0 on success, or an SDO abort code on error.
  */
@@ -912,7 +912,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(msg->len > 0);
 	uint8_t cs = msg->data[0];
 
-	// Load the object index and sub-index from the CAN msg.
+	// Load the object index and sub-index from the CAN frame.
 	if (__unlikely(msg->len < 3))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
@@ -1023,7 +1023,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	// Load the object index and sub-index from the CAN msg.
+	// Load the object index and sub-index from the CAN frame.
 	if (__unlikely(msg->len < 3))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
@@ -1122,7 +1122,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Check if the client supports generating a CRC.
 	sdo->gencrc = !!(cs & CO_SDO_BLK_CRC);
 
-	// Load the object index and sub-index from the CAN msg.
+	// Load the object index and sub-index from the CAN frame.
 	if (__unlikely(msg->len < 3))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
@@ -1288,7 +1288,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Check if the client supports generating a CRC.
 	sdo->gencrc = !!(cs & CO_SDO_BLK_CRC);
 
-	// Load the object index and sub-index from the CAN msg.
+	// Load the object index and sub-index from the CAN frame.
 	if (__unlikely(msg->len < 3))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);

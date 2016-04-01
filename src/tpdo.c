@@ -910,7 +910,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 		if (__unlikely(!co_sub_get_pdo_mapping(sub)))
 			return CO_SDO_AC_NO_PDO;
 
-		// Check the PDO length and write the value to the msg.
+		// Check the PDO length and write the value to the frame.
 		size_t size = co_val_write(co_sub_get_type(sub),
 				co_sub_get_val(sub), begin, begin + len / 8);
 		if (__unlikely(len != size * 8))
