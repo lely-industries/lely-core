@@ -26,6 +26,14 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 PKG_CHECK_MODULES([liblely_util], [liblely-util])
 PKG_CHECK_MODULES([liblely_can], [liblely-can])
 
+AM_CONDITIONAL([NO_THREADS], [false])
+AC_ARG_ENABLE([threads],
+	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
+AS_IF([test "x$enable_threads" == "xno"], [
+	AM_CONDITIONAL([NO_THREADS], [true])
+	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
