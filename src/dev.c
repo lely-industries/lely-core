@@ -410,6 +410,30 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 	dev->dummy = dummy;
 }
 
+LELY_CO_EXPORT const void *
+co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
+{
+	co_sub_t *sub = __likely(dev)
+			? co_dev_find_sub(dev, idx, subidx)
+			: NULL;
+	return co_sub_get_val(sub);
+}
+
+LELY_CO_EXPORT size_t
+co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const void *ptr, size_t n)
+{
+	assert(dev);
+
+	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+	if (__unlikely(!sub)) {
+		set_errnum(ERRNUM_INVAL);
+		return 0;
+	}
+
+	return co_sub_set_val(sub, ptr, n);
+}
+
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	LELY_CO_EXPORT co_##b##_t \
 	co_dev_get_val_##c(const co_dev_t *dev, co_unsigned16_t idx, \

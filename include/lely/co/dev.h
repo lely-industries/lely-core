@@ -277,6 +277,35 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_get_dummy(const co_dev_t *dev);
  */
 LELY_CO_EXTERN void co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy);
 
+/*!
+ * Returns a pointer to the current value of a CANopen sub-object. In the case
+ * of strings or domains, this is the address of a pointer to the first byte in
+ * the array.
+ *
+ * \see co_dev_set_val(), co_sub_get_val()
+ */
+LELY_CO_EXTERN const void *co_dev_get_val(const co_dev_t *dev,
+		co_unsigned16_t idx, co_unsigned8_t subidx);
+
+/*!
+ * Sets the current value of a CANopen sub-object.
+ *
+ * \param dev    a pointer to a CANopen device.
+ * \param idx    the object index.
+ * \param subidx the object sub-index.
+ * \param ptr    a pointer to the bytes to be copied. In case of strings or
+ *               domains, \a ptr MUST point to the first byte in the array.
+ * \param n      the number of bytes at \a ptr. In case of strings, \a n SHOULD
+ *               exclude the terminating null byte(s).
+ *
+ * \returns the number of bytes copied (i.e., \a n), or 0 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see co_dev_get_val(), co_sub_set_val()
+ */
+LELY_CO_EXTERN size_t co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, const void *ptr, size_t n);
+
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	LELY_CO_EXTERN co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
 			co_unsigned16_t idx, co_unsigned8_t subidx); \

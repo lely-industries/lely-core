@@ -246,6 +246,34 @@ LELY_CO_EXTERN void *co_obj_addressof_val(const co_obj_t *obj);
  */
 LELY_CO_EXTERN size_t co_obj_sizeof_val(const co_obj_t *obj);
 
+/*!
+ * Returns a pointer to the current value of a CANopen sub-object. In the case
+ * of strings or domains, this is the address of a pointer to the first byte in
+ * the array.
+ *
+ * \see co_obj_set_val(), co_sub_get_val()
+ */
+LELY_CO_EXTERN const void *co_obj_get_val(const co_obj_t *obj,
+		co_unsigned8_t subidx);
+
+/*!
+ * Sets the current value of a CANopen sub-object.
+ *
+ * \param obj    a pointer to a CANopen object.
+ * \param subidx the object sub-index.
+ * \param ptr    a pointer to the bytes to be copied. In case of strings or
+ *               domains, \a ptr MUST point to the first byte in the array.
+ * \param n      the number of bytes at \a ptr. In case of strings, \a n SHOULD
+ *               exclude the terminating null byte(s).
+ *
+ * \returns the number of bytes copied (i.e., \a n), or 0 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see co_obj_get_val(), co_sub_set_val()
+ */
+LELY_CO_EXTERN size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx,
+		const void *ptr, size_t n);
+
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	LELY_CO_EXTERN co_##b##_t co_obj_get_val_##c(const co_obj_t *obj, \
 			co_unsigned8_t subidx); \
