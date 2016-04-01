@@ -523,6 +523,8 @@ co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx
 	const void *val = co_sub_get_val(sub);
 
 	co_unsigned32_t size = co_val_write(type, val, NULL, NULL);
+	if (__unlikely(!size && co_val_sizeof(type, val)))
+		return 0;
 
 	if (begin && (!end || end - begin >= (ptrdiff_t)(2 + 1 + 4 + size))) {
 		// Write the object index.

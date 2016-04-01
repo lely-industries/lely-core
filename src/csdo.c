@@ -815,6 +815,50 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 }
 
 LELY_CO_EXPORT int
+co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
+		void *data)
+{
+	assert(sdo);
+
+	// Obtain the size of the serialized value (which may be 0 for arrays).
+	size_t n = co_val_write(type, val, NULL, NULL);
+	if (__unlikely(!n && co_val_sizeof(type, val)))
+		return -1;
+
+	if (co_type_is_array(type)) {
+		int res = 0;
+		errc_t errc = get_errc();
+
+		uint8_t *buf = malloc(n);
+		if (__unlikely(n && !buf)) {
+			errc = get_errc();
+			goto error_malloc_buf;
+		}
+
+		if (__unlikely(co_val_write(type, val, buf, buf + n) != n)) {
+			errc = get_errc();
+			goto error_write_val;
+		}
+
+		res = co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
+
+	error_write_val:
+		free(buf);
+	error_malloc_buf:
+		set_errc(errc);
+		return res;
+	} else {
+		// Fast path for values small enough to be allocated on the
+		// heap.
+		uint8_t buf[n];
+		if (__unlikely(co_val_write(type, val, buf, buf + n) != n))
+			return -1;
+		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
+	}
+}
+
+LELY_CO_EXPORT int
 co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_csdo_up_con_t *con, void *data)
 {
@@ -837,7 +881,8 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	if (__unlikely(co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data) == -1))
+	if (__unlikely(co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data)
+			== -1))
 		return -1;
 
 	if (sdo->timeout)
