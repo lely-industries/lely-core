@@ -60,7 +60,7 @@ void co_nmt_boot_destroy(co_nmt_boot_t *boot);
 
 /*!
  * Retrieves the indication function invoked when the NMT 'boot slave' process
- * reaches the 'download software' step.
+ * reaches the 'update software' step.
  *
  * \param boot a pointer to a 'boot slave' service.
  * \param pind  the address at which to store a pointer to the indication
@@ -68,28 +68,28 @@ void co_nmt_boot_destroy(co_nmt_boot_t *boot);
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_boot_set_dn_sw_ind()
+ * \see co_nmt_boot_set_up_sw_ind()
  */
-void co_nmt_boot_get_dn_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
+void co_nmt_boot_get_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
 		void **pdata);
 
 /*!
  * Sets the indication function invoked when the NMT 'boot slave' process
- * reaches the 'download software' step.
+ * reaches the 'update software' step.
  *
  * \param boot a pointer to a 'boot slave' service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_boot_get_dn_sw_ind()
+ * \see co_nmt_boot_get_up_sw_ind()
  */
-void co_nmt_boot_set_dn_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
+void co_nmt_boot_set_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
 		void *data);
 
 /*!
  * Retrieves the indication function invoked when the NMT 'boot slave' process
- * reaches the 'download configuration' step.
+ * reaches the 'update configuration' step.
  *
  * \param boot a pointer to a 'boot slave' service.
  * \param pind  the address at which to store a pointer to the indication
@@ -97,23 +97,23 @@ void co_nmt_boot_set_dn_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_boot_set_dn_cfg_ind()
+ * \see co_nmt_boot_set_up_cfg_ind()
  */
-void co_nmt_boot_get_dn_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
+void co_nmt_boot_get_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
 		void **pdata);
 
 /*!
  * Sets the indication function invoked when the NMT 'boot slave' process
- * reaches the 'download configuration' step.
+ * reaches the 'update configuration' step.
  *
  * \param boot a pointer to a 'boot slave' service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_boot_get_dn_cfg_ind()
+ * \see co_nmt_boot_get_up_cfg_ind()
  */
-void co_nmt_boot_set_dn_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
+void co_nmt_boot_set_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
 		void *data);
 
 /*!

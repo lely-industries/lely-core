@@ -262,7 +262,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	assert(msg->id == (uint32_t)(0x700 + hb->id));
 	assert(hb->ms);
 
-	// Obtain the node status from the CAN msg. Ignore if the toggle bit
+	// Obtain the node status from the CAN frame. Ignore if the toggle bit
 	// is set, since then it is not a heartbeat message.
 	if (__unlikely(msg->len < 1))
 		return 0;

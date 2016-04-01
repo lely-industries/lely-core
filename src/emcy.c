@@ -805,7 +805,7 @@ co_emcy_flush(co_emcy_t *emcy)
 		// Update the inhibit time.
 		emcy->inhibit = now;
 		timespec_add_usec(&emcy->inhibit, inhibit * 100);
-		// Send the msg.
+		// Send the frame.
 		struct can_msg msg;
 		if (__likely(can_buf_read(&emcy->buf, &msg, 1)))
 			can_net_send(emcy->net, &msg);

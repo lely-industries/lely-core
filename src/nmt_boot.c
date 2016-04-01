@@ -36,11 +36,11 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! The timeout (in milliseconds) after sending a node guarding RTR.
-#define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
-
 //! The timeout (in milliseconds) before trying to boot the slave again.
 #define LELY_CO_NMT_BOOT_WAIT_TIMEOUT	1000
+
+//! The timeout (in milliseconds) after sending a node guarding RTR.
+#define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
 
 //! An opaque CANopen NMT 'boot slave' state type.
 typedef const struct co_nmt_boot_state co_nmt_boot_state_t;
@@ -49,7 +49,6 @@ typedef const struct co_nmt_boot_state co_nmt_boot_state_t;
 struct co_nmt_boot_state {
 	//! A pointer to the function invoked when a new state is entered.
 	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
-
 	/*!
 	 * A pointer to the transition function invoked when a timeout occurs.
 	 *
@@ -76,14 +75,14 @@ struct co_nmt_boot_state {
 	 * request completes.
 	 *
 	 * \param boot a pointer to a 'boot slave' service.
+	 * \param ac   the SDO abort code.
 	 * \param ptr  a pointer to the uploaded bytes.
 	 * \param n    the number of bytes at \a ptr.
-	 * \param ac   the SDO abort code.
 	 *
 	 * \returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_up_con)(co_nmt_boot_t *boot,
-			const void *ptr, size_t n, co_unsigned32_t ac);
+			co_unsigned32_t ac, const void *ptr, size_t n);
 	/*!
 	 * A pointer to the transition function invoked when the result of a
 	 * user-implemented step is received.
@@ -106,6 +105,14 @@ struct __co_nmt_boot {
 	co_dev_t *dev;
 	//! A pointer to an NMT master service.
 	co_nmt_t *nmt;
+	//! A pointer to the 'update software' indication function.
+	co_nmt_req_ind_t *up_sw_ind;
+	//! A pointer to user-specified data for #up_sw_ind.
+	void *up_sw_data;
+	//! A pointer to the 'update configuration' indication function.
+	co_nmt_req_ind_t *up_cfg_ind;
+	//! A pointer to user-specified data for #up_cfg_ind.
+	void *up_cfg_data;
 	//! A pointer to the current state.
 	co_nmt_boot_state_t *state;
 	//! A pointer to the CAN frame receiver.
@@ -114,14 +121,6 @@ struct __co_nmt_boot {
 	can_timer_t *timer;
 	//! The Node-ID.
 	co_unsigned8_t id;
-	//! A pointer to the 'download software' indication function.
-	co_nmt_req_ind_t *dn_sw_ind;
-	//! A pointer to user-specified data for #dn_sw_ind.
-	void *dn_sw_data;
-	//! A pointer to the 'download configuration' indication function.
-	co_nmt_req_ind_t *dn_cfg_ind;
-	//! A pointer to user-specified data for #dn_cfg_ind.
-	void *dn_cfg_data;
 	//! A pointer to the confirmation function.
 	co_nmt_boot_ind_t *con;
 	//! A pointer to user-specified data for #con.
@@ -134,7 +133,7 @@ struct __co_nmt_boot {
 	struct timespec start;
 	//! A pointer to the Client-SDO used to read slave objects.
 	co_csdo_t *sdo;
-	//! The slave assignment.
+	//! The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
 	//! The consumer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
@@ -168,8 +167,7 @@ static void co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
  * Enters the specified state of a 'boot slave' service and invokes the exit and
  * entry functions.
  */
-static inline void co_nmt_boot_enter(co_nmt_boot_t *boot,
-		co_nmt_boot_state_t *next);
+static void co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next);
 
 /*!
  * Invokes the 'timeout' transition function of the current state of a 'boot
@@ -196,12 +194,12 @@ static inline void co_nmt_boot_emit_recv(co_nmt_boot_t *boot,
  * state of a 'boot slave' service.
  *
  * \param boot  a pointer to a 'boot slave' service.
+ * \param ac   the SDO abort code.
  * \param ptr  a pointer to the uploaded bytes.
  * \param n    the number of bytes at \a ptr.
- * \param ac   the SDO abort code.
  */
 static inline void co_nmt_boot_emit_up_con(co_nmt_boot_t *boot,
-		const void *ptr, size_t n, co_unsigned32_t ac);
+		co_unsigned32_t ac, const void *ptr, size_t n);
 
 /*!
  * Invokes the 'result received' transition function of the current state of a
@@ -257,10 +255,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_enter(
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check device type' state (see Fig. 5 in CiA DSP-302-2 V4.1.0).
+//! The 'check device type' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_device_type_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_device_type_on_enter,
@@ -280,10 +278,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_enter(
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check vendor ID' state (see Fig. 5 in CiA DSP-302-2 V4.1.0).
+//! The 'check vendor ID' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_vendor_id_on_enter,
@@ -303,10 +301,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_enter(
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check product code' state (see Fig. 5 in CiA DSP-302-2 V4.1.0).
+//! The 'check product code' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_product_code_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_product_code_on_enter,
@@ -326,10 +324,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_enter(
  * number' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check revision number' state (see Fig. 5 in CiA DSP-302-2 V4.1.0).
+//! The 'check revision number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_revision_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_revision_on_enter,
@@ -349,10 +347,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_enter(
  * number' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check serial number' state (see Fig. 5 in CiA DSP-302-2 V4.1.0).
+//! The 'check serial number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_serial_nr_on_enter,
@@ -376,7 +374,7 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_time(co_nmt_boot_t *boot,
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
-//! The 'check node state' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
+//! The 'check node state' state (see Fig. 6 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_chk_node_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_node_on_enter,
@@ -387,82 +385,55 @@ static const co_nmt_boot_state_t *co_nmt_boot_chk_node_state =
 	NULL
 };
 
-//! The entry function of the 'check software date' state.
-static co_nmt_boot_state_t *co_nmt_boot_chk_sw_date_on_enter(
-		co_nmt_boot_t *boot);
+//! The entry function of the 'check software' state.
+static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_enter(co_nmt_boot_t *boot);
 
 /*!
- * The 'SDO upload confirmation' transition function of the 'check software
- * date' state.
+ * The 'SDO upload confirmation' transition function of the 'check software'
+ * state.
  */
-static co_nmt_boot_state_t *co_nmt_boot_chk_sw_date_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac, const void *ptr, size_t n);
 
-//! The 'check software date' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_sw_date_state =
+//! The 'check software' state (see Fig. 6 in CiA 302-2 version 4.1.0).
+static const co_nmt_boot_state_t *co_nmt_boot_chk_sw_state =
 		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_sw_date_on_enter,
+	&co_nmt_boot_chk_sw_on_enter,
 	NULL,
 	NULL,
-	&co_nmt_boot_chk_sw_date_on_up_con,
+	&co_nmt_boot_chk_sw_on_up_con,
 	NULL,
 	NULL
 };
 
-/*!
- * The 'SDO upload confirmation' transition function of the 'check software
- * time' state.
- */
-static co_nmt_boot_state_t *co_nmt_boot_chk_sw_time_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+//! The entry function of the 'update software request' state.
+static co_nmt_boot_state_t *co_nmt_boot_up_sw_req_on_enter(co_nmt_boot_t *boot);
 
-//! The 'check software time' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_sw_time_state =
+//! The exit function of the 'update software request' state.
+static void co_nmt_boot_up_sw_req_on_leave(co_nmt_boot_t *boot);
+
+//! The 'update software request' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+static const co_nmt_boot_state_t *co_nmt_boot_up_sw_req_state =
 		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, &co_nmt_boot_chk_sw_time_on_up_con, NULL, NULL
-};
-
-//! The entry function of the 'update software' state.
-static co_nmt_boot_state_t *co_nmt_boot_up_sw_on_enter(co_nmt_boot_t *boot);
-
-//! The 'update software' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_up_sw_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_up_sw_on_enter, NULL, NULL, NULL, NULL, NULL
-};
-
-//! The entry function of the 'download software' state.
-static co_nmt_boot_state_t *co_nmt_boot_dn_sw_on_enter(co_nmt_boot_t *boot);
-
-//! The exit function of the 'download software' state.
-static void co_nmt_boot_dn_sw_on_leave(co_nmt_boot_t *boot);
-
-//! The 'download software' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_dn_sw_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_dn_sw_on_enter,
+	&co_nmt_boot_up_sw_req_on_enter,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	&co_nmt_boot_dn_sw_on_leave
+	&co_nmt_boot_up_sw_req_on_leave
 };
 
 /*!
- * The 'result received' transition function of the 'check software download'
+ * The 'result received' transition function of the 'update software result'
  * state.
  */
-static co_nmt_boot_state_t *co_nmt_boot_sw_ok_on_res(co_nmt_boot_t *boot,
+static co_nmt_boot_state_t *co_nmt_boot_up_sw_res_on_res(co_nmt_boot_t *boot,
 		int res);
 
-/*!
- * The 'check software download' state (see Fig. 6 in CiA DSP-302-2 V4.1.0).
- */
-static const co_nmt_boot_state_t *co_nmt_boot_sw_ok_state =
+//! The 'update software result' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+static const co_nmt_boot_state_t *co_nmt_boot_up_sw_res_state =
 		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, NULL, &co_nmt_boot_sw_ok_on_res, NULL
+	NULL, NULL, NULL, NULL, &co_nmt_boot_up_sw_res_on_res, NULL
 };
 
 //! The entry function of the 'check configuration date' state.
@@ -474,10 +445,12 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_enter(
  * date' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check configuration date' state (see Fig. 8 in CiA DSP-302-2 V4.1.0).
+/*!
+ * The 'check configuration date' state (see Fig. 8 in CiA 302-2 version 4.1.0).
+ */
 static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_chk_cfg_date_on_enter,
@@ -493,10 +466,12 @@ static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_state =
  * time' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_on_up_con(
-		co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac);
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
-//! The 'check configuration time' state (see Fig. 8 in CiA DSP-302-2 V4.1.0).
+/*!
+ * The 'check configuration time' state (see Fig. 8 in CiA 302-2 version 4.1.0).
+ */
 static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_state =
 		&(co_nmt_boot_state_t){
 	NULL, NULL, NULL, &co_nmt_boot_chk_cfg_time_on_up_con, NULL, NULL
@@ -505,43 +480,49 @@ static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_state =
 //! The entry function of the 'update configuration' state.
 static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot);
 
-//! The 'update configuration' state (see Fig. 8 in CiA DSP-302-2 V4.1.0).
+/*!
+ * The 'update configuration' state (see Fig. 8 in CiA 302-2 version 4.1.0).
+ */
 static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_up_cfg_on_enter, NULL, NULL, NULL, NULL, NULL
 };
 
-//! The entry function of the 'download configuration' state.
-static co_nmt_boot_state_t *co_nmt_boot_dn_cfg_on_enter(co_nmt_boot_t *boot);
+//! The entry function of the 'update configuration request' state.
+static co_nmt_boot_state_t *co_nmt_boot_up_cfg_req_on_enter(
+		co_nmt_boot_t *boot);
 
-//! The exit function of the 'download configuration' state.
-static void co_nmt_boot_dn_cfg_on_leave(co_nmt_boot_t *boot);
+//! The exit function of the 'update configuration request' state.
+static void co_nmt_boot_up_cfg_req_on_leave(co_nmt_boot_t *boot);
 
-//! The 'download configuration' state (see Fig. 8 in CiA DSP-302-2 V4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_dn_cfg_state =
+/*!
+ * The 'update configuration request' state (see Fig. 8 in CiA 302-2 version
+ * 4.1.0).
+ */
+static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_req_state =
 		&(co_nmt_boot_state_t){
-	&co_nmt_boot_dn_cfg_on_enter,
+	&co_nmt_boot_up_cfg_req_on_enter,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	&co_nmt_boot_dn_cfg_on_leave
+	&co_nmt_boot_up_cfg_req_on_leave
 };
 
 /*!
- * The 'result received' transition function of the 'check configuration
- * download' state.
+ * The 'result received' transition function of the 'update configuration
+ * result' state.
  */
-static co_nmt_boot_state_t *co_nmt_boot_cfg_ok_on_res(co_nmt_boot_t *boot,
+static co_nmt_boot_state_t *co_nmt_boot_up_cfg_res_on_res(co_nmt_boot_t *boot,
 		int res);
 
 /*!
- * The 'check configuration download' state (see Fig. 8 in CiA DSP-302-2
- * V4.1.0).
+ * The 'update configuration result' state (see Fig. 8 in CiA 302-2 version
+ * 4.1.0).
  */
-static const co_nmt_boot_state_t *co_nmt_boot_cfg_ok_state =
+static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_res_state =
 		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, NULL, &co_nmt_boot_cfg_ok_on_res, NULL
+	NULL, NULL, NULL, NULL, &co_nmt_boot_up_cfg_res_on_res, NULL
 };
 
 //! The entry function of the 'start error control' state.
@@ -558,7 +539,7 @@ static co_nmt_boot_state_t *co_nmt_boot_ec_on_time(co_nmt_boot_t *boot,
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
-//! The 'start error control' state (see Fig. 11 in CiA DSP-302-2 V4.1.0).
+//! The 'start error control' state (see Fig. 11 in CiA 302-2 version 4.1.0).
 static const co_nmt_boot_state_t *co_nmt_boot_ec_state =
 		&(co_nmt_boot_state_t){
 	&co_nmt_boot_ec_on_enter,
@@ -579,38 +560,26 @@ static const co_nmt_boot_state_t *co_nmt_boot_ec_state =
  *
  * \returns 0 on success, or -1 on error.
  */
-static int co_nmt_boot_read(co_nmt_boot_t *boot, co_unsigned16_t idx,
+static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx);
 
 /*!
- * Compares the result of an SDO upload request to the (32-bit unsigned integer)
- * value of a local sub-object.
+ * Compares the result of an SDO upload request to the value of a local
+ * sub-object.
  *
  * \param boot   a pointer to a 'boot slave' service.
+ * \param idx    the local object index.
+ * \param subidx the local object sub-index.
  * \param ac     the SDO abort code.
  * \param ptr    a pointer to the uploaded bytes.
  * \param n      the number of bytes at \a ptr.
- * \param idx    the local object index.
- * \param subidx the local object sub-index.
  *
  * \returns 1 if the received value matches that of the specified sub-object,
  * and 0 if not.
  */
-static int co_nmt_boot_chk_u32(co_nmt_boot_t *boot, co_unsigned32_t ac,
-		const void *ptr, size_t n, co_unsigned16_t idx,
-		co_unsigned8_t subidx);
-
-/*
- * Sends an NMT command to the slave.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param cs   the NMT command specifier (one of #CO_NMT_CS_START,
- *             #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
- *             #CO_NMT_CS_RESET_COMM).
- *
- * \returns 0 on success, or -1 on error.
- */
-static int co_nmt_boot_send_nmt(co_nmt_boot_t *boot, co_unsigned8_t cs);
+static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
+		size_t n);
 
 /*!
  * Sends a node guarding RTR to the slave.
@@ -646,6 +615,12 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->dev = dev;
 	boot->nmt = nmt;
 
+	boot->up_sw_ind = NULL;
+	boot->up_sw_data = NULL;
+
+	boot->up_cfg_ind = NULL;
+	boot->up_cfg_data = NULL;
+
 	boot->state = co_nmt_boot_wait_state;
 
 	boot->recv = can_recv_create();
@@ -663,12 +638,6 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
 
 	boot->id = 0;
-
-	boot->dn_sw_ind = NULL;
-	boot->dn_sw_data = NULL;
-
-	boot->dn_cfg_ind = NULL;
-	boot->dn_cfg_data = NULL;
 
 	boot->con = NULL;
 	boot->data = NULL;
@@ -739,47 +708,47 @@ co_nmt_boot_destroy(co_nmt_boot_t *boot)
 }
 
 void
-co_nmt_boot_get_dn_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
+co_nmt_boot_get_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
 		void **pdata)
 {
 	assert(boot);
 
 	if (pind)
-		*pind = boot->dn_sw_ind;
+		*pind = boot->up_sw_ind;
 	if (pdata)
-		*pdata = boot->dn_sw_data;
+		*pdata = boot->up_sw_data;
 }
 
 void
-co_nmt_boot_set_dn_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
+co_nmt_boot_set_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
 		void *data)
 {
 	assert(boot);
 
-	boot->dn_sw_ind = ind;
-	boot->dn_sw_data = data;
+	boot->up_sw_ind = ind;
+	boot->up_sw_data = data;
 }
 
 void
-co_nmt_boot_get_dn_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
+co_nmt_boot_get_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
 		void **pdata)
 {
 	assert(boot);
 
 	if (pind)
-		*pind = boot->dn_cfg_ind;
+		*pind = boot->up_cfg_ind;
 	if (pdata)
-		*pdata = boot->dn_cfg_data;
+		*pdata = boot->up_cfg_data;
 }
 
 void
-co_nmt_boot_set_dn_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
+co_nmt_boot_set_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
 		void *data)
 {
 	assert(boot);
 
-	boot->dn_cfg_ind = ind;
-	boot->dn_cfg_data = data;
+	boot->up_cfg_ind = ind;
+	boot->up_cfg_data = data;
 }
 
 int
@@ -799,9 +768,6 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 		return -1;
 	}
 
-	can_recv_stop(boot->recv);
-	can_timer_stop(boot->timer);
-
 	boot->id = id;
 
 	boot->con = con;
@@ -818,7 +784,7 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 		return -1;
 	co_csdo_set_timeout(boot->sdo, timeout);
 
-	co_nmt_boot_enter(boot, co_nmt_boot_chk_device_type_state);
+	co_nmt_boot_emit_time(boot, NULL);
 
 	return 0;
 }
@@ -837,10 +803,6 @@ co_nmt_boot_recv(const struct can_msg *msg, void *data)
 	assert(msg);
 	co_nmt_boot_t *boot = data;
 	assert(boot);
-
-	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
-		return 0;
 
 	co_nmt_boot_emit_recv(boot, msg);
 
@@ -869,10 +831,10 @@ co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_nmt_boot_t *boot = data;
 	assert(boot);
 
-	co_nmt_boot_emit_up_con(boot, ptr, n, ac);
+	co_nmt_boot_emit_up_con(boot, ac, ptr, n);
 }
 
-static inline void
+static void
 co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 {
 	assert(boot);
@@ -894,9 +856,9 @@ co_nmt_boot_emit_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	assert(boot);
 	assert(boot->state);
-	assert(boot->state->on_time);
 
-	co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
+	if (boot->state->on_time)
+		co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
 }
 
 static inline void
@@ -904,20 +866,21 @@ co_nmt_boot_emit_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 {
 	assert(boot);
 	assert(boot->state);
-	assert(boot->state->on_recv);
 
-	co_nmt_boot_enter(boot, boot->state->on_recv(boot, msg));
+	if (boot->state->on_recv)
+		co_nmt_boot_enter(boot, boot->state->on_recv(boot, msg));
 }
 
 static inline void
-co_nmt_boot_emit_up_con(co_nmt_boot_t *boot, const void *ptr, size_t n,
-		co_unsigned32_t ac)
+co_nmt_boot_emit_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 	assert(boot->state);
-	assert(boot->state->on_up_con);
 
-	co_nmt_boot_enter(boot, boot->state->on_up_con(boot, ptr, n, ac));
+	if (boot->state->on_up_con)
+		co_nmt_boot_enter(boot,
+				boot->state->on_up_con(boot, ac, ptr, n));
 }
 
 static inline void
@@ -925,9 +888,9 @@ co_nmt_boot_emit_res(co_nmt_boot_t *boot, int res)
 {
 	assert(boot);
 	assert(boot->state);
-	assert(boot->state->on_res);
 
-	co_nmt_boot_enter(boot, boot->state->on_res(boot, res));
+	if (boot->state->on_res)
+		co_nmt_boot_enter(boot, boot->state->on_res(boot, res));
 }
 
 static co_nmt_boot_state_t *
@@ -935,6 +898,32 @@ co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	__unused_var(boot);
 	__unused_var(tp);
+
+	// Retrieve the slave assignment for the node.
+	boot->assignment = co_dev_get_val_u32(boot->dev, 0x1f81, boot->id);
+
+	// Find the consumer heartbeat time for the node.
+	boot->ms = 0;
+	co_obj_t *obj_1016 = co_dev_find_obj(boot->dev, 0x1016);
+	if (obj_1016) {
+		co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
+		for (size_t i = 1; i <= n; i++) {
+			co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i);
+			if (((val >> 16) & 0x7f) == boot->id)
+				boot->ms = val & 0xffff;
+		}
+	}
+
+	// Abort the 'boot slave' process if the slave is not in the network
+	// list.
+	if (!(boot->assignment & 0x01)) {
+		boot->es = 'A';
+		return co_nmt_boot_abort_state;
+	}
+
+	if (!(boot->assignment & 0x04))
+		// Skip booting and start the error control service.
+		return co_nmt_boot_ec_state;
 
 	return co_nmt_boot_chk_device_type_state;
 }
@@ -952,6 +941,7 @@ co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot)
 	if (!boot->es && (boot->st & ~CO_NMT_ST_TOGGLE) == CO_NMT_ST_START)
 		boot->es = 'L';
 
+	// Retry on error status B (see Fig. 4 in CiA 302-2 version 4.1.0).
 	if (boot->es == 'B') {
 		int wait = 0;
 		if (boot->assignment & 0x08) {
@@ -1002,51 +992,33 @@ co_nmt_boot_chk_device_type_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// Retrieve the slave assignment for the node.
-	boot->assignment = co_dev_get_val_u32(boot->dev, 0x1f81, boot->id);
+	boot->es = 'B';
 
-	// Find the consumer heartbeat time for the node.
-	boot->ms = 0;
-	co_obj_t *obj_1016 = co_dev_find_obj(boot->dev, 0x1016);
-	if (obj_1016) {
-		co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0);
-		for (size_t i = 1; i <= n; i++) {
-			co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i);
-			if (((val >> 16) & 0x7f) == boot->id)
-				boot->ms = val;
-		}
-	}
-
-	if ((boot->assignment & 0x01)) {
-		boot->es = 'B';
-		// Read the device type of the slave (object 1000).
-		if (__unlikely(co_nmt_boot_read(boot, 0x1000, 0x00) == -1))
-			return co_nmt_boot_abort_state;
-		return NULL;
-	} else {
-		// Abort the 'boot slave' process if the slave is not in the
-		// network list.
-		boot->es = 'A';
+	// Read the device type of the slave (object 1000).
+	if (__unlikely(co_nmt_boot_up(boot, 0x1000, 0x00) == -1))
 		return co_nmt_boot_abort_state;
-	}
+
+	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
 	if (__unlikely(ac))
 		return co_nmt_boot_abort_state;
 
-	boot->es = 'C';
-
+	// If the expected device type (sub-object 1F84:ID) is 0, skip the check
+	// and proceed with the vendor ID.
 	co_unsigned32_t device_type =
 			co_dev_get_val_u32(boot->dev, 0x1f84, boot->id);
-	if (__unlikely(!device_type || !co_nmt_boot_chk_u32(boot, ac, ptr, n,
-			0x1f84, boot->id)))
+	if (__unlikely(device_type && !co_nmt_boot_chk(boot, 0x1f84, boot->id,
+			ac, ptr, n))) {
+		boot->es = 'C';
 		return co_nmt_boot_abort_state;
+	}
 
 	return co_nmt_boot_chk_vendor_id_state;
 }
@@ -1056,8 +1028,6 @@ co_nmt_boot_chk_vendor_id_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	boot->es = 'D';
-
 	// If the expected vendor ID (sub-object 1F85:ID) is 0, skip the check
 	// and proceed with the product code.
 	co_unsigned32_t vendor_id =
@@ -1065,20 +1035,22 @@ co_nmt_boot_chk_vendor_id_on_enter(co_nmt_boot_t *boot)
 	if (!vendor_id)
 		return co_nmt_boot_chk_product_code_state;
 
+	boot->es = 'D';
+
 	// Read the vendor ID of the slave (sub-object 1018:01).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1018, 0x01) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x01) == -1))
 		return co_nmt_boot_abort_state;
+
 	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_vendor_id_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_vendor_id_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+	const void *ptr, size_t n)
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f85,
-			boot->id)))
+	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f85, boot->id, ac, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_product_code_state;
@@ -1089,8 +1061,6 @@ co_nmt_boot_chk_product_code_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	boot->es = 'M';
-
 	// If the expected product code (sub-object 1F86:ID) is 0, skip the
 	// check and proceed with the revision number.
 	co_unsigned32_t product_code =
@@ -1098,20 +1068,22 @@ co_nmt_boot_chk_product_code_on_enter(co_nmt_boot_t *boot)
 	if (!product_code)
 		return co_nmt_boot_chk_revision_state;
 
+	boot->es = 'M';
+
 	// Read the product code of the slave (sub-object 1018:02).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1018, 0x02) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x02) == -1))
 		return co_nmt_boot_abort_state;
+
 	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_product_code_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_product_code_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f86,
-			boot->id)))
+	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f86, boot->id, ac, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_revision_state;
@@ -1122,8 +1094,6 @@ co_nmt_boot_chk_revision_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	boot->es = 'N';
-
 	// If the expected revision number (sub-object 1F87:ID) is 0, skip the
 	// check and proceed with the serial number.
 	co_unsigned32_t revision =
@@ -1131,20 +1101,22 @@ co_nmt_boot_chk_revision_on_enter(co_nmt_boot_t *boot)
 	if (!revision)
 		return co_nmt_boot_chk_serial_nr_state;
 
+	boot->es = 'N';
+
 	// Read the revision number of the slave (sub-object 1018:03).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1018, 0x03) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x03) == -1))
 		return co_nmt_boot_abort_state;
+
 	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_revision_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_revision_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f87,
-			boot->id)))
+	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f87, boot->id, ac, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_serial_nr_state;
@@ -1155,8 +1127,6 @@ co_nmt_boot_chk_serial_nr_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	boot->es = 'O';
-
 	// If the expected serial number (sub-object 1F88:ID) is 0, skip the
 	// check and proceed to 'check node state'.
 	co_unsigned32_t serial_nr =
@@ -1164,20 +1134,22 @@ co_nmt_boot_chk_serial_nr_on_enter(co_nmt_boot_t *boot)
 	if (!serial_nr)
 		return co_nmt_boot_chk_node_state;
 
+	boot->es = 'O';
+
 	// Read the serial number of the slave (sub-object 1018:04).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1018, 0x04) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x04) == -1))
 		return co_nmt_boot_abort_state;
+
 	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_serial_nr_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_serial_nr_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f88,
-			boot->id)))
+	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f88, boot->id, ac, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_node_state;
@@ -1188,30 +1160,31 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// If the keep-alive bit is not set, skip 'check node state' and proceed
-	// to 'check and update software version'.
-	if (!(boot->assignment & 0x10))
-		return co_nmt_boot_chk_sw_date_state;
+	// If the keep-alive bit is set, check the node state.
+	if (boot->assignment & 0x10) {
+		int ms;
+		if (boot->ms) {
+			ms = boot->ms;
+			boot->es = 'E';
+		} else {
+			ms = LELY_CO_NMT_BOOT_RTR_TIMEOUT;
+			boot->es = 'F';
+			// If we're not a heartbeat consumer, start node
+			// guarding by sending the first RTR.
+			co_nmt_boot_send_rtr(boot);
+		}
 
-	int ms;
-	if (boot->ms) {
-		boot->es = 'E';
-		ms = boot->ms;
-	} else {
-		boot->es = 'F';
-		ms = LELY_CO_NMT_BOOT_RTR_TIMEOUT;
-		// If we're not a heartbeat consumer, start node guarding by
-		// sending the first RTR.
-		co_nmt_boot_send_rtr(boot);
+		// Start the CAN frame receiver for the heartbeat or node guard
+		// message.
+		can_recv_start(boot->recv, boot->net, 0x700 + boot->id, 0);
+		// Start the CAN timer in case we do not receive a heartbeat
+		// indication or a node guard confirmation.
+		can_timer_timeout(boot->timer, boot->net, ms);
+
+		return NULL;
 	}
 
-	// Start the CAN frame receiver for the heartbeat or node guard message.
-	can_recv_start(boot->recv, boot->net, 0x700 + boot->id, 0);
-
-	// Start the CAN timer in case we do not receive a heartbeat indication
-	// or a node guard confirmation.
-	can_timer_timeout(boot->timer, boot->net, ms);
-	return NULL;
+	return co_nmt_boot_chk_sw_state;
 }
 
 static co_nmt_boot_state_t *
@@ -1244,106 +1217,85 @@ co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 		// If the node is not operational, send the NMT 'reset
 		// communication' command and proceed as if the keep-alive bit
 		// was not set.
-		co_nmt_boot_send_nmt(boot, CO_NMT_CS_RESET_COMM);
-		return co_nmt_boot_chk_sw_date_state;
+		co_nmt_cs_req(boot->nmt, CO_NMT_CS_RESET_COMM, boot->id);
+		return co_nmt_boot_chk_sw_state;
 	}
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_sw_date_on_enter(co_nmt_boot_t *boot)
+co_nmt_boot_chk_sw_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// If application software verification for this node is not required,
-	// proceed to 'check configuration'.
-	if (!(boot->assignment & 0x20))
-		return co_nmt_boot_chk_cfg_date_state;
+	if (boot->assignment & 0x20) {
+		boot->es = 'G';
 
-	boot->es = 'G';
+		// Abort if the expected program software identification
+		// (sub-object 1F55:ID) is 0.
+		co_unsigned32_t sw_id =
+				co_dev_get_val_u32(boot->dev, 0x1f55, boot->id);
+		if (!sw_id)
+			return co_nmt_boot_abort_state;
 
-	// Abort if the expected application software date (sub-object 1F53:ID)
-	// and time (sub-object 1F54:ID) are not configured.
-	co_unsigned32_t sw_date =
-			co_dev_get_val_u32(boot->dev, 0x1f53, boot->id);
-	co_unsigned32_t sw_time =
-			co_dev_get_val_u32(boot->dev, 0x1f54, boot->id);
-	if (!sw_date && !sw_time)
-		return co_nmt_boot_abort_state;
+		// Read the program software identification of the slave
+		// (sub-object 1F56:01).
+		if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
+			return co_nmt_boot_abort_state;
 
-	// Read the application software date of the slave (sub-object 1F52:01).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1f52, 0x01) == -1))
-		return co_nmt_boot_abort_state;
-	return NULL;
-}
-
-static co_nmt_boot_state_t *
-co_nmt_boot_chk_sw_date_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
-{
-	assert(boot);
-
-	// If the application software date does not match the expected value,
-	// skip checking the time and proceed to 'download software'.
-	if (!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f53, boot->id))
-		return co_nmt_boot_up_sw_state;
-
-	// Read the application software time of the slave (sub-object 1F52:01).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1f52, 0x02) == -1))
-		return co_nmt_boot_abort_state;
-
-	return co_nmt_boot_chk_sw_time_state;
-}
-
-static co_nmt_boot_state_t *
-co_nmt_boot_chk_sw_time_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
-{
-	assert(boot);
-
-	// If the application software time does not match the expected value,
-	// proceed to 'download software'.
-	if (!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f54, boot->id))
-		return co_nmt_boot_up_sw_state;
+		return NULL;
+	}
 
 	return co_nmt_boot_chk_cfg_date_state;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_up_sw_on_enter(co_nmt_boot_t *boot)
+co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
-	// Abort if automatic software update is not allowed.
-	boot->es = 'H';
-	if (!(boot->assignment & 0x40))
+	if (__unlikely(ac))
 		return co_nmt_boot_abort_state;
+
+	// If the program software identification matches the expected value,
+	// proceed to 'check configuration'.
+	if (co_nmt_boot_chk(boot, 0x1f55, boot->id, ac, ptr, n))
+		return co_nmt_boot_chk_cfg_date_state;
+
+	// Do not update the software if software update (bit 6) is not allowed
+	// or if the keep-alive bit (bit 4) is set.
+	if ((boot->assignment & 0x50) != 0x40) {
+		boot->es = 'H';
+		return co_nmt_boot_abort_state;
+	}
 
 	boot->es = 'I';
-	if (__unlikely(!boot->dn_sw_ind))
+
+	if (!boot->up_sw_ind)
 		return co_nmt_boot_abort_state;
 
-	return co_nmt_boot_dn_sw_state;
+	return co_nmt_boot_up_sw_req_state;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_dn_sw_on_enter(co_nmt_boot_t *boot)
+co_nmt_boot_up_sw_req_on_enter(co_nmt_boot_t *boot)
 {
 	__unused_var(boot);
 
-	return co_nmt_boot_sw_ok_state;
+	return co_nmt_boot_up_sw_res_state;
 }
 
 static void
-co_nmt_boot_dn_sw_on_leave(co_nmt_boot_t *boot)
+co_nmt_boot_up_sw_req_on_leave(co_nmt_boot_t *boot)
 {
 	assert(boot);
-	assert(boot->dn_sw_ind);
+	assert(boot->up_sw_ind);
 
-	boot->dn_sw_ind(boot->nmt, boot->id, boot->sdo, boot->dn_sw_data);
+	boot->up_sw_ind(boot->nmt, boot->id, boot->sdo, boot->up_sw_data);
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_sw_ok_on_res(co_nmt_boot_t *boot, int res)
+co_nmt_boot_up_sw_res_on_res(co_nmt_boot_t *boot, int res)
 {
 	__unused_var(boot);
 
@@ -1360,48 +1312,50 @@ co_nmt_boot_chk_cfg_date_on_enter(co_nmt_boot_t *boot)
 
 	boot->es = 'J';
 
-	// Abort if the expected configuration date (sub-object 1F26:ID) and
-	// time (sub-object 1F27:ID) are not configured.
+	// If the expected configuration date (sub-object 1F26:ID) or time
+	// (sub-object 1F27:ID) are not configured, proceed to 'update
+	// configuration'.
 	co_unsigned32_t cfg_date =
 			co_dev_get_val_u32(boot->dev, 0x1f26, boot->id);
 	co_unsigned32_t cfg_time =
 			co_dev_get_val_u32(boot->dev, 0x1f27, boot->id);
-	if (!cfg_date && !cfg_time)
+	if (!cfg_date || !cfg_time)
 		return co_nmt_boot_up_cfg_state;
 
 	// Read the configuration date of the slave (sub-object 1020:01).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1020, 0x01) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x01) == -1))
 		return co_nmt_boot_abort_state;
+
 	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
 	// If the configuration date does not match the expected value, skip
-	// checking the time and proceed to 'download configuration'.
-	if (!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f26, boot->id))
+	// checking the time and proceed to 'update configuration'.
+	if (!co_nmt_boot_chk(boot, 0x1f26, boot->id, ac, ptr, n))
 		return co_nmt_boot_up_cfg_state;
 
 	// Read the configuration time of the slave (sub-object 1020:02).
-	if (__unlikely(co_nmt_boot_read(boot, 0x1020, 0x02) == -1))
+	if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x02) == -1))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_cfg_time_state;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, const void *ptr,
-		size_t n, co_unsigned32_t ac)
+co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
 	// If the configuration time does not match the expected value, proceed
-	// to 'download configuration'.
-	if (!co_nmt_boot_chk_u32(boot, ac, ptr, n, 0x1f27, boot->id))
+	// to 'update configuration'.
+	if (!co_nmt_boot_chk(boot, 0x1f27, boot->id, ac, ptr, n))
 		return co_nmt_boot_up_cfg_state;
 
 	return co_nmt_boot_ec_state;
@@ -1412,31 +1366,33 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	if (__unlikely(!boot->dn_cfg_ind))
+	boot->es = 'J';
+
+	if (!boot->up_cfg_ind)
 		return co_nmt_boot_abort_state;
 
-	return co_nmt_boot_dn_cfg_state;
+	return co_nmt_boot_up_cfg_req_state;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_dn_cfg_on_enter(co_nmt_boot_t *boot)
+co_nmt_boot_up_cfg_req_on_enter(co_nmt_boot_t *boot)
 {
 	__unused_var(boot);
 
-	return co_nmt_boot_cfg_ok_state;
+	return co_nmt_boot_up_cfg_res_state;
 }
 
 static void
-co_nmt_boot_dn_cfg_on_leave(co_nmt_boot_t *boot)
+co_nmt_boot_up_cfg_req_on_leave(co_nmt_boot_t *boot)
 {
 	assert(boot);
-	assert(boot->dn_cfg_ind);
+	assert(boot->up_cfg_ind);
 
-	boot->dn_cfg_ind(boot->nmt, boot->id, boot->sdo, boot->dn_cfg_data);
+	boot->up_cfg_ind(boot->nmt, boot->id, boot->sdo, boot->up_cfg_data);
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_cfg_ok_on_res(co_nmt_boot_t *boot, int res)
+co_nmt_boot_up_cfg_res_on_res(co_nmt_boot_t *boot, int res)
 {
 	__unused_var(boot);
 
@@ -1494,8 +1450,7 @@ co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 }
 
 static int
-co_nmt_boot_read(co_nmt_boot_t *boot, co_unsigned16_t idx,
-		co_unsigned8_t subidx)
+co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(boot);
 
@@ -1504,35 +1459,26 @@ co_nmt_boot_read(co_nmt_boot_t *boot, co_unsigned16_t idx,
 }
 
 static int
-co_nmt_boot_chk_u32(co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
-		size_t n, co_unsigned16_t idx, co_unsigned8_t subidx)
+co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned32_t ac, const void *ptr, size_t n)
 {
 	assert(boot);
+
+	co_sub_t *sub = co_dev_find_sub(boot->dev, idx, subidx);
+	if (__unlikely(!sub))
+		return 0;
+	co_unsigned16_t type = co_sub_get_type(sub);
 
 	if (__unlikely(ac))
 		return 0;
 
-	co_unsigned32_t val = 0;
-	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
-			(const uint8_t *)ptr + n)))
+	union co_val val;
+	if (__unlikely(!co_val_read(type, &val, ptr, (const uint8_t *)ptr + n)))
 		return 0;
 
-	return val == co_dev_get_val_u32(boot->dev, idx, subidx);
-}
-
-static int
-co_nmt_boot_send_nmt(co_nmt_boot_t *boot, co_unsigned8_t cs)
-{
-	assert(boot);
-
-
-	struct can_msg msg = CAN_MSG_INIT;
-	msg.id = 0x000;
-	msg.len = 2;
-	msg.data[0] = cs;
-	msg.data[1] = boot->id;
-
-	return can_net_send(boot->net, &msg);
+	int eq = !co_val_cmp(type, &val, co_sub_get_val(sub));
+	co_val_fini(type, &val);
+	return eq;
 }
 
 static int

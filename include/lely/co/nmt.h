@@ -74,7 +74,7 @@ extern "C" {
 
 /*!
  * The type of a CANopen NMT command indication function, invoked when an NMT
- * command is received.
+ * command is received (and _after_ the state switch has occurred).
  *
  * \param nmt  a pointer to an NMT master/slave service.
  * \param cs   the NMT command specifier (one of #CO_NMT_CS_START,
@@ -139,9 +139,10 @@ typedef void co_nmt_boot_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 /*!
  * The type of a CANopen NMT request indication function, invoked when user
  * interaction is required. This is used to implement the application-dependent
- * 'download software' and 'download configuration' steps of the NMT 'boot
- * slave' process (see Fig. 6 & 8 in CiA DSP-302-2 V4.1.0). The user MUST
- * indicate the result of the request with co_nmt_req_res().
+ * 'update software' and 'update configuration' steps of the NMT 'boot slave'
+ * process (see Fig. 6 & 8 in CiA 302-2 version 4.1.0 and Fig. 3 in CiA 302-3
+ * version 4.1.0). The user MUST indicate the result of the request with
+ * co_nmt_req_res().
  *
  * \param nmt  a pointer to an NMT master service.
  * \param id   the Node-ID (in the range [1..127]).
@@ -221,7 +222,9 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  * Sets the indication function invoked when a life guarding event occurs.
  *
  * \param nmt  a pointer to an NMT slave service.
- * \param ind  a pointer to the function to be invoked.
+ * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
+ *             default indication function will be used (which invokes
+ *             co_nmt_comm_err_ind()).
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
@@ -248,7 +251,9 @@ LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
  * Sets the indication function invoked when a heartbeat event occurs.
  *
  * \param nmt  a pointer to an NMT master/slave service.
- * \param ind  a pointer to the function to be invoked.
+ * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
+ *             default indication function will be used (which invokes
+ *             co_nmt_comm_err_ind() or co_nmt_node_err_ind()).
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
@@ -315,8 +320,8 @@ LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
 
 /*!
  * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
- * process reaches the 'download software' step (see Fig. 6 in
- * CiA DSP-302-2 V4.1.0).
+ * process reaches the 'update software' step (see Fig. 3 in CiA 302-3 version
+ * 4.1.0).
  *
  * \param nmt   a pointer to an NMT master service.
  * \param pind  the address at which to store a pointer to the indication
@@ -324,29 +329,29 @@ LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_set_dn_sw_ind()
+ * \see co_nmt_set_up_sw_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_dn_sw_ind(const co_nmt_t *nmt,
+LELY_CO_EXTERN void co_nmt_get_up_sw_ind(const co_nmt_t *nmt,
 		co_nmt_req_ind_t **pind, void **pdata);
 
 /*!
  * Sets the indication function invoked when a CANopen NMT 'boot slave' process
- * reaches the 'download software' step (see Fig. 6 in CiA DSP-302-2 V4.1.0).
+ * reaches the 'update software' step (see Fig. 3 in CiA 302-3 version 4.1.0).
  *
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_get_dn_sw_ind()
+ * \see co_nmt_get_up_sw_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_dn_sw_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
+LELY_CO_EXTERN void co_nmt_set_up_sw_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
 		void *data);
 
 /*!
  * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
- * process reaches the 'download configuration' step (see Fig. 8 in
- * CiA DSP-302-2 V4.1.0).
+ * process reaches the 'update configuration' step (see Fig. 8 in CiA 302-2
+ * version 4.1.0).
  *
  * \param nmt   a pointer to an NMT master service.
  * \param pind  the address at which to store a pointer to the indication
@@ -354,27 +359,27 @@ LELY_CO_EXTERN void co_nmt_set_dn_sw_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_set_dn_cfg_ind()
+ * \see co_nmt_set_up_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_dn_cfg_ind(const co_nmt_t *nmt,
+LELY_CO_EXTERN void co_nmt_get_up_cfg_ind(const co_nmt_t *nmt,
 		co_nmt_req_ind_t **pind, void **pdata);
 
 /*!
  * Sets the indication function invoked when a CANopen NMT 'boot slave' process
- * reaches the 'download configuration' step (see Fig. 8 in CiA DSP-302-2
- * V4.1.0).
+ * reaches the 'update configuration' step (see Fig. 8 in CiA 302-2 version
+ * 4.1.0).
  *
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_get_dn_cfg_ind()
+ * \see co_nmt_get_up_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_dn_cfg_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
+LELY_CO_EXTERN void co_nmt_set_up_cfg_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
 		void *data);
 
-//! Returns the pending Node-ID. \see co_nmts_set_id()
+//! Returns the pending Node-ID. \see co_nmt_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
 
 /*!
@@ -394,7 +399,7 @@ LELY_CO_EXTERN int co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id);
  * #CO_NMT_ST_STOP, #CO_NMT_ST_START, #CO_NMT_ST_RESET_NODE,
  * #CO_NMT_ST_RESET_COMM or #CO_NMT_ST_PREOP).
  */
-LELY_CO_EXTERN co_unsigned8_t co_nmt_get_state(const co_nmt_t *nmt);
+LELY_CO_EXTERN co_unsigned8_t co_nmt_get_st(const co_nmt_t *nmt);
 
 //! Returns 1 if the specified CANopen NMT service is a master, and 0 if not.
 LELY_CO_EXTERN int co_nmt_is_master(const co_nmt_t *nmt);
@@ -415,23 +420,6 @@ LELY_CO_EXTERN int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs,
 		co_unsigned8_t id);
 
 /*!
- * Processes an NMT command from the master or the application. Note that this
- * function may trigger a reset of one or more CANopen services and invalidate
- * previously obtained results of co_nmt_get_rpdo(), co_nmt_get_tpdo(),
- * co_nmt_get_ssdo(), co_nmt_get_csdo(), co_nmt_get_sync(), co_nmt_get_time()
- * and/or co_nmt_get_emcy().
- *
- * \param nmt a pointer to an NMT master/slave service.
- * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
- *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
- *            #CO_NMT_CS_RESET_COMM).
- *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- */
-LELY_CO_EXTERN int co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs);
-
-/*!
  * Requests the NMT 'boot slave' process for the specified node. The function
  * specified to co_nmt_set_boot_ind() is invoked on completion
  *
@@ -448,8 +436,9 @@ LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
 /*!
  * Indicates the result of a user-implemented step requested for the specified
  * node. This function MUST be called upon completion of the
- * application-dependent 'download software' and 'download configuration' steps
- * of the NMT 'boot slave' process (see Fig. 6 & 8 in CiA DSP-302-2 V4.1.0).
+ * application-dependent 'update software' and 'update configuration' steps of
+ * the NMT 'boot slave' process (see Fig. 6 & 8 in CiA 302-2 version 4.1.0 and
+ * Fig. 3 in CiA 302-3 version 4.1.0).
  *
  * \param nmt a pointer to an NMT master service.
  * \param id  the Node-ID (in the range [1..127]).
@@ -462,18 +451,32 @@ LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
 LELY_CO_EXTERN int co_nmt_req_res(co_nmt_t *nmt, co_unsigned8_t id, int res);
 
 /*!
- * Indicates the occurrence of a communication error and invokes the specified
- * error behavior (object 1029:01). Note that this may involve a call to
- * co_nmt_cs_ind().
+ * Processes an NMT command from the master or the application. Note that this
+ * function MAY trigger a reset of one or more CANopen services and invalidate
+ * previously obtained results of co_nmt_get_rpdo(), co_nmt_get_tpdo(),
+ * co_nmt_get_ssdo(), co_nmt_get_csdo(), co_nmt_get_sync(), co_nmt_get_time()
+ * and/or co_nmt_get_emcy().
+ *
+ * \param nmt a pointer to an NMT master/slave service.
+ * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
+ *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
+ *            #CO_NMT_CS_RESET_COMM).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_CO_EXTERN int co_nmt_comm_err_ind(co_nmt_t *nmt);
+LELY_CO_EXTERN int co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs);
+
+/*!
+ * Indicates the occurrence of a communication error and invokes the specified
+ * error behavior (object 1029). Note that this function MAY invoke
+ * co_nmt_cs_ind().
+ */
+LELY_CO_EXTERN void co_nmt_comm_err_ind(co_nmt_t *nmt);
 
 /*!
  * Indicates the occurrence of an error event and triggers the error handling
- * process (see Fig. 12 in CiA DSP-302-2 V4.1.0). Note that this function might
+ * process (see Fig. 12 in CiA 302-2 version 4.1.0). Note that this function MAY
  * invoke co_nmt_cs_ind().
  *
  * \param nmt a pointer to an NMT master service.
