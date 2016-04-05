@@ -52,14 +52,6 @@ struct __co_nmt_hb {
 	 * #CO_NMT_EC_RESOLVED).
 	 */
 	int state;
-	//! A pointer to the heartbeat event indication function.
-	co_nmt_hb_ind_t *hb_ind;
-	//! A pointer to user-specified data for #hb_ind.
-	void *hb_data;
-	//! A pointer to the state change indication function.
-	co_nmt_st_ind_t *st_ind;
-	//! A pointer to user-specified data for #st_ind.
-	void *st_data;
 };
 
 /*!
@@ -122,11 +114,6 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_dev_t *dev,
 	hb->ms = 0;
 	hb->state = CO_NMT_EC_RESOLVED;
 
-	hb->hb_ind = NULL;
-	hb->hb_data = NULL;
-	hb->st_ind = NULL;
-	hb->st_data = NULL;
-
 	return hb;
 
 	can_timer_destroy(hb->timer);
@@ -179,48 +166,6 @@ co_nmt_hb_destroy(co_nmt_hb_t *hb)
 		__co_nmt_hb_fini(hb);
 		__co_nmt_hb_free(hb);
 	}
-}
-
-void
-co_nmt_hb_get_hb_ind(const co_nmt_hb_t *hb, co_nmt_hb_ind_t **pind,
-		void **pdata)
-{
-	assert(hb);
-
-	if (pind)
-		*pind = hb->hb_ind;
-	if (pdata)
-		*pdata = hb->hb_data;
-}
-
-void
-co_nmt_hb_set_hb_ind(co_nmt_hb_t *hb, co_nmt_hb_ind_t *ind, void *data)
-{
-	assert(hb);
-
-	hb->hb_ind = ind;
-	hb->hb_data = data;
-}
-
-void
-co_nmt_hb_get_st_ind(const co_nmt_hb_t *hb, co_nmt_st_ind_t **pind,
-		void **pdata)
-{
-	assert(hb);
-
-	if (pind)
-		*pind = hb->st_ind;
-	if (pdata)
-		*pdata = hb->st_data;
-}
-
-void
-co_nmt_hb_set_st_ind(co_nmt_hb_t *hb, co_nmt_st_ind_t *ind, void *data)
-{
-	assert(hb);
-
-	hb->st_ind = ind;
-	hb->st_data = data;
 }
 
 void
@@ -278,13 +223,11 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 		// If a heartbeat error occurred, notify the user that it has
 		// been resolved.
 		hb->state = CO_NMT_EC_RESOLVED;
-		if (hb->hb_ind)
-			hb->hb_ind(hb->nmt, hb->id, hb->state, hb->hb_data);
+		co_nmt_hb_ind(hb->nmt, hb->id, hb->state);
 	} else if (old_st && st != old_st) {
-		// Only notify the user of the occurrence of a state change, not
-		// its resolution.
-		if (hb->st_ind)
-			hb->st_ind(hb->nmt, hb->id, st, hb->st_data);
+		// Only notify the application of the occurrence of a state
+		// change, not its resolution.
+		co_nmt_st_ind(hb->nmt, hb->id, st);
 	}
 
 	return 0;
@@ -297,10 +240,9 @@ co_nmt_hb_timer(const struct timespec *tp, void *data)
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 
-	// Notify the user of the occurrence of a heartbeat error.
+	// Notify the application of the occurrence of a heartbeat error.
 	hb->state = CO_NMT_EC_OCCURRED;
-	if (hb->hb_ind)
-		hb->hb_ind(hb->nmt, hb->id, hb->state, hb->hb_data);
+	co_nmt_hb_ind(hb->nmt, hb->id, hb->state);
 
 	return 0;
 }

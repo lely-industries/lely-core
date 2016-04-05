@@ -36,6 +36,27 @@ typedef struct __co_nmt_hb co_nmt_hb_t;
 extern "C" {
 #endif
 
+/*!
+ * The CANopen NMT error control indication function, invoked when a heartbeat
+ * event occurs.
+ *
+ * \param nmt   a pointer to an NMT master/slave service.
+ * \param id    the Node-ID (in the range [1..127]).
+ * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
+ *              was resolved (#CO_NMT_EC_RESOLVED).
+ */
+void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state);
+
+/*!
+ * The CANopen NMT error control indication function, invoked when a state
+ * change occurs.
+ *
+ * \param nmt a pointer to an NMT master/slave service.
+ * \param id  the Node-ID (in the range [1..127]).
+ * \param st  the state of the node.
+ */
+void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
+
 void *__co_nmt_hb_alloc(void);
 void __co_nmt_hb_free(void *ptr);
 struct __co_nmt_hb *__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net,
@@ -57,58 +78,6 @@ co_nmt_hb_t *co_nmt_hb_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 
 //! Destroys a CANopen NMT heartbeat consumer service. \see co_nmt_hb_create()
 void co_nmt_hb_destroy(co_nmt_hb_t *hb);
-
-/*!
- * Retrieves the indication function invoked when a heartbeat event occurs.
- *
- * \param hb    a pointer to a heartbeat consumer service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_hb_set_hb_ind()
- */
-void co_nmt_hb_get_hb_ind(const co_nmt_hb_t *hb, co_nmt_hb_ind_t **pind,
-		void **pdata);
-
-/*!
- * Sets the indication function invoked when a heartbeat event occurs.
- *
- * \param hb   a pointer to a heartbeat consumer service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_hb_get_hb_ind()
- */
-void co_nmt_hb_set_hb_ind(co_nmt_hb_t *hb, co_nmt_hb_ind_t *ind, void *data);
-
-/*!
- * Retrieves the indication function invoked when a state change occurs.
- *
- * \param hb    a pointer to a heartbeat consumer service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_hb_set_st_ind()
- */
-void co_nmt_hb_get_st_ind(const co_nmt_hb_t *hb, co_nmt_st_ind_t **pind,
-		void **pdata);
-
-/*!
- * Sets the indication function invoked when a state change occurs.
- *
- * \param hb   a pointer to a heartbeat consumer service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_hb_get_st_ind()
- */
-void co_nmt_hb_set_st_ind(co_nmt_hb_t *hb, co_nmt_st_ind_t *ind, void *data);
 
 /*!
  * Processes the value of CANopen object 1016 (Consumer heartbeat time) for the

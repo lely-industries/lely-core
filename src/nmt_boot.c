@@ -25,7 +25,7 @@
 
 #ifndef LELY_NO_CO_NMT_MASTER
 
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #include <lely/util/time.h>
 #include <lely/co/csdo.h>
 #include <lely/co/dev.h>
@@ -42,60 +42,15 @@
 //! The timeout (in milliseconds) after sending a node guarding RTR.
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
 
-//! An opaque CANopen NMT 'boot slave' state type.
-typedef const struct co_nmt_boot_state co_nmt_boot_state_t;
+/*!
+ * The timeout (in milliseconds) before checking the flash status indication or
+ * the program control of a slave again.
+ */
+#define LELY_CO_NMT_BOOT_CHECK_TIMEOUT	100
 
-//! A CANopen NMT 'boot slave' state.
-struct co_nmt_boot_state {
-	//! A pointer to the function invoked when a new state is entered.
-	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
-	/*!
-	 * A pointer to the transition function invoked when a timeout occurs.
-	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param tp   a pointer to the current time.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_nmt_boot_state_t *(*on_time)(co_nmt_boot_t *boot,
-			const struct timespec *tp);
-	/*!
-	 * A pointer to the transition function invoked when a CAN frame has
-	 * been received.
-	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param msg  a pointer to the received CAN frame.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_nmt_boot_state_t *(*on_recv)(co_nmt_boot_t *boot,
-			const struct can_msg *msg);
-	/*!
-	 * A pointer to the transition function invoked when an SDO upload
-	 * request completes.
-	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param ac   the SDO abort code.
-	 * \param ptr  a pointer to the uploaded bytes.
-	 * \param n    the number of bytes at \a ptr.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_nmt_boot_state_t *(*on_up_con)(co_nmt_boot_t *boot,
-			co_unsigned32_t ac, const void *ptr, size_t n);
-	/*!
-	 * A pointer to the transition function invoked when the result of a
-	 * user-implemented step is received.
-	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param res   the result of a callback to the application.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_nmt_boot_state_t *(*on_res)(co_nmt_boot_t *boot, int res);
-	//! A pointer to the function invoked when the current state is left.
-	void (*on_leave)(co_nmt_boot_t *boot);
-};
+struct __co_nmt_boot_state;
+//! An opaque CANopen NMT 'boot slave' state type.
+typedef const struct __co_nmt_boot_state co_nmt_boot_state_t;
 
 //! A CANopen NMT 'boot slave' service.
 struct __co_nmt_boot {
@@ -105,34 +60,24 @@ struct __co_nmt_boot {
 	co_dev_t *dev;
 	//! A pointer to an NMT master service.
 	co_nmt_t *nmt;
-	//! A pointer to the 'update software' indication function.
-	co_nmt_req_ind_t *up_sw_ind;
-	//! A pointer to user-specified data for #up_sw_ind.
-	void *up_sw_data;
-	//! A pointer to the 'update configuration' indication function.
-	co_nmt_req_ind_t *up_cfg_ind;
-	//! A pointer to user-specified data for #up_cfg_ind.
-	void *up_cfg_data;
+	//! The Node-ID.
+	co_unsigned8_t id;
+	//! The SDO timeout (in milliseconds).
+	int timeout;
+	//! A pointer to the Client-SDO used to access slave objects.
+	co_csdo_t *sdo;
 	//! A pointer to the current state.
 	co_nmt_boot_state_t *state;
 	//! A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 	//! A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The Node-ID.
-	co_unsigned8_t id;
-	//! A pointer to the confirmation function.
-	co_nmt_boot_ind_t *con;
-	//! A pointer to user-specified data for #con.
-	void *data;
 	//! The state of the node (including the toggle bit).
 	co_unsigned32_t st;
 	//! The error status.
 	char es;
 	//! The time at which the 'boot slave' request was received.
 	struct timespec start;
-	//! A pointer to the Client-SDO used to read slave objects.
-	co_csdo_t *sdo;
 	//! The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
 	//! The consumer heartbeat time (in milliseconds).
@@ -154,6 +99,15 @@ static int co_nmt_boot_recv(const struct can_msg *msg, void *data);
 static int co_nmt_boot_timer(const struct timespec *tp, void *data);
 
 /*!
+ * The CANopen SDO download confirmation callback function for a 'boot slave'
+ * service.
+ *
+ * \see co_csdo_dn_con_t
+ */
+static void co_nmt_boot_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
+
+/*!
  * The CANopen SDO upload confirmation callback function for a 'boot slave'
  * service.
  *
@@ -162,6 +116,15 @@ static int co_nmt_boot_timer(const struct timespec *tp, void *data);
 static void co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
+
+/*!
+ * The CANopen NMT 'configuration request' confirmation callback function for a
+ * 'boot slave' service.
+ *
+ * \see co_nmt_cfg_con_t
+ */
+static void co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned32_t ac, void *data);
 
 /*!
  * Enters the specified state of a 'boot slave' service and invokes the exit and
@@ -190,11 +153,21 @@ static inline void co_nmt_boot_emit_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
 /*!
+ * Invokes the 'SDO download confirmation' transition function of the current
+ * state of a 'boot slave' service.
+ *
+ * \param boot a pointer to a 'boot slave' service.
+ * \param ac   the SDO abort code (0 on success).
+ */
+static inline void co_nmt_boot_emit_dn_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac);
+
+/*!
  * Invokes the 'SDO upload confirmation' transition function of the current
  * state of a 'boot slave' service.
  *
- * \param boot  a pointer to a 'boot slave' service.
- * \param ac   the SDO abort code.
+ * \param boot a pointer to a 'boot slave' service.
+ * \param ac   the SDO abort code (0 on success).
  * \param ptr  a pointer to the uploaded bytes.
  * \param n    the number of bytes at \a ptr.
  */
@@ -205,29 +178,95 @@ static inline void co_nmt_boot_emit_up_con(co_nmt_boot_t *boot,
  * Invokes the 'result received' transition function of the current state of a
  * 'boot slave' service.
  *
- * \param boot  a pointer to a 'boot slave' service.
- * \param res   the result of a callback to the application.
+ * \param boot a pointer to a 'boot slave' service.
+ * \param ac   the SDO abort code (0 on success).
  */
-static inline void co_nmt_boot_emit_res(co_nmt_boot_t *boot, int res);
+static inline void co_nmt_boot_emit_res(co_nmt_boot_t *boot,
+		co_unsigned32_t ac);
+
+//! A CANopen NMT 'boot slave' state.
+struct __co_nmt_boot_state {
+	//! A pointer to the function invoked when a new state is entered.
+	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
+	/*!
+	 * A pointer to the transition function invoked when a timeout occurs.
+	 *
+	 * \param boot a pointer to a 'boot slave' service.
+	 * \param tp   a pointer to the current time.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_time)(co_nmt_boot_t *boot,
+			const struct timespec *tp);
+	/*!
+	 * A pointer to the transition function invoked when a CAN frame has
+	 * been received.
+	 *
+	 * \param boot a pointer to a 'boot slave' service.
+	 * \param msg  a pointer to the received CAN frame.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_recv)(co_nmt_boot_t *boot,
+			const struct can_msg *msg);
+	/*!
+	 * A pointer to the transition function invoked when an SDO download
+	 * request completes.
+	 *
+	 * \param boot a pointer to a 'boot slave' service.
+	 * \param ac   the SDO abort code (0 on success).
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_dn_con)(co_nmt_boot_t *boot,
+			co_unsigned32_t ac);
+	/*!
+	 * A pointer to the transition function invoked when an SDO upload
+	 * request completes.
+	 *
+	 * \param boot a pointer to a 'boot slave' service.
+	 * \param ac   the SDO abort code.
+	 * \param ptr  a pointer to the uploaded bytes.
+	 * \param n    the number of bytes at \a ptr.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_up_con)(co_nmt_boot_t *boot,
+			co_unsigned32_t ac, const void *ptr, size_t n);
+	/*!
+	 * A pointer to the transition function invoked when an NMT
+	 * 'configuration request' completes.
+	 *
+	 * \param boot a pointer to a 'boot slave' service.
+	 * \param ac   the SDO abort code (0 on success).
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_res)(co_nmt_boot_t *boot, co_unsigned32_t ac);
+	//! A pointer to the function invoked when the current state is left.
+	void (*on_leave)(co_nmt_boot_t *boot);
+};
+
+#define LELY_CO_DEFINE_STATE(name, ...) \
+	static co_nmt_boot_state_t *const name = \
+			&(co_nmt_boot_state_t){ __VA_ARGS__  };
 
 //! The 'timeout' transition function of the 'wait asynchronously' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
 //! The 'wait asynchronously' state.
-static const co_nmt_boot_state_t *co_nmt_boot_wait_state =
-		&(co_nmt_boot_state_t){
-	NULL, &co_nmt_boot_wait_on_time, NULL, NULL, NULL, NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_wait_state,
+	.on_time = &co_nmt_boot_wait_on_time
+)
 
 //! The entry function of the 'abort' state.
 static co_nmt_boot_state_t *co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot);
 
 //! The 'abort' state.
-static const co_nmt_boot_state_t *co_nmt_boot_abort_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_abort_on_enter, NULL, NULL, NULL, NULL, NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_abort_state,
+	.on_enter = &co_nmt_boot_abort_on_enter
+)
 
 //! The entry function of the 'error' state.
 static co_nmt_boot_state_t *co_nmt_boot_error_on_enter(co_nmt_boot_t *boot);
@@ -236,15 +275,10 @@ static co_nmt_boot_state_t *co_nmt_boot_error_on_enter(co_nmt_boot_t *boot);
 static void co_nmt_boot_error_on_leave(co_nmt_boot_t *boot);
 
 //! The 'error' state.
-static const co_nmt_boot_state_t *co_nmt_boot_error_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_error_on_enter,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	&co_nmt_boot_error_on_leave
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_error_state,
+	.on_enter = &co_nmt_boot_error_on_enter,
+	.on_leave = &co_nmt_boot_error_on_leave
+)
 
 //! The entry function of the 'check device type' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_enter(
@@ -259,15 +293,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_up_con(
 		size_t n);
 
 //! The 'check device type' state (see Fig. 5 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_device_type_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_device_type_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_device_type_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_device_type_state,
+	.on_enter = &co_nmt_boot_chk_device_type_on_enter,
+	.on_up_con = &co_nmt_boot_chk_device_type_on_up_con
+)
 
 //! The entry function of the 'check vendor ID' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_enter(
@@ -282,15 +311,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_up_con(
 		size_t n);
 
 //! The 'check vendor ID' state (see Fig. 5 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_vendor_id_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_vendor_id_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_vendor_id_state,
+	.on_enter = &co_nmt_boot_chk_vendor_id_on_enter,
+	.on_up_con = &co_nmt_boot_chk_vendor_id_on_up_con
+)
 
 //! The entry function of the 'check product code' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_enter(
@@ -305,16 +329,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_up_con(
 		size_t n);
 
 //! The 'check product code' state (see Fig. 5 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_product_code_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_product_code_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_product_code_on_up_con,
-	NULL,
-	NULL
-};
-
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_product_code_state,
+	.on_enter = &co_nmt_boot_chk_product_code_on_enter,
+	.on_up_con = &co_nmt_boot_chk_product_code_on_up_con
+)
 //! The entry function of the 'check revision number' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_enter(
 		co_nmt_boot_t *boot);
@@ -328,15 +346,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_up_con(
 		size_t n);
 
 //! The 'check revision number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_revision_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_revision_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_revision_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_revision_state,
+	.on_enter = &co_nmt_boot_chk_revision_on_enter,
+	.on_up_con = &co_nmt_boot_chk_revision_on_up_con
+)
 
 //! The entry function of the 'check serial number' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_enter(
@@ -351,15 +364,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_up_con(
 		size_t n);
 
 //! The 'check serial number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_serial_nr_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_serial_nr_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_serial_nr_state,
+	.on_enter = &co_nmt_boot_chk_serial_nr_on_enter,
+	.on_up_con = &co_nmt_boot_chk_serial_nr_on_up_con
+)
 
 //! The entry function of the 'check node state' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot);
@@ -375,15 +383,11 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
 //! The 'check node state' state (see Fig. 6 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_node_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_node_on_enter,
-	&co_nmt_boot_chk_node_on_time,
-	&co_nmt_boot_chk_node_on_recv,
-	NULL,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_node_state,
+	.on_enter = &co_nmt_boot_chk_node_on_enter,
+	.on_time = &co_nmt_boot_chk_node_on_time,
+	.on_recv = &co_nmt_boot_chk_node_on_recv
+)
 
 //! The entry function of the 'check software' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_enter(co_nmt_boot_t *boot);
@@ -396,45 +400,159 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
 //! The 'check software' state (see Fig. 6 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_chk_sw_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_sw_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_sw_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_sw_state,
+	.on_enter = &co_nmt_boot_chk_sw_on_enter,
+	.on_up_con = &co_nmt_boot_chk_sw_on_up_con
+)
 
-//! The entry function of the 'update software request' state.
-static co_nmt_boot_state_t *co_nmt_boot_up_sw_req_on_enter(co_nmt_boot_t *boot);
-
-//! The exit function of the 'update software request' state.
-static void co_nmt_boot_up_sw_req_on_leave(co_nmt_boot_t *boot);
-
-//! The 'update software request' state (see Fig. 3 in CiA 302-3 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_up_sw_req_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_up_sw_req_on_enter,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	&co_nmt_boot_up_sw_req_on_leave
-};
+//! The entry function of the 'stop program' state.
+static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot);
 
 /*!
- * The 'result received' transition function of the 'update software result'
+ * The 'SDO download confirmation' transition function of the 'stop program'
  * state.
  */
-static co_nmt_boot_state_t *co_nmt_boot_up_sw_res_on_res(co_nmt_boot_t *boot,
-		int res);
+static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac);
 
-//! The 'update software result' state (see Fig. 3 in CiA 302-3 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_up_sw_res_state =
-		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, NULL, &co_nmt_boot_up_sw_res_on_res, NULL
-};
+//! The 'stop program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_stop_prog_state,
+	.on_enter = &co_nmt_boot_stop_prog_on_enter,
+	.on_dn_con = &co_nmt_boot_stop_prog_on_dn_con
+)
+
+//! The entry function of the 'clear program' state.
+static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_enter(
+		co_nmt_boot_t *boot);
+
+/*!
+ * The 'SDO download confirmation' transition function of the 'clear program'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_dn_con(
+		co_nmt_boot_t *boot, co_unsigned32_t ac);
+
+//! The 'clear program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_clear_prog_state,
+	.on_enter = &co_nmt_boot_clear_prog_on_enter,
+	.on_dn_con = &co_nmt_boot_clear_prog_on_dn_con
+)
+
+//! The entry function of the 'download program' state.
+static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_enter(
+		co_nmt_boot_t *boot);
+
+/*!
+ * The 'SDO download confirmation' transition function of the 'download program'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_dn_con(
+		co_nmt_boot_t *boot, co_unsigned32_t ac);
+
+//! The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_blk_dn_prog_state,
+	.on_enter = &co_nmt_boot_blk_dn_prog_on_enter,
+	.on_dn_con = &co_nmt_boot_blk_dn_prog_on_dn_con
+)
+
+//! The entry function of the 'download program' state.
+static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_enter(co_nmt_boot_t *boot);
+
+/*!
+ * The 'SDO download confirmation' transition function of the 'download program'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac);
+
+//! The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_dn_prog_state,
+	.on_enter = &co_nmt_boot_dn_prog_on_enter,
+	.on_dn_con = &co_nmt_boot_dn_prog_on_dn_con
+)
+
+//! The entry function of the 'wait for end of flashing' state.
+static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_enter(
+		co_nmt_boot_t *boot);
+
+//! The 'timeout' transition function of the 'wait for end of flashing' state.
+static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_time(co_nmt_boot_t *boot,
+		const struct timespec *tp);
+
+/*!
+ * The 'SDO upload confirmation' transition function of the 'wait for end of
+ * flashing' state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_up_con(
+		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
+		size_t n);
+
+//! The 'check flashing' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_wait_flash_state,
+	.on_enter = &co_nmt_boot_wait_flash_on_enter,
+	.on_time = &co_nmt_boot_wait_flash_on_time,
+	.on_up_con = &co_nmt_boot_wait_flash_on_up_con
+)
+
+//! The entry function of the 'check program SW ID state.
+static co_nmt_boot_state_t *co_nmt_boot_chk_prog_on_enter(co_nmt_boot_t *boot);
+
+/*!
+ * The 'SDO upload confirmation' transition function of the 'check program
+ * SW ID' state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_chk_prog_on_up_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac, const void *ptr, size_t n);
+
+//! The 'check program SW ID' state (see Fig. 8 in CiA 302-2 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_prog_state,
+	.on_enter = &co_nmt_boot_chk_prog_on_enter,
+	.on_up_con = &co_nmt_boot_chk_prog_on_up_con
+)
+
+//! The entry function of the 'start program' state.
+static co_nmt_boot_state_t *co_nmt_boot_start_prog_on_enter(
+		co_nmt_boot_t *boot);
+
+/*!
+ * The 'SDO download confirmation' transition function of the 'start program'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_start_prog_on_dn_con(
+		co_nmt_boot_t *boot, co_unsigned32_t ac);
+
+//! The 'start program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+LELY_CO_DEFINE_STATE(co_nmt_boot_start_prog_state,
+	.on_enter = &co_nmt_boot_start_prog_on_enter,
+	.on_dn_con = &co_nmt_boot_start_prog_on_dn_con
+)
+
+//! The entry function of the 'wait till program is started' state.
+static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_enter(co_nmt_boot_t *boot);
+
+/*!
+ * The 'timeout' transition function of the 'wait till program is started'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot,
+		const struct timespec *tp);
+
+/*!
+ * The 'SDO upload confirmation' transition function of the 'wait till program
+ * is started' state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac, const void *ptr, size_t n);
+
+/*!
+ * The 'wait till program is started' state (see Fig. 8 in CiA 302-2 version
+ * 4.1.0).
+ */
+LELY_CO_DEFINE_STATE(co_nmt_boot_wait_prog_state,
+	.on_enter = &co_nmt_boot_wait_prog_on_enter,
+	.on_time = &co_nmt_boot_wait_prog_on_time,
+	.on_up_con = &co_nmt_boot_wait_prog_on_up_con
+)
 
 //! The entry function of the 'check configuration date' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_enter(
@@ -451,15 +569,10 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_up_con(
 /*!
  * The 'check configuration date' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
-static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_chk_cfg_date_on_enter,
-	NULL,
-	NULL,
-	&co_nmt_boot_chk_cfg_date_on_up_con,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_date_state,
+	.on_enter = &co_nmt_boot_chk_cfg_date_on_enter,
+	.on_up_con = &co_nmt_boot_chk_cfg_date_on_up_con
+)
 
 /*!
  * The 'SDO upload confirmation' transition function of the 'check configuration
@@ -472,58 +585,24 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_on_up_con(
 /*!
  * The 'check configuration time' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
-static const co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_state =
-		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, &co_nmt_boot_chk_cfg_time_on_up_con, NULL, NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_time_state,
+	.on_up_con = &co_nmt_boot_chk_cfg_time_on_up_con
+)
 
 //! The entry function of the 'update configuration' state.
 static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot);
 
+//! The 'result received' function of the 'update configuration' state.
+static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_res(co_nmt_boot_t *boot,
+		co_unsigned32_t ac);
+
 /*!
  * The 'update configuration' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
-static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_up_cfg_on_enter, NULL, NULL, NULL, NULL, NULL
-};
-
-//! The entry function of the 'update configuration request' state.
-static co_nmt_boot_state_t *co_nmt_boot_up_cfg_req_on_enter(
-		co_nmt_boot_t *boot);
-
-//! The exit function of the 'update configuration request' state.
-static void co_nmt_boot_up_cfg_req_on_leave(co_nmt_boot_t *boot);
-
-/*!
- * The 'update configuration request' state (see Fig. 8 in CiA 302-2 version
- * 4.1.0).
- */
-static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_req_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_up_cfg_req_on_enter,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	&co_nmt_boot_up_cfg_req_on_leave
-};
-
-/*!
- * The 'result received' transition function of the 'update configuration
- * result' state.
- */
-static co_nmt_boot_state_t *co_nmt_boot_up_cfg_res_on_res(co_nmt_boot_t *boot,
-		int res);
-
-/*!
- * The 'update configuration result' state (see Fig. 8 in CiA 302-2 version
- * 4.1.0).
- */
-static const co_nmt_boot_state_t *co_nmt_boot_up_cfg_res_state =
-		&(co_nmt_boot_state_t){
-	NULL, NULL, NULL, NULL, &co_nmt_boot_up_cfg_res_on_res, NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_up_cfg_state,
+	.on_enter = &co_nmt_boot_up_cfg_on_enter,
+	.on_res = &co_nmt_boot_up_cfg_on_res
+)
 
 //! The entry function of the 'start error control' state.
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot);
@@ -540,18 +619,31 @@ static co_nmt_boot_state_t *co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
 //! The 'start error control' state (see Fig. 11 in CiA 302-2 version 4.1.0).
-static const co_nmt_boot_state_t *co_nmt_boot_ec_state =
-		&(co_nmt_boot_state_t){
-	&co_nmt_boot_ec_on_enter,
-	&co_nmt_boot_ec_on_time,
-	&co_nmt_boot_ec_on_recv,
-	NULL,
-	NULL,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_nmt_boot_ec_state,
+	.on_enter = &co_nmt_boot_ec_on_enter,
+	.on_time = &co_nmt_boot_ec_on_time,
+	.on_recv = &co_nmt_boot_ec_on_recv
+)
+
+#undef LELY_CO_DEFINE_STATE
 
 /*!
- * Issues and an SDO upload request to the slave. co_nmt_boot_up_con() is called
+ * Issues an SDO download request to the slave. co_nmt_boot_dn_con() is called
+ * upon completion of the request.
+ *
+ * \param boot   a pointer to a 'boot slave' service.
+ * \param idx    the remote object index.
+ * \param subidx the remote object sub-index.
+ * \param type   the data type.
+ * \param val    the address of the value to be written.
+ *
+ * \returns 0 on success, or -1 on error.
+ */
+static int co_nmt_boot_dn(co_nmt_boot_t *boot, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned16_t type, const void *val);
+
+/*!
+ * Issues an SDO upload request to the slave. co_nmt_boot_up_con() is called
  * upon completion of the request.
  *
  * \param boot   a pointer to a 'boot slave' service.
@@ -570,7 +662,6 @@ static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
  * \param boot   a pointer to a 'boot slave' service.
  * \param idx    the local object index.
  * \param subidx the local object sub-index.
- * \param ac     the SDO abort code.
  * \param ptr    a pointer to the uploaded bytes.
  * \param n      the number of bytes at \a ptr.
  *
@@ -578,8 +669,7 @@ static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
  * and 0 if not.
  */
 static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
-		size_t n);
+		co_unsigned8_t subidx, const void *ptr, size_t n);
 
 /*!
  * Sends a node guarding RTR to the slave.
@@ -602,7 +692,7 @@ __co_nmt_boot_free(void *ptr)
 
 struct __co_nmt_boot *
 __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
+		co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 {
 	assert(boot);
 	assert(net);
@@ -615,13 +705,18 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->dev = dev;
 	boot->nmt = nmt;
 
-	boot->up_sw_ind = NULL;
-	boot->up_sw_data = NULL;
+	boot->id = id;
 
-	boot->up_cfg_ind = NULL;
-	boot->up_cfg_data = NULL;
+	boot->timeout = timeout;
 
-	boot->state = co_nmt_boot_wait_state;
+	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
+	if (__unlikely(!boot->sdo)) {
+		errc = get_errc();
+		goto error_create_sdo;
+	}
+	co_csdo_set_timeout(boot->sdo, boot->timeout);
+
+	boot->state = NULL;
 
 	boot->recv = can_recv_create();
 	if (__unlikely(!boot->recv)) {
@@ -637,27 +732,25 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
 
-	boot->id = 0;
-
-	boot->con = NULL;
-	boot->data = NULL;
-
 	boot->st = 0;
 	boot->es = 0;
 
 	boot->start = (struct timespec){ 0, 0 };
-
-	boot->sdo = NULL;
+	can_net_get_time(boot->net, &boot->start);
 
 	boot->assignment = 0;
 	boot->ms = 0;
 
+	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
+	co_nmt_boot_emit_time(boot, NULL);
 	return boot;
 
 	can_timer_destroy(boot->timer);
 error_create_timer:
 	can_recv_destroy(boot->recv);
 error_create_recv:
+	co_csdo_destroy(boot->sdo);
+error_create_sdo:
 	set_errc(errc);
 	return NULL;
 }
@@ -667,14 +760,15 @@ __co_nmt_boot_fini(struct __co_nmt_boot *boot)
 {
 	assert(boot);
 
-	co_csdo_destroy(boot->sdo);
-
 	can_timer_destroy(boot->timer);
 	can_recv_destroy(boot->recv);
+
+	co_csdo_destroy(boot->sdo);
 }
 
 co_nmt_boot_t *
-co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
+		co_unsigned8_t id, int timeout)
 {
 	errc_t errc = 0;
 
@@ -684,7 +778,7 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 		goto error_alloc_boot;
 	}
 
-	if (__unlikely(!__co_nmt_boot_init(boot, net, dev, nmt))) {
+	if (__unlikely(!__co_nmt_boot_init(boot, net, dev, nmt, id, timeout))) {
 		errc = get_errc();
 		goto error_init_boot;
 	}
@@ -705,96 +799,6 @@ co_nmt_boot_destroy(co_nmt_boot_t *boot)
 		__co_nmt_boot_fini(boot);
 		__co_nmt_boot_free(boot);
 	}
-}
-
-void
-co_nmt_boot_get_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
-		void **pdata)
-{
-	assert(boot);
-
-	if (pind)
-		*pind = boot->up_sw_ind;
-	if (pdata)
-		*pdata = boot->up_sw_data;
-}
-
-void
-co_nmt_boot_set_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
-		void *data)
-{
-	assert(boot);
-
-	boot->up_sw_ind = ind;
-	boot->up_sw_data = data;
-}
-
-void
-co_nmt_boot_get_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
-		void **pdata)
-{
-	assert(boot);
-
-	if (pind)
-		*pind = boot->up_cfg_ind;
-	if (pdata)
-		*pdata = boot->up_cfg_data;
-}
-
-void
-co_nmt_boot_set_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
-		void *data)
-{
-	assert(boot);
-
-	boot->up_cfg_ind = ind;
-	boot->up_cfg_data = data;
-}
-
-int
-co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
-		co_nmt_boot_ind_t *con, void *data)
-{
-	assert(boot);
-
-	if (__unlikely(!id || id > CO_NUM_NODES)) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-
-	// Check whether we are in the waiting state.
-	if (__unlikely(boot->state != co_nmt_boot_wait_state)) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-
-	boot->id = id;
-
-	boot->con = con;
-	boot->data = data;
-
-	boot->st = 0;
-	boot->es = 0;
-
-	can_net_get_time(boot->net, &boot->start);
-
-	co_csdo_destroy(boot->sdo);
-	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
-	if (__unlikely(!boot->sdo))
-		return -1;
-	co_csdo_set_timeout(boot->sdo, timeout);
-
-	co_nmt_boot_emit_time(boot, NULL);
-
-	return 0;
-}
-
-void
-co_nmt_boot_req_res(co_nmt_boot_t *boot, int res)
-{
-	assert(boot);
-
-	co_nmt_boot_emit_res(boot, res);
 }
 
 static int
@@ -822,6 +826,19 @@ co_nmt_boot_timer(const struct timespec *tp, void *data)
 }
 
 static void
+co_nmt_boot_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned32_t ac, void *data)
+{
+	__unused_var(sdo);
+	__unused_var(idx);
+	__unused_var(subidx);
+	co_nmt_boot_t *boot = data;
+	assert(boot);
+
+	co_nmt_boot_emit_dn_con(boot, ac);
+}
+
+static void
 co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
 {
@@ -835,6 +852,18 @@ co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 }
 
 static void
+co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac,
+		void *data)
+{
+	__unused_var(nmt);
+	__unused_var(id);
+	co_nmt_boot_t *boot = data;
+	assert(boot);
+
+	co_nmt_boot_emit_res(boot, ac);
+}
+
+static void
 co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 {
 	assert(boot);
@@ -844,7 +873,7 @@ co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 		co_nmt_boot_state_t *prev = boot->state;
 		boot->state = next;
 
-		if (prev->on_leave)
+		if (prev && prev->on_leave)
 			prev->on_leave(boot);
 
 		next = next->on_enter ? next->on_enter(boot) : NULL;
@@ -856,9 +885,9 @@ co_nmt_boot_emit_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	assert(boot);
 	assert(boot->state);
+	assert(boot->state->on_time);
 
-	if (boot->state->on_time)
-		co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
+	co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
 }
 
 static inline void
@@ -866,9 +895,19 @@ co_nmt_boot_emit_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 {
 	assert(boot);
 	assert(boot->state);
+	assert(boot->state->on_recv);
 
-	if (boot->state->on_recv)
-		co_nmt_boot_enter(boot, boot->state->on_recv(boot, msg));
+	co_nmt_boot_enter(boot, boot->state->on_recv(boot, msg));
+}
+
+static inline void
+co_nmt_boot_emit_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
+{
+	assert(boot);
+	assert(boot->state);
+	assert(boot->state->on_dn_con);
+
+	co_nmt_boot_enter(boot, boot->state->on_dn_con(boot, ac));
 }
 
 static inline void
@@ -877,20 +916,19 @@ co_nmt_boot_emit_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 	assert(boot->state);
+	assert(boot->state->on_up_con);
 
-	if (boot->state->on_up_con)
-		co_nmt_boot_enter(boot,
-				boot->state->on_up_con(boot, ac, ptr, n));
+	co_nmt_boot_enter(boot, boot->state->on_up_con(boot, ac, ptr, n));
 }
 
 static inline void
-co_nmt_boot_emit_res(co_nmt_boot_t *boot, int res)
+co_nmt_boot_emit_res(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 	assert(boot->state);
+	assert(boot->state->on_res);
 
-	if (boot->state->on_res)
-		co_nmt_boot_enter(boot, boot->state->on_res(boot, res));
+	co_nmt_boot_enter(boot, boot->state->on_res(boot, ac));
 }
 
 static co_nmt_boot_state_t *
@@ -983,8 +1021,7 @@ co_nmt_boot_error_on_leave(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	if (boot->con)
-		boot->con(boot->nmt, boot->id, boot->st, boot->es, boot->data);
+	co_nmt_boot_con(boot->nmt, boot->id, boot->st, boot->es);
 }
 
 static co_nmt_boot_state_t *
@@ -1007,15 +1044,18 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of object 1000 (Device type) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
+	}
 
 	// If the expected device type (sub-object 1F84:ID) is 0, skip the check
 	// and proceed with the vendor ID.
 	co_unsigned32_t device_type =
 			co_dev_get_val_u32(boot->dev, 0x1f84, boot->id);
 	if (__unlikely(device_type && !co_nmt_boot_chk(boot, 0x1f84, boot->id,
-			ac, ptr, n))) {
+			ptr, n))) {
 		boot->es = 'C';
 		return co_nmt_boot_abort_state;
 	}
@@ -1050,7 +1090,11 @@ co_nmt_boot_chk_vendor_id_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f85, boot->id, ac, ptr, n)))
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1018:01 (Vendor-ID) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f85, boot->id, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_product_code_state;
@@ -1083,7 +1127,11 @@ co_nmt_boot_chk_product_code_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f86, boot->id, ac, ptr, n)))
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1018:02 (Product code) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f86, boot->id, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_revision_state;
@@ -1116,7 +1164,11 @@ co_nmt_boot_chk_revision_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f87, boot->id, ac, ptr, n)))
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1018:03 (Revision number) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f87, boot->id, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_serial_nr_state;
@@ -1149,7 +1201,11 @@ co_nmt_boot_chk_serial_nr_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(!co_nmt_boot_chk(boot, 0x1f88, boot->id, ac, ptr, n)))
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1018:04 (Serial number) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f88, boot->id, ptr, n)))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_node_state;
@@ -1254,12 +1310,15 @@ co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
+	}
 
 	// If the program software identification matches the expected value,
 	// proceed to 'check configuration'.
-	if (co_nmt_boot_chk(boot, 0x1f55, boot->id, ac, ptr, n))
+	if (co_nmt_boot_chk(boot, 0x1f55, boot->id, ptr, n))
 		return co_nmt_boot_chk_cfg_date_state;
 
 	// Do not update the software if software update (bit 6) is not allowed
@@ -1271,38 +1330,324 @@ co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 
 	boot->es = 'I';
 
-	if (!boot->up_sw_ind)
-		return co_nmt_boot_abort_state;
-
-	return co_nmt_boot_up_sw_req_state;
+	return co_nmt_boot_stop_prog_state;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_up_sw_req_on_enter(co_nmt_boot_t *boot)
-{
-	__unused_var(boot);
-
-	return co_nmt_boot_up_sw_res_state;
-}
-
-static void
-co_nmt_boot_up_sw_req_on_leave(co_nmt_boot_t *boot)
+co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
-	assert(boot->up_sw_ind);
 
-	boot->up_sw_ind(boot->nmt, boot->id, boot->sdo, boot->up_sw_data);
+	// Write a 0 (Stop program) to the program control of the slave
+	// (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 0 }) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_up_sw_res_on_res(co_nmt_boot_t *boot, int res)
+co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
-	__unused_var(boot);
+	assert(boot);
 
-	if (__unlikely(res))
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	return co_nmt_boot_clear_prog_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_clear_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	// Write a 3 (Clear program) to the program control of the slave
+	// (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 3 }) == -1))
 		return co_nmt_boot_abort_state;
 
-	return co_nmt_boot_chk_cfg_date_state;
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_clear_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	return co_nmt_boot_blk_dn_prog_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	co_sub_t *sub = co_dev_find_sub(boot->dev, 0x1f58, boot->id);
+	if (__unlikely(!sub))
+		return co_nmt_boot_abort_state;
+
+	// Write the program data (sub-object 1F58:ID) to the program data of
+	// the slave (sub-object 1F50:01) using SDO block transfer.
+	if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01,
+			co_sub_addressof_val(sub), co_sub_sizeof_val(sub),
+			&co_nmt_boot_dn_con, boot) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		// If SDO block transfer is not supported, fall back to SDO
+		// segmented transfer.
+		if (ac == CO_SDO_AC_NO_CS)
+			return co_nmt_boot_dn_prog_state;
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	return co_nmt_boot_wait_flash_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_dn_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	co_sub_t *sub = co_dev_find_sub(boot->dev, 0x1f58, boot->id);
+	if (__unlikely(!sub))
+		return co_nmt_boot_abort_state;
+
+	// Write the program data (sub-object 1F58:ID) to the program data of
+	// the slave (sub-object 1F50:01) using SDO segmented transfer.
+	if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01,
+			co_sub_addressof_val(sub), co_sub_sizeof_val(sub),
+			&co_nmt_boot_dn_con, boot) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	return co_nmt_boot_wait_flash_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_flash_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	// Wait for a while before checking the flash status indication.
+	can_timer_timeout(boot->timer, boot->net,
+			LELY_CO_NMT_BOOT_CHECK_TIMEOUT);
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_flash_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
+{
+	assert(boot);
+	__unused_var(tp);
+
+	// Read the flash status indication of the slave (sub-object 1F57:01).
+	if (__unlikely(co_nmt_boot_up(boot, 0x1f57, 0x01) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
+{
+	assert(boot);
+
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F57:01 (Flash status indication) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	// If the flash status indication is not valid, try again.
+	co_unsigned32_t val = 0;
+	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
+			(const uint8_t *)ptr + n) || (val & 0x01)))
+		return co_nmt_boot_wait_flash_state;
+
+	co_unsigned8_t st = (val >> 1) & 0x7f;
+	switch (st) {
+	case 0:
+		return co_nmt_boot_chk_prog_state;
+	case 1:
+		diag(DIAG_ERROR, 0, "flash status identification %d: No valid program available",
+				st);
+		break;
+	case 2:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Data format unknown",
+				st);
+		break;
+	case 3:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Data format error or data CRC error",
+				st);
+		break;
+	case 4:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Flash not cleared before write",
+				st);
+		break;
+	case 5:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Flash write error",
+				st);
+		break;
+	case 6:
+		diag(DIAG_ERROR, 0, "flash status identification %d: General address error",
+				st);
+		break;
+	case 7:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Flash secured (= write access currently forbidden)",
+				st);
+		break;
+	case 63:
+		diag(DIAG_ERROR, 0, "flash status identification %d: Unspecified error",
+				st);
+		break;
+	default:
+		if (st > 63)
+			diag(DIAG_ERROR, 0, "flash status identification %d: Manufacturer-specific error: 0x%08X",
+					st, (val >> 16) & 0xffff);
+		break;
+	}
+
+	return co_nmt_boot_abort_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_chk_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	// Read the program software identification of the slave (sub-object
+	// 1F56:01).
+	if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_chk_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
+{
+	assert(boot);
+
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f55, boot->id, ptr, n)))
+		return co_nmt_boot_abort_state;
+
+	return co_nmt_boot_start_prog_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_start_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	// Write a 1 (Start program) to the program control of the slave
+	// (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 1 }) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_start_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	return co_nmt_boot_wait_prog_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_prog_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	// Wait for a while before checking the program control.
+	can_timer_timeout(boot->timer, boot->net,
+			LELY_CO_NMT_BOOT_CHECK_TIMEOUT);
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
+{
+	assert(boot);
+	__unused_var(tp);
+
+	// Read the program control of the slave (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	// If the program control differs from 'Program started', try again.
+	co_unsigned32_t val = 0;
+	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
+			(const uint8_t *)ptr + n) || val != 1))
+		// TODO: wait for a while before checking again.
+		return co_nmt_boot_wait_prog_state;
+
+	return co_nmt_boot_chk_device_type_state;
 }
 
 static co_nmt_boot_state_t *
@@ -1335,9 +1680,13 @@ co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1020:01 (Configuration date) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
 	// If the configuration date does not match the expected value, skip
 	// checking the time and proceed to 'update configuration'.
-	if (!co_nmt_boot_chk(boot, 0x1f26, boot->id, ac, ptr, n))
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f26, boot->id, ptr, n)))
 		return co_nmt_boot_up_cfg_state;
 
 	// Read the configuration time of the slave (sub-object 1020:02).
@@ -1353,9 +1702,13 @@ co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+	if (__unlikely(ac))
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1020:02 (Configuration time) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+
 	// If the configuration time does not match the expected value, proceed
 	// to 'update configuration'.
-	if (!co_nmt_boot_chk(boot, 0x1f27, boot->id, ac, ptr, n))
+	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f27, boot->id, ptr, n)))
 		return co_nmt_boot_up_cfg_state;
 
 	return co_nmt_boot_ec_state;
@@ -1368,36 +1721,24 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 
 	boot->es = 'J';
 
-	if (!boot->up_cfg_ind)
+	if (__unlikely(co_nmt_cfg_req(boot->nmt, boot->id, boot->timeout,
+			&co_nmt_boot_cfg_con, boot) == -1))
 		return co_nmt_boot_abort_state;
 
-	return co_nmt_boot_up_cfg_req_state;
+	return NULL;
 }
 
-static co_nmt_boot_state_t *
-co_nmt_boot_up_cfg_req_on_enter(co_nmt_boot_t *boot)
-{
-	__unused_var(boot);
-
-	return co_nmt_boot_up_cfg_res_state;
-}
-
-static void
-co_nmt_boot_up_cfg_req_on_leave(co_nmt_boot_t *boot)
+static
+co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_res(co_nmt_boot_t *boot,
+		co_unsigned32_t ac)
 {
 	assert(boot);
-	assert(boot->up_cfg_ind);
 
-	boot->up_cfg_ind(boot->nmt, boot->id, boot->sdo, boot->up_cfg_data);
-}
-
-static co_nmt_boot_state_t *
-co_nmt_boot_up_cfg_res_on_res(co_nmt_boot_t *boot, int res)
-{
-	__unused_var(boot);
-
-	if (__unlikely(res))
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received while updating the configuration of node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
+	}
 
 	return co_nmt_boot_ec_state;
 }
@@ -1450,6 +1791,16 @@ co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 }
 
 static int
+co_nmt_boot_dn(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned16_t type, const void *val)
+{
+	assert(boot);
+
+	return co_csdo_dn_val_req(boot->sdo, idx, subidx, type, val,
+			&co_nmt_boot_dn_con, boot);
+}
+
+static int
 co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(boot);
@@ -1460,7 +1811,7 @@ co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 
 static int
 co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_unsigned32_t ac, const void *ptr, size_t n)
+		const void *ptr, size_t n)
 {
 	assert(boot);
 
@@ -1468,9 +1819,6 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (__unlikely(!sub))
 		return 0;
 	co_unsigned16_t type = co_sub_get_type(sub);
-
-	if (__unlikely(ac))
-		return 0;
 
 	union co_val val;
 	if (__unlikely(!co_val_read(type, &val, ptr, (const uint8_t *)ptr + n)))

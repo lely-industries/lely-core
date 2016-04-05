@@ -17,6 +17,8 @@ src += nmt.c
 if !NO_CO_NMT_MASTER
 src += nmt_boot.c
 src += nmt_boot.h
+src += nmt_cfg.c
+src += nmt_cfg.h
 endif
 src += nmt_ec.c
 src += nmt_ec.h

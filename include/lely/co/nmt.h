@@ -115,10 +115,10 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * The type of a CANopen NMT error control indication function, invoked when a
  * state change occurs.
  *
- * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the Node-ID (in the range [1..127]).
- * \param st    the state of the node.
- * \param data  a pointer to user-specified data.
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param id   the Node-ID (in the range [1..127]).
+ * \param st   the state of the node.
+ * \param data a pointer to user-specified data.
  */
 typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
@@ -137,20 +137,31 @@ typedef void co_nmt_boot_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es, void *data);
 
 /*!
- * The type of a CANopen NMT request indication function, invoked when user
- * interaction is required. This is used to implement the application-dependent
- * 'update software' and 'update configuration' steps of the NMT 'boot slave'
- * process (see Fig. 6 & 8 in CiA 302-2 version 4.1.0 and Fig. 3 in CiA 302-3
- * version 4.1.0). The user MUST indicate the result of the request with
- * co_nmt_req_res().
+ * The type of a CANopen NMT 'update configuration' indication function, invoked
+ * when a configuration request is received. This function MUST cause
+ * co_nmt_cfg_res() to be invoked once the 'update configuration' step completes
+ * (with success or failure).
  *
  * \param nmt  a pointer to an NMT master service.
- * \param id   the Node-ID (in the range [1..127]).
- * \param sdo  a pointer to a Client-SDO connected to the node.
+ * \param id   the Node-ID of the slave (in the range [1..127]).
+ * \param sdo  a pointer to a Client-SDO connected to the slave.
  * \param data a pointer to user-specified data.
  */
-typedef void co_nmt_req_ind_t(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
+typedef void co_nmt_cfg_ind_t(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
 		void *data);
+
+/*!
+ * The type of a CANopen NMT 'configuration request' confirmation callback
+ * function, invoked when a configuration request completes (with success or
+ * failure).
+ *
+ * \param nmt  a pointer to an NMT master service.
+ * \param id   the Node-ID of the slave (in the range [1..127]).
+ * \param ac   the SDO abort code (0 on success).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_nmt_cfg_con_t(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned32_t ac, void *data);
 
 //! Returns a pointer to a string describing an NMT boot error status.
 LELY_CO_EXTERN const char *co_nmt_es2str(char es);
@@ -319,9 +330,8 @@ LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
 		void *data);
 
 /*!
- * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
- * process reaches the 'update software' step (see Fig. 3 in CiA 302-3 version
- * 4.1.0).
+ * Retrieves the indication function invoked when a CANopen NMT 'configuration
+ * request' is received.
  *
  * \param nmt   a pointer to an NMT master service.
  * \param pind  the address at which to store a pointer to the indication
@@ -329,54 +339,23 @@ LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_set_up_sw_ind()
+ * \see co_nmt_set_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_up_sw_ind(const co_nmt_t *nmt,
-		co_nmt_req_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
+		co_nmt_cfg_ind_t **pind, void **pdata);
 
 /*!
- * Sets the indication function invoked when a CANopen NMT 'boot slave' process
- * reaches the 'update software' step (see Fig. 3 in CiA 302-3 version 4.1.0).
+ * Sets the indication function invoked when a CANopen NMT 'configuration
+ * request' process is received.
  *
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_get_up_sw_ind()
+ * \see co_nmt_get_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_up_sw_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
-		void *data);
-
-/*!
- * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
- * process reaches the 'update configuration' step (see Fig. 8 in CiA 302-2
- * version 4.1.0).
- *
- * \param nmt   a pointer to an NMT master service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_set_up_cfg_ind()
- */
-LELY_CO_EXTERN void co_nmt_get_up_cfg_ind(const co_nmt_t *nmt,
-		co_nmt_req_ind_t **pind, void **pdata);
-
-/*!
- * Sets the indication function invoked when a CANopen NMT 'boot slave' process
- * reaches the 'update configuration' step (see Fig. 8 in CiA 302-2 version
- * 4.1.0).
- *
- * \param nmt  a pointer to an NMT master service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_get_up_cfg_ind()
- */
-LELY_CO_EXTERN void co_nmt_set_up_cfg_ind(co_nmt_t *nmt, co_nmt_req_ind_t *ind,
+LELY_CO_EXTERN void co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind,
 		void *data);
 
 //! Returns the pending Node-ID. \see co_nmt_set_id()
@@ -421,7 +400,7 @@ LELY_CO_EXTERN int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs,
 
 /*!
  * Requests the NMT 'boot slave' process for the specified node. The function
- * specified to co_nmt_set_boot_ind() is invoked on completion
+ * specified to co_nmt_set_boot_ind() is invoked on completion.
  *
  * \param nmt     a pointer to an NMT master service.
  * \param id      the Node-ID (in the range [1..127]).
@@ -434,21 +413,36 @@ LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
 		int timeout);
 
 /*!
- * Indicates the result of a user-implemented step requested for the specified
- * node. This function MUST be called upon completion of the
- * application-dependent 'update software' and 'update configuration' steps of
- * the NMT 'boot slave' process (see Fig. 6 & 8 in CiA 302-2 version 4.1.0 and
- * Fig. 3 in CiA 302-3 version 4.1.0).
+ * Issues the NMT 'configuration request' for the specified node. The function
+ * specified to co_nmt_set_cfg_ind() is invoked to complete the request.
  *
- * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID (in the range [1..127]).
- * \param res the result of the request. A non-zero value is interpreted as an
- *            error.
+ * \param nmt     a pointer to an NMT master service.
+ * \param id      the Node-ID (0 for all nodes, [1..127] for a specific slave).
+ * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
+ * \param con     a pointer to the confirmation function (can be NULL).
+ * \param data    a pointer to user-specified data (can be NULL). \a data is
+ *                passed as the last parameter to \a con.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_CO_EXTERN int co_nmt_req_res(co_nmt_t *nmt, co_unsigned8_t id, int res);
+LELY_CO_EXTERN int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
+		co_nmt_cfg_con_t *con, void *data);
+
+/*!
+ * Indicates the result of the 'update configuration' step of an NMT 'request
+ * configuration' request for the specified node (see Fig. 8 in CiA 302-2
+ * version 4.1.0). This function MUST be called upon completion.
+ *
+ * \param nmt a pointer to an NMT master service.
+ * \param id  the Node-ID (in the range [1..127]).
+ * \param ac  the SDO abort code (0 on success).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned32_t ac);
 
 /*!
  * Processes an NMT command from the master or the application. Note that this

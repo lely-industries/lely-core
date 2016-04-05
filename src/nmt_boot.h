@@ -36,111 +36,43 @@ typedef struct __co_nmt_boot co_nmt_boot_t;
 extern "C" {
 #endif
 
+/*!
+ * The CANopen NMT 'boot slave' confirmation function, invoked when the 'boot
+ * slave' process completes.
+ *
+ * \param nmt a pointer to an NMT master service.
+ * \param id  the Node-ID of the slave (in the range [1..127]).
+ * \param st  the state of the node (including the toggle bit).
+ * \param es  the error status (in the range ['A'..'O'], or 0 on success).
+ */
+void co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
+		char es);
+
 void *__co_nmt_boot_alloc(void);
 void __co_nmt_boot_free(void *ptr);
 struct __co_nmt_boot *__co_nmt_boot_init(struct __co_nmt_boot *boot,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
+		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id,
+		int timeout);
 void __co_nmt_boot_fini(struct __co_nmt_boot *boot);
 
 /*!
- * Creates a new CANopen NMT 'boot slave' service.
+ * Creates and starts a new CANopen NMT 'boot slave' service.
  *
- * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device.
- * \param nmt a pointer to an NMT master service.
+ * \param net     a pointer to a CAN network.
+ * \param dev     a pointer to a CANopen device.
+ * \param nmt     a pointer to an NMT master service.
+ * \param id      the Node-ID.
+ * \param timeout the SDO timeout (in milliseconds).
  *
  * \returns a pointer to a new 'boot slave' service, or NULL on error.
  *
  * \see co_nmt_boot_destroy()
  */
-co_nmt_boot_t *co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
+co_nmt_boot_t *co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
+		co_unsigned8_t id, int timeout);
 
 //! Destroys a CANopen NMT 'boot slave' service. \see co_nmt_boot_create()
 void co_nmt_boot_destroy(co_nmt_boot_t *boot);
-
-/*!
- * Retrieves the indication function invoked when the NMT 'boot slave' process
- * reaches the 'update software' step.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_boot_set_up_sw_ind()
- */
-void co_nmt_boot_get_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
-		void **pdata);
-
-/*!
- * Sets the indication function invoked when the NMT 'boot slave' process
- * reaches the 'update software' step.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_boot_get_up_sw_ind()
- */
-void co_nmt_boot_set_up_sw_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
-		void *data);
-
-/*!
- * Retrieves the indication function invoked when the NMT 'boot slave' process
- * reaches the 'update configuration' step.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_boot_set_up_cfg_ind()
- */
-void co_nmt_boot_get_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t **pind,
-		void **pdata);
-
-/*!
- * Sets the indication function invoked when the NMT 'boot slave' process
- * reaches the 'update configuration' step.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_boot_get_up_cfg_ind()
- */
-void co_nmt_boot_set_up_cfg_ind(co_nmt_boot_t *boot, co_nmt_req_ind_t *ind,
-		void *data);
-
-/*!
- * Starts the NMT 'boot slave' process.
- *
- * \param boot    a pointer to a 'boot slave' service.
- * \param id      the Node-ID.
- * \param timeout the SDO timeout (in milliseconds).
- * \param con     a pointer to the confirmation function (can be NULL).
- * \param data    a pointer to user-specified data (can be NULL). \a data is
- *                passed as the last parameter to \a con.
- *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- */
-int co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
-		co_nmt_boot_ind_t *con, void *data);
-
-/*!
- * Indicates the result of a user-implemented step requested by the NMT 'boot
- * slave' process.
- *
- * \param boot a pointer to a 'boot slave' service.
- * \param res  the result of the request. A non-zero value is interpreted as an
- *             error.
- */
-void co_nmt_boot_req_res(co_nmt_boot_t *boot, int res);
 
 #ifdef __cplusplus
 }
