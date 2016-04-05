@@ -83,23 +83,35 @@
 //! Constant value.
 #define CO_ACCESS_CONST	(CO_ACCESS_RO | 0x10)
 
-//! The lower limit of the object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_MIN_NODEID	0x01
-
-//! The upper limit of the object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_MAX_NODEID	0x02
-
-//! The default object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_DEF_NODEID	0x04
-
-//! The current object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_VAL_NODEID	0x08
-
 //! Refuse read on scan.
-#define CO_OBJ_FLAGS_READ	0x10
+#define CO_OBJ_FLAGS_READ	0x01
 
 //! Refuse write on download.
-#define CO_OBJ_FLAGS_WRITE	0x20
+#define CO_OBJ_FLAGS_WRITE	0x02
+
+/*!
+ * If a read access is performed for the object, the data is stored in a file.
+ * In this case, the object contains the filename, _not_ the file contents.
+ */
+#define CO_OBJ_FLAGS_UPLOAD_FILE	0x04
+
+/*!
+ * If a write access is performed for the object, the data is stored in a file.
+ * In this case, the object contains the filename, _not_ the file contents.
+ */
+#define CO_OBJ_FLAGS_DOWNLOAD_FILE	0x08
+
+//! The lower limit of the object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_MIN_NODEID	0x10
+
+//! The upper limit of the object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_MAX_NODEID	0x20
+
+//! The default object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_DEF_NODEID	0x40
+
+//! The current object value is of the form `$NODEID { "+" number }`.
+#define CO_OBJ_FLAGS_VAL_NODEID	0x80
 
 //! The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
 struct co_sdo_req;
@@ -649,14 +661,14 @@ LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
 		void *data);
 
 /*!
- * Downloads (copies) a value into a CANopen sub-object if the
+ * Downloads (moves) a value into a CANopen sub-object if the
  * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. This
  * function is invoked by the default download indication function.
  *
  * \param sub a pointer to a CANopen sub-object.
  * \param val a pointer to the value to be written. In the case of strings or
  *            domains, this MUST be the address of pointer (which is set to NULL
- *            if the value is copied).
+ *            if the value is moved).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.

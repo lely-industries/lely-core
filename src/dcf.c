@@ -603,7 +603,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	const char *val;
 
-	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
+	co_obj_t *obj = co_sub_get_obj(sub);
+	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(obj));
 	co_unsigned16_t type = co_sub_get_type(sub);
 
 	val = config_get(cfg, section, "LowLimit");
@@ -636,40 +637,6 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			co_val_set_id(type, &sub->max, id);
 	}
 
-	val = config_get(cfg, section, "DefaultValue");
-	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
-			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
-		}
-		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse DefaultValue in section %s",
-					section);
-			return -1;
-		}
-		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
-			co_val_set_id(type, &sub->def, id);
-	}
-
-	val = config_get(cfg, section, "ParameterValue");
-	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
-			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
-		}
-		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse ParameterValue in section %s",
-					section);
-			return -1;
-		}
-		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
-			co_val_set_id(type, sub->val, id);
-	} else {
-		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
-			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
-		co_val_copy(type, sub->val, &sub->def);
-	}
-
 	unsigned int access = 0;
 	val = config_get(cfg, section, "AccessType");
 	if (__unlikely(!val || !*val)) {
@@ -696,13 +663,73 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	}
 	co_sub_set_access(sub, access);
 
+	val = config_get(cfg, section, "DefaultValue");
+	if (val && *val) {
+		if (!strncmp(val, "$NODEID", 7)) {
+			val += 7;
+			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
+		}
+		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, NULL))) {
+			diag(DIAG_ERROR, get_errc(), "unable to parse DefaultValue in section %s",
+					section);
+			return -1;
+		}
+		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
+			co_val_set_id(type, &sub->def, id);
+	}
+
 	val = config_get(cfg, section, "PDOMapping");
 	if (val && *val)
 		co_sub_set_pdo_mapping(sub, strtoul(val, NULL, 0));
 
 	val = config_get(cfg, section, "ObjFlags");
 	if (val && *val)
-		co_sub_set_flags(sub, strtoul(val, NULL, 0));
+		sub->flags |= strtoul(val, NULL, 0);
+
+	val = config_get(cfg, section, "ParameterValue");
+	if (val && *val) {
+		if (!strncmp(val, "$NODEID", 7)) {
+			val += 7;
+			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
+		}
+		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, NULL))) {
+			diag(DIAG_ERROR, get_errc(), "unable to parse ParameterValue in section %s",
+					section);
+			return -1;
+		}
+		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
+			co_val_set_id(type, sub->val, id);
+#ifndef LELY_NO_CO_OBJ_FILE
+	} else if (co_obj_get_code(obj) == CO_OBJECT_DOMAIN
+			&& !co_sub_get_subidx(sub) && access == CO_ACCESS_RO
+			&& (val = config_get(cfg, section, "UploadFile"))) {
+		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
+		// Store the filename instead of the contents in the object
+		// dictionary.
+		if (__unlikely(!co_val_lex(CO_DEFTYPE_VISIBLE_STRING, sub->val,
+				val, NULL, NULL))) {
+			diag(DIAG_ERROR, get_errc(), "unable to parse UploadFile in section %s",
+					section);
+			return -1;
+		}
+	} else if (co_obj_get_code(obj) == CO_OBJECT_DOMAIN
+			&& !co_sub_get_subidx(sub) && access == CO_ACCESS_WO
+			&& (val = config_get(cfg, section, "DownloadFile"))) {
+		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
+		// Store the filename instead of the contents in the object
+		// dictionary.
+		if (__unlikely(!co_val_lex(CO_DEFTYPE_VISIBLE_STRING, sub->val,
+				val, NULL, NULL))) {
+			diag(DIAG_ERROR, get_errc(), "unable to parse DownloadFile in section %s",
+					section);
+			return -1;
+		}
+#endif
+	} else {
+		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
+			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
+		co_val_copy(type, sub->val, &sub->def);
+	}
 
 	return 0;
 }

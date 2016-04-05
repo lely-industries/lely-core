@@ -537,7 +537,14 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
-	r = snprintf_c99_sval(s, n, type, co_sub_get_val(sub));
+#ifndef LELY_NO_CO_OBJ_FILE
+	if ((co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)
+			|| (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE))
+		r = snprintf_c99_sval(s, n, CO_DEFTYPE_VISIBLE_STRING,
+				co_sub_get_val(sub));
+	else
+#endif
+		r = snprintf_c99_sval(s, n, type, co_sub_get_val(sub));
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -584,20 +591,24 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
-	unsigned int baud = co_sub_get_flags(sub);
+	unsigned int flags = co_sub_get_flags(sub);
 #define LELY_CO_DEFINE_FLAGS(x) \
-	if (baud & CO_OBJ_FLAGS_##x) { \
+	if (flags & CO_OBJ_FLAGS_##x) { \
 		r = snprintf(s, n, "\t\t\t\t| CO_OBJ_FLAGS_" #x "\n"); \
 		if (__unlikely(r < 0)) \
 			return r; \
 		t += r; r = MIN((size_t)r, n); s += r; n -= r; \
 	}
+LELY_CO_DEFINE_FLAGS(READ)
+LELY_CO_DEFINE_FLAGS(WRITE)
+#ifndef LELY_NO_CO_OBJ_FILE
+LELY_CO_DEFINE_FLAGS(UPLOAD_FILE)
+LELY_CO_DEFINE_FLAGS(DOWNLOAD_FILE)
+#endif
 LELY_CO_DEFINE_FLAGS(MIN_NODEID)
 LELY_CO_DEFINE_FLAGS(MAX_NODEID)
 LELY_CO_DEFINE_FLAGS(DEF_NODEID)
 LELY_CO_DEFINE_FLAGS(VAL_NODEID)
-LELY_CO_DEFINE_FLAGS(READ)
-LELY_CO_DEFINE_FLAGS(WRITE)
 #undef LELY_CO_DEFINE_FLAGS
 
 	return t;
@@ -679,7 +690,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNICODE_STRING:
 		// TODO: Implement UNICODE_STRING.
-		r = 0;
+		r = snprintf(s, n, "{ .us = NULL }");
 		break;
 	case CO_DEFTYPE_TIME_OF_DAY:
 		r = snprintf(s, n, "{ .t = { "
@@ -697,7 +708,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_DOMAIN:
 		// TODO: Implement DOMAIN.
-		r = 0;
+		r = snprintf(s, n, "{ .dom = NULL }");
 		break;
 	case CO_DEFTYPE_INTEGER24:
 		r = snprintf(s, n, "{ .i24 = %" PRIi32 "l }", u->i24);

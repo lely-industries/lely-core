@@ -50,6 +50,14 @@ AS_IF([test "x$enable_dcf" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
+AC_ARG_ENABLE([obj-file],
+	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
+AS_IF([test "x$enable_obj_file" == "xno"], [
+	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
+])
+
 AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
