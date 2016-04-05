@@ -34,6 +34,14 @@ AS_IF([test "x$enable_threads" == "xno"], [
 	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CANFD], [false])
+AC_ARG_ENABLE([canfd],
+	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
+AS_IF([test "x$enable_canfd" == "xno"], [
+	AM_CONDITIONAL([NO_CANFD], [true])
+	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
