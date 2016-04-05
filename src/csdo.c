@@ -949,7 +949,7 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	switch (co_sub_get_subidx(sub)) {
 	case 0:
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);

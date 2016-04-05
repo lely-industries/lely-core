@@ -632,6 +632,8 @@ co_sub_set_access(co_sub_t *sub, unsigned int access)
 	case CO_ACCESS_RO:
 	case CO_ACCESS_WO:
 	case CO_ACCESS_RW:
+	case CO_ACCESS_RWR:
+	case CO_ACCESS_RWW:
 	case CO_ACCESS_CONST:
 		sub->access = access;
 		return 0;
@@ -733,8 +735,8 @@ co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 	if (__unlikely(!sub))
 		return CO_SDO_AC_NO_SUB;
 
-	if (__unlikely(!(sub->access & CO_ACCESS_WO)))
-		return CO_SDO_AC_NO_WO;
+	if (__unlikely(!(sub->access & CO_ACCESS_WRITE)))
+		return CO_SDO_AC_NO_WRITE;
 
 	if (__unlikely(!req))
 		return CO_SDO_AC_ERROR;
@@ -749,8 +751,8 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 	if (__unlikely(!sub))
 		return CO_SDO_AC_NO_SUB;
 
-	if (__unlikely(!(sub->access & CO_ACCESS_RO)))
-		return CO_SDO_AC_NO_RO;
+	if (__unlikely(!(sub->access & CO_ACCESS_READ)))
+		return CO_SDO_AC_NO_READ;
 
 	if (__unlikely(!req))
 		return CO_SDO_AC_ERROR;

@@ -681,9 +681,12 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		access = CO_ACCESS_RO;
 	} else if (!strcmp(val, "wo")) {
 		access = CO_ACCESS_WO;
-	} else if (!strcmp(val, "rw") || !strcmp(val, "rwr")
-			|| !strcmp(val, "rww")) {
+	} else if (!strcmp(val, "rw")) {
 		access = CO_ACCESS_RW;
+	} else if (!strcmp(val, "rwr")) {
+		access = CO_ACCESS_RWR;
+	} else if (!strcmp(val, "rww")) {
+		access = CO_ACCESS_RWW;
 	} else if (!strcmp(val, "const")) {
 		access = CO_ACCESS_CONST;
 	} else {

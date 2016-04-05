@@ -567,7 +567,7 @@ co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return ac;
 
 	if (__unlikely(co_sub_get_subidx(sub))) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 
@@ -690,7 +690,7 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned8_t id = co_sub_get_subidx(sub);
 	if (__unlikely(!id)) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 	co_unsigned8_t maxid = MIN(co_obj_get_val_u8(co_sub_get_obj(sub), 0),

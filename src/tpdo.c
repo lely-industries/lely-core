@@ -588,7 +588,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	switch (co_sub_get_subidx(sub)) {
 	case 0:
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
@@ -763,7 +763,13 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 				ac = CO_SDO_AC_NO_OBJ;
 				goto error;
 			}
-			if (__unlikely(!co_sub_get_pdo_mapping(sub))) {
+			unsigned int access = co_sub_get_access(sub);
+			if (__unlikely(!(access & CO_ACCESS_READ))) {
+				ac = CO_SDO_AC_NO_READ;
+				goto error;
+			}
+			if (__unlikely(!co_sub_get_pdo_mapping(sub)
+					|| !(access & CO_ACCESS_TPDO))) {
 				ac = CO_SDO_AC_NO_PDO;
 				goto error;
 			}
@@ -802,7 +808,13 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			ac = CO_SDO_AC_NO_OBJ;
 			goto error;
 		}
-		if (__unlikely(!co_sub_get_pdo_mapping(sub))) {
+		unsigned int access = co_sub_get_access(sub);
+		if (__unlikely(!(access & CO_ACCESS_READ))) {
+			ac = CO_SDO_AC_NO_READ;
+			goto error;
+		}
+		if (__unlikely(!co_sub_get_pdo_mapping(sub)
+				|| !(access & CO_ACCESS_TPDO))) {
 			ac = CO_SDO_AC_NO_PDO;
 			goto error;
 		}
@@ -907,7 +919,11 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 		co_sub_t *sub = co_dev_find_sub(pdo->dev, idx, subidx);
 		if (__unlikely(!sub))
 			return CO_SDO_AC_NO_OBJ;
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)))
+		unsigned int access = co_sub_get_access(sub);
+		if (__unlikely(!(access & CO_ACCESS_READ)))
+			return CO_SDO_AC_NO_READ;
+		if (__unlikely(!co_sub_get_pdo_mapping(sub)
+				|| !(access & CO_ACCESS_TPDO)))
 			return CO_SDO_AC_NO_PDO;
 
 		// Check the PDO length and write the value to the frame.

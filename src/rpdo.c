@@ -479,7 +479,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	switch (co_sub_get_subidx(sub)) {
 	case 0:
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
@@ -625,10 +625,17 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 					ac = CO_SDO_AC_NO_OBJ;
 					goto error;
 				}
-				if (__unlikely(!co_sub_get_pdo_mapping(sub))) {
+				unsigned int access = co_sub_get_access(sub);
+				if (__unlikely(!(access & CO_ACCESS_WRITE))) {
+					ac = CO_SDO_AC_NO_WRITE;
+					goto error;
+				}
+				if (__unlikely(!co_sub_get_pdo_mapping(sub)
+						|| !(access & CO_ACCESS_RPDO))) {
 					ac = CO_SDO_AC_NO_PDO;
 					goto error;
 				}
+
 				size = co_val_write(co_sub_get_type(sub),
 						co_sub_get_val(sub), NULL,
 						NULL);
@@ -667,7 +674,13 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 				ac = CO_SDO_AC_NO_OBJ;
 				goto error;
 			}
-			if (__unlikely(!co_sub_get_pdo_mapping(sub))) {
+			unsigned int access = co_sub_get_access(sub);
+			if (__unlikely(!(access & CO_ACCESS_WRITE))) {
+				ac = CO_SDO_AC_NO_WRITE;
+				goto error;
+			}
+			if (__unlikely(!co_sub_get_pdo_mapping(sub)
+					|| !(access & CO_ACCESS_RPDO))) {
 				ac = CO_SDO_AC_NO_PDO;
 				goto error;
 			}
@@ -768,7 +781,11 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 			co_sub_t *sub = co_dev_find_sub(pdo->dev, idx, subidx);
 			if (__unlikely(!sub))
 				return CO_SDO_AC_NO_OBJ;
-			if (__unlikely(!co_sub_get_pdo_mapping(sub)))
+			unsigned int access = co_sub_get_access(sub);
+			if (__unlikely(!(access & CO_ACCESS_WRITE)))
+				return CO_SDO_AC_NO_WRITE;
+			if (__unlikely(!co_sub_get_pdo_mapping(sub)
+					|| !(access & CO_ACCESS_RPDO)))
 				return CO_SDO_AC_NO_PDO;
 			// Download the value.
 			struct co_sdo_req req = CO_SDO_REQ_INIT;

@@ -53,17 +53,35 @@
  */
 #define CO_OBJECT_RECORD	0x09
 
+//! The object can be read.
+#define CO_ACCESS_READ	0x01
+
+//! The object can be written.
+#define CO_ACCESS_WRITE	0x02
+
+//! The object can be mapped to a TPDO.
+#define CO_ACCESS_TPDO	0x04
+
+//! The object can be mapped to an RPDO.
+#define CO_ACCESS_RPDO	0x08
+
 //! Read-only access.
-#define CO_ACCESS_RO	01
+#define CO_ACCESS_RO	(CO_ACCESS_READ | CO_ACCESS_TPDO)
 
 //! Write-only access.
-#define CO_ACCESS_WO	02
+#define CO_ACCESS_WO	(CO_ACCESS_WRITE | CO_ACCESS_RPDO)
 
-//! Read/write access.
-#define CO_ACCESS_RW	03
+//! Read or write access.
+#define CO_ACCESS_RW	(CO_ACCESS_RO | CO_ACCESS_WO)
 
-//! Read-only access (constant value).
-#define CO_ACCESS_CONST	05
+//! Read or write on process input.
+#define CO_ACCESS_RWR	(CO_ACCESS_RO | CO_ACCESS_WRITE)
+
+//! Read or write on process output.
+#define CO_ACCESS_RWW	(CO_ACCESS_WO | CO_ACCESS_READ)
+
+//! Constant value.
+#define CO_ACCESS_CONST	(CO_ACCESS_RO | 0x10)
 
 //! The lower limit of the object value is of the form `$NODEID { "+" number }`.
 #define CO_OBJ_FLAGS_MIN_NODEID	0x01

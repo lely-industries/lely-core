@@ -557,6 +557,12 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	case CO_ACCESS_RW:
 		r = snprintf(s, n, "CO_ACCESS_RW,\n");
 		break;
+	case CO_ACCESS_RWR:
+		r = snprintf(s, n, "CO_ACCESS_RWR,\n");
+		break;
+	case CO_ACCESS_RWW:
+		r = snprintf(s, n, "CO_ACCESS_RWW,\n");
+		break;
 	case CO_ACCESS_CONST:
 		r = snprintf(s, n, "CO_ACCESS_CONST,\n");
 		break;

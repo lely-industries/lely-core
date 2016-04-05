@@ -74,9 +74,9 @@ co_sdo_ac2str(co_unsigned32_t ac)
 		return "Out of memory";
 	case CO_SDO_AC_NO_ACCES:
 		return "Unsupported access to an object";
-	case CO_SDO_AC_NO_RO:
+	case CO_SDO_AC_NO_READ:
 		return "Attempt to read a write only object";
-	case CO_SDO_AC_NO_WO:
+	case CO_SDO_AC_NO_WRITE:
 		return "Attempt to write a read only object";
 	case CO_SDO_AC_NO_OBJ:
 		return "Object does not exist in the object dictionary";

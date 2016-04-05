@@ -74,10 +74,10 @@ struct co_sdo_par {
 #define CO_SDO_AC_NO_ACCES	UINT32_C(0x06010000)
 
 //! SDO abort code: Attempt to read a write only object.
-#define CO_SDO_AC_NO_RO		UINT32_C(0x06010001)
+#define CO_SDO_AC_NO_READ	UINT32_C(0x06010001)
 
 //! SDO abort code: Attempt to write a read only object.
-#define CO_SDO_AC_NO_WO		UINT32_C(0x06010002)
+#define CO_SDO_AC_NO_WRITE	UINT32_C(0x06010002)
 
 //! SDO abort code: Object does not exist in the object dictionary.
 #define CO_SDO_AC_NO_OBJ	UINT32_C(0x06020000)

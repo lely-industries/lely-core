@@ -1486,7 +1486,7 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
 	if (__unlikely(!subidx)) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 	if (__unlikely(subidx > nmt->nhb)) {
@@ -1591,7 +1591,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
 	if (__unlikely(!subidx)) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 
@@ -1706,7 +1706,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
 	if (__unlikely(!subidx)) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 
