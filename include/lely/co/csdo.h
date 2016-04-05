@@ -71,8 +71,8 @@ LELY_CO_EXTERN void __co_csdo_fini(struct __co_csdo *sdo);
  * \param dev a pointer to a CANopen device describing the client (can be NULL).
  * \param num the SDO number (in the range [1..128]). The SDO parameter record
  *            MUST exist in the object dictionary of \a dev. However, if \a dev
- *            is NULL, \a num is interpreted as a Node-ID (in the range[1..127])
- *            and the default SDO parameters are used.
+ *            is NULL, \a num is interpreted as a Node-ID (in the range
+ *            [1..127]) and the default SDO parameters are used.
  *
  * \returns a pointer to a new Client-SDO service, or NULL on error. In the
  * latter case, the error number can be obtained with `get_errnum()`.

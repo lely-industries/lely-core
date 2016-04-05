@@ -1955,6 +1955,8 @@ PREDEFINED             += LELY_CO_EXPORT=
 
 EXPAND_AS_DEFINED      =
 
+EXPAND_AS_DEFINED      += LELY_CO_DEFINE_STATE
+
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all refrences to function-like macros that are alone on a line, have an
 # all uppercase name, and do not end with a semicolon. Such function macros are

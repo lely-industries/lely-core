@@ -36,45 +36,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+struct __co_csdo_state;
 //! An opaque CANopen Client-SDO state type.
-typedef const struct co_csdo_state co_csdo_state_t;
-
-//! A CANopen Client-SDO state.
-struct co_csdo_state {
-	//! A pointer to the function invoked when a new state is entered.
-	co_csdo_state_t *(*on_enter)(co_csdo_t *sdo);
-	/*!
-	 * A pointer to the transition function invoked when an abort code has
-	 * been received.
-	 *
-	 * \param sdo a pointer to a Client-SDO service.
-	 * \param ac  the abort code.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_csdo_state_t *(*on_abort)(co_csdo_t *sdo, co_unsigned32_t ac);
-	/*!
-	 * A pointer to the transition function invoked when a timeout occurs.
-	 *
-	 * \param sdo a pointer to a Client-SDO service.
-	 * \param tp  a pointer to the current time.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_csdo_state_t *(*on_time)(co_csdo_t *sdo, const struct timespec *tp);
-	/*!
-	 * A pointer to the transition function invoked when a CAN frame has
-	 * been received.
-	 *
-	 * \param sdo a pointer to a Client-SDO service.
-	 * \param msg a pointer to the received CAN frame.
-	 *
-	 * \returns a pointer to the next state.
-	 */
-	co_csdo_state_t *(*on_recv)(co_csdo_t *sdo, const struct can_msg *msg);
-	//! A pointer to the function invoked when the current state is left.
-	void (*on_leave)(co_csdo_t *sdo);
-};
+typedef const struct __co_csdo_state co_csdo_state_t;
 
 //! A CANopen Client-SDO.
 struct __co_csdo {
@@ -186,6 +150,46 @@ static inline void co_csdo_emit_time(co_csdo_t *sdo, const struct timespec *tp);
  */
 static inline void co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg);
 
+//! A CANopen Client-SDO state.
+struct __co_csdo_state {
+	//! A pointer to the function invoked when a new state is entered.
+	co_csdo_state_t *(*on_enter)(co_csdo_t *sdo);
+	/*!
+	 * A pointer to the transition function invoked when an abort code has
+	 * been received.
+	 *
+	 * \param sdo a pointer to a Client-SDO service.
+	 * \param ac  the abort code.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_csdo_state_t *(*on_abort)(co_csdo_t *sdo, co_unsigned32_t ac);
+	/*!
+	 * A pointer to the transition function invoked when a timeout occurs.
+	 *
+	 * \param sdo a pointer to a Client-SDO service.
+	 * \param tp  a pointer to the current time.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_csdo_state_t *(*on_time)(co_csdo_t *sdo, const struct timespec *tp);
+	/*!
+	 * A pointer to the transition function invoked when a CAN frame has
+	 * been received.
+	 *
+	 * \param sdo a pointer to a Client-SDO service.
+	 * \param msg a pointer to the received CAN frame.
+	 *
+	 * \returns a pointer to the next state.
+	 */
+	co_csdo_state_t *(*on_recv)(co_csdo_t *sdo, const struct can_msg *msg);
+	//! A pointer to the function invoked when the current state is left.
+	void (*on_leave)(co_csdo_t *sdo);
+};
+
+#define LELY_CO_DEFINE_STATE(name, ...) \
+	static co_csdo_state_t *const name = &(co_csdo_state_t){ __VA_ARGS__  };
+
 //! The 'abort' transition function of the 'waiting' state.
 static co_csdo_state_t *co_csdo_wait_on_abort(co_csdo_t *sdo,
 		co_unsigned32_t ac);
@@ -195,9 +199,10 @@ static co_csdo_state_t *co_csdo_wait_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'waiting' state.
-static const co_csdo_state_t *co_csdo_wait_state = &(co_csdo_state_t){
-	NULL, &co_csdo_wait_on_abort, NULL, &co_csdo_wait_on_recv, NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_wait_state,
+	.on_abort = &co_csdo_wait_on_abort,
+	.on_recv = &co_csdo_wait_on_recv
+)
 
 //! The entry function of the 'abort transfer' state.
 static co_csdo_state_t *co_csdo_abort_on_enter(co_csdo_t *sdo);
@@ -206,9 +211,10 @@ static co_csdo_state_t *co_csdo_abort_on_enter(co_csdo_t *sdo);
 static void co_csdo_abort_on_leave(co_csdo_t *sdo);
 
 //! The 'abort transfer' state.
-static const co_csdo_state_t *co_csdo_abort_state = &(co_csdo_state_t){
-	&co_csdo_abort_on_enter, NULL, NULL, NULL, &co_csdo_abort_on_leave
-};
+LELY_CO_DEFINE_STATE(co_csdo_abort_state,
+	.on_enter = &co_csdo_abort_on_enter,
+	.on_leave = &co_csdo_abort_on_leave
+)
 
 //! The 'abort' transition function of the 'download initiate' state.
 static co_csdo_state_t *co_csdo_dn_ini_on_abort(co_csdo_t *sdo,
@@ -226,13 +232,11 @@ static co_csdo_state_t *co_csdo_dn_ini_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'download initiate' state.
-static const co_csdo_state_t *co_csdo_dn_ini_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_dn_ini_on_abort,
-	&co_csdo_dn_ini_on_time,
-	&co_csdo_dn_ini_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_dn_ini_state,
+	.on_abort = &co_csdo_dn_ini_on_abort,
+	.on_time = &co_csdo_dn_ini_on_time,
+	.on_recv = &co_csdo_dn_ini_on_recv
+)
 
 //! The entry function of the 'download segment' state.
 static co_csdo_state_t *co_csdo_dn_seg_on_enter(co_csdo_t *sdo);
@@ -252,13 +256,12 @@ static co_csdo_state_t *co_csdo_dn_seg_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'download segment' state.
-static const co_csdo_state_t *co_csdo_dn_seg_state = &(co_csdo_state_t){
-	&co_csdo_dn_seg_on_enter,
-	&co_csdo_dn_seg_on_abort,
-	&co_csdo_dn_seg_on_time,
-	&co_csdo_dn_seg_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_dn_seg_state,
+	.on_enter = &co_csdo_dn_seg_on_enter,
+	.on_abort = &co_csdo_dn_seg_on_abort,
+	.on_time = &co_csdo_dn_seg_on_time,
+	.on_recv = &co_csdo_dn_seg_on_recv
+)
 
 //! The 'abort' transition function of the 'upload initiate' state.
 static co_csdo_state_t *co_csdo_up_ini_on_abort(co_csdo_t *sdo,
@@ -273,13 +276,11 @@ static co_csdo_state_t *co_csdo_up_ini_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'upload initiate' state.
-static const co_csdo_state_t *co_csdo_up_ini_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_up_ini_on_abort,
-	&co_csdo_up_ini_on_time,
-	&co_csdo_up_ini_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_up_ini_state,
+	.on_abort = &co_csdo_up_ini_on_abort,
+	.on_time = &co_csdo_up_ini_on_time,
+	.on_recv = &co_csdo_up_ini_on_recv
+)
 
 //! The 'abort' transition function of the 'upload segment' state.
 static co_csdo_state_t *co_csdo_up_seg_on_abort(co_csdo_t *sdo,
@@ -294,13 +295,11 @@ static co_csdo_state_t *co_csdo_up_seg_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'upload segment' state.
-static const co_csdo_state_t *co_csdo_up_seg_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_up_seg_on_abort,
-	&co_csdo_up_seg_on_time,
-	&co_csdo_up_seg_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_up_seg_state,
+	.on_abort = &co_csdo_up_seg_on_abort,
+	.on_time = &co_csdo_up_seg_on_time,
+	.on_recv = &co_csdo_up_seg_on_recv
+)
 
 //! The 'abort' transition function of the 'block download initiate' state.
 static co_csdo_state_t *co_csdo_blk_dn_ini_on_abort(co_csdo_t *sdo,
@@ -318,13 +317,11 @@ static co_csdo_state_t *co_csdo_blk_dn_ini_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block download initiate' state.
-static const co_csdo_state_t *co_csdo_blk_dn_ini_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_blk_dn_ini_on_abort,
-	&co_csdo_blk_dn_ini_on_time,
-	&co_csdo_blk_dn_ini_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_dn_ini_state,
+	.on_abort = &co_csdo_blk_dn_ini_on_abort,
+	.on_time = &co_csdo_blk_dn_ini_on_time,
+	.on_recv = &co_csdo_blk_dn_ini_on_recv
+)
 
 //! The entry function of the 'block download sub-block' state.
 static co_csdo_state_t *co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo);
@@ -345,13 +342,12 @@ static co_csdo_state_t *co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block download sub-block' state.
-static const co_csdo_state_t *co_csdo_blk_dn_sub_state = &(co_csdo_state_t){
-	&co_csdo_blk_dn_sub_on_enter,
-	&co_csdo_blk_dn_sub_on_abort,
-	&co_csdo_blk_dn_sub_on_time,
-	&co_csdo_blk_dn_sub_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_dn_sub_state,
+	.on_enter = &co_csdo_blk_dn_sub_on_enter,
+	.on_abort = &co_csdo_blk_dn_sub_on_abort,
+	.on_time = &co_csdo_blk_dn_sub_on_time,
+	.on_recv = &co_csdo_blk_dn_sub_on_recv
+)
 
 //! The 'abort' transition function of the 'block download end' state.
 static co_csdo_state_t *co_csdo_blk_dn_end_on_abort(co_csdo_t *sdo,
@@ -369,13 +365,11 @@ static co_csdo_state_t *co_csdo_blk_dn_end_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block download end' state.
-static const co_csdo_state_t *co_csdo_blk_dn_end_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_blk_dn_end_on_abort,
-	&co_csdo_blk_dn_end_on_time,
-	&co_csdo_blk_dn_end_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_dn_end_state,
+	.on_abort = &co_csdo_blk_dn_end_on_abort,
+	.on_time = &co_csdo_blk_dn_end_on_time,
+	.on_recv = &co_csdo_blk_dn_end_on_recv
+)
 
 //! The 'abort' transition function of the 'block upload initiate' state.
 static co_csdo_state_t *co_csdo_blk_up_ini_on_abort(co_csdo_t *sdo,
@@ -393,13 +387,11 @@ static co_csdo_state_t *co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block upload initiate' state.
-static const co_csdo_state_t *co_csdo_blk_up_ini_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_blk_up_ini_on_abort,
-	&co_csdo_blk_up_ini_on_time,
-	&co_csdo_blk_up_ini_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_up_ini_state,
+	.on_abort = &co_csdo_blk_up_ini_on_abort,
+	.on_time = &co_csdo_blk_up_ini_on_time,
+	.on_recv = &co_csdo_blk_up_ini_on_recv
+)
 
 //! The 'abort' transition function of the 'block upload sub-block' state.
 static co_csdo_state_t *co_csdo_blk_up_sub_on_abort(co_csdo_t *sdo,
@@ -417,13 +409,11 @@ static co_csdo_state_t *co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block upload sub-block' state.
-static const co_csdo_state_t *co_csdo_blk_up_sub_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_blk_up_sub_on_abort,
-	&co_csdo_blk_up_sub_on_time,
-	&co_csdo_blk_up_sub_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_up_sub_state,
+	.on_abort = &co_csdo_blk_up_sub_on_abort,
+	.on_time = &co_csdo_blk_up_sub_on_time,
+	.on_recv = &co_csdo_blk_up_sub_on_recv
+)
 
 //! The 'abort' transition function of the 'block upload end' state.
 static co_csdo_state_t *co_csdo_blk_up_end_on_abort(co_csdo_t *sdo,
@@ -440,13 +430,13 @@ static co_csdo_state_t *co_csdo_blk_up_end_on_recv(co_csdo_t *sdo,
 		const struct can_msg *msg);
 
 //! The 'block upload end' state.
-static const co_csdo_state_t *co_csdo_blk_up_end_state = &(co_csdo_state_t){
-	NULL,
-	&co_csdo_blk_up_end_on_abort,
-	&co_csdo_blk_up_end_on_time,
-	&co_csdo_blk_up_end_on_recv,
-	NULL
-};
+LELY_CO_DEFINE_STATE(co_csdo_blk_up_end_state,
+	.on_abort = &co_csdo_blk_up_end_on_abort,
+	.on_time = &co_csdo_blk_up_end_on_time,
+	.on_recv = &co_csdo_blk_up_end_on_recv
+)
+
+#undef LELY_CO_DEFINE_STATE
 
 /*!
  * Processes an abort transfer indication by aborting any ongoing transfer of a
