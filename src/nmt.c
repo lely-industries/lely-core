@@ -47,6 +47,11 @@
 #define LELY_CO_NMT_BOOT_TIMEOUT	100
 #endif
 
+#ifndef LELY_CO_NMT_CFG_TIMEOUT
+//! The SDO timeout (in milliseconds) for an NMT 'configuration request'.
+#define LELY_CO_NMT_CFG_TIMEOUT	100
+#endif
+
 struct __co_nmt_state;
 //! An opaque CANopen NMT state type.
 typedef const struct __co_nmt_state co_nmt_state_t;
@@ -194,6 +199,17 @@ static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  */
 static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
+
+#ifndef LELY_NO_CO_NMT_MASTER
+/*!
+ * The download indication function for (all sub-objects of) CANopen object 1F25
+ * (Configuration request).
+ *
+ * \see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		void *data);
+#endif
 
 /*!
  * The download indication function for (all sub-objects of) CANopen object 1F80
@@ -658,6 +674,14 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1017)
 		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
 
+#ifndef LELY_NO_CO_NMT_MASTER
+	// Set the download indication function for the configuration request
+	// value.
+	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
+	if (obj_1f25)
+		co_obj_set_dn_ind(obj_1f25, &co_1f25_dn_ind, nmt);
+#endif
+
 	// Set the download indication function for the NMT startup value.
 	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
 	if (obj_1f80)
@@ -679,6 +703,10 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
+#ifndef LELY_NO_CO_NMT_MASTER
+	if (obj_1f25)
+		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+#endif
 	if (obj_1017)
 		co_obj_set_dn_ind(obj_1017, NULL, NULL);
 	if (obj_1016)
@@ -714,6 +742,14 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
+
+#ifndef LELY_NO_CO_NMT_MASTER
+	// Remove the download indication function for the configuration request
+	// value.
+	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
+	if (obj_1f25)
+		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+#endif
 
 	// Remove the download indication function for the producer heartbeat
 	// time.
@@ -1536,6 +1572,83 @@ error:
 	return ac;
 }
 
+#ifndef LELY_NO_CO_NMT_MASTER
+static co_unsigned32_t
+co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f25);
+	assert(req);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_unsigned32_t ac = 0;
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+		return ac;
+
+	co_unsigned8_t subidx = co_sub_get_subidx(sub);
+	if (__unlikely(!subidx)) {
+		ac = CO_SDO_AC_NO_WO;
+		goto error;
+	}
+
+	// Sub-index 80 indicates all nodes.
+	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
+	// Abort with an error if the Node-ID is unknown.
+	if (__unlikely(id > CO_NUM_NODES
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
+		ac = CO_SDO_AC_PARAM_VAL;
+		goto error;
+	}
+
+	// Check if the value 'conf' was downloaded.
+	if (__unlikely(!nmt->master || val.u32 != UINT32_C(0x666e6f63))) {
+		ac = CO_SDO_AC_DATA_CTL;
+		goto error;
+	}
+
+	if (id) {
+		// Check if the entry for this node is present in object 1F20
+		// (Store DCF) or 1F22 (Concise DCF).
+		if (__unlikely(!co_dev_get_val(nmt->dev, 0x1f20, id)
+				&& !co_dev_get_val(nmt->dev, 0x1f22, id))) {
+			ac = CO_SDO_AC_NO_DATA;
+			goto error;
+		}
+		// Abort if the slave is already being configured.
+		if (__unlikely(nmt->slaves[id - 1].cfg)) {
+			ac = CO_SDO_AC_DATA_DEV;
+			goto error;
+		}
+		co_nmt_cfg_req(nmt, id, LELY_CO_NMT_CFG_TIMEOUT, NULL, NULL);
+	} else {
+		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
+		// exists.
+		if (__unlikely(!co_dev_find_obj(nmt->dev, 0x1f20)
+				&& !co_dev_find_obj(nmt->dev, 0x1f22))) {
+			ac = CO_SDO_AC_NO_DATA;
+			goto error;
+		}
+		for (id = 1; id <= CO_NUM_NODES; id++) {
+			struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+			// Skip slaves that are not in the network list or are
+			// already being configured.
+			if (!(slave->assignment & 0x01) || slave->cfg)
+				continue;
+			co_nmt_cfg_req(nmt, id, LELY_CO_NMT_CFG_TIMEOUT, NULL,
+					NULL);
+		}
+	}
+
+error:
+	co_val_fini(type, &val);
+	return ac;
+}
+#endif // !LELY_NO_CO_NMT_MASTER
+
 static co_unsigned32_t
 co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -1599,13 +1712,15 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
-	if (__unlikely(id > CO_NUM_NODES)) {
+	// Abort with an error if the Node-ID is unknown.
+	if (__unlikely(id > CO_NUM_NODES
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
 	if (__unlikely(!nmt->master)) {
-		ac = CO_SDO_AC_NO_WO;
+		ac = CO_SDO_AC_DATA_CTL;
 		goto error;
 	}
 
@@ -1635,7 +1750,7 @@ error:
 	co_val_fini(type, &val);
 	return ac;
 }
-#endif
+#endif // !LELY_NO_CO_NMT_MASTER
 
 static int
 co_nmt_recv_000(const struct can_msg *msg, void *data)
