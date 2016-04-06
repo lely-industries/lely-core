@@ -538,8 +538,9 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
 #ifndef LELY_NO_CO_OBJ_FILE
-	if ((co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)
-			|| (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE))
+	if (type == CO_DEFTYPE_DOMAIN
+			&& ((co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)
+			|| (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE)))
 		r = snprintf_c99_sval(s, n, CO_DEFTYPE_VISIBLE_STRING,
 				co_sub_get_val(sub));
 	else

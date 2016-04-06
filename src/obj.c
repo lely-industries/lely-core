@@ -29,6 +29,9 @@
 #include "obj.h"
 
 #include <assert.h>
+#ifndef LELY_NO_CO_OBJ_FILE
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -720,11 +723,42 @@ co_sub_dn(co_sub_t *sub, void *val)
 {
 	assert(sub);
 
-	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
-		co_val_fini(sub->type, sub->val);
-		if (__unlikely(!co_val_move(sub->type, sub->val, val)))
-			return -1;
+	if (sub->flags & CO_OBJ_FLAGS_WRITE)
+		return 0;
+
+#ifndef LELY_NO_CO_OBJ_FILE
+	if (sub->type == CO_DEFTYPE_DOMAIN
+			&& (sub->flags & CO_OBJ_FLAGS_DOWNLOAD_FILE)) {
+		errc_t errc = 0;
+
+		const char *filename = co_val_addressof(sub->type, sub->val);
+		FILE *stream = fopen(filename, "wb");
+		if (__unlikely(!stream)) {
+			errc = get_errc();
+			goto error_fopen;
+		}
+
+		const void *ptr = co_val_addressof(sub->type, val);
+		size_t size = co_val_sizeof(sub->type, val);
+		if (__unlikely(fwrite(ptr, 1, size, stream) != size)) {
+			errc = get_errc();
+			goto error_fwrite;
+		}
+
+		fclose(stream);
+		return 0;
+
+	error_fwrite:
+		fclose(stream);
+	error_fopen:
+		set_errc(errc);
+		return -1;
 	}
+#endif
+
+	co_val_fini(sub->type, sub->val);
+	if (__unlikely(!co_val_move(sub->type, sub->val, val)))
+		return -1;
 
 	return 0;
 }
@@ -867,7 +901,14 @@ default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return CO_SDO_AC_NO_DATA;
 
 	co_unsigned32_t ac = 0;
-	co_sdo_req_up(req, co_sub_get_type(sub), val, &ac);
+#ifndef LELY_NO_CO_OBJ_FILE
+	co_unsigned16_t type = co_sub_get_type(sub);
+	if (type == CO_DEFTYPE_DOMAIN
+			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE))
+		co_sdo_req_up_file(req, co_val_addressof(type, val), &ac);
+	else
+#endif
+		co_sdo_req_up(req, co_sub_get_type(sub), val, &ac);
 	return ac;
 }
 

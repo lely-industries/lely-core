@@ -27,6 +27,9 @@
 #include <lely/co/val.h>
 
 #include <assert.h>
+#ifndef LELY_NO_CO_OBJ_FILE
+#include <stdio.h>
+#endif
 
 /*!
  * Copies the next segment of the specified CANopen SDO download request to the
@@ -301,6 +304,63 @@ error_reserve:
 		*pac = ac;
 	return -1;
 }
+
+#ifndef LELY_NO_CO_OBJ_FILE
+LELY_CO_EXPORT int
+co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
+		co_unsigned32_t *pac)
+{
+	assert(req);
+	struct membuf *buf = &req->membuf;
+
+	co_unsigned32_t ac = 0;
+
+	FILE *stream = fopen(filename, "rb");
+	if (__unlikely(!stream)) {
+		ac = CO_SDO_AC_DATA;
+		goto error_fopen;
+	}
+
+	if (__unlikely(fseek(stream, 0, SEEK_END))) {
+		ac = CO_SDO_AC_DATA;
+		goto error_fseek;
+	}
+	int whence = ftell(stream);
+	if (__unlikely(whence == -1)) {
+		ac = CO_SDO_AC_DATA;
+		goto error_ftell;
+	}
+	rewind(stream);
+	size_t size = whence;
+
+	membuf_clear(buf);
+	if (__unlikely(size && !membuf_reserve(buf, size))) {
+		ac = CO_SDO_AC_NO_MEM;
+		goto error_reserve;
+	}
+
+	void *ptr = membuf_alloc(buf, &size);
+	if (__unlikely(fread(ptr, 1, size, stream) != size)) {
+		ac = CO_SDO_AC_DATA;
+		goto error_fread;
+	}
+
+	fclose(stream);
+
+	co_sdo_req_up_buf(req);
+	return 0;
+
+error_fread:
+error_reserve:
+error_ftell:
+error_fseek:
+	fclose(stream);
+error_fopen:
+	if (pac)
+		*pac = ac;
+	return -1;
+}
+#endif // !LELY_NO_CO_OBJ_FILE
 
 static int
 co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)

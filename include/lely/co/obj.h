@@ -662,8 +662,10 @@ LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
 
 /*!
  * Downloads (moves) a value into a CANopen sub-object if the
- * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. This
- * function is invoked by the default download indication function.
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. If the type
+ * of the sub-object is #CO_DEFTYPE_DOMAIN and the #CO_OBJ_FLAGS_DOWNLOAD_FILE
+ * flag is set, the value is written to a file. This function is invoked by the
+ * default download indication function.
  *
  * \param sub a pointer to a CANopen sub-object.
  * \param val a pointer to the value to be written. In the case of strings or

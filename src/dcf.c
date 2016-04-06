@@ -603,8 +603,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	const char *val;
 
-	co_obj_t *obj = co_sub_get_obj(sub);
-	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(obj));
+	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
 	co_unsigned16_t type = co_sub_get_type(sub);
 
 	val = config_get(cfg, section, "LowLimit");
@@ -700,8 +699,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
 			co_val_set_id(type, sub->val, id);
 #ifndef LELY_NO_CO_OBJ_FILE
-	} else if (co_obj_get_code(obj) == CO_OBJECT_DOMAIN
-			&& !co_sub_get_subidx(sub) && access == CO_ACCESS_RO
+	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_WRITE)
 			&& (val = config_get(cfg, section, "UploadFile"))) {
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
 		// Store the filename instead of the contents in the object
@@ -712,8 +710,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 					section);
 			return -1;
 		}
-	} else if (co_obj_get_code(obj) == CO_OBJECT_DOMAIN
-			&& !co_sub_get_subidx(sub) && access == CO_ACCESS_WO
+	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_READ)
 			&& (val = config_get(cfg, section, "DownloadFile"))) {
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
 		// Store the filename instead of the contents in the object

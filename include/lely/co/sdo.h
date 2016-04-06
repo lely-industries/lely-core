@@ -271,6 +271,21 @@ LELY_CO_EXTERN int co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type,
 LELY_CO_EXTERN int co_sdo_req_up(struct co_sdo_req *req, co_unsigned16_t type,
 		const void *val, co_unsigned32_t *pac);
 
+/*!
+ * Loads the specified file into a buffer and constructs a CANopen SDO upload
+ * request.
+ *
+ * \param req      a pointer to a CANopen SDO upload request.
+ * \param filename a pointer to the name of the file.
+ * \param pac      the address of a value which, on exit, contains the SDO abort
+ *                 code (can be NULL).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, *\a pac contains
+ * the SDO abort code.
+ */
+LELY_CO_EXTERN int co_sdo_req_up_file(struct co_sdo_req *req,
+		const char *filename, co_unsigned32_t *pac);
+
 static inline int
 co_sdo_req_first(const struct co_sdo_req *req)
 {
