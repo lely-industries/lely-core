@@ -223,7 +223,7 @@ LELY_CO_EXPORT int
 co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 		co_unsigned32_t *pac)
 {
-	errc_t errc = get_errnum();
+	errc_t errc = get_errc();
 	co_unsigned32_t ac = 0;
 
 	const void *ptr = NULL;
@@ -271,6 +271,57 @@ error_done:
 		*pac = ac;
 	return -1;
 }
+
+#ifndef LELY_NO_CO_OBJ_FILE
+LELY_CO_EXPORT int
+co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
+		co_unsigned32_t *pac)
+{
+	errc_t errc = get_errc();
+	co_unsigned32_t ac = 0;
+
+	const void *ptr = NULL;
+	size_t nbyte = 0;
+	switch (co_sdo_req_dn_buf(req, &ptr, &nbyte)) {
+	default:
+		// Convert the error number to an SDO abort code.
+		ac = get_errnum() == ERRNUM_NOMEM
+				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
+		set_errc(errc);
+	case 0:
+		// Return without an abort code if not all data is present. This
+		// is not an error.
+		goto error_done;
+	case 1:
+		break;
+	}
+
+	FILE *stream = fopen(filename, "wb");
+	if (__unlikely(!stream)) {
+		ac = CO_SDO_AC_DATA;
+		set_errc(errc);
+		goto error_fopen;
+	}
+
+	if (__unlikely(fwrite(ptr, 1, nbyte, stream) != nbyte)) {
+		ac = CO_SDO_AC_DATA;
+		set_errc(errc);
+		goto error_fwrite;
+	}
+
+	fclose(stream);
+
+	return 0;
+
+error_fwrite:
+	fclose(stream);
+error_fopen:
+error_done:
+	if (pac)
+		*pac = ac;
+	return -1;
+}
+#endif // !LELY_NO_CO_OBJ_FILE
 
 LELY_CO_EXPORT int
 co_sdo_req_up(struct co_sdo_req *req, co_unsigned16_t type, const void *val,

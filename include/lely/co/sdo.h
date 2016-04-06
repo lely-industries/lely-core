@@ -255,6 +255,23 @@ LELY_CO_EXTERN int co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type,
 		void *val, co_unsigned32_t *pac);
 
 /*!
+ * Copies the next segment of the specified CANopen SDO download request to the
+ * internal buffer and, on the last segment, writes the value to the specified
+ * file.
+ *
+ * \param req      a pointer to a CANopen SDO download request.
+ * \param filename a pointer to the name of the file.
+ * \param pac      the address of a value which, on exit, contains the SDO abort
+ *                 code (can be NULL).
+ *
+ * \returns 0 if all segments have been copied and the value has been read, and
+ * -1 if one or more segments remain or an error has occurred. In the latter
+ * case, *\a pac contains the SDO abort code.
+ */
+LELY_CO_EXTERN int co_sdo_req_dn_file(struct co_sdo_req *req,
+		const char *filename, co_unsigned32_t *pac);
+
+/*!
  * Writes the specified value to a buffer and constructs a CANopen SDO upload
  * request.
  *
