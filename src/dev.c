@@ -497,11 +497,11 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		co_unsigned16_t type = co_sub_get_type(sub);
 		union co_val val;
 		co_val_init(type, &val);
-		if (__likely(co_val_read(type, &val, begin, end) == size)) {
+		if (__likely(co_val_read(type, &val, begin, begin + size)
+				== size))
 			co_sub_set_val(sub, co_val_addressof(type, &val),
 					co_val_sizeof(type, &val));
-			co_val_fini(type, &val);
-		}
+		co_val_fini(type, &val);
 	}
 
 	if (pidx)
@@ -513,8 +513,8 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 }
 
 LELY_CO_EXPORT size_t
-co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		uint8_t *begin, uint8_t *end)
+co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end)
 {
 	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 	if (__unlikely(!sub))
