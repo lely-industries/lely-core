@@ -30,7 +30,6 @@
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/co/dcf.h>
-#include <lely/co/obj.h>
 #include "obj.h"
 
 #include <assert.h>

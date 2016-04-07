@@ -632,6 +632,41 @@ LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
 		void *data);
 
 /*!
+ * Invokes the download indication function of a CANopen sub-object, registered
+ * with co_sub_set_dn_ind(). This is used for writing values to the object
+ * dictionary. If the indication function returns an error, or the
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is set, the value of the
+ * sub-object is left untouched.
+ *
+ * \param sub a pointer to a CANopen sub-object.
+ * \param req a pointer to a CANopen SDO download request. All members of
+ *            *\a req, except \a membuf, MUST be set by the caller. The
+ *            \a membuf MUST be initialized before the first invocation and MUST
+ *            only be used by the indication function.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(co_sub_t *sub,
+		struct co_sdo_req *req);
+
+/*!
+ * Downloads (moves) a value into a CANopen sub-object if the
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. This
+ * function is invoked by the default download indication function.
+ *
+ * \param sub a pointer to a CANopen sub-object.
+ * \param val a pointer to the value to be written. In the case of strings or
+ *            domains, this MUST be the address of pointer (which is set to NULL
+ *            if the value is moved).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_val_move()
+ */
+LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
+
+/*!
  * Retrieves the upload indication function for a CANopen sub-object.
  *
  * \param sub   a pointer to a CANopen sub-object.
@@ -661,23 +696,19 @@ LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
 		void *data);
 
 /*!
- * Downloads (moves) a value into a CANopen sub-object if the
- * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is _not_ set. If the type
- * of the sub-object is #CO_DEFTYPE_DOMAIN and the #CO_OBJ_FLAGS_DOWNLOAD_FILE
- * flag is set, the value is written to a file. This function is invoked by the
- * default download indication function.
+ * Invokes the upload indication function of a CANopen sub-object, registered
+ * with co_sub_set_up_ind(). This is used for reading values from the object
+ * dictionary.
  *
  * \param sub a pointer to a CANopen sub-object.
- * \param val a pointer to the value to be written. In the case of strings or
- *            domains, this MUST be the address of pointer (which is set to NULL
- *            if the value is moved).
+ * \param req a pointer to a CANopen SDO upload request. The \a size member of
+ *            *\a req MUST be set to 0 on the first invocation. All members MUST
+ *            be initialized by the indication function.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- *
- * \see co_val_move()
+ * \returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
+LELY_CO_EXTERN co_unsigned32_t co_sub_up_ind(const co_sub_t *sub,
+		struct co_sdo_req *req);
 
 #ifdef __cplusplus
 }

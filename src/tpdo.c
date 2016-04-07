@@ -67,6 +67,8 @@ struct __co_tpdo {
 	co_unsigned8_t sync;
 	//! The SYNC counter value.
 	co_unsigned8_t cnt;
+	//! The CANopen SDO upload request used for reading sub-objects.
+	struct co_sdo_req req;
 	//! A pointer to the indication function.
 	co_tpdo_ind_t *ind;
 	//! A pointer to user-specified data for #ind.
@@ -220,6 +222,8 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->sync = pdo->comm.sync;
 	pdo->cnt = 0;
 
+	co_sdo_req_init(&pdo->req);
+
 	pdo->ind = NULL;
 	pdo->data = NULL;
 
@@ -276,6 +280,8 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 	co_obj_t *obj_1800 = co_dev_find_obj(pdo->dev, 0x1800 + pdo->num - 1);
 	assert(obj_1800);
 	co_obj_set_dn_ind(obj_1800, NULL, NULL);
+
+	co_sdo_req_fini(&pdo->req);
 
 	can_buf_destroy(pdo->buf);
 
@@ -926,11 +932,18 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 				|| !(access & CO_ACCESS_TPDO)))
 			return CO_SDO_AC_NO_PDO;
 
-		// Check the PDO length and write the value to the frame.
-		size_t size = co_val_write(co_sub_get_type(sub),
-				co_sub_get_val(sub), begin, begin + len / 8);
-		if (__unlikely(len != size * 8))
+		// Upload the value.
+		struct co_sdo_req *req = &pdo->req;
+		co_sdo_req_clear(req);
+		co_unsigned32_t ac = co_sub_up_ind(sub, req);
+		if (__unlikely(ac))
+			return ac;
+
+		// Check the PDO length and copy the value to the frame.
+		if (__unlikely(req->size != len / 8 || !co_sdo_req_first(req)
+				|| !co_sdo_req_last(req)))
 			return CO_SDO_AC_PDO_LEN;
+		memcpy(begin, req->buf, len / 8);
 		msg->len += len / 8;
 		begin += len / 8;
 	}

@@ -24,7 +24,6 @@
 #include "co.h"
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
-#include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include "obj.h"
 
@@ -707,6 +706,36 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 	sub->dn_data = ind ? data : NULL;
 }
 
+LELY_CO_EXPORT co_unsigned32_t
+co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
+{
+	if (__unlikely(!sub))
+		return CO_SDO_AC_NO_SUB;
+
+	if (__unlikely(!(sub->access & CO_ACCESS_WRITE)))
+		return CO_SDO_AC_NO_WRITE;
+
+	if (__unlikely(!req))
+		return CO_SDO_AC_ERROR;
+
+	assert(sub->dn_ind);
+	return sub->dn_ind(sub, req, sub->dn_data);
+}
+
+LELY_CO_EXPORT int
+co_sub_dn(co_sub_t *sub, void *val)
+{
+	assert(sub);
+
+	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
+		co_val_fini(sub->type, sub->val);
+		if (__unlikely(!co_val_move(sub->type, sub->val, val)))
+			return -1;
+	}
+
+	return 0;
+}
+
 LELY_CO_EXPORT void
 co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
 {
@@ -727,37 +756,7 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 	sub->up_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT int
-co_sub_dn(co_sub_t *sub, void *val)
-{
-	assert(sub);
-
-	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
-		co_val_fini(sub->type, sub->val);
-		if (__unlikely(!co_val_move(sub->type, sub->val, val)))
-			return -1;
-	}
-
-	return 0;
-}
-
-co_unsigned32_t
-co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
-{
-	if (__unlikely(!sub))
-		return CO_SDO_AC_NO_SUB;
-
-	if (__unlikely(!(sub->access & CO_ACCESS_WRITE)))
-		return CO_SDO_AC_NO_WRITE;
-
-	if (__unlikely(!req))
-		return CO_SDO_AC_ERROR;
-
-	assert(sub->dn_ind);
-	return sub->dn_ind(sub, req, sub->dn_data);
-}
-
-co_unsigned32_t
+LELY_CO_EXPORT co_unsigned32_t
 co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 {
 	if (__unlikely(!sub))

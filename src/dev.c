@@ -24,7 +24,6 @@
 #include "co.h"
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
-#include <lely/co/obj.h>
 #include "obj.h"
 
 #include <assert.h>

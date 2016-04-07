@@ -30,7 +30,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
-#include "obj.h"
+#include <lely/co/val.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -59,6 +59,8 @@ struct __co_rpdo {
 	unsigned int swnd:1;
 	//! A CAN frame waiting for a SYNC object to be processed.
 	struct can_msg msg;
+	//! The CANopen SDO download request used for writing sub-objects.
+	struct co_sdo_req req;
 	//! A pointer to the indication function.
 	co_rpdo_ind_t *ind;
 	//! A pointer to user-specified data for #ind.
@@ -202,6 +204,8 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->swnd = 0;
 	pdo->msg = (struct can_msg)CAN_MSG_INIT;
 
+	co_sdo_req_init(&pdo->req);
+
 	pdo->ind = NULL;
 	pdo->data = NULL;
 
@@ -251,6 +255,8 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
 	assert(obj_1400);
 	co_obj_set_dn_ind(obj_1400, NULL, NULL);
+
+	co_sdo_req_fini(&pdo->req);
 
 	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
@@ -788,12 +794,12 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 					|| !(access & CO_ACCESS_RPDO)))
 				return CO_SDO_AC_NO_PDO;
 			// Download the value.
-			struct co_sdo_req req = CO_SDO_REQ_INIT;
-			req.size = len / 8;
-			req.buf = begin;
-			req.nbyte = req.size;
-			co_unsigned32_t ac = co_sub_dn_ind(sub, &req);
-			co_sdo_req_fini(&req);
+			struct co_sdo_req *req = &pdo->req;
+			co_sdo_req_clear(req);
+			req->size = len / 8;
+			req->buf = begin;
+			req->nbyte = pdo->req.size;
+			co_unsigned32_t ac = co_sub_dn_ind(sub, req);
 			if (__unlikely(ac))
 				return ac;
 		}

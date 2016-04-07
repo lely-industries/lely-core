@@ -27,7 +27,7 @@
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/ssdo.h>
-#include "obj.h"
+#include <lely/co/val.h>
 #include "sdo.h"
 
 #include <assert.h>
