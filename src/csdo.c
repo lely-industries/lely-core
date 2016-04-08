@@ -933,7 +933,6 @@ co_csdo_update(co_csdo_t *sdo)
 static co_unsigned32_t
 co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-
 	assert(sub);
 	assert(req);
 	co_csdo_t *sdo = data;
@@ -1083,7 +1082,7 @@ co_csdo_emit_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 {
 	assert(sdo);
 	assert(sdo->state);
-	assert(sdo->state->on_recv);
+	assert(sdo->state->on_abort);
 
 	co_csdo_enter(sdo, sdo->state->on_abort(sdo, ac));
 }
