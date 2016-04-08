@@ -30,6 +30,8 @@
 
 #include <lely/util/util.h>
 
+#include <stddef.h>
+
 struct __fbuf;
 #ifndef __cplusplus
 //! An opaque file buffer type.
