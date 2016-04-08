@@ -29,6 +29,14 @@ AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 PKG_CHECK_MODULES([liblely_util], [liblely-util])
 
+AM_CONDITIONAL([NO_THREADS], [false])
+AC_ARG_ENABLE([threads],
+	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
+AS_IF([test "x$enable_threads" == "xno"], [
+	AM_CONDITIONAL([NO_THREADS], [true])
+	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
@@ -43,14 +51,6 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 		AM_CONDITIONAL([HAVE_SOCKET_CAN], [true])
 		AC_DEFINE([LELY_HAVE_SOCKET_CAN], [1], [Define to 1 if you have SocketCAN.])
 	])
-])
-
-AM_CONDITIONAL([NO_THREADS], [false])
-AC_ARG_ENABLE([threads],
-	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "x$enable_threads" == "xno"], [
-	AM_CONDITIONAL([NO_THREADS], [true])
-	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"

@@ -220,8 +220,10 @@ can_net_set_time(can_net_t *net, const struct timespec *tp)
 
 		// Requeue the timer before invoking the callback function.
 		pheap_remove(&net->timer_heap, &timer->node);
+		timer->net = NULL;
 		if (timer->interval.tv_sec || timer->interval.tv_nsec) {
 			timespec_add(&timer->start, &timer->interval);
+			timer->net = net;
 			pheap_insert(&net->timer_heap, &timer->node);
 		}
 
@@ -444,7 +446,7 @@ can_timer_start(can_timer_t *timer, can_net_t *net,
 
 	pheap_insert(&timer->net->timer_heap, &timer->node);
 
-	can_net_set_next(timer->net);
+	can_net_set_next(net);
 }
 
 LELY_CAN_EXPORT void
@@ -452,16 +454,15 @@ can_timer_stop(can_timer_t *timer)
 {
 	assert(timer);
 
-	if (!timer->net)
+	can_net_t *net = timer->net;
+	if (!net)
 		return;
 
 	pheap_remove(&timer->net->timer_heap, &timer->node);
 
-	can_net_set_next(timer->net);
 	timer->net = NULL;
 
-	timer->start = (struct timespec){ 0, 0 };
-	timer->interval = (struct timespec){ 0, 0 };
+	can_net_set_next(net);
 }
 
 LELY_CAN_EXPORT void
