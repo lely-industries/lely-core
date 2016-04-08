@@ -70,7 +70,8 @@ void __co_nmt_hb_fini(struct __co_nmt_hb *hb);
  * \param dev a pointer to a CANopen device.
  * \param nmt a pointer to an NMT master/slave service.
  *
- * \returns a pointer to a new heartbeat consumer service, or NULL on error.
+ * \returns a pointer to a new heartbeat consumer service, or NULL on error. In
+ * the latter case, the error number can be obtained with `get_errnum()`.
  *
  * \see co_nmt_hb_destroy()
  */

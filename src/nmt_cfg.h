@@ -60,28 +60,37 @@ void co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 void *__co_nmt_cfg_alloc(void);
 void __co_nmt_cfg_free(void *ptr);
 struct __co_nmt_cfg *__co_nmt_cfg_init(struct __co_nmt_cfg *boot,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id,
-		int timeout);
+		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 void __co_nmt_cfg_fini(struct __co_nmt_cfg *boot);
 
 /*!
  * Creates a new CANopen NMT 'configuration request'.
  *
- * \param net     a pointer to a CAN network.
- * \param dev     a pointer to a CANopen device.
- * \param nmt     a pointer to an NMT master service.
- * \param id      the Node-ID.
- * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
+ * \param net a pointer to a CAN network.
+ * \param dev a pointer to a CANopen device.
+ * \param nmt a pointer to an NMT master service.
  *
- * \returns a pointer to a new NMT 'configuration request', or NULL on error.
+ * \returns a pointer to a new NMT 'configuration request', or NULL on error. In
+ * the latter case, the error number can be obtained with `get_errnum()`.
  *
  * \see co_nmt_cfg_destroy()
  */
-co_nmt_cfg_t *co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
-		co_unsigned8_t id, int timeout);
+co_nmt_cfg_t *co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 
 //! Destroys a CANopen NMT 'configuration request'. \see co_nmt_cfg_create()
 void co_nmt_cfg_destroy(co_nmt_cfg_t *boot);
+
+/*!
+ * Starts a CANopen NMT 'configuration request'.
+ *
+ * \param cfg     a pointer to an NMT 'configuration request'.
+ * \param id      the Node-ID.
+ * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout);
 
 /*!
  * Indicates the result of the 'update configuration' step of an NMT

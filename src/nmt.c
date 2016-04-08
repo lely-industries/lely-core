@@ -1051,20 +1051,34 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 {
 	assert(nmt);
 
+	errc_t errc = 0;
+
 	if (__unlikely(!nmt->master)) {
-		set_errnum(ERRNUM_PERM);
-		return -1;
+		errc = errnum2c(ERRNUM_PERM);
+		goto error_param;
 	}
 
-	if (__unlikely(!id || id > CO_NUM_NODES || nmt->slaves[id - 1].boot)) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id, timeout);
-	if (__unlikely(!slave->boot))
-		return -1;
+	if (__unlikely(slave->boot)) {
+		errc = errnum2c(ERRNUM_INPROGRESS);
+		goto error_param;
+	}
+
+	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
+	if (__unlikely(!slave->boot)) {
+		errc = get_errc();
+		goto error_create_boot;
+	}
+
+	if (__unlikely(co_nmt_boot_boot_req(slave->boot, id, timeout) == -1)) {
+		errc = get_errc();
+		goto error_boot_req;
+	}
 
 	// Disable the heartbeat consumer service for the node.
 	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
@@ -1076,6 +1090,14 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 	}
 
 	return 0;
+
+error_boot_req:
+	co_nmt_boot_destroy(slave->boot);
+	slave->boot = NULL;
+error_create_boot:
+error_param:
+	set_errc(errc);
+	return -1;
 }
 
 LELY_CO_EXPORT int
@@ -1084,24 +1106,46 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 {
 	assert(nmt);
 
+	errc_t errc = 0;
+
 	if (__unlikely(!nmt->master)) {
-		set_errnum(ERRNUM_PERM);
-		return -1;
+		errc = errnum2c(ERRNUM_PERM);
+		goto error_param;
 	}
 
-	if (__unlikely(!id || id > CO_NUM_NODES || nmt->slaves[id - 1].cfg)) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
+	if (__unlikely(slave->cfg)) {
+		errc = errnum2c(ERRNUM_INPROGRESS);
+		goto error_param;
+	}
+
+	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
+	if (__unlikely(!slave->cfg)) {
+		errc = get_errc();
+		goto error_create_cfg;
+	}
 	slave->cfg_con = con;
 	slave->cfg_data = data;
-	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id, timeout);
-	if (__unlikely(!slave->cfg))
-		return -1;
+
+	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout) == -1)) {
+		errc = get_errc();
+		goto error_cfg_req;
+	}
 
 	return 0;
+
+error_cfg_req:
+	co_nmt_cfg_destroy(slave->cfg);
+	slave->cfg = NULL;
+error_create_cfg:
+error_param:
+	set_errc(errc);
+	return -1;
 }
 
 LELY_CO_EXPORT int

@@ -45,16 +45,16 @@ struct __co_nmt_cfg {
 	co_dev_t *dev;
 	//! A pointer to an NMT master service.
 	co_nmt_t *nmt;
-	//! The Node-ID.
-	co_unsigned8_t id;
-	//! A pointer to the Client-SDO used to access slave objects.
-	co_csdo_t *sdo;
 	//! A pointer to the current state.
 	co_nmt_cfg_state_t *state;
-	//! The SDO abort code.
-	co_unsigned32_t ac;
+	//! The Node-ID.
+	co_unsigned8_t id;
 	//! The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
+	//! A pointer to the Client-SDO used to access slave objects.
+	co_csdo_t *sdo;
+	//! The SDO abort code.
+	co_unsigned32_t ac;
 };
 
 /*!
@@ -178,41 +178,27 @@ __co_nmt_cfg_free(void *ptr)
 
 struct __co_nmt_cfg *
 __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt, co_unsigned8_t id, int timeout)
+		co_nmt_t *nmt)
 {
 	assert(cfg);
 	assert(net);
 	assert(dev);
 	assert(nmt);
 
-	errc_t errc = 0;
-
 	cfg->net = net;
 	cfg->dev = dev;
 	cfg->nmt = nmt;
 
-	cfg->id = id;
-
-	cfg->sdo = co_csdo_create(cfg->net, NULL, cfg->id);
-	if (__unlikely(!cfg->sdo)) {
-		errc = get_errc();
-		goto error_create_sdo;
-	}
-	co_csdo_set_timeout(cfg->sdo, timeout);
-
 	cfg->state = NULL;
+
+	cfg->id = 0;
+	cfg->assignment = 0;
+
+	cfg->sdo = NULL;
 
 	cfg->ac = 0;
 
-	cfg->assignment = 0;
-
-	co_nmt_cfg_enter(cfg, co_nmt_cfg_init_state);
 	return cfg;
-
-	co_csdo_destroy(cfg->sdo);
-error_create_sdo:
-	set_errc(errc);
-	return NULL;
 }
 
 void
@@ -224,8 +210,7 @@ __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 }
 
 co_nmt_cfg_t *
-co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
-		co_unsigned8_t id, int timeout)
+co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	errc_t errc = 0;
 
@@ -235,7 +220,7 @@ co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
 		goto error_alloc_cfg;
 	}
 
-	if (__unlikely(!__co_nmt_cfg_init(cfg, net, dev, nmt, id, timeout))) {
+	if (__unlikely(!__co_nmt_cfg_init(cfg, net, dev, nmt))) {
 		errc = get_errc();
 		goto error_init_cfg;
 	}
@@ -256,6 +241,34 @@ co_nmt_cfg_destroy(co_nmt_cfg_t *cfg)
 		__co_nmt_cfg_fini(cfg);
 		__co_nmt_cfg_free(cfg);
 	}
+}
+
+int
+co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout)
+{
+	assert(cfg);
+
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(cfg->state)) {
+		set_errnum(ERRNUM_INPROGRESS);
+		return -1;
+	}
+
+	cfg->id = id;
+
+	co_csdo_destroy(cfg->sdo);
+	cfg->sdo = co_csdo_create(cfg->net, NULL, cfg->id);
+	if (__unlikely(!cfg->sdo))
+		return -1;
+	co_csdo_set_timeout(cfg->sdo, timeout);
+
+	co_nmt_cfg_enter(cfg, co_nmt_cfg_init_state);
+
+	return 0;
 }
 
 int
@@ -321,6 +334,8 @@ static co_nmt_cfg_state_t *
 co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg)
 {
 	assert(cfg);
+
+	cfg->ac = 0;
 
 	// Retrieve the slave assignment for the node.
 	cfg->assignment = co_dev_get_val_u32(cfg->dev, 0x1f81, cfg->id);

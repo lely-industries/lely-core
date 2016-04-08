@@ -60,28 +60,30 @@ struct __co_nmt_boot {
 	co_dev_t *dev;
 	//! A pointer to an NMT master service.
 	co_nmt_t *nmt;
-	//! The Node-ID.
-	co_unsigned8_t id;
-	//! The SDO timeout (in milliseconds).
-	int timeout;
-	//! A pointer to the Client-SDO used to access slave objects.
-	co_csdo_t *sdo;
 	//! A pointer to the current state.
 	co_nmt_boot_state_t *state;
 	//! A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 	//! A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The state of the node (including the toggle bit).
-	co_unsigned32_t st;
-	//! The error status.
-	char es;
+	//! The Node-ID.
+	co_unsigned8_t id;
+	//! The SDO timeout (in milliseconds).
+	int timeout;
+	//! A pointer to the Client-SDO used to access slave objects.
+	co_csdo_t *sdo;
 	//! The time at which the 'boot slave' request was received.
 	struct timespec start;
 	//! The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
 	//! The consumer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
+	//! The CANopen SDO upload request used for reading sub-objects.
+	struct co_sdo_req req;
+	//! The state of the node (including the toggle bit).
+	co_unsigned32_t st;
+	//! The error status.
+	char es;
 };
 
 /*!
@@ -175,13 +177,13 @@ static inline void co_nmt_boot_emit_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
 /*!
- * Invokes the 'result received' transition function of the current state of a
- * 'boot slave' service.
+ * Invokes the 'configuration request confirmation' transition function of the
+ * current state of a 'boot slave' service.
  *
  * \param boot a pointer to a 'boot slave' service.
  * \param ac   the SDO abort code (0 on success).
  */
-static inline void co_nmt_boot_emit_res(co_nmt_boot_t *boot,
+static inline void co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
 //! A CANopen NMT 'boot slave' state.
@@ -242,7 +244,8 @@ struct __co_nmt_boot_state {
 	 *
 	 * \returns a pointer to the next state.
 	 */
-	co_nmt_boot_state_t *(*on_res)(co_nmt_boot_t *boot, co_unsigned32_t ac);
+	co_nmt_boot_state_t *(*on_cfg_con)(co_nmt_boot_t *boot,
+			co_unsigned32_t ac);
 	//! A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_nmt_boot_t *boot);
 };
@@ -592,8 +595,11 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_time_state,
 //! The entry function of the 'update configuration' state.
 static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot);
 
-//! The 'result received' function of the 'update configuration' state.
-static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_res(co_nmt_boot_t *boot,
+/*!
+ * The 'configuration request confirmation' transition unction of the 'update
+ * configuration' state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_cfg_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
 /*!
@@ -601,7 +607,7 @@ static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_res(co_nmt_boot_t *boot,
  */
 LELY_CO_DEFINE_STATE(co_nmt_boot_up_cfg_state,
 	.on_enter = &co_nmt_boot_up_cfg_on_enter,
-	.on_res = &co_nmt_boot_up_cfg_on_res
+	.on_cfg_con = &co_nmt_boot_up_cfg_on_cfg_con
 )
 
 //! The entry function of the 'start error control' state.
@@ -692,7 +698,7 @@ __co_nmt_boot_free(void *ptr)
 
 struct __co_nmt_boot *
 __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt, co_unsigned8_t id, int timeout)
+		co_nmt_t *nmt)
 {
 	assert(boot);
 	assert(net);
@@ -704,17 +710,6 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->net = net;
 	boot->dev = dev;
 	boot->nmt = nmt;
-
-	boot->id = id;
-
-	boot->timeout = timeout;
-
-	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
-	if (__unlikely(!boot->sdo)) {
-		errc = get_errc();
-		goto error_create_sdo;
-	}
-	co_csdo_set_timeout(boot->sdo, boot->timeout);
 
 	boot->state = NULL;
 
@@ -732,8 +727,10 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
 
-	boot->st = 0;
-	boot->es = 0;
+	boot->id = 0;
+
+	boot->timeout = 0;
+	boot->sdo = NULL;
 
 	boot->start = (struct timespec){ 0, 0 };
 	can_net_get_time(boot->net, &boot->start);
@@ -741,16 +738,18 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->assignment = 0;
 	boot->ms = 0;
 
+	boot->st = 0;
+	boot->es = 0;
+
+	co_sdo_req_init(&boot->req);
+
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
-	co_nmt_boot_emit_time(boot, NULL);
 	return boot;
 
 	can_timer_destroy(boot->timer);
 error_create_timer:
 	can_recv_destroy(boot->recv);
 error_create_recv:
-	co_csdo_destroy(boot->sdo);
-error_create_sdo:
 	set_errc(errc);
 	return NULL;
 }
@@ -760,15 +759,16 @@ __co_nmt_boot_fini(struct __co_nmt_boot *boot)
 {
 	assert(boot);
 
-	can_timer_destroy(boot->timer);
-	can_recv_destroy(boot->recv);
+	co_sdo_req_fini(&boot->req);
 
 	co_csdo_destroy(boot->sdo);
+
+	can_timer_destroy(boot->timer);
+	can_recv_destroy(boot->recv);
 }
 
 co_nmt_boot_t *
-co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
-		co_unsigned8_t id, int timeout)
+co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	errc_t errc = 0;
 
@@ -778,7 +778,7 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
 		goto error_alloc_boot;
 	}
 
-	if (__unlikely(!__co_nmt_boot_init(boot, net, dev, nmt, id, timeout))) {
+	if (__unlikely(!__co_nmt_boot_init(boot, net, dev, nmt))) {
 		errc = get_errc();
 		goto error_init_boot;
 	}
@@ -799,6 +799,35 @@ co_nmt_boot_destroy(co_nmt_boot_t *boot)
 		__co_nmt_boot_fini(boot);
 		__co_nmt_boot_free(boot);
 	}
+}
+
+int
+co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout)
+{
+	assert(boot);
+
+	if (__unlikely(!id || id > CO_NUM_NODES)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(boot->state != co_nmt_boot_wait_state)) {
+		set_errnum(ERRNUM_INPROGRESS);
+		return -1;
+	}
+
+	boot->id = id;
+
+	boot->timeout = timeout;
+	co_csdo_destroy(boot->sdo);
+	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
+	if (__unlikely(!boot->sdo))
+		return -1;
+	co_csdo_set_timeout(boot->sdo, boot->timeout);
+
+	co_nmt_boot_emit_time(boot, NULL);
+
+	return 0;
 }
 
 static int
@@ -860,7 +889,7 @@ co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac,
 	co_nmt_boot_t *boot = data;
 	assert(boot);
 
-	co_nmt_boot_emit_res(boot, ac);
+	co_nmt_boot_emit_cfg_con(boot, ac);
 }
 
 static void
@@ -922,13 +951,13 @@ co_nmt_boot_emit_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 }
 
 static inline void
-co_nmt_boot_emit_res(co_nmt_boot_t *boot, co_unsigned32_t ac)
+co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 	assert(boot->state);
-	assert(boot->state->on_res);
+	assert(boot->state->on_cfg_con);
 
-	co_nmt_boot_enter(boot, boot->state->on_res(boot, ac));
+	co_nmt_boot_enter(boot, boot->state->on_cfg_con(boot, ac));
 }
 
 static co_nmt_boot_state_t *
@@ -936,6 +965,9 @@ co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	__unused_var(boot);
 	__unused_var(tp);
+
+	boot->st = 0;
+	boot->es = 0;
 
 	// Retrieve the slave assignment for the node.
 	boot->assignment = co_dev_get_val_u32(boot->dev, 0x1f81, boot->id);
@@ -1398,11 +1430,21 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 	if (__unlikely(!sub))
 		return co_nmt_boot_abort_state;
 
+	// Upload the program data.
+	struct co_sdo_req *req = &boot->req;
+	co_sdo_req_clear(req);
+	co_unsigned32_t ac = co_sub_up_ind(sub, req);
+	if (__unlikely(ac || !co_sdo_req_first(req) || !co_sdo_req_last(req))) {
+		if (ac)
+			diag(DIAG_ERROR, 0, "SDO abort code %08X on upload request of object 1F58:%02X (Program data): %s",
+					ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
 	// Write the program data (sub-object 1F58:ID) to the program data of
 	// the slave (sub-object 1F50:01) using SDO block transfer.
-	if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01,
-			co_sub_addressof_val(sub), co_sub_sizeof_val(sub),
-			&co_nmt_boot_dn_con, boot) == -1))
+	if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
+			req->size, &co_nmt_boot_dn_con, boot) == -1))
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1431,15 +1473,11 @@ co_nmt_boot_dn_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	co_sub_t *sub = co_dev_find_sub(boot->dev, 0x1f58, boot->id);
-	if (__unlikely(!sub))
-		return co_nmt_boot_abort_state;
-
+	struct co_sdo_req *req = &boot->req;
 	// Write the program data (sub-object 1F58:ID) to the program data of
 	// the slave (sub-object 1F50:01) using SDO segmented transfer.
-	if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01,
-			co_sub_addressof_val(sub), co_sub_sizeof_val(sub),
-			&co_nmt_boot_dn_con, boot) == -1))
+	if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
+			req->size, &co_nmt_boot_dn_con, boot) == -1))
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1641,10 +1679,9 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	}
 
 	// If the program control differs from 'Program started', try again.
-	co_unsigned32_t val = 0;
-	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
+	co_unsigned8_t val = 0;
+	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
 			(const uint8_t *)ptr + n) || val != 1))
-		// TODO: wait for a while before checking again.
 		return co_nmt_boot_wait_prog_state;
 
 	return co_nmt_boot_chk_device_type_state;
@@ -1728,9 +1765,8 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 	return NULL;
 }
 
-static
-co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_res(co_nmt_boot_t *boot,
-		co_unsigned32_t ac)
+static co_nmt_boot_state_t *
+co_nmt_boot_up_cfg_on_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 

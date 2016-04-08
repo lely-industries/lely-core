@@ -51,28 +51,36 @@ void co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 void *__co_nmt_boot_alloc(void);
 void __co_nmt_boot_free(void *ptr);
 struct __co_nmt_boot *__co_nmt_boot_init(struct __co_nmt_boot *boot,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id,
-		int timeout);
+		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 void __co_nmt_boot_fini(struct __co_nmt_boot *boot);
 
 /*!
- * Creates and starts a new CANopen NMT 'boot slave' service.
+ * Creates a new CANopen NMT 'boot slave' service.
  *
- * \param net     a pointer to a CAN network.
- * \param dev     a pointer to a CANopen device.
- * \param nmt     a pointer to an NMT master service.
- * \param id      the Node-ID.
- * \param timeout the SDO timeout (in milliseconds).
+ * \param net a pointer to a CAN network.
+ * \param dev a pointer to a CANopen device.
+ * \param nmt a pointer to an NMT master service.
  *
  * \returns a pointer to a new 'boot slave' service, or NULL on error.
  *
  * \see co_nmt_boot_destroy()
  */
-co_nmt_boot_t *co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
-		co_unsigned8_t id, int timeout);
+co_nmt_boot_t *co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 
 //! Destroys a CANopen NMT 'boot slave' service. \see co_nmt_boot_create()
 void co_nmt_boot_destroy(co_nmt_boot_t *boot);
+
+/*!
+ * Starts a CANopen NMT 'boot slave' service.
+ *
+ * \param boot    a pointer to an NMT 'boot slave' service.
+ * \param id      the Node-ID.
+ * \param timeout the SDO timeout (in milliseconds).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+int co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout);
 
 #ifdef __cplusplus
 }
