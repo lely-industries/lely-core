@@ -66,7 +66,7 @@ LELY_CO_EXTERN void __co_dev_fini(struct __co_dev *dev);
 /*!
  * Creates a new CANopen device.
  *
- * \param id the Node-ID of the device (in the range [1..127, 255]).
+ * \param id the node-ID of the device (in the range [1..127, 255]).
  *
  * \returns a pointer to a new CANopen device, or NULL on error. In the latter
  * case, the error number can be obtained with `get_errnum()`.
@@ -82,11 +82,11 @@ LELY_CO_EXTERN co_dev_t *co_dev_create(co_unsigned8_t id);
  */
 LELY_CO_EXTERN void co_dev_destroy(co_dev_t *dev);
 
-//! Returns the Node-ID of a CANopen device. \see co_dev_set_id()
+//! Returns the node-ID of a CANopen device. \see co_dev_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_dev_get_id(const co_dev_t *dev);
 
 /*!
- * Sets the Node-ID of a CANopen device. This function will also update any
+ * Sets the node-ID of a CANopen device. This function will also update any
  * sub-object values of the form `$NODEID { "+" number }`.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
@@ -161,6 +161,19 @@ LELY_CO_EXTERN co_obj_t *co_dev_find_obj(const co_dev_t *dev,
  */
 LELY_CO_EXTERN co_sub_t *co_dev_find_sub(const co_dev_t *dev,
 		co_unsigned16_t idx, co_unsigned8_t subidx);
+
+//! Returns the name of a CANopen device. \see co_dev_set_name()
+LELY_CO_EXTERN const char *co_dev_get_name(const co_dev_t *dev);
+
+/*!
+ * Sets the name of a CANopen device.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_dev_get_name()
+ */
+LELY_CO_EXTERN int co_dev_set_name(co_dev_t *dev, const char *name);
 
 /*!
  * Returns a pointer to the vendor name of a CANopen device.
@@ -256,6 +269,29 @@ LELY_CO_EXTERN unsigned int co_dev_get_baud(const co_dev_t *dev);
  * \see co_dev_get_baud()
  */
 LELY_CO_EXTERN void co_dev_set_baud(co_dev_t *dev, unsigned int baud);
+
+/*!
+ * Returns the (pending) baudrate of a CANopen device (in kbit/s).
+ *
+ * \see co_dev_set_rate()
+ */
+LELY_CO_EXTERN co_unsigned16_t co_dev_get_rate(const co_dev_t *dev);
+
+/*!
+ * Sets the (pending) baudrate of a CANopen device.
+ *
+ * \param dev  a pointer to a CANopen device.
+ * \param rate the baudrate (in kbit/s).
+ *
+ * \see co_dev_get_rate()
+ */
+LELY_CO_EXTERN void co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate);
+
+//! Returns 1 if LSS is supported and 0 if not. \see co_dev_set_lss()
+LELY_CO_EXTERN int co_dev_get_lss(const co_dev_t *dev);
+
+//! Sets the LSS support flag. \see co_dev_get_lss()
+LELY_CO_EXTERN void co_dev_set_lss(co_dev_t *dev, int lss);
 
 /*!
  * Returns the data types supported by a CANopen device for mapping dummy

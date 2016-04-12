@@ -37,7 +37,7 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_file(
 /*!
  * Creates a CANopen device from an EDS or DCF file.
  *
- * \param id       the Node-ID of the device (in the range [1..127]).
+ * \param id       the node-ID of the device (in the range [1..127]).
  * \param filename a pointer to the name of the EDS or DCF file containing the
  *                 device configuration and object dictionary.
  *
@@ -53,7 +53,7 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
 /*!
  * Creates a CANopen device from an EDS or DCF text string.
  *
- * \param id    the Node-ID of the device (in the range [1..127]).
+ * \param id    the node-ID of the device (in the range [1..127]).
  * \param begin a pointer to the first character in the string.
  * \param end   a pointer to one past the last character in the string (can be
  *              NULL if the string is null-terminated).

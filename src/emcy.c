@@ -50,7 +50,7 @@ struct co_emcy_msg {
 struct co_emcy_node {
 	//! A pointer to the EMCY service.
 	co_emcy_t *emcy;
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
 	//! A pointer to the CAN frame receiver.
 	can_recv_t *recv;
@@ -60,7 +60,7 @@ struct co_emcy_node {
  * Creates a new remote CANopen EMCY producer node.
  *
  * \param emcy a pointer to an EMCY service.
- * \param id   the Node-ID.
+ * \param id   the node-ID.
  *
  * \returns a pointer to a new remote node, or NULL on error.
  *
@@ -145,7 +145,7 @@ static co_unsigned32_t co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  * Sets the value of CANopen object 1028 (Emergency consumer object).
  *
  * \param emcy  a pointer to an EMCY service.
- * \param id    the Node-ID.
+ * \param id    the node-ID.
  * \param cobid the COB-ID of the EMCY object.
  *
  * \returns 0 on success, or -1 on error.

@@ -66,7 +66,7 @@ struct __co_nmt_boot {
 	can_recv_t *recv;
 	//! A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
 	//! The SDO timeout (in milliseconds).
 	int timeout;

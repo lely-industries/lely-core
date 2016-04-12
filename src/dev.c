@@ -31,10 +31,12 @@
 
 //! A CANopen device.
 struct __co_dev {
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
 	//! The tree containing the object dictionary.
 	struct rbtree tree;
+	//! A pointer to the name of the device.
+	char *name;
 	//! A pointer to the vendor name.
 	char *vendor_name;
 	//! The vendor ID.
@@ -49,6 +51,10 @@ struct __co_dev {
 	char *order_code;
 	//! The supported bit rates.
 	unsigned baud:8;
+	//! The (pending) baudrate (in kbit/s).
+	co_unsigned16_t rate;
+	//! A flag specifying whether LSS is supported (1) or not (0).
+	int lss;
 	//! The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
 };
@@ -85,6 +91,8 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 
 	rbtree_init(&dev->tree, &uint16_cmp);
 
+	dev->name = NULL;
+
 	dev->vendor_name = NULL;
 	dev->vendor_id = 0;
 	dev->product_name = NULL;
@@ -93,6 +101,9 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 	dev->order_code = NULL;
 
 	dev->baud = 0;
+	dev->rate = 0;
+
+	dev->lss = 0;
 
 	dev->dummy = 0;
 
@@ -110,6 +121,8 @@ __co_dev_fini(struct __co_dev *dev)
 	free(dev->vendor_name);
 	free(dev->product_name);
 	free(dev->order_code);
+
+	free(dev->name);
 }
 
 LELY_CO_EXPORT co_dev_t *
@@ -243,6 +256,34 @@ co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
 	return __likely(obj) ? co_obj_find_sub(obj, subidx) : NULL;
+}
+
+LELY_CO_EXPORT const char *
+co_dev_get_name(const co_dev_t *dev)
+{
+	assert(dev);
+
+	return dev->name;
+}
+
+LELY_CO_EXPORT int
+co_dev_set_name(co_dev_t *dev, const char *name)
+{
+	assert(dev);
+
+	if (!name || !*name) {
+		free(dev->name);
+		dev->name = NULL;
+		return 0;
+	}
+
+	void *ptr = realloc(dev->name, strlen(name) + 1);
+	if (__unlikely(!ptr))
+		return -1;
+	dev->name = ptr;
+	strcpy(dev->name, name);
+
+	return 0;
 }
 
 LELY_CO_EXPORT const char *
@@ -391,6 +432,38 @@ co_dev_set_baud(co_dev_t *dev, unsigned int baud)
 	assert(dev);
 
 	dev->baud = baud;
+}
+
+LELY_CO_EXPORT co_unsigned16_t
+co_dev_get_rate(const co_dev_t *dev)
+{
+	assert(dev);
+
+	return dev->rate;
+}
+
+LELY_CO_EXPORT void
+co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate)
+{
+	assert(dev);
+
+	dev->rate = rate;
+}
+
+LELY_CO_EXPORT int
+co_dev_get_lss(const co_dev_t *dev)
+{
+	assert(dev);
+
+	return dev->lss;
+}
+
+LELY_CO_EXPORT void
+co_dev_set_lss(co_dev_t *dev, int lss)
+{
+	assert(dev);
+
+	dev->lss = !!lss;
 }
 
 LELY_CO_EXPORT co_unsigned32_t

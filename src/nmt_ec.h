@@ -41,7 +41,7 @@ extern "C" {
  * event occurs.
  *
  * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the Node-ID (in the range [1..127]).
+ * \param id    the node-ID (in the range [1..127]).
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
  *              was resolved (#CO_NMT_EC_RESOLVED).
  */
@@ -52,7 +52,7 @@ void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state);
  * change occurs.
  *
  * \param nmt a pointer to an NMT master/slave service.
- * \param id  the Node-ID (in the range [1..127]).
+ * \param id  the node-ID (in the range [1..127]).
  * \param st  the state of the node.
  */
 void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
@@ -82,14 +82,14 @@ void co_nmt_hb_destroy(co_nmt_hb_t *hb);
 
 /*!
  * Processes the value of CANopen object 1016 (Consumer heartbeat time) for the
- * specified heartbeat consumer. If the Node-ID is valid and the heartbeat time
+ * specified heartbeat consumer. If the node-ID is valid and the heartbeat time
  * is non-zero, the heartbeat consumer is activated. Note that this only
  * activates the CAN frame receiver for heartbeat messages. The CAN timer for
  * heartbeat events is not activated until the first heartbeat message is
  * received or co_nmt_hb_set_st() is invoked.
  *
  * \param hb a pointer to a heartbeat consumer service.
- * \param id the Node-ID.
+ * \param id the node-ID.
  * \param ms the heartbeat time (in milliseconds).
  */
 void co_nmt_hb_set_1016(co_nmt_hb_t *hb, co_unsigned8_t id, co_unsigned16_t ms);

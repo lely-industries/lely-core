@@ -183,8 +183,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	if (__unlikely(co_dev_set_vendor_name(dev,
 			config_get(cfg, "DeviceInfo", "VendorName")) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to set vendor name of node %d",
-				co_dev_get_id(dev));
+		diag(DIAG_ERROR, get_errc(), "unable to set vendor name");
 		return -1;
 	}
 
@@ -194,8 +193,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	if (__unlikely(co_dev_set_product_name(dev,
 			config_get(cfg, "DeviceInfo", "ProductName")) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to set product name of node %d",
-				co_dev_get_id(dev));
+		diag(DIAG_ERROR, get_errc(), "unable to set product name");
 		return -1;
 	}
 
@@ -209,8 +207,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	if (__unlikely(co_dev_set_order_code(dev,
 			config_get(cfg, "DeviceInfo", "OrderCode")) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to set order code of node %d",
-				co_dev_get_id(dev));
+		diag(DIAG_ERROR, get_errc(), "unable to set order code");
 		return -1;
 	}
 
@@ -240,6 +237,10 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (val && *val && strtoul(val, NULL, 0))
 		baud |= CO_BAUD_1000;
 	co_dev_set_baud(dev, baud);
+
+	val = config_get(cfg, "DeviceInfo", "LSS_Supported");
+	if (val && *val)
+		co_dev_set_lss(dev, strtoul(val, NULL, 0));
 
 	// For each of the basic data types, check whether it is supproted for
 	// mapping dummy entries in PDOs.
@@ -273,7 +274,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	for (i = 0; i < n; i++) {
 		if (__unlikely(!idx[i])) {
-			diag(DIAG_ERROR, 0, "entry missing in object list");
+			diag(DIAG_ERROR, 0, "entry (%d) missing in object list",
+					i);
 			return -1;
 		}
 
@@ -301,6 +303,31 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		// Parse the configuration section for the object.
 		if (__unlikely(co_obj_parse_cfg(obj, cfg, section) == -1))
 			return -1;
+	}
+
+	val = config_get(cfg, "DeviceComissioning", "NodeID");
+	if (val && *val && co_dev_set_id(dev, strtoul(val, NULL, 0)) == -1) {
+		diag(DIAG_ERROR, get_errc(), "invalid node-ID (%s) specified",
+				val);
+		return -1;
+	}
+
+	if (__unlikely(co_dev_set_name(dev,
+			config_get(cfg, "DeviceComissioning", "NodeName"))
+			== -1)) {
+		diag(DIAG_ERROR, get_errc(), "unable to set node name");
+		return -1;
+	}
+
+	val = config_get(cfg, "DeviceComissioning", "Baudrate");
+	if (val && *val)
+		co_dev_set_rate(dev, strtoul(val, NULL, 0));
+
+	val = config_get(cfg, "DeviceComissioning", "LSS_SerialNumber");
+	if (val && *val && !co_dev_set_val_u32(dev, 0x1018, 0x04,
+			strtoul(val, NULL, 0))) {
+		diag(DIAG_ERROR, get_errc(), "unable to set serial number");
+		return -1;
 	}
 
 	return 0;

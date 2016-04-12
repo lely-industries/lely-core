@@ -41,7 +41,7 @@ extern "C" {
  * slave' process completes.
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID of the slave (in the range [1..127]).
+ * \param id  the node-ID of the slave (in the range [1..127]).
  * \param st  the state of the node (including the toggle bit).
  * \param es  the error status (in the range ['A'..'O'], or 0 on success).
  */
@@ -74,7 +74,7 @@ void co_nmt_boot_destroy(co_nmt_boot_t *boot);
  * Starts a CANopen NMT 'boot slave' service.
  *
  * \param boot    a pointer to an NMT 'boot slave' service.
- * \param id      the Node-ID.
+ * \param id      the node-ID.
  * \param timeout the SDO timeout (in milliseconds).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number

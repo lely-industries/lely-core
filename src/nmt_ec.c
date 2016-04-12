@@ -41,7 +41,7 @@ struct __co_nmt_hb {
 	can_recv_t *recv;
 	//! A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
 	//! The state of the node (excluding the toggle bit).
 	co_unsigned8_t st;

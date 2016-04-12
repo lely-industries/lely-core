@@ -43,7 +43,7 @@ extern "C" {
  * is received.
  *
  * \param emcy a pointer to an EMCY consumer service.
- * \param id   the Node-ID of the producer.
+ * \param id   the node-ID of the producer.
  * \param eec  the emergency error code.
  * \param er   the error register.
  * \param msef the manufacturer-specific error code.

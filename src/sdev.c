@@ -118,9 +118,27 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
 
+	name = co_dev_get_name(dev);
+	if (name) {
+		r = snprintf(s, n, "\t.name = CO_SDEV_STRING(\"");
+		if (__unlikely(r < 0))
+			return r;
+		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		r = snprintf_c99_esc(s, n, name);
+		if (__unlikely(r < 0))
+			return r;
+		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		r = snprintf(s, n, "\"),\n");
+	} else {
+		r = snprintf(s, n, "\t.name = NULL,\n");
+	}
+	if (__unlikely(r < 0))
+		return r;
+	t += r; r = MIN((size_t)r, n); s += r; n -= r;
+
 	name = co_dev_get_vendor_name(dev);
 	if (name) {
-		r = snprintf(s, n, "\t.vendor_name = CO_SDEV_NAME(\"");
+		r = snprintf(s, n, "\t.vendor_name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -144,7 +162,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 
 	name = co_dev_get_product_name(dev);
 	if (name) {
-		r = snprintf(s, n, "\t.product_name = CO_SDEV_NAME(\"");
+		r = snprintf(s, n, "\t.product_name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -168,7 +186,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 
 	name = co_dev_get_order_code(dev);
 	if (name) {
-		r = snprintf(s, n, "\t.order_code = CO_SDEV_NAME(\"");
+		r = snprintf(s, n, "\t.order_code = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -206,7 +224,9 @@ LELY_CO_DEFINE_BAUD(800)
 LELY_CO_DEFINE_BAUD(1000)
 #undef LELY_CO_DEFINE_BAUD
 
-	r = snprintf(s, n, ",\n\t.dummy = 0x%08x,\n", co_dev_get_dummy(dev));
+	r = snprintf(s, n, ",\n\t.rate = %d,\n\t.lss = %d,\n\t.dummy = 0x%08x,\n",
+			co_dev_get_rate(dev), co_dev_get_lss(dev),
+			co_dev_get_dummy(dev));
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -250,6 +270,9 @@ co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 	assert(sdev);
 	assert(dev);
 
+	if (__unlikely(co_dev_set_name(dev, sdev->name) == -1))
+		return -1;
+
 	if (__unlikely(co_dev_set_vendor_name(dev, sdev->vendor_name) == -1))
 		return -1;
 
@@ -265,6 +288,10 @@ co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 		return -1;
 
 	co_dev_set_baud(dev, sdev->baud);
+	co_dev_set_rate(dev, sdev->rate);
+
+	co_dev_set_lss(dev, sdev->lss);
+
 	co_dev_set_dummy(dev, sdev->dummy);
 
 	for (size_t i = 0; i < sdev->nobj; i++) {
@@ -369,7 +396,7 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 
 	const char *name = co_obj_get_name(obj);
 	if (name) {
-		r = snprintf(s, n, "\t\t.name = CO_SDEV_NAME(\"");
+		r = snprintf(s, n, "\t\t.name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -468,7 +495,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 
 	const char *name = co_sub_get_name(sub);
 	if (name) {
-		r = snprintf(s, n, "\t\t\t.name = CO_SDEV_NAME(\"");
+		r = snprintf(s, n, "\t\t\t.name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;

@@ -42,7 +42,7 @@ extern "C" {
  * configuration request is received.
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID of the slave (in the range [1..127]).
+ * \param id  the node-ID of the slave (in the range [1..127]).
  * \param sdo a pointer to a Client-SDO connected to the slave.
  */
 void co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo);
@@ -52,7 +52,7 @@ void co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo);
  * configuration request completes (with success or failure).
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID of the slave (in the range [1..127]).
+ * \param id  the node-ID of the slave (in the range [1..127]).
  * \param ac  the SDO abort code (0 on success).
  */
 void co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
@@ -84,7 +84,7 @@ void co_nmt_cfg_destroy(co_nmt_cfg_t *boot);
  * Starts a CANopen NMT 'configuration request'.
  *
  * \param cfg     a pointer to an NMT 'configuration request'.
- * \param id      the Node-ID.
+ * \param id      the node-ID.
  * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number

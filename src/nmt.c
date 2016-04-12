@@ -84,7 +84,7 @@ struct __co_nmt {
 	can_net_t *net;
 	//! A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The pending Node-ID.
+	//! The pending node-ID.
 	co_unsigned8_t id;
 	//! The concise DCF of the application parameters.
 	void *dcf_node;
@@ -289,7 +289,7 @@ static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
  * of an NMT master service.
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID of the slave.
+ * \param id  the node-ID of the slave.
  * \param st  the state of the node (including the toggle bit).
  * \param es  the error status (in the range ['A'..'O'], or 0 on success).
  */
@@ -319,7 +319,7 @@ struct __co_nmt_state {
 	 * process completes.
 	 *
 	 * \param nmt a pointer to an NMT master service.
-	 * \param id  the Node-ID of the slave.
+	 * \param id  the node-ID of the slave.
 	 * \param st  the state of the node (including the toggle bit).
 	 * \param es  the error status (in the range ['A'..'O'], or 0 on
 	 *            success).
@@ -1545,8 +1545,8 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned8_t id = (val.u32 >> 16) & 0xff;
 	co_unsigned16_t ms = val.u32 & 0xffff;
 
-	// If the heartbeat consumer is active (valid Node-ID and non-zero
-	// heartbeat time), check the other entries for duplicate Node-IDs.
+	// If the heartbeat consumer is active (valid node-ID and non-zero
+	// heartbeat time), check the other entries for duplicate node-IDs.
 	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (id && id <= CO_NUM_NODES && ms) {
 		for (co_unsigned8_t i = 1; i <= CO_NUM_NODES; i++) {
@@ -1557,7 +1557,7 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned8_t id_i = (val_i >> 16) & 0xff;
 			co_unsigned16_t ms_i = val_i & 0xffff;
 			// It's not allowed to have two active heartbeat
-			// consumers with the same Node-ID.
+			// consumers with the same node-ID.
 			if (__unlikely(id_i == id && ms_i)) {
 				ac = CO_SDO_AC_PARAM;
 				goto error;
@@ -1641,7 +1641,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
-	// Abort with an error if the Node-ID is unknown.
+	// Abort with an error if the node-ID is unknown.
 	if (__unlikely(id > CO_NUM_NODES
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
 		ac = CO_SDO_AC_PARAM_VAL;
@@ -1756,7 +1756,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
-	// Abort with an error if the Node-ID is unknown.
+	// Abort with an error if the node-ID is unknown.
 	if (__unlikely(id > CO_NUM_NODES
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
 		ac = CO_SDO_AC_PARAM_VAL;
@@ -2115,7 +2115,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 			== -1))
 		diag(DIAG_ERROR, get_errc(), "unable to reset communication parameters");
 
-	// Update the Node-ID if necessary.
+	// Update the node-ID if necessary.
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
 		co_dev_set_id(nmt->dev, nmt->id);
 		if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
@@ -2137,7 +2137,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	// Start receiving NMT commands.
 	can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
 
-	// Don't enter the 'pre-operational' state if the Node-ID is invalid.
+	// Don't enter the 'pre-operational' state if the node-ID is invalid.
 	if (nmt->id != 0xff) {
 		next = co_nmt_preop_state;
 

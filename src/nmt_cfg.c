@@ -1,6 +1,6 @@
 /*!\file
  * This file is part of the CANopen library; it contains the implementation of
- * the NMT 'update configuration' functions.
+ * the NMT 'configuration request' functions.
  *
  * \see src/nmt_cfg.h
  *
@@ -47,7 +47,7 @@ struct __co_nmt_cfg {
 	co_nmt_t *nmt;
 	//! A pointer to the current state.
 	co_nmt_cfg_state_t *state;
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
 	//! The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;

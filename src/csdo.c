@@ -544,8 +544,7 @@ static void co_csdo_send_blk_up_sub_res(co_csdo_t *sdo);
 static void co_csdo_send_blk_up_end_res(co_csdo_t *sdo);
 
 /*!
- * Initializes a Client-SDO download/upload initiate request CAN frame and sets
- * the payload length to 4.
+ * Initializes a Client-SDO download/upload initiate request CAN frame.
  *
  * \param sdo a pointer to a Client-SDO service.
  * \param msg a pointer to the CAN frame to be initialized.
@@ -555,8 +554,7 @@ static void co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg,
 		uint8_t cs);
 
 /*!
- * Initializes a Client-SDO download/upload segment request CAN frame and sets
- * the payload length to 1.
+ * Initializes a Client-SDO download/upload segment request CAN frame.
  *
  * \param sdo a pointer to a Client-SDO service.
  * \param msg a pointer to the CAN frame to be initialized.

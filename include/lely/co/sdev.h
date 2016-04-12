@@ -28,8 +28,10 @@
 
 //! A static CANopen device. \see co_dev_create_from_sdev()
 struct co_sdev {
-	//! The Node-ID.
+	//! The node-ID.
 	co_unsigned8_t id;
+	//! A pointer to the name of the device.
+	const char *name;
 	//! A pointer to the vendor name.
 	const char *vendor_name;
 	//! The vendor ID.
@@ -44,6 +46,10 @@ struct co_sdev {
 	const char *order_code;
 	//! The supported bit rates.
 	unsigned baud:8;
+	//! The (pending) baudrate (in kbit/s).
+	co_unsigned16_t rate;
+	//! A flag specifying whether LSS is supported (1) or not (0).
+	int lss;
 	//! The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
 	//! The number of objects in #objs.

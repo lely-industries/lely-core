@@ -103,7 +103,7 @@ typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
  * NMT service is a master or not (see co_nmt_is_master()).
  *
  * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the Node-ID (in the range [1..127]).
+ * \param id    the node-ID (in the range [1..127]).
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
  *              was resolved (#CO_NMT_EC_RESOLVED).
  * \param data  a pointer to user-specified data.
@@ -116,7 +116,7 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * state change occurs.
  *
  * \param nmt  a pointer to an NMT master/slave service.
- * \param id   the Node-ID (in the range [1..127]).
+ * \param id   the node-ID (in the range [1..127]).
  * \param st   the state of the node.
  * \param data a pointer to user-specified data.
  */
@@ -128,7 +128,7 @@ typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
  * 'boot slave' process completes.
  *
  * \param nmt  a pointer to an NMT master service.
- * \param id   the Node-ID of the slave (in the range [1..127]).
+ * \param id   the node-ID of the slave (in the range [1..127]).
  * \param st   the state of the node (including the toggle bit).
  * \param es   the error status (in the range ['A'..'O'], or 0 on success).
  * \param data a pointer to user-specified data.
@@ -143,7 +143,7 @@ typedef void co_nmt_boot_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
  * (with success or failure).
  *
  * \param nmt  a pointer to an NMT master service.
- * \param id   the Node-ID of the slave (in the range [1..127]).
+ * \param id   the node-ID of the slave (in the range [1..127]).
  * \param sdo  a pointer to a Client-SDO connected to the slave.
  * \param data a pointer to user-specified data.
  */
@@ -156,7 +156,7 @@ typedef void co_nmt_cfg_ind_t(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
  * failure).
  *
  * \param nmt  a pointer to an NMT master service.
- * \param id   the Node-ID of the slave (in the range [1..127]).
+ * \param id   the node-ID of the slave (in the range [1..127]).
  * \param ac   the SDO abort code (0 on success).
  * \param data a pointer to user-specified data.
  */
@@ -358,16 +358,16 @@ LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
 LELY_CO_EXTERN void co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind,
 		void *data);
 
-//! Returns the pending Node-ID. \see co_nmt_set_id()
+//! Returns the pending node-ID. \see co_nmt_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
 
 /*!
- * Sets the pending Node-ID. The Node-ID of the device will be updated once the
+ * Sets the pending node-ID. The node-ID of the device will be updated once the
  * NMT 'reset communication command' is received. This is used for the LSS
- * configure Node-ID protocol.
+ * configure node-ID protocol.
  *
  * \param nmt a pointer to an NMT master/slave service.
- * \param id  the Node-ID of the device (in the range [1..127, 255]).
+ * \param id  the node-ID of the device (in the range [1..127, 255]).
  *
  * \see co_nmt_get_id(), co_dev_set_id()
  */
@@ -390,7 +390,7 @@ LELY_CO_EXTERN int co_nmt_is_master(const co_nmt_t *nmt);
  * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
  *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
  *            #CO_NMT_CS_RESET_COMM).
- * \param id  the Node-ID (0 for all nodes, [1..127] for a specific slave).
+ * \param id  the node-ID (0 for all nodes, [1..127] for a specific slave).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -403,7 +403,7 @@ LELY_CO_EXTERN int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs,
  * specified to co_nmt_set_boot_ind() is invoked on completion.
  *
  * \param nmt     a pointer to an NMT master service.
- * \param id      the Node-ID (in the range [1..127]).
+ * \param id      the node-ID (in the range [1..127]).
  * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
@@ -417,7 +417,7 @@ LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
  * specified to co_nmt_set_cfg_ind() is invoked to complete the request.
  *
  * \param nmt     a pointer to an NMT master service.
- * \param id      the Node-ID (0 for all nodes, [1..127] for a specific slave).
+ * \param id      the node-ID (0 for all nodes, [1..127] for a specific slave).
  * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
  * \param con     a pointer to the confirmation function (can be NULL).
  * \param data    a pointer to user-specified data (can be NULL). \a data is
@@ -435,7 +435,7 @@ LELY_CO_EXTERN int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
  * version 4.1.0). This function MUST be called upon completion.
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID (in the range [1..127]).
+ * \param id  the node-ID (in the range [1..127]).
  * \param ac  the SDO abort code (0 on success).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
@@ -474,7 +474,7 @@ LELY_CO_EXTERN void co_nmt_comm_err_ind(co_nmt_t *nmt);
  * invoke co_nmt_cs_ind().
  *
  * \param nmt a pointer to an NMT master service.
- * \param id  the Node-ID (in the range [1..127]).
+ * \param id  the node-ID (in the range [1..127]).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.

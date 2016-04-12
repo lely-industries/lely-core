@@ -459,8 +459,7 @@ static void co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last);
 static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
 
 /*!
- * Initializes a Server-SDO download/upload initiate response CAN frame and sets
- * the payload length to 4.
+ * Initializes a Server-SDO download/upload initiate response CAN frame.
  *
  * \param sdo a pointer to a Server-SDO service.
  * \param msg a pointer to the CAN frame to be initialized.
@@ -470,8 +469,7 @@ static void co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg,
 		uint8_t cs);
 
 /*!
- * Initializes a Server-SDO download/upload segment response CAN frame and sets
- * the payload length to 1.
+ * Initializes a Server-SDO download/upload segment response CAN frame.
  *
  * \param sdo a pointer to a Server-SDO service.
  * \param msg a pointer to the CAN frame to be initialized.

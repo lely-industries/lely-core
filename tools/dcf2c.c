@@ -30,11 +30,11 @@
 	"Arguments: [options] <filename> <name> <Node-ID>\n" \
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
-	"  --no-names            Do not include names in the output\n" \
+	"  --no-strings          Do not include optional strings in the output\n" \
 	"  -o <file>, --output=<file>\n" \
 	"                        Write the output to <file> instead of stdout\n"
 
-#define FLAG_NO_NAMES	0x01
+#define FLAG_NO_STRINGS	0x01
 
 void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap);
@@ -59,8 +59,8 @@ main(int argc, char *argv[])
 				if (!strcmp(opt, "help")) {
 					diag(DIAG_NONE, 0, CMD_USAGE);
 					goto error_arg;
-				} else if (!strcmp(opt, "no-names")) {
-					flags |= FLAG_NO_NAMES;
+				} else if (!strcmp(opt, "no-strings")) {
+					flags |= FLAG_NO_STRINGS;
 				} else if (!strncmp(opt, "output=", 7)) {
 					ofname = opt + 7;
 				} else {
@@ -137,9 +137,9 @@ main(int argc, char *argv[])
 	}
 
 	fprintf(stream, "#include <lely/co/sdev.h>\n\n"
-			"#define CO_SDEV_NAME(s)\t%s\n\n"
+			"#define CO_SDEV_STRING(s)\t%s\n\n"
 			"const struct co_sdev %s = %s;\n\n",
-			(flags & FLAG_NO_NAMES) ? "NULL" : "s", name, s);
+			(flags & FLAG_NO_STRINGS) ? "NULL" : "s", name, s);
 
 	if (ofname)
 		fclose(stream);
