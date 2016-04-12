@@ -23,7 +23,7 @@
 
 #include "co.h"
 #include <lely/util/diag.h>
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 #include <lely/util/time.h>
 #include <lely/can/buf.h>
 #endif
@@ -32,7 +32,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 #include "nmt_boot.h"
 #include "nmt_cfg.h"
 #endif
@@ -56,7 +56,7 @@ struct __co_nmt_state;
 //! An opaque CANopen NMT state type.
 typedef const struct __co_nmt_state co_nmt_state_t;
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 //! A struct containing the state of an NMT slave.
 struct co_nmt_slave {
 	//! A pointer to the CAN frame receiver for the boot-up event.
@@ -96,7 +96,7 @@ struct __co_nmt {
 	struct co_nmt_srv srv;
 	//! The NMT startup value (object 1F80).
 	co_unsigned32_t startup;
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	//! A flag specifying whether the NMT service is a master or a slave.
 	int master;
 #endif
@@ -141,7 +141,7 @@ struct __co_nmt {
 	co_nmt_st_ind_t *st_ind;
 	//! A pointer to user-specified data for #st_ind.
 	void *st_data;
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	//! A pointer to the CAN frame buffer for NMT messages.
 	struct can_buf buf;
 	//! The time at which the next NMT message may be sent.
@@ -200,7 +200,7 @@ static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 /*!
  * The download indication function for (all sub-objects of) CANopen object 1F25
  * (Configuration request).
@@ -220,7 +220,7 @@ static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 static co_unsigned32_t co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 /*!
  * The download indication function for (all sub-objects of) CANopen object 1F80
  * (Request NMT).
@@ -250,7 +250,7 @@ static int co_nmt_recv_700(const struct can_msg *msg, void *data);
  */
 static int co_nmt_ec_timer(const struct timespec *tp, void *data);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 /*!
  * The CAN timer callback function for sending buffered NMT messages.
  *
@@ -283,7 +283,7 @@ static void co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next);
  */
 static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 /*!
  * Invokes the 'boot slave completed' transition function of the current state
  * of an NMT master service.
@@ -313,7 +313,7 @@ struct __co_nmt_state {
 	 * \returns a pointer to the next state.
 	 */
 	co_nmt_state_t *(*on_cs)(co_nmt_t *nmt, co_unsigned8_t cs);
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	/*!
 	 * A pointer to the transition function invoked when an 'boot slave'
 	 * process completes.
@@ -336,7 +336,7 @@ struct __co_nmt_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_nmt_state_t *const name = &(co_nmt_state_t){ __VA_ARGS__  };
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 //! The default 'boot slave completed' transition function.
 static co_nmt_state_t *co_nmt_default_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es);
@@ -383,7 +383,7 @@ static co_nmt_state_t *co_nmt_preop_on_enter(co_nmt_t *nmt);
  */
 static co_nmt_state_t *co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 /*!
  * The 'boot slave completed' transition function of the 'pre-operational'
  * state.
@@ -393,7 +393,7 @@ static co_nmt_state_t *co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
 #endif
 
 //! The NMT 'pre-operational' state.
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 	.on_enter = &co_nmt_preop_on_enter,
 	.on_cs = &co_nmt_preop_on_cs
@@ -413,7 +413,7 @@ static co_nmt_state_t *co_nmt_start_on_enter(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 //! The NMT 'operational' state.
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_start_state,
 	.on_enter = &co_nmt_start_on_enter,
 	.on_cs = &co_nmt_start_on_cs
@@ -433,7 +433,7 @@ static co_nmt_state_t *co_nmt_stop_on_enter(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 //! The NMT 'stopped' state.
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 	.on_enter = &co_nmt_stop_on_enter,
 	.on_cs = &co_nmt_stop_on_cs
@@ -451,7 +451,7 @@ LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 //! The NMT startup procedure (see Fig. 1 & 2 in CiA 302-2 version 4.1.0).
 static co_nmt_state_t *co_nmt_startup(co_nmt_t *nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 //! The NMT master startup procedure.
 static co_nmt_state_t *co_nmt_startup_master(co_nmt_t *nmt);
 #endif
@@ -491,7 +491,7 @@ static void co_nmt_hb_init(co_nmt_t *nmt);
 //! Finalizes the heartbeat consumer services. \see co_nmt_hb_init()
 static void co_nmt_hb_fini(co_nmt_t *nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 //! Initializes NMT slave management. \see co_nmt_slaves_fini()
 static void co_nmt_slaves_init(co_nmt_t *nmt);
@@ -520,7 +520,7 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 //! The services enabled in the NMT 'stopped' state.
 #define CO_NMT_STOP_SRV	0
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT const char *
 co_nmt_es_str(char es)
 {
@@ -590,7 +590,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	co_nmt_srv_init(&nmt->srv);
 
 	nmt->startup = 0;
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	nmt->master = 0;
 #endif
 
@@ -625,7 +625,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->st_ind = NULL;
 	nmt->st_data = NULL;
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	nmt->buf = (struct can_buf)CAN_BUF_INIT;
 	can_net_get_time(nmt->net, &nmt->inhibit);
 	nmt->cs_timer = NULL;
@@ -674,7 +674,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1017)
 		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Set the download indication function for the configuration request
 	// value.
 	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
@@ -687,7 +687,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, &co_1f80_dn_ind, nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Set the download indication function for the request NMT value.
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
 	if (obj_1f82)
@@ -697,13 +697,13 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	co_nmt_enter(nmt, co_nmt_init_state);
 	return nmt;
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	if (obj_1f82)
 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
 #endif
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	if (obj_1f25)
 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
 #endif
@@ -731,7 +731,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 {
 	assert(nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Remove the download indication function for the request NMT value.
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
 	if (obj_1f82)
@@ -743,7 +743,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Remove the download indication function for the configuration request
 	// value.
 	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
@@ -773,7 +773,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	if (obj_100c)
 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	co_nmt_slaves_fini(nmt);
 #endif
 
@@ -784,7 +784,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	can_timer_destroy(nmt->ec_timer);
 	can_recv_destroy(nmt->recv_700);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	can_timer_destroy(nmt->cs_timer);
 	can_buf_fini(&nmt->buf);
 #endif
@@ -911,7 +911,7 @@ co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data)
 	nmt->st_data = data;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT void
 co_nmt_get_boot_ind(const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata)
@@ -953,7 +953,7 @@ co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data)
 	nmt->cfg_data = data;
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT co_unsigned8_t
 co_nmt_get_id(const co_nmt_t *nmt)
@@ -989,7 +989,7 @@ co_nmt_get_st(const co_nmt_t *nmt)
 LELY_CO_EXPORT int
 co_nmt_is_master(const co_nmt_t *nmt)
 {
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 	__unused_var(nmt);
 
 	return 0;
@@ -1000,7 +1000,7 @@ co_nmt_is_master(const co_nmt_t *nmt)
 #endif
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT int
 co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
@@ -1166,7 +1166,7 @@ co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	return co_nmt_cfg_cfg_res(nmt->slaves[id - 1].cfg, ac);
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT int
 co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
@@ -1203,7 +1203,7 @@ co_nmt_comm_err_ind(co_nmt_t *nmt)
 	}
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT int
 co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 {
@@ -1316,7 +1316,7 @@ co_nmt_get_emcy(const co_nmt_t *nmt)
 	return nmt->srv.emcy;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 void
 co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
@@ -1399,7 +1399,7 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 		slave->cfg_con(nmt, id, ac, slave->cfg_data);
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
 void
 co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state)
@@ -1418,7 +1418,7 @@ co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 	if (__unlikely(!id || id > CO_NUM_NODES))
 		return;
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	if (nmt->master) {
 		nmt->slaves[id - 1].st = st;
 		// Update object 1F82 (Request NMT) with the NMT state.
@@ -1616,7 +1616,7 @@ error:
 	return ac;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static co_unsigned32_t
 co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -1691,7 +1691,7 @@ error:
 	co_val_fini(type, &val);
 	return ac;
 }
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
 static co_unsigned32_t
 co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
@@ -1731,7 +1731,7 @@ error:
 	return ac;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static co_unsigned32_t
 co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -1794,7 +1794,7 @@ error:
 	co_val_fini(type, &val);
 	return ac;
 }
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
 static int
 co_nmt_recv_000(const struct can_msg *msg, void *data)
@@ -1803,7 +1803,7 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Ignore NMT commands if we're the master.
 	if (nmt->master)
 		return 0;
@@ -1847,7 +1847,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			nmt->lg_state = CO_NMT_EC_RESOLVED;
 			nmt->lg_ind(nmt, nmt->lg_state, nmt->lg_data);
 		}
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	} else {
 		assert(nmt->master);
 
@@ -1902,7 +1902,7 @@ co_nmt_ec_timer(const struct timespec *tp, void *data)
 	return 0;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 int
 co_nmt_cs_timer(const struct timespec *tp, void *data)
 {
@@ -1970,7 +1970,7 @@ default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, void *data)
 	__unused_var(data);
 
 	if (state == CO_NMT_EC_OCCURRED) {
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 		__unused_var(id);
 		co_nmt_comm_err_ind(nmt);
 #else
@@ -2009,7 +2009,7 @@ co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	co_nmt_enter(nmt, nmt->state->on_cs(nmt, cs));
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static inline void
 co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 {
@@ -2021,7 +2021,7 @@ co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 }
 #endif
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static co_nmt_state_t *
 co_nmt_default_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 		char es)
@@ -2053,7 +2053,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
 	nmt->halt = 0;
@@ -2092,7 +2092,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	co_nmt_state_t *next = NULL;
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
 	nmt->halt = 0;
@@ -2125,7 +2125,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	// Load the NMT startup value.
 	nmt->startup = co_dev_get_val_u32(nmt->dev, 0x1f80, 0x00);
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Bit 0 of the NMT startup value determines whether we are a master or
 	// a slave.
 	nmt->master = !!(nmt->startup & 0x01);
@@ -2177,7 +2177,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
 	nmt->halt = 0;
@@ -2214,7 +2214,7 @@ co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	}
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static co_nmt_state_t *
 co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 		char es)
@@ -2249,7 +2249,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 	// If we're the master and bit 3 of the NMT startup value is 0 and bit 1
 	// is 1, send the NMT start remote node command to all nodes (see Fig. 2
 	// in CiA 302-2 version 4.1.0).
@@ -2356,7 +2356,7 @@ co_nmt_startup(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-#ifdef LELY_NO_CO_NMT_MASTER
+#ifdef LELY_NO_CO_MASTER
 	return co_nmt_startup_slave(nmt);
 #else
 	return nmt->master
@@ -2365,7 +2365,7 @@ co_nmt_startup(co_nmt_t *nmt)
 #endif
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 static co_nmt_state_t *
 co_nmt_startup_master(co_nmt_t *nmt)
 {
@@ -2553,7 +2553,7 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 	nmt->nhb = 0;
 }
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 static void
 co_nmt_slaves_init(co_nmt_t *nmt)
@@ -2636,5 +2636,5 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 	return res;
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 

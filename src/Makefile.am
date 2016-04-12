@@ -14,7 +14,7 @@ if !NO_CO_EMCY
 src += emcy.c
 endif
 src += nmt.c
-if !NO_CO_NMT_MASTER
+if !NO_CO_MASTER
 src += nmt_boot.c
 src += nmt_boot.h
 src += nmt_cfg.c

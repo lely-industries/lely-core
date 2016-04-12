@@ -114,12 +114,12 @@ AS_IF([test "x$enable_emcy" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_EMCY], [1], [Define to 1 if emergency (EMCY) object support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_CO_NMT_MASTER], [false])
-AC_ARG_ENABLE([nmt-master],
-	AS_HELP_STRING([--disable-nmt-master], [disable NMT master support]))
-AS_IF([test "x$enable_nmt_master" == "xno"], [
-	AM_CONDITIONAL([NO_CO_NMT_MASTER], [true])
-	AC_DEFINE([LELY_NO_CO_NMT_MASTER], [1], [Define to 1 if NMT master support is disabled.])
+AM_CONDITIONAL([NO_CO_MASTER], [false])
+AC_ARG_ENABLE([master],
+	AS_HELP_STRING([--disable-master], [disable master support]))
+AS_IF([test "x$enable_master" == "xno"], [
+	AM_CONDITIONAL([NO_CO_MASTER], [true])
+	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"

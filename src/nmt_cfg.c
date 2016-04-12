@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 #include <lely/util/errnum.h>
 #include <lely/co/csdo.h>
@@ -430,5 +430,5 @@ co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 	return co_nmt_cfg_abort_state;
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 

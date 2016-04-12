@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_NMT_MASTER
+#ifndef LELY_NO_CO_MASTER
 
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
@@ -1877,5 +1877,5 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 	return can_net_send(boot->net, &msg);
 }
 
-#endif // !LELY_NO_CO_NMT_MASTER
+#endif // !LELY_NO_CO_MASTER
 
