@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 static struct __co_dev *__co_dev_init_from_dcf_cfg(struct __co_dev *dev,
-		co_unsigned8_t id, const config_t *cfg);
+		const config_t *cfg);
 
 static int co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg);
 
@@ -58,8 +58,7 @@ static co_unsigned16_t config_get_idx(const config_t *cfg, const char *section,
 
 
 LELY_CO_EXPORT struct __co_dev *
-__co_dev_init_from_dcf_file(struct __co_dev *dev, co_unsigned8_t id,
-		const char *filename)
+__co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (__unlikely(!cfg)) {
@@ -70,7 +69,7 @@ __co_dev_init_from_dcf_file(struct __co_dev *dev, co_unsigned8_t id,
 	if (__unlikely(!config_parse_ini_file(cfg, filename)))
 		goto error_parse_ini_file;
 
-	dev = __co_dev_init_from_dcf_cfg(dev, id, cfg);
+	dev = __co_dev_init_from_dcf_cfg(dev, cfg);
 
 error_parse_ini_file:
 	config_destroy(cfg);
@@ -79,7 +78,7 @@ error_create_cfg:
 }
 
 LELY_CO_EXPORT co_dev_t *
-co_dev_create_from_dcf_file(co_unsigned8_t id, const char *filename)
+co_dev_create_from_dcf_file(const char *filename)
 {
 	errc_t errc = 0;
 
@@ -89,7 +88,7 @@ co_dev_create_from_dcf_file(co_unsigned8_t id, const char *filename)
 		goto error_alloc_dev;
 	}
 
-	if (__unlikely(!__co_dev_init_from_dcf_file(dev, id, filename))) {
+	if (__unlikely(!__co_dev_init_from_dcf_file(dev, filename))) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -104,8 +103,8 @@ error_alloc_dev:
 }
 
 LELY_CO_EXPORT struct __co_dev *
-__co_dev_init_from_dcf_text(struct __co_dev *dev, co_unsigned8_t id,
-		const char *begin, const char *end, struct floc *at)
+__co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
+		const char *end, struct floc *at)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (__unlikely(!cfg)) {
@@ -116,7 +115,7 @@ __co_dev_init_from_dcf_text(struct __co_dev *dev, co_unsigned8_t id,
 	if (__unlikely(!config_parse_ini_text(cfg, begin, end, at)))
 		goto error_parse_ini_text;
 
-	dev = __co_dev_init_from_dcf_cfg(dev, id, cfg);
+	dev = __co_dev_init_from_dcf_cfg(dev, cfg);
 
 error_parse_ini_text:
 	config_destroy(cfg);
@@ -125,8 +124,7 @@ error_create_cfg:
 }
 
 LELY_CO_EXPORT co_dev_t *
-co_dev_create_from_dcf_text(co_unsigned8_t id, const char *begin,
-		const char *end, struct floc *at)
+co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 {
 	errc_t errc = 0;
 
@@ -136,7 +134,7 @@ co_dev_create_from_dcf_text(co_unsigned8_t id, const char *begin,
 		goto error_alloc_dev;
 	}
 
-	if (__unlikely(!__co_dev_init_from_dcf_text(dev, id, begin, end, at))) {
+	if (__unlikely(!__co_dev_init_from_dcf_text(dev, begin, end, at))) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -151,13 +149,12 @@ error_alloc_dev:
 }
 
 static struct __co_dev *
-__co_dev_init_from_dcf_cfg(struct __co_dev *dev, co_unsigned8_t id,
-		const config_t *cfg)
+__co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 {
 	assert(dev);
 	assert(cfg);
 
-	if (__unlikely(!__co_dev_init(dev, id))) {
+	if (__unlikely(!__co_dev_init(dev, 0xff))) {
 		diag(DIAG_ERROR, get_errc(), "unable to initialize device description");
 		goto error_init_dev;
 	}

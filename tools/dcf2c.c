@@ -27,7 +27,7 @@
 #include <string.h>
 
 #define CMD_USAGE \
-	"Arguments: [options] <filename> <name> <Node-ID>\n" \
+	"Arguments: [options] <filename> <name>\n" \
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
 	"  --no-strings          Do not include optional strings in the output\n" \
@@ -49,7 +49,6 @@ main(int argc, char *argv[])
 	const char *ifname = NULL;
 	const char *ofname = NULL;
 	const char *name = NULL;
-	co_unsigned8_t id = 0;
 	for (int i = 1; i < argc; i++) {
 		char *opt = argv[i];
 		if (*opt == '-') {
@@ -94,8 +93,6 @@ main(int argc, char *argv[])
 				ifname = opt;
 			else if (!name)
 				name = opt;
-			else if (!id)
-				id = strtol(opt, NULL, 0);
 		}
 	}
 
@@ -109,12 +106,7 @@ main(int argc, char *argv[])
 		goto error_arg;
 	}
 
-	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
-		diag(DIAG_ERROR, 0, "invalid Node-ID specified: %d", id);
-		goto error_arg;
-	}
-
-	co_dev_t *dev = co_dev_create_from_dcf_file(id, ifname);
+	co_dev_t *dev = co_dev_create_from_dcf_file(ifname);
 	if (__unlikely(!dev))
 		goto errror_create_dev;
 

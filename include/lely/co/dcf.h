@@ -32,28 +32,22 @@ extern "C" {
 #endif
 
 LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_file(
-		struct __co_dev *dev, co_unsigned8_t id, const char *filename);
+		struct __co_dev *dev, const char *filename);
 
 /*!
  * Creates a CANopen device from an EDS or DCF file.
  *
- * \param id       the node-ID of the device (in the range [1..127]).
- * \param filename a pointer to the name of the EDS or DCF file containing the
- *                 device configuration and object dictionary.
- *
  * \returns a pointer to a new CANopen device, or NULL on error.
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_file(co_unsigned8_t id,
-		const char *filename);
+LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_file(const char *filename);
 
 LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
-		struct __co_dev *dev, co_unsigned8_t id, const char *begin,
-		const char *end, struct floc *at);
+		struct __co_dev *dev, const char *begin, const char *end,
+		struct floc *at);
 
 /*!
  * Creates a CANopen device from an EDS or DCF text string.
  *
- * \param id    the node-ID of the device (in the range [1..127]).
  * \param begin a pointer to the first character in the string.
  * \param end   a pointer to one past the last character in the string (can be
  *              NULL if the string is null-terminated).
@@ -63,8 +57,8 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
  *
  * \returns a pointer to a new CANopen device, or NULL on error.
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_text(co_unsigned8_t id,
-		const char *begin, const char *end, struct floc *at);
+LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_text(const char *begin,
+		const char *end, struct floc *at);
 
 #ifdef __cplusplus
 }
