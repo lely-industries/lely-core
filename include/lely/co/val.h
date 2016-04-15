@@ -346,7 +346,8 @@ LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
 LELY_CO_EXTERN int co_val_init_dom(void **val, const void *dom, size_t n);
 
 /*!
- * Finalizes a value of the specified data type.
+ * Finalizes a value of the specified data type. It is safe to invoke this
+ * function multiple times on the same value.
  *
  * \param type the data type (in the range [1..27]). This MUST be the object
  *             index of one of the static data types.

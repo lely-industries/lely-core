@@ -2127,6 +2127,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	// Update the node-ID if necessary.
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
 		co_dev_set_id(nmt->dev, nmt->id);
+		co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
 		if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
 				&nmt->dcf_comm) == -1))
 			diag(DIAG_ERROR, get_errc(), "unable to store communication parameters");
