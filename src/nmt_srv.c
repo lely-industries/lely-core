@@ -23,14 +23,29 @@
 
 #include "co.h"
 #include <lely/util/diag.h>
+#ifndef LELY_NO_CO_CSDO
 #include <lely/co/csdo.h>
+#endif
 #include <lely/co/dev.h>
+#ifndef LELY_NO_CO_SYNC
 #include <lely/co/emcy.h>
+#endif
+#ifndef LELY_NO_CO_LSS
+#include <lely/co/lss.h>
+#endif
+#ifndef LELY_NO_CO_RPDO
 #include <lely/co/rpdo.h>
+#endif
 #include <lely/co/ssdo.h>
+#ifndef LELY_NO_CO_SYNC
 #include <lely/co/sync.h>
+#endif
+#ifndef LELY_NO_CO_TIME
 #include <lely/co/time.h>
+#endif
+#ifndef LELY_NO_CO_RPDO
 #include <lely/co/tpdo.h>
+#endif
 #include "nmt_srv.h"
 
 #include <assert.h>
@@ -56,34 +71,45 @@ static void co_nmt_srv_fini_sdo(struct co_nmt_srv *srv);
 
 #ifndef LELY_NO_CO_SYNC
 
-//! Initializes the SYNC producer/consumer services. \see co_nmt_srv_fini_sync()
+//! Initializes the SYNC producer/consumer service. \see co_nmt_srv_fini_sync()
 static void co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
 
-//! Finalizes the SYNC producer/consumer services. \see co_nmt_srv_init_sync()
+//! Finalizes the SYNC producer/consumer service. \see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
 
 #endif
 
 #ifndef LELY_NO_CO_TIME
 
-//! Initializes the TIME producer/consumer services. \see co_nmt_srv_fini_time()
+//! Initializes the TIME producer/consumer service. \see co_nmt_srv_fini_time()
 static void co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
 
-//! Finalizes the TIME producer/consumer services. \see co_nmt_srv_init_time()
+//! Finalizes the TIME producer/consumer service. \see co_nmt_srv_init_time()
 static void co_nmt_srv_fini_time(struct co_nmt_srv *srv);
 
 #endif
 
 #ifndef LELY_NO_CO_EMCY
 
-//! Initializes the EMCY producer/consumer services. \see co_nmt_srv_fini_emcy()
+//! Initializes the EMCY producer/consumer service. \see co_nmt_srv_fini_emcy()
 static void co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
 
-//! Finalizes the EMCY producer/consumer services. \see co_nmt_srv_init_emcy()
+//! Finalizes the EMCY producer/consumer service. \see co_nmt_srv_init_emcy()
 static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
+
+#endif
+
+#ifndef LELY_NO_CO_LSS
+
+//! Initializes the LSS master/slave service. \see co_nmt_srv_fini_lss()
+static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, can_net_t *net,
+		co_dev_t *dev, co_nmt_t *nmt);
+
+//! Finalizes the EMCY master/slave service. \see co_nmt_srv_init_lss()
+static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 
 #endif
 
@@ -125,6 +151,8 @@ co_nmt_srv_init(struct co_nmt_srv *srv)
 	srv->sync = NULL;
 	srv->time = NULL;
 	srv->emcy = NULL;
+
+	srv->lss = NULL;
 }
 
 void
@@ -132,14 +160,19 @@ co_nmt_srv_fini(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
-	co_nmt_srv_set(srv, NULL, NULL, 0);
+	co_nmt_srv_set(srv, NULL, NULL, NULL, 0);
 }
 
 void
-co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev, int set)
+co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
+		co_nmt_t *nmt, int set)
 {
 	assert(srv);
 
+#ifndef LELY_NO_CO_LSS
+	if ((srv->set & ~set) & CO_NMT_SRV_LSS)
+		co_nmt_srv_fini_lss(srv);
+#endif
 #ifndef LELY_NO_CO_EMCY
 	if ((srv->set & ~set) & CO_NMT_SRV_EMCY)
 		co_nmt_srv_fini_emcy(srv);
@@ -176,6 +209,12 @@ co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev, int set)
 #ifndef LELY_NO_CO_EMCY
 	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
 		co_nmt_srv_init_emcy(srv, net, dev);
+#endif
+#ifdef LELY_NO_CO_LSS
+	__unused_var(nmt);
+#else
+	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
+		co_nmt_srv_init_lss(srv, net, dev, nmt);
 #endif
 }
 
@@ -466,6 +505,40 @@ co_nmt_srv_fini_emcy(struct co_nmt_srv *srv)
 
 	co_emcy_destroy(srv->emcy);
 	srv->emcy = NULL;
+}
+
+#endif
+
+#ifndef LELY_NO_CO_LSS
+
+static void
+co_nmt_srv_init_lss(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
+		co_nmt_t *nmt)
+{
+	assert(srv);
+	assert(!(srv->set & CO_NMT_SRV_LSS));
+	assert(!srv->emcy);
+
+	if (!co_dev_get_lss(dev))
+		return;
+
+	srv->set |= CO_NMT_SRV_LSS;
+
+	srv->lss = co_lss_create(net, dev, nmt);
+	if (__unlikely(!srv->lss))
+		diag(DIAG_ERROR, get_errc(), "unable to initialize LSS service");
+}
+
+static void
+co_nmt_srv_fini_lss(struct co_nmt_srv *srv)
+{
+	assert(srv);
+	assert(srv->set & CO_NMT_SRV_LSS);
+
+	srv->set &= ~CO_NMT_SRV_LSS;
+
+	co_lss_destroy(srv->lss);
+	srv->lss = NULL;
 }
 
 #endif

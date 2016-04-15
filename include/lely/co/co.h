@@ -103,5 +103,11 @@ struct __co_nmt;
 typedef struct __co_nmt co_nmt_t;
 #endif
 
+struct __co_lss;
+#ifndef __cplusplus
+//! An opaque CANopen LSS master/slave service type.
+typedef struct __co_lss co_lss_t;
+#endif
+
 #endif
 

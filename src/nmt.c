@@ -511,14 +511,15 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 
 //! The services enabled in the NMT 'pre-operational' state.
 #define CO_NMT_PREOP_SRV \
-	(CO_NMT_SRV_SDO | CO_NMT_SRV_SYNC | CO_NMT_SRV_TIME | CO_NMT_SRV_EMCY)
+	(CO_NMT_STOP_SRV | CO_NMT_SRV_SDO | CO_NMT_SRV_SYNC | CO_NMT_SRV_TIME \
+			| CO_NMT_SRV_EMCY)
 
 //! The services enabled in the NMT 'operational' state.
 #define CO_NMT_START_SRV \
 	(CO_NMT_PREOP_SRV | CO_NMT_SRV_PDO)
 
 //! The services enabled in the NMT 'stopped' state.
-#define CO_NMT_STOP_SRV	0
+#define CO_NMT_STOP_SRV	CO_NMT_SRV_LSS
 
 #ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT const char *
@@ -1316,6 +1317,14 @@ co_nmt_get_emcy(const co_nmt_t *nmt)
 	return nmt->srv.emcy;
 }
 
+LELY_CO_EXPORT co_lss_t *
+co_nmt_get_lss(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->srv.lss;
+}
+
 #ifndef LELY_NO_CO_MASTER
 
 void
@@ -2060,7 +2069,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, 0);
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2076,7 +2085,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 			== -1))
 		diag(DIAG_ERROR, get_errc(), "unable to reset application parameters");
 
-	nmt->st = CO_NMT_ST_BOOTUP;
+	nmt->st = CO_NMT_ST_RESET_NODE;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
 
 	if (nmt->cs_ind)
@@ -2099,7 +2108,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, 0);
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2131,11 +2140,15 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	nmt->master = !!(nmt->startup & 0x01);
 #endif
 
-	nmt->st = CO_NMT_ST_BOOTUP;
+	nmt->st = CO_NMT_ST_RESET_COMM;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
 
 	// Start receiving NMT commands.
-	can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
+	if (!co_nmt_is_master(nmt))
+		can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
+
+	// Enable LSS.
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_SRV_LSS);
 
 	// Don't enter the 'pre-operational' state if the node-ID is invalid.
 	if (nmt->id != 0xff) {
@@ -2148,7 +2161,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 		co_nmt_hb_init(nmt);
 
 		// Send the boot-up signal to notify the master we exist.
-		co_nmt_ec_send_res(nmt, nmt->st);
+		co_nmt_ec_send_res(nmt, CO_NMT_ST_BOOTUP);
 	}
 
 	if (nmt->cs_ind)
@@ -2184,7 +2197,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services except PDO.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, CO_NMT_PREOP_SRV);
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_PREOP_SRV);
 
 	nmt->st = CO_NMT_ST_PREOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2244,7 +2257,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Enable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, CO_NMT_START_SRV);
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_START_SRV);
 
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2320,8 +2333,8 @@ co_nmt_stop_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, CO_NMT_STOP_SRV);
+	// Disable all services (except LSS).
+	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_STOP_SRV);
 
 	nmt->st = CO_NMT_ST_STOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);

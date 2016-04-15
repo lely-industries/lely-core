@@ -26,6 +26,23 @@
 
 #include <stddef.h>
 
+//! The data type (and object index) of an identity record.
+#define CO_DEFSTRUCT_ID	0x0023
+
+//! An identity record.
+struct co_id {
+	//! Highest sub-index supported.
+	co_unsigned8_t n;
+	//! Vendor-ID.
+	co_unsigned32_t vendor_id;
+	//! Product code.
+	co_unsigned32_t product_code;
+	//! Revision number.
+	co_unsigned32_t revision;
+	//! Serial number.
+	co_unsigned32_t serial_nr;
+};
+
 //! The maximum number of nodes in a CANopen network.
 #define CO_NUM_NODES	127
 

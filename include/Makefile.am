@@ -12,6 +12,9 @@ inc += lely/co/dev.h
 if !NO_CO_EMCY
 inc += lely/co/emcy.h
 endif
+if !NO_CO_LSS
+inc += lely/co/lss.h
+endif
 inc += lely/co/nmt.h
 inc += lely/co/obj.h
 inc += lely/co/pdo.h

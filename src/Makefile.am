@@ -13,6 +13,9 @@ src += dev.c
 if !NO_CO_EMCY
 src += emcy.c
 endif
+if !NO_CO_LSS
+src += lss.c
+endif
 src += nmt.c
 if !NO_CO_MASTER
 src += nmt_boot.c

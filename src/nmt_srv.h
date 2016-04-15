@@ -56,6 +56,8 @@ struct co_nmt_srv {
 	co_time_t *time;
 	//! A pointer to the EMCY producer/consumer service.
 	co_emcy_t *emcy;
+	//! A pointer to the LSS master/slave service.
+	co_lss_t *lss;
 };
 
 //! The Receive/Transmit-PDO services.
@@ -64,14 +66,17 @@ struct co_nmt_srv {
 //! The Server/Client-SDO services.
 #define CO_NMT_SRV_SDO	0x02
 
-//! The SYNC producer/consumer services.
+//! The SYNC producer/consumer service
 #define CO_NMT_SRV_SYNC	0x04
 
-//! The TIME producer/consumer services.
+//! The TIME producer/consumer service.
 #define CO_NMT_SRV_TIME	0x08
 
-//! The EMCY producer/consumer services.
+//! The EMCY producer/consumer service.
 #define CO_NMT_SRV_EMCY	0x10
+
+//! The LSS master/slave service.
+#define CO_NMT_SRV_LSS	0x20
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,12 +94,13 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  * \param srv a pointer to a CANopen NMT service manager.
  * \param net a pointer to a CAN network.
  * \param dev a pointer to a CANopen device.
+ * \param nmt a pointer to an NMT master/slave service.
  * \param set the services to be enabled (any combination of #CO_NMT_SRV_PDO,
  *            #CO_NMT_SRV_SDO, #CO_NMT_SRV_SYNC, #CO_NMT_SRV_TIME and
  *            #CO_NMT_SRV_EMCY). Services not part of \a set will be disabled.
  */
 void co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
-		int set);
+		co_nmt_t *nmt, int set);
 
 #ifdef __cplusplus
 }

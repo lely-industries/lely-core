@@ -526,6 +526,9 @@ LELY_CO_EXTERN co_time_t *co_nmt_get_time(const co_nmt_t *nmt);
 //! Returns a pointer to the EMCY producer/consumer service.
 LELY_CO_EXTERN co_emcy_t *co_nmt_get_emcy(const co_nmt_t *nmt);
 
+//! Returns a pointer to the LSS master/slave service.
+LELY_CO_EXTERN co_lss_t *co_nmt_get_lss(const co_nmt_t *nmt);
+
 #ifdef __cplusplus
 }
 #endif

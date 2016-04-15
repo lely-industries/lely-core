@@ -114,6 +114,14 @@ AS_IF([test "x$enable_emcy" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_EMCY], [1], [Define to 1 if emergency (EMCY) object support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_LSS], [false])
+AC_ARG_ENABLE([lss],
+	AS_HELP_STRING([--disable-lss], [disable Layer Setting Services (LSS) and protocols support]))
+AS_IF([test "x$enable_lss" == "xno"], [
+	AM_CONDITIONAL([NO_CO_LSS], [true])
+	AC_DEFINE([LELY_NO_CO_LSS], [1], [Define to 1 if Layer Setting Services (LSS) and protocols support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_MASTER], [false])
 AC_ARG_ENABLE([master],
 	AS_HELP_STRING([--disable-master], [disable master support]))
