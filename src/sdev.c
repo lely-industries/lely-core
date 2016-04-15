@@ -214,14 +214,15 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 			return r; \
 		t += r; r = MIN((size_t)r, n); s += r; n -= r; \
 	}
-LELY_CO_DEFINE_BAUD(10)
-LELY_CO_DEFINE_BAUD(20)
-LELY_CO_DEFINE_BAUD(50)
-LELY_CO_DEFINE_BAUD(125)
-LELY_CO_DEFINE_BAUD(250)
-LELY_CO_DEFINE_BAUD(500)
-LELY_CO_DEFINE_BAUD(800)
 LELY_CO_DEFINE_BAUD(1000)
+LELY_CO_DEFINE_BAUD(800)
+LELY_CO_DEFINE_BAUD(500)
+LELY_CO_DEFINE_BAUD(250)
+LELY_CO_DEFINE_BAUD(125)
+LELY_CO_DEFINE_BAUD(50)
+LELY_CO_DEFINE_BAUD(20)
+LELY_CO_DEFINE_BAUD(10)
+LELY_CO_DEFINE_BAUD(AUTO)
 #undef LELY_CO_DEFINE_BAUD
 
 	r = snprintf(s, n, ",\n\t.rate = %d,\n\t.lss = %d,\n\t.dummy = 0x%08x,\n",

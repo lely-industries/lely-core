@@ -29,29 +29,32 @@
 //! The maximum number of nodes in a CANopen network.
 #define CO_NUM_NODES	127
 
-//! A bit rate of 10 kbit/s.
-#define CO_BAUD_10	0x01
-
-//! A bit rate of 20 kbit/s.
-#define CO_BAUD_20	0x02
-
-//! A bit rate of 50 kbit/s.
-#define CO_BAUD_50	0x04
-
-//! A bit rate of 125 kbit/s.
-#define CO_BAUD_125	0x08
-
-//! A bit rate of 250 kbit/s.
-#define CO_BAUD_250	0x10
-
-//! A bit rate of 500 kbit/s.
-#define CO_BAUD_500	0x20
+//! A bit rate of 1 Mbit/s.
+#define CO_BAUD_1000	0x0001
 
 //! A bit rate of 800 kbit/s.
-#define CO_BAUD_800	0x40
+#define CO_BAUD_800	0x0002
 
-//! A bit rate of 1 Mbit/s.
-#define CO_BAUD_1000	0x80
+//! A bit rate of 500 kbit/s.
+#define CO_BAUD_500	0x0004
+
+//! A bit rate of 250 kbit/s.
+#define CO_BAUD_250	0x0008
+
+//! A bit rate of 125 kbit/s.
+#define CO_BAUD_125	0x0020
+
+//! A bit rate of 50 kbit/s.
+#define CO_BAUD_50	0x0040
+
+//! A bit rate of 20 kbit/s.
+#define CO_BAUD_20	0x0080
+
+//! A bit rate of 10 kbit/s.
+#define CO_BAUD_10	0x0100
+
+//! Automatic bit rate detection.
+#define CO_BAUD_AUTO	0x0200
 
 #ifdef __cplusplus
 extern "C" {
@@ -251,8 +254,8 @@ LELY_CO_EXTERN int co_dev_set_order_code(co_dev_t *dev, const char *order_code);
 
 /*!
  * Returns the supported bit rates of a CANopen device (any combination of
- * #CO_BAUD_10, #CO_BAUD_20, #CO_BAUD_50, #CO_BAUD_125, #CO_BAUD_250,
- * #CO_BAUD_500, #CO_BAUD_800 and #CO_BAUD_1000).
+ * #CO_BAUD_1000, #CO_BAUD_800, #CO_BAUD_500, #CO_BAUD_250, #CO_BAUD_125,
+ * #CO_BAUD_50, #CO_BAUD_20, #CO_BAUD_10 and #CO_BAUD_AUTO).
  *
  * \see co_dev_set_baud()
  */
@@ -262,9 +265,9 @@ LELY_CO_EXTERN unsigned int co_dev_get_baud(const co_dev_t *dev);
  * Sets the supported bit rates of a CANopen device.
  *
  * \param dev  a pointer to a CANopen device.
- * \param baud the supported bit rates (any combination of #CO_BAUD_10,
- *             #CO_BAUD_20, #CO_BAUD_50, #CO_BAUD_125, #CO_BAUD_250,
- *             #CO_BAUD_500, #CO_BAUD_800 and #CO_BAUD_1000).
+ * \param baud the supported bit rates (any combination of #CO_BAUD_1000,
+ *             #CO_BAUD_800, #CO_BAUD_500, #CO_BAUD_250, #CO_BAUD_125,
+ *             #CO_BAUD_50, #CO_BAUD_20, #CO_BAUD_10 and #CO_BAUD_AUTO).
  *
  * \see co_dev_get_baud()
  */
