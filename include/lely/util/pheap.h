@@ -1,6 +1,6 @@
 /*!\file
  * This header file is part of the utilities library; it contains the
- * <a href="http://en.wikipedia.org/wiki/Pairing_heap">pairing heap</a>
+ * <a href="https://en.wikipedia.org/wiki/Pairing_heap">pairing heap</a>
  * declarations.
  *
  * A pairing heap is a half-sorted tree structure suitable for a priority queue.
@@ -75,6 +75,33 @@ extern "C" {
 static inline struct pnode *pnode_next(const struct pnode *node);
 
 /*!
+ * Iterates over each node in a pairing heap in unspecified order. It is safe to
+ * remove the current node during the iteration. However, since pheap_remove()
+ * may change the order of the nodes, it is not guaranteed that all nodes will
+ * be visited.
+ *
+ * \param first a pointer to the first node.
+ * \param node  the name of the pointer to the nodes. This variable is declared
+ *              in the scope of the loop.
+ *
+ * \see pnode_next()
+ */
+#ifdef __COUNTER__
+#define pnode_foreach(first, node) \
+	_pnode_foreach(first, node, __COUNTER__)
+#else
+#define pnode_foreach(first, node) \
+	_pnode_foreach(first, node, __LINE__)
+#endif
+#define _pnode_foreach(first, node, n) \
+	__pnode_foreach(first, node, n)
+#define __pnode_foreach(first, node, n) \
+	for (struct pnode *(node) = (first), \
+			*__pnode_next_##n = (node) ? pnode_next(node) : NULL; \
+			(node); (node) = __pnode_next_##n, \
+			__pnode_next_##n = (node) ? pnode_next(node) : NULL)
+
+/*!
  * Initializes a pairing heap.
  *
  * \param heap a pointer to the heap to be initialized.
@@ -127,15 +154,10 @@ static inline struct pnode *pheap_first(const struct pheap *heap);
 /*!
  * Iterates over each node in a pairing heap in unspecified order.
  *
- * \param heap a pointer to a pairing heap.
- * \param node the name of the pointer to the nodes. This variable is declared
- *             in the scope of the loop.
- *
- * \see pheap_first(), pnode_next()
+ * \see pnode_foreach(), pheap_first()
  */
 #define pheap_foreach(heap, node) \
-	for (struct pnode *(node) = pheap_first(heap); (node); \
-			(node) = pnode_next(node))
+	pnode_foreach(pheap_first(heap), node)
 
 static inline struct pnode *
 pnode_next(const struct pnode *node)
