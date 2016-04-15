@@ -1,6 +1,6 @@
 /*!\file
  * This header file is part of the utilities library; it contains the
- * <a href="http://en.wikipedia.org/wiki/Red-black_tree">red-black tree</a>
+ * <a href="https://en.wikipedia.org/wiki/Red-black_tree">red-black tree</a>
  * declarations.
  *
  * A red-black tree is a type of self-balancing binary tree. This implementation
@@ -101,6 +101,31 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_prev(const struct rbnode *node);
 LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
 
 /*!
+ * Iterates over each node in a red-black tree in ascending order. It is safe to
+ * remove the current node during the iteration.
+ *
+ * \param first a pointer to the first node.
+ * \param node  the name of the pointer to the nodes. This variable is declared
+ *              in the scope of the loop.
+ *
+ * \see rbnode_next()
+ */
+#ifdef __COUNTER__
+#define rbnode_foreach(first, node) \
+	_rbnode_foreach(first, node, __COUNTER__)
+#else
+#define rbnode_foreach(first, node) \
+	_rbnode_foreach(first, node, __LINE__)
+#endif
+#define _rbnode_foreach(first, node, n) \
+	__rbnode_foreach(first, node, n)
+#define __rbnode_foreach(first, node, n) \
+	for (struct rbnode *(node) = (first), \
+			*__rbnode_next_##n = (node) ? rbnode_next(node) : NULL; \
+			(node); (node) = __rbnode_next_##n, \
+			__rbnode_next_##n = (node) ? rbnode_next(node) : NULL)
+
+/*!
  * Initializes a red-black tree.
  *
  * \param tree a pointer to the tree to be initialized.
@@ -168,23 +193,10 @@ static inline struct rbnode *rbtree_root(const struct rbtree *tree);
 /*!
  * Iterates over each node in a red-black tree in ascending order.
  *
- * \param tree a pointer to a red-black tree.
- * \param node the name of the pointer to the nodes. This variable is declared
- *             in the scope of the loop.
- *
- * \see rbtree_first(), rbnode_next()
+ * \see rbnode_foreach(), rbtree_first()
  */
 #define rbtree_foreach(tree, node) \
-	_rbtree_foreach(tree, node, __LINE__)
-#define _rbtree_foreach(tree, node, line) \
-	__rbtree_foreach(tree, node, line)
-#define __rbtree_foreach(tree, node, line) \
-	for (struct rbnode *(node) = rbtree_first(tree), \
-			*__rbnode_next_##line = (node) \
-			? rbnode_next(node) : NULL; \
-			(node); (node) = __rbnode_next_##line, \
-			__rbnode_next_##line = (node) \
-			? rbnode_next(node) : NULL)
+	rbnode_foreach(rbtree_first(tree), node)
 
 static inline void
 rbnode_init(struct rbnode *node, const void *key)
