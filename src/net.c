@@ -23,6 +23,7 @@
 
 #include "can.h"
 #include <lely/util/errnum.h>
+#include <lely/util/list.h>
 #include <lely/util/pheap.h>
 #include <lely/util/rbtree.h>
 #include <lely/util/time.h>
@@ -92,10 +93,12 @@ static inline can_recv_key_t can_recv_key(uint32_t id, uint8_t flags);
 //! The function used to compare to CAN receiver keys.
 static int __cdecl can_recv_key_cmp(const void *p1, const void *p2);
 
-//! A CAN network receiver.
+//! A CAN frame receiver.
 struct __can_recv {
 	//! The node of this receiver in the tree of receivers.
 	struct rbnode node;
+	//! The list of CAN frame receivers with the same key.
+	struct dlnode list;
 	/*!
 	 * A pointer to the network interface with which this receiver is
 	 * registered.
@@ -147,8 +150,11 @@ __can_net_fini(struct __can_net *net)
 {
 	assert(net);
 
-	rbtree_foreach(&net->recv_tree, node)
-		can_recv_stop(structof(node, can_recv_t, node));
+	rbtree_foreach(&net->recv_tree, node) {
+		can_recv_t *recv = structof(node, can_recv_t, node);
+		dlnode_foreach(&recv->list, node)
+			can_recv_stop(structof(node, can_recv_t, list));
+	}
 
 	struct pnode *node;
 	while ((node = pheap_first(&net->timer_heap)))
@@ -272,20 +278,21 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	errc_t errc = get_errc();
 	int result = 0;
 
-	// Loop over all matching receivers.
 	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
 	struct rbnode *node = rbtree_find(&net->recv_tree, &key);
-	while (node) {
+	if (node) {
+		// Loop over all matching receivers.
 		can_recv_t *recv = structof(node, can_recv_t, node);
-		node = rbnode_next(node);
-		// Invoke the callback function and check the result.
-		if (recv->func && recv->func(msg, recv->data) && !result) {
-			// Store the first error that occurs.
-			errc = get_errc();
-			result = -1;
+		dlnode_foreach(&recv->list, node) {
+			recv = structof(node, can_recv_t, list);
+			// Invoke the callback function and check the result.
+			if (recv->func && recv->func(msg, recv->data)
+					&& !result) {
+				// Store the first error that occurs.
+				errc = get_errc();
+				result = -1;
+			}
 		}
-		if (!node || net->recv_tree.cmp(&key, node->key))
-			break;
 	}
 
 	set_errc(errc);
@@ -497,6 +504,7 @@ __can_recv_init(struct __can_recv *recv)
 	assert(recv);
 
 	rbnode_init(&recv->node, &recv->key);
+	dlnode_init(&recv->list);
 
 	recv->net = NULL;
 
@@ -579,7 +587,14 @@ can_recv_start(can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags)
 	recv->net = net;
 
 	recv->key = can_recv_key(id, flags);
-	rbtree_insert(&recv->net->recv_tree, &recv->node);
+	struct rbnode *node = rbtree_find(&recv->net->recv_tree, &recv->key);
+	if (node) {
+		can_recv_t *prev = structof(node, can_recv_t, node);
+		dlnode_insert_after(&prev->list, &recv->list);
+	} else {
+		rbtree_insert(&recv->net->recv_tree, &recv->node);
+		dlnode_init(&recv->list);
+	}
 }
 
 LELY_CAN_EXPORT void
@@ -590,9 +605,20 @@ can_recv_stop(can_recv_t *recv)
 	if (!recv->net)
 		return;
 
-	rbtree_remove(&recv->net->recv_tree, &recv->node);
+	struct dlnode *prev = recv->list.prev;
+	struct dlnode *next = recv->list.next;
+
+	if (!prev)
+		rbtree_remove(&recv->net->recv_tree, &recv->node);
+	dlnode_remove(&recv->list);
+	dlnode_init(&recv->list);
 
 	recv->net = NULL;
+
+	if (!prev && next) {
+		recv = structof(next, can_recv_t, node);
+		rbtree_insert(&recv->net->recv_tree, &recv->node);
+	}
 }
 
 static void
