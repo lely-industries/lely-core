@@ -688,13 +688,9 @@ __co_csdo_fini(struct __co_csdo *sdo)
 	if (obj_1280)
 		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 
-	// Abort any ongoing transfer.
-	co_csdo_abort_req(sdo, CO_SDO_AC_NO_SDO);
-
 	membuf_fini(&sdo->buf);
 
 	can_timer_destroy(sdo->timer);
-
 	can_recv_destroy(sdo->recv);
 }
 
@@ -770,7 +766,9 @@ co_csdo_set_timeout(co_csdo_t *sdo, int timeout)
 LELY_CO_EXPORT int
 co_csdo_is_idle(const co_csdo_t *sdo)
 {
-	return __likely(sdo) ? sdo->state == co_csdo_wait_state : 0;
+	assert(sdo);
+
+	return sdo->state == co_csdo_wait_state;
 }
 
 LELY_CO_EXPORT void
@@ -1138,6 +1136,8 @@ static co_csdo_state_t *
 co_csdo_abort_on_enter(co_csdo_t *sdo)
 {
 	__unused_var(sdo);
+
+	can_timer_stop(sdo->timer);
 
 	return co_csdo_wait_state;
 }
@@ -1789,13 +1789,8 @@ static co_csdo_state_t *
 co_csdo_abort_ind(co_csdo_t *sdo, co_unsigned32_t ac)
 {
 	assert(sdo);
-	__unused_var(ac);
-
-	if (sdo->timeout)
-		can_timer_stop(sdo->timer);
 
 	sdo->ac = ac;
-
 	return co_csdo_abort_state;
 }
 
