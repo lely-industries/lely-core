@@ -9,6 +9,7 @@ inc += lely/util/errnum.h
 inc += lely/util/fbuf.h
 inc += lely/util/idlist.h
 inc += lely/util/lex.h
+inc += lely/util/list.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h
 inc += lely/util/pool.h
