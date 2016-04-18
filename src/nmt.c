@@ -2585,6 +2585,8 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 			continue;
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+		// Start listening for boot-up notifications.
+		can_recv_start(slave->recv, nmt->net, 0x700 + id, 0);
 	}
 
 	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
