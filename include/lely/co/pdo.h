@@ -24,6 +24,18 @@
 
 #include <lely/co/type.h>
 
+//! The bit in the PDO COB-ID specifying whether the PDO exists and is valid.
+#define CO_PDO_COBID_VALID	UINT32_C(0x80000000)
+
+//! The bit in the PDO COB-ID specifying whether RTR is allowed.
+#define CO_PDO_COBID_RTR	UINT32_C(0x40000000)
+
+/*!
+ * The bit in the PDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
+ * (1) CAN-ID.
+ */
+#define CO_PDO_COBID_FRAME	UINT32_C(0x20000000)
+
 //! The data type (and object index) of a PDO communication parameter record.
 #define CO_DEFSTRUCT_PDO_COMM_PAR	0x0020
 
@@ -44,6 +56,9 @@ struct co_pdo_comm_par {
 	co_unsigned8_t sync;
 };
 
+//! The static initializer from struct #co_pdo_comm_par.
+#define CO_PDO_COMM_PAR_INIT	{ 6, CO_PDO_COBID_VALID, 0, 0, 0, 0, 0 }
+
 //! The data type (and object index) of a PDO mapping parameter record.
 #define CO_DEFSTRUCT_PDO_MAP_PAR	0x0021
 
@@ -55,17 +70,18 @@ struct co_pdo_map_par {
 	co_unsigned32_t map[0x40];
 };
 
-//! The bit in the PDO COB-ID specifying whether the PDO exists and is valid.
-#define CO_PDO_COBID_VALID	UINT32_C(0x80000000)
-
-//! The bit in the PDO COB-ID specifying whether RTR is allowed.
-#define CO_PDO_COBID_RTR	UINT32_C(0x40000000)
-
-/*!
- * The bit in the PDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
- * (1) CAN-ID.
- */
-#define CO_PDO_COBID_FRAME	UINT32_C(0x20000000)
+//! The static initializer from struct #co_pdo_map_par.
+#define CO_PDO_MAP_PAR_INIT \
+	{ \
+		0, \
+		{ \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0 \
+		} \
+	}
 
 #endif
 

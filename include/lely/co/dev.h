@@ -43,6 +43,9 @@ struct co_id {
 	co_unsigned32_t serial_nr;
 };
 
+//! The static initializer for struct #co_id.
+#define CO_ID_INIT	{ 4, 0, 0, 0, 0 }
+
 //! The maximum number of nodes in a CANopen network.
 #define CO_NUM_NODES	127
 

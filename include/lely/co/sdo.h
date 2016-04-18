@@ -25,6 +25,15 @@
 #include <lely/util/membuf.h>
 #include <lely/co/type.h>
 
+//! The bit in the SDO COB-ID specifying whether the SDO exists and is valid.
+#define CO_SDO_COBID_VALID	UINT32_C(0x80000000)
+
+/*!
+ * The bit in the SDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
+ * (1) CAN-ID.
+ */
+#define CO_SDO_COBID_FRAME	UINT32_C(0x20000000)
+
 //! The data type (and object index) of an SDO parameter record.
 #define CO_DEFSTRUCT_SDO_PAR	0x0022
 
@@ -40,14 +49,8 @@ struct co_sdo_par {
 	co_unsigned8_t id;
 };
 
-//! The bit in the SDO COB-ID specifying whether the SDO exists and is valid.
-#define CO_SDO_COBID_VALID	UINT32_C(0x80000000)
-
-/*!
- * The bit in the SDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
- * (1) CAN-ID.
- */
-#define CO_SDO_COBID_FRAME	UINT32_C(0x20000000)
+//! The static initializer for struct #co_sdo_par.
+#define CO_SDO_PAR_INIT	{ 3, CO_SDO_COBID_VALID, CO_SDO_COBID_VALID, 0 }
 
 //! SDO abort code: Toggle bit not altered.
 #define CO_SDO_AC_TOGGLE	UINT32_C(0x05030000)
