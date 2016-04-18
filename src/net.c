@@ -616,7 +616,7 @@ can_recv_stop(can_recv_t *recv)
 	recv->net = NULL;
 
 	if (!prev && next) {
-		recv = structof(next, can_recv_t, node);
+		recv = structof(next, can_recv_t, list);
 		rbtree_insert(&recv->net->recv_tree, &recv->node);
 	}
 }
