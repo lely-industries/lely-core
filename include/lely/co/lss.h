@@ -23,7 +23,7 @@
 #define LELY_CO_LSS_H
 
 #include <lely/can/net.h>
-#include <lely/co/type.h>
+#include <lely/co/dev.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,6 +58,73 @@ typedef void co_lss_rate_ind_t(co_lss_t *lss, co_unsigned16_t rate, int delay,
  */
 typedef int co_lss_store_ind_t(co_lss_t *lss, co_unsigned8_t id,
 		co_unsigned16_t rate, void *data);
+
+/*!
+ * The type of a CANopen LSS command received indication function, invoked when
+ * a 'switch state selective','LSS identify remote slave' or 'LSS identify
+ * non-configured remote slave' request completes.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param cs   the received command specifier (one of 0x44, 0x4f or 0x50), or 0
+ *             on timeout.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_lss_cs_ind_t(co_lss_t *lss, co_unsigned8_t cs, void *data);
+
+/*!
+ * The type of a CANopen LSS error received indication function, invoked when a
+ * 'configure node-ID', 'configure bit timing parameters' or 'store
+ * configuration' request completes.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param cs   the received command specifier (one of 0x11, 0x13 or 0x17), or 0
+ *             on timeout.
+ * \param err  the error code (0 on success).
+ * \param spec the implementation-specific error code (if \a err is 0xff).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_lss_err_ind_t(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned8_t err, co_unsigned8_t spec, void *data);
+
+/*!
+ * The type of a CANopen LSS inquire identity indication function, invoked when
+ * an 'inquire identity vendor-ID', 'inquire identity product-code', 'inquire
+ * identity revision-number' or 'inquire identity serial-number' request
+ * completes.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param cs   the received command specifier (one of 0x51, 0x5b, 0x5c or 0x5d),
+ *             or 0 on timeout.
+ * \param id   the received LSS number.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_lss_lssid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned32_t id, void *data);
+
+/*!
+ * The type of a CANopen LSS inquire node-ID indication function, invoked when
+ * an 'inquire node-ID' request completes.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param cs   the received command specifier (0x5e), or 0 on timeout.
+ * \param id   the received node-ID.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_lss_nid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned8_t id, void *data);
+/*!
+ * The type of a CANopen LSS identify remote slave indication function, invoked
+ * when a 'Slowscan' or 'Fastscan' request completes.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param cs   the received command specifier (0x44 or 0x4f), or 0 if no slave
+ *             was found.
+ * \param id   a pointer to the received LSS address, or NULL if no slave was
+ *             found.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
+		const struct co_id *id, void *data);
 
 LELY_CO_EXTERN void *__co_lss_alloc(void);
 LELY_CO_EXTERN void __co_lss_free(void *ptr);
@@ -141,8 +208,309 @@ LELY_CO_EXTERN void co_lss_get_store_ind(const co_lss_t *lss,
 LELY_CO_EXTERN void co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind,
 		void *data);
 
+/*!
+ * Returns the timeout (in milliseconds) of an LSS master service. A return
+ * value of 0 means no timeout is being used.
+ *
+ * \see co_lss_set_timeout()
+ */
+LELY_CO_EXTERN int co_lss_get_timeout(const co_lss_t *lss);
+
+/*!
+ * Sets the timeout of an LSS master service.
+ *
+ * \param lss     a pointer to an LSS master service.
+ * \param timeout the timeout (in milliseconds). A value of 0 disables the
+ *                timeout.
+ *
+ * \see co_lss_get_timeout()
+ */
+LELY_CO_EXTERN void co_lss_set_timeout(co_lss_t *lss, int timeout);
+
 //! Returns 1 if the specified CANopen LSS service is a master, and 0 if not.
 LELY_CO_EXTERN int co_lss_is_master(const co_lss_t *lss);
+
+/*!
+ * Returns 1 if the specified LSS master is idle, and 0 if a request is ongoing.
+ */
+LELY_CO_EXTERN int co_lss_is_idle(const co_lss_t *lss);
+
+/*!
+ * Aborts the current LSS master request. This function has no effect if the
+ * LSS service is idle (see co_lss_is_idle()).
+ */
+LELY_CO_EXTERN void co_lss_abort_req(co_lss_t *lss);
+
+/*!
+ * Requests the 'switch state global' service.
+ *
+ * See section 6.3.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param mode 0 to switch to all slaves the LSS waiting state, 1 to switch all
+ *             slaves to the LSS configuration state.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode);
+
+/*!
+ * Requests the 'switch state selective' service.
+ *
+ * See section 6.3.3 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param id   a pointer to the LSS address of the slave to be configured.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_switch_sel_req(co_lss_t *lss, const struct co_id* id,
+		co_lss_cs_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'configure node-ID' service. It is the responsibility of the LSS
+ * master to ensure that a single LSS slave is in the LSS configuration state.
+ *
+ * See section 6.4.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param id   the pending node-ID to be configured.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id,
+		co_lss_err_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'configure bit timing parameters' service. It is the
+ * responsibility of the LSS master to ensure that a single LSS slave is in the
+ * LSS configuration state.
+ *
+ * See section 6.4.3 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param rate the pending baudrate (in kbit/s), or 0 for automatic bit rate
+ *             detection.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate,
+		co_lss_err_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'activate bit timing parameters' service.
+ *
+ * See section 6.4.4 in CiA 305 version 3.0.0.
+ *
+ * \param lss   a pointer to an LSS master service.
+ * \param delay the delay (in ms) before the switch and the delay after the
+ *              switch during which CAN frames MUST NOT be sent.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_switch_rate_req(co_lss_t *lss, int delay);
+
+/*!
+ * Requests the 'store configuration' service. It is the responsibility of the
+ * LSS master to ensure that a single LSS slave is in the LSS configuration
+ * state.
+ *
+ * See section 6.4.5 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind,
+		void *data);
+
+/*!
+ * Requests the 'inquire identity vendor-ID' service. It is the responsibility
+ * of the LSS master to ensure that a single LSS slave is in the LSS
+ * configuration state.
+ *
+ * See section 6.5.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_get_vendor_id_req(co_lss_t *lss,
+		co_lss_lssid_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'inquire identity product-code' service. It is the
+ * responsibility of the LSS master to ensure that a single LSS slave is in the
+ * LSS configuration state.
+ *
+ * See section 6.5.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_get_product_code_req(co_lss_t *lss,
+		co_lss_lssid_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'inquire identity revision-number' service. It is the
+ * responsibility of the LSS master to ensure that a single LSS slave is in the
+ * LSS configuration state.
+ *
+ * See section 6.5.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_get_revision_req(co_lss_t *lss,
+		co_lss_lssid_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'inquire identity serial-number' service. It is the
+ * responsibility of the LSS master to ensure that a single LSS slave is in the
+ * LSS configuration state.
+ *
+ * See section 6.5.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_get_serial_nr_req(co_lss_t *lss,
+		co_lss_lssid_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'inquire node-ID' service. It is the responsibility of the LSS
+ * master to ensure that a single LSS slave is in the LSS configuration state.
+ *
+ * See section 6.5.3 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind,
+		void *data);
+
+/*!
+ * Requests the 'LSS identify remote slave' service. The specified indication
+ * function is invoked as soon as the first slave responds.
+ *
+ * See section 6.6.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param lo   a pointer to the lower bound of the LSS address.
+ * \param hi   a pointer to the upper bound of the LSS address. The vendor-ID
+ *             and product-code MUST be the same as in *\a lo.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
+		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'LSS identify non-configured remote slave' service. The
+ * specified indication function is invoked as soon as the first slave responds.
+ *
+ * See section 6.6.4 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_id_non_cfg_slave_req(co_lss_t *lss,
+		co_lss_cs_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'LSS Slowscan' service. This service performs a binary search
+ * using the LSS identify remote slave' service to obtain a single LSS address,
+ * followed by the 'switch state selective' service. If the request completes
+ * with success, the identified slave is in the LSS configuration state.
+ *
+ * See section 8.4.2 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param lo   a pointer to the lower bound of the LSS address.
+ * \param hi   a pointer to the upper bound of the LSS address. The vendor-ID
+ *             and product-code MUST be the same as in *\a lo.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
+		const struct co_id *hi, co_lss_scan_ind_t *ind, void *data);
+
+/*!
+ * Requests the 'LSS Fastscan' service. If the request completes with success,
+ * the identified slave is in the LSS configuration state.
+ *
+ * See section 6.7 in CiA 305 version 3.0.0.
+ *
+ * \param lss  a pointer to an LSS master service.
+ * \param id   a pointer a struct containing the bits of the LSS address that
+ *             already known and can be skipped during scanning (can be NULL).
+ * \param mask a pointer to a struct containing the mask specifying which bits
+ *             in *\a id are already known (can be NULL). If a bit in *\a mask
+ *             is 1, the corresponding bit in *\a id is _not_ checked.
+ * \param ind  a pointer to the indication function (can be NULL).
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
+		const struct co_id *mask, co_lss_scan_ind_t *ind, void *data);
 
 #ifdef __cplusplus
 }
