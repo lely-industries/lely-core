@@ -1879,9 +1879,8 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		if (!slave->boot) {
 			co_unsigned32_t assignment = co_dev_get_val_u32(
 					nmt->dev, 0x1f81, id);
-			// Boot the slave if it is in the network list (bit 0),
-			// and we are allowed to boot it (bit 2).
-			if ((assignment & 0x05) == 0x05)
+			// Boot the slave if it is in the network list (bit 0).
+			if ((assignment & 0x01) == 0x01)
 				co_nmt_boot_req(nmt, id,
 						LELY_CO_NMT_BOOT_TIMEOUT);
 		}
@@ -2632,9 +2631,8 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 	int res = 0;
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-		// Skip those slaves that are not in the network list (bit 0),
-		// or that we are not allowed to boot (bit 2).
-		if ((slave->assignment & 0x05) != 0x05)
+		// Skip those slaves that are not in the network list (bit 0).
+		if ((slave->assignment & 0x01) != 0x01)
 			continue;
 		int mandatory = !!(slave->assignment & 0x08);
 		// Start the 'boot slave' process.
