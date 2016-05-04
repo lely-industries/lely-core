@@ -12,11 +12,22 @@ AM_SILENT_RULES([yes])
 AC_LANG(C)
 AC_PROG_CC_STDC
 
-LT_INIT
+LT_INIT([win32-dll])
+LT_PROG_RC
+
+case "$host" in
+*-*-mingw*)
+	platform_win32=yes
+	;;
+esac
+AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
