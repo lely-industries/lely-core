@@ -191,6 +191,13 @@
 #endif
 #endif
 
+#ifndef __builtin_expect
+#if defined(__GNUC__) || __has_builtin(__builtin_expect)
+#else
+#define __builtin_expect(exp, c)	(exp)
+#endif
+#endif
+
 #if !defined(__cdecl) && !defined(_MSC_VER)
 #define __cdecl
 #endif
