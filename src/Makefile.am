@@ -4,6 +4,7 @@ if PLATFORM_WIN32
 src += libc.rc
 endif
 src += stdlib.c
+src += string.c
 src += strings.c
 if !NO_THREADS
 src += threads.c
