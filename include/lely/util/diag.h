@@ -39,15 +39,15 @@ struct floc {
 
 //! The severity of a diagnostic message.
 enum diag_severity {
-	//! An unannotated message.
-	DIAG_NONE,
-	//! A note.
-	DIAG_NOTE,
+	//! A debug message.
+	DIAG_DEBUG,
+	//! An informational message.
+	DIAG_INFO,
 	//! A warning.
 	DIAG_WARNING,
 	//! An error.
 	DIAG_ERROR,
-	//! A fatal error, which will result in program termination.
+	//! A fatal error, which SHOULD result in program termination.
 	DIAG_FATAL
 };
 
@@ -260,9 +260,9 @@ LELY_UTIL_EXTERN void default_diag_at_handler(void *handle,
 
 /*!
  * Prints a diagnostic message to a string buffer. This function prints the
- * severity of the message, followed by a colon and the user-specified message.
- * If \a errc is non-zero, the message is followed by another colon and the
- * result of errc2str().
+ * severity of the message (except in the case of #DIAG_INFO), followed by a
+ * colon and the user-specified message.  If \a errc is non-zero, the message is
+ * followed by another colon and the result of errc2str().
  *
  * \param s        the address of the output buffer. If \a s is not NULL, at
  *                 most `n - 1` characters are written, plus a terminating null
@@ -291,9 +291,9 @@ LELY_UTIL_EXTERN int vsnprintf_diag(char *s, size_t n,
  * Prints a diagnostic message occurring at a location in a text file to a
  * string buffer. This function prints the location in a text file, where the
  * diagnostic presumably occurred, followed a colon and the severity of the
- * message, followed by a colon and the user-specified message. If \a errc is
- * non-zero, the message is followed by another colon and the result of
- * errc2str().
+ * message (except in the case of #DIAG_INFO), followed by a colon and the
+ * user-specified message. If \a errc is non-zero, the message is followed by
+ * another colon and the result of errc2str().
  *
  * \param s        the address of the output buffer. If \a s is not NULL, at
  *                 most `n - 1` characters are written, plus a terminating null

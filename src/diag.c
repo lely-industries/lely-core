@@ -230,11 +230,11 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	}
 
 	switch (severity) {
-	case DIAG_NONE:
-		r = 0;
+	case DIAG_DEBUG:
+		r = snprintf(s, n, "debug: ");
 		break;
-	case DIAG_NOTE:
-		r = snprintf(s, n, "note: ");
+	case DIAG_INFO:
+		r = 0;
 		break;
 	case DIAG_WARNING:
 		r = snprintf(s, n, "warning: ");
@@ -243,7 +243,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 		r = snprintf(s, n, "error: ");
 		break;
 	case DIAG_FATAL:
-		r = snprintf(s, n, "fatal error: ");
+		r = snprintf(s, n, "fatal: ");
 		break;
 	default:
 		r = 0;
