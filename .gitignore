@@ -29,6 +29,7 @@
 /ltmain.sh
 /missing
 /stamp-h1
+/tap-driver.sh
 .deps
 .libs
 Makefile
@@ -38,3 +39,4 @@ Makefile.in
 *.lo
 *.o
 *.pc
+test-*
