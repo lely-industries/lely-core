@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 			if (*opt == '-') {
 				opt++;
 				if (!strcmp(opt, "help")) {
-					diag(DIAG_NONE, 0, CMD_USAGE);
+					diag(DIAG_INFO, 0, CMD_USAGE);
 					goto error_arg;
 				} else if (!strcmp(opt, "no-strings")) {
 					flags |= FLAG_NO_STRINGS;
@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 				for (; *opt; opt++) {
 					switch (*opt) {
 					case 'h':
-						diag(DIAG_NONE, 0, CMD_USAGE);
+						diag(DIAG_INFO, 0, CMD_USAGE);
 						goto error_arg;
 					case 'o':
 						if (__unlikely(++i >= argc)) {
