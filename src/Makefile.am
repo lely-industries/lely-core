@@ -1,4 +1,5 @@
 src =
+src += tap.c
 src += tap.h
 if PLATFORM_WIN32
 src += tap.rc

@@ -35,5 +35,59 @@
 #endif
 #endif
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wformat-zero-length"
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
+#endif
+
+#define tap_plan(...) \
+	_tap_plan(__VA_ARGS__, "")
+#define _tap_plan(n, ...) \
+	__tap_plan(n, "" __VA_ARGS__)
+
+#define tap_test(...) \
+	_tap_test(__VA_ARGS__, "")
+#define _tap_test(expr, ...) \
+	__tap_test(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
+
+#define tap_pass(...) \
+	__tap_test(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
+
+#define tap_fail(...) \
+	__tap_test(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
+
+#define tap_todo(...) \
+	_tap_todo(__VA_ARGS__, "")
+#define _tap_todo(expr, ...) \
+	__tap_test(!!(expr), #expr, __FILE__, __LINE__, " # TODO " __VA_ARGS__)
+
+#define tap_skip(...) \
+	_tap_skip(__VA_ARGS__, "")
+#define _tap_skip(expr, ...) \
+	tap_pass(" # SKIP " __VA_ARGS__)
+
+#define tap_abort(...) \
+	__tap_abort("" __VA_ARGS__)
+
+#define tap_assert(expr) \
+	((expr) ? (void)0 \
+		: tap_abort("%s:%d: Assertion `%s' failed.", __FILE__, __LINE__, \
+				#expr))
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LELY_TAP_EXTERN void __tap_plan(int n, const char *format, ...)
+		__format_printf(2, 3);
+LELY_TAP_EXTERN int __tap_test(int test, const char *expr, const char *file,
+		int line, const char *format, ...) __format_printf(5, 6);
+LELY_TAP_EXTERN _Noreturn void __tap_abort(const char *format, ...)
+		__format_printf(1, 2);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
