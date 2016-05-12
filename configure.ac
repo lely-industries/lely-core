@@ -26,6 +26,7 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
+	CFLAGS="$CFLAGS -std=c99"
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
 
