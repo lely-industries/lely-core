@@ -296,7 +296,6 @@ static void
 co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next)
 {
 	assert(cfg);
-	assert(cfg->state);
 
 	while (next) {
 		co_nmt_cfg_state_t *prev = cfg->state;

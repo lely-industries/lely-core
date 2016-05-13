@@ -878,7 +878,7 @@ default_sub_dn_file_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
 	assert(sub);
 	assert(co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN);
-	assert(co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE);
+	assert(co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE);
 	assert(req);
 	__unused_var(data);
 

@@ -4,6 +4,10 @@ if !NO_CO_EMCY
 bin += test-emcy
 test_emcy_SOURCES = test.h emcy.c
 endif
+if !NO_CO_MASTER
+bin += test-nmt
+test_nmt_SOURCES = test.h nmt.c
+endif
 if !NO_CO_RPDO
 if !NO_CO_TPDO
 bin += test-pdo
@@ -28,6 +32,9 @@ check_PROGRAMS = $(bin)
 
 extra =
 extra += emcy.dcf
+extra += nmt-master.dat
+extra += nmt-master.dcf
+extra += nmt-slave.dcf
 extra += pdo-receive.dcf
 extra += pdo-transmit.dcf
 extra += sdo-client.dcf
@@ -36,6 +43,8 @@ extra += sync.dcf
 extra += time.dcf
 
 EXTRA_DIST = $(extra)
+
+CLEANFILES = nmt-slave.dat
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)

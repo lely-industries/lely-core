@@ -1994,7 +1994,6 @@ static void
 co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
 {
 	assert(nmt);
-	assert(nmt->state);
 
 	while (next) {
 		co_nmt_state_t *prev = nmt->state;

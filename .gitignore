@@ -36,6 +36,7 @@
 Makefile
 Makefile.in
 *~
+*.dat
 *.la
 *.lo
 *.o

@@ -1257,7 +1257,6 @@ static void
 co_lss_enter(co_lss_t *lss, co_lss_state_t *next)
 {
 	assert(lss);
-	assert(lss->state);
 
 	while (next) {
 		co_lss_state_t *prev = lss->state;

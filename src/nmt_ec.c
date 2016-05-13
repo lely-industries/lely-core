@@ -130,7 +130,6 @@ __co_nmt_hb_fini(struct __co_nmt_hb *hb)
 	assert(hb);
 
 	can_timer_destroy(hb->timer);
-
 	can_recv_destroy(hb->recv);
 }
 
@@ -182,7 +181,7 @@ co_nmt_hb_set_1016(co_nmt_hb_t *hb, co_unsigned8_t id, co_unsigned16_t ms)
 	hb->state = CO_NMT_EC_RESOLVED;
 
 	if (hb->id && hb->id <= CO_NUM_NODES && hb->ms)
-		can_recv_start(hb->recv, hb->net, 0x700 + id, 0);
+		can_recv_start(hb->recv, hb->net, 0x700 + hb->id, 0);
 }
 
 void

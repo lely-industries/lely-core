@@ -896,7 +896,6 @@ static void
 co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 {
 	assert(boot);
-	assert(boot->state);
 
 	while (next) {
 		co_nmt_boot_state_t *prev = boot->state;
