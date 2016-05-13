@@ -1,8 +1,14 @@
 bin =
+if !NO_CO_CSDO
+bin += test-sdo
+test_sdo_SOURCES = test.h sdo.c
+endif
 
 check_PROGRAMS = $(bin)
 
 extra =
+extra += sdo-client.dcf
+extra += sdo-server.dcf
 
 EXTRA_DIST = $(extra)
 
