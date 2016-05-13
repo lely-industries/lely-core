@@ -1,6 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = doc include src
+if HAVE_TAP
+SUBDIRS += test
+endif
 
 dist =
 dist += LICENSE
