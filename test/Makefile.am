@@ -9,6 +9,10 @@ if !NO_CO_CSDO
 bin += test-sdo
 test_sdo_SOURCES = test.h sdo.c
 endif
+if !NO_CO_SYNC
+bin += test-sync
+test_sync_SOURCES = test.h sync.c
+endif
 
 check_PROGRAMS = $(bin)
 
@@ -17,6 +21,7 @@ extra += pdo-receive.dcf
 extra += pdo-transmit.dcf
 extra += sdo-client.dcf
 extra += sdo-server.dcf
+extra += sync.dcf
 
 EXTRA_DIST = $(extra)
 
