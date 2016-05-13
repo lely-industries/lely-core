@@ -1,4 +1,10 @@
 bin =
+if !NO_CO_RPDO
+if !NO_CO_TPDO
+bin += test-pdo
+test_pdo_SOURCES = test.h pdo.c
+endif
+endif
 if !NO_CO_CSDO
 bin += test-sdo
 test_sdo_SOURCES = test.h sdo.c
@@ -7,6 +13,8 @@ endif
 check_PROGRAMS = $(bin)
 
 extra =
+extra += pdo-receive.dcf
+extra += pdo-transmit.dcf
 extra += sdo-client.dcf
 extra += sdo-server.dcf
 
