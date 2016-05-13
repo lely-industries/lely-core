@@ -1,4 +1,6 @@
 bin =
+bin += test-net
+test_net_SOURCES = net.c
 
 check_PROGRAMS = $(bin)
 
