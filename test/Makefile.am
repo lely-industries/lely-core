@@ -1,4 +1,8 @@
 bin =
+if !NO_CO_EMCY
+bin += test-emcy
+test_emcy_SOURCES = test.h emcy.c
+endif
 if !NO_CO_RPDO
 if !NO_CO_TPDO
 bin += test-pdo
@@ -21,6 +25,7 @@ endif
 check_PROGRAMS = $(bin)
 
 extra =
+extra += emcy.dcf
 extra += pdo-receive.dcf
 extra += pdo-transmit.dcf
 extra += sdo-client.dcf
