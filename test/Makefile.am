@@ -1,4 +1,5 @@
 bin =
+if !NO_CO_DCF
 if !NO_CO_EMCY
 bin += test-emcy
 test_emcy_SOURCES = test.h emcy.c
@@ -20,6 +21,7 @@ endif
 if !NO_CO_TIME
 bin += test-time
 test_time_SOURCES = test.h time.c
+endif
 endif
 
 check_PROGRAMS = $(bin)
