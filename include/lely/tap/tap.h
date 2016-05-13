@@ -66,6 +66,9 @@
 #define _tap_skip(expr, ...) \
 	tap_pass(" # SKIP " __VA_ARGS__)
 
+#define tap_diag(...) \
+	__tap_diag("# " __VA_ARGS__)
+
 #define tap_abort(...) \
 	__tap_abort("" __VA_ARGS__)
 
@@ -82,6 +85,7 @@ LELY_TAP_EXTERN void __tap_plan(int n, const char *format, ...)
 		__format_printf(2, 3);
 LELY_TAP_EXTERN int __tap_test(int test, const char *expr, const char *file,
 		int line, const char *format, ...) __format_printf(5, 6);
+LELY_TAP_EXTERN void __tap_diag(const char *format, ...) __format_printf(1, 2);
 LELY_TAP_EXTERN _Noreturn void __tap_abort(const char *format, ...)
 		__format_printf(1, 2);
 

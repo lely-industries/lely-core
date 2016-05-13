@@ -76,6 +76,18 @@ __tap_test(int test, const char *expr, const char *file, int line,
 	return test;
 }
 
+LELY_TAP_EXPORT void
+__tap_diag(const char *format, ...)
+{
+	assert(format);
+
+	va_list ap;
+	va_start(ap, format);
+	tap_vprintf(format, ap);
+	va_end(ap);
+	fputc('\n', stdout);
+}
+
 LELY_TAP_EXPORT _Noreturn void
 __tap_abort(const char *format, ...)
 {

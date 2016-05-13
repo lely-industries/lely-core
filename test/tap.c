@@ -18,6 +18,8 @@ main(void)
 	tap_skip(1 == 1);
 	tap_skip(1 == 0, "with\nmultiline\ncomment");
 
+	tap_diag("all done");
+
 	return 0;
 }
 
