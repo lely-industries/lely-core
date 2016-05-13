@@ -1,7 +1,8 @@
 Source: liblely-co
 Priority: extra
 Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
-Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen
+Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen,
+         liblely-tap-dev
 Standards-Version: 3.9.7
 Section: libs
 Homepage: http://www.lely.com
