@@ -13,6 +13,10 @@ if !NO_CO_SYNC
 bin += test-sync
 test_sync_SOURCES = test.h sync.c
 endif
+if !NO_CO_TIME
+bin += test-time
+test_time_SOURCES = test.h time.c
+endif
 
 check_PROGRAMS = $(bin)
 
@@ -22,6 +26,7 @@ extra += pdo-transmit.dcf
 extra += sdo-client.dcf
 extra += sdo-server.dcf
 extra += sync.dcf
+extra += time.dcf
 
 EXTRA_DIST = $(extra)
 
