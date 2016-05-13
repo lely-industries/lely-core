@@ -30,6 +30,8 @@
 
 static int tap_num;
 
+static void tap_vprintf(const char *format, va_list ap);
+
 LELY_TAP_EXPORT void
 __tap_plan(int n, const char *format, ...)
 {
@@ -43,7 +45,7 @@ __tap_plan(int n, const char *format, ...)
 			fputc(' ', stdout);
 			va_list ap;
 			va_start(ap, format);
-			vprintf(format, ap);
+			tap_vprintf(format, ap);
 			va_end(ap);
 		}
 	}
@@ -54,19 +56,21 @@ LELY_TAP_EXPORT int
 __tap_test(int test, const char *expr, const char *file, int line,
 		const char *format, ...)
 {
+	assert(expr);
 	assert(file);
+	assert(format);
 
 	printf(test ? "ok %d" : "not ok %d", ++tap_num);
-	if (format && *format) {
+	if (*format) {
 		fputc(' ', stdout);
 		va_list ap;
 		va_start(ap, format);
-		vprintf(format, ap);
+		tap_vprintf(format, ap);
 		va_end(ap);
 	}
 	fputc('\n', stdout);
 
-	if (!test && expr && *expr)
+	if (!test && *expr)
 		printf("# %s:%d: Test `%s' failed.\n", file, line, expr);
 
 	return test;
@@ -82,11 +86,41 @@ __tap_abort(const char *format, ...)
 		fputc(' ', stdout);
 		va_list ap;
 		va_start(ap, format);
-		vprintf(format, ap);
+		tap_vprintf(format, ap);
 		va_end(ap);
 	}
 	fputc('\n', stdout);
 
 	exit(EXIT_FAILURE);
+}
+
+static void
+tap_vprintf(const char *format, va_list ap)
+{
+	assert(format);
+
+	va_list aq;
+	va_copy(aq, ap);
+	int n = vsnprintf(NULL, 0, format, aq);
+	va_end(aq);
+	if (__unlikely(n < 0))
+		return;
+	char s[n + 1];
+	vsnprintf(s, n + 1, format, ap);
+
+	for (char *cp = s; cp < s + n; cp++) {
+		switch (*cp) {
+		case '\r':
+			if (cp + 1 < s + n && cp[1] == '\n')
+				cp++;
+		case '\n':
+			fputc('\n', stdout);
+			fputc('#', stdout);
+			fputc(' ', stdout);
+			break;
+		default:
+			fputc(*cp, stdout);
+		}
+	}
 }
 
