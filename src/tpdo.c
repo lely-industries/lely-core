@@ -1,6 +1,6 @@
 /*!\file
  * This file is part of the CANopen library; it contains the implementation of
- * the Transmot-PDO functions.
+ * the Transmit-PDO functions.
  *
  * \see lely/co/tpdo.h
  *

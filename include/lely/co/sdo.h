@@ -202,21 +202,6 @@ extern "C" {
 //! Returns a string describing an SDO abort code.
 LELY_CO_EXTERN const char *co_sdo_ac2str(co_unsigned32_t ac);
 
-/*!
- * Computes a CRC-16 checksum used to verify SDO block transfer. This is an
- * implementation of the CRC16-CCITT specification based on the 0x1021 generator
- * polynomial. It uses a table with precomputed values for efficiency.
- *
- * As per CiA 301 7.2.4.3.16, the CRC of "123456789" is 0x31c3.
- *
- * \param crc the initial value.
- * \param ptr a pointer to the bytes to be hashed.
- * \param n   the number of bytes to hash.
- *
- * \returns the updated CRC.
- */
-LELY_CO_EXTERN uint16_t co_sdo_crc(uint16_t crc, const void *ptr, size_t n);
-
 //! Initializes a CANopen SDO upload/download request. \see co_sdo_req_fini()
 LELY_CO_EXTERN void co_sdo_req_init(struct co_sdo_req *req);
 

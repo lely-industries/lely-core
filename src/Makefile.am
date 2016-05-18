@@ -3,6 +3,7 @@ src += co.h
 if PLATFORM_WIN32
 src += co.rc
 endif
+src += crc.c
 if !NO_CO_CSDO
 src += csdo.c
 endif

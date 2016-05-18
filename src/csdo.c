@@ -27,6 +27,7 @@
 
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
+#include <lely/co/crc.h>
 #include <lely/co/csdo.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
@@ -1777,7 +1778,7 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	// Check the CRC.
 	if (sdo->crc) {
 		uint16_t crc = ldle_u16(msg->data + 1);
-		if (__unlikely(crc != co_sdo_crc(0, sdo->buf.begin, sdo->size)))
+		if (__unlikely(crc != co_crc(0, sdo->buf.begin, sdo->size)))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
@@ -2020,7 +2021,7 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 	uint8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK
 			| CO_SDO_BLK_SIZE_SET(n);
 
-	uint16_t crc = sdo->crc ? co_sdo_crc(0, sdo->buf.begin, sdo->size) : 0;
+	uint16_t crc = sdo->crc ? co_crc(0, sdo->buf.begin, sdo->size) : 0;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);

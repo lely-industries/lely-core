@@ -24,6 +24,7 @@
 #include "co.h"
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
+#include <lely/co/crc.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/ssdo.h>
@@ -1192,7 +1193,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		sdo->ackseq++;
 		// Update the CRC.
 		if (sdo->gencrc)
-			sdo->crc = co_sdo_crc(sdo->crc, sdo->req.buf,
+			sdo->crc = co_crc(sdo->crc, sdo->req.buf,
 					sdo->req.nbyte);
 		// Pass the previous frame to the download indication function.
 		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
@@ -1262,7 +1263,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the CRC.
 	if (sdo->gencrc) {
-		sdo->crc = co_sdo_crc(sdo->crc, sdo->req.buf, sdo->req.nbyte);
+		sdo->crc = co_crc(sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		uint16_t crc = ldle_u16(msg->data + 1);
 		if (__unlikely(sdo->crc != crc))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
@@ -1553,7 +1554,7 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 		size_t n = MIN(nbyte, sdo->req.nbyte - sdo->nbyte);
 
 		if (sdo->gencrc)
-			sdo->crc = co_sdo_crc(sdo->crc, src, n);
+			sdo->crc = co_crc(sdo->crc, src, n);
 
 		membuf_write(&sdo->buf, src, n);
 		nbyte -= n;

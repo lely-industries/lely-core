@@ -2,6 +2,7 @@ inc =
 inc += lely/co/def/basic.def
 inc += lely/co/def/type.def
 inc += lely/co/co.h
+inc += lely/co/crc.h
 if !NO_CO_CSDO
 inc += lely/co/csdo.h
 endif

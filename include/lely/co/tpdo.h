@@ -65,7 +65,7 @@ LELY_CO_EXTERN void __co_tpdo_fini(struct __co_tpdo *pdo);
  *
  * \see co_tpdo_destroy()
  */
-LELY_CO_EXTERN co_tpdo_t * co_tpdo_create(can_net_t *net, co_dev_t *dev,
+LELY_CO_EXTERN co_tpdo_t *co_tpdo_create(can_net_t *net, co_dev_t *dev,
 		co_unsigned16_t num);
 
 //! Destroys a CANopen Transmit-PDO service. \see co_tpdo_create()
