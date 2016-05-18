@@ -38,5 +38,8 @@ inc += lely/co/tpdo.h
 endif
 inc += lely/co/type.h
 inc += lely/co/val.h
+if !NO_CO_WTM
+inc += lely/co/wtm.h
+endif
 
 nobase_include_HEADERS = $(inc)

@@ -122,6 +122,14 @@ AS_IF([test "x$enable_lss" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_LSS], [1], [Define to 1 if Layer Setting Services (LSS) and protocols support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_WTM], [false])
+AC_ARG_ENABLE([lss],
+	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
+AS_IF([test "x$enable_wtm" == "xno"], [
+	AM_CONDITIONAL([NO_CO_WTM], [true])
+	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_MASTER], [false])
 AC_ARG_ENABLE([master],
 	AS_HELP_STRING([--disable-master], [disable master support]))

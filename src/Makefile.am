@@ -50,6 +50,9 @@ src += tpdo.c
 endif
 src += type.c
 src += val.c
+if !NO_CO_WTM
+src += wtm.c
+endif
 
 lib_LTLIBRARIES = liblely-co.la
 liblely_co_la_CPPFLAGS = -I$(top_srcdir)/include $(liblely_libc_CFLAGS) $(liblely_util_CFLAGS) $(liblely_can_CFLAGS)
