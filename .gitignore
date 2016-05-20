@@ -14,6 +14,7 @@
 /m4/ltoptions.m4
 /m4/ltsugar.m4
 /m4/ltversion.m4
+/tools/can2udp
 /tools/dcf2c
 /aclocal.m4
 /compile

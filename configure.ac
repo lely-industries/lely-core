@@ -16,10 +16,14 @@ LT_INIT([win32-dll])
 LT_PROG_RC
 
 case "$host" in
+*linux*)
+	platform_linux=yes
+	;;
 *-*-mingw*)
 	platform_win32=yes
 	;;
 esac
+AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc])

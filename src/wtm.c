@@ -38,12 +38,6 @@
 //! The maximum value of a CAN/WTM interface indicator.
 #define CO_WTM_MAX_NIF	127
 
-/*!
- * The maximum size of a CANopen WTM generic frame (4 (header) + 255 (payload) +
- * 2 (CRC checksum) = 261).
- */
-#define CO_WTM_MAX_LEN	261
-
 //! A CANopen WTM CAN interface.
 struct co_wtm_can {
 	//! The current time of the CAN frame receiver.

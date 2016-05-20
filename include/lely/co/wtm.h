@@ -26,6 +26,12 @@
 #include <lely/can/msg.h>
 #include <lely/co/co.h>
 
+/*!
+ * The maximum size of a CANopen WTM generic frame (4 (header) + 255 (payload) +
+ * 2 (CRC checksum) = 261).
+ */
+#define CO_WTM_MAX_LEN	261
+
 //! CANopen WTM abort code: General error.
 #define CO_WTM_AC_ERROR		UINT32_C(0x01000000)
 

@@ -5,6 +5,10 @@ bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
 endif
 endif
+if PLATFORM_LINUX
+bin += can2udp
+can2udp_SOURCES = can2udp.c
+endif
 
 bin_PROGRAMS = $(bin)
 
