@@ -379,13 +379,13 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 #define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_SIGNED(long, long, strtov, LONG_MIN, LONG_MAX, pl)
 #undef strtov
-#define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
+#define strtov(nptr, endptr)	strtoul(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long, ulong, strtov, ULONG_MAX, pul)
 #undef strtov
 #define strtov(nptr, endptr)	strtoll(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_SIGNED(long long, llong, strtov, LLONG_MIN, LLONG_MAX, pll)
 #undef strtov
-#define strtov(nptr, endptr)	strtoll(nptr, endptr, 0)
+#define strtov(nptr, endptr)	strtoull(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long long, ullong, strtov, ULLONG_MAX,
 		pull)
 #undef strtov
