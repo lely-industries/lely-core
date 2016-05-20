@@ -133,6 +133,7 @@ AS_IF([test "x$enable_wtm" == "xno"], [
 AM_CONDITIONAL([NO_CO_MASTER], [false])
 AC_ARG_ENABLE([master],
 	AS_HELP_STRING([--disable-master], [disable master support]))
+AS_IF([test "x$enable_csdo" == "xno"], [enable_master=no])
 AS_IF([test "x$enable_master" == "xno"], [
 	AM_CONDITIONAL([NO_CO_MASTER], [true])
 	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
