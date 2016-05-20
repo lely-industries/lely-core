@@ -28,15 +28,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __MINGW32__
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 static int tap_num;
 
 static void tap_vprintf(const char *format, va_list ap);
 
 LELY_TAP_EXPORT void
-__tap_plan(int n, const char *format, ...)
+__tap_plan_impl(int n, const char *format, ...)
 {
 	if (__unlikely(tap_num))
 		return;
+
+#ifdef __MINGW32__
+	// Set the stdout translation mode to binary to prevent printf() from
+	// changing '\n' to '\r\n', as this trips up tap-driver.sh.
+	fflush(stdout);
+	_setmode(1, _O_BINARY);
+#endif
 
 	printf("1..%d", n);
 	if (!n) {
@@ -50,10 +62,17 @@ __tap_plan(int n, const char *format, ...)
 		}
 	}
 	fputc('\n', stdout);
+
+#ifdef __MINGW32__
+	// Revert back to text mode, since the problem only occurs when parsing
+	// the test plan.
+	fflush(stdout);
+	_setmode(1, _O_TEXT);
+#endif
 }
 
 LELY_TAP_EXPORT int
-__tap_test(int test, const char *expr, const char *file, int line,
+__tap_test_impl(int test, const char *expr, const char *file, int line,
 		const char *format, ...)
 {
 	assert(expr);
@@ -77,7 +96,7 @@ __tap_test(int test, const char *expr, const char *file, int line,
 }
 
 LELY_TAP_EXPORT void
-__tap_diag(const char *format, ...)
+__tap_diag_impl(const char *format, ...)
 {
 	assert(format);
 
@@ -89,7 +108,7 @@ __tap_diag(const char *format, ...)
 }
 
 LELY_TAP_EXPORT _Noreturn void
-__tap_abort(const char *format, ...)
+__tap_abort_impl(const char *format, ...)
 {
 	assert(format);
 

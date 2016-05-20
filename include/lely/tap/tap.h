@@ -43,23 +43,24 @@
 #define tap_plan(...) \
 	_tap_plan(__VA_ARGS__, "")
 #define _tap_plan(n, ...) \
-	__tap_plan(n, "" __VA_ARGS__)
+	__tap_plan_impl(n, "" __VA_ARGS__)
 
 #define tap_test(...) \
 	_tap_test(__VA_ARGS__, "")
 #define _tap_test(expr, ...) \
-	__tap_test(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
+	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
 
 #define tap_pass(...) \
-	__tap_test(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
+	__tap_test_impl(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
 
 #define tap_fail(...) \
-	__tap_test(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
+	__tap_test_impl(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
 
 #define tap_todo(...) \
 	_tap_todo(__VA_ARGS__, "")
 #define _tap_todo(expr, ...) \
-	__tap_test(!!(expr), #expr, __FILE__, __LINE__, " # TODO " __VA_ARGS__)
+	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, \
+			" # TODO " __VA_ARGS__)
 
 #define tap_skip(...) \
 	_tap_skip(__VA_ARGS__, "")
@@ -67,10 +68,10 @@
 	tap_pass(" # SKIP " __VA_ARGS__)
 
 #define tap_diag(...) \
-	__tap_diag("# " __VA_ARGS__)
+	__tap_diag_impl("# " __VA_ARGS__)
 
 #define tap_abort(...) \
-	__tap_abort("" __VA_ARGS__)
+	__tap_abort_impl("" __VA_ARGS__)
 
 #define tap_assert(expr) \
 	((expr) ? (void)0 \
@@ -81,12 +82,14 @@
 extern "C" {
 #endif
 
-LELY_TAP_EXTERN void __tap_plan(int n, const char *format, ...)
+LELY_TAP_EXTERN void __tap_plan_impl(int n, const char *format, ...)
 		__format_printf(2, 3);
-LELY_TAP_EXTERN int __tap_test(int test, const char *expr, const char *file,
-		int line, const char *format, ...) __format_printf(5, 6);
-LELY_TAP_EXTERN void __tap_diag(const char *format, ...) __format_printf(1, 2);
-LELY_TAP_EXTERN _Noreturn void __tap_abort(const char *format, ...)
+LELY_TAP_EXTERN int __tap_test_impl(int test, const char *expr,
+		const char *file, int line, const char *format, ...)
+		__format_printf(5, 6);
+LELY_TAP_EXTERN void __tap_diag_impl(const char *format, ...)
+		__format_printf(1, 2);
+LELY_TAP_EXTERN _Noreturn void __tap_abort_impl(const char *format, ...)
 		__format_printf(1, 2);
 
 #ifdef __cplusplus
