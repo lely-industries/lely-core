@@ -25,6 +25,9 @@
 #include <lely/can/msg.h>
 
 #include <stdio.h>
+// Include inttypes.h before stdio.h to enforce declarations of format
+// specifiers in Newlib.
+#include <inttypes.h>
 
 LELY_CAN_EXPORT int
 snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
@@ -46,9 +49,9 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	int r, t = 0;
 
 	if (msg->flags & CAN_FLAG_IDE)
-		r = snprintf(s, n, "%08X", msg->id & CAN_MASK_EID);
+		r = snprintf(s, n, "%08" PRIX32, msg->id & CAN_MASK_EID);
 	else
-		r = snprintf(s, n, "%03X", msg->id & CAN_MASK_BID);
+		r = snprintf(s, n, "%03" PRIX32, msg->id & CAN_MASK_BID);
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
