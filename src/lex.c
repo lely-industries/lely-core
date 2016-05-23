@@ -27,6 +27,7 @@
 #include "unicode.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,7 +131,7 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 
 	if (__unlikely(!utf32_valid(c32))) {
 		if (at)
-			diag(DIAG_WARNING, 0, "illegal Unicode code point U+%X",
+			diag(DIAG_WARNING, 0, "illegal Unicode code point U+%" PRIX32,
 					c32);
 		c32 = 0xfffd;
 	}
