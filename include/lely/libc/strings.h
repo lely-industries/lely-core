@@ -46,7 +46,8 @@ extern "C" {
  *
  * \returns the index of the first bit set, or 0 if \a i is 0.
  */
-#if defined(__GNUC__) || __has_builtin(__builtin_ffs)
+#if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
+			&& !defined(__BSD_VISIBLE)
 static inline int __cdecl ffs(int i) { return __builtin_ffs(i); }
 #else
 LELY_LIBC_EXTERN int __cdecl ffs(int i);
