@@ -396,10 +396,15 @@ co_time_recv(const struct can_msg *msg, void *data)
 	co_time_t *time = data;
 	assert(time);
 
-	// Ignore remote and CAN FD format frames.
-	if (__unlikely((msg->flags & CAN_FLAG_RTR)
-			|| (msg->flags & CAN_FLAG_EDL)))
+	// Ignore remote frames.
+	if (__unlikely(msg->flags & CAN_FLAG_RTR))
 		return 0;
+
+#ifndef LELY_NO_CANFD
+	// Ignore CAN FD format frames.
+	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+		return 0;
+#endif
 
 	if (__unlikely(msg->len < 6))
 		return 0;

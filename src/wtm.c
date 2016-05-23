@@ -500,8 +500,15 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	}
 	struct co_wtm_can *can = &wtm->can[nif - 1];
 
+#ifndef LELY_NO_CANFD
 	// CAN FD frames are not supported.
-	if (__unlikely((msg->flags & CAN_FLAG_EDL) || msg->len > CAN_MAX_LEN)) {
+	if (__unlikely(msg->flags & CAN_FLAG_EDL)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+#endif
+
+	if (__unlikely(msg->len > CAN_MAX_LEN)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
