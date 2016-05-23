@@ -43,7 +43,7 @@
 #ifndef LELY_NO_CO_TIME
 #include <lely/co/time.h>
 #endif
-#ifndef LELY_NO_CO_RPDO
+#ifndef LELY_NO_CO_TPDO
 #include <lely/co/tpdo.h>
 #endif
 #include "nmt_srv.h"

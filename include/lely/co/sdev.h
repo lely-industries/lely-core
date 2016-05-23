@@ -89,11 +89,11 @@ struct co_ssub {
 	//! The sub-object value.
 	union co_val val;
 	//! The access type.
-	unsigned access:3;
+	unsigned access:5;
 	//! A flag indicating if it is possible to map this object into a PDO.
 	unsigned pdo_mapping:1;
 	//! The object flags.
-	unsigned flags:28;
+	unsigned flags:26;
 };
 
 #ifdef __cplusplus

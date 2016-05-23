@@ -31,8 +31,10 @@
 #include <lely/co/sdev.h>
 
 #include <assert.h>
-#include <inttypes.h>
 #include <stdio.h>
+// Include inttypes.h before stdio.h to enforce declarations of format
+// specifiers in Newlib.
+#include <inttypes.h>
 
 static int co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev);
 static int co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj);
@@ -154,7 +156,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
 
-	r = snprintf(s, n, "\t.vendor_id = 0x%08x,\n",
+	r = snprintf(s, n, "\t.vendor_id = 0x%08" PRIx32 ",\n",
 			co_dev_get_vendor_id(dev));
 	if (__unlikely(r < 0))
 		return r;
@@ -178,7 +180,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
 
-	r = snprintf(s, n, "\t.product_code = 0x%08x,\n\t.revision = 0x%08x,\n",
+	r = snprintf(s, n, "\t.product_code = 0x%08" PRIx32 ",\n\t.revision = 0x%08" PRIx32 ",\n",
 			co_dev_get_product_code(dev), co_dev_get_revision(dev));
 	if (__unlikely(r < 0))
 		return r;
@@ -225,7 +227,7 @@ LELY_CO_DEFINE_BAUD(10)
 LELY_CO_DEFINE_BAUD(AUTO)
 #undef LELY_CO_DEFINE_BAUD
 
-	r = snprintf(s, n, ",\n\t.rate = %d,\n\t.lss = %d,\n\t.dummy = 0x%08x,\n",
+	r = snprintf(s, n, ",\n\t.rate = %d,\n\t.lss = %d,\n\t.dummy = 0x%08" PRIx32 ",\n",
 			co_dev_get_rate(dev), co_dev_get_lss(dev),
 			co_dev_get_dummy(dev));
 	if (__unlikely(r < 0))
@@ -663,10 +665,10 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		r = snprintf(s, n, "{ .i8 = %" PRIi8 " }", u->i8);
 		break;
 	case CO_DEFTYPE_INTEGER16:
-		r = snprintf(s, n, "{ .i8 = %" PRIi16 " }", u->i16);
+		r = snprintf(s, n, "{ .i16 = %" PRIi16 " }", u->i16);
 		break;
 	case CO_DEFTYPE_INTEGER32:
-		r = snprintf(s, n, "{ .i8 = %" PRIi32 "l }", u->i32);
+		r = snprintf(s, n, "{ .i32 = %" PRIi32 "l }", u->i32);
 		break;
 	case CO_DEFTYPE_UNSIGNED8:
 		r = snprintf(s, n, "{ .u8 = 0x%02" PRIx8 " }", u->u8);
