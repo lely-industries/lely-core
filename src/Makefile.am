@@ -1,7 +1,7 @@
 src =
 src += libc.h
 if PLATFORM_WIN32
-src += libc.rc
+src += libc.win32.rc
 endif
 src += stdlib.c
 src += string.c
