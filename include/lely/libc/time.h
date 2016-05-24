@@ -26,9 +26,21 @@
 
 #include <time.h>
 
-#if !(__STDC_VERSION__ >= 201112L) \
-		&& !(_POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
-		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined))
+#ifndef LELY_HAVE_TIMESPEC
+#if __STDC_VERSION__ >= 201112L || _POSIX_C_SOURCE >= 199309L \
+		|| defined(__CYGWIN__) || defined(_TIMESPEC_DEFINED) \
+		|| defined(__timespec_defined)
+#define LELY_HAVE_TIMESPEC	1
+#endif
+#endif
+
+#ifndef LELY_HAVE_TIMESPEC_GET
+#if (__STDC_VERSION__ >= 201112L || __USE_ISOC11) && defined(TIME_UTC)
+#define LELY_HAVE_TIMESPEC_GET	1
+#endif
+#endif
+
+#ifndef LELY_HAVE_TIMESPEC
 //! A time type with nanosecond resolution.
 struct timespec {
 	//! Whole seconds (>= 0).
@@ -38,30 +50,22 @@ struct timespec {
 };
 #endif
 
-#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
 
 LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
 		struct timespec *rmtp);
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS
 
-#if !(__STDC_VERSION__ >= 201112L) && !defined(__USE_ISOC11)
+#ifndef LELY_HAVE_TIMESPEC_GET
 
 #ifndef TIME_UTC
 //! An integer constant greater than 0 that designates the UTC time base.
 #define TIME_UTC	1
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /*!
@@ -77,11 +81,11 @@ extern "C" {
  */
 LELY_LIBC_EXTERN int __cdecl timespec_get(struct timespec *ts, int base);
 
+#endif // !LELY_HAVE_TIMESPEC_GET
+
 #ifdef __cplusplus
 }
 #endif
-
-#endif // !(__STDC_VERSION__ >= 201112L) && !__USE_ISOC11
 
 #endif
 

@@ -42,7 +42,7 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 
 #endif
 
-#if !(__STDC_VERSION__ >= 201112L) && !defined(__USE_ISOC11)
+#ifndef LELY_HAVE_TIMESPEC_GET
 
 #ifdef _WIN32
 
@@ -80,5 +80,5 @@ timespec_get(struct timespec *ts, int base)
 
 #endif
 
-#endif // !(__STDC_VERSION__ >= 201112L) && !defined(__USE_ISOC11)
+#endif // !LELY_HAVE_TIMESPEC_GET
 
