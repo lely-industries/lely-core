@@ -3,6 +3,9 @@ if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
+if PLATFORM_WIN32
+dcf2c_SOURCES += dcf2c.win32.rc
+endif
 endif
 endif
 if !NO_CO_WTM
@@ -23,3 +26,6 @@ LDADD = $(top_srcdir)/src/liblely-co.la
 LDADD += $(liblely_libc_LIBS)
 LDADD += $(liblely_util_LIBS)
 LDADD += $(liblely_can_LIBS)
+
+.rc.o:
+	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@

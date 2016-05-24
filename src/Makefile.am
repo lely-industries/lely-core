@@ -1,7 +1,7 @@
 src =
 src += co.h
 if PLATFORM_WIN32
-src += co.rc
+src += co.win32.rc
 endif
 src += crc.c
 if !NO_CO_CSDO
