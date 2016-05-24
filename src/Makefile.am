@@ -16,7 +16,7 @@ src += rbtree.c
 src += unicode.h
 src += util.h
 if PLATFORM_WIN32
-src += util.rc
+src += util.win32.rc
 endif
 
 lib_LTLIBRARIES = liblely-util.la
