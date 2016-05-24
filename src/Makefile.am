@@ -2,7 +2,7 @@ src =
 src += buf.c
 src += can.h
 if PLATFORM_WIN32
-src += can.rc
+src += can.win32.rc
 endif
 src += msg.c
 src += net.c
