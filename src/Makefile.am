@@ -1,8 +1,8 @@
 src =
-src += impl.c
+src += tap.c
 src += tap.h
 if PLATFORM_WIN32
-src += tap.rc
+src += tap.win32.rc
 endif
 
 lib_LTLIBRARIES = liblely-tap.la
