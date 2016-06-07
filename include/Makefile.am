@@ -1,6 +1,9 @@
 inc =
 inc += lely/util/def/type.def
 inc += lely/util/bitset.h
+if !NO_CXX
+inc += lely/util/c_type.hpp
+endif
 inc += lely/util/config.h
 inc += lely/util/cmp.h
 inc += lely/util/diag.h

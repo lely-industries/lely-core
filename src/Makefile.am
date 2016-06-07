@@ -1,5 +1,8 @@
 src =
 src += bitset.c
+if !NO_CXX
+src += c_type.cpp
+endif
 src += config.c
 src += config_ini.c
 src += diag.c
