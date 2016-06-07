@@ -470,7 +470,7 @@ LELY_CO_EXTERN int co_lss_id_non_cfg_slave_req(co_lss_t *lss,
 
 /*!
  * Requests the 'LSS Slowscan' service. This service performs a binary search
- * using the LSS identify remote slave' service to obtain a single LSS address,
+ * using the 'LSS identify remote slave' service to obtain a single LSS address,
  * followed by the 'switch state selective' service. If the request completes
  * with success, the identified slave is in the LSS configuration state.
  *

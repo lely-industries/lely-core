@@ -1081,15 +1081,6 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_boot_req;
 	}
 
-	// Disable the heartbeat consumer service for the node.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-	for (size_t i = 0; i < nmt->nhb; i++) {
-		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
-		if (id != ((val >> 16) & 0xff))
-			continue;
-		co_nmt_hb_set_1016(nmt->hbs[i], 0, 0);
-	}
-
 	return 0;
 
 error_boot_req:
@@ -1353,24 +1344,19 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 			|| co_nmt_get_st(nmt) == CO_NMT_ST_START))
 		co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
 
-	// Enable the heartbeat consumer service for the node.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-	for (size_t i = 0; i < nmt->nhb; i++) {
-		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
-		if (id != ((val >> 16) & 0xff))
-			continue;
-		co_nmt_hb_set_1016(nmt->hbs[i], id, val & 0xffff);
-		// If the error control service was successfully started,
-		// update the state of the node, which also sets the timeout for
-		// the next heartbeat message,
-		if (!es || es == 'L')
+	// If the error control service was successfully started, update the
+	// state of the node, which also sets the timeout for the next heartbeat
+	// message.
+	if (!es || es == 'L') {
+		co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+		for (size_t i = 0; i < nmt->nhb; i++) {
+			co_unsigned32_t val =
+					co_obj_get_val_u32(obj_1016, i + 1);
+			if (id != ((val >> 16) & 0xff))
+				continue;
 			co_nmt_hb_set_st(nmt->hbs[i], st);
+		}
 	}
-
-	// If the error control service was successfully started, inform the
-	// application of the node state.
-	if (!es || es == 'L')
-		co_nmt_st_ind(nmt, id, st);
 
 	if (nmt->boot_ind)
 		nmt->boot_ind(nmt, id, st, es, nmt->boot_data);
@@ -1415,6 +1401,12 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state)
 {
 	assert(nmt);
 	assert(nmt->hb_ind);
+
+#ifndef LELY_NO_CO_MASTER
+	// Ignore heartbeat events while the slave is booting.
+	if (nmt->slaves[id - 1].boot)
+		return;
+#endif
 
 	nmt->hb_ind(nmt, id, state, nmt->hb_data);
 }
