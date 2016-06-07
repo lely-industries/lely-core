@@ -237,6 +237,9 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 
 	memset(emcy->nodes, 0, CO_NUM_NODES * sizeof(struct co_emcy_node *));
 
+	emcy->ind = NULL;
+	emcy->data = NULL;
+
 	// Set the download indication function for the pre-defined error field.
 	if (emcy->obj_1003)
 		co_obj_set_dn_ind(emcy->obj_1003, &co_1003_dn_ind, emcy);
