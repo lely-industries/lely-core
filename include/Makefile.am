@@ -6,6 +6,9 @@ inc += lely/util/cmp.h
 inc += lely/util/diag.h
 inc += lely/util/endian.h
 inc += lely/util/errnum.h
+if !NO_CXX
+inc += lely/util/exception.hpp
+endif
 inc += lely/util/fbuf.h
 inc += lely/util/idlist.h
 inc += lely/util/lex.h

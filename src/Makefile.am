@@ -4,6 +4,9 @@ src += config.c
 src += config_ini.c
 src += diag.c
 src += errnum.c
+if !NO_CXX
+src += exception.cpp
+endif
 src += fbuf.c
 src += idlist.c
 src += lex.c
