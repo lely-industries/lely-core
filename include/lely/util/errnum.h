@@ -28,6 +28,8 @@
 
 #ifdef _WIN32
 #include <winerror.h>
+#elif _POSIX_C_SOURCE >= 200112L
+#include <netdb.h>
 #endif
 
 //! The native error code type.
@@ -345,11 +347,53 @@ enum errnum {
 	//! Cross-device link.
 	ERRNUM_XDEV = EXDEV,
 #endif
+#ifdef EAI_AGAIN
+	/*!
+	 * The name could not be resolved at this time. Future attempts may
+	 * succeed.
+	 */
+	ERRNUM_AI_AGAIN = EAI_AGAIN,
+#endif
+#ifdef EAI_BADFLAGS
+	//! The flags had an invalid value.
+	ERRNUM_AI_BADFLAGS = EAI_BADFLAGS,
+#endif
+#ifdef EAI_FAIL
+	//! A non-recoverable error occurred.
+	ERRNUM_AI_FAIL = EAI_FAIL,
+#endif
+#ifdef EAI_FAMILY
+	/*!
+	 * The address family was not recognized or the address length was
+	 * invalid for the specified family.
+	 */
+	ERRNUM_AI_FAMILY = EAI_FAMILY,
+#endif
+#ifdef EAI_MEMORY
+	//! There was a memory allocation failure.
+	ERRNUM_AI_MEMORY = EAI_MEMORY,
+#endif
+#ifdef EAI_NONAME
+	//! The name does not resolve for the supplied parameters.
+	ERRNUM_AI_NONAME = EAI_NONAME,
+#endif
+#ifdef EAI_OVERFLOW
+	//! An argument buffer overflowed.
+	ERRNUM_AI_OVERFLOW = EAI_OVERFLOW,
+#endif
+#ifdef EAI_SERVICE
+	//! The service passed was not recognized for the specified socket type.
+	ERRNUM_AI_SERVICE = EAI_SERVICE,
+#endif
+#ifdef EAI_SOCKTYPE
+	//! The intended socket type was not recognized.
+	ERRNUM_AI_SOCKTYPE = EAI_SOCKTYPE,
+#endif
 	// To prevent duplicate error numbers, this value should be at least as
 	// large as the largest explicitly defined error number, and small
 	// enough that the last implicitly defined error number does not exceed
 	// INT_MAX.
-	__ERRNUM_MAX_DEFINED = INT_MAX - 75 - 1,
+	__ERRNUM_MAX_DEFINED = INT_MAX - 84 - 1,
 #ifndef E2BIG
 	//! Argument list too long.
 	ERRNUM_2BIG,
@@ -653,6 +697,48 @@ enum errnum {
 //	ERRNUM_DQUOT,
 //	ERRNUM_MULTIHOP,
 //	ERRNUM_STALE,
+#ifndef EAI_AGAIN
+	/*!
+	 * The name could not be resolved at this time. Future attempts may
+	 * succeed.
+	 */
+	ERRNUM_AI_AGAIN,
+#endif
+#ifndef EAI_BADFLAGS
+	//! The flags had an invalid value.
+	ERRNUM_AI_BADFLAGS,
+#endif
+#ifndef EAI_FAIL
+	//! A non-recoverable error occurred.
+	ERRNUM_AI_FAIL,
+#endif
+#ifndef EAI_FAMILY
+	/*!
+	 * The address family was not recognized or the address length was
+	 * invalid for the specified family.
+	 */
+	ERRNUM_AI_FAMILY,
+#endif
+#ifndef EAI_MEMORY
+	//! There was a memory allocation failure.
+	ERRNUM_AI_MEMORY,
+#endif
+#ifndef EAI_NONAME
+	//! The name does not resolve for the supplied parameters.
+	ERRNUM_AI_NONAME,
+#endif
+#ifndef EAI_OVERFLOW
+	//! An argument buffer overflowed.
+	ERRNUM_AI_OVERFLOW,
+#endif
+#ifndef EAI_SERVICE
+	//! The service passed was not recognized for the specified socket type.
+	ERRNUM_AI_SERVICE,
+#endif
+#ifndef EAI_SOCKTYPE
+	//! The intended socket type was not recognized.
+	ERRNUM_AI_SOCKTYPE,
+#endif
 	__ERRNUM_MAX
 };
 
@@ -714,18 +800,18 @@ static inline errnum_t get_errnum(void);
  * Sets the current (thread-specific) platform-independent error number to
  * \a errnum. This is equivalent to `set_errc(errnum2c(errnum))`.
  *
- * \see get_errnu7m()
+ * \see get_errnum()
  */
 static inline void set_errnum(errnum_t errnum);
 
 //! Returns a string describing a native error code.
-LELY_UTIL_EXTERN char *errc2str(errc_t errc);
+LELY_UTIL_EXTERN const char *errc2str(errc_t errc);
 
 /*!
  * Returns a string describing a platform-independent error number.This is
  * equivalent to `errc2str(errnum2c(errnum))`.
  */
-static inline char *errnum2str(errnum_t errnum);
+static inline const char *errnum2str(errnum_t errnum);
 
 static inline errnum_t
 get_errnum(void)
@@ -739,7 +825,7 @@ set_errnum(errnum_t errnum)
 	set_errc(errnum2c(errnum));
 }
 
-static inline char *
+static inline const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));

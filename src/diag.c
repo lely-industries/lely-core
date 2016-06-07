@@ -267,7 +267,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	}
 
 	if (errc) {
-		char *errstr = errc2str(errc);
+		const char *errstr = errc2str(errc);
 		if (__likely(errstr)) {
 			r = snprintf(s, n, "%s", errstr);
 			if (__unlikely(r < 0))

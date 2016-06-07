@@ -225,8 +225,14 @@ errc2num(errc_t errc)
 	case WSAEOPNOTSUPP: return ERRNUM_OPNOTSUPP;
 	case WSAEPROTONOSUPPORT: return ERRNUM_PROTONOSUPPORT;
 	case WSAEPROTOTYPE: return ERRNUM_PROTOTYPE;
+	case WSAESOCKTNOSUPPORT: return ERRNUM_AI_SOCKTYPE;
 	case WSAETIMEDOUT: return ERRNUM_TIMEDOUT;
 	case WSAEWOULDBLOCK: return ERRNUM_WOULDBLOCK;
+	case WSAHOST_NOT_FOUND: return ERRNUM_AI_NONAME;
+	case WSANO_RECOVERY: return ERRNUM_AI_FAIL;
+	case WSATRY_AGAIN: return ERRNUM_AI_AGAIN;
+	case WSATYPE_NOT_FOUND: return ERRNUM_AI_SERVICE;
+	case WSA_NOT_ENOUGH_MEMORY: return ERRNUM_AI_MEMORY;
 #else
 #ifdef E2BIF
 	case E2BIG: return ERRNUM_2BIG;
@@ -459,6 +465,33 @@ errc2num(errc_t errc)
 #ifdef EXDEV
 	case EXDEV: return ERRNUM_XDEV;
 #endif
+#ifdef EAI_AGAIN
+	case EAI_AGAIN: return ERRNUM_AI_AGAIN;
+#endif
+#ifdef EAI_BADFLAGS
+	case EAI_BADFLAGS: return ERRNUM_AI_BADFLAGS;
+#endif
+#ifdef EAI_FAIL
+	case EAI_FAIL: return ERRNUM_AI_FAIL;
+#endif
+#ifdef EAI_FAMILY
+	case EAI_FAMILY: return ERRNUM_AI_FAMILY;
+#endif
+#ifdef EAI_MEMORY
+	case EAI_MEMORY: return ERRNUM_AI_MEMORY;
+#endif
+#ifdef EAI_NONAME
+	case EAI_NONAME: return ERRNUM_AI_NONAME;
+#endif
+#ifdef EAI_OVERFLOW
+	case EAI_OVERFLOW: return ERRNUM_AI_OVERFLOW;
+#endif
+#ifdef EAI_SERVICE
+	case EAI_SERVICE: return ERRNUM_AI_SERVICE;
+#endif
+#ifdef EAI_SOCKTYPE
+	case EAI_SOCKTYPE: return ERRNUM_AI_SOCKTYPE;
+#endif
 #endif // _WIN32
 	default: return 0;
 	}
@@ -549,6 +582,15 @@ errnum2c(errnum_t errnum)
 //	case ERRNUM_TXTBSY: return ...;
 	case ERRNUM_WOULDBLOCK: return WSAEWOULDBLOCK;
 	case ERRNUM_XDEV: return ERROR_NOT_SAME_DEVICE;
+	case ERRNUM_AI_AGAIN: return WSATRY_AGAIN;
+	case ERRNUM_AI_BADFLAGS: return WSAEINVAL;
+	case ERRNUM_AI_FAIL: return WSANO_RECOVERY;
+	case ERRNUM_AI_FAMILY: return WSAEAFNOSUPPORT;
+	case ERRNUM_AI_MEMORY: return WSA_NOT_ENOUGH_MEMORY;
+	case ERRNUM_AI_NONAME: return WSAHOST_NOT_FOUND;
+	case ERRNUM_AI_SERVICE: return WSATYPE_NOT_FOUND;
+	case ERRNUM_AI_SOCKTYPE: return WSAESOCKTNOSUPPORT;
+	case ERRNUM_AI_OVERFLOW: return WSAEFAULT;
 #else
 #ifdef E2BIG
 	case ERRNUM_2BIG: return E2BIG;
@@ -781,6 +823,33 @@ errnum2c(errnum_t errnum)
 #ifdef EXDEV
 	case ERRNUM_XDEV: return EXDEV;
 #endif
+#ifdef EAI_AGAIN
+	case ERRNUM_AI_AGAIN: return EAI_AGAIN;
+#endif
+#ifdef EAI_BADFLAGS
+	case ERRNUM_AI_BADFLAGS: return EAI_BADFLAGS;
+#endif
+#ifdef EAI_FAIL
+	case ERRNUM_AI_FAIL: return EAI_FAIL;
+#endif
+#ifdef EAI_FAMILY
+	case ERRNUM_AI_FAMILY: return EAI_FAMILY;
+#endif
+#ifdef EAI_MEMORY
+	case ERRNUM_AI_MEMORY: return EAI_MEMORY;
+#endif
+#ifdef EAI_NONAME
+	case ERRNUM_AI_NONAME: return EAI_NONAME;
+#endif
+#ifdef EAI_OVERFLOW
+	case ERRNUM_AI_OVERFLOW: return EAI_OVERFLOW;
+#endif
+#ifdef EAI_SERVICE
+	case ERRNUM_AI_SERVICE: return EAI_SERVICE;
+#endif
+#ifdef EAI_SOCKTYPE
+	case ERRNUM_AI_SOCKTYPE: return EAI_SOCKTYPE;
+#endif
 #endif // _WIN32
 	default: return 0;
 	}
@@ -806,7 +875,7 @@ set_errc(errc_t errc)
 #endif
 }
 
-LELY_UTIL_EXPORT char *
+LELY_UTIL_EXPORT const char *
 errc2str(errc_t errc)
 {
 #ifdef _WIN32
@@ -822,6 +891,20 @@ errc2str(errc_t errc)
 		errstr[n - 2] = '\0';
 	return errstr;
 #else
+#if _POSIX_C_SOURCE >= 200112L
+	switch (errc) {
+	case EAI_AGAIN:
+	case EAI_BADFLAGS:
+	case EAI_FAIL:
+	case EAI_FAMILY:
+	case EAI_MEMORY:
+	case EAI_NONAME:
+	case EAI_OVERFLOW:
+	case EAI_SERVICE:
+	case EAI_SOCKTYPE:
+		return gai_strerror(errc);
+	}
+#endif
 	return strerror(errc);
 #endif
 }
