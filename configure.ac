@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([C11 and POSIX compatibility library], [1.0], [], [liblely-libc])
+AC_INIT([C11 and POSIX compatibility library], [1.0.0], [], [liblely-libc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -15,6 +15,11 @@ AC_USE_SYSTEM_EXTENSIONS
 
 LT_INIT([win32-dll])
 LT_PROG_RC
+
+m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
+AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
+AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
+AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
 case "$host" in
 *-*-mingw*)
@@ -54,6 +59,7 @@ AC_CONFIG_FILES([
 	doc/Makefile
 	include/Makefile
 	src/Makefile
+	src/version.rc
 	Makefile
 	${PACKAGE}.pc
 ])
