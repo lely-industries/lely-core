@@ -2,14 +2,24 @@ src =
 src += tap.c
 src += tap.h
 if PLATFORM_WIN32
-src += tap.win32.rc
+src += version.rc
 endif
 
 lib_LTLIBRARIES = liblely-tap.la
-liblely_tap_la_CPPFLAGS = -I$(top_srcdir)/include $(liblely_libc_CFLAGS)
-liblely_tap_la_LDFLAGS = -version-number 1:0:0 -no-undefined
+liblely_tap_la_CPPFLAGS = -I$(top_srcdir)/include
+liblely_tap_la_CPPFLAGS += $(liblely_libc_CFLAGS)
+liblely_tap_la_LDFLAGS = -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
+if PLATFORM_WIN32
+liblely_tap_la_LDFLAGS += -no-undefined -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
+endif
 liblely_tap_la_LIBADD = $(liblely_libc_LIBS)
 liblely_tap_la_SOURCES = $(src)
 
+if PLATFORM_WIN32
 .rc.lo:
 	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@
+
+defdir = $(libdir)
+def_DATA = $(PACKAGE)-$(VERSION_MAJOR).def
+MOSTLYCLEANFILES = $(def_DATA)
+endif
