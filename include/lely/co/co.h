@@ -38,19 +38,28 @@
 #endif
 
 struct __co_dev;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class CODev; }
+typedef lely::CODev co_dev_t;
+#else
 //! An opaque CANopen device type.
 typedef struct __co_dev co_dev_t;
 #endif
 
 struct __co_obj;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COObj; }
+typedef lely::COObj co_obj_t;
+#else
 //! An opaque CANopen object type.
 typedef struct __co_obj co_obj_t;
 #endif
 
 struct __co_sub;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COSub; }
+typedef lely::COSub co_sub_t;
+#else
 //! An opaque CANopen sub-object type.
 typedef struct __co_sub co_sub_t;
 #endif
