@@ -98,7 +98,8 @@ __co_obj_fini(struct __co_obj *obj)
 {
 	assert(obj);
 
-	co_dev_remove_obj(obj->dev, obj);
+	if (obj->dev)
+		co_dev_remove_obj(obj->dev, obj);
 
 	co_obj_clear(obj);
 
@@ -395,7 +396,8 @@ __co_sub_fini(struct __co_sub *sub)
 {
 	assert(sub);
 
-	co_obj_remove_sub(sub->obj, sub);
+	if (sub->obj)
+		co_obj_remove_sub(sub->obj, sub);
 
 	co_val_fini(sub->type, &sub->def);
 	co_val_fini(sub->type, &sub->max);
