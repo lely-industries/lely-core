@@ -1,5 +1,8 @@
 inc =
 inc += lely/co/def/basic.def
+if !NO_CXX
+inc += lely/co/def/cxx.def
+endif
 inc += lely/co/def/type.def
 inc += lely/co/co.h
 inc += lely/co/crc.h
@@ -37,7 +40,13 @@ if !NO_CO_TPDO
 inc += lely/co/tpdo.h
 endif
 inc += lely/co/type.h
+if !NO_CXX
+inc += lely/co/type.hpp
+endif
 inc += lely/co/val.h
+if !NO_CXX
+inc += lely/co/val.hpp
+endif
 if !NO_CO_WTM
 inc += lely/co/wtm.h
 endif
