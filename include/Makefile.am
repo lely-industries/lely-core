@@ -30,8 +30,14 @@ endif
 endif
 if !NO_CO_LSS
 inc += lely/co/lss.h
+if !NO_CXX
+inc += lely/co/lss.hpp
+endif
 endif
 inc += lely/co/nmt.h
+if !NO_CXX
+inc += lely/co/nmt.hpp
+endif
 inc += lely/co/obj.h
 if !NO_CXX
 inc += lely/co/obj.hpp

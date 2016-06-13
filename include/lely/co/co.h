@@ -128,13 +128,19 @@ typedef struct __co_emcy co_emcy_t;
 #endif
 
 struct __co_nmt;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class CONMT; }
+typedef lely::CONMT co_nmt_t;
+#else
 //! An opaque CANopen NMT master/slave service type.
 typedef struct __co_nmt co_nmt_t;
 #endif
 
 struct __co_lss;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COLSS; }
+typedef lely::COLSS co_lss_t;
+#else
 //! An opaque CANopen LSS master/slave service type.
 typedef struct __co_lss co_lss_t;
 #endif

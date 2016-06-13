@@ -269,7 +269,7 @@ LELY_CO_EXTERN int co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode);
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_CO_EXTERN int co_lss_switch_sel_req(co_lss_t *lss, const struct co_id* id,
+LELY_CO_EXTERN int co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data);
 
 /*!

@@ -830,7 +830,7 @@ co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 }
 
 LELY_CO_EXPORT int
-co_lss_switch_sel_req(co_lss_t *lss, const struct co_id* id,
+co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data)
 {
 	assert(lss);
