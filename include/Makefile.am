@@ -59,6 +59,9 @@ endif
 endif
 if !NO_CO_TIME
 inc += lely/co/time.h
+if !NO_CXX
+inc += lely/co/time.hpp
+endif
 endif
 if !NO_CO_TPDO
 inc += lely/co/tpdo.h

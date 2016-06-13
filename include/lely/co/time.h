@@ -1,6 +1,6 @@
 /*!\file
  * This header file is part of the CANopen library; it contains the time stamp
- * (SYNC) object declarations.
+ * (TIME) object declarations.
  *
  * \copyright 2016 Lely Industries N.V.
  *
