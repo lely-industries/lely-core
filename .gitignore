@@ -35,8 +35,11 @@
 Makefile
 Makefile.in
 *~
+*.def
+*.exe
 *.la
 *.lo
 *.o
 *.pc
+*.rc
 test-*
