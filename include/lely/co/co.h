@@ -83,13 +83,19 @@ typedef struct __co_csdo co_csdo_t;
 #endif
 
 struct __co_rpdo;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class CORPDO; }
+typedef lely::CORPDO co_rpdo_t;
+#else
 //! An opaque CANopen Receive-PDO service type.
 typedef struct __co_rpdo co_rpdo_t;
 #endif
 
 struct __co_tpdo;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COTPDO; }
+typedef lely::COTPDO co_tpdo_t;
+#else
 //! An opaque CANopen Transmit-PDO service type.
 typedef struct __co_tpdo co_tpdo_t;
 #endif

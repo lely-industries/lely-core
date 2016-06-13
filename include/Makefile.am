@@ -36,6 +36,9 @@ endif
 inc += lely/co/pdo.h
 if !NO_CO_RPDO
 inc += lely/co/rpdo.h
+if !NO_CXX
+inc += lely/co/rpdo.hpp
+endif
 endif
 if !NO_CO_SDEV
 inc += lely/co/sdev.h
@@ -56,6 +59,9 @@ inc += lely/co/time.h
 endif
 if !NO_CO_TPDO
 inc += lely/co/tpdo.h
+if !NO_CXX
+inc += lely/co/tpdo.hpp
+endif
 endif
 inc += lely/co/type.h
 if !NO_CXX
