@@ -91,7 +91,7 @@ str_cmp(const void *p1, const void *p2)
 	if (__unlikely(!p2))
 		return 1;
 
-	return strcmp(p1, p2);
+	return strcmp((const char *)p1, (const char *)p2);
 }
 
 static inline int __cdecl
@@ -105,7 +105,7 @@ str_case_cmp(const void *p1, const void *p2)
 	if (__unlikely(!p2))
 		return 1;
 
-	return strcasecmp(p1, p2);
+	return strcasecmp((const char *)p1, (const char *)p2);
 }
 
 #ifdef __cplusplus
