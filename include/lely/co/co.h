@@ -119,7 +119,10 @@ typedef struct __co_time co_time_t;
 #endif
 
 struct __co_emcy;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COEmcy; }
+typedef lely::COEmcy co_emcy_t;
+#else
 //! An opaque CANopen EMCY producer/consumer service type.
 typedef struct __co_emcy co_emcy_t;
 #endif

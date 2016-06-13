@@ -24,6 +24,9 @@ inc += lely/co/dev.hpp
 endif
 if !NO_CO_EMCY
 inc += lely/co/emcy.h
+if !NO_CXX
+inc += lely/co/emcy.hpp
+endif
 endif
 if !NO_CO_LSS
 inc += lely/co/lss.h
