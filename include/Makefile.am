@@ -1,5 +1,6 @@
 inc =
 inc += lely/util/def/type.def
+inc += lely/util/bimap.h
 inc += lely/util/bitset.h
 if !NO_CXX
 inc += lely/util/c_type.hpp
