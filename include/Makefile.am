@@ -53,6 +53,9 @@ inc += lely/co/ssdo.hpp
 endif
 if !NO_CO_SYNC
 inc += lely/co/sync.h
+if !NO_CXX
+inc += lely/co/sync.hpp
+endif
 endif
 if !NO_CO_TIME
 inc += lely/co/time.h

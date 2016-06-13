@@ -101,7 +101,10 @@ typedef struct __co_tpdo co_tpdo_t;
 #endif
 
 struct __co_sync;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COSync; }
+typedef lely::COSync co_sync_t;
+#else
 //! An opaque CANopen SYNC producer/consumer service type.
 typedef struct __co_sync co_sync_t;
 #endif
