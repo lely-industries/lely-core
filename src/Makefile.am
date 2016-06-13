@@ -1,8 +1,5 @@
 src =
 src += co.h
-if PLATFORM_WIN32
-src += co.win32.rc
-endif
 src += crc.c
 if !NO_CO_CSDO
 src += csdo.c
@@ -50,15 +47,32 @@ src += tpdo.c
 endif
 src += type.c
 src += val.c
+if PLATFORM_WIN32
+src += version.rc
+endif
 if !NO_CO_WTM
 src += wtm.c
 endif
 
 lib_LTLIBRARIES = liblely-co.la
-liblely_co_la_CPPFLAGS = -I$(top_srcdir)/include $(liblely_libc_CFLAGS) $(liblely_util_CFLAGS) $(liblely_can_CFLAGS)
-liblely_co_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-liblely_co_la_LIBADD = $(liblely_libc_LIBS) $(liblely_util_LIBS) $(liblely_can_LIBS)
+liblely_co_la_CPPFLAGS = -I$(top_srcdir)/include
+liblely_co_la_CPPFLAGS += $(liblely_libc_CFLAGS)
+liblely_co_la_CPPFLAGS += $(liblely_util_CFLAGS)
+liblely_co_la_CPPFLAGS += $(liblely_can_CFLAGS)
+liblely_co_la_LDFLAGS = -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
+if PLATFORM_WIN32
+liblely_co_la_LDFLAGS += -no-undefined -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
+endif
+liblely_co_la_LIBADD = $(liblely_libc_LIBS)
+liblely_co_la_LIBADD += $(liblely_util_LIBS)
+liblely_co_la_LIBADD += $(liblely_can_LIBS)
 liblely_co_la_SOURCES = $(src)
 
+if PLATFORM_WIN32
 .rc.lo:
 	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@
+
+defdir = $(libdir)
+def_DATA = $(PACKAGE)-$(VERSION_MAJOR).def
+MOSTLYCLEANFILES = $(def_DATA)
+endif

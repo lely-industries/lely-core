@@ -4,7 +4,7 @@ if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
 if PLATFORM_WIN32
-dcf2c_SOURCES += dcf2c.win32.rc
+dcf2c_SOURCES += version.dcf2c.rc
 endif
 endif
 endif
@@ -27,5 +27,7 @@ LDADD += $(liblely_libc_LIBS)
 LDADD += $(liblely_util_LIBS)
 LDADD += $(liblely_can_LIBS)
 
+if PLATFORM_WIN32
 .rc.o:
 	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@
+endif

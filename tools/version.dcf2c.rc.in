@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     1,0,0,0
-PRODUCTVERSION  1,0,0,0
+FILEVERSION     0,@VERSION_MAJOR@,0,@VERSION_MINOR@
+PRODUCTVERSION  0,@VERSION_MAJOR@,0,@VERSION_MINOR@
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT
@@ -15,12 +15,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName",      "Lely Industries N.V."
       VALUE "FileDescription",  "CANopen EDS/DCF to C conversion tool"
-      VALUE "FileVersion",      "1.0.0.0\0"
+      VALUE "FileVersion",      "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
       VALUE "InternalName",     "dcf2c"
       VALUE "LegalCopyright",   "2016 Lely Industries N.V."
       VALUE "OriginalFilename", "dcf2c.exe"
-      VALUE "ProductName",      "CANopen library"
-      VALUE "ProductVersion",   "1.0.0\0"
+      VALUE "ProductName",      "@PACKAGE_NAME@"
+      VALUE "ProductVersion",   "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
     END
   END
   BLOCK "VarFileInfo"
