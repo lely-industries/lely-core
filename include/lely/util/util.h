@@ -76,6 +76,11 @@
 #define powerof2(x)	(!((x) & ((x) - 1)))
 #endif
 
+#ifndef STRINGIFY
+//! Expands and stringifies \a x. \see QUOTE()
+#define STRINGIFY(x)	QUOTE(x)
+#endif
+
 #ifndef structof
 /*!
  * Obtains the address of a structure from the address of one of its members.
@@ -88,6 +93,11 @@
  */
 #define structof(ptr, type, member) \
 	((type *)((char *)(ptr) - offsetof(type, member)))
+#endif
+
+#ifndef QUOTE
+//! Stringifies \a x without expanding. \see STRINGIFY()
+#define QUOTE(x)	#x
 #endif
 
 #endif
