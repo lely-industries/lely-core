@@ -8,6 +8,9 @@ inc += lely/co/co.h
 inc += lely/co/crc.h
 if !NO_CO_CSDO
 inc += lely/co/csdo.h
+if !NO_CXX
+inc += lely/co/csdo.hpp
+endif
 endif
 if !NO_CO_DCF
 inc += lely/co/dcf.h
@@ -42,6 +45,9 @@ endif
 endif
 inc += lely/co/sdo.h
 inc += lely/co/ssdo.h
+if !NO_CXX
+inc += lely/co/ssdo.hpp
+endif
 if !NO_CO_SYNC
 inc += lely/co/sync.h
 endif

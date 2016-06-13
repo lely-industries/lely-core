@@ -65,13 +65,19 @@ typedef struct __co_sub co_sub_t;
 #endif
 
 struct __co_ssdo;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COSSDO; }
+typedef lely::COSSDO co_ssdo_t;
+#else
 //! An opaque CANopen Server-SDO service type.
 typedef struct __co_ssdo co_ssdo_t;
 #endif
 
 struct __co_csdo;
-#ifndef __cplusplus
+#ifdef __cplusplus
+namespace lely { class COCSDO; }
+typedef lely::COCSDO co_csdo_t;
+#else
 //! An opaque CANopen Client-SDO service type.
 typedef struct __co_csdo co_csdo_t;
 #endif
