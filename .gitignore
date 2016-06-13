@@ -34,7 +34,9 @@
 Makefile
 Makefile.in
 *~
+*.def
 *.la
 *.lo
 *.o
 *.pc
+*.rc
