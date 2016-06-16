@@ -204,6 +204,15 @@
 #define __cdecl
 #endif
 
+#ifndef __deprecated
+//! Mark a function as deprecated.
+#if defined(__GNUC__) || __has_attribute(__deprecated__)
+#define __deprecated	__attribute__((__deprecated__))
+#else
+#define __deprecated
+#endif
+#endif
+
 #ifndef __dllexport
 #if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(dllexport))
