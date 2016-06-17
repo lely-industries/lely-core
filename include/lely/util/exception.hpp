@@ -27,7 +27,7 @@
 #include <exception>
 
 #if !defined(noexcept) && !(__cplusplus >= 201103L && (__GNUC_PREREQ(4, 6) \
-		|| __has_feature(cxx_noexcept)))
+		|| __has_feature(cxx_noexcept))) && !(_MSC_VER >= 1900)
 #define noexcept
 #endif
 
