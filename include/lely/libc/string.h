@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#if !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
+#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
 /*!
  * Duplicates the string at \a s.
  *
@@ -51,7 +51,7 @@ LELY_LIBC_EXTERN char * __cdecl strdup(const char *s);
 LELY_LIBC_EXTERN char * __cdecl strndup(const char *s, size_t size);
 #endif
 
-#if !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
+#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
 /*!
  * Computes the length of the string at \a s, not including the terminating null
  * byte. At most \a maxlen characters are examined.

@@ -27,15 +27,16 @@
 #include <time.h>
 
 #ifndef LELY_HAVE_TIMESPEC
-#if __STDC_VERSION__ >= 201112L || _POSIX_C_SOURCE >= 199309L \
-		|| defined(__CYGWIN__) || defined(_TIMESPEC_DEFINED) \
-		|| defined(__timespec_defined)
+#if __STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
+		|| _POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
+		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined)
 #define LELY_HAVE_TIMESPEC	1
 #endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC_GET
-#if (__STDC_VERSION__ >= 201112L || __USE_ISOC11) && defined(TIME_UTC)
+#if (__STDC_VERSION__ >= 201112L || __USE_ISOC11 || _MSC_VER >= 1900) \
+		&& defined(TIME_UTC)
 #define LELY_HAVE_TIMESPEC_GET	1
 #endif
 #endif

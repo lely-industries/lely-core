@@ -25,7 +25,8 @@
 
 #include <stdlib.h>
 
-#if !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
+#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
+		&& !defined(__MINGW32__)
 LELY_LIBC_EXPORT char * __cdecl
 strdup(const char *s)
 {
@@ -50,7 +51,8 @@ strndup(const char *s, size_t size)
 }
 #endif
 
-#if !(_POSIX_C_SOURCE >= 200809L) && !defined(__MINGW32__)
+#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
+		&& !defined(__MINGW32__)
 LELY_LIBC_EXPORT  size_t __cdecl
 strnlen(const char *s, size_t maxlen)
 {

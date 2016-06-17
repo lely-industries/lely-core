@@ -33,7 +33,7 @@ nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
 	int64_t msec = rqtp->tv_sec * 1000 + rqtp->tv_nsec / 1000000;
 	if (__likely(msec > 0))
-		Sleep(msec);
+		Sleep((DWORD)msec);
 	// Since Sleep() cannot be interrupted, there is no remaining time.
 	if (rmtp)
 		*rmtp = (struct timespec){ 0, 0 };
