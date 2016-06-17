@@ -205,7 +205,7 @@ rbnode_init(struct rbnode *node, const void *key)
 }
 
 static inline void
-rbtree_init(struct rbtree *tree, cmp_t cmp)
+rbtree_init(struct rbtree *tree, cmp_t *cmp)
 {
 	tree->cmp = cmp;
 	tree->root = NULL;

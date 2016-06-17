@@ -172,7 +172,7 @@ pnode_next(const struct pnode *node)
 }
 
 static inline void
-pheap_init(struct pheap *heap, cmp_t cmp)
+pheap_init(struct pheap *heap, cmp_t *cmp)
 {
 	heap->cmp = cmp;
 	heap->root = NULL;
