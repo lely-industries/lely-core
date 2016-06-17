@@ -43,7 +43,7 @@ extern "C" {
  * \param ...  an optional list of arguments to be printed according to \a fmt.
  *
  * \returns the number of characters written, not counting the terminating null
- * byte, or a* negative number on error.
+ * byte, or a negative number on error.
  *
  * \see vasprintf()
  */
@@ -60,7 +60,7 @@ LELY_LIBC_EXTERN int asprintf(char **strp, const char *fmt, ...);
  * \param ap   the list with arguments to be printed according to \a fmt.
  *
  * \returns the number of characters written, not counting the terminating null
- * byte, or a* negative number on error.
+ * byte, or a negative number on error.
  *
  * \see asprintf()
  */

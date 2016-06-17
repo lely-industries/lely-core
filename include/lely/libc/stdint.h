@@ -25,7 +25,7 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_STDINT_H
-#if (__STDC_VERSION__ >= 199901L || __cplusplus >= 201103L) \
+#if (__STDC_VERSION__ >= 199901L || __cplusplus >= 201103L || _MSC_VER >= 1600) \
 		&& __has_include(<stdint.h>)
 #define LELY_HAVE_STDINT_H	1
 #endif
@@ -66,7 +66,7 @@ typedef int int32_t;
 #ifdef __INT64_TYPE__
 __extension__
 typedef __INT64_TYPE__ int64_t;
-#elif LONG_BIT == 64
+#else
 typedef long int64_t;
 #else
 __extension__
