@@ -22,10 +22,10 @@
  */
 
 #include "tap.h"
+#include <lely/libc/stdio.h>
 
 #include <assert.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __MINGW32__
@@ -130,14 +130,10 @@ tap_vprintf(const char *format, va_list ap)
 {
 	assert(format);
 
-	va_list aq;
-	va_copy(aq, ap);
-	int n = vsnprintf(NULL, 0, format, aq);
-	va_end(aq);
+	char *s = NULL;
+	int n = vasprintf(&s, format, ap);
 	if (__unlikely(n < 0))
 		return;
-	char s[n + 1];
-	vsnprintf(s, n + 1, format, ap);
 
 	for (char *cp = s; cp < s + n; cp++) {
 		switch (*cp) {
@@ -153,5 +149,7 @@ tap_vprintf(const char *format, va_list ap)
 			fputc(*cp, stdout);
 		}
 	}
+
+	free(s);
 }
 
