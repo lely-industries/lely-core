@@ -66,7 +66,7 @@ typedef int int32_t;
 #ifdef __INT64_TYPE__
 __extension__
 typedef __INT64_TYPE__ int64_t;
-#else
+#elif LONG_BIT == 64
 typedef long int64_t;
 #else
 __extension__
@@ -122,7 +122,7 @@ typedef int32_t int_least32_t;
 #ifdef __INT_LEAST64_TYPE__
 __extension__
 typedef __INT_LEAST64_TYPE__ int_least64_t;
-#elif LONG_BIT == 64
+#else
 __extension__
 typedef int64_t int_least64_t;
 #endif
