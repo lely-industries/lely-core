@@ -6,6 +6,7 @@ inc += lely/libc/stdalign.h
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h
 inc += lely/libc/stdint.h
+inc += lely/libc/stdio.h
 inc += lely/libc/stdlib.h
 inc += lely/libc/stdnoreturn.h
 inc += lely/libc/string.h
