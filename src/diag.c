@@ -186,16 +186,11 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 	__unused_var(handle);
 
-	va_list aq;
-	va_copy(aq, ap);
-	int n = vsnprintf_diag_at(NULL, 0, severity, errc, at, format, aq);
-	va_end(aq);
-
-	if (__likely(n > 0)) {
-		char s[n + 1];
-		vsnprintf_diag_at(s, n + 1, severity, errc, at, format, ap);
+	char *s = NULL;
+	if (__likely(vasnprintf_diag_at(&s, severity, errc, at, format, ap)
+			>= 0))
 		fprintf(stderr, "%s\n", s);
-	}
+	free(s);
 
 	if (severity == DIAG_FATAL)
 		exit(EXIT_FAILURE);
@@ -206,6 +201,13 @@ vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	return vsnprintf_diag_at(s, n, severity, errc, NULL, format, ap);
+}
+
+LELY_UTIL_EXPORT int
+vasnprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	return vasnprintf_diag_at(ps, severity, errc, NULL, format, ap);
 }
 
 LELY_UTIL_EXPORT int
@@ -277,6 +279,27 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	}
 
 	return t;
+}
+
+LELY_UTIL_EXPORT int
+vasnprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+	assert(ps);
+
+	va_list aq;
+	va_copy(aq, ap);
+	int n = vsnprintf_diag_at(NULL, 0, severity, errc, at, format, ap);
+	va_end(aq);
+	if (__unlikely(n < 0))
+		return n;
+
+	void *ptr = malloc(n + 1);
+	if (__unlikely(!ptr && n > 0))
+		return -1;
+
+	*ps = ptr;
+	return vsnprintf_diag_at(*ps, n + 1, severity, errc, at, format, ap);
 }
 
 LELY_UTIL_EXPORT const char *

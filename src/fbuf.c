@@ -81,7 +81,7 @@ __fbuf_init(struct __fbuf *buf, const char *filename)
 		if (__unlikely(iError))
 			goto error_GetFileSize;
 	}
-	buf->size = FileSize.QuadPart;
+	buf->size = (size_t)FileSize.QuadPart;
 
 	HANDLE hFileMappingObject = CreateFileMapping(hFile, NULL,
 			PAGE_READONLY, 0, 0, NULL);

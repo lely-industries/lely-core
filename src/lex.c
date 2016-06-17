@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#include <lely/libc/string.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include "unicode.h"
@@ -30,7 +31,6 @@
 #include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
-#include <string.h>
 
 LELY_UTIL_EXPORT size_t
 lex_char(int c, const char *begin, const char *end, struct floc *at)
@@ -308,9 +308,11 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (!chars) \
 			return 0; \
 	\
-		char buf[chars + 1]; \
-		memcpy(buf, begin, chars); \
-		buf[chars] = '\0'; \
+		char *buf = strndup(begin, chars + 1); \
+		if (__unlikely(!buf)) { \
+			diag_at(DIAG_ERROR, get_errc(), at, "unable to duplicate string"); \
+			return 0; \
+		} \
 	\
 		int errsv = errno; \
 		errno = 0; \
@@ -318,6 +320,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		char *endptr; \
 		type result = strtov(buf, &endptr); \
 		chars = endptr - buf; \
+	\
+		free(buf); \
 	\
 		if (__unlikely(errno == ERANGE && result == min)) { \
 			set_errnum(ERRNUM_RANGE); \
@@ -349,9 +353,11 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (!chars) \
 			return 0; \
 	\
-		char buf[chars + 1]; \
-		memcpy(buf, begin, chars); \
-		buf[chars] = '\0'; \
+		char *buf = strndup(begin, chars + 1); \
+		if (__unlikely(!buf)) { \
+			diag_at(DIAG_ERROR, get_errc(), at, "unable to duplicate string"); \
+			return 0; \
+		} \
 	\
 		int errsv = errno; \
 		errno = 0; \
@@ -359,6 +365,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		char *endptr; \
 		type result = strtov(buf, &endptr); \
 		chars = endptr - buf; \
+	\
+		free(buf); \
 	\
 		if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
@@ -416,7 +424,7 @@ lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 				diag_at(DIAG_WARNING, get_errc(), at, "int8_t overflow");
 		}
 		if (pi8)
-			*pi8 = i8;
+			*pi8 = (int8_t)i8;
 	}
 	return chars;
 }
@@ -439,7 +447,7 @@ lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 				diag_at(DIAG_WARNING, get_errc(), at, "int16_t overflow");
 		}
 		if (pi16)
-			*pi16 = i16;
+			*pi16 = (int16_t)i16;
 	}
 	return chars;
 }
@@ -472,7 +480,7 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 				diag_at(DIAG_WARNING, get_errc(), at, "int32_t overflow");
 		}
 		if (pi32)
-			*pi32 = i32;
+			*pi32 = (int32_t)i32;
 	}
 	return chars;
 }
@@ -512,7 +520,7 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 				diag_at(DIAG_WARNING, get_errc(), at, "int64_t overflow");
 		}
 		if (pi64)
-			*pi64 = i64;
+			*pi64 = (int64_t)i64;
 	}
 	return chars;
 }
@@ -530,7 +538,7 @@ lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 				diag_at(DIAG_WARNING, get_errc(), at, "uint8_t overflow");
 		}
 		if (pu8)
-			*pu8 = u8;
+			*pu8 = (uint8_t)u8;
 	}
 	return chars;
 }
@@ -548,7 +556,7 @@ lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 				diag_at(DIAG_WARNING, get_errc(), at, "uint16_t overflow");
 		}
 		if (pu16)
-			*pu16 = u16;
+			*pu16 = (uint16_t)u16;
 	}
 	return chars;
 }
@@ -571,7 +579,7 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 				diag_at(DIAG_WARNING, get_errc(), at, "uint32_t overflow");
 		}
 		if (pu32)
-			*pu32 = u32;
+			*pu32 = (uint32_t)u32;
 	}
 	return chars;
 }
@@ -600,7 +608,7 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 				diag_at(DIAG_WARNING, get_errc(), at, "uint64_t overflow");
 		}
 		if (pu64)
-			*pu64 = u64;
+			*pu64 = (uint64_t)u64;
 	}
 	return chars;
 }
