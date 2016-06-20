@@ -44,8 +44,6 @@ public:
 	typedef typename traits::type type;
 
 	operator type() const noexcept { return m_val; }
-	operator type&() noexcept { return m_val; }
-	operator const type&() const noexcept { return m_val; }
 
 	COVal(): m_val() {}
 
