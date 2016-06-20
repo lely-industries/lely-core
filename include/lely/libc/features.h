@@ -272,7 +272,9 @@
 
 #ifndef __unused_arg
 //! Suppresses a compiler warning about an unused function argument.
-#if defined(__GNUC__) || __has_attribute(__unused__)
+#ifdef _MSC_VER
+#define __unused_arg(x)	__pragma(warning(suppress: 4100))
+#elif defined(__GNUC__) || __has_attribute(__unused__)
 #define __unused_arg	__attribute__((__unused__))
 #else
 #define __unused_arg
@@ -281,7 +283,11 @@
 
 #ifndef __unused_var
 //! Suppresses a compiler warning about an unused variable.
+#ifdef _MSC_VER
+#define __unused_var(x)	__pragma(warning(suppress: 4100 4101)) x
+#else
 #define __unused_var(x)	((void)(0 ? ((void)(x), 0) : 0))
+#endif
 #endif
 
 #ifndef __WORDSIZE
