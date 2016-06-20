@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([Utilities library], [1.0.0], [], [liblely-util])
+AC_INIT([Utilities library], [1.1.0], [], [liblely-util])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -31,7 +31,7 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
-PKG_CHECK_MODULES([liblely_libc], [liblely-libc])
+PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
