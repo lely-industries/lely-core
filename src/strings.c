@@ -66,8 +66,8 @@ strcasecmp(const char *s1, const char *s2)
 		return 0;
 
 	int result;
-	while (!(result = tolower((unsigned char)*s1)
-			- tolower((unsigned char)*s2++)) && *s1++);
+	while ((result = tolower((unsigned char)*s1)
+			- tolower((unsigned char)*s2++)) == 0 && *s1++);
 	return result;
 }
 
@@ -78,8 +78,8 @@ strncasecmp(const char *s1, const char *s2, size_t n)
 		return 0;
 
 	int result;
-	while (!(result = tolower((unsigned char)*s1)
-			- tolower((unsigned char)*s2++)) && --n && *s1++);
+	while ((result = tolower((unsigned char)*s1)
+			- tolower((unsigned char)*s2++)) == 0 && --n && *s1++);
 	return result;
 }
 
