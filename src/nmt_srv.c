@@ -517,7 +517,7 @@ co_nmt_srv_init_lss(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_LSS));
-	assert(!srv->emcy);
+	assert(!srv->lss);
 
 	if (!co_dev_get_lss(dev))
 		return;
