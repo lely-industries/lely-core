@@ -103,7 +103,7 @@ static inline void
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
 	node->next = next;
-	if ((node->prev = next->prev))
+	if ((node->prev = next->prev) != NULL)
 		node->prev->next = node;
 	next->prev = node;
 }

@@ -221,7 +221,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 
 	int r, t = 0;
 
-	if (at && (r = snprintf_floc(s, n, at))) {
+	if (at && (r = snprintf_floc(s, n, at)) != 0) {
 		if (__unlikely(r < 0))
 			return r;
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;

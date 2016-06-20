@@ -80,7 +80,7 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 		// Skip comments and empty lines.
 		for (;;) {
 			cp += skip(cp, end, at);
-			if ((chars = lex_break(cp, end, at)))
+			if ((chars = lex_break(cp, end, at)) > 0)
 				cp += chars;
 			else
 				break;
@@ -88,14 +88,14 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 		if ((end && cp >= end) || !*cp)
 			break;
 
-		if ((chars = lex_char('[', cp, end, at))) {
+		if ((chars = lex_char('[', cp, end, at)) > 0) {
 			cp += chars;
 			cp += skip(cp, end, at);
-			if ((chars = lex_ctype(&issection, cp, end, at))) {
+			if ((chars = lex_ctype(&issection, cp, end, at)) > 0) {
 				membuf_print_chars(&section, cp, chars);
 				cp += chars;
 				cp += skip(cp, end, at);
-				if ((chars = lex_char(']', cp, end, at))) {
+				if ((chars = lex_char(']', cp, end, at)) > 0) {
 					cp += chars;
 				} else if (at) {
 					diag_at(DIAG_ERROR, 0, at, "expected ']' after section name");
@@ -104,14 +104,14 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 				diag_at(DIAG_ERROR, 0, at, "expected section name after '['");
 			}
 			cp += lex_line_comment(NULL, cp, end, at);
-		} else if ((chars = lex_ctype(&iskey, cp, end, at))) {
+		} else if ((chars = lex_ctype(&iskey, cp, end, at)) > 0) {
 			membuf_print_chars(&key, cp, chars);
 			cp += chars;
 			cp += skip(cp, end, at);
-			if ((chars = lex_char('=', cp, end, at))) {
+			if ((chars = lex_char('=', cp, end, at)) > 0) {
 				cp += chars;
 				cp += skip(cp, end, at);
-				if ((chars = lex_c99_str(cp, end, at))) {
+				if ((chars = lex_c99_str(cp, end, at)) > 0) {
 					membuf_print_string(&value, cp, chars);
 					cp += chars;
 				} else {

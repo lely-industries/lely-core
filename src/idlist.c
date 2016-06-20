@@ -100,7 +100,7 @@ __idlist_fini(struct __idlist *list)
 
 	if (list->dtor) {
 		int id = 0;
-		while ((id = bitset_fns(&list->set, id)))
+		while ((id = bitset_fns(&list->set, id)) > 0)
 			list->dtor(list->values[id - 1]);
 	}
 
