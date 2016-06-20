@@ -813,7 +813,7 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 		return 0;
 
 	co_unsigned16_t n = (co_unsigned16_t)strtoul(val, NULL, 0);
-	for (size_t i = 0; i < MIN(n, maxidx); i++) {
+	for (size_t i = 0; i < (size_t)MIN(n, maxidx); i++) {
 		char key[6];
 		sprintf(key, "%u", (co_unsigned16_t)(i + 1));
 
