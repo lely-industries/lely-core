@@ -301,7 +301,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "NodeID");
-	if (val && *val && co_dev_set_id(dev, strtoul(val, NULL, 0)) == -1) {
+	if (val && *val && co_dev_set_id(dev,
+			(co_unsigned8_t)strtoul(val, NULL, 0)) == -1) {
 		diag(DIAG_ERROR, get_errc(), "invalid node-ID (%s) specified",
 				val);
 		goto error_parse_dcf;
@@ -316,7 +317,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	val = config_get(cfg, "DeviceComissioning", "Baudrate");
 	if (val && *val)
-		co_dev_set_rate(dev, strtoul(val, NULL, 0));
+		co_dev_set_rate(dev, (co_unsigned16_t)strtoul(val, NULL, 0));
 
 	val = config_get(cfg, "DeviceComissioning", "LSS_SerialNumber");
 	if (val && *val && !co_dev_set_val_u32(dev, 0x1018, 0x04,
@@ -365,7 +366,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	co_unsigned8_t code = co_obj_get_code(obj);
 	val = config_get(cfg, section, "ObjectType");
 	if (val && *val) {
-		code = strtoul(val, NULL, 0);
+		code = (co_unsigned8_t)strtoul(val, NULL, 0);
 		if (__unlikely(co_obj_set_code(obj, code) == -1)) {
 			diag(DIAG_ERROR, 0, "ObjectType = 0x%x for object 0x%04X",
 					code, idx);
@@ -378,11 +379,11 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		co_unsigned8_t subnum = 0;
 		val = config_get(cfg, section, "SubNumber");
 		if (val && *val)
-			subnum = strtoul(val, NULL, 0);
+			subnum = (co_unsigned8_t)strtoul(val, NULL, 0);
 		co_unsigned8_t subobj = 0;
 		val = config_get(cfg, section, "CompactSubObj");
 		if (val && *val)
-			subobj = strtoul(val, NULL, 0);
+			subobj = (co_unsigned8_t)strtoul(val, NULL, 0);
 		if (__unlikely(!subnum && !subobj)) {
 			diag(DIAG_ERROR, 0, "neither SubNumber nor CompactSubObj specified for object 0x%04X",
 					idx);
@@ -422,10 +423,12 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 						section);
 				return -1;
 			}
-			co_unsigned16_t type = strtoul(val, NULL, 0);
+			co_unsigned16_t type =
+					(co_unsigned16_t)strtoul(val, NULL, 0);
 
 			// Create and insert the sub-object.
-			co_sub_t *sub = co_sub_build(obj, subidx, type, name);
+			co_sub_t *sub = co_sub_build(obj,
+					(co_unsigned8_t)subidx, type, name);
 			if (__unlikely(!sub))
 				return -1;
 
@@ -455,7 +458,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 						section);
 				return -1;
 			}
-			co_unsigned16_t type = strtoul(val, NULL, 0);
+			co_unsigned16_t type =
+					(co_unsigned16_t)strtoul(val, NULL, 0);
 
 			// Create the sub-objects.
 			for (size_t subidx = 1; subidx <= subobj; subidx++) {
@@ -466,7 +470,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 					return -1;
 
 				// Create and insert the sub-object.
-				sub = co_sub_build(obj, subidx, type, subname);
+				sub = co_sub_build(obj, (co_unsigned8_t)subidx,
+						type, subname);
 				free(subname);
 				if (__unlikely(!sub))
 					return -1;
@@ -501,7 +506,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				? CO_DEFTYPE_DOMAIN : 0;
 		val = config_get(cfg, section, "DataType");
 		if (val && *val)
-			type = strtoul(val, NULL, 0);
+			type = (co_unsigned16_t)strtoul(val, NULL, 0);
 		if (__unlikely(!type)) {
 			diag(DIAG_ERROR, 0, "DataType not specified in section %s",
 					section);
@@ -537,7 +542,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 	if (!val || !*val)
 		return 0;
 
-	co_unsigned8_t n = strtoul(val, NULL, 0);
+	co_unsigned8_t n = (co_unsigned8_t)strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
 		char key[4];
 		sprintf(key, "%u", (co_unsigned8_t)subidx);
@@ -545,7 +550,8 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 		val = config_get(cfg, section, key);
 		if (val && *val) {
 			n--;
-			co_sub_t *sub = co_obj_find_sub(obj, subidx);
+			co_sub_t *sub = co_obj_find_sub(obj,
+					(co_unsigned8_t)subidx);
 			if (sub && __unlikely(co_sub_set_name(sub, val)
 					== -1)) {
 				diag(DIAG_ERROR, get_errc(), "unable to set name of sub-object %Xsub%X",
@@ -576,7 +582,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 	if (!val || !*val)
 		return 0;
 
-	co_unsigned8_t n = strtoul(val, NULL, 0);
+	co_unsigned8_t n = (co_unsigned8_t)strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
 		char key[4];
 		sprintf(key, "%u", (co_unsigned8_t)subidx);
@@ -584,7 +590,8 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 		val = config_get(cfg, section, key);
 		if (val && *val) {
 			n--;
-			co_sub_t *sub = co_obj_find_sub(obj, subidx);
+			co_sub_t *sub = co_obj_find_sub(obj,
+					(co_unsigned8_t)subidx);
 			co_unsigned16_t type = co_sub_get_type(sub);
 			co_val_fini(type, sub->val);
 			if (!strncmp(val, "$NODEID", 7)) {
@@ -805,13 +812,14 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 	if (__unlikely(!val || !*val))
 		return 0;
 
-	co_unsigned16_t n = strtoul(val, NULL, 0);
+	co_unsigned16_t n = (co_unsigned16_t)strtoul(val, NULL, 0);
 	for (size_t i = 0; i < MIN(n, maxidx); i++) {
 		char key[6];
 		sprintf(key, "%u", (co_unsigned16_t)(i + 1));
 
 		val = config_get(cfg, section, key);
-		idx[i] = val && *val ? strtoul(val, NULL, 0) : 0;
+		idx[i] = val && *val
+				? (co_unsigned16_t)strtoul(val, NULL, 0) : 0;
 	}
 
 	return n;

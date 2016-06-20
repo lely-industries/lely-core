@@ -201,7 +201,7 @@ co_dev_get_idx(const co_dev_t *dev, co_unsigned16_t maxidx,
 			idx[i] = co_obj_get_idx(structof(node, co_obj_t, node));
 	}
 
-	return rbtree_size(&dev->tree);
+	return (co_unsigned16_t)rbtree_size(&dev->tree);
 }
 
 LELY_CO_EXPORT int

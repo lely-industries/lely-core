@@ -523,7 +523,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	// Extract the parameters from the frame.
 	co_unsigned16_t eec = 0;
 	if (msg->len >= 2)
-		eec = ldle_u32(msg->data);
+		eec = ldle_u16(msg->data);
 	co_unsigned8_t er = msg->len >= 3 ? msg->data[2] : 0;
 	co_unsigned8_t msef[5] = { 0 };
 	if (msg->len >= 4)
@@ -549,7 +549,7 @@ co_emcy_set_1003(co_emcy_t *emcy)
 		return 0;
 
 	// Copy the emergency error codes.
-	val_1003->n = MIN(emcy->nmsg, (size_t)(nsubidx - 1));
+	val_1003->n = MIN((co_unsigned8_t)emcy->nmsg, nsubidx - 1);
 	for (int i = 0; i < val_1003->n; i++)
 		val_1003->ef[i] = emcy->msgs[i].eec;
 	for (int i = val_1003->n; i < nsubidx - 1; i++)

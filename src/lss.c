@@ -943,7 +943,7 @@ co_lss_switch_rate_req(co_lss_t *lss, int delay)
 	// 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x15);
-	stle_u16(req.data + 1, delay);
+	stle_u16(req.data + 1, (co_unsigned16_t)delay);
 	return can_net_send(lss->net, &req);
 }
 

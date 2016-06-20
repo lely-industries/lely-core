@@ -911,7 +911,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	uint8_t *begin = msg->data;
 	uint8_t *end = msg->data + CAN_MAX_LEN;
 
-	for (size_t i = 1; i <= MIN(pdo->map.n, 0x40); i++) {
+	for (size_t i = 1; i <= MIN(pdo->map.n, 0x40u); i++) {
 		co_unsigned32_t map = pdo->map.map[i - 1];
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
@@ -940,7 +940,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 			return ac;
 
 		// Check the PDO length and copy the value to the frame.
-		if (__unlikely(req->size != len / 8 || !co_sdo_req_first(req)
+		if (__unlikely(req->size != len / 8u || !co_sdo_req_first(req)
 				|| !co_sdo_req_last(req)))
 			return CO_SDO_AC_PDO_LEN;
 		memcpy(begin, req->buf, len / 8);

@@ -784,7 +784,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 		case CO_DEFTYPE_INTEGER24:
 			if (begin && (!end || end - begin >= 3)) {
 				for (size_t i = 0; i < 3; i++)
-					*begin++ = u->i24 >> 8 * i;
+					*begin++ = (u->i24 >> 8 * i) & 0xff;
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
@@ -794,19 +794,19 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 		case CO_DEFTYPE_INTEGER40:
 			if (begin && (!end || end - begin >= 5)) {
 				for (size_t i = 0; i < 5; i++)
-					*begin++ = u->i40 >> 8 * i;
+					*begin++ = (u->i40 >> 8 * i) & 0xff;
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
 			if (begin && (!end || end - begin >= 6)) {
 				for (size_t i = 0; i < 6; i++)
-					*begin++ = u->i48 >> 8 * i;
+					*begin++ = (u->i48 >> 8 * i) & 0xff;
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
 			if (begin && (!end || end - begin >= 7)) {
 				for (size_t i = 0; i < 7; i++)
-					*begin++ = u->i56 >> 8 * i;
+					*begin++ = (u->i56 >> 8 * i) & 0xff;
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
@@ -816,25 +816,25 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 		case CO_DEFTYPE_UNSIGNED24:
 			if (begin && (!end || end - begin >= 3)) {
 				for (size_t i = 0; i < 3; i++)
-					*begin++ = u->u24 >> 8 * i;
+					*begin++ = (u->u24 >> 8 * i) & 0xff;
 			}
 			return 3;
 		case CO_DEFTYPE_UNSIGNED40:
 			if (begin && (!end || end - begin >= 5)) {
 				for (size_t i = 0; i < 5; i++)
-					*begin++ = u->u40 >> 8 * i;
+					*begin++ = (u->u40 >> 8 * i) & 0xff;
 			}
 			return 5;
 		case CO_DEFTYPE_UNSIGNED48:
 			if (begin && (!end || end - begin >= 6)) {
 				for (size_t i = 0; i < 6; i++)
-					*begin++ = u->u48 >> 8 * i;
+					*begin++ = (u->u48 >> 8 * i) & 0xff;
 			}
 			return 6;
 		case CO_DEFTYPE_UNSIGNED56:
 			if (begin && (!end || end - begin >= 7)) {
 				for (size_t i = 0; i < 7; i++)
-					*begin++ = u->u56 >> 8 * i;
+					*begin++ = (u->u56 >> 8 * i) & 0xff;
 			}
 			return 7;
 		case CO_DEFTYPE_UNSIGNED64:
@@ -1043,9 +1043,9 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			for (size_t i = 0; i < chars; i++) {
 				if (i % 2) {
 					*os <<= 4;
-					*os++ |= ctox(cp[i]);
+					*os++ |= ctox(cp[i]) & 0xf;
 				} else {
-					*os = ctox(cp[i]);
+					*os = ctox(cp[i]) & 0xf;
 				}
 			}
 		}

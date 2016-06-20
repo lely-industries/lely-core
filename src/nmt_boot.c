@@ -81,7 +81,7 @@ struct __co_nmt_boot {
 	//! The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
 	//! The state of the node (including the toggle bit).
-	co_unsigned32_t st;
+	co_unsigned8_t st;
 	//! The error status.
 	char es;
 };
@@ -977,7 +977,8 @@ co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	if (obj_1016) {
 		co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
 		for (size_t i = 1; i <= n; i++) {
-			co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i);
+			co_unsigned32_t val = co_obj_get_val_u32(obj_1016,
+					i & 0xff);
 			if (((val >> 16) & 0x7f) == boot->id)
 				boot->ms = val & 0xffff;
 		}

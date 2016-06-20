@@ -1479,7 +1479,7 @@ co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 	assert(sdo);
 
 	size_t n = sdo->size - membuf_size(&sdo->buf);
-	sdo->blksize = MIN((n + 6) / 7, sdo->blksize);
+	sdo->blksize = (uint8_t)MIN((n + 6) / 7, sdo->blksize);
 
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);

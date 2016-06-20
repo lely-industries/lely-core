@@ -158,7 +158,7 @@ co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxidx,
 					node));
 	}
 
-	return rbtree_size(&obj->tree);
+	return (co_unsigned8_t)rbtree_size(&obj->tree);
 }
 
 LELY_CO_EXPORT int

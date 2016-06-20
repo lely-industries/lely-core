@@ -234,7 +234,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_RPDO
 	// Create the Receive-PDOs.
-	for (size_t i = 0; i < CO_NUM_PDO; i++) {
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDO; i++) {
 		co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
 		co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + i);
 		if (!obj_1400 || !obj_1600)
@@ -258,7 +258,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_TPDO
 	// Create the Transmit-PDOs.
-	for (size_t i = 0; i < CO_NUM_PDO; i++) {
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDO; i++) {
 		co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
 		co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
 		if (!obj_1800 || !obj_1a00)
@@ -328,7 +328,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 	srv->set |= CO_NMT_SRV_SDO;
 
 	// Create the Server-SDOs.
-	for (size_t i = 0; i < CO_NUM_SDO; i++) {
+	for (co_unsigned8_t i = 0; i < CO_NUM_SDO; i++) {
 		co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
 		// The default Server-SDO does not have to exist in the object
 		// dictionary.
@@ -352,7 +352,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_CSDO
 	// Create the Client-SDOs.
-	for (size_t i = 0; i < CO_NUM_SDO; i++) {
+	for (co_unsigned8_t i = 0; i < CO_NUM_SDO; i++) {
 		co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
 		if (!obj_1280)
 			continue;
@@ -554,12 +554,12 @@ co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 	assert(srv);
 
 #ifndef LELY_NO_CO_TPDO
-	for (size_t i = 0; i < srv->ntpdo; i++)
+	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++)
 		co_tpdo_sync(srv->tpdos[i], cnt);
 #endif
 
 #ifndef LELY_NO_CO_RPDO
-	for (size_t i = 0; i < srv->nrpdo; i++)
+	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++)
 		co_rpdo_sync(srv->rpdos[i], cnt);
 #endif
 

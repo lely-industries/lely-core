@@ -49,7 +49,7 @@ struct co_pdo_comm_par {
 	co_unsigned8_t trans;
 	//! Inhibit time.
 	co_unsigned16_t inhibit;
-	co_unsigned8_t __reserved;
+	co_unsigned8_t reserved;
 	//! Event timer.
 	co_unsigned16_t event;
 	//! SYNC start value.

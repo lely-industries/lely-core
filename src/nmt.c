@@ -1349,7 +1349,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 	// message.
 	if (!es || es == 'L') {
 		co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-		for (size_t i = 0; i < nmt->nhb; i++) {
+		for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
 			co_unsigned32_t val =
 					co_obj_get_val_u32(obj_1016, i + 1);
 			if (id != ((val >> 16) & 0xff))
@@ -1827,7 +1827,8 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 static int
 co_nmt_recv_700(const struct can_msg *msg, void *data)
 {
-	__unused_var(msg);
+	assert(msg);
+	assert(msg->id > 0x700 && msg->id <= 0x77f);
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
@@ -1852,8 +1853,8 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 	} else {
 		assert(nmt->master);
 
-		co_unsigned8_t id = msg->id - 0x700;
-		if (__unlikely(!id || id > CO_NUM_NODES))
+		co_unsigned8_t id = (msg->id - 0x700) & 0x7f;
+		if (__unlikely(!id))
 			return 0;
 
 		if (__unlikely(msg->len < 1))
@@ -2529,7 +2530,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		}
 	}
 
-	for (size_t i = 0; i < nmt->nhb; i++) {
+	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
 		nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt->dev, nmt);
 		if (__unlikely(!nmt->hbs[i])) {
 			diag(DIAG_ERROR, get_errc(), "unable to create heartbeat consumer 0x%02X",

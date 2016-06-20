@@ -774,7 +774,7 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	const uint8_t *begin = msg->data;
 	const uint8_t *end = msg->data + MAX(msg->len, CAN_MAX_LEN);
 
-	for (size_t i = 1; i <= MIN(pdo->map.n, 0x40); i++) {
+	for (size_t i = 1; i <= MIN(pdo->map.n, 0x40u); i++) {
 		co_unsigned32_t map = pdo->map.map[i - 1];
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;

@@ -137,7 +137,7 @@ co_time_diff_set(co_time_diff_t *td, const struct timespec *tp)
 	// Compute the number of milliseconds since midnight.
 	td->ms = (tp->tv_sec % (24 * 60 * 60)) * 1000 + tp->tv_nsec / 1000000;
 	// Compute the number of days.
-	td->days = tp->tv_sec / (24 * 60 * 60);
+	td->days = (co_unsigned16_t)(tp->tv_sec / (24 * 60 * 60));
 }
 
 LELY_CO_EXPORT void *
@@ -431,7 +431,7 @@ co_time_timer(const struct timespec *tp, void *data)
 
 	// Update the high-resolution time stamp, if it exists.
 	if (time->sub_1013_00)
-		co_sub_set_val_u32(time->sub_1013_00,
+		co_sub_set_val_u32(time->sub_1013_00, (co_unsigned32_t)
 				timespec_diff_usec(tp, &time->start));
 
 	// Convert the time to a TIME_OF_DAY value.

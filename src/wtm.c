@@ -555,7 +555,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	bp += msg->len; nbytes += msg->len;
 	// Write the time stamp.
 	int64_t usec = timespec_diff_usec(&can->send_next, &can->send_time);
-	stle_u16(bp, usec / 100);
+	stle_u16(bp, (uint16_t)(usec / 100));
 	bp += 2; nbytes += 2;
 
 	assert(nbytes + 2 <= CO_WTM_MAX_LEN);
@@ -601,7 +601,7 @@ co_wtm_flush(co_wtm_t *wtm)
 	// Do not flush if there is no header.
 	if (wtm->send_nbytes < 4)
 		return 0;
-	uint8_t len = wtm->send_nbytes - 4;
+	uint8_t len = (uint8_t)(wtm->send_nbytes - 4);
 	wtm->send_nbytes = 0;
 
 	// Fill in the header fields.
