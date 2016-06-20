@@ -289,7 +289,7 @@ vasnprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
 
 	va_list aq;
 	va_copy(aq, ap);
-	int n = vsnprintf_diag_at(NULL, 0, severity, errc, at, format, ap);
+	int n = vsnprintf_diag_at(NULL, 0, severity, errc, at, format, aq);
 	va_end(aq);
 	if (__unlikely(n < 0))
 		return n;
