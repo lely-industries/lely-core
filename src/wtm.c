@@ -339,8 +339,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// 1.0.0).
 		case 0x00:
 			// Process the CAN frames.
-			if (__unlikely(ac = co_wtm_recv_can(wtm,
-					wtm->recv_buf + 4, len)))
+			if (__unlikely((ac = co_wtm_recv_can(wtm,
+					wtm->recv_buf + 4, len)) != 0))
 				goto error;
 			break;
 		// Keep-alive (see section 7.3 in CiA 315 version 1.0.0).

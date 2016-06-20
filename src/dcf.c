@@ -718,7 +718,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			co_val_set_id(type, sub->val, id);
 #ifndef LELY_NO_CO_OBJ_FILE
 	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_WRITE)
-			&& (val = config_get(cfg, section, "UploadFile"))) {
+			&& (val = config_get(cfg, section, "UploadFile"))
+			!= NULL) {
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
 		// Store the filename instead of the contents in the object
 		// dictionary.
@@ -729,7 +730,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			return -1;
 		}
 	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_READ)
-			&& (val = config_get(cfg, section, "DownloadFile"))) {
+			&& (val = config_get(cfg, section, "DownloadFile"))
+			!= NULL) {
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
 		// Store the filename instead of the contents in the object
 		// dictionary.

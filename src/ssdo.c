@@ -1049,7 +1049,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	if (sdo->req.size <= 4) {
 		// Perform an expedited transfer.
-		if (__unlikely(ac = co_ssdo_up_buf(sdo, sdo->req.size)))
+		if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0))
 			return co_ssdo_abort_res(sdo, ac);
 		co_ssdo_send_up_exp_res(sdo);
 		return co_ssdo_abort_ind(sdo);
@@ -1327,7 +1327,8 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// than or equal to the PST, switch to the SDO upload protocol.
 		if (sdo->req.size <= 4) {
 			// Perform an expedited transfer.
-			if (__unlikely(ac = co_ssdo_up_buf(sdo, sdo->req.size)))
+			if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size))
+					!= 0))
 				return co_ssdo_abort_res(sdo, ac);
 			co_ssdo_send_up_exp_res(sdo);
 			return co_ssdo_abort_ind(sdo);
@@ -1566,7 +1567,7 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 		sdo->nbyte += n;
 		src += n;
 	} while (nbyte && !(co_sdo_req_last(&sdo->req)
-			|| __unlikely(ac = co_ssdo_up_ind(sdo))));
+			|| __unlikely((ac = co_ssdo_up_ind(sdo)) != 0)));
 
 	return ac;
 }
