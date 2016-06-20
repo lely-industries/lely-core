@@ -26,6 +26,7 @@
 
 #ifndef LELY_NO_CO_DCF
 
+#include <lely/libc/stdio.h>
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
@@ -33,7 +34,6 @@
 #include "obj.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 static struct __co_dev *__co_dev_init_from_dcf_cfg(struct __co_dev *dev,
@@ -181,7 +181,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (__unlikely(co_dev_set_vendor_name(dev,
 			config_get(cfg, "DeviceInfo", "VendorName")) == -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set vendor name");
-		return -1;
+		goto error_parse_dev;
 	}
 
 	val = config_get(cfg, "DeviceInfo", "VendorNumber");
@@ -191,7 +191,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (__unlikely(co_dev_set_product_name(dev,
 			config_get(cfg, "DeviceInfo", "ProductName")) == -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set product name");
-		return -1;
+		goto error_parse_dev;
 	}
 
 	val = config_get(cfg, "DeviceInfo", "ProductNumber");
@@ -205,7 +205,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (__unlikely(co_dev_set_order_code(dev,
 			config_get(cfg, "DeviceInfo", "OrderCode")) == -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set order code");
-		return -1;
+		goto error_parse_dev;
 	}
 
 	unsigned int baud = 0;
@@ -244,11 +244,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	co_unsigned32_t dummy = 0;
 	for (int i = 0; i < 0x20; i++) {
 		// Create the key name.
-		int chars = snprintf(NULL, 0, "Dummy%04X", i);
-		if (__unlikely(chars < 0))
-			return -1;
-		char key[chars + 1];
-		sprintf(key, "Dummy%04X", i);
+		char key[10];
+		sprintf(key, "Dummy%04X", (co_unsigned16_t)i);
 
 		val = config_get(cfg, "DummyUsage", key);
 		if (val && *val && strtoul(val, NULL, 0))
@@ -263,7 +260,11 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	n += config_get_idx(cfg, "ManufacturerObjects", 0, NULL);
 
 	// Parse the object indices.
-	co_unsigned16_t idx[n];
+	co_unsigned16_t *idx = malloc(n * sizeof(co_unsigned16_t));
+	if (__unlikely(!idx)) {
+		diag(DIAG_ERROR, get_errc(), "unable to create object list");
+		goto error_parse_idx;
+	}
 	co_unsigned16_t i = 0;
 	i += config_get_idx(cfg, "MandatoryObjects", n - i, idx + i);
 	i += config_get_idx(cfg, "OptionalObjects", n - i, idx + i);
@@ -273,14 +274,11 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (__unlikely(!idx[i])) {
 			diag(DIAG_ERROR, 0, "entry (%d) missing in object list",
 					i);
-			return -1;
+			goto error_parse_obj;
 		}
 
 		// Create the section name for the object.
-		int chars = snprintf(NULL, 0, "%X", idx[i]);
-		if (__unlikely(chars < 0))
-			return -1;
-		char section[chars + 1];
+		char section[5];
 		sprintf(section, "%X", idx[i]);
 
 		// Create the object and add it to the dictionary.
@@ -288,32 +286,32 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (__unlikely(!obj)) {
 			diag(DIAG_ERROR, get_errc(), "unable to create object 0x%04X",
 					idx[i]);
-			return -1;
+			goto error_parse_obj;
 		}
 		if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
 			diag(DIAG_ERROR, 0, "unable to insert object 0x%04X into the object dictionary",
 					idx[i]);
 			co_obj_destroy(obj);
-			return -1;
+			goto error_parse_obj;
 		}
 
 		// Parse the configuration section for the object.
 		if (__unlikely(co_obj_parse_cfg(obj, cfg, section) == -1))
-			return -1;
+			goto error_parse_obj;
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "NodeID");
 	if (val && *val && co_dev_set_id(dev, strtoul(val, NULL, 0)) == -1) {
 		diag(DIAG_ERROR, get_errc(), "invalid node-ID (%s) specified",
 				val);
-		return -1;
+		goto error_parse_dcf;
 	}
 
 	if (__unlikely(co_dev_set_name(dev,
 			config_get(cfg, "DeviceComissioning", "NodeName"))
 			== -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set node name");
-		return -1;
+		goto error_parse_dcf;
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "Baudrate");
@@ -324,10 +322,19 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (val && *val && !co_dev_set_val_u32(dev, 0x1018, 0x04,
 			strtoul(val, NULL, 0))) {
 		diag(DIAG_ERROR, get_errc(), "unable to set serial number");
-		return -1;
+		goto error_parse_dcf;
 	}
 
+	free(idx);
+
 	return 0;
+
+error_parse_dcf:
+error_parse_obj:
+	free(idx);
+error_parse_idx:
+error_parse_dev:
+	return -1;
 }
 
 static int
@@ -390,12 +397,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		// Parse the sub-objects specified by SubNumber.
 		for (size_t subidx = 0; subnum && subidx < 0xff; subidx++) {
 			// Create section name for the sub-object.
-			int chars = snprintf(NULL, 0, "%Xsub%X",
-					(co_unsigned16_t)idx,
-					(co_unsigned8_t)subidx);
-			if (__unlikely(chars < 0))
-				return -1;
-			char section[chars + 1];
+			char section[10];
 			sprintf(section, "%Xsub%X", (co_unsigned16_t)idx,
 					(co_unsigned8_t)subidx);
 
@@ -458,16 +460,14 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Create the sub-objects.
 			for (size_t subidx = 1; subidx <= subobj; subidx++) {
 				// Create name of the sub-object.
-				int chars = snprintf(NULL, 0, "%s%d", name,
-						(co_unsigned8_t)subidx);
-				if (__unlikely(chars < 0))
+				char *subname = NULL;
+				if (__unlikely(asprintf(&subname, "%s%u", name,
+						(co_unsigned8_t)subidx) < 0))
 					return -1;
-				char subname[chars + 1];
-				sprintf(subname, "%s%d", name,
-						(co_unsigned8_t)subidx);
 
 				// Create and insert the sub-object.
 				sub = co_sub_build(obj, subidx, type, subname);
+				free(subname);
 				if (__unlikely(!sub))
 					return -1;
 
@@ -530,10 +530,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
 	// Create the section name for the explicit names of the sub-objects.
-	int chars = snprintf(NULL, 0, "%XName", idx);
-	if (__unlikely(chars < 0))
-		return -1;
-	char section[chars + 1];
+	char section[9];
 	sprintf(section, "%XName", idx);
 
 	const char *val = config_get(cfg, section, "NrOfEntries");
@@ -542,11 +539,8 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 
 	co_unsigned8_t n = strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
-		int chars = snprintf(NULL, 0, "%d", (co_unsigned8_t)subidx);
-		if (__unlikely(chars < 0))
-			return -1;
-		char key[chars + 1];
-		sprintf(key, "%d", (co_unsigned8_t)subidx);
+		char key[4];
+		sprintf(key, "%u", (co_unsigned8_t)subidx);
 
 		val = config_get(cfg, section, key);
 		if (val && *val) {
@@ -575,10 +569,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
 	// Create the section name for the explicit values of the sub-objects.
-	int chars = snprintf(NULL, 0, "%XValue", (co_unsigned16_t)idx);
-	if (__unlikely(chars < 0))
-		return -1;
-	char section[chars + 1];
+	char section[10];
 	sprintf(section, "%XValue", (co_unsigned16_t)idx);
 
 	const char *val = config_get(cfg, section, "NrOfEntries");
@@ -587,11 +578,8 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 
 	co_unsigned8_t n = strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
-		int chars = snprintf(NULL, 0, "%d", (co_unsigned8_t)subidx);
-		if (__unlikely(chars < 0))
-			return -1;
-		char key[chars + 1];
-		sprintf(key, "%d", (co_unsigned8_t)subidx);
+		char key[4];
+		sprintf(key, "%u", (co_unsigned8_t)subidx);
 
 		val = config_get(cfg, section, key);
 		if (val && *val) {
@@ -819,11 +807,8 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 
 	co_unsigned16_t n = strtoul(val, NULL, 0);
 	for (size_t i = 0; i < MIN(n, maxidx); i++) {
-		int chars = snprintf(NULL, 0, "%d", (int)(i + 1));
-		if (__unlikely(chars < 0))
-			return 0;
-		char key[chars + 1];
-		sprintf(key, "%d", (int)(i + 1));
+		char key[6];
+		sprintf(key, "%u", (co_unsigned16_t)(i + 1));
 
 		val = config_get(cfg, section, key);
 		idx[i] = val && *val ? strtoul(val, NULL, 0) : 0;

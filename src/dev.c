@@ -670,9 +670,15 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	assert(dev);
 	assert(ptr);
 
+	errc_t errc = 0;
+
 	// Get the list of object indices.
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
-	co_unsigned16_t idx[maxidx];
+	co_unsigned16_t *idx = malloc(maxidx * sizeof(co_unsigned16_t));
+	if (__unlikely(!idx)) {
+		errc = get_errc();
+		goto error_malloc_idx;
+	}
 	maxidx = co_dev_get_idx(dev, maxidx, idx);
 
 	size_t size = 4;
@@ -684,9 +690,8 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 
 		// Get the list of object sub-indices.
 		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
-		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0, NULL);
-		co_unsigned8_t subidx[maxsubidx];
-		co_obj_get_subidx(obj, maxsubidx, subidx);
+		co_unsigned8_t subidx[0xff];
+		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0xff, subidx);
 
 		// Count the number of sub-objects and compute the size (in
 		// bytes).
@@ -696,8 +701,10 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	}
 
 	// Create a DOMAIN for the concise DCF.
-	if (__unlikely(co_val_init_dom(ptr, NULL, size) == -1))
-		return -1;
+	if (__unlikely(co_val_init_dom(ptr, NULL, size) == -1)) {
+		errc = get_errc();
+		goto error_init_dom;
+	}
 	uint8_t *begin = *ptr;
 	uint8_t *end = begin + size;
 
@@ -710,9 +717,8 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 
 		// Get the list of object sub-indices.
 		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
-		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0, NULL);
-		co_unsigned8_t subidx[maxsubidx];
-		co_obj_get_subidx(obj, maxsubidx, subidx);
+		co_unsigned8_t subidx[0xff];
+		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0xff, subidx);
 
 		// Write the value of the sub-object.
 		for (size_t j = 0; j < maxsubidx; j++, n++)
@@ -720,7 +726,15 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 					end);
 	}
 
+	free(idx);
+
 	return 0;
+
+error_init_dom:
+	free(idx);
+error_malloc_idx:
+	set_errc(errc);
+	return -1;
 }
 
 static void

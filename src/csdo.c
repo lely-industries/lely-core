@@ -813,7 +813,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (__unlikely(!n && co_val_sizeof(type, val)))
 		return -1;
 
-	if (co_type_is_array(type)) {
+	if (co_type_is_array(type) || n > 8) {
 		int res = 0;
 		errc_t errc = get_errc();
 
@@ -838,7 +838,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	} else {
 		// Fast path for values small enough to be allocated on the
 		// heap.
-		uint8_t buf[n];
+		uint8_t buf[8];
 		if (__unlikely(co_val_write(type, val, buf, buf + n) != n))
 			return -1;
 		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);

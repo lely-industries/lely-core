@@ -23,6 +23,7 @@
 
 #include "co.h"
 #include <lely/libc/stdalign.h>
+#include <lely/libc/string.h>
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
@@ -31,7 +32,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define CO_BOOLEAN_INIT		0
 #define CO_INTEGER8_INIT	0
@@ -995,13 +995,18 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		if (end) {
 			chars = end - cp;
 			if (val) {
-				// Copy the string to a temporary
-				// null-terminated buffer.
-				char buf[chars + 1];
-				strncpy(buf, cp, chars);
-				buf[chars] = '\0';
-				if (__unlikely(co_val_init_vs(val, buf)
-						== -1)) {
+				// Copy the string to a temporary buffer.
+				char *buf = strndup(cp, chars);
+				if (__unlikely(!buf)) {
+					if (at)
+						diag_at(DIAG_ERROR, get_errc(),
+								at,
+								"unable to duplicate string");
+					return 0;
+				}
+				int result = co_val_init_vs(val, buf);
+				free(buf);
+				if (__unlikely(result == -1)) {
 					if (at)
 						diag_at(DIAG_ERROR, get_errc(),
 								at,
@@ -1025,26 +1030,26 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		while ((!end || cp + chars < end)
 				&& isxdigit((unsigned char)cp[chars]))
 			chars++;
-		if (chars) {
-			// The number of octets is at most half the number of
-			// characters plus 1 for the terminating null byte.
-			co_unsigned8_t buf[chars / 2 + 1];
-			size_t n = 0;
-			while (isxdigit((unsigned char)*cp)) {
-				buf[n] = ctox(*cp++);
-				if (isxdigit((unsigned char)*cp)) {
-					buf[n] <<= 4;
-					buf[n++] |= ctox(*cp++);
-				}
-			}
-			if (val && __unlikely(co_val_init_os(val, buf, n)
-					== -1)) {
+		if (val) {
+			if (__unlikely(co_val_init_os(val, NULL,
+					(chars + 1) / 2) == -1)) {
 				if (at)
 					diag_at(DIAG_ERROR, get_errc(), at,
 							"unable to create value of type OCTET_STRING");
 				return 0;
 			}
+			// Parse the octets.
+			uint8_t *os = *(void **)val;
+			for (size_t i = 0; i < chars; i++) {
+				if (i % 2) {
+					*os <<= 4;
+					*os++ |= ctox(cp[i]);
+				} else {
+					*os = ctox(cp[i]);
+				}
+			}
 		}
+		cp += chars;
 		break;
 	}
 	case CO_DEFTYPE_UNICODE_STRING:
