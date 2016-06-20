@@ -157,7 +157,7 @@ __can_net_fini(struct __can_net *net)
 	}
 
 	struct pnode *node;
-	while ((node = pheap_first(&net->timer_heap)))
+	while ((node = pheap_first(&net->timer_heap)) != NULL)
 		can_timer_stop(structof(node, can_timer_t, node));
 }
 
@@ -217,7 +217,7 @@ can_net_set_time(can_net_t *net, const struct timespec *tp)
 
 	// Keep processing the first timer until we're done.
 	struct pnode *node;
-	while ((node = pheap_first(&net->timer_heap))) {
+	while ((node = pheap_first(&net->timer_heap)) != NULL) {
 		can_timer_t *timer = structof(node, can_timer_t, node);
 		// If the timeout of the first timer is after the current time,
 		// we're done.
