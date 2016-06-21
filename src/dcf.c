@@ -69,12 +69,18 @@ __co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 	if (__unlikely(!config_parse_ini_file(cfg, filename)))
 		goto error_parse_ini_file;
 
-	dev = __co_dev_init_from_dcf_cfg(dev, cfg);
+	if (__unlikely(!__co_dev_init_from_dcf_cfg(dev, cfg)))
+		goto error_init_dev;
 
+	config_destroy(cfg);
+
+	return dev;
+
+error_init_dev:
 error_parse_ini_file:
 	config_destroy(cfg);
 error_create_cfg:
-	return dev;
+	return NULL;
 }
 
 LELY_CO_EXPORT co_dev_t *
@@ -115,12 +121,18 @@ __co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
 	if (__unlikely(!config_parse_ini_text(cfg, begin, end, at)))
 		goto error_parse_ini_text;
 
-	dev = __co_dev_init_from_dcf_cfg(dev, cfg);
+	if (__unlikely(!__co_dev_init_from_dcf_cfg(dev, cfg)))
+		goto error_init_dev;
 
+	config_destroy(cfg);
+
+	return dev;
+
+error_init_dev:
 error_parse_ini_text:
 	config_destroy(cfg);
 error_create_cfg:
-	return dev;
+	return NULL;
 }
 
 LELY_CO_EXPORT co_dev_t *
