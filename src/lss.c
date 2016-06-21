@@ -1298,7 +1298,8 @@ co_lss_wait_on_enter(co_lss_t *lss)
 
 #ifndef LELY_NO_CO_MASTER
 	// Only an NMT master can be an LSS master.
-	if (!!(lss->master = co_nmt_is_master(lss->nmt)))
+	lss->master = co_nmt_is_master(lss->nmt);
+	if (lss->master)
 		return NULL;
 #endif
 
