@@ -94,7 +94,7 @@ static inline void
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
 	node->prev = prev;
-	if ((node->next = prev->next))
+	if ((node->next = prev->next) != NULL)
 		node->next->prev = node;
 	prev->next = node;
 }
