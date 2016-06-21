@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#ifndef _GNU_SOURCE
+#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +47,7 @@ extern "C" {
  *
  * \see vasprintf()
  */
-LELY_LIBC_EXTERN int asprintf(char **strp, const char *fmt, ...);
+LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
 
 /*!
  * Equivalent to `vsprintf()`, except that it allocates a string large enough to
@@ -64,13 +64,14 @@ LELY_LIBC_EXTERN int asprintf(char **strp, const char *fmt, ...);
  *
  * \see asprintf()
  */
-LELY_LIBC_EXTERN int vasprintf(char **strp, const char *fmt, va_list ap);
+LELY_LIBC_EXTERN int __cdecl vasprintf(char **strp, const char *fmt,
+		va_list ap);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // !_GNU_SOURCE
+#endif // !_GNU_SOURCE || __MINGW32__
 
 #endif
 

@@ -23,13 +23,13 @@
 #include "libc.h"
 #include <lely/libc/stdio.h>
 
-#ifndef _GNU_SOURCE
+#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 
-LELY_LIBC_EXPORT int
+LELY_LIBC_EXPORT int __cdecl
 asprintf(char **strp, const char *fmt, ...)
 {
 	va_list ap;
@@ -39,7 +39,7 @@ asprintf(char **strp, const char *fmt, ...)
 	return result;
 }
 
-LELY_LIBC_EXPORT int
+LELY_LIBC_EXPORT int __cdecl
 vasprintf(char **strp, const char *fmt, va_list ap)
 {
 	assert(strp);
@@ -59,5 +59,5 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 	return vsnprintf(*strp, n + 1, fmt, ap);
 }
 
-#endif // !_GNU_SOURCE
+#endif // !_GNU_SOURCE || __MINGW32__
 
