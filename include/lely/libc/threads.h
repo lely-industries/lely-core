@@ -25,8 +25,9 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_THREADS_H
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__) \
-		 && __has_include(<threads.h>)
+#if __STDC_VERSION__ >= 201112L \
+		&& !(defined(__STDC_NO_THREADS__) || defined(__CYGWIN__)) \
+		&& __has_include(<threads.h>)
 #define LELY_HAVE_THREADS_H	1
 #endif
 #endif
