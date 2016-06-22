@@ -223,7 +223,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 		// been resolved.
 		hb->state = CO_NMT_EC_RESOLVED;
 		co_nmt_hb_ind(hb->nmt, hb->id, hb->state);
-	} else if (old_st && st != old_st) {
+	} else if (st != old_st) {
 		// Only notify the application of the occurrence of a state
 		// change, not its resolution.
 		co_nmt_st_ind(hb->nmt, hb->id, st);
