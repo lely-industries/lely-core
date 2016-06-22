@@ -33,7 +33,7 @@ namespace lely {
  * The type of objects thrown as exceptions to report a failure to initialize an
  * instantiation of a C type.
  */
-class bad_init: public ::std::exception {
+class __dllexport bad_init: public ::std::exception {
 public:
 	virtual const char* what() const nothrow_or_noexcept;
 };
@@ -42,7 +42,7 @@ public:
  * The type of objects thrown as exceptions to report a failure to copy an
  * instantiation of a C type.
  */
-class bad_copy: public ::std::exception {
+class __dllexport bad_copy: public ::std::exception {
 public:
 	virtual const char* what() const nothrow_or_noexcept;
 };
@@ -51,7 +51,7 @@ public:
  * The type of objects thrown as exceptions to report a failure to move an
  * instantiation of a C type.
  */
-class bad_move: public ::std::exception {
+class __dllexport bad_move: public ::std::exception {
 public:
 	virtual const char* what() const nothrow_or_noexcept;
 };
