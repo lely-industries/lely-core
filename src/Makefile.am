@@ -59,9 +59,9 @@ liblely_co_la_CPPFLAGS = -I$(top_srcdir)/include
 liblely_co_la_CPPFLAGS += $(liblely_libc_CFLAGS)
 liblely_co_la_CPPFLAGS += $(liblely_util_CFLAGS)
 liblely_co_la_CPPFLAGS += $(liblely_can_CFLAGS)
-liblely_co_la_LDFLAGS = -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
+liblely_co_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
-liblely_co_la_LDFLAGS += -no-undefined -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
+liblely_co_la_LDFLAGS += -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
 endif
 liblely_co_la_LIBADD = $(liblely_libc_LIBS)
 liblely_co_la_LIBADD += $(liblely_util_LIBS)
