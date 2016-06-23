@@ -26,6 +26,7 @@
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #include <assert.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
 
@@ -51,12 +52,20 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 	if (__unlikely(n < 0))
 		return n;
 
-	void *ptr = malloc(n + 1);
-	if (__unlikely(!ptr && n > 0))
+	char *s = malloc(n + 1);
+	if (__unlikely(!s))
 		return -1;
 
-	*strp = ptr;
-	return vsnprintf(*strp, n + 1, fmt, ap);
+	n = vsnprintf(s, n + 1, fmt, ap);
+	if (__unlikely(n < 0)) {
+		int errsv = errno;
+		free(s);
+		errno = errsv;
+		return n;
+	}
+
+	*strp = s;
+	return n;
 }
 
 #endif // !_GNU_SOURCE || __MINGW32__
