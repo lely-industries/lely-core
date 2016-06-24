@@ -39,10 +39,12 @@
 #ifdef _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "iphlpapi.lib")
 #endif
-#include <ws2bth.h>
 #include <winsock2.h>
+#include <ws2bth.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -54,15 +56,30 @@
 #endif
 
 #ifdef __linux__
+
 #ifdef HAVE_BLUETOOTH_BLUETOOTH_H
 #include <bluetooth/bluetooth.h>
 #endif
 #ifdef HAVE_BLUETOOTH_RFCOMM_H
 #include <bluetooth/rfcomm.h>
 #endif
+
+#ifdef HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif
+
 #ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
 #endif
+
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+
+#ifndef ARPHRD_CAN
+#define ARPHRD_CAN	280
+#endif
+
 #endif
 
 #endif

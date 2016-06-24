@@ -1,5 +1,6 @@
 src =
 src += addr.c
+src += if.c
 src += io.c
 src += io.h
 if PLATFORM_WIN32

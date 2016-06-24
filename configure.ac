@@ -44,6 +44,18 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 			[[WSAGetLastError();]])],
 		[ax_winsock_ok=yes], [LIBS=$save_LIBS])
 	AC_MSG_RESULT([$ax_winsock_ok])
+
+	AC_MSG_CHECKING([for GetAdaptersAddresses in iphlpapi])
+	ax_iphlpapi_ok=no
+	save_LIBS=$LIBS
+	LIBS="-liphlpapi $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <ws2tcpip.h>
+				#include <iphlpapi.h>
+			]], [[GetAdaptersAddresses(0, 0, NULL, NULL, NULL);]])],
+		[ax_iphlpapi_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_iphlpapi_ok])
 ])
 
 AS_IF([test "x$platform_linux" == "xyes"], [
@@ -55,7 +67,11 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 		]])
 	AC_SEARCH_LIBS([str2ba], [bluetooth])
 
+	AC_CHECK_HEADERS([ifaddrs.h])
+
 	AC_CHECK_HEADERS([linux/can.h])
+
+	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
