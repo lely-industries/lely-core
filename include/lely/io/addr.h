@@ -37,6 +37,12 @@ struct __io_addr {
 #define IO_ADDR_INIT	{ 0, { { 0 } } }
 
 /*!
+ * The maximum number of bytes required to hold the text representation of a
+ * Bluetooth device address, including the terminating null byte.
+ */
+#define IO_ADDR_BTH_STRLEN	18
+
+/*!
  * The maximum number of bytes required to hold the text representation of an
  * IPv4 internet address, including the terminating null byte.
  */
@@ -65,6 +71,91 @@ extern "C" {
  * \a p1 is greater than, equal to, or less than the address at \a p2.
  */
 LELY_IO_EXTERN int __cdecl io_addr_cmp(const void *p1, const void *p2);
+
+/*!
+ * Obtains an RFCOMM Bluetooth device address and port number from a network
+ * address.
+ *
+ * \param addr a pointer to a network address.
+ * \param ba   the address of a string containing at least
+ *             #IO_ADDR_BTH_STRLEN characters (can be NULL). On success, if
+ *             \a ba is not NULL, *\a ba contains the text representation of the
+ *             Bluetooth address.
+ * \param port the address of a port number (can be NULL). On success, if
+ *             \a port is not NULL, *\a port contains the port number or
+ *             channel.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_set_rfcomm_a()
+ */
+LELY_IO_EXTERN int io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba,
+		int *port);
+
+/*!
+ * Initializes a network address from an RFCOMM Bluetooth device address and
+ * port number.
+ *
+ * \param addr a pointer to the network address to be initialized.
+ * \param ba   the text representation of a Bluetooth address. If \a ba is NULL
+ *             or an empty string, the wildcard address (00:00:00:00:00:00) is
+ *             used.
+ * \param port the port number or channel. If \a port is 0, \a io_socket_bind()
+ *             will dynamically assign a port number.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_get_rfcomm_a()
+ */
+LELY_IO_EXTERN int io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba,
+		int port);
+
+/*!
+ * Obtains an RFCOMM Bluetooth device address and port number from a network
+ * address.
+ *
+ * \param addr a pointer to a network address.
+ * \param ba   the address of an array containing at least 6 four bytes (can be
+ *             NULL). On success, if \a ba is not NULL, *\a ba contains the
+ *             Bluetooth address in network byte order.
+ * \param port the address of a port number (can be NULL). On success, if
+ *             \a port is not NULL, *\a port contains the port number or
+ *             channel.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_set_rfcomm_n()
+ */
+LELY_IO_EXTERN int io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6],
+		int *port);
+
+/*!
+ * Initializes a network address from an RFCOMM Bluetooth device address and
+ * port number.
+ *
+ * \param addr a pointer to the network address to be initialized.
+ * \param ba   a pointer to a Bluetooth address in network byte order. If \a ba
+ *             is, the wildcard address (00:00:00:00:00:00) is used.
+ * \param port the port number or channel. If \a port is 0, \a io_socket_bind()
+ *             will dynamically assign a port number.
+ *
+ * \see io_addr_get_rfcomm_n()
+ */
+LELY_IO_EXTERN void io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6],
+		int port);
+
+/*!
+ * Initializes a network address with the local Bluetooth (RFCOMM) device
+ * address (FF:FF:FF:00:00:00) and a port number.
+ *
+ * \param addr a pointer to the network address to be initialized.
+ * \param port the port number or PSM (Protocol Service Multiplexer). If \a port
+ *             is 0, \a io_socket_bind() will dynamically assign a port number.
+ */
+LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
 
 /*!
  * Initializes a network address from an IPv4 address and port number.

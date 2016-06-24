@@ -2043,6 +2043,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             =
 
 PREDEFINED             += _POSIX_C_SOURCE=200809L
+PREDEFINED             += __linux__=1
 
 PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_IO_EXTERN=

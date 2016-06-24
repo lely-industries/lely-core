@@ -29,6 +29,18 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef _WIN32
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static int ba2str(const BTH_ADDR *ba, char *str);
+static int str2ba(const char *str, BTH_ADDR *ba);
+static int bachk(const char *str);
+
+#endif
+
 LELY_IO_EXPORT int __cdecl
 io_addr_cmp(const void *p1, const void *p2)
 {
@@ -48,6 +60,177 @@ io_addr_cmp(const void *p1, const void *p2)
 		cmp = (a2->addrlen < a1->addrlen) - (a1->addrlen < a2->addrlen);
 	return cmp;
 }
+
+#if defined(_WIN32) || (defined(__linux__) \
+		&& defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
+		&& defined(HAVE_BLUETOOTH_RFCOMM_H))
+
+LELY_IO_EXPORT int
+io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
+{
+	assert(addr);
+
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+#ifdef _WIN32
+	const SOCKADDR_BTH *addr_bth = (const SOCKADDR_BTH *)&addr->addr;
+	if (__unlikely(addr_bth->addressFamily != AF_BTH)) {
+		WSASetLastError(WSAEAFNOSUPPORT);
+		return -1;
+	}
+
+	if (port)
+		*port = addr_bth->port == BT_PORT_ANY ? 0 : addr_bth->port;
+	if (ba && __unlikely(ba2str(&addr_bth->btAddr, ba) < 0))
+		return -1;
+#else
+	const struct sockaddr_rc *addr_rc =
+			(const struct sockaddr_rc *)&addr->addr;
+	if (__unlikely(addr_rc->rc_family != AF_BLUETOOTH)) {
+		errno = EAFNOSUPPORT;
+		return -1;
+	}
+
+	if (port)
+		*port = btohs(addr_rc->rc_channel);
+	if (ba && __unlikely(ba2str(&addr_rc->rc_bdaddr, ba) < 0))
+		return -1;
+#endif
+
+	return 0;
+}
+
+LELY_IO_EXPORT int
+io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port)
+{
+	assert(addr);
+
+	memset(addr, 0, sizeof(*addr));
+#ifdef _WIN32
+	addr->addrlen = sizeof(SOCKADDR_BTH);
+	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
+
+	addr_bth->addressFamily = AF_BTH;
+	addr_bth->port = port ? (ULONG)port : BT_PORT_ANY;
+	addr_bth->btAddr = 0;
+	if (ba && *ba) {
+		if (__unlikely(str2ba(ba, &addr_bth->btAddr) < 0))
+			return -1;
+	}
+#else
+	addr->addrlen = sizeof(struct sockaddr_rc);
+	struct sockaddr_rc *addr_rc = (struct sockaddr_rc *)&addr->addr;
+
+	addr_rc->rc_family = AF_BLUETOOTH;
+	addr_rc->rc_channel = htobs(port);
+	if (ba && *ba) {
+		if (__unlikely(str2ba(ba, &addr_rc->rc_bdaddr) < 0))
+			return -1;
+	} else {
+		bacpy(&addr_rc->rc_bdaddr, BDADDR_ANY);
+	}
+#endif
+
+	return 0;
+}
+
+LELY_IO_EXPORT int
+io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
+{
+	assert(addr);
+
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+#ifdef _WIN32
+	const SOCKADDR_BTH *addr_bth = (const SOCKADDR_BTH *)&addr->addr;
+	if (__unlikely(addr_bth->addressFamily != AF_BTH)) {
+		WSASetLastError(WSAEAFNOSUPPORT);
+		return -1;
+	}
+
+	if (port)
+		*port = addr_bth->port == BT_PORT_ANY ? 0 : addr_bth->port;
+	if (ba) {
+		for (int i = 0; i < 6; i++)
+			ba[i] = (addr_bth->btAddr >> (7 - i ) * 8) & 0xff;
+	}
+#else
+	const struct sockaddr_rc *addr_rc =
+			(const struct sockaddr_rc *)&addr->addr;
+	if (__unlikely(addr_rc->rc_family != AF_BLUETOOTH)) {
+		errno = EAFNOSUPPORT;
+		return -1;
+	}
+
+	if (port)
+		*port = btohs(addr_rc->rc_channel);
+	if (ba)
+		memcpy(ba, &addr_rc->rc_bdaddr, 6);
+#endif
+
+	return 0;
+}
+
+LELY_IO_EXPORT void
+io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6], int port)
+{
+	assert(addr);
+
+	memset(addr, 0, sizeof(*addr));
+#ifdef _WIN32
+	addr->addrlen = sizeof(SOCKADDR_BTH);
+	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
+
+	addr_bth->addressFamily = AF_BTH;
+	addr_bth->port = port ? (ULONG)port : BT_PORT_ANY;
+	addr_bth->btAddr = 0;
+	if (ba && *ba) {
+		for (int i = 0; i < 6; i++)
+			addr_bth->btAddr |= (BTH_ADDR)ba[i] << (7 - i) * 8;
+	}
+#else
+	addr->addrlen = sizeof(struct sockaddr_rc);
+	struct sockaddr_rc *addr_rc = (struct sockaddr_rc *)&addr->addr;
+
+	addr_rc->rc_family = AF_BLUETOOTH;
+	addr_rc->rc_channel = htobs(port);
+	if (ba && *ba)
+		memcpy(&addr_rc->rc_bdaddr, ba, 6);
+	else
+		bacpy(&addr_rc->rc_bdaddr, BDADDR_ANY);
+#endif
+}
+
+LELY_IO_EXPORT void
+io_addr_set_rfcomm_local(io_addr_t *addr, int port)
+{
+	assert(addr);
+
+	memset(addr, 0, sizeof(*addr));
+#ifdef _WIN32
+	addr->addrlen = sizeof(SOCKADDR_BTH);
+	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
+
+	addr_bth->addressFamily = AF_BTH;
+	addr_bth->port = port ? (ULONG)port : BT_PORT_ANY;
+	addr_bth->btAddr = (BTH_ADDR)0xffffff000000ull;
+#else
+	addr->addrlen = sizeof(struct sockaddr_rc);
+	struct sockaddr_rc *addr_rc = (struct sockaddr_rc *)&addr->addr;
+
+	addr_rc->rc_family = AF_BLUETOOTH;
+	addr_rc->rc_channel = htobs(port);
+	bacpy(&addr_rc->rc_bdaddr, BDADDR_LOCAL);
+#endif
+}
+
+#endif // _WIN32 || (__linux__ && HAVE_BLUETOOTH_BLUETOOTH_H && HAVE_BLUETOOTH_RFCOMM_H)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
@@ -443,4 +626,53 @@ io_addr_is_multicast(const io_addr_t *addr)
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#ifdef _WIN32
+
+static int
+ba2str(const BTH_ADDR *ba, char *str)
+{
+	return sprintf(str, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+			(int)((*ba >> 40) & 0xff), (int)((*ba >> 32) & 0xff),
+			(int)((*ba >> 24) & 0xff), (int)((*ba >> 16) & 0xff),
+			((int)(*ba >> 8) & 0xff), (int)(*ba & 0xff));
+}
+
+static int
+str2ba(const char *str, BTH_ADDR *ba)
+{
+	if (__unlikely(bachk(str) < 0)) {
+		*ba = 0;
+		return -1;
+	}
+
+	for (int i = 5; i >= 0; i--, str += 3)
+		*ba |= (BTH_ADDR)strtol(str, NULL, 16) << (i * 8);
+
+	return 0;
+}
+
+static int
+bachk(const char *str)
+{
+	assert(str);
+
+	if (__unlikely(strlen(str) != 17))
+		return -1;
+
+	while (*str) {
+		if (__unlikely(!isxdigit(*str++)))
+			return -1;
+		if (__unlikely(!isxdigit(*str++)))
+			return -1;
+		if (!*str)
+			break;
+		if (__unlikely(*str++ != ':'))
+			return -1;
+	}
+
+	return 0;
+}
+
+#endif // _WIN32
 

@@ -40,7 +40,7 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
 #endif
-#include <windows.h>
+#include <ws2bth.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #elif defined(_POSIX_C_SOURCE)
@@ -48,6 +48,15 @@
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <unistd.h>
+#endif
+
+#ifdef __linux__
+#ifdef HAVE_BLUETOOTH_BLUETOOTH_H
+#include <bluetooth/bluetooth.h>
+#endif
+#ifdef HAVE_BLUETOOTH_RFCOMM_H
+#include <bluetooth/rfcomm.h>
+#endif
 #endif
 
 #endif

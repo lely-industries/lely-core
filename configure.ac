@@ -24,8 +24,12 @@ case "$host" in
 *-*-mingw*)
 	platform_win32=yes
 	;;
+*linux*)
+	platform_linux=yes
+	;;
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
+AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
@@ -40,6 +44,16 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 			[[WSAGetLastError();]])],
 		[ax_winsock_ok=yes], [LIBS=$save_LIBS])
 	AC_MSG_RESULT([$ax_winsock_ok])
+])
+
+AS_IF([test "x$platform_linux" == "xyes"], [
+	AC_CHECK_HEADERS([bluetooth/bluetooth.h bluetooth/rfcomm.h],
+		[], [], [[
+			#ifdef HAVE_BLUETOOTH_BLUETOOTH_H
+			#include <bluetooth/bluetooth.h>
+			#endif
+		]])
+	AC_SEARCH_LIBS([str2ba], [bluetooth])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
