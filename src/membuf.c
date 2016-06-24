@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#include <lely/util/errnum.h>
 #include <lely/util/membuf.h>
 
 #include <assert.h>
@@ -57,8 +58,10 @@ membuf_reserve(struct membuf *buf, size_t size)
 		buf_size *= 2;
 
 	char *begin = realloc(buf->begin, buf_size);
-	if (__unlikely(!begin))
+	if (__unlikely(!begin)) {
+		set_errno(errno);
 		return 0;
+	}
 
 	buf->cur = begin + membuf_size(buf);
 	buf->begin = begin;

@@ -49,7 +49,10 @@ struct __pool {
 LELY_UTIL_EXPORT void *
 __pool_alloc(void)
 {
-	return malloc(sizeof(struct __pool));
+	void *ptr = malloc(sizeof(struct __pool));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_UTIL_EXPORT void

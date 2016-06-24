@@ -35,6 +35,11 @@
 #endif
 #endif
 
+#ifndef ABS
+//! Returns the absolute value of \a a.
+#define ABS(a)	((a) < 0 ? -(a) : (a))
+#endif
+
 #ifndef ALIGN
 /*!
  * Rounds \a x up to the nearest multiple of \a a.

@@ -66,7 +66,10 @@ static void config_entry_destroy(struct rbnode *node);
 LELY_UTIL_EXPORT void *
 __config_alloc(void)
 {
-	return malloc(sizeof(struct __config));
+	void *ptr = malloc(sizeof(struct __config));
+	if (__unlikely(ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_UTIL_EXPORT void
@@ -191,7 +194,7 @@ config_section_create(config_t *config, const char *name)
 
 	struct config_section *section = malloc(sizeof(*section));
 	if (__unlikely(!section)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_section;
 	}
 
@@ -199,7 +202,7 @@ config_section_create(config_t *config, const char *name)
 
 	node->key = malloc(strlen(name) + 1);
 	if (__unlikely(!node->key)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_key;
 	}
 	strcpy((char *)node->key, name);
@@ -267,7 +270,7 @@ config_entry_create(struct config_section *section, const char *key,
 
 	struct config_entry *entry = malloc(sizeof(*entry));
 	if (__unlikely(!entry)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_entry;
 	}
 
@@ -275,14 +278,14 @@ config_entry_create(struct config_section *section, const char *key,
 
 	node->key = malloc(strlen(key) + 1);
 	if (__unlikely(!node->key)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_key;
 	}
 	strcpy((char *)node->key, key);
 
 	entry->value = malloc(strlen(value) + 1);
 	if (__unlikely(!entry->value)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_value;
 	}
 	strcpy(entry->value, value);

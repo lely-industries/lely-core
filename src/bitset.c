@@ -24,6 +24,7 @@
 #include "util.h"
 #include <lely/libc/strings.h>
 #include <lely/util/bitset.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -39,8 +40,10 @@ bitset_init(struct bitset *set, int size)
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = malloc(size * sizeof(int));
-	if (__unlikely(size && !bits))
+	if (__unlikely(!bits && size)) {
+		set_errno(errno);
 		return -1;
+	}
 
 	set->size = size;
 	set->bits = bits;
@@ -72,8 +75,10 @@ bitset_resize(struct bitset *set, int size)
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = realloc(set->bits, size * sizeof(int));
-	if (__unlikely(size && !bits))
+	if (__unlikely(!bits && size)) {
+		set_errno(errno);
 		return 0;
+	}
 
 	// If the size increased, clear the new bits.
 	for (int i = set->size; i < size; i++)

@@ -310,7 +310,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars + 1); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, get_errc(), at, "unable to duplicate string"); \
+			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
 			return 0; \
 		} \
 	\
@@ -355,7 +355,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars + 1); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, get_errc(), at, "unable to duplicate string"); \
+			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
 			return 0; \
 		} \
 	\

@@ -49,7 +49,10 @@ struct __idlist {
 LELY_UTIL_EXPORT void *
 __idlist_alloc(void)
 {
-	return malloc(sizeof(struct __idlist));
+	void *ptr = malloc(sizeof(struct __idlist));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_UTIL_EXPORT void
@@ -76,7 +79,7 @@ __idlist_init(struct __idlist *list, int size, idlist_dtor_t dtor)
 	size = bitset_size(&list->set);
 	list->values = malloc(size * sizeof(void *));
 	if (__unlikely(!list->values)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_values;
 	}
 	for (int i = 0; i < size; i++)
@@ -192,7 +195,7 @@ idlist_reserve(idlist_t *list, int size)
 
 	void **values = realloc(list->values, new_size * sizeof(void *));
 	if (__unlikely(!values)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_realloc;
 	}
 	list->values = values;

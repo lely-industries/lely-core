@@ -29,6 +29,7 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
+#include <lely/libc/stdint.h>
 #elif _POSIX_C_SOURCE >= 200112L && defined(_POSIX_MAPPED_FILES)
 #include <sys/fcntl.h>
 #include <sys/mman.h>
@@ -48,7 +49,10 @@ struct __fbuf {
 LELY_UTIL_EXPORT void *
 __fbuf_alloc(void)
 {
-	return malloc(sizeof(struct __fbuf));
+	void *ptr = malloc(sizeof(struct __fbuf));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_UTIL_EXPORT void
@@ -81,7 +85,7 @@ __fbuf_init(struct __fbuf *buf, const char *filename)
 		if (__unlikely(iError))
 			goto error_GetFileSize;
 	}
-	buf->size = (size_t)FileSize.QuadPart;
+	buf->size = (size_t)MIN(SIZE_MAX, FileSize.QuadPart);
 
 	HANDLE hFileMappingObject = CreateFileMapping(hFile, NULL,
 			PAGE_READONLY, 0, 0, NULL);
@@ -143,21 +147,21 @@ error_open:
 	errno = errsv;
 	return NULL;
 #else
-	int errsv = 0;
+	errc_t errc = 0;
 
 	FILE *stream = fopen(filename, "rb");
 	if (__unlikely(!stream)) {
-		errsv = errno;
+		errc = errno2c(errno);
 		goto error_fopen;
 	}
 
 	if (__unlikely(fseek(stream, 0, SEEK_END) == -1)) {
-		errsv = errno;
+		errc = errno2c(errno);
 		goto error_fseek;
 	}
 	long offset = ftell(stream);
 	if (__unlikely(offset == -1)) {
-		errsv = errno;
+		errc = errno2c(errno);
 		goto error_ftell;
 	}
 	rewind(stream);
@@ -165,12 +169,12 @@ error_open:
 	buf->size = offset;
 	buf->ptr = malloc(buf->size);
 	if (__unlikely(!buf->ptr)) {
-		errsv = errno;
+		errc = errno2c(errno);
 		goto error_alloc_ptr;
 	}
 
 	if (__unlikely(fread(buf->ptr, 1, buf->size, stream) != buf->size)) {
-		errsv = errno;
+		errc = errno2c(errno);
 		goto error_fread;
 	}
 
@@ -185,7 +189,7 @@ error_ftell:
 error_fseek:
 	fclose(stream);
 error_fopen:
-	errno = errsv;
+	set_errc(errc);
 	return NULL;
 #endif
 }

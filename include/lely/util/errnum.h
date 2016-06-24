@@ -2,6 +2,41 @@
  * This header file is part of the utilities library; it contains the native and
  * platform-independent error number declarations.
  *
+ * The C standard defines the (thread-local) `errno` variable plus a small
+ * number of error numbers (which are guaranteed to be positive). POSIX
+ * platforms extend the list of pre-defined error numbers to cover all
+ * platform-specific errors. Windows defines a separate (thread-local) variable,
+ * accessible by `GetLastError()`/`SetLastError()`, for all system errors. A
+ * subset of these, accessible by `WSAGetLastError()`/`WSASetLastError()`, is
+ * used for Windows Sockets errors. On top of this, both POSIX and Windows
+ * maintain a list of error codes returned by the `getaddrinfo()` and
+ * `getnameinfo()` functions. On Windows these error codes have the same values
+ * as their corresponding system errors, while on Linux they all have negative
+ * values, allowing them to be distinguished from valid `errno` values.
+ * Unfortunately on Cygwin their values are positive and overlap with `errno`
+ * error numbers.
+ *
+ * In order to minimize information loss, we would like to keep track of
+ * platform-dependent error numbers when storing or propagating errors, but do
+ * so in a platform-independent way. The #errc_t data type can be used to store
+ * native error codes, while get_errc() and set_errc() provide access to the
+ * current (thread-local) error code. These functions are equivalent to
+ * `GetLastError()` and `SetLastError()` on Windows and map to `errno` on other
+ * platforms. Negative `errno` values are used to store the error codes returned
+ * by `getaddrinfo()` and `getnameinfo()`, even if the original error codes are
+ * positive (e.g., on Cygwin). Since Windows also uses `errno` (for standard C
+ * functions), `set_errno(errno)` can be used to portably translate `errno` to a
+ * native error code(this is a no-op on POSIX platforms).
+ *
+ * When responding to errors it is desirable to have a list of
+ * platform-independent error numbers. The #errnum_t data type provides the
+ * `ERRNUM_*` error values. These values are guaranteed to be positive, unique
+ * and to have the same value across all platforms. There is an `ERRNUM_*` value
+ * for each of the (non-reserved) POSIX error numbers as well as the error codes
+ * returned by `getaddrinfo()` and `getnameinfo()`. Translating between native
+ * and platform-independent error numbers can be  done with errc2num() and
+ * errnum2c().
+ *
  * \copyright 2016 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
@@ -41,704 +76,189 @@ typedef int errc_t;
 
 //! The platform-independent error numbers.
 enum errnum {
-	//! Mathematics argument out of domain of function.
-	ERRNUM_DOM = EDOM,
-	//! Illegal byte sequence.
-	ERRNUM_ILSEQ = EILSEQ,
-	//! Result too large.
-	ERRNUM_RANGE = ERANGE,
-#ifdef E2BIG
-	//! Argument list too long.
-	ERRNUM_2BIG = E2BIG,
-#endif
-#ifdef EACCES
-	//! Permission denied.
-	ERRNUM_ACCES = EACCES,
-#endif
-#ifdef EADDRINUSE
-	//! Address in use.
-	ERRNUM_ADDRINUSE = EADDRINUSE,
-#endif
-#ifdef EADDRNOTAVAIL
-	//! Address not available.
-	ERRNUM_ADDRNOTAVAIL = EADDRNOTAVAIL,
-#endif
-#ifdef EAFNOSUPPORT
-	//! Address family not supported.
-	ERRNUM_AFNOSUPPORT = EAFNOSUPPORT,
-#endif
-#ifdef EAGAIN
-	//! Resource unavailable, try again.
-	ERRNUM_AGAIN = EAGAIN,
-#endif
-#ifdef EALREADY
-	//! Connection already in progress.
-	ERRNUM_ALREADY = EALREADY,
-#endif
-#ifdef EBADF
-	//! Bad file descriptor.
-	ERRNUM_BADF = EBADF,
-#endif
-#ifdef EBADMSG
-	//! Bad message.
-	ERRNUM_BADMSG = EBADMSG,
-#endif
-#ifdef EBUSY
-	//! Device or resource busy.
-	ERRNUM_BUSY = EBUSY,
-#endif
-#ifdef ECANCELED
-	//! Operation canceled.
-	ERRNUM_CANCELED = ECANCELED,
-#endif
-#ifdef ECHILD
-	//! No child process.
-	ERRNUM_CHILD = ECHILD,
-#endif
-#ifdef ECONNABORTED
-	//! Connection aborted.
-	ERRNUM_CONNABORTED = ECONNABORTED,
-#endif
-#ifdef ECONNREFUSED
-	//! Connection refused.
-	ERRNUM_CONNREFUSED = ECONNREFUSED,
-#endif
-#ifdef ECONNRESET
-	//! Connection reset.
-	ERRNUM_CONNRESET = ECONNRESET,
-#endif
-#ifdef EDEADLK
-	//! Resource deadlock would occur.
-	ERRNUM_DEADLK = EDEADLK,
-#endif
-#ifdef EDESTADDRREQ
-	//! Destination address required.
-	ERRNUM_DESTADDRREQ = EDESTADDRREQ,
-#endif
-#ifdef EEXIST
-	//! File exists.
-	ERRNUM_EXIST = EEXIST,
-#endif
-#ifdef EFAULT
-	//! Bad address.
-	ERRNUM_FAULT = EFAULT,
-#endif
-#ifdef EFBIG
-	//! File too large.
-	ERRNUM_FBIG = EFBIG,
-#endif
-#ifdef EHOSTUNREACH
-	//! Host is unreachable.
-	ERRNUM_HOSTUNREACH = EHOSTUNREACH,
-#endif
-#ifdef EIDRM
-	//! Identifier removed.
-	ERRNUM_IDRM = EIDRM,
-#endif
-#ifdef EINPROGRESS
-	//! Operation in progress.
-	ERRNUM_INPROGRESS = EINPROGRESS,
-#endif
-#ifdef EINTR
-	//! Interrupted function.
-	ERRNUM_INTR = EINTR,
-#endif
-#ifdef EINVAL
-	//! Invalid argument.
-	ERRNUM_INVAL = EINVAL,
-#endif
-#ifdef EIO
-	//! I/O error.
-	ERRNUM_IO = EIO,
-#endif
-#ifdef EISCONN
-	//! Socket is connected.
-	ERRNUM_ISCONN = EISCONN,
-#endif
-#ifdef EISDIR
-	//! Is a directory.
-	ERRNUM_ISDIR = EISDIR,
-#endif
-#ifdef ELOOP
-	//! Too many levels of symbolic links.
-	ERRNUM_LOOP = ELOOP,
-#endif
-#ifdef EMFILE
-	//! File descriptor value too large.
-	ERRNUM_MFILE = EMFILE,
-#endif
-#ifdef EMLINK
-	//! Too many links.
-	ERRNUM_MLINK = EMLINK,
-#endif
-#ifdef EMSGSIZE
-	//! Message too large.
-	ERRNUM_MSGSIZE = EMSGSIZE,
-#endif
-#ifdef ENAMETOOLONG
-	//! Filename too long.
-	ERRNUM_NAMETOOLONG = ENAMETOOLONG,
-#endif
-#ifdef ENETDOWN
-	//! Network is down.
-	ERRNUM_NETDOWN = ENETDOWN,
-#endif
-#ifdef ENETRESET
-	//! Connection aborted by network.
-	ERRNUM_NETRESET = ENETRESET,
-#endif
-#ifdef ENETUNREACH
-	//! Network unreachable.
-	ERRNUM_NETUNREACH = ENETUNREACH,
-#endif
-#ifdef ENFILE
-	//! Too many files open in system.
-	ERRNUM_NFILE = ENFILE,
-#endif
-#ifdef ENOBUFS
-	//! No buffer space available.
-	ERRNUM_NOBUFS = ENOBUFS,
-#endif
-#ifdef ENODATA
-	//! No message is available on the STREAM head read queue.
-	ERRNUM_NODATA = ENODATA,
-#endif
-#ifdef ENODEV
-	//! No such device.
-	ERRNUM_NODEV = ENODEV,
-#endif
-#ifdef ENOENT
-	//! No such file or directory.
-	ERRNUM_NOENT = ENOENT,
-#endif
-#ifdef ENOEXEC
-	//! Executable file format error.
-	ERRNUM_NOEXEC = ENOEXEC,
-#endif
-#ifdef ENOLCK
-	//! No locks available.
-	ERRNUM_NOLCK = ENOLCK,
-#endif
-#ifdef ENOLINK
-	//! Reserved.
-	ERRNUM_NOLINK = ENOLINK,
-#endif
-#ifdef ENOMEM
-	//! Not enough space.
-	ERRNUM_NOMEM = ENOMEM,
-#endif
-#ifdef ENOMSG
-	//! No message of the desired type.
-	ERRNUM_NOMSG = ENOMSG,
-#endif
-#ifdef ENOPROTOOPT
-	//! Protocol not available.
-	ERRNUM_NOPROTOOPT = ENOPROTOOPT,
-#endif
-#ifdef ENOSPC
-	//! No space left on device.
-	ERRNUM_NOSPC = ENOSPC,
-#endif
-#ifdef ENOSR
-	//! No STREAM resources.
-	ERRNUM_NOSR = ENOSR,
-#endif
-#ifdef ENOSTR
-	//! Not a STREAM.
-	ERRNUM_NOSTR = ENOSTR,
-#endif
-#ifdef ENOSYS
-	//! Function not supported.
-	ERRNUM_NOSYS = ENOSYS,
-#endif
-#ifdef ENOTCONN
-	//! The socket is not connected.
-	ERRNUM_NOTCONN = ENOTCONN,
-#endif
-#ifdef ENOTDIR
-	//! Not a directory or a symbolic link to a directory.
-	ERRNUM_NOTDIR = ENOTDIR,
-#endif
-#ifdef ENOTEMPTY
-	//! Directory not empty.
-	ERRNUM_NOTEMPTY = ENOTEMPTY,
-#endif
-#ifdef ENOTRECOVERABLE
-	//! State not recoverable.
-	ERRNUM_NOTRECOVERABLE = ENOTRECOVERABLE,
-#endif
-#ifdef ENOTSOCK
-	//! Not a socket.
-	ERRNUM_NOTSOCK = ENOTSOCK,
-#endif
-#ifdef ENOTSUP
-	//! Not supported.
-	ERRNUM_NOTSUP = ENOTSUP,
-#endif
-#ifdef ENOTTY
-	//! Inappropriate I/O control operation.
-	ERRNUM_NOTTY = ENOTTY,
-#endif
-#ifdef ENXIO
-	//! No such device or address.
-	ERRNUM_NXIO = ENXIO,
-#endif
-#ifdef EOPNOTSUPP
-	//! Operation not supported on socket.
-	ERRNUM_OPNOTSUPP = EOPNOTSUPP,
-#endif
-#ifdef EOVERFLOW
-	//! Value too large to be stored in data type.
-	ERRNUM_OVERFLOW = EOVERFLOW,
-#endif
-#ifdef EOWNERDEAD
-	//! Previous owner died.
-	ERRNUM_OWNERDEAD = EOWNERDEAD,
-#endif
-#ifdef EPERM
-	//! Operation not permitted.
-	ERRNUM_PERM = EPERM,
-#endif
-#ifdef EPIPE
-	//! Broken pipe.
-	ERRNUM_PIPE = EPIPE,
-#endif
-#ifdef EPROTO
-	//! Protocol error.
-	ERRNUM_PROTO = EPROTO,
-#endif
-#ifdef EPROTONOSUPPORT
-	//! Protocol not supported.
-	ERRNUM_PROTONOSUPPORT = EPROTONOSUPPORT,
-#endif
-#ifdef EPROTOTYPE
-	//! Protocol wrong type for socket.
-	ERRNUM_PROTOTYPE = EPROTOTYPE,
-#endif
-#ifdef EROFS
-	//! Read-only file system.
-	ERRNUM_ROFS = EROFS,
-#endif
-#ifdef ESPIPE
-	//! Invalid seek.
-	ERRNUM_SPIPE = ESPIPE,
-#endif
-#ifdef ESRCH
-	//! No such process.
-	ERRNUM_SRCH = ESRCH,
-#endif
-#ifdef ETIME
-	//! Stream ioctl() timeout.
-	ERRNUM_TIME = ETIME,
-#endif
-#ifdef ETIMEDOUT
-	//! Connection timed out.
-	ERRNUM_TIMEDOUT = ETIMEDOUT,
-#endif
-#ifdef ETXTBSY
-	//! Text file busy.
-	ERRNUM_TXTBSY = ETXTBSY,
-#endif
-#ifdef EWOULDBLOCK
-	//! Operation would block.
-	ERRNUM_WOULDBLOCK = EWOULDBLOCK,
-#endif
-#ifdef EXDEV
-	//! Cross-device link.
-	ERRNUM_XDEV = EXDEV,
-#endif
-#ifdef EAI_AGAIN
-	/*!
-	 * The name could not be resolved at this time. Future attempts may
-	 * succeed.
-	 */
-	ERRNUM_AI_AGAIN = EAI_AGAIN,
-#endif
-#ifdef EAI_BADFLAGS
-	//! The flags had an invalid value.
-	ERRNUM_AI_BADFLAGS = EAI_BADFLAGS,
-#endif
-#ifdef EAI_FAIL
-	//! A non-recoverable error occurred.
-	ERRNUM_AI_FAIL = EAI_FAIL,
-#endif
-#ifdef EAI_FAMILY
-	/*!
-	 * The address family was not recognized or the address length was
-	 * invalid for the specified family.
-	 */
-	ERRNUM_AI_FAMILY = EAI_FAMILY,
-#endif
-#ifdef EAI_MEMORY
-	//! There was a memory allocation failure.
-	ERRNUM_AI_MEMORY = EAI_MEMORY,
-#endif
-#ifdef EAI_NONAME
-	//! The name does not resolve for the supplied parameters.
-	ERRNUM_AI_NONAME = EAI_NONAME,
-#endif
-#ifdef EAI_OVERFLOW
-	//! An argument buffer overflowed.
-	ERRNUM_AI_OVERFLOW = EAI_OVERFLOW,
-#endif
-#ifdef EAI_SERVICE
-	//! The service passed was not recognized for the specified socket type.
-	ERRNUM_AI_SERVICE = EAI_SERVICE,
-#endif
-#ifdef EAI_SOCKTYPE
-	//! The intended socket type was not recognized.
-	ERRNUM_AI_SOCKTYPE = EAI_SOCKTYPE,
-#endif
-	// To prevent duplicate error numbers, this value should be at least as
-	// large as the largest explicitly defined error number, and small
-	// enough that the last implicitly defined error number does not exceed
-	// INT_MAX.
-	__ERRNUM_MAX_DEFINED = INT_MAX - 84 - 1,
-#ifndef E2BIG
+	__ERRNUM_MIN,
 	//! Argument list too long.
 	ERRNUM_2BIG,
-#endif
-#ifndef EACCES
 	//! Permission denied.
 	ERRNUM_ACCES,
-#endif
-#ifndef EADDRINUSE
 	//! Address in use.
 	ERRNUM_ADDRINUSE,
-#endif
-#ifndef EADDRNOTAVAIL
 	//! Address not available.
 	ERRNUM_ADDRNOTAVAIL,
-#endif
-#ifndef EAFNOSUPPORT
 	//! Address family not supported.
 	ERRNUM_AFNOSUPPORT,
-#endif
-#ifndef EAGAIN
 	//! Resource unavailable, try again.
 	ERRNUM_AGAIN,
-#endif
-#ifndef EALREADY
 	//! Connection already in progress.
 	ERRNUM_ALREADY,
-#endif
-#ifndef EBADF
 	//! Bad file descriptor.
 	ERRNUM_BADF,
-#endif
-#ifndef EBADMSG
 	//! Bad message.
 	ERRNUM_BADMSG,
-#endif
-#ifndef EBUSY
 	//! Device or resource busy.
 	ERRNUM_BUSY,
-#endif
-#ifndef ECANCELED
 	//! Operation canceled.
 	ERRNUM_CANCELED,
-#endif
-#ifndef ECHILD
 	//! No child process.
 	ERRNUM_CHILD,
-#endif
-#ifndef ECONNABORTED
 	//! Connection aborted.
 	ERRNUM_CONNABORTED,
-#endif
-#ifndef ECONNREFUSED
 	//! Connection refused.
 	ERRNUM_CONNREFUSED,
-#endif
-#ifndef ECONNRESET
 	//! Connection reset.
 	ERRNUM_CONNRESET,
-#endif
-#ifndef EDEADLK
 	//! Resource deadlock would occur.
 	ERRNUM_DEADLK,
-#endif
-#ifndef EDESTADDRREQ
 	//! Destination address required.
 	ERRNUM_DESTADDRREQ,
-#endif
-#ifndef EEXIST
+	//! Mathematics argument out of domain of function.
+	ERRNUM_DOM,
+//	ERRNUM_DQUOT,
 	//! File exists.
 	ERRNUM_EXIST,
-#endif
-#ifndef EFAULT
 	//! Bad address.
 	ERRNUM_FAULT,
-#endif
-#ifndef EFBIG
 	//! File too large.
 	ERRNUM_FBIG,
-#endif
-#ifndef EHOSTUNREACH
 	//! Host is unreachable.
 	ERRNUM_HOSTUNREACH,
-#endif
-#ifndef EIDRM
 	//! Identifier removed.
 	ERRNUM_IDRM,
-#endif
-#ifndef EINPROGRESS
+	//! Illegal byte sequence.
+	ERRNUM_ILSEQ,
 	//! Operation in progress.
 	ERRNUM_INPROGRESS,
-#endif
-#ifndef EINTR
 	//! Interrupted function.
 	ERRNUM_INTR,
-#endif
-#ifndef EINVAL
 	//! Invalid argument.
 	ERRNUM_INVAL,
-#endif
-#ifndef EIO
 	//! I/O error.
 	ERRNUM_IO,
-#endif
-#ifndef EISCONN
 	//! Socket is connected.
 	ERRNUM_ISCONN,
-#endif
-#ifndef EISDIR
 	//! Is a directory.
 	ERRNUM_ISDIR,
-#endif
-#ifndef ELOOP
 	//! Too many levels of symbolic links.
 	ERRNUM_LOOP,
-#endif
-#ifndef EMFILE
 	//! File descriptor value too large.
 	ERRNUM_MFILE,
-#endif
-#ifndef EMLINK
 	//! Too many links.
 	ERRNUM_MLINK,
-#endif
-#ifndef EMSGSIZE
 	//! Message too large.
 	ERRNUM_MSGSIZE,
-#endif
-#ifndef ENAMETOOLONG
+//	ERRNUM_MULTIHOP,
 	//! Filename too long.
 	ERRNUM_NAMETOOLONG,
-#endif
-#ifndef ENETDOWN
 	//! Network is down.
 	ERRNUM_NETDOWN,
-#endif
-#ifndef ENETRESET
 	//! Connection aborted by network.
 	ERRNUM_NETRESET,
-#endif
-#ifndef ENETUNREACH
 	//! Network unreachable.
 	ERRNUM_NETUNREACH,
-#endif
-#ifndef ENFILE
 	//! Too many files open in system.
 	ERRNUM_NFILE,
-#endif
-#ifndef ENOBUFS
 	//! No buffer space available.
 	ERRNUM_NOBUFS,
-#endif
-#ifndef ENODATA
 	//! No message is available on the STREAM head read queue.
 	ERRNUM_NODATA,
-#endif
-#ifndef ENODEV
 	//! No such device.
 	ERRNUM_NODEV,
-#endif
-#ifndef ENOENT
 	//! No such file or directory.
 	ERRNUM_NOENT,
-#endif
-#ifndef ENOEXEC
 	//! Executable file format error.
 	ERRNUM_NOEXEC,
-#endif
-#ifndef ENOLCK
 	//! No locks available.
 	ERRNUM_NOLCK,
-#endif
-#ifndef ENOLINK
-	//! Reserved.
-	ERRNUM_NOLINK,
-#endif
-#ifndef ENOMEM
+//	ERRNUM_NOLINK,
 	//! Not enough space.
 	ERRNUM_NOMEM,
-#endif
-#ifndef ENOMSG
 	//! No message of the desired type.
 	ERRNUM_NOMSG,
-#endif
-#ifndef ENOPROTOOPT
 	//! Protocol not available.
 	ERRNUM_NOPROTOOPT,
-#endif
-#ifndef ENOSPC
 	//! No space left on device.
 	ERRNUM_NOSPC,
-#endif
-#ifndef ENOSR
 	//! No STREAM resources.
 	ERRNUM_NOSR,
-#endif
-#ifndef ENOSTR
 	//! Not a STREAM.
 	ERRNUM_NOSTR,
-#endif
-#ifndef ENOSYS
 	//! Function not supported.
 	ERRNUM_NOSYS,
-#endif
-#ifndef ENOTCONN
 	//! The socket is not connected.
 	ERRNUM_NOTCONN,
-#endif
-#ifndef ENOTDIR
 	//! Not a directory or a symbolic link to a directory.
 	ERRNUM_NOTDIR,
-#endif
-#ifndef ENOTEMPTY
 	//! Directory not empty.
 	ERRNUM_NOTEMPTY,
-#endif
-#ifndef ENOTRECOVERABLE
 	//! State not recoverable.
 	ERRNUM_NOTRECOVERABLE,
-#endif
-#ifndef ENOTSOCK
 	//! Not a socket.
 	ERRNUM_NOTSOCK,
-#endif
-#ifndef ENOTSUP
 	//! Not supported.
 	ERRNUM_NOTSUP,
-#endif
-#ifndef ENOTTY
 	//! Inappropriate I/O control operation.
 	ERRNUM_NOTTY,
-#endif
-#ifndef ENXIO
 	//! No such device or address.
 	ERRNUM_NXIO,
-#endif
-#ifndef EOPNOTSUPP
 	//! Operation not supported on socket.
 	ERRNUM_OPNOTSUPP,
-#endif
-#ifndef EOVERFLOW
 	//! Value too large to be stored in data type.
 	ERRNUM_OVERFLOW,
-#endif
-#ifndef EOWNERDEAD
 	//! Previous owner died.
 	ERRNUM_OWNERDEAD,
-#endif
-#ifndef EPERM
 	//! Operation not permitted.
 	ERRNUM_PERM,
-#endif
-#ifndef EPIPE
 	//! Broken pipe.
 	ERRNUM_PIPE,
-#endif
-#ifndef EPROTO
 	//! Protocol error.
 	ERRNUM_PROTO,
-#endif
-#ifndef EPROTONOSUPPORT
 	//! Protocol not supported.
 	ERRNUM_PROTONOSUPPORT,
-#endif
-#ifndef EPROTOTYPE
 	//! Protocol wrong type for socket.
 	ERRNUM_PROTOTYPE,
-#endif
-#ifndef EROFS
+	//! Result too large.
+	ERRNUM_RANGE,
 	//! Read-only file system.
 	ERRNUM_ROFS,
-#endif
-#ifndef ESPIPE
 	//! Invalid seek.
 	ERRNUM_SPIPE,
-#endif
-#ifndef ESRCH
 	//! No such process.
 	ERRNUM_SRCH,
-#endif
-#ifndef ETIME
+//	ERRNUM_STALE,
 	//! Stream ioctl() timeout.
 	ERRNUM_TIME,
-#endif
-#ifndef ETIMEDOUT
 	//! Connection timed out.
 	ERRNUM_TIMEDOUT,
-#endif
-#ifndef ETXTBSY
 	//! Text file busy.
 	ERRNUM_TXTBSY,
-#endif
-#ifndef EWOULDBLOCK
 	//! Operation would block.
 	ERRNUM_WOULDBLOCK,
-#endif
-#ifndef EXDEV
 	//! Cross-device link.
 	ERRNUM_XDEV,
-#endif
-//	ERRNUM_DQUOT,
-//	ERRNUM_MULTIHOP,
-//	ERRNUM_STALE,
-#ifndef EAI_AGAIN
 	/*!
 	 * The name could not be resolved at this time. Future attempts may
 	 * succeed.
 	 */
 	ERRNUM_AI_AGAIN,
-#endif
-#ifndef EAI_BADFLAGS
 	//! The flags had an invalid value.
 	ERRNUM_AI_BADFLAGS,
-#endif
-#ifndef EAI_FAIL
 	//! A non-recoverable error occurred.
 	ERRNUM_AI_FAIL,
-#endif
-#ifndef EAI_FAMILY
 	/*!
 	 * The address family was not recognized or the address length was
 	 * invalid for the specified family.
 	 */
 	ERRNUM_AI_FAMILY,
-#endif
-#ifndef EAI_MEMORY
 	//! There was a memory allocation failure.
 	ERRNUM_AI_MEMORY,
-#endif
-#ifndef EAI_NONAME
 	//! The name does not resolve for the supplied parameters.
 	ERRNUM_AI_NONAME,
-#endif
-#ifndef EAI_OVERFLOW
 	//! An argument buffer overflowed.
 	ERRNUM_AI_OVERFLOW,
-#endif
-#ifndef EAI_SERVICE
 	//! The service passed was not recognized for the specified socket type.
 	ERRNUM_AI_SERVICE,
-#endif
-#ifndef EAI_SOCKTYPE
 	//! The intended socket type was not recognized.
 	ERRNUM_AI_SOCKTYPE,
-#endif
 	__ERRNUM_MAX
 };
 
@@ -754,11 +274,43 @@ extern "C" {
 #endif
 
 /*!
+ * Transforms a standard C error number to a native error code. This is
+ * equivalent to `errnum2c(errno2num(errnum))` on Windows, or `errnum` on other
+ * platforms.
+ *
+ * \see errc2no()
+ */
+LELY_UTIL_EXTERN errc_t errno2c(int errnum);
+
+/*!
+ * Transforms a standard C error number to a platform-independent error number.
+ *
+ * \see errnum2no()
+ */
+LELY_UTIL_EXTERN errnum_t errno2num(int errnum);
+
+/*!
+ * Transforms a native error code to a standard C error number. This is
+ * equivalent to `errnum2no(errc2num(errc))` on Windows, or `errc` on other
+ * platforms (provided `errc` is positive).
+ *
+ * \see errc2no()
+ */
+LELY_UTIL_EXTERN int errc2no(errc_t errc);
+
+/*!
  * Transforms a native error code to a platform-independent error number.
  *
  * \see errnum2c()
  */
 LELY_UTIL_EXTERN errnum_t errc2num(errc_t errc);
+
+/*!
+ * Transforms a platform-independent error number to a standard C error number.
+ *
+ * \see errno2num()
+ */
+LELY_UTIL_EXTERN int errnum2no(errnum_t errnum);
 
 /*!
  * Transforms a platform-independent error number to a native error code.
@@ -768,9 +320,25 @@ LELY_UTIL_EXTERN errnum_t errc2num(errc_t errc);
 LELY_UTIL_EXTERN errc_t errnum2c(errnum_t errnum);
 
 /*!
+ * Returns the last (thread-specific) standard C error number set by a system
+ * call or library function. This is equivalent to `errc2no(get_errc())`.
+ *
+ * \see set_errno()
+ */
+static inline int get_errno(void);
+
+/*!
+ * Sets the current (thread-specific) standard C error number to \a errnum. This
+ * is equivalent to `set_errc(errno2c(errnum))`.
+ *
+ * \see get_errno()
+ */
+static inline void set_errno(int errnum);
+
+/*!
  * Returns the last (thread-specific) native error code set by a system call or
- * library function. This is equivalent to `GetLastError()` on Microsoft
- * Windows, or `errno` on other platforms.
+ * library function. This is equivalent to `GetLastError()`/`WSAGetLastError()`
+ * on Windows, or `errno` on other platforms.
  *
  * This function returns the thread-specific error number.
  *
@@ -780,8 +348,8 @@ LELY_UTIL_EXTERN errc_t get_errc(void);
 
 /*!
  * Sets the current (thread-specific) native error code to \a errc. This is
- * equivalent to `SetLastError(errnum)` on Microsoft Windows, or `errno = errc`
- * on other platforms.
+ * equivalent to `SetLastError(errc)`/`WSASetLastError(errc)` on Windows, or
+ * `errno = errc` on other platforms.
  *
  * \see get_errc()
  */
@@ -804,14 +372,32 @@ static inline errnum_t get_errnum(void);
  */
 static inline void set_errnum(errnum_t errnum);
 
+/*!
+ * Returns a string describing a standard C error number. This is equivalent to
+ * `strerror(errnum)`.
+ */
+LELY_UTIL_EXTERN const char *errno2str(int errnum);
+
 //! Returns a string describing a native error code.
 LELY_UTIL_EXTERN const char *errc2str(errc_t errc);
 
 /*!
- * Returns a string describing a platform-independent error number.This is
+ * Returns a string describing a platform-independent error number. This is
  * equivalent to `errc2str(errnum2c(errnum))`.
  */
 static inline const char *errnum2str(errnum_t errnum);
+
+static inline int
+get_errno(void)
+{
+	return errc2no(get_errc());
+}
+
+static inline void
+set_errno(int errnum)
+{
+	set_errc(errno2c(errnum));
+}
 
 static inline errnum_t
 get_errnum(void)
