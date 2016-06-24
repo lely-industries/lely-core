@@ -46,6 +46,7 @@
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/un.h>
 #include <unistd.h>
 #endif
 

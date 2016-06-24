@@ -272,6 +272,54 @@ io_addr_set_ipv6_loopback(io_addr_t *addr, int port)
 	addr_in6->sin6_addr = in6addr_loopback;
 }
 
+#endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#if _POSIX_C_SOURCE >= 200112L
+
+LELY_IO_EXPORT int
+io_addr_get_unix(const io_addr_t *addr, char *path)
+{
+	assert(addr);
+
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	const struct sockaddr_un *addr_un =
+			(const struct sockaddr_un *)&addr->addr;
+	if (__unlikely(addr_un->sun_family != AF_UNIX)) {
+		errno = EAFNOSUPPORT;
+		return -1;
+	}
+
+	if (path)
+		strncpy(path, addr_un->sun_path, IO_ADDR_UNIX_STRLEN);
+
+	return 0;
+}
+
+LELY_IO_EXPORT void
+io_addr_set_unix(io_addr_t *addr, const char *path)
+{
+	assert(addr);
+	assert(path);
+
+	memset(addr, 0, sizeof(*addr));
+	addr->addrlen = sizeof(struct sockaddr_un);
+	struct sockaddr_un *addr_un = (struct sockaddr_un *)&addr->addr;
+
+	addr_un->sun_family = AF_UNIX;
+
+	size_t n = MIN(strlen(path), sizeof(addr_un->sun_path) - 1);
+	strncpy(addr_un->sun_path, path, n);
+	addr_un->sun_path[n] = '\0';
+}
+
+#endif // _POSIX_C_SOURCE >= 200112L
+
+#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+
 LELY_IO_EXPORT int
 io_addr_get_port(const io_addr_t *addr, int *port)
 {

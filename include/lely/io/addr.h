@@ -48,6 +48,12 @@ struct __io_addr {
  */
 #define IO_ADDR_IPV6_STRLEN	46
 
+/*!
+ * The maximum number of bytes required to hold the text representation of a
+ * UNIX domain socket path name, including the terminating null byte.
+ */
+#define IO_ADDR_UNIX_STRLEN	108
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -195,6 +201,31 @@ LELY_IO_EXTERN void io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16],
  * \param port the port number.
  */
 LELY_IO_EXTERN void io_addr_set_ipv6_loopback(io_addr_t *addr, int port);
+
+/*!
+ * Obtains a UNIX domain socket path name from a network address.
+ *
+ * \param addr a pointer to a network address.
+ * \param path the address of a string containing at least #IO_ADDR_UNIX_STRLEN
+ *             characters (can be NULL). On success, if \a path is not NULL,
+ *             *\a path contains the path name.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_set_unix()
+ */
+LELY_IO_EXTERN int io_addr_get_unix(const io_addr_t *addr, char *path);
+
+/*!
+ * Initializes a network address from a UNIX domain socket path name.
+ *
+ * \param addr a pointer to the network address to be initialized.
+ * \param path a pointer to a path name.
+ *
+ * \see io_addr_get_unix()
+ */
+LELY_IO_EXTERN void io_addr_set_unix(io_addr_t *addr, const char *path);
 
 /*!
  * Obtains the port number of an IPv4 or IPv6 network address.
