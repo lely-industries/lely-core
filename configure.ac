@@ -17,5 +17,6 @@ AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	Makefile
+	${PACKAGE}.pc
 ])
 AC_OUTPUT
