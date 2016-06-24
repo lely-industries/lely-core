@@ -128,14 +128,30 @@ extern "C" {
  *            `n - 1` characters are written, plus a terminating null byte.
  * \param n   the size (in bytes) of the buffer at \a s. If \a n is zero,
  *            nothing is written.
- * \param msg a pointer to a CAN frame to be printed.
+ * \param msg a pointer to the CAN frame to be printed.
  *
  * \returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
+ * negative number on error. In the latter case, the error number is stored in
+ * `errno`.
  */
 LELY_CAN_EXTERN int snprintf_can_msg(char *s, size_t n,
 		const struct can_msg *msg);
+
+/*!
+ * Equivalent to snprintf_can_msg(), except that it allocates a string large
+ * enough to hold the output, including the terminating null byte.
+ *
+ * \param ps  the address of a value which, on success, contains a pointer to
+ *            the allocated string. This pointer SHOULD be passed to `free()` to
+ *            release the allocated storage.
+ * \param msg a pointer to the CAN frame to be printed.
+ *
+ * \returns the number of characters written, not counting the terminating null
+ * byte, or a negative number on error. In the latter case, the error number is
+ * stored in `errno`.
+ */
+LELY_CAN_EXTERN int asprintf_can_msg(char **ps, const struct can_msg *msg);
 
 #ifdef __cplusplus
 }

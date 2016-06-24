@@ -24,10 +24,12 @@
 #include "can.h"
 #include <lely/can/msg.h>
 
+#include <errno.h>
 #include <stdio.h>
-// Include inttypes.h before stdio.h to enforce declarations of format
-// specifiers in Newlib.
+// Include inttypes.h after stdio.h to enforce declarations of format specifiers
+// in Newlib.
 #include <inttypes.h>
+#include <stdlib.h>
 
 LELY_CAN_EXPORT int
 snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
@@ -76,5 +78,28 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	}
 
 	return t;
+}
+
+LELY_CAN_EXPORT int
+asprintf_can_msg(char **ps, const struct can_msg *msg)
+{
+	int n = snprintf_can_msg(NULL, 0, msg);
+	if (__unlikely(n < 0))
+		return n;
+
+	char *s = malloc(n + 1);
+	if (__unlikely(!s))
+		return -1;
+
+	n = snprintf_can_msg(s, n + 1, msg);
+	if (__unlikely(n < 0)) {
+		int errsv = errno;
+		free(s);
+		errno = errsv;
+		return n;
+	}
+
+	*ps = s;
+	return n;
 }
 
