@@ -557,6 +557,25 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	}
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
+#ifdef _WIN32
+	case AF_BTH: {
+		const SOCKADDR_BTH *addr_bth =
+				(const SOCKADDR_BTH *)&addr->addr;
+		if (port)
+			*port = addr_bth->port == BT_PORT_ANY
+					? 0 : addr_bth->port;
+		return 0;
+	}
+#elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
+		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
+	case AF_BLUETOOTH: {
+		const struct sockaddr_rc *addr_rc =
+				(const struct sockaddr_rc *)&addr->addr;
+		if (port)
+			*port = btohs(addr_rc->rc_channel);
+		return 0;
+	}
+#endif
 	case AF_INET: {
 		const struct sockaddr_in *addr_in =
 				(const struct sockaddr_in *)&addr->addr;
@@ -588,6 +607,17 @@ io_addr_set_port(io_addr_t *addr, int port)
 	}
 
 	switch (((struct sockaddr *)&addr->addr)->sa_family) {
+#ifdef _WIN32
+	case AF_BTH:
+		((SOCKADDR_BTH *)&addr->addr)->port =
+				port ? (ULONG)port : BT_PORT_ANY;;
+		return 0;
+#elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
+		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
+	case AF_BLUETOOTH:
+		((struct sockaddr_rc *)&addr->addr)->rc_channel = htobs(port);
+		return 0;
+#endif
 	case AF_INET:
 		((struct sockaddr_in *)&addr->addr)->sin_port = htons(port);
 		return 0;
