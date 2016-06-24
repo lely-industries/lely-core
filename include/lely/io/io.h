@@ -36,5 +36,32 @@
 #endif
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*!
+ * Initializes the I/O library and makes the I/O functions available for use.
+ * On Windows this function invokes `WSAStartup()`. This function is not thread
+ * safe, but can be invoked multiple times, as long as it is matched by an equal
+ * number of calls to lely_io_fini().
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int lely_io_init(void);
+
+/*!
+ * Finalizes the I/O library and terminates the availability of the I/O
+ * functions. On Windows this function invokes `WSACleanup()`. Note that this
+ * function MUST be invoked once for each corresponding call to lely_io_init().
+ * Only the last invocation will finalize the library.
+ */
+LELY_IO_EXTERN void lely_io_fini(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 

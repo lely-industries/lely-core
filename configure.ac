@@ -30,6 +30,18 @@ AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
 
+AS_IF([test "x$platform_win32" == "xyes"], [
+	AC_MSG_CHECKING([for WSAGetLastError in ws2_32])
+	ax_winsock_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lws2_32 $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[#include <winsock2.h>]],
+			[[WSAGetLastError();]])],
+		[ax_winsock_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_winsock_ok])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"

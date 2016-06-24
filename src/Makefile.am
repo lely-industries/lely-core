@@ -1,4 +1,5 @@
 src =
+src += io.c
 src += io.h
 if PLATFORM_WIN32
 src += version.rc
