@@ -24,6 +24,7 @@
 
 #include <lely/libc/libc.h>
 
+#include <stdarg.h>
 #include <stdio.h>
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
