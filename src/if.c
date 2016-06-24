@@ -27,6 +27,7 @@
 #include <lely/io/sock.h>
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
