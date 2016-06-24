@@ -114,7 +114,8 @@ LELY_UTIL_EXTERN void floc_strninc(struct floc *at, const char *s, size_t n);
  *
  * \returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
+ * negative number on error. In the latter case, the error number is stored in
+ * `errno`.
  */
 LELY_UTIL_EXTERN int snprintf_floc(char *s, size_t n, const struct floc *at);
 
@@ -279,7 +280,8 @@ LELY_UTIL_EXTERN void default_diag_at_handler(void *handle,
  *
  * \returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
+ * negative number on error. In the latter case, the error number is stored in
+ * `errno`.
  *
  * \see vsnprintf_diag_at()
  */
@@ -303,11 +305,12 @@ LELY_UTIL_EXTERN int vsnprintf_diag(char *s, size_t n,
  * \param ap       the list of arguments to be printed according to \a format.
  *
  * \returns the number of characters written, not counting the terminating null
- * byte, or a negative number on error.
+ * byte, or a negative number on error. In the latter case, the error number is
+ * stored in `errno`.
  *
- * \see vasnprintf_diag_at()
+ * \see vasprintf_diag_at()
  */
-LELY_UTIL_EXTERN int vasnprintf_diag(char **ps, enum diag_severity severity,
+LELY_UTIL_EXTERN int vasprintf_diag(char **ps, enum diag_severity severity,
 		errc_t errc, const char *format, va_list ap)
 		__format_printf(4, 0);
 
@@ -337,7 +340,8 @@ LELY_UTIL_EXTERN int vasnprintf_diag(char **ps, enum diag_severity severity,
  *
  * \returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
+ * negative number on error. In the latter case, the error number is stored in
+ * `errno`.
  *
  * \see vsnprintf_diag()
  */
@@ -364,11 +368,12 @@ LELY_UTIL_EXTERN int vsnprintf_diag_at(char *s, size_t n,
  * \param ap       the list of arguments to be printed according to \a format.
  *
  * \returns the number of characters written, not counting the terminating null
- * byte, or a negative number on error.
+ * byte, or a negative number on error. In the latter case, the error number is
+ * stored in `errno`.
  *
- * \see vasnprintf_diag()
+ * \see vasprintf_diag()
  */
-LELY_UTIL_EXTERN int vasnprintf_diag_at(char **ps, enum diag_severity severity,
+LELY_UTIL_EXTERN int vasprintf_diag_at(char **ps, enum diag_severity severity,
 		errc_t errc, const struct floc *at, const char *format,
 		va_list ap) __format_printf(5, 0);
 

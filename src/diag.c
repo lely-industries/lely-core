@@ -187,7 +187,7 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 	__unused_var(handle);
 
 	char *s = NULL;
-	if (__likely(vasnprintf_diag_at(&s, severity, errc, at, format, ap)
+	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
 			>= 0))
 		fprintf(stderr, "%s\n", s);
 	free(s);
@@ -204,10 +204,10 @@ vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
 }
 
 LELY_UTIL_EXPORT int
-vasnprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
+vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
-	return vasnprintf_diag_at(ps, severity, errc, NULL, format, ap);
+	return vasprintf_diag_at(ps, severity, errc, NULL, format, ap);
 }
 
 LELY_UTIL_EXPORT int
@@ -282,7 +282,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 }
 
 LELY_UTIL_EXPORT int
-vasnprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
+vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	assert(ps);
@@ -294,12 +294,20 @@ vasnprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
 	if (__unlikely(n < 0))
 		return n;
 
-	void *ptr = malloc(n + 1);
-	if (__unlikely(!ptr && n > 0))
+	char *s = malloc(n + 1);
+	if (__unlikely(!s))
 		return -1;
 
-	*ps = ptr;
-	return vsnprintf_diag_at(*ps, n + 1, severity, errc, at, format, ap);
+	n = vsnprintf_diag_at(s, n + 1, severity, errc, at, format, ap);
+	if (__unlikely(n < 0)) {
+		int errsv = errno;
+		free(s);
+		errno = errsv;
+		return n;
+	}
+
+	*ps = s;
+	return n;
 }
 
 LELY_UTIL_EXPORT const char *
