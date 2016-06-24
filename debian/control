@@ -1,0 +1,46 @@
+Source: liblely-io
+Priority: extra
+Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
+Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen
+Standards-Version: 3.9.7
+Section: libs
+Homepage: http://www.lely.com
+
+Package: liblely-io1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-util1,
+         liblely-libc1
+Multi-Arch: same
+Description: I/O library
+ This package contains the shared library.
+
+Package: liblely-io1-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-io1 (= ${binary:Version})
+Multi-Arch: same
+Description: I/O library debugging symbols
+ This package contains the debugging symbols.
+
+Package: liblely-io-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-io1 (= ${binary:Version}),
+         liblely-util-dev,
+         liblely-libc-dev
+Suggests: liblely-io-doc
+Multi-Arch: same
+Description: I/O library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-io-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: I/O library documentation
+ This package contains doxygen generated documentation.
