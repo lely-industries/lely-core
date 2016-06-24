@@ -67,6 +67,22 @@ struct __io_addr {
  */
 #define IO_ADDR_UNIX_STRLEN	108
 
+//! A network address info structure.
+struct io_addrinfo {
+	/*!
+	 * The domain of the socket (only #IO_SOCK_IPV4 and #IO_SOCK_IPV6 are
+	 * supported).
+	 */
+	int domain;
+	//! The type of the socket (either #IO_SOCK_STREAM or #IO_SOCK_DGRAM).
+	int type;
+	//! The network address.
+	io_addr_t addr;
+};
+
+//! The static initializer for struct #io_addrinfo.
+#define IO_ADDRINFO_INIT	{ 0, 0, IO_ADDR_INIT }
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -391,6 +407,31 @@ LELY_IO_EXTERN int io_addr_is_broadcast(const io_addr_t *addr);
 
 //! Returns 1 if the network address is a multicast address, and 0 if not.
 LELY_IO_EXTERN int io_addr_is_multicast(const io_addr_t *addr);
+
+/*!
+ * Obtains a list of network addresses corresponding to a host and/or service
+ * name.
+ *
+ * \param maxinfo  the maximum number of #io_addrinfo structs to return.
+ * \param info     an array of at least \a maxinfo #io_addrinfo structs (can be
+ *                 NULL). On success, *\a info contains at most \a maxinfo
+ *                 structures describing the network addresses.
+ * \param nodename a pointer to a string containing a host (node) name or
+ *                 numeric address (can be NULL).
+ * \param servname a pointer to a string containing a service name or port
+ *                 number (can be NULL).
+ * \param hints    a pointer to a network address structure containing hints
+ *                 about the domain and type of sockets the caller supports. If
+ *                 not NULL, only the \a domain and \a type fields of *\a hints
+ *                 are taken into account, if they are non-zero.
+ *
+ * \returns the total number of addresses (which may be different from
+ * \a maxinfo), or -1 on error. In the latter case, the error number can be
+ * obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_get_addrinfo(int maxinfo, struct io_addrinfo *info,
+		const char *nodename, const char *servname,
+		const struct io_addrinfo *hints);
 
 #ifdef __cplusplus
 }

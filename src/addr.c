@@ -25,6 +25,7 @@
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/io/addr.h>
+#include <lely/io/sock.h>
 
 #include <assert.h>
 #include <string.h>
@@ -696,6 +697,108 @@ io_addr_is_multicast(const io_addr_t *addr)
 	default:
 		return 0;
 	}
+}
+
+LELY_IO_EXPORT int
+io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
+		const char *servname, const struct io_addrinfo *hints)
+{
+	if (!info)
+		maxinfo = 0;
+
+	int ecode = 0;
+
+	struct addrinfo ai_hints = { .ai_family = AF_UNSPEC };
+	if (hints) {
+		switch (hints->domain) {
+		case 0:
+			break;
+		case IO_SOCK_IPV4:
+			ai_hints.ai_family = AF_INET;
+			break;
+		case IO_SOCK_IPV6:
+			ai_hints.ai_family = AF_INET6;
+			break;
+		default:
+			ecode = EAI_FAMILY;
+			break;
+		}
+
+		switch (hints->type) {
+		case 0:
+			break;
+		case IO_SOCK_STREAM:
+			ai_hints.ai_socktype = SOCK_STREAM;
+			break;
+		case IO_SOCK_DGRAM:
+			ai_hints.ai_socktype = SOCK_DGRAM;
+			break;
+		default:
+			ecode = EAI_SOCKTYPE;
+			break;
+		}
+	}
+
+	struct addrinfo *res = NULL;
+	if (__likely(!ecode))
+		ecode = getaddrinfo(nodename, servname, &ai_hints, &res);
+	if (__unlikely(ecode)) {
+		switch (ecode) {
+		case EAI_AGAIN: set_errnum(ERRNUM_AI_AGAIN); break;
+		case EAI_BADFLAGS: set_errnum(ERRNUM_AI_BADFLAGS); break;
+		case EAI_FAIL: set_errnum(ERRNUM_AI_FAIL); break;
+		case EAI_FAMILY: set_errnum(ERRNUM_AI_FAMILY); break;
+		case EAI_MEMORY: set_errnum(ERRNUM_AI_MEMORY); break;
+		case EAI_NONAME: set_errnum(ERRNUM_AI_NONAME); break;
+		case EAI_SERVICE: set_errnum(ERRNUM_AI_SERVICE); break;
+		case EAI_SOCKTYPE: set_errnum(ERRNUM_AI_SOCKTYPE); break;
+#ifdef EAI_SYSTEM
+		case EAI_SYSTEM: break;
+#endif
+		}
+		return -1;
+	}
+	assert(res);
+
+	int ninfo = 0;
+	for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
+		int domain;
+		switch (ai->ai_family) {
+		case AF_INET:
+			domain = IO_SOCK_IPV4;
+			break;
+		case AF_INET6:
+			domain = IO_SOCK_IPV6;
+			break;
+		default:
+			continue;
+		}
+
+		int type;
+		switch (ai->ai_socktype) {
+		case SOCK_STREAM:
+			type = IO_SOCK_STREAM;
+			break;
+		case SOCK_DGRAM:
+			type = IO_SOCK_DGRAM;
+			break;
+		default:
+			continue;
+		}
+
+		if (ninfo++ < maxinfo) {
+			memset(info, 0, sizeof(*info));
+			info->domain = domain;
+			info->type = type;
+			info->addr.addrlen = ai->ai_addrlen;
+			memcpy(&info->addr.addr, ai->ai_addr, ai->ai_addrlen);
+			info++;
+		}
+	}
+
+	freeaddrinfo(res);
+
+	return ninfo;
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
