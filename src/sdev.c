@@ -329,6 +329,29 @@ error_print_dev:
 	return r;
 }
 
+LELY_CO_EXPORT int
+asprintf_c99_sdev(char **ps, const co_dev_t *dev)
+{
+	int n = snprintf_c99_sdev(NULL, 0, dev);
+	if (__unlikely(n < 0))
+		return n;
+
+	char *s = malloc(n + 1);
+	if (__unlikely(!s))
+		return -1;
+
+	n = snprintf_c99_sdev(s, n + 1, dev);
+	if (__unlikely(n < 0)) {
+		int errsv = errno;
+		free(s);
+		errno = errsv;
+		return n;
+	}
+
+	*ps = s;
+	return n;
+}
+
 static int
 co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 {

@@ -115,17 +115,33 @@ LELY_CO_EXTERN co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
  * Prints a C99 static initializer code fragment for a static device description
  * (struct #co_sdev) to a string buffer.
  *
- * \param s    the address of the output buffer. If \a s is not NULL, at most
- *             `n - 1` characters are written, plus a terminating null byte.
- * \param n    the size (in bytes) of the buffer at \a s. If \a n is zero,
- *             nothing is written.
- * \param dev  a pointer to a CANopen device description to be printed.
+ * \param s   the address of the output buffer. If \a s is not NULL, at most
+ *            `n - 1` characters are written, plus a terminating null byte.
+ * \param n   the size (in bytes) of the buffer at \a s. If \a n is zero,
+ *            nothing is written.
+ * \param dev a pointer to a CANopen device description to be printed.
  *
  * \returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
+ * negative number on error. In the latter case, the error number is stored in
+ * `errno`.
  */
 LELY_CO_EXTERN int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
+
+/*!
+ * Equivalent to snprintf_c99_sdev(), except that it allocates a string large
+ * enough to hold the output, including the terminating null byte.
+ *
+ * \param ps  the address of a value which, on success, contains a pointer to
+ *            the allocated string. This pointer SHOULD be passed to `free()` to
+ *            release the allocated storage.
+ * \param dev a pointer to a CANopen device description to be printed.
+ *
+ * \returns the number of characters written, not counting the terminating null
+ * byte, or a negative number on error. In the latter case, the error number is
+ * stored in `errno`.
+ */
+LELY_CO_EXTERN int asprintf_c99_sdev(char **ps, const co_dev_t *dev);
 
 #ifdef __cplusplus
 }
