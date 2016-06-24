@@ -42,6 +42,11 @@
 #endif
 #include <windows.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
+#elif defined(_POSIX_C_SOURCE)
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <unistd.h>
 #endif
 
 #endif

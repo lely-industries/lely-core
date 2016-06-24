@@ -36,6 +36,9 @@
 #endif
 #endif
 
+//! An opaque network address type.
+typedef struct __io_addr io_addr_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
