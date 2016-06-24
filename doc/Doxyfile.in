@@ -2042,6 +2042,7 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             =
 
+PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_IO_EXTERN=
 PREDEFINED             += LELY_IO_EXPORT=
 
