@@ -29,19 +29,19 @@
 
 namespace lely {
 
-const char*
+__dllexport const char*
 bad_init::what() const nothrow_or_noexcept
 {
 	return "lely::bad_init";
 }
 
-const char*
+__dllexport const char*
 bad_copy::what() const nothrow_or_noexcept
 {
 	return "lely::bad_copy";
 }
 
-const char*
+__dllexport const char*
 bad_move::what() const nothrow_or_noexcept
 {
 	return "lely::bad_move";
