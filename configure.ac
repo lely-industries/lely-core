@@ -54,6 +54,8 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 			#endif
 		]])
 	AC_SEARCH_LIBS([str2ba], [bluetooth])
+
+	AC_CHECK_HEADERS([linux/can.h])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"

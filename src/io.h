@@ -45,6 +45,7 @@
 #include <ws2tcpip.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -56,6 +57,9 @@
 #endif
 #ifdef HAVE_BLUETOOTH_RFCOMM_H
 #include <bluetooth/rfcomm.h>
+#endif
+#ifdef HAVE_LINUX_CAN_H
+#include <linux/can.h>
 #endif
 #endif
 

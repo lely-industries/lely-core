@@ -43,6 +43,13 @@ struct __io_addr {
 #define IO_ADDR_BTH_STRLEN	18
 
 /*!
+ * The maximum number of bytes required to hold the text representation of a
+ * CAN (Controller Area Network) network interface address, including the
+ * terminating null byte.
+ */
+#define IO_ADDR_CAN_STRLEN	16
+
+/*!
  * The maximum number of bytes required to hold the text representation of an
  * IPv4 internet address, including the terminating null byte.
  */
@@ -156,6 +163,37 @@ LELY_IO_EXTERN void io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6],
  *             is 0, \a io_socket_bind() will dynamically assign a port number.
  */
 LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
+
+/*!
+ * Obtains a CAN (Controller Area Network) network interface name from a network
+ * address.
+ *
+ * \param addr a pointer to network address.
+ * \param name the address of a string containing at least #IO_ADDR_CAN_STRLEN
+ *             characters (can be NULL). On success, if \a name is not NULL,
+ *             *\a name contains the network interface name.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_set_can()
+ */
+LELY_IO_EXTERN int io_addr_get_can(const io_addr_t *addr, char *name);
+
+/*!
+ * Initializes a network address from a CAN (Controller Area Network) network
+ * interface name.
+ *
+ * \param addr a pointer to the network address to be initialized.
+ * \param name the network interface name. If \a name is NULL or an empty
+ *             string, the address will represent all interfaces.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_get_can()
+ */
+LELY_IO_EXTERN int io_addr_set_can(io_addr_t *addr, const char *name);
 
 /*!
  * Initializes a network address from an IPv4 address and port number.
