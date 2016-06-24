@@ -115,7 +115,10 @@ struct __can_recv {
 LELY_CAN_EXPORT void *
 __can_net_alloc(void)
 {
-	return malloc(sizeof(struct __can_net));
+	void *ptr = malloc(sizeof(struct __can_net));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CAN_EXPORT void
@@ -337,7 +340,10 @@ can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 LELY_CAN_EXPORT void *
 __can_timer_alloc(void)
 {
-	return malloc(sizeof(struct __can_timer));
+	void *ptr = malloc(sizeof(struct __can_timer));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CAN_EXPORT void
@@ -489,7 +495,10 @@ can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
 LELY_CAN_EXPORT void *
 __can_recv_alloc(void)
 {
-	return malloc(sizeof(struct __can_recv));
+	void *ptr = malloc(sizeof(struct __can_recv));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CAN_EXPORT void

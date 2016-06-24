@@ -46,8 +46,10 @@ can_buf_init(struct can_buf *buf, size_t size)
 	buf->size--;
 
 	buf->ptr = malloc((buf->size + 1) * sizeof(struct can_msg));
-	if (__unlikely(!buf->ptr))
+	if (__unlikely(!buf->ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 
 #ifdef LELY_NO_ATOMICS
 	buf->begin = 0;
@@ -75,7 +77,7 @@ can_buf_create(size_t size)
 
 	struct can_buf *buf = malloc(sizeof(*buf));
 	if (__unlikely(!buf)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_buf;
 	}
 
@@ -130,8 +132,10 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 	// Reallocate the existing buffer.
 	struct can_msg *ptr = realloc(buf->ptr,
 			(size + 1) * sizeof(struct can_msg));
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return 0;
+	}
 	buf->ptr = ptr;
 
 	// If the buffer consists of two regions (because of wrapping), move the
