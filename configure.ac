@@ -14,8 +14,13 @@ AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
 AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
+AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
+	doc/Doxyfile
+	doc/Makefile
 	Makefile
 	${PACKAGE}.pc
 ])
