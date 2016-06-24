@@ -151,7 +151,10 @@ co_wtm_ac_str(uint32_t ac)
 LELY_CO_EXPORT void *
 __co_wtm_alloc(void)
 {
-	return malloc(sizeof(struct __co_wtm));
+	void *ptr = malloc(sizeof(struct __co_wtm));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

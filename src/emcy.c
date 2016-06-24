@@ -190,7 +190,10 @@ static void co_emcy_flush(co_emcy_t *emcy);
 LELY_CO_EXPORT void *
 __co_emcy_alloc(void)
 {
-	return malloc(sizeof(struct __co_emcy));
+	void *ptr = malloc(sizeof(struct __co_emcy));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -366,8 +369,10 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
 	// Make room on the stack.
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
-	if (__unlikely(!msgs))
+	if (__unlikely(!msgs)) {
+		set_errno(errno);
 		return -1;
+	}
 	emcy->msgs = msgs;
 	if (emcy->nmsg) {
 		// Copy the current error register.
@@ -467,7 +472,7 @@ co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 
 	struct co_emcy_node *node = malloc(sizeof(*node));
 	if (__unlikely(!node)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_alloc_node;
 	}
 

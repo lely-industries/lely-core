@@ -567,7 +567,10 @@ static void co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg,
 LELY_CO_EXPORT void *
 __co_csdo_alloc(void)
 {
-	return malloc(sizeof(struct __co_csdo));
+	void *ptr = malloc(sizeof(struct __co_csdo));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -819,7 +822,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 		uint8_t *buf = malloc(n);
 		if (__unlikely(n && !buf)) {
-			errc = get_errc();
+			errc = errno2c(errno);
 			goto error_malloc_buf;
 		}
 

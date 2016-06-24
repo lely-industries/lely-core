@@ -63,7 +63,10 @@ static co_unsigned32_t default_sub_up_file_ind(const co_sub_t *sub,
 LELY_CO_EXPORT void *
 __co_obj_alloc(void)
 {
-	return malloc(sizeof(struct __co_obj));
+	void *ptr = malloc(sizeof(struct __co_obj));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -233,8 +236,10 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 	}
 
 	void *ptr = realloc(obj->name, strlen(name) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	obj->name = ptr;
 	strcpy(obj->name, name);
 
@@ -350,7 +355,10 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 LELY_CO_EXPORT void *
 __co_sub_alloc(void)
 {
-	return malloc(sizeof(struct __co_sub));
+	void *ptr = malloc(sizeof(struct __co_sub));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -477,8 +485,10 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 	}
 
 	void *ptr = realloc(sub->name, strlen(name) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	sub->name = ptr;
 	strcpy(sub->name, name);
 
@@ -791,8 +801,10 @@ co_obj_update(co_obj_t *obj)
 	void *val = NULL;
 	if (size) {
 		val = calloc(1, size);
-		if (__unlikely(!val))
+		if (__unlikely(!val)) {
+			set_errno(errno);
 			return;
+		}
 	}
 
 	// Initialize the values of the sub-objects.

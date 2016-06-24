@@ -163,7 +163,10 @@ static co_unsigned32_t co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
 LELY_CO_EXPORT void *
 __co_tpdo_alloc(void)
 {
-	return malloc(sizeof(struct __co_tpdo));
+	void *ptr = malloc(sizeof(struct __co_tpdo));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

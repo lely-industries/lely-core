@@ -1293,8 +1293,10 @@ co_array_alloc(void *val, size_t size)
 
 	if (size) {
 		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
-		if (__unlikely(!ptr))
+		if (__unlikely(!ptr)) {
+			set_errno(errno);
 			return -1;
+		}
 		*(char **)val = ptr + CO_ARRAY_OFFSET;
 	} else {
 		*(char **)val = NULL;

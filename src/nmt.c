@@ -549,7 +549,10 @@ co_nmt_es_str(char es)
 LELY_CO_EXPORT void *
 __co_nmt_alloc(void)
 {
-	return malloc(sizeof(struct __co_nmt));
+	void *ptr = malloc(sizeof(struct __co_nmt));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -2524,8 +2527,9 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	if (obj_1016) {
 		nmt->nhb = co_obj_get_val_u8(obj_1016, 0x00);
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
-		if (__unlikely(nmt->nhb && !nmt->hbs)) {
+		if (__unlikely(!nmt->hbs && nmt->nhb)) {
 			nmt->nhb = 0;
+			set_errno(errno);
 			diag(DIAG_ERROR, get_errc(), "unable to create heartbeat consumers");
 		}
 	}

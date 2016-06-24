@@ -69,7 +69,10 @@ static void co_val_set_id(co_unsigned16_t type, void *val,
 LELY_CO_EXPORT void *
 __co_dev_alloc(void)
 {
-	return malloc(sizeof(struct __co_dev));
+	void *ptr = malloc(sizeof(struct __co_dev));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
@@ -278,8 +281,10 @@ co_dev_set_name(co_dev_t *dev, const char *name)
 	}
 
 	void *ptr = realloc(dev->name, strlen(name) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	dev->name = ptr;
 	strcpy(dev->name, name);
 
@@ -306,8 +311,10 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 	}
 
 	void *ptr = realloc(dev->vendor_name, strlen(vendor_name) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	dev->vendor_name = ptr;
 	strcpy(dev->vendor_name, vendor_name);
 
@@ -350,8 +357,10 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 	}
 
 	void *ptr = realloc(dev->product_name, strlen(product_name) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	dev->product_name = ptr;
 	strcpy(dev->product_name, product_name);
 
@@ -410,8 +419,10 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 	}
 
 	void *ptr = realloc(dev->order_code, strlen(order_code) + 1);
-	if (__unlikely(!ptr))
+	if (__unlikely(!ptr)) {
+		set_errno(errno);
 		return -1;
+	}
 	dev->order_code = ptr;
 	strcpy(dev->order_code, order_code);
 
@@ -676,7 +687,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
 	co_unsigned16_t *idx = malloc(maxidx * sizeof(co_unsigned16_t));
 	if (__unlikely(!idx)) {
-		errc = get_errc();
+		errc = errno2c(errno);
 		goto error_malloc_idx;
 	}
 	maxidx = co_dev_get_idx(dev, maxidx, idx);

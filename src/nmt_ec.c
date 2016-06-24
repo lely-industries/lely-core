@@ -71,7 +71,10 @@ static int co_nmt_hb_timer(const struct timespec *tp, void *data);
 void *
 __co_nmt_hb_alloc(void)
 {
-	return malloc(sizeof(struct __co_nmt_hb));
+	void *ptr = malloc(sizeof(struct __co_nmt_hb));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 void

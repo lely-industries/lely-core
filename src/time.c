@@ -143,7 +143,10 @@ co_time_diff_set(co_time_diff_t *td, const struct timespec *tp)
 LELY_CO_EXPORT void *
 __co_time_alloc(void)
 {
-	return malloc(sizeof(struct __co_time));
+	void *ptr = malloc(sizeof(struct __co_time));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

@@ -482,7 +482,10 @@ static void co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg,
 LELY_CO_EXPORT void *
 __co_ssdo_alloc(void)
 {
-	return malloc(sizeof(struct __co_ssdo));
+	void *ptr = malloc(sizeof(struct __co_ssdo));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

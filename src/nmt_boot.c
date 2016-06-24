@@ -687,7 +687,10 @@ static int co_nmt_boot_send_rtr(co_nmt_boot_t *boot);
 void *
 __co_nmt_boot_alloc(void)
 {
-	return malloc(sizeof(struct __co_nmt_boot));
+	void *ptr = malloc(sizeof(struct __co_nmt_boot));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 void

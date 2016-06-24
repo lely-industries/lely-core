@@ -112,7 +112,10 @@ static int co_sync_timer(const struct timespec *tp, void *data);
 LELY_CO_EXPORT void *
 __co_sync_alloc(void)
 {
-	return malloc(sizeof(struct __co_sync));
+	void *ptr = malloc(sizeof(struct __co_sync));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

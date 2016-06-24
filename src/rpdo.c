@@ -149,7 +149,10 @@ static co_unsigned32_t co_rpdo_read_frame(co_rpdo_t *pdo,
 LELY_CO_EXPORT void *
 __co_rpdo_alloc(void)
 {
-	return malloc(sizeof(struct __co_rpdo));
+	void *ptr = malloc(sizeof(struct __co_rpdo));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void

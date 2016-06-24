@@ -32,10 +32,10 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
-// Include inttypes.h after stdio.h to enforce declarations of format
-// specifiers in Newlib.
+// Include inttypes.h after stdio.h to enforce declarations of format specifiers
+// in Newlib.
 #include <inttypes.h>
+#include <stdlib.h>
 
 static int co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev);
 static int co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj);
@@ -113,14 +113,14 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (__unlikely(!dev))
 		return 0;
 
-	errc_t errc = 0;
+	int errsv = 0;
 
 	int r, t = 0;
 	const char *name;
 
 	r = snprintf(s, n, "{\n\t.id = 0x%02x,\n", co_dev_get_id(dev));
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -129,13 +129,13 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (name) {
 		r = snprintf(s, n, "\t.name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf_c99_esc(s, n, name);
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -144,7 +144,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		r = snprintf(s, n, "\t.name = NULL,\n");
 	}
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -153,13 +153,13 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (name) {
 		r = snprintf(s, n, "\t.vendor_name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf_c99_esc(s, n, name);
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -168,7 +168,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		r = snprintf(s, n, "\t.vendor_name = NULL,\n");
 	}
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -176,7 +176,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	r = snprintf(s, n, "\t.vendor_id = 0x%08" PRIx32 ",\n",
 			co_dev_get_vendor_id(dev));
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -185,13 +185,13 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (name) {
 		r = snprintf(s, n, "\t.product_name = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+		errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf_c99_esc(s, n, name);
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+		errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -200,7 +200,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		r = snprintf(s, n, "\t.product_name = NULL,\n");
 	}
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -208,7 +208,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	r = snprintf(s, n, "\t.product_code = 0x%08" PRIx32 ",\n\t.revision = 0x%08" PRIx32 ",\n",
 			co_dev_get_product_code(dev), co_dev_get_revision(dev));
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -217,13 +217,13 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (name) {
 		r = snprintf(s, n, "\t.order_code = CO_SDEV_STRING(\"");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf_c99_esc(s, n, name);
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_dev;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -232,14 +232,14 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 		r = snprintf(s, n, "\t.order_code = NULL,\n");
 	}
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
 
 	r = snprintf(s, n, "\t.baud = 0");
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -248,7 +248,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	if (baud & CO_BAUD_##x) { \
 		r = snprintf(s, n, "\n\t\t| CO_BAUD_" #x); \
 		if (__unlikely(r < 0)) { \
-			errc = get_errc(); \
+			errsv = errno; \
 			goto error_print_dev; \
 		} \
 		t += r; r = MIN((size_t)r, n); s += r; n -= r; \
@@ -268,7 +268,7 @@ LELY_CO_DEFINE_BAUD(AUTO)
 			co_dev_get_rate(dev), co_dev_get_lss(dev),
 			co_dev_get_dummy(dev));
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_dev;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -276,7 +276,7 @@ LELY_CO_DEFINE_BAUD(AUTO)
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
 	co_unsigned16_t *idx = malloc(maxidx * sizeof(co_unsigned16_t));
 	if (__unlikely(!idx)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_malloc_idx;
 	}
 	co_dev_get_idx(dev, maxidx, idx);
@@ -284,7 +284,7 @@ LELY_CO_DEFINE_BAUD(AUTO)
 	r = snprintf(s, n, "\t.nobj = %d,\n\t.objs = (const struct co_sobj[]){",
 			maxidx);
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_obj;
 	}
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -292,19 +292,19 @@ LELY_CO_DEFINE_BAUD(AUTO)
 	for (size_t i = 0; i < maxidx; i++) {
 		r = snprintf(s, n, i ? ", {\n" : "{\n");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_obj;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf_c99_sobj(s, n, co_dev_find_obj(dev, idx[i]));
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_obj;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf(s, n, "\t}");
 		if (__unlikely(r < 0)) {
-			errc = get_errc();
+			errsv = errno;
 			goto error_print_obj;
 		}
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -312,7 +312,7 @@ LELY_CO_DEFINE_BAUD(AUTO)
 
 	r = snprintf(s, n, "}\n}");
 	if (__unlikely(r < 0)) {
-		errc = get_errc();
+		errsv = errno;
 		goto error_print_obj;
 	}
 	t += r;
@@ -325,7 +325,7 @@ error_print_obj:
 	free(idx);
 error_malloc_idx:
 error_print_dev:
-	set_errc(errc);
+	errno = errsv;
 	return r;
 }
 

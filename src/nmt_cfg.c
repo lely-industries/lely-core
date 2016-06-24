@@ -167,7 +167,10 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_restore_state,
 void *
 __co_nmt_cfg_alloc(void)
 {
-	return malloc(sizeof(struct __co_nmt_cfg));
+	void *ptr = malloc(sizeof(struct __co_nmt_cfg));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 void

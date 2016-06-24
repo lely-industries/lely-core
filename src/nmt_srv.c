@@ -242,8 +242,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_rpdo_t **rpdos =
 				realloc(srv->rpdos, (i + 1) * sizeof(*rpdos));
-		if (__unlikely(!rpdos))
+		if (__unlikely(!rpdos)) {
+			set_errno(errno);
 			goto error;
+		}
 		srv->rpdos = rpdos;
 
 		for (size_t j = srv->nrpdo; j < i; j++)
@@ -266,8 +268,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_tpdo_t **tpdos =
 				realloc(srv->tpdos, (i + 1) * sizeof(*tpdos));
-		if (__unlikely(!tpdos))
+		if (__unlikely(!tpdos)) {
+			set_errno(errno);
 			goto error;
+		}
 		srv->tpdos = tpdos;
 
 		for (size_t j = srv->ntpdo; j < i; j++)
@@ -337,8 +341,10 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_ssdo_t **ssdos =
 				realloc(srv->ssdos, (i + 1) * sizeof(*ssdos));
-		if (__unlikely(!ssdos))
+		if (__unlikely(!ssdos)) {
+			set_errno(errno);
 			goto error;
+		}
 		srv->ssdos = ssdos;
 
 		for (size_t j = srv->nssdo; j < i; j++)
@@ -359,8 +365,10 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_csdo_t **csdos =
 				realloc(srv->csdos, (i + 1) * sizeof(*csdos));
-		if (__unlikely(!csdos))
+		if (__unlikely(!csdos)) {
+			set_errno(errno);
 			goto error;
+		}
 		srv->csdos = csdos;
 
 		for (size_t j = srv->ncsdo; j < i; j++)

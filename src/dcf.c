@@ -274,7 +274,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	// Parse the object indices.
 	co_unsigned16_t *idx = malloc(n * sizeof(co_unsigned16_t));
 	if (__unlikely(!idx)) {
-		diag(DIAG_ERROR, get_errc(), "unable to create object list");
+		diag(DIAG_ERROR, errno2c(errno), "unable to create object list");
 		goto error_parse_idx;
 	}
 	co_unsigned16_t i = 0;

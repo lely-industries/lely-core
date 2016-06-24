@@ -572,7 +572,10 @@ static void co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs);
 LELY_CO_EXPORT void *
 __co_lss_alloc(void)
 {
-	return malloc(sizeof(struct __co_lss));
+	void *ptr = malloc(sizeof(struct __co_lss));
+	if (__unlikely(!ptr))
+		set_errno(errno);
+	return ptr;
 }
 
 LELY_CO_EXPORT void
