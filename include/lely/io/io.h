@@ -36,6 +36,12 @@
 #endif
 #endif
 
+//! An opaque I/O device handle type.
+typedef struct io_handle *io_handle_t;
+
+//! The value of an invalid I/O device handle.
+#define IO_HANDLE_ERROR	((io_handle_t)NULL)
+
 //! An opaque network address type.
 typedef struct __io_addr io_addr_t;
 
@@ -61,6 +67,14 @@ LELY_IO_EXTERN int lely_io_init(void);
  * Only the last invocation will finalize the library.
  */
 LELY_IO_EXTERN void lely_io_fini(void);
+
+/*!
+ * Closes an I/O device.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_close(io_handle_t handle);
 
 #ifdef __cplusplus
 }

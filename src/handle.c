@@ -1,8 +1,8 @@
 /*!\file
  * This file is part of the I/O library; it contains the implementation of the
- * the initialization and finalization functions.
+ * I/O handle functions.
  *
- * \see lely/io/io.h
+ * \see src/handle.h
  *
  * \copyright 2016 Lely Industries N.V.
  *
@@ -25,59 +25,53 @@
 #include <lely/util/errnum.h>
 #include "handle.h"
 
-static int lely_io_ref;
+#include <assert.h>
+#include <stdlib.h>
 
-LELY_IO_EXPORT int
-lely_io_init(void)
+struct io_handle *
+io_handle_alloc(const struct io_handle_vtab *vtab)
 {
-	if (lely_io_ref++)
-		return 0;
+	assert(vtab);
+	assert(vtab->size >= sizeof(struct io_handle));
 
-	errc_t errc = 0;
-
-#ifdef _WIN32
-	WORD wVersionRequested = MAKEWORD(2, 2);
-	WSADATA wsaData;
-	if (__unlikely(errc = WSAStartup(wVersionRequested, &wsaData)))
-		goto error_WSAStartup;
-#endif
-
-	return 0;
-
-#ifdef _WIN32
-	WSACleanup();
-error_WSAStartup:
-#endif
-	lely_io_ref--;
-	set_errc(errc);
-	return -1;
-}
-
-LELY_IO_EXPORT void
-lely_io_fini(void)
-{
-	if (__unlikely(lely_io_ref <= 0)) {
-		lely_io_ref = 0;
-		return;
-	}
-	if (--lely_io_ref)
-		return;
-
-#ifdef _WIN32
-	WSACleanup();
-#endif
-}
-
-LELY_IO_EXPORT int
-io_close(io_handle_t handle)
-{
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
-		set_errnum(ERRNUM_BADF);
-		return -1;
+	struct io_handle *handle = malloc(vtab->size);
+	if (__unlikely(!handle)) {
+		set_errno(errno);
+		return NULL;
 	}
 
-	io_handle_release(handle);
+	handle->vtab = vtab;
+#ifndef LELY_NO_ATOMICS
+	atomic_init(&handle->ref, 0);
+#else
+	handle->ref = 0;
+#endif
 
-	return 0;
+	return handle;
+}
+
+void
+io_handle_fini(struct io_handle *handle)
+{
+	assert(handle);
+	assert(handle->vtab);
+
+	if (handle->vtab->fini)
+		handle->vtab->fini(handle);
+}
+
+void
+io_handle_free(struct io_handle *handle)
+{
+	free(handle);
+}
+
+void
+io_handle_destroy(struct io_handle *handle)
+{
+	if (handle) {
+		io_handle_fini(handle);
+		io_handle_free(handle);
+	}
 }
 

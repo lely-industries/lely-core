@@ -1,5 +1,7 @@
 src =
 src += addr.c
+src += handle.c
+src += handle.h
 src += if.c
 src += io.c
 src += io.h

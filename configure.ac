@@ -34,6 +34,14 @@ AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
 
+AM_CONDITIONAL([NO_THREADS], [false])
+AC_ARG_ENABLE([threads],
+	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
+AS_IF([test "x$enable_threads" == "xno"], [
+	AM_CONDITIONAL([NO_THREADS], [true])
+	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+])
+
 AS_IF([test "x$platform_win32" == "xyes"], [
 	AC_MSG_CHECKING([for WSAGetLastError in ws2_32])
 	ax_winsock_ok=no
