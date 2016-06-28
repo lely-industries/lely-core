@@ -227,6 +227,157 @@ LELY_IO_EXPORT int io_sock_get_peername(io_handle_t handle, io_addr_t *addr);
  */
 LELY_IO_EXPORT int io_sock_get_maxconn(void);
 
+/*!
+ * Checks if a socket is currently listening for incoming connections. This
+ * function implements the SOL_SOCKET/SO_ACCEPTCONN option.
+ *
+ * \returns 1 if the socket is accepting connections and 0 if not, or -1 on
+ * error. In the latter case, the error number can be obtained with
+ * `get_errnum()`.
+ *
+ * \see io_sock_listen()
+ */
+LELY_IO_EXTERN int io_sock_get_acceptconn(io_handle_t handle);
+
+/*!
+ * Checks if a socket is allowed to send broadcast messages. This function
+ * implements the SOL_SOCKET/SO_BROADCAST option.
+ *
+ * \returns 1 if address reuse is enabled and 0 if not, or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_broadcast()
+ */
+LELY_IO_EXTERN int io_sock_get_broadcast(io_handle_t handle);
+
+/*!
+ * Enables a socket to send broadcast messages if \a broadcast is non-zero, and
+ * disables this option otherwise (disabled by default). This function
+ * implements the SOL_SOCKET/SO_BROADCAST option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_broadcast()
+ */
+LELY_IO_EXTERN int io_sock_set_broadcast(io_handle_t handle, int broadcast);
+
+/*!
+ * Obtains and clears the current native error code of a socket, and stores the
+ * value in *\a perrc. This function implements the SOL_SOCKET/SO_ERROR option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_sock_get_errc(io_handle_t handle, errc_t *perrc);
+
+/*!
+ * Checks if the TCP keep-alive option is enabled for a socket. This function
+ * implements the SOL_SOCKET/KEEPALIVE option.
+ *
+ * \returns 1 if TCP keep-alive is enabled and 0 if not, or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_keepalive()
+ */
+LELY_IO_EXTERN int io_sock_get_keepalive(io_handle_t handle);
+
+/*!
+ * Enables or disables the TCP keep-alive option for a socket (disabled by
+ * default). Note that the \a time and \a interval options are supported only on
+ * Windows and Linux. This function implements the SOL_SOCKET/SO_KEEPALIVE
+ * option.
+ *
+ * \param handle    a valid socket device handle.
+ * \param keepalive a boolean option specifying whether TCP keep-alive should be
+ *                  enabled (non-zero) or disabled (zero).
+ * \param time      the timeout (in seconds) after which the first keep-alive
+ *                  packet is sent. This parameter is unused if \a keepalive is
+ *                  zero.
+ * \param interval  the interval (in seconds) between successive keep-alive
+ *                  packets if no acknowledgment is received. This parameter is
+ *                  unused if \a keepalive is zero.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_keepalive()
+ */
+LELY_IO_EXTERN int io_sock_set_keepalive(io_handle_t handle, int keepalive,
+		int time, int interval);
+
+/*!
+ * Sets the timeout (in milliseconds) of a receive operation on a socket. This
+ * function implements the SOL_SOCKET/SO_RCVTIMEO option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_sock_set_rcvtimeo(io_handle_t handle, int timeout);
+
+/*!
+ * Checks if a socket is allowed to be bound to an address that is already in
+ * use. This function implements the SOL_SOCKET/SO_REUSEADDR option.
+ *
+ * \returns 1 if address reuse is enabled and 0 if not, or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_reuseaddr()
+ */
+LELY_IO_EXTERN int io_sock_get_reuseaddr(io_handle_t handle);
+
+/*!
+ * Enables a socket to be bound to an address that is already in use if
+ * \a reuseaddr is non-zero, and disables this option otherwise (disabled by
+ * default). This function implements the SOL_SOCKET/SO_REUSEADDR option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_reuseaddr()
+ */
+LELY_IO_EXTERN int io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr);
+
+/*!
+ * Sets the timeout (in milliseconds) of a send operation on a socket. This
+ * function implements the SOL_SOCKET/SO_SNDTIMEO option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_sock_set_sndtimeo(io_handle_t handle, int timeout);
+
+/*!
+ * Checks if Nagle's algorithm for send coalescing is enabled for a socket. This
+ * function implements the IPPROTO_TCP/TCP_NODELAY option.
+ *
+ * \returns 1 if Nagle's algorithm is disabled and 0 otherwise, or -1 on error.
+ * In the latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_tcp_nodelay()
+ */
+LELY_IO_EXTERN int io_sock_get_tcp_nodelay(io_handle_t handle);
+
+/*!
+ * Disables Nagle's algorithm for send coalescing if \a nodelay is non-zero, and
+ * enables it otherwise. This function implements the IPPROTO_TCP/TCP_NODELAY
+ * option. Nagle's algorithm is enabled by default.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_tcp_nodelay()
+ */
+LELY_IO_EXTERN int io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay);
+
+/*!
+ * Obtains the amount of data (in bytes) in the input buffer of a socket.
+ *
+ * \returns the number of bytes that can be read, or -1 on error. In the latter
+ * case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN ssize_t io_sock_get_nread(io_handle_t handle);
+
 #ifdef __cplusplus
 }
 #endif

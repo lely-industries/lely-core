@@ -506,6 +506,271 @@ io_sock_get_maxconn(void)
 	return SOMAXCONN;
 }
 
+LELY_IO_EXPORT int
+io_sock_get_acceptconn(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval;
+#else
+	int optval;
+#endif
+	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ACCEPTCONN,
+			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		return -1;
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_get_broadcast(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval;
+#else
+	int optval;
+#endif
+	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
+			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		return -1;
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_broadcast(io_handle_t handle, int broadcast)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval = !!broadcast;
+#else
+	int optval = !!broadcast;
+#endif
+	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
+			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_get_errc(io_handle_t handle, errc_t *perrc)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	return getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ERROR,
+			(char *)perrc, &(socklen_t){ sizeof(*perrc) }) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_get_keepalive(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval;
+#else
+	int optval;
+#endif
+	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_KEEPALIVE,
+			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		return -1;
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	struct tcp_keepalive kaInBuffer = {
+		.onoff = keepalive,
+		// The timeout is specified in milliseconds.
+		.keepalivetime = time * 1000,
+		// The interval is specified in milliseconds.
+		.keepaliveinterval = interval * 1000
+	};
+	DWORD dwBytesReturned;
+	return WSAIoctl((SOCKET)handle->fd, SIO_KEEPALIVE_VALS, &kaInBuffer,
+			sizeof(kaInBuffer), NULL, 0, &dwBytesReturned, NULL,
+			NULL) ? -1 : 0;
+#else
+	if (__unlikely(setsockopt(handle->fd, SOL_SOCKET, SO_KEEPALIVE,
+			&keepalive, sizeof(keepalive)) == -1))
+		return -1;
+#ifdef __linux__
+	if (keepalive) {
+		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPIDLE,
+				&time, sizeof(time)) == -1))
+			return -1;
+		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPINTVL,
+				&interval, sizeof(interval)) == -1))
+			return -1;
+	}
+#else
+	__unused_var(time);
+	__unused_var(interval);
+#endif
+	return 0;
+#endif
+}
+
+LELY_IO_EXPORT int
+io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval = timeout;
+#else
+	struct timeval optval = {
+		.tv_sec = timeout / 1000,
+		.tv_usec = (timeout % 1000) * 1000
+	};
+#endif
+	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVTIMEO,
+			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_get_reuseaddr(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval;
+#else
+	int optval;
+#endif
+	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
+			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		return -1;
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval = !!reuseaddr;
+#else
+	int optval = !!reuseaddr;
+#endif
+	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
+			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_sndtimeo(io_handle_t handle, int timeout)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval = timeout;
+#else
+	struct timeval optval = {
+		.tv_sec = timeout / 1000,
+		.tv_usec = (timeout % 1000) * 1000
+	};
+#endif
+	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDTIMEO,
+			(const char *)&optval, sizeof(optval)) ? -1 :0;
+}
+
+LELY_IO_EXPORT int
+io_sock_get_tcp_nodelay(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval;
+#else
+	int optval;
+#endif
+	if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
+			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		return -1;
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	BOOL optval = !!nodelay;
+#else
+	int optval = !!nodelay;
+#endif
+	return setsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
+			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+}
+
+#if defined(_WIN32) || defined(HAVE_SYS_IOCTL_H)
+LELY_IO_EXTERN ssize_t
+io_sock_get_nread(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+#ifdef _WIN32
+	u_long optval;
+	if (__unlikely(ioctlsocket((SOCKET)handle->fd, FIONREAD, &optval)))
+		return -1;
+	return optval;
+#else
+	int optval;
+	int result;
+	do result = ioctl(handle->fd, FIONREAD, &optval);
+	while (__unlikely(result == -1 && errno == EINTR));
+	if (__unlikely(result == -1))
+		return -1;
+	return optval;
+#endif
+}
+#endif
+
 static void
 sock_fini(struct io_handle *handle)
 {
