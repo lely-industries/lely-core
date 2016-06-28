@@ -11,6 +11,7 @@ AM_SILENT_RULES([yes])
 
 AC_LANG(C)
 AC_PROG_CC_STDC
+AC_USE_SYSTEM_EXTENSIONS
 
 LT_INIT([win32-dll])
 LT_PROG_RC
@@ -78,6 +79,9 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_CHECK_HEADERS([ifaddrs.h])
 
 	AC_CHECK_HEADERS([linux/can.h])
+	AC_CHECK_HEADERS([linux/can/raw.h])
+	AC_EGREP_HEADER([CAN_RAW_FD_FRAMES], [linux/can/raw.h],
+		[AC_DEFINE([HAVE_CAN_RAW_FD_FRAMES], [1], [Have CAN_RAW_FD_FRAMES])])
 
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])

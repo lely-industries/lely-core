@@ -21,7 +21,7 @@
 #ifndef LELY_IO_IO_H
 #define LELY_IO_IO_H
 
-#include <lely/libc/libc.h>
+#include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
 #ifndef LELY_IO_EXTERN
@@ -75,6 +75,33 @@ LELY_IO_EXTERN void lely_io_fini(void);
  * can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_close(io_handle_t handle);
+
+/*!
+ * Performs a read operation. For regular files, this function updates the file
+ * pointer on success.
+ *
+ * \param handle a valid I/O device id.
+ * \param buf    a pointer to the destination buffer.
+ * \param nbytes the number of bytes to read.
+ *
+ * \returns the number of bytes read on success, or -1 on error. In the latter
+ * case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
+
+/*!
+ * Performs a write operation. For regular files, this function updates the file
+ * pointer on success.
+ *
+ * \param handle a valid I/O device id.
+ * \param buf    a pointer to the source buffer.
+ * \param nbytes the number of bytes to write.
+ *
+ * \returns the number of bytes written on success, or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN ssize_t io_write(io_handle_t handle, const void *buf,
+		size_t nbytes);
 
 #ifdef __cplusplus
 }

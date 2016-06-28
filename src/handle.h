@@ -46,6 +46,12 @@ struct io_handle {
 #else
 	atomic_size_t ref;
 #endif
+	//! The native file descriptor.
+#ifdef _WIN32
+	HANDLE fd;
+#else
+	int fd;
+#endif
 };
 
 #ifdef __cplusplus
@@ -58,6 +64,21 @@ struct io_handle_vtab {
 	size_t size;
 	//! A pointer to the \a fini method.
 	void (*fini)(struct io_handle *handle);
+	//! A pointer to the \a read method. \see io_read()
+	ssize_t (*read)(struct io_handle *handle, void *buf, size_t nbytes);
+	//! A pointer to the \a write method. \see io_write()
+	ssize_t (*write)(struct io_handle *handle, const void *buf,
+			size_t nbytes);
+	//! A pointer to the \a recv method. \see io_recv()
+	ssize_t (*recv)(struct io_handle *handle, void *buf, size_t nbytes,
+			io_addr_t *addr);
+	//! A pointer to the \a send method. \see io_send()
+	ssize_t (*send)(struct io_handle *handle, const void *buf,
+			size_t nbytes, const io_addr_t *addr);
+	//! A pointer to the \a accept method. \see io_accept()
+	struct io_handle *(*accept)(struct io_handle *handle, io_addr_t *addr);
+	//! A pointer to the \a connect method. \see io_connect()
+	int (*connect)(struct io_handle *handle, const io_addr_t *addr);
 };
 
 /*!

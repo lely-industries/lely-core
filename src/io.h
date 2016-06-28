@@ -47,6 +47,7 @@
 #include <iphlpapi.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -71,6 +72,9 @@
 #ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
 #endif
+#ifdef HAVE_LINUX_CAN_RAW_H
+#include <linux/can/raw.h>
+#endif
 
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
@@ -79,6 +83,20 @@
 #ifndef ARPHRD_CAN
 #define ARPHRD_CAN	280
 #endif
+
+#endif
+
+#ifndef _WIN32
+
+typedef int HANDLE;
+#define INVALID_HANDLE_VALUE	(-1)
+
+typedef int SOCKET;
+#define INVALID_SOCKET	(-1)
+
+#define SOCKET_ERROR	(-1)
+
+#define closesocket	close
 
 #endif
 

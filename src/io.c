@@ -25,6 +25,8 @@
 #include <lely/util/errnum.h>
 #include "handle.h"
 
+#include <assert.h>
+
 static int lely_io_ref;
 
 LELY_IO_EXPORT int
@@ -79,5 +81,39 @@ io_close(io_handle_t handle)
 	io_handle_release(handle);
 
 	return 0;
+}
+
+LELY_IO_EXPORT ssize_t
+io_read(io_handle_t handle, void *buf, size_t nbytes)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	assert(handle->vtab);
+	if (__unlikely(!handle->vtab->read)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+	return handle->vtab->read(handle, buf, nbytes);
+}
+
+LELY_IO_EXPORT ssize_t
+io_write(io_handle_t handle, const void *buf, size_t nbytes)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	assert(handle->vtab);
+	if (__unlikely(!handle->vtab->write)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+	return handle->vtab->write(handle, buf, nbytes);
 }
 
