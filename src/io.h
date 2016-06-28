@@ -87,7 +87,33 @@
 
 #endif
 
-#ifndef _WIN32
+#ifdef _WIN32
+
+#ifndef MCAST_JOIN_GROUP
+#define MCAST_JOIN_GROUP	41
+#endif
+
+#ifndef MCAST_LEAVE_GROUP
+#define MCAST_LEAVE_GROUP	42
+#endif
+
+#ifndef MCAST_BLOCK_SOURCE
+#define MCAST_BLOCK_SOURCE	43
+#endif
+
+#ifndef MCAST_UNBLOCK_SOURCE
+#define MCAST_UNBLOCK_SOURCE	44
+#endif
+
+#ifndef MCAST_JOIN_SOURCE_GROUP
+#define MCAST_JOIN_SOURCE_GROUP	45
+#endif
+
+#ifndef MCAST_LEAVE_SOURCE_GROUP
+#define MCAST_LEAVE_SOURCE_GROUP	46
+#endif
+
+#else
 
 typedef int HANDLE;
 #define INVALID_HANDLE_VALUE	(-1)
@@ -99,7 +125,7 @@ typedef int SOCKET;
 
 #define closesocket	close
 
-#endif
+#endif // _WIN32
 
 #endif
 

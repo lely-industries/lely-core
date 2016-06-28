@@ -378,6 +378,161 @@ LELY_IO_EXTERN int io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay);
  */
 LELY_IO_EXTERN ssize_t io_sock_get_nread(io_handle_t handle);
 
+/*!
+ * Checks if the loopback of outgoing multicast datagrams is enabled for a
+ * socket. This function implements the IPPROTO_IP/IP_MULTICAST_LOOP and
+ * IPPROTO_IPV6/IPV6_MULTICAST_LOOP options.
+ *
+ * \returns 1 if multicast loopback is enabled and 0 if not, or -1 on error. In
+ * the latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_mcast_loop()
+ */
+LELY_IO_EXTERN int io_sock_get_mcast_loop(io_handle_t handle);
+
+/*!
+ * Enables the loopback of outgoing multicast datagrams for a socket if \a loop
+ * is non-zero, and disables this option otherwise (enabled by default). This
+ * function implements the IPPROTO_IP/IP_MULTICAST_LOOP and
+ * IPPROTO_IPV6/IPV6_MULTICAST_LOOP options.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_mcast_loop()
+ */
+LELY_IO_EXTERN int io_sock_set_mcast_loop(io_handle_t handle, int loop);
+
+/*!
+ * Obtains the TTL (time to live) value for IP multicast traffic on a socket.
+ * This function implements the IPPROTO_IP/IP_MULTICAST_TTL and
+ * IPPROTO_IPV6/IPV6_MULTICAST_HOPS options.
+ *
+ * \returns the TTL for IP multicast traffic, or -1 on error. In the latter
+ * case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_mcast_ttl()
+ */
+LELY_IO_EXTERN int io_sock_get_mcast_ttl(io_handle_t handle);
+
+/*!
+ * Sets the TTL (time to live) value for IP multicast traffic on a socket (the
+ * default is 1). This function implements the IPPROTO_IP/IP_MULTICAST_TTL and
+ * IPPROTO_IPV6/IPV6_MULTICAST_HOPS options.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_mcast_ttl()
+ */
+LELY_IO_EXTERN int io_sock_set_mcast_ttl(io_handle_t handle, int ttl);
+
+/*!
+ * Joins an any-source multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the group to join.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_leave_group()
+ */
+LELY_IO_EXTERN int io_sock_mcast_join_group(io_handle_t handle,
+		unsigned int index, const io_addr_t *group);
+
+/*!
+ * Blocks data from a given source to a given multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the multicast group.
+ * \param source a pointer to the address of the source to block.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_unblock_source()
+ */
+LELY_IO_EXTERN int io_sock_mcast_block_source(io_handle_t handle,
+		unsigned int index, const io_addr_t *group,
+		const io_addr_t *source);
+
+/*!
+ * Unblocks data from a given source to a given multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the multicast group.
+ * \param source a pointer to the address of the source to unblock.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_block_source()
+ */
+LELY_IO_EXTERN int io_sock_mcast_unblock_source(io_handle_t handle,
+		unsigned int index, const io_addr_t *group,
+		const io_addr_t *source);
+
+/*!
+ * Leaves an any-source multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the group to leave.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_join_group()
+ */
+LELY_IO_EXTERN int io_sock_mcast_leave_group(io_handle_t handle,
+		unsigned int index, const io_addr_t *group);
+
+/*!
+ * Joins a source-specific multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the group to join.
+ * \param source a pointer to the address of the source from which to receive
+ *               data.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_join_source_group()
+ */
+LELY_IO_EXTERN int io_sock_mcast_join_source_group(io_handle_t handle,
+		unsigned int index, const io_addr_t *group,
+		const io_addr_t *source);
+
+/*!
+ * Leaves a source-specific multicast group.
+ *
+ * \param handle a valid IPv4 or IPv6 connectionless socket device handle.
+ * \param index  a network interface index. On Linux, if \a index is 0, the
+ *               interface is chosen automatically.
+ * \param group  a pointer to the address of the group to leave.
+ * \param source a pointer to the address of the source from which data was
+ *               received.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_mcast_leave_source_group()
+ */
+LELY_IO_EXTERN int io_sock_mcast_leave_source_group(io_handle_t handle,
+		unsigned int index, const io_addr_t *group,
+		const io_addr_t *source);
+
 #ifdef __cplusplus
 }
 #endif

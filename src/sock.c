@@ -28,6 +28,7 @@
 #include "handle.h"
 
 #include <assert.h>
+#include <string.h>
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
@@ -770,6 +771,319 @@ io_sock_get_nread(io_handle_t handle)
 #endif
 }
 #endif
+
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__linux__)
+
+LELY_IO_EXPORT int
+io_sock_get_mcast_loop(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval;
+#else
+	int optval;
+#endif
+	switch (((struct sock *)handle)->domain) {
+	case IO_SOCK_IPV4:
+		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
+				IP_MULTICAST_LOOP, (char *)&optval,
+				&(socklen_t){ sizeof(optval) })))
+			return -1;
+		break;
+	case IO_SOCK_IPV6:
+		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+				IPV6_MULTICAST_LOOP, (char *)&optval,
+				&(socklen_t){ sizeof(optval) })))
+			return -1;
+		break;
+	default:
+		set_errnum(ERRNUM_AFNOSUPPORT);
+		return -1;
+	}
+	return !!optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_mcast_loop(io_handle_t handle, int loop)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval = !!loop;
+#else
+	int optval = !!loop;
+#endif
+	switch (((struct sock *)handle)->domain) {
+	case IO_SOCK_IPV4:
+		return setsockopt((SOCKET)handle->fd, IPPROTO_IP,
+				IP_MULTICAST_LOOP, (const char *)&optval,
+				sizeof(optval)) ? -1 : 0;
+	case IO_SOCK_IPV6:
+		return setsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+				IPV6_MULTICAST_LOOP, (const char *)&optval,
+				sizeof(optval)) ? -1 : 0;
+	default:
+		set_errnum(ERRNUM_AFNOSUPPORT);
+		return -1;
+	}
+}
+
+LELY_IO_EXPORT int
+io_sock_get_mcast_ttl(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval;
+#else
+	int optval;
+#endif
+	switch (((struct sock *)handle)->domain) {
+	case IO_SOCK_IPV4:
+		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
+				IP_MULTICAST_TTL, (char *)&optval,
+				&(socklen_t){ sizeof(optval) })))
+			return -1;
+		break;
+	case IO_SOCK_IPV6:
+		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+				IPV6_MULTICAST_HOPS, (char *)&optval,
+				&(socklen_t){ sizeof(optval) })))
+			return -1;
+		break;
+	default:
+		set_errnum(ERRNUM_AFNOSUPPORT);
+		return -1;
+	}
+	return optval;
+}
+
+LELY_IO_EXPORT int
+io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+#ifdef _WIN32
+	DWORD optval = ttl;
+#else
+	int optval = ttl;
+#endif
+	switch (((struct sock *)handle)->domain) {
+	case IO_SOCK_IPV4:
+		return setsockopt((SOCKET)handle->fd, IPPROTO_IP,
+				IP_MULTICAST_TTL, (const char *)&optval,
+				sizeof(optval)) ? -1 :0;
+	case IO_SOCK_IPV6:
+		return setsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+				IPV6_MULTICAST_HOPS, (const char *)&optval,
+				sizeof(optval)) ? -1 :0;
+	default:
+		set_errnum(ERRNUM_AFNOSUPPORT);
+		return -1;
+	}
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_join_group(io_handle_t handle, unsigned int index,
+		const io_addr_t *group)
+{
+	assert(group);
+
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gr_interface = index;
+	memcpy(&greq.gr_group, &group->addr, sizeof(greq.gr_group));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_JOIN_GROUP,
+			(const char *)&greq, sizeof(greq)) ? 0 : -1;
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
+		const io_addr_t *group, const io_addr_t *source)
+{
+	assert(group);
+	assert(source);
+
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_source_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gsr_interface = index;
+	memcpy(&greq.gsr_group, &group->addr, sizeof(greq.gsr_group));
+	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_BLOCK_SOURCE,
+			(const char *)&greq, sizeof(greq)) ? -1 :0;
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
+		const io_addr_t *group, const io_addr_t *source)
+{
+	assert(group);
+	assert(source);
+
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_source_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gsr_interface = index;
+	memcpy(&greq.gsr_group, &group->addr, sizeof(greq.gsr_group));
+	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_UNBLOCK_SOURCE,
+			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_leave_group(io_handle_t handle, unsigned int index,
+		const io_addr_t *group)
+{
+	assert(group);
+
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gr_interface = index;
+	memcpy(&greq.gr_group, &group->addr, sizeof(greq.gr_group));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_LEAVE_GROUP,
+			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
+		const io_addr_t *group, const io_addr_t *source)
+{
+	assert(group);
+	assert(source);
+
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_source_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gsr_interface = index;
+	memcpy(&greq.gsr_group, &group->addr, sizeof(greq.gsr_group));
+	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_JOIN_SOURCE_GROUP,
+			(const char *)&greq, sizeof(greq)) ? -1 :0;
+}
+
+LELY_IO_EXPORT int
+io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
+		const io_addr_t *group, const io_addr_t *source)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &sock_vtab)) {
+		set_errnum(ERRNUM_NOTSOCK);
+		return -1;
+	}
+
+	struct group_source_req greq;
+	memset(&greq, 0, sizeof(greq));
+	greq.gsr_interface = index;
+	memcpy(&greq.gsr_group, &group->addr, sizeof(greq.gsr_group));
+	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
+
+	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
+			? IPPROTO_IPV6 : IPPROTO_IP;
+	return setsockopt((SOCKET)handle->fd, level, MCAST_LEAVE_SOURCE_GROUP,
+			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+}
+
+#endif // _WIN32 || __CYGWIN__ || __linux__
 
 static void
 sock_fini(struct io_handle *handle)
