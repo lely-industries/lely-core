@@ -1,6 +1,6 @@
 /*!\file
  * This header file is part of the C11 and POSIX compatibility library; it
- * includes `<strings.h>` and defines any missing functionality.
+ * includes `<strings.h>`, if it exists, and defines any missing functionality.
  *
  * \copyright 2016 Lely Industries N.V.
  *
