@@ -548,6 +548,32 @@ io_addr_set_unix(io_addr_t *addr, const char *path)
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
 LELY_IO_EXPORT int
+io_addr_get_domain(const io_addr_t *addr)
+{
+	assert(addr);
+
+	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
+#ifdef _WIN32
+	case AF_BTH: return IO_SOCK_BTH;
+#elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
+		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
+	case AF_BLUETOOTH: return IO_SOCK_BTH;
+#endif
+#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
+	case AF_CAN: return IO_SOCK_CAN;
+#endif
+	case AF_INET: return IO_SOCK_IPV4;
+	case AF_INET6: return IO_SOCK_IPV6;
+#if _POSIX_C_SOURCE >= 200112L
+	case AF_UNIX: return IO_SOCK_UNIX;
+#endif
+	default:
+		set_errnum(ERRNUM_AFNOSUPPORT);
+		return -1;
+	}
+}
+
+LELY_IO_EXPORT int
 io_addr_get_port(const io_addr_t *addr, int *port)
 {
 	assert(addr);

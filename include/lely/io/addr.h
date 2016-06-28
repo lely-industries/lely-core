@@ -373,6 +373,17 @@ LELY_IO_EXTERN int io_addr_get_unix(const io_addr_t *addr, char *path);
 LELY_IO_EXTERN void io_addr_set_unix(io_addr_t *addr, const char *path);
 
 /*!
+ * Obtains the domain of a network address.
+ *
+ * \returns #IO_SOCK_BTH, #IO_SOCK_CAN, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or
+ * #IO_SOCK_UNIX, or -1 on error. In the latter case, the error number can be
+ * obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_domain()
+ */
+LELY_IO_EXTERN int io_addr_get_domain(const io_addr_t *addr);
+
+/*!
  * Obtains the port number of an IPv4 or IPv6 network address.
  *
  * \param addr a pointer to a network address.

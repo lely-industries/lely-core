@@ -158,11 +158,11 @@ LELY_IO_EXTERN int io_connect(io_handle_t handle, const io_addr_t *addr);
  * Obtains the domain of a socket (the first parameter in a call to
  * io_open_socket() or io_open_socketpair()).
  *
- * \returns #IO_SOCK_BTH, #IO_SOCK_CAN, #IO_SOCK_IPV4, #IO_SOCK_IPV6,
- * #IO_SOCK_UNIX or -1 on error. In the latter case, the error number can be
+ * \returns #IO_SOCK_BTH, #IO_SOCK_CAN, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or
+ * #IO_SOCK_UNIX, or -1 on error. In the latter case, the error number can be
  * obtained with `get_errnum()`.
  *
- * \see io_sock_get_type()
+ * \see io_sock_get_type(), io_addr_get_domain()
  */
 LELY_IO_EXTERN int io_sock_get_domain(io_handle_t handle);
 
