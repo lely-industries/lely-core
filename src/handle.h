@@ -97,6 +97,8 @@ struct io_handle_vtab {
 	//! A pointer to the \a pwrite method. \see io_pwrite()
 	ssize_t (*pwrite)(struct io_handle *handle, const void *buf,
 			size_t nbytes, io_off_t offset);
+	//! A pointer to the \a purge method. \see io_purge()
+	int (*purge)(struct io_handle *handle, int flags);
 	//! A pointer to the \a recv method. \see io_recv()
 	ssize_t (*recv)(struct io_handle *handle, void *buf, size_t nbytes,
 			io_addr_t *addr);
