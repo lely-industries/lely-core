@@ -41,11 +41,11 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
 #endif
-#include <mstcpip.h>
 #include <winsock2.h>
 #include <ws2bth.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
+#include <mstcpip.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
 #include <fcntl.h>

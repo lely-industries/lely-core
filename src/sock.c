@@ -34,8 +34,8 @@
 
 //! A network socket.
 struct sock {
-	//! The shared I/O device handle.
-	struct io_handle handle;
+	//! The I/O device base handle.
+	struct io_handle base;
 	/*!
 	 * The domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_CAN,
 	 * #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
@@ -345,6 +345,8 @@ io_open_pipe(io_handle_t handle_vector[2])
 #endif
 }
 
+#endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
 LELY_IO_EXPORT ssize_t
 io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr)
 {
@@ -413,6 +415,8 @@ io_connect(io_handle_t handle, const io_addr_t *addr)
 
 	return handle->vtab->connect(handle, addr);
 }
+
+#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
 LELY_IO_EXPORT int
 io_sock_get_domain(io_handle_t handle)
