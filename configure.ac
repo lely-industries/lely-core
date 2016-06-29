@@ -35,12 +35,26 @@ AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
 
+AM_CONDITIONAL([NO_CAN], [false])
+PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.1 liblely-can < 2], [], [
+	AM_CONDITIONAL([NO_CAN], [true])
+	AC_DEFINE([LELY_NO_CAN], [1], [Define to 1 if the CAN library is not available.])
+])
+
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
 AS_IF([test "x$enable_threads" == "xno"], [
 	AM_CONDITIONAL([NO_THREADS], [true])
-	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CANFD], [false])
+AC_ARG_ENABLE([canfd],
+	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
+AS_IF([test "x$enable_canfd" == "xno"], [
+	AM_CONDITIONAL([NO_CANFD], [true])
+	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
 AS_IF([test "x$platform_win32" == "xyes"], [
@@ -81,7 +95,7 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_CHECK_HEADERS([linux/can.h])
 	AC_CHECK_HEADERS([linux/can/raw.h])
 	AC_EGREP_HEADER([CAN_RAW_FD_FRAMES], [linux/can/raw.h],
-		[AC_DEFINE([HAVE_CAN_RAW_FD_FRAMES], [1], [Have CAN_RAW_FD_FRAMES])])
+		[AC_DEFINE([HAVE_CAN_RAW_FD_FRAMES], [1], [Define to 1 if CAN_RAW_FD_FRAMES is defined.])])
 
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])

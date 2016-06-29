@@ -126,7 +126,7 @@ LELY_IO_EXTERN int io_set_flags(io_handle_t handle, int flags);
  * Performs a read operation. For regular files, this function updates the file
  * pointer on success.
  *
- * \param handle a valid I/O device id.
+ * \param handle a valid I/O device handle.
  * \param buf    a pointer to the destination buffer.
  * \param nbytes the number of bytes to read.
  *
@@ -139,7 +139,7 @@ LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
  * Performs a write operation. For regular files, this function updates the file
  * pointer on success.
  *
- * \param handle a valid I/O device id.
+ * \param handle a valid I/O device handle.
  * \param buf    a pointer to the source buffer.
  * \param nbytes the number of bytes to write.
  *

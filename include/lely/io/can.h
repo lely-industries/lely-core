@@ -24,6 +24,9 @@
 
 #include <lely/io/io.h>
 
+// The CAN or CAN FD format frame struct from <lely/can/msg.h>.
+struct can_msg;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,6 +40,28 @@ extern "C" {
  * case, the error number can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN io_handle_t io_open_can(const char *path);
+
+/*!
+ * Reads a single CAN or CAN FD frame.
+ *
+ * \param handle a valid CAN device handle.
+ * \param msg    the address at which to store the received frame.
+ *
+ * \returns the number of frames received (at most 1), or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
+
+/*!
+ * Writes a single CAN or CAN FD frame.
+ *
+ * \param handle a valid CAN device handle.
+ * \param msg    a pointer to the frame to be written.
+ *
+ * \returns the number of frames sent (at most 1), or -1 on error. In the latter
+ * case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
 
 #ifdef __cplusplus
 }

@@ -23,12 +23,25 @@
 
 #include "io.h"
 #include <lely/util/errnum.h>
+#if !defined(LELY_NO_CAN) && defined(__linux__) && defined(HAVE_LINUX_CAN_H)
+#include <lely/can/socket.h>
+#endif
 #include <lely/io/can.h>
 #include "handle.h"
 
 #include <assert.h>
 
 #if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
+
+//! A CAN device.
+struct can {
+	//! The I/O device base handle.
+	struct io_handle base;
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+	//! A flag indicating the device supports sending CAN FD frames.
+	int canfd;
+#endif
+};
 
 static void can_fini(struct io_handle *handle);
 static int can_flags(struct io_handle *handle, int flags);
@@ -37,7 +50,7 @@ static ssize_t can_write(struct io_handle *handle, const void *buf,
 		size_t nbytes);
 
 static const struct io_handle_vtab can_vtab = {
-	.size = sizeof(struct io_handle),
+	.size = sizeof(struct can),
 	.fini = &can_fini,
 	.flags = &can_flags,
 	.read = &can_read,
@@ -55,12 +68,16 @@ io_open_can(const char *path)
 		goto error_socket;
 	}
 
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+	int canfd = 0;
 #ifdef HAVE_CAN_RAW_FD_FRAMES
-	if (__unlikely(setsockopt(s, SOL_CAN_RAW, CAN_RAW_FD_FRAMES,
-			&(int){ 1 }, sizeof(int)) == -1)) {
+	errsv = errno;
+	if (__likely(!setsockopt(s, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &(int){ 1 },
+			sizeof(int))))
+		canfd = 1;
+	else
 		errsv = errno;
-		goto error_setsockopt;
-	}
+#endif
 #endif
 
 	unsigned int ifindex = if_nametoindex(path);
@@ -78,6 +95,17 @@ io_open_can(const char *path)
 		goto error_bind;
 	}
 
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU) && defined(HAVE_SYS_IOCTL_H)
+	if (canfd) {
+		struct ifreq ifr;
+		if (__unlikely(ioctl(s, SIOCGIFMTU, &ifr) == -1)) {
+			errsv = errno;
+			goto error_ioctl;
+		}
+		canfd = ifr.ifr_mtu == CANFD_MTU;
+	}
+#endif
+
 	struct io_handle *handle = io_handle_alloc(&can_vtab);
 	if (__unlikely(!handle)) {
 		errsv = errno;
@@ -85,27 +113,121 @@ io_open_can(const char *path)
 	}
 
 	handle->fd = s;
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+	((struct can *)handle)->canfd = canfd;
+#endif
 
 	return handle;
 
 error_alloc_handle:
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU) && defined(HAVE_SYS_IOCTL_H)
+error_ioctl:
+#endif
 error_bind:
 error_if_nametoindex:
-#ifdef HAVE_CAN_RAW_FD_FRAMES
-error_setsockopt:
-#endif
 	close(s);
 error_socket:
 	errno = errsv;
 	return IO_HANDLE_ERROR;
 }
 
+#ifndef LELY_NO_CAN
+
+LELY_IO_EXPORT int
+io_can_read(io_handle_t handle, struct can_msg *msg)
+{
+	assert(msg);
+
+	if (__unlikely(!handle)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &can_vtab)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+	if (((struct can *)handle)->canfd) {
+		struct canfd_frame frame;
+		ssize_t nbytes = can_read(handle, &frame, sizeof(frame));
+		if (__unlikely(nbytes < 0))
+			return -1;
+
+		if (nbytes == CANFD_MTU) {
+			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
+				return 0;
+			canfd_frame2can_msg(&frame, msg);
+			return 1;
+		} else if (nbytes == CAN_MTU) {
+			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
+				return 0;
+			can_frame2can_msg((struct can_frame *)&frame, msg);
+			return 1;
+		}
+
+		return 0;
+	}
+#endif
+
+	struct can_frame frame;
+	ssize_t nbytes = can_read(handle, &frame, sizeof(frame));
+	if (__unlikely(nbytes < 0))
+		return -1;
+
+	if (nbytes == CAN_MTU) {
+		if (__unlikely(frame.can_id & CAN_ERR_FLAG))
+			return 0;
+		can_frame2can_msg(&frame, msg);
+		return 1;
+	}
+
+	return 0;
+}
+
+LELY_IO_EXPORT int
+io_can_write(io_handle_t handle, const struct can_msg *msg)
+{
+	assert(msg);
+
+	if (__unlikely(!handle)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &can_vtab)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+	if (msg->flags & CAN_FLAG_EDL) {
+		if (__unlikely(!((struct can *)handle)->canfd)) {
+			errno = EINVAL;
+			return -1;
+		}
+		struct canfd_frame frame;
+		can_msg2canfd_frame(msg, &frame);
+		return can_write(handle, &frame, sizeof(frame)) == sizeof(frame)
+				? 0 : -1;
+	}
+#endif
+	struct can_frame frame;
+	can_msg2can_frame(msg, &frame);
+	return can_write(handle, &frame, sizeof(frame)) == sizeof(frame)
+			? 0 : -1;
+}
+
+#endif // !LELY_NO_CAN
+
 static void
 can_fini(struct io_handle *handle)
 {
 	assert(handle);
 
-	close(handle->fd);
+	if (!(handle->flags & IO_FLAG_NO_CLOSE))
+		close(handle->fd);
 }
 
 static int
