@@ -363,7 +363,7 @@ file_pread(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 		return -1;
 	// pread() does not change the file pointer.
 	if (__unlikely(file_seek(handle, current, IO_SEEK_BEGIN) == -1))
-		return current;
+		return -1;
 	return result;
 #else
 	ssize_t result;

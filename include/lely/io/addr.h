@@ -1,5 +1,5 @@
 /*!\file
- * This header file is part of the I/O library; it contains network address
+ * This header file is part of the I/O library; it contains the network address
  * declarations.
  *
  * \copyright 2016 Lely Industries N.V.
