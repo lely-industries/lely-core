@@ -46,6 +46,9 @@ typedef struct io_handle *io_handle_t;
 //! A file offset type.
 typedef int64_t io_off_t;
 
+//! An opaque serial I/O device attributes type.
+typedef union __io_attr io_attr_t;
+
 //! An opaque network address type.
 typedef struct __io_addr io_addr_t;
 
