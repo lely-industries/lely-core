@@ -39,10 +39,6 @@ static NETIO_STATUS WINAPI ConvertLengthToIpv6Mask(ULONG MaskLength,
 		u_char Mask[16]);
 #endif
 
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-static int io_ifname_is_can(const char *name);
-#endif
-
 #if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
 
 LELY_IO_EXPORT int
@@ -188,10 +184,6 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 				domain = IO_SOCK_IPV4;
 				break;
 			}
-#ifdef HAVE_LINUX_CAN_H
-		} else if (io_ifname_is_can(ifa->ifa_name)) {
-			domain = IO_SOCK_CAN;
-#endif
 		}
 		// Skip network interfaces with unknown domains.
 		if (!domain)
@@ -227,16 +219,6 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 		// Copy the interface address.
 		if (ifa->ifa_addr)
 			io_addr_set(&info->addr, ifa->ifa_addr);
-#ifdef HAVE_LINUX_CAN_H
-		// In case of CAN, construct the address.
-		else if (domain == IO_SOCK_CAN) {
-			info->addr.addrlen = sizeof(struct sockaddr_can);
-			struct sockaddr_can *addr_can =
-					(struct sockaddr_can *)&info->addr.addr;
-			addr_can->can_family = AF_CAN;
-			addr_can->can_ifindex = info->index;
-		}
-#endif
 
 		// Copy the netmask.
 		if (ifa->ifa_netmask)
@@ -302,38 +284,6 @@ ConvertLengthToIpv6Mask(ULONG MaskLength, u_char Mask[16])
 	for (LONG i = MaskLength, j = 0; i > 0; i -= 8, j++)
 		Mask[j] = i >= 8 ? 0xff : ((0xff << ( 8 - i)) & 0xff);
 	return NO_ERROR;
-}
-#endif
-
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-static int
-io_ifname_is_can(const char *name)
-{
-	assert(name);
-
-	int errsv = errno;
-
-	int fd = socket(AF_CAN, SOCK_RAW | SOCK_CLOEXEC, CAN_RAW);
-	if (__unlikely(fd == -1))
-		goto error_socket;
-
-	struct ifreq ifr;
-	strncpy(ifr.ifr_name, name, IFNAMSIZ);
-	int result;
-	do result = ioctl(fd, SIOCGIFHWADDR, &ifr);
-	while (__unlikely(result == -1 && errno == EINTR));
-	if (__unlikely(result == -1))
-		goto error_ioctl;
-
-	close(fd);
-
-	return ifr.ifr_hwaddr.sa_family == ARPHRD_CAN;
-
-error_ioctl:
-	close(fd);
-error_socket:
-	errno = errsv;
-	return 0;
 }
 #endif
 

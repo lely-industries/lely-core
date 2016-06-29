@@ -54,8 +54,8 @@ struct io_ifinfo {
 	//! The interface name.
 	char name[IO_IF_NAME_STRLEN];
 	/*!
-	 * The domain of the interface (one of #IO_SOCK_BTH, #IO_SOCK_CAN,
-	 * #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
+	 * The domain of the interface (one of #IO_SOCK_BTH, #IO_SOCK_IPV4,
+	 * #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
 	 */
 	int domain;
 	/*!

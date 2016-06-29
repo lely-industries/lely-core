@@ -233,49 +233,6 @@ io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 
 #endif // _WIN32 || (__linux__ && HAVE_BLUETOOTH_BLUETOOTH_H && HAVE_BLUETOOTH_RFCOMM_H)
 
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-
-LELY_IO_EXPORT int
-io_addr_get_can(const io_addr_t *addr, char *name)
-{
-	assert(addr);
-
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	const struct sockaddr_can *addr_can =
-			(const struct sockaddr_can *)&addr->addr;
-	if (__unlikely(addr_can->can_family != AF_CAN)) {
-		errno = EAFNOSUPPORT;
-		return -1;
-	}
-
-	return if_indextoname(addr_can->can_ifindex, name) ? 0 : -1;
-}
-
-LELY_IO_EXPORT int
-io_addr_set_can(io_addr_t *addr, const char *name)
-{
-	assert(addr);
-
-	memset(addr, 0, sizeof(*addr));
-	addr->addrlen = sizeof(struct sockaddr_can);
-	struct sockaddr_can *addr_can = (struct sockaddr_can *)&addr->addr;
-
-	int ifindex = if_nametoindex(name);
-	if (__unlikely(!ifindex))
-		return -1;
-
-	addr_can->can_family = AF_CAN;
-	addr_can->can_ifindex = ifindex;
-
-	return 0;
-}
-
-#endif // __linux__ && HAVE_LINUX_CAN_H
-
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
 LELY_IO_EXPORT int
@@ -558,9 +515,6 @@ io_addr_get_domain(const io_addr_t *addr)
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
 	case AF_BLUETOOTH: return IO_SOCK_BTH;
-#endif
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-	case AF_CAN: return IO_SOCK_CAN;
 #endif
 	case AF_INET: return IO_SOCK_IPV4;
 	case AF_INET6: return IO_SOCK_IPV6;

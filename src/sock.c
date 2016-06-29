@@ -37,8 +37,8 @@ struct sock {
 	//! The I/O device base handle.
 	struct io_handle base;
 	/*!
-	 * The domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_CAN,
-	 * #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
+	 * The domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_IPV4,
+	 * #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
 	 */
 	int domain;
 	//! The type of the socket (#IO_SOCK_STREAM or #IO_SOCK_DGRAM).
@@ -102,26 +102,6 @@ io_open_socket(int domain, int type)
 		case IO_SOCK_STREAM:
 			s = socket(AF_BLUETOOTH, SOCK_STREAM | flags,
 					BTPROTO_RFCOMM);
-			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
-		}
-		break;
-#endif
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-	case IO_SOCK_CAN:
-		switch (type) {
-		case IO_SOCK_DGRAM:
-			s = socket(AF_CAN, SOCK_RAW | flags, CAN_RAW);
-#ifdef HAVE_CAN_RAW_FD_FRAMES
-			if (__unlikely(s != -1 && setsockopt(s, SOL_CAN_RAW,
-					CAN_RAW_FD_FRAMES, &(int){ 1 },
-					sizeof(int)) == -1)) {
-				errc = get_errc();
-				goto error_setsockopt;
-			}
-#endif
 			break;
 		default:
 			errc = errnum2c(ERRNUM_PROTOTYPE);
@@ -202,9 +182,6 @@ io_open_socket(int domain, int type)
 error_alloc_handle:
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
 error_fcntl:
-#endif
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H) && HAVE_CAN_RAW_FD_FRAMES
-error_setsockopt:
 #endif
 	closesocket(s);
 error_socket:

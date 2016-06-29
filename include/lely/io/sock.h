@@ -27,8 +27,6 @@
 enum {
 	//! A Bluetooth socket.
 	IO_SOCK_BTH = 1,
-	//! A CAN (Controller Area Network) socket (only supported on Linux).
-	IO_SOCK_CAN,
 	//! An IPv4 socket.
 	IO_SOCK_IPV4,
 	//! An IPv6 socket.
@@ -57,8 +55,8 @@ extern "C" {
 /*!
  * Opens a network socket.
  *
- * \param domain the domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_CAN,
- *               #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
+ * \param domain the domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_IPV4,
+ *               #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
  * \param type   the type of the socket (either #IO_SOCK_STREAM or
  *               #IO_SOCK_DGRAM).
  *
@@ -158,9 +156,9 @@ LELY_IO_EXTERN int io_connect(io_handle_t handle, const io_addr_t *addr);
  * Obtains the domain of a socket (the first parameter in a call to
  * io_open_socket() or io_open_socketpair()).
  *
- * \returns #IO_SOCK_BTH, #IO_SOCK_CAN, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or
- * #IO_SOCK_UNIX, or -1 on error. In the latter case, the error number can be
- * obtained with `get_errnum()`.
+ * \returns #IO_SOCK_BTH, #IO_SOCK_IPV4, #IO_SOCK_IPV6 or #IO_SOCK_UNIX, or -1
+ * on error. In the latter case, the error number can be obtained with
+ * `get_errnum()`.
  *
  * \see io_sock_get_type(), io_addr_get_domain()
  */
