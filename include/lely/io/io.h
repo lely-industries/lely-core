@@ -21,6 +21,7 @@
 #ifndef LELY_IO_IO_H
 #define LELY_IO_IO_H
 
+#include <lely/libc/stdint.h>
 #include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
@@ -41,6 +42,9 @@ typedef struct io_handle *io_handle_t;
 
 //! The value of an invalid I/O device handle.
 #define IO_HANDLE_ERROR	((io_handle_t)NULL)
+
+//! A file offset type.
+typedef int64_t io_off_t;
 
 //! An opaque network address type.
 typedef struct __io_addr io_addr_t;
@@ -102,6 +106,15 @@ LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
  */
 LELY_IO_EXTERN ssize_t io_write(io_handle_t handle, const void *buf,
 		size_t nbytes);
+
+/*!
+ * Flushes the write buffer of a an I/O device. This function waits until all
+ * buffered data has been written.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_flush(io_handle_t handle);
 
 #ifdef __cplusplus
 }

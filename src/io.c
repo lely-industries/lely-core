@@ -117,3 +117,20 @@ io_write(io_handle_t handle, const void *buf, size_t nbytes)
 	return handle->vtab->write(handle, buf, nbytes);
 }
 
+LELY_IO_EXPORT int
+io_flush(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	assert(handle->vtab);
+	if (__unlikely(!handle->vtab->flush)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+	return handle->vtab->flush(handle);
+}
+

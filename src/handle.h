@@ -69,6 +69,16 @@ struct io_handle_vtab {
 	//! A pointer to the \a write method. \see io_write()
 	ssize_t (*write)(struct io_handle *handle, const void *buf,
 			size_t nbytes);
+	//! A pointer to the \a flush method. \see io_flush()
+	int (*flush)(struct io_handle *handle);
+	//! A pointer to the \a seek method. \see io_seek()
+	io_off_t (*seek)(struct io_handle *handle, io_off_t offset, int whence);
+	//! A pointer to the \a pread method. \see io_pread()
+	ssize_t (*pread)(struct io_handle *handle, void *buf, size_t nbytes,
+			io_off_t offset);
+	//! A pointer to the \a pwrite method. \see io_pwrite()
+	ssize_t (*pwrite)(struct io_handle *handle, const void *buf,
+			size_t nbytes, io_off_t offset);
 	//! A pointer to the \a recv method. \see io_recv()
 	ssize_t (*recv)(struct io_handle *handle, void *buf, size_t nbytes,
 			io_addr_t *addr);
