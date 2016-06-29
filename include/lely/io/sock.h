@@ -48,6 +48,18 @@ enum {
 	IO_SOCK_DGRAM
 };
 
+enum {
+	//! Peeks at incoming data.
+	IO_MSG_PEEK = 1 << 0,
+	//! Requests out-of-band data.
+	IO_MSG_OOB = 1 << 1,
+	/*!
+	 * On stream-oriented sockets, block until the full amount of data can
+	 * be returned.
+	 */
+	IO_MSG_WAITALL = 1 << 2
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -105,12 +117,14 @@ LELY_IO_EXTERN int io_open_pipe(io_handle_t handle_vector[2]);
  * \param nbytes the number of bytes to receive.
  * \param addr   an optional pointer to a value which, on success, contains the
  *               source address.
+ * \param flags  the type of message reception (any combination of #IO_MSG_PEEK,
+ *               #IO_MSG_OOB and #IO_MSG_WAITALL).
  *
  * \returns the number of bytes received on success, or -1 on error. In the
  * latter case, the error number can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN ssize_t io_recv(io_handle_t handle, void *buf, size_t nbytes,
-		io_addr_t *addr);
+		io_addr_t *addr, int flags);
 
 /*!
  * Performs a send operation on a network socket.
@@ -120,12 +134,13 @@ LELY_IO_EXTERN ssize_t io_recv(io_handle_t handle, void *buf, size_t nbytes,
  * \param nbytes the number of bytes to send.
  * \param addr   an optional pointer to the destination address (ignored for
  *               connection-mode sockets).
+ * \param flags  type type of message transmission (0 or #IO_MSG_OOB).
  *
  * \returns the number of bytes sent on success, or -1 on error. In the latter
  * case, the error number can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN ssize_t io_send(io_handle_t handle, const void *buf,
-		size_t nbytes, const io_addr_t *addr);
+		size_t nbytes, const io_addr_t *addr, int flags);
 
 /*!
  * Accepts an incoming connection on a listening socket.

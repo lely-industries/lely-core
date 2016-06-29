@@ -101,10 +101,10 @@ struct io_handle_vtab {
 	int (*purge)(struct io_handle *handle, int flags);
 	//! A pointer to the \a recv method. \see io_recv()
 	ssize_t (*recv)(struct io_handle *handle, void *buf, size_t nbytes,
-			io_addr_t *addr);
+			io_addr_t *addr, int flags);
 	//! A pointer to the \a send method. \see io_send()
 	ssize_t (*send)(struct io_handle *handle, const void *buf,
-			size_t nbytes, const io_addr_t *addr);
+			size_t nbytes, const io_addr_t *addr, int flags);
 	//! A pointer to the \a accept method. \see io_accept()
 	struct io_handle *(*accept)(struct io_handle *handle, io_addr_t *addr);
 	//! A pointer to the \a connect method. \see io_connect()

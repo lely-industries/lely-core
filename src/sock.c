@@ -51,9 +51,9 @@ static ssize_t sock_read(struct io_handle *handle, void *buf, size_t nbytes);
 static ssize_t sock_write(struct io_handle *handle, const void *buf,
 		size_t nbytes);
 static ssize_t sock_recv(struct io_handle *handle, void *buf, size_t nbytes,
-		io_addr_t *addr);
+		io_addr_t *addr, int flags);
 static ssize_t sock_send(struct io_handle *handle, const void *buf,
-		size_t nbytes, const io_addr_t *addr);
+		size_t nbytes, const io_addr_t *addr, int flags);
 static struct io_handle *sock_accept(struct io_handle *handle, io_addr_t *addr);
 static int sock_connect(struct io_handle *handle, const io_addr_t *addr);
 
@@ -327,7 +327,8 @@ io_open_pipe(io_handle_t handle_vector[2])
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 LELY_IO_EXPORT ssize_t
-io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr)
+io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
+		int flags)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
 		set_errnum(ERRNUM_BADF);
@@ -340,12 +341,12 @@ io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr)
 		return -1;
 	}
 
-	return handle->vtab->recv(handle, buf, nbytes, addr);
+	return handle->vtab->recv(handle, buf, nbytes, addr, flags);
 }
 
 LELY_IO_EXPORT ssize_t
 io_send(io_handle_t handle, const void *buf, size_t nbytes,
-		const io_addr_t *addr)
+		const io_addr_t *addr, int flags)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
 		set_errnum(ERRNUM_BADF);
@@ -358,7 +359,7 @@ io_send(io_handle_t handle, const void *buf, size_t nbytes,
 		return -1;
 	}
 
-	return handle->vtab->send(handle, buf, nbytes, addr);
+	return handle->vtab->send(handle, buf, nbytes, addr, flags);
 }
 
 LELY_IO_EXPORT io_handle_t
@@ -1100,37 +1101,46 @@ sock_flags(struct io_handle *handle, int flags)
 static ssize_t
 sock_read(struct io_handle *handle, void *buf, size_t nbytes)
 {
-	return sock_recv(handle, buf, nbytes, NULL);
+	return sock_recv(handle, buf, nbytes, NULL, 0);
 }
 
 static ssize_t
 sock_write(struct io_handle *handle, const void *buf, size_t nbytes)
 {
-	return sock_send(handle, buf, nbytes, NULL);
+	return sock_send(handle, buf, nbytes, NULL, 0);
 }
 
 static ssize_t
-sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr)
+sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
+		int flags)
 {
 	assert(handle);
+
+	int _flags = 0;
+	if (flags & IO_MSG_PEEK)
+		_flags |= MSG_PEEK;
+	if (flags & IO_MSG_OOB)
+		_flags |= MSG_OOB;
+	if (flags & IO_MSG_WAITALL)
+		_flags |= MSG_WAITALL;
 
 	ssize_t result;
 	if (addr) {
 		addr->addrlen = sizeof(addr->addr);
 #ifdef _WIN32
-		result = recvfrom((SOCKET)handle->fd, buf, nbytes, 0,
+		result = recvfrom((SOCKET)handle->fd, buf, nbytes, _flags,
 				(struct sockaddr *)&addr->addr, &addr->addrlen);
 #else
-		do result = recvfrom(handle->fd, buf, nbytes, 0,
+		do result = recvfrom(handle->fd, buf, nbytes, _flags,
 				(struct sockaddr *)&addr->addr,
 				(socklen_t *)&addr->addrlen);
 		while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	} else {
 #ifdef _WIN32
-		result = recv((SOCKET)handle->fd, buf, nbytes, 0);
+		result = recv((SOCKET)handle->fd, buf, nbytes, _flags);
 #else
-		do result = recv(handle->fd, buf, nbytes, 0);
+		do result = recv(handle->fd, buf, nbytes, _flags);
 		while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	}
@@ -1139,21 +1149,28 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr)
 
 static ssize_t
 sock_send(struct io_handle *handle, const void *buf, size_t nbytes,
-		const io_addr_t *addr)
+		const io_addr_t *addr, int flags)
 {
 	assert(handle);
+
+	int _flags = 0;
+	if (flags & IO_MSG_OOB)
+		_flags |= MSG_OOB;
+#ifndef _WIN32
+	_flags |= MSG_NOSIGNAL;
+#endif
 
 	ssize_t result;
 #ifdef _WIN32
 	result = addr
-			? sendto((SOCKET)handle->fd, buf, nbytes, 0,
+			? sendto((SOCKET)handle->fd, buf, nbytes, _flags,
 			(const struct sockaddr *)&addr->addr, addr->addrlen)
-			: send((SOCKET)handle->fd, buf, nbytes, 0);
+			: send((SOCKET)handle->fd, buf, nbytes, _flags);
 #else
 	do result = addr
-			? sendto(handle->fd, buf, nbytes, MSG_NOSIGNAL,
+			? sendto(handle->fd, buf, nbytes, _flags,
 			(const struct sockaddr *)&addr->addr, addr->addrlen)
-			: send(handle->fd, buf, nbytes, MSG_NOSIGNAL);
+			: send(handle->fd, buf, nbytes, _flags);
 	while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	return result == SOCKET_ERROR ? -1 : result;
