@@ -41,6 +41,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
 #endif
+#include <mstcpip.h>
 #include <winsock2.h>
 #include <ws2bth.h>
 #include <ws2tcpip.h>
