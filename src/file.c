@@ -60,6 +60,7 @@ static ssize_t file_pwrite(struct io_handle *handle, const void *buf,
 		size_t nbytes, io_off_t offset);
 
 static const struct io_handle_vtab file_vtab = {
+	.type = IO_TYPE_FILE,
 	.size = sizeof(struct file),
 	.fini = &file_fini,
 	.read = &file_read,

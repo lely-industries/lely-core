@@ -53,6 +53,17 @@ typedef union __io_attr io_attr_t;
 typedef struct __io_addr io_addr_t;
 
 enum {
+	//! A CAN device.
+	IO_TYPE_CAN = 1,
+	//! A regular file.
+	IO_TYPE_FILE,
+	//! A serial I/O device.
+	IO_TYPE_SERIAL,
+	//! A network socket.
+	IO_TYPE_SOCK
+};
+
+enum {
 	//! Do not close the native file descriptor when closing an I/O device.
 	IO_FLAG_NO_CLOSE = 1 << 0,
 	//! Perform I/O operations in non-blocking mode.
@@ -89,6 +100,12 @@ LELY_IO_EXTERN void lely_io_fini(void);
  * can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_close(io_handle_t handle);
+
+/*!
+ * Returns the type of an I/O device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
+ * #IO_TYPE_SERIAL or #IO_TYPE_SOCK).
+ */
+LELY_IO_EXTERN int io_get_type(io_handle_t handle);
 
 //! Returns the native file descriptor of an I/O device.
 #ifdef _WIN32

@@ -76,6 +76,11 @@ extern "C" {
 
 //! The virtual table of an I/O device handle.
 struct io_handle_vtab {
+	/*!
+	 * The type of the device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
+	 * #IO_TYPE_SERIAL or #IO_TYPE_SOCK).
+	 */
+	int type;
 	//! The size (in bytes) of the handle struct.
 	size_t size;
 	//! A pointer to the \a fini method.

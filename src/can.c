@@ -50,6 +50,7 @@ static ssize_t can_write(struct io_handle *handle, const void *buf,
 		size_t nbytes);
 
 static const struct io_handle_vtab can_vtab = {
+	.type = IO_TYPE_CAN,
 	.size = sizeof(struct can),
 	.fini = &can_fini,
 	.flags = &can_flags,

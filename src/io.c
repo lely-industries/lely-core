@@ -83,6 +83,18 @@ io_close(io_handle_t handle)
 	return 0;
 }
 
+LELY_IO_EXPORT int
+io_get_type(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	assert(handle->vtab);
+	return handle->vtab->type;
+}
+
 LELY_IO_EXPORT HANDLE
 io_get_fd(io_handle_t handle)
 {

@@ -41,6 +41,7 @@ static int serial_flush(struct io_handle *handle);
 static int serial_purge(struct io_handle *handle, int flags);
 
 static const struct io_handle_vtab serial_vtab = {
+	.type = IO_TYPE_SERIAL,
 	.size = sizeof(struct io_handle),
 	.fini = &serial_fini,
 	.flags = &serial_flags,

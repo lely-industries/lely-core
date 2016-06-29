@@ -58,6 +58,7 @@ static struct io_handle *sock_accept(struct io_handle *handle, io_addr_t *addr);
 static int sock_connect(struct io_handle *handle, const io_addr_t *addr);
 
 static const struct io_handle_vtab sock_vtab = {
+	.type = IO_TYPE_SOCK,
 	.size = sizeof(struct sock),
 	.fini = &sock_fini,
 	.flags = &sock_flags,
