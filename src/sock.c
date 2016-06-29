@@ -46,6 +46,7 @@ struct sock {
 };
 
 static void sock_fini(struct io_handle *handle);
+static int sock_flags(struct io_handle *handle, int flags);
 static ssize_t sock_read(struct io_handle *handle, void *buf, size_t nbytes);
 static ssize_t sock_write(struct io_handle *handle, const void *buf,
 		size_t nbytes);
@@ -59,6 +60,7 @@ static int sock_connect(struct io_handle *handle, const io_addr_t *addr);
 static const struct io_handle_vtab sock_vtab = {
 	.size = sizeof(struct sock),
 	.fini = &sock_fini,
+	.flags = &sock_flags,
 	.read = &sock_read,
 	.write = &sock_write,
 	.accept = &sock_accept,
@@ -1092,7 +1094,30 @@ io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
 static void
 sock_fini(struct io_handle *handle)
 {
-	closesocket((SOCKET)handle->fd);
+	if (!(handle->flags & IO_FLAG_NO_CLOSE))
+		closesocket((SOCKET)handle->fd);
+}
+
+static int
+sock_flags(struct io_handle *handle, int flags)
+{
+	assert(handle);
+
+#ifdef _WIN32
+	u_long iMode = !!(flags & IO_FLAG_NONBLOCK);
+	return ioctlsocket((SOCKET)handle->fd, FIONBIO, &iMode) ? -1 : 0;
+#else
+	int arg = fcntl(handle->fd, F_GETFL, 0);
+	if (__unlikely(arg == -1))
+		return -1;
+
+	if (flags & IO_FLAG_NONBLOCK)
+		arg |= O_NONBLOCK;
+	else
+		arg &= ~O_NONBLOCK;
+
+	return fcntl(handle->fd, F_SETFL, arg);
+#endif
 }
 
 static ssize_t

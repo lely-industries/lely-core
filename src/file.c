@@ -231,10 +231,11 @@ file_fini(struct io_handle *handle)
 {
 	assert(handle);
 
+	if (!(handle->flags & IO_FLAG_NO_CLOSE))
 #ifdef _WIN32
-	CloseHandle(handle->fd) ? 0 : -1;
+		CloseHandle(handle->fd);
 #else
-	close(handle->fd);
+		close(handle->fd);
 #endif
 }
 

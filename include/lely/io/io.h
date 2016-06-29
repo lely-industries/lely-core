@@ -52,6 +52,13 @@ typedef union __io_attr io_attr_t;
 //! An opaque network address type.
 typedef struct __io_addr io_addr_t;
 
+enum {
+	//! Do not close the native file descriptor when closing an I/O device.
+	IO_FLAG_NO_CLOSE = 1 << 0,
+	//! Perform I/O operations in non-blocking mode.
+	IO_FLAG_NONBLOCK = 1 << 1
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -82,6 +89,38 @@ LELY_IO_EXTERN void lely_io_fini(void);
  * can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_close(io_handle_t handle);
+
+//! Returns the native file descriptor of an I/O device.
+#ifdef _WIN32
+LELY_IO_EXTERN HANDLE io_get_fd(io_handle_t handle);
+#else
+LELY_IO_EXTERN int io_get_fd(io_handle_t handle);
+#endif
+
+/*!
+ * Obtains the flags of an I/O device.
+ *
+ * \returns the active flags (any combination of #IO_FLAG_NO_CLOSE and
+ * #IO_FLAG_NONBLOCK), or -1 on error. In the latter case, the error number can
+ * be obtained with `get_errnum()`.
+ *
+ * \see io_set_flags()
+ */
+LELY_IO_EXTERN int io_get_flags(io_handle_t handle);
+
+/*!
+ * Sets the flags of an I/O device.
+ *
+ * \param handle a valid I/O device handle.
+ * \param flags  the I/O device flags (any combination of #IO_FLAG_NO_CLOSE and
+ *               #IO_FLAG_NONBLOCK).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_get_flags()
+ */
+LELY_IO_EXTERN int io_set_flags(io_handle_t handle, int flags);
 
 /*!
  * Performs a read operation. For regular files, this function updates the file

@@ -83,6 +83,57 @@ io_close(io_handle_t handle)
 	return 0;
 }
 
+LELY_IO_EXPORT HANDLE
+io_get_fd(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return INVALID_HANDLE_VALUE;
+	}
+
+	return handle->fd;
+}
+
+LELY_IO_EXPORT int
+io_get_flags(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	io_handle_lock(handle);
+	int flags = handle->flags;
+	io_handle_unlock(handle);
+	return flags;
+}
+
+LELY_IO_EXPORT int
+io_set_flags(io_handle_t handle, int flags)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	flags &= (IO_FLAG_NO_CLOSE | IO_FLAG_NONBLOCK);
+
+	int result = 0;
+	io_handle_lock(handle);
+	if (flags != handle->flags) {
+		if (__likely(handle->vtab->flags)) {
+			result = handle->vtab->flags(handle, flags);
+			if (__likely(!result))
+				handle->flags = flags;
+		} else {
+			set_errnum(ERRNUM_NXIO);
+			result = -1;
+		}
+	}
+	io_handle_unlock(handle);
+	return result;
+}
+
 LELY_IO_EXPORT ssize_t
 io_read(io_handle_t handle, void *buf, size_t nbytes)
 {

@@ -31,6 +31,9 @@
 #endif
 #endif
 #endif
+#ifndef LELY_NO_THREADS
+#include <lely/libc/threads.h>
+#endif
 
 struct io_handle_vtab;
 
@@ -52,6 +55,19 @@ struct io_handle {
 #else
 	int fd;
 #endif
+	/*!
+	 * The I/O device flags (any combination of #IO_FLAG_NO_CLOSE and
+	 * #IO_FLAG_NONBLOCK).
+	 */
+	int flags;
+#ifndef LELY_NO_THREADS
+	//! The mutex protecting #flags (and other device-specific fields).
+#ifdef _WIN32
+	CRITICAL_SECTION CriticalSection;
+#else
+	mtx_t mtx;
+#endif
+#endif
 };
 
 #ifdef __cplusplus
@@ -64,6 +80,8 @@ struct io_handle_vtab {
 	size_t size;
 	//! A pointer to the \a fini method.
 	void (*fini)(struct io_handle *handle);
+	//! A pointer to the static \a flags method.
+	int (*flags)(struct io_handle *handle, int flags);
 	//! A pointer to the \a read method. \see io_read()
 	ssize_t (*read)(struct io_handle *handle, void *buf, size_t nbytes);
 	//! A pointer to the \a write method. \see io_write()
@@ -135,6 +153,25 @@ static inline void io_handle_release(struct io_handle *handle);
  * handle, and 0 otherwise.
  */
 static inline int io_handle_unique(struct io_handle *handle);
+
+/*!
+ * Locks an unlocked I/O device handle, so the flags (and other device-specific
+ * fields) can safely be accessed.
+ *
+ * \see io_handle_unlock()
+ */
+#ifdef LELY_NO_THREADS
+#define io_handle_lock(handle)
+#else
+void io_handle_lock(struct io_handle *handle);
+#endif
+
+//! Unlocks a locked I/O device handle. \see io_handle_lock()
+#ifdef LELY_NO_THREADS
+#define io_handle_unlock(handle)
+#else
+void io_handle_unlock(struct io_handle *handle);
+#endif
 
 static inline struct io_handle *
 io_handle_acquire(struct io_handle *handle)

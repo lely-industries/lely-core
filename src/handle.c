@@ -46,6 +46,17 @@ io_handle_alloc(const struct io_handle_vtab *vtab)
 #else
 	handle->ref = 0;
 #endif
+	handle->fd = INVALID_HANDLE_VALUE;
+
+#ifndef LELY_NO_THREADS
+#ifdef _WIN32
+	InitializeCriticalSection(&handle->CriticalSection);
+#else
+	mtx_init(&handle->mtx, mtx_plain);
+#endif
+#endif
+
+	handle->flags = 0;
 
 	return handle;
 }
@@ -63,7 +74,17 @@ io_handle_fini(struct io_handle *handle)
 void
 io_handle_free(struct io_handle *handle)
 {
-	free(handle);
+	if (handle) {
+#ifndef LELY_NO_THREADS
+#ifdef _WIN32
+		DeleteCriticalSection(&handle->CriticalSection);
+#else
+		mtx_destroy(&handle->mtx);
+#endif
+#endif
+
+		free(handle);
+	}
 }
 
 void
@@ -74,4 +95,32 @@ io_handle_destroy(struct io_handle *handle)
 		io_handle_free(handle);
 	}
 }
+
+#ifndef LELY_NO_THREADS
+
+void
+io_handle_lock(struct io_handle *handle)
+{
+	assert(handle);
+
+#ifdef _WIN32
+	EnterCriticalSection(&handle->CriticalSection);
+#else
+	mtx_lock(&handle->mtx);
+#endif
+}
+
+void
+io_handle_unlock(struct io_handle *handle)
+{
+	assert(handle);
+
+#ifdef _WIN32
+	LeaveCriticalSection(&handle->CriticalSection);
+#else
+	mtx_unlock(&handle->mtx);
+#endif
+}
+
+#endif // !LELY_NO_THREADS
 
