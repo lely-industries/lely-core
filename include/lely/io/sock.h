@@ -276,13 +276,59 @@ LELY_IO_EXTERN int io_sock_get_broadcast(io_handle_t handle);
 LELY_IO_EXTERN int io_sock_set_broadcast(io_handle_t handle, int broadcast);
 
 /*!
+ * Checks if debugging is enabled for a socket. This function implements the
+ * SOL_SOCKET/SO_DEBUG option.
+ *
+ * \returns 1 if debugging is enabled and 0 if not, or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_debug()
+ */
+LELY_IO_EXTERN int io_sock_get_debug(io_handle_t handle);
+
+/*!
+ * Enables (platform dependent) debugging output for a socket if \a debug is
+ * non-zero, and disables this option otherwise (disabled by default). This
+ * function implements the SOL_SOCKET/SO_DEBUG option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_debug()
+ */
+LELY_IO_EXTERN int io_sock_set_debug(io_handle_t handle, int debug);
+
+/*!
+ * Checks if routing is disabled for a socket. This function implements the
+ * SOL_SOCKET/SO_DONTROUTE option.
+ *
+ * \returns 1 if routing is disabled and 0 if not, or -1 on error. In the latter
+ * case, the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_dontroute()
+ */
+LELY_IO_EXTERN int io_sock_get_dontroute(io_handle_t handle);
+
+/*!
+ * Bypasses normal routing for a socket if \a dontroute is non-zero, and
+ * disables this option otherwise (disabled by default). This function
+ * implements the SOL_SOCKET/SO_DONTROUTE option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_dontroute()
+ */
+LELY_IO_EXTERN int io_sock_set_dontroute(io_handle_t handle, int dontroute);
+
+/*!
  * Obtains and clears the current native error code of a socket, and stores the
  * value in *\a perrc. This function implements the SOL_SOCKET/SO_ERROR option.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_IO_EXTERN int io_sock_get_errc(io_handle_t handle, errc_t *perrc);
+LELY_IO_EXTERN int io_sock_get_error(io_handle_t handle, errc_t *perrc);
 
 /*!
  * Checks if the TCP keep-alive option is enabled for a socket. This function
@@ -320,6 +366,76 @@ LELY_IO_EXTERN int io_sock_set_keepalive(io_handle_t handle, int keepalive,
 		int time, int interval);
 
 /*!
+ * Obtains the linger time (in seconds) of a socket. This function implements
+ * the SOL_SOCKET/SO_LINGER option.
+ *
+ * \returns the linger time, or -1 on error. In the latter case, the error
+ * number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_linger()
+ */
+LELY_IO_EXTERN int io_sock_get_linger(io_handle_t handle);
+
+/*!
+ * Sets the time (in seconds) io_close() will wait for unsent messages to be
+ * sent. If \a time is 0, lingering is disabled. This function implements the
+ * SOL_SOCKET/SO_LINGER option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_getlinger()
+ */
+LELY_IO_EXTERN int io_sock_set_linger(io_handle_t handle, int time);
+
+/*!
+ * Checks if out-of-band data is received in the normal data stream of a socket.
+ * This function implements the SOL_SOCKET/SO_OOBINLINE option.
+ *
+ * \returns 1 if out-of-band data is received in the normal data stream and 0 if
+ * not, or -1 on error. In the latter case, the error number can be obtained
+ * with `get_errnum()`.
+ *
+ * \see io_sock_set_oobinline()
+ */
+LELY_IO_EXTERN int io_sock_get_oobinline(io_handle_t handle);
+
+/*!
+ * Requests that out-of-band data is placed into the normal data stream of
+ * socket if \a oobinline is non-zero, and disables this option otherwise
+ * (disabled by default). This function implements the SOL_SOCKET/SO_OOBINLINE
+ * option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_oobinline()
+ */
+LELY_IO_EXTERN int io_sock_set_oobinline(io_handle_t handle, int oobinline);
+
+/*!
+ * Obtains the size (in bytes) of the receive buffer of a socket. This function
+ * implements the SOL_SOCKET/SO_RCVBUF option.
+ *
+ * \returns the size of the receive buffer, or -1 on error. In the latter case,
+ * the error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_rcvbuf()
+ */
+LELY_IO_EXTERN int io_sock_get_rcvbuf(io_handle_t handle);
+
+/*!
+ * Sets the size (in bytes) of the receive buffer of a socket. This function
+ * implements the SOL_SOCKET/SO_RCVBUF option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_rcvbuf()
+ */
+LELY_IO_EXTERN int io_sock_set_rcvbuf(io_handle_t handle, int size);
+
+/*!
  * Sets the timeout (in milliseconds) of a receive operation on a socket. This
  * function implements the SOL_SOCKET/SO_RCVTIMEO option.
  *
@@ -350,6 +466,28 @@ LELY_IO_EXTERN int io_sock_get_reuseaddr(io_handle_t handle);
  * \see io_sock_get_reuseaddr()
  */
 LELY_IO_EXTERN int io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr);
+
+/*!
+ * Obtains the size (in bytes) of the send buffer of a socket. This function
+ * implements the SOL_SOCKET/SO_SNDBUF option.
+ *
+ * \returns the size of the send buffer, or -1 on error. In the latter case, the
+ * error number can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_set_sndbuf()
+ */
+LELY_IO_EXTERN int io_sock_get_sndbuf(io_handle_t handle);
+
+/*!
+ * Sets the size (in bytes) of the send buffer of a socket. This function
+ * implements the SOL_SOCKET/SO_SNDBUF option.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_sock_get_sndbuf()
+ */
+LELY_IO_EXTERN int io_sock_set_sndbuf(io_handle_t handle, int size);
 
 /*!
  * Sets the timeout (in milliseconds) of a send operation on a socket. This
