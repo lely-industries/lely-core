@@ -9,6 +9,7 @@ src += handle.h
 src += if.c
 src += io.c
 src += io.h
+src += poll.c
 src += serial.c
 src += sock.c
 if PLATFORM_WIN32

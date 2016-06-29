@@ -97,6 +97,8 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_EGREP_HEADER([CAN_RAW_FD_FRAMES], [linux/can/raw.h],
 		[AC_DEFINE([HAVE_CAN_RAW_FD_FRAMES], [1], [Define to 1 if CAN_RAW_FD_FRAMES is defined.])])
 
+	AC_CHECK_HEADERS([sys/epoll.h])
+
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 

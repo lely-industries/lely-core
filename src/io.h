@@ -41,6 +41,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
 #endif
+#define FD_SETSIZE 1024
 #include <winsock2.h>
 #include <ws2bth.h>
 #include <ws2tcpip.h>
@@ -53,6 +54,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -78,6 +80,10 @@
 #endif
 #ifdef HAVE_LINUX_CAN_RAW_H
 #include <linux/can/raw.h>
+#endif
+
+#ifdef HAVE_SYS_EPOLL_H
+#include <sys/epoll.h>
 #endif
 
 #ifdef HAVE_SYS_IOCTL_H
