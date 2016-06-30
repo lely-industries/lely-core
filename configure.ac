@@ -30,7 +30,7 @@ AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 AX_PTHREAD
 AS_IF([test "x$ax_pthread_ok" == "xyes"], [
-	AC_DEFINE_UNQUOTED([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
+	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
 ])
 
 AM_CONDITIONAL([NO_THREADS], [false])
@@ -41,7 +41,7 @@ AS_IF([test "x$ax_pthread_ok" == "xyes" -a "x$enable_threads" != "xno"], [
 	LIBS="$PTHREAD_LIBS $LIBS"
 ], [
 	AM_CONDITIONAL([NO_THREADS], [true])
-	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"

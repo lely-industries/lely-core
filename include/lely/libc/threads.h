@@ -67,7 +67,9 @@ typedef unsigned long thrd_t;
  * A complete object type that holds an identifier for a thread-specific storage
  * pointer.
  */
-#ifdef __CYGWIN__
+#ifdef _WIN32
+typedef unsigned long tss_t;
+#elif defined(__CYGWIN__)
 typedef void *tss_t;
 #else
 typedef unsigned int tss_t;
@@ -103,7 +105,6 @@ typedef long once_flag;
 #else
 typedef int once_flag;
 #endif
-
 
 //! The static initializer for an object of type #once_flag.
 #define ONCE_FLAG_INIT	0
@@ -316,7 +317,7 @@ LELY_LIBC_EXTERN int __cdecl thrd_create(thrd_t *thr, thrd_start_t func,
  *
  * \returns the identifier of the thread that called it.
  */
-LELY_LIBC_EXTERN thrd_t thrd_current(void);
+LELY_LIBC_EXTERN thrd_t __cdecl thrd_current(void);
 
 /*!
  * Tells the operating system to dispose of any resources allocated to the
