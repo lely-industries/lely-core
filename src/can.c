@@ -77,7 +77,7 @@ io_open_can(const char *path)
 			sizeof(int))))
 		canfd = 1;
 	else
-		errsv = errno;
+		errno = errsv;
 #endif
 #endif
 
@@ -99,6 +99,7 @@ io_open_can(const char *path)
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU) && defined(HAVE_SYS_IOCTL_H)
 	if (canfd) {
 		struct ifreq ifr;
+		if_indextoname(ifindex, ifr.ifr_name);
 		if (__unlikely(ioctl(s, SIOCGIFMTU, &ifr) == -1)) {
 			errsv = errno;
 			goto error_ioctl;
@@ -208,16 +209,23 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 			errno = EINVAL;
 			return -1;
 		}
+
 		struct canfd_frame frame;
 		can_msg2canfd_frame(msg, &frame);
-		return can_write(handle, &frame, sizeof(frame)) == sizeof(frame)
-				? 0 : -1;
+		ssize_t nbytes = can_write(handle, &frame, sizeof(frame));
+		if (__unlikely(nbytes < 0))
+			return -1;
+
+		return nbytes == CANFD_MTU;
 	}
 #endif
 	struct can_frame frame;
 	can_msg2can_frame(msg, &frame);
-	return can_write(handle, &frame, sizeof(frame)) == sizeof(frame)
-			? 0 : -1;
+	ssize_t nbytes = can_write(handle, &frame, sizeof(frame));
+	if (__unlikely(nbytes < 0))
+		return -1;
+
+	return nbytes == CAN_MTU;
 }
 
 #endif // !LELY_NO_CAN
