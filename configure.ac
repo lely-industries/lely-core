@@ -13,6 +13,9 @@ AC_LANG(C)
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
 
+AC_LANG(C++)
+AC_PROG_CXX
+
 LT_INIT([win32-dll])
 LT_PROG_RC
 
@@ -39,6 +42,14 @@ AM_CONDITIONAL([NO_CAN], [false])
 PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.1 liblely-can < 2], [], [
 	AM_CONDITIONAL([NO_CAN], [true])
 	AC_DEFINE([LELY_NO_CAN], [1], [Define to 1 if the CAN library is not available.])
+])
+
+AM_CONDITIONAL([NO_CXX], [false])
+AC_ARG_ENABLE([cxx],
+	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "x$enable_cxx" == "xno"], [
+	AM_CONDITIONAL([NO_CXX], [true])
+	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
 ])
 
 AM_CONDITIONAL([NO_THREADS], [false])
@@ -103,9 +114,10 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])

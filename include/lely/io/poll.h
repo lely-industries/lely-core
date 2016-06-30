@@ -1,6 +1,6 @@
 /*!\file
- * This header file is part of the I/O library; it contains polling interface
- * declarations.
+ * This header file is part of the I/O library; it contains I/O polling
+ * interface declarations.
  *
  * \copyright 2016 Lely Industries N.V.
  *
