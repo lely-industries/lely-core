@@ -29,14 +29,17 @@
 /ltmain.sh
 /missing
 /stamp-h1
+/tap-driver.sh
 .deps
 .libs
 Makefile
 Makefile.in
 *~
 *.def
+*.exe
 *.la
 *.lo
 *.o
 *.pc
 *.rc
+test-*
