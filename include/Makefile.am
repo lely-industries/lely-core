@@ -1,7 +1,6 @@
 inc =
 inc += lely/util/def/type.def
 inc += lely/util/bimap.h
-inc += lely/util/bitset.h
 if !NO_CXX
 inc += lely/util/c_type.hpp
 endif
@@ -14,7 +13,6 @@ if !NO_CXX
 inc += lely/util/exception.hpp
 endif
 inc += lely/util/fbuf.h
-inc += lely/util/idlist.h
 inc += lely/util/lex.h
 inc += lely/util/list.h
 inc += lely/util/membuf.h

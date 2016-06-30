@@ -1,5 +1,4 @@
 src =
-src += bitset.c
 if !NO_CXX
 src += c_type.cpp
 endif
@@ -11,7 +10,6 @@ if !NO_CXX
 src += exception.cpp
 endif
 src += fbuf.c
-src += idlist.c
 src += lex.c
 src += membuf.c
 src += page.h
