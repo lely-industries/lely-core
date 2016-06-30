@@ -38,6 +38,12 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
 PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.1 liblely-can < 2])
 
+AM_CONDITIONAL([NO_IO], [false])
+PKG_CHECK_MODULES([liblely_io], [liblely-io >= 1.0 liblely-io < 2], [], [
+	AM_CONDITIONAL([NO_IO], [true])
+	AC_DEFINE([LELY_NO_IO], [1], [Define to 1 if the I/O library is not available.])
+])
+
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
@@ -51,7 +57,7 @@ AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
 AS_IF([test "x$enable_threads" == "xno"], [
 	AM_CONDITIONAL([NO_THREADS], [true])
-	AC_DEFINE_UNQUOTED([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
 AM_CONDITIONAL([NO_CANFD], [false])

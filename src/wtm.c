@@ -331,7 +331,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (__unlikely(seq != wtm->recv_nseq))
 			// Generate an error, but do not abort processing the
 			// message.
-			co_wtm_diag(wtm, CO_WTM_AC_CRC);
+			co_wtm_diag(wtm, CO_WTM_AC_SEQ);
 		wtm->recv_nseq = seq + 1;
 		// Process message payload based on its type (see Table 2 in CiA
 		// 315 version 1.0.0).

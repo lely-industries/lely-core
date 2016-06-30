@@ -20,21 +20,16 @@
 
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
-#include <lely/can/socket.h>
+#include <lely/io/addr.h>
+#include <lely/io/can.h>
+#include <lely/io/poll.h>
+#include <lely/io/sock.h>
 #include <lely/co/wtm.h>
 
 #include <assert.h>
-#include <fcntl.h>
-#include <linux/can.h>
-#include <net/if.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/epoll.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #define CMD_USAGE \
 	"Arguments: [options] <CAN interface> <address> <port>\n" \
@@ -63,9 +58,9 @@ int flags = 0;
 void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap);
 
-int open_can(const char *ifname);
-int open_send(const char *address, const char *port, int flags);
-int open_recv(int domain, const char *port);
+io_handle_t open_can(const char *ifname);
+io_handle_t open_send(const char *address, const char *port, int flags);
+io_handle_t open_recv(int domain, const char *port);
 
 int wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data);
@@ -77,7 +72,7 @@ main(int argc, char *argv[])
 	const char *cmd = cmdname(argv[0]);
 	diag_set_handler(&cmd_diag_handler, (void *)cmd);
 
-	int recv_domain = AF_INET;
+	int recv_domain = IO_SOCK_IPV4;
 	int nif = 1;
 	int keep = 10000;
 	const char *recv_port = NULL;
@@ -91,9 +86,9 @@ main(int argc, char *argv[])
 			if (*opt == '-') {
 				opt++;
 				if (!strcmp(opt, "ipv4")) {
-					recv_domain = AF_INET;
+					recv_domain = IO_SOCK_IPV4;
 				} else if (!strcmp(opt, "ipv6")) {
-					recv_domain = AF_INET6;
+					recv_domain = IO_SOCK_IPV6;
 				} else if (!strcmp(opt, "broadcast")) {
 					flags |= FLAG_BROADCAST;
 				} else if (!strcmp(opt, "flush")) {
@@ -118,10 +113,10 @@ main(int argc, char *argv[])
 				for (; *opt; opt++) {
 					switch (*opt) {
 					case '4':
-						recv_domain = AF_INET;
+						recv_domain = IO_SOCK_IPV4;
 						break;
 					case '6':
-						recv_domain = AF_INET6;
+						recv_domain = IO_SOCK_IPV6;
 						break;
 					case 'b':
 						flags |= FLAG_BROADCAST;
@@ -191,44 +186,48 @@ main(int argc, char *argv[])
 		goto error_arg;
 	}
 
-	int epfd = epoll_create1(EPOLL_CLOEXEC);
-	if (__unlikely(epfd == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable top create epoll instance");
-		goto error_open_ep;
+	io_poll_t *poll = io_poll_create();
+	if (__unlikely(!poll)) {
+		diag(DIAG_ERROR, get_errc(), "unable to create I/O polling interface");
+		goto error_create_poll;
 	}
-	struct epoll_event ev = { 0, { NULL } };
+	struct io_event event = IO_EVENT_INIT;
 
-	int canfd = open_can(ifname);
-	if (__unlikely(canfd == -1)) {
+	io_handle_t can_handle = open_can(ifname);
+	if (__unlikely(can_handle == IO_HANDLE_ERROR)) {
 		diag(DIAG_ERROR, get_errc(), "%s is not a suitable CAN device",
 				ifname);
 		goto error_open_can;
 	}
-	ev.events = EPOLLIN;
-	ev.data.fd = canfd;
-	if (__unlikely(epoll_ctl(epfd, EPOLL_CTL_ADD, canfd, &ev) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to register file descriptor with epoll");
-		goto error_add_can;
+	event.events = IO_EVENT_READ;
+	event.u.handle = can_handle;
+	if (__unlikely(io_poll_watch(poll, can_handle, &event, 1) == -1)) {
+		diag(DIAG_ERROR, get_errc(), "unable to watch %s", ifname);
+		goto error_watch_can;
 	}
 
-	int sendfd = open_send(address, send_port, flags);
-	if (__unlikely(sendfd == -1))
+	io_handle_t send_handle = open_send(address, send_port, flags);
+	if (__unlikely(send_handle == IO_HANDLE_ERROR)) {
+		diag(DIAG_ERROR, get_errc(), "unable to connect to [%s]:%s",
+				address, send_port);
 		goto error_open_send;
+	}
 
-	int recvfd = -1;
+	io_handle_t recv_handle = IO_HANDLE_ERROR;
 	if (recv_port) {
-		recvfd = open_recv(recv_domain, recv_port);
-		if (__unlikely(recvfd == -1)) {
+		recv_handle = open_recv(recv_domain, recv_port);
+		if (__unlikely(recv_handle == IO_HANDLE_ERROR)) {
 			diag(DIAG_ERROR, get_errc(), "unable to bind to port %s",
 					recv_port);
 			goto error_open_recv;
 		}
-		ev.events = EPOLLIN;
-		ev.data.fd = recvfd;
-		if (__unlikely(epoll_ctl(epfd, EPOLL_CTL_ADD, recvfd, &ev)
+		event.events = IO_EVENT_READ;
+		event.u.handle = recv_handle;
+		if (__unlikely(io_poll_watch(poll, recv_handle, &event, 1)
 				== -1)) {
-			diag(DIAG_ERROR, get_errc(), "unable to register file descriptor with epoll");
-			goto error_add_recv;
+			diag(DIAG_ERROR, get_errc(), "unable to watch port %s",
+					recv_port);
+			goto error_watch_recv;
 		}
 	}
 
@@ -242,8 +241,8 @@ main(int argc, char *argv[])
 				nif);
 		goto error_set_nif;
 	}
-	co_wtm_set_recv_func(wtm, &wtm_recv, (void *)(intptr_t)canfd);
-	co_wtm_set_send_func(wtm, &wtm_send, (void *)(intptr_t)sendfd);
+	co_wtm_set_recv_func(wtm, &wtm_recv, can_handle);
+	co_wtm_set_send_func(wtm, &wtm_send, send_handle);
 
 	struct timespec now = { 0, 0 };
 	timespec_get(&now, TIME_UTC);
@@ -259,40 +258,33 @@ main(int argc, char *argv[])
 			timespec_add_msec(&next, keep);
 		}
 		// Wait for input events.
-		int n = epoll_wait(epfd, &ev, 1, timeout);
+		int n = io_poll_wait(poll, 1, &event, timeout);
 		// Update the clock. This might trigger timer-overrun messages.
 		timespec_get(&now, TIME_UTC);
 		co_wtm_set_time(wtm, 1, &now);
 		// Ignore non-input events.
-		if (n != 1 || !(ev.events & EPOLLIN))
+		if (n != 1 || !(event.events & IO_EVENT_READ))
 			continue;
-		if (ev.data.fd == canfd) {
+		if (event.u.handle == can_handle) {
 			// Read a single CAN frame.
-			struct can_frame frame;
-			ssize_t result;
-			do result = recv(canfd, &frame, sizeof(frame), 0);
-			while (__unlikely(result == -1 && errno == EINTR));
-			if (__unlikely(result != (ssize_t)sizeof(frame)))
-				continue;
-			// Process the frame.
 			struct can_msg msg = CAN_MSG_INIT;
-			can_frame2can_msg(&frame, &msg);
-			co_wtm_send(wtm, 1, &msg);
-			if (flags & FLAG_FLUSH)
-				co_wtm_flush(wtm);
+			if (__unlikely(io_can_read(can_handle, &msg) != 1))
+				continue;
 			// Print the frame in verbose mode.
 			if (flags & FLAG_VERBOSE) {
 				char s[60] = { 0 };
 				snprintf_can_msg(s, sizeof(s), &msg);
 				printf("[%ld.%09ld] > %s\n", now.tv_sec,
 						now.tv_nsec, s);
-			};
-		} else if (ev.data.fd == recvfd) {
+			}
+			// Process the frame.
+			co_wtm_send(wtm, 1, &msg);
+			if (flags & FLAG_FLUSH)
+				co_wtm_flush(wtm);
+		} else if (event.u.handle == recv_handle) {
 			// Read a single generic frame.
 			char buf[CO_WTM_MAX_LEN];
-			ssize_t result;
-			do result = recv(recvfd, buf, sizeof(buf), 0);
-			while (__unlikely(result == -1 && errno == EINTR));
+			ssize_t result = io_read(recv_handle, buf, sizeof(buf));
 			if (__unlikely(result == -1))
 				continue;
 			// Process the frame.
@@ -301,28 +293,28 @@ main(int argc, char *argv[])
 	}
 
 	co_wtm_destroy(wtm);
-	if (recvfd != -1)
-		close(recvfd);
-	close(sendfd);
-	close(canfd);
-	close(epfd);
+	if (recv_handle != IO_HANDLE_ERROR)
+		io_close(recv_handle);
+	io_close(send_handle);
+	io_close(can_handle);
+	io_poll_destroy(poll);
 
 	return EXIT_SUCCESS;
 
 error_set_nif:
-	co_wtm_destroy(wtm);
 error_create_wtm:
-error_add_recv:
-	if (recvfd != -1)
-		close(recvfd);
+	co_wtm_destroy(wtm);
+error_watch_recv:
+	if (recv_handle != IO_HANDLE_ERROR)
+		io_close(recv_handle);
 error_open_recv:
-	close(sendfd);
+	io_close(send_handle);
 error_open_send:
-error_add_can:
-	close(canfd);
+error_watch_can:
+	io_close(can_handle);
 error_open_can:
-	close(epfd);
-error_open_ep:
+	io_poll_destroy(poll);
+error_create_poll:
 error_arg:
 	return EXIT_FAILURE;
 }
@@ -336,172 +328,123 @@ cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 	default_diag_handler(handle, severity, errc, format, ap);
 }
 
-int
+io_handle_t
 open_can(const char *ifname)
 {
 	assert(ifname);
 
-	int errsv = 0;
+	errc_t errc = 0;
 
-	int s = socket(PF_CAN, SOCK_RAW | SOCK_CLOEXEC, CAN_RAW);
-	if (__unlikely(s == -1)) {
-		errsv = errno;
-		goto error_socket;
+	io_handle_t handle = io_open_can(ifname);
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		errc = get_errc();
+		goto error_open_can;
 	}
 
-	struct ifreq ifr;
-	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
-	ifr.ifr_name[IFNAMSIZ - 1] = '\0';
-	if (__unlikely(ioctl(s, SIOCGIFINDEX, &ifr) == -1)) {
-		errsv = errno;
-		goto error_ioctl;
+	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+		errc = get_errc();
+		goto error_set_flags;
 	}
 
-	struct sockaddr_can addr;
-	addr.can_family = AF_CAN;
-	addr.can_ifindex = ifr.ifr_ifindex;
-	if (__unlikely(bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1)) {
-		errsv = errno;
-		goto error_bind;
-	}
+	return handle;
 
-	int flags = fcntl(s, F_GETFL, 0);
-	if (__unlikely(flags == -1 || fcntl(s, F_SETFL,
-			flags | O_NONBLOCK) == -1)) {
-		errsv = errno;
-		goto error_fcntl;
-	}
-
-	return s;
-
-error_fcntl:
-error_bind:
-error_ioctl:
-	close(s);
-error_socket:
-	errno = errsv;
-	return -1;
+error_set_flags:
+	io_close(handle);
+error_open_can:
+	set_errc(errc);
+	return IO_HANDLE_ERROR;
 }
 
-int
+io_handle_t
 open_send(const char *address, const char *port, int flags)
 {
 	assert(address);
 
-	int errsv = 0;
+	errc_t errc = 0;
 
-	struct addrinfo ai_hints = {
-		.ai_family = AF_UNSPEC,
-		.ai_socktype = SOCK_DGRAM
+	struct io_addrinfo hints = {
+		.type = IO_SOCK_DGRAM
 	};
-
-	struct addrinfo *ai = NULL;
-	int ecode = getaddrinfo(address, port, &ai_hints, &ai);
-	if (__unlikely(ecode)) {
-		diag(DIAG_ERROR, 0, "[%s]:%s: %s",
-				address, port, gai_strerror(ecode));
-		goto error_getaddrinfo;
-	}
-	assert(ai);
-
-	int s = socket(ai->ai_family, ai->ai_socktype | SOCK_CLOEXEC, 0);
-	if (__unlikely(s == -1)) {
-		errsv = errno;
-		goto error_socket;
+	struct io_addrinfo info;
+	if (__unlikely(io_get_addrinfo(1, &info, address, port, &hints) == -1)) {
+		errc = get_errc();
+		goto error_get_addrinfo;
 	}
 
-	if (__unlikely(ai->ai_family == AF_INET && (flags & FLAG_BROADCAST)
-			&& setsockopt(s, SOL_SOCKET, SO_BROADCAST, &(int){ 1 },
-			sizeof(int)) == -1)) {
-		errsv = errno;
-		goto error_setsockopt;
+	io_handle_t handle = io_open_socket(info.domain, info.type);
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		errc = get_errc();
+		goto error_open_socket;
 	}
 
-	if (__unlikely(connect(s, ai->ai_addr, ai->ai_addrlen) == -1)) {
-		errsv = errno;
+	if (__unlikely(info.domain == IO_SOCK_IPV4 && (flags & FLAG_BROADCAST)
+			&& io_sock_set_broadcast(handle, 1) == -1)) {
+		errc = get_errc();
+		goto error_set_broadcast;
+	}
+
+	if (__unlikely(io_connect(handle, &info.addr) == -1)) {
+		errc = get_errc();
 		goto error_connect;
 	}
 
-	flags = fcntl(s, F_GETFL, 0);
-	if (__unlikely(flags == -1 || fcntl(s, F_SETFL,
-			flags | O_NONBLOCK) == -1)) {
-		errsv = errno;
-		goto error_fcntl;
+	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+		errc = get_errc();
+		goto error_set_flags;
 	}
 
-	freeaddrinfo(ai);
+	return handle;
 
-	return s;
-
-error_fcntl:
+error_set_flags:
 error_connect:
-error_setsockopt:
-	close(s);
-error_socket:
-	freeaddrinfo(ai);
-	errno = errsv;
-	diag(DIAG_ERROR, get_errc(), "unable to connect");
-error_getaddrinfo:
-	return -1;
+error_set_broadcast:
+	io_close(handle);
+error_open_socket:
+error_get_addrinfo:
+	set_errc(errc);
+	return IO_HANDLE_ERROR;
 }
 
-int
+io_handle_t
 open_recv(int domain, const char *port)
 {
-	int errsv = 0;
+	errc_t errc = 0;
 
-	int s = socket(domain, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-	if (__unlikely(s == -1)) {
-		errsv = errno;
-		goto error_socket;
+	io_handle_t handle = io_open_socket(domain, IO_SOCK_DGRAM);
+	if (__unlikely(!handle)) {
+		errc = get_errc();
+		goto error_open_socket;
 	}
 
-	if (__unlikely(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 },
-			sizeof(int)) == -1)) {
-		errsv = errno;
-		goto error_setsockopt;
+	if (__unlikely(io_sock_set_reuseaddr(handle, 1) == -1)) {
+		errc = get_errc();
+		goto error_set_reuseaddr;
 	}
 
-	if (domain == AF_INET6) {
-		struct sockaddr_in6 addr = {
-			.sin6_family = AF_INET6,
-			.sin6_port = htons(atoi(port)),
-			.sin6_addr = in6addr_any
-		};
-		if (__unlikely(bind(s, (struct sockaddr *)&addr, sizeof(addr))
-				== -1)) {
-			errsv = errno;
-			goto error_bind;
-		}
-	} else {
-		struct sockaddr_in addr = {
-			.sin_family = AF_INET,
-			.sin_port = htons(atoi(port)),
-			.sin_addr.s_addr = htonl(INADDR_ANY)
-		};
-		if (__unlikely(bind(s, (struct sockaddr *)&addr, sizeof(addr))
-				== -1)) {
-			errsv = errno;
-			goto error_bind;
-		}
+	io_addr_t addr;
+	if (domain == IO_SOCK_IPV6)
+		io_addr_set_ipv6_n(&addr, NULL, atoi(port));
+	else
+		io_addr_set_ipv4_n(&addr, NULL, atoi(port));
+	if (__unlikely(io_sock_bind(handle, &addr) == -1)) {
+		errc = get_errc();
+		goto error_bind;
 	}
 
-	int flags = fcntl(s, F_GETFL, 0);
-	if (__unlikely(flags == -1 || fcntl(s, F_SETFL,
-			flags | O_NONBLOCK) == -1)) {
-		errsv = errno;
-		goto error_fcntl;
+	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+		errc = get_errc();
+		goto error_set_flags;
 	}
 
-	return s;
+	return handle;
 
-error_fcntl:
+error_set_flags:
 error_bind:
-error_setsockopt:
-	close(s);
-error_socket:
-	errno = errsv;
-	return -1;
+error_set_reuseaddr:
+	io_close(handle);
+error_open_socket:
+	set_errc(errc);
+	return IO_HANDLE_ERROR;
 }
 
 int
@@ -510,18 +453,11 @@ wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 {
 	__unused_var(wtm);
 	assert(msg);
-	int s = (intptr_t)data;
+	io_handle_t handle = data;
+	assert(handle != IO_HANDLE_ERROR);
 
 	if (nif != 1)
 		return 0;
-
-	struct can_frame frame;
-	can_msg2can_frame(msg, &frame);
-
-	// Send the received frame to the CAN bus.
-	ssize_t result;
-	do result = send(s, &frame, sizeof(frame), MSG_NOSIGNAL);
-	while (__unlikely(result == -1 && errno == EINTR));
 
 	// Print the frame in verbose mode.
 	if (flags & FLAG_VERBOSE) {
@@ -530,19 +466,17 @@ wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		printf("[% 10ld.%09ld] < %s\n", tp->tv_sec, tp->tv_nsec, s);
 	}
 
-	return result == (ssize_t)sizeof(frame) ? 0 : -1;
+	// Send the received frame to the CAN bus.
+	return io_can_write(handle, msg) == 1 ? 0 : -1;
 }
 
 int
 wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 {
 	__unused_var(wtm);
-	int s = (intptr_t)data;
+	io_handle_t handle = data;
+	assert(handle != IO_HANDLE_ERROR);
 
-	ssize_t result;
-	do result = send(s, buf, nbytes, MSG_NOSIGNAL);
-	while (__unlikely(result == -1 && errno == EINTR));
-
-	return result == (ssize_t)nbytes ? 0 : -1;
+	return io_write(handle, buf, nbytes) == (ssize_t)nbytes ? 0 : -1;
 }
 

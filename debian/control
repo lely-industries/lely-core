@@ -2,7 +2,8 @@ Source: liblely-co
 Priority: extra
 Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
 Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen,
-         liblely-tap-dev
+         liblely-tap-dev,
+         liblely-io-dev
 Standards-Version: 3.9.7
 Section: libs
 Homepage: http://www.lely.com
@@ -52,6 +53,7 @@ Package: liblely-co-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
          liblely-co1 (= ${binary:Version}),
+         liblely-io1,
          liblely-can1,
          liblely-util1,
          liblely-libc1
