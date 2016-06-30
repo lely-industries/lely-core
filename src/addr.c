@@ -318,7 +318,7 @@ io_addr_set_ipv4_n(io_addr_t *addr, const uint8_t ip[4], int port)
 
 	addr_in->sin_family = AF_INET;
 	addr_in->sin_port = htons(port);
-	if (ip && *ip)
+	if (ip)
 		memcpy(&addr_in->sin_addr.s_addr, ip, 4);
 	else
 		addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
@@ -436,7 +436,7 @@ io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16], int port)
 
 	addr_in6->sin6_family = AF_INET6;
 	addr_in6->sin6_port = htons(port);
-	if (ip && *ip)
+	if (ip)
 		memcpy(&addr_in6->sin6_addr.s6_addr, ip, 16);
 	else
 		addr_in6->sin6_addr = in6addr_any;

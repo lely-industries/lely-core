@@ -9,6 +9,8 @@ main(void)
 {
 	tap_plan(16);
 
+	tap_assert(!lely_io_init());
+
 	io_poll_t *poll = io_poll_create();
 	tap_assert(poll);
 
@@ -56,6 +58,8 @@ main(void)
 	io_close(pipe[1]);
 	io_close(pipe[0]);
 	io_poll_destroy(poll);
+
+	lely_io_fini();
 
 	return 0;
 }

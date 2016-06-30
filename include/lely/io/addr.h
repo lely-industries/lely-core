@@ -174,6 +174,24 @@ LELY_IO_EXTERN void io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6],
 LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
 
 /*!
+ * Obtains an IPv4 address and port number from a network address.
+ *
+ * \param addr a pointer to a network address.
+ * \param ip   the address of a string containing at least #IO_ADDR_IPV4_STRLEN
+ *             characters (can be NULL). On success, if \a ip is not NULL,
+ *             *\a ip contains the text representation of the IPv4 address.
+ * \param port the address of a port number (can be NULL). On success, if
+ *             \a port is not NULL, *\a port contains the port number.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_addr_set_ipv4_a()
+ */
+LELY_IO_EXTERN int io_addr_get_ipv4_a(const io_addr_t *addr, char *ip,
+		int *port);
+
+/*!
  * Initializes a network address from an IPv4 address and port number.
  *
  * \param addr a pointer to the network address to be initialized.

@@ -361,7 +361,6 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 #endif
 
 #ifdef _WIN32
-	int nreadfds = 0;
 	fd_set readfds;
 	FD_ZERO(&readfds);
 
@@ -373,9 +372,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	FD_ZERO(&errorfds);
 
 	FD_SET((SOCKET)poll->pipe[0]->fd, &readfds);
-	nreadfds++;
 
-	io_poll_unlock(poll);
+	io_poll_lock(poll);
 	struct rbnode *node = rbtree_first(&poll->tree);
 	while (node) {
 		struct io_watch *watch = structof(node, struct io_watch, node);
@@ -387,10 +385,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		}
 
 		SOCKET fd = (SOCKET)watch->handle->fd;
-		if (watch->event.events & IO_EVENT_READ) {
-			nreadfds++;
+		if (watch->event.events & IO_EVENT_READ)
 			FD_SET(fd, &readfds);
-		}
 		if (watch->event.events & IO_EVENT_WRITE) {
 			nwritefds++;
 			FD_SET(fd, &writefds);
@@ -403,9 +399,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		.tv_sec = timeout / 1000,
 		.tv_usec = (timeout % 1000) * 1000
 	};
-	int result = select(0, nreadfds ? &readfds : NULL,
-			nwritefds ? &writefds : NULL, &errorfds,
-			timeout >= 0 ? &tv : NULL);
+	int result = select(0, &readfds, nwritefds ? &writefds : NULL,
+			&errorfds, timeout >= 0 ? &tv : NULL);
 	if (__unlikely(result == -1))
 		return -1;
 
@@ -424,16 +419,14 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 			continue;
 		}
 
-		SOCKET fd = (SOCKET)watch->handle->fd;
-
 		events[nevents].events = 0;
-		if (FD_ISSET(fd, &readfds) && (watch->event.events
-				& IO_EVENT_READ))
+		if (FD_ISSET((SOCKET)watch->handle->fd, &readfds)
+				&& (watch->event.events & IO_EVENT_READ))
 			events[nevents].events |= IO_EVENT_READ;
-		if (FD_ISSET(fd, &writefds) && (watch->event.events
-				& IO_EVENT_WRITE))
+		if (FD_ISSET((SOCKET)watch->handle->fd, &writefds)
+				&& (watch->event.events & IO_EVENT_WRITE))
 			events[nevents].events |= IO_EVENT_WRITE;
-		if (FD_ISSET(fd, &errorfds))
+		if (FD_ISSET((SOCKET)watch->handle->fd, &errorfds))
 			events[nevents].events |= IO_EVENT_ERROR;
 		// Ignore non-events.
 		if (!events[nevents].events)

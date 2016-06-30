@@ -64,6 +64,8 @@ static const struct io_handle_vtab sock_vtab = {
 	.flags = &sock_flags,
 	.read = &sock_read,
 	.write = &sock_write,
+	.recv = &sock_recv,
+	.send = &sock_send,
 	.accept = &sock_accept,
 	.connect = &sock_connect
 };
@@ -1519,12 +1521,6 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 		namelen_1 = sizeof(*name_in6_1);
 	}
 
-	if (__unlikely(setsockopt(sv[1], SOL_SOCKET, SO_REUSEADDR,
-			(const char *)&(int){ 1 }, sizeof(int))
-			== SOCKET_ERROR)) {
-		iError = WSAGetLastError();
-		goto error_setsockopt_1;
-	}
 	if (__unlikely(bind(sv[1], name_1, namelen_1) == SOCKET_ERROR)) {
 		iError = WSAGetLastError();
 		goto error_bind_1;
@@ -1553,12 +1549,6 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 			namelen_0 = sizeof(*name_in6_0);
 		}
 
-		if (__unlikely(setsockopt(sv[0], SOL_SOCKET, SO_REUSEADDR,
-				(const char *)&(int){ 1 }, sizeof(int))
-				== SOCKET_ERROR)) {
-			iError = WSAGetLastError();
-			goto error_setsockopt_0;
-		}
 		if (__unlikely(bind(sv[0], name_0, namelen_0)
 				== SOCKET_ERROR)) {
 			iError = WSAGetLastError();
@@ -1600,18 +1590,16 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 		}
 	}
 
-	return SOCKET_ERROR;
+	return 0;
 
 error_connect_1:
 error_accept:
 error_connect_0:
 error_getsockname_0:
 error_bind_0:
-error_setsockopt_0:
 error_listen:
 error_getsockname_1:
 error_bind_1:
-error_setsockopt_1:
 	closesocket(sv[1]);
 	sv[1] = INVALID_SOCKET;
 error_socket_1:
