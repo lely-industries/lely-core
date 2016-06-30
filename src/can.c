@@ -118,7 +118,7 @@ io_open_can(const char *path)
 	((struct can *)handle)->canfd = canfd;
 #endif
 
-	return handle;
+	return io_handle_acquire(handle);
 
 error_alloc_handle:
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU) && defined(HAVE_SYS_IOCTL_H)

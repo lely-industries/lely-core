@@ -69,8 +69,7 @@ static const struct io_handle_vtab sock_vtab = {
 };
 
 #ifdef _WIN32
-static int socketpair(int domain, int type, int protocol,
-		SOCKET socket_vector[2]);
+static int socketpair(int af, int type, int protocol, SOCKET sv[2]);
 #endif
 
 LELY_IO_EXPORT io_handle_t
@@ -178,7 +177,7 @@ io_open_socket(int domain, int type)
 	((struct sock *)handle)->domain = domain;
 	((struct sock *)handle)->type = type;
 
-	return handle;
+	return io_handle_acquire(handle);
 
 error_alloc_handle:
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
@@ -260,7 +259,7 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 		goto error_domain;
 	}
 
-	if (__unlikely(result == -1)) {
+	if (__unlikely(result == SOCKET_ERROR)) {
 		errc = get_errc();
 		goto error_socketpair;
 	}
@@ -295,6 +294,9 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	handle_vector[1]->fd = (HANDLE)socket_vector[1];
 	((struct sock *)handle_vector[1])->domain = domain;
 	((struct sock *)handle_vector[1])->type = type;
+
+	io_handle_acquire(handle_vector[0]);
+	io_handle_acquire(handle_vector[1]);
 
 	return 0;
 
@@ -620,7 +622,7 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 }
 
 LELY_IO_EXPORT int
-io_sock_get_error(io_handle_t handle, errc_t *perrc)
+io_sock_get_error(io_handle_t handle, int *perror)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
 		set_errnum(ERRNUM_BADF);
@@ -628,7 +630,8 @@ io_sock_get_error(io_handle_t handle, errc_t *perrc)
 	}
 
 	return getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ERROR,
-			(char *)perrc, &(socklen_t){ sizeof(*perrc) }) ? -1 : 0;
+			(char *)perror, &(socklen_t){ sizeof(*perror) })
+			? -1 : 0;
 }
 
 LELY_IO_EXPORT int
@@ -1466,23 +1469,23 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 
 #ifdef _WIN32
 static int
-socketpair(int domain, int type, int protocol, SOCKET socket_vector[2])
+socketpair(int af, int type, int protocol, SOCKET sv[2])
 {
-	assert(socket_vector);
-	socket_vector[0] = socket_vector[1] = INVALID_SOCKET;
+	assert(sv);
+	sv[0] = sv[1] = INVALID_SOCKET;
 
-	SOCKADDR_STORAGE name_vector[2];
-	SOCKADDR *name_0 = (SOCKADDR *)&name_vector[0];
+	SOCKADDR_STORAGE name[2];
+	SOCKADDR *name_0 = (SOCKADDR *)&name[0];
 	SOCKADDR_IN *name_in_0 = (SOCKADDR_IN *)name_0;
 	SOCKADDR_IN6 *name_in6_0 = (SOCKADDR_IN6 *)name_0;
-	SOCKADDR *name_1 = (SOCKADDR *)&name_vector[1];
+	SOCKADDR *name_1 = (SOCKADDR *)&name[1];
 	SOCKADDR_IN *name_in_1 = (SOCKADDR_IN *)name_1;
 	SOCKADDR_IN6 *name_in6_1 = (SOCKADDR_IN6 *)name_1;
 	int namelen_0, namelen_1;
 
 	int iError = 0;
 
-	if (__unlikely(domain != AF_INET && domain != AF_INET6)) {
+	if (__unlikely(af != AF_INET && af != AF_INET6)) {
 		iError = WSAEAFNOSUPPORT;
 		goto error_param;
 	}
@@ -1492,19 +1495,19 @@ socketpair(int domain, int type, int protocol, SOCKET socket_vector[2])
 		goto error_param;
 	}
 
-	socket_vector[0] = socket(domain, type, protocol);
-	if (__unlikely(socket_vector[0] == INVALID_SOCKET)) {
+	sv[0] = socket(af, type, protocol);
+	if (__unlikely(sv[0] == INVALID_SOCKET)) {
 		iError = WSAGetLastError();
 		goto error_socket_0;
 	}
 
-	socket_vector[1] = socket(domain, type, protocol);
-	if (__unlikely(socket_vector[1] == INVALID_SOCKET)) {
+	sv[1] = socket(af, type, protocol);
+	if (__unlikely(sv[1] == INVALID_SOCKET)) {
 		iError = WSAGetLastError();
 		goto error_socket_1;
 	}
 
-	if (domain == AF_INET) {
+	if (af == AF_INET) {
 		name_in_1->sin_family = AF_INET;
 		name_in_1->sin_port = 0;
 		name_in_1->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -1516,24 +1519,29 @@ socketpair(int domain, int type, int protocol, SOCKET socket_vector[2])
 		namelen_1 = sizeof(*name_in6_1);
 	}
 
-	if (__unlikely(bind(socket_vector[1], name_1, namelen_1)
+	if (__unlikely(setsockopt(sv[1], SOL_SOCKET, SO_REUSEADDR,
+			(const char *)&(int){ 1 }, sizeof(int))
 			== SOCKET_ERROR)) {
+		iError = WSAGetLastError();
+		goto error_setsockopt_1;
+	}
+	if (__unlikely(bind(sv[1], name_1, namelen_1) == SOCKET_ERROR)) {
 		iError = WSAGetLastError();
 		goto error_bind_1;
 	}
-	if (__unlikely(getsockname(socket_vector[1], name_1, &namelen_1)
+	if (__unlikely(getsockname(sv[1], name_1, &namelen_1)
 			== SOCKET_ERROR)) {
 		iError = WSAGetLastError();
 		goto error_getsockname_1;
 	}
 
 	if (type == SOCK_STREAM) {
-		if (__unlikely(listen(socket_vector[1], 1) == SOCKET_ERROR)) {
+		if (__unlikely(listen(sv[1], 1) == SOCKET_ERROR)) {
 			iError = WSAGetLastError();
 			goto error_listen;
 		}
 	} else {
-		if (domain == AF_INET) {
+		if (af == AF_INET) {
 			name_in_0->sin_family = AF_INET;
 			name_in_0->sin_port = 0;
 			name_in_0->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -1545,67 +1553,74 @@ socketpair(int domain, int type, int protocol, SOCKET socket_vector[2])
 			namelen_0 = sizeof(*name_in6_0);
 		}
 
-		if (__unlikely(bind(socket_vector[0], name_0, namelen_0)
+		if (__unlikely(setsockopt(sv[0], SOL_SOCKET, SO_REUSEADDR,
+				(const char *)&(int){ 1 }, sizeof(int))
+				== SOCKET_ERROR)) {
+			iError = WSAGetLastError();
+			goto error_setsockopt_0;
+		}
+		if (__unlikely(bind(sv[0], name_0, namelen_0)
 				== SOCKET_ERROR)) {
 			iError = WSAGetLastError();
 			goto error_bind_0;
 		}
-		if (__unlikely(getsockname(socket_vector[0], name_0, &namelen_0)
+		if (__unlikely(getsockname(sv[0], name_0, &namelen_0)
 				== SOCKET_ERROR)) {
 			iError = WSAGetLastError();
 			goto error_getsockname_0;
 		}
 	}
 
-	if (domain == AF_INET)
+	if (af == AF_INET)
 		name_in_1->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	else
 		name_in6_1->sin6_addr = in6addr_loopback;
-	if (__unlikely(connect(socket_vector[0], name_1, namelen_1)
-			== SOCKET_ERROR)) {
+	if (__unlikely(connect(sv[0], name_1, namelen_1) == SOCKET_ERROR)) {
 		iError = WSAGetLastError();
 		goto error_connect_0;
 	}
 
 	if (type == SOCK_STREAM) {
-		SOCKET s = accept(socket_vector[1], NULL, NULL);
+		SOCKET s = accept(sv[1], NULL, NULL);
 		if (__unlikely(s == INVALID_SOCKET)) {
 			iError = WSAGetLastError();
 			goto error_accept;
 		}
-		closesocket(socket_vector[1]);
-		socket_vector[1] = s;
+		closesocket(sv[1]);
+		sv[1] = s;
 	} else {
-		if (domain == AF_INET)
+		if (af == AF_INET)
 			name_in_0->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		else
 			name_in6_0->sin6_addr = in6addr_loopback;
-		if (__unlikely(connect(socket_vector[1], name_0, namelen_0)
+		if (__unlikely(connect(sv[1], name_0, namelen_0)
 				== SOCKET_ERROR)) {
 			iError = WSAGetLastError();
 			goto error_connect_1;
 		}
 	}
 
-	return 0;
+	return SOCKET_ERROR;
 
 error_connect_1:
 error_accept:
 error_connect_0:
 error_getsockname_0:
 error_bind_0:
+error_setsockopt_0:
 error_listen:
 error_getsockname_1:
 error_bind_1:
-	closesocket(socket_vector[1]);
-	socket_vector[1] = INVALID_SOCKET;
+error_setsockopt_1:
+	closesocket(sv[1]);
+	sv[1] = INVALID_SOCKET;
 error_socket_1:
-	closesocket(socket_vector[0]);
-	socket_vector[0] = INVALID_SOCKET;
+	closesocket(sv[0]);
+	sv[0] = INVALID_SOCKET;
 error_socket_0:
 error_param:
 	WSASetLastError(iError);
-	return -1;
+	return SOCKET_ERROR;
 }
 #endif // _WIN32
 

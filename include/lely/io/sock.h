@@ -221,7 +221,7 @@ LELY_IO_EXTERN int io_sock_listen(io_handle_t handle, int backlog);
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_IO_EXPORT int io_sock_get_sockname(io_handle_t handle, io_addr_t *addr);
+LELY_IO_EXTERN int io_sock_get_sockname(io_handle_t handle, io_addr_t *addr);
 
 /*!
  * Obtains the peer address of a socket and stores the result in *\a addr. The
@@ -230,7 +230,7 @@ LELY_IO_EXPORT int io_sock_get_sockname(io_handle_t handle, io_addr_t *addr);
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_IO_EXPORT int io_sock_get_peername(io_handle_t handle, io_addr_t *addr);
+LELY_IO_EXTERN int io_sock_get_peername(io_handle_t handle, io_addr_t *addr);
 
 /*!
  * Returns the maximum queue length for pending connections. This value can be
@@ -238,7 +238,7 @@ LELY_IO_EXPORT int io_sock_get_peername(io_handle_t handle, io_addr_t *addr);
  *
  * \returns the value of \a SOMAXCONN, or -1 on error.
  */
-LELY_IO_EXPORT int io_sock_get_maxconn(void);
+LELY_IO_EXTERN int io_sock_get_maxconn(void);
 
 /*!
  * Checks if a socket is currently listening for incoming connections. This
@@ -322,13 +322,13 @@ LELY_IO_EXTERN int io_sock_get_dontroute(io_handle_t handle);
 LELY_IO_EXTERN int io_sock_set_dontroute(io_handle_t handle, int dontroute);
 
 /*!
- * Obtains and clears the current native error code of a socket, and stores the
- * value in *\a perrc. This function implements the SOL_SOCKET/SO_ERROR option.
+ * Obtains and clears the current error number of a socket, and stores the value
+ * in *\a perror. This function implements the SOL_SOCKET/SO_ERROR option.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_IO_EXTERN int io_sock_get_error(io_handle_t handle, errc_t *perrc);
+LELY_IO_EXTERN int io_sock_get_error(io_handle_t handle, int *perror);
 
 /*!
  * Checks if the TCP keep-alive option is enabled for a socket. This function

@@ -171,7 +171,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 
 	handle->fd = fd;
 
-	return handle;
+	return io_handle_acquire(handle);
 
 error_alloc_handle:
 #ifdef _WIN32

@@ -158,7 +158,7 @@ io_open_file(const char *path, int flags)
 	handle->fd = fd;
 	((struct file *)handle)->flags = flags;
 
-	return handle;
+	return io_handle_acquire(handle);
 
 error_alloc_handle:
 #ifdef _WIN32
