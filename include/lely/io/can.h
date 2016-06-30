@@ -1,5 +1,5 @@
 /*!\file
- * This header file is part of the I/O library; it contains Controller Area
+ * This header file is part of the I/O library; it contains the Controller Area
  * Network (CAN) declarations.
  *
  * \copyright 2016 Lely Industries N.V.

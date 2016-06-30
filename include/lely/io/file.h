@@ -1,5 +1,5 @@
 /*!\file
- * This header file is part of the I/O library; it contains regular file
+ * This header file is part of the I/O library; it contains the regular file
  * declarations.
  *
  * \copyright 2016 Lely Industries N.V.

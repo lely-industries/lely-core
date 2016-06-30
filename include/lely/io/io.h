@@ -25,6 +25,8 @@
 #include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
+#include <stddef.h>
+
 #ifndef LELY_IO_EXTERN
 #ifdef DLL_EXPORT
 #ifdef LELY_IO_INTERN
@@ -92,6 +94,29 @@ LELY_IO_EXTERN int lely_io_init(void);
  * Only the last invocation will finalize the library.
  */
 LELY_IO_EXTERN void lely_io_fini(void);
+
+/*!
+ * Increments the reference count of an I/O device handle.
+ *
+ * \returns \a handle.
+ *
+ * \see io_handle_release()
+ */
+LELY_IO_EXTERN io_handle_t io_handle_acquire(io_handle_t handle);
+
+/*!
+ * Decrements the reference count of an I/O device handle. If the count reaches
+ * zero, the handle is destroyed.
+ *
+ * \see io_handle_acquire()
+ */
+LELY_IO_EXTERN void io_handle_release(io_handle_t handle);
+
+/*!
+ * Returns 1 if there is only a single reference to the specified I/O device
+ * handle, and 0 otherwise.
+ */
+LELY_IO_EXTERN int io_handle_unique(io_handle_t handle);
 
 /*!
  * Closes an I/O device.

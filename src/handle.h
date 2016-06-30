@@ -139,29 +139,6 @@ void io_handle_fini(struct io_handle *handle);
 void io_handle_destroy(struct io_handle *handle);
 
 /*!
- * Increments the reference count of an I/O device handle.
- *
- * \returns \a handle.
- *
- * \see io_handle_release()
- */
-static inline struct io_handle *io_handle_acquire(struct io_handle *handle);
-
-/*!
- * Decrements the reference count of an I/O device handle. If the count reaches
- * zero, the handle is destroyed.
- *
- * \see io_handle_acquire()
- */
-static inline void io_handle_release(struct io_handle *handle);
-
-/*!
- * Returns 1 if there is only a single reference to the specified I/O device
- * handle, and 0 otherwise.
- */
-static inline int io_handle_unique(struct io_handle *handle);
-
-/*!
  * Locks an unlocked I/O device handle, so the flags (and other device-specific
  * fields) can safely be accessed.
  *
@@ -179,46 +156,6 @@ void io_handle_lock(struct io_handle *handle);
 #else
 void io_handle_unlock(struct io_handle *handle);
 #endif
-
-static inline struct io_handle *
-io_handle_acquire(struct io_handle *handle)
-{
-#ifndef LELY_NO_ATOMICS
-	atomic_fetch_add_explicit(&handle->ref, 1, memory_order_relaxed);
-#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
-	InterlockedIncrementNoFence(&handle->ref);
-#else
-	handle->ref++;
-#endif
-	return handle;
-}
-
-static inline void
-io_handle_release(struct io_handle *handle)
-{
-#ifndef LELY_NO_ATOMICS
-	if (atomic_fetch_sub_explicit(&handle->ref, 1, memory_order_release)
-			== 1) {
-		atomic_thread_fence(memory_order_acquire);
-#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
-	if (!InterlockedDecrementRelease(&handle->ref)) {
-		MemoryBarrier();
-#else
-	if (handle->ref-- == 1) {
-#endif
-		io_handle_destroy(handle);
-	}
-}
-
-static inline int
-io_handle_unique(struct io_handle *handle)
-{
-#ifndef LELY_NO_ATOMICS
-	return atomic_load(&handle->ref) == 1;
-#else
-	return handle->ref == 1;
-#endif
-}
 
 #ifdef __cplusplus
 }

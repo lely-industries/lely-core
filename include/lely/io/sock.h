@@ -1,5 +1,5 @@
 /*!\file
- * This header file is part of the I/O library; it contains network socket
+ * This header file is part of the I/O library; it contains the network socket
  * declarations.
  *
  * \copyright 2016 Lely Industries N.V.

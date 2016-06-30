@@ -1,5 +1,5 @@
 /*!\file
- * This header file is part of the I/O library; it contains serial I/O
+ * This header file is part of the I/O library; it contains the serial I/O
  * declarations.
  *
  * \copyright 2016 Lely Industries N.V.

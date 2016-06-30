@@ -28,6 +28,50 @@
 #include <assert.h>
 #include <stdlib.h>
 
+LELY_IO_EXPORT io_handle_t
+io_handle_acquire(io_handle_t handle)
+{
+	if (__likely(handle != IO_HANDLE_ERROR))
+#ifndef LELY_NO_ATOMICS
+		atomic_fetch_add_explicit(&handle->ref, 1, memory_order_relaxed);
+#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
+		InterlockedIncrementNoFence(&handle->ref);
+#else
+		handle->ref++;
+#endif
+	return handle;
+}
+
+LELY_IO_EXPORT void
+io_handle_release(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR))
+		return;
+
+#ifndef LELY_NO_ATOMICS
+	if (atomic_fetch_sub_explicit(&handle->ref, 1, memory_order_release)
+			== 1) {
+		atomic_thread_fence(memory_order_acquire);
+#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
+	if (!InterlockedDecrementRelease(&handle->ref)) {
+		MemoryBarrier();
+#else
+	if (handle->ref-- == 1) {
+#endif
+		io_handle_destroy(handle);
+	}
+}
+
+LELY_IO_EXPORT int
+io_handle_unique(io_handle_t handle)
+{
+#ifndef LELY_NO_ATOMICS
+	return handle != IO_HANDLE_ERROR && atomic_load(&handle->ref) == 1;
+#else
+	return handle != IO_HANDLE_ERROR && handle->ref == 1;
+#endif
+}
+
 struct io_handle *
 io_handle_alloc(const struct io_handle_vtab *vtab)
 {
