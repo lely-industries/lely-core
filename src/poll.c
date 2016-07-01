@@ -118,7 +118,17 @@ __io_poll_init(struct __io_poll *poll)
 #endif
 #endif
 
+#if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
+	// Track attributes with the I/O device handle.
 	rbtree_init(&poll->tree, ptr_cmp);
+#else
+	// Track attributes with native file descriptor.
+#ifdef _WIN32
+	rbtree_init(&poll->tree, ptr_cmp);
+#else
+	rbtree_init(&poll->tree, int_cmp);
+#endif
+#endif
 
 	poll->pool = pool_create(0, sizeof(struct io_watch));
 	if (__unlikely(!poll->pool)) {
@@ -276,7 +286,11 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 	io_poll_lock(poll);
 
 	// Check if the I/O device has already been registered.
+#if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
 	struct rbnode *node = rbtree_find(&poll->tree, handle);
+#else
+	struct rbnode *node = rbtree_find(&poll->tree, &handle->fd);
+#endif
 	struct io_watch *watch = node
 			? structof(node, struct io_watch, node)
 			: NULL;
@@ -624,7 +638,11 @@ io_poll_insert(io_poll_t *poll, struct io_handle *handle)
 		return NULL;
 
 	watch->handle = io_handle_acquire(handle);
+#if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
 	watch->node.key = watch->handle;
+#else
+	watch->node.key = &watch->handle->fd;
+#endif
 	rbtree_insert(&poll->tree, &watch->node);
 
 	return watch;
