@@ -60,6 +60,15 @@ enum {
 	IO_MSG_WAITALL = 1 << 2
 };
 
+enum {
+	//! Disables further receive operations.
+	IO_SHUT_RD,
+	//! Disables further send operations.
+	IO_SHUT_WR,
+	//! Disables further send and receive operations.
+	IO_SHUT_RDWR
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -213,6 +222,18 @@ LELY_IO_EXTERN int io_sock_bind(io_handle_t handle, const io_addr_t *addr);
  * \see io_accept()
  */
 LELY_IO_EXTERN int io_sock_listen(io_handle_t handle, int backlog);
+
+/*!
+ * Causes all or part of a full-duplex connection on a socket to be shut down.
+ *
+ * \param handle a valid socket device handle.
+ * \param how    the type of shutdown (one of #IO_SHUT_RD, #IO_SHUT_WR or
+ *               #IO_SHUT_RDWR).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_sock_shutdown(io_handle_t handle, int how);
 
 /*!
  * Obtains the locally-bound name of a socket and stores the resulting address

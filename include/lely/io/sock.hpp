@@ -106,6 +106,8 @@ public:
 		return io_sock_listen(*this, backlog);
 	}
 
+	int shutdown(int how) noexcept { return io_sock_shutdown(*this, how); }
+
 	int
 	getSockname(io_addr_t& addr) const noexcept
 	{

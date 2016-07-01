@@ -461,6 +461,44 @@ io_sock_listen(io_handle_t handle, int backlog)
 }
 
 LELY_IO_EXPORT int
+io_sock_shutdown(io_handle_t handle, int how)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	switch (how) {
+	case IO_SHUT_RD:
+#ifdef _WIN32
+		how = SD_RECEIVE;
+#else
+		how = SHUT_RD;
+#endif
+		break;
+	case IO_SHUT_WR:
+#ifdef _WIN32
+		how = SD_SEND;
+#else
+		how = SHUT_WR;
+#endif
+		break;
+	case IO_SHUT_RDWR:
+#ifdef _WIN32
+		how = SD_BOTH;
+#else
+		how = SHUT_RDWR;
+#endif
+		break;
+	default:
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	return shutdown((SOCKET)handle->fd, how) ? -1 : 0;
+}
+
+LELY_IO_EXPORT int
 io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
