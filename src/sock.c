@@ -70,9 +70,7 @@ static const struct io_handle_vtab sock_vtab = {
 	.connect = &sock_connect
 };
 
-#ifdef _WIN32
-static int socketpair(int af, int type, int protocol, SOCKET sv[2]);
-#endif
+int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
 
 LELY_IO_EXPORT io_handle_t
 io_open_socket(int domain, int type)
@@ -212,11 +210,11 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	case IO_SOCK_IPV4:
 		switch (type) {
 		case IO_SOCK_STREAM:
-			result = socketpair(AF_INET, SOCK_STREAM | flags, 0,
+			result = _socketpair(AF_INET, SOCK_STREAM | flags, 0,
 					socket_vector);
 			break;
 		case IO_SOCK_DGRAM:
-			result = socketpair(AF_INET, SOCK_DGRAM | flags, 0,
+			result = _socketpair(AF_INET, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
 		default:
@@ -227,11 +225,11 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	case IO_SOCK_IPV6:
 		switch (type) {
 		case IO_SOCK_STREAM:
-			result = socketpair(AF_INET6, SOCK_STREAM | flags, 0,
+			result = _socketpair(AF_INET6, SOCK_STREAM | flags, 0,
 					socket_vector);
 			break;
 		case IO_SOCK_DGRAM:
-			result = socketpair(AF_INET6, SOCK_DGRAM | flags, 0,
+			result = _socketpair(AF_INET6, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
 		default:
@@ -243,11 +241,11 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	case IO_SOCK_UNIX:
 		switch (type) {
 		case IO_SOCK_STREAM:
-			result = socketpair(AF_UNIX, SOCK_STREAM | flags, 0,
+			result = _socketpair(AF_UNIX, SOCK_STREAM | flags, 0,
 					socket_vector);
 			break;
 		case IO_SOCK_DGRAM:
-			result = socketpair(AF_UNIX, SOCK_DGRAM | flags, 0,
+			result = _socketpair(AF_UNIX, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
 		default:
@@ -322,10 +320,10 @@ error_domain:
 LELY_IO_EXPORT int
 io_open_pipe(io_handle_t handle_vector[2])
 {
-#ifdef _WIN32
-	return io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, handle_vector);
-#else
+#if _POSIX_C_SOURCE >= 200112L
 	return io_open_socketpair(IO_SOCK_UNIX, IO_SOCK_STREAM, handle_vector);
+#else
+	return io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, handle_vector);
 #endif
 }
 
@@ -1507,45 +1505,55 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 #endif
 }
 
-#ifdef _WIN32
-static int
-socketpair(int af, int type, int protocol, SOCKET sv[2])
+int
+_socketpair(int af, int type, int protocol, SOCKET sv[2])
 {
 	assert(sv);
 	sv[0] = sv[1] = INVALID_SOCKET;
 
-	SOCKADDR_STORAGE name[2];
-	SOCKADDR *name_0 = (SOCKADDR *)&name[0];
-	SOCKADDR_IN *name_in_0 = (SOCKADDR_IN *)name_0;
-	SOCKADDR_IN6 *name_in6_0 = (SOCKADDR_IN6 *)name_0;
-	SOCKADDR *name_1 = (SOCKADDR *)&name[1];
-	SOCKADDR_IN *name_in_1 = (SOCKADDR_IN *)name_1;
-	SOCKADDR_IN6 *name_in6_1 = (SOCKADDR_IN6 *)name_1;
-	int namelen_0, namelen_1;
+#if _POSIX_C_SOURCE >= 200112L
+	if (af == AF_UNIX)
+		return socketpair(af, type, protocol, sv);
+#endif
 
-	int iError = 0;
+	errc_t errc = 0;
 
 	if (__unlikely(af != AF_INET && af != AF_INET6)) {
-		iError = WSAEAFNOSUPPORT;
+		errc = errnum2c(ERRNUM_AFNOSUPPORT);
 		goto error_param;
 	}
+
+	int flags = 0;
+#if defined(__CYGWIN__) || defined(__linux__)
+	flags = type & (SOCK_NONBLOCK | SOCK_CLOEXEC);
+	type &= ~flags;
+#endif
 
 	if (__unlikely(type != SOCK_STREAM && type != SOCK_DGRAM)) {
-		iError = WSAEPROTOTYPE;
+		errc = errnum2c(ERRNUM_PROTOTYPE);
 		goto error_param;
 	}
 
-	sv[0] = socket(af, type, protocol);
+	sv[0] = socket(af, type | flags, protocol);
 	if (__unlikely(sv[0] == INVALID_SOCKET)) {
-		iError = WSAGetLastError();
+		errc = get_errc();
 		goto error_socket_0;
 	}
 
-	sv[1] = socket(af, type, protocol);
+	sv[1] = socket(af, type | flags, protocol);
 	if (__unlikely(sv[1] == INVALID_SOCKET)) {
-		iError = WSAGetLastError();
+		errc = get_errc();
 		goto error_socket_1;
 	}
+
+	struct sockaddr_storage name[2];
+	struct sockaddr *name_0 = (struct sockaddr *)&name[0];
+	struct sockaddr_in *name_in_0 = (struct sockaddr_in *)name_0;
+	struct sockaddr_in6 *name_in6_0 = (struct sockaddr_in6 *)name_0;
+	struct sockaddr *name_1 = (struct sockaddr *)&name[1];
+	struct sockaddr_in *name_in_1 = (struct sockaddr_in *)name_1;
+	struct sockaddr_in6 *name_in6_1 = (struct sockaddr_in6 *)name_1;
+	socklen_t namelen_0, namelen_1;
 
 	if (af == AF_INET) {
 		name_in_1->sin_family = AF_INET;
@@ -1560,18 +1568,18 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 	}
 
 	if (__unlikely(bind(sv[1], name_1, namelen_1) == SOCKET_ERROR)) {
-		iError = WSAGetLastError();
+		errc = get_errc();
 		goto error_bind_1;
 	}
 	if (__unlikely(getsockname(sv[1], name_1, &namelen_1)
 			== SOCKET_ERROR)) {
-		iError = WSAGetLastError();
+		errc = get_errc();
 		goto error_getsockname_1;
 	}
 
 	if (type == SOCK_STREAM) {
 		if (__unlikely(listen(sv[1], 1) == SOCKET_ERROR)) {
-			iError = WSAGetLastError();
+			errc = get_errc();
 			goto error_listen;
 		}
 	} else {
@@ -1589,12 +1597,12 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 
 		if (__unlikely(bind(sv[0], name_0, namelen_0)
 				== SOCKET_ERROR)) {
-			iError = WSAGetLastError();
+			errc = get_errc();
 			goto error_bind_0;
 		}
 		if (__unlikely(getsockname(sv[0], name_0, &namelen_0)
 				== SOCKET_ERROR)) {
-			iError = WSAGetLastError();
+			errc = get_errc();
 			goto error_getsockname_0;
 		}
 	}
@@ -1604,14 +1612,14 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 	else
 		name_in6_1->sin6_addr = in6addr_loopback;
 	if (__unlikely(connect(sv[0], name_1, namelen_1) == SOCKET_ERROR)) {
-		iError = WSAGetLastError();
+		errc = get_errc();
 		goto error_connect_0;
 	}
 
 	if (type == SOCK_STREAM) {
 		SOCKET s = accept(sv[1], NULL, NULL);
 		if (__unlikely(s == INVALID_SOCKET)) {
-			iError = WSAGetLastError();
+			errc = get_errc();
 			goto error_accept;
 		}
 		closesocket(sv[1]);
@@ -1623,7 +1631,7 @@ socketpair(int af, int type, int protocol, SOCKET sv[2])
 			name_in6_0->sin6_addr = in6addr_loopback;
 		if (__unlikely(connect(sv[1], name_0, namelen_0)
 				== SOCKET_ERROR)) {
-			iError = WSAGetLastError();
+			errc = get_errc();
 			goto error_connect_1;
 		}
 	}
@@ -1645,10 +1653,9 @@ error_socket_1:
 	sv[0] = INVALID_SOCKET;
 error_socket_0:
 error_param:
-	WSASetLastError(iError);
-	return SOCKET_ERROR;
+	set_errc(errc);
+	return -1;
 }
-#endif // _WIN32
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
