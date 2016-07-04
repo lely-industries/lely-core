@@ -113,6 +113,7 @@ public:
 	{
 		can_net_set_send_func(this, func, data);
 	}
+
 protected:
 	~CANNet() {}
 };

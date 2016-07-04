@@ -36,31 +36,51 @@ struct canfd_frame;
 extern "C" {
 #endif
 
-//! Converts a SocketCAN CAN frame to a #can_msg frame. \see can_msg2can_frame()
-LELY_CAN_EXTERN void can_frame2can_msg(const struct can_frame *frame,
-		struct can_msg *msg);
+/*!
+ * Converts a SocketCAN CAN frame to a #can_msg frame.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see can_msg2can_frame()
+ */
+LELY_CAN_EXTERN int can_frame2can_msg(const struct can_frame *src,
+		struct can_msg *dst);
 
-//! Converts a #can_msg frame to a SocketCAN CAN frame. \see can_frame2can_msg()
-LELY_CAN_EXTERN void can_msg2can_frame(const struct can_msg *msg,
-		struct can_frame *frame);
+/*!
+ * Converts a #can_msg frame to a SocketCAN CAN frame.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see can_frame2can_msg()
+ */
+LELY_CAN_EXTERN int can_msg2can_frame(const struct can_msg *src,
+		struct can_frame *dst);
 
 #ifndef LELY_NO_CANFD
 
 /*!
  * Converts a SocketCAN CAN FD frame to a #can_msg frame.
  *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
  * \see can_msg2canfd_frame()
  */
-LELY_CAN_EXTERN void canfd_frame2can_msg(const struct canfd_frame *frame,
-		struct can_msg *msg);
+LELY_CAN_EXTERN int canfd_frame2can_msg(const struct canfd_frame *src,
+		struct can_msg *dst);
 
 /*!
  * Converts a #can_msg frame to a SocketCAN CAN FD frame.
  *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
  * \see canfd_frame2can_msg()
  */
-LELY_CAN_EXTERN void can_msg2canfd_frame(const struct can_msg *msg,
-		struct canfd_frame *frame);
+LELY_CAN_EXTERN int can_msg2canfd_frame(const struct can_msg *src,
+		struct canfd_frame *dst);
 
 #endif // !LELY_NO_CANFD
 

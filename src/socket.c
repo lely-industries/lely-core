@@ -25,6 +25,7 @@
 
 #ifdef LELY_HAVE_SOCKET_CAN
 
+#include <lely/util/errnum.h>
 #include <lely/can/socket.h>
 
 #include <assert.h>
@@ -32,99 +33,123 @@
 
 #include <linux/can.h>
 
-LELY_CAN_EXPORT void
-can_frame2can_msg(const struct can_frame *frame, struct can_msg *msg)
+LELY_CAN_EXPORT int
+can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
 {
-	assert(frame);
-	assert(!(frame->can_id & CAN_ERR_FLAG));
-	assert(msg);
+	assert(src);
+	assert(dst);
 
-	memset(msg, 0, sizeof(*msg));
-	msg->flags = 0;
-	if (frame->can_id & CAN_EFF_FLAG) {
-		msg->id = frame->can_id & CAN_EFF_MASK;
-		msg->flags |= CAN_FLAG_IDE;
-	} else {
-		msg->id = frame->can_id & CAN_SFF_MASK;
+	if (__unlikely(src->can_id & CAN_ERR_FLAG)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
 	}
-	if (frame->can_id & CAN_RTR_FLAG)
-		msg->flags |= CAN_FLAG_RTR;
-	msg->len = MIN(frame->can_dlc, CAN_MAX_LEN);
-	if (!(msg->flags & CAN_FLAG_RTR))
-		memcpy(msg->data, frame->data, msg->len);
+
+	memset(dst, 0, sizeof(*dst));
+	dst->flags = 0;
+	if (src->can_id & CAN_EFF_FLAG) {
+		dst->id = src->can_id & CAN_EFF_MASK;
+		dst->flags |= CAN_FLAG_IDE;
+	} else {
+		dst->id = src->can_id & CAN_SFF_MASK;
+	}
+	if (src->can_id & CAN_RTR_FLAG)
+		dst->flags |= CAN_FLAG_RTR;
+	dst->len = MIN(src->can_dlc, CAN_MAX_LEN);
+	if (!(dst->flags & CAN_FLAG_RTR))
+		memcpy(dst->data, src->data, dst->len);
+
+	return 0;
 }
 
-LELY_CAN_EXPORT void
-can_msg2can_frame(const struct can_msg *msg, struct can_frame *frame)
+LELY_CAN_EXPORT int
+can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 {
-	assert(msg);
-#ifndef LELY_NO_CANFD
-	assert(!(msg->flags & CAN_FLAG_EDL));
-#endif
-	assert(frame);
+	assert(src);
+	assert(dst);
 
-	memset(frame, 0, sizeof(*frame));
-	frame->can_id = msg->id;
-	if (msg->flags & CAN_FLAG_IDE) {
-		frame->can_id &= CAN_EFF_MASK;
-		frame->can_id |= CAN_EFF_FLAG;
-	} else {
-		frame->can_id &= CAN_SFF_MASK;
+#ifndef LELY_NO_CANFD
+	if (__unlikely(src->flags & CAN_FLAG_EDL)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
 	}
-	frame->can_dlc = MIN(msg->len, CAN_MAX_LEN);
-	if (msg->flags & CAN_FLAG_RTR)
-		frame->can_id |= CAN_RTR_FLAG;
+#endif
+
+	memset(dst, 0, sizeof(*dst));
+	dst->can_id = src->id;
+	if (src->flags & CAN_FLAG_IDE) {
+		dst->can_id &= CAN_EFF_MASK;
+		dst->can_id |= CAN_EFF_FLAG;
+	} else {
+		dst->can_id &= CAN_SFF_MASK;
+	}
+	dst->can_dlc = MIN(src->len, CAN_MAX_LEN);
+	if (src->flags & CAN_FLAG_RTR)
+		dst->can_id |= CAN_RTR_FLAG;
 	else
-		memcpy(frame->data, msg->data, frame->can_dlc);
+		memcpy(dst->data, src->data, dst->can_dlc);
+
+	return 0;
 }
 
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
 
-LELY_CAN_EXPORT void
-canfd_frame2can_msg(const struct canfd_frame *frame, struct can_msg *msg)
+LELY_CAN_EXPORT int
+canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst)
 {
-	assert(frame);
-	assert(!(frame->can_id & CAN_ERR_FLAG));
-	assert(msg);
+	assert(src);
+	assert(dst);
 
-	memset(msg, 0, sizeof(*msg));
-	msg->flags = CAN_FLAG_EDL;
-	if (frame->can_id & CAN_EFF_FLAG) {
-		msg->id = frame->can_id & CAN_EFF_MASK;
-		msg->flags |= CAN_FLAG_IDE;
-	} else {
-		msg->id = frame->can_id & CAN_SFF_MASK;
+	if (__unlikely(src->can_id & CAN_ERR_FLAG)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
 	}
-	if (frame->flags & CANFD_BRS)
-		msg->flags |= CAN_FLAG_BRS;
-	if (frame->flags & CANFD_ESI)
-		msg->flags |= CAN_FLAG_ESI;
-	msg->len = MIN(frame->len, CANFD_MAX_LEN);
-	memcpy(msg->data, frame->data, msg->len);
+
+	memset(dst, 0, sizeof(*dst));
+	dst->flags = CAN_FLAG_EDL;
+	if (src->can_id & CAN_EFF_FLAG) {
+		dst->id = src->can_id & CAN_EFF_MASK;
+		dst->flags |= CAN_FLAG_IDE;
+	} else {
+		dst->id = src->can_id & CAN_SFF_MASK;
+	}
+	if (src->flags & CANFD_BRS)
+		dst->flags |= CAN_FLAG_BRS;
+	if (src->flags & CANFD_ESI)
+		dst->flags |= CAN_FLAG_ESI;
+	dst->len = MIN(src->len, CANFD_MAX_LEN);
+	memcpy(dst->data, src->data, dst->len);
+
+	return 0;
 }
 
-LELY_CAN_EXPORT void
-can_msg2canfd_frame(const struct can_msg *msg, struct canfd_frame *frame)
+LELY_CAN_EXPORT int
+can_msg2canfd_frame(const struct can_msg *src, struct canfd_frame *dst)
 {
-	assert(msg);
-	assert(msg->flags & CAN_FLAG_EDL);
-	assert(frame);
+	assert(src);
+	assert(dst);
 
-	memset(frame, 0, sizeof(*frame));
-	frame->can_id = msg->id;
-	if (msg->flags & CAN_FLAG_IDE) {
-		frame->can_id &= CAN_EFF_MASK;
-		frame->can_id |= CAN_EFF_FLAG;
-	} else {
-		frame->can_id &= CAN_SFF_MASK;
+	if (__unlikely(!(src->flags & CAN_FLAG_EDL))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
 	}
-	frame->flags = 0;
-	if (msg->flags & CAN_FLAG_BRS)
-		frame->flags |= CANFD_BRS;
-	if (msg->flags & CAN_FLAG_ESI)
-		frame->flags |= CANFD_ESI;
-	frame->len = MIN(msg->len, CANFD_MAX_LEN);
-	memcpy(frame->data, msg->data, frame->len);
+
+	memset(dst, 0, sizeof(*dst));
+	dst->can_id = src->id;
+	if (src->flags & CAN_FLAG_IDE) {
+		dst->can_id &= CAN_EFF_MASK;
+		dst->can_id |= CAN_EFF_FLAG;
+	} else {
+		dst->can_id &= CAN_SFF_MASK;
+	}
+	dst->flags = 0;
+	if (src->flags & CAN_FLAG_BRS)
+		dst->flags |= CANFD_BRS;
+	if (src->flags & CAN_FLAG_ESI)
+		dst->flags |= CANFD_ESI;
+	dst->len = MIN(src->len, CANFD_MAX_LEN);
+	memcpy(dst->data, src->data, dst->len);
+
+	return 0;
 }
 
 #endif // !LELY_NO_CANFD && CANFD_MTU
