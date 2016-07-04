@@ -4,6 +4,9 @@ if !NO_CXX
 inc += lely/can/buf.hpp
 endif
 inc += lely/can/can.h
+if HAVE_IXXAT_VCI3
+inc += lely/can/ixxat.h
+endif
 inc += lely/can/msg.h
 inc += lely/can/net.h
 if !NO_CXX

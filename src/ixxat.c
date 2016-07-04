@@ -1,0 +1,99 @@
+/*!\file
+ * This file is part of the CAN library; it contains the implementation of the
+ * IXXAT VCI V3 interface.
+ *
+ * \see lely/can/socket.h
+ *
+ * \copyright 2016 Lely Industries N.V.
+ *
+ * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "can.h"
+
+#ifdef LELY_HAVE_IXXAT_VCI3
+
+#include <lely/util/endian.h>
+#include <lely/util/errnum.h>
+#include <lely/can/ixxat.h>
+
+#include <assert.h>
+#include <string.h>
+
+#include <CANtype.h>
+
+LELY_CAN_EXPORT int
+CANMSG2can_msg(const void *src, struct can_msg *dst)
+{
+	const CANMSG *msg = src;
+	assert(msg);
+	assert(dst);
+
+	if (__unlikely(msg->uMsgInfo.Bits.type != CAN_MSGTYPE_DATA)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	memset(dst, 0, sizeof(*dst));
+	dst->flags = 0;
+	if (msg->uMsgInfo.Bits.ext) {
+		dst->id = ldle_u32(&msg->dwMsgId) & CAN_MASK_EID;
+		dst->flags |= CAN_FLAG_IDE;
+	} else {
+		dst->id = ldle_u32(&msg->dwMsgId) & CAN_MASK_BID;
+	}
+	if (msg->uMsgInfo.Bits.rtr)
+		dst->flags |= CAN_FLAG_RTR;
+	dst->len = MIN(msg->uMsgInfo.Bits.dlc, CAN_MAX_LEN);
+	if (!(dst->flags & CAN_FLAG_RTR))
+		memcpy(dst->data, msg->abData, dst->len);
+
+	return 0;
+}
+
+LELY_CAN_EXPORT int
+can_msg2CANMSG(const struct can_msg *src, void *dst)
+{
+	assert(src);
+	CANMSG *msg = dst;
+	assert(msg);
+
+#ifndef LELY_NO_CANFD
+	if (__unlikely(src->flags & CAN_FLAG_EDL)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+#endif
+
+	memset(msg, 0, sizeof(*msg));
+	msg->dwTime = 0;
+	msg->uMsgInfo.Bits.type = CAN_MSGTYPE_DATA;
+	if (src->flags & CAN_FLAG_IDE) {
+		stle_u32(&msg->dwMsgId, src->id & CAN_MASK_EID);
+		msg->uMsgInfo.Bits.ext = 1;
+	} else {
+		stle_u32(&msg->dwMsgId, src->id & CAN_MASK_BID);
+	}
+	msg->uMsgInfo.Bits.dlc = MIN(src->len, CAN_MAX_LEN);
+	if (src->flags & CAN_FLAG_RTR)
+		msg->uMsgInfo.Bits.rtr = 1;
+	else
+		memcpy(msg->abData, src->data, msg->uMsgInfo.Bits.dlc);
+
+	return 0;
+}
+
+#endif // LELY_HAVE_IXXAT_VCI3
+

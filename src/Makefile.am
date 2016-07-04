@@ -1,6 +1,9 @@
 src =
 src += buf.c
 src += can.h
+if HAVE_IXXAT_VCI3
+src += ixxat.c
+endif
 src += msg.c
 src += net.c
 if HAVE_SOCKET_CAN

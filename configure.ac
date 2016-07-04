@@ -61,6 +61,14 @@ AS_IF([test "x$enable_canfd" == "xno"], [
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
+AM_CONDITIONAL([HAVE_IXXAT_VCI3], [false])
+AS_IF([test "x$platform_win32" == "xyes"], [
+	AC_CHECK_HEADERS([vci3.h], [
+		AM_CONDITIONAL([HAVE_IXXAT_VCI3], [true])
+		AC_DEFINE([LELY_HAVE_IXXAT_VCI3], [1], [Define to 1 if you have IXXAT VCI V3.])
+	])
+])
+
 AM_CONDITIONAL([HAVE_SOCKET_CAN], [false])
 AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_CHECK_HEADERS([linux/can.h], [
