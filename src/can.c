@@ -160,12 +160,15 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 		if (nbytes == CANFD_MTU) {
 			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
 				return 0;
-			canfd_frame2can_msg(&frame, msg);
+			if (__unlikely(canfd_frame2can_msg(&frame, msg) == -1))
+				return 0;
 			return 1;
 		} else if (nbytes == CAN_MTU) {
 			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
 				return 0;
-			can_frame2can_msg((struct can_frame *)&frame, msg);
+			if (__unlikely(can_frame2can_msg(
+					(struct can_frame *)&frame, msg) == -1))
+				return 0;
 			return 1;
 		}
 
@@ -181,7 +184,8 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 	if (nbytes == CAN_MTU) {
 		if (__unlikely(frame.can_id & CAN_ERR_FLAG))
 			return 0;
-		can_frame2can_msg(&frame, msg);
+		if (__unlikely(can_frame2can_msg(&frame, msg) == -1))
+			return 0;
 		return 1;
 	}
 
@@ -211,7 +215,8 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 		}
 
 		struct canfd_frame frame;
-		can_msg2canfd_frame(msg, &frame);
+		if (__unlikely(can_msg2canfd_frame(msg, &frame) == -1))
+			return -1;
 		ssize_t nbytes = can_write(handle, &frame, sizeof(frame));
 		if (__unlikely(nbytes < 0))
 			return -1;
@@ -220,7 +225,8 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 	}
 #endif
 	struct can_frame frame;
-	can_msg2can_frame(msg, &frame);
+	if (__unlikely(can_msg2can_frame(msg, &frame) == -1))
+		return -1;
 	ssize_t nbytes = can_write(handle, &frame, sizeof(frame));
 	if (__unlikely(nbytes < 0))
 		return -1;
