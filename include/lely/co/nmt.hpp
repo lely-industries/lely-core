@@ -73,27 +73,15 @@ public:
 	}
 
 	void
-	getLgInd(co_nmt_lg_ind_t** pind, void** pdata = 0) const noexcept
+	getEcInd(co_nmt_ec_ind_t** pind, void** pdata = 0) const noexcept
 	{
-		co_nmt_get_lg_ind(this, pind, pdata);
+		co_nmt_get_ec_ind(this, pind, pdata);
 	}
 
 	void
-	setLgInd(co_nmt_lg_ind_t *ind, void* data = 0) noexcept
+	setEcInd(co_nmt_ec_ind_t *ind, void* data = 0) noexcept
 	{
-		co_nmt_set_lg_ind(this, ind, data);
-	}
-
-	void
-	getHbInd(co_nmt_hb_ind_t** pind, void** pdata = 0) const noexcept
-	{
-		co_nmt_get_hb_ind(this, pind, pdata);
-	}
-
-	void
-	setHbInd(co_nmt_hb_ind_t *ind, void* data = 0) noexcept
-	{
-		co_nmt_set_hb_ind(this, ind, data);
+		co_nmt_set_ec_ind(this, ind, data);
 	}
 
 	void
@@ -106,6 +94,18 @@ public:
 	setStInd(co_nmt_st_ind_t *ind, void* data = 0) noexcept
 	{
 		co_nmt_set_st_ind(this, ind, data);
+	}
+
+	void
+	getLgInd(co_nmt_lg_ind_t** pind, void** pdata = 0) const noexcept
+	{
+		co_nmt_get_lg_ind(this, pind, pdata);
+	}
+
+	void
+	setLgInd(co_nmt_lg_ind_t *ind, void* data = 0) noexcept
+	{
+		co_nmt_set_lg_ind(this, ind, data);
 	}
 
 	void

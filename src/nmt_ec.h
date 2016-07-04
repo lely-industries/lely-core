@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 /*!
- * The CANopen NMT error control indication function, invoked when a heartbeat
+ * The CANopen NMT error control indication function, invoked when a timeout
  * event occurs.
  *
  * \param nmt   a pointer to an NMT master/slave service.
@@ -45,11 +45,11 @@ extern "C" {
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
  *              was resolved (#CO_NMT_EC_RESOLVED).
  */
-void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state);
+void co_nmt_ec_ind(co_nmt_t *nmt, co_unsigned8_t id, int state);
 
 /*!
  * The CANopen NMT error control indication function, invoked when a state
- * change occurs.
+ * change event occurs.
  *
  * \param nmt a pointer to an NMT master/slave service.
  * \param id  the node-ID (in the range [1..127]).
@@ -60,14 +60,13 @@ void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
 void *__co_nmt_hb_alloc(void);
 void __co_nmt_hb_free(void *ptr);
 struct __co_nmt_hb *__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net,
-		co_dev_t *dev, co_nmt_t *nmt);
+		co_nmt_t *nmt);
 void __co_nmt_hb_fini(struct __co_nmt_hb *hb);
 
 /*!
  * Creates a new CANopen NMT heartbeat consumer service.
  *
  * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device.
  * \param nmt a pointer to an NMT master/slave service.
  *
  * \returns a pointer to a new heartbeat consumer service, or NULL on error. In
@@ -75,7 +74,7 @@ void __co_nmt_hb_fini(struct __co_nmt_hb *hb);
  *
  * \see co_nmt_hb_destroy()
  */
-co_nmt_hb_t *co_nmt_hb_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
+co_nmt_hb_t *co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt);
 
 //! Destroys a CANopen NMT heartbeat consumer service. \see co_nmt_hb_create()
 void co_nmt_hb_destroy(co_nmt_hb_t *hb);

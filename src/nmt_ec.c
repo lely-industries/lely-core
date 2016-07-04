@@ -33,8 +33,6 @@
 struct __co_nmt_hb {
 	//! A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
-	co_dev_t *dev;
 	//! A pointer to an NMT master/slave service.
 	co_nmt_t *nmt;
 	//! A pointer to the CAN frame receiver.
@@ -84,18 +82,15 @@ __co_nmt_hb_free(void *ptr)
 }
 
 struct __co_nmt_hb *
-__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
+__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 {
 	assert(hb);
 	assert(net);
-	assert(dev);
 	assert(nmt);
 
 	errc_t errc = 0;
 
 	hb->net = net;
-	hb->dev = dev;
 	hb->nmt = nmt;
 
 	hb->recv = can_recv_create();
@@ -137,7 +132,7 @@ __co_nmt_hb_fini(struct __co_nmt_hb *hb)
 }
 
 co_nmt_hb_t *
-co_nmt_hb_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 {
 	errc_t errc = 0;
 
@@ -147,7 +142,7 @@ co_nmt_hb_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 		goto error_alloc_hb;
 	}
 
-	if (__unlikely(!__co_nmt_hb_init(hb, net, dev, nmt))) {
+	if (__unlikely(!__co_nmt_hb_init(hb, net, nmt))) {
 		errc = get_errc();
 		goto error_init_hb;
 	}
@@ -194,6 +189,7 @@ co_nmt_hb_set_st(co_nmt_hb_t *hb, co_unsigned8_t st)
 
 	if (hb->id && hb->id <= CO_NUM_NODES && hb->ms) {
 		hb->st = st;
+		hb->state = CO_NMT_EC_RESOLVED;
 		// Reset the CAN timer for the heartbeat consumer.
 		can_timer_timeout(hb->timer, hb->net, hb->ms);
 	}
@@ -222,15 +218,15 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	co_nmt_hb_set_st(hb, st);
 
 	if (hb->state == CO_NMT_EC_OCCURRED) {
-		// If a heartbeat error occurred, notify the user that it has
+		// If a heartbeat event occurred, notify the user that it has
 		// been resolved.
 		hb->state = CO_NMT_EC_RESOLVED;
-		co_nmt_hb_ind(hb->nmt, hb->id, hb->state);
-	} else if (st != old_st) {
-		// Only notify the application of the occurrence of a state
-		// change, not its resolution.
-		co_nmt_st_ind(hb->nmt, hb->id, st);
+		co_nmt_ec_ind(hb->nmt, hb->id, hb->state);
 	}
+
+	// Notify the application of the occurrence of a state change.
+	if (st != old_st)
+		co_nmt_st_ind(hb->nmt, hb->id, st);
 
 	return 0;
 }
@@ -242,9 +238,9 @@ co_nmt_hb_timer(const struct timespec *tp, void *data)
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 
-	// Notify the application of the occurrence of a heartbeat error.
+	// Notify the application of the occurrence of a heartbeat event.
 	hb->state = CO_NMT_EC_OCCURRED;
-	co_nmt_hb_ind(hb->nmt, hb->id, hb->state);
+	co_nmt_ec_ind(hb->nmt, hb->id, hb->state);
 
 	return 0;
 }

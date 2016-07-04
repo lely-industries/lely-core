@@ -36,8 +36,8 @@ extern "C" {
  * specification based on the 0x1021 generator polynomial. It uses a table with
  * precomputed values for efficiency.
  *
- * As per CiA 301 7.2.4.3.16, the CRC of "123456789" (with an initial value of
- * 0x0000) is 0x31c3.
+ * As per section 7.2.4.3.16 in CiA 301 version 4.2.0, the CRC of "123456789"
+ * (with an initial value of 0x0000) is 0x31c3.
  *
  * \param crc the initial value.
  * \param ptr a pointer to the bytes to be hashed.
