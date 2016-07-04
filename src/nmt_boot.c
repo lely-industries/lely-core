@@ -36,17 +36,23 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#ifndef LELY_CO_NMT_BOOT_WAIT_TIMEOUT
 //! The timeout (in milliseconds) before trying to boot the slave again.
 #define LELY_CO_NMT_BOOT_WAIT_TIMEOUT	1000
+#endif
 
+#ifndef LELY_CO_NMT_BOOT_RTR_TIMEOUT
 //! The timeout (in milliseconds) after sending a node guarding RTR.
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
+#endif
 
+#ifndef LELY_CO_NMT_BOOT_CHECK_TIMEOUT
 /*!
  * The timeout (in milliseconds) before checking the flash status indication or
  * the program control of a slave again.
  */
 #define LELY_CO_NMT_BOOT_CHECK_TIMEOUT	100
+#endif
 
 struct __co_nmt_boot_state;
 //! An opaque CANopen NMT 'boot slave' state type.
