@@ -19,6 +19,8 @@ AC_PROG_CXX
 LT_INIT([win32-dll])
 LT_PROG_RC
 
+AM_CONDITIONAL([ENABLE_SHARED], [test "x$enable_shared" == "xyes"])
+
 m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
 AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
 AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
