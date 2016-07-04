@@ -28,8 +28,9 @@ liblely_can_la_SOURCES = $(src)
 if PLATFORM_WIN32
 .rc.lo:
 	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@
-
+if ENABLE_SHARED
 defdir = $(libdir)
 def_DATA = $(PACKAGE)-$(VERSION_MAJOR).def
 MOSTLYCLEANFILES = $(def_DATA)
+endif
 endif
