@@ -21,8 +21,8 @@ src += nmt_boot.h
 src += nmt_cfg.c
 src += nmt_cfg.h
 endif
-src += nmt_ec.c
-src += nmt_ec.h
+src += nmt_hb.c
+src += nmt_hb.h
 src += nmt_srv.c
 src += nmt_srv.h
 src += obj.c

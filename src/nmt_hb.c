@@ -1,6 +1,6 @@
 /*!\file
  * This file is part of the CANopen library; it contains the implementation of
- * the NMT error control functions.
+ * the NMT heartbeat consumer functions.
  *
  * \see src/nmt_ec.h
  *
@@ -24,7 +24,7 @@
 #include "co.h"
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
-#include "nmt_ec.h"
+#include "nmt_hb.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -218,15 +218,16 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	co_nmt_hb_set_st(hb, st);
 
 	if (hb->state == CO_NMT_EC_OCCURRED) {
-		// If a heartbeat event occurred, notify the user that it has
-		// been resolved.
+		// If a heartbeat timeout event occurred, notify the user that
+		// it has been resolved.
 		hb->state = CO_NMT_EC_RESOLVED;
-		co_nmt_ec_ind(hb->nmt, hb->id, hb->state);
+		co_nmt_hb_ind(hb->nmt, hb->id, hb->state, CO_NMT_EC_TIMEOUT, 0);
 	}
 
 	// Notify the application of the occurrence of a state change.
 	if (st != old_st)
-		co_nmt_st_ind(hb->nmt, hb->id, st);
+		co_nmt_hb_ind(hb->nmt, hb->id, CO_NMT_EC_OCCURRED,
+				CO_NMT_EC_STATE, st);
 
 	return 0;
 }
@@ -238,9 +239,10 @@ co_nmt_hb_timer(const struct timespec *tp, void *data)
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 
-	// Notify the application of the occurrence of a heartbeat event.
+	// Notify the application of the occurrence of a heartbeat timeout
+	// event.
 	hb->state = CO_NMT_EC_OCCURRED;
-	co_nmt_ec_ind(hb->nmt, hb->id, hb->state);
+	co_nmt_hb_ind(hb->nmt, hb->id, hb->state, CO_NMT_EC_TIMEOUT, 0);
 
 	return 0;
 }

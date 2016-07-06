@@ -68,6 +68,13 @@ enum {
 	CO_NMT_EC_RESOLVED
 };
 
+enum {
+	//! An NMT error control timeout event.
+	CO_NMT_EC_TIMEOUT,
+	//! An NMT error control state change event.
+	CO_NMT_EC_STATE
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,37 +93,20 @@ typedef void co_nmt_cs_ind_t(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 
 /*!
  * The type of a CANopen NMT error control indication function, invoked when a
- * node guarding or heartbeat timeout event occurs. The default handler invokes
- * co_nmt_node_err_ind() or co_nmt_comm_err_ind(), depending on whether the NMT
- * service is a master or not (see co_nmt_is_master()).
+ * node guarding event occurs. The default handler invokes
+ * co_nmt_comm_err_ind().
  *
- * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the node-ID (in the range [1..127]).
- * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
- *              was resolved (#CO_NMT_EC_RESOLVED).
- * \param data  a pointer to user-specified data.
+ * \param nmt    a pointer to an NMT master service.
+ * \param id     the node-ID (in the range [1..127]).
+ * \param state  indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
+ *               was resolved (#CO_NMT_EC_RESOLVED).
+ * \param reason indicates whether the event occurred because of a timeout
+ *               (#CO_NMT_EC_TIMEOUT) or an unexpected state change
+ *               (#CO_NMT_EC_STATE).
+ * \param data   a pointer to user-specified data.
  */
-typedef void co_nmt_ec_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		void *data);
-
-/*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * node guarding or heartbeat state change event occurs.
- *
- * Note that sections 7.2.8.2.2.1 and 7.2.8.3.2.1 in CiA 301 version 4.2.0
- * specify that a node guarding event is generated if the reported NMT slave
- * state does not match the expected state. This implementation reports the
- * occurrence of every NMT state change, regardless of whether it is expected or
- * not, and leaves it up to the application to compare the received state to the
- * expected state.
- *
- * \param nmt  a pointer to an NMT master/slave service.
- * \param id   the node-ID (in the range [1..127]).
- * \param st   the state of the node.
- * \param data a pointer to user-specified data.
- */
-typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned8_t st, void *data);
+typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason, void *data);
 
 /*!
  * The type of a CANopen NMT error control indication function, invoked when a
@@ -129,6 +119,53 @@ typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
  * \param data  a pointer to user-specified data.
  */
 typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
+
+/*!
+ * The type of a CANopen NMT error control indication function, invoked when a
+ * heartbeat event occurs. The default handler invokes co_nmt_node_err_ind() or
+ * co_nmt_comm_err_ind(), depending on whether the NMT service is a master or
+ * not (see co_nmt_is_master()).
+ *
+ * \param nmt    a pointer to an NMT master/slave service.
+ * \param id     the node-ID (in the range [1..127]).
+ * \param state  indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
+ *               was resolved (#CO_NMT_EC_RESOLVED). Note that heartbeat state
+ *               change events only occur and are never resolved.
+ * \param reason indicates whether the event occurred because of a timeout
+ *               (#CO_NMT_EC_TIMEOUT) or a state change (#CO_NMT_EC_STATE).
+ * \param data   a pointer to user-specified data.
+ */
+typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason, void *data);
+
+/*!
+ * The type of a CANopen NMT error control indication function, invoked when a
+ * state change is detected. This indication is an extension of the boot-up
+ * event indication (sections 7.2.8.2.3.1 and 7.2.8.3.3 in CiA 301 version
+ * 4.2.0) since it reports all state changes, not just the boot-up event.
+ *
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param id   the node-ID (in the range [1..127]).
+ * \param st   the state of the node (excluding the toggle bit).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, void *data);
+
+/*!
+ * The type of a CANopen NMT error control indication function, invoked when a
+ * node guarding or heartbeat timeout event occurs. The default handler invokes
+ * co_nmt_node_err_ind() or co_nmt_comm_err_ind(), depending on whether the NMT
+ * service is a master or not (see co_nmt_is_master()).
+ *
+ * \param nmt   a pointer to an NMT master/slave service.
+ * \param id    the node-ID (in the range [1..127]).
+ * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
+ *              was resolved (#CO_NMT_EC_RESOLVED).
+ * \param data  a pointer to user-specified data.
+ */
+typedef void co_nmt_ec_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		void *data);
 
 /*!
  * The type of a CANopen NMT 'boot slave' indication function, invoked when the
@@ -223,63 +260,32 @@ LELY_CO_EXTERN void co_nmt_set_cs_ind(co_nmt_t *nmt, co_nmt_cs_ind_t *ind,
 		void *data);
 
 /*!
- * Retrieves the indication function invoked when a node guarding or heartbeat
- * timeout event occurs.
+ * Retrieves the indication function invoked when a node guarding event occurs.
  *
- * \param nmt   a pointer to an NMT master/slave service.
+ * \param nmt   a pointer to an NMT master service.
  * \param pind  the address at which to store a pointer to the indication
  *              function (can be NULL).
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_nmt_set_ec_ind()
+ * \see co_nmt_set_ng_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_ec_ind(const co_nmt_t *nmt,
-		co_nmt_ec_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
+		co_nmt_ng_ind_t **pind, void **pdata);
 
 /*!
- * Sets the indication function invoked when a node guarding or heartbeat
- * timeout event occurs.
+ * Sets the indication function invoked when a node guarding event occurs.
  *
- * \param nmt  a pointer to an NMT master/slave service.
+ * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
- *             co_nmt_comm_err_ind() or co_nmt_node_err_ind()).
+ *             co_nmt_node_err_ind()).
  * \param data a pointer to user-specified data (can be NULL). \a data is
  *             passed as the last parameter to \a ind.
  *
- * \see co_nmt_get_ec_ind()
+ * \see co_nmt_get_ng_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_ec_ind(co_nmt_t *nmt, co_nmt_ec_ind_t *ind,
-		void *data);
-
-/*!
- * Retrieves the indication function invoked when a node guarding or heartbeat
- * state change event occurs.
- *
- * \param nmt   a pointer to an NMT master/slave service.
- * \param pind  the address at which to store a pointer to the indication
- *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
- *              (can be NULL).
- *
- * \see co_nmt_set_st_ind()
- */
-LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
-		co_nmt_st_ind_t **pind, void **pdata);
-
-/*!
- * Sets the indication function invoked when a node guarding or heartbeat state
- * change occurs.
- *
- * \param nmt  a pointer to an NMT master/slave service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
- *
- * \see co_nmt_get_st_ind()
- */
-LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
+LELY_CO_EXTERN void co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind,
 		void *data);
 
 /*!
@@ -309,6 +315,65 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  * \see co_nmt_get_lg_ind()
  */
 LELY_CO_EXTERN void co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the indication function invoked when a heartbeat event occurs.
+ *
+ * \param nmt   a pointer to an NMT master/slave service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_hb_ind()
+ */
+LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
+		co_nmt_hb_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function invoked when a heartbeat event occurs.
+ *
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
+ *             default indication function will be used (which invokes
+ *             co_nmt_node_err_ind() or co_nmt_comm_err_ind()).
+ * \param data a pointer to user-specified data (can be NULL). \a data is
+ *             passed as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_hb_ind()
+ */
+LELY_CO_EXTERN void co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the indication function invoked when a state change is detected.
+ *
+ * \param nmt   a pointer to an NMT master/slave service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_st_ind()
+ */
+LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
+		co_nmt_st_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function invoked when a state change is detected.
+ *
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
+ *             default indication function will be used (which invokes
+ *             co_nmt_boot_req() if a boot-up event indication is received by
+ *             an NMT master).
+ * \param data a pointer to user-specified data (can be NULL). \a data is
+ *             passed as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_st_ind()
+ */
+LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
 		void *data);
 
 /*!

@@ -1311,6 +1311,7 @@ co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 		// proceed immediately to 'start error control service'.
 		return co_nmt_boot_ec_state;
 	} else {
+		boot->st = 0;
 		// If the node is not operational, send the NMT 'reset
 		// communication' command and proceed as if the keep-alive bit
 		// was not set.
@@ -1803,8 +1804,8 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 	} else if (boot->assignment & 0x01) {
 		// If the guard time is non-zero, start node guarding by sending
 		// the first RTR, but do not wait for the response.
-		co_unsigned16_t guard = (boot->assignment >> 16) & 0xffff;
-		if (guard)
+		co_unsigned16_t gt = (boot->assignment >> 16) & 0xffff;
+		if (gt)
 			co_nmt_boot_send_rtr(boot);
 	}
 

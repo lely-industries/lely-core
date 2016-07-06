@@ -1,5 +1,5 @@
 /*!\file
- * This is the internal header file of the NMT error control declarations.
+ * This is the internal header file of the NMT heartbeat consumer declarations.
  *
  * \see lely/co/nmt.h
  *
@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_NMT_EC_H
-#define LELY_CO_INTERN_NMT_EC_H
+#ifndef LELY_CO_INTERN_NMT_HB_H
+#define LELY_CO_INTERN_NMT_HB_H
 
 #include "co.h"
 #include <lely/co/nmt.h>
@@ -37,25 +37,20 @@ extern "C" {
 #endif
 
 /*!
- * The CANopen NMT error control indication function, invoked when a timeout
- * event occurs.
+ * The CANopen NMT heartbeat indication function, invoked when a heartbeat event
+ * occurs.
  *
- * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the node-ID (in the range [1..127]).
- * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
- *              was resolved (#CO_NMT_EC_RESOLVED).
+ * \param nmt    a pointer to an NMT master/slave service.
+ * \param id     the node-ID (in the range [1..127]).
+ * \param state  indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
+ *               was resolved (#CO_NMT_EC_RESOLVED). Note that heartbeat state
+ *               change events only occur and are never resolved.
+ * \param reason indicates whether the event occurred because of a timeout
+ *               (#CO_NMT_EC_TIMEOUT) or a state change (#CO_NMT_EC_STATE).
+ * \param st     the state of the node (if \a reason is #CO_NMT_EC_STATE).
  */
-void co_nmt_ec_ind(co_nmt_t *nmt, co_unsigned8_t id, int state);
-
-/*!
- * The CANopen NMT error control indication function, invoked when a state
- * change event occurs.
- *
- * \param nmt a pointer to an NMT master/slave service.
- * \param id  the node-ID (in the range [1..127]).
- * \param st  the state of the node.
- */
-void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
+void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
+		co_unsigned8_t st);
 
 void *__co_nmt_hb_alloc(void);
 void __co_nmt_hb_free(void *ptr);

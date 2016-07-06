@@ -8,7 +8,8 @@
 #include "test.h"
 
 void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
-void ec_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, void *data);
+void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
+		void *data);
 void st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data);
 void boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 		void *data);
@@ -41,7 +42,7 @@ main(void)
 	co_nmt_t *master = co_nmt_create(net, mdev);
 	tap_assert(master);
 	co_nmt_set_cs_ind(master, &cs_ind, mdev);
-	co_nmt_set_ec_ind(master, &ec_ind, NULL);
+	co_nmt_set_hb_ind(master, &hb_ind, NULL);
 	co_nmt_set_st_ind(master, &st_ind, NULL);
 	co_nmt_set_boot_ind(master, &boot_ind, &test);
 
@@ -158,12 +159,13 @@ cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 }
 
 void
-ec_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, void *data)
+hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason, void *data)
 {
 	__unused_var(nmt);
 	__unused_var(data);
 
-	tap_diag("timeout %s for node %d",
+	tap_diag("heartbeat %s %s for node %d",
+			reason == CO_NMT_EC_TIMEOUT ? "timeout" : "state change",
 			state == CO_NMT_EC_OCCURRED ? "occurred" : "resolved",
 			id);
 }
@@ -171,10 +173,13 @@ ec_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, void *data)
 void
 st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 {
-	__unused_var(nmt);
+	tap_assert(nmt);
 	__unused_var(data);
 
 	tap_diag("state %02x reported for node %d", st, id);
+
+	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP)
+		co_nmt_boot_req(nmt, id, 100);
 }
 
 void
