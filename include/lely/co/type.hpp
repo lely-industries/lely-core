@@ -63,11 +63,11 @@ template <class T> struct co_type_traits_T;
 #include <lely/co/def/cxx.def>
 #undef LELY_CO_DEFINE_TYPE
 
-template <::std::size_t N>
+template < ::std::size_t N>
 struct co_type_traits_T<char[N]>
 		: co_type_traits<CO_DEFTYPE_VISIBLE_STRING, char[N]> {};
 
-template <::std::size_t N>
+template < ::std::size_t N>
 struct co_type_traits_T<char16_t[N]>
 		: co_type_traits<CO_DEFTYPE_UNICODE_STRING, char16_t[N]> {};
 
