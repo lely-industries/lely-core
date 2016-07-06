@@ -78,6 +78,9 @@
 #ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
 #endif
+#ifdef HAVE_LINUX_CAN_ERROR_H
+#include <linux/can/error.h>
+#endif
 #ifdef HAVE_LINUX_CAN_RAW_H
 #include <linux/can/raw.h>
 #endif

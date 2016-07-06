@@ -41,6 +41,12 @@ struct can {
 	//! A flag indicating the device supports sending CAN FD frames.
 	int canfd;
 #endif
+	//! The state of the CAN controller.
+	int state;
+	/*! The last error (any combination of #CAN_ERROR_BIT, #CAN_ERROR_STUFF,
+	 * #CAN_ERROR_CRC, #CAN_ERROR_FORM and #CAN_ERROR_ACK).
+	 */
+	int error;
 };
 
 static void can_fini(struct io_handle *handle);
@@ -57,6 +63,8 @@ static const struct io_handle_vtab can_vtab = {
 	.read = &can_read,
 	.write = &can_write
 };
+
+static int can_err(io_handle_t handle, const struct can_frame *frame);
 
 LELY_IO_EXPORT io_handle_t
 io_open_can(const char *path)
@@ -79,6 +87,15 @@ io_open_can(const char *path)
 	else
 		errno = errsv;
 #endif
+#endif
+
+#ifdef HAVE_LINUX_CAN_RAW_H
+	if (__unlikely(setsockopt(s, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
+			&(can_err_mask_t){ CAN_ERR_MASK },
+			sizeof(can_err_mask_t)) == -1)) {
+		errsv = errno;
+		goto error_setsockopt;
+	}
 #endif
 
 	unsigned int ifindex = if_nametoindex(path);
@@ -118,6 +135,8 @@ io_open_can(const char *path)
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
 	((struct can *)handle)->canfd = canfd;
 #endif
+	((struct can *)handle)->state = CAN_STATE_ACTIVE;
+	((struct can *)handle)->error = 0;
 
 	return io_handle_acquire(handle);
 
@@ -127,6 +146,9 @@ error_ioctl:
 #endif
 error_bind:
 error_if_nametoindex:
+#ifdef HAVE_LINUX_CAN_RAW_H
+error_setsockopt:
+#endif
 	close(s);
 error_socket:
 	errno = errsv;
@@ -159,13 +181,15 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 
 		if (nbytes == CANFD_MTU) {
 			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
-				return 0;
+				return can_err(handle,
+						(struct can_frame *)&frame);
 			if (__unlikely(canfd_frame2can_msg(&frame, msg) == -1))
 				return 0;
 			return 1;
 		} else if (nbytes == CAN_MTU) {
 			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
-				return 0;
+				return can_err(handle,
+						(struct can_frame *)&frame);
 			if (__unlikely(can_frame2can_msg(
 					(struct can_frame *)&frame, msg) == -1))
 				return 0;
@@ -183,7 +207,7 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 
 	if (nbytes == CAN_MTU) {
 		if (__unlikely(frame.can_id & CAN_ERR_FLAG))
-			return 0;
+			return can_err(handle, &frame);
 		if (__unlikely(can_frame2can_msg(&frame, msg) == -1))
 			return 0;
 		return 1;
@@ -236,6 +260,42 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 
 #endif // !LELY_NO_CAN
 
+LELY_IO_EXPORT int
+io_can_get_state(io_handle_t handle)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &can_vtab)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+	return ((struct can *)handle)->state;
+}
+
+LELY_IO_EXPORT int
+io_can_get_error(io_handle_t handle, int *perror)
+{
+	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+		set_errnum(ERRNUM_BADF);
+		return -1;
+	}
+
+	if (__unlikely(handle->vtab != &can_vtab)) {
+		set_errnum(ERRNUM_NXIO);
+		return -1;
+	}
+
+	if (perror)
+		*perror = ((struct can *)handle)->error;
+	((struct can *)handle)->error = 0;
+
+	return 0;
+}
+
 static void
 can_fini(struct io_handle *handle)
 {
@@ -282,6 +342,63 @@ can_write(struct io_handle *handle, const void *buf, size_t nbytes)
 	do result = write(handle->fd, buf, nbytes);
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
+}
+
+static int
+can_err(io_handle_t handle, const struct can_frame *frame)
+{
+	assert(handle);
+	assert(handle->vtab == &can_vtab);
+	assert(frame);
+	assert(frame->can_id & CAN_ERR_FLAG);
+
+#ifdef HAVE_LINUX_CAN_ERROR_H
+	if (__unlikely(frame->can_dlc != CAN_ERR_DLC))
+		return 0;
+#endif
+
+	int state = ((struct can *)handle)->state;
+	int error = 0;
+
+#ifdef HAVE_LINUX_CAN_ERROR_H
+	if (frame->can_id & CAN_ERR_RESTARTED)
+		state = CAN_STATE_ACTIVE;
+
+	if (frame->can_id & CAN_ERR_CRTL) {
+		if (frame->data[1] & CAN_ERR_CRTL_ACTIVE)
+			state = CAN_STATE_ACTIVE;
+		if (frame->data[1] & (CAN_ERR_CRTL_RX_PASSIVE
+				| CAN_ERR_CRTL_TX_PASSIVE))
+			state = CAN_STATE_PASSIVE;
+	}
+
+	if (frame->can_id & CAN_ERR_PROT) {
+		if (frame->data[2] & CAN_ERR_PROT_BIT)
+			error |= CAN_ERROR_BIT;
+		if (frame->data[2] & CAN_ERR_PROT_FORM)
+			error |= CAN_ERROR_FORM;
+		if (frame->data[2] & CAN_ERR_PROT_STUFF)
+			error |= CAN_ERROR_STUFF;
+		if (frame->data[3] & CAN_ERR_PROT_LOC_CRC_SEQ)
+			error |= CAN_ERROR_CRC;
+	}
+
+	if (frame->can_id & CAN_ERR_ACK)
+		error |= CAN_ERROR_ACK;
+
+	if (frame->can_id & CAN_ERR_BUSOFF)
+		state = CAN_STATE_BUSOFF;
+#endif
+
+	((struct can *)handle)->state = state;
+	((struct can *)handle)->state = error;
+
+	if (state != CAN_STATE_ACTIVE || error) {
+		errno = EIO;
+		return -1;
+	}
+
+	return 0;
 }
 
 #endif // __linux__ && HAVE_LINUX_CAN_H

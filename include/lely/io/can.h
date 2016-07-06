@@ -24,6 +24,28 @@
 
 #include <lely/io/io.h>
 
+enum {
+	//! The error active state.
+	CAN_STATE_ACTIVE,
+	//! The error passive state.
+	CAN_STATE_PASSIVE,
+	//! The bus off state.
+	CAN_STATE_BUSOFF
+};
+
+enum {
+	//! A single bit error.
+	CAN_ERROR_BIT = 1 << 0,
+	//! A bit stuffing error.
+	CAN_ERROR_STUFF = 1 << 1,
+	//! A CRC sequence error.
+	CAN_ERROR_CRC = 1 << 2,
+	//! A form error.
+	CAN_ERROR_FORM = 1 << 3,
+	//! An acknowledgment error.
+	CAN_ERROR_ACK = 1 << 4
+};
+
 // The CAN or CAN FD format frame struct from <lely/can/msg.h>.
 struct can_msg;
 
@@ -48,7 +70,9 @@ LELY_IO_EXTERN io_handle_t io_open_can(const char *path);
  * \param msg    the address at which to store the received frame.
  *
  * \returns the number of frames received (at most 1), or -1 on error. In the
- * latter case, the error number can be obtained with `get_errnum()`.
+ * latter case, the error number can be obtained with `get_errnum()`. In case of
+ * an I/O error (`ERRNUM_IO`), the CAN device state and error can be obtained
+ * with io_can_get_state() and io_can_get_error(), respectively.
  */
 LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
 
@@ -62,6 +86,25 @@ LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
  * case, the error number can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
+
+/*!
+ * Obtains the state of a CAN device.
+ *
+ * \returns #CAN_STATE_ACTIVE, #CAN_STATE_PASSIVE, #CAN_STATE_BUSOFF, or -1 on
+ * error. In the latter case, the error number can be obtained with
+ * `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_can_get_state(io_handle_t handle);
+
+/*!
+ * Obtains and clears the current error number of a CAN device, and stores the
+ * value (any combination of #CAN_ERROR_BIT, #CAN_ERROR_STUFF, #CAN_ERROR_CRC,
+ * #CAN_ERROR_FORM and #CAN_ERROR_ACK) in *\a perror.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_can_get_error(io_handle_t handle, int *perror);
 
 #ifdef __cplusplus
 }
