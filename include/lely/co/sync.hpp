@@ -53,7 +53,6 @@ struct c_type_traits<__co_sync> {
 	static void fini(pointer p) noexcept { __co_sync_fini(p); }
 };
 
-
 //! An opaque CANopen SYNC producer/consumer service type.
 class COSync: public incomplete_c_type<__co_sync> {
 	typedef incomplete_c_type<__co_sync> c_base;

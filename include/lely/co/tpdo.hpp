@@ -53,7 +53,6 @@ struct c_type_traits<__co_tpdo> {
 	static void fini(pointer p) noexcept { __co_tpdo_fini(p); }
 };
 
-
 //! An opaque CANopen Transmit-PDO service type.
 class COTPDO: public incomplete_c_type<__co_tpdo> {
 	typedef incomplete_c_type<__co_tpdo> c_base;

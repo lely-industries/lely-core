@@ -53,7 +53,6 @@ struct c_type_traits<__co_nmt> {
 	static void fini(pointer p) noexcept { __co_nmt_fini(p); }
 };
 
-
 //! An opaque CANopen NMT master/slave service type.
 class CONMT: public incomplete_c_type<__co_nmt> {
 	typedef incomplete_c_type<__co_nmt> c_base;

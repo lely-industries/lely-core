@@ -53,7 +53,6 @@ struct c_type_traits<__co_time> {
 	static void fini(pointer p) noexcept { __co_time_fini(p); }
 };
 
-
 //! An opaque CANopen TIME producer/consumer service type.
 class COTime: public incomplete_c_type<__co_time> {
 	typedef incomplete_c_type<__co_time> c_base;

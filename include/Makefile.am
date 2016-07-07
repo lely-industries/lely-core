@@ -88,6 +88,9 @@ inc += lely/co/val.hpp
 endif
 if !NO_CO_WTM
 inc += lely/co/wtm.h
+if !NO_CXX
+inc += lely/co/wtm.hpp
+endif
 endif
 
 nobase_include_HEADERS = $(inc)

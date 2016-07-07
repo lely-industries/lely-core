@@ -53,7 +53,6 @@ struct c_type_traits<__co_ssdo> {
 	static void fini(pointer p) noexcept { __co_ssdo_fini(p); }
 };
 
-
 //! An opaque CANopen Server-SDO service type.
 class COSSDO: public incomplete_c_type<__co_ssdo> {
 	typedef incomplete_c_type<__co_ssdo> c_base;

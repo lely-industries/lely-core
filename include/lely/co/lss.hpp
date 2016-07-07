@@ -53,7 +53,6 @@ struct c_type_traits<__co_lss> {
 	static void fini(pointer p) noexcept { __co_lss_fini(p); }
 };
 
-
 //! An opaque CANopen LSS master/slave service type.
 class COLSS: public incomplete_c_type<__co_lss> {
 	typedef incomplete_c_type<__co_lss> c_base;

@@ -53,7 +53,6 @@ struct c_type_traits<__co_emcy> {
 	static void fini(pointer p) noexcept { __co_emcy_fini(p); }
 };
 
-
 //! An opaque CANopen EMCY producer/consumer service type.
 class COEmcy: public incomplete_c_type<__co_emcy> {
 	typedef incomplete_c_type<__co_emcy> c_base;

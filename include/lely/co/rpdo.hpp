@@ -53,7 +53,6 @@ struct c_type_traits<__co_rpdo> {
 	static void fini(pointer p) noexcept { __co_rpdo_fini(p); }
 };
 
-
 //! An opaque CANopen Receive-PDO service type.
 class CORPDO: public incomplete_c_type<__co_rpdo> {
 	typedef incomplete_c_type<__co_rpdo> c_base;

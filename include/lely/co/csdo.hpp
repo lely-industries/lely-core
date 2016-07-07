@@ -54,7 +54,6 @@ struct c_type_traits<__co_csdo> {
 	static void fini(pointer p) noexcept { __co_csdo_fini(p); }
 };
 
-
 //! An opaque CANopen Client-SDO service type.
 class COCSDO: public incomplete_c_type<__co_csdo> {
 	typedef incomplete_c_type<__co_csdo> c_base;

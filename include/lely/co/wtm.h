@@ -233,7 +233,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_func(const co_wtm_t *wtm,
  * \see co_wtm_get_diag_func()
  */
 LELY_CO_EXTERN void co_wtm_set_diag_func(co_wtm_t *wtm,
-			co_wtm_diag_func_t *func, void *data);
+		co_wtm_diag_func_t *func, void *data);
 
 /*!
  * Receives and processes a byte stream with a CANopen WTM interface. This
