@@ -73,13 +73,13 @@ public:
 	}
 
 	void
-	getNgInd(co_nmt_lg_ind_t** pind, void** pdata = 0) const noexcept
+	getNgInd(co_nmt_ng_ind_t** pind, void** pdata = 0) const noexcept
 	{
 		co_nmt_get_ng_ind(this, pind, pdata);
 	}
 
 	void
-	setNgInd(co_nmt_lg_ind_t *ind, void* data = 0) noexcept
+	setNgInd(co_nmt_ng_ind_t *ind, void* data = 0) noexcept
 	{
 		co_nmt_set_ng_ind(this, ind, data);
 	}
@@ -97,13 +97,13 @@ public:
 	}
 
 	void
-	getHbInd(co_nmt_lg_ind_t** pind, void** pdata = 0) const noexcept
+	getHbInd(co_nmt_hb_ind_t** pind, void** pdata = 0) const noexcept
 	{
 		co_nmt_get_hb_ind(this, pind, pdata);
 	}
 
 	void
-	setHbInd(co_nmt_lg_ind_t *ind, void* data = 0) noexcept
+	setHbInd(co_nmt_hb_ind_t *ind, void* data = 0) noexcept
 	{
 		co_nmt_set_hb_ind(this, ind, data);
 	}
