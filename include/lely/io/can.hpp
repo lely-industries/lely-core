@@ -73,6 +73,14 @@ public:
 	{
 		return io_can_write(*this, &msg);
 	}
+
+	int getState() noexcept { return io_can_get_state(*this); }
+
+	int
+	getError(int& error) noexcept
+	{
+		return io_can_get_error(*this, &error);
+	}
 };
 
 } //lely
