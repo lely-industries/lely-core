@@ -47,7 +47,7 @@ static void *daemon_handle;
 
 #include <winerror.h>
 
-static void WINAPI ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv);
+static void WINAPI ServiceMain(DWORD dwArgc, LPSTR *lpszArgv);
 static void WINAPI Handler(DWORD fdwControl);
 static int ReportStatus(DWORD dwCurrentState);
 
@@ -80,11 +80,11 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	daemon_main = main;
 	daemon_fini = fini;
 
-	SERVICE_TABLE_ENTRY ServiceTable[] = {
-		{ (LPTSTR)daemon_name, &ServiceMain },
+	SERVICE_TABLE_ENTRYA ServiceTable[] = {
+		{ (LPSTR)daemon_name, &ServiceMain },
 		{ NULL, NULL }
 	};
-	return StartServiceCtrlDispatcher(ServiceTable) ? 0 : -1;
+	return StartServiceCtrlDispatcherA(ServiceTable) ? 0 : -1;
 }
 
 LELY_UTIL_EXPORT int
@@ -127,13 +127,13 @@ daemon_status(int status)
 }
 
 static void WINAPI
-ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
+ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 {
 	assert(daemon_main);
 
-	hServiceStatus = RegisterServiceCtrlHandler(daemon_name, Handler);
+	hServiceStatus = RegisterServiceCtrlHandlerA(daemon_name, Handler);
 	if (__unlikely(!hServiceStatus))
-		goto error_RegisterServiceCtrlHandler;
+		goto error_RegisterServiceCtrlHandlerA;
 	ReportStatus(SERVICE_START_PENDING);
 
 	if (daemon_init) {
@@ -160,7 +160,7 @@ ServiceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 
 error_init:
 	ReportStatus(SERVICE_STOPPED);
-error_RegisterServiceCtrlHandler:
+error_RegisterServiceCtrlHandlerA:
 	;
 }
 
