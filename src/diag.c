@@ -144,11 +144,8 @@ diag(enum diag_severity severity, errc_t errc, const char *format, ...)
 LELY_UTIL_EXPORT void
 vdiag(enum diag_severity severity, errc_t errc, const char *format, va_list ap)
 {
-	diag_handler_t *handler = NULL;
-	void *handle = NULL;
-	diag_get_handler(&handler, &handle);
-	if (handler)
-		handler(handle, severity, errc, format, ap);
+	if (diag_handler)
+		diag_handler(diag_handle, severity, errc, format, ap);
 }
 
 LELY_UTIL_EXPORT void
@@ -165,11 +162,8 @@ LELY_UTIL_EXPORT void
 vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, va_list ap)
 {
-	diag_at_handler_t *handler = NULL;
-	void *handle = NULL;
-	diag_at_get_handler(&handler, &handle);
-	if (handler)
-		handler(handle, severity, errc, at, format, ap);
+	if (diag_at_handler)
+		diag_at_handler(diag_at_handle, severity, errc, at, format, ap);
 }
 
 LELY_UTIL_EXPORT void

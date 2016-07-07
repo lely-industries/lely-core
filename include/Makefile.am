@@ -6,6 +6,9 @@ inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
 inc += lely/util/cmp.h
+if !NO_DAEMON
+inc += lely/util/daemon.h
+endif
 inc += lely/util/diag.h
 inc += lely/util/endian.h
 inc += lely/util/errnum.h

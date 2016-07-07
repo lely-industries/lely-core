@@ -4,6 +4,9 @@ src += c_type.cpp
 endif
 src += config.c
 src += config_ini.c
+if !NO_DAEMON
+src += daemon.c
+endif
 src += diag.c
 src += errnum.c
 if !NO_CXX

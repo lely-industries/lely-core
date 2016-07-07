@@ -43,6 +43,14 @@ AS_IF([test "x$enable_cxx" == "xno"], [
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_DAEMON], [false])
+AC_ARG_ENABLE([daemon],
+	AS_HELP_STRING([--disable-daemon], [disable daemon support]))
+AS_IF([test "x$enable_daemon" == "xno"], [
+	AM_CONDITIONAL([NO_DAEMON], [true])
+	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
+])
+
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
