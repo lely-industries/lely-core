@@ -92,9 +92,10 @@ extern "C" {
 typedef void co_nmt_cs_ind_t(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 
 /*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * node guarding event occurs. The default handler invokes
- * co_nmt_comm_err_ind().
+ * The type of a CANopen NMT node guarding indication function, invoked when a
+ * node guarding event occurs (see sections 7.2.8.2.2.1 and 7.2.8.3.2.1 in CiA
+ * 301 version 4.2.0). The default handler invokes co_nmt_comm_err_ind() when an
+ * event occurs.
  *
  * \param nmt    a pointer to an NMT master service.
  * \param id     the node-ID (in the range [1..127]).
@@ -109,9 +110,10 @@ typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 
 /*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * life guarding event occurs. The default handler invokes
- * co_nmt_comm_err_ind().
+ * The type of a CANopen NMT life guarding indication function, invoked when a
+ * life guarding event occurs (see section 7.2.8.2.2.2 in CiA 301 version
+ * 4.2.0). The default handler invokes co_nmt_comm_err_ind() when an event
+ * occurs.
  *
  * \param nmt   a pointer to an NMT master/slave service.
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
@@ -121,10 +123,11 @@ typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
 typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
 
 /*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * heartbeat event occurs. The default handler invokes co_nmt_node_err_ind() or
- * co_nmt_comm_err_ind(), depending on whether the NMT service is a master or
- * not (see co_nmt_is_master()).
+ * The type of a CANopen NMT heartbeat indication function, invoked when a
+ * heartbeat event occurs (see sections 7.2.8.2.2.3 and 7.2.8.3.2.2 in CiA 301
+ * version 4.2.0). The default handler invokes co_nmt_node_err_ind() or
+ * co_nmt_comm_err_ind() when a timeout event occurs, depending on whether the
+ * NMT service is a master or not (see co_nmt_is_master()).
  *
  * \param nmt    a pointer to an NMT master/slave service.
  * \param id     the node-ID (in the range [1..127]).
@@ -139,10 +142,11 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 
 /*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * state change is detected. This indication is an extension of the boot-up
- * event indication (sections 7.2.8.2.3.1 and 7.2.8.3.3 in CiA 301 version
- * 4.2.0) since it reports all state changes, not just the boot-up event.
+ * The type of a CANopen NMT state change indication function, invoked when a
+ * state change is detected by the node guarding or heartbeat protocol. This
+ * indication is an extension of the boot-up event indication (sections
+ * 7.2.8.2.3.1 and 7.2.8.3.3 in CiA 301 version 4.2.0) since it reports all
+ * state changes, not just the boot-up event.
  *
  * \param nmt  a pointer to an NMT master/slave service.
  * \param id   the node-ID (in the range [1..127]).
@@ -151,21 +155,6 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  */
 typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
-
-/*!
- * The type of a CANopen NMT error control indication function, invoked when a
- * node guarding or heartbeat timeout event occurs. The default handler invokes
- * co_nmt_node_err_ind() or co_nmt_comm_err_ind(), depending on whether the NMT
- * service is a master or not (see co_nmt_is_master()).
- *
- * \param nmt   a pointer to an NMT master/slave service.
- * \param id    the node-ID (in the range [1..127]).
- * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
- *              was resolved (#CO_NMT_EC_RESOLVED).
- * \param data  a pointer to user-specified data.
- */
-typedef void co_nmt_ec_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		void *data);
 
 /*!
  * The type of a CANopen NMT 'boot slave' indication function, invoked when the
