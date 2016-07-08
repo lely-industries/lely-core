@@ -71,6 +71,10 @@ typedef void daemon_handler_t(int sig, void *handle);
  * any files, sockets, etc. have been opened. On successful execution, this
  * function does not return until the daemon terminates.
  *
+ * This function registers daemon_diag_handler() and daemon_diag_at_handler() as
+ * the diagnostic message handlers for any code running as a daemon (this
+ * includes \a init on Windows, but not on other platforms).
+ *
  * \param name a pointer to the name of the daemon. Depending on the platform,
  *             the name is used for diagnostic or registration purposes.
  * \param init a pointer to the initialization function executed before \a main

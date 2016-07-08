@@ -260,6 +260,15 @@ LELY_UTIL_EXTERN void default_diag_at_handler(void *handle,
 		const char *format, va_list ap) __format_printf(5, 0);
 
 /*!
+ * The diag() handler used for command-line programs. This function prints the
+ * string at \a handle, which SHOULD point to the name of the program (see
+ * cmdname()), and then calls default_diag_handler().
+ */
+LELY_UTIL_EXTERN void cmd_diag_handler(void *handle,
+		enum diag_severity severity, errc_t errc, const char *format,
+		va_list ap) __format_printf(4, 0);
+
+/*!
  * The diag() handler for daemons. On Windows this function is equivalent to
  * dialog_diag_handler(), on other platforms to syslog_diag_handler().
  */

@@ -210,6 +210,21 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 }
 
 LELY_UTIL_EXPORT void
+cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	const char *cmd = handle;
+	if (cmd && *cmd) {
+		int errsv = errno;
+		fprintf(stderr, "%s: ", cmd);
+		fflush(stderr);
+		errno = errsv;
+	}
+
+	default_diag_handler(handle, severity, errc, format, ap);
+}
+
+LELY_UTIL_EXPORT void
 daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {

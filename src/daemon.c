@@ -29,7 +29,7 @@
 #include <lely/libc/threads.h>
 #endif
 #include <lely/util/daemon.h>
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 
 #include <assert.h>
 #include <signal.h>
@@ -136,6 +136,16 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 		goto error_RegisterServiceCtrlHandlerA;
 	ReportStatus(SERVICE_START_PENDING);
 
+	diag_handler_t *diag_handler;
+	void *diag_handle;
+	diag_get_handler(&diag_handler, &diag_handle);
+	diag_set_handler(&daemon_diag_handler, (void *)daemon_name);
+
+	diag_at_handler_t *diag_at_handler;
+	void *diag_at_handle;
+	diag_at_get_handler(&diag_at_handler, &diag_at_handle);
+	diag_at_set_handler(&daemon_diag_at_handler, (void *)daemon_name);
+
 	if (daemon_init) {
 		// Make sure the argument list is NULL-terminated.
 		char **argv = malloc((dwArgc + 1) * sizeof(char *));
@@ -158,10 +168,16 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 	if (daemon_fini)
 		daemon_fini();
 
+	diag_at_set_handler(diag_at_handler, diag_at_handle);
+	diag_set_handler(diag_handler, diag_handle);
+
 error_init:
 	ReportStatus(SERVICE_STOPPED);
 error_RegisterServiceCtrlHandlerA:
-	;
+	daemon_fini = NULL;
+	daemon_main = NULL;
+	daemon_init = NULL;
+	daemon_name = NULL;
 }
 
 static void WINAPI
@@ -331,12 +347,25 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	}
 #endif
 
+	diag_handler_t *diag_handler;
+	void *diag_handle;
+	diag_get_handler(&diag_handler, &diag_handle);
+	diag_set_handler(&daemon_diag_handler, argv[0]);
+
+	diag_at_handler_t *diag_at_handler;
+	void *diag_at_handle;
+	diag_at_get_handler(&diag_at_handler, &diag_at_handle);
+	diag_at_set_handler(&daemon_diag_at_handler, argv[0]);
+
 	main();
 
 	daemon_stop();
 #ifndef LELY_NO_THREADS
 	thrd_join(thr, NULL);
 #endif
+
+	diag_at_set_handler(diag_at_handler, diag_at_handle);
+	diag_set_handler(diag_handler, diag_handle);
 
 error_signal:
 #if !defined(__CYGWIN__) && !defined(__linux__)
