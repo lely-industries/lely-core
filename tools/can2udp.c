@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <lely/util/daemon.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
 #include <lely/io/addr.h>
@@ -31,12 +32,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CMD_USAGE \
+#define USAGE \
 	"Arguments: [options] <CAN interface> <address> <port>\n" \
 	"Options:\n" \
 	"  -4, --ipv4            Use IPv4 for receiving UDP frames (default)\n" \
 	"  -6, --ipv6            Use IPv6 for receiving UDP frames \n" \
 	"  -b, --broadcast       Send broadcast messages (IPv4 only)\n" \
+	"  -D, --no-daemon       Do not run as daemon\n" \
 	"  -f, --flush           Flush the send buffer after every received CAN frame\n" \
 	"  -h, --help            Display this information\n" \
 	"  -i <n>, --interface=<n>\n" \
@@ -49,14 +51,12 @@
 	"                        Receive UDP frames on <local port>\n" \
 	"  -v, --verbose         Print sent and received CAN frames\n"
 
-#define FLAG_BROADCAST	0x01
-#define FLAG_FLUSH	0x02
-#define FLAG_VERBOSE	0x04
+void usage(const char *cmdname);
 
-int flags = 0;
-
-void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
-		const char *format, va_list ap);
+int daemon_init(int argc, char *argv[]);
+void daemon_main();
+void daemon_fini();
+void daemon_handler(int sig, void *handle);
 
 io_handle_t open_can(const char *ifname);
 io_handle_t open_send(const char *address, const char *port, int flags);
@@ -66,15 +66,81 @@ int wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data);
 int wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 
+#define FLAG_BROADCAST	0x01
+#define FLAG_FLUSH	0x02
+#define FLAG_NO_DAEMON	0x04
+#define FLAG_VERBOSE	0x08
+
+int flags;
+int keep = 10000;
+io_poll_t *poll;
+io_handle_t can_handle = IO_HANDLE_ERROR;
+io_handle_t send_handle = IO_HANDLE_ERROR;
+io_handle_t recv_handle = IO_HANDLE_ERROR;
+co_wtm_t *wtm;
+
 int
 main(int argc, char *argv[])
 {
 	const char *cmd = cmdname(argv[0]);
 	diag_set_handler(&cmd_diag_handler, (void *)cmd);
 
+	for (int i = 1; i < argc; i++) {
+		char *opt = argv[i];
+		if (*opt == '-') {
+			opt++;
+			if (*opt == '-') {
+				opt++;
+				if (!strcmp(opt, "help")) {
+					usage(cmd);
+					return EXIT_SUCCESS;
+				} else if (!strcmp(opt, "no-daemon")) {
+					flags |= FLAG_NO_DAEMON;
+				}
+			} else {
+				for (; *opt; opt++) {
+					switch (*opt) {
+					case 'D':
+						flags |= FLAG_NO_DAEMON;
+						break;
+					case 'h':
+						usage(cmd);
+						return EXIT_SUCCESS;
+					}
+				}
+			}
+		}
+	}
+
+	if (flags & FLAG_NO_DAEMON) {
+		if (__unlikely(daemon_init(argc, argv)))
+			return EXIT_FAILURE;
+		daemon_main();
+		daemon_fini();
+		return EXIT_SUCCESS;
+	} else {
+		return daemon_start(cmd, &daemon_init, &daemon_main,
+				&daemon_fini, argc, argv)
+				? EXIT_FAILURE : EXIT_SUCCESS;
+	}
+}
+
+void
+usage(const char *cmdname)
+{
+	fprintf(stderr, "%s: %s", cmdname, USAGE);
+}
+
+int
+daemon_init(int argc, char *argv[])
+{
+	if (__unlikely(lely_io_init() == -1)) {
+		diag(DIAG_ERROR, get_errc(), "unable to initialize I/O library");
+		goto error_io_init;
+	}
+
 	int recv_domain = IO_SOCK_IPV4;
 	int nif = 1;
-	int keep = 10000;
 	const char *recv_port = NULL;
 	const char *ifname = NULL;
 	const char *address = NULL;
@@ -91,11 +157,10 @@ main(int argc, char *argv[])
 					recv_domain = IO_SOCK_IPV6;
 				} else if (!strcmp(opt, "broadcast")) {
 					flags |= FLAG_BROADCAST;
+				} else if (!strcmp(opt, "no-daemon")) {
 				} else if (!strcmp(opt, "flush")) {
 					flags |= FLAG_FLUSH;
 				} else if (!strcmp(opt, "help")) {
-					diag(DIAG_INFO, 0, CMD_USAGE);
-					goto error_arg;
 				} else if (!strcmp(opt, "interface=")) {
 					nif = atoi(opt + 10);
 				} else if (!strcmp(opt, "keep-alive=")) {
@@ -121,12 +186,11 @@ main(int argc, char *argv[])
 					case 'b':
 						flags |= FLAG_BROADCAST;
 						break;
+					case 'D': break;
 					case 'f':
 						flags |= FLAG_FLUSH;
 						break;
-					case 'h':
-						diag(DIAG_INFO, 0, CMD_USAGE);
-						goto error_arg;
+					case 'h': break;
 					case 'i':
 						if (__unlikely(++i >= argc)) {
 							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
@@ -186,14 +250,14 @@ main(int argc, char *argv[])
 		goto error_arg;
 	}
 
-	io_poll_t *poll = io_poll_create();
+	poll = io_poll_create();
 	if (__unlikely(!poll)) {
 		diag(DIAG_ERROR, get_errc(), "unable to create I/O polling interface");
 		goto error_create_poll;
 	}
 	struct io_event event = IO_EVENT_INIT;
 
-	io_handle_t can_handle = open_can(ifname);
+	can_handle = open_can(ifname);
 	if (__unlikely(can_handle == IO_HANDLE_ERROR)) {
 		diag(DIAG_ERROR, get_errc(), "%s is not a suitable CAN device",
 				ifname);
@@ -206,14 +270,13 @@ main(int argc, char *argv[])
 		goto error_watch_can;
 	}
 
-	io_handle_t send_handle = open_send(address, send_port, flags);
+	send_handle = open_send(address, send_port, flags);
 	if (__unlikely(send_handle == IO_HANDLE_ERROR)) {
 		diag(DIAG_ERROR, get_errc(), "unable to connect to [%s]:%s",
 				address, send_port);
 		goto error_open_send;
 	}
 
-	io_handle_t recv_handle = IO_HANDLE_ERROR;
 	if (recv_port) {
 		recv_handle = open_recv(recv_domain, recv_port);
 		if (__unlikely(recv_handle == IO_HANDLE_ERROR)) {
@@ -231,7 +294,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	co_wtm_t *wtm = co_wtm_create();
+	wtm = co_wtm_create();
 	if (__unlikely(!wtm)) {
 		diag(DIAG_ERROR, get_errc(), "unable to create WTM interface");
 		goto error_create_wtm;
@@ -244,6 +307,42 @@ main(int argc, char *argv[])
 	co_wtm_set_recv_func(wtm, &wtm_recv, can_handle);
 	co_wtm_set_send_func(wtm, &wtm_send, send_handle);
 
+	// Disable verbose output in daemon mode.
+	if (!(flags & FLAG_NO_DAEMON))
+		flags &= ~FLAG_VERBOSE;
+
+	daemon_set_handler(&daemon_handler, poll);
+
+	return 0;
+
+error_set_nif:
+error_create_wtm:
+	co_wtm_destroy(wtm);
+	wtm = NULL;
+error_watch_recv:
+	if (recv_handle != IO_HANDLE_ERROR)
+		io_close(recv_handle);
+	recv_handle = IO_HANDLE_ERROR;
+error_open_recv:
+	io_close(send_handle);
+	send_handle = IO_HANDLE_ERROR;
+error_open_send:
+error_watch_can:
+	io_close(can_handle);
+	can_handle = IO_HANDLE_ERROR;
+error_open_can:
+	io_poll_destroy(poll);
+	poll = NULL;
+error_create_poll:
+error_arg:
+	lely_io_fini();
+error_io_init:
+	return -1;
+}
+
+void
+daemon_main()
+{
 	struct timespec now = { 0, 0 };
 	timespec_get(&now, TIME_UTC);
 	struct timespec next = now;
@@ -258,14 +357,44 @@ main(int argc, char *argv[])
 			timespec_add_msec(&next, keep);
 		}
 		// Wait for input events.
+		struct io_event event;
 		int n = io_poll_wait(poll, 1, &event, timeout);
 		// Update the clock. This might trigger timer-overrun messages.
 		timespec_get(&now, TIME_UTC);
 		co_wtm_set_time(wtm, 1, &now);
-		// Ignore non-input events.
-		if (n != 1 || !(event.events & IO_EVENT_READ))
+		// Handle events.
+		if (n != 1)
 			continue;
-		if (event.u.handle == can_handle) {
+		if (event.events == IO_EVENT_SIGNAL) {
+			switch (event.u.sig) {
+			case DAEMON_STOP:
+				// Stop the daemon by returning.
+				return;
+			case DAEMON_PAUSE:
+				// Pause the daemon by unregistering the device
+				// handles so we only responds to signals.
+				io_poll_watch(poll, can_handle, NULL, 0);
+				if (recv_handle != IO_HANDLE_ERROR)
+					io_poll_watch(poll, recv_handle, NULL,
+							0);
+				daemon_status(DAEMON_PAUSE);
+				break;
+			case DAEMON_CONTINUE:
+				// Continue the daemon by re-registering the
+				// device handles.
+				event.events = IO_EVENT_READ;
+				event.u.handle = can_handle;
+				io_poll_watch(poll, can_handle, &event, 1);
+				if (recv_handle != IO_HANDLE_ERROR) {
+					event.u.handle = recv_handle;
+					io_poll_watch(poll, recv_handle, &event,
+							1);
+				}
+				daemon_status(DAEMON_CONTINUE);
+				break;
+			}
+		} else if ((event.events & IO_EVENT_READ)
+				&& event.u.handle == can_handle) {
 			// Read a single CAN frame.
 			struct can_msg msg = CAN_MSG_INIT;
 			if (__unlikely(io_can_read(can_handle, &msg) != 1))
@@ -281,7 +410,8 @@ main(int argc, char *argv[])
 			co_wtm_send(wtm, 1, &msg);
 			if (flags & FLAG_FLUSH)
 				co_wtm_flush(wtm);
-		} else if (event.u.handle == recv_handle) {
+		} else if ((event.events & IO_EVENT_READ)
+				&& event.u.handle == recv_handle) {
 			// Read a single generic frame.
 			char buf[CO_WTM_MAX_LEN];
 			ssize_t result = io_read(recv_handle, buf, sizeof(buf));
@@ -291,41 +421,37 @@ main(int argc, char *argv[])
 			co_wtm_recv(wtm, buf, result);
 		}
 	}
-
-	co_wtm_destroy(wtm);
-	if (recv_handle != IO_HANDLE_ERROR)
-		io_close(recv_handle);
-	io_close(send_handle);
-	io_close(can_handle);
-	io_poll_destroy(poll);
-
-	return EXIT_SUCCESS;
-
-error_set_nif:
-error_create_wtm:
-	co_wtm_destroy(wtm);
-error_watch_recv:
-	if (recv_handle != IO_HANDLE_ERROR)
-		io_close(recv_handle);
-error_open_recv:
-	io_close(send_handle);
-error_open_send:
-error_watch_can:
-	io_close(can_handle);
-error_open_can:
-	io_poll_destroy(poll);
-error_create_poll:
-error_arg:
-	return EXIT_FAILURE;
 }
 
 void
-cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
-		const char *format, va_list ap)
+daemon_fini()
 {
-	if (handle)
-		fprintf(stderr, "%s: ", (const char *)handle);
-	default_diag_handler(handle, severity, errc, format, ap);
+	co_wtm_destroy(wtm);
+	wtm = NULL;
+
+	if (recv_handle != IO_HANDLE_ERROR)
+		io_close(recv_handle);
+	recv_handle = IO_HANDLE_ERROR;
+
+	io_close(send_handle);
+	send_handle = IO_HANDLE_ERROR;
+
+	io_close(can_handle);
+	can_handle = IO_HANDLE_ERROR;
+
+	io_poll_destroy(poll);
+	poll = NULL;
+
+	lely_io_fini();
+}
+
+void
+daemon_handler(int sig, void *handle)
+{
+	io_poll_t *poll = handle;
+	assert(poll);
+
+	io_poll_signal(poll, sig);
 }
 
 io_handle_t

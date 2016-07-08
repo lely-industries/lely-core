@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CMD_USAGE \
+#define USAGE \
 	"Arguments: [options] <filename> <name>\n" \
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
@@ -34,10 +34,9 @@
 	"  -o <file>, --output=<file>\n" \
 	"                        Write the output to <file> instead of stdout\n"
 
-#define FLAG_NO_STRINGS	0x01
+void usage(const char *cmdname);
 
-void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
-		const char *format, va_list ap);
+#define FLAG_NO_STRINGS	0x01
 
 int
 main(int argc, char *argv[])
@@ -56,8 +55,8 @@ main(int argc, char *argv[])
 			if (*opt == '-') {
 				opt++;
 				if (!strcmp(opt, "help")) {
-					diag(DIAG_INFO, 0, CMD_USAGE);
-					goto error_arg;
+					usage(cmd);
+					return EXIT_SUCCESS;
 				} else if (!strcmp(opt, "no-strings")) {
 					flags |= FLAG_NO_STRINGS;
 				} else if (!strncmp(opt, "output=", 7)) {
@@ -71,8 +70,8 @@ main(int argc, char *argv[])
 				for (; *opt; opt++) {
 					switch (*opt) {
 					case 'h':
-						diag(DIAG_INFO, 0, CMD_USAGE);
-						goto error_arg;
+						usage(cmd);
+						return EXIT_SUCCESS;
 					case 'o':
 						if (__unlikely(++i >= argc)) {
 							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
@@ -150,11 +149,8 @@ error_arg:
 }
 
 void
-cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
-		const char *format, va_list ap)
+usage(const char *cmdname)
 {
-	if (handle)
-		fprintf(stderr, "%s: ", (const char *)handle);
-	default_diag_handler(handle, severity, errc, format, ap);
+	fprintf(stderr, "%s: %s", cmdname, USAGE);
 }
 
