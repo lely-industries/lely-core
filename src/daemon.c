@@ -129,7 +129,7 @@ daemon_status(int status)
 static void WINAPI
 ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 {
-	assert(daemon_main);
+	assert(lpszArgv);
 
 	hServiceStatus = RegisterServiceCtrlHandlerA(daemon_name, Handler);
 	if (__unlikely(!hServiceStatus))
@@ -163,6 +163,7 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 
 	ReportStatus(SERVICE_RUNNING);
 
+	assert(daemon_main);
 	daemon_main();
 
 	if (daemon_fini)
@@ -257,8 +258,9 @@ LELY_UTIL_EXPORT int
 daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		void (*fini)(void), int argc, char *argv[])
 {
-	__unused_var(name);
 	assert(main);
+	assert(argc >= 0);
+	assert(argv);
 
 	int result = 0;
 	int errsv = errno;
@@ -350,12 +352,12 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	diag_handler_t *diag_handler;
 	void *diag_handle;
 	diag_get_handler(&diag_handler, &diag_handle);
-	diag_set_handler(&daemon_diag_handler, argv[0]);
+	diag_set_handler(&daemon_diag_handler, (void *)name);
 
 	diag_at_handler_t *diag_at_handler;
 	void *diag_at_handle;
 	diag_at_get_handler(&diag_at_handler, &diag_at_handle);
-	diag_at_set_handler(&daemon_diag_at_handler, argv[0]);
+	diag_at_set_handler(&daemon_diag_at_handler, (void *)name);
 
 	main();
 
