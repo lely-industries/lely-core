@@ -28,6 +28,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#ifdef _WIN32
+#include <wtsapi32.h>
+#ifdef _MSC_VER
+#pragma comment(lib, "wtsapi32.lib")
+#endif
+#elif _POSIX_C_SOURCE >= 200809L
+#include <syslog.h>
+#endif
+
+#ifdef _WIN32
+#ifndef DIALOG_DIAG_TIMEOUT
+#define DIALOG_DIAG_TIMEOUT	10
+#endif
+#endif
 
 static diag_handler_t *diag_handler = &default_diag_handler;
 static void *diag_handle;
@@ -177,17 +193,177 @@ LELY_UTIL_EXPORT void
 default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
-
 	__unused_var(handle);
 
+	int errsv = errno;
 	char *s = NULL;
 	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
-			>= 0))
+			>= 0)) {
 		fprintf(stderr, "%s\n", s);
+		fflush(stderr);
+	}
 	free(s);
+	errno = errsv;
 
 	if (severity == DIAG_FATAL)
-		exit(EXIT_FAILURE);
+		abort();
+}
+
+LELY_UTIL_EXPORT void
+daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	daemon_diag_at_handler(handle, severity, errc, NULL, format, ap);
+}
+
+LELY_UTIL_EXPORT void
+daemon_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+#ifdef _WIN32
+	dialog_diag_at_handler(handle, severity, errc, at, format, ap);
+#else
+	syslog_diag_at_handler(handle, severity, errc, at, format, ap);
+#endif
+}
+
+#ifdef _WIN32
+
+LELY_UTIL_EXPORT void
+dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	dialog_diag_at_handler(handle, severity, errc, NULL, format, ap);
+}
+
+LELY_UTIL_EXPORT void
+dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+	LPSTR pTitle = (LPSTR)(handle ? handle : "");
+
+	DWORD Style = MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
+	switch (severity) {
+	case DIAG_DEBUG:
+	case DIAG_INFO:
+		Style |= MB_ICONINFORMATION;
+		break;
+	case DIAG_WARNING:
+		Style |= MB_ICONWARNING;
+		break;
+	case DIAG_ERROR:
+	case DIAG_FATAL:
+		Style |= MB_ICONERROR;
+		break;
+	default:
+		break;
+	}
+
+	int errsv = errno;
+	char *pMessage = NULL;
+	if (__likely(vasprintf_diag_at(&pMessage, severity, errc, at, format,
+			ap) >= 0)) {
+		DWORD dwResponse;
+		WTSSendMessageA(WTS_CURRENT_SERVER_HANDLE,
+				WTSGetActiveConsoleSessionId(), pTitle,
+				strlen(pTitle), pMessage, strlen(pMessage),
+				Style, DIALOG_DIAG_TIMEOUT, &dwResponse, FALSE);
+	}
+	free(pMessage);
+	errno = errsv;
+
+	if (severity == DIAG_FATAL)
+		abort();
+}
+
+#endif // _WIN32
+
+LELY_UTIL_EXPORT void
+log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	log_diag_at_handler(handle, severity, errc, NULL, format, ap);
+}
+
+LELY_UTIL_EXPORT void
+log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+	int errsv = errno;
+	time_t timer;
+	if (__likely(time(&timer) != -1)) {
+		struct tm *timeptr = NULL;
+#ifdef _WIN32
+		struct tm time;
+		if (__likely(localtime_s(&time, &timer)))
+			timeptr = &time;
+#elif defined(_POSIX_C_SOURCE)
+		struct tm time;
+		timeptr = localtime_r(&timer, &time);
+#else
+		timeptr = localtime(&timer);
+#endif
+		if (__likely(timeptr)) {
+			char buf[80];
+			if (strftime(buf, sizeof(buf),
+					"%a, %d %b %Y %H:%M:%S %z", timeptr)
+					> 0) {
+				fprintf(stderr, "%s: ", buf);
+				fflush(stderr);
+			}
+		}
+	}
+	errno = errsv;
+
+	default_diag_at_handler(handle, severity, errc, at, format, ap);
+}
+
+LELY_UTIL_EXPORT void
+syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	syslog_diag_at_handler(handle, severity, errc, NULL, format, ap);
+}
+
+LELY_UTIL_EXPORT void
+syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+#if _POSIX_C_SOURCE >= 200809L
+	__unused_var(handle);
+
+	int priority = LOG_USER;
+	switch (severity) {
+	case DIAG_DEBUG:
+		priority |= LOG_DEBUG;
+		break;
+	case DIAG_INFO:
+		priority |= LOG_INFO;
+		break;
+	case DIAG_WARNING:
+		priority |= LOG_WARNING;
+		break;
+	case DIAG_ERROR:
+		priority |= LOG_ERR;
+		break;
+	case DIAG_FATAL:
+		priority |= LOG_EMERG;
+		break;
+	}
+
+	int errsv = errno;
+	char *s = NULL;
+	if (__likely(vasprintf_diag_at(&s, DIAG_INFO, errc, at, format, ap)
+			>= 0))
+		syslog(priority, "%s", s);
+	free(s);
+	errno = errsv;
+
+	if (severity == DIAG_FATAL)
+		abort();
+#else
+	log_diag_at_handler(handle, severity, errc, at, format, ap);
+#endif
 }
 
 LELY_UTIL_EXPORT int

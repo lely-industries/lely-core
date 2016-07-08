@@ -59,6 +59,21 @@ AS_IF([test "x$enable_threads" == "xno"], [
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
+AS_IF([test "x$platform_win32" == "xyes"], [
+	AC_MSG_CHECKING([for WTSSendMessage in wtsapi32])
+	ax_wtsapi32_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lwtsapi32 $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <windows.h>
+				#include <wtsapi32.h>
+			]],
+			[[WTSSendMessage(WTS_CURRENT_SERVER_HANDLE, 0, NULL, 0, NULL, 0, 0, 0, NULL, FALSE);]])],
+		[ax_wtsapi32_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_wtsapi32_ok])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
