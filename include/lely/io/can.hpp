@@ -74,12 +74,45 @@ public:
 		return io_can_write(*this, &msg);
 	}
 
+	int start() noexcept { return io_can_start(*this); }
+	int stop() noexcept { return io_can_stop(*this); }
+
 	int getState() noexcept { return io_can_get_state(*this); }
 
 	int
 	getError(int& error) noexcept
 	{
 		return io_can_get_error(*this, &error);
+	}
+
+	int
+	getEC(uint16_t& txec, uint16_t& rxec) noexcept
+	{
+		return io_can_get_ec(*this, &txec, &rxec);
+	}
+
+	int
+	getBitrate(uint32_t& bitrate) noexcept
+	{
+		return io_can_get_bitrate(*this, &bitrate);
+	}
+
+	int
+	setBitrate(uint32_t bitrate) noexcept
+	{
+		return io_can_set_bitrate(*this, bitrate);
+	}
+
+	int
+	getTXQLen(size_t& txqlen) noexcept
+	{
+		return io_can_get_txqlen(*this, &txqlen);
+	}
+
+	int
+	setTXQLen(size_t txqlen) noexcept
+	{
+		return io_can_set_txqlen(*this, txqlen);
 	}
 };
 
