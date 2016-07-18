@@ -546,18 +546,10 @@ io_can_set_bitrate(io_handle_t handle, uint32_t bitrate)
 	}
 
 	struct can_bittiming attr = { .bitrate = bitrate };
-	if (__unlikely(can_setattr(fd, 0, 0, can->ifindex,
-			can->ifflags & ~IFF_UP, IFLA_CAN_BITTIMING, &attr,
-			sizeof(attr)) == -1)) {
+	if (__unlikely(can_setattr(fd, 0, 0, can->ifindex, can->ifflags,
+			IFLA_CAN_BITTIMING, &attr, sizeof(attr)) == -1)) {
 		errsv = errno;
 		goto error_setattr;
-	}
-
-	// Reactivate the network interface, if necessary.
-	if (__unlikely((can->ifflags & IFF_UP) && io_rtnl_newlink(fd, 0, 0,
-			can->ifindex, can->ifflags, NULL, 0) == -1)) {
-		errsv = errno;
-		goto error_newlink;
 	}
 
 	result = 0;
