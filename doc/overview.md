@@ -1,0 +1,20 @@
+Overview
+========
+
+The C11 and POSIX compatibility library provides:
+- `static_assert()`: lely/libc/assert.h
+- compiler feature definitions: lely/libc/features.h
+- `alignas()` and `alignof()`: lely/libc/stdalign.h
+- atomics: lely/libc/stdatomic.h
+- `max_align_t`: lely/libc/stddef.h
+- integer types: lely/libc/stdint.h
+- `asprintf()` and `vasprintf()`: lely/libc/stdio.h
+- `aligned_alloc()`: lely/libc/stdlib.h
+- `noreturn`: lely/libc/stdnoreturn.h
+- `strdup()`, `strndup()` and `strnlen()`: lely/libc/string.h
+- `ffs()`, `strcasecmp()` and `strncasecmp()`: lely/libc/strings.h
+- `ssize_t`: lely/libc/sys/types.h
+- threads: lely/libc/threads.h
+- `struct timespec`, `nanosleep()` and `timespec_get()`: lely/libc/time.h
+- `char16_t` and `char32_t`: lely/libc/uchar.h
+
