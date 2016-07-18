@@ -365,8 +365,10 @@ can_err(io_handle_t handle, const struct can_frame *frame)
 		state = CAN_STATE_ACTIVE;
 
 	if (frame->can_id & CAN_ERR_CRTL) {
+#ifdef CAN_ERR_CRTL_ACTIVE
 		if (frame->data[1] & CAN_ERR_CRTL_ACTIVE)
 			state = CAN_STATE_ACTIVE;
+#endif
 		if (frame->data[1] & (CAN_ERR_CRTL_RX_PASSIVE
 				| CAN_ERR_CRTL_TX_PASSIVE))
 			state = CAN_STATE_PASSIVE;
