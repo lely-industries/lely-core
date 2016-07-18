@@ -36,5 +36,27 @@
 #endif
 #endif
 
+enum {
+	//! The error active state (TX/RX error count < 128).
+	CAN_STATE_ACTIVE,
+	//! The error passive state (TX/RX error count < 256).
+	CAN_STATE_PASSIVE,
+	//! The bus off state (TX/RX error count >= 256).
+	CAN_STATE_BUSOFF
+};
+
+enum {
+	//! A single bit error.
+	CAN_ERROR_BIT = 1 << 0,
+	//! A bit stuffing error.
+	CAN_ERROR_STUFF = 1 << 1,
+	//! A CRC sequence error.
+	CAN_ERROR_CRC = 1 << 2,
+	//! A form error.
+	CAN_ERROR_FORM = 1 << 3,
+	//! An acknowledgment error.
+	CAN_ERROR_ACK = 1 << 4
+};
+
 #endif
 
