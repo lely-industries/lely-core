@@ -41,10 +41,14 @@ struct can {
 	//! A flag indicating the device supports sending CAN FD frames.
 	int canfd;
 #endif
-	//! The state of the CAN controller.
+	/*!
+	 * The state of the CAN controller (one of `CAN_STATE_ACTIVE`,
+	 * `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`).
+	 */
 	int state;
-	/*! The last error (any combination of #CAN_ERROR_BIT, #CAN_ERROR_STUFF,
-	 * #CAN_ERROR_CRC, #CAN_ERROR_FORM and #CAN_ERROR_ACK).
+	/*! The last error (any combination of `CAN_ERROR_BIT`,
+	* `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM` and
+	* `CAN_ERROR_ACK`).
 	 */
 	int error;
 };

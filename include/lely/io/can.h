@@ -24,28 +24,6 @@
 
 #include <lely/io/io.h>
 
-enum {
-	//! The error active state.
-	CAN_STATE_ACTIVE,
-	//! The error passive state.
-	CAN_STATE_PASSIVE,
-	//! The bus off state.
-	CAN_STATE_BUSOFF
-};
-
-enum {
-	//! A single bit error.
-	CAN_ERROR_BIT = 1 << 0,
-	//! A bit stuffing error.
-	CAN_ERROR_STUFF = 1 << 1,
-	//! A CRC sequence error.
-	CAN_ERROR_CRC = 1 << 2,
-	//! A form error.
-	CAN_ERROR_FORM = 1 << 3,
-	//! An acknowledgment error.
-	CAN_ERROR_ACK = 1 << 4
-};
-
 // The CAN or CAN FD format frame struct from <lely/can/msg.h>.
 struct can_msg;
 
@@ -90,16 +68,16 @@ LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
 /*!
  * Obtains the state of a CAN device.
  *
- * \returns #CAN_STATE_ACTIVE, #CAN_STATE_PASSIVE, #CAN_STATE_BUSOFF, or -1 on
- * error. In the latter case, the error number can be obtained with
+ * \returns `CAN_STATE_ACTIVE`, `CAN_STATE_PASSIVE`, `CAN_STATE_BUSOFF`, or -1
+ * on error. In the latter case, the error number can be obtained with
  * `get_errnum()`.
  */
 LELY_IO_EXTERN int io_can_get_state(io_handle_t handle);
 
 /*!
  * Obtains and clears the current error number of a CAN device, and stores the
- * value (any combination of #CAN_ERROR_BIT, #CAN_ERROR_STUFF, #CAN_ERROR_CRC,
- * #CAN_ERROR_FORM and #CAN_ERROR_ACK) in *\a perror.
+ * value (any combination of `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`,
+ * `CAN_ERROR_CRC`, `CAN_ERROR_FORM` and `CAN_ERROR_ACK`) in *\a perror.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
