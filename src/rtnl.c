@@ -188,15 +188,14 @@ io_rtnl_setattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 
 	struct rtattr *rta = (struct rtattr *)buf;
 	*rta = (struct rtattr){
-		.rta_type = type,
-		.rta_len = RTA_LENGTH(payload)
+		.rta_len = RTA_LENGTH(payload),
+		.rta_type = type
 	};
 	if (data)
 		memcpy(RTA_DATA(rta), data, payload);
 
 	return io_rtnl_newlink(fd, seq, pid, ifi_index, ifi_flags, rta,
 			rta->rta_len);
-
 }
 
 static int

@@ -66,6 +66,28 @@ LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
 LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
 
 /*!
+ * Starts transmission and reception on a CAN device. On Linux, this operation
+ * requires the process to have the CAP_NET_ADMIN capability.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_stop()
+ */
+LELY_IO_EXTERN int io_can_start(io_handle_t handle);
+
+/*!
+ * Stops transmission and reception on a CAN device. On Linux, this operation
+ * requires the process to have the CAP_NET_ADMIN capability.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_start()
+ */
+LELY_IO_EXTERN int io_can_stop(io_handle_t handle);
+
+/*!
  * Obtains the state of a CAN device.
  *
  * \returns `CAN_STATE_ACTIVE`, `CAN_STATE_PASSIVE`, `CAN_STATE_BUSOFF`, or -1
@@ -83,6 +105,64 @@ LELY_IO_EXTERN int io_can_get_state(io_handle_t handle);
  * can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_can_get_error(io_handle_t handle, int *perror);
+
+/*!
+ * Obtains the transmit and/or receive error count of a CAN device and stores
+ * the value in *\a ptxec and/or *\a prxec.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_IO_EXTERN int io_can_get_ec(io_handle_t handle, uint16_t *ptxec,
+		uint16_t *prxec);
+
+/*!
+ * Obtains the bitrate (in bit/s) of a CAN device and stores the value in
+ * *\a pbitrate.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_set_bitrate()
+ */
+LELY_IO_EXTERN int io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate);
+
+/*!
+ * Sets the bitrate (in bit/s) of a CAN device. Note that not all bitrates are
+ * supported on every CAN controller. Standard bitrates are 10 kbit/s,
+ * 20 kbit/s, 50 kbit/s, 125 kbit/s, 250 kbit/s, 500 kbit/s, 800 kbit/s and 1
+ * Mbit/s. On Linux, this operation requires the process to have the
+ * CAP_NET_ADMIN capability.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_get_bitrate()
+ */
+LELY_IO_EXTERN int io_can_set_bitrate(io_handle_t handle, uint32_t bitrate);
+
+/*!
+ * Obtains the length of the transmission queue (in number of CAN frames) of a
+ * CAN device and stores the value in *\a ptxqlen.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_set_txqlen()
+ */
+LELY_IO_EXTERN int io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen);
+
+/*!
+ * Sets the length of the transmission queue (in number of CAN frames) of a CAN
+ * device. On Linux, this operation requires the process to have the
+ * CAP_NET_ADMIN capability.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see io_can_get_txqlen()
+ */
+LELY_IO_EXTERN int io_can_set_txqlen(io_handle_t handle, size_t txqlen);
 
 #ifdef __cplusplus
 }
