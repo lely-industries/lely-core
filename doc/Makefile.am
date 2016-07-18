@@ -12,9 +12,7 @@ install-html-local: html-local
 	fi
 
 clean-local:
-	if test -d html; then \
-		rm -rf html; \
-	fi
+	rm -rf doxygen_sqlite3.db html
 
 uninstall-local:
 	if test -d $(DESTDIR)$(htmldir)/html; then \
