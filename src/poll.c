@@ -32,6 +32,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#if _POSIX_C_SOURCE >= 200112L
+#if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
+#include <sys/epoll.h>
+#else
+#include <poll.h>
+#endif
+#endif
+
 //! An I/O polling interface.
 struct __io_poll {
 #ifndef LELY_NO_THREADS

@@ -30,6 +30,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#ifdef _MSC_VER
+#pragma comment(lib, "iphlpapi.lib")
+#endif
+#include <iphlpapi.h>
+#elif defined(__linux__) && defined(HAVE_IFADDRS_H)
+#include <ifaddrs.h>
+#endif
+
 #if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
 static void io_addr_set(io_addr_t *addr, const struct sockaddr *address);
 #endif

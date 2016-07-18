@@ -37,8 +37,14 @@
 
 #if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
 
+#ifdef HAVE_LINUX_CAN_ERROR_H
+#include <linux/can/error.h>
+#endif
 #ifdef HAVE_LINUX_CAN_NETLINK_H
 #include <linux/can/netlink.h>
+#endif
+#ifdef HAVE_LINUX_CAN_RAW_H
+#include <linux/can/raw.h>
 #endif
 
 //! A CAN device.

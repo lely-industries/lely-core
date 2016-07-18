@@ -39,22 +39,18 @@
 #ifdef _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "iphlpapi.lib")
 #endif
 #define FD_SETSIZE 1024
 #include <winsock2.h>
 #include <ws2bth.h>
 #include <ws2tcpip.h>
-#include <iphlpapi.h>
 #include <mstcpip.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <net/if.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -71,30 +67,12 @@
 #include <bluetooth/rfcomm.h>
 #endif
 
-#ifdef HAVE_IFADDRS_H
-#include <ifaddrs.h>
-#endif
-
 #ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
-#endif
-#ifdef HAVE_LINUX_CAN_ERROR_H
-#include <linux/can/error.h>
-#endif
-#ifdef HAVE_LINUX_CAN_RAW_H
-#include <linux/can/raw.h>
-#endif
-
-#ifdef HAVE_SYS_EPOLL_H
-#include <sys/epoll.h>
 #endif
 
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
-#endif
-
-#ifndef ARPHRD_CAN
-#define ARPHRD_CAN	280
 #endif
 
 #endif

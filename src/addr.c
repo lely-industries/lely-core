@@ -40,6 +40,8 @@ static int ba2str(const BTH_ADDR *ba, char *str);
 static int str2ba(const char *str, BTH_ADDR *ba);
 static int bachk(const char *str);
 
+#elif _POSIX_C_SOURCE >= 200112L
+#include <netdb.h>
 #endif
 
 LELY_IO_EXPORT int __cdecl
