@@ -60,6 +60,19 @@ AS_IF([test "x$enable_threads" == "xno"], [
 ])
 
 AS_IF([test "x$platform_win32" == "xyes"], [
+	AC_MSG_CHECKING([for PathRemoveFileSpecA in shlwapi])
+	ax_shlwapi_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lshlwapi $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <windows.h>
+				#include <shlwapi.h>
+			]],
+			[[PathRemoveFileSpecA(NULL);]])],
+		[ax_shlwapi_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_shlwapi_ok])
+
 	AC_MSG_CHECKING([for WTSSendMessage in wtsapi32])
 	ax_wtsapi32_ok=no
 	save_LIBS=$LIBS

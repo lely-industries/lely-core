@@ -14,6 +14,7 @@ src += exception.cpp
 endif
 src += fbuf.c
 src += frbuf.c
+src += fwbuf.c
 src += lex.c
 src += membuf.c
 src += page.h

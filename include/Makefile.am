@@ -17,6 +17,7 @@ inc += lely/util/exception.hpp
 endif
 inc += lely/util/fbuf.h
 inc += lely/util/frbuf.h
+inc += lely/util/fwbuf.h
 inc += lely/util/lex.h
 inc += lely/util/list.h
 inc += lely/util/membuf.h
