@@ -97,6 +97,14 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
+PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.1 liblely-tap < 2], [
+	AM_CONDITIONAL([HAVE_TAP], [true])
+	AC_PROG_AWK
+	AC_REQUIRE_AUX_FILE([tap-driver.sh])
+], [
+	AM_CONDITIONAL([HAVE_TAP], [false])
+])
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	doc/Doxyfile
@@ -104,6 +112,7 @@ AC_CONFIG_FILES([
 	include/Makefile
 	src/Makefile
 	src/version.rc
+	test/Makefile
 	Makefile
 	${PACKAGE}.pc
 ])
