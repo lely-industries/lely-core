@@ -1,6 +1,11 @@
 bin =
+bin += test-config
+test_config_SOURCES = config.c
 bin += test-fbuf
 test_fbuf_SOURCES = fbuf.c
+
+EXTRA_DIST =
+EXTRA_DIST += config.ini
 
 CLEANFILES =
 CLEANFILES += fbuf.dat
