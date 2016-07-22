@@ -24,7 +24,7 @@
 #include "util.h"
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
-#include <lely/util/fbuf.h>
+#include <lely/util/frbuf.h>
 #include <lely/util/lex.h>
 #include <lely/util/membuf.h>
 #include <lely/util/print.h>
@@ -45,18 +45,26 @@ static size_t print_string(const char *s, size_t n, char **pbegin, char *end);
 LELY_UTIL_EXPORT size_t
 config_parse_ini_file(config_t *config, const char *filename)
 {
-	fbuf_t *buf = fbuf_create(filename);
+	frbuf_t *buf = frbuf_create(filename);
 	if (__unlikely(!buf)) {
 		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		return 0;
 	}
 
-	const char *begin = fbuf_begin(buf);
-	const char *end = begin + fbuf_size(buf);
+	size_t size = 0;
+	const void *map = frbuf_map(buf, 0, &size);
+	if (__unlikely(!map)) {
+		diag(DIAG_ERROR, get_errc(), "unable to map file");
+		frbuf_destroy(buf);
+		return 0;
+	}
+
+	const char *begin = map;
+	const char *end = begin + size;
 	struct floc at = { filename, 1, 1 };
 	size_t chars = config_parse_ini_text(config, begin, end, &at);
 
-	fbuf_destroy(buf);
+	frbuf_destroy(buf);
 
 	return chars;
 }
