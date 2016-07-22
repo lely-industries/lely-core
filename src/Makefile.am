@@ -13,6 +13,7 @@ if !NO_CXX
 src += exception.cpp
 endif
 src += fbuf.c
+src += frbuf.c
 src += lex.c
 src += membuf.c
 src += page.h
