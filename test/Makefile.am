@@ -28,23 +28,22 @@ test_time_SOURCES = test.h time.c
 endif
 endif
 
+EXTRA_DIST =
+EXTRA_DIST += emcy.dcf
+EXTRA_DIST += nmt-master.dat
+EXTRA_DIST += nmt-master.dcf
+EXTRA_DIST += nmt-slave.dcf
+EXTRA_DIST += pdo-receive.dcf
+EXTRA_DIST += pdo-transmit.dcf
+EXTRA_DIST += sdo-client.dcf
+EXTRA_DIST += sdo-server.dcf
+EXTRA_DIST += sync.dcf
+EXTRA_DIST += time.dcf
+
+CLEANFILES =
+CLEANFILES += nmt-slave.dat
+
 check_PROGRAMS = $(bin)
-
-extra =
-extra += emcy.dcf
-extra += nmt-master.dat
-extra += nmt-master.dcf
-extra += nmt-slave.dcf
-extra += pdo-receive.dcf
-extra += pdo-transmit.dcf
-extra += sdo-client.dcf
-extra += sdo-server.dcf
-extra += sync.dcf
-extra += time.dcf
-
-EXTRA_DIST = $(extra)
-
-CLEANFILES = nmt-slave.dat
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)

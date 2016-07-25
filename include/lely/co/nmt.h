@@ -240,8 +240,8 @@ LELY_CO_EXTERN void co_nmt_get_cs_ind(const co_nmt_t *nmt,
  *
  * \param nmt  a pointer to an NMT master/slave service.
  * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_cs_ind()
  */
@@ -269,8 +269,8 @@ LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
  *             co_nmt_node_err_ind()).
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_ng_ind()
  */
@@ -298,8 +298,8 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
  *             co_nmt_comm_err_ind()).
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_lg_ind()
  */
@@ -327,8 +327,8 @@ LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
  *             co_nmt_node_err_ind() or co_nmt_comm_err_ind()).
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_hb_ind()
  */
@@ -357,8 +357,8 @@ LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
  *             default indication function will be used (which invokes
  *             co_nmt_boot_req() if a boot-up event indication is received by
  *             an NMT master).
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_st_ind()
  */
@@ -386,8 +386,8 @@ LELY_CO_EXTERN void co_nmt_get_boot_ind(const co_nmt_t *nmt,
  *
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_boot_ind()
  */
@@ -415,8 +415,8 @@ LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
  *
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
  *
  * \see co_nmt_get_cfg_ind()
  */
