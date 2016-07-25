@@ -23,13 +23,14 @@
 
 #include "co.h"
 #include <lely/util/errnum.h>
+#ifndef LELY_NO_CO_OBJ_FILE
+#include <lely/util/frbuf.h>
+#include <lely/util/fwbuf.h>
+#endif
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 
 #include <assert.h>
-#ifndef LELY_NO_CO_OBJ_FILE
-#include <stdio.h>
-#endif
 
 /*!
  * Copies the next segment of the specified CANopen SDO download request to the
@@ -235,26 +236,33 @@ co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 		break;
 	}
 
-	FILE *stream = fopen(filename, "wb");
-	if (__unlikely(!stream)) {
+	fwbuf_t *fbuf = fwbuf_create(filename);
+	if (__unlikely(!fbuf)) {
 		ac = CO_SDO_AC_DATA;
 		set_errc(errc);
-		goto error_fopen;
+		goto error_create_fbuf;
 	}
 
-	if (__unlikely(fwrite(ptr, 1, nbyte, stream) != nbyte)) {
+	if (__unlikely(fwbuf_write(fbuf, ptr, nbyte) != (ssize_t)nbyte)) {
 		ac = CO_SDO_AC_DATA;
 		set_errc(errc);
-		goto error_fwrite;
+		goto error_write;
 	}
 
-	fclose(stream);
+	if (__unlikely(fwbuf_commit(fbuf) == -1)) {
+		ac = CO_SDO_AC_DATA;
+		set_errc(errc);
+		goto error_commit;
+	}
+
+	fwbuf_destroy(fbuf);
 
 	return 0;
 
-error_fwrite:
-	fclose(stream);
-error_fopen:
+error_commit:
+error_write:
+	fwbuf_destroy(fbuf);
+error_create_fbuf:
 error_done:
 	if (pac)
 		*pac = ac;
@@ -305,47 +313,41 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 
 	co_unsigned32_t ac = 0;
 
-	FILE *stream = fopen(filename, "rb");
-	if (__unlikely(!stream)) {
+	frbuf_t *fbuf = frbuf_create(filename);
+	if (__unlikely(!fbuf)) {
 		ac = CO_SDO_AC_DATA;
-		goto error_fopen;
+		goto error_create_fbuf;
 	}
 
-	if (__unlikely(fseek(stream, 0, SEEK_END))) {
+	int64_t size = frbuf_get_size(fbuf);
+	if (__unlikely(size == -1)) {
 		ac = CO_SDO_AC_DATA;
-		goto error_fseek;
+		goto error_get_size;
 	}
-	int whence = ftell(stream);
-	if (__unlikely(whence == -1)) {
-		ac = CO_SDO_AC_DATA;
-		goto error_ftell;
-	}
-	rewind(stream);
-	size_t size = whence;
+	size_t nbyte = size;
 
 	membuf_clear(buf);
-	if (__unlikely(size && !membuf_reserve(buf, size))) {
+	if (__unlikely(size && !membuf_reserve(buf, nbyte))) {
 		ac = CO_SDO_AC_NO_MEM;
 		goto error_reserve;
 	}
 
-	void *ptr = membuf_alloc(buf, &size);
-	if (__unlikely(fread(ptr, 1, size, stream) != size)) {
+	void *ptr = membuf_alloc(buf, &nbyte);
+	if (__unlikely(frbuf_read(fbuf, ptr, nbyte) != (ssize_t)nbyte)) {
 		ac = CO_SDO_AC_DATA;
-		goto error_fread;
+		goto error_read;
 	}
 
-	fclose(stream);
+	frbuf_destroy(fbuf);
 
 	co_sdo_req_up_buf(req);
 	return 0;
 
-error_fread:
+error_read:
 error_reserve:
-error_ftell:
-error_fseek:
-	fclose(stream);
-error_fopen:
+error_get_size:
+	frbuf_destroy(fbuf);
+error_create_fbuf:
 	if (pac)
 		*pac = ac;
 	return -1;
