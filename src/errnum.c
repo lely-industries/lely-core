@@ -904,8 +904,7 @@ LELY_UTIL_EXPORT const char *
 errc2str(errc_t errc)
 {
 #ifdef _WIN32
-	if (__unlikely(!FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER
-			| FORMAT_MESSAGE_FROM_SYSTEM
+	if (__unlikely(!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
 			| FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errc,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			errstr, sizeof(errstr), NULL)))
