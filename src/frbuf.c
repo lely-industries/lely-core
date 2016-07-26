@@ -423,14 +423,14 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	ULARGE_INTEGER FileOffset = { .QuadPart = pos - off };
 	buf->lpBaseAddress = MapViewOfFile(buf->hFileMappingObject,
 			FILE_MAP_READ, FileOffset.HighPart, FileOffset.LowPart,
-			off + size);
+			(SIZE_T)off + size);
 	if (__unlikely(!buf->lpBaseAddress)) {
 		dwErrCode = GetLastError();
 		goto error_MapViewOfFile;
 	}
 
 	if (psize)
-		*psize = size;
+		*psize = (size_t)size;
 
 	return (char *)buf->lpBaseAddress + off;
 
