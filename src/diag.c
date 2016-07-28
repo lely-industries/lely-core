@@ -22,10 +22,10 @@
  */
 
 #include "util.h"
+#include <lely/libc/stdio.h>
 #include <lely/util/diag.h>
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
