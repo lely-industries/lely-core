@@ -22,10 +22,10 @@
  */
 
 #include "can.h"
+#include <lely/libc/stdio.h>
 #include <lely/can/msg.h>
 
 #include <errno.h>
-#include <stdio.h>
 // Include inttypes.h after stdio.h to enforce declarations of format specifiers
 // in Newlib.
 #include <inttypes.h>
