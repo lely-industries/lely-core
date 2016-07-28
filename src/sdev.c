@@ -25,13 +25,13 @@
 
 #ifndef LELY_NO_CO_SDEV
 
+#include <lely/libc/stdio.h>
 #include <lely/util/errnum.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
 #include <lely/co/sdev.h>
 
 #include <assert.h>
-#include <stdio.h>
 // Include inttypes.h after stdio.h to enforce declarations of format specifiers
 // in Newlib.
 #include <inttypes.h>
