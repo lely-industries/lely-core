@@ -30,6 +30,33 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#ifndef LELY_HAVE_SNPRINTF
+
+LELY_LIBC_EXPORT int __cdecl
+snprintf(char *s, size_t n, const char *format, ...)
+{
+	va_list arg;
+	va_start(arg, format);
+	int result = vsnprintf(s, n, format, arg);
+	va_end(arg);
+	return result;
+}
+
+LELY_LIBC_EXPORT int __cdecl
+vsnprintf(char *s, size_t n, const char *format, va_list arg)
+{
+	int result = -1;
+	if (n) {
+		va_list ap;
+		va_copy(ap, arg);
+		result = _vsnprintf_s(s, n, _TRUNCATE, format, ap);
+		va_end(ap);
+	}
+	return result == -1 ? _vscprintf(format, arg) : result;
+}
+
+#endif // !LELY_HAVE_SNPRINTF
+
 LELY_LIBC_EXPORT int __cdecl
 asprintf(char **strp, const char *fmt, ...)
 {

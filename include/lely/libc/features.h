@@ -249,6 +249,13 @@
 #endif
 #endif
 
+#if !defined(__cplusplus) && defined(_MSC_VER) && _MSC_VER < 1900
+// Microsoft Visual C++ 2013 and earlier do not support the C99 inline keyword.
+#ifndef inline
+#define inline	__inline
+#endif
+#endif
+
 #ifndef __likely
 /*!
  * Indicates to the compiler that the expression is most-likely true. Subject to

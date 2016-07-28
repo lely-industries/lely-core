@@ -24,13 +24,79 @@
 
 #include <lely/libc/libc.h>
 
+#ifndef LELY_HAVE_SNPRINTF
+#define LELY_HAVE_SNPRINTF	1
+// Microsoft Visual C++ 2013 and earlier do not have snprintf().
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#undef LELY_HAVE_SNPRINTF
+#endif
+#endif
+
+#ifndef LELY_HAVE_SNPRINTF
+// Hide existing (and non-conformant) definitions of snprintf() and vsnprintf().
+#undef snprintf
+#define snprintf	__no_snprintf
+#undef vsnprintf
+#define vsnprintf	__no_vsnprintf
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
+
+#ifndef LELY_HAVE_SNPRINTF
+#undef vsnprintf
+#undef snprintf
+#endif
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef LELY_HAVE_SNPRINTF
+
+/*!
+ * Equivalent to `printf()`, except that the output is written to a string
+ * buffer rather than a stream.
+ *
+ * \param s      the address of the output buffer. If \a s is not NULL, at most
+ *               `n - 1` characters are written, plus a terminating null byte.
+ * \param n      the size (in bytes) of the buffer at \a s. If \a n is zero,
+ *               nothing is written.
+ * \param format a printf-style format string.
+ * \param ...    an optional list of arguments to be printed according to
+ *               \a format.
+ *
+ * \returns the number of characters that would have been written had the
+ * buffer been sufficiently large, not counting the terminating null byte, or a
+ * negative number on error.
+ *
+ * \see vsnprintf()
+ */
+LELY_LIBC_EXTERN int __cdecl snprintf(char *s, size_t n, const char *format,
+		...);
+
+/*!
+ * Equivalent to `vprintf()`, except that the output is written to a string
+ * buffer rather than a stream.
+ *
+ * \param s      the address of the output buffer. If \a s is not NULL, at most
+ *               `n - 1` characters are written, plus a terminating null byte.
+ * \param n      the size (in bytes) of the buffer at \a s. If \a n is zero,
+ *               nothing is written.
+ * \param format a printf-style format string.
+ * \param arg    the list with arguments to be printed according to \a format.
+ *
+ * \returns the number of characters that would have been written had the
+ * buffer been sufficiently large, not counting the terminating null byte, or a
+ * negative number on error.
+ *
+ * \see snprintf()
+ */
+LELY_LIBC_EXTERN int __cdecl vsnprintf(char *s, size_t n, const char *format,
+		va_list arg);
+
 #endif
 
 /*!
