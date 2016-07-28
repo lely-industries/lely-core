@@ -96,9 +96,9 @@ as root.
 
 liblely-libc provides an implementation of the C11 multithreading support
 library. Multithreading support can be disabled by providing the
-`--disable-threads` option to `configure` or by defining the`LELY_NO_THREADS`
+`--disable-threads` option to `configure` or by defining the `LELY_NO_THREADS`
 preprocessor macro. The implementation is based on pthreads. When building the
-library without the autotools build system, defined the `LELY_HAVE_PTHREAD`
+library without the autotools build system, define the `LELY_HAVE_PTHREAD`
 preprocessor macro if pthreads is available.
 
 Usage

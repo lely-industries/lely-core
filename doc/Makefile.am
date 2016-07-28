@@ -1,3 +1,9 @@
+dist =
+dist += logo.png
+dist += overview.md
+
+EXTRA_DIST = $(dist)
+
 if HAVE_DOXYGEN
 
 html-local: Doxyfile
