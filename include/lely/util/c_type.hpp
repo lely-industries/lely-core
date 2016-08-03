@@ -24,6 +24,9 @@
 
 #include <lely/util/exception.hpp>
 
+#if __cplusplus >= 201103L
+#include <memory>
+#endif
 #include <new>
 #include <utility>
 
@@ -55,6 +58,52 @@ class bad_move: public ::std::exception {
 public:
 	__dllexport virtual const char* what() const nothrow_or_noexcept;
 };
+
+//! The deleter for trivial, standard layout and incomplete C types.
+template <class T>
+struct delete_c_type {
+#if __cplusplus >= 201103L
+	constexpr delete_c_type() noexcept = default;
+#else
+	delete_c_type() noexcept {};
+#endif
+	template <class U> delete_c_type(const delete_c_type<U>&) noexcept {}
+
+	void operator()(T* p) const { destroy(p); }
+};
+
+#if __cplusplus >= 201103L
+
+/*!
+ * Creates an instance of a trivial, standard layout or incomplete C type and
+ * wraps it in a std::shared_ptr, using #delete_c_type as the deleter.
+ */
+template <class T, class... Args>
+inline ::std::shared_ptr<T>
+make_shared_c(Args&&... args)
+{
+	return ::std::shared_ptr<T>(new T(::std::forward<Args>(args)...),
+			delete_c_type<T>());
+}
+
+/*!
+ * A specialization of std::unique_ptr for trivial, standard layout or
+ * incomplete C types, using #delete_c_type as the deleter.
+ */
+template <class T> using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
+
+/*!
+ * Creates an instance of a trivial, standard layout or incomplete C type and
+ * wraps it in a #unique_c_ptr.
+ */
+template <class T, class... Args>
+unique_c_ptr<T>
+make_unique_c(Args&&... args)
+{
+	return unique_c_ptr<T>(new T(::std::forward<Args>(args)...));
+}
+
+#endif
 
 /*!
  * A class template supplying a uniform interface to certain attributes of C
