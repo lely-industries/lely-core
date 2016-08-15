@@ -25,8 +25,7 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_THREADS_H
-#if __STDC_VERSION__ >= 201112L \
-		&& !(defined(__STDC_NO_THREADS__) || defined(__CYGWIN__)) \
+#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__) \
 		&& __has_include(<threads.h>)
 #define LELY_HAVE_THREADS_H	1
 #endif
@@ -42,7 +41,7 @@
 #include <lely/libc/time.h>
 
 #ifndef thread_local
-#if __STDC_VERSION__ >= 201112L
+#if __cplusplus >= 201103L
 // thread_local is a keyword in C++11 and later.
 #else
 #define thread_local	_Thread_local

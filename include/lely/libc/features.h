@@ -97,10 +97,49 @@
 #define __has_include(x)	1
 #endif
 
+#ifndef __STDC_HOSTED__
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define __STDC_HOSTED__	1
+#endif
+#endif
+
+#ifndef __STDC_NO_ATOMICS__
+// GCC versions older than 4.9 do not properly advertise the absence of
+// <stdatomic.h>.
+#if defined(__cplusplus) || defined(_MSC_VER) \
+		|| (defined(__GNUC__) && !__GNUC_PREREQ(4, 9))
+#define __STDC_NO_ATOMICS__	1
+#endif
+#endif
+
+#ifndef __STDC_NO_COMPLEX__
+#if defined(__cplusplus) || defined(_MSC_VER)
+#define __STDC_NO_COMPLEX__	1
+#endif
+#endif
+
+#ifndef __STDC_NO_THREADS__
+// Although recent versions of Cygwin do provide <threads.h>, it requires
+// <machine/_threads.h>, which is missing.
+#if defined(__cplusplus) || defined(_MSC_VER) || defined(__CYGWIN__)
+#define __STDC_NO_THREADS__	1
+#endif
+#endif
+
+#ifndef __STDC_NO_VLA__
+#if defined(__cplusplus) || defined(_MSC_VER)
+#define __STDC_NO_VLA__	1
+#endif
+#endif
+
+#ifdef __STDC_NO_COMPLEX__
+#undef __STDC_IEC_559_COMPLEX__
+#endif
+
 //! Specifies the alignment requirement of the declared object or member.
 #if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
-#if __STDC_VERSION__ >= 201112L \
+#if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignas))
 #define _Alignas	alignas
 #elif defined(__GNUC__) || __has_attribute(__aligned__)
@@ -116,7 +155,7 @@
 //! Yields the alignment requirement of its operand type.
 #if !defined(_Alignof) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
-#if __STDC_VERSION__ >= 201112L \
+#if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignof))
 #define _Alignof	alignof
 #elif defined(__GNUC__)
@@ -152,7 +191,7 @@
  */
 #if !defined(_Static_assert) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
-#if __STDC_VERSION__ >= 201112L \
+#if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 3) || __has_feature(cxx_static_assert))
 #define _Static_assert	static_assert
 #else
@@ -180,7 +219,7 @@
  */
 #if !defined(_Thread_local) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_thread_local)))
-#if __STDC_VERSION__ >= 201112L \
+#if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_thread_local))
 #define _Thread_local	thread_local
 #elif defined(__GNUC__)
@@ -280,7 +319,7 @@
 #ifndef __unused_arg
 //! Suppresses a compiler warning about an unused function argument.
 #ifdef _MSC_VER
-#define __unused_arg(x)	__pragma(warning(suppress: 4100))
+#define __unused_arg	__pragma(warning(suppress: 4100))
 #elif defined(__GNUC__) || __has_attribute(__unused__)
 #define __unused_arg	__attribute__((__unused__))
 #else

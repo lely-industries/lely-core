@@ -25,13 +25,6 @@
 
 #include <lely/libc/libc.h>
 
-// GCC versions older than 4.9 do not properly advertise the absence of
-// <stdatomic.h>.
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) \
-		&& (defined(__GNUC__) && !__GNUC_PREREQ(4, 9))
-#define __STDC_NO_ATOMICS__	1
-#endif
-
 #ifndef LELY_HAVE_STDATOMIC_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) \
 		&& __has_include(<stdatomic.h>)
