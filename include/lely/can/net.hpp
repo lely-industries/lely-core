@@ -26,6 +26,7 @@
 #error "include <lely/can/net.h> for the C interface"
 #endif
 
+#include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 
 namespace lely { class CANNet; }
@@ -79,15 +80,23 @@ public:
 	}
 
 	void
-	getNextFunc(can_timer_func_t** pfunc, void** pdata = 0) noexcept
+	getNextFunc(can_timer_func_t** pfunc, void** pdata) noexcept
 	{
 		can_net_get_next_func(this, pfunc, pdata);
 	}
 
 	void
-	setNextFunc(can_timer_func_t* func, void* data = 0) noexcept
+	setNextFunc(can_timer_func_t* func, void* data) noexcept
 	{
 		can_net_set_next_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setNextFunc(F* f) noexcept
+	{
+		setNextFunc(&c_call<F, can_timer_func_t>::function,
+				static_cast<void*>(f));
 	}
 
 	int
@@ -103,15 +112,23 @@ public:
 	}
 
 	void
-	getSendFunc(can_send_func_t** pfunc, void** pdata = 0) noexcept
+	getSendFunc(can_send_func_t** pfunc, void** pdata) noexcept
 	{
 		can_net_get_send_func(this, pfunc, pdata);
 	}
 
 	void
-	setSendFunc(can_send_func_t* func, void* data = 0) noexcept
+	setSendFunc(can_send_func_t* func, void* data) noexcept
 	{
 		can_net_set_send_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setSendFunc(F* f) noexcept
+	{
+		setNextFunc(&c_call<F, can_send_func_t>::function,
+				static_cast<void*>(f));
 	}
 
 protected:
@@ -141,15 +158,23 @@ public:
 	CANTimer(): c_base() {}
 
 	void
-	getFunc(can_timer_func_t** pfunc, void** pdata = 0) noexcept
+	getFunc(can_timer_func_t** pfunc, void** pdata) noexcept
 	{
 		can_timer_get_func(this, pfunc, pdata);
 	}
 
 	void
-	setFunc(can_timer_func_t* func, void* data = 0) noexcept
+	setFunc(can_timer_func_t* func, void* data) noexcept
 	{
 		can_timer_set_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setFunc(F* f) noexcept
+	{
+		setFunc(&c_call<F, can_timer_func_t>::function,
+				static_cast<void*>(f));
 	}
 
 	void
@@ -194,15 +219,23 @@ public:
 	CANRecv(): c_base() {}
 
 	void
-	getFunc(can_recv_func_t** pfunc, void** pdata = 0) noexcept
+	getFunc(can_recv_func_t** pfunc, void** pdata) noexcept
 	{
 		can_recv_get_func(this, pfunc, pdata);
 	}
 
 	void
-	setFunc(can_recv_func_t* func, void* data = 0) noexcept
+	setFunc(can_recv_func_t* func, void* data) noexcept
 	{
 		can_recv_set_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setFunc(F* f) noexcept
+	{
+		setFunc(&c_call<F, can_recv_func_t>::function,
+				static_cast<void*>(f));
 	}
 
 	void
