@@ -44,15 +44,19 @@
  * If exceptions are disabled, aborts the process instead of throwing an
  * exception.
  */
-#if defined(__EXCEPTIONS) || __has_feature(cxx_exceptions)
-#define throw_or_abort(e)	throw(e)
-#else
+#if LELY_NO_EXCEPTIONS
 #define throw_or_abort(e)	__throw_or_abort((e).what())
+#else
+#define throw_or_abort(e)	throw(e)
 #endif
 #endif
 
+extern "C" {
+
 //! Aborts the process instead of throwing an exception.
 LELY_UTIL_EXTERN _Noreturn void __throw_or_abort(const char *what) noexcept;
+
+}
 
 #endif
 

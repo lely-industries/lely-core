@@ -76,7 +76,7 @@ struct delete_c_type {
 
 /*!
  * Creates an instance of a trivial, standard layout or incomplete C type and
- * wraps it in a std::shared_ptr, using #delete_c_type as the deleter.
+ * wraps it in a std::shared_ptr, using #lely::delete_c_type as the deleter.
  */
 template <class T, class... Args>
 inline ::std::shared_ptr<T>
@@ -88,16 +88,16 @@ make_shared_c(Args&&... args)
 
 /*!
  * A specialization of std::unique_ptr for trivial, standard layout or
- * incomplete C types, using #delete_c_type as the deleter.
+ * incomplete C types, using #lely::delete_c_type as the deleter.
  */
 template <class T> using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
 
 /*!
  * Creates an instance of a trivial, standard layout or incomplete C type and
- * wraps it in a #unique_c_ptr.
+ * wraps it in a lely::unique_c_ptr.
  */
 template <class T, class... Args>
-unique_c_ptr<T>
+inline unique_c_ptr<T>
 make_unique_c(Args&&... args)
 {
 	return unique_c_ptr<T>(new T(::std::forward<Args>(args)...));
