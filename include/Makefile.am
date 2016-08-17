@@ -2,6 +2,7 @@ inc =
 inc += lely/util/def/type.def
 inc += lely/util/bimap.h
 if !NO_CXX
+inc += lely/util/c_call.hpp
 inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
