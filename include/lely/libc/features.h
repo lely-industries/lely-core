@@ -140,6 +140,26 @@
 #undef __STDC_IEC_559_COMPLEX__
 #endif
 
+#ifdef __cplusplus
+
+#ifndef LELY_NO_EXCEPTIONS
+#if (defined(_MSC_VER) && !_HAS_EXCEPTIONS) \
+		|| (defined(__GNUC__) && !__EXCEPTIONS) \
+		|| (defined(__clang__) && !__has_feature(cxx_exceptions))
+#define LELY_NO_EXCEPTIONS	1
+#endif
+#endif
+
+#ifndef LELY_NO_RTTI
+#if (defined(_MSC_VER) && !_CPPRTTI) \
+		|| (defined(__GNUC__) && !__GXX_RTTI) \
+		|| (defined(__clang__) && !__has_feature(cxx_rtti))
+#define LELY_NO_RTTI	1
+#endif
+#endif
+
+#endif // __cplusplus
+
 //! Specifies the alignment requirement of the declared object or member.
 #if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
