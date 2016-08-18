@@ -362,9 +362,9 @@
 
 #ifndef __WORDSIZE
 //! The native word size (in bits).
-#if !defined(__ILP32__) && (defined(_WIN64) \
-		|| defined(__x86_64) || defined(_M_X64) \
-		|| defined(__ia64__) || defined(_M_IA64) \
+#if !defined(__ILP32__) && (defined(__LP64__) || defined(_WIN64) \
+		|| defined(_M_AMD64) || defined(__amd64__) || defined(_M_IA64) \
+		|| defined(__ia64__) || defined(_M_X64) || defined(__x86_64__) \
 		|| defined(__aarch64__))
 #define __WORDSIZE	64
 #else
@@ -380,6 +380,32 @@
 #else
 #define LONG_BIT	__WORDSIZE
 #endif
+#endif
+
+#ifndef LELY_BIG_ENDIAN
+#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__ARMEB__) \
+		|| defined(__THUMBEB__) || defined(__AARCH64EB__)
+//! The target platform is big-endian.
+#define LELY_BIG_ENDIAN	1
+#endif
+#endif
+
+#ifdef LELY_BIG_ENDIAN
+#undef LELY_LITTLE_ENDIAN
+#endif
+
+#ifndef LELY_LITTLE_ENDIAN
+#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || defined(_M_AMD64) \
+		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
+		|| defined(_M_X64) || defined(__x86_64__) || defined(__ARMEL__) \
+		|| defined(__THUMBEL__) || defined(__AARCH64EL__)
+//! The target platform is little-endian.
+#define LELY_LITTLE_ENDIAN	1
+#endif
+#endif
+
+#ifdef LELY_LITTLE_ENDIAN
+#undef LELY_BIG_ENDIAN
 #endif
 
 #endif
