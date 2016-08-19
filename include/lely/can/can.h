@@ -25,14 +25,10 @@
 #include <lely/util/util.h>
 
 #ifndef LELY_CAN_EXTERN
-#ifdef DLL_EXPORT
 #ifdef LELY_CAN_INTERN
-#define LELY_CAN_EXTERN	extern __dllexport
+#define LELY_CAN_EXTERN	extern LELY_DLL_EXPORT
 #else
-#define LELY_CAN_EXTERN	extern __dllimport
-#endif
-#else
-#define LELY_CAN_EXTERN	extern
+#define LELY_CAN_EXTERN	extern LELY_DLL_IMPORT
 #endif
 #endif
 

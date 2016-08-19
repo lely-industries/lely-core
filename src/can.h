@@ -29,11 +29,7 @@
 #include <lely/can/can.h>
 
 #ifndef LELY_CAN_EXPORT
-#ifdef DLL_EXPORT
-#define LELY_CAN_EXPORT	__dllexport
-#else
-#define LELY_CAN_EXPORT
-#endif
+#define LELY_CAN_EXPORT	LELY_DLL_EXPORT
 #endif
 
 #endif
