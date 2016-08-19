@@ -1,5 +1,6 @@
 src =
 src += libc.h
+src += stdatomic.c
 src += stdio.c
 src += stdlib.c
 src += string.c

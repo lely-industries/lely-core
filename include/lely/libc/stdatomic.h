@@ -54,6 +54,10 @@
 
 #include <stddef.h>
 
+#ifndef LELY_LIBC_STDATOMIC_INLINE
+#define LELY_LIBC_STDATOMIC_INLINE	inline
+#endif
+
 #undef __atomic_bool
 #ifdef __cplusplus
 #define __atomic_bool	bool
@@ -220,7 +224,7 @@ extern "C" {
 #endif
 
 //! Inserts a fence with semantics according to \a order.
-static inline void __cdecl
+LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_thread_fence(memory_order order)
 {
 #ifdef LELY_HAVE_CLANG_ATOMIC
@@ -238,7 +242,7 @@ atomic_thread_fence(memory_order order)
  * ordering constraints are established only between a thread and a signal
  * handler executing in the same thread.
  */
-static inline void __cdecl
+LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_signal_fence(memory_order order)
 {
 #ifdef LELY_HAVE_CLANG_ATOMIC
@@ -536,7 +540,7 @@ extern "C" {
  *
  * \returns the value at \a object immediately before the effects.
  */
-static inline __atomic_bool __cdecl
+LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
 atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
 		memory_order order)
 {
@@ -544,7 +548,7 @@ atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
 }
 
 //! Equivalent to `atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)`.
-static inline __atomic_bool __cdecl
+LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
 atomic_flag_test_and_set(volatile atomic_flag *object)
 {
 	return atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
@@ -554,14 +558,14 @@ atomic_flag_test_and_set(volatile atomic_flag *object)
  * Atomically sets the value at \a object to false. Memory is affected according
  * to \a order.
 */
-static inline void __cdecl
+LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
 {
 	atomic_store_explicit(&object->__value, 0, order);
 }
 
 //! Equivalent to `atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)`.
-static inline void __cdecl
+LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_flag_clear(volatile atomic_flag *object)
 {
 	atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);

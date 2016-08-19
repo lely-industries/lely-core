@@ -36,6 +36,10 @@
 
 #include <stddef.h>
 
+#ifndef LELY_LIBC_STRINGS_INLINE
+#define LELY_LIBC_STRINGS_INLINE	inline
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,7 +52,7 @@ extern "C" {
  */
 #if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
 			&& !defined(__BSD_VISIBLE)
-static inline int __cdecl ffs(int i) { return __builtin_ffs(i); }
+LELY_LIBC_STRINGS_INLINE int __cdecl ffs(int i) { return __builtin_ffs(i); }
 #else
 LELY_LIBC_EXTERN int __cdecl ffs(int i);
 #endif

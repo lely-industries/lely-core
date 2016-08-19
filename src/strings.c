@@ -21,6 +21,7 @@
  */
 
 #include "libc.h"
+#define LELY_LIBC_STRINGS_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/strings.h>
 
 #ifndef LELY_HAVE_STRINGS_H

@@ -2056,8 +2056,11 @@ PREDEFINED             += _POSIX_TIMEOUTS=200809L
 PREDEFINED             += LELY_HAVE_PTHREAD=1
 
 PREDEFINED             += __cdecl=
+
 PREDEFINED             += LELY_LIBC_EXTERN=
 PREDEFINED             += LELY_LIBC_EXPORT=
+PREDEFINED             += LELY_LIBC_STDATOMIC_INLINE=
+PREDEFINED             += LELY_LIBC_STRINGS_INLINE=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
