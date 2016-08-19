@@ -104,14 +104,50 @@ LELY_UTIL_EXTERN size_t print_c99_esc(char32_t c32, char **pbegin, char *end);
 LELY_UTIL_PRINT_INLINE int
 otoc(int i)
 {
+#if __STDC_ISO_10646__ && !__STDC_MB_MIGHT_NEQ_WC__
 	return '0' + (i & 7);
+#else
+	switch (i & 7) {
+	case 0: return '0';
+	case 1: return '1';
+	case 2: return '2';
+	case 3: return '3';
+	case 4: return '4';
+	case 5: return '5';
+	case 6: return '6';
+	case 7: return '7';
+	default: return -1;
+	}
+#endif
 }
 
 LELY_UTIL_PRINT_INLINE int
 xtoc(int i)
 {
+#if __STDC_ISO_10646__ && !__STDC_MB_MIGHT_NEQ_WC__
 	i &= 0xf;
 	return i < 10 ? '0' + i : 'a' + i - 10;
+#else
+	switch (i & 0xf) {
+	case 0x0: return '0';
+	case 0x1: return '1';
+	case 0x2: return '2';
+	case 0x3: return '3';
+	case 0x4: return '4';
+	case 0x5: return '5';
+	case 0x6: return '6';
+	case 0x7: return '7';
+	case 0x8: return '8';
+	case 0x9: return '9';
+	case 0xa: return 'a';
+	case 0xb: return 'b';
+	case 0xc: return 'c';
+	case 0xd: return 'd';
+	case 0xe: return 'e';
+	case 0xf: return 'f';
+	default: return -1;
+	}
+#endif
 }
 
 LELY_UTIL_PRINT_INLINE size_t

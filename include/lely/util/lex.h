@@ -317,19 +317,64 @@ isbreak(int c)
 LELY_UTIL_LEX_INLINE int __cdecl
 isodigit(int c)
 {
+#if __STDC_ISO_10646__ && !__STDC_MB_MIGHT_NEQ_WC__
 	return c >= '0' && c <= '7';
+#else
+	switch (c) {
+	case '0': case '1': case '2': case '3':
+	case '4': case '5': case '6': case '7':
+		return 1;
+	default: return 0;
+	}
+#endif
 }
 
 LELY_UTIL_LEX_INLINE int
 ctoo(int c)
 {
+#if __STDC_ISO_10646__ && !__STDC_MB_MIGHT_NEQ_WC__
 	return c - '0';
+#else
+	switch (c) {
+	case '0': return 0;
+	case '1': return 1;
+	case '2': return 2;
+	case '3': return 3;
+	case '4': return 4;
+	case '5': return 5;
+	case '6': return 6;
+	case '7': return 7;
+	default: return -1;
+	}
+#endif
 }
 
 LELY_UTIL_LEX_INLINE int
 ctox(int c)
 {
+#if __STDC_ISO_10646__ && !__STDC_MB_MIGHT_NEQ_WC__
 	return isdigit(c) ? c - '0' : 10 + (isupper(c) ? c - 'A' : c - 'a');
+#else
+	switch (c) {
+	case '0': return 0x0;
+	case '1': return 0x1;
+	case '2': return 0x2;
+	case '3': return 0x3;
+	case '4': return 0x4;
+	case '5': return 0x5;
+	case '6': return 0x6;
+	case '7': return 0x7;
+	case '8': return 0x8;
+	case '9': return 0x9;
+	case 'A': case 'a': return 0xa;
+	case 'B': case 'b': return 0xb;
+	case 'C': case 'c': return 0xc;
+	case 'D': case 'd': return 0xd;
+	case 'E': case 'e': return 0xe;
+	case 'F': case 'f': return 0xf;
+	default: return -1;
+	}
+#endif
 }
 
 #ifdef __cplusplus
