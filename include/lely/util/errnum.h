@@ -67,6 +67,10 @@
 #include <netdb.h>
 #endif
 
+#ifndef LELY_UTIL_ERRNUM_INLINE
+#define LELY_UTIL_ERRNUM_INLINE	inline
+#endif
+
 //! The native error code type.
 #ifdef _WIN32
 typedef DWORD errc_t;
@@ -325,7 +329,7 @@ LELY_UTIL_EXTERN errc_t errnum2c(errnum_t errnum);
  *
  * \see set_errno()
  */
-static inline int get_errno(void);
+LELY_UTIL_ERRNUM_INLINE int get_errno(void);
 
 /*!
  * Sets the current (thread-specific) standard C error number to \a errnum. This
@@ -333,7 +337,7 @@ static inline int get_errno(void);
  *
  * \see get_errno()
  */
-static inline void set_errno(int errnum);
+LELY_UTIL_ERRNUM_INLINE void set_errno(int errnum);
 
 /*!
  * Returns the last (thread-specific) native error code set by a system call or
@@ -362,7 +366,7 @@ LELY_UTIL_EXTERN void set_errc(errc_t errc);
  *
  * \see set_errnum()
  */
-static inline errnum_t get_errnum(void);
+LELY_UTIL_ERRNUM_INLINE errnum_t get_errnum(void);
 
 /*!
  * Sets the current (thread-specific) platform-independent error number to
@@ -370,7 +374,7 @@ static inline errnum_t get_errnum(void);
  *
  * \see get_errnum()
  */
-static inline void set_errnum(errnum_t errnum);
+LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
 
 /*!
  * Returns a string describing a standard C error number. This is equivalent to
@@ -385,33 +389,33 @@ LELY_UTIL_EXTERN const char *errc2str(errc_t errc);
  * Returns a string describing a platform-independent error number. This is
  * equivalent to `errc2str(errnum2c(errnum))`.
  */
-static inline const char *errnum2str(errnum_t errnum);
+LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
 
-static inline int
+LELY_UTIL_ERRNUM_INLINE int
 get_errno(void)
 {
 	return errc2no(get_errc());
 }
 
-static inline void
+LELY_UTIL_ERRNUM_INLINE void
 set_errno(int errnum)
 {
 	set_errc(errno2c(errnum));
 }
 
-static inline errnum_t
+LELY_UTIL_ERRNUM_INLINE errnum_t
 get_errnum(void)
 {
 	return errc2num(get_errc());
 }
 
-static inline void
+LELY_UTIL_ERRNUM_INLINE void
 set_errnum(errnum_t errnum)
 {
 	set_errc(errnum2c(errnum));
 }
 
-static inline const char *
+LELY_UTIL_ERRNUM_INLINE const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));

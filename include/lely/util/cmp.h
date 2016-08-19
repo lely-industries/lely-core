@@ -31,6 +31,10 @@
 #include <string.h>
 #include <wchar.h>
 
+#ifndef LELY_UTIL_CMP_INLINE
+#define LELY_UTIL_CMP_INLINE	inline
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,7 +50,8 @@ extern "C" {
 typedef int __cdecl cmp_t(const void *p1, const void *p2);
 
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
-	static inline int __cdecl name##_cmp(const void *p1, const void *p2);
+	LELY_UTIL_CMP_INLINE int __cdecl name##_cmp(const void *p1, \
+			const void *p2);
 #include <lely/util/def/type.def>
 LELY_UTIL_DEFINE_TYPE(ptr,)
 LELY_UTIL_DEFINE_TYPE(str,)
@@ -54,7 +59,7 @@ LELY_UTIL_DEFINE_TYPE(str_case,)
 #undef LELY_UTIL_DEFINE_TYPE
 
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
-	static inline int __cdecl \
+	LELY_UTIL_CMP_INLINE int __cdecl \
 	name##_cmp(const void *p1, const void *p2) \
 	{ \
 		if (p1 == p2) \
@@ -72,7 +77,7 @@ LELY_UTIL_DEFINE_TYPE(str_case,)
 #include <lely/util/def/type.def>
 #undef LELY_UTIL_DEFINE_TYPE
 
-static inline int __cdecl
+LELY_UTIL_CMP_INLINE int __cdecl
 ptr_cmp(const void *p1, const void *p2)
 {
 	uintptr_t v1 = (uintptr_t)p1;
@@ -80,7 +85,7 @@ ptr_cmp(const void *p1, const void *p2)
 	return (v2 < v1) - (v1 < v2);
 }
 
-static inline int __cdecl
+LELY_UTIL_CMP_INLINE int __cdecl
 str_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
@@ -94,7 +99,7 @@ str_cmp(const void *p1, const void *p2)
 	return strcmp((const char *)p1, (const char *)p2);
 }
 
-static inline int __cdecl
+LELY_UTIL_CMP_INLINE int __cdecl
 str_case_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)

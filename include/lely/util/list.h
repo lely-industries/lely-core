@@ -27,6 +27,10 @@
 
 #include <stddef.h>
 
+#ifndef LELY_UTIL_LIST_INLINE
+#define LELY_UTIL_LIST_INLINE	inline
+#endif
+
 /*!
  * A node in a doubly linked list. To associate a value with a node, embed the
  * node in a struct containing the value and use structof() to obtain the struct
@@ -44,21 +48,21 @@ extern "C" {
 #endif
 
 //! Initializes a node in a doubly linked list.
-static inline void dlnode_init(struct dlnode *node);
+LELY_UTIL_LIST_INLINE void dlnode_init(struct dlnode *node);
 
 //! Inserts \a node after \a prev.
-static inline void dlnode_insert_after(struct dlnode *prev,
+LELY_UTIL_LIST_INLINE void dlnode_insert_after(struct dlnode *prev,
 		struct dlnode *node);
 
 //! Inserts \a node before \a next.
-static inline void dlnode_insert_before(struct dlnode *next,
+LELY_UTIL_LIST_INLINE void dlnode_insert_before(struct dlnode *next,
 		struct dlnode *node);
 
 /*!
  * Removes \a node from a list. Note that this function does _not_ reset the
  * \a prev and \a next fields of the node.
  */
-static inline void dlnode_remove(struct dlnode *node);
+LELY_UTIL_LIST_INLINE void dlnode_remove(struct dlnode *node);
 
 /*!
  * Iterates in order over each node in a doubly linked list. It is safe to
@@ -83,14 +87,14 @@ static inline void dlnode_remove(struct dlnode *node);
 			(node); (node) = __dlnode_next_##n, \
 			__dlnode_next_##n = (node) ? (node)->next : NULL)
 
-static inline void
+LELY_UTIL_LIST_INLINE void
 dlnode_init(struct dlnode *node)
 {
 	node->prev = NULL;
 	node->next = NULL;
 }
 
-static inline void
+LELY_UTIL_LIST_INLINE void
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
 	node->prev = prev;
@@ -99,7 +103,7 @@ dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 	prev->next = node;
 }
 
-static inline void
+LELY_UTIL_LIST_INLINE void
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
 	node->next = next;
@@ -108,7 +112,7 @@ dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 	next->prev = node;
 }
 
-static inline void
+LELY_UTIL_LIST_INLINE void
 dlnode_remove(struct dlnode *node)
 {
 	if (node->prev)

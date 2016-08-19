@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#define LELY_UTIL_PRINT_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/print.h>
 #include "unicode.h"
 

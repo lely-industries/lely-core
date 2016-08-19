@@ -34,6 +34,10 @@
 
 #include <lely/util/cmp.h>
 
+#ifndef LELY_UTIL_RBTREE_INLINE
+#define LELY_UTIL_RBTREE_INLINE	inline
+#endif
+
 /*!
  * A node in a red-black tree. To associate a value with a node, embed the node
  * in a struct containing the value and use structof() to obtain the struct from
@@ -80,7 +84,7 @@ extern "C" {
  * \param key  a pointer to the key for this node. The key MUST NOT be modified
  *             while the node is part of a tree.
  */
-static inline void rbnode_init(struct rbnode *node, const void *key);
+LELY_UTIL_RBTREE_INLINE void rbnode_init(struct rbnode *node, const void *key);
 
 /*!
  * Returns a pointer to the previous (in-order) node in a red-black tree with
@@ -131,16 +135,16 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
  * \param tree a pointer to the tree to be initialized.
  * \param cmp  a pointer to the function used to compare two keys.
  */
-static inline void rbtree_init(struct rbtree *tree, cmp_t *cmp);
+LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree, cmp_t *cmp);
 
 //! Returns 1 if the red-black tree is empty, and 0 if not.
-static inline int rbtree_empty(const struct rbtree *tree);
+LELY_UTIL_RBTREE_INLINE int rbtree_empty(const struct rbtree *tree);
 
 /*!
  * Returns the size (in number of nodes) of a red-black tree. This is an O(1)
  * operation.
  */
-static inline size_t rbtree_size(const struct rbtree *tree);
+LELY_UTIL_RBTREE_INLINE size_t rbtree_size(const struct rbtree *tree);
 
 /*!
  * Inserts a node into a red-black tree. This is an O(log(n)) operation. This
@@ -188,7 +192,7 @@ LELY_UTIL_EXTERN struct rbnode *rbtree_last(const struct rbtree *tree);
  * Returns a pointer to the root node in a red-black tree. This is an O(1)
  * operation.
  */
-static inline struct rbnode *rbtree_root(const struct rbtree *tree);
+LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
 
 /*!
  * Iterates over each node in a red-black tree in ascending order.
@@ -198,13 +202,13 @@ static inline struct rbnode *rbtree_root(const struct rbtree *tree);
 #define rbtree_foreach(tree, node) \
 	rbnode_foreach(rbtree_first(tree), node)
 
-static inline void
+LELY_UTIL_RBTREE_INLINE void
 rbnode_init(struct rbnode *node, const void *key)
 {
 	node->key = key;
 }
 
-static inline void
+LELY_UTIL_RBTREE_INLINE void
 rbtree_init(struct rbtree *tree, cmp_t *cmp)
 {
 	tree->cmp = cmp;
@@ -212,19 +216,19 @@ rbtree_init(struct rbtree *tree, cmp_t *cmp)
 	tree->num_nodes = 0;
 }
 
-static inline int
+LELY_UTIL_RBTREE_INLINE int
 rbtree_empty(const struct rbtree *tree)
 {
 	return !rbtree_size(tree);
 }
 
-static inline size_t
+LELY_UTIL_RBTREE_INLINE size_t
 rbtree_size(const struct rbtree *tree)
 {
 	return tree->num_nodes;
 }
 
-static inline struct rbnode *
+LELY_UTIL_RBTREE_INLINE struct rbnode *
 rbtree_root(const struct rbtree *tree)
 {
 	return tree->root;

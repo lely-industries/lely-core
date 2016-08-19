@@ -25,19 +25,23 @@
 #include <lely/libc/uchar.h>
 #include <lely/util/util.h>
 
+#ifndef LELY_UTIL_PRINT_INLINE
+#define LELY_UTIL_PRINT_INLINE	inline
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 //! Returns the character corresponding to the octal digit \a i. \see ctoo()
-static inline int otoc(int i);
+LELY_UTIL_PRINT_INLINE int otoc(int i);
 
 /*!
  * Returns the character corresponding to the hexadecimal digit \a i.
  *
  * \see ctox()
  */
-static inline int xtoc(int i);
+LELY_UTIL_PRINT_INLINE int xtoc(int i);
 
 /*!
  * Prints a single character to a memory buffer.
@@ -52,7 +56,7 @@ static inline int xtoc(int i);
  *
  * \returns 1.
  */
-static inline size_t print_char(int c, char **pbegin, char *end);
+LELY_UTIL_PRINT_INLINE size_t print_char(int c, char **pbegin, char *end);
 
 /*!
  * Prints a UTF-8 encoded Unicode character to a memory buffer. Illegal Unicode
@@ -97,20 +101,20 @@ LELY_UTIL_EXTERN size_t print_utf8(char32_t c32, char **pbegin, char *end);
  */
 LELY_UTIL_EXTERN size_t print_c99_esc(char32_t c32, char **pbegin, char *end);
 
-static inline int
+LELY_UTIL_PRINT_INLINE int
 otoc(int i)
 {
 	return '0' + (i & 7);
 }
 
-static inline int
+LELY_UTIL_PRINT_INLINE int
 xtoc(int i)
 {
 	i &= 0xf;
 	return i < 10 ? '0' + i : 'a' + i - 10;
 }
 
-static inline size_t
+LELY_UTIL_PRINT_INLINE size_t
 print_char(int c, char **pbegin, char *end)
 {
 	if (pbegin && *pbegin && (!end || *pbegin < end))

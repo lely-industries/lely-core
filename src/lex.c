@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#define LELY_UTIL_LEX_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/string.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>

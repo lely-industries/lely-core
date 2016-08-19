@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#define LELY_UTIL_RBTREE_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/rbtree.h>
 
 #include <assert.h>

@@ -1,13 +1,16 @@
 src =
+src += bimap.c
 if !NO_CXX
 src += c_type.cpp
 endif
+src += cmp.c
 src += config.c
 src += config_ini.c
 if !NO_DAEMON
 src += daemon.c
 endif
 src += diag.c
+src += endian.c
 src += errnum.c
 if !NO_CXX
 src += exception.cpp
@@ -15,12 +18,14 @@ endif
 src += frbuf.c
 src += fwbuf.c
 src += lex.c
+src += list.c
 src += membuf.c
 src += page.h
 src += pheap.c
 src += pool.c
 src += print.c
 src += rbtree.c
+src += time.c
 src += unicode.h
 src += util.h
 if PLATFORM_WIN32

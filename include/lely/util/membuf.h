@@ -27,6 +27,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifndef LELY_UTIL_MEMBUF_INLINE
+#define LELY_UTIL_MEMBUF_INLINE	inline
+#endif
+
 //! A memory buffer.
 struct membuf {
 	//! A pointer to one past the last byte written to the buffer.
@@ -45,22 +49,22 @@ extern "C" {
 #endif
 
 //! Initializes a memory buffer. \see membuf_fini()
-static inline void membuf_init(struct membuf *buf);
+LELY_UTIL_MEMBUF_INLINE void membuf_init(struct membuf *buf);
 
 //! Finalizes a memory buffer. \see membuf_init()
 LELY_UTIL_EXTERN void membuf_fini(struct membuf *buf);
 
 //! Returns a pointer to the first byte in a memory buffer.
-static inline void *membuf_begin(const struct membuf *buf);
+LELY_UTIL_MEMBUF_INLINE void *membuf_begin(const struct membuf *buf);
 
 //! Clears a memory buffer. \see membuf_flush()
-static inline void membuf_clear(struct membuf *buf);
+LELY_UTIL_MEMBUF_INLINE void membuf_clear(struct membuf *buf);
 
 //! Returns the total number of bytes written to a memory buffer.
-static inline size_t membuf_size(const struct membuf *buf);
+LELY_UTIL_MEMBUF_INLINE size_t membuf_size(const struct membuf *buf);
 
 //! Returns the number of unused bytes remaining in a memory buffer.
-static inline size_t membuf_capacity(const struct membuf *buf);
+LELY_UTIL_MEMBUF_INLINE size_t membuf_capacity(const struct membuf *buf);
 
 /*!
  * Resizes a memory buffer, if necessary, to make room for at least an
@@ -89,7 +93,8 @@ LELY_UTIL_EXTERN size_t membuf_reserve(struct membuf *buf, size_t size);
  *
  * \returns the actual applied offset.
  */
-static inline ptrdiff_t membuf_seek(struct membuf *buf, ptrdiff_t offset);
+LELY_UTIL_MEMBUF_INLINE ptrdiff_t membuf_seek(struct membuf *buf,
+		ptrdiff_t offset);
 
 /*!
  * Creates region of *\a size bytes in a memory buffer, starting at the current
@@ -107,7 +112,7 @@ static inline ptrdiff_t membuf_seek(struct membuf *buf, ptrdiff_t offset);
  * bytes (which may be 0). Note that this pointer is only valid until the next
  * call to membuf_reserve().
  */
-static inline void *membuf_alloc(struct membuf *buf, size_t *size);
+LELY_UTIL_MEMBUF_INLINE void *membuf_alloc(struct membuf *buf, size_t *size);
 
 /*!
  * Writes data to a memory buffer. Writing starts at the current position
@@ -120,43 +125,43 @@ static inline void *membuf_alloc(struct membuf *buf, size_t *size);
  * \returns the number of bytes written, which may be smaller than \a size in
  * case of insufficient capacity.
  */
-static inline size_t membuf_write(struct membuf *buf, const void *ptr,
+LELY_UTIL_MEMBUF_INLINE size_t membuf_write(struct membuf *buf, const void *ptr,
 		size_t size);
 
 //! Flushes \a size bytes from the beginning of a memory buffer.
 LELY_UTIL_EXTERN void membuf_flush(struct membuf *buf, size_t size);
 
-static inline void
+LELY_UTIL_MEMBUF_INLINE void
 membuf_init(struct membuf *buf)
 {
 	buf->begin = buf->end = buf->cur = NULL;
 }
 
-static inline void *
+LELY_UTIL_MEMBUF_INLINE void *
 membuf_begin(const struct membuf *buf)
 {
 	return buf->begin;
 }
 
-static inline void
+LELY_UTIL_MEMBUF_INLINE void
 membuf_clear(struct membuf *buf)
 {
 	buf->cur = buf->begin;
 }
 
-static inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_size(const struct membuf *buf)
 {
 	return buf->cur - buf->begin;
 }
 
-static inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_capacity(const struct membuf *buf)
 {
 	return buf->end - buf->cur;
 }
 
-static inline ptrdiff_t
+LELY_UTIL_MEMBUF_INLINE ptrdiff_t
 membuf_seek(struct membuf *buf, ptrdiff_t offset)
 {
 	char *cur = buf->cur + offset;
@@ -172,7 +177,7 @@ membuf_seek(struct membuf *buf, ptrdiff_t offset)
 	return offset;
 }
 
-static inline void *
+LELY_UTIL_MEMBUF_INLINE void *
 membuf_alloc(struct membuf *buf, size_t *size)
 {
 	void *cur = buf->cur;
@@ -180,7 +185,7 @@ membuf_alloc(struct membuf *buf, size_t *size)
 	return cur;
 }
 
-static inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
 	void *cur = membuf_alloc(buf, &size);

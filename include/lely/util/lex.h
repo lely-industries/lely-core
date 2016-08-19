@@ -28,6 +28,10 @@
 
 #include <ctype.h>
 
+#ifndef LELY_UTIL_LEX_INLINE
+#define LELY_UTIL_LEX_INLINE	inline
+#endif
+
 // The file location struct from <lely/util/diag.h>.
 struct floc;
 
@@ -36,20 +40,20 @@ extern "C" {
 #endif
 
 //! Returns 1 if \a c is a line break character, and 0 otherwise.
-static inline int __cdecl isbreak(int c);
+LELY_UTIL_LEX_INLINE int __cdecl isbreak(int c);
 
 //! Returns 1 if \a c is an octal digit, and 0 otherwise.
-static inline int __cdecl isodigit(int c);
+LELY_UTIL_LEX_INLINE int __cdecl isodigit(int c);
 
 //! Returns the octal digit corresponding to the character \a c. \see otoc()
-static inline int ctoo(int c);
+LELY_UTIL_LEX_INLINE int ctoo(int c);
 
 /*!
  * Returns the hexadecimal digit corresponding to the character \a c.
  *
  * \see xtoc()
  */
-static inline int ctox(int c);
+LELY_UTIL_LEX_INLINE int ctox(int c);
 
 /*!
  * Lexes the specified character from a memory buffer.
@@ -304,25 +308,25 @@ LELY_UTIL_DEFINE_LEX_UNSIGNED(uint64_t, u64, pu64)
 LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
 		const char *end, struct floc *at);
 
-static inline int __cdecl
+LELY_UTIL_LEX_INLINE int __cdecl
 isbreak(int c)
 {
 	return c == '\n' || c == '\r';
 }
 
-static inline int __cdecl
+LELY_UTIL_LEX_INLINE int __cdecl
 isodigit(int c)
 {
 	return c >= '0' && c <= '7';
 }
 
-static inline int
+LELY_UTIL_LEX_INLINE int
 ctoo(int c)
 {
 	return c - '0';
 }
 
-static inline int
+LELY_UTIL_LEX_INLINE int
 ctox(int c)
 {
 	return isdigit(c) ? c - '0' : 10 + (isupper(c) ? c - 'A' : c - 'a');

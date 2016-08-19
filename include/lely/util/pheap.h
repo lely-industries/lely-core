@@ -35,6 +35,10 @@
 
 #include <lely/util/cmp.h>
 
+#ifndef LELY_UTIL_PHEAP_INLINE
+#define LELY_UTIL_PHEAP_INLINE	inline
+#endif
+
 /*!
  * A node in a pairing heap. To associate a value with a node, embed the node in
  * a struct containing the value and use structof() to obtain the struct from
@@ -72,7 +76,7 @@ extern "C" {
 #endif
 
 //! Returns a pointer to the next node (in unspecified order) in a pairing heap.
-static inline struct pnode *pnode_next(const struct pnode *node);
+LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
 
 /*!
  * Iterates over each node in a pairing heap in unspecified order. It is safe to
@@ -107,16 +111,16 @@ static inline struct pnode *pnode_next(const struct pnode *node);
  * \param heap a pointer to the heap to be initialized.
  * \param cmp  a pointer to the function used to compare two keys.
  */
-static inline void pheap_init(struct pheap *heap, cmp_t *cmp);
+LELY_UTIL_PHEAP_INLINE void pheap_init(struct pheap *heap, cmp_t *cmp);
 
 //! Returns 1 if the pairing heap is empty, and 0 if not.
-static inline int pheap_empty(const struct pheap *heap);
+LELY_UTIL_PHEAP_INLINE int pheap_empty(const struct pheap *heap);
 
 /*!
  * Returns the size (in number of nodes) of a pairing heap. This is an O(1)
  * operation.
  */
-static inline size_t pheap_size(const struct pheap *heap);
+LELY_UTIL_PHEAP_INLINE size_t pheap_size(const struct pheap *heap);
 
 /*!
  * Inserts a node into a pairing heap. This is an O(1) operation. This function
@@ -149,7 +153,7 @@ LELY_UTIL_EXTERN struct pnode *pheap_find(const struct pheap *heap,
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an
  * O(1) operation.
  */
-static inline struct pnode *pheap_first(const struct pheap *heap);
+LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
 
 /*!
  * Iterates over each node in a pairing heap in unspecified order.
@@ -159,7 +163,7 @@ static inline struct pnode *pheap_first(const struct pheap *heap);
 #define pheap_foreach(heap, node) \
 	pnode_foreach(pheap_first(heap), node)
 
-static inline struct pnode *
+LELY_UTIL_PHEAP_INLINE struct pnode *
 pnode_next(const struct pnode *node)
 {
 	if (node->child)
@@ -171,7 +175,7 @@ pnode_next(const struct pnode *node)
 	return NULL;
 }
 
-static inline void
+LELY_UTIL_PHEAP_INLINE void
 pheap_init(struct pheap *heap, cmp_t *cmp)
 {
 	heap->cmp = cmp;
@@ -179,19 +183,19 @@ pheap_init(struct pheap *heap, cmp_t *cmp)
 	heap->num_nodes = 0;
 }
 
-static inline int
+LELY_UTIL_PHEAP_INLINE int
 pheap_empty(const struct pheap *heap)
 {
 	return !pheap_size(heap);
 }
 
-static inline size_t
+LELY_UTIL_PHEAP_INLINE size_t
 pheap_size(const struct pheap *heap)
 {
 	return heap->num_nodes;
 }
 
-static inline struct pnode *
+LELY_UTIL_PHEAP_INLINE struct pnode *
 pheap_first(const struct pheap *heap)
 {
 	return heap->root;

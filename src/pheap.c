@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#define LELY_UTIL_PHEAP_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/pheap.h>
 
 #include <assert.h>

@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#define LELY_UTIL_MEMBUF_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 #include <lely/util/membuf.h>
 

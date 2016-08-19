@@ -31,6 +31,10 @@
 
 #include <lely/util/rbtree.h>
 
+#ifndef LELY_UTIL_BIMAP_INLINE
+#define LELY_UTIL_BIMAP_INLINE	inline
+#endif
+
 /*!
  * A node in a bidirectional map. To associate a value with a node, embed the
  * node in a struct containing the value and use structof() to obtain the struct
@@ -66,7 +70,7 @@ extern "C" {
  * \param value a pointer to the value of the node. The value MUST NOT be
  *              modified while the node is part of a map.
  */
-static inline void binode_init(struct binode *node, const void *key,
+LELY_UTIL_BIMAP_INLINE void binode_init(struct binode *node, const void *key,
 		const void *value);
 
 /*!
@@ -75,7 +79,8 @@ static inline void binode_init(struct binode *node, const void *key,
  *
  * \see binode_next_by_key(), binode_prev_by_value()
  */
-static inline struct binode *binode_prev_by_key(const struct binode *node);
+LELY_UTIL_BIMAP_INLINE struct binode *binode_prev_by_key(
+		const struct binode *node);
 
 /*!
  * Returns a pointer to the next (in-order) node by key in a bidirectional map
@@ -85,7 +90,8 @@ static inline struct binode *binode_prev_by_key(const struct binode *node);
  *
  * \see binode_prev_by_key(), binode_next_by_value()
  */
-static inline struct binode *binode_next_by_key(const struct binode *node);
+LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_key(
+		const struct binode *node);
 
 /*!
  * Returns a pointer to the previous (in-order) node by value in a bidirectional
@@ -93,7 +99,8 @@ static inline struct binode *binode_next_by_key(const struct binode *node);
  *
  * \see binode_next_by_value(), binode_prev_by_key()
  */
-static inline struct binode *binode_prev_by_value(const struct binode *node);
+LELY_UTIL_BIMAP_INLINE struct binode *binode_prev_by_value(
+		const struct binode *node);
 
 /*!
  * Returns a pointer to the next (in-order) node by value in a bidirectional map
@@ -103,7 +110,8 @@ static inline struct binode *binode_prev_by_value(const struct binode *node);
  *
  * \see binode_prev_by_value(), binode_next_by_key()
  */
-static inline struct binode *binode_next_by_value(const struct binode *node);
+LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
+		const struct binode *node);
 
 /*!
  * Iterates over each node in a bidirectional map in ascending order by key. It
@@ -166,17 +174,17 @@ static inline struct binode *binode_next_by_value(const struct binode *node);
  * \param key_cmp   a pointer to the function used to compare two keys.
  * \param value_cmp a pointer to the function used to compare two values.
  */
-static inline void bimap_init(struct bimap *map, cmp_t *key_cmp,
+LELY_UTIL_BIMAP_INLINE void bimap_init(struct bimap *map, cmp_t *key_cmp,
 		cmp_t *value_cmp);
 
 //! Returns 1 if the bidirectional map is empty, and 0 if not.
-static inline int bimap_empty(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE int bimap_empty(const struct bimap *map);
 
 /*!
  * Returns the size (in number of nodes) of a bidirectional map. This is an O(1)
  * operation.
  */
-static inline size_t bimap_size(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE size_t bimap_size(const struct bimap *map);
 
 /*!
  * Inserts a node into a bidirectional map. This is an O(log(n)) operation. This
@@ -185,14 +193,16 @@ static inline size_t bimap_size(const struct bimap *map);
  *
  * \see bimap_remove(), bimap_find_by_key(), bimap_find_by_value()
  */
-static inline void bimap_insert(struct bimap *map, struct binode *node);
+LELY_UTIL_BIMAP_INLINE void bimap_insert(struct bimap *map,
+		struct binode *node);
 
 /*!
  * Removes a node from a bidirectional map. This is an O(log(n)) operation.
  *
  * \see bimap_insert()
  */
-static inline void bimap_remove(struct bimap *map, struct binode *node);
+LELY_UTIL_BIMAP_INLINE void bimap_remove(struct bimap *map,
+		struct binode *node);
 
 /*!
  * Finds a node by key in a bidirectional map. This is an O(log(n)) operation.
@@ -201,7 +211,7 @@ static inline void bimap_remove(struct bimap *map, struct binode *node);
  *
  * \see bimap_insert(), bimap_find_by_value()
  */
-static inline struct binode *bimap_find_by_key(const struct bimap *map,
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_find_by_key(const struct bimap *map,
 		const void *key);
 
 /*!
@@ -211,8 +221,8 @@ static inline struct binode *bimap_find_by_key(const struct bimap *map,
  *
  * \see bimap_insert(), bimap_find_by_key()
  */
-static inline struct binode *bimap_find_by_value(const struct bimap *map,
-		const void *value);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_find_by_value(
+		const struct bimap *map, const void *value);
 
 /*!
  * Returns a pointer to the first (leftmost) node by key in a bidirectional map.
@@ -220,7 +230,8 @@ static inline struct binode *bimap_find_by_value(const struct bimap *map,
  *
  * \see bimap_last_by_key(), bimap_first_by_value()
  */
-static inline struct binode *bimap_first_by_key(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_first_by_key(
+		const struct bimap *map);
 
 /*!
  * Returns a pointer to the last (rightmost) node by key in a bidirectional map.
@@ -228,7 +239,8 @@ static inline struct binode *bimap_first_by_key(const struct bimap *map);
  *
  * \see bimap_first_by_key(), bimap_last_by_value()
  */
-static inline struct binode *bimap_last_by_key(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_key(
+		const struct bimap *map);
 
 /*!
  * Returns a pointer to the first (leftmost) node by value in a bidirectional
@@ -236,7 +248,8 @@ static inline struct binode *bimap_last_by_key(const struct bimap *map);
  *
  * \see bimap_last_by_value(), bimap_first_by_key()
  */
-static inline struct binode *bimap_first_by_value(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_first_by_value(
+		const struct bimap *map);
 
 /*!
  * Returns a pointer to the last (rightmost) node by value in a bidirectional
@@ -244,7 +257,8 @@ static inline struct binode *bimap_first_by_value(const struct bimap *map);
  *
  * \see bimap_first_by_value(), bimap_last_by_key()
  */
-static inline struct binode *bimap_last_by_value(const struct bimap *map);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_value(
+		const struct bimap *map);
 
 /*!
  * Iterates over each node in a bidirectional map in ascending order by key.
@@ -262,110 +276,110 @@ static inline struct binode *bimap_last_by_value(const struct bimap *map);
 #define bimap_foreach_by_value(map, node) \
 	binode_foreach_by_value(bimap_first_by_value(map), node)
 
-static inline void
+LELY_UTIL_BIMAP_INLINE void
 binode_init(struct binode *node, const void *key, const void *value)
 {
 	rbnode_init(&node->key, key);
 	rbnode_init(&node->value, value);
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 binode_prev_by_key(const struct binode *node)
 {
 	struct rbnode *prev = rbnode_prev(&node->key);
 	return prev ? structof(prev, struct binode, key) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 binode_next_by_key(const struct binode *node)
 {
 	struct rbnode *next = rbnode_next(&node->key);
 	return next ? structof(next, struct binode, key) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 binode_prev_by_value(const struct binode *node)
 {
 	struct rbnode *prev = rbnode_prev(&node->value);
 	return prev ? structof(prev, struct binode, value) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 binode_next_by_value(const struct binode *node)
 {
 	struct rbnode *next = rbnode_next(&node->value);
 	return next ? structof(next, struct binode, value) : NULL;
 }
 
-static inline void
+LELY_UTIL_BIMAP_INLINE void
 bimap_init(struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp)
 {
 	rbtree_init(&map->keys, key_cmp);
 	rbtree_init(&map->values, value_cmp);
 }
 
-static inline int
+LELY_UTIL_BIMAP_INLINE int
 bimap_empty(const struct bimap *map)
 {
 	return !bimap_size(map);
 }
 
-static inline size_t
+LELY_UTIL_BIMAP_INLINE size_t
 bimap_size(const struct bimap *map)
 {
 	return rbtree_size(&map->keys);
 }
 
-static inline void
+LELY_UTIL_BIMAP_INLINE void
 bimap_insert(struct bimap *map, struct binode *node)
 {
 	rbtree_insert(&map->keys, &node->key);
 	rbtree_insert(&map->values, &node->value);
 }
 
-static inline void
+LELY_UTIL_BIMAP_INLINE void
 bimap_remove(struct bimap *map, struct binode *node)
 {
 	rbtree_remove(&map->keys, &node->key);
 	rbtree_remove(&map->values, &node->value);
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_find_by_key(const struct bimap *map, const void *key)
 {
 	struct rbnode *node = rbtree_find(&map->keys, key);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_find_by_value(const struct bimap *map, const void *value)
 {
 	struct rbnode *node = rbtree_find(&map->values, value);
 	return node ? structof(node, struct binode, value) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_first_by_key(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_first(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_last_by_key(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_last(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_first_by_value(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_first(&map->values);
 	return node ? structof(node, struct binode, value) : NULL;
 }
 
-static inline struct binode *
+LELY_UTIL_BIMAP_INLINE struct binode *
 bimap_last_by_value(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_last(&map->values);
