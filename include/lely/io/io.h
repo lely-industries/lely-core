@@ -28,14 +28,10 @@
 #include <stddef.h>
 
 #ifndef LELY_IO_EXTERN
-#ifdef DLL_EXPORT
 #ifdef LELY_IO_INTERN
-#define LELY_IO_EXTERN	extern __dllexport
+#define LELY_IO_EXTERN	extern LELY_DLL_EXPORT
 #else
-#define LELY_IO_EXTERN	extern __dllimport
-#endif
-#else
-#define LELY_IO_EXTERN	extern
+#define LELY_IO_EXTERN	extern LELY_DLL_IMPORT
 #endif
 #endif
 

@@ -29,11 +29,7 @@
 #include <lely/io/io.h>
 
 #ifndef LELY_IO_EXPORT
-#ifdef DLL_EXPORT
-#define LELY_IO_EXPORT	__dllexport
-#else
-#define LELY_IO_EXPORT
-#endif
+#define LELY_IO_EXPORT	LELY_DLL_EXPORT
 #endif
 
 #ifdef _WIN32

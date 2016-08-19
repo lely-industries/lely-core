@@ -2058,6 +2058,7 @@ PREDEFINED             += HAVE_SYS_EPOLL_H=1
 PREDEFINED             += HAVE_SYS_IOCTL_H=1
 
 PREDEFINED             += __cdecl=
+
 PREDEFINED             += LELY_IO_EXTERN=
 PREDEFINED             += LELY_IO_EXPORT=
 
