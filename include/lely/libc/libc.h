@@ -24,14 +24,10 @@
 #include <lely/libc/features.h>
 
 #ifndef LELY_LIBC_EXTERN
-#ifdef DLL_EXPORT
 #ifdef LELY_LIBC_INTERN
-#define LELY_LIBC_EXTERN	extern __dllexport
+#define LELY_LIBC_EXTERN	extern LELY_DLL_EXPORT
 #else
-#define LELY_LIBC_EXTERN	extern __dllimport
-#endif
-#else
-#define LELY_LIBC_EXTERN	extern
+#define LELY_LIBC_EXTERN	extern LELY_DLL_IMPORT
 #endif
 #endif
 

@@ -136,7 +136,7 @@
 #endif
 #endif
 
-#ifdef __STDC_NO_COMPLEX__
+#if __STDC_NO_COMPLEX__
 #undef __STDC_IEC_559_COMPLEX__
 #endif
 
@@ -382,6 +382,29 @@
 #endif
 #endif
 
+#ifndef LELY_DLL
+// libtool defines DLL_EXPORT for a shared library.
+#ifdef DLL_EXPORT
+#define LELY_DLL	1
+#endif
+#endif
+
+#ifndef LELY_DLL_EXPORT
+#if LELY_DLL
+#define LELY_DLL_EXPORT	__dllexport
+#else
+#define LELY_DLL_EXPORT
+#endif
+#endif
+
+#ifndef LELY_DLL_IMPORT
+#if LELY_DLL
+#define LELY_DLL_IMPORT	__dllimport
+#else
+#define LELY_DLL_IMPORT
+#endif
+#endif
+
 #ifndef LELY_BIG_ENDIAN
 #if (__GNUC__ && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__ARMEB__) \
 		|| defined(__THUMBEB__) || defined(__AARCH64EB__)
@@ -390,7 +413,7 @@
 #endif
 #endif
 
-#ifdef LELY_BIG_ENDIAN
+#if LELY_BIG_ENDIAN
 #undef LELY_LITTLE_ENDIAN
 #endif
 
@@ -404,7 +427,7 @@
 #endif
 #endif
 
-#ifdef LELY_LITTLE_ENDIAN
+#if LELY_LITTLE_ENDIAN
 #undef LELY_BIG_ENDIAN
 #endif
 

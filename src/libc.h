@@ -29,11 +29,7 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_LIBC_EXPORT
-#ifdef DLL_EXPORT
-#define LELY_LIBC_EXPORT	__dllexport
-#else
-#define LELY_LIBC_EXPORT
-#endif
+#define LELY_LIBC_EXPORT	LELY_DLL_EXPORT
 #endif
 
 #ifdef _WIN32
