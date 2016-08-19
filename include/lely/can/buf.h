@@ -39,6 +39,10 @@
 #endif
 #include <lely/can/msg.h>
 
+#ifndef LELY_CAN_BUF_INLINE
+#define LELY_CAN_BUF_INLINE	inline
+#endif
+
 //! A CAN frame buffer.
 struct can_buf {
 	//! A pointer to the allocated memory for the buffer.
@@ -117,21 +121,21 @@ LELY_CAN_EXTERN struct can_buf *can_buf_create(size_t size);
 LELY_CAN_EXTERN void can_buf_destroy(struct can_buf *buf);
 
 //! Clears a CAN frame buffer.
-static inline void can_buf_clear(struct can_buf *buf);
+LELY_CAN_BUF_INLINE void can_buf_clear(struct can_buf *buf);
 
 /*!
  * Returns the number of frames available for reading in a CAN buffer.
  *
  * \see can_buf_capacity()
  */
-static inline size_t can_buf_size(const struct can_buf *buf);
+LELY_CAN_BUF_INLINE size_t can_buf_size(const struct can_buf *buf);
 
 /*!
  * Returns the number of frames available for writing in a CAN buffer.
  *
  * \see can_buf_size()
  */
-static inline size_t can_buf_capacity(const struct can_buf *buf);
+LELY_CAN_BUF_INLINE size_t can_buf_capacity(const struct can_buf *buf);
 
 /*!
  * Resizes a CAN frame buffer, if necessary, to make room for at least \a n
@@ -154,8 +158,8 @@ LELY_CAN_EXTERN size_t can_buf_reserve(struct can_buf *buf, size_t n);
  *
  * \see can_buf_read(), can_buf_write()
  */
-static inline size_t can_buf_peek(struct can_buf *buf, struct can_msg *ptr,
-		size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_peek(struct can_buf *buf,
+		struct can_msg *ptr, size_t n);
 
 /*!
  * Reads, and removes, frames from a CAN frame buffer.
@@ -168,8 +172,8 @@ static inline size_t can_buf_peek(struct can_buf *buf, struct can_msg *ptr,
  *
  * \see can_buf_peek(), can_buf_write()
  */
-static inline size_t can_buf_read(struct can_buf *buf, struct can_msg *ptr,
-		size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_read(struct can_buf *buf,
+		struct can_msg *ptr, size_t n);
 
 /*!
  * Writes frames to a CAN frame buffer.
@@ -182,10 +186,10 @@ static inline size_t can_buf_read(struct can_buf *buf, struct can_msg *ptr,
  *
  * \see can_buf_peek(), can_buf_read()
  */
-static inline size_t can_buf_write(struct can_buf *buf,
+LELY_CAN_BUF_INLINE size_t can_buf_write(struct can_buf *buf,
 		const struct can_msg *ptr, size_t n);
 
-static inline void
+LELY_CAN_BUF_INLINE void
 can_buf_clear(struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -196,7 +200,7 @@ can_buf_clear(struct can_buf *buf)
 #endif
 }
 
-static inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_size(const struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -212,7 +216,7 @@ can_buf_size(const struct can_buf *buf)
 	return (end - begin) & buf->size;
 }
 
-static inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_capacity(const struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -228,7 +232,7 @@ can_buf_capacity(const struct can_buf *buf)
 	return (begin - end - 1) & buf->size;
 }
 
-static inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS
@@ -254,7 +258,7 @@ can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 	return n;
 }
 
-static inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS
@@ -286,7 +290,7 @@ can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 	return n;
 }
 
-static inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS

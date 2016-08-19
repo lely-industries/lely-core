@@ -22,6 +22,7 @@
  */
 
 #include "can.h"
+#define LELY_CAN_BUF_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 #include <lely/can/buf.h>
 
