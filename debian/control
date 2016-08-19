@@ -2,6 +2,7 @@ Source: liblely-io
 Priority: extra
 Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
 Build-Depends: debhelper (>= 9), autotools-dev, cdbs, doxygen,
+               liblely-tap-dev,
                libbluetooth-dev
 Standards-Version: 3.9.7
 Section: libs
