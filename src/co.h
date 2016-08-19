@@ -29,11 +29,7 @@
 #include <lely/co/co.h>
 
 #ifndef LELY_CO_EXPORT
-#ifdef DLL_EXPORT
-#define LELY_CO_EXPORT	__dllexport
-#else
-#define LELY_CO_EXPORT
-#endif
+#define LELY_CO_EXPORT	LELY_DLL_EXPORT
 #endif
 
 #endif
