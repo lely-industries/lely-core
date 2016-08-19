@@ -29,11 +29,7 @@
 #include <lely/tap/tap.h>
 
 #ifndef LELY_TAP_EXPORT
-#ifdef DLL_EXPORT
-#define LELY_TAP_EXPORT	__dllexport
-#else
-#define LELY_TAP_EXPORT
-#endif
+#define LELY_TAP_EXPORT	LELY_DLL_EXPORT
 #endif
 
 #endif

@@ -24,14 +24,10 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_TAP_EXTERN
-#ifdef DLL_EXPORT
 #ifdef LELY_TAP_INTERN
-#define LELY_TAP_EXTERN	extern __dllexport
+#define LELY_TAP_EXTERN	extern LELY_DLL_EXPORT
 #else
-#define LELY_TAP_EXTERN	extern __dllimport
-#endif
-#else
-#define LELY_TAP_EXTERN	extern
+#define LELY_TAP_EXTERN	extern LELY_DLL_IMPORT
 #endif
 #endif
 
