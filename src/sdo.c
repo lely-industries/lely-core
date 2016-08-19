@@ -22,6 +22,7 @@
  */
 
 #include "co.h"
+#define LELY_CO_SDO_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 #ifndef LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>

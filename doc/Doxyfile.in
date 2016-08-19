@@ -2044,9 +2044,9 @@ PREDEFINED             =
 
 PREDEFINED             += __STDC_VERSION__=199901L
 
-PREDEFINED             += __cdecl=
 PREDEFINED             += LELY_CO_EXTERN=
 PREDEFINED             += LELY_CO_EXPORT=
+PREDEFINED             += LELY_CO_SDO_INLINE=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
