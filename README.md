@@ -6,7 +6,8 @@ Utilities library
 Introduction
 ------------
 
-The Lely utilities (liblely-util) provides...
+The Lely utilities library (liblely-util) provides a variety of functions and
+data structures used by, and shared between, other Lely libraries.
 
 Download
 --------
