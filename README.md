@@ -27,7 +27,7 @@ Build and install
 liblely-libc uses the GNU Build System (`configure`, `make`, `make install`) and
 has native support for POSIX platforms (Debian-based Linux distributions in
 particular) and Windows (Vista and higher) through [Cygwin][] or [MinGW-w64][].
-[GCC ARM Embedded][] and Microsoft Visual Studio (2015 and higher) are also
+[GCC ARM Embedded][] and Microsoft Visual Studio (2013 and higher) are also
 supported, but project files will have to be created by hand.
 
 The release archive includes the build system, but if you want to build a

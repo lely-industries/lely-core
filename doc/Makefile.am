@@ -1,8 +1,6 @@
-dist =
-dist += logo.png
-dist += overview.md
-
-EXTRA_DIST = $(dist)
+EXTRA_DIST =
+EXTRA_DIST += logo.png
+EXTRA_DIST += overview.md
 
 if HAVE_DOXYGEN
 
