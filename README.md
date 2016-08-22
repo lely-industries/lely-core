@@ -96,11 +96,11 @@ as root.
 
 ### Options
 
-liblely-can uses the multithreading functions of liblely-libc. If
-multithreading support was disabled or unavailable when liblely-libc was built,
-it should also be disabled when building liblely-can. This can be achieved by
-providing the `--disable-threads` option to `configure` or by defining the
-`LELY_NO_THREADS` preprocessor macro.
+liblely-can uses the multithreading functions of liblely-libc. If multithreading
+support was disabled or unavailable when liblely-libc was built, it should also
+be disabled when building liblely-can. This can be achieved by providing the
+`--disable-threads` option to `configure` or by defining the `LELY_NO_THREADS`
+preprocessor macro.
 
 liblely-can is written in C, but a C++ interface is provided. This interface
 requires support from liblely-util. If the C++ interface is not required, or
