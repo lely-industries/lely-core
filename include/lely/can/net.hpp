@@ -95,8 +95,16 @@ public:
 	void
 	setNextFunc(F* f) noexcept
 	{
-		setNextFunc(&c_call<F, can_timer_func_t>::function,
+		setNextFunc(&c_call<can_timer_func_t, F>::function,
 				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<can_timer_func_t, T>::type M>
+	void
+	setNextFunc(T* t) noexcept
+	{
+		setNextFunc(&c_mem_call<can_timer_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	int
@@ -127,8 +135,16 @@ public:
 	void
 	setSendFunc(F* f) noexcept
 	{
-		setNextFunc(&c_call<F, can_send_func_t>::function,
+		setSendFunc(&c_call<can_send_func_t, F>::function,
 				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<can_send_func_t, T>::type M>
+	void
+	setSendFunc(T* t) noexcept
+	{
+		setSendFunc(&c_mem_call<can_send_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:
@@ -173,8 +189,16 @@ public:
 	void
 	setFunc(F* f) noexcept
 	{
-		setFunc(&c_call<F, can_timer_func_t>::function,
+		setFunc(&c_call<can_timer_func_t, F>::function,
 				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<can_timer_func_t, T>::type M>
+	void
+	setFunc(T* t) noexcept
+	{
+		setFunc(&c_mem_call<can_timer_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	void
@@ -234,8 +258,16 @@ public:
 	void
 	setFunc(F* f) noexcept
 	{
-		setFunc(&c_call<F, can_recv_func_t>::function,
+		setFunc(&c_call<can_recv_func_t, F>::function,
 				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<can_recv_func_t, T>::type M>
+	void
+	setFunc(T* t) noexcept
+	{
+		setFunc(&c_mem_call<can_recv_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	void
