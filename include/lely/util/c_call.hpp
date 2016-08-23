@@ -28,6 +28,9 @@ namespace lely {
 
 template <class, class> struct c_call;
 
+template <class, class> struct c_mem_fn;
+template <class F, class T, typename c_mem_fn<F, T>::type> struct c_mem_call;
+
 #if __cplusplus >= 201103L
 
 namespace impl {
@@ -48,8 +51,8 @@ template <class T, class S> struct c_pack_pop<T, S> { using type = c_pack<T>; };
 } // impl
 
 //! Provides a C wrapper for a callable with an arbitrary number of arguments.
-template <class F, class R, class... ArgTypes>
-struct c_call<F, impl::c_pack<R, ArgTypes...>> {
+template <class R, class... ArgTypes, class F>
+struct c_call<impl::c_pack<R, ArgTypes...>, F> {
 	typedef R result_type;
 
 	static R
@@ -60,16 +63,60 @@ struct c_call<F, impl::c_pack<R, ArgTypes...>> {
 };
 
 //! Provides a C wrapper for a callable with an arbitrary number of arguments.
-template <class F, class R, class... ArgTypes>
-struct c_call<F, R(ArgTypes...)>
-: c_call<F, typename impl::c_pack_pop<R, ArgTypes...>::type>
+template <class R, class... ArgTypes, class F>
+struct c_call<R(ArgTypes...), F>
+: c_call<typename impl::c_pack_pop<R, ArgTypes...>::type, F>
+{};
+
+/*!
+ * A class template supplying the type of a member function with an arbitrary
+ * number of arguments.
+ */
+template <class R, class... ArgTypes, class T>
+struct c_mem_fn<impl::c_pack<R, ArgTypes...>, T> {
+	using type = R (T::*)(ArgTypes...);
+};
+
+/*!
+ * A class template supplying the type of a member function with an arbitrary
+ * number of arguments.
+ */
+template <class R, class... ArgTypes, class T>
+struct c_mem_fn<R(ArgTypes...), T>
+: c_mem_fn<typename impl::c_pack_pop<R, ArgTypes...>::type, T>
+{};
+
+/*!
+ * Provides a C wrapper for a member function with an arbitrary number of
+ * arguments.
+ */
+template <class R, class... ArgTypes, class T,
+		typename c_mem_fn<impl::c_pack<R, ArgTypes...>, T>::type M>
+struct c_mem_call<impl::c_pack<R, ArgTypes...>, T, M> {
+	typedef R result_type;
+
+	static R
+	function(ArgTypes... args, void* data) noexcept
+	{
+		return ((*static_cast<T*>(data)).*M)(args...);
+	}
+};
+
+/*!
+ * Provides a C wrapper for a member function with an arbitrary number of
+ * arguments.
+ */
+template <class R, class... ArgTypes, class T,
+		typename c_mem_fn<R(ArgTypes...), T>::type M>
+struct c_mem_call<R(ArgTypes...), T, M>
+: c_mem_call<typename impl::c_pack_pop<R, ArgTypes...>::type, T, M>
 {};
 
 #else
 
 //! Provides a C wrapper for a callable taking no arguments.
-template <class F, class R>
-struct c_call<F, R(void*)> {
+template <class R, class F>
+struct c_call<R(void*), F> {
 	typedef R result_type;
 
 	static R
@@ -80,8 +127,8 @@ struct c_call<F, R(void*)> {
 };
 
 //! Provides a C wrapper for a callable taking one argument.
-template <class F, class R, class T0>
-struct c_call<F, R(T0, void*)> {
+template <class R, class T0, class F>
+struct c_call<R(T0, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -92,8 +139,8 @@ struct c_call<F, R(T0, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking two arguments.
-template <class F, class R, class T0, class T1>
-struct c_call<F, R(T0, T1, void*)> {
+template <class R, class T0, class T1, class F>
+struct c_call<R(T0, T1, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -104,8 +151,8 @@ struct c_call<F, R(T0, T1, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking three arguments.
-template <class F, class R, class T0, class T1, class T2>
-struct c_call<F, R(T0, T1, T2, void*)> {
+template <class R, class T0, class T1, class T2, class F>
+struct c_call<R(T0, T1, T2, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -116,8 +163,8 @@ struct c_call<F, R(T0, T1, T2, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking four arguments.
-template <class F, class R, class T0, class T1, class T2, class T3>
-struct c_call<F, R(T0, T1, T2, T3, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class F>
+struct c_call<R(T0, T1, T2, T3, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -128,8 +175,8 @@ struct c_call<F, R(T0, T1, T2, T3, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking five arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4>
-struct c_call<F, R(T0, T1, T2, T3, T4, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class F>
+struct c_call<R(T0, T1, T2, T3, T4, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -140,9 +187,9 @@ struct c_call<F, R(T0, T1, T2, T3, T4, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking six arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4,
-		class T5>
-struct c_call<F, R(T0, T1, T2, T3, T4, T5, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class F>
+struct c_call<R(T0, T1, T2, T3, T4, T5, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -153,9 +200,9 @@ struct c_call<F, R(T0, T1, T2, T3, T4, T5, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking seven arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4,
-		class T5, class T6>
-struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class F>
+struct c_call<R(T0, T1, T2, T3, T4, T5, T6, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -166,9 +213,9 @@ struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking eight arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4,
-		class T5, class T6, class T7>
-struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class F>
+struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -180,9 +227,9 @@ struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking nine arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4,
-		class T5, class T6, class T7, class T8>
-struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class T8, class F>
+struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -195,9 +242,9 @@ struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*)> {
 };
 
 //! Provides a C wrapper for a callable taking ten arguments.
-template <class F, class R, class T0, class T1, class T2, class T3, class T4,
-		class T5, class T6, class T7, class T8, class T9>
-struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*)> {
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class T8, class T9, class F>
+struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), F> {
 	typedef R result_type;
 
 	static R
@@ -206,6 +253,254 @@ struct c_call<F, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*)> {
 	{
 		return (*static_cast<F*>(data))(t0, t1, t2, t3, t4, t5, t6, t7,
 				t8, t9);
+	}
+};
+
+//! A class template supplying the type of a member function with no arguments.
+template <class R, class T>
+struct c_mem_fn<R(void*), T> {
+	typedef R (T::*type)();
+};
+
+//! A class template supplying the type of a member function with one arguments.
+template <class R, class T0, class T>
+struct c_mem_fn<R(T0, void*), T> {
+	typedef R (T::*type)(T0);
+};
+
+//! A class template supplying the type of a member function with two arguments.
+template <class R, class T0, class T1, class T>
+struct c_mem_fn<R(T0, T1, void*), T> {
+	typedef R (T::*type)(T0, T1);
+};
+
+/*!
+ * A class template supplying the type of a member function with three
+ * arguments.
+ */
+template <class R, class T0, class T1, class T2, class T>
+struct c_mem_fn<R(T0, T1, T2, void*), T> {
+	typedef R (T::*type)(T0, T1, T2);
+};
+
+/*!
+ * A class template supplying the type of a member function with four arguments.
+ */
+template <class R, class T0, class T1, class T2, class T3, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3);
+};
+
+/*!
+ * A class template supplying the type of a member function with five arguments.
+ */
+template <class R, class T0, class T1, class T2, class T3, class T4, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4);
+};
+
+//! A class template supplying the type of a member function with six arguments.
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4, T5);
+};
+
+/*!
+ * A class template supplying the type of a member function with seven
+ * arguments.
+ */
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, T6, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4, T5, T6);
+};
+
+/*!
+ * A class template supplying the type of a member function with eight
+ * arguments.
+ */
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4, T5, T6, T7);
+};
+
+/*!
+ * A class template supplying the type of a member function with nine arguments.
+ */
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class T8, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4, T5, T6, T7, T8);
+};
+
+//! A class template supplying the type of a member function with ten arguments.
+template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
+		class T6, class T7, class T8, class T9, class T>
+struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), T> {
+	typedef R (T::*type)(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9);
+};
+
+//! Provides a C wrapper for a member function taking no arguments.
+template <class T, class R, typename c_mem_fn<R(void*), T>::type M>
+struct c_mem_call<R(void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)();
+	}
+};
+
+//! Provides a C wrapper for a member function taking one argument.
+template <class T, class R, class T0,
+		typename c_mem_fn<R(T0, void*), T>::type M>
+struct c_mem_call<R(T0, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0);
+	}
+};
+
+//! Provides a C wrapper for a member function taking two arguments.
+template <class T, class R, class T0, class T1,
+		typename c_mem_fn<R(T0, T1, void*), T>::type M>
+struct c_mem_call<R(T0, T1, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1);
+	}
+};
+
+//! Provides a C wrapper for a member function taking three arguments.
+template <class T, class R, class T0, class T1, class T2,
+		typename c_mem_fn<R(T0, T1, T2, void*), T>::type M>
+struct c_mem_call<R(T0, T1, T2, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2);
+	}
+};
+
+//! Provides a C wrapper for a member function taking four arguments.
+template <class T, class R, class T0, class T1, class T2, class T3,
+		typename c_mem_fn<R(T0, T1, T2, T3, void*), T>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3);
+	}
+};
+
+//! Provides a C wrapper for a member function taking five arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		typename c_mem_fn<R(T0, T1, T2, T3, T4, void*), T>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4);
+	}
+};
+
+//! Provides a C wrapper for a member function taking six arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		class T5,
+		typename c_mem_fn<R(T0, T1, T2, T3, T4, T5, void*), T>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, T5, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4, t5);
+	}
+};
+
+//! Provides a C wrapper for a member function taking seven arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		class T5, class T6,
+		typename c_mem_fn<
+			T, R(T0, T1, T2, T3, T4, T5, T6, void*)
+		>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4, t5,
+				t6);
+	}
+};
+
+//! Provides a C wrapper for a member function taking eight arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		class T5, class T6, class T7,
+		typename c_mem_fn<
+			T, R(T0, T1, T2, T3, T4, T5, T6, T7, void*)
+		>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
+			void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4, t5, t6,
+				t7);
+	}
+};
+
+//! Provides a C wrapper for a member function taking nine arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		class T5, class T6, class T7, class T8,
+		typename c_mem_fn<
+			T, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*)
+		>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
+			void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4, t5, t6,
+				t7, t8);
+	}
+};
+
+//! Provides a C wrapper for a member function taking ten arguments.
+template <class T, class R, class T0, class T1, class T2, class T3, class T4,
+		class T5, class T6, class T7, class T8, class T9,
+		typename c_mem_fn<
+			T, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*)
+		>::type M>
+struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), T, M> {
+	typedef R result_type;
+
+	static R
+	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
+			T9 t9, void* data)
+	{
+		return ((*static_cast<T*>(data)).*M)(t0, t1, t2, t3, t4, t5, t6,
+				t7, t8, t9);
 	}
 };
 
