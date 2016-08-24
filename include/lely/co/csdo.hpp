@@ -213,7 +213,7 @@ public:
 				static_cast<void*>(f));
 	}
 
-	template <class T typename c_mem_fn<co_csdo_up_con_t, T>::type M>
+	template <class T, typename c_mem_fn<co_csdo_up_con_t, T>::type M>
 	int
 	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, T* t)
 			noexcept
