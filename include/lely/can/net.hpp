@@ -95,7 +95,7 @@ public:
 	void
 	setNextFunc(F* f) noexcept
 	{
-		setNextFunc(&c_call<can_timer_func_t, F>::function,
+		setNextFunc(&c_obj_call<can_timer_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -135,7 +135,7 @@ public:
 	void
 	setSendFunc(F* f) noexcept
 	{
-		setSendFunc(&c_call<can_send_func_t, F>::function,
+		setSendFunc(&c_obj_call<can_send_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -189,7 +189,7 @@ public:
 	void
 	setFunc(F* f) noexcept
 	{
-		setFunc(&c_call<can_timer_func_t, F>::function,
+		setFunc(&c_obj_call<can_timer_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -258,7 +258,7 @@ public:
 	void
 	setFunc(F* f) noexcept
 	{
-		setFunc(&c_call<can_recv_func_t, F>::function,
+		setFunc(&c_obj_call<can_recv_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 

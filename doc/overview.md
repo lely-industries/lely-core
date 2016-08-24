@@ -17,6 +17,6 @@ passive, relying on the application to feed it CAN frames or notify it of the
 current time. A C++ interface can be found in lely/can/net.hpp.
 
 When processing CAN frames it is often necessary to buffer incoming or outgoing
-messages. A thread-safe, lock-free circular buffer (#can_buf_t) is provided in
+messages. A thread-safe, lock-free circular buffer (#can_buf) is provided in
 lely/can/buf.h (see lely/can/buf.hpp for the C++ interface).
 
