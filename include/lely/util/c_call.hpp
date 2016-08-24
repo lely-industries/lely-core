@@ -26,7 +26,7 @@
 
 namespace lely {
 
-template <class, class> struct c_call;
+template <class, class> struct c_obj_call;
 
 template <class, class> struct c_mem_fn;
 template <class F, class T, typename c_mem_fn<F, T>::type> struct c_mem_call;
@@ -37,24 +37,30 @@ namespace impl {
 
 template <class...> struct c_pack;
 
-template <class, class> struct c_pack_push;
+template <class, class> struct c_pack_push_front;
 //! Pushes a type to the front of a parameter pack.
 template <class T, class... S>
-struct c_pack_push<T, c_pack<S...>> { using type = c_pack<T, S...>; };
+struct c_pack_push_front<T, c_pack<S...>> { using type = c_pack<T, S...>; };
 
 template <class T, class... S>
 //! Pops a type from the back of a parameter pack.
-struct c_pack_pop: c_pack_push<T, typename c_pack_pop<S...>::type> {};
+struct c_pack_pop_back
+: c_pack_push_front<T, typename c_pack_pop_back<S...>::type>
+{};
 //! Pops a type from the back of a parameter pack.
-template <class T, class S> struct c_pack_pop<T, S> { using type = c_pack<T>; };
+template <class T, class S>
+struct c_pack_pop_back<T, S> {
+	using type = c_pack<T>;
+};
 
 } // impl
 
-//! Provides a C wrapper for a callable with an arbitrary number of arguments.
+/*!
+ * Provides a C wrapper for a function object with an arbitrary number of
+ * arguments.
+ */
 template <class R, class... ArgTypes, class F>
-struct c_call<impl::c_pack<R, ArgTypes...>, F> {
-	typedef R result_type;
-
+struct c_obj_call<impl::c_pack<R, ArgTypes...>, F> {
 	static R
 	function(ArgTypes... args, void* data) noexcept
 	{
@@ -62,10 +68,13 @@ struct c_call<impl::c_pack<R, ArgTypes...>, F> {
 	}
 };
 
-//! Provides a C wrapper for a callable with an arbitrary number of arguments.
+/*!
+ * Provides a C wrapper for a function object with an arbitrary number of
+ * arguments.
+ */
 template <class R, class... ArgTypes, class F>
-struct c_call<R(ArgTypes...), F>
-: c_call<typename impl::c_pack_pop<R, ArgTypes...>::type, F>
+struct c_obj_call<R(ArgTypes...), F>
+: c_obj_call<typename impl::c_pack_pop_back<R, ArgTypes...>::type, F>
 {};
 
 /*!
@@ -83,7 +92,7 @@ struct c_mem_fn<impl::c_pack<R, ArgTypes...>, T> {
  */
 template <class R, class... ArgTypes, class T>
 struct c_mem_fn<R(ArgTypes...), T>
-: c_mem_fn<typename impl::c_pack_pop<R, ArgTypes...>::type, T>
+: c_mem_fn<typename impl::c_pack_pop_back<R, ArgTypes...>::type, T>
 {};
 
 /*!
@@ -93,8 +102,6 @@ struct c_mem_fn<R(ArgTypes...), T>
 template <class R, class... ArgTypes, class T,
 		typename c_mem_fn<impl::c_pack<R, ArgTypes...>, T>::type M>
 struct c_mem_call<impl::c_pack<R, ArgTypes...>, T, M> {
-	typedef R result_type;
-
 	static R
 	function(ArgTypes... args, void* data) noexcept
 	{
@@ -109,16 +116,14 @@ struct c_mem_call<impl::c_pack<R, ArgTypes...>, T, M> {
 template <class R, class... ArgTypes, class T,
 		typename c_mem_fn<R(ArgTypes...), T>::type M>
 struct c_mem_call<R(ArgTypes...), T, M>
-: c_mem_call<typename impl::c_pack_pop<R, ArgTypes...>::type, T, M>
+: c_mem_call<typename impl::c_pack_pop_back<R, ArgTypes...>::type, T, M>
 {};
 
 #else
 
-//! Provides a C wrapper for a callable taking no arguments.
+//! Provides a C wrapper for a function object taking no arguments.
 template <class R, class F>
-struct c_call<R(void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(void*), F> {
 	static R
 	function(void* data)
 	{
@@ -126,11 +131,9 @@ struct c_call<R(void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking one argument.
+//! Provides a C wrapper for a function object taking one argument.
 template <class R, class T0, class F>
-struct c_call<R(T0, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, void*), F> {
 	static R
 	function(T0 t0, void* data)
 	{
@@ -138,11 +141,9 @@ struct c_call<R(T0, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking two arguments.
+//! Provides a C wrapper for a function object taking two arguments.
 template <class R, class T0, class T1, class F>
-struct c_call<R(T0, T1, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, void*), F> {
 	static R
 	function(T0 t0, T1 t1, void* data)
 	{
@@ -150,11 +151,9 @@ struct c_call<R(T0, T1, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking three arguments.
+//! Provides a C wrapper for a function object taking three arguments.
 template <class R, class T0, class T1, class T2, class F>
-struct c_call<R(T0, T1, T2, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, void* data)
 	{
@@ -162,11 +161,9 @@ struct c_call<R(T0, T1, T2, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking four arguments.
+//! Provides a C wrapper for a function object taking four arguments.
 template <class R, class T0, class T1, class T2, class T3, class F>
-struct c_call<R(T0, T1, T2, T3, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, void* data)
 	{
@@ -174,11 +171,9 @@ struct c_call<R(T0, T1, T2, T3, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking five arguments.
+//! Provides a C wrapper for a function object taking five arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class F>
-struct c_call<R(T0, T1, T2, T3, T4, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, void* data)
 	{
@@ -186,12 +181,10 @@ struct c_call<R(T0, T1, T2, T3, T4, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking six arguments.
+//! Provides a C wrapper for a function object taking six arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class F>
-struct c_call<R(T0, T1, T2, T3, T4, T5, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, T5, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, void* data)
 	{
@@ -199,12 +192,10 @@ struct c_call<R(T0, T1, T2, T3, T4, T5, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking seven arguments.
+//! Provides a C wrapper for a function object taking seven arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class F>
-struct c_call<R(T0, T1, T2, T3, T4, T5, T6, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, T5, T6, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, void* data)
 	{
@@ -212,12 +203,10 @@ struct c_call<R(T0, T1, T2, T3, T4, T5, T6, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking eight arguments.
+//! Provides a C wrapper for a function object taking eight arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class F>
-struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
 			void* data)
@@ -226,12 +215,10 @@ struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking nine arguments.
+//! Provides a C wrapper for a function object taking nine arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8, class F>
-struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 			void* data)
@@ -241,12 +228,10 @@ struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), F> {
 	}
 };
 
-//! Provides a C wrapper for a callable taking ten arguments.
+//! Provides a C wrapper for a function object taking ten arguments.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8, class T9, class F>
-struct c_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), F> {
-	typedef R result_type;
-
+struct c_obj_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), F> {
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 			T9 t9, void* data)
@@ -345,8 +330,6 @@ struct c_mem_fn<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), T> {
 //! Provides a C wrapper for a member function taking no arguments.
 template <class T, class R, typename c_mem_fn<R(void*), T>::type M>
 struct c_mem_call<R(void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(void* data)
 	{
@@ -358,8 +341,6 @@ struct c_mem_call<R(void*), T, M> {
 template <class T, class R, class T0,
 		typename c_mem_fn<R(T0, void*), T>::type M>
 struct c_mem_call<R(T0, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, void* data)
 	{
@@ -371,8 +352,6 @@ struct c_mem_call<R(T0, void*), T, M> {
 template <class T, class R, class T0, class T1,
 		typename c_mem_fn<R(T0, T1, void*), T>::type M>
 struct c_mem_call<R(T0, T1, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, void* data)
 	{
@@ -384,8 +363,6 @@ struct c_mem_call<R(T0, T1, void*), T, M> {
 template <class T, class R, class T0, class T1, class T2,
 		typename c_mem_fn<R(T0, T1, T2, void*), T>::type M>
 struct c_mem_call<R(T0, T1, T2, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, void* data)
 	{
@@ -397,8 +374,6 @@ struct c_mem_call<R(T0, T1, T2, void*), T, M> {
 template <class T, class R, class T0, class T1, class T2, class T3,
 		typename c_mem_fn<R(T0, T1, T2, T3, void*), T>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, void* data)
 	{
@@ -410,8 +385,6 @@ struct c_mem_call<R(T0, T1, T2, T3, void*), T, M> {
 template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 		typename c_mem_fn<R(T0, T1, T2, T3, T4, void*), T>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, void* data)
 	{
@@ -424,8 +397,6 @@ template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 		class T5,
 		typename c_mem_fn<R(T0, T1, T2, T3, T4, T5, void*), T>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, T5, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, void* data)
 	{
@@ -440,8 +411,6 @@ template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 			T, R(T0, T1, T2, T3, T4, T5, T6, void*)
 		>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, void* data)
 	{
@@ -457,8 +426,6 @@ template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 			T, R(T0, T1, T2, T3, T4, T5, T6, T7, void*)
 		>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
 			void* data)
@@ -475,8 +442,6 @@ template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 			T, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*)
 		>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 			void* data)
@@ -493,8 +458,6 @@ template <class T, class R, class T0, class T1, class T2, class T3, class T4,
 			T, R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*)
 		>::type M>
 struct c_mem_call<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, void*), T, M> {
-	typedef R result_type;
-
 	static R
 	function(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 			T9 t9, void* data)
