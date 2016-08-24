@@ -99,7 +99,7 @@ public:
 			size_t n, F* f) noexcept
 	{
 		return dnReq(idx, subidx, ptr, n,
-				&c_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -128,7 +128,7 @@ public:
 			F* f) noexcept
 	{
 		return dnReq<N>(idx, subidx, val,
-				&c_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -155,7 +155,7 @@ public:
 	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, F* f) noexcept
 	{
 		return upReq(idx, subidx,
-				&c_call<co_csdo_up_con_t, F>::function,
+				&c_obj_call<co_csdo_up_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -182,7 +182,7 @@ public:
 			size_t n, F* f) noexcept
 	{
 		return blkDnReq(idx, subidx, ptr, n,
-				&c_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -209,7 +209,7 @@ public:
 			noexcept
 	{
 		return blkUpReq(idx, subidx, pst,
-				&c_call<co_csdo_up_con_t, F>::function,
+				&c_obj_call<co_csdo_up_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 

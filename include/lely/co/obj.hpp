@@ -146,7 +146,7 @@ public:
 	void
 	setDnInd(F* f) noexcept
 	{
-		setDnInd(&c_call<co_sub_dn_ind_t, F>::function,
+		setDnInd(&c_obj_call<co_sub_dn_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -168,7 +168,7 @@ public:
 	void
 	setUpInd(F* f) noexcept
 	{
-		setUpInd(&c_call<co_sub_up_ind_t, F>::function,
+		setUpInd(&c_obj_call<co_sub_up_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -442,7 +442,7 @@ public:
 	void
 	setDnInd(F* f) noexcept
 	{
-		setDnInd(&c_call<co_sub_dn_ind_t, F>::function,
+		setDnInd(&c_obj_call<co_sub_dn_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -470,7 +470,7 @@ public:
 	void
 	setUpInd(F* f) noexcept
 	{
-		setUpInd(&c_call<co_sub_up_ind_t, F>::function,
+		setUpInd(&c_obj_call<co_sub_up_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 

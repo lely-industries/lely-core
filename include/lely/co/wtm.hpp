@@ -84,7 +84,7 @@ public:
 	void
 	setDiagFunc(F* f) noexcept
 	{
-		setDiagFunc(&c_call<co_wtm_diag_func_t, F>::function,
+		setDiagFunc(&c_obj_call<co_wtm_diag_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -118,7 +118,7 @@ public:
 	void
 	setRecvFunc(F* f) noexcept
 	{
-		setRecvFunc(&c_call<co_wtm_recv_func_t, F>::function,
+		setRecvFunc(&c_obj_call<co_wtm_recv_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -174,7 +174,7 @@ public:
 	void
 	getSendFunc(F* f) noexcept
 	{
-		getSendFunc(&c_call<co_wtm_send_func_t, F>::function,
+		getSendFunc(&c_obj_call<co_wtm_send_func_t, F>::function,
 				static_cast<void*>(f));
 	}
 

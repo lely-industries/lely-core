@@ -61,7 +61,11 @@ public:
 		: c_base(net, dev, num)
 	{}
 
-	co_unsigned16_t getNum() const noexcept { return co_tpdo_get_num(this); }
+	co_unsigned16_t
+	getNum() const noexcept
+	{
+		return co_tpdo_get_num(this);
+	}
 
 	const co_pdo_comm_par&
 	getCommPar() const noexcept
@@ -91,7 +95,7 @@ public:
 	void
 	setInd(F* f) noexcept
 	{
-		setInd(&c_call<co_tpdo_ind_t, F>::function,
+		setInd(&c_obj_call<co_tpdo_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 

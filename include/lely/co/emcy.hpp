@@ -95,7 +95,7 @@ public:
 	void
 	setInd(F* f) noexcept
 	{
-		setInd(&c_call<co_emcy_ind_t, F>::function,
+		setInd(&c_obj_call<co_emcy_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 

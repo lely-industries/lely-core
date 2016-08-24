@@ -75,7 +75,7 @@ public:
 	void
 	setRateInd(F* f) noexcept
 	{
-		setRateInd(&c_call<co_lss_rate_ind_t, F>::function,
+		setRateInd(&c_obj_call<co_lss_rate_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -103,7 +103,7 @@ public:
 	void
 	setStoreInd(F* f) noexcept
 	{
-		setStoreInd(&c_call<co_lss_store_ind_t, F>::function,
+		setStoreInd(&c_obj_call<co_lss_store_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -146,7 +146,8 @@ public:
 	int
 	switchSelReq(const co_id& id, F* f) noexcept
 	{
-		return switchSelReq(id, &c_call<co_lss_cs_ind_t, F>::function,
+		return switchSelReq(id,
+				&c_obj_call<co_lss_cs_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -169,7 +170,7 @@ public:
 	int
 	setIdReq(co_unsigned8_t id, F* f) noexcept
 	{
-		return setIdReq(id, &c_call<co_lss_err_ind_t, F>::function,
+		return setIdReq(id, &c_obj_call<co_lss_err_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -192,7 +193,8 @@ public:
 	int
 	setRateReq(co_unsigned16_t rate, F* f) noexcept
 	{
-		return setRateReq(rate, &c_call<co_lss_err_ind_t, F>::function,
+		return setRateReq(rate,
+				&c_obj_call<co_lss_err_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -220,7 +222,7 @@ public:
 	int
 	storeReq(F* f) noexcept
 	{
-		return storeReq(&c_call<co_lss_err_ind_t, F>::function,
+		return storeReq(&c_obj_call<co_lss_err_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -242,7 +244,8 @@ public:
 	int
 	getVendorIdReq(F* f) noexcept
 	{
-		return getVendorIdReq(&c_call<co_lss_lssid_ind_t, F>::function,
+		return getVendorIdReq(
+				&c_obj_call<co_lss_lssid_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -265,7 +268,7 @@ public:
 	getProductCodeReq(F* f) noexcept
 	{
 		return getProductCodeReq(
-				&c_call<co_lss_lssid_ind_t, F>::function,
+				&c_obj_call<co_lss_lssid_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -288,7 +291,8 @@ public:
 	int
 	getRevisionReq(F* f) noexcept
 	{
-		return getRevisionReq(&c_call<co_lss_lssid_ind_t, F>::function,
+		return getRevisionReq(
+				&c_obj_call<co_lss_lssid_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -310,7 +314,8 @@ public:
 	int
 	getSerialNrReq(F* f) noexcept
 	{
-		return getSerialNrReq(&c_call<co_lss_lssid_ind_t, F>::function,
+		return getSerialNrReq(
+				&c_obj_call<co_lss_lssid_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -332,7 +337,7 @@ public:
 	int
 	getIdReq(F* f) noexcept
 	{
-		return getIdReq(&c_call<co_lss_nid_ind_t, F>::function,
+		return getIdReq(&c_obj_call<co_lss_nid_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -355,7 +360,8 @@ public:
 	int
 	idSlaveReq(const co_id& lo, const co_id& hi, F* f) noexcept
 	{
-		return idSlaveReq(lo, hi, &c_call<co_lss_cs_ind_t, F>::function,
+		return idSlaveReq(lo, hi,
+				&c_obj_call<co_lss_cs_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -377,7 +383,8 @@ public:
 	int
 	idNonCfgSlaveReq(F* f) noexcept
 	{
-		return idNonCfgSlaveReq(&c_call<co_lss_cs_ind_t, F>::function,
+		return idNonCfgSlaveReq(
+				&c_obj_call<co_lss_cs_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -401,7 +408,7 @@ public:
 	slowscanReq(const co_id& lo, const co_id& hi, F* f) noexcept
 	{
 		return slowscanReq(lo, hi,
-				&c_call<co_lss_scan_ind_t, F>::function,
+				&c_obj_call<co_lss_scan_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -426,7 +433,7 @@ public:
 	fastscanReq(const co_id* id, const co_id* mask, F* f) noexcept
 	{
 		return fastscanReq(id, mask,
-				&c_call<co_lss_scan_ind_t, F>::function,
+				&c_obj_call<co_lss_scan_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 

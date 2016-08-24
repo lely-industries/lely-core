@@ -75,7 +75,7 @@ public:
 	void
 	setCsInd(F* f) noexcept
 	{
-		setCsInd(&c_call<co_nmt_cs_ind_t, F>::function,
+		setCsInd(&c_obj_call<co_nmt_cs_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -103,7 +103,7 @@ public:
 	void
 	setNgInd(F* f) noexcept
 	{
-		setNgInd(&c_call<co_nmt_ng_ind_t, F>::function,
+		setNgInd(&c_obj_call<co_nmt_ng_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -131,7 +131,7 @@ public:
 	void
 	setLgInd(F* f) noexcept
 	{
-		setLgInd(&c_call<co_nmt_lg_ind_t, F>::function,
+		setLgInd(&c_obj_call<co_nmt_lg_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -159,7 +159,7 @@ public:
 	void
 	setHbInd(F* f) noexcept
 	{
-		setHbInd(&c_call<co_nmt_hb_ind_t, F>::function,
+		setHbInd(&c_obj_call<co_nmt_hb_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -187,7 +187,7 @@ public:
 	void
 	setStInd(F* f) noexcept
 	{
-		setStInd(&c_call<co_nmt_st_ind_t, F>::function,
+		setStInd(&c_obj_call<co_nmt_st_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -215,7 +215,7 @@ public:
 	void
 	setBootInd(F* f) noexcept
 	{
-		setBootInd(&c_call<co_nmt_boot_ind_t, F>::function,
+		setBootInd(&c_obj_call<co_nmt_boot_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -243,7 +243,7 @@ public:
 	void
 	setCfgInd(F* f) noexcept
 	{
-		setCfgInd(&c_call<co_nmt_cfg_ind_t, F>::function,
+		setCfgInd(&c_obj_call<co_nmt_cfg_ind_t, F>::function,
 				static_cast<void*>(f));
 	}
 
@@ -290,7 +290,7 @@ public:
 	int
 	cfgReq(co_unsigned8_t id, int timeout, F* f) noexcept
 	{
-		cfgReq(id, timeout, &c_call<co_nmt_cfg_con_t, F>::function,
+		cfgReq(id, timeout, &c_obj_call<co_nmt_cfg_con_t, F>::function,
 				static_cast<void*>(f));
 	}
 
