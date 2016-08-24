@@ -60,27 +60,59 @@ public:
 	COLSS(CANNet* net, CODev* dev, CONMT* nmt): c_base(net, dev, nmt) {}
 
 	void
-	getRateInd(co_lss_rate_ind_t** pind, void** pdata = 0) const noexcept
+	getRateInd(co_lss_rate_ind_t** pind, void** pdata) const noexcept
 	{
 		co_lss_get_rate_ind(this, pind, pdata);
 	}
 
 	void
-	setRateInd(co_lss_rate_ind_t* ind, void* data = 0) noexcept
+	setRateInd(co_lss_rate_ind_t* ind, void* data) noexcept
 	{
 		co_lss_set_rate_ind(this, ind, data);
 	}
 
+	template <class F>
 	void
-	getStoreInd(co_lss_store_ind_t** pind, void** pdata = 0) const noexcept
+	setRateInd(F* f) noexcept
+	{
+		setRateInd(&c_call<co_lss_rate_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_rate_ind_t, T>::type M>
+	void
+	setRateInd(T* t) noexcept
+	{
+		setRateInd(&c_mem_call<co_lss_rate_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	void
+	getStoreInd(co_lss_store_ind_t** pind, void** pdata) const noexcept
 	{
 		co_lss_get_store_ind(this, pind, pdata);
 	}
 
 	void
-	setStoreInd(co_lss_store_ind_t* ind, void* data = 0) noexcept
+	setStoreInd(co_lss_store_ind_t* ind, void* data) noexcept
 	{
 		co_lss_set_store_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setStoreInd(F* f) noexcept
+	{
+		setStoreInd(&c_call<co_lss_store_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_store_ind_t, T>::type M>
+	void
+	setStoreInd(T* t) noexcept
+	{
+		setStoreInd(&c_mem_call<co_lss_store_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	int getTimeout() const noexcept { return co_lss_get_timeout(this); }
@@ -103,26 +135,73 @@ public:
 		return co_lss_switch_req(this, mode);
 	}
 
-
 	int
-	switchSelReq(const co_id& id, co_lss_cs_ind_t* ind, void* data = 0)
+	switchSelReq(const co_id& id, co_lss_cs_ind_t* ind, void* data)
 			noexcept
 	{
 		return co_lss_switch_sel_req(this, &id, ind, data);
 	}
 
+	template <class F>
 	int
-	setIdReq(co_unsigned8_t id, co_lss_err_ind_t* ind, void* data = 0)
+	switchSelReq(const co_id& id, F* f) noexcept
+	{
+		return switchSelReq(id, &c_call<co_lss_cs_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_cs_ind_t, T>::type M>
+	void
+	switchSelReq(const co_id& id, T* t) noexcept
+	{
+		switchSelReq(id, &c_mem_call<co_lss_cs_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	setIdReq(co_unsigned8_t id, co_lss_err_ind_t* ind, void* data)
 			noexcept
 	{
 		return co_lss_set_id_req(this, id, ind, data);
 	}
 
+	template <class F>
 	int
-	setRateReq(co_unsigned16_t rate, co_lss_err_ind_t* ind, void* data = 0)
+	setIdReq(co_unsigned8_t id, F* f) noexcept
+	{
+		return setIdReq(id, &c_call<co_lss_err_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_err_ind_t, T>::type M>
+	void
+	setIdReq(co_unsigned8_t id, T* t) noexcept
+	{
+		setIdReq(id, &c_mem_call<co_lss_err_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	setRateReq(co_unsigned16_t rate, co_lss_err_ind_t* ind, void* data)
 			noexcept
 	{
 		return co_lss_set_rate_req(this, rate, ind, data);
+	}
+
+	template <class F>
+	int
+	setRateReq(co_unsigned16_t rate, F* f) noexcept
+	{
+		return setRateReq(rate, &c_call<co_lss_err_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_err_ind_t, T>::type M>
+	void
+	setRateReq(co_unsigned16_t rate, T* t) noexcept
+	{
+		setRateReq(rate, &c_mem_call<co_lss_err_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	int
@@ -132,33 +211,115 @@ public:
 	}
 
 	int
-	storeReq(co_lss_err_ind_t* ind, void* data = 0) noexcept
+	storeReq(co_lss_err_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_store_req(this, ind, data);
 	}
 
+	template <class F>
 	int
-	getVendorIdReq(co_lss_lssid_ind_t* ind, void* data = 0) noexcept
+	storeReq(F* f) noexcept
+	{
+		return storeReq(&c_call<co_lss_err_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_err_ind_t, T>::type M>
+	void
+	storeReq(T* t) noexcept
+	{
+		storeReq(&c_mem_call<co_lss_err_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	getVendorIdReq(co_lss_lssid_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_get_vendor_id_req(this, ind, data);
 	}
 
+	template <class F>
 	int
-	getProductCodeReq(co_lss_lssid_ind_t* ind, void* data = 0) noexcept
+	getVendorIdReq(F* f) noexcept
+	{
+		return getVendorIdReq(&c_call<co_lss_lssid_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_lssid_ind_t, T>::type M>
+	void
+	getVendorIdReq(T* t) noexcept
+	{
+		getVendorIdReq(&c_mem_call<co_lss_lssid_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	getProductCodeReq(co_lss_lssid_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_get_product_code_req(this, ind, data);
 	}
 
+	template <class F>
 	int
-	getRevisionReq(co_lss_lssid_ind_t* ind, void* data = 0) noexcept
+	getProductCodeReq(F* f) noexcept
+	{
+		return getProductCodeReq(
+				&c_call<co_lss_lssid_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_lssid_ind_t, T>::type M>
+	void
+	getProductCodeReq(T* t) noexcept
+	{
+		getProductCodeReq(
+				&c_mem_call<co_lss_lssid_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	getRevisionReq(co_lss_lssid_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_get_revision_req(this, ind, data);
 	}
 
+	template <class F>
 	int
-	getSerialNrReq(co_lss_lssid_ind_t* ind, void* data = 0) noexcept
+	getRevisionReq(F* f) noexcept
+	{
+		return getRevisionReq(&c_call<co_lss_lssid_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_lssid_ind_t, T>::type M>
+	void
+	getRevisionReq(T* t) noexcept
+	{
+		getRevisionReq(&c_mem_call<co_lss_lssid_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	getSerialNrReq(co_lss_lssid_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_get_serial_nr_req(this, ind, data);
+	}
+
+	template <class F>
+	int
+	getSerialNrReq(F* f) noexcept
+	{
+		return getSerialNrReq(&c_call<co_lss_lssid_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_lssid_ind_t, T>::type M>
+	void
+	getSerialNrReq(T* t) noexcept
+	{
+		getSerialNrReq(&c_mem_call<co_lss_lssid_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	int
@@ -167,31 +328,115 @@ public:
 		return co_lss_get_id_req(this, ind, data);
 	}
 
+	template <class F>
+	int
+	getIdReq(F* f) noexcept
+	{
+		return getIdReq(&c_call<co_lss_nid_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_nid_ind_t, T>::type M>
+	void
+	getIdReq(T* t) noexcept
+	{
+		getIdReq(&c_mem_call<co_lss_nid_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	idSlaveReq(const co_id& lo, const co_id& hi, co_lss_cs_ind_t* ind,
-			void* data = 0) noexcept
+			void* data) noexcept
 	{
 		return co_lss_id_slave_req(this, &lo, &hi, ind, data);
 	}
 
+	template <class F>
 	int
-	idNonCfgSlaveReq(co_lss_cs_ind_t* ind, void* data = 0) noexcept
+	idSlaveReq(const co_id& lo, const co_id& hi, F* f) noexcept
+	{
+		return idSlaveReq(lo, hi, &c_call<co_lss_cs_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_cs_ind_t, T>::type M>
+	void
+	idSlaveReq(const co_id& lo, const co_id& hi, T* t) noexcept
+	{
+		idSlaveReq(lo, hi, &c_mem_call<co_lss_cs_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	int
+	idNonCfgSlaveReq(co_lss_cs_ind_t* ind, void* data) noexcept
 	{
 		return co_lss_id_non_cfg_slave_req(this, ind, data);
 	}
 
+	template <class F>
+	int
+	idNonCfgSlaveReq(F* f) noexcept
+	{
+		return idNonCfgSlaveReq(&c_call<co_lss_cs_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_cs_ind_t, T>::type M>
+	void
+	idNonCfgSlaveReq(T* t) noexcept
+	{
+		idNonCfgSlaveReq(&c_mem_call<co_lss_cs_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	slowscanReq(const co_id& lo, const co_id& hi, co_lss_scan_ind_t* ind,
-			void* data = 0) noexcept
+			void* data) noexcept
 	{
 		return co_lss_slowscan_req(this, &lo, &hi, ind, data);
 	}
 
+	template <class F>
+	int
+	slowscanReq(const co_id& lo, const co_id& hi, F* f) noexcept
+	{
+		return slowscanReq(lo, hi,
+				&c_call<co_lss_scan_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_scan_ind_t, T>::type M>
+	void
+	slowscanReq(const co_id& lo, const co_id& hi, T* t) noexcept
+	{
+		slowscanReq(lo, hi,
+				&c_mem_call<co_lss_scan_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	fastscanReq(const co_id* id, const co_id* mask, co_lss_scan_ind_t* ind,
-			void* data = 0) noexcept
+			void* data) noexcept
 	{
 		return co_lss_fastscan_req(this, id, mask, ind, data);
+	}
+
+	template <class F>
+	int
+	fastscanReq(const co_id* id, const co_id* mask, F* f) noexcept
+	{
+		return fastscanReq(id, mask,
+				&c_call<co_lss_scan_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_lss_scan_ind_t, T>::type M>
+	int
+	fastscanReq(const co_id* id, const co_id* mask, T* t) noexcept
+	{
+		return fastscanReq(id, mask,
+				&c_mem_call<co_lss_scan_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:

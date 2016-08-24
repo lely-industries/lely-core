@@ -60,15 +60,31 @@ public:
 	COSync(CANNet* net, CODev* dev): c_base(net, dev) {}
 
 	void
-	getInd(co_sync_ind_t** pind, void** pdata = 0) const noexcept
+	getInd(co_sync_ind_t** pind, void** pdata) const noexcept
 	{
 		co_sync_get_ind(this, pind, pdata);
 	}
 
 	void
-	setInd(co_sync_ind_t* ind, void* data = 0) noexcept
+	setInd(co_sync_ind_t* ind, void* data) noexcept
 	{
 		co_sync_set_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setInd(F* f) noexcept
+	{
+		setInd(&c_call<co_sync_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_sync_ind_t, T>::type M>
+	void
+	setInd(T* t) noexcept
+	{
+		setInd(&c_mem_call<co_sync_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:

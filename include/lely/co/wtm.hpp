@@ -27,6 +27,7 @@
 #error "include <lely/co/wtm.h> for the C interface"
 #endif
 
+#include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 
 namespace lely { class COWTM; }
@@ -68,15 +69,31 @@ public:
 	}
 
 	void
-	getDiagFunc(co_wtm_diag_func_t** pfunc, void** pdata = 0) const noexcept
+	getDiagFunc(co_wtm_diag_func_t** pfunc, void** pdata) const noexcept
 	{
 		co_wtm_get_diag_func(this, pfunc, pdata);
 	}
 
 	void
-	setDiagFunc(co_wtm_diag_func_t* func, void* data = 0) noexcept
+	setDiagFunc(co_wtm_diag_func_t* func, void* data) noexcept
 	{
 		co_wtm_set_diag_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setDiagFunc(F* f) noexcept
+	{
+		setDiagFunc(&c_call<co_wtm_diag_func_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_wtm_diag_func_t, T>::type M>
+	void
+	setDiagFunc(T* t) noexcept
+	{
+		setDiagFunc(&c_mem_call<co_wtm_diag_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	void
@@ -86,15 +103,31 @@ public:
 	}
 
 	void
-	getRecvFunc(co_wtm_recv_func_t** pfunc, void** pdata = 0) const noexcept
+	getRecvFunc(co_wtm_recv_func_t** pfunc, void** pdata) const noexcept
 	{
 		co_wtm_get_recv_func(this, pfunc, pdata);
 	}
 
 	void
-	setRecvFunc(co_wtm_recv_func_t* func, void* data = 0) noexcept
+	setRecvFunc(co_wtm_recv_func_t* func, void* data) noexcept
 	{
 		co_wtm_set_recv_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setRecvFunc(F* f) noexcept
+	{
+		setRecvFunc(&c_call<co_wtm_recv_func_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_wtm_recv_func_t, T>::type M>
+	void
+	setRecvFunc(T* t) noexcept
+	{
+		setRecvFunc(&c_mem_call<co_wtm_recv_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	int
@@ -126,15 +159,31 @@ public:
 	int flush() noexcept { return co_wtm_flush(this); }
 
 	void
-	getSendFunc(co_wtm_send_func_t** pfunc, void** pdata = 0) const noexcept
+	getSendFunc(co_wtm_send_func_t** pfunc, void** pdata) const noexcept
 	{
 		co_wtm_get_send_func(this, pfunc, pdata);
 	}
 
 	void
-	setSendFunc(co_wtm_send_func_t* func, void* data = 0) noexcept
+	setSendFunc(co_wtm_send_func_t* func, void* data) noexcept
 	{
 		co_wtm_set_send_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	getSendFunc(F* f) noexcept
+	{
+		getSendFunc(&c_call<co_wtm_send_func_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_wtm_send_func_t, T>::type M>
+	void
+	getSendFunc(T* t) noexcept
+	{
+		getSendFunc(&c_mem_call<co_wtm_send_func_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:

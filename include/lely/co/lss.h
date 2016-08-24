@@ -93,7 +93,7 @@ typedef void co_lss_err_ind_t(co_lss_t *lss, co_unsigned8_t cs,
  * completes.
  *
  * \param lss  a pointer to an LSS master service.
- * \param cs   the received command specifier (one of 0x51, 0x5b, 0x5c or 0x5d),
+ * \param cs   the received command specifier (one of 0x5a, 0x5b, 0x5c or 0x5d),
  *             or 0 on timeout.
  * \param id   the received LSS number.
  * \param data a pointer to user-specified data.
@@ -112,6 +112,7 @@ typedef void co_lss_lssid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
  */
 typedef void co_lss_nid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned8_t id, void *data);
+
 /*!
  * The type of a CANopen LSS identify remote slave indication function, invoked
  * when a 'Slowscan' or 'Fastscan' request completes.

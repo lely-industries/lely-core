@@ -26,9 +26,10 @@
 #error "include <lely/co/obj.h> for the C interface"
 #endif
 
+#include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 #include <lely/co/obj.h>
-#include <lely/co/type.hpp>
+#include <lely/co/val.hpp>
 
 namespace lely {
 
@@ -136,15 +137,47 @@ public:
 	}
 
 	void
-	setDnInd(co_sub_dn_ind_t* ind, void* data = 0) noexcept
+	setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept
 	{
 		co_obj_set_dn_ind(this, ind, data);
 	}
 
+	template <class F>
 	void
-	setUpInd(co_sub_up_ind_t* ind, void* data = 0) noexcept
+	setDnInd(F* f) noexcept
+	{
+		setDnInd(&c_call<co_sub_dn_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_sub_dn_ind_t, T>::type M>
+	void
+	setDnInd(T* t) noexcept
+	{
+		setDnInd(&c_mem_call<co_sub_dn_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	void
+	setUpInd(co_sub_up_ind_t* ind, void* data) noexcept
 	{
 		co_obj_set_up_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setUpInd(F* f) noexcept
+	{
+		setUpInd(&c_call<co_sub_up_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_sub_up_ind_t, T>::type M>
+	void
+	setUpInd(T* t) noexcept
+	{
+		setUpInd(&c_mem_call<co_sub_up_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:
@@ -394,27 +427,59 @@ public:
 	}
 
 	void
-	getDnInd(co_sub_dn_ind_t** pind, void** pdata = 0) noexcept
+	getDnInd(co_sub_dn_ind_t** pind, void** pdata) noexcept
 	{
 		co_sub_get_dn_ind(this, pind, pdata);
 	}
 
 	void
-	setDnInd(co_sub_dn_ind_t* ind, void* data = 0) noexcept
+	setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept
 	{
 		co_sub_set_dn_ind(this, ind, data);
 	}
 
+	template <class F>
 	void
-	getUpInd(co_sub_up_ind_t** pind, void** pdata = 0) noexcept
+	setDnInd(F* f) noexcept
+	{
+		setDnInd(&c_call<co_sub_dn_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_sub_dn_ind_t, T>::type M>
+	void
+	setDnInd(T* t) noexcept
+	{
+		setDnInd(&c_mem_call<co_sub_dn_ind_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
+	void
+	getUpInd(co_sub_up_ind_t** pind, void** pdata) noexcept
 	{
 		co_sub_get_up_ind(this, pind, pdata);
 	}
 
 	void
-	setUpInd(co_sub_up_ind_t* ind, void* data = 0) noexcept
+	setUpInd(co_sub_up_ind_t* ind, void* data) noexcept
 	{
 		co_sub_set_up_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setUpInd(F* f) noexcept
+	{
+		setUpInd(&c_call<co_sub_up_ind_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_sub_up_ind_t, T>::type M>
+	void
+	setUpInd(T* t) noexcept
+	{
+		setUpInd(&c_mem_call<co_sub_up_ind_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:

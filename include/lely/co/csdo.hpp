@@ -88,41 +88,139 @@ public:
 
 	int
 	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, co_csdo_dn_con_t* con, void* data = 0)
-			noexcept
+			size_t n, co_csdo_dn_con_t* con, void* data) noexcept
 	{
 		return co_csdo_dn_req(this, idx, subidx, ptr, n, con, data);
+	}
+
+	template <class F>
+	int
+	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+			size_t n, F* f) noexcept
+	{
+		return dnReq(idx, subidx, ptr, n,
+				&c_call<co_csdo_dn_con_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+	int
+	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+			size_t n, T* t) noexcept
+	{
+		return dnReq(idx, subidx, ptr, n,
+				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 	template <co_unsigned16_t N>
 	int
 	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
-			co_csdo_dn_con_t* con, void* data = 0) noexcept
+			co_csdo_dn_con_t* con, void* data) noexcept
 	{
 		return co_csdo_dn_val_req(this, idx, subidx, N, &val, con,
 				data);
 	}
 
+	template <co_unsigned16_t N, class F>
+	int
+	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
+			F* f) noexcept
+	{
+		return dnReq<N>(idx, subidx, val,
+				&c_call<co_csdo_dn_con_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <co_unsigned16_t N, class T,
+			typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+	int
+	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
+			T* t) noexcept
+	{
+		return dnReq<N>(idx, subidx, val,
+				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	upReq(co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_csdo_up_con_t* con, void* data = 0) noexcept
+			co_csdo_up_con_t* con, void* data) noexcept
 	{
 		return co_csdo_up_req(this, idx, subidx, con, data);
 	}
 
+	template <class F>
+	int
+	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, F* f) noexcept
+	{
+		return upReq(idx, subidx,
+				&c_call<co_csdo_up_con_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_csdo_up_con_t, T>::type M>
+	int
+	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, T* t) noexcept
+	{
+		return upReq(idx, subidx,
+				&c_mem_call<co_csdo_up_con_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, co_csdo_dn_con_t* con, void* data = 0)
+			size_t n, co_csdo_dn_con_t* con, void* data)
 			noexcept
 	{
 		return co_csdo_blk_dn_req(this, idx, subidx, ptr, n, con, data);
 	}
 
+	template <class F>
+	int
+	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+			size_t n, F* f) noexcept
+	{
+		return blkDnReq(idx, subidx, ptr, n,
+				&c_call<co_csdo_dn_con_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T, typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+	int
+	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+			size_t n, T* t) noexcept
+	{
+		return blkDnReq(idx, subidx, ptr, n,
+				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
+				static_cast<void*>(t));
+	}
+
 	int
 	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
-			co_csdo_up_con_t* con, void* data = 0) noexcept
+			co_csdo_up_con_t* con, void* data) noexcept
 	{
 		return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
+	}
+
+	template <class F>
+	int
+	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, F* f)
+			noexcept
+	{
+		return blkUpReq(idx, subidx, pst,
+				&c_call<co_csdo_up_con_t, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class T typename c_mem_fn<co_csdo_up_con_t, T>::type M>
+	int
+	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, T* t)
+			noexcept
+	{
+		return blkUpReq(idx, subidx, pst,
+				&c_mem_call<co_csdo_up_con_t, T, M>::function,
+				static_cast<void*>(t));
 	}
 
 protected:
