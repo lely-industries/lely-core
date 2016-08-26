@@ -33,6 +33,8 @@
 
 namespace lely {
 
+template <class> struct COCSDOUpCon;
+
 //! The attributes of #co_csdo_t required by #lely::COCSDO.
 template <>
 struct c_type_traits<__co_csdo> {
@@ -150,22 +152,35 @@ public:
 		return co_csdo_up_req(this, idx, subidx, con, data);
 	}
 
-	template <class F>
+	template <class T, typename COCSDOUpCon<T>::type* M>
+	int
+	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, void* data) noexcept
+	{
+		return upReq(idx, subidx, &COCSDOUpCon<T>::template function<M>,
+				data);
+	}
+
+	template <class T, class F>
 	int
 	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, F* f) noexcept
 	{
 		return upReq(idx, subidx,
-				&c_obj_call<co_csdo_up_con_t, F>::function,
-				static_cast<void*>(f));
+				&COCSDOUpCon<T>::template function<&c_obj_call<
+					typename COCSDOUpCon<T>::type, F
+				>::function>, static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_csdo_up_con_t, T>::type M>
+	template <
+		class T, class C,
+		typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
+	>
 	int
-	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, T* t) noexcept
+	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, C* obj) noexcept
 	{
 		return upReq(idx, subidx,
-				&c_mem_call<co_csdo_up_con_t, T, M>::function,
-				static_cast<void*>(t));
+				&COCSDOUpCon<T>::template function<&c_mem_call<
+					typename COCSDOUpCon<T>::type, C, M
+				>::function>, static_cast<void*>(obj));
 	}
 
 	int
@@ -186,14 +201,14 @@ public:
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+	template <class C, typename c_mem_fn<co_csdo_dn_con_t, C>::type M>
 	int
 	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, T* t) noexcept
+			size_t n, C* obj) noexcept
 	{
 		return blkDnReq(idx, subidx, ptr, n,
-				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
-				static_cast<void*>(t));
+				&c_mem_call<co_csdo_dn_con_t, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	int
@@ -203,28 +218,284 @@ public:
 		return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
 	}
 
-	template <class F>
+	template <class T, typename COCSDOUpCon<T>::type* M>
+	int
+	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+			void* data) noexcept
+	{
+		return blkUpReq(idx, subidx, pst,
+				&COCSDOUpCon<T>::template function<M>, data);
+	}
+
+	template <class T, class F>
 	int
 	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, F* f)
 			noexcept
 	{
 		return blkUpReq(idx, subidx, pst,
-				&c_obj_call<co_csdo_up_con_t, F>::function,
-				static_cast<void*>(f));
+				&COCSDOUpCon<T>::template function<&c_obj_call<
+					typename COCSDOUpCon<T>::type, F
+				>::function>, static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_csdo_up_con_t, T>::type M>
+	template <
+		class T, class C,
+		typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
+	>
 	int
-	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, T* t)
-			noexcept
+	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+			C* obj) noexcept
 	{
 		return blkUpReq(idx, subidx, pst,
-				&c_mem_call<co_csdo_up_con_t, T, M>::function,
-				static_cast<void*>(t));
+				&COCSDOUpCon<T>::template function<&c_mem_call<
+					typename COCSDOUpCon<T>::type, C, M
+				>::function>, static_cast<void*>(obj));
 	}
 
 protected:
 	~COCSDO() {}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received value on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <class T>
+struct COCSDOUpCon {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, T val, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		COVal<co_type_traits_T<T>::index> val;
+		if (__likely(!ac))
+			ac = co_val_read_sdo(val.index, &val, ptr, n);
+		return (*M)(sdo, idx, subidx, ac, val, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received array of visible characters on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon<char*> {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const char* vs,
+		void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		if (__likely(!ac)) {
+#if !LELY_NO_EXCEPTIONS
+			try {
+#endif
+				COVal<CO_DEFTYPE_VISIBLE_STRING> val(ptr, n);
+				return (*M)(sdo, idx, subidx, ac, val, data);
+#if !LELY_NO_EXCEPTIONS
+			} catch (...) {
+				ac = CO_SDO_AC_ERROR;
+			}
+#endif
+		}
+		return (*M)(sdo, idx, subidx, ac, 0, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received array of visible characters on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon< ::std::string> {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac,
+		const ::std::string& vs, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		if (__likely(!ac)) {
+#if !LELY_NO_EXCEPTIONS
+			try {
+#endif
+				const char* vs = static_cast<const char*>(ptr);
+				return (*M)(sdo, idx, subidx, ac,
+						::std::string(vs,
+						vs ? vs + n : vs), data);
+#if !LELY_NO_EXCEPTIONS
+			} catch (...) {
+				ac = CO_SDO_AC_ERROR;
+			}
+#endif
+		}
+		return (*M)(sdo, idx, subidx, ac, 0, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper for an array of
+ * octets.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon<uint8_t*> {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const uint8_t* os,
+		size_t n, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		return (*M)(sdo, idx, subidx, ac,
+				static_cast<const uint8_t*>(ptr), n, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received array of octets on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon< ::std::vector<uint8_t> > {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac,
+		const ::std::vector<uint8_t>& os, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		const uint8_t* os = static_cast<const uint8_t*>(ptr);
+		if (__likely(!ac)) {
+#if !LELY_NO_EXCEPTIONS
+			try {
+#endif
+				return (*M)(sdo, idx, subidx, ac,
+						::std::vector<uint8_t>(os,
+						os ? os + n : os), data);
+#if !LELY_NO_EXCEPTIONS
+			} catch (...) {
+				ac = CO_SDO_AC_ERROR;
+			}
+#endif
+		}
+		return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(),
+				data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received array of (16-bit) Unicode characters on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon<char16_t*> {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const char16_t* us,
+		void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		COVal<CO_DEFTYPE_UNICODE_STRING> val;
+		if (__likely(!ac))
+			ac = co_val_read_sdo(val.index, &val, ptr, n);
+		return (*M)(sdo, idx, subidx, ac, val, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
+ * the received array of (16-bit) Unicode characters on success.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon< ::std::basic_string<char16_t> > {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac,
+		const ::std::basic_string<char16_t>& us, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		COVal<CO_DEFTYPE_UNICODE_STRING> val;
+		if (__likely(!ac)) {
+			ac = co_val_read_sdo(val.index, &val, ptr, n);
+			if (__likely(!ac)) {
+#if !LELY_NO_EXCEPTIONS
+				try {
+#endif
+					const char16_t* us = val;
+					return (*M)(sdo, idx, subidx, ac,
+							::std::basic_string<char16_t>(
+							us, us ? us + n : us),
+							data);
+#if !LELY_NO_EXCEPTIONS
+				} catch (...) {
+					ac = CO_SDO_AC_ERROR;
+				}
+#endif
+			}
+		}
+		return (*M)(sdo, idx, subidx, ac, 0, data);
+	}
+};
+
+/*!
+ * A CANopen Client-SDO upload confirmation callback wrapper for an arbitrary
+ * large block of data.
+ *
+ * \see co_csdo_up_con_t
+ */
+template <>
+struct COCSDOUpCon<void*> {
+	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const void* dom,
+		size_t n, void* data);
+
+	template <type* M>
+	static void
+	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+			co_unsigned32_t ac, const void* ptr, size_t n,
+			void* data) noexcept
+	{
+		return (*M)(sdo, idx, subidx, ac, ptr, n, data);
+	}
 };
 
 } // lely

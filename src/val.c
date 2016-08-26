@@ -28,6 +28,7 @@
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
 #include <lely/util/lex.h>
+#include <lely/co/sdo.h>
 #include <lely/co/val.h>
 
 #include <assert.h>
@@ -697,6 +698,23 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			return 0;
 		}
 	}
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
+{
+	errc_t errc = get_errc();
+	co_unsigned32_t ac = 0;
+
+	const uint8_t *begin = ptr;
+	const uint8_t *end = begin ? begin + n : NULL;
+	if (__unlikely(!co_val_read(type, val, begin, end))) {
+		ac = get_errnum() == ERRNUM_NOMEM
+				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
+		set_errc(errc);
+	}
+
+	return ac;
 }
 
 LELY_CO_EXPORT size_t
