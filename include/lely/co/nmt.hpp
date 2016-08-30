@@ -75,16 +75,16 @@ public:
 	void
 	setCsInd(F* f) noexcept
 	{
-		setCsInd(&c_obj_call<co_nmt_cs_ind_t, F>::function,
+		setCsInd(&c_obj_call<co_nmt_cs_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_cs_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_cs_ind_t*, C>::type M>
 	void
-	setCsInd(T* t) noexcept
+	setCsInd(C* obj) noexcept
 	{
-		setCsInd(&c_mem_call<co_nmt_cs_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setCsInd(&c_mem_call<co_nmt_cs_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -103,16 +103,16 @@ public:
 	void
 	setNgInd(F* f) noexcept
 	{
-		setNgInd(&c_obj_call<co_nmt_ng_ind_t, F>::function,
+		setNgInd(&c_obj_call<co_nmt_ng_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_ng_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_ng_ind_t*, C>::type M>
 	void
-	setNgInd(T* t) noexcept
+	setNgInd(C* obj) noexcept
 	{
-		setNgInd(&c_mem_call<co_nmt_ng_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setNgInd(&c_mem_call<co_nmt_ng_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -131,16 +131,16 @@ public:
 	void
 	setLgInd(F* f) noexcept
 	{
-		setLgInd(&c_obj_call<co_nmt_lg_ind_t, F>::function,
+		setLgInd(&c_obj_call<co_nmt_lg_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_lg_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_lg_ind_t*, C>::type M>
 	void
-	setLgInd(T* t) noexcept
+	setLgInd(C* obj) noexcept
 	{
-		setLgInd(&c_mem_call<co_nmt_lg_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setLgInd(&c_mem_call<co_nmt_lg_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -159,16 +159,16 @@ public:
 	void
 	setHbInd(F* f) noexcept
 	{
-		setHbInd(&c_obj_call<co_nmt_hb_ind_t, F>::function,
+		setHbInd(&c_obj_call<co_nmt_hb_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_hb_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_hb_ind_t*, C>::type M>
 	void
-	setHbInd(T* t) noexcept
+	setHbInd(C* obj) noexcept
 	{
-		setHbInd(&c_mem_call<co_nmt_hb_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setHbInd(&c_mem_call<co_nmt_hb_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -187,16 +187,16 @@ public:
 	void
 	setStInd(F* f) noexcept
 	{
-		setStInd(&c_obj_call<co_nmt_st_ind_t, F>::function,
+		setStInd(&c_obj_call<co_nmt_st_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_st_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_st_ind_t*, C>::type M>
 	void
-	setStInd(T* t) noexcept
+	setStInd(C* obj) noexcept
 	{
-		setStInd(&c_mem_call<co_nmt_st_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setStInd(&c_mem_call<co_nmt_st_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -215,16 +215,16 @@ public:
 	void
 	setBootInd(F* f) noexcept
 	{
-		setBootInd(&c_obj_call<co_nmt_boot_ind_t, F>::function,
+		setBootInd(&c_obj_call<co_nmt_boot_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_boot_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_boot_ind_t*, C>::type M>
 	void
-	setBootInd(T* t) noexcept
+	setBootInd(C* obj) noexcept
 	{
-		setBootInd(&c_mem_call<co_nmt_boot_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setBootInd(&c_mem_call<co_nmt_boot_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -243,16 +243,16 @@ public:
 	void
 	setCfgInd(F* f) noexcept
 	{
-		setCfgInd(&c_obj_call<co_nmt_cfg_ind_t, F>::function,
+		setCfgInd(&c_obj_call<co_nmt_cfg_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_cfg_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_cfg_ind_t*, C>::type M>
 	void
-	setCfgInd(T* t) noexcept
+	setCfgInd(C* obj) noexcept
 	{
-		setCfgInd(&c_mem_call<co_nmt_cfg_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setCfgInd(&c_mem_call<co_nmt_cfg_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	co_unsigned8_t getId() const noexcept { return co_nmt_get_id(this); }
@@ -290,17 +290,17 @@ public:
 	int
 	cfgReq(co_unsigned8_t id, int timeout, F* f) noexcept
 	{
-		cfgReq(id, timeout, &c_obj_call<co_nmt_cfg_con_t, F>::function,
+		cfgReq(id, timeout, &c_obj_call<co_nmt_cfg_con_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_nmt_cfg_con_t, T>::type M>
+	template <class C, typename c_mem_fn<co_nmt_cfg_con_t*, C>::type M>
 	void
-	cfgReq(co_unsigned8_t id, int timeout, T* t) noexcept
+	cfgReq(co_unsigned8_t id, int timeout, C* obj) noexcept
 	{
 		cfgReq(id, timeout,
-				&c_mem_call<co_nmt_cfg_con_t, T, M>::function,
-				static_cast<void*>(t));
+				&c_mem_call<co_nmt_cfg_con_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	int

@@ -95,16 +95,16 @@ public:
 	void
 	setInd(F* f) noexcept
 	{
-		setInd(&c_obj_call<co_rpdo_ind_t, F>::function,
+		setInd(&c_obj_call<co_rpdo_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_rpdo_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_rpdo_ind_t*, C>::type M>
 	void
-	setInd(T* t) noexcept
+	setInd(C* obj) noexcept
 	{
-		setInd(&c_mem_call<co_rpdo_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setInd(&c_mem_call<co_rpdo_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	int

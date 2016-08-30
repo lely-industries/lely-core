@@ -146,16 +146,16 @@ public:
 	void
 	setDnInd(F* f) noexcept
 	{
-		setDnInd(&c_obj_call<co_sub_dn_ind_t, F>::function,
+		setDnInd(&c_obj_call<co_sub_dn_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_sub_dn_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_sub_dn_ind_t*, C>::type M>
 	void
-	setDnInd(T* t) noexcept
+	setDnInd(C* obj) noexcept
 	{
-		setDnInd(&c_mem_call<co_sub_dn_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setDnInd(&c_mem_call<co_sub_dn_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -168,16 +168,16 @@ public:
 	void
 	setUpInd(F* f) noexcept
 	{
-		setUpInd(&c_obj_call<co_sub_up_ind_t, F>::function,
+		setUpInd(&c_obj_call<co_sub_up_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_sub_up_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_sub_up_ind_t*, C>::type M>
 	void
-	setUpInd(T* t) noexcept
+	setUpInd(C* obj) noexcept
 	{
-		setUpInd(&c_mem_call<co_sub_up_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 protected:
@@ -442,16 +442,16 @@ public:
 	void
 	setDnInd(F* f) noexcept
 	{
-		setDnInd(&c_obj_call<co_sub_dn_ind_t, F>::function,
+		setDnInd(&c_obj_call<co_sub_dn_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_sub_dn_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_sub_dn_ind_t*, C>::type M>
 	void
-	setDnInd(T* t) noexcept
+	setDnInd(C* obj) noexcept
 	{
-		setDnInd(&c_mem_call<co_sub_dn_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setDnInd(&c_mem_call<co_sub_dn_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -470,16 +470,16 @@ public:
 	void
 	setUpInd(F* f) noexcept
 	{
-		setUpInd(&c_obj_call<co_sub_up_ind_t, F>::function,
+		setUpInd(&c_obj_call<co_sub_up_ind_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_sub_up_ind_t, T>::type M>
+	template <class C, typename c_mem_fn<co_sub_up_ind_t*, C>::type M>
 	void
-	setUpInd(T* t) noexcept
+	setUpInd(C* obj) noexcept
 	{
-		setUpInd(&c_mem_call<co_sub_up_ind_t, T, M>::function,
-				static_cast<void*>(t));
+		setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 protected:

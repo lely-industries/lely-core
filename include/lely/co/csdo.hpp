@@ -101,17 +101,17 @@ public:
 			size_t n, F* f) noexcept
 	{
 		return dnReq(idx, subidx, ptr, n,
-				&c_obj_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+	template <class T, typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
 	int
 	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
 			size_t n, T* t) noexcept
 	{
 		return dnReq(idx, subidx, ptr, n,
-				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
+				&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
 				static_cast<void*>(t));
 	}
 
@@ -130,18 +130,18 @@ public:
 			F* f) noexcept
 	{
 		return dnReq<N>(idx, subidx, val,
-				&c_obj_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
 	template <co_unsigned16_t N, class T,
-			typename c_mem_fn<co_csdo_dn_con_t, T>::type M>
+			typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
 	int
 	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
 			T* t) noexcept
 	{
 		return dnReq<N>(idx, subidx, val,
-				&c_mem_call<co_csdo_dn_con_t, T, M>::function,
+				&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
 				static_cast<void*>(t));
 	}
 
@@ -152,7 +152,7 @@ public:
 		return co_csdo_up_req(this, idx, subidx, con, data);
 	}
 
-	template <class T, typename COCSDOUpCon<T>::type* M>
+	template <class T, typename COCSDOUpCon<T>::type M>
 	int
 	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, void* data) noexcept
 	{
@@ -197,17 +197,17 @@ public:
 			size_t n, F* f) noexcept
 	{
 		return blkDnReq(idx, subidx, ptr, n,
-				&c_obj_call<co_csdo_dn_con_t, F>::function,
+				&c_obj_call<co_csdo_dn_con_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class C, typename c_mem_fn<co_csdo_dn_con_t, C>::type M>
+	template <class C, typename c_mem_fn<co_csdo_dn_con_t*, C>::type M>
 	int
 	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
 			size_t n, C* obj) noexcept
 	{
 		return blkDnReq(idx, subidx, ptr, n,
-				&c_mem_call<co_csdo_dn_con_t, C, M>::function,
+				&c_mem_call<co_csdo_dn_con_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
 
@@ -218,7 +218,7 @@ public:
 		return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
 	}
 
-	template <class T, typename COCSDOUpCon<T>::type* M>
+	template <class T, typename COCSDOUpCon<T>::type M>
 	int
 	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
 			void* data) noexcept
@@ -264,10 +264,10 @@ protected:
  */
 template <class T>
 struct COCSDOUpCon {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, T val, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -288,11 +288,11 @@ struct COCSDOUpCon {
  */
 template <>
 struct COCSDOUpCon<char*> {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const char* vs,
 		void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -322,11 +322,11 @@ struct COCSDOUpCon<char*> {
  */
 template <>
 struct COCSDOUpCon< ::std::string> {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
 		const ::std::string& vs, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -358,11 +358,11 @@ struct COCSDOUpCon< ::std::string> {
  */
 template <>
 struct COCSDOUpCon<uint8_t*> {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const uint8_t* os,
 		size_t n, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -381,11 +381,11 @@ struct COCSDOUpCon<uint8_t*> {
  */
 template <>
 struct COCSDOUpCon< ::std::vector<uint8_t> > {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
 		const ::std::vector<uint8_t>& os, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -418,11 +418,11 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
  */
 template <>
 struct COCSDOUpCon<char16_t*> {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const char16_t* us,
 		void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -443,11 +443,11 @@ struct COCSDOUpCon<char16_t*> {
  */
 template <>
 struct COCSDOUpCon< ::std::basic_string<char16_t> > {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
 		const ::std::basic_string<char16_t>& us, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,
@@ -484,11 +484,11 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
  */
 template <>
 struct COCSDOUpCon<void*> {
-	typedef void (type)(COCSDO* sdo, co_unsigned16_t idx,
+	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void* dom,
 		size_t n, void* data);
 
-	template <type* M>
+	template <type M>
 	static void
 	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			co_unsigned32_t ac, const void* ptr, size_t n,

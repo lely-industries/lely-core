@@ -84,16 +84,16 @@ public:
 	void
 	setDiagFunc(F* f) noexcept
 	{
-		setDiagFunc(&c_obj_call<co_wtm_diag_func_t, F>::function,
+		setDiagFunc(&c_obj_call<co_wtm_diag_func_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_wtm_diag_func_t, T>::type M>
+	template <class C, typename c_mem_fn<co_wtm_diag_func_t*, C>::type M>
 	void
-	setDiagFunc(T* t) noexcept
+	setDiagFunc(C* obj) noexcept
 	{
-		setDiagFunc(&c_mem_call<co_wtm_diag_func_t, T, M>::function,
-				static_cast<void*>(t));
+		setDiagFunc(&c_mem_call<co_wtm_diag_func_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	void
@@ -118,16 +118,16 @@ public:
 	void
 	setRecvFunc(F* f) noexcept
 	{
-		setRecvFunc(&c_obj_call<co_wtm_recv_func_t, F>::function,
+		setRecvFunc(&c_obj_call<co_wtm_recv_func_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_wtm_recv_func_t, T>::type M>
+	template <class C, typename c_mem_fn<co_wtm_recv_func_t*, C>::type M>
 	void
-	setRecvFunc(T* t) noexcept
+	setRecvFunc(C* obj) noexcept
 	{
-		setRecvFunc(&c_mem_call<co_wtm_recv_func_t, T, M>::function,
-				static_cast<void*>(t));
+		setRecvFunc(&c_mem_call<co_wtm_recv_func_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 	int
@@ -174,16 +174,16 @@ public:
 	void
 	getSendFunc(F* f) noexcept
 	{
-		getSendFunc(&c_obj_call<co_wtm_send_func_t, F>::function,
+		getSendFunc(&c_obj_call<co_wtm_send_func_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
-	template <class T, typename c_mem_fn<co_wtm_send_func_t, T>::type M>
+	template <class C, typename c_mem_fn<co_wtm_send_func_t*, C>::type M>
 	void
-	getSendFunc(T* t) noexcept
+	getSendFunc(C* obj) noexcept
 	{
-		getSendFunc(&c_mem_call<co_wtm_send_func_t, T, M>::function,
-				static_cast<void*>(t));
+		getSendFunc(&c_mem_call<co_wtm_send_func_t*, C, M>::function,
+				static_cast<void*>(obj));
 	}
 
 protected:
