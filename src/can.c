@@ -385,18 +385,18 @@ io_can_get_state(io_handle_t handle)
 	struct can *can = (struct can *)handle;
 
 #if defined(HAVE_LINUX_CAN_NETLINK_H) && defined(HAVE_LINUX_RTNETLINK_H)
+	int errsv = errno;
+
 	int fd = io_rtnl_socket(0, 0);
 	if (__unlikely(fd == -1))
-		return -1;
+		goto error;
 
 	__u32 attr = 0;
 	if (__unlikely(can_getattr(fd, 0, 0, can->ifindex, &can->ifflags,
 			IFLA_CAN_STATE, &attr, sizeof(attr))
 			< (int)sizeof(attr))) {
-		int errsv = errno;
 		close(fd);
-		errno = errsv;
-		return -1;
+		goto error;
 	}
 
 	close(fd);
@@ -413,6 +413,11 @@ io_can_get_state(io_handle_t handle)
 		can->state = CAN_STATE_BUSOFF;
 		break;
 	};
+
+error:
+	// The virtual CAN driver does not provide the state through rtnetlink.
+	// This is not an error, so return the stored state.
+	errno = errsv;
 #endif
 
 	return can->state;
