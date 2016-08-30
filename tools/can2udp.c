@@ -397,8 +397,18 @@ daemon_main()
 				&& event.u.handle == can_handle) {
 			// Read a single CAN frame.
 			struct can_msg msg = CAN_MSG_INIT;
-			if (__unlikely(io_can_read(can_handle, &msg) != 1))
+			int n = io_can_read(can_handle, &msg);
+			if (__unlikely(n != 1)) {
+				// If an error occurred or an error frame was
+				// received, update the diagnostic parameters of
+				// the CAN interface.
+				int st = io_can_get_state(can_handle);
+				int err = 0xf;
+				io_can_get_error(can_handle, &err);
+				co_wtm_set_diag_can(wtm, 1, st, err, 0xff,
+						0xffff, 0xffff, 0xffff);
 				continue;
+			}
 			// Print the frame in verbose mode.
 			if (flags & FLAG_VERBOSE) {
 				char s[60] = { 0 };

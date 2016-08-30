@@ -40,6 +40,40 @@
 
 //! A CANopen WTM CAN interface.
 struct co_wtm_can {
+	/*!
+	 * The current CAN controller status (one of `CAN_STATE_ACTIVE`,
+	 * `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`, or 0xf if the information
+	 * is not available).
+	 */
+	uint8_t st;
+	/*!
+	 * The last detected error (0 if no error was detected, one of
+	 * `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM`
+	 * or `CAN_ERROR_ACK` in case of an error, or 0xf if the information is
+	 * not available).
+	 */
+	uint8_t err;
+	/*!
+	 * The current busload percentage (in the range [0..100], or 0xff if the
+	 * information is not available).
+	 */
+	uint8_t load;
+	/*!
+	 * The number of detected errors that led to the increase of one of the
+	 * CAN controller internal error counters (in the range [0..0xfffe], or
+	 * 0xffff if the information is not available).
+	 */
+	uint16_t ec;
+	/*!
+	 * The FIFO overrun counter (in the range [0..0xfffe], or 0xffff if the
+	 * information is not available).
+	 */
+	uint16_t foc;
+	/*!
+	 * The CAN controller overrun counter (in the range [0..0xfffe], or
+	 * 0xffff if the information is not available).
+	 */
+	uint16_t coc;
 	//! The current time of the CAN frame receiver.
 	struct timespec recv_time;
 	//! The current time of the CAN frame sender.
@@ -52,15 +86,48 @@ struct co_wtm_can {
 struct __co_wtm {
 	//! The WTM interface indicator.
 	uint8_t nif;
+	/*!
+	 * The link quality percentage (in the range [0..100], or 0xff if the
+	 * information is not available).
+	 */
+	uint8_t quality;
 	//! The CAN interfaces.
 	struct co_wtm_can can[CO_WTM_MAX_NIF];
+	/*!
+	 * A pointer to the confirmation function invoked when a CAN
+	 * communication quality response is received.
+	 */
+	co_wtm_diag_can_con_t *diag_can_con;
+	//! A pointer to the user-specified data for #diag_can_con.
+	void *diag_can_con_data;
+	/*!
+	 * A pointer to the confirmation function invoked when a WTM
+	 * communication quality response is received.
+	 */
+	co_wtm_diag_wtm_con_t *diag_wtm_con;
+	//! A pointer to the user-specified data for #diag_wtm_con.
+	void *diag_wtm_con_data;
+	/*!
+	 * A pointer to the indication function invoked when a CAN communication
+	 * quality reset message is received.
+	 */
+	co_wtm_diag_can_ind_t *diag_can_ind;
+	//! A pointer to the user-specified data for #diag_can_ind.
+	void *diag_can_ind_data;
+	/*!
+	 * A pointer to the indication function invoked when a WTM communication
+	 * quality reset message is received.
+	 */
+	co_wtm_diag_wtm_ind_t *diag_wtm_ind;
+	//! A pointer to the user-specified data for #diag_wtm_ind.
+	void *diag_wtm_ind_data;
 	/*!
 	 * A pointer to the callback function invoked when an abort code is
 	 * generated or received.
 	 */
-	co_wtm_diag_func_t *diag_func;
-	//! A pointer to the user-specified data for #diag_func.
-	void *diag_data;
+	co_wtm_diag_ac_ind_t *diag_ac_ind;
+	//! A pointer to the user-specified data for #diag_ac_ind.
+	void *diag_ac_data;
 	//! A pointer to the callback function invoked by co_wtm_recv().
 	co_wtm_recv_func_t *recv_func;
 	//! A pointer to the user-specified data for #recv_func.
@@ -83,10 +150,17 @@ struct __co_wtm {
 	uint8_t send_nseq;
 };
 
-static void co_wtm_diag(co_wtm_t *wtm, uint32_t ac);
+//! Sends a communication quality response for a CAN interface.
+static int co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif);
 
-//! The default diagnostic callback function. \see co_wtm_diag_func_t
-static void default_wtm_diag_func(co_wtm_t *wtm, uint32_t ac, void *data);
+//! Sends a communication quality response for a WTM interface.
+static int co_wtm_send_diag_wtm_res(co_wtm_t *wtm);
+
+//! Invokes the diagnostic indication function.
+static void co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac);
+
+//! The default diagnostic indication function. \see co_wtm_diag_ac_ind_t
+static void default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data);
 
 /*!
  * Processes a generic frame containing CAN messages.
@@ -170,14 +244,37 @@ __co_wtm_init(struct __co_wtm *wtm)
 
 	wtm->nif = 1;
 
+	wtm->quality = 0xff;
+
 	for (uint8_t nif = 1; nif <= CO_WTM_MAX_NIF; nif++) {
-		wtm->can[nif - 1].recv_time = (struct timespec){ 0, 0 };
-		wtm->can[nif - 1].send_time = (struct timespec){ 0, 0 };
-		wtm->can[nif - 1].send_next = (struct timespec){ 0, 0 };
+		struct co_wtm_can *can = &wtm->can[nif - 1];
+
+		can->st = 0xf;
+		can->err = 0xf;
+		can->load = 0xff;
+		can->ec = 0xffff;
+		can->foc = 0xffff;
+		can->coc = 0xffff;
+
+		can->recv_time = (struct timespec){ 0, 0 };
+		can->send_time = (struct timespec){ 0, 0 };
+		can->send_next = (struct timespec){ 0, 0 };
 	}
 
-	wtm->diag_func = &default_wtm_diag_func;
-	wtm->diag_data = NULL;
+	wtm->diag_can_con = NULL;
+	wtm->diag_can_con_data = NULL;
+
+	wtm->diag_wtm_con = NULL;
+	wtm->diag_wtm_con_data = NULL;
+
+	wtm->diag_can_ind = NULL;
+	wtm->diag_can_ind_data = NULL;
+
+	wtm->diag_wtm_ind = NULL;
+	wtm->diag_wtm_ind_data = NULL;
+
+	wtm->diag_ac_ind = &default_wtm_diag_ac_ind;
+	wtm->diag_ac_data = NULL;
 
 	wtm->recv_func = NULL;
 	wtm->recv_data = NULL;
@@ -257,32 +354,183 @@ co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
 	return 0;
 }
 
+LELY_CO_EXPORT int
+co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
+		uint8_t load, uint16_t ec, uint16_t foc, uint16_t coc)
+{
+	assert(wtm);
+
+	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	struct co_wtm_can *can = &wtm->can[nif - 1];
+
+	switch (st) {
+	case CAN_STATE_ACTIVE: st = 0; break;
+	case CAN_STATE_PASSIVE: st = 1; break;
+	case CAN_STATE_BUSOFF: st = 2; break;
+	case 0xf: break;
+	default:
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (err == 0xf) {
+	} else if (err & CAN_ERROR_BIT) {
+		err = 1;
+	} else if (err & CAN_ERROR_STUFF) {
+		err = 2;
+	} else if (err & CAN_ERROR_CRC) {
+		err = 3;
+	} else if (err & CAN_ERROR_FORM) {
+		err = 4;
+	} else if (err & CAN_ERROR_ACK) {
+		err = 5;
+	} else if (err) {
+		err = 0xf;
+	}
+
+	if (__unlikely(load > 100 && load != 0xff)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	can->st = st;
+	can->err = err;
+	can->load = load;
+	can->ec = ec;
+	can->foc = foc;
+	can->coc = coc;
+
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
+{
+	assert(wtm);
+
+	if (__unlikely(quality > 100 && quality != 0xff)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	wtm->quality = quality;
+
+	return 0;
+}
+
 LELY_CO_EXPORT void
-co_wtm_get_diag_func(const co_wtm_t *wtm, co_wtm_diag_func_t **pfunc,
+co_wtm_get_diag_can_con(const co_wtm_t *wtm, co_wtm_diag_can_con_t **pcon,
 		void **pdata)
 {
 	assert(wtm);
 
-	if (pfunc)
-		*pfunc = wtm->diag_func;
+	if (pcon)
+		*pcon = wtm->diag_can_con;
 	if (pdata)
-		*pdata = wtm->diag_data;
+		*pdata = wtm->diag_can_con_data;
 }
 
 LELY_CO_EXPORT void
-co_wtm_set_diag_func(co_wtm_t *wtm, co_wtm_diag_func_t *func, void *data)
+co_wtm_set_diag_can_con(co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data)
 {
 	assert(wtm);
 
-	wtm->diag_func = func ? func : &default_wtm_diag_func;
-	wtm->diag_data = func ? data : NULL;
+	wtm->diag_can_con = con;
+	wtm->diag_can_con_data = data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_get_diag_wtm_con(const co_wtm_t *wtm, co_wtm_diag_wtm_con_t **pcon,
+		void **pdata)
+{
+	assert(wtm);
+
+	if (pcon)
+		*pcon = wtm->diag_wtm_con;
+	if (pdata)
+		*pdata = wtm->diag_wtm_con_data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_set_diag_wtm_con(co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data)
+{
+	assert(wtm);
+
+	wtm->diag_wtm_con = con;
+	wtm->diag_wtm_con_data = data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_get_diag_can_ind(const co_wtm_t *wtm, co_wtm_diag_can_ind_t **pcon,
+		void **pdata)
+{
+	assert(wtm);
+
+	if (pcon)
+		*pcon = wtm->diag_can_ind;
+	if (pdata)
+		*pdata = wtm->diag_can_ind_data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_set_diag_can_ind(co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data)
+{
+	assert(wtm);
+
+	wtm->diag_can_ind = con;
+	wtm->diag_can_ind_data = data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm, co_wtm_diag_wtm_ind_t **pcon,
+		void **pdata)
+{
+	assert(wtm);
+
+	if (pcon)
+		*pcon = wtm->diag_wtm_ind;
+	if (pdata)
+		*pdata = wtm->diag_wtm_ind_data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_set_diag_wtm_ind(co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data)
+{
+	assert(wtm);
+
+	wtm->diag_wtm_ind = con;
+	wtm->diag_wtm_ind_data = data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_get_diag_ac_ind(const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind,
+		void **pdata)
+{
+	assert(wtm);
+
+	if (pind)
+		*pind = wtm->diag_ac_ind;
+	if (pdata)
+		*pdata = wtm->diag_ac_data;
+}
+
+LELY_CO_EXPORT void
+co_wtm_set_diag_ac_ind(co_wtm_t *wtm, co_wtm_diag_ac_ind_t *ind, void *data)
+{
+	assert(wtm);
+
+	wtm->diag_ac_ind = ind ? ind : &default_wtm_diag_ac_ind;
+	wtm->diag_ac_data = ind ? data : NULL;
 }
 
 LELY_CO_EXPORT void
 co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 {
 	assert(wtm);
-	assert(wtm->diag_func);
+	assert(wtm->diag_ac_ind);
 	assert(buf);
 
 	for (const char *bp = buf; nbytes;) {
@@ -331,7 +579,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (__unlikely(seq != wtm->recv_nseq))
 			// Generate an error, but do not abort processing the
 			// message.
-			co_wtm_diag(wtm, CO_WTM_AC_SEQ);
+			co_wtm_diag_ac(wtm, CO_WTM_AC_SEQ);
 		wtm->recv_nseq = seq + 1;
 		// Process message payload based on its type (see Table 2 in CiA
 		// 315 version 1.0.0).
@@ -381,12 +629,117 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			break;
 		// Communication quality request.
 		case 0x12:
+			if (__unlikely(len < 1)) {
+				ac = CO_WTM_AC_PAYLOAD;
+				goto error;
+			}
+			// Obtain the interface indicator.
+			nif = wtm->recv_buf[4];
+			if (nif <= 0x80) {
+				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+					co_wtm_send_diag_ac(wtm,
+							CO_WTM_AC_NO_IF);
+					break;
+				}
+				// Send the communication quality response.
+				co_wtm_send_diag_can_res(wtm, nif);
+			} else {
+				// Only accept communication quality requests
+				// for this WTM interface.
+				if (__unlikely(nif != 0x80 + wtm->nif)) {
+					co_wtm_send_diag_ac(wtm,
+							CO_WTM_AC_NO_IF);
+					break;
+				}
+				// Send the communication quality response.
+				co_wtm_send_diag_wtm_res(wtm);
+			}
+			break;
 		// Communication quality response.
 		case 0x13:
+			if (__unlikely(len < 2)) {
+				ac = CO_WTM_AC_PAYLOAD;
+				goto error;
+			}
+			// Obtain the interface indicator.
+			nif = wtm->recv_buf[4];
+			if (__unlikely(!nif || nif == 0x80)) {
+				ac = CO_WTM_AC_PAYLOAD;
+				goto error;
+			}
+			if (nif < 0x80) {
+				if (__unlikely(len < 9)) {
+					ac = CO_WTM_AC_PAYLOAD;
+					goto error;
+				}
+				if (!wtm->diag_can_con)
+					continue;
+				uint8_t st = 0xf;
+				switch ((wtm->recv_buf[5] >> 4) & 0xf) {
+				case 0: st = CAN_STATE_ACTIVE; break;
+				case 1: st = CAN_STATE_PASSIVE; break;
+				case 2: st = CAN_STATE_BUSOFF; break;
+				}
+				uint8_t err = 0xf;
+				switch (wtm->recv_buf[5] & 0xf) {
+				case 1: err = CAN_ERROR_BIT; break;
+				case 2: err = CAN_ERROR_STUFF; break;
+				case 3: err = CAN_ERROR_CRC; break;
+				case 4: err = CAN_ERROR_FORM; break;
+				case 5: err = CAN_ERROR_ACK; break;
+				}
+				uint8_t load = wtm->recv_buf[6];
+				uint16_t ec = ldle_u16(wtm->recv_buf + 7);
+				uint16_t foc = ldle_u16(wtm->recv_buf + 9);
+				uint16_t coc = ldle_u16(wtm->recv_buf + 11);
+				wtm->diag_can_con(wtm, nif, st, err, load, ec,
+						foc, coc,
+						wtm->diag_can_con_data);
+			} else {
+				if (!wtm->diag_wtm_con)
+					continue;
+				uint8_t quality = wtm->recv_buf[5];
+				wtm->diag_wtm_con(wtm, nif - 0x80, quality,
+						wtm->diag_wtm_con_data);
+			}
+			break;
 		// Communication quality reset.
 		case 0x14:
-			// TODO: implement diagnostic protocol.
-			co_wtm_send_abort(wtm, CO_WTM_AC_DIAG);
+			if (__unlikely(len < 1)) {
+				ac = CO_WTM_AC_PAYLOAD;
+				goto error;
+			}
+			// Obtain the interface indicator.
+			nif = wtm->recv_buf[4];
+			if (nif <= 0x80) {
+				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+					co_wtm_send_diag_ac(wtm,
+							CO_WTM_AC_NO_IF);
+					break;
+				}
+				struct co_wtm_can *can = &wtm->can[nif - 1];
+				can->st = 0xf;
+				can->err = 0xf;
+				can->load = 0xff;
+				can->ec = 0xffff;
+				can->foc = 0xffff;
+				can->coc = 0xffff;
+				if (wtm->diag_can_ind)
+					wtm->diag_can_ind(wtm, nif,
+							wtm->diag_can_ind_data);
+			} else {
+				// Only accept communication quality reset
+				// messages for this WTM interface.
+				if (__unlikely(nif != 0x80 + wtm->nif)) {
+					co_wtm_send_diag_ac(wtm,
+							CO_WTM_AC_NO_IF);
+					break;
+				}
+				wtm->quality = 0xff;
+				if (wtm->diag_wtm_ind)
+					wtm->diag_wtm_ind(wtm,
+							wtm->diag_wtm_ind_data);
+			}
 			break;
 		// Diagnostic abort message.
 		case 0x15:
@@ -412,7 +765,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		}
 	error:
 		if (__unlikely(ac)) {
-			co_wtm_diag(wtm, ac);
+			co_wtm_diag_ac(wtm, ac);
 			ac = 0;
 		}
 		// Empty the buffer for the next message.
@@ -582,7 +935,79 @@ co_wtm_send_alive(co_wtm_t *wtm)
 }
 
 LELY_CO_EXPORT int
-co_wtm_send_abort(co_wtm_t *wtm, uint32_t ac)
+co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
+{
+	assert(wtm);
+
+	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x12;
+	wtm->send_buf[4] = nif;
+	wtm->send_nbytes = 5;
+	return co_wtm_flush(wtm);
+}
+
+LELY_CO_EXPORT int
+co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
+{
+	assert(wtm);
+
+	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x12;
+	wtm->send_buf[4] = 0x80 + nif;
+	wtm->send_nbytes = 5;
+	return co_wtm_flush(wtm);
+}
+
+LELY_CO_EXPORT int
+co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
+{
+	assert(wtm);
+
+	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x14;
+	wtm->send_buf[4] = nif;
+	wtm->send_nbytes = 5;
+	return co_wtm_flush(wtm);
+}
+
+LELY_CO_EXPORT int
+co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
+{
+	assert(wtm);
+
+	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x14;
+	wtm->send_buf[4] = 0x80 + nif;
+	wtm->send_nbytes = 5;
+	return co_wtm_flush(wtm);
+}
+
+LELY_CO_EXPORT int
+co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac)
 {
 	assert(wtm);
 	assert(wtm->nif && wtm->nif <= CO_WTM_MAX_NIF);
@@ -646,17 +1071,51 @@ co_wtm_set_send_func(co_wtm_t *wtm, co_wtm_send_func_t *func, void *data)
 	wtm->send_data = data;
 }
 
-static void
-co_wtm_diag(co_wtm_t *wtm, uint32_t ac)
+static int
+co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
-	assert(wtm->diag_func);
+	assert(nif && nif <= CO_WTM_MAX_NIF);
+	struct co_wtm_can *can = &wtm->can[nif - 1];
 
-	wtm->diag_func(wtm, ac, wtm->diag_data);
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x13;
+	wtm->send_buf[4] = nif;
+	wtm->send_buf[5] = ((can->st & 0xf) << 4) | (can->err & 0xf);
+	wtm->send_buf[6] = can->load;
+	stle_u16(wtm->send_buf + 7, can->ec);
+	stle_u16(wtm->send_buf + 9, can->foc);
+	stle_u16(wtm->send_buf + 11, can->coc);
+	wtm->send_nbytes = 13;
+	return co_wtm_flush(wtm);
+}
+
+static int
+co_wtm_send_diag_wtm_res(co_wtm_t *wtm)
+{
+	assert(wtm);
+
+	if (__unlikely(co_wtm_flush(wtm) == -1))
+		return -1;
+	wtm->send_buf[3] = 0x13;
+	wtm->send_buf[4] = 0x80 + wtm->nif;
+	wtm->send_buf[5] = wtm->quality;
+	wtm->send_nbytes = 6;
+	return co_wtm_flush(wtm);
 }
 
 static void
-default_wtm_diag_func(co_wtm_t *wtm, uint32_t ac, void *data)
+co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac)
+{
+	assert(wtm);
+	assert(wtm->diag_ac_ind);
+
+	wtm->diag_ac_ind(wtm, ac, wtm->diag_ac_data);
+}
+
+static void
+default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data)
 {
 	__unused_var(wtm);
 	__unused_var(data);

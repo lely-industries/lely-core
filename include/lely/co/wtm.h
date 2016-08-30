@@ -118,14 +118,74 @@ extern "C" {
 #endif
 
 /*!
- * The type of a CANopen WTM diagnostic callback function, invoked when an abort
- * code is generated or received.
+ * The type of a CANopen WTM diagnostic confirmation function, invoked when a
+ * CAN communication quality response is received.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param nif  the remote CAN interface indicator (in the range [1..127]).
+ * \param st   The current CAN controller status (one of `CAN_STATE_ACTIVE`,
+ *             `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`, or 0xf if the
+ *             information is not available).
+ * \param err  the last detected error (0 if no error was detected, one of
+ *             `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`,
+ *             `CAN_ERROR_FORM` or `CAN_ERROR_ACK` in case of an error, or 0xf
+ *             if the information is not available).
+ * \param load the current busload percentage (in the range [0..100], or 0xff if
+ *             the information is not available).
+ * \param ec   the number of detected errors that led to the increase of one of
+ *             the CAN controller internal error counters (in the range
+ *             [0..0xfffe], or 0xffff if the information is not available).
+ * \param foc  the FIFO overrun counter (in the range [0..0xfffe], or 0xffff if
+ *             the information is not available).
+ * \param coc  the CAN controller overrun counter (in the range [0..0xfffe], or
+ *             0xffff if the information is not available).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_wtm_diag_can_con_t(co_wtm_t *wtm, uint8_t nif, uint8_t st,
+		uint8_t err, uint8_t load, uint16_t ec, uint16_t foc,
+		uint16_t coc, void *data);
+
+/*!
+ * The type of a CANopen WTM diagnostic confirmation function, invoked when a
+ * WTM communication quality response is received.
+ *
+ * \param wtm     a pointer to a CANopen WTM interface.
+ * \param nif     the remote WTM interface indicator (in the range [1..127]).
+ * \param quality the link quality percentage (in the range [0..100], or 0xff if
+ *                the information is not available).
+ * \param data    a pointer to user-specified data.
+ */
+typedef void co_wtm_diag_wtm_con_t(co_wtm_t *wtm, uint8_t nif, uint8_t quality,
+		void *data);
+
+/*!
+ * The type of a CANopen WTM diagnostic indication function, invoked when a CAN
+ * communication quality reset message is received.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param nif  the remote CAN interface indicator (in the range [1..127]).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_wtm_diag_can_ind_t(co_wtm_t *wtm, uint8_t nif, void *data);
+
+/*!
+ * The type of a CANopen WTM diagnostic indication function, invoked when a WTM
+ * communication quality reset message is received.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_wtm_diag_wtm_ind_t(co_wtm_t *wtm, void *data);
+
+/*!
+ * The type of a CANopen WTM diagnostic indication function, invoked when an
+ * abort code is generated or received.
  *
  * \param wtm  a pointer to a CANopen WTM interface.
  * \param ac   the abort code.
  * \param data a pointer to user-specified data.
  */
-typedef void co_wtm_diag_func_t(co_wtm_t *wtm, uint32_t ac, void *data);
+typedef void co_wtm_diag_ac_ind_t(co_wtm_t *wtm, uint32_t ac, void *data);
 
 /*!
  * The type of a CANopen WTM receive callback function, invoked when a CAN frame
@@ -206,34 +266,192 @@ LELY_CO_EXTERN uint8_t co_wtm_get_nif(const co_wtm_t *wtm);
 LELY_CO_EXTERN int co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif);
 
 /*!
- * Retrieves the callback function invoked when an abort code is generated or
- * received by a CANopen WTM interface.
+ * Sets the diagnostic parameters of a CAN interface.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param nif  the local CAN interface indicator (in the range [1..127]).
+ * \param st   The current CAN controller status (one of `CAN_STATE_ACTIVE`,
+ *             `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`, or 0xf if the
+ *             information is not available).
+ * \param err  the last detected error (0 if no error was detected, one of
+ *             `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`,
+ *             `CAN_ERROR_FORM` or `CAN_ERROR_ACK` in case of an error, or 0xf
+ *             if the information is not available).
+ * \param load the current busload percentage (in the range [0..100], or 0xff if
+ *             the information is not available).
+ * \param ec   the number of detected errors that led to the increase of one of
+ *             the CAN controller internal error counters (in the range
+ *             [0..0xfffe], or 0xffff if the information is not available).
+ * \param foc  the FIFO overrun counter (in the range [0..0xfffe], or 0xffff if
+ *             the information is not available).
+ * \param coc  the CAN controller overrun counter (in the range [0..0xfffe], or
+ *             0xffff if the information is not available).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st,
+		uint8_t err, uint8_t load, uint16_t ec, uint16_t foc,
+		uint16_t coc);
+
+/*!
+ * Sets the diagnostic parameters of a WTM interface.
+ *
+ * \param wtm     a pointer to a CANopen WTM interface.
+ * \param quality the link quality percentage (in the range [0..100], or 0xff if
+ *                the information is not available).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality);
+
+/*!
+ * Retrieves the confirmation function invoked when a CAN communication quality
+ * response is received by a CANopen WTM interface.
  *
  * \param wtm   a pointer to a CANopen WTM interface.
- * \param pfunc the address at which to store a pointer to the callback function
- *              (can be NULL).
+ * \param pcon  the address at which to store a pointer to the confirmation
+ *              function (can be NULL).
  * \param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_wtm_set_diag_func()
+ * \see co_wtm_set_diag_can_con()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_func(const co_wtm_t *wtm,
-		co_wtm_diag_func_t **pfunc, void **pdata);
+LELY_CO_EXTERN void co_wtm_get_diag_can_con(const co_wtm_t *wtm,
+		co_wtm_diag_can_con_t **pcon, void **pdata);
 
 /*!
- * Sets the callback function invoked when an abort code is generated or
+ * Sets the confirmation function invoked when a CAN communication quality
+ * response is received by a CANopen WTM interface.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param con  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a con.
+ *
+ * \see co_wtm_get_diag_can_con()
+ */
+LELY_CO_EXTERN void co_wtm_set_diag_can_con(co_wtm_t *wtm,
+		co_wtm_diag_can_con_t *con, void *data);
+
+/*!
+ * Retrieves the confirmation function invoked when a WTM communication quality
+ * response is received by a CANopen WTM interface.
+ *
+ * \param wtm   a pointer to a CANopen WTM interface.
+ * \param pcon  the address at which to store a pointer to the confirmation
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_wtm_set_diag_wtm_con()
+ */
+LELY_CO_EXTERN void co_wtm_get_diag_wtm_con(const co_wtm_t *wtm,
+		co_wtm_diag_wtm_con_t **pcon, void **pdata);
+
+/*!
+ * Sets the confirmation function invoked when a WTM communication quality
+ * response is received by a CANopen WTM interface.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param con  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a con.
+ *
+ * \see co_wtm_get_diag_wtm_con()
+ */
+LELY_CO_EXTERN void co_wtm_set_diag_wtm_con(co_wtm_t *wtm,
+		co_wtm_diag_wtm_con_t *con, void *data);
+
+/*!
+ * Retrieves the indication function invoked when a CAN communication quality
+ * reset message is received by a CANopen WTM interface.
+ *
+ * \param wtm   a pointer to a CANopen WTM interface.
+ * \param pcon  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_wtm_set_diag_can_ind()
+ */
+LELY_CO_EXTERN void co_wtm_get_diag_can_ind(const co_wtm_t *wtm,
+		co_wtm_diag_can_ind_t **pcon, void **pdata);
+
+/*!
+ * Sets the indication function invoked when a CAN communication quality reset
+ * message is received by a CANopen WTM interface.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param con  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a con.
+ *
+ * \see co_wtm_get_diag_can_ind()
+ */
+LELY_CO_EXTERN void co_wtm_set_diag_can_ind(co_wtm_t *wtm,
+		co_wtm_diag_can_ind_t *con, void *data);
+
+/*!
+ * Retrieves the indication function invoked when a WTM communication quality
+ * reset message is received by a CANopen WTM interface.
+ *
+ * \param wtm   a pointer to a CANopen WTM interface.
+ * \param pcon  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_wtm_set_diag_wtm_ind()
+ */
+LELY_CO_EXTERN void co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm,
+		co_wtm_diag_wtm_ind_t **pcon, void **pdata);
+
+/*!
+ * Sets the indication function invoked when a WTM communication quality reset
+ * message is received by a CANopen WTM interface.
+ *
+ * \param wtm  a pointer to a CANopen WTM interface.
+ * \param con  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a con.
+ *
+ * \see co_wtm_get_diag_wtm_ind()
+ */
+LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(co_wtm_t *wtm,
+		co_wtm_diag_wtm_ind_t *con, void *data);
+
+/*!
+ * Retrieves the indication function invoked when an abort code is generated or
+ * received by a CANopen WTM interface.
+ *
+ * \param wtm   a pointer to a CANopen WTM interface.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_wtm_set_diag_ac_ind()
+ */
+LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(const co_wtm_t *wtm,
+		co_wtm_diag_ac_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function invoked when an abort code is generated or
  * received by a CANopen WTM interface.
  *
  * \param wtm  a pointer to a CANopen WTM interface.
- * \param func a pointer to the function to be invoked. If \a func is NULL, a
- *             default implementation (invoking `diag()`) will be used.
+ * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
+ *             default indication function will be used (which invokes
+ *             `diag()`).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
- *             as the last parameter to \a func.
+ *             as the last parameter to \a ind.
  *
- * \see co_wtm_get_diag_func()
+ * \see co_wtm_get_diag_ac_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_func(co_wtm_t *wtm,
-		co_wtm_diag_func_t *func, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_ac_ind(co_wtm_t *wtm,
+		co_wtm_diag_ac_ind_t *ind, void *data);
 
 /*!
  * Receives and processes a byte stream with a CANopen WTM interface. This
@@ -332,6 +550,52 @@ LELY_CO_EXTERN int co_wtm_send(co_wtm_t *wtm, uint8_t nif,
 LELY_CO_EXTERN int co_wtm_send_alive(co_wtm_t *wtm);
 
 /*!
+ * Sends a CAN communication quality request. The function specified to
+ * co_wtm_set_diag_can_con() is invoked if a response is received.
+ *
+ * \param wtm a pointer to a CANopen WTM interface.
+ * \param nif the remote CAN interface indicator (in the range [1..127]).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif);
+
+/*!
+ * Sends a WTM communication quality request. The function specified to
+ * co_wtm_set_diag_wtm_con() is invoked if a response is received.
+ *
+ * \param wtm a pointer to a CANopen WTM interface.
+ * \param nif the remote WTM interface indicator (in the range [1..127]).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif);
+
+/*!
+ * Sends a CAN communication quality reset message.
+ *
+ * \param wtm a pointer to a CANopen WTM interface.
+ * \param nif the remote CAN interface indicator (in the range [1..127]).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif);
+
+/*!
+ * Sends a WTM communication quality reset message.
+ *
+ * \param wtm a pointer to a CANopen WTM interface.
+ * \param nif the remote WTM interface indicator (in the range [1..127]).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif);
+
+/*!
  * Sends a diagnostic abort message from a CANopen WTM interface. This function
  * MAY invoke the callback function set by co_wtm_set_send_func().
  *
@@ -341,7 +605,7 @@ LELY_CO_EXTERN int co_wtm_send_alive(co_wtm_t *wtm);
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-LELY_CO_EXTERN int co_wtm_send_abort(co_wtm_t *wtm, uint32_t ac);
+LELY_CO_EXTERN int co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac);
 
 /*!
  * Flushes the current send buffer of a CANopen WTM interface. This function MAY
