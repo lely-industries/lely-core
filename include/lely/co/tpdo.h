@@ -71,6 +71,12 @@ LELY_CO_EXTERN co_tpdo_t *co_tpdo_create(can_net_t *net, co_dev_t *dev,
 //! Destroys a CANopen Transmit-PDO service. \see co_tpdo_create()
 LELY_CO_EXTERN void co_tpdo_destroy(co_tpdo_t *pdo);
 
+//! Returns a pointer to the CAN network of a Transmit-PDO.
+LELY_CO_EXTERN can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);
+
+//! Returns a pointer to the CANopen device of a Transmit-PDO.
+LELY_CO_EXTERN co_dev_t *co_tpdo_get_dev(const co_tpdo_t *pdo);
+
 //! Returns the PDO number of a Transmit-PDO.
 LELY_CO_EXTERN co_unsigned16_t co_tpdo_get_num(const co_tpdo_t *pdo);
 

@@ -78,7 +78,7 @@ struct co_sdo_par {
 #define CO_SDO_AC_NO_MEM	UINT32_C(0x05040005)
 
 //! SDO abort code: Unsupported access to an object.
-#define CO_SDO_AC_NO_ACCES	UINT32_C(0x06010000)
+#define CO_SDO_AC_NO_ACCESS	UINT32_C(0x06010000)
 
 //! SDO abort code: Attempt to read a write only object.
 #define CO_SDO_AC_NO_READ	UINT32_C(0x06010001)

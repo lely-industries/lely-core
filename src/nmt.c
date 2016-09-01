@@ -897,6 +897,22 @@ co_nmt_destroy(co_nmt_t *nmt)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_nmt_get_net(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_nmt_get_dev(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->dev;
+}
+
 LELY_CO_EXPORT void
 co_nmt_get_cs_ind(const co_nmt_t *nmt, co_nmt_cs_ind_t **pind, void **pdata)
 {
@@ -2351,7 +2367,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, nmt, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2390,7 +2406,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, nmt, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2431,7 +2447,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 		can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
 
 	// Enable LSS.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_SRV_LSS);
+	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_SRV_LSS);
 
 	// Don't enter the 'pre-operational' state if the node-ID is invalid.
 	if (co_dev_get_id(nmt->dev) != 0xff) {
@@ -2480,7 +2496,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services except PDO.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_PREOP_SRV);
+	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_PREOP_SRV);
 
 	nmt->st = CO_NMT_ST_PREOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2540,7 +2556,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Enable all services.
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_START_SRV);
+	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_START_SRV);
 
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2617,7 +2633,7 @@ co_nmt_stop_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Disable all services (except LSS).
-	co_nmt_srv_set(&nmt->srv, nmt->net, nmt->dev, nmt, CO_NMT_STOP_SRV);
+	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_STOP_SRV);
 
 	nmt->st = CO_NMT_ST_STOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);

@@ -331,17 +331,17 @@ public:
 
 	template <class F>
 	void
-	getSendFunc(F* f) noexcept
+	setSendFunc(F* f) noexcept
 	{
-		getSendFunc(&c_obj_call<co_wtm_send_func_t*, F>::function,
+		setSendFunc(&c_obj_call<co_wtm_send_func_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
 	template <class C, typename c_mem_fn<co_wtm_send_func_t*, C>::type M>
 	void
-	getSendFunc(C* obj) noexcept
+	setSendFunc(C* obj) noexcept
 	{
-		getSendFunc(&c_mem_call<co_wtm_send_func_t*, C, M>::function,
+		setSendFunc(&c_mem_call<co_wtm_send_func_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
 

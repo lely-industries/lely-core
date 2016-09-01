@@ -61,6 +61,9 @@ public:
 		: c_base(net, dev, num)
 	{}
 
+	CANNet* getNet() const noexcept { return co_tpdo_get_dev(this); }
+	CODev* getDev() const noexcept { return co_tpdo_get_net(this); }
+
 	co_unsigned16_t
 	getNum() const noexcept
 	{

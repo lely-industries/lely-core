@@ -106,6 +106,12 @@ LELY_CO_EXTERN co_time_t *co_time_create(can_net_t *net, co_dev_t *dev);
 //! Destroys a CANopen TIME producer/consumer service. \see co_time_create()
 LELY_CO_EXTERN void co_time_destroy(co_time_t *time);
 
+//! Returns a pointer to the CAN network of a TIME producer/consumer service.
+LELY_CO_EXTERN can_net_t *co_time_get_net(const co_time_t *time);
+
+//! Returns a pointer to the CANopen device of a TIME producer/consumer service.
+LELY_CO_EXTERN co_dev_t *co_time_get_dev(const co_time_t *time);
+
 /*!
  * Retrieves the indication function invoked when a CANopen time stamp is
  * received.

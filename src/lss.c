@@ -46,12 +46,12 @@ typedef const struct __co_lss_state co_lss_state_t;
 
 //! A CANopen LSS master/slave service.
 struct __co_lss {
+	//! A pointer to an NMT master/slave service.
+	co_nmt_t *nmt;
 	//! A pointer to a CAN network interface.
 	can_net_t *net;
 	//! A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! A pointer to an NMT master/slave service.
-	co_nmt_t *nmt;
 	//! A pointer to the current state.
 	co_lss_state_t *state;
 #ifndef LELY_NO_CO_MASTER
@@ -584,21 +584,17 @@ __co_lss_free(void *ptr)
 	free(ptr);
 }
 
-#include <lely/co/pdo.h>
 LELY_CO_EXPORT struct __co_lss *
-__co_lss_init(struct __co_lss *lss, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
+__co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 {
 	assert(lss);
-	assert(net);
-	assert(dev);
 	assert(nmt);
 
 	errc_t errc = 0;
 
-	lss->net = net;
-	lss->dev = dev;
 	lss->nmt = nmt;
+	lss->net = co_nmt_get_net(lss->nmt);
+	lss->dev = co_nmt_get_dev(lss->nmt);
 
 	lss->state = NULL;
 
@@ -681,7 +677,7 @@ __co_lss_fini(struct __co_lss *lss)
 }
 
 LELY_CO_EXPORT co_lss_t *
-co_lss_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_lss_create(co_nmt_t *nmt)
 {
 	errc_t errc = 0;
 
@@ -691,7 +687,7 @@ co_lss_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 		goto error_alloc_lss;
 	}
 
-	if (__unlikely(!__co_lss_init(lss, net, dev, nmt))) {
+	if (__unlikely(!__co_lss_init(lss, nmt))) {
 		errc = get_errc();
 		goto error_init_lss;
 	}
@@ -712,6 +708,14 @@ co_lss_destroy(co_lss_t *lss)
 		__co_lss_fini(lss);
 		__co_lss_free(lss);
 	}
+}
+
+LELY_CO_EXPORT co_nmt_t *
+co_lss_get_nmt(const co_lss_t *lss)
+{
+	assert(lss);
+
+	return lss->nmt;
 }
 
 LELY_CO_EXPORT void

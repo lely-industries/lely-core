@@ -130,14 +130,12 @@ typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 LELY_CO_EXTERN void *__co_lss_alloc(void);
 LELY_CO_EXTERN void __co_lss_free(void *ptr);
 LELY_CO_EXTERN struct __co_lss *__co_lss_init(struct __co_lss *lss,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
+		co_nmt_t *nmt);
 LELY_CO_EXTERN void __co_lss_fini(struct __co_lss *lss);
 
 /*!
  * Creates a new CANopen LSS master/slave service.
  *
- * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device.
  * \param nmt a pointer to an NMT master/slave service.
  *
  * \returns a pointer to a new LSS service, or NULL on error. In the latter
@@ -145,11 +143,13 @@ LELY_CO_EXTERN void __co_lss_fini(struct __co_lss *lss);
  *
  * \see co_lss_destroy()
  */
-LELY_CO_EXTERN co_lss_t *co_lss_create(can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt);
+LELY_CO_EXTERN co_lss_t *co_lss_create(co_nmt_t *nmt);
 
 //! Destroys a CANopen LSS master/slave service. \see co_lss_create()
 LELY_CO_EXTERN void co_lss_destroy(co_lss_t *lss);
+
+//! Returns a pointer to the NMT service of an LSS master/slave service.
+LELY_CO_EXTERN co_nmt_t *co_lss_get_nmt(const co_lss_t *lss);
 
 /*!
  * Retrieves the indication function invoked when an LSS 'activate bit timing'

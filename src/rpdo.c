@@ -301,6 +301,22 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_rpdo_get_net(const co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	return pdo->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_rpdo_get_dev(const co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	return pdo->dev;
+}
+
 LELY_CO_EXPORT co_unsigned16_t
 co_rpdo_get_num(const co_rpdo_t *pdo)
 {

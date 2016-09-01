@@ -75,6 +75,14 @@ LELY_CO_EXTERN co_emcy_t *co_emcy_create(can_net_t *net, co_dev_t *dev);
 //! Destroys a CANopen EMCY producer/consumer service. \see co_emcy_create()
 LELY_CO_EXTERN void co_emcy_destroy(co_emcy_t *emcy);
 
+//! Returns a pointer to the CAN network of an EMCY producer/consumer service.
+LELY_CO_EXTERN can_net_t *co_emcy_get_net(const co_emcy_t *emcy);
+
+/*!
+ * Returns a pointer to the CANopen device of an EMCY producer/consumer service.
+ */
+LELY_CO_EXTERN co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
+
 /*!
  * Pushes a CANopen EMCY message to the stack and broadcasts it if the EMCY
  * producer service is active.

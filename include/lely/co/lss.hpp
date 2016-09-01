@@ -45,9 +45,9 @@ struct c_type_traits<__co_lss> {
 	static void free(void* ptr) noexcept { __co_lss_free(ptr); }
 
 	static pointer
-	init(pointer p, CANNet* net, CODev* dev, CONMT* nmt) noexcept
+	init(pointer p, CONMT* nmt) noexcept
 	{
-		return __co_lss_init(p, net, dev, nmt);
+		return __co_lss_init(p,nmt);
 	}
 
 	static void fini(pointer p) noexcept { __co_lss_fini(p); }
@@ -57,7 +57,9 @@ struct c_type_traits<__co_lss> {
 class COLSS: public incomplete_c_type<__co_lss> {
 	typedef incomplete_c_type<__co_lss> c_base;
 public:
-	COLSS(CANNet* net, CODev* dev, CONMT* nmt): c_base(net, dev, nmt) {}
+	explicit COLSS(CONMT* nmt): c_base(nmt) {}
+
+	CONMT* getNMT() const noexcept { return co_lss_get_nmt(this); }
 
 	void
 	getRateInd(co_lss_rate_ind_t** pind, void** pdata) const noexcept

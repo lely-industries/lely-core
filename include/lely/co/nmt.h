@@ -221,6 +221,12 @@ LELY_CO_EXTERN co_nmt_t *co_nmt_create(can_net_t *net, co_dev_t *dev);
 //! Destroys a CANopen NMT master/slave service. \see co_nmt_create()
 LELY_CO_EXTERN void co_nmt_destroy(co_nmt_t *nmt);
 
+//! Returns a pointer to the CAN network of an NMT master/slave service.
+LELY_CO_EXTERN can_net_t *co_nmt_get_net(const co_nmt_t *nmt);
+
+//! Returns a pointer to the CANopen device of an NMT master/slave service.
+LELY_CO_EXTERN co_dev_t *co_nmt_get_dev(const co_nmt_t *nmt);
+
 /*!
  * Retrieves the indication function invoked when an NMT command is received.
  *

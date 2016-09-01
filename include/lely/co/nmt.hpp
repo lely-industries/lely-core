@@ -59,6 +59,9 @@ class CONMT: public incomplete_c_type<__co_nmt> {
 public:
 	CONMT(CANNet* net, CODev* dev): c_base(net, dev) {}
 
+	CANNet* getNet() const noexcept { return co_nmt_get_dev(this); }
+	CODev* getDev() const noexcept { return co_nmt_get_net(this); }
+
 	void
 	getCsInd(co_nmt_cs_ind_t** pind, void** pdata) const noexcept
 	{

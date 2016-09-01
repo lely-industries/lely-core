@@ -645,6 +645,22 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_ssdo_get_net(const co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_ssdo_get_dev(const co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->dev;
+}
+
 LELY_CO_EXPORT co_unsigned8_t
 co_ssdo_get_num(const co_ssdo_t *sdo)
 {

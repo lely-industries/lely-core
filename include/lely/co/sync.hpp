@@ -59,6 +59,9 @@ class COSync: public incomplete_c_type<__co_sync> {
 public:
 	COSync(CANNet* net, CODev* dev): c_base(net, dev) {}
 
+	CANNet* getNet() const noexcept { return co_sync_get_dev(this); }
+	CODev* getDev() const noexcept { return co_sync_get_net(this); }
+
 	void
 	getInd(co_sync_ind_t** pind, void** pdata) const noexcept
 	{

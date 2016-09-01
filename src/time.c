@@ -251,6 +251,22 @@ co_time_destroy(co_time_t *time)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_time_get_net(const co_time_t *time)
+{
+	assert(time);
+
+	return time->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_time_get_dev(const co_time_t *time)
+{
+	assert(time);
+
+	return time->dev;
+}
+
 LELY_CO_EXPORT void
 co_time_get_ind(const co_time_t *time, co_time_ind_t **pind, void **pdata)
 {

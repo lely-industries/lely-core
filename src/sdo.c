@@ -77,7 +77,7 @@ co_sdo_ac2str(co_unsigned32_t ac)
 		return "CRC error";
 	case CO_SDO_AC_NO_MEM:
 		return "Out of memory";
-	case CO_SDO_AC_NO_ACCES:
+	case CO_SDO_AC_NO_ACCESS:
 		return "Unsupported access to an object";
 	case CO_SDO_AC_NO_READ:
 		return "Attempt to read a write only object";

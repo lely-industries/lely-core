@@ -59,6 +59,9 @@ class COEmcy: public incomplete_c_type<__co_emcy> {
 public:
 	COEmcy(CANNet* net, CODev* dev): c_base(net, dev) {}
 
+	CANNet* getNet() const noexcept { return co_emcy_get_dev(this); }
+	CODev* getDev() const noexcept { return co_emcy_get_net(this); }
+
 	int
 	push(co_unsigned16_t eec, co_unsigned8_t er) noexcept
 	{

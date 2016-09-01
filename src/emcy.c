@@ -354,6 +354,22 @@ co_emcy_destroy(co_emcy_t *emcy)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_emcy_get_net(const co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	return emcy->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_emcy_get_dev(const co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	return emcy->dev;
+}
+
 LELY_CO_EXPORT int
 co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
 {

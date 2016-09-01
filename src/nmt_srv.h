@@ -92,15 +92,12 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  * Enables/disables the specified CANopen services.
  *
  * \param srv a pointer to a CANopen NMT service manager.
- * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device.
  * \param nmt a pointer to an NMT master/slave service.
  * \param set the services to be enabled (any combination of #CO_NMT_SRV_PDO,
  *            #CO_NMT_SRV_SDO, #CO_NMT_SRV_SYNC, #CO_NMT_SRV_TIME and
  *            #CO_NMT_SRV_EMCY). Services not part of \a set will be disabled.
  */
-void co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt, int set);
+void co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set);
 
 #ifdef __cplusplus
 }

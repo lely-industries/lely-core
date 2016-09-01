@@ -70,6 +70,12 @@ LELY_CO_EXTERN co_rpdo_t *co_rpdo_create(can_net_t *net, co_dev_t *dev,
 //! Destroys a CANopen Receive-PDO service. \see co_rpdo_create()
 LELY_CO_EXTERN void co_rpdo_destroy(co_rpdo_t *pdo);
 
+//! Returns a pointer to the CAN network of a Receive-PDO.
+LELY_CO_EXTERN can_net_t *co_rpdo_get_net(const co_rpdo_t *pdo);
+
+//! Returns a pointer to the CANopen device of a Receive-PDO.
+LELY_CO_EXTERN co_dev_t *co_rpdo_get_dev(const co_rpdo_t *pdo);
+
 //! Returns the PDO number of a Receive-PDO.
 LELY_CO_EXTERN co_unsigned16_t co_rpdo_get_num(const co_rpdo_t *pdo);
 

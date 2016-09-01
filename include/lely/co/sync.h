@@ -70,6 +70,12 @@ LELY_CO_EXTERN co_sync_t *co_sync_create(can_net_t *net, co_dev_t *dev);
 //! Destroys a CANopen SYNC producer/consumer service. \see co_sync_create()
 LELY_CO_EXTERN void co_sync_destroy(co_sync_t *sync);
 
+//! Returns a pointer to the CAN network of a SYNC producer/consumer service.
+LELY_CO_EXTERN can_net_t *co_sync_get_net(const co_sync_t *sync);
+
+//! Returns a pointer to the CANopen device of a SYNC producer/consumer service.
+LELY_CO_EXTERN co_dev_t *co_sync_get_dev(const co_sync_t *sync);
+
 /*!
  * Retrieves the indication function invoked when a CANopen SYNC message is
  * received.

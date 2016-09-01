@@ -105,8 +105,7 @@ static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
 #ifndef LELY_NO_CO_LSS
 
 //! Initializes the LSS master/slave service. \see co_nmt_srv_fini_lss()
-static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev, co_nmt_t *nmt);
+static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt);
 
 //! Finalizes the EMCY master/slave service. \see co_nmt_srv_init_lss()
 static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
@@ -160,14 +159,16 @@ co_nmt_srv_fini(struct co_nmt_srv *srv)
 {
 	assert(srv);
 
-	co_nmt_srv_set(srv, NULL, NULL, NULL, 0);
+	co_nmt_srv_set(srv, NULL, 0);
 }
 
 void
-co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt, int set)
+co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 {
 	assert(srv);
+
+	can_net_t *net = nmt ? co_nmt_get_net(nmt) : NULL;
+	co_dev_t *dev = nmt ? co_nmt_get_dev(nmt) : NULL;
 
 #ifndef LELY_NO_CO_LSS
 	if ((srv->set & ~set) & CO_NMT_SRV_LSS)
@@ -214,7 +215,7 @@ co_nmt_srv_set(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
 	__unused_var(nmt);
 #else
 	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
-		co_nmt_srv_init_lss(srv, net, dev, nmt);
+		co_nmt_srv_init_lss(srv, nmt);
 #endif
 }
 
@@ -520,19 +521,18 @@ co_nmt_srv_fini_emcy(struct co_nmt_srv *srv)
 #ifndef LELY_NO_CO_LSS
 
 static void
-co_nmt_srv_init_lss(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
+co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt)
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_LSS));
 	assert(!srv->lss);
 
-	if (!co_dev_get_lss(dev))
+	if (!co_dev_get_lss(co_nmt_get_dev(nmt)))
 		return;
 
 	srv->set |= CO_NMT_SRV_LSS;
 
-	srv->lss = co_lss_create(net, dev, nmt);
+	srv->lss = co_lss_create(nmt);
 	if (__unlikely(!srv->lss))
 		diag(DIAG_ERROR, get_errc(), "unable to initialize LSS service");
 }

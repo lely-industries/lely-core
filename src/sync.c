@@ -253,6 +253,22 @@ co_sync_destroy(co_sync_t *sync)
 	}
 }
 
+LELY_CO_EXPORT can_net_t *
+co_sync_get_net(const co_sync_t *sync)
+{
+	assert(sync);
+
+	return sync->net;
+}
+
+LELY_CO_EXPORT co_dev_t *
+co_sync_get_dev(const co_sync_t *sync)
+{
+	assert(sync);
+
+	return sync->dev;
+}
+
 LELY_CO_EXPORT void
 co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind, void **pdata)
 {

@@ -85,6 +85,12 @@ LELY_CO_EXTERN co_csdo_t *co_csdo_create(can_net_t *net, co_dev_t *dev,
 //! Destroys a CANopen Client-SDO service. \see co_csdo_create()
 LELY_CO_EXTERN void co_csdo_destroy(co_csdo_t *sdo);
 
+//! Returns a pointer to the CAN network of a Client-SDO.
+LELY_CO_EXTERN can_net_t *co_csdo_get_net(const co_csdo_t *sdo);
+
+//! Returns a pointer to the CANopen device of a Client-SDO.
+LELY_CO_EXTERN co_dev_t *co_csdo_get_dev(const co_csdo_t *sdo);
+
 //! Returns the SDO number of a Client-SDO.
 LELY_CO_EXTERN co_unsigned8_t co_csdo_get_num(const co_csdo_t *sdo);
 
