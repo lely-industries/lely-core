@@ -308,6 +308,30 @@ LELY_UTIL_DEFINE_LEX_UNSIGNED(uint64_t, u64, pu64)
 LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
 		const char *end, struct floc *at);
 
+/*!
+ * Lexwes and decodes the Base64 representation of binary data from a memory
+ * buffer. This function implements the MIME variant of Base64 as specified in
+ * <a href="https://tools.ietf.org/html/rfc2045">RFC 2045</a>. Since this
+ * variant instructs implementations to ignore invalid characters, this function
+ * will lex the entire input.
+ *
+ * \param ptr   the address at which to store the decoded binary data (can be
+ *              NULL).
+ * \param pn    the address at which to store the number of written to \a ptr
+ *              (can be NULL).
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
+ * \param at    an optional pointer to the file location of \a begin (used for
+ *              diagnostic purposes). On success, if `at != NULL`, *\a at points
+ *              to one past the last character parsed. On error, *\a at is left
+ *              untouched.
+ *
+ * \returns the number of characters read.
+ */
+LELY_UTIL_EXTERN size_t lex_base64(void *ptr, size_t *pn, const char *begin,
+		const char *end, struct floc *at);
+
 LELY_UTIL_LEX_INLINE int __cdecl
 isbreak(int c)
 {

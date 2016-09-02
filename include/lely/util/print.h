@@ -101,6 +101,27 @@ LELY_UTIL_EXTERN size_t print_utf8(char32_t c32, char **pbegin, char *end);
  */
 LELY_UTIL_EXTERN size_t print_c99_esc(char32_t c32, char **pbegin, char *end);
 
+/*!
+ * Prints the Base64 representation of binary data to a memory buffer. This
+ * function implements the MIME variant of Base64 as specified in
+ * <a href="https://tools.ietf.org/html/rfc2045">RFC 2045</a>.
+ *
+ * \param ptr    a pointer to the binary data to be encoded and written.
+ * \param n      the number of bytes at \a ptr.
+ * \param pbegin the address of a pointer to the start of the buffer. If
+ *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
+ *               on exit, *\a pbegin points to one past the last character
+ *               written.
+ * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
+ *               most `end - *pbegin` characters are written, and the output may
+ *               be truncated.
+ *
+ * \returns the number of characters that would have been written had the buffer
+ * been sufficiently large.
+ */
+LELY_UTIL_EXTERN size_t print_base64(const void *ptr, size_t n, char **pbegin,
+		char *end);
+
 LELY_UTIL_PRINT_INLINE int
 otoc(int i)
 {

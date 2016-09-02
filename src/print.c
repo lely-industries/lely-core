@@ -23,6 +23,7 @@
 
 #include "util.h"
 #define LELY_UTIL_PRINT_INLINE	extern inline LELY_DLL_EXPORT
+#include <lely/libc/stdint.h>
 #include <lely/util/print.h>
 #include "unicode.h"
 
@@ -129,6 +130,51 @@ print_c99_esc(char32_t c32, char **pbegin, char *end)
 		for (int i = 0; i < n; i++)
 			chars += print_char(xtoc(c32 >> (4 * (n - i - 1))),
 					pbegin, end);
+	}
+
+	return chars;
+}
+
+LELY_UTIL_EXPORT size_t
+print_base64(const void *ptr, size_t n, char **pbegin, char *end)
+{
+	static const char tab[64] =
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
+			"ghijklmnopqrstuvwxyz0123456789+/";
+
+	size_t chars = 0;
+
+	const uint8_t *bp = ptr;
+	while (n) {
+		char c = tab[(bp[0] >> 2) & 0x3f];
+		chars += print_char(c, pbegin, end);
+		if (!((chars + 2) % 78)) {
+			chars += print_char('\r', pbegin, end);
+			chars += print_char('\n', pbegin, end);
+		}
+
+		c = tab[((bp[0] << 4) + (--n ? (bp[1] >> 4) : 0)) & 0x3f];
+		chars += print_char(c, pbegin, end);
+		if (!((chars + 2) % 78)) {
+			chars += print_char('\r', pbegin, end);
+			chars += print_char('\n', pbegin, end);
+		}
+
+		c = n ? tab[((bp[1] << 2) + (--n ? (bp[2] >> 6) : 0)) & 0x3f] : '=';
+		chars += print_char(c, pbegin, end);
+		if (!((chars + 2) % 78)) {
+			chars += print_char('\r', pbegin, end);
+			chars += print_char('\n', pbegin, end);
+		}
+
+		c = n ? (--n, tab[bp[2] & 0x3f]) : '=';
+		chars += print_char(c, pbegin, end);
+		if (n && !((chars + 2) % 78)) {
+			chars += print_char('\r', pbegin, end);
+			chars += print_char('\n', pbegin, end);
+		}
+
+		bp += 3;
 	}
 
 	return chars;
