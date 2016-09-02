@@ -76,9 +76,12 @@ lex_break(const char *begin, const char *end, struct floc *at)
 	assert(begin);
 	assert(!end || end >= begin);
 
+	if (__unlikely(end && begin >= end))
+		return 0;
+
 	const char *cp = begin;
 
-	if (!isbreak(*cp))
+	if (!isbreak((unsigned char )*cp))
 		return 0;
 
 	// Treat "\r\n" as a single line break.
@@ -97,6 +100,11 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	assert(begin);
 	assert(!end || end >= begin);
 
+	if (__unlikely(end && begin >= end))
+		return 0;
+
+	const char *cp = begin;
+
 	static const unsigned char mask[] = {
 		0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
 		0x00, 0x00, 0x00, 0x00,
@@ -104,8 +112,6 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		0x0f,
 		0x07
 	};
-
-	const char *cp = begin;
 
 	char32_t c32 = *cp & mask[(*cp >> 4) & 0xf];
 	switch (utf8_bytes(cp++)) {
@@ -159,6 +165,9 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	assert(begin);
 	assert(!end || end >= begin);
 
+	if (__unlikely(end && begin >= end))
+		return 0;
+
 	const char *cp = begin;
 
 	if (*cp++ != '\\')
@@ -172,7 +181,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	if (isodigit(*cp)) {
 		c32 = ctoo(*cp);
 		cp++;
-		while ((!end || cp < end) && isodigit(*cp)) {
+		while ((!end || cp < end) && isodigit((unsigned char)*cp)) {
 			c32 = c32 * 8 + ctoo(*cp);
 			cp++;
 		}

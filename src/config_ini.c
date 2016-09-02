@@ -183,9 +183,9 @@ skip(const char *begin, const char *end, struct floc *at)
 
 	const char *cp = begin;
 
-	cp += lex_ctype(&isblank, begin, end, at);
-	cp += lex_line_comment("#", begin, end, at);
-	cp += lex_line_comment(";", begin, end, at);
+	cp += lex_ctype(&isblank, cp, end, at);
+	cp += lex_line_comment("#", cp, end, at);
+	cp += lex_line_comment(";", cp, end, at);
 
 	return cp - begin;
 }
