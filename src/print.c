@@ -24,10 +24,18 @@
 #include "util.h"
 #define LELY_UTIL_PRINT_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/stdint.h>
+#include <lely/libc/stdio.h>
+#include <lely/util/lex.h>
 #include <lely/util/print.h>
 #include "unicode.h"
 
+#include <assert.h>
 #include <ctype.h>
+#include <float.h>
+#if __STDC_NO_VLA__
+#include <stdlib.h>
+#endif
+#include <string.h>
 
 LELY_UTIL_EXPORT size_t
 print_utf8(char32_t c32, char **pbegin, char *end)
@@ -134,6 +142,132 @@ print_c99_esc(char32_t c32, char **pbegin, char *end)
 
 	return chars;
 }
+
+LELY_UTIL_EXPORT size_t
+print_c99_str(const char *s, char **pbegin, char *end)
+{
+	assert(s);
+
+	size_t chars = 0;
+	chars += print_char('"', pbegin, end);
+	while (*s) {
+		char32_t c32 = 0;
+		size_t n = lex_utf8(s, NULL, NULL, &c32);
+		if (n) {
+			s += n;
+			chars += print_c99_esc(c32, pbegin, end);
+		}
+	}
+	chars += print_char('"', pbegin, end);
+	return chars;
+}
+
+#if __STDC_NO_VLA__
+#define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format) \
+	LELY_UTIL_EXPORT size_t \
+	print_c99_##suffix(type name, char **pbegin, char *end) \
+	{ \
+		if (pbegin && *pbegin) { \
+			char *buf = NULL; \
+			int chars = asprintf(&buf, format, name); \
+			if (__unlikely(chars < 0)) \
+				return 0; \
+			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
+					: chars); \
+			free(buf); \
+			return chars; \
+		} \
+		return snprintf(NULL, 0, format, name); \
+	}
+#else
+#define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format) \
+	LELY_UTIL_EXPORT size_t \
+	print_c99_##suffix(type name, char **pbegin, char *end) \
+	{ \
+		int chars = snprintf(NULL, 0, format, name); \
+		assert(chars > 0); \
+		if (pbegin && *pbegin) { \
+			char buf[chars + 1]; \
+			sprintf(buf, format, name); \
+			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
+					: chars); \
+		} \
+		return chars; \
+	}
+#endif
+
+LELY_UTIL_DEFINE_PRINT(long, long, l, "%li")
+LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul, "%lu")
+LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%lli")
+LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
+
+#undef LELY_UTIL_DEFINE_PRINT
+
+#if __STDC_NO_VLA__
+#define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format, dig) \
+	LELY_UTIL_EXPORT size_t \
+	print_c99_##suffix(type name, char **pbegin, char *end) \
+	{ \
+		if (pbegin && *pbegin) { \
+			char *buf = NULL; \
+			int chars = asprintf(&buf, format, dig, name); \
+			if (__unlikely(chars < 0)) \
+				return 0; \
+			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
+					: chars); \
+			free(buf); \
+			return chars; \
+		} \
+		return snprintf(NULL, 0, format, dig, name); \
+	}
+#else
+#define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format, dig) \
+	LELY_UTIL_EXPORT size_t \
+	print_c99_##suffix(type name, char **pbegin, char *end) \
+	{ \
+		int chars = snprintf(NULL, 0, format, dig, name); \
+		assert(chars > 0); \
+		if (pbegin && *pbegin) { \
+			char buf[chars + 1]; \
+			sprintf(buf, format, dig, name); \
+			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
+					: chars); \
+		} \
+		return chars; \
+	}
+#endif
+
+LELY_UTIL_DEFINE_PRINT(float, flt, f, "%.*g", FLT_DIG)
+LELY_UTIL_DEFINE_PRINT(double, dbl, d, "%.*g", DBL_DIG)
+LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld, "%.*Lg", LDBL_DIG)
+
+#undef LELY_UTIL_DEFINE_PRINT
+
+#define LELY_UTIL_DEFINE_PRINT(type, suffix, name, alias) \
+	LELY_UTIL_EXPORT size_t \
+	print_c99_##suffix(type name, char **pbegin, char *end) \
+	{ \
+		return print_c99_##alias(name, pbegin, end); \
+	}
+
+LELY_UTIL_DEFINE_PRINT(int8_t, i8, i8, long)
+LELY_UTIL_DEFINE_PRINT(int16_t, i16, i16, long)
+LELY_UTIL_DEFINE_PRINT(int32_t, i32, i32, long)
+#if LONG_BIT == 32
+LELY_UTIL_DEFINE_PRINT(int64_t, i64, i64, llong)
+#else
+LELY_UTIL_DEFINE_PRINT(int64_t, i64, i64, long)
+#endif
+LELY_UTIL_DEFINE_PRINT(uint8_t, u8, u8, ulong)
+LELY_UTIL_DEFINE_PRINT(uint16_t, u16, u16, ulong)
+LELY_UTIL_DEFINE_PRINT(uint32_t, u32, u32, ulong)
+#if LONG_BIT == 32
+LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ullong)
+#else
+LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ulong)
+#endif
+
+#undef LELY_UTIL_DEFINE_PRINT
 
 LELY_UTIL_EXPORT size_t
 print_base64(const void *ptr, size_t n, char **pbegin, char *end)
