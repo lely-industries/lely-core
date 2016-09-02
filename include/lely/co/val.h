@@ -551,6 +551,27 @@ LELY_CO_EXTERN size_t co_val_write(co_unsigned16_t type, const void *val,
 LELY_CO_EXTERN size_t co_val_lex(co_unsigned16_t type, void *val,
 		const char *begin, const char *end, struct floc *at);
 
+/*!
+ * Prints a value of the specified data type to a memory buffer.
+ *
+ * \param type   the data type (in the range [1..27]). This MUST be the object
+ *               index of one of the static data types.
+ * \param val    the address of the value to be written. In case of string or
+ *               domains, this MUST be the address of pointer.
+ * \param pbegin the address of a pointer to the start of the buffer. If
+ *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
+ *               on exit, *\a pbegin points to one past the last character
+ *               written.
+ * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
+ *               most `end - *pbegin` characters are written, and the output may
+ *               be truncated.
+ *
+ * \returns the number of characters that would have been written had the buffer
+ * been sufficiently large.
+ */
+LELY_CO_EXTERN size_t co_val_print(co_unsigned16_t type, const void *val,
+		char **pbegin, char *end);
+
 #ifdef __cplusplus
 }
 #endif

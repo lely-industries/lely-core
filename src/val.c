@@ -28,6 +28,7 @@
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
 #include <lely/util/lex.h>
+#include <lely/util/print.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 
@@ -1058,6 +1059,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			}
 			// Parse the octets.
 			uint8_t *os = *(void **)val;
+			assert(*os);
 			for (size_t i = 0; i < chars; i++) {
 				if (i % 2) {
 					*os <<= 4;
@@ -1070,13 +1072,29 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		cp += chars;
 		break;
 	}
-	case CO_DEFTYPE_UNICODE_STRING:
-		// TODO: Implement UNICODE_STRING.
-		set_errnum(ERRNUM_NOSYS);
-		if (at)
-			diag_at(DIAG_ERROR, get_errc(), at,
-					"cannot parse value of type UNICODE_STRING");
+	case CO_DEFTYPE_UNICODE_STRING: {
+		size_t n = 0;
+		chars = lex_base64(NULL, &n, cp, end, NULL);
+		if (val) {
+			if (__unlikely(co_array_alloc(val, 2 * (n / 2 + 1))
+					== -1)) {
+				if (at)
+					diag_at(DIAG_ERROR, get_errc(), at,
+							"unable to create value of type UNICODE_STRING");
+				return 0;
+			}
+			co_array_init(val, 2 * (n / 2));
+			// Parse the Unicode characters.
+			char16_t *us = *(void **)val;
+			assert(*us);
+			lex_base64(us, NULL, cp, end, NULL);
+			for (size_t i = 0; i + 1 < n; i += 2)
+				us[i / 2] = letoh_u16(us[i / 2]);
+			break;
+		}
+		cp += chars;
 		break;
+	}
 	case CO_DEFTYPE_TIME_OF_DAY:
 		// TODO: Implement TIME_OF_DAY.
 		set_errnum(ERRNUM_NOSYS);
@@ -1091,13 +1109,23 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			diag_at(DIAG_ERROR, get_errc(), at,
 					"cannot parse value of type TIME_DIFFERENCE");
 		break;
-	case CO_DEFTYPE_DOMAIN:
-		// TODO: Implement DOMAIN.
-		set_errnum(ERRNUM_NOSYS);
-		if (at)
-			diag_at(DIAG_ERROR, get_errc(), at,
-					"cannot parse value of type DOMAIN");
+	case CO_DEFTYPE_DOMAIN: {
+		size_t n = 0;
+		chars = lex_base64(NULL, &n, cp, end, NULL);
+		if (val) {
+			if (__unlikely(co_val_init_dom(val, NULL, n) == -1)) {
+				if (at)
+					diag_at(DIAG_ERROR, get_errc(), at,
+							"unable to create value of type DOMAIN");
+				return 0;
+			}
+			void *dom = *(void **)val;
+			assert(dom);
+			lex_base64(dom, NULL, cp, end, NULL);
+		}
+		cp += chars;
 		break;
+	}
 	case CO_DEFTYPE_INTEGER24:
 		chars = lex_c99_i32(cp, end, NULL, &u.i32);
 		if (chars) {
@@ -1302,6 +1330,100 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		floc_strninc(at, cp, cp - begin);
 
 	return cp - begin;
+}
+
+LELY_CO_EXPORT size_t
+co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
+{
+	if (co_type_is_array(type)) {
+		const void *ptr = co_val_addressof(type, val);
+		size_t n = co_val_sizeof(type, val);
+		if (!ptr || !n)
+			return 0;
+		switch (type) {
+			case CO_DEFTYPE_VISIBLE_STRING:
+				return print_c99_str(ptr, pbegin, end);
+			case CO_DEFTYPE_OCTET_STRING: {
+				size_t chars = 0;
+				for (const uint8_t *os = ptr; n; n--, os++) {
+					chars += print_char(otoc(*os >> 4),
+							pbegin, end);
+					chars += print_char(otoc(*os), pbegin,
+							end);
+				}
+				return chars;
+			}
+			case CO_DEFTYPE_UNICODE_STRING: {
+				char16_t *us = NULL;
+				if (__unlikely(co_val_copy(type, &us, val)
+						!= n))
+					return 0;
+				for (size_t i = 0; i + 1 < n; i += 2)
+					us[i / 2] = htole_u16(us[i / 2]);
+				size_t chars = print_base64(us, n, pbegin, end);
+				co_val_fini(type, &us);
+				return chars;
+			}
+			case CO_DEFTYPE_DOMAIN:
+				return print_base64(ptr, n, pbegin, end);
+			default:
+				// We can never get here.
+				return 0;
+		}
+	} else {
+		const union co_val *u = val;
+		switch (type) {
+		case CO_DEFTYPE_BOOLEAN:
+			return print_c99_u8(!!u->b, pbegin, end);
+		case CO_DEFTYPE_INTEGER8:
+			return print_c99_i8(u->i8, pbegin, end);
+		case CO_DEFTYPE_INTEGER16:
+			return print_c99_i16(u->i16, pbegin, end);
+		case CO_DEFTYPE_INTEGER32:
+			return print_c99_i32(u->i32, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED8:
+			return print_c99_u8(u->u8, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED16:
+			return print_c99_u16(u->u16, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED32:
+			return print_c99_u32(u->u32, pbegin, end);
+		case CO_DEFTYPE_REAL32:
+			return print_c99_flt(u->r32, pbegin, end);
+		case CO_DEFTYPE_TIME_OF_DAY:
+			// TODO: Implement TIME_OF_DAY.
+			set_errnum(ERRNUM_NOSYS);
+			return 0;
+		case CO_DEFTYPE_TIME_DIFF:
+			// TODO: Implement TIME_DIFFERENCE.
+			set_errnum(ERRNUM_NOSYS);
+			return 0;
+		case CO_DEFTYPE_INTEGER24:
+			return print_c99_i32(u->i24, pbegin, end);
+		case CO_DEFTYPE_REAL64:
+			return print_c99_dbl(u->r64, pbegin, end);
+		case CO_DEFTYPE_INTEGER40:
+			return print_c99_i64(u->i40, pbegin, end);
+		case CO_DEFTYPE_INTEGER48:
+			return print_c99_i64(u->i48, pbegin, end);
+		case CO_DEFTYPE_INTEGER56:
+			return print_c99_i64(u->i56, pbegin, end);
+		case CO_DEFTYPE_INTEGER64:
+			return print_c99_i64(u->i64, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED24:
+			return print_c99_u32(u->u24, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED40:
+			return print_c99_u64(u->u40, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED48:
+			return print_c99_u64(u->u48, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED56:
+			return print_c99_u64(u->u56, pbegin, end);
+		case CO_DEFTYPE_UNSIGNED64:
+			return print_c99_u64(u->u64, pbegin, end);
+		default:
+			set_errnum(ERRNUM_INVAL);
+			return 0;
+		}
+	}
 }
 
 static int

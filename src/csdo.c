@@ -1172,14 +1172,14 @@ co_csdo_abort_on_leave(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	if (sdo->dn_con)
+	if (sdo->dn_con) {
 		sdo->dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac, sdo->dn_data);
-
-	if (sdo->up_con)
+	} else if (sdo->up_con) {
 		sdo->up_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
 				sdo->ac ? NULL : sdo->buf.begin,
 				sdo->ac ? 0 : membuf_size(&sdo->buf),
 				sdo->up_data);
+	}
 }
 
 static co_csdo_state_t *
