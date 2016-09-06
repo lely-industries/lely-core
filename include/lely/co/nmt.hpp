@@ -293,15 +293,16 @@ public:
 	int
 	cfgReq(co_unsigned8_t id, int timeout, F* f) noexcept
 	{
-		cfgReq(id, timeout, &c_obj_call<co_nmt_cfg_con_t*, F>::function,
+		return cfgReq(id, timeout,
+				&c_obj_call<co_nmt_cfg_con_t*, F>::function,
 				static_cast<void*>(f));
 	}
 
 	template <class C, typename c_mem_fn<co_nmt_cfg_con_t*, C>::type M>
-	void
+	int
 	cfgReq(co_unsigned8_t id, int timeout, C* obj) noexcept
 	{
-		cfgReq(id, timeout,
+		return cfgReq(id, timeout,
 				&c_mem_call<co_nmt_cfg_con_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
