@@ -59,8 +59,8 @@ class COTime: public incomplete_c_type<__co_time> {
 public:
 	COTime(CANNet* net, CODev* dev): c_base(net, dev) {}
 
-	CANNet* getNet() const noexcept { return co_time_get_dev(this); }
-	CODev* getDev() const noexcept { return co_time_get_net(this); }
+	CANNet* getNet() const noexcept { return co_time_get_net(this); }
+	CODev* getDev() const noexcept { return co_time_get_dev(this); }
 
 	void
 	getInd(co_time_ind_t** pind, void** pdata) const noexcept
