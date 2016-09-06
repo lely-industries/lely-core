@@ -454,6 +454,19 @@ public:
 				static_cast<void*>(obj));
 	}
 
+	co_unsigned32_t
+	dnInd(co_sdo_req& req) noexcept
+	{
+		return co_sub_dn_ind(this, &req);
+	}
+
+	template <co_unsigned16_t N>
+	co_unsigned32_t
+	dnInd(const COVal<N>& val) noexcept
+	{
+		return co_sub_dn_ind_val(this, N, &val);
+	}
+
 	void
 	getUpInd(co_sub_up_ind_t** pind, void** pdata) noexcept
 	{
@@ -480,6 +493,12 @@ public:
 	{
 		setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
 				static_cast<void*>(obj));
+	}
+
+	co_unsigned32_t
+	upInd(co_sdo_req& req) noexcept
+	{
+		return co_sub_dn_ind(this, &req);
 	}
 
 protected:

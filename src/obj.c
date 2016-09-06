@@ -734,6 +734,28 @@ co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 	return sub->dn_ind(sub, req, sub->dn_data);
 }
 
+LELY_CO_EXPORT co_unsigned32_t
+co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
+{
+	if (__unlikely(co_sub_get_type(sub) != type))
+		return CO_SDO_AC_TYPE_LEN;
+
+	struct co_sdo_req req = CO_SDO_REQ_INIT;
+	co_unsigned32_t ac = 0;
+
+	errc_t errc = get_errc();
+
+	if (__unlikely(co_sdo_req_up(&req, type, val, &ac) == -1))
+		goto error;
+
+	ac = co_sub_dn_ind(sub, &req);
+
+error:
+	co_sdo_req_fini(&req);
+	set_errc(errc);
+	return ac;
+}
+
 LELY_CO_EXPORT int
 co_sub_dn(co_sub_t *sub, void *val)
 {

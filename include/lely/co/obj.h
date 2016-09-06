@@ -645,9 +645,32 @@ LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
  *            only be used by the indication function.
  *
  * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_sub_dn_ind_val()
  */
 LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(co_sub_t *sub,
 		struct co_sdo_req *req);
+
+/*!
+ * Invokes the download indication function of a CANopen sub-object, registered
+ * with co_sub_set_dn_ind(). This is used for writing values to the object
+ * dictionary. If the indication function returns an error, or the
+ * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is set, the value of the
+ * sub-object is left untouched.
+ *
+ * \param sub   a pointer to a CANopen sub-object.
+ * \param type  the data type (in the range [1..27]). This MUST be the object
+ *              index of one of the static data types and SHOULD be the same as
+ *              the return value of co_sub_get_type().
+ * \param val   the address of the value to be written. In case of string or
+ *              domains, this MUST be the address of pointer.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_sub_dn_ind()
+ */
+LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind_val(co_sub_t *sub,
+		co_unsigned16_t type, const void *val);
 
 /*!
  * Downloads (moves) a value into a CANopen sub-object if the
