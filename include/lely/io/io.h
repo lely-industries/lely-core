@@ -65,7 +65,9 @@ enum {
 	//! Do not close the native file descriptor when closing an I/O device.
 	IO_FLAG_NO_CLOSE = 1 << 0,
 	//! Perform I/O operations in non-blocking mode.
-	IO_FLAG_NONBLOCK = 1 << 1
+	IO_FLAG_NONBLOCK = 1 << 1,
+	//! Receive own messages (i.e., sent by the same device).
+	IO_FLAG_LOOPBACK = 1 << 2
 };
 
 #ifdef __cplusplus
@@ -138,9 +140,9 @@ LELY_IO_EXTERN int io_get_fd(io_handle_t handle);
 /*!
  * Obtains the flags of an I/O device.
  *
- * \returns the active flags (any combination of #IO_FLAG_NO_CLOSE and
- * #IO_FLAG_NONBLOCK), or -1 on error. In the latter case, the error number can
- * be obtained with `get_errnum()`.
+ * \returns the active flags (any combination of #IO_FLAG_NO_CLOSE,
+ * #IO_FLAG_NONBLOCK and #IO_FLAG_LOOPBACK), or -1 on error. In the latter case,
+ * the error number can be obtained with `get_errnum()`.
  *
  * \see io_set_flags()
  */
@@ -150,8 +152,8 @@ LELY_IO_EXTERN int io_get_flags(io_handle_t handle);
  * Sets the flags of an I/O device.
  *
  * \param handle a valid I/O device handle.
- * \param flags  the I/O device flags (any combination of #IO_FLAG_NO_CLOSE and
- *               #IO_FLAG_NONBLOCK).
+ * \param flags  the I/O device flags (any combination of #IO_FLAG_NO_CLOSE,
+ *               #IO_FLAG_NONBLOCK and #IO_FLAG_LOOPBACK).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.

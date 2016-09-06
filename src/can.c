@@ -654,12 +654,35 @@ can_flags(struct io_handle *handle, int flags)
 	if (__unlikely(arg == -1))
 		return -1;
 
-	if (flags & IO_FLAG_NONBLOCK)
-		arg |= O_NONBLOCK;
-	else
-		arg &= ~O_NONBLOCK;
+	int errsv = errno;
 
-	return fcntl(handle->fd, F_SETFL, arg);
+	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK)) {
+		if (__unlikely(fcntl(handle->fd, F_SETFL, arg | O_NONBLOCK)
+				== -1)) {
+			errsv = errno;
+			goto error_fcntl;
+		}
+	} else if (!(flags & IO_FLAG_NONBLOCK) && (arg & O_NONBLOCK)) {
+		if (__unlikely(fcntl(handle->fd, F_SETFL, arg & ~O_NONBLOCK)
+				== -1)) {
+			errsv = errno;
+			goto error_fcntl;
+		}
+	}
+
+	int optval = !!(flags & IO_FLAG_LOOPBACK);
+	if (__unlikely(setsockopt(handle->fd, SOL_CAN_RAW,
+			CAN_RAW_RECV_OWN_MSGS, (const char *)&optval,
+			sizeof(optval)) == -1)) {
+		errsv = errno;
+		goto error_setsockopt;
+	}
+
+error_setsockopt:
+	fcntl(handle->fd, F_SETFL, arg);
+error_fcntl:
+	errno = errsv;
+	return -1;
 }
 
 static ssize_t

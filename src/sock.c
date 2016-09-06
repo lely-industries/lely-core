@@ -1326,12 +1326,11 @@ sock_flags(struct io_handle *handle, int flags)
 	if (__unlikely(arg == -1))
 		return -1;
 
-	if (flags & IO_FLAG_NONBLOCK)
-		arg |= O_NONBLOCK;
-	else
-		arg &= ~O_NONBLOCK;
-
-	return fcntl(handle->fd, F_SETFL, arg);
+	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK))
+		return fcntl(handle->fd, F_SETFL, arg | O_NONBLOCK);
+	else if (!(flags & IO_FLAG_NONBLOCK) && (arg & O_NONBLOCK))
+		return fcntl(handle->fd, F_SETFL, arg & ~O_NONBLOCK);
+	return 0;
 #endif
 }
 
