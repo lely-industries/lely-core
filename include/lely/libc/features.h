@@ -116,12 +116,6 @@
 #endif
 #endif
 
-#ifndef __STDC_NO_COMPLEX__
-#if defined(__cplusplus) || defined(_MSC_VER)
-#define __STDC_NO_COMPLEX__	1
-#endif
-#endif
-
 #ifndef __STDC_NO_THREADS__
 // Although recent versions of Cygwin do provide <threads.h>, it requires
 // <machine/_threads.h>, which is missing.
@@ -134,10 +128,6 @@
 #if defined(__cplusplus) || defined(_MSC_VER)
 #define __STDC_NO_VLA__	1
 #endif
-#endif
-
-#if __STDC_NO_COMPLEX__
-#undef __STDC_IEC_559_COMPLEX__
 #endif
 
 #ifdef __cplusplus
