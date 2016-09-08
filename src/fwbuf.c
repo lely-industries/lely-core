@@ -35,8 +35,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#undef _POSIX_C_SOURCE
-
 #ifdef _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "shlwapi.lib")

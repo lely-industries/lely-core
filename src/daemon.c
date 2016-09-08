@@ -239,7 +239,7 @@ ReportStatus(DWORD dwCurrentState)
 	return SetServiceStatus(hServiceStatus, &ServiceStatus) ? 0 : -1;
 }
 
-#elif _POSIX_C_SOURCE >= 200112
+#elif _POSIX_C_SOURCE >= 200112L
 
 #include <fcntl.h>
 #include <poll.h>
