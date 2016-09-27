@@ -1,8 +1,0 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: liblely-libc
-Source: http://www.lely.com
-
-Files: *
-Copyright: 2016 Lely Industries N.V.
-License: Apache-2.0
- /usr/share/common-licenses/Apache-2.0
