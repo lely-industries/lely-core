@@ -682,7 +682,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
-	if (__unlikely((uint64_t)size > SIZE_MAX - off)) {
+	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
 		buf->dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_size;
 	}
@@ -724,7 +724,7 @@ error_size:
 		return NULL;
 	}
 	int64_t off = pos % page_size;
-	if (__unlikely((uint64_t)size > SIZE_MAX - off)) {
+	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
 		errno = buf->errsv = EOVERFLOW;
 		return NULL;
 	}
