@@ -36,6 +36,10 @@
 #endif
 #include <string.h>
 
+#ifdef __MINGW32__
+#pragma GCC diagnostic ignored "-Wformat"
+#endif
+
 LELY_UTIL_EXPORT size_t
 print_utf8(char32_t c32, char **pbegin, char *end)
 {
