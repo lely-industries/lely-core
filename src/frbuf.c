@@ -172,7 +172,7 @@ frbuf_get_size(frbuf_t *buf)
 		return -1;
 	return FileSize.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	struct stat64 stat;
 	if (__unlikely(fstat64(buf->fd, &stat) == -1))
 		return -1;
@@ -217,7 +217,7 @@ frbuf_get_pos(frbuf_t *buf)
 		return -1;
 	return li.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	return lseek64(buf->fd, 0, SEEK_CUR);
 #else
 	return lseek(buf->fd, 0, SEEK_CUR);
@@ -342,10 +342,10 @@ error_get_pos:
 	return result;
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
-#ifdef _GNU_SOURCE
-	do result = pread(buf->fd, ptr, size, pos);
-#else
+#ifdef __linux__
 	do result = pread64(buf->fd, ptr, size, pos);
+#else
+	do result = pread(buf->fd, ptr, size, pos);
 #endif
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
@@ -451,7 +451,7 @@ error_size:
 		return NULL;
 	}
 
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	buf->addr = mmap64(NULL, off + size, PROT_READ, MAP_SHARED, buf->fd,
 			pos - off);
 #else

@@ -343,7 +343,7 @@ fwbuf_get_size(fwbuf_t *buf)
 	}
 	return FileSize.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	struct stat64 stat;
 	if (__unlikely(fstat64(buf->fd, &stat) == -1)) {
 #else
@@ -383,7 +383,7 @@ fwbuf_set_size(fwbuf_t *buf, int64_t size)
 
 	return 0;
 #elif _POSIX_C_SOURCE >= 200112L
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	if (__unlikely(ftruncate64(buf->fd, size) == -1)) {
 #else
 	// TODO: Check if size does not overflow the range of off_t.
@@ -419,7 +419,7 @@ fwbuf_get_pos(fwbuf_t *buf)
 	}
 	return li.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	int64_t pos = lseek64(buf->fd, 0, SEEK_CUR);
 #else
 	int64_t pos = lseek(buf->fd, 0, SEEK_CUR);
@@ -581,10 +581,10 @@ error_pos:
 	return result;
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
-#ifdef _GNU_SOURCE
-	do result = pwrite(buf->fd, ptr, size, pos);
-#else
+#ifdef __linux__
 	do result = pwrite64(buf->fd, ptr, size, pos);
+#else
+	do result = pwrite(buf->fd, ptr, size, pos);
 #endif
 	while (__unlikely(result == -1 && errno == EINTR));
 	if (__unlikely(result == -1))
@@ -729,7 +729,7 @@ error_size:
 		return NULL;
 	}
 
-#ifdef _GNU_SOURCE
+#ifdef __linux__
 	buf->addr = mmap64(NULL, off + size, PROT_READ | PROT_WRITE, MAP_SHARED,
 			buf->fd,
 			pos - off);
