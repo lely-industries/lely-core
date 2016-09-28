@@ -30,7 +30,6 @@
 #include "unicode.h"
 
 #include <assert.h>
-#include <ctype.h>
 #include <float.h>
 #if __STDC_NO_VLA__
 #include <stdlib.h>
@@ -196,10 +195,17 @@ print_c99_str(const char *s, char **pbegin, char *end)
 	}
 #endif
 
+#ifdef _WIN32
+LELY_UTIL_DEFINE_PRINT(long, long, l, "%I32i")
+LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul, "%I32u")
+LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%I64i")
+LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%I64u")
+#else
 LELY_UTIL_DEFINE_PRINT(long, long, l, "%li")
 LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul, "%lu")
 LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%lli")
 LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
+#endif
 
 #undef LELY_UTIL_DEFINE_PRINT
 
@@ -239,7 +245,9 @@ LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
 
 LELY_UTIL_DEFINE_PRINT(float, flt, f, "%.*g", FLT_DIG)
 LELY_UTIL_DEFINE_PRINT(double, dbl, d, "%.*g", DBL_DIG)
+#ifndef _WIN32
 LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld, "%.*Lg", LDBL_DIG)
+#endif
 
 #undef LELY_UTIL_DEFINE_PRINT
 
