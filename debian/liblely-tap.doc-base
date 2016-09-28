@@ -1,9 +1,0 @@
-Document: liblely-tap
-Title: Test Anything Protocol (TAP) library documentation
-Author: J. S. Seldenthuis <jseldenthuis@lely.com>
-Abstract: This is the doxygen generated documentation.
-Section: Programming/C
-
-Format: HTML
-Index: /usr/share/doc/liblely-tap-doc/html/index.html
-Files: /usr/share/doc/liblely-tap-doc/html/*
