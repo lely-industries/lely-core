@@ -27,12 +27,16 @@ AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
 case "$host" in
-*-*-mingw*)
-	platform_win32=yes
-	;;
 *linux*)
 	platform_linux=yes
 	;;
+*-*-mingw*)
+	platform_win32=yes
+	case "$build" in
+	*linux*)
+		AC_CHECK_PROGS([LOG_COMPILER], [wine])
+		;;
+	esac	;;
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
