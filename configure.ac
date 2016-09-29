@@ -31,6 +31,11 @@ case "$host" in
 	;;
 *-*-mingw*)
 	platform_win32=yes
+	case "$build" in
+	*linux*)
+		AC_CHECK_PROGS([LOG_COMPILER], [wine])
+		;;
+	esac
 	;;
 esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
