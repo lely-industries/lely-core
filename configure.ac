@@ -37,11 +37,11 @@ esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 
-PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.1 liblely-libc < 2])
-PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.1 liblely-util < 2])
+PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
+PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.2 liblely-util < 2])
 
 AM_CONDITIONAL([NO_CAN], [false])
-PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.1 liblely-can < 2], [], [
+PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.2 liblely-can < 2], [], [
 	AM_CONDITIONAL([NO_CAN], [true])
 	AC_DEFINE([LELY_NO_CAN], [1], [Define to 1 if the CAN library is not available.])
 ])
@@ -128,7 +128,7 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
-PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.1 liblely-tap < 2], [
+PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.2 liblely-tap < 2], [
 	AM_CONDITIONAL([HAVE_TAP], [true])
 	AC_PROG_AWK
 	AC_REQUIRE_AUX_FILE([tap-driver.sh])
