@@ -1,12 +1,4 @@
 /autom4te.cache/
-/debian/*/
-!/debian/source
-/debian/files
-/debian/stamp-*
-/debian/*.debhelper.log
-/debian/*.postinst.debhelper
-/debian/*.postrm.debhelper
-/debian/*.substvars
 /doc/html/
 /doc/Doxyfile
 /doc/doxygen_sqlite3.db
@@ -19,12 +11,12 @@
 /tools/dcf2c
 /aclocal.m4
 /compile
-/config.guess*
+/config.guess
 /config.h
 /config.h.in
 /config.log
 /config.status
-/config.sub*
+/config.sub
 /configure
 /depcomp
 /install-sh
