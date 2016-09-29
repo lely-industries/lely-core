@@ -24,7 +24,7 @@ or download the latest release
 Build and install
 -----------------
 
-liblely-can uses the GNU Build System (`configure`, `make`, `make install`) and
+liblely-io uses the GNU Build System (`configure`, `make`, `make install`) and
 has native support for POSIX platforms (Debian-based Linux distributions in
 particular) and Windows (Vista and higher) through [Cygwin][] or [MinGW-w64][].
 [GCC ARM Embedded][] and Microsoft Visual Studio (2013 and higher) are also
