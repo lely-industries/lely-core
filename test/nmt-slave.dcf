@@ -87,7 +87,8 @@ DefaultValue=0x00000003
 ParameterName=Serial number
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000004
+ParameterValue=0x00000004
+
 [1F50]
 SubNumber=2
 ParameterName=Program data

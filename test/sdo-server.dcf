@@ -1,9 +1,9 @@
 [DeviceInfo]
 VendorName=
-VendorNumber=0x0
+VendorNumber=0
 ProductName=
-ProductNumber=0x0
-RevisionNumber=0x0
+ProductNumber=0
+RevisionNumber=0
 OrderCode=
 BaudRate_10=0
 BaudRate_20=0
