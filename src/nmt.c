@@ -1524,7 +1524,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		// Enable node guarding if the guard time and lifetime factor
 		// are non-zero.
 		co_unsigned16_t gt = (slave->assignment >> 16) & 0xffff;
-		co_unsigned16_t ltf = (slave->assignment >> 8) & 0xff;
+		co_unsigned8_t ltf = (slave->assignment >> 8) & 0xff;
 		if (__unlikely(co_nmt_ng_req(nmt, id, gt, ltf) == -1))
 			diag(DIAG_ERROR, get_errc(), "unable to guard node %02X",
 					id);

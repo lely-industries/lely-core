@@ -325,7 +325,7 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		ac = CO_SDO_AC_DATA;
 		goto error_get_size;
 	}
-	size_t nbyte = size;
+	size_t nbyte = (size_t)size;
 
 	membuf_clear(buf);
 	if (__unlikely(size && !membuf_reserve(buf, nbyte))) {
