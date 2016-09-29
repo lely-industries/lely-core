@@ -36,7 +36,8 @@ case "$host" in
 	*linux*)
 		AC_CHECK_PROGS([LOG_COMPILER], [wine])
 		;;
-	esac	;;
+	esac
+	;;
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
