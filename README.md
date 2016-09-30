@@ -23,7 +23,7 @@ liblely-co is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/co.git
 
 or download the latest release
-([v1.1.0](https://gitlab.com/lely_industries/co/tags/v1.1.0)).
+([v1.2.0](https://gitlab.com/lely_industries/co/tags/v1.2.0)).
 
 Build and install
 -----------------
