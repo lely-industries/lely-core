@@ -1,3 +1,6 @@
+EXTRA_DIST =
+EXTRA_DIST += logo.png
+
 if HAVE_DOXYGEN
 
 html-local: Doxyfile
