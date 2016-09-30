@@ -143,8 +143,8 @@ limitations under the License.
 [GitLab]: https://gitlab.com/lely_industries/can
 [Graphviz]: http://www.graphviz.org/
 [Lely Industries N.V.]: http://www.lely.com
+[liblely-can]: https://gitlab.com/lely_industries/can
 [liblely-libc]: https://gitlab.com/lely_industries/libc
 [liblely-util]: https://gitlab.com/lely_industries/util
-[liblely-can]: https://gitlab.com/lely_industries/can
 [MinGW-w64]: http://mingw-w64.org/
 
