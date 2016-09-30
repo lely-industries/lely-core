@@ -116,6 +116,11 @@ subset of the functionality. These interfaces require support from liblely-util.
 This support can be disabled with the `--disable-cxx` option to `configure` or
 by defining the `LELY_NO_CXX` preprocessor macro.
 
+The memory pool allocator allocates its memory in pages. By default these pages
+are 64 KiB large and aligned on a 4 KiB boundary. For embedded systems this may
+be far too large. The `LELY_PAGE_SIZE` and `LELY_PAGE_ALIGNMENT` preprocessor
+macros can be used to set the size and alignment of memory pages (in bytes).
+
 Usage
 -----
 
