@@ -70,7 +70,7 @@ static const struct io_handle_vtab sock_vtab = {
 	.connect = &sock_connect
 };
 
-int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
+static int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
 
 LELY_IO_EXPORT io_handle_t
 io_open_socket(int domain, int type)
@@ -1504,7 +1504,7 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 #endif
 }
 
-int
+static int
 _socketpair(int af, int type, int protocol, SOCKET sv[2])
 {
 	assert(sv);
