@@ -678,6 +678,8 @@ can_flags(struct io_handle *handle, int flags)
 		goto error_setsockopt;
 	}
 
+	return 0;
+
 error_setsockopt:
 	fcntl(handle->fd, F_SETFL, arg);
 error_fcntl:

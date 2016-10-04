@@ -128,7 +128,7 @@ io_set_flags(io_handle_t handle, int flags)
 		return -1;
 	}
 
-	flags &= (IO_FLAG_NO_CLOSE | IO_FLAG_NONBLOCK);
+	flags &= (IO_FLAG_NO_CLOSE | IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
 
 	int result = 0;
 	io_handle_lock(handle);
