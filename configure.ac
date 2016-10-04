@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([I/O library], [1.0.0], [], [liblely-io])
+AC_INIT([I/O library], [1.0.1], [], [liblely-io])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
