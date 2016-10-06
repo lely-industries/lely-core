@@ -282,6 +282,7 @@ static int co_nmt_ng_timer(const struct timespec *tp, void *data);
  */
 static int co_nmt_ec_timer(const struct timespec *tp, void *data);
 
+#ifndef LELY_NO_CO_MASTER
 /*!
  * The CAN timer callback function for sending buffered NMT messages.
  *
@@ -292,8 +293,8 @@ static int co_nmt_cs_timer(const struct timespec *tp, void *data);
 //! The default node guarding event handler. \see co_nmt_ng_ind_t
 static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
+#endif
 
-#ifndef LELY_NO_CO_MASTER
 /*!
  * The indication function for state change events.
  *
@@ -302,7 +303,6 @@ static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * \param st  the state of the node.
  */
 static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
-#endif
 
 //! The default life guarding event handler. \see co_nmt_lg_ind_t
 static void default_lg_ind(co_nmt_t *nmt, int state, void *data);
@@ -660,8 +660,10 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->recv_700 = NULL;
 
+#ifndef LELY_NO_CO_MASTER
 	nmt->ng_ind = &default_ng_ind;
 	nmt->ng_data = NULL;
+#endif
 
 	nmt->ec_timer = NULL;
 
