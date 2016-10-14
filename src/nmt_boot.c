@@ -424,10 +424,18 @@ static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot);
 static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
+/*!
+ * The 'SDO upload confirmation' transition function of the 'stop program'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot,
+		co_unsigned32_t ac, const void *ptr, size_t n);
+
 //! The 'stop program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_stop_prog_state,
 	.on_enter = &co_nmt_boot_stop_prog_on_enter,
-	.on_dn_con = &co_nmt_boot_stop_prog_on_dn_con
+	.on_dn_con = &co_nmt_boot_stop_prog_on_dn_con,
+	.on_up_con = &co_nmt_boot_stop_prog_on_up_con
 )
 
 //! The entry function of the 'clear program' state.
@@ -1380,10 +1388,8 @@ co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// Write a 0 (Stop program) to the program control of the slave
-	// (sub-object 1F51:01).
-	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
-			&(co_unsigned8_t){ 0 }) == -1))
+	// Read the program control of the slave (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1394,13 +1400,44 @@ co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// The download SDO request may be unconfirmed on some devices since it
+	// stops the program on the slave (and may cause a restart of the
+	// bootloader). We therefore ignore timeouts.
+	if (__unlikely(ac && ac != CO_SDO_AC_TIMEOUT)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
 	}
 
 	return co_nmt_boot_clear_prog_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
+		const void *ptr, size_t n)
+{
+	assert(boot);
+
+	if (__unlikely(ac)) {
+		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
+				ac, boot->id, co_sdo_ac2str(ac));
+		return co_nmt_boot_abort_state;
+	}
+
+	// If the value is already 0 (Program stopped), do not write a 0 (Stop
+	// program), but skip to the 'clear program' state.
+	co_unsigned8_t val = 0;
+	if (co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
+			(const uint8_t *)ptr + n) && !val)
+		return co_nmt_boot_clear_prog_state;
+
+	// Write a 0 (Stop program) to the program control of the slave
+	// (sub-object 1F51:01).
+	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 0 }) == -1))
+		return co_nmt_boot_abort_state;
+
+	return NULL;
 }
 
 static co_nmt_boot_state_t *
@@ -1463,17 +1500,12 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
-	assert(boot);
+	__unused_var(boot);
 
-	if (__unlikely(ac)) {
-		// If SDO block transfer is not supported, fall back to SDO
-		// segmented transfer.
-		if (ac == CO_SDO_AC_NO_CS)
-			return co_nmt_boot_dn_prog_state;
-		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
-				ac, boot->id, co_sdo_ac2str(ac));
-		return co_nmt_boot_abort_state;
-	}
+	// If SDO block transfer is not supported, fall back to SDO segmented
+	// transfer.
+	if (__unlikely(ac))
+		return co_nmt_boot_dn_prog_state;
 
 	return co_nmt_boot_wait_flash_state;
 }
