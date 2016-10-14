@@ -65,6 +65,12 @@ my_can_init(struct my_can *can, const char *ifname)
 {
 	errc_t errc = 0;
 
+	// Initialize the I/O library.
+	if (__unlikely(lely_io_init() == -1)) {
+		errc = get_errc();
+		goto error_init_io;
+	}
+
 	// Open a handle to the CAN bus.
 	can->can = io_open_can(ifname);
 	if (__unlikely(can->can == IO_HANDLE_ERROR)) {
@@ -118,6 +124,8 @@ error_create_poll:
 	io_handle_release(can->can);
 	can->can = IO_HANDLE_ERROR;
 error_open_can:
+	lely_io_fini();
+error_init_io:
 	set_errc(errc);
 	return -1;
 }
@@ -133,6 +141,8 @@ my_can_fini(struct my_can *can)
 
 	io_handle_release(can->can);
 	can->can = IO_HANDLE_ERROR;
+
+	lely_io_fini();
 }
 
 void
@@ -190,7 +200,8 @@ public:
 		m_can.setFlags(IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
 
 		// Watch the CAN bus for incoming frames.
-		io_event event = { IO_EVENT_READ, { m_can } };
+		io_event event = { IO_EVENT_READ, { 0 } };
+		event.u.handle = m_can;
 		m_poll->watch(m_can, &event, true);
 
 		// Obtain the current time.
@@ -387,6 +398,9 @@ C++11 example:
 int
 main()
 {
+	// Initialize the I/O library.
+	lely_io_init();
+
 	// Initialize the CAN network.
 	MyCAN can("can0");
 
@@ -406,6 +420,7 @@ main()
 		// TODO: do other useful stuff.
 	}
 
+	lely_io_fini();
 	return 0;
 }
 ~~~
