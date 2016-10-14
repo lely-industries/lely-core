@@ -270,6 +270,14 @@ public:
 
 	bool isMaster() const noexcept { return !!co_nmt_is_master(this); }
 
+	int getTimeout() const noexcept { return co_nmt_get_timeout(this); }
+
+	void
+	setTimeout(int timeout) noexcept
+	{
+		co_nmt_set_timeout(this, timeout);
+	}
+
 	int
 	csReq(co_unsigned8_t cs, co_unsigned8_t id = 0) noexcept
 	{

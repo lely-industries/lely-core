@@ -455,6 +455,25 @@ LELY_CO_EXTERN co_unsigned8_t co_nmt_get_st(const co_nmt_t *nmt);
 LELY_CO_EXTERN int co_nmt_is_master(const co_nmt_t *nmt);
 
 /*!
+ * Returns the default SDO timeout used during the NMT 'boot slave' and
+ * 'check configuration' processes.
+ *
+ * \see co_nmt_set_timeout()
+ */
+LELY_CO_EXTERN int co_nmt_get_timeout(const co_nmt_t *nmt);
+
+/*!
+ * Sets the default SDO timeout used during the NMT 'boot slave' and
+ * 'check configuration' processes.
+ *
+ * \param nmt     a pointer to an NMT master service.
+ * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
+ *
+ * \see co_nmt_get_timeout()
+ */
+LELY_CO_EXTERN void co_nmt_set_timeout(co_nmt_t *nmt, int timeout);
+
+/*!
  * Submits an NMT request to a slave.
  *
  * \param nmt a pointer to an NMT master service.

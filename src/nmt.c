@@ -42,14 +42,12 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifndef LELY_CO_NMT_BOOT_TIMEOUT
-//! The SDO timeout (in milliseconds) for the NMT 'boot slave' process.
-#define LELY_CO_NMT_BOOT_TIMEOUT	100
-#endif
-
-#ifndef LELY_CO_NMT_CFG_TIMEOUT
-//! The SDO timeout (in milliseconds) for an NMT 'configuration request'.
-#define LELY_CO_NMT_CFG_TIMEOUT	100
+#ifndef LELY_CO_NMT_TIMEOUT
+/*!
+ * The default SDO timeout (in milliseconds) for the NMT 'boot slave' and
+ * 'check configuration' processes.
+ */
+#define LELY_CO_NMT_TIMEOUT	100
 #endif
 
 struct __co_nmt_state;
@@ -182,6 +180,11 @@ struct __co_nmt {
 	int halt;
 	//! An array containing the state of each NMT slave.
 	struct co_nmt_slave slaves[CO_NUM_NODES];
+	/*!
+	 * The default SDO timeout (in milliseconds) used during the NMT
+	 * 'boot slave' and 'check configuration' processes.
+	 */
+	int timeout;
 	//! A pointer to the NMT 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
 	//! A pointer to user-specified data for #boot_ind.
@@ -716,6 +719,8 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->ng_state = CO_NMT_EC_RESOLVED;
 	}
 
+	nmt->timeout = LELY_CO_NMT_TIMEOUT;
+
 	nmt->boot_ind = NULL;
 	nmt->boot_data = NULL;
 	nmt->cfg_ind = NULL;
@@ -1111,6 +1116,22 @@ co_nmt_is_master(const co_nmt_t *nmt)
 #ifndef LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT int
+co_nmt_get_timeout(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->timeout;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
+{
+	assert(nmt);
+
+	nmt->timeout = timeout;
+}
+
+LELY_CO_EXPORT int
 co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 {
 	assert(nmt);
@@ -1391,7 +1412,7 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 		// the slave is already booting.
 		if (!(assignment & 0x04) || nmt->slaves[id - 1].boot)
 			return 0;
-		return co_nmt_boot_req(nmt, id, LELY_CO_NMT_BOOT_TIMEOUT);
+		return co_nmt_boot_req(nmt, id, nmt->timeout);
 	}
 }
 #endif
@@ -1820,7 +1841,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			ac = CO_SDO_AC_DATA_DEV;
 			goto error;
 		}
-		co_nmt_cfg_req(nmt, id, LELY_CO_NMT_CFG_TIMEOUT, NULL, NULL);
+		co_nmt_cfg_req(nmt, id, nmt->timeout, NULL, NULL);
 	} else {
 		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
 		// exists.
@@ -1835,8 +1856,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			// already being configured.
 			if (!(slave->assignment & 0x01) || slave->cfg)
 				continue;
-			co_nmt_cfg_req(nmt, id, LELY_CO_NMT_CFG_TIMEOUT, NULL,
-					NULL);
+			co_nmt_cfg_req(nmt, id, nmt->timeout, NULL, NULL);
 		}
 	}
 
@@ -2286,7 +2306,7 @@ default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 #else
 	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP) {
 		errc_t errc = get_errc();
-		co_nmt_boot_req(nmt, id, LELY_CO_NMT_BOOT_TIMEOUT);
+		co_nmt_boot_req(nmt, id, nmt->timeout);
 		set_errc(errc);
 	}
 #endif
@@ -2954,8 +2974,8 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 			res = 1;
 		// Halt the network boot-up procedure if the 'boot slave'
 		// process failed for a mandatory slave.
-		if (__unlikely(co_nmt_boot_req(nmt, id,
-				LELY_CO_NMT_BOOT_TIMEOUT) == -1 && mandatory))
+		if (__unlikely(co_nmt_boot_req(nmt, id, nmt->timeout) == -1
+				&& mandatory))
 			res = -1;
 	}
 	return res;
