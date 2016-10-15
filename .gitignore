@@ -1,4 +1,5 @@
 /autom4te.cache/
+/coverage/
 /doc/html/
 /doc/Doxyfile
 /doc/doxygen_sqlite3.db
@@ -18,6 +19,7 @@
 /config.status
 /config.sub
 /configure
+/coverage.info
 /depcomp
 /install-sh
 /libtool
@@ -33,6 +35,8 @@ Makefile.in
 *.dat
 *.def
 *.exe
+*.gcda
+*.gcno
 *.la
 *.lo
 *.o

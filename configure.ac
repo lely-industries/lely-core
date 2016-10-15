@@ -9,6 +9,12 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
+AX_CODE_COVERAGE
+AS_IF([test "x$enable_code_coverage" == "xyes"], [
+	${CFLAGS=""}
+	${CXXFLAGS=""}
+])
+
 AC_LANG(C)
 AC_PROG_CC_STDC
 
@@ -40,6 +46,13 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
+
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
+])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.2 liblely-util < 2])
@@ -170,13 +183,6 @@ AS_IF([test "x$enable_csdo" == "xno"], [enable_master=no])
 AS_IF([test "x$enable_master" == "xno"], [
 	AM_CONDITIONAL([NO_CO_MASTER], [true])
 	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
-])
-
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
