@@ -15,8 +15,9 @@ check_PROGRAMS = $(bin)
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)
 AM_CPPFLAGS += $(liblely_tap_CFLAGS)
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}/\"
 
-LDADD = $(top_srcdir)/src/liblely-util.la
+LDADD = $(top_builddir)/src/liblely-util.la
 LDADD += $(liblely_libc_LIBS)
 LDADD += $(liblely_tap_LIBS)
 
