@@ -27,6 +27,13 @@ liblely_io_la_CPPFLAGS += $(liblely_util_CFLAGS)
 if !NO_CAN
 liblely_io_la_CPPFLAGS += $(liblely_can_CFLAGS)
 endif
+if CODE_COVERAGE_ENABLED
+liblely_io_la_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
+endif
+liblely_io_la_CFLAGS =
+if CODE_COVERAGE_ENABLED
+liblely_io_la_CFLAGS += $(CODE_COVERAGE_CFLAGS)
+endif
 liblely_io_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
 liblely_io_la_LDFLAGS += -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
@@ -35,6 +42,9 @@ liblely_io_la_LIBADD = $(liblely_libc_LIBS)
 liblely_io_la_LIBADD += $(liblely_util_LIBS)
 if !NO_CAN
 liblely_io_la_LIBADD += $(liblely_can_LIBS)
+endif
+if CODE_COVERAGE_ENABLED
+liblely_io_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
 liblely_io_la_SOURCES = $(src)
 

@@ -9,6 +9,12 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
+AX_CODE_COVERAGE
+AS_IF([test "x$enable_code_coverage" == "xyes"], [
+	${CFLAGS=""}
+	${CXXFLAGS=""}
+])
+
 AC_LANG(C)
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
