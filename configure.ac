@@ -38,6 +38,17 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
+AS_IF([test "$host_cpu" != "$build_cpu"], [
+	AC_CHECK_PROGS([LOG_COMPILER], [qemu-$host_cpu qemu-$host_cpu-static])
+])
+
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
+])
+
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
 
 AM_CONDITIONAL([NO_CXX], [false])
@@ -90,13 +101,6 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 			[[WTSSendMessage(WTS_CURRENT_SERVER_HANDLE, 0, NULL, 0, NULL, 0, 0, 0, NULL, FALSE);]])],
 		[ax_wtsapi32_ok=yes], [LIBS=$save_LIBS])
 	AC_MSG_RESULT([$ax_wtsapi32_ok])
-])
-
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
