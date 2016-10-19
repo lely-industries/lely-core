@@ -41,6 +41,10 @@ esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
+AS_IF([test "$host_cpu" != "$build_cpu"], [
+	AC_CHECK_PROGS([LOG_COMPILER], [qemu-$host_cpu qemu-$host_cpu-static])
+])
+
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
