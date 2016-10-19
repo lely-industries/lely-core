@@ -47,7 +47,6 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
@@ -57,6 +56,10 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_PROG_AWK
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
+AS_IF([test "x$platform_win32" == "xyes"], [
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+])
 
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
