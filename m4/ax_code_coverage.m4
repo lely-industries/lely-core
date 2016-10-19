@@ -235,11 +235,17 @@ code_coverage_quiet_0 = --quiet
 # sanitizes the test-name: replaces with underscores: dashes and dots
 code_coverage_sanitize = $(subst -,_,$(subst .,_,$(1)))
 
+$(CODE_COVERAGE_OUTPUT_FILE).tmp.base:
+ifeq ($(CODE_COVERAGE_ENABLED),yes)
+	$(code_coverage_v_lcov_cap)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --capture --initial --output-file "$(CODE_COVERAGE_OUTPUT_FILE).tmp.base" --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
+endif
+
 # Use recursive makes in order to ignore errors during check
-check-code-coverage:
+check-code-coverage: $(CODE_COVERAGE_OUTPUT_FILE).tmp.base
 ifeq ($(CODE_COVERAGE_ENABLED),yes)
 	-$(A''M_V_at)$(MAKE) $(AM_MAKEFLAGS) -k check
 	$(A''M_V_at)$(MAKE) $(AM_MAKEFLAGS) code-coverage-capture
+	-@rm -f $(CODE_COVERAGE_OUTPUT_FILE).tmp.base
 else
 	@echo "Need to reconfigure with --enable-code-coverage"
 endif
@@ -247,7 +253,9 @@ endif
 # Capture code coverage data
 code-coverage-capture: code-coverage-capture-hook
 ifeq ($(CODE_COVERAGE_ENABLED),yes)
-	$(code_coverage_v_lcov_cap)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --capture --output-file "$(CODE_COVERAGE_OUTPUT_FILE).tmp" --test-name "$(call code_coverage_sanitize,$(PACKAGE_NAME)-$(PACKAGE_VERSION))" --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
+	$(code_coverage_v_lcov_cap)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --capture --output-file "$(CODE_COVERAGE_OUTPUT_FILE).tmp.test" --test-name "$(call code_coverage_sanitize,$(PACKAGE_NAME)-$(PACKAGE_VERSION))" --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
+	$(code_coverage_v_lcov_ign)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --add-tracefile "$(CODE_COVERAGE_OUTPUT_FILE).tmp.base" --add-tracefile "$(CODE_COVERAGE_OUTPUT_FILE).tmp.test" --output-file "$(CODE_COVERAGE_OUTPUT_FILE).tmp" $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_RMOPTS)
+	-@rm -f $(CODE_COVERAGE_OUTPUT_FILE).tmp.test
 	$(code_coverage_v_lcov_ign)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --remove "$(CODE_COVERAGE_OUTPUT_FILE).tmp" "/tmp/*" $(CODE_COVERAGE_IGNORE_PATTERN) --output-file "$(CODE_COVERAGE_OUTPUT_FILE)" $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_RMOPTS)
 	-@rm -f $(CODE_COVERAGE_OUTPUT_FILE).tmp
 	$(code_coverage_v_genhtml)LANG=C $(GENHTML) $(code_coverage_quiet) $(addprefix --prefix ,$(CODE_COVERAGE_DIRECTORY)) --output-directory "$(CODE_COVERAGE_OUTPUT_DIRECTORY)" --title "$(PACKAGE_NAME)-$(PACKAGE_VERSION) Code Coverage" --legend --show-details "$(CODE_COVERAGE_OUTPUT_FILE)" $(CODE_COVERAGE_GENHTML_OPTIONS)
@@ -264,7 +272,7 @@ clean: code-coverage-clean
 distclean: code-coverage-clean
 code-coverage-clean:
 	-$(LCOV) --directory $(top_builddir) -z
-	-rm -rf $(CODE_COVERAGE_OUTPUT_FILE) $(CODE_COVERAGE_OUTPUT_FILE).tmp $(CODE_COVERAGE_OUTPUT_DIRECTORY)
+	-rm -rf $(CODE_COVERAGE_OUTPUT_FILE) $(CODE_COVERAGE_OUTPUT_FILE).tmp.base $(CODE_COVERAGE_OUTPUT_FILE).tmp.test $(CODE_COVERAGE_OUTPUT_FILE).tmp $(CODE_COVERAGE_OUTPUT_DIRECTORY)
 	-find . \( -name "*.gcda" -o -name "*.gcno" -o -name "*.gcov" \) -delete
 endif
 
