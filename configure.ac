@@ -41,6 +41,12 @@ esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+])
+
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.2 liblely-util < 2])
 
@@ -84,13 +90,6 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	])
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
-])
-
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
@@ -100,6 +99,10 @@ PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.2 liblely-tap < 2], [
 	AC_REQUIRE_AUX_FILE([tap-driver.sh])
 ], [
 	AM_CONDITIONAL([HAVE_TAP], [false])
+])
+
+AS_IF([test "x$platform_win32" == "xyes"], [
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CONFIG_HEADERS(config.h)
