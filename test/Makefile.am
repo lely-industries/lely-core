@@ -15,7 +15,7 @@ if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
 
-LDADD = $(top_srcdir)/src/liblely-tap.la
+LDADD = $(top_builddir)/src/liblely-tap.la
 LDADD += $(liblely_libc_LIBS)
 if CODE_COVERAGE_ENABLED
 LDADD += $(CODE_COVERAGE_LIBS)
