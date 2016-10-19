@@ -51,12 +51,12 @@ AS_IF([test "x$ax_pthread_ok" == "xyes" -a "x$enable_threads" != "xno"], [
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
+AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+
 AS_IF([test "x$platform_win32" == "xyes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
-
-AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
-AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
