@@ -52,7 +52,6 @@ CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
@@ -118,6 +117,10 @@ PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.2 liblely-tap < 2], [
 	AC_REQUIRE_AUX_FILE([tap-driver.sh])
 ], [
 	AM_CONDITIONAL([HAVE_TAP], [false])
+])
+
+AS_IF([test "x$platform_win32" == "xyes"], [
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CONFIG_HEADERS(config.h)
