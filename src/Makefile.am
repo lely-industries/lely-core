@@ -35,11 +35,25 @@ endif
 lib_LTLIBRARIES = liblely-util.la
 liblely_util_la_CPPFLAGS = -I$(top_srcdir)/include
 liblely_util_la_CPPFLAGS += $(liblely_libc_CFLAGS)
+if CODE_COVERAGE_ENABLED
+liblely_util_la_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
+endif
+liblely_util_la_CFLAGS =
+if CODE_COVERAGE_ENABLED
+liblely_util_la_CFLAGS += $(CODE_COVERAGE_CFLAGS)
+endif
+liblely_util_la_CXXFLAGS =
+if CODE_COVERAGE_ENABLED
+liblely_util_la_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
+endif
 liblely_util_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
 liblely_util_la_LDFLAGS += -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
 endif
 liblely_util_la_LIBADD = $(liblely_libc_LIBS)
+if CODE_COVERAGE_ENABLED
+liblely_util_la_LIBADD += $(CODE_COVERAGE_LIBS)
+endif
 liblely_util_la_SOURCES = $(src)
 
 if PLATFORM_WIN32
