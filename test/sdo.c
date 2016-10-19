@@ -5,10 +5,6 @@
 
 #include "test.h"
 
-#ifndef TEST_SRCDIR
-#define TEST_SRCDIR
-#endif
-
 // A value small enough for a single CAN frame.
 #define EXP_VALUE	"42"
 
@@ -50,13 +46,13 @@ main(void)
 	co_test_init(&test, net);
 
 	co_dev_t *sdev = co_dev_create_from_dcf_file(
-			TEST_SRCDIR "sdo-server.dcf");
+			TEST_SRCDIR "/sdo-server.dcf");
 	tap_assert(sdev);
 	co_ssdo_t *ssdo = co_ssdo_create(net, sdev, 1);
 	tap_assert(ssdo);
 
 	co_dev_t *cdev = co_dev_create_from_dcf_file(
-			TEST_SRCDIR "sdo-client.dcf");
+			TEST_SRCDIR "/sdo-client.dcf");
 	tap_assert(cdev);
 	co_csdo_t *csdo = co_csdo_create(net, cdev, 1);
 	tap_assert(csdo);

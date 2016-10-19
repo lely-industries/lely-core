@@ -4,10 +4,6 @@
 
 #include "test.h"
 
-#ifndef TEST_SRCDIR
-#define TEST_SRCDIR
-#endif
-
 #define NUM_TEST	8
 #define MSEC	100
 
@@ -23,7 +19,7 @@ main(void)
 	struct co_test test;
 	co_test_init(&test, net);
 
-	co_dev_t *dev = co_dev_create_from_dcf_file(TEST_SRCDIR "time.dcf");
+	co_dev_t *dev = co_dev_create_from_dcf_file(TEST_SRCDIR "/time.dcf");
 	tap_assert(dev);
 	co_time_t *time = co_time_create(net, dev);
 	tap_assert(time);

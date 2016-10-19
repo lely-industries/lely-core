@@ -49,7 +49,7 @@ AM_CPPFLAGS += $(liblely_libc_CFLAGS)
 AM_CPPFLAGS += $(liblely_tap_CFLAGS)
 AM_CPPFLAGS += $(liblely_util_CFLAGS)
 AM_CPPFLAGS += $(liblely_can_CFLAGS)
-AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}/\"
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
 if CODE_COVERAGE_ENABLED
 AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
 endif

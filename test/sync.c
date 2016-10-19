@@ -4,10 +4,6 @@
 
 #include "test.h"
 
-#ifndef TEST_SRCDIR
-#define TEST_SRCDIR
-#endif
-
 #define NUM_TEST	8
 
 void sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
@@ -22,7 +18,7 @@ main(void)
 	struct co_test test;
 	co_test_init(&test, net);
 
-	co_dev_t *dev = co_dev_create_from_dcf_file(TEST_SRCDIR "sync.dcf");
+	co_dev_t *dev = co_dev_create_from_dcf_file(TEST_SRCDIR "/sync.dcf");
 	tap_assert(dev);
 	co_sync_t *sync = co_sync_create(net, dev);
 	tap_assert(sync);
