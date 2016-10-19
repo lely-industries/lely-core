@@ -4,6 +4,10 @@
 
 #include "test.h"
 
+#ifndef TEST_SRCDIR
+#define TEST_SRCDIR
+#endif
+
 #define VAL_2000	0x01234567u
 #define VAL_2001	0x89abcdefu
 
@@ -17,12 +21,14 @@ main(void)
 	struct co_test test;
 	co_test_init(&test, net);
 
-	co_dev_t *rdev = co_dev_create_from_dcf_file("pdo-receive.dcf");
+	co_dev_t *rdev = co_dev_create_from_dcf_file(
+			TEST_SRCDIR "pdo-receive.dcf");
 	tap_assert(rdev);
 	co_rpdo_t *rpdo = co_rpdo_create(net, rdev, 1);
 	tap_assert(rpdo);
 
-	co_dev_t *tdev = co_dev_create_from_dcf_file("pdo-transmit.dcf");
+	co_dev_t *tdev = co_dev_create_from_dcf_file(
+			TEST_SRCDIR "pdo-transmit.dcf");
 	tap_assert(tdev);
 	co_tpdo_t *tpdo = co_tpdo_create(net, tdev, 1);
 	tap_assert(tpdo);

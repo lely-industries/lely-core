@@ -7,6 +7,10 @@
 
 #include "test.h"
 
+#ifndef TEST_SRCDIR
+#define TEST_SRCDIR
+#endif
+
 void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data);
@@ -46,7 +50,8 @@ main(void)
 	co_nmt_set_st_ind(master, &st_ind, NULL);
 	co_nmt_set_boot_ind(master, &boot_ind, &test);
 
-	co_dev_t *sdev = co_dev_create_from_dcf_file("nmt-slave.dcf");
+	co_dev_t *sdev = co_dev_create_from_dcf_file(
+			TEST_SRCDIR "nmt-slave.dcf");
 	tap_assert(sdev);
 	co_obj_t *obj_1f51 = co_dev_find_obj(sdev, 0x1f51);
 	if (obj_1f51)

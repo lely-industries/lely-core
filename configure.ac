@@ -210,6 +210,7 @@ AC_CONFIG_FILES([
 	tools/Makefile
 	tools/version.dcf2c.rc
 	test/Makefile
+	test/nmt-master.dcf
 	Makefile
 	${PACKAGE}.pc
 ])

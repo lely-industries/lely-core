@@ -3,6 +3,10 @@
 
 #include "test.h"
 
+#ifndef TEST_SRCDIR
+#define TEST_SRCDIR
+#endif
+
 void emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 		co_unsigned8_t er, uint8_t msef[5], void *data);
 
@@ -16,7 +20,7 @@ main(void)
 	struct co_test test;
 	co_test_init(&test, net);
 
-	co_dev_t *dev = co_dev_create_from_dcf_file("emcy.dcf");
+	co_dev_t *dev = co_dev_create_from_dcf_file(TEST_SRCDIR "emcy.dcf");
 	tap_assert(dev);
 	co_emcy_t *emcy = co_emcy_create(net, dev);
 	tap_assert(emcy);

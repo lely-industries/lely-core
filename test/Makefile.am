@@ -31,7 +31,6 @@ endif
 EXTRA_DIST =
 EXTRA_DIST += emcy.dcf
 EXTRA_DIST += nmt-master.dat
-EXTRA_DIST += nmt-master.dcf
 EXTRA_DIST += nmt-slave.dcf
 EXTRA_DIST += pdo-receive.dcf
 EXTRA_DIST += pdo-transmit.dcf
@@ -50,6 +49,7 @@ AM_CPPFLAGS += $(liblely_libc_CFLAGS)
 AM_CPPFLAGS += $(liblely_tap_CFLAGS)
 AM_CPPFLAGS += $(liblely_util_CFLAGS)
 AM_CPPFLAGS += $(liblely_can_CFLAGS)
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}/\"
 if CODE_COVERAGE_ENABLED
 AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
 endif
@@ -59,7 +59,7 @@ if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
 
-LDADD = $(top_srcdir)/src/liblely-co.la
+LDADD = $(top_builddir)/src/liblely-co.la
 LDADD += $(liblely_libc_LIBS)
 LDADD += $(liblely_tap_LIBS)
 LDADD += $(liblely_util_LIBS)
