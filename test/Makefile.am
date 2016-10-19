@@ -6,6 +6,7 @@ check_PROGRAMS = $(bin)
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}/\"
 if CODE_COVERAGE_ENABLED
 AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
 endif
