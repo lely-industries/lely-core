@@ -34,13 +34,17 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
-PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
+AS_IF([test "$host_cpu" != "$build_cpu"], [
+	AC_CHECK_PROGS([LOG_COMPILER], [qemu-$host_cpu qemu-$host_cpu-static])
+])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
+
+PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
