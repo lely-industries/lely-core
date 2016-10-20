@@ -654,7 +654,7 @@ can_flags(struct io_handle *handle, int flags)
 	if (__unlikely(arg == -1))
 		return -1;
 
-	int errsv = errno;
+	int errsv = 0;
 
 	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK)) {
 		if (__unlikely(fcntl(handle->fd, F_SETFL, arg | O_NONBLOCK)
