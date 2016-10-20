@@ -836,7 +836,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int res = 0;
 		errc_t errc = get_errc();
 
-		uint8_t *buf = malloc(n);
+		uint8_t *buf = n ? malloc(n) : NULL;
 		if (__unlikely(n && !buf)) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;

@@ -1375,6 +1375,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 				if (__unlikely(co_val_copy(type, &us, val)
 						!= n))
 					return 0;
+				assert(us);
 				for (size_t i = 0; i + 1 < n; i += 2)
 					us[i / 2] = htole_u16(us[i / 2]);
 				size_t chars = print_base64(us, n, pbegin, end);

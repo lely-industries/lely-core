@@ -764,10 +764,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			goto error;
 		}
 	error:
-		if (__unlikely(ac)) {
+		if (__unlikely(ac))
 			co_wtm_diag_ac(wtm, ac);
-			ac = 0;
-		}
 		// Empty the buffer for the next message.
 		wtm->recv_nbytes = 0;
 	}
@@ -912,7 +910,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	// Write the time stamp.
 	int64_t usec = timespec_diff_usec(&can->send_next, &can->send_time);
 	stle_u16(bp, (uint16_t)(usec / 100));
-	bp += 2; nbytes += 2;
+	nbytes += 2;
 
 	assert(nbytes + 2 <= CO_WTM_MAX_LEN);
 	wtm->send_nbytes = nbytes;

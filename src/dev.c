@@ -686,7 +686,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 
 	// Get the list of object indices.
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
-	co_unsigned16_t *idx = malloc(maxidx * sizeof(co_unsigned16_t));
+	co_unsigned16_t *idx = calloc(maxidx, sizeof(co_unsigned16_t));
 	if (__unlikely(!idx)) {
 		errc = errno2c(errno);
 		goto error_malloc_idx;

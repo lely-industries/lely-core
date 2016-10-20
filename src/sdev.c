@@ -1042,7 +1042,7 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 		// Print the C99 escape sequence to a temporary buffer.
 		char buf[12] = { '\0' };
 		char *cp = buf;
-		chars = print_c99_esc(c32, &cp, buf + sizeof(buf));
+		print_c99_esc(c32, &cp, buf + sizeof(buf));
 		// Print the character to the string.
 		r = snprintf(s, n, "%s", buf);
 		if (__unlikely(r < 0))
