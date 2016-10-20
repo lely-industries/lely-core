@@ -20,7 +20,7 @@ bin += test-sdev
 test_sdev_SOURCES = test.h sdev.c
 nodist_test_sdev_SOURCES = test-sdev.h
 test-sdev.h: sdev.dcf $(top_builddir)/tools/dcf2c$(EXEEXT)
-	$(LOG_COMPILER) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_sdev -o $@
+	$(EXEC) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_sdev -o $@
 endif
 endif
 if !NO_CO_CSDO
@@ -84,7 +84,8 @@ endif
 
 TESTS = $(check_PROGRAMS)
 
-LOG_COMPILER = $(BINFMT_HANDLER)
+EXEC = $(SHELL) $(top_srcdir)/exec-wrapper.sh
+LOG_COMPILER = $(EXEC)
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
 TEST_LOG_DRIVER = $(LOG_DRIVER)
 

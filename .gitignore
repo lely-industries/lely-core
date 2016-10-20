@@ -12,6 +12,7 @@
 /tools/can2udp
 /tools/dcf2c
 /aclocal.m4
+/exec-wrapper.sh
 /compile
 /config.guess
 /config.h
