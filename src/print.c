@@ -152,7 +152,6 @@ print_c99_str(const char *s, char **pbegin, char *end)
 	assert(s);
 
 	size_t chars = 0;
-	chars += print_char('"', pbegin, end);
 	while (*s) {
 		char32_t c32 = 0;
 		size_t n = lex_utf8(s, NULL, NULL, &c32);
@@ -161,7 +160,6 @@ print_c99_str(const char *s, char **pbegin, char *end)
 			chars += print_c99_esc(c32, pbegin, end);
 		}
 	}
-	chars += print_char('"', pbegin, end);
 	return chars;
 }
 
@@ -177,6 +175,7 @@ print_c99_str(const char *s, char **pbegin, char *end)
 				return 0; \
 			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
 					: chars); \
+			(*pbegin) += chars; \
 			free(buf); \
 			return chars; \
 		} \
@@ -194,6 +193,7 @@ print_c99_str(const char *s, char **pbegin, char *end)
 			sprintf(buf, format, name); \
 			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
 					: chars); \
+			(*pbegin) += chars; \
 		} \
 		return chars; \
 	}
@@ -225,6 +225,7 @@ LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
 				return 0; \
 			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
 					: chars); \
+			(*pbegin) += chars; \
 			free(buf); \
 			return chars; \
 		} \
@@ -242,6 +243,7 @@ LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
 			sprintf(buf, format, dig, name); \
 			memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) \
 					: chars); \
+			(*pbegin) += chars; \
 		} \
 		return chars; \
 	}

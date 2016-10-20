@@ -103,10 +103,10 @@ LELY_UTIL_EXTERN size_t print_utf8(char32_t c32, char **pbegin, char *end);
 LELY_UTIL_EXTERN size_t print_c99_esc(char32_t c32, char **pbegin, char *end);
 
 /*!
- * Prints a a UTF-8 encoded Unicode string delimited by double quotes to a
- * memory buffer. Non-printable ASCII characters are printed using C99 escape
- * sequences, illegal Unicode code points using hexadecimal escape sequences.
- * Note that the output is _not_ null-terminated.
+ * Prints a a UTF-8 encoded Unicode string to a memory buffer. Non-printable
+ * ASCII characters are printed using C99 escape sequences, illegal Unicode code
+ * points using hexadecimal escape sequences. Note that the output is _not_
+ * delimited by double quotes and _not_ null-terminated.
  *
  * \param s      a pointer to the string to be written.
  * \param pbegin the address of a pointer to the start of the buffer. If

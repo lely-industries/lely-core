@@ -293,7 +293,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (*cp == 'e' || *cp == 'E' || *cp == 'p' || *cp == 'P') {
 			cp++;
 			// Exponents may contain a sign.
-			if (cp < end && (*cp == '+' || *cp == '-'))
+			if ((!end || cp < end) && (*cp == '+' || *cp == '-'))
 				cp++;
 		} else if (*cp == '.' || *cp == '_'
 				|| isalnum((unsigned char)*cp)) {
@@ -318,7 +318,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (!chars) \
 			return 0; \
 	\
-		char *buf = strndup(begin, chars + 1); \
+		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
 			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
 			return 0; \
@@ -363,7 +363,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (!chars) \
 			return 0; \
 	\
-		char *buf = strndup(begin, chars + 1); \
+		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
 			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
 			return 0; \
