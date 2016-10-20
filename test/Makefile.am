@@ -14,6 +14,15 @@ bin += test-pdo
 test_pdo_SOURCES = test.h pdo.c
 endif
 endif
+if !NO_CO_DCF
+if !NO_CO_SDEV
+bin += test-sdev
+test_sdev_SOURCES = test.h sdev.c
+nodist_test_sdev_SOURCES = test-sdev.h
+test-sdev.h: sdev.dcf $(top_builddir)/tools/dcf2c$(EXEXT)
+	$(top_builddir)/tools/dcf2c$(EXEXT) $< test_sdev -o $@
+endif
+endif
 if !NO_CO_CSDO
 bin += test-sdo
 test_sdo_SOURCES = test.h sdo.c
@@ -34,13 +43,18 @@ EXTRA_DIST += nmt-master.dat
 EXTRA_DIST += nmt-slave.dcf
 EXTRA_DIST += pdo-receive.dcf
 EXTRA_DIST += pdo-transmit.dcf
+EXTRA_DIST += sdev.dcf
 EXTRA_DIST += sdo-client.dcf
 EXTRA_DIST += sdo-server.dcf
 EXTRA_DIST += sync.dcf
 EXTRA_DIST += time.dcf
 
+BUILT_SOURCES =
+BUILT_SOURCES += test-sdev.h
+
 CLEANFILES =
 CLEANFILES += nmt-slave.dat
+CLEANFILES += test-sdev.h
 
 check_PROGRAMS = $(bin)
 
