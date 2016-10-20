@@ -34,7 +34,8 @@ endif
 
 TESTS = $(check_PROGRAMS)
 
-LOG_COMPILER = $(BINFMT_HANDLER)
+EXEC = $(SHELL) $(top_srcdir)/exec-wrapper.sh
+LOG_COMPILER = $(EXEC)
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
 TEST_LOG_DRIVER = $(LOG_DRIVER)
 

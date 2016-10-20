@@ -19,6 +19,7 @@
 /configure
 /coverage.info
 /depcomp
+/exec-wrapper.sh
 /install-sh
 /libtool
 /ltmain.sh
@@ -31,6 +32,7 @@ Makefile
 Makefile.in
 *~
 *.def
+*.dat
 *.exe
 *.gcda
 *.gcno
