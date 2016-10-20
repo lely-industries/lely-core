@@ -660,6 +660,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 		size = co_dev_read_sub(dev, &idx, NULL, begin, end);
 		if (__unlikely(!size))
 			return 0;
+		begin += size;
 
 		// Keep track of the index range.
 		min = MIN(min, idx);

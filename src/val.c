@@ -375,6 +375,10 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 	if (co_type_is_array(type)) {
 		const void *p1 = co_val_addressof(type, v1);
 		const void *p2 = co_val_addressof(type, v2);
+
+		if (p1 == p2)
+			return 0;
+
 		if (!p1)
 			return -1;
 		if (!p2)
@@ -503,7 +507,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			case CO_DEFTYPE_DOMAIN:
 				if (__unlikely(co_array_alloc(val, n) == -1))
 					return 0;
-				assert(*(void **)val);
+				assert(!n || *(void **)val);
 				co_array_init(val, n);
 				void *dom = *(void **)val;
 				if (dom)
@@ -592,9 +596,9 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				for (size_t i = 0; i < 3; i++)
 					u24 |= (co_unsigned24_t)*begin++
 							<< 8 * i;
-				u->i24 = (u24 & UINT32_C(0x00800000))
-						? -(co_integer24_t)u24
-						: (co_integer24_t)u24;
+				u->i24 = u24 > CO_INTEGER24_MAX
+						? -(CO_UNSIGNED24_MAX + 1 - u24)
+						: u24;
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
@@ -611,9 +615,9 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				for (size_t i = 0; i < 5; i++)
 					u40 |= (co_unsigned40_t)*begin++
 							<< 8 * i;
-				u->i40 = (u40 & UINT64_C(0x0000008000000000))
-						? -(co_integer40_t)u40
-						: (co_integer40_t)u40;
+				u->i40 = u40 > CO_INTEGER40_MAX
+						? -(CO_UNSIGNED40_MAX + 1 - u40)
+						: u40;
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
@@ -624,9 +628,9 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				for (size_t i = 0; i < 6; i++)
 					u48 |= (co_unsigned48_t)*begin++
 							<< 8 * i;
-				u->i48 = (u48 & UINT64_C(0x0000800000000000))
-						? -(co_integer48_t)u48
-						: (co_integer48_t)u48;
+				u->i48 = u48 > CO_INTEGER48_MAX
+						? -(CO_UNSIGNED48_MAX + 1 - u48)
+						: u48;
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
@@ -637,9 +641,9 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				for (size_t i = 0; i < 7; i++)
 					u56 |= (co_unsigned56_t)*begin++
 							<< 8 * i;
-				u->i56 = (u56 & UINT64_C(0x0080000000000000))
-						? -(co_integer56_t)u56
-						: (co_integer56_t)u56;
+				u->i56 = u56 > CO_INTEGER56_MAX
+						? -(CO_UNSIGNED56_MAX + 1 - u56)
+						: u56;
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
@@ -802,8 +806,11 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 			return 6;
 		case CO_DEFTYPE_INTEGER24:
 			if (begin && (!end || end - begin >= 3)) {
+				co_unsigned24_t u24 = u->i24 < 0
+						? CO_UNSIGNED24_MAX + 1 + u->i24
+						: (co_unsigned24_t)u->i24;
 				for (size_t i = 0; i < 3; i++)
-					*begin++ = (u->i24 >> 8 * i) & 0xff;
+					*begin++ = (u24 >> 8 * i) & 0xff;
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
@@ -812,20 +819,29 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 			return 8;
 		case CO_DEFTYPE_INTEGER40:
 			if (begin && (!end || end - begin >= 5)) {
+				co_unsigned40_t u40 = u->i40 < 0
+						? CO_UNSIGNED40_MAX + 1 + u->i40
+						: (co_unsigned40_t)u->i40;
 				for (size_t i = 0; i < 5; i++)
-					*begin++ = (u->i40 >> 8 * i) & 0xff;
+					*begin++ = (u40 >> 8 * i) & 0xff;
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
 			if (begin && (!end || end - begin >= 6)) {
+				co_unsigned48_t u48 = u->i48 < 0
+						? CO_UNSIGNED48_MAX + 1 + u->i48
+						: (co_unsigned48_t)u->i48;
 				for (size_t i = 0; i < 6; i++)
-					*begin++ = (u->i48 >> 8 * i) & 0xff;
+					*begin++ = (u48 >> 8 * i) & 0xff;
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
 			if (begin && (!end || end - begin >= 7)) {
+				co_unsigned56_t u56 = u->i56 < 0
+						? CO_UNSIGNED56_MAX + 1 + u->i56
+						: (co_unsigned56_t)u->i56;
 				for (size_t i = 0; i < 7; i++)
-					*begin++ = (u->i56 >> 8 * i) & 0xff;
+					*begin++ = (u56 >> 8 * i) & 0xff;
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
@@ -871,7 +887,6 @@ LELY_CO_EXPORT size_t
 co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		const char *end, struct floc *at)
 {
-	assert(val);
 	assert(begin);
 	assert(!end || end >= begin);
 
@@ -1059,7 +1074,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			}
 			// Parse the octets.
 			uint8_t *os = *(void **)val;
-			assert(*os);
+			assert(os);
 			for (size_t i = 0; i < chars; i++) {
 				if (i % 2) {
 					*os <<= 4;
@@ -1086,11 +1101,10 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			co_array_init(val, 2 * (n / 2));
 			// Parse the Unicode characters.
 			char16_t *us = *(void **)val;
-			assert(*us);
+			assert(us);
 			lex_base64(us, NULL, cp, end, NULL);
 			for (size_t i = 0; i + 1 < n; i += 2)
 				us[i / 2] = letoh_u16(us[i / 2]);
-			break;
 		}
 		cp += chars;
 		break;
@@ -1120,7 +1134,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 				return 0;
 			}
 			void *dom = *(void **)val;
-			assert(dom);
+			assert(!n || dom);
 			lex_base64(dom, NULL, cp, end, NULL);
 		}
 		cp += chars;
@@ -1341,14 +1355,17 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		if (!ptr || !n)
 			return 0;
 		switch (type) {
-			case CO_DEFTYPE_VISIBLE_STRING:
-				return print_c99_str(ptr, pbegin, end);
+			case CO_DEFTYPE_VISIBLE_STRING: {
+				size_t chars = print_c99_str(ptr, pbegin, end);
+				chars += print_char('\0', pbegin, end);
+				return chars;
+			}
 			case CO_DEFTYPE_OCTET_STRING: {
 				size_t chars = 0;
 				for (const uint8_t *os = ptr; n; n--, os++) {
-					chars += print_char(otoc(*os >> 4),
+					chars += print_char(xtoc(*os >> 4),
 							pbegin, end);
-					chars += print_char(otoc(*os), pbegin,
+					chars += print_char(xtoc(*os), pbegin,
 							end);
 				}
 				return chars;
@@ -1388,7 +1405,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_UNSIGNED32:
 			return print_c99_u32(u->u32, pbegin, end);
 		case CO_DEFTYPE_REAL32:
-			return print_c99_flt(u->r32, pbegin, end);
+			return print_c99_u32(u->u32, pbegin, end);
 		case CO_DEFTYPE_TIME_OF_DAY:
 			// TODO: Implement TIME_OF_DAY.
 			set_errnum(ERRNUM_NOSYS);
@@ -1400,7 +1417,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_INTEGER24:
 			return print_c99_i32(u->i24, pbegin, end);
 		case CO_DEFTYPE_REAL64:
-			return print_c99_dbl(u->r64, pbegin, end);
+			return print_c99_u64(u->u64, pbegin, end);
 		case CO_DEFTYPE_INTEGER40:
 			return print_c99_i64(u->i40, pbegin, end);
 		case CO_DEFTYPE_INTEGER48:
