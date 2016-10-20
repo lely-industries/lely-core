@@ -33,7 +33,8 @@ case "$host" in
 	platform_win32=yes
 	case "$build" in
 	*linux*)
-		AC_CHECK_PROGS([LOG_COMPILER], [wine])
+		AC_CHECK_PROGS([BINFMT_EXEC], [wine])
+		AC_CHECK_PROGS([SCRIPT_EXEC], [wine])
 		;;
 	esac
 	;;
@@ -41,7 +42,7 @@ esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
 AS_IF([test "$host_cpu" != "$build_cpu"], [
-	AC_CHECK_PROGS([LOG_COMPILER], [qemu-$host_cpu qemu-$host_cpu-static])
+	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
@@ -69,6 +70,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/version.rc
 	test/Makefile
+	exec-wrapper.sh
 	Makefile
 	${PACKAGE}.pc
 ])
