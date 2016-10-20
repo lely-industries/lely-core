@@ -163,6 +163,8 @@ union co_val {
 
 #if __STDC_VERSION__ >= 199901L
 
+#define _CO_ARRAY(...)	__VA_ARGS__
+
 //! Converts a visible string literal to a CANopen array.
 #define CO_VISIBLE_STRING_C(c) \
 	(((struct { \
@@ -189,24 +191,21 @@ union co_val {
 		.u = { .os = c } \
 	}).u.os)
 
-#if __STDC_VERSION__ >= 201112L
-
 //! Converts a (16-bit) Unicode string literal to a CANopen array.
-#define CO_UNICODE_STRING_C(c) \
+#define CO_UNICODE_STRING_C(...) \
+	_CO_UNICODE_STRING_C(_CO_ARRAY(__VA_ARGS__))
+
+#define _CO_UNICODE_STRING_C(c) \
 	(((struct { \
 		size_t size; \
 		union { \
 			union co_val val; \
-			char16_t us[sizeof(c)]; \
+			char16_t us[sizeof((char16_t[])c) / sizeof(char16_t)]; \
 		} u; \
 	}){ \
-		.size = sizeof(c) - 2, \
+		.size = sizeof((char16_t[])c) - sizeof(char16_t), \
 		.u = { .us = c } \
 	}).u.us)
-
-#endif // __STDC_VERSION__ >= 201112L
-
-#define _CO_ARRAY(...)	__VA_ARGS__
 
 //! Converts an array literal with elements of type \a type to a CANopen array.
 #define CO_DOMAIN_C(type, ...) \
