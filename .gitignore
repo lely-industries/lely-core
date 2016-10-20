@@ -19,6 +19,7 @@
 /configure
 /coverage.info
 /depcomp
+/exec-wrapper.sh
 /install-sh
 /libtool
 /ltmain.sh
