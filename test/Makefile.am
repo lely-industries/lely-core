@@ -20,7 +20,7 @@ bin += test-sdev
 test_sdev_SOURCES = test.h sdev.c
 nodist_test_sdev_SOURCES = test-sdev.h
 test-sdev.h: sdev.dcf $(top_builddir)/tools/dcf2c$(EXEEXT)
-	$(top_builddir)/tools/dcf2c$(EXEEXT) $< test_sdev -o $@
+	$(LOG_COMPILER) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_sdev -o $@
 endif
 endif
 if !NO_CO_CSDO
