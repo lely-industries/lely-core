@@ -459,7 +459,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 			r = snprintf(s, n, "%s", errstr);
 			if (__unlikely(r < 0))
 				return r;
-			t += r; r = MIN((size_t)r, n); s += r; n -= r;
+			t += r; r = MIN((size_t)r, n);
 		}
 	}
 
