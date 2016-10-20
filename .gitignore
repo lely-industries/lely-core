@@ -12,7 +12,6 @@
 /tools/can2udp
 /tools/dcf2c
 /aclocal.m4
-/exec-wrapper.sh
 /compile
 /config.guess
 /config.h
@@ -23,6 +22,7 @@
 /configure
 /coverage.info
 /depcomp
+/exec-wrapper.sh
 /install-sh
 /libtool
 /ltmain.sh
