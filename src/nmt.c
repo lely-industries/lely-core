@@ -386,7 +386,7 @@ struct __co_nmt_state {
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
-	static co_nmt_state_t *const name = &(co_nmt_state_t){ __VA_ARGS__  };
+	static co_nmt_state_t *const name = &(co_nmt_state_t){ __VA_ARGS__ };
 
 #ifndef LELY_NO_CO_MASTER
 //! The default 'boot slave completed' transition function.
@@ -2318,12 +2318,10 @@ co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
 	assert(nmt);
 
 	while (next) {
-		co_nmt_state_t *prev = nmt->state;
+		if (nmt->state && nmt->state->on_leave)
+			nmt->state->on_leave(nmt);
+
 		nmt->state = next;
-
-		if (prev && prev->on_leave)
-			prev->on_leave(nmt);
-
 		next = next->on_enter ? next->on_enter(nmt) : NULL;
 	}
 }

@@ -258,7 +258,7 @@ struct __co_nmt_boot_state {
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_nmt_boot_state_t *const name = \
-			&(co_nmt_boot_state_t){ __VA_ARGS__  };
+			&(co_nmt_boot_state_t){ __VA_ARGS__ };
 
 //! The 'timeout' transition function of the 'wait asynchronously' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_on_time(co_nmt_boot_t *boot,
@@ -915,12 +915,10 @@ co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 	assert(boot);
 
 	while (next) {
-		co_nmt_boot_state_t *prev = boot->state;
+		if (boot->state && boot->state->on_leave)
+			boot->state->on_leave(boot);
+
 		boot->state = next;
-
-		if (prev && prev->on_leave)
-			prev->on_leave(boot);
-
 		next = next->on_enter ? next->on_enter(boot) : NULL;
 	}
 }

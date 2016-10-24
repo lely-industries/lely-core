@@ -173,7 +173,7 @@ struct __co_ssdo_state {
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
-	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__  };
+	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__ };
 
 //! The 'abort' transition function of the 'waiting' state.
 static co_ssdo_state_t *co_ssdo_wait_on_abort(co_ssdo_t *sdo,

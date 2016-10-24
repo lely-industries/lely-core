@@ -301,12 +301,10 @@ co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next)
 	assert(cfg);
 
 	while (next) {
-		co_nmt_cfg_state_t *prev = cfg->state;
+		if (cfg->state && cfg->state->on_leave)
+			cfg->state->on_leave(cfg);
+
 		cfg->state = next;
-
-		if (prev && prev->on_leave)
-			prev->on_leave(cfg);
-
 		next = next->on_enter ? next->on_enter(cfg) : NULL;
 	}
 }

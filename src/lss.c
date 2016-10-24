@@ -193,7 +193,7 @@ struct __co_lss_state {
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
-	static co_lss_state_t *const name = &(co_lss_state_t){ __VA_ARGS__  };
+	static co_lss_state_t *const name = &(co_lss_state_t){ __VA_ARGS__ };
 
 //! The entry function of the 'waiting' state an LSS master or slave.
 static co_lss_state_t *co_lss_wait_on_enter(co_lss_t *lss);
@@ -1266,12 +1266,10 @@ co_lss_enter(co_lss_t *lss, co_lss_state_t *next)
 	assert(lss);
 
 	while (next) {
-		co_lss_state_t *prev = lss->state;
+		if (lss->state && lss->state->on_leave)
+			lss->state->on_leave(lss);
+
 		lss->state = next;
-
-		if (prev && prev->on_leave)
-			prev->on_leave(lss);
-
 		next = next->on_enter ? next->on_enter(lss) : NULL;
 	}
 }

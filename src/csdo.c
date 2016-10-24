@@ -189,7 +189,7 @@ struct __co_csdo_state {
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
-	static co_csdo_state_t *const name = &(co_csdo_state_t){ __VA_ARGS__  };
+	static co_csdo_state_t *const name = &(co_csdo_state_t){ __VA_ARGS__ };
 
 //! The 'abort' transition function of the 'waiting' state.
 static co_csdo_state_t *co_csdo_wait_on_abort(co_csdo_t *sdo,
@@ -1088,12 +1088,10 @@ co_csdo_enter(co_csdo_t *sdo, co_csdo_state_t *next)
 	assert(sdo->state);
 
 	while (next) {
-		co_csdo_state_t *prev = sdo->state;
+		if (sdo->state && sdo->state->on_leave)
+			sdo->state->on_leave(sdo);
+
 		sdo->state = next;
-
-		if (prev->on_leave)
-			prev->on_leave(sdo);
-
 		next = next->on_enter ? next->on_enter(sdo) : NULL;
 	}
 }
