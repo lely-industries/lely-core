@@ -125,7 +125,8 @@ Usage
 -----
 
 See [doc/overview.md](@ref md_doc_overview) for an overview of the provided
-functionality.
+functionality. Doxygen documentation for the latest development version can be
+found at http://lely_industries.gitlab.io/util/doxygen/.
 
 Licensing
 ---------
