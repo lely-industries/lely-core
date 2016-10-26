@@ -106,7 +106,9 @@ Usage
 
 To use the library, include `<lely/libc/header>`, where `header` is the name of
 a missing or incomplete C header. See [doc/overview.md](@ref md_doc_overview)
-for an overview of the provided functionality.
+for an overview of the provided functionality. Doxygen documentation for the
+latest development version can be found at
+http://lely_industries.gitlab.io/libc/doxygen/.
 
 Licensing
 ---------
