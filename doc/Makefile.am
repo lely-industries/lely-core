@@ -1,4 +1,5 @@
 EXTRA_DIST =
+EXTRA_DIST += fsm.md
 EXTRA_DIST += logo.png
 EXTRA_DIST += overview.md
 
