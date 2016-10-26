@@ -71,7 +71,8 @@ C++ support
 Although the Lely libraries are written in C, a C++ interface is often
 available. To simplify the task of providing such an interface, wrapper classes
 can be found in lely/util/c_type.hpp for trivial, standard layout and incomplete
-C types.
+C types. See [doc/object.md](@ref md_doc_object) for a template of the C and C++
+interfaces for objects in the Lely libraries.
 
 Callback functions in C typically have a user-provided void pointer as the last
 parameter. This can be used to allow, for example, C++ member functions to be

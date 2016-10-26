@@ -1,5 +1,6 @@
 EXTRA_DIST =
 EXTRA_DIST += logo.png
+EXTRA_DIST += object.md
 EXTRA_DIST += overview.md
 
 if HAVE_DOXYGEN
