@@ -80,7 +80,7 @@ public:
 	}
 
 	void
-	getNextFunc(can_timer_func_t** pfunc, void** pdata) noexcept
+	getNextFunc(can_timer_func_t** pfunc, void** pdata) const noexcept
 	{
 		can_net_get_next_func(this, pfunc, pdata);
 	}
@@ -120,7 +120,7 @@ public:
 	}
 
 	void
-	getSendFunc(can_send_func_t** pfunc, void** pdata) noexcept
+	getSendFunc(can_send_func_t** pfunc, void** pdata) const noexcept
 	{
 		can_net_get_send_func(this, pfunc, pdata);
 	}
@@ -174,7 +174,7 @@ public:
 	CANTimer(): c_base() {}
 
 	void
-	getFunc(can_timer_func_t** pfunc, void** pdata) noexcept
+	getFunc(can_timer_func_t** pfunc, void** pdata) const noexcept
 	{
 		can_timer_get_func(this, pfunc, pdata);
 	}
@@ -243,7 +243,7 @@ public:
 	CANRecv(): c_base() {}
 
 	void
-	getFunc(can_recv_func_t** pfunc, void** pdata) noexcept
+	getFunc(can_recv_func_t** pfunc, void** pdata) const noexcept
 	{
 		can_recv_get_func(this, pfunc, pdata);
 	}
