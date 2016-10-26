@@ -22,9 +22,6 @@ or download the latest release
 Build and install
 -----------------
 
-Build and install
------------------
-
 liblely-tap uses the GNU Build System (`configure`, `make`, `make install`) and
 has native support for POSIX platforms (Debian-based Linux distributions in
 particular) and Windows (Vista and higher) through [Cygwin] or [MinGW-w64].
