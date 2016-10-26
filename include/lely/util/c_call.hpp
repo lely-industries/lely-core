@@ -72,8 +72,8 @@ template <class, class> struct c_pack_push_front;
 template <class T, class... S>
 struct c_pack_push_front<T, c_pack<S...>> { using type = c_pack<T, S...>; };
 
-template <class T, class... S>
 //! Pops a type from the back of a parameter pack.
+template <class T, class... S>
 struct c_pack_pop_back
 : c_pack_push_front<T, typename c_pack_pop_back<S...>::type>
 {};

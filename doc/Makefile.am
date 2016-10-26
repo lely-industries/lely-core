@@ -1,4 +1,5 @@
 EXTRA_DIST =
+EXTRA_DIST += callback.md
 EXTRA_DIST += logo.png
 EXTRA_DIST += object.md
 EXTRA_DIST += overview.md

@@ -77,7 +77,9 @@ interfaces for objects in the Lely libraries.
 Callback functions in C typically have a user-provided void pointer as the last
 parameter. This can be used to allow, for example, C++ member functions to be
 called from C. lely/util/c_call.hpp contains a wrapper that allows any C++
-callable to be used as a C callback function.
+callable to be used as a C callback function. See
+[doc/callback.md](@ref md_doc_callback) for a detailed description of the C and
+C++ callback interface.
 
 Other
 -----
