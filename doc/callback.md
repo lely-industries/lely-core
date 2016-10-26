@@ -5,7 +5,7 @@ Many [objects](@ref md_doc_object) in the Lely libraries allow the user to
 register callback functions. The function signature and registration method all
 follow the pattern shown here.
 
-Example of a public C header (lely/util/obj.h):
+Example of a public C header (lely/lib/obj.h):
 ~~~{.c}
 #ifdef __cplusplus
 // Ensure that callback functions also use the C calling convention.
@@ -87,7 +87,7 @@ The user-specified data pointer can be used to allow the registration of C++
 function objects or member functions. lely/util/c_call.hpp provides several
 templates to automatically generate the required wrapper functions.
 
-Example of a public C++ header (lely/util/obj.hpp):
+Example of a public C++ header (lely/lib/obj.hpp):
 ~~~{.cpp}
 // Include the c_obj_call<>, c_mem_call<> and c_mem_fn<> templates.
 #include <lely/util/c_call.hpp>
