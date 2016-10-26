@@ -99,7 +99,9 @@ as root.
 Usage
 -----
 
-To use the library, include `<lely/tap/tap.h>`.
+To use the library, include `<lely/tap/tap.h>`. Doxygen documentation for the
+latest development version can be found at
+http://lely_industries.gitlab.io/tap/doxygen/.
 
 Licensing
 ---------
