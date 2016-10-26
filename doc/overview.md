@@ -540,7 +540,8 @@ CANopen requests
 
 As mentioned before, the CANopen stack is asynchronous. Requests return
 immediately, but take a callback function which is invoked once the request
-succeeds (or fails).
+succeeds (or fails). See the documentation of the Lely utilities library
+([liblely-util]) for a description of the general callback interface.
 
 As an example, define the following callback function for reading a 32-bit
 unsigned integer from a remote object dictionary:
@@ -592,4 +593,5 @@ booting slaves.
 [CiA]: http://can-cia.org/
 [liblely-can]: https://gitlab.com/lely_industries/can
 [liblely-io]: https://gitlab.com/lely_industries/io
+[liblely-util]: https://gitlab.com/lely_industries/util
 
