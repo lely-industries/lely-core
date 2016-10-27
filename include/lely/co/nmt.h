@@ -157,6 +157,17 @@ typedef void co_nmt_st_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
 
 /*!
+ * The type of a CANopen LSS request function, invoked by an NMT master before
+ * booting the slaves (see Fig. 1 in CiA 302-2 version 4.1.0). This function
+ * MUST cause co_nmt_lss_con() to be invoked once the LSS process completes.
+ *
+ * \param nmt  a pointer to an NMT master service.
+ * \param lss  a pointer to an LSS master service.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_nmt_lss_req_t(co_nmt_t *nmt, co_lss_t *lss, void *data);
+
+/*!
  * The type of a CANopen NMT 'boot slave' indication function, invoked when the
  * 'boot slave' process completes.
  *
@@ -372,6 +383,36 @@ LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
 		void *data);
 
 /*!
+ * Retrieves the request function invoked to perform LSS when booting an NMT
+ * master.
+ *
+ * \param nmt   a pointer to an NMT master service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_lss_req()
+ */
+LELY_CO_EXTERN void co_nmt_get_lss_req(const co_nmt_t *nmt,
+		co_nmt_lss_req_t **pind, void **pdata);
+
+/*!
+ * Sets the request function invoked to perform LSS when booting an NMT master.
+ * Setting this function means LSS is required (see Fig. 1 in CiA 302-2 version
+ * 4.1.0).
+ *
+ * \param nmt  a pointer to an NMT master service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_lss_req()
+ */
+LELY_CO_EXTERN void co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind,
+		void *data);
+
+/*!
  * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
  * process completes.
  *
@@ -487,6 +528,16 @@ LELY_CO_EXTERN void co_nmt_set_timeout(co_nmt_t *nmt, int timeout);
  */
 LELY_CO_EXTERN int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs,
 		co_unsigned8_t id);
+
+/*!
+ * Confirms the completion of the process when booting an NMT master. The
+ * function specified to co_nmt_set_lss_req() MUST cause this function to be
+ * invoked.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_nmt_lss_con(co_nmt_t *nmt);
 
 /*!
  * Requests the NMT 'boot slave' process for the specified node. The function

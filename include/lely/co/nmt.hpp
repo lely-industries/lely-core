@@ -203,6 +203,34 @@ public:
 	}
 
 	void
+	getLSSReq(co_nmt_lss_req_t** preq, void** pdata) const noexcept
+	{
+		co_nmt_get_lss_req(this, preq, pdata);
+	}
+
+	void
+	setLSSReq(co_nmt_lss_req_t* req, void* data) noexcept
+	{
+		co_nmt_set_lss_req(this, req, data);
+	}
+
+	template <class F>
+	void
+	setLSSReq(F* f) noexcept
+	{
+		setLSSReq(&c_obj_call<co_nmt_lss_req_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_nmt_lss_req_t*, C>::type M>
+	void
+	setLSSReq(C* obj) noexcept
+	{
+		setLSSReq(&c_mem_call<co_nmt_lss_req_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
 	getBootInd(co_nmt_boot_ind_t** pind, void** pdata) const noexcept
 	{
 		co_nmt_get_boot_ind(this, pind, pdata);
@@ -283,6 +311,8 @@ public:
 	{
 		return co_nmt_cs_req(this, cs, id);
 	}
+
+	int LSSCon() noexcept { return co_nmt_lss_con(this); }
 
 	int
 	bootReq(co_unsigned8_t id, int timeout) noexcept
