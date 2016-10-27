@@ -733,10 +733,10 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			&& (val = config_get(cfg, section, "UploadFile"))
 			!= NULL) {
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
-		// Store the filename instead of the contents in the object
+		// Store the filename instead of its contents in the object
 		// dictionary.
-		if (__unlikely(!co_val_lex(CO_DEFTYPE_VISIBLE_STRING, sub->val,
-				val, NULL, NULL))) {
+		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
+				== -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable to parse UploadFile in section %s",
 					section);
 			return -1;
@@ -745,10 +745,10 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			&& (val = config_get(cfg, section, "DownloadFile"))
 			!= NULL) {
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
-		// Store the filename instead of the contents in the object
+		// Store the filename instead of its contents in the object
 		// dictionary.
-		if (__unlikely(!co_val_lex(CO_DEFTYPE_VISIBLE_STRING, sub->val,
-				val, NULL, NULL))) {
+		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
+				== -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable to parse DownloadFile in section %s",
 					section);
 			return -1;
