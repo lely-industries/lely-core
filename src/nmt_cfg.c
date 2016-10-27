@@ -126,7 +126,7 @@ struct __co_nmt_cfg_state {
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_nmt_cfg_state_t *const name = \
-			&(co_nmt_cfg_state_t){ __VA_ARGS__  };
+			&(co_nmt_cfg_state_t){ __VA_ARGS__ };
 
 //! The entry function of the 'initialization' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg);
@@ -301,10 +301,12 @@ co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next)
 	assert(cfg);
 
 	while (next) {
-		if (cfg->state && cfg->state->on_leave)
-			cfg->state->on_leave(cfg);
-
+		co_nmt_cfg_state_t *prev = cfg->state;
 		cfg->state = next;
+
+		if (prev && prev->on_leave)
+			prev->on_leave(cfg);
+
 		next = next->on_enter ? next->on_enter(cfg) : NULL;
 	}
 }

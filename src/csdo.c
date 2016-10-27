@@ -1088,10 +1088,12 @@ co_csdo_enter(co_csdo_t *sdo, co_csdo_state_t *next)
 	assert(sdo->state);
 
 	while (next) {
-		if (sdo->state && sdo->state->on_leave)
-			sdo->state->on_leave(sdo);
-
+		co_csdo_state_t *prev = sdo->state;
 		sdo->state = next;
+
+		if (prev->on_leave)
+			prev->on_leave(sdo);
+
 		next = next->on_enter ? next->on_enter(sdo) : NULL;
 	}
 }

@@ -915,10 +915,12 @@ co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 	assert(boot);
 
 	while (next) {
-		if (boot->state && boot->state->on_leave)
-			boot->state->on_leave(boot);
-
+		co_nmt_boot_state_t *prev = boot->state;
 		boot->state = next;
+
+		if (prev && prev->on_leave)
+			prev->on_leave(boot);
+
 		next = next->on_enter ? next->on_enter(boot) : NULL;
 	}
 }

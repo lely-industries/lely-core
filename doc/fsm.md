@@ -156,13 +156,21 @@ fsm_enter(fsm_t *fsm, fsm_state_t *next)
 
 	// Use a loop to allow transient state sequences of arbitrary length.
 	while (next) {
+		// Set the next state before invoking on_leave(). It is common
+		// for services to invoke a user-defined callback function from
+		// on_leave(). By setting the next state before doing so, it
+		// becomes possible for the callback function to issue the next
+		// request without waiting for on_leave() to complete.
+		fsm_state_t *prev = fsm->state;
+		sdo->state = next;
+
 		// Invoke the on_leave() function if specified.
-		if (fsm->state && fsm->state->on_leave)
-			fsm->state->on_leave(fsm);
+		if (prev->on_leave)
+			prev->on_leave(fsm);
+
 		// Enter the next state and invoke its on_enter() function, if
 		// specified. If this function returns another state, enter it
 		// in the next iteration.
-		fsm->state = next;
 		next = next->on_enter ? next->on_enter(fsm) : NULL;
 	}
 }

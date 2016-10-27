@@ -2318,10 +2318,12 @@ co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
 	assert(nmt);
 
 	while (next) {
-		if (nmt->state && nmt->state->on_leave)
-			nmt->state->on_leave(nmt);
-
+		co_nmt_state_t *prev = nmt->state;
 		nmt->state = next;
+
+		if (prev && prev->on_leave)
+			prev->on_leave(nmt);
+
 		next = next->on_enter ? next->on_enter(nmt) : NULL;
 	}
 }
