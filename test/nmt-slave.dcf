@@ -16,7 +16,7 @@ BaudRate_1000=1
 LSS_Supported=1
 
 [DeviceComissioning]
-NodeID=0xFF
+NodeID=0x02
 LSS_SerialNumber=0x00000004
 
 [MandatoryObjects]

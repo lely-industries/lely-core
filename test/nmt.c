@@ -1,5 +1,11 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/co/dcf.h>
+#ifndef LELY_NO_CO_LSS
 #include <lely/co/lss.h>
+#endif
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
@@ -7,13 +13,19 @@
 
 #include "test.h"
 
+#define NMT_TIMEOUT	1000
+
 void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data);
 void st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data);
+#ifndef LELY_NO_CO_LSS
+void lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data);
+#endif
 void boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 		void *data);
 
+#ifndef LELY_NO_CO_LSS
 void err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 		co_unsigned8_t spec, void *data);
 void lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id,
@@ -21,14 +33,22 @@ void lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id,
 void nid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id, void *data);
 void scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
 		void *data);
+#endif
 
 co_unsigned32_t co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
+co_dev_t *mdev;
+co_nmt_t *master;
+
 int
 main(void)
 {
-	tap_plan(22);
+#ifdef LELY_NO_CO_LSS
+	tap_plan(3);
+#else
+	tap_plan(3 + 17);
+#endif
 
 	can_net_t *net = can_net_create();
 	tap_assert(net);
@@ -36,15 +56,19 @@ main(void)
 	struct co_test test;
 	co_test_init(&test, net);
 
-	co_dev_t *mdev = co_dev_create_from_dcf_file("nmt-master.dcf");
+	mdev = co_dev_create_from_dcf_file("nmt-master.dcf");
 	tap_assert(mdev);
 
-	co_nmt_t *master = co_nmt_create(net, mdev);
+	master = co_nmt_create(net, mdev);
 	tap_assert(master);
 	co_nmt_set_cs_ind(master, &cs_ind, mdev);
 	co_nmt_set_hb_ind(master, &hb_ind, NULL);
 	co_nmt_set_st_ind(master, &st_ind, NULL);
+#ifndef LELY_NO_CO_LSS
+	co_nmt_set_lss_req(master, &lss_req, &test);
+#endif
 	co_nmt_set_boot_ind(master, &boot_ind, &test);
+	co_nmt_set_timeout(master, NMT_TIMEOUT);
 
 	co_dev_t *sdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/nmt-slave.dcf");
@@ -61,80 +85,6 @@ main(void)
 	co_test_step(&test);
 
 	tap_test(!co_nmt_cs_ind(master, CO_NMT_CS_RESET_NODE), "reset master");
-	co_test_wait(&test);
-
-	co_lss_t *lss = co_nmt_get_lss(master);
-	tap_assert(lss);
-
-	struct co_id lo = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
-		0,
-		0
-	};
-	struct co_id hi = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
-		UINT32_MAX,
-		UINT32_MAX
-	};
-	tap_test(!co_lss_slowscan_req(lss, &lo, &hi, &scan_ind, &test),
-			"LSS slowscan");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_switch_req(lss, 0), "switch state global");
-	co_test_step(&test);
-
-	struct co_id id = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f87, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f88, 0x02)
-	};
-	struct co_id mask = {
-		4,
-		UINT32_MAX,
-		UINT32_MAX,
-		0,
-		0
-	};
-	tap_test(!co_lss_fastscan_req(lss, &id, &mask, &scan_ind, &test),
-			"LSS fastscan");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_get_vendor_id_req(lss, &lssid_ind, &test),
-			"inquire identity vendor-ID");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_get_product_code_req(lss, &lssid_ind, &test),
-			"inquire identity product-code");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_get_revision_req(lss, &lssid_ind, &test),
-			"inquire identity revision-number");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_get_serial_nr_req(lss, &lssid_ind, &test),
-			"inquire identity serial-nunber");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_get_id_req(lss, &nid_ind, &test),
-			"inquire node-ID");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_set_id_req(lss, 0x02, &err_ind, &test),
-			"configure node-ID");
-	co_test_wait(&test);
-
-	tap_test(!co_lss_switch_req(lss, 0), "switch state global");
-	co_test_step(&test);
-
-	tap_test(co_nmt_get_id(slave) == 0x02, "check node-ID");
-
-	co_nmt_cs_req(master, CO_NMT_CS_RESET_NODE, 0);
 	co_test_wait(&test);
 
 	co_nmt_destroy(slave);
@@ -183,6 +133,87 @@ st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 		co_nmt_boot_req(nmt, id, 100);
 }
 
+#ifndef LELY_NO_CO_LSS
+void
+lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
+{
+	tap_assert(nmt);
+	tap_assert(lss);
+	struct co_test *test = data;
+	tap_assert(test);
+
+	struct co_id lo = {
+		4,
+		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
+		0,
+		0
+	};
+	struct co_id hi = {
+		4,
+		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
+		UINT32_MAX,
+		UINT32_MAX
+	};
+	tap_test(!co_lss_slowscan_req(lss, &lo, &hi, &scan_ind, test),
+			"LSS slowscan");
+	co_test_wait(test);
+
+	tap_test(!co_lss_switch_req(lss, 0), "switch state global");
+	co_test_step(test);
+
+	struct co_id id = {
+		4,
+		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f87, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f88, 0x02)
+	};
+	struct co_id mask = {
+		4,
+		UINT32_MAX,
+		UINT32_MAX,
+		0,
+		0
+	};
+	tap_test(!co_lss_fastscan_req(lss, &id, &mask, &scan_ind, test),
+			"LSS fastscan");
+	co_test_wait(test);
+
+	tap_test(!co_lss_get_vendor_id_req(lss, &lssid_ind, test),
+			"inquire identity vendor-ID");
+	co_test_wait(test);
+
+	tap_test(!co_lss_get_product_code_req(lss, &lssid_ind, test),
+			"inquire identity product-code");
+	co_test_wait(test);
+
+	tap_test(!co_lss_get_revision_req(lss, &lssid_ind, test),
+			"inquire identity revision-number");
+	co_test_wait(test);
+
+	tap_test(!co_lss_get_serial_nr_req(lss, &lssid_ind, test),
+			"inquire identity serial-nunber");
+	co_test_wait(test);
+
+	tap_test(!co_lss_get_id_req(lss, &nid_ind, test),
+			"inquire node-ID");
+	co_test_wait(test);
+
+	tap_test(!co_lss_set_id_req(lss, 0x02, &err_ind, test),
+			"configure node-ID");
+	co_test_wait(test);
+
+	tap_test(!co_lss_switch_req(lss, 0), "switch state global");
+	co_test_step(test);
+
+	co_nmt_lss_con(nmt);
+
+	co_nmt_cs_req(master, CO_NMT_CS_RESET_NODE, 0);
+}
+#endif // !LELY_NO_CO_LSS
+
 void
 boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 		void *data)
@@ -196,6 +227,8 @@ boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 
 	co_test_done(test);
 }
+
+#ifndef LELY_NO_CO_LSS
 
 void
 err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
@@ -274,6 +307,8 @@ scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id, void *data)
 
 	co_test_done(test);
 }
+
+#endif // !LELY_NO_CO_LSS
 
 co_unsigned32_t
 co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
