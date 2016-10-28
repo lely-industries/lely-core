@@ -1,4 +1,5 @@
 src =
+src += getopt.c
 src += libc.h
 src += stdatomic.c
 src += stdio.c

@@ -17,5 +17,6 @@ inc += lely/libc/threads.h
 endif
 inc += lely/libc/time.h
 inc += lely/libc/uchar.h
+inc += lely/libc/unistd.h
 
 nobase_include_HEADERS = $(inc)

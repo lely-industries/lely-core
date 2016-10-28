@@ -17,4 +17,5 @@ The C11 and POSIX compatibility library provides:
 - threads: lely/libc/threads.h
 - `struct timespec`, `nanosleep()` and `timespec_get()`: lely/libc/time.h
 - `char16_t` and `char32_t`: lely/libc/uchar.h
+- `getopt()`: lely/libc/unistd.h
 
