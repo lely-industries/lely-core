@@ -30,11 +30,6 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-])
-
 AX_PTHREAD
 AS_IF([test "x$ax_pthread_ok" == "xyes"], [
 	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
@@ -49,6 +44,11 @@ AS_IF([test "x$ax_pthread_ok" == "xyes" -a "x$enable_threads" != "xno"], [
 ], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+])
+
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+AS_IF([test "x$platform_win32" == "xyes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
