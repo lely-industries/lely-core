@@ -84,21 +84,22 @@ static size_t co_array_sizeof(const void *val);
 
 /*!
  * Returns the number of (16-bit) Unicode characters, excluding the terminating
- * null-bytes, in the string at \a s.
+ * null bytes, in the string at \a s.
  */
 static size_t str16len(const char16_t *s);
 
 /*!
- * Copies the (16-bit) Unicode string, including the terminating null-bytes, at
- * \a src to \a dst.
+ * Copies at most \a n (16-bit) Unicode characters from the string at \a src to
+ * \a dst.
  *
  * \param dst the destination address, which MUST be large enough to hold the
  *            string.
- * \param src a pointer to the (null-terminated) string to be copied.
+ * \param src a pointer to the string to be copied.
+ * \param n   the maximum number of (16-bit) Unicode characters to copy.
  *
  * \returns \a dst.
  */
-static char16_t *str16cpy(char16_t *dst, const char16_t *src);
+static char16_t *str16ncpy(char16_t *dst, const char16_t *src, size_t n);
 
 /*!
  * Compares two (16-bit) Unicode strings.
@@ -174,13 +175,26 @@ co_val_init_vs(char **val, const char *vs)
 {
 	assert(val);
 
-	if (vs) {
-		size_t n = strlen(vs);
+	if (vs)
+		return co_val_init_vs_n(val, vs, strlen(vs));
+
+	*val = NULL;
+
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_val_init_vs_n(char **val, const char *vs, size_t n)
+{
+	assert(val);
+
+	if (n) {
 		if (__unlikely(co_array_alloc(val, n + 1) == -1))
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
-		strcpy(*val, vs);
+		if (vs)
+			strncpy(*val, vs, n);
 	} else {
 		*val = NULL;
 	}
@@ -212,13 +226,26 @@ co_val_init_us(char16_t **val, const char16_t *us)
 {
 	assert(val);
 
-	if (us) {
-		size_t n = str16len(us);
+	if (us)
+		return co_val_init_us_n(val, us, str16len(us));
+
+	*val = NULL;
+
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_val_init_us_n(char16_t **val, const char16_t *us, size_t n)
+{
+	assert(val);
+
+	if (n) {
 		if (__unlikely(co_array_alloc(val, 2 * (n + 1)) == -1))
 			return -1;
 		assert(*val);
 		co_array_init(val, 2 * n);
-		str16cpy(*val, us);
+		if (us)
+			str16ncpy(*val, us, n);
 	} else {
 		*val = NULL;
 	}
@@ -477,41 +504,28 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 		if (val) {
 			switch (type) {
 			case CO_DEFTYPE_VISIBLE_STRING:
-				if (__unlikely(co_array_alloc(val, n + 1)
-						== -1))
+				if (__unlikely(co_val_init_vs_n(val,
+						(const char *)begin, n) == -1))
 					return 0;
-				assert(*(char **)val);
-				co_array_init(val, n);
-				char *vs = *(char **)val;
-				memcpy(vs, begin, n);
 				break;
 			case CO_DEFTYPE_OCTET_STRING:
-				if (__unlikely(co_array_alloc(val, n + 1)
+				if (__unlikely(co_val_init_os(val, begin, n)
 						== -1))
 					return 0;
-				assert(*(uint8_t **)val);
-				co_array_init(val, n);
-				uint8_t *os = *(uint8_t **)val;
-				memcpy(os, begin, n);
 				break;
 			case CO_DEFTYPE_UNICODE_STRING:
-				if (__unlikely(co_array_alloc(val,
-						2 * (n / 2 + 1)) == -1))
+				if (__unlikely(co_val_init_us_n(val, NULL,
+						n / 2) == -1))
 					return 0;
-				assert(*(char16_t **)val);
-				co_array_init(val, 2 * (n / 2));
 				char16_t *us = *(char16_t **)val;
+				assert(us);
 				for (size_t i = 0; i + 1 < n; i += 2)
 					us[i / 2] = ldle_u16(begin + i);
 				break;
 			case CO_DEFTYPE_DOMAIN:
-				if (__unlikely(co_array_alloc(val, n) == -1))
+				if (__unlikely(co_val_init_dom(val, begin, n)
+						== -1))
 					return 0;
-				assert(!n || *(void **)val);
-				co_array_init(val, n);
-				void *dom = *(void **)val;
-				if (dom)
-					memcpy(dom, begin, n);
 				break;
 			default:
 				// We can never get here.
@@ -571,21 +585,13 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				u->r32 = ldle_flt(begin);
 			return 4;
 		case CO_DEFTYPE_TIME_OF_DAY:
+		case CO_DEFTYPE_TIME_DIFF:
 			if (__unlikely(n < 6))
 				return 0;
 			if (u) {
 				u->t.ms = ldle_u32(begin)
 						& UINT32_C(0x0fffffff);
 				u->t.days = ldle_u16(begin + 4);
-			}
-			return 6;
-		case CO_DEFTYPE_TIME_DIFF:
-			if (__unlikely(n < 6))
-				return 0;
-			if (u) {
-				u->td.ms = ldle_u32(begin)
-						& UINT32_C(0x0fffffff);
-				u->td.days = ldle_u16(begin + 4);
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER24:
@@ -792,16 +798,10 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 				stle_flt(begin, u->r32);
 			return 4;
 		case CO_DEFTYPE_TIME_OF_DAY:
-			if (begin && (!end || end - begin >= 6)) {
-				stle_u32(begin, u->t.ms & UINT32_C(0x0fffffff));
-				stle_u16(begin, u->t.days);
-			}
-			return 6;
 		case CO_DEFTYPE_TIME_DIFF:
 			if (begin && (!end || end - begin >= 6)) {
-				stle_u32(begin, u->td.ms
-						& UINT32_C(0x0fffffff));
-				stle_u16(begin, u->td.days);
+				stle_u32(begin, u->t.ms & UINT32_C(0x0fffffff));
+				stle_u16(begin + 4, u->t.days);
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER24:
@@ -1025,40 +1025,32 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 				*(co_real32_t *)val = u.r32;
 		}
 		break;
-	case CO_DEFTYPE_VISIBLE_STRING:
-		if (end) {
-			chars = end - cp;
-			if (val) {
-				// Copy the string to a temporary buffer.
-				char *buf = strndup(cp, chars);
-				if (__unlikely(!buf)) {
-					if (at)
-						diag_at(DIAG_ERROR, get_errc(),
-								at,
-								"unable to duplicate string");
-					return 0;
-				}
-				int result = co_val_init_vs(val, buf);
-				free(buf);
-				if (__unlikely(result == -1)) {
-					if (at)
-						diag_at(DIAG_ERROR, get_errc(),
-								at,
-								"unable to create value of type VISIBLE_STRING");
-					return 0;
-				}
-			}
-		} else {
-			chars = strlen(cp) + 1;
-			if (val && __unlikely(co_val_init_vs(val, cp) == -1)) {
+	case CO_DEFTYPE_VISIBLE_STRING: {
+		size_t n = 0;
+		while ((!end || cp < end) && *cp) {
+			char32_t c32 = 0;
+			cp += lex_c99_esc(cp, end, NULL, &c32);
+			n += print_utf8(c32, NULL, NULL);
+		}
+		if (val) {
+			if (__unlikely(co_val_init_vs_n(val, 0, n) == -1)) {
 				if (at)
 					diag_at(DIAG_ERROR, get_errc(), at,
 							"unable to create value of type VISIBLE_STRING");
 				return 0;
 			}
+			// Parse the characters.
+			char *vs = *(void **)val;
+			assert(vs);
+			cp = begin;
+			while ((!end || cp < end) && *cp) {
+				char32_t c32 = 0;
+				cp += lex_c99_esc(cp, end, NULL, &c32);
+				print_utf8(c32, &vs, NULL);
+			}
 		}
-		cp += chars;
 		break;
+	}
 	case CO_DEFTYPE_OCTET_STRING: {
 		// Count the number of hexadecimal digits.
 		while ((!end || cp + chars < end)
@@ -1091,14 +1083,13 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		size_t n = 0;
 		chars = lex_base64(NULL, &n, cp, end, NULL);
 		if (val) {
-			if (__unlikely(co_array_alloc(val, 2 * (n / 2 + 1))
+			if (__unlikely(co_val_init_us_n(val, NULL, n / 2)
 					== -1)) {
 				if (at)
 					diag_at(DIAG_ERROR, get_errc(), at,
 							"unable to create value of type UNICODE_STRING");
 				return 0;
 			}
-			co_array_init(val, 2 * (n / 2));
 			// Parse the Unicode characters.
 			char16_t *us = *(void **)val;
 			assert(us);
@@ -1110,18 +1101,18 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		break;
 	}
 	case CO_DEFTYPE_TIME_OF_DAY:
-		// TODO: Implement TIME_OF_DAY.
-		set_errnum(ERRNUM_NOSYS);
-		if (at)
-			diag_at(DIAG_ERROR, get_errc(), at,
-					"cannot parse value of type TIME_OF_DAY");
-		break;
 	case CO_DEFTYPE_TIME_DIFF:
-		// TODO: Implement TIME_DIFFERENCE.
-		set_errnum(ERRNUM_NOSYS);
-		if (at)
-			diag_at(DIAG_ERROR, get_errc(), at,
-					"cannot parse value of type TIME_DIFFERENCE");
+		chars = lex_c99_u16(cp, end, NULL, &u.t.days);
+		if (__unlikely(!chars))
+			return 0;
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, NULL);
+		chars = lex_c99_u32(cp, end, NULL, &u.t.ms);
+		if (__unlikely(!chars))
+			return 0;
+		cp += chars;
+		if (val)
+			*(co_time_of_day_t *)val = u.t;
 		break;
 	case CO_DEFTYPE_DOMAIN: {
 		size_t n = 0;
@@ -1355,11 +1346,8 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		if (!ptr || !n)
 			return 0;
 		switch (type) {
-			case CO_DEFTYPE_VISIBLE_STRING: {
-				size_t chars = print_c99_str(ptr, pbegin, end);
-				chars += print_char('\0', pbegin, end);
-				return chars;
-			}
+			case CO_DEFTYPE_VISIBLE_STRING:
+				return print_c99_str(ptr, pbegin, end);
 			case CO_DEFTYPE_OCTET_STRING: {
 				size_t chars = 0;
 				for (const uint8_t *os = ptr; n; n--, os++) {
@@ -1409,13 +1397,13 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_REAL32:
 			return print_c99_u32(u->u32, pbegin, end);
 		case CO_DEFTYPE_TIME_OF_DAY:
-			// TODO: Implement TIME_OF_DAY.
-			set_errnum(ERRNUM_NOSYS);
-			return 0;
-		case CO_DEFTYPE_TIME_DIFF:
-			// TODO: Implement TIME_DIFFERENCE.
-			set_errnum(ERRNUM_NOSYS);
-			return 0;
+		case CO_DEFTYPE_TIME_DIFF: {
+			size_t chars = 0;
+			chars += print_c99_u16(u->t.days, pbegin, end);
+			chars += print_char(' ', pbegin, end);
+			chars += print_c99_u32(u->t.ms, pbegin, end);
+			return chars;
+		}
 		case CO_DEFTYPE_INTEGER24:
 			return print_c99_i32(u->i24, pbegin, end);
 		case CO_DEFTYPE_REAL64:
@@ -1511,12 +1499,13 @@ str16len(const char16_t *s)
 }
 
 static char16_t *
-str16cpy(char16_t *dst, const char16_t *src)
+str16ncpy(char16_t *dst, const char16_t *src, size_t n)
 {
 	char16_t *cp = dst;
-	while (*src)
+	for (; n && *src; n--)
 		*cp++ = *src++;
-	*cp = 0;
+	while (n--)
+		*cp++ = 0;
 
 	return dst;
 }

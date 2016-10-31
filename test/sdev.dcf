@@ -163,11 +163,13 @@ ParameterValue=SABlAGwAbABvACwAIABXAG8AcgBsAGQAIQA=
 ParameterName=TIME_OF_DAY
 DataType=0x000C
 AccessType=rw
+ParameterValue=365 43200000
 
 [200D]
 ParameterName=TIME_DIFF
 DataType=0x000D
 AccessType=rw
+ParameterValue=365 43200000
 
 [200F]
 ParameterName=DOMAIN

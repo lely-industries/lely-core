@@ -295,6 +295,24 @@ LELY_CO_EXTERN int co_val_init_max(co_unsigned16_t type, void *val);
 LELY_CO_EXTERN int co_val_init_vs(char **val, const char *vs);
 
 /*!
+ * Initializes an array of visible characters (#CO_DEFTYPE_VISIBLE_STRING).
+ *
+ * \param val the address of a pointer. On success, *\a val points to the first
+ *            character in the string.
+ * \param vs  a pointer to the string with which *\a val should be initialized
+ *            (can be NULL).
+ * \param n   the number of characters in the value to be created (excluding the
+ *            terminating null byte) and the maximum number of characters to
+ *            copy from \a vs (unless \a vs is NULL).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_val_fini()
+ */
+LELY_CO_EXTERN int co_val_init_vs_n(char **val, const char *vs, size_t n);
+
+/*!
  * Initializes an array of octets (#CO_DEFTYPE_OCTET_STRING).
  *
  * \param val the address of a pointer. On success, *\a val points to the first
@@ -326,6 +344,26 @@ LELY_CO_EXTERN int co_val_init_os(uint8_t **val, const uint8_t *os, size_t n);
  * \see co_val_fini()
  */
 LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
+
+/*!
+ * Initializes an array of (16-bit) Unicode characters
+ * (#CO_DEFTYPE_UNICODE_STRING).
+ *
+ * \param val the address of a pointer. On success, *\a val points to the first
+ *            character in the string.
+ * \param us  a pointer to the string with which *\a val should be initialized
+ *            (can be NULL).
+ * \param n   the number of (16-bit) Unicode characters in the value to be
+ *            created (excluding the terminating null bytes) and the maximum
+ *            number of characters to copy from \a us (unless \a us is NULL).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_val_fini()
+ */
+LELY_CO_EXTERN int co_val_init_us_n(char16_t **val, const char16_t *us,
+		size_t n);
 
 /*!
  * Initializes an arbitrary large block of data (#CO_DEFTYPE_DOMAIN).
