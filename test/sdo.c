@@ -103,13 +103,11 @@ dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	__unused_var(sdo);
 	struct co_test *test = data;
 
-	if (__unlikely(ac)) {
+	if (__likely(!ac))
+		tap_pass("value sent");
+	else
 		tap_fail("received abort code %08X for SDO %Xsub%X: %s", ac,
 				idx, subidx, co_sdo_ac2str(ac));
-		return;
-	}
-
-	tap_pass("value sent");
 
 	co_test_done(test);
 }
@@ -121,21 +119,19 @@ up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	__unused_var(sdo);
 	struct co_test *test = data;
 
-	if (__unlikely(ac)) {
+	if (__likely(!ac)) {
+		union co_val val;
+		co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val);
+		if (__likely(!n || co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val,
+				ptr, (const uint8_t *)ptr + n) == n))
+			tap_pass("value received\n%s", val.vs);
+		else
+			tap_fail("unable to read value");
+		co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
+	} else {
 		tap_fail("received abort code %08X for SDO %Xsub%X: %s", ac,
 				idx, subidx, co_sdo_ac2str(ac));
-		return;
 	}
-
-	union co_val val;
-	co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val);
-	if (__unlikely(co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val, ptr,
-			(const uint8_t *)ptr + n) != n)) {
-		tap_fail("unable to read value");
-		return;
-	}
-	tap_pass("value received\n%s", val.vs);
-	co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 
 	co_test_done(test);
 }
