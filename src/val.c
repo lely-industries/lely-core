@@ -517,10 +517,12 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				if (__unlikely(co_val_init_us_n(val, NULL,
 						n / 2) == -1))
 					return 0;
-				char16_t *us = *(char16_t **)val;
-				assert(us);
-				for (size_t i = 0; i + 1 < n; i += 2)
-					us[i / 2] = ldle_u16(begin + i);
+				if (n) {
+					char16_t *us = *(char16_t **)val;
+					assert(us);
+					for (size_t i = 0; i + 1 < n; i += 2)
+						us[i / 2] = ldle_u16(begin + i);
+				}
 				break;
 			case CO_DEFTYPE_DOMAIN:
 				if (__unlikely(co_val_init_dom(val, begin, n)
