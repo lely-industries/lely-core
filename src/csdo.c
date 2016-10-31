@@ -811,7 +811,7 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
-	if (sdo->size <= 4)
+	if (sdo->size && sdo->size <= 4)
 		co_csdo_send_dn_exp_req(sdo);
 	else
 		co_csdo_send_dn_ini_req(sdo);
@@ -1235,7 +1235,10 @@ co_csdo_dn_seg_on_enter(co_csdo_t *sdo)
 	assert(sdo);
 
 	size_t n = sdo->size - membuf_size(&sdo->buf);
-	if (n) {
+	// 0-byte values cannot be send using expedited transfer, so we need to
+	// send one empty segment. We use the toggle bit to check if it was
+	// sent.
+	if (n || (!sdo->size && !sdo->toggle)) {
 		if (sdo->timeout)
 			can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 		co_csdo_send_dn_seg_req(sdo, MIN(n, 7), n <= 7);
@@ -1930,7 +1933,7 @@ static void
 co_csdo_send_dn_exp_req(co_csdo_t *sdo)
 {
 	assert(sdo);
-	assert(sdo->size <= 4);
+	assert(sdo->size && sdo->size <= 4);
 
 	uint8_t cs = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sdo->size);
 
@@ -1945,7 +1948,7 @@ static void
 co_csdo_send_dn_ini_req(co_csdo_t *sdo)
 {
 	assert(sdo);
-	assert(sdo->size > 4);
+	assert(!sdo->size || sdo->size > 4);
 
 	uint8_t cs = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND;
 

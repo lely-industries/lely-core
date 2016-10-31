@@ -713,7 +713,7 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 
 	const uint8_t *begin = ptr;
 	const uint8_t *end = begin ? begin + n : NULL;
-	if (__unlikely(!co_val_read(type, val, begin, end))) {
+	if (__unlikely(n && !co_val_read(type, val, begin, end))) {
 		ac = get_errnum() == ERRNUM_NOMEM
 				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
 		set_errc(errc);
@@ -1390,6 +1390,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		}
 	} else {
 		const union co_val *u = val;
+		assert(u);
 		switch (type) {
 		case CO_DEFTYPE_BOOLEAN:
 			return print_c99_u8(!!u->b, pbegin, end);

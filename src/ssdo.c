@@ -1066,7 +1066,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (__unlikely(ac))
 		return co_ssdo_abort_res(sdo, ac);
 
-	if (sdo->req.size <= 4) {
+	if (sdo->req.size && sdo->req.size <= 4) {
 		// Perform an expedited transfer.
 		if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0))
 			return co_ssdo_abort_res(sdo, ac);
@@ -1631,7 +1631,7 @@ static void
 co_ssdo_send_up_exp_res(co_ssdo_t *sdo)
 {
 	assert(sdo);
-	assert(sdo->req.size <= 4);
+	assert(sdo->req.size && sdo->req.size <= 4);
 
 	const char *buf = membuf_begin(&sdo->buf);
 	size_t nbyte = membuf_size(&sdo->buf);
@@ -1649,7 +1649,7 @@ static void
 co_ssdo_send_up_ini_res(co_ssdo_t *sdo)
 {
 	assert(sdo);
-	assert(sdo->req.size > 4);
+	assert(!sdo->req.size || sdo->req.size > 4);
 
 	uint8_t cs = CO_SDO_SCS_UP_INI_RES | CO_SDO_INI_SIZE_IND;
 
@@ -1663,7 +1663,7 @@ static void
 co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last)
 {
 	assert(sdo);
-	assert(sdo->req.size > 4);
+	assert(!sdo->req.size || sdo->req.size > 4);
 
 	const char *buf = membuf_begin(&sdo->buf);
 	size_t nbyte = membuf_size(&sdo->buf);

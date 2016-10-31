@@ -276,7 +276,7 @@ struct COCSDOUpCon {
 			void* data) noexcept
 	{
 		COVal<co_type_traits_T<T>::index> val;
-		if (__likely(!ac))
+		if (__likely(!ac && n))
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 		return (*M)(sdo, idx, subidx, ac, val, data);
 	}
@@ -300,7 +300,7 @@ struct COCSDOUpCon<char*> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		if (__likely(!ac)) {
+		if (__likely(!ac && n)) {
 #if !LELY_NO_EXCEPTIONS
 			try {
 #endif
@@ -334,7 +334,7 @@ struct COCSDOUpCon< ::std::string> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		if (__likely(!ac)) {
+		if (__likely(!ac && n)) {
 #if !LELY_NO_EXCEPTIONS
 			try {
 #endif
@@ -394,7 +394,7 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
 			void* data) noexcept
 	{
 		const uint8_t* os = static_cast<const uint8_t*>(ptr);
-		if (__likely(!ac)) {
+		if (__likely(!ac && n)) {
 #if !LELY_NO_EXCEPTIONS
 			try {
 #endif
@@ -431,7 +431,7 @@ struct COCSDOUpCon<char16_t*> {
 			void* data) noexcept
 	{
 		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac))
+		if (__likely(!ac && n))
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 		return (*M)(sdo, idx, subidx, ac, val, data);
 	}
@@ -456,7 +456,7 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 			void* data) noexcept
 	{
 		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac)) {
+		if (__likely(!ac && n)) {
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 			if (__likely(!ac)) {
 #if !LELY_NO_EXCEPTIONS
