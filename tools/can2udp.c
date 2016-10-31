@@ -413,7 +413,7 @@ daemon_main()
 			if (flags & FLAG_VERBOSE) {
 				char s[60] = { 0 };
 				snprintf_can_msg(s, sizeof(s), &msg);
-				printf("[%ld.%09ld] > %s\n", now.tv_sec,
+				printf("[% 10ld.%09ld] > %s\n", now.tv_sec,
 						now.tv_nsec, s);
 			}
 			// Process the frame.
