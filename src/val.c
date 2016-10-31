@@ -741,12 +741,12 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 			case CO_DEFTYPE_OCTET_STRING:
 				memcpy(begin, ptr, n);
 				break;
-			case CO_DEFTYPE_UNICODE_STRING:
-				n %= 2;
+			case CO_DEFTYPE_UNICODE_STRING: {
 				const char16_t *us = ptr;
 				for (size_t i = 0; i + 1 < n; i += 2)
 					stle_u16(begin + i, us[i / 2]);
 				break;
+			}
 			case CO_DEFTYPE_DOMAIN:
 				memcpy(begin, ptr, n);
 				break;
