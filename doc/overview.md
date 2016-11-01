@@ -8,7 +8,7 @@ The C11 and POSIX compatibility library provides:
 - atomics: lely/libc/stdatomic.h
 - `max_align_t`: lely/libc/stddef.h
 - integer types: lely/libc/stdint.h
-- `asprintf()` and `vasprintf()`: lely/libc/stdio.h
+- `getdelim()`, `getline()`, `asprintf()` and `vasprintf()`: lely/libc/stdio.h
 - `aligned_alloc()`: lely/libc/stdlib.h
 - `noreturn`: lely/libc/stdnoreturn.h
 - `strdup()`, `strndup()` and `strnlen()`: lely/libc/string.h

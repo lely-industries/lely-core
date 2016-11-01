@@ -40,6 +40,8 @@
 #define vsnprintf	__no_vsnprintf
 #endif
 
+#include <lely/libc/sys/types.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -48,11 +50,38 @@
 #undef snprintf
 #endif
 
-#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if !(_POSIX_C_SOURCE >= 200809L)
+
+/*!
+ * Reads a delimited record from a stream.
+ *
+ * \param lineptr the address of a pointer to the buffer used for storing the
+ *                characters read from \a stream. If *\a lineptr is NULL or the
+ *                buffer is too small, a new buffer will be allocated (with
+ *                `malloc()` or `realloc()`, respectively) and the address will
+ *                be stored in *\a lineptr.
+ * \param n       the address of a value containing the size of the buffer at
+ *                *\a lineptr. On exit, *\a n contains the actual size of the
+ *                buffer.
+ * \param delim   the delimiter character.
+ * \param stream  a pointer to the input stream.
+ *
+ * \returns the number of characters read (including the delimiter but excluding
+ * the terminating null byte), or -1 on error or end-of-file.
+ */
+LELY_LIBC_EXTERN ssize_t getdelim(char **lineptr, size_t *n, int delim,
+		FILE *stream);
+
+//! Equivalent to #getdelim(lineptr, n, '\\n', stream).
+LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+
+#endif // !(_POSIX_C_SOURCE >= 200809L)
+
+#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #ifndef LELY_HAVE_SNPRINTF
 
@@ -134,11 +163,11 @@ LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
 LELY_LIBC_EXTERN int __cdecl vasprintf(char **strp, const char *fmt,
 		va_list ap);
 
+#endif // !_GNU_SOURCE || __MINGW32__
+
 #ifdef __cplusplus
 }
 #endif
-
-#endif // !_GNU_SOURCE || __MINGW32__
 
 #endif
 

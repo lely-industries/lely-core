@@ -23,12 +23,81 @@
 #include "libc.h"
 #include <lely/libc/stdio.h>
 
-#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
-
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
+
+#if !(_POSIX_C_SOURCE >= 200809L)
+
+#ifndef LELY_GETDELIM_SIZE
+//! The initial size (in bytes) of the buffer allocated by getdelim().
+#define LELY_GETDELIM_SIZE	64
+#endif
+
+LELY_LIBC_EXPORT ssize_t
+getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
+{
+	if (__unlikely(!lineptr || !n)) {
+#ifdef EINVAL
+		errno = EINVAL;
+#endif
+		return -1;
+	}
+	if (!*n)
+		*lineptr = NULL;
+	else if (!*lineptr)
+		*n = 0;
+	size_t size = LELY_GETDELIM_SIZE;
+
+	char *cp = *lineptr;
+	for (;;) {
+		// Make sure we have enough space for the next character and the
+		// terminating null byte.
+		if (*n - (cp - *lineptr) < 2) {
+			int errsv = errno;
+			// First try to double the buffer, to minimize the
+			// number of reallocations.
+			while (size < (size_t)(cp - *lineptr + 2))
+				size *= 2;
+			char *tmp = realloc(*lineptr, size);
+			if (__unlikely(!tmp)) {
+				errno = errsv;
+				// If doubling the buffer fails, try to allocate
+				// just enough memory for the next character
+				// (including the terminating null byte).
+				size = cp - *lineptr + 2;
+				tmp = realloc(*lineptr, size);
+				if (__unlikely(!tmp))
+					return -1;
+			}
+			cp = tmp + (cp - *lineptr);
+			*lineptr = tmp;
+			*n = size;
+		}
+		int c = fgetc(stream);
+		// On end-of-file, if any characters have been written to the
+		// buffer and no error has occurred, do not return -1. This
+		// allows the caller to retrieve the last (undelimited) record.
+		if (c == EOF && (ferror(stream) || !(cp - *lineptr)))
+			return -1;
+		if (c == EOF || (*cp++ = c) == delim)
+			break;
+	}
+	*cp = '\0';
+
+	return cp - *lineptr;
+}
+
+LELY_LIBC_EXPORT ssize_t
+getline(char **lineptr, size_t *n, FILE *stream)
+{
+	return getdelim(lineptr, n, '\n', stream);
+}
+
+#endif // !(_POSIX_C_SOURCE >= 200809L)
+
+#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
 #ifndef LELY_HAVE_SNPRINTF
 
