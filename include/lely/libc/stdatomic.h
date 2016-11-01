@@ -293,7 +293,7 @@ atomic_signal_fence(memory_order order)
 	((void)atomic_exchange_explicit((object), (desired), (order)))
 #endif
 /*!
- * Equivalent to `atomic_store_explicit(object, desired, memory_order_seq_cst)`.
+ * Equivalent to #atomic_store_explicit(object, desired, memory_order_seq_cst).
  */
 #define atomic_store(object, desired) \
 	(atomic_store_explicit((object), (desired), memory_order_seq_cst))
@@ -312,7 +312,7 @@ atomic_signal_fence(memory_order order)
 #define atomic_load_explicit(object, order) \
 	(__unused_var(order), __sync_fetch_and_add(&(object)->__value, 0))
 #endif
-//! Equivalent to `atomic_load_explicit(object, memory_order_seq_cst)`.
+//! Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
 #define atomic_load(object) \
 	(atomic_load_explicit((object), memory_order_seq_cst))
 
@@ -337,7 +337,10 @@ atomic_signal_fence(memory_order order)
 		__sync_lock_test_and_set(&(__object)->__value, __desired); \
 	})
 #endif
-//! Equivalent to `atomic_exchange_explicit(object, desired, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_exchange_explicit(object, desired,
+ * memory_order_seq_cst).
+ */
 #define atomic_exchange(object, desired) \
 	(atomic_exchange_explicit((object), (desired), memory_order_seq_cst))
 
@@ -373,7 +376,10 @@ atomic_signal_fence(memory_order order)
 				== __expected); \
 	})
 #endif
-//! Equivalent to `atomic_compare_exchange_strong_explicit(object, expected, desired, memory_order_seq_cst, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_compare_exchange_strong_explicit(object, expected,
+ * desired, memory_order_seq_cst, memory_order_seq_cst).
+ */
 #define atomic_compare_exchange_strong(object, expected, desired) \
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), memory_order_seq_cst, memory_order_seq_cst))
@@ -407,7 +413,10 @@ atomic_signal_fence(memory_order order)
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), (success), (failure)))
 #endif
-//! Equivalent to `atomic_compare_exchange_weak_explicit(object, expected, desired, memory_order_seq_cst, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_compare_exchange_weak_explicit(object, expected,
+ * desired, memory_order_seq_cst, memory_order_seq_cst).
+ */
 #define atomic_compare_exchange_weak(object, expected, desired) \
 	(atomic_compare_exchange_weak_explicit((object), (expected), \
 			(desired), memory_order_seq_cst, memory_order_seq_cst))
@@ -429,7 +438,10 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_add(&(object)->__value, (operand)))
 #endif
-//! Equivalent to `atomic_fetch_add_explicit(object, operand, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_fetch_add_explicit(object, operand,
+ * memory_order_seq_cst).
+ */
 #define atomic_fetch_add(object, operand) \
 	(atomic_fetch_add_explicit((object), (operand), memory_order_seq_cst))
 
@@ -450,7 +462,10 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_sub(&(object)->__value, (operand)))
 #endif
-//! Equivalent to `atomic_fetch_sub_explicit(object, operand, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_fetch_sub_explicit(object, operand,
+ * memory_order_seq_cst).
+ */
 #define atomic_fetch_sub(object, operand) \
 	(atomic_fetch_sub_explicit((object), (operand), memory_order_seq_cst))
 
@@ -471,7 +486,10 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_or(&(object)->__value, (operand)))
 #endif
-//! Equivalent to `atomic_fetch_or_explicit(object, operand, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_fetch_or_explicit(object, operand,
+ * memory_order_seq_cst).
+ */
 #define atomic_fetch_or(object, operand) \
 	(atomic_fetch_or_explicit((object), (operand), memory_order_seq_cst))
 
@@ -492,7 +510,10 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_xor(&(object)->__value, (operand)))
 #endif
-//! Equivalent to `atomic_fetch_xor_explicit(object, operand, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_fetch_xor_explicit(object, operand,
+ * memory_order_seq_cst).
+ */
 #define atomic_fetch_xor(object, operand) \
 	(atomic_fetch_xor_explicit((object), (operand), memory_order_seq_cst))
 
@@ -513,7 +534,10 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_and(&(object)->__value, (operand)))
 #endif
-//! Equivalent to `atomic_fetch_and_explicit(object, operand, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_fetch_and_explicit(object, operand,
+ * memory_order_seq_cst).
+ */
 #define atomic_fetch_and(object, operand) \
 	(atomic_fetch_and_explicit((object), (operand), memory_order_seq_cst))
 
@@ -547,7 +571,10 @@ atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
 	return atomic_exchange_explicit(&object->__value, 1, order);
 }
 
-//! Equivalent to `atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_flag_test_and_set_explicit(object,
+ * memory_order_seq_cst).
+ */
 LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
 atomic_flag_test_and_set(volatile atomic_flag *object)
 {
@@ -564,7 +591,10 @@ atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
 	atomic_store_explicit(&object->__value, 0, order);
 }
 
-//! Equivalent to `atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)`.
+/*!
+ * Equivalent to #atomic_flag_test_and_set_explicit(object,
+ * memory_order_seq_cst).
+ */
 LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_flag_clear(volatile atomic_flag *object)
 {

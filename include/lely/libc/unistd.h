@@ -56,7 +56,7 @@ LELY_LIBC_EXTERN int optopt;
 
 /*!
  * Parses options passed as arguments to `main()`.
- * 
+ *
  * \param argc      the argument count as passed to `main()`.
  * \param argv      the argument array as passed to `main()`.
  * \param optstring a pointer to a string of recognized option characters; if a
