@@ -473,7 +473,8 @@ daemon_proc(void)
 	fclose(stdout);
 	close(STDOUT_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
-	if (__unlikely(open("/dev/null", O_WRONLY | O_CLOEXEC) != STDOUT_FILENO))
+	if (__unlikely(open("/dev/null", O_WRONLY | O_CLOEXEC)
+			!= STDOUT_FILENO))
 		return -1;
 #else
 	if (__unlikely(open("/dev/null", O_WRONLY) != STDOUT_FILENO))

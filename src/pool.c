@@ -175,7 +175,8 @@ pool_alloc(pool_t *pool)
 		return ptr;
 
 	// If no free space remains on the existing page, create a new page.
-	if (__unlikely(page_create(&pool->page, pool->nmemb * pool->size) == -1))
+	if (__unlikely(page_create(&pool->page, pool->nmemb * pool->size)
+			== -1))
 		return NULL;
 
 	return pool_alloc(pool);

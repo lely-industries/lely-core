@@ -103,11 +103,10 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 				membuf_print_chars(&section, cp, chars);
 				cp += chars;
 				cp += skip(cp, end, at);
-				if ((chars = lex_char(']', cp, end, at)) > 0) {
+				if ((chars = lex_char(']', cp, end, at)) > 0)
 					cp += chars;
-				} else if (at) {
+				else if (at)
 					diag_at(DIAG_ERROR, 0, at, "expected ']' after section name");
-				}
 			} else if (at) {
 				diag_at(DIAG_ERROR, 0, at, "expected section name after '['");
 			}

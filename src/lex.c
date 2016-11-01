@@ -81,7 +81,7 @@ lex_break(const char *begin, const char *end, struct floc *at)
 
 	const char *cp = begin;
 
-	if (!isbreak((unsigned char )*cp))
+	if (!isbreak((unsigned char)*cp))
 		return 0;
 
 	// Treat "\r\n" as a single line break.
@@ -242,7 +242,7 @@ lex_c99_str(const char *begin, const char *end, struct floc *at)
 
 	const char *cp = begin;
 
-	size_t chars = lex_char('"', cp, end, floc);
+	size_t chars = lex_char('\"', cp, end, floc);
 	cp += chars;
 	if (__unlikely(!chars))
 		return 0;

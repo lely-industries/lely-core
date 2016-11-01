@@ -154,11 +154,8 @@ print_c99_str(const char *s, char **pbegin, char *end)
 	size_t chars = 0;
 	while (*s) {
 		char32_t c32 = 0;
-		size_t n = lex_utf8(s, NULL, NULL, &c32);
-		if (n) {
-			s += n;
-			chars += print_c99_esc(c32, pbegin, end);
-		}
+		s += lex_utf8(s, NULL, NULL, &c32);
+		chars += print_c99_esc(c32, pbegin, end);
 	}
 	return chars;
 }
