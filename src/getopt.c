@@ -23,7 +23,7 @@
 #include "libc.h"
 #include <lely/libc/unistd.h>
 
-#ifndef _POSIX_C_SOURCE
+#ifndef LELY_HAVE_UNISTD_H
 
 #include <assert.h>
 #include <stddef.h>
@@ -110,5 +110,5 @@ getopt(int argc, char *const argv[], const char *optstring)
 	return c;
 }
 
-#endif // !_POSIX_C_SOURCE
+#endif // !LELY_HAVE_UNISTD_H
 

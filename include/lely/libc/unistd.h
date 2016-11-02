@@ -25,7 +25,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_UNISTD_H
-#if defined(_POSIX_C_SOURCE) && __has_include(<unistd.h>)
+#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__)) \
+		&& __has_include(<unistd.h>)
 #define LELY_HAVE_UNISTD_H	1
 #endif
 #endif
