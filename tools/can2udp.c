@@ -416,7 +416,7 @@ daemon_main()
 			if (flags & FLAG_VERBOSE) {
 				char s[60] = { 0 };
 				snprintf_can_msg(s, sizeof(s), &msg);
-				printf("[% 10ld.%09ld] > %s\n", now.tv_sec,
+				printf("[%10ld.%09ld] > %s\n", now.tv_sec,
 						now.tv_nsec, s);
 			}
 			// Process the frame.
@@ -602,7 +602,7 @@ wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 	if (flags & FLAG_VERBOSE) {
 		char s[60] = { 0 };
 		snprintf_can_msg(s, sizeof(s), msg);
-		printf("[% 10ld.%09ld] < %s\n", tp->tv_sec, tp->tv_nsec, s);
+		printf("[%10ld.%09ld] < %s\n", tp->tv_sec, tp->tv_nsec, s);
 	}
 
 	// Send the received frame to the CAN bus.
