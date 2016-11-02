@@ -18,81 +18,93 @@
  * limitations under the License.
  */
 
+#include <lely/libc/stdio.h>
+#include <lely/libc/unistd.h>
 #include <lely/util/diag.h>
 #include <lely/co/dcf.h>
 #include <lely/co/sdev.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define USAGE \
-	"Arguments: [options] <filename> <name>\n" \
+#define HELP \
+	"Arguments: [options...] filename <variable name>\n" \
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
 	"  --no-strings          Do not include optional strings in the output\n" \
-	"  -o <file>, --output=<file>\n" \
-	"                        Write the output to <file> instead of stdout\n"
+	"  -o <file>, --output=FILE\n" \
+	"                        Write the output to FILE instead of stdout"
 
-void usage(const char *cmdname);
-
-#define FLAG_NO_STRINGS	0x01
+#define FLAG_HELP	0x01
+#define FLAG_NO_STRINGS	0x02
 
 int
 main(int argc, char *argv[])
 {
-	const char *cmd = cmdname(argv[0]);
-	diag_set_handler(&cmd_diag_handler, (void *)cmd);
+	argv[0] = (char *)cmdname(argv[0]);
+	diag_set_handler(&cmd_diag_handler, argv[0]);
 
 	int flags = 0;
 	const char *ifname = NULL;
 	const char *ofname = NULL;
 	const char *name = NULL;
-	for (int i = 1; i < argc; i++) {
-		char *opt = argv[i];
-		if (*opt == '-') {
-			opt++;
-			if (*opt == '-') {
-				opt++;
-				if (!strcmp(opt, "help")) {
-					usage(cmd);
-					return EXIT_SUCCESS;
-				} else if (!strcmp(opt, "no-strings")) {
-					flags |= FLAG_NO_STRINGS;
-				} else if (!strncmp(opt, "output=", 7)) {
-					ofname = opt + 7;
-				} else {
-					diag(DIAG_ERROR, 0, "invalid option '--%s'",
-							opt);
-					goto error_arg;
-				}
+
+	opterr = 0;
+	optind = 1;
+	while (optind < argc) {
+		char *arg = argv[optind];
+		if (*arg != '-') {
+			optind++;
+			if (!ifname)
+				ifname = arg;
+			else if (!name)
+				name = arg;
+		} else if (*++arg == '-') {
+			optind++;
+			if (!*++arg)
+				break;
+			if (!strcmp(arg, "help")) {
+				flags |= FLAG_HELP;
+			} else if (!strcmp(arg, "no-strings")) {
+				flags |= FLAG_NO_STRINGS;
+			} else if (!strncmp(arg, "output=", 7)) {
+				ofname = arg + 7;
 			} else {
-				for (; *opt; opt++) {
-					switch (*opt) {
-					case 'h':
-						usage(cmd);
-						return EXIT_SUCCESS;
-					case 'o':
-						if (__unlikely(++i >= argc)) {
-							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
-									*opt);
-							goto error_arg;
-						}
-						ofname = argv[i];
-						break;
-					default:
-						diag(DIAG_ERROR, 0, "invalid option '-%c'",
-								*opt);
-						goto error_arg;
-					}
-				}
+				diag(DIAG_ERROR, 0, "illegal option -- %s",
+						arg);
 			}
 		} else {
-			if (!ifname)
-				ifname = opt;
-			else if (!name)
-				name = opt;
+			int c = getopt(argc, argv, ":ho:");
+			if (c == -1)
+				break;
+			switch (c) {
+			case ':':
+				diag(DIAG_ERROR, 0, "option requires an argument -- %c",
+						optopt);
+				break;
+			case '?':
+				diag(DIAG_ERROR, 0, "illegal option -- %c",
+						optopt);
+				break;
+			case 'h':
+				flags |= FLAG_HELP;
+				break;
+			case 'o':
+				ofname = optarg;
+				break;
+			}
 		}
+	}
+	for (; optind < argc; optind++) {
+		if (!ifname)
+			ifname = argv[optind];
+		else if (!name)
+			name = argv[optind];
+	}
+
+	if (flags & FLAG_HELP) {
+		diag(DIAG_INFO, 0, "%s", HELP);
+		return EXIT_SUCCESS;
 	}
 
 	if (__unlikely(!ifname)) {
@@ -105,7 +117,21 @@ main(int argc, char *argv[])
 		goto error_arg;
 	}
 
-	co_dev_t *dev = co_dev_create_from_dcf_file(ifname);
+	co_dev_t *dev = NULL;
+	if (!strcmp(ifname, "-")) {
+		char *line = NULL;
+		size_t n = 0;
+		if (getdelim(&line, &n, '\0', stdin) == -1 && ferror(stdin)) {
+			free(line);
+			diag(DIAG_ERROR, get_errc(), "unable to read from standard input");
+			goto error_getdelim;
+		}
+		struct floc at = { "<stdin>", 1, 1 };
+		dev = co_dev_create_from_dcf_text(line, line + n, &at);
+		free(line);
+	} else {
+		dev = co_dev_create_from_dcf_file(ifname);
+	}
 	if (__unlikely(!dev))
 		goto errror_create_dev;
 
@@ -144,13 +170,8 @@ error_fopen:
 error_malloc_s:
 	co_dev_destroy(dev);
 errror_create_dev:
+error_getdelim:
 error_arg:
 	return EXIT_FAILURE;
-}
-
-void
-usage(const char *cmdname)
-{
-	fprintf(stderr, "%s: %s", cmdname, USAGE);
 }
 

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <lely/libc/unistd.h>
 #include <lely/util/daemon.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
@@ -32,8 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define USAGE \
-	"Arguments: [options] <CAN interface> <address> <port>\n" \
+#define HELP \
+	"Arguments: [options...] <CAN interface> address port\n" \
 	"Options:\n" \
 	"  -4, --ipv4            Use IPv4 for receiving UDP frames (default)\n" \
 	"  -6, --ipv6            Use IPv6 for receiving UDP frames \n" \
@@ -49,9 +50,7 @@
 	"                        (default: 10000)\n" \
 	"  -p <local port>, --port=<local port>\n" \
 	"                        Receive UDP frames on <local port>\n" \
-	"  -v, --verbose         Print sent and received CAN frames\n"
-
-void usage(const char *cmdname);
+	"  -v, --verbose         Print sent and received CAN frames"
 
 int daemon_init(int argc, char *argv[]);
 void daemon_main();
@@ -68,8 +67,9 @@ int wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 
 #define FLAG_BROADCAST	0x01
 #define FLAG_FLUSH	0x02
-#define FLAG_NO_DAEMON	0x04
-#define FLAG_VERBOSE	0x08
+#define FLAG_HELP	0x04
+#define FLAG_NO_DAEMON	0x08
+#define FLAG_VERBOSE	0x10
 
 int flags;
 int keep = 10000;
@@ -82,34 +82,43 @@ co_wtm_t *wtm;
 int
 main(int argc, char *argv[])
 {
-	const char *cmd = cmdname(argv[0]);
-	diag_set_handler(&cmd_diag_handler, (void *)cmd);
+	argv[0] = (char *)cmdname(argv[0]);
+	diag_set_handler(&cmd_diag_handler, argv[0]);
 
-	for (int i = 1; i < argc; i++) {
-		char *opt = argv[i];
-		if (*opt == '-') {
-			opt++;
-			if (*opt == '-') {
-				opt++;
-				if (!strcmp(opt, "help")) {
-					usage(cmd);
-					return EXIT_SUCCESS;
-				} else if (!strcmp(opt, "no-daemon")) {
-					flags |= FLAG_NO_DAEMON;
-				}
-			} else {
-				for (; *opt; opt++) {
-					switch (*opt) {
-					case 'D':
-						flags |= FLAG_NO_DAEMON;
-						break;
-					case 'h':
-						usage(cmd);
-						return EXIT_SUCCESS;
-					}
-				}
+	opterr = 0;
+	optind = 1;
+	while (optind < argc) {
+		char *arg = argv[optind];
+		if (*arg != '-') {
+			optind++;
+		} else if (*++arg == '-') {
+			optind++;
+			if (!*++arg)
+				break;
+			if (!strcmp(arg, "help")) {
+				flags |= FLAG_HELP;
+			} else if (!strcmp(arg, "no-daemon")) {
+				flags |= FLAG_NO_DAEMON;
+			}
+		} else {
+			int c = getopt(argc, argv, ":Dh");
+			if (c == -1)
+				break;
+			switch (c) {
+			case ':': case '?': break;
+			case 'D':
+				flags |= FLAG_NO_DAEMON;
+				break;
+			case 'h':
+				flags |= FLAG_HELP;
+				break;
 			}
 		}
+	}
+
+	if (flags & FLAG_HELP) {
+		diag(DIAG_INFO, 0, "%s", HELP);
+		return EXIT_SUCCESS;
 	}
 
 	if (flags & FLAG_NO_DAEMON) {
@@ -119,16 +128,10 @@ main(int argc, char *argv[])
 		daemon_fini();
 		return EXIT_SUCCESS;
 	} else {
-		return daemon_start(cmd, &daemon_init, &daemon_main,
+		return daemon_start(argv[0], &daemon_init, &daemon_main,
 				&daemon_fini, argc, argv)
 				? EXIT_FAILURE : EXIT_SUCCESS;
 	}
-}
-
-void
-usage(const char *cmdname)
-{
-	fprintf(stderr, "%s: %s", cmdname, USAGE);
 }
 
 int
@@ -145,94 +148,94 @@ daemon_init(int argc, char *argv[])
 	const char *ifname = NULL;
 	const char *address = NULL;
 	const char *send_port = NULL;
-	for (int i = 1; i < argc; i++) {
-		char *opt = argv[i];
-		if (*opt == '-') {
-			opt++;
-			if (*opt == '-') {
-				opt++;
-				if (!strcmp(opt, "ipv4")) {
-					recv_domain = IO_SOCK_IPV4;
-				} else if (!strcmp(opt, "ipv6")) {
-					recv_domain = IO_SOCK_IPV6;
-				} else if (!strcmp(opt, "broadcast")) {
-					flags |= FLAG_BROADCAST;
-				} else if (!strcmp(opt, "no-daemon")) {
-				} else if (!strcmp(opt, "flush")) {
-					flags |= FLAG_FLUSH;
-				} else if (!strcmp(opt, "help")) {
-				} else if (!strcmp(opt, "interface=")) {
-					nif = atoi(opt + 10);
-				} else if (!strcmp(opt, "keep-alive=")) {
-					keep = atoi(opt + 11);
-				} else if (!strcmp(opt, "port=")) {
-					recv_port = opt + 5;
-				} else if (!strcmp(opt, "verbose")) {
-					flags |= FLAG_VERBOSE;
-				} else {
-					diag(DIAG_ERROR, 0, "invalid option '--%s'",
-							opt);
-					goto error_arg;
-				}
+
+	opterr = 0;
+	optind = 1;
+	while (optind < argc) {
+		char *arg = argv[optind];
+		if (*arg != '-') {
+			optind++;
+			if (!ifname)
+				ifname = arg;
+			else if (!address)
+				address = arg;
+			else if (!send_port)
+				send_port = arg;
+		} else if (*++arg == '-') {
+			optind++;
+			if (!*++arg)
+				break;
+			if (!strcmp(arg, "ipv4")) {
+				recv_domain = IO_SOCK_IPV4;
+			} else if (!strcmp(arg, "ipv6")) {
+				recv_domain = IO_SOCK_IPV6;
+			} else if (!strcmp(arg, "broadcast")) {
+				flags |= FLAG_BROADCAST;
+			} else if (!strcmp(arg, "no-daemon")) {
+			} else if (!strcmp(arg, "flush")) {
+				flags |= FLAG_FLUSH;
+			} else if (!strcmp(arg, "help")) {
+			} else if (!strncmp(arg, "interface=", 10)) {
+				nif = atoi(arg + 10);
+			} else if (!strncmp(arg, "keep-alive=", 11)) {
+				keep = atoi(arg + 11);
+			} else if (!strncmp(arg, "port=", 5)) {
+				recv_port = arg + 5;
+			} else if (!strcmp(arg, "verbose")) {
+				flags |= FLAG_VERBOSE;
 			} else {
-				for (; *opt; opt++) {
-					switch (*opt) {
-					case '4':
-						recv_domain = IO_SOCK_IPV4;
-						break;
-					case '6':
-						recv_domain = IO_SOCK_IPV6;
-						break;
-					case 'b':
-						flags |= FLAG_BROADCAST;
-						break;
-					case 'D': break;
-					case 'f':
-						flags |= FLAG_FLUSH;
-						break;
-					case 'h': break;
-					case 'i':
-						if (__unlikely(++i >= argc)) {
-							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
-									*opt);
-							goto error_arg;
-						}
-						nif = atoi(argv[i]);
-						break;
-					case 'k':
-						if (__unlikely(++i >= argc)) {
-							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
-									*opt);
-							goto error_arg;
-						}
-						keep = atoi(argv[i]);
-						break;
-					case 'p':
-						if (__unlikely(++i >= argc)) {
-							diag(DIAG_ERROR, 0, "option '-%c' requires an argument",
-									*opt);
-							goto error_arg;
-						}
-						recv_port = argv[i];
-						break;
-					case 'v':
-						flags |= FLAG_VERBOSE;
-						break;
-					default:
-						diag(DIAG_ERROR, 0, "invalid option '-%c'",
-								*opt);
-						goto error_arg;
-					}
-				}
+				diag(DIAG_ERROR, 0, "illegal option -- %s",
+						arg);
 			}
 		} else {
-			if (!ifname)
-				ifname = opt;
-			else if (!address)
-				address = opt;
-			else if (!send_port)
-				send_port = opt;
+			int c = getopt(argc, argv, ":46bDfhi:k:p:v");
+			if (c == -1)
+				break;
+			switch (c) {
+			case ':':
+				diag(DIAG_ERROR, 0, "option requires an argument -- %c",
+						optopt);
+				break;
+			case '?':
+				diag(DIAG_ERROR, 0, "illegal option -- %c",
+						optopt);
+				break;
+			case '4':
+				recv_domain = IO_SOCK_IPV4;
+				break;
+			case '6':
+				recv_domain = IO_SOCK_IPV6;
+				break;
+			case 'b':
+				flags |= FLAG_BROADCAST;
+				break;
+			case 'D': break;
+			case 'f':
+				flags |= FLAG_FLUSH;
+				break;
+			case 'h': break;
+			case 'i':
+				nif = atoi(optarg);
+				break;
+			case 'k':
+				keep = atoi(optarg);
+				break;
+			case 'p':
+				recv_port = optarg;
+				break;
+			case 'v':
+				flags |= FLAG_VERBOSE;
+				break;
+			}
 		}
+	}
+	for (; optind < argc; optind++) {
+		if (!ifname)
+			ifname = argv[optind];
+		else if (!address)
+			address = argv[optind];
+		else if (!send_port)
+			send_port = argv[optind];
 	}
 
 	if (__unlikely(!ifname)) {
