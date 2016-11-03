@@ -26,6 +26,7 @@
 #include <lely/libc/string.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
+#include <lely/util/print.h>
 #include "unicode.h"
 
 #include <assert.h>
@@ -228,7 +229,8 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 }
 
 LELY_UTIL_EXPORT size_t
-lex_c99_str(const char *begin, const char *end, struct floc *at)
+lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
+		size_t *pn)
 {
 	assert(begin);
 	assert(!end || end >= begin);
@@ -242,23 +244,22 @@ lex_c99_str(const char *begin, const char *end, struct floc *at)
 
 	const char *cp = begin;
 
-	size_t chars = lex_char('\"', cp, end, floc);
-	cp += chars;
-	if (__unlikely(!chars))
-		return 0;
+	size_t n = 0;
+	char *ends = s + (s && pn ? *pn : 0);
 
-	char32_t c32 = 0;
-	while (c32 != '\"') {
-		if (__unlikely(end && cp >= end))
-			return 0;
+	while ((!end || cp < end) && *cp && *cp != '\"'
+			&& !isbreak((unsigned char)*cp)) {
+		char32_t c32 = 0;
 		if (*cp == '\\')
-			chars = lex_c99_esc(cp, end, floc, NULL);
+			cp += lex_c99_esc(cp, end, floc, &c32);
 		else
-			chars = lex_utf8(cp, end, floc, &c32);
-		cp += chars;
-		if (__unlikely(!chars))
-			return 0;
+			cp += lex_utf8(cp, end, floc, &c32);
+		if (s || pn)
+			n += print_utf8(c32, &s, ends);
 	}
+
+	if (pn)
+		*pn = n;
 
 	if (at)
 		*at = *floc;
@@ -650,46 +651,90 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 }
 
 LELY_UTIL_EXPORT size_t
-lex_base64(void *ptr, size_t *pn, const char *begin, const char *end,
-		struct floc *at)
+lex_base64(const char *begin, const char *end, struct floc *at,
+		void *ptr, size_t *pn)
 {
 	assert(begin);
 	assert(!end || end >= begin);
 
-	static const uint8_t tab[128] = {
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0x3e, 0xff, 0xff, 0xff, 0x3f,
-		0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
-		0x3c, 0x3d, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-		0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-		0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-		0x17, 0x18, 0x19, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
-		0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-		0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-		0x31, 0x32, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff
-	};
+	const char *cp = begin;
 
 	uint8_t *bp = ptr;
-	if (pn)
-		*pn = 0;
-
-	const char *cp = begin;
+	uint8_t *endb = bp + (ptr && pn ? *pn : 0);
 
 	size_t n = 0;
 	uint8_t s = 0;
-	while ((!end || cp < end) && *cp) {
-		unsigned char c = *cp++;
-		uint8_t b = c < 0x80 ? tab[c] : 0xff;
-		if (b >= 64)
-			continue;
-		if (bp) {
-			switch (n % 4) {
+	for (size_t i = 0; (!end || cp < end) && *cp; i++) {
+		uint8_t b;
+		switch (*cp++) {
+		case 'A': b = 0; break;
+		case 'B': b = 1; break;
+		case 'C': b = 2; break;
+		case 'D': b = 3; break;
+		case 'E': b = 4; break;
+		case 'F': b = 5; break;
+		case 'G': b = 6; break;
+		case 'H': b = 7; break;
+		case 'I': b = 8; break;
+		case 'J': b = 9; break;
+		case 'K': b = 10; break;
+		case 'L': b = 11; break;
+		case 'M': b = 12; break;
+		case 'N': b = 13; break;
+		case 'O': b = 14; break;
+		case 'P': b = 15; break;
+		case 'Q': b = 16; break;
+		case 'R': b = 17; break;
+		case 'S': b = 18; break;
+		case 'T': b = 19; break;
+		case 'U': b = 20; break;
+		case 'V': b = 21; break;
+		case 'W': b = 22; break;
+		case 'X': b = 23; break;
+		case 'Y': b = 24; break;
+		case 'Z': b = 25; break;
+		case 'a': b = 26; break;
+		case 'b': b = 27; break;
+		case 'c': b = 28; break;
+		case 'd': b = 29; break;
+		case 'e': b = 30; break;
+		case 'f': b = 31; break;
+		case 'g': b = 32; break;
+		case 'h': b = 33; break;
+		case 'i': b = 34; break;
+		case 'j': b = 35; break;
+		case 'k': b = 36; break;
+		case 'l': b = 37; break;
+		case 'm': b = 38; break;
+		case 'n': b = 39; break;
+		case 'o': b = 40; break;
+		case 'p': b = 41; break;
+		case 'q': b = 42; break;
+		case 'r': b = 43; break;
+		case 's': b = 44; break;
+		case 't': b = 45; break;
+		case 'u': b = 46; break;
+		case 'v': b = 47; break;
+		case 'w': b = 48; break;
+		case 'x': b = 49; break;
+		case 'y': b = 50; break;
+		case 'z': b = 51; break;
+		case '0': b = 52; break;
+		case '1': b = 53; break;
+		case '2': b = 54; break;
+		case '3': b = 55; break;
+		case '4': b = 56; break;
+		case '5': b = 57; break;
+		case '6': b = 58; break;
+		case '7': b = 59; break;
+		case '8': b = 60; break;
+		case '9': b = 61; break;
+		case '+': b = 62; break;
+		case '/': b = 63; break;
+		default: continue;
+		}
+		if (bp && bp < endb) {
+			switch (i % 4) {
 			case 0:
 				s = b << 2;
 				break;
@@ -710,10 +755,12 @@ lex_base64(void *ptr, size_t *pn, const char *begin, const char *end,
 				break;
 			}
 		}
-		if (pn && n % 4)
-			(*pn)++;
-		n++;
+		if (i % 4)
+			n++;
 	}
+
+	if (pn)
+		*pn = n;
 
 	if (at)
 		floc_strninc(at, begin, cp - begin);

@@ -141,10 +141,10 @@ LELY_UTIL_EXTERN size_t lex_utf8(const char *begin, const char *end,
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
  *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
- * \param pc32  the address at which to store the escape sequence or Unicode
- *              character. On success, if \a pc32 is not NULL, *\a pc32 contains
- *              the UTF-32 encoded character. On error, *\a pc32 is left
- *              untouched.
+ * \param pc32  the address at which to store the converted escape sequence or
+ *              Unicode character. On success, if \a pc32 is not NULL, *\a pc32
+ *              contains the UTF-32 encoded character. On error, *\a pc32 is
+ *              left untouched.
  *
  * \returns the number of characters read (at least 1 if `begin < end`).
  *
@@ -154,8 +154,9 @@ LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
 		struct floc *at, char32_t *pc32);
 
 /*!
- * Lexes a UTF-8 encoded Unicode string delimited by double quotes from a
- * memory buffer. The string MAY contain C99 character escape sequences.
+ * Lexes a UTF-8 encoded Unicode string from a memory buffer. The string MAY
+ * contain C99 character escape sequences. Strings are terminated by a null
+ * byte, an unescaped double-quote or a newline character.
  *
  * \param begin a pointer to the start of the buffer.
  * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
@@ -164,13 +165,18 @@ LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
  *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
+ * \param s     the address at which to store the string (can be NULL).
+ * \param pn    the address of a value containing the size of the buffer at
+ *              *\a s. On exit, if \a pn is not NULL, *\a pn contains the number
+ *              of bytes that would have been written had the buffer at \a s
+ *              been sufficiently large.
  *
- * \returns the number of characters read (including the quotes).
+ * \returns the number of characters read (excluding the termination character).
  *
  * \see lex_c99_esc()
  */
 LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
-		struct floc *at);
+		struct floc *at, char *s, size_t *pn);
 
 /*!
  * Lexes a C99 preprocessing number from a memory buffer. Note that this does
@@ -315,10 +321,6 @@ LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
  * variant instructs implementations to ignore invalid characters, this function
  * will lex the entire input.
  *
- * \param ptr   the address at which to store the decoded binary data (can be
- *              NULL).
- * \param pn    the address at which to store the number of written to \a ptr
- *              (can be NULL).
  * \param begin a pointer to the start of the buffer.
  * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
  *              null-terminated).
@@ -326,11 +328,17 @@ LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
  *              diagnostic purposes). On success, if `at != NULL`, *\a at points
  *              to one past the last character parsed. On error, *\a at is left
  *              untouched.
+ * \param ptr   the address at which to store the decoded binary data (can be
+ *              NULL).
+ * \param pn    the address of a value containing the size of the buffer at
+ *              *\a ptr. On exit, if \a pn is not NULL, *\a pn contains the
+ *              number of bytes that would have been written had the buffer at
+ *              \a ptr been sufficiently large.
  *
  * \returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_base64(void *ptr, size_t *pn, const char *begin,
-		const char *end, struct floc *at);
+LELY_UTIL_EXTERN size_t lex_base64(const char *begin, const char *end,
+		struct floc *at, void *ptr, size_t *pn);
 
 LELY_UTIL_LEX_INLINE int __cdecl
 isbreak(int c)

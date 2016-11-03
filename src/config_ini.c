@@ -38,9 +38,6 @@ static int __cdecl isvalue(int c);
 static size_t skip(const char *begin, const char *end, struct floc *at);
 
 static void membuf_print_chars(struct membuf *buf, const char *s, size_t n);
-static void membuf_print_string(struct membuf *buf, const char *s, size_t n);
-
-static size_t print_string(const char *s, size_t n, char **pbegin, char *end);
 
 LELY_UTIL_EXPORT size_t
 config_parse_ini_file(config_t *config, const char *filename)
@@ -118,9 +115,22 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 			if ((chars = lex_char('=', cp, end, at)) > 0) {
 				cp += chars;
 				cp += skip(cp, end, at);
-				if ((chars = lex_c99_str(cp, end, at)) > 0) {
-					membuf_print_string(&value, cp, chars);
+				if ((chars = lex_char('\"', cp, end, at)) > 0) {
 					cp += chars;
+					lex_c99_str(cp, end, at, NULL, &chars);
+					chars++;
+					membuf_clear(&value);
+					membuf_reserve(&value, chars);
+					char *s = membuf_alloc(&value, &chars);
+					if (__likely(s && chars))
+						s[--chars] = '\0';
+					cp += lex_c99_str(cp, end, NULL, s,
+							&chars);
+					if ((chars = lex_char('\"', cp, end,
+							at)) > 0)
+						cp += chars;
+					else if (at)
+						diag_at(DIAG_ERROR, 0, at, "expected '\"' after string");
 				} else {
 					chars = lex_ctype(&isvalue, cp, end,
 							at);
@@ -203,41 +213,5 @@ membuf_print_chars(struct membuf *buf, const char *s, size_t n)
 		return;
 	membuf_write(buf, s, n);
 	membuf_write(buf, "", 1);
-}
-
-static void
-membuf_print_string(struct membuf *buf, const char *s, size_t n)
-{
-	assert(buf);
-	assert(s);
-	assert(n >= 2);
-
-	// Skip the surrounding quotes.
-	s++;
-	n -= 2;
-
-	size_t chars = print_string(s, n, NULL, NULL) + 1;
-	membuf_clear(buf);
-	if (__unlikely(!membuf_reserve(buf, chars)))
-		return;
-	char *str = membuf_alloc(buf, &chars);
-
-	print_string(s, n, &str, str + chars - 1);
-	*str = '\0';
-}
-
-static size_t
-print_string(const char *s, size_t n, char **pbegin, char *end)
-{
-	size_t chars = 0;
-
-	const char *cp = s;
-	while (cp < s + n) {
-		char32_t c32;
-		cp += lex_c99_esc(cp, s + n, NULL, &c32);
-		chars += print_utf8(c32, pbegin, end);
-	}
-
-	return chars;
 }
 
