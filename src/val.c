@@ -1029,11 +1029,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		break;
 	case CO_DEFTYPE_VISIBLE_STRING: {
 		size_t n = 0;
-		while ((!end || cp < end) && *cp) {
-			char32_t c32 = 0;
-			cp += lex_c99_esc(cp, end, NULL, &c32);
-			n += print_utf8(c32, NULL, NULL);
-		}
+		chars = lex_c99_str(cp, end, NULL, NULL, &n);
 		if (val) {
 			if (__unlikely(co_val_init_vs_n(val, 0, n) == -1)) {
 				if (at)
@@ -1044,13 +1040,9 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			// Parse the characters.
 			char *vs = *(void **)val;
 			assert(vs);
-			cp = begin;
-			while ((!end || cp < end) && *cp) {
-				char32_t c32 = 0;
-				cp += lex_c99_esc(cp, end, NULL, &c32);
-				print_utf8(c32, &vs, NULL);
-			}
+			lex_c99_str(cp, end, NULL, vs, &n);
 		}
+		cp += chars;
 		break;
 	}
 	case CO_DEFTYPE_OCTET_STRING: {
@@ -1083,7 +1075,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 	}
 	case CO_DEFTYPE_UNICODE_STRING: {
 		size_t n = 0;
-		chars = lex_base64(NULL, &n, cp, end, NULL);
+		chars = lex_base64(cp, end, NULL, NULL, &n);
 		if (val) {
 			if (__unlikely(co_val_init_us_n(val, NULL, n / 2)
 					== -1)) {
@@ -1095,7 +1087,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			// Parse the Unicode characters.
 			char16_t *us = *(void **)val;
 			assert(us);
-			lex_base64(us, NULL, cp, end, NULL);
+			lex_base64(cp, end, NULL, us, &n);
 			for (size_t i = 0; i + 1 < n; i += 2)
 				us[i / 2] = letoh_u16(us[i / 2]);
 		}
@@ -1118,7 +1110,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		break;
 	case CO_DEFTYPE_DOMAIN: {
 		size_t n = 0;
-		chars = lex_base64(NULL, &n, cp, end, NULL);
+		chars = lex_base64(cp, end, NULL, NULL, &n);
 		if (val) {
 			if (__unlikely(co_val_init_dom(val, NULL, n) == -1)) {
 				if (at)
@@ -1128,7 +1120,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 			}
 			void *dom = *(void **)val;
 			assert(!n || dom);
-			lex_base64(dom, NULL, cp, end, NULL);
+			lex_base64(cp, end, NULL, dom, &n);
 		}
 		cp += chars;
 		break;
