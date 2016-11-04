@@ -421,7 +421,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 {
 	long i8;
-	size_t chars = lex_c99_long(begin, end, NULL, &i8);
+	size_t chars = lex_c99_long(begin, end, at, &i8);
 	if (chars) {
 		if (__unlikely(i8 < INT8_MIN)) {
 			i8 = INT8_MIN;
@@ -444,7 +444,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 {
 	long i16;
-	size_t chars = lex_c99_long(begin, end, NULL, &i16);
+	size_t chars = lex_c99_long(begin, end, at, &i16);
 	if (chars) {
 		if (__unlikely(i16 < INT16_MIN)) {
 			i16 = INT16_MIN;
@@ -467,7 +467,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 {
 	long i32;
-	size_t chars = lex_c99_long(begin, end, NULL, &i32);
+	size_t chars = lex_c99_long(begin, end, at, &i32);
 	if (chars) {
 #if LONG_BIT == 32
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
@@ -501,10 +501,10 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 {
 #if LONG_BIT == 64
 	long i64;
-	size_t chars = lex_c99_long(begin, end, NULL, &i64);
+	size_t chars = lex_c99_long(begin, end, at, &i64);
 #else
 	long long i64;
-	size_t chars = lex_c99_llong(begin, end, NULL, &i64);
+	size_t chars = lex_c99_llong(begin, end, at, &i64);
 #endif
 	if (chars) {
 #if LONG_BIT == 64
@@ -540,7 +540,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 {
 	unsigned long u8;
-	size_t chars = lex_c99_ulong(begin, end, NULL, &u8);
+	size_t chars = lex_c99_ulong(begin, end, at, &u8);
 	if (chars) {
 		if (__unlikely(u8 > UINT8_MAX)) {
 			u8 = UINT8_MAX;
@@ -558,7 +558,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 {
 	unsigned long u16;
-	size_t chars = lex_c99_ulong(begin, end, NULL, &u16);
+	size_t chars = lex_c99_ulong(begin, end, at, &u16);
 	if (chars) {
 		if (__unlikely(u16 > UINT16_MAX)) {
 			u16 = UINT16_MAX;
@@ -576,7 +576,7 @@ LELY_UTIL_EXPORT size_t
 lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 {
 	unsigned long u32;
-	size_t chars = lex_c99_ulong(begin, end, NULL, &u32);
+	size_t chars = lex_c99_ulong(begin, end, at, &u32);
 	if (chars) {
 #if LONG_BIT == 32
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
@@ -600,10 +600,10 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 {
 #if LONG_BIT == 64
 	unsigned long u64;
-	size_t chars = lex_c99_ulong(begin, end, NULL, &u64);
+	size_t chars = lex_c99_ulong(begin, end, at, &u64);
 #else
 	unsigned long long u64;
-	size_t chars = lex_c99_ullong(begin, end, NULL, &u64);
+	size_t chars = lex_c99_ullong(begin, end, at, &u64);
 #endif
 	if (chars) {
 #if LONG_BIT == 64
