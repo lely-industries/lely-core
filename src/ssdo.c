@@ -1062,6 +1062,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->subidx = msg->data[3];
 
 	// Perform access checks and start serializing the value.
+	sdo->req.size = 0;
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (__unlikely(ac))
 		return co_ssdo_abort_res(sdo, ac);
@@ -1337,6 +1338,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t pst = msg->len > 5 ? msg->data[5] : 0;
 
 	// Perform access checks and start serializing the value.
+	sdo->req.size = 0;
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (__unlikely(ac))
 		return co_ssdo_abort_res(sdo, ac);
@@ -1574,8 +1576,14 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 	if (__unlikely(nbyte && !membuf_reserve(&sdo->buf, nbyte)))
 		return CO_SDO_AC_NO_MEM;
 
-	const char *src = (const char *)sdo->req.buf + sdo->nbyte;
-	do {
+	while (nbyte) {
+		if (sdo->nbyte >= sdo->req.nbyte) {
+			if (co_sdo_req_last(&sdo->req)
+					|| __unlikely(ac = co_ssdo_up_ind(sdo)))
+				break;
+			sdo->nbyte = 0;
+		}
+		const char *src = (const char *)sdo->req.buf + sdo->nbyte;
 		size_t n = MIN(nbyte, sdo->req.nbyte - sdo->nbyte);
 
 		if (sdo->gencrc)
@@ -1584,9 +1592,7 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 		membuf_write(&sdo->buf, src, n);
 		nbyte -= n;
 		sdo->nbyte += n;
-		src += n;
-	} while (nbyte && !(co_sdo_req_last(&sdo->req)
-			|| __unlikely((ac = co_ssdo_up_ind(sdo)) != 0)));
+	}
 
 	return ac;
 }
