@@ -745,7 +745,7 @@ co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 
 	errc_t errc = get_errc();
 
-	if (__unlikely(co_sdo_req_up(&req, type, val, &ac) == -1))
+	if (__unlikely(co_sdo_req_up_val(&req, type, val, &ac) == -1))
 		goto error;
 
 	ac = co_sub_dn_ind(sub, &req);
@@ -879,7 +879,7 @@ default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// Read the value.
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		goto error_req;
 
 	// Check whether the value is within bounds.
@@ -942,7 +942,7 @@ default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return CO_SDO_AC_NO_DATA;
 
 	co_unsigned32_t ac = 0;
-	co_sdo_req_up(req, co_sub_get_type(sub), val, &ac);
+	co_sdo_req_up_val(req, co_sub_get_type(sub), val, &ac);
 	return ac;
 }
 

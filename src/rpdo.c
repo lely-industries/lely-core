@@ -512,7 +512,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
@@ -624,7 +624,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	int valid = !(pdo->comm.cobid & CO_PDO_COBID_VALID);

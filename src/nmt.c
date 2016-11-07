@@ -1725,7 +1725,7 @@ co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	if (__unlikely(co_sub_get_subidx(sub))) {
@@ -1765,7 +1765,7 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	if (__unlikely(co_sub_get_subidx(sub))) {
@@ -1805,7 +1805,7 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
@@ -1869,7 +1869,7 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	if (__unlikely(co_sub_get_subidx(sub))) {
@@ -1910,7 +1910,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
@@ -1984,7 +1984,7 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	if (__unlikely(co_sub_get_subidx(sub))) {
@@ -2024,7 +2024,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);

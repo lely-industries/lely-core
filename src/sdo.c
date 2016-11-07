@@ -46,17 +46,11 @@
  * \returns 1 if all segments have been copied, 0 if one or more segments
  * remain, or -1 on error. In the latter case, the error number can be obtained
  * with `get_errnum()`.
- *
- * \see co_sdo_req_dn()
  */
 static int co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr,
 		size_t *pnbyte);
 
-/*!
- * Constructs a CANopen SDO upload request from its internal buffer.
- *
- * \see co_sdo_req_up()
- */
+//! Constructs a CANopen SDO upload request from its internal buffer.
 static void co_sdo_req_up_buf(struct co_sdo_req *req);
 
 LELY_CO_EXPORT const char *
@@ -161,15 +155,13 @@ co_sdo_req_clear(struct co_sdo_req *req)
 }
 
 LELY_CO_EXPORT int
-co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type, void *val,
+co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 		co_unsigned32_t *pac)
 {
-	errc_t errc = get_errc();
 	co_unsigned32_t ac = 0;
 
-	const void *ptr = NULL;
-	size_t nbyte = 0;
-	switch (co_sdo_req_dn_buf(req, &ptr, &nbyte)) {
+	errc_t errc = get_errc();
+	switch (co_sdo_req_dn_buf(req, pptr, pnbyte)) {
 	default:
 		// Convert the error number to an SDO abort code.
 		ac = get_errnum() == ERRNUM_NOMEM
@@ -178,10 +170,24 @@ co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 	case 0:
 		// Return without an abort code if not all data is present. This
 		// is not an error.
-		goto error_done;
+		if (pac)
+			*pac = ac;
+		return -1;
 	case 1:
-		break;
+		return 0;
 	}
+}
+
+LELY_CO_EXPORT int
+co_sdo_req_dn_val(struct co_sdo_req *req, co_unsigned16_t type, void *val,
+		co_unsigned32_t *pac)
+{
+	co_unsigned32_t ac = 0;
+
+	const void *ptr = NULL;
+	size_t nbyte = 0;
+	if (co_sdo_req_dn(req, &ptr, &nbyte, pac) == -1)
+		return -1;
 
 	// Read the value.
 	co_val_init(type, val);
@@ -207,7 +213,6 @@ co_sdo_req_dn(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 
 error_read:
 	co_val_fini(type, val);
-error_done:
 	if (pac)
 		*pac = ac;
 	return -1;
@@ -223,19 +228,8 @@ co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 
 	const void *ptr = NULL;
 	size_t nbyte = 0;
-	switch (co_sdo_req_dn_buf(req, &ptr, &nbyte)) {
-	default:
-		// Convert the error number to an SDO abort code.
-		ac = get_errnum() == ERRNUM_NOMEM
-				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
-		set_errc(errc);
-	case 0:
-		// Return without an abort code if not all data is present. This
-		// is not an error.
-		goto error_done;
-	case 1:
-		break;
-	}
+	if (co_sdo_req_dn(req, &ptr, &nbyte, pac) == -1)
+		return -1;
 
 	fwbuf_t *fbuf = fwbuf_create(filename);
 	if (__unlikely(!fbuf)) {
@@ -264,7 +258,6 @@ error_commit:
 error_write:
 	fwbuf_destroy(fbuf);
 error_create_fbuf:
-error_done:
 	if (pac)
 		*pac = ac;
 	return -1;
@@ -272,7 +265,34 @@ error_done:
 #endif // !LELY_NO_CO_OBJ_FILE
 
 LELY_CO_EXPORT int
-co_sdo_req_up(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
+co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
+		co_unsigned32_t *pac)
+{
+	assert(req);
+	struct membuf *buf = &req->membuf;
+
+	co_unsigned32_t ac = 0;
+
+	membuf_clear(buf);
+	if (__unlikely(n && !membuf_reserve(buf, n))) {
+		ac = CO_SDO_AC_NO_MEM;
+		goto error_reserve;
+	}
+
+	if (ptr)
+		membuf_write(buf, ptr, n);
+
+	co_sdo_req_up_buf(req);
+	return 0;
+
+error_reserve:
+	if (pac)
+		*pac = ac;
+	return -1;
+}
+
+LELY_CO_EXPORT int
+co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 		co_unsigned32_t *pac)
 {
 	assert(req);
