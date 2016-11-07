@@ -58,6 +58,65 @@ typedef void co_csdo_up_con_t(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
+/*!
+ * Submits a download request to a local device. This is equivalent to a write
+ * operation into an dictionary.
+ *
+ * \param dev    a pointer to CANopen device.
+ * \param idx    the remote object index.
+ * \param subidx the remote object sub-index.
+ * \param ptr    a pointer to the bytes to be downloaded.
+ * \param n      the number of bytes at \a ptr.
+ * \param con    a pointer to the confirmation function (can be NULL).
+ * \param data   a pointer to user-specified data (can be NULL). \a data is
+ *               passed as the last parameter to \a con.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, const void *ptr, size_t n,
+		co_csdo_dn_con_t *con, void *data);
+
+/*!
+ * Submits a download request to a local device. This is equivalent to a write
+ * operation into an object dictionary.
+ *
+ * \param dev    a pointer to CANopen device.
+ * \param idx    the remote object index.
+ * \param subidx the remote object sub-index.
+ * \param type   the data type (in the range [1..27]). This MUST be the object
+ *               index of one of the static data types.
+ * \param val    the address of the value to be written. In case of string or
+ *               domains, this MUST be the address of pointer.
+ * \param con    a pointer to the confirmation function (can be NULL).
+ * \param data   a pointer to user-specified data (can be NULL). \a data is
+ *               passed as the last parameter to \a con.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
+		co_csdo_dn_con_t *con, void *data);
+
+/*!
+ * Submits an upload request to a local device. This is equivalent to a read
+ * operation from an object dictionary.
+ *
+ * \param dev    a pointer to CANopen device.
+ * \param idx    the remote object index.
+ * \param subidx the remote object sub-index.
+ * \param con    a pointer to the confirmation function (can be NULL).
+ * \param data   a pointer to user-specified data (can be NULL). \a data is
+ *               passed as the last parameter to \a con.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ */
+LELY_CO_EXTERN int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_csdo_up_con_t *con, void *data);
+
 LELY_CO_EXTERN void *__co_csdo_alloc(void);
 LELY_CO_EXTERN void __co_csdo_free(void *ptr);
 LELY_CO_EXTERN struct __co_csdo *__co_csdo_init(struct __co_csdo *sdo,

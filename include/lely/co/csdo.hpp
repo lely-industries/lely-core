@@ -35,6 +35,103 @@ namespace lely {
 
 template <class> struct COCSDOUpCon;
 
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+		size_t n, co_csdo_dn_con_t* con, void* data) noexcept
+{
+	return co_dev_dn_req(&dev, idx, subidx, ptr, n, con, data);
+}
+
+template <class F>
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+		size_t n, F* f) noexcept
+{
+	return dnReq(dev, idx, subidx, ptr, n,
+			&c_obj_call<co_csdo_dn_con_t*, F>::function,
+			static_cast<void*>(f));
+}
+
+template <class T, typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+		size_t n, T* t) noexcept
+{
+	return dnReq(dev, idx, subidx, ptr, n,
+			&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+			static_cast<void*>(t));
+}
+
+template <co_unsigned16_t N>
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const COVal<N>& val, co_csdo_dn_con_t* con, void* data) noexcept
+{
+	return co_dev_dn_val_req(&dev, idx, subidx, N, &val, con, data);
+}
+
+template <co_unsigned16_t N, class F>
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const COVal<N>& val, F* f) noexcept
+{
+	return dnReq<N>(dev, idx, subidx, val,
+			&c_obj_call<co_csdo_dn_con_t*, F>::function,
+			static_cast<void*>(f));
+}
+
+template <co_unsigned16_t N, class T,
+		typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
+inline int
+dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const COVal<N>& val, T* t) noexcept
+{
+	return dnReq<N>(dev, idx, subidx, val,
+			&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+			static_cast<void*>(t));
+}
+
+inline int
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_csdo_up_con_t* con, void* data) noexcept
+{
+	return co_dev_up_req(&dev, idx, subidx, con, data);
+}
+
+template <class T, typename COCSDOUpCon<T>::type M>
+inline int
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, void* data)
+		noexcept
+{
+	return upReq(dev, idx, subidx, &COCSDOUpCon<T>::template function<M>,
+			data);
+}
+
+template <class T, class F>
+inline int
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, F* f)
+		noexcept
+{
+	return upReq(dev, idx, subidx,
+			&COCSDOUpCon<T>::template function<&c_obj_call<
+				typename COCSDOUpCon<T>::type, F
+			>::function>, static_cast<void*>(f));
+}
+
+template <
+	class T, class C,
+	typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
+>
+inline int
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, C* obj)
+		noexcept
+{
+	return upReq(dev, idx, subidx,
+			&COCSDOUpCon<T>::template function<&c_mem_call<
+				typename COCSDOUpCon<T>::type, C, M
+			>::function>, static_cast<void*>(obj));
+}
+
 //! The attributes of #co_csdo_t required by #lely::COCSDO.
 template <>
 struct c_type_traits<__co_csdo> {

@@ -22,19 +22,148 @@
  */
 
 #include "co.h"
+#include <lely/util/errnum.h>
+#include <lely/co/csdo.h>
+#include <lely/co/dev.h>
+#include <lely/co/obj.h>
+
+#include <assert.h>
+
+LELY_CO_EXPORT int
+co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data)
+{
+	assert(dev);
+
+	errc_t errc = get_errc();
+	struct co_sdo_req req = CO_SDO_REQ_INIT;
+
+	co_unsigned32_t ac = 0;
+
+	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj)) {
+		ac = CO_SDO_AC_NO_OBJ;
+		goto done;
+	}
+
+	co_sub_t *sub = co_obj_find_sub(obj, subidx);
+	if (__unlikely(!sub)) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto done;
+	}
+
+	if (__unlikely(co_sdo_req_up(&req, ptr, n, &ac) == -1))
+		goto done;
+
+	ac = co_sub_dn_ind(sub, &req);
+
+done:
+	if (con)
+		con(NULL, idx, subidx, ac, data);
+
+	co_sdo_req_fini(&req);
+	set_errc(errc);
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
+		void *data)
+{
+	assert(dev);
+
+	errc_t errc = get_errc();
+	struct co_sdo_req req = CO_SDO_REQ_INIT;
+
+	co_unsigned32_t ac = 0;
+
+	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj)) {
+		ac = CO_SDO_AC_NO_OBJ;
+		goto done;
+	}
+
+	co_sub_t *sub = co_obj_find_sub(obj, subidx);
+	if (__unlikely(!sub)) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto done;
+	}
+
+	if (__unlikely(co_sdo_req_up_val(&req, type, val, &ac) == -1))
+		goto done;
+
+	ac = co_sub_dn_ind(sub, &req);
+
+done:
+	if (con)
+		con(NULL, idx, subidx, ac, data);
+
+	co_sdo_req_fini(&req);
+	set_errc(errc);
+	return 0;
+}
+
+LELY_CO_EXPORT int
+co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_csdo_up_con_t *con, void *data)
+{
+	assert(dev);
+
+	errc_t errc = get_errc();
+	struct membuf buf = MEMBUF_INIT;
+	co_unsigned32_t ac = 0;
+
+	const co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj)) {
+		ac = CO_SDO_AC_NO_OBJ;
+		goto done;
+	}
+
+	const co_sub_t *sub = co_obj_find_sub(obj, subidx);
+	if (__unlikely(!sub)) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto done;
+	}
+
+	// If the object is an array, check whether the element exists.
+	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY
+			&& __unlikely(subidx > co_obj_get_val_u8(obj, 0))) {
+		ac = CO_SDO_AC_NO_DATA;
+		goto done;
+	}
+
+	struct co_sdo_req req = CO_SDO_REQ_INIT;
+
+	ac = co_sub_up_ind(sub, &req);
+	if (!ac && req.size && !membuf_reserve(&buf, req.size))
+		ac = CO_SDO_AC_NO_MEM;
+
+	do {
+		membuf_write(&buf, req.buf, req.nbyte);
+		if (!co_sdo_req_last(&req))
+			ac = co_sub_up_ind(sub, &req);
+	} while (!ac && membuf_size(&buf) < req.size);
+
+	co_sdo_req_fini(&req);
+
+done:
+	if (con)
+		con(NULL, idx, subidx, ac, ac ? NULL : buf.begin,
+				ac ? 0 : membuf_size(&buf), data);
+
+	membuf_fini(&buf);
+	set_errc(errc);
+	return 0;
+}
 
 #ifndef LELY_NO_CO_CSDO
 
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
 #include <lely/co/crc.h>
-#include <lely/co/csdo.h>
-#include <lely/co/dev.h>
-#include <lely/co/obj.h>
 #include <lely/co/val.h>
 #include "sdo.h"
 
-#include <assert.h>
 #include <stdlib.h>
 
 struct __co_csdo_state;
