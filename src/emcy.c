@@ -175,11 +175,12 @@ static int co_emcy_timer(const struct timespec *tp, void *data);
  * \param emcy a pointer to an EMCY service.
  * \param eec  the emergency error code.
  * \param er   the error register.
+ * \param msef the manufacturer-specific error code (can be NULL).
  *
  * \returns 0 on success, or -1 on error.
  */
 static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec,
-		co_unsigned8_t er);
+		co_unsigned8_t er, const uint8_t msef[5]);
 
 /*!
  * Sends any messages in the CAN frame buffer unless the inhibit time has not
@@ -371,7 +372,8 @@ co_emcy_get_dev(const co_emcy_t *emcy)
 }
 
 LELY_CO_EXPORT int
-co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
+co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5])
 {
 	assert(emcy);
 
@@ -405,7 +407,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
 	// Update the pre-defined error field.
 	co_emcy_set_1003(emcy);
 
-	return co_emcy_send(emcy, eec, er);
+	return co_emcy_send(emcy, eec, er, msef);
 }
 
 LELY_CO_EXPORT int
@@ -426,7 +428,7 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 	// Update the pre-defined error field.
 	co_emcy_set_1003(emcy);
 
-	return co_emcy_send(emcy, 0, emcy->nmsg ? emcy->msgs[0].er : 0);
+	return co_emcy_send(emcy, 0, emcy->nmsg ? emcy->msgs[0].er : 0, NULL);
 }
 
 LELY_CO_EXPORT void
@@ -455,7 +457,7 @@ co_emcy_clear(co_emcy_t *emcy)
 	co_emcy_set_1003(emcy);
 
 	// Send the 'error reset/no error' message.
-	return co_emcy_send(emcy, 0, 0);
+	return co_emcy_send(emcy, 0, 0, NULL);
 }
 
 LELY_CO_EXPORT void
@@ -776,7 +778,8 @@ co_emcy_timer(const struct timespec *tp, void *data)
 }
 
 static int
-co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
+co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5])
 {
 	assert(emcy);
 
@@ -803,6 +806,8 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er)
 	msg.len = CAN_MAX_LEN;
 	stle_u32(msg.data, eec);
 	msg.data[2] = er;
+	if (msef)
+		memcpy(msg.data + 3, msef, 5);
 
 	// Add the frame to the buffer.
 	if (__unlikely(!can_buf_write(&emcy->buf, &msg, 1))) {

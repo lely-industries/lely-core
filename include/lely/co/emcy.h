@@ -90,6 +90,7 @@ LELY_CO_EXTERN co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
  * \param emcy a pointer to an EMCY producer service.
  * \param eec  the emergency error code.
  * \param er   the error register.
+ * \param msef the manufacturer-specific error code (can be NULL).
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -97,7 +98,7 @@ LELY_CO_EXTERN co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
  * \see co_emcy_pop(), co_emcy_peek(), co_emcy_clear()
  */
 LELY_CO_EXTERN int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec,
-		co_unsigned8_t er);
+		co_unsigned8_t er, const uint8_t msef[5]);
 
 /*!
  * Pops the most recent CANopen EMCY message from the stack and broadcasts an

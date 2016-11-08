@@ -23,15 +23,15 @@ main(void)
 
 	co_emcy_set_ind(emcy, &emcy_ind, &test);
 
-	co_emcy_push(emcy, 0x1000, 0x00);
+	co_emcy_push(emcy, 0x1000, 0x00, NULL);
 	co_test_wait(&test);
-	co_emcy_push(emcy, 0x2000, 0x02);
+	co_emcy_push(emcy, 0x2000, 0x02, NULL);
 	co_test_wait(&test);
-	co_emcy_push(emcy, 0x3000, 0x04);
+	co_emcy_push(emcy, 0x3000, 0x04, NULL);
 	co_test_wait(&test);
-	co_emcy_push(emcy, 0x4000, 0x08);
+	co_emcy_push(emcy, 0x4000, 0x08, NULL);
 	co_test_wait(&test);
-	co_emcy_push(emcy, 0x8100, 0x10);
+	co_emcy_push(emcy, 0x8100, 0x10, NULL);
 	co_test_wait(&test);
 
 	co_emcy_pop(emcy, NULL, NULL);
