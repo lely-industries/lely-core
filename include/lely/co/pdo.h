@@ -79,9 +79,60 @@ struct co_pdo_map_par {
 			0, 0, 0, 0, 0, 0, 0, 0, \
 			0, 0, 0, 0, 0, 0, 0, 0, \
 			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
+			0, 0, 0, 0, 0, 0, 0, 0, \
 			0, 0, 0, 0, 0, 0, 0, 0 \
 		} \
 	}
+
+// The CANopen SDO upload/download request from lely/co/sdo.h.
+struct co_sdo_req;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*!
+ * Performs a PDO read service by reading the mapped values and writing them to
+ * the object dictionary through a local SDO download request.
+ *
+ * \param par a pointer to the PDO mapping parameters.
+ * \param dev a pointer to a CANopen device.
+ * \param req a pointer to the CANopen SDO download request used for writing to
+ *            the object dictionary.
+ * \param buf a pointer to the mapped values.
+ * \param n   the number of bytes at \a buf.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_pdo_read(const struct co_pdo_map_par *par,
+		co_dev_t *dev, struct co_sdo_req *req, const uint8_t *buf,
+		size_t n);
+
+/*!
+ * Performs a PDO write service by writing the mapped values obtained from the
+ * object dictionary through a local SDO upload request.
+ *
+ * \param par a pointer to the PDO mapping parameters.
+ * \param dev a pointer to a CANopen device.
+ * \param req a pointer to the CANopen SDO upload request used for reading from
+ *            the object dictionary.
+ * \param buf the address at which to store the mapped values (can be NULL).
+ * \param pn  the address of a value containing the size (in bytes) of the
+ *            buffer at \a buf. On exit, if \a pn is not NULL, *\a pn contains
+ *            the number of bytes that would have been written had the buffer at
+ *            \a buf been sufficiently large.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_pdo_write(const struct co_pdo_map_par *par,
+		const co_dev_t *dev, struct co_sdo_req *req, uint8_t *buf,
+		size_t *pn);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

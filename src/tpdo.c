@@ -927,45 +927,12 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 		msg->id &= CAN_MASK_BID;
 	}
 
-	uint8_t *begin = msg->data;
-	uint8_t *end = msg->data + CAN_MAX_LEN;
-
-	for (size_t i = 1; i <= MIN(pdo->map.n, 0x40u); i++) {
-		co_unsigned32_t map = pdo->map.map[i - 1];
-		co_unsigned16_t idx = (map >> 16) & 0xffff;
-		co_unsigned8_t subidx = (map >> 8) & 0xff;
-		co_unsigned8_t len = map & 0xff;
-
-		if (__unlikely(begin + len / 8 > end))
-			return CO_SDO_AC_PDO_LEN;
-
-		// Check whether the sub-object exists and can be mapped into a
-		// PDO.
-		co_sub_t *sub = co_dev_find_sub(pdo->dev, idx, subidx);
-		if (__unlikely(!sub))
-			return CO_SDO_AC_NO_OBJ;
-		unsigned int access = co_sub_get_access(sub);
-		if (__unlikely(!(access & CO_ACCESS_READ)))
-			return CO_SDO_AC_NO_READ;
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-				|| !(access & CO_ACCESS_TPDO)))
-			return CO_SDO_AC_NO_PDO;
-
-		// Upload the value.
-		struct co_sdo_req *req = &pdo->req;
-		co_sdo_req_clear(req);
-		co_unsigned32_t ac = co_sub_up_ind(sub, req);
-		if (__unlikely(ac))
-			return ac;
-
-		// Check the PDO length and copy the value to the frame.
-		if (__unlikely(req->size != len / 8u || !co_sdo_req_first(req)
-				|| !co_sdo_req_last(req)))
-			return CO_SDO_AC_PDO_LEN;
-		memcpy(begin, req->buf, len / 8);
-		msg->len += len / 8;
-		begin += len / 8;
-	}
+	size_t n = CAN_MAX_LEN;
+	co_unsigned32_t ac = co_pdo_write(&pdo->map, pdo->dev, &pdo->req,
+			msg->data, &n);
+	if (__unlikely(ac))
+		return ac;
+	msg->len = n;
 
 	return 0;
 }
