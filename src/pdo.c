@@ -40,6 +40,8 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 	assert(req);
 	assert(buf);
 
+	co_unsigned32_t ac = 0;
+
 	const uint8_t *bp = buf;
 	const uint8_t *end = buf + n;
 
@@ -49,31 +51,25 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
 
-		if (__unlikely(bp + len / 8 > end))
+		// Check whether the sub-object exists and can be mapped into a
+		// PDO (or is a valid dummy entry).
+		size_t size = 0;
+		ac = co_dev_check_rpdo(dev, idx, subidx, &size);
+		if (__unlikely(ac))
+			return ac;
+
+		// Check the PDO length.
+		if (__unlikely(len != size * 8 || bp + len / 8 > end))
 			return CO_SDO_AC_PDO_LEN;
 
-		if (co_type_is_basic(idx) && !subidx) {
-			if (__unlikely(len != 8 * co_type_sizeof(idx)))
-				return CO_SDO_AC_PDO_LEN;
-		} else {
-			// Check whether the sub-object exists and can be mapped
-			// into a PDO.
-			co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
-			if (__unlikely(!sub))
-				return CO_SDO_AC_NO_OBJ;
-			unsigned int access = co_sub_get_access(sub);
-			if (__unlikely(!(access & CO_ACCESS_WRITE)))
-				return CO_SDO_AC_NO_WRITE;
-			if (__unlikely(!co_sub_get_pdo_mapping(sub)
-					|| !(access & CO_ACCESS_RPDO)))
-				return CO_SDO_AC_NO_PDO;
-
+		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+		if (sub) {
 			// Download the value from the sub-object.
 			co_sdo_req_clear(req);
 			req->size = len / 8;
 			req->buf = bp;
 			req->nbyte = req->size;
-			co_unsigned32_t ac = co_sub_dn_ind(sub, req);
+			ac = co_sub_dn_ind(sub, req);
 			if (__unlikely(ac))
 				return ac;
 		}
@@ -81,7 +77,7 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 		bp += len / 8;
 	}
 
-	return 0;
+	return ac;
 }
 #endif // !LELY_NO_CO_RPDO
 
@@ -94,6 +90,8 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	assert(dev);
 	assert(req);
 
+	co_unsigned32_t ac = 0;
+
 	uint8_t *bp = buf;
 	uint8_t *end = buf + (buf && pn ? *pn : 0);
 
@@ -103,29 +101,26 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
 
-		if (__unlikely(bp + len / 8 > buf + CAN_MAX_LEN))
-			return CO_SDO_AC_PDO_LEN;
-
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
-		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
-		if (__unlikely(!sub))
-			return CO_SDO_AC_NO_OBJ;
-		unsigned int access = co_sub_get_access(sub);
-		if (__unlikely(!(access & CO_ACCESS_READ)))
-			return CO_SDO_AC_NO_READ;
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-				|| !(access & CO_ACCESS_TPDO)))
-			return CO_SDO_AC_NO_PDO;
+		size_t size = 0;
+		ac = co_dev_check_tpdo(dev, idx, subidx, &size);
+		if (__unlikely(ac))
+			return ac;
+
+		// Check the PDO length.
+		if (__unlikely(len != size * 8
+				|| bp + len / 8 > buf + CAN_MAX_LEN))
+			return CO_SDO_AC_PDO_LEN;
 
 		// Upload the value of the sub-object.
 		co_sdo_req_clear(req);
-		co_unsigned32_t ac = co_sub_up_ind(sub, req);
+		ac = co_sub_up_ind(co_dev_find_sub(dev, idx, subidx), req);
 		if (__unlikely(ac))
 			return ac;
 
 		// Check the PDO length and copy the value.
-		if (__unlikely(req->size != len / 8u || !co_sdo_req_first(req)
+		if (__unlikely(len != req->size * 8 || !co_sdo_req_first(req)
 				|| !co_sdo_req_last(req)))
 			return CO_SDO_AC_PDO_LEN;
 		if (buf && pn && bp < end)
@@ -136,7 +131,7 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	if (pn)
 		*pn = bp - buf;
 
-	return 0;
+	return ac;
 }
 #endif // !LELY_NO_CO_TPDO
 

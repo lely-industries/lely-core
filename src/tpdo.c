@@ -758,10 +758,9 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	if (__unlikely(co_sdo_req_dn(req, type, &val, &ac) == -1))
 		return ac;
 
-	co_unsigned8_t subidx = co_sub_get_subidx(sub);
 	int valid = !(pdo->comm.cobid & CO_PDO_COBID_VALID);
 
-	if (!subidx) {
+	if (!co_sub_get_subidx(sub)) {
 		assert(type == CO_DEFTYPE_UNSIGNED8);
 		co_unsigned8_t n = val.u8;
 		co_unsigned8_t n_old = co_sub_get_val_u8(sub);
@@ -783,25 +782,12 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO.
-			sub = co_dev_find_sub(pdo->dev, idx, subidx);
-			if (__unlikely(!sub)) {
-				ac = CO_SDO_AC_NO_OBJ;
+			size_t size = 0;
+			ac = co_dev_check_tpdo(pdo->dev, idx, subidx, &size);
+			if (__unlikely(ac))
 				goto error;
-			}
-			unsigned int access = co_sub_get_access(sub);
-			if (__unlikely(!(access & CO_ACCESS_READ))) {
-				ac = CO_SDO_AC_NO_READ;
-				goto error;
-			}
-			if (__unlikely(!co_sub_get_pdo_mapping(sub)
-					|| !(access & CO_ACCESS_TPDO))) {
-				ac = CO_SDO_AC_NO_PDO;
-				goto error;
-			}
 
 			// Check the PDO length.
-			size_t size = co_val_write(co_sub_get_type(sub),
-					co_sub_get_val(sub), NULL, NULL);
 			if (__unlikely(len != size * 8
 					|| (bits += len) > CAN_MAX_LEN * 8)) {
 				ac = CO_SDO_AC_PDO_LEN;
@@ -824,27 +810,15 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			goto error;
 		}
 
-		// Check whether the sub-object exists and can be mapped into a
-		// PDO.
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
-		sub = co_dev_find_sub(pdo->dev, idx, subidx);
-		if (__unlikely(!sub)) {
-			ac = CO_SDO_AC_NO_OBJ;
+		// Check whether the sub-object exists and can be mapped into a
+		// PDO.
+		ac = co_dev_check_tpdo(pdo->dev, idx, subidx, NULL);
+		if (__unlikely(ac))
 			goto error;
-		}
-		unsigned int access = co_sub_get_access(sub);
-		if (__unlikely(!(access & CO_ACCESS_READ))) {
-			ac = CO_SDO_AC_NO_READ;
-			goto error;
-		}
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-				|| !(access & CO_ACCESS_TPDO))) {
-			ac = CO_SDO_AC_NO_PDO;
-			goto error;
-		}
 
-		pdo->map.map[subidx - 1] = map;
+		pdo->map.map[co_sub_get_subidx(sub) - 1] = map;
 	}
 
 	co_sub_dn(sub, &val);

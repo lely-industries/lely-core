@@ -290,6 +290,20 @@ public:
 				reinterpret_cast<void**>(&val));
 	}
 
+	co_unsigned32_t
+	checkRPDO(co_unsigned16_t idx, co_unsigned8_t subidx, ::std::size_t* pn)
+			const noexcept
+	{
+		return co_dev_check_rpdo(this, idx, subidx, pn);
+	}
+
+	co_unsigned32_t
+	checkTPDO(co_unsigned16_t idx, co_unsigned8_t subidx, ::std::size_t* pn)
+			const noexcept
+	{
+		return co_dev_check_tpdo(this, idx, subidx, pn);
+	}
+
 protected:
 	~CODev() {}
 };
