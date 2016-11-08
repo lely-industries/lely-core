@@ -20,7 +20,7 @@ main(void)
 	co_dev_t *rdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/pdo-receive.dcf");
 	tap_assert(rdev);
-	co_rpdo_t *rpdo = co_rpdo_create(net, rdev, 1);
+	co_rpdo_t *rpdo = co_rpdo_create(net, rdev, 1, NULL);
 	tap_assert(rpdo);
 
 	co_dev_t *tdev = co_dev_create_from_dcf_file(

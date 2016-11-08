@@ -174,10 +174,6 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 	if ((srv->set & ~set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_fini_lss(srv);
 #endif
-#ifndef LELY_NO_CO_EMCY
-	if ((srv->set & ~set) & CO_NMT_SRV_EMCY)
-		co_nmt_srv_fini_emcy(srv);
-#endif
 #ifndef LELY_NO_CO_TIME
 	if ((srv->set & ~set) & CO_NMT_SRV_TIME)
 		co_nmt_srv_fini_time(srv);
@@ -192,7 +188,15 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 	if ((srv->set & ~set) & CO_NMT_SRV_PDO)
 		co_nmt_srv_fini_pdo(srv);
 #endif
+#ifndef LELY_NO_CO_EMCY
+	if ((srv->set & ~set) & CO_NMT_SRV_EMCY)
+		co_nmt_srv_fini_emcy(srv);
+#endif
 
+#ifndef LELY_NO_CO_EMCY
+	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
+		co_nmt_srv_init_emcy(srv, net, dev);
+#endif
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
 	if ((set & ~srv->set) & CO_NMT_SRV_PDO)
 		co_nmt_srv_init_pdo(srv, net, dev);
@@ -206,10 +210,6 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 #ifndef LELY_NO_CO_TIME
 	if ((set & ~srv->set) & CO_NMT_SRV_TIME)
 		co_nmt_srv_init_time(srv, net, dev);
-#endif
-#ifndef LELY_NO_CO_EMCY
-	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
-		co_nmt_srv_init_emcy(srv, net, dev);
 #endif
 #ifdef LELY_NO_CO_LSS
 	__unused_var(nmt);
@@ -251,7 +251,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		for (size_t j = srv->nrpdo; j < i; j++)
 			srv->rpdos[j] = NULL;
-		srv->rpdos[i] = co_rpdo_create(net, dev, i + 1);
+		srv->rpdos[i] = co_rpdo_create(net, dev, i + 1, srv->emcy);
 		if (__unlikely(!srv->rpdos[i]))
 			goto error;
 

@@ -27,6 +27,9 @@
 
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
+#ifndef LELY_NO_CO_EMCY
+#include <lely/co/emcy.h>
+#endif
 #include <lely/co/obj.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
@@ -43,6 +46,10 @@ struct __co_rpdo {
 	co_dev_t *dev;
 	//! The PDO number.
 	co_unsigned16_t num;
+#ifndef LELY_NO_CO_EMCY
+	//! A pointer to an EMCY producer service.
+	co_emcy_t *emcy;
+#endif
 	//! The PDO communication parameter.
 	struct co_pdo_comm_par comm;
 	//! The PDO mapping parameter.
@@ -163,7 +170,7 @@ __co_rpdo_free(void *ptr)
 
 LELY_CO_EXPORT struct __co_rpdo *
 __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num)
+		co_unsigned16_t num, co_emcy_t *emcy)
 {
 	assert(pdo);
 	assert(net);
@@ -187,6 +194,11 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->net = net;
 	pdo->dev = dev;
 	pdo->num = num;
+#ifdef LELY_NO_CO_EMCY
+	__unused_var(emcy);
+#else
+	pdo->emcy = emcy;
+#endif
 
 	// Copy the PDO communication parameter record.
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
@@ -268,7 +280,8 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 }
 
 LELY_CO_EXPORT co_rpdo_t *
-co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
+co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num,
+		co_emcy_t *emcy)
 {
 	errc_t errc = 0;
 
@@ -278,7 +291,7 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 		goto error_alloc_pdo;
 	}
 
-	if (__unlikely(!__co_rpdo_init(pdo, net, dev, num))) {
+	if (__unlikely(!__co_rpdo_init(pdo, net, dev, num, emcy))) {
 		errc = get_errc();
 		goto error_init_pdo;
 	}
@@ -712,8 +725,7 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 		// In case of an event-driven RPDO, process the frame directly.
 		co_unsigned32_t ac = co_rpdo_read_frame(pdo, msg);
 		if (pdo->ind)
-			pdo->ind(pdo, ac, ac ? NULL : msg->data,
-					ac ? 0 : msg->len, pdo->data);
+			pdo->ind(pdo, ac, msg->data, msg->len, pdo->data);
 	}
 
 	return 0;
@@ -751,8 +763,14 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	assert(pdo);
 	assert(msg);
 
-	return co_pdo_read(&pdo->map, pdo->dev, &pdo->req, msg->data,
-			MIN(msg->len, CAN_MAX_LEN));
+	co_unsigned32_t ac = co_pdo_read(&pdo->map, pdo->dev, &pdo->req,
+			msg->data, MIN(msg->len, CAN_MAX_LEN));
+#ifndef LELY_NO_CO_EMCY
+	// Generate an EMCY message if too few bytes where available in the PDO.
+	if (__unlikely(ac == CO_SDO_AC_PDO_LEN && pdo->emcy))
+		co_emcy_push(pdo->emcy, 0x8210, 0x10, NULL);
+#endif
+	return ac;
 }
 
 #endif // !LELY_NO_CO_RPDO
