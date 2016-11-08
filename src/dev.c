@@ -753,16 +753,14 @@ error_malloc_idx:
 #ifndef LELY_NO_CO_RPDO
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_check_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, size_t *pn)
+		co_unsigned8_t subidx)
 {
 	assert(dev);
 
-	co_unsigned16_t type;
 	if (co_type_is_basic(idx) && !subidx) {
 		// If the object is a dummy entry, check if it is enabled.
 		if (__unlikely(!(dev->dummy & (1 << idx))))
 			return CO_SDO_AC_NO_OBJ;
-		type = idx;
 	} else {
 		co_obj_t *obj = co_dev_find_obj(dev, idx);
 		if (__unlikely(!obj))
@@ -779,12 +777,7 @@ co_dev_check_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
 		if (__unlikely(!co_sub_get_pdo_mapping(sub)
 				|| !(access & CO_ACCESS_RPDO)))
 			return CO_SDO_AC_NO_PDO;
-
-		type = co_sub_get_type(sub);
 	}
-
-	if (pn)
-		*pn = co_type_sizeof(type);
 
 	return 0;
 }
@@ -793,7 +786,7 @@ co_dev_check_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
 #ifndef LELY_NO_CO_TPDO
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_check_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, size_t *pn)
+		co_unsigned8_t subidx)
 {
 	assert(dev);
 
@@ -812,9 +805,6 @@ co_dev_check_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 	if (__unlikely(!co_sub_get_pdo_mapping(sub)
 			|| !(access & CO_ACCESS_TPDO)))
 		return CO_SDO_AC_NO_PDO;
-
-	if (pn)
-		*pn = co_type_sizeof(co_sub_get_type(sub));
 
 	return 0;
 }

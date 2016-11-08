@@ -40,41 +40,42 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 	assert(req);
 	assert(buf);
 
+	n = MIN(n, CAN_MAX_LEN);
+
 	co_unsigned32_t ac = 0;
 
-	const uint8_t *bp = buf;
-	const uint8_t *end = buf + n;
-
+	size_t offset = 0;
 	for (size_t i = 1; i <= MIN(par->n, 0x40u); i++) {
 		co_unsigned32_t map = par->map[i - 1];
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
 
+		// Check the PDO length.
+		if (__unlikely(offset + len > n * 8))
+			return CO_SDO_AC_PDO_LEN;
+
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO (or is a valid dummy entry).
-		size_t size = 0;
-		ac = co_dev_check_rpdo(dev, idx, subidx, &size);
+		ac = co_dev_check_rpdo(dev, idx, subidx);
 		if (__unlikely(ac))
 			return ac;
 
-		// Check the PDO length.
-		if (__unlikely(len != size * 8 || bp + len / 8 > end))
-			return CO_SDO_AC_PDO_LEN;
-
 		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 		if (sub) {
-			// Download the value from the sub-object.
+			// Copy the value and download it into the sub-object.
+			uint8_t tmp[CAN_MAX_LEN] = { 0 };
+			bcpyle(tmp, 0, buf, offset, len);
 			co_sdo_req_clear(req);
-			req->size = len / 8;
-			req->buf = bp;
+			req->size = (len + 7) / 8;
+			req->buf = tmp;
 			req->nbyte = req->size;
 			ac = co_sub_dn_ind(sub, req);
 			if (__unlikely(ac))
 				return ac;
 		}
 
-		bp += len / 8;
+		offset += len;
 	}
 
 	return ac;
@@ -92,44 +93,38 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 
 	co_unsigned32_t ac = 0;
 
-	uint8_t *bp = buf;
-	uint8_t *end = buf + (buf && pn ? *pn : 0);
-
+	size_t offset = 0;
 	for (size_t i = 1; i <= MIN(par->n, 0x40u); i++) {
 		co_unsigned32_t map = par->map[i - 1];
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
 
+		// Check the PDO length.
+		if (__unlikely(offset + len > CAN_MAX_LEN * 8))
+			return CO_SDO_AC_PDO_LEN;
+
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
-		size_t size = 0;
-		ac = co_dev_check_tpdo(dev, idx, subidx, &size);
+		ac = co_dev_check_tpdo(dev, idx, subidx);
 		if (__unlikely(ac))
 			return ac;
 
-		// Check the PDO length.
-		if (__unlikely(len != size * 8
-				|| bp + len / 8 > buf + CAN_MAX_LEN))
-			return CO_SDO_AC_PDO_LEN;
-
-		// Upload the value of the sub-object.
+		// Upload the value of the sub-object and copy the value.
 		co_sdo_req_clear(req);
 		ac = co_sub_up_ind(co_dev_find_sub(dev, idx, subidx), req);
 		if (__unlikely(ac))
 			return ac;
-
-		// Check the PDO length and copy the value.
-		if (__unlikely(len != req->size * 8 || !co_sdo_req_first(req)
-				|| !co_sdo_req_last(req)))
+		if (__unlikely(!co_sdo_req_first(req) || !co_sdo_req_last(req)))
 			return CO_SDO_AC_PDO_LEN;
-		if (buf && pn && bp < end)
-			memcpy(bp, req->buf, MIN(len / 8, end - bp));
-		bp += len / 8;
+		if (buf && pn && offset + len <= *pn * 8)
+			bcpyle(buf, offset, req->buf, 0, len);
+
+		offset += len;
 	}
 
 	if (pn)
-		*pn = bp - buf;
+		*pn = (offset + 7) / 8;
 
 	return ac;
 }

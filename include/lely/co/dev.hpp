@@ -291,17 +291,15 @@ public:
 	}
 
 	co_unsigned32_t
-	checkRPDO(co_unsigned16_t idx, co_unsigned8_t subidx, ::std::size_t* pn)
-			const noexcept
+	checkRPDO(co_unsigned16_t idx, co_unsigned8_t subidx) const noexcept
 	{
-		return co_dev_check_rpdo(this, idx, subidx, pn);
+		return co_dev_check_rpdo(this, idx, subidx);
 	}
 
 	co_unsigned32_t
-	checkTPDO(co_unsigned16_t idx, co_unsigned8_t subidx, ::std::size_t* pn)
-			const noexcept
+	checkTPDO(co_unsigned16_t idx, co_unsigned8_t subidx) const noexcept
 	{
-		return co_dev_check_tpdo(this, idx, subidx, pn);
+		return co_dev_check_tpdo(this, idx, subidx);
 	}
 
 protected:

@@ -132,7 +132,7 @@ DefaultValue=0x02
 ParameterName=1st application object
 DataType=0x0007
 AccessType=rw
-DefaultValue=0x20000020
+DefaultValue=0x2000001c
 
 [1A00sub2]
 ParameterName=2nd application object

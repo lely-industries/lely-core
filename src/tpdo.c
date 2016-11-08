@@ -780,19 +780,17 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			co_unsigned8_t len = map & 0xff;
 
-			// Check whether the sub-object exists and can be mapped
-			// into a PDO.
-			size_t size = 0;
-			ac = co_dev_check_tpdo(pdo->dev, idx, subidx, &size);
-			if (__unlikely(ac))
-				goto error;
-
 			// Check the PDO length.
-			if (__unlikely(len != size * 8
-					|| (bits += len) > CAN_MAX_LEN * 8)) {
+			if (__unlikely((bits += len) > CAN_MAX_LEN * 8)) {
 				ac = CO_SDO_AC_PDO_LEN;
 				goto error;
 			}
+
+			// Check whether the sub-object exists and can be mapped
+			// into a PDO.
+			ac = co_dev_check_tpdo(pdo->dev, idx, subidx);
+			if (__unlikely(ac))
+				goto error;
 		}
 
 		pdo->map.n = n;
@@ -814,7 +812,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
-		ac = co_dev_check_tpdo(pdo->dev, idx, subidx, NULL);
+		ac = co_dev_check_tpdo(pdo->dev, idx, subidx);
 		if (__unlikely(ac))
 			goto error;
 
