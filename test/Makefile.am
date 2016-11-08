@@ -1,6 +1,8 @@
 bin =
 bin += test-config
 test_config_SOURCES = config.c
+bin += test-endian
+test_endian_SOURCES = endian.c
 bin += test-fbuf
 test_fbuf_SOURCES = fbuf.c
 
