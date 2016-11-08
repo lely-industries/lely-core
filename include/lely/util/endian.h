@@ -245,6 +245,34 @@ LELY_UTIL_ENDIAN_INLINE double ldn_dbl(const void *ptr);
 //! Stores a double-precision floating-point number in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_dbl(void *ptr, double d);
 
+/*!
+ * Copies \a n bits from the source to the destination buffer. The buffers MUST
+ * NOT overlap. This function assumes a big-endian bit ordering (i.e., bit 0 is
+ * the most significant bit).
+ *
+ * \param dst    a pointer to the destination buffer.
+ * \param dstbit the destination offset (in bits) with respect to \a dst.
+ * \param src    a pointer to the source buffer.
+ * \param srcbit the source offset (in bits) with respect to \a src.
+ * \param n      the number of bits to copy.
+ */
+LELY_UTIL_EXTERN void bcpybe(void *dst, int dstbit, const void *src, int srcbit,
+		size_t n);
+
+/*!
+ * Copies \a n bits from the source to the destination buffer. The buffers MUST
+ * NOT overlap. This function assumes a little-endian bit ordering (i.e., bit 0
+ * is the least significant bit).
+ *
+ * \param dst    a pointer to the destination buffer.
+ * \param dstbit the destination offset (in bits) with respect to \a dst.
+ * \param src    a pointer to the source buffer.
+ * \param srcbit the source offset (in bits) with respect to \a src.
+ * \param n      the number of bits to copy.
+ */
+LELY_UTIL_EXTERN void bcpyle(void *dst, int dstbit, const void *src, int srcbit,
+		size_t n);
+
 LELY_UTIL_ENDIAN_INLINE uint16_t
 bswap_u16(uint16_t i)
 {
