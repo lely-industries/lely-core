@@ -94,6 +94,44 @@ extern "C" {
 #endif
 
 /*!
+ * Maps values into a PDO.
+ *
+ * \param par a pointer to the PDO mapping parameters.
+ * \param val a pointer to the values to map.
+ * \param n   the number of values at \a val.
+ * \param buf the address at which to store the mapped values (can be NULL).
+ * \param pn  the address of a value containing the size (in bytes) of the
+ *            buffer at \a buf. On exit, if \a pn is not NULL, *\a pn contains
+ *            the number of bytes that would have been written had the buffer at
+ *            \a buf been sufficiently large.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_pdo_unmap()
+ */
+LELY_CO_EXTERN co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
+		const co_unsigned64_t *val, size_t n, uint8_t *buf, size_t *pn);
+
+/*!
+ * Unmaps a PDO into its constituent values.
+ *
+ * \param par a pointer to the PDO mapping parameters.
+ * \param buf a pointer to the mapped values.
+ * \param n   the number of bytes at \a buf.
+ * \param val the address at which to store the unmapped values (can be NULL).
+ * \param pn  the address of a value containing the size (in number of values)
+ *            of the buffer at \a val. On exit, if \a pn is not NULL, *\a pn
+ *            contains the number of values that would have been written had the
+ *            buffer at \a val been sufficiently large.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_pdo_map()
+ */
+LELY_CO_EXTERN co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
+		const uint8_t *buf, size_t n, co_unsigned64_t *val, size_t *pn);
+
+/*!
  * Performs a PDO read service by reading the mapped values and writing them to
  * the object dictionary through a local SDO download request.
  *
