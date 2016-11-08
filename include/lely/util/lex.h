@@ -166,10 +166,10 @@ LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
  *              to one past the last character lexed. On error, *\a at is left
  *              untouched.
  * \param s     the address at which to store the string (can be NULL).
- * \param pn    the address of a value containing the size of the buffer at
- *              *\a s. On exit, if \a pn is not NULL, *\a pn contains the number
- *              of bytes that would have been written had the buffer at \a s
- *              been sufficiently large.
+ * \param pn    the address of a value containing the size (in bytes) of the
+ *              buffer at \a s. On exit, if \a pn is not NULL, *\a pn contains
+ *              the number of bytes that would have been written had the buffer
+ *              at \a s been sufficiently large.
  *
  * \returns the number of characters read (excluding the termination character).
  *
