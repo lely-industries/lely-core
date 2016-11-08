@@ -951,6 +951,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->subidx = msg->data[3];
 
 	// Obtain the size from the command specifier.
+	co_sdo_req_clear(&sdo->req);
 	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
 	if (exp) {
 		if (cs & CO_SDO_INI_SIZE_IND)
@@ -1062,7 +1063,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->subidx = msg->data[3];
 
 	// Perform access checks and start serializing the value.
-	sdo->req.size = 0;
+	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (__unlikely(ac))
 		return co_ssdo_abort_res(sdo, ac);
@@ -1162,6 +1163,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->subidx = msg->data[3];
 
 	// Obtain the data set size.
+	co_sdo_req_clear(&sdo->req);
 	if (cs & CO_SDO_BLK_SIZE_IND) {
 		if (__unlikely(msg->len < 8))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1338,7 +1340,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t pst = msg->len > 5 ? msg->data[5] : 0;
 
 	// Perform access checks and start serializing the value.
-	sdo->req.size = 0;
+	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (__unlikely(ac))
 		return co_ssdo_abort_res(sdo, ac);
