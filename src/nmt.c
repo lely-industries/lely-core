@@ -591,6 +591,48 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 //! The services enabled in the NMT 'stopped' state.
 #define CO_NMT_STOP_SRV	CO_NMT_SRV_LSS
 
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
+{
+	assert(dev);
+
+	co_obj_t *obj_1016 = co_dev_find_obj(dev, 0x1016);
+	if (__unlikely(!obj_1016))
+		return CO_SDO_AC_NO_OBJ;
+
+	co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
+	co_unsigned8_t i = 0;
+	// If the node-ID is valid, find an existing heartbeat consumer with the
+	// same ID.
+	if (id && id <= CO_NUM_NODES) {
+		for (i = 1; i <= n; i++) {
+			co_unsigned32_t val_i = co_obj_get_val_u32(obj_1016, i);
+			co_unsigned8_t id_i = (val_i >> 16) & 0xff;
+			if (id_i == id)
+				break;
+		}
+	}
+	// If the node-ID is invalid or no heartbeat consumer exists, find an
+	// unused consumer.
+	if (!i || i > n) {
+		for (i = 1; i <= n; i++) {
+			co_unsigned32_t val_i = co_obj_get_val_u32(obj_1016, i);
+			co_unsigned8_t id_i = (val_i >> 16) & 0xff;
+			if (!id_i || id_i > CO_NUM_NODES)
+				break;
+		}
+	}
+
+	if (__unlikely(!i || i > n))
+		return CO_SDO_AC_NO_SUB;
+	co_sub_t *sub = co_obj_find_sub(obj_1016, i);
+	if (__unlikely(!sub))
+		return CO_SDO_AC_NO_SUB;
+
+	co_unsigned32_t val = ((co_unsigned32_t)ms << 16) | id;
+	return co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &val);
+}
+
 #ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT const char *
 co_nmt_es_str(char es)

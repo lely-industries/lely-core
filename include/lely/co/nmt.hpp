@@ -32,6 +32,12 @@
 
 namespace lely {
 
+inline co_unsigned32_t
+cfgHb(CODev& dev, co_unsigned8_t id, co_unsigned16_t ms) noexcept
+{
+	return co_dev_cfg_hb(&dev, id, ms);
+}
+
 //! The attributes of #co_nmt_t required by #lely::CONMT.
 template <>
 struct c_type_traits<__co_nmt> {

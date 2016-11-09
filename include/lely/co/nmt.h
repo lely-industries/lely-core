@@ -207,6 +207,20 @@ typedef void co_nmt_cfg_ind_t(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
 typedef void co_nmt_cfg_con_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned32_t ac, void *data);
 
+/*!
+ * Configures heartbeat consumption for the specified node by updating CANopen
+ * object 1016 (Consumer heartbeat time).
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param id  the node-ID (in the range [1..127]).
+ * \param ms  the heartbeat time (in milliseconds). If \a ms is 0, the heartbeat
+ *            consumer is disabled.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id,
+		co_unsigned16_t ms);
+
 //! Returns a pointer to a string describing an NMT boot error status.
 LELY_CO_EXTERN const char *co_nmt_es2str(char es);
 
