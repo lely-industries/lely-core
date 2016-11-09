@@ -24,7 +24,6 @@
 #include "co.h"
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
-#include <lely/co/sdo.h>
 #include "obj.h"
 
 #include <assert.h>
@@ -749,66 +748,6 @@ error_malloc_idx:
 	set_errc(errc);
 	return -1;
 }
-
-#ifndef LELY_NO_CO_RPDO
-LELY_CO_EXPORT co_unsigned32_t
-co_dev_check_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx)
-{
-	assert(dev);
-
-	if (co_type_is_basic(idx) && !subidx) {
-		// If the object is a dummy entry, check if it is enabled.
-		if (__unlikely(!(dev->dummy & (1 << idx))))
-			return CO_SDO_AC_NO_OBJ;
-	} else {
-		co_obj_t *obj = co_dev_find_obj(dev, idx);
-		if (__unlikely(!obj))
-			return CO_SDO_AC_NO_OBJ;
-
-		co_sub_t *sub = co_obj_find_sub(obj, subidx);
-		if (__unlikely(!sub))
-			return CO_SDO_AC_NO_SUB;
-
-		unsigned int access = co_sub_get_access(sub);
-		if (__unlikely(!(access & CO_ACCESS_WRITE)))
-			return CO_SDO_AC_NO_WRITE;
-
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-				|| !(access & CO_ACCESS_RPDO)))
-			return CO_SDO_AC_NO_PDO;
-	}
-
-	return 0;
-}
-#endif
-
-#ifndef LELY_NO_CO_TPDO
-LELY_CO_EXPORT co_unsigned32_t
-co_dev_check_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx)
-{
-	assert(dev);
-
-	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj))
-		return CO_SDO_AC_NO_OBJ;
-
-	co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub))
-		return CO_SDO_AC_NO_SUB;
-
-	unsigned int access = co_sub_get_access(sub);
-	if (__unlikely(!(access & CO_ACCESS_READ)))
-		return CO_SDO_AC_NO_WRITE;
-
-	if (__unlikely(!co_sub_get_pdo_mapping(sub)
-			|| !(access & CO_ACCESS_TPDO)))
-		return CO_SDO_AC_NO_PDO;
-
-	return 0;
-}
-#endif
 
 static void
 co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)

@@ -453,33 +453,6 @@ LELY_CO_EXTERN int co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
 LELY_CO_EXTERN int co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, void **ptr);
 
-/*!
- * Checks if the specified object is valid and can be mapped into a Receive-PDO.
- *
- * \param dev    a pointer to a CANopen device.
- * \param idx    the object index.
- * \param subidx the object sub-index.
- *
- * \returns 0 if the object is valid and can be mapped, or an SDO abort code on
- * error.
- */
-LELY_CO_EXTERN co_unsigned32_t co_dev_check_rpdo(const co_dev_t *dev,
-		co_unsigned16_t idx, co_unsigned8_t subidx);
-
-/*!
- * Checks if the specified object is valid and can be mapped into a
- * Transmit-PDO.
- *
- * \param dev    a pointer to a CANopen device.
- * \param idx    the object index.
- * \param subidx the object sub-index.
- *
- * \returns 0 if the object is valid and can be mapped, or an SDO abort code on
- * error.
- */
-LELY_CO_EXTERN co_unsigned32_t co_dev_check_tpdo(const co_dev_t *dev,
-		co_unsigned16_t idx, co_unsigned8_t subidx);
-
 #ifdef __cplusplus
 }
 #endif

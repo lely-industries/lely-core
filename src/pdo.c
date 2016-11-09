@@ -34,6 +34,66 @@
 
 #include <assert.h>
 
+#ifndef LELY_NO_CO_RPDO
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx)
+{
+	assert(dev);
+
+	if (co_type_is_basic(idx) && !subidx) {
+		// If the object is a dummy entry, check if it is enabled.
+		if (__unlikely(!(co_dev_get_dummy(dev) & (1 << idx))))
+			return CO_SDO_AC_NO_OBJ;
+	} else {
+		co_obj_t *obj = co_dev_find_obj(dev, idx);
+		if (__unlikely(!obj))
+			return CO_SDO_AC_NO_OBJ;
+
+		co_sub_t *sub = co_obj_find_sub(obj, subidx);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+
+		unsigned int access = co_sub_get_access(sub);
+		if (__unlikely(!(access & CO_ACCESS_WRITE)))
+			return CO_SDO_AC_NO_WRITE;
+
+		if (__unlikely(!co_sub_get_pdo_mapping(sub)
+				|| !(access & CO_ACCESS_RPDO)))
+			return CO_SDO_AC_NO_PDO;
+	}
+
+	return 0;
+}
+#endif
+
+#ifndef LELY_NO_CO_TPDO
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx)
+{
+	assert(dev);
+
+	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj))
+		return CO_SDO_AC_NO_OBJ;
+
+	co_sub_t *sub = co_obj_find_sub(obj, subidx);
+	if (__unlikely(!sub))
+		return CO_SDO_AC_NO_SUB;
+
+	unsigned int access = co_sub_get_access(sub);
+	if (__unlikely(!(access & CO_ACCESS_READ)))
+		return CO_SDO_AC_NO_WRITE;
+
+	if (__unlikely(!co_sub_get_pdo_mapping(sub)
+			|| !(access & CO_ACCESS_TPDO)))
+		return CO_SDO_AC_NO_PDO;
+
+	return 0;
+}
+#endif
+
 LELY_CO_EXPORT co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 		size_t n, uint8_t *buf, size_t *pn)
@@ -124,7 +184,7 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO (or is a valid dummy entry).
-		ac = co_dev_check_rpdo(dev, idx, subidx);
+		ac = co_dev_chk_rpdo(dev, idx, subidx);
 		if (__unlikely(ac))
 			return ac;
 
@@ -177,7 +237,7 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
-		ac = co_dev_check_tpdo(dev, idx, subidx);
+		ac = co_dev_chk_tpdo(dev, idx, subidx);
 		if (__unlikely(ac))
 			return ac;
 

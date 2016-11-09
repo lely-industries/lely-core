@@ -788,7 +788,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO.
-			ac = co_dev_check_tpdo(pdo->dev, idx, subidx);
+			ac = co_dev_chk_tpdo(pdo->dev, idx, subidx);
 			if (__unlikely(ac))
 				goto error;
 		}
@@ -812,7 +812,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
-		ac = co_dev_check_tpdo(pdo->dev, idx, subidx);
+		ac = co_dev_chk_tpdo(pdo->dev, idx, subidx);
 		if (__unlikely(ac))
 			goto error;
 
