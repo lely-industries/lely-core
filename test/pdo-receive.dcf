@@ -75,7 +75,7 @@ DataType=0x0007
 AccessType=ro
 
 [1400]
-SubNumber=7
+SubNumber=6
 ParameterName=RPDO communication parameter
 ObjectType=0x09
 
@@ -109,11 +109,6 @@ AccessType=rw
 [1400sub5]
 ParameterName=event timer
 DataType=0x0006
-AccessType=rw
-
-[1400sub6]
-ParameterName=SYNC start value
-DataType=0x0005
 AccessType=rw
 
 [1600]

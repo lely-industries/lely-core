@@ -34,7 +34,14 @@
 
 #include <assert.h>
 
+static co_unsigned32_t co_dev_cfg_pdo_comm(const co_dev_t *dev,
+		co_unsigned16_t idx, const struct co_pdo_comm_par *par);
+
+static co_unsigned32_t co_dev_cfg_pdo_map(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_map_par *par);
+
 #ifndef LELY_NO_CO_RPDO
+
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx)
@@ -65,9 +72,57 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
 
 	return 0;
 }
-#endif
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_rpdo(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *comm,
+		const struct co_pdo_map_par *map)
+{
+	assert(comm);
+
+	co_unsigned32_t ac = 0;
+
+	struct co_pdo_comm_par par = *comm;
+	// Disable the RPDO service before configuring any parameters.
+	par.cobid |= CO_PDO_COBID_VALID;
+	ac = co_dev_cfg_rpdo_comm(dev, num, &par);
+	if (__unlikely(ac))
+		return ac;
+
+	ac = co_dev_cfg_rpdo_map(dev, num, map);
+	if (__unlikely(ac))
+		return ac;
+
+	// Re-enable the RPDO service if necessary.
+	if (!(comm->cobid & CO_PDO_COBID_VALID))
+		ac = co_dev_cfg_rpdo_comm(dev, num, comm);
+	return ac;
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_rpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *par)
+{
+	if (__unlikely(!num || num > 512))
+		return CO_SDO_AC_NO_OBJ;
+
+	return co_dev_cfg_pdo_comm(dev, 0x1400 + num - 1, par);
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_map_par *par)
+{
+	if (__unlikely(!num || num > 512))
+		return CO_SDO_AC_NO_OBJ;
+
+	return co_dev_cfg_pdo_map(dev, 0x1600 + num - 1, par);
+}
+
+#endif // !LELY_NO_CO_RPDO
 
 #ifndef LELY_NO_CO_TPDO
+
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx)
@@ -92,7 +147,54 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 
 	return 0;
 }
-#endif
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_tpdo(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *comm,
+		const struct co_pdo_map_par *map)
+{
+	assert(comm);
+
+	co_unsigned32_t ac = 0;
+
+	struct co_pdo_comm_par par = *comm;
+	// Disable the TPDO service before configuring any parameters.
+	par.cobid |= CO_PDO_COBID_VALID;
+	ac = co_dev_cfg_tpdo_comm(dev, num, &par);
+	if (__unlikely(ac))
+		return ac;
+
+	ac = co_dev_cfg_tpdo_map(dev, num, map);
+	if (__unlikely(ac))
+		return ac;
+
+	// Re-enable the TPDO service if necessary.
+	if (!(comm->cobid & CO_PDO_COBID_VALID))
+		ac = co_dev_cfg_tpdo_comm(dev, num, comm);
+	return ac;
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_tpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *par)
+{
+	if (__unlikely(!num || num > 512))
+		return CO_SDO_AC_NO_OBJ;
+
+	return co_dev_cfg_pdo_comm(dev, 0x1800 + num - 1, par);
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_map_par *par)
+{
+	if (__unlikely(!num || num > 512))
+		return CO_SDO_AC_NO_OBJ;
+
+	return co_dev_cfg_pdo_map(dev, 0x1a00 + num - 1, par);
+}
+
+#endif // !LELY_NO_CO_RPDO
 
 LELY_CO_EXPORT co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
@@ -260,6 +362,105 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	return ac;
 }
 #endif // !LELY_NO_CO_TPDO
+
+static co_unsigned32_t
+co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
+		const struct co_pdo_comm_par *par)
+{
+	assert(dev);
+	assert(par);
+
+	co_unsigned32_t ac = 0;
+
+	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj))
+		return CO_SDO_AC_NO_OBJ;
+
+	// Check if all sub-objects are available.
+	co_unsigned8_t n = co_obj_get_val_u8(obj, 0x00);
+	if (__unlikely(par->n > n))
+		return CO_SDO_AC_NO_SUB;
+
+	// Configure the COB-ID.
+	if (par->n >= 1 && !ac) {
+		co_sub_t *sub = co_obj_find_sub(obj, 0x01);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &par->cobid);
+	}
+
+	// Configure the transmission type.
+	if (par->n >= 2 && !ac) {
+		co_sub_t *sub = co_obj_find_sub(obj, 0x02);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->trans);
+	}
+
+	// Configure the inhibit time.
+	if (par->n >= 3 && !ac) {
+		co_sub_t *sub = co_obj_find_sub(obj, 0x03);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16,
+				&par->inhibit);
+	}
+
+	// Configure the event timer.
+	if (par->n >= 5 && !ac) {
+		co_sub_t *sub = co_obj_find_sub(obj, 0x05);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->event);
+	}
+
+	// Configure the SYNC start value.
+	if (par->n >= 6 && !ac) {
+		co_sub_t *sub = co_obj_find_sub(obj, 0x06);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->sync);
+	}
+
+	return ac;
+}
+
+static co_unsigned32_t
+co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
+		const struct co_pdo_map_par *par)
+{
+	assert(dev);
+	assert(par);
+
+	co_unsigned32_t ac = 0;
+
+	co_obj_t *obj = co_dev_find_obj(dev, idx);
+	if (__unlikely(!obj))
+		return CO_SDO_AC_NO_OBJ;
+
+	co_sub_t *sub_00 = co_obj_find_sub(obj, 0x00);
+	if (__unlikely(!sub_00))
+		return CO_SDO_AC_NO_SUB;
+	// Disable mapping by setting subindex 0x00 to zero.
+	ac = co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 0 });
+	if (__unlikely(ac))
+		return ac;
+
+	// Copy the mapping parameters.
+	for (co_unsigned8_t i = 1; i <= par->n; i++) {
+		co_sub_t *sub = co_obj_find_sub(obj, i);
+		if (__unlikely(!sub))
+			return CO_SDO_AC_NO_SUB;
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32,
+				&par->map[i - 1]);
+		if (__unlikely(ac))
+			return ac;
+	}
+
+	// Enable mapping.
+	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n);
+}
 
 #endif // !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 

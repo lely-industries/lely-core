@@ -107,6 +107,51 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_chk_rpdo(const co_dev_t *dev,
 		co_unsigned16_t idx, co_unsigned8_t subidx);
 
 /*!
+ * Configures the communication and parameters of a Receive-PDO service. This
+ * function disables the RPDO before configuring the parameters and re-enables
+ * it on success.
+ *
+ * \param dev  a pointer to a CANopen device.
+ * \param num  the PDO number (in the range [1..512]).
+ * \param comm a pointer to the communication parameters.
+ * \param map  a pointer to the mapping parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_dev_cfg_rpdo_comm(), co_dev_cfg_rpdo_map()
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_comm_par *comm,
+		const struct co_pdo_map_par *map);
+
+/*!
+ * Configures the communication parameters of a Receive-PDO service by updating
+ * CANopen object 1400 - 15FF (RPDO communication parameter).
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param num the PDO number (in the range [1..512]).
+ * \param par a pointer to the communication parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_comm(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_comm_par *par);
+
+/*!
+ * Configures the mapping parameters of a Receive-PDO service by updating
+ * CANopen object 1600 - 17FF (RPDO mapping parameter). It is the responsibility
+ * of the caller to disable the RPDO before changing the mapping.
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param num the PDO number (in the range [1..512]).
+ * \param par a pointer to the mapping parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_map(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_map_par *par);
+
+/*!
  * Checks if the specified object is valid and can be mapped into a
  * Transmit-PDO.
  *
@@ -119,6 +164,51 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_chk_rpdo(const co_dev_t *dev,
  */
 LELY_CO_EXTERN co_unsigned32_t co_dev_chk_tpdo(const co_dev_t *dev,
 		co_unsigned16_t idx, co_unsigned8_t subidx);
+
+/*!
+ * Configures the communication and parameters of a Transmit-PDO service. This
+ * function disables the TPDO before configuring the parameters and re-enables
+ * it on success.
+ *
+ * \param dev  a pointer to a CANopen device.
+ * \param num  the PDO number (in the range [1..512]).
+ * \param comm a pointer to the communication parameters.
+ * \param map  a pointer to the mapping parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ *
+ * \see co_dev_cfg_tpdo_comm(), co_dev_cfg_tpdo_map()
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_comm_par *comm,
+		const struct co_pdo_map_par *map);
+
+/*!
+ * Configures the communication parameters of a Transmit-PDO service by updating
+ * CANopen object 1800 - 19FF (TPDO communication parameter).
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param num the PDO number (in the range [1..512]).
+ * \param par a pointer to the communication parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_comm(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_comm_par *par);
+
+/*!
+ * Configures the mapping parameters of a Transmit-PDO service by updating
+ * CANopen object 1A00 - 1BFF (TPDO mapping parameter). It is the responsibility
+ * of the caller to disable the TPDO before changing the mapping.
+ *
+ * \param dev a pointer to a CANopen device.
+ * \param num the PDO number (in the range [1..512]).
+ * \param par a pointer to the mapping parameters.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev,
+		co_unsigned16_t num, const struct co_pdo_map_par *par);
 
 /*!
  * Maps values into a PDO.
