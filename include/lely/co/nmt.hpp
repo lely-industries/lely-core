@@ -352,6 +352,13 @@ public:
 	}
 
 	int
+	ngReq(co_unsigned8_t id, co_unsigned16_t gt, co_unsigned8_t ltf)
+			noexcept
+	{
+		return co_nmt_ng_req(id, gt, ltf);
+	}
+
+	int
 	csInd(co_unsigned8_t cs) noexcept
 	{
 		return co_nmt_cs_ind(this, cs);

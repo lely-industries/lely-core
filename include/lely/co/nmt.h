@@ -587,7 +587,8 @@ LELY_CO_EXTERN int co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id,
 
 /*!
  * Request the node guarding service for the specified node, even if it is not
- * in the network list.
+ * in the network list. If the guard time or lifetime factor is 0, node guarding
+ * is disabled.
  *
  * \param nmt a pointer to an NMT master service.
  * \param id  the node-ID (in the range [1..127]).
