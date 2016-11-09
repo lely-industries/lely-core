@@ -1562,8 +1562,8 @@ co_ssdo_up_ind(co_ssdo_t *sdo)
 		return CO_SDO_AC_NO_SUB;
 
 	// If the object is an array, check whether the element exists.
-	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY
-			&& __unlikely(sdo->subidx > co_obj_get_val_u8(obj, 0)))
+	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY && __unlikely(sdo->subidx
+			> co_obj_get_val_u8(obj, 0x00)))
 		return CO_SDO_AC_NO_DATA;
 
 	sdo->nbyte = 0;

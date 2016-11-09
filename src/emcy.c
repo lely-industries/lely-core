@@ -259,7 +259,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		// consumer object.
 		co_obj_set_dn_ind(obj_1028, &co_1028_dn_ind, emcy);
 		// Initialize the nodes.
-		co_unsigned8_t maxid = MIN(co_obj_get_val_u8(obj_1028, 0),
+		co_unsigned8_t maxid = MIN(co_obj_get_val_u8(obj_1028, 0x00),
 				CO_NUM_NODES);
 		for (co_unsigned8_t id = 1; id <= maxid; id++) {
 			co_unsigned32_t cobid =
