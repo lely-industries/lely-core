@@ -31,6 +31,7 @@
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/co/dcf.h>
+#include <lely/co/pdo.h>
 #include "obj.h"
 
 #include <assert.h>
@@ -45,11 +46,15 @@ static int co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg,
 		const char *section);
 static int co_obj_parse_names(co_obj_t *obj, const config_t *cfg);
 static int co_obj_parse_values(co_obj_t *obj, const config_t *cfg);
+static co_obj_t *co_obj_build(co_dev_t *dev, co_unsigned16_t idx);
 
 static int co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg,
 		const char *section);
 static co_sub_t *co_sub_build(co_obj_t *obj, co_unsigned8_t subidx,
 		co_unsigned16_t type, const char *name);
+
+static int co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
+static int co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
 
 static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
 
@@ -294,22 +299,38 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		sprintf(section, "%X", idx[i]);
 
 		// Create the object and add it to the dictionary.
-		co_obj_t *obj = co_obj_create(idx[i]);
-		if (__unlikely(!obj)) {
-			diag(DIAG_ERROR, get_errc(), "unable to create object 0x%04X",
-					idx[i]);
+		co_obj_t *obj = co_obj_build(dev, idx[i]);
+		if (__unlikely(!obj))
 			goto error_parse_obj;
-		}
-		if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
-			diag(DIAG_ERROR, 0, "unable to insert object 0x%04X into the object dictionary",
-					idx[i]);
-			co_obj_destroy(obj);
-			goto error_parse_obj;
-		}
 
 		// Parse the configuration section for the object.
 		if (__unlikely(co_obj_parse_cfg(obj, cfg, section) == -1))
 			goto error_parse_obj;
+	}
+
+	// Parse compact PDO definitions after the explicit object definitions
+	// to prevent overwriting PDOs.
+	val = config_get(cfg, "DeviceInfo", "CompactPDO");
+	if (val && *val) {
+		unsigned int mask = strtoul(val, NULL, 0);
+
+		co_unsigned16_t nrpdo = 0;
+		val = config_get(cfg, "DeviceInfo", "NrOfRxPDO");
+		if (val && *val)
+			nrpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
+		for (co_unsigned16_t num = 1; num <= nrpdo; num++) {
+			if (__unlikely(co_rpdo_build(dev, num, mask) == -1))
+				goto error_parse_pdo;
+		}
+
+		co_unsigned16_t ntpdo = 0;
+		val = config_get(cfg, "DeviceInfo", "NrOfTxPDO");
+		if (val && *val)
+			ntpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
+		for (co_unsigned16_t num = 1; num <= ntpdo; num++) {
+			if (__unlikely(co_tpdo_build(dev, num, mask) == -1))
+				goto error_parse_pdo;
+		}
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "NodeID");
@@ -342,6 +363,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	return 0;
 
+error_parse_pdo:
 error_parse_dcf:
 error_parse_obj:
 	free(idx);
@@ -453,7 +475,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		// Create an array based on CompactSubObj.
 		if (subobj) {
 			co_sub_t *sub = co_sub_build(obj, 0,
-					CO_DEFTYPE_UNSIGNED8, "NrOfObjects");
+					CO_DEFTYPE_UNSIGNED8,
+					"Highest sub-index supported");
 			if (__unlikely(!sub))
 				return -1;
 			co_val_make(sub->type, &sub->def, &subobj,
@@ -623,6 +646,28 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 	}
 
 	return 0;
+}
+
+static co_obj_t *
+co_obj_build(co_dev_t *dev, co_unsigned16_t idx)
+{
+	assert(dev);
+
+	co_obj_t *obj = co_obj_create(idx);
+	if (__unlikely(!obj)) {
+		diag(DIAG_ERROR, get_errc(), "unable to create object 0x%04X",
+				idx);
+		return NULL;
+	}
+
+	if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
+		diag(DIAG_ERROR, 0, "unable to insert object 0x%04X into the object dictionary",
+				idx);
+		co_obj_destroy(obj);
+		return NULL;
+	}
+
+	return obj;
 }
 
 static int
@@ -795,6 +840,260 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 error:
 	co_sub_destroy(sub);
 	return NULL;
+}
+
+static int
+co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
+{
+	assert(dev);
+	assert(num && num <= 512);
+
+	// Find the highest sub-index supported.
+	mask &= 0x3f;
+	co_unsigned8_t n = 0;
+	for (int i = 0; i < 6; i++) {
+		if (mask & (1 << i))
+			n = i + 1;
+	}
+
+	// Create the RPDO communication parameter if it does not exist.
+	if (!co_dev_find_obj(dev, 0x1400 + num - 1)) {
+		co_obj_t *obj = co_obj_build(dev, 0x1400 + num - 1);
+		if (__unlikely(!obj))
+			return -1;
+		if (__unlikely(co_obj_set_name(obj,
+				"RPDO communication parameter") == -1)) {
+			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
+					num);
+			return -1;
+		}
+		co_obj_set_code(obj, CO_OBJECT_RECORD);
+
+		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
+				"Highest sub-index supported");
+		if (__unlikely(!sub))
+			return -1;
+		co_val_make(sub->type, &sub->def, &n, sizeof(n));
+		co_val_copy(sub->type, sub->val, &sub->def);
+		co_sub_set_access(sub, CO_ACCESS_CONST);
+
+		if (mask & 0x01) {
+			sub = co_sub_build(obj, 1, CO_DEFTYPE_UNSIGNED32,
+					"COB-ID used by RPDO");
+			if (__unlikely(!sub))
+				return -1;
+			co_unsigned32_t cobid = CO_PDO_COBID_VALID;
+			if (num <= 4) {
+				cobid = num * 0x100 + 0x100 + 0xff;
+				sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
+				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
+			}
+			co_val_make(sub->type, &sub->def, &cobid,
+					sizeof(cobid));
+			co_val_copy(sub->type, sub->val, &sub->def);
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x02) {
+			sub = co_sub_build(obj, 2, CO_DEFTYPE_UNSIGNED8,
+					"Transmission type");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x04) {
+			sub = co_sub_build(obj, 3, CO_DEFTYPE_UNSIGNED16,
+					"Inhibit time");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x08) {
+			sub = co_sub_build(obj, 4, CO_DEFTYPE_UNSIGNED8,
+					"Compatibility entry");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x10) {
+			sub = co_sub_build(obj, 5, CO_DEFTYPE_UNSIGNED16,
+					"Event timer");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x20) {
+			sub = co_sub_build(obj, 6, CO_DEFTYPE_UNSIGNED8,
+					"SYNC start value");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+	}
+
+	// Create the RPDO mapping parameter if it does not exist.
+	if (!co_dev_find_obj(dev, 0x1600 + num - 1)) {
+		co_obj_t *obj = co_obj_build(dev, 0x1600 + num - 1);
+		if (__unlikely(!obj))
+			return -1;
+		if (__unlikely(co_obj_set_name(obj,
+				"RPDO mapping parameter") == -1)) {
+			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
+					num);
+			return -1;
+		}
+		co_obj_set_code(obj, CO_OBJECT_RECORD);
+
+		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
+				"Highest sub-index supported");
+		if (__unlikely(!sub))
+			return -1;
+		co_sub_set_access(sub, CO_ACCESS_RW);
+
+		for (co_unsigned8_t i = 1; i <= 0x40; i++) {
+			char name[22];
+			sprintf(name, "Application object %u", i);
+
+			co_sub_t *sub = co_sub_build(obj, i,
+					CO_DEFTYPE_UNSIGNED32, name);
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+	}
+
+	return 0;
+}
+
+static int
+co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
+{
+	assert(dev);
+	assert(num && num <= 512);
+
+	// Find the highest sub-index supported.
+	mask &= 0x3f;
+	co_unsigned8_t n = 0;
+	for (int i = 0; i < 6; i++) {
+		if (mask & (1 << i))
+			n = i + 1;
+	}
+
+	// Create the TPDO communication parameter if it does not exist.
+	if (!co_dev_find_obj(dev, 0x1800 + num - 1)) {
+		co_obj_t *obj = co_obj_build(dev, 0x1800 + num - 1);
+		if (__unlikely(!obj))
+			return -1;
+		if (__unlikely(co_obj_set_name(obj,
+				"TPDO communication parameter") == -1)) {
+			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
+					num);
+			return -1;
+		}
+		co_obj_set_code(obj, CO_OBJECT_RECORD);
+
+		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
+				"Highest sub-index supported");
+		if (__unlikely(!sub))
+			return -1;
+		co_val_make(sub->type, &sub->def, &n, sizeof(n));
+		co_val_copy(sub->type, sub->val, &sub->def);
+		co_sub_set_access(sub, CO_ACCESS_CONST);
+
+		if (mask & 0x01) {
+			sub = co_sub_build(obj, 1, CO_DEFTYPE_UNSIGNED32,
+					"COB-ID used by TPDO");
+			if (__unlikely(!sub))
+				return -1;
+			co_unsigned32_t cobid = CO_PDO_COBID_VALID;
+			if (num <= 4) {
+				cobid = num * 0x100 + 0x80 + 0xff;
+				sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
+				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
+			}
+			co_val_make(sub->type, &sub->def, &cobid,
+					sizeof(cobid));
+			co_val_copy(sub->type, sub->val, &sub->def);
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x02) {
+			sub = co_sub_build(obj, 2, CO_DEFTYPE_UNSIGNED8,
+					"Transmission type");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x04) {
+			sub = co_sub_build(obj, 3, CO_DEFTYPE_UNSIGNED16,
+					"Inhibit time");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x08) {
+			sub = co_sub_build(obj, 4, CO_DEFTYPE_UNSIGNED8,
+					"Reserved");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x10) {
+			sub = co_sub_build(obj, 5, CO_DEFTYPE_UNSIGNED16,
+					"Event timer");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+
+		if (mask & 0x20) {
+			sub = co_sub_build(obj, 6, CO_DEFTYPE_UNSIGNED8,
+					"SYNC start value");
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+	}
+
+	// Create the TPDO mapping parameter if it does not exist.
+	if (!co_dev_find_obj(dev, 0x1a00 + num - 1)) {
+		co_obj_t *obj = co_obj_build(dev, 0x1a00 + num - 1);
+		if (__unlikely(!obj))
+			return -1;
+		if (__unlikely(co_obj_set_name(obj,
+				"TPDO mapping parameter") == -1)) {
+			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
+					num);
+			return -1;
+		}
+		co_obj_set_code(obj, CO_OBJECT_RECORD);
+
+		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
+				"Highest sub-index supported");
+		if (__unlikely(!sub))
+			return -1;
+		co_sub_set_access(sub, CO_ACCESS_RW);
+
+		for (co_unsigned8_t i = 1; i <= 0x40; i++) {
+			char name[22];
+			sprintf(name, "Application object %u", i);
+
+			co_sub_t *sub = co_sub_build(obj, i,
+					CO_DEFTYPE_UNSIGNED32, name);
+			if (__unlikely(!sub))
+				return -1;
+			co_sub_set_access(sub, CO_ACCESS_RW);
+		}
+	}
+
+	return 0;
 }
 
 static void
