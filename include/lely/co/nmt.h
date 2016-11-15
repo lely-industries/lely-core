@@ -495,6 +495,9 @@ LELY_CO_EXTERN co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
  * \param nmt a pointer to an NMT master/slave service.
  * \param id  the node-ID of the device (in the range [1..127, 255]).
  *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
  * \see co_nmt_get_id(), co_dev_set_id()
  */
 LELY_CO_EXTERN int co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id);

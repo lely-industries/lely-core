@@ -294,22 +294,15 @@ co_sync_update(co_sync_t *sync)
 {
 	assert(sync);
 
-	if (sync->cobid & CO_SYNC_COBID_PRODUCER) {
-		if (sync->recv) {
-			can_recv_destroy(sync->recv);
-			sync->recv = NULL;
-		}
+	if ((sync->cobid & CO_SYNC_COBID_PRODUCER) && sync->us) {
 		if (!sync->timer) {
 			sync->timer = can_timer_create();
 			if (__unlikely(!sync->timer))
 				return -1;
 			can_timer_set_func(sync->timer, co_sync_timer, sync);
 		}
-		if (sync->us) {
-			struct timespec interval = { 0, 1000 * sync->us };
-			can_timer_start(sync->timer, sync->net, NULL,
-					&interval);
-		}
+		struct timespec interval = { 0, 1000 * sync->us };
+		can_timer_start(sync->timer, sync->net, NULL, &interval);
 	} else {
 		if (sync->timer) {
 			can_timer_destroy(sync->timer);
