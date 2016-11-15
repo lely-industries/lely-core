@@ -1,18 +1,14 @@
 [DeviceInfo]
-VendorName=
-VendorNumber=0
-ProductName=
-ProductNumber=0
-RevisionNumber=0
-OrderCode=
-BaudRate_10=0
-BaudRate_20=0
-BaudRate_50=0
-BaudRate_125=0
-BaudRate_250=0
-BaudRate_500=0
-BaudRate_800=0
-BaudRate_1000=0
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
 
 [DeviceComissioning]
 NodeID=0x01
@@ -50,6 +46,7 @@ ParameterName=Highest sub-index supported
 DataType=0x0005
 AccessType=const
 DefaultValue=0x4
+DefaultValue=0x00000360
 
 [1018sub1]
 ParameterName=Vendor-ID

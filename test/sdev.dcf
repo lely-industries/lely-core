@@ -1,18 +1,14 @@
 [DeviceInfo]
-VendorName=
-VendorNumber=0
-ProductName=
-ProductNumber=0
-RevisionNumber=0
-OrderCode=
-BaudRate_10=0
-BaudRate_20=0
-BaudRate_50=0
-BaudRate_125=0
-BaudRate_250=0
-BaudRate_500=0
-BaudRate_800=0
-BaudRate_1000=0
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
 
 [MandatoryObjects]
 SupportedObjects=3
@@ -77,6 +73,7 @@ DefaultValue=0x4
 ParameterName=Vendor-ID
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00000360
 
 [1018sub2]
 ParameterName=Product code

@@ -1,10 +1,6 @@
 [DeviceInfo]
-VendorName=
-VendorNumber=
-ProductName=
-ProductNumber=
-RevisionNumber=
-OrderCode=
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
 BaudRate_10=1
 BaudRate_20=1
 BaudRate_50=1
@@ -76,6 +72,7 @@ DefaultValue=4
 ParameterName=Vendor-ID
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00000360
 
 [1018sub2]
 ParameterName=Product code
@@ -162,7 +159,7 @@ CompactSubObj=2
 
 [1F85Value]
 NrOfEntries=1
-2=0x00000001
+2=0x00000360
 
 [1F86]
 ParameterName=Product code

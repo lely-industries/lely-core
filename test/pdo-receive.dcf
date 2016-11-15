@@ -1,18 +1,14 @@
 [DeviceInfo]
-VendorName=
-VendorNumber=0
-ProductName=
-ProductNumber=0
-RevisionNumber=0
-OrderCode=
-BaudRate_10=0
-BaudRate_20=0
-BaudRate_50=0
-BaudRate_125=0
-BaudRate_250=0
-BaudRate_500=0
-BaudRate_800=0
-BaudRate_1000=0
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
 
 [DeviceComissioning]
 NodeID=0x01
@@ -58,6 +54,7 @@ DefaultValue=0x4
 ParameterName=Vendor-ID
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00000360
 
 [1018sub2]
 ParameterName=Product code
@@ -75,12 +72,12 @@ DataType=0x0007
 AccessType=ro
 
 [1400]
-SubNumber=6
+SubNumber=3
 ParameterName=RPDO communication parameter
 ObjectType=0x09
 
 [1400sub0]
-ParameterName=highest sub-index supported
+ParameterName=Highest sub-index supported
 DataType=0x0005
 AccessType=const
 DefaultValue=0x02
@@ -92,47 +89,22 @@ AccessType=rw
 DefaultValue=0x182
 
 [1400sub2]
-ParameterName=transmission type
+ParameterName=Transmission type
 DataType=0x0005
 AccessType=rw
-
-[1400sub3]
-ParameterName=inhibit time
-DataType=0x0006
-AccessType=rw
-
-[1400sub4]
-ParameterName=compatibility entry
-DataType=0x0005
-AccessType=rw
-
-[1400sub5]
-ParameterName=event timer
-DataType=0x0006
-AccessType=rw
+DefaultValue=0x01
 
 [1600]
-SubNumber=3
 ParameterName=RPDO mapping parameter
 ObjectType=0x09
-
-[1600sub0]
-ParameterName=number of mapped application objects in PDO
-AccessType=rw
-DataType=0x0005
-DefaultValue=0x02
-
-[1600sub1]
-ParameterName=1st application object
 DataType=0x0007
 AccessType=rw
-DefaultValue=0x2000001c
+CompactSubObj=2
 
-[1600sub2]
-ParameterName=2nd application object
-DataType=0x0007
-AccessType=rw
-DefaultValue=0x20010020
+[1600Value]
+NrOfEntries=2
+1=0x2000001c
+2=0x20010020
 
 [2000]
 ParameterName=Test
