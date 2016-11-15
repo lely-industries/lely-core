@@ -50,7 +50,7 @@ struct __co_dev {
 	//! A pointer to the order code.
 	char *order_code;
 	//! The supported bit rates.
-	unsigned baud:8;
+	unsigned baud:10;
 	//! The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
 	//! A flag specifying whether LSS is supported (1) or not (0).
