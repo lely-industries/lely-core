@@ -227,7 +227,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev,
  * \see co_pdo_unmap()
  */
 LELY_CO_EXTERN co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
-		const co_unsigned64_t *val, size_t n, uint8_t *buf, size_t *pn);
+		const co_unsigned64_t *val, co_unsigned8_t n, uint8_t *buf,
+		size_t *pn);
 
 /*!
  * Unmaps a PDO into its constituent values.
@@ -246,11 +247,12 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
  * \see co_pdo_map()
  */
 LELY_CO_EXTERN co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
-		const uint8_t *buf, size_t n, co_unsigned64_t *val, size_t *pn);
+		const uint8_t *buf, size_t n, co_unsigned64_t *val,
+		co_unsigned8_t *pn);
 
 /*!
- * Performs a PDO read service by reading the mapped values and writing them to
- * the object dictionary through a local SDO download request.
+ * Writes mapped PDO values to the object dictionary through a local SDO
+ * download request.
  *
  * \param par a pointer to the PDO mapping parameters.
  * \param dev a pointer to a CANopen device.
@@ -261,13 +263,13 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
  *
  * \returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_read(const struct co_pdo_map_par *par,
+LELY_CO_EXTERN co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par,
 		co_dev_t *dev, struct co_sdo_req *req, const uint8_t *buf,
 		size_t n);
 
 /*!
- * Performs a PDO write service by writing the mapped values obtained from the
- * object dictionary through a local SDO upload request.
+ * Reads mapped PDO values from the object dictionary through a local SDO upload
+ * request.
  *
  * \param par a pointer to the PDO mapping parameters.
  * \param dev a pointer to a CANopen device.
@@ -281,7 +283,7 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_read(const struct co_pdo_map_par *par,
  *
  * \returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_write(const struct co_pdo_map_par *par,
+LELY_CO_EXTERN co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par,
 		const co_dev_t *dev, struct co_sdo_req *req, uint8_t *buf,
 		size_t *pn);
 

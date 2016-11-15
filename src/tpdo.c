@@ -900,7 +900,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	}
 
 	size_t n = CAN_MAX_LEN;
-	co_unsigned32_t ac = co_pdo_write(&pdo->map, pdo->dev, &pdo->req,
+	co_unsigned32_t ac = co_pdo_up(&pdo->map, pdo->dev, &pdo->req,
 			msg->data, &n);
 	if (__unlikely(ac))
 		return ac;

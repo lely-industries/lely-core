@@ -723,9 +723,7 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 		}
 	} else if (pdo->comm.trans >= 0xfe) {
 		// In case of an event-driven RPDO, process the frame directly.
-		co_unsigned32_t ac = co_rpdo_read_frame(pdo, msg);
-		if (pdo->ind)
-			pdo->ind(pdo, ac, msg->data, msg->len, pdo->data);
+		co_rpdo_read_frame(pdo, msg);
 	}
 
 	return 0;
@@ -763,13 +761,18 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	assert(pdo);
 	assert(msg);
 
-	co_unsigned32_t ac = co_pdo_read(&pdo->map, pdo->dev, &pdo->req,
-			msg->data, MIN(msg->len, CAN_MAX_LEN));
+	size_t n = MIN(msg->len, CAN_MAX_LEN);
+	co_unsigned32_t ac = co_pdo_dn(&pdo->map, pdo->dev, &pdo->req,
+			msg->data, n);
 #ifndef LELY_NO_CO_EMCY
 	// Generate an EMCY message if too few bytes where available in the PDO.
 	if (__unlikely(ac == CO_SDO_AC_PDO_LEN && pdo->emcy))
 		co_emcy_push(pdo->emcy, 0x8210, 0x10, NULL);
 #endif
+	// Invoke the user-defined callback function.
+	if (pdo->ind)
+		pdo->ind(pdo, ac, msg->data, n, pdo->data);
+
 	return ac;
 }
 

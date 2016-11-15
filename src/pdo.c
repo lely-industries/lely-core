@@ -198,7 +198,7 @@ co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 
 LELY_CO_EXPORT co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
-		size_t n, uint8_t *buf, size_t *pn)
+		co_unsigned8_t n, uint8_t *buf, size_t *pn)
 {
 	assert(par);
 	assert(val);
@@ -229,7 +229,7 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 
 LELY_CO_EXPORT co_unsigned32_t
 co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
-		co_unsigned64_t *val, size_t *pn)
+		co_unsigned64_t *val, co_unsigned8_t *pn)
 {
 	assert(par);
 	assert(buf);
@@ -258,9 +258,8 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
 	return 0;
 }
 
-#ifndef LELY_NO_CO_RPDO
 LELY_CO_EXPORT co_unsigned32_t
-co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
+co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		struct co_sdo_req *req, const uint8_t *buf, size_t n)
 {
 	assert(par);
@@ -313,11 +312,9 @@ co_pdo_read(const struct co_pdo_map_par *par, co_dev_t *dev,
 
 	return ac;
 }
-#endif // !LELY_NO_CO_RPDO
 
-#ifndef LELY_NO_CO_TPDO
 LELY_CO_EXPORT co_unsigned32_t
-co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
+co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 		struct co_sdo_req *req, uint8_t *buf, size_t *pn)
 {
 	assert(par);
@@ -361,7 +358,6 @@ co_pdo_write(const struct co_pdo_map_par *par, const co_dev_t *dev,
 
 	return ac;
 }
-#endif // !LELY_NO_CO_TPDO
 
 static co_unsigned32_t
 co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
