@@ -4,6 +4,10 @@ if !NO_CO_EMCY
 bin += test-emcy
 test_emcy_SOURCES = test.h emcy.c
 endif
+if !NO_CO_GW_TXT
+bin += test-gw_txt
+test_gw_txt_SOURCES = test.h gw_txt.c
+endif
 if !NO_CO_MASTER
 bin += test-nmt
 test_nmt_SOURCES = test.h nmt.c
@@ -39,6 +43,8 @@ endif
 
 EXTRA_DIST =
 EXTRA_DIST += emcy.dcf
+EXTRA_DIST += gw_txt-master.dcf
+EXTRA_DIST += gw_txt-slave.dcf
 EXTRA_DIST += nmt-master.dat
 EXTRA_DIST += nmt-slave.dcf
 EXTRA_DIST += pdo-receive.dcf
