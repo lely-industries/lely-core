@@ -7,11 +7,11 @@ Introduction
 ------------
 
 The Lely CANopen library ([liblely-co]) is a CANopen implementation for both
-masters and slaves. Most of the functionality of [CiA] 301, 302, 305, 306 and
-315 is provided. The implementation is passive; it does not perform any I/O or
-timing by itself. Instead it relies on the user to send and received CAN frames
-and update the clock. This allows the library to be integrated into a wide
-variety of frameworks and communication patterns. The library uses the
+masters and slaves. Most of the functionality of [CiA] 301, 302, 305, 306, 309
+and 315 is provided. The implementation is passive; it does not perform any I/O
+or timing by itself. Instead it relies on the user to send and received CAN
+frames and update the clock. This allows the library to be integrated into a
+wide variety of frameworks and communication patterns. The library uses the
 platform-independent CAN frame definition from the Lely CAN library
 ([liblely-can]) and can be used with the Lely I/O library ([liblely-io]).
 
@@ -154,6 +154,8 @@ space on embedded devices. liblely-co supports the following `configure` options
   disable Wireless Transmission Media (WTM) support.
 * `--disable-master` (`LELY_NO_CO_MASTER`):
   disable master support.
+* `--disable-gw` (`LELY_NO_CO_GW`):
+  disable gateway support.
 
 Usage
 -----

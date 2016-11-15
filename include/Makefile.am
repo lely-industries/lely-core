@@ -28,6 +28,12 @@ if !NO_CXX
 inc += lely/co/emcy.hpp
 endif
 endif
+if !NO_CO_GW
+inc += lely/co/gw.h
+if !NO_CXX
+inc += lely/co/gw.hpp
+endif
+endif
 if !NO_CO_LSS
 inc += lely/co/lss.h
 if !NO_CXX

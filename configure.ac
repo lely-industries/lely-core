@@ -189,6 +189,14 @@ AS_IF([test "x$enable_master" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_GW], [false])
+AC_ARG_ENABLE([gw],
+	AS_HELP_STRING([--disable-gw], [disable gateway support]))
+AS_IF([test "x$enable_gw" == "xno"], [
+	AM_CONDITIONAL([NO_CO_GW], [true])
+	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])
+])
+
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
