@@ -34,6 +34,12 @@ if !NO_CXX
 inc += lely/co/gw.hpp
 endif
 endif
+if !NO_CO_GW_TXT
+inc += lely/co/gw_txt.h
+if !NO_CXX
+inc += lely/co/gw_txt.hpp
+endif
+endif
 if !NO_CO_LSS
 inc += lely/co/lss.h
 if !NO_CXX

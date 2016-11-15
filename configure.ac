@@ -197,6 +197,15 @@ AS_IF([test "x$enable_gw" == "xno"], [
 	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_GW_TXT], [false])
+AC_ARG_ENABLE([gw-txt],
+	AS_HELP_STRING([--disable-gw-txt], [disable ASCII gateway support]))
+AS_IF([test "x$enable_gw" == "xno"], [enable_gw_txt=no])
+AS_IF([test "x$enable_gw_txt" == "xno"], [
+	AM_CONDITIONAL([NO_CO_GW_TXT], [true])
+	AC_DEFINE([LELY_NO_CO_GW_TXT], [1], [Define to 1 if ASCII gateway support is disabled.])
+])
+
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 

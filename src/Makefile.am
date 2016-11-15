@@ -14,6 +14,9 @@ endif
 if !NO_CO_GW
 src += gw.c
 endif
+if !NO_CO_GW_TXT
+src += gw_txt.c
+endif
 if !NO_CO_LSS
 src += lss.c
 endif

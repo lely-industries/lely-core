@@ -156,6 +156,8 @@ space on embedded devices. liblely-co supports the following `configure` options
   disable master support.
 * `--disable-gw` (`LELY_NO_CO_GW`):
   disable gateway support.
+* `--disable-gw-txt` (`LELY_NO_CO_GW_TXT`):
+  disable ASCII gateway support.
 
 Usage
 -----
