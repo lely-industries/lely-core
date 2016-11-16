@@ -126,7 +126,8 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 
 	if (__unlikely(!utf32_valid(c32))) {
 		if (at)
-			diag(DIAG_WARNING, 0, "illegal Unicode code point U+%" PRIX32,
+			diag(DIAG_WARNING, 0,
+					"illegal Unicode code point U+%" PRIX32,
 					c32);
 		c32 = 0xfffd;
 	}
@@ -192,7 +193,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		default:
 			cp--;
 			if (at)
-				diag_at(DIAG_ERROR, 0, at,
+				diag_at(DIAG_WARNING, 0, at,
 						isgraph((unsigned char)*cp)
 						? "illegal escape sequence '\\%c'"
 						: "illegal escape sequence '\\\\%o'",
@@ -299,7 +300,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
+			diag_at(DIAG_ERROR, errno2c(errno), at, \
+					"unable to duplicate string"); \
 			return 0; \
 		} \
 	\
@@ -315,11 +317,13 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (__unlikely(errno == ERANGE && result == min)) { \
 			set_errnum(ERRNUM_RANGE); \
 			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, #type " underflow"); \
+				diag_at(DIAG_WARNING, get_errc(), at, \
+						#type " underflow"); \
 		} else if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
 			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, #type " overflow"); \
+				diag_at(DIAG_WARNING, get_errc(), at, \
+						#type " overflow"); \
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
@@ -341,7 +345,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, errno2c(errno), at, "unable to duplicate string"); \
+			diag_at(DIAG_ERROR, errno2c(errno), at, \
+					"unable to duplicate string"); \
 			return 0; \
 		} \
 	\
@@ -357,7 +362,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
 			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, #type " overflow"); \
+				diag_at(DIAG_WARNING, get_errc(), at, \
+						#type " overflow"); \
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
@@ -399,12 +405,14 @@ lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 			i8 = INT8_MIN;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int8_t underflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int8_t underflow");
 		} else if (__unlikely(i8 > INT8_MAX)) {
 			i8 = INT8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int8_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int8_t overflow");
 		}
 		if (pi8)
 			*pi8 = (int8_t)i8;
@@ -422,12 +430,14 @@ lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 			i16 = INT16_MIN;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int16_t underflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int16_t underflow");
 		} else if (__unlikely(i16 > INT16_MAX)) {
 			i16 = INT16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int16_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int16_t overflow");
 		}
 		if (pi16)
 			*pi16 = (int16_t)i16;
@@ -450,7 +460,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int32_t underflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int32_t underflow");
 #if LONG_BIT == 32
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i32 == LONG_MAX)) {
@@ -460,7 +471,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int32_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int32_t overflow");
 		}
 		if (pi32)
 			*pi32 = (int32_t)i32;
@@ -489,7 +501,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int64_t underflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int64_t underflow");
 #if LONG_BIT == 64
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i64 == LONG_MAX)) {
@@ -500,7 +513,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "int64_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"int64_t overflow");
 		}
 		if (pi64)
 			*pi64 = (int64_t)i64;
@@ -518,7 +532,8 @@ lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 			u8 = UINT8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "uint8_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"uint8_t overflow");
 		}
 		if (pu8)
 			*pu8 = (uint8_t)u8;
@@ -536,7 +551,8 @@ lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 			u16 = UINT16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "uint16_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"uint16_t overflow");
 		}
 		if (pu16)
 			*pu16 = (uint16_t)u16;
@@ -559,7 +575,8 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "uint32_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"uint32_t overflow");
 		}
 		if (pu32)
 			*pu32 = (uint32_t)u32;
@@ -588,7 +605,8 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 			set_errnum(ERRNUM_RANGE);
 #endif
 			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at, "uint64_t overflow");
+				diag_at(DIAG_WARNING, get_errc(), at,
+						"uint64_t overflow");
 		}
 		if (pu64)
 			*pu64 = (uint64_t)u64;
