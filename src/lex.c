@@ -40,16 +40,12 @@ lex_char(int c, const char *begin, const char *end, struct floc *at)
 	assert(begin);
 	assert(!end || end >= begin);
 
-	if (__unlikely(end && begin >= end))
+	const char *cp = begin;
+
+	if ((end && cp >= end) || *cp++ != c)
 		return 0;
 
-	if (*begin != c)
-		return 0;
-
-	if (at)
-		floc_strninc(at, begin, 1);
-
-	return 1;
+	return floc_lex(at, begin, begin + 1);
 }
 
 LELY_UTIL_EXPORT size_t
@@ -65,10 +61,7 @@ lex_ctype(int (__cdecl *ctype)(int), const char *begin, const char *end,
 	while ((!end || cp < end) && ctype((unsigned char)*cp))
 		cp++;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 
 LELY_UTIL_EXPORT size_t
@@ -77,22 +70,16 @@ lex_break(const char *begin, const char *end, struct floc *at)
 	assert(begin);
 	assert(!end || end >= begin);
 
-	if (__unlikely(end && begin >= end))
-		return 0;
-
 	const char *cp = begin;
 
-	if (!isbreak((unsigned char)*cp))
+	if ((end && cp >= end) || !isbreak((unsigned char)*cp))
 		return 0;
 
 	// Treat "\r\n" as a single line break.
 	if (*cp++ == '\r' && (!end || cp < end) && *cp == '\n')
 		cp++;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 
 LELY_UTIL_EXPORT size_t
@@ -101,10 +88,10 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	assert(begin);
 	assert(!end || end >= begin);
 
-	if (__unlikely(end && begin >= end))
-		return 0;
-
 	const char *cp = begin;
+
+	if (__unlikely(end && cp >= end))
+		return 0;
 
 	static const unsigned char mask[] = {
 		0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
@@ -148,10 +135,7 @@ done:
 	if (pc32)
 		*pc32 = c32;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 
 error:
 	if (at)
@@ -166,10 +150,10 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	assert(begin);
 	assert(!end || end >= begin);
 
-	if (__unlikely(end && begin >= end))
-		return 0;
-
 	const char *cp = begin;
+
+	if (__unlikely(end && cp >= end))
+		return 0;
 
 	if (*cp++ != '\\')
 		return lex_utf8(begin, end, at, pc32);
@@ -222,10 +206,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	if (pc32)
 		*pc32 = c32;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 
 LELY_UTIL_EXPORT size_t
@@ -304,10 +285,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		}
 	}
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, min, max, pname) \
@@ -349,10 +327,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (pname) \
 			*pname = result; \
 	\
-		if (at) \
-			floc_strninc(at, begin, chars); \
-	\
-		return chars; \
+		return floc_lex(at, begin, begin + chars); \
 	}
 
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, strtov, max, pname) \
@@ -390,10 +365,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		if (pname) \
 			*pname = result; \
 	\
-		if (at) \
-			floc_strninc(at, begin, chars); \
-	\
-		return chars; \
+		return floc_lex(at, begin, begin + chars); \
 	}
 
 #define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
@@ -644,10 +616,7 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 	while ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp))
 		cp++;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 
 LELY_UTIL_EXPORT size_t
@@ -762,9 +731,6 @@ lex_base64(const char *begin, const char *end, struct floc *at,
 	if (pn)
 		*pn = n;
 
-	if (at)
-		floc_strninc(at, begin, cp - begin);
-
-	return cp - begin;
+	return floc_lex(at, begin, cp);
 }
 

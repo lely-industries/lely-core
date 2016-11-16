@@ -50,38 +50,35 @@ static void *diag_handle;
 static diag_at_handler_t *diag_at_handler = &default_diag_at_handler;
 static void *diag_at_handle;
 
-LELY_UTIL_EXPORT void
-floc_strinc(struct floc *at, const char *s)
+LELY_UTIL_EXPORT size_t
+floc_lex(struct floc *at, const char *begin, const char *end)
 {
-	assert(s);
+	assert(begin);
+	assert(!end || end >= begin);
 
-	floc_strninc(at, s, strlen(s));
-}
-
-LELY_UTIL_EXPORT void
-floc_strninc(struct floc *at, const char *s, size_t n)
-{
-	assert(at);
-	assert(s);
-
-	const char *end = s + n;
-	while (*s && s < end) {
-		switch (*s++) {
+	const char *cp = begin;
+	while ((!end || cp < end) && *cp) {
+		switch (*cp++) {
 		case '\r':
-			if (s < end && *s == '\n')
-				s++;
+			if ((!end || cp < end) && *cp == '\n')
+				cp++;
 		case '\n':
-			at->line++;
-			at->column = 1;
+			if (at) {
+				at->line++;
+				at->column = 1;
+			}
 			break;
 		case '\t':
-			at->column = ((at->column + 7) & ~7) + 1;
+			if (at)
+				at->column = ((at->column + 7) & ~7) + 1;
 			break;
 		default:
-			at->column++;
+			if (at)
+				at->column++;
 			break;
 		}
 	}
+	return cp - begin;
 }
 
 LELY_UTIL_EXPORT int

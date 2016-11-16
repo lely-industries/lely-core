@@ -83,22 +83,18 @@ typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
 		va_list ap) __format_printf(5, 0);
 
 /*!
- * Increments a file location with a text string. This function assumes a tab
- * stop of 8 spaces.
+ * Increments a file location by reading characters from a memory buffer. This
+ * function assumes a tab stop of 8 spaces.
  *
- * \param at a pointer to a file location.
- * \param s  a pointer to the string to be parsed.
+ * \param at    a pointer to a file location (can be NULL).
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
  *
- * \see floc_strninc().
+ * \returns the number of characters read (excluding the termination character).
  */
-LELY_UTIL_EXTERN void floc_strinc(struct floc *at, const char *s);
-
-/*!
- * Increments a file location with a text string. This function is similar to
- * floc_strinc(), except that it only considers the first \a n characters of the
- * string.
- */
-LELY_UTIL_EXTERN void floc_strninc(struct floc *at, const char *s, size_t n);
+LELY_UTIL_EXTERN size_t floc_lex(struct floc *at, const char *begin,
+		const char *end);
 
 /*!
  * Prints a file location to a string buffer. The filename, line and column are
@@ -193,10 +189,8 @@ LELY_UTIL_EXTERN void diag(enum diag_severity severity, errc_t errc,
 		const char *format, ...) __format_printf(3, 4);
 
 /*!
- * Emits a diagnostic message. This function is equivalent to diag(), except
+ * Emits a diagnostic message. This function is equivalent to #diag(), except
  * that it accepts a `va_list` instead of a variable number of arguments.
- *
- * \see diag()
  */
 LELY_UTIL_EXTERN void vdiag(enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap) __format_printf(3, 0);
@@ -232,10 +226,8 @@ LELY_UTIL_EXTERN void diag_at(enum diag_severity severity, errc_t errc,
 
 /*!
  * Emits a diagnostic message occurring at a location in a text file. This
- * function is equivalent to diag_at(), except that it accepts a `va_list`
+ * function is equivalent to #diag_at(), except that it accepts a `va_list`
  * instead of a variable number of arguments.
- *
- * \see diag_at()
  */
 LELY_UTIL_EXTERN void vdiag_at(enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
