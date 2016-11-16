@@ -255,7 +255,7 @@ lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
 		else
 			cp += lex_utf8(cp, end, floc, &c32);
 		if (s || pn)
-			n += print_utf8(c32, &s, ends);
+			n += print_utf8(&s, ends, c32);
 	}
 
 	if (pn)
