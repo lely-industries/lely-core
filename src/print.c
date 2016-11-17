@@ -25,9 +25,9 @@
 #define LELY_UTIL_PRINT_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/stdint.h>
 #include <lely/libc/stdio.h>
+#include <lely/libc/uchar.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
-#include "unicode.h"
 
 #include <assert.h>
 #include <float.h>
@@ -94,7 +94,7 @@ print_utf8(char **pbegin, char *end, char32_t c32)
 		return print_char(pbegin, end, c32);
 
 	// Replace invalid characters by the replacement character (U+FFFD).
-	if (__unlikely(!utf32_valid(c32)))
+	if (__unlikely((c32 >= 0xd800 && c32 <= 0xdfff) || c32 > 0x10ffff))
 		c32 = 0xfffd;
 
 	int n = c32 <= 0x07ff ? 1 : (c32 <= 0xffff ? 2 : 3);
@@ -170,7 +170,8 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 			}
 			break;
 		}
-	} else if (__likely(utf32_valid(c32))) {
+	} else if (__likely((c32 < 0xd800 || c32 > 0xdfff)
+			&& c32 <= 0x10ffff)) {
 		chars += print_utf8(pbegin, end, c32);
 	} else {
 		// For invalid Unicode code points, we use a hexadecimal escape

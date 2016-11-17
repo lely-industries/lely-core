@@ -24,10 +24,10 @@
 #include "util.h"
 #define LELY_UTIL_LEX_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/string.h>
+#include <lely/libc/uchar.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
-#include "unicode.h"
 
 #include <assert.h>
 #include <inttypes.h>
@@ -90,46 +90,64 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 
 	const char *cp = begin;
 
-	if (__unlikely(end && cp >= end))
+	if (end && cp >= end)
 		return 0;
 
-	static const unsigned char mask[] = {
-		0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
-		0x00, 0x00, 0x00, 0x00,
-		0x1f, 0x1f,
-		0x0f,
-		0x07
-	};
+	char32_t c32;
 
-	char32_t c32 = *cp & mask[(*cp >> 4) & 0xf];
-	switch (utf8_bytes(cp++)) {
-	case 4:
-		if (__unlikely((end && cp >= end) || (*cp & 0xc0) != 0x80))
-			goto error;
-		c32 = (c32 << 6) | (*cp++ & 0x3f);
-	case 3:
-		if (__unlikely((end && cp >= end) || (*cp & 0xc0) != 0x80))
-			goto error;
-		c32 = (c32 << 6) | (*cp++ & 0x3f);
-	case 2:
-		if (__unlikely((end && cp >= end) || (*cp & 0xc0) != 0x80))
-			goto error;
-		c32 = (c32 << 6) | (*cp++ & 0x3f);
-	case 1:
-		break;
-	default:
-		// Skip all continuation bytes.
-		while ((!end || cp < end) && (*cp & 0xc0) == 0x80)
+	int n;
+	unsigned char c = *cp++;
+	if (!(c & 0x80)) {
+		// 0xxxxxxx is an ASCII character.
+		c32 = c & 0x7f;
+		n = 0;
+	} else if ((c & 0xc0) == 0x80) {
+		// 10xxxxxx is a continuation byte. It cannot appear at the
+		// beginning of a valid UTF-8 sequence. We skip all subsequent
+		// continuation bytes to prevent multiple errors for the same
+		// sequence.
+		while ((!end || cp < end)
+				&& ((unsigned char)*cp & 0xc0) == 0x80)
 			cp++;
+		if (at)
+			diag_at(DIAG_WARNING, 0, at,
+					"a UTF-8 sequence cannot begin with a continuation byte");
+		goto error;
+	} else if ((c & 0xe0) == 0xc0) {
+		// 110xxxxx is the first byte in a two-byte sequence.
+		c32 = c & 0x1f;
+		n = 1;
+	} else if ((c & 0xf0) == 0xe0) {
+		// 1110xxxx is the first byte in a three-byte sequence.
+		c32 = c & 0x0f;
+		n = 2;
+	} else if ((c & 0xf8) == 0xf0) {
+		// 11110xxx is the first byte in a four-byte sequence.
+		c32 = c & 0x07;
+		n = 3;
+	} else {
+		// Five- and six-byte sequences have been deprecated since 2003.
+		if (at)
+			diag_at(DIAG_WARNING, 0, at, "invalid UTF-8 byte");
 		goto error;
 	}
 
-	if (__unlikely(!utf32_valid(c32))) {
+	// Lex the continuation bytes.
+	while (n--) {
+		if ((end && cp > end) || ((unsigned char)*cp & 0xc0) != 0x80)
+			goto error;
+		c32 = (c32 << 6) | ((unsigned char)*cp & 0x3f);
+	}
+
+	// Valid Unicode code points fall in the range between U+0000 and
+	// U+10FFFF, with the exception of U+D800 to U+DFFF, which are reserved
+	// for UTF-16 encoding of high and low surrogates, respectively.
+	if ((c32 >= 0xd800 && c32 <= 0xdfff) || c32 > 0x10ffff) {
 		if (at)
 			diag(DIAG_WARNING, 0,
 					"illegal Unicode code point U+%" PRIX32,
 					c32);
-		c32 = 0xfffd;
+		goto error;
 	}
 
 done:
@@ -139,8 +157,8 @@ done:
 	return floc_lex(at, begin, cp);
 
 error:
-	if (at)
-		diag_at(DIAG_WARNING, 0, at, "invalid UTF-8 sequence");
+	// Replace an invalid code point by the Unicode replacement character
+	// (U+FFFD).
 	c32 = 0xfffd;
 	goto done;
 }
@@ -194,7 +212,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		c32 = ctoo(*cp);
 		cp++;
 		while ((!end || cp < end) && isodigit((unsigned char)*cp)) {
-			c32 = c32 * 8 + ctoo(*cp);
+			c32 = (c32 << 3) | ctoo(*cp);
 			cp++;
 		}
 	} else {
@@ -212,7 +230,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		case 'x':
 			while ((!end || cp < end) && isxdigit(
 					(unsigned char)*cp)) {
-				c32 = c32 * 16 + ctox(*cp);
+				c32 = (c32 << 4) | ctox(*cp);
 				cp++;
 			}
 			break;

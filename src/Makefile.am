@@ -26,7 +26,6 @@ src += pool.c
 src += print.c
 src += rbtree.c
 src += time.c
-src += unicode.h
 src += util.h
 if PLATFORM_WIN32
 src += version.rc
