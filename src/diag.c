@@ -180,6 +180,24 @@ vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 }
 
 LELY_UTIL_EXPORT void
+diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	vdiag_if(severity, errc, at, format, ap);
+	va_end(ap);
+}
+
+LELY_UTIL_EXPORT void
+vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, va_list ap)
+{
+	if (at)
+		vdiag_at(severity, errc, at, format, ap);
+}
+
+LELY_UTIL_EXPORT void
 default_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {

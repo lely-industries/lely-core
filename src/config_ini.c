@@ -101,11 +101,11 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 				cp += skip(cp, end, at);
 				if ((chars = lex_char(']', cp, end, at)) > 0)
 					cp += chars;
-				else if (at)
-					diag_at(DIAG_ERROR, 0, at,
+				else
+					diag_if(DIAG_ERROR, 0, at,
 							"expected ']' after section name");
-			} else if (at) {
-				diag_at(DIAG_ERROR, 0, at,
+			} else {
+				diag_if(DIAG_ERROR, 0, at,
 						"expected section name after '['");
 			}
 			cp += lex_line_comment(NULL, cp, end, at);
@@ -130,8 +130,8 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 					if ((chars = lex_char('\"', cp, end,
 							at)) > 0)
 						cp += chars;
-					else if (at)
-						diag_at(DIAG_ERROR, 0, at,
+					else
+						diag_if(DIAG_ERROR, 0, at,
 								"expected '\"' after string");
 				} else {
 					chars = lex_ctype(&isvalue, cp, end,
@@ -143,22 +143,19 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 						membuf_begin(&key),
 						membuf_begin(&value));
 				membuf_clear(&value);
-			} else if (at) {
-				diag_at(DIAG_ERROR, 0, at,
+			} else {
+				diag_if(DIAG_ERROR, 0, at,
 						"expected '=' after key");
 			}
 			cp += lex_line_comment(NULL, cp, end, at);
 		} else {
-			if (at) {
-				if (isgraph((unsigned char)*cp))
-					diag_at(DIAG_ERROR, 0, at,
-							"unknown character '%c'",
-							*cp);
-				else
-					diag_at(DIAG_ERROR, 0, at,
-							"unknown character '\\%o'",
-							*cp);
-			}
+			if (isgraph((unsigned char)*cp))
+				diag_if(DIAG_ERROR, 0, at,
+						"unknown character '%c'", *cp);
+			else
+				diag_if(DIAG_ERROR, 0, at,
+						"unknown character '\\%o'",
+								*cp);
 			// Skip the offending character.
 			cp += lex_char(*cp, cp, end, at);
 		}

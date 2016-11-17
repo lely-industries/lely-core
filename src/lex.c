@@ -105,8 +105,7 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		while ((!end || cp < end)
 				&& ((unsigned char)*cp & 0xc0) == 0x80)
 			cp++;
-		if (at)
-			diag_at(DIAG_WARNING, 0, at,
+		diag_if(DIAG_WARNING, 0, at,
 					"a UTF-8 sequence cannot begin with a continuation byte");
 		goto error;
 	} else if ((c & 0xe0) == 0xc0) {
@@ -123,8 +122,7 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		n = 3;
 	} else {
 		// Five- and six-byte sequences have been deprecated since 2003.
-		if (at)
-			diag_at(DIAG_WARNING, 0, at, "invalid UTF-8 byte");
+		diag_if(DIAG_WARNING, 0, at, "invalid UTF-8 byte");
 		goto error;
 	}
 
@@ -139,10 +137,8 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	// U+10FFFF, with the exception of U+D800 to U+DFFF, which are reserved
 	// for UTF-16 encoding of high and low surrogates, respectively.
 	if ((c32 >= 0xd800 && c32 <= 0xdfff) || c32 > 0x10ffff) {
-		if (at)
-			diag(DIAG_WARNING, 0,
-					"illegal Unicode code point U+%" PRIX32,
-					c32);
+		diag_if(DIAG_WARNING, 0, at,
+				"illegal Unicode code point U+%" PRIX32, c32);
 		goto error;
 	}
 
@@ -230,12 +226,11 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 			break;
 		default:
 			cp--;
-			if (at)
-				diag_at(DIAG_WARNING, 0, at,
-						isgraph((unsigned char)*cp)
-						? "illegal escape sequence '\\%c'"
-						: "illegal escape sequence '\\\\%o'",
-						*cp);
+			diag_if(DIAG_WARNING, 0, at,
+					isgraph((unsigned char)*cp)
+					? "illegal escape sequence '\\%c'"
+					: "illegal escape sequence '\\\\%o'",
+					*cp);
 			// Treat an invalid escape sequence as '\\'.
 			c32 = '\\';
 			break;
@@ -336,7 +331,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, errno2c(errno), at, \
+			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
 		} \
@@ -352,14 +347,12 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		if (__unlikely(errno == ERANGE && result == min)) { \
 			set_errnum(ERRNUM_RANGE); \
-			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, \
-						#type " underflow"); \
+			diag_if(DIAG_WARNING, get_errc(), at, \
+					#type " underflow"); \
 		} else if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
-			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, \
-						#type " overflow"); \
+			diag_if(DIAG_WARNING, get_errc(), at, \
+					#type " overflow"); \
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
@@ -381,7 +374,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
-			diag_at(DIAG_ERROR, errno2c(errno), at, \
+			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
 		} \
@@ -397,9 +390,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	\
 		if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
-			if (at) \
-				diag_at(DIAG_WARNING, get_errc(), at, \
-						#type " overflow"); \
+			diag_if(DIAG_WARNING, get_errc(), at, \
+					#type " overflow"); \
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
@@ -440,15 +432,13 @@ lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 		if (__unlikely(i8 < INT8_MIN)) {
 			i8 = INT8_MIN;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int8_t underflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int8_t underflow");
 		} else if (__unlikely(i8 > INT8_MAX)) {
 			i8 = INT8_MAX;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int8_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int8_t overflow");
 		}
 		if (pi8)
 			*pi8 = (int8_t)i8;
@@ -465,15 +455,13 @@ lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 		if (__unlikely(i16 < INT16_MIN)) {
 			i16 = INT16_MIN;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int16_t underflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int16_t underflow");
 		} else if (__unlikely(i16 > INT16_MAX)) {
 			i16 = INT16_MAX;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int16_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int16_t overflow");
 		}
 		if (pi16)
 			*pi16 = (int16_t)i16;
@@ -495,9 +483,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 			i32 = INT32_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int32_t underflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int32_t underflow");
 #if LONG_BIT == 32
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i32 == LONG_MAX)) {
@@ -506,9 +493,8 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 			i32 = INT32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int32_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int32_t overflow");
 		}
 		if (pi32)
 			*pi32 = (int32_t)i32;
@@ -536,9 +522,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 			i64 = INT64_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int64_t underflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int64_t underflow");
 #if LONG_BIT == 64
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i64 == LONG_MAX)) {
@@ -548,9 +533,8 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 			i64 = INT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"int64_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"int64_t overflow");
 		}
 		if (pi64)
 			*pi64 = (int64_t)i64;
@@ -567,9 +551,8 @@ lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 		if (__unlikely(u8 > UINT8_MAX)) {
 			u8 = UINT8_MAX;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"uint8_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"uint8_t overflow");
 		}
 		if (pu8)
 			*pu8 = (uint8_t)u8;
@@ -586,9 +569,8 @@ lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 		if (__unlikely(u16 > UINT16_MAX)) {
 			u16 = UINT16_MAX;
 			set_errnum(ERRNUM_RANGE);
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"uint16_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"uint16_t overflow");
 		}
 		if (pu16)
 			*pu16 = (uint16_t)u16;
@@ -610,9 +592,8 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 			u32 = UINT32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"uint32_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"uint32_t overflow");
 		}
 		if (pu32)
 			*pu32 = (uint32_t)u32;
@@ -640,9 +621,8 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 			u64 = UINT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
-			if (at)
-				diag_at(DIAG_WARNING, get_errc(), at,
-						"uint64_t overflow");
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"uint64_t overflow");
 		}
 		if (pu64)
 			*pu64 = (uint64_t)u64;
