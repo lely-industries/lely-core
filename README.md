@@ -17,7 +17,7 @@ liblely-util is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/util.git
 
 or download the latest release
-([v1.4.0](https://gitlab.com/lely_industries/util/tags/v1.4.0)).
+([v1.5.0](https://gitlab.com/lely_industries/util/tags/v1.5.0)).
 
 Build and install
 -----------------
