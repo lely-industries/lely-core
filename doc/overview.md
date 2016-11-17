@@ -85,5 +85,6 @@ Other
 -----
 
 Convenience functions to compare and manipulate `timespec` structs can be found
-in lely/util/time.h.
+in lely/util/time.h. Hash function for integers, pointers and strings can be
+found in lely/util/hash.h.
 
