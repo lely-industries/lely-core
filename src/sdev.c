@@ -797,7 +797,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u32 == CO_UNSIGNED32_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED32_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u32 = 0x%08" PRIx32 "ul }",
+			r = snprintf(s, n, "{ .u32 = 0x%08" PRIx32 "lu }",
 					u->u32);
 		}
 		break;
@@ -965,7 +965,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u24 == CO_UNSIGNED24_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED24_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u24 = 0x%06" PRIx32 "ul }",
+			r = snprintf(s, n, "{ .u24 = 0x%06" PRIx32 "lu }",
 					u->u24);
 		}
 		break;
@@ -975,7 +975,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u40 == CO_UNSIGNED40_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED40_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u40 = 0x%010" PRIx64 "ull }",
+			r = snprintf(s, n, "{ .u40 = 0x%010" PRIx64 "llu }",
 					u->u40);
 		}
 		break;
@@ -985,7 +985,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u48 == CO_UNSIGNED48_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED48_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u48 = 0x%012" PRIx64 "ull }",
+			r = snprintf(s, n, "{ .u48 = 0x%012" PRIx64 "llu }",
 					u->u48);
 		}
 		break;
@@ -995,7 +995,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u56 == CO_UNSIGNED56_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED56_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u56 = 0x%014" PRIx64 "ull }",
+			r = snprintf(s, n, "{ .u56 = 0x%014" PRIx64 "llu }",
 					u->u56);
 		}
 		break;
@@ -1005,7 +1005,7 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		} else if (u->u64 == CO_UNSIGNED64_MAX) {
 			r = snprintf(s, n, "{ CO_UNSIGNED64_MAX }");
 		} else {
-			r = snprintf(s, n, "{ .u64 = 0x%016" PRIx64 "ull }",
+			r = snprintf(s, n, "{ .u64 = 0x%016" PRIx64 "llu }",
 					u->u64);
 		}
 		break;
@@ -1042,7 +1042,7 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 		// Print the C99 escape sequence to a temporary buffer.
 		char buf[12] = { '\0' };
 		char *cp = buf;
-		print_c99_esc(c32, &cp, buf + sizeof(buf));
+		print_c99_esc(&cp, buf + sizeof(buf), c32);
 		// Print the character to the string.
 		r = snprintf(s, n, "%s", buf);
 		if (__unlikely(r < 0))
