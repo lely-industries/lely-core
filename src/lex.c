@@ -38,7 +38,6 @@ LELY_UTIL_EXPORT size_t
 lex_char(int c, const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -54,7 +53,6 @@ lex_ctype(int (__cdecl *ctype)(int), const char *begin, const char *end,
 {
 	assert(ctype);
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -68,7 +66,6 @@ LELY_UTIL_EXPORT size_t
 lex_break(const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -86,7 +83,6 @@ LELY_UTIL_EXPORT size_t
 lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -168,7 +164,6 @@ lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
 		size_t *pn)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -193,7 +188,6 @@ LELY_UTIL_EXPORT size_t
 lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -259,7 +253,6 @@ lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
 		size_t *pn)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	struct floc *floc = NULL;
 	struct floc floc_;
@@ -297,7 +290,6 @@ LELY_UTIL_EXPORT size_t
 lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -663,7 +655,6 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 		struct floc *at)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
@@ -686,7 +677,6 @@ lex_base64(const char *begin, const char *end, struct floc *at,
 		void *ptr, size_t *pn)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 

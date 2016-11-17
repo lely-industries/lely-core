@@ -72,7 +72,6 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 {
 	assert(config);
 	assert(begin);
-	assert(!end || end >= begin);
 
 	struct membuf section = MEMBUF_INIT;
 	struct membuf key = MEMBUF_INIT;
@@ -194,7 +193,6 @@ static size_t
 skip(const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
-	assert(!end || end >= begin);
 
 	const char *cp = begin;
 
