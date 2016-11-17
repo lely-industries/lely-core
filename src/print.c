@@ -192,14 +192,16 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 }
 
 LELY_UTIL_EXPORT size_t
-print_c99_str(char **pbegin, char *end, const char *s)
+print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 {
 	assert(s);
 
+	const char *ends = s + (s ? n : 0);
+
 	size_t chars = 0;
-	while (*s) {
+	while (s < ends) {
 		char32_t c32 = 0;
-		s += lex_utf8(s, NULL, NULL, &c32);
+		s += lex_utf8(s, ends, NULL, &c32);
 		chars += print_c99_esc(pbegin, end, c32);
 	}
 	return chars;

@@ -148,13 +148,15 @@ LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
  *               most `end - *pbegin` characters are written, and the output may
  *               be truncated.
  * \param s      a pointer to the string to be written.
+ * \param n      the number of characters at \a s.
  *
  * \returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  *
  * \see print_c99_esc()
  */
-LELY_UTIL_EXTERN size_t print_c99_str(char **pbegin, char *end, const char *s);
+LELY_UTIL_EXTERN size_t print_c99_str(char **pbegin, char *end, const char *s,
+		size_t n);
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name) \
 	/*! Prints a C99 `type` to a memory buffer. Note that the output is
