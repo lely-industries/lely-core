@@ -32,6 +32,54 @@
 #define LELY_UTIL_PRINT_INLINE	inline
 #endif
 
+#ifndef LENll
+//! A cross-platform "ll" length modifier macro for format specifiers.
+#ifdef _WIN32
+#define LENll	"I64"
+#ifdef __MINGW32__
+// Ignore complaints that "I64" is not a valid ISO C length modifier.
+#pragma GCC diagnostic ignored "-Wformat"
+#endif
+#else
+#define LENll	"ll"
+#endif
+#endif
+
+#ifndef LENj
+//! A cross-platform "j" length modifier macro for format specifiers.
+#ifdef _WIN32
+#define LENj	LENll
+#else
+#define LENj	"j"
+#endif
+#endif
+
+#ifndef LENz
+//! A cross-platform "z" length modifier macro for format specifiers.
+#ifdef _WIN32
+#if __WORDSIZE == 64
+#define LENz	LENll
+#else
+#define LENz	LENl
+#endif
+#else
+#define LENz	"z"
+#endif
+#endif
+
+#ifndef LENt
+//! A cross-platform "t" length modifier macro for format specifiers.
+#ifdef _WIN32
+#if __WORDSIZE == 64
+#define LENz	LENll
+#else
+#define LENz	LENl
+#endif
+#else
+#define LENt	"t"
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

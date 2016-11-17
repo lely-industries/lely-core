@@ -36,10 +36,6 @@
 #endif
 #include <string.h>
 
-#ifdef __MINGW32__
-#pragma GCC diagnostic ignored "-Wformat"
-#endif
-
 LELY_UTIL_EXPORT size_t
 print_fmt(char **pbegin, char *end, const char *format, ...)
 {
@@ -214,17 +210,10 @@ print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 		return print_fmt(pbegin, end, format, name); \
 	}
 
-#ifdef _WIN32
-LELY_UTIL_DEFINE_PRINT(long, long, l, "%I32i")
-LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul, "%I32u")
-LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%I64i")
-LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%I64u")
-#else
 LELY_UTIL_DEFINE_PRINT(long, long, l, "%li")
 LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul, "%lu")
-LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%lli")
-LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%llu")
-#endif
+LELY_UTIL_DEFINE_PRINT(long long, llong, ll, "%" LENll "i")
+LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%" LENll "u")
 
 #undef LELY_UTIL_DEFINE_PRINT
 
