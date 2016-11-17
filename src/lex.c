@@ -146,6 +146,32 @@ error:
 }
 
 LELY_UTIL_EXPORT size_t
+lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
+		size_t *pn)
+{
+	assert(begin);
+	assert(!end || end >= begin);
+
+	const char *cp = begin;
+
+	if ((end && cp >= end) || !(*cp == '_' || isalpha((unsigned char)*cp)))
+		return 0;
+	cp++;
+
+	while ((!end || cp < end)
+			&& (*cp == '_' || isalnum((unsigned char)*cp)))
+		cp++;
+
+	if (pn) {
+		if (s)
+			memcpy(s, begin, MIN((size_t)(cp - begin), *pn));
+		*pn = cp - begin;
+	}
+
+	return floc_lex(at, begin, cp);
+}
+
+LELY_UTIL_EXPORT size_t
 lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 {
 	assert(begin);

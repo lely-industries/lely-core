@@ -130,6 +130,27 @@ LELY_UTIL_EXTERN size_t lex_utf8(const char *begin, const char *end,
 		struct floc *at, char32_t *pc32);
 
 /*!
+ * Lexes a C99 identifier from a memory buffer.
+ *
+ * \param begin a pointer to the start of the buffer.
+ * \param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
+ * \param at    an optional pointer to the file location of \a begin (used for
+ *              diagnostic purposes). On success, if `at != NULL`, *\a at points
+ *              to one past the last character lexed. On error, *\a at is left
+ *              untouched.
+ * \param s     the address at which to store the identifier (can be NULL).
+ * \param pn    the address of a value containing the size (in bytes) of the
+ *              buffer at \a s. On exit, if \a pn is not NULL, *\a pn contains
+ *              the number of bytes that would have been written had the buffer
+ *              at \a s been sufficiently large.
+ *
+ * \returns the number of characters read.
+ */
+LELY_UTIL_EXTERN size_t lex_c99_id(const char *begin, const char *end,
+		struct floc *at, char *s, size_t *pn);
+
+/*!
  * Lexes a C99 character escape sequence from a memory buffer if the buffer
  * begins with '\', and a UTF-8 encoded Unicode character if not. If the escape
  * sequence is invalid, the initial '\' is returned as is.
