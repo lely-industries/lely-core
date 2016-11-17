@@ -59,7 +59,7 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 ])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.3 liblely-libc < 2])
-PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.4 liblely-util < 2])
+PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.5 liblely-util < 2])
 PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.2 liblely-can < 2])
 
 AM_CONDITIONAL([NO_IO], [false])
