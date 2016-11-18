@@ -1,8 +1,20 @@
+#include <lely/util/diag.h>
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
 
 #include "test.h"
+
+static const char *cmds[] = {
+	"[1] set command_timeout 1000",
+	"[2] set command_size 65536",
+	"[3] set network 1",
+	"[4] info version",
+	"[5] boot_up_indication Disable",
+	"[6] set id 1",
+	"[7] init 0",
+	"[8] set node 2",
+};
 
 int gw_send(const struct co_gw_srv *srv, void *data);
 int gw_txt_recv(const char *txt, void *data);
@@ -46,6 +58,15 @@ main(void)
 
 	tap_test(!co_nmt_cs_ind(slave, CO_NMT_CS_RESET_NODE), "reset slave");
 	co_test_step(&test);
+
+	int ncmd = sizeof(cmds) / sizeof(*cmds);
+	for (int i = 0; i < ncmd; i++) {
+		tap_diag("%s", cmds[i]);
+		struct floc at = { "gw_txt", i + 1, 1 };
+		co_gw_txt_send(gw_txt, cmds[i], NULL, &at);
+		do co_test_step(&test);
+		while (co_gw_txt_pending(gw_txt));
+	}
 
 	co_gw_txt_destroy(gw_txt);
 	co_gw_destroy(gw);
