@@ -10,6 +10,7 @@
 /m4/ltversion.m4
 /test/nmt-master.dcf
 /tools/can2udp
+/tools/coctl
 /tools/dcf2c
 /aclocal.m4
 /compile

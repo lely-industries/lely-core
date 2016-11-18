@@ -1,18 +1,28 @@
 bin =
+if !NO_CO_WTM
+if !NO_IO
+if PLATFORM_LINUX
+bin += can2udp
+can2udp_SOURCES = can2udp.c
+endif
+endif
+endif
+if !NO_CO_GW_TXT
+if !NO_IO
+if !NO_THREADS
+if PLATFORM_LINUX
+bin += coctl
+coctl_SOURCES = coctl.c
+endif
+endif
+endif
+endif
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
 if PLATFORM_WIN32
 dcf2c_SOURCES += version.dcf2c.rc
-endif
-endif
-endif
-if !NO_CO_WTM
-if !NO_IO
-if PLATFORM_LINUX
-bin += can2udp
-can2udp_SOURCES = can2udp.c
 endif
 endif
 endif

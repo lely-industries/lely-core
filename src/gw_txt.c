@@ -320,6 +320,10 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	// Skip leading whitespace.
 	cp += lex_ctype(&isspace, cp, end, floc);
 
+	// Ignore empty requests.
+	if ((end && cp >= end) || !*cp)
+		goto error;
+
 	co_unsigned32_t seq = 0;
 	co_unsigned16_t net = 0;
 	co_unsigned8_t node = 0xff;
@@ -449,7 +453,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	cp += chars;
 
 	// Skip trailing whitespace.
-	cp += lex_ctype(&isspace, cp, end, floc);
+	cp += lex_ctype(&isblank, cp, end, floc);
 
 done:
 	if ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp))
