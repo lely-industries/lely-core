@@ -50,6 +50,20 @@ struct co_gw_net {
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind:1;
+#ifndef LELY_NO_CO_MASTER
+	//! A pointer to the original node guarding event indication function.
+	co_nmt_ng_ind_t *ng_ind;
+	//! A pointer to user-specified data for #ng_ind.
+	void *ng_data;
+#endif
+	//! A pointer to the original life guarding event indication function.
+	co_nmt_lg_ind_t *lg_ind;
+	//! A pointer to user-specified data for #lg_ind.
+	void *lg_data;
+	//! A pointer to the original heartbeat event indication function.
+	co_nmt_hb_ind_t *hb_ind;
+	//! A pointer to user-specified data for #hb_ind.
+	void *hb_data;
 	//! A pointer to the original state change event indication function.
 	co_nmt_st_ind_t *st_ind;
 	//! A pointer to user-specified data for #st_ind.
@@ -63,6 +77,25 @@ static struct co_gw_net *co_gw_net_create(co_gw_t *gw, co_unsigned16_t id,
 //! Destroys a CANopen network. \see co_gw_net_create()
 static void co_gw_net_destroy(struct co_gw_net *net);
 
+#ifndef LELY_NO_CO_MASTER
+/*!
+ * The callback function invoked when a node guarding event occurs for a node on
+ * a CANopen network.
+ */
+static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason, void *data);
+#endif
+/*!
+ * The callback function invoked when a life guarding event occurs for a CANopen
+ * gateway.
+ */
+static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
+/*!
+ * The callback function invoked when a heartbeat event occurs for a node on a
+ * CANopen network.
+ */
+static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason, void *data);
 /*!
  * The callback function invoked when a boot-up event or state change is
  * detected for a node on a CANopen network.
@@ -93,6 +126,19 @@ struct __co_gw {
 	//! A pointer to the user-specified data for #rate_func.
 	void *rate_data;
 };
+
+#ifndef LELY_NO_CO_MASTER
+//! Processes an NMT request.
+static int co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, co_unsigned8_t cs,
+		const struct co_gw_req *req);
+//! Processes a 'Enable/Disable node guarding' request.
+static int co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, const struct co_gw_req *req);
+#endif
+//! Processes a 'Start/Disable heartbeat consumer' request.
+static int co_gw_recv_nmt_set_hb(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, const struct co_gw_req *req);
 
 //! Processes an 'Initialize gateway' request.
 static int co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net,
@@ -312,10 +358,21 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 
 	int iec = 0;
 
-	// Obtain the network-ID for network-level requests. If the network-ID
-	// is 0, use the default ID.
+	// Obtain the network-ID for node- and network-level requests. If the
+	// network-ID is 0, use the default ID.
 	co_unsigned16_t net = gw->def;
 	switch (req->srv) {
+#ifndef LELY_NO_CO_MASTER
+	case CO_GW_SRV_NMT_START:
+	case CO_GW_SRV_NMT_STOP:
+	case CO_GW_SRV_NMT_ENTER_PREOP:
+	case CO_GW_SRV_NMT_RESET_NODE:
+	case CO_GW_SRV_NMT_RESET_COMM:
+	case CO_GW_SRV_NMT_NG_ENABLE:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+#endif
+	case CO_GW_SRV_NMT_HB_ENABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE:
 	case CO_GW_SRV_INIT:
 	case CO_GW_SRV_SET_HB:
 	case CO_GW_SRV_SET_ID:
@@ -332,14 +389,82 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		if (__unlikely(!net)) {
 			iec = CO_GW_IEC_NO_DEF_NET;
 			goto error;
-		} else if (__unlikely(net > CO_GW_NUM_NET)) {
+		} else if (__unlikely(net > CO_GW_NUM_NET
+				|| !gw->net[net - 1])) {
 			iec = CO_GW_IEC_BAD_NET;
 			goto error;
 		}
 		break;
 	}
+	assert(net <= CO_GW_NUM_NET);
+	assert(!net || gw->net[net - 1]);
+
+	// Obtain the node-ID for node-level requests. If the node-ID is 0xff,
+	// use the default ID.
+	co_unsigned8_t node = net ? gw->net[net - 1]->def : 0;
+	switch (req->srv) {
+#ifndef LELY_NO_CO_MASTER
+	case CO_GW_SRV_NMT_START:
+	case CO_GW_SRV_NMT_STOP:
+	case CO_GW_SRV_NMT_ENTER_PREOP:
+	case CO_GW_SRV_NMT_RESET_NODE:
+	case CO_GW_SRV_NMT_RESET_COMM:
+	case CO_GW_SRV_NMT_NG_ENABLE:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+#endif
+	case CO_GW_SRV_NMT_HB_ENABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE:
+		if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		struct co_gw_req_node *par = (struct co_gw_req_node *)req;
+		if (par->node != 0xff)
+			node = par->node;
+		if (__unlikely(node > CO_NUM_NODES)) {
+			iec = CO_GW_IEC_BAD_NODE;
+			goto error;
+		}
+		break;
+	}
+
+	// Except for the NMT commands, node-level request require a non-zero
+	// node-ID.
+	switch (req->srv) {
+#ifndef LELY_NO_CO_MASTER
+	case CO_GW_SRV_NMT_NG_ENABLE:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+#endif
+	case CO_GW_SRV_NMT_HB_ENABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE:
+		if (__unlikely(!node)) {
+			iec = CO_GW_IEC_NO_DEF_NODE;
+			goto error;
+		}
+	}
 
 	switch (req->srv) {
+#ifndef LELY_NO_CO_MASTER
+	case CO_GW_SRV_NMT_START:
+		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_START, req);
+	case CO_GW_SRV_NMT_STOP:
+		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_STOP, req);
+	case CO_GW_SRV_NMT_ENTER_PREOP:
+		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_ENTER_PREOP,
+				req);
+	case CO_GW_SRV_NMT_RESET_NODE:
+		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_RESET_NODE,
+				req);
+	case CO_GW_SRV_NMT_RESET_COMM:
+		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_RESET_COMM,
+				req);
+	case CO_GW_SRV_NMT_NG_ENABLE:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+		return co_gw_recv_nmt_set_ng(gw, net, node, req);
+#endif
+	case CO_GW_SRV_NMT_HB_ENABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE:
+		return co_gw_recv_nmt_set_hb(gw, net, node, req);
 	case CO_GW_SRV_INIT:
 		return co_gw_recv_init(gw, net, req);
 	case CO_GW_SRV_SET_HB:
@@ -428,6 +553,14 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	net->def = 0;
 	net->bootup_ind = 1;
 
+#ifndef LELY_NO_CO_MASTER
+	co_nmt_get_ng_ind(net->nmt, &net->ng_ind, &net->ng_data);
+	co_nmt_set_ng_ind(net->nmt, &co_gw_net_ng_ind, net);
+#endif
+	co_nmt_get_lg_ind(net->nmt, &net->lg_ind, &net->lg_data);
+	co_nmt_set_lg_ind(net->nmt, &co_gw_net_lg_ind, net);
+	co_nmt_get_hb_ind(net->nmt, &net->hb_ind, &net->hb_data);
+	co_nmt_set_hb_ind(net->nmt, &co_gw_net_hb_ind, net);
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
 	co_nmt_set_st_ind(net->nmt, &co_gw_net_st_ind, net);
 
@@ -439,9 +572,71 @@ co_gw_net_destroy(struct co_gw_net *net)
 {
 	if (net) {
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
+		co_nmt_set_hb_ind(net->nmt, net->hb_ind, net->hb_data);
+		co_nmt_set_lg_ind(net->nmt, net->lg_ind, net->lg_data);
+#ifndef LELY_NO_CO_MASTER
+		co_nmt_set_ng_ind(net->nmt, net->ng_ind, net->ng_data);
+#endif
 
 		free(net);
 	}
+}
+
+#ifndef LELY_NO_CO_MASTER
+static void
+co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
+		void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	if (state == CO_NMT_EC_OCCURRED) {
+		int iec = 0;
+		switch (state) {
+		case CO_NMT_EC_TIMEOUT: iec = CO_GW_IEC_NG_OCCURRED; break;
+		case CO_NMT_EC_STATE: iec = CO_GW_IEC_ST_OCCURRED; break;
+		}
+		co_gw_send_ec(net->gw, net->id, id, 0, iec);
+	}
+
+	if (net->ng_ind)
+		net->ng_ind(nmt, id, state, reason, net->ng_data);
+}
+#endif
+
+static void
+co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	co_unsigned8_t id = co_dev_get_id(dev);
+	co_gw_send_ec(net->gw, net->id, id, 0, CO_GW_IEC_LG_OCCURRED);
+
+	if (net->lg_ind)
+		net->lg_ind(nmt, state, net->lg_data);
+}
+
+static void
+co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
+		void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	if (reason == CO_NMT_EC_TIMEOUT) {
+		int iec = 0;
+		switch (state) {
+		case CO_NMT_EC_OCCURRED: iec = CO_GW_IEC_HB_OCCURRED; break;
+		case CO_NMT_EC_RESOLVED: iec = CO_GW_IEC_HB_RESOLVED; break;
+		}
+		co_gw_send_ec(net->gw, net->id, id, 0, iec);
+	}
+
+	if (net->hb_ind)
+		net->hb_ind(nmt, id, state, reason, net->hb_data);
 }
 
 static void
@@ -465,6 +660,96 @@ co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 
 	if (net->st_ind)
 		net->st_ind(nmt, id, st, net->st_data);
+}
+
+#ifndef LELY_NO_CO_MASTER
+
+static int
+co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		co_unsigned8_t cs, const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+
+	int iec = 0;
+
+	errc_t errc = get_errc();
+	if (__unlikely(co_nmt_cs_req(nmt, cs, node) == -1)) {
+		iec = errnum2iec(get_errnum());
+		set_errc(errc);
+	}
+
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+
+	co_unsigned16_t gt = 0;
+	co_unsigned8_t ltf = 0;
+	if (req->srv == CO_GW_SRV_NMT_NG_ENABLE) {
+		if (__unlikely(req->size
+				< sizeof(struct co_gw_req_nmt_set_ng))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		const struct co_gw_req_nmt_set_ng *par =
+				(const struct co_gw_req_nmt_set_ng *)req;
+
+		gt = par->gt;
+		ltf = par->ltf;
+	}
+
+	int iec = 0;
+
+	errc_t errc = get_errc();
+	if (__unlikely(co_nmt_ng_req(nmt, node, gt, ltf) == -1)) {
+		iec = errnum2iec(get_errnum());
+		set_errc(errc);
+	}
+
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+#endif // !LELY_NO_CO_MASTER
+
+static int
+co_gw_recv_nmt_set_hb(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	co_unsigned16_t ms = 0;
+	if (req->srv == CO_GW_SRV_NMT_HB_ENABLE) {
+		if (__unlikely(req->size
+				< sizeof(struct co_gw_req_nmt_set_hb))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		const struct co_gw_req_nmt_set_hb *par =
+				(const struct co_gw_req_nmt_set_hb *)req;
+
+		ms = par->ms;
+	}
+
+	co_unsigned32_t ac = co_dev_cfg_hb(dev, node, ms);
+
+	return co_gw_send_con(gw, req, 0, ac);
 }
 
 static int

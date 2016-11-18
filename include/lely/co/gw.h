@@ -33,6 +33,33 @@
 //! The low number of the version of CiA 309-1 implemented by this gateway.
 #define CO_GW_PROT_LO	0
 
+//! CANopen gateway service: Start node.
+#define CO_GW_SRV_NMT_START	0x31
+
+//! CANopen gateway service: Start node.
+#define CO_GW_SRV_NMT_STOP	0x32
+
+//! CANopen gateway service: Set node to pre-operational.
+#define CO_GW_SRV_NMT_ENTER_PREOP	0x33
+
+//! CANopen gateway service: Reset node.
+#define CO_GW_SRV_NMT_RESET_NODE	0x34
+
+//! CANopen gateway service: Reset communication.
+#define CO_GW_SRV_NMT_RESET_COMM	0x35
+
+//! CANopen gateway service: Enable node guarding.
+#define CO_GW_SRV_NMT_NG_ENABLE	0x36
+
+//! CANopen gateway service: Disable node guarding.
+#define CO_GW_SRV_NMT_NG_DISABLE	0x37
+
+//! CANopen gateway service: Start heartbeat consumer.
+#define CO_GW_SRV_NMT_HB_ENABLE	0x38
+
+//! CANopen gateway service: Disable heartbeat consumer.
+#define CO_GW_SRV_NMT_HB_DISABLE	0x39
+
 //! CANopen gateway service: Error control event received.
 #define CO_GW_SRV_EC	0x3a
 
@@ -192,6 +219,40 @@ struct co_gw_req_node {
 	co_unsigned16_t net;
 	//! The node-ID.
 	co_unsigned8_t node;
+};
+
+//! The parameters of a CANopen gateway 'Enable node guarding' request.
+struct co_gw_req_nmt_set_ng {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_NMT_NG_ENABLE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The guard time (in milliseconds).
+	co_unsigned16_t gt;
+	//! The lifetime factor.
+	co_unsigned8_t ltf;
+};
+
+//! The parameters of a CANopen gateway 'Start heartbeat consumer' request.
+struct co_gw_req_nmt_set_hb {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_NMT_HB_ENABLE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The heartbeat time (in milliseconds).
+	co_unsigned16_t ms;
 };
 
 //! The parameters of a CANopen gateway 'Initialize gateway' request.
