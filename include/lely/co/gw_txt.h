@@ -24,6 +24,12 @@
 
 #include <lely/co/gw.h>
 
+//! The high number of the version of CiA 309-3 implemented by this gateway.
+#define CO_GW_TXT_IMPL_HI	2
+
+//! The low number of the version of CiA 309-3 implemented by this gateway.
+#define CO_GW_TXT_IMPL_LO	1
+
 struct __co_gw_txt;
 #ifndef __cplusplus
 //! An opaque CANopen ASCII gateway type.
@@ -73,6 +79,9 @@ LELY_CO_EXTERN co_gw_txt_t *co_gw_txt_create(void);
 
 //! Destroys a CANopen ASCII gateway. \see co_gw_txt_create()
 LELY_CO_EXTERN void co_gw_txt_destroy(co_gw_txt_t *gw);
+
+//! Returns the number of pending (i.e., unconfirmed) requests.
+LELY_CO_EXTERN size_t co_gw_txt_pending(const co_gw_txt_t *gw);
 
 /*!
  * Receives and forwards an indication or confirmation from a CANopen gateway.
