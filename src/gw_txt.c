@@ -86,35 +86,44 @@ static int co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt);
 //! Invokes the callback function to send a request.
 static void co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req);
 
-//! Sens an 'Initialize gateway' request after parsing its parameters.
+//! Sends an 'Enable node guarding' request after parsing its parameters.
+static size_t co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at);
+//! Sends a 'Start heartbeat consumer' request after parsing its parameters.
+static size_t co_gw_txt_send_nmt_set_hb(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at);
+
+//! Sends an 'Initialize gateway' request after parsing its parameters.
 static size_t co_gw_txt_send_init(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sens a 'Set heartbeat producer' request after parsing its parameters.
+//! Sends a 'Set heartbeat producer' request after parsing its parameters.
 static size_t co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sens a 'Set node-ID' request after parsing its parameters.
+//! Sends a 'Set node-ID' request after parsing its parameters.
 static size_t co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sens a 'Set command time-out' request after parsin gits parameters.
+//! Sends a 'Set command time-out' request after parsin gits parameters.
 static size_t co_gw_txt_send_set_cmd_timeout(co_gw_txt_t *gw, int srv,
 		void *data, const char *begin, const char *end,
 		struct floc *at);
-//! Sens a 'Boot-up forwarding' request after parsing its parameters.
+//! Sends a 'Boot-up forwarding' request after parsing its parameters.
 static size_t co_gw_txt_send_set_bootup_ind(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
-//! Sens a 'Set default network' request after parsing its parameters.
+//! Sends a 'Set default network' request after parsing its parameters.
 static size_t co_gw_txt_send_set_net(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
-//! Sens a 'Set default node-ID' request after parsing its parameters.
+//! Sends a 'Set default node-ID' request after parsing its parameters.
 static size_t co_gw_txt_send_set_node(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sens a 'Set command size' request after parsing its parameters.
+//! Sends a 'Set command size' request after parsing its parameters.
 static size_t co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
 
@@ -224,14 +233,15 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	}
 
 	switch (srv->srv) {
-	case CO_GW_SRV_EC:
-		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
-			set_errnum(ERRNUM_INVAL);
-			return -1;
-		}
-		const struct co_gw_ind_ec *ind =
-				(const struct co_gw_ind_ec *)srv;
-		return co_gw_txt_recv_ec(gw, ind);
+	case CO_GW_SRV_NMT_START:
+	case CO_GW_SRV_NMT_STOP:
+	case CO_GW_SRV_NMT_ENTER_PREOP:
+	case CO_GW_SRV_NMT_RESET_NODE:
+	case CO_GW_SRV_NMT_RESET_COMM:
+	case CO_GW_SRV_NMT_NG_ENABLE:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+	case CO_GW_SRV_NMT_HB_ENABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE:
 	case CO_GW_SRV_INIT:
 	case CO_GW_SRV_SET_HB:
 	case CO_GW_SRV_SET_ID:
@@ -248,6 +258,14 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		const struct co_gw_con *con = (const struct co_gw_con *)srv;
 		co_unsigned32_t seq = (uintptr_t)con->data;
 		return co_gw_txt_recv_con(gw, seq, con);
+	case CO_GW_SRV_EC:
+		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		const struct co_gw_ind_ec *ind =
+				(const struct co_gw_ind_ec *)srv;
+		return co_gw_txt_recv_ec(gw, ind);
 	default:
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -289,7 +307,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 
 	co_unsigned32_t seq = 0;
 	co_unsigned16_t net = 0;
-	co_unsigned8_t node = 0;
+	co_unsigned8_t node = 0xff;
 	if (__unlikely(!(chars = co_gw_txt_lex_prefix(cp, end, floc, &seq, &net,
 			&node))))
 		goto error;
@@ -306,7 +324,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	case CO_GW_SRV_SET_NET:
 	case CO_GW_SRV_GET_VERSION:
 	case CO_GW_SRV_SET_CMD_SIZE:
-		if (__unlikely(node)) {
+		if (__unlikely(node != 0xff)) {
 			diag_if(DIAG_ERROR, 0, floc,
 					"node-ID specified before global command");
 			goto error;
@@ -330,8 +348,8 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 					"node-ID specified before network-level command");
 			goto error;
 		}
-		net = node;
-		node = 0;
+		net = node == 0xff ? 0 : node;
+		node = 0xff;
 		break;
 	}
 
@@ -339,6 +357,35 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 
 	chars = 0;
 	switch (srv) {
+	case CO_GW_SRV_NMT_START:
+	case CO_GW_SRV_NMT_STOP:
+	case CO_GW_SRV_NMT_ENTER_PREOP:
+	case CO_GW_SRV_NMT_RESET_NODE:
+	case CO_GW_SRV_NMT_RESET_COMM:
+	case CO_GW_SRV_NMT_NG_DISABLE:
+	case CO_GW_SRV_NMT_HB_DISABLE: {
+		// 'start', 'stop', 'preop[erational]', 'reset node',
+		// 'reset comm[unication]', 'disable guarding' and
+		// 'disable heartbeat' are node-level commands without any
+		// additional parameters.
+		struct co_gw_req_node req = {
+			.size = sizeof(req),
+			.srv = srv,
+			.data = data,
+			.net = net,
+			.node = node
+		};
+		co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+		goto done;
+	}
+	case CO_GW_SRV_NMT_NG_ENABLE:
+		chars = co_gw_txt_send_nmt_set_ng(gw, srv, data, net, node, cp,
+				end, floc);
+		break;
+	case CO_GW_SRV_NMT_HB_ENABLE:
+		chars = co_gw_txt_send_nmt_set_hb(gw, srv, data, net, node, cp,
+				end, floc);
+		break;
 	case CO_GW_SRV_INIT:
 		chars = co_gw_txt_send_init(gw, srv, data, net, cp, end, floc);
 		break;
@@ -366,7 +413,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 				floc);
 		break;
 	case CO_GW_SRV_GET_VERSION: {
-		// 'Get version' is a network-level command without any
+		// 'info version' is a network-level command without any
 		// additional parameters.
 		struct co_gw_req_net req = {
 			.size = sizeof(req),
@@ -561,6 +608,78 @@ co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt)
 	}
 
 	return gw->recv_func(txt, gw->recv_data) ? -1 : 0;
+}
+
+static size_t
+co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at)
+{
+	assert(srv == CO_GW_SRV_NMT_NG_ENABLE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t gt = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &gt)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected guard time");
+		return 0;
+	}
+	cp += chars;
+
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	co_unsigned8_t ltf = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &ltf)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected lifetime factor");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_nmt_set_ng req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.node = node,
+		.gt = gt,
+		.ltf = ltf
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_nmt_set_hb(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at)
+{
+	assert(srv == CO_GW_SRV_NMT_HB_ENABLE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t ms = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &ms)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected heartbeat time");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_nmt_set_hb req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.node = node,
+		.ms = ms
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
 }
 
 static size_t
@@ -879,7 +998,7 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	co_unsigned16_t net = 0;
-	co_unsigned8_t node = 0;
+	co_unsigned8_t node = 0xff;
 
 	// Try to parse the optional network-ID.
 	if ((chars = lex_c99_u16(cp, end, at, &net))) {
@@ -898,16 +1017,16 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 				return 0;
 			}
 
-			if (__unlikely(!node || node > CO_NUM_NODES)) {
+			if (__unlikely(node > CO_NUM_NODES)) {
 				diag_if(DIAG_ERROR, 0, at,
-						"the node-ID must be in the range [1..%u]",
+						"the node-ID must be in the range [0..%u]",
 						CO_NUM_NODES);
 				return 0;
 			}
 		} else {
-			if (__unlikely(!net || net > CO_NUM_NODES)) {
+			if (__unlikely(net > CO_NUM_NODES)) {
 				diag_if(DIAG_ERROR, 0, at,
-						"the node-ID must be in the range [1..%u]",
+						"the node-ID must be in the range [0..%u]",
 						CO_NUM_NODES);
 				return 0;
 			}
@@ -946,6 +1065,38 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 	if (!strncmp("boot_up_indication", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_SET_BOOTUP_IND;
+	} else if (!strncmp("disable", cp, chars)) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		chars = co_gw_txt_lex_cmd(cp, end, at);
+		if (!strncmp("guarding", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_NG_DISABLE;
+		} else if (!strncmp("heartbeat", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_HB_DISABLE;
+		} else {
+			diag_if(DIAG_ERROR, 0, at,
+					"expected 'guarding' or 'heartbeat'");
+			return 0;
+		}
+	} else if (!strncmp("enable", cp, chars)) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		chars = co_gw_txt_lex_cmd(cp, end, at);
+		if (!strncmp("guarding", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_NG_ENABLE;
+		} else if (!strncmp("heartbeat", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_HB_ENABLE;
+		} else {
+			diag_if(DIAG_ERROR, 0, at,
+					"expected 'guarding' or 'heartbeat'");
+			return 0;
+		}
 	} else if (!strncmp("info", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
@@ -961,6 +1112,27 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 	} else if (!strncmp("init", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_INIT;
+	} else if (!strncmp("preop", cp, chars)
+			|| !strncmp("preoperational", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_NMT_ENTER_PREOP;
+	} else if (!strncmp("reset", cp, chars)) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		chars = co_gw_txt_lex_cmd(cp, end, at);
+		if (!strncmp("comm", cp, chars)
+				|| !strncmp("communication", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_RESET_COMM;
+		} else if (!strncmp("node", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_NMT_RESET_NODE;
+		} else {
+			diag_if(DIAG_ERROR, 0, at,
+					"expected 'node' or 'comm[unication]'");
+			return 0;
+		}
 	} else if (!strncmp("set", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
@@ -989,8 +1161,14 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network' or 'node'");
 			return 0;
 		}
+	} else if (!strncmp("start", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_NMT_START;
+	} else if (!strncmp("stop", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_NMT_STOP;
 	} else {
-		diag_if(DIAG_ERROR, 0, at, "expected 'boot_up_indication', 'info', 'init' or 'set'");
+		diag_if(DIAG_ERROR, 0, at, "expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'reset', 'set', 'start' or 'stop'");
 		return 0;
 	}
 
