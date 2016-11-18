@@ -181,7 +181,7 @@ __co_gw_txt_init(struct __co_gw_txt *gw)
 LELY_CO_EXPORT void
 __co_gw_txt_fini(struct __co_gw_txt *gw)
 {
-	assert(gw);
+	__unused_var(gw);
 }
 
 LELY_CO_EXPORT co_gw_txt_t *
