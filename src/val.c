@@ -33,6 +33,7 @@
 #include <lely/co/val.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 #define CO_BOOLEAN_INIT		0
@@ -1338,11 +1339,11 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_INTEGER32:
 			return print_c99_i32(pbegin, end, u->i32);
 		case CO_DEFTYPE_UNSIGNED8:
-			return print_c99_u8(pbegin, end, u->u8);
+			return print_fmt(pbegin, end, "0x%02" PRIx8, u->u8);
 		case CO_DEFTYPE_UNSIGNED16:
-			return print_c99_u16(pbegin, end, u->u16);
+			return print_fmt(pbegin, end, "0x%04" PRIx16, u->u16);
 		case CO_DEFTYPE_UNSIGNED32:
-			return print_c99_u32(pbegin, end, u->u32);
+			return print_fmt(pbegin, end, "0x%08" PRIx32, u->u32);
 		case CO_DEFTYPE_REAL32:
 			return print_c99_u32(pbegin, end, u->u32);
 		case CO_DEFTYPE_TIME_OF_DAY:
@@ -1356,7 +1357,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_INTEGER24:
 			return print_c99_i32(pbegin, end, u->i24);
 		case CO_DEFTYPE_REAL64:
-			return print_c99_u64(pbegin, end, u->u64);
+			return print_fmt(pbegin, end, "0x%016" PRIx64, u->u64);
 		case CO_DEFTYPE_INTEGER40:
 			return print_c99_i64(pbegin, end, u->i40);
 		case CO_DEFTYPE_INTEGER48:
@@ -1366,15 +1367,15 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_INTEGER64:
 			return print_c99_i64(pbegin, end, u->i64);
 		case CO_DEFTYPE_UNSIGNED24:
-			return print_c99_u32(pbegin, end, u->u24);
+			return print_fmt(pbegin, end, "0x%06" PRIx32, u->u24);
 		case CO_DEFTYPE_UNSIGNED40:
-			return print_c99_u64(pbegin, end, u->u40);
+			return print_fmt(pbegin, end, "0x%010" PRIx64, u->u40);
 		case CO_DEFTYPE_UNSIGNED48:
-			return print_c99_u64(pbegin, end, u->u48);
+			return print_fmt(pbegin, end, "0x%012" PRIx64, u->u48);
 		case CO_DEFTYPE_UNSIGNED56:
-			return print_c99_u64(pbegin, end, u->u56);
+			return print_fmt(pbegin, end, "0x%014" PRIx64, u->u56);
 		case CO_DEFTYPE_UNSIGNED64:
-			return print_c99_u64(pbegin, end, u->u64);
+			return print_fmt(pbegin, end, "0x%016" PRIx64, u->u64);
 		default:
 			set_errnum(ERRNUM_INVAL);
 			return 0;
