@@ -629,7 +629,7 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 	if (__unlikely(!sub))
 		return CO_SDO_AC_NO_SUB;
 
-	co_unsigned32_t val = ((co_unsigned32_t)ms << 16) | id;
+	co_unsigned32_t val = ((co_unsigned32_t)id << 16) | ms;
 	return co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &val);
 }
 
