@@ -14,10 +14,11 @@ BaudRate_1000=1
 NodeID=0x02
 
 [MandatoryObjects]
-SupportedObjects=3
+SupportedObjects=4
 1=0x1000
 2=0x1001
-3=0x1018
+3=0x1017
+4=0x1018
 
 [OptionalObjects]
 SupportedObjects=0
@@ -35,6 +36,12 @@ DefaultValue=0x01020304
 ParameterName=Error register
 DataType=0x0005
 AccessType=ro
+
+[1017]
+ParameterName=Producer heartbeat time
+DataType=0x0006
+AccessType=rw
+ParameterValue=50
 
 [1018]
 SubNumber=5

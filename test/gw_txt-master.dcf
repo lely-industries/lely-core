@@ -11,10 +11,12 @@ BaudRate_800=1
 BaudRate_1000=1
 
 [MandatoryObjects]
-SupportedObjects=3
+SupportedObjects=5
 1=0x1000
 2=0x1001
-3=0x1018
+3=0x1016
+4=0x1017
+5=0x1018
 
 [OptionalObjects]
 SupportedObjects=1
@@ -32,6 +34,18 @@ AccessType=ro
 ParameterName=Error register
 DataType=0x0005
 AccessType=ro
+
+[1016]
+ParameterName=Consumer heartbeat time
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=127
+
+[1017]
+ParameterName=Producer heartbeat time
+DataType=0x0006
+AccessType=rw
 
 [1018]
 SubNumber=5

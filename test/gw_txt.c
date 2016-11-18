@@ -13,7 +13,15 @@ static const char *cmds[] = {
 	"[5] boot_up_indication Disable",
 	"[6] set id 1",
 	"[7] init 0",
-	"[8] set node 2",
+	"[8] set heartbeat 50",
+	"[9] set node 2",
+	"[10] disable guarding",
+	"[11] enable heartbeat 100",
+	"[12] reset node",
+	"[13] reset comm",
+	"[14] preop",
+	"[15] stop",
+	"[16] start"
 };
 
 int gw_send(const struct co_gw_srv *srv, void *data);
