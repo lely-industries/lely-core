@@ -68,6 +68,10 @@ static int co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 //! Processes an 'Error control event received' indication.
 static int co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind);
 
+//! Processes an 'Emergency event received' indication.
+static int co_gw_txt_recv_emcy(co_gw_txt_t *gw,
+		const struct co_gw_ind_emcy *ind);
+
 /*!
  * Formats a received indication or confirmation and invokes the callback
  * function to process it.
@@ -250,7 +254,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	case CO_GW_SRV_SET_NET:
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
-	case CO_GW_SRV_SET_CMD_SIZE:
+	case CO_GW_SRV_SET_CMD_SIZE: {
 		if (__unlikely(srv->size < sizeof(struct co_gw_con))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -258,7 +262,8 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		const struct co_gw_con *con = (const struct co_gw_con *)srv;
 		co_unsigned32_t seq = (uintptr_t)con->data;
 		return co_gw_txt_recv_con(gw, seq, con);
-	case CO_GW_SRV_EC:
+	}
+	case CO_GW_SRV_EC: {
 		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -266,6 +271,16 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		const struct co_gw_ind_ec *ind =
 				(const struct co_gw_ind_ec *)srv;
 		return co_gw_txt_recv_ec(gw, ind);
+	}
+	case CO_GW_SRV_EMCY: {
+		if (__unlikely(srv->size < sizeof(struct co_gw_ind_emcy))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		const struct co_gw_ind_emcy *ind =
+				(const struct co_gw_ind_emcy *)srv;
+		return co_gw_txt_recv_emcy(gw, ind);
+	}
 	default:
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -564,6 +579,18 @@ co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind)
 	else
 		return co_gw_txt_recv_fmt(gw, "%u %u %s", ind->net,
 				ind->node, str);
+}
+
+
+static int
+co_gw_txt_recv_emcy(co_gw_txt_t *gw, const struct co_gw_ind_emcy *ind)
+{
+	assert(ind);
+	assert(ind->srv == CO_GW_SRV_EMCY);
+
+	return co_gw_txt_recv_fmt(gw, "%u %u EMCY %04X %02X %u %u %u %u %u",
+			ind->net, ind->node, ind->ec, ind->er, ind->msef[0],
+			ind->msef[1], ind->msef[2], ind->msef[3], ind->msef[4]);
 }
 
 static int
