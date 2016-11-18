@@ -104,6 +104,34 @@ public:
 				static_cast<void*>(obj));
 	}
 
+	void
+	getRateFunc(co_gw_rate_func_t** pfunc, void** pdata) const noexcept
+	{
+		co_gw_get_rate_func(this, pfunc, pdata);
+	}
+
+	void
+	setRateFunc(co_gw_rate_func_t* func, void* data) noexcept
+	{
+		co_gw_set_rate_func(this, func, data);
+	}
+
+	template <class F>
+	void
+	setRateFunc(F* f) noexcept
+	{
+		setRateFunc(&c_obj_call<co_gw_rate_func_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_gw_rate_func_t*, C>::type M>
+	void
+	setRateFunc(C* obj) noexcept
+	{
+		setRateFunc(&c_mem_call<co_gw_rate_func_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
 protected:
 	~COGW() {}
 };

@@ -27,6 +27,42 @@
 //! The maximum number of networks in a CANopen gateway.
 #define CO_GW_NUM_NET	127
 
+//! The high number of the version of CiA 309-1 implemented by this gateway.
+#define CO_GW_PROT_HI	2
+
+//! The low number of the version of CiA 309-1 implemented by this gateway.
+#define CO_GW_PROT_LO	0
+
+//! CANopen gateway service: Error control event received.
+#define CO_GW_SRV_EC	0x3a
+
+//! CANopen gateway service: Initialize gateway.
+#define CO_GW_SRV_INIT	0x51
+
+//! CANopen gateway service: Set heartbeat producer.
+#define CO_GW_SRV_SET_HB	0x54
+
+//! CANopen gateway service: Set node-ID.
+#define CO_GW_SRV_SET_ID	0x55
+
+//! CANopen gateway service: Set command time-out.
+#define CO_GW_SRV_SET_CMD_TIMEOUT	0x58
+
+//! CANopen gateway service: Boot-up forwarding.
+#define CO_GW_SRV_SET_BOOTUP_IND	0x59
+
+//! CANopen gateway service: Set default network.
+#define CO_GW_SRV_SET_NET	0x61
+
+//! CANopen gateway service: Set default node-ID.
+#define CO_GW_SRV_SET_NODE	0x62
+
+//! CANopen gateway service: Get version.
+#define CO_GW_SRV_GET_VERSION	0x63
+
+//! CANopen gateway service: Set command size.
+#define CO_GW_SRV_SET_CMD_SIZE	0x64
+
 //! CANopen gateway internal error: Request not supported.
 #define CO_GW_IEC_BAD_SRV	100
 
@@ -132,6 +168,101 @@ struct co_gw_req {
 	void *data;
 };
 
+//! The common parameters of a CANopen gateway network-level request.
+struct co_gw_req_net {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number.
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+};
+
+//! The common parameters of a CANopen gateway node-level request.
+struct co_gw_req_node {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number.
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+};
+
+//! The parameters of a CANopen gateway 'Initialize gateway' request.
+struct co_gw_req_init {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_INIT).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The bit timing index (in the range [0..9]).
+	co_unsigned8_t bitidx;
+};
+
+//! The parameters of a CANopen gateway 'Set heartbeat producer' request.
+struct co_gw_req_set_hb {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_HB).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The heartbeat time (in milliseconds).
+	co_unsigned16_t ms;
+};
+
+//! The parameters of a CANopen gateway 'Set command time-out' request.
+struct co_gw_req_set_cmd_timeout {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_CMD_TIMEOUT).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The command timeout (in milliseconds).
+	int timeout;
+};
+
+//! The parameters of a CANopen gateway 'Boot-up forwarding' request.
+struct co_gw_req_set_bootup_ind {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_BOOTUP_IND).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	/*!
+	 * A flag indicating whether "boot-up event received" commands should be
+	 * forwarded (1) or not (0).
+	 */
+	unsigned cs:1;
+};
+
+//! The parameters of a CANopen gateway 'Set command size' request.
+struct co_gw_req_set_cmd_size {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_CMD_TIMEOUT).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The command size (in bytes).
+	co_unsigned32_t n;
+};
+
 //! The common parameters of a CANopen gateway confirmation.
 struct co_gw_con {
 	//! The size of this struct (in bytes).
@@ -144,6 +275,53 @@ struct co_gw_con {
 	int iec;
 	//! The SDO abort code (0 on success).
 	co_unsigned32_t ac;
+};
+
+//! The parameters of a CANopen gateway 'Get version' confirmation.
+struct co_gw_con_get_version {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_GET_VERSION).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The vendor-ID.
+	co_unsigned32_t vendor_id;
+	//! The product code.
+	co_unsigned32_t product_code;
+	//! The revision number.
+	co_unsigned32_t revision;
+	//! The serial number.
+	co_unsigned32_t serial_nr;
+	//! The gateway class.
+	co_unsigned8_t gw_class;
+	//! The protocol version (high number).
+	co_unsigned8_t prot_hi;
+	//! The protocol version (low number).
+	co_unsigned8_t prot_lo;
+};
+
+/*!
+ * The parameters of a CANopen gateway 'Error control event received'
+ * indication.
+ */
+struct co_gw_ind_ec {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_EC).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The status of the node, or 0 in case of a boot-up event.
+	co_unsigned8_t st;
+	//! The internal error code (0 on success).
+	int iec;
 };
 
 #ifdef __cplusplus
@@ -161,6 +339,17 @@ extern "C" {
  * SHOULD set the error number with `set_errnum()`.
  */
 typedef int co_gw_send_func_t(const struct co_gw_srv *srv, void *data);
+
+/*!
+ * The type of a CANopen gateway 'set bit timing' function, invoked when a
+ * baudrate switch is needed after an 'Initialize gateway' command is received.
+ *
+ * \param net  the network-ID (in the range [1..127]).
+ * \param rate the baudrate (in kbit/s), or 0 for automatic bit rate detection.
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_gw_rate_func_t(co_unsigned16_t net, co_unsigned16_t rate,
+		void *data);
 
 //! Returns a string describing an internal error code.
 LELY_CO_EXTERN const char *co_gw_iec2str(int iec);
@@ -243,6 +432,36 @@ LELY_CO_EXTERN void co_gw_get_send_func(const co_gw_t *gw,
  * \see co_gw_get_send_func()
  */
 LELY_CO_EXTERN void co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func,
+		void *data);
+
+/*!
+ * Retrieves the callback function invoked when a baudrate switch is needed
+ * after an 'Initialize gateway' command is received.
+ *
+ * \param gw   a pointer to a CANopen gateway.
+ * \param pfunc the address at which to store a pointer to the callback function
+ *              (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_gw_set_rate_func()
+ */
+LELY_CO_EXTERN void co_gw_get_rate_func(const co_gw_t *gw,
+		co_gw_rate_func_t **pfunc, void **pdata);
+
+/*!
+ * Sets the callback function invoked when a baudrate switch is needed after an
+ * 'Initialize gateway' command is received.
+ *
+ * \param gw   a pointer to a CANopen gateway.
+ * \param func a pointer to the function to be invoked when an indication or
+ *             confirmation needs to be sent.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a func.
+ *
+ * \see co_gw_get_rate_func()
+ */
+LELY_CO_EXTERN void co_gw_set_rate_func(co_gw_t *gw, co_gw_rate_func_t *func,
 		void *data);
 
 #ifdef __cplusplus
