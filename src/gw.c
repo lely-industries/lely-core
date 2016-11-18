@@ -27,6 +27,9 @@
 
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
+#ifndef LELY_NO_CO_EMCY
+#include <lely/co/emcy.h>
+#endif
 #include <lely/co/gw.h>
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
@@ -50,6 +53,10 @@ struct co_gw_net {
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind:1;
+	//! A pointer to the original NMT command indication function.
+	co_nmt_cs_ind_t *cs_ind;
+	//! A pointer to user-specified data for #cs_ind.
+	void *cs_data;
 #ifndef LELY_NO_CO_MASTER
 	//! A pointer to the original node guarding event indication function.
 	co_nmt_ng_ind_t *ng_ind;
@@ -77,6 +84,11 @@ static struct co_gw_net *co_gw_net_create(co_gw_t *gw, co_unsigned16_t id,
 //! Destroys a CANopen network. \see co_gw_net_create()
 static void co_gw_net_destroy(struct co_gw_net *net);
 
+/*!
+ * The callback function invoked when an NMT command is received by a CANopen
+ * gateway.
+ */
+static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 #ifndef LELY_NO_CO_MASTER
 /*!
  * The callback function invoked when a node guarding event occurs for a node on
@@ -102,6 +114,15 @@ static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
+#ifndef LELY_NO_CO_EMCY
+/*!
+ * The callback function invoked when an EMCY message is received from node on a
+ * CANopen network.
+ */
+static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
+		co_unsigned16_t ec, co_unsigned8_t er, uint8_t msef[5],
+		void *data);
+#endif
 
 //! A CANopen gateway.
 struct __co_gw {
@@ -149,6 +170,11 @@ static int co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net,
 //! Processes a 'Set node-ID' request.
 static int co_gw_recv_set_id(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
+#ifndef LELY_NO_CO_EMCY
+//! Processes a 'Start/Stop emergency consumer' request.
+static int co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, const struct co_gw_req *req);
+#endif
 //! Processes a 'Set command time-out' request.
 static int co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req);
 //! Processes a 'Boot-up forwarding' request.
@@ -376,6 +402,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_INIT:
 	case CO_GW_SRV_SET_HB:
 	case CO_GW_SRV_SET_ID:
+#ifndef LELY_NO_CO_EMCY
+	case CO_GW_SRV_EMCY_START:
+	case CO_GW_SRV_EMCY_STOP:
+#endif
 	case CO_GW_SRV_SET_BOOTUP_IND:
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
@@ -414,6 +444,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 #endif
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
+#ifndef LELY_NO_CO_EMCY
+	case CO_GW_SRV_EMCY_START:
+	case CO_GW_SRV_EMCY_STOP:
+#endif
 		if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -437,6 +471,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 #endif
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
+#ifndef LELY_NO_CO_EMCY
+	case CO_GW_SRV_EMCY_START:
+	case CO_GW_SRV_EMCY_STOP:
+#endif
 		if (__unlikely(!node)) {
 			iec = CO_GW_IEC_NO_DEF_NODE;
 			goto error;
@@ -471,6 +509,11 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		return co_gw_recv_set_hb(gw, net, req);
 	case CO_GW_SRV_SET_ID:
 		return co_gw_recv_set_id(gw, net, req);
+#ifndef LELY_NO_CO_EMCY
+	case CO_GW_SRV_EMCY_START:
+	case CO_GW_SRV_EMCY_STOP:
+		return co_gw_recv_set_emcy(gw, net, node, req);
+#endif
 	case CO_GW_SRV_SET_CMD_TIMEOUT:
 		return co_gw_recv_set_cmd_timeout(gw, req);
 	case CO_GW_SRV_SET_BOOTUP_IND:
@@ -553,6 +596,8 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	net->def = 0;
 	net->bootup_ind = 1;
 
+	co_nmt_get_cs_ind(net->nmt, &net->cs_ind, &net->cs_data);
+	co_nmt_set_cs_ind(net->nmt, &co_gw_net_cs_ind, net);
 #ifndef LELY_NO_CO_MASTER
 	co_nmt_get_ng_ind(net->nmt, &net->ng_ind, &net->ng_data);
 	co_nmt_set_ng_ind(net->nmt, &co_gw_net_ng_ind, net);
@@ -571,15 +616,51 @@ static void
 co_gw_net_destroy(struct co_gw_net *net)
 {
 	if (net) {
+#ifndef LELY_NO_CO_EMCY
+		co_emcy_t *emcy = co_nmt_get_emcy(net->nmt);
+		if (emcy)
+			co_emcy_set_ind(emcy, NULL, NULL);
+#endif
+
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
 		co_nmt_set_hb_ind(net->nmt, net->hb_ind, net->hb_data);
 		co_nmt_set_lg_ind(net->nmt, net->lg_ind, net->lg_data);
 #ifndef LELY_NO_CO_MASTER
 		co_nmt_set_ng_ind(net->nmt, net->ng_ind, net->ng_data);
 #endif
+		co_nmt_set_cs_ind(net->nmt, net->cs_ind, net->cs_data);
 
 		free(net);
 	}
+}
+
+static void
+co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	switch (cs) {
+	case CO_NMT_CS_START: {
+#ifndef LELY_NO_CO_EMCY
+		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
+		if (emcy)
+			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
+#endif
+		break;
+	}
+	case CO_NMT_CS_ENTER_PREOP: {
+#ifndef LELY_NO_CO_EMCY
+		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
+		if (emcy)
+			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
+#endif
+		break;
+	}
+	}
+
+	if (net->cs_ind)
+		net->cs_ind(nmt, cs, net->cs_data);
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -661,6 +742,28 @@ co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 	if (net->st_ind)
 		net->st_ind(nmt, id, st, net->st_data);
 }
+
+#ifndef LELY_NO_CO_EMCY
+static void
+co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
+		co_unsigned8_t er, uint8_t msef[5], void *data)
+{
+	__unused_var(emcy);
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind_emcy ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV_EMCY,
+		.net = net->id,
+		.node = id,
+		.ec = ec,
+		.er = er,
+		.msef = { msef[0], msef[1], msef[2], msef[3], msef[4] }
+	};
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+}
+#endif
 
 #ifndef LELY_NO_CO_MASTER
 
@@ -919,6 +1022,49 @@ co_gw_recv_set_id(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 error:
 	return co_gw_send_con(gw, req, iec, 0);
 }
+
+#ifndef LELY_NO_CO_EMCY
+static int
+co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(req);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_set_emcy))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_set_emcy *par =
+			(const struct co_gw_req_set_emcy *)req;
+
+	co_unsigned32_t ac = 0;
+
+	co_unsigned32_t cobid = par->cobid;
+	if (par->srv == CO_GW_SRV_EMCY_START)
+		cobid &= ~CO_EMCY_COBID_VALID;
+	else
+		cobid |= CO_EMCY_COBID_VALID;
+
+	co_obj_t *obj = co_dev_find_obj(dev, 0x1028);
+	if (__unlikely(!obj)) {
+		ac = CO_SDO_AC_NO_OBJ;
+		goto error;
+	}
+	co_sub_t *sub = co_obj_find_sub(obj, node);
+	if (__unlikely(!sub)) {
+		ac = CO_SDO_AC_NO_SUB;
+		goto error;
+	}
+	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &cobid);
+
+error:
+	return co_gw_send_con(gw, req, 0, ac);
+}
+#endif
 
 static int
 co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)

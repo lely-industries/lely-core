@@ -63,6 +63,9 @@
 //! CANopen gateway service: Error control event received.
 #define CO_GW_SRV_EC	0x3a
 
+//! CANopen gateway service: Emergency event received.
+#define CO_GW_SRV_EMCY	0x42
+
 //! CANopen gateway service: Initialize gateway.
 #define CO_GW_SRV_INIT	0x51
 
@@ -71,6 +74,12 @@
 
 //! CANopen gateway service: Set node-ID.
 #define CO_GW_SRV_SET_ID	0x55
+
+//! CANopen gateway service: Start emergency consumer.
+#define CO_GW_SRV_EMCY_START	0x56
+
+//! CANopen gateway service: Stop emergency consumer.
+#define CO_GW_SRV_EMCY_STOP	0x57
 
 //! CANopen gateway service: Set command time-out.
 #define CO_GW_SRV_SET_CMD_TIMEOUT	0x58
@@ -283,6 +292,22 @@ struct co_gw_req_set_hb {
 	co_unsigned16_t ms;
 };
 
+//! The parameters of a CANopen gateway 'Start/Stop emergency consumer' request.
+struct co_gw_req_set_emcy {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_EMCY_START or #CO_GW_SRV_EMCY_STOP).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The COB-ID.
+	co_unsigned32_t cobid;
+};
+
 //! The parameters of a CANopen gateway 'Set command time-out' request.
 struct co_gw_req_set_cmd_timeout {
 	//! The size of this struct (in bytes).
@@ -383,6 +408,24 @@ struct co_gw_ind_ec {
 	co_unsigned8_t st;
 	//! The internal error code (0 on success).
 	int iec;
+};
+
+//! The parameters of a CANopen gateway 'Emergency event received' indication.
+struct co_gw_ind_emcy {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_EMCY).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The emergency error code.
+	co_unsigned16_t ec;
+	//! The error register.
+	co_unsigned8_t er;
+	//! The manufacturer-specific error code.
+	uint8_t msef[5];
 };
 
 #ifdef __cplusplus
