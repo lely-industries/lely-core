@@ -33,7 +33,13 @@
 #include <lely/co/gw.h>
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
+#ifndef LELY_NO_CO_RPDO
+#include <lely/co/rpdo.h>
+#endif
 #include <lely/co/sdo.h>
+#ifndef LELY_NO_CO_TPDO
+#include <lely/co/tpdo.h>
+#endif
 
 #include <assert.h>
 #include <stdlib.h>
@@ -123,6 +129,14 @@ static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t ec, co_unsigned8_t er, uint8_t msef[5],
 		void *data);
 #endif
+#ifndef LELY_NO_CO_RPDO
+/*!
+ * The callback function invoked when a PDO is received from a node on a CANopen
+ * network.
+ */
+static void co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac,
+		const void *ptr, size_t n, void *data);
+#endif
 
 //! A CANopen gateway.
 struct __co_gw {
@@ -147,6 +161,27 @@ struct __co_gw {
 	//! A pointer to the user-specified data for #rate_func.
 	void *rate_data;
 };
+
+#ifndef LELY_NO_CO_RPDO
+//! Processes a 'Configure RPDO' request.
+static int co_gw_recv_set_rpdo(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+#endif
+#ifndef LELY_NO_CO_TPDO
+//! Processes a 'Configure TPDO' request.
+static int co_gw_recv_set_tpdo(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+#endif
+#ifndef LELY_NO_CO_RPDO
+//! Processes a 'Read PDO data' request.
+static int co_gw_recv_pdo_read(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+#endif
+#ifndef LELY_NO_CO_TPDO
+//! Processes a 'Write PDO data' request.
+static int co_gw_recv_pdo_write(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+#endif
 
 #ifndef LELY_NO_CO_MASTER
 //! Processes an NMT request.
@@ -388,6 +423,18 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// network-ID is 0, use the default ID.
 	co_unsigned16_t net = gw->def;
 	switch (req->srv) {
+#ifndef LELY_NO_CO_RPDO
+	case CO_GW_SRV_SET_RPDO:
+#endif
+#ifndef LELY_NO_CO_TPDO
+	case CO_GW_SRV_SET_TPDO:
+#endif
+#ifndef LELY_NO_CO_RPDO
+	case CO_GW_SRV_PDO_READ:
+#endif
+#ifndef LELY_NO_CO_TPDO
+	case CO_GW_SRV_PDO_WRITE:
+#endif
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
@@ -482,6 +529,22 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	}
 
 	switch (req->srv) {
+#ifndef LELY_NO_CO_RPDO
+	case CO_GW_SRV_SET_RPDO:
+		return co_gw_recv_set_rpdo(gw, net, req);
+#endif
+#ifndef LELY_NO_CO_TPDO
+	case CO_GW_SRV_SET_TPDO:
+		return co_gw_recv_set_tpdo(gw, net, req);
+#endif
+#ifndef LELY_NO_CO_RPDO
+	case CO_GW_SRV_PDO_READ:
+		return co_gw_recv_pdo_read(gw, net, req);
+#endif
+#ifndef LELY_NO_CO_TPDO
+	case CO_GW_SRV_PDO_WRITE:
+		return co_gw_recv_pdo_write(gw, net, req);
+#endif
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_START, req);
@@ -609,6 +672,16 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
 	co_nmt_set_st_ind(net->nmt, &co_gw_net_st_ind, net);
 
+#ifndef LELY_NO_CO_RPDO
+	if (co_nmt_get_st(net->nmt) == CO_NMT_ST_START) {
+		for (co_unsigned16_t i = 1; i <= 512; i++) {
+			co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, i);
+			if (pdo)
+				co_rpdo_set_ind(pdo, &co_gw_net_rpdo_ind, net);
+		}
+	}
+#endif
+
 	return net;
 }
 
@@ -616,6 +689,14 @@ static void
 co_gw_net_destroy(struct co_gw_net *net)
 {
 	if (net) {
+#ifndef LELY_NO_CO_RPDO
+		for (co_unsigned16_t i = 1; i <= 512; i++) {
+			co_rpdo_t *pdo = co_nmt_get_rpdo(net->nmt, i);
+			if (pdo)
+				co_rpdo_set_ind(pdo, NULL, NULL);
+		}
+#endif
+
 #ifndef LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(net->nmt);
 		if (emcy)
@@ -646,6 +727,14 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 		if (emcy)
 			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_RPDO
+		for (co_unsigned16_t i = 1; i <= 512; i++) {
+			co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, i);
+			if (pdo)
+				co_rpdo_set_ind(pdo, &co_gw_net_rpdo_ind, net);
+		}
 #endif
 		break;
 	}
@@ -762,6 +851,249 @@ co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 		.msef = { msef[0], msef[1], msef[2], msef[3], msef[4] }
 	};
 	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+}
+#endif
+
+#ifndef LELY_NO_CO_RPDO
+static void
+co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
+		size_t n, void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	if (__unlikely(ac))
+		return;
+
+	struct co_gw_ind_rpdo ind = {
+		.size = CO_GW_IND_RPDO_SIZE,
+		.srv = CO_GW_SRV_RPDO,
+		.net = net->id,
+		.num = co_rpdo_get_num(pdo),
+		.n = 0x40
+	};
+
+	const struct co_pdo_map_par *par = co_rpdo_get_map_par(pdo);
+	if (__unlikely(co_pdo_unmap(par, ptr, n, ind.val, &ind.n)))
+		return;
+	ind.size += ind.n * sizeof(*ind.val);
+
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+}
+#endif
+
+#ifndef LELY_NO_CO_RPDO
+static int
+co_gw_recv_set_rpdo(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_SET_RPDO);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < CO_GW_REQ_SET_RPDO_SIZE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_set_rpdo *par =
+			(const struct co_gw_req_set_rpdo *)req;
+	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_SET_RPDO_SIZE
+			+ par->n * sizeof(*par->map))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	struct co_pdo_comm_par comm = {
+		.n = 2,
+		.cobid = par->cobid,
+		.trans = par->trans
+	};
+
+	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+	map.n = par->n;
+	for (co_unsigned8_t i = 0; i < par->n; i++)
+		map.map[i] = par->map[i];
+
+	co_unsigned32_t ac = co_dev_cfg_rpdo(dev, par->num, &comm, &map);
+
+	return co_gw_send_con(gw, req, 0, ac);
+}
+#endif
+
+#ifndef LELY_NO_CO_TPDO
+static int
+co_gw_recv_set_tpdo(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_SET_TPDO);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < CO_GW_REQ_SET_TPDO_SIZE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_set_tpdo *par =
+			(const struct co_gw_req_set_tpdo *)req;
+	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_SET_TPDO_SIZE
+			+ par->n * sizeof(*par->map))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	struct co_pdo_comm_par comm = {
+		.n = 6,
+		.cobid = par->cobid,
+		.trans = par->trans,
+		.inhibit = par->inhibit,
+		.event = par->event,
+		.sync = par->sync
+	};
+
+	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+	map.n = par->n;
+	for (co_unsigned8_t i = 0; i < par->n; i++)
+		map.map[i] = par->map[i];
+
+	co_unsigned32_t ac = co_dev_cfg_tpdo(dev, par->num, &comm, &map);
+
+	return co_gw_send_con(gw, req, 0, ac);
+}
+#endif
+
+#ifndef LELY_NO_CO_RPDO
+static int
+co_gw_recv_pdo_read(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_PDO_READ);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_pdo_read))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_pdo_read *par =
+			(const struct co_gw_req_pdo_read *)req;
+
+	int iec = 0;
+	co_unsigned32_t ac = 0;
+
+	co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, par->num);
+	if (__unlikely(!pdo)) {
+		iec = CO_GW_IEC_INTERN;
+		goto error;
+	}
+	const struct co_pdo_comm_par *comm = co_rpdo_get_comm_par(pdo);
+	if (comm->trans == 0xfc || comm->trans == 0xfd) {
+		// TODO(jseldenthuis@lely.com): Send an RTR and wait for the
+		// result.
+		iec = CO_GW_IEC_INTERN;
+		goto error;
+	}
+	const struct co_pdo_map_par *map = co_rpdo_get_map_par(pdo);
+
+	// Read the mapped values from the object dictionary.
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	uint8_t buf[CAN_MAX_LEN];
+	size_t n = sizeof(buf);
+	ac = co_pdo_up(map, dev, &sdo_req, buf, &n);
+	co_sdo_req_fini(&sdo_req);
+	if (__unlikely(ac))
+		goto error;
+
+	struct co_gw_con_pdo_read con = {
+		.size = sizeof(con),
+		.srv = req->srv,
+		.data = req->data,
+		.net = net,
+		.num = par->num
+	};
+
+	// Unmap the PDO values.
+	ac = co_pdo_unmap(map, buf, n, con.val, &con.n);
+	if (__unlikely(ac))
+		goto error;
+
+	con.size += con.n * sizeof(*con.val);
+	return co_gw_send_srv(gw, (struct co_gw_srv *)&con);
+
+error:
+	return co_gw_send_con(gw, req, iec, ac);
+}
+#endif
+
+#ifndef LELY_NO_CO_TPDO
+static int
+co_gw_recv_pdo_write(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_PDO_WRITE);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < CO_GW_REQ_PDO_WRITE_SIZE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_pdo_write *par =
+			(const struct co_gw_req_pdo_write *)req;
+	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_PDO_WRITE_SIZE
+			+ par->n * sizeof(*par->val))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	int iec = 0;
+	co_unsigned32_t ac = 0;
+
+	co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, par->num);
+	if (__unlikely(!pdo)) {
+		iec = CO_GW_IEC_INTERN;
+		goto error;
+	}
+	const struct co_pdo_map_par *map = co_tpdo_get_map_par(pdo);
+
+	// Map the values into a PDO.
+	uint8_t buf[CAN_MAX_LEN];
+	size_t n = sizeof(buf);
+	ac = co_pdo_map(map, par->val, par->n, buf, &n);
+	if (__unlikely(ac))
+		goto error;
+
+	// Write the mapped values to the object dictionary.
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	ac = co_pdo_dn(map, dev, &sdo_req, buf, n);
+	co_sdo_req_fini(&sdo_req);
+	if (__unlikely(ac))
+		goto error;
+
+	// Trigger the event-based TPDO, if necessary.
+	errc_t errc = 0;
+	if (__unlikely(co_tpdo_event(pdo) == -1)) {
+		iec = errnum2iec(get_errnum());
+		set_errc(errc);
+	}
+
+error:
+	return co_gw_send_con(gw, req, iec, ac);
 }
 #endif
 

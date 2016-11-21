@@ -33,6 +33,21 @@
 //! The low number of the version of CiA 309-1 implemented by this gateway.
 #define CO_GW_PROT_LO	0
 
+//! CANopen gateway service: Configure RPDO.
+#define CO_GW_SRV_SET_RPDO	0x21
+
+//! CANopen gateway service: Configure TPDO.
+#define CO_GW_SRV_SET_TPDO	0x22
+
+//! CANopen gateway service: Read PDO data.
+#define CO_GW_SRV_PDO_READ	0x23
+
+//! CANopen gateway service: Write PDO data.
+#define CO_GW_SRV_PDO_WRITE	0x24
+
+//! CANopen gateway service: RPDO received.
+#define CO_GW_SRV_RPDO	0x25
+
 //! CANopen gateway service: Start node.
 #define CO_GW_SRV_NMT_START	0x31
 
@@ -230,6 +245,100 @@ struct co_gw_req_node {
 	co_unsigned8_t node;
 };
 
+//! The parameters of a CANopen gateway 'Configure RPDO' request.
+struct co_gw_req_set_rpdo {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_RPDO).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+	//! The COB-ID.
+	co_unsigned32_t cobid;
+	//! The transmission type.
+	co_unsigned8_t trans;
+	//! Number of mapped objects in PDO.
+	co_unsigned8_t n;
+	//! An array of objects to be mapped.
+	co_unsigned32_t map[0x40];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'Configure RPDO' request.
+#define CO_GW_REQ_SET_RPDO_SIZE \
+	offsetof(struct co_gw_req_set_rpdo, map)
+
+//! The parameters of a CANopen gateway 'Configure TPDO' request.
+struct co_gw_req_set_tpdo {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_TPDO).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+	//! The COB-ID.
+	co_unsigned32_t cobid;
+	//! The transmission type.
+	co_unsigned8_t trans;
+	//! The inhibit time.
+	co_unsigned16_t inhibit;
+	//! The event timer.
+	co_unsigned16_t event;
+	//! The SYNC start value.
+	co_unsigned8_t sync;
+	//! Number of mapped objects in PDO.
+	co_unsigned8_t n;
+	//! An array of objects to be mapped.
+	co_unsigned32_t map[0x40];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'Configure TPDO' request.
+#define CO_GW_REQ_SET_TPDO_SIZE \
+	offsetof(struct co_gw_req_set_tpdo, map)
+
+//! The parameters of a CANopen gateway 'Read PDO' request.
+struct co_gw_req_pdo_read {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_PDO_READ).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+};
+
+//! The parameters of a CANopen gateway 'Write PDO' request.
+struct co_gw_req_pdo_write {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_PDO_WRITE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+	//! Number of mapped objects in PDO.
+	co_unsigned8_t n;
+	//! An array of object values.
+	co_unsigned64_t val[0x40];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'Write PDO' request.
+#define CO_GW_REQ_PDO_WRITE_SIZE \
+	offsetof(struct co_gw_req_pdo_write, val)
+
 //! The parameters of a CANopen gateway 'Enable node guarding' request.
 struct co_gw_req_nmt_set_ng {
 	//! The size of this struct (in bytes).
@@ -363,6 +472,33 @@ struct co_gw_con {
 	co_unsigned32_t ac;
 };
 
+//! The parameters of a CANopen gateway 'Read PDO' confirmation.
+struct co_gw_con_pdo_read {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_PDO_READ).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+	//! Number of mapped objects in PDO.
+	co_unsigned8_t n;
+	//! An array of object values.
+	co_unsigned64_t val[0x40];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'Read PDO' confirmation.
+#define CO_GW_CON_PDO_READ_SIZE \
+	offsetof(struct co_gw_con_pdo_read, val)
+
+
 //! The parameters of a CANopen gateway 'Get version' confirmation.
 struct co_gw_con_get_version {
 	//! The size of this struct (in bytes).
@@ -390,6 +526,26 @@ struct co_gw_con_get_version {
 	//! The protocol version (low number).
 	co_unsigned8_t prot_lo;
 };
+
+//! The parameters of a CANopen gateway 'RPDO received' indication.
+struct co_gw_ind_rpdo {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_RPDO).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The PDO number.
+	co_unsigned16_t num;
+	//! Number of mapped objects in PDO.
+	co_unsigned8_t n;
+	//! An array of object values.
+	co_unsigned64_t val[0x40];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'RPDO received' indication.
+#define CO_GW_IND_RPDO_SIZE \
+	offsetof(struct co_gw_ind_rpdo, val)
 
 /*!
  * The parameters of a CANopen gateway 'Error control event received'
