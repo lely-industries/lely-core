@@ -216,7 +216,7 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 		uint8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
 		stle_u64(tmp, val[i]);
 		if (buf && pn && offset + len <= *pn * 8)
-			bcpyle(buf, offset, val, 0, len);
+			bcpyle(buf, offset, tmp, 0, len);
 
 		offset += len;
 	}
