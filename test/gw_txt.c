@@ -6,6 +6,7 @@
 #include "test.h"
 
 #define TEST_WAIT	10
+#define TEST_STEP	2
 
 static const char *cmds[] = {
 	"[1] set command_timeout 1000",
@@ -23,7 +24,11 @@ static const char *cmds[] = {
 	"[13] reset comm",
 	"[14] preop",
 	"[15] stop",
-	"[16] start"
+	"[16] start",
+	"[18] set tpdo 1 0x202 sync1 2 0x2000 0 u32 0x2001 0 u32",
+	"[17] set rpdo 1 0x182 sync0 2 0x2002 0 u32 0x2003 0 u32",
+	"[19] write pdo 1 2 0x1234 0x5678",
+	"[20] read pdo 1",
 };
 
 int gw_send(const struct co_gw_srv *srv, void *data);
@@ -77,6 +82,8 @@ main(void)
 		do co_test_step(&test);
 		while (co_gw_txt_pending(gw_txt));
 	}
+	for (int i = 0; i < TEST_STEP; i++)
+		co_test_step(&test);
 
 	co_gw_txt_destroy(gw_txt);
 	co_gw_destroy(gw);

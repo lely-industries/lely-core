@@ -9,22 +9,31 @@ BaudRate_250=1
 BaudRate_500=1
 BaudRate_800=1
 BaudRate_1000=1
+NrOfRxPDO=1
+NrOfTxPDO=1
+CompactPDO=0x3f
 
 [DeviceComissioning]
 NodeID=0x02
 
 [MandatoryObjects]
-SupportedObjects=4
+SupportedObjects=3
 1=0x1000
 2=0x1001
-3=0x1017
-4=0x1018
+3=0x1018
 
 [OptionalObjects]
-SupportedObjects=0
+SupportedObjects=5
+1=0x1005
+2=0x1017
+3=0x1600
+4=0x1800
+5=0x1A00
 
 [ManufacturerObjects]
-SupportedObjects=0
+SupportedObjects=2
+1=0x2000
+2=0x2001
 
 [1000]
 ParameterName=Device type
@@ -36,6 +45,12 @@ DefaultValue=0x01020304
 ParameterName=Error register
 DataType=0x0005
 AccessType=ro
+
+[1005]
+ParameterName=COB-ID SYNC message
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x00000080
 
 [1017]
 ParameterName=Producer heartbeat time
@@ -74,4 +89,63 @@ AccessType=ro
 ParameterName=Serial number
 DataType=0x0007
 AccessType=ro
+
+[1600]
+ParameterName=RPDO mapping parameter
+ObjectType=0x09
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1600Value]
+NrOfEntries=2
+1=0x20000020
+2=0x20010020
+
+[1800]
+SubNumber=3
+ParameterName=TPDO communication parameter
+ObjectType=0x09
+
+[1800sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x02
+
+[1800sub1]
+ParameterName=COB-ID used by TPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x180
+
+[1800sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x01
+
+[1A00]
+ParameterName=TPDO mapping parameter
+ObjectType=0x09
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1A00Value]
+NrOfEntries=2
+1=0x20000020
+2=0x20010020
+
+[2000]
+ParameterName=Test 1
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
+
+[2001]
+ParameterName=Test 2
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
 
