@@ -54,7 +54,7 @@ main(void)
 	tap_assert(net);
 
 	struct co_test test;
-	co_test_init(&test, net);
+	co_test_init(&test, net, 0);
 
 	mdev = co_dev_create_from_dcf_file("nmt-master.dcf");
 	tap_assert(mdev);

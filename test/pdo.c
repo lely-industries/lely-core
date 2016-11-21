@@ -15,7 +15,7 @@ main(void)
 	can_net_t *net = can_net_create();
 	tap_assert(net);
 	struct co_test test;
-	co_test_init(&test, net);
+	co_test_init(&test, net, 0);
 
 	co_dev_t *rdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/pdo-receive.dcf");

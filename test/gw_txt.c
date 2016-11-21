@@ -5,6 +5,8 @@
 
 #include "test.h"
 
+#define TEST_WAIT	10
+
 static const char *cmds[] = {
 	"[1] set command_timeout 1000",
 	"[2] set command_size 65536",
@@ -37,7 +39,7 @@ main(void)
 	tap_assert(net);
 
 	struct co_test test;
-	co_test_init(&test, net);
+	co_test_init(&test, net, TEST_WAIT);
 
 	co_dev_t *mdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/gw_txt-master.dcf");

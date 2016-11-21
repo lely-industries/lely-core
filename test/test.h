@@ -18,6 +18,7 @@ struct co_test {
 	co_wtm_t *wtm;
 #endif
 	struct can_buf buf;
+	int wait;
 	int done;
 };
 
@@ -25,7 +26,7 @@ struct co_test {
 extern "C" {
 #endif
 
-static void co_test_init(struct co_test *test, can_net_t *net);
+static void co_test_init(struct co_test *test, can_net_t *net, int wait);
 static void co_test_fini(struct co_test *test);
 
 static void co_test_step(struct co_test *test);
@@ -44,7 +45,7 @@ static int co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes,
 #endif
 
 static void
-co_test_init(struct co_test *test, can_net_t *net)
+co_test_init(struct co_test *test, can_net_t *net, int wait)
 {
 	tap_assert(test);
 	tap_assert(net);
@@ -61,6 +62,7 @@ co_test_init(struct co_test *test, can_net_t *net)
 	co_wtm_set_recv_func(test->wtm, &co_test_wtm_recv, test);
 #endif
 
+	test->wait = wait;
 	test->done = 0;
 
 	co_test_step(test);
@@ -102,6 +104,14 @@ co_test_step(struct co_test *test)
 		tap_diag("%s", s);
 
 		can_net_recv(test->net, &msg);
+	}
+
+	if (test->wait > 0) {
+		const struct timespec wait = {
+			test->wait / 1000,
+			(test->wait % 1000) * 1000000
+		};
+		nanosleep(&wait, NULL);
 	}
 }
 
