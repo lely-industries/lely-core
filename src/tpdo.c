@@ -397,12 +397,12 @@ co_tpdo_event(co_tpdo_t *pdo)
 	if (pdo->comm.trans && pdo->comm.trans < 0xfd)
 		return 0;
 
-	if (pdo->comm.trans < 0xfe) {
+	if (!pdo->comm.trans) {
 		// Ignore events occurring after the synchronous time window has
 		// expired.
 		if (!pdo->event)
 			pdo->event = !pdo->swnd;
-	} else {
+	} else if (pdo->comm.trans >= 0xfe) {
 		if (pdo->comm.inhibit) {
 			// Check whether the inhibit time has passed.
 			struct timespec now;
@@ -475,7 +475,10 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 	if (__unlikely(co_tpdo_init_frame(pdo, &msg)))
 		return -1;
 
-	if (pdo->comm.trans == 0xfc) {
+	if (pdo->comm.trans <= 0xf0) {
+		if (__unlikely(can_net_send(pdo->net, &msg) == -1))
+			return -1;
+	} else if (pdo->comm.trans == 0xfc) {
 		if (__unlikely(!pdo->buf)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -487,8 +490,6 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 				return -1;
 			can_buf_write(pdo->buf, &msg, 1);
 		}
-	} else if (__unlikely(can_net_send(pdo->net, &msg) == -1)) {
-		return -1;
 	}
 
 	return 0;
@@ -531,7 +532,7 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 	assert(pdo);
 
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (!pdo->comm.trans
-			|| pdo->comm.trans >= 0xfd) && pdo->comm.event) {
+			|| pdo->comm.trans >= 0xfe) && pdo->comm.event) {
 		if (!pdo->timer_event) {
 			pdo->timer_event = can_timer_create();
 			if (__unlikely(!pdo->timer_event))
