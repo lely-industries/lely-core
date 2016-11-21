@@ -31,9 +31,11 @@
 #include <lely/co/dev.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
+#include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 //! A CANopen ASCII gateway.
@@ -54,9 +56,13 @@ struct __co_gw_txt {
 static int co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con *con);
 
+//! Processes a 'Read PDO data' confirmation.
+static int co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_pdo_read *con);
+
 //! Processes a 'Get version' confirmation.
 static int co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
-		const struct co_gw_con *con);
+		const struct co_gw_con_get_version *con);
 
 /*!
  * Processes a confirmation with a non-zero internal error code or SDO abort
@@ -64,6 +70,10 @@ static int co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
  */
 static int co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 		co_unsigned32_t ac);
+
+//! Processes an 'RPDO received' indication.
+static int co_gw_txt_recv_rpdo(co_gw_txt_t *gw,
+		const struct co_gw_ind_rpdo *ind);
 
 //! Processes an 'Error control event received' indication.
 static int co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind);
@@ -89,6 +99,23 @@ static int co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt);
 
 //! Invokes the callback function to send a request.
 static void co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req);
+
+//! Sends a 'Configure RPDO' request after parsing its parameters.
+static size_t co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
+//! Sends a 'Configure TPDO' request after parsing its parameters.
+static size_t co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
+//! Sends a 'Read PDO data' request after parsing its parameters.
+static size_t co_gw_txt_send_pdo_read(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
+//! Sends a 'Write PDO data' request after parsing its parameters.
+static size_t co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 
 //! Sends an 'Enable node guarding' request after parsing its parameters.
 static size_t co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
@@ -146,6 +173,19 @@ static size_t co_gw_txt_lex_srv(const char *begin, const char *end,
 //! Lexes a single command.
 static size_t co_gw_txt_lex_cmd(const char *begin, const char *end,
 		struct floc *at);
+
+//! Lexes the communication and mapping parameters of a configure PDO request.
+static size_t co_gw_txt_lex_pdo(const char *begin, const char *end,
+		struct floc *at, int ext, co_unsigned16_t *pnum,
+		struct co_pdo_comm_par *pcomm, struct co_pdo_map_par *pmap);
+
+//! Lexes a data type.
+static size_t co_gw_txt_lex_type(const char *begin, const char *end,
+		struct floc *at, co_unsigned16_t *ptype);
+
+//! Lexes the transmission type of a configure PDO request.
+static size_t co_gw_txt_lex_trans(const char *begin, const char *end,
+		struct floc *at, co_unsigned8_t *ptrans);
 
 LELY_CO_EXPORT void *
 __co_gw_txt_alloc(void)
@@ -237,6 +277,10 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	}
 
 	switch (srv->srv) {
+	case CO_GW_SRV_SET_RPDO:
+	case CO_GW_SRV_SET_TPDO:
+	case CO_GW_SRV_PDO_READ:
+	case CO_GW_SRV_PDO_WRITE:
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
 	case CO_GW_SRV_NMT_ENTER_PREOP:
@@ -254,7 +298,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	case CO_GW_SRV_SET_NET:
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
-	case CO_GW_SRV_SET_CMD_SIZE: {
+	case CO_GW_SRV_SET_CMD_SIZE:
 		if (__unlikely(srv->size < sizeof(struct co_gw_con))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -262,25 +306,26 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		const struct co_gw_con *con = (const struct co_gw_con *)srv;
 		co_unsigned32_t seq = (uintptr_t)con->data;
 		return co_gw_txt_recv_con(gw, seq, con);
-	}
-	case CO_GW_SRV_EC: {
+	case CO_GW_SRV_RPDO:
+		if (__unlikely(srv->size < CO_GW_IND_RPDO_SIZE)) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_rpdo(gw,
+				(const struct co_gw_ind_rpdo *)srv);
+	case CO_GW_SRV_EC:
 		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		const struct co_gw_ind_ec *ind =
-				(const struct co_gw_ind_ec *)srv;
-		return co_gw_txt_recv_ec(gw, ind);
-	}
-	case CO_GW_SRV_EMCY: {
+		return co_gw_txt_recv_ec(gw, (const struct co_gw_ind_ec *)srv);
+	case CO_GW_SRV_EMCY:
 		if (__unlikely(srv->size < sizeof(struct co_gw_ind_emcy))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		const struct co_gw_ind_emcy *ind =
-				(const struct co_gw_ind_emcy *)srv;
-		return co_gw_txt_recv_emcy(gw, ind);
-	}
+		return co_gw_txt_recv_emcy(gw,
+				(const struct co_gw_ind_emcy *)srv);
 	default:
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -354,6 +399,8 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 			goto error;
 		}
 		break;
+	case CO_GW_SRV_SET_RPDO:
+	case CO_GW_SRV_SET_TPDO:
 	case CO_GW_SRV_INIT:
 	case CO_GW_SRV_SET_HB:
 	case CO_GW_SRV_SET_ID:
@@ -376,6 +423,22 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 
 	chars = 0;
 	switch (srv) {
+	case CO_GW_SRV_SET_RPDO:
+		chars = co_gw_txt_send_set_rpdo(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_SET_TPDO:
+		chars = co_gw_txt_send_set_tpdo(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_PDO_READ:
+		chars = co_gw_txt_send_pdo_read(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_PDO_WRITE:
+		chars = co_gw_txt_send_pdo_write(gw, srv, data, net, cp, end,
+				floc);
+		break;
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
 	case CO_GW_SRV_NMT_ENTER_PREOP:
@@ -515,32 +578,81 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		return co_gw_txt_recv_err(gw, seq, con->iec, con->ac);
 
 	switch (con->srv) {
+	case CO_GW_SRV_PDO_READ:
+		if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE)) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_pdo_read(gw, seq,
+				(const struct co_gw_con_pdo_read *)con);
 	case CO_GW_SRV_GET_VERSION:
-		return co_gw_txt_recv_get_version(gw, seq, con);
+		if (__unlikely(con->size
+				< sizeof(struct co_gw_con_get_version))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_get_version(gw, seq,
+				(const struct co_gw_con_get_version *)con);
 	default:
 		return co_gw_txt_recv_err(gw, seq, 0, 0);
 	}
 }
 
 static int
+co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_pdo_read *con)
+{
+	assert(con);
+	assert(con->srv == CO_GW_SRV_PDO_READ);
+
+	if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE
+			+ con->n * sizeof(*con->val))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+
+	errc_t errc = get_errc();
+
+	char *buf;
+	int result = asprintf(&buf, "[%u] %u pdo %u", seq, con->net, con->n);
+	if (__unlikely(result < 0)) {
+		errc = get_errc();
+		buf = NULL;
+		goto error;
+	}
+
+	for (co_unsigned8_t i = 0; i < con->n; i++) {
+		char *tmp;
+		result = asprintf(&tmp, "%s 0x%" PRIx64, buf, con->val[i]);
+		if (__unlikely(result < 0)) {
+			errc = get_errc();
+			goto error;
+		}
+		free(buf);
+		buf = tmp;
+	}
+
+	result = co_gw_txt_recv_txt(gw, buf);
+
+error:
+	free(buf);
+	set_errc(errc);
+	return result;
+}
+
+static int
 co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
-		const struct co_gw_con *con)
+		const struct co_gw_con_get_version *con)
 {
 	assert(con);
 	assert(con->srv == CO_GW_SRV_GET_VERSION);
 
-	if (__unlikely(con->size < sizeof(struct co_gw_con_get_version))) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-	const struct co_gw_con_get_version *par =
-			(const struct co_gw_con_get_version *)con;
-
 	return co_gw_txt_recv_fmt(gw, "[%u] %u %u %u.%u %u %u %u.%u %u.%u",
-			seq, par->vendor_id, par->product_code,
-			(par->revision >> 16) & 0xffff, par->revision & 0xffff,
-			par->serial_nr, par->gw_class, par->prot_hi,
-			par->prot_lo, CO_GW_TXT_IMPL_HI, CO_GW_TXT_IMPL_LO);
+			seq, con->vendor_id, con->product_code,
+			(con->revision >> 16) & 0xffff, con->revision & 0xffff,
+			con->serial_nr, con->gw_class, con->prot_hi,
+			con->prot_lo, CO_GW_TXT_IMPL_HI, CO_GW_TXT_IMPL_LO);
 }
 
 static int
@@ -555,6 +667,47 @@ co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 				co_sdo_ac2str(ac));
 	else
 		return co_gw_txt_recv_fmt(gw, "[%u] OK", seq);
+}
+
+static int
+co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
+{
+	assert(ind);
+	assert(ind->srv == CO_GW_SRV_RPDO);
+
+	if (__unlikely(ind->size < CO_GW_IND_RPDO_SIZE
+			+ ind->n * sizeof(*ind->val))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	errc_t errc = get_errc();
+
+	char *buf;
+	int result = asprintf(&buf, "%u pdo %u", ind->net, ind->n);
+	if (__unlikely(result < 0)) {
+		errc = get_errc();
+		buf = NULL;
+		goto error;
+	}
+
+	for (co_unsigned8_t i = 0; i < ind->n; i++) {
+		char *tmp;
+		result = asprintf(&tmp, "%s 0x%" PRIx64, buf, ind->val[i]);
+		if (__unlikely(result < 0)) {
+			errc = get_errc();
+			goto error;
+		}
+		free(buf);
+		buf = tmp;
+	}
+
+	result = co_gw_txt_recv_txt(gw, buf);
+
+error:
+	free(buf);
+	set_errc(errc);
+	return result;
 }
 
 static int
@@ -639,6 +792,184 @@ co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt)
 	}
 
 	return gw->recv_func(txt, gw->recv_data) ? -1 : 0;
+}
+
+static size_t
+co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_SET_RPDO);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t num = 0;
+	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
+	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+	if (__unlikely(!(chars = co_gw_txt_lex_pdo(cp, end, at, 0, &num, &comm,
+			&map))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req_set_rpdo req = {
+		.size = CO_GW_REQ_SET_RPDO_SIZE + map.n * sizeof(*map.map),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.num = num,
+		.cobid = comm.cobid,
+		.trans = comm.trans,
+		.n = map.n
+	};
+	for (co_unsigned8_t i = 0; i < map.n; i++)
+		req.map[i] = map.map[i];
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_SET_TPDO);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	// Check if this is an extended configure TPDO command.
+	int ext = 0;
+	if ((chars = lex_char('x', cp, end, at))) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+		ext = 1;
+	}
+
+	co_unsigned16_t num = 0;
+	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
+	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+	if (__unlikely(!(chars = co_gw_txt_lex_pdo(cp, end, at, ext, &num,
+			&comm, &map))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req_set_tpdo req = {
+		.size = CO_GW_REQ_SET_TPDO_SIZE + map.n * sizeof(*map.map),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.num = num,
+		.cobid = comm.cobid,
+		.trans = comm.trans,
+		.inhibit = comm.inhibit,
+		.event = comm.event,
+		.sync = comm.sync,
+		.n = map.n
+	};
+	for (co_unsigned8_t i = 0; i < map.n; i++)
+		req.map[i] = map.map[i];
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_pdo_read(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_PDO_READ);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t num = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(!num || num > 512)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"PDO number must be in the range [1..512]");
+		return 0;
+	}
+
+	struct co_gw_req_pdo_read req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.num = num
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_PDO_WRITE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t num = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(!num || num > 512)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"PDO number must be in the range [1..512]");
+		return 0;
+	}
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	struct co_gw_req_pdo_write req = {
+		.size = CO_GW_REQ_PDO_WRITE_SIZE,
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.num = num
+	};
+
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &req.n)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected number of values");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(req.n > 0x40)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"number of values must be in the range [0..64]");
+		return 0;
+	}
+
+	for (co_unsigned8_t i = 0; i < req.n; i++) {
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		chars = lex_c99_u64(cp, end, at, &req.val[i]);
+		if (__unlikely(!chars)) {
+			diag_if(DIAG_ERROR, 0, at, "expected value");
+			return 0;
+		}
+		cp += chars;
+	}
+
+	req.size += req.n * sizeof(*req.val);
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
 }
 
 static size_t
@@ -1093,6 +1424,11 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	chars = co_gw_txt_lex_cmd(cp, end, at);
+	if (__unlikely(!chars)) {
+		diag_if(DIAG_ERROR, 0, at, "expected command");
+		return 0;
+	}
+
 	if (!strncmp("boot_up_indication", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_SET_BOOTUP_IND;
@@ -1147,6 +1483,23 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 			|| !strncmp("preoperational", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_NMT_ENTER_PREOP;
+	} else if (!strncmp("r", cp, chars) || !strncmp("read", cp, chars)) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		if ((chars = co_gw_txt_lex_cmd(cp, end, at))) {
+			if (!strncmp("p", cp, chars)
+					|| !strncmp("pdo", cp, chars)) {
+				cp += chars;
+				srv = CO_GW_SRV_PDO_READ;
+			} else {
+				diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
+				return 0;
+			}
+		} else {
+			diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
+			return 0;
+		}
 	} else if (!strncmp("reset", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
@@ -1187,9 +1540,21 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		} else if (!strncmp("node", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_NODE;
+		} else if (!strncmp("rpdo", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_SET_RPDO;
+		} else if (!strncmp("tpdo", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_SET_TPDO;
+		} else if (!strncmp("tpdox", cp, chars)) {
+			// Wait with parsing the 'x' until co_gw_txt_lex_pdo().
+			cp += chars - 1;
+			if (at)
+				at->column--;
+			srv = CO_GW_SRV_SET_TPDO;
 		} else {
 			diag_if(DIAG_ERROR, 0, at,
-					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network' or 'node'");
+					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network', 'node', 'rpdo' or 'tpdo[x]'");
 			return 0;
 		}
 	} else if (!strncmp("start", cp, chars)) {
@@ -1198,8 +1563,25 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 	} else if (!strncmp("stop", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_NMT_STOP;
+	} else if (!strncmp("w", cp, chars) || !strncmp("write", cp, chars)) {
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		if ((chars = co_gw_txt_lex_cmd(cp, end, at))) {
+			if (!strncmp("p", cp, chars)
+					|| !strncmp("pdo", cp, chars)) {
+				cp += chars;
+				srv = CO_GW_SRV_PDO_WRITE;
+			} else {
+				diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
+				return 0;
+			}
+		} else {
+			diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
+			return 0;
+		}
 	} else {
-		diag_if(DIAG_ERROR, 0, at, "expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'reset', 'set', 'start' or 'stop'");
+		diag_if(DIAG_ERROR, 0, at, "expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
 		return 0;
 	}
 
@@ -1226,6 +1608,260 @@ co_gw_txt_lex_cmd(const char *begin, const char *end, struct floc *at)
 		cp++;
 
 	return floc_lex(at, begin, cp);
+}
+
+static size_t
+co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
+		co_unsigned16_t *pnum, struct co_pdo_comm_par *pcomm,
+		struct co_pdo_map_par *pmap)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t num = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(!num || num > 512)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"PDO number must be in the range [1..512]");
+		return 0;
+	}
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &comm.cobid)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected COB-ID");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = co_gw_txt_lex_trans(cp, end, at,
+			&comm.trans))))
+		return 0;
+	cp += chars;
+	if (ext && comm.trans >= 0xfe) {
+		if (__unlikely(!(chars = lex_c99_u16(cp, end, at,
+				&comm.inhibit)))) {
+			diag_if(DIAG_ERROR, 0, at, "expected inhibit time");
+			return 0;
+		}
+		cp += chars;
+	}
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (ext && comm.trans >= 0xfd) {
+		if (__unlikely(!(chars = lex_c99_u16(cp, end, at,
+				&comm.event)))) {
+			diag_if(DIAG_ERROR, 0, at, "expected event timer");
+			return 0;
+		}
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+	} else if (ext && comm.trans <= 240) {
+		if (__unlikely(!(chars = lex_c99_u8(cp, end, at,
+				&comm.sync)))) {
+			diag_if(DIAG_ERROR, 0, at, "expected SYNC start value");
+			return 0;
+		}
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, at);
+	}
+
+	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
+
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &map.n)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected number of values");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(map.n > 0x40)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"number of mapped values must be in the range [0..64]");
+		return 0;
+	}
+
+	for (co_unsigned8_t i = 0; i < map.n; i++) {
+		cp += lex_ctype(&isblank, cp, end, at);
+
+		co_unsigned16_t idx = 0;
+		co_unsigned8_t subidx = 0;
+		chars = lex_c99_u16(cp, end, at, &idx);
+		if (chars) {
+			cp += chars;
+			cp += lex_ctype(&isblank, cp, end, at);
+
+			chars = lex_c99_u8(cp, end, at, &subidx);
+			if (__unlikely(!chars)) {
+				diag_if(DIAG_ERROR, 0, at,
+						"expected object sub-index");
+				return 0;
+			}
+			cp += chars;
+			cp += lex_ctype(&isblank, cp, end, at);
+		}
+
+		co_unsigned16_t type = 0;
+		chars = co_gw_txt_lex_type(cp, end, at, &type);
+		if (__unlikely(!chars))
+			return 0;
+		cp += chars;
+		if (__unlikely(!co_type_is_basic(type))) {
+			diag_if(DIAG_ERROR, 0, at,
+					"only basic types can be mapped to PDOs");
+			return 0;
+		}
+
+		co_unsigned8_t len = co_type_sizeof(type) * CHAR_BIT;
+		// If no multiplexer was specified, use the type as the object
+		// index (dummy mapping).
+		map.map[i] = ((co_unsigned32_t)(idx ? idx : type) << 16)
+				| ((co_unsigned32_t)subidx << 8) | len;
+	}
+
+	if (pnum)
+		*pnum = num;
+
+	if (pcomm)
+		*pcomm = comm;
+
+	if (pmap) {
+		pmap->n = map.n;
+		for (co_unsigned8_t i = 0; i < map.n; i++)
+			pmap->map[i] = map.map[i];
+	}
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_lex_type(const char *begin, const char *end, struct floc *at,
+		co_unsigned16_t *ptype)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t type = 0;
+
+	chars = co_gw_txt_lex_cmd(cp, end, at);
+	if (!strncmp("b", cp, chars)) {
+		type = CO_DEFTYPE_BOOLEAN;
+	} else if (!strncmp("d", cp, chars)) {
+		type = CO_DEFTYPE_DOMAIN;
+	} else if (!strncmp("i16", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER16;
+	} else if (!strncmp("i24", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER24;
+	} else if (!strncmp("i32", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER32;
+	} else if (!strncmp("i40", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER40;
+	} else if (!strncmp("i48", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER48;
+	} else if (!strncmp("i56", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER56;
+	} else if (!strncmp("i64", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER64;
+	} else if (!strncmp("i8", cp, chars)) {
+		type = CO_DEFTYPE_INTEGER8;
+	} else if (!strncmp("os", cp, chars)) {
+		type = CO_DEFTYPE_OCTET_STRING;
+	} else if (!strncmp("r32", cp, chars)) {
+		type = CO_DEFTYPE_REAL32;
+	} else if (!strncmp("r64", cp, chars)) {
+		type = CO_DEFTYPE_REAL64;
+	} else if (!strncmp("t", cp, chars)) {
+		type = CO_DEFTYPE_TIME_OF_DAY;
+	} else if (!strncmp("td", cp, chars)) {
+		type = CO_DEFTYPE_TIME_DIFF;
+	} else if (!strncmp("u16", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED16;
+	} else if (!strncmp("u24", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED24;
+	} else if (!strncmp("u32", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED32;
+	} else if (!strncmp("u40", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED40;
+	} else if (!strncmp("u48", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED48;
+	} else if (!strncmp("u56", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED56;
+	} else if (!strncmp("u64", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED64;
+	} else if (!strncmp("u8", cp, chars)) {
+		type = CO_DEFTYPE_UNSIGNED8;
+	} else if (!strncmp("us", cp, chars)) {
+		type = CO_DEFTYPE_UNICODE_STRING;
+	} else if (!strncmp("vs", cp, chars)) {
+		type = CO_DEFTYPE_VISIBLE_STRING;
+	} else {
+		diag_if(DIAG_ERROR, 0, at, "expected data type");
+		return 0;
+	}
+	cp += chars;
+
+	if (ptype)
+		*ptype = type;
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
+		co_unsigned8_t *ptrans)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	chars = co_gw_txt_lex_cmd(cp, end, at);
+	if (__unlikely(!chars)) {
+		diag_if(DIAG_ERROR, 0, at, "expected transmission type");
+		return 0;
+	}
+
+	co_unsigned8_t trans = 0;
+
+	if (!strncmp("event", cp, 5)) {
+		cp += 5;
+		if (at)
+			at->column -= chars - 5;
+		trans = 0xff;
+	} else if (!strncmp("rtr", cp, chars)) {
+		cp += chars;
+		trans = 0xfd;
+	} else if (!strncmp("sync", cp, 4)) {
+		cp += 4;
+		if (at)
+			at->column -= chars - 4;
+		if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &trans)))) {
+			diag_if(DIAG_ERROR, 0, at, "expected SYNC period");
+			return 0;
+		}
+		cp += chars;
+		if (__unlikely(trans > 240)) {
+			diag_if(DIAG_ERROR, 0, at, "SYNC period must be in the range [0..240]");
+			return 0;
+		}
+	} else {
+		diag_if(DIAG_ERROR, 0, at,
+				"expected 'event', 'rtr' or 'sync<0..240>'");
+		return 0;
+	}
+
+	if (ptrans)
+		*ptrans = trans;
+
+	return cp - begin;
 }
 
 #endif // !LELY_NO_CO_GW_TXT
