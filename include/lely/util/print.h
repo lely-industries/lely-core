@@ -39,6 +39,7 @@
 #ifdef __MINGW32__
 // Ignore complaints that "I64" is not a valid ISO C length modifier.
 #pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
 #endif
 #else
 #define LENll	"ll"
