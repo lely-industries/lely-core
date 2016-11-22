@@ -46,11 +46,13 @@ SupportedObjects=5
 5=0x1F80
 
 [ManufacturerObjects]
-SupportedObjects=4
+SupportedObjects=6
 1=0x2000
 2=0x2001
 3=0x2002
 4=0x2003
+5=0x2004
+6=0x2005
 
 [1000]
 ParameterName=Device type
@@ -125,25 +127,37 @@ AccessType=rw
 ParameterValue=0x00000001
 
 [2000]
-ParameterName=Test 1
-DataType=0x0007
+ParameterName=UNSIGNED8
+DataType=0x0005
 AccessType=rw
 PDOMapping=1
 
 [2001]
-ParameterName=Test 2
-DataType=0x0007
+ParameterName=UNSIGNED16
+DataType=0x0006
 AccessType=rw
 PDOMapping=1
 
 [2002]
-ParameterName=Test 1
+ParameterName=UNSIGNED32
 DataType=0x0007
 AccessType=rw
 PDOMapping=1
 
 [2003]
-ParameterName=Test 2
+ParameterName=UNSIGNED8
+DataType=0x0005
+AccessType=rw
+PDOMapping=1
+
+[2004]
+ParameterName=UNSIGNED16
+DataType=0x0006
+AccessType=rw
+PDOMapping=1
+
+[2005]
+ParameterName=UNSIGNED32
 DataType=0x0007
 AccessType=rw
 PDOMapping=1
