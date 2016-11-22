@@ -404,8 +404,13 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	const char *cp = begin;
 	size_t chars = 0;
 
-	// Skip leading whitespace.
-	cp += lex_ctype(&isspace, cp, end, floc);
+	// Skip leading whitespace and/or comments.
+	for (;;) {
+		cp += lex_ctype(&isspace, cp, end, floc);
+		if (!(chars = lex_line_comment("#", cp, end, floc)))
+			break;
+		cp += chars;
+	}
 
 	// Ignore empty requests.
 	if ((end && cp >= end) || !*cp)
@@ -570,8 +575,9 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		goto error;
 	cp += chars;
 
-	// Skip trailing whitespace.
+	// Skip trailing whitespace and/or comments.
 	cp += lex_ctype(&isblank, cp, end, floc);
+	cp += lex_line_comment("#", cp, end, floc);
 
 done:
 	if ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp))

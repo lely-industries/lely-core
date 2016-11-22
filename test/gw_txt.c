@@ -174,9 +174,13 @@ main(void)
 	for (int i = 0; i < ncmd; i++) {
 		tap_diag("%s", cmds[i]);
 		struct floc at = { "gw_txt", i + 1, 1 };
-		co_gw_txt_send(gw_txt, cmds[i], NULL, &at);
-		do co_test_step(&test);
-		while (co_gw_txt_pending(gw_txt));
+		const char *cp = cmds[i];
+		size_t chars = 0;
+		while ((chars = co_gw_txt_send(gw_txt, cp, NULL, &at))) {
+			cp += chars;
+			do co_test_step(&test);
+			while (co_gw_txt_pending(gw_txt));
+		}
 	}
 	for (int i = 0; i < TEST_STEP; i++)
 		co_test_step(&test);

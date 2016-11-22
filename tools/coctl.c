@@ -324,12 +324,15 @@ main(int argc, char *argv[])
 				fputc('\n', stdout);
 			break;
 		}
-		// Ignore empty lines.
-		char *cp = line + strlen(line);
-		while (--cp >= line && isspace(*cp));
-		if (cp < line)
+		// Ignore empty lines and comments.
+		char *cp = line;
+		cp += lex_ctype(&isblank, cp, NULL, NULL);
+		cp += lex_line_comment("#", cp, NULL, NULL);
+		if (lex_break(cp, NULL, NULL))
 			continue;
 		// If a line ends with a continuation character, buffer it.
+		cp = line + strlen(line);
+		while (isspace(*--cp));
 		if (*cp == '\\') {
 			*cp = '\0';
 			if (cmd) {
