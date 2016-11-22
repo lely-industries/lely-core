@@ -711,31 +711,32 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			co_val_set_id(type, &sub->max, id);
 	}
 
-	unsigned int access = 0;
+	unsigned int access = co_sub_get_access(sub);
 	val = config_get(cfg, section, "AccessType");
-	if (__unlikely(!val || !*val)) {
+	if (val && *val) {
+		if (!strcmp(val, "ro")) {
+			access = CO_ACCESS_RO;
+		} else if (!strcmp(val, "wo")) {
+			access = CO_ACCESS_WO;
+		} else if (!strcmp(val, "rw")) {
+			access = CO_ACCESS_RW;
+		} else if (!strcmp(val, "rwr")) {
+			access = CO_ACCESS_RWR;
+		} else if (!strcmp(val, "rww")) {
+			access = CO_ACCESS_RWW;
+		} else if (!strcmp(val, "const")) {
+			access = CO_ACCESS_CONST;
+		} else {
+			diag(DIAG_ERROR, 0, "AccessType = %s in section %s",
+					val, section);
+			return -1;
+		}
+		co_sub_set_access(sub, access);
+	} else if (type != CO_DEFTYPE_DOMAIN) {
 		diag(DIAG_ERROR, 0, "AccessType not specified in section %s",
 				section);
 		return -1;
 	}
-	if (!strcmp(val, "ro")) {
-		access = CO_ACCESS_RO;
-	} else if (!strcmp(val, "wo")) {
-		access = CO_ACCESS_WO;
-	} else if (!strcmp(val, "rw")) {
-		access = CO_ACCESS_RW;
-	} else if (!strcmp(val, "rwr")) {
-		access = CO_ACCESS_RWR;
-	} else if (!strcmp(val, "rww")) {
-		access = CO_ACCESS_RWW;
-	} else if (!strcmp(val, "const")) {
-		access = CO_ACCESS_CONST;
-	} else {
-		diag(DIAG_ERROR, 0, "AccessType = %s in section %s", val,
-				section);
-		return -1;
-	}
-	co_sub_set_access(sub, access);
 
 	val = config_get(cfg, section, "DefaultValue");
 	if (val && *val) {
