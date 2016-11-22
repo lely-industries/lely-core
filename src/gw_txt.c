@@ -28,11 +28,13 @@
 #include <lely/libc/stdio.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
+#include <lely/util/print.h>
 #include <lely/co/dev.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
 #include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
+#include <lely/co/val.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -55,6 +57,10 @@ struct __co_gw_txt {
 //! Processes a confirmation.
 static int co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con *con);
+
+//! Processes an 'SDO upload' confirmation.
+static int co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_sdo_up *con);
 
 //! Processes a 'Read PDO data' confirmation.
 static int co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
@@ -97,8 +103,25 @@ static int co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
  */
 static int co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt);
 
+//! Prints a CANopen value.
+static size_t co_gw_txt_print_val(char **pbegin, char *end,
+		co_unsigned16_t type, const void *val);
+
 //! Invokes the callback function to send a request.
 static void co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req);
+
+//! Sends an 'SDO upload' request after parsing its parameters.
+static size_t co_gw_txt_send_sdo_up(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'SDO download' request after parsing its parameters.
+static size_t co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
+		const char *end, struct floc *at);
+//! Sends a 'Configure SDO time-out' request after parsing its parameters.
+static size_t co_gw_txt_send_set_sdo_timeout(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
 
 //! Sends a 'Configure RPDO' request after parsing its parameters.
 static size_t co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
@@ -174,6 +197,11 @@ static size_t co_gw_txt_lex_srv(const char *begin, const char *end,
 static size_t co_gw_txt_lex_cmd(const char *begin, const char *end,
 		struct floc *at);
 
+//! Lexes the multiplexer and data type of an SDO upload/download request.
+static size_t co_gw_txt_lex_sdo(const char *begin, const char *end,
+		struct floc *at, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
+		co_unsigned16_t *ptype);
+
 //! Lexes the communication and mapping parameters of a configure PDO request.
 static size_t co_gw_txt_lex_pdo(const char *begin, const char *end,
 		struct floc *at, int ext, co_unsigned16_t *pnum,
@@ -182,6 +210,17 @@ static size_t co_gw_txt_lex_pdo(const char *begin, const char *end,
 //! Lexes a data type.
 static size_t co_gw_txt_lex_type(const char *begin, const char *end,
 		struct floc *at, co_unsigned16_t *ptype);
+
+//! Lexes a value for an SDO download request.
+static size_t co_gw_txt_lex_val(const char *begin, const char *end,
+		struct floc *at, co_unsigned16_t type, void *val);
+
+/*!
+ * Lexes an array of visible characters (#CO_DEFTYPE_VISIBLE_STRING), excluding
+ * the delimiting quotes, for an SDO download request.
+ */
+static size_t co_gw_txt_lex_vs(const char *begin, const char *end,
+		struct floc *at, char *s, size_t *pn);
 
 //! Lexes the transmission type of a configure PDO request.
 static size_t co_gw_txt_lex_trans(const char *begin, const char *end,
@@ -277,6 +316,9 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	}
 
 	switch (srv->srv) {
+	case CO_GW_SRV_SDO_UP:
+	case CO_GW_SRV_SDO_DN:
+	case CO_GW_SRV_SET_SDO_TIMEOUT:
 	case CO_GW_SRV_SET_RPDO:
 	case CO_GW_SRV_SET_TPDO:
 	case CO_GW_SRV_PDO_READ:
@@ -399,6 +441,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 			goto error;
 		}
 		break;
+	case CO_GW_SRV_SET_SDO_TIMEOUT:
 	case CO_GW_SRV_SET_RPDO:
 	case CO_GW_SRV_SET_TPDO:
 	case CO_GW_SRV_INIT:
@@ -423,6 +466,18 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 
 	chars = 0;
 	switch (srv) {
+	case CO_GW_SRV_SDO_UP:
+		chars = co_gw_txt_send_sdo_up(gw, srv, data, net, node, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_SDO_DN:
+		chars = co_gw_txt_send_sdo_dn(gw, srv, data, net, node, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_SET_SDO_TIMEOUT:
+		chars = co_gw_txt_send_set_sdo_timeout(gw, srv, data, net, cp,
+				end, floc);
+		break;
 	case CO_GW_SRV_SET_RPDO:
 		chars = co_gw_txt_send_set_rpdo(gw, srv, data, net, cp, end,
 				floc);
@@ -578,6 +633,13 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		return co_gw_txt_recv_err(gw, seq, con->iec, con->ac);
 
 	switch (con->srv) {
+	case CO_GW_SRV_SDO_UP:
+		if (__unlikely(con->size < CO_GW_CON_SDO_UP_SIZE)) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_sdo_up(gw, seq,
+				(const struct co_gw_con_sdo_up *)con);
 	case CO_GW_SRV_PDO_READ:
 		if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE)) {
 			set_errnum(ERRNUM_INVAL);
@@ -599,6 +661,52 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 }
 
 static int
+co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_sdo_up *con)
+{
+	assert(con);
+	assert(con->srv == CO_GW_SRV_SDO_UP);
+
+	if (__unlikely(con->size < CO_GW_CON_SDO_UP_SIZE + con->len)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	union co_val val;
+	const uint8_t *bp = (const uint8_t *)con->val;
+	if (__unlikely(co_val_read(con->type, &val, bp, bp + con->len)
+			!= con->len))
+		co_gw_txt_recv_err(gw, seq, 0, CO_SDO_AC_TYPE_LEN);
+
+	int result = -1;
+
+	size_t chars = co_gw_txt_print_val(NULL, NULL, con->type, &val);
+#if __STDC_NO_VLA__
+	char *buf = malloc(chars + 1);
+	if (__likely(buf)) {
+		char *cp = buf;
+		co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
+		*cp = '\0';
+
+		result = co_gw_txt_recv_fmt(gw, "[%u] %s", seq, buf);
+
+		free(buf);
+	}
+#else
+	char buf[chars + 1];
+	char *cp = buf;
+	co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
+	*cp = '\0';
+
+	result = co_gw_txt_recv_fmt(gw, "[%u] %s", seq, buf);
+#endif
+
+	co_val_fini(con->type, &val);
+
+	return result;
+}
+
+static int
 co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_pdo_read *con)
 {
@@ -610,7 +718,6 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
-
 
 	errc_t errc = get_errc();
 
@@ -792,6 +899,176 @@ co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt)
 	}
 
 	return gw->recv_func(txt, gw->recv_data) ? -1 : 0;
+}
+
+static size_t
+co_gw_txt_print_val(char **pbegin, char *end, co_unsigned16_t type,
+		const void *val)
+{
+	const union co_val *u = val;
+	assert(u);
+	switch (type) {
+	case CO_DEFTYPE_REAL32:
+		return print_c99_flt(pbegin, end, u->r32);
+	case CO_DEFTYPE_VISIBLE_STRING: {
+		size_t chars = 0;
+		chars += print_char(pbegin, end, '\"');
+		const char *vs = u->vs;
+		while (vs && *vs) {
+			char32_t c32 = 0;
+			vs += lex_utf8(vs, NULL, NULL, &c32);
+			if (c32 == '\"') {
+				chars += print_char(pbegin, end, '\"');
+				chars += print_char(pbegin, end, '\"');
+			} else {
+				chars += print_c99_esc(pbegin, end, c32);
+			}
+		}
+		chars += print_char(pbegin, end, '\"');
+		return chars;
+	}
+	case CO_DEFTYPE_OCTET_STRING:
+		return co_val_print(CO_DEFTYPE_DOMAIN, val, pbegin, end);
+	case CO_DEFTYPE_REAL64:
+		return print_c99_dbl(pbegin, end, u->r64);
+	default:
+		return co_val_print(type, val, pbegin, end);
+	}
+}
+
+static size_t
+co_gw_txt_send_sdo_up(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
+		co_unsigned8_t node, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_SDO_UP);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t idx = 0;
+	co_unsigned8_t subidx = 0;
+	co_unsigned16_t type = 0;
+	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
+			&subidx, &type))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req_sdo_up req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.node = node,
+		.idx = idx,
+		.subidx = subidx,
+		.type = type
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
+		co_unsigned8_t node, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_SDO_DN);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t idx = 0;
+	co_unsigned8_t subidx = 0;
+	co_unsigned16_t type = 0;
+	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
+			&subidx, &type))))
+		goto error_lex_sdo;
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	union co_val val;
+	co_val_init(type, &val);
+
+	if (__unlikely(!(chars = co_gw_txt_lex_val(cp, end, at, type, &val)))) {
+		diag_if(DIAG_ERROR, 0, at, "unable to parse value");
+		goto error_lex_val;
+	}
+	cp += chars;
+
+	size_t n = co_val_write(type, &val, NULL, NULL);
+
+	size_t size = CO_GW_REQ_SDO_DN_SIZE + MAX(n, 1);
+	struct co_gw_req_sdo_dn *req = malloc(size);
+	if (__unlikely(!req)) {
+		diag_if(DIAG_ERROR, get_errc(), at, "unable to create value");
+		goto error_malloc_req;
+	}
+
+	*req = (struct co_gw_req_sdo_dn){
+		.size = size,
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.node = node,
+		.idx = idx,
+		.subidx = subidx,
+		.len = n
+	};
+
+	uint8_t *bp = (uint8_t *)req->val;
+	if (__unlikely(co_val_write(type, &val, bp, bp + n) != n)) {
+		diag_if(DIAG_ERROR, get_errc(), at, "unable to write value");
+		goto error_write_val;
+	}
+
+	co_gw_txt_send_req(gw, (struct co_gw_req *)req);
+
+	free(req);
+	co_val_fini(type, &val);
+
+	return cp - begin;
+
+error_write_val:
+	free(req);
+error_malloc_req:
+error_lex_val:
+	co_val_fini(type, &val);
+error_lex_sdo:
+	return 0;
+}
+
+static size_t
+co_gw_txt_send_set_sdo_timeout(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_SET_SDO_TIMEOUT);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	long timeout = 0;
+	if (__unlikely(!(chars = lex_c99_long(cp, end, at, &timeout)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected SDO time-out");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_set_sdo_timeout req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.timeout = timeout
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
 }
 
 static size_t
@@ -1497,8 +1774,7 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 				return 0;
 			}
 		} else {
-			diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
-			return 0;
+			srv = CO_GW_SRV_SDO_UP;
 		}
 	} else if (!strncmp("reset", cp, chars)) {
 		cp += chars;
@@ -1543,6 +1819,9 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		} else if (!strncmp("rpdo", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_RPDO;
+		} else if (!strncmp("sdo_timeout", cp, chars)) {
+			cp += chars;
+			srv = CO_GW_SRV_SET_SDO_TIMEOUT;
 		} else if (!strncmp("tpdo", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_TPDO;
@@ -1554,7 +1833,7 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 			srv = CO_GW_SRV_SET_TPDO;
 		} else {
 			diag_if(DIAG_ERROR, 0, at,
-					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network', 'node', 'rpdo' or 'tpdo[x]'");
+					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network', 'node', 'rpdo', 'sdo_timeout' or 'tpdo[x]'");
 			return 0;
 		}
 	} else if (!strncmp("start", cp, chars)) {
@@ -1577,11 +1856,11 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 				return 0;
 			}
 		} else {
-			diag_if(DIAG_ERROR, 0, at, "expected 'p[do]'");
-			return 0;
+			srv = CO_GW_SRV_SDO_DN;
 		}
 	} else {
-		diag_if(DIAG_ERROR, 0, at, "expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
+		diag_if(DIAG_ERROR, 0, at,
+				"expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
 		return 0;
 	}
 
@@ -1608,6 +1887,37 @@ co_gw_txt_lex_cmd(const char *begin, const char *end, struct floc *at)
 		cp++;
 
 	return floc_lex(at, begin, cp);
+}
+
+static size_t
+co_gw_txt_lex_sdo(const char *begin, const char *end, struct floc *at,
+		co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
+		co_unsigned16_t *ptype)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, pidx)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected object index");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, psubidx)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected object sub-index");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = co_gw_txt_lex_type(cp, end, at, ptype))))
+		return 0;
+	cp += chars;
+
+	return cp - begin;
 }
 
 static size_t
@@ -1810,6 +2120,100 @@ co_gw_txt_lex_type(const char *begin, const char *end, struct floc *at,
 
 	if (ptype)
 		*ptype = type;
+
+	return cp - begin;
+}
+
+
+static size_t
+co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
+		co_unsigned16_t type, void *val)
+{
+	assert(begin);
+	assert(!end || end >= begin);
+
+	switch (type) {
+	case CO_DEFTYPE_REAL32:
+		return lex_c99_flt(begin, end, at, val);
+	case CO_DEFTYPE_VISIBLE_STRING: {
+		const char *cp = begin;
+		size_t chars = 0;
+
+		if (__unlikely(!(chars = lex_char('\"', cp, end, at))))
+			diag_if(DIAG_WARNING, 0, at,
+					"expected '\"' before string");
+		cp += chars;
+
+		size_t n = 0;
+		chars = co_gw_txt_lex_vs(cp, end, at, NULL, &n);
+		if (val) {
+			if (__unlikely(co_val_init_vs_n(val, 0, n) == -1)) {
+				diag_if(DIAG_ERROR, get_errc(), at,
+						"unable to create value of type VISIBLE_STRING");
+				return 0;
+			}
+			// Parse the characters.
+			char *vs = *(void **)val;
+			assert(vs);
+			co_gw_txt_lex_vs(cp, end, NULL, vs, &n);
+		}
+		cp += chars;
+
+		if (__unlikely(!(chars = lex_char('\"', cp, end, at))))
+			diag_if(DIAG_WARNING, 0, at,
+					"expected '\"' after string");
+		cp += chars;
+
+		return cp - begin;
+	}
+	case CO_DEFTYPE_OCTET_STRING:
+		return co_val_lex(CO_DEFTYPE_DOMAIN, val, begin, end, at);
+	case CO_DEFTYPE_REAL64:
+		return lex_c99_dbl(begin, end, at, val);
+	default:
+		return co_val_lex(type, val, begin, end, at);
+	}
+}
+
+static size_t
+co_gw_txt_lex_vs(const char *begin, const char *end, struct floc *at, char *s,
+		size_t *pn)
+{
+	assert(begin);
+
+	struct floc *floc = NULL;
+	struct floc floc_;
+	if (at) {
+		floc = &floc_;
+		*floc = *at;
+	}
+
+	const char *cp = begin;
+
+	size_t n = 0;
+	char *ends = s + (s && pn ? *pn : 0);
+
+	while ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp)) {
+		char32_t c32 = 0;
+		if (*cp == '\"') {
+			if ((end && cp + 1 >= end) || cp[1] != '\"')
+				break;
+			c32 = *cp;
+			cp += floc_lex(floc, cp, cp + 2);
+		} else if (*cp == '\\') {
+			cp += lex_c99_esc(cp, end, floc, &c32);
+		} else {
+			cp += lex_utf8(cp, end, floc, &c32);
+		}
+		if (s || pn)
+			n += print_utf8(&s, ends, c32);
+	}
+
+	if (pn)
+		*pn = n;
+
+	if (at)
+		*at = *floc;
 
 	return cp - begin;
 }
