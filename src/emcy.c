@@ -405,7 +405,8 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	emcy->msgs[0].er = er;
 
 	// Update the pre-defined error field.
-	co_emcy_set_1003(emcy);
+	if (emcy->obj_1003)
+		co_emcy_set_1003(emcy);
 
 	return co_emcy_send(emcy, eec, er, msef);
 }
@@ -426,7 +427,8 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 				emcy->nmsg * sizeof(struct co_emcy_msg));
 
 	// Update the pre-defined error field.
-	co_emcy_set_1003(emcy);
+	if (emcy->obj_1003)
+		co_emcy_set_1003(emcy);
 
 	return co_emcy_send(emcy, 0, emcy->nmsg ? emcy->msgs[0].er : 0, NULL);
 }
@@ -454,7 +456,8 @@ co_emcy_clear(co_emcy_t *emcy)
 	emcy->nmsg = 0;
 
 	// Clear the pre-defined error field.
-	co_emcy_set_1003(emcy);
+	if (emcy->obj_1003)
+		co_emcy_set_1003(emcy);
 
 	// Send the 'error reset/no error' message.
 	return co_emcy_send(emcy, 0, 0, NULL);
