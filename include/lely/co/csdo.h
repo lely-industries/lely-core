@@ -33,7 +33,8 @@ extern "C" {
  * The type of a CANopen Client-SDO download confirmation callback function,
  * invoked when a download request completes (with success or failure).
  *
- * \param sdo    a pointer to a Client-SDO service.
+ * \param sdo    a pointer to a Client-SDO service (NULL in case of a local
+ *               device).
  * \param idx    the object index.
  * \param subidx the object sub-index.
  * \param ac     the abort code (0 on success).
@@ -46,7 +47,8 @@ typedef void co_csdo_dn_con_t(co_csdo_t *sdo, co_unsigned16_t idx,
  * The type of a CANopen Client-SDO upload confirmation callback function,
  * invoked when an upload request completes (with success or failure).
  *
- * \param sdo    a pointer to a Client-SDO service.
+ * \param sdo    a pointer to a Client-SDO service (NULL in case of a local
+ *               device).
  * \param idx    the object index.
  * \param subidx the object sub-index.
  * \param ac     the abort code (0 on success).

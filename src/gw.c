@@ -26,6 +26,7 @@
 #ifndef LELY_NO_CO_GW
 
 #include <lely/util/errnum.h>
+#include <lely/co/csdo.h>
 #include <lely/co/dev.h>
 #ifndef LELY_NO_CO_EMCY
 #include <lely/co/emcy.h>
@@ -44,6 +45,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+struct co_gw_job;
+
 //! A CANopen network.
 struct co_gw_net {
 	//! A pointer to the CANopen gateway.
@@ -54,11 +57,15 @@ struct co_gw_net {
 	co_nmt_t *nmt;
 	//! The default node-ID.
 	co_unsigned8_t def;
+	//! The SDO timeout (in milliseconds).
+	int timeout;
 	/*!
 	 * A flag indicating whether "boot-up event received" commands should be
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind:1;
+	//! An array of pointers to the SDO upload/download jobs.
+	struct co_gw_job *sdo[CO_NUM_NODES];
 	//! A pointer to the original NMT command indication function.
 	co_nmt_cs_ind_t *cs_ind;
 	//! A pointer to user-specified data for #cs_ind.
@@ -138,6 +145,50 @@ static void co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac,
 		const void *ptr, size_t n, void *data);
 #endif
 
+//! A CANopen gateway network job.
+struct co_gw_job {
+	//! The address of the pointer to this job in the network.
+	struct co_gw_job **pself;
+	//! A pointer to the CANopen network.
+	struct co_gw_net *net;
+	//! A pointer to request-specific data.
+	void *data;
+	//! A pointer to the destructor for #data.
+	void (*dtor)(void *data);
+	//! The service parameters of the request.
+	struct co_gw_req req;
+};
+
+//! The minimum size (in bytes) of a CANopen gateway network job.
+#define CO_GW_JOB_SIZE \
+	offsetof(struct co_gw_job, req)
+
+//! Creates a new CANopen gateway network job. \see co_gw_job_destroy()
+static struct co_gw_job *co_gw_job_create(struct co_gw_job **pself,
+		struct co_gw_net *net, void *data, void (*dtor)(void *data),
+		const struct co_gw_req *req);
+//! Destroys a CANopen gateway network job. \see co_gw_job_create()
+static void co_gw_job_destroy(struct co_gw_job *job);
+
+//! Removes a CANopen gateway network job from its network.
+static void co_gw_job_remove(struct co_gw_job *job);
+
+#ifndef LELY_NO_CO_CSDO
+//! Creates a new SDO upload/download job.
+static struct co_gw_job *co_gw_job_create_sdo(struct co_gw_job **pself,
+		struct co_gw_net *net, co_unsigned8_t id,
+		const struct co_gw_req *req);
+//! Destroys the Client-SDO service in an SDO upload/download job.
+static void co_gw_job_sdo_dtor(void *data);
+#endif
+//! The confirmation function for an 'SDO upload' request.
+static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
+		size_t n, void *data);
+//! The confirmation function for an 'SDO download' request.
+static void co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
+
 //! A CANopen gateway.
 struct __co_gw {
 	//! An array of pointers to the CANopen networks.
@@ -161,6 +212,16 @@ struct __co_gw {
 	//! A pointer to the user-specified data for #rate_func.
 	void *rate_data;
 };
+
+//! Processes an 'SDO upload' request.
+static int co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, const struct co_gw_req *req);
+//! Processes an 'SDO download' request.
+static int co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net,
+		co_unsigned8_t node, const struct co_gw_req *req);
+//! Processes a 'Configure SDO time-out' request.
+static int co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
 
 #ifndef LELY_NO_CO_RPDO
 //! Processes a 'Configure RPDO' request.
@@ -423,6 +484,9 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// network-ID is 0, use the default ID.
 	co_unsigned16_t net = gw->def;
 	switch (req->srv) {
+	case CO_GW_SRV_SDO_UP:
+	case CO_GW_SRV_SDO_DN:
+	case CO_GW_SRV_SET_SDO_TIMEOUT:
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 #endif
@@ -480,6 +544,8 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// use the default ID.
 	co_unsigned8_t node = net ? gw->net[net - 1]->def : 0;
 	switch (req->srv) {
+	case CO_GW_SRV_SDO_UP:
+	case CO_GW_SRV_SDO_DN:
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
@@ -512,6 +578,8 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// Except for the NMT commands, node-level request require a non-zero
 	// node-ID.
 	switch (req->srv) {
+	case CO_GW_SRV_SDO_UP:
+	case CO_GW_SRV_SDO_DN:
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_NG_ENABLE:
 	case CO_GW_SRV_NMT_NG_DISABLE:
@@ -529,6 +597,12 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	}
 
 	switch (req->srv) {
+	case CO_GW_SRV_SDO_UP:
+		return co_gw_recv_sdo_up(gw, net, node, req);
+	case CO_GW_SRV_SDO_DN:
+		return co_gw_recv_sdo_dn(gw, net, node, req);
+	case CO_GW_SRV_SET_SDO_TIMEOUT:
+		return co_gw_recv_set_sdo_timeout(gw, net, req);
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 		return co_gw_recv_set_rpdo(gw, net, req);
@@ -657,7 +731,11 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	net->nmt = nmt;
 
 	net->def = 0;
+	net->timeout = 0;
 	net->bootup_ind = 1;
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
+		net->sdo[id - 1] = NULL;
 
 	co_nmt_get_cs_ind(net->nmt, &net->cs_ind, &net->cs_data);
 	co_nmt_set_cs_ind(net->nmt, &co_gw_net_cs_ind, net);
@@ -710,6 +788,9 @@ co_gw_net_destroy(struct co_gw_net *net)
 		co_nmt_set_ng_ind(net->nmt, net->ng_ind, net->ng_data);
 #endif
 		co_nmt_set_cs_ind(net->nmt, net->cs_ind, net->cs_data);
+
+		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
+			co_gw_job_destroy(net->sdo[id - 1]);
 
 		free(net);
 	}
@@ -854,6 +935,168 @@ co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 }
 #endif
 
+static struct co_gw_job *
+co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
+		void (*dtor)(void *data), const struct co_gw_req *req)
+{
+	assert(pself);
+	assert(req);
+
+	if (*pself)
+		co_gw_job_destroy(*pself);
+
+	*pself = malloc(CO_GW_JOB_SIZE + req->size);
+	if (__unlikely(!*pself)) {
+		set_errno(errno);
+		return NULL;
+	}
+
+	(*pself)->pself = pself;
+	(*pself)->net = net;
+	(*pself)->data = data;
+	(*pself)->dtor = dtor;
+	memcpy(&(*pself)->req, req, req->size);
+
+	return *pself;
+}
+
+static void
+co_gw_job_destroy(struct co_gw_job *job)
+{
+	if (job) {
+		co_gw_job_remove(job);
+
+		if (job->dtor)
+			job->dtor(job->data);
+
+		free(job);
+	}
+}
+
+static void
+co_gw_job_remove(struct co_gw_job *job)
+{
+	assert(job);
+
+	if (job->pself && *job->pself == job)
+		*job->pself = NULL;
+}
+
+#ifndef LELY_NO_CO_CSDO
+
+static struct co_gw_job *
+co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
+		co_unsigned8_t id, const struct co_gw_req *req)
+{
+	assert(net);
+
+	errc_t errc = 0;
+
+	co_csdo_t *sdo = co_csdo_create(co_nmt_get_net(net->nmt), NULL, id);
+	if (__unlikely(!sdo)) {
+		errc = get_errc();
+		goto error_create_sdo;
+	}
+
+	// The actual SDO timeout is limited by the gateway command timeout.
+	int timeout = net->timeout;
+	if (net->gw->timeout)
+		timeout = timeout
+				? MIN(timeout, net->gw->timeout)
+				: net->gw->timeout;
+	co_csdo_set_timeout(sdo, timeout);
+
+	struct co_gw_job *job = co_gw_job_create(pself, net, sdo,
+			&co_gw_job_sdo_dtor, req);
+	if (__unlikely(!job)) {
+		errc = get_errc();
+		goto error_create_job;
+	}
+
+	return job;
+
+error_create_job:
+	co_csdo_destroy(sdo);
+error_create_sdo:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_gw_job_sdo_dtor(void *data)
+{
+	co_csdo_t *sdo = data;
+
+	co_csdo_destroy(sdo);
+}
+
+#endif // !LELY_NO_CO_CSDO
+
+static void
+co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
+{
+	__unused_var(sdo);
+	__unused_var(idx);
+	__unused_var(subidx);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	co_gw_job_remove(job);
+
+	if (__unlikely(job->req.srv != CO_GW_SRV_SDO_UP))
+		goto done;
+	struct co_gw_req_sdo_up *req = (struct co_gw_req_sdo_up *)&job->req;
+
+	if (ac) {
+		co_gw_send_con(job->net->gw, &job->req, 0, ac);
+	} else {
+		size_t size = CO_GW_CON_SDO_UP_SIZE + MAX(n, 1);
+		errc_t errc = get_errc();
+		struct co_gw_con_sdo_up *con = malloc(size);
+		if (__likely(con)) {
+			*con = (struct co_gw_con_sdo_up){
+				.size = size,
+				.srv = req->srv,
+				.data = req->data,
+				.type = req->type,
+				.len = n
+			};
+			memcpy(con->val, ptr, n);
+			co_gw_send_srv(job->net->gw, (struct co_gw_srv *)con);
+
+			free(con);
+		} else {
+			set_errc(errc);
+			co_gw_send_con(job->net->gw, &job->req,
+					CO_GW_IEC_NO_MEM, 0);
+		}
+	}
+
+done:
+	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned32_t ac, void *data)
+{
+	__unused_var(sdo);
+	__unused_var(idx);
+	__unused_var(subidx);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	co_gw_job_remove(job);
+
+	if (__likely(job->req.srv == CO_GW_SRV_SDO_DN))
+		co_gw_send_con(job->net->gw, &job->req, 0, ac);
+
+	co_gw_job_destroy(job);
+}
+
 #ifndef LELY_NO_CO_RPDO
 static void
 co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
@@ -881,6 +1124,190 @@ co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
 }
 #endif
+
+static int
+co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_SDO_UP);
+	assert(node && node <= CO_NUM_NODES);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_sdo_up))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_sdo_up *par =
+			(const struct co_gw_req_sdo_up *)req;
+
+	int iec = 0;
+	if (__unlikely(gw->net[net - 1]->sdo[node - 1])) {
+		iec = CO_GW_IEC_INTERN;
+		goto error_srv;
+	}
+
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = NULL;
+	if (node == co_dev_get_id(dev)) {
+		job = co_gw_job_create(&gw->net[net - 1]->sdo[node - 1],
+				gw->net[net - 1], NULL, NULL, req);
+		if (__unlikely(!job)) {
+			iec = errnum2iec(get_errnum());
+			goto error_create_job;
+		}
+
+		if (__unlikely(co_dev_up_req(dev, par->idx, par->subidx,
+				&co_gw_job_sdo_up_con, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_up_req;
+		}
+	} else {
+#ifdef LELY_NO_CO_CSDO
+		iec = CO_GW_IEC_BAD_SRV;
+		goto error_srv;
+#else
+		if (!co_nmt_is_master(gw->net[net - 1]->nmt)) {
+			// TODO: Add client-SDO support for slaves where
+			// possible.
+			iec = CO_GW_IEC_BAD_NODE;
+			goto error_srv;
+		}
+
+		job = co_gw_job_create_sdo(&gw->net[net - 1]->sdo[node - 1],
+				gw->net[net - 1], node, req);
+		if (__unlikely(!job)) {
+			iec = errnum2iec(get_errnum());
+			goto error_create_job;
+		}
+
+		if (__unlikely(co_csdo_up_req(job->data, par->idx, par->subidx,
+				&co_gw_job_sdo_up_con, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_up_req;
+		}
+#endif
+	}
+
+	return 0;
+
+error_up_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+error_srv:
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_SDO_DN);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
+	if (__unlikely(req->size < CO_GW_REQ_SDO_DN_SIZE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_sdo_dn *par =
+			(const struct co_gw_req_sdo_dn *)req;
+	if (__unlikely(par->size < CO_GW_REQ_SDO_DN_SIZE + par->len)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	int iec = 0;
+	if (__unlikely(gw->net[net - 1]->sdo[node - 1])) {
+		iec = CO_GW_IEC_INTERN;
+		goto error_srv;
+	}
+
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = NULL;
+	if (node == co_dev_get_id(dev)) {
+		job = co_gw_job_create(&gw->net[net - 1]->sdo[node - 1],
+				gw->net[net - 1], NULL, NULL, req);
+		if (__unlikely(!job)) {
+			iec = errnum2iec(get_errnum());
+			goto error_create_job;
+		}
+
+		if (__unlikely(co_dev_dn_req(dev, par->idx, par->subidx,
+				par->val, par->len, &co_gw_job_sdo_dn_con, job)
+						== -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_dn_req;
+		}
+	} else {
+#ifdef LELY_NO_CO_CSDO
+		iec = CO_GW_IEC_BAD_SRV;
+		goto error_srv;
+#else
+		if (!co_nmt_is_master(gw->net[net - 1]->nmt)) {
+			// TODO: Add client-SDO support for slaves where
+			// possible.
+			iec = CO_GW_IEC_BAD_NODE;
+			goto error_srv;
+		}
+
+		job = co_gw_job_create_sdo(&gw->net[net - 1]->sdo[node - 1],
+				gw->net[net - 1], node, req);
+		if (__unlikely(!job)) {
+			iec = errnum2iec(get_errnum());
+			goto error_create_job;
+		}
+
+		if (__unlikely(co_csdo_dn_req(job->data, par->idx, par->subidx,
+				par->val, par->len, &co_gw_job_sdo_dn_con, job)
+				== -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_dn_req;
+		}
+#endif
+	}
+
+	return 0;
+
+error_dn_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+error_srv:
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_SET_SDO_TIMEOUT);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_set_sdo_timeout))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_set_sdo_timeout *par =
+			(const struct co_gw_req_set_sdo_timeout *)req;
+
+	gw->net[net - 1]->timeout = par->timeout;
+
+	return co_gw_send_con(gw, req, 0, 0);
+}
 
 #ifndef LELY_NO_CO_RPDO
 static int

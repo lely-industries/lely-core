@@ -33,6 +33,15 @@
 //! The low number of the version of CiA 309-1 implemented by this gateway.
 #define CO_GW_PROT_LO	0
 
+//! CANopen gateway service: SDO upload.
+#define CO_GW_SRV_SDO_UP	0x11
+
+//! CANopen gateway service: SDO download.
+#define CO_GW_SRV_SDO_DN	0x13
+
+//! CANopen gateway service: Configure SDO time-out.
+#define CO_GW_SRV_SET_SDO_TIMEOUT	0x14
+
 //! CANopen gateway service: Configure RPDO.
 #define CO_GW_SRV_SET_RPDO	0x21
 
@@ -243,6 +252,66 @@ struct co_gw_req_node {
 	co_unsigned16_t net;
 	//! The node-ID.
 	co_unsigned8_t node;
+};
+
+//! The parameters of a CANopen gateway 'SDO upload' request.
+struct co_gw_req_sdo_up {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SDO_UP).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The object index.
+	co_unsigned16_t idx;
+	//! The object sub-index.
+	co_unsigned8_t subidx;
+	//! The data type.
+	co_unsigned16_t type;
+};
+
+//! The parameters of a CANopen gateway 'SDO download' request.
+struct co_gw_req_sdo_dn {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SDO_DN).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The object index.
+	co_unsigned16_t idx;
+	//! The object sub-index.
+	co_unsigned8_t subidx;
+	//! The length of the value (in bytes).
+	co_unsigned32_t len;
+	//! The (first byte in the) value.
+	char val[1];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'SDO download' request.
+#define CO_GW_REQ_SDO_DN_SIZE \
+	offsetof(struct co_gw_req_sdo_dn, val)
+
+//! The parameters of a CANopen gateway 'Configure SDO time-out' request.
+struct co_gw_req_set_sdo_timeout {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SET_SDO_TIMEOUT).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The SDO timeout (in milliseconds).
+	int timeout;
 };
 
 //! The parameters of a CANopen gateway 'Configure RPDO' request.
@@ -471,6 +540,30 @@ struct co_gw_con {
 	//! The SDO abort code (0 on success).
 	co_unsigned32_t ac;
 };
+
+//! The parameters of a CANopen gateway 'SDO upload' confirmation.
+struct co_gw_con_sdo_up {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SDO_UP).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The data type.
+	co_unsigned16_t type;
+	//! The length of the value (in bytes).
+	co_unsigned32_t len;
+	//! The (first byte in the) value.
+	char val[1];
+};
+
+//! The minimum size (in bytes) of a CANopen gateway 'SDO upload' confirmation.
+#define CO_GW_CON_SDO_UP_SIZE \
+	offsetof(struct co_gw_con_sdo_up, val)
 
 //! The parameters of a CANopen gateway 'Read PDO' confirmation.
 struct co_gw_con_pdo_read {
