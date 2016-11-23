@@ -12,9 +12,10 @@ BaudRate_1000=1
 NrOfRxPDO=1
 NrOfTxPDO=1
 CompactPDO=0x3f
+LSS_Supported=1
 
 [DeviceComissioning]
-NodeID=0x02
+NodeID=0xff
 
 [MandatoryObjects]
 SupportedObjects=3

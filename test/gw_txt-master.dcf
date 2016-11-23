@@ -12,6 +12,7 @@ BaudRate_1000=1
 NrOfRxPDO=1
 NrOfTxPDO=1
 CompactPDO=0x3f
+LSS_Supported=1
 
 [DummyUsage]
 Dummy0002=1
