@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/util/diag.h>
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
@@ -177,6 +181,10 @@ main(void)
 
 	co_nmt_t *slave = co_nmt_create(net, sdev);
 	tap_assert(slave);
+
+#ifdef LELY_NO_CO_LSS
+	co_nmt_set_id(slave, 0x02);
+#endif
 
 	co_gw_t *gw = co_gw_create();
 	tap_assert(gw);

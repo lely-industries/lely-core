@@ -23,8 +23,6 @@
 
 #include "co.h"
 
-#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-
 #include <lely/util/endian.h>
 #include <lely/can/msg.h>
 #include <lely/co/dev.h>
@@ -39,8 +37,6 @@ static co_unsigned32_t co_dev_cfg_pdo_comm(const co_dev_t *dev,
 
 static co_unsigned32_t co_dev_cfg_pdo_map(const co_dev_t *dev,
 		co_unsigned16_t num, const struct co_pdo_map_par *par);
-
-#ifndef LELY_NO_CO_RPDO
 
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
@@ -119,10 +115,6 @@ co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 	return co_dev_cfg_pdo_map(dev, 0x1600 + num - 1, par);
 }
 
-#endif // !LELY_NO_CO_RPDO
-
-#ifndef LELY_NO_CO_TPDO
-
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx)
@@ -193,8 +185,6 @@ co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 
 	return co_dev_cfg_pdo_map(dev, 0x1a00 + num - 1, par);
 }
-
-#endif // !LELY_NO_CO_RPDO
 
 LELY_CO_EXPORT co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
@@ -457,6 +447,4 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	// Enable mapping.
 	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n);
 }
-
-#endif // !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 

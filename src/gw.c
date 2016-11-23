@@ -66,15 +66,19 @@ struct co_gw_net {
 	co_nmt_t *nmt;
 	//! The default node-ID.
 	co_unsigned8_t def;
+#ifndef LELY_NO_CO_CSDO
 	//! The SDO timeout (in milliseconds).
 	int timeout;
+#endif
 	/*!
 	 * A flag indicating whether "boot-up event received" commands should be
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind:1;
+#ifndef LELY_NO_CO_CSDO
 	//! An array of pointers to the SDO upload/download jobs.
 	struct co_gw_job *sdo[CO_NUM_NODES];
+#endif
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
 	//! A pointer to the LSS job.
 	struct co_gw_job *lss;
@@ -222,7 +226,6 @@ static struct co_gw_job *co_gw_job_create_sdo(struct co_gw_job **pself,
 		const struct co_gw_req *req);
 //! Destroys the Client-SDO service in an SDO upload/download job.
 static void co_gw_job_sdo_dtor(void *data);
-#endif
 //! The confirmation function for an 'SDO upload' request.
 static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
@@ -230,6 +233,7 @@ static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 //! The confirmation function for an 'SDO download' request.
 static void co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
+#endif
 
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
 //! Creates a new LSS job.
@@ -281,6 +285,7 @@ struct __co_gw {
 	void *rate_data;
 };
 
+#ifndef LELY_NO_CO_CSDO
 //! Processes an 'SDO upload' request.
 static int co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
@@ -290,6 +295,7 @@ static int co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net,
 //! Processes a 'Configure SDO time-out' request.
 static int co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
+#endif
 
 #ifndef LELY_NO_CO_RPDO
 //! Processes a 'Configure RPDO' request.
@@ -592,9 +598,11 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// network-ID is 0, use the default ID.
 	co_unsigned16_t net = gw->def;
 	switch (req->srv) {
+#ifndef LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
+#endif
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 #endif
@@ -666,8 +674,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// use the default ID.
 	co_unsigned8_t node = net ? gw->net[net - 1]->def : 0;
 	switch (req->srv) {
+#ifndef LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
+#endif
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
@@ -700,8 +710,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// Except for the NMT commands, node-level request require a non-zero
 	// node-ID.
 	switch (req->srv) {
+#ifndef LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
+#endif
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_NG_ENABLE:
 	case CO_GW_SRV_NMT_NG_DISABLE:
@@ -719,12 +731,14 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	}
 
 	switch (req->srv) {
+#ifndef LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 		return co_gw_recv_sdo_up(gw, net, node, req);
 	case CO_GW_SRV_SDO_DN:
 		return co_gw_recv_sdo_dn(gw, net, node, req);
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
 		return co_gw_recv_set_sdo_timeout(gw, net, req);
+#endif
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 		return co_gw_recv_set_rpdo(gw, net, req);
@@ -879,11 +893,15 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	net->nmt = nmt;
 
 	net->def = 0;
+#ifndef LELY_NO_CO_CSDO
 	net->timeout = 0;
+#endif
 	net->bootup_ind = 1;
 
+#ifndef LELY_NO_CO_CSDO
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		net->sdo[id - 1] = NULL;
+#endif
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
 	net->lss = NULL;
 #endif
@@ -977,8 +995,10 @@ co_gw_net_destroy(struct co_gw_net *net)
 #endif
 		co_nmt_set_cs_ind(net->nmt, net->cs_ind, net->cs_data);
 
+#ifndef LELY_NO_CO_CSDO
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 			co_gw_job_destroy(net->sdo[id - 1]);
+#endif
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
 		co_gw_job_destroy(net->lss);
 #endif
@@ -1241,6 +1261,8 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 static void
 co_gw_job_destroy(struct co_gw_job *job)
 {
+	__unused_var(co_gw_job_create);
+
 	if (job) {
 		co_gw_job_remove(job);
 
@@ -1316,37 +1338,6 @@ co_gw_job_sdo_dtor(void *data)
 	co_csdo_destroy(sdo);
 }
 
-#endif // !LELY_NO_CO_CSDO
-
-static struct co_gw_job *
-co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
-		const struct co_gw_req *req)
-{
-	assert(pself);
-	assert(net);
-
-	co_gw_t *gw = net->gw;
-
-	if (__unlikely(*pself)) {
-		set_errnum(ERRNUM_BUSY);
-		return NULL;
-	}
-
-	co_lss_t *lss = co_nmt_get_lss(net->nmt);
-	if (__unlikely(!lss)) {
-		set_errnum(ERRNUM_PERM);
-		return NULL;
-	}
-
-	// The LSS timeout is limited by the global gateway command timeout.
-	int timeout = LELY_CO_LSS_TIMEOUT;
-	if (gw->timeout)
-		timeout = MIN(timeout, gw->timeout);
-	co_lss_set_timeout(lss, timeout);
-
-	return co_gw_job_create(pself, net, lss, NULL, req);
-}
-
 static void
 co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
@@ -1412,7 +1403,38 @@ co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_gw_job_destroy(job);
 }
 
+#endif // !LELY_NO_CO_CSDO
+
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+
+static struct co_gw_job *
+co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
+		const struct co_gw_req *req)
+{
+	assert(pself);
+	assert(net);
+
+	co_gw_t *gw = net->gw;
+
+	if (__unlikely(*pself)) {
+		set_errnum(ERRNUM_BUSY);
+		return NULL;
+	}
+
+	co_lss_t *lss = co_nmt_get_lss(net->nmt);
+	if (__unlikely(!lss)) {
+		set_errnum(ERRNUM_PERM);
+		return NULL;
+	}
+
+	// The LSS timeout is limited by the global gateway command timeout.
+	int timeout = LELY_CO_LSS_TIMEOUT;
+	if (gw->timeout)
+		timeout = MIN(timeout, gw->timeout);
+	co_lss_set_timeout(lss, timeout);
+
+	return co_gw_job_create(pself, net, lss, NULL, req);
+}
 
 static void
 co_gw_job_lss_cs_ind(co_lss_t *lss, co_unsigned8_t cs, void *data)
@@ -1624,6 +1646,8 @@ co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 }
 #endif
 
+#ifndef LELY_NO_CO_CSDO
+
 static int
 co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		const struct co_gw_req *req)
@@ -1662,10 +1686,6 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			goto error_up_req;
 		}
 	} else {
-#ifdef LELY_NO_CO_CSDO
-		iec = CO_GW_IEC_BAD_SRV;
-		goto error_srv;
-#else
 		if (!co_nmt_is_master(gw->net[net - 1]->nmt)) {
 			// TODO: Add client-SDO support for slaves where
 			// possible.
@@ -1685,7 +1705,6 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_up_req;
 		}
-#endif
 	}
 
 	return 0;
@@ -1740,10 +1759,6 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			goto error_dn_req;
 		}
 	} else {
-#ifdef LELY_NO_CO_CSDO
-		iec = CO_GW_IEC_BAD_SRV;
-		goto error_srv;
-#else
 		if (!co_nmt_is_master(gw->net[net - 1]->nmt)) {
 			// TODO: Add client-SDO support for slaves where
 			// possible.
@@ -1764,7 +1779,6 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_dn_req;
 		}
-#endif
 	}
 
 	return 0;
@@ -1786,7 +1800,9 @@ co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_SDO_TIMEOUT);
 
+#ifndef LELY_NO_CO_MASTER
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+#endif
 
 	if (__unlikely(req->size < sizeof(struct co_gw_req_set_sdo_timeout))) {
 		set_errnum(ERRNUM_INVAL);
@@ -1797,15 +1813,19 @@ co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 
 	gw->net[net - 1]->timeout = par->timeout;
 
+#ifndef LELY_NO_CO_MASTER
 	// The actual NMT SDO timeout is limited by the global gateway command
 	// timeout.
 	int timeout = par->timeout;
 	if (gw->timeout)
 		timeout = timeout ? MIN(timeout, gw->timeout) : gw->timeout;
 	co_nmt_set_timeout(nmt, timeout);
+#endif
 
 	return co_gw_send_con(gw, req, 0, 0);
 }
+
+#endif //! LELY_NO_CO_CSDO
 
 #ifndef LELY_NO_CO_RPDO
 static int
@@ -2339,6 +2359,7 @@ co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)
 
 	gw->timeout = par->timeout;
 
+#ifndef LELY_NO_CO_MASTER
 	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++) {
 		if (!gw->net[id - 1])
 			continue;
@@ -2351,6 +2372,7 @@ co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)
 					: gw->timeout;
 		co_nmt_set_timeout(gw->net[id - 1]->nmt, timeout);
 	}
+#endif
 
 	return co_gw_send_con(gw, req, 0, 0);
 }

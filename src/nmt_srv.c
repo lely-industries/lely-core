@@ -27,7 +27,7 @@
 #include <lely/co/csdo.h>
 #endif
 #include <lely/co/dev.h>
-#ifndef LELY_NO_CO_SYNC
+#ifndef LELY_NO_CO_EMCY
 #include <lely/co/emcy.h>
 #endif
 #ifndef LELY_NO_CO_LSS

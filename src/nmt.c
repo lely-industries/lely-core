@@ -625,7 +625,6 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 	return co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &val);
 }
 
-#ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT const char *
 co_nmt_es2str(char es)
 {
@@ -648,7 +647,6 @@ co_nmt_es2str(char es)
 	default: return "Unknown error status";
 	}
 }
-#endif
 
 LELY_CO_EXPORT void *
 __co_nmt_alloc(void)

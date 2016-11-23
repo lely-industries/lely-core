@@ -8,11 +8,13 @@ endif
 endif
 endif
 if !NO_CO_GW_TXT
+if !NO_CO_DCF
 if !NO_IO
 if !NO_THREADS
 if PLATFORM_LINUX
 bin += coctl
 coctl_SOURCES = coctl.c
+endif
 endif
 endif
 endif
