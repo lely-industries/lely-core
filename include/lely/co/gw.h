@@ -159,6 +159,15 @@
 //! Lely-specific gateway service: LSS Fastscan.
 #define CO_GW_SRV__LSS_FASTSCAN 0x92
 
+//! Lely-specific gateway service: Synchronization event received.
+#define CO_GW_SRV__SYNC 0x101
+
+//! Lely-specific gateway service: Time stamp event received.
+#define CO_GW_SRV__TIME 0x102
+
+//! Lely-specific gateway service: Boot slave process completed.
+#define CO_GW_SRV__BOOT 0x103
+
 //! CANopen gateway internal error: Request not supported.
 #define CO_GW_IEC_BAD_SRV	100
 
@@ -651,7 +660,7 @@ struct co_gw_req_lss_id_slave {
 	struct co_id hi;
 };
 
-//! The parameters of a CANopen gateway 'LSS Slowscan/Fastscan' request.
+//! The parameters of a Lely-specific gateway 'LSS Slowscan/Fastscan' request.
 struct co_gw_req__lss_scan {
 	//! The size of this struct (in bytes).
 	size_t size;
@@ -803,7 +812,10 @@ struct co_gw_con_lss_get_id {
 	co_unsigned8_t id;
 };
 
-//! The parameters of a CANopen gateway 'LSS Slowscan/Fastscan' confirmation.
+/*!
+ * The parameters of a Lely-specific gateway 'LSS Slowscan/Fastscan'
+ * confirmation.
+ */
 struct co_gw_con__lss_scan {
 	//! The size of this struct (in bytes).
 	size_t size;
@@ -855,7 +867,7 @@ struct co_gw_ind_ec {
 	co_unsigned16_t net;
 	//! The node-ID.
 	co_unsigned8_t node;
-	//! The status of the node, or 0 in case of a boot-up event.
+	//! The state of the node, or 0 in case of a boot-up event.
 	co_unsigned8_t st;
 	//! The internal error code (0 on success).
 	int iec;
@@ -877,6 +889,55 @@ struct co_gw_ind_emcy {
 	co_unsigned8_t er;
 	//! The manufacturer-specific error code.
 	uint8_t msef[5];
+};
+
+/*!
+ * The parameters of a Lely-specific gateway 'Synchronization event received'
+ * indication.
+ */
+struct co_gw_ind__sync {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV__SYNC).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The SYNC counter.
+	co_unsigned8_t cnt;
+};
+
+/*!
+ * The parameters of a Lely-specific gateway 'Time stamp event received'
+ * indication.
+ */
+struct co_gw_ind__time {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV__TIME).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The absolute time.
+	struct timespec ts;
+};
+
+/*!
+ * The parameters of a Lely-specific gateway 'Boot slave process completed'
+ * indication.
+ */
+struct co_gw_ind__boot {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV__BOOT).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The the state of the node (including the toggle bit).
+	co_unsigned8_t st;
+	//! The error status (in the range ['A'..'O'], or 0 on success).
+	char es;
 };
 
 #ifdef __cplusplus

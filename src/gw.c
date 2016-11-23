@@ -41,6 +41,12 @@
 #include <lely/co/rpdo.h>
 #endif
 #include <lely/co/sdo.h>
+#ifndef LELY_NO_CO_SYNC
+#include <lely/co/sync.h>
+#endif
+#ifndef LELY_NO_CO_TIME
+#include <lely/co/time.h>
+#endif
 #ifndef LELY_NO_CO_TPDO
 #include <lely/co/tpdo.h>
 #endif
@@ -95,6 +101,12 @@ struct co_gw_net {
 	co_nmt_st_ind_t *st_ind;
 	//! A pointer to user-specified data for #st_ind.
 	void *st_data;
+#ifndef LELY_NO_CO_MASTER
+	//! A pointer to the original 'boot slave' indication function.
+	co_nmt_boot_ind_t *boot_ind;
+	//! A pointer to user-specified data for #boot_ind.
+	void *boot_data;
+#endif
 };
 
 //! Creates a new CANopen network. \see co_gw_net_destroy()
@@ -134,10 +146,33 @@ static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
+#ifndef LELY_NO_CO_MASTER
+/*!
+ * The callback function invoked when the 'boot slave' process completes for a
+ * node on a CANopen network.
+ */
+static void co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st, char es, void *data);
+#endif
+#ifndef LELY_NO_CO_SYNC
+/*!
+ * The callback function invoked when a SYNC message is received from a node on
+ * a CANopen network.
+ */
+static void co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
+#endif
+#ifndef LELY_NO_CO_TIME
+/*!
+ * The callback function invoked when a TIME message is received from a node on
+ * a CANopen network.
+ */
+static void co_gw_net_time_ind(co_time_t *time, const struct timespec *tp,
+		void *data);
+#endif
 #ifndef LELY_NO_CO_EMCY
 /*!
- * The callback function invoked when an EMCY message is received from node on a
- * CANopen network.
+ * The callback function invoked when an EMCY message is received from a node on
+ * a CANopen network.
  */
 static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t ec, co_unsigned8_t er, uint8_t msef[5],
@@ -865,6 +900,28 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	co_nmt_set_hb_ind(net->nmt, &co_gw_net_hb_ind, net);
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
 	co_nmt_set_st_ind(net->nmt, &co_gw_net_st_ind, net);
+#ifndef LELY_NO_CO_MASTER
+	co_nmt_get_boot_ind(net->nmt, &net->boot_ind, &net->boot_data);
+	co_nmt_set_boot_ind(net->nmt, &co_gw_net_boot_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_SYNC
+	co_sync_t *sync = co_nmt_get_sync(nmt);
+	if (sync)
+		co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_TIME
+	co_time_t *time = co_nmt_get_time(nmt);
+	if (time)
+		co_time_set_ind(time, &co_gw_net_time_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_EMCY
+	co_emcy_t *emcy = co_nmt_get_emcy(nmt);
+	if (emcy)
+		co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
+#endif
 
 #ifndef LELY_NO_CO_RPDO
 	if (co_nmt_get_st(net->nmt) == CO_NMT_ST_START) {
@@ -897,6 +954,21 @@ co_gw_net_destroy(struct co_gw_net *net)
 			co_emcy_set_ind(emcy, NULL, NULL);
 #endif
 
+#ifndef LELY_NO_CO_TIME
+		co_time_t *time = co_nmt_get_time(net->nmt);
+		if (time)
+			co_time_set_ind(time, NULL, NULL);
+#endif
+
+#ifndef LELY_NO_CO_SYNC
+		co_sync_t *sync = co_nmt_get_sync(net->nmt);
+		if (sync)
+			co_sync_set_ind(sync, NULL, NULL);
+#endif
+
+#ifndef LELY_NO_CO_MASTER
+		co_nmt_set_boot_ind(net->nmt, net->boot_ind, net->boot_data);
+#endif
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
 		co_nmt_set_hb_ind(net->nmt, net->hb_ind, net->hb_data);
 		co_nmt_set_lg_ind(net->nmt, net->lg_ind, net->lg_data);
@@ -923,6 +995,18 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 
 	switch (cs) {
 	case CO_NMT_CS_START: {
+#ifndef LELY_NO_CO_SYNC
+		co_sync_t *sync = co_nmt_get_sync(nmt);
+		if (sync)
+			co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_TIME
+		co_time_t *time = co_nmt_get_time(nmt);
+		if (time)
+			co_time_set_ind(time, &co_gw_net_time_ind, net);
+#endif
+
 #ifndef LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 		if (emcy)
@@ -936,14 +1020,28 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 				co_rpdo_set_ind(pdo, &co_gw_net_rpdo_ind, net);
 		}
 #endif
+
 		break;
 	}
 	case CO_NMT_CS_ENTER_PREOP: {
+#ifndef LELY_NO_CO_SYNC
+		co_sync_t *sync = co_nmt_get_sync(nmt);
+		if (sync)
+			co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
+#endif
+
+#ifndef LELY_NO_CO_TIME
+		co_time_t *time = co_nmt_get_time(nmt);
+		if (time)
+			co_time_set_ind(time, &co_gw_net_time_ind, net);
+#endif
+
 #ifndef LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 		if (emcy)
 			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
 #endif
+
 		break;
 	}
 	}
@@ -1031,6 +1129,67 @@ co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 	if (net->st_ind)
 		net->st_ind(nmt, id, st, net->st_data);
 }
+
+#ifndef LELY_NO_CO_MASTER
+static void
+co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
+		void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind__boot ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV__BOOT,
+		.net = net->id,
+		.node = id,
+		.st = st,
+		.es = es
+	};
+
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+	if (net->boot_ind)
+		net->boot_ind(nmt, id, st, es, net->boot_data);
+}
+#endif
+
+#ifndef LELY_NO_CO_SYNC
+static void
+co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
+{
+	__unused_var(sync);
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind__sync ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV__SYNC,
+		.net = net->id,
+		.cnt = cnt
+	};
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+
+	co_nmt_sync(net->nmt, cnt);
+}
+#endif
+
+#ifndef LELY_NO_CO_TIME
+static void
+co_gw_net_time_ind(co_time_t *time, const struct timespec *tp, void *data)
+{
+	__unused_var(time);
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind__time ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV__TIME,
+		.net = net->id,
+		.ts = *tp
+	};
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+}
+#endif
 
 #ifndef LELY_NO_CO_EMCY
 static void
