@@ -70,6 +70,13 @@ static int co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 static int co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_get_version *con);
 
+//! Processes an 'Inquire LSS address' confirmation.
+static int co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_lss_get_lssid *con);
+//! Processes an 'LSS inquire node-ID' confirmation.
+static int co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_lss_get_id *con);
+
 /*!
  * Processes a confirmation with a non-zero internal error code or SDO abort
  * code.
@@ -181,6 +188,35 @@ static size_t co_gw_txt_send_set_node(co_gw_txt_t *gw, int srv, void *data,
 static size_t co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
 
+//! Sends an 'LSS switch state global' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS switch state selective' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS configure node-ID' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS configure bit-rate' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS activate new bit-rate' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'Inquire LSS address' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS identify remote slave' request after parsing its parameters.
+static size_t co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+
 /*!
  * Lexes the prefix (sequence number and optional network and node-ID) of a
  * request.
@@ -225,6 +261,14 @@ static size_t co_gw_txt_lex_vs(const char *begin, const char *end,
 //! Lexes the transmission type of a configure PDO request.
 static size_t co_gw_txt_lex_trans(const char *begin, const char *end,
 		struct floc *at, co_unsigned8_t *ptrans);
+
+//! Lexes an LSS address.
+static size_t co_gw_txt_lex_id(const char *begin, const char *end,
+		struct floc *at, struct co_id *pid);
+
+//! Lexes an LSS address range.
+static size_t co_gw_txt_lex_id_sel(const char *begin, const char *end,
+		struct floc *at, struct co_id *plo, struct co_id *phi);
 
 LELY_CO_EXPORT void *
 __co_gw_txt_alloc(void)
@@ -341,6 +385,16 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
 	case CO_GW_SRV_SET_CMD_SIZE:
+	case CO_GW_SRV_LSS_SWITCH:
+	case CO_GW_SRV_LSS_SWITCH_SEL:
+	case CO_GW_SRV_LSS_SET_ID:
+	case CO_GW_SRV_LSS_SET_RATE:
+	case CO_GW_SRV_LSS_SWITCH_RATE:
+	case CO_GW_SRV_LSS_STORE:
+	case CO_GW_SRV_LSS_GET_LSSID:
+	case CO_GW_SRV_LSS_GET_ID:
+	case CO_GW_SRV_LSS_ID_SLAVE:
+	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
 		if (__unlikely(srv->size < sizeof(struct co_gw_con))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -454,6 +508,16 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	case CO_GW_SRV_SET_ID:
 	case CO_GW_SRV_SET_BOOTUP_IND:
 	case CO_GW_SRV_SET_NODE:
+	case CO_GW_SRV_LSS_SWITCH:
+	case CO_GW_SRV_LSS_SWITCH_SEL:
+	case CO_GW_SRV_LSS_SET_ID:
+	case CO_GW_SRV_LSS_SET_RATE:
+	case CO_GW_SRV_LSS_SWITCH_RATE:
+	case CO_GW_SRV_LSS_STORE:
+	case CO_GW_SRV_LSS_GET_LSSID:
+	case CO_GW_SRV_LSS_GET_ID:
+	case CO_GW_SRV_LSS_ID_SLAVE:
+	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
 		// A single number preceding the command is normally interpreted
 		// as the node-ID. However, in this case we take it to be the
 		// network-ID.
@@ -554,8 +618,12 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		chars = co_gw_txt_send_set_node(gw, srv, data, net, cp, end,
 				floc);
 		break;
-	case CO_GW_SRV_GET_VERSION: {
-		// 'info version' is a network-level command without any
+	case CO_GW_SRV_GET_VERSION:
+	case CO_GW_SRV_LSS_STORE:
+	case CO_GW_SRV_LSS_GET_ID:
+	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE: {
+		// 'info version', 'lss_store', 'lss_get_node' and
+		// 'lss_ident_nonconf' are network-level commands without any
 		// additional parameters.
 		struct co_gw_req_net req = {
 			.size = sizeof(req),
@@ -568,6 +636,34 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	}
 	case CO_GW_SRV_SET_CMD_SIZE:
 		chars = co_gw_txt_send_set_cmd_size(gw, srv, data, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_LSS_SWITCH:
+		chars = co_gw_txt_send_lss_switch(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_LSS_SWITCH_SEL:
+		chars = co_gw_txt_send_lss_switch_sel(gw, srv, data, net, cp,
+				end, floc);
+		break;
+	case CO_GW_SRV_LSS_SET_ID:
+		chars = co_gw_txt_send_lss_set_id(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_LSS_SET_RATE:
+		chars = co_gw_txt_send_lss_set_rate(gw, srv, data, net, cp, end,
+				floc);
+		break;
+	case CO_GW_SRV_LSS_SWITCH_RATE:
+		chars = co_gw_txt_send_lss_switch_rate(gw, srv, data, net, cp,
+				end, floc);
+		break;
+	case CO_GW_SRV_LSS_GET_LSSID:
+		chars = co_gw_txt_send_lss_get_lssid(gw, srv, data, net, cp,
+				end, floc);
+		break;
+	case CO_GW_SRV_LSS_ID_SLAVE:
+		chars = co_gw_txt_send_lss_id_slave(gw, srv, data, net, cp, end,
 				floc);
 		break;
 	}
@@ -661,6 +757,22 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		}
 		return co_gw_txt_recv_get_version(gw, seq,
 				(const struct co_gw_con_get_version *)con);
+	case CO_GW_SRV_LSS_GET_LSSID:
+		if (__unlikely(con->size
+				< sizeof(struct co_gw_con_lss_get_lssid))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_lss_get_lssid(gw, seq,
+				(const struct co_gw_con_lss_get_lssid *)con);
+	case CO_GW_SRV_LSS_GET_ID:
+		if (__unlikely(con->size
+				< sizeof(struct co_gw_con_lss_get_id))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_lss_get_id(gw, seq,
+				(const struct co_gw_con_lss_get_id *)con);
 	default:
 		return co_gw_txt_recv_err(gw, seq, 0, 0);
 	}
@@ -766,6 +878,26 @@ co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 			(con->revision >> 16) & 0xffff, con->revision & 0xffff,
 			con->serial_nr, con->gw_class, con->prot_hi,
 			con->prot_lo, CO_GW_TXT_IMPL_HI, CO_GW_TXT_IMPL_LO);
+}
+
+static int
+co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_lss_get_lssid *con)
+{
+	assert(con);
+	assert(con->srv == CO_GW_SRV_LSS_GET_LSSID);
+
+	return co_gw_txt_recv_fmt(gw, "[%u] 0x%08x", seq, con->id);
+}
+
+static int
+co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con_lss_get_id *con)
+{
+	assert(con);
+	assert(con->srv == CO_GW_SRV_LSS_GET_ID);
+
+	return co_gw_txt_recv_fmt(gw, "[%u] %u", seq, con->id);
 }
 
 static int
@@ -1272,7 +1404,6 @@ co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 	cp += chars;
-
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	co_unsigned8_t ltf = 0;
@@ -1595,6 +1726,235 @@ co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 	return cp - begin;
 }
 
+static size_t
+co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_SWITCH);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned8_t mode = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &mode)) || mode > 1)) {
+		diag_if(DIAG_ERROR, 0, at, "expected 0 or 1");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_lss_switch req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.mode = mode
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_SWITCH_SEL);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id id = CO_ID_INIT;
+	if (__unlikely(!(chars = co_gw_txt_lex_id(cp, end, at, &id))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req_lss_switch_sel req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.id = id
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_SET_ID);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned8_t node = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &node)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected node-ID");
+		return 0;
+	}
+	cp += chars;
+
+	if (__unlikely(!node || (node > CO_NUM_NODES && node != 0xff))) {
+		diag_if(DIAG_ERROR, 0, at,
+				"the node-ID must be in the range [1..%u, 255]",
+				CO_NUM_NODES);
+		return 0;
+	}
+
+	struct co_gw_req_node req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.node = node
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_SET_RATE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned8_t bitsel = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &bitsel)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected table selector");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	co_unsigned8_t bitidx = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &bitidx)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected table index");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_lss_set_rate req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.bitsel = bitsel,
+		.bitidx = bitidx
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_SWITCH_RATE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned16_t delay = 0;
+	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &delay)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected switch delay");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req_lss_switch_rate req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.delay = delay
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_GET_LSSID);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	co_unsigned8_t cs = 0;
+	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &cs)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected code for LSS number");
+		return 0;
+	}
+	cp += chars;
+	if (__unlikely(cs < 0x5a || cs > 0x5d)) {
+		diag_if(DIAG_ERROR, 0, at,
+				"code must be in the range [0x5A..0x5D]");
+		return 0;
+	}
+
+	struct co_gw_req_lss_get_lssid req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.cs = cs
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV_LSS_ID_SLAVE);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id lo = CO_ID_INIT;
+	struct co_id hi = CO_ID_INIT;
+	if (__unlikely(!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req_lss_id_slave req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.lo = lo,
+		.hi = hi
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
 static void
 co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req)
 {
@@ -1762,6 +2122,36 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 	} else if (!strncmp("init", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_INIT;
+	} else if (!strncmp("lss_activate_bitrate", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_SWITCH_RATE;
+	} else if (!strncmp("lss_conf_bitrate", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_SET_RATE;
+	} else if (!strncmp("lss_get_node", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_GET_ID;
+	} else if (!strncmp("lss_identity", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_ID_SLAVE;
+	} else if (!strncmp("lss_ident_nonconf", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_ID_NON_CFG_SLAVE;
+	} else if (!strncmp("lss_inquire_addr", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_GET_LSSID;
+	} else if (!strncmp("lss_set_node", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_SET_ID;
+	} else if (!strncmp("lss_store", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_STORE;
+	} else if (!strncmp("lss_switch_glob", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_SWITCH;
+	} else if (!strncmp("lss_switch_sel", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV_LSS_SWITCH_SEL;
 	} else if (!strncmp("preop", cp, chars)
 			|| !strncmp("preoperational", cp, chars)) {
 		cp += chars;
@@ -1866,7 +2256,7 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		}
 	} else {
 		diag_if(DIAG_ERROR, 0, at,
-				"expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
+				"expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'lss_activate_bitrate', 'lss_conf_bitrate', 'lss_get_node', 'lss_identity', 'lss_ident_nonconf', 'lss_inquire_addr', 'lss_set_node', 'lss_store', 'lss_switch_glob', 'lss_switch_sel', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
 		return 0;
 	}
 
@@ -2270,6 +2660,117 @@ co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
 
 	if (ptrans)
 		*ptrans = trans;
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_lex_id(const char *begin, const char *end, struct floc *at,
+		struct co_id *pid)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id id = CO_ID_INIT;
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.vendor_id)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.product_code)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected product code");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.revision)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected revision number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.serial_nr)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected serial number");
+		return 0;
+	}
+	cp += chars;
+
+	if (pid)
+		*pid = id;
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
+		struct co_id *plo, struct co_id *phi)
+{
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id lo = CO_ID_INIT;
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.vendor_id)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.product_code)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected product code");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	struct co_id hi = lo;
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.revision)))) {
+		diag_if(DIAG_ERROR, 0, at,
+				"expected lower bound for revision number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &hi.revision)))) {
+		diag_if(DIAG_ERROR, 0, at,
+				"expected upper bound for revision number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.serial_nr)))) {
+		diag_if(DIAG_ERROR, 0, at,
+				"expected lower bound for serial number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &hi.serial_nr)))) {
+		diag_if(DIAG_ERROR, 0, at,
+				"expected upper bound for serial number");
+		return 0;
+	}
+	cp += chars;
+
+	if (plo)
+		*plo = lo;
+
+	if (phi)
+		*phi = hi;
 
 	return cp - begin;
 }
