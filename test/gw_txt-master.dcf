@@ -75,7 +75,6 @@ DefaultValue=0x40000080
 ParameterName=Communication cycle period
 DataType=0x0007
 AccessType=rw
-DefaultValue=10000
 
 [1016]
 ParameterName=Consumer heartbeat time
