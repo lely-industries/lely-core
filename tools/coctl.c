@@ -23,6 +23,7 @@
 #include <lely/libc/unistd.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
+#include <lely/util/time.h>
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
 #include <lely/co/dcf.h>
@@ -54,6 +55,9 @@ struct co_net {
 	"Arguments: [options...] [<CAN interface> <EDS/DCF filename>]...\n" \
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
+	"  -i <ms>, --inhibit=<ms>\n" \
+	"                        Wait at least <ms> milliseconds between requests\n" \
+	"                        (default: 100)\n" \
 	"  -W, --no-wait         Do not wait for the previous command to complete\n" \
 	"                        before accepting the next one"
 
@@ -73,6 +77,7 @@ struct co_net net[CO_MAX_NET];
 io_poll_t *poll;
 
 int flags;
+int inhibit = 100;
 
 mtx_t wait_mtx;
 cnd_t wait_cond;
@@ -116,6 +121,8 @@ main(int argc, char *argv[])
 				break;
 			if (!strcmp(arg, "help")) {
 				flags |= FLAG_HELP;
+			} else if (!strncmp(arg, "inhibit=", 8)) {
+				inhibit = atoi(arg + 8);
 			} else if (!strcmp(arg, "no-wait")) {
 				flags |= FLAG_NO_WAIT;
 			} else {
@@ -123,7 +130,7 @@ main(int argc, char *argv[])
 						arg);
 			}
 		} else {
-			int c = getopt(argc, argv, ":hW");
+			int c = getopt(argc, argv, ":hi:W");
 			if (c == -1)
 				break;
 			switch (c) {
@@ -139,6 +146,9 @@ main(int argc, char *argv[])
 				break;
 			case 'h':
 				flags |= FLAG_HELP;
+				break;
+			case 'i':
+				inhibit = atoi(optarg);
 				break;
 			case 'W':
 				flags |= FLAG_NO_WAIT;
@@ -516,8 +526,22 @@ io_thrd_start(void *arg)
 	co_gw_txt_t *gw = arg;
 	assert(gw);
 
+	struct timespec last = { 0, 0 };
+	char *buf = NULL;
+	char *end = NULL;
+	char *cp = NULL;
 	struct floc at = { "<stdin>", 1, 1 };
 	for (;;) {
+		if (!buf) {
+			mtx_lock(&recv_mtx);
+			char *buf = recv_buf;
+			recv_buf = NULL;
+			mtx_unlock(&recv_mtx);
+			if (buf) {
+				end = buf + strlen(buf) + 1;
+				cp = buf;
+			}
+		}
 		if (!(flags & FLAG_NO_WAIT)) {
 			// Signal the main thread if no pending request remain.
 			mtx_lock(&wait_mtx);
@@ -529,25 +553,25 @@ io_thrd_start(void *arg)
 			mtx_unlock(&wait_mtx);
 		}
 		// Update the CAN network time.
+		struct timespec now = { 0, 0 };
+		timespec_get(&now, TIME_UTC);
 		for (co_unsigned16_t id = 1; id <= CO_MAX_NET; id++) {
 			if (!net[id - 1].net)
 				break;
-			struct timespec now = { 0, 0 };
-			timespec_get(&now, TIME_UTC);
 			can_net_set_time(net[id - 1].net, &now);
+			timespec_get(&now, TIME_UTC);
 		}
 		// Process user requests.
-		mtx_lock(&recv_mtx);
-		char *buf = recv_buf;
-		recv_buf = NULL;
-		mtx_unlock(&recv_mtx);
-		if (buf) {
-			char *end = buf + strlen(buf);
-			char *cp = buf;
-			size_t chars = 0;
-			while ((chars = co_gw_txt_send(gw, cp, end, &at)))
+		if (buf && (!inhibit || timespec_diff_msec(&now, &last)
+				>= inhibit)) {
+			size_t chars = co_gw_txt_send(gw, cp, end, &at);
+			if (chars) {
 				cp += chars;
-			free(buf);
+				timespec_get(&last, TIME_UTC);
+			} else {
+				free(buf);
+				buf = end = cp = NULL;
+			}
 		}
 		// Process incoming CAN frames.
 		struct io_event event = IO_EVENT_INIT;
@@ -565,6 +589,7 @@ io_thrd_start(void *arg)
 				can_net_recv(net->net, &msg);
 		}
 	}
+	free(buf);
 
 	return 0;
 }
