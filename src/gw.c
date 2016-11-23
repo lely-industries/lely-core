@@ -1094,6 +1094,8 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 	assert(pself);
 	assert(net);
 
+	co_gw_t *gw = net->gw;
+
 	errc_t errc = 0;
 
 	if (__unlikely(*pself)) {
@@ -1107,12 +1109,11 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 		goto error_create_sdo;
 	}
 
-	// The actual SDO timeout is limited by the gateway command timeout.
+	// The actual SDO timeout is limited by the global gateway command
+	// timeout.
 	int timeout = net->timeout;
-	if (net->gw->timeout)
-		timeout = timeout
-				? MIN(timeout, net->gw->timeout)
-				: net->gw->timeout;
+	if (gw->timeout)
+		timeout = timeout ? MIN(timeout, gw->timeout) : gw->timeout;
 	co_csdo_set_timeout(sdo, timeout);
 
 	struct co_gw_job *job = co_gw_job_create(pself, net, sdo,
@@ -1149,6 +1150,8 @@ co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
 	assert(pself);
 	assert(net);
 
+	co_gw_t *gw = net->gw;
+
 	if (__unlikely(*pself)) {
 		set_errnum(ERRNUM_BUSY);
 		return NULL;
@@ -1160,10 +1163,10 @@ co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
 		return NULL;
 	}
 
-	// The LSS timeout is limited by the gateway command timeout.
+	// The LSS timeout is limited by the global gateway command timeout.
 	int timeout = LELY_CO_LSS_TIMEOUT;
-	if (net->gw->timeout)
-		timeout = MIN(timeout, net->gw->timeout);
+	if (gw->timeout)
+		timeout = MIN(timeout, gw->timeout);
 	co_lss_set_timeout(lss, timeout);
 
 	return co_gw_job_create(pself, net, lss, NULL, req);
@@ -1566,6 +1569,8 @@ co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_SDO_TIMEOUT);
 
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+
 	if (__unlikely(req->size < sizeof(struct co_gw_req_set_sdo_timeout))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -1574,6 +1579,13 @@ co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 			(const struct co_gw_req_set_sdo_timeout *)req;
 
 	gw->net[net - 1]->timeout = par->timeout;
+
+	// The actual NMT SDO timeout is limited by the global gateway command
+	// timeout.
+	int timeout = par->timeout;
+	if (gw->timeout)
+		timeout = timeout ? MIN(timeout, gw->timeout) : gw->timeout;
+	co_nmt_set_timeout(nmt, timeout);
 
 	return co_gw_send_con(gw, req, 0, 0);
 }
@@ -2109,6 +2121,19 @@ co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)
 			(const struct co_gw_req_set_cmd_timeout *)req;
 
 	gw->timeout = par->timeout;
+
+	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++) {
+		if (!gw->net[id - 1])
+			continue;
+		// Limit the NMT SDO timeout for each network by the global
+		// gateway command timeout.
+		int timeout = gw->net[id - 1]->timeout;
+		if (gw->timeout)
+			timeout = timeout
+					? MIN(timeout, gw->timeout)
+					: gw->timeout;
+		co_nmt_set_timeout(gw->net[id - 1]->nmt, timeout);
+	}
 
 	return co_gw_send_con(gw, req, 0, 0);
 }

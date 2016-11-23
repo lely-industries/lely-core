@@ -25,6 +25,14 @@
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
+#ifndef LELY_CO_NMT_TIMEOUT
+/*!
+ * The default SDO timeout (in milliseconds) for the NMT 'boot slave' and
+ * 'check configuration' processes.
+ */
+#define LELY_CO_NMT_TIMEOUT	100
+#endif
+
 //! The NMT command specifier 'start'.
 #define CO_NMT_CS_START	0x01
 

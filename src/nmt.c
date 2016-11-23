@@ -42,14 +42,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifndef LELY_CO_NMT_TIMEOUT
-/*!
- * The default SDO timeout (in milliseconds) for the NMT 'boot slave' and
- * 'check configuration' processes.
- */
-#define LELY_CO_NMT_TIMEOUT	100
-#endif
-
 struct __co_nmt_state;
 //! An opaque CANopen NMT state type.
 typedef const struct __co_nmt_state co_nmt_state_t;
