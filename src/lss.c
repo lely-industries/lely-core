@@ -35,11 +35,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifndef LELY_CO_LSS_TIMEOUT
-//! The default LSS timeout (in milliseconds).
-#define LELY_CO_LSS_TIMEOUT	100
-#endif
-
 struct __co_lss_state;
 //! An opaque CANopen LSS state type.
 typedef const struct __co_lss_state co_lss_state_t;

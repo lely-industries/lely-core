@@ -32,6 +32,9 @@
 #include <lely/co/emcy.h>
 #endif
 #include <lely/co/gw.h>
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#include <lely/co/lss.h>
+#endif
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
 #ifndef LELY_NO_CO_RPDO
@@ -66,6 +69,10 @@ struct co_gw_net {
 	unsigned bootup_ind:1;
 	//! An array of pointers to the SDO upload/download jobs.
 	struct co_gw_job *sdo[CO_NUM_NODES];
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+	//! A pointer to the LSS job.
+	struct co_gw_job *lss;
+#endif
 	//! A pointer to the original NMT command indication function.
 	co_nmt_cs_ind_t *cs_ind;
 	//! A pointer to user-specified data for #cs_ind.
@@ -189,6 +196,29 @@ static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 static void co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
 
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+//! Creates a new LSS job.
+static struct co_gw_job *co_gw_job_create_lss(struct co_gw_job **pself,
+		struct co_gw_net *net, const struct co_gw_req *req);
+/*!
+ * The confirmation function for an 'LSS switch state selective', 'LSS identify
+ * remote slave' or 'LSS identify non-configured remote slaves' request.
+ */
+static void co_gw_job_lss_cs_ind(co_lss_t *lss, co_unsigned8_t cs, void *data);
+/*!
+ * The confirmation function for an 'LSS configure node-ID', 'LSS configure
+ * bit-rate' or 'LSS store configuration' request.
+ */
+static void co_gw_job_lss_err_ind(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned8_t err, co_unsigned8_t spec, void *data);
+//! The confirmation function for an 'Inquire LSS address' request.
+static void co_gw_job_lss_lssid_ind(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned32_t id, void *data);
+//! The confirmation function for an 'LSS inquire node-ID' request.
+static void co_gw_job_lss_nid_ind(co_lss_t *lss, co_unsigned8_t cs,
+		co_unsigned8_t id, void *data);
+#endif
+
 //! A CANopen gateway.
 struct __co_gw {
 	//! An array of pointers to the CANopen networks.
@@ -285,6 +315,39 @@ static int co_gw_recv_set_node(co_gw_t *gw, co_unsigned16_t net,
 //! Processes a 'Get version' request.
 static int co_gw_recv_get_version(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
+
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+//! Processes an 'LSS switch state global' request.
+static int co_gw_recv_lss_switch(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS switch state selective' request.
+static int co_gw_recv_lss_switch_sel(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS configure node-ID' request.
+static int co_gw_recv_lss_set_id(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS configure bit-rate' request.
+static int co_gw_recv_lss_set_rate(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS activate new bit-rate' request.
+static int co_gw_recv_lss_switch_rate(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS store configuration' request.
+static int co_gw_recv_lss_store(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'Inquire LSS address' request.
+static int co_gw_recv_lss_get_lssid(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS inquire node-ID' request.
+static int co_gw_recv_lss_get_id(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS identify remote slave' request.
+static int co_gw_recv_lss_id_slave(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS identify non-configured remote slaves' request.
+static int co_gw_recv_lss_id_non_cfg_slave(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+#endif
 
 //! Sends a confirmation with an internal error code or SDO abort code.
 static int co_gw_send_con(co_gw_t *gw, const struct co_gw_req *req, int iec,
@@ -520,6 +583,18 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_SET_BOOTUP_IND:
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+	case CO_GW_SRV_LSS_SWITCH:
+	case CO_GW_SRV_LSS_SWITCH_SEL:
+	case CO_GW_SRV_LSS_SET_ID:
+	case CO_GW_SRV_LSS_SET_RATE:
+	case CO_GW_SRV_LSS_SWITCH_RATE:
+	case CO_GW_SRV_LSS_STORE:
+	case CO_GW_SRV_LSS_GET_LSSID:
+	case CO_GW_SRV_LSS_GET_ID:
+	case CO_GW_SRV_LSS_ID_SLAVE:
+	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+#endif
 		if (__unlikely(req->size < sizeof(struct co_gw_req_net))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -665,6 +740,28 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		// We cannot guarantee a lack of memory resources will never
 		// occur.
 		return co_gw_send_con(gw, req, CO_GW_IEC_NO_MEM, 0);
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+	case CO_GW_SRV_LSS_SWITCH:
+		return co_gw_recv_lss_switch(gw, net, req);
+	case CO_GW_SRV_LSS_SWITCH_SEL:
+		return co_gw_recv_lss_switch_sel(gw, net, req);
+	case CO_GW_SRV_LSS_SET_ID:
+		return co_gw_recv_lss_set_id(gw, net, req);
+	case CO_GW_SRV_LSS_SET_RATE:
+		return co_gw_recv_lss_set_rate(gw, net, req);
+	case CO_GW_SRV_LSS_SWITCH_RATE:
+		return co_gw_recv_lss_switch_rate(gw, net, req);
+	case CO_GW_SRV_LSS_STORE:
+		return co_gw_recv_lss_store(gw, net, req);
+	case CO_GW_SRV_LSS_GET_LSSID:
+		return co_gw_recv_lss_get_lssid(gw, net, req);
+	case CO_GW_SRV_LSS_GET_ID:
+		return co_gw_recv_lss_get_id(gw, net, req);
+	case CO_GW_SRV_LSS_ID_SLAVE:
+		return co_gw_recv_lss_id_slave(gw, net, req);
+	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+		return co_gw_recv_lss_id_non_cfg_slave(gw, net, req);
+#endif
 	default:
 		iec = CO_GW_IEC_BAD_SRV;
 		goto error;
@@ -736,6 +833,9 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		net->sdo[id - 1] = NULL;
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+	net->lss = NULL;
+#endif
 
 	co_nmt_get_cs_ind(net->nmt, &net->cs_ind, &net->cs_data);
 	co_nmt_set_cs_ind(net->nmt, &co_gw_net_cs_ind, net);
@@ -791,6 +891,9 @@ co_gw_net_destroy(struct co_gw_net *net)
 
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 			co_gw_job_destroy(net->sdo[id - 1]);
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+		co_gw_job_destroy(net->lss);
+#endif
 
 		free(net);
 	}
@@ -988,9 +1091,15 @@ static struct co_gw_job *
 co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 		co_unsigned8_t id, const struct co_gw_req *req)
 {
+	assert(pself);
 	assert(net);
 
 	errc_t errc = 0;
+
+	if (__unlikely(*pself)) {
+		errc = errnum2c(ERRNUM_BUSY);
+		goto error_param;
+	}
 
 	co_csdo_t *sdo = co_csdo_create(co_nmt_get_net(net->nmt), NULL, id);
 	if (__unlikely(!sdo)) {
@@ -1018,6 +1127,7 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 error_create_job:
 	co_csdo_destroy(sdo);
 error_create_sdo:
+error_param:
 	set_errc(errc);
 	return NULL;
 }
@@ -1031,6 +1141,33 @@ co_gw_job_sdo_dtor(void *data)
 }
 
 #endif // !LELY_NO_CO_CSDO
+
+static struct co_gw_job *
+co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
+		const struct co_gw_req *req)
+{
+	assert(pself);
+	assert(net);
+
+	if (__unlikely(*pself)) {
+		set_errnum(ERRNUM_BUSY);
+		return NULL;
+	}
+
+	co_lss_t *lss = co_nmt_get_lss(net->nmt);
+	if (__unlikely(!lss)) {
+		set_errnum(ERRNUM_PERM);
+		return NULL;
+	}
+
+	// The LSS timeout is limited by the gateway command timeout.
+	int timeout = LELY_CO_LSS_TIMEOUT;
+	if (net->gw->timeout)
+		timeout = MIN(timeout, net->gw->timeout);
+	co_lss_set_timeout(lss, timeout);
+
+	return co_gw_job_create(pself, net, lss, NULL, req);
+}
 
 static void
 co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
@@ -1097,6 +1234,148 @@ co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_gw_job_destroy(job);
 }
 
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+
+static void
+co_gw_job_lss_cs_ind(co_lss_t *lss, co_unsigned8_t cs, void *data)
+{
+	__unused_var(lss);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	co_gw_job_remove(job);
+
+	int iec = CO_GW_IEC_TIMEOUT;
+	if (cs) {
+		iec = CO_GW_IEC_LSS;
+		switch (job->req.srv) {
+		case CO_GW_SRV_LSS_SWITCH_SEL:
+			if (cs == 0x44)
+				iec = 0;
+			break;
+		case CO_GW_SRV_LSS_ID_SLAVE:
+			if (cs == 0x4f)
+				iec = 0;
+			break;
+		case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+			if (cs == 0x50)
+				iec = 0;
+			break;
+		}
+	}
+	co_gw_send_con(job->net->gw, &job->req, iec, 0);
+
+	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_lss_err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
+		co_unsigned8_t spec, void *data)
+{
+	__unused_var(lss);
+	__unused_var(spec);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	co_gw_job_remove(job);
+
+	int iec = CO_GW_IEC_TIMEOUT;
+	if (cs) {
+		iec = CO_GW_IEC_LSS;
+		switch (job->req.srv) {
+		case CO_GW_SRV_LSS_SET_ID:
+			if (cs == 0x11)
+				iec = err ? CO_GW_IEC_LSS_ID : 0;
+			break;
+		case CO_GW_SRV_LSS_SET_RATE:
+			if (cs == 0x13)
+				iec = err ? CO_GW_IEC_LSS_RATE : 0;
+			break;
+		case CO_GW_SRV_LSS_STORE:
+			if (cs == 0x17)
+				iec = err ? CO_GW_IEC_LSS_PARAM : 0;
+			break;
+		}
+	}
+	co_gw_send_con(job->net->gw, &job->req, iec, 0);
+
+	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_lss_lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id,
+		void *data)
+{
+	__unused_var(lss);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+	assert(job->req.srv == CO_GW_SRV_LSS_GET_LSSID);
+	assert(job->req.size >= sizeof(struct co_gw_req_lss_get_lssid));
+
+	struct co_gw_req_lss_get_lssid *req =
+			(struct co_gw_req_lss_get_lssid *)&job->req;
+
+	co_gw_job_remove(job);
+
+	int iec = 0;
+	if (!cs)
+		iec = CO_GW_IEC_TIMEOUT;
+	else if (cs != req->cs)
+		iec = CO_GW_IEC_LSS;
+
+	if (iec) {
+		co_gw_send_con(job->net->gw, &job->req, iec, 0);
+	} else {
+		struct co_gw_con_lss_get_lssid con = {
+			.size = sizeof(con),
+			.srv = req->srv,
+			.data = req->data,
+			.id = id
+		};
+		co_gw_send_srv(job->net->gw, (struct co_gw_srv *)&con);
+	}
+
+	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_lss_nid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id,
+		void *data)
+{
+	__unused_var(lss);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+	assert(job->req.srv == CO_GW_SRV_LSS_GET_ID);
+
+	co_gw_job_remove(job);
+
+	int iec = 0;
+	if (!cs)
+		iec = CO_GW_IEC_TIMEOUT;
+	else if (cs != 0x5e)
+		iec = CO_GW_IEC_LSS;
+
+	if (iec) {
+		co_gw_send_con(job->net->gw, &job->req, iec, 0);
+	} else {
+		struct co_gw_con_lss_get_id con = {
+			.size = sizeof(con),
+			.srv = job->req.srv,
+			.data = job->req.data,
+			.id = id
+		};
+		co_gw_send_srv(job->net->gw, (struct co_gw_srv *)&con);
+	}
+
+	co_gw_job_destroy(job);
+}
+
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
+
 #ifndef LELY_NO_CO_RPDO
 static void
 co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
@@ -1146,11 +1425,6 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			(const struct co_gw_req_sdo_up *)req;
 
 	int iec = 0;
-	if (__unlikely(gw->net[net - 1]->sdo[node - 1])) {
-		iec = CO_GW_IEC_INTERN;
-		goto error_srv;
-	}
-
 	errc_t errc = get_errc();
 
 	struct co_gw_job *job = NULL;
@@ -1228,11 +1502,6 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	}
 
 	int iec = 0;
-	if (__unlikely(gw->net[net - 1]->sdo[node - 1])) {
-		iec = CO_GW_IEC_INTERN;
-		goto error_srv;
-	}
-
 	errc_t errc = get_errc();
 
 	struct co_gw_job *job = NULL;
@@ -1928,7 +2197,9 @@ co_gw_recv_get_version(co_gw_t *gw, co_unsigned16_t net,
 	assert(req);
 	assert(req->srv == CO_GW_SRV_GET_VERSION);
 
-	co_dev_t *dev = co_nmt_get_dev(gw->net[net - 1]->nmt);
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_dev_t *dev = co_nmt_get_dev(nmt);
+
 	struct co_gw_con_get_version con = {
 		.size = sizeof(con),
 		.srv = req->srv,
@@ -1943,6 +2214,441 @@ co_gw_recv_get_version(co_gw_t *gw, co_unsigned16_t net,
 	};
 	return co_gw_send_srv(gw, (struct co_gw_srv *)&con);
 }
+
+#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+
+static int
+co_gw_recv_lss_switch(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_SWITCH);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_lss_t *lss = co_nmt_get_lss(nmt);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_switch *par =
+			(const struct co_gw_req_lss_switch *)req;
+
+	int iec = 0;
+
+	if (__unlikely(!lss)) {
+		iec = CO_GW_IEC_BAD_SRV;
+		goto error;
+	}
+
+	errc_t errc = get_errc();
+	if (__unlikely(co_lss_switch_req(lss, par->mode) == -1)) {
+		iec = errnum2iec(get_errnum());
+		set_errc(errc);
+	}
+
+error:
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_switch_sel(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_SWITCH_SEL);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch_sel))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_switch_sel *par =
+			(const struct co_gw_req_lss_switch_sel *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_switch_sel_req(job->data, &par->id,
+			&co_gw_job_lss_cs_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_switch_sel_req;
+	}
+
+	return 0;
+
+error_switch_sel_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_set_id(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_SET_ID);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_node *par = (const struct co_gw_req_node *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_set_id_req(job->data, par->node,
+			&co_gw_job_lss_err_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_set_id_req;
+	}
+
+	return 0;
+
+error_set_id_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_set_rate(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_SET_RATE);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_set_rate))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_set_rate *par =
+			(const struct co_gw_req_lss_set_rate *)req;
+
+	int iec = 0;
+
+	if (__unlikely(par->bitsel)) {
+		iec = CO_GW_IEC_LSS_RATE;
+		goto error_srv;
+	}
+
+	co_unsigned16_t rate;
+	switch (par->bitidx) {
+	case 0: rate = 1000; break;
+	case 1: rate = 800; break;
+	case 2: rate = 500; break;
+	case 3: rate = 250; break;
+	case 4: rate = 125; break;
+	case 6: rate = 50; break;
+	case 7: rate = 20; break;
+	case 8: rate = 10; break;
+	case 9: rate = 0; break;
+	default:
+		iec = CO_GW_IEC_LSS_RATE;
+		goto error_srv;
+	}
+
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_set_rate_req(job->data, rate,
+			&co_gw_job_lss_err_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_set_rate_req;
+	}
+
+	return 0;
+
+error_set_rate_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+error_srv:
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_switch_rate(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_SWITCH_RATE);
+
+	co_nmt_t *nmt = gw->net[net - 1]->nmt;
+	co_lss_t *lss = co_nmt_get_lss(nmt);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch_rate))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_switch_rate *par =
+			(const struct co_gw_req_lss_switch_rate *)req;
+
+	int iec = 0;
+
+	if (__unlikely(!lss)) {
+		iec = CO_GW_IEC_BAD_SRV;
+		goto error;
+	}
+
+	errc_t errc = get_errc();
+	if (__unlikely(co_lss_switch_rate_req(lss, par->delay) == -1)) {
+		iec = errnum2iec(get_errnum());
+		set_errc(errc);
+	}
+
+error:
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_store(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_STORE);
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_store_req(job->data, &co_gw_job_lss_err_ind, job)
+			== -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_store_req;
+	}
+
+	return 0;
+
+error_store_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_get_lssid(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_GET_LSSID);
+
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_get_lssid))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_get_lssid *par =
+			(const struct co_gw_req_lss_get_lssid *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	switch (par->cs) {
+	case 0x5a:
+		if (__unlikely(co_lss_get_vendor_id_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_switch_sel_req;
+		}
+		break;
+	case 0x5b:
+		if (__unlikely(co_lss_get_product_code_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_switch_sel_req;
+		}
+		break;
+	case 0x5c:
+		if (__unlikely(co_lss_get_revision_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_switch_sel_req;
+		}
+		break;
+	case 0x5d:
+		if (__unlikely(co_lss_get_serial_nr_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1)) {
+			iec = errnum2iec(get_errnum());
+			goto error_switch_sel_req;
+		}
+		break;
+	default:
+		iec = CO_GW_IEC_LSS;
+		goto error_cs;
+	}
+
+	return 0;
+
+error_switch_sel_req:
+error_cs:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_get_id(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_GET_ID);
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_get_id_req(job->data, &co_gw_job_lss_nid_ind, job)
+			== -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_get_id_req;
+	}
+
+	return 0;
+
+error_get_id_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_id_slave(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_ID_SLAVE);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_id_slave))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req_lss_id_slave *par =
+			(const struct co_gw_req_lss_id_slave *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_id_slave_req(job->data, &par->lo, &par->hi,
+			&co_gw_job_lss_cs_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_id_slave_req;
+	}
+
+	return 0;
+
+error_id_slave_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv_lss_id_non_cfg_slave(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV_LSS_ID_NON_CFG_SLAVE);
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_id_non_cfg_slave_req(job->data,
+			&co_gw_job_lss_cs_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_id_non_cfg_slave_req;
+	}
+
+	return 0;
+
+error_id_non_cfg_slave_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 
 static int
 co_gw_send_con(co_gw_t *gw, const struct co_gw_req *req, int iec,

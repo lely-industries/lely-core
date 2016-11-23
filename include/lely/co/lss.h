@@ -25,6 +25,11 @@
 #include <lely/can/net.h>
 #include <lely/co/dev.h>
 
+#ifndef LELY_CO_LSS_TIMEOUT
+//! The default LSS timeout (in milliseconds).
+#define LELY_CO_LSS_TIMEOUT	100
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,8 +41,8 @@ extern "C" {
  * \param lss   a pointer to an LSS slave service.
  * \param rate  the new baudrate (in kbit/s), or 0 for automatic bit rate
  *              detection.
- * \param delay the delay (in ms) before the switch and the delay after the
- *              switch during which CAN frames MUST NOT be sent.
+ * \param delay the delay (in milliseconds) before the switch and the delay
+ *              after the switch during which CAN frames MUST NOT be sent.
  * \param data  a pointer to user-specified data.
  */
 typedef void co_lss_rate_ind_t(co_lss_t *lss, co_unsigned16_t rate, int delay,
@@ -317,8 +322,8 @@ LELY_CO_EXTERN int co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate,
  * See section 6.4.4 in CiA 305 version 3.0.0.
  *
  * \param lss   a pointer to an LSS master service.
- * \param delay the delay (in ms) before the switch and the delay after the
- *              switch during which CAN frames MUST NOT be sent.
+ * \param delay the delay (in milliseconds) before the switch and the delay
+ *              after the switch during which CAN frames MUST NOT be sent.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.

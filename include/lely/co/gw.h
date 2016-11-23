@@ -123,6 +123,36 @@
 //! CANopen gateway service: Set command size.
 #define CO_GW_SRV_SET_CMD_SIZE	0x64
 
+//! CANopen gateway service: LSS switch state global.
+#define CO_GW_SRV_LSS_SWITCH	0x81
+
+//! CANopen gateway service: LSS switch state selective.
+#define CO_GW_SRV_LSS_SWITCH_SEL	0x82
+
+//! CANopen gateway service: LSS configure node-ID.
+#define CO_GW_SRV_LSS_SET_ID	0x83
+
+//! CANopen gateway service: LSS configure bit-rate.
+#define CO_GW_SRV_LSS_SET_RATE	0x84
+
+//! CANopen gateway service: LSS activate new bit-rate.
+#define CO_GW_SRV_LSS_SWITCH_RATE	0x85
+
+//! CANopen gateway service: LSS store configuration.
+#define CO_GW_SRV_LSS_STORE	0x86
+
+//! CANopen gateway service: Inquire LSS address.
+#define CO_GW_SRV_LSS_GET_LSSID	0x87
+
+//! CANopen gateway service: LSS inquire node-ID.
+#define CO_GW_SRV_LSS_GET_ID	0x88
+
+//! CANopen gateway service: LSS identify remote slave.
+#define CO_GW_SRV_LSS_ID_SLAVE	0x89
+
+//! CANopen gateway service: LSS identify non-configured remote slaves.
+#define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE	0x8a
+
 //! CANopen gateway internal error: Request not supported.
 #define CO_GW_IEC_BAD_SRV	100
 
@@ -527,6 +557,94 @@ struct co_gw_req_set_cmd_size {
 	co_unsigned32_t n;
 };
 
+//! The parameters of a CANopen gateway 'LSS switch state global' request.
+struct co_gw_req_lss_switch {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_SWITCH).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! 0 for waiting state, 1 for configuration state.
+	co_unsigned8_t mode;
+};
+
+//! The parameters of a CANopen gateway 'LSS switch state selective' request.
+struct co_gw_req_lss_switch_sel {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_SWITCH_SEL).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The LSS address of the slave to be configured.
+	struct co_id id;
+};
+
+//! The parameters of a CANopen gateway 'LSS configure bit-rate' request.
+struct co_gw_req_lss_set_rate {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_SET_RATE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The bit timing selector.
+	co_unsigned8_t bitsel;
+	//! The bit timing index.
+	co_unsigned8_t bitidx;
+};
+
+//! The parameters of a CANopen gateway 'LSS activate new bit-rate' request.
+struct co_gw_req_lss_switch_rate {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_SWITCH_RATE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The delay (in milliseconds).
+	co_unsigned16_t delay;
+};
+
+//! The parameters of a CANopen gateway 'Inquire LSS address' request.
+struct co_gw_req_lss_get_lssid {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_GET_LSSID).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The command specifier (one of 0x5a, 0x5b, 0x5c or 0x5d).
+	co_unsigned8_t cs;
+};
+
+//! The parameters of a CANopen gateway 'LSS identify remote slave' request.
+struct co_gw_req_lss_id_slave {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_ID_SLAVE).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The lower bound of the LSS address.
+	struct co_id lo;
+	//! The upper bound of the LSS address.
+	struct co_id hi;
+};
+
 //! The common parameters of a CANopen gateway confirmation.
 struct co_gw_con {
 	//! The size of this struct (in bytes).
@@ -618,6 +736,38 @@ struct co_gw_con_get_version {
 	co_unsigned8_t prot_hi;
 	//! The protocol version (low number).
 	co_unsigned8_t prot_lo;
+};
+
+//! The parameters of a CANopen gateway 'Inquire LSS address' confirmation.
+struct co_gw_con_lss_get_lssid {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_GET_LSSID).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The LSS number.
+	co_unsigned32_t id;
+};
+
+//! The parameters of a CANopen gateway 'LSS inquire node-ID' confirmation.
+struct co_gw_con_lss_get_id {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_LSS_GET_ID).
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The node-ID.
+	co_unsigned8_t id;
 };
 
 //! The parameters of a CANopen gateway 'RPDO received' indication.
