@@ -77,6 +77,10 @@ static int co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
 static int co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_lss_get_id *con);
 
+//! Processes an 'LSS Slowscan/Fastscan' confirmation.
+static int co_gw_txt_recv__lss_scan(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con__lss_scan *con);
+
 /*!
  * Processes a confirmation with a non-zero internal error code or SDO abort
  * code.
@@ -214,6 +218,15 @@ static size_t co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv,
 		const char *end, struct floc *at);
 //! Sends an 'LSS identify remote slave' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+
+//! Sends an 'LSS Slowscan' request after parsing its parameters.
+static size_t co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv,
+		void *data, co_unsigned16_t net, const char *begin,
+		const char *end, struct floc *at);
+//! Sends an 'LSS Fastscan' request after parsing its parameters.
+static size_t co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
@@ -395,6 +408,8 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	case CO_GW_SRV_LSS_GET_ID:
 	case CO_GW_SRV_LSS_ID_SLAVE:
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+	case CO_GW_SRV__LSS_SLOWSCAN:
+	case CO_GW_SRV__LSS_FASTSCAN:
 		if (__unlikely(srv->size < sizeof(struct co_gw_con))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
@@ -518,6 +533,8 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	case CO_GW_SRV_LSS_GET_ID:
 	case CO_GW_SRV_LSS_ID_SLAVE:
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+	case CO_GW_SRV__LSS_SLOWSCAN:
+	case CO_GW_SRV__LSS_FASTSCAN:
 		// A single number preceding the command is normally interpreted
 		// as the node-ID. However, in this case we take it to be the
 		// network-ID.
@@ -666,6 +683,14 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		chars = co_gw_txt_send_lss_id_slave(gw, srv, data, net, cp, end,
 				floc);
 		break;
+	case CO_GW_SRV__LSS_SLOWSCAN:
+		chars = co_gw_txt_send__lss_slowscan(gw, srv, data, net, cp,
+				end, floc);
+		break;
+	case CO_GW_SRV__LSS_FASTSCAN:
+		chars = co_gw_txt_send__lss_fastscan(gw, srv, data, net, cp,
+				end, floc);
+		break;
 	}
 	if (__unlikely(!chars))
 		goto error;
@@ -773,6 +798,15 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		}
 		return co_gw_txt_recv_lss_get_id(gw, seq,
 				(const struct co_gw_con_lss_get_id *)con);
+	case CO_GW_SRV__LSS_SLOWSCAN:
+	case CO_GW_SRV__LSS_FASTSCAN:
+		if (__unlikely(con->size
+				< sizeof(struct co_gw_con__lss_scan))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv__lss_scan(gw, seq,
+				(const struct co_gw_con__lss_scan *)con);
 	default:
 		return co_gw_txt_recv_err(gw, seq, 0, 0);
 	}
@@ -898,6 +932,17 @@ co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con->srv == CO_GW_SRV_LSS_GET_ID);
 
 	return co_gw_txt_recv_fmt(gw, "[%u] %u", seq, con->id);
+}
+
+static int
+co_gw_txt_recv__lss_scan(co_gw_txt_t *gw, co_unsigned32_t seq,
+		const struct co_gw_con__lss_scan *con)
+{
+	assert(con);
+
+	return co_gw_txt_recv_fmt(gw, "[%u] 0x%0x 0x%0x 0x%0x 0x%0x", seq,
+			con->id.vendor_id, con->id.product_code,
+			con->id.revision, con->id.serial_nr);
 }
 
 static int
@@ -1955,6 +2000,119 @@ co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv, void *data,
 	return cp - begin;
 }
 
+static size_t
+co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV__LSS_SLOWSCAN);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id lo = CO_ID_INIT;
+	struct co_id hi = CO_ID_INIT;
+	if (__unlikely(!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi))))
+		return 0;
+	cp += chars;
+
+	struct co_gw_req__lss_scan req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.id_1 = lo,
+		.id_2 = hi
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
+static size_t
+co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at)
+{
+	assert(srv == CO_GW_SRV__LSS_FASTSCAN);
+	assert(begin);
+
+	const char *cp = begin;
+	size_t chars = 0;
+
+	struct co_id id = CO_ID_INIT;
+	struct co_id mask = CO_ID_INIT;
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.vendor_id)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.vendor_id)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID mask");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.product_code)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected product code");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at,
+			&mask.product_code)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected product code mask");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.revision)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected revision number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.revision)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected revision number mask");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.serial_nr)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected serial number");
+		return 0;
+	}
+	cp += chars;
+	cp += lex_ctype(&isblank, cp, end, at);
+
+	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.serial_nr)))) {
+		diag_if(DIAG_ERROR, 0, at, "expected serial number mask");
+		return 0;
+	}
+	cp += chars;
+
+	struct co_gw_req__lss_scan req = {
+		.size = sizeof(req),
+		.srv = srv,
+		.data = data,
+		.net = net,
+		.id_1 = id,
+		.id_2 = mask
+	};
+	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
+
+	return cp - begin;
+}
+
 static void
 co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req)
 {
@@ -2072,7 +2230,13 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		return 0;
 	}
 
-	if (!strncmp("boot_up_indication", cp, chars)) {
+	if (!strncmp("_lss_fastscan", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV__LSS_FASTSCAN;
+	} else if (!strncmp("_lss_slowscan", cp, chars)) {
+		cp += chars;
+		srv = CO_GW_SRV__LSS_SLOWSCAN;
+	} else if (!strncmp("boot_up_indication", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_SET_BOOTUP_IND;
 	} else if (!strncmp("disable", cp, chars)) {
@@ -2256,7 +2420,7 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		}
 	} else {
 		diag_if(DIAG_ERROR, 0, at,
-				"expected 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'lss_activate_bitrate', 'lss_conf_bitrate', 'lss_get_node', 'lss_identity', 'lss_ident_nonconf', 'lss_inquire_addr', 'lss_set_node', 'lss_store', 'lss_switch_glob', 'lss_switch_sel', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
+				"expected '_lss_fastscan', '_lss_slowscan', 'boot_up_indication', 'disable', 'enable', 'info', 'init', 'lss_activate_bitrate', 'lss_conf_bitrate', 'lss_get_node', 'lss_identity', 'lss_ident_nonconf', 'lss_inquire_addr', 'lss_set_node', 'lss_store', 'lss_switch_glob', 'lss_switch_sel', 'preop[erational]', 'r[ead]', 'reset', 'set', 'start', 'stop', or 'w[rite]'");
 		return 0;
 	}
 

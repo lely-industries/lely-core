@@ -153,6 +153,12 @@
 //! CANopen gateway service: LSS identify non-configured remote slaves.
 #define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE	0x8a
 
+//! Lely-specific gateway service: LSS Slowscan.
+#define CO_GW_SRV__LSS_SLOWSCAN 0x91
+
+//! Lely-specific gateway service: LSS Fastscan.
+#define CO_GW_SRV__LSS_FASTSCAN 0x92
+
 //! CANopen gateway internal error: Request not supported.
 #define CO_GW_IEC_BAD_SRV	100
 
@@ -645,6 +651,33 @@ struct co_gw_req_lss_id_slave {
 	struct co_id hi;
 };
 
+//! The parameters of a CANopen gateway 'LSS Slowscan/Fastscan' request.
+struct co_gw_req__lss_scan {
+	//! The size of this struct (in bytes).
+	size_t size;
+	/*!
+	 * The service number (#CO_GW_SRV__LSS_SLOWSCAN or
+	 * #CO_GW_SRV__LSS_FASTSCAN).
+	 */
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The network-ID.
+	co_unsigned16_t net;
+	/*!
+	 * In case of an LSS Slowscan request, the lower bound of the LSS
+	 * address; in case of an LSS Fastscan request, the bits of LSS address
+	 * that are already known.
+	 */
+	struct co_id id_1;
+	/*!
+	 * In case of an LSS Slowscan request, the upper bound of the LSS
+	 * address; in case of an LSS Fastscan request, the mask specifying
+	 * which bits of the LSS address are already known.
+	 */
+	struct co_id id_2;
+};
+
 //! The common parameters of a CANopen gateway confirmation.
 struct co_gw_con {
 	//! The size of this struct (in bytes).
@@ -768,6 +801,25 @@ struct co_gw_con_lss_get_id {
 	co_unsigned32_t ac;
 	//! The node-ID.
 	co_unsigned8_t id;
+};
+
+//! The parameters of a CANopen gateway 'LSS Slowscan/Fastscan' confirmation.
+struct co_gw_con__lss_scan {
+	//! The size of this struct (in bytes).
+	size_t size;
+	/*!
+	 * The service number (#CO_GW_SRV__LSS_SLOWSCAN or
+	 * #CO_GW_SRV__LSS_FASTSCAN).
+	 */
+	int srv;
+	//! A pointer to user-specified data.
+	void *data;
+	//! The internal error code (0 on success).
+	int iec;
+	//! The SDO abort code (0 on success).
+	co_unsigned32_t ac;
+	//! The LSS address.
+	struct co_id id;
 };
 
 //! The parameters of a CANopen gateway 'RPDO received' indication.

@@ -217,6 +217,9 @@ static void co_gw_job_lss_lssid_ind(co_lss_t *lss, co_unsigned8_t cs,
 //! The confirmation function for an 'LSS inquire node-ID' request.
 static void co_gw_job_lss_nid_ind(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned8_t id, void *data);
+//! The confirmation function for an 'LSS Slowscan/Fastscan' request.
+static void co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs,
+		const struct co_id *id, void *data);
 #endif
 
 //! A CANopen gateway.
@@ -346,6 +349,13 @@ static int co_gw_recv_lss_id_slave(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 //! Processes an 'LSS identify non-configured remote slaves' request.
 static int co_gw_recv_lss_id_non_cfg_slave(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+
+//! Processes an 'LSS Slowscan' request.
+static int co_gw_recv__lss_slowscan(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req);
+//! Processes an 'LSS Fastscan' request.
+static int co_gw_recv__lss_fastscan(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 
@@ -594,6 +604,8 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_LSS_GET_ID:
 	case CO_GW_SRV_LSS_ID_SLAVE:
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+	case CO_GW_SRV__LSS_SLOWSCAN:
+	case CO_GW_SRV__LSS_FASTSCAN:
 #endif
 		if (__unlikely(req->size < sizeof(struct co_gw_req_net))) {
 			set_errnum(ERRNUM_INVAL);
@@ -761,6 +773,10 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		return co_gw_recv_lss_id_slave(gw, net, req);
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
 		return co_gw_recv_lss_id_non_cfg_slave(gw, net, req);
+	case CO_GW_SRV__LSS_SLOWSCAN:
+		return co_gw_recv__lss_slowscan(gw, net, req);
+	case CO_GW_SRV__LSS_FASTSCAN:
+		return co_gw_recv__lss_fastscan(gw, net, req);
 #endif
 	default:
 		iec = CO_GW_IEC_BAD_SRV;
@@ -1370,6 +1386,48 @@ co_gw_job_lss_nid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id,
 			.srv = job->req.srv,
 			.data = job->req.data,
 			.id = id
+		};
+		co_gw_send_srv(job->net->gw, (struct co_gw_srv *)&con);
+	}
+
+	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
+		void *data)
+{
+	__unused_var(lss);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	co_gw_job_remove(job);
+
+	int iec = CO_GW_IEC_TIMEOUT;
+	if (cs) {
+		iec = CO_GW_IEC_LSS;
+		switch (job->req.srv) {
+		case CO_GW_SRV__LSS_SLOWSCAN:
+			if (cs == 0x44)
+				iec = 0;
+			break;
+		case CO_GW_SRV__LSS_FASTSCAN:
+			if (cs == 0x4f)
+				iec = 0;
+			break;
+		}
+	}
+
+	if (iec) {
+		co_gw_send_con(job->net->gw, &job->req, iec, 0);
+	} else {
+		assert(id);
+		struct co_gw_con__lss_scan con = {
+			.size = sizeof(con),
+			.srv = job->req.srv,
+			.data = job->req.data,
+			.id = *id
 		};
 		co_gw_send_srv(job->net->gw, (struct co_gw_srv *)&con);
 	}
@@ -2667,6 +2725,88 @@ co_gw_recv_lss_id_non_cfg_slave(co_gw_t *gw, co_unsigned16_t net,
 	return 0;
 
 error_id_non_cfg_slave_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv__lss_slowscan(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV__LSS_SLOWSCAN);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req__lss_scan))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req__lss_scan *par =
+			(const struct co_gw_req__lss_scan *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_slowscan_req(job->data, &par->id_1, &par->id_2,
+			&co_gw_job_lss_scan_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_slowscan_req;
+	}
+
+	return 0;
+
+error_slowscan_req:
+	co_gw_job_destroy(job);
+error_create_job:
+	set_errc(errc);
+	return co_gw_send_con(gw, req, iec, 0);
+}
+
+static int
+co_gw_recv__lss_fastscan(co_gw_t *gw, co_unsigned16_t net,
+		const struct co_gw_req *req)
+{
+	assert(gw);
+	assert(net && net <= CO_GW_NUM_NET && gw->net[net - 1]);
+	assert(req);
+	assert(req->srv == CO_GW_SRV__LSS_FASTSCAN);
+
+	if (__unlikely(req->size < sizeof(struct co_gw_req__lss_scan))) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+	const struct co_gw_req__lss_scan *par =
+			(const struct co_gw_req__lss_scan *)req;
+
+	int iec = 0;
+	errc_t errc = get_errc();
+
+	struct co_gw_job *job = co_gw_job_create_lss(&gw->net[net - 1]->lss,
+			gw->net[net - 1], req);
+	if (__unlikely(!job)) {
+		iec = errnum2iec(get_errnum());
+		goto error_create_job;
+	}
+
+	if (__unlikely(co_lss_fastscan_req(job->data, &par->id_1, &par->id_2,
+			&co_gw_job_lss_scan_ind, job) == -1)) {
+		iec = errnum2iec(get_errnum());
+		goto error_fastscan_req;
+	}
+
+	return 0;
+
+error_fastscan_req:
 	co_gw_job_destroy(job);
 error_create_job:
 	set_errc(errc);
