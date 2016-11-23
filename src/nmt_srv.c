@@ -52,76 +52,48 @@
 #include <stdlib.h>
 
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-
 //! Initializes all Receive/Transmit-PDO services. \see co_nmt_srv_fini_pdo()
 static void co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-
 //! Finalizes all Receive/Transmit-PDO services. \see co_nmt_srv_init_pdo()
 static void co_nmt_srv_fini_pdo(struct co_nmt_srv *srv);
-
 #endif
 
 //! Initializes all Server/Client-SDO services. \see co_nmt_srv_fini_sdo()
 static void co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-
 //! Finalizes all Server/Client-SDO services. \see co_nmt_srv_init_sdo()
 static void co_nmt_srv_fini_sdo(struct co_nmt_srv *srv);
 
 #ifndef LELY_NO_CO_SYNC
-
 //! Initializes the SYNC producer/consumer service. \see co_nmt_srv_fini_sync()
 static void co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-
 //! Finalizes the SYNC producer/consumer service. \see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
-
 #endif
 
 #ifndef LELY_NO_CO_TIME
-
 //! Initializes the TIME producer/consumer service. \see co_nmt_srv_fini_time()
 static void co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-
 //! Finalizes the TIME producer/consumer service. \see co_nmt_srv_init_time()
 static void co_nmt_srv_fini_time(struct co_nmt_srv *srv);
-
 #endif
 
 #ifndef LELY_NO_CO_EMCY
-
 //! Initializes the EMCY producer/consumer service. \see co_nmt_srv_fini_emcy()
 static void co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-
 //! Finalizes the EMCY producer/consumer service. \see co_nmt_srv_init_emcy()
 static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
-
 #endif
 
 #ifndef LELY_NO_CO_LSS
-
 //! Initializes the LSS master/slave service. \see co_nmt_srv_fini_lss()
 static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt);
-
 //! Finalizes the EMCY master/slave service. \see co_nmt_srv_init_lss()
 static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
-
-#endif
-
-#ifndef LELY_NO_CO_SYNC
-
-/*!
- * The SYNC indication function for NMT masters/slaves. This function passes the
- * SYNC object on to all active Receive/Transmit-PDO services.
- *
- * \see co_sync_ind_t
- */
-static void co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data);
-
 #endif
 
 //! The maximum number of Receive/Transmit-PDOs.
@@ -216,6 +188,31 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 #else
 	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_init_lss(srv, nmt);
+#endif
+}
+
+void
+co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data)
+{
+#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
+	__unused_var(sync);
+	struct co_nmt_srv *srv = data;
+	assert(srv);
+
+#ifndef LELY_NO_CO_TPDO
+	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++)
+		co_tpdo_sync(srv->tpdos[i], cnt);
+#endif
+
+#ifndef LELY_NO_CO_RPDO
+	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++)
+		co_rpdo_sync(srv->rpdos[i], cnt);
+#endif
+
+#else
+	__unused_var(sync);
+	__unused_var(cnt);
+	__unused_var(data);
 #endif
 }
 
@@ -547,35 +544,6 @@ co_nmt_srv_fini_lss(struct co_nmt_srv *srv)
 
 	co_lss_destroy(srv->lss);
 	srv->lss = NULL;
-}
-
-#endif
-
-#ifndef LELY_NO_CO_SYNC
-
-static void
-co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data)
-{
-#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-	__unused_var(sync);
-	struct co_nmt_srv *srv = data;
-	assert(srv);
-
-#ifndef LELY_NO_CO_TPDO
-	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++)
-		co_tpdo_sync(srv->tpdos[i], cnt);
-#endif
-
-#ifndef LELY_NO_CO_RPDO
-	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++)
-		co_rpdo_sync(srv->rpdos[i], cnt);
-#endif
-
-#else
-	__unused_var(sync);
-	__unused_var(cnt);
-	__unused_var(data);
-#endif
 }
 
 #endif

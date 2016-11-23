@@ -627,7 +627,7 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 
 #ifndef LELY_NO_CO_MASTER
 LELY_CO_EXPORT const char *
-co_nmt_es_str(char es)
+co_nmt_es2str(char es)
 {
 	switch (es) {
 	case 'A': return "The CANopen device is not listed in object 1F81.";
@@ -1589,6 +1589,14 @@ co_nmt_get_lss(const co_nmt_t *nmt)
 	assert(nmt);
 
 	return nmt->srv.lss;
+}
+
+LELY_CO_EXPORT void
+co_nmt_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
+{
+	assert(nmt);
+
+	co_nmt_srv_sync(nmt->srv.sync, cnt, &nmt->srv);
 }
 
 #ifndef LELY_NO_CO_MASTER

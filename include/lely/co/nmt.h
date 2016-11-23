@@ -711,6 +711,9 @@ LELY_CO_EXTERN co_emcy_t *co_nmt_get_emcy(const co_nmt_t *nmt);
 //! Returns a pointer to the LSS master/slave service.
 LELY_CO_EXTERN co_lss_t *co_nmt_get_lss(const co_nmt_t *nmt);
 
+//! Passes a SYNC object to all active Receive/Transmit-PDO services.
+LELY_CO_EXTERN void co_nmt_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
+
 #ifdef __cplusplus
 }
 #endif

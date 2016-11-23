@@ -410,6 +410,8 @@ public:
 
 	COLSS* getLSS() const noexcept { return co_nmt_get_lss(this); }
 
+	void sync(co_unsigned8_t cs = 0)  noexcept { co_nmt_sync(this, cs); }
+
 protected:
 	~CONMT() {}
 };

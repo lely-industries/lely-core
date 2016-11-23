@@ -99,6 +99,14 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  */
 void co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set);
 
+/*!
+ * The SYNC indication function for NMT masters/slaves. This function passes the
+ * SYNC object on to all active Receive/Transmit-PDO services.
+ *
+ * \see co_sync_ind_t
+ */
+void co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data);
+
 #ifdef __cplusplus
 }
 #endif
