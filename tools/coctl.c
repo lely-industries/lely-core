@@ -534,23 +534,23 @@ io_thrd_start(void *arg)
 	for (;;) {
 		if (!buf) {
 			mtx_lock(&recv_mtx);
-			char *buf = recv_buf;
+			buf = recv_buf;
 			recv_buf = NULL;
 			mtx_unlock(&recv_mtx);
 			if (buf) {
 				end = buf + strlen(buf) + 1;
 				cp = buf;
+			} else if (!(flags & FLAG_NO_WAIT)) {
+				// Signal the main thread if no pending request
+				// remain.
+				mtx_lock(&wait_mtx);
+				if (wait) {
+					wait = !!co_gw_txt_pending(gw);
+					if (!wait)
+						cnd_signal(&wait_cond);
+				}
+				mtx_unlock(&wait_mtx);
 			}
-		}
-		if (!(flags & FLAG_NO_WAIT)) {
-			// Signal the main thread if no pending request remain.
-			mtx_lock(&wait_mtx);
-			if (wait) {
-				wait = !!co_gw_txt_pending(gw);
-				if (!wait)
-					cnd_signal(&wait_cond);
-			}
-			mtx_unlock(&wait_mtx);
 		}
 		// Update the CAN network time.
 		struct timespec now = { 0, 0 };
