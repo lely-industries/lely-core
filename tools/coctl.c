@@ -49,11 +49,10 @@ struct co_net {
 	co_nmt_t *nmt;
 };
 
-#define CO_MAX_NET	127
-
 #define HELP \
 	"Arguments: [options...] [<CAN interface> <EDS/DCF filename>]...\n" \
 	"Options:\n" \
+	"  -e, --exit            Exit on error\n" \
 	"  -h, --help            Display this information\n" \
 	"  -i <ms>, --inhibit=<ms>\n" \
 	"                        Wait at least <ms> milliseconds between requests\n" \
@@ -61,8 +60,9 @@ struct co_net {
 	"  -W, --no-wait         Do not wait for the previous command to complete\n" \
 	"                        before accepting the next one"
 
-#define FLAG_HELP	0x01
-#define FLAG_NO_WAIT	0x02
+#define FLAG_EXIT	0x01
+#define FLAG_HELP	0x02
+#define FLAG_NO_WAIT	0x03
 
 int can_send(const struct can_msg *msg, void *data);
 
@@ -73,7 +73,7 @@ int gw_txt_send(const struct co_gw_req *req, void *data);
 
 int __cdecl io_thrd_start(void *arg);
 
-struct co_net net[CO_MAX_NET];
+struct co_net net[CO_GW_NUM_NET];
 io_poll_t *poll;
 
 int flags;
@@ -82,6 +82,7 @@ int inhibit = 100;
 mtx_t wait_mtx;
 cnd_t wait_cond;
 int wait;
+int status;
 
 mtx_t recv_mtx;
 char *recv_buf;
@@ -95,7 +96,7 @@ main(int argc, char *argv[])
 	argv[0] = (char *)cmdname(argv[0]);
 	diag_set_handler(&cmd_diag_handler, argv[0]);
 
-	for (co_unsigned16_t id = 0; id < CO_MAX_NET; id++)
+	for (co_unsigned16_t id = 0; id < CO_GW_NUM_NET; id++)
 		net[id].handle = IO_HANDLE_ERROR;
 	co_unsigned16_t num_net = 0;
 
@@ -105,7 +106,7 @@ main(int argc, char *argv[])
 		char *arg = argv[optind];
 		if (*arg != '-') {
 			optind++;
-			if (__likely(num_net < CO_MAX_NET)) {
+			if (__likely(num_net < CO_GW_NUM_NET)) {
 				if (!net[num_net].can_path)
 					net[num_net].can_path = arg;
 				else
@@ -113,13 +114,15 @@ main(int argc, char *argv[])
 			} else {
 				diag(DIAG_ERROR, 0,
 						"at most %d CAN networks are supported",
-						CO_MAX_NET);
+						CO_GW_NUM_NET);
 			}
 		} else if (*++arg == '-') {
 			optind++;
 			if (!*++arg)
 				break;
-			if (!strcmp(arg, "help")) {
+			if (!strcmp(arg, "exit")) {
+				flags |= FLAG_EXIT;
+			} else if (!strcmp(arg, "help")) {
 				flags |= FLAG_HELP;
 			} else if (!strncmp(arg, "inhibit=", 8)) {
 				inhibit = atoi(arg + 8);
@@ -130,7 +133,7 @@ main(int argc, char *argv[])
 						arg);
 			}
 		} else {
-			int c = getopt(argc, argv, ":hi:W");
+			int c = getopt(argc, argv, ":ehi:W");
 			if (c == -1)
 				break;
 			switch (c) {
@@ -143,6 +146,9 @@ main(int argc, char *argv[])
 				diag(DIAG_ERROR, 0,
 						"illegal option -- %c",
 						optopt);
+				break;
+			case 'e':
+				flags |= FLAG_EXIT;
 				break;
 			case 'h':
 				flags |= FLAG_HELP;
@@ -157,7 +163,7 @@ main(int argc, char *argv[])
 		}
 	}
 	for (; optind < argc; optind++) {
-		if (__likely(num_net < CO_MAX_NET)) {
+		if (__likely(num_net < CO_GW_NUM_NET)) {
 			if (!net[num_net].can_path)
 				net[num_net].can_path = argv[optind];
 			else
@@ -165,7 +171,7 @@ main(int argc, char *argv[])
 		} else {
 			diag(DIAG_ERROR, 0,
 					"at most %d CAN networks are supported",
-					CO_MAX_NET);
+					CO_GW_NUM_NET);
 		}
 	}
 
@@ -270,6 +276,7 @@ main(int argc, char *argv[])
 	mtx_init(&recv_mtx, mtx_plain);
 	cnd_init(&wait_cond);
 	wait = 0;
+	status = EXIT_SUCCESS;
 
 	mtx_init(&recv_mtx, mtx_plain);
 	recv_buf = NULL;
@@ -300,11 +307,17 @@ main(int argc, char *argv[])
 	co_unsigned32_t seq = 1;
 	char *cmd = NULL;
 	for (;;) {
-		if (!(flags & FLAG_NO_WAIT)) {
-			// Wait for all pending requests to complete.
+		if (!(flags & FLAG_NO_WAIT) || (flags & FLAG_EXIT)) {
 			mtx_lock(&wait_mtx);
-			while (wait)
-				cnd_wait(&wait_cond, &wait_mtx);
+			if (!(flags & FLAG_NO_WAIT)) {
+				// Wait for all pending requests to complete.
+				while (wait && !((flags & FLAG_EXIT) && status))
+					cnd_wait(&wait_cond, &wait_mtx);
+			}
+			if ((flags & FLAG_EXIT) && status) {
+				mtx_unlock(&wait_mtx);
+				break;
+			}
 			mtx_unlock(&wait_mtx);
 		}
 		// Do not print a confirmation or indication while the user is
@@ -435,7 +448,7 @@ main(int argc, char *argv[])
 
 	io_poll_destroy(poll);
 
-	return EXIT_SUCCESS;
+	return status;
 
 error_create_thr:
 	free(send_buf);
@@ -479,7 +492,7 @@ gw_send(const struct co_gw_srv *srv, void *data)
 void
 gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data)
 {
-	assert(id && id <= CO_MAX_NET);
+	assert(id && id <= CO_GW_NUM_NET);
 	uint32_t bitrate = rate * 1000;
 	__unused_var(data);
 
@@ -532,6 +545,18 @@ io_thrd_start(void *arg)
 	char *cp = NULL;
 	struct floc at = { "<stdin>", 1, 1 };
 	for (;;) {
+		if (flags & FLAG_EXIT) {
+			int iec = co_gw_txt_iec(gw);
+			if (iec) {
+				mtx_lock(&wait_mtx);
+				status = iec;
+				if (!(flags & FLAG_NO_WAIT)) {
+					wait = 0;
+					cnd_signal(&wait_cond);
+				}
+				mtx_unlock(&wait_mtx);
+			}
+		}
 		if (!buf) {
 			mtx_lock(&recv_mtx);
 			buf = recv_buf;
@@ -555,7 +580,7 @@ io_thrd_start(void *arg)
 		// Update the CAN network time.
 		struct timespec now = { 0, 0 };
 		timespec_get(&now, TIME_UTC);
-		for (co_unsigned16_t id = 1; id <= CO_MAX_NET; id++) {
+		for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++) {
 			if (!net[id - 1].net)
 				break;
 			can_net_set_time(net[id - 1].net, &now);

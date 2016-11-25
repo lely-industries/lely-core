@@ -42,6 +42,8 @@
 
 //! A CANopen ASCII gateway.
 struct __co_gw_txt {
+	//! The last internal error code.
+	int iec;
 	//! The number of pending requests.
 	size_t pending;
 	//! A pointer to the callback function invoked by co_gw_txt_recv().
@@ -307,6 +309,7 @@ __co_gw_txt_init(struct __co_gw_txt *gw)
 {
 	assert(gw);
 
+	gw->iec = 0;
 	gw->pending = 0;
 
 	gw->recv_func = NULL;
@@ -356,6 +359,16 @@ co_gw_txt_destroy(co_gw_txt_t *gw)
 		__co_gw_txt_fini(gw);
 		__co_gw_txt_free(gw);
 	}
+}
+
+LELY_CO_EXPORT int
+co_gw_txt_iec(co_gw_txt_t *gw)
+{
+	assert(gw);
+
+	int iec = gw->iec;
+	gw->iec = 0;
+	return iec;
 }
 
 LELY_CO_EXPORT size_t
@@ -485,6 +498,8 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		*floc = *at;
 	}
 
+	int iec = CO_GW_IEC_SYNTAX;
+
 	const char *cp = begin;
 	size_t chars = 0;
 
@@ -498,7 +513,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 
 	// Ignore empty requests.
 	if ((end && cp >= end) || !*cp)
-		goto error;
+		goto done;
 
 	co_unsigned32_t seq = 0;
 	co_unsigned16_t net = 0;
@@ -720,11 +735,16 @@ done:
 		diag_if(DIAG_ERROR, 0, floc,
 				"expected line break after request");
 
+	iec = 0;
+
 error:
 	// Skip all characters until (and including) the next line break.
 	chars = 0;
 	while ((!end || cp + chars < end) && cp[chars] && cp[chars++] != '\n');
 	cp += chars;
+
+	if (iec)
+		gw->iec = iec;
 
 	return floc_lex(at, begin, cp);
 }
@@ -964,14 +984,17 @@ static int
 co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 		co_unsigned32_t ac)
 {
-	if (iec)
+	if (iec) {
+		gw->iec = iec;
 		return co_gw_txt_recv_fmt(gw, "[%u] ERROR: %d (%s)", seq, iec,
 				co_gw_iec2str(iec));
-	else if (ac)
+	} else if (ac) {
+		gw->iec = CO_GW_IEC_INTERN;
 		return co_gw_txt_recv_fmt(gw, "[%u] ERROR: %08X (%s)", seq, ac,
 				co_sdo_ac2str(ac));
-	else
+	} else {
 		return co_gw_txt_recv_fmt(gw, "[%u] OK", seq);
+	}
 }
 
 static int

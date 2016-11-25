@@ -80,6 +80,9 @@ LELY_CO_EXTERN co_gw_txt_t *co_gw_txt_create(void);
 //! Destroys a CANopen ASCII gateway. \see co_gw_txt_create()
 LELY_CO_EXTERN void co_gw_txt_destroy(co_gw_txt_t *gw);
 
+//! Returns (and clears) the last internal error code.
+LELY_CO_EXTERN int co_gw_txt_iec(co_gw_txt_t *gw);
+
 //! Returns the number of pending (i.e., unconfirmed) requests.
 LELY_CO_EXTERN size_t co_gw_txt_pending(const co_gw_txt_t *gw);
 

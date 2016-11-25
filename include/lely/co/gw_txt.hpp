@@ -59,6 +59,8 @@ class COGWTxt: public incomplete_c_type<__co_gw_txt> {
 public:
 	COGWTxt(): c_base() {}
 
+	int iec() noexcept { return co_gw_txt_iec(this); }
+
 	::std::size_t
 	pending() const noexcept
 	{
