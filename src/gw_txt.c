@@ -26,6 +26,7 @@
 #ifndef LELY_NO_CO_GW_TXT
 
 #include <lely/libc/stdio.h>
+#include <lely/libc/strings.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
@@ -1452,11 +1453,13 @@ co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 	cp += chars;
+
 	if (__unlikely(!num || num > 512)) {
 		diag_if(DIAG_ERROR, 0, at,
 				"PDO number must be in the range [1..512]");
 		return 0;
 	}
+
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	struct co_gw_req_pdo_write req = {
@@ -1710,10 +1713,10 @@ co_gw_txt_send_set_bootup_ind(co_gw_txt_t *gw, int srv, void *data,
 	int cs;
 
 	chars = co_gw_txt_lex_cmd(cp, end, at);
-	if (!strncmp("Disable", cp, chars)) {
+	if (!strncasecmp("Disable", cp, chars)) {
 		cp += chars;
 		cs = 0;
-	} else if (!strncmp("Disable", cp, chars)) {
+	} else if (!strncasecmp("Disable", cp, chars)) {
 		cp += chars;
 		cs = 1;
 	} else {
@@ -2293,24 +2296,24 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		return 0;
 	}
 
-	if (!strncmp("_lss_fastscan", cp, chars)) {
+	if (!strncasecmp("_lss_fastscan", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV__LSS_FASTSCAN;
-	} else if (!strncmp("_lss_slowscan", cp, chars)) {
+	} else if (!strncasecmp("_lss_slowscan", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV__LSS_SLOWSCAN;
-	} else if (!strncmp("boot_up_indication", cp, chars)) {
+	} else if (!strncasecmp("boot_up_indication", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_SET_BOOTUP_IND;
-	} else if (!strncmp("disable", cp, chars)) {
+	} else if (!strncasecmp("disable", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = co_gw_txt_lex_cmd(cp, end, at);
-		if (!strncmp("guarding", cp, chars)) {
+		if (!strncasecmp("guarding", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_NG_DISABLE;
-		} else if (!strncmp("heartbeat", cp, chars)) {
+		} else if (!strncasecmp("heartbeat", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_HB_DISABLE;
 		} else {
@@ -2318,15 +2321,15 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 					"expected 'guarding' or 'heartbeat'");
 			return 0;
 		}
-	} else if (!strncmp("enable", cp, chars)) {
+	} else if (!strncasecmp("enable", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = co_gw_txt_lex_cmd(cp, end, at);
-		if (!strncmp("guarding", cp, chars)) {
+		if (!strncasecmp("guarding", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_NG_ENABLE;
-		} else if (!strncmp("heartbeat", cp, chars)) {
+		} else if (!strncasecmp("heartbeat", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_HB_ENABLE;
 		} else {
@@ -2334,62 +2337,63 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 					"expected 'guarding' or 'heartbeat'");
 			return 0;
 		}
-	} else if (!strncmp("info", cp, chars)) {
+	} else if (!strncasecmp("info", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = co_gw_txt_lex_cmd(cp, end, at);
-		if (!strncmp("version", cp, chars)) {
+		if (!strncasecmp("version", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_GET_VERSION;
 		} else {
 			diag_if(DIAG_ERROR, 0, at, "expected 'version'");
 			return 0;
 		}
-	} else if (!strncmp("init", cp, chars)) {
+	} else if (!strncasecmp("init", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_INIT;
-	} else if (!strncmp("lss_activate_bitrate", cp, chars)) {
+	} else if (!strncasecmp("lss_activate_bitrate", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_SWITCH_RATE;
-	} else if (!strncmp("lss_conf_bitrate", cp, chars)) {
+	} else if (!strncasecmp("lss_conf_bitrate", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_SET_RATE;
-	} else if (!strncmp("lss_get_node", cp, chars)) {
+	} else if (!strncasecmp("lss_get_node", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_GET_ID;
-	} else if (!strncmp("lss_identity", cp, chars)) {
+	} else if (!strncasecmp("lss_identity", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_ID_SLAVE;
-	} else if (!strncmp("lss_ident_nonconf", cp, chars)) {
+	} else if (!strncasecmp("lss_ident_nonconf", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_ID_NON_CFG_SLAVE;
-	} else if (!strncmp("lss_inquire_addr", cp, chars)) {
+	} else if (!strncasecmp("lss_inquire_addr", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_GET_LSSID;
-	} else if (!strncmp("lss_set_node", cp, chars)) {
+	} else if (!strncasecmp("lss_set_node", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_SET_ID;
-	} else if (!strncmp("lss_store", cp, chars)) {
+	} else if (!strncasecmp("lss_store", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_STORE;
-	} else if (!strncmp("lss_switch_glob", cp, chars)) {
+	} else if (!strncasecmp("lss_switch_glob", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_SWITCH;
-	} else if (!strncmp("lss_switch_sel", cp, chars)) {
+	} else if (!strncasecmp("lss_switch_sel", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_LSS_SWITCH_SEL;
-	} else if (!strncmp("preop", cp, chars)
-			|| !strncmp("preoperational", cp, chars)) {
+	} else if (!strncasecmp("preop", cp, chars)
+			|| !strncasecmp("preoperational", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_NMT_ENTER_PREOP;
-	} else if (!strncmp("r", cp, chars) || !strncmp("read", cp, chars)) {
+	} else if (!strncasecmp("r", cp, chars)
+			|| !strncasecmp("read", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		if ((chars = co_gw_txt_lex_cmd(cp, end, at))) {
-			if (!strncmp("p", cp, chars)
-					|| !strncmp("pdo", cp, chars)) {
+			if (!strncasecmp("p", cp, chars)
+					|| !strncasecmp("pdo", cp, chars)) {
 				cp += chars;
 				srv = CO_GW_SRV_PDO_READ;
 			} else {
@@ -2399,16 +2403,16 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 		} else {
 			srv = CO_GW_SRV_SDO_UP;
 		}
-	} else if (!strncmp("reset", cp, chars)) {
+	} else if (!strncasecmp("reset", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = co_gw_txt_lex_cmd(cp, end, at);
-		if (!strncmp("comm", cp, chars)
-				|| !strncmp("communication", cp, chars)) {
+		if (!strncasecmp("comm", cp, chars)
+				|| !strncasecmp("communication", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_RESET_COMM;
-		} else if (!strncmp("node", cp, chars)) {
+		} else if (!strncasecmp("node", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_NMT_RESET_NODE;
 		} else {
@@ -2416,39 +2420,39 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 					"expected 'node' or 'comm[unication]'");
 			return 0;
 		}
-	} else if (!strncmp("set", cp, chars)) {
+	} else if (!strncasecmp("set", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = co_gw_txt_lex_cmd(cp, end, at);
-		if (!strncmp("command_size", cp, chars)) {
+		if (!strncasecmp("command_size", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_CMD_SIZE;
-		} else if (!strncmp("command_timeout", cp, chars)) {
+		} else if (!strncasecmp("command_timeout", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_CMD_TIMEOUT;
-		} else if (!strncmp("heartbeat", cp, chars)) {
+		} else if (!strncasecmp("heartbeat", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_HB;
-		} else if (!strncmp("id", cp, chars)) {
+		} else if (!strncasecmp("id", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_ID;
-		} else if (!strncmp("network", cp, chars)) {
+		} else if (!strncasecmp("network", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_NET;
-		} else if (!strncmp("node", cp, chars)) {
+		} else if (!strncasecmp("node", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_NODE;
-		} else if (!strncmp("rpdo", cp, chars)) {
+		} else if (!strncasecmp("rpdo", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_RPDO;
-		} else if (!strncmp("sdo_timeout", cp, chars)) {
+		} else if (!strncasecmp("sdo_timeout", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_SDO_TIMEOUT;
-		} else if (!strncmp("tpdo", cp, chars)) {
+		} else if (!strncasecmp("tpdo", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_TPDO;
-		} else if (!strncmp("tpdox", cp, chars)) {
+		} else if (!strncasecmp("tpdox", cp, chars)) {
 			// Wait with parsing the 'x' until co_gw_txt_lex_pdo().
 			cp += chars - 1;
 			if (at)
@@ -2459,19 +2463,20 @@ co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
 					"expected 'command_size', 'command_timeout', 'heartbeat', 'id', 'network', 'node', 'rpdo', 'sdo_timeout' or 'tpdo[x]'");
 			return 0;
 		}
-	} else if (!strncmp("start", cp, chars)) {
+	} else if (!strncasecmp("start", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_NMT_START;
-	} else if (!strncmp("stop", cp, chars)) {
+	} else if (!strncasecmp("stop", cp, chars)) {
 		cp += chars;
 		srv = CO_GW_SRV_NMT_STOP;
-	} else if (!strncmp("w", cp, chars) || !strncmp("write", cp, chars)) {
+	} else if (!strncasecmp("w", cp, chars)
+			|| !strncasecmp("write", cp, chars)) {
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		if ((chars = co_gw_txt_lex_cmd(cp, end, at))) {
-			if (!strncmp("p", cp, chars)
-					|| !strncmp("pdo", cp, chars)) {
+			if (!strncasecmp("p", cp, chars)
+					|| !strncasecmp("pdo", cp, chars)) {
 				cp += chars;
 				srv = CO_GW_SRV_PDO_WRITE;
 			} else {
@@ -2559,11 +2564,13 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 		return 0;
 	}
 	cp += chars;
+
 	if (__unlikely(!num || num > 512)) {
 		diag_if(DIAG_ERROR, 0, at,
 				"PDO number must be in the range [1..512]");
 		return 0;
 	}
+
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
@@ -2685,55 +2692,55 @@ co_gw_txt_lex_type(const char *begin, const char *end, struct floc *at,
 	co_unsigned16_t type = 0;
 
 	chars = co_gw_txt_lex_cmd(cp, end, at);
-	if (!strncmp("b", cp, chars)) {
+	if (!strncasecmp("b", cp, chars)) {
 		type = CO_DEFTYPE_BOOLEAN;
-	} else if (!strncmp("d", cp, chars)) {
+	} else if (!strncasecmp("d", cp, chars)) {
 		type = CO_DEFTYPE_DOMAIN;
-	} else if (!strncmp("i16", cp, chars)) {
+	} else if (!strncasecmp("i16", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER16;
-	} else if (!strncmp("i24", cp, chars)) {
+	} else if (!strncasecmp("i24", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER24;
-	} else if (!strncmp("i32", cp, chars)) {
+	} else if (!strncasecmp("i32", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER32;
-	} else if (!strncmp("i40", cp, chars)) {
+	} else if (!strncasecmp("i40", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER40;
-	} else if (!strncmp("i48", cp, chars)) {
+	} else if (!strncasecmp("i48", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER48;
-	} else if (!strncmp("i56", cp, chars)) {
+	} else if (!strncasecmp("i56", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER56;
-	} else if (!strncmp("i64", cp, chars)) {
+	} else if (!strncasecmp("i64", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER64;
-	} else if (!strncmp("i8", cp, chars)) {
+	} else if (!strncasecmp("i8", cp, chars)) {
 		type = CO_DEFTYPE_INTEGER8;
-	} else if (!strncmp("os", cp, chars)) {
+	} else if (!strncasecmp("os", cp, chars)) {
 		type = CO_DEFTYPE_OCTET_STRING;
-	} else if (!strncmp("r32", cp, chars)) {
+	} else if (!strncasecmp("r32", cp, chars)) {
 		type = CO_DEFTYPE_REAL32;
-	} else if (!strncmp("r64", cp, chars)) {
+	} else if (!strncasecmp("r64", cp, chars)) {
 		type = CO_DEFTYPE_REAL64;
-	} else if (!strncmp("t", cp, chars)) {
+	} else if (!strncasecmp("t", cp, chars)) {
 		type = CO_DEFTYPE_TIME_OF_DAY;
-	} else if (!strncmp("td", cp, chars)) {
+	} else if (!strncasecmp("td", cp, chars)) {
 		type = CO_DEFTYPE_TIME_DIFF;
-	} else if (!strncmp("u16", cp, chars)) {
+	} else if (!strncasecmp("u16", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED16;
-	} else if (!strncmp("u24", cp, chars)) {
+	} else if (!strncasecmp("u24", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED24;
-	} else if (!strncmp("u32", cp, chars)) {
+	} else if (!strncasecmp("u32", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED32;
-	} else if (!strncmp("u40", cp, chars)) {
+	} else if (!strncasecmp("u40", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED40;
-	} else if (!strncmp("u48", cp, chars)) {
+	} else if (!strncasecmp("u48", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED48;
-	} else if (!strncmp("u56", cp, chars)) {
+	} else if (!strncasecmp("u56", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED56;
-	} else if (!strncmp("u64", cp, chars)) {
+	} else if (!strncasecmp("u64", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED64;
-	} else if (!strncmp("u8", cp, chars)) {
+	} else if (!strncasecmp("u8", cp, chars)) {
 		type = CO_DEFTYPE_UNSIGNED8;
-	} else if (!strncmp("us", cp, chars)) {
+	} else if (!strncasecmp("us", cp, chars)) {
 		type = CO_DEFTYPE_UNICODE_STRING;
-	} else if (!strncmp("vs", cp, chars)) {
+	} else if (!strncasecmp("vs", cp, chars)) {
 		type = CO_DEFTYPE_VISIBLE_STRING;
 	} else {
 		diag_if(DIAG_ERROR, 0, at, "expected data type");
@@ -2858,15 +2865,15 @@ co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
 
 	co_unsigned8_t trans = 0;
 
-	if (!strncmp("event", cp, 5)) {
+	if (!strncasecmp("event", cp, 5)) {
 		cp += 5;
 		if (at)
 			at->column -= chars - 5;
 		trans = 0xff;
-	} else if (!strncmp("rtr", cp, chars)) {
+	} else if (!strncasecmp("rtr", cp, chars)) {
 		cp += chars;
 		trans = 0xfd;
-	} else if (!strncmp("sync", cp, 4)) {
+	} else if (!strncasecmp("sync", cp, 4)) {
 		cp += 4;
 		if (at)
 			at->column -= chars - 4;
