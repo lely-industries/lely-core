@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc include src
+SUBDIRS = doc include src python
 if HAVE_TAP
 SUBDIRS += test
 endif

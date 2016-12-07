@@ -77,6 +77,13 @@
 #define CANFD_MAX_LEN	64
 #endif
 
+//! The maximum number of bytes in the payload of a #can_msg struct.
+#ifdef LELY_NO_CANFD
+#define CAN_MSG_MAX_LEN CAN_MAX_LEN
+#else
+#define CAN_MSG_MAX_LEN CANFD_MAX_LEN
+#endif
+
 //! A CAN or CAN FD format frame.
 struct can_msg {
 	//! The identifier (11 or 29 bits, depending on the #CAN_FLAG_IDE flag).
@@ -93,11 +100,7 @@ struct can_msg {
 	 */
 	uint8_t len;
 	//! The frame payload (in case of a data frame).
-#ifdef LELY_NO_CANFD
-	uint8_t data[CAN_MAX_LEN];
-#else
-	uint8_t data[CANFD_MAX_LEN];
-#endif
+	uint8_t data[CAN_MSG_MAX_LEN];
 };
 
 //! The static initializer for a #can_msg struct.
