@@ -18,7 +18,7 @@ liblely-can is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/can.git
 
 or download the latest release
-([v1.3.0](https://gitlab.com/lelyw_industries/can/tags/v1.3.0)).
+([v1.3.0](https://gitlab.com/lely_industries/can/tags/v1.3.0)).
 
 Build and install
 -----------------
