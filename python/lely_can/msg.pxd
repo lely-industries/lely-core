@@ -24,5 +24,5 @@ cdef class CANMsg(object):
     cdef can_msg _c_msg
 
 
-cdef CANMsg CANMsg_new(can_msg* msg)
+cdef CANMsg CANMsg_new(const can_msg* msg)
 

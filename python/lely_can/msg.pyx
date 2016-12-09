@@ -54,7 +54,7 @@ cdef class CANMsg(object):
                 self._c_msg.data[i] = value[i]
 
 
-cdef CANMsg CANMsg_new(can_msg* msg):
+cdef CANMsg CANMsg_new(const can_msg* msg):
     cdef CANMsg obj = CANMsg()
     obj._c_msg.id = msg.id
     obj._c_msg.flags = msg.flags
