@@ -63,7 +63,7 @@ PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.2 liblely-util < 2])
 
 AM_CONDITIONAL([NO_CAN], [false])
-PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.2 liblely-can < 2], [], [
+PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.3 liblely-can < 2], [], [
 	AM_CONDITIONAL([NO_CAN], [true])
 	AC_DEFINE([LELY_NO_CAN], [1], [Define to 1 if the CAN library is not available.])
 ])
@@ -140,6 +140,34 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 
+# AM_PROG_PYTHON([MAJOR-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND]))
+AC_DEFUN([AM_PROG_PYTHON], [
+	AC_CHECK_PROGS([PYTHON$1], [python$1 python])
+	AS_IF([test -n "${PYTHON$1}" && test -n "$1"], [
+		AC_MSG_CHECKING([whether ${PYTHON$1} is version $1])
+		am_python_version=`${PYTHON$1} -V 2>&1 | grep -o 'Python @<:@0-9@:>@' | grep -o '@<:@0-9@:>@'`
+		AS_IF([test $am_python_version -eq $1], [
+			AC_MSG_RESULT([yes])
+			m4_default([$2], [:])
+		], [
+			AC_MSG_RESULT([no])
+			PYTHON$1=
+			m4_default([$3], [:])
+		])
+	])
+])
+
+AM_CONDITIONAL([HAVE_PYTHON2], [false])
+AM_CONDITIONAL([HAVE_PYTHON3], [false])
+AC_ARG_ENABLE([python],
+	AS_HELP_STRING([--disable-python], [disable Python bindings]))
+AS_IF([test "x$enable_shared" == "xno" -o "x$platform_win32" == "xyes"],
+	[enable_python=no])
+AS_IF([test "x$enable_python" != "xno"], [
+	AM_PROG_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
+	AM_PROG_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
+])
+
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
@@ -160,6 +188,7 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
+	python/Makefile
 	src/Makefile
 	src/version.rc
 	test/Makefile
