@@ -37,7 +37,7 @@
 	"Arguments: [options...] <CAN interface> address port\n" \
 	"Options:\n" \
 	"  -4, --ipv4            Use IPv4 for receiving UDP frames (default)\n" \
-	"  -6, --ipv6            Use IPv6 for receiving UDP frames \n" \
+	"  -6, --ipv6            Use IPv6 for receiving UDP frames\n" \
 	"  -b, --broadcast       Send broadcast messages (IPv4 only)\n" \
 	"  -D, --no-daemon       Do not run as daemon\n" \
 	"  -f, --flush           Flush the send buffer after every received CAN frame\n" \

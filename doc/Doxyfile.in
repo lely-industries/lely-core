@@ -774,6 +774,7 @@ WARN_LOGFILE           =
 INPUT                  =
 INPUT                  += @top_srcdir@/README.md
 INPUT                  += @top_srcdir@/doc/overview.md
+INPUT                  += @top_srcdir@/doc/can2udp.md
 INPUT                  += @top_srcdir@/doc/fsm.md
 INPUT                  += @top_srcdir@/include
 INPUT                  += @top_srcdir@/src
