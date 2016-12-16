@@ -17,7 +17,7 @@ liblely-tap is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/tap.git
 
 or download the latest release
-([v1.2.0](https://gitlab.com/lely_industries/tap/tags/v1.2.0)).
+([v1.2.1](https://gitlab.com/lely_industries/tap/tags/v1.2.1)).
 
 Build and install
 -----------------
