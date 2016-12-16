@@ -32,8 +32,8 @@
 	"Options:\n" \
 	"  -h, --help            Display this information\n" \
 	"  --no-strings          Do not include optional strings in the output\n" \
-	"  -o <file>, --output=FILE\n" \
-	"                        Write the output to FILE instead of stdout"
+	"  -o <file>, --output=<file>\n" \
+	"                        Write the output to <file> instead of stdout"
 
 #define FLAG_HELP	0x01
 #define FLAG_NO_STRINGS	0x02
