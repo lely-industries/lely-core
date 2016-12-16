@@ -1,4 +1,5 @@
 bin =
+etc =
 if !NO_CO_WTM
 if !NO_IO
 if PLATFORM_LINUX
@@ -14,6 +15,7 @@ if !NO_THREADS
 if PLATFORM_LINUX
 bin += coctl
 coctl_SOURCES = coctl.c
+etc += coctl.dcf
 endif
 endif
 endif
@@ -30,6 +32,7 @@ endif
 endif
 
 bin_PROGRAMS = $(bin)
+sysconf_DATA = $(etc)
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)
