@@ -79,8 +79,6 @@ struct __co_lss {
 	 * service.
 	 */
 	co_unsigned8_t lsssub;
-
-
 	//! The received error code.
 	co_unsigned8_t err;
 	//! The received implementation-specific error code.
@@ -812,8 +810,6 @@ co_lss_abort_req(co_lss_t *lss)
 LELY_CO_EXPORT int
 co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -835,8 +831,6 @@ LELY_CO_EXPORT int
 co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -928,8 +922,6 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 LELY_CO_EXPORT int
 co_lss_switch_rate_req(co_lss_t *lss, int delay)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -975,8 +967,6 @@ co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 LELY_CO_EXPORT int
 co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1000,8 +990,6 @@ co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 LELY_CO_EXPORT int
 co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1025,8 +1013,6 @@ co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 LELY_CO_EXPORT int
 co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1051,8 +1037,6 @@ co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 LELY_CO_EXPORT int
 co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1077,8 +1061,6 @@ co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 LELY_CO_EXPORT int
 co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1103,8 +1085,6 @@ LELY_CO_EXPORT int
 co_lss_id_slave_req(co_lss_t *lss, const struct co_id* lo,
 		const struct co_id* hi, co_lss_cs_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1126,8 +1106,6 @@ co_lss_id_slave_req(co_lss_t *lss, const struct co_id* lo,
 LELY_CO_EXPORT int
 co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -1153,7 +1131,6 @@ LELY_CO_EXPORT int
 co_lss_slowscan_req(co_lss_t *lss, const struct co_id* lo,
 		const struct co_id* hi, co_lss_scan_ind_t *ind, void *data)
 {
-	assert(lss);
 	assert(lo);
 	assert(hi);
 
@@ -1186,8 +1163,6 @@ LELY_CO_EXPORT int
 co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 		const struct co_id *mask, co_lss_scan_ind_t *ind, void *data)
 {
-	assert(lss);
-
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
