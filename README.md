@@ -15,6 +15,11 @@ wide variety of frameworks and communication patterns. The library uses the
 platform-independent CAN frame definition from the Lely CAN library
 ([liblely-can]) and can be used with the Lely I/O library ([liblely-io]).
 
+Additionally, several tools are provided:
+- can2udp - CAN to UDP forwarding tool
+- coctl - CANopen control tool
+- dcf2c - CANopen EDS/DCF to C conversion tool
+
 Download
 --------
 
