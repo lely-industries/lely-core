@@ -21,6 +21,9 @@ liblely-io is hosted on [GitLab]. You can clone the repository with
 or download the latest release
 ([v1.1.0](https://gitlab.com/lely_industries/io/tags/v1.1.0)).
 
+Binary packages for Ubuntu 16.04 LTS (Xenial Xerus) can be found at
+https://launchpad.net/~lely/+archive/ubuntu/ppa.
+
 Build and install
 -----------------
 
