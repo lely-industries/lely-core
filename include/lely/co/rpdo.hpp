@@ -45,9 +45,10 @@ struct c_type_traits<__co_rpdo> {
 	static void free(void* ptr) noexcept { __co_rpdo_free(ptr); }
 
 	static pointer
-	init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num) noexcept
+	init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num,
+			COEmcy* emcy) noexcept
 	{
-		return __co_rpdo_init(p, net, dev, num);
+		return __co_rpdo_init(p, net, dev, num, emcy);
 	}
 
 	static void fini(pointer p) noexcept { __co_rpdo_fini(p); }
@@ -57,8 +58,8 @@ struct c_type_traits<__co_rpdo> {
 class CORPDO: public incomplete_c_type<__co_rpdo> {
 	typedef incomplete_c_type<__co_rpdo> c_base;
 public:
-	CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num)
-		: c_base(net, dev, num)
+	CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num, COEmcy* emcy = 0)
+		: c_base(net, dev, num, emcy)
 	{}
 
 	CANNet* getNet() const noexcept { return co_rpdo_get_net(this); }
