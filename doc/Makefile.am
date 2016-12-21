@@ -1,4 +1,7 @@
 EXTRA_DIST =
+EXTRA_DIST += can2udp.md
+EXTRA_DIST += coctl.md
+EXTRA_DIST += dcf2c.md
 EXTRA_DIST += fsm.md
 EXTRA_DIST += logo.png
 EXTRA_DIST += overview.md
