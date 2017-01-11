@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([Test Anything Protocol (TAP) library], [1.2.1], [], [liblely-tap])
+AC_INIT([Test Anything Protocol (TAP) library], [1.3.0], [], [liblely-tap])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
