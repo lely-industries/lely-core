@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the gateway declarations. See lely/co/gw.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -71,9 +71,9 @@ public:
 	}
 
 	int
-	recv(const co_gw_srv* srv) noexcept
+	recv(const co_gw_req *req) noexcept
 	{
-		return co_gw_recv(this, srv);
+		return co_gw_recv(this, req);
 	}
 
 	void

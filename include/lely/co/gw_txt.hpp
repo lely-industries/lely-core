@@ -3,7 +3,7 @@
  * interface of the ASCII gateway declarations. See lely/co/gw_txt.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -76,13 +76,13 @@ public:
 	void
 	getRecvFunc(co_gw_txt_recv_func_t** pfunc, void** pdata) const noexcept
 	{
-		co_gw_get_txt_recv_func(this, pfunc, pdata);
+		co_gw_txt_get_recv_func(this, pfunc, pdata);
 	}
 
 	void
 	setRecvFunc(co_gw_txt_recv_func_t* func, void* data) noexcept
 	{
-		co_gw_set_txt_recv_func(this, func, data);
+		co_gw_txt_set_recv_func(this, func, data);
 	}
 
 	template <class F>
@@ -110,13 +110,13 @@ public:
 	void
 	getSendFunc(co_gw_txt_send_func_t** pfunc, void** pdata) const noexcept
 	{
-		co_gw_get_txt_send_func(this, pfunc, pdata);
+		co_gw_txt_get_send_func(this, pfunc, pdata);
 	}
 
 	void
 	setSendFunc(co_gw_txt_send_func_t* func, void* data) noexcept
 	{
-		co_gw_set_txt_send_func(this, func, data);
+		co_gw_txt_set_send_func(this, func, data);
 	}
 
 	template <class F>

@@ -3,7 +3,7 @@
  * interface of the emergency (EMCY) object. See lely/co/emcy.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -63,9 +63,10 @@ public:
 	CODev* getDev() const noexcept { return co_emcy_get_dev(this); }
 
 	int
-	push(co_unsigned16_t eec, co_unsigned8_t er) noexcept
+	push(co_unsigned16_t eec, co_unsigned8_t er, const uint8_t msef[5] = 0)
+			noexcept
 	{
-		return co_emcy_push(this, eec, er);
+		return co_emcy_push(this, eec, er, msef);
 	}
 
 	int
