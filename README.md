@@ -28,7 +28,7 @@ liblely-co is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/co.git
 
 or download the latest release
-([v1.3.2](https://gitlab.com/lely_industries/co/tags/v1.3.2)).
+([v1.3.3](https://gitlab.com/lely_industries/co/tags/v1.3.3)).
 
 Binary packages for Ubuntu 16.04 LTS (Xenial Xerus) can be found at
 https://launchpad.net/~lely/+archive/ubuntu/ppa.
