@@ -1,7 +1,7 @@
 /*!\file
  * This is the public header file of the Test Anything Protocol (TAP) library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -43,10 +43,15 @@
  * skipping the tests. Any further arguments are printed under the control of
  * the format string.
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_plan(...) \
 	_tap_plan(__VA_ARGS__, "")
 #define _tap_plan(n, ...) \
 	__tap_plan_impl(n, "" __VA_ARGS__)
+#else
+#define tap_plan(n) \
+	__tap_plan_impl(n, "")
+#endif
 
 /*!
  * Evaluates an expression. If the result is non-zero, the test passed,
@@ -55,10 +60,15 @@
  * interpreted as a printf-style format string describing the test. Any further
  * arguments are printed under the control of the format string.
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_test(...) \
 	_tap_test(__VA_ARGS__, "")
 #define _tap_test(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
+#else
+#define tap_test(expr) \
+	__tap_plan_impl(!!(expr), #expr, __FILE__, __LINE__, "")
+#endif
 
 /*!
  * Indicates that a test has passed. No arguments are required, but if they are
@@ -68,8 +78,13 @@
  *
  * \see tap_fail()
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_pass(...) \
 	__tap_test_impl(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
+#else
+#define tap_pass() \
+	__tap_test_impl(1, "", __FILE__, __LINE__, "")
+#endif
 
 /*!
  * Indicates that a test has failed. No arguments are required, but if they are
@@ -79,36 +94,56 @@
  *
  * \see tap_pass()
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_fail(...) \
 	__tap_test_impl(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
+#else
+#define tap_fail() \
+	__tap_test_impl(0, "", __FILE__, __LINE__, "")
+#endif
 
 /*!
  * Indicates that a test is expected to fail. If the expression evaluates to
  * zero, the test is not considered to have failed. The arguments are the same
  * as for tap_test().
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_todo(...) \
 	_tap_todo(__VA_ARGS__, "")
 #define _tap_todo(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, \
 			" # TODO " __VA_ARGS__)
+#else
+#define tap_todo(expr) \
+	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, " # TODO")
+#endif
 
 /*!
  * Skips a test. The provided expression is _not_ evaluated. The arguments are
  * the same as for tap_test().
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_skip(...) \
 	_tap_skip(__VA_ARGS__, "")
 #define _tap_skip(expr, ...) \
 	tap_pass(" # SKIP " __VA_ARGS__)
+#else
+#define tap_skip(expr) \
+	tap_pass(" # SKIP")
+#endif
 
 /*!
  * Emits a diagnostic message. The first argument, if provided, is interpreted
  * as a printf-style format string. Any further arguments are printed under the
  * control of the format string.
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_diag(...) \
 	__tap_diag_impl("# " __VA_ARGS__)
+#else
+#define tap_diag(format) \
+	__tap_diag_impl("# " format)
+#endif
 
 /*!
  * Aborts all tests. The first argument, if provided, is interpreted as a
@@ -116,14 +151,29 @@
  * arguments are printed under the control of the format string. Note that this
  * function aborts the running process and does not return.
  */
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_abort(...) \
 	__tap_abort_impl("" __VA_ARGS__)
+#else
+#define tap_abort() \
+	__tap_abort_impl("")
+#endif
 
 //! Similar to `assert()`, but invokes tap_abort() if \a expr evaluates to zero.
+#if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_assert(expr) \
 	((expr) ? (void)0 \
 		: tap_abort("%s:%d: Assertion `%s' failed.", __FILE__, __LINE__, \
 				#expr))
+#else
+#define tap_assert(expr) \
+	_tap_assert(expr, __FILE__, __LINE__)
+#define _tap_assert(expr, file, line) \
+	__tap_assert(expr, file, line)
+#define __tap_assert(expr, file, line) \
+	((expr) ? (void)0 \
+		: __tap_abort_impl(file ":" #line ": Assertion `" #expr "' failed."))
+#endif
 
 #ifdef __cplusplus
 extern "C" {
