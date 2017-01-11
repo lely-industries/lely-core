@@ -49,9 +49,7 @@
 int
 main()
 {
-	tap_plan(1);
-
-	tap_pass();
+	tap_plan(0);
 
 	return 0;
 }
