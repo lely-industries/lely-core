@@ -1,4 +1,8 @@
 bin =
+if !NO_CXX
+bin += test-cxx
+test_cxx_SOURCES = cxx.cpp
+endif
 if !NO_CO_DCF
 if !NO_CO_EMCY
 bin += test-emcy
