@@ -44,7 +44,7 @@ clock_getres(clockid_t clock_id, struct timespec *res)
 			QueryPerformanceFrequency(&Frequency);
 			*res = (struct timespec){
 				0,
-				1000000000l / Frequency.QuadPart
+				(long)(1000000000l / Frequency.QuadPart)
 			};
 		}
 		return 0;
@@ -86,9 +86,9 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 			}
 			tp->tv_sec = PerformanceCount.QuadPart
 					/ Frequency.QuadPart;
-			tp->tv_nsec = (PerformanceCount.QuadPart
+			tp->tv_nsec = (long)((PerformanceCount.QuadPart
 					% Frequency.QuadPart)
-					* 1000000000l / Frequency.QuadPart;
+					* 1000000000l / Frequency.QuadPart);
 		}
 		return 0;
 	}
@@ -135,7 +135,7 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 	if (__unlikely(Milliseconds > ULONG_MAX))
 		return EINVAL;
 
-	if (SleepEx(Milliseconds, TRUE)) {
+	if (SleepEx((DWORD)Milliseconds, TRUE)) {
 		if (!(flags & TIMER_ABSTIME) && rmtp) {
 			struct timespec after = { 0, 0 };
 			if (__unlikely(clock_gettime(clock_id, &after) == -1)) {

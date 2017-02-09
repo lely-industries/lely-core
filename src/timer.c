@@ -262,7 +262,7 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 			return -1;
 		}
 		// Round the period up to the nearest millisecond.
-		lPeriod = (period.tv_sec * 1000)
+		lPeriod = (LONG)(period.tv_sec * 1000)
 				+ (period.tv_nsec + 999999l) / 1000000l;
 		period = (struct timespec) {
 			lPeriod / 1000,
@@ -447,7 +447,7 @@ timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
 			// A negative overrun indicates an overflow.
 			if (__unlikely(overrun < 0 || overrun > INT_MAX))
 				overrun = INT_MAX;
-			timer->overrun = overrun;
+			timer->overrun = (int)overrun;
 			// Update the expiration time.
 			ft2tp(&ft, &timer->expire);
 			timespec_add(&timer->expire, &timer->period);

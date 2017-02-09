@@ -50,7 +50,7 @@ sleep(unsigned seconds)
 	int errsv = errno;
 	if (__unlikely(nanosleep(&rqtp, &rmtp) == -1)) {
 		errno = errsv;
-		return rmtp.tv_sec;
+		return (unsigned)rmtp.tv_sec;
 	}
 
 	return 0;

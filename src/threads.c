@@ -260,10 +260,10 @@ cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 	timespec_get(&now, TIME_UTC);
 	int64_t msec = ((int64_t)now.tv_sec - (int64_t)ts->tv_sec) * 1000
 			+ ((int64_t)now.tv_nsec - (int64_t)ts->tv_nsec)
-			/ 1000000;
+			/ 1000000l;
 
 	return SleepConditionVariableCS(&cond->__cond, &mtx->__mtx,
-			msec > 0 ? msec : 0)
+			(DWORD)(msec > 0 ? msec : 0))
 			? thrd_success : GetLastError() == ERROR_TIMEOUT
 			? thrd_timedout : thrd_error;
 #endif
@@ -560,8 +560,8 @@ tss_create(tss_t *key, tss_dtor_t dtor)
 	return __unlikely(pthread_key_create((pthread_key_t *)key, dtor))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
-	DWORD dwTlsIndex = FlsAlloc(dtor);
-	if (__unlikely(dwTlsIndex == FLS_OUT_OF_INDEXES))
+	DWORD dwFlsIndex = FlsAlloc(dtor);
+	if (__unlikely(dwFlsIndex == FLS_OUT_OF_INDEXES))
 		return thrd_error;
 
 	*key = dwFlsIndex;
