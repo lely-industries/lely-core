@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * contains compiler feature definitions.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -370,6 +370,11 @@
 #else
 #define LONG_BIT	__WORDSIZE
 #endif
+#endif
+
+#ifndef LEVEL1_DCACHE_LINESIZE
+//! The size (in bytes) of the level 1 (L1) data cache.
+#define LEVEL1_DCACHE_LINESIZE	64
 #endif
 
 #ifndef LELY_DLL
