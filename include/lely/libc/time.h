@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<time.h>` and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_TIME_H
 #define LELY_LIBC_TIME_H
 
-#include <lely/libc/libc.h>
+#include <lely/libc/sys/types.h>
 
 #include <time.h>
 
@@ -41,6 +41,36 @@
 #endif
 #endif
 
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
+		&& !defined(__MINGW32__)
+
+//! The identifier of the system-wide clock measuring real time.
+#define CLOCK_REALTIME	0
+
+/*!
+ * The identifier for the system-wide monotonic clock, which is defined as a
+ * clock measuring real time, whose value cannot be set via `clock_settime()`
+ * and which cannot have negative clock jumps.
+ */
+#define CLOCK_MONOTONIC	1
+
+/*!
+ * The identifier of the CPU-time clock associated with the process making a
+ * `clock_*()` function call (not supported on Windows).
+ */
+#define CLOCK_PROCESS_CPUTIME_ID	2
+
+/*!
+ * The identifier of the CPU-time clock associated with the thread making a
+ * `clock_*()` function call (not supported on Windows).
+ */
+#define CLOCK_THREAD_CPUTIME_ID	3
+
+//! Flag indicating time is absolute.
+#define TIMER_ABSTIME	1
+
+#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
+
 #ifndef LELY_HAVE_TIMESPEC
 //! A time type with nanosecond resolution.
 struct timespec {
@@ -55,12 +85,98 @@ struct timespec {
 extern "C" {
 #endif
 
-#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
+		&& !defined(__MINGW32__)
 
+/*!
+ * Obtains the resolution of a clock. Clock resolutions are
+ * implementation-defined and cannot be set by a process.
+ *
+ * \param clock_id the identifier of the clock (one of #CLOCK_REALTIME,
+ *                 #CLOCK_MONOTONIC, #CLOCK_PROCESS_CPUTIME_ID or
+ *                 #CLOCK_THREAD_CPUTIME_ID).
+ * \param res      the address at which to store the resolution of the specified
+ *                 clock (can be NULL).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, `errno` is set to
+ * indicate the error.
+ *
+ * \see clock_gettime(), clock_settime()
+ */
+LELY_LIBC_EXTERN int __cdecl clock_getres(clockid_t clock_id,
+		struct timespec *res);
+
+/*!
+ * Obtains the current value of a clock.
+ *
+ * \param clock_id the identifier of the clock (one of #CLOCK_REALTIME,
+ *                 #CLOCK_MONOTONIC, #CLOCK_PROCESS_CPUTIME_ID or
+ *                 #CLOCK_THREAD_CPUTIME_ID).
+ * \param tp       the address at which to store the value of the specified
+ *                 clock (can be NULL).
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, `errno` is set to
+ * indicate the error.
+ *
+ * \see clock_getres(), clock_settime()
+ */
+LELY_LIBC_EXTERN int __cdecl clock_gettime(clockid_t clock_id,
+		struct timespec *tp);
+
+/*!
+ * Sleeps until a time interval or absolute time has elapsed on a clock. If the
+ * sleep is interrupted, an error is returned. In the case of a relative sleep,
+ * the remaining time is stored at \a rmtp.
+ *
+ * Absolute sleep MAY be implemented on some platforms with a relative sleep
+ * with respect to the current value of `clock_gettime()` for the specified
+ * clock. Unfortunately, this implementation is susceptible to a race condition
+ * if the process is preempted between the call to `clock_gettime()` and the
+ * start of the relative sleep.
+ *
+ * Whether changing the value of the #CLOCK_REALTIME clock affects the wakeup
+ * time of any threads in an absolute sleep is implementation-defined.
+ *
+ * \param clock_id the identifier of the clock (one of #CLOCK_REALTIME,
+ *                 #CLOCK_MONOTONIC or #CLOCK_PROCESS_CPUTIME_ID).
+ * \param flags    if the #TIMER_ABSTIME is set in \a flags, this function shall
+ *                 sleep until the value of the clock specified by \a clock_id
+ *                 reaches the absolute time specified by \a rqtp. If
+ *                 #TIMER_ABSTIME is not set, this function shall sleep until
+ *                 the time interval specified by \a rqtp has elapsed.
+ * \param rqtp     a pointer to a time interval or absolute time, depending on
+ *                 the value of \a flags.
+ * \param rmtp     the address at which to store the remaining time if the
+ *                 relative sleep was interrupted (can be NULL).
+ *
+ * \returns 0 on success, or an error number on error.
+ */
+LELY_LIBC_EXTERN int __cdecl clock_nanosleep(clockid_t clock_id,
+		int flags, const struct timespec *rqtp, struct timespec *rmtp);
+
+/*!
+ * Sets the value of a clock.
+ *
+ * \param clock_id the identifier of the clock (one of #CLOCK_REALTIME,
+ *                 #CLOCK_PROCESS_CPUTIME_ID or #CLOCK_THREAD_CPUTIME_ID).
+ * \param tp       a pointer to the new value of the specified clock.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, `errno` is set to
+ * indicate the error.
+ *
+ * \see clock_getres(), clock_gettime()
+ */
+LELY_LIBC_EXTERN int __cdecl clock_settime(clockid_t clock_id,
+		const struct timespec *tp);
+
+/*!
+ * Equivalent to `clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp)`, except that
+ * on error, it returns -1 and sets `errno` to indicate the error.
+ */
 LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
 		struct timespec *rmtp);
 
-#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS
+#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
 #ifndef LELY_HAVE_TIMESPEC_GET
 

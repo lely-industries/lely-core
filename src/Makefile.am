@@ -1,4 +1,7 @@
 src =
+if !NO_RT
+src += clock.c
+endif
 src += getopt.c
 src += libc.h
 src += stdatomic.c
@@ -6,10 +9,16 @@ src += stdio.c
 src += stdlib.c
 src += string.c
 src += strings.c
+if !NO_RT
+src += sleep.c
+endif
 if !NO_THREADS
 src += threads.c
 endif
+if !NO_RT
 src += time.c
+src += timespec.h
+endif
 if PLATFORM_WIN32
 src += version.rc
 endif

@@ -3,7 +3,7 @@
  * includes `<sys/types.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
-#if defined(_POSIX_C_SOURCE) && __has_include(<sys/types.h>)
+#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__)) \
+		&& __has_include(<sys/types.h>)
 #define LELY_HAVE_SYS_TYPES_H	1
 #endif
 #endif
@@ -37,6 +38,10 @@
 
 #include <stddef.h>
 
+//! Used for clock ID type in the clock and timer functions.
+typedef int clockid_t;
+
+//! Used for a count of bytes or an error indication.
 typedef ptrdiff_t ssize_t;
 
 #endif // LELY_HAVE_SYS_TYPES_H

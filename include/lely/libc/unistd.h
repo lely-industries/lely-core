@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<unistd.h>`, if it exists, and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -73,6 +73,17 @@ LELY_LIBC_EXTERN int optopt;
  */
 LELY_LIBC_EXTERN int getopt(int argc, char *const argv[],
 		const char *optstring);
+
+/*!
+ * Sleeps until the specified number of realtime seconds has elapsed or the
+ * calling thread is interrupted.
+ *
+ * \returns 0 if the requested time has elapsed, or the remaining number of
+ * seconds if not.
+ *
+ * \see nanosleep()
+ */
+LELY_LIBC_EXTERN unsigned __cdecl sleep(unsigned seconds);
 
 #ifdef __cplusplus
 }
