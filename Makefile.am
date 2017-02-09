@@ -9,3 +9,6 @@ EXTRA_DIST += README.md
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(PACKAGE).pc
+if !NO_RT
+pkgconfig_DATA += $(PACKAGE)_rt.pc
+endif

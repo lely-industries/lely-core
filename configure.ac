@@ -30,6 +30,22 @@ case "$host" in
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
 
+RT_LIBS=
+AM_CONDITIONAL([NO_RT], [false])
+AC_ARG_ENABLE([rt],
+	AS_HELP_STRING([--disable-rt], [disable Realtime Extensions]))
+AS_IF([test "x$enable_rt" != "xno"], [
+	AS_IF([test "x$platform_win32" == "xyes"], [
+		AC_CHECK_LIB([pthread], [clock_gettime], [RT_LIBS="-lpthread"])
+	], [
+		AC_CHECK_LIB([rt], [timer_create], [RT_LIBS="-lrt"])
+	])
+], [
+	AM_CONDITIONAL([NO_RT], [true])
+	AC_DEFINE([LELY_NO_RT], [1], [Define to 1 if Realtime Extensions are disabled.])
+])
+AC_SUBST([RT_LIBS])
+
 AX_PTHREAD
 AS_IF([test "x$ax_pthread_ok" == "xyes"], [
 	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
@@ -39,11 +55,13 @@ AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
 AS_IF([test "x$ax_pthread_ok" == "xyes" -a "x$enable_threads" != "xno"], [
+	CC="$PTHREAD_CC"
 	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 	LIBS="$PTHREAD_LIBS $LIBS"
 ], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
+	AS_IF([test "x$platform_win32" == "xyes"], [LIBS="$RT_LIBS $LIBS"])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
@@ -67,5 +85,6 @@ AC_CONFIG_FILES([
 	src/version.rc
 	Makefile
 	${PACKAGE}.pc
+	${PACKAGE}_rt.pc
 ])
 AC_OUTPUT
