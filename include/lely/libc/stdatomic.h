@@ -3,7 +3,7 @@
  * includes `<stdatomic.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -111,7 +111,7 @@ typedef _Atomic(int)			atomic_int;
 typedef _Atomic(unsigned int)		atomic_uint;
 typedef _Atomic(long)			atomic_long;
 typedef _Atomic(unsigned long)		atomic_ulong;
-#if defined(HAVE_C99) || defined(HAVE_CXX11)
+#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 typedef _Atomic(long long)		atomic_llong;
 typedef _Atomic(unsigned long long)	atomic_ullong;
 #endif
@@ -231,7 +231,7 @@ atomic_thread_fence(memory_order order)
 	__c11_atomic_thread_fence(order);
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 	__atomic_thread_fence(order);
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 	if (order != memory_order_relaxed)
 		__sync_synchronize();
 #endif
@@ -308,7 +308,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_load_explicit(object, order) \
 	(__atomic_load_n(&(object)->__value, (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_load_explicit(object, order) \
 	(__unused_var(order), __sync_fetch_and_add(&(object)->__value, 0))
 #endif
@@ -328,7 +328,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_exchange_explicit(object, desired, order) \
 	(__atomic_exchange_n(&(object)->__value, (desired), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_exchange_explicit(object, desired, order) \
 	__extension__({ \
 		__typeof__(object) __object = (object); \
@@ -364,7 +364,7 @@ atomic_signal_fence(memory_order order)
 		success, failure) \
 	(__atomic_compare_exchange_n(&(object)->__value, (expected), (desired), \
 			0, (success), (failure)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_compare_exchange_strong_explicit(object, expected, desired, \
 		success, failure) \
 	__extension__({ \
@@ -433,7 +433,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_fetch_add_explicit(object, operand, order) \
 	(__atomic_fetch_add(&(object)->__value, (operand), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_fetch_add_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_add(&(object)->__value, (operand)))
@@ -457,7 +457,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_fetch_sub_explicit(object, operand, order) \
 	(__atomic_fetch_sub(&(object)->__value, (operand), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_fetch_sub_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_sub(&(object)->__value, (operand)))
@@ -481,7 +481,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_fetch_or_explicit(object, operand, order) \
 	(__atomic_fetch_or(&(object)->__value, (operand), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_fetch_or_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_or(&(object)->__value, (operand)))
@@ -505,7 +505,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_fetch_xor_explicit(object, operand, order) \
 	(__atomic_fetch_xor(&(object)->__value, (operand), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_fetch_xor_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_xor(&(object)->__value, (operand)))
@@ -529,7 +529,7 @@ atomic_signal_fence(memory_order order)
 #elif defined(LELY_HAVE_GNUC_ATOMIC)
 #define atomic_fetch_and_explicit(object, operand, order) \
 	(__atomic_fetch_and(&(object)->__value, (operand), (order)))
-#else
+#elif defined(LELY_HAVE_SYNC_ATOMIC)
 #define atomic_fetch_and_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_and(&(object)->__value, (operand)))
