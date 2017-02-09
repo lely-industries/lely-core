@@ -3,6 +3,7 @@ inc += lely/libc/sys/types.h
 inc += lely/libc/assert.h
 inc += lely/libc/features.h
 inc += lely/libc/libc.h
+inc += lely/libc/signal.h
 inc += lely/libc/stdalign.h
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h

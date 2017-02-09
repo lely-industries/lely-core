@@ -46,5 +46,15 @@ typedef ptrdiff_t ssize_t;
 
 #endif // LELY_HAVE_SYS_TYPES_H
 
+#ifndef _POSIX_C_SOURCE
+
+//! Used to identify a thread attribute object.
+typedef struct pthread_attr_t pthread_attr_t;
+
+//! Used for timer ID returned by `timer_create()`.
+typedef void *timer_t;
+
+#endif // !_POSIX_C_SOURCE
+
 #endif
 
