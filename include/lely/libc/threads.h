@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<threads.h>`, if it exists, and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -49,8 +49,10 @@
 #endif
 
 //! A complete object type that holds an identifier for a condition variable.
-#ifdef _WIN32
-typedef struct { void *__cnd; } cnd_t;
+#ifdef __MINGW32__
+typedef struct { void *__cond; } cnd_t;
+#elif defined(_WIN32)
+typedef struct { CONDITION_VARIABLE __cond; } cnd_t;
 #else
 typedef union { char __size[48]; long __align; } cnd_t;
 #endif
@@ -66,10 +68,12 @@ typedef unsigned long thrd_t;
  * A complete object type that holds an identifier for a thread-specific storage
  * pointer.
  */
-#ifdef _WIN32
-typedef unsigned long tss_t;
+#ifdef __MINGW32__
+typedef unsigned int tss_t;
 #elif defined(__CYGWIN__)
 typedef void *tss_t;
+#elif defined(_WIN32)
+typedef DWORD tss_t;
 #else
 typedef unsigned int tss_t;
 #endif
@@ -85,8 +89,10 @@ typedef unsigned int tss_t;
 #endif
 
 //! A complete object type that holds an identifier for a mutex.
-#ifdef _WIN32
+#ifdef __MINGW32__
 typedef struct { void *__mtx; } mtx_t;
+#elif defined(_WIN32)
+typedef struct { CRITICAL_SECTION __mtx; } mtx_t;
 #else
 typedef union {
 #if __WORDSIZE == 64
@@ -113,7 +119,10 @@ enum {
 	mtx_plain = 0,
 	//! A mutex type that supports recursive locking.
 	mtx_recursive = 2,
-	//! A mutex type that supports timeout.
+	/*!
+	 * A mutex type that supports timeout (not available with the native
+	 * Windows API).
+	 */
 	mtx_timed = 1
 };
 
@@ -153,7 +162,11 @@ typedef int (__cdecl *thrd_start_t)(void *);
  * The function pointer type used for a destructor for a thread-specific storage
  * pointer.
  */
+#if defined(_WIN32) && !defined(__MINGW32__)
+typedef void (WINAPI *tss_dtor_t)(void *);
+#else
 typedef void (__cdecl *tss_dtor_t)(void *);
+#endif
 
 /*!
  * Uses the #once_flag at \a flag to ensure that \a func is called exactly once,
