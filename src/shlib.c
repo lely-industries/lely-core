@@ -41,11 +41,11 @@ shlib_open(const char *filename)
 	if (filename && *filename)
 		return GetModuleHandle(NULL);
 
-	DWORD = dwFlags = 0;
+	DWORD dwFlags = 0;
 	if (*filename == '\\' || (isalpha((unsigned char)filename[0])
 			&& filename[1] == ':'))
 		dwFlags |= LOAD_WITH_ALTERED_SEARCH_PATH;
-	HMODULE hModule = LoadLibraryExA(filename, dwFlags);
+	HMODULE hModule = LoadLibraryExA(filename, NULL, dwFlags);
 	if (__unlikely(!hModule))
 		diag(DIAG_ERROR, GetLastError(), "%s", filename);
 	return hModule;
@@ -55,7 +55,7 @@ LELY_UTIL_EXPORT void
 shlib_close(void *handle)
 {
 	if (handle != GetModuleHandle(NULL)) {
-		if (__unlikely(!FreeHandle(handle)))
+		if (__unlikely(!FreeLibrary(handle)))
 			diag(DIAG_ERROR, GetLastError(), "");
 	}
 }
