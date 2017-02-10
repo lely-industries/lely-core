@@ -28,7 +28,9 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
+#ifdef _WIN64
+typedef INT_PTR WINAPI shlib_func_t();
+#elif defined(_WIN32)
 typedef int WINAPI shlib_func_t();
 #else
 typedef int shlib_func_t();
