@@ -29,6 +29,8 @@
 // Avoid the warning: "ISO C forbids conversion of object pointer to function
 // pointer type".
 #pragma GCC diagnostic ignored "-pedantic"
+// Avoid the warning: "zero-length gnu_printf format string".
+#pragma GCC diagnostic ignored "-Wformat-zero-length"
 #endif
 
 #ifdef _WIN32
