@@ -13,7 +13,7 @@
  * of the heap, the user is responsible for providing a suitable comparison
  * function (#cmp_t).
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -74,6 +74,15 @@ struct pheap {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * Initializes a node in a paring heap.
+ *
+ * \param node a pointer to the node to be initialized.
+ * \param key  a pointer to the key for this node. The key MUST NOT be modified
+ *             while the node is part of a heap.
+ */
+LELY_UTIL_PHEAP_INLINE void pnode_init(struct pnode *node, const void *key);
 
 //! Returns a pointer to the next node (in unspecified order) in a pairing heap.
 LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
@@ -162,6 +171,12 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
  */
 #define pheap_foreach(heap, node) \
 	pnode_foreach(pheap_first(heap), node)
+
+LELY_UTIL_PHEAP_INLINE void
+pnode_init(struct pnode *node, const void *key)
+{
+	node->key = key;
+}
 
 LELY_UTIL_PHEAP_INLINE struct pnode *
 pnode_next(const struct pnode *node)
