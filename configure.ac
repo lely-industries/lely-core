@@ -107,6 +107,8 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 			[[WTSSendMessage(WTS_CURRENT_SERVER_HANDLE, 0, NULL, 0, NULL, 0, 0, 0, NULL, FALSE);]])],
 		[ax_wtsapi32_ok=yes], [LIBS=$save_LIBS])
 	AC_MSG_RESULT([$ax_wtsapi32_ok])
+], [
+	AC_SEARCH_LIBS([dlopen], [dl])
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])

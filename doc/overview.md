@@ -31,6 +31,9 @@ On POSIX and Windows platforms, functions are provided to run a process in the
 background as a daemon/service (see lely/util/daemon.h). Note that this
 functionality can be disabled when liblely-util is built.
 
+Shared libraries and their symbols can be loaded with the functions in
+lely/util/shlib.h.
+
 The byte order of integers and floating-point values is platform specific.
 Functions to convert between native, big-endian and little-endian, and network
 byte order can be found in lely/util/endian.h.
@@ -85,6 +88,6 @@ Other
 -----
 
 Convenience functions to compare and manipulate `timespec` structs can be found
-in lely/util/time.h. Hash function for integers, pointers and strings can be
-found in lely/util/hash.h.
+in lely/util/time.h. Comparison and hash function for integers, pointers and
+strings can be found in lely/util/cmp.h and lely/util/hash.h, respectively.
 

@@ -26,6 +26,7 @@ src += pheap.c
 src += pool.c
 src += print.c
 src += rbtree.c
+src += shlib.c
 src += time.c
 src += util.h
 if PLATFORM_WIN32
