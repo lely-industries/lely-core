@@ -16,6 +16,10 @@ inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
 endif
+inc += lely/util/factory.h
+if !NO_CXX
+inc += lely/util/factory.hpp
+endif
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
 inc += lely/util/hash.h
