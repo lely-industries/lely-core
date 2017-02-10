@@ -5,6 +5,7 @@ includedir=@includedir@
 
 Name: @PACKAGE@
 Description: @PACKAGE_NAME@
+URL: https://gitlab.com/lely_industries/util
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llely-util

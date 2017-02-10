@@ -17,7 +17,7 @@ liblely-util is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/util.git
 
 or download the latest release
-([v1.5.1](https://gitlab.com/lely_industries/util/tags/v1.5.1)).
+([v1.6.0](https://gitlab.com/lely_industries/util/tags/v1.6.0)).
 
 Binary packages for Ubuntu 16.04 LTS (Xenial Xerus) can be found at
 https://launchpad.net/~lely/+archive/ubuntu/ppa.
@@ -134,7 +134,7 @@ found at http://lely_industries.gitlab.io/util/doxygen/.
 Licensing
 ---------
 
-Copyright 2016 [Lely Industries N.V.]
+Copyright 2017 [Lely Industries N.V.]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
