@@ -40,8 +40,8 @@
 #endif
 
 #ifdef _WIN32
-#ifndef DIALOG_DIAG_TIMEOUT
-#define DIALOG_DIAG_TIMEOUT	10
+#ifndef LELY_DIALOG_DIAG_TIMEOUT
+#define LELY_DIALOG_DIAG_TIMEOUT	10
 #endif
 #endif
 
@@ -297,7 +297,8 @@ dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		WTSSendMessageA(WTS_CURRENT_SERVER_HANDLE,
 				WTSGetActiveConsoleSessionId(), pTitle,
 				strlen(pTitle), pMessage, strlen(pMessage),
-				Style, DIALOG_DIAG_TIMEOUT, &dwResponse, FALSE);
+				Style, LELY_DIALOG_DIAG_TIMEOUT, &dwResponse,
+				FALSE);
 	}
 	free(pMessage);
 	errno = errsv;
