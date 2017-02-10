@@ -4,7 +4,7 @@
  *
  * \see lely/util/daemon.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,8 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef DAEMON_TIMEOUT
-#define DAEMON_TIMEOUT	1000
+#ifndef LELY_DAEMON_TIMEOUT
+#define LELY_DAEMON_TIMEOUT	1000
 #endif
 
 static daemon_handler_t *daemon_handler = &default_daemon_handler;
@@ -65,7 +65,7 @@ static SERVICE_STATUS ServiceStatus = {
 			| SERVICE_ACCEPT_SHUTDOWN
 			| SERVICE_ACCEPT_PARAMCHANGE,
 	.dwWin32ExitCode = NO_ERROR,
-	.dwWaitHint = 2 * DAEMON_TIMEOUT
+	.dwWaitHint = 2 * LELY_DAEMON_TIMEOUT
 };
 
 LELY_UTIL_EXPORT int
@@ -328,16 +328,25 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 #endif
 
 	// SIGHUP is interpreted as DAEMON_RELOAD.
-	if (__unlikely(signal(SIGHUP, &daemon_signal_func) == SIG_ERR)) {
+	struct sigaction new_hup, old_hup;
+	new_hup.sa_handler = &daemon_signal_func;
+	sigemptyset(&new_hup.sa_mask);
+	new_hup.sa_flags = 0;
+	if (__unlikely(sigaction(SIGHUP, &new_hup, &old_hup) == -1)) {
 		result = -1;
 		errsv = errno;
-		goto error_signal;
+		goto error_sighup;
 	}
+
 	// SIGTERM is interpreted as DAEMON_STOP.
-	if (__unlikely(signal(SIGTERM, &daemon_signal_func) == SIG_ERR)) {
+	struct sigaction new_term, old_term;
+	new_term.sa_handler = &daemon_signal_func;
+	sigemptyset(&new_term.sa_mask);
+	new_term.sa_flags = 0;
+	if (__unlikely(sigaction(SIGTERM, &new_term, &old_term) == -1)) {
 		result = -1;
 		errsv = errno;
-		goto error_signal;
+		goto error_sigterm;
 	}
 
 #ifndef LELY_NO_THREADS
@@ -345,7 +354,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	if (__unlikely(thrd_create(&thr, &daemon_thrd_start, NULL)
 			!= thrd_success)) {
 		result = -1;
-		goto error_signal;
+		goto error_thrd_create;
 	}
 #endif
 
@@ -369,7 +378,13 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	diag_at_set_handler(diag_at_handler, diag_at_handle);
 	diag_set_handler(diag_handler, diag_handle);
 
-error_signal:
+#ifndef LELY_NO_THREADS
+error_thrd_create:
+#endif
+	sigaction(SIGTERM, &old_term, NULL);
+error_sigterm:
+	sigaction(SIGHUP, &old_hup, NULL);
+error_sighup:
 #if !defined(__CYGWIN__) && !defined(__linux__)
 error_fcntl:
 #endif
@@ -443,9 +458,13 @@ daemon_proc(void)
 	}
 
 	// Ignore terminal signals we shouldn't be receiving anyway.
-	signal(SIGTSTP, SIG_IGN);
-	signal(SIGTTIN, SIG_IGN);
-	signal(SIGTTOU, SIG_IGN);
+	struct sigaction act;
+	act.sa_handler = SIG_IGN;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	sigaction(SIGTSTP, &act, NULL);
+	sigaction(SIGTTIN, &act, NULL);
+	sigaction(SIGTTOU, &act, NULL);
 
 	// Redirect the standard streams to /dev/null. Since the link between
 	// file descriptors and streams is implementation-defined, we close and
@@ -534,7 +553,7 @@ daemon_thrd_start(void *arg)
 			.fd = daemon_pipe[0],
 			.events = POLLIN
 		};
-		do result = poll(&fds, 1, DAEMON_TIMEOUT);
+		do result = poll(&fds, 1, LELY_DAEMON_TIMEOUT);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result != 1))
 			continue;
