@@ -1,8 +1,8 @@
 /*!\file
  * This header file is part of the utilities library; it contains the time
- * functions.
+ * function declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,6 +29,7 @@
 #ifndef LELY_UTIL_TIME_INLINE
 #define LELY_UTIL_TIME_INLINE	inline
 #endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,16 +39,38 @@ LELY_UTIL_TIME_INLINE void timespec_add(struct timespec *tp,
 		const struct timespec *inc);
 
 //! Adds \a sec seconds to the time at \a tp.
-LELY_UTIL_TIME_INLINE void timespec_add_sec(struct timespec *tp, int64_t sec);
+LELY_UTIL_TIME_INLINE void timespec_add_sec(struct timespec *tp, uint64_t sec);
 
 //! Adds \a msec milliseconds to the time at \a tp.
-LELY_UTIL_TIME_INLINE void timespec_add_msec(struct timespec *tp, int64_t msec);
+LELY_UTIL_TIME_INLINE void timespec_add_msec(struct timespec *tp,
+		uint64_t msec);
 
 //! Adds \a usec microseconds to the time at \a tp.
-LELY_UTIL_TIME_INLINE void timespec_add_usec(struct timespec *tp, int64_t usec);
+LELY_UTIL_TIME_INLINE void timespec_add_usec(struct timespec *tp,
+		uint64_t usec);
 
 //! Adds \a nsec nanoseconds to the time at \a tp.
-LELY_UTIL_TIME_INLINE void timespec_add_nsec(struct timespec *tp, int64_t nsec);
+LELY_UTIL_TIME_INLINE void timespec_add_nsec(struct timespec *tp,
+		uint64_t nsec);
+
+//! Subtracts the time interval *\a inc to the time at \a tp.
+LELY_UTIL_TIME_INLINE void timespec_sub(struct timespec *tp,
+		const struct timespec *dec);
+
+//! Subtracts \a sec seconds to the time at \a tp.
+LELY_UTIL_TIME_INLINE void timespec_sub_sec(struct timespec *tp, uint64_t sec);
+
+//! Subtracts \a msec milliseconds to the time at \a tp.
+LELY_UTIL_TIME_INLINE void timespec_sub_msec(struct timespec *tp,
+		uint64_t msec);
+
+//! Subtracts \a usec microseconds to the time at \a tp.
+LELY_UTIL_TIME_INLINE void timespec_sub_usec(struct timespec *tp,
+		uint64_t usec);
+
+//! Subtracts \a nsec nanoseconds to the time at \a tp.
+LELY_UTIL_TIME_INLINE void timespec_sub_nsec(struct timespec *tp,
+		uint64_t nsec);
 
 //! Returns the time difference (in seconds) between *\a t1 and *\a t2.
 LELY_UTIL_TIME_INLINE int64_t timespec_diff_sec(const struct timespec *t1,
@@ -79,49 +102,94 @@ timespec_add(struct timespec *tp, const struct timespec *inc)
 	tp->tv_sec += inc->tv_sec;
 	tp->tv_nsec += inc->tv_nsec;
 
-	if (tp->tv_nsec < 0) {
-		tp->tv_sec--;
-		tp->tv_nsec += 1000000000l;
-	} else if (tp->tv_nsec >= 1000000000l) {
+	if (tp->tv_nsec >= 1000000000l) {
 		tp->tv_sec++;
 		tp->tv_nsec -= 1000000000l;
 	}
 }
 
 LELY_UTIL_TIME_INLINE void
-timespec_add_sec(struct timespec *tp, int64_t sec)
+timespec_add_sec(struct timespec *tp, uint64_t sec)
 {
 	tp->tv_sec += sec;
 }
 
 LELY_UTIL_TIME_INLINE void
-timespec_add_msec(struct timespec *tp, int64_t msec)
+timespec_add_msec(struct timespec *tp, uint64_t msec)
 {
 	struct timespec inc = {
 		(time_t)(msec / 1000),
-		(long)((msec % 1000) * 1000000)
+		(long)((msec % 1000) * 1000000l)
 	};
 	timespec_add(tp, &inc);
 }
 
 LELY_UTIL_TIME_INLINE void
-timespec_add_usec(struct timespec *tp, int64_t usec)
+timespec_add_usec(struct timespec *tp, uint64_t usec)
 {
 	struct timespec inc = {
-		(time_t)(usec / 1000000),
-		(long)((usec % 1000000) * 1000)
+		(time_t)(usec / 1000000l),
+		(long)((usec % 1000000l) * 1000)
 	};
 	timespec_add(tp, &inc);
 }
 
 LELY_UTIL_TIME_INLINE void
-timespec_add_nsec(struct timespec *tp, int64_t nsec)
+timespec_add_nsec(struct timespec *tp, uint64_t nsec)
 {
 	struct timespec inc = {
 		(time_t)(nsec / 1000000000l),
 		(long)(nsec % 1000000000l)
 	};
 	timespec_add(tp, &inc);
+}
+
+LELY_UTIL_TIME_INLINE void
+timespec_sub(struct timespec *tp, const struct timespec *dec)
+{
+	tp->tv_sec -= dec->tv_sec;
+	tp->tv_nsec -= dec->tv_nsec;
+
+	if (tp->tv_nsec < 0) {
+		tp->tv_sec--;
+		tp->tv_nsec += 1000000000l;
+	}
+}
+
+LELY_UTIL_TIME_INLINE void
+timespec_sub_sec(struct timespec *tp, uint64_t sec)
+{
+	tp->tv_sec += sec;
+}
+
+LELY_UTIL_TIME_INLINE void
+timespec_sub_msec(struct timespec *tp, uint64_t msec)
+{
+	struct timespec dec = {
+		(time_t)(msec / 1000),
+		(long)((msec % 1000) * 1000000l)
+	};
+	timespec_sub(tp, &dec);
+}
+
+LELY_UTIL_TIME_INLINE void
+timespec_sub_usec(struct timespec *tp, uint64_t usec)
+{
+	struct timespec dec = {
+		(time_t)(usec / 1000000l),
+		(long)((usec % 1000000l) * 1000)
+	};
+	timespec_sub(tp, &dec);
+}
+
+LELY_UTIL_TIME_INLINE void
+timespec_sub_nsec(struct timespec *tp, uint64_t nsec)
+{
+	struct timespec dec = {
+		(time_t)(nsec / 1000000000l),
+		(long)(nsec % 1000000000l)
+	};
+	timespec_sub(tp, &dec);
 }
 
 LELY_UTIL_TIME_INLINE int64_t
@@ -143,7 +211,7 @@ timespec_diff_msec(const struct timespec *t1, const struct timespec *t2)
 LELY_UTIL_TIME_INLINE int64_t
 timespec_diff_usec(const struct timespec *t1, const struct timespec *t2)
 {
-	return ((int64_t)t1->tv_sec - (int64_t)t2->tv_sec) * 1000000
+	return ((int64_t)t1->tv_sec - (int64_t)t2->tv_sec) * 1000000l
 			+ ((int64_t)t1->tv_nsec - (int64_t)t2->tv_nsec) / 1000;
 }
 
