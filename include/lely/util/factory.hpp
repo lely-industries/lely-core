@@ -99,7 +99,7 @@ public:
 
 #if __cplusplus >= 201103L
 	unique_type
-	make_shared() const
+	make_unique() const
 	{
 		return unique_type(create(), deleter_type(*this));
 	}
@@ -107,11 +107,11 @@ public:
 };
 
 /*!
- * An implementation of #factory<Base> for object types registered with
- * LELY_C_FACTORY(name, T, Base).
+ * An implementation of #factory<T> for object types registered with
+ * LELY_C_FACTORY(name, ..., T).
  */
-template <class T, class Base = T>
-class c_factory: public factory<Base> {
+template <class T>
+class c_factory: public factory<T> {
 public:
 	explicit c_factory(const char* name)
 	: m_ctor(factory_find_ctor(name)), m_dtor(factory_find_dtor(name))
@@ -119,14 +119,14 @@ public:
 
 	explicit operator bool() const { return m_ctor; }
 
-	virtual Base*
+	virtual T*
 	create() const
 	{
-		return static_cast<Base*>(m_ctor());
+		return static_cast<T*>(m_ctor());
 	}
 
 	virtual void
-	destroy(Base* p) const noexcept
+	destroy(T* p) const noexcept
 	{
 		if (m_dtor)
 			m_dtor(static_cast<void*>(p));
@@ -173,8 +173,8 @@ private:
 	struct c_factory_##n { \
 		c_factory_##n() \
 		{ \
-			factory_insert(name &lely_factory_ctor_##n, \
-					&lely_factory_dtor_##n); \
+			factory_insert(name, &lely_c_factory_ctor_##n, \
+					&lely_c_factory_dtor_##n); \
 		} \
 		~c_factory_##n() { factory_remove(name); } \
 	}; \
