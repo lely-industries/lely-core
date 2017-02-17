@@ -58,6 +58,9 @@
 // and will typically include <features.h>, which we need but cannot portably
 // include directly.
 #include <limits.h>
+#ifdef __NEWLIB__
+#include <sys/features.h>
+#endif
 
 #ifndef __CLANG_PREREQ
 #if defined(__clang__) && defined(__clang_major__) && defined(__clang_minor__)

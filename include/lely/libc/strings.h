@@ -25,7 +25,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_STRINGS_H
-#if _POSIX_C_SOURCE >= 200112L && __has_include(<strings.h>)
+#if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__)) \
+		 && __has_include(<strings.h>)
 #define LELY_HAVE_STRINGS_H	1
 #endif
 #endif

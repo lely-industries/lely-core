@@ -26,8 +26,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
-#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__)) \
-		&& __has_include(<sys/types.h>)
+#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) \
+		|| defined(__NEWLIB__)) && __has_include(<sys/types.h>)
 #define LELY_HAVE_SYS_TYPES_H	1
 #endif
 #endif
@@ -51,8 +51,10 @@ typedef ptrdiff_t ssize_t;
 //! Used to identify a thread attribute object.
 typedef struct pthread_attr_t pthread_attr_t;
 
+#ifndef _POSIX_TIMERS
 //! Used for timer ID returned by `timer_create()`.
 typedef void *timer_t;
+#endif
 
 #endif // !_POSIX_C_SOURCE
 
