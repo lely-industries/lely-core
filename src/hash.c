@@ -35,7 +35,6 @@
 #define FNV_PRIME	UINT32_C(16777619)
 #endif
 
-
 LELY_UTIL_EXPORT size_t
 strhash(const char *s)
 {
@@ -65,7 +64,7 @@ strcasehash(const char *s)
 
 	size_t hash = FNV_OFFSET;
 	while (*s)
-		hash = (hash ^ tolower(*s++)) * FNV_PRIME;
+		hash = (hash ^ tolower((unsigned char)*s++)) * FNV_PRIME;
 	return hash;
 }
 
@@ -76,7 +75,7 @@ strncasehash(const char *s, size_t n)
 
 	size_t hash = FNV_OFFSET;
 	while (n-- && *s)
-		hash = (hash ^ tolower(*s++)) * FNV_PRIME;
+		hash = (hash ^ tolower((unsigned char)*s++)) * FNV_PRIME;
 	return hash;
 }
 
