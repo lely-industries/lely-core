@@ -3,6 +3,7 @@ src += addr.c
 src += attr.c
 src += attr.h
 src += can.c
+src += default.h
 src += file.c
 src += handle.c
 src += handle.h

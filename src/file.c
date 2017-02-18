@@ -4,7 +4,7 @@
  *
  * \see lely/io/file.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,9 +28,8 @@
 #endif
 
 #include "io.h"
-#include <lely/util/errnum.h>
 #include <lely/io/file.h>
-#include "handle.h"
+#include "default.h"
 
 #include <assert.h>
 
@@ -48,7 +47,6 @@ struct file {
 	int flags;
 };
 
-static void file_fini(struct io_handle *handle);
 static ssize_t file_read(struct io_handle *handle, void *buf, size_t nbytes);
 static ssize_t file_write(struct io_handle *handle, const void *buf,
 		size_t nbytes);
@@ -62,7 +60,7 @@ static ssize_t file_pwrite(struct io_handle *handle, const void *buf,
 static const struct io_handle_vtab file_vtab = {
 	.type = IO_TYPE_FILE,
 	.size = sizeof(struct file),
-	.fini = &file_fini,
+	.fini = &default_fini,
 	.read = &file_read,
 	.write = &file_write,
 	.flush = &file_flush,
@@ -226,19 +224,6 @@ io_pwrite(io_handle_t handle, const void *buf, size_t nbytes, io_off_t offset)
 }
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
-
-static void
-file_fini(struct io_handle *handle)
-{
-	assert(handle);
-
-	if (!(handle->flags & IO_FLAG_NO_CLOSE))
-#ifdef _WIN32
-		CloseHandle(handle->fd);
-#else
-		close(handle->fd);
-#endif
-}
 
 static ssize_t
 file_read(struct io_handle *handle, void *buf, size_t nbytes)

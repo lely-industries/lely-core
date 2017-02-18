@@ -4,7 +4,7 @@
  *
  * \see lely/io/serial.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,31 +22,25 @@
  */
 
 #include "io.h"
-#include <lely/util/errnum.h>
 #include <lely/io/serial.h>
 #include "attr.h"
-#include "handle.h"
+#include "default.h"
 
 #include <assert.h>
 #include <string.h>
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-static void serial_fini(struct io_handle *handle);
-static int serial_flags(struct io_handle *handle, int flags);
-static ssize_t serial_read(struct io_handle *handle, void *buf, size_t nbytes);
-static ssize_t serial_write(struct io_handle *handle, const void *buf,
-		size_t nbytes);
 static int serial_flush(struct io_handle *handle);
 static int serial_purge(struct io_handle *handle, int flags);
 
 static const struct io_handle_vtab serial_vtab = {
 	.type = IO_TYPE_SERIAL,
 	.size = sizeof(struct io_handle),
-	.fini = &serial_fini,
-	.flags = &serial_flags,
-	.read = &serial_read,
-	.write = &serial_write,
+	.fini = &default_fini,
+	.flags = &default_flags,
+	.read = &default_read,
+	.write = &default_write,
 	.flush = &serial_flush,
 	.purge = &serial_purge
 };
@@ -260,196 +254,6 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 	int result;
 	do result = tcsetattr(handle->fd, TCSANOW,
 			(const struct termios *)attr);
-	while (__unlikely(result == -1 && errno == EINTR));
-	return result;
-#endif
-}
-
-static void
-serial_fini(struct io_handle *handle)
-{
-	assert(handle);
-
-	if (!(handle->flags & IO_FLAG_NO_CLOSE))
-#ifdef _WIN32
-		CloseHandle(handle->fd);
-#else
-		close(handle->fd);
-#endif
-}
-
-static int
-serial_flags(struct io_handle *handle, int flags)
-{
-	assert(handle);
-
-#ifdef _WIN32
-	__unused_var(handle);
-	__unused_var(flags);
-
-	return 0;
-#else
-	int arg = fcntl(handle->fd, F_GETFL, 0);
-	if (__unlikely(arg == -1))
-		return -1;
-
-	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK))
-		return fcntl(handle->fd, F_SETFL, arg | O_NONBLOCK);
-	else if (!(flags & IO_FLAG_NONBLOCK) && (arg & O_NONBLOCK))
-		return fcntl(handle->fd, F_SETFL, arg & ~O_NONBLOCK);
-	return 0;
-#endif
-}
-
-static ssize_t
-serial_read(struct io_handle *handle, void *buf, size_t nbytes)
-{
-	assert(handle);
-
-#ifdef _WIN32
-	DWORD dwErrCode = GetLastError();
-
-	OVERLAPPED overlapped = { 0 };
-	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
-		dwErrCode = GetLastError();
-		goto error_CreateEvent;
-	}
-
-	DWORD dwNumberOfBytesRead = 0;
-
-retry:
-	io_handle_lock(handle);
-	int flags = handle->flags;
-	io_handle_unlock(handle);
-
-	if (ReadFile(handle->fd, buf, nbytes, &dwNumberOfBytesRead,
-			&overlapped))
-		goto done;
-
-	switch (GetLastError()) {
-	case ERROR_IO_PENDING:
-		break;
-	case ERROR_OPERATION_ABORTED:
-		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
-			goto retry;
-	default:
-		dwErrCode = GetLastError();
-		goto error_ReadFile;
-	}
-
-	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
-			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
-		dwErrCode = GetLastError();
-		goto error_CancelIoEx;
-	}
-
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesRead, TRUE))) {
-		dwErrCode = GetLastError();
-		goto error_GetOverlappedResult;
-	}
-
-	if (__unlikely(nbytes && !dwNumberOfBytesRead)) {
-		if (!(flags & IO_FLAG_NONBLOCK))
-			goto retry;
-		dwErrCode = errnum2c(ERRNUM_AGAIN);
-		goto error_dwNumberOfBytesRead;
-	}
-
-done:
-	CloseHandle(overlapped.hEvent);
-	SetLastError(dwErrCode);
-	return dwNumberOfBytesRead;
-
-error_dwNumberOfBytesRead:
-error_GetOverlappedResult:
-error_CancelIoEx:
-error_ReadFile:
-	CloseHandle(overlapped.hEvent);
-error_CreateEvent:
-	SetLastError(dwErrCode);
-	return -1;
-#else
-	ssize_t result;
-	do result = read(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
-	return result;
-#endif
-}
-
-static ssize_t
-serial_write(struct io_handle *handle, const void *buf, size_t nbytes)
-{
-	assert(handle);
-
-#ifdef _WIN32
-	DWORD dwErrCode = GetLastError();
-
-	OVERLAPPED overlapped = { 0 };
-	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
-		dwErrCode = GetLastError();
-		goto error_CreateEvent;
-	}
-
-	DWORD dwNumberOfBytesWritten = 0;
-
-retry:
-	io_handle_lock(handle);
-	int flags = handle->flags;
-	io_handle_unlock(handle);
-
-	if (WriteFile(handle->fd, buf, nbytes, &dwNumberOfBytesWritten,
-			&overlapped))
-		goto done;
-
-	switch (GetLastError()) {
-	case ERROR_IO_PENDING:
-		break;
-	case ERROR_OPERATION_ABORTED:
-		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
-			goto retry;
-	default:
-		dwErrCode = GetLastError();
-		goto error_WriteFile;
-	}
-
-	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
-			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
-		dwErrCode = GetLastError();
-		goto error_CancelIoEx;
-	}
-
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesWritten, TRUE))) {
-		dwErrCode = GetLastError();
-		goto error_GetOverlappedResult;
-	}
-
-	if (__unlikely(nbytes && !dwNumberOfBytesWritten)) {
-		if (!(flags & IO_FLAG_NONBLOCK))
-			goto retry;
-		dwErrCode = errnum2c(ERRNUM_AGAIN);
-		goto error_dwNumberOfBytesWritten;
-	}
-
-done:
-	CloseHandle(overlapped.hEvent);
-	SetLastError(dwErrCode);
-	return dwNumberOfBytesWritten;
-
-error_dwNumberOfBytesWritten:
-error_GetOverlappedResult:
-error_CancelIoEx:
-error_WriteFile:
-	CloseHandle(overlapped.hEvent);
-error_CreateEvent:
-	SetLastError(dwErrCode);
-	return -1;
-#else
-	ssize_t result;
-	do result = write(handle->fd, buf, nbytes);
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
