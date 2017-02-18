@@ -67,7 +67,7 @@
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
 #else
 #define tap_test(expr) \
-	__tap_plan_impl(!!(expr), #expr, __FILE__, __LINE__, "")
+	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "")
 #endif
 
 /*!
