@@ -1,7 +1,7 @@
 /*!\file
  * This is the internal header file of the I/O handle declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -62,11 +62,7 @@ struct io_handle {
 	int flags;
 #ifndef LELY_NO_THREADS
 	//! The mutex protecting #flags (and other device-specific fields).
-#ifdef _WIN32
-	CRITICAL_SECTION CriticalSection;
-#else
 	mtx_t mtx;
-#endif
 #endif
 };
 

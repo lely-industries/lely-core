@@ -4,7 +4,7 @@
  *
  * \see lely/io/poll.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -44,11 +44,7 @@
 struct __io_poll {
 #ifndef LELY_NO_THREADS
 	//! The mutex protecting #tree.
-#ifdef _WIN32
-	CRITICAL_SECTION CriticalSection;
-#else
 	mtx_t mtx;
-#endif
 #endif
 	//! The tree containing the I/O device handles being watched.
 	struct rbtree tree;
@@ -119,11 +115,7 @@ __io_poll_init(struct __io_poll *poll)
 	errc_t errc = 0;
 
 #ifndef LELY_NO_THREADS
-#ifdef _WIN32
-	InitializeCriticalSection(&poll->CriticalSection);
-#else
 	mtx_init(&poll->mtx, mtx_plain);
-#endif
 #endif
 
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
@@ -218,11 +210,7 @@ __io_poll_fini(struct __io_poll *poll)
 	pool_destroy(poll->pool);
 
 #ifndef LELY_NO_THREADS
-#ifdef _WIN32
-	DeleteCriticalSection(&poll->CriticalSection);
-#else
 	mtx_destroy(&poll->mtx);
-#endif
 #endif
 }
 
@@ -614,11 +602,7 @@ io_poll_lock(io_poll_t *poll)
 {
 	assert(poll);
 
-#ifdef _WIN32
-	EnterCriticalSection(&poll->CriticalSection);
-#else
 	mtx_lock(&poll->mtx);
-#endif
 }
 
 static void
@@ -626,11 +610,7 @@ io_poll_unlock(io_poll_t *poll)
 {
 	assert(poll);
 
-#ifdef _WIN32
-	LeaveCriticalSection(&poll->CriticalSection);
-#else
 	mtx_unlock(&poll->mtx);
-#endif
 }
 
 #endif // !LELY_NO_THREADS

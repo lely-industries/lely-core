@@ -4,7 +4,7 @@
  *
  * \see src/handle.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -93,11 +93,7 @@ io_handle_alloc(const struct io_handle_vtab *vtab)
 	handle->fd = INVALID_HANDLE_VALUE;
 
 #ifndef LELY_NO_THREADS
-#ifdef _WIN32
-	InitializeCriticalSection(&handle->CriticalSection);
-#else
 	mtx_init(&handle->mtx, mtx_plain);
-#endif
 #endif
 
 	handle->flags = 0;
@@ -120,11 +116,7 @@ io_handle_free(struct io_handle *handle)
 {
 	if (handle) {
 #ifndef LELY_NO_THREADS
-#ifdef _WIN32
-		DeleteCriticalSection(&handle->CriticalSection);
-#else
 		mtx_destroy(&handle->mtx);
-#endif
 #endif
 
 		free(handle);
@@ -147,11 +139,7 @@ io_handle_lock(struct io_handle *handle)
 {
 	assert(handle);
 
-#ifdef _WIN32
-	EnterCriticalSection(&handle->CriticalSection);
-#else
 	mtx_lock(&handle->mtx);
-#endif
 }
 
 void
@@ -159,11 +147,7 @@ io_handle_unlock(struct io_handle *handle)
 {
 	assert(handle);
 
-#ifdef _WIN32
-	LeaveCriticalSection(&handle->CriticalSection);
-#else
 	mtx_unlock(&handle->mtx);
-#endif
 }
 
 #endif // !LELY_NO_THREADS

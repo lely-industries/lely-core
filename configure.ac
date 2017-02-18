@@ -59,7 +59,7 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 ])
 
-PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
+PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.4 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.2 liblely-util < 2])
 
 AM_CONDITIONAL([NO_CAN], [false])
