@@ -171,7 +171,7 @@ AS_IF([test "x$enable_python" != "xno"], [
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
-PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.2 liblely-tap < 2], [
+PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.3 liblely-tap < 2], [
 	AM_CONDITIONAL([HAVE_TAP], [true])
 	AC_PROG_AWK
 	AC_REQUIRE_AUX_FILE([tap-driver.sh])

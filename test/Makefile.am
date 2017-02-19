@@ -1,4 +1,6 @@
 bin =
+bin += test-cxx
+test_cxx_SOURCES = cxx.cpp
 bin += test-poll
 test_poll_SOURCES = poll.c
 
