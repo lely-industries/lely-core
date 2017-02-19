@@ -50,22 +50,6 @@ cdef class IOSock(IOHandle):
                 io_handle_release(handle_vector[0])
             raise
 
-    @staticmethod
-    def open_pipe():
-        cdef io_handle_t handle_vector[2]
-        cdef int result
-        with nogil:
-            result = io_open_pipe(handle_vector)
-        if result == -1:
-            io_error()
-        try:
-            return [IOSock_new(handle_vector[0]), IOSock_new(handle_vector[1])]
-        except:
-            with nogil:
-                io_handle_release(handle_vector[1])
-                io_handle_release(handle_vector[0])
-            raise
-
     @cython.boundscheck(False)
     def recv(self, uint8_t[::1] buf not None, IOAddr addr = None,
              int flags = 0):

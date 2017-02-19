@@ -4,7 +4,7 @@
  *
  * \see lely/io/sock.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -315,16 +315,6 @@ error_type:
 error_domain:
 	set_errc(errc);
 	return -1;
-}
-
-LELY_IO_EXPORT int
-io_open_pipe(io_handle_t handle_vector[2])
-{
-#if _POSIX_C_SOURCE >= 200112L
-	return io_open_socketpair(IO_SOCK_UNIX, IO_SOCK_STREAM, handle_vector);
-#else
-	return io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, handle_vector);
-#endif
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L

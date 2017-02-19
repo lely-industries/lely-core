@@ -55,6 +55,8 @@ enum {
 	IO_TYPE_CAN = 1,
 	//! A regular file.
 	IO_TYPE_FILE,
+	//! A pipe.
+	IO_TYPE_PIPE,
 	//! A serial I/O device.
 	IO_TYPE_SERIAL,
 	//! A network socket.
@@ -126,8 +128,8 @@ LELY_IO_EXTERN int io_close(io_handle_t handle);
 
 /*!
  * Returns the type of an I/O device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
- * #IO_TYPE_SERIAL or #IO_TYPE_SOCK), or -1 on error. In the latter case, the
- * error number can be obtained with `get_errnum()`.
+ * #IO_TYPE_PIPE, #IO_TYPE_SERIAL or #IO_TYPE_SOCK), or -1 on error. In the
+ * latter case, the error number can be obtained with `get_errnum()`.
  */
 LELY_IO_EXTERN int io_get_type(io_handle_t handle);
 

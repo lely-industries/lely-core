@@ -26,7 +26,11 @@
 #include <lely/util/pool.h>
 #include <lely/util/rbtree.h>
 #include <lely/io/poll.h>
+#ifdef _WIN32
 #include <lely/io/sock.h>
+#else
+#include <lely/io/pipe.h>
+#endif
 #include "handle.h"
 
 #include <assert.h>
@@ -51,7 +55,7 @@ struct __io_poll {
 	//! A pointer to the pool allocator used to allocate the nodes in #tree.
 	pool_t *pool;
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
-	//! A self-pipe (socket pair) used to generate signal events.
+	//! A self-pipe used to generate signal events.
 	io_handle_t pipe[2];
 #endif
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
@@ -139,7 +143,12 @@ __io_poll_init(struct __io_poll *poll)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
+#ifdef _WIN32
+	if (__unlikely(io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM,
+			poll->pipe) == -1)) {
+#else
 	if (__unlikely(io_open_pipe(poll->pipe) == -1)) {
+#endif
 		errc = get_errc();
 		goto error_open_pipe;
 	}
@@ -266,6 +275,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 #endif
 #if _POSIX_C_SOURCE >= 200112L
 	case IO_TYPE_FILE:
+	case IO_TYPE_PIPE:
 	case IO_TYPE_SERIAL:
 #endif
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L

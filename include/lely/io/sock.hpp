@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the C++ interface of
  * the network socket device handle. \see lely/io/sock.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -64,6 +64,18 @@ public:
 		return *this;
 	}
 #endif
+
+	static int
+	open(int domain, int type, IOSock sock[2]) noexcept
+	{
+		io_handle_t handle_vector[2];
+		if (__unlikely(io_open_socketpair(domain, type, handle_vector)
+				== -1))
+			return -1;
+		sock[0] = IOSock(handle_vector[0]);
+		sock[1] = IOSock(handle_vector[1]);
+		return 0;
+	}
 
 	ssize_t
 	recv(void* buf, size_t nbytes, io_addr_t* addr = 0, int flags = 0)

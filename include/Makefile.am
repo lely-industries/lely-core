@@ -14,6 +14,10 @@ inc += lely/io/io.h
 if !NO_CXX
 inc += lely/io/io.hpp
 endif
+inc += lely/io/pipe.h
+if !NO_CXX
+inc += lely/io/pipe.hpp
+endif
 inc += lely/io/poll.h
 if !NO_CXX
 inc += lely/io/poll.hpp

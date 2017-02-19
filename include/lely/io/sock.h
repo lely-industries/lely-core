@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the network socket
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -101,22 +101,6 @@ LELY_IO_EXTERN io_handle_t io_open_socket(int domain, int type);
  */
 LELY_IO_EXTERN int io_open_socketpair(int domain, int type,
 		io_handle_t handle_vector[2]);
-
-/*!
- * Opens a pipe (a pair of connected stream-oriented sockets). This function
- * uses UNIX domain sockets (#IO_SOCK_UNIX) on POSIX platforms and IPv4 sockets
- * (#IO_SOCK_IPV4) on Windows.
- *
- * \param handle_vector a 2-value array which, on success, contains the device
- *                      handles of the pipe. `handle_vector[0]` corresponds to
- *                      the read end and `handle_vector[1]` to the write end.
- *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
- *
- * \see io_open_socketpair()
- */
-LELY_IO_EXTERN int io_open_pipe(io_handle_t handle_vector[2]);
 
 /*!
  * Performs a receive operation on a network socket.

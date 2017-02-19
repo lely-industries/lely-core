@@ -10,6 +10,7 @@ src += handle.h
 src += if.c
 src += io.c
 src += io.h
+src += pipe.c
 src += poll.c
 if PLATFORM_LINUX
 src += rtnl.c

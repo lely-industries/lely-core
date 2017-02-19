@@ -74,7 +74,7 @@ extern "C" {
 struct io_handle_vtab {
 	/*!
 	 * The type of the device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
-	 * #IO_TYPE_SERIAL or #IO_TYPE_SOCK).
+	 * #IO_TYPE_PIPE, #IO_TYPE_SERIAL or #IO_TYPE_SOCK).
 	 */
 	int type;
 	//! The size (in bytes) of the handle struct.

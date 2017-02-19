@@ -1,6 +1,10 @@
 #include <lely/tap/tap.h>
-#include <lely/io/poll.h>
+#ifdef _WIN32
 #include <lely/io/sock.h>
+#else
+#include <lely/io/pipe.h>
+#endif
+#include <lely/io/poll.h>
 
 #define TIMEOUT	1000
 
@@ -15,7 +19,11 @@ main(void)
 	tap_assert(poll);
 
 	io_handle_t pipe[2];
+#ifdef _WIN32
+	tap_test(!io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, pipe));
+#else
 	tap_test(!io_open_pipe(pipe));
+#endif
 	tap_test(!io_set_flags(pipe[0], IO_FLAG_NONBLOCK));
 	tap_test(!io_set_flags(pipe[1], IO_FLAG_NONBLOCK));
 

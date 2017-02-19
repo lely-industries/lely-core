@@ -24,7 +24,6 @@ cdef extern from "lely/io/sock.h":
     io_handle_t io_open_socket(int domain, int type) nogil
     int io_open_socketpair(int domain, int type,
                             io_handle_t handle_vector[2]) nogil
-    int io_open_pipe(io_handle_t handle_vector[2]) nogil
 
     ssize_t io_recv(io_handle_t handle, void* buf, size_t nbytes,
                     io_addr_t* addr, int flags) nogil
