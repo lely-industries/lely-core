@@ -9,6 +9,7 @@ A C++ interface for I/O device handles can be found in lely/io/io.hpp.
 The following I/O devices are supported:
 - CAN devices (lely/io/can.h, lely/io/can.hpp)
 - regular files (lely/io/file.h, lely/io/file.hpp)
+- pipes (lely/io/pipe.h, lely/io/pipe.hpp)
 - serial I/O devices (lely/io/serial.h, lely/io/serial.hpp)
 - network sockets (lely/io/sock.h, lely/io/sock.hpp)
 
