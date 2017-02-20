@@ -33,6 +33,7 @@ src += util.h
 if PLATFORM_WIN32
 src += version.rc
 endif
+src += xtime.c
 
 lib_LTLIBRARIES = liblely-util.la
 liblely_util_la_CPPFLAGS = -I$(top_srcdir)/include

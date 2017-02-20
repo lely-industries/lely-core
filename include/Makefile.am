@@ -33,5 +33,6 @@ inc += lely/util/rbtree.h
 inc += lely/util/shlib.h
 inc += lely/util/time.h
 inc += lely/util/util.h
+inc += lely/util/xtime.h
 
 nobase_include_HEADERS = $(inc)
