@@ -2,5 +2,4 @@ Name: @PACKAGE@_rt
 Description: Realtime Extensions for the @PACKAGE_NAME@
 URL: https://gitlab.com/lely_industries/libc
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc = @PACKAGE_VERSION@
 Libs: @RT_LIBS@
