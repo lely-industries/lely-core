@@ -34,7 +34,7 @@
 static _Thread_local char errstr[ERRSTR_SIZE];
 #endif
 
-LELY_UTIL_EXTERN errc_t
+LELY_UTIL_EXPORT errc_t
 errno2c(int errnum)
 {
 #ifdef _WIN32
@@ -44,7 +44,7 @@ errno2c(int errnum)
 #endif
 }
 
-LELY_UTIL_EXTERN errnum_t
+LELY_UTIL_EXPORT errnum_t
 errno2num(int errnum)
 {
 	switch (errnum) {
@@ -281,7 +281,7 @@ errno2num(int errnum)
 	}
 }
 
-LELY_UTIL_EXTERN int
+LELY_UTIL_EXPORT int
 errc2no(errc_t errc)
 {
 #ifdef _WIN32
