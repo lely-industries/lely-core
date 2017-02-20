@@ -252,12 +252,12 @@ LELY_LIBC_EXTERN int __cdecl timer_getoverrun(timer_t timerid);
  * Obtains the amount of time until the specified timer expires and the reload
  * value of the timer.
  *
- * \param timerid a timer ID created with timer_create().
- * \param value   the address of a #itimerspec struct. On success, the
+ * \param timerid a timer ID created with `timer_create()`.
+ * \param value   the address of an #itimerspec struct. On success, the
  *                \a it_value member shall contain the time until the next
  *                expiration, or zero if the timer is disarmed. The
  *                \a it_interval member shall contain the reload value last set
- *                by timer_settime().
+ *                by `timer_settime()`.
  *
  * \returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
@@ -269,21 +269,20 @@ LELY_LIBC_EXTERN int __cdecl timer_gettime(timer_t timerid,
  * Arms or disarms a timer. If the specified timer was already armed, the
  * expiration time shall be reset to the specified value.
  *
- * \param timerid a timer ID created with timer_create().
+ * \param timerid a timer ID created with `timer_create()`.
  * \param flags   if the #TIMER_ABSTIME is set in \a flags, the \a it_value
- *                member if *\a value contains the absolute time of the first
+ *                member of *\a value contains the absolute time of the first
  *                expiration. If #TIMER_ABSTIME is not set, the \a it_value
  *                member contains the time interval until the first expiration.
  * \param value   a pointer to an #itimerspec struct containing the period and
  *                expiration of the timer. If the \a it_value member is zero,
- *                the shall be disarmed. If the \a it_interval member is
+ *                the timer shall be disarmed. If the \a it_interval member is
  *                non-zero, a periodic (or repetitive) timer is specified. The
  *                period is rounded up to the nearest multiple of the clock
  *                resolution.
- * \param ovalue  if not NULL, the address at which to store  previous amount
- *                of time before the timer would have expired, or zero if the
- *                timer was disarmed, together with the previous timer reload
- *                value.
+ * \param ovalue  if not NULL, the address at which to store  previous amount of
+ *                time before the timer would have expired, or zero if the timer
+ *                was disarmed, together with the previous timer reload value.
  *
  * \returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
