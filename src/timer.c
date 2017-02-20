@@ -460,13 +460,10 @@ timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
 			LONGLONG period = (LONGLONG)timer->period.tv_sec
 					* 10000000l
 					+ timer->period.tv_nsec / 100;
-			expire += period;
 			LONGLONG overrun = 0;
-			if (ft > expire) {
+			if (ft > expire)
 				overrun = (ft - expire) / period;
-				expire += overrun * period;
-			}
-
+			expire += (overrun + 1) * period;
 			timer->expire = (struct timespec){
 				.tv_sec = expire / 10000000l,
 				.tv_nsec = (expire % 10000000l) * 100
