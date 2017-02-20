@@ -30,8 +30,12 @@
 #error This file requires compiler and library support for the ISO C++98 standard.
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
+#ifdef _MSC_VER
+#if _MSC_VER < 1800
 #error This file requires Microsoft Visual C++ 2013 or later.
+#endif
+// Disable warnings about deprecated POSIX functions.
+#pragma warning(disable: 4996)
 #endif
 
 #ifdef _WIN32
