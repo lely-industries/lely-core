@@ -101,7 +101,7 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	])
 ])
 
-# AM_PROG_PYTHON([MAJOR-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND]))
+# AM_PROG_PYTHON(MAJOR-VERSION[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 AC_DEFUN([AM_PROG_PYTHON], [
 	AC_CHECK_PROGS([PYTHON$1], [python$1 python])
 	AS_IF([test -n "${PYTHON$1}" && test -n "$1"], [
