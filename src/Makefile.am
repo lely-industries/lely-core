@@ -18,7 +18,6 @@ endif
 if !NO_RT
 src += time.c
 src += timer.c
-src += timespec.h
 endif
 if PLATFORM_WIN32
 src += version.rc

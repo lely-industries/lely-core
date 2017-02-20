@@ -27,11 +27,19 @@
 #ifdef _WIN32
 
 #include <lely/libc/threads.h>
-#include "timespec.h"
+#include <lely/libc/time.h>
 
+#include <errno.h>
 #include <stdlib.h>
 
 #include <process.h>
+
+/*!
+ * The difference between Windows file time (seconds since 00:00:00 UTC on
+ * January 1, 1601) and the Unix epoch (seconds since 00:00:00 UTC on January 1,
+ * 1970) is 369 years and 89 leap days.
+ */
+#define FILETIME_EPOCH	((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
 
 //! The magic number used to check the validity of a timer ("LELY").
 #define TIMER_MAGIC	0x594c454c
@@ -58,7 +66,7 @@ struct timer {
 	//! The period.
 	struct timespec period;
 	//! The expiration time passed to `SetWaitableTimer()`.
-	LARGE_INTEGER DueTime;
+	LARGE_INTEGER liDueTime;
 	//! The period (in milliseconds) passed to `SetWaitableTimer()`.
 	LONG lPeriod;
 	//! A flag indicating whether the timer is armed.
@@ -92,6 +100,14 @@ static struct timer *timer_list;
 static HANDLE timer_exit;
 //! The handle of the timer thread.
 static uintptr_t timer_thr = -1;
+
+//! Adds the time interval *\a inc to the time at \a tp.
+static inline void timespec_add(struct timespec *tp,
+		const struct timespec *inc);
+
+//! Subtracts the time interval *\a dec from the time at \a tp.
+static inline void timespec_sub(struct timespec *tp,
+		const struct timespec *dec);
 
 LELY_LIBC_EXPORT int __cdecl
 timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid)
@@ -150,7 +166,7 @@ timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid)
 
 	timer->expire = (struct timespec){ 0, 0 };
 	timer->period = (struct timespec){ 0, 0 };
-	timer->DueTime.QuadPart = 0;
+	timer->liDueTime.QuadPart = 0;
 	timer->lPeriod = 0;
 	timer->armed = 0;
 	timer->overrun = 0;
@@ -257,13 +273,14 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 
 	LONG lPeriod = 0;
 	if (arm && timer->sigev_notify == SIGEV_THREAD) {
-		if (__unlikely(period.tv_sec > (LONG_MAX - 1000) / 1000)) {
+		// Round the period up to the nearest millisecond.
+		LONGLONG llPeriod = (LONGLONG)period.tv_sec * 1000
+				+ (period.tv_nsec + 999999l) / 1000000l;
+		if (__unlikely(llPeriod > LONG_MAX)) {
 			errno = EINVAL;
 			return -1;
 		}
-		// Round the period up to the nearest millisecond.
-		lPeriod = (LONG)(period.tv_sec * 1000)
-				+ (period.tv_nsec + 999999l) / 1000000l;
+		lPeriod = (LONG)llPeriod;
 		period = (struct timespec) {
 			lPeriod / 1000,
 			(lPeriod % 1000) * 1000000l
@@ -274,15 +291,15 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 	if (__unlikely(clock_gettime(CLOCK_REALTIME, &now) == -1))
 		return -1;
 
-	LARGE_INTEGER DueTime = { { 0, 0 } };
+	LARGE_INTEGER liDueTime = { { 0, 0 } };
 	if (arm && timer->sigev_notify == SIGEV_THREAD)
-		DueTime.QuadPart = expire.tv_sec * 10000000l
+		liDueTime.QuadPart = expire.tv_sec * 10000000l
 				+ expire.tv_nsec / 100;
 	if (arm && !(flags & TIMER_ABSTIME)) {
 		// A relative expiration time is indicated with a negative value
-		// in the call to SwtWaitableTimer().
+		// in the call to SetWaitableTimer().
 		if (timer->sigev_notify == SIGEV_THREAD)
-			DueTime.QuadPart *= -1;
+			liDueTime.QuadPart *= -1;
 		// Compute the absolute expiration time.
 		timespec_add(&expire, &now);
 	}
@@ -315,7 +332,7 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 	timer->period = period;
 
 	if (timer->sigev_notify == SIGEV_THREAD) {
-		timer->DueTime = DueTime;
+		timer->liDueTime = liDueTime;
 		timer->lPeriod = lPeriod;
 
 		if (timer->armed)
@@ -406,7 +423,7 @@ timer_apc_set(ULONG_PTR dwParam)
 		timer_list = timer_list->next;
 
 		mtx_lock(&timer->mtx);
-		SetWaitableTimer(timer->hTimer, &timer->DueTime,
+		SetWaitableTimer(timer->hTimer, &timer->liDueTime,
 				timer->lPeriod, &timer_apc_proc, timer, TRUE);
 		timer->armed = 1;
 		mtx_unlock(&timer->mtx);
@@ -429,33 +446,38 @@ timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
 		sigev_notify_function = timer->sigev_notify_function;
 
 		if (timer->period.tv_sec || timer->period.tv_nsec) {
-			// If the timer is periodic, calculate the overrun
-			// counter.
-			FILETIME ft = { 0, 0 };
-			tp2ft(&timer->expire, &ft);
-			ULARGE_INTEGER expire = { {
-				ft.dwLowDateTime,
-				ft.dwHighDateTime
-			} };
-			ft = (FILETIME){ dwTimerLowValue, dwTimerHighValue };
-			ULARGE_INTEGER now = { {
-				ft.dwLowDateTime,
-				ft.dwHighDateTime
-			} };
-			LONGLONG overrun = (now.QuadPart - expire.QuadPart)
-					/ 10000 / timer->lPeriod;
-			// A negative overrun indicates an overflow.
-			if (__unlikely(overrun < 0 || overrun > INT_MAX))
-				overrun = INT_MAX;
-			timer->overrun = (int)overrun;
-			// Update the expiration time.
-			ft2tp(&ft, &timer->expire);
-			timespec_add(&timer->expire, &timer->period);
+			// Obtain the actual expiration time.
+			ULARGE_INTEGER st = {
+				.LowPart = dwTimerLowValue,
+				.HighPart = dwTimerHighValue
+			};
+			LONGLONG ft = st.QuadPart - (ULONGLONG)FILETIME_EPOCH
+					* 10000000ul;
+			// Compute the overrun counter.
+			LONGLONG expire = (LONGLONG)timer->expire.tv_sec
+					* 10000000l
+					+ timer->expire.tv_nsec / 100;
+			LONGLONG period = (LONGLONG)timer->period.tv_sec
+					* 10000000l
+					+ timer->period.tv_nsec / 100;
+			expire += period;
+			LONGLONG overrun = 0;
+			if (ft > expire) {
+				overrun = (ft - expire) / period;
+				expire += overrun * period;
+			}
+
+			timer->expire = (struct timespec){
+				.tv_sec = expire / 10000000l,
+				.tv_nsec = (expire % 10000000l) * 100
+			};
+			timer->overrun = overrun <= INT_MAX
+					? (int)overrun : INT_MAX;
 		} else {
 			// Reset the timer if it is non-periodic.
 			timer->expire = (struct timespec){ 0, 0 };
 			timer->period = (struct timespec){ 0, 0 };
-			timer->DueTime.QuadPart = 0;
+			timer->liDueTime.QuadPart = 0;
 			timer->lPeriod = 0;
 			timer->armed = 0;
 			timer->overrun = 0;
@@ -467,6 +489,28 @@ timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
 	// the function to reset its own timer.
 	if (sigev_notify_function)
 		sigev_notify_function(sigev_value);
+}
+
+static inline void
+timespec_add(struct timespec *tp, const struct timespec *inc)
+{
+	tp->tv_sec += inc->tv_sec;
+	tp->tv_nsec += inc->tv_nsec;
+	if (tp->tv_nsec >= 1000000000l) {
+		tp->tv_sec++;
+		tp->tv_nsec -= 1000000000l;
+	}
+}
+
+static inline void
+timespec_sub(struct timespec *tp, const struct timespec *dec)
+{
+	tp->tv_sec -= dec->tv_sec;
+	tp->tv_nsec -= dec->tv_nsec;
+	if (tp->tv_nsec < 0) {
+		tp->tv_sec--;
+		tp->tv_nsec += 1000000000l;
+	}
 }
 
 #endif // _WIN32

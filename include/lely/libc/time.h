@@ -142,8 +142,9 @@ LELY_LIBC_EXTERN int __cdecl clock_gettime(clockid_t clock_id,
 
 /*!
  * Sleeps until a time interval or absolute time has elapsed on a clock. If the
- * sleep is interrupted, an error is returned. In the case of a relative sleep,
- * the remaining time is stored at \a rmtp.
+ * sleep is interrupted (by a signal, an I/O completion callback function or an
+ * asynchronous procedure call), `EINTR` is returned. In the case of a relative
+ * sleep, the remaining time is then stored at \a rmtp.
  *
  * Absolute sleep MAY be implemented on some platforms with a relative sleep
  * with respect to the current value of `clock_gettime()` for the specified
