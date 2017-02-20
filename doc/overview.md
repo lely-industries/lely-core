@@ -92,6 +92,9 @@ Other
 -----
 
 Convenience functions to compare and manipulate `timespec` structs can be found
-in lely/util/time.h. Comparison and hash function for integers, pointers and
-strings can be found in lely/util/cmp.h and lely/util/hash.h, respectively.
+in lely/util/time.h. External clock and timer functions, with an API similar to
+the POSIX clock and timer functions, can be found in lely/util/xtime.h.
+
+Comparison and hash function for integers, pointers and strings can be found in
+lely/util/cmp.h and lely/util/hash.h, respectively.
 
