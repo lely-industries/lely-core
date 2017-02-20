@@ -22,15 +22,8 @@ cdef extern from "lely/io/attr.h":
     int io_attr_set_char_size(io_attr_t* attr, int char_size) nogil
 
 
-cdef class __IOAttr(object):
-    cdef io_attr_t* _c_attr
-
-
-cdef __IOAttr __IOAttr_new(io_attr_t* attr)
-
-
-cdef class IOAttr(__IOAttr):
-    cdef io_attr_t __attr
+cdef class IOAttr(object):
+    cdef io_attr_t _c_attr
 
 
 cdef IOAttr IOAttr_new(const io_attr_t* attr)

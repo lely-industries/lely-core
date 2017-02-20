@@ -98,14 +98,16 @@ cdef class __IOAddr(object):
             return <bint>io_addr_is_multicast(self._c_addr)
 
 
-cdef __IOAddr __IOAddr_new(io_addr_t* addr):
+cdef __IOAddr __IOAddr_new(object owner, io_addr_t* addr):
     cdef __IOAddr obj = __IOAddr()
+    obj._owner = owner
     obj._c_addr = addr
     return obj
 
 
 cdef class IOAddr(__IOAddr):
     def __cinit__(self, __IOAddr addr = None):
+        self._owner = None
         self._c_addr = &self.__addr
         if addr is not None:
             self._c_addr[0] = addr._c_addr[0]
@@ -134,7 +136,7 @@ cdef class IOAddrInfo(object):
 
     property addr:
         def __get__(self):
-            return __IOAddr_new(&self._c_info.addr)
+            return __IOAddr_new(self, &self._c_info.addr)
 
         def __set__(self, __IOAddr value not None):
             self._c_info.addr = value._c_addr[0]

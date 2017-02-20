@@ -53,10 +53,11 @@ cdef extern from "lely/io/addr.h":
 
 
 cdef class __IOAddr(object):
+    cdef object _owner
     cdef io_addr_t* _c_addr
 
 
-cdef __IOAddr __IOAddr_new(io_addr_t* addr)
+cdef __IOAddr __IOAddr_new(object owner, io_addr_t* addr)
 
 
 cdef class IOAddr(__IOAddr):

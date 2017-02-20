@@ -11,7 +11,7 @@ cdef class IOSerial(IOHandle):
         cdef char* __path = _path
         cdef io_attr_t* _attr = NULL
         if attr is not None:
-            _attr = attr._c_attr
+            _attr = &attr._c_attr
         cdef io_handle_t handle
         with nogil:
             handle = io_open_serial(__path, _attr)
@@ -36,7 +36,7 @@ cdef class IOSerial(IOHandle):
             cdef IOAttr value = IOAttr()
             cdef int result
             with nogil:
-                result = io_serial_get_attr(self._c_handle, value._c_attr)
+                result = io_serial_get_attr(self._c_handle, &value._c_attr)
             if result == -1:
                 io_error()
             return value
@@ -44,7 +44,7 @@ cdef class IOSerial(IOHandle):
         def __set__(self, IOAttr value not None):
             cdef int result
             with nogil:
-                result = io_serial_set_attr(self._c_handle, value._c_attr)
+                result = io_serial_set_attr(self._c_handle, &value._c_attr)
             if result == -1:
                 io_error()
 
