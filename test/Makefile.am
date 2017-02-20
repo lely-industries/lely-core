@@ -5,6 +5,8 @@ bin += test-endian
 test_endian_SOURCES = endian.c
 bin += test-fbuf
 test_fbuf_SOURCES = fbuf.c
+bin += test-xtime
+test_xtime_SOURCES = xtime.c
 
 EXTRA_DIST =
 EXTRA_DIST += config.ini
