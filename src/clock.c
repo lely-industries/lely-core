@@ -28,8 +28,7 @@
 
 #include <errno.h>
 
-#if defined(_WIN32)
-// && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(__MINGW32__)
 
 /*!
  * The difference between Windows file time (seconds since 00:00:00 UTC on
