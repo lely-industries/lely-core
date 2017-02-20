@@ -140,23 +140,6 @@ AS_IF([test "x$platform_linux" == "xyes"], [
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 
-# AM_PROG_PYTHON([MAJOR-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND]))
-AC_DEFUN([AM_PROG_PYTHON], [
-	AC_CHECK_PROGS([PYTHON$1], [python$1 python])
-	AS_IF([test -n "${PYTHON$1}" && test -n "$1"], [
-		AC_MSG_CHECKING([whether ${PYTHON$1} is version $1])
-		am_python_version=`${PYTHON$1} -V 2>&1 | grep -o 'Python @<:@0-9@:>@' | grep -o '@<:@0-9@:>@'`
-		AS_IF([test $am_python_version -eq $1], [
-			AC_MSG_RESULT([yes])
-			m4_default([$2], [:])
-		], [
-			AC_MSG_RESULT([no])
-			PYTHON$1=
-			m4_default([$3], [:])
-		])
-	])
-])
-
 AM_CONDITIONAL([HAVE_PYTHON2], [false])
 AM_CONDITIONAL([HAVE_PYTHON3], [false])
 AC_ARG_ENABLE([python],
@@ -164,8 +147,8 @@ AC_ARG_ENABLE([python],
 AS_IF([test "x$enable_shared" == "xno" -o "x$platform_win32" == "xyes"],
 	[enable_python=no])
 AS_IF([test "x$enable_python" != "xno"], [
-	AM_PROG_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
-	AM_PROG_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
+	AX_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
+	AX_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
