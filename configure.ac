@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([C11 and POSIX compatibility library], [1.4.0], [], [liblely-libc])
+AC_INIT([C11 and POSIX compatibility library], [1.4.1], [], [liblely-libc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
