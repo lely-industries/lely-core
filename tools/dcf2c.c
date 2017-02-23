@@ -1,7 +1,7 @@
 /*!\file
  * This file contains the CANopen EDS/DCF to C conversion tool.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -51,14 +51,22 @@ main(int argc, char *argv[])
 
 	opterr = 0;
 	optind = 1;
+	int optpos = 0;
 	while (optind < argc) {
 		char *arg = argv[optind];
 		if (*arg != '-') {
 			optind++;
-			if (!ifname)
+			switch (optpos++) {
+			case 0:
 				ifname = arg;
-			else if (!name)
+				break;
+			case 1:
 				name = arg;
+				break;
+			default:
+				diag(DIAG_ERROR, 0, "extra argument %s", arg);
+				break;
+			}
 		} else if (*++arg == '-') {
 			optind++;
 			if (!*++arg)
@@ -79,7 +87,8 @@ main(int argc, char *argv[])
 				break;
 			switch (c) {
 			case ':':
-				diag(DIAG_ERROR, 0, "option requires an argument -- %c",
+				diag(DIAG_ERROR, 0,
+						"option requires an argument -- %c",
 						optopt);
 				break;
 			case '?':
@@ -95,11 +104,18 @@ main(int argc, char *argv[])
 			}
 		}
 	}
-	for (; optind < argc; optind++) {
-		if (!ifname)
-			ifname = argv[optind];
-		else if (!name)
-			name = argv[optind];
+	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
+		switch (optpos++) {
+		case 0:
+			ifname = arg;
+			break;
+		case 1:
+			name = arg;
+			break;
+		default:
+			diag(DIAG_ERROR, 0, "extra argument %s", arg);
+			break;
+		}
 	}
 
 	if (flags & FLAG_HELP) {
@@ -107,12 +123,12 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if (__unlikely(!ifname)) {
+	if (__unlikely(optpos < 1 || !ifname)) {
 		diag(DIAG_ERROR, 0, "no filename specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(!name)) {
+	if (__unlikely(optpos < 2 || !name)) {
 		diag(DIAG_ERROR, 0, "no variable name specified");
 		goto error_arg;
 	}
@@ -123,7 +139,8 @@ main(int argc, char *argv[])
 		size_t n = 0;
 		if (getdelim(&line, &n, '\0', stdin) == -1 && ferror(stdin)) {
 			free(line);
-			diag(DIAG_ERROR, get_errc(), "unable to read from standard input");
+			diag(DIAG_ERROR, get_errc(),
+					"unable to read from standard input");
 			goto error_getdelim;
 		}
 		struct floc at = { "<stdin>", 1, 1 };
@@ -147,7 +164,8 @@ main(int argc, char *argv[])
 	if (ofname) {
 		stream = fopen(ofname, "w");
 		if (__unlikely(!stream)) {
-			diag(DIAG_ERROR, get_errc(), "unable to open %s for writing",
+			diag(DIAG_ERROR, get_errc(),
+					"unable to open %s for writing",
 					ofname);
 			goto error_fopen;
 		}
