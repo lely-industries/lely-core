@@ -629,7 +629,7 @@ can_next(const struct timespec *tp, void *data)
 int
 can_timer(const struct timespec *tp, void *data)
 {
-	assert(tp);
+	__unused_var(tp);
 	int *pwatch = data;
 	assert(pwatch);
 
@@ -641,7 +641,7 @@ can_timer(const struct timespec *tp, void *data)
 co_unsigned32_t
 co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	assert(sub);
+	__unused_var(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1026);
 	assert(co_sub_get_subidx(sub) == 0x01);
 	assert(co_sub_get_type(sub) == CO_DEFTYPE_UNSIGNED8);
@@ -664,7 +664,7 @@ co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 co_unsigned32_t
 co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	assert(sub);
+	__unused_var(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1026);
 	assert(co_sub_get_subidx(sub) == 0x02
 			|| co_sub_get_subidx(sub) == 0x03);
