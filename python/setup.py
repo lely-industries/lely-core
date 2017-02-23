@@ -22,7 +22,7 @@ if USE_CYTHON:
 
 setup(
     name=pkg,
-    version='1.3.0',
+    version='1.3.1',
     description='Python bindings for the Lely CAN library.',
     url='https://gitlab.com/lely_industries/can',
     author='J. S. Seldenthuis',
