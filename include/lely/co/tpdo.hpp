@@ -3,7 +3,7 @@
  * interface of the Transmit-PDO declarations. See lely/co/tpdo.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -117,6 +117,8 @@ public:
 	{
 		return co_tpdo_sync(this, cnt);
 	}
+
+	void getNext(timespec& tp) noexcept { co_tpdo_get_next(this, &tp); }
 
 protected:
 	~COTPDO() {}

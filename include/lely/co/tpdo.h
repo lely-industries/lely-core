@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Transmit-PDO
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -119,7 +119,8 @@ LELY_CO_EXTERN void co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind,
 		void *data);
 
 /*!
- * Triggers the transmission of an event-driven (asynchronous) PDO.
+ * Triggers the transmission of an event-driven (asynchronous) PDO. This
+ * function returns an error if the inhibit time has not yet elapsed.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -140,6 +141,9 @@ LELY_CO_EXTERN int co_tpdo_event(co_tpdo_t *pdo);
  * \see co_tpdo_event()
  */
 LELY_CO_EXTERN int co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt);
+
+//! Retrieves the time at which the next event-driven TPDO may be sent.
+LELY_CO_EXTERN void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
 
 #ifdef __cplusplus
 }

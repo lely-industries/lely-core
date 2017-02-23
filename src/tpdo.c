@@ -4,7 +4,7 @@
  *
  * \see lely/co/tpdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -407,8 +407,10 @@ co_tpdo_event(co_tpdo_t *pdo)
 			// Check whether the inhibit time has passed.
 			struct timespec now;
 			can_net_get_time(pdo->net, &now);
-			if (timespec_cmp(&now, &pdo->inhibit) < 0)
-				return 0;
+			if (timespec_cmp(&now, &pdo->inhibit) < 0) {
+				set_errnum(ERRNUM_AGAIN);
+				return -1;
+			}
 			pdo->inhibit = now;
 		}
 
@@ -493,6 +495,15 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 	}
 
 	return 0;
+}
+
+LELY_CO_EXPORT void
+co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp)
+{
+	assert(pdo);
+
+	if (tp)
+		*tp = pdo->inhibit;
 }
 
 static int
