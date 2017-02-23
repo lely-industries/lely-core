@@ -1,7 +1,7 @@
 /*!\file
  * This file contains the CANopen control tool (a CiA 309-3 gateway).
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,8 +38,6 @@
 #include <io.h>
 #endif
 
-#define POLL_TIMEOUT	10
-
 struct co_net {
 	const char *can_path;
 	const char *dcf_path;
@@ -64,6 +62,10 @@ struct co_net {
 #define FLAG_HELP	0x02
 #define FLAG_NO_WAIT	0x03
 
+#define INHIBIT	100
+
+#define POLL_TIMEOUT	10
+
 int can_send(const struct can_msg *msg, void *data);
 
 int gw_send(const struct co_gw_srv *srv, void *data);
@@ -77,7 +79,7 @@ struct co_net net[CO_GW_NUM_NET];
 io_poll_t *poll;
 
 int flags;
-int inhibit = 100;
+int inhibit = INHIBIT;
 
 mtx_t wait_mtx;
 cnd_t wait_cond;

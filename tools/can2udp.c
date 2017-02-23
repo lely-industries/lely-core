@@ -1,7 +1,7 @@
 /*!\file
  * This file contains the CAN to UDP forwarding tool.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -43,7 +43,7 @@
 	"  -f, --flush           Flush the send buffer after every received CAN frame\n" \
 	"  -h, --help            Display this information\n" \
 	"  -i <n>, --interface=<n>\n" \
-	"                        Uses WTM interface indicator <n> (in the range [1..127],\n" \
+	"                        Use WTM interface indicator <n> (in the range [1..127],\n" \
 	"                        default: 1)\n" \
 	"  -k <ms>, --keep-alive=<ms>\n" \
 	"                        Sends a keep-alive message every <ms> milliseconds\n" \
@@ -138,7 +138,8 @@ int
 daemon_init(int argc, char *argv[])
 {
 	if (__unlikely(lely_io_init() == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to initialize I/O library");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize I/O library");
 		goto error_io_init;
 	}
 
@@ -151,16 +152,25 @@ daemon_init(int argc, char *argv[])
 
 	opterr = 0;
 	optind = 1;
+	int optpos = 0;
 	while (optind < argc) {
 		char *arg = argv[optind];
 		if (*arg != '-') {
 			optind++;
-			if (!ifname)
+			switch (optpos++) {
+			case 0:
 				ifname = arg;
-			else if (!address)
+				break;
+			case 1:
 				address = arg;
-			else if (!send_port)
+				break;
+			case 2:
 				send_port = arg;
+				break;
+			default:
+				diag(DIAG_ERROR, 0, "extra argument %s", arg);
+				break;
+			}
 		} else if (*++arg == '-') {
 			optind++;
 			if (!*++arg)
@@ -193,7 +203,8 @@ daemon_init(int argc, char *argv[])
 				break;
 			switch (c) {
 			case ':':
-				diag(DIAG_ERROR, 0, "option requires an argument -- %c",
+				diag(DIAG_ERROR, 0,
+						"option requires an argument -- %c",
 						optopt);
 				break;
 			case '?':
@@ -229,33 +240,42 @@ daemon_init(int argc, char *argv[])
 			}
 		}
 	}
-	for (; optind < argc; optind++) {
-		if (!ifname)
-			ifname = argv[optind];
-		else if (!address)
-			address = argv[optind];
-		else if (!send_port)
-			send_port = argv[optind];
+	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
+		switch (optpos++) {
+		case 0:
+			ifname = arg;
+			break;
+		case 1:
+			address = arg;
+			break;
+		case 2:
+			send_port = arg;
+			break;
+		default:
+			diag(DIAG_ERROR, 0, "extra argument %s", arg);
+			break;
+		}
 	}
 
-	if (__unlikely(!ifname)) {
+	if (__unlikely(optpos < 1 || !ifname)) {
 		diag(DIAG_ERROR, 0, "no CAN interface specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(!address)) {
+	if (__unlikely(optpos < 2 || !address)) {
 		diag(DIAG_ERROR, 0, "no address specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(!send_port)) {
+	if (__unlikely(optpos < 3 || !send_port)) {
 		diag(DIAG_ERROR, 0, "no port specified");
 		goto error_arg;
 	}
 
 	poll = io_poll_create();
 	if (__unlikely(!poll)) {
-		diag(DIAG_ERROR, get_errc(), "unable to create I/O polling interface");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to create I/O polling interface");
 		goto error_create_poll;
 	}
 	struct io_event event = IO_EVENT_INIT;
@@ -283,8 +303,8 @@ daemon_init(int argc, char *argv[])
 	if (recv_port) {
 		recv_handle = open_recv(recv_domain, recv_port);
 		if (__unlikely(recv_handle == IO_HANDLE_ERROR)) {
-			diag(DIAG_ERROR, get_errc(), "unable to bind to port %s",
-					recv_port);
+			diag(DIAG_ERROR, get_errc(),
+					"unable to bind to port %s", recv_port);
 			goto error_open_recv;
 		}
 		event.events = IO_EVENT_READ;
@@ -303,8 +323,8 @@ daemon_init(int argc, char *argv[])
 		goto error_create_wtm;
 	}
 	if (__unlikely(co_wtm_set_nif(wtm, nif) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "invalid WTM interface indicator: %d",
-				nif);
+		diag(DIAG_ERROR, get_errc(),
+				"invalid WTM interface indicator: %d", nif);
 		goto error_set_nif;
 	}
 	co_wtm_set_recv_func(wtm, &wtm_recv, can_handle);
