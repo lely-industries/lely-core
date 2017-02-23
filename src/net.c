@@ -640,9 +640,6 @@ can_net_set_next(can_net_t *net)
 		return;
 	can_timer_t *timer = structof(node, can_timer_t, node);
 
-	if (timespec_cmp(&net->next, &timer->start) <= 0)
-		return;
-
 	net->next = timer->start;
 	if (net->next_func)
 		net->next_func(&net->next, net->next_data);
