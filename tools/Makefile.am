@@ -1,3 +1,5 @@
+AM_CPPFLAGS =
+
 bin =
 etc =
 if !NO_CO_WTM
@@ -21,6 +23,20 @@ endif
 endif
 endif
 endif
+if !NO_IO
+if PLATFORM_LINUX
+if !NO_THREADS
+bin += cocat
+cocat_SOURCES = cocat.c
+endif
+if !NO_CO_TPDO
+bin += cocatd
+cocatd_SOURCES = cocatd.c
+etc += cocatd.dcf
+AM_CPPFLAGS += -DCOCATD_DCF="\"$(sysconfdir)/cocatd.dcf\""
+endif
+endif
+endif
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
@@ -34,7 +50,7 @@ endif
 bin_PROGRAMS = $(bin)
 dist_sysconf_DATA = $(etc)
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS += -I$(top_srcdir)/include
 AM_CPPFLAGS += $(liblely_libc_CFLAGS)
 AM_CPPFLAGS += $(liblely_util_CFLAGS)
 AM_CPPFLAGS += $(liblely_can_CFLAGS)

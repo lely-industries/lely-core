@@ -63,7 +63,7 @@ PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.5 liblely-util < 2])
 PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.2 liblely-can < 2])
 
 AM_CONDITIONAL([NO_IO], [false])
-PKG_CHECK_MODULES([liblely_io], [liblely-io >= 1.0 liblely-io < 2], [], [
+PKG_CHECK_MODULES([liblely_io], [liblely-io >= 1.2 liblely-io < 2], [], [
 	AM_CONDITIONAL([NO_IO], [true])
 	AC_DEFINE([LELY_NO_IO], [1], [Define to 1 if the I/O library is not available.])
 ])

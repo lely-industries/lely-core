@@ -17,6 +17,7 @@ platform-independent CAN frame definition from the Lely CAN library
 
 Additionally, several tools are provided:
 - can2udp - CAN to UDP forwarding tool
+- cocat/cocatd - CANopen cat tools
 - coctl - CANopen control tool
 - dcf2c - CANopen EDS/DCF to C conversion tool
 

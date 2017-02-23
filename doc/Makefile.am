@@ -1,5 +1,6 @@
 EXTRA_DIST =
 EXTRA_DIST += can2udp.md
+EXTRA_DIST += cocat.md
 EXTRA_DIST += coctl.md
 EXTRA_DIST += dcf2c.md
 EXTRA_DIST += fsm.md
