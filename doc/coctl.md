@@ -449,3 +449,23 @@ which bits are known.
 Because this is an aggregate command, it may take longer to complete than the
 time set with `set command_timeout`.
 
+Example
+-------
+
+A typical session may look like:
+
+    $ coctl can0 /etc/coctl.dcf
+    > [1] set network 1     # Set the default network, so it can be omitted.
+    < [1] OK
+    > [2] set id 1          # Set the node-ID of the gateway to 1.
+    < [2] OK
+    > [3] init 0            # Initialize the gateway, and configure to CAN bus
+    > [3]                   # with a bit rate of 1000 kbit/s.
+    < [3] OK
+    < 1 2 BOOT_UP
+    < 1 2 USER BOOT A (The CANopen device is not listed in object 1F81.)
+    > [4] set node 2        # Target the slave with node-ID 2.
+    < [4] OK
+    > [5] r 0x1018 0x01 u32 # Read the vendor-ID (sub-object 1018:01).
+    < [5] 0x00000360        # A device by Lely Industries N.V.
+

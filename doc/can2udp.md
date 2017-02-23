@@ -27,7 +27,7 @@ The options are as follows:
     -f, --flush           Flush the send buffer after every received CAN frame.
     -h, --help            Display help.
     -i <n>, --interface=<n>
-                          Uses WTM interface indicator <n> (in the range
+                          Use WTM interface indicator <n> (in the range
                           [1..127], default: 1).
     -k <ms>, --keep-alive=<ms>
                           Sends a keep-alive message every <ms> milliseconds
@@ -35,4 +35,32 @@ The options are as follows:
     -p <local port>, --port=<local port>
                           Receive UDP frames on <local port>.
     -v, --verbose         Print sent and received CAN frames.
+
+Example
+-------
+
+Linux supports virtual CAN interfaces (through SocketCAN). This allows a user to
+run CAN programs on machines (such as a developer PC) which do not have a
+physical CAN bus. `can2udp` makes it possible to connect the virtual CAN
+interface to an actual CAN bus on a remote device, as long as there is an
+IPv4/IPv6 connection.
+
+To setup the connection, run
+
+    can2udp -fp 6000 can0 192.168.0.101 6001
+
+on the device with a physical CAN bus, and
+
+    can2udp -fp 6001 vcan0 192.168.0.100 6000
+
+on the machine with a virtual CAN interface. The first device listens on
+192.168.0.100:6000 for incoming UDP frames, and puts the CAN frames they contain
+on can0. Frames originating from the CAN bus are sent to 192.168.0.101:6001. The
+second devices receives those messages and puts them on vcan0. In this way, CAN
+frames are duplicated on can0 and vcan0, effectively combining the two remote
+CAN interfaces into a single CAN bus.
+
+To monitor the CAN frames sent and received (like candump), run
+
+    can2udp -Dfpv 6001 vcan0 192.168.0.100 6000
 
