@@ -6,6 +6,7 @@ EXTRA_DIST += dcf2c.md
 EXTRA_DIST += fsm.md
 EXTRA_DIST += logo.png
 EXTRA_DIST += overview.md
+EXTRA_DIST += standards.md
 
 if HAVE_DOXYGEN
 

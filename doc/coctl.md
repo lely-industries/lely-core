@@ -13,7 +13,7 @@ Description
 -----------
 
 The CANopen control tool provides shell-like access to one or more CANopen
-network according to the ASCII gateway protocol (CiA 309-3).
+networks according to the ASCII gateway protocol (CiA 309-3).
 
 The options are as follows:
 
