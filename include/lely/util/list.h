@@ -112,14 +112,14 @@ LELY_UTIL_LIST_INLINE void dllist_push_front(struct dllist *list,
 		struct dlnode *node);
 
 //! Pushes a node to the back of a doubly-linked list. \see dllist_pop_back()
-LELY_UTIL_LIST_INLINE void dllist_push_back_in(struct dllist *list,
+LELY_UTIL_LIST_INLINE void dllist_push_back(struct dllist *list,
 		struct dlnode *node);
 
 //! Pops a node from the front of a doubly-linked list. \see dllist_push_front()
 LELY_UTIL_LIST_INLINE struct dlnode *dllist_pop_front(struct dllist *list);
 
 //! Pops a node from the back of a doubly-linked list. \see dllist_push_back()
-LELY_UTIL_LIST_INLINE struct dlnode *dllist_pop_back_in(struct dllist *list);
+LELY_UTIL_LIST_INLINE struct dlnode *dllist_pop_back(struct dllist *list);
 
 /*!
  * Inserts a node into a doubly-linked list. This is an O(1) operation.
@@ -240,7 +240,7 @@ dllist_push_front(struct dllist *list, struct dlnode *node)
 }
 
 LELY_UTIL_LIST_INLINE void
-dllist_push_back_in(struct dllist *list, struct dlnode *node)
+dllist_push_back(struct dllist *list, struct dlnode *node)
 {
 	node->next = NULL;
 	if ((node->prev = list->last))
@@ -264,7 +264,7 @@ dllist_pop_front(struct dllist *list)
 }
 
 LELY_UTIL_LIST_INLINE struct dlnode *
-dllist_pop_back_in(struct dllist *list)
+dllist_pop_back(struct dllist *list)
 {
 	struct dlnode *node = list->last;
 	if (list->last) {
