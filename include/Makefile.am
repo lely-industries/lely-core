@@ -7,6 +7,7 @@ inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
 inc += lely/util/cmp.h
+inc += lely/util/cpp.h
 if !NO_DAEMON
 inc += lely/util/daemon.h
 endif

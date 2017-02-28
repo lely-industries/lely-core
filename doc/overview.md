@@ -91,6 +91,9 @@ create and destroy instances of C++ classes.
 Other
 -----
 
+Preprocessor macros to assist in automatic and conditional code generation are
+provided in lely/util/cpp.h.
+
 Convenience functions to compare and manipulate `timespec` structs can be found
 in lely/util/time.h. External clock and timer functions, with an API similar to
 the POSIX clock and timer functions, can be found in lely/util/xtime.h.
