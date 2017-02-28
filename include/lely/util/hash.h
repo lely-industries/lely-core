@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the hash
  * function declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,9 +22,10 @@
 #ifndef LELY_UTIL_HASH_H
 #define LELY_UTIL_HASH_H
 
-#include <lely/libc/stddef.h>
 #include <lely/libc/stdint.h>
 #include <lely/util/util.h>
+
+#include <stddef.h>
 
 #ifndef LELY_UTIL_HASH_INLINE
 #define LELY_UTIL_HASH_INLINE	inline

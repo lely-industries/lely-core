@@ -12,7 +12,7 @@
  * initialization of the tree, the user is responsible for providing a suitable
  * comparison function (#cmp_t).
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -116,18 +116,18 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
  */
 #ifdef __COUNTER__
 #define rbnode_foreach(first, node) \
-	_rbnode_foreach(first, node, __COUNTER__)
+	rbnode_foreach_(__COUNTER__, first, node)
 #else
 #define rbnode_foreach(first, node) \
-	_rbnode_foreach(first, node, __LINE__)
+	rbnode_foreach_(__LINE__, first, node)
 #endif
-#define _rbnode_foreach(first, node, n) \
-	__rbnode_foreach(first, node, n)
-#define __rbnode_foreach(first, node, n) \
+#define rbnode_foreach_(n, first, node) \
+	rbnode_foreach__(n, first, node)
+#define rbnode_foreach__(n, first, node) \
 	for (struct rbnode *(node) = (first), \
-			*__rbnode_next_##n = (node) ? rbnode_next(node) : NULL; \
-			(node); (node) = __rbnode_next_##n, \
-			__rbnode_next_##n = (node) ? rbnode_next(node) : NULL)
+			*_rbnode_next_##n = (node) ? rbnode_next(node) : NULL; \
+			(node); (node) = _rbnode_next_##n, \
+			_rbnode_next_##n = (node) ? rbnode_next(node) : NULL)
 
 /*!
  * Initializes a red-black tree.

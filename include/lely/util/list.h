@@ -82,18 +82,18 @@ LELY_UTIL_LIST_INLINE void dlnode_remove(struct dlnode *node);
  */
 #ifdef __COUNTER__
 #define dlnode_foreach(first, node) \
-	_dlnode_foreach(first, node, __COUNTER__)
+	dlnode_foreach_(__COUNTER__, first, node)
 #else
 #define dlnode_foreach(first, node) \
-	_dlnode_foreach(first, node, __LINE__)
+	dlnode_foreach_(__LINE__, first, node)
 #endif
-#define _dlnode_foreach(first, node, n) \
-	__dlnode_foreach(first, node, n)
-#define __dlnode_foreach(first, node, n) \
+#define dlnode_foreach_(n, first, node) \
+	dlnode_foreach__(n, first, node)
+#define dlnode_foreach__(n, first, node) \
 	for (struct dlnode *(node) = (first), \
-			*__dlnode_next_##n = (node) ? (node)->next : NULL; \
-			(node); (node) = __dlnode_next_##n, \
-			__dlnode_next_##n = (node) ? (node)->next : NULL)
+			*_dlnode_next_##n = (node) ? (node)->next : NULL; \
+			(node); (node) = _dlnode_next_##n, \
+			_dlnode_next_##n = (node) ? (node)->next : NULL)
 
 //!Initializes a doubly-linked list.
 LELY_UTIL_LIST_INLINE void dllist_init(struct dllist *list);
