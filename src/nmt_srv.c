@@ -200,13 +200,17 @@ co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 	assert(srv);
 
 #ifndef LELY_NO_CO_TPDO
-	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++)
-		co_tpdo_sync(srv->tpdos[i], cnt);
+	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++) {
+		if (srv->tpdos[i])
+			co_tpdo_sync(srv->tpdos[i], cnt);
+	}
 #endif
 
 #ifndef LELY_NO_CO_RPDO
-	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++)
-		co_rpdo_sync(srv->rpdos[i], cnt);
+	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++) {
+		if (srv->rpdos[i])
+			co_rpdo_sync(srv->rpdos[i], cnt);
+	}
 #endif
 
 #else
