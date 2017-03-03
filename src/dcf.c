@@ -475,8 +475,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		// Create an array based on CompactSubObj.
 		if (subobj) {
 			co_sub_t *sub = co_sub_build(obj, 0,
-					CO_DEFTYPE_UNSIGNED8,
-					"Highest sub-index supported");
+					CO_DEFTYPE_UNSIGNED8, "NrOfObjects");
 			if (__unlikely(!sub))
 				return -1;
 			co_val_make(sub->type, &sub->def, &subobj,

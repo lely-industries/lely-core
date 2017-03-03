@@ -4,7 +4,7 @@
  *
  * \see lely/co/gw_txt.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1055,7 +1055,7 @@ co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind)
 	case CO_NMT_ST_START: str = "ERRORx OPER"; break;
 	case CO_NMT_ST_RESET_NODE: str = "ERRORx RAPP"; break;
 	case CO_NMT_ST_RESET_COMM: str = "ERRORx RCOM"; break;
-	case CO_NMT_ST_PREOP: str = "ERRORx PREOP"; break;
+	case CO_NMT_ST_PREOP: str = "ERRORx PREO"; break;
 	default: str = "ERROR"; break;
 	}
 	if (ind->iec)

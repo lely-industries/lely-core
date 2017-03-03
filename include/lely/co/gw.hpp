@@ -29,7 +29,7 @@
 #include <lely/util/c_type.hpp>
 
 namespace lely { class COGW; }
-//! An opaque CANopen gateway client type.
+//! An opaque CANopen gateway type.
 typedef lely::COGW co_gw_t;
 
 #include <lely/co/gw.h>
@@ -52,7 +52,7 @@ struct c_type_traits<__co_gw> {
 	static void fini(pointer p) noexcept { __co_gw_fini(p); }
 };
 
-//! An opaque CANopen gateway client type.
+//! An opaque CANopen gateway type.
 class COGW: public incomplete_c_type<__co_gw> {
 	typedef incomplete_c_type<__co_gw> c_base;
 public:

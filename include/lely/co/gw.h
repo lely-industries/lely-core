@@ -752,7 +752,6 @@ struct co_gw_con_pdo_read {
 #define CO_GW_CON_PDO_READ_SIZE \
 	offsetof(struct co_gw_con_pdo_read, val)
 
-
 //! The parameters of a CANopen gateway 'Get version' confirmation.
 struct co_gw_con_get_version {
 	//! The size of this struct (in bytes).
