@@ -31,6 +31,7 @@
 #include <lely/co/gw_txt.h>
 
 #include <assert.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -55,12 +56,14 @@ struct co_net {
 	"  -i <ms>, --inhibit=<ms>\n" \
 	"                        Wait at least <ms> milliseconds between requests\n" \
 	"                        (default: 100)\n" \
+	"  -m, --monitor         Do not exit on EOF (monitor mode)\n" \
 	"  -W, --no-wait         Do not wait for the previous command to complete\n" \
 	"                        before accepting the next one"
 
 #define FLAG_EXIT	0x01
 #define FLAG_HELP	0x02
-#define FLAG_NO_WAIT	0x03
+#define FLAG_MONITOR	0x04
+#define FLAG_NO_WAIT	0x08
 
 #define INHIBIT	100
 
@@ -73,6 +76,7 @@ void gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data);
 int gw_txt_recv(const char *txt, void *data);
 int gw_txt_send(const struct co_gw_req *req, void *data);
 
+void __cdecl sig_done(int sig);
 int __cdecl io_thrd_start(void *arg);
 
 struct co_net net[CO_GW_NUM_NET];
@@ -91,6 +95,8 @@ char *recv_buf;
 
 mtx_t send_mtx;
 char *send_buf;
+
+sig_atomic_t done;
 
 int
 main(int argc, char *argv[])
@@ -128,6 +134,8 @@ main(int argc, char *argv[])
 				flags |= FLAG_HELP;
 			} else if (!strncmp(arg, "inhibit=", 8)) {
 				inhibit = atoi(arg + 8);
+			} else if (!strcmp(arg, "monitor")) {
+				flags |= FLAG_MONITOR;
 			} else if (!strcmp(arg, "no-wait")) {
 				flags |= FLAG_NO_WAIT;
 			} else {
@@ -135,7 +143,7 @@ main(int argc, char *argv[])
 						arg);
 			}
 		} else {
-			int c = getopt(argc, argv, ":ehi:W");
+			int c = getopt(argc, argv, ":ehi:mW");
 			if (c == -1)
 				break;
 			switch (c) {
@@ -157,6 +165,9 @@ main(int argc, char *argv[])
 				break;
 			case 'i':
 				inhibit = atoi(optarg);
+				break;
+			case 'm':
+				flags |= FLAG_MONITOR;
 				break;
 			case 'W':
 				flags |= FLAG_NO_WAIT;
@@ -286,6 +297,10 @@ main(int argc, char *argv[])
 	mtx_init(&send_mtx, mtx_plain);
 	send_buf = NULL;
 
+	// In monitor mode, we exit on receipt of SIGINT or SIGTERM.
+	signal(SIGINT, &sig_done);
+	signal(SIGTERM, &sig_done);
+
 	thrd_t thr;
 	if (__unlikely(thrd_create(&thr, &io_thrd_start, gw_txt)
 			!= thrd_success)) {
@@ -303,12 +318,13 @@ main(int argc, char *argv[])
 	int tty = 1;
 #endif
 	errno = errsv;
+	int eof = 0;
 
 	char *line = NULL;
 	size_t n = 0;
 	co_unsigned32_t seq = 1;
 	char *cmd = NULL;
-	for (;;) {
+	while (!done && (!eof || (flags & FLAG_MONITOR))) {
 		if (!(flags & FLAG_NO_WAIT) || (flags & FLAG_EXIT)) {
 			mtx_lock(&wait_mtx);
 			if (!(flags & FLAG_NO_WAIT)) {
@@ -334,6 +350,10 @@ main(int argc, char *argv[])
 				free(buf);
 			}
 		}
+		// In monitor mode, keep printing indications on EOF, but do not
+		// try to parse any more commands.
+		if (eof)
+			continue;
 		// Only print the sequence number (or continuation ellipsis) on
 		// an interactive terminal.
 		if (tty) {
@@ -347,7 +367,19 @@ main(int argc, char *argv[])
 		if (getline(&line, &n, stdin) == -1) {
 			if (tty)
 				fputc('\n', stdout);
-			break;
+			if (ferror(stdin)) {
+				diag(DIAG_ERROR, errno2c(errno),
+					"error reading from stdin");
+				// Abort on a stream error.
+				break;
+			}
+			if (feof(stdin)) {
+				// Disable the interactive terminal on EOF.
+				tty = 0;
+				eof = 1;
+			}
+			// Skip parsing on error.
+			continue;
 		}
 		// Ignore empty lines and comments.
 		char *cp = line;
@@ -533,6 +565,14 @@ gw_txt_send(const struct co_gw_req *req, void *data)
 	assert(gw_txt);
 
 	return co_gw_recv(gw_txt, req);
+}
+
+void __cdecl
+sig_done(int sig)
+{
+	__unused_var(sig);
+
+	done = 1;
 }
 
 int __cdecl
