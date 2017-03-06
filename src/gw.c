@@ -4,7 +4,7 @@
  *
  * \see lely/co/gw.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1189,7 +1189,7 @@ co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 	};
 	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
 
-	co_nmt_sync(net->nmt, cnt);
+	co_nmt_on_sync(net->nmt, cnt);
 }
 #endif
 

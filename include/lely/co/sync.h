@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the
  * synchronization (SYNC) object declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -48,6 +48,18 @@ extern "C" {
  */
 typedef void co_sync_ind_t(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 
+/*!
+ * The type of a CANopen SYNC error handling function, invoked when the SYNC
+ * data length does not match.
+ *
+ * \param sync a pointer to a SYNC consumer service.
+ * \param eec  the emergency error code (0x8240).
+ * \param er   the error register (0x10).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
+		co_unsigned8_t er, void *data);
+
 LELY_CO_EXTERN void *__co_sync_alloc(void);
 LELY_CO_EXTERN void __co_sync_free(void *ptr);
 LELY_CO_EXTERN struct __co_sync *__co_sync_init(struct __co_sync *sync,
@@ -57,8 +69,8 @@ LELY_CO_EXTERN void __co_sync_fini(struct __co_sync *sync);
 /*!
  * Creates a new CANopen SYNC producer/consumer service.
  *
- * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device.
+ * \param net  a pointer to a CAN network.
+ * \param dev  a pointer to a CANopen device.
  *
  * \returns a pointer to a new SYNC service, or NULL on error. In the latter
  * case, the error number can be obtained with `get_errnum()`.
@@ -97,11 +109,38 @@ LELY_CO_EXTERN void co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind,
  * \param sync a pointer to a SYNC consumer service.
  * \param ind  a pointer to the function to be invoked.
  * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a func.
+ *             passed as the last parameter to \a ind.
  *
  * \see co_sync_get_ind()
  */
 LELY_CO_EXTERN void co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the error handling function of a SYNC consumer service.
+ *
+ * \param sync  a pointer to a SYNC consumer service.
+ * \param perr  the address at which to store a pointer to the error handling
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_sync_set_err()
+ */
+LELY_CO_EXTERN void co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr,
+		void **pdata);
+
+/*!
+ * Sets the error handling function of a SYNC consumer service.
+ *
+ * \param sync a pointer to a SYNC consumer service.
+ * \param err  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is
+ *             passed as the last parameter to \a err.
+ *
+ * \see co_sync_get_err()
+ */
+LELY_CO_EXTERN void co_sync_set_err(co_sync_t *sync, co_sync_err_t *err,
 		void *data);
 
 #ifdef __cplusplus

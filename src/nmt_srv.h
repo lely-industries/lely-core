@@ -3,7 +3,7 @@
  *
  * \see lely/co/nmt.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,6 +28,8 @@
 
 //! A CANopen NMT service manager.
 struct co_nmt_srv {
+	//! A pointer to the NMT master/slave service.
+	co_nmt_t *nmt;
 	/*!
 	 * The currently enabled CANopen services (any combination of
 	 * #CO_NMT_SRV_PDO, #CO_NMT_SRV_SDO, #CO_NMT_SRV_SYNC, #CO_NMT_SRV_TIME
@@ -83,7 +85,7 @@ extern "C" {
 #endif
 
 //! Initializes a CANopen NMT service manager. \see co_nmt_srv_fini()
-void co_nmt_srv_init(struct co_nmt_srv *srv);
+void co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt);
 
 //! Finalizes a CANopen NMT service manager. \see co_nmt_srv_init()
 void co_nmt_srv_fini(struct co_nmt_srv *srv);
@@ -98,14 +100,6 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  *            #CO_NMT_SRV_EMCY). Services not part of \a set will be disabled.
  */
 void co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set);
-
-/*!
- * The SYNC indication function for NMT masters/slaves. This function passes the
- * SYNC object on to all active Receive/Transmit-PDO services.
- *
- * \see co_sync_ind_t
- */
-void co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 
 #ifdef __cplusplus
 }

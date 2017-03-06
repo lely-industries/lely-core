@@ -4,7 +4,7 @@
  *
  * \see src/nmt_srv.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -57,6 +57,11 @@ static void co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
 //! Finalizes all Receive/Transmit-PDO services. \see co_nmt_srv_init_pdo()
 static void co_nmt_srv_fini_pdo(struct co_nmt_srv *srv);
+#ifndef LELY_NO_CO_RPDO
+//! Invokes co_nmt_err() to handle Receive-PDO errors. \see co_rpdo_err_t
+static void co_nmt_srv_rpdo_err(co_rpdo_t *pdo, co_unsigned16_t eec,
+		co_unsigned8_t er, void *data);
+#endif
 #endif
 
 //! Initializes all Server/Client-SDO services. \see co_nmt_srv_fini_sdo()
@@ -71,6 +76,12 @@ static void co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
 //! Finalizes the SYNC producer/consumer service. \see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
+//! Invokes co_nmt_sync() to handle SYNC objects. \see co_sync_ind_t
+static void co_nmt_srv_sync_ind(co_sync_t *sync, co_unsigned8_t cnt,
+		void *data);
+//! Invokes co_nmt_err() to handle SYNC errors. \see co_sync_err_t
+static void co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec,
+		co_unsigned8_t er, void *data);
 #endif
 
 #ifndef LELY_NO_CO_TIME
@@ -103,9 +114,12 @@ static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 #define CO_NUM_SDO	128
 
 void
-co_nmt_srv_init(struct co_nmt_srv *srv)
+co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 {
 	assert(srv);
+	assert(nmt);
+
+	srv->nmt = nmt;
 
 	srv->set = 0;
 
@@ -146,6 +160,10 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 	if ((srv->set & ~set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_fini_lss(srv);
 #endif
+#ifndef LELY_NO_CO_EMCY
+	if ((srv->set & ~set) & CO_NMT_SRV_EMCY)
+		co_nmt_srv_fini_emcy(srv);
+#endif
 #ifndef LELY_NO_CO_TIME
 	if ((srv->set & ~set) & CO_NMT_SRV_TIME)
 		co_nmt_srv_fini_time(srv);
@@ -160,15 +178,7 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 	if ((srv->set & ~set) & CO_NMT_SRV_PDO)
 		co_nmt_srv_fini_pdo(srv);
 #endif
-#ifndef LELY_NO_CO_EMCY
-	if ((srv->set & ~set) & CO_NMT_SRV_EMCY)
-		co_nmt_srv_fini_emcy(srv);
-#endif
 
-#ifndef LELY_NO_CO_EMCY
-	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
-		co_nmt_srv_init_emcy(srv, net, dev);
-#endif
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
 	if ((set & ~srv->set) & CO_NMT_SRV_PDO)
 		co_nmt_srv_init_pdo(srv, net, dev);
@@ -183,40 +193,15 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 	if ((set & ~srv->set) & CO_NMT_SRV_TIME)
 		co_nmt_srv_init_time(srv, net, dev);
 #endif
+#ifndef LELY_NO_CO_EMCY
+	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
+		co_nmt_srv_init_emcy(srv, net, dev);
+#endif
 #ifdef LELY_NO_CO_LSS
 	__unused_var(nmt);
 #else
 	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_init_lss(srv, nmt);
-#endif
-}
-
-void
-co_nmt_srv_sync(co_sync_t *sync, co_unsigned8_t cnt, void *data)
-{
-#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-	__unused_var(sync);
-	struct co_nmt_srv *srv = data;
-	assert(srv);
-
-#ifndef LELY_NO_CO_TPDO
-	for (co_unsigned16_t i = 0; i < srv->ntpdo; i++) {
-		if (srv->tpdos[i])
-			co_tpdo_sync(srv->tpdos[i], cnt);
-	}
-#endif
-
-#ifndef LELY_NO_CO_RPDO
-	for (co_unsigned16_t i = 0; i < srv->nrpdo; i++) {
-		if (srv->rpdos[i])
-			co_rpdo_sync(srv->rpdos[i], cnt);
-	}
-#endif
-
-#else
-	__unused_var(sync);
-	__unused_var(cnt);
-	__unused_var(data);
 #endif
 }
 
@@ -252,9 +237,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		for (size_t j = srv->nrpdo; j < i; j++)
 			srv->rpdos[j] = NULL;
-		srv->rpdos[i] = co_rpdo_create(net, dev, i + 1, srv->emcy);
+		srv->rpdos[i] = co_rpdo_create(net, dev, i + 1);
 		if (__unlikely(!srv->rpdos[i]))
 			goto error;
+		co_rpdo_set_err(srv->rpdos[i], &co_nmt_srv_rpdo_err, srv->nmt);
 
 		srv->nrpdo = i + 1;
 	}
@@ -318,6 +304,19 @@ co_nmt_srv_fini_pdo(struct co_nmt_srv *srv)
 	srv->nrpdo = 0;
 #endif
 }
+
+#ifndef LELY_NO_CO_RPDO
+static void
+co_nmt_srv_rpdo_err(co_rpdo_t *pdo, co_unsigned16_t eec, co_unsigned8_t er,
+		void *data)
+{
+	__unused_var(pdo);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_nmt_on_err(nmt, eec, er, NULL);
+}
+#endif
 
 #endif // !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 
@@ -434,7 +433,8 @@ co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		diag(DIAG_ERROR, get_errc(), "unable to initialize SYNC service");
 		return;
 	}
-	co_sync_set_ind(srv->sync, &co_nmt_srv_sync, srv);
+	co_sync_set_ind(srv->sync, &co_nmt_srv_sync_ind, srv->nmt);
+	co_sync_set_err(srv->sync, &co_nmt_srv_sync_err, srv->nmt);
 }
 
 static void
@@ -449,7 +449,28 @@ co_nmt_srv_fini_sync(struct co_nmt_srv *srv)
 	srv->sync = NULL;
 }
 
-#endif
+static void
+co_nmt_srv_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
+{
+	__unused_var(sync);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_nmt_on_sync(nmt, cnt);
+}
+
+static void
+co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec, co_unsigned8_t er,
+		void *data)
+{
+	__unused_var(sync);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_nmt_on_err(nmt, eec, er, NULL);
+}
+
+#endif // !LELY_NO_CO_SYNC
 
 #ifndef LELY_NO_CO_TIME
 

@@ -4,7 +4,7 @@
  *
  * \see lely/co/sync.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -56,7 +56,11 @@ struct __co_sync {
 	//! A pointer to the indication function.
 	co_sync_ind_t *ind;
 	//! A pointer to user-specified data for #ind.
-	void *data;
+	void *ind_data;
+	//! A pointer to the error handling function.
+	co_sync_err_t *err;
+	//! A pointer to user-specified data for #err.
+	void *err_data;
 };
 
 /*!
@@ -159,7 +163,9 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	sync->cnt = 1;
 
 	sync->ind = NULL;
-	sync->data = NULL;
+	sync->ind_data = NULL;
+	sync->err = NULL;
+	sync->err_data = NULL;
 
 	// Set the download indication function for the SYNC COB-ID object.
 	co_obj_set_dn_ind(obj_1005, &co_1005_dn_ind, sync);
@@ -277,7 +283,7 @@ co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind, void **pdata)
 	if (pind)
 		*pind = sync->ind;
 	if (pdata)
-		*pdata = sync->data;
+		*pdata = sync->ind_data;
 }
 
 LELY_CO_EXPORT void
@@ -286,7 +292,27 @@ co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind, void *data)
 	assert(sync);
 
 	sync->ind = ind;
-	sync->data = data;
+	sync->ind_data = data;
+}
+
+LELY_CO_EXPORT void
+co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr, void **pdata)
+{
+	assert(sync);
+
+	if (perr)
+		*perr = sync->err;
+	if (pdata)
+		*pdata = sync->err_data;
+}
+
+LELY_CO_EXPORT void
+co_sync_set_err(co_sync_t *sync, co_sync_err_t *err, void *data)
+{
+	assert(sync);
+
+	sync->err = err;
+	sync->err_data = data;
 }
 
 static int
@@ -498,10 +524,13 @@ co_sync_recv(const struct can_msg *msg, void *data)
 		return 0;
 #endif
 
-	co_unsigned8_t cnt = msg->len > 0 ? msg->data[0] : 0;
+	uint8_t len = sync->max_cnt ? 1 : 0;
+	if (__unlikely(msg->len != len && sync->err))
+		sync->err(sync, 0x8240, 0x10, sync->err_data);
+	co_unsigned8_t cnt = len && msg->len == len ? msg->data[0] : 0;
 
 	if (sync->ind)
-		sync->ind(sync, cnt, sync->data);
+		sync->ind(sync, cnt, sync->ind_data);
 
 	return 0;
 }

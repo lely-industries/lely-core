@@ -3,7 +3,7 @@
  * interface of the Receive-PDO declarations. See lely/co/rpdo.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,10 +45,9 @@ struct c_type_traits<__co_rpdo> {
 	static void free(void* ptr) noexcept { __co_rpdo_free(ptr); }
 
 	static pointer
-	init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num,
-			COEmcy* emcy) noexcept
+	init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num) noexcept
 	{
-		return __co_rpdo_init(p, net, dev, num, emcy);
+		return __co_rpdo_init(p, net, dev, num);
 	}
 
 	static void fini(pointer p) noexcept { __co_rpdo_fini(p); }
@@ -58,8 +57,8 @@ struct c_type_traits<__co_rpdo> {
 class CORPDO: public incomplete_c_type<__co_rpdo> {
 	typedef incomplete_c_type<__co_rpdo> c_base;
 public:
-	CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num, COEmcy* emcy = 0)
-		: c_base(net, dev, num, emcy)
+	CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num)
+		: c_base(net, dev, num)
 	{}
 
 	CANNet* getNet() const noexcept { return co_rpdo_get_net(this); }
@@ -108,6 +107,34 @@ public:
 	setInd(C* obj) noexcept
 	{
 		setInd(&c_mem_call<co_rpdo_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
+	getErr(co_rpdo_err_t** perr, void** pdata) const noexcept
+	{
+		co_rpdo_get_err(this, perr, pdata);
+	}
+
+	void
+	setErr(co_rpdo_err_t* err, void* data) noexcept
+	{
+		co_rpdo_set_err(this, err, data);
+	}
+
+	template <class F>
+	void
+	setErr(F* f) noexcept
+	{
+		setErr(&c_obj_call<co_rpdo_err_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_rpdo_err_t*, C>::type M>
+	void
+	setErr(C* obj) noexcept
+	{
+		setErr(&c_mem_call<co_rpdo_err_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
 

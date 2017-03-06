@@ -4,7 +4,7 @@
  *
  * \see lely/co/rpdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,9 +27,6 @@
 
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
-#ifndef LELY_NO_CO_EMCY
-#include <lely/co/emcy.h>
-#endif
 #include <lely/co/obj.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
@@ -46,10 +43,6 @@ struct __co_rpdo {
 	co_dev_t *dev;
 	//! The PDO number.
 	co_unsigned16_t num;
-#ifndef LELY_NO_CO_EMCY
-	//! A pointer to an EMCY producer service.
-	co_emcy_t *emcy;
-#endif
 	//! The PDO communication parameter.
 	struct co_pdo_comm_par comm;
 	//! The PDO mapping parameter.
@@ -71,7 +64,11 @@ struct __co_rpdo {
 	//! A pointer to the indication function.
 	co_rpdo_ind_t *ind;
 	//! A pointer to user-specified data for #ind.
-	void *data;
+	void *ind_data;
+	//! A pointer to the error handling function.
+	co_rpdo_err_t *err;
+	//! A pointer to user-specified data for #err.
+	void *err_data;
 };
 
 /*!
@@ -170,7 +167,7 @@ __co_rpdo_free(void *ptr)
 
 LELY_CO_EXPORT struct __co_rpdo *
 __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num, co_emcy_t *emcy)
+		co_unsigned16_t num)
 {
 	assert(pdo);
 	assert(net);
@@ -194,11 +191,6 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->net = net;
 	pdo->dev = dev;
 	pdo->num = num;
-#ifdef LELY_NO_CO_EMCY
-	__unused_var(emcy);
-#else
-	pdo->emcy = emcy;
-#endif
 
 	// Copy the PDO communication parameter record.
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
@@ -222,7 +214,9 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	co_sdo_req_init(&pdo->req);
 
 	pdo->ind = NULL;
-	pdo->data = NULL;
+	pdo->ind_data = NULL;
+	pdo->err = NULL;
+	pdo->err_data = NULL;
 
 	// Set the download indication functions PDO communication parameter
 	// record.
@@ -280,8 +274,7 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 }
 
 LELY_CO_EXPORT co_rpdo_t *
-co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num,
-		co_emcy_t *emcy)
+co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
 	errc_t errc = 0;
 
@@ -291,7 +284,7 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num,
 		goto error_alloc_pdo;
 	}
 
-	if (__unlikely(!__co_rpdo_init(pdo, net, dev, num, emcy))) {
+	if (__unlikely(!__co_rpdo_init(pdo, net, dev, num))) {
 		errc = get_errc();
 		goto error_init_pdo;
 	}
@@ -362,7 +355,7 @@ co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata)
 	if (pind)
 		*pind = pdo->ind;
 	if (pdata)
-		*pdata = pdo->data;
+		*pdata = pdo->ind_data;
 }
 
 LELY_CO_EXPORT void
@@ -371,7 +364,27 @@ co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data)
 	assert(pdo);
 
 	pdo->ind = ind;
-	pdo->data = data;
+	pdo->ind_data = data;
+}
+
+LELY_CO_EXPORT void
+co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata)
+{
+	assert(pdo);
+
+	if (perr)
+		*perr = pdo->err;
+	if (pdata)
+		*pdata = pdo->err_data;
+}
+
+LELY_CO_EXPORT void
+co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err, void *data)
+{
+	assert(pdo);
+
+	pdo->err = err;
+	pdo->err_data = data;
 }
 
 LELY_CO_EXPORT int
@@ -736,8 +749,9 @@ co_rpdo_timer_event(const struct timespec *tp, void *data)
 	co_rpdo_t *pdo = data;
 	assert(pdo);
 
-	if (pdo->ind)
-		pdo->ind(pdo, CO_SDO_AC_TIMEOUT, NULL, 0, pdo->data);
+	// Generate an error if an RPDO timeout occurred.
+	if (pdo->err)
+		pdo->err(pdo, 0x8250, 0x10, pdo->err_data);
 
 	return 0;
 }
@@ -764,14 +778,26 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	size_t n = MIN(msg->len, CAN_MAX_LEN);
 	co_unsigned32_t ac = co_pdo_dn(&pdo->map, pdo->dev, &pdo->req,
 			msg->data, n);
-#ifndef LELY_NO_CO_EMCY
-	// Generate an EMCY message if too few bytes where available in the PDO.
-	if (__unlikely(ac == CO_SDO_AC_PDO_LEN && pdo->emcy))
-		co_emcy_push(pdo->emcy, 0x8210, 0x10, NULL);
-#endif
+
 	// Invoke the user-defined callback function.
 	if (pdo->ind)
-		pdo->ind(pdo, ac, msg->data, n, pdo->data);
+		pdo->ind(pdo, ac, msg->data, n, pdo->ind_data);
+
+	if (pdo->err) {
+		if (ac == CO_SDO_AC_PDO_LEN) {
+			// Generate an error message if the PDO was not
+			// processed because too few bytes were available.
+			pdo->err(pdo, 0x8210, 0x10, pdo->err_data);
+		} else if (!ac) {
+			size_t len = 0;
+			for (size_t i = 0; i < MIN(pdo->map.n, 0x40u); i++)
+				len += (pdo->map.map[i]) & 0xff;
+			if (__unlikely(n > (len  + 7) / 8))
+				// Generate an error message if the PDO length
+				// was exceeded.
+				pdo->err(pdo, 0x8220, 0x10, pdo->err_data);
+		}
+	}
 
 	return ac;
 }

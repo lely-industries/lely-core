@@ -4,7 +4,7 @@
  *
  * \see lely/co/emcy.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -787,7 +787,7 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	assert(emcy);
 
 	// Update the error register in the object dictionary.
-	co_sub_set_val(emcy->sub_1001_00, &er, sizeof(er));
+	co_sub_set_val_u8(emcy->sub_1001_00, er);
 
 	// Check whether the EMCY COB-ID exists and is valid.
 	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);

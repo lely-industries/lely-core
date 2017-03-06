@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the network
  * management (NMT) declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -711,8 +711,22 @@ LELY_CO_EXTERN co_emcy_t *co_nmt_get_emcy(const co_nmt_t *nmt);
 //! Returns a pointer to the LSS master/slave service.
 LELY_CO_EXTERN co_lss_t *co_nmt_get_lss(const co_nmt_t *nmt);
 
-//! Passes a SYNC object to all active Receive/Transmit-PDO services.
-LELY_CO_EXTERN void co_nmt_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
+/*!
+ * Implements the default behavior when receiving a SYNC object by passing it to
+ * all active Receive/Transmit-PDO services.
+ *
+ * \see co_sync_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
+
+/*!
+ * Implements the default error handling behavior by generating an EMCY message
+ * with co_emcy_push() and invoking co_nmt_comm_err_ind().
+ *
+ * \see co_rpdo_err_t, co_sync_err_t
+ */
+LELY_CO_EXTERN void co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec,
+		co_unsigned8_t er, const uint8_t msef[5]);
 
 #ifdef __cplusplus
 }

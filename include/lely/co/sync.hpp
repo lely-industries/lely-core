@@ -3,7 +3,7 @@
  * interface of the synchronization (SYNC) object. See lely/co/sync.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -87,6 +87,34 @@ public:
 	setInd(C* obj) noexcept
 	{
 		setInd(&c_mem_call<co_sync_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
+	getErr(co_sync_err_t** perr, void** pdata) const noexcept
+	{
+		co_sync_get_err(this, perr, pdata);
+	}
+
+	void
+	setErr(co_sync_err_t* err, void* data) noexcept
+	{
+		co_sync_set_err(this, err, data);
+	}
+
+	template <class F>
+	void
+	setErr(F* f) noexcept
+	{
+		setErr(&c_obj_call<co_sync_err_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_sync_err_t*, C>::type M>
+	void
+	setErr(C* obj) noexcept
+	{
+		setErr(&c_mem_call<co_sync_err_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
 

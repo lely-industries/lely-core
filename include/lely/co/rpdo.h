@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Receive-PDO
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -34,10 +34,9 @@ extern "C" {
  * received or an error occurs.
  *
  * \param pdo  a pointer to a Receive-PDO service.
- * \param ac   the SDO abort code: 0 on success, #CO_SDO_AC_NO_OBJ,
- *             #CO_SDO_AC_NO_SUB, #CO_SDO_AC_NO_PDO or #CO_SDO_AC_PDO_LEN in
- *             case of a mapping error, or #CO_SDO_AC_TIMEOUT in case the event
- *             timer expires.
+ * \param ac   the SDO abort code: 0 on success, or #CO_SDO_AC_NO_OBJ,
+ *             #CO_SDO_AC_NO_SUB, #CO_SDO_AC_NO_PDO or #CO_SDO_AC_PDO_LEN on
+ *             error.
  * \param ptr  a pointer to the bytes received.
  * \param n    the number of bytes at \a ptr.
  * \param data a pointer to user-specified data.
@@ -45,11 +44,22 @@ extern "C" {
 typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
+/*!
+ * The type of a CANopen Receive-PDO error handling function, invoked in case of
+ * a timeout or length mismatch.
+ *
+ * \param pdo  a pointer to a Receive-PDO service.
+ * \param eec  the emergency error code (0x8240).
+ * \param er   the error register (0x10).
+ * \param data a pointer to user-specified data.
+ */
+typedef void co_rpdo_err_t(co_rpdo_t *pdo, co_unsigned16_t eec,
+		co_unsigned8_t er, void *data);
+
 LELY_CO_EXTERN void *__co_rpdo_alloc(void);
 LELY_CO_EXTERN void __co_rpdo_free(void *ptr);
 LELY_CO_EXTERN struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo,
-		can_net_t *net, co_dev_t *dev, co_unsigned16_t num,
-		co_emcy_t *emcy);
+		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
 
 /*!
@@ -60,9 +70,6 @@ LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
  * \param num  the PDO number (in the range [1..512]). The PDO communication and
  *             mapping parameter records MUST exist in the object dictionary of
  *             \a dev.
- * \param emcy a pointer to an EMCY producer service. If \a emcy is not NULL and
- *             a PDO is received with too few data bytes, an EMCY message is
- *             generated with error code 8210.
  *
  * \returns a pointer to a new Receive-PDO service, or NULL on error. In the
  * latter case, the error number can be obtained with `get_errnum()`.
@@ -70,7 +77,7 @@ LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
  * \see co_rpdo_destroy()
  */
 LELY_CO_EXTERN co_rpdo_t *co_rpdo_create(can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num, co_emcy_t *emcy);
+		co_unsigned16_t num);
 
 //! Destroys a CANopen Receive-PDO service. \see co_rpdo_create()
 LELY_CO_EXTERN void co_rpdo_destroy(co_rpdo_t *pdo);
@@ -119,6 +126,33 @@ LELY_CO_EXTERN void co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind,
  * \see co_rpdo_get_ind()
  */
 LELY_CO_EXTERN void co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the error handling function of a Receive-PDO service.
+ *
+ * \param pdo   a pointer to a Receive-PDO service.
+ * \param perr  the address at which to store a pointer to the error handling
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_rpdo_set_err()
+ */
+LELY_CO_EXTERN void co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr,
+		void **pdata);
+
+/*!
+ * Sets the error handling function of a Receive-PDO service.
+ *
+ * \param pdo  a pointer to a Receive-PDO service.
+ * \param err  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is
+ *             passed as the last parameter to \a err.
+ *
+ * \see co_rpdo_get_err()
+ */
+LELY_CO_EXTERN void co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err,
 		void *data);
 
 /*!

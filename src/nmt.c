@@ -4,7 +4,7 @@
  *
  * \see lely/co/nmt.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,9 +28,18 @@
 #include <lely/can/buf.h>
 #endif
 #include <lely/co/dev.h>
+#ifndef LELY_NO_CO_EMCY
+#include <lely/co/emcy.h>
+#endif
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
+#ifndef LELY_NO_CO_RPDO
+#include <lely/co/rpdo.h>
+#endif
 #include <lely/co/sdo.h>
+#ifndef LELY_NO_CO_TPDO
+#include <lely/co/tpdo.h>
+#endif
 #include <lely/co/val.h>
 #ifndef LELY_NO_CO_MASTER
 #include "nmt_boot.h"
@@ -693,7 +702,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->state = NULL;
 
-	co_nmt_srv_init(&nmt->srv);
+	co_nmt_srv_init(&nmt->srv, nmt);
 
 	nmt->startup = 0;
 #ifndef LELY_NO_CO_MASTER
@@ -1590,11 +1599,43 @@ co_nmt_get_lss(const co_nmt_t *nmt)
 }
 
 LELY_CO_EXPORT void
-co_nmt_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
+co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
+{
+#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
+	assert(nmt);
+#ifndef LELY_NO_CO_TPDO
+	for (co_unsigned16_t i = 0; i < nmt->srv.ntpdo; i++) {
+		if (nmt->srv.tpdos[i])
+			co_tpdo_sync(nmt->srv.tpdos[i], cnt);
+	}
+#endif
+#ifndef LELY_NO_CO_RPDO
+	for (co_unsigned16_t i = 0; i < nmt->srv.nrpdo; i++) {
+		if (nmt->srv.rpdos[i])
+			co_rpdo_sync(nmt->srv.rpdos[i], cnt);
+	}
+#endif
+#else
+	__unused_var(nmt);
+	__unused_var(cnt);
+#endif
+}
+
+LELY_CO_EXPORT void
+co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5])
 {
 	assert(nmt);
 
-	co_nmt_srv_sync(nmt->srv.sync, cnt, &nmt->srv);
+	if (eec) {
+#ifdef LELY_NO_CO_EMCY
+		__unused_var(er);
+#else
+		if (nmt->srv.emcy)
+			co_emcy_push(nmt->srv.emcy, eec, er, msef);
+#endif
+		co_nmt_comm_err_ind(nmt);
+	}
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2370,7 +2411,7 @@ default_lg_ind(co_nmt_t *nmt, int state, void *data)
 	__unused_var(data);
 
 	if (state == CO_NMT_EC_OCCURRED)
-		co_nmt_comm_err_ind(nmt);
+		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 }
 
 static void
@@ -2385,12 +2426,12 @@ default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
 #ifdef LELY_NO_CO_MASTER
-		co_nmt_comm_err_ind(nmt);
+		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 #else
 		if (co_nmt_is_master(nmt))
 			co_nmt_node_err_ind(nmt, id);
 		else
-			co_nmt_comm_err_ind(nmt);
+			co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 #endif
 	}
 }
