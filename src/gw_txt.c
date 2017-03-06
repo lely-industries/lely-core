@@ -1013,7 +1013,7 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 	errc_t errc = get_errc();
 
 	char *buf;
-	int result = asprintf(&buf, "%u pdo %u", ind->net, ind->n);
+	int result = asprintf(&buf, "%u pdo %u %u", ind->net, ind->num, ind->n);
 	if (__unlikely(result < 0)) {
 		errc = get_errc();
 		buf = NULL;
