@@ -6,7 +6,7 @@ Synopsis
 
     coctl -h
     coctl --help
-    coctl [-e | --exit] [-W | --no-wait] [-i ms | --inhibit=ms]
+    coctl [-e | --exit] [-i ms | --inhibit=ms] [-m | --monitor] [-W | --no-wait]
           [interface filename]...
 
 Description
@@ -22,6 +22,7 @@ The options are as follows:
     -i <ms>, --inhibit=<ms>
                           Wait at least <ms> milliseconds between requests
                           (default: 100).
+    -m, --monitor         Do not exit on EOF (monitor mode).
     -W, --no-wait         Do not wait for the previous command to complete
                           before accepting the next one.
 
