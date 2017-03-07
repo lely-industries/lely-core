@@ -4,7 +4,7 @@
  *
  * \see lely/util/config.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -50,6 +50,9 @@ static void config_section_destroy(struct rbnode *node);
 
 static const char *config_section_set(struct rbnode *node, const char *key,
 		const char *value);
+
+static void config_section_foreach(struct rbnode *node,
+		config_foreach_func_t *func, void *data);
 
 //! An entry in a configuration section.
 struct config_entry {
@@ -137,6 +140,50 @@ config_destroy(config_t *config)
 	}
 }
 
+LELY_UTIL_EXPORT size_t
+config_get_sections(const config_t *config, size_t n, const char **sections)
+{
+	assert(config);
+
+	if (!sections)
+		n = 0;
+
+	if (n) {
+		struct rbnode *node = rbtree_first(&config->tree);
+		for (size_t i = 0; node && i < n; node = rbnode_next(node), i++)
+			sections[i] = node->key;
+	}
+
+	return rbtree_size(&config->tree);
+}
+
+LELY_UTIL_EXPORT size_t
+config_get_keys(const config_t *config, const char *section, size_t n,
+		const char **keys)
+{
+	assert(config);
+
+	if (!section)
+		section = "";
+
+	struct rbnode *node = rbtree_find(&config->tree, section);
+	if (!node)
+		return 0;
+	struct rbtree *tree =
+			&structof(node, struct config_section, node)->tree;
+
+	if (!keys)
+		n = 0;
+
+	if (n) {
+		node = rbtree_first(tree);
+		for (size_t i = 0; node && i < n; node = rbnode_next(node), i++)
+			keys[i] = node->key;
+	}
+
+	return rbtree_size(tree);
+}
+
 LELY_UTIL_EXPORT const char *
 config_get(const config_t *config, const char *section, const char *key)
 {
@@ -174,14 +221,31 @@ config_set(config_t *config, const char *section, const char *key,
 	if (__unlikely(!key))
 		return NULL;
 
-	struct rbnode *node;
-
-	node = rbtree_find(&config->tree, section);
+	struct rbnode *node = rbtree_find(&config->tree, section);
 	// Only create a section if we are not removing an entry.
 	if (!node && value)
 		node = config_section_create(config, section);
 
 	return node ? config_section_set(node, key, value) : NULL;
+}
+
+LELY_UTIL_EXPORT void
+config_foreach(const config_t *config, config_foreach_func_t *func, void *data)
+{
+	assert(config);
+
+	// Start with the root section.
+	struct rbnode *node = rbtree_find(&config->tree, "");
+	if (node)
+		config_section_foreach(node, func, data);
+
+	rbtree_foreach(&config->tree, node) {
+		const char *section = node->key;
+		// Skip the root section.
+		if (!section || !*section)
+			continue;
+		config_section_foreach(node, func, data);
+	}
 }
 
 static struct rbnode *
@@ -257,6 +321,22 @@ config_section_set(struct rbnode *node, const char *key, const char *value)
 	return __likely(node)
 			? structof(node, struct config_entry, node)->value
 			: NULL;
+}
+
+static void
+config_section_foreach(struct rbnode *node, config_foreach_func_t *func,
+		void *data)
+{
+	assert(node);
+	struct config_section *section =
+			structof(node, struct config_section, node);
+	assert(func);
+
+	rbtree_foreach(&section->tree, node) {
+		struct config_entry *entry =
+				structof(node, struct config_entry, node);
+		func(section->node.key, entry->node.key, entry->value, data);
+	}
 }
 
 static struct rbnode *

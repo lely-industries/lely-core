@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the
  * configuration functions.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -44,6 +44,18 @@ struct floc;
 extern "C" {
 #endif
 
+/*!
+ * The type of a function called by config_foreach() for each key in a
+ * configuration struct.
+ *
+ * \param section a pointer to the name of the section
+ * \param key     a pointer to the name of the key.
+ * \param value   a pointer to the value of the key.
+ * \param data    a pointer to user-specified data.
+ */
+typedef void config_foreach_func_t(const char *section, const char *key,
+		const char *value, void *data);
+
 LELY_UTIL_EXTERN void *__config_alloc(void);
 LELY_UTIL_EXTERN void __config_free(void *ptr);
 LELY_UTIL_EXTERN struct __config *__config_init(struct __config *config,
@@ -64,6 +76,40 @@ LELY_UTIL_EXTERN config_t *config_create(int flags);
 
 //! Destroys a configuration struct. \see config_create()
 LELY_UTIL_EXTERN void config_destroy(config_t *config);
+
+/*!
+ * Retrieves a list of section names from a configuration struct.
+ *
+ * \param config   a pointer to a configuration struct.
+ * \param n        the maximum number of sections to return.
+ * \param sections an array of at least \a n pointers (can be NULL). On success,
+ *                 *\a sections contains the pointers to the section names.
+ *
+ * \returns the total number of sections in the configuration struct (which may
+ * may be different from \a n).
+ *
+ * \see config_get_keys()
+ */
+LELY_UTIL_EXTERN size_t config_get_sections(const config_t *config, size_t n,
+		const char **sections);
+
+/*!
+ * Retrieves a list of key names from a section in a configuration struct.
+ *
+ * \param config  a pointer to a configuration struct.
+ * \param section a pointer to the name of the section. If \a section is NULL or
+ *                "", the root section is used instead.
+ * \param n       the maximum number of sections to return.
+ * \param keys    an array of at least \a n pointers (can be NULL). On success,
+ *                *\a keys contains the pointers to the key names.
+ *
+ * \returns the total number of keys in the section (which may may be different
+ * from \a n).
+ *
+ * \see config_get_sections()
+ */
+LELY_UTIL_EXTERN size_t config_get_keys(const config_t *config,
+		const char *section, size_t n, const char **keys);
 
 /*!
  * Retrieves a key from a configuration struct.
@@ -99,10 +145,21 @@ LELY_UTIL_EXTERN const char *config_set(config_t *config,
 		const char *section, const char *key, const char *value);
 
 /*!
+ * Invokes a function for each key in a configuration struct.
+ *
+ * \param config a pointer to a configuration struct.
+ * \param func   a pointer to the function to be invoked.
+ * \param data   a pointer to user-specified data (can be NULL). \a data is
+ *               passed as the last parameter to \a func.
+ */
+LELY_UTIL_EXTERN void config_foreach(const config_t *config,
+		config_foreach_func_t *func, void *data);
+
+/*!
  * Parses an INI file and adds the keys to a configuration struct.
  *
- * \returns the number of characters read. Parsing errors are reported with
- * diag_at().
+ * \returns the number of characters read, or 0 on error. I/O and parsing errors
+ * are reported with diag_at().
  *
  * \see config_parse_ini_text()
  */
@@ -121,12 +178,44 @@ LELY_UTIL_EXTERN size_t config_parse_ini_file(config_t *config,
  *               to one past the last character parsed.
  *
  * \returns the number of characters read. Parsing errors are reported with
- * diag_at().
+ * diag() and diag_at(), respectively.
  *
  * \see config_parse_ini_file()
  */
 LELY_UTIL_EXTERN size_t config_parse_ini_text(config_t *config,
 		const char *begin, const char *end, struct floc *at);
+
+/*!
+ * Prints a configuration struct to an INI file.
+ *
+ * \returns the number of characters written, or 0 on error. I/O errors are
+ * reported with diag().
+ *
+ * \see config_print_ini_text()
+ */
+LELY_UTIL_EXTERN size_t config_print_ini_file(const config_t *config,
+		const char *filename);
+
+/*!
+ * Prints a configuration struct in INI-format to a memory buffer. Note that the
+ * output is _not_ null-terminated.
+ *
+ * \param config a pointer to a configuration struct.
+ * \param pbegin the address of a pointer to the start of the buffer. If
+ *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
+ *               on exit, *\a pbegin points to one past the last character
+ *               written.
+ * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
+ *               most `end - *pbegin` characters are written, and the output may
+ *               be truncated.
+ *
+ * \returns the number of characters that would have been written had the buffer
+ * been sufficiently large.
+ *
+ * \see config_print_ini_file()
+ */
+LELY_UTIL_EXTERN size_t config_print_ini_text(const config_t *config,
+		char **pbegin, char *end);
 
 #ifdef __cplusplus
 }

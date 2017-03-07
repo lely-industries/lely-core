@@ -184,8 +184,8 @@ LELY_UTIL_EXTERN size_t print_utf8(char **pbegin, char *end, char32_t c32);
 LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
 
 /*!
- * Prints a a UTF-8 encoded Unicode string to a memory buffer. Non-printable
- * ASCII characters are printed using C99 escape sequences, illegal Unicode code
+ * Prints a UTF-8 encoded Unicode string to a memory buffer. Non-printable ASCII
+ * characters are printed using C99 escape sequences, illegal Unicode code
  * points using hexadecimal escape sequences. Note that the output is _not_
  * delimited by double quotes and _not_ null-terminated.
  *

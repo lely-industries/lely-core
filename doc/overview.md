@@ -65,9 +65,9 @@ ease the implementation of parsers, several lexing functions are provided in
 lely/util/lex.h. Corresponding printing functions can be found in
 lely/util/print.h.
 
-These functions are used to implement the INI parser of the configuration
-struct (lely/util/config.h), a simple string-based key-value store with
-sections.
+These functions are used to implement the INI parser and printer of the
+configuration struct (lely/util/config.h), a simple string-based key-value store
+with sections.
 
 C++ support
 -----------

@@ -4,7 +4,7 @@
  *
  * \see lely/util/config.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,6 +25,7 @@
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/frbuf.h>
+#include <lely/util/fwbuf.h>
 #include <lely/util/lex.h>
 #include <lely/util/membuf.h>
 #include <lely/util/print.h>
@@ -39,6 +40,9 @@ static size_t skip(const char *begin, const char *end, struct floc *at);
 
 static void membuf_print_chars(struct membuf *buf, const char *s, size_t n);
 
+static void config_print_ini_func(const char *section, const char *key,
+		const char *value, void *data);
+
 LELY_UTIL_EXPORT size_t
 config_parse_ini_file(config_t *config, const char *filename)
 {
@@ -51,7 +55,8 @@ config_parse_ini_file(config_t *config, const char *filename)
 	size_t size = 0;
 	const void *map = frbuf_map(buf, 0, &size);
 	if (__unlikely(!map)) {
-		diag(DIAG_ERROR, get_errc(), "unable to map file");
+		diag(DIAG_ERROR, get_errc(), "%s: unable to map file",
+				filename);
 		frbuf_destroy(buf);
 		return 0;
 	}
@@ -168,6 +173,62 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 	return cp - begin;
 }
 
+LELY_UTIL_EXPORT size_t
+config_print_ini_file(const config_t *config, const char *filename)
+{
+	fwbuf_t *buf = fwbuf_create(filename);
+	if (__unlikely(!buf)) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
+		return 0;
+	}
+
+	size_t size = config_print_ini_text(config, NULL, NULL);
+	void *map = fwbuf_map(buf, 0, &size);
+	if (__unlikely(!map)) {
+		diag(DIAG_ERROR, get_errc(), "%s: unable to map file",
+				filename);
+		fwbuf_destroy(buf);
+		return 0;
+	}
+
+	char *begin = map;
+	char *end = begin + size;
+	size_t chars = config_print_ini_text(config, &begin, end);
+
+	if (__unlikely(fwbuf_commit(buf) == -1)) {
+		diag(DIAG_ERROR, get_errc(), "%s: unable to commit file",
+				filename);
+		fwbuf_destroy(buf);
+		return 0;
+	}
+
+	fwbuf_destroy(buf);
+
+	return chars;
+}
+
+LELY_UTIL_EXPORT size_t
+config_print_ini_text(const config_t *config, char **pbegin, char *end)
+{
+	assert(config);
+
+	struct {
+		char **pbegin;
+		char *end;
+		const char *section;
+		size_t chars;
+	} ctx = {
+		.pbegin = pbegin,
+		.end = end,
+		.section = NULL,
+		.chars = 0
+	};
+
+	config_foreach(config, &config_print_ini_func, &ctx);
+
+	return ctx.chars;
+}
+
 static int __cdecl
 issection(int c)
 {
@@ -214,5 +275,67 @@ membuf_print_chars(struct membuf *buf, const char *s, size_t n)
 		return;
 	membuf_write(buf, s, n);
 	membuf_write(buf, "", 1);
+}
+
+static void
+config_print_ini_func(const char *section, const char *key, const char *value,
+		void *data)
+{
+	assert(section);
+	assert(key);
+	assert(value);
+	struct {
+		char **pbegin;
+		char *end;
+		const char *section;
+		size_t chars;
+	} *ctx = data;
+	assert(ctx);
+	char **pbegin = ctx->pbegin;
+	char *end = ctx->end;
+	size_t chars = ctx->chars;
+
+	if (ctx->section != section) {
+		ctx->section = section;
+		// Prepend the section with a newline, if necessary.
+		if (chars)
+			chars += print_char(pbegin, end, '\n');
+		if (*section) {
+			chars += print_char(pbegin, end, '[');
+			while (*section)
+				chars += print_char(pbegin, end, *section++);
+			chars += print_char(pbegin, end, ']');
+			chars += print_char(pbegin, end, '\n');
+		}
+	}
+
+	while (*key)
+		chars += print_char(pbegin, end, *key++);
+
+	chars += print_char(pbegin, end, ' ');
+	chars += print_char(pbegin, end, '=');
+
+	if (*value) {
+		chars += print_char(pbegin, end, ' ');
+		size_t n = strlen(value);
+		// Check for leading or trailing whitespace.
+		int esc = isspace((unsigned char)value[0])
+				|| isspace((unsigned char)value[n - 1]);
+		// Check for non-printable ASCII characters or comments.
+		for (size_t i = 0; !esc && i < n; i++)
+			esc = !isvalue((unsigned char)value[i]);
+		if (esc) {
+			chars += print_char(pbegin, end, '"');
+			chars += print_c99_str(pbegin, end, value, n);
+			chars += print_char(pbegin, end, '"');
+		} else {
+			while (*value)
+				chars += print_char(pbegin, end, *value++);
+		}
+	}
+
+	chars += print_char(pbegin, end, '\n');
+
+	ctx->chars = chars;
 }
 
