@@ -108,6 +108,8 @@ htab_resize(struct htab *tab, size_t num_slots)
 		};
 	}
 
+	free(old_slots);
+
 	return 0;
 }
 
