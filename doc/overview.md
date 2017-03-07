@@ -42,14 +42,17 @@ the CAN bus.
 C example:
 ```{.c}
 #include <lely/util/errnum.h>
+#include <lely/util/time.h>
 #include <lely/can/net.h>
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
 
 struct my_can {
-	io_handle_t can;
+	io_handle_t handle;
+	int st;
 	io_poll_t *poll;
 	can_net_t *net;
+	struct timespec next;
 };
 
 int my_can_init(struct my_can *can, const char *ifname);
@@ -58,6 +61,7 @@ void my_can_fini(struct my_can *can);
 // This function can be called to perform a single step in an event loop.
 void my_can_step(struct my_can *can, int timeout);
 
+int my_can_on_next(const struct timespec *tp, void *data);
 int my_can_on_send(const struct can_msg *msg, void *data);
 
 int
@@ -72,11 +76,12 @@ my_can_init(struct my_can *can, const char *ifname)
 	}
 
 	// Open a handle to the CAN bus.
-	can->can = io_open_can(ifname);
-	if (__unlikely(can->can == IO_HANDLE_ERROR)) {
+	can->handle = io_open_can(ifname);
+	if (__unlikely(can->handle == IO_HANDLE_ERROR)) {
 		errc = get_errc();
 		goto error_open_can;
 	}
+	can->st = io_can_get_state(can->handle);
 
 	// Create a new I/O polling interface.
 	can->poll = io_poll_create();
@@ -94,20 +99,25 @@ my_can_init(struct my_can *can, const char *ifname)
 
 	// Do not block when reading or writing CAN frames and make sure we
 	// receive the frames we sent.
-	io_set_flags(can->can, IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
+	io_set_flags(can->handle, IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
 
 	// Watch the CAN bus for incoming frames.
 	struct io_event event = {
 		.events = IO_EVENT_READ,
-		.u.handle = can->can
+		.u.handle = can->handle
 	};
-	io_poll_watch(can->poll, can->can, &event, 1);
+	io_poll_watch(can->poll, can->handle, &event, 1);
 
 	// Obtain the current time.
 	struct timespec now = { 0, 0 };
 	timespec_get(&now, TIME_UTC);
 	// Initialize the CAN network clock.
 	can_net_set_time(can->net, &now);
+
+	can->next = now;
+	// Register my_can_on_next as the function to be invoked when the time
+	// at which the next CAN timer triggers is updated.
+	can_net_set_next_func(can->net, &my_can_on_next, can);
 
 	// Register my_can_on_send() as the function to be invoked when a CAN
 	// frame needs to be sent.
@@ -121,8 +131,8 @@ error_create_net:
 	io_poll_destroy(can->poll);
 	can->poll = NULL;
 error_create_poll:
-	io_handle_release(can->can);
-	can->can = IO_HANDLE_ERROR;
+	io_handle_release(can->handle);
+	can->handle = IO_HANDLE_ERROR;
 error_open_can:
 	lely_io_fini();
 error_init_io:
@@ -139,8 +149,8 @@ my_can_fini(struct my_can *can)
 	io_poll_destroy(can->poll);
 	can->poll = NULL;
 
-	io_handle_release(can->can);
-	can->can = IO_HANDLE_ERROR;
+	io_handle_release(can->handle);
+	can->handle = IO_HANDLE_ERROR;
 
 	lely_io_fini();
 }
@@ -148,26 +158,61 @@ my_can_fini(struct my_can *can)
 void
 my_can_step(struct my_can *can, int timeout)
 {
+	struct timespec now = { 0, 0 };
+	timespec_get(&now, TIME_UTC);
+	// Check if a CAN timer is set to expire before the specified timeout.
+	// Ignore if the expiration time is in the past, as that probably
+	// indicates an old timer.
+	int64_t msec = timespec_diff_msec(&can->next, &now);
+	if (msec > 0 && msec < timeout)
+		timeout = msec;
+
 	// Wait at most `timeout` milliseconds for an I/O event to occur.
 	struct io_event event = IO_EVENT_INIT;
 	int n = io_poll_wait(can->poll, 1, &event, timeout);
 
 	// Update the CAN network clock.
-	struct timespec now = { 0, 0 };
 	timespec_get(&now, TIME_UTC);
 	can_net_set_time(can->net, &now);
 
-	// Handle the I/O event, if necessary.
-	if (n == 1) {
-		// If the CAN bus is ready for reading, process all waiting
-		// frames.
-		if ((event.events & IO_EVENT_READ) && event.u.handle
-				== can->can) {
-			struct can_msg msg = CAN_MSG_INIT;
-			while (io_can_read(can->can, &msg) == 1)
-				can_net_recv(can->net, &msg);
+	if (n != 1 || event.u.handle != can->handle)
+		return;
+
+	// Handle the I/O event.
+	int result = 0;
+	// If the CAN bus is ready for reading, process all waiting frames.
+	if (event.events & IO_EVENT_READ) {
+		struct can_msg msg = CAN_MSG_INIT;
+		while ((result = io_can_read(can->handle, &msg)) == 1)
+			can_net_recv(can->net, &msg);
+	}
+	// If an error occurred, update the state of the CAN device.
+	if (can->st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
+			|| result == -1) {
+		int st = io_can_get_state(can->handle);
+		if (st != can->st) {
+			if (can->st == CAN_STATE_BUSOFF) {
+				// Recovered from bus off. This is typically
+				// handled by invoking:
+				// co_nmt_on_err(nmt, 0x8140, 0x10, NULL);
+			} else if (st == CAN_STATE_PASSIVE) {
+				// CAN in error passive mode. This is typically
+				// handled by invoking:
+				// co_nmt_on_err(nmt, 0x8120, 0x10, NULL);
+			}
+			can->st = st;
 		}
 	}
+}
+
+int
+my_can_on_next(const struct timespec *tp, void *data)
+{
+	struct my_can *can = data;
+
+	can->next = *tp;
+
+	return 0;
 }
 
 int
@@ -176,12 +221,13 @@ my_can_on_send(const struct can_msg *msg, void *data)
 	struct my_can *can = data;
 
 	// Send a single frame to the CAN bus.
-	return io_can_write(can->can, msg) == 1 ? 0 : -1;
+	return io_can_write(can->handle, msg) == 1 ? 0 : -1;
 }
 ```
 
 C++11 example:
 ```{.cpp}
+#include <lely/util/time.h>
 #include <lely/can/net.hpp>
 #include <lely/io/can.hpp>
 #include <lely/io/poll.hpp>
@@ -191,24 +237,31 @@ using namespace lely;
 class MyCAN {
 public:
 	explicit MyCAN(const char* ifname)
-	: m_can(ifname) // Open a handle to the CAN bus.
+	: m_handle(ifname) // Open a handle to the CAN bus.
+	, m_st(m_handle.getState()) // Get the state of the CAN device.
 	, m_poll(new IOPoll) // Create a new I/O polling interface.
 	, m_net(new CANNet) // Create a CAN network object.
 	{
 		// Do not block when reading or writing CAN frames and make sure
 		// we receive the frames we sent.
-		m_can.setFlags(IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
+		m_handle.setFlags(IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK);
 
 		// Watch the CAN bus for incoming frames.
 		io_event event = { IO_EVENT_READ, { 0 } };
-		event.u.handle = m_can;
-		m_poll->watch(m_can, &event, true);
+		event.u.handle = m_handle;
+		m_poll->watch(m_handle, &event, true);
 
 		// Obtain the current time.
 		timespec now = { 0, 0 };
 		timespec_get(&now, TIME_UTC);
 		// Initialize the CAN network clock.
 		m_net->setTime(now);
+
+		m_next = now;
+		// Register the onNext() member function as the function to be
+		// invoked when the time at which the next CAN timer triggers is
+		// updated.
+		m_net->setNextFunc<MyCAN, &MyCAN::onNext>(this);
 
 		// Register the onSend() member function as the function to be
 		// invoked when a CAN frame needs to be sent.
@@ -226,40 +279,76 @@ public:
 	void
 	step(int timeout = 0) noexcept
 	{
+		timespec now = { 0, 0 };
+		timespec_get(&now, TIME_UTC);
+		// Check if a CAN timer is set to expire before the specified
+		// timeout. Ignore if the expiration time is in the past, as
+		// that probably indicates an old timer.
+		int64_t msec = timespec_diff_msec(&m_next, &now);
+		if (msec > 0 && msec < timeout)
+			timeout = msec;
+
 		// Wait at most `timeout` milliseconds for an I/O event to
 		// occur.
 		io_event event = IO_EVENT_INIT;
 		int n = m_poll->wait(1, &event, timeout);
 
 		// Update the CAN network clock.
-		timespec now = { 0, 0 };
 		timespec_get(&now, TIME_UTC);
 		m_net->setTime(now);
 
-		// Handle the I/O event, if necessary.
-		if (n == 1) {
-			// If the CAN bus is ready for reading, process all
-			// waiting frames.
-			if ((event.events & IO_EVENT_READ) && event.u.handle
-					== m_can) {
-				can_msg msg = CAN_MSG_INIT;
-				while (m_can.read(msg) == 1)
-					m_net->recv(msg);
+		if (n != 1 || event.u.handle != m_handle)
+			return;
+
+		// Handle the I/O event.
+		int result = 0;
+		// If the CAN bus is ready for reading, process all waiting
+		// frames.
+		if (event.events & IO_EVENT_READ) {
+			can_msg msg = CAN_MSG_INIT;
+			while ((result = m_handle.read(msg)) == 1)
+				m_net->recv(msg);
+		}
+		// If an error occurred, update the state of the CAN device.
+		if (m_st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
+				|| result == -1) {
+			int st = m_handle.getState();
+			if (st != m_st) {
+				if (m_st == CAN_STATE_BUSOFF) {
+					// Recovered from bus off. This is
+					// typically handled by invoking:
+					// nmt->onErr(0x8140, 0x10);
+				} else if (st == CAN_STATE_PASSIVE) {
+					// CAN in error passive mode. This is
+					// typically handled by invoking:
+					// nmt->onErr(0x8120, 0x10);
+				}
+				m_st = st;
 			}
 		}
 	}
 
 private:
 	int
+	onNext(const timespec* tp) noexcept
+	{
+		m_next = *tp;
+
+		return 0;
+	}
+
+	int
 	onSend(const can_msg* msg) noexcept
 	{
 		// Send a single frame to the CAN bus.
-		return m_can.write(*msg) == 1 ? 0 : -1;
+		return m_handle.write(*msg) == 1 ? 0 : -1;
 	}
 
-	IOCAN m_can;
+	IOCAN m_handle;
+	int m_st;
 	unique_c_ptr<IOPoll> m_poll;
 	unique_c_ptr<CANNet> m_net;
+	timespec m_next;
 };
 ```
 
