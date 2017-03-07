@@ -789,12 +789,12 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 			// processed because too few bytes were available.
 			pdo->err(pdo, 0x8210, 0x10, pdo->err_data);
 		} else if (!ac) {
-			size_t len = 0;
+			size_t offset = 0;
 			for (size_t i = 0; i < MIN(pdo->map.n, 0x40u); i++)
-				len += (pdo->map.map[i]) & 0xff;
-			if (__unlikely(n > (len  + 7) / 8))
+				offset += (pdo->map.map[i]) & 0xff;
+			if (__unlikely((offset + 7) / 8 < n))
 				// Generate an error message if the PDO length
-				// was exceeded.
+				// exceeds the mapping.
 				pdo->err(pdo, 0x8220, 0x10, pdo->err_data);
 		}
 	}

@@ -296,10 +296,6 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		offset += len;
 	}
 
-	// Also return an error if we received too many bytes.
-	if (__unlikely((offset + 7) / 8 < n))
-		return CO_SDO_AC_PDO_LEN;
-
 	return ac;
 }
 
