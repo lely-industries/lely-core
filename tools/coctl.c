@@ -43,6 +43,7 @@ struct co_net {
 	const char *can_path;
 	const char *dcf_path;
 	io_handle_t handle;
+	int st;
 	can_net_t *net;
 	co_dev_t *dev;
 	co_nmt_t *nmt;
@@ -78,6 +79,8 @@ int gw_txt_send(const struct co_gw_req *req, void *data);
 
 void __cdecl sig_done(int sig);
 int __cdecl io_thrd_start(void *arg);
+
+void co_net_err(struct co_net *net);
 
 struct co_net net[CO_GW_NUM_NET];
 io_poll_t *poll;
@@ -234,6 +237,7 @@ main(int argc, char *argv[])
 					"unable to watch CAN device");
 			goto error_net;
 		}
+		net[id - 1].st = io_can_get_state(net[id - 1].handle);
 		// Create a CAN network object.
 		net[id - 1].net = can_net_create();
 		if (__unlikely(!net[id - 1].net)) {
@@ -651,13 +655,36 @@ io_thrd_start(void *arg)
 		} else if (event.events & IO_EVENT_READ) {
 			struct co_net *net = event.u.data;
 			assert(net);
+			int result;
 			struct can_msg msg = CAN_MSG_INIT;
-			while (io_can_read(net->handle, &msg) == 1)
+			while ((result = io_can_read(net->handle, &msg)) == 1)
 				can_net_recv(net->net, &msg);
+			if (__unlikely(result == -1
+					|| net->st == CAN_STATE_BUSOFF))
+				co_net_err(net);
+		} else if (event.events & IO_EVENT_ERROR) {
+			co_net_err(event.u.data);
 		}
 	}
 	free(buf);
 
 	return 0;
+}
+
+void
+co_net_err(struct co_net *net)
+{
+	assert(net);
+
+	int st = io_can_get_state(net->handle);
+	if (st != net->st) {
+		if (net->st == CAN_STATE_BUSOFF)
+			// Recovered from bus off.
+			co_nmt_on_err(net->nmt, 0x8140, 0x10, NULL);
+		else if (st == CAN_STATE_PASSIVE)
+			// CAN in error passive mode.
+			co_nmt_on_err(net->nmt, 0x8120, 0x10, NULL);
+		net->st = st;
+	}
 }
 

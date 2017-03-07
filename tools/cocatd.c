@@ -61,6 +61,8 @@ int can_send(const struct can_msg *msg, void *data);
 int can_next(const struct timespec *tp, void *data);
 int can_timer(const struct timespec *tp, void *data);
 
+void can_err(io_handle_t handle, int *pst, co_nmt_t *nmt);
+
 co_unsigned32_t co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 co_unsigned32_t co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
@@ -473,6 +475,7 @@ daemon_main()
 	can_timer_set_func(timer_err, &can_timer, &watch_err);
 
 	struct io_event event;
+	int st = CAN_STATE_ACTIVE;
 
 	for (;;) {
 		// Only watch hout when PDO 1 is active.
@@ -536,9 +539,13 @@ daemon_main()
 			}
 		} else if (event.events & IO_EVENT_READ) {
 			if (event.u.handle == hcan) {
+				int result;
 				struct can_msg msg = CAN_MSG_INIT;
-				while (io_can_read(hcan, &msg) == 1)
+				while ((result = io_can_read(hcan, &msg)) == 1)
 					can_net_recv(net, &msg);
+				if (__unlikely(result == -1
+						|| st == CAN_STATE_BUSOFF)) 
+					can_err(hcan, &st, nmt);
 			} else if (event.u.handle == hout) {
 				co_tpdo_event(pdo_out);
 				// Wait for the inhibit time to elapse before
@@ -554,6 +561,9 @@ daemon_main()
 				co_tpdo_get_next(pdo_err, &start);
 				can_timer_start(timer_err, net, &start, NULL);
 			}
+		} else if (event.events && IO_EVENT_ERROR
+				&& event.u.handle == hcan) {
+			can_err(hcan, &st, nmt);
 		}
 	}
 
@@ -619,8 +629,6 @@ can_next(const struct timespec *tp, void *data)
 	struct timespec *next = data;
 	assert(next);
 
-	struct timespec now;
-	can_net_get_time(net, &now);
 	*next = *tp;
 
 	return 0;
@@ -636,6 +644,24 @@ can_timer(const struct timespec *tp, void *data)
 	*pwatch = 1;
 
 	return 0;
+}
+
+void
+can_err(io_handle_t handle, int *pst, co_nmt_t *nmt)
+{
+	assert(pst);
+	assert(nmt);
+
+	int st = io_can_get_state(handle);
+	if (st != *pst) {
+		if (*pst == CAN_STATE_BUSOFF)
+			// Recovered from bus off.
+			co_nmt_on_err(nmt, 0x8140, 0x10, NULL);
+		else if (st == CAN_STATE_PASSIVE)
+			// CAN in error passive mode.
+			co_nmt_on_err(nmt, 0x8120, 0x10, NULL);
+		*pst = st;
+	}
 }
 
 co_unsigned32_t
