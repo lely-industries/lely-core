@@ -301,10 +301,6 @@ main(int argc, char *argv[])
 	mtx_init(&send_mtx, mtx_plain);
 	send_buf = NULL;
 
-	// In monitor mode, we exit on receipt of SIGINT or SIGTERM.
-	signal(SIGINT, &sig_done);
-	signal(SIGTERM, &sig_done);
-
 	thrd_t thr;
 	if (__unlikely(thrd_create(&thr, &io_thrd_start, gw_txt)
 			!= thrd_success)) {
@@ -328,7 +324,7 @@ main(int argc, char *argv[])
 	size_t n = 0;
 	co_unsigned32_t seq = 1;
 	char *cmd = NULL;
-	while (!done && (!eof || (flags & FLAG_MONITOR))) {
+	while (!done) {
 		if (!(flags & FLAG_NO_WAIT) || (flags & FLAG_EXIT)) {
 			mtx_lock(&wait_mtx);
 			if (!(flags & FLAG_NO_WAIT)) {
@@ -381,6 +377,14 @@ main(int argc, char *argv[])
 				// Disable the interactive terminal on EOF.
 				tty = 0;
 				eof = 1;
+				if (flags & FLAG_MONITOR) {
+					// In monitor mode, we exit on receipt
+					// of SIGINT or SIGTERM instead of EOF.
+					signal(SIGINT, &sig_done);
+					signal(SIGTERM, &sig_done);
+				} else {
+					done = 1;
+				}
 			}
 			// Skip parsing on error.
 			continue;
