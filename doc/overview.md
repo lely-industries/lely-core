@@ -108,8 +108,12 @@ my_can_init(struct my_can *can, const char *ifname)
 	};
 	io_poll_watch(can->poll, can->handle, &event, 1);
 
-	// Obtain the current time.
 	struct timespec now = { 0, 0 };
+	// Obtain the current time. This is equivalent to
+	// clock_gettime(CLOCK_REALTIME, &now) from POSIX. To use a steady,
+	// monotonic clock instead, replace all occurrences of the following
+	// line with:
+	// clock_gettime(CLOCK_MONOTONIC, &now);
 	timespec_get(&now, TIME_UTC);
 	// Initialize the CAN network clock.
 	can_net_set_time(can->net, &now);
@@ -251,8 +255,12 @@ public:
 		event.u.handle = m_handle;
 		m_poll->watch(m_handle, &event, true);
 
-		// Obtain the current time.
 		timespec now = { 0, 0 };
+		// Obtain the current time. This is equivalent to
+		// clock_gettime(CLOCK_REALTIME, &now) from POSIX. To use a
+		// steady, monotonic clock instead, replace all occurrences of
+		// the following line with:
+		// clock_gettime(CLOCK_MONOTONIC, &now);
 		timespec_get(&now, TIME_UTC);
 		// Initialize the CAN network clock.
 		m_net->setTime(now);
