@@ -92,13 +92,15 @@ create and destroy instances of C++ classes.
 Other
 -----
 
+Bit counting and manipulation functions can be found in lely/util/bits.h.
+
 Preprocessor macros to assist in automatic and conditional code generation are
 provided in lely/util/cpp.h.
+
+Comparison and hash function for integers, pointers and strings can be found in
+lely/util/cmp.h and lely/util/hash.h, respectively.
 
 Convenience functions to compare and manipulate `timespec` structs can be found
 in lely/util/time.h. External clock and timer functions, with an API similar to
 the POSIX clock and timer functions, can be found in lely/util/xtime.h.
-
-Comparison and hash function for integers, pointers and strings can be found in
-lely/util/cmp.h and lely/util/hash.h, respectively.
 

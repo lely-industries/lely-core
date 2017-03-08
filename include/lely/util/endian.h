@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,12 +22,8 @@
 #ifndef LELY_UTIL_ENDIAN_H
 #define LELY_UTIL_ENDIAN_H
 
-#include <lely/libc/stdint.h>
-#include <lely/util/util.h>
+#include <lely/util/bits.h>
 
-#ifdef _MSC_VER
-#include <stdlib.h>
-#endif
 #include <string.h>
 
 #ifndef LELY_UTIL_ENDIAN_INLINE
@@ -37,15 +33,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-//! Reverses the byte order of a 16-bit unsigned int.
-LELY_UTIL_ENDIAN_INLINE uint16_t bswap_u16(uint16_t i);
-
-//! Reverses the byte order of a 32-bit unsigned int.
-LELY_UTIL_ENDIAN_INLINE uint32_t bswap_u32(uint32_t i);
-
-//! Reverses the byte order of a 64-bit unsigned int.
-LELY_UTIL_ENDIAN_INLINE uint64_t bswap_u64(uint64_t i);
 
 //! Converts a 16-bit unsigned int from host to big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t htobe_u16(uint16_t i);
@@ -274,52 +261,12 @@ LELY_UTIL_EXTERN void bcpyle(void *dst, int dstbit, const void *src, int srcbit,
 		size_t n);
 
 LELY_UTIL_ENDIAN_INLINE uint16_t
-bswap_u16(uint16_t i)
-{
-#ifdef _MSC_VER
-	return _byteswap_ushort(i);
-#elif __GNUC_PREREQ(4, 8) || __has_builtin(__builtin_bswap16)
-	return __builtin_bswap16(i);
-#else
-	return ((i & 0xff) << 8) | ((i >> 8) & 0xff);
-#endif
-}
-
-LELY_UTIL_ENDIAN_INLINE uint32_t
-bswap_u32(uint32_t i)
-{
-#ifdef _MSC_VER
-	return _byteswap_ulong(i);
-#elif __GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap32)
-	return __builtin_bswap32(i);
-#else
-	return ((i & 0xff) << 24) | ((i & 0xff00) << 8) | ((i >> 8) & 0xff00)
-			| ((i >> 24) & 0xff);
-#endif
-}
-
-LELY_UTIL_ENDIAN_INLINE uint64_t
-bswap_u64(uint64_t i)
-{
-#ifdef _MSC_VER
-	return _byteswap_uint64(i);
-#elif __GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap64)
-	return __builtin_bswap64(i);
-#else
-	return ((i & 0xff) << 56) | ((i & 0xff00) << 40)
-			| ((i & 0xff0000) << 24) | ((i & 0xff000000) << 8)
-			| ((i >> 8) & 0xff000000) | ((i >> 24) & 0xff0000)
-			| ((i >> 40) & 0xff00) | ((i >> 56) & 0xff);
-#endif
-}
-
-LELY_UTIL_ENDIAN_INLINE uint16_t
 htobe_u16(uint16_t i)
 {
 #if LELY_BIG_ENDIAN
 	return i;
 #elif LELY_LITTLE_ENDIAN
-	return bswap_u16(i);
+	return bswap16(i);
 #else
 	uint8_t b[] = { (uint8_t)(i >> 8), (uint8_t)i };
 	memcpy(&i, b, sizeof(i));
@@ -333,7 +280,7 @@ LELY_UTIL_ENDIAN_INLINE uint16_t
 htole_u16(uint16_t i)
 {
 #if LELY_BIG_ENDIAN
-	return bswap_u16(i);
+	return bswap16(i);
 #elif LELY_LITTLE_ENDIAN
 	return i;
 #else
@@ -355,7 +302,7 @@ htobe_u32(uint32_t i)
 #if LELY_BIG_ENDIAN
 	return i;
 #elif LELY_LITTLE_ENDIAN
-	return bswap_u32(i);
+	return bswap32(i);
 #else
 	uint8_t b[] = {
 		(uint8_t)(i >> 24),
@@ -374,7 +321,7 @@ LELY_UTIL_ENDIAN_INLINE uint32_t
 htole_u32(uint32_t i)
 {
 #if LELY_BIG_ENDIAN
-	return bswap_u32(i);
+	return bswap32(i);
 #elif LELY_LITTLE_ENDIAN
 	return i;
 #else
@@ -401,7 +348,7 @@ htobe_u64(uint64_t i)
 #if LELY_BIG_ENDIAN
 	return i;
 #elif LELY_LITTLE_ENDIAN
-	return bswap_u64(i);
+	return bswap64(i);
 #else
 	uint8_t b[] = {
 		(uint8_t)(i >> 56),
@@ -424,7 +371,7 @@ LELY_UTIL_ENDIAN_INLINE uint64_t
 htole_u64(uint64_t i)
 {
 #if LELY_BIG_ENDIAN
-	return bswap_u64(i);
+	return bswap64(i);
 #elif LELY_LITTLE_ENDIAN
 	return i;
 #else
