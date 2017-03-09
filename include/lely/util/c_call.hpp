@@ -32,7 +32,7 @@
  * The definition of #lely::c_mem_call makes use of the fact that member
  * function pointers can be template parameters.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -83,7 +83,7 @@ struct c_pack_pop_back<T, S> {
 	using type = c_pack<T>;
 };
 
-} // impl
+} // lely::impl
 
 /*!
  * Provides a C wrapper for a function object with an arbitrary number of

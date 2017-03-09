@@ -16,6 +16,18 @@ containing the value to be stored. This is generally more performant than a
 non-intrusive implementation. Moreover, it is trivial to build a non-intrusive
 version on top of the intrusive implementation if necessary.
 
+Numerics
+--------
+
+Bit counting and manipulation functions are provided in lely/util/bits.h.
+
+Comparison and hash function for integers, pointers and strings can be found in
+lely/util/cmp.h and lely/util/hash.h, respectively.
+
+A uniformly distributed random number generator for unsigned integers is given
+in lely/util/rand.h. A C++ interface, that meets the C++11 random number engine
+requirements, can be found in lely/util/rand.hpp.
+
 System support
 --------------
 
@@ -92,13 +104,8 @@ create and destroy instances of C++ classes.
 Other
 -----
 
-Bit counting and manipulation functions can be found in lely/util/bits.h.
-
 Preprocessor macros to assist in automatic and conditional code generation are
 provided in lely/util/cpp.h.
-
-Comparison and hash function for integers, pointers and strings can be found in
-lely/util/cmp.h and lely/util/hash.h, respectively.
 
 Convenience functions to compare and manipulate `timespec` structs can be found
 in lely/util/time.h. External clock and timer functions, with an API similar to
