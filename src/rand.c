@@ -90,7 +90,7 @@ rand64_discard(struct rand64 *r, uint64_t z)
 		} \
 	\
 		r->n -= b; \
-		return r->x >>= b; \
+		return (uint##b##_t)(r->x >>= b); \
 	} \
 	\
 	LELY_UTIL_EXPORT void \
@@ -110,7 +110,7 @@ rand64_discard(struct rand64 *r, uint64_t z)
 	\
 		if (z) { \
 			r->x >>= z * b; \
-			r->n -= z * b; \
+			r->n -= (unsigned int)(z * b); \
 		} \
 	}
 
