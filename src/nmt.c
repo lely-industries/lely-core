@@ -1267,8 +1267,8 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 }
 
 #ifndef LELY_NO_CO_LSS
-LELY_CO_EXPORT
-int co_nmt_lss_con(co_nmt_t *nmt)
+LELY_CO_EXPORT int
+co_nmt_lss_con(co_nmt_t *nmt)
 {
 	assert(nmt);
 
