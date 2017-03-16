@@ -97,6 +97,7 @@ mtx_t recv_mtx;
 char *recv_buf;
 
 mtx_t send_mtx;
+cnd_t send_cond;
 char *send_buf;
 
 sig_atomic_t done;
@@ -299,6 +300,7 @@ main(int argc, char *argv[])
 	recv_buf = NULL;
 
 	mtx_init(&send_mtx, mtx_plain);
+	cnd_init(&send_cond);
 	send_buf = NULL;
 
 	thrd_t thr;
@@ -342,6 +344,9 @@ main(int argc, char *argv[])
 		// entering a command.
 		if (!tty || !cmd) {
 			mtx_lock(&send_mtx);
+			// In monitor mode, wait for the next indication.
+			if (eof && !send_buf)
+				cnd_wait(&send_cond, &send_mtx);
 			char *buf = send_buf;
 			send_buf = NULL;
 			mtx_unlock(&send_mtx);
@@ -382,6 +387,9 @@ main(int argc, char *argv[])
 					// of SIGINT or SIGTERM instead of EOF.
 					signal(SIGINT, &sig_done);
 					signal(SIGTERM, &sig_done);
+#if _POSIX_C_SOURCE >= 200112L
+					signal(SIGQUIT, &sig_done);
+#endif
 				} else {
 					done = 1;
 				}
@@ -470,6 +478,7 @@ main(int argc, char *argv[])
 	thrd_join(thr, NULL);
 
 	free(send_buf);
+	cnd_destroy(&send_cond);
 	mtx_destroy(&send_mtx);
 
 	free(recv_buf);
@@ -494,9 +503,12 @@ main(int argc, char *argv[])
 
 error_create_thr:
 	free(send_buf);
+	cnd_destroy(&send_cond);
 	mtx_destroy(&send_mtx);
 	free(recv_buf);
 	mtx_destroy(&recv_mtx);
+	cnd_destroy(&wait_cond);
+	mtx_destroy(&wait_mtx);
 	co_gw_txt_destroy(gw_txt);
 error_create_gw_txt:
 	co_gw_destroy(gw);
@@ -561,6 +573,7 @@ gw_txt_recv(const char *txt, void *data)
 	} else {
 		asprintf(&send_buf, "%s\n", txt);
 	}
+	cnd_signal(&send_cond);
 	mtx_unlock(&send_mtx);
 
 	return 0;
@@ -581,6 +594,17 @@ sig_done(int sig)
 	__unused_var(sig);
 
 	done = 1;
+
+	// Wake up the wait for pending requests.
+	mtx_lock(&wait_mtx);
+	wait = 0;
+	cnd_signal(&wait_cond);
+	mtx_unlock(&wait_mtx);
+
+	// Wake up the wait for indications in monitor mode.
+	mtx_lock(&send_mtx);
+	cnd_signal(&send_cond);
+	mtx_unlock(&send_mtx);
 }
 
 int __cdecl
