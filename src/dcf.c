@@ -256,7 +256,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (val && *val)
 		co_dev_set_lss(dev, strtoul(val, NULL, 0));
 
-	// For each of the basic data types, check whether it is supproted for
+	// For each of the basic data types, check whether it is supported for
 	// mapping dummy entries in PDOs.
 	co_unsigned32_t dummy = 0;
 	for (int i = 0; i < 0x20; i++) {
@@ -307,6 +307,13 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (__unlikely(co_obj_parse_cfg(obj, cfg, section) == -1))
 			goto error_parse_obj;
 	}
+
+	if (!co_dev_find_obj(dev, 0x1000))
+		diag(DIAG_WARNING, 0, "mandatory object 0x1000 missing");
+	if (!co_dev_find_obj(dev, 0x1001))
+		diag(DIAG_WARNING, 0, "mandatory object 0x1001 missing");
+	if (!co_dev_find_obj(dev, 0x1018))
+		diag(DIAG_WARNING, 0, "mandatory object 0x1018 missing");
 
 	// Parse compact PDO definitions after the explicit object definitions
 	// to prevent overwriting PDOs.
