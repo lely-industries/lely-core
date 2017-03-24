@@ -379,6 +379,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	assert(cfg);
 
 	const char *val;
+	struct floc at = { section, 0, 0 };
 
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
@@ -453,8 +454,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Obtain the data type of the sub-object.
 			val = config_get(cfg, section, "DataType");
 			if (!val || !*val) {
-				diag(DIAG_ERROR, 0, "DataType not specified in section %s",
-						section);
+				diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
 				return -1;
 			}
 			co_unsigned16_t type =
@@ -488,8 +488,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Obtain the data type of the sub-object.
 			val = config_get(cfg, section, "DataType");
 			if (!val || !*val) {
-				diag(DIAG_ERROR, 0, "DataType not specified in section %s",
-						section);
+				diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
 				return -1;
 			}
 			co_unsigned16_t type =
@@ -542,8 +541,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		if (val && *val)
 			type = (co_unsigned16_t)strtoul(val, NULL, 0);
 		if (__unlikely(!type)) {
-			diag(DIAG_ERROR, 0, "DataType not specified in section %s",
-					section);
+			diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
 			return -1;
 		}
 
@@ -611,6 +609,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 	// Create the section name for the explicit values of the sub-objects.
 	char section[10];
 	sprintf(section, "%XValue", (co_unsigned16_t)idx);
+	struct floc at = { section, 0, 0 };
 
 	const char *val = config_get(cfg, section, "NrOfEntries");
 	if (!val || !*val)
@@ -633,7 +632,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
 			if (__unlikely(!co_val_lex(type, sub->val, val, NULL,
-					NULL))) {
+					&at))) {
 				diag(DIAG_ERROR, get_errc(), "unable to set value of sub-object %Xsub%X",
 					(co_unsigned16_t)idx,
 					(co_unsigned8_t)subidx);
@@ -676,6 +675,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	assert(cfg);
 
 	const char *val;
+	struct floc at = { section, 0, 0 };
 
 	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
 	co_unsigned16_t type = co_sub_get_type(sub);
@@ -686,9 +686,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_MIN_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->min, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse LowLimit in section %s",
-					section);
+		if (__unlikely(!co_val_lex(type, &sub->min, val, NULL, &at))) {
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse LowLimit");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MIN_NODEID)
@@ -701,9 +700,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_MAX_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->max, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse HighLimit in section %s",
-					section);
+		if (__unlikely(!co_val_lex(type, &sub->max, val, NULL, &at))) {
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse HighLimit");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MAX_NODEID)
@@ -726,14 +724,12 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		} else if (!strcmp(val, "const")) {
 			access = CO_ACCESS_CONST;
 		} else {
-			diag(DIAG_ERROR, 0, "AccessType = %s in section %s",
-					val, section);
+			diag_at(DIAG_ERROR, 0, &at, "AccessType = %s", val);
 			return -1;
 		}
 		co_sub_set_access(sub, access);
 	} else if (type != CO_DEFTYPE_DOMAIN) {
-		diag(DIAG_ERROR, 0, "AccessType not specified in section %s",
-				section);
+		diag_at(DIAG_ERROR, 0, &at, "AccessType not specified");
 		return -1;
 	}
 
@@ -743,9 +739,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse DefaultValue in section %s",
-					section);
+		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, &at))) {
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse DefaultValue");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
@@ -766,9 +761,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, NULL))) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse ParameterValue in section %s",
-					section);
+		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, &at))) {
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse ParameterValue");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
@@ -782,8 +776,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		// dictionary.
 		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
 				== -1)) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse UploadFile in section %s",
-					section);
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse UploadFile");
 			return -1;
 		}
 	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_READ)
@@ -794,8 +787,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		// dictionary.
 		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
 				== -1)) {
-			diag(DIAG_ERROR, get_errc(), "unable to parse DownloadFile in section %s",
-					section);
+			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse DownloadFile");
 			return -1;
 		}
 #endif
@@ -810,19 +802,18 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		const void *max = co_sub_addressof_max(sub);
 		const void *def = co_sub_addressof_def(sub);
 		const void *val = co_sub_addressof_val(sub);
-		if (co_val_cmp(type, min, max) > 0) {
-			diag(DIAG_WARNING, 0, "LowLimit exceeds HighLimit in section %s",
-					section);
-		} else if (co_val_cmp(type, def, min) < 0
-				|| co_val_cmp(type, def, max) > 0) {
-			diag(DIAG_WARNING, 0, "DefaultValue out of range in section %s",
-					section);
-		} else if (!co_val_cmp(type, val, def)
-				&& (co_val_cmp(type, val, min) < 0
-				|| co_val_cmp(type, val, max) > 0)) {
-			diag(DIAG_WARNING, 0, "ParameterValue out of range in section %s",
-					section);
-		}
+		if (co_val_cmp(type, min, max) > 0)
+			diag_at(DIAG_WARNING, 0, &at, "LowLimit exceeds HighLimit");
+		if (co_val_cmp(type, def, min) < 0)
+			diag_at(DIAG_WARNING, 0, &at, "DefaultValue underflow");
+		if (co_val_cmp(type, def, max) > 0)
+			diag_at(DIAG_WARNING, 0, &at, "DefaultValue overflow");
+		if (co_val_cmp(type, val, def)
+				&& co_val_cmp(type, val, min) < 0)
+			diag_at(DIAG_WARNING, 0, &at, "ParameterValue underflow");
+		if (co_val_cmp(type, val, def)
+				&& co_val_cmp(type, val, max) > 0)
+			diag_at(DIAG_WARNING, 0, &at, "ParameterValue overflow");
 	}
 
 	return 0;
