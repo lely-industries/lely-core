@@ -805,6 +805,26 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		co_val_copy(type, sub->val, &sub->def);
 	}
 
+	if (co_type_is_basic(type)) {
+		const void *min = co_sub_addressof_min(sub);
+		const void *max = co_sub_addressof_max(sub);
+		const void *def = co_sub_addressof_def(sub);
+		const void *val = co_sub_addressof_val(sub);
+		if (co_val_cmp(type, min, max) > 0) {
+			diag(DIAG_WARNING, 0, "LowLimit exceeds HighLimit in section %s",
+					section);
+		} else if (co_val_cmp(type, def, min) < 0
+				|| co_val_cmp(type, def, max) > 0) {
+			diag(DIAG_WARNING, 0, "DefaultValue out of range in section %s",
+					section);
+		} else if (!co_val_cmp(type, val, def)
+				&& (co_val_cmp(type, val, min) < 0
+				|| co_val_cmp(type, val, max) > 0)) {
+			diag(DIAG_WARNING, 0, "ParameterValue out of range in section %s",
+					section);
+		}
+	}
+
 	return 0;
 }
 
