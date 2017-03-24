@@ -430,10 +430,30 @@ LELY_CO_EXTERN size_t co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errnum().
  *
- * \see co_dev_read_dcf()
+ * \see co_dev_write_dcf()
  */
 LELY_CO_EXTERN int co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
 		co_unsigned16_t *pmax, void *const *ptr);
+
+/*!
+ * Reads the values of a range of objects from a file, in the concise DCF
+ * format, and stores them in the object dictionary of a CANopen device. If an
+ * object does not exist, the value is discarded.
+ *
+ * \param dev      a pointer to a CANopen device.
+ * \param pmin     the address at which to store the minimum object index (can
+ *                 be NULL).
+ * \param pmax     the address at which to store the maximum object index (can
+ *                 be NULL).
+ * \param filename a pointer to the name of the file.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errnum().
+ *
+ * \see co_dev_read_dcf()
+ */
+LELY_CO_EXTERN int co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
+		co_unsigned16_t *pmax, const char *filename);
 
 /*!
  * Loads the values of a range of objects in the object dictionary of a CANopen
@@ -452,6 +472,23 @@ LELY_CO_EXTERN int co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
  */
 LELY_CO_EXTERN int co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, void **ptr);
+
+/*!
+ * Loads the values of a range of objects in the object dictionary of a CANopen
+ * device, and writes them to a file, in the concise DCF format.
+ *
+ * \param dev      a pointer to a CANopen device.
+ * \param min      the minimum object index.
+ * \param max      the maximum object index.
+ * \param filename a pointer to the name of the file.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errnum().
+ *
+ * \see co_dev_write_dcf()
+ */
+LELY_CO_EXTERN int co_dev_write_dcf_file(const co_dev_t *dev,
+		co_unsigned16_t min, co_unsigned16_t max, const char *filename);
 
 #ifdef __cplusplus
 }

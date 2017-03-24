@@ -283,11 +283,25 @@ public:
 	}
 
 	int
+	readDCF(co_unsigned16_t *pmin, co_unsigned16_t *pmax,
+			const char* filename) noexcept
+	{
+		return co_dev_read_dcf_file(this, pmin, pmax, filename);
+	}
+
+	int
 	writeDCF(co_unsigned16_t min, co_unsigned16_t max,
 			COVal<CO_DEFTYPE_DOMAIN>& val) const noexcept
 	{
 		return co_dev_write_dcf(this, min, max,
 				reinterpret_cast<void**>(&val));
+	}
+
+	int
+	writeDCF(co_unsigned16_t min, co_unsigned16_t max, const char *filename)
+			const noexcept
+	{
+		return co_dev_write_dcf_file(this, min, max, filename);
 	}
 
 protected:

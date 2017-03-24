@@ -23,6 +23,10 @@
 
 #include "co.h"
 #include <lely/util/errnum.h>
+#ifndef LELY_NO_CO_DCF
+#include <lely/util/frbuf.h>
+#include <lely/util/fwbuf.h>
+#endif
 #include <lely/co/dev.h>
 #include "obj.h"
 
@@ -675,6 +679,58 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	return 0;
 }
 
+#ifndef LELY_NO_CO_DCF
+LELY_CO_EXPORT int
+co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
+		co_unsigned16_t *pmax, const char *filename)
+{
+	errc_t errc = 0;
+
+	frbuf_t *buf = frbuf_create(filename);
+	if (__unlikely(!buf)) {
+		errc = get_errc();
+		goto error_create_buf;
+	}
+
+	int64_t size = frbuf_get_size(buf);
+	if (size == -1) {
+		errc = get_errc();
+		goto error_get_size;
+	}
+
+	void *dom = NULL;
+	if (__unlikely(co_val_init_dom(&dom, NULL, size) == -1)) {
+		errc = get_errc();
+		goto error_init_dom;
+	}
+
+	if (__unlikely(frbuf_read(buf, dom, size) != size)) {
+		errc = get_errc();
+		goto error_read;
+	}
+
+	if (co_dev_read_dcf(dev, pmin, pmax, &dom) == -1) {
+		errc = get_errc();
+		goto error_read_dcf;
+	}
+
+	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+	frbuf_destroy(buf);
+
+	return 0;
+
+error_read_dcf:
+error_read:
+	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+error_init_dom:
+error_get_size:
+	frbuf_destroy(buf);
+error_create_buf:
+	set_errc(errc);
+	return -1;
+}
+#endif
+
 LELY_CO_EXPORT int
 co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 		void **ptr)
@@ -748,6 +804,52 @@ error_malloc_idx:
 	set_errc(errc);
 	return -1;
 }
+
+#ifndef LELY_NO_CO_DCF
+LELY_CO_EXPORT int
+co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
+		co_unsigned16_t max, const char *filename)
+{
+	errc_t errc = 0;
+
+	void *dom = NULL;
+	if (__unlikely(co_dev_write_dcf(dev, min, max, &dom) == -1)) {
+		errc = get_errc();
+		goto error_write_dcf;
+	}
+
+	fwbuf_t *buf = fwbuf_create(filename);
+	if (__unlikely(!buf)) {
+		errc = get_errc();
+		goto error_create_buf;
+	}
+
+	size_t nbyte = co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
+	if (__unlikely(fwbuf_write(buf, dom, nbyte) != (ssize_t)nbyte)) {
+		errc = get_errc();
+		goto error_write;
+	}
+
+	if (__unlikely(fwbuf_commit(buf) == -1)) {
+		errc = get_errc();
+		goto error_commit;
+	}
+
+	fwbuf_destroy(buf);
+	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+
+	return 0;
+
+error_commit:
+error_write:
+	fwbuf_destroy(buf);
+error_create_buf:
+	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+error_write_dcf:
+	set_errc(errc);
+	return -1;
+}
+#endif
 
 static void
 co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)
