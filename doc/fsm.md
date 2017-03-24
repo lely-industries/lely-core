@@ -2,7 +2,7 @@ Finite-state machines
 =====================
 
 All services in the CANopen stack are asynchronous and therefore implemented as
-event-driven [finite-state machines] (FSMs). Each implementation follows the
+event-driven [finite-state machines][] (FSMs). Each implementation follows the
 pattern shown here. To ensure the maintainability and extensibility of these
 state machines, the pattern was designed to have the following properties:
 
