@@ -876,7 +876,7 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 		co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
 		*cp = '\0';
 
-		result = co_gw_txt_recv_fmt(gw, "[%u] %s", seq, buf);
+		result = co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %s", seq, buf);
 
 		free(buf);
 	}
@@ -886,7 +886,7 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
 	*cp = '\0';
 
-	result = co_gw_txt_recv_fmt(gw, "[%u] %s", seq, buf);
+	result = co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %s", seq, buf);
 #endif
 
 	co_val_fini(con->type, &val);
@@ -910,7 +910,8 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	errc_t errc = get_errc();
 
 	char *buf;
-	int result = asprintf(&buf, "[%u] %u pdo %u", seq, con->net, con->n);
+	int result = asprintf(&buf, "[%" PRIu32 "] %u pdo %u", seq, con->net,
+			con->n);
 	if (__unlikely(result < 0)) {
 		errc = get_errc();
 		buf = NULL;
@@ -943,7 +944,7 @@ co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_GET_VERSION);
 
-	return co_gw_txt_recv_fmt(gw, "[%u] %u %u %u.%u %u %u %u.%u %u.%u",
+	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %" PRIu32 " %" PRIu32 " %u.%u %" PRIu32 " %u %u.%u %u.%u",
 			seq, con->vendor_id, con->product_code,
 			(con->revision >> 16) & 0xffff, con->revision & 0xffff,
 			con->serial_nr, con->gw_class, con->prot_hi,
@@ -957,7 +958,8 @@ co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_LSS_GET_LSSID);
 
-	return co_gw_txt_recv_fmt(gw, "[%u] 0x%08x", seq, con->id);
+	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] 0x%08" PRIx32, seq,
+			con->id);
 }
 
 static int
@@ -967,7 +969,7 @@ co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_LSS_GET_ID);
 
-	return co_gw_txt_recv_fmt(gw, "[%u] %u", seq, con->id);
+	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %u", seq, con->id);
 }
 
 static int
@@ -976,8 +978,8 @@ co_gw_txt_recv__lss_scan(co_gw_txt_t *gw, co_unsigned32_t seq,
 {
 	assert(con);
 
-	return co_gw_txt_recv_fmt(gw, "[%u] 0x%0x 0x%0x 0x%0x 0x%0x", seq,
-			con->id.vendor_id, con->id.product_code,
+	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] 0x%08" PRIx32 " 0x%08" PRIx32 " 0x%08" PRIx32 " 0x%08" PRIx32,
+			seq, con->id.vendor_id, con->id.product_code,
 			con->id.revision, con->id.serial_nr);
 }
 
@@ -987,14 +989,14 @@ co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 {
 	if (iec) {
 		gw->iec = iec;
-		return co_gw_txt_recv_fmt(gw, "[%u] ERROR: %d (%s)", seq, iec,
-				co_gw_iec2str(iec));
+		return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] ERROR: %d (%s)",
+				seq, iec, co_gw_iec2str(iec));
 	} else if (ac) {
 		gw->iec = CO_GW_IEC_INTERN;
-		return co_gw_txt_recv_fmt(gw, "[%u] ERROR: %08X (%s)", seq, ac,
-				co_sdo_ac2str(ac));
+		return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] ERROR: %08X (%s)",
+				seq, ac, co_sdo_ac2str(ac));
 	} else {
-		return co_gw_txt_recv_fmt(gw, "[%u] OK", seq);
+		return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] OK", seq);
 	}
 }
 
