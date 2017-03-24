@@ -2864,13 +2864,11 @@ co_nmt_startup(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-#ifdef LELY_NO_CO_MASTER
-	return co_nmt_startup_slave(nmt);
-#else
-	return nmt->master
-			? co_nmt_startup_master(nmt)
-			: co_nmt_startup_slave(nmt);
+#ifndef LELY_NO_CO_MASTER
+	if (nmt->master)
+		return co_nmt_startup_master(nmt);
 #endif
+	return co_nmt_startup_slave(nmt);
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2889,9 +2887,13 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		keep = (nmt->slaves[id - 1].assignment & 0x11) == 0x11;
 
 	// Send the NMT 'reset communication' command to all slaves with
-	// the keep-alive bit _not_ set.
+	// the keep-alive bit _not_ set. This includes slaves which are not in
+	// the network list.
 	if (keep) {
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+			// Do not reset the master itself.
+			if (id == co_dev_get_id(nmt->dev))
+				continue;
 			if ((nmt->slaves[id - 1].assignment & 0x11) != 0x11)
 				co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, id);
 		}
