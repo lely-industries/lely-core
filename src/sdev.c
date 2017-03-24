@@ -747,45 +747,45 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_INTEGER8:
 		if (u->i8 == CO_INTEGER8_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER8_MIN }");
+			r = snprintf(s, n, "{ .i8 = CO_INTEGER8_MIN }");
 		} else if (u->i8 == CO_INTEGER8_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER8_MAX }");
+			r = snprintf(s, n, "{ .i8 = CO_INTEGER8_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i8 = %" PRIi8 " }", u->i8);
 		}
 		break;
 	case CO_DEFTYPE_INTEGER16:
 		if (u->i16 == CO_INTEGER16_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER16_MIN }");
+			r = snprintf(s, n, "{ .i16 = CO_INTEGER16_MIN }");
 		} else if (u->i16 == CO_INTEGER16_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER16_MAX }");
+			r = snprintf(s, n, "{ .i16 = CO_INTEGER16_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i16 = %" PRIi16 " }", u->i16);
 		}
 		break;
 	case CO_DEFTYPE_INTEGER32:
 		if (u->i32 == CO_INTEGER32_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER32_MIN }");
+			r = snprintf(s, n, "{ .i32 = CO_INTEGER32_MIN }");
 		} else if (u->i32 == CO_INTEGER32_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER32_MAX }");
+			r = snprintf(s, n, "{ .i32 = CO_INTEGER32_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i32 = %" PRIi32 "l }", u->i32);
 		}
 		break;
 	case CO_DEFTYPE_UNSIGNED8:
 		if (u->u8 == CO_UNSIGNED8_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED8_MIN }");
+			r = snprintf(s, n, "{ .u8 = CO_UNSIGNED8_MIN }");
 		} else if (u->u8 == CO_UNSIGNED8_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED8_MAX }");
+			r = snprintf(s, n, "{ .u8 = CO_UNSIGNED8_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u8 = 0x%02" PRIx8 " }", u->u8);
 		}
 		break;
 	case CO_DEFTYPE_UNSIGNED16:
 		if (u->u16 == CO_UNSIGNED16_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED16_MIN }");
+			r = snprintf(s, n, "{ .u16 = CO_UNSIGNED16_MIN }");
 		} else if (u->u16 == CO_UNSIGNED16_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED16_MAX }");
+			r = snprintf(s, n, "{ .u16 = CO_UNSIGNED16_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u16 = 0x%04" PRIx16 "u }",
 					u->u16);
@@ -793,9 +793,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNSIGNED32:
 		if (u->u32 == CO_UNSIGNED32_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED32_MIN }");
+			r = snprintf(s, n, "{ .u32 = CO_UNSIGNED32_MIN }");
 		} else if (u->u32 == CO_UNSIGNED32_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED32_MAX }");
+			r = snprintf(s, n, "{ .u32 = CO_UNSIGNED32_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u32 = 0x%08" PRIx32 "lu }",
 					u->u32);
@@ -803,9 +803,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_REAL32:
 		if (u->r32 == CO_REAL32_MIN) {
-			r = snprintf(s, n, "{ CO_REAL32_MIN }");
+			r = snprintf(s, n, "{ .r32 = CO_REAL32_MIN }");
 		} else if (u->r32 == CO_REAL32_MAX) {
-			r = snprintf(s, n, "{ CO_REAL32_MAX }");
+			r = snprintf(s, n, "{ .r32 = CO_REAL32_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .r32 = %.*g }", DECIMAL_DIG,
 				(double)u->r32);
@@ -906,18 +906,18 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_INTEGER24:
 		if (u->i24 == CO_INTEGER24_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER24_MIN }");
+			r = snprintf(s, n, "{ .i24 = CO_INTEGER24_MIN }");
 		} else if (u->i24 == CO_INTEGER24_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER24_MAX }");
+			r = snprintf(s, n, "{ .i24 = CO_INTEGER24_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i24 = %" PRIi32 "l }", u->i24);
 		}
 		break;
 	case CO_DEFTYPE_REAL64:
 		if (u->r64 == CO_REAL64_MIN) {
-			r = snprintf(s, n, "{ CO_REAL64_MIN }");
+			r = snprintf(s, n, "{ .r64 = CO_REAL64_MIN }");
 		} else if (u->r64 == CO_REAL64_MAX) {
-			r = snprintf(s, n, "{ CO_REAL64_MAX }");
+			r = snprintf(s, n, "{ .r64 = CO_REAL64_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .r64 = %.*g }", DECIMAL_DIG,
 					u->r64);
@@ -934,36 +934,36 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_INTEGER48:
 		if (u->i48 == CO_INTEGER48_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER48_MIN }");
+			r = snprintf(s, n, "{ .i48 = CO_INTEGER48_MIN }");
 		} else if (u->i48 == CO_INTEGER48_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER48_MAX }");
+			r = snprintf(s, n, "{ .i48 = CO_INTEGER48_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i48 = %" PRIi64 "ll }", u->i48);
 		}
 		break;
 	case CO_DEFTYPE_INTEGER56:
 		if (u->i56 == CO_INTEGER56_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER56_MIN }");
+			r = snprintf(s, n, "{ .i56 = CO_INTEGER56_MIN }");
 		} else if (u->i56 == CO_INTEGER56_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER56_MAX }");
+			r = snprintf(s, n, "{ .i56 = CO_INTEGER56_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i56 = %" PRIi64 "ll }", u->i56);
 		}
 		break;
 	case CO_DEFTYPE_INTEGER64:
 		if (u->i64 == CO_INTEGER64_MIN) {
-			r = snprintf(s, n, "{ CO_INTEGER64_MIN }");
+			r = snprintf(s, n, "{ .i64 = CO_INTEGER64_MIN }");
 		} else if (u->i64 == CO_INTEGER64_MAX) {
-			r = snprintf(s, n, "{ CO_INTEGER64_MAX }");
+			r = snprintf(s, n, "{ .i64 = CO_INTEGER64_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .i64 = %" PRIi64 "ll }", u->i64);
 		}
 		break;
 	case CO_DEFTYPE_UNSIGNED24:
 		if (u->u24 == CO_UNSIGNED24_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED24_MIN }");
+			r = snprintf(s, n, "{ .u24 = CO_UNSIGNED24_MIN }");
 		} else if (u->u24 == CO_UNSIGNED24_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED24_MAX }");
+			r = snprintf(s, n, "{ .u24 = CO_UNSIGNED24_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u24 = 0x%06" PRIx32 "lu }",
 					u->u24);
@@ -971,9 +971,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNSIGNED40:
 		if (u->u40 == CO_UNSIGNED40_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED40_MIN }");
+			r = snprintf(s, n, "{ .u40 = CO_UNSIGNED40_MIN }");
 		} else if (u->u40 == CO_UNSIGNED40_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED40_MAX }");
+			r = snprintf(s, n, "{ .u40 = CO_UNSIGNED40_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u40 = 0x%010" PRIx64 "llu }",
 					u->u40);
@@ -981,9 +981,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNSIGNED48:
 		if (u->u48 == CO_UNSIGNED48_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED48_MIN }");
+			r = snprintf(s, n, "{ .u48 = CO_UNSIGNED48_MIN }");
 		} else if (u->u48 == CO_UNSIGNED48_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED48_MAX }");
+			r = snprintf(s, n, "{ .u48 = CO_UNSIGNED48_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u48 = 0x%012" PRIx64 "llu }",
 					u->u48);
@@ -991,9 +991,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNSIGNED56:
 		if (u->u56 == CO_UNSIGNED56_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED56_MIN }");
+			r = snprintf(s, n, "{ .u56 = CO_UNSIGNED56_MIN }");
 		} else if (u->u56 == CO_UNSIGNED56_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED56_MAX }");
+			r = snprintf(s, n, "{ .u56 = CO_UNSIGNED56_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u56 = 0x%014" PRIx64 "llu }",
 					u->u56);
@@ -1001,9 +1001,9 @@ snprintf_c99_sval(char *s, size_t n, co_unsigned16_t type, const void *val)
 		break;
 	case CO_DEFTYPE_UNSIGNED64:
 		if (u->u64 == CO_UNSIGNED64_MIN) {
-			r = snprintf(s, n, "{ CO_UNSIGNED64_MIN }");
+			r = snprintf(s, n, "{ .u64 = CO_UNSIGNED64_MIN }");
 		} else if (u->u64 == CO_UNSIGNED64_MAX) {
-			r = snprintf(s, n, "{ CO_UNSIGNED64_MAX }");
+			r = snprintf(s, n, "{ .u64 = CO_UNSIGNED64_MAX }");
 		} else {
 			r = snprintf(s, n, "{ .u64 = 0x%016" PRIx64 "llu }",
 					u->u64);
