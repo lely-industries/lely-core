@@ -22,7 +22,7 @@
  */
 
 #include "co.h"
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #include <lely/co/dev.h>
 #include "nmt_hb.h"
 
@@ -218,6 +218,8 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	co_nmt_hb_set_st(hb, st);
 
 	if (hb->state == CO_NMT_EC_OCCURRED) {
+		diag(DIAG_INFO, 0, "NMT: heartbeat time out resolved for node %d",
+				hb->id);
 		// If a heartbeat timeout event occurred, notify the user that
 		// it has been resolved.
 		hb->state = CO_NMT_EC_RESOLVED;
@@ -225,9 +227,12 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	}
 
 	// Notify the application of the occurrence of a state change.
-	if (st != old_st)
+	if (st != old_st) {
+		diag(DIAG_INFO, 0, "NMT: heartbeat state change occurred for node %d",
+				hb->id);
 		co_nmt_hb_ind(hb->nmt, hb->id, CO_NMT_EC_OCCURRED,
 				CO_NMT_EC_STATE, st);
+	}
 
 	return 0;
 }
@@ -241,6 +246,8 @@ co_nmt_hb_timer(const struct timespec *tp, void *data)
 
 	// Notify the application of the occurrence of a heartbeat timeout
 	// event.
+	diag(DIAG_INFO, 0, "NMT: heartbeat time out occurred for node %d",
+			hb->id);
 	hb->state = CO_NMT_EC_OCCURRED;
 	co_nmt_hb_ind(hb->nmt, hb->id, hb->state, CO_NMT_EC_TIMEOUT, 0);
 

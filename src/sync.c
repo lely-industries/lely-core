@@ -228,6 +228,8 @@ __co_sync_fini(struct __co_sync *sync)
 LELY_CO_EXPORT co_sync_t *
 co_sync_create(can_net_t *net, co_dev_t *dev)
 {
+	trace("creating SYNC service");
+
 	errc_t errc = 0;
 
 	co_sync_t *sync = __co_sync_alloc();
@@ -254,6 +256,7 @@ LELY_CO_EXPORT void
 co_sync_destroy(co_sync_t *sync)
 {
 	if (sync) {
+		trace("destroying SYNC service");
 		__co_sync_fini(sync);
 		__co_sync_free(sync);
 	}

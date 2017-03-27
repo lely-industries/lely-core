@@ -297,6 +297,8 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 LELY_CO_EXPORT co_tpdo_t *
 co_tpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
+	trace("creating Transmit-PDO %d", num);
+
 	errc_t errc = 0;
 
 	co_tpdo_t *pdo = __co_tpdo_alloc();
@@ -323,6 +325,7 @@ LELY_CO_EXPORT void
 co_tpdo_destroy(co_tpdo_t *tpdo)
 {
 	if (tpdo) {
+		trace("destroying Transmit-PDO %d", tpdo->num);
 		__co_tpdo_fini(tpdo);
 		__co_tpdo_free(tpdo);
 	}
@@ -889,6 +892,8 @@ co_tpdo_timer_swnd(const struct timespec *tp, void *data)
 	__unused_var(tp);
 	co_tpdo_t *pdo = data;
 	assert(pdo);
+
+	trace("TPDO %d: no event occurred in synchronous window", pdo->num);
 
 	if (pdo->ind)
 		pdo->ind(pdo, CO_SDO_AC_TIMEOUT, NULL, 0, pdo->data);

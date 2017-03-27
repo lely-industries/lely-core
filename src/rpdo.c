@@ -33,6 +33,7 @@
 #include <lely/co/val.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 //! A CANopen Receive-PDO.
@@ -276,6 +277,8 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 LELY_CO_EXPORT co_rpdo_t *
 co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
+	trace("creating Receive-PDO %d", num);
+
 	errc_t errc = 0;
 
 	co_rpdo_t *pdo = __co_rpdo_alloc();
@@ -302,6 +305,7 @@ LELY_CO_EXPORT void
 co_rpdo_destroy(co_rpdo_t *rpdo)
 {
 	if (rpdo) {
+		trace("destroying Receive-PDO %d", rpdo->num);
 		__co_rpdo_fini(rpdo);
 		__co_rpdo_free(rpdo);
 	}
@@ -749,6 +753,8 @@ co_rpdo_timer_event(const struct timespec *tp, void *data)
 	co_rpdo_t *pdo = data;
 	assert(pdo);
 
+	trace("RPDO %d: no PDO received in synchronous window", pdo->num);
+
 	// Generate an error if an RPDO timeout occurred.
 	if (pdo->err)
 		pdo->err(pdo, 0x8250, 0x10, pdo->err_data);
@@ -778,6 +784,12 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	size_t n = MIN(msg->len, CAN_MAX_LEN);
 	co_unsigned32_t ac = co_pdo_dn(&pdo->map, pdo->dev, &pdo->req,
 			msg->data, n);
+
+#ifndef NDEBUG
+	if (ac)
+		trace("RPDO %d: PDO error %08" PRIX32 " (%s)", pdo->num, ac,
+				co_sdo_ac2str(ac));
+#endif
 
 	// Invoke the user-defined callback function.
 	if (pdo->ind)

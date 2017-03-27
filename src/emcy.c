@@ -26,7 +26,7 @@
 #ifndef LELY_NO_CO_EMCY
 
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #include <lely/util/time.h>
 #include <lely/can/buf.h>
 #include <lely/co/dev.h>
@@ -324,6 +324,8 @@ __co_emcy_fini(struct __co_emcy *emcy)
 LELY_CO_EXPORT co_emcy_t *
 co_emcy_create(can_net_t *net, co_dev_t *dev)
 {
+	trace("creating EMCY producer service");
+
 	errc_t errc = 0;
 
 	co_emcy_t *emcy = __co_emcy_alloc();
@@ -350,6 +352,7 @@ LELY_CO_EXPORT void
 co_emcy_destroy(co_emcy_t *emcy)
 {
 	if (emcy) {
+		trace("destroying EMCY producer service");
 		__co_emcy_fini(emcy);
 		__co_emcy_free(emcy);
 	}
@@ -383,6 +386,12 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	}
 	// Bit 0 (generic error) shall be signaled at any error situation.
 	er |= 0x01;
+
+	if (msef)
+		diag(DIAG_INFO, 0, "EMCY: %04X %02X %u %u %u %u %u", eec, er,
+				msef[0], msef[1], msef[2], msef[3], msef[4]);
+	else
+		diag(DIAG_INFO, 0, "EMCY: %04X %02X", eec, er);
 
 	// Make room on the stack.
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
@@ -489,6 +498,8 @@ co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 	assert(emcy);
 	assert(id && id <= CO_NUM_NODES);
 
+	trace("creating EMCY consumer service for node %d", id);
+
 	errc_t errc = 0;
 
 	struct co_emcy_node *node = malloc(sizeof(*node));
@@ -519,12 +530,11 @@ error_alloc_node:
 void
 co_emcy_node_destroy(struct co_emcy_node *node)
 {
-	if (__unlikely(!node))
-		return;
-
-	can_recv_destroy(node->recv);
-
-	free(node);
+	if (node) {
+		trace("destroying EMCY consumer service for node %d", node->id);
+		can_recv_destroy(node->recv);
+		free(node);
+	}
 }
 
 static int
@@ -557,6 +567,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 				MAX((uint8_t)(msg->len - 3), 5));
 
 	// Notify the user.
+	trace("EMCY: received %04X %02X", eec, er);
 	if (emcy->ind)
 		emcy->ind(emcy, node->id, eec, er, msef, emcy->data);
 

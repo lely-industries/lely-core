@@ -733,98 +733,140 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	switch (req->srv) {
 #ifndef LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
+		trace("gateway: received 'SDO upload' request");
 		return co_gw_recv_sdo_up(gw, net, node, req);
 	case CO_GW_SRV_SDO_DN:
+		trace("gateway: received 'SDO download' request");
 		return co_gw_recv_sdo_dn(gw, net, node, req);
+		trace("gateway: received 'Configure SDO time-out' request");
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
 		return co_gw_recv_set_sdo_timeout(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
+		trace("gateway: received 'Configure RPDO' request");
 		return co_gw_recv_set_rpdo(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_TPDO
 	case CO_GW_SRV_SET_TPDO:
+		trace("gateway: received 'Configure TPDO' request");
 		return co_gw_recv_set_tpdo(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_RPDO
 	case CO_GW_SRV_PDO_READ:
+		trace("gateway: received 'Read PDO data' request");
 		return co_gw_recv_pdo_read(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_TPDO
 	case CO_GW_SRV_PDO_WRITE:
+		trace("gateway: received 'Write PDO data' request");
 		return co_gw_recv_pdo_write(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
+		trace("gateway: received 'Start node' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_START, req);
 	case CO_GW_SRV_NMT_STOP:
+		trace("gateway: received 'Stop node' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_STOP, req);
 	case CO_GW_SRV_NMT_ENTER_PREOP:
+		trace("gateway: received 'Set node to pre-operational' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_ENTER_PREOP,
 				req);
 	case CO_GW_SRV_NMT_RESET_NODE:
+		trace("gateway: received 'Reset node' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_RESET_NODE,
 				req);
 	case CO_GW_SRV_NMT_RESET_COMM:
+		trace("gateway: received 'Reset communication' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_RESET_COMM,
 				req);
 	case CO_GW_SRV_NMT_NG_ENABLE:
 	case CO_GW_SRV_NMT_NG_DISABLE:
+		trace("gateway: received '%s node guarding' request",
+				req->srv == CO_GW_SRV_NMT_NG_ENABLE
+				? "Enable" : "Disable");
 		return co_gw_recv_nmt_set_ng(gw, net, node, req);
 #endif
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
+		trace("gateway: received '%s heartbeat consumer' request",
+				req->srv == CO_GW_SRV_NMT_HB_ENABLE
+				? "Start" : "Disable");
 		return co_gw_recv_nmt_set_hb(gw, net, node, req);
 	case CO_GW_SRV_INIT:
+		trace("gateway: received 'Initialize gateway' request");
 		return co_gw_recv_init(gw, net, req);
 	case CO_GW_SRV_SET_HB:
+		trace("gateway: received 'Set heartbeat producer' request");
 		return co_gw_recv_set_hb(gw, net, req);
 	case CO_GW_SRV_SET_ID:
+		trace("gateway: received 'Set node-ID' request");
 		return co_gw_recv_set_id(gw, net, req);
 #ifndef LELY_NO_CO_EMCY
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
+		trace("gateway: received '%s emergency consumer' request",
+				req->srv == CO_GW_SRV_EMCY_START
+				? "Start" : "Stop");
 		return co_gw_recv_set_emcy(gw, net, node, req);
 #endif
 	case CO_GW_SRV_SET_CMD_TIMEOUT:
+		trace("gateway: received 'Set command time-out' request");
 		return co_gw_recv_set_cmd_timeout(gw, req);
 	case CO_GW_SRV_SET_BOOTUP_IND:
+		trace("gateway: received 'Boot-up forwarding' request");
 		return co_gw_recv_set_bootup_ind(gw, net, req);
 	case CO_GW_SRV_SET_NET:
+		trace("gateway: received 'Set default network' request");
 		return co_gw_recv_set_net(gw, req);
 	case CO_GW_SRV_SET_NODE:
+		trace("gateway: received 'Set default node-ID' request");
 		return co_gw_recv_set_node(gw, net, req);
 	case CO_GW_SRV_GET_VERSION:
+		trace("gateway: received 'Get version' request");
 		return co_gw_recv_get_version(gw, net, req);
 	case CO_GW_SRV_SET_CMD_SIZE:
+		trace("gateway: received 'Set command size' request");
 		// We cannot guarantee a lack of memory resources will never
 		// occur.
 		return co_gw_send_con(gw, req, CO_GW_IEC_NO_MEM, 0);
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
 	case CO_GW_SRV_LSS_SWITCH:
+		trace("gateway: received 'LSS switch state global' request");
 		return co_gw_recv_lss_switch(gw, net, req);
 	case CO_GW_SRV_LSS_SWITCH_SEL:
+		trace("gateway: received 'LSS switch state selective' request");
 		return co_gw_recv_lss_switch_sel(gw, net, req);
 	case CO_GW_SRV_LSS_SET_ID:
+		trace("gateway: received 'LSS configure node-ID' request");
 		return co_gw_recv_lss_set_id(gw, net, req);
 	case CO_GW_SRV_LSS_SET_RATE:
+		trace("gateway: received 'LSS configure bit-rate' request");
 		return co_gw_recv_lss_set_rate(gw, net, req);
 	case CO_GW_SRV_LSS_SWITCH_RATE:
+		trace("gateway: received 'LSS activate new bit-rate' request");
 		return co_gw_recv_lss_switch_rate(gw, net, req);
 	case CO_GW_SRV_LSS_STORE:
+		trace("gateway: received 'LSS store configuration' request");
 		return co_gw_recv_lss_store(gw, net, req);
 	case CO_GW_SRV_LSS_GET_LSSID:
+		trace("gateway: received 'Inquire LSS address' request");
 		return co_gw_recv_lss_get_lssid(gw, net, req);
 	case CO_GW_SRV_LSS_GET_ID:
+		trace("gateway: received 'LSS inquire node-ID' request");
 		return co_gw_recv_lss_get_id(gw, net, req);
 	case CO_GW_SRV_LSS_ID_SLAVE:
+		trace("gateway: received 'LSS identify remote slave' request");
 		return co_gw_recv_lss_id_slave(gw, net, req);
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
+		trace("gateway: received 'LSS identify non-configure remote slaves' request");
 		return co_gw_recv_lss_id_non_cfg_slave(gw, net, req);
 	case CO_GW_SRV__LSS_SLOWSCAN:
+		trace("gateway: received 'LSS Slowscan' request");
 		return co_gw_recv__lss_slowscan(gw, net, req);
 	case CO_GW_SRV__LSS_FASTSCAN:
+		trace("gateway: received 'LSS Fastscan' request");
 		return co_gw_recv__lss_fastscan(gw, net, req);
 #endif
 	default:

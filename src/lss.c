@@ -672,6 +672,8 @@ __co_lss_fini(struct __co_lss *lss)
 LELY_CO_EXPORT co_lss_t *
 co_lss_create(co_nmt_t *nmt)
 {
+	trace("creating LSS");
+
 	errc_t errc = 0;
 
 	co_lss_t *lss = __co_lss_alloc();
@@ -698,6 +700,7 @@ LELY_CO_EXPORT void
 co_lss_destroy(co_lss_t *lss)
 {
 	if (lss) {
+		trace("destroying LSS");
 		__co_lss_fini(lss);
 		__co_lss_free(lss);
 	}
@@ -820,6 +823,8 @@ co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 		return -1;
 	}
 
+	trace("LSS: switch state global");
+
 	// Switch state global (see Fig. 31 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x04);
@@ -835,6 +840,8 @@ co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: switch state selective");
 
 	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
 	if (__unlikely(co_lss_send_switch_sel_req(lss, id) == -1))
@@ -862,6 +869,8 @@ co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
+
+	trace("LSS: configure node-ID");
 
 	// Configure node-ID (see Fig. 33 in CiA 305 version 3.0.0).
 	struct can_msg req;
@@ -907,6 +916,9 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 		set_errnum(ERRNUM_INVAL);
 		return 0;
 	}
+
+	trace("LSS: configure bit timing parameters");
+
 	if (__unlikely(can_net_send(lss->net, &req) == -1))
 		return -1;
 
@@ -933,6 +945,8 @@ co_lss_switch_rate_req(co_lss_t *lss, int delay)
 		return -1;
 	}
 
+	trace("LSS: activate bit timing parameters");
+
 	// Activate bit timing parameters (see Fig. 35 in CiA 305 version
 	// 3.0.0).
 	struct can_msg req;
@@ -948,6 +962,8 @@ co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: store configuration");
 
 	// Store configuration (see Fig. 36 in CiA 305 version 3.0.0).
 	struct can_msg req;
@@ -972,6 +988,8 @@ co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 		return -1;
 	}
 
+	trace("LSS: inquire identity vendor-ID");
+
 	// Inquire identity vendor-ID (see Fig. 37 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5a);
@@ -995,6 +1013,8 @@ co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 		return -1;
 	}
 
+	trace("LSS: inquire identity product-code");
+
 	// Inquire identity product-code (see Fig. 38 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5b);
@@ -1017,6 +1037,8 @@ co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: inquire identity revision-number");
 
 	// Inquire identity revision-number (see Fig. 39 in CiA 305 version
 	// 3.0.0).
@@ -1042,6 +1064,8 @@ co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 		return -1;
 	}
 
+	trace("LSS: inquire identity serial number");
+
 	// Inquire identity serial-number (see Fig. 40 in CiA 305 version
 	// 3.0.0).
 	struct can_msg req;
@@ -1065,6 +1089,8 @@ co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: inquire node-ID");
 
 	// Inquire node-ID (see Fig. 41 in CiA 305 version 3.0.0).
 	struct can_msg req;
@@ -1090,6 +1116,8 @@ co_lss_id_slave_req(co_lss_t *lss, const struct co_id* lo,
 		return -1;
 	}
 
+	trace("LSS: identify remote slave");
+
 	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
 	if (__unlikely(co_lss_send_id_slave_req(lss, lo, hi) == -1))
 		return -1;
@@ -1110,6 +1138,8 @@ co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: identify non-configured remote slave");
 
 	// LSS identify non-configured remote slave (see Fig. 44 in CiA 305
 	// version 3.0.0).
@@ -1139,6 +1169,8 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id* lo,
 		return -1;
 	}
 
+	trace("LSS: Slowscan");
+
 	lss->lo = *lo;
 	lss->lo.n = 4;
 	lss->hi = *hi;
@@ -1167,6 +1199,8 @@ co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
+
+	trace("LSS: Fastscan");
 
 	lss->id = (struct co_id)CO_ID_INIT;
 	lss->mask = (struct co_id)CO_ID_INIT;
@@ -1315,9 +1349,11 @@ co_lss_wait_slave_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		switch (msg->data[1]) {
 		case 0x00:
 			// Re-enter the waiting state.
+			trace("LSS: switching to waiting state");
 			return co_lss_wait_state;
 		case 0x01:
 			// Switch to the configuration state.
+			trace("LSS: switching to configuration state");
 			return co_lss_cfg_state;
 		}
 		break;
@@ -1369,9 +1405,11 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		switch (msg->data[1]) {
 		case 0x00:
 			// Switch to the waiting state.
+			trace("LSS: switching to waiting state");
 			return co_lss_wait_state;
 		case 0x01:
 			// Re-enter the configuration state.
+			trace("LSS: switching to configuration state");
 			return co_lss_cfg_state;
 		}
 		break;
@@ -1380,6 +1418,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		if (msg->len < 2)
 			return NULL;
 		// Configure the pending node-ID.
+		trace("LSS: configuring node-ID");
 		co_lss_init_req(lss, &req, cs);
 		if (co_nmt_set_id(lss->nmt, msg->data[1]) == -1) {
 			// Discard the error code if the node-ID was invalid.
@@ -1394,6 +1433,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		if (msg->len < 3)
 			return NULL;
 		// Configure the pending baudrate.
+		trace("LSS: configuring bit timing parameters");
 		co_lss_init_req(lss, &req, cs);
 		if (__unlikely(!lss->rate_ind || msg->data[1])) {
 			req.data[1] = 1;
@@ -1450,11 +1490,13 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 			return NULL;
 		// Invoke the user-specified callback function to perform the
 		// baudrate switch.
+		trace("LSS: activating bit timing parameters");
 		lss->rate_ind(lss, co_dev_get_rate(lss->dev),
 				ldle_u16(msg->data + 1), lss->rate_data);
 		break;
 	// Store configuration (see Fig. 36 in CiA 305 version 3.0.0).
 	case 0x17:
+		trace("LSS: storing configuration");
 		co_lss_init_req(lss, &req, cs);
 		if (lss->store_ind) {
 			// Store the pending node-ID and baudrate.
@@ -1483,30 +1525,35 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		break;
 	// Inquire identity vendor-ID (Fig. 37 in CiA 305 version 3.0.0).
 	case 0x5a:
+		trace("LSS: sending vendor-ID");
 		co_lss_init_req(lss, &req, cs);
 		stle_u32(req.data + 1, co_obj_get_val_u32(obj_1018, 0x01));
 		can_net_send(lss->net, &req);
 		break;
 	// Inquire identity product-code (Fig. 38 in CiA 305 version 3.0.0).
 	case 0x5b:
+		trace("LSS: sending product-code");
 		co_lss_init_req(lss, &req, cs);
 		stle_u32(req.data + 1, co_obj_get_val_u32(obj_1018, 0x02));
 		can_net_send(lss->net, &req);
 		break;
-	// Inquire identity revision number (Fig. 39 in CiA 305 version 3.0.0).
+	// Inquire identity revision-number (Fig. 39 in CiA 305 version 3.0.0).
 	case 0x5c:
+		trace("LSS: sending revision-number");
 		co_lss_init_req(lss, &req, cs);
 		stle_u32(req.data + 1, co_obj_get_val_u32(obj_1018, 0x03));
 		can_net_send(lss->net, &req);
 		break;
 	// Inquire identity serial-number (Fig. 40 in CiA 305 version 3.0.0).
 	case 0x5d:
+		trace("LSS: sending serial-number");
 		co_lss_init_req(lss, &req, cs);
 		stle_u32(req.data + 1, co_obj_get_val_u32(obj_1018, 0x04));
 		can_net_send(lss->net, &req);
 		break;
 	// Inquire node-ID (Fig. 41 in CiA 305 version 3.0.0).
 	case 0x5e:
+		trace("LSS: sending node-ID");
 		co_lss_init_req(lss, &req, cs);
 		// Respond with the active or pending node-ID, depending on
 		// whether the device is in the NMT state Initializing.
@@ -2051,6 +2098,7 @@ co_lss_switch_sel(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		co_lss_init_req(lss, &req, 0x44);
 		can_net_send(lss->net, &req);
 		// Switch to the configuration state.
+		trace("LSS: switching to configuration state");
 		return co_lss_cfg_state;
 	default:
 		return NULL;
@@ -2075,7 +2123,7 @@ co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		lss->cs = 0x47;
 		break;
 	case 0x47:
-		// Check the product code.
+		// Check the product-code.
 		if (cs != lss->cs || id != co_obj_get_val_u32(obj_1018, 0x02)) {
 			lss->cs = 0;
 			return;
@@ -2083,7 +2131,7 @@ co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		lss->cs = 0x48;
 		break;
 	case 0x48:
-		// Check the lower bound of the revision number.
+		// Check the lower bound of the revision-number.
 		if (cs != lss->cs || id > co_obj_get_val_u32(obj_1018, 0x03)) {
 			lss->cs = 0;
 			return;
@@ -2091,7 +2139,7 @@ co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		lss->cs = 0x49;
 		break;
 	case 0x49:
-		// Check the upper bound of the revision number.
+		// Check the upper bound of the revision-number.
 		if (cs != lss->cs || id < co_obj_get_val_u32(obj_1018, 0x03)) {
 			lss->cs = 0;
 			return;
@@ -2099,7 +2147,7 @@ co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		lss->cs = 0x4a;
 		break;
 	case 0x4a:
-		// Check the lower bound of the serial number.
+		// Check the lower bound of the serial-number.
 		if (cs != lss->cs || id > co_obj_get_val_u32(obj_1018, 0x04)) {
 			lss->cs = 0;
 			return;
@@ -2107,7 +2155,7 @@ co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		lss->cs = 0x4b;
 		break;
 	case 0x4b:
-		// Check the upper bound of the serial number.
+		// Check the upper bound of the serial-number.
 		if (cs != lss->cs || id < co_obj_get_val_u32(obj_1018, 0x04)) {
 			lss->cs = 0;
 			return;

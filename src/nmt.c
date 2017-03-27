@@ -1249,6 +1249,8 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	if (id == co_dev_get_id(nmt->dev))
 		return co_nmt_cs_ind(nmt, cs);
 
+	trace("NMT: sending command specifier %d to node %d", cs, id);
+
 	struct can_msg msg = CAN_MSG_INIT;
 	msg.id = 0x000;
 	msg.len = 2;
@@ -1307,6 +1309,8 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_param;
 	}
 
+	trace("NMT: booting slave %d", id);
+
 	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
 	if (__unlikely(!slave->boot)) {
 		errc = get_errc();
@@ -1353,6 +1357,8 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
+
+	trace("NMT: starting update configuration process for node %d", id);
 
 	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
 	if (__unlikely(!slave->cfg)) {
@@ -1453,6 +1459,7 @@ co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
 	case CO_NMT_CS_ENTER_PREOP:
 	case CO_NMT_CS_RESET_NODE:
 	case CO_NMT_CS_RESET_COMM:
+		trace("NMT: received command specifier %d", cs);
 		co_nmt_emit_cs(nmt, cs);
 		return 0;
 	default:
@@ -1466,6 +1473,7 @@ co_nmt_comm_err_ind(co_nmt_t *nmt)
 {
 	assert(nmt);
 
+	diag(DIAG_INFO, 0, "NMT: communication error indicated");
 	switch (co_dev_get_val_u8(nmt->dev, 0x1029, 0x01)) {
 	case 0:
 		if (co_nmt_get_st(nmt) == CO_NMT_ST_START)
@@ -1498,6 +1506,9 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 	if (!(assignment & 0x01))
 		return 0;
 	int mandatory = !!(assignment & 0x08);
+
+	diag(DIAG_INFO, 0, "NMT: error indicated for %s slave %d",
+			mandatory ? "mandatory" : "optional", id);
 
 	if (mandatory && (nmt->startup & 0x40)) {
 		// If the slave is mandatory and bit 6 of the NMT startup value
@@ -1698,6 +1709,8 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 					id);
 	}
 
+	trace("NMT: slave %d finished booting with error status %c",
+			id, es);
 	if (nmt->boot_ind)
 		nmt->boot_ind(nmt, id, st, es, nmt->boot_data);
 
@@ -1730,6 +1743,7 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
 
+	trace("NMT: update configuration process completed for slave %d", id);
 	if (slave->cfg_con)
 		slave->cfg_con(nmt, id, ac, slave->cfg_data);
 }
@@ -2161,6 +2175,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		can_timer_timeout(nmt->ec_timer, nmt->net, nmt->gt * nmt->ltf);
 
 		if (nmt->lg_state == CO_NMT_EC_OCCURRED) {
+			diag(DIAG_INFO, 0, "NMT: life guarding event resolved");
 			// Notify the user of the resolution of a life guarding
 			// error.
 			nmt->lg_state = CO_NMT_EC_RESOLVED;
@@ -2205,20 +2220,27 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 		// Notify the application of the resolution of a node guarding
 		// timeout.
-		if (slave->rtr >= slave->ltf)
+		if (slave->rtr >= slave->ltf) {
+			diag(DIAG_INFO, 0, "NMT: node guarding time out resolved for node %d",
+					id);
 			nmt->ng_ind(nmt, id, CO_NMT_EC_RESOLVED,
 					CO_NMT_EC_TIMEOUT, nmt->ng_data);
+		}
 		slave->rtr = 0;
 
 		// Notify the application of the occurrence or resolution of an
 		// unexpected state change.
 		if (slave->est != (st & ~CO_NMT_ST_TOGGLE)
 				&& slave->ng_state == CO_NMT_EC_RESOLVED) {
+			diag(DIAG_INFO, 0, "NMT: node guarding state change occurred for node %d",
+					id);
 			slave->ng_state = CO_NMT_EC_OCCURRED;
 			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
 					nmt->ng_data);
 		} else if (slave->est == (st & ~CO_NMT_ST_TOGGLE)
 				&& slave->ng_state == CO_NMT_EC_OCCURRED) {
+			diag(DIAG_INFO, 0, "NMT: node guarding state change resolved for node %d",
+					id);
 			slave->ng_state = CO_NMT_EC_RESOLVED;
 			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
 					nmt->ng_data);
@@ -2259,6 +2281,8 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 	// timeout.
 	if (__unlikely(slave->rtr <= slave->ltf
 			&& ++slave->rtr == slave->ltf)) {
+		diag(DIAG_INFO, 0, "NMT: node guarding time out occurred for node %d",
+				id);
 		nmt->ng_ind(nmt, id, CO_NMT_EC_OCCURRED, CO_NMT_EC_TIMEOUT,
 				nmt->ng_data);
 		return 0;
@@ -2285,6 +2309,7 @@ co_nmt_ec_timer(const struct timespec *tp, void *data)
 		co_nmt_ec_send_res(nmt, nmt->st & ~CO_NMT_ST_TOGGLE);
 	} else if (nmt->gt && nmt->ltf) {
 		// Notify the user of the occurrence of a life guarding error.
+		diag(DIAG_INFO, 0, "NMT: life guarding event occurred");
 		nmt->lg_state = CO_NMT_EC_OCCURRED;
 		nmt->lg_ind(nmt, nmt->lg_state, nmt->lg_data);
 	}
@@ -2527,6 +2552,8 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
 
+	diag(DIAG_INFO, 0, "NMT: entering reset application state");
+
 #ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
 	co_nmt_slaves_fini(nmt);
@@ -2563,6 +2590,8 @@ static co_nmt_state_t *
 co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
+
+	diag(DIAG_INFO, 0, "NMT: entering reset communication state");
 
 #ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
@@ -2603,6 +2632,8 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	// a slave.
 	nmt->master = !!(nmt->startup & 0x01);
 #endif
+	diag(DIAG_INFO, 0, "NMT: running as %s",
+			co_nmt_is_master(nmt) ? "master" : "slave");
 
 	nmt->st = CO_NMT_ST_RESET_COMM;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
@@ -2650,8 +2681,10 @@ co_nmt_bootup_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Don't enter the 'pre-operational' state if the node-ID is invalid.
-	if (co_dev_get_id(nmt->dev) == 0xff)
+	if (co_dev_get_id(nmt->dev) == 0xff) {
+		diag(DIAG_INFO, 0, "NMT: unconfigured node-ID");
 		return NULL;
+	}
 
 	// Enable error control services.
 	co_nmt_ec_init(nmt);
@@ -2684,6 +2717,8 @@ static co_nmt_state_t *
 co_nmt_preop_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
+
+	diag(DIAG_INFO, 0, "NMT: entering pre-operational state");
 
 #ifndef LELY_NO_CO_MASTER
 	// Disable NMT slave management.
@@ -2742,7 +2777,11 @@ co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 	for (co_unsigned8_t id = 1; !wait && id <= CO_NUM_NODES; id++)
 		wait = (nmt->slaves[id - 1].assignment & 0x09) == 0x09
 				&& nmt->slaves[id - 1].boot;
-	return wait ? NULL : co_nmt_startup_slave(nmt);
+	if (!wait) {
+		trace("NMT: all mandatory slaves started successfully");
+		return co_nmt_startup_slave(nmt);
+	}
+	return NULL;
 }
 #endif
 
@@ -2750,6 +2789,8 @@ static co_nmt_state_t *
 co_nmt_start_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
+
+	diag(DIAG_INFO, 0, "NMT: entering operational state");
 
 	// Enable all services.
 	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_START_SRV);
@@ -2827,6 +2868,8 @@ static co_nmt_state_t *
 co_nmt_stop_on_enter(co_nmt_t *nmt)
 {
 	assert(nmt);
+
+	diag(DIAG_INFO, 0, "NMT: entering stopped state");
 
 	// Disable all services (except LSS).
 	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_STOP_SRV);
@@ -2912,6 +2955,7 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		return co_nmt_startup_slave(nmt);
 	default:
 		// Wait for all mandatory slaves to finish booting.
+		trace("NMT: waiting for mandatory slaves to start");
 		return NULL;
 	}
 }

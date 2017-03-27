@@ -112,6 +112,8 @@ __co_obj_fini(struct __co_obj *obj)
 LELY_CO_EXPORT co_obj_t *
 co_obj_create(co_unsigned16_t idx)
 {
+	trace("creating object %04X", idx);
+
 	co_obj_t *obj = __co_obj_alloc();
 	if (__unlikely(!obj))
 		return NULL;
@@ -123,6 +125,7 @@ LELY_CO_EXPORT void
 co_obj_destroy(co_obj_t *obj)
 {
 	if (obj) {
+		trace("destroying object %04X", obj->idx);
 		__co_obj_fini(obj);
 		__co_obj_free(obj);
 	}

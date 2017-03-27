@@ -32,6 +32,7 @@
 #include "sdo.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 struct __co_ssdo_state;
@@ -614,6 +615,8 @@ __co_ssdo_fini(struct __co_ssdo *sdo)
 LELY_CO_EXPORT co_ssdo_t *
 co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
+	trace("creating Server-SDO %d", num);
+
 	errc_t errc = 0;
 
 	co_ssdo_t *sdo = __co_ssdo_alloc();
@@ -640,6 +643,7 @@ LELY_CO_EXPORT void
 co_ssdo_destroy(co_ssdo_t *ssdo)
 {
 	if (ssdo) {
+		trace("destroying Server-SDO %d", ssdo->num);
 		__co_ssdo_fini(ssdo);
 		__co_ssdo_free(ssdo);
 	}
@@ -950,6 +954,9 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
+	trace("SSDO: %04X:%02X: received download request", sdo->idx,
+			sdo->subidx);
+
 	// Obtain the size from the command specifier.
 	co_sdo_req_clear(&sdo->req);
 	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
@@ -1062,6 +1069,9 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
+	trace("SSDO: %04X:%02X: received upload request", sdo->idx,
+			sdo->subidx);
+
 	// Perform access checks and start serializing the value.
 	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
@@ -1161,6 +1171,9 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (__unlikely(msg->len < 4))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
+
+	trace("SSDO: %04X:%02X: received block download request", sdo->idx,
+			sdo->subidx);
 
 	// Obtain the data set size.
 	co_sdo_req_clear(&sdo->req);
@@ -1328,6 +1341,9 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (__unlikely(msg->len < 4))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
+
+	trace("SSDO: %04X:%02X: received block upload request", sdo->idx,
+			sdo->subidx);
 
 	// Load the number of segments per block.
 	if (__unlikely(msg->len < 5))
@@ -1524,6 +1540,7 @@ co_ssdo_abort_ind(co_ssdo_t *sdo)
 static co_ssdo_state_t *
 co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
+	trace("SSDO: abort code %08" PRIX32 " (%s)", ac, co_sdo_ac2str(ac));
 	co_ssdo_send_abort(sdo, ac);
 	return co_ssdo_abort_ind(sdo);
 }

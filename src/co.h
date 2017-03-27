@@ -32,5 +32,14 @@
 #define LELY_CO_EXPORT	LELY_DLL_EXPORT
 #endif
 
+#ifdef NDEBUG
+#define trace(...)
+#else
+#include <lely/util/diag.h>
+#define trace(...) \
+	diag_at(DIAG_DEBUG, 0, &(struct floc){ __FILE__, __LINE__, 0 }, \
+			__VA_ARGS__)
+#endif
+
 #endif
 

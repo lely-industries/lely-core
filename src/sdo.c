@@ -57,6 +57,8 @@ LELY_CO_EXPORT const char *
 co_sdo_ac2str(co_unsigned32_t ac)
 {
 	switch (ac) {
+	case 0:
+		return "Success";
 	case CO_SDO_AC_TOGGLE:
 		return "Toggle bit not altered";
 	case CO_SDO_AC_TIMEOUT:

@@ -220,6 +220,8 @@ __co_time_fini(struct __co_time *time)
 LELY_CO_EXPORT co_time_t *
 co_time_create(can_net_t *net, co_dev_t *dev)
 {
+	trace("creating TIME service");
+
 	errc_t errc = 0;
 
 	co_time_t *time = __co_time_alloc();
@@ -246,6 +248,7 @@ LELY_CO_EXPORT void
 co_time_destroy(co_time_t *time)
 {
 	if (time) {
+		trace("destroying TIME service");
 		__co_time_fini(time);
 		__co_time_free(time);
 	}

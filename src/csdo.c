@@ -829,6 +829,8 @@ __co_csdo_fini(struct __co_csdo *sdo)
 LELY_CO_EXPORT co_csdo_t *
 co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
+	trace("creating Client-SDO %d", num);
+
 	errc_t errc = 0;
 
 	co_csdo_t *sdo = __co_csdo_alloc();
@@ -855,6 +857,7 @@ LELY_CO_EXPORT void
 co_csdo_destroy(co_csdo_t *csdo)
 {
 	if (csdo) {
+		trace("destroying Client-SDO %d", csdo->num);
 		__co_csdo_fini(csdo);
 		__co_csdo_free(csdo);
 	}
@@ -937,6 +940,8 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			== -1))
 		return -1;
 
+	trace("CSDO: %04X:%02X: initiate download", idx, subidx);
+
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	if (sdo->size && sdo->size <= 4)
@@ -1001,6 +1006,8 @@ co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (__unlikely(co_csdo_up_ind(sdo, idx, subidx, con, data) == -1))
 		return -1;
 
+	trace("CSDO: %04X:%02X: initiate upload", idx, subidx);
+
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	co_csdo_send_up_ini_req(sdo);
@@ -1019,6 +1026,8 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			== -1))
 		return -1;
 
+	trace("CSDO: %04X:%02X: initiate block download", idx, subidx);
+
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	co_csdo_send_blk_dn_ini_req(sdo);
@@ -1035,6 +1044,8 @@ co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	if (__unlikely(co_csdo_up_ind(sdo, idx, subidx, con, data) == -1))
 		return -1;
+
+	trace("CSDO: %04X:%02X: initiate block upload", idx, subidx);
 
 	// Use the maximum block size by default.
 	sdo->blksize = CO_SDO_MAX_SEQNO;
