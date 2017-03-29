@@ -1861,7 +1861,11 @@ co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 	assert(msg);
 
 	if (msg->len >= 1) {
-		boot->st = msg->data[0];
+		co_unsigned8_t st = msg->data[0];
+		// Do not consider a boot-up message to be a heartbeat message.
+		if (st == CO_NMT_ST_BOOTUP)
+			return NULL;
+		boot->st = st;
 		boot->es = 0;
 	}
 
