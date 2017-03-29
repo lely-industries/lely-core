@@ -2,7 +2,6 @@
 #include <config.h>
 #endif
 
-#include <lely/util/diag.h>
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
@@ -161,6 +160,9 @@ int
 main(void)
 {
 	tap_plan(2);
+
+	diag_set_handler(&co_test_diag_handler, NULL);
+	diag_at_set_handler(&co_test_diag_at_handler, NULL);
 
 	can_net_t *net = can_net_create();
 	tap_assert(net);

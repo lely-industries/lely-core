@@ -2,11 +2,14 @@
 #define LELY_CO_TEST_TEST_H
 
 #include <lely/tap/tap.h>
+#include <lely/util/diag.h>
 #include <lely/can/buf.h>
 #include <lely/can/net.h>
 #ifndef LELY_CO_NO_WTM
 #include <lely/co/wtm.h>
 #endif
+
+#include <stdlib.h>
 
 #ifndef CO_TEST_BUFSIZE
 #define CO_TEST_BUFSIZE	256
@@ -26,6 +29,12 @@ struct co_test {
 extern "C" {
 #endif
 
+static void co_test_diag_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const char *format, va_list ap);
+static void co_test_diag_at_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap);
+
 static void co_test_init(struct co_test *test, can_net_t *net, int wait);
 static void co_test_fini(struct co_test *test);
 
@@ -43,6 +52,31 @@ static int co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif,
 static int co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes,
 		void *data);
 #endif
+
+static void
+co_test_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap)
+{
+	co_test_diag_at_handler(handle, severity, errc, NULL, format, ap);
+}
+
+static void
+co_test_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+{
+	__unused_var(handle);
+
+	int errsv = errno;
+	char *s = NULL;
+	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
+			>= 0))
+		tap_diag("%s", s);
+	free(s);
+	errno = errsv;
+
+	if (severity == DIAG_FATAL)
+		abort();
+}
 
 static void
 co_test_init(struct co_test *test, can_net_t *net, int wait)

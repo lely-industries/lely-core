@@ -40,6 +40,9 @@ main(void)
 {
 	tap_plan(12);
 
+	diag_set_handler(&co_test_diag_handler, NULL);
+	diag_at_set_handler(&co_test_diag_at_handler, NULL);
+
 	can_net_t *net = can_net_create();
 	tap_assert(net);
 	struct co_test test;
