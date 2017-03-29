@@ -91,6 +91,10 @@ extern "C" {
  * The type of a CANopen NMT command indication function, invoked when an NMT
  * command is received (and _after_ the state switch has occurred).
  *
+ * Since the indication function is invoked during an NMT state transition, it
+ * is NOT safe to invoke co_nmt_cs_ind() (or co_nmt_cs_req() with the node-ID of
+ * the master) from this function.
+ *
  * \param nmt  a pointer to an NMT master/slave service.
  * \param cs   the NMT command specifier (one of #CO_NMT_CS_START,
  *             #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
@@ -155,6 +159,11 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * indication is an extension of the boot-up event indication (sections
  * 7.2.8.2.3.1 and 7.2.8.3.3 in CiA 301 version 4.2.0) since it reports all
  * state changes, not just the boot-up event.
+ *
+ * This indication function is also invoked by an NMT master/slave service to
+ * notify the user of its own state changes. It that case it is NOT safe to
+ * invoke co_nmt_cs_ind() (or co_nmt_cs_req() with the node-ID of the master)
+ * from this function.
  *
  * \param nmt  a pointer to an NMT master/slave service.
  * \param id   the node-ID (in the range [1..127]).
@@ -540,7 +549,8 @@ LELY_CO_EXTERN int co_nmt_get_timeout(const co_nmt_t *nmt);
 LELY_CO_EXTERN void co_nmt_set_timeout(co_nmt_t *nmt, int timeout);
 
 /*!
- * Submits an NMT request to a slave.
+ * Submits an NMT request to a slave. If \a id equals the node-ID of the master,
+ * this is equivalent to `co_nmt_cs_ind(nmt, cs)`.
  *
  * \param nmt a pointer to an NMT master service.
  * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
@@ -632,6 +642,11 @@ LELY_CO_EXTERN int co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id,
  * previously obtained results of co_nmt_get_rpdo(), co_nmt_get_tpdo(),
  * co_nmt_get_ssdo(), co_nmt_get_csdo(), co_nmt_get_sync(), co_nmt_get_time()
  * and/or co_nmt_get_emcy().
+ *
+ * This function MUST NOT be invoked during an NMT state transition. It is
+ * therefore unsafe to call co_nmt_cs_ind() (or co_nmt_cs_req() with the node-ID
+ * of the master) from the #co_nmt_cs_ind_t and #co_nmt_st_ind_t indication
+ * functions.
  *
  * \param nmt a pointer to an NMT master/slave service.
  * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
