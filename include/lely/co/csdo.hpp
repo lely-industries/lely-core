@@ -445,7 +445,7 @@ struct COCSDOUpCon< ::std::string> {
 			}
 #endif
 		}
-		return (*M)(sdo, idx, subidx, ac, 0, data);
+		return (*M)(sdo, idx, subidx, ac, ::std::string(), data);
 	}
 };
 
@@ -571,7 +571,8 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 #endif
 			}
 		}
-		return (*M)(sdo, idx, subidx, ac, 0, data);
+		return (*M)(sdo, idx, subidx, ac,
+				::std::basic_string<char16_t>(), data);
 	}
 };
 
