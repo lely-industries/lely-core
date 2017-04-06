@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Client-SDO
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -59,6 +59,25 @@ typedef void co_csdo_dn_con_t(co_csdo_t *sdo, co_unsigned16_t idx,
 typedef void co_csdo_up_con_t(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
+
+/*!
+ * The type of a CANopen Client-SDO request progress indication function, used
+ * to notify the user of the progress of the current upload/download request.
+ * The indication function is invoked after the size of the value has been
+ * sent/received, and again after each block (of at most 127 segments) is
+ * sent/received. The last invocation occurs before the upload/download
+ * confirmation. No notification is generated for expedited transfers.
+ *
+ * \param sdo    a pointer to a Client-SDO service.
+ * \param idx    the object index.
+ * \param subidx the object sub-index.
+ * \param size   The total size (in bytes) of the value being
+ *               uploaded/downloaded.
+ * \param nbyte  The number of bytes already uploaded/downloaded.
+ * \param data   a pointer to user-specified data.
+ */
+typedef void co_csdo_ind_t(const co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 
 /*!
  * Submits a download request to a local device. This is equivalent to a write
@@ -177,6 +196,64 @@ LELY_CO_EXTERN int co_csdo_get_timeout(const co_csdo_t *sdo);
  * \see co_csdo_get_timeout()
  */
 LELY_CO_EXTERN void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
+
+/*!
+ * Retrieves the indication function used to notify the user of the progress of
+ * the current SDO download request.
+ *
+ * \param sdo   a pointer to a Client-SDO service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_csdo_set_dn_ind()
+ */
+LELY_CO_EXTERN void co_csdo_get_dn_ind(const co_csdo_t *sdo,
+		co_csdo_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function used to notify the user of the progress of the
+ * current SDO download request.
+ *
+ * \param sdo  a pointer to a Client-SDO service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_csdo_get_dn_ind()
+ */
+LELY_CO_EXTERN void co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the indication function used to notify the user of the progress of
+ * the current SDO upload request.
+ *
+ * \param sdo   a pointer to a Client-SDO service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_csdo_set_up_ind()
+ */
+LELY_CO_EXTERN void co_csdo_get_up_ind(const co_csdo_t *sdo,
+		co_csdo_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function used to notify the user of the progress of the
+ * current SDO upload request.
+ *
+ * \param sdo  a pointer to a Client-SDO service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_csdo_get_up_ind()
+ */
+LELY_CO_EXTERN void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind,
+		void *data);
 
 /*!
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is

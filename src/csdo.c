@@ -4,7 +4,7 @@
  *
  * \see lely/co/csdo.h, src/sdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -78,11 +78,19 @@ struct __co_csdo {
 	//! A pointer to the download confirmation function.
 	co_csdo_dn_con_t *dn_con;
 	//! A pointer to user-specified data for #dn_con.
-	void *dn_data;
+	void *dn_con_data;
+	//! A pointer to the download progress indication function.
+	co_csdo_ind_t *dn_ind;
+	//! A pointer to user-specified data for #dn_ind.
+	void *dn_ind_data;
 	//! A pointer to the upload confirmation function.
 	co_csdo_up_con_t *up_con;
 	//! A pointer to user-specified data for #up_con.
-	void *up_data;
+	void *up_con_data;
+	//! A pointer to the upload progress indication function.
+	co_csdo_ind_t *up_ind;
+	//! A pointer to user-specified data for #up_ind.
+	void *up_ind_data;
 	//! The buffer.
 	struct membuf buf;
 };
@@ -776,10 +784,16 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->crc = 0;
 
 	sdo->dn_con = NULL;
-	sdo->dn_data = NULL;
+	sdo->dn_con_data = NULL;
+
+	sdo->dn_ind = NULL;
+	sdo->dn_ind_data = NULL;
 
 	sdo->up_con = NULL;
-	sdo->up_data = NULL;
+	sdo->up_con_data = NULL;
+
+	sdo->up_ind = NULL;
+	sdo->up_ind_data = NULL;
 
 	membuf_init(&sdo->buf);
 
@@ -912,6 +926,46 @@ co_csdo_set_timeout(co_csdo_t *sdo, int timeout)
 		can_timer_stop(sdo->timer);
 
 	sdo->timeout = MAX(0, timeout);
+}
+
+LELY_CO_EXPORT void
+co_csdo_get_dn_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
+{
+	assert(sdo);
+
+	if (pind)
+		*pind = sdo->dn_ind;
+	if (pdata)
+		*pdata = sdo->dn_ind_data;
+}
+
+LELY_CO_EXPORT void
+co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
+{
+	assert(sdo);
+
+	sdo->dn_ind = ind;
+	sdo->dn_ind_data = data;
+}
+
+LELY_CO_EXPORT void
+co_csdo_get_up_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
+{
+	assert(sdo);
+
+	if (pind)
+		*pind = sdo->up_ind;
+	if (pdata)
+		*pdata = sdo->up_ind_data;
+}
+
+LELY_CO_EXPORT void
+co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
+{
+	assert(sdo);
+
+	sdo->up_ind = ind;
+	sdo->up_ind_data = data;
 }
 
 LELY_CO_EXPORT int
@@ -1312,12 +1366,13 @@ co_csdo_abort_on_leave(co_csdo_t *sdo)
 	assert(sdo);
 
 	if (sdo->dn_con) {
-		sdo->dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac, sdo->dn_data);
+		sdo->dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
+				sdo->dn_con_data);
 	} else if (sdo->up_con) {
 		sdo->up_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
 				sdo->ac ? NULL : sdo->buf.begin,
 				sdo->ac ? 0 : membuf_size(&sdo->buf),
-				sdo->up_data);
+				sdo->up_con_data);
 	}
 }
 
@@ -1374,7 +1429,7 @@ co_csdo_dn_seg_on_enter(co_csdo_t *sdo)
 	assert(sdo);
 
 	size_t n = sdo->size - membuf_size(&sdo->buf);
-	// 0-byte values cannot be send using expedited transfer, so we need to
+	// 0-byte values cannot be sent using expedited transfer, so we need to
 	// send one empty segment. We use the toggle bit to check if it was
 	// sent.
 	if (n || (!sdo->size && !sdo->toggle)) {
@@ -1499,6 +1554,9 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
+		if (sdo->size && sdo->up_ind)
+			sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size, 0,
+					sdo->up_ind_data);
 		if (sdo->timeout)
 			can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 		co_csdo_send_up_seg_req(sdo);
@@ -1560,6 +1618,10 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	memcpy(sdo->buf.cur, msg->data + 1, n);
 	sdo->buf.cur += n;
 
+	if ((last || !(membuf_size(&sdo->buf) % (CO_SDO_MAX_SEQNO * 7)))
+			&& sdo->size && sdo->up_ind)
+		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
+				membuf_size(&sdo->buf), sdo->up_ind_data);
 	if (last) {
 		if (__unlikely(sdo->size
 				&& membuf_size(&sdo->buf) != sdo->size))
@@ -1642,6 +1704,9 @@ co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 	size_t n = sdo->size - membuf_size(&sdo->buf);
 	sdo->blksize = (uint8_t)MIN((n + 6) / 7, sdo->blksize);
 
+	if (sdo->size && sdo->dn_ind)
+		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
+				membuf_size(&sdo->buf), sdo->dn_ind_data);
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	if (n) {
@@ -1999,10 +2064,10 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->crc = 0;
 
 	sdo->dn_con = con;
-	sdo->dn_data = data;
+	sdo->dn_con_data = data;
 
 	sdo->up_con = NULL;
-	sdo->up_data = NULL;
+	sdo->up_con_data = NULL;
 
 	// Allocate the buffer.
 	membuf_clear(&sdo->buf);
@@ -2047,10 +2112,10 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->crc = 0;
 
 	sdo->dn_con = NULL;
-	sdo->dn_data = NULL;
+	sdo->dn_con_data = NULL;
 
 	sdo->up_con = con;
-	sdo->up_data = data;
+	sdo->up_con_data = data;
 
 	membuf_clear(&sdo->buf);
 
@@ -2095,6 +2160,10 @@ co_csdo_send_dn_ini_req(co_csdo_t *sdo)
 	co_csdo_init_ini_req(sdo, &msg, cs);
 	stle_u32(msg.data + 4, sdo->size);
 	can_net_send(sdo->net, &msg);
+
+	if (sdo->size && sdo->dn_ind)
+		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size, 0,
+				sdo->dn_ind_data);
 }
 
 static void
@@ -2114,6 +2183,11 @@ co_csdo_send_dn_seg_req(co_csdo_t *sdo, uint32_t n, int last)
 	memcpy(msg.data + 1, sdo->buf.cur, n);
 	sdo->buf.cur += n;
 	can_net_send(sdo->net, &msg);
+
+	if ((last || !(membuf_size(&sdo->buf) % (CO_SDO_MAX_SEQNO * 7)))
+			&& sdo->size && sdo->dn_ind)
+		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
+				membuf_size(&sdo->buf), sdo->dn_ind_data);
 }
 
 static void
@@ -2219,6 +2293,10 @@ co_csdo_send_start_up_req(co_csdo_t *sdo)
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
 	can_net_send(sdo->net, &msg);
+
+	if (sdo->size && sdo->up_ind)
+		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size, 0,
+				sdo->up_ind_data);
 }
 
 static void
@@ -2233,6 +2311,10 @@ co_csdo_send_blk_up_sub_res(co_csdo_t *sdo)
 	msg.data[1] = sdo->ackseq;
 	msg.data[2] = sdo->blksize;
 	can_net_send(sdo->net, &msg);
+
+	if (sdo->size && sdo->up_ind)
+		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
+				membuf_size(&sdo->buf), sdo->up_ind_data);
 }
 
 static void
