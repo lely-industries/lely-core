@@ -75,6 +75,8 @@ struct __co_csdo {
 	uint8_t ackseq;
 	//! A flag indicating whether a CRC should be generated.
 	unsigned crc:1;
+	//! The buffer.
+	struct membuf buf;
 	//! A pointer to the download confirmation function.
 	co_csdo_dn_con_t *dn_con;
 	//! A pointer to user-specified data for #dn_con.
@@ -91,8 +93,6 @@ struct __co_csdo {
 	co_csdo_ind_t *up_ind;
 	//! A pointer to user-specified data for #up_ind.
 	void *up_ind_data;
-	//! The buffer.
-	struct membuf buf;
 };
 
 /*!
@@ -783,6 +783,8 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
+	membuf_init(&sdo->buf);
+
 	sdo->dn_con = NULL;
 	sdo->dn_con_data = NULL;
 
@@ -794,8 +796,6 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	sdo->up_ind = NULL;
 	sdo->up_ind_data = NULL;
-
-	membuf_init(&sdo->buf);
 
 	// Set the download indication function for the SDO parameter record.
 	if (obj_1280)
@@ -1365,14 +1365,23 @@ co_csdo_abort_on_leave(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	if (sdo->dn_con) {
-		sdo->dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
-				sdo->dn_con_data);
-	} else if (sdo->up_con) {
-		sdo->up_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
+	co_csdo_dn_con_t *dn_con = sdo->dn_con;
+	sdo->dn_con = NULL;
+	void *dn_con_data = sdo->dn_con_data;
+	sdo->dn_con_data = NULL;
+
+	co_csdo_up_con_t *up_con = sdo->up_con;
+	sdo->up_con = NULL;
+	void *up_con_data = sdo->up_con_data;
+	sdo->up_con_data = NULL;
+
+	if (dn_con) {
+		dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac, dn_con_data);
+	} else if (up_con) {
+		up_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
 				sdo->ac ? NULL : sdo->buf.begin,
 				sdo->ac ? 0 : membuf_size(&sdo->buf),
-				sdo->up_con_data);
+				up_con_data);
 	}
 }
 
@@ -2063,12 +2072,6 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
-	sdo->dn_con = con;
-	sdo->dn_con_data = data;
-
-	sdo->up_con = NULL;
-	sdo->up_con_data = NULL;
-
 	// Allocate the buffer.
 	membuf_clear(&sdo->buf);
 	if (__unlikely(sdo->size && !membuf_reserve(&sdo->buf, sdo->size)))
@@ -2077,6 +2080,12 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	// Copy the bytes to the buffer.
 	if (ptr)
 		memcpy(sdo->buf.cur, ptr, sdo->size);
+
+	sdo->dn_con = con;
+	sdo->dn_con_data = data;
+
+	sdo->up_con = NULL;
+	sdo->up_con_data = NULL;
 
 	return 0;
 }
@@ -2111,13 +2120,13 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
+	membuf_clear(&sdo->buf);
+
 	sdo->dn_con = NULL;
 	sdo->dn_con_data = NULL;
 
 	sdo->up_con = con;
 	sdo->up_con_data = data;
-
-	membuf_clear(&sdo->buf);
 
 	return 0;
 }
