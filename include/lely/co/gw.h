@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the gateway
  * declarations (see CiA 309-1 version 2.0).
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -153,6 +153,9 @@
 
 //! CANopen gateway service: LSS identify non-configured remote slaves.
 #define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE	0x8a
+
+//! CANopen gateway service: CiA 301 progress indication download.
+#define CO_GW_SRV_SDO	0x93
 
 //! Lely-specific gateway service: LSS Slowscan.
 #define CO_GW_SRV__LSS_SLOWSCAN 0x101
@@ -889,6 +892,29 @@ struct co_gw_ind_emcy {
 	co_unsigned8_t er;
 	//! The manufacturer-specific error code.
 	uint8_t msef[5];
+};
+
+/*!
+ * The parameters of a CANopen gateway 'CiA 301 progress indication download'
+ * indication.
+ */
+struct co_gw_ind_sdo {
+	//! The size of this struct (in bytes).
+	size_t size;
+	//! The service number (#CO_GW_SRV_SDO).
+	int srv;
+	//! The network-ID.
+	co_unsigned16_t net;
+	//! The node-ID.
+	co_unsigned8_t node;
+	//! The transferred bytes.
+	uint32_t nbyte;
+	//! The transfer direction: download (0) or upload (1).
+	unsigned int up:1;
+	//! A pointer to user-specified data of the SDO upload/download request.
+	void *data;
+	//! The Lely-specific total value size (in bytes).
+	uint32_t _size;
 };
 
 /*!

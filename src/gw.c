@@ -110,6 +110,14 @@ struct co_gw_net {
 	co_nmt_boot_ind_t *boot_ind;
 	//! A pointer to user-specified data for #boot_ind.
 	void *boot_data;
+	//! A pointer to the original SDO download progress indication function.
+	co_nmt_sdo_ind_t *dn_ind;
+	//! A pointer to user-specified data for #dn_ind.
+	void *dn_data;
+	//! A pointer to the original SDO upload progress indication function.
+	co_nmt_sdo_ind_t *up_ind;
+	//! A pointer to user-specified data for #up_ind.
+	void *up_data;
 #endif
 };
 
@@ -123,12 +131,16 @@ static void co_gw_net_destroy(struct co_gw_net *net);
 /*!
  * The callback function invoked when an NMT command is received by a CANopen
  * gateway.
+ *
+ * \see co_nmt_cs_ind_t
  */
 static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 #ifndef LELY_NO_CO_MASTER
 /*!
  * The callback function invoked when a node guarding event occurs for a node on
  * a CANopen network.
+ *
+ * \see co_nmt_ng_ind_t
  */
 static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
@@ -136,17 +148,23 @@ static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 /*!
  * The callback function invoked when a life guarding event occurs for a CANopen
  * gateway.
+ *
+ * \see co_nmt_lg_ind_t
  */
 static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
 /*!
  * The callback function invoked when a heartbeat event occurs for a node on a
  * CANopen network.
+ *
+ * \see co_nmt_hb_ind_t
  */
 static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 /*!
  * The callback function invoked when a boot-up event or state change is
  * detected for a node on a CANopen network.
+ *
+ * \see co_nmt_st_ind_t
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
@@ -154,9 +172,31 @@ static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 /*!
  * The callback function invoked when the 'boot slave' process completes for a
  * node on a CANopen network.
+ *
+ * \see co_nmt_boot_ind_t
  */
 static void co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es, void *data);
+/*!
+ * The callback function invoked to notify the user of the progress of an SDO
+ * download request during the 'boot slave' process of a node on a CANopen
+ * network.
+ *
+ * \see co_nmt_sdo_ind_t
+ */
+static void co_gw_net_dn_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
+		size_t nbyte, void *data);
+/*!
+ * The callback function invoked to notify the user of the progress of an SDO
+ * upload request during the 'boot slave' process of a node on a CANopen
+ * network.
+ *
+ * \see co_nmt_sdo_ind_t
+ */
+static void co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
+		size_t nbyte, void *data);
 #endif
 #ifndef LELY_NO_CO_SYNC
 /*!
@@ -233,6 +273,9 @@ static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 //! The confirmation function for an 'SDO download' request.
 static void co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
+//! The progress indication function for an SDO upload/download job.
+static void co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 #endif
 
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
@@ -963,6 +1006,10 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 #ifndef LELY_NO_CO_MASTER
 	co_nmt_get_boot_ind(net->nmt, &net->boot_ind, &net->boot_data);
 	co_nmt_set_boot_ind(net->nmt, &co_gw_net_boot_ind, net);
+	co_nmt_get_dn_ind(net->nmt, &net->dn_ind, &net->dn_data);
+	co_nmt_set_dn_ind(net->nmt, &co_gw_net_dn_ind, net);
+	co_nmt_get_dn_ind(net->nmt, &net->up_ind, &net->up_data);
+	co_nmt_set_dn_ind(net->nmt, &co_gw_net_up_ind, net);
 #endif
 
 #ifndef LELY_NO_CO_SYNC
@@ -1193,6 +1240,7 @@ co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 }
 
 #ifndef LELY_NO_CO_MASTER
+
 static void
 co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
 		void *data)
@@ -1208,12 +1256,59 @@ co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
 		.st = st,
 		.es = es
 	};
-
 	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+
 	if (net->boot_ind)
 		net->boot_ind(nmt, id, st, es, net->boot_data);
 }
-#endif
+
+static void
+co_gw_net_dn_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind_sdo ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV_SDO,
+		.net = net->id,
+		.node = id,
+		.nbyte = nbyte,
+		.up = 0,
+		.data = NULL,
+		._size = size
+	};
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+
+	if (net->dn_ind)
+		net->dn_ind(nmt, id, idx, subidx, size, nbyte, net->dn_data);
+}
+
+static void
+co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data)
+{
+	struct co_gw_net *net = data;
+	assert(net);
+
+	struct co_gw_ind_sdo ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV_SDO,
+		.net = net->id,
+		.node = id,
+		.nbyte = nbyte,
+		.up = 1,
+		.data = NULL,
+		._size = size
+	};
+	co_gw_send_srv(net->gw, (struct co_gw_srv *)&ind);
+
+	if (net->up_ind)
+		net->up_ind(nmt, id, idx, subidx, size, nbyte, net->up_data);
+}
+
+#endif // !LELY_NO_CO_MASTER
 
 #ifndef LELY_NO_CO_SYNC
 static void
@@ -1443,6 +1538,30 @@ co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_gw_send_con(job->net->gw, &job->req, 0, ac);
 
 	co_gw_job_destroy(job);
+}
+
+static void
+co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data)
+{
+	__unused_var(sdo);
+	__unused_var(idx);
+	__unused_var(subidx);
+	struct co_gw_job *job = data;
+	assert(job);
+	assert(job->net);
+
+	struct co_gw_ind_sdo ind = {
+		.size = sizeof(ind),
+		.srv = CO_GW_SRV_SDO,
+		.net = job->net->id,
+		.node = co_csdo_get_num(job->data),
+		.nbyte = nbyte,
+		.up = job->req.srv == CO_GW_SRV_SDO_UP,
+		.data = job->req.data,
+		._size = size
+	};
+	co_gw_send_srv(job->net->gw, (struct co_gw_srv *)&ind);
 }
 
 #endif // !LELY_NO_CO_CSDO
@@ -1742,6 +1861,7 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			goto error_create_job;
 		}
 
+		co_csdo_set_up_ind(job->data, &co_gw_job_sdo_ind, job);
 		if (__unlikely(co_csdo_up_req(job->data, par->idx, par->subidx,
 				&co_gw_job_sdo_up_con, job) == -1)) {
 			iec = errnum2iec(get_errnum());
@@ -1815,6 +1935,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			goto error_create_job;
 		}
 
+		co_csdo_set_dn_ind(job->data, &co_gw_job_sdo_ind, job);
 		if (__unlikely(co_csdo_dn_req(job->data, par->idx, par->subidx,
 				par->val, par->len, &co_gw_job_sdo_dn_con, job)
 				== -1)) {

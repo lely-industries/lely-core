@@ -102,6 +102,10 @@ static int co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind);
 static int co_gw_txt_recv_emcy(co_gw_txt_t *gw,
 		const struct co_gw_ind_emcy *ind);
 
+//! Processes an 'CiA 301 progress indication download' indication.
+static int co_gw_txt_recv_sdo(co_gw_txt_t *gw,
+		const struct co_gw_ind_sdo *ind);
+
 //! Processes a 'Boot slave process completed' indication.
 static int co_gw_txt_recv__boot(co_gw_txt_t *gw,
 		const struct co_gw_ind__boot *ind);
@@ -455,6 +459,13 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		}
 		return co_gw_txt_recv_emcy(gw,
 				(const struct co_gw_ind_emcy *)srv);
+	case CO_GW_SRV_SDO:
+		if (__unlikely(srv->size < sizeof(struct co_gw_ind_sdo))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
+		return co_gw_txt_recv_sdo(gw,
+				(const struct co_gw_ind_sdo *)srv);
 	case CO_GW_SRV__SYNC:
 	case CO_GW_SRV__TIME:
 		// Ignore synchronization and time stamp events.
@@ -1069,7 +1080,6 @@ co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind)
 				ind->node, str);
 }
 
-
 static int
 co_gw_txt_recv_emcy(co_gw_txt_t *gw, const struct co_gw_ind_emcy *ind)
 {
@@ -1079,6 +1089,16 @@ co_gw_txt_recv_emcy(co_gw_txt_t *gw, const struct co_gw_ind_emcy *ind)
 	return co_gw_txt_recv_fmt(gw, "%u %u EMCY %04X %02X %u %u %u %u %u",
 			ind->net, ind->node, ind->ec, ind->er, ind->msef[0],
 			ind->msef[1], ind->msef[2], ind->msef[3], ind->msef[4]);
+}
+
+static int
+co_gw_txt_recv_sdo(co_gw_txt_t *gw, const struct co_gw_ind_sdo *ind)
+{
+	assert(ind);
+	assert(ind->srv == CO_GW_SRV_SDO);
+
+	return co_gw_txt_recv_fmt(gw, "%u %u SDO%c %" PRIu32, ind->net,
+			ind->node, ind->up ? 'r' : 'w', ind->nbyte);
 }
 
 static int
