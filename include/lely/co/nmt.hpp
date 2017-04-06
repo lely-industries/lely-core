@@ -3,7 +3,7 @@
  * interface of the network management (NMT) declarations. See lely/co/nmt.h for
  * the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -289,6 +289,62 @@ public:
 	setCfgInd(C* obj) noexcept
 	{
 		setCfgInd(&c_mem_call<co_nmt_cfg_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
+	getDnInd(co_nmt_sdo_ind_t** pind, void** pdata) const noexcept
+	{
+		co_nmt_get_dn_ind(this, pind, pdata);
+	}
+
+	void
+	setDnInd(co_nmt_sdo_ind_t* ind, void* data) noexcept
+	{
+		co_nmt_set_dn_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setDnInd(F* f) noexcept
+	{
+		setDnInd(&c_obj_call<co_nmt_sdo_ind_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_nmt_sdo_ind_t*, C>::type M>
+	void
+	setDnInd(C* obj) noexcept
+	{
+		setDnInd(&c_mem_call<co_nmt_sdo_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
+	getUpInd(co_nmt_sdo_ind_t** pind, void** pdata) const noexcept
+	{
+		co_nmt_get_up_ind(this, pind, pdata);
+	}
+
+	void
+	setUpInd(co_nmt_sdo_ind_t* ind, void* data) noexcept
+	{
+		co_nmt_set_up_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setUpInd(F* f) noexcept
+	{
+		setUpInd(&c_obj_call<co_nmt_sdo_ind_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_nmt_sdo_ind_t*, C>::type M>
+	void
+	setUpInd(C* obj) noexcept
+	{
+		setUpInd(&c_mem_call<co_nmt_sdo_ind_t*, C, M>::function,
 				static_cast<void*>(obj));
 	}
 

@@ -4,7 +4,7 @@
  *
  * \see src/nmt_boot.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,7 +27,6 @@
 
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
-#include <lely/co/csdo.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
@@ -819,7 +818,8 @@ co_nmt_boot_destroy(co_nmt_boot_t *boot)
 }
 
 int
-co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout)
+co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
+		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
 {
 	assert(boot);
 
@@ -841,6 +841,8 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout)
 	if (__unlikely(!boot->sdo))
 		return -1;
 	co_csdo_set_timeout(boot->sdo, boot->timeout);
+	co_csdo_set_dn_ind(boot->sdo, dn_ind, data);
+	co_csdo_set_up_ind(boot->sdo, up_ind, data);
 
 	co_nmt_boot_emit_time(boot, NULL);
 

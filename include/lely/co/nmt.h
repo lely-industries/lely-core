@@ -225,6 +225,26 @@ typedef void co_nmt_cfg_con_t(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned32_t ac, void *data);
 
 /*!
+ * The type of an SDO request progress indication function, invoked by a CANopen
+ * NMT master to notify the user of the progress of the an SDO upload/download
+ * request during the 'boot slave' process.
+ *
+ * \param nmt    a pointer to an NMT master service.
+ * \param id     the node-ID of the slave (in the range [1..127]).
+ * \param idx    the object index.
+ * \param subidx the object sub-index.
+ * \param size   The total size (in bytes) of the value being
+ *               uploaded/downloaded.
+ * \param nbyte  The number of bytes already uploaded/downloaded.
+ * \param data   a pointer to user-specified data.
+ *
+ * \see co_csdo_ind_t
+ */
+typedef void co_nmt_sdo_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
+		size_t nbyte, void *data);
+
+/*!
  * Configures heartbeat consumption for the specified node by updating CANopen
  * object 1016 (Consumer heartbeat time).
  *
@@ -499,6 +519,64 @@ LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
  * \see co_nmt_get_cfg_ind()
  */
 LELY_CO_EXTERN void co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the indication function used to notify the user of the progress of
+ * the current SDO download request during the CANopen NMT 'boot slave' process.
+ *
+ * \param nmt   a pointer to an NMT master service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_dn_ind()
+ */
+LELY_CO_EXTERN void co_nmt_get_dn_ind(const co_nmt_t *nmt,
+		co_nmt_sdo_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function used to notify the user of the progress of the
+ * current SDO download request during the CANopen NMT 'boot slave' process.
+ *
+ * \param nmt  a pointer to an NMT master service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_dn_ind()
+ */
+LELY_CO_EXTERN void co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
+		void *data);
+
+/*!
+ * Retrieves the indication function used to notify the user of the progress of
+ * the current SDO upload request during the CANopen NMT 'boot slave' process.
+ *
+ * \param nmt   a pointer to an NMT master service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_up_ind()
+ */
+LELY_CO_EXTERN void co_nmt_get_up_ind(const co_nmt_t *nmt,
+		co_nmt_sdo_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function used to notify the user of the progress of the
+ * current SDO upload request during the CANopen NMT 'boot slave' process.
+ *
+ * \param nmt  a pointer to an NMT master service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_up_ind()
+ */
+LELY_CO_EXTERN void co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
 		void *data);
 
 //! Returns the pending node-ID. \see co_nmt_set_id()

@@ -4,7 +4,7 @@
  *
  * \see lely/co/nmt.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,6 +25,7 @@
 #define LELY_CO_INTERN_NMT_CFG_H
 
 #include "co.h"
+#include <lely/co/csdo.h>
 #include <lely/co/nmt.h>
 
 struct __co_nmt_cfg;
@@ -86,11 +87,18 @@ void co_nmt_cfg_destroy(co_nmt_cfg_t *boot);
  * \param cfg     a pointer to an NMT 'configuration request'.
  * \param id      the node-ID.
  * \param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
+ * \param dn_ind  a pointer to the SDO download progress indication function
+ *                (can be NULL).
+ * \param up_ind  a pointer to the SDO upload progress indication function (can
+ *                be NULL).
+ * \param data    a pointer to user-specified data (can be NULL). \a data is
+ *                passed as the last parameter to \a dn_ind and \a up_ind.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
  */
-int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout);
+int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
+		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data);
 
 /*!
  * Indicates the result of the 'update configuration' step of an NMT

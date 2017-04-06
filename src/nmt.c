@@ -26,6 +26,7 @@
 #ifndef LELY_NO_CO_MASTER
 #include <lely/util/time.h>
 #include <lely/can/buf.h>
+#include <lely/co/csdo.h>
 #endif
 #include <lely/co/dev.h>
 #ifndef LELY_NO_CO_EMCY
@@ -200,6 +201,14 @@ struct __co_nmt {
 	co_nmt_cfg_ind_t *cfg_ind;
 	//! A pointer to user-specified data for #cfg_ind.
 	void *cfg_data;
+	//! A pointer to the SDO download progress indication function.
+	co_nmt_sdo_ind_t *dn_ind;
+	//! A pointer to user-specified data for #dn_ind.
+	void *dn_data;
+	//! A pointer to the SDO upload progress indication function.
+	co_nmt_sdo_ind_t *up_ind;
+	//! A pointer to user-specified data for #up_ind.
+	void *up_data;
 #endif
 };
 
@@ -324,6 +333,18 @@ static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 //! The default state change event handler. \see co_nmt_st_ind_t
 static void default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 		void *data);
+
+#ifndef LELY_NO_CO_MASTER
+
+//! The SDO download progress indication function. \see co_csdo_ind_t
+static void co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
+
+//! The SDO upload progress indication function. \see co_csdo_ind_t
+static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
+
+#endif
 
 /*!
  * Enters the specified state of an NMT master/slave service and invokes the
@@ -789,6 +810,10 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->boot_data = NULL;
 	nmt->cfg_ind = NULL;
 	nmt->cfg_data = NULL;
+	nmt->dn_ind = NULL;
+	nmt->dn_data = NULL;
+	nmt->up_ind = NULL;
+	nmt->up_data = NULL;
 #endif
 
 	// Set the download indication function for the guard time.
@@ -1154,6 +1179,46 @@ co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data)
 	nmt->cfg_data = data;
 }
 
+LELY_CO_EXPORT void
+co_nmt_get_dn_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->dn_ind;
+	if (pdata)
+		*pdata = nmt->dn_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->dn_ind = ind;
+	nmt->dn_data = data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_get_up_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->up_ind;
+	if (pdata)
+		*pdata = nmt->up_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->up_ind = ind;
+	nmt->up_data = data;
+}
+
 #endif // !LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT co_unsigned8_t
@@ -1317,7 +1382,8 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_create_boot;
 	}
 
-	if (__unlikely(co_nmt_boot_boot_req(slave->boot, id, timeout) == -1)) {
+	if (__unlikely(co_nmt_boot_boot_req(slave->boot, id, timeout,
+			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
 		errc = get_errc();
 		goto error_boot_req;
 	}
@@ -1368,7 +1434,8 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	slave->cfg_con = con;
 	slave->cfg_data = data;
 
-	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout) == -1)) {
+	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout,
+			&co_nmt_dn_ind, &co_nmt_up_ind, data) == -1)) {
 		errc = get_errc();
 		goto error_cfg_req;
 	}
@@ -2481,6 +2548,34 @@ default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 	}
 #endif
 }
+
+#ifndef LELY_NO_CO_MASTER
+
+static void
+co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		size_t size, size_t nbyte, void *data)
+{
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	if (nmt->dn_ind)
+		nmt->dn_ind(nmt, co_csdo_get_num(sdo), idx, subidx, size, nbyte,
+				nmt->dn_data);
+}
+
+static void
+co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		size_t size, size_t nbyte, void *data)
+{
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	if (nmt->up_ind)
+		nmt->up_ind(nmt, co_csdo_get_num(sdo), idx, subidx, size, nbyte,
+				nmt->up_data);
+}
+
+#endif
 
 static void
 co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)

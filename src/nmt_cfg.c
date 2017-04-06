@@ -4,7 +4,7 @@
  *
  * \see src/nmt_cfg.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,6 @@
 #ifndef LELY_NO_CO_MASTER
 
 #include <lely/util/errnum.h>
-#include <lely/co/csdo.h>
 #include <lely/co/dev.h>
 #include "nmt_cfg.h"
 
@@ -247,7 +246,8 @@ co_nmt_cfg_destroy(co_nmt_cfg_t *cfg)
 }
 
 int
-co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout)
+co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
+		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
 {
 	assert(cfg);
 
@@ -268,6 +268,8 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout)
 	if (__unlikely(!cfg->sdo))
 		return -1;
 	co_csdo_set_timeout(cfg->sdo, timeout);
+	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);
+	co_csdo_set_up_ind(cfg->sdo, up_ind, data);
 
 	co_nmt_cfg_enter(cfg, co_nmt_cfg_init_state);
 
