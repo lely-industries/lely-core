@@ -155,19 +155,19 @@
 #define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE	0x8a
 
 //! Lely-specific gateway service: LSS Slowscan.
-#define CO_GW_SRV__LSS_SLOWSCAN 0x91
+#define CO_GW_SRV__LSS_SLOWSCAN 0x101
 
 //! Lely-specific gateway service: LSS Fastscan.
-#define CO_GW_SRV__LSS_FASTSCAN 0x92
+#define CO_GW_SRV__LSS_FASTSCAN 0x102
 
 //! Lely-specific gateway service: Synchronization event received.
-#define CO_GW_SRV__SYNC 0x101
+#define CO_GW_SRV__SYNC 0x103
 
 //! Lely-specific gateway service: Time stamp event received.
-#define CO_GW_SRV__TIME 0x102
+#define CO_GW_SRV__TIME 0x104
 
 //! Lely-specific gateway service: Boot slave process completed.
-#define CO_GW_SRV__BOOT 0x103
+#define CO_GW_SRV__BOOT 0x105
 
 //! CANopen gateway internal error: Request not supported.
 #define CO_GW_IEC_BAD_SRV	100
