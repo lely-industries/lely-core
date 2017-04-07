@@ -5,7 +5,7 @@
  *
  * \see lely/co/dcf.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -775,9 +775,16 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
 			co_val_set_id(type, sub->val, id);
 #ifndef LELY_NO_CO_OBJ_FILE
-	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_WRITE)
+	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "UploadFile"))
 			!= NULL) {
+		if (!(access & CO_ACCESS_READ) || (access & CO_ACCESS_WRITE)) {
+			diag_at(DIAG_WARNING, 0, &at, "AccessType must be 'ro' or 'const' when using UploadFile");
+			access |= CO_ACCESS_READ;
+			access &= ~CO_ACCESS_WRITE;
+			co_sub_set_access(sub, access);
+		}
+
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
@@ -786,9 +793,15 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse UploadFile");
 			return -1;
 		}
-	} else if (type == CO_DEFTYPE_DOMAIN && !(access & CO_ACCESS_READ)
+	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "DownloadFile"))
 			!= NULL) {
+		if ((access & CO_ACCESS_READ) || !(access & CO_ACCESS_WRITE)) {
+			diag_at(DIAG_WARNING, 0, &at, "AccessType must be 'wo' when using DownloadFile");
+			access &= ~CO_ACCESS_READ;
+			access |= CO_ACCESS_WRITE;
+			co_sub_set_access(sub, access);
+		}
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
