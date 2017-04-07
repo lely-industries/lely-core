@@ -4,7 +4,7 @@
  *
  * \see lely/co/val.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -496,7 +496,7 @@ LELY_CO_EXPORT size_t
 co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 		const uint8_t *end)
 {
-	assert(begin);
+	assert(begin || begin == end);
 	assert(!end || end >= begin);
 
 	size_t n = end - begin;
