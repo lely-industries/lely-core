@@ -106,8 +106,7 @@ typedef void co_nmt_cs_ind_t(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 /*!
  * The type of a CANopen NMT node guarding indication function, invoked when a
  * node guarding event occurs (see sections 7.2.8.2.2.1 and 7.2.8.3.2.1 in CiA
- * 301 version 4.2.0). The default handler invokes co_nmt_comm_err_ind() when an
- * event occurs.
+ * 301 version 4.2.0). The default handler invokes co_nmt_on_ng().
  *
  * \param nmt    a pointer to an NMT master service.
  * \param id     the node-ID (in the range [1..127]).
@@ -124,8 +123,7 @@ typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
 /*!
  * The type of a CANopen NMT life guarding indication function, invoked when a
  * life guarding event occurs (see section 7.2.8.2.2.2 in CiA 301 version
- * 4.2.0). The default handler invokes co_nmt_comm_err_ind() when an event
- * occurs.
+ * 4.2.0). The default handler invokes co_nmt_on_lg().
  *
  * \param nmt   a pointer to an NMT master/slave service.
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
@@ -137,9 +135,7 @@ typedef void co_nmt_lg_ind_t(co_nmt_t *nmt, int state, void *data);
 /*!
  * The type of a CANopen NMT heartbeat indication function, invoked when a
  * heartbeat event occurs (see sections 7.2.8.2.2.3 and 7.2.8.3.2.2 in CiA 301
- * version 4.2.0). The default handler invokes co_nmt_node_err_ind() or
- * co_nmt_comm_err_ind() when a timeout event occurs, depending on whether the
- * NMT service is a master or not (see co_nmt_is_master()).
+ * version 4.2.0). The default handler invokes co_nmt_on_hb().
  *
  * \param nmt    a pointer to an NMT master/slave service.
  * \param id     the node-ID (in the range [1..127]).
@@ -158,7 +154,8 @@ typedef void co_nmt_hb_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * state change is detected by the node guarding or heartbeat protocol. This
  * indication is an extension of the boot-up event indication (sections
  * 7.2.8.2.3.1 and 7.2.8.3.3 in CiA 301 version 4.2.0) since it reports all
- * state changes, not just the boot-up event.
+ * state changes, not just the boot-up event. The default handler invokes
+ * co_nmt_on_st().
  *
  * This indication function is also invoked by an NMT master/slave service to
  * notify the user of its own state changes. It that case it is NOT safe to
@@ -336,7 +333,7 @@ LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
  * \param nmt  a pointer to an NMT master service.
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
- *             co_nmt_node_err_ind()).
+ *             co_nmt_on_ng()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a ind.
  *
@@ -344,6 +341,16 @@ LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
  */
 LELY_CO_EXTERN void co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when a node guarding event occurs (see
+ * sections 7.2.8.2.2.1 and 7.2.8.3.2.1 in CiA 301 version 4.2.0). This function
+ * invokes co_nmt_comm_err_ind() when an event occurs.
+ *
+ * \see co_nmt_ng_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason);
 
 /*!
  * Retrieves the indication function invoked when a life guarding event occurs.
@@ -365,7 +372,7 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  * \param nmt  a pointer to an NMT slave service.
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
- *             co_nmt_comm_err_ind()).
+ *             co_nmt_on_lg()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a ind.
  *
@@ -373,6 +380,15 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  */
 LELY_CO_EXTERN void co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when a life guarding event occurs (see
+ * section 7.2.8.2.2.2 in CiA 301 version 4.2.0). This function invokes
+ * co_nmt_comm_err_ind() when an event occurs.
+ *
+ * \see co_nmt_lg_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_lg(co_nmt_t *nmt, int state);
 
 /*!
  * Retrieves the indication function invoked when a heartbeat event occurs.
@@ -394,7 +410,7 @@ LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
  * \param nmt  a pointer to an NMT master/slave service.
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
- *             co_nmt_node_err_ind() or co_nmt_comm_err_ind()).
+ *             co_nmt_on_hb()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a ind.
  *
@@ -402,6 +418,18 @@ LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
  */
 LELY_CO_EXTERN void co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when a heartbeat event occurs (see sections
+ * 7.2.8.2.2.3 and 7.2.8.3.2.2 in CiA 301 version 4.2.0). This function invokes
+ * co_nmt_node_err_ind() or co_nmt_comm_err_ind() when a timeout event occurs,
+ * depending on whether the NMT service is a master or not (see
+ * co_nmt_is_master()).
+ *
+ * \see co_nmt_hb_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason);
 
 /*!
  * Retrieves the indication function invoked when a state change is detected.
@@ -423,8 +451,7 @@ LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
  * \param nmt  a pointer to an NMT master/slave service.
  * \param ind  a pointer to the function to be invoked. If \a ind is NULL, the
  *             default indication function will be used (which invokes
- *             co_nmt_boot_req() if a boot-up event indication is received by
- *             an NMT master).
+ *             co_nmt_on_st()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a ind.
  *
@@ -432,6 +459,17 @@ LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
  */
 LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when a state change is detected by the node
+ * guarding or heartbeat protocol. In case of a boot-up event (and the NMT
+ * service is a master), this function invokes co_nmt_boot_req() to boot the
+ * slave.
+ *
+ * \see co_nmt_st_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id,
+		co_unsigned8_t st);
 
 /*!
  * Retrieves the request function invoked to perform LSS when booting an NMT

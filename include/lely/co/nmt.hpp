@@ -125,6 +125,12 @@ public:
 	}
 
 	void
+	onNg(co_unsigned8_t id, int state, int reason) noexcept
+	{
+		co_nmt_on_ng(this, id, state, reason);
+	}
+
+	void
 	getLgInd(co_nmt_lg_ind_t** pind, void** pdata) const noexcept
 	{
 		co_nmt_get_lg_ind(this, pind, pdata);
@@ -150,6 +156,12 @@ public:
 	{
 		setLgInd(&c_mem_call<co_nmt_lg_ind_t*, C, M>::function,
 				static_cast<void*>(obj));
+	}
+
+	void
+	onLg(int state) noexcept
+	{
+		co_nmt_on_lg(this, state);
 	}
 
 	void
@@ -181,6 +193,12 @@ public:
 	}
 
 	void
+	onHb(co_unsigned8_t id, int state, int reason) noexcept
+	{
+		co_nmt_on_hb(this, id, state, reason);
+	}
+
+	void
 	getStInd(co_nmt_st_ind_t** pind, void** pdata) const noexcept
 	{
 		co_nmt_get_st_ind(this, pind, pdata);
@@ -206,6 +224,12 @@ public:
 	{
 		setStInd(&c_mem_call<co_nmt_st_ind_t*, C, M>::function,
 				static_cast<void*>(obj));
+	}
+
+	void
+	onSt(co_unsigned8_t id, co_unsigned8_t st) noexcept
+	{
+		co_nmt_on_st(this, id, st);
 	}
 
 	void

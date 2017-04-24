@@ -308,10 +308,6 @@ static int co_nmt_ec_timer(const struct timespec *tp, void *data);
  * \see can_timer_func_t
  */
 static int co_nmt_cs_timer(const struct timespec *tp, void *data);
-
-//! The default node guarding event handler. \see co_nmt_ng_ind_t
-static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason, void *data);
 #endif
 
 /*!
@@ -322,6 +318,12 @@ static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * \param st  the state of the node.
  */
 static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
+
+#ifndef LELY_NO_CO_MASTER
+//! The default node guarding event handler. \see co_nmt_ng_ind_t
+static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
+		int reason, void *data);
+#endif
 
 //! The default life guarding event handler. \see co_nmt_lg_ind_t
 static void default_lg_ind(co_nmt_t *nmt, int state, void *data);
@@ -1051,7 +1053,20 @@ co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data)
 	nmt->ng_data = ind ? data : NULL;
 }
 
-#endif
+LELY_CO_EXPORT void
+co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
+{
+	assert(nmt);
+	__unused_var(reason);
+
+	if (__unlikely(id || id >= CO_NUM_NODES))
+		return;
+
+	if (co_nmt_is_master(nmt) && state == CO_NMT_EC_OCCURRED)
+		co_nmt_node_err_ind(nmt, id);
+}
+
+#endif // !LELY_NO_CO_MASTER
 
 LELY_CO_EXPORT void
 co_nmt_get_lg_ind(const co_nmt_t *nmt, co_nmt_lg_ind_t **pind, void **pdata)
@@ -1071,6 +1086,15 @@ co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data)
 
 	nmt->lg_ind = ind ? ind : &default_lg_ind;
 	nmt->lg_data = ind ? data : NULL;
+}
+
+LELY_CO_EXPORT void
+co_nmt_on_lg(co_nmt_t *nmt, int state)
+{
+	assert(nmt);
+
+	if (state == CO_NMT_EC_OCCURRED)
+		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 }
 
 LELY_CO_EXPORT void
@@ -1094,6 +1118,26 @@ co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data)
 }
 
 LELY_CO_EXPORT void
+co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
+{
+	assert(nmt);
+
+	if (__unlikely(!id || id >= CO_NUM_NODES))
+		return;
+
+	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
+#ifdef LELY_NO_CO_MASTER
+		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
+#else
+		if (co_nmt_is_master(nmt))
+			co_nmt_node_err_ind(nmt, id);
+		else
+			co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
+#endif
+	}
+}
+
+LELY_CO_EXPORT void
 co_nmt_get_st_ind(const co_nmt_t *nmt, co_nmt_st_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1111,6 +1155,26 @@ co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data)
 
 	nmt->st_ind = ind ? ind : &default_st_ind;
 	nmt->st_data = ind ? data : NULL;
+}
+
+LELY_CO_EXPORT void
+co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
+{
+	assert(nmt);
+
+	if (__unlikely(!id || id >= CO_NUM_NODES))
+		return;
+
+#ifdef LELY_NO_CO_MASTER
+	__unused_var(nmt);
+	__unused_var(st);
+#else
+	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP) {
+		errc_t errc = get_errc();
+		co_nmt_boot_req(nmt, id, nmt->timeout);
+		set_errc(errc);
+	}
+#endif
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2483,70 +2547,35 @@ static void
 default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data)
 {
-	assert(nmt);
-	assert(nmt->master);
-	__unused_var(reason);
 	__unused_var(data);
 
-	if (__unlikely(!id || id >= CO_NUM_NODES))
-		return;
-
-	if (state == CO_NMT_EC_OCCURRED)
-		co_nmt_node_err_ind(nmt, id);
+	co_nmt_on_ng(nmt, id, state, reason);
 }
 #endif
 
 static void
 default_lg_ind(co_nmt_t *nmt, int state, void *data)
 {
-	assert(nmt);
 	__unused_var(data);
 
-	if (state == CO_NMT_EC_OCCURRED)
-		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
+	co_nmt_on_lg(nmt, state);
 }
 
 static void
 default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data)
 {
-	assert(nmt);
 	__unused_var(data);
 
-	if (__unlikely(!id || id >= CO_NUM_NODES))
-		return;
-
-	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
-#ifdef LELY_NO_CO_MASTER
-		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
-#else
-		if (co_nmt_is_master(nmt))
-			co_nmt_node_err_ind(nmt, id);
-		else
-			co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
-#endif
-	}
+	co_nmt_on_hb(nmt, id, state, reason);
 }
 
 static void
 default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 {
-	assert(nmt);
 	__unused_var(data);
 
-	if (__unlikely(!id || id >= CO_NUM_NODES))
-		return;
-
-#ifdef LELY_NO_CO_MASTER
-	__unused_var(nmt);
-	__unused_var(st);
-#else
-	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP) {
-		errc_t errc = get_errc();
-		co_nmt_boot_req(nmt, id, nmt->timeout);
-		set_errc(errc);
-	}
-#endif
+	co_nmt_on_st(nmt, id, st);
 }
 
 #ifndef LELY_NO_CO_MASTER
