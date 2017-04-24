@@ -464,7 +464,7 @@ LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
  * Implements the default behavior when a state change is detected by the node
  * guarding or heartbeat protocol. In case of a boot-up event (and the NMT
  * service is a master), this function invokes co_nmt_boot_req() to boot the
- * slave.
+ * slave (see Fig. 13 in CiA 302-2).
  *
  * \see co_nmt_st_ind_t
  */
