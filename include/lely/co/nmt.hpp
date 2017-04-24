@@ -406,6 +406,12 @@ public:
 		return co_nmt_boot_req(this, id, timeout);
 	}
 
+	bool
+	isBooting(co_unsigned8_t id) const noexcept
+	{
+		return !!co_nmt_is_booting(this, id);
+	}
+
 	int
 	cfgReq(co_unsigned8_t id, int timeout, co_nmt_cfg_con_t* con,
 			void* data) noexcept

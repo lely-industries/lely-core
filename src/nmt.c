@@ -1464,6 +1464,21 @@ error_param:
 }
 
 LELY_CO_EXPORT int
+co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
+{
+	assert(nmt);
+
+	if (__unlikely(!nmt->master))
+		return 0;
+
+	if (__unlikely(!id || id > CO_NUM_NODES
+			|| id == co_dev_get_id(nmt->dev)))
+		return 0;
+
+	return !!nmt->slaves[id - 1].boot;
+}
+
+LELY_CO_EXPORT int
 co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		co_nmt_cfg_con_t *con, void *data)
 {

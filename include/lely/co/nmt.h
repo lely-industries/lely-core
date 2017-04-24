@@ -705,6 +705,12 @@ LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
 		int timeout);
 
 /*!
+ * Returns 1 if the NMT 'boot slave' process is currently running for the
+ * specified node, and 0 if not.
+ */
+LELY_CO_EXTERN int co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id);
+
+/*!
  * Issues the NMT 'configuration request' for the specified node. The function
  * specified to co_nmt_set_cfg_ind() is invoked to complete the request.
  *
