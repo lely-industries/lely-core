@@ -4,7 +4,7 @@
  *
  * \see lely/co/obj.h, src/obj.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -44,21 +44,9 @@ static void co_obj_clear(co_obj_t *obj);
 static co_unsigned32_t default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-#ifndef LELY_NO_CO_OBJ_FILE
-//! The default download indication function for files. \see co_sub_dn_ind_t
-static co_unsigned32_t default_sub_dn_file_ind(co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
-#endif
-
 //! The default upload indication function. \see co_sub_up_ind_t
 static co_unsigned32_t default_sub_up_ind(const co_sub_t *sub,
 		struct co_sdo_req *req, void *data);
-
-#ifndef LELY_NO_CO_OBJ_FILE
-//! The default upload indication function for files. \see co_sub_up_ind_t
-static co_unsigned32_t default_sub_up_file_ind(const co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
-#endif
 
 LELY_CO_EXPORT void *
 __co_obj_alloc(void)
@@ -722,6 +710,54 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 }
 
 LELY_CO_EXPORT co_unsigned32_t
+co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
+{
+	assert(sub);
+	assert(req);
+
+	co_unsigned32_t ac = 0;
+
+#ifndef LELY_NO_CO_OBJ_FILE
+	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN && (co_sub_get_flags(sub)
+			& CO_OBJ_FLAGS_DOWNLOAD_FILE)) {
+		co_sdo_req_dn_file(req, co_sub_addressof_val(sub), &ac);
+		return ac;
+	}
+#endif
+
+	// Read the value.
+	co_unsigned16_t type = co_sub_get_type(sub);
+	union co_val val;
+	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+		goto error_req;
+
+	// Check whether the value is within bounds.
+	if (co_type_is_basic(type)) {
+		const void *ptr = co_val_addressof(type, &val);
+		const void *min = co_sub_addressof_min(sub);
+		const void *max = co_sub_addressof_max(sub);
+		if (__unlikely(co_val_cmp(type, min, max) > 0)) {
+			ac = CO_SDO_AC_PARAM_RANGE;
+			goto error_range;
+		}
+		if (__unlikely(co_val_cmp(type, ptr, max) > 0)) {
+			ac = CO_SDO_AC_PARAM_HI;
+			goto error_range;
+		}
+		if (__unlikely(co_val_cmp(type, ptr, min) < 0)) {
+			ac = CO_SDO_AC_PARAM_LO;
+			goto error_range;
+		}
+	}
+
+	co_sub_dn(sub, &val);
+error_range:
+	co_val_fini(type, &val);
+error_req:
+	return ac;
+}
+
+LELY_CO_EXPORT co_unsigned32_t
 co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 {
 	if (__unlikely(!sub))
@@ -791,6 +827,30 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 
 	sub->up_ind = ind ? ind : &default_sub_up_ind;
 	sub->up_data = ind ? data : NULL;
+}
+
+LELY_CO_EXPORT co_unsigned32_t
+co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
+{
+	assert(sub);
+	assert(req);
+
+	co_unsigned32_t ac = 0;
+
+#ifndef LELY_NO_CO_OBJ_FILE
+	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
+			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)) {
+		co_sdo_req_up_file(req, co_sub_addressof_val(sub), &ac);
+		return ac;
+	}
+#endif
+
+	const void *val = co_sub_get_val(sub);
+	if (__unlikely(!val))
+		return CO_SDO_AC_NO_DATA;
+
+	co_sdo_req_up_val(req, co_sub_get_type(sub), val, &ac);
+	return ac;
 }
 
 LELY_CO_EXPORT co_unsigned32_t
@@ -867,101 +927,16 @@ co_obj_clear(co_obj_t *obj)
 static co_unsigned32_t
 default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	assert(sub);
-	assert(req);
 	__unused_var(data);
 
-#ifndef LELY_NO_CO_OBJ_FILE
-	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
-			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE))
-		return default_sub_dn_file_ind(sub, req, data);
-#endif
-
-	co_unsigned32_t ac = 0;
-
-	// Read the value.
-	co_unsigned16_t type = co_sub_get_type(sub);
-	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
-		goto error_req;
-
-	// Check whether the value is within bounds.
-	if (co_type_is_basic(type)) {
-		const void *ptr = co_val_addressof(type, &val);
-		const void *min = co_sub_addressof_min(sub);
-		const void *max = co_sub_addressof_max(sub);
-		if (__unlikely(co_val_cmp(type, min, max) > 0)) {
-			ac = CO_SDO_AC_PARAM_RANGE;
-			goto error_range;
-		}
-		if (__unlikely(co_val_cmp(type, ptr, max) > 0)) {
-			ac = CO_SDO_AC_PARAM_HI;
-			goto error_range;
-		}
-		if (__unlikely(co_val_cmp(type, ptr, min) < 0)) {
-			ac = CO_SDO_AC_PARAM_LO;
-			goto error_range;
-		}
-	}
-
-	co_sub_dn(sub, &val);
-error_range:
-	co_val_fini(type, &val);
-error_req:
-	return ac;
+	return co_sub_on_dn(sub, req);
 }
-
-#ifndef LELY_NO_CO_OBJ_FILE
-static co_unsigned32_t
-default_sub_dn_file_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	assert(sub);
-	assert(co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN);
-	assert(co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE);
-	assert(req);
-	__unused_var(data);
-
-	co_unsigned32_t ac = 0;
-	co_sdo_req_dn_file(req, co_sub_addressof_val(sub), &ac);
-	return ac;
-}
-#endif
 
 static co_unsigned32_t
 default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	assert(sub);
-	assert(req);
 	__unused_var(data);
 
-#ifndef LELY_NO_CO_OBJ_FILE
-	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
-			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE))
-		return default_sub_up_file_ind(sub, req, data);
-#endif
-
-	const void *val = co_sub_get_val(sub);
-	if (__unlikely(!val))
-		return CO_SDO_AC_NO_DATA;
-
-	co_unsigned32_t ac = 0;
-	co_sdo_req_up_val(req, co_sub_get_type(sub), val, &ac);
-	return ac;
+	return co_sub_on_up(sub, req);
 }
-
-#ifndef LELY_NO_CO_OBJ_FILE
-static co_unsigned32_t
-default_sub_up_file_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	assert(sub);
-	assert(co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN);
-	assert(co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE);
-	assert(req);
-	__unused_var(data);
-
-	co_unsigned32_t ac = 0;
-	co_sdo_req_up_file(req, co_sub_addressof_val(sub), &ac);
-	return ac;
-}
-#endif
 

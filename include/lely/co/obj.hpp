@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the object dictionary. See lely/co/obj.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -455,6 +455,12 @@ public:
 	}
 
 	co_unsigned32_t
+	onDn(co_sdo_req& req) noexcept
+	{
+		return co_sub_on_dn(this, &req);
+	}
+
+	co_unsigned32_t
 	dnInd(co_sdo_req& req) noexcept
 	{
 		return co_sub_dn_ind(this, &req);
@@ -496,9 +502,15 @@ public:
 	}
 
 	co_unsigned32_t
-	upInd(co_sdo_req& req) noexcept
+	onUp(co_sdo_req& req) const noexcept
 	{
-		return co_sub_dn_ind(this, &req);
+		return co_sub_on_up(this, &req);
+	}
+
+	co_unsigned32_t
+	upInd(co_sdo_req& req) const noexcept
+	{
+		return co_sub_up_ind(this, &req);
 	}
 
 protected:

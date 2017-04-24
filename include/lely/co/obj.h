@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the object
  * dictionary declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -622,7 +622,8 @@ LELY_CO_EXTERN void co_sub_get_dn_ind(const co_sub_t *sub,
  *
  * \param sub  a pointer to a CANopen sub-object.
  * \param ind  a pointer to the indication function. If \a ind is NULL, the
- *             default indication function will be used.
+ *             default indication function will be used (which invokes
+ *             co_sub_on_dn()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a func.
  *
@@ -630,6 +631,19 @@ LELY_CO_EXTERN void co_sub_get_dn_ind(const co_sub_t *sub,
  */
 LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when a download indication is received by a
+ * CANopen sub-object. For a domain value with the #CO_OBJ_FLAGS_DOWNLOAD_FILE
+ * flag set, this function invokes co_sdo_req_dn_file() to write the value to
+ * file. Otherwise the value is read from the SDO download request with
+ * co_sdo_req_dn_val() and, if it is within the specified range, written to the
+ * object dictionary with co_sub_dn().
+ *
+ * \see co_sub_dn_ind_t
+ */
+LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(co_sub_t *sub,
+		struct co_sdo_req *req);
 
 /*!
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -709,7 +723,8 @@ LELY_CO_EXTERN void co_sub_get_up_ind(const co_sub_t *sub,
  *
  * \param sub  a pointer to a CANopen sub-object.
  * \param ind  a pointer to the indication function. If \a ind is NULL, the
- *             default indication function will be used.
+ *             default indication function will be used (which invokes
+ *             co_sub_on_up()).
  * \param data a pointer to user-specified data (can be NULL). \a data is passed
  *             as the last parameter to \a func.
  *
@@ -717,6 +732,19 @@ LELY_CO_EXTERN void co_sub_get_up_ind(const co_sub_t *sub,
  */
 LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
 		void *data);
+
+/*!
+ * Implements the default behavior when an upload indication is received by a
+ * CANopen sub-object. For a domain value with the #CO_OBJ_FLAGS_UPLOAD_FILE
+ * flag set, this function invokes co_sdo_req_up_file() to read the value from
+ * file. Otherwise the value is read from the object dictionary with
+ * co_sub_get_val() and written to the SDO upload request with
+ * co_sdo_req_up_val().
+ *
+ * \see co_sub_up_ind_t
+ */
+LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(const co_sub_t *sub,
+		struct co_sdo_req *req);
 
 /*!
  * Invokes the upload indication function of a CANopen sub-object, registered
