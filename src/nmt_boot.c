@@ -1421,16 +1421,10 @@ co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
-		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
-				ac, boot->id, co_sdo_ac2str(ac));
-		return co_nmt_boot_abort_state;
-	}
-
 	// If the value is already 0 (Program stopped), do not write a 0 (Stop
 	// program), but skip to the 'clear program' state.
 	co_unsigned8_t val = 0;
-	if (co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
+	if (!ac && co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
 			(const uint8_t *)ptr + n) && !val)
 		return co_nmt_boot_clear_prog_state;
 
