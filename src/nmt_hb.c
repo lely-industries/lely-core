@@ -179,7 +179,7 @@ co_nmt_hb_set_1016(co_nmt_hb_t *hb, co_unsigned8_t id, co_unsigned16_t ms)
 	hb->state = CO_NMT_EC_RESOLVED;
 
 	if (hb->id && hb->id <= CO_NUM_NODES && hb->ms)
-		can_recv_start(hb->recv, hb->net, 0x700 + hb->id, 0);
+		can_recv_start(hb->recv, hb->net, CO_NMT_EC_CANID(hb->id), 0);
 }
 
 void
@@ -202,7 +202,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 	assert(hb->id && hb->id <= CO_NUM_NODES);
-	assert(msg->id == (uint32_t)(0x700 + hb->id));
+	assert(msg->id == (uint32_t)CO_NMT_EC_CANID(hb->id));
 	assert(hb->ms);
 
 	// Obtain the node status from the CAN frame. Ignore if the toggle bit

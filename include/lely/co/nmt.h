@@ -69,6 +69,9 @@
 //! The mask to get/set the toggle bit from an NMT state.
 #define CO_NMT_ST_TOGGLE	0x80
 
+//! The CAN identifier used for both node guarding and heartbeat monitoring.
+#define CO_NMT_EC_CANID(id)	(0x700 + ((id) & 0x7f))
+
 enum {
 	//! An NMT error control event occurred.
 	CO_NMT_EC_OCCURRED,

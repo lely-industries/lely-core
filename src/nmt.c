@@ -2465,7 +2465,7 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 	}
 
 	struct can_msg msg = CAN_MSG_INIT;
-	msg.id = 0x700 + id;
+	msg.id = CO_NMT_EC_CANID(id);
 	msg.flags |= CAN_FLAG_RTR;
 
 	return can_net_send(nmt->net, &msg);
@@ -3194,7 +3194,8 @@ co_nmt_ec_update(co_nmt_t *nmt)
 		}
 		// Start the CAN frame receiver for node guarding RTRs.
 		can_recv_start(nmt->recv_700, nmt->net,
-				0x700 + co_dev_get_id(nmt->dev), CAN_FLAG_RTR);
+				CO_NMT_EC_CANID(co_dev_get_id(nmt->dev)),
+				CAN_FLAG_RTR);
 	} else if (nmt->recv_700) {
 		can_recv_destroy(nmt->recv_700);
 		nmt->recv_700 = NULL;
@@ -3227,7 +3228,7 @@ co_nmt_ec_send_res(co_nmt_t *nmt, co_unsigned8_t st)
 	assert(nmt);
 
 	struct can_msg msg = CAN_MSG_INIT;
-	msg.id = 0x700 + co_dev_get_id(nmt->dev);
+	msg.id = CO_NMT_EC_CANID(co_dev_get_id(nmt->dev));
 	msg.len = 1;
 	msg.data[0] = st;
 
@@ -3300,7 +3301,7 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
 		// Start listening for boot-up notifications.
-		can_recv_start(slave->recv, nmt->net, 0x700 + id, 0);
+		can_recv_start(slave->recv, nmt->net, CO_NMT_EC_CANID(id), 0);
 	}
 
 	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);

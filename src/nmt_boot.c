@@ -1283,7 +1283,8 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 
 		// Start the CAN frame receiver for the heartbeat or node guard
 		// message.
-		can_recv_start(boot->recv, boot->net, 0x700 + boot->id, 0);
+		can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id),
+				0);
 		// Start the CAN timer in case we do not receive a heartbeat
 		// indication or a node guard confirmation.
 		can_timer_timeout(boot->timer, boot->net, ms);
@@ -1831,7 +1832,8 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 	if (boot->ms) {
 		boot->es = 'K';
 		// Start the CAN frame receiver for heartbeat messages.
-		can_recv_start(boot->recv, boot->net, 0x700 + boot->id, 0);
+		can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id),
+				0);
 		// Wait for the first heartbeat indication.
 		can_timer_timeout(boot->timer, boot->net, boot->ms);
 		return NULL;
@@ -1919,7 +1921,7 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 	assert(boot);
 
 	struct can_msg msg = CAN_MSG_INIT;
-	msg.id = 0x700 + boot->id;
+	msg.id = CO_NMT_EC_CANID(boot->id);
 	msg.flags |= CAN_FLAG_RTR;
 
 	return can_net_send(boot->net, &msg);
