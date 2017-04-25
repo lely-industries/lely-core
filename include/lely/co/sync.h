@@ -39,8 +39,8 @@ extern "C" {
 #endif
 
 /*!
- * The type of a CANopen SYNC indication function, invoked when a SYNC message
- * is received.
+ * The type of a CANopen SYNC indication function, invoked after a SYNC message
+ * is received or transmitted.
  *
  * \param sync a pointer to a SYNC consumer service.
  * \param cnt  the counter.
@@ -89,8 +89,8 @@ LELY_CO_EXTERN can_net_t *co_sync_get_net(const co_sync_t *sync);
 LELY_CO_EXTERN co_dev_t *co_sync_get_dev(const co_sync_t *sync);
 
 /*!
- * Retrieves the indication function invoked when a CANopen SYNC message is
- * received.
+ * Retrieves the indication function invoked after a CANopen SYNC message is
+ * received or transmitted.
  *
  * \param sync  a pointer to a SYNC consumer service.
  * \param pind  the address at which to store a pointer to the indication
@@ -104,7 +104,8 @@ LELY_CO_EXTERN void co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind,
 		void **pdata);
 
 /*!
- * Sets the indication function invoked when a CANopen SYNC message is received.
+ * Sets the indication function invoked after a CANopen SYNC message is received
+ * or transmitted.
  *
  * \param sync a pointer to a SYNC consumer service.
  * \param ind  a pointer to the function to be invoked.

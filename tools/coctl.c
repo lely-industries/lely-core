@@ -224,7 +224,7 @@ main(int argc, char *argv[])
 			goto error_net;
 		}
 		if (__unlikely(io_set_flags(net[id - 1].handle,
-				IO_FLAG_NONBLOCK | IO_FLAG_LOOPBACK) == -1)) {
+				IO_FLAG_NONBLOCK) == -1)) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to set CAN device flags");
 			goto error_net;

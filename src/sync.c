@@ -323,6 +323,30 @@ co_sync_update(co_sync_t *sync)
 {
 	assert(sync);
 
+	if (!(sync->cobid & CO_SYNC_COBID_PRODUCER)) {
+		if (!sync->recv) {
+			sync->recv = can_recv_create();
+			if (__unlikely(!sync->recv))
+				return -1;
+			can_recv_set_func(sync->recv, &co_sync_recv, sync);
+		}
+		// Register the receiver under the specified CAN-ID.
+		uint32_t id = sync->cobid;
+		uint8_t flags = 0;
+		if (id & CO_SYNC_COBID_FRAME) {
+			id &= CAN_MASK_EID;
+			flags |= CAN_FLAG_IDE;
+		} else {
+			id &= CAN_MASK_BID;
+		}
+		can_recv_start(sync->recv, sync->net, id, flags);
+	} else if (sync->recv) {
+		// Destroy the receiver if we are a producer, to prevent
+		// receiving our own SYNC messages.
+		can_recv_destroy(sync->recv);
+		sync->recv = NULL;
+	}
+
 	if ((sync->cobid & CO_SYNC_COBID_PRODUCER) && sync->us) {
 		if (!sync->timer) {
 			sync->timer = can_timer_create();
@@ -330,31 +354,15 @@ co_sync_update(co_sync_t *sync)
 				return -1;
 			can_timer_set_func(sync->timer, co_sync_timer, sync);
 		}
+		// Start SYNC transmission after 1 SYNC cycle.
 		struct timespec interval = { 0, 1000 * sync->us };
 		can_timer_start(sync->timer, sync->net, NULL, &interval);
-	} else {
-		if (sync->timer) {
-			can_timer_destroy(sync->timer);
-			sync->timer = NULL;
-		}
+	} else if (sync->timer) {
+		// Destroy the SYNC timer unless we are an active SYNC producer
+		// (with a non-zero communication cycle period).
+		can_timer_destroy(sync->timer);
+		sync->timer = NULL;
 	}
-
-	if (!sync->recv) {
-		sync->recv = can_recv_create();
-		if (__unlikely(!sync->recv))
-			return -1;
-		can_recv_set_func(sync->recv, &co_sync_recv, sync);
-	}
-	// Register the receiver under the specified CAN-ID.
-	uint32_t id = sync->cobid;
-	uint8_t flags = 0;
-	if (id & CO_SYNC_COBID_FRAME) {
-		id &= CAN_MASK_EID;
-		flags |= CAN_FLAG_IDE;
-	} else {
-		id &= CAN_MASK_BID;
-	}
-	can_recv_start(sync->recv, sync->net, id, flags);
 
 	return 0;
 }
@@ -530,8 +538,8 @@ co_sync_recv(const struct can_msg *msg, void *data)
 	uint8_t len = sync->max_cnt ? 1 : 0;
 	if (__unlikely(msg->len != len && sync->err))
 		sync->err(sync, 0x8240, 0x10, sync->err_data);
-	co_unsigned8_t cnt = len && msg->len == len ? msg->data[0] : 0;
 
+	co_unsigned8_t cnt = len && msg->len == len ? msg->data[0] : 0;
 	if (sync->ind)
 		sync->ind(sync, cnt, sync->ind_data);
 
@@ -559,6 +567,10 @@ co_sync_timer(const struct timespec *tp, void *data)
 		sync->cnt = sync->cnt < sync->max_cnt ? sync->cnt + 1 : 1;
 	}
 	can_net_send(sync->net, &msg);
+
+	co_unsigned8_t cnt = msg.len ? msg.data[0] : 0;
+	if (sync->ind)
+		sync->ind(sync, cnt, sync->ind_data);
 
 	return 0;
 }
