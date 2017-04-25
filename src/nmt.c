@@ -1346,6 +1346,7 @@ co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 	if (eec) {
 #ifdef LELY_NO_CO_EMCY
 		__unused_var(er);
+		__unused_var(msef);
 #else
 		if (nmt->srv.emcy)
 			co_emcy_push(nmt->srv.emcy, eec, er, msef);
