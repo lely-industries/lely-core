@@ -1461,7 +1461,7 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 	((struct sock *)handle)->domain = sock->domain;
 	((struct sock *)handle)->type = sock->type;
 
-	return handle;
+	return io_handle_acquire(handle);
 
 error_alloc_handle:
 #if _POSIX_C_SOURCE >= 200112L && !defined(_GNU_SOURCE)
