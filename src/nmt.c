@@ -1451,7 +1451,7 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	trace("NMT: sending command specifier %d to node %d", cs, id);
 
 	struct can_msg msg = CAN_MSG_INIT;
-	msg.id = 0x000;
+	msg.id = CO_NMT_CS_CANID;
 	msg.len = 2;
 	msg.data[0] = cs;
 	msg.data[1] = id;
@@ -2524,7 +2524,7 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 
 	struct can_msg msg;
 	while (can_buf_peek(&nmt->buf, &msg, 1)) {
-		assert(msg.id == 0x000);
+		assert(msg.id == CO_NMT_CS_CANID);
 		assert(msg.len == 2);
 		// Wait until the inhibit time has elapsed.
 		if (inhibit && timespec_cmp(&now, &nmt->inhibit) < 0) {
@@ -2809,7 +2809,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 
 	// Start receiving NMT commands.
 	if (!co_nmt_is_master(nmt))
-		can_recv_start(nmt->recv_000, nmt->net, 0x000, 0);
+		can_recv_start(nmt->recv_000, nmt->net, CO_NMT_CS_CANID, 0);
 
 	// Enable LSS.
 	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_SRV_LSS);

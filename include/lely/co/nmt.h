@@ -33,6 +33,9 @@
 #define LELY_CO_NMT_TIMEOUT	100
 #endif
 
+//! The CAN identifier used for NMT commands.
+#define CO_NMT_CS_CANID	0x000
+
 //! The NMT command specifier 'start'.
 #define CO_NMT_CS_START	0x01
 
