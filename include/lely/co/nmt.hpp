@@ -372,6 +372,47 @@ public:
 				static_cast<void*>(obj));
 	}
 
+	void
+	getSyncInd(co_nmt_sync_ind_t** pind, void** pdata) const noexcept
+	{
+		co_nmt_get_sync_ind(this, pind, pdata);
+	}
+
+	void
+	setSyncInd(co_nmt_sync_ind_t* ind, void* data) noexcept
+	{
+		co_nmt_set_sync_ind(this, ind, data);
+	}
+
+	template <class F>
+	void
+	setSyncInd(F* f) noexcept
+	{
+		setSyncInd(&c_obj_call<co_nmt_sync_ind_t*, F>::function,
+				static_cast<void*>(f));
+	}
+
+	template <class C, typename c_mem_fn<co_nmt_sync_ind_t*, C>::type M>
+	void
+	setSyncInd(C* obj) noexcept
+	{
+		setSyncInd(&c_mem_call<co_nmt_sync_ind_t*, C, M>::function,
+				static_cast<void*>(obj));
+	}
+
+	void
+	onSync(co_unsigned8_t cs = 0) noexcept
+	{
+		co_nmt_on_sync(this, cs);
+	}
+
+	void
+	onErr(co_unsigned16_t eec, co_unsigned8_t er, const uint8_t msef[5] = 0)
+			noexcept
+	{
+		co_nmt_on_err(this, eec, er, msef);
+	}
+
 	co_unsigned8_t getId() const noexcept { return co_nmt_get_id(this); }
 
 	int
@@ -495,19 +536,6 @@ public:
 	COEmcy* getEmcy() const noexcept { return co_nmt_get_emcy(this); }
 
 	COLSS* getLSS() const noexcept { return co_nmt_get_lss(this); }
-
-	void
-	onSync(co_unsigned8_t cs = 0) noexcept
-	{
-		co_nmt_on_sync(this, cs);
-	}
-
-	void
-	onErr(co_unsigned16_t eec, co_unsigned8_t er, const uint8_t msef[5] = 0)
-			noexcept
-	{
-		co_nmt_on_err(this, eec, er, msef);
-	}
 
 protected:
 	~CONMT() {}

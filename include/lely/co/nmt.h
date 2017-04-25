@@ -242,6 +242,18 @@ typedef void co_nmt_sdo_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
 		size_t nbyte, void *data);
 
 /*!
+ * The type of a SYNC indication function, invoked by co_nmt_on_sync() _after_
+ * PDOs are transmitted/processed upon reception/transmission of a SYNC message.
+ *
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param cnt  the counter.
+ * \param data a pointer to user-specified data.
+ *
+ * \see co_sync_ind_t
+ */
+typedef void co_nmt_sync_ind_t(co_nmt_t *nmt, co_unsigned8_t cnt, void *data);
+
+/*!
  * Configures heartbeat consumption for the specified node by updating CANopen
  * object 1016 (Consumer heartbeat time).
  *
@@ -617,6 +629,55 @@ LELY_CO_EXTERN void co_nmt_get_up_ind(const co_nmt_t *nmt,
 LELY_CO_EXTERN void co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
 		void *data);
 
+/*!
+ * Retrieves the indication function invoked by co_nmt_on_sync() after all PDOs
+ * have been transmitted/processed.
+ *
+ * \param nmt   a pointer to an NMT master/slave service.
+ * \param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * \param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * \see co_nmt_set_sync_ind()
+ */
+LELY_CO_EXTERN void co_nmt_get_sync_ind(const co_nmt_t *nmt,
+		co_nmt_sync_ind_t **pind, void **pdata);
+
+/*!
+ * Sets the indication function invoked by co_nmt_on_sync() after all PDOs have
+ * been transmitted/processed.
+ *
+ * \param nmt  a pointer to an NMT master/slave service.
+ * \param ind  a pointer to the function to be invoked.
+ * \param data a pointer to user-specified data (can be NULL). \a data is passed
+ *             as the last parameter to \a ind.
+ *
+ * \see co_nmt_get_sync_ind()
+ */
+LELY_CO_EXTERN void co_nmt_set_sync_ind(co_nmt_t *nmt, co_nmt_sync_ind_t *ind,
+		void *data);
+
+/*!
+ * Implements the default behavior after a SYNC object is received or
+ * transmitted. First all synchronous Transmit-PDOs are sent with
+ * co_tpdo_sync(). Then all synchronous Receive-PDOs are actuated with
+ * co_rpdo_sync(). Finally the user-defined callback function set with
+ * co_nmt_set_sync_ind() is invoked.
+ *
+ * \see co_sync_ind_t, co_nmt_sync_ind_t
+ */
+LELY_CO_EXTERN void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
+
+/*!
+ * Implements the default error handling behavior by generating an EMCY message
+ * with co_emcy_push() and invoking co_nmt_comm_err_ind().
+ *
+ * \see co_rpdo_err_t, co_sync_err_t
+ */
+LELY_CO_EXTERN void co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec,
+		co_unsigned8_t er, const uint8_t msef[5]);
+
 //! Returns the pending node-ID. \see co_nmt_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
 
@@ -847,23 +908,6 @@ LELY_CO_EXTERN co_emcy_t *co_nmt_get_emcy(const co_nmt_t *nmt);
 
 //! Returns a pointer to the LSS master/slave service.
 LELY_CO_EXTERN co_lss_t *co_nmt_get_lss(const co_nmt_t *nmt);
-
-/*!
- * Implements the default behavior when receiving a SYNC object by passing it to
- * all active Receive/Transmit-PDO services.
- *
- * \see co_sync_ind_t
- */
-LELY_CO_EXTERN void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
-
-/*!
- * Implements the default error handling behavior by generating an EMCY message
- * with co_emcy_push() and invoking co_nmt_comm_err_ind().
- *
- * \see co_rpdo_err_t, co_sync_err_t
- */
-LELY_CO_EXTERN void co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec,
-		co_unsigned8_t er, const uint8_t msef[5]);
 
 #ifdef __cplusplus
 }

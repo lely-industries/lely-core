@@ -210,6 +210,10 @@ struct __co_nmt {
 	//! A pointer to user-specified data for #up_ind.
 	void *up_data;
 #endif
+	//! A pointer to the SYNC indication function.
+	co_nmt_sync_ind_t *sync_ind;
+	//! A pointer to user-specified data for #sync_ind.
+	void *sync_data;
 };
 
 /*!
@@ -817,6 +821,8 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->up_ind = NULL;
 	nmt->up_data = NULL;
 #endif
+	nmt->sync_ind = NULL;
+	nmt->sync_data = NULL;
 
 	// Set the download indication function for the guard time.
 	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
@@ -1284,6 +1290,69 @@ co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
 }
 
 #endif // !LELY_NO_CO_MASTER
+
+LELY_CO_EXPORT void
+co_nmt_get_sync_ind(const co_nmt_t *nmt, co_nmt_sync_ind_t **pind, void **pdata)
+{
+	assert(nmt);
+
+	if (pind)
+		*pind = nmt->sync_ind;
+	if (pdata)
+		*pdata = nmt->sync_data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_set_sync_ind(co_nmt_t *nmt, co_nmt_sync_ind_t *ind, void *data)
+{
+	assert(nmt);
+
+	nmt->sync_ind = ind;
+	nmt->sync_data = data;
+}
+
+LELY_CO_EXPORT void
+co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
+{
+	assert(nmt);
+
+	// Handle TPDOs before RPDOs. This prevents a possible race condition if
+	// the same object is mapped to both an RPDO and a TPDO. In accordance
+	// with CiA 301 v4.2.0 we transmit the value from the previous
+	// synchronous window before updating it with a received PDO.
+#ifndef LELY_NO_CO_TPDO
+	for (co_unsigned16_t i = 0; i < nmt->srv.ntpdo; i++) {
+		if (nmt->srv.tpdos[i])
+			co_tpdo_sync(nmt->srv.tpdos[i], cnt);
+	}
+#endif
+#ifndef LELY_NO_CO_RPDO
+	for (co_unsigned16_t i = 0; i < nmt->srv.nrpdo; i++) {
+		if (nmt->srv.rpdos[i])
+			co_rpdo_sync(nmt->srv.rpdos[i], cnt);
+	}
+#endif
+
+	if (nmt->sync_ind)
+		nmt->sync_ind(nmt, cnt, nmt->sync_data);
+}
+
+LELY_CO_EXPORT void
+co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5])
+{
+	assert(nmt);
+
+	if (eec) {
+#ifdef LELY_NO_CO_EMCY
+		__unused_var(er);
+#else
+		if (nmt->srv.emcy)
+			co_emcy_push(nmt->srv.emcy, eec, er, msef);
+#endif
+		co_nmt_comm_err_ind(nmt);
+	}
+}
 
 LELY_CO_EXPORT co_unsigned8_t
 co_nmt_get_id(const co_nmt_t *nmt)
@@ -1753,46 +1822,6 @@ co_nmt_get_lss(const co_nmt_t *nmt)
 	assert(nmt);
 
 	return nmt->srv.lss;
-}
-
-LELY_CO_EXPORT void
-co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
-{
-#if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-	assert(nmt);
-#ifndef LELY_NO_CO_TPDO
-	for (co_unsigned16_t i = 0; i < nmt->srv.ntpdo; i++) {
-		if (nmt->srv.tpdos[i])
-			co_tpdo_sync(nmt->srv.tpdos[i], cnt);
-	}
-#endif
-#ifndef LELY_NO_CO_RPDO
-	for (co_unsigned16_t i = 0; i < nmt->srv.nrpdo; i++) {
-		if (nmt->srv.rpdos[i])
-			co_rpdo_sync(nmt->srv.rpdos[i], cnt);
-	}
-#endif
-#else
-	__unused_var(nmt);
-	__unused_var(cnt);
-#endif
-}
-
-LELY_CO_EXPORT void
-co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
-{
-	assert(nmt);
-
-	if (eec) {
-#ifdef LELY_NO_CO_EMCY
-		__unused_var(er);
-#else
-		if (nmt->srv.emcy)
-			co_emcy_push(nmt->srv.emcy, eec, er, msef);
-#endif
-		co_nmt_comm_err_ind(nmt);
-	}
 }
 
 #ifndef LELY_NO_CO_MASTER
