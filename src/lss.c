@@ -4,7 +4,7 @@
  *
  * \see lely/co/lss.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1326,7 +1326,7 @@ co_lss_wait_slave_on_enter(co_lss_t *lss)
 	lss->lsspos = 0;
 
 	// Start receiving LSS commands from the master.
-	can_recv_start(lss->recv, lss->net, 0x7e5, 0);
+	can_recv_start(lss->recv, lss->net, CO_LSS_CANID(1), 0);
 
 	return NULL;
 }
@@ -2239,7 +2239,7 @@ co_lss_init_req(const co_lss_t *lss, struct can_msg *msg, co_unsigned8_t cs)
 	assert(msg);
 
 	*msg = (struct can_msg)CAN_MSG_INIT;
-	msg->id = 0x7e4 + !!co_lss_is_master(lss);
+	msg->id = CO_LSS_CANID(co_lss_is_master(lss));
 	msg->len = CAN_MAX_LEN;
 	msg->data[0] = cs;
 }
@@ -2344,7 +2344,7 @@ co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs)
 	lss->lssid = 0;
 	lss->nid = 0;
 
-	can_recv_start(lss->recv, lss->net, 0x7e4, 0);
+	can_recv_start(lss->recv, lss->net, CO_LSS_CANID(0), 0);
 	can_timer_timeout(lss->timer, lss->net, lss->timeout);
 }
 

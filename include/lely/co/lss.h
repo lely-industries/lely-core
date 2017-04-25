@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Layer
  * Setting Services (LSS) and protocols declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,6 +29,9 @@
 //! The default LSS timeout (in milliseconds).
 #define LELY_CO_LSS_TIMEOUT	100
 #endif
+
+//! The CAN identifier used for LSS by the master (1) or the slave (0).
+#define CO_LSS_CANID(master)	(0x7e4 + !!(master))
 
 #ifdef __cplusplus
 extern "C" {
