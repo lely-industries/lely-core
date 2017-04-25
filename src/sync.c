@@ -364,6 +364,8 @@ co_sync_update(co_sync_t *sync)
 		sync->timer = NULL;
 	}
 
+	sync->cnt = 1;
+
 	return 0;
 }
 
@@ -453,7 +455,6 @@ co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		goto error;
 
 	sync->us = us;
-	sync->cnt = 1;
 
 	co_sub_dn(sub, &val);
 	co_val_fini(type, &val);
