@@ -1032,7 +1032,7 @@ co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot)
 
 	// Retry on error status B (see Fig. 4 in CiA 302-2 version 4.1.0).
 	if (boot->es == 'B') {
-		int wait = 0;
+		int wait = 1;
 		if (boot->assignment & 0x08) {
 			// Obtain the time (in milliseconds) the master will
 			// wait for a mandatory slave to boot.
