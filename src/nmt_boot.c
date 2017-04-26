@@ -40,6 +40,11 @@
 #define LELY_CO_NMT_BOOT_WAIT_TIMEOUT	1000
 #endif
 
+#ifndef LELY_CO_NMT_BOOT_SDO_RETRY
+//! The number of times an SDO request is retried after a timeout.
+#define LELY_CO_NMT_BOOT_SDO_RETRY	3
+#endif
+
 #ifndef LELY_CO_NMT_BOOT_RTR_TIMEOUT
 //! The timeout (in milliseconds) after sending a node guarding RTR.
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
@@ -85,6 +90,8 @@ struct __co_nmt_boot {
 	co_unsigned16_t ms;
 	//! The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
+	//! The number of SDO retries remaining.
+	int retry;
 	//! The state of the node (including the toggle bit).
 	co_unsigned8_t st;
 	//! The error status.
@@ -758,6 +765,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->es = 0;
 
 	co_sdo_req_init(&boot->req);
+	boot->retry = 0;
 
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
 	return boot;
@@ -1346,14 +1354,17 @@ co_nmt_boot_chk_sw_on_enter(co_nmt_boot_t *boot)
 		if (!sw_id)
 			return co_nmt_boot_abort_state;
 
-		// Read the program software identification of the slave
-		// (sub-object 1F56:01).
-		if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
-			return co_nmt_boot_abort_state;
-
-		return NULL;
+		// The software version check may follow an NMT 'reset
+		// communication' command, in which case we may have to give the
+		// slave some time to complete the state change. Start the first
+		// SDO request by simulating a timeout.
+		boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+		return co_nmt_boot_chk_sw_on_up_con(boot, CO_SDO_AC_TIMEOUT,
+				NULL, 0);
 	}
 
+	// Continue with the 'check configuration' step if the software version
+	// check is not necessary.
 	return co_nmt_boot_chk_cfg_date_state;
 }
 
@@ -1363,7 +1374,14 @@ co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		// Read the program software identification of the slave
+		// (sub-object 1F56:01).
+		if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
@@ -1442,13 +1460,12 @@ co_nmt_boot_clear_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// Write a 3 (Clear program) to the program control of the slave
-	// (sub-object 1F51:01).
-	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
-			&(co_unsigned8_t){ 3 }) == -1))
-		return co_nmt_boot_abort_state;
-
-	return NULL;
+	// The 'clear program' command follows the 'stop program' command, which
+	// may have triggered a reboot of the slave. In that case we may have to
+	// give the slave some time to finish booting. Start the first SDO
+	// request by simulating a timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_clear_prog_on_dn_con(boot, CO_SDO_AC_TIMEOUT);
 }
 
 static co_nmt_boot_state_t *
@@ -1456,7 +1473,16 @@ co_nmt_boot_clear_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// Retry the SDO request on timeout.
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		// Write a 3 (Clear program) to the program control of the slave
+		// (sub-object 1F51:01).
+		if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01,
+				CO_DEFTYPE_UNSIGNED8, &(co_unsigned8_t){ 3 })
+				== -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
@@ -1485,13 +1511,11 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 		return co_nmt_boot_abort_state;
 	}
 
-	// Write the program data (sub-object 1F58:ID) to the program data of
-	// the slave (sub-object 1F50:01) using SDO block transfer.
-	if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
-			req->size, &co_nmt_boot_dn_con, boot) == -1))
-		return co_nmt_boot_abort_state;
-
-	return NULL;
+	// The 'clear program' step may take some time to complete, causing an
+	// immediate 'download program' to generate a timeout. Start the first
+	// attempt by simulating a timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_blk_dn_prog_on_dn_con(boot, CO_SDO_AC_TIMEOUT);
 }
 
 static co_nmt_boot_state_t *
@@ -1499,10 +1523,22 @@ co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	__unused_var(boot);
 
-	// If SDO block transfer is not supported, fall back to SDO segmented
-	// transfer.
-	if (__unlikely(ac))
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		struct co_sdo_req *req = &boot->req;
+		// Write the program data (sub-object 1F58:ID) to the program
+		// data of the slave (sub-object 1F50:01) using SDO block
+		// transfer.
+		if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01,
+				req->buf, req->size, &co_nmt_boot_dn_con, boot)
+				== -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
+		// If SDO block transfer is not supported, fall back to SDO
+		// segmented transfer.
 		return co_nmt_boot_dn_prog_state;
+	}
 
 	return co_nmt_boot_wait_flash_state;
 }
@@ -1512,14 +1548,12 @@ co_nmt_boot_dn_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	struct co_sdo_req *req = &boot->req;
-	// Write the program data (sub-object 1F58:ID) to the program data of
-	// the slave (sub-object 1F50:01) using SDO segmented transfer.
-	if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
-			req->size, &co_nmt_boot_dn_con, boot) == -1))
-		return co_nmt_boot_abort_state;
-
-	return NULL;
+	// If SDO block transfer is not supported, we may still have to wait for
+	// the 'clear program' step to complete before successfully doing a
+	// segmented SDO transfer. Start the first attempt by simulating a
+	// timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_dn_prog_on_dn_con(boot, CO_SDO_AC_TIMEOUT);
 }
 
 static co_nmt_boot_state_t *
@@ -1527,7 +1561,17 @@ co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		struct co_sdo_req *req = &boot->req;
+		// Write the program data (sub-object 1F58:ID) to the program
+		// data of the slave (sub-object 1F50:01) using SDO segmented
+		// transfer.
+		if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
+				req->size, &co_nmt_boot_dn_con, boot) == -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
@@ -1698,9 +1742,12 @@ co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	assert(boot);
 	__unused_var(tp);
 
-	// Read the program control of the slave (sub-object 1F51:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
-		return co_nmt_boot_abort_state;
+	// The 'start program' step may take some time to complete, causing an
+	// immediate SDO upload request to generate a timeout. Start the first
+	// attempt by simulating a timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_wait_prog_on_up_con(boot, CO_SDO_AC_TIMEOUT, NULL,
+			0);
 
 	return NULL;
 }
@@ -1711,7 +1758,13 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		// Read the program control of the slave (sub-object 1F51:01).
+		if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
@@ -1743,11 +1796,14 @@ co_nmt_boot_chk_cfg_date_on_enter(co_nmt_boot_t *boot)
 	if (!cfg_date || !cfg_time)
 		return co_nmt_boot_up_cfg_state;
 
-	// Read the configuration date of the slave (sub-object 1020:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x01) == -1))
-		return co_nmt_boot_abort_state;
+	// The configuration check may follow an NMT 'reset communication'
+	// command (if the 'check software version' step was skipped), in which
+	// case we may have to give the slave some time to complete the state
+	// change. Start the first SDO request by simulating a timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_chk_cfg_date_on_up_con(boot, CO_SDO_AC_TIMEOUT, NULL,
+			0);
 
-	return NULL;
 }
 
 static co_nmt_boot_state_t *
@@ -1756,9 +1812,17 @@ co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		// Read the configuration date of the slave (sub-object
+		// 1020:01).
+		if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x01) == -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of sub-object 1020:01 (Configuration date) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+	}
 
 	// If the configuration date does not match the expected value, skip
 	// checking the time and proceed to 'update configuration'.
