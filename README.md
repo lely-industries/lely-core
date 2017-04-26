@@ -168,6 +168,27 @@ space on embedded devices. liblely-co supports the following `configure` options
 * `--disable-gw-txt` (`LELY_NO_CO_GW_TXT`):
   disable ASCII gateway support.
 
+The following preprocessor macros can be defined to change the default timeouts
+used by an NMT master when booting a slave:
+
+* `LELY_CO_NMT_TIMEOUT`: the default timeout (in milliseconds) for SDO requests
+  issued by an NMT master (default: 100). The actual timeout can be changed at
+  runtime with co_nmt_set_timeout().
+* `LELY_CO_NMT_BOOT_WAIT_TIMEOUT`: the timeout (in milliseconds) before an NMT
+  master tries to boot a slave on error status B (default: 1000, see Fig. 4 in
+  CiA 302-2 version 4.1.0).
+* `LELY_CO_NMT_BOOT_SDO_RETRY`: the number of times an NMT master retries an SDO
+  request on timeout (default: 3). This is used for SDO requests that may occur
+  right after a slave receives a reset node or reset communication command,
+  which might cause it to miss the request.
+* `LELY_CO_NMT_BOOT_RTR_TIMEOUT`: the timeout (in milliseconds) after an NMT
+  master sends a node guarding RTR to check the NMT state of a slave during
+  booting (default: 100, see Fig. 9 in CiA 302-2 version 4.1.0).
+* `LELY_CO_NMT_BOOT_CHECK_TIMEOUT`: the time (in milliseconds) between
+  successive checks of the flash status indication (1F57:01) or program control
+  (1F51:01) sub-object of a slave during booting (default: 100, see Fig. 3 in
+  CiA 302-3 version 4.1.0).
+
 Usage
 -----
 
