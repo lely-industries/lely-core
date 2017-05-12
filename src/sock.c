@@ -497,8 +497,21 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 	}
 
 	addr->addrlen = sizeof(addr->addr);
+#ifdef _WIN32
 	return getsockname((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
+#else
+	int errsv = errno;
+	int result = getsockname(handle->fd, (struct sockaddr *)&addr->addr,
+			(socklen_t *)&addr->addrlen);
+	// getsockname() may return an error if the address length is too large.
+	if (!result || errno != EINVAL
+			|| addr->addrlen > (int)sizeof(addr->addr))
+		return result;
+	errno = errsv;
+	return getsockname(handle->fd, (struct sockaddr *)&addr->addr,
+			(socklen_t *)&addr->addrlen);
+#endif
 }
 
 LELY_IO_EXPORT int
@@ -512,8 +525,21 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 	}
 
 	addr->addrlen = sizeof(addr->addr);
+#ifdef _WIN32
 	return getpeername((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
+#else
+	int errsv = errno;
+	int result = getpeername(handle->fd, (struct sockaddr *)&addr->addr,
+			(socklen_t *)&addr->addrlen);
+	// getpeername() may return an error if the address length is too large.
+	if (!result || errno != EINVAL
+			|| addr->addrlen > (int)sizeof(addr->addr))
+		return result;
+	errno = errsv;
+	return getpeername(handle->fd, (struct sockaddr *)&addr->addr,
+			(socklen_t *)&addr->addrlen);
+#endif
 }
 
 LELY_IO_EXPORT int

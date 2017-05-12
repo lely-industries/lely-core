@@ -73,12 +73,12 @@ io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
-		set_errnum(ERRNUM_INVAL);
+#ifdef _WIN32
+	if (__unlikely(addr->addrlen < (int)sizeof(SOCKADDR_BTH))) {
+		WSASetLastError(WSAEINVAL);
 		return -1;
 	}
 
-#ifdef _WIN32
 	const SOCKADDR_BTH *addr_bth = (const SOCKADDR_BTH *)&addr->addr;
 	if (__unlikely(addr_bth->addressFamily != AF_BTH)) {
 		WSASetLastError(WSAEAFNOSUPPORT);
@@ -90,6 +90,11 @@ io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
 	if (ba && __unlikely(ba2str(&addr_bth->btAddr, ba) < 0))
 		return -1;
 #else
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_rc))) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	const struct sockaddr_rc *addr_rc =
 			(const struct sockaddr_rc *)&addr->addr;
 	if (__unlikely(addr_rc->rc_family != AF_BLUETOOTH)) {
@@ -145,12 +150,12 @@ io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
-		set_errnum(ERRNUM_INVAL);
+#ifdef _WIN32
+	if (__unlikely(addr->addrlen < (int)sizeof(SOCKADDR_BTH))) {
+		WSASetLastError(WSAEINVAL);
 		return -1;
 	}
 
-#ifdef _WIN32
 	const SOCKADDR_BTH *addr_bth = (const SOCKADDR_BTH *)&addr->addr;
 	if (__unlikely(addr_bth->addressFamily != AF_BTH)) {
 		WSASetLastError(WSAEAFNOSUPPORT);
@@ -164,6 +169,11 @@ io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 			ba[i] = (addr_bth->btAddr >> (7 - i ) * 8) & 0xff;
 	}
 #else
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_rc))) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	const struct sockaddr_rc *addr_rc =
 			(const struct sockaddr_rc *)&addr->addr;
 	if (__unlikely(addr_rc->rc_family != AF_BLUETOOTH)) {
@@ -242,7 +252,7 @@ io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -289,7 +299,7 @@ io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4], int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -359,7 +369,7 @@ io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in6))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -407,7 +417,7 @@ io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16], int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in6))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -467,7 +477,7 @@ io_addr_get_unix(const io_addr_t *addr, char *path)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_un))) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -534,7 +544,7 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(sa_family_t))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -542,6 +552,10 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
 #ifdef _WIN32
 	case AF_BTH: {
+		if (__unlikely(addr->addrlen < (int)sizeof(SOCKADDR_BTH))) {
+			WSASetLastError(WSAEINVAL);
+			return -1;
+		}
 		const SOCKADDR_BTH *addr_bth =
 				(const SOCKADDR_BTH *)&addr->addr;
 		if (port)
@@ -552,6 +566,11 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
 	case AF_BLUETOOTH: {
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_rc))) {
+			errno = EINVAL;
+			return -1;
+		}
 		const struct sockaddr_rc *addr_rc =
 				(const struct sockaddr_rc *)&addr->addr;
 		if (port)
@@ -560,6 +579,11 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	}
 #endif
 	case AF_INET: {
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
 		const struct sockaddr_in *addr_in =
 				(const struct sockaddr_in *)&addr->addr;
 		if (port)
@@ -567,6 +591,11 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 		return 0;
 	}
 	case AF_INET6: {
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in6))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
 		const struct sockaddr_in6 *addr_in6 =
 				(const struct sockaddr_in6 *)&addr->addr;
 		if (port)
@@ -584,7 +613,7 @@ io_addr_set_port(io_addr_t *addr, int port)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr))) {
+	if (__unlikely(addr->addrlen < (int)sizeof(sa_family_t))) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -592,19 +621,38 @@ io_addr_set_port(io_addr_t *addr, int port)
 	switch (((struct sockaddr *)&addr->addr)->sa_family) {
 #ifdef _WIN32
 	case AF_BTH:
+		if (__unlikely(addr->addrlen < (int)sizeof(SOCKADDR_BTH))) {
+			WSASetLastError(WSAEINVAL);
+			return -1;
+		}
 		((SOCKADDR_BTH *)&addr->addr)->port =
 				port ? (ULONG)port : BT_PORT_ANY;;
 		return 0;
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
 	case AF_BLUETOOTH:
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_rc))) {
+			errno = EINVAL;
+			return -1;
+		}
 		((struct sockaddr_rc *)&addr->addr)->rc_channel = htobs(port);
 		return 0;
 #endif
 	case AF_INET:
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
 		((struct sockaddr_in *)&addr->addr)->sin_port = htons(port);
 		return 0;
 	case AF_INET6:
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in6))) {
+			set_errnum(ERRNUM_INVAL);
+			return -1;
+		}
 		((struct sockaddr_in6 *)&addr->addr)->sin6_port = htons(port);
 		return 0;
 	default:
@@ -618,16 +666,21 @@ io_addr_is_loopback(const io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr)))
+	if (__unlikely(addr->addrlen < (int)sizeof(sa_family_t)))
 		return 0;
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
 	case AF_INET: {
+		if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in)))
+			return 0;
 		const struct sockaddr_in *addr_in =
 				(const struct sockaddr_in *)&addr->addr;
 		return ntohl(addr_in->sin_addr.s_addr) == INADDR_LOOPBACK;
 	}
 	case AF_INET6: {
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in6)))
+			return 0;
 		const struct sockaddr_in6 *addr_in6 =
 				(const struct sockaddr_in6 *)&addr->addr;
 		return !memcmp(&addr_in6->sin6_addr, &in6addr_any,
@@ -643,11 +696,13 @@ io_addr_is_broadcast(const io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr)))
+	if (__unlikely(addr->addrlen < (int)sizeof(sa_family_t)))
 		return 0;
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
 	case AF_INET: {
+		if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in)))
+			return 0;
 		const struct sockaddr_in *addr_in =
 				(const struct sockaddr_in *)&addr->addr;
 		return ntohl(addr_in->sin_addr.s_addr) == INADDR_BROADCAST;
@@ -662,16 +717,21 @@ io_addr_is_multicast(const io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr)))
+	if (__unlikely(addr->addrlen < (int)sizeof(sa_family_t)))
 		return 0;
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
 	case AF_INET: {
+		if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_in)))
+			return 0;
 		const struct sockaddr_in *addr_in =
 				(const struct sockaddr_in *)&addr->addr;
 		return (ntohl(addr_in->sin_addr.s_addr) >> 28) == 0xe;
 	}
 	case AF_INET6: {
+		if (__unlikely(addr->addrlen
+				< (int)sizeof(struct sockaddr_in6)))
+			return 0;
 		const struct sockaddr_in6 *addr_in6 =
 				(const struct sockaddr_in6 *)&addr->addr;
 		return addr_in6->sin6_addr.s6_addr[0] == 0xff;
