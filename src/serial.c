@@ -121,8 +121,11 @@ io_open_serial(const char *path, io_attr_t *attr)
 	}
 #else
 	int fd;
-	do fd = open(path, O_RDWR | O_NOCTTY | O_CLOEXEC);
-	while (__unlikely(fd == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		fd = open(path, O_RDWR | O_NOCTTY | O_CLOEXEC);
+	} while (__unlikely(fd == -1 && errno == EINTR));
 	if (__unlikely(fd == -1)) {
 		errc = get_errc();
 		goto error_open;
@@ -252,9 +255,12 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 	return 0;
 #else
 	int result;
-	do result = tcsetattr(handle->fd, TCSANOW,
-			(const struct termios *)attr);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = tcsetattr(handle->fd, TCSANOW,
+				(const struct termios *)attr);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -268,8 +274,11 @@ serial_flush(struct io_handle *handle)
 	return FlushFileBuffers(handle->fd) ? 0 : -1;
 #else
 	int result;
-	do result = tcdrain(handle->fd);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = tcdrain(handle->fd);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }

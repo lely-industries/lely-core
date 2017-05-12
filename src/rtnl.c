@@ -4,7 +4,7 @@
  *
  * \see lely/io/rtnl.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -209,8 +209,10 @@ io_rtnl_recv(int fd, int (*func)(struct nlmsghdr *nlh, void *data), void *data)
 	int done = 0;
 	while (!done) {
 		ssize_t len;
-		do len = recv(fd, buf, sizeof(buf), 0);
-		while (__unlikely(len == -1 && errno == EINTR));
+		do {
+			errno = errsv;
+			len = recv(fd, buf, sizeof(buf), 0);
+		} while (__unlikely(len == -1 && errno == EINTR));
 		if (__unlikely(len <= 0)) {
 			if (len < 0) {
 				result = -1;
@@ -294,8 +296,11 @@ io_rtnl_send(int fd, struct iovec *iov, int iovlen)
 	};
 
 	ssize_t result;
-	do result = sendmsg(fd, &msg, 0);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = sendmsg(fd, &msg, 0);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 }
 

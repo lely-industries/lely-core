@@ -148,8 +148,11 @@ error_CreateEvent:
 	return -1;
 #else
 	ssize_t result;
-	do result = read(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = read(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -225,8 +228,11 @@ error_CreateEvent:
 	return -1;
 #else
 	ssize_t result;
-	do result = write(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = write(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }

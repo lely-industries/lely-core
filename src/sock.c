@@ -1000,8 +1000,11 @@ io_sock_get_nread(io_handle_t handle)
 #else
 	int optval;
 	int result;
-	do result = ioctl(handle->fd, FIONREAD, &optval);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = ioctl(handle->fd, FIONREAD, &optval);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	if (__unlikely(result == -1))
 		return -1;
 	return optval;
@@ -1383,17 +1386,23 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
 		result = recvfrom((SOCKET)handle->fd, buf, nbytes, _flags,
 				(struct sockaddr *)&addr->addr, &addr->addrlen);
 #else
-		do result = recvfrom(handle->fd, buf, nbytes, _flags,
-				(struct sockaddr *)&addr->addr,
-				(socklen_t *)&addr->addrlen);
-		while (__unlikely(result == -1 && errno == EINTR));
+		int errsv = errno;
+		do {
+			errno = errsv;
+			result = recvfrom(handle->fd, buf, nbytes, _flags,
+					(struct sockaddr *)&addr->addr,
+					(socklen_t *)&addr->addrlen);
+		} while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	} else {
 #ifdef _WIN32
 		result = recv((SOCKET)handle->fd, buf, nbytes, _flags);
 #else
-		do result = recv(handle->fd, buf, nbytes, _flags);
-		while (__unlikely(result == -1 && errno == EINTR));
+		int errsv = errno;
+		do {
+			errno = errsv;
+			result = recv(handle->fd, buf, nbytes, _flags);
+		} while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	}
 	return result == SOCKET_ERROR ? -1 : result;
@@ -1419,11 +1428,15 @@ sock_send(struct io_handle *handle, const void *buf, size_t nbytes,
 			(const struct sockaddr *)&addr->addr, addr->addrlen)
 			: send((SOCKET)handle->fd, buf, nbytes, _flags);
 #else
-	do result = addr
-			? sendto(handle->fd, buf, nbytes, _flags,
-			(const struct sockaddr *)&addr->addr, addr->addrlen)
-			: send(handle->fd, buf, nbytes, _flags);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = addr
+				? sendto(handle->fd, buf, nbytes, _flags,
+				(const struct sockaddr *)&addr->addr,
+				addr->addrlen)
+				: send(handle->fd, buf, nbytes, _flags);
+	} while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	return result == SOCKET_ERROR ? -1 : result;
 }
@@ -1443,25 +1456,32 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 		s = accept((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 				&addr->addrlen);
 #else
+		int errsv = errno;
+		do {
+			errno = errsv;
 #ifdef _GNU_SOURCE
-		do s = accept4(handle->fd, (struct sockaddr *)&addr->addr,
-				(socklen_t *)&addr->addrlen, SOCK_CLOEXEC);
+			s = accept4(handle->fd, (struct sockaddr *)&addr->addr,
+					(socklen_t *)&addr->addrlen,
+					SOCK_CLOEXEC);
 #else
-		do s = accept(handle->fd, (struct sockaddr *)&addr->addr,
-				(socklen_t *)&addr->addrlen);
+			s = accept(handle->fd, (struct sockaddr *)&addr->addr,
+					(socklen_t *)&addr->addrlen);
 #endif
-		while (__unlikely(s == -1 && errno == EINTR));
+		} while (__unlikely(s == -1 && errno == EINTR));
 #endif
 	} else {
 #ifdef _WIN32
 		s = accept((SOCKET)handle->fd, NULL, NULL);
 #else
+		int errsv = errno;
+		do {
+			errno = errsv;
 #ifdef _GNU_SOURCE
-		do s = accept4(handle->fd, NULL, NULL, SOCK_CLOEXEC);
+			s = accept4(handle->fd, NULL, NULL, SOCK_CLOEXEC);
 #else
-		do s = accept(handle->fd, NULL, NULL);
+			s = accept(handle->fd, NULL, NULL);
 #endif
-		while (__unlikely(s == -1 && errno == EINTR));
+		} while (__unlikely(s == -1 && errno == EINTR));
 #endif
 	}
 
@@ -1513,9 +1533,13 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 			addr->addrlen) ? -1 : 0;
 #else
 	int result;
-	do result = connect(handle->fd, (const struct sockaddr *)&addr->addr,
-			addr->addrlen);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = connect(handle->fd,
+				(const struct sockaddr *)&addr->addr,
+				addr->addrlen);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }

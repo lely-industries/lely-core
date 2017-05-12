@@ -4,7 +4,7 @@
  *
  * \see lely/io/can.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -693,8 +693,11 @@ can_read(struct io_handle *handle, void *buf, size_t nbytes)
 	assert(handle);
 
 	ssize_t result;
-	do result = read(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = read(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 }
 
@@ -704,8 +707,11 @@ can_write(struct io_handle *handle, const void *buf, size_t nbytes)
 	assert(handle);
 
 	ssize_t result;
-	do result = write(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = write(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 }
 

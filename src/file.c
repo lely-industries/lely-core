@@ -138,8 +138,11 @@ io_open_file(const char *path, int flags)
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 
 	int fd;
-	do fd = open(path, oflag, mode);
-	while (__unlikely(fd == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		fd = open(path, oflag, mode);
+	} while (__unlikely(fd == -1 && errno == EINTR));
 #endif
 
 	if (__unlikely(fd == INVALID_HANDLE_VALUE)) {
@@ -237,8 +240,11 @@ file_read(struct io_handle *handle, void *buf, size_t nbytes)
 	return _file_read(handle, buf, nbytes, current);
 #else
 	ssize_t result;
-	do result = read(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = read(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -262,8 +268,11 @@ file_write(struct io_handle *handle, const void *buf, size_t nbytes)
 	return _file_write(handle, buf, nbytes, current);
 #else
 	ssize_t result;
-	do result = write(handle->fd, buf, nbytes);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = write(handle->fd, buf, nbytes);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -277,8 +286,11 @@ file_flush(struct io_handle *handle)
 	return FlushFileBuffers(handle->fd) ? 0 : -1;
 #else
 	int result;
-	do result = fsync(handle->fd);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = fsync(handle->fd);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -354,8 +366,11 @@ file_pread(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 	return result;
 #else
 	ssize_t result;
-	do result = pread(handle->fd, buf, nbytes, offset);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = pread(handle->fd, buf, nbytes, offset);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }
@@ -379,8 +394,11 @@ file_pwrite(struct io_handle *handle, const void *buf, size_t nbytes,
 	return result;
 #else
 	ssize_t result;
-	do result = pwrite(handle->fd, buf, nbytes, offset);
-	while (__unlikely(result == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		result = pwrite(handle->fd, buf, nbytes, offset);
+	} while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #endif
 }

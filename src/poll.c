@@ -463,9 +463,12 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
 	struct epoll_event ev[maxevents];
 	int nfds;
-	do nfds = epoll_wait(poll->epfd, ev, maxevents,
-			timeout >= 0 ? timeout : -1);
-	while (__unlikely(nfds == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		nfds = epoll_wait(poll->epfd, ev, maxevents,
+				timeout >= 0 ? timeout : -1);
+	} while (__unlikely(nfds == -1 && errno == EINTR));
 	if (__unlikely(nfds == -1))
 		return -1;
 
@@ -533,8 +536,11 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	io_poll_unlock(poll);
 
 	int n;
-	do n = _poll(fds, nfds, timeout >= 0 ? timeout : -1);
-	while (__unlikely(n == -1 && errno == EINTR));
+	int errsv = errno;
+	do {
+		errno = errsv;
+		n = _poll(fds, nfds, timeout >= 0 ? timeout : -1);
+	} while (__unlikely(n == -1 && errno == EINTR));
 	if (__unlikely(n == -1))
 		return -1;
 	maxevents = MIN(n, maxevents);
