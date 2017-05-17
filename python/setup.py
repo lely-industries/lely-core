@@ -22,7 +22,7 @@ if USE_CYTHON:
 
 setup(
     name=pkg,
-    version='1.2.1',
+    version='1.2.2',
     description='Python bindings for the Lely I/O library.',
     url='https://gitlab.com/lely_industries/io',
     author='J. S. Seldenthuis',
