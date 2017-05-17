@@ -99,6 +99,8 @@
 #define MCAST_LEAVE_SOURCE_GROUP	46
 #endif
 
+typedef USHORT sa_family_t;
+
 #else
 
 typedef int HANDLE;
