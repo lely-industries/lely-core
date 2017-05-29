@@ -1351,7 +1351,10 @@ co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 		if (nmt->srv.emcy)
 			co_emcy_push(nmt->srv.emcy, eec, er, msef);
 #endif
-		co_nmt_comm_err_ind(nmt);
+		// In case of a communication error (0x81xx), invoke the
+		// behavior specified by 1029:01.
+		if ((eec & 0xff00) == 0x8100)
+			co_nmt_comm_err_ind(nmt);
 	}
 }
 

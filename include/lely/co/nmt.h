@@ -677,7 +677,8 @@ LELY_CO_EXTERN void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
 
 /*!
  * Implements the default error handling behavior by generating an EMCY message
- * with co_emcy_push() and invoking co_nmt_comm_err_ind().
+ * with co_emcy_push() and invoking co_nmt_comm_err_ind() in case of a
+ * communication error (emergency error code 0x81xx).
  *
  * \see co_rpdo_err_t, co_sync_err_t
  */
@@ -849,7 +850,7 @@ LELY_CO_EXTERN int co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /*!
  * Indicates the occurrence of a communication error and invokes the specified
- * error behavior (object 1029). Note that this function MAY invoke
+ * error behavior (object 1029:01). Note that this function MAY invoke
  * co_nmt_cs_ind().
  */
 LELY_CO_EXTERN void co_nmt_comm_err_ind(co_nmt_t *nmt);
