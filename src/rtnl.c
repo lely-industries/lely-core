@@ -201,7 +201,7 @@ io_rtnl_setattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 static int
 io_rtnl_recv(int fd, int (*func)(struct nlmsghdr *nlh, void *data), void *data)
 {
-	char buf[RTNL_BUFSIZE];
+	char buf[RTNL_BUFSIZE] = { 0 };
 
 	int result = 0;
 	int errsv = errno;
@@ -307,7 +307,7 @@ io_rtnl_send(int fd, struct iovec *iov, int iovlen)
 static ssize_t
 io_rtnl_send_getlink(int fd, __u32 seq, __u32 pid)
 {
-	char buf[NLMSG_SPACE(sizeof(struct rtgenmsg))];
+	char buf[NLMSG_SPACE(sizeof(struct rtgenmsg))] = { 0 };
 
 	struct nlmsghdr *nlh = (struct nlmsghdr *)buf;
 	*nlh = (struct nlmsghdr){
@@ -331,7 +331,7 @@ io_rtnl_send_newlink(int fd, __u32 seq, __u32 pid, int ifi_index,
 {
 	assert(rta || !rtalen);
 
-	char buf[NLMSG_SPACE(sizeof(struct ifinfomsg))];
+	char buf[NLMSG_SPACE(sizeof(struct ifinfomsg))] = { 0 };
 
 	struct nlmsghdr *nlh = (struct nlmsghdr *)buf;
 	*nlh = (struct nlmsghdr){
