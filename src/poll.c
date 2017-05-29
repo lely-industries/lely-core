@@ -140,7 +140,6 @@ __io_poll_init(struct __io_poll *poll)
 		goto error_create_pool;
 	}
 
-
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
 #ifdef _WIN32
@@ -206,6 +205,9 @@ LELY_IO_EXPORT void
 __io_poll_fini(struct __io_poll *poll)
 {
 	assert(poll);
+
+	rbtree_foreach(&poll->tree, node)
+		io_poll_remove(poll, structof(node, struct io_watch, node));
 
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
 	close(poll->epfd);
