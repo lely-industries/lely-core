@@ -138,9 +138,10 @@ io_open_can(const char *path)
 		goto error_if_nametoindex;
 	}
 
-	struct sockaddr_can addr;
-	addr.can_family = AF_CAN;
-	addr.can_ifindex = ifindex;
+	struct sockaddr_can addr = {
+		.can_family = AF_CAN,
+		.can_ifindex = ifindex
+	};
 
 	if (__unlikely(bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1)) {
 		errsv = errno;
