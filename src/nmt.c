@@ -1132,14 +1132,13 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 		return;
 
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
-#ifdef LELY_NO_CO_MASTER
-		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
-#else
-		if (co_nmt_is_master(nmt))
+#ifndef LELY_NO_CO_MASTER
+		if (co_nmt_is_master(nmt)) {
 			co_nmt_node_err_ind(nmt, id);
-		else
-			co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
+			return;
+		}
 #endif
+		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 	}
 }
 
