@@ -9,14 +9,14 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
-AC_LANG(C)
+AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
 
 LT_INIT([win32-dll])
 LT_PROG_RC
 
-AM_CONDITIONAL([ENABLE_SHARED], [test "x$enable_shared" == "xyes"])
+AM_CONDITIONAL([ENABLE_SHARED], [test "$enable_shared" == "yes"])
 
 m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
 AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
@@ -28,14 +28,14 @@ case "$host" in
 	platform_win32=yes
 	;;
 esac
-AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
+AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
 RT_LIBS=
 AM_CONDITIONAL([NO_RT], [false])
 AC_ARG_ENABLE([rt],
 	AS_HELP_STRING([--disable-rt], [disable Realtime Extensions]))
-AS_IF([test "x$enable_rt" != "xno"], [
-	AS_IF([test "x$platform_win32" == "xyes"], [
+AS_IF([test "$enable_rt" != "no"], [
+	AS_IF([test "$platform_win32" == "yes"], [
 		AC_CHECK_LIB([pthread], [clock_gettime], [RT_LIBS="-lpthread"])
 	], [
 		AC_CHECK_LIB([rt], [timer_create], [RT_LIBS="-lrt"])
@@ -46,35 +46,34 @@ AS_IF([test "x$enable_rt" != "xno"], [
 ])
 AC_SUBST([RT_LIBS])
 
-AX_PTHREAD
-AS_IF([test "x$ax_pthread_ok" == "xyes"], [
+AX_PTHREAD([
+	with_pthread=yes
 	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
+], [
+	with_pthread=no
 ])
 
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "x$ax_pthread_ok" == "xyes" -a "x$enable_threads" != "xno"], [
+AS_IF([test "$enable_threads" != "no" -a "$with_pthread" == "yes"], [
 	CC="$PTHREAD_CC"
 	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 	LIBS="$PTHREAD_LIBS $LIBS"
 ], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
-	AS_IF([test "x$platform_win32" == "xyes"], [LIBS="$RT_LIBS $LIBS"])
+	AS_IF([test "$platform_win32" == "yes"], [LIBS="$RT_LIBS $LIBS"])
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AS_IF([test "x$platform_win32" == "xyes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
-
-AS_IF([test "x$platform_win32" == "xyes"], [
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
-])
 
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
