@@ -4,7 +4,7 @@
  *
  * \see lely/util/errnum.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -338,7 +338,7 @@ errc2num(errc_t errc)
 	case ERROR_DEV_NOT_EXIST: return ERRNUM_NODEV;
 //	case ERROR_DEV_NOT_EXIST: return ERRNUM_NOENT; // Cywgin
 	case ERROR_DIRECTORY: return ERRNUM_NOTDIR;
-//	case ERROR_DIRECTORY: return ERRNUM_INVAL; // Cygwin
+//	case ERROR_DIRECTORY: return ERRNUM_INVAL; // Cygwin, <system_error>
 	case ERROR_DIR_NOT_EMPTY: return ERRNUM_NOTEMPTY;
 	case ERROR_DISK_CORRUPT: return ERRNUM_IO;
 	case ERROR_DISK_FULL: return ERRNUM_NOSPC;
@@ -380,7 +380,7 @@ errc2num(errc_t errc)
 	case ERROR_INVALID_EA_NAME: return ERRNUM_INVAL;
 	case ERROR_INVALID_EXE_SIGNATURE: return ERRNUM_NOEXEC;
 	case ERROR_INVALID_FUNCTION: return ERRNUM_NOSYS;
-//	case ERROR_INVALID_HANDLE: return ERRNUM_INVAL; // Boost
+//	case ERROR_INVALID_HANDLE: return ERRNUM_INVAL; // Boost, <system_error>
 	case ERROR_INVALID_HANDLE: return ERRNUM_BADF;
 	case ERROR_INVALID_NAME: return ERRNUM_INVAL;
 //	case ERROR_INVALID_NAME: return ERRNUM_NOENT; // Cygwin
@@ -403,7 +403,7 @@ errc2num(errc_t errc)
 	case ERROR_NESTING_NOT_ALLOWED: return ERRNUM_AGAIN;
 	case ERROR_NETNAME_DELETED: return ERRNUM_NOENT;
 	case ERROR_NETWORK_ACCESS_DENIED: return ERRNUM_ACCES;
-//	case ERROR_NOACCESS: return ERRNUM_ACCES; // Boost
+//	case ERROR_NOACCESS: return ERRNUM_ACCES; // Boost, <system_error>
 	case ERROR_NOACCESS: return ERRNUM_FAULT;
 	case ERROR_NONE_MAPPED: return ERRNUM_INVAL;
 	case ERROR_NONPAGED_SYSTEM_RESOURCES: return ERRNUM_AGAIN;
@@ -426,7 +426,7 @@ errc2num(errc_t errc)
 	case ERROR_NO_TOKEN: return ERRNUM_INVAL;
 	case ERROR_OPEN_FAILED: return ERRNUM_IO;
 	case ERROR_OPEN_FILES: return ERRNUM_AGAIN;
-//	case ERROR_OPEN_FILES: return ERRNUM_BUSY; // Cygwin
+//	case ERROR_OPEN_FILES: return ERRNUM_BUSY; // Cygwin, <system_error>
 	case ERROR_OPERATION_ABORTED: return ERRNUM_CANCELED;
 	case ERROR_OUTOFMEMORY: return ERRNUM_NOMEM;
 	case ERROR_PAGED_SYSTEM_RESOURCES: return ERRNUM_AGAIN;
@@ -460,7 +460,7 @@ errc2num(errc_t errc)
 	case ERROR_WAIT_NO_CHILDREN: return ERRNUM_CHILD;
 	case ERROR_WORKING_SET_QUOTA: return ERRNUM_AGAIN;
 	case ERROR_WRITE_FAULT: return ERRNUM_IO;
-//	case ERROR_WRITE_PROTECT: return ERRNUM_ACCES; // Boost
+//	case ERROR_WRITE_PROTECT: return ERRNUM_ACCES; // Boost, <system_error>
 	case ERROR_WRITE_PROTECT: return ERRNUM_ROFS;
 	case WSAEACCES: return ERRNUM_ACCES;
 	case WSAEADDRINUSE: return ERRNUM_ADDRINUSE;

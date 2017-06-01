@@ -1,9 +1,6 @@
 src =
 src += bimap.c
 src += bits.c
-if !NO_CXX
-src += c_type.cpp
-endif
 src += cmp.c
 src += config.c
 src += config_ini.c

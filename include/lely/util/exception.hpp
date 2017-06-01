@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the C++
  * exception declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,9 +22,12 @@
 #ifndef LELY_UTIL_EXCEPTION_HPP
 #define LELY_UTIL_EXCEPTION_HPP
 
-#include <lely/util/util.h>
+#include <lely/util/errnum.h>
 
-#include <exception>
+#include <stdexcept>
+#if __cplusplus >= 201103L
+#include <system_error>
+#endif
 
 #if !defined(noexcept) && !(__cplusplus >= 201103L && (__GNUC_PREREQ(4, 6) \
 		|| __has_feature(cxx_noexcept))) && !(_MSC_VER >= 1900)
@@ -57,6 +60,36 @@ extern "C" {
 LELY_UTIL_EXTERN _Noreturn void __throw_or_abort(const char *what) noexcept;
 
 }
+
+namespace lely {
+
+/*!
+ * The type of objects thrown as exceptions to report a system error with an
+ * associated error code.
+ */
+#if __cplusplus >= 201103L
+class error: public ::std::system_error {
+#else
+class error: public ::std::runtime_error {
+#endif
+public:
+	error(errc_t errc = get_errc())
+#if __cplusplus >= 201103L
+	: ::std::system_error(errc, ::std::system_category())
+#else
+	: ::std::runtime_error(errc2str(errc))
+#endif
+	, m_errc(errc)
+	{}
+
+	errc_t errc() const noexcept { return m_errc; }
+	errnum_t errnum() const noexcept { return errc2num(errc()); }
+
+private:
+	errc_t m_errc;
+};
+
+} // lely
 
 #endif
 
