@@ -10,7 +10,7 @@ The C11 and POSIX compatibility library provides:
 - `max_align_t`: lely/libc/stddef.h
 - integer types: lely/libc/stdint.h
 - `getdelim()`, `getline()`, `asprintf()` and `vasprintf()`: lely/libc/stdio.h
-- `aligned_alloc()`: lely/libc/stdlib.h
+- `aligned_alloc()`, `aligned_free()` and `setenv()`: lely/libc/stdlib.h
 - `noreturn`: lely/libc/stdnoreturn.h
 - `strdup()`, `strndup()` and `strnlen()`: lely/libc/string.h
 - `ffs()`, `strcasecmp()` and `strncasecmp()`: lely/libc/strings.h

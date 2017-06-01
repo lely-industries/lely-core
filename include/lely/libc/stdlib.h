@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdlib.h>` and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -65,5 +65,22 @@ LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
 
 #endif // __STDC_VERSION__ >= 201112L || __USE_ISOC11
 
+#if !(_POSIX_C_SOURCE > 200112L)
+
+/*!
+ * Updates or adds a variable in the environment of the calling process.
+ * \a envname points to a string containing the name of the variable to be added
+ * or altered. If the variable does not exist, or overwrite is non-zero, it
+ * SHALL be set to the value two which \a envval points. Otherwise the
+ * environment SHALL remain unchanged.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the environment is
+ * unchanged.
+ */
+LELY_LIBC_EXTERN int setenv(const char *envname, const char *envval,
+		int overwrite);
+
 #endif
+
+#endif // !(_POSIX_C_SOURCE > 200112L)
 

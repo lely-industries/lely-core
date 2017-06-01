@@ -3,7 +3,7 @@
  *
  * \see lely/libc/stdlib.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -92,4 +92,45 @@ aligned_free(void *ptr)
 #endif
 
 #endif // !(__STDC_VERSION__ >= 201112L)
+
+#ifdef _WIN32
+
+#include <lely/libc/stdio.h>
+
+#include <errno.h>
+
+LELY_LIBC_EXPORT int
+setenv(const char *envname, const char *envval, int overwrite)
+{
+	if (__unlikely(!envname)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!overwrite && getenv(envname))
+		return 0;
+
+	for (const char *cp = envname; *cp; cp++) {
+		if (__unlikely(*cp == '=')) {
+			errno = EINVAL;
+			return -1;
+		}
+	}
+
+	char *string = NULL;
+	if (__unlikely(asprintf(&string, "%s=%s", envname, envval) < 0))
+		return -1;
+
+	if (__unlikely(_putenv(string))) {
+		int errsv = errno;
+		free(string);
+		errno = errsv;
+		return -1;
+	}
+
+	free(string);
+	return 0;
+}
+
+#endif // _WIN32
 
