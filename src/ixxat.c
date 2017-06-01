@@ -4,7 +4,7 @@
  *
  * \see lely/can/socket.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "can.h"
 
-#ifdef LELY_HAVE_IXXAT_VCI3
+#ifdef LELY_HAVE_IXXAT_VCI
 
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
@@ -32,7 +32,9 @@
 #include <assert.h>
 #include <string.h>
 
-#include <CANtype.h>
+#ifdef HAVE_CANTYPE_H
+#include <cantype.h>
+#endif
 
 LELY_CAN_EXPORT int
 CANMSG2can_msg(const void *src, struct can_msg *dst)
@@ -95,5 +97,5 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	return 0;
 }
 
-#endif // LELY_HAVE_IXXAT_VCI3
+#endif // LELY_HAVE_IXXAT_VCI
 

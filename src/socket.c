@@ -4,7 +4,7 @@
  *
  * \see lely/can/socket.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,7 +31,9 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
+#endif
 
 LELY_CAN_EXPORT int
 can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)

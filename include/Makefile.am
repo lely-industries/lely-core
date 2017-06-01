@@ -4,7 +4,7 @@ if !NO_CXX
 inc += lely/can/buf.hpp
 endif
 inc += lely/can/can.h
-if HAVE_IXXAT_VCI3
+if HAVE_IXXAT_VCI
 inc += lely/can/ixxat.h
 endif
 inc += lely/can/msg.h

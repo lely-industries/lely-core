@@ -1,7 +1,7 @@
 src =
 src += buf.c
 src += can.h
-if HAVE_IXXAT_VCI3
+if HAVE_IXXAT_VCI
 src += ixxat.c
 endif
 src += msg.c

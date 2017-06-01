@@ -1,15 +1,15 @@
-pkg = lely_can
-
-src = 
-src += $(pkg)/__init__.pxd
-src += $(pkg)/__init__.py
-src += $(pkg)/can.pxd
-src += $(pkg)/can.pyx
-src += $(pkg)/msg.pxd
-src += $(pkg)/msg.pyx
+src =
+src += lely_can/__init__.pxd
+src += lely_can/__init__.py
+src += lely_can/can.pxd
+src += lely_can/can.pyx
+src += lely_can/msg.pxd
+src += lely_can/msg.pyx
 
 EXTRA_DIST = $(src)
 EXTRA_DIST += setup.py
+
+build_base = $(realpath $(builddir))/build
 
 AM_CPPFLAGS = -I$(abs_top_srcdir)/include
 AM_CPPFLAGS += $(liblely_util_CFLAGS)
@@ -30,15 +30,13 @@ CYTHON_ENV = \
 	LDSHARED="$(CC)" \
 	LDFLAGS="$(CFLAGS) $(AM_CFLAGS) $(LDFLAGS) $(AM_LDFLAGS) $(LIBS)"
 
-build_base = $(realpath $(builddir))/build
-
 all-local:
 if HAVE_PYTHON2
-	cd $(srcdir); \
+	@cd $(srcdir); \
 	$(CYTHON_ENV) $(PYTHON2) setup.py build --build-base $(build_base)
 endif
 if HAVE_PYTHON3
-	cd $(srcdir); \
+	@cd $(srcdir); \
 	$(CYTHON_ENV) $(PYTHON3) setup.py build --build-base $(build_base)
 endif
 
@@ -50,8 +48,10 @@ distclean-local:
 
 install-exec-local:
 if HAVE_PYTHON2
-	$(PYTHON2) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+	@$(PYTHON2) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+		--root / --single-version-externally-managed
 endif
 if HAVE_PYTHON3
-	$(PYTHON3) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+	@$(PYTHON3) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+		--root / --single-version-externally-managed
 endif
