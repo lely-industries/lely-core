@@ -10,18 +10,19 @@ AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
 AX_CODE_COVERAGE
-AS_IF([test "x$enable_code_coverage" == "xyes"], [
+AS_IF([test "$enable_code_coverage" == "yes"], [
 	${CFLAGS=""}
 	${CXXFLAGS=""}
 ])
 
-AC_LANG(C)
+AC_LANG([C])
 AC_PROG_CC_STDC
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 LT_INIT([win32-dll])
 LT_PROG_RC
 
-AM_CONDITIONAL([ENABLE_SHARED], [test "x$enable_shared" == "xyes"])
+AM_CONDITIONAL([ENABLE_SHARED], [test "$enable_shared" == "yes"])
 
 m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
 AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
@@ -39,28 +40,23 @@ case "$host" in
 	esac
 	;;
 esac
-AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
+AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
 AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-])
-
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
+AS_IF([test "$platform_win32" == "yes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 AC_PROG_AWK
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
-
-AS_IF([test "x$platform_win32" == "xyes"], [
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
-])
 
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
