@@ -3,7 +3,7 @@
  * clock and timer declarations.
  *
  * The external timer API mimics the POSIX clock and timer functions. It is
- * 'external' in that the user must periodically invoked `xclock_settime()` to
+ * 'external' in that the user must periodically invoke `xclock_settime()` to
  * advance the clock.
  *
  * \copyright 2017 Lely Industries N.V.
