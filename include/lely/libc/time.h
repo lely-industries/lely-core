@@ -102,8 +102,7 @@ struct itimerspec {
 extern "C" {
 #endif
 
-#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
-		&& !defined(__MINGW32__)
+#if !defined(_POSIX_TIMERS) && !defined(__MINGW32__)
 
 /*!
  * Obtains the resolution of a clock. Clock resolutions are
@@ -194,9 +193,9 @@ LELY_LIBC_EXTERN int __cdecl clock_settime(clockid_t clock_id,
 LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
 		struct timespec *rmtp);
 
-#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
+#endif // !_POSIX_TIMERS && !__MINGW32__
 
-#if defined(_WIN32) || (!defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS))
+#if defined(_WIN32) || !defined(_POSIX_TIMERS)
 
 /*!
  * Creates a per-process timer using the specified clock as the timing base.
@@ -290,7 +289,7 @@ LELY_LIBC_EXTERN int __cdecl timer_gettime(timer_t timerid,
 LELY_LIBC_EXTERN int __cdecl timer_settime(timer_t timerid, int flags,
 		const struct itimerspec *value, struct itimerspec *ovalue);
 
-#endif // _WIN32 || (!_POSIX_C_SOURCE && !_POSIX_TIMERS)
+#endif // _WIN32 || !_POSIX_TIMERS
 
 #ifndef LELY_HAVE_TIMESPEC_GET
 

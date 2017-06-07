@@ -25,9 +25,18 @@
 
 #if !(__STDC_VERSION__ >= 201112L)
 
+#ifndef LELY_HAVE_POSIX_MEMALIGN
+#if _POSIX_C_SOURCE >= 200112L
+#define LELY_HAVE_POSIX_MEMALIGN	1
+#if defined(__NEWLIB__) && !defined(__rtems__)
+#undef LELY_HAVE_POSIX_MEMALIGN
+#endif
+#endif
+#endif
+
 #ifdef _WIN32
 #include <malloc.h>
-#elif _POSIX_C_SOURCE >= 200112L
+#elif defined(LELY_HAVE_POSIX_MEMALIGN)
 #include <errno.h>
 #else
 #include <lely/libc/stdint.h>
@@ -40,7 +49,7 @@ aligned_alloc(size_t alignment, size_t size)
 	if (__unlikely(!size))
 		return NULL;
 	return _aligned_malloc(size, alignment);
-#elif _POSIX_C_SOURCE >= 200112L
+#elif defined(LELY_HAVE_POSIX_MEMALIGN)
 	void *ptr = NULL;
 	int errnum = posix_memalign(&ptr, alignment, size);
 	if (__unlikely(errnum)) {
@@ -81,7 +90,7 @@ aligned_free(void *ptr)
 {
 #ifdef _WIN32
 	_aligned_free(ptr);
-#elif _POSIX_C_SOURCE >= 200112L
+#elif defined(LELY_HAVE_POSIX_MEMALIGN)
 	free(ptr);
 #else
 	if (__likely(ptr))

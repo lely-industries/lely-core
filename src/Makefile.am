@@ -17,7 +17,9 @@ src += threads.c
 endif
 if !NO_RT
 src += time.c
+if PLATFORM_WIN32
 src += timer.c
+endif
 endif
 if PLATFORM_WIN32
 src += version.rc
