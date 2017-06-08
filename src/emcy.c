@@ -439,7 +439,15 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 	if (emcy->obj_1003)
 		co_emcy_set_1003(emcy);
 
-	return co_emcy_send(emcy, 0, emcy->nmsg ? emcy->msgs[0].er : 0, NULL);
+	if (emcy->nmsg) {
+		// Store the next error in the error register and the
+		// manufacturer-specific field.
+		uint8_t msef[5] = { 0 };
+		stle_u16(msef, emcy->msgs[0].eec);
+		return co_emcy_send(emcy, 0, emcy->msgs[0].er, msef);
+	} else {
+		return co_emcy_send(emcy, 0, 0, NULL);
+	}
 }
 
 LELY_CO_EXPORT void
