@@ -192,7 +192,8 @@ my_can_step(struct my_can *can, int timeout)
 	}
 	// If an error occurred, update the state of the CAN device.
 	if (can->st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
-			|| result == -1) {
+			|| (result == -1 && get_errnum() != ERRNUM_AGAIN
+			&& get_errnum() != ERRNUM_WOULDBLOCK)) {
 		int st = io_can_get_state(can->handle);
 		if (st != can->st) {
 			if (can->st == CAN_STATE_BUSOFF) {
@@ -231,6 +232,7 @@ my_can_on_send(const struct can_msg *msg, void *data)
 
 C++11 example:
 ```{.cpp}
+#include <lely/util/errnum.h>
 #include <lely/util/time.h>
 #include <lely/can/net.hpp>
 #include <lely/io/can.hpp>
@@ -319,7 +321,8 @@ public:
 		}
 		// If an error occurred, update the state of the CAN device.
 		if (m_st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
-				|| result == -1) {
+				|| (result == -1 && get_errnum() != ERRNUM_AGAIN
+				&& get_errnum() != ERRNUM_WOULDBLOCK)) {
 			int st = m_handle.getState();
 			if (st != m_st) {
 				if (m_st == CAN_STATE_BUSOFF) {

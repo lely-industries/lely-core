@@ -1885,8 +1885,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 					id);
 	}
 
-	trace("NMT: slave %d finished booting with error status %c",
-			id, es);
+	trace("NMT: slave %d finished booting with error status %c", id, es);
 	if (nmt->boot_ind)
 		nmt->boot_ind(nmt, id, st, es, nmt->boot_data);
 
