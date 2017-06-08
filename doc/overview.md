@@ -189,11 +189,15 @@ my_can_step(struct my_can *can, int timeout)
 		struct can_msg msg = CAN_MSG_INIT;
 		while ((result = io_can_read(can->handle, &msg)) == 1)
 			can_net_recv(can->net, &msg);
+		// Treat the reception of an error frame, or any error other
+		// than an empty receive buffer, as an error event.
+		if (__unlikely(!result || (result == -1
+				&& get_errnum() != ERRNUM_AGAIN
+				&& get_errnum() != ERRNUM_WOULDBLOCK)))
+			error.events |= IO_EVENT_ERROR;
 	}
 	// If an error occurred, update the state of the CAN device.
-	if (can->st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
-			|| (result == -1 && get_errnum() != ERRNUM_AGAIN
-			&& get_errnum() != ERRNUM_WOULDBLOCK)) {
+	if (can->st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)) {
 		int st = io_can_get_state(can->handle);
 		if (st != can->st) {
 			if (can->st == CAN_STATE_BUSOFF) {
@@ -318,11 +322,17 @@ public:
 			can_msg msg = CAN_MSG_INIT;
 			while ((result = m_handle.read(msg)) == 1)
 				m_net->recv(msg);
+			// Treat the reception of an error frame, or any error
+			// other than an empty receive buffer, as an error
+			// event.
+			if (__unlikely(!result || (result == -1
+					&& get_errnum() != ERRNUM_AGAIN
+					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+				error.events |= IO_EVENT_ERROR;
 		}
 		// If an error occurred, update the state of the CAN device.
-		if (m_st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)
-				|| (result == -1 && get_errnum() != ERRNUM_AGAIN
-				&& get_errnum() != ERRNUM_WOULDBLOCK)) {
+		if (m_st == CAN_STATE_BUSOFF
+				|| (event.events & IO_EVENT_ERROR)) {
 			int st = m_handle.getState();
 			if (st != m_st) {
 				if (m_st == CAN_STATE_BUSOFF) {

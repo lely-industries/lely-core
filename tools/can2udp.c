@@ -416,35 +416,32 @@ daemon_main()
 				daemon_status(DAEMON_CONTINUE);
 				break;
 			}
-		} else if ((event.events & IO_EVENT_READ)
-				&& event.u.handle == can_handle) {
-			// Read a single CAN frame.
+		} else if (event.u.handle == can_handle
+				&& (event.events & IO_EVENT_READ)) {
+			int result;
 			struct can_msg msg = CAN_MSG_INIT;
-			int n = io_can_read(can_handle, &msg);
-			if (__unlikely(n != 1)) {
-				// If an error occurred or an error frame was
-				// received, update the diagnostic parameters of
-				// the CAN interface.
-				int st = io_can_get_state(can_handle);
-				int err = 0xf;
-				io_can_get_error(can_handle, &err);
-				co_wtm_set_diag_can(wtm, 1, st, err, 0xff,
-						0xffff, 0xffff, 0xffff);
-				continue;
+			while ((result = io_can_read(can_handle, &msg)) == 1) {
+				// Print the frame in verbose mode.
+				if (flags & FLAG_VERBOSE) {
+					char s[60] = { 0 };
+					snprintf_can_msg(s, sizeof(s), &msg);
+					printf("[%10ld.%09ld] > %s\n", now.tv_sec,
+							now.tv_nsec, s);
+				}
+				// Process the frame.
+				co_wtm_send(wtm, 1, &msg);
+				if (flags & FLAG_FLUSH)
+					co_wtm_flush(wtm);
 			}
-			// Print the frame in verbose mode.
-			if (flags & FLAG_VERBOSE) {
-				char s[60] = { 0 };
-				snprintf_can_msg(s, sizeof(s), &msg);
-				printf("[%10ld.%09ld] > %s\n", now.tv_sec,
-						now.tv_nsec, s);
-			}
-			// Process the frame.
-			co_wtm_send(wtm, 1, &msg);
-			if (flags & FLAG_FLUSH)
-				co_wtm_flush(wtm);
-		} else if ((event.events & IO_EVENT_READ)
-				&& event.u.handle == recv_handle) {
+			// Treat the reception of an error frame, or any error
+			// other than an empty receive buffer, as an error
+			// event.
+			if (__unlikely(!result || (result == -1
+					&& get_errnum() != ERRNUM_AGAIN
+					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+				event.events |= IO_EVENT_ERROR;
+		} else if (event.u.handle == recv_handle
+				&&(event.events & IO_EVENT_READ)) {
 			// Read a single generic frame.
 			char buf[CO_WTM_MAX_LEN];
 			ssize_t result = io_read(recv_handle, buf, sizeof(buf));
@@ -452,6 +449,17 @@ daemon_main()
 				continue;
 			// Process the frame.
 			co_wtm_recv(wtm, buf, result);
+		}
+		if (event.u.handle == can_handle
+				&& (event.events & IO_EVENT_ERROR)) {
+			// If an error occurred or an error frame was received,
+			// update the diagnostic parameters of the CAN
+			// interface.
+			int st = io_can_get_state(can_handle);
+			int err = 0xf;
+			io_can_get_error(can_handle, &err);
+			co_wtm_set_diag_can(wtm, 1, st, err, 0xff, 0xffff,
+					0xffff, 0xffff);
 		}
 	}
 }

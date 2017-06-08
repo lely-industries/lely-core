@@ -687,12 +687,17 @@ io_thrd_start(void *arg)
 			struct can_msg msg = CAN_MSG_INIT;
 			while ((result = io_can_read(net->handle, &msg)) == 1)
 				can_net_recv(net->net, &msg);
-			if (__unlikely(result == -1
-					|| net->st == CAN_STATE_BUSOFF))
-				co_net_err(net);
-		} else if (event.events & IO_EVENT_ERROR) {
-			co_net_err(event.u.data);
+			// Treat the reception of an error frame, or any error
+			// other than an empty receive buffer, as an error
+			// event.
+			if (__unlikely(!result || (result == -1
+					&& get_errnum() != ERRNUM_AGAIN
+					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+				event.events |= IO_EVENT_ERROR;
 		}
+		if (net->st == CAN_STATE_BUSOFF
+				|| (event.events & IO_EVENT_ERROR))
+			co_net_err(event.u.data);
 	}
 	free(buf);
 

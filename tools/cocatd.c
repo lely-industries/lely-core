@@ -543,9 +543,14 @@ daemon_main()
 				struct can_msg msg = CAN_MSG_INIT;
 				while ((result = io_can_read(hcan, &msg)) == 1)
 					can_net_recv(net, &msg);
-				if (__unlikely(result == -1
-						|| st == CAN_STATE_BUSOFF)) 
-					can_err(hcan, &st, nmt);
+				// Treat the reception of an error frame, or any
+				// error other than an empty receive buffer, as
+				// an error event.
+				if (__unlikely(!result || (result == -1
+						&& get_errnum() != ERRNUM_AGAIN
+						&& get_errnum()
+						!= ERRNUM_WOULDBLOCK)))
+					event.events |= IO_EVENT_ERROR;
 			} else if (event.u.handle == hout) {
 				co_tpdo_event(pdo_out);
 				// Wait for the inhibit time to elapse before
@@ -561,10 +566,10 @@ daemon_main()
 				co_tpdo_get_next(pdo_err, &start);
 				can_timer_start(timer_err, net, &start, NULL);
 			}
-		} else if (event.events && IO_EVENT_ERROR
-				&& event.u.handle == hcan) {
-			can_err(hcan, &st, nmt);
 		}
+		if (event.u.handle == hcan && (st == CAN_STATE_BUSOFF
+				|| (event.events & IO_EVENT_ERROR)))
+			can_err(hcan, &st, nmt);
 	}
 
 done:
