@@ -1939,7 +1939,8 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 	nmt->hb_ind(nmt, id, state, reason, nmt->hb_data);
 
-	co_nmt_st_ind(nmt, id, st);
+	if (reason == CO_NMT_EC_STATE)
+		co_nmt_st_ind(nmt, id, st);
 }
 
 static co_unsigned32_t
