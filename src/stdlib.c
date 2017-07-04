@@ -49,7 +49,7 @@ aligned_alloc(size_t alignment, size_t size)
 	if (__unlikely(!size))
 		return NULL;
 	return _aligned_malloc(size, alignment);
-#elif defined(LELY_HAVE_POSIX_MEMALIGN)
+#elif LELY_HAVE_POSIX_MEMALIGN
 	void *ptr = NULL;
 	int errnum = posix_memalign(&ptr, alignment, size);
 	if (__unlikely(errnum)) {
@@ -90,7 +90,7 @@ aligned_free(void *ptr)
 {
 #ifdef _WIN32
 	_aligned_free(ptr);
-#elif defined(LELY_HAVE_POSIX_MEMALIGN)
+#elif LELY_HAVE_POSIX_MEMALIGN
 	free(ptr);
 #else
 	if (__likely(ptr))

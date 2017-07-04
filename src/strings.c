@@ -3,7 +3,7 @@
  *
  * \see lely/libc/strings.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,7 +24,7 @@
 #define LELY_LIBC_STRINGS_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/libc/strings.h>
 
-#ifndef LELY_HAVE_STRINGS_H
+#if !LELY_HAVE_STRINGS_H
 
 #include <ctype.h>
 

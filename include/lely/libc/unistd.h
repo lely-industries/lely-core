@@ -31,7 +31,7 @@
 #endif
 #endif
 
-#ifdef LELY_HAVE_UNISTD_H
+#if LELY_HAVE_UNISTD_H
 #include <unistd.h>
 #else
 

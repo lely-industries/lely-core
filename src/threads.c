@@ -23,19 +23,19 @@
 #include "libc.h"
 
 #ifndef LELY_NO_THREADS
-#if !defined(LELY_HAVE_PTHREAD) && !defined(_WIN32)
+#if !LELY_HAVE_PTHREAD && !defined(_WIN32)
 #define LELY_NO_THREADS	1
 #endif
 #endif
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 
 #include <lely/libc/threads.h>
 
 #include <assert.h>
 #include <errno.h>
 
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 
 #include <pthread.h>
 
@@ -125,7 +125,7 @@ static void __cdecl thrd_start(void *arglist);
 LELY_LIBC_EXPORT void __cdecl
 call_once(once_flag *flag, void (__cdecl *func)(void))
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_once((pthread_once_t *)flag, func);
 #else
 	// Perform a quick (atomic) check to see if the flag is already set.
@@ -196,7 +196,7 @@ call_once(once_flag *flag, void (__cdecl *func)(void))
 LELY_LIBC_EXPORT int __cdecl
 cnd_broadcast(cnd_t *cond)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_cond_broadcast((pthread_cond_t *)cond))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -209,7 +209,7 @@ cnd_broadcast(cnd_t *cond)
 LELY_LIBC_EXPORT void __cdecl
 cnd_destroy(cnd_t *cond)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_cond_destroy((pthread_cond_t *)cond);
 #elif defined(_WIN32)
 	__unused_var(cond);
@@ -219,7 +219,7 @@ cnd_destroy(cnd_t *cond)
 LELY_LIBC_EXPORT int __cdecl
 cnd_init(cnd_t *cond)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	switch (pthread_cond_init((pthread_cond_t *)cond, NULL)) {
 	case 0: return thrd_success;
 	case ENOMEM: return thrd_nomem;
@@ -235,7 +235,7 @@ cnd_init(cnd_t *cond)
 LELY_LIBC_EXPORT int __cdecl
 cnd_signal(cnd_t *cond)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_cond_signal((pthread_cond_t *)cond))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -248,7 +248,7 @@ cnd_signal(cnd_t *cond)
 LELY_LIBC_EXPORT int __cdecl
 cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	switch (pthread_cond_timedwait((pthread_cond_t *)cond,
 			(pthread_mutex_t*)mtx, ts)) {
 	case 0: return thrd_success;
@@ -272,7 +272,7 @@ cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 LELY_LIBC_EXPORT int __cdecl
 cnd_wait(cnd_t *cond, mtx_t *mtx)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_cond_wait((pthread_cond_t *)cond,
 			(pthread_mutex_t*)mtx)) ? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -284,7 +284,7 @@ cnd_wait(cnd_t *cond, mtx_t *mtx)
 LELY_LIBC_EXPORT void __cdecl
 mtx_destroy(mtx_t *mtx)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_mutex_destroy((pthread_mutex_t *)mtx);
 #elif defined(_WIN32)
 	DeleteCriticalSection(&mtx->__mtx);
@@ -294,7 +294,7 @@ mtx_destroy(mtx_t *mtx)
 LELY_LIBC_EXPORT int __cdecl
 mtx_init(mtx_t *mtx, int type)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_mutexattr_t attr;
 	if (__unlikely(pthread_mutexattr_init(&attr)))
 		goto error_mutexattr_init;
@@ -325,7 +325,7 @@ error_mutexattr_init:
 LELY_LIBC_EXPORT int __cdecl
 mtx_lock(mtx_t *mtx)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_mutex_lock((pthread_mutex_t *)mtx))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -338,7 +338,7 @@ mtx_lock(mtx_t *mtx)
 LELY_LIBC_EXPORT int __cdecl
 mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 {
-#if defined(_POSIX_TIMEOUTS) && _POSIX_TIMEOUTS >= 200112L
+#if _POSIX_TIMEOUTS >= 200112L
 	switch (pthread_mutex_timedlock((pthread_mutex_t *)mtx, ts)) {
 	case 0: return thrd_success;
 	case ETIMEDOUT: return thrd_timedout;
@@ -355,7 +355,7 @@ mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 LELY_LIBC_EXPORT int __cdecl
 mtx_trylock(mtx_t *mtx)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	switch (pthread_mutex_trylock((pthread_mutex_t *)mtx)) {
 	case 0: return thrd_success;
 	case EBUSY: return thrd_busy;
@@ -369,7 +369,7 @@ mtx_trylock(mtx_t *mtx)
 LELY_LIBC_EXPORT int __cdecl
 mtx_unlock(mtx_t *mtx)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_mutex_unlock((pthread_mutex_t *)mtx))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -382,7 +382,7 @@ mtx_unlock(mtx_t *mtx)
 LELY_LIBC_EXPORT int __cdecl
 thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	switch (pthread_create((pthread_t *)thr, NULL,
 			(void *(__cdecl *)(void *))func, arg)) {
 	case 0: return thrd_success;
@@ -418,7 +418,7 @@ thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 LELY_LIBC_EXPORT thrd_t __cdecl
 thrd_current(void)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return (thrd_t)pthread_self();
 #elif defined(_WIN32)
 	return (thrd_t)thrd_self;
@@ -428,7 +428,7 @@ thrd_current(void)
 LELY_LIBC_EXPORT int __cdecl
 thrd_detach(thrd_t thr)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_detach((pthread_t)thr))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -454,7 +454,7 @@ thrd_detach(thrd_t thr)
 LELY_LIBC_EXPORT int __cdecl
 thrd_equal(thrd_t thr0, thrd_t thr1)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return pthread_equal((pthread_t)thr0, (pthread_t)thr1);
 #elif defined(_WIN32)
 	return thr0 == thr1;
@@ -464,7 +464,7 @@ thrd_equal(thrd_t thr0, thrd_t thr1)
 _Noreturn LELY_LIBC_EXPORT void __cdecl
 thrd_exit(int res)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_exit((void *)(intptr_t)res);
 #elif defined(_WIN32)
 	struct thrd_info *info = (struct thrd_info *)thrd_current();
@@ -493,7 +493,7 @@ thrd_exit(int res)
 LELY_LIBC_EXPORT int __cdecl
 thrd_join(thrd_t thr, int *res)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	void *value_ptr = NULL;
 	if (__unlikely(pthread_join((pthread_t)thr, &value_ptr)))
 		return thrd_error;
@@ -525,7 +525,7 @@ thrd_join(thrd_t thr, int *res)
 	return thrd_success;
 }
 
-#ifndef LELY_NO_RT
+#if !LELY_NO_RT
 LELY_LIBC_EXPORT int __cdecl
 thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
@@ -548,7 +548,7 @@ thrd_yield(void)
 {
 #ifdef _WIN32
 	SwitchToThread();
-#elif defined(LELY_HAVE_SCHED)
+#elif LELY_HAVE_SCHED
 	sched_yield();
 #endif
 }
@@ -556,7 +556,7 @@ thrd_yield(void)
 LELY_LIBC_EXPORT int __cdecl
 tss_create(tss_t *key, tss_dtor_t dtor)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_key_create((pthread_key_t *)key, dtor))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -573,7 +573,7 @@ tss_create(tss_t *key, tss_dtor_t dtor)
 LELY_LIBC_EXPORT void __cdecl
 tss_delete(tss_t key)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	pthread_key_delete((pthread_key_t)key);
 #elif defined(_WIN32)
 	FlsFree(key);
@@ -583,7 +583,7 @@ tss_delete(tss_t key)
 LELY_LIBC_EXPORT void * __cdecl
 tss_get(tss_t key)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return pthread_getspecific((pthread_key_t)key);
 #elif defined(_WIN32)
 	return FlsGetValue(key);
@@ -593,7 +593,7 @@ tss_get(tss_t key)
 LELY_LIBC_EXPORT int __cdecl
 tss_set(tss_t key, void *val)
 {
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 	return __unlikely(pthread_setspecific((pthread_key_t)key, val))
 			? thrd_error : thrd_success;
 #elif defined(_WIN32)
@@ -601,7 +601,7 @@ tss_set(tss_t key, void *val)
 #endif
 }
 
-#ifdef LELY_HAVE_PTHREAD
+#if LELY_HAVE_PTHREAD
 #elif defined(_WIN32)
 static void __cdecl
 thrd_start(void *arglist)

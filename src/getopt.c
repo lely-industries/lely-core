@@ -3,7 +3,7 @@
  *
  * \see lely/libc/unistd.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #include "libc.h"
 #include <lely/libc/unistd.h>
 
-#ifndef LELY_HAVE_UNISTD_H
+#if !LELY_HAVE_UNISTD_H
 
 #include <assert.h>
 #include <stddef.h>

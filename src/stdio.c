@@ -3,7 +3,7 @@
  *
  * \see lely/libc/stdio.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -99,7 +99,7 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
-#ifndef LELY_HAVE_SNPRINTF
+#if !LELY_HAVE_SNPRINTF
 
 LELY_LIBC_EXPORT int __cdecl
 snprintf(char *s, size_t n, const char *format, ...)

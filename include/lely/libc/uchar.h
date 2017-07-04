@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<uchar.h>`, if it exists, and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,7 +31,7 @@
 #endif
 #endif
 
-#ifdef LELY_HAVE_UCHAR_H
+#if LELY_HAVE_UCHAR_H
 #include <uchar.h>
 #else
 

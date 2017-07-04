@@ -31,7 +31,7 @@
 #endif
 #endif
 
-#ifdef LELY_HAVE_THREADS_H
+#if LELY_HAVE_THREADS_H
 #include <threads.h>
 #else
 

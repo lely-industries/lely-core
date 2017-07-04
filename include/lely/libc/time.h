@@ -78,7 +78,7 @@
 
 #endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
-#ifndef LELY_HAVE_TIMESPEC
+#if !LELY_HAVE_TIMESPEC
 //! A time type with nanosecond resolution.
 struct timespec {
 	//! Whole seconds (>= 0).
@@ -88,7 +88,7 @@ struct timespec {
 };
 #endif
 
-#ifndef LELY_HAVE_ITIMERSPEC
+#if !LELY_HAVE_ITIMERSPEC
 //! A struct specifying an interval and initial value for a timer.
 struct itimerspec {
 	//! The timer period.
@@ -291,7 +291,7 @@ LELY_LIBC_EXTERN int __cdecl timer_settime(timer_t timerid, int flags,
 
 #endif // _WIN32 || !_POSIX_TIMERS
 
-#ifndef LELY_HAVE_TIMESPEC_GET
+#if !LELY_HAVE_TIMESPEC_GET
 
 #ifndef TIME_UTC
 //! An integer constant greater than 0 that designates the UTC time base.

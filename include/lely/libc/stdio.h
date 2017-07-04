@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdio.h>` and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,7 +32,7 @@
 #endif
 #endif
 
-#ifndef LELY_HAVE_SNPRINTF
+#if !LELY_HAVE_SNPRINTF
 // Hide existing (and non-conformant) definitions of snprintf() and vsnprintf().
 #undef snprintf
 #define snprintf	__no_snprintf
@@ -45,7 +45,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifndef LELY_HAVE_SNPRINTF
+#if !LELY_HAVE_SNPRINTF
 #undef vsnprintf
 #undef snprintf
 #endif
@@ -83,7 +83,7 @@ LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
-#ifndef LELY_HAVE_SNPRINTF
+#if !LELY_HAVE_SNPRINTF
 
 /*!
  * Equivalent to `printf()`, except that the output is written to a string
@@ -126,7 +126,7 @@ LELY_LIBC_EXTERN int __cdecl snprintf(char *s, size_t n, const char *format,
 LELY_LIBC_EXTERN int __cdecl vsnprintf(char *s, size_t n, const char *format,
 		va_list arg);
 
-#endif
+#endif // !LELY_HAVE_SNPRINTF
 
 /*!
  * Equivalent to `sprintf()`, except that it allocates a string large enough to

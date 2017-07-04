@@ -22,7 +22,7 @@
 
 #include "libc.h"
 
-#ifndef LELY_NO_RT
+#if !LELY_NO_RT
 
 #include <lely/libc/time.h>
 

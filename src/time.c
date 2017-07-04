@@ -22,11 +22,11 @@
 
 #include "libc.h"
 
-#ifndef LELY_NO_RT
+#if !LELY_NO_RT
 
 #include <lely/libc/time.h>
 
-#ifndef LELY_HAVE_TIMESPEC_GET
+#if !LELY_HAVE_TIMESPEC_GET
 
 LELY_LIBC_EXPORT int __cdecl
 timespec_get(struct timespec *ts, int base)

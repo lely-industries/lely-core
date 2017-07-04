@@ -32,7 +32,7 @@
 #endif
 #endif
 
-#ifdef LELY_HAVE_STDATOMIC_H
+#if LELY_HAVE_STDATOMIC_H
 #include <stdatomic.h>
 #else
 
@@ -67,33 +67,62 @@
 
 #ifdef __GCC_ATOMIC_BOOL_LOCK_FREE
 #define ATOMIC_BOOL_LOCK_FREE		__GCC_ATOMIC_BOOL_LOCK_FREE
+#else
+#define ATOMIC_BOOL_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_CHAR_LOCK_FREE
 #define ATOMIC_CHAR_LOCK_FREE		__GCC_ATOMIC_CHAR_LOCK_FREE
+#else
+#define ATOMIC_CHAR_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_CHAR16_T_LOCK_FREE
 #define ATOMIC_CHAR16_T_LOCK_FREE	__GCC_ATOMIC_CHAR16_T_LOCK_FREE
+#else
+#define ATOMIC_CHAR16_T_LOCK_FREE	1
 #endif
+
 #ifdef __GCC_ATOMIC_CHAR32_T_LOCK_FREE
 #define ATOMIC_CHAR32_T_LOCK_FREE	__GCC_ATOMIC_CHAR32_T_LOCK_FREE
+#else
+#define ATOMIC_CHAR32_T_LOCK_FREE	1
 #endif
+
 #ifdef __GCC_ATOMIC_WCHAR_T_LOCK_FREE
 #define ATOMIC_WCHAR_T_LOCK_FREE	__GCC_ATOMIC_WCHAR_T_LOCK_FREE
+#else
+#define ATOMIC_WCHAR_T_LOCK_FREE	1
 #endif
+
 #ifdef __GCC_ATOMIC_SHORT_LOCK_FREE
 #define ATOMIC_SHORT_LOCK_FREE		__GCC_ATOMIC_SHORT_LOCK_FREE
+#else
+#define ATOMIC_SHORT_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_INT_LOCK_FREE
 #define ATOMIC_INT_LOCK_FREE		__GCC_ATOMIC_INT_LOCK_FREE
+#else
+#define ATOMIC_INT_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_LONG_LOCK_FREE
 #define ATOMIC_LONG_LOCK_FREE		__GCC_ATOMIC_LONG_LOCK_FREE
+#else
+#define ATOMIC_LONG_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_LLONG_LOCK_FREE
 #define ATOMIC_LLONG_LOCK_FREE		__GCC_ATOMIC_LLONG_LOCK_FREE
+#else
+#define ATOMIC_LLONG_LOCK_FREE		1
 #endif
+
 #ifdef __GCC_ATOMIC_POINTER_LOCK_FREE
 #define ATOMIC_POINTER_LOCK_FREE	__GCC_ATOMIC_POINTER_LOCK_FREE
+#else
+#define ATOMIC_POINTER_LOCK_FREE	1
 #endif
 
 #ifndef LELY_HAVE_CLANG_ATOMIC
@@ -145,7 +174,7 @@ typedef _Atomic(uintmax_t)		atomic_uintmax_t;
  * The static initializer for an atomic object of a type that is
  * initialization-compatible with \a value.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define ATOMIC_VAR_INIT(value)	(value)
 #else
 #define ATOMIC_VAR_INIT(value)	{ (value) }
@@ -155,7 +184,7 @@ typedef _Atomic(uintmax_t)		atomic_uintmax_t;
  * Initializes the atomic object at \a obj with the value \a value. Note that
  * this function does not avoid data races.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define	atomic_init(obj, value)	__c11_atomic_init(obj, value)
 #else
 #define	atomic_init(obj, value)	((void)((obj)->__value = (value)))
@@ -227,11 +256,11 @@ extern "C" {
 LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_thread_fence(memory_order order)
 {
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 	__c11_atomic_thread_fence(order);
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 	__atomic_thread_fence(order);
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 	if (order != memory_order_relaxed)
 		__sync_synchronize();
 #endif
@@ -245,9 +274,9 @@ atomic_thread_fence(memory_order order)
 LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_signal_fence(memory_order order)
 {
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 	__c11_atomic_signal_fence(order);
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 	__atomic_signal_fence(order);
 #elif defined(__GNUC__)
 	if (order != memory_order_relaxed)
@@ -267,10 +296,10 @@ atomic_signal_fence(memory_order order)
  * \returns 0 if the type is never lock-free, 1 if the type is sometimes
  * lock-free, and 2 if the type is always lock-free.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_is_lock_free(obj) \
 	(__c11_atomic_is_lock_free(sizeof(*(obj))))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_is_lock_free(obj) \
 	(__atomic_is_lock_free(sizeof((obj)->__value), &(obj)->__value))
 #else
@@ -282,10 +311,10 @@ atomic_signal_fence(memory_order order)
  * Atomically replaces the value at \a object with the value of \a desired.
  * Memory is affected according to \a order.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_store_explicit(object, desired, order) \
 	(__c11_atomic_store((object), (desired), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_store_explicit(object, desired, order) \
 	(__atomic_store_n(&(object)->__value, (desired), (order)))
 #else
@@ -302,13 +331,13 @@ atomic_signal_fence(memory_order order)
  * Atomically returns the value at \a object. Memory is affected according to
  * \a order.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_load_explicit(object, order) \
 	(__c11_atomic_load((object), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_load_explicit(object, order) \
 	(__atomic_load_n(&(object)->__value, (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_load_explicit(object, order) \
 	(__unused_var(order), __sync_fetch_and_add(&(object)->__value, 0))
 #endif
@@ -322,13 +351,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
 	(__c11_atomic_exchange((object), (desired), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
 	(__atomic_exchange_n(&(object)->__value, (desired), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
 	__extension__({ \
 		__typeof__(object) __object = (object); \
@@ -354,17 +383,17 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the result of the comparison.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_compare_exchange_strong_explicit(object, expected, desired, \
 		success, failure) \
 	(__c11_atomic_compare_exchange_strong((object), (expected), (desired), \
 			(success), (failure)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_compare_exchange_strong_explicit(object, expected, desired, \
 		success, failure) \
 	(__atomic_compare_exchange_n(&(object)->__value, (expected), (desired), \
 			0, (success), (failure)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_compare_exchange_strong_explicit(object, expected, desired, \
 		success, failure) \
 	__extension__({ \
@@ -397,12 +426,12 @@ atomic_signal_fence(memory_order order)
  * compare-and-exchange would require a loop and a strong one would not, the
  * strong one is preferable.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_compare_exchange_weak_explicit(object, expected, desired, \
 		success, failure) \
 	(__c11_atomic_compare_exchange_weak((object), (expected), (desired), \
 			(success), (failure)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_compare_exchange_weak_explicit(object, expected, desired, \
 		success, failure) \
 	(__atomic_compare_exchange_n(&(object)->__value, (expected), (desired), \
@@ -427,13 +456,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
 	(__c11_atomic_fetch_add((object), (operand), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
 	(__atomic_fetch_add(&(object)->__value, (operand), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_add(&(object)->__value, (operand)))
@@ -451,13 +480,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
 	(__c11_atomic_fetch_sub((object), (operand), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
 	(__atomic_fetch_sub(&(object)->__value, (operand), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_sub(&(object)->__value, (operand)))
@@ -475,13 +504,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
 	(__c11_atomic_fetch_or((object), (operand), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
 	(__atomic_fetch_or(&(object)->__value, (operand), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_or(&(object)->__value, (operand)))
@@ -499,13 +528,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
 	(__c11_atomic_fetch_xor((object), (operand), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
 	(__atomic_fetch_xor(&(object)->__value, (operand), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_xor(&(object)->__value, (operand)))
@@ -523,13 +552,13 @@ atomic_signal_fence(memory_order order)
  *
  * \returns the value at \a object immediately before the effects.
  */
-#ifdef LELY_HAVE_CLANG_ATOMIC
+#if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
 	(__c11_atomic_fetch_and((object), (operand), (order)))
-#elif defined(LELY_HAVE_GNUC_ATOMIC)
+#elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
 	(__atomic_fetch_and(&(object)->__value, (operand), (order)))
-#elif defined(LELY_HAVE_SYNC_ATOMIC)
+#elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
 	(__unused_var(order), \
 			__sync_fetch_and_and(&(object)->__value, (operand)))

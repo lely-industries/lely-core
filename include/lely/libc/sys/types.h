@@ -32,7 +32,7 @@
 #endif
 #endif
 
-#ifdef LELY_HAVE_SYS_TYPES_H
+#if LELY_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #else
 
