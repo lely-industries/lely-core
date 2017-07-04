@@ -141,7 +141,8 @@
 
 #ifndef LELY_NO_EXCEPTIONS
 #if (defined(_MSC_VER) && !_HAS_EXCEPTIONS) \
-		|| (defined(__GNUC__) && !__EXCEPTIONS) \
+		|| (defined(__GNUC__) \
+		&& !(defined(__EXCEPTIONS) || __cpp_exceptions)) \
 		|| (defined(__clang__) && !__has_feature(cxx_exceptions))
 #define LELY_NO_EXCEPTIONS	1
 #endif
@@ -149,7 +150,7 @@
 
 #ifndef LELY_NO_RTTI
 #if (defined(_MSC_VER) && !_CPPRTTI) \
-		|| (defined(__GNUC__) && !__GXX_RTTI) \
+		|| (defined(__GNUC__) && !(defined(__GXX_RTTI) || __cpp_rtti)) \
 		|| (defined(__clang__) && !__has_feature(cxx_rtti))
 #define LELY_NO_RTTI	1
 #endif
@@ -277,6 +278,8 @@
 #if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(dllexport))
 #define __dllexport	__declspec(dllexport)
+#elif defined(__GNUC__)
+#define __dllexport	__attribute__((visibility("default")))
 #else
 #define __dllexport
 #endif
