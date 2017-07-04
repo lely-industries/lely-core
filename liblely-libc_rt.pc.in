@@ -1,4 +1,4 @@
-Name: @PACKAGE@_rt
+Name: lib@PACKAGE@_rt
 Description: Realtime Extensions for the @PACKAGE_NAME@
 URL: https://gitlab.com/lely_industries/libc
 Version: @PACKAGE_VERSION@

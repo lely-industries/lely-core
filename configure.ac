@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([C11 and POSIX compatibility library], [1.4.1], [], [liblely-libc])
+AC_INIT([C11 and POSIX compatibility library], [1.4.1], [], [lely-libc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -23,6 +23,7 @@ AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
 AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
+platform_win32=no
 case "$host" in
 *-*-mingw*)
 	platform_win32=yes
@@ -46,28 +47,30 @@ AS_IF([test "$enable_rt" != "no"], [
 ])
 AC_SUBST([RT_LIBS])
 
+with_pthread=no
 AX_PTHREAD([
 	with_pthread=yes
 	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
-], [
-	with_pthread=no
 ])
 
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "$enable_threads" != "no" -a "$with_pthread" == "yes"], [
-	CC="$PTHREAD_CC"
-	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
-	LIBS="$PTHREAD_LIBS $LIBS"
-], [
+AS_IF([test "$platform_win32" == "no" -a "$with_pthread" == "no"], [
+	enable_threads=no
+])
+AS_IF([test "$enable_threads" == "no"], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 	AS_IF([test "$platform_win32" == "yes"], [LIBS="$RT_LIBS $LIBS"])
+], [test "$with_pthread" == "yes"], [
+	CC="$PTHREAD_CC"
+	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+	LIBS="$PTHREAD_LIBS $LIBS"
 ])
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
+AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
 ])
@@ -83,7 +86,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/version.rc
 	Makefile
-	${PACKAGE}.pc
-	${PACKAGE}_rt.pc
+	lib${PACKAGE}.pc
+	lib${PACKAGE}_rt.pc
 ])
 AC_OUTPUT
