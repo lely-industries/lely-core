@@ -46,19 +46,16 @@ typedef ptrdiff_t ssize_t;
 
 #endif // LELY_HAVE_SYS_TYPES_H
 
-#ifndef _POSIX_C_SOURCE
-
-#ifndef _POSIX_THREADS
+#if (!defined(_POSIX_C_SOURCE) || defined(__NEWLIB__)) \
+		&& !defined(_POSIX_THREADS)
 //! Used to identify a thread attribute object.
 typedef struct pthread_attr_t pthread_attr_t;
 #endif
 
-#ifndef _POSIX_TIMERS
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
 //! Used for timer ID returned by `timer_create()`.
 typedef void *timer_t;
 #endif
-
-#endif // !_POSIX_C_SOURCE
 
 #endif
 
