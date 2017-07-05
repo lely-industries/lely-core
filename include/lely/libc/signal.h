@@ -26,7 +26,7 @@
 
 #include <signal.h>
 
-#ifndef _POSIX_REALTIME_SIGNALS
+#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_REALTIME_SIGNALS)
 
 //! No asynchronous notification is delivered when the event of interest occurs.
 #define SIGEV_NONE	1
@@ -65,7 +65,7 @@ struct sigevent {
 	pthread_attr_t *sigev_notify_attributes;
 };
 
-#endif // !_POSIX_REALTIME_SIGNALS
+#endif // !_POSIX_C_SOURCE && !_POSIX_REALTIME_SIGNALS
 
 #endif
 
