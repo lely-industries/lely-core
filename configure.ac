@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([Utilities library], [1.7.1], [], [liblely-util])
+AC_INIT([Utilities library], [1.7.1], [], [lely-util])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -132,6 +132,6 @@ AC_CONFIG_FILES([
 	test/Makefile
 	exec-wrapper.sh
 	Makefile
-	${PACKAGE}.pc
+	lib${PACKAGE}.pc
 ])
 AC_OUTPUT
