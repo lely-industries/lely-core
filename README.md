@@ -17,7 +17,7 @@ liblely-tap is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/tap.git
 
 or download the latest release
-([v1.3.0](https://gitlab.com/lely_industries/tap/tags/v1.3.0)).
+([v1.3.1](https://gitlab.com/lely_industries/tap/tags/v1.3.1)).
 
 Binary packages for Ubuntu 16.04 LTS (Xenial Xerus) can be found at
 https://launchpad.net/~lely/+archive/ubuntu/ppa.
