@@ -4,7 +4,7 @@
  *
  * \see lely/util/print.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -283,7 +283,8 @@ print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 			chars += print_char(pbegin, end, '\n');
 		}
 
-		c = n ? tab[((bp[1] << 2) + (--n ? (bp[2] >> 6) : 0)) & 0x3f] : '=';
+		c = n ? tab[((bp[1] << 2) + (--n ? (bp[2] >> 6) : 0)) & 0x3f]
+				: '=';
 		chars += print_char(pbegin, end, c);
 		if (!((chars + 2) % 78)) {
 			chars += print_char(pbegin, end, '\r');
