@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([Test Anything Protocol (TAP) library], [1.3.0], [], [liblely-tap])
+AC_INIT([Test Anything Protocol (TAP) library], [1.3.0], [], [lely-tap])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -47,6 +47,7 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 ])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.2 liblely-libc < 2])
+
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
@@ -68,6 +69,6 @@ AC_CONFIG_FILES([
 	test/Makefile
 	exec-wrapper.sh
 	Makefile
-	${PACKAGE}.pc
+	lib${PACKAGE}.pc
 ])
 AC_OUTPUT
