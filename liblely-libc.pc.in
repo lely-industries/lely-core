@@ -9,4 +9,4 @@ URL: https://gitlab.com/lely_industries/libc
 Version: @PACKAGE_VERSION@
 Requires: lib@PACKAGE@_rt = @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -llely-libc
+Libs: -L${libdir} -l@PACKAGE@
