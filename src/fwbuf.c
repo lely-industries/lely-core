@@ -731,8 +731,7 @@ error_size:
 
 #ifdef __linux__
 	buf->addr = mmap64(NULL, off + size, PROT_READ | PROT_WRITE, MAP_SHARED,
-			buf->fd,
-			pos - off);
+			buf->fd, pos - off);
 #else
 	// TODO: Check if `pos - off` does not overflow the range of off_t.
 	buf->addr = mmap(NULL, off + size, PROT_READ | PROT_WRITE, MAP_SHARED,
