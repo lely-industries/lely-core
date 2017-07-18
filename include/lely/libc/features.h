@@ -62,7 +62,12 @@
 // and will typically include <features.h>, which we need but cannot portably
 // include directly.
 #include <limits.h>
-#ifdef __NEWLIB__
+
+// Include a (platform-specific) header which defines the POSIX feature test
+// macros.
+#ifdef __GLIBC__
+#include <bits/posix_opt.h>
+#elif defined(__NEWLIB__)
 #include <sys/features.h>
 #endif
 
