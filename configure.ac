@@ -81,25 +81,25 @@ AS_IF([test "$enable_canfd" == "no"], [
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
-AM_CONDITIONAL([HAVE_IXXAT_VCI], [false])
+AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 
-	AC_ARG_WITH([ixxat-vci],
+	AC_ARG_WITH([vci],
 		[AS_HELP_STRING(
-			[--with-ixxat-vci@<:@=DIR@:>@],
+			[--with-vci@<:@=DIR@:>@],
 			[search for the IXXAT VCI SDK (in DIR if specified)]
 		)],,
-		[with_ixxat_vci=no]
+		[with_vci=no]
 	)
-	AS_IF([test "$with_ixxat_vci" != "no"], [
+	AS_IF([test "$with_vci" != "no"], [
 		save_CPPFLAGS="$CPPFLAGS"
-		AS_IF([test "$with_ixxat" != "yes"], [
-			CPPFLAGS="$CPPFLAGS -I$with_ixxat/vci/inc"
+		AS_IF([test "$with_vci" != "yes"], [
+			CPPFLAGS="$CPPFLAGS -I$with_vci/inc"
 		])
 		AC_CHECK_HEADERS([cantype.h], [
-			AM_CONDITIONAL([HAVE_IXXAT_VCI], [true])
-			AC_DEFINE([LELY_HAVE_IXXAT_VCI], [1], [Define to 1 if you have the IXXAT VCI SDK.])
+			AM_CONDITIONAL([HAVE_VCI], [true])
+			AC_DEFINE([LELY_HAVE_VCI], [1], [Define to 1 if you have the IXXAT VCI SDK.])
 		], [
 			CPPFLAGS=$save_CPPFLAGS
 		], [

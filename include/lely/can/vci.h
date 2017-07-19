@@ -1,8 +1,8 @@
 /*!\file
- * This header file is part of the CAN library; it contains the IXXAT VCI V3
+ * This header file is part of the CAN library; it contains the IXXAT VCI V4
  * interface declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2017 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_IXXAT_H
-#define LELY_CAN_IXXAT_H
+#ifndef LELY_CAN_VCI_H
+#define LELY_CAN_VCI_H
 
 #include <lely/can/msg.h>
 
@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 /*!
- * Converts an IXXAT CAN message telegram to a #can_msg frame.
+ * Converts an IXXAT VCI CAN message to a #can_msg frame.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.
@@ -39,7 +39,7 @@ extern "C" {
 LELY_CAN_EXTERN int CANMSG2can_msg(const void *src, struct can_msg *dst);
 
 /*!
- * Converts a #can_msg frame to an IXXAT CAN message telegram.
+ * Converts a #can_msg frame to an IXXAT VCI CAN message.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errnum()`.

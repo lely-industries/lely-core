@@ -1,13 +1,13 @@
 src =
 src += buf.c
 src += can.h
-if HAVE_IXXAT_VCI
-src += ixxat.c
-endif
 src += msg.c
 src += net.c
 if HAVE_SOCKET_CAN
 src += socket.c
+endif
+if HAVE_VCI
+src += vci.c
 endif
 if PLATFORM_WIN32
 src += version.rc

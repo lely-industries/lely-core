@@ -1,8 +1,8 @@
 /*!\file
  * This file is part of the CAN library; it contains the implementation of the
- * IXXAT VCI V3 interface.
+ * IXXAT VCI V4 interface.
  *
- * \see lely/can/socket.h
+ * \see lely/can/vci.h
  *
  * \copyright 2017 Lely Industries N.V.
  *
@@ -23,11 +23,11 @@
 
 #include "can.h"
 
-#ifdef LELY_HAVE_IXXAT_VCI
+#ifdef LELY_HAVE_VCI
 
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
-#include <lely/can/ixxat.h>
+#include <lely/can/vci.h>
 
 #include <assert.h>
 #include <string.h>
@@ -97,5 +97,5 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	return 0;
 }
 
-#endif // LELY_HAVE_IXXAT_VCI
+#endif // LELY_HAVE_VCI
 
