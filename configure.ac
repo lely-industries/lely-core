@@ -119,6 +119,8 @@ AS_IF([test "$platform_linux" == "yes"], [
 	])
 ])
 
+AM_CONDITIONAL([HAVE_PYTHON2], [false])
+AM_CONDITIONAL([HAVE_PYTHON3], [false])
 AC_ARG_ENABLE([python],
 	AS_HELP_STRING([--disable-python], [do no generate Python bindings]))
 AM_CONDITIONAL([WITH_PYTHON], [false])
