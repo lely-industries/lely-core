@@ -18,7 +18,7 @@ liblely-can is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/can.git
 
 or download the latest release
-([v1.3.1](https://gitlab.com/lely_industries/can/tags/v1.3.1)).
+([v1.3.2](https://gitlab.com/lely_industries/can/tags/v1.3.2)).
 
 Binary packages for Ubuntu 16.04 LTS (Xenial Xerus) can be found at
 https://launchpad.net/~lely/+archive/ubuntu/ppa.
