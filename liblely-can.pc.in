@@ -3,8 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: @PACKAGE@
+Name: lib@PACKAGE@
 Description: @PACKAGE_NAME@
+URL: https://gitlab.com/lely_industries/can
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -llely-can
+Libs: -L${libdir} -l@PACKAGE@
