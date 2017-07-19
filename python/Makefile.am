@@ -28,7 +28,9 @@ CYTHON_ENV = \
 	CPPFLAGS="$(CPPFLAGS) $(AM_CPPFLAGS)" \
 	CFLAGS="$(CFLAGS) $(AM_CFLAGS)" \
 	LDSHARED="$(CC)" \
-	LDFLAGS="$(CFLAGS) $(AM_CFLAGS) $(LDFLAGS) $(AM_LDFLAGS) $(LIBS)"
+	LDFLAGS="$(LDFLAGS) $(AM_LDFLAGS)"
+
+CLEANFILES = $(patsubst %.pyx,$(srcdir)/%.c,$(filter %.pyx,$(src)))
 
 all-local:
 if HAVE_PYTHON2
@@ -41,10 +43,7 @@ if HAVE_PYTHON3
 endif
 
 clean-local:
-	rm -rf $(builddir)/build
-
-distclean-local:
-	rm -rf $(srcdir)/$(pkg)/*.c
+	rm -rf $(build_base)
 
 install-exec-local:
 if HAVE_PYTHON2
