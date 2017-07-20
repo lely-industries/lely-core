@@ -1,5 +1,5 @@
-# AX_PYTHON(MAJOR-VERSION[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
-AC_DEFUN([AX_PYTHON], [
+# AX_CHECK_PYTHON(MAJOR-VERSION[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+AC_DEFUN([AX_CHECK_PYTHON], [
 ax_python_ok=no
 
 AC_CHECK_PROGS([PYTHON$1], [python$1 python])
@@ -14,6 +14,8 @@ AS_IF([test -n "${PYTHON$1}"], [
 AS_IF([test "$ax_python_ok" = "yes"], [
 	m4_default([$2], [:])
 ], [
+	PYTHON$1=
 	m4_default([$3], [:])
 ])
+AC_SUBST([PYTHON$1])
 ])

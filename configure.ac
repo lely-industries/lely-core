@@ -143,12 +143,14 @@ AS_IF([test "$platform_linux" == "yes"], [
 AM_CONDITIONAL([HAVE_PYTHON2], [false])
 AM_CONDITIONAL([HAVE_PYTHON3], [false])
 AC_ARG_ENABLE([python],
-	AS_HELP_STRING([--disable-python], [disable Python bindings]))
-AS_IF([test "x$enable_shared" == "xno" -o "x$platform_win32" == "xyes"],
-	[enable_python=no])
-AS_IF([test "x$enable_python" != "xno"], [
-	AX_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
-	AX_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
+	AS_HELP_STRING([--disable-python], [do no generate Python bindings]))
+AM_CONDITIONAL([WITH_PYTHON], [false])
+AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes"], [
+	enable_python=no
+])
+AS_IF([test "$enable_python" != "no"], [
+	AX_CHECK_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
+	AX_CHECK_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
 ])
 
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
