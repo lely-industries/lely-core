@@ -47,10 +47,10 @@ clean-local:
 
 install-exec-local:
 if HAVE_PYTHON2
-	@$(PYTHON2) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
-		--root / --single-version-externally-managed
+	@$(PYTHON2) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix) \
+		--root /
 endif
 if HAVE_PYTHON3
-	@$(PYTHON3) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
-		--root / --single-version-externally-managed
+	@$(PYTHON3) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix) \
+		--root /
 endif
