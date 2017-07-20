@@ -10,22 +10,24 @@ AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
 AX_CODE_COVERAGE
-AS_IF([test "x$enable_code_coverage" == "xyes"], [
+AS_IF([test "$enable_code_coverage" == "yes"], [
 	${CFLAGS=""}
 	${CXXFLAGS=""}
 ])
 
-AC_LANG(C)
+AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
-AC_LANG(C++)
+AC_LANG([C++])
 AC_PROG_CXX
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 
 LT_INIT([win32-dll])
 LT_PROG_RC
 
-AM_CONDITIONAL([ENABLE_SHARED], [test "x$enable_shared" == "xyes"])
+AM_CONDITIONAL([ENABLE_SHARED], [test "$enable_shared" == "yes"])
 
 m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
 AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
@@ -46,17 +48,11 @@ case "$host" in
 	esac
 	;;
 esac
-AM_CONDITIONAL([PLATFORM_LINUX], [test "x$platform_linux" == "xyes"])
-AM_CONDITIONAL([PLATFORM_WIN32], [test "x$platform_win32" == "xyes"])
+AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
+AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
 AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
-])
-
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
-AS_IF([test "x$platform_win32" == "xyes"], [
-	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
 ])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.4 liblely-libc < 2])
@@ -71,7 +67,7 @@ PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.3 liblely-can < 2], [], [
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
-AS_IF([test "x$enable_cxx" == "xno"], [
+AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
 ])
@@ -79,7 +75,7 @@ AS_IF([test "x$enable_cxx" == "xno"], [
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "x$enable_threads" == "xno"], [
+AS_IF([test "$enable_threads" == "no"], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
@@ -87,12 +83,14 @@ AS_IF([test "x$enable_threads" == "xno"], [
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
-AS_IF([test "x$enable_canfd" == "xno"], [
+AS_IF([test "$enable_canfd" == "no"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
-AS_IF([test "x$platform_win32" == "xyes"], [
+AS_IF([test "$platform_win32" == "yes"], [
+	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+
 	AC_MSG_CHECKING([for WSAGetLastError in ws2_32])
 	ax_winsock_ok=no
 	save_LIBS=$LIBS
@@ -114,9 +112,11 @@ AS_IF([test "x$platform_win32" == "xyes"], [
 			]], [[GetAdaptersAddresses(0, 0, NULL, NULL, NULL);]])],
 		[ax_iphlpapi_ok=yes], [LIBS=$save_LIBS])
 	AC_MSG_RESULT([$ax_iphlpapi_ok])
+
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
-AS_IF([test "x$platform_linux" == "xyes"], [
+AS_IF([test "$platform_linux" == "yes"], [
 	AC_CHECK_HEADERS([bluetooth/bluetooth.h bluetooth/rfcomm.h],
 		[], [], [[
 			#ifdef HAVE_BLUETOOTH_BLUETOOTH_H
@@ -151,19 +151,15 @@ AS_IF([test "x$enable_python" != "xno"], [
 	AX_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
 ])
 
-AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
-PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.3 liblely-tap < 2], [
+PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.2 liblely-tap < 2], [
 	AM_CONDITIONAL([HAVE_TAP], [true])
 	AC_PROG_AWK
 	AC_REQUIRE_AUX_FILE([tap-driver.sh])
 ], [
 	AM_CONDITIONAL([HAVE_TAP], [false])
-])
-
-AS_IF([test "x$platform_win32" == "xyes"], [
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
 AC_CONFIG_HEADERS(config.h)
