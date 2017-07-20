@@ -13,7 +13,7 @@ dist += README.md
 EXTRA_DIST = $(dist)
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = $(PACKAGE).pc
+pkgconfig_DATA = lib$(PACKAGE).pc
 
 if CODE_COVERAGE_ENABLED
 @CODE_COVERAGE_RULES@
