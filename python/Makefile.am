@@ -60,6 +60,7 @@ endif
 
 clean-local:
 	rm -rf $(build_base)
+	rm -rf *.egg-info
 
 install-exec-local:
 if HAVE_PYTHON2
