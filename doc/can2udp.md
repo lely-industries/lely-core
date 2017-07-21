@@ -62,5 +62,5 @@ CAN interfaces into a single CAN bus.
 
 To monitor the CAN frames sent and received (like candump), run
 
-    can2udp -Dfpv 6001 vcan0 192.168.0.100 6000
+    can2udp -Dfvp 6001 vcan0 192.168.0.100 6000
 
