@@ -1,6 +1,7 @@
 src =
 src += bimap.c
 src += bits.c
+src += bitset.c
 src += cmp.c
 src += config.c
 src += config_ini.c

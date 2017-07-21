@@ -19,7 +19,8 @@ version on top of the intrusive implementation if necessary.
 Numerics
 --------
 
-Bit counting and manipulation functions are provided in lely/util/bits.h.
+Bit counting and manipulation functions are provided in lely/util/bits.h and
+lely/util/bitset.h.
 
 Comparison and hash function for integers, pointers and strings can be found in
 lely/util/cmp.h and lely/util/hash.h, respectively.
