@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([CANopen library], [1.4.0], [], [liblely-co])
+AC_INIT([CANopen library], [1.4.0], [], [lely-co])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign])
@@ -207,7 +207,7 @@ AS_IF([test "$platform_win32" == "yes"], [
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ])
 
-AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
 PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.3 liblely-tap < 2], [
@@ -217,6 +217,7 @@ PKG_CHECK_MODULES([liblely_tap], [liblely-tap >= 1.3 liblely-tap < 2], [
 ], [
 	AM_CONDITIONAL([HAVE_TAP], [false])
 ])
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	doc/Doxyfile
@@ -230,6 +231,6 @@ AC_CONFIG_FILES([
 	test/nmt-master.dcf
 	exec-wrapper.sh
 	Makefile
-	${PACKAGE}.pc
+	lib${PACKAGE}.pc
 ])
 AC_OUTPUT
