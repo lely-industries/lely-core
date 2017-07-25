@@ -59,6 +59,31 @@ static mtx_t factory_mtx;
 //! The tree containing all registered constructor and destructor functions.
 static struct rbtree factory = { &str_cmp, NULL, 0 };
 
+LELY_UTIL_EXPORT void *
+factory_ctor_create(factory_ctor_t *ctor, ...)
+{
+	va_list ap;
+	va_start(ap, ctor);
+	void *ptr = factory_ctor_vcreate(ctor, ap);
+	va_end(ap);
+	return ptr;
+}
+
+LELY_UTIL_EXPORT void *
+factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap)
+{
+	assert(ctor);
+
+	return ctor(ap);
+}
+
+LELY_UTIL_EXPORT void
+factory_dtor_destroy(factory_dtor_t *dtor, void *ptr)
+{
+	if (dtor)
+		dtor(ptr);
+}
+
 LELY_UTIL_EXPORT int
 factory_insert(const char *name, factory_ctor_t *ctor, factory_dtor_t *dtor)
 {

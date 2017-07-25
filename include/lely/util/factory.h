@@ -24,15 +24,33 @@
 
 #include <lely/util/util.h>
 
+#include <stdarg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 //! The type of a default constructor function.
-typedef void *factory_ctor_t(void);
+typedef void *factory_ctor_t(va_list ap);
 
-//! THe type of a destructor function.
+//! The type of a destructor function.
 typedef void factory_dtor_t(void *ptr);
+
+/*!
+ * Invokes a constructor with a variable number of arguments.
+ *
+ * \returns a pinter to the newly created object.
+ */
+LELY_UTIL_EXTERN void *factory_ctor_create(factory_ctor_t *ctor, ...);
+
+/*!
+ * Invokes a constructor. This function is equivalent to #factory_ctor_create(),
+ * except that it accepts a `va_list` instead of a variable number of arguments.
+ */
+LELY_UTIL_EXTERN void *factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap);
+
+//! Invokes a destructor on the object at \a ptr.
+LELY_UTIL_EXTERN void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
 
 /*!
  * Registers a constructor and destructor function for the specified type name,
