@@ -99,8 +99,8 @@ callable to be used as a C callback function. See
 C++ callback interface.
 
 An implementation of the factory pattern can be found in lely/util/factory.hpp.
-Building on the interface from lely/util/factory.h, this allows even C code to
-create and destroy instances of C++ classes.
+Building on the interface from lely/util/factory.h, lely/util/c_factory.hpp
+allows even C code to create and destroy instances of C++ classes.
 
 Other
 -----
