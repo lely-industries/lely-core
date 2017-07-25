@@ -5,6 +5,7 @@ inc += lely/util/bits.h
 inc += lely/util/bitset.h
 if !NO_CXX
 inc += lely/util/c_call.hpp
+inc += lely/util/c_factory.hpp
 inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
