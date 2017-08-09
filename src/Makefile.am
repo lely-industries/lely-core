@@ -17,7 +17,7 @@ liblely_tap_la_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
 liblely_tap_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
-liblely_tap_la_LDFLAGS += -Wl,--output-def,$(PACKAGE)-$(VERSION_MAJOR).def
+liblely_tap_la_LDFLAGS += -Wl,--output-def,lib$(PACKAGE)-$(VERSION_MAJOR).def
 endif
 liblely_tap_la_LIBADD = $(liblely_libc_LIBS)
 if CODE_COVERAGE_ENABLED
@@ -30,7 +30,7 @@ if PLATFORM_WIN32
 	$(AM_V_GEN) $(LIBTOOL) --silent --tag=RC --mode=compile $(RC) $< -o $@
 if ENABLE_SHARED
 defdir = $(libdir)
-def_DATA = $(PACKAGE)-$(VERSION_MAJOR).def
+def_DATA = lib$(PACKAGE)-$(VERSION_MAJOR).def
 MOSTLYCLEANFILES = $(def_DATA)
 endif
 endif
