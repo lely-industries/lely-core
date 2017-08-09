@@ -16,9 +16,9 @@ BEGIN
       VALUE "CompanyName",      "Lely Industries N.V."
       VALUE "FileDescription",  "@PACKAGE_NAME@"
       VALUE "FileVersion",      "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
-      VALUE "InternalName",     "@PACKAGE@"
-      VALUE "LegalCopyright",   "2016 Lely Industries N.V."
-      VALUE "OriginalFilename", "@PACKAGE@-@VERSION_MAJOR@.dll"
+      VALUE "InternalName",     "lib@PACKAGE@"
+      VALUE "LegalCopyright",   "2017 Lely Industries N.V."
+      VALUE "OriginalFilename", "lib@PACKAGE@-@VERSION_MAJOR@.dll"
       VALUE "ProductName",      "@PACKAGE_NAME@"
       VALUE "ProductVersion",   "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
     END
