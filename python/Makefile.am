@@ -28,7 +28,7 @@ CYTHON_ENV = \
 	CPPFLAGS="$(CPPFLAGS) $(AM_CPPFLAGS)" \
 	CFLAGS="$(CFLAGS) $(AM_CFLAGS)" \
 	LDSHARED="$(CC)" \
-	LDFLAGS="$(LDFLAGS) $(AM_LDFLAGS)"
+	LDFLAGS="$(LDFLAGS) $(AM_LDFLAGS) $(LIBS)"
 
 CLEANFILES = $(patsubst %.pyx,$(srcdir)/%.c,$(filter %.pyx,$(src)))
 

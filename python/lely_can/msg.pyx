@@ -48,7 +48,7 @@ cdef class CANMsg(object):
                 view = None
             return view
 
-        def __set__(self, uint8_t[:] value):
+        def __set__(self, value not None):
             self._c_msg.len = min(len(value), _CAN_MSG_MAX_LEN)
             for i in range(self._c_msg.len):
                 self._c_msg.data[i] = value[i]

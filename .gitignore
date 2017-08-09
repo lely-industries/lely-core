@@ -8,7 +8,7 @@
 /m4/ltsugar.m4
 /m4/ltversion.m4
 /python/build/
-/python/lely_can/*.c
+/python/*/*.c
 /aclocal.m4
 /compile
 /config.guess
