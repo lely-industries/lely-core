@@ -4,8 +4,8 @@ Overview
 The generic CAN message type is struct #can_msg (see lely/can/msg.h). This
 struct can represent both CAN and CAN FD frames (if CAN FD support is enabled).
 The #can_msg struct does not correspond to any specific driver or interface.
-Conversion functions to and from IXXAT VCI V3 and SocketCAN can be found in
-lely/can/ixxat.h and lely/can/socket.h, respectively.
+Conversion functions to and from IXXAT VCI V4 and SocketCAN can be found in
+lely/can/vci.h and lely/can/socket.h, respectively.
 
 The CAN bus is a broadcast bus, so each node receives all messages. Applications
 typically only listen to messages with a specific CAN identifier. The CAN
