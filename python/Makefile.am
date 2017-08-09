@@ -20,15 +20,12 @@ AM_CFLAGS = -shared -Wno-pedantic
 AM_LDFLAGS = -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro
 AM_LDFLAGS += -L$(abs_top_builddir)/src/.libs
 
-LIBS += $(liblely_util_LIBS)
-LIBS += $(liblely_libc_LIBS)
-
 CYTHON_ENV = \
 	CC="$(CC)" \
 	CPPFLAGS="$(CPPFLAGS) $(AM_CPPFLAGS)" \
 	CFLAGS="$(CFLAGS) $(AM_CFLAGS)" \
 	LDSHARED="$(CC)" \
-	LDFLAGS="$(LDFLAGS) $(AM_LDFLAGS) $(LIBS)"
+	LDFLAGS="$(LDFLAGS) $(AM_LDFLAGS)"
 
 CLEANFILES = $(patsubst %.pyx,$(srcdir)/%.c,$(filter %.pyx,$(src)))
 
