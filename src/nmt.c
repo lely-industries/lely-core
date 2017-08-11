@@ -1586,7 +1586,7 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	slave->cfg_data = data;
 
 	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout,
-			&co_nmt_dn_ind, &co_nmt_up_ind, data) == -1)) {
+			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
 		errc = get_errc();
 		goto error_cfg_req;
 	}
