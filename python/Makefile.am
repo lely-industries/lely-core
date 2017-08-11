@@ -37,8 +37,8 @@ CYTHON3_ENV = $(PYTHON3_ENV) $(CYTHON_ENV)
 
 all-local: python-build python-sdist python-bdist_wheel
 
-clean-local: python-clean
-	rm -rf $(srcdir)/*.egg-info $(builddir)/*.egg-info $(dist_dir)
+clean-local:
+	rm -rf $(build_base) $(dist_dir) $(srcdir)/*.egg-info $(builddir)/*.egg-info
 
 install-exec-local: python-install
 
@@ -62,17 +62,6 @@ endif
 if HAVE_PYTHON3
 	@cd $(srcdir); $(CYTHON3_ENV) $(PYTHON3) setup.py \
 		build --build-base $(build_base)
-endif
-
-.PHONY: python-clean
-python-clean:
-if HAVE_PYTHON2
-	@$(PYTHON2_ENV) $(PYTHON2) $(srcdir)/setup.py \
-		clean --build-base $(build_base) --all
-endif
-if HAVE_PYTHON3
-	@$(PYTHON3_ENV) $(PYTHON3) $(srcdir)/setup.py \
-		clean --build-base $(build_base) --all
 endif
 
 .PHONY: python-install
