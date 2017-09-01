@@ -1346,7 +1346,7 @@ co_csdo_wait_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		ac = msg->len < 8 ? 0 : ldle_u32(msg->data + 4);
 		return co_csdo_abort_ind(sdo, ac ? ac : CO_SDO_AC_ERROR);
 	default:
-		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return NULL;
 	}
 }
 
