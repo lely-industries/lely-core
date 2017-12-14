@@ -182,11 +182,10 @@ my_can_step(struct my_can *can, int timeout)
 	if (n != 1 || event.u.handle != can->handle)
 		return;
 
-	// Handle the I/O event.
-	int result = 0;
 	// If the CAN bus is ready for reading, process all waiting frames.
 	if (event.events & IO_EVENT_READ) {
 		struct can_msg msg = CAN_MSG_INIT;
+		int result = 0;
 		while ((result = io_can_read(can->handle, &msg)) == 1)
 			can_net_recv(can->net, &msg);
 		// Treat the reception of an error frame, or any error other
@@ -194,8 +193,9 @@ my_can_step(struct my_can *can, int timeout)
 		if (__unlikely(!result || (result == -1
 				&& get_errnum() != ERRNUM_AGAIN
 				&& get_errnum() != ERRNUM_WOULDBLOCK)))
-			error.events |= IO_EVENT_ERROR;
+			event.events |= IO_EVENT_ERROR;
 	}
+
 	// If an error occurred, update the state of the CAN device.
 	if (can->st == CAN_STATE_BUSOFF || (event.events & IO_EVENT_ERROR)) {
 		int st = io_can_get_state(can->handle);
@@ -314,12 +314,11 @@ public:
 		if (n != 1 || event.u.handle != m_handle)
 			return;
 
-		// Handle the I/O event.
-		int result = 0;
 		// If the CAN bus is ready for reading, process all waiting
 		// frames.
 		if (event.events & IO_EVENT_READ) {
 			can_msg msg = CAN_MSG_INIT;
+			int result = 0;
 			while ((result = m_handle.read(msg)) == 1)
 				m_net->recv(msg);
 			// Treat the reception of an error frame, or any error
@@ -328,8 +327,9 @@ public:
 			if (__unlikely(!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
 					&& get_errnum() != ERRNUM_WOULDBLOCK)))
-				error.events |= IO_EVENT_ERROR;
+				event.events |= IO_EVENT_ERROR;
 		}
+
 		// If an error occurred, update the state of the CAN device.
 		if (m_st == CAN_STATE_BUSOFF
 				|| (event.events & IO_EVENT_ERROR)) {
