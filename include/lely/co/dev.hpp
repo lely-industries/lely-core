@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the device description. See lely/co/dev.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -75,6 +75,15 @@ public:
 	{}
 
 	explicit CODev(const co_sdev* sdev): c_base(sdev) {}
+
+	co_unsigned8_t
+	getNetid() const noexcept { return co_dev_get_netid(this); }
+
+	int
+	setNetid(co_unsigned8_t id) noexcept
+	{
+		return co_dev_set_netid(this, id);
+	}
 
 	co_unsigned8_t getId() const noexcept { return co_dev_get_id(this); }
 

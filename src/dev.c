@@ -4,7 +4,7 @@
  *
  * \see lely/co/dev.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,6 +35,8 @@
 
 //! A CANopen device.
 struct __co_dev {
+	//! The network-ID.
+	co_unsigned8_t netid;
 	//! The node-ID.
 	co_unsigned8_t id;
 	//! The tree containing the object dictionary.
@@ -89,6 +91,8 @@ LELY_CO_EXPORT struct __co_dev *
 __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 {
 	assert(dev);
+
+	dev->netid = 0;
 
 	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
 		set_errnum(ERRNUM_INVAL);
@@ -164,6 +168,29 @@ co_dev_destroy(co_dev_t *dev)
 		__co_dev_fini(dev);
 		__co_dev_free(dev);
 	}
+}
+
+LELY_CO_EXPORT co_unsigned8_t
+co_dev_get_netid(const co_dev_t *dev)
+{
+	assert(dev);
+
+	return dev->netid;
+}
+
+LELY_CO_EXPORT int
+co_dev_set_netid(co_dev_t *dev, co_unsigned8_t id)
+{
+	assert(dev);
+
+	if (__unlikely(id > CO_NUM_NETWORKS && id != 0xff)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	dev->netid = id;
+
+	return 0;
 }
 
 LELY_CO_EXPORT co_unsigned8_t

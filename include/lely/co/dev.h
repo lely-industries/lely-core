@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the device
  * description declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,6 +45,9 @@ struct co_id {
 
 //! The static initializer for struct #co_id.
 #define CO_ID_INIT	{ 4, 0, 0, 0, 0 }
+
+//! The maximum number of CANopen networks.
+#define CO_NUM_NETWORKS	127
 
 //! The maximum number of nodes in a CANopen network.
 #define CO_NUM_NODES	127
@@ -104,6 +107,19 @@ LELY_CO_EXTERN co_dev_t *co_dev_create(co_unsigned8_t id);
  * \see co_dev_create()
  */
 LELY_CO_EXTERN void co_dev_destroy(co_dev_t *dev);
+
+//! Returns the network-ID of a CANopen device. \see co_dev_set_netid()
+LELY_CO_EXTERN co_unsigned8_t co_dev_get_netid(const co_dev_t *dev);
+
+/*!
+ * Sets the network-ID of a CANopen device.
+ *
+ * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with `get_errnum()`.
+ *
+ * \see co_dev_get_netid()
+ */
+LELY_CO_EXTERN int co_dev_set_netid(co_dev_t *dev, co_unsigned8_t id);
 
 //! Returns the node-ID of a CANopen device. \see co_dev_set_id()
 LELY_CO_EXTERN co_unsigned8_t co_dev_get_id(const co_dev_t *dev);

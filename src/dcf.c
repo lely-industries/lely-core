@@ -5,7 +5,7 @@
  *
  * \see lely/co/dcf.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -345,6 +345,14 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 			(co_unsigned8_t)strtoul(val, NULL, 0)) == -1) {
 		diag(DIAG_ERROR, get_errc(), "invalid node-ID (%s) specified",
 				val);
+		goto error_parse_dcf;
+	}
+
+	val = config_get(cfg, "DeviceComissioning", "NetNumber");
+	if (val && *val && co_dev_set_netid(dev,
+			(co_unsigned32_t)strtoul(val, NULL, 0)) == -1) {
+		diag(DIAG_ERROR, get_errc(),
+				"invalid network-ID (%s) specified", val);
 		goto error_parse_dcf;
 	}
 
