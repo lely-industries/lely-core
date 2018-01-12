@@ -3,7 +3,7 @@
  * interface of the Client-SDO declarations. See lely/co/csdo.h for the C
  * interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -428,8 +428,15 @@ struct COCSDOUpCon {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
+		if (__likely(!ac)) {
+			if (__unlikely(!ptr || n < sizeof(T))) {
+				ac = CO_SDO_AC_TYPE_LEN_LO;
+			} else if (__unlikely(n > sizeof(T))) {
+				ac = CO_SDO_AC_TYPE_LEN_HI;
+			}
+		}
 		COVal<co_type_traits_T<T>::index> val;
-		if (__likely(!ac && n))
+		if (__likely(!ac))
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 		return (*M)(sdo, idx, subidx, ac, val, data);
 	}
@@ -453,19 +460,10 @@ struct COCSDOUpCon<char*> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		if (__likely(!ac && n)) {
-#if !LELY_NO_EXCEPTIONS
-			try {
-#endif
-				COVal<CO_DEFTYPE_VISIBLE_STRING> val(ptr, n);
-				return (*M)(sdo, idx, subidx, ac, val, data);
-#if !LELY_NO_EXCEPTIONS
-			} catch (...) {
-				ac = CO_SDO_AC_ERROR;
-			}
-#endif
-		}
-		return (*M)(sdo, idx, subidx, ac, 0, data);
+		COVal<CO_DEFTYPE_VISIBLE_STRING> val;
+		if (__likely(!ac && ptr && n))
+			ac = co_val_read_sdo(val.index, &val, ptr, n);
+		return (*M)(sdo, idx, subidx, ac, val, data);
 	}
 };
 
@@ -479,7 +477,12 @@ template <>
 struct COCSDOUpCon< ::std::string> {
 	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
-		const ::std::string& vs, void* data);
+#if __cplusplus >= 201103L
+		::std::string vs,
+#else
+		const ::std::string& vs,
+#endif
+		void* data);
 
 	template <type M>
 	static void
@@ -487,17 +490,17 @@ struct COCSDOUpCon< ::std::string> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		if (__likely(!ac && n)) {
+		const char* vs = static_cast<const char*>(ptr);
+		if (__likely(!ac && vs && n)) {
 #if !LELY_NO_EXCEPTIONS
 			try {
 #endif
-				const char* vs = static_cast<const char*>(ptr);
 				return (*M)(sdo, idx, subidx, ac,
-						::std::string(vs,
-						vs ? vs + n : vs), data);
+						::std::string(vs, vs + n),
+						data);
 #if !LELY_NO_EXCEPTIONS
 			} catch (...) {
-				ac = CO_SDO_AC_ERROR;
+				ac = CO_SDO_AC_NO_MEM;
 			}
 #endif
 		}
@@ -523,8 +526,8 @@ struct COCSDOUpCon<uint8_t*> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		return (*M)(sdo, idx, subidx, ac,
-				static_cast<const uint8_t*>(ptr), n, data);
+		const uint8_t* os = static_cast<const uint8_t*>(ptr);
+		return (*M)(sdo, idx, subidx, ac, n ? os : 0, n, data);
 	}
 };
 
@@ -538,7 +541,12 @@ template <>
 struct COCSDOUpCon< ::std::vector<uint8_t> > {
 	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
-		const ::std::vector<uint8_t>& os, void* data);
+#if __cplusplus >= 201103L
+		::std::vector<uint8_t> os,
+#else
+		const ::std::vector<uint8_t>& os,
+#endif
+		void* data);
 
 	template <type M>
 	static void
@@ -547,16 +555,16 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
 			void* data) noexcept
 	{
 		const uint8_t* os = static_cast<const uint8_t*>(ptr);
-		if (__likely(!ac && n)) {
+		if (__likely(!ac && os && n)) {
 #if !LELY_NO_EXCEPTIONS
 			try {
 #endif
 				return (*M)(sdo, idx, subidx, ac,
 						::std::vector<uint8_t>(os,
-						os ? os + n : os), data);
+						os + n), data);
 #if !LELY_NO_EXCEPTIONS
 			} catch (...) {
-				ac = CO_SDO_AC_ERROR;
+				ac = CO_SDO_AC_NO_MEM;
 			}
 #endif
 		}
@@ -584,7 +592,7 @@ struct COCSDOUpCon<char16_t*> {
 			void* data) noexcept
 	{
 		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac && n))
+		if (__likely(!ac && ptr && n))
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 		return (*M)(sdo, idx, subidx, ac, val, data);
 	}
@@ -600,7 +608,12 @@ template <>
 struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac,
-		const ::std::basic_string<char16_t>& us, void* data);
+#if __cplusplus >= 201103L
+		::std::basic_string<char16_t> us,
+#else
+		const ::std::basic_string<char16_t>& us,
+#endif
+		void* data);
 
 	template <type M>
 	static void
@@ -609,23 +622,21 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 			void* data) noexcept
 	{
 		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac && n)) {
+		if (__likely(!ac && ptr && n))
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
-			if (__likely(!ac)) {
+		const char16_t* us = val;
+		if (__likely(!ac && us && n)) {
 #if !LELY_NO_EXCEPTIONS
-				try {
+			try {
 #endif
-					const char16_t* us = val;
-					return (*M)(sdo, idx, subidx, ac,
-							::std::basic_string<char16_t>(
-							us, us ? us + n : us),
-							data);
+				return (*M)(sdo, idx, subidx, ac,
+						::std::basic_string<char16_t>(
+						us, us + n), data);
 #if !LELY_NO_EXCEPTIONS
-				} catch (...) {
-					ac = CO_SDO_AC_ERROR;
-				}
-#endif
+			} catch (...) {
+				ac = CO_SDO_AC_NO_MEM;
 			}
+#endif
 		}
 		return (*M)(sdo, idx, subidx, ac,
 				::std::basic_string<char16_t>(), data);
@@ -650,7 +661,7 @@ struct COCSDOUpCon<void*> {
 			co_unsigned32_t ac, const void* ptr, size_t n,
 			void* data) noexcept
 	{
-		return (*M)(sdo, idx, subidx, ac, ptr, n, data);
+		return (*M)(sdo, idx, subidx, ac, n ? ptr : 0, n, data);
 	}
 };
 

@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the object
  * dictionary declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -563,6 +563,22 @@ LELY_CO_EXTERN size_t co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n);
 	LELY_CO_EXTERN size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
+
+/*!
+ * Checks if the specifed value would be a valid value for a CANopen sub-object.
+ * This function checks if the specified type matches that of the sub-object
+ * and, in the case of basic types, if the value is within range.
+ *
+ * \param sub  a pointer to a CANopen sub-object.
+ * \param type the data type (in the range [1..27]). This MUST be the object
+ *             index of one of the static data types.
+ * \param val  a pointer to the value to be checked. In the case of strings or
+ *             domains, this MUST be the address of pointer.
+ *
+ * \returns 0 on success, or an SDO abort code on error.
+ */
+LELY_CO_EXTERN co_unsigned32_t co_sub_chk_val(const co_sub_t *sub,
+		co_unsigned16_t type, const void *val);
 
 //! Returns the access type of a CANopen sub-object. \see co_sub_set_access()
 LELY_CO_EXTERN unsigned int co_sub_get_access(const co_sub_t *sub);

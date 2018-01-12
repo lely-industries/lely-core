@@ -4,7 +4,7 @@
  *
  * \see lely/co/obj.h, src/obj.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -629,6 +629,30 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
+LELY_CO_EXPORT co_unsigned32_t
+co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val) {
+	assert(sub);
+
+	if (__unlikely(sub->type != type))
+		return CO_SDO_AC_TYPE_LEN;
+
+	// Arrays do not have a minimum or maximum value.
+	if (!co_type_is_basic(sub->type))
+		return 0;
+
+	assert(val);
+
+	// Check whether the value is within bounds.
+	if (__unlikely(co_val_cmp(sub->type, &sub->min, &sub->max) > 0))
+		return CO_SDO_AC_PARAM_RANGE;
+	if (__unlikely(co_val_cmp(sub->type, val, &sub->max) > 0))
+		return CO_SDO_AC_PARAM_HI;
+	if (__unlikely(co_val_cmp(sub->type, val, &sub->min) < 0))
+		return CO_SDO_AC_PARAM_LO;
+
+	return 0;
+}
+
 LELY_CO_EXPORT unsigned int
 co_sub_get_access(const co_sub_t *sub)
 {
@@ -731,27 +755,11 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
 	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		goto error_req;
 
-	// Check whether the value is within bounds.
-	if (co_type_is_basic(type)) {
-		const void *ptr = co_val_addressof(type, &val);
-		const void *min = co_sub_addressof_min(sub);
-		const void *max = co_sub_addressof_max(sub);
-		if (__unlikely(co_val_cmp(type, min, max) > 0)) {
-			ac = CO_SDO_AC_PARAM_RANGE;
-			goto error_range;
-		}
-		if (__unlikely(co_val_cmp(type, ptr, max) > 0)) {
-			ac = CO_SDO_AC_PARAM_HI;
-			goto error_range;
-		}
-		if (__unlikely(co_val_cmp(type, ptr, min) < 0)) {
-			ac = CO_SDO_AC_PARAM_LO;
-			goto error_range;
-		}
-	}
+	// Accept the value if it is within bounds.
+	ac = co_sub_chk_val(sub, type, &val);
+	if (__likely(!ac))
+		co_sub_dn(sub, &val);
 
-	co_sub_dn(sub, &val);
-error_range:
 	co_val_fini(type, &val);
 error_req:
 	return ac;

@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the object dictionary. See lely/co/obj.h for the C interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,9 +29,13 @@
 #include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 #include <lely/co/obj.h>
+#include <lely/co/sdo.h>
 #include <lely/co/val.hpp>
 
 namespace lely {
+
+template <co_unsigned16_t> struct COSubDnInd;
+template <co_unsigned16_t> struct COSubUpInd;
 
 //! The attributes of #co_obj_t required by #lely::COObj.
 template <>
@@ -390,6 +394,20 @@ public:
 		return setVal<co_type_traits_T<T>::index>(val);
 	}
 
+	template <co_unsigned16_t N>
+	co_unsigned32_t
+	chkVal(const COVal<N>& val) const noexcept
+	{
+		return co_sub_chk_val(this, N, &val);
+	}
+
+	template <class T>
+	co_unsigned32_t
+	chkVal(const T& val) const noexcept
+	{
+		return chkVal<co_type_traits_T<T>::index>(val);
+	}
+
 	unsigned int
 	getAccess() const noexcept
 	{
@@ -438,20 +456,32 @@ public:
 		co_sub_set_dn_ind(this, ind, data);
 	}
 
-	template <class F>
+	template <co_unsigned16_t N, typename COSubDnInd<N>::type M>
+	void
+	setDnInd(void* data) noexcept
+	{
+		setDnInd(&COSubDnInd<N>::template function<M>, data);
+	}
+
+	template <co_unsigned16_t N, class F>
 	void
 	setDnInd(F* f) noexcept
 	{
-		setDnInd(&c_obj_call<co_sub_dn_ind_t*, F>::function,
-				static_cast<void*>(f));
+		setDnInd(&COSubDnInd<N>::template function<&c_obj_call<
+					typename COSubDnInd<N>::type, F
+				>::function>, static_cast<void*>(f));
 	}
 
-	template <class C, typename c_mem_fn<co_sub_dn_ind_t*, C>::type M>
+	template <
+		co_unsigned16_t N, class C,
+		typename c_mem_fn<typename COSubDnInd<N>::type, C>::type M
+	>
 	void
 	setDnInd(C* obj) noexcept
 	{
-		setDnInd(&c_mem_call<co_sub_dn_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
+		setDnInd(&COSubDnInd<N>::template function<&c_mem_call<
+					typename COSubDnInd<N>::type, C, M
+				>::function>, static_cast<void*>(obj));
 	}
 
 	co_unsigned32_t
@@ -473,6 +503,13 @@ public:
 		return co_sub_dn_ind_val(this, N, &val);
 	}
 
+	template <co_unsigned16_t N>
+	int
+	dn(COVal<N>& val) noexcept
+	{
+		return co_sub_dn(this, &val);
+	}
+
 	void
 	getUpInd(co_sub_up_ind_t** pind, void** pdata) noexcept
 	{
@@ -485,20 +522,32 @@ public:
 		co_sub_set_up_ind(this, ind, data);
 	}
 
-	template <class F>
+	template <co_unsigned16_t N, typename COSubUpInd<N>::type M>
+	void
+	setUpInd(void* data) noexcept
+	{
+		setUpInd(&COSubUpInd<N>::template function<M>, data);
+	}
+
+	template <co_unsigned16_t N, class F>
 	void
 	setUpInd(F* f) noexcept
 	{
-		setUpInd(&c_obj_call<co_sub_up_ind_t*, F>::function,
-				static_cast<void*>(f));
+		setUpInd(&COSubUpInd<N>::template function<&c_obj_call<
+					typename COSubUpInd<N>::type, F
+				>::function>, static_cast<void*>(f));
 	}
 
-	template <class C, typename c_mem_fn<co_sub_up_ind_t*, C>::type M>
+	template <
+		co_unsigned16_t N, class C,
+		typename c_mem_fn<typename COSubUpInd<N>::type, C>::type M
+	>
 	void
 	setUpInd(C* obj) noexcept
 	{
-		setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
+		setUpInd(&COSubUpInd<N>::template function<&c_mem_call<
+					typename COSubUpInd<N>::type, C, M
+				>::function>, static_cast<void*>(obj));
 	}
 
 	co_unsigned32_t
@@ -515,6 +564,61 @@ public:
 
 protected:
 	~COSub() {}
+};
+
+/*!
+ * A CANopen CANopen sub-object download indication callback wrapper.
+ *
+ * \see co_sub_dn_ind_t
+ */
+template <co_unsigned16_t N>
+struct COSubDnInd {
+	typedef co_unsigned32_t (*type)(const COSub* sub, COVal<N>& val,
+			void *data);
+
+	template <type M>
+	static co_unsigned32_t
+	function(COSub* sub, co_sdo_req* req, void *data) noexcept {
+		uint32_t ac = 0;
+
+		COVal<N> val;
+		if (__unlikely(co_sdo_req_dn_val(req, N, &val, &ac) == -1))
+			return ac;
+
+		if (__unlikely(ac = sub->chkVal(val)))
+			return ac;
+
+		if (__unlikely(ac = (*M)(sub, val, data)))
+			return ac;
+
+		sub->dn(val);
+		return ac;
+	}
+};
+
+/*!
+ * A CANopen CANopen sub-object upload indication callback wrapper.
+ *
+ * \see co_sub_up_ind_t
+ */
+template <co_unsigned16_t N>
+struct COSubUpInd {
+	typedef co_unsigned32_t (*type)(const COSub* sub, COVal<N>& val,
+			void *data);
+
+	template <type M>
+	static co_unsigned32_t
+	function(const COSub* sub, co_sdo_req* req, void *data) noexcept {
+		uint32_t ac = 0;
+
+		COVal<N> val = sub->getVal<N>();
+
+		if (__unlikely(ac = (*M)(sub, val, data)))
+			return ac;
+
+		co_sdo_req_up_val(req, N, &val, &ac);
+		return ac;
+	}
 };
 
 } // lely

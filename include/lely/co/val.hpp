@@ -3,7 +3,7 @@
  * interface of the CANopen value declarations. See lely/co/val.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -98,6 +98,11 @@ public:
 
 	operator type() const noexcept { return m_val; }
 
+	operator ::std::string() const
+	{
+		return m_val ? ::std::string(m_val) : ::std::string();
+	}
+
 	COVal(): m_val() {}
 	COVal(const COVal& val): m_val() { *this = val; }
 #if __cplusplus >= 201103L
@@ -187,6 +192,12 @@ public:
 
 	operator type() const noexcept { return m_val; }
 
+	operator ::std::vector<uint8_t>() const
+	{
+		return m_val ? ::std::vector<uint8_t>(m_val, m_val + size())
+				: ::std::vector<uint8_t>();
+	}
+
 	COVal(): m_val() {}
 	COVal(const COVal& val): m_val() { *this = val; }
 #if __cplusplus >= 201103L
@@ -272,6 +283,12 @@ public:
 	typedef typename traits::type type;
 
 	operator type() const noexcept { return m_val; }
+
+	operator ::std::basic_string<char16_t>() const
+	{
+		return m_val ? ::std::basic_string<char16_t>(m_val)
+				: ::std::basic_string<char16_t>();
+	}
 
 	COVal(): m_val() {}
 	COVal(const COVal& val): m_val() { *this = val; }
