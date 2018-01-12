@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the network
  * management (NMT) declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -131,7 +131,7 @@ typedef void co_nmt_ng_ind_t(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * life guarding event occurs (see section 7.2.8.2.2.2 in CiA 301 version
  * 4.2.0). The default handler invokes co_nmt_on_lg().
  *
- * \param nmt   a pointer to an NMT master/slave service.
+ * \param nmt   a pointer to an NMT slave service.
  * \param state indicates whether the event occurred (#CO_NMT_EC_OCCURRED) or
  *              was resolved (#CO_NMT_EC_RESOLVED).
  * \param data  a pointer to user-specified data.
