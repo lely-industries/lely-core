@@ -7,5 +7,6 @@ Name: lib@PACKAGE@
 Description: @PACKAGE_NAME@
 URL: https://gitlab.com/lely_industries/co
 Version: @PACKAGE_VERSION@
+Requires: liblely-libc >= 1.3 liblely-util >= 1.5 liblely-can >= 1.2
 Cflags: -I${includedir}
 Libs: -L${libdir} -l@PACKAGE@
