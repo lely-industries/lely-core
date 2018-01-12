@@ -199,7 +199,7 @@ found at http://lely_industries.gitlab.io/co/doxygen/.
 Licensing
 ---------
 
-Copyright 2017 [Lely Industries N.V.]
+Copyright 2018 [Lely Industries N.V.]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
