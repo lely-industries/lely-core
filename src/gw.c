@@ -4,7 +4,7 @@
  *
  * \see lely/co/gw.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -600,6 +600,9 @@ LELY_CO_EXPORT int
 co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 {
 	assert(gw);
+
+	if (!id)
+		id = co_dev_get_netid(co_nmt_get_dev(nmt));
 
 	if (__unlikely(co_gw_fini_net(gw, id) == -1))
 		return -1;

@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the gateway
  * declarations (see CiA 309-1 version 2.0).
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1011,7 +1011,8 @@ LELY_CO_EXTERN void co_gw_destroy(co_gw_t *gw);
  * Registers a CANopen network with a gateway.
  *
  * \param gw  a pointer to a CANopen gateway.
- * \param id  the network-ID (in the range [1..127]).
+ * \param id  the network-ID (in the range [1..127]). If \a id is 0, the
+ *            network-ID is obtained from the CANopen device of the NMT service.
  * \param nmt a pointer to the NMT service of the gateway node in the network.
  *
  * \returns 0 on success, or -1 on error. In the latter case, the error number
