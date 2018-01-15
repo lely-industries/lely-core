@@ -573,8 +573,7 @@ protected:
  */
 template <co_unsigned16_t N>
 struct COSubDnInd {
-	typedef co_unsigned32_t (*type)(const COSub* sub, COVal<N>& val,
-			void *data);
+	typedef co_unsigned32_t (*type)(COSub* sub, COVal<N>& val, void *data);
 
 	template <type M>
 	static co_unsigned32_t

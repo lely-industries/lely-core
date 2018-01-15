@@ -633,12 +633,12 @@ LELY_CO_EXPORT co_unsigned32_t
 co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val) {
 	assert(sub);
 
-	if (__unlikely(sub->type != type))
-		return CO_SDO_AC_TYPE_LEN;
-
 	// Arrays do not have a minimum or maximum value.
 	if (!co_type_is_basic(sub->type))
 		return 0;
+
+	if (__unlikely(sub->type != type))
+		return CO_SDO_AC_TYPE_LEN;
 
 	assert(val);
 
