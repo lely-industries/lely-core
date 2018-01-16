@@ -4,7 +4,7 @@
  *
  * \see lely/util/xtime.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -286,9 +286,9 @@ xclock_settime(xclock_t *clock, const struct timespec *tp)
 		}
 	}
 
+#ifndef LELY_NO_THREADS
 	// Wake all threads waiting on xclock_nanosleep().
 	cnd_broadcast(&clock->cond);
-#ifndef LELY_NO_THREADS
 	mtx_unlock(&clock->mtx);
 #endif
 
