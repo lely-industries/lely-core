@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Transmit-PDO
  * declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,9 +35,9 @@ extern "C" {
  *
  * \param pdo  a pointer to a Transmit-PDO service.
  * \param ac   the SDO abort code: 0 on success, #CO_SDO_AC_NO_OBJ,
- *             #CO_SDO_AC_NO_PDO or #CO_SDO_AC_PDO_LEN in case of a mapping
- *             error, or #CO_SDO_AC_TIMEOUT in case the synchronous time window
- *             expires.
+ *             #CO_SDO_AC_NO_PDO, CO_SDO_AC_NO_READ or #CO_SDO_AC_PDO_LEN in
+ *             case of a mapping error, or #CO_SDO_AC_TIMEOUT in case the
+ *             synchronous time window expires.
  * \param ptr  a pointer to the bytes sent.
  * \param n    the number of bytes at \a ptr.
  * \param data a pointer to user-specified data.

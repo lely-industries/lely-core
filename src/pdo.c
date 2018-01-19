@@ -4,7 +4,7 @@
  *
  * \see lely/co/pdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -131,7 +131,7 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 
 	unsigned int access = co_sub_get_access(sub);
 	if (__unlikely(!(access & CO_ACCESS_READ)))
-		return CO_SDO_AC_NO_WRITE;
+		return CO_SDO_AC_NO_READ;
 
 	if (__unlikely(!co_sub_get_pdo_mapping(sub)
 			|| !(access & CO_ACCESS_TPDO)))

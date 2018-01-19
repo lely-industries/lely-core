@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Receive-PDO
  * declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,8 +35,8 @@ extern "C" {
  *
  * \param pdo  a pointer to a Receive-PDO service.
  * \param ac   the SDO abort code: 0 on success, or #CO_SDO_AC_NO_OBJ,
- *             #CO_SDO_AC_NO_SUB, #CO_SDO_AC_NO_PDO or #CO_SDO_AC_PDO_LEN on
- *             error.
+ *             #CO_SDO_AC_NO_SUB, #CO_SDO_AC_NO_WRITE, #CO_SDO_AC_NO_PDO or
+ *             #CO_SDO_AC_PDO_LEN on error.
  * \param ptr  a pointer to the bytes received.
  * \param n    the number of bytes at \a ptr.
  * \param data a pointer to user-specified data.
@@ -49,7 +49,7 @@ typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
  * a timeout or length mismatch.
  *
  * \param pdo  a pointer to a Receive-PDO service.
- * \param eec  the emergency error code (0x8240).
+ * \param eec  the emergency error code (0x8210, 0x8220 or 0x8250).
  * \param er   the error register (0x10).
  * \param data a pointer to user-specified data.
  */
