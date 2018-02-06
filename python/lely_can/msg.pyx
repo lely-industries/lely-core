@@ -9,7 +9,10 @@ __all__ = [
     'CAN_MAX_LEN',
     'CANFD_MAX_LEN',
     'CAN_MSG_MAX_LEN',
-    'CANMsg'
+    'CANMsg',
+    'CAN_MSG_BITS_MODE_NO_STUFF',
+    'CAN_MSG_BITS_MODE_WORST',
+    'CAN_MSG_BITS_MODE_EXACT'
 ]
 
 CAN_MASK_BID = _CAN_MASK_BID
@@ -53,6 +56,9 @@ cdef class CANMsg(object):
             for i in range(self._c_msg.len):
                 self._c_msg.data[i] = value[i]
 
+    def bits(self, can_msg_bits_mode mode = _CAN_MSG_BITS_MODE_EXACT):
+            return can_msg_bits(&self._c_msg, mode)
+
 
 cdef CANMsg CANMsg_new(const can_msg* msg):
     cdef CANMsg obj = CANMsg()
@@ -62,4 +68,8 @@ cdef CANMsg CANMsg_new(const can_msg* msg):
     for i in range(obj._c_msg.len):
         obj._c_msg.data[i] = msg.data[i]
     return obj
+
+CAN_MSG_BITS_MODE_NO_STUFF = _CAN_MSG_BITS_MODE_NO_STUFF
+CAN_MSG_BITS_MODE_WORST = _CAN_MSG_BITS_MODE_WORST
+CAN_MSG_BITS_MODE_EXACT = _CAN_MSG_BITS_MODE_EXACT
 

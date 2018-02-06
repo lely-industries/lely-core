@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN frame
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -119,9 +119,33 @@ struct can_msg {
 	}
 #endif
 
+//! The method used to compute te size (in bits) of a CAN frame.
+enum can_msg_bits_mode {
+	//! Simple calculation assuming no bit stuffing.
+	CAN_MSG_BITS_MODE_NO_STUFF,
+	//! Simple worst case estimate.
+	CAN_MSG_BITS_MODE_WORST,
+	//! Exact calculation based of frame content and CRC.
+	CAN_MSG_BITS_MODE_EXACT
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * Computes the size (in bits) of the specified CAN format frame on the CAN bus.
+ *
+ * \param msg  a pointer to a CAN frame format frame.
+ * \param mode the method used to compute the size (one of
+ *             #CAN_MSG_BITS_MODE_NO_STUFF, #CAN_MSG_BITS_MODE_WORST or
+ *             #CAN_MSG_BITS_MODE_EXACT).
+ *
+ * Returns the number of bits on success, or -1 on error. In the latter case,
+ * the error number can be obtained with `get_errnum()`.
+ */
+LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
+		enum can_msg_bits_mode mode);
 
 /*!
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The

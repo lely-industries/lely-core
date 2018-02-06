@@ -19,6 +19,13 @@ cdef extern from "lely/can/msg.h":
         uint8_t len
         uint8_t data[_CAN_MSG_MAX_LEN]
 
+    enum can_msg_bits_mode:
+        _CAN_MSG_BITS_MODE_NO_STUFF "CAN_MSG_BITS_MODE_NO_STUFF"
+        _CAN_MSG_BITS_MODE_WORST "CAN_MSG_BITS_MODE_WORST"
+        _CAN_MSG_BITS_MODE_EXACT "CAN_MSG_BITS_MODE_EXACT"
+
+    int can_msg_bits(const can_msg* msg, can_msg_bits_mode mode) nogil
+
 
 cdef class CANMsg(object):
     cdef can_msg _c_msg
