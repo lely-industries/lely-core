@@ -117,6 +117,7 @@ AS_IF([test "$platform_linux" == "yes"], [
 		AM_CONDITIONAL([HAVE_SOCKET_CAN], [true])
 		AC_DEFINE([LELY_HAVE_SOCKET_CAN], [1], [Define to 1 if you have SocketCAN.])
 	])
+	AC_CHECK_HEADERS([linux/can/error.h])
 ])
 
 AM_CONDITIONAL([HAVE_PYTHON2], [false])

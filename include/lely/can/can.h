@@ -1,7 +1,7 @@
 /*!\file
  * This is the public header file of the CAN library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,7 +32,8 @@
 #endif
 #endif
 
-enum {
+//! The states of a CAN node, dependening on the TX/RX error count.
+enum can_state {
 	//! The error active state (TX/RX error count < 128).
 	CAN_STATE_ACTIVE,
 	//! The error passive state (TX/RX error count < 256).
@@ -41,7 +42,8 @@ enum {
 	CAN_STATE_BUSOFF
 };
 
-enum {
+//! The error flags of a CAN bus, which are not mutually exclusive.
+enum can_error {
 	//! A single bit error.
 	CAN_ERROR_BIT = 1 << 0,
 	//! A bit stuffing error.
@@ -51,7 +53,9 @@ enum {
 	//! A form error.
 	CAN_ERROR_FORM = 1 << 3,
 	//! An acknowledgment error.
-	CAN_ERROR_ACK = 1 << 4
+	CAN_ERROR_ACK = 1 << 4,
+	//! One or more other errors.
+	CAN_ERROR_OTHER = 1 << 5
 };
 
 #endif

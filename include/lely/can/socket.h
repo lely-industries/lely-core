@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the SocketCAN
  * interface declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,6 +35,24 @@ struct canfd_frame;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * Checks if a SocketCAN CAN frame is an error frame and parses the bus state
+ * and error flags if it is.
+ *
+ * \param frame  a pointer to a SocketCAN CAN frame.
+ * \param pstate the address at which to store the updated CAN node state (can
+ *               be NULL). The value is only updated if the error frame
+ *               indicates a state change.
+ * \param perror the address at which to store the updated CAN bus errors (can
+ *               be NULL). Any new error flags indicated by by the error frame
+ *               are set in *\a perror, but existing flags are not cleared.
+ *
+ * \returns 1 if the CAN frame is an error frame, 0 if not, and -1 on error. In
+ * the latter case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_CAN_EXTERN int can_frame_is_error(const struct can_frame *frame,
+		enum can_state *pstate, enum can_error *perror);
 
 /*!
  * Converts a SocketCAN CAN frame to a #can_msg frame.

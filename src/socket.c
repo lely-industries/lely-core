@@ -4,7 +4,7 @@
  *
  * \see lely/can/socket.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -34,6 +34,77 @@
 #ifdef HAVE_LINUX_CAN_H
 #include <linux/can.h>
 #endif
+#ifdef HAVE_LINUX_CAN_ERROR_H
+#include <linux/can/error.h>
+#endif
+
+LELY_CAN_EXPORT int
+can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
+		enum can_error *perror) {
+	assert(frame);
+
+	if (!(frame->can_id & CAN_ERR_FLAG))
+		return 0;
+
+	enum can_state state = pstate ? *pstate : CAN_STATE_ACTIVE;
+	enum can_error error = perror ? *perror : 0;
+
+#ifdef HAVE_LINUX_CAN_ERROR_H
+	if (__unlikely(frame->can_dlc != CAN_ERR_DLC)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (frame->can_id & CAN_ERR_RESTARTED)
+		state = CAN_STATE_ACTIVE;
+
+	if (frame->can_id & CAN_ERR_TX_TIMEOUT)
+		error |= CAN_ERROR_OTHER;
+
+	if (frame->can_id & CAN_ERR_CRTL) {
+#ifdef CAN_ERR_CRTL_ACTIVE
+		if (frame->data[1] & CAN_ERR_CRTL_ACTIVE)
+			state = CAN_STATE_ACTIVE;
+#endif
+		if (frame->data[1] & (CAN_ERR_CRTL_RX_PASSIVE
+				| CAN_ERR_CRTL_TX_PASSIVE))
+			state = CAN_STATE_PASSIVE;
+	}
+
+	if (frame->can_id & CAN_ERR_PROT) {
+		if (frame->data[2] & CAN_ERR_PROT_BIT)
+			error |= CAN_ERROR_BIT;
+		if (frame->data[2] & CAN_ERR_PROT_FORM)
+			error |= CAN_ERROR_FORM;
+		if (frame->data[2] & CAN_ERR_PROT_STUFF)
+			error |= CAN_ERROR_STUFF;
+		if (frame->data[2] & (CAN_ERR_PROT_BIT0 | CAN_ERR_PROT_BIT1
+				| CAN_ERR_PROT_OVERLOAD))
+			error |= CAN_ERROR_OTHER;
+		if (frame->data[2] & CAN_ERR_PROT_ACTIVE)
+			state = CAN_STATE_ACTIVE;
+		if (frame->data[3] & CAN_ERR_PROT_LOC_CRC_SEQ)
+			error |= CAN_ERROR_CRC;
+	}
+
+	if ((frame->can_id & CAN_ERR_TRX) && frame->data[4])
+		error |= CAN_ERROR_OTHER;
+
+	if (frame->can_id & CAN_ERR_ACK)
+		error |= CAN_ERROR_ACK;
+
+	if (frame->can_id & CAN_ERR_BUSOFF)
+		state = CAN_STATE_BUSOFF;
+#endif // HAVE_LINUX_CAN_ERROR_H
+
+	if (pstate)
+		*pstate = state;
+
+	if (perror)
+		*perror = error;
+
+	return 1;
+}
 
 LELY_CAN_EXPORT int
 can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
