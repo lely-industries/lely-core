@@ -4,7 +4,7 @@
  *
  * \see lely/can/vci.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,22 @@
  * limitations under the License.
  */
 
+// Rename error flags to avoid conflicts with definitions in <cantype.h>.
+#define CAN_ERROR_BIT	_CAN_ERROR_BIT
+#define CAN_ERROR_STUFF	_CAN_ERROR_STUFF
+#define CAN_ERROR_CRC	_CAN_ERROR_CRC
+#define CAN_ERROR_FORM	_CAN_ERROR_FORM
+#define CAN_ERROR_ACK	_CAN_ERROR_ACK
+#define CAN_ERROR_OTHER	_CAN_ERROR_OTHER
+
 #include "can.h"
+
+#undef CAN_ERROR_OTHER
+#undef CAN_ERROR_ACK
+#undef CAN_ERROR_FORM
+#undef CAN_ERROR_CRC
+#undef CAN_ERROR_STUFF
+#undef CAN_ERROR_BIT
 
 #ifdef LELY_HAVE_VCI
 
@@ -35,6 +50,56 @@
 #ifdef HAVE_CANTYPE_H
 #include <cantype.h>
 #endif
+
+LELY_CAN_EXPORT int
+CANMSG_is_error(const void *msg, enum can_state *pstate, enum can_error *perror)
+{
+	const CANMSG *msg_ = msg;
+	assert(msg);
+
+	if (msg_->uMsgInfo.Bits.type != CAN_MSGTYPE_ERROR)
+		return 0;
+
+	enum can_state state = pstate ? *pstate : 0;
+	enum can_error error = perror ? *perror : 0;
+
+	switch (msg_->abData[0]) {
+	case CAN_ERROR_STUFF:
+		error |= _CAN_ERROR_STUFF;
+		break;
+	case CAN_ERROR_FORM:
+		error |= _CAN_ERROR_FORM;
+		break;
+	case CAN_ERROR_ACK:
+		error |= _CAN_ERROR_ACK;
+		break;
+	case CAN_ERROR_BIT:
+		error |= _CAN_ERROR_BIT;
+		break;
+	case CAN_ERROR_CRC:
+		error |= _CAN_ERROR_CRC;
+		break;
+	case CAN_ERROR_OTHER:
+		error |= _CAN_ERROR_OTHER;
+		break;
+	}
+
+	if (msg_->abData[1] & CAN_STATUS_BUSOFF) {
+		state = CAN_STATE_BUSOFF;
+	} else if (msg_->abData[1] & CAN_STATUS_ERRLIM) {
+		state = CAN_STATE_PASSIVE;
+	} else {
+		state = CAN_STATE_ACTIVE;
+	}
+
+	if (pstate)
+		*pstate = state;
+
+	if (perror)
+		*perror = error;
+
+	return 1;
+}
 
 LELY_CAN_EXPORT int
 CANMSG2can_msg(const void *src, struct can_msg *dst)

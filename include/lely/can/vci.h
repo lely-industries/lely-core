@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the IXXAT VCI V4
  * interface declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,6 +27,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * Checks if an IXXAT VCI CAN message is an error message and parses the bus
+ * state and error flags if it is.
+ *
+ * \param msg    a pointer to an IXXAT VCI CAN message.
+ * \param pstate the address at which to store the updated CAN node state (can
+ *               be NULL). The value is only updated if the error frame
+ *               indicates a state change.
+ * \param perror the address at which to store the updated CAN bus errors (can
+ *               be NULL). Any new error flags indicated by by the error frame
+ *               are set in *\a perror, but existing flags are not cleared.
+ *
+ * \returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
+ * In the latter case, the error number can be obtained with `get_errnum()`.
+ */
+LELY_CAN_EXPORT int CANMSG_is_error(const void *msg, enum can_state *pstate,
+		enum can_error *perror);
 
 /*!
  * Converts an IXXAT VCI CAN message to a #can_msg frame.
