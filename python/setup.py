@@ -31,7 +31,7 @@ if USE_CYTHON:
 
 setup(
     name='lely_can',
-    version='1.3.3',
+    version='1.4.0',
     description='Python bindings for the Lely CAN library.',
     url='https://gitlab.com/lely_industries/can',
     author='J. S. Seldenthuis',
