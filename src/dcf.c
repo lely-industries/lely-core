@@ -44,7 +44,9 @@ static int co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg);
 
 static int co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg,
 		const char *section);
+#ifndef LELY_NO_CO_OBJ_NAME
 static int co_obj_parse_names(co_obj_t *obj, const config_t *cfg);
+#endif
 static int co_obj_parse_values(co_obj_t *obj, const config_t *cfg);
 static co_obj_t *co_obj_build(co_dev_t *dev, co_unsigned16_t idx);
 
@@ -404,6 +406,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				idx);
 		return -1;
 	}
+#ifndef LELY_NO_CO_OBJ_NAME
 	val = config_get(cfg, section, "Denotation");
 	if (val && *val)
 		name = val;
@@ -412,6 +415,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				idx);
 		return -1;
 	}
+#endif
 
 	co_unsigned8_t code = co_obj_get_code(obj);
 	val = config_get(cfg, section, "ObjectType");
@@ -531,9 +535,11 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 					return -1;
 			}
 
+#ifndef LELY_NO_CO_OBJ_NAME
 			// Parse the names of the sub-objects.
 			if (__unlikely(co_obj_parse_names(obj, cfg) == -1))
 				return -1;
+#endif
 
 			// Parse the values of the sub-objects.
 			if (__unlikely(co_obj_parse_values(obj, cfg) == -1))
@@ -573,6 +579,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	return 0;
 }
 
+#ifndef LELY_NO_CO_OBJ_NAME
 static int
 co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 {
@@ -611,6 +618,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 
 	return 0;
 }
+#endif // LELY_NO_CO_OBJ_NAME
 
 static int
 co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
@@ -695,6 +703,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
 	co_unsigned16_t type = co_sub_get_type(sub);
 
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	val = config_get(cfg, section, "LowLimit");
 	if (val && *val) {
 		if (!strncmp(val, "$NODEID", 7)) {
@@ -722,6 +731,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (sub->flags & CO_OBJ_FLAGS_MAX_NODEID)
 			co_val_set_id(type, &sub->max, id);
 	}
+#endif // LELY_NO_CO_OBJ_LIMITS
 
 	unsigned int access = co_sub_get_access(sub);
 	val = config_get(cfg, section, "AccessType");
@@ -825,6 +835,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		co_val_copy(type, sub->val, &sub->def);
 	}
 
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	if (co_type_is_basic(type)) {
 		const void *min = co_sub_addressof_min(sub);
 		const void *max = co_sub_addressof_max(sub);
@@ -843,6 +854,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 				&& co_val_cmp(type, val, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at, "ParameterValue overflow");
 	}
+#endif
 
 	return 0;
 }
@@ -868,11 +880,15 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 		goto error;
 	}
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	if (__unlikely(co_sub_set_name(sub, name) == -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set name of sub-object %Xsub%X",
 				idx, subidx);
 		goto error;
 	}
+#else
+	__unused_var(name);
+#endif
 
 	return sub;
 
@@ -900,12 +916,14 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1400 + num - 1);
 		if (__unlikely(!obj))
 			return -1;
+#ifndef LELY_NO_CO_OBJ_NAME
 		if (__unlikely(co_obj_set_name(obj,
 				"RPDO communication parameter") == -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
 		}
+#endif
 		co_obj_set_code(obj, CO_OBJECT_RECORD);
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
@@ -979,12 +997,14 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1600 + num - 1);
 		if (__unlikely(!obj))
 			return -1;
+#ifndef LELY_NO_CO_OBJ_NAME
 		if (__unlikely(co_obj_set_name(obj,
 				"RPDO mapping parameter") == -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
 		}
+#endif
 		co_obj_set_code(obj, CO_OBJECT_RECORD);
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
@@ -1027,12 +1047,14 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1800 + num - 1);
 		if (__unlikely(!obj))
 			return -1;
+#ifndef LELY_NO_CO_OBJ_NAME
 		if (__unlikely(co_obj_set_name(obj,
 				"TPDO communication parameter") == -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
 		}
+#endif
 		co_obj_set_code(obj, CO_OBJECT_RECORD);
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
@@ -1106,12 +1128,14 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1a00 + num - 1);
 		if (__unlikely(!obj))
 			return -1;
+#ifndef LELY_NO_CO_OBJ_NAME
 		if (__unlikely(co_obj_set_name(obj,
 				"TPDO mapping parameter") == -1)) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
 		}
+#endif
 		co_obj_set_code(obj, CO_OBJECT_RECORD);
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,

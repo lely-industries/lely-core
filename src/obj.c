@@ -74,7 +74,9 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 
 	rbtree_init(&obj->tree, &uint8_cmp);
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	obj->name = NULL;
+#endif
 
 	obj->code = CO_OBJECT_VAR;
 
@@ -94,7 +96,9 @@ __co_obj_fini(struct __co_obj *obj)
 
 	co_obj_clear(obj);
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	free(obj->name);
+#endif
 }
 
 LELY_CO_EXPORT co_obj_t *
@@ -207,6 +211,8 @@ co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx)
 	return __likely(node) ? structof(node, co_sub_t, node) : NULL;
 }
 
+#ifndef LELY_NO_CO_OBJ_NAME
+
 LELY_CO_EXPORT const char *
 co_obj_get_name(const co_obj_t *obj)
 {
@@ -236,6 +242,8 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 
 	return 0;
 }
+
+#endif // LELY_NO_CO_OBJ_NAME
 
 LELY_CO_EXPORT co_unsigned8_t
 co_obj_get_code(const co_obj_t *obj)
@@ -367,13 +375,17 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	sub->obj = NULL;
 	sub->subidx = subidx;
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	sub->name = NULL;
+#endif
 
 	sub->type = type;
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	if (__unlikely(co_val_init_min(sub->type, &sub->min) == -1))
 		return NULL;
 	if (__unlikely(co_val_init_max(sub->type, &sub->max) == -1))
 		return NULL;
+#endif
 	if (__unlikely(co_val_init(sub->type, &sub->def) == -1))
 		return NULL;
 	sub->val = NULL;
@@ -399,10 +411,14 @@ __co_sub_fini(struct __co_sub *sub)
 		co_obj_remove_sub(sub->obj, sub);
 
 	co_val_fini(sub->type, &sub->def);
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	co_val_fini(sub->type, &sub->max);
 	co_val_fini(sub->type, &sub->min);
+#endif
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	free(sub->name);
+#endif
 }
 
 LELY_CO_EXPORT co_sub_t *
@@ -456,6 +472,8 @@ co_sub_get_subidx(const co_sub_t *sub)
 	return sub->subidx;
 }
 
+#ifndef LELY_NO_CO_OBJ_NAME
+
 LELY_CO_EXPORT const char *
 co_sub_get_name(const co_sub_t *sub)
 {
@@ -486,6 +504,8 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 	return 0;
 }
 
+#endif // LELY_NO_CO_OBJ_NAME
+
 LELY_CO_EXPORT co_unsigned16_t
 co_sub_get_type(const co_sub_t *sub)
 {
@@ -493,6 +513,8 @@ co_sub_get_type(const co_sub_t *sub)
 
 	return sub->type;
 }
+
+#ifndef LELY_NO_CO_OBJ_LIMITS
 
 LELY_CO_EXPORT const void *
 co_sub_addressof_min(const co_sub_t *sub)
@@ -547,6 +569,8 @@ co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 	co_val_fini(sub->type, &sub->max);
 	return co_val_make(sub->type, &sub->max, ptr, n);
 }
+
+#endif // LELY_NO_CO_OBJ_LIMITS
 
 LELY_CO_EXPORT const void *
 co_sub_addressof_def(const co_sub_t *sub)
@@ -629,6 +653,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
+#ifndef LELY_NO_CO_OBJ_LIMITS
 LELY_CO_EXPORT co_unsigned32_t
 co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val) {
 	assert(sub);
@@ -652,6 +677,7 @@ co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val) {
 
 	return 0;
 }
+#endif
 
 LELY_CO_EXPORT unsigned int
 co_sub_get_access(const co_sub_t *sub)
@@ -755,8 +781,10 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
 	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
 		goto error_req;
 
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	// Accept the value if it is within bounds.
 	ac = co_sub_chk_val(sub, type, &val);
+#endif
 	if (__likely(!ac))
 		co_sub_dn(sub, &val);
 

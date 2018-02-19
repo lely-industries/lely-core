@@ -4,7 +4,7 @@
  *
  * \see lely/co/sdev.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -406,8 +406,10 @@ co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj)
 	assert(sobj);
 	assert(obj);
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	if (__unlikely(co_obj_set_name(obj, sobj->name) == -1))
 		return -1;
+#endif
 
 	if (__unlikely(co_obj_set_code(obj, sobj->code) == -1))
 		return -1;
@@ -436,8 +438,10 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 	assert(ssub);
 	assert(sub);
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	if (__unlikely(co_sub_set_name(sub, ssub->name) == -1))
 		return -1;
+#endif
 
 	if (__unlikely(co_sub_set_access(sub, ssub->access) == -1))
 		return -1;
@@ -445,6 +449,7 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 	const void *ptr;
 	size_t n;
 
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	ptr = co_val_addressof(ssub->type, &ssub->min);
 	n = co_val_sizeof(ssub->type, &ssub->min);
 	if (__unlikely(n && !co_sub_set_min(sub, ptr, n)))
@@ -454,6 +459,7 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 	n = co_val_sizeof(ssub->type, &ssub->max);
 	if (__unlikely(n && !co_sub_set_max(sub, ptr, n)))
 		return -1;
+#endif
 
 	ptr = co_val_addressof(ssub->type, &ssub->def);
 	n = co_val_sizeof(ssub->type, &ssub->def);
@@ -482,6 +488,7 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 
 	int r, t = 0;
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	const char *name = co_obj_get_name(obj);
 	if (name) {
 		r = snprintf(s, n, "\t\t.name = CO_SDEV_STRING(\"");
@@ -494,8 +501,11 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf(s, n, "\"),\n");
 	} else {
+#endif
 		r = snprintf(s, n, "\t\t.name = NULL,\n");
+#ifndef LELY_NO_CO_OBJ_NAME
 	}
+#endif
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -580,6 +590,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 
 	int r, t = 0;
 
+#ifndef LELY_NO_CO_OBJ_NAME
 	const char *name = co_sub_get_name(sub);
 	if (name) {
 		r = snprintf(s, n, "\t\t\t.name = CO_SDEV_STRING(\"");
@@ -592,8 +603,11 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 		t += r; r = MIN((size_t)r, n); s += r; n -= r;
 		r = snprintf(s, n, "\"),\n");
 	} else {
+#endif
 		r = snprintf(s, n, "\t\t\t.name = NULL,\n");
+#ifndef LELY_NO_CO_OBJ_NAME
 	}
+#endif
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -624,7 +638,14 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	r = snprintf_c99_sval(s, n, type, co_sub_get_min(sub));
+#else
+	union co_val min;
+	co_val_init_min(type, &min);
+	r = snprintf_c99_sval(s, n, type, &min);
+	co_val_fini(type, &min);
+#endif
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
@@ -633,7 +654,14 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	r = snprintf_c99_sval(s, n, type, co_sub_get_max(sub));
+#else
+	union co_val max;
+	co_val_init_max(type, &max);
+	r = snprintf_c99_sval(s, n, type, &max);
+	co_val_fini(type, &max);
+#endif
 	if (__unlikely(r < 0))
 		return r;
 	t += r; r = MIN((size_t)r, n); s += r; n -= r;

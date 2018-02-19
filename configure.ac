@@ -104,6 +104,22 @@ AS_IF([test "$enable_obj_file" == "no"], [
 	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
 ])
 
+AM_CONDITIONAL([NO_CO_OBJ_LIMITS], [false])
+AC_ARG_ENABLE([obj-limits],
+	AS_HELP_STRING([--disable-obj-limits], [disable minimum/maximum values in the object dictionary]))
+AS_IF([test "$enable_obj_limits" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_LIMITS], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_LIMITS], [1], [Define to 1 if minimum/maximum values are disabled in the object dictionary.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_NAME], [false])
+AC_ARG_ENABLE([obj-name],
+	AS_HELP_STRING([--disable-obj-name], [disable names in the object dictionary]))
+AS_IF([test "$enable_obj_name" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_NAME], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_NAME], [1], [Define to 1 if names are disabled in the object dictionary.])
+])
+
 AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))

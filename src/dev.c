@@ -894,10 +894,12 @@ co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id)
 
 	unsigned int flags = co_sub_get_flags(sub);
 	co_unsigned16_t type = co_sub_get_type(sub);
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	if (flags & CO_OBJ_FLAGS_MIN_NODEID)
 		co_val_set_id(type, &sub->min, new_id, old_id);
 	if (flags & CO_OBJ_FLAGS_MAX_NODEID)
 		co_val_set_id(type, &sub->max, new_id, old_id);
+#endif
 	if (flags & CO_OBJ_FLAGS_DEF_NODEID)
 		co_val_set_id(type, &sub->def, new_id, old_id);
 	if (flags & CO_OBJ_FLAGS_VAL_NODEID)

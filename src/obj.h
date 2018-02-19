@@ -3,7 +3,7 @@
  *
  * \see lely/co/obj.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,12 +36,14 @@ struct __co_obj {
 	co_dev_t *dev;
 	//! The object index.
 	co_unsigned16_t idx;
-	//! The tree containing all the sub-objects.
-	struct rbtree tree;
-	//! A pointer to the name of the object.
-	char *name;
 	//! The object code.
 	co_unsigned8_t code;
+#ifndef LELY_NO_CO_OBJ_NAME
+	//! A pointer to the name of the object.
+	char *name;
+#endif
+	//! The tree containing all the sub-objects.
+	struct rbtree tree;
 	//! A pointer to the object value.
 	void *val;
 	//! The size (in bytes) of the value at #val.
@@ -56,14 +58,18 @@ struct __co_sub {
 	co_obj_t *obj;
 	//! The object sub-index.
 	co_unsigned8_t subidx;
-	//! A pointer to the name of the sub-object.
-	char *name;
 	//! The data type.
 	co_unsigned16_t type;
+#ifndef LELY_NO_CO_OBJ_NAME
+	//! A pointer to the name of the sub-object.
+	char *name;
+#endif
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	//! The lower limit of the object value.
 	union co_val min;
 	//! The upper limit of the object value.
 	union co_val max;
+#endif
 	//! The default value.
 	union co_val def;
 	//! A pointer to the sub-object value.
