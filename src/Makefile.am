@@ -1,1 +1,1 @@
-SUBDIRS = coapp
+SUBDIRS = aio coapp

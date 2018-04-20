@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: liblely-aio
+Description: Asynchronous I/O library
+URL: https://gitlab.com/lely_industries/aio
+Version: @PACKAGE_VERSION@
+Requires: liblely-libc >= 1.4 liblely-util >= 1.8 liblely-can >= 1.4
+Cflags: -I${includedir}
+Libs: -L${libdir} -llely-aio

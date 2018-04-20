@@ -8,4 +8,4 @@ EXTRA_DIST += NOTICE
 EXTRA_DIST += README.md
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = lib$(PACKAGE).pc
+pkgconfig_DATA = liblely-aio.pc lib$(PACKAGE).pc
