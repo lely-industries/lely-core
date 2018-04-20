@@ -49,6 +49,7 @@ AC_CONFIG_FILES([
 	src/coapp/Makefile
 	src/coapp/version.rc
 	src/Makefile
+	lib${PACKAGE}.pc
 	Makefile
 ])
 AC_OUTPUT

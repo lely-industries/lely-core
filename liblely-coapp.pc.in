@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: lib@PACKAGE@
+Description: @PACKAGE_NAME@
+URL: https://gitlab.com/lely_industries/coapp
+Version: @PACKAGE_VERSION@
+Requires: liblely-libc >= 1.4
+Cflags: -I${includedir}
+Libs: -L${libdir} -l@PACKAGE@
