@@ -14,7 +14,8 @@ AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([11], [ext], [mandatory])
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 
-LT_INIT
+LT_INIT([win32-dll])
+LT_PROG_RC
 
 AM_CONDITIONAL([ENABLE_SHARED], [test "$enable_shared" == "yes"])
 
@@ -22,6 +23,18 @@ m4_define(version_split, m4_split(AC_PACKAGE_VERSION, [\.]))
 AC_SUBST(VERSION_MAJOR, m4_argn(1, version_split))
 AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
+
+case "$host" in
+*-*-mingw*)
+	platform_win32=yes
+	;;
+esac
+AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
+
+AS_IF([test "$platform_win32" == "yes"], [
+	CXXFLAGS="$CXXFLAGS -Wno-error=attributes"
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
+])
 
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.4 liblely-libc < 2])
 
@@ -34,6 +47,7 @@ AC_CONFIG_FILES([
 	doc/Makefile
 	include/Makefile
 	src/coapp/Makefile
+	src/coapp/version.rc
 	src/Makefile
 	Makefile
 ])
