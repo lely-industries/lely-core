@@ -1,0 +1,7 @@
+{
+  "execPath": "/usr/bin/g++",
+  "gccDefaultCFlags": "-c -x c -std=gnu99 -Wall -Wextra -pedantic -fsyntax-only",
+  "gccDefaultCppFlags": "-c -std=gnu++11 -Wall -Wextra -pedantic -fsyntax-only",
+  "gccIncludePaths": ".,./include",
+  "gccSuppressWarnings": false
+}
