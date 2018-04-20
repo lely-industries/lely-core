@@ -39,7 +39,25 @@
 namespace lely {
 
 //! Namespace for the C++ CANopen application library.
-namespace canopen {}
+namespace canopen {
+
+//! An abstract interface conforming to the BasicLockable concept.
+class BasicLockable {
+ public:
+  /*!
+   * Blocks until a lock can be obtained for the current execution agent
+   * (thread, process, task). If an exception is thrown, no lock is obtained.
+   */
+  virtual void lock() = 0;
+
+  //! Releases the lock held by the execution agent. Throws no exceptions.
+  virtual void unlock() = 0;
+
+ protected:
+  ~BasicLockable() = default;
+};
+
+}  // namespace canopen
 
 }  // namespace lely
 
