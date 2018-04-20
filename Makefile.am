@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc
+SUBDIRS = doc include src
 
 EXTRA_DIST =
 EXTRA_DIST += LICENSE
