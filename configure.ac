@@ -8,8 +8,13 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
+	doc/Doxyfile
+	doc/Makefile
 	Makefile
 ])
 AC_OUTPUT

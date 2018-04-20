@@ -1,4 +1,6 @@
 /autom4te.cache/
+/doc/html/
+/doc/Doxyfile
 /aclocal.m4
 /config.guess
 /config.h
