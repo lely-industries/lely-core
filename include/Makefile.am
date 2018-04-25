@@ -3,6 +3,7 @@ inc += lely/coapp/detail/type_traits.hpp
 inc += lely/coapp/coapp.hpp
 inc += lely/coapp/device.hpp
 inc += lely/coapp/io_context.hpp
+inc += lely/coapp/node.hpp
 inc += lely/coapp/sdo_error.hpp
 
 inc += lely/aio/detail/cbase.hpp

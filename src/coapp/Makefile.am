@@ -2,6 +2,7 @@ src =
 src += coapp.hpp
 src += device.cpp
 src += io_context.cpp
+src += node.cpp
 src += sdo_error.cpp
 
 lib_LTLIBRARIES = liblely-coapp.la
