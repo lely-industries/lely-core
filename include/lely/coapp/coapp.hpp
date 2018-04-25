@@ -41,6 +41,9 @@ namespace lely {
 //! Namespace for the C++ CANopen application library.
 namespace canopen {
 
+//! Namespace for implementation details of the C++ CANopen application library.
+namespace detail {}
+
 //! An abstract interface conforming to the BasicLockable concept.
 class BasicLockable {
  public:
