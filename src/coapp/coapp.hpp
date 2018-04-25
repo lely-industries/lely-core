@@ -32,4 +32,25 @@
 #define LELY_COAPP_EXPORT LELY_DLL_EXPORT
 #endif
 
+#include <lely/util/errnum.h>
+
+#include <system_error>
+
+namespace lely {
+
+namespace canopen {
+
+namespace {
+
+_Noreturn inline void
+throw_errc(const char *what, int errc = get_errc()) {
+  throw ::std::system_error(errc, ::std::system_category(), what);
+}
+
+}  // namespace
+
+}  // namespace canopen
+
+}  // namespace lely
+
 #endif  // LELY_COAPP_INTERN_COAPP_HPP_

@@ -1,5 +1,6 @@
 src =
 src += coapp.hpp
+src += io_context.cpp
 
 lib_LTLIBRARIES = liblely-coapp.la
 liblely_coapp_la_CPPFLAGS = -I$(top_srcdir)/include

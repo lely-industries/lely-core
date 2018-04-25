@@ -1,5 +1,6 @@
 inc =
 inc += lely/coapp/coapp.hpp
+inc += lely/coapp/io_context.hpp
 
 inc += lely/aio/detail/cbase.hpp
 inc += lely/aio/detail/timespec.hpp
