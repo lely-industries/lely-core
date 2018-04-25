@@ -48,6 +48,7 @@ AS_IF([test "$platform_win32" == "yes"], [
 PKG_CHECK_MODULES([liblely_libc], [liblely-libc >= 1.4 liblely-libc < 2])
 PKG_CHECK_MODULES([liblely_util], [liblely-util >= 1.8 liblely-util < 2])
 PKG_CHECK_MODULES([liblely_can], [liblely-can >= 1.4 liblely-can < 2])
+PKG_CHECK_MODULES([liblely_co], [liblely-co >= 1.5 liblely-co < 2])
 
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
