@@ -1,5 +1,6 @@
 src =
 src += coapp.hpp
+src += device.cpp
 src += io_context.cpp
 src += sdo_error.cpp
 
