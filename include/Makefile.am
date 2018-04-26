@@ -5,6 +5,9 @@ inc += lely/coapp/device.hpp
 inc += lely/coapp/io_context.hpp
 inc += lely/coapp/node.hpp
 inc += lely/coapp/sdo_error.hpp
+if !NO_COAPP_SLAVE
+inc += lely/coapp/slave.hpp
+endif
 
 inc += lely/aio/detail/cbase.hpp
 inc += lely/aio/detail/timespec.hpp

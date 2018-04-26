@@ -74,6 +74,14 @@ AS_IF([test "$enable_canfd" == "no"], [
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_COAPP_SLAVE], [false])
+AC_ARG_ENABLE([slave],
+	AS_HELP_STRING([--disable-slave], [disable CANopen slave support]))
+AS_IF([test "$enable_slave" == "no"], [
+	AM_CONDITIONAL([NO_COAPP_SLAVE], [true])
+	AC_DEFINE([LELY_NO_COAPP_SLAVE], [1], [Define to 1 if CANopen slave support is disabled.])
+])
+
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
