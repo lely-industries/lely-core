@@ -26,6 +26,7 @@
 
 #include <mutex>
 
+#include <lely/co/csdo.hpp>
 #include <lely/co/dcf.hpp>
 #include <lely/co/obj.hpp>
 
@@ -82,6 +83,340 @@ Device::id() const noexcept {
   ::std::lock_guard<Impl_> lock(*impl_);
 
   return impl_->id();
+}
+
+namespace {
+
+void
+OnDnCon(COCSDO*, uint16_t, uint8_t, uint32_t ac, void* data) noexcept {
+  *static_cast<uint32_t*>(data) = ac;
+}
+
+template <class T>
+void
+OnUpCon(COCSDO*, uint16_t, uint8_t, uint32_t ac, T value, void* data) noexcept {
+  auto* t = static_cast<decltype(::std::tie(ac, value))*>(data);
+  *t = ::std::forward_as_tuple(ac, ::std::move(value));
+}
+
+}  // namespace
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenType<T>::value, T
+>::type
+Device::Read(uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  T value(Read<T>(idx, subidx, ec));
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Read");
+  return value;
+}
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenType<T>::value, T
+>::type
+Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
+  uint32_t ac = 0;
+  T value = T();
+  auto t = ::std::tie(ac, value);
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  if (upReq<T, &OnUpCon<T>>(*impl_->dev, idx, subidx, &t) == -1)
+    throw_errc("Read");
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
+  return value;
+}
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenBasic<T>::value
+>::type
+Device::Write(uint16_t idx, uint8_t subidx, T value) {
+  ::std::error_code ec;
+  Write(idx, subidx, value, ec);
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+}
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenBasic<T>::value
+>::type
+Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
+  constexpr auto N = co_type_traits_T<T>::index;
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
+    throw_errc("Write");
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
+}
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenArray<T>::value
+>::type
+Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
+  ::std::error_code ec;
+  Write(idx, subidx, value, ec);
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+}
+
+template <class T>
+LELY_COAPP_EXPORT typename ::std::enable_if<
+    detail::IsCanopenArray<T>::value
+>::type
+Device::Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec) {
+  constexpr auto N = co_type_traits_T<T>::index;
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
+    throw_errc("Write");
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
+}
+
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+// BOOLEAN
+template LELY_COAPP_EXPORT bool
+Device::Read<bool>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT bool
+Device::Read<bool>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<bool>(uint16_t, uint8_t, bool);
+template LELY_COAPP_EXPORT void
+Device::Write<bool>(uint16_t, uint8_t, bool, ::std::error_code&);
+
+// INTEGER8
+template LELY_COAPP_EXPORT int8_t
+Device::Read<int8_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT int8_t
+Device::Read<int8_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<int8_t>(uint16_t, uint8_t, int8_t);
+template LELY_COAPP_EXPORT void
+Device::Write<int8_t>(uint16_t, uint8_t, int8_t, ::std::error_code&);
+
+// INTEGER16
+template LELY_COAPP_EXPORT int16_t
+Device::Read<int16_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT int16_t
+Device::Read<int16_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<int16_t>(uint16_t, uint8_t, int16_t);
+template LELY_COAPP_EXPORT void
+Device::Write<int16_t>(uint16_t, uint8_t, int16_t, ::std::error_code&);
+
+// INTEGER32
+template LELY_COAPP_EXPORT int32_t
+Device::Read<int32_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT int32_t
+Device::Read<int32_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<int32_t>(uint16_t, uint8_t, int32_t);
+template LELY_COAPP_EXPORT void
+Device::Write<int32_t>(uint16_t, uint8_t, int32_t, ::std::error_code&);
+
+// UNSIGNED8
+template LELY_COAPP_EXPORT uint8_t
+Device::Read<uint8_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT uint8_t
+Device::Read<uint8_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<uint8_t>(uint16_t, uint8_t, uint8_t);
+template LELY_COAPP_EXPORT void
+Device::Write<uint8_t>(uint16_t, uint8_t, uint8_t, ::std::error_code&);
+
+// UNSIGNED16
+template LELY_COAPP_EXPORT uint16_t
+Device::Read<uint16_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT uint16_t
+Device::Read<uint16_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<uint16_t>(uint16_t, uint8_t, uint16_t);
+template LELY_COAPP_EXPORT void
+Device::Write<uint16_t>(uint16_t, uint8_t, uint16_t, ::std::error_code&);
+
+// UNSIGNED32
+template LELY_COAPP_EXPORT uint32_t
+Device::Read<uint32_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT uint32_t
+Device::Read<uint32_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<uint32_t>(uint16_t, uint8_t, uint32_t);
+template LELY_COAPP_EXPORT void
+Device::Write<uint32_t>(uint16_t, uint8_t, uint32_t, ::std::error_code&);
+
+// REAL32
+template LELY_COAPP_EXPORT float
+Device::Read<float>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT float
+Device::Read<float>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<float>(uint16_t, uint8_t, float);
+template LELY_COAPP_EXPORT void
+Device::Write<float>(uint16_t, uint8_t, float, ::std::error_code&);
+
+// VISIBLE_STRING
+template LELY_COAPP_EXPORT ::std::string
+Device::Read<::std::string>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT ::std::string
+Device::Read<::std::string>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<::std::string>(uint16_t, uint8_t, const ::std::string&);
+template LELY_COAPP_EXPORT void
+Device::Write<::std::string>(uint16_t, uint8_t, const ::std::string&,
+                             ::std::error_code&);
+
+// OCTET_STRING
+template LELY_COAPP_EXPORT ::std::vector<uint8_t>
+Device::Read<::std::vector<uint8_t>>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT ::std::vector<uint8_t>
+Device::Read<::std::vector<uint8_t>>(uint16_t, uint8_t, ::std::error_code&)
+    const;
+template LELY_COAPP_EXPORT void
+Device::Write<::std::vector<uint8_t>>(uint16_t, uint8_t,
+                                      const ::std::vector<uint8_t>&);
+template LELY_COAPP_EXPORT void
+Device::Write<::std::vector<uint8_t>>(uint16_t, uint8_t,
+    const ::std::vector<uint8_t>&, ::std::error_code&);
+
+// UNICODE_STRING
+template LELY_COAPP_EXPORT ::std::basic_string<char16_t>
+Device::Read<::std::basic_string<char16_t>>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT ::std::basic_string<char16_t>
+Device::Read<::std::basic_string<char16_t>>(uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<::std::basic_string<char16_t>>(uint16_t, uint8_t,
+    const ::std::basic_string<char16_t>&);
+template LELY_COAPP_EXPORT void
+Device::Write<::std::basic_string<char16_t>>(uint16_t, uint8_t,
+    const ::std::basic_string<char16_t>&, ::std::error_code&);
+
+// TIME_OF_DAY
+// TIME_DIFFERENCE
+// DOMAIN
+// INTEGER24
+
+// REAL64
+template LELY_COAPP_EXPORT double
+Device::Read<double>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT double
+Device::Read<double>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<double>(uint16_t, uint8_t, double);
+template LELY_COAPP_EXPORT void
+Device::Write<double>(uint16_t, uint8_t, double, ::std::error_code&);
+
+// INTEGER40
+// INTEGER48
+// INTEGER56
+
+// INTEGER64
+template LELY_COAPP_EXPORT int64_t
+Device::Read<int64_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT int64_t
+Device::Read<int64_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<int64_t>(uint16_t, uint8_t, int64_t);
+template LELY_COAPP_EXPORT void
+Device::Write<int64_t>(uint16_t, uint8_t, int64_t, ::std::error_code&);
+
+// UNSIGNED24
+// UNSIGNED40
+// UNSIGNED48
+// UNSIGNED56
+
+// UNSIGNED64
+template LELY_COAPP_EXPORT uint64_t
+Device::Read<uint64_t>(uint16_t, uint8_t) const;
+template LELY_COAPP_EXPORT uint64_t
+Device::Read<uint64_t>(uint16_t, uint8_t, ::std::error_code&) const;
+template LELY_COAPP_EXPORT void
+Device::Write<uint64_t>(uint16_t, uint8_t, uint64_t);
+template LELY_COAPP_EXPORT void
+Device::Write<uint64_t>(uint16_t, uint8_t, uint64_t, ::std::error_code&);
+
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const char* value) {
+  ::std::error_code ec;
+  Write(idx, subidx, value, ec);
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+}
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const char* value,
+              ::std::error_code& ec) {
+  Write(idx, subidx, value, ::std::char_traits<char>::length(value), ec);
+}
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value) {
+  ::std::error_code ec;
+  Write(idx, subidx, value, ec);
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+}
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value,
+              ::std::error_code& ec) {
+  constexpr auto N = CO_DEFTYPE_UNICODE_STRING;
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  // TODO: Prevent unnecessary copy.
+  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
+    throw_errc("Write");
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
+}
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
+  ::std::error_code ec;
+  Write(idx, subidx, p, n, ec);
+  if (ec)
+    throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+}
+
+LELY_COAPP_EXPORT void
+Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
+              ::std::error_code& ec) {
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  if (dnReq(*impl_->dev, idx, subidx, p, n, &OnDnCon, &ac) == -1)
+    throw_errc("Write");
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
 }
 
 LELY_COAPP_EXPORT CODev*

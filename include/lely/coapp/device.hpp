@@ -70,6 +70,178 @@ class LELY_COAPP_EXTERN Device {
   //! Returns the node-ID.
   uint8_t id() const noexcept;
 
+  /*!
+   * Submits an SDO upload request to the local object dictionary. This function
+   * reads the value of a sub-object while honoring all access checks and
+   * executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   *
+   * \returns the result of the SDO request.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+  Read(uint16_t idx, uint8_t subidx) const;
+
+  /*!
+   * Submits an SDO upload request to the local object dictionary. This function
+   * reads the value of a sub-object while honoring all access checks and
+   * executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   *
+   * \returns the result of the SDO request, or an empty value on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+  Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a CANopen basic value to a sub-object while honoring all
+   * access and range checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+  Write(uint16_t idx, uint8_t subidx, T value);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a CANopen basic value to a sub-object while honoring all
+   * access and range checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+  Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a CANopen array value to a sub-object while honoring all
+   * access checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+  Write(uint16_t idx, uint8_t subidx, const T& value);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a CANopen array value to a sub-object while honoring all
+   * access checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+  Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a VISIBLE_STRING to a sub-object while honoring all access
+   * checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) string to be written.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  void Write(uint16_t idx, uint8_t subidx, const char* value);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a VISIBLE_STRING to a sub-object while honoring all access
+   * checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) string to be written.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  void Write(uint16_t idx, uint8_t subidx, const char* value,
+             ::std::error_code& ec);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a UNICODE_STRING to a sub-object while honoring all access
+   * checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) UCS-2 string to be
+   *               written.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  void Write(uint16_t idx, uint8_t subidx, const char16_t* value);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes a UNICODE_STRING to a sub-object while honoring all access
+   * checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) UCS-2 string to be
+   *               written.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  void Write(uint16_t idx, uint8_t subidx, const char16_t* value,
+             ::std::error_code& ec);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes an OCTET_STRING or DOMAIN value to a sub-object while
+   * honoring all access checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param p      a pointer to the bytes to be written.
+   * \param n      the number of bytes to write.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  void Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n);
+
+  /*!
+   * Submits an SDO download request to the local object dictionary. This
+   * function writes an OCTET_STRING or DOMAIN value to a sub-object while
+   * honoring all access checks and executing any registered callback function.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param p      a pointer to the bytes to be written.
+   * \param n      the number of bytes to write.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  void
+  Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
+        ::std::error_code& ec);
+
  protected:
   ~Device();
 
