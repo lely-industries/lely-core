@@ -1,4 +1,5 @@
 inc =
+inc += lely/coapp/detail/mutex.hpp
 inc += lely/coapp/detail/type_traits.hpp
 inc += lely/coapp/coapp.hpp
 inc += lely/coapp/device.hpp
