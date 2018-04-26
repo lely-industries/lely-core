@@ -26,6 +26,7 @@
 #include <lely/coapp/sdo_error.hpp>
 
 #include <memory>
+#include <typeinfo>
 
 namespace lely {
 
@@ -74,6 +75,216 @@ class LELY_COAPP_EXTERN Device {
 
   //! Returns a pointer to the internal CANopen device from <lely/co/dev.hpp>.
   CODev* dev() const noexcept;
+
+  /*!
+   * Returns the type of a sub-object.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   *
+   * \returns a reference to an `std::type_info` object representing the type,
+   * or `typeid(void)` if unknown.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist.
+   */
+  const ::std::type_info& Type(uint16_t idx, uint8_t subidx) const;
+
+  /*!
+   * Returns the type of a sub-object.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in \a ec.
+   *
+   * \returns a reference to an `std::type_info` object representing the type,
+   * or `typeid(void)` if unknown.
+   */
+  const ::std::type_info& Type(uint16_t idx, uint8_t subidx,
+                               ::std::error_code& ec) const;
+
+  /*!
+   * Reads the value of a sub-object. This function reads the value directly
+   * from the object dictionary and bypasses any access checks or registered
+   * callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   *
+   * \returns a copy of the value of the sub-object.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+  Get(uint16_t idx, uint8_t subidx) const;
+
+  /*!
+   * Reads the value of a sub-object. This function reads the value directly
+   * from the object dictionary and bypasses any access checks or registered
+   * callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   *
+   * \returns a copy of the value of the sub-object, or an empty value on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+  Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
+
+  /*!
+   * Writes a CANopen basic value to a sub-object. This function writes the
+   * value directly to the object dictionary and bypasses any access and range
+   * checks or registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+  Set(uint16_t idx, uint8_t subidx, T value);
+
+  /*!
+   * Writes a CANopen basic value to a sub-object. This function writes the
+   * value directly to the object dictionary and bypasses any access and range
+   * checks or registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+  Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /*!
+   * Writes a CANopen array value to a sub-object. This function writes the
+   * array directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+  Set(uint16_t idx, uint8_t subidx, const T& value);
+
+  /*!
+   * Writes a CANopen array value to a sub-object. This function writes the
+   * array directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  the value to be written.
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+  Set(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
+
+  /*!
+   * Writes a VISIBLE_STRING to a sub-object. This function writes the string
+   * directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) string to be written.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const char* value);
+
+  /*!
+   * Writes a VISIBLE_STRING to a sub-object. This function writes the string
+   * directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) string to be written.
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const char* value,
+           ::std::error_code& ec);
+
+  /*!
+   * Writes a UNICODE_STRING to a sub-object. This function writes the string
+   * directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) UCS-2 string to be
+   *               written.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const char16_t* value);
+
+  /*!
+   * Writes a UNICODE_STRING to a sub-object. This function writes the string
+   * directly to the object dictionary and bypasses any access checks or
+   * registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param value  a pointer to the (null-terminated) UCS-2 string to be
+   *               written.
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const char16_t* value,
+           ::std::error_code& ec);
+
+  /*!
+   * Writes an OCTET_STRING or DOMAIN value to a sub-object. This function
+   * writes the bytes directly to the object dictionary and bypasses any access
+   * checks or registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param p      a pointer to the bytes to be written.
+   * \param n      the number of bytes to write.
+   *
+   * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+   * type does not match.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n);
+
+  /*!
+   * Writes an OCTET_STRING or DOMAIN value to a sub-object. This function
+   * writes the bytes directly to the object dictionary and bypasses any access
+   * checks or registered callback functions.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index
+   * \param p      a pointer to the bytes to be written.
+   * \param n      the number of bytes to write.
+   * \param ec     if the sub-object does not exist or the type does not match,
+   *               the SDO abort code is stored in \a ec.
+   */
+  void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
+           ::std::error_code& ec);
 
  private:
   struct Impl_;
