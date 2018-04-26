@@ -4,7 +4,13 @@ inc += lely/coapp/detail/mutex.hpp
 inc += lely/coapp/detail/type_traits.hpp
 inc += lely/coapp/coapp.hpp
 inc += lely/coapp/device.hpp
+if !NO_COAPP_MASTER
+inc += lely/coapp/driver.hpp
+endif
 inc += lely/coapp/io_context.hpp
+if !NO_COAPP_MASTER
+inc += lely/coapp/master.hpp
+endif
 inc += lely/coapp/node.hpp
 inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE

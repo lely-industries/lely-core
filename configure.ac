@@ -74,6 +74,14 @@ AS_IF([test "$enable_canfd" == "no"], [
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_COAPP_MASTER], [false])
+AC_ARG_ENABLE([slave],
+	AS_HELP_STRING([--disable-master], [disable CANopen master support]))
+AS_IF([test "$enable_master" == "no"], [
+	AM_CONDITIONAL([NO_COAPP_MASTER], [true])
+	AC_DEFINE([LELY_NO_COAPP_MASTER], [1], [Define to 1 if CANopen master support is disabled.])
+])
+
 AM_CONDITIONAL([NO_COAPP_SLAVE], [false])
 AC_ARG_ENABLE([slave],
 	AS_HELP_STRING([--disable-slave], [disable CANopen slave support]))

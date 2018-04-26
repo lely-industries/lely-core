@@ -1,7 +1,13 @@
 src =
 src += coapp.hpp
 src += device.cpp
+if !NO_COAPP_MASTER
+src += driver.cpp
+endif
 src += io_context.cpp
+if !NO_COAPP_MASTER
+src += master.cpp
+endif
 src += node.cpp
 src += sdo_error.cpp
 if !NO_COAPP_SLAVE
