@@ -44,6 +44,284 @@ class DriverBase;
  class LELY_COAPP_EXTERN BasicMaster
     : public Node, protected ::std::map<uint8_t, DriverBase*> {
  public:
+  class Object;
+  class ConstObject;
+
+  /*!
+   * A mutator providing read/write access to a CANopen sub-object in a local
+   * object dictionary.
+   */
+  class SubObject {
+    friend class Object;
+
+   public:
+    SubObject(const SubObject&) = default;
+    SubObject(SubObject&&) = default;
+
+    SubObject& operator=(const SubObject&) = default;
+    SubObject& operator=(SubObject&&) = default;
+
+    /*!
+     * Sets the value of the sub-object.
+     *
+     * \param value the value to be written.
+     *
+     * \throws #lely::canopen::SdoError if the sub-object does not exist or the
+     * type does not match.
+     *
+     * \see Write()
+     */
+    template <class T>
+    SubObject&
+    operator=(T&& value) {
+      Write(::std::forward<T>(value));
+      return *this;
+    }
+
+    /*!
+     * Returns the value of the sub-object by submitting an SDO upload request
+     * to the local object dictionary.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Read()
+     */
+    template <class T> operator T() const { return Read<T>(); }
+
+    /*!
+     * Reads the value of the sub-object by submitting an SDO upload request to
+     * the local object dictionary.
+     *
+     * \returns the result of the SDO request.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Device::Read(uint16_t idx, uint8_t subidx) const
+     */
+    template <class T>
+    T Read() const { return master_->Read<T>(idx_, subidx_); }
+
+    /*!
+     * Reads the value of the sub-object by submitting an SDO upload request to
+     * the local object dictionary.
+     *
+     * \param ec on error, the SDO abort code is stored in \a ec.
+     *
+     * \returns the result of the SDO request, or an empty value on error.
+     *
+     * \see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     */
+    template <class T>
+    T
+    Read(::std::error_code& ec) const {
+      return master_->Read<T>(idx_, subidx_, ec);
+    }
+
+    /*!
+     * Writes a value to the sub-object by submitting an SDO download request to
+     * the local object dictionary.
+     *
+     * \param value the value to be written.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Device::Write(uint16_t idx, uint8_t subidx, T&& value)
+     */
+    template <class T>
+    void
+    Write(T&& value) {
+      master_->Write(idx_, subidx_, ::std::forward<T>(value));
+    }
+
+    /*!
+     * Writes a value to the sub-object by submitting an SDO download request to
+     * the local object dictionary.
+     *
+     * \param value the value to be written.
+     * \param ec    on error, the SDO abort code is stored in \a ec.
+     *
+     * \see Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec),
+     * Device::Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec),
+     * Device::Write(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec),
+     * Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
+     */
+    template <class T>
+    void
+    Write(T&& value, ::std::error_code& ec) {
+      master_->Write(idx_, subidx_, ::std::forward<T>(value), ec);
+    }
+
+    /*!
+     * Writes an OCTET_STRING or DOMAIN value to the sub-object by submitting an
+     * SDO download request to the local object dictionary.
+     *
+     * \param p a pointer to the bytes to be written.
+     * \param n the number of bytes to write.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n)
+     */
+    void
+    Write(const void* p, ::std::size_t n) {
+      master_->Write(idx_, subidx_, p, n);
+    }
+
+    /*!
+     * Writes an OCTET_STRING or DOMAIN value to the sub-object by submitting an
+     * SDO download request to the local object dictionary.
+     *
+     * \param p  a pointer to the bytes to be written.
+     * \param n  the number of bytes to write.
+     * \param ec on error, the SDO abort code is stored in \a ec.
+     *
+     * \see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
+     */
+    void
+    Write(const void* p, ::std::size_t n, ::std::error_code& ec) {
+      master_->Write(idx_, subidx_, p, n, ec);
+    }
+
+   private:
+    SubObject(BasicMaster* master, uint16_t idx, uint8_t subidx)
+        : master_(master), idx_(idx), subidx_(subidx) {}
+
+    BasicMaster* master_;
+    uint16_t idx_;
+    uint8_t subidx_;
+  };
+
+  /*!
+   * An accessor providing read-only access to a CANopen sub-object in a local
+   * object dictionary.
+   */
+  class ConstSubObject {
+    friend class Object;
+    friend class ConstObject;
+
+   public:
+    /*!
+     * Returns the value of the sub-object by submitting an SDO upload request
+     * to the local object dictionary.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Read()
+     */
+    template <class T> operator T() const { return Read<T>(); }
+
+    /*!
+     * Reads the value of the sub-object by submitting an SDO upload request to
+     * the local object dictionary.
+     *
+     * \returns the result of the SDO request.
+     *
+     * \throws #lely::canopen::SdoError on error.
+     *
+     * \see Device::Read(uint16_t idx, uint8_t subidx) const
+     */
+    template <class T>
+    T Read() const { return master_->Read<T>(idx_, subidx_); }
+
+    /*!
+     * Reads the value of the sub-object by submitting an SDO upload request to
+     * the local object dictionary.
+     *
+     * \param ec on error, the SDO abort code is stored in \a ec.
+     *
+     * \returns the result of the SDO request, or an empty value on error.
+     *
+     * \see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     */
+    template <class T>
+    T
+    Read(::std::error_code& ec) const {
+      return master_->Read<T>(idx_, subidx_, ec);
+    }
+
+   private:
+    ConstSubObject(const BasicMaster* master, uint16_t idx, uint8_t subidx)
+        : master_(master), idx_(idx), subidx_(subidx) {}
+
+    const BasicMaster* master_;
+    uint16_t idx_;
+    uint8_t subidx_;
+  };
+
+  /*!
+   * A mutator providing read/write access to a CANopen object in a local object
+   * dictionary.
+   */
+  class Object {
+    friend class BasicMaster;
+
+   public:
+    /*!
+     * Returns a mutator object that provides read/write access to the specified
+     * CANopen sub-object in the local object dictionary. Note that this
+     * function succeeds even if the sub-object does not exist.
+     *
+     * \param subidx the object sub-index.
+     *
+     * \returns a mutator object for a CANopen sub-object in the local object
+     * dictionary.
+     */
+    SubObject
+    operator[](uint8_t subidx) { return SubObject(master_, idx_, subidx); }
+
+    /*!
+     * Returns an accessor object that provides read-only access to the
+     * specified CANopen sub-object in the local object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * \param subidx the object sub-index.
+     *
+     * \returns an accessor object for a CANopen sub-object in the local object
+     * dictionary.
+     */
+    ConstSubObject
+    operator[](uint8_t subidx) const {
+      return ConstSubObject(master_, idx_, subidx);
+    }
+
+   private:
+    Object(BasicMaster* master, uint16_t idx) : master_(master), idx_(idx) {}
+
+    BasicMaster* master_;
+    uint16_t idx_;
+  };
+
+  /*!
+   * An accessor providing read-only access to a CANopen object in a local
+   * object dictionary.
+   */
+  class ConstObject {
+    friend class BasicMaster;
+
+   public:
+    /*!
+     * Returns an accessor object that provides read-only access to the
+     * specified CANopen sub-object in the local object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * \param subidx the object sub-index.
+     *
+     * \returns an accessor object for a CANopen sub-object in the local object
+     * dictionary.
+     */
+    ConstSubObject
+    operator[](uint8_t subidx) const {
+      return ConstSubObject(master_, idx_, subidx);
+    }
+
+   private:
+    ConstObject(const BasicMaster* master, uint16_t idx)
+        : master_(master), idx_(idx) {}
+
+    const BasicMaster* master_;
+    uint16_t idx_;
+  };
+
   /*!
    * Creates a new CANopen master. After creation, the master is in the NMT
    * 'Initialisation' state and does not yet create any services or perform any
@@ -64,6 +342,31 @@ class DriverBase;
       uint8_t id = 0xff);
 
   virtual ~BasicMaster();
+
+  /*!
+   * Returns a mutator object that provides read/write access to the specified
+   * CANopen object in the local object dictionary. Note that this function
+   * succeeds even if the object does not exist.
+   *
+   * \param idx the object index.
+   *
+   * \returns a mutator object for a CANopen object in the local object
+   * dictionary.
+   */
+  Object operator[](uint16_t idx) { return Object(this, idx); }
+
+  /*!
+   * Returns an accessor object that provides read-only access to the specified
+   * CANopen object in the local object dictionary. Note that this function
+   * succeeds even if the object does not exist.
+   *
+   * \param idx the object index.
+   *
+   * \returns an accessor object for a CANopen object in the local object
+   * dictionary.
+   */
+  ConstObject
+  operator[](uint16_t idx) const { return ConstObject(this, idx); }
 
   /*!
    * Indicates the occurrence of an error event on a remote node and triggers
