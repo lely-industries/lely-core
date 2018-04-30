@@ -9,6 +9,7 @@ if !NO_COAPP_MASTER
 src += master.cpp
 endif
 src += node.cpp
+src += sdo.cpp
 src += sdo_error.cpp
 if !NO_COAPP_SLAVE
 src += slave.cpp

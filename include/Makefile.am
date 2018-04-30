@@ -12,6 +12,7 @@ if !NO_COAPP_MASTER
 inc += lely/coapp/master.hpp
 endif
 inc += lely/coapp/node.hpp
+inc += lely/coapp/sdo.hpp
 inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
