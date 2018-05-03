@@ -331,6 +331,136 @@ class LELY_COAPP_EXTERN BasicDriver : private DriverBase {
    */
   void Error() { master.Error(id()); }
 
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint16_t idx, uint8_t subidx, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint16_t idx, uint8_t subidx, F&& con) {
+    auto exec = GetExecutor();
+    master.SubmitRead<T>(id(), idx, subidx, exec, ::std::forward<F>(con));
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint16_t idx, uint8_t subidx, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint16_t idx, uint8_t subidx, F&& con, ::std::error_code& ec) {
+    auto exec = GetExecutor();
+    master.SubmitRead<T>(id(), idx, subidx, exec, ::std::forward<F>(con), ec);
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint16_t idx, uint8_t subidx, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint16_t idx, uint8_t subidx, F&& con,
+             const Sdo::duration& timeout) {
+    auto exec = GetExecutor();
+    master.SubmitRead<T>(id(), idx, subidx, exec, ::std::forward<F>(con),
+                         timeout);
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation. This function reads the
+   * value of a sub-object in the remote object dictionary.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint16_t idx, uint8_t subidx, F&& con,
+             const Sdo::duration& timeout, ::std::error_code& ec) {
+    auto exec = GetExecutor();
+    master.SubmitRead<T>(id(), idx, subidx, exec, ::std::forward<F>(con),
+                         timeout, ec);
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con) {
+    auto exec = GetExecutor();
+    master.SubmitWrite<T>(id(), idx, subidx, ::std::forward<T>(value), exec,
+                          ::std::forward<F>(con));
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+              ::std::error_code& ec) {
+    auto exec = GetExecutor();
+    master.SubmitWrite<T>(id(), idx, subidx, ::std::forward<T>(value), exec,
+                          ::std::forward<F>(con), ec);
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+              const Sdo::duration& timeout) {
+    auto exec = GetExecutor();
+    master.SubmitWrite<T>(id(), idx, subidx, ::std::forward<T>(value), exec,
+                          ::std::forward<F>(con), timeout);
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation. This function writes
+   * a value to a sub-object in the remote object dictionary.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+              const Sdo::duration& timeout, ::std::error_code& ec) {
+    auto exec = GetExecutor();
+    master.SubmitWrite<T>(id(), idx, subidx, ::std::forward<T>(value), exec,
+                          ::std::forward<F>(con), timeout, ec);
+  }
+
   //! A reference to the master with which this driver is registered.
   BasicMaster& master;
 

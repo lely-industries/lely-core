@@ -22,7 +22,9 @@
 #ifndef LELY_COCPP_MASTER_HPP_
 #define LELY_COCPP_MASTER_HPP_
 
+#include <lely/coapp/detail/mutex.hpp>
 #include <lely/coapp/node.hpp>
+#include <lely/coapp/sdo.hpp>
 
 #include <map>
 
@@ -323,6 +325,38 @@ class DriverBase;
   };
 
   /*!
+   * The signature of the callback function invoked on completion of an
+   * asynchronous read (SDO upload) operation from a remote object dictionary.
+   * Note that the callback function SHOULD NOT throw exceptions. Since it is
+   * invoked from C, any exception that is thrown cannot be caught and will
+   * result in a call to `std::terminate()`.
+   *
+   * \param id     the node-ID (in the range[1..127]).
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ec     the SDO abort code (0 on success).
+   * \param value  the value received from the SDO server.
+   */
+  template <class T>
+  using ReadSignature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                             ::std::error_code ec, T value);
+
+  /*!
+   * The signature of the callback function invoked on completion of an
+   * asynchronous write (SDO download) operation to a remote object dictionary.
+   * Note that the callback function SHOULD NOT throw exceptions. Since it is
+   * invoked from C, any exception that is thrown cannot be caught and will
+   * result in a call to `std::terminate()`.
+   *
+   * \param id     the node-ID (in the range[1..127]).
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ec     the SDO abort code (0 on success).
+   */
+  using WriteSignature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                              ::std::error_code ec);
+
+  /*!
    * Creates a new CANopen master. After creation, the master is in the NMT
    * 'Initialisation' state and does not yet create any services or perform any
    * communication. Call #Reset() to start the boot-up process.
@@ -394,6 +428,245 @@ class DriverBase;
    * \see GetTimeout()
    */
   void SetTimeout(const ::std::chrono::milliseconds& timeout);
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  void
+  SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req) {
+    ::std::error_code ec;
+    SubmitRead<T>(id, req, ec);
+    if (ec)
+      throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitRead");
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation.
+   *
+   * \param id  the node-ID (in the range[1..127]).
+   * \param req the SDO upload request.
+   * \param ec  the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *            client-SDO is available.
+   */
+  template <class T>
+  void
+  SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req, ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      sdo->SubmitUpload<T>(req);
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
+             F&& con) {
+    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), GetTimeout());
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
+             F&& con, ::std::error_code& ec) {
+    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), GetTimeout(),
+                  ec);
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
+             F&& con, const Sdo::duration& timeout) {
+    ::std::error_code ec;
+    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), timeout, ec);
+    if (ec)
+      throw SdoError(netid(), id, idx, subidx, ec, "SubmitRead");
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation. This function reads the
+   * value of a sub-object in a remote object dictionary.
+   *
+   * \param id      the node-ID (in the range[1..127]).
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param exec    the executor used to execute the confirmation function.
+   * \param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
+             F&& con, const Sdo::duration& timeout, ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      if (con) {
+        sdo->SubmitUpload<T>(idx, subidx, exec,
+            [=](uint16_t idx, uint8_t subidx, ::std::error_code ec, T value) {
+              con(id, idx, subidx, ec, ::std::move(value));
+            }, timeout);
+      } else {
+        sdo->SubmitUpload<T>(idx, subidx, exec, nullptr, timeout);
+      }
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  void
+  SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req) {
+    ::std::error_code ec;
+    SubmitWrite<T>(id, req, ec);
+    if (ec)
+      throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitWrite");
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation.
+   *
+   * \param id  the node-ID (in the range[1..127]).
+   * \param req the SDO download request.
+   * \param ec  the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *            client-SDO is available.
+   */
+  template <class T>
+  void
+  SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req, ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      sdo->SubmitDownload<T>(req);
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value, aio::ExecutorBase& exec, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
+              aio::ExecutorBase& exec, F&& con) {
+    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
+                ::std::forward<F>(con), GetTimeout());
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value, aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
+              aio::ExecutorBase& exec, F&& con, ::std::error_code& ec) {
+    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
+                ::std::forward<F>(con), GetTimeout(), ec);
+  }
+
+  /*!
+   * Equivalent to
+   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value, aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
+              aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout) {
+    ::std::error_code ec;
+    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
+                ::std::forward<F>(con), timeout, ec);
+    if (ec)
+      throw SdoError(netid(), id, idx, subidx, ec, "SubmitWrite");
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation. This function writes
+   * a value to a sub-object in a remote object dictionary.
+   *
+   * \param id      the node-ID (in the range[1..127]).
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param exec    the executor used to execute the confirmation function.
+   * \param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
+      aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout,
+      ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      if (con) {
+        sdo->SubmitDownload(idx, subidx, ::std::forward<T>(value), exec,
+            [=](uint16_t idx, uint8_t subidx, ::std::error_code ec) {
+              con(id, idx, subidx, ec);
+            }, timeout);
+      } else {
+        sdo->SubmitDownload(idx, subidx, ::std::forward<T>(value), exec,
+                            nullptr, timeout);
+      }
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
 
   /*!
    * Registers a driver for a remote CANopen node. If an event occurs for that
@@ -593,6 +866,20 @@ class DriverBase;
    */
   void OnEmcy(uint8_t id, uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept
       override;
+
+  /*!
+   * Returns a pointer to the default client-SDO service for the given node. If
+   * the master is not in the pre-operational or operational state, or if the
+   * master needs the client-SDO to boot the node, a null pointer is returned.
+   */
+  Sdo* GetSdo(uint8_t id);
+
+  /*!
+   * Aborts any ongoing or pending SDO requests for the specified slave.
+   *
+   * \param id the node-ID (0 for all nodes, [1..127] for a specific slave).
+   */
+  void CancelSdo(uint8_t id = 0);
 
  private:
   struct Impl_;

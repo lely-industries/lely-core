@@ -26,7 +26,6 @@
 #if !LELY_NO_COAPP_MASTER
 
 #include <lely/coapp/detail/chrono.hpp>
-#include <lely/coapp/detail/mutex.hpp>
 #include <lely/coapp/driver.hpp>
 
 #include <cassert>
@@ -47,6 +46,7 @@ struct BasicMaster::Impl_ {
   void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
 
   BasicMaster* self;
+  ::std::map<uint8_t, Sdo> sdos;
 };
 
 LELY_COAPP_EXPORT
@@ -122,8 +122,10 @@ BasicMaster::OnCanState(CanState new_state, CanState old_state) noexcept {
 
 LELY_COAPP_EXPORT void
 BasicMaster::OnCommand(NmtCommand cs) noexcept {
-  // TODO: Abort all ongoing and pending SDO requests unless the master is in
-  // the pre-operational or operational state.
+  // Abort all ongoing and pending SDO requests unless the master is in the
+  // pre-operational or operational state.
+  if (cs != NmtCommand::ENTER_PREOP && cs != NmtCommand::START)
+    CancelSdo();
   for (const auto& it : *this) {
     detail::UnlockGuard<BasicLockable> unlock(*this);
     it.second->OnCommand(cs);
@@ -150,8 +152,10 @@ BasicMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
 
 LELY_COAPP_EXPORT void
 BasicMaster::OnState(uint8_t id, NmtState st) noexcept {
-  // TODO: Abort any ongoing or pending SDO requests for the slave, since the
-  // master MAY need the Client-SDO service for the NMT 'boot slave' process.
+  // Abort any ongoing or pending SDO requests for the slave, since the master
+  // MAY need the Client-SDO service for the NMT 'boot slave' process.
+  if (st == NmtState::BOOTUP)
+    CancelSdo(id);
   auto it = find(id);
   if (it != end()) {
     detail::UnlockGuard<BasicLockable> unlock(*this);
@@ -191,7 +195,8 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
 LELY_COAPP_EXPORT void
 BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
   assert(nmt()->isBooting(id));
-  // TODO: Disable Client-SDO.
+  // Destroy the Client-SDO, since it will be taken over by the master.
+  impl_->sdos.erase(id);
   // Ignore any errors, since we cannot handle them here.
   nmt()->cfgRes(id, ec.value());
 }
@@ -257,6 +262,36 @@ BasicMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er, uint8_t msef[5])
   }
 }
 
+LELY_COAPP_EXPORT Sdo*
+BasicMaster::GetSdo(uint8_t id) {
+  if (!id || id > 0x7f)
+    throw ::std::out_of_range("invalid node-ID: " + ::std::to_string(id));
+  // The Client-SDO service only exists in the pre-operational and operational
+  // state.
+  auto st = nmt()->getSt();
+  if (st != CO_NMT_ST_PREOP && st != CO_NMT_ST_START)
+    return nullptr;
+  // During the 'update configuration' step of the NMT 'boot slave' process, a
+  // Client-SDO queue may be available.
+  auto it = impl_->sdos.find(id);
+  if (it != impl_->sdos.end())
+    return &it->second;
+  // The master needs the Client-SDO service during the NMT 'boot slave'
+  // process.
+  if (nmt()->isBooting(id))
+    return nullptr;
+  // Return a Client-SDO queue for the default SDO.
+  return &(impl_->sdos[id] = Sdo(nmt()->getNet(), id));
+}
+
+LELY_COAPP_EXPORT void
+BasicMaster::CancelSdo(uint8_t id) {
+  if (id)
+    impl_->sdos.erase(id);
+  else
+    impl_->sdos.clear();
+}
+
 BasicMaster::Impl_::Impl_(BasicMaster* self_, CONMT* nmt) : self(self_) {
   nmt->setNgInd<Impl_, &Impl_::OnNgInd>(this);
   nmt->setBootInd<Impl_, &Impl_::OnBootInd>(this);
@@ -283,8 +318,14 @@ BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st, char es)
 }
 
 void
-BasicMaster::Impl_::OnCfgInd(CONMT*, uint8_t id, COCSDO*) noexcept {
-  // TODO: Enable Client-SDO for the 'update configuration' process.
+BasicMaster::Impl_::OnCfgInd(CONMT*, uint8_t id, COCSDO* sdo) noexcept {
+  // Create a Client-SDO for the 'update configuration' process.
+  try {
+    sdos[id] = Sdo(sdo);
+  } catch (...) {
+    self->ConfigResult(id, SdoErrc::ERROR);
+    return;
+  }
   self->OnConfig(id);
 }
 
