@@ -28,6 +28,9 @@
 #include <lely/coapp/detail/chrono.hpp>
 #include <lely/coapp/driver.hpp>
 
+#include <algorithm>
+#include <array>
+
 #include <cassert>
 
 #include <lely/co/dev.hpp>
@@ -290,6 +293,242 @@ BasicMaster::CancelSdo(uint8_t id) {
     impl_->sdos.erase(id);
   else
     impl_->sdos.clear();
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnCanError(CanError error) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnCanError(error);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnCanState(CanState new_state, CanState old_state) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnCanState(new_state, old_state);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnCommand(NmtCommand cs) noexcept {
+  // Abort all ongoing and pending SDO requests unless the master is in the
+  // pre-operational or operational state.
+  if (cs != NmtCommand::ENTER_PREOP && cs != NmtCommand::START)
+    CancelSdo();
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnCommand(cs);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnNodeGuarding(occurred);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnHeartbeat(occurred);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnState(uint8_t id, NmtState st) noexcept {
+  // Abort any ongoing or pending SDO requests for the slave, since the master
+  // MAY need the Client-SDO service for the NMT 'boot slave' process.
+  if (st == NmtState::BOOTUP)
+    CancelSdo(id);
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnState(st);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnBoot(uint8_t id, NmtState st, char es, const ::std::string& what)
+    noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnBoot(st, es, what);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnConfig(uint8_t id) noexcept {
+  auto it = find(id);
+  // If no remote interface is registered for this node, the 'update
+  // configuration' process is considered complete.
+  if (it == end()) {
+    ConfigResult(id, ::std::error_code());
+    return;
+  }
+
+  // Let the driver perform the configuration update.
+  DriverBase* driver = it->second;
+  auto op = new aio::TaskWrapper(
+      [=](::std::error_code ec) {
+        if (!ec) {
+          driver->OnConfig(
+            [=](::std::error_code ec) {
+              ::std::lock_guard<BasicLockable> lock(*this);
+              ConfigResult(id, ec);
+            }
+          );
+        } else {
+          ::std::lock_guard<BasicLockable> lock(*this);
+          ConfigResult(id, SdoErrc::ERROR);
+        }
+      });
+  driver->GetExecutor().Post(*op);
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
+                    ::std::size_t n) noexcept {
+  ::std::array<uint8_t, CAN_MAX_LEN> value;
+  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
+                value.begin());
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    // TODO: Ensure lifetime of value.
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec_) {
+          if (!ec_)
+            driver->OnRpdo(num, ec, value.data(), value.size());
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnRpdoError(num, eec, er);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
+                    ::std::size_t n) noexcept {
+  ::std::array<uint8_t, CAN_MAX_LEN> value;
+  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
+                value.begin());
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec_) {
+          if (!ec_)
+            driver->OnTpdo(num, ec, value.data(), value.size());
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnSync(uint8_t cnt) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnSync(cnt);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnSyncError(uint16_t eec, uint8_t er) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnSyncError(eec, er);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnTime(const ::std::chrono::system_clock::time_point& abs_time)
+    noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnTime(abs_time);
+        });
+    driver->GetExecutor().Post(*op);
+  }
+}
+
+LELY_COAPP_EXPORT void
+AsyncMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er, uint8_t msef[5])
+    noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    auto op = new aio::TaskWrapper(
+        [=](::std::error_code ec) {
+          if (!ec)
+            driver->OnEmcy(eec, er, msef);
+        });
+    driver->GetExecutor().Post(*op);
+  }
 }
 
 BasicMaster::Impl_::Impl_(BasicMaster* self_, CONMT* nmt) : self(self_) {

@@ -978,6 +978,144 @@ class DriverBase;
   ::std::unique_ptr<Impl_> impl_;
 };
 
+/*!
+ * An asynchronous CANopen master. When a CANopen event occurs, this master
+ * queues a notification to (the executor of) each registered driver. The master
+ * itself does not block waiting for events to be handled.
+ */
+class AsyncMaster : public BasicMaster {
+ public:
+  using BasicMaster::BasicMaster;
+
+ protected:
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see IoContext::OnCanError(), DriverBase::OnCanError()
+   */
+  void OnCanError(CanError error) noexcept override;
+
+  /*!
+   * The default implementation invokes #lely::canopen::Node::OnCanState() and
+   * queues a notification for each registered driver.
+   *
+   * \see IoContext::OnCanState(), DriverBase::OnCanState()
+   */
+  void OnCanState(CanState new_state, CanState old_state) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers. Unless the master enters the pre-operational or operational state,
+   * all ongoing and pending SDO requests are aborted.
+   *
+   * \see Node::OnCommand(), DriverBase::OnCommand()
+   */
+  void OnCommand(NmtCommand cs) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see BasicMaster::OnNodeGuarding(), DriverBase::OnNodeGuarding()
+   */
+  void OnNodeGuarding(uint8_t id, bool occurred) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for the driver registered
+   * for node \a id.
+   *
+   * \see Node::OnHeartbeat(), DriverBase::OnHeartbeat()
+   */
+  void OnHeartbeat(uint8_t id, bool occurred) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for the driver registered
+   * for node \a id. If a boot-up event (`st == NmtState::BOOTUP`) is detected,
+   * any ongoing or pending SDO requests for the slave are aborted.
+   *
+   * \see Node::OnState(), DriverBase::OnState()
+   */
+  void OnState(uint8_t id, NmtState st) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for the driver registered
+   * for node \a id.
+   *
+   * \see BasicMaster::OnBoot(), DriverBase::OnBoot()
+   */
+  void OnBoot(uint8_t id, NmtState st, char es, const ::std::string& what)
+      noexcept override;
+
+  /*!
+   * The default implementation queues a notification for the driver registered
+   * for node \a id.
+   *
+   * \see BasicMaster::OnConfig(), DriverBase::OnConfig()
+   */
+  void OnConfig(uint8_t id) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnRpdo(), DriverBase::OnRpdo()
+   */
+  void OnRpdo(int num, ::std::error_code ec, const void* p, ::std::size_t n)
+      noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnRpdoError(), DriverBase::OnRpdoError()
+   */
+  void OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnTpdo(), DriverBase::OnTpdo()
+   */
+  void OnTpdo(int num, ::std::error_code ec, const void* p, ::std::size_t n)
+      noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnSync(), DriverBase::OnSync()
+   */
+  void OnSync(uint8_t cnt) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnSyncError(), DriverBase::OnSyncError()
+   */
+  void OnSyncError(uint16_t eec, uint8_t er) noexcept override;
+
+  /*!
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * \see Node::OnTime(), DriverBase::OnTime()
+   */
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
+
+  /*!
+   * The default implementation queues a notification for the driver registered
+   * for node \a id.
+   *
+   * \see Node::OnEmcy(), DriverBase::OnEmcy()
+   */
+  void OnEmcy(uint8_t id, uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept
+      override;
+};
+
 }  // namespace canopen
 
 }  // namespace lely
