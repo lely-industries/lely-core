@@ -153,6 +153,44 @@ Sdo::UploadRequestWrapper<T>::Func_(aio_task* task) noexcept {
     con(idx, subidx, ec, ::std::move(value));
 }
 
+template <class T>
+LELY_COAPP_EXPORT void
+Sdo::AsyncDownloadRequest<T>::OnRequest(Impl_* impl) noexcept {
+  impl->OnRequest<T>(this->idx, this->subidx, this->value);
+}
+
+template <class T>
+LELY_COAPP_EXPORT void
+Sdo::AsyncDownloadRequest<T>::Func_(aio_task* task) noexcept {
+  auto self = static_cast<Sdo::AsyncDownloadRequest<T>*>(task);
+
+  aio::Promise<::std::error_code> promise = ::std::move(self->promise_);
+  auto ec = ErrorCode(self->errc, self->ac);
+  delete self;
+
+  promise.SetValue(ec);
+}
+
+template <class T>
+LELY_COAPP_EXPORT void
+Sdo::AsyncUploadRequest<T>::OnRequest(Impl_* impl) noexcept {
+  impl->OnRequest<T>(this->idx, this->subidx);
+}
+
+template <class T>
+LELY_COAPP_EXPORT void
+Sdo::AsyncUploadRequest<T>::Func_(aio_task* task) noexcept {
+  auto self = static_cast<Sdo::AsyncUploadRequest<T>*>(task);
+
+  aio::Promise<::std::tuple<::std::error_code, T>> promise =
+      ::std::move(self->promise_);
+  auto value = ::std::make_tuple(ErrorCode(self->errc, self->ac),
+                                 ::std::move(self->value));
+  delete self;
+
+  promise.SetValue(value);
+}
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 // BOOLEAN
@@ -160,54 +198,72 @@ template class LELY_COAPP_EXPORT Sdo::DownloadRequest<bool>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<bool>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<bool>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<bool>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<bool>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<bool>;
 
 // INTEGER8
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<int8_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<int8_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<int8_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<int8_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<int8_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<int8_t>;
 
 // INTEGER16
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<int16_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<int16_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<int16_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<int16_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<int16_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<int16_t>;
 
 // INTEGER32
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<int32_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<int32_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<int32_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<int32_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<int32_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<int32_t>;
 
 // UNSIGNED8
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<uint8_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<uint8_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<uint8_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<uint8_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<uint8_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<uint8_t>;
 
 // UNSIGNED16
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<uint16_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<uint16_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<uint16_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<uint16_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<uint16_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<uint16_t>;
 
 // UNSIGNED32
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<uint32_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<uint32_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<uint32_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<uint32_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<uint32_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<uint32_t>;
 
 // REAL32
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<float>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<float>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<float>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<float>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<float>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<float>;
 
 // VISIBLE_STRING
 template class LELY_COAPP_EXPORT Sdo::DownloadRequest<::std::string>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<::std::string>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<::std::string>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<::std::string>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<::std::string>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<::std::string>;
 
 // OCTET_STRING
 template class LELY_COAPP_EXPORT
@@ -217,6 +273,10 @@ template class LELY_COAPP_EXPORT
 Sdo::DownloadRequestWrapper<::std::vector<uint8_t>>;
 template class LELY_COAPP_EXPORT
 Sdo::UploadRequestWrapper<::std::vector<uint8_t>>;
+template class LELY_COAPP_EXPORT
+Sdo::AsyncDownloadRequest<::std::vector<uint8_t>>;
+template class LELY_COAPP_EXPORT
+Sdo::AsyncUploadRequest<::std::vector<uint8_t>>;
 
 // UNICODE_STRING
 template class LELY_COAPP_EXPORT
@@ -227,6 +287,10 @@ template class LELY_COAPP_EXPORT
 Sdo::DownloadRequestWrapper<::std::basic_string<char16_t>>;
 template class LELY_COAPP_EXPORT
 Sdo::UploadRequestWrapper<::std::basic_string<char16_t>>;
+template class LELY_COAPP_EXPORT
+Sdo::AsyncDownloadRequest<::std::basic_string<char16_t>>;
+template class LELY_COAPP_EXPORT
+Sdo::AsyncUploadRequest<::std::basic_string<char16_t>>;
 
 // TIME_OF_DAY
 // TIME_DIFFERENCE
@@ -238,6 +302,8 @@ template class LELY_COAPP_EXPORT Sdo::DownloadRequest<double>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<double>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<double>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<double>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<double>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<double>;
 
 // INTEGER40
 // INTEGER48
@@ -248,6 +314,8 @@ template class LELY_COAPP_EXPORT Sdo::DownloadRequest<int64_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<int64_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<int64_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<int64_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<int64_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<int64_t>;
 
 // UNSIGNED24
 // UNSIGNED40
@@ -259,6 +327,8 @@ template class LELY_COAPP_EXPORT Sdo::DownloadRequest<uint64_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequest<uint64_t>;
 template class LELY_COAPP_EXPORT Sdo::DownloadRequestWrapper<uint64_t>;
 template class LELY_COAPP_EXPORT Sdo::UploadRequestWrapper<uint64_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncDownloadRequest<uint64_t>;
+template class LELY_COAPP_EXPORT Sdo::AsyncUploadRequest<uint64_t>;
 
 #endif  // !DOXYGEN_SHOULD_SKIP_THIS
 

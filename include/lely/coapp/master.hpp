@@ -669,6 +669,98 @@ class DriverBase;
   }
 
   /*!
+   * Equivalent to
+   * #AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id, uint16_t idx, uint8_t subidx, const Sdo::duration& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T>
+  aio::Future<::std::tuple<::std::error_code, T>>
+  AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
+            uint16_t idx, uint8_t subidx) {
+    return AsyncRead<T>(loop, exec, id, idx, subidx, GetTimeout());
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation and returns a future.
+   *
+   * \param loop    the event loop used to create the future.
+   * \param exec    the executor used to create the future. The executor SHOULD
+   *                be based on \a loop.
+   * \param id      the node-ID (in the range[1..127]).
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code and the
+   * received value. Note that if the client-SDO service is not available, the
+   * returned future is invalid.
+   */
+  template <class T>
+  aio::Future<::std::tuple<::std::error_code, T>>
+  AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
+            uint16_t idx, uint8_t subidx, const Sdo::duration& timeout) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    aio::Future<::std::tuple<::std::error_code, T>> future(nullptr);
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      future = sdo->AsyncUpload<T>(loop, exec, idx, subidx, timeout);
+    }
+    return future;
+  }
+
+  /*!
+   * Equivalent to
+   * #AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T>
+  aio::Future<::std::error_code>
+  AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
+             uint16_t idx, uint8_t subidx, T&& value) {
+    return AsyncWrite(loop, exec, id, idx, subidx, ::std::forward<T>(value),
+                      GetTimeout());
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation and returns a future.
+   *
+   * \param loop    the event loop used to create the future.
+   * \param exec    the executor used to create the future. The executor SHOULD
+   *                be based on \a loop.
+   * \param id      the node-ID (in the range[1..127]).
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code. Note that
+   * if the client-SDO service is not available, the returned future is invalid.
+   */
+  template <class T>
+  aio::Future<::std::error_code>
+  AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
+      uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    aio::Future<::std::error_code> future(nullptr);
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      future = sdo->AsyncDownload(loop, exec, idx, subidx,
+                                  ::std::forward<T>(value), timeout);
+    }
+    return future;
+  }
+
+  /*!
    * Registers a driver for a remote CANopen node. If an event occurs for that
    * node, or for the entire CANopen network, the corresponding method of the
    * driver will be invoked.

@@ -23,11 +23,13 @@
 #define LELY_COAPP_SDO_HPP_
 
 #include <lely/aio/exec.hpp>
+#include <lely/aio/future.hpp>
 #include <lely/coapp/detail/type_traits.hpp>
 #include <lely/coapp/sdo_error.hpp>
 
 #include <chrono>
 #include <memory>
+#include <tuple>
 
 namespace lely {
 
@@ -379,6 +381,61 @@ class LELY_COAPP_EXTERN Sdo {
    */
   ::std::size_t Cancel(SdoErrc ac);
 
+  /*!
+   * Queues an asynchronous SDO download request and returns a future.
+   *
+   * \param loop    the event loop used to create the future.
+   * \param exec    the executor used to create the future. The executor SHOULD
+   *                be based on \a loop.
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value,
+      aio::Future<::std::error_code>
+  >::type
+  AsyncDownload(aio::LoopBase& loop, aio::ExecutorBase& exec, int16_t idx,
+                uint8_t subidx, T&& value, const duration& timeout) {
+    auto req = new AsyncDownloadRequest<T>(loop, exec, idx, subidx,
+                                           ::std::forward<T>(value), timeout);
+    Submit(*req);
+    return req->GetFuture();
+  }
+
+  /*!
+   * Queues an asynchronous SDO upload request and returns a future.
+   *
+   * \param loop    the event loop used to create the future.
+   * \param exec    the executor used to create the future. The executor SHOULD
+   *                be based on \a loop.
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code and the
+   * received value.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value,
+      aio::Future<::std::tuple<::std::error_code, T>>
+  >::type
+  AsyncUpload(aio::LoopBase& loop, aio::ExecutorBase& exec, int16_t idx,
+              uint8_t subidx, const duration& timeout) {
+    auto req = new AsyncUploadRequest<T>(loop, exec, idx, subidx, timeout);
+    Submit(*req);
+    return req->GetFuture();
+  }
+
  private:
   template <class T>
   class LELY_COAPP_EXTERN DownloadRequestWrapper
@@ -418,6 +475,51 @@ class LELY_COAPP_EXTERN Sdo {
     static void Func_(aio_task* task) noexcept;
 
     ::std::function<UploadSignature<T>> con_ { nullptr };
+  };
+
+  template <class T>
+  class LELY_COAPP_EXTERN AsyncDownloadRequest
+      : public DownloadRequestBase_<T> {
+   public:
+    template <class U>
+    AsyncDownloadRequest(aio::LoopBase& loop, aio::ExecutorBase& exec,
+        uint16_t idx, int8_t subidx, U&& value, const duration& timeout)
+        : DownloadRequestBase_<T>(exec, &Func_, idx, subidx,
+                                  ::std::forward<U>(value), timeout),
+          promise_(loop, exec) {}
+
+    aio::Future<::std::error_code>
+    GetFuture() noexcept { return promise_.GetFuture(); }
+
+   private:
+    ~AsyncDownloadRequest() = default;
+
+    void OnRequest(Impl_* impl) noexcept override;
+
+    static void Func_(aio_task* task) noexcept;
+
+    aio::Promise<::std::error_code> promise_;
+  };
+
+  template <class T>
+  class LELY_COAPP_EXTERN AsyncUploadRequest : public UploadRequestBase_<T> {
+   public:
+    AsyncUploadRequest(aio::LoopBase& loop, aio::ExecutorBase& exec,
+                       uint16_t idx, int8_t subidx, const duration& timeout)
+        : UploadRequestBase_<T>(exec, &Func_, idx, subidx, timeout),
+          promise_(loop, exec) {}
+
+    aio::Future<::std::tuple<::std::error_code, T>>
+    GetFuture() noexcept { return promise_.GetFuture(); }
+
+   private:
+    ~AsyncUploadRequest() = default;
+
+    void OnRequest(Impl_* impl) noexcept override;
+
+    static void Func_(aio_task* task) noexcept;
+
+    aio::Promise<::std::tuple<::std::error_code, T>> promise_;
   };
 
   void Submit(RequestBase_& req);

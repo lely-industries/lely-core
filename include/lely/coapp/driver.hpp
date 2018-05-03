@@ -461,6 +461,227 @@ class LELY_COAPP_EXTERN BasicDriver : private DriverBase {
                           ::std::forward<F>(con), timeout, ec);
   }
 
+  /*!
+   * Equivalent to
+   * #AsyncRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  aio::Future<::std::tuple<::std::error_code, T>>
+  AsyncRead(uint16_t idx, uint8_t subidx) {
+    auto loop = GetLoop();
+    auto exec = GetExecutor();
+    return master.AsyncRead<T>(loop, exec, id(), idx, subidx);
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation and returns a future.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code and the
+   * received value. Note that if the client-SDO service is not available, the
+   * returned future is invalid.
+   */
+  template <class T>
+  aio::Future<::std::tuple<::std::error_code, T>>
+  AsyncRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout) {
+    auto loop = GetLoop();
+    auto exec = GetExecutor();
+    return master.AsyncRead<T>(loop, exec, id(), idx, subidx, timeout);
+  }
+
+  /*!
+   * Equivalent to
+   * #AsyncWrite(uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  aio::Future<::std::error_code>
+  AsyncWrite(uint16_t idx, uint8_t subidx, T&& value) {
+    auto loop = GetLoop();
+    auto exec = GetExecutor();
+    return master.AsyncWrite(loop, exec, id(), idx, subidx,
+                             ::std::forward<T>(value));
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation and returns a future.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * \returns a future which, on completion, holds the SDO abort code. Note that
+   * if the client-SDO service is not available, the returned future is invalid.
+   */
+  template <class T>
+  aio::Future<::std::error_code>
+  AsyncWrite(uint16_t idx, uint8_t subidx, T&& value,
+             const Sdo::duration& timeout) {
+    auto loop = GetLoop();
+    auto exec = GetExecutor();
+    return master.AsyncWrite(loop, exec, id(), idx, subidx,
+                             ::std::forward<T>(value), timeout);
+  }
+
+  /*!
+   * Equivalent to
+   * #RunRead(uint16_t idx, uint8_t subidx, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  T
+  RunRead(uint16_t idx, uint8_t subidx) {
+    ::std::error_code ec;
+    auto r = RunRead<T>(idx, subidx, ec);
+    if (ec)
+      throw SdoError(netid(), id(), idx, subidx, ec, "RunRead");
+    return r;
+  }
+
+  /*!
+   * Equivalent to
+   * #RunRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  T
+  RunRead(uint16_t idx, uint8_t subidx, ::std::error_code& ec) {
+    T value {};
+    auto future = AsyncRead<T>(idx, subidx);
+    if (future) {
+      auto t = future.Get();
+      ec = ::std::get<0>(t);
+      value = ::std::move(::std::get<1>(t));
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+    return value;
+  }
+
+  /*!
+   * Equivalent to
+   * #RunRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  T
+  RunRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout) {
+    ::std::error_code ec;
+    auto r = RunRead<T>(idx, subidx, timeout, ec);
+    if (ec)
+      throw SdoError(netid(), id(), idx, subidx, ec, "RunRead");
+    return r;
+  }
+
+  /*!
+   * Queues an asynchronous read (SDO upload) operation and runs the event loop
+   * until the operation is complete.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   *
+   * \returns the received value.
+   */
+  template <class T>
+  T
+  RunRead(uint16_t idx, uint8_t subidx, const Sdo::duration& timeout,
+          ::std::error_code& ec) {
+    T value {};
+    auto future = AsyncRead<T>(idx, subidx, timeout);
+    if (future) {
+      auto t = future.Get();
+      ec = ::std::get<0>(t);
+      value = ::std::move(::std::get<1>(t));
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+    return value;
+  }
+
+  /*!
+   * Equivalent to
+   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  void
+  RunWrite(uint16_t idx, uint8_t subidx, T&& value) {
+    ::std::error_code ec;
+    RunWrite(idx, subidx, ::std::forward<T>(value), ec);
+    if (ec)
+      throw SdoError(netid(), id(), idx, subidx, ec, "RunWrite");
+  }
+
+  /*!
+   * Equivalent to
+   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  void
+  RunWrite(uint16_t idx, uint8_t subidx, T&& value, ::std::error_code& ec) {
+    auto future = AsyncWrite(idx, subidx, ::std::forward<T>(value));
+    ec = future ? future.Get() : SdoErrc::NO_SDO;
+  }
+
+  /*!
+   * Equivalent to
+   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  void
+  RunWrite(uint16_t idx, uint8_t subidx, T&& value,
+           const Sdo::duration& timeout) {
+    ::std::error_code ec;
+    RunWrite(idx, subidx, ::std::forward<T>(value), timeout, ec);
+    if (ec)
+      throw SdoError(netid(), id(), idx, subidx, ec, "RunWrite");
+  }
+
+  /*!
+   * Queues an asynchronous write (SDO download) operation and runs the event
+   * loop until the operation is complete.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param value   the value to be written.
+   * \param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * \param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T>
+  void
+  RunWrite(uint16_t idx, uint8_t subidx, T&& value,
+           const Sdo::duration& timeout, ::std::error_code& ec) {
+    auto future = AsyncWrite(idx, subidx, ::std::forward<T>(value), timeout);
+    ec = future ? future.Get() : SdoErrc::NO_SDO;
+  }
+
   //! A reference to the master with which this driver is registered.
   BasicMaster& master;
 
