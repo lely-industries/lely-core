@@ -752,6 +752,32 @@ class LELY_COAPP_EXTERN BasicDriver : private DriverBase {
   uint8_t id_ { 0xff };
 };
 
+namespace detail {
+
+/*!
+ * A base class for #lely::canopen::LoopDriver, containing an event loop and the
+ * associated executor.
+ */
+class LoopDriverBase {
+ protected:
+  aio::Loop loop {};
+  aio::Executor exec { loop };
+};
+
+}  // namespace detail
+
+//! A CANopen driver running its own dedicated event loop in a separate thread.
+class LELY_COAPP_EXTERN LoopDriver
+    : private detail::LoopDriverBase, public BasicDriver {
+ public:
+  LoopDriver(BasicMaster& master, uint8_t id);
+  ~LoopDriver();
+
+ private:
+  struct Impl_;
+  ::std::unique_ptr<Impl_> impl_;
+};
+
 }  // namespace canopen
 
 }  // namespace lely

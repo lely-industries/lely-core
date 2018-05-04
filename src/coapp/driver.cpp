@@ -27,9 +27,26 @@
 
 #include <lely/coapp/driver.hpp>
 
+#if !LELY_NO_THREADS
+#include <thread>
+#endif
+
 namespace lely {
 
 namespace canopen {
+
+#if !LELY_NO_THREADS
+//! The internal implementation of #lely::canopen::LoopDriver.
+struct LoopDriver::Impl_ {
+  explicit Impl_(LoopDriver* self);
+  ~Impl_();
+
+  void Start();
+
+  LoopDriver* self { nullptr };
+  ::std::thread thread;
+};
+#endif
 
 LELY_COAPP_EXPORT
 BasicDriver::BasicDriver(aio::LoopBase& loop, aio::ExecutorBase& exec,
@@ -43,6 +60,40 @@ BasicDriver::~BasicDriver() { master.Erase(*this); }
 
 LELY_COAPP_EXPORT uint8_t
 BasicDriver::netid() const noexcept { return master.netid(); }
+
+#if !LELY_NO_THREADS
+
+LELY_COAPP_EXPORT
+LoopDriver::LoopDriver(BasicMaster& master, uint8_t id)
+    : BasicDriver(loop, exec, master, id), impl_(new Impl_(this)) {}
+
+LELY_COAPP_EXPORT LoopDriver::~LoopDriver() = default;
+
+LoopDriver::Impl_::Impl_(LoopDriver* self_)
+    : self(self_), thread(&Impl_::Start, this) {}
+
+LoopDriver::Impl_::~Impl_() {
+  self->GetLoop().Stop();
+  thread.join();
+}
+
+void
+LoopDriver::Impl_::Start() {
+  auto loop = self->GetLoop();
+  auto exec = self->GetExecutor();
+
+  // Start the event loop. Signal the existance of a fake task to
+  // prevent the loop for stopping early.
+  exec.OnTaskStarted();
+  loop.Run();
+  exec.OnTaskFinished();
+
+  // Finish remaining tasks, but do not block.
+  loop.Restart();
+  loop.RunFor();
+}
+
+#endif  // !LELY_NO_THREADS
 
 }  // namespace canopen
 
