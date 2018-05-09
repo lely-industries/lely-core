@@ -391,6 +391,49 @@ class LELY_COAPP_EXTERN BasicSlave : public Node {
     uint16_t idx_;
   };
 
+   /*!
+   * The signature of the callback function invoked on read (SDO upload) access
+   * to the local object dictionary. Note that the callback function SHOULD NOT
+   * throw exceptions. Since it is invoked from C, any exception that is thrown
+   * cannot be caught and will result in a call to `std::terminate()`. The
+   * #lely::canopen::BasicLockable mutex implemented by this class is held for
+   * the duration of the call.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param value  the current value in the object dictionary. This value can be
+   *               modified before it is returned to the client.
+   *
+   * \returns 0 on success, or an SDO abort code on error.
+   */
+  template <class T>
+  using OnReadSignature =
+      ::std::error_code(uint16_t idx, uint8_t subdx, T& value);
+
+  /*!
+   * The signature of the callback function invoked on write (SDO download)
+   * access to the local object dictionary. Note that the callback function
+   * SHOULD NOT throw exceptions. Since it is invoked from C, any exception that
+   * is thrown cannot be caught and will result in a call to `std::terminate()`.
+   * The #lely::canopen::BasicLockable mutex implemented by this class is held
+   * for the duration of the call.
+   *
+   * \param idx     the object index.
+   * \param subidx  the object sub-index.
+   * \param new_val the value to be written to the object dictionary. This value
+   *                can be modified before it is committed.
+   * \param old_val the current value in the object dictionary (only for
+   *                CANopen basic data types).
+   *
+   * \returns 0 on success, or an SDO abort code on error.
+   */
+  template <class T>
+  using OnWriteSignature = typename ::std::conditional<
+      detail::IsCanopenBasic<T>::value,
+      ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val, T old_val),
+      ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val)
+  >::type;
+
   /*!
    * Returns a mutator object that provides read/write access to the specified
    * CANopen object in the local object dictionary. Note that this function
@@ -415,6 +458,74 @@ class LELY_COAPP_EXTERN BasicSlave : public Node {
    */
   ConstObject
   operator[](uint16_t idx) const { return ConstObject(this, idx); }
+
+
+  /*!
+   * Registers a callback function to be invoked on read (SDO upload) access to
+   * the specified CANopen sub-object in the local object dictionary. Note that
+   * the callback function is not invoked if the access checks fail.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ind    the indication function to be called on read access to the
+   *               specified sub-object.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+  OnRead(uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind);
+
+  /*!
+   * Registers a callback function to be invoked on read (SDO upload) access to
+   * the specified CANopen sub-object in the local object dictionary. Note that
+   * the callback function is not invoked if the access checks fail.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ind    the indication function to be called on read access to the
+   *               specified sub-object.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+  OnRead(uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind,
+         ::std::error_code& ec);
+
+  /*!
+   * Registers a callback function to be invoked on write (SDO download) access
+   * to the specified CANopen sub-object in the local object dictionary. Note
+   * that the callback function is not invoked if the access or range checks
+   * fail.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ind    the indication function to be called on read access to the
+   *               specified sub-object.
+   *
+   * \throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+  OnWrite(uint16_t idx, uint8_t subidx,
+          ::std::function<OnWriteSignature<T>> ind);
+
+  /*!
+   * Registers a callback function to be invoked on write (SDO download) access
+   * to the specified CANopen sub-object in the local object dictionary. Note
+   * that the callback function is not invoked if the access or range checks
+   * fail.
+   *
+   * \param idx    the object index.
+   * \param subidx the object sub-index.
+   * \param ind    the indication function to be called on read access to the
+   *               specified sub-object.
+   * \param ec     on error, the SDO abort code is stored in \a ec.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+  OnWrite(uint16_t idx, uint8_t subidx,
+          ::std::function<OnWriteSignature<T>> ind, ::std::error_code& ec);
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
  private:
