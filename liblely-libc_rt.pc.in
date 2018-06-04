@@ -1,0 +1,5 @@
+Name: liblely-libc_rt
+Description: Realtime Extensions for the C11 and POSIX compatibility library
+URL: https://gitlab.com/lely_industries/@PACKAGE@
+Version: @PACKAGE_VERSION@
+Libs: @RT_LIBS@
