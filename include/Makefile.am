@@ -21,4 +21,6 @@ inc += lely/libc/time.h
 inc += lely/libc/uchar.h
 inc += lely/libc/unistd.h
 
+inc += lely/tap/tap.h
+
 nobase_include_HEADERS = $(inc)

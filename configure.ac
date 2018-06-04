@@ -9,6 +9,12 @@ AM_INIT_AUTOMAKE([foreign])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
+AX_CODE_COVERAGE
+AS_IF([test "$enable_code_coverage" == "yes"], [
+	${CFLAGS=""}
+	${CXXFLAGS=""}
+])
+
 AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
@@ -27,9 +33,19 @@ platform_win32=no
 case "$host" in
 *-*-mingw*)
 	platform_win32=yes
+	case "$build" in
+	*linux*)
+		AC_CHECK_PROGS([BINFMT_EXEC], [wine])
+		AC_CHECK_PROGS([SCRIPT_EXEC], [wine])
+		;;
+	esac
 	;;
 esac
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
+
+AS_IF([test "$host_cpu" != "$build_cpu"], [
+	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
+])
 
 RT_LIBS=
 AM_CONDITIONAL([NO_RT], [false])
@@ -78,6 +94,9 @@ AS_IF([test "$platform_win32" == "yes"], [
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 
+AC_PROG_AWK
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	doc/Doxyfile
@@ -85,9 +104,14 @@ AC_CONFIG_FILES([
 	include/Makefile
 	src/libc/Makefile
 	src/libc/version.rc
+	src/tap/Makefile
+	src/tap/version.rc
 	src/Makefile
+	test/Makefile
+	exec-wrapper.sh
 	Makefile
 	liblely-libc.pc
 	liblely-libc_rt.pc
+	liblely-tap.pc
 ])
 AC_OUTPUT

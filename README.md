@@ -14,6 +14,10 @@ C11-compliant users.
 
 See [doc/libc/overview.md](@ref md_doc_libc_overview) for an overview of the provided functionality.
 
+### Test Anything Protocol (TAP) library (liblely-tap)
+
+liblely-tap provides an implementation of the [Test Anything Protocol].
+
 Download
 --------
 
@@ -134,3 +138,4 @@ limitations under the License.
 [Graphviz]: http://www.graphviz.org/
 [Lely Industries N.V.]: http://www.lely.com
 [MinGW-w64]: http://mingw-w64.org/
+[Test Anything Protocol]: https://testanything.org

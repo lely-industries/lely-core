@@ -2057,6 +2057,11 @@ PREDEFINED             += LELY_LIBC_EXPORT=
 PREDEFINED             += LELY_LIBC_STDATOMIC_INLINE=
 PREDEFINED             += LELY_LIBC_STRINGS_INLINE=
 
+PREDEFINED             += LELY_TAP_EXTERN=
+PREDEFINED             += LELY_TAP_EXPORT=
+
+PREDEFINED             += "__format_printf(i, j)="
+
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
 # macro definition that is found in the sources will be used. Use the PREDEFINED
@@ -2065,6 +2070,8 @@ PREDEFINED             += LELY_LIBC_STRINGS_INLINE=
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 EXPAND_AS_DEFINED      =
+
+EXPAND_AS_DEFINED      += __format_printf
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have
