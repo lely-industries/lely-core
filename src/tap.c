@@ -140,6 +140,7 @@ tap_vprintf(const char *format, va_list ap)
 		case '\r':
 			if (cp + 1 < s + n && cp[1] == '\n')
 				cp++;
+		// ... falls through ...
 		case '\n':
 			fputc('\n', stdout);
 			fputc('#', stdout);

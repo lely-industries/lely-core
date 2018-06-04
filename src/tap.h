@@ -21,7 +21,7 @@
 #ifndef LELY_TAP_INTERN_TAP_H
 #define LELY_TAP_INTERN_TAP_H
 
-#ifdef HAVE_TAPNFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
