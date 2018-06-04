@@ -4,7 +4,7 @@
  *
  * \see lely/util/diag.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -62,6 +62,7 @@ floc_lex(struct floc *at, const char *begin, const char *end)
 		case '\r':
 			if ((!end || cp < end) && *cp == '\n')
 				cp++;
+		// ... falls through ...
 		case '\n':
 			if (at) {
 				at->line++;

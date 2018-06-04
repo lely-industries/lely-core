@@ -4,7 +4,7 @@
  *
  * \see lely/util/shlib.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,7 +28,7 @@
 #ifdef __GNUC__
 // Avoid the warning: "ISO C forbids conversion of object pointer to function
 // pointer type".
-#pragma GCC diagnostic ignored "-pedantic"
+#pragma GCC diagnostic ignored "-Wpedantic"
 // Avoid the warning: "zero-length gnu_printf format string".
 #pragma GCC diagnostic ignored "-Wformat-zero-length"
 #endif
