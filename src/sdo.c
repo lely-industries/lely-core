@@ -4,7 +4,7 @@
  *
  * \see lely/co/sdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -169,6 +169,7 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 		ac = get_errnum() == ERRNUM_NOMEM
 				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
 		set_errc(errc);
+	// ...falls through ...
 	case 0:
 		// Return without an abort code if not all data is present. This
 		// is not an error.

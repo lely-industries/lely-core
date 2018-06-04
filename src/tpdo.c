@@ -4,7 +4,7 @@
  *
  * \see lely/co/tpdo.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -859,6 +859,7 @@ co_tpdo_recv(const struct can_msg *_msg, void *data)
 			can_net_send(pdo->net, &msg);
 			break;
 		}
+	// ... falls through ...
 	case 0xfd: {
 		co_unsigned32_t ac = co_tpdo_init_frame(pdo, &msg);
 		if (__likely(!ac))

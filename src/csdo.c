@@ -4,7 +4,7 @@
  *
  * \see lely/co/csdo.h, src/sdo.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1213,6 +1213,7 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		sdo->par.cobid_res = cobid;
+		break;
 	}
 	case 3: {
 		assert(type == CO_DEFTYPE_UNSIGNED8);

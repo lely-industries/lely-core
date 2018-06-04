@@ -784,8 +784,8 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_SDO_DN:
 		trace("gateway: received 'SDO download' request");
 		return co_gw_recv_sdo_dn(gw, net, node, req);
-		trace("gateway: received 'Configure SDO time-out' request");
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
+		trace("gateway: received 'Configure SDO time-out' request");
 		return co_gw_recv_set_sdo_timeout(gw, net, req);
 #endif
 #ifndef LELY_NO_CO_RPDO
