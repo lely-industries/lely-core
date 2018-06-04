@@ -306,13 +306,12 @@ class LELY_COAPP_EXTERN Sdo {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    */
-  template <class T, class F>
+  template <class T, class F, class U = typename ::std::decay<T>::type>
   typename ::std::enable_if<
-      detail::IsCanopenType<typename ::std::decay<T>::type>::value
+      detail::IsCanopenType<typename ::std::decay<U>::type>::value
   >::type
   SubmitDownload(uint16_t idx, uint8_t subidx, T&& value,
                  aio::ExecutorBase& exec, F&& con, const duration& timeout) {
-    using U = typename ::std::decay<T>::type;
     auto req = new DownloadRequestWrapper<U>(idx, subidx,
         ::std::forward<T>(value), exec, ::std::forward<F>(con), timeout);
     Submit(*req);
@@ -397,13 +396,13 @@ class LELY_COAPP_EXTERN Sdo {
    *
    * \returns a future which, on completion, holds the SDO abort code.
    */
-  template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value,
+  template <class T, class U = typename ::std::decay<T>::type>
+  typename ::std::enable_if<detail::IsCanopenType<U>::value,
       aio::Future<::std::error_code>
   >::type
   AsyncDownload(aio::LoopBase& loop, aio::ExecutorBase& exec, int16_t idx,
                 uint8_t subidx, T&& value, const duration& timeout) {
-    auto req = new AsyncDownloadRequest<T>(loop, exec, idx, subidx,
+    auto req = new AsyncDownloadRequest<U>(loop, exec, idx, subidx,
                                            ::std::forward<T>(value), timeout);
     Submit(*req);
     return req->GetFuture();

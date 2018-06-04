@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([C++ CANopen application library], [0.1.0], [], [lely-coapp])
+AC_INIT([C++ CANopen application library], [0.1.1], [], [lely-coapp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign subdir-objects])

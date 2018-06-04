@@ -7,6 +7,6 @@ Name: lib@PACKAGE@
 Description: @PACKAGE_NAME@
 URL: https://gitlab.com/lely_industries/coapp
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc >= 1.4 liblely-aio >= 1.0 liblely-co >= 1.5
+Requires: liblely-libc >= 1.4 liblely-aio >= 0.1 liblely-co >= 1.5
 Cflags: -I${includedir}
 Libs: -L${libdir} -l@PACKAGE@
