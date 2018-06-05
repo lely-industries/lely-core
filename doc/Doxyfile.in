@@ -773,6 +773,7 @@ WARN_LOGFILE           =
 
 INPUT                  =
 INPUT                  += @top_srcdir@/README.md
+INPUT                  += @top_srcdir@/doc/can/overview.md
 INPUT                  += @top_srcdir@/doc/libc/overview.md
 INPUT                  += @top_srcdir@/doc/util/overview.md
 INPUT                  += @top_srcdir@/doc/util/object.md
@@ -2052,6 +2053,7 @@ PREDEFINED             += __GNUC__=5
 PREDEFINED             += __GNUC_MINOR__=4
 
 PREDEFINED             += LELY_HAVE_PTHREAD=1
+PREDEFINED             += LELY_HAVE_SOCKET_CAN=1
 
 PREDEFINED             += _POSIX_C_SOURCE=200809L
 PREDEFINED             += _POSIX_MAPPED_FILES=200809L
@@ -2082,6 +2084,10 @@ PREDEFINED             += LELY_UTIL_PHEAP_INLINE=
 PREDEFINED             += LELY_UTIL_PRINT_INLINE=
 PREDEFINED             += LELY_UTIL_RBTREE_INLINE=
 PREDEFINED             += LELY_UTIL_TIME_INLINE=
+
+PREDEFINED             += LELY_CAN_EXTERN=
+PREDEFINED             += LELY_CAN_EXPORT=
+PREDEFINED             += LELY_CAN_BUF_INLINE=
 
 PREDEFINED             += "__format_printf(i, j)="
 

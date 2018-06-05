@@ -14,6 +14,9 @@ test_fbuf_SOURCES = fbuf.c
 bin += test-xtime
 test_xtime_SOURCES = xtime.c
 
+bin += test-net
+test_net_SOURCES = net.c
+
 EXTRA_DIST =
 EXTRA_DIST += config.ini
 
@@ -37,6 +40,7 @@ LDADD =
 LDADD += $(top_builddir)/src/libc/liblely-libc.la
 LDADD += $(top_builddir)/src/tap/liblely-tap.la
 LDADD += $(top_builddir)/src/util/liblely-util.la
+LDADD += $(top_builddir)/src/can/liblely-can.la
 if CODE_COVERAGE_ENABLED
 LDADD += $(CODE_COVERAGE_LIBS)
 endif

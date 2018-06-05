@@ -1,4 +1,5 @@
 EXTRA_DIST =
+EXTRA_DIST += can/overview.md
 EXTRA_DIST += libc/overview.md
 EXTRA_DIST += logo.png
 
