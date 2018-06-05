@@ -1,5 +1,5 @@
-Overview
-========
+Utilities library overview
+==========================
 
 Data structures
 ---------------

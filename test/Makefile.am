@@ -3,30 +3,30 @@ bin =
 bin += test-tap
 test_tap_SOURCES = tap.c
 
-bin += test-config
-test_config_SOURCES = config.c
-bin += test-endian
-test_endian_SOURCES = endian.c
-bin += test-c_factory
-test_c_factory_SOURCES = c_factory.cpp
-bin += test-fbuf
-test_fbuf_SOURCES = fbuf.c
-bin += test-xtime
-test_xtime_SOURCES = xtime.c
+bin += test-util-config
+test_util_config_SOURCES = util-config.c
+bin += test-util-endian
+test_util_endian_SOURCES = util-endian.c
+bin += test-util-c_factory
+test_util_c_factory_SOURCES = util-c_factory.cpp
+bin += test-util-fbuf
+test_util_fbuf_SOURCES = util-fbuf.c
+bin += test-util-xtime
+test_util_xtime_SOURCES = util-xtime.c
 
-bin += test-net
-test_net_SOURCES = net.c
+bin += test-can-net
+test_can_net_SOURCES = can-net.c
 
-bin += test-cxx
-test_cxx_SOURCES = cxx.cpp
-bin += test-poll
-test_poll_SOURCES = poll.c
+bin += test-io-cxx
+test_io_cxx_SOURCES = io-cxx.cpp
+bin += test-io-poll
+test_io_poll_SOURCES = io-poll.c
 
 EXTRA_DIST =
-EXTRA_DIST += config.ini
+EXTRA_DIST += util-config.ini
 
 CLEANFILES =
-CLEANFILES += fbuf.dat
+CLEANFILES += util-fbuf.dat
 
 check_PROGRAMS = $(bin)
 

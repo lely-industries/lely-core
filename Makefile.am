@@ -16,6 +16,7 @@ if !NO_RT
 pkgconfig_DATA += liblely-libc_rt.pc
 endif
 pkgconfig_DATA += liblely-tap.pc
+pkgconfig_DATA += liblely-util.pc
 
 if CODE_COVERAGE_ENABLED
 @CODE_COVERAGE_RULES@

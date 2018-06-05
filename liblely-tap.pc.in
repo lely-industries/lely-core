@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: liblely-tap
-Description: Test Anything Protocol (TAP) library
+Description: Lely Test Anything Protocol (TAP) library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
 Requires: liblely-libc >= @PACKAGE_VERSION@

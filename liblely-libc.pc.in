@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: liblely-libc
-Description: C11 and POSIX compatibility library
+Description: Lely C11 and POSIX compatibility library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
 Requires: liblely-libc_rt >= @PACKAGE_VERSION@

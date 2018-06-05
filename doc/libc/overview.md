@@ -1,5 +1,5 @@
-Overview
-========
+C11 and POSIX compatibility library overview
+============================================
 
 The C11 and POSIX compatibility library provides:
 - `static_assert()`: lely/libc/assert.h

@@ -1,5 +1,5 @@
-Overview
-========
+I/O library overview
+====================
 
 All I/O devices are represented by the same handle (#io_handle_t,
 see lely/io/io.h), providing a uniform interface. This handle is a

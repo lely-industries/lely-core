@@ -1,5 +1,5 @@
-Overview
-========
+CAN library overview
+====================
 
 The generic CAN message type is struct #can_msg (see lely/can/msg.h). This
 struct can represent both CAN and CAN FD frames (if CAN FD support is enabled).

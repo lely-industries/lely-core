@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: liblely-util
-Description: Utilities library
+Description: Lely Utilities library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
 Requires: liblely-libc >= @PACKAGE_VERSION@

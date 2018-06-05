@@ -124,6 +124,10 @@ Once the build system is configured, the library can be built with
 
     $ make
 
+The test suite can be run with
+
+    $ make check
+
 Run
 
     $ make html

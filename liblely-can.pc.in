@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: liblely-can
-Description: CAN library
+Description: Lely CAN library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
 Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-util >= @PACKAGE_VERSION@

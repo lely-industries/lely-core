@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FILENAME	"fbuf.dat"
+#define FILENAME	"util-fbuf.dat"
 
 #define SIZE	1024
 

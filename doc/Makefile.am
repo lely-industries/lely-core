@@ -2,6 +2,9 @@ EXTRA_DIST =
 EXTRA_DIST += can/overview.md
 EXTRA_DIST += io/overview.md
 EXTRA_DIST += libc/overview.md
+EXTRA_DIST += util/callback.md
+EXTRA_DIST += util/object.md
+EXTRA_DIST += util/overview.md
 EXTRA_DIST += logo.png
 
 if HAVE_DOXYGEN
