@@ -33,6 +33,16 @@ different drivers and an interface designed to simplify CAN frame handling.
 See [doc/can/overview.md](@ref md_doc_can_overview) for an overview of the
 provided functionality.
 
+### I/O library (liblely-io)
+
+liblely-io provides uniform, platform-independent I/O interface for CAN devices,
+regular files, serial I/O devices and network sockets. Depending on the
+platform, some or all of these devices can be polled for events, allowing the
+use of the reactor pattern.
+
+See [doc/io/overview.md](@ref md_doc_io_overview) for an overview of the
+provided functionality.
+
 Download
 --------
 

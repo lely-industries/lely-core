@@ -9,13 +9,15 @@ except ImportError:
 
 import os
 
-packages = ['lely_can']
+packages = ['lely_can', 'lely_io']
 
 description = {}
 description['lely_can'] = 'Python bindings for the Lely CAN library.'
+description['lely_io'] = 'Python bindings for the Lely I/O library.'
 
 libraries = {}
 libraries['lely_can'] = ['lely-can']
+libraries['lely_io'] = ['lely-io']
 
 package_data = {}
 package_dir = {}

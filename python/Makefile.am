@@ -1,6 +1,5 @@
-EXTRA_DIST = setup.py
-
 src =
+
 src += lely_can/__init__.pxd
 src += lely_can/__init__.py
 src += lely_can/can.pxd
@@ -8,7 +7,29 @@ src += lely_can/can.pyx
 src += lely_can/msg.pxd
 src += lely_can/msg.pyx
 
-EXTRA_DIST += $(src)
+src += lely_io/__init__.pxd
+src += lely_io/__init__.py
+src += lely_io/addr.pxd
+src += lely_io/addr.pyx
+src += lely_io/attr.pxd
+src += lely_io/attr.pyx
+src += lely_io/can.pxd
+src += lely_io/can.pyx
+src += lely_io/file.pxd
+src += lely_io/file.pyx
+src += lely_io/io.pxd
+src += lely_io/io.pyx
+src += lely_io/pipe.pxd
+src += lely_io/pipe.pyx
+src += lely_io/poll.pxd
+src += lely_io/poll.pyx
+src += lely_io/serial.pxd
+src += lely_io/serial.pyx
+src += lely_io/sock.pxd
+src += lely_io/sock.pyx
+
+EXTRA_DIST = $(src)
+EXTRA_DIST += setup.py
 
 CLEANFILES = $(patsubst %.pyx,$(srcdir)/%.c,$(filter %.pyx,$(src)))
 
@@ -16,13 +37,12 @@ build_base = $(realpath $(builddir))/build
 dist_dir = $(realpath $(builddir))/dist
 
 AM_CPPFLAGS = -I$(abs_top_srcdir)/include
-AM_CPPFLAGS += $(liblely_util_CFLAGS)
-AM_CPPFLAGS += $(liblely_libc_CFLAGS)
 
 AM_CFLAGS = -shared -Wno-pedantic
 
 AM_LDFLAGS = -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro
-AM_LDFLAGS += -L$(abs_top_builddir)/src/.libs
+AM_LDFLAGS += -L$(abs_top_builddir)/src/can/.libs
+AM_LDFLAGS += -L$(abs_top_builddir)/src/io/.libs
 
 CYTHON_ENV = \
 	CC="$(CC)" \

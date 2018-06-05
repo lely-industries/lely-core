@@ -18,7 +18,6 @@ AS_IF([test "$enable_code_coverage" == "yes"], [
 AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 AC_LANG([C++])
 AC_PROG_CXX
@@ -78,6 +77,8 @@ AX_PTHREAD([
 	with_pthread=yes
 	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
 ])
+
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 AM_CONDITIONAL([NO_THREADS], [false])
 AC_ARG_ENABLE([threads],
@@ -172,6 +173,28 @@ AS_IF([test "$platform_win32" == "yes"], [
 		])
 	])
 
+	AC_MSG_CHECKING([for WSAGetLastError in ws2_32])
+	ax_winsock_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lws2_32 $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[#include <winsock2.h>]],
+			[[WSAGetLastError();]])],
+		[ax_winsock_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_winsock_ok])
+
+	AC_MSG_CHECKING([for GetAdaptersAddresses in iphlpapi])
+	ax_iphlpapi_ok=no
+	save_LIBS=$LIBS
+	LIBS="-liphlpapi $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <ws2tcpip.h>
+				#include <iphlpapi.h>
+			]], [[GetAdaptersAddresses(0, 0, NULL, NULL, NULL);]])],
+		[ax_iphlpapi_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_iphlpapi_ok])
+
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
 ], [
 	AC_SEARCH_LIBS([dlopen], [dl])
@@ -184,6 +207,26 @@ AS_IF([test "$platform_linux" == "yes"], [
 		AC_DEFINE([LELY_HAVE_SOCKET_CAN], [1], [Define to 1 if you have SocketCAN.])
 	])
 	AC_CHECK_HEADERS([linux/can/error.h])
+
+	AC_CHECK_HEADERS([bluetooth/bluetooth.h bluetooth/rfcomm.h],
+		[], [], [[
+			#ifdef HAVE_BLUETOOTH_BLUETOOTH_H
+			#include <bluetooth/bluetooth.h>
+			#endif
+		]])
+	AC_SEARCH_LIBS([str2ba], [bluetooth])
+
+	AC_CHECK_HEADERS([ifaddrs.h])
+
+	AC_CHECK_HEADERS([linux/can/netlink.h])
+	AC_CHECK_HEADERS([linux/can/raw.h])
+	AC_EGREP_HEADER([CAN_RAW_FD_FRAMES], [linux/can/raw.h],
+		[AC_DEFINE([HAVE_CAN_RAW_FD_FRAMES], [1], [Define to 1 if CAN_RAW_FD_FRAMES is defined.])])
+	AC_CHECK_HEADERS([linux/rtnetlink.h])
+
+	AC_CHECK_HEADERS([sys/epoll.h])
+
+	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 
 AM_CONDITIONAL([HAVE_PYTHON2], [false])
@@ -213,6 +256,8 @@ AC_CONFIG_FILES([
 	python/Makefile
 	src/can/Makefile
 	src/can/version.rc
+	src/io/Makefile
+	src/io/version.rc
 	src/libc/Makefile
 	src/libc/version.rc
 	src/tap/Makefile
@@ -224,6 +269,7 @@ AC_CONFIG_FILES([
 	exec-wrapper.sh
 	Makefile
 	liblely-can.pc
+	liblely-io.pc
 	liblely-libc.pc
 	liblely-libc_rt.pc
 	liblely-tap.pc
