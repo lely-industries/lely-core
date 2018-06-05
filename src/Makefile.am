@@ -1,1 +1,1 @@
-SUBDIRS = libc tap
+SUBDIRS = libc tap util

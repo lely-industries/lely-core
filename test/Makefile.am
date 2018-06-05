@@ -3,6 +3,23 @@ bin =
 bin += test-tap
 test_tap_SOURCES = tap.c
 
+bin += test-config
+test_config_SOURCES = config.c
+bin += test-endian
+test_endian_SOURCES = endian.c
+bin += test-c_factory
+test_c_factory_SOURCES = c_factory.cpp
+bin += test-fbuf
+test_fbuf_SOURCES = fbuf.c
+bin += test-xtime
+test_xtime_SOURCES = xtime.c
+
+EXTRA_DIST =
+EXTRA_DIST += config.ini
+
+CLEANFILES =
+CLEANFILES += fbuf.dat
+
 check_PROGRAMS = $(bin)
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
@@ -19,6 +36,7 @@ endif
 LDADD =
 LDADD += $(top_builddir)/src/libc/liblely-libc.la
 LDADD += $(top_builddir)/src/tap/liblely-tap.la
+LDADD += $(top_builddir)/src/util/liblely-util.la
 if CODE_COVERAGE_ENABLED
 LDADD += $(CODE_COVERAGE_LIBS)
 endif

@@ -31,6 +31,7 @@
 Makefile
 Makefile.in
 *~
+*.dat
 *.def
 *.exe
 *.gcda

@@ -18,6 +18,13 @@ See [doc/libc/overview.md](@ref md_doc_libc_overview) for an overview of the pro
 
 liblely-tap provides an implementation of the [Test Anything Protocol].
 
+### Utilities library (liblely-util)
+
+liblely-util provides a variety of functions and data structures used by, and
+shared between, other Lely libraries.
+
+See [doc/util/overview.md](@ref md_doc_util_overview) for an overview of the provided functionality.
+
 Download
 --------
 
@@ -107,6 +114,21 @@ library. Multithreading support can be disabled by providing the
 preprocessor macro. The implementation is based on pthreads. When building the
 library without the autotools build system, define the `LELY_HAVE_PTHREAD`
 preprocessor macro if pthreads is available.
+
+On POSIX and Windows platforms, liblely-util provides functions to run a process
+in the background as a daemon/service. This functionality can be disabled with
+the `--disable-daemon` option to `configure` or by defining the `LELY_NO_DAEMON`
+preprocessor macro.
+
+The memory pool allocator allocates its memory in pages. By default these pages
+are 64 KiB large and aligned on a 4 KiB boundary. For embedded systems this may
+be far too large. The `LELY_PAGE_SIZE` and `LELY_PAGE_ALIGNMENT` preprocessor
+macros can be used to set the size and alignment of memory pages (in bytes).
+
+Although the Lely core libraries are written in C, C++ interfaces are provided
+for a subset of the functionality. These interfaces can be disabled with the
+`--disable-cxx` option to `configure` or by defining the `LELY_NO_CXX`
+preprocessor macro.
 
 Documentation
 -------------

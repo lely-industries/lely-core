@@ -18,6 +18,11 @@ AS_IF([test "$enable_code_coverage" == "yes"], [
 AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+
+AC_LANG([C++])
+AC_PROG_CXX
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 
 LT_INIT([win32-dll])
 LT_PROG_RC
@@ -85,10 +90,54 @@ AS_IF([test "$enable_threads" == "no"], [
 	LIBS="$PTHREAD_LIBS $LIBS"
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+AM_CONDITIONAL([NO_CXX], [false])
+AC_ARG_ENABLE([cxx],
+	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "$enable_cxx" == "no"], [
+	AM_CONDITIONAL([NO_CXX], [true])
+	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
+])
+
+AM_CONDITIONAL([NO_DAEMON], [false])
+AC_ARG_ENABLE([daemon],
+	AS_HELP_STRING([--disable-daemon], [disable daemon support]))
+AS_IF([test "$enable_daemon" == "no"], [
+	AM_CONDITIONAL([NO_DAEMON], [true])
+	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
+])
+
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
-	LDFLAGS="$LDFLAGS -Wc,-static-libgcc"
+
+	AC_MSG_CHECKING([for PathRemoveFileSpecA in shlwapi])
+	ax_shlwapi_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lshlwapi $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <windows.h>
+				#include <shlwapi.h>
+			]],
+			[[PathRemoveFileSpecA(NULL);]])],
+		[ax_shlwapi_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_shlwapi_ok])
+
+	AC_MSG_CHECKING([for WTSSendMessage in wtsapi32])
+	ax_wtsapi32_ok=no
+	save_LIBS=$LIBS
+	LIBS="-lwtsapi32 $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[
+				#include <windows.h>
+				#include <wtsapi32.h>
+			]],
+			[[WTSSendMessage(WTS_CURRENT_SERVER_HANDLE, 0, NULL, 0, NULL, 0, 0, 0, NULL, FALSE);]])],
+		[ax_wtsapi32_ok=yes], [LIBS=$save_LIBS])
+	AC_MSG_RESULT([$ax_wtsapi32_ok])
+
+	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
+], [
+	AC_SEARCH_LIBS([dlopen], [dl])
 ])
 
 AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
@@ -106,6 +155,8 @@ AC_CONFIG_FILES([
 	src/libc/version.rc
 	src/tap/Makefile
 	src/tap/version.rc
+	src/util/Makefile
+	src/util/version.rc
 	src/Makefile
 	test/Makefile
 	exec-wrapper.sh
@@ -113,5 +164,6 @@ AC_CONFIG_FILES([
 	liblely-libc.pc
 	liblely-libc_rt.pc
 	liblely-tap.pc
+	liblely-util.pc
 ])
 AC_OUTPUT

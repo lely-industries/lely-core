@@ -23,4 +23,49 @@ inc += lely/libc/unistd.h
 
 inc += lely/tap/tap.h
 
+inc += lely/util/def/type.def
+inc += lely/util/bimap.h
+inc += lely/util/bits.h
+inc += lely/util/bitset.h
+if !NO_CXX
+inc += lely/util/c_call.hpp
+inc += lely/util/c_factory.hpp
+inc += lely/util/c_type.hpp
+endif
+inc += lely/util/config.h
+inc += lely/util/cmp.h
+inc += lely/util/cpp.h
+if !NO_DAEMON
+inc += lely/util/daemon.h
+endif
+inc += lely/util/diag.h
+inc += lely/util/endian.h
+inc += lely/util/errnum.h
+if !NO_CXX
+inc += lely/util/exception.hpp
+endif
+inc += lely/util/factory.h
+if !NO_CXX
+inc += lely/util/factory.hpp
+endif
+inc += lely/util/frbuf.h
+inc += lely/util/fwbuf.h
+inc += lely/util/hash.h
+inc += lely/util/htab.h
+inc += lely/util/lex.h
+inc += lely/util/list.h
+inc += lely/util/membuf.h
+inc += lely/util/pheap.h
+inc += lely/util/pool.h
+inc += lely/util/print.h
+inc += lely/util/rand.h
+if !NO_CXX
+inc += lely/util/rand.hpp
+endif
+inc += lely/util/rbtree.h
+inc += lely/util/shlib.h
+inc += lely/util/time.h
+inc += lely/util/util.h
+inc += lely/util/xtime.h
+
 nobase_include_HEADERS = $(inc)
