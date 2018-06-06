@@ -1,0 +1,1 @@
+diff-ignore = "(\.clang-format|\.git*|\.lgtm.yml|\.travis.yml|\.vscode|sonar-project\.properties)"
