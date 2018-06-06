@@ -1,0 +1,6 @@
+usr/lib/python3*/dist-packages/dcf/*.py
+usr/lib/python3*/dist-packages/dcfgen/data/
+usr/lib/python3*/dist-packages/dcfgen/*.py
+usr/lib/python3*/dist-packages/dcf_tools-*.egg-info/
+usr/bin/dcfchk
+usr/bin/dcfgen

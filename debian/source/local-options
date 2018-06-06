@@ -1,0 +1,1 @@
+diff-ignore = "(\.clang-format|\.flake8|\.git*|\.lgtm.yml|\.sonar|\.travis.yml|\.vscode|docker)"

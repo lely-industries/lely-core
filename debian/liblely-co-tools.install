@@ -1,0 +1,6 @@
+etc/cocatd.dcf
+etc/coctl.dcf
+usr/bin/can2udp
+usr/bin/cocat
+usr/bin/cocatd
+usr/bin/coctl

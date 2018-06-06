@@ -1,0 +1,4 @@
+usr/include/lely/can/
+usr/lib/*/liblely-can.a
+usr/lib/*/liblely-can.so
+usr/lib/*/pkgconfig/liblely-can.pc
