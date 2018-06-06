@@ -1,0 +1,4 @@
+usr/include/lely/coapp/
+usr/lib/*/liblely-coapp.a
+usr/lib/*/liblely-coapp.so
+usr/lib/*/pkgconfig/liblely-coapp.pc

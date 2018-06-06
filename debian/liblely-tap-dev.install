@@ -1,0 +1,4 @@
+usr/include/lely/tap/
+usr/lib/*/liblely-tap.a
+usr/lib/*/liblely-tap.so
+usr/lib/*/pkgconfig/liblely-tap.pc

@@ -1,0 +1,4 @@
+usr/include/lely/util/
+usr/lib/*/liblely-util.a
+usr/lib/*/liblely-util.so
+usr/lib/*/pkgconfig/liblely-util.pc

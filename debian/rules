@@ -1,0 +1,49 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/rules/autoreconf.mk
+include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/dpkg/default.mk
+
+DEB_CONFIGURE_EXTRA_FLAGS += --libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH)
+DEB_MAKE_CHECK_TARGET = check
+
+export CFLAGS += -DNDEBUG
+
+ifneq ($(DEB_BUILD_MULTIARCH),$(DEB_HOST_MULTIARCH))
+	PYTHON2_ENV = PYTHONPATH=/usr/lib/python$(shell pyversions -vr)/plat-$(DEB_HOST_MULTIARCH)
+	PYTHON3_ENV = PYTHONPATH=/usr/lib/python$(shell py3versions -vr)/plat-$(DEB_HOST_MULTIARCH)
+ifeq ($(DEB_HOST_GNU_CPU),arm)
+	PYTHON2_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_ARCH_OS)-armv7l
+	PYTHON3_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_ARCH_OS)-armv7l
+else
+	PYTHON2_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_ARCH_OS)-$(DEB_HOST_GNU_CPU)
+	PYTHON3_ENV += _PYTHON_HOST_PLATFORM=$(DEB_HOST_ARCH_OS)-$(DEB_HOST_GNU_CPU)
+endif
+	PYTHON3_ENV += _PYTHON_SYSCONFIGDATA_NAME=_sysconfigdata_m_$(DEB_HOST_ARCH_OS)_$(DEB_HOST_MULTIARCH)
+	export PYTHON2_ENV
+	export PYTHON3_ENV
+endif
+
+pkgs_dbg = $(shell grep '^Package.*\-dbg$$' debian/control | sed -e 's/^Package:\s*//' -e 's/\-dbg$$//')
+
+binary-install/python-lely-can::
+	dh_python2 -ppython-lely-can
+
+binary-install/python-lely-io::
+	dh_python2 -ppython-lely-io
+
+binary-install/python3-lely-can::
+	dh_python3 -ppython3-lely-can
+
+binary-install/python3-lely-io::
+	dh_python3 -ppython3-lely-io
+
+override_dh_strip:
+	@set -x; for pkg in $(pkgs_dbg); do \
+		dh_strip -p$$pkg --dbg-package=$$pkg-dbg; \
+	done
