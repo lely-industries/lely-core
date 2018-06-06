@@ -1,0 +1,8 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lely-core
+Source: https://gitlab.com/lely_industries/lely-core
+
+Files: *
+Copyright: 2013-2019 Lely Industries N.V.
+License: Apache-2.0
+ /usr/share/common-licenses/Apache-2.0

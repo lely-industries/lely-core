@@ -1,0 +1,463 @@
+Source: lely-core
+Section: libs
+Priority: optional
+Maintainer: J. S. Seldenthuis <jseldenthuis@lely.com>
+Build-Depends: debhelper (>= 9), cdbs, dh-autoreconf, dh-python, pkg-config,
+               doxygen, graphviz,
+               python:any, python-setuptools, python-wheel, cython:native, libpython-dev,
+               python3:any, python3-setuptools, python3-wheel, cython3:native, libpython3-dev,
+               libbluetooth-dev
+Standards-Version: 3.9.7
+Homepage: https://gitlab.com/lely_industries/lely-core
+XS-Python-Version: all
+X-Python3-Version: >= 3.4
+
+Package: lely-core-doc
+Section: doc
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Description: Lely core libraries documentation
+ This package contains the doxygen generated documentation.
+
+Package: liblely-libc2
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
+Description: C11 and POSIX compatibility library
+ This package contains the shared library.
+
+Package: liblely-libc2-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-libc2 (= ${binary:Version})
+Multi-Arch: same
+Description: debugging symbols of liblely-libc2
+ This package contains the debugging symbols.
+
+Package: liblely-libc-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-libc2 (= ${binary:Version})
+Suggests: lely-core-doc
+Multi-Arch: same
+Description: C11 and POSIX compatibility library development files
+ This package contains the static library and header files.
+
+Package: liblely-tap2
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-libc2
+Multi-Arch: same
+Description: Test Anything Protocol (TAP) library
+ This package contains the shared library.
+
+Package: liblely-tap2-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-tap2 (= ${binary:Version})
+Multi-Arch: same
+Description: debugging symbols of liblely-tap2
+ This package contains the debugging symbols.
+
+Package: liblely-tap-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-tap2 (= ${binary:Version}),
+         liblely-libc-dev
+Suggests: lely-core-doc
+Multi-Arch: same
+Description: Test Anything Protocol (TAP) library development files
+ This package contains the static library and header files.
+
+Package: liblely-util2
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-libc2
+Multi-Arch: same
+Description: Utilities library
+ This package contains the shared library.
+
+Package: liblely-util2-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-util2 (= ${binary:Version})
+Multi-Arch: same
+Description: debugging symbols of liblely-util2
+ This package contains the debugging symbols.
+
+Package: liblely-util-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-util2 (= ${binary:Version}),
+         liblely-libc-dev
+Suggests: lely-core-doc
+Multi-Arch: same
+Description: Utilities library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-ev2
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-can1,
+         liblely-libc2,
+         liblely-util2
+Description: Event library
+ This package contains the shared library.
+
+Package: liblely-ev2-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-ev2 (= ${binary:Version})
+Description: debug symbols for liblely-ev2
+ This package contains the debug symbols.
+
+Package: liblely-ev-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-ev2 (= ${binary:Version}),
+         liblely-libc-dev,
+         liblely-util-dev
+Suggests: lely-core-doc
+Description: Event library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-io2-2
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-can1,
+         liblely-ev2,
+         liblely-util2,
+         liblely-libc2
+Description: I/O library
+ This package contains the shared library.
+
+Package: liblely-io2-2-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-io2-2 (= ${binary:Version})
+Description: debug symbols for liblely-io2-2
+ This package contains the debug symbols.
+
+Package: liblely-io2-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-io2-2 (= ${binary:Version}),
+         liblely-can-dev,
+         liblely-ev-dev,
+         liblely-util-dev,
+         liblely-libc-dev
+Suggests: lely-core-doc
+Description: I/O library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-co2
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-can1,
+         liblely-util2,
+         liblely-libc2
+Description: CANopen library
+ This package contains the shared library.
+
+Package: liblely-co2-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-co2 (= ${binary:Version})
+Description: debugging symbols of liblely-co2
+ This package contains the debugging symbols.
+
+Package: liblely-co-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-co2 (= ${binary:Version}),
+         liblely-can-dev,
+         liblely-util-dev,
+         liblely-libc-dev
+Recommends: liblely-co-dev-tools
+Suggests: lely-core-doc
+Description: CANopen library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-co-dev-tools
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-co2 (= ${binary:Version}),
+         liblely-can1,
+         liblely-util2,
+         liblely-libc2
+Recommends: liblely-co-dev
+Description: CANopen library tools
+ This package includes the development tools.
+
+Package: liblely-co-tools
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-co2 (= ${binary:Version}),
+         liblely-io1,
+         liblely-can1,
+         liblely-util2,
+         liblely-libc2
+Description: CANopen library tools
+ This package includes the command-line tools.
+
+Package: liblely-coapp2
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-co2,
+         liblely-io2-2,
+         liblely-ev2,
+         liblely-util2,
+         liblely-libc2
+Description: C++ CANopen application library
+ This package contains the shared library.
+
+Package: liblely-coapp2-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-coapp2 (= ${binary:Version})
+Description: debug symbols for liblely-coapp2
+ This package contains the debug symbols.
+
+Package: liblely-coapp-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-coapp2 (= ${binary:Version}),
+         liblely-co-dev,
+         liblely-io2-dev,
+         liblely-ev2-dev,
+         liblely-util-dev,
+         liblely-libc-dev
+Suggests: lely-core-doc
+Description: C++ CANopen application library development files
+ This package contains the development files, static library and header files.
+
+Package: liblely-can1
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         liblely-util2,
+         liblely-libc2
+Description: CAN library
+ This package contains the shared library.
+
+Package: liblely-can1-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-can1 (= ${binary:Version})
+Description: debugging symbols of liblely-can1
+ This package contains the debugging symbols.
+
+Package: liblely-can-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         liblely-can1 (= ${binary:Version}),
+         liblely-util-dev,
+         liblely-libc-dev
+Suggests: lely-core-doc
+Description: CAN library development files
+ This package contains the development files, static library and header files.
+
+Package: python-lely-can
+Section: python
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         ${python:Depends},
+         liblely-can1 (= ${binary:Version})
+Provides: ${python:Provides}
+Description: Python interface to liblely-can
+ This package contains the Python 2 bindings.
+
+Package: python-lely-can-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         python-lely-can
+Description: debugging symbols of python-lely-can
+ This package contains the extension built for the Python debug interpreter.
+
+Package: python-lely-can-dev
+Section: python
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         python-lely-can,
+         liblely-can-dev
+Recommends: cython
+Description: Python interface to liblely-can (development files)
+ This package contains the .pxd files for use with Cython.
+
+Package: python3-lely-can
+Section: python
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends}, ${shlibs:Depends},
+         ${python3:Depends},
+         liblely-can1 (= ${binary:Version})
+Provides: ${python3:Provides}
+Description: Python 3 interface to liblely-can
+ This package contains the Python 2 bindings.
+
+Package: python3-lely-can-dbg
+Section: debug
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         python3-lely-can
+Description: debugging symbols of python3-lely-can
+ This package contains the extension built for the Python debug interpreter.
+
+Package: python3-lely-can-dev
+Section: python
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         python3-lely-can,
+         liblely-can-dev
+Recommends: cython3
+Description: Python 3 interface to liblely-can (development files)
+ This package contains the .pxd files for use with Cython.
+
+Package: liblely-io1
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         liblely-can1,
+         liblely-util2,
+         liblely-libc2,
+         libbluetooth3
+Multi-Arch: same
+Description: I/O library
+ This package contains the shared library.
+
+Package: liblely-io1-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-io1 (= ${binary:Version})
+Multi-Arch: same
+Description: debugging symbols of liblely-io1
+ This package contains the debugging symbols.
+
+Package: liblely-io-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         liblely-io1 (= ${binary:Version}),
+         liblely-util-dev,
+         liblely-libc-dev
+Suggests: lely-core-doc
+Multi-Arch: same
+Description: I/O library development files
+ This package contains the development files, static library and header files.
+
+Package: python-lely-io
+Section: python
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         ${python:Depends},
+         liblely-io1 (= ${binary:Version}),
+         python-lely-can
+Provides: ${python:Provides}
+Multi-Arch: same
+Description: Python interface to liblely-io
+ This package contains the Python 2 bindings.
+
+Package: python-lely-io-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         python-lely-io
+Multi-Arch: same
+Description: debugging symbols of python-lely-io
+ This package contains the extension built for the Python debug interpreter.
+
+Package: python-lely-io-dev
+Section: python
+Architecture: any
+Depends: ${misc:Depends},
+         python-lely-io,
+         liblely-io-dev,
+         python-lely-can-dev
+Recommends: cython
+Multi-Arch: foreign
+Description: Python interface to liblely-io (development files)
+ This package contains the .pxd files for use with Cython.
+
+Package: python3-lely-io
+Section: python
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         ${python3:Depends},
+         liblely-io1 (= ${binary:Version}),
+         python3-lely-can
+Provides: ${python3:Provides}
+Multi-Arch: same
+Description: Python 3 interface to liblely-io
+ This package contains the Python 2 bindings.
+
+Package: python3-lely-io-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         python3-lely-io
+Multi-Arch: same
+Description: debugging symbols of python3-lely-io
+ This package contains the extension built for the Python debug interpreter.
+
+Package: python3-lely-io-dev
+Section: python
+Architecture: any
+Depends: ${misc:Depends},
+         python3-lely-io,
+         liblely-io-dev,
+         python3-lely-can-dev
+Recommends: cython3
+Multi-Arch: foreign
+Description: Python 3 interface to liblely-io (development files)
+ This package contains the .pxd files for use with Cython.
