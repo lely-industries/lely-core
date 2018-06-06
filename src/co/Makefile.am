@@ -54,9 +54,6 @@ src += tpdo.c
 endif
 src += type.c
 src += val.c
-if PLATFORM_WIN32
-src += version.rc
-endif
 if !NO_CO_WTM
 src += wtm.c
 endif
@@ -83,6 +80,9 @@ if CODE_COVERAGE_ENABLED
 liblely_co_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
 liblely_co_la_SOURCES = $(src)
+if PLATFORM_WIN32
+nodist_liblely_co_la_SOURCES = version.rc
+endif
 
 if PLATFORM_WIN32
 .rc.lo:

@@ -18,9 +18,6 @@ src += rtnl.h
 endif
 src += serial.c
 src += sock.c
-if PLATFORM_WIN32
-src += version.rc
-endif
 
 lib_LTLIBRARIES = liblely-io.la
 liblely_io_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -44,6 +41,9 @@ if CODE_COVERAGE_ENABLED
 liblely_io_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
 liblely_io_la_SOURCES = $(src)
+if PLATFORM_WIN32
+nodist_liblely_io_la_SOURCES = version.rc
+endif
 
 if PLATFORM_WIN32
 .rc.lo:

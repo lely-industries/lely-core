@@ -21,9 +21,6 @@ if PLATFORM_WIN32
 src += timer.c
 endif
 endif
-if PLATFORM_WIN32
-src += version.rc
-endif
 
 lib_LTLIBRARIES = liblely-libc.la
 liblely_libc_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -33,6 +30,9 @@ liblely_libc_la_LDFLAGS += -Wl,--output-def,liblely-libc-$(VERSION_MAJOR).def
 endif
 liblely_libc_la_LDFLAGS += -Wl,--as-needed
 liblely_libc_la_SOURCES = $(src)
+if PLATFORM_WIN32
+nodist_liblely_libc_la_SOURCES = version.rc
+endif
 
 if PLATFORM_WIN32
 .rc.lo:

@@ -9,9 +9,6 @@ endif
 if HAVE_VCI
 src += vci.c
 endif
-if PLATFORM_WIN32
-src += version.rc
-endif
 
 lib_LTLIBRARIES = liblely-can.la
 liblely_can_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -34,6 +31,9 @@ if CODE_COVERAGE_ENABLED
 liblely_can_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
 liblely_can_la_SOURCES = $(src)
+if PLATFORM_WIN32
+nodist_liblely_can_la_SOURCES = version.rc
+endif
 
 if PLATFORM_WIN32
 .rc.lo:

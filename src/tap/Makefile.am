@@ -1,9 +1,6 @@
 src =
 src += tap.c
 src += tap.h
-if PLATFORM_WIN32
-src += version.rc
-endif
 
 lib_LTLIBRARIES = liblely-tap.la
 liblely_tap_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -25,6 +22,9 @@ if CODE_COVERAGE_ENABLED
 liblely_tap_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
 liblely_tap_la_SOURCES = $(src)
+if PLATFORM_WIN32
+nodist_liblely_tap_la_SOURCES = version.rc
+endif
 
 if PLATFORM_WIN32
 .rc.lo:
