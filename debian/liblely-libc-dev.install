@@ -1,0 +1,6 @@
+usr/include/lely/libc/
+usr/include/lely/*.h
+usr/lib/*/liblely-libc.a
+usr/lib/*/liblely-libc.so
+usr/lib/*/pkgconfig/liblely-libc.pc
+usr/lib/*/pkgconfig/liblely-libc_rt.pc

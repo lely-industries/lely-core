@@ -1,0 +1,9 @@
+Document: lely-core
+Title: Lely core libraries documentation
+Author: J. S. Seldenthuis <jseldenthuis@lely.com>
+Abstract: This is the doxygen generated documentation.
+Section: Programming/C
+
+Format: HTML
+Index: /usr/share/doc/lely-core-doc/html/index.html
+Files: /usr/share/doc/lely-core-doc/html/*
