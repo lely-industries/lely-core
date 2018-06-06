@@ -1,0 +1,5 @@
+liblely-tap.so.2 liblely-tap2 #MINVER#
+ tap_abort_impl@Base 1.9.0
+ tap_diag_impl@Base 1.9.0
+ tap_plan_impl@Base 1.9.0
+ tap_test_impl@Base 1.9.0
