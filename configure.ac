@@ -383,6 +383,14 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
+	pkgconfig/liblely-can.pc
+	pkgconfig/liblely-co.pc
+	pkgconfig/liblely-io.pc
+	pkgconfig/liblely-libc.pc
+	pkgconfig/liblely-libc_rt.pc
+	pkgconfig/liblely-tap.pc
+	pkgconfig/liblely-util.pc
+	pkgconfig/Makefile
 	python/Makefile
 	src/can/Makefile
 	src/can/version.rc
@@ -403,12 +411,5 @@ AC_CONFIG_FILES([
 	test/Makefile
 	exec-wrapper.sh
 	Makefile
-	liblely-can.pc
-	liblely-co.pc
-	liblely-io.pc
-	liblely-libc.pc
-	liblely-libc_rt.pc
-	liblely-tap.pc
-	liblely-util.pc
 ])
 AC_OUTPUT
