@@ -1,0 +1,46 @@
+Description: Add --install-layout=deb to setup.py for dh_python2 and dh_python3
+Author: J. S. Seldenthuis <jseldenthuis@lely.com>
+
+--- a/python/can/Makefile.am
++++ b/python/can/Makefile.am
+@@ -65,11 +65,11 @@
+ python-install: python-build
+ if HAVE_PYTHON2
+ 	@$(PYTHON2_ENV) $(PYTHON2) $(srcdir)/setup.py \
+-		install --prefix $(DESTDIR)$(prefix) --root /
++		install --prefix $(DESTDIR)$(prefix) --root / --install-layout=deb
+ endif
+ if HAVE_PYTHON3
+ 	@$(PYTHON3_ENV) $(PYTHON3) $(srcdir)/setup.py \
+-		install --prefix $(DESTDIR)$(prefix) --root /
++		install --prefix $(DESTDIR)$(prefix) --root / --install-layout=deb
+ endif
+ 
+ .PHONY: python-sdist
+--- a/python/dcf-tools/Makefile.am
++++ b/python/dcf-tools/Makefile.am
+@@ -35,7 +35,7 @@
+ python-install:
+ if HAVE_PYTHON3
+ 	@$(PYTHON3_ENV) $(PYTHON3) $(srcdir)/setup.py \
+-		install --prefix $(DESTDIR)$(prefix) --root /
++		install --prefix $(DESTDIR)$(prefix) --root / --install-layout=deb
+ endif
+ 
+ .PHONY: python-sdist
+--- a/python/io/Makefile.am
++++ b/python/io/Makefile.am
+@@ -79,11 +79,11 @@
+ python-install: python-build
+ if HAVE_PYTHON2
+ 	@$(PYTHON2_ENV) $(PYTHON2) $(srcdir)/setup.py \
+-		install --prefix $(DESTDIR)$(prefix) --root /
++		install --prefix $(DESTDIR)$(prefix) --root / --install-layout=deb
+ endif
+ if HAVE_PYTHON3
+ 	@$(PYTHON3_ENV) $(PYTHON3) $(srcdir)/setup.py \
+-		install --prefix $(DESTDIR)$(prefix) --root /
++		install --prefix $(DESTDIR)$(prefix) --root / --install-layout=deb
+ endif
+ 
+ .PHONY: python-sdist

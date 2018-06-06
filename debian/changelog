@@ -1,0 +1,867 @@
+lely-core (2.2.6) UNRELEASED; urgency=low
+
+  * Fix PDO mapping issue in dcfgen
+  * Fix argument order in CanNet::on_can_state()
+  * Cancel AsyncWait() operation in USleep() if the event loop is interrupted
+  * Copy heartbeat_producer attribute from object 1017 in dcfgen
+  * Use actual timer in LoopDriver::USleep()
+  * Add public Join() method to LoopDriver
+  * Fix co_sdev_load() complilation in case of LELY_NO_CO_OBJ_NAME
+  * Do not stop the TPDO event timer in case of an error
+  * Fix potential race condition in asynchronous I/O functions
+  * Fix TIME_OF_DAY and TIME_DIFF comparison in co_val_cmp()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 06 Apr 2021 12:24:03 +0200
+
+lely-core (2.2.5) UNRELEASED; urgency=low
+
+  * Synchronous window length (object 1007h) is specified in microseconds
+  * Remove synchronous window support for TPDOs
+  * Only start event timer for event-driven TPDOs
+  * Ignore a synchronous TPDO RTR if no buffered CAN frame is available
+  * Ignore empty UploadFile attribute during SDO requests
+  * Fix overload resolution for when_all() and when_any()
+  * Add Boot() method to master and driver classes
+  * Add protected IsConfig() method to BasicMaster
+  * Add --disable-cython option to configure script
+  * Allow implicit PDOs in dcfchk and dcfgen
+  * Allow duplicate PDO mappings in dcfgen
+  * Add configuration_file slave attribute to dcfgen
+  * Omit object 1F22h in dcfgen output if unused
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 16 Nov 2020 17:46:25 +0100
+
+lely-core (2.2.4) UNRELEASED; urgency=low
+
+  * Accept CAN frames less than 8 bytes in Client-SDO and Server-SDO
+  * Fix deadlock in CAN channel read operations on Linux
+  * Fix submit_read_error() overload in CanRouter
+  * Fix sub-object ParameterValue parsing in dcf-tools
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 14 Oct 2020 14:05:54 +0200
+
+lely-core (2.2.3) UNRELEASED; urgency=low
+
+  * Fix Transmit-PDO indication function
+  * Fix io_can_chan_read() on Linux
+  * Fix parsing of REAL32 and REAL64 values in dcf-tools
+  * Add --disable-doc option to disable Doxygen documentation
+  * Add --disable-python2 and --disable-python3 options
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 09 Oct 2020 15:17:09 +0200
+
+lely-core (2.2.2) UNRELEASED; urgency=low
+
+  * Make dcf-tools more lenient when parsing PDOMapping and ObjectType attributes
+  * Add --no-strict option to dcfgen
+  * Print warning during busy loop in destructors
+  * Fix USleep() exception in LoopDriver
+  * Make CAN channel I/O event handling more robust on Linux
+  * Fix RTR handling in Transmit-PDOs
+  * Fix NMT heartbeat timeout resolution notifications
+  * Fix number-of-nodes counter in red-black tree
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 11 Sep 2020 14:12:43 +0200
+
+lely-core (2.2.1) UNRELEASED; urgency=low
+
+  * Fix missing definitions when using C++17
+  * Fix missing definitions when using Linux 5.2 and later
+  * Fix pkg-config configuration of liblely-io2
+  * Fix GCC 10 warnings
+  * Fix BasicDriver::AsyncDeconfig()
+  * Fix double unlock in io_can_net_get_on_can_state_func()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 20 May 2020 15:50:44 +0200
+
+lely-core (2.2.0) UNRELEASED; urgency=low
+
+  * Add EDS/DCF checker and DCF generator tools
+  * Add asynchronous C++ LSS API
+  * Add support for logical device drivers
+  * Add first CppUTest unit tests
+  * Move coapp::IoContext to io::CanNet and add C implementation
+  * Add access functions for DownloadFile/UploadFile in object dictionary
+  * Add inhibit time to LSS master service
+  * Expose timer queue in BasicMaster and add sleep functions to drivers
+  * Add AsyncDeconfig() for all drivers to BasicMaster
+  * Add C11/C++11-style fiber mutex and condition variable
+  * Allow explicit executor specification for CANopen nodes
+  * Add non-throwing versions of CAN controller methods
+  * Require AsyncMaster for LoopDriver and FiberDriver
+  * Fix SDO request cancellation bug
+  * Fix EDS/DCF parsing of binary CANopen values
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 08 May 2020 11:14:10 +0200
+
+lely-core (2.1.8) UNRELEASED; urgency=low
+
+  * Fix co_sdev_load() complilation in case of LELY_NO_CO_OBJ_NAME
+  * Do not stop the TPDO event timer in case of an error
+  * Fix potential race condition in asynchronous I/O functions
+  * Fix TIME_OF_DAY and TIME_DIFF comparison in co_val_cmp()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 06 Apr 2021 12:21:36 +0200
+
+lely-core (2.1.7) UNRELEASED; urgency=low
+
+  * Synchronous window length (object 1007h) is specified in microseconds
+  * Remove synchronous window support for TPDOs
+  * Only start event timer for event-driven TPDOs
+  * Ignore a synchronous TPDO RTR if no buffered CAN frame is available
+  * Ignore empty UploadFile attribute during SDO requests
+  * Fix overload resolution for when_all() and when_any()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 16 Nov 2020 17:41:14 +0100
+
+lely-core (2.1.6) UNRELEASED; urgency=low
+
+  * Fix Transmit-PDO indication function
+  * Fix io_can_chan_read() on Linux
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 09 Oct 2020 15:15:26 +0200
+
+lely-core (2.1.5) UNRELEASED; urgency=low
+
+  * Fix GCC 10 warnings
+  * Fix RTR handling in Transmit-PDOs
+  * Fix NMT heartbeat timeout resolution notifications
+  * Fix number-of-nodes counter in red-black tree
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 11 Sep 2020 13:59:16 +0200
+
+lely-core (2.1.4) UNRELEASED; urgency=low
+
+  * Create and use Docker images for build and test jobs
+  * Reduce the number of system calls in the timer queue
+  * Fix 64-bit value truncation in bit functions on MinGW
+  * Fix build errors with --disable-canfd
+  * Fix LSS bit rate conversion
+  * Fix Newlib builds
+  * Fix uninitialized value access in timer queue
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 08 May 2020 11:08:44 +0200
+
+lely-core (2.1.3) UNRELEASED; urgency=low
+
+  * Prevent posting the receive queue task twice in the SocketCAN CAN channel
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 06 Mar 2020 14:20:13 +0100
+
+lely-core (2.1.2) UNRELEASED; urgency=low
+
+  * Print diagnostic message for file errors in DCF parsing or SDO access
+  * Fix SYNC start and interval calculation
+  * Use generic_category() instead of system_category() for std::error_code
+  * Add timeout to CAN frame write confirmation in IoContext
+  * Print diagnostic messages for CAN bus errors and state changes in IoContext
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 04 Mar 2020 10:15:50 +0100
+
+lely-core (2.1.1) UNRELEASED; urgency=low
+
+  * Do not send disabled event-driven TPDOs
+  * Add send buffer to IoContext
+  * Fix CompactPDO parsing
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 14 Feb 2020 13:20:41 +0100
+
+lely-core (2.1.0) UNRELEASED; urgency=low
+
+  * Add stackful coroutine support
+  * Add FiberDriver
+  * Add custom callbacks for some CANopen events
+  * Add write (SDO download) notifications to local object dictionary
+  * Add remote PDO mapping in C++
+  * Add TPDO event tracking
+  * Ignore heartbeat errors during NMT boot slave process
+  * Always try to boot mandatory slaves, even without a boot-up message
+  * Add NMT configuration through object 1F20 and 1F22
+  * Add virtual CAN bus
+  * Enable SonarCloud Automatic Analysis
+  * Enable LGTM
+  * Add record/array access callback functions to the slave object dictionary
+  * Add single-producer, single-consumer ring buffer and use it in CAN channels
+  * Simplify Wait() usage in LoopDriver and FiberDriver
+  * Do not use exact-width integer types
+  * Remove __likely()/__unlikely() macros
+  * Remove OnRpdo(), OnRpdoError() and OnTpdo() callbacks from driver classes
+  * Improve SDO error and exception handling
+  * Move LoopDriver to separate header
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 15 Jan 2020 10:24:55 +0100
+
+lely-core (2.0.9) UNRELEASED; urgency=low
+
+  * Fix co_sdev_load() complilation in case of LELY_NO_CO_OBJ_NAME
+  * Do not stop the TPDO event timer in case of an error
+  * Fix potential race condition in asynchronous I/O functions
+  * Fix TIME_OF_DAY and TIME_DIFF comparison in co_val_cmp()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 06 Apr 2021 12:19:52 +0200
+
+lely-core (2.0.8) UNRELEASED; urgency=low
+
+  * Synchronous window length (object 1007h) is specified in microseconds
+  * Remove synchronous window support for TPDOs
+  * Only start event timer for event-driven TPDOs
+  * Ignore a synchronous TPDO RTR if no buffered CAN frame is available
+  * Ignore empty UploadFile attribute during SDO requests
+  * Fix overload resolution for when_all() and when_any()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 16 Nov 2020 17:40:45 +0100
+
+lely-core (2.0.7) UNRELEASED; urgency=low
+
+  * Fix Transmit-PDO indication function
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 09 Oct 2020 15:13:37 +0200
+
+lely-core (2.0.6) UNRELEASED; urgency=low
+
+  * Fix GCC 10 warnings
+  * Fix RTR handling in Transmit-PDOs
+  * Fix NMT heartbeat timeout resolution notifications
+  * Fix number-of-nodes counter in red-black tree
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 11 Sep 2020 13:56:06 +0200
+
+lely-core (2.0.5) UNRELEASED; urgency=low
+
+  * Create and use Docker images for build and test jobs
+  * Reduce the number of system calls in the timer queue
+  * Fix 64-bit value truncation in bit functions on MinGW
+  * Fix build errors with --disable-canfd
+  * Fix LSS bit rate conversion
+  * Fix Newlib builds
+  * Fix uninitialized value access in timer queue
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 08 May 2020 11:02:56 +0200
+
+lely-core (2.0.4) UNRELEASED; urgency=low
+
+  * Fix SYNC start and interval calculation
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 04 Mar 2020 09:58:23 +0100
+
+lely-core (2.0.3) UNRELEASED; urgency=low
+
+  * Report error status B for missing mandatory slaves if object 1F89 is non-zero
+  * Allow empty ParameterName in EDS/DCF files
+  * Be more lenient when parsing EDS/DCF values beginning with "$NODEID+"
+  * Fix bcpybe() and bcpyle() on platforms where CHAR_BIT != 8
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 08 Jan 2020 17:59:52 +0100
+
+lely-core (2.0.2) UNRELEASED; urgency=low
+
+  * Support platforms with CHAR_BIT != 8
+  * Add options to reduce the size of the object dictionary
+  * Optionally reduce the size of the static device description
+  * Make storing concise DCF of the application parameters optional
+  * Minor bug fixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 02 Dec 2019 15:26:42 +0100
+
+lely-core (2.0.1) UNRELEASED; urgency=low
+
+  * Add Coverity scan job
+  * Add cppcheck build job
+  * Remove remaining uses of __likely()/__unlikely()
+  * Minor bug fixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 24 Oct 2019 11:38:44 +0200
+
+lely-core (2.0.0) UNRELEASED; urgency=low
+
+  * Add new event library: liblely-ev
+  * Add new I/O library: liblely-io2
+  * Migrate liblely-coapp to liblely-ev and liblely-io2
+  * Remove liblely-aio
+  * Add <lely/libc/chrono.hpp>
+  * Add <lely/libc/utility.hpp>
+  * Add make_invoker() to liblely-util
+  * Add stackless coroutine implementation to liblely-util
+  * Add C++ error code functions to liblely-util
+  * Add generic C++ result type to liblely-util
+  * Add time functions to liblely-util
+  * Add BasicLockable interface and UnlockGuard to liblely-util
+  * Update CAN frame and CAN bus error definitions
+  * Add ConfigHeartbeat() method to CANopen node
+  * Add Command() and AsyncDeconfig() methods to CANopen master
+  * Add AsyncStopped() method to CANopen driver
+  * Add clang-format configuration for C++
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 11 Jul 2019 20:08:20 +0200
+
+lely-core (1.9.2) UNRELEASED; urgency=low
+
+  * Fix CANopen node-ID checks
+  * Disable liblely-aio and liblely-coapp on Windows
+  * Fix various compiler errors on GCC >= 8
+  * Fix scan-build, cpplint and valgrind warnings
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 11 Jul 2019 13:30:44 +0200
+
+lely-core (1.9.1) UNRELEASED; urgency=low
+
+  * Fix pkg-config scripts
+  * Minor cleanups
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 20 Mar 2019 10:50:07 +0100
+
+lely-core (1.9.0) UNRELEASED; urgency=low
+
+  * Integrate all Lely libraries in a single repository
+  * Initial release of asynchronous I/O library (liblely-aio)
+  * Initial release of C++ CANopen application library (liblely-coapp)
+  * Add Visual Studio Code configuration
+  * Remove support for C++98
+  * Remove support for Microsoft Visual C++ 2013
+  * Remove unused functionality
+  * Remove LELY_*_EXTERN, LELY_*_EXPORT and __cdecl macros
+  * Remove __unused_arg() and __unused_var() macros
+  * Remove __likely() and __unlikely() macros from public headers
+  * Do not depend on the availability of fixed-size numerical types
+  * Base C++ code style on Google C++ Style Guide
+  * Cleanup C and C++ code style
+  * Cleanup doxygen style
+  * Various minor bug fixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 08 Mar 2019 09:19:26 +0100
+
+lely-tap (1.3.2) UNRELEASED; urgency=low
+
+  * Fix warning on GCC 7
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 04 Jun 2018 13:16:46 +0200
+
+lely-can (1.4.0) UNRELEASED; urgency=low
+
+  * Add CAN frame length calculation
+  * Add error frame parsing
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 07 Feb 2018 11:19:14 +0100
+
+lely-co (1.5.1) UNRELEASED; urgency=low
+
+  * Use network-ID from device description in gateway
+  * Improve value handling, especially in C++
+  * Minor documenation fixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 19 Jan 2018 16:11:29 +0100
+
+lely-co (1.5.0) UNRELEASED; urgency=low
+
+  * Add network-ID to device description
+  * Improve value handling, especially in C++
+  * Fix segfault during NMT configuration request
+  * Ignore unexpected SDO frames in idle state
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 12 Jan 2018 17:14:21 +0100
+
+lely-can (1.3.3) UNRELEASED; urgency=low
+
+  * Fix Python bindings
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 09 Aug 2017 10:58:51 +0200
+
+lely-util (1.8.0) UNRELEASED; urgency=low
+
+  * Re-implement factory pattern for C and C++ objects
+  * Add bitset functions
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 25 Jul 2017 16:46:11 +0200
+
+lely-libc (1.4.5) UNRELEASED; urgency=low
+
+  * Include POSIX feature test macros on glibc
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 21 Jul 2017 13:17:25 +0200
+
+lely-co (1.4.1) UNRELEASED; urgency=low
+
+  * Update build scripts
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 21 Jul 2017 13:03:41 +0200
+
+lely-io (1.2.3) UNRELEASED; urgency=low
+
+  * Fix valgrind warning
+  * Update build scripts
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 20 Jul 2017 18:12:40 +0200
+
+lely-can (1.3.2) UNRELEASED; urgency=low
+
+  * Rename IXXAT to VCI
+  * Update build scripts
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 19 Jul 2017 16:24:41 +0200
+
+lely-util (1.7.2) UNRELEASED; urgency=low
+
+  * Add bit counting and manipulation functions
+  * Add random number generator
+  * Add config_foreach() and config_print_ini_*() functions
+  * Add error exception class
+  * Fix Base64 parsing bug
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 18 Jul 2017 17:25:31 +0200
+
+lely-libc (1.4.4) UNRELEASED; urgency=low
+
+  * Fix potential redefinition of sigval and sigevent
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 05 Jul 2017 15:03:00 +0200
+
+lely-tap (1.3.1) UNRELEASED; urgency=low
+
+  * Fix error in tap_test() on C++98
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 05 Jul 2017 12:58:53 +0200
+
+lely-libc (1.4.3) UNRELEASED; urgency=low
+
+  * Fix potential redefinition of pthread_attr_t
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 05 Jul 2017 11:14:12 +0200
+
+lely-libc (1.4.2) UNRELEASED; urgency=low
+
+  * Add setenv()
+  * Improve C++ and POSIX feature detection
+  * Fix timer overrun calculation
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 04 Jul 2017 16:01:56 +0200
+
+lely-co (1.4.0) UNRELEASED; urgency=low
+
+  * Close issue #2, #3, #5, #6, #8 and #9.
+  * Expose default implementation of SDO and NMT callback functions
+  * Allow user to check if the master is booting a slave
+  * Also invoke the SYNC callback on transmission of a SYNC message
+  * Add post-SYNC callback to NMT
+  * Add macros for pre-defined CAN identifiers (for NMT and LSS services)
+  * Improve robustness of NMT boot process
+  * Fix bug preventing NMT boot retries on error status B
+  * Add proper error handling when reading CAN frames
+  * Only invoke (object 1029) error behavior on communication errors
+  * Include next error in manufacturer-specific field when clearing an EMCY
+  * Do not treat heartbeat timeout events as state changes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 08 Jun 2017 16:41:57 +0200
+
+lely-co (1.3.8.1) UNRELEASED; urgency=low
+
+  * Add xenial-i386 build target
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 14:37:25 +0200
+
+lely-io (1.2.2) UNRELEASED; urgency=low
+
+  * Fix various socket address length errors
+  * Save old value of errno in case of EINTR
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 14:06:56 +0200
+
+lely-can (1.3.1.1) UNRELEASED; urgency=low
+
+  * Add xenial-i386 build target
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 13:32:16 +0200
+
+lely-util (1.7.1.1) UNRELEASED; urgency=low
+
+  * Add xenial-i386 build target
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 13:19:35 +0200
+
+lely-tap (1.3.0.1) UNRELEASED; urgency=low
+
+  * Add xenial-i386 build target
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 13:11:41 +0200
+
+lely-libc (1.4.1.1) UNRELEASED; urgency=low
+
+  * Add xenial-i386 build target
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 17 May 2017 12:59:03 +0200
+
+lely-io (1.2.1) UNRELEASED; urgency=low
+
+  * Fix reference count bug in io_accept()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 25 Apr 2017 10:56:12 +0200
+
+lely-co (1.3.8) UNRELEASED; urgency=low
+
+  * Add gateway CiA 301 progress indication download service
+  * Emit trace diagnostics in debug mode
+  * Various bug fixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 07 Apr 2017 16:37:58 +0200
+
+lely-co (1.3.7) UNRELEASED; urgency=low
+
+  * Bug fixes and documenation improvements
+  * Improved diagnostics during EDS/DCF parsing
+  * Add support for concise DCF files
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 24 Mar 2017 18:00:03 +0100
+
+lely-co (1.3.6) UNRELEASED; urgency=low
+
+  * Add monitor mode to coctl
+  * Improve error handling
+  * Extend C and C++ examples in overview to handle CAN bus errors
+  * Fix minor compliance issues with CiA 306-1 and CiA 309-3
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 07 Mar 2017 11:36:43 +0100
+
+lely-co (1.3.5) UNRELEASED; urgency=low
+
+  * Document CiA standards support
+  * Fix segmentation fault with non-consecutive PDOs
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 02 Mar 2017 13:33:32 +0100
+
+lely-util (1.7.1) UNRELEASED; urgency=low
+
+  * Add hash table
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 01 Mar 2017 13:26:30 +0100
+
+lely-util (1.7.0) UNRELEASED; urgency=low
+
+  * Add preprocessor definitions for code generation
+  * Add doubly-linked list functions
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 28 Feb 2017 12:05:36 +0100
+
+lely-co (1.3.4) UNRELEASED; urgency=low
+
+  * Add CANopen cat tools, based on object 1026 (OS prompt)
+  * Add examples to tool documentation
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 23 Feb 2017 22:51:46 +0100
+
+lely-can (1.3.1) UNRELEASED; urgency=low
+
+  * Minor bugfixes
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 23 Feb 2017 18:15:43 +0100
+
+lely-io (1.2.0) UNRELEASED; urgency=low
+
+  * Add pipe support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Feb 2017 17:28:00 +0100
+
+lely-util (1.6.1) UNRELEASED; urgency=low
+
+  * Add external clock and timer functions
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Feb 2017 16:21:45 +0100
+
+lely-libc (1.4.1) UNRELEASED; urgency=low
+
+  * Improve Newlib compatibility
+  * Cleanup implementation of clock_*() and timer_*() functions
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Feb 2017 13:47:30 +0100
+
+lely-libc (1.4.0) UNRELEASED; urgency=low
+
+  * Add native Windows implementation of <lely/libc/threads.h>
+  * Add POSIX clock_*() functions
+  * Add POSIX timer_*() functions
+  * Add LEVEL1_DCACHE_LINESIZE definition
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 09 Feb 2017 18:38:12 +0100
+
+lely-tap (1.3.0) UNRELEASED; urgency=low
+
+  * Add C++98 support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 11 Jan 2017 11:22:44 +0100
+
+lely-co (1.3.3) UNRELEASED; urgency=low
+
+  * Add compile-time check of C++ interface
+  * Fix several errors in the C++ interface
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 11 Jan 2017 10:41:55 +0100
+
+lely-co (1.3.2) UNRELEASED; urgency=low
+
+  * Fix discrepancy between C and C++ interface
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 09 Jan 2017 13:04:43 +0100
+
+lely-co (1.3.1) UNRELEASED; urgency=low
+
+  * Add missing files to enable Launchpad PPA builds
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 21 Dec 2016 13:38:51 +0100
+
+lely-util (1.6.0) UNRELEASED; urgency=low
+
+  * Add shared library functions
+  * Implement the factory pattern
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 16 Dec 2016 12:54:15 +0100
+
+lely-util (1.5.1) UNRELEASED; urgency=low
+
+  * Fix potential print format warnings on MinGW
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 16 Dec 2016 12:54:15 +0100
+
+lely-tap (1.2.1) UNRELEASED; urgency=low
+
+  * Enable tests with cross-compiling
+  * Enable code coverage
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 16 Dec 2016 12:47:07 +0100
+
+lely-co (1.3.0) UNRELEASED; urgency=low
+
+  * Improve CiA 301 compliance
+  * Add bitwise PDO mapping support
+  * Add support for CompactPDO definitions in EDS/DCF files
+  * Add CANopen gateway support
+  * Implement ASCII gateway
+  * Add CANopen control tool (coctl)
+  * Add documentation for can2udp and dcf2c
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 16 Dec 2016 11:43:44 +0100
+
+lely-io (1.1.0) UNRELEASED; urgency=low
+
+  * Enable tests with cross-compiling
+  * Enable code coverage
+  * Add Python bindings
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 13 Dec 2016 14:08:51 +0100
+
+lely-can (1.3.0) UNRELEASED; urgency=low
+
+  * Enable tests with cross-compiling
+  * Enable code coverage
+  * Add Python bindings for CAN frames
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 09 Dec 2016 10:21:41 +0100
+
+lely-util (1.5.0) UNRELEASED; urgency=low
+
+  * Add hash function
+  * Add diag_if() and vdiag_if()
+  * Add lex_c99_id()
+  * Add print_fmt() and vprint_fmt()
+  * Replace floc_strinc() and floc_strninc() by floc_lex()
+  * Change signature of printing functions to improve consistency with lexing
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 17 Nov 2016 17:06:56 +0100
+
+lely-util (1.4.0) UNRELEASED; urgency=low
+
+  * Add bitwise memcpy()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 08 Nov 2016 16:40:43 +0100
+
+lely-util (1.3.1) UNRELEASED; urgency=low
+
+  * Fix file location bugs
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 04 Nov 2016 15:22:07 +0100
+
+lely-util (1.3.0) UNRELEASED; urgency=low
+
+  * Add object interface documentation
+  * Add callback interface documentation
+  * Improve lex_c99_str() and lex_base64()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 03 Nov 2016 14:28:01 +0100
+
+lely-co (1.2.4) UNRELEASED; urgency=low
+
+  * Fix various value handling issues
+  * Allow 0-byte values in SDO requests
+  * Update liblely-libc dependency to v1.3 to be able to use getopt()
+  * Move dcf2c to lely-co-dev-tools
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 02 Nov 2016 10:45:05 +0100
+
+lely-libc (1.3.1) UNRELEASED; urgency=low
+
+  * Use native <unistd.h> on MinGW, fixing a linker issue with getopt()
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 02 Nov 2016 14:47:21 +0100
+
+lely-libc (1.3.0) UNRELEASED; urgency=low
+
+  * Add <lely/libc/unistd.h> and the implementation of getopt()
+  * Add getdelim() and getline() to <lely/libc/stdio.h>
+  * Generate more doxygen documentation
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 01 Nov 2016 16:13:33 +0100
+
+lely-co (1.2.3) UNRELEASED; urgency=low
+
+  * Fix UploadFile/DownloadFile parsing bug
+  * Add finite-state machine (FSM) documentation
+  * Add optional LSS step to NMT boot sequence
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 27 Oct 2016 15:20:24 +0200
+
+lely-co (1.2.2) UNRELEASED; urgency=low
+
+  * Fix various value handling bugs
+  * Enable tests with cross-compiling
+  * Enable code coverage
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 20 Oct 2016 14:27:12 +0200
+
+lely-util (1.2.1) UNRELEASED; urgency=low
+
+  * Fix lexing and printing bugs
+  * Enable tests with cross-compiling
+  * Enable code coverage
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 20 Oct 2016 12:54:53 +0200
+
+lely-co (1.2.1) UNRELEASED; urgency=low
+
+  * Make NMT boot slave process more lenient and robust
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 14 Oct 2016 13:09:41 +0200
+
+lely-io (1.0.1) UNRELEASED; urgency=low
+
+  * Do not ignore IO_FLAG_LOOPBACK
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 04 Oct 2016 15:58:13 +0200
+
+lely-co (1.2.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2013
+  * Improve Cygwin support
+  * Implement node guarding
+  * Use Lely I/O library for can2udp and turn it into a daemon
+  * Add diagnostic protocol support to the WTM interface
+  * Add high-level documentation
+  * Add GitLab CI support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Fri, 30 Sep 2016 17:05:36 +0200
+
+lely-io (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 29 Sep 2016 10:42:58 +0200
+
+lely-can (1.2.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2013
+  * Improve Cywgin support
+  * Add IXXAT VCI V3 interface
+  * Add CAN state and error definitions
+  * Add high-level documentation
+  * Add GitLab CI support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 29 Sep 2016 10:25:38 +0200
+
+lely-util (1.2.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2013
+  * Improve Cywgin support
+  * Distinguish between errno and native error numbers
+  * Remove unused bitset and id list
+  * Add daemon support
+  * Add file buffers
+  * Allow C++ member functions to be used as C callbacks
+  * Extend lexing and printing functions
+  * Add high-level documentation
+  * Add GitLab CI support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 28 Sep 2016 15:43:44 +0200
+
+lely-tap (1.2.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2013
+  * Improve Cywgin support
+  * Add build and install documentation
+  * Add GitLab CI support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Wed, 28 Sep 2016 10:39:22 +0200
+
+lely-libc (1.2.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2013
+  * Improve Cywgin support
+  * Add GitLab CI support
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Tue, 27 Sep 2016 18:08:07 +0200
+
+lely-co (1.1.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2015
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Jun 2016 17:10:10 +0200
+
+lely-can (1.1.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2015
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Jun 2016 17:00:38 +0200
+
+lely-util (1.1.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2015
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Jun 2016 16:55:49 +0200
+
+lely-tap (1.1.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2015
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Jun 2016 16:52:24 +0200
+
+lely-libc (1.1.0) UNRELEASED; urgency=low
+
+  * Add support for Visual Studio 2015
+  * Add asprintf() and vasprintf() to <lely/libc/stdio.h>
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Mon, 20 Jun 2016 16:34:45 +0200
+
+lely-co (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 16 Jun 2016 10:33:30 +0200
+
+lely-can (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 16 Jun 2016 10:28:44 +0200
+
+lely-util (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 16 Jun 2016 10:25:56 +0200
+
+lely-tap (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 16 Jun 2016 10:24:27 +0200
+
+lely-libc (1.0.0) UNRELEASED; urgency=low
+
+  * Initial release
+
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 16 Jun 2016 10:20:37 +0200
