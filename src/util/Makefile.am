@@ -31,9 +31,6 @@ src += rbtree.c
 src += shlib.c
 src += time.c
 src += util.h
-if PLATFORM_WIN32
-src += version.rc
-endif
 src += xtime.c
 
 lib_LTLIBRARIES = liblely-util.la
