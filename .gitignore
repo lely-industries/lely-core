@@ -12,6 +12,12 @@
 /python/dist/
 /python/*.egg-info/
 /python/*/*.c
+/test/co-nmt-master.dcf
+/tools/can2udp
+/tools/cocat
+/tools/cocatd
+/tools/coctl
+/tools/dcf2c
 /aclocal.m4
 /compile
 /config.guess

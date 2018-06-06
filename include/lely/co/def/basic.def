@@ -1,0 +1,43 @@
+// A boolean truth value.
+#ifdef __cplusplus
+LELY_CO_DEFINE_TYPE(BOOLEAN, boolean, b, bool)
+#else
+LELY_CO_DEFINE_TYPE(BOOLEAN, boolean, b, _Bool)
+#endif
+// An 8-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER8, integer8, i8, int8_t)
+// A 16-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER16, integer16, i16, int16_t)
+// A 32-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER32, integer32, i32, int32_t)
+// An 8-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED8, unsigned8, u8, uint8_t)
+// A 16-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED16, unsigned16, u16, uint16_t)
+// A 32-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED32, unsigned32, u32, uint32_t)
+// A 32-bit IEEE-754 floating-point number.
+LELY_CO_DEFINE_TYPE(REAL32, real32, r32, float)
+// A 24-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER24, integer24, i24, int32_t)
+// A 64-bit IEEE-754 floating-point number.
+LELY_CO_DEFINE_TYPE(REAL64, real64, r64, double)
+// A 40-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER40, integer40, i40, int64_t)
+// A 48-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER48, integer48, i48, int64_t)
+// A 56-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER56, integer56, i56, int64_t)
+// A 64-bit signed integer.
+LELY_CO_DEFINE_TYPE(INTEGER64, integer64, i64, int64_t)
+// A 24-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED24, unsigned24, u24, uint32_t)
+// A 40-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED40, unsigned40, u40, uint64_t)
+// A 48-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED48, unsigned48, u48, uint64_t)
+// A 56-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED56, unsigned56, u56, uint64_t)
+// A 64-bit unsigned integer.
+LELY_CO_DEFINE_TYPE(UNSIGNED64, unsigned64, u64, uint64_t)
+

@@ -1,0 +1,120 @@
+[DeviceInfo]
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
+
+[DeviceComissioning]
+NodeID=0x01
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=2
+1=0x1400
+2=0x1600
+
+[ManufacturerObjects]
+SupportedObjects=2
+1=0x2000
+2=0x2001
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000360
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+
+[1400]
+SubNumber=3
+ParameterName=RPDO communication parameter
+ObjectType=0x09
+
+[1400sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x02
+
+[1400sub1]
+ParameterName=COB-ID used by RPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x182
+
+[1400sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x01
+
+[1600]
+ParameterName=RPDO mapping parameter
+ObjectType=0x09
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1600Value]
+NrOfEntries=2
+1=0x2000001c
+2=0x20010020
+
+[2000]
+ParameterName=Test
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
+
+[2001]
+ParameterName=Test
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
+

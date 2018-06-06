@@ -774,6 +774,13 @@ WARN_LOGFILE           =
 INPUT                  =
 INPUT                  += @top_srcdir@/README.md
 INPUT                  += @top_srcdir@/doc/can/overview.md
+INPUT                  += @top_srcdir@/doc/co/overview.md
+INPUT                  += @top_srcdir@/doc/co/standards.md
+INPUT                  += @top_srcdir@/doc/co/can2udp.md
+INPUT                  += @top_srcdir@/doc/co/cocat.md
+INPUT                  += @top_srcdir@/doc/co/coctl.md
+INPUT                  += @top_srcdir@/doc/co/dcf2c.md
+INPUT                  += @top_srcdir@/doc/co/fsm.md
 INPUT                  += @top_srcdir@/doc/io/overview.md
 INPUT                  += @top_srcdir@/doc/libc/overview.md
 INPUT                  += @top_srcdir@/doc/util/overview.md
@@ -2107,6 +2114,10 @@ PREDEFINED             += LELY_CAN_BUF_INLINE=
 PREDEFINED             += LELY_IO_EXTERN=
 PREDEFINED             += LELY_IO_EXPORT=
 
+PREDEFINED             += LELY_CO_EXTERN=
+PREDEFINED             += LELY_CO_EXPORT=
+PREDEFINED             += LELY_CO_SDO_INLINE=
+
 PREDEFINED             += "__format_printf(i, j)="
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
@@ -2123,6 +2134,11 @@ EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_LEX_UNSIGNED
 EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_PRINT
 EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_RAND
 EXPAND_AS_DEFINED      += LELY_UTIL_DEFINE_TYPE
+
+EXPAND_AS_DEFINED      += LELY_CO_DEFINE_BAUD
+EXPAND_AS_DEFINED      += LELY_CO_DEFINE_FLAGS
+EXPAND_AS_DEFINED      += LELY_CO_DEFINE_STATE
+EXPAND_AS_DEFINED      += LELY_CO_DEFINE_TYPE
 
 EXPAND_AS_DEFINED      += __format_printf
 

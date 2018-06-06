@@ -120,6 +120,136 @@ AS_IF([test "$enable_canfd" == "no"], [
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_DCF], [false])
+AC_ARG_ENABLE([dcf],
+	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
+AS_IF([test "$enable_dcf" == "no"], [
+	AM_CONDITIONAL([NO_CO_DCF], [true])
+	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
+AC_ARG_ENABLE([obj-file],
+	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
+AS_IF([test "$enable_obj_file" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_LIMITS], [false])
+AC_ARG_ENABLE([obj-limits],
+	AS_HELP_STRING([--disable-obj-limits], [disable minimum/maximum values in the object dictionary]))
+AS_IF([test "$enable_obj_limits" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_LIMITS], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_LIMITS], [1], [Define to 1 if minimum/maximum values are disabled in the object dictionary.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_NAME], [false])
+AC_ARG_ENABLE([obj-name],
+	AS_HELP_STRING([--disable-obj-name], [disable names in the object dictionary]))
+AS_IF([test "$enable_obj_name" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_NAME], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_NAME], [1], [Define to 1 if names are disabled in the object dictionary.])
+])
+
+AM_CONDITIONAL([NO_CO_SDEV], [false])
+AC_ARG_ENABLE([sdev],
+	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
+AS_IF([test "$enable_sdev" == "no"], [
+	AM_CONDITIONAL([NO_CO_SDEV], [true])
+	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_CSDO], [false])
+AC_ARG_ENABLE([csdo],
+	AS_HELP_STRING([--disable-csdo], [disable Client-SDO support]))
+AS_IF([test "$enable_csdo" == "no"], [
+	AM_CONDITIONAL([NO_CO_CSDO], [true])
+	AC_DEFINE([LELY_NO_CO_CSDO], [1], [Define to 1 if Client-SDO support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_RPDO], [false])
+AC_ARG_ENABLE([rpdo],
+	AS_HELP_STRING([--disable-rpdo], [disable Receive-PDO support]))
+AS_IF([test "$enable_rpdo" == "no"], [
+	AM_CONDITIONAL([NO_CO_RPDO], [true])
+	AC_DEFINE([LELY_NO_CO_RPDO], [1], [Define to 1 if Receive-PDO support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_TPDO], [false])
+AC_ARG_ENABLE([tpdo],
+	AS_HELP_STRING([--disable-tpdo], [disable Transmit-PDO support]))
+AS_IF([test "$enable_tpdo" == "no"], [
+	AM_CONDITIONAL([NO_CO_TPDO], [true])
+	AC_DEFINE([LELY_NO_CO_TPDO], [1], [Define to 1 if Transmit-PDO support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_SYNC], [false])
+AC_ARG_ENABLE([sync],
+	AS_HELP_STRING([--disable-sync], [disable synchronization (SYNC) object support]))
+AS_IF([test "$enable_sync" == "no"], [
+	AM_CONDITIONAL([NO_CO_SYNC], [true])
+	AC_DEFINE([LELY_NO_CO_SYNC], [1], [Define to 1 if synchronization (SYNC) object support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_TIME], [false])
+AC_ARG_ENABLE([time],
+	AS_HELP_STRING([--disable-time], [disable time stamp (TIME) object support]))
+AS_IF([test "$enable_time" == "no"], [
+	AM_CONDITIONAL([NO_CO_TIME], [true])
+	AC_DEFINE([LELY_NO_CO_TIME], [1], [Define to 1 if time stamp (TIME) object support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_EMCY], [false])
+AC_ARG_ENABLE([emcy],
+	AS_HELP_STRING([--disable-emcy], [disable emergency (EMCY) object support]))
+AS_IF([test "$enable_emcy" == "no"], [
+	AM_CONDITIONAL([NO_CO_EMCY], [true])
+	AC_DEFINE([LELY_NO_CO_EMCY], [1], [Define to 1 if emergency (EMCY) object support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_LSS], [false])
+AC_ARG_ENABLE([lss],
+	AS_HELP_STRING([--disable-lss], [disable Layer Setting Services (LSS) and protocols support]))
+AS_IF([test "$enable_lss" == "no"], [
+	AM_CONDITIONAL([NO_CO_LSS], [true])
+	AC_DEFINE([LELY_NO_CO_LSS], [1], [Define to 1 if Layer Setting Services (LSS) and protocols support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_WTM], [false])
+AC_ARG_ENABLE([lss],
+	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
+AS_IF([test "$enable_wtm" == "no"], [
+	AM_CONDITIONAL([NO_CO_WTM], [true])
+	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_MASTER], [false])
+AC_ARG_ENABLE([master],
+	AS_HELP_STRING([--disable-master], [disable master support]))
+AS_IF([test "$enable_csdo" == "no"], [enable_master=no])
+AS_IF([test "$enable_master" == "no"], [
+	AM_CONDITIONAL([NO_CO_MASTER], [true])
+	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_GW], [false])
+AC_ARG_ENABLE([gw],
+	AS_HELP_STRING([--disable-gw], [disable gateway support]))
+AS_IF([test "$enable_gw" == "no"], [
+	AM_CONDITIONAL([NO_CO_GW], [true])
+	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_GW_TXT], [false])
+AC_ARG_ENABLE([gw-txt],
+	AS_HELP_STRING([--disable-gw-txt], [disable ASCII gateway support]))
+AS_IF([test "$enable_gw" == "no"], [enable_gw_txt=no])
+AS_IF([test "$enable_gw_txt" == "no"], [
+	AM_CONDITIONAL([NO_CO_GW_TXT], [true])
+	AC_DEFINE([LELY_NO_CO_GW_TXT], [1], [Define to 1 if ASCII gateway support is disabled.])
+])
+
 AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
@@ -256,6 +386,8 @@ AC_CONFIG_FILES([
 	python/Makefile
 	src/can/Makefile
 	src/can/version.rc
+	src/co/Makefile
+	src/co/version.rc
 	src/io/Makefile
 	src/io/version.rc
 	src/libc/Makefile
@@ -265,10 +397,14 @@ AC_CONFIG_FILES([
 	src/util/Makefile
 	src/util/version.rc
 	src/Makefile
+	tools/Makefile
+	tools/version.dcf2c.rc
+	test/co-nmt-master.dcf
 	test/Makefile
 	exec-wrapper.sh
 	Makefile
 	liblely-can.pc
+	liblely-co.pc
 	liblely-io.pc
 	liblely-libc.pc
 	liblely-libc_rt.pc

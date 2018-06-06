@@ -1,0 +1,196 @@
+[DeviceInfo]
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
+LSS_Supported=1
+
+[DeviceComissioning]
+NodeID=0x01
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=10
+1=0x1016
+2=0x1F55
+3=0x1F58
+4=0x1F80
+5=0x1F81
+6=0x1F84
+7=0x1F85
+8=0x1F86
+9=0x1F87
+10=0x1F88
+
+[ManufacturerObjects]
+SupportedObjects=0
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1016]
+ParameterName=Consumer heartbeat time
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=1
+
+[1016Value]
+NrOfEntries=1
+1=0x00020100
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000360
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+
+[1F55]
+ParameterName=Expected software identification
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F55Value]
+NrOfEntries=1
+2=0x12345678
+
+[1F58]
+SubNumber=3
+ParameterName=Program data
+ObjectType=0x08
+
+[1F58sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=2
+
+[1F58sub1]
+ParameterName=Node-ID 1
+DataType=0x000F
+AccessType=ro
+
+[1F58sub2]
+ParameterName=Node-ID 2
+DataType=0x000F
+AccessType=ro
+UploadFile=@srcdir@/co-nmt-master.dat
+
+[1F80]
+ParameterName=NMT startup
+DataType=0x0007
+AccessType=rw
+ParameterValue=0x00000001
+
+[1F81]
+ParameterName=NMT slave assignment
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F81Value]
+NrOfEntries=1
+2=0x00000065
+
+[1F84]
+ParameterName=Device type identification
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F84Value]
+NrOfEntries=1
+2=0x01020304
+
+[1F85]
+ParameterName=Vendor identification
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F85Value]
+NrOfEntries=1
+2=0x00000360
+
+[1F86]
+ParameterName=Product code
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F86Value]
+NrOfEntries=1
+2=0x00000002
+
+[1F87]
+ParameterName=Revision number
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F87Value]
+NrOfEntries=1
+2=0x00000003
+
+[1F88]
+ParameterName=Serial number
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=2
+
+[1F88Value]
+NrOfEntries=1
+2=0x00000004
+

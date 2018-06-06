@@ -1,0 +1,102 @@
+[DeviceInfo]
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
+
+[DeviceComissioning]
+NodeID=0x02
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=1
+1=0x1280
+
+[ManufacturerObjects]
+SupportedObjects=0
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000360
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+
+[1280]
+SubNumber=4
+ParameterName=SDO client parameter
+ObjectType=0x09
+
+[1280sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x03
+
+[1280sub1]
+ParameterName=COB-ID client -> server (tx)
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x800006E0
+ParameterValue=0x601
+
+[1280sub2]
+ParameterName=COB-ID server -> client (rx)
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x800006E0
+ParameterValue=0x581
+
+[1280sub3]
+ParameterName=Node-ID of the SDO server
+DataType=0x0005
+AccessType=rw
+ParameterValue=0x01
+

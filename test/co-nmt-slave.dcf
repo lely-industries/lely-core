@@ -1,0 +1,162 @@
+[DeviceInfo]
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+ProductNumber=0x00000002
+RevisionNumber=0x00000003
+BaudRate_10=1
+BaudRate_20=1
+BaudRate_50=1
+BaudRate_125=1
+BaudRate_250=1
+BaudRate_500=1
+BaudRate_800=1
+BaudRate_1000=1
+LSS_Supported=1
+
+[DeviceComissioning]
+NodeID=0x02
+LSS_SerialNumber=0x00000004
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=6
+1=0x1017
+2=0x1F50
+3=0x1F51
+4=0x1F56
+5=0x1F57
+6=0x1F80
+
+[ManufacturerObjects]
+SupportedObjects=0
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x01020304
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1017]
+ParameterName=Producer heartbeat time
+DataType=0x0006
+AccessType=rw
+DefaultValue=100
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000360
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000002
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000003
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+ParameterValue=0x00000004
+
+[1F50]
+SubNumber=2
+ParameterName=Program data
+ObjectType=0x09
+
+[1F50sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[1F50sub1]
+ParameterName=Program Number 1
+DataType=0x000F
+AccessType=wo
+DownloadFile=nmt-slave.dat
+
+[1F51]
+SubNumber=2
+ParameterName=Program control
+ObjectType=0x09
+
+[1F51sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[1F51sub1]
+ParameterName=Program Number 1
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x01
+
+[1F56]
+SubNumber=2
+ParameterName=Program software identification
+ObjectType=0x09
+
+[1F56sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=ro
+DefaultValue=1
+
+[1F56sub1]
+ParameterName=Program Number 1
+DataType=0x0007
+AccessType=ro
+
+[1F57]
+SubNumber=2
+ParameterName=Flash status identification
+ObjectType=0x09
+
+[1F57sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=ro
+DefaultValue=1
+
+[1F57sub1]
+ParameterName=Program Number 1
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+
+[1F80]
+ParameterName=NMT startup
+DataType=0x0007
+AccessType=rw
+ParameterValue=0x00000004
+

@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc include src python test
+SUBDIRS = doc include src python tools test
 
 EXTRA_DIST =
 EXTRA_DIST += LICENSE
@@ -10,6 +10,7 @@ EXTRA_DIST += README.md
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA =
 pkgconfig_DATA += liblely-can.pc
+pkgconfig_DATA += liblely-co.pc
 pkgconfig_DATA += liblely-io.pc
 pkgconfig_DATA += liblely-libc.pc
 if !NO_RT

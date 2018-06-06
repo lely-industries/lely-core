@@ -1,5 +1,12 @@
 EXTRA_DIST =
 EXTRA_DIST += can/overview.md
+EXTRA_DIST += co/can2udp.md
+EXTRA_DIST += co/cocat.md
+EXTRA_DIST += co/coctl.md
+EXTRA_DIST += co/dcf2c.md
+EXTRA_DIST += co/fsm.md
+EXTRA_DIST += co/overview.md
+EXTRA_DIST += co/standards.md
 EXTRA_DIST += io/overview.md
 EXTRA_DIST += libc/overview.md
 EXTRA_DIST += util/callback.md

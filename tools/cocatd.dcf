@@ -1,0 +1,261 @@
+[DeviceInfo]
+VendorName=Lely Industries N.V.
+VendorNumber=0x00000360
+LSS_Supported=1
+NrOfRxPDO=1
+NrOfTxPDO=2
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=11
+1=0x1003
+2=0x1014
+3=0x1015
+4=0x1017
+5=0x1026
+6=0x1400
+7=0x1600
+8=0x1800
+9=0x1801
+10=0x1A00
+11=0x1A01
+
+[ManufacturerObjects]
+SupportedObjects=0
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1003]
+ParameterName=Pre-defined error field
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=254
+
+[1014]
+ParameterName=COB-ID EMCY
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x80
+
+[1015]
+ParameterName=Inhibit time EMCY
+DataType=0x0006
+AccessType=rw
+
+[1017]
+ParameterName=Producer heartbeat time
+DataType=0x0006
+AccessType=rw
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000360
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+
+[1026]
+SubNumber=4
+ParameterName=OS prompt
+ObjectType=0x09
+
+[1026sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=3
+
+[1026sub1]
+ParameterName=StdIn
+DataType=0x0005
+AccessType=wo
+PDOMapping=1
+
+[1026sub2]
+ParameterName=StdOut
+DataType=0x0005
+AccessType=ro
+PDOMapping=1
+
+[1026sub3]
+ParameterName=StdErr
+DataType=0x0005
+AccessType=ro
+PDOMapping=1
+
+[1400]
+SubNumber=4
+ParameterName=RPDO communication parameter
+ObjectType=0x09
+
+[1400sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=3
+
+[1400sub1]
+ParameterName=COB-ID used by RPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x00000200
+
+[1400sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=const
+DefaultValue=0xFE
+
+[1400sub3]
+ParameterName=Inhibit time
+DataType=0x0006
+AccessType=rw
+
+[1600]
+SubNumber=2
+ParameterName=RPDO mapping parameter
+ObjectType=0x09
+
+[1600sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[1600sub1]
+ParameterName=Application object 1
+DataType=0x0007
+AccessType=const
+DefaultValue=0x10260108
+
+[1800]
+SubNumber=4
+ParameterName=TPDO communication parameter
+ObjectType=0x09
+
+[1800sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=3
+
+[1800sub1]
+ParameterName=COB-ID used by TPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x00000180
+
+[1800sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=const
+DefaultValue=0xFE
+
+[1800sub3]
+ParameterName=Inhibit time
+DataType=0x0006
+AccessType=rw
+DefaultValue=1
+
+[1801]
+SubNumber=4
+ParameterName=TPDO communication parameter
+ObjectType=0x09
+
+[1801sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=3
+
+[1801sub1]
+ParameterName=COB-ID used by TPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x00000280
+
+[1801sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=const
+DefaultValue=0xFE
+
+[1801sub3]
+ParameterName=Inhibit time
+DataType=0x0006
+AccessType=rw
+DefaultValue=1
+
+[1A00]
+SubNumber=2
+ParameterName=TPDO mapping parameter
+ObjectType=0x09
+
+[1A00sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[1A00sub1]
+ParameterName=Application object 1
+DataType=0x0007
+AccessType=const
+DefaultValue=0x10260208
+
+[1A01]
+SubNumber=2
+ParameterName=TPDO mapping parameter
+ObjectType=0x09
+
+[1A01sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[1A01sub1]
+ParameterName=Application object 1
+DataType=0x0007
+AccessType=const
+DefaultValue=0x10260308
+

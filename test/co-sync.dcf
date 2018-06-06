@@ -1,0 +1,90 @@
+[DeviceInfo]
+VendorName=
+VendorNumber=0
+ProductName=
+ProductNumber=0
+RevisionNumber=0
+OrderCode=
+BaudRate_10=0
+BaudRate_20=0
+BaudRate_50=0
+BaudRate_125=0
+BaudRate_250=0
+BaudRate_500=0
+BaudRate_800=0
+BaudRate_1000=0
+
+[MandatoryObjects]
+SupportedObjects=3
+1=0x1000
+2=0x1001
+3=0x1018
+
+[OptionalObjects]
+SupportedObjects=3
+1=0x1005
+2=0x1006
+3=0x1019
+
+[ManufacturerObjects]
+SupportedObjects=0
+
+[1000]
+ParameterName=Device type
+DataType=0x0007
+AccessType=ro
+
+[1001]
+ParameterName=Error register
+DataType=0x0005
+AccessType=ro
+
+[1005]
+ParameterName=COB-ID SYNC message
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x40000080
+
+[1006]
+ParameterName=Communication cycle period
+DataType=0x0007
+AccessType=rw
+DefaultValue=100000
+
+[1018]
+SubNumber=5
+ParameterName=Identity object
+ObjectType=0x09
+
+[1018sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x4
+
+[1018sub1]
+ParameterName=Vendor-ID
+DataType=0x0007
+AccessType=ro
+
+[1018sub2]
+ParameterName=Product code
+DataType=0x0007
+AccessType=ro
+
+[1018sub3]
+ParameterName=Revision number
+DataType=0x0007
+AccessType=ro
+
+[1018sub4]
+ParameterName=Serial number
+DataType=0x0007
+AccessType=ro
+
+[1019]
+ParameterName=Synchronous counter overflow value
+DataType=0x0005
+AccessType=rw
+DefaultValue=4
+
