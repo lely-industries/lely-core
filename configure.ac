@@ -391,6 +391,8 @@ AC_CONFIG_FILES([
 	pkgconfig/liblely-tap.pc
 	pkgconfig/liblely-util.pc
 	pkgconfig/Makefile
+	python/can/Makefile
+	python/io/Makefile
 	python/Makefile
 	src/can/Makefile
 	src/can/version.rc
