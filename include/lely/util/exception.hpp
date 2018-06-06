@@ -47,7 +47,7 @@
  * If exceptions are disabled, aborts the process instead of throwing an
  * exception.
  */
-#if LELY_NO_EXCEPTIONS
+#if __cpp_exceptions
 #define throw_or_abort(e)	__throw_or_abort((e).what())
 #else
 #define throw_or_abort(e)	throw(e)

@@ -388,12 +388,12 @@ template <class R, class... Args>
 inline void*
 cpp_factory_ctor(Args... args) noexcept
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(args...);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return nullptr;
@@ -422,12 +422,12 @@ template <class R>
 inline void*
 cpp_factory_ctor()
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R();
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -450,12 +450,12 @@ template <class R, class T0>
 inline void*
 cpp_factory_ctor(T0 t0)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -478,12 +478,12 @@ template <class R, class T0, class T1>
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -506,12 +506,12 @@ template <class R, class T0, class T1, class T2>
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -534,12 +534,12 @@ template <class R, class T0, class T1, class T2, class T3>
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -562,12 +562,12 @@ template <class R, class T0, class T1, class T2, class T3, class T4>
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -590,12 +590,12 @@ template <class R, class T0, class T1, class T2, class T3, class T4, class T5>
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4, t5);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -619,12 +619,12 @@ template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4, t5, t6);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -648,12 +648,12 @@ template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4, t5, t6, t7);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -677,12 +677,12 @@ template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4, t5, t6, t7, t8);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;
@@ -707,12 +707,12 @@ inline void*
 cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 		T9 t9)
 {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	try {
 #endif
 		R* p = new R(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9);
 		return static_cast<void*>(p);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 	} catch (error& e) {
 		set_errc(e.errc());
 		return 0;

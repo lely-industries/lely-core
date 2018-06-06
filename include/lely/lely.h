@@ -1,5 +1,6 @@
 /*!\file
- * This is the public header file of the C11 and POSIX compatibility library.
+ * This header file is part of the Lely libraries; it contains the Lely-specific
+ * feature definitions.
  *
  * \copyright 2013-2018 Lely Industries N.V.
  *
@@ -18,17 +19,32 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_LIBC_H_
-#define LELY_LIBC_LIBC_H_
+#ifndef LELY_LELY_H_
+#define LELY_LELY_H_
 
-#include <lely/lely.h>
+#include <lely/features.h>
 
-#ifndef LELY_LIBC_EXTERN
-#ifdef LELY_LIBC_INTERN
-#define LELY_LIBC_EXTERN	LELY_DLL_EXPORT
+#ifndef LELY_DLL
+// libtool defines DLL_EXPORT for a shared library.
+#ifdef DLL_EXPORT
+#define LELY_DLL	1
+#endif
+#endif
+
+#ifndef LELY_DLL_EXPORT
+#if LELY_DLL
+#define LELY_DLL_EXPORT	__dllexport
 #else
-#define LELY_LIBC_EXTERN	LELY_DLL_IMPORT
+#define LELY_DLL_EXPORT
 #endif
 #endif
 
-#endif // LELY_LIBC_LIBC_H_
+#ifndef LELY_DLL_IMPORT
+#if LELY_DLL
+#define LELY_DLL_IMPORT	__dllimport
+#else
+#define LELY_DLL_IMPORT
+#endif
+#endif
+
+#endif // LELY_LELY_H_

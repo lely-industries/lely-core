@@ -1,8 +1,8 @@
 /*!\file
- * This header file is part of the C11 and POSIX compatibility library; it
- * contains compiler feature definitions.
+ * This header file is part of the Lely libraries; it contains the compiler
+ * feature definitions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_FEATURES_H
-#define LELY_LIBC_FEATURES_H
+#ifndef LELY_FEATURES_H_
+#define LELY_FEATURES_H_
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L
 #error This file requires compiler and library support for the ISO C99 standard.
@@ -39,18 +39,18 @@
 #endif
 
 #ifdef _WIN32
-// Windows Vista (0x06000000) is the minimum supported version.
-#if !defined(NTDDI_VERSION) || (NTDDI_VERSION < 0x06000000)
+// Windows 7 is the minimum supported version.
+#if !defined(NTDDI_VERSION) || (NTDDI_VERSION < NTDDI_WIN7)
 #undef NTDDI_VERSION
-#define NTDDI_VERSION	0x06000000
+#define NTDDI_VERSION NTDDI_WIN7
 #endif
-#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0600
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT < _WIN32_WINNT_WIN7
 #undef _WIN32_WINNT
-#define _WIN32_WINNT	0x0600
+#define _WIN32_WINNT _WIN32_WINNT_WIN7
 #endif
 #if !defined(WINVER) || WINVER < _WIN32_WINNT
 #undef WINVER
-#define WINVER	_WIN32_WINNT
+#define WINVER _WIN32_WINNT
 #endif
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -144,20 +144,19 @@
 
 #ifdef __cplusplus
 
-#ifndef LELY_NO_EXCEPTIONS
-#if (defined(_MSC_VER) && !_HAS_EXCEPTIONS) \
-		|| (defined(__GNUC__) \
-		&& !(defined(__EXCEPTIONS) || __cpp_exceptions)) \
-		|| (defined(__clang__) && !__has_feature(cxx_exceptions))
-#define LELY_NO_EXCEPTIONS	1
+#ifndef __cpp_exceptions
+#if (defined(_MSC_VER) && _HAS_EXCEPTIONS) \
+		|| (defined(__GNUC__) && defined(__EXCEPTIONS)) \
+		|| (defined(__clang__) && __has_feature(cxx_exceptions))
+#define __cpp_exceptions	__cplusplus
 #endif
 #endif
 
-#ifndef LELY_NO_RTTI
-#if (defined(_MSC_VER) && !_CPPRTTI) \
-		|| (defined(__GNUC__) && !(defined(__GXX_RTTI) || __cpp_rtti)) \
-		|| (defined(__clang__) && !__has_feature(cxx_rtti))
-#define LELY_NO_RTTI	1
+#ifndef __cpp_rtti
+#if (defined(_MSC_VER) && _CPPRTTI) \
+		|| (defined(__GNUC__) && defined(__GXX_RTTI)) \
+		|| (defined(__clang__) && __has_feature(cxx_rtti))
+#define __cpp_rtti	__cplusplus
 #endif
 #endif
 
@@ -392,54 +391,4 @@
 #define LEVEL1_DCACHE_LINESIZE	64
 #endif
 
-#ifndef LELY_DLL
-// libtool defines DLL_EXPORT for a shared library.
-#ifdef DLL_EXPORT
-#define LELY_DLL	1
-#endif
-#endif
-
-#ifndef LELY_DLL_EXPORT
-#if LELY_DLL
-#define LELY_DLL_EXPORT	__dllexport
-#else
-#define LELY_DLL_EXPORT
-#endif
-#endif
-
-#ifndef LELY_DLL_IMPORT
-#if LELY_DLL
-#define LELY_DLL_IMPORT	__dllimport
-#else
-#define LELY_DLL_IMPORT
-#endif
-#endif
-
-#ifndef LELY_BIG_ENDIAN
-#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__ARMEB__) \
-		|| defined(__THUMBEB__) || defined(__AARCH64EB__)
-//! The target platform is big-endian.
-#define LELY_BIG_ENDIAN	1
-#endif
-#endif
-
-#if LELY_BIG_ENDIAN
-#undef LELY_LITTLE_ENDIAN
-#endif
-
-#ifndef LELY_LITTLE_ENDIAN
-#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || defined(_M_AMD64) \
-		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
-		|| defined(_M_X64) || defined(__x86_64__) || defined(__ARMEL__) \
-		|| defined(__THUMBEL__) || defined(__AARCH64EL__)
-//! The target platform is little-endian.
-#define LELY_LITTLE_ENDIAN	1
-#endif
-#endif
-
-#if LELY_LITTLE_ENDIAN
-#undef LELY_BIG_ENDIAN
-#endif
-
-#endif
-
+#endif // LELY_FEATURES_H_

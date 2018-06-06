@@ -492,13 +492,13 @@ struct COCSDOUpCon< ::std::string> {
 	{
 		const char* vs = static_cast<const char*>(ptr);
 		if (__likely(!ac && vs && n)) {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			try {
 #endif
 				return (*M)(sdo, idx, subidx, ac,
 						::std::string(vs, vs + n),
 						data);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			} catch (...) {
 				ac = CO_SDO_AC_NO_MEM;
 			}
@@ -556,13 +556,13 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
 	{
 		const uint8_t* os = static_cast<const uint8_t*>(ptr);
 		if (__likely(!ac && os && n)) {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			try {
 #endif
 				return (*M)(sdo, idx, subidx, ac,
 						::std::vector<uint8_t>(os,
 						os + n), data);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			} catch (...) {
 				ac = CO_SDO_AC_NO_MEM;
 			}
@@ -626,13 +626,13 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 			ac = co_val_read_sdo(val.index, &val, ptr, n);
 		const char16_t* us = val;
 		if (__likely(!ac && us && n)) {
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			try {
 #endif
 				return (*M)(sdo, idx, subidx, ac,
 						::std::basic_string<char16_t>(
 						us, us + n), data);
-#if !LELY_NO_EXCEPTIONS
+#if !__cpp_exceptions
 			} catch (...) {
 				ac = CO_SDO_AC_NO_MEM;
 			}
