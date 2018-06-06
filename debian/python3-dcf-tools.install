@@ -1,0 +1,5 @@
+usr/lib/python3*/dist-packages/dcf/*.py
+usr/lib/python3*/dist-packages/dcfgen/data/
+usr/lib/python3*/dist-packages/dcfgen/*.py
+usr/bin/dcfchk
+usr/bin/dcfgen
