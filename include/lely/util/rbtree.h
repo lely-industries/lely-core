@@ -10,9 +10,9 @@
  * The red-black tree implemented here is generic and can be used for any kind
  * of key-value pair; only (void) pointers to keys are stored. Upon
  * initialization of the tree, the user is responsible for providing a suitable
- * comparison function (#cmp_t).
+ * comparison function (#rbtree_cmp_t).
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,10 +29,13 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_RBTREE_H
-#define LELY_UTIL_RBTREE_H
+#ifndef LELY_UTIL_RBTREE_H_
+#define LELY_UTIL_RBTREE_H_
 
-#include <lely/util/cmp.h>
+#include <lely/libc/stdint.h>
+#include <lely/util/util.h>
+
+#include <stddef.h>
 
 #ifndef LELY_UTIL_RBTREE_INLINE
 #define LELY_UTIL_RBTREE_INLINE	inline
@@ -40,14 +43,14 @@
 
 /*!
  * A node in a red-black tree. To associate a value with a node, embed the node
- * in a struct containing the value and use structof() to obtain the struct from
- * the node.
+ * in a struct containing the value and use `structof()` to obtain the struct
+ * from the node.
  *
  * \see rbtree
  */
 struct rbnode {
 	/*!
-	 * A pointer to the key of this node. The key MUST be set before the
+	 * A pointer to the key for this node. The key MUST be set before the
 	 * node is inserted into a tree and MUST NOT be modified while the node
 	 * is part of the tree.
 	 */
@@ -63,19 +66,28 @@ struct rbnode {
 	struct rbnode *right;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*!
+ * The type of a comparison function suitable for use in a red-black tree. \a p1
+ * and \a p2 MUST be NULL or point to objects of the same type.
+ *
+ * \returns an integer greater than, equal to, or less than 0 if the object at
+ * \a p1 is greater than, equal to, or less than the object at \a p2.
+ */
+typedef int __cdecl rbtree_cmp_t(const void *, const void *);
+
 //! A red-black tree.
 struct rbtree {
 	//! A pointer to the function used to compare two keys.
-	cmp_t *cmp;
+	rbtree_cmp_t *cmp;
 	//! A pointer to the root node of the tree.
 	struct rbnode *root;
 	//! The number of nodes stored in the tree.
 	size_t num_nodes;
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*!
  * Initializes a node in a red-black tree.
@@ -135,7 +147,7 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
  * \param tree a pointer to the tree to be initialized.
  * \param cmp  a pointer to the function used to compare two keys.
  */
-LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree, cmp_t *cmp);
+LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp);
 
 //! Returns 1 if the red-black tree is empty, and 0 if not.
 LELY_UTIL_RBTREE_INLINE int rbtree_empty(const struct rbtree *tree);
@@ -206,10 +218,13 @@ LELY_UTIL_RBTREE_INLINE void
 rbnode_init(struct rbnode *node, const void *key)
 {
 	node->key = key;
+	node->parent = 0;
+	node->left = NULL;
+	node->right = NULL;
 }
 
 LELY_UTIL_RBTREE_INLINE void
-rbtree_init(struct rbtree *tree, cmp_t *cmp)
+rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 {
 	tree->cmp = cmp;
 	tree->root = NULL;
@@ -217,26 +232,16 @@ rbtree_init(struct rbtree *tree, cmp_t *cmp)
 }
 
 LELY_UTIL_RBTREE_INLINE int
-rbtree_empty(const struct rbtree *tree)
-{
-	return !rbtree_size(tree);
-}
+rbtree_empty(const struct rbtree *tree) { return !rbtree_size(tree); }
 
 LELY_UTIL_RBTREE_INLINE size_t
-rbtree_size(const struct rbtree *tree)
-{
-	return tree->num_nodes;
-}
+rbtree_size(const struct rbtree *tree) { return tree->num_nodes; }
 
 LELY_UTIL_RBTREE_INLINE struct rbnode *
-rbtree_root(const struct rbtree *tree)
-{
-	return tree->root;
-}
+rbtree_root(const struct rbtree *tree) { return tree->root; }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_RBTREE_H_

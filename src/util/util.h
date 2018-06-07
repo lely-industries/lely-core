@@ -1,7 +1,7 @@
 /*!\file
  * This is the internal header file of the utilities library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_INTERN_UTIL_H
-#define LELY_UTIL_INTERN_UTIL_H
+#ifndef LELY_UTIL_INTERN_UTIL_H_
+#define LELY_UTIL_INTERN_UTIL_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -55,5 +55,4 @@
 #define ALIGNED_ALLOC_SIZE	((size_t)(1 << (ALIGNED_ALLOC_BITS)))
 #endif
 
-#endif
-
+#endif // LELY_UTIL_INTERN_UTIL_H_

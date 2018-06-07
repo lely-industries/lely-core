@@ -4,7 +4,7 @@
  *
  * \see lely/util/bimap.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,4 +24,3 @@
 #include "util.h"
 #define LELY_UTIL_BIMAP_INLINE	extern inline LELY_DLL_EXPORT
 #include <lely/util/bimap.h>
-

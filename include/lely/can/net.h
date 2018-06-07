@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN network
  * interface declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_NET_H
-#define LELY_CAN_NET_H
+#ifndef LELY_CAN_NET_H_
+#define LELY_CAN_NET_H_
 
 #include <lely/libc/time.h>
 #include <lely/can/msg.h>
@@ -347,5 +347,4 @@ LELY_CAN_EXTERN void can_recv_stop(can_recv_t *recv);
 }
 #endif
 
-#endif
-
+#endif // LELY_CAN_NET_H_

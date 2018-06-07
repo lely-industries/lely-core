@@ -4,7 +4,7 @@
  *
  * \see lely/util/endian.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -217,4 +217,3 @@ bitcpy(unsigned char *dst, unsigned char src, unsigned char mask)
 {
 	*dst = ((src ^ *dst) & mask) ^ *dst;
 }
-

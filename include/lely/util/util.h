@@ -1,7 +1,7 @@
 /*!\file
  * This is the public header file of the utilities library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,16 +18,16 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_UTIL_H
-#define LELY_UTIL_UTIL_H
+#ifndef LELY_UTIL_UTIL_H_
+#define LELY_UTIL_UTIL_H_
 
-#include <lely/libc/libc.h>
+#include <lely/lely.h>
 
 #ifndef LELY_UTIL_EXTERN
 #ifdef LELY_UTIL_INTERN
-#define LELY_UTIL_EXTERN	extern LELY_DLL_EXPORT
+#define LELY_UTIL_EXTERN	LELY_DLL_EXPORT
 #else
-#define LELY_UTIL_EXTERN	extern LELY_DLL_IMPORT
+#define LELY_UTIL_EXTERN	LELY_DLL_IMPORT
 #endif
 #endif
 
@@ -101,5 +101,4 @@
 #define QUOTE(x)	#x
 #endif
 
-#endif
-
+#endif // LELY_UTIL_UTIL_H_

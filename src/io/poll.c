@@ -22,6 +22,7 @@
  */
 
 #include "io.h"
+#include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/util/pool.h>
 #include <lely/util/rbtree.h>

@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 static struct __co_dev *__co_dev_init_from_dcf_cfg(struct __co_dev *dev,
 		const config_t *cfg);

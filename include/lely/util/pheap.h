@@ -11,9 +11,9 @@
  * The pairing heap implemented here is generic and can be used for any kind of
  * key-value pair; only (void) pointers to keys are stored. Upon initialization
  * of the heap, the user is responsible for providing a suitable comparison
- * function (#cmp_t).
+ * function (#pheap_cmp_t).
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,10 +30,12 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_PHEAP_H
-#define LELY_UTIL_PHEAP_H
+#ifndef LELY_UTIL_PHEAP_H_
+#define LELY_UTIL_PHEAP_H_
 
-#include <lely/util/cmp.h>
+#include <lely/util/util.h>
+
+#include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
 #define LELY_UTIL_PHEAP_INLINE	inline
@@ -41,7 +43,7 @@
 
 /*!
  * A node in a pairing heap. To associate a value with a node, embed the node in
- * a struct containing the value and use structof() to obtain the struct from
+ * a struct containing the value and use `structof()` to obtain the struct from
  * the node.
  *
  * \see pheap_in
@@ -61,19 +63,28 @@ struct pnode {
 	struct pnode *child;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*!
+ * The type of a comparison function suitable for use in a paring heap. \a p1
+ * and \a p2 MUST be NULL or point to objects of the same type.
+ *
+ * \returns an integer greater than, equal to, or less than 0 if the object at
+ * \a p1 is greater than, equal to, or less than the object at \a p2.
+ */
+typedef int __cdecl pheap_cmp_t(const void *p1, const void *p2);
+
 //! A pairing heap.
 struct pheap {
 	//! A pointer to the function used to compare two keys.
-	cmp_t *cmp;
+	pheap_cmp_t *cmp;
 	//! A pointer to the root node of the heap.
 	struct pnode *root;
 	//! The number of nodes stored in the heap.
 	size_t num_nodes;
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*!
  * Initializes a node in a paring heap.
@@ -120,7 +131,7 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
  * \param heap a pointer to the heap to be initialized.
  * \param cmp  a pointer to the function used to compare two keys.
  */
-LELY_UTIL_PHEAP_INLINE void pheap_init(struct pheap *heap, cmp_t *cmp);
+LELY_UTIL_PHEAP_INLINE void pheap_init(struct pheap *heap, pheap_cmp_t *cmp);
 
 //! Returns 1 if the pairing heap is empty, and 0 if not.
 LELY_UTIL_PHEAP_INLINE int pheap_empty(const struct pheap *heap);
@@ -191,7 +202,7 @@ pnode_next(const struct pnode *node)
 }
 
 LELY_UTIL_PHEAP_INLINE void
-pheap_init(struct pheap *heap, cmp_t *cmp)
+pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 {
 	heap->cmp = cmp;
 	heap->root = NULL;
@@ -220,5 +231,4 @@ pheap_first(const struct pheap *heap)
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_PHEAP_H_

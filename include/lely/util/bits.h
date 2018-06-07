@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the bit
  * function definitions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_BITS_H
-#define LELY_UTIL_BITS_H
+#ifndef LELY_UTIL_BITS_H_
+#define LELY_UTIL_BITS_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/util/util.h>
@@ -266,6 +266,7 @@ bswap64(uint64_t x)
 LELY_UTIL_BITS_INLINE int cls8(uint8_t x) { return clz8(~x); }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
+
 LELY_UTIL_BITS_INLINE int
 clz8(uint8_t x)
 {
@@ -276,6 +277,7 @@ clz8(uint8_t x)
 	return x ? __builtin_clz(x) - 24 : 8;
 #endif
 }
+
 #endif
 
 LELY_UTIL_BITS_INLINE int cls16(uint16_t x) { return clz16(~x); }
@@ -330,6 +332,7 @@ clz64(uint64_t x)
 LELY_UTIL_BITS_INLINE int cts8(uint8_t x) { return ctz8(~x); }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
+
 LELY_UTIL_BITS_INLINE int
 ctz8(uint8_t x)
 {
@@ -340,6 +343,7 @@ ctz8(uint8_t x)
 	return x ? __builtin_ctz(x) : 8;
 #endif
 }
+
 #endif
 
 LELY_UTIL_BITS_INLINE int cts16(uint16_t x) { return ctz16(~x); }
@@ -389,6 +393,7 @@ ctz64(uint64_t x)
 }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ffs)
+
 LELY_UTIL_BITS_INLINE int
 ffs8(uint8_t x)
 {
@@ -399,6 +404,7 @@ ffs8(uint8_t x)
 	return __builtin_ffs(x);
 #endif
 }
+
 #endif
 
 LELY_UTIL_BITS_INLINE int ffz8(uint8_t x) { return ffs8(~x); }
@@ -455,11 +461,13 @@ ffs64(uint64_t x)
 LELY_UTIL_BITS_INLINE int ffz64(uint64_t x) { return ffs64(~x); }
 
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
+
 LELY_UTIL_BITS_INLINE int
 parity8(uint8_t x)
 {
 	return __builtin_parity(x);
 }
+
 #endif
 
 LELY_UTIL_BITS_INLINE int
@@ -632,5 +640,4 @@ ror64(uint64_t x, unsigned int n)
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_BITS_H_

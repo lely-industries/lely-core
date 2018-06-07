@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the time
  * function declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_TIME_H
-#define LELY_UTIL_TIME_H
+#ifndef LELY_UTIL_TIME_H_
+#define LELY_UTIL_TIME_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/libc/time.h>
@@ -89,7 +89,7 @@ LELY_UTIL_TIME_INLINE int64_t timespec_diff_nsec(const struct timespec *t1,
 		const struct timespec *t2);
 
 /*!
- * Compares two times. This function has the signature of #cmp_t.
+ * Compares two times.
  *
  * \returns an integer greater than, equal to, or less than 0 if *\a p1 is
  * greater than, equal to, or less than *\a p2.
@@ -246,5 +246,4 @@ timespec_cmp(const void *p1, const void *p2)
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_TIME_H_

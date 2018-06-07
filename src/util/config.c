@@ -4,7 +4,7 @@
  *
  * \see lely/util/config.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#include <lely/util/cmp.h>
 #include <lely/util/config.h>
 #include <lely/util/errnum.h>
 #include <lely/util/rbtree.h>
@@ -394,4 +395,3 @@ config_entry_destroy(struct rbnode *node)
 	free(entry->value);
 	free(entry);
 }
-

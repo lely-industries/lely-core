@@ -4,7 +4,7 @@
  *
  * \see lely/util/rbtree.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -443,4 +443,3 @@ rbtree_replace(struct rbtree *tree, struct rbnode *old_node,
 		parent->right = new_node;
 	rbnode_set_parent(new_node, parent);
 }
-

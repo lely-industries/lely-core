@@ -9,7 +9,7 @@
  * and values are stored. Upon initialization of the map, the user is
  * responsible for providing suitable comparison functions (#cmp_t).
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,9 +26,10 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_BIMAP_H
-#define LELY_UTIL_BIMAP_H
+#ifndef LELY_UTIL_BIMAP_H_
+#define LELY_UTIL_BIMAP_H_
 
+#include <lely/util/cmp.h>
 #include <lely/util/rbtree.h>
 
 #ifndef LELY_UTIL_BIMAP_INLINE
@@ -390,5 +391,4 @@ bimap_last_by_value(const struct bimap *map)
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_BIMAP_H_

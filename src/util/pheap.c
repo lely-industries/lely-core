@@ -4,7 +4,7 @@
  *
  * \see lely/util/pheap.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,10 +28,10 @@
 #include <assert.h>
 
 static struct pnode *pnode_merge(struct pnode *n1, struct pnode *n2,
-		cmp_t *cmp);
-static struct pnode *pnode_merge_pairs(struct pnode *node, cmp_t *cmp);
+		pheap_cmp_t *cmp);
+static struct pnode *pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp);
 static struct pnode *pnode_find(struct pnode *node, const void *key,
-		cmp_t *cmp);
+		pheap_cmp_t *cmp);
 
 LELY_UTIL_EXPORT void
 pheap_insert(struct pheap *heap, struct pnode *node)
@@ -96,7 +96,7 @@ pheap_find(const struct pheap *heap, const void *key)
 }
 
 static struct pnode *
-pnode_merge(struct pnode *n1, struct pnode *n2, cmp_t *cmp)
+pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 {
 	if (!n1)
 		return n2;
@@ -118,7 +118,7 @@ pnode_merge(struct pnode *n1, struct pnode *n2, cmp_t *cmp)
 }
 
 static struct pnode *
-pnode_merge_pairs(struct pnode *node, cmp_t *cmp)
+pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp)
 {
 	if (!node)
 		return NULL;
@@ -135,7 +135,7 @@ pnode_merge_pairs(struct pnode *node, cmp_t *cmp)
 }
 
 static struct pnode *
-pnode_find(struct pnode *node, const void *key, cmp_t *cmp)
+pnode_find(struct pnode *node, const void *key, pheap_cmp_t *cmp)
 {
 	assert(cmp);
 
@@ -153,4 +153,3 @@ pnode_find(struct pnode *node, const void *key, cmp_t *cmp)
 
 	return NULL;
 }
-

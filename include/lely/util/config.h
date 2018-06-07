@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the
  * configuration functions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_CONFIG_H
-#define LELY_UTIL_CONFIG_H
+#ifndef LELY_UTIL_CONFIG_H_
+#define LELY_UTIL_CONFIG_H_
 
 #include <lely/util/util.h>
 
@@ -221,5 +221,4 @@ LELY_UTIL_EXTERN size_t config_print_ini_text(const config_t *config,
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_CONFIG_H_

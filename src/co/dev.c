@@ -22,6 +22,7 @@
  */
 
 #include "co.h"
+#include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #ifndef LELY_NO_CO_DCF
 #include <lely/util/frbuf.h>

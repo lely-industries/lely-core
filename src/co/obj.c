@@ -22,6 +22,7 @@
  */
 
 #include "co.h"
+#include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>

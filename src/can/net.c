@@ -4,7 +4,7 @@
  *
  * \see lely/can/net.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,6 +22,7 @@
  */
 
 #include "can.h"
+#include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/util/list.h>
 #include <lely/util/pheap.h>
@@ -661,4 +662,3 @@ can_recv_key_cmp(const void *p1, const void *p2)
 	return uint64_cmp(p1, p2);
 #endif
 }
-

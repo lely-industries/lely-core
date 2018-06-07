@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_ENDIAN_H
-#define LELY_UTIL_ENDIAN_H
+#ifndef LELY_UTIL_ENDIAN_H_
+#define LELY_UTIL_ENDIAN_H_
 
 #include <lely/util/bits.h>
 
@@ -763,5 +763,4 @@ stn_dbl(void *ptr, double d)
 }
 #endif
 
-#endif
-
+#endif // LELY_UTIL_ENDIAN_H_

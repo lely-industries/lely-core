@@ -3,7 +3,7 @@
  *
  * \see lely/util/bits.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,6 +25,7 @@
 #include <lely/util/bits.h>
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_clz)
+
 LELY_UTIL_EXPORT int
 clz8(uint8_t x)
 {
@@ -49,9 +50,11 @@ clz8(uint8_t x)
 
 	return tab[x];
 }
+
 #endif
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ctz)
+
 LELY_UTIL_EXPORT int
 ctz8(uint8_t x)
 {
@@ -76,9 +79,11 @@ ctz8(uint8_t x)
 
 	return tab[x];
 }
+
 #endif
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ffs)
+
 LELY_UTIL_EXPORT int
 ffs8(uint8_t x)
 {
@@ -103,9 +108,11 @@ ffs8(uint8_t x)
 
 	return tab[x];
 }
+
 #endif
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_parity)
+
 LELY_UTIL_EXPORT int
 parity8(uint8_t x)
 {
@@ -130,9 +137,11 @@ parity8(uint8_t x)
 
 	return tab[x];
 }
+
 #endif
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_popcount)
+
 LELY_UTIL_EXPORT int
 popcount8(uint8_t x)
 {
@@ -157,5 +166,5 @@ popcount8(uint8_t x)
 
 	return tab[x];
 }
-#endif
 
+#endif
