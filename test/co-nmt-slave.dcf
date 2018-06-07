@@ -102,7 +102,7 @@ DefaultValue=1
 ParameterName=Program Number 1
 DataType=0x000F
 AccessType=wo
-DownloadFile=nmt-slave.dat
+DownloadFile=co-nmt-slave.dat
 
 [1F51]
 SubNumber=2
