@@ -3,7 +3,7 @@
  * includes `<stdnoreturn.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_STDNORETURN_H
-#define LELY_LIBC_STDNORETURN_H
+#ifndef LELY_LIBC_STDNORETURN_H_
+#define LELY_LIBC_STDNORETURN_H_
 
 #include <lely/libc/libc.h>
 
@@ -45,6 +45,4 @@
 
 #endif // LELY_HAVE_STDNORETURN_H
 
-#endif
-
-
+#endif // LELY_LIBC_STDNORETURN_H_

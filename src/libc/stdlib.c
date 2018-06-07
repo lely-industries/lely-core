@@ -3,7 +3,7 @@
  *
  * \see lely/libc/stdlib.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -142,4 +142,3 @@ setenv(const char *envname, const char *envval, int overwrite)
 }
 
 #endif // _WIN32
-

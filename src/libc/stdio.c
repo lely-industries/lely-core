@@ -3,7 +3,7 @@
  *
  * \see lely/libc/stdio.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -165,4 +165,3 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 }
 
 #endif // !_GNU_SOURCE || __MINGW32__
-

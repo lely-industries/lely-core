@@ -3,7 +3,7 @@
  *
  * \see lely/libc/time.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -326,4 +326,3 @@ clock_settime(clockid_t clock_id, const struct timespec *tp)
 #endif // _WIN32 && !__MINGW32__
 
 #endif // !LELY_NO_RT
-

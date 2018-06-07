@@ -3,7 +3,7 @@
  *
  * \see lely/libc/threads.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,6 +36,8 @@
 #include <errno.h>
 
 #if LELY_HAVE_PTHREAD
+
+#include <lely/libc/stdint.h>
 
 #include <pthread.h>
 
@@ -135,7 +137,7 @@ call_once(once_flag *flag, void (__cdecl *func)(void))
 	struct once_info *info;
 	struct once_info **pinfo;
 
-	// Acquire the spinlock for #once_list.
+	// Acquire the spinlock for once_list.
 	while (InterlockedCompareExchange(&once_lock, 1, 0))
 		thrd_yield();
 
@@ -160,7 +162,7 @@ call_once(once_flag *flag, void (__cdecl *func)(void))
 		*pinfo = info;
 	}
 
-	// Release the spinlock for #once_list.
+	// Release the spinlock for once_list.
 	InterlockedExchange(&once_lock, 0);
 
 	// Now that we have a mutex for the flag, lock it and run func() once.
@@ -526,6 +528,7 @@ thrd_join(thrd_t thr, int *res)
 }
 
 #if !LELY_NO_RT
+
 LELY_LIBC_EXPORT int __cdecl
 thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
@@ -541,6 +544,7 @@ thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 	}
 	return res;
 }
+
 #endif
 
 LELY_LIBC_EXPORT void __cdecl
@@ -603,6 +607,7 @@ tss_set(tss_t key, void *val)
 
 #if LELY_HAVE_PTHREAD
 #elif defined(_WIN32)
+
 static void __cdecl
 thrd_start(void *arglist)
 {
@@ -612,7 +617,7 @@ thrd_start(void *arglist)
 
 	thrd_exit(info->func(info->arg));
 }
+
 #endif
 
 #endif // !LELY_NO_THREADS
-

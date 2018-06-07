@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdlib.h>` and defines any missing functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_STDLIB_H
-#define LELY_LIBC_STDLIB_H
+#ifndef LELY_LIBC_STDLIB_H_
+#define LELY_LIBC_STDLIB_H_
 
 #include <lely/libc/libc.h>
 
@@ -80,7 +80,6 @@ LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
 LELY_LIBC_EXTERN int setenv(const char *envname, const char *envval,
 		int overwrite);
 
-#endif
-
 #endif // !(_POSIX_C_SOURCE > 200112L)
 
+#endif // LELY_LIBC_STDLIB_H_

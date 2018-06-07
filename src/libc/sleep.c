@@ -3,7 +3,7 @@
  *
  * \see lely/libc/time.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -59,4 +59,3 @@ sleep(unsigned seconds)
 #endif // _WIN32 && !__MINGW32__
 
 #endif // !LELY_NO_RT
-

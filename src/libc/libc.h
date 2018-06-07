@@ -1,7 +1,7 @@
 /*!\file
  * This is the internal header file of the C11 and POSIX compatibility library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_INTERN_LIBC_H
-#define LELY_LIBC_INTERN_LIBC_H
+#ifndef LELY_LIBC_INTERN_LIBC_H_
+#define LELY_LIBC_INTERN_LIBC_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -34,9 +34,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(_POSIX_C_SOURCE)
-#include <unistd.h>
 #endif
 
-#endif
-
+#endif // LELY_LIBC_INTERN_LIBC_H_

@@ -3,7 +3,7 @@
  *
  * \see lely/libc/strings.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -85,4 +85,3 @@ strncasecmp(const char *s1, const char *s2, size_t n)
 }
 
 #endif // !LELY_HAVE_STRINGS_H
-

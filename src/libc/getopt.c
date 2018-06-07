@@ -3,7 +3,7 @@
  *
  * \see lely/libc/unistd.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -111,4 +111,3 @@ getopt(int argc, char *const argv[], const char *optstring)
 }
 
 #endif // !LELY_HAVE_UNISTD_H
-

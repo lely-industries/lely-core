@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<threads.h>`, if it exists, and defines any missing functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_THREADS_H
-#define LELY_LIBC_THREADS_H
+#ifndef LELY_LIBC_THREADS_H_
+#define LELY_LIBC_THREADS_H_
 
 #include <lely/libc/libc.h>
 
@@ -443,5 +443,4 @@ LELY_LIBC_EXTERN int __cdecl tss_set(tss_t key, void *val);
 
 #endif // LELY_HAVE_THREADS_H
 
-#endif
-
+#endif // LELY_LIBC_THREADS_H_

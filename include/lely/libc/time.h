@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<time.h>` and defines any missing functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_TIME_H
-#define LELY_LIBC_TIME_H
+#ifndef LELY_LIBC_TIME_H_
+#define LELY_LIBC_TIME_H_
 
 #include <lely/libc/signal.h>
 
@@ -79,6 +79,7 @@
 #endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
 #if !LELY_HAVE_TIMESPEC
+
 //! A time type with nanosecond resolution.
 struct timespec {
 	//! Whole seconds (>= 0).
@@ -86,9 +87,11 @@ struct timespec {
 	//! Nanoseconds [0, 999999999].
 	long tv_nsec;
 };
+
 #endif
 
 #if !LELY_HAVE_ITIMERSPEC
+
 //! A struct specifying an interval and initial value for a timer.
 struct itimerspec {
 	//! The timer period.
@@ -96,6 +99,7 @@ struct itimerspec {
 	//! The timer expiration.
 	struct timespec it_value;
 };
+
 #endif
 
 #ifdef __cplusplus
@@ -156,7 +160,7 @@ LELY_LIBC_EXTERN int __cdecl clock_gettime(clockid_t clock_id,
  *
  * \param clock_id the identifier of the clock (one of #CLOCK_REALTIME,
  *                 #CLOCK_MONOTONIC or #CLOCK_PROCESS_CPUTIME_ID).
- * \param flags    if the #TIMER_ABSTIME is set in \a flags, this function shall
+ * \param flags    if #TIMER_ABSTIME is set in \a flags, this function shall
  *                 sleep until the value of the clock specified by \a clock_id
  *                 reaches the absolute time specified by \a rqtp. If
  *                 #TIMER_ABSTIME is not set, this function shall sleep until
@@ -317,5 +321,4 @@ LELY_LIBC_EXTERN int __cdecl timespec_get(struct timespec *ts, int base);
 }
 #endif
 
-#endif
-
+#endif // LELY_LIBC_TIME_H_

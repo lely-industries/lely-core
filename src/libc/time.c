@@ -3,7 +3,7 @@
  *
  * \see lely/libc/time.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,4 +41,3 @@ timespec_get(struct timespec *ts, int base)
 #endif // !LELY_HAVE_TIMESPEC_GET
 
 #endif // !LELY_NO_RT
-

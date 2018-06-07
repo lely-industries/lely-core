@@ -3,7 +3,7 @@
  *
  * \see lely/libc/time.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -513,4 +513,3 @@ timespec_sub(struct timespec *tp, const struct timespec *dec)
 #endif // _WIN32
 
 #endif // !LELY_NO_RT
-

@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stddef.h>` and defines any missing functionality.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,14 +19,15 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_STDDEF_H
-#define LELY_LIBC_STDDEF_H
+#ifndef LELY_LIBC_STDDEF_H_
+#define LELY_LIBC_STDDEF_H_
 
 #include <lely/libc/libc.h>
 
 #include <stddef.h>
 
 #if !(__STDC_VERSION__ >= 201112L) && !(__cplusplus >= 201103L)
+
 /*!
  * An object type whose alignment is as great as is supported by the
  * implementation in all contexts.
@@ -41,7 +42,7 @@ typedef union {
 	void *__ptr;
 	int (*__fptr)(void);
 } max_align_t;
-#endif
 
 #endif
 
+#endif // LELY_LIBC_STDDEF_H_

@@ -3,7 +3,7 @@
  * includes `<stdatomic.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_STDATOMIC_H
-#define LELY_LIBC_STDATOMIC_H
+#ifndef LELY_LIBC_STDATOMIC_H_
+#define LELY_LIBC_STDATOMIC_H_
 
 #include <lely/libc/libc.h>
 
@@ -640,5 +640,4 @@ atomic_flag_clear(volatile atomic_flag *object)
 
 #endif // LELY_HAVE_STDATOMIC_H
 
-#endif
-
+#endif // LELY_LIBC_STDATOMIC_H_

@@ -3,7 +3,7 @@
  * includes `<sys/types.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2014-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_SYS_TYPES_H
-#define LELY_LIBC_SYS_TYPES_H
+#ifndef LELY_LIBC_SYS_TYPES_H_
+#define LELY_LIBC_SYS_TYPES_H_
 
 #include <lely/libc/libc.h>
 
@@ -52,10 +52,9 @@ typedef ptrdiff_t ssize_t;
 typedef struct pthread_attr_t pthread_attr_t;
 #endif
 
-#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS)
+#if !defined(_POSIX_C_SOURCE) && (defined(_WIN32) || !defined(_POSIX_TIMERS))
 //! Used for timer ID returned by `timer_create()`.
 typedef void *timer_t;
 #endif
 
-#endif
-
+#endif // LELY_LIBC_SYS_TYPES_H_

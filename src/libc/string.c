@@ -3,7 +3,7 @@
  *
  * \see lely/libc/string.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,6 +27,7 @@
 
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
+
 LELY_LIBC_EXPORT char * __cdecl
 strdup(const char *s)
 {
@@ -36,9 +37,11 @@ strdup(const char *s)
 		return NULL;
 	return memcpy(dup, s, size);
 }
+
 #endif
 
 #if !(_POSIX_C_SOURCE >= 200809L)
+
 LELY_LIBC_EXPORT char * __cdecl
 strndup(const char *s, size_t size)
 {
@@ -49,10 +52,12 @@ strndup(const char *s, size_t size)
 	dup[size] = '\0';
 	return memcpy(dup, s, size);
 }
+
 #endif
 
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
+
 LELY_LIBC_EXPORT  size_t __cdecl
 strnlen(const char *s, size_t maxlen)
 {
@@ -61,5 +66,5 @@ strnlen(const char *s, size_t maxlen)
 		size++;
 	return size;
 }
-#endif
 
+#endif

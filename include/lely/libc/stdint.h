@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdint.h>`, if it exists, and defines any missing functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_STDINT_H
-#define LELY_LIBC_STDINT_H
+#ifndef LELY_LIBC_STDINT_H_
+#define LELY_LIBC_STDINT_H_
 
 #include <lely/libc/libc.h>
 
@@ -703,5 +703,4 @@ typedef uint64_t uintmax_t;
 #endif
 #endif
 
-#endif
-
+#endif // LELY_LIBC_STDINT_H_
