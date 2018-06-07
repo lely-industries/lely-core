@@ -4,7 +4,7 @@
  *
  * \see lely/can/vci.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -163,4 +163,3 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 }
 
 #endif // LELY_HAVE_VCI
-

@@ -1,7 +1,7 @@
 /*!\file
  * This is the internal header file of the CAN library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_INTERN_CAN_H
-#define LELY_CAN_INTERN_CAN_H
+#ifndef LELY_CAN_INTERN_CAN_H_
+#define LELY_CAN_INTERN_CAN_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -32,5 +32,4 @@
 #define LELY_CAN_EXPORT	LELY_DLL_EXPORT
 #endif
 
-#endif
-
+#endif // LELY_CAN_INTERN_CAN_H_

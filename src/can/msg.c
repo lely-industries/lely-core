@@ -4,7 +4,7 @@
  *
  * \see lely/can/msg.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,6 +26,7 @@
 #include <lely/util/bits.h>
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
+#include <lely/util/util.h>
 #include <lely/can/msg.h>
 
 #include <assert.h>
@@ -367,4 +368,3 @@ can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n) {
 		crc = (tab[*bp++ ^ (crc >> 7)] ^ (crc << 8)) & 0x7fff;
 	return crc;
 }
-

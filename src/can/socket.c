@@ -4,7 +4,7 @@
  *
  * \see lely/can/socket.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -228,4 +228,3 @@ can_msg2canfd_frame(const struct can_msg *src, struct canfd_frame *dst)
 #endif // !LELY_NO_CANFD && CANFD_MTU
 
 #endif // LELY_HAVE_SOCKET_CAN
-

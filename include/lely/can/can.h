@@ -1,7 +1,7 @@
 /*!\file
  * This is the public header file of the CAN library.
  *
- * \copyright 2018 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,17 +18,16 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_CAN_H
-#define LELY_CAN_CAN_H
+#ifndef LELY_CAN_CAN_H_
+#define LELY_CAN_CAN_H_
 
-#include <lely/libc/libc.h>
-#include <lely/util/util.h>
+#include <lely/lely.h>
 
 #ifndef LELY_CAN_EXTERN
 #ifdef LELY_CAN_INTERN
-#define LELY_CAN_EXTERN	extern LELY_DLL_EXPORT
+#define LELY_CAN_EXTERN	LELY_DLL_EXPORT
 #else
-#define LELY_CAN_EXTERN	extern LELY_DLL_IMPORT
+#define LELY_CAN_EXTERN	LELY_DLL_IMPORT
 #endif
 #endif
 
@@ -45,18 +44,17 @@ enum can_state {
 //! The error flags of a CAN bus, which are not mutually exclusive.
 enum can_error {
 	//! A single bit error.
-	CAN_ERROR_BIT = 1 << 0,
+	CAN_ERROR_BIT = 1u << 0,
 	//! A bit stuffing error.
-	CAN_ERROR_STUFF = 1 << 1,
+	CAN_ERROR_STUFF = 1u << 1,
 	//! A CRC sequence error.
-	CAN_ERROR_CRC = 1 << 2,
+	CAN_ERROR_CRC = 1u << 2,
 	//! A form error.
-	CAN_ERROR_FORM = 1 << 3,
+	CAN_ERROR_FORM = 1u << 3,
 	//! An acknowledgment error.
-	CAN_ERROR_ACK = 1 << 4,
+	CAN_ERROR_ACK = 1u << 4,
 	//! One or more other errors.
 	CAN_ERROR_OTHER = 1 << 5
 };
 
-#endif
-
+#endif // LELY_CAN_CAN_H_

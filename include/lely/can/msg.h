@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN frame
  * declarations.
  *
- * \copyright 2018 Lely Industries N.V.
+ * \copyright 2015-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_MSG_H
-#define LELY_CAN_MSG_H
+#ifndef LELY_CAN_MSG_H_
+#define LELY_CAN_MSG_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/can/can.h>
@@ -142,7 +142,7 @@ extern "C" {
  *             #CAN_MSG_BITS_MODE_EXACT).
  *
  * Returns the number of bits on success, or -1 on error. In the latter case,
- * the error number can be obtained with `get_errnum()`.
+ * the error number can be obtained with `get_errc()`.
  */
 LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
 		enum can_msg_bits_mode mode);
@@ -184,5 +184,4 @@ LELY_CAN_EXTERN int asprintf_can_msg(char **ps, const struct can_msg *msg);
 }
 #endif
 
-#endif
-
+#endif // LELY_CAN_MSG_H_

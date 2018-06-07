@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the IXXAT VCI V4
  * interface declarations.
  *
- * \copyright 2018 Lely Industries N.V.
+ * \copyright 2016-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_VCI_H
-#define LELY_CAN_VCI_H
+#ifndef LELY_CAN_VCI_H_
+#define LELY_CAN_VCI_H_
 
 #include <lely/can/msg.h>
 
@@ -41,7 +41,7 @@ extern "C" {
  *               are set in *\a perror, but existing flags are not cleared.
  *
  * \returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
- * In the latter case, the error number can be obtained with `get_errnum()`.
+ * In the latter case, the error number can be obtained with `get_errc()`.
  */
 LELY_CAN_EXTERN int CANMSG_is_error(const void *msg, enum can_state *pstate,
 		enum can_error *perror);
@@ -70,5 +70,4 @@ LELY_CAN_EXTERN int can_msg2CANMSG(const struct can_msg *src, void *dst);
 }
 #endif
 
-#endif
-
+#endif // LELY_CAN_VCI_H_
