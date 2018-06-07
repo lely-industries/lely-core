@@ -3,9 +3,12 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = doc include src python tools pkgconfig test
 
 EXTRA_DIST =
+EXTRA_DIST += CPPLINT.cfg
 EXTRA_DIST += LICENSE
 EXTRA_DIST += NOTICE
 EXTRA_DIST += README.md
+EXTRA_DIST += .cquery
+EXTRA_DIST += .gcc-flags.json
 
 if CODE_COVERAGE_ENABLED
 @CODE_COVERAGE_RULES@

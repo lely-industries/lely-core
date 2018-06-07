@@ -36,6 +36,8 @@
 /missing
 /stamp-h1
 /tap-driver.sh
+/.vscode/
+!/.vscode/c_cpp_properties.json
 .deps
 .libs
 Makefile

@@ -1,0 +1,8 @@
+%clang
+%c -std=gnu11
+%cpp -std=gnu++11
+
+# Includes
+-Iinclude
+
+-DHAVE_CONFIG_H
