@@ -34,6 +34,7 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "iphlpapi.lib")
 #endif
+#include <wincrypt.h>
 #include <iphlpapi.h>
 #elif defined(__linux__) && defined(HAVE_IFADDRS_H)
 #include <ifaddrs.h>
