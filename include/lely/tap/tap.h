@@ -1,7 +1,7 @@
 /*!\file
  * This is the public header file of the Test Anything Protocol (TAP) library.
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,16 +18,16 @@
  * limitations under the License.
  */
 
-#ifndef LELY_TAP_TAP_H
-#define LELY_TAP_TAP_H
+#ifndef LELY_TAP_TAP_H_
+#define LELY_TAP_TAP_H_
 
-#include <lely/libc/libc.h>
+#include <lely/lely.h>
 
 #ifndef LELY_TAP_EXTERN
 #ifdef LELY_TAP_INTERN
-#define LELY_TAP_EXTERN	extern LELY_DLL_EXPORT
+#define LELY_TAP_EXTERN	LELY_DLL_EXPORT
 #else
-#define LELY_TAP_EXTERN	extern LELY_DLL_IMPORT
+#define LELY_TAP_EXTERN	LELY_DLL_IMPORT
 #endif
 #endif
 
@@ -45,8 +45,8 @@
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_plan(...) \
-	_tap_plan(__VA_ARGS__, "")
-#define _tap_plan(n, ...) \
+	tap_plan_(__VA_ARGS__, "")
+#define tap_plan_(n, ...) \
 	__tap_plan_impl(n, "" __VA_ARGS__)
 #else
 #define tap_plan(n) \
@@ -62,8 +62,8 @@
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_test(...) \
-	_tap_test(__VA_ARGS__, "")
-#define _tap_test(expr, ...) \
+	tap_test_(__VA_ARGS__, "")
+#define tap_test_(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
 #else
 #define tap_test(expr) \
@@ -109,8 +109,8 @@
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_todo(...) \
-	_tap_todo(__VA_ARGS__, "")
-#define _tap_todo(expr, ...) \
+	tap_todo_(__VA_ARGS__, "")
+#define tap_todo_(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, \
 			" # TODO " __VA_ARGS__)
 #else
@@ -124,8 +124,8 @@
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_skip(...) \
-	_tap_skip(__VA_ARGS__, "")
-#define _tap_skip(expr, ...) \
+	tap_skip_(__VA_ARGS__, "")
+#define tap_skip_(expr, ...) \
 	tap_pass(" # SKIP " __VA_ARGS__)
 #else
 #define tap_skip(expr) \
@@ -167,10 +167,10 @@
 				#expr))
 #else
 #define tap_assert(expr) \
-	_tap_assert(expr, __FILE__, __LINE__)
-#define _tap_assert(expr, file, line) \
-	__tap_assert(expr, file, line)
-#define __tap_assert(expr, file, line) \
+	tap_assert_(expr, __FILE__, __LINE__)
+#define tap_assert_(expr, file, line) \
+	tap_assert__(expr, file, line)
+#define tap_assert__(expr, file, line) \
 	((expr) ? (void)0 \
 		: __tap_abort_impl(file ":" #line ": Assertion `" #expr "' failed."))
 #endif
@@ -193,5 +193,4 @@ LELY_TAP_EXTERN _Noreturn void __tap_abort_impl(const char *format, ...)
 }
 #endif
 
-#endif
-
+#endif // LELY_TAP_TAP_H_

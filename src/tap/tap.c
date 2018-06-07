@@ -4,7 +4,7 @@
  *
  * \see lely/tap/tap.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -153,4 +153,3 @@ tap_vprintf(const char *format, va_list ap)
 
 	free(s);
 }
-

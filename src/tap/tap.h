@@ -1,7 +1,7 @@
 /*!\file
  * This is the internal header file of the Test Anything Protocol (TAP) library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * \copyright 2013-2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_TAP_INTERN_TAP_H
-#define LELY_TAP_INTERN_TAP_H
+#ifndef LELY_TAP_INTERN_TAP_H_
+#define LELY_TAP_INTERN_TAP_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -32,5 +32,4 @@
 #define LELY_TAP_EXPORT	LELY_DLL_EXPORT
 #endif
 
-#endif
-
+#endif // LELY_TAP_INTERN_TAP_H_
