@@ -217,7 +217,7 @@ AS_IF([test "$enable_lss" == "no"], [
 ])
 
 AM_CONDITIONAL([NO_CO_WTM], [false])
-AC_ARG_ENABLE([lss],
+AC_ARG_ENABLE([wtm],
 	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
 AS_IF([test "$enable_wtm" == "no"], [
 	AM_CONDITIONAL([NO_CO_WTM], [true])
