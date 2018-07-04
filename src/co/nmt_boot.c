@@ -4,7 +4,7 @@
  *
  * \see src/nmt_boot.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * \copyright 2018 Lely Industries N.V.
  *
  * \author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1090,11 +1090,13 @@ co_nmt_boot_chk_device_type_on_enter(co_nmt_boot_t *boot)
 
 	boot->es = 'B';
 
-	// Read the device type of the slave (object 1000).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1000, 0x00) == -1))
-		return co_nmt_boot_abort_state;
-
-	return NULL;
+	// The device type check may follow an NMT 'reset communication'
+	// command, in which case we may have to give the slave some time to
+	// complete the state change. Start the first SDO request by simulating
+	// a timeout.
+	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
+	return co_nmt_boot_chk_device_type_on_up_con(boot, CO_SDO_AC_TIMEOUT,
+			NULL, 0);
 }
 
 static co_nmt_boot_state_t *
@@ -1103,7 +1105,13 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	// Retry the SDO request on timeout (this includes the first attempt).
+	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
+		// Read the device type of the slave (object 1000).
+		if (__unlikely(co_nmt_boot_up(boot, 0x1000, 0x00) == -1))
+			return co_nmt_boot_abort_state;
+		return NULL;
+	} else if (__unlikely(ac)) {
 		diag(DIAG_ERROR, 0, "SDO abort code %08X received on upload request of object 1000 (Device type) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 		return co_nmt_boot_abort_state;
