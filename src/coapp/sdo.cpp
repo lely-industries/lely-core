@@ -474,8 +474,9 @@ Sdo::Impl_::OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac, T value)
 
 void
 Sdo::Impl_::OnTaskFinished(RequestBase_& req) noexcept {
-  req.GetExecutor().Post(req);
-  req.GetExecutor().OnTaskFinished();
+  auto exec = req.GetExecutor();
+  exec.Post(req);
+  exec.OnTaskFinished();
 
   auto task = aio_queue_front(&queue);
   if (task)
