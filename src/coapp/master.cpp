@@ -60,6 +60,35 @@ BasicMaster::BasicMaster(aio::TimerBase& timer, aio::CanBusBase& bus,
 
 LELY_COAPP_EXPORT BasicMaster::~BasicMaster() = default;
 
+LELY_COAPP_EXPORT void
+BasicMaster::Error(uint8_t id) {
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  if (nmt()->nodeErrInd(id) == -1)
+    throw_errc("Error");
+}
+
+LELY_COAPP_EXPORT void
+BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  Node::Error(eec, er, msef);
+}
+
+LELY_COAPP_EXPORT void
+BasicMaster::RpdoRtr(int num) {
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  Node::RpdoRtr(num);
+}
+
+LELY_COAPP_EXPORT void
+BasicMaster::TpdoEvent(int num) {
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  Node::TpdoEvent(num);
+}
+
 LELY_COAPP_EXPORT ::std::chrono::milliseconds
 BasicMaster::GetTimeout() const {
   ::std::lock_guard<BasicLockable> lock(const_cast<BasicMaster&>(*this));
@@ -72,14 +101,6 @@ BasicMaster::SetTimeout(const ::std::chrono::milliseconds& timeout) {
   ::std::lock_guard<BasicLockable> lock(*this);
 
   nmt()->setTimeout(detail::ToTimeout(timeout));
-}
-
-LELY_COAPP_EXPORT void
-BasicMaster::Error(uint8_t id) {
-  ::std::lock_guard<BasicLockable> lock(*this);
-
-  if (nmt()->nodeErrInd(id) == -1)
-    throw_errc("Error");
 }
 
 LELY_COAPP_EXPORT void

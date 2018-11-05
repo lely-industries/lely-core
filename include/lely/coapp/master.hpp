@@ -413,6 +413,34 @@ class DriverBase;
    */
   void Error(uint8_t id);
 
+  /*
+   * Generates an EMCY error and triggers the error handling behavior according
+   * to object 1029:01 (Error behavior object) in case of a communication error
+   * (emergency error code 0x81xx).
+   *
+   * \param eec  the emergency error code.
+   * \param er   the error register.
+   * \param msef the manufacturer-specific error code.
+   */
+  void Error(uint16_t eec, uint8_t er, const uint8_t msef[5] = nullptr);
+
+  /*!
+   * Requests the transmission of a PDO.
+   *
+   * \param num the PDO number (in the range [1..512]).
+   */
+  void RpdoRtr(int num = 0);
+
+  /*!
+   * Triggers the transmission of an event-driven (asynchronous) PDO.
+   *
+   * \param num the PDO number (in the range [1..512]).
+   *
+   * \throws std::system_error(std::errc::resource_unavailable_try_again) if the
+   * inhibit time has not yet elapsed.
+   */
+  void TpdoEvent(int num = 0);
+
   /*!
    * Returns the SDO timeout used during the NMT 'boot slave' and 'check
    * configuration' processes.
