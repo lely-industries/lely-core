@@ -72,6 +72,11 @@ IoContext::IoContext(aio::TimerBase& timer, aio::CanBusBase& bus,
 
 LELY_COAPP_EXPORT IoContext::~IoContext() = default;
 
+LELY_COAPP_EXPORT aio::ExecutorBase
+IoContext::GetExecutor() const noexcept {
+  return impl_->timer.GetExecutor();
+}
+
 LELY_COAPP_EXPORT CANNet*
 IoContext::net() const noexcept { return impl_->net.get(); }
 

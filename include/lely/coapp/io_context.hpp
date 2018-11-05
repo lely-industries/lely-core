@@ -61,6 +61,19 @@ class LELY_COAPP_EXTERN IoContext {
   IoContext(const IoContext&) = delete;
   IoContext& operator=(const IoContext&) = delete;
 
+  //! Returns the executor used to process I/O events on the CAN bus.
+  aio::ExecutorBase GetExecutor() const noexcept;
+
+  //! Schedules the specified Callable object for execution. \see GetExecutor()
+  template <class F>
+  void
+  Post(F&& f) {
+    auto* op = new aio::TaskWrapper(
+        [=](::std::error_code ec) { if (!ec) f(); }
+    );
+    GetExecutor().Post(*op);
+  }
+
  protected:
   ~IoContext();
 
@@ -71,7 +84,7 @@ class LELY_COAPP_EXTERN IoContext {
   CANNet* net() const noexcept;
 
   /*!
-   * Update the CAN network time. If a mutex was passed to the constructtor, it
+   * Update the CAN network time. If a mutex was passed to the constructor, it
    * MUST be locked for the duration of this call.
    */
   void SetTime();
