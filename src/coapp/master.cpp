@@ -540,13 +540,15 @@ AsyncMaster::OnTime(const ::std::chrono::system_clock::time_point& abs_time)
 LELY_COAPP_EXPORT void
 AsyncMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er, uint8_t msef[5])
     noexcept {
+  ::std::array<uint8_t, 5> value = { 0 };
+  ::std::copy_n(msef, value.size(), value.begin());
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
     auto op = new aio::TaskWrapper(
-        [=](::std::error_code ec) {
+        [=](::std::error_code ec) mutable {
           if (!ec)
-            driver->OnEmcy(eec, er, msef);
+            driver->OnEmcy(eec, er, value.data());
         });
     driver->GetExecutor().Post(*op);
   }
