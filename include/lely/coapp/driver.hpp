@@ -35,6 +35,8 @@ class DriverBase {
   using CanState = BasicMaster::CanState;
   using CanError = BasicMaster::CanError;
 
+  using time_point = BasicMaster::time_point;
+
   DriverBase() = default;
 
   DriverBase(const DriverBase&) = delete;
@@ -252,10 +254,11 @@ class DriverBase {
    *
    * \param cnt the counter (in the range [1..240]), or 0 if the SYNC message is
    *            empty.
+   * \param t   the time at which the SYNC message was sent/received.
    *
    * \see BasicMaster::OnSync()
    */
-  virtual void OnSync(uint8_t cnt) noexcept = 0;
+  virtual void OnSync(uint8_t cnt, const Node::time_point& t) noexcept = 0;
 
   /*!
    * The function invoked when the data length of a received SYNC message does
@@ -295,6 +298,8 @@ class LELY_COAPP_EXTERN BasicDriver : private DriverBase {
   friend class BasicMaster;
 
  public:
+  using DriverBase::time_point;
+
   /*!
    * Creates a new driver for a remote CANopen node and registers it with the
    * master.
@@ -735,7 +740,7 @@ class LELY_COAPP_EXTERN BasicDriver : private DriverBase {
   OnTpdo(int /*num*/, ::std::error_code /*ec*/, const void* /*p*/,
          ::std::size_t /*n*/) noexcept override {}
 
-  void OnSync(uint8_t /*cnt*/) noexcept override {}
+  void OnSync(uint8_t /*cnt*/, const time_point& /*t*/) noexcept override {}
 
   void OnSyncError(uint16_t /*eec*/, uint8_t /*er*/) noexcept override {}
 

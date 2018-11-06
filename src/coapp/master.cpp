@@ -252,10 +252,10 @@ BasicMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
 }
 
 LELY_COAPP_EXPORT void
-BasicMaster::OnSync(uint8_t cnt) noexcept {
+BasicMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
     detail::UnlockGuard<BasicLockable> unlock(*this);
-    it.second->OnSync(cnt);
+    it.second->OnSync(cnt, t);
   }
 }
 
@@ -498,13 +498,13 @@ AsyncMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
 }
 
 LELY_COAPP_EXPORT void
-AsyncMaster::OnSync(uint8_t cnt) noexcept {
+AsyncMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
     auto op = new aio::TaskWrapper(
         [=](::std::error_code ec) {
           if (!ec)
-            driver->OnSync(cnt);
+            driver->OnSync(cnt, t);
         });
     driver->GetExecutor().Post(*op);
   }

@@ -110,6 +110,8 @@ operator^=(NmtState& lhs, NmtState rhs) noexcept {
 class LELY_COAPP_EXTERN Node
     : protected BasicLockable, public IoContext, public Device {
  public:
+  using time_point = ::std::chrono::steady_clock::time_point;
+
   /*!
    * Creates a new CANopen node. After creation, the node is in the NMT
    * 'Initialisation' state and does not yet create any services or perform any
@@ -313,8 +315,13 @@ class LELY_COAPP_EXTERN Node
    *
    * \param cnt the counter (in the range [1..240]), or 0 if the SYNC message is
    *            empty.
+   * \param t   the time at which the SYNC message was sent/received.
    */
-  virtual void OnSync(uint8_t cnt) noexcept { (void)cnt; }
+  virtual void
+  OnSync(uint8_t cnt, const time_point& t) noexcept {
+    (void)cnt;
+    (void)t;
+  }
 
   /*!
    * The function invoked when the data length of a received SYNC message does

@@ -962,7 +962,7 @@ class DriverBase;
    *
    * \see Node::OnSync(), DriverBase::OnSync()
    */
-  void OnSync(uint8_t cnt) noexcept override;
+  void OnSync(uint8_t cnt, const time_point& t) noexcept override;
 
   /*!
    * The default implementation notifies all registered drivers.
@@ -1115,7 +1115,7 @@ class AsyncMaster : public BasicMaster {
    *
    * \see Node::OnSync(), DriverBase::OnSync()
    */
-  void OnSync(uint8_t cnt) noexcept override;
+  void OnSync(uint8_t cnt, const time_point& t) noexcept override;
 
   /*!
    * The default implementation queues a notification for all registered

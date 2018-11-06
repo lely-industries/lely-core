@@ -280,7 +280,7 @@ Node::Impl_::OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr, size_t n)
 
 void
 Node::Impl_::OnSyncInd(CONMT*, uint8_t cnt) noexcept {
-  self->OnSync(cnt);
+  self->OnSync(cnt, Node::time_point::clock::now());
 }
 
 void
