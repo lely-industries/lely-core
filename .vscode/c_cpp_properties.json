@@ -1,23 +1,31 @@
 {
+    "env": {
+        "defaultIncludePath": [
+            "${workspaceFolder}",
+            "${workspaceFolder}/include"
+        ]
+    },
     "configurations": [
         {
             "name": "Linux",
+            "intelliSenseMode": "clang-x64",
+            "includePath": [
+                "${defaultIncludePath}"
+            ],
+            "defines": [
+                "HAVE_CONFIG_H",
+                "_POSIX_C_SOURCE=200809L",
+                "_POSIX_MAPPED_FILES=200809L"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
             "browse": {
                 "path": [
                     "${workspaceFolder}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
-            },
-            "includePath": [
-                "${workspaceFolder}"
-            ],
-            "defines": [
-                "HAVE_CONFIG_H"
-            ],
-            "compilerPath": "/usr/bin/clang",
-            "cStandard": "c11",
-            "cppStandard": "c++11",
-            "intelliSenseMode": "clang-x64"
+            }
         }
     ],
     "version": 4

@@ -38,6 +38,7 @@
 /tap-driver.sh
 /.vscode/
 !/.vscode/c_cpp_properties.json
+!/.vscode/settings.json
 .deps
 .libs
 Makefile
