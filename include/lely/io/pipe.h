@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the I/O library; it contains the pipe
  * declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,15 @@
 extern "C" {
 #endif
 
-/*!
+/**
  * Opens a pipe.
  *
- * \param handle_vector a 2-value array which, on success, contains the device
+ * @param handle_vector a 2-value array which, on success, contains the device
  *                      handles of the pipe. `handle_vector[0]` corresponds to
  *                      the read end and `handle_vector[1]` to the write end.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  */
 LELY_IO_EXTERN int io_open_pipe(io_handle_t handle_vector[2]);
 

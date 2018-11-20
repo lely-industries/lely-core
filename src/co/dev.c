@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the device description.
  *
- * \see lely/co/dev.h
+ * @see lely/co/dev.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,35 +34,35 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CANopen device.
+/// A CANopen device.
 struct __co_dev {
-	//! The network-ID.
+	/// The network-ID.
 	co_unsigned8_t netid;
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! The tree containing the object dictionary.
+	/// The tree containing the object dictionary.
 	struct rbtree tree;
-	//! A pointer to the name of the device.
+	/// A pointer to the name of the device.
 	char *name;
-	//! A pointer to the vendor name.
+	/// A pointer to the vendor name.
 	char *vendor_name;
-	//! The vendor ID.
+	/// The vendor ID.
 	co_unsigned32_t vendor_id;
-	//! A pointer to the product name.
+	/// A pointer to the product name.
 	char *product_name;
-	//! The product code.
+	/// The product code.
 	co_unsigned32_t product_code;
-	//! The revision number.
+	/// The revision number.
 	co_unsigned32_t revision;
-	//! A pointer to the order code.
+	/// A pointer to the order code.
 	char *order_code;
-	//! The supported bit rates.
+	/// The supported bit rates.
 	unsigned baud:10;
-	//! The (pending) baudrate (in kbit/s).
+	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
-	//! A flag specifying whether LSS is supported (1) or not (0).
+	/// A flag specifying whether LSS is supported (1) or not (0).
 	int lss;
-	//! The data types supported for mapping dummy entries in PDOs.
+	/// The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
 };
 

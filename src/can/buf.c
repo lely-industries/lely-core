@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CAN library; it contains the implementation of the
  * CAN frame buffer.
  *
- * \see lely/can/buf.h
+ * @see lely/can/buf.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 #include <string.h>
 
 #ifndef LELY_CAN_BUF_SIZE
-//! The minimum size (in number of frames) of a CAN frame buffer.
+/// The minimum size (in number of frames) of a CAN frame buffer.
 #define LELY_CAN_BUF_SIZE	16
 #endif
 

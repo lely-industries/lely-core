@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the ASCII gateway functions.
  *
- * \see lely/co/gw_txt.h
+ * @see lely/co/gw_txt.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,207 +41,207 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-//! A CANopen ASCII gateway.
+/// A CANopen ASCII gateway.
 struct __co_gw_txt {
-	//! The last internal error code.
+	/// The last internal error code.
 	int iec;
-	//! The number of pending requests.
+	/// The number of pending requests.
 	size_t pending;
-	//! A pointer to the callback function invoked by co_gw_txt_recv().
+	/// A pointer to the callback function invoked by co_gw_txt_recv().
 	co_gw_txt_recv_func_t *recv_func;
-	//! A pointer to the user-specified data for #recv_func.
+	/// A pointer to the user-specified data for #recv_func.
 	void *recv_data;
-	//! A pointer to the callback function invoked by co_gw_txt_send().
+	/// A pointer to the callback function invoked by co_gw_txt_send().
 	co_gw_txt_send_func_t *send_func;
-	//! A pointer to the user-specified data for #send_func.
+	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
 };
 
-//! Processes a confirmation.
+/// Processes a confirmation.
 static int co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con *con);
 
-//! Processes an 'SDO upload' confirmation.
+/// Processes an 'SDO upload' confirmation.
 static int co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_sdo_up *con);
 
-//! Processes a 'Read PDO data' confirmation.
+/// Processes a 'Read PDO data' confirmation.
 static int co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_pdo_read *con);
 
-//! Processes a 'Get version' confirmation.
+/// Processes a 'Get version' confirmation.
 static int co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_get_version *con);
 
-//! Processes an 'Inquire LSS address' confirmation.
+/// Processes an 'Inquire LSS address' confirmation.
 static int co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_lss_get_lssid *con);
-//! Processes an 'LSS inquire node-ID' confirmation.
+/// Processes an 'LSS inquire node-ID' confirmation.
 static int co_gw_txt_recv_lss_get_id(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con_lss_get_id *con);
 
-//! Processes an 'LSS Slowscan/Fastscan' confirmation.
+/// Processes an 'LSS Slowscan/Fastscan' confirmation.
 static int co_gw_txt_recv__lss_scan(co_gw_txt_t *gw, co_unsigned32_t seq,
 		const struct co_gw_con__lss_scan *con);
 
-/*!
+/**
  * Processes a confirmation with a non-zero internal error code or SDO abort
  * code.
  */
 static int co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 		co_unsigned32_t ac);
 
-//! Processes an 'RPDO received' indication.
+/// Processes an 'RPDO received' indication.
 static int co_gw_txt_recv_rpdo(co_gw_txt_t *gw,
 		const struct co_gw_ind_rpdo *ind);
 
-//! Processes an 'Error control event received' indication.
+/// Processes an 'Error control event received' indication.
 static int co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind);
 
-//! Processes an 'Emergency event received' indication.
+/// Processes an 'Emergency event received' indication.
 static int co_gw_txt_recv_emcy(co_gw_txt_t *gw,
 		const struct co_gw_ind_emcy *ind);
 
-//! Processes an 'CiA 301 progress indication download' indication.
+/// Processes an 'CiA 301 progress indication download' indication.
 static int co_gw_txt_recv_sdo(co_gw_txt_t *gw,
 		const struct co_gw_ind_sdo *ind);
 
-//! Processes a 'Boot slave process completed' indication.
+/// Processes a 'Boot slave process completed' indication.
 static int co_gw_txt_recv__boot(co_gw_txt_t *gw,
 		const struct co_gw_ind__boot *ind);
 
-/*!
+/**
  * Formats a received indication or confirmation and invokes the callback
  * function to process it.
  *
- * \see co_gw_txt_recv_txt()
+ * @see co_gw_txt_recv_txt()
  */
 static int co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
 		__format_printf(2, 3);
 
-/*!
+/**
  * Invokes the callback function to process a received indication or
  * confirmation.
  */
 static int co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt);
 
-//! Prints a CANopen value.
+/// Prints a CANopen value.
 static size_t co_gw_txt_print_val(char **pbegin, char *end,
 		co_unsigned16_t type, const void *val);
 
-//! Invokes the callback function to send a request.
+/// Invokes the callback function to send a request.
 static void co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req);
 
-//! Sends an 'SDO upload' request after parsing its parameters.
+/// Sends an 'SDO upload' request after parsing its parameters.
 static size_t co_gw_txt_send_sdo_up(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'SDO download' request after parsing its parameters.
+/// Sends an 'SDO download' request after parsing its parameters.
 static size_t co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
 		const char *end, struct floc *at);
-//! Sends a 'Configure SDO time-out' request after parsing its parameters.
+/// Sends a 'Configure SDO time-out' request after parsing its parameters.
 static size_t co_gw_txt_send_set_sdo_timeout(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
-//! Sends a 'Configure RPDO' request after parsing its parameters.
+/// Sends a 'Configure RPDO' request after parsing its parameters.
 static size_t co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Configure TPDO' request after parsing its parameters.
+/// Sends a 'Configure TPDO' request after parsing its parameters.
 static size_t co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Read PDO data' request after parsing its parameters.
+/// Sends a 'Read PDO data' request after parsing its parameters.
 static size_t co_gw_txt_send_pdo_read(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Write PDO data' request after parsing its parameters.
+/// Sends a 'Write PDO data' request after parsing its parameters.
 static size_t co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
 
-//! Sends an 'Enable node guarding' request after parsing its parameters.
+/// Sends an 'Enable node guarding' request after parsing its parameters.
 static size_t co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
 		const char *end, struct floc *at);
-//! Sends a 'Start heartbeat consumer' request after parsing its parameters.
+/// Sends a 'Start heartbeat consumer' request after parsing its parameters.
 static size_t co_gw_txt_send_nmt_set_hb(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, co_unsigned8_t node, const char *begin,
 		const char *end, struct floc *at);
 
-//! Sends an 'Initialize gateway' request after parsing its parameters.
+/// Sends an 'Initialize gateway' request after parsing its parameters.
 static size_t co_gw_txt_send_init(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Set heartbeat producer' request after parsing its parameters.
+/// Sends a 'Set heartbeat producer' request after parsing its parameters.
 static size_t co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Set node-ID' request after parsing its parameters.
+/// Sends a 'Set node-ID' request after parsing its parameters.
 static size_t co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Set command time-out' request after parsin gits parameters.
+/// Sends a 'Set command time-out' request after parsin gits parameters.
 static size_t co_gw_txt_send_set_cmd_timeout(co_gw_txt_t *gw, int srv,
 		void *data, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Boot-up forwarding' request after parsing its parameters.
+/// Sends a 'Boot-up forwarding' request after parsing its parameters.
 static size_t co_gw_txt_send_set_bootup_ind(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
-//! Sends a 'Set default network' request after parsing its parameters.
+/// Sends a 'Set default network' request after parsing its parameters.
 static size_t co_gw_txt_send_set_net(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
-//! Sends a 'Set default node-ID' request after parsing its parameters.
+/// Sends a 'Set default node-ID' request after parsing its parameters.
 static size_t co_gw_txt_send_set_node(co_gw_txt_t *gw, int srv, void *data,
 		co_unsigned16_t net, const char *begin, const char *end,
 		struct floc *at);
-//! Sends a 'Set command size' request after parsing its parameters.
+/// Sends a 'Set command size' request after parsing its parameters.
 static size_t co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
 
-//! Sends an 'LSS switch state global' request after parsing its parameters.
+/// Sends an 'LSS switch state global' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS switch state selective' request after parsing its parameters.
+/// Sends an 'LSS switch state selective' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS configure node-ID' request after parsing its parameters.
+/// Sends an 'LSS configure node-ID' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS configure bit-rate' request after parsing its parameters.
+/// Sends an 'LSS configure bit-rate' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS activate new bit-rate' request after parsing its parameters.
+/// Sends an 'LSS activate new bit-rate' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'Inquire LSS address' request after parsing its parameters.
+/// Sends an 'Inquire LSS address' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS identify remote slave' request after parsing its parameters.
+/// Sends an 'LSS identify remote slave' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
-//! Sends an 'LSS Slowscan' request after parsing its parameters.
+/// Sends an 'LSS Slowscan' request after parsing its parameters.
 static size_t co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
-//! Sends an 'LSS Fastscan' request after parsing its parameters.
+/// Sends an 'LSS Fastscan' request after parsing its parameters.
 static size_t co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 
-/*!
+/**
  * Lexes the prefix (sequence number and optional network and node-ID) of a
  * request.
  */
@@ -249,48 +249,48 @@ static size_t co_gw_txt_lex_prefix(const char *begin, const char *end,
 		struct floc *at, co_unsigned32_t *pseq, co_unsigned16_t *pnet,
 		co_unsigned8_t *pnode);
 
-//! Lexes the service number of a request.
+/// Lexes the service number of a request.
 static size_t co_gw_txt_lex_srv(const char *begin, const char *end,
 		struct floc *at, int *psrv);
 
-//! Lexes a single command.
+/// Lexes a single command.
 static size_t co_gw_txt_lex_cmd(const char *begin, const char *end,
 		struct floc *at);
 
-//! Lexes the multiplexer and data type of an SDO upload/download request.
+/// Lexes the multiplexer and data type of an SDO upload/download request.
 static size_t co_gw_txt_lex_sdo(const char *begin, const char *end,
 		struct floc *at, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		co_unsigned16_t *ptype);
 
-//! Lexes the communication and mapping parameters of a configure PDO request.
+/// Lexes the communication and mapping parameters of a configure PDO request.
 static size_t co_gw_txt_lex_pdo(const char *begin, const char *end,
 		struct floc *at, int ext, co_unsigned16_t *pnum,
 		struct co_pdo_comm_par *pcomm, struct co_pdo_map_par *pmap);
 
-//! Lexes a data type.
+/// Lexes a data type.
 static size_t co_gw_txt_lex_type(const char *begin, const char *end,
 		struct floc *at, co_unsigned16_t *ptype);
 
-//! Lexes a value for an SDO download request.
+/// Lexes a value for an SDO download request.
 static size_t co_gw_txt_lex_val(const char *begin, const char *end,
 		struct floc *at, co_unsigned16_t type, void *val);
 
-/*!
+/**
  * Lexes an array of visible characters (#CO_DEFTYPE_VISIBLE_STRING), excluding
  * the delimiting quotes, for an SDO download request.
  */
 static size_t co_gw_txt_lex_vs(const char *begin, const char *end,
 		struct floc *at, char *s, size_t *pn);
 
-//! Lexes the transmission type of a configure PDO request.
+/// Lexes the transmission type of a configure PDO request.
 static size_t co_gw_txt_lex_trans(const char *begin, const char *end,
 		struct floc *at, co_unsigned8_t *ptrans);
 
-//! Lexes an LSS address.
+/// Lexes an LSS address.
 static size_t co_gw_txt_lex_id(const char *begin, const char *end,
 		struct floc *at, struct co_id *pid);
 
-//! Lexes an LSS address range.
+/// Lexes an LSS address range.
 static size_t co_gw_txt_lex_id_sel(const char *begin, const char *end,
 		struct floc *at, struct co_id *plo, struct co_id *phi);
 

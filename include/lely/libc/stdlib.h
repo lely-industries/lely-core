@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdlib.h>` and defines any missing functionality.
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,26 +36,26 @@
 extern "C" {
 #endif
 
-/*!
- * Allocates space for an object whose alignment is specified by \a alignment,
- * whose size is specified by \a size, and whose value is indeterminate. The
- * value of \a alignment SHALL be a valid alignment supported by the
- * implementation and the value of \a size SHALL be an integral multiple of
- * \a alignment.
+/**
+ * Allocates space for an object whose alignment is specified by
+ * <b>alignment</b>, whose size is specified by <b>size</b>, and whose value is
+ * indeterminate. The value of <b>alignment</b> SHALL be a valid alignment
+ * supported by the implementation and the value of <b>size</b> SHALL be an
+ * integral multiple of <b>alignment</b>.
  *
  * To ensure maximum portability, objects allocated with this function SHOULD be
  * freed with aligned_free().
  *
- * \returns either a NULL pointer or a pointer to the allocated space.
+ * @returns either a NULL pointer or a pointer to the allocated space.
  */
 LELY_LIBC_EXTERN void * __cdecl aligned_alloc(size_t alignment, size_t size);
 
-/*!
- * Causes the space at \a ptr to be deallocated, that is, made available for
- * further allocation. If \a ptr is a NULL pointer, no action occurs. Otherwise,
- * if the argument does not match a pointer earlier returned by aligned_alloc(),
- * or if the space has been deallocated by a call to aligned_free(), the
- * behavior is undefined.
+/**
+ * Causes the space at <b>ptr</b> to be deallocated, that is, made available for
+ * further allocation. If <b>ptr</b> is a NULL pointer, no action occurs.
+ * Otherwise, if the argument does not match a pointer earlier returned by
+ * aligned_alloc(), or if the space has been deallocated by a call to
+ * aligned_free(), the behavior is undefined.
  */
 LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
 
@@ -67,14 +67,14 @@ LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
 
 #if !(_POSIX_C_SOURCE > 200112L)
 
-/*!
+/**
  * Updates or adds a variable in the environment of the calling process.
- * \a envname points to a string containing the name of the variable to be added
- * or altered. If the variable does not exist, or overwrite is non-zero, it
- * SHALL be set to the value two which \a envval points. Otherwise the
+ * <b>envname</b> points to a string containing the name of the variable to be
+ * added or altered. If the variable does not exist, or overwrite is non-zero,
+ * it SHALL be set to the value two which <b>envval</b> points. Otherwise the
  * environment SHALL remain unchanged.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the environment is
+ * @returns 0 on success, or -1 on error. In the latter case, the environment is
  * unchanged.
  */
 LELY_LIBC_EXTERN int setenv(const char *envname, const char *envval,
@@ -82,4 +82,4 @@ LELY_LIBC_EXTERN int setenv(const char *envname, const char *envval,
 
 #endif // !(_POSIX_C_SOURCE > 200112L)
 
-#endif // LELY_LIBC_STDLIB_H_
+#endif // !LELY_LIBC_STDLIB_H_

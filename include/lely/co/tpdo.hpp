@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the Transmit-PDO declarations. See lely/co/tpdo.h for the C
  * interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 namespace lely {
 
-//! The attributes of #co_tpdo_t required by #lely::COTPDO.
+/// The attributes of #co_tpdo_t required by #lely::COTPDO.
 template <>
 struct c_type_traits<__co_tpdo> {
 	typedef __co_tpdo value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_tpdo> {
 	static void fini(pointer p) noexcept { __co_tpdo_fini(p); }
 };
 
-//! An opaque CANopen Transmit-PDO service type.
+/// An opaque CANopen Transmit-PDO service type.
 class COTPDO: public incomplete_c_type<__co_tpdo> {
 	typedef incomplete_c_type<__co_tpdo> c_base;
 public:

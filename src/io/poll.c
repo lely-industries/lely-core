@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the I/O library; it contains the implementation of the
  * polling interface.
  *
- * \see lely/io/poll.h
+ * @see lely/io/poll.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,35 +45,35 @@
 #endif
 #endif
 
-//! An I/O polling interface.
+/// An I/O polling interface.
 struct __io_poll {
 #ifndef LELY_NO_THREADS
-	//! The mutex protecting #tree.
+	/// The mutex protecting #tree.
 	mtx_t mtx;
 #endif
-	//! The tree containing the I/O device handles being watched.
+	/// The tree containing the I/O device handles being watched.
 	struct rbtree tree;
-	//! A pointer to the pool allocator used to allocate the nodes in #tree.
+	/// A pointer to the pool allocator used to allocate the nodes in #tree.
 	pool_t *pool;
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
-	//! A self-pipe used to generate signal events.
+	/// A self-pipe used to generate signal events.
 	io_handle_t pipe[2];
 #endif
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
-	//! The epoll file descriptor.
+	/// The epoll file descriptor.
 	int epfd;
 #endif
 };
 
-//! The attributes of an I/O device handle being watched.
+/// The attributes of an I/O device handle being watched.
 struct io_watch {
-	//! The node in the tree of file descriptors.
+	/// The node in the tree of file descriptors.
 	struct rbnode node;
-	//! A pointer to the I/O device handle.
+	/// A pointer to the I/O device handle.
 	struct io_handle *handle;
-	//! The events being watched.
+	/// The events being watched.
 	struct io_event event;
-	/*!
+	/**
 	 * A flag indicating whether to keep watching the file descriptor after
 	 * an event occurs.
 	 */

@@ -1,9 +1,9 @@
-/*!\file
+/**@file
  * This is the public header file of the CANopen library.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ struct __co_dev;
 namespace lely { class CODev; }
 typedef lely::CODev co_dev_t;
 #else
-//! An opaque CANopen device type.
+/// An opaque CANopen device type.
 typedef struct __co_dev co_dev_t;
 #endif
 
@@ -47,7 +47,7 @@ struct __co_obj;
 namespace lely { class COObj; }
 typedef lely::COObj co_obj_t;
 #else
-//! An opaque CANopen object type.
+/// An opaque CANopen object type.
 typedef struct __co_obj co_obj_t;
 #endif
 
@@ -56,7 +56,7 @@ struct __co_sub;
 namespace lely { class COSub; }
 typedef lely::COSub co_sub_t;
 #else
-//! An opaque CANopen sub-object type.
+/// An opaque CANopen sub-object type.
 typedef struct __co_sub co_sub_t;
 #endif
 
@@ -65,7 +65,7 @@ struct __co_ssdo;
 namespace lely { class COSSDO; }
 typedef lely::COSSDO co_ssdo_t;
 #else
-//! An opaque CANopen Server-SDO service type.
+/// An opaque CANopen Server-SDO service type.
 typedef struct __co_ssdo co_ssdo_t;
 #endif
 
@@ -74,7 +74,7 @@ struct __co_csdo;
 namespace lely { class COCSDO; }
 typedef lely::COCSDO co_csdo_t;
 #else
-//! An opaque CANopen Client-SDO service type.
+/// An opaque CANopen Client-SDO service type.
 typedef struct __co_csdo co_csdo_t;
 #endif
 
@@ -83,7 +83,7 @@ struct __co_rpdo;
 namespace lely { class CORPDO; }
 typedef lely::CORPDO co_rpdo_t;
 #else
-//! An opaque CANopen Receive-PDO service type.
+/// An opaque CANopen Receive-PDO service type.
 typedef struct __co_rpdo co_rpdo_t;
 #endif
 
@@ -92,7 +92,7 @@ struct __co_tpdo;
 namespace lely { class COTPDO; }
 typedef lely::COTPDO co_tpdo_t;
 #else
-//! An opaque CANopen Transmit-PDO service type.
+/// An opaque CANopen Transmit-PDO service type.
 typedef struct __co_tpdo co_tpdo_t;
 #endif
 
@@ -101,7 +101,7 @@ struct __co_sync;
 namespace lely { class COSync; }
 typedef lely::COSync co_sync_t;
 #else
-//! An opaque CANopen SYNC producer/consumer service type.
+/// An opaque CANopen SYNC producer/consumer service type.
 typedef struct __co_sync co_sync_t;
 #endif
 
@@ -110,7 +110,7 @@ struct __co_time;
 namespace lely { class COTime; }
 typedef lely::COTime co_time_t;
 #else
-//! An opaque CANopen TIME producer/consumer service type.
+/// An opaque CANopen TIME producer/consumer service type.
 typedef struct __co_time co_time_t;
 #endif
 
@@ -119,7 +119,7 @@ struct __co_emcy;
 namespace lely { class COEmcy; }
 typedef lely::COEmcy co_emcy_t;
 #else
-//! An opaque CANopen EMCY producer/consumer service type.
+/// An opaque CANopen EMCY producer/consumer service type.
 typedef struct __co_emcy co_emcy_t;
 #endif
 
@@ -128,7 +128,7 @@ struct __co_nmt;
 namespace lely { class CONMT; }
 typedef lely::CONMT co_nmt_t;
 #else
-//! An opaque CANopen NMT master/slave service type.
+/// An opaque CANopen NMT master/slave service type.
 typedef struct __co_nmt co_nmt_t;
 #endif
 
@@ -137,7 +137,7 @@ struct __co_lss;
 namespace lely { class COLSS; }
 typedef lely::COLSS co_lss_t;
 #else
-//! An opaque CANopen LSS master/slave service type.
+/// An opaque CANopen LSS master/slave service type.
 typedef struct __co_lss co_lss_t;
 #endif
 

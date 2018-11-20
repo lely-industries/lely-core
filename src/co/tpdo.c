@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the Transmit-PDO functions.
  *
- * \see lely/co/tpdo.h
+ * @see lely/co/tpdo.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,126 +37,126 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CANopen Transmit-PDO.
+/// A CANopen Transmit-PDO.
 struct __co_tpdo {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The PDO number.
+	/// The PDO number.
 	co_unsigned16_t num;
-	//! The PDO communication parameter.
+	/// The PDO communication parameter.
 	struct co_pdo_comm_par comm;
-	//! The PDO mapping parameter.
+	/// The PDO mapping parameter.
 	struct co_pdo_map_par map;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! A pointer to the CAN timer for events.
+	/// A pointer to the CAN timer for events.
 	can_timer_t *timer_event;
-	//! A pointer to the CAN timer for the synchronous time window.
+	/// A pointer to the CAN timer for the synchronous time window.
 	can_timer_t *timer_swnd;
-	//! A CAN frame buffer.
+	/// A CAN frame buffer.
 	struct can_buf *buf;
-	//! The time at which the next event-driven TPDO may be sent.
+	/// The time at which the next event-driven TPDO may be sent.
 	struct timespec inhibit;
-	//! A flag indicating the occurrence of an event.
+	/// A flag indicating the occurrence of an event.
 	unsigned int event:1;
-	//! A flag indicating the synchronous time window has expired.
+	/// A flag indicating the synchronous time window has expired.
 	unsigned int swnd:1;
-	//! The SYNC start value.
+	/// The SYNC start value.
 	co_unsigned8_t sync;
-	//! The SYNC counter value.
+	/// The SYNC counter value.
 	co_unsigned8_t cnt;
-	//! The CANopen SDO upload request used for reading sub-objects.
+	/// The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
-	//! A pointer to the indication function.
+	/// A pointer to the indication function.
 	co_tpdo_ind_t *ind;
-	//! A pointer to user-specified data for #ind.
+	/// A pointer to user-specified data for #ind.
 	void *data;
 };
 
-/*!
+/**
  * Initializes the CAN frame receiver of a Transmit-PDO service. This function
  * is invoked when one of the TPDO communication parameters (objects 1800..19FF)
  * is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_recv(co_tpdo_t *pdo);
 
-/*!
+/**
  * Initializes the CAN timer for events of a Transmit-PDO service. This function
  * is invoked when one of the TPDO communication parameters (objects 1800..19FF)
  * is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_timer_event(co_tpdo_t *pdo);
 
-/*!
+/**
  * Initializes the CAN timer for the synchronous time window of a Transmit-PDO
  * service.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
 
-/*!
+/**
  * Initializes the CAN frame buffer of a Transmit-PDO service. This function is
  * invoked when one of the TPDO communication parameters (objects 1800..19FF) is
  * updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_buf(co_tpdo_t *pdo);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen objects
  * 1800..19FF (TPDO communication parameter).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1800_dn_ind(co_sub_t *sub,
 		struct co_sdo_req *req, void *data);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen objects
  * 1A00..1BFF (TPDO mapping parameter).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1a00_dn_ind(co_sub_t *sub,
 		struct co_sdo_req *req, void *data);
 
-/*!
+/**
  * The CAN receive callback function for a Transmit-PDO service.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_tpdo_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for events of a Transmit-PDO service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_tpdo_timer_event(const struct timespec *tp, void *data);
 
-/*!
+/**
  * The CAN timer callback function for the synchronous time window of a
  * Transmit-PDO service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
 
-/*!
+/**
  * Initializes a CAN frame to be sent by a Transmit-PDO service.
  *
- * \param pdo a pointer to a Transmit-PDO service.
- * \param msg a pointer to the CAN frame to be initialized.
+ * @param pdo a pointer to a Transmit-PDO service.
+ * @param msg a pointer to the CAN frame to be initialized.
  *
- * \returns 0 on success, or an SDO abort code on error.
+ * @returns 0 on success, or an SDO abort code on error.
  */
 static co_unsigned32_t co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
 

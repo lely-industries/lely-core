@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdnoreturn.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,4 +45,4 @@
 
 #endif // LELY_HAVE_STDNORETURN_H
 
-#endif // LELY_LIBC_STDNORETURN_H_
+#endif // !LELY_LIBC_STDNORETURN_H_

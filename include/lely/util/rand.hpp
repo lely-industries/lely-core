@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the C++
  * interface of the random number generator.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ template <class> struct rand_traits;
 
 } // impl
 
-/*!
+/**
  * A uniformly distributed random number generator meeting the random number
  * engine requirements.
  */
@@ -162,7 +162,7 @@ operator!=(const Rand<T>& lhs, const Rand<T>& rhs)
 
 namespace impl {
 
-//! A class template supplying a wrapper around the #rand64 functions.
+/// A class template supplying a wrapper around the #rand64 functions.
 template <>
 struct rand_traits<uint64_t> {
 	typedef rand64 c_type;
@@ -198,7 +198,7 @@ struct rand_traits<uint64_t> {
 	}
 };
 
-//! A class template supplying a wrapper around the #rand32 functions.
+/// A class template supplying a wrapper around the #rand32 functions.
 template <>
 struct rand_traits<uint32_t> {
 	typedef rand32 c_type;
@@ -237,7 +237,7 @@ struct rand_traits<uint32_t> {
 	}
 };
 
-//! A class template supplying a wrapper around the #rand16 functions.
+/// A class template supplying a wrapper around the #rand16 functions.
 template <>
 struct rand_traits<uint16_t> {
 	typedef rand16 c_type;
@@ -276,7 +276,7 @@ struct rand_traits<uint16_t> {
 	}
 };
 
-//! A class template supplying a wrapper around the #rand8 functions.
+/// A class template supplying a wrapper around the #rand8 functions.
 template <>
 struct rand_traits<uint8_t> {
 	typedef rand8 c_type;

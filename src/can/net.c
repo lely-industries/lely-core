@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CAN library; it contains the implementation of the
  * CAN network interface.
  *
- * \see lely/can/net.h
+ * @see lely/can/net.h
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,52 +33,52 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CAN network interface.
+/// A CAN network interface.
 struct __can_net {
-	//! The tree containing all timers.
+	/// The tree containing all timers.
 	struct pheap timer_heap;
-	//! The current time.
+	/// The current time.
 	struct timespec time;
-	//! The time at which the next timer triggers.
+	/// The time at which the next timer triggers.
 	struct timespec next;
-	//! A pointer to the callback function invoked by can_net_set_next().
+	/// A pointer to the callback function invoked by can_net_set_next().
 	can_timer_func_t *next_func;
-	//! A pointer to user-specified data for #next_func.
+	/// A pointer to user-specified data for #next_func.
 	void *next_data;
-	//! The tree containing all receivers.
+	/// The tree containing all receivers.
 	struct rbtree recv_tree;
-	//! A pointer to the callback function invoked by can_net_send().
+	/// A pointer to the callback function invoked by can_net_send().
 	can_send_func_t *send_func;
-	//! A pointer to the user-specified data for #send_func.
+	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
 };
 
-/*!
+/**
  * Invokes the callback function if the time at which the next CAN timer
  * triggers has been updated.
  */
 static void can_net_set_next(can_net_t *net);
 
-//! A CAN timer.
+/// A CAN timer.
 struct __can_timer {
-	//! The node of this timer in the tree of timers.
+	/// The node of this timer in the tree of timers.
 	struct pnode node;
-	/*!
+	/**
 	 * A pointer to the network interface with which this timer is
 	 * registered.
 	 */
 	can_net_t *net;
-	//! The time at which the timer should trigger.
+	/// The time at which the timer should trigger.
 	struct timespec start;
-	//! The interval between successive triggers.
+	/// The interval between successive triggers.
 	struct timespec interval;
-	//! A pointer to the callback function invoked by can_net_set_time().
+	/// A pointer to the callback function invoked by can_net_set_time().
 	can_timer_func_t *func;
-	//! A pointer to the user-specified data for #func.
+	/// A pointer to the user-specified data for #func.
 	void *data;
 };
 
-/*!
+/**
  * The type of the key used to match CAN frame receivers to CAN frames. The key
  * is a combination of the CAN identifier and the flags.
  */
@@ -88,28 +88,28 @@ typedef uint32_t can_recv_key_t;
 typedef uint64_t can_recv_key_t;
 #endif
 
-//! Computes a CAN receiver key from a CAN identifier and flags.
+/// Computes a CAN receiver key from a CAN identifier and flags.
 static inline can_recv_key_t can_recv_key(uint32_t id, uint8_t flags);
 
-//! The function used to compare to CAN receiver keys.
+/// The function used to compare to CAN receiver keys.
 static int __cdecl can_recv_key_cmp(const void *p1, const void *p2);
 
-//! A CAN frame receiver.
+/// A CAN frame receiver.
 struct __can_recv {
-	//! The node of this receiver in the tree of receivers.
+	/// The node of this receiver in the tree of receivers.
 	struct rbnode node;
-	//! The list of CAN frame receivers with the same key.
+	/// The list of CAN frame receivers with the same key.
 	struct dlnode list;
-	/*!
+	/**
 	 * A pointer to the network interface with which this receiver is
 	 * registered.
 	 */
 	can_net_t *net;
-	//! The key used in #node.
+	/// The key used in #node.
 	can_recv_key_t key;
-	//! A pointer to the callback function invoked by can_net_recv().
+	/// A pointer to the callback function invoked by can_net_recv().
 	can_recv_func_t *func;
-	//! A pointer to the user-specified data for #func.
+	/// A pointer to the user-specified data for #func.
 	void *data;
 };
 

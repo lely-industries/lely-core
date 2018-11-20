@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the red-black tree.
  *
- * \see lely/util/rbtree.h
+ * @see lely/util/rbtree.h
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,43 +27,46 @@
 
 #include <assert.h>
 
-//! Returns the parent of \a node, or NULL if \a node is NULL.
+/// Returns the parent of <b>node</b>, or NULL if <b>node</b> is NULL.
 static inline struct rbnode *rbnode_get_parent(const struct rbnode *node);
 
-/*!
- * Sets the parent of \a node to \a parent. If \a node is NULL, this function
- * has no effect.
+/**
+ * Sets the parent of <b>node</b> to <b>parent</b>. If <b>node</b> is NULL, this
+ * function has no effect.
  */
 static void rbnode_set_parent(struct rbnode *node, const struct rbnode *parent);
 
-//! Returns the color of \a node, or 0 (black) if \a node is NULL.
+/// Returns the color of <b>node</b>, or 0 (black) if <b>node</b> is NULL.
 static inline int rbnode_get_color(const struct rbnode *node);
 
-/*!
- * Sets the color of \a node to 0 (black) if \a color 0, or to 1 (red)
- * otherwise. If \a node is NULL, this function has no effect.
+/**
+ * Sets the color of <b>node</b> to 0 (black) if <b>color</b> 0, or to 1 (red)
+ * otherwise. If <b>node</b> is NULL, this function has no effect.
  */
 static inline void rbnode_set_color(struct rbnode *node, int color);
 
-//! Returns the leftmost descendant of \a node.
+/// Returns the leftmost descendant of <b>node</b>.
 static struct rbnode *rbnode_min(struct rbnode *node);
 
-//! Returns the rightmost descendant of \a node.
+/// Returns the rightmost descendant of <b>node</b>.
 static struct rbnode *rbnode_max(struct rbnode *node);
 
-/*!
- * Rotates \a node counter-clockwise (left), i.e., it is replaced in the tree by
- * its right child, while becoming that child's left child.
+/**
+ * Rotates <b>node</b> counter-clockwise (left), i.e., it is replaced in the
+ * tree by its right child, while becoming that child's left child.
  */
 static void rbtree_rol(struct rbtree *tree, struct rbnode *node);
 
-/*!
- * Rotates \a node clockwise (right), i.e., it is replaced in the tree by its
- * left child, while becoming that child's right child.
+/**
+ * Rotates <b>node</b> clockwise (right), i.e., it is replaced in the tree by
+ * its left child, while becoming that child's right child.
  */
 static void rbtree_ror(struct rbtree *tree, struct rbnode *node);
 
-//! Replaces \a old_node by \a new_node in \a tree by updating its parent.
+/**
+ * Replaces <b>old_node</b> by <b>new_node</b> in <b>tree</b> by updating its
+ * parent.
+ */
 static void rbtree_replace(struct rbtree *tree, struct rbnode *old_node,
 		struct rbnode *new_node);
 

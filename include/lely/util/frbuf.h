@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the read file
  * buffer declarations.
  *
@@ -7,9 +7,9 @@
  * `memcpy()` instead of reading from the file explicitly. The implementation
  * uses `CreateFileMapping()`/`MapViewOfFile()` or `mmap()` if available.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@
 
 struct __frbuf;
 #ifndef __cplusplus
-//! An opaque read file buffer type.
+/// An opaque read file buffer type.
 typedef struct __frbuf frbuf_t;
 #endif
 
@@ -49,36 +49,36 @@ LELY_UTIL_EXTERN struct __frbuf *__frbuf_init(struct __frbuf *buf,
 		const char *filename);
 LELY_UTIL_EXTERN void __frbuf_fini(struct __frbuf *buf);
 
-/*!
+/**
  * Creates a new read file buffer.
  *
- * \param filename a pointer to the name of the file to be read into a buffer.
+ * @param filename a pointer to the name of the file to be read into a buffer.
  *
- * \returns a pointer to a new file buffer, or NULL on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to a new file buffer, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
  *
- * \see frbuf_destroy()
+ * @see frbuf_destroy()
  */
 LELY_UTIL_EXTERN frbuf_t *frbuf_create(const char *filename);
 
-/*!
+/**
  * Destroys a read file buffer. frbuf_unmap() is invoked, if necessary, before
  * the file is closed.
  *
- * \see frbuf_create()
+ * @see frbuf_create()
  */
 LELY_UTIL_EXTERN void frbuf_destroy(frbuf_t *buf);
 
-/*!
+/**
  * Returns the size (in bytes) of the a read file buffer, or -1 on error. In the
- * latter case, the error number can be obtained with `get_errnum()`.
+ * latter case, the error number can be obtained with get_errc().
  */
 LELY_UTIL_EXTERN int64_t frbuf_get_size(frbuf_t *buf);
 
-/*!
+/**
  * Returns the current offset (in bytes) of a read file buffer with respect to
  * the beginning of the file, or -1 on error. In the latter case, the error
- * number can be obtained with `get_errnum()`.
+ * number can be obtained with get_errc().
  *
  * The position indicates the location at which the next call to frbuf_read()
  * will starting reading, and it is only updated by that function or
@@ -86,79 +86,79 @@ LELY_UTIL_EXTERN int64_t frbuf_get_size(frbuf_t *buf);
  */
 LELY_UTIL_EXTERN int64_t frbuf_get_pos(frbuf_t *buf);
 
-/*!
+/**
  * Sets the current offset (in bytes) of a read file buffer with respect to the
  * beginning of the file. The new position cannot be larger that the size of the
  * file.
  *
- * \returns the new position, or -1 on error. In the latter case, the error
- * number can be obtained with `get_errnum()`.
+ * @returns the new position, or -1 on error. In the latter case, the error
+ * number can be obtained with get_errc().
  *
- * \see frbuf_get_pos()
+ * @see frbuf_get_pos()
  */
 LELY_UTIL_EXTERN int64_t frbuf_set_pos(frbuf_t *buf, int64_t pos);
 
-/*!
+/**
  * Reads bytes from the current position in a read file buffer. Note that this
  * function updates the current position on success.
  *
- * \param buf  a pointer to a read file buffer.
- * \param ptr  the address at which to store the bytes read.
- * \param size the number of bytes to read.
+ * @param buf  a pointer to a read file buffer.
+ * @param ptr  the address at which to store the bytes read.
+ * @param size the number of bytes to read.
  *
- * \returns the number of bytes read, or -1 on error. In the latter case, the
- * error number can be obtained with `get_errnum()`.
+ * @returns the number of bytes read, or -1 on error. In the latter case, the
+ * error number can be obtained with get_errc().
  *
- * \see frbuf_pread()
+ * @see frbuf_pread()
  */
 LELY_UTIL_EXTERN ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
 
-/*!
+/**
  * Reads bytes from the specified position in a read file buffer. This function
  * does not modify the current position.
  *
- * \param buf  a pointer to a read file buffer.
- * \param ptr  the address at which to store the bytes read.
- * \param size the number of bytes to read.
- * \param pos  the offset (in bytes, with respect to the beginning of the file)
+ * @param buf  a pointer to a read file buffer.
+ * @param ptr  the address at which to store the bytes read.
+ * @param size the number of bytes to read.
+ * @param pos  the offset (in bytes, with respect to the beginning of the file)
  *             at which to start reading.
  *
- * \returns the number of bytes read, or -1 on error. In the latter case, the
- * error number can be obtained with `get_errnum()`.
+ * @returns the number of bytes read, or -1 on error. In the latter case, the
+ * error number can be obtained with get_errc().
  *
- * \see frbuf_read()
+ * @see frbuf_read()
  */
 LELY_UTIL_EXTERN ssize_t frbuf_pread(frbuf_t *buf, void *ptr, size_t size,
 		int64_t pos);
 
-/*!
+/**
  * Maps (part of) the contents of a read file buffer to memory. Only a single
  * memory map can exists at a time. This function invokes frbuf_unmap() before
  * creating the map.
  *
- * \param buf   a pointer to a read file buffer.
- * \param pos   the offset (in bytes, with respect to the beginning of the file)
+ * @param buf   a pointer to a read file buffer.
+ * @param pos   the offset (in bytes, with respect to the beginning of the file)
  *              at which to the memory map.
- * \param psize the address of a value containing the desired size (in bytes) of
- *              the memory map. If \a psize or *\a psize is zero, all bytes from
- *              \a pos until the end of the file are mapped. On success, *\a
- *              psize contains the size of the map.
+ * @param psize the address of a value containing the desired size (in bytes) of
+ *              the memory map. If <b>psize</b> or *<b>psize</b> is zero, all
+ *              bytes from <b>pos</b> until the end of the file are mapped. On
+ *              success, *<b>psize</b> contains the size of the map.
  *
- * \returns a pointer to the first byte in the memory map, or NULL on error. In
- * the latter case, the error number can be obtained with `get_errnum()`. Note
- * that it is an error to modify bytes in the memory map which may lead to a
+ * @returns a pointer to the first byte in the memory map, or NULL on error. In
+ * the latter case, the error number can be obtained with get_errc(). Note that
+ * it is an error to modify bytes in the memory map which may lead to a
  * segmentation fault.
  */
 LELY_UTIL_EXTERN const void *frbuf_map(frbuf_t *buf, int64_t pos,
 		size_t *psize);
 
-/*!
+/**
  * Unmaps the current memory map of a read file buffer, if it exists.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
- * \see frbuf_map()
+ * @see frbuf_map()
  */
 LELY_UTIL_EXTERN int frbuf_unmap(frbuf_t *buf);
 

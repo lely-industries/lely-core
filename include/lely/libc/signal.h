@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<signal.h>` and defines any missing functionality.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,40 +28,40 @@
 
 #if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_REALTIME_SIGNALS)
 
-//! No asynchronous notification is delivered when the event of interest occurs.
+/// No asynchronous notification is delivered when the event of interest occurs.
 #define SIGEV_NONE	1
 
-/*!
+/**
  * A queued signal, with an application-defined value, is generated when the
  * event of interest occurs (not supported with the native Windows API).
  */
 #define SIGEV_SIGNAL	0
 
-//! A notification function is called to perform notification.
+/// A notification function is called to perform notification.
 #define SIGEV_THREAD	2
 
-//! A signal value.
+/// A signal value.
 union sigval {
-	//! The integer signal value.
+	/// The integer signal value.
 	int sival_int;
-	//! The pointer signal value.
+	/// The pointer signal value.
 	void *sival_ptr;
 };
 
-//! A struct specifying how a a signal event should be handles.
+/// A struct specifying how a a signal event should be handles.
 struct sigevent {
-	/*!
+	/**
 	 * The notification type (one of #SIGEV_NONE, #SIGEV_SIGNAL or
 	 * #SIGEV_THREAD).
 	 */
 	int sigev_notify;
-	//! The signal number.
+	/// The signal number.
 	int sigev_signo;
-	//! The signal value.
+	/// The signal value.
 	union sigval sigev_value;
-	//! The notification function.
+	/// The notification function.
 	void (__cdecl *sigev_notify_function)(union sigval);
-	//! The notification attributes (ignored on Windows).
+	/// The notification attributes (ignored on Windows).
 	pthread_attr_t *sigev_notify_attributes;
 };
 

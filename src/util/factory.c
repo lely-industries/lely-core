@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the factory pattern.
  *
- * \see lely/util/factory.h
+ * @see lely/util/factory.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,29 +34,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-//! An entry in #factory.
+/// An entry in #factory.
 struct factory_entry {
-	//! The node in #factory.
+	/// The node in #factory.
 	struct rbnode node;
-	//! A pointer to the constructor function.
+	/// A pointer to the constructor function.
 	factory_ctor_t *ctor;
-	//! A pointer to the destructor function.
+	/// A pointer to the destructor function.
 	factory_dtor_t *dtor;
-	//! A pointer to the type name.
+	/// A pointer to the type name.
 	char name[1];
 };
 
 #ifndef LELY_NO_THREADS
-//! The flag ensuring factory_init() is only called once.
+/// The flag ensuring factory_init() is only called once.
 static once_flag factory_once = ONCE_FLAG_INIT;
-//! The initialization function for #factory_mtx.
+/// The initialization function for #factory_mtx.
 static void __cdecl factory_init(void);
-//! The finalization function for #factory_mtx.
+/// The finalization function for #factory_mtx.
 static void __cdecl factory_fini(void);
-//! The mutex protecting #factory.
+/// The mutex protecting #factory.
 static mtx_t factory_mtx;
 #endif
-//! The tree containing all registered constructor and destructor functions.
+/// The tree containing all registered constructor and destructor functions.
 static struct rbtree factory = { &str_cmp, NULL, 0 };
 
 LELY_UTIL_EXPORT void *

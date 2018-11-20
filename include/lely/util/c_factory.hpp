@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * implementation of the C++ factory pattern for C objects.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@
 
 namespace lely {
 
-//! The factory for C objects.
+/// The factory for C objects.
 template <class T, class U = typename impl::remove_arguments<T>::type>
 class c_factory;
 
-//! The factory for heap-allocated C objects.
+/// The factory for heap-allocated C objects.
 template <class T, class U>
 class c_factory<T*, U*>: public virtual factory<U*> {
 public:
@@ -73,7 +73,7 @@ protected:
 
 #if __cplusplus >= 201103L
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with an
  * arbitrary number of arguments.
  */
@@ -95,7 +95,7 @@ public:
 
 #else
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed without
  * arguments.
  */
@@ -119,7 +119,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with one
  * argument.
  */
@@ -143,7 +143,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with two
  * arguments.
  */
@@ -167,7 +167,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with three
  * arguments.
  */
@@ -191,7 +191,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with four
  * arguments.
  */
@@ -216,7 +216,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with five
  * arguments.
  */
@@ -241,7 +241,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with six
  * arguments.
  */
@@ -267,7 +267,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with seven
  * arguments.
  */
@@ -293,7 +293,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with eight
  * arguments.
  */
@@ -319,7 +319,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with nine
  * arguments.
  */
@@ -346,7 +346,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The factory for heap-allocated C objects that can be constructed with nine
  * arguments.
  */
@@ -378,11 +378,11 @@ public:
 
 #if __cplusplus >= 201103L
 
-/*!
+/**
  * Constructs a C++ object with an arbitrary number of arguments.
  *
- * \returns a pointer to the newly created object, or `nullptr` on error. In the
- * latter case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or `nullptr` on error. In the
+ * latter case, the error number can be obtained with get_errc().
  */
 template <class R, class... Args>
 inline void*
@@ -412,11 +412,11 @@ cpp_factory_ctor(Args... args) noexcept
 
 #else
 
-/*!
+/**
  * Constructs a C++ object without arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R>
 inline void*
@@ -440,11 +440,11 @@ cpp_factory_ctor()
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with one arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0>
 inline void*
@@ -468,11 +468,11 @@ cpp_factory_ctor(T0 t0)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with two arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1>
 inline void*
@@ -496,11 +496,11 @@ cpp_factory_ctor(T0 t0, T1 t1)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with three arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2>
 inline void*
@@ -524,11 +524,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with four arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3>
 inline void*
@@ -552,11 +552,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with five arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4>
 inline void*
@@ -580,11 +580,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with six arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5>
 inline void*
@@ -608,11 +608,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with seven arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6>
@@ -637,11 +637,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with eight arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7>
@@ -666,11 +666,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with nine arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8>
@@ -695,11 +695,11 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8)
 #endif
 }
 
-/*!
+/**
  * Constructs a C++ object with ten arguments.
  *
- * \returns a pointer to the newly created object, or 0 on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to the newly created object, or 0 on error. In the latter
+ * case, the error number can be obtained with get_errc().
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8, class T9>
@@ -727,12 +727,12 @@ cpp_factory_ctor(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
 
 #endif // __cplusplus >= 201103L
 
-//! Destroys a C++ object.
+/// Destroys a C++ object.
 template <class T>
 inline void
 cpp_factory_dtor(void* ptr) noexcept { delete static_cast<T*>(ptr); }
 
-/*!
+/**
  * A class template which statically registers a C constructor and destructor
  * function under the specified name.
  */
@@ -756,7 +756,7 @@ private:
 
 } // lely
 
-/*!
+/**
  * Statically registers a C constructor and destructor function under the
  * specified name.
  */
@@ -909,7 +909,7 @@ private:
 		::lely::cpp_factory_dtor<T>(ptr); \
 	}
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking no arguments and
  * the default destructor under the specified name.
  */
@@ -917,7 +917,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_0(R) \
 	LELY_C_STATIC_FACTORY_(0, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking one argument and
  * the default destructor under the specified name.
  */
@@ -925,7 +925,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_1(R, T0) \
 	LELY_C_STATIC_FACTORY_(1, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking two arguments and
  * the default destructor under the specified name.
  */
@@ -933,7 +933,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_2(R, T0, T1) \
 	LELY_C_STATIC_FACTORY_(2, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking three arguments
  * and the default destructor under the specified name.
  */
@@ -941,7 +941,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_3(R, T0, T1, T2) \
 	LELY_C_STATIC_FACTORY_(3, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking four arguments and
  * the default destructor under the specified name.
  */
@@ -949,7 +949,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_4(R, T0, T1, T2, T3) \
 	LELY_C_STATIC_FACTORY_(4, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking five arguments and
  * the default destructor under the specified name.
  */
@@ -957,7 +957,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_5(R, T0, T1, T2, T3, T4) \
 	LELY_C_STATIC_FACTORY_(5, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking six arguments and
  * the default destructor under the specified name.
  */
@@ -965,7 +965,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_6(R, T0, T1, T2, T3, T4, T5) \
 	LELY_C_STATIC_FACTORY_(6, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking seven arguments
  * and the default destructor under the specified name.
  */
@@ -973,7 +973,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_7(R, T0, T1, T2, T3, T4, T5, T6) \
 	LELY_C_STATIC_FACTORY_(7, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking eight arguments
  * and the default destructor under the specified name.
  */
@@ -981,7 +981,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_8(R, T0, T1, T2, T3, T4, T5, T6, T7) \
 	LELY_C_STATIC_FACTORY_(8, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking nine arguments and
  * the default destructor under the specified name.
  */
@@ -989,7 +989,7 @@ private:
 	LELY_CPP_FACTORY_CTOR_9(R, T0, T1, T2, T3, T4, T5, T6, T7, T8) \
 	LELY_C_STATIC_FACTORY_(9, name, R)
 
-/*!
+/**
  * Statically registers the constructor for a C++ type taking ten arguments and
  * the default destructor under the specified name.
  */

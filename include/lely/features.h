@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the Lely libraries; it contains the compiler
  * feature definitions.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,7 +162,7 @@
 
 #endif // __cplusplus
 
-//! Specifies the alignment requirement of the declared object or member.
+/// Specifies the alignment requirement of the declared object or member.
 #if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
 #if __cplusplus >= 201103L \
@@ -178,7 +178,7 @@
 #endif
 #endif
 
-//! Yields the alignment requirement of its operand type.
+/// Yields the alignment requirement of its operand type.
 #if !defined(_Alignof) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
 #if __cplusplus >= 201103L \
@@ -194,7 +194,7 @@
 #endif
 #endif
 
-/*!
+/**
  * A function declared with a `_Noreturn` function specifier SHALL not return to
  * its caller.
  */
@@ -210,10 +210,11 @@
 #endif
 #endif
 
-/*!
- * If the value of \a expr compares unequal to 0, the declaration has no effect.
- * Otherwise, the constraint is violated and a diagnostic message is produced
- * which may, depending on the implementation, include the text of \a msg.
+/**
+ * If the value of <b>expr</b> compares unequal to 0, the declaration has no
+ * effect. Otherwise, the constraint is violated and a diagnostic message is
+ * produced which may, depending on the implementation, include the text of
+ * <b>msg</b>.
  */
 #if !defined(_Static_assert) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
@@ -235,7 +236,7 @@
 #endif
 #endif
 
-/*!
+/**
  * An object whose identifier is declared with the storage-class specifier
  * `_Thread_local` has thread storage duration. Its lifetime is the entire
  * execution of the thread for which it is created, and its stored value is
@@ -270,7 +271,7 @@
 #endif
 
 #ifndef __deprecated
-//! Mark a function as deprecated.
+/// Mark a function as deprecated.
 #if defined(__GNUC__) || __has_attribute(__deprecated__)
 #define __deprecated	__attribute__((__deprecated__))
 #else
@@ -324,7 +325,7 @@
 #endif
 
 #ifndef __likely
-/*!
+/**
  * Indicates to the compiler that the expression is most-likely true. Subject to
  * the same considerations as __unlikely().
  */
@@ -332,20 +333,20 @@
 #endif
 
 #ifndef __unlikely
-/*!
+/**
  * Indicates to the compiler that the expression is most-likely false. This
  * should only be used in performance-critical sections as compilers are very
  * good at branch prediction nowadays. The only exception to this rule is error
  * and exception checking, e.g. `if (__unlikely(!ptr)) { handle NULL pointer }`,
  * since we never optimize exceptions.
  *
- * \see __likely()
+ * @see __likely()
  */
 #define __unlikely(x)	__builtin_expect(!!(x), 0)
 #endif
 
 #ifndef __unused_arg
-//! Suppresses a compiler warning about an unused function argument.
+/// Suppresses a compiler warning about an unused function argument.
 #ifdef _MSC_VER
 #define __unused_arg	__pragma(warning(suppress: 4100))
 #elif defined(__GNUC__) || __has_attribute(__unused__)
@@ -356,7 +357,7 @@
 #endif
 
 #ifndef __unused_var
-//! Suppresses a compiler warning about an unused variable.
+/// Suppresses a compiler warning about an unused variable.
 #ifdef _MSC_VER
 #define __unused_var(x)	__pragma(warning(suppress: 4100 4101)) x
 #else
@@ -365,7 +366,7 @@
 #endif
 
 #ifndef __WORDSIZE
-//! The native word size (in bits).
+/// The native word size (in bits).
 #if !defined(__ILP32__) && (defined(__LP64__) || defined(_WIN64) \
 		|| defined(_M_AMD64) || defined(__amd64__) || defined(_M_IA64) \
 		|| defined(__ia64__) || defined(_M_X64) || defined(__x86_64__) \
@@ -377,7 +378,7 @@
 #endif
 
 #ifndef LONG_BIT
-//! The number of bits in a long.
+/// The number of bits in a long.
 #ifdef _WIN32
 // long remains 32-bits on 64-bit Windows.
 #define LONG_BIT	32
@@ -387,7 +388,7 @@
 #endif
 
 #ifndef LEVEL1_DCACHE_LINESIZE
-//! The size (in bytes) of the level 1 (L1) data cache.
+/// The size (in bytes) of the level 1 (L1) data cache.
 #define LEVEL1_DCACHE_LINESIZE	64
 #endif
 

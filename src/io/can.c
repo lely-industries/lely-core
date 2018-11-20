@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the I/O library; it contains the implementation of the
  * Controller Area Network (CAN) functions.
  *
- * \see lely/io/can.h
+ * @see lely/io/can.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,24 +49,24 @@
 #include <linux/can/raw.h>
 #endif
 
-//! A CAN device.
+/// A CAN device.
 struct can {
-	//! The I/O device base handle.
+	/// The I/O device base handle.
 	struct io_handle base;
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
-	//! A flag indicating the device supports sending CAN FD frames.
+	/// A flag indicating the device supports sending CAN FD frames.
 	int canfd;
 #endif
-	//! The interface index.
+	/// The interface index.
 	unsigned int ifindex;
-	//! The active flag word of the device.
+	/// The active flag word of the device.
 	unsigned int ifflags;
-	/*!
+	/**
 	 * The state of the CAN controller (one of `CAN_STATE_ACTIVE`,
 	 * `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`).
 	 */
 	int state;
-	/*! The last error (any combination of `CAN_ERROR_BIT`,
+	/** The last error (any combination of `CAN_ERROR_BIT`,
 	* `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM` and
 	* `CAN_ERROR_ACK`).
 	 */

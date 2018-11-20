@@ -1,9 +1,9 @@
-/*!\file
+/**@file
  * This is the internal header file of the utilities library.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@
 #endif
 
 #ifndef ALIGNED_ALLOC_BITS
-/*!
+/**
  * The minimum alignment (in bits) of heap-allocated objects. This corresponds
  * to the number of least-significant bits in a pointer guaranteed to be zero.
  */
@@ -51,8 +51,8 @@
 #endif
 
 #ifndef ALIGNED_ALLOC_SIZE
-//! The minimum alignment (in bytes) of heap-allocated objects.
+/// The minimum alignment (in bytes) of heap-allocated objects.
 #define ALIGNED_ALLOC_SIZE	((size_t)(1 << (ALIGNED_ALLOC_BITS)))
 #endif
 
-#endif // LELY_UTIL_INTERN_UTIL_H_
+#endif // !LELY_UTIL_INTERN_UTIL_H_

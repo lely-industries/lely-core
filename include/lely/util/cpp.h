@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * preprocessor definitions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@
 
 #if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 
-/*!
- * Repeats all but the first argument \a n times. \a n can be at most
+/**
+ * Repeats all but the first argument <b>n</b> times. <b>n</b> can be at most
  * #CPP_MAX_SIZE.
  */
 #define CPP_SEQUENCE(n, ...) \
@@ -294,10 +294,10 @@
 	CPP_SEQUENCE_127(__VA_ARGS__) __VA_ARGS__
 #endif // __cplusplus >= 201103L
 
-/*!
+/**
  * Evaluates to 1 if an empty argument list is provided, and 0 if not.
  *
- * \see CPP_SIZE()
+ * @see CPP_SIZE()
  */
 #define CPP_EMPTY(...) \
 	CPP_AND(CPP_NOT(CPP_HAS_COMMA(__VA_ARGS__)), \
@@ -307,12 +307,12 @@
 #define CPP_EMPTY_(...) \
 	,
 
-/*!
+/**
  * Evaluates to the number of arguments. The implementation counts the number of
  * commas in the argument list and therefore makes no distinction between a
  * single argument and an empty argument list.
  *
- * \see CPP_EMPTY()
+ * @see CPP_EMPTY()
  */
 #if __cplusplus >= 201103L
 #define CPP_SIZE(...) \
@@ -346,7 +346,7 @@
 			7, 6, 5, 4, 3, 2, 1)
 #endif // __cplusplus >= 201103L
 
-/*!
+/**
  * The maximum size of a preprocessor sequence. This is half the maximum number
  * of parameters in one macro definition (guaranteed to be at least 127 for C
  * and 256 for C++).
@@ -357,17 +357,17 @@
 #define CPP_MAX_SIZE	63
 #endif
 
-//! Evaluates to the n-th argument, starting from 0.
+/// Evaluates to the n-th argument, starting from 0.
 #define CPP_AT(n, ...) \
 	CPP_EVAL(CPP_HEAD CPP_SEQUENCE(n, CPP_AT_)(__VA_ARGS__))
 #define CPP_AT_(...) \
 	(CPP_TAIL(__VA_ARGS__))
 
-/*!
- * Evaluates to 1 if \a a and \a b are equal non-negative integers, and 0 if
- * not.
+/**
+ * Evaluates to 1 if <b>a</b> and <b>b</b> are equal non-negative integers, and
+ * 0 if not.
  *
- * \see CPP_NEQ()
+ * @see CPP_NEQ()
  */
 #define CPP_EQ(a, b) \
 	CPP_EQ_(a, b)
@@ -636,32 +636,32 @@
 	,
 #endif // __cplusplus >= 201103L
 
-/*!
- * Evaluates to 0 if \a a and \a b are equal non-negative integers, and 1 if
- * not.
+/**
+ * Evaluates to 0 if <b>a</b> and <b>b</b> are equal non-negative integers, and
+ * 1 if not.
  *
- * \see CPP_EQ()
+ * @see CPP_EQ()
  */
 #define CPP_NEQ(a, b) \
 	CPP_NOT(CPP_EQ(a, b))
 
-//! Evaluates to 1 if `a > b`, and 0 if not.
+/// Evaluates to 1 if `a > b`, and 0 if not.
 #define CPP_GT(a, b) \
 	CPP_LT(b, a)
 
-//! Evaluates to 1 if `a >= b`, and 0 if not.
+/// Evaluates to 1 if `a >= b`, and 0 if not.
 #define CPP_GE(a, b) \
 	CPP_NOT(CPP_LT(a, b))
 
-//! Evaluates to 1 if `a <= b`, and 0 if not.
+/// Evaluates to 1 if `a <= b`, and 0 if not.
 #define CPP_LE(a, b) \
 	CPP_NOT(CPP_GT(a, b))
 
-//! Evaluates to 1 if `a < b`, and 0 if not.
+/// Evaluates to 1 if `a < b`, and 0 if not.
 #define CPP_LT(a, b) \
 	CPP_AT(a, CPP_TAIL(CPP_SEQUENCE(b,, 1) CPP_SEQUENCE(a,, 0), 0))
 
-//! Evaluates to 1 if \a x evaluates to 0, and 0 if not.
+/// Evaluates to 1 if <b>x</b> evaluates to 0, and 0 if not.
 #define CPP_NOT(x) \
 	CPP_NOT_(x)
 #define CPP_NOT_(x) \
@@ -669,17 +669,17 @@
 #define CPP_NOT_0 \
 	,
 
-//! Evaluates to 1 if both \a a and \a b evaluate to 1, and 0 if not.
+/// Evaluates to 1 if both <b>a</b> and <b>b</b> evaluate to 1, and 0 if not.
 #define CPP_AND(a, b) \
 	CPP_IF_ELSE(a)(CPP_IF_ELSE(b)(1)(0))(0)
 
-//! Evaluates to 1 if either \a a or \a b evaluates to 1, and 0 if not.
+/// Evaluates to 1 if either <b>a</b> or <b>b</b> evaluates to 1, and 0 if not.
 #define CPP_OR(a, b) \
 	CPP_IF_ELSE(a)(1)(CPP_IF_ELSE(b)(1)(0))
 
-/*!
- * Expands the next expression in parentheses if and only if \a c evaluates to
- * \a 1. Use as `CPP_IF(cond)(expr-if-true)`.
+/**
+ * Expands the next expression in parentheses if and only if <b>c</b> evaluates
+ * to <b>1</b>. Use as `CPP_IF(cond)(expr-if-true)`.
  */
 #define CPP_IF(c) \
 	CPP_IF_(CPP_NOT(CPP_NOT(c)))
@@ -691,9 +691,10 @@
 #define CPP_IF_1(...) \
 	__VA_ARGS__
 
-/*!
- * Expands the first expression in parentheses if \a c evaluates to \a 1, and
- * the second if not. Use as `CPP_IF_ELSE(cond)(expr-if-true)(expr-if-false)`.
+/**
+ * Expands the first expression in parentheses if <b>c</b> evaluates to
+ * <b>1</b>, and the second if not. Use as
+ * `CPP_IF_ELSE(cond)(expr-if-true)(expr-if-false)`.
  */
 #define CPP_IF_ELSE(c) \
 	CPP_IF_ELSE_(CPP_NOT(CPP_NOT(c)))
@@ -706,21 +707,22 @@
 #define CPP_IF_ELSE_1(...) \
 	__VA_ARGS__ CPP_IF_0
 
-/*!
- * Left folds the argument list by applying \a f with \a x as the initial value.
+/**
+ * Left folds the argument list by applying <b>f</b> with <b>x</b> as the
+ * initial value.
  *
- * \see CPP_FOLDR()
+ * @see CPP_FOLDR()
  */
 #define CPP_FOLDL(f, x, ...) \
 	CPP_EVAL_2(CPP_FOLD_(CPP_FOLDL_, f, x, __VA_ARGS__))
 #define CPP_FOLDL_(f, a, b, ...) \
 	(f, (f(CPP_EVAL_1 a, b)), __VA_ARGS__)
 
-/*!
- * Right folds the argument list by applying \a f with \a x as the initial
- * value.
+/**
+ * Right folds the argument list by applying <b>f</b> with <b>x</b> as the
+ * initial value.
  *
- * \see CPP_FOLDR()
+ * @see CPP_FOLDR()
  */
 #define CPP_FOLDR(f, x, ...) \
 	CPP_EVAL_2(CPP_FOLD_(CPP_FOLDR_, f, x, CPP_REVERSE(__VA_ARGS__)))
@@ -732,7 +734,7 @@
 #define CPP_FOLD__(m, f, x, ...) \
 	CPP_SEQUENCE(CPP_SIZE(__VA_ARGS__), m)(f, x, __VA_ARGS__,)
 
-//! Applies \a f to every argument.
+/// Applies <b>f</b> to every argument.
 #define CPP_MAP(f, ...) \
 	CPP_EVAL(CPP_MAP_(f, __VA_ARGS__))
 #define CPP_MAP_(f, ...) \
@@ -746,7 +748,7 @@
 #define CPP_MAP___() \
 	CPP_MAP_
 
-//! Reverses the argument list.
+/// Reverses the argument list.
 #define CPP_REVERSE(...) \
 	CPP_EVAL(CPP_REVERSE_((), __VA_ARGS__))
 #define CPP_REVERSE_(s, ...) \
@@ -760,7 +762,7 @@
 #define CPP_REVERSE___() \
 	CPP_REVERSE_
 
-//! Evaluates its arguments as many times as possible.
+/// Evaluates its arguments as many times as possible.
 #if __cplusplus >= 201103L
 #define CPP_EVAL \
 	CPP_EVAL_256
@@ -784,19 +786,19 @@
 	CPP_EVAL_2(CPP_EVAL_2(__VA_ARGS__))
 #define CPP_EVAL_2(...) \
 	CPP_EVAL_1(CPP_EVAL_1(__VA_ARGS__))
-//! Evaluates its arguments exactly once.
+/// Evaluates its arguments exactly once.
 #define CPP_EVAL_1(...) \
 	__VA_ARGS__
-//! Does not evaluate its arguments at all.
+/// Does not evaluate its arguments at all.
 #define CPP_EVAL_0(...)
 
-//! Evaluates to the first of its arguments.
+/// Evaluates to the first of its arguments.
 #define CPP_HEAD(...) \
 	CPP_HEAD_(__VA_ARGS__,)
 #define CPP_HEAD_(_0, ...) \
 	_0
 
-/*!
+/**
  * Evaluates to all but the first of its arguments. At least two arguments must
  * be provided.
  */
@@ -841,7 +843,7 @@
 	_63
 #endif
 
-//! Evaluates to 1 if the argument list contains a comma, and 0 if not.
+/// Evaluates to 1 if the argument list contains a comma, and 0 if not.
 #if __cplusplus >= 201103L
 #define CPP_HAS_COMMA(...) \
 	CPP_AT_127(__VA_ARGS__, \

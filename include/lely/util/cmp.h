@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the comparison
  * function definitions.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,13 +39,13 @@
 extern "C" {
 #endif
 
-/*!
+/**
  * The type of a generic comparison function. Functions with this signature can
- * be used with, e.g., qsort() from stdlib.h. \a p1 and \a p2 MUST be NULL or
- * point to objects of the same type.
+ * be used with, e.g., qsort() from stdlib.h. <b>p1</b> and <b>p2</b> MUST be
+ * NULL or point to objects of the same type.
  *
- * \returns an integer greater than, equal to, or less than 0 if the object at
- * \a p1 is greater than, equal to, or less than the object at \a p2.
+ * @returns an integer greater than, equal to, or less than 0 if the object at
+ * <b>p1</b> is greater than, equal to, or less than the object at <b>p2</b>.
  */
 typedef int __cdecl cmp_t(const void *p1, const void *p2);
 

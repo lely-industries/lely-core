@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the I/O library; it contains the C++ interface of
- * the I/O polling interface. \see lely/io/poll.h for the C interface.
+ * the I/O polling interface. @see lely/io/poll.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@
 #include <lely/util/c_type.hpp>
 
 namespace lely { class IOPoll; }
-//! An opaque I/O polling interface type.
+/// An opaque I/O polling interface type.
 typedef lely::IOPoll io_poll_t;
 
 #include <lely/io/poll.h>
 
 namespace lely {
 
-//! The attributes of #io_poll_t required by #lely::IOPoll.
+/// The attributes of #io_poll_t required by #lely::IOPoll.
 template <>
 struct c_type_traits<__io_poll> {
 	typedef __io_poll value_type;
@@ -52,7 +52,7 @@ struct c_type_traits<__io_poll> {
 	static void fini(pointer p) noexcept { __io_poll_fini(p); }
 };
 
-//! An opaque I/O polling interface type.
+/// An opaque I/O polling interface type.
 class IOPoll: public incomplete_c_type<__io_poll> {
 	typedef incomplete_c_type<__io_poll> c_base;
 public:

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the Cyclic
  * Redundancy Check (CRC) declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-/*!
+/**
  * Computes a CRC-16 checksum. This is an implementation of the CRC16-CCITT
  * specification based on the 0x1021 generator polynomial. It uses a table with
  * precomputed values for efficiency.
@@ -39,11 +39,11 @@ extern "C" {
  * As per section 7.2.4.3.16 in CiA 301 version 4.2.0, the CRC of "123456789"
  * (with an initial value of 0x0000) is 0x31c3.
  *
- * \param crc the initial value.
- * \param ptr a pointer to the bytes to be hashed.
- * \param n   the number of bytes to hash.
+ * @param crc the initial value.
+ * @param ptr a pointer to the bytes to be hashed.
+ * @param n   the number of bytes to hash.
  *
- * \returns the updated CRC.
+ * @returns the updated CRC.
  */
 LELY_CO_EXTERN uint16_t co_crc(uint16_t crc, const void *ptr, size_t n);
 

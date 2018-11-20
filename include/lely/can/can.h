@@ -1,9 +1,9 @@
-/*!\file
+/**@file
  * This is the public header file of the CAN library.
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,30 +31,30 @@
 #endif
 #endif
 
-//! The states of a CAN node, dependening on the TX/RX error count.
+/// The states of a CAN node, dependening on the TX/RX error count.
 enum can_state {
-	//! The error active state (TX/RX error count < 128).
+	/// The error active state (TX/RX error count < 128).
 	CAN_STATE_ACTIVE,
-	//! The error passive state (TX/RX error count < 256).
+	/// The error passive state (TX/RX error count < 256).
 	CAN_STATE_PASSIVE,
-	//! The bus off state (TX/RX error count >= 256).
+	/// The bus off state (TX/RX error count >= 256).
 	CAN_STATE_BUSOFF
 };
 
-//! The error flags of a CAN bus, which are not mutually exclusive.
+/// The error flags of a CAN bus, which are not mutually exclusive.
 enum can_error {
-	//! A single bit error.
+	/// A single bit error.
 	CAN_ERROR_BIT = 1u << 0,
-	//! A bit stuffing error.
+	/// A bit stuffing error.
 	CAN_ERROR_STUFF = 1u << 1,
-	//! A CRC sequence error.
+	/// A CRC sequence error.
 	CAN_ERROR_CRC = 1u << 2,
-	//! A form error.
+	/// A form error.
 	CAN_ERROR_FORM = 1u << 3,
-	//! An acknowledgment error.
+	/// An acknowledgment error.
 	CAN_ERROR_ACK = 1u << 4,
-	//! One or more other errors.
+	/// One or more other errors.
 	CAN_ERROR_OTHER = 1 << 5
 };
 
-#endif // LELY_CAN_CAN_H_
+#endif // !LELY_CAN_CAN_H_

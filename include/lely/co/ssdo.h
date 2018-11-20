@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the Server-SDO
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,55 +35,55 @@ LELY_CO_EXTERN struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo,
 		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 LELY_CO_EXTERN void __co_ssdo_fini(struct __co_ssdo *sdo);
 
-/*!
+/**
  * Creates a new CANopen Server-SDO service.
  *
- * \param net a pointer to a CAN network.
- * \param dev a pointer to a CANopen device describing the server.
- * \param num the SDO number (in the range [1..128]). Except when \a num is 1,
- *            the SDO parameter record MUST exist in the object dictionary of
- *            \a dev.
+ * @param net a pointer to a CAN network.
+ * @param dev a pointer to a CANopen device describing the server.
+ * @param num the SDO number (in the range [1..128]). Except when <b>num</b> is
+ *            1, the SDO parameter record MUST exist in the object dictionary of
+ *            <b>dev</b>.
  *
- * \returns a pointer to a new Server-SDO service, or NULL on error. In the
- * latter case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to a new Server-SDO service, or NULL on error. In the
+ * latter case, the error number can be obtained with get_errc().
  *
- * \see co_ssdo_destroy()
+ * @see co_ssdo_destroy()
  */
 LELY_CO_EXTERN co_ssdo_t *co_ssdo_create(can_net_t *net, co_dev_t *dev,
 		co_unsigned8_t num);
 
-//! Destroys a CANopen Server-SDO service. \see co_ssdo_create()
+/// Destroys a CANopen Server-SDO service. @see co_ssdo_create()
 LELY_CO_EXTERN void co_ssdo_destroy(co_ssdo_t *sdo);
 
-//! Returns a pointer to the CAN network of a Server-SDO.
+/// Returns a pointer to the CAN network of a Server-SDO.
 LELY_CO_EXTERN can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);
 
-//! Returns a pointer to the CANopen device of a Server-SDO.
+/// Returns a pointer to the CANopen device of a Server-SDO.
 LELY_CO_EXTERN co_dev_t *co_ssdo_get_dev(const co_ssdo_t *sdo);
 
-//! Returns the SDO number of a Server-SDO.
+/// Returns the SDO number of a Server-SDO.
 LELY_CO_EXTERN co_unsigned8_t co_ssdo_get_num(const co_ssdo_t *sdo);
 
-//! Returns a pointer to the SDO parameter record of a Server-SDO.
+/// Returns a pointer to the SDO parameter record of a Server-SDO.
 LELY_CO_EXTERN const struct co_sdo_par *co_ssdo_get_par(const co_ssdo_t *sdo);
 
-/*!
+/**
  * Returns the timeout (in milliseconds) of a Server-SDO. A return value of 0
  * (the default) means no timeout is being used.
  *
- * \see co_ssdo_set_timeout()
+ * @see co_ssdo_set_timeout()
  */
 LELY_CO_EXTERN int co_ssdo_get_timeout(const co_ssdo_t *sdo);
 
-/*!
+/**
  * Sets the timeout of a Server-SDO. If the timeout expires before receiving a
  * request from a client, the server aborts the transfer.
  *
- * \param sdo     a pointer to a Server-SDO service.
- * \param timeout the timeout (in milliseconds). A value of 0 (the default)
+ * @param sdo     a pointer to a Server-SDO service.
+ * @param timeout the timeout (in milliseconds). A value of 0 (the default)
  *                disables the timeout.
  *
- * \see co_ssdo_get_timeout()
+ * @see co_ssdo_get_timeout()
  */
 LELY_CO_EXTERN void co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout);
 

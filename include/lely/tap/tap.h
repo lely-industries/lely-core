@@ -1,9 +1,9 @@
-/*!\file
+/**@file
  * This is the public header file of the Test Anything Protocol (TAP) library.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
 #pragma GCC diagnostic ignored "-Wformat-extra-args"
 #endif
 
-/*!
+/**
  * Specifies the test plan. The first argument MUST be the number of test to
  * run. If no tests are run, a second argument MAY be provided. If it is, it is
  * interpreted as a printf-style format string describing the reason for
@@ -53,7 +53,7 @@
 	__tap_plan_impl(n, "")
 #endif
 
-/*!
+/**
  * Evaluates an expression. If the result is non-zero, the test passed,
  * otherwise it failed. The first argument MUST be the expression to be
  * evaluated. The second argument is optional. If it is specified, it is
@@ -70,13 +70,13 @@
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "")
 #endif
 
-/*!
+/**
  * Indicates that a test has passed. No arguments are required, but if they are
  * specified, the first argument is interpreted as a printf-style format string
  * describing the test. Any further arguments are printed under the control of
  * the format string.
  *
- * \see tap_fail()
+ * @see tap_fail()
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_pass(...) \
@@ -86,13 +86,13 @@
 	__tap_test_impl(1, "", __FILE__, __LINE__, "")
 #endif
 
-/*!
+/**
  * Indicates that a test has failed. No arguments are required, but if they are
  * specified, the first argument is interpreted as a printf-style format string
  * describing the test. Any further arguments are printed under the control of
  * the format string.
  *
- * \see tap_pass()
+ * @see tap_pass()
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_fail(...) \
@@ -102,7 +102,7 @@
 	__tap_test_impl(0, "", __FILE__, __LINE__, "")
 #endif
 
-/*!
+/**
  * Indicates that a test is expected to fail. If the expression evaluates to
  * zero, the test is not considered to have failed. The arguments are the same
  * as for tap_test().
@@ -118,7 +118,7 @@
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, " # TODO")
 #endif
 
-/*!
+/**
  * Skips a test. The provided expression is _not_ evaluated. The arguments are
  * the same as for tap_test().
  */
@@ -132,7 +132,7 @@
 	tap_pass(" # SKIP")
 #endif
 
-/*!
+/**
  * Emits a diagnostic message. The first argument, if provided, is interpreted
  * as a printf-style format string. Any further arguments are printed under the
  * control of the format string.
@@ -145,7 +145,7 @@
 	__tap_diag_impl("# " format)
 #endif
 
-/*!
+/**
  * Aborts all tests. The first argument, if provided, is interpreted as a
  * printf-style format string describing the reason for aborting. Any further
  * arguments are printed under the control of the format string. Note that this
@@ -159,7 +159,10 @@
 	__tap_abort_impl("")
 #endif
 
-//! Similar to `assert()`, but invokes tap_abort() if \a expr evaluates to zero.
+/**
+ * Similar to `assert()`, but invokes tap_abort() if <b>expr</b> evaluates to
+ * zero.
+ */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
 #define tap_assert(expr) \
 	((expr) ? (void)0 \
@@ -193,4 +196,4 @@ LELY_TAP_EXTERN _Noreturn void __tap_abort_impl(const char *format, ...)
 }
 #endif
 
-#endif // LELY_TAP_TAP_H_
+#endif // !LELY_TAP_TAP_H_

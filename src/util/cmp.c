@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it exposes thecomparison
  * functions.
  *
- * \see lely/util/cmp.h
+ * @see lely/util/cmp.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

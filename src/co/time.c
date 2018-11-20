@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the time stamp (TIME) object functions.
  *
- * \see lely/co/time.h
+ * @see lely/co/time.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,57 +37,57 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CANopen TIME producer/consumer service.
+/// A CANopen TIME producer/consumer service.
 struct __co_time {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The TIME COB-ID.
+	/// The TIME COB-ID.
 	uint32_t cobid;
-	//! A pointer to the high-resolution time stamp sub-object.
+	/// A pointer to the high-resolution time stamp sub-object.
 	co_sub_t *sub_1013_00;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The creation time of the service.
+	/// The creation time of the service.
 	struct timespec start;
-	//! A pointer to the indication function.
+	/// A pointer to the indication function.
 	co_time_ind_t *ind;
-	//! A pointer to user-specified data for #ind.
+	/// A pointer to user-specified data for #ind.
 	void *data;
 };
 
-/*!
+/**
  * Updates and (de)activates a TIME producer/consumer service. This function is
  * invoked by the download indication functions when the TIME COB-ID (object
  * 1012) is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_time_update(co_time_t *time);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1012
  * (COB-ID time stamp object).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The CAN receive callback function for a TIME consumer service.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_time_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for a TIME producer service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_time_timer(const struct timespec *tp, void *data);
 

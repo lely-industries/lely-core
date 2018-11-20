@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the external clock and timer functions.
  *
- * \see lely/util/xtime.h
+ * @see lely/util/xtime.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,44 +33,44 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! An external clock.
+/// An external clock.
 struct __xclock {
 #ifndef LELY_NO_THREADS
-	//! The mutex protecting #cond, #now, #res and #timers.
+	/// The mutex protecting #cond, #now, #res and #timers.
 	mtx_t mtx;
-	//! The condition variable used to wake xclock_nanosleep().
+	/// The condition variable used to wake xclock_nanosleep().
 	cnd_t cond;
 #endif
-	//! The current time.
+	/// The current time.
 	struct timespec now;
-	/*!
+	/**
 	 * The clock resolution (i.e., the interval between the previous two
 	 * updates).
 	 */
 	struct timespec res;
-	//! The heap containing the timers.
+	/// The heap containing the timers.
 	struct pheap timers;
 };
 
-//! An external timer.
+/// An external timer.
 struct __xtimer {
-	//! The node in the heap of timers.
+	/// The node in the heap of timers.
 	struct pnode node;
-	//! A pointer to the external clock.
+	/// A pointer to the external clock.
 	xclock_t *clock;
-	//! The notification type (`SIGEV_NONE` or `SIGEV_THREAD`).
+	/// The notification type (`SIGEV_NONE` or `SIGEV_THREAD`).
 	int notify;
-	//! The signal value.
+	/// The signal value.
 	union sigval value;
-	//! The notification function.
+	/// The notification function.
 	void (__cdecl *notify_function)(union sigval);
-	//! The absolute expiration time.
+	/// The absolute expiration time.
 	struct timespec expire;
-	//! The period.
+	/// The period.
 	struct timespec period;
-	//! A flag indicating whether the timer is armed.
+	/// A flag indicating whether the timer is armed.
 	int armed;
-	//! The overrun counter.
+	/// The overrun counter.
 	int overrun;
 };
 

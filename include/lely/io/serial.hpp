@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the I/O library; it contains the C++ interface of
- * the serial I/O device handle. \see lely/io/serial.h for the C interface.
+ * the serial I/O device handle. @see lely/io/serial.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 
 namespace lely {
 
-//! A serial I/O device handle.
+/// A serial I/O device handle.
 class IOSerial: public IOHandle {
 public:
 	IOSerial(const char* path, io_attr_t* attr = 0)

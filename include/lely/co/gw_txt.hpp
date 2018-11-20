@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the ASCII gateway declarations. See lely/co/gw_txt.h for the C
  * interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,14 @@
 #include <lely/util/c_type.hpp>
 
 namespace lely { class COGWTxt; }
-//! An opaque CANopen ASCII gateway client type.
+/// An opaque CANopen ASCII gateway client type.
 typedef lely::COGWTxt co_gw_txt_t;
 
 #include <lely/co/gw_txt.h>
 
 namespace lely {
 
-//! The attributes of #co_gw_txt_t required by #lely::COGWTxt.
+/// The attributes of #co_gw_txt_t required by #lely::COGWTxt.
 template <>
 struct c_type_traits<__co_gw_txt> {
 	typedef __co_gw_txt value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_gw_txt> {
 	static void fini(pointer p) noexcept { __co_gw_txt_fini(p); }
 };
 
-//! An opaque CANopen ASCII gateway client type.
+/// An opaque CANopen ASCII gateway client type.
 class COGWTxt: public incomplete_c_type<__co_gw_txt> {
 	typedef incomplete_c_type<__co_gw_txt> c_base;
 public:

@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT heartbeat consumer functions.
  *
- * \see src/nmt_ec.h
+ * @see src/nmt_ec.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,40 +29,40 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CANopen NMT heartbeat consumer.
+/// A CANopen NMT heartbeat consumer.
 struct __co_nmt_hb {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to an NMT master/slave service.
+	/// A pointer to an NMT master/slave service.
 	co_nmt_t *nmt;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! The state of the node (excluding the toggle bit).
+	/// The state of the node (excluding the toggle bit).
 	co_unsigned8_t st;
-	//! The consumer heartbeat time (in milliseconds).
+	/// The consumer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
-	/*!
+	/**
 	 * Indicates whether a heartbeat error occurred (#CO_NMT_EC_OCCURRED or
 	 * #CO_NMT_EC_RESOLVED).
 	 */
 	int state;
 };
 
-/*!
+/**
  * The CAN receive callback function for a heartbeat consumer.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_nmt_hb_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for a heartbeat consumer.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_nmt_hb_timer(const struct timespec *tp, void *data);
 

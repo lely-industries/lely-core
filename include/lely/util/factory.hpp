@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the C++
  * interface of the factory pattern.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 
 namespace lely {
 
-//! An abstract factory.
+/// An abstract factory.
 template <class T>
 class factory {
 public:
@@ -46,13 +46,13 @@ public:
 	virtual void destroy(T) = 0;
 };
 
-//! An abstract factory for heap-allocated objects.
+/// An abstract factory for heap-allocated objects.
 template <class T>
 class factory<T*> {
 public:
 	typedef T* value_type;
 
-	/*!
+	/**
 	 * The deleter used by `shared_ptr` and `unique_ptr` to delete objects
 	 * created with this factory.
 	 */
@@ -81,7 +81,7 @@ public:
 
 #if __cplusplus >= 201103L
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * an arbitrary number of arguments.
  */
@@ -109,7 +109,7 @@ public:
 
 #else
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed
  * without arguments.
  */
@@ -128,7 +128,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * one argument.
  */
@@ -147,7 +147,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * two arguments.
  */
@@ -166,7 +166,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * three arguments.
  */
@@ -185,7 +185,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * four arguments.
  */
@@ -204,7 +204,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * five arguments.
  */
@@ -223,7 +223,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * six arguments.
  */
@@ -242,7 +242,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * seven arguments.
  */
@@ -263,7 +263,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * eight arguments.
  */
@@ -284,7 +284,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * nine arguments.
  */
@@ -307,7 +307,7 @@ public:
 #endif
 };
 
-/*!
+/**
  * An abstract factory for heap-allocated objects that can be constructed with
  * ten arguments.
  */
@@ -334,63 +334,63 @@ public:
 
 namespace impl {
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class T> struct remove_arguments { typedef T type; };
 
 #if __cplusplus >= 201103L
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class... Args>
 struct remove_arguments<R(Args...)> { using type = R; };
 
 #else
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R>
 struct remove_arguments<R()> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0>
 struct remove_arguments<R(T0)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1>
 struct remove_arguments<R(T0, T1)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2>
 struct remove_arguments<R(T0, T1, T2)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3>
 struct remove_arguments<R(T0, T1, T2, T3)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4>
 struct remove_arguments<R(T0, T1, T2, T3, T4)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7)> { typedef R type; };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
 	typedef R type;
 };
 
-//! Removes the arguments from the given function type.
+/// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
 		class T6, class T7, class T8, class T9>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
@@ -401,10 +401,10 @@ struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
 
 } // impl
 
-//! The default factory.
+/// The default factory.
 template <class, class> class default_factory;
 
-//! The default factory for heap-allocated objects.
+/// The default factory for heap-allocated objects.
 template <class T, class U>
 class default_factory<T*, U*>: public virtual factory<U*> {
 public:
@@ -421,7 +421,7 @@ public:
 
 #if __cplusplus >= 201103L
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * an arbitrary number of arguments.
  */
@@ -434,7 +434,7 @@ public:
 
 #else
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed
  * without arguments.
  */
@@ -445,7 +445,7 @@ public:
 	virtual U* create() { return new R(); }
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * one argument.
  */
@@ -456,7 +456,7 @@ public:
 	virtual U* create(T0 t0) { return new R(t0); }
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * two arguments.
  */
@@ -467,7 +467,7 @@ public:
 	virtual U* create(T0 t0, T1 t1) { return new R(t0, t1); }
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * three arguments.
  */
@@ -478,7 +478,7 @@ public:
 	virtual U* create(T0 t0, T1 t1, T2 t2) { return new R(t0, t1, t2); }
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * four arguments.
  */
@@ -490,7 +490,7 @@ public:
 	create(T0 t0, T1 t1, T2 t2, T3 t3) { return new R(t0, t1, t2, t3); }
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * five arguments.
  */
@@ -505,7 +505,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * six arguments.
  */
@@ -521,7 +521,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * seven arguments.
  */
@@ -538,7 +538,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * eight arguments.
  */
@@ -555,7 +555,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * nine arguments.
  */
@@ -572,7 +572,7 @@ public:
 	}
 };
 
-/*!
+/**
  * The default factory for heap-allocated objects that can be constructed with
  * ten arguments.
  */

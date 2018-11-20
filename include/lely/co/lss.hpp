@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the Layer Setting Services (LSS) and protocols declarations. See
  * lely/co/lss.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 namespace lely {
 
-//! The attributes of #co_lss_t required by #lely::COLSS.
+/// The attributes of #co_lss_t required by #lely::COLSS.
 template <>
 struct c_type_traits<__co_lss> {
 	typedef __co_lss value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_lss> {
 	static void fini(pointer p) noexcept { __co_lss_fini(p); }
 };
 
-//! An opaque CANopen LSS master/slave service type.
+/// An opaque CANopen LSS master/slave service type.
 class COLSS: public incomplete_c_type<__co_lss> {
 	typedef incomplete_c_type<__co_lss> c_base;
 public:

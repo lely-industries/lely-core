@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * <a href="https://en.wikipedia.org/wiki/Pairing_heap">pairing heap</a>
  * declarations.
@@ -13,9 +13,9 @@
  * of the heap, the user is responsible for providing a suitable comparison
  * function (#pheap_cmp_t).
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,25 +41,25 @@
 #define LELY_UTIL_PHEAP_INLINE	inline
 #endif
 
-/*!
+/**
  * A node in a pairing heap. To associate a value with a node, embed the node in
  * a struct containing the value and use `structof()` to obtain the struct from
  * the node.
  *
- * \see pheap_in
+ * @see pheap_in
  */
 struct pnode {
-	/*!
+	/**
 	 * A pointer to the key of this node. The key MUST be set before the
 	 * node is inserted into a heap and MUST NOT be modified while the node
 	 * is part of the heap.
 	 */
 	const void *key;
-	//! A pointer to the parent node.
+	/// A pointer to the parent node.
 	struct pnode *parent;
-	//! A pointer to the next sibling node.
+	/// A pointer to the next sibling node.
 	struct pnode *next;
-	//! A pointer to the first child node.
+	/// A pointer to the first child node.
 	struct pnode *child;
 };
 
@@ -67,48 +67,48 @@ struct pnode {
 extern "C" {
 #endif
 
-/*!
- * The type of a comparison function suitable for use in a paring heap. \a p1
- * and \a p2 MUST be NULL or point to objects of the same type.
+/**
+ * The type of a comparison function suitable for use in a paring heap.
+ * <b>p1</b> and <b>p2</b> MUST be NULL or point to objects of the same type.
  *
- * \returns an integer greater than, equal to, or less than 0 if the object at
- * \a p1 is greater than, equal to, or less than the object at \a p2.
+ * @returns an integer greater than, equal to, or less than 0 if the object at
+ * <b>p1</b> is greater than, equal to, or less than the object at <b>p2</b>.
  */
 typedef int __cdecl pheap_cmp_t(const void *p1, const void *p2);
 
-//! A pairing heap.
+/// A pairing heap.
 struct pheap {
-	//! A pointer to the function used to compare two keys.
+	/// A pointer to the function used to compare two keys.
 	pheap_cmp_t *cmp;
-	//! A pointer to the root node of the heap.
+	/// A pointer to the root node of the heap.
 	struct pnode *root;
-	//! The number of nodes stored in the heap.
+	/// The number of nodes stored in the heap.
 	size_t num_nodes;
 };
 
-/*!
+/**
  * Initializes a node in a paring heap.
  *
- * \param node a pointer to the node to be initialized.
- * \param key  a pointer to the key for this node. The key MUST NOT be modified
+ * @param node a pointer to the node to be initialized.
+ * @param key  a pointer to the key for this node. The key MUST NOT be modified
  *             while the node is part of a heap.
  */
 LELY_UTIL_PHEAP_INLINE void pnode_init(struct pnode *node, const void *key);
 
-//! Returns a pointer to the next node (in unspecified order) in a pairing heap.
+/// Returns a pointer to the next node (in unspecified order) in a pairing heap.
 LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
 
-/*!
+/**
  * Iterates over each node in a pairing heap in unspecified order. It is safe to
  * remove the current node during the iteration. However, since pheap_remove()
  * may change the order of the nodes, it is not guaranteed that all nodes will
  * be visited.
  *
- * \param first a pointer to the first node.
- * \param node  the name of the pointer to the nodes. This variable is declared
+ * @param first a pointer to the first node.
+ * @param node  the name of the pointer to the nodes. This variable is declared
  *              in the scope of the loop.
  *
- * \see pnode_next()
+ * @see pnode_next()
  */
 #ifdef __COUNTER__
 #define pnode_foreach(first, node) \
@@ -125,60 +125,60 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
 			(node); (node) = _pnode_next_##n, \
 			_pnode_next_##n = (node) ? pnode_next(node) : NULL)
 
-/*!
+/**
  * Initializes a pairing heap.
  *
- * \param heap a pointer to the heap to be initialized.
- * \param cmp  a pointer to the function used to compare two keys.
+ * @param heap a pointer to the heap to be initialized.
+ * @param cmp  a pointer to the function used to compare two keys.
  */
 LELY_UTIL_PHEAP_INLINE void pheap_init(struct pheap *heap, pheap_cmp_t *cmp);
 
-//! Returns 1 if the pairing heap is empty, and 0 if not.
+/// Returns 1 if the pairing heap is empty, and 0 if not.
 LELY_UTIL_PHEAP_INLINE int pheap_empty(const struct pheap *heap);
 
-/*!
+/**
  * Returns the size (in number of nodes) of a pairing heap. This is an O(1)
  * operation.
  */
 LELY_UTIL_PHEAP_INLINE size_t pheap_size(const struct pheap *heap);
 
-/*!
+/**
  * Inserts a node into a pairing heap. This is an O(1) operation. This function
  * does not check whether a node with the same key already exists, or whether
  * the node is already part of another heap.
  *
- * \see pheap_remove(), pheap_find()
+ * @see pheap_remove(), pheap_find()
  */
 LELY_UTIL_EXTERN void pheap_insert(struct pheap *heap, struct pnode *node);
 
-/*!
+/**
  * Removes a node from a pairing heap. This is an (amortized) O(log(n))
  * operation.
  *
- * \see pheap_insert()
+ * @see pheap_insert()
  */
 LELY_UTIL_EXTERN void pheap_remove(struct pheap *heap, struct pnode *node);
 
-/*!
+/**
  * Finds a node in a pairing heap. This is an O(n) operation.
  *
- * \returns a pointer to the node if found, or NULL if not.
+ * @returns a pointer to the node if found, or NULL if not.
  *
- * \see pheap_insert()
+ * @see pheap_insert()
  */
 LELY_UTIL_EXTERN struct pnode *pheap_find(const struct pheap *heap,
 		const void *key);
 
-/*!
+/**
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an
  * O(1) operation.
  */
 LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
 
-/*!
+/**
  * Iterates over each node in a pairing heap in unspecified order.
  *
- * \see pnode_foreach(), pheap_first()
+ * @see pnode_foreach(), pheap_first()
  */
 #define pheap_foreach(heap, node) \
 	pnode_foreach(pheap_first(heap), node)
@@ -231,4 +231,4 @@ pheap_first(const struct pheap *heap)
 }
 #endif
 
-#endif // LELY_UTIL_PHEAP_H_
+#endif // !LELY_UTIL_PHEAP_H_

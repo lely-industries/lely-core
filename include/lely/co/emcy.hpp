@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the emergency (EMCY) object. See lely/co/emcy.h for the C
  * interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 namespace lely {
 
-//! The attributes of #co_emcy_t required by #lely::COEmcy.
+/// The attributes of #co_emcy_t required by #lely::COEmcy.
 template <>
 struct c_type_traits<__co_emcy> {
 	typedef __co_emcy value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_emcy> {
 	static void fini(pointer p) noexcept { __co_emcy_fini(p); }
 };
 
-//! An opaque CANopen EMCY producer/consumer service type.
+/// An opaque CANopen EMCY producer/consumer service type.
 class COEmcy: public incomplete_c_type<__co_emcy> {
 	typedef incomplete_c_type<__co_emcy> c_base;
 public:

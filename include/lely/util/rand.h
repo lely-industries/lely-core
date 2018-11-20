@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the random
  * number generator definitions.
  *
@@ -6,9 +6,9 @@
  * Recipes (3rd edition), paragraph 7.1. It generates 64-bit uniformly
  * distributed random numbers with a period of more than 3 * 10^57.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,55 +29,55 @@
 #include <lely/libc/stdint.h>
 #include <lely/util/util.h>
 
-//! A 64-bit uniformly distributed unsigned random number generator.
+/// A 64-bit uniformly distributed unsigned random number generator.
 struct rand64 {
-	//! The first state value of the generator.
+	/// The first state value of the generator.
 	uint64_t u;
-	//! The second state value of the generator.
+	/// The second state value of the generator.
 	uint64_t v;
-	//! The third state value of the generator.
+	/// The third state value of the generator.
 	uint64_t w;
 };
 
-/*!
+/**
  * A 32-bit uniformly distributed unsigned random number generator. This
  * generator uses all bits of the 64-bit base generator, instead of discarding
  * the higher bits.
  */
 struct rand32 {
-	//! The 64-bit base generator.
+	/// The 64-bit base generator.
 	struct rand64 r;
-	//! The current set of random numbers.
+	/// The current set of random numbers.
 	uint64_t x;
-	//! The number of random bits left in #x.
+	/// The number of random bits left in #x.
 	unsigned int n;
 };
 
-/*!
+/**
  * A 16-bit uniformly distributed unsigned random number generator. This
  * generator uses all bits of the 64-bit base generator, instead of discarding
  * the higher bits.
  */
 struct rand16 {
-	//! The 64-bit base generator.
+	/// The 64-bit base generator.
 	struct rand64 r;
-	//! The current set of random numbers.
+	/// The current set of random numbers.
 	uint64_t x;
-	//! The number of random bits left in #x.
+	/// The number of random bits left in #x.
 	unsigned int n;
 };
 
-/*!
+/**
  * An 8-bit uniformly distributed unsigned random number generator. This
  * generator uses all bits of the 64-bit base generator, instead of discarding
  * the higher bits.
  */
 struct rand8 {
-	//! The 64-bit base generator.
+	/// The 64-bit base generator.
 	struct rand64 r;
-	//! The current set of random numbers.
+	/// The current set of random numbers.
 	uint64_t x;
-	//! The number of random bits left in #x.
+	/// The number of random bits left in #x.
 	unsigned int n;
 };
 
@@ -85,40 +85,40 @@ struct rand8 {
 extern "C" {
 #endif
 
-//! Initializes a 64-bit random number generator with a seed.
+/// Initializes a 64-bit random number generator with a seed.
 LELY_UTIL_EXTERN void rand64_seed(struct rand64 *r, uint64_t seed);
 
-//! Generates an unsigned 64-bit random number.
+/// Generates an unsigned 64-bit random number.
 LELY_UTIL_EXTERN uint64_t rand64_get(struct rand64 *r);
 
-//! Discards the next \a z random numbers from the sequence.
+/// Discards the next <b>z</b> random numbers from the sequence.
 LELY_UTIL_EXTERN void rand64_discard(struct rand64 *r, uint64_t z);
 
-//! Initializes a 32-bit random number generator with a seed.
+/// Initializes a 32-bit random number generator with a seed.
 LELY_UTIL_EXTERN void rand32_seed(struct rand32 *r, uint64_t seed);
 
-//! Generates an unsigned 32-bit random number.
+/// Generates an unsigned 32-bit random number.
 LELY_UTIL_EXTERN uint32_t rand32_get(struct rand32 *r);
 
-//! Discards the next \a z random numbers from the sequence.
+/// Discards the next <b>z</b> random numbers from the sequence.
 LELY_UTIL_EXTERN void rand32_discard(struct rand32 *r, uint64_t z);
 
-//! Initializes a 16-bit random number generator with a seed.
+/// Initializes a 16-bit random number generator with a seed.
 LELY_UTIL_EXTERN void rand16_seed(struct rand16 *r, uint64_t seed);
 
-//! Generates an unsigned 16-bit random number.
+/// Generates an unsigned 16-bit random number.
 LELY_UTIL_EXTERN uint16_t rand16_get(struct rand16 *r);
 
-//! Discards the next \a z random numbers from the sequence.
+/// Discards the next <b>z</b> random numbers from the sequence.
 LELY_UTIL_EXTERN void rand16_discard(struct rand16 *r, uint64_t z);
 
-//! Initializes a 8-bit random number generator with a seed.
+/// Initializes a 8-bit random number generator with a seed.
 LELY_UTIL_EXTERN void rand8_seed(struct rand8 *r, uint64_t seed);
 
-//! Generates an unsigned 8-bit random number.
+/// Generates an unsigned 8-bit random number.
 LELY_UTIL_EXTERN uint8_t rand8_get(struct rand8 *r);
 
-//! Discards the next \a z random numbers from the sequence.
+/// Discards the next <b>z</b> random numbers from the sequence.
 LELY_UTIL_EXTERN void rand8_discard(struct rand8 *r, uint64_t z);
 
 #ifdef __cplusplus

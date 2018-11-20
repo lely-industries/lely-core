@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT 'configuration request' functions.
  *
- * \see src/nmt_cfg.h
+ * @see src/nmt_cfg.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,93 +33,93 @@
 #include <stdlib.h>
 
 struct __co_nmt_cfg_state;
-//! An opaque CANopen NMT 'configuration request' state type.
+/// An opaque CANopen NMT 'configuration request' state type.
 typedef const struct __co_nmt_cfg_state co_nmt_cfg_state_t;
 
-//! A CANopen NMT 'configuration request' service.
+/// A CANopen NMT 'configuration request' service.
 struct __co_nmt_cfg {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! A pointer to an NMT master service.
+	/// A pointer to an NMT master service.
 	co_nmt_t *nmt;
-	//! A pointer to the current state.
+	/// A pointer to the current state.
 	co_nmt_cfg_state_t *state;
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! The NMT slave assignment (object 1F81).
+	/// The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
-	//! A pointer to the Client-SDO used to access slave objects.
+	/// A pointer to the Client-SDO used to access slave objects.
 	co_csdo_t *sdo;
-	//! The SDO abort code.
+	/// The SDO abort code.
 	co_unsigned32_t ac;
 };
 
-/*!
+/**
  * The CANopen SDO download confirmation callback function for a 'configuration
  * request'.
  *
- * \see co_csdo_dn_con_t
+ * @see co_csdo_dn_con_t
  */
 static void co_nmt_cfg_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
 
-/*!
+/**
  * Enters the specified state of a 'configuration request; and invokes the exit
  * and entry functions.
  */
 static void co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next);
 
-/*!
+/**
  * Invokes the 'SDO download confirmation' transition function of the current
  * state of a 'boot slave' service.
  *
- * \param cfg    a pointer to a 'configuration request'.
- * \param ac     the SDO abort code (0 on success).
- * \param idx    the object index.
- * \param subidx the object sub-index.
+ * @param cfg    a pointer to a 'configuration request'.
+ * @param ac     the SDO abort code (0 on success).
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
  */
 static inline void co_nmt_cfg_emit_dn_con(co_nmt_cfg_t *cfg,
 		co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned32_t ac);
 
-/*!
+/**
  * Invokes the 'result received' transition function of the current state of a
  * 'configuration request'.
  *
- * \param cfg a pointer to a 'configuration request'.
- * \param ac  the SDO abort code (0 on success).
+ * @param cfg a pointer to a 'configuration request'.
+ * @param ac  the SDO abort code (0 on success).
  */
 static inline void co_nmt_cfg_emit_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 
-//! A CANopen NMT 'configuration request' state.
+/// A CANopen NMT 'configuration request' state.
 struct __co_nmt_cfg_state {
-	//! A pointer to the function invoked when a new state is entered.
+	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_cfg_state_t *(*on_enter)(co_nmt_cfg_t *cfg);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an NMT'update
 	 * configuration' step completes.
 	 *
-	 * \param cfg a pointer to a 'configuration request'.
-	 * \param ac  the SDO abort code (0 on success).
+	 * @param cfg a pointer to a 'configuration request'.
+	 * @param ac  the SDO abort code (0 on success).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_cfg_state_t *(*on_res)(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an SDO download
 	 * request completes.
 	 *
-	 * \param cfg    a pointer to a 'configuration request'.
-	 * \param idx    the object index.
-	 * \param subidx the object sub-index.
-	 * \param ac     the SDO abort code (0 on success).
+	 * @param cfg    a pointer to a 'configuration request'.
+	 * @param idx    the object index.
+	 * @param subidx the object sub-index.
+	 * @param ac     the SDO abort code (0 on success).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_cfg_state_t *(*on_dn_con)(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 			co_unsigned8_t subidx, co_unsigned32_t ac);
-	//! A pointer to the function invoked when the current state is left.
+	/// A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_nmt_cfg_t *cfg);
 };
 
@@ -127,10 +127,10 @@ struct __co_nmt_cfg_state {
 	static co_nmt_cfg_state_t *const name = \
 			&(co_nmt_cfg_state_t){ __VA_ARGS__ };
 
-//! The entry function of the 'initialization' state.
+/// The entry function of the 'initialization' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg);
 
-//! The 'result received' function of the 'initialization' state.
+/// The 'result received' function of the 'initialization' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_init_on_res(co_nmt_cfg_t *cfg,
 		co_unsigned32_t ac);
 
@@ -139,17 +139,17 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_init_state,
 	.on_res = &co_nmt_cfg_init_on_res
 )
 
-//! The entry function of the 'abort' state.
+/// The entry function of the 'abort' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg);
 
 LELY_CO_DEFINE_STATE(co_nmt_cfg_abort_state,
 	.on_enter = &co_nmt_cfg_abort_on_enter
 )
 
-//! The entry function of the 'restore configuration' state.
+/// The entry function of the 'restore configuration' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'restore
  * configuration' state.
  */

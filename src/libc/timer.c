@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/time.h
+ * @see lely/libc/time.h
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,78 +34,81 @@
 
 #include <process.h>
 
-/*!
+/**
  * The difference between Windows file time (seconds since 00:00:00 UTC on
  * January 1, 1601) and the Unix epoch (seconds since 00:00:00 UTC on January 1,
  * 1970) is 369 years and 89 leap days.
  */
 #define FILETIME_EPOCH	((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
 
-//! The magic number used to check the validity of a timer ("LELY").
+/// The magic number used to check the validity of a timer ("LELY").
 #define TIMER_MAGIC	0x594c454c
 
-//! The timer struct.
+/// The timer struct.
 struct timer {
-	/*!
+	/**
 	 * The magic number used to check the validity of the timer (MUST equal
 	 * #TIMER_MAGIC).
 	 */
 	unsigned int magic;
-	//! The notification type (#SIGEV_NONE or #SIGEV_THREAD).
+	/// The notification type (#SIGEV_NONE or #SIGEV_THREAD).
 	int sigev_notify;
-	//! The signal value.
+	/// The signal value.
 	union sigval sigev_value;
-	//! The notification function.
+	/// The notification function.
 	void (__cdecl *sigev_notify_function)(union sigval);
-	//! The waitable timer object.
+	/// The waitable timer object.
 	HANDLE hTimer;
-	//! The mutex protecting #expire, #period, #armed and #overrun.
+	/// The mutex protecting #expire, #period, #armed and #overrun.
 	mtx_t mtx;
-	//! The absolute expiration time.
+	/// The absolute expiration time.
 	struct timespec expire;
-	//! The period.
+	/// The period.
 	struct timespec period;
-	//! The expiration time passed to `SetWaitableTimer()`.
+	/// The expiration time passed to `SetWaitableTimer()`.
 	LARGE_INTEGER liDueTime;
-	//! The period (in milliseconds) passed to `SetWaitableTimer()`.
+	/// The period (in milliseconds) passed to `SetWaitableTimer()`.
 	LONG lPeriod;
-	//! A flag indicating whether the timer is armed.
+	/// A flag indicating whether the timer is armed.
 	int armed;
-	//! The overrun counter.
+	/// The overrun counter.
 	int overrun;
-	//! A pointer to the next timer in #timer_list.
+	/// A pointer to the next timer in #timer_list.
 	struct timer *next;
 };
 
-//! Initializes #timer_mtx and #timer_exit and starts the timer thread.
+/// Initializes #timer_mtx and #timer_exit and starts the timer thread.
 static void __cdecl timer_init(void);
-//! Signals the timer thread to exit.
+/// Signals the timer thread to exit.
 static void __cdecl timer_fini(void);
-//! The function running in the timer thread.
+/// The function running in the timer thread.
 static void __cdecl timer_start(void *arglist);
 
-//! The asynchronous procedure used to arm queued timers.
+/// The asynchronous procedure used to arm queued timers.
 static void __stdcall timer_apc_set(ULONG_PTR dwParam);
-//! The asynchronous procedure invoked when a timer is triggered.
+/// The asynchronous procedure invoked when a timer is triggered.
 static void __stdcall timer_apc_proc(LPVOID lpArgToCompletionRoutine,
 		DWORD dwTimerLowValue, DWORD dwTimerHighValue);
 
-//! The flag ensuring timer_init() is only called once.
+/// The flag ensuring timer_init() is only called once.
 static once_flag timer_once = ONCE_FLAG_INIT;
-//! The mutex protecting #timer_list and the \a next field in the #timer struct.
+/**
+ * The mutex protecting #timer_list and the <b>next</b> field in the #timer
+ * struct.
+ */
 static mtx_t timer_mtx;
-//! The list of timers waiting to be armed.
+/// The list of timers waiting to be armed.
 static struct timer *timer_list;
-//! The event used by time_fini() to signal the timer thread to exit.
+/// The event used by time_fini() to signal the timer thread to exit.
 static HANDLE timer_exit;
-//! The handle of the timer thread.
+/// The handle of the timer thread.
 static uintptr_t timer_thr = -1;
 
-//! Adds the time interval *\a inc to the time at \a tp.
+/// Adds the time interval *<b>inc</b> to the time at <b>tp</b>.
 static inline void timespec_add(struct timespec *tp,
 		const struct timespec *inc);
 
-//! Subtracts the time interval *\a dec from the time at \a tp.
+/// Subtracts the time interval *<b>dec</b> from the time at <b>tp</b>.
 static inline void timespec_sub(struct timespec *tp,
 		const struct timespec *dec);
 

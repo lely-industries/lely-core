@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CAN library; it contains the IXXAT VCI V4
  * interface declarations.
  *
- * \copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,41 +28,41 @@
 extern "C" {
 #endif
 
-/*!
+/**
  * Checks if an IXXAT VCI CAN message is an error message and parses the bus
  * state and error flags if it is.
  *
- * \param msg    a pointer to an IXXAT VCI CAN message.
- * \param pstate the address at which to store the updated CAN node state (can
+ * @param msg    a pointer to an IXXAT VCI CAN message.
+ * @param pstate the address at which to store the updated CAN node state (can
  *               be NULL). The value is only updated if the error frame
  *               indicates a state change.
- * \param perror the address at which to store the updated CAN bus errors (can
+ * @param perror the address at which to store the updated CAN bus errors (can
  *               be NULL). Any new error flags indicated by by the error frame
- *               are set in *\a perror, but existing flags are not cleared.
+ *               are set in *<b>perror</b>, but existing flags are not cleared.
  *
- * \returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
+ * @returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
  * In the latter case, the error number can be obtained with `get_errc()`.
  */
 LELY_CAN_EXTERN int CANMSG_is_error(const void *msg, enum can_state *pstate,
 		enum can_error *perror);
 
-/*!
+/**
  * Converts an IXXAT VCI CAN message to a #can_msg frame.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
- * \see can_msg2CANMSG()
+ * @see can_msg2CANMSG()
  */
 LELY_CAN_EXTERN int CANMSG2can_msg(const void *src, struct can_msg *dst);
 
-/*!
+/**
  * Converts a #can_msg frame to an IXXAT VCI CAN message.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
- * \see CANMSG2can_msg()
+ * @see CANMSG2can_msg()
  */
 LELY_CAN_EXTERN int can_msg2CANMSG(const struct can_msg *src, void *dst);
 
@@ -70,4 +70,4 @@ LELY_CAN_EXTERN int can_msg2CANMSG(const struct can_msg *src, void *dst);
 }
 #endif
 
-#endif // LELY_CAN_VCI_H_
+#endif // !LELY_CAN_VCI_H_

@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This is the internal header file of the object dictionary.
  *
- * \see lely/co/obj.h
+ * @see lely/co/obj.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,65 +28,65 @@
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
 
-//! A CANopen object.
+/// A CANopen object.
 struct __co_obj {
-	//! The node of this object in the tree of objects.
+	/// The node of this object in the tree of objects.
 	struct rbnode node;
-	//! A pointer to the CANopen device containing this object.
+	/// A pointer to the CANopen device containing this object.
 	co_dev_t *dev;
-	//! The object index.
+	/// The object index.
 	co_unsigned16_t idx;
-	//! The object code.
+	/// The object code.
 	co_unsigned8_t code;
 #ifndef LELY_NO_CO_OBJ_NAME
-	//! A pointer to the name of the object.
+	/// A pointer to the name of the object.
 	char *name;
 #endif
-	//! The tree containing all the sub-objects.
+	/// The tree containing all the sub-objects.
 	struct rbtree tree;
-	//! A pointer to the object value.
+	/// A pointer to the object value.
 	void *val;
-	//! The size (in bytes) of the value at #val.
+	/// The size (in bytes) of the value at #val.
 	size_t size;
 };
 
-//! A CANopen sub-object.
+/// A CANopen sub-object.
 struct __co_sub {
-	//! The node of this sub-object in the tree of sub-objects.
+	/// The node of this sub-object in the tree of sub-objects.
 	struct rbnode node;
-	//! A pointer to the CANopen object containing this sub-object.
+	/// A pointer to the CANopen object containing this sub-object.
 	co_obj_t *obj;
-	//! The object sub-index.
+	/// The object sub-index.
 	co_unsigned8_t subidx;
-	//! The data type.
+	/// The data type.
 	co_unsigned16_t type;
 #ifndef LELY_NO_CO_OBJ_NAME
-	//! A pointer to the name of the sub-object.
+	/// A pointer to the name of the sub-object.
 	char *name;
 #endif
 #ifndef LELY_NO_CO_OBJ_LIMITS
-	//! The lower limit of the object value.
+	/// The lower limit of the object value.
 	union co_val min;
-	//! The upper limit of the object value.
+	/// The upper limit of the object value.
 	union co_val max;
 #endif
-	//! The default value.
+	/// The default value.
 	union co_val def;
-	//! A pointer to the sub-object value.
+	/// A pointer to the sub-object value.
 	void *val;
-	//! The access type.
+	/// The access type.
 	unsigned access:5;
-	//! A flag indicating if it is possible to map this object into a PDO.
+	/// A flag indicating if it is possible to map this object into a PDO.
 	unsigned pdo_mapping:1;
-	//! The object flags.
+	/// The object flags.
 	unsigned flags:26;
-	//! A pointer to the download indication function.
+	/// A pointer to the download indication function.
 	co_sub_dn_ind_t *dn_ind;
-	//! A pointer to user-specified data for #dn_ind.
+	/// A pointer to user-specified data for #dn_ind.
 	void *dn_data;
-	//! A pointer to the upload indication function.
+	/// A pointer to the upload indication function.
 	co_sub_up_ind_t *up_ind;
-	//! A pointer to user-specified data for #up_ind.
+	/// A pointer to user-specified data for #up_ind.
 	void *up_data;
 };
 

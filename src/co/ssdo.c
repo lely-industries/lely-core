@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the Server-SDO functions.
  *
- * \see lely/co/ssdo.h, src/sdo.h
+ * @see lely/co/ssdo.h, src/sdo.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,139 +36,139 @@
 #include <stdlib.h>
 
 struct __co_ssdo_state;
-//! An opaque CANopen Server-SDO state type.
+/// An opaque CANopen Server-SDO state type.
 typedef const struct __co_ssdo_state co_ssdo_state_t;
 
-//! A CANopen Server-SDO.
+/// A CANopen Server-SDO.
 struct __co_ssdo {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The SDO number.
+	/// The SDO number.
 	co_unsigned8_t num;
-	//! The SDO parameter record.
+	/// The SDO parameter record.
 	struct co_sdo_par par;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! The SDO timeout (in milliseconds).
+	/// The SDO timeout (in milliseconds).
 	int timeout;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! A pointer to the current state.
+	/// A pointer to the current state.
 	co_ssdo_state_t *state;
-	//! The current object index.
+	/// The current object index.
 	co_unsigned16_t idx;
-	//! The current object sub-index.
+	/// The current object sub-index.
 	co_unsigned8_t subidx;
-	//! The current value of the toggle bit.
+	/// The current value of the toggle bit.
 	uint8_t toggle;
-	//! The number of segments per block.
+	/// The number of segments per block.
 	uint8_t blksize;
-	//! The sequence number of the last successfully received segment.
+	/// The sequence number of the last successfully received segment.
 	uint8_t ackseq;
-	//! A flag indicating whether a CRC should be generated.
+	/// A flag indicating whether a CRC should be generated.
 	unsigned gencrc:1;
-	//! The generated CRC.
+	/// The generated CRC.
 	uint16_t crc;
-	//! The SDO request.
+	/// The SDO request.
 	struct co_sdo_req req;
-	//! The buffer.
+	/// The buffer.
 	struct membuf buf;
-	//! The number of bytes in #req already copied to #buf.
+	/// The number of bytes in #req already copied to #buf.
 	size_t nbyte;
 };
 
-/*!
+/**
  * Updates and (de)activates a Server-SDO service. This function is invoked when
  * one of the SDO server parameters (objects 1200..127F) is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_ssdo_update(co_ssdo_t *sdo);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen objects
  * 1200..127F (SDO server parameter).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The CAN receive callback function for a Server-SDO service.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_ssdo_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for a Server-SDO service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_ssdo_timer(const struct timespec *tp, void *data);
 
-//! Enters the specified state of a Server-SDO service.
+/// Enters the specified state of a Server-SDO service.
 static inline void co_ssdo_enter(co_ssdo_t *sdo, co_ssdo_state_t *next);
 
-/*!
+/**
  * Invokes the 'abort' transition function of the current state of a Server-SDO
  * service.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param ac  the abort code.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param ac  the abort code.
  */
 static inline void co_ssdo_emit_abort(co_ssdo_t *sdo, co_unsigned32_t ac);
 
-/*!
+/**
  * Invokes the 'timeout' transition function of the current state of a
  * Server-SDO service.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param tp  a pointer to the current time.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param tp  a pointer to the current time.
  */
 static inline void co_ssdo_emit_time(co_ssdo_t *sdo, const struct timespec *tp);
 
-/*!
+/**
  * Invokes the 'CAN frame received' transition function of the current state of
  * a Server-SDO service.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param msg a pointer to the received CAN frame.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param msg a pointer to the received CAN frame.
  */
 static inline void co_ssdo_emit_recv(co_ssdo_t *sdo, const struct can_msg *msg);
 
-//! A CANopen Server-SDO state.
+/// A CANopen Server-SDO state.
 struct __co_ssdo_state {
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an abort code has
 	 * been received.
 	 *
-	 * \param sdo a pointer to a Server-SDO service.
-	 * \param ac  the abort code.
+	 * @param sdo a pointer to a Server-SDO service.
+	 * @param ac  the abort code.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_ssdo_state_t *(*on_abort)(co_ssdo_t *sdo, co_unsigned32_t ac);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a timeout occurs.
 	 *
-	 * \param sdo a pointer to a Server-SDO service.
-	 * \param tp  a pointer to the current time.
+	 * @param sdo a pointer to a Server-SDO service.
+	 * @param tp  a pointer to the current time.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_ssdo_state_t *(*on_time)(co_ssdo_t *sdo, const struct timespec *tp);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a CAN frame has
 	 * been received.
 	 *
-	 * \param sdo a pointer to a Server-SDO service.
-	 * \param msg a pointer to the received CAN frame.
+	 * @param sdo a pointer to a Server-SDO service.
+	 * @param msg a pointer to the received CAN frame.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_ssdo_state_t *(*on_recv)(co_ssdo_t *sdo, const struct can_msg *msg);
 };
@@ -176,186 +176,186 @@ struct __co_ssdo_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__ };
 
-//! The 'abort' transition function of the 'waiting' state.
+/// The 'abort' transition function of the 'waiting' state.
 static co_ssdo_state_t *co_ssdo_wait_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'CAN frame received' transition function of the 'waiting' state.
+/// The 'CAN frame received' transition function of the 'waiting' state.
 static co_ssdo_state_t *co_ssdo_wait_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'waiting' state.
+/// The 'waiting' state.
 LELY_CO_DEFINE_STATE(co_ssdo_wait_state,
 	.on_abort = &co_ssdo_wait_on_abort,
 	.on_recv = &co_ssdo_wait_on_recv
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'download initiate'
  * state.
  */
 static co_ssdo_state_t *co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'download initiate' state.
+/// The 'download initiate' state.
 //LELY_CO_DEFINE_STATE(co_ssdo_dn_ini_state,
 //	.on_recv = &co_ssdo_dn_ini_on_recv
 //)
 
-//! The 'abort' transition function of the 'download segment' state.
+/// The 'abort' transition function of the 'download segment' state.
 static co_ssdo_state_t *co_ssdo_dn_seg_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'download segment' state.
+/// The 'timeout' transition function of the 'download segment' state.
 static co_ssdo_state_t *co_ssdo_dn_seg_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'download segment' state.
  */
 static co_ssdo_state_t *co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'download segment' state.
+/// The 'download segment' state.
 LELY_CO_DEFINE_STATE(co_ssdo_dn_seg_state,
 	.on_abort = &co_ssdo_dn_seg_on_abort,
 	.on_time = &co_ssdo_dn_seg_on_time,
 	.on_recv = &co_ssdo_dn_seg_on_recv
 )
 
-//! The 'CAN frame received' transition function of the 'upload initiate' state.
+/// The 'CAN frame received' transition function of the 'upload initiate' state.
 static co_ssdo_state_t *co_ssdo_up_ini_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'upload initiate' state.
+/// The 'upload initiate' state.
 //LELY_CO_DEFINE_STATE(co_ssdo_up_ini_state,
 //	.on_recv = &co_ssdo_up_ini_on_recv
 //)
 
-//! The 'abort' transition function of the 'upload segment' state.
+/// The 'abort' transition function of the 'upload segment' state.
 static co_ssdo_state_t *co_ssdo_up_seg_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'upload segment' state.
+/// The 'timeout' transition function of the 'upload segment' state.
 static co_ssdo_state_t *co_ssdo_up_seg_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-//! The 'CAN frame received' transition function of the 'upload segment' state.
+/// The 'CAN frame received' transition function of the 'upload segment' state.
 static co_ssdo_state_t *co_ssdo_up_seg_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'upload segment' state.
+/// The 'upload segment' state.
 LELY_CO_DEFINE_STATE(co_ssdo_up_seg_state,
 	.on_abort = &co_ssdo_up_seg_on_abort,
 	.on_time = &co_ssdo_up_seg_on_time,
 	.on_recv = &co_ssdo_up_seg_on_recv
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block download initiate'
  * state.
  */
 static co_ssdo_state_t *co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block download initiate' state.
+/// The 'block download initiate' state.
 //LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_ini_state,
 //	.on_recv = &co_ssdo_blk_dn_ini_on_recv
 //)
 
-//! The 'abort' transition function of the 'block download sub-block' state.
+/// The 'abort' transition function of the 'block download sub-block' state.
 static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'block download sub-block' state.
+/// The 'timeout' transition function of the 'block download sub-block' state.
 static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block download
  * sub-block' state.
  */
 static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block download sub-block' state.
+/// The 'block download sub-block' state.
 LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_sub_state,
 	.on_abort = &co_ssdo_blk_dn_sub_on_abort,
 	.on_time = &co_ssdo_blk_dn_sub_on_time,
 	.on_recv = &co_ssdo_blk_dn_sub_on_recv
 )
 
-//! The 'abort' transition function of the 'block download end' state.
+/// The 'abort' transition function of the 'block download end' state.
 static co_ssdo_state_t *co_ssdo_blk_dn_end_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'block download end' state.
+/// The 'timeout' transition function of the 'block download end' state.
 static co_ssdo_state_t *co_ssdo_blk_dn_end_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block download end'
  * state.
  */
 static co_ssdo_state_t *co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block download end' state.
+/// The 'block download end' state.
 LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_end_state,
 	.on_abort = &co_ssdo_blk_dn_end_on_abort,
 	.on_time = &co_ssdo_blk_dn_end_on_time,
 	.on_recv = &co_ssdo_blk_dn_end_on_recv
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block upload initiate'
  * state.
  */
 static co_ssdo_state_t *co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block upload initiate' state.
+/// The 'block upload initiate' state.
 //LELY_CO_DEFINE_STATE(co_ssdo_blk_up_ini_state,
 //	.on_recv = &co_ssdo_blk_up_ini_on_recv
 //)
 
-//! The 'abort' transition function of the 'block upload sub-block' state.
+/// The 'abort' transition function of the 'block upload sub-block' state.
 static co_ssdo_state_t *co_ssdo_blk_up_sub_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'block upload sub-block' state.
+/// The 'timeout' transition function of the 'block upload sub-block' state.
 static co_ssdo_state_t *co_ssdo_blk_up_sub_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block upload sub-block'
  * state.
  */
 static co_ssdo_state_t *co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block upload sub-block' state.
+/// The 'block upload sub-block' state.
 LELY_CO_DEFINE_STATE(co_ssdo_blk_up_sub_state,
 	.on_abort = &co_ssdo_blk_up_sub_on_abort,
 	.on_time = &co_ssdo_blk_up_sub_on_time,
 	.on_recv = &co_ssdo_blk_up_sub_on_recv
 )
 
-//! The 'abort' transition function of the 'block upload end' state.
+/// The 'abort' transition function of the 'block upload end' state.
 static co_ssdo_state_t *co_ssdo_blk_up_end_on_abort(co_ssdo_t *sdo,
 		co_unsigned32_t ac);
 
-//! The 'timeout' transition function of the 'block upload end' state.
+/// The 'timeout' transition function of the 'block upload end' state.
 static co_ssdo_state_t *co_ssdo_blk_up_end_on_time(co_ssdo_t *sdo,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'block upload end' state.
  */
 static co_ssdo_state_t *co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo,
 		const struct can_msg *msg);
 
-//! The 'block upload end' state.
+/// The 'block upload end' state.
 LELY_CO_DEFINE_STATE(co_ssdo_blk_up_end_state,
 	.on_abort = &co_ssdo_blk_up_end_on_abort,
 	.on_time = &co_ssdo_blk_up_end_on_time,
@@ -364,118 +364,118 @@ LELY_CO_DEFINE_STATE(co_ssdo_blk_up_end_state,
 
 #undef LELY_CO_DEFINE_STATE
 
-/*!
+/**
  * Processes an abort transfer indication by aborting any ongoing transfer of a
  * Server-SDO and returning it to the waiting state.
  *
- * \returns #co_ssdo_wait_state
+ * @returns #co_ssdo_wait_state
  */
 static co_ssdo_state_t *co_ssdo_abort_ind(co_ssdo_t *sdo);
 
-/*!
+/**
  * Sends an abort transfer request and aborts any ongoing transfer by invoking
  * co_ssdo_abort_ind().
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param ac  the SDO abort code.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param ac  the SDO abort code.
  *
- * \returns #co_ssdo_wait_state
+ * @returns #co_ssdo_wait_state
  *
- * \see co_ssdo_send_abort()
+ * @see co_ssdo_send_abort()
  */
 static co_ssdo_state_t *co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac);
 
-/*!
+/**
  * Processes a download indication of a Server-SDO by checking access to the
  * requested sub-object and reading the data from the frame.
  *
- * \returns 0 on success, or an SDO abort code on error.
+ * @returns 0 on success, or an SDO abort code on error.
  */
 static co_unsigned32_t co_ssdo_dn_ind(co_ssdo_t *sdo);
 
-/*!
+/**
  * Processes an upload indication of a Server-SDO by checking access to the
  * requested sub-object and writing the data to the internal buffer.
  *
- * \returns 0 on success, or an SDO abort code on error.
+ * @returns 0 on success, or an SDO abort code on error.
  */
 static co_unsigned32_t co_ssdo_up_ind(co_ssdo_t *sdo);
 
-/*!
- * Copies at most \a nbyte bytes from a CANopen SDO upload request, obtaining
- * more bytes with co_ssdo_up_ind() as necessary.
+/**
+ * Copies at most <b>nbyte</b> bytes from a CANopen SDO upload request,
+ * obtaining more bytes with co_ssdo_up_ind() as necessary.
  *
- * \returns 0 on success, or an SDO abort code on error.
+ * @returns 0 on success, or an SDO abort code on error.
  */
 static co_unsigned32_t co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte);
 
-/*!
+/**
  * Sends an abort transfer request.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param ac  the SDO abort code.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param ac  the SDO abort code.
  */
 static void co_ssdo_send_abort(co_ssdo_t *sdo, co_unsigned32_t ac);
 
-//! Sends a Server-SDO 'download initiate' response.
+/// Sends a Server-SDO 'download initiate' response.
 static void co_ssdo_send_dn_ini_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'download segment' response.
+/// Sends a Server-SDO 'download segment' response.
 static void co_ssdo_send_dn_seg_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'upload initiate' (expedited) response.
+/// Sends a Server-SDO 'upload initiate' (expedited) response.
 static void co_ssdo_send_up_exp_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'upload initiate' response.
+/// Sends a Server-SDO 'upload initiate' response.
 static void co_ssdo_send_up_ini_res(co_ssdo_t *sdo);
 
-/*!
+/**
  * Sends a Server-SDO 'upload segment' response.
  *
- * \param sdo  a pointer to a Server-SDO service.
- * \param last a flag indicating whether this is the last segment.
+ * @param sdo  a pointer to a Server-SDO service.
+ * @param last a flag indicating whether this is the last segment.
  */
 static void co_ssdo_send_up_seg_res(co_ssdo_t *sdo, int last);
 
-//! Sends a Server-SDO 'block download initiate' response.
+/// Sends a Server-SDO 'block download initiate' response.
 static void co_ssdo_send_blk_dn_ini_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'block upload sub-block' response.
+/// Sends a Server-SDO 'block upload sub-block' response.
 static void co_ssdo_send_blk_dn_sub_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'block download end' response.
+/// Sends a Server-SDO 'block download end' response.
 static void co_ssdo_send_blk_dn_end_res(co_ssdo_t *sdo);
 
-//! Sends a Server-SDO 'block upload initiate' response.
+/// Sends a Server-SDO 'block upload initiate' response.
 static void co_ssdo_send_blk_up_ini_res(co_ssdo_t *sdo);
 
-/*!
+/**
  * Sends a Server-SDO 'block upload sub-block' response.
  *
- * \param sdo  a pointer to a Server-SDO service.
- * \param last a flag indicating whether this block contains the last segment.
+ * @param sdo  a pointer to a Server-SDO service.
+ * @param last a flag indicating whether this block contains the last segment.
  */
 static void co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last);
 
-//! Sends a Server-SDO 'block upload end' response.
+/// Sends a Server-SDO 'block upload end' response.
 static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
 
-/*!
+/**
  * Initializes a Server-SDO download/upload initiate response CAN frame.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param msg a pointer to the CAN frame to be initialized.
- * \param cs  the command specifier.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param msg a pointer to the CAN frame to be initialized.
+ * @param cs  the command specifier.
  */
 static void co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg,
 		uint8_t cs);
 
-/*!
+/**
  * Initializes a Server-SDO download/upload segment response CAN frame.
  *
- * \param sdo a pointer to a Server-SDO service.
- * \param msg a pointer to the CAN frame to be initialized.
- * \param cs  the command specifier.
+ * @param sdo a pointer to a Server-SDO service.
+ * @param msg a pointer to the CAN frame to be initialized.
+ * @param cs  the command specifier.
  */
 static void co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg,
 		uint8_t cs);

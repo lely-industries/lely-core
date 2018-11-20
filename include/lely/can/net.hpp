@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CAN library; it contains the C++ interface of
- * the CAN network interface. \see lely/can/net.h for the C interface.
+ * the CAN network interface. @see lely/can/net.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,22 +30,22 @@
 #include <lely/util/c_type.hpp>
 
 namespace lely { class CANNet; }
-//! An opaque CAN network interface type.
+/// An opaque CAN network interface type.
 typedef lely::CANNet can_net_t;
 
 namespace lely { class CANTimer; }
-//! An opaque CAN timer type.
+/// An opaque CAN timer type.
 typedef lely::CANTimer can_timer_t;
 
 namespace lely { class CANRecv; }
-//! An opaque CAN frame receiver type.
+/// An opaque CAN frame receiver type.
 typedef lely::CANRecv can_recv_t;
 
 #include <lely/can/net.h>
 
 namespace lely {
 
-//! The attributes of #can_net_t required by #lely::CANNet.
+/// The attributes of #can_net_t required by #lely::CANNet.
 template <>
 struct c_type_traits<__can_net> {
 	typedef __can_net value_type;
@@ -61,7 +61,7 @@ struct c_type_traits<__can_net> {
 	static void fini(pointer p) noexcept { __can_net_fini(p); }
 };
 
-//! An opaque CAN network interface type.
+/// An opaque CAN network interface type.
 class CANNet: public incomplete_c_type<__can_net> {
 	typedef incomplete_c_type<__can_net> c_base;
 public:
@@ -151,7 +151,7 @@ protected:
 	~CANNet() {}
 };
 
-//! The attributes of #can_timer_t required by #lely::CANTimer.
+/// The attributes of #can_timer_t required by #lely::CANTimer.
 template <>
 struct c_type_traits<__can_timer> {
 	typedef __can_timer value_type;
@@ -167,7 +167,7 @@ struct c_type_traits<__can_timer> {
 	static void fini(pointer p) noexcept { __can_timer_fini(p); }
 };
 
-//! An opaque CAN timer type.
+/// An opaque CAN timer type.
 class CANTimer: public incomplete_c_type<__can_timer> {
 	typedef incomplete_c_type<__can_timer> c_base;
 public:
@@ -220,7 +220,7 @@ protected:
 	~CANTimer() {}
 };
 
-//! The attributes of #can_recv_t required by #lely::CANRecv.
+/// The attributes of #can_recv_t required by #lely::CANRecv.
 template <>
 struct c_type_traits<__can_recv> {
 	typedef __can_recv value_type;
@@ -236,7 +236,7 @@ struct c_type_traits<__can_recv> {
 	static void fini(pointer p) noexcept { __can_recv_fini(p); }
 };
 
-//! An opaque CAN frame receiver type.
+/// An opaque CAN frame receiver type.
 class CANRecv: public incomplete_c_type<__can_recv> {
 	typedef incomplete_c_type<__can_recv> c_base;
 public:

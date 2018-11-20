@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the read file buffer.
  *
- * \see lely/util/frbuf.h
+ * @see lely/util/frbuf.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,26 +43,26 @@
 #endif
 #endif
 
-//! An read file buffer struct.
+/// An read file buffer struct.
 struct __frbuf {
 #ifdef _WIN32
-	//! The file handle.
+	/// The file handle.
 	HANDLE hFile;
-	//! The handle of the file mapping.
+	/// The handle of the file mapping.
 	HANDLE hFileMappingObject;
-	//! The base address of the file mapping.
+	/// The base address of the file mapping.
 	LPVOID lpBaseAddress;
 #elif _POSIX_C_SOURCE >= 200112L
-	//! The file descriptor.
+	/// The file descriptor.
 	int fd;
-	//! The base address of the current file mapping.
+	/// The base address of the current file mapping.
 	void *addr;
-	//! The length (in bytes) of the mapping at \a addr.
+	/// The length (in bytes) of the mapping at <b>addr</b>.
 	size_t len;
 #else
-	//! The file stream.
+	/// The file stream.
 	FILE *stream;
-	//! The address of the file mapping.
+	/// The address of the file mapping.
 	void *map;
 #endif
 };

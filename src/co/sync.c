@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the synchronization (SYNC) object functions.
  *
- * \see lely/co/sync.h
+ * @see lely/co/sync.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,81 +35,81 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! A CANopen SYNC producer/consumer service.
+/// A CANopen SYNC producer/consumer service.
 struct __co_sync {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The SYNC COB-ID.
+	/// The SYNC COB-ID.
 	uint32_t cobid;
-	//! The communication cycle period (in microseconds).
+	/// The communication cycle period (in microseconds).
 	co_unsigned32_t us;
-	//! The synchronous counter overflow value.
+	/// The synchronous counter overflow value.
 	co_unsigned8_t max_cnt;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The counter value.
+	/// The counter value.
 	co_unsigned8_t cnt;
-	//! A pointer to the indication function.
+	/// A pointer to the indication function.
 	co_sync_ind_t *ind;
-	//! A pointer to user-specified data for #ind.
+	/// A pointer to user-specified data for #ind.
 	void *ind_data;
-	//! A pointer to the error handling function.
+	/// A pointer to the error handling function.
 	co_sync_err_t *err;
-	//! A pointer to user-specified data for #err.
+	/// A pointer to user-specified data for #err.
 	void *err_data;
 };
 
-/*!
+/**
  * Updates and (de)activates a SYNC producer/consumer service. This function is
  * invoked by the download indication functions when one of the SYNC
  * configuration objects (1005, 1006 or 1019) is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_sync_update(co_sync_t *sync);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1005
  * (COB-ID SYNC message).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1006
  * (Communication cycle period).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1019
  * (Synchronous counter overflow value).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The CAN receive callback function for a SYNC consumer service.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_sync_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for a SYNC producer service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_sync_timer(const struct timespec *tp, void *data);
 

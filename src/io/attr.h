@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This is the internal header file of the serial I/O attributes declarations.
  *
- * \see lely/io/attr.h
+ * @see lely/io/attr.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

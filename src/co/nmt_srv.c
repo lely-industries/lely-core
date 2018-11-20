@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT service manager functions.
  *
- * \see src/nmt_srv.h
+ * @see src/nmt_srv.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,65 +52,65 @@
 #include <stdlib.h>
 
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-//! Initializes all Receive/Transmit-PDO services. \see co_nmt_srv_fini_pdo()
+/// Initializes all Receive/Transmit-PDO services. @see co_nmt_srv_fini_pdo()
 static void co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-//! Finalizes all Receive/Transmit-PDO services. \see co_nmt_srv_init_pdo()
+/// Finalizes all Receive/Transmit-PDO services. @see co_nmt_srv_init_pdo()
 static void co_nmt_srv_fini_pdo(struct co_nmt_srv *srv);
 #ifndef LELY_NO_CO_RPDO
-//! Invokes co_nmt_err() to handle Receive-PDO errors. \see co_rpdo_err_t
+/// Invokes co_nmt_err() to handle Receive-PDO errors. @see co_rpdo_err_t
 static void co_nmt_srv_rpdo_err(co_rpdo_t *pdo, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 #endif
 #endif
 
-//! Initializes all Server/Client-SDO services. \see co_nmt_srv_fini_sdo()
+/// Initializes all Server/Client-SDO services. @see co_nmt_srv_fini_sdo()
 static void co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-//! Finalizes all Server/Client-SDO services. \see co_nmt_srv_init_sdo()
+/// Finalizes all Server/Client-SDO services. @see co_nmt_srv_init_sdo()
 static void co_nmt_srv_fini_sdo(struct co_nmt_srv *srv);
 
 #ifndef LELY_NO_CO_SYNC
-//! Initializes the SYNC producer/consumer service. \see co_nmt_srv_fini_sync()
+/// Initializes the SYNC producer/consumer service. @see co_nmt_srv_fini_sync()
 static void co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-//! Finalizes the SYNC producer/consumer service. \see co_nmt_srv_init_sync()
+/// Finalizes the SYNC producer/consumer service. @see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
-//! Invokes co_nmt_sync() to handle SYNC objects. \see co_sync_ind_t
+/// Invokes co_nmt_sync() to handle SYNC objects. @see co_sync_ind_t
 static void co_nmt_srv_sync_ind(co_sync_t *sync, co_unsigned8_t cnt,
 		void *data);
-//! Invokes co_nmt_err() to handle SYNC errors. \see co_sync_err_t
+/// Invokes co_nmt_err() to handle SYNC errors. @see co_sync_err_t
 static void co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 #endif
 
 #ifndef LELY_NO_CO_TIME
-//! Initializes the TIME producer/consumer service. \see co_nmt_srv_fini_time()
+/// Initializes the TIME producer/consumer service. @see co_nmt_srv_fini_time()
 static void co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-//! Finalizes the TIME producer/consumer service. \see co_nmt_srv_init_time()
+/// Finalizes the TIME producer/consumer service. @see co_nmt_srv_init_time()
 static void co_nmt_srv_fini_time(struct co_nmt_srv *srv);
 #endif
 
 #ifndef LELY_NO_CO_EMCY
-//! Initializes the EMCY producer/consumer service. \see co_nmt_srv_fini_emcy()
+/// Initializes the EMCY producer/consumer service. @see co_nmt_srv_fini_emcy()
 static void co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net,
 		co_dev_t *dev);
-//! Finalizes the EMCY producer/consumer service. \see co_nmt_srv_init_emcy()
+/// Finalizes the EMCY producer/consumer service. @see co_nmt_srv_init_emcy()
 static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
 #endif
 
 #ifndef LELY_NO_CO_LSS
-//! Initializes the LSS master/slave service. \see co_nmt_srv_fini_lss()
+/// Initializes the LSS master/slave service. @see co_nmt_srv_fini_lss()
 static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt);
-//! Finalizes the EMCY master/slave service. \see co_nmt_srv_init_lss()
+/// Finalizes the EMCY master/slave service. @see co_nmt_srv_init_lss()
 static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 #endif
 
-//! The maximum number of Receive/Transmit-PDOs.
+/// The maximum number of Receive/Transmit-PDOs.
 #define CO_NUM_PDO	512
 
-//! The maximum number of Client/Server-SDOs.
+/// The maximum number of Client/Server-SDOs.
 #define CO_NUM_SDO	128
 
 void

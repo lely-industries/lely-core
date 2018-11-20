@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the time stamp (TIME) object. See lely/co/time.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 namespace lely {
 
-//! The attributes of #co_time_t required by #lely::COTime.
+/// The attributes of #co_time_t required by #lely::COTime.
 template <>
 struct c_type_traits<__co_time> {
 	typedef __co_time value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_time> {
 	static void fini(pointer p) noexcept { __co_time_fini(p); }
 };
 
-//! An opaque CANopen TIME producer/consumer service type.
+/// An opaque CANopen TIME producer/consumer service type.
 class COTime: public incomplete_c_type<__co_time> {
 	typedef incomplete_c_type<__co_time> c_base;
 public:

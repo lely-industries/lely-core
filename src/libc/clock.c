@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/time.h
+ * @see lely/libc/time.h
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,28 +30,28 @@
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 
-/*!
+/**
  * The difference between Windows file time (seconds since 00:00:00 UTC on
  * January 1, 1601) and the Unix epoch (seconds since 00:00:00 UTC on January 1,
  * 1970) is 369 years and 89 leap days.
  */
 #define FILETIME_EPOCH	((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
 
-/*!
+/**
  * The maximum number of milliseconds to be spent in `SleepEx()`. This value
  * MUST be smaller than `INFINITE`, to prevent an infinite sleep.
  */
 #define MAX_SLEEP_MS	(ULONG_MAX - 1)
 
 #ifdef _USE_32BIT_TIME_T
-//! The lower limit for a value of type `time_t`.
+/// The lower limit for a value of type `time_t`.
 #define TIME_T_MIN	LONG_MIN
-//! The upper limit for a value of type `time_t`.
+/// The upper limit for a value of type `time_t`.
 #define TIME_T_MAX	LONG_MAX
 #else
-//! The lower limit for a value of type `time_t`.
+/// The lower limit for a value of type `time_t`.
 #define TIME_T_MIN	_I64_MIN
-//! The upper limit for a value of type `time_t`.
+/// The upper limit for a value of type `time_t`.
 #define TIME_T_MAX	_I64_MAX
 #endif
 

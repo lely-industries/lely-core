@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * thread-safe lock-free memory pool allocator declarations.
  *
@@ -26,9 +26,9 @@
  * empty. Since all of this is simply a matter of pointer manipulation, we never
  * touch memory that is not used by an object.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@
 
 struct __pool;
 #ifndef __cplusplus
-//! An opaque pool memory allocator type.
+/// An opaque pool memory allocator type.
 typedef struct __pool pool_t;
 #endif
 
@@ -66,54 +66,54 @@ LELY_UTIL_EXTERN struct __pool *__pool_init(struct __pool *pool, size_t nmemb,
 		size_t size);
 LELY_UTIL_EXTERN void __pool_fini(struct __pool *pool);
 
-/*!
- * Creates a new pool allocator with enough space for \a nmemb objects of
- * \a size bytes. This space is allocated from a single memory #page. Each
+/**
+ * Creates a new pool allocator with enough space for <b>nmemb</b> objects of
+ * <b>size</b> bytes. This space is allocated from a single memory #page. Each
  * subsequent page will have the same size.
  *
- * \param nmemb the minimum number of elements available in the pool.
- * \param size  the size (in bytes) of each element.
+ * @param nmemb the minimum number of elements available in the pool.
+ * @param size  the size (in bytes) of each element.
  *
- * \returns a pointer to a new pool allocator, or NULL on error. In the latter
- * case, the error number can be obtained with get_errnum().
+ * @returns a pointer to a new pool allocator, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
  *
- * \see pool_destroy()
+ * @see pool_destroy()
  */
 LELY_UTIL_EXTERN pool_t *pool_create(size_t nmemb, size_t size);
 
-/*!
+/**
  * Destroys a pool allocator and frees all objects allocated with it.
  *
- * \see pool_create()
+ * @see pool_create()
  */
 LELY_UTIL_EXTERN void pool_destroy(pool_t *pool);
 
-/*!
+/**
  * Allocates an object of pool_size() bytes from a pool. The allocation is
  * thread-safe and lock-free (as long as the platform supports lock-free atomic
  * operations).
  *
- * \param pool a pointer to a pool allocator.
+ * @param pool a pointer to a pool allocator.
  *
- * \returns a pointer to the newly allocated object, or NULL on error. In the
- * latter case, the error number can be obtained with get_errnum().
+ * @returns a pointer to the newly allocated object, or NULL on error. In the
+ * latter case, the error number can be obtained with get_errc().
  *
- * \see pool_free()
+ * @see pool_free()
  */
 LELY_UTIL_EXTERN void *pool_alloc(pool_t *pool);
 
-/*!
+/**
  * Frees the memory allocated for an object. The deallocation is thread-safe and
  * lock-free (as long as the platform supports lock-free atomic operations).
  *
- * \param pool a pointer to a pool allocator.
- * \param ptr  a pointer to an object allocated from the pool (can be NULL).
+ * @param pool a pointer to a pool allocator.
+ * @param ptr  a pointer to an object allocated from the pool (can be NULL).
  *
- * \see pool_alloc()
+ * @see pool_alloc()
  */
 LELY_UTIL_EXTERN void pool_free(pool_t *pool, void *ptr);
 
-//! Returns the size (in bytes) of the objects in a pool.
+/// Returns the size (in bytes) of the objects in a pool.
 LELY_UTIL_EXTERN size_t pool_size(const pool_t *pool);
 
 #ifdef __cplusplus

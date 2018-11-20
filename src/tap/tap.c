@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the Test Anything Protocol (TAP) library; it contains
  * the implementation of the TAP functions.
  *
- * \see lely/tap/tap.h
+ * @see lely/tap/tap.h
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the C to C++
  * interface declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,19 +32,19 @@
 
 namespace lely {
 
-/*!
+/**
  * The type of objects thrown as exceptions to report a failure to initialize an
  * instantiation of a C type.
  */
 class bad_init: public error {};
 
-/*!
+/**
  * The type of objects thrown as exceptions to report a failure to copy an
  * instantiation of a C type.
  */
 class bad_copy: public error {};
 
-/*!
+/**
  * The type of objects thrown as exceptions to report a failure to move an
  * instantiation of a C type.
  */
@@ -75,7 +75,7 @@ throw_bad_move() {
 
 } // impl
 
-//! The deleter for trivial, standard layout and incomplete C types.
+/// The deleter for trivial, standard layout and incomplete C types.
 template <class T>
 struct delete_c_type {
 #if __cplusplus >= 201103L
@@ -90,7 +90,7 @@ struct delete_c_type {
 
 #if __cplusplus >= 201103L
 
-/*!
+/**
  * Creates an instance of a trivial, standard layout or incomplete C type and
  * wraps it in a std::shared_ptr, using #lely::delete_c_type as the deleter.
  */
@@ -102,13 +102,13 @@ make_shared_c(Args&&... args)
 			delete_c_type<T>());
 }
 
-/*!
+/**
  * A specialization of std::unique_ptr for trivial, standard layout or
  * incomplete C types, using #lely::delete_c_type as the deleter.
  */
 template <class T> using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
 
-/*!
+/**
  * Creates an instance of a trivial, standard layout or incomplete C type and
  * wraps it in a lely::unique_c_ptr.
  */
@@ -121,13 +121,13 @@ make_unique_c(Args&&... args)
 
 #endif
 
-/*!
+/**
  * A class template supplying a uniform interface to certain attributes of C
  * types.
  */
 template <class T> struct c_type_traits;
 
-//! The base class for a C++ interface to a trivial C type.
+/// The base class for a C++ interface to a trivial C type.
 template <class T>
 struct trivial_c_type {
 	typedef typename c_type_traits<T>::value_type c_value_type;
@@ -158,7 +158,7 @@ struct trivial_c_type {
 template <class T>
 inline void destroy(trivial_c_type<T>* p) noexcept { p->destroy(); }
 
-//! The base class for a C++ interface to a standard layout C type.
+/// The base class for a C++ interface to a standard layout C type.
 template <class T>
 class standard_c_type {
 public:
@@ -309,7 +309,7 @@ protected:
 template <class T>
 inline void destroy(standard_c_type<T>* p) noexcept { p->destroy(); }
 
-/*!
+/**
  * The base class for a C++ interface to an incomplete C type. This class
  * requires a specialization of `c_type_traits<T>`.
  */
@@ -505,7 +505,7 @@ private:
 template <class T>
 inline void destroy(incomplete_c_type<T>* p) noexcept { p->destroy(); }
 
-/*!
+/**
  * A class template supplying a uniform interface to certain attributes of
  * trivial and standard layout C types.
  */
@@ -558,7 +558,7 @@ struct c_type_traits {
 	}
 };
 
-/*!
+/**
  * A class template supplying a uniform interface to certain attributes of the C
  * type `void`.
  */

@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<sys/types.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,23 +38,23 @@
 
 #include <stddef.h>
 
-//! Used for clock ID type in the clock and timer functions.
+/// Used for clock ID type in the clock and timer functions.
 typedef int clockid_t;
 
-//! Used for a count of bytes or an error indication.
+/// Used for a count of bytes or an error indication.
 typedef ptrdiff_t ssize_t;
 
 #endif // LELY_HAVE_SYS_TYPES_H
 
 #if (!defined(_POSIX_C_SOURCE) || defined(__NEWLIB__)) \
 		&& !defined(_POSIX_THREADS)
-//! Used to identify a thread attribute object.
+/// Used to identify a thread attribute object.
 typedef struct pthread_attr_t pthread_attr_t;
 #endif
 
 #if !defined(_POSIX_C_SOURCE) && (defined(_WIN32) || !defined(_POSIX_TIMERS))
-//! Used for timer ID returned by `timer_create()`.
+/// Used for timer ID returned by `timer_create()`.
 typedef void *timer_t;
 #endif
 
-#endif // LELY_LIBC_SYS_TYPES_H_
+#endif // !LELY_LIBC_SYS_TYPES_H_

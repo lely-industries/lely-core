@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the C++
  * exception declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@
 #endif
 
 #ifndef throw_or_abort
-/*!
+/**
  * If exceptions are disabled, aborts the process instead of throwing an
  * exception.
  */
@@ -56,14 +56,14 @@
 
 extern "C" {
 
-//! Aborts the process instead of throwing an exception.
+/// Aborts the process instead of throwing an exception.
 LELY_UTIL_EXTERN _Noreturn void __throw_or_abort(const char *what) noexcept;
 
 }
 
 namespace lely {
 
-/*!
+/**
  * The type of objects thrown as exceptions to report a system error with an
  * associated error code.
  */

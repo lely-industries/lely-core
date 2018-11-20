@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/unistd.h
+ * @see lely/libc/unistd.h
  *
- * \copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ LELY_LIBC_EXPORT int optind = 1;
 LELY_LIBC_EXPORT int opterr = 1;
 LELY_LIBC_EXPORT int optopt;
 
-/*!
+/**
  * The offset (in characters) of the next option with respect to the beginning
  * of the current option argument.
  */

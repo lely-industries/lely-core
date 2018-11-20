@@ -1,20 +1,21 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * <a href="https://en.wikipedia.org/wiki/Red-black_tree">red-black tree</a>
  * declarations.
  *
  * A red-black tree is a type of self-balancing binary tree. This implementation
  * is based on chapters 12 and 13 in: \n
- * T. H. Cormen et al., <em>Introduction to Algorithms</em> (third edition), MIT Press (2009).
+ * T. H. Cormen et al., <em>Introduction to Algorithms</em> (third edition), MIT
+ * Press (2009).
  *
  * The red-black tree implemented here is generic and can be used for any kind
  * of key-value pair; only (void) pointers to keys are stored. Upon
  * initialization of the tree, the user is responsible for providing a suitable
  * comparison function (#rbtree_cmp_t).
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,28 +42,28 @@
 #define LELY_UTIL_RBTREE_INLINE	inline
 #endif
 
-/*!
+/**
  * A node in a red-black tree. To associate a value with a node, embed the node
  * in a struct containing the value and use `structof()` to obtain the struct
  * from the node.
  *
- * \see rbtree
+ * @see rbtree
  */
 struct rbnode {
-	/*!
+	/**
 	 * A pointer to the key for this node. The key MUST be set before the
 	 * node is inserted into a tree and MUST NOT be modified while the node
 	 * is part of the tree.
 	 */
 	const void *key;
-	/*!
+	/**
 	 * A pointer to the parent node. The least significant bit contains the
 	 * color of this node (0 = black, 1 = red).
 	 */
 	uintptr_t parent;
-	//! A pointer to the left child node.
+	/// A pointer to the left child node.
 	struct rbnode *left;
-	//! A pointer to the right child node.
+	/// A pointer to the right child node.
 	struct rbnode *right;
 };
 
@@ -70,61 +71,61 @@ struct rbnode {
 extern "C" {
 #endif
 
-/*!
- * The type of a comparison function suitable for use in a red-black tree. \a p1
- * and \a p2 MUST be NULL or point to objects of the same type.
+/**
+ * The type of a comparison function suitable for use in a red-black tree.
+ * <b>p1</b> and <b>p2</b> MUST be NULL or point to objects of the same type.
  *
- * \returns an integer greater than, equal to, or less than 0 if the object at
- * \a p1 is greater than, equal to, or less than the object at \a p2.
+ * @returns an integer greater than, equal to, or less than 0 if the object at
+ * <b>p1</b> is greater than, equal to, or less than the object at <b>p2</b>.
  */
 typedef int __cdecl rbtree_cmp_t(const void *, const void *);
 
-//! A red-black tree.
+/// A red-black tree.
 struct rbtree {
-	//! A pointer to the function used to compare two keys.
+	/// A pointer to the function used to compare two keys.
 	rbtree_cmp_t *cmp;
-	//! A pointer to the root node of the tree.
+	/// A pointer to the root node of the tree.
 	struct rbnode *root;
-	//! The number of nodes stored in the tree.
+	/// The number of nodes stored in the tree.
 	size_t num_nodes;
 };
 
-/*!
+/**
  * Initializes a node in a red-black tree.
  *
- * \param node a pointer to the node to be initialized.
- * \param key  a pointer to the key for this node. The key MUST NOT be modified
+ * @param node a pointer to the node to be initialized.
+ * @param key  a pointer to the key for this node. The key MUST NOT be modified
  *             while the node is part of a tree.
  */
 LELY_UTIL_RBTREE_INLINE void rbnode_init(struct rbnode *node, const void *key);
 
-/*!
+/**
  * Returns a pointer to the previous (in-order) node in a red-black tree with
- * respect to \a node. This is, at worst, an O(log(n)) operation.
+ * respect to <b>node</b>. This is, at worst, an O(log(n)) operation.
  *
- * \see rbnode_next()
+ * @see rbnode_next()
  */
 LELY_UTIL_EXTERN struct rbnode *rbnode_prev(const struct rbnode *node);
 
-/*!
+/**
  * Returns a pointer to the next (in-order) node in a red-black tree with
- * respect to \a node. This is, at worst, an O(log(n)) operation. However,
+ * respect to <b>node</b>. This is, at worst, an O(log(n)) operation. However,
  * visiting all nodes in order is an O(n) operation, and therefore, on average,
  * O(1) for each node.
  *
- * \see rbnode_prev()
+ * @see rbnode_prev()
  */
 LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
 
-/*!
+/**
  * Iterates over each node in a red-black tree in ascending order. It is safe to
  * remove the current node during the iteration.
  *
- * \param first a pointer to the first node.
- * \param node  the name of the pointer to the nodes. This variable is declared
+ * @param first a pointer to the first node.
+ * @param node  the name of the pointer to the nodes. This variable is declared
  *              in the scope of the loop.
  *
- * \see rbnode_next()
+ * @see rbnode_next()
  */
 #ifdef __COUNTER__
 #define rbnode_foreach(first, node) \
@@ -141,75 +142,76 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
 			(node); (node) = _rbnode_next_##n, \
 			_rbnode_next_##n = (node) ? rbnode_next(node) : NULL)
 
-/*!
+/**
  * Initializes a red-black tree.
  *
- * \param tree a pointer to the tree to be initialized.
- * \param cmp  a pointer to the function used to compare two keys.
+ * @param tree a pointer to the tree to be initialized.
+ * @param cmp  a pointer to the function used to compare two keys.
  */
-LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp);
+LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree,
+		rbtree_cmp_t *cmp);
 
-//! Returns 1 if the red-black tree is empty, and 0 if not.
+/// Returns 1 if the red-black tree is empty, and 0 if not.
 LELY_UTIL_RBTREE_INLINE int rbtree_empty(const struct rbtree *tree);
 
-/*!
+/**
  * Returns the size (in number of nodes) of a red-black tree. This is an O(1)
  * operation.
  */
 LELY_UTIL_RBTREE_INLINE size_t rbtree_size(const struct rbtree *tree);
 
-/*!
+/**
  * Inserts a node into a red-black tree. This is an O(log(n)) operation. This
  * function does not check whether a node with the same key already exists, or
  * whether the node is already part of another tree.
  *
- * \see rbtree_remove(), rbtree_find()
+ * @see rbtree_remove(), rbtree_find()
  */
 LELY_UTIL_EXTERN void rbtree_insert(struct rbtree *tree, struct rbnode *node);
 
-/*!
+/**
  * Removes a node from a red-black tree. This is an O(log(n)) operation.
  *
- * \see rbtree_insert()
+ * @see rbtree_insert()
  */
 LELY_UTIL_EXTERN void rbtree_remove(struct rbtree *tree, struct rbnode *node);
 
-/*!
+/**
  * Finds a node in a red-black tree. This is an O(log(n)) operation.
  *
- * \returns a pointer to the node if found, or NULL if not.
+ * @returns a pointer to the node if found, or NULL if not.
  *
- * \see rbtree_insert()
+ * @see rbtree_insert()
  */
 LELY_UTIL_EXTERN struct rbnode *rbtree_find(const struct rbtree *tree,
 		const void *key);
 
-/*!
+/**
  * Returns a pointer to the first (leftmost) node in a red-black tree. This is
  * an O(log(n)) operation.
  *
- * \see rbtree_last()
+ * @see rbtree_last()
  */
 LELY_UTIL_EXTERN struct rbnode *rbtree_first(const struct rbtree *tree);
 
-/*!
+/**
  * Returns a pointer to the last (rightmost) node in a red-black tree. This is
  * an O(log(n)) operation.
  *
- * \see rbtree_first()
+ * @see rbtree_first()
  */
 LELY_UTIL_EXTERN struct rbnode *rbtree_last(const struct rbtree *tree);
 
-/*!
+/**
  * Returns a pointer to the root node in a red-black tree. This is an O(1)
  * operation.
  */
 LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
 
-/*!
+/**
  * Iterates over each node in a red-black tree in ascending order.
  *
- * \see rbnode_foreach(), rbtree_first()
+ * @see rbnode_foreach(), rbtree_first()
  */
 #define rbtree_foreach(tree, node) \
 	rbnode_foreach(rbtree_first(tree), node)
@@ -244,4 +246,4 @@ rbtree_root(const struct rbtree *tree) { return tree->root; }
 }
 #endif
 
-#endif // LELY_UTIL_RBTREE_H_
+#endif // !LELY_UTIL_RBTREE_H_

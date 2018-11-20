@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdatomic.h>`, if it exists, and defines any missing
  * functionality.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,9 +170,9 @@ typedef _Atomic(ptrdiff_t)		atomic_ptrdiff_t;
 typedef _Atomic(intmax_t)		atomic_intmax_t;
 typedef _Atomic(uintmax_t)		atomic_uintmax_t;
 
-/*!
+/**
  * The static initializer for an atomic object of a type that is
- * initialization-compatible with \a value.
+ * initialization-compatible with <b>value</b>.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define ATOMIC_VAR_INIT(value)	(value)
@@ -180,9 +180,9 @@ typedef _Atomic(uintmax_t)		atomic_uintmax_t;
 #define ATOMIC_VAR_INIT(value)	{ (value) }
 #endif
 
-/*!
- * Initializes the atomic object at \a obj with the value \a value. Note that
- * this function does not avoid data races.
+/**
+ * Initializes the atomic object at <b>obj</b> with the value <b>value</b>. Note
+ * that this function does not avoid data races.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define	atomic_init(obj, value)	__c11_atomic_init(obj, value)
@@ -209,36 +209,36 @@ typedef _Atomic(uintmax_t)		atomic_uintmax_t;
 #define __ATOMIC_SEQ_CST	5
 #endif
 
-//! An enumerated type identifying memory constraints.
+/// An enumerated type identifying memory constraints.
 typedef enum {
-	//! No operation orders memory.
+	/// No operation orders memory.
 	memory_order_relaxed = __ATOMIC_RELAXED,
-	/*!
+	/**
 	 * A load operation performs a consume operation on the affected memory
 	 * location.
 	 */
 	memory_order_consume = __ATOMIC_CONSUME,
-	/*!
+	/**
 	 * A load operation performs an acquire operation on the affected memory
 	 * location.
 	 */
 	memory_order_acquire = __ATOMIC_ACQUIRE,
-	/*!
+	/**
 	 * A store operation performs a release operation on the affected memory
 	 * location.
 	 */
 	memory_order_release = __ATOMIC_RELEASE,
-	/*!
+	/**
 	 * A load operation performs an acquire operation on the affected memory
 	 * location, and a store operation performs a release operation on the
 	 * affected memory location.
 	 */
 	memory_order_acq_rel = __ATOMIC_ACQ_REL,
-	//! Enforces a single total order on all affected locations.
+	/// Enforces a single total order on all affected locations.
 	memory_order_seq_cst = __ATOMIC_SEQ_CST
 } memory_order;
 
-/*!
+/**
  * Terminates a dependency chain; the argument does not carry a dependency to
  * the return value.
  */
@@ -252,7 +252,7 @@ typedef enum {
 extern "C" {
 #endif
 
-//! Inserts a fence with semantics according to \a order.
+/// Inserts a fence with semantics according to <b>order</b>.
 LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_thread_fence(memory_order order)
 {
@@ -266,7 +266,7 @@ atomic_thread_fence(memory_order order)
 #endif
 }
 
-/*!
+/**
  * Equivalent to `atomic_thread_fence(order)`, except that the resulting
  * ordering constraints are established only between a thread and a signal
  * handler executing in the same thread.
@@ -290,10 +290,10 @@ atomic_signal_fence(memory_order order)
 }
 #endif
 
-/*!
+/**
  * Indicates the lock-free property of integer and address atomic types.
  *
- * \returns 0 if the type is never lock-free, 1 if the type is sometimes
+ * @returns 0 if the type is never lock-free, 1 if the type is sometimes
  * lock-free, and 2 if the type is always lock-free.
  */
 #if LELY_HAVE_CLANG_ATOMIC
@@ -307,9 +307,9 @@ atomic_signal_fence(memory_order order)
 	(sizeof((obj)->__value) <= sizeof(void *))
 #endif
 
-/*!
- * Atomically replaces the value at \a object with the value of \a desired.
- * Memory is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with the value of
+ * <b>desired</b>. Memory is affected according to <b>order</b>.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_store_explicit(object, desired, order) \
@@ -321,15 +321,15 @@ atomic_signal_fence(memory_order order)
 #define atomic_store_explicit(object, desired, order) \
 	((void)atomic_exchange_explicit((object), (desired), (order)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_store_explicit(object, desired, memory_order_seq_cst).
  */
 #define atomic_store(object, desired) \
 	(atomic_store_explicit((object), (desired), memory_order_seq_cst))
 
-/*!
- * Atomically returns the value at \a object. Memory is affected according to
- * \a order.
+/**
+ * Atomically returns the value at <b>object</b>. Memory is affected according
+ * to <b>order</b>.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_load_explicit(object, order) \
@@ -341,15 +341,15 @@ atomic_signal_fence(memory_order order)
 #define atomic_load_explicit(object, order) \
 	(__unused_var(order), __sync_fetch_and_add(&(object)->__value, 0))
 #endif
-//! Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
+/// Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
 #define atomic_load(object) \
 	(atomic_load_explicit((object), memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with \a desired. Memory is
- * affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with <b>desired</b>. Memory is
+ * affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
@@ -366,22 +366,22 @@ atomic_signal_fence(memory_order order)
 		__sync_lock_test_and_set(&(__object)->__value, __desired); \
 	})
 #endif
-/*!
+/**
  * Equivalent to #atomic_exchange_explicit(object, desired,
  * memory_order_seq_cst).
  */
 #define atomic_exchange(object, desired) \
 	(atomic_exchange_explicit((object), (desired), memory_order_seq_cst))
 
-/*!
- * Atomically compares the value at \a object for equality with that at
- * \a expected, and if true, replaces the value at \a object with \a desired,
- * and if false, updates the value at \a expected with the value at \a object.
- * Further, if the comparison is true, memory is affected according to the value
- * of \a success, and if the comparison is false, memory is affected according
- * to the value of \a failure.
+/**
+ * Atomically compares the value at <b>object</b> for equality with that at
+ * <b>expected</b>, and if true, replaces the value at <b>object</b> with
+ * <b>desired</b>, and if false, updates the value at <b>expected</b> with the
+ * value at <b>object</b>. Further, if the comparison is true, memory is
+ * affected according to the value of <b>success</b>, and if the comparison is
+ * false, memory is affected according to the value of <b>failure</b>.
  *
- * \returns the result of the comparison.
+ * @returns the result of the comparison.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_compare_exchange_strong_explicit(object, expected, desired, \
@@ -405,7 +405,7 @@ atomic_signal_fence(memory_order order)
 				== __expected); \
 	})
 #endif
-/*!
+/**
  * Equivalent to #atomic_compare_exchange_strong_explicit(object, expected,
  * desired, memory_order_seq_cst, memory_order_seq_cst).
  */
@@ -413,12 +413,12 @@ atomic_signal_fence(memory_order order)
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), memory_order_seq_cst, memory_order_seq_cst))
 
-/*!
+/**
  * Equivalent to atomic_compare_exchange_strong_explicit(), except that a weak
  * compare-and-exchange may fail spuriously. That is, even when the contents of
- * memory referred to by \a expected and \a object are equal, it may return zero
- * and store back to \a expected the same memory contents that were there
- * before.
+ * memory referred to by <b>expected</b> and <b>object</b> are equal, it may
+ * return zero and store back to <b>expected</b> the same memory contents that
+ * were there before.
  *
  * The spurious failure enables implementation of compare-and-exchange on a
  * broader class of machines. When a compare-and-exchange is in a loop, the weak
@@ -442,7 +442,7 @@ atomic_signal_fence(memory_order order)
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), (success), (failure)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_compare_exchange_weak_explicit(object, expected,
  * desired, memory_order_seq_cst, memory_order_seq_cst).
  */
@@ -450,11 +450,11 @@ atomic_signal_fence(memory_order order)
 	(atomic_compare_exchange_weak_explicit((object), (expected), \
 			(desired), memory_order_seq_cst, memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with `*object + operand`. Memory
- * is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with `*object + operand`.
+ * Memory is affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
@@ -467,18 +467,18 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_add(&(object)->__value, (operand)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_fetch_add_explicit(object, operand,
  * memory_order_seq_cst).
  */
 #define atomic_fetch_add(object, operand) \
 	(atomic_fetch_add_explicit((object), (operand), memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with `*object - operand`. Memory
- * is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with `*object - operand`.
+ * Memory is affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
@@ -491,18 +491,18 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_sub(&(object)->__value, (operand)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_fetch_sub_explicit(object, operand,
  * memory_order_seq_cst).
  */
 #define atomic_fetch_sub(object, operand) \
 	(atomic_fetch_sub_explicit((object), (operand), memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with `*object | operand`. Memory
- * is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with `*object | operand`.
+ * Memory is affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
@@ -515,18 +515,18 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_or(&(object)->__value, (operand)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_fetch_or_explicit(object, operand,
  * memory_order_seq_cst).
  */
 #define atomic_fetch_or(object, operand) \
 	(atomic_fetch_or_explicit((object), (operand), memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with `*object ^ operand`. Memory
- * is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with `*object ^ operand`.
+ * Memory is affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
@@ -539,18 +539,18 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_xor(&(object)->__value, (operand)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_fetch_xor_explicit(object, operand,
  * memory_order_seq_cst).
  */
 #define atomic_fetch_xor(object, operand) \
 	(atomic_fetch_xor_explicit((object), (operand), memory_order_seq_cst))
 
-/*!
- * Atomically replaces the value at \a object with `*object & operand`. Memory
- * is affected according to \a order.
+/**
+ * Atomically replaces the value at <b>object</b> with `*object & operand`.
+ * Memory is affected according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 #if LELY_HAVE_CLANG_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
@@ -563,14 +563,14 @@ atomic_signal_fence(memory_order order)
 	(__unused_var(order), \
 			__sync_fetch_and_and(&(object)->__value, (operand)))
 #endif
-/*!
+/**
  * Equivalent to #atomic_fetch_and_explicit(object, operand,
  * memory_order_seq_cst).
  */
 #define atomic_fetch_and(object, operand) \
 	(atomic_fetch_and_explicit((object), (operand), memory_order_seq_cst))
 
-/*!
+/**
  * An atomic type providing the classic test-and-set functionality. It has two
  * states, set and clear. Operations on objects of this type are lock free.
  */
@@ -578,7 +578,7 @@ typedef struct {
 	atomic_bool __value;
 } atomic_flag;
 
-/*!
+/**
  * The static initializer used to initialize an #atomic_flag to the clear state.
  */
 #define ATOMIC_FLAG_INIT	{ ATOMIC_VAR_INIT(0) }
@@ -587,11 +587,11 @@ typedef struct {
 extern "C" {
 #endif
 
-/*!
- * Atomically sets the value at \a object to true. Memory is affected according
- * to \a order.
+/**
+ * Atomically sets the value at <b>object</b> to true. Memory is affected
+ * according to <b>order</b>.
  *
- * \returns the value at \a object immediately before the effects.
+ * @returns the value at <b>object</b> immediately before the effects.
  */
 LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
 atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
@@ -600,7 +600,7 @@ atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
 	return atomic_exchange_explicit(&object->__value, 1, order);
 }
 
-/*!
+/**
  * Equivalent to #atomic_flag_test_and_set_explicit(object,
  * memory_order_seq_cst).
  */
@@ -610,9 +610,9 @@ atomic_flag_test_and_set(volatile atomic_flag *object)
 	return atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
 }
 
-/*!
- * Atomically sets the value at \a object to false. Memory is affected according
- * to \a order.
+/**
+ * Atomically sets the value at <b>object</b> to false. Memory is affected
+ * according to <b>order</b>.
 */
 LELY_LIBC_STDATOMIC_INLINE void __cdecl
 atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
@@ -620,7 +620,7 @@ atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
 	atomic_store_explicit(&object->__value, 0, order);
 }
 
-/*!
+/**
  * Equivalent to #atomic_flag_test_and_set_explicit(object,
  * memory_order_seq_cst).
  */
@@ -640,4 +640,4 @@ atomic_flag_clear(volatile atomic_flag *object)
 
 #endif // LELY_HAVE_STDATOMIC_H
 
-#endif // LELY_LIBC_STDATOMIC_H_
+#endif // !LELY_LIBC_STDATOMIC_H_

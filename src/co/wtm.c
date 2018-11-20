@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the Wireless Transmission Media (WTM) functions.
  *
- * \see lely/co/wtm.h
+ * @see lely/co/wtm.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,141 +35,141 @@
 #include <stdlib.h>
 #include <string.h>
 
-//! The maximum value of a CAN/WTM interface indicator.
+/// The maximum value of a CAN/WTM interface indicator.
 #define CO_WTM_MAX_NIF	127
 
-//! A CANopen WTM CAN interface.
+/// A CANopen WTM CAN interface.
 struct co_wtm_can {
-	/*!
+	/**
 	 * The current CAN controller status (one of `CAN_STATE_ACTIVE`,
 	 * `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`, or 0xf if the information
 	 * is not available).
 	 */
 	uint8_t st;
-	/*!
+	/**
 	 * The last detected error (0 if no error was detected, one of
 	 * `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM`
 	 * or `CAN_ERROR_ACK` in case of an error, or 0xf if the information is
 	 * not available).
 	 */
 	uint8_t err;
-	/*!
+	/**
 	 * The current busload percentage (in the range [0..100], or 0xff if the
 	 * information is not available).
 	 */
 	uint8_t load;
-	/*!
+	/**
 	 * The number of detected errors that led to the increase of one of the
 	 * CAN controller internal error counters (in the range [0..0xfffe], or
 	 * 0xffff if the information is not available).
 	 */
 	uint16_t ec;
-	/*!
+	/**
 	 * The FIFO overrun counter (in the range [0..0xfffe], or 0xffff if the
 	 * information is not available).
 	 */
 	uint16_t foc;
-	/*!
+	/**
 	 * The CAN controller overrun counter (in the range [0..0xfffe], or
 	 * 0xffff if the information is not available).
 	 */
 	uint16_t coc;
-	//! The current time of the CAN frame receiver.
+	/// The current time of the CAN frame receiver.
 	struct timespec recv_time;
-	//! The current time of the CAN frame sender.
+	/// The current time of the CAN frame sender.
 	struct timespec send_time;
-	//! The time at which the next frame is sent.
+	/// The time at which the next frame is sent.
 	struct timespec send_next;
 };
 
-//! A CANopen Wireless Transmission Media (WTM) interface.
+/// A CANopen Wireless Transmission Media (WTM) interface.
 struct __co_wtm {
-	//! The WTM interface indicator.
+	/// The WTM interface indicator.
 	uint8_t nif;
-	/*!
+	/**
 	 * The link quality percentage (in the range [0..100], or 0xff if the
 	 * information is not available).
 	 */
 	uint8_t quality;
-	//! The CAN interfaces.
+	/// The CAN interfaces.
 	struct co_wtm_can can[CO_WTM_MAX_NIF];
-	/*!
+	/**
 	 * A pointer to the confirmation function invoked when a CAN
 	 * communication quality response is received.
 	 */
 	co_wtm_diag_can_con_t *diag_can_con;
-	//! A pointer to the user-specified data for #diag_can_con.
+	/// A pointer to the user-specified data for #diag_can_con.
 	void *diag_can_con_data;
-	/*!
+	/**
 	 * A pointer to the confirmation function invoked when a WTM
 	 * communication quality response is received.
 	 */
 	co_wtm_diag_wtm_con_t *diag_wtm_con;
-	//! A pointer to the user-specified data for #diag_wtm_con.
+	/// A pointer to the user-specified data for #diag_wtm_con.
 	void *diag_wtm_con_data;
-	/*!
+	/**
 	 * A pointer to the indication function invoked when a CAN communication
 	 * quality reset message is received.
 	 */
 	co_wtm_diag_can_ind_t *diag_can_ind;
-	//! A pointer to the user-specified data for #diag_can_ind.
+	/// A pointer to the user-specified data for #diag_can_ind.
 	void *diag_can_ind_data;
-	/*!
+	/**
 	 * A pointer to the indication function invoked when a WTM communication
 	 * quality reset message is received.
 	 */
 	co_wtm_diag_wtm_ind_t *diag_wtm_ind;
-	//! A pointer to the user-specified data for #diag_wtm_ind.
+	/// A pointer to the user-specified data for #diag_wtm_ind.
 	void *diag_wtm_ind_data;
-	/*!
+	/**
 	 * A pointer to the callback function invoked when an abort code is
 	 * generated or received.
 	 */
 	co_wtm_diag_ac_ind_t *diag_ac_ind;
-	//! A pointer to the user-specified data for #diag_ac_ind.
+	/// A pointer to the user-specified data for #diag_ac_ind.
 	void *diag_ac_data;
-	//! A pointer to the callback function invoked by co_wtm_recv().
+	/// A pointer to the callback function invoked by co_wtm_recv().
 	co_wtm_recv_func_t *recv_func;
-	//! A pointer to the user-specified data for #recv_func.
+	/// A pointer to the user-specified data for #recv_func.
 	void *recv_data;
-	//! A pointer to the callback function invoked by co_wtm_send().
+	/// A pointer to the callback function invoked by co_wtm_send().
 	co_wtm_send_func_t *send_func;
-	//! A pointer to the user-specified data for #send_func.
+	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
-	//! The buffer used to receive byte streams.
+	/// The buffer used to receive byte streams.
 	uint8_t recv_buf[CO_WTM_MAX_LEN];
-	//! The number of bytes in #recv_buf.
+	/// The number of bytes in #recv_buf.
 	size_t recv_nbytes;
-	//! The sequence number for received generic frames.
+	/// The sequence number for received generic frames.
 	uint8_t recv_nseq;
-	//! The buffer used to send byte streams.
+	/// The buffer used to send byte streams.
 	uint8_t send_buf[CO_WTM_MAX_LEN];
-	//! The number of bytes in #send_buf.
+	/// The number of bytes in #send_buf.
 	size_t send_nbytes;
-	//! The sequence number for sent generic frames.
+	/// The sequence number for sent generic frames.
 	uint8_t send_nseq;
 };
 
-//! Sends a communication quality response for a CAN interface.
+/// Sends a communication quality response for a CAN interface.
 static int co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif);
 
-//! Sends a communication quality response for a WTM interface.
+/// Sends a communication quality response for a WTM interface.
 static int co_wtm_send_diag_wtm_res(co_wtm_t *wtm);
 
-//! Invokes the diagnostic indication function.
+/// Invokes the diagnostic indication function.
 static void co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac);
 
-//! The default diagnostic indication function. \see co_wtm_diag_ac_ind_t
+/// The default diagnostic indication function. @see co_wtm_diag_ac_ind_t
 static void default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data);
 
-/*!
+/**
  * Processes a generic frame containing CAN messages.
  *
- * \param wtm    a pointer to a CANopen WTM interface.
- * \param buf    a pointer to the payload of the generic frame.
- * \param nbytes the number of bytes at \a buf.
+ * @param wtm    a pointer to a CANopen WTM interface.
+ * @param buf    a pointer to the payload of the generic frame.
+ * @param nbytes the number of bytes at <b>buf</b>.
  *
- * \returns 0 on success, or a WTM abort code on error.
+ * @returns 0 on success, or a WTM abort code on error.
  */
 static uint32_t co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes);
 

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the factory
  * pattern declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,61 +30,61 @@
 extern "C" {
 #endif
 
-//! The type of a default constructor function.
+/// The type of a default constructor function.
 typedef void *factory_ctor_t(va_list ap);
 
-//! The type of a destructor function.
+/// The type of a destructor function.
 typedef void factory_dtor_t(void *ptr);
 
-/*!
+/**
  * Invokes a constructor with a variable number of arguments.
  *
- * \returns a pinter to the newly created object.
+ * @returns a pinter to the newly created object.
  */
 LELY_UTIL_EXTERN void *factory_ctor_create(factory_ctor_t *ctor, ...);
 
-/*!
+/**
  * Invokes a constructor. This function is equivalent to #factory_ctor_create(),
  * except that it accepts a `va_list` instead of a variable number of arguments.
  */
 LELY_UTIL_EXTERN void *factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap);
 
-//! Invokes a destructor on the object at \a ptr.
+/// Invokes a destructor on the object at <b>ptr</b>.
 LELY_UTIL_EXTERN void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
 
-/*!
+/**
  * Registers a constructor and destructor function for the specified type name,
  * replacing any previous registration with the same name.
  *
- * \returns the number of bytes read, or -1 on error. In the latter case, the
- * error number can be obtained with `get_errnum()`.
+ * @returns the number of bytes read, or -1 on error. In the latter case, the
+ * error number can be obtained with get_errc().
  *
- * \see factory_remove(), factory_find_ctor(), factory_find_dtor().
+ * @see factory_remove(), factory_find_ctor(), factory_find_dtor().
  */
 LELY_UTIL_EXTERN int factory_insert(const char *name, factory_ctor_t *ctor,
 		factory_dtor_t *dtor);
 
-/*!
+/**
  * Unregisters the constructor and destructor function for the specified type
  * name.
  *
- * \see factory_insert()
+ * @see factory_insert()
  */
 LELY_UTIL_EXTERN void factory_remove(const char *name);
 
-/*!
+/**
  * Returns a pointer to the constructor function for the specified type name, or
  * NULL if not found.
  *
- * \see factory_insert()
+ * @see factory_insert()
  */
 LELY_UTIL_EXTERN factory_ctor_t *factory_find_ctor(const char *name);
 
-/*!
+/**
  * Returns a pointer to the destructor function for the specified type name, or
  * NULL if not found.
  *
- * \see factory_insert()
+ * @see factory_insert()
  */
 LELY_UTIL_EXTERN factory_dtor_t *factory_find_dtor(const char *name);
 

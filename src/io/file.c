@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the I/O library; it contains the implementation of the
  * regular file functions.
  *
- * \see lely/io/file.h
+ * @see lely/io/file.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,11 @@
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-//! A regular file handle.
+/// A regular file handle.
 struct file {
-	//! The I/O device base handle.
+	/// The I/O device base handle.
 	struct io_handle base;
-	/*!
+	/**
 	 * The file flags (any combination of #IO_FILE_READ, #IO_FILE_WRITE,
 	 * #IO_FILE_APPEND, #IO_FILE_CREATE, #IO_FILE_NO_EXIST and
 	 * #IO_FILE_TRUNCATE).

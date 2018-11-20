@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * <a href="https://en.wikipedia.org/wiki/Linked_list">linked list</a>
  * declarations.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,44 +31,44 @@
 #define LELY_UTIL_LIST_INLINE	inline
 #endif
 
-/*!
+/**
  * A node in a singly-linked list. To associate a value with a node, embed the
  * node in a struct containing the value and use `structof()` to obtain the
  * struct from the node.
  */
 struct slnode {
-	//! A pointer to the next node in the list.
+	/// A pointer to the next node in the list.
 	struct slnode *next;
 };
 
-//! A singly-linked list.
+/// A singly-linked list.
 struct sllist {
-	//! A pointer to the first node in the list.
+	/// A pointer to the first node in the list.
 	struct slnode *first;
-	/*!
-	 * The address of the \a next field in the last node in the list. If
+	/**
+	 * The address of the <b>next</b> field in the last node in the list. If
 	 * the list is empty (#first is `NULL`), this equals `&first`.
 	 */
 	struct slnode **plast;
 };
 
-/*!
+/**
  * A node in a doubly-linked list. To associate a value with a node, embed the
  * node in a struct containing the value and use `structof()` to obtain the
  * struct from the node.
  */
 struct dlnode {
-	//! A pointer to the previous node in the list.
+	/// A pointer to the previous node in the list.
 	struct dlnode *prev;
-	//! A pointer to the next node in the list.
+	/// A pointer to the next node in the list.
 	struct dlnode *next;
 };
 
-//! A doubly-linked list.
+/// A doubly-linked list.
 struct dllist {
-	//! A pointer to the first node in the list.
+	/// A pointer to the first node in the list.
 	struct dlnode *first;
-	//! A pointer to the last node in the list.
+	/// A pointer to the last node in the list.
 	struct dlnode *last;
 };
 
@@ -76,35 +76,35 @@ struct dllist {
 extern "C" {
 #endif
 
-//! Initializes a node in a singly-linked list.
+/// Initializes a node in a singly-linked list.
 LELY_UTIL_LIST_INLINE void slnode_init(struct slnode *node);
 
-/*!
- * Inserts \a node after \a prev.
+/**
+ * Inserts <b>node</b> after <b>prev</b>.
  *
- * \returns 1 if \a prev was the last node in the list and 0 if not.
+ * @returns 1 if <b>prev</b> was the last node in the list and 0 if not.
  */
 LELY_UTIL_LIST_INLINE int slnode_insert_after(struct slnode *prev,
 		struct slnode *node);
 
-//! Inserts \a node before \a next.
+/// Inserts <b>node</b> before <b>next</b>.
 LELY_UTIL_LIST_INLINE void slnode_insert_before(struct slnode **pnext,
 		struct slnode *node);
 
-/*!
- * Removes \a node from a singly-list. Note that this function does _not_ reset
- * the \a next field of the node.
+/**
+ * Removes <b>node</b> from a singly-list. Note that this function does _not_
+ * reset the <b>next</b> field of the node.
  *
- * \returns 1 if *\a pnode was the last node in the list and 0 if not.
+ * @returns 1 if *<b>pnode</b> was the last node in the list and 0 if not.
  */
 LELY_UTIL_LIST_INLINE int slnode_remove(struct slnode **pnode);
 
-/*!
+/**
  * Iterates in order over each node in a singly-linked list. It is safe to
  * remove the current node during the iteration.
  *
- * \param first a pointer to the first node in the list.
- * \param node  the name of the pointer to the nodes. This variable is declared
+ * @param first a pointer to the first node in the list.
+ * @param node  the name of the pointer to the nodes. This variable is declared
  *              in the scope of the loop.
  */
 #ifdef __COUNTER__
@@ -122,131 +122,131 @@ LELY_UTIL_LIST_INLINE int slnode_remove(struct slnode **pnode);
 			(node); (node) = _slnode_next_##n, \
 			_slnode_next_##n = (node) ? (node)->next : NULL)
 
-/*!
+/**
  * Returns 1 if the doubly-linked list is empty, and 0 if not. This is an O(1)
  * operation.
  */
 LELY_UTIL_LIST_INLINE int dllist_empty(const struct dllist *list);
 
-/*!
+/**
  * Returns the size (in number of nodes) of a singly-linked list. This is an
  * O(n) operation.
  */
 LELY_UTIL_LIST_INLINE size_t sllist_size(const struct sllist *list);
 
-/*!
+/**
  * Pushes a node to the front of a singly-linked list. This is an O(1)
  * operation.
  *
- * \see sllist_pop_front()
+ * @see sllist_pop_front()
  */
 LELY_UTIL_LIST_INLINE void sllist_push_front(struct sllist *list,
 		struct slnode *node);
 
-/*!
+/**
  * Pushes a node to the back of a singly-linked list. This is an O(1) operation.
  *
- * \see sllist_pop_back()
+ * @see sllist_pop_back()
  */
 LELY_UTIL_LIST_INLINE void sllist_push_back(struct sllist *list,
 		struct slnode *node);
 
-/*!
+/**
  * Pops a node from the front of a singly-linked list. This is an O(1)
  * operation.
  *
- * \see sllist_push_front()
+ * @see sllist_push_front()
  */
 LELY_UTIL_LIST_INLINE struct slnode *sllist_pop_front(struct sllist *list);
 
-/*!
+/**
  * Pops a node from the back of a singly-linked list. This is an O(n) operation.
  *
- * \see sllist_push_back()
+ * @see sllist_push_back()
  */
 LELY_UTIL_LIST_INLINE struct slnode *sllist_pop_back(struct sllist *list);
 
-/*!
- * Inserts a node into a singly-linked list. *\a prev MUST be part of *\a list.
- * This is an O(1) operation.
+/**
+ * Inserts a node into a singly-linked list. *<b>prev</b> MUST be part of
+ * *<b>list</b>. This is an O(1) operation.
  *
- * \see slnode_insert_after()
+ * @see slnode_insert_after()
  */
 LELY_UTIL_LIST_INLINE void sllist_insert_after(struct sllist *list,
 		struct slnode *prev, struct slnode *node);
 
-/*!
- * Inserts a node into a singly-linked list. \a next MUST be part of \a list.
- * This is an O(n) operation.
+/**
+ * Inserts a node into a singly-linked list. <b>next</b> MUST be part of
+ * <b>list</b>. This is an O(n) operation.
  *
- * \see slnode_insert_before()
+ * @see slnode_insert_before()
  */
 LELY_UTIL_LIST_INLINE void sllist_insert_before(struct sllist *list,
 		struct slnode *next, struct slnode *node);
 
-/*!
- * Removes a node from a singly-linked list. \a node MUST be part of \a list.
- * This is an O(n) operation.
+/**
+ * Removes a node from a singly-linked list. <b>node</b> MUST be part of
+ * <b>list</b>. This is an O(n) operation.
  *
- * \see slnode_remove()
+ * @see slnode_remove()
  */
 LELY_UTIL_LIST_INLINE void sllist_remove(struct sllist *list,
 		struct slnode *node);
 
-/*!
+/**
  * Returns a pointer to the first node in a singly-linked list. This is an O(1)
  * operation.
  */
 LELY_UTIL_LIST_INLINE struct slnode *sllist_first(const struct sllist *list);
 
-/*!
+/**
  * Returns a pointer to the last node in a singly-linked list. This is an O(1)
  * operation.
  */
 LELY_UTIL_LIST_INLINE struct slnode *sllist_last(const struct sllist *list);
 
-/*!
+/**
  * Iterates in order over each node in a singly-linked list. It is safe to
  * remove the current node during the iteration.
  *
- * \param list a pointer to a singly-linked list.
- * \param node the name of the pointer to the nodes. This variable is declared
+ * @param list a pointer to a singly-linked list.
+ * @param node the name of the pointer to the nodes. This variable is declared
  *             in the scope of the loop.
  */
 #define sllist_foreach(list, node) \
 	slnode_foreach(sllist_first(list), node)
 
-//! Initializes a node in a doubly-linked list.
+/// Initializes a node in a doubly-linked list.
 LELY_UTIL_LIST_INLINE void dlnode_init(struct dlnode *node);
 
-/*!
- * Inserts \a node after \a prev.
+/**
+ * Inserts <b>node</b> after <b>prev</b>.
 *
-* \returns 1 if \a prev was the last node in the list and 0 if not.
+* @returns 1 if <b>prev</b> was the last node in the list and 0 if not.
 */
 LELY_UTIL_LIST_INLINE int dlnode_insert_after(struct dlnode *prev,
 		struct dlnode *node);
 
-/*!
- * Inserts \a node before \a next.
+/**
+ * Inserts <b>node</b> before <b>next</b>.
  *
- * \returns 1 if \a next was the first node in the list and 0 if not.
+ * @returns 1 if <b>next</b> was the first node in the list and 0 if not.
  */
 LELY_UTIL_LIST_INLINE int dlnode_insert_before(struct dlnode *next,
 		struct dlnode *node);
 
-/*!
- * Removes \a node from a doubly-list. Note that this function does _not_ reset
- * the \a prev and \a next fields of the node.
+/**
+ * Removes <b>node</b> from a doubly-list. Note that this function does _not_
+ * reset the <b>prev</b> and <b>next</b> fields of the node.
  */
 LELY_UTIL_LIST_INLINE void dlnode_remove(struct dlnode *node);
 
-/*!
+/**
  * Iterates in order over each node in a doubly-linked list. It is safe to
  * remove the current node during the iteration.
  *
- * \param first a pointer to the first node in the list.
- * \param node  the name of the pointer to the nodes. This variable is declared
+ * @param first a pointer to the first node in the list.
+ * @param node  the name of the pointer to the nodes. This variable is declared
  *              in the scope of the loop.
  */
 #ifdef __COUNTER__
@@ -264,102 +264,102 @@ LELY_UTIL_LIST_INLINE void dlnode_remove(struct dlnode *node);
 			(node); (node) = _dlnode_next_##n, \
 			_dlnode_next_##n = (node) ? (node)->next : NULL)
 
-//! Initializes a doubly-linked list.
+/// Initializes a doubly-linked list.
 LELY_UTIL_LIST_INLINE void dllist_init(struct dllist *list);
 
-/*!
+/**
  * Returns 1 if the doubly-linked list is empty, and 0 if not. This is an O(1)
  * operation.
  */
 LELY_UTIL_LIST_INLINE int dllist_empty(const struct dllist *list);
 
-/*!
+/**
  * Returns the size (in number of nodes) of a doubly-linked list. This is an
  * O(n) operation.
  */
 LELY_UTIL_LIST_INLINE size_t dllist_size(const struct dllist *list);
 
-/*!
+/**
  * Pushes a node to the front of a doubly-linked list. This is an O(1)
  * operation.
  *
- * \see dllist_pop_front()
+ * @see dllist_pop_front()
  */
 LELY_UTIL_LIST_INLINE void dllist_push_front(struct dllist *list,
 		struct dlnode *node);
 
-/*!
+/**
  * Pushes a node to the back of a doubly-linked list. This is an O(1) operation.
  *
- * \see dllist_pop_back()
+ * @see dllist_pop_back()
  */
 LELY_UTIL_LIST_INLINE void dllist_push_back(struct dllist *list,
 		struct dlnode *node);
 
-/*!
+/**
  * Pops a node from the front of a doubly-linked list. This is an O(1)
  * operation.
  *
- * \see dllist_push_front()
+ * @see dllist_push_front()
  */
 LELY_UTIL_LIST_INLINE struct dlnode *dllist_pop_front(struct dllist *list);
 
-/*!
+/**
  * Pops a node from the back of a doubly-linked list. This is an O(1) operation.
  *
- * \see dllist_push_back()
+ * @see dllist_push_back()
  */
 LELY_UTIL_LIST_INLINE struct dlnode *dllist_pop_back(struct dllist *list);
 
-/*!
- * Inserts a node into a doubly-linked list. *\a prev MUST be part of *\a list.
- * This is an O(1) operation.
+/**
+ * Inserts a node into a doubly-linked list. *<b>prev</b> MUST be part of
+ * *<b>list</b>. This is an O(1) operation.
  *
- * \see dlnode_insert_after()
+ * @see dlnode_insert_after()
  */
 LELY_UTIL_LIST_INLINE void dllist_insert_after(struct dllist *list,
 		struct dlnode *prev, struct dlnode *node);
 
-/*!
- * Inserts a node into a doubly-linked list. *\a next MUST be part of *\a list.
- * This is an O(1) operation.
+/**
+ * Inserts a node into a doubly-linked list. *<b>next</b> MUST be part of
+ * *<b>list</b>. This is an O(1) operation.
  *
- * \see dlnode_insert_before()
+ * @see dlnode_insert_before()
  */
 LELY_UTIL_LIST_INLINE void dllist_insert_before(struct dllist *list,
 		struct dlnode *next, struct dlnode *node);
 
-/*!
- * Removes a node from a doubly-linked list. *\a node MUST be part of *\a list.
- * This is an O(1) operation.
+/**
+ * Removes a node from a doubly-linked list. *<b>node</b> MUST be part of
+ * *<b>list</b>. This is an O(1) operation.
  *
- * \see dlnode_remove()
+ * @see dlnode_remove()
  */
 LELY_UTIL_LIST_INLINE void dllist_remove(struct dllist *list,
 		struct dlnode *node);
 
-/*!
+/**
  * Returns a pointer to the first node in a doubly-linked list. This is an O(1)
  * operation.
  *
- * \see dllist_last()
+ * @see dllist_last()
  */
 LELY_UTIL_LIST_INLINE struct dlnode *dllist_first(const struct dllist *list);
 
-/*!
+/**
  * Returns a pointer to the last node in a doubly-linked list. This is an O(1)
  * operation.
  *
- * \see dllist_first()
+ * @see dllist_first()
  */
 LELY_UTIL_LIST_INLINE struct dlnode *dllist_last(const struct dllist *list);
 
-/*!
+/**
  * Iterates in order over each node in a doubly-linked list. It is safe to
  * remove the current node during the iteration.
  *
- * \param list a pointer to a double-linked list.
- * \param node the name of the pointer to the nodes. This variable is declared
+ * @param list a pointer to a double-linked list.
+ * @param node the name of the pointer to the nodes. This variable is declared
  *             in the scope of the loop.
  */
 #define dllist_foreach(list, node) \
@@ -636,4 +636,4 @@ dllist_last(const struct dllist *list)
 }
 #endif
 
-#endif // LELY_UTIL_LIST_H_
+#endif // !LELY_UTIL_LIST_H_

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CAN library; it contains the CAN frame
  * declarations.
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,20 +27,20 @@
 
 #include <stddef.h>
 
-//! The mask used to extract the 11-bit Base Identifier from a CAN frame.
+/// The mask used to extract the 11-bit Base Identifier from a CAN frame.
 #define CAN_MASK_BID	UINT32_C(0x000007ff)
 
-//! The mask used to extract the 29-bit Extended Identifier from a CAN frame.
+/// The mask used to extract the 29-bit Extended Identifier from a CAN frame.
 #define CAN_MASK_EID	UINT32_C(0x1fffffff)
 
-/*!
+/**
  * The Identifier Extension (IDE) flag. If this flag is set, the CAN Extended
  * Format (with a 29-bit identifier) is used, otherwise the CAN Base Format
  * (with an 11-bit identifier) is used.
  */
 #define CAN_FLAG_IDE	0x01
 
-/*!
+/**
  * The Remote Transmission Request (RTR) flag (unavailable in CAN FD format
  * frames). If this flag is set, the frame has no payload.
  */
@@ -48,20 +48,20 @@
 
 #ifndef LELY_NO_CANFD
 
-/*!
+/**
  * The Extended Data Length (EDL) flag. This flag is set for CAN FD format
  * frames.
  */
 #define CAN_FLAG_EDL	0x04
 
-/*!
+/**
  * The Bit Rate Switch (BRS) flag (only available in CAN FD format frames). If
  * this flag is set, the bit rate is switched from the standard bit rate of the
  * arbitration phase to the preconfigured alternate bit rate of the data phase.
  */
 #define CAN_FLAG_BRS	0x08
 
-/*!
+/**
  * The Error State Indicator (ESI) flag (only available in CAN FD format
  * frames).
  */
@@ -69,41 +69,41 @@
 
 #endif // !LELY_NO_CANFD
 
-//! The maximum number of bytes in the payload of a CAN format frame.
+/// The maximum number of bytes in the payload of a CAN format frame.
 #define CAN_MAX_LEN	8
 
 #ifndef LELY_NO_CANFD
-//! The maximum number of bytes in the payload of a CAN FD format frame.
+/// The maximum number of bytes in the payload of a CAN FD format frame.
 #define CANFD_MAX_LEN	64
 #endif
 
-//! The maximum number of bytes in the payload of a #can_msg struct.
+/// The maximum number of bytes in the payload of a #can_msg struct.
 #ifdef LELY_NO_CANFD
 #define CAN_MSG_MAX_LEN CAN_MAX_LEN
 #else
 #define CAN_MSG_MAX_LEN CANFD_MAX_LEN
 #endif
 
-//! A CAN or CAN FD format frame.
+/// A CAN or CAN FD format frame.
 struct can_msg {
-	//! The identifier (11 or 29 bits, depending on the #CAN_FLAG_IDE flag).
+	/// The identifier (11 or 29 bits, depending on the #CAN_FLAG_IDE flag).
 	uint32_t id;
-	/*!
+	/**
 	 * The flags (any combination of #CAN_FLAG_IDE, #CAN_FLAG_RTR,
 	 * #CAN_FLAG_EDL, #CAN_FLAG_BRS and #CAN_FLAG_ESI).
 	 */
 	uint8_t flags;
-	/*!
+	/**
 	 * The number of bytes in #data (or the requested number of bytes in
 	 * case of a remote frame). The maximum value is 8 for CAN format frames
 	 * and 64 for CAN FD format frames.
 	 */
 	uint8_t len;
-	//! The frame payload (in case of a data frame).
+	/// The frame payload (in case of a data frame).
 	uint8_t data[CAN_MSG_MAX_LEN];
 };
 
-//! The static initializer for a #can_msg struct.
+/// The static initializer for a #can_msg struct.
 #ifdef LELY_NO_CANFD
 #define CAN_MSG_INIT	{ 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } }
 #else
@@ -119,13 +119,13 @@ struct can_msg {
 	}
 #endif
 
-//! The method used to compute te size (in bits) of a CAN frame.
+/// The method used to compute te size (in bits) of a CAN frame.
 enum can_msg_bits_mode {
-	//! Simple calculation assuming no bit stuffing.
+	/// Simple calculation assuming no bit stuffing.
 	CAN_MSG_BITS_MODE_NO_STUFF,
-	//! Simple worst case estimate.
+	/// Simple worst case estimate.
 	CAN_MSG_BITS_MODE_WORST,
-	//! Exact calculation based of frame content and CRC.
+	/// Exact calculation based of frame content and CRC.
 	CAN_MSG_BITS_MODE_EXACT
 };
 
@@ -133,11 +133,11 @@ enum can_msg_bits_mode {
 extern "C" {
 #endif
 
-/*!
+/**
  * Computes the size (in bits) of the specified CAN format frame on the CAN bus.
  *
- * \param msg  a pointer to a CAN frame format frame.
- * \param mode the method used to compute the size (one of
+ * @param msg  a pointer to a CAN frame format frame.
+ * @param mode the method used to compute the size (one of
  *             #CAN_MSG_BITS_MODE_NO_STUFF, #CAN_MSG_BITS_MODE_WORST or
  *             #CAN_MSG_BITS_MODE_EXACT).
  *
@@ -147,17 +147,17 @@ extern "C" {
 LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
 		enum can_msg_bits_mode mode);
 
-/*!
+/**
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The
  * output mimics that of candump.
  *
- * \param s   the address of the output buffer. If \a s is not NULL, at most
+ * @param s   the address of the output buffer. If <b>s</b> is not NULL, at most
  *            `n - 1` characters are written, plus a terminating null byte.
- * \param n   the size (in bytes) of the buffer at \a s. If \a n is zero,
- *            nothing is written.
- * \param msg a pointer to the CAN frame to be printed.
+ * @param n   the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
+ *            zero, nothing is written.
+ * @param msg a pointer to the CAN frame to be printed.
  *
- * \returns the number of characters that would have been written had the
+ * @returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
@@ -165,16 +165,16 @@ LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
 LELY_CAN_EXTERN int snprintf_can_msg(char *s, size_t n,
 		const struct can_msg *msg);
 
-/*!
+/**
  * Equivalent to snprintf_can_msg(), except that it allocates a string large
  * enough to hold the output, including the terminating null byte.
  *
- * \param ps  the address of a value which, on success, contains a pointer to
+ * @param ps  the address of a value which, on success, contains a pointer to
  *            the allocated string. This pointer SHOULD be passed to `free()` to
  *            release the allocated storage.
- * \param msg a pointer to the CAN frame to be printed.
+ * @param msg a pointer to the CAN frame to be printed.
  *
- * \returns the number of characters written, not counting the terminating null
+ * @returns the number of characters written, not counting the terminating null
  * byte, or a negative number on error. In the latter case, the error number is
  * stored in `errno`.
  */
@@ -184,4 +184,4 @@ LELY_CAN_EXTERN int asprintf_can_msg(char **ps, const struct can_msg *msg);
 }
 #endif
 
-#endif // LELY_CAN_MSG_H_
+#endif // !LELY_CAN_MSG_H_

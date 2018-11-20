@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT 'boot slave' functions.
  *
- * \see src/nmt_boot.h
+ * @see src/nmt_boot.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,22 +36,22 @@
 #include <stdlib.h>
 
 #ifndef LELY_CO_NMT_BOOT_WAIT_TIMEOUT
-//! The timeout (in milliseconds) before trying to boot the slave again.
+/// The timeout (in milliseconds) before trying to boot the slave again.
 #define LELY_CO_NMT_BOOT_WAIT_TIMEOUT	1000
 #endif
 
 #ifndef LELY_CO_NMT_BOOT_SDO_RETRY
-//! The number of times an SDO request is retried after a timeout.
+/// The number of times an SDO request is retried after a timeout.
 #define LELY_CO_NMT_BOOT_SDO_RETRY	3
 #endif
 
 #ifndef LELY_CO_NMT_BOOT_RTR_TIMEOUT
-//! The timeout (in milliseconds) after sending a node guarding RTR.
+/// The timeout (in milliseconds) after sending a node guarding RTR.
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT	100
 #endif
 
 #ifndef LELY_CO_NMT_BOOT_CHECK_TIMEOUT
-/*!
+/**
  * The timeout (in milliseconds) before checking the flash status indication or
  * the program control of a slave again.
  */
@@ -59,206 +59,206 @@
 #endif
 
 struct __co_nmt_boot_state;
-//! An opaque CANopen NMT 'boot slave' state type.
+/// An opaque CANopen NMT 'boot slave' state type.
 typedef const struct __co_nmt_boot_state co_nmt_boot_state_t;
 
-//! A CANopen NMT 'boot slave' service.
+/// A CANopen NMT 'boot slave' service.
 struct __co_nmt_boot {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! A pointer to an NMT master service.
+	/// A pointer to an NMT master service.
 	co_nmt_t *nmt;
-	//! A pointer to the current state.
+	/// A pointer to the current state.
 	co_nmt_boot_state_t *state;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! The SDO timeout (in milliseconds).
+	/// The SDO timeout (in milliseconds).
 	int timeout;
-	//! A pointer to the Client-SDO used to access slave objects.
+	/// A pointer to the Client-SDO used to access slave objects.
 	co_csdo_t *sdo;
-	//! The time at which the 'boot slave' request was received.
+	/// The time at which the 'boot slave' request was received.
 	struct timespec start;
-	//! The NMT slave assignment (object 1F81).
+	/// The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
-	//! The consumer heartbeat time (in milliseconds).
+	/// The consumer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
-	//! The CANopen SDO upload request used for reading sub-objects.
+	/// The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
-	//! The number of SDO retries remaining.
+	/// The number of SDO retries remaining.
 	int retry;
-	//! The state of the node (including the toggle bit).
+	/// The state of the node (including the toggle bit).
 	co_unsigned8_t st;
-	//! The error status.
+	/// The error status.
 	char es;
 };
 
-/*!
+/**
  * The CAN receive callback function for a 'boot slave' service.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_nmt_boot_recv(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN timer callback function for a 'boot slave' service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_nmt_boot_timer(const struct timespec *tp, void *data);
 
-/*!
+/**
  * The CANopen SDO download confirmation callback function for a 'boot slave'
  * service.
  *
- * \see co_csdo_dn_con_t
+ * @see co_csdo_dn_con_t
  */
 static void co_nmt_boot_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
 
-/*!
+/**
  * The CANopen SDO upload confirmation callback function for a 'boot slave'
  * service.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 static void co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
-/*!
+/**
  * The CANopen NMT 'configuration request' confirmation callback function for a
  * 'boot slave' service.
  *
- * \see co_nmt_cfg_con_t
+ * @see co_nmt_cfg_con_t
  */
 static void co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned32_t ac, void *data);
 
-/*!
+/**
  * Enters the specified state of a 'boot slave' service and invokes the exit and
  * entry functions.
  */
 static void co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next);
 
-/*!
+/**
  * Invokes the 'timeout' transition function of the current state of a 'boot
  * slave' service.
  *
- * \param boot a pointer to a 'boot slave' service.
- * \param tp   a pointer to the current time.
+ * @param boot a pointer to a 'boot slave' service.
+ * @param tp   a pointer to the current time.
  */
 static inline void co_nmt_boot_emit_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-/*!
+/**
  * Invokes the 'CAN frame received' transition function of the current state of
  * a 'boot slave' service.
  *
- * \param boot a pointer to a 'boot slave' service.
- * \param msg  a pointer to the received CAN frame.
+ * @param boot a pointer to a 'boot slave' service.
+ * @param msg  a pointer to the received CAN frame.
  */
 static inline void co_nmt_boot_emit_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
-/*!
+/**
  * Invokes the 'SDO download confirmation' transition function of the current
  * state of a 'boot slave' service.
  *
- * \param boot a pointer to a 'boot slave' service.
- * \param ac   the SDO abort code (0 on success).
+ * @param boot a pointer to a 'boot slave' service.
+ * @param ac   the SDO abort code (0 on success).
  */
 static inline void co_nmt_boot_emit_dn_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
-/*!
+/**
  * Invokes the 'SDO upload confirmation' transition function of the current
  * state of a 'boot slave' service.
  *
- * \param boot a pointer to a 'boot slave' service.
- * \param ac   the SDO abort code (0 on success).
- * \param ptr  a pointer to the uploaded bytes.
- * \param n    the number of bytes at \a ptr.
+ * @param boot a pointer to a 'boot slave' service.
+ * @param ac   the SDO abort code (0 on success).
+ * @param ptr  a pointer to the uploaded bytes.
+ * @param n    the number of bytes at <b>ptr</b>.
  */
 static inline void co_nmt_boot_emit_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
-/*!
+/**
  * Invokes the 'configuration request confirmation' transition function of the
  * current state of a 'boot slave' service.
  *
- * \param boot a pointer to a 'boot slave' service.
- * \param ac   the SDO abort code (0 on success).
+ * @param boot a pointer to a 'boot slave' service.
+ * @param ac   the SDO abort code (0 on success).
  */
 static inline void co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
-//! A CANopen NMT 'boot slave' state.
+/// A CANopen NMT 'boot slave' state.
 struct __co_nmt_boot_state {
-	//! A pointer to the function invoked when a new state is entered.
+	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a timeout occurs.
 	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param tp   a pointer to the current time.
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param tp   a pointer to the current time.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_time)(co_nmt_boot_t *boot,
 			const struct timespec *tp);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a CAN frame has
 	 * been received.
 	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param msg  a pointer to the received CAN frame.
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param msg  a pointer to the received CAN frame.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_recv)(co_nmt_boot_t *boot,
 			const struct can_msg *msg);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an SDO download
 	 * request completes.
 	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param ac   the SDO abort code (0 on success).
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param ac   the SDO abort code (0 on success).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_dn_con)(co_nmt_boot_t *boot,
 			co_unsigned32_t ac);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an SDO upload
 	 * request completes.
 	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param ac   the SDO abort code.
-	 * \param ptr  a pointer to the uploaded bytes.
-	 * \param n    the number of bytes at \a ptr.
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param ac   the SDO abort code.
+	 * @param ptr  a pointer to the uploaded bytes.
+	 * @param n    the number of bytes at <b>ptr</b>.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_up_con)(co_nmt_boot_t *boot,
 			co_unsigned32_t ac, const void *ptr, size_t n);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an NMT
 	 * 'configuration request' completes.
 	 *
-	 * \param boot a pointer to a 'boot slave' service.
-	 * \param ac   the SDO abort code (0 on success).
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param ac   the SDO abort code (0 on success).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_boot_state_t *(*on_cfg_con)(co_nmt_boot_t *boot,
 			co_unsigned32_t ac);
-	//! A pointer to the function invoked when the current state is left.
+	/// A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_nmt_boot_t *boot);
 };
 
@@ -266,40 +266,40 @@ struct __co_nmt_boot_state {
 	static co_nmt_boot_state_t *const name = \
 			&(co_nmt_boot_state_t){ __VA_ARGS__ };
 
-//! The 'timeout' transition function of the 'wait asynchronously' state.
+/// The 'timeout' transition function of the 'wait asynchronously' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-//! The 'wait asynchronously' state.
+/// The 'wait asynchronously' state.
 LELY_CO_DEFINE_STATE(co_nmt_boot_wait_state,
 	.on_time = &co_nmt_boot_wait_on_time
 )
 
-//! The entry function of the 'abort' state.
+/// The entry function of the 'abort' state.
 static co_nmt_boot_state_t *co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot);
 
-//! The 'abort' state.
+/// The 'abort' state.
 LELY_CO_DEFINE_STATE(co_nmt_boot_abort_state,
 	.on_enter = &co_nmt_boot_abort_on_enter
 )
 
-//! The entry function of the 'error' state.
+/// The entry function of the 'error' state.
 static co_nmt_boot_state_t *co_nmt_boot_error_on_enter(co_nmt_boot_t *boot);
 
-//! The exit function of the 'error' state.
+/// The exit function of the 'error' state.
 static void co_nmt_boot_error_on_leave(co_nmt_boot_t *boot);
 
-//! The 'error' state.
+/// The 'error' state.
 LELY_CO_DEFINE_STATE(co_nmt_boot_error_state,
 	.on_enter = &co_nmt_boot_error_on_enter,
 	.on_leave = &co_nmt_boot_error_on_leave
 )
 
-//! The entry function of the 'check device type' state.
+/// The entry function of the 'check device type' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check device type'
  * state.
  */
@@ -307,17 +307,17 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check device type' state (see Fig. 5 in CiA 302-2 version 4.1.0).
+/// The 'check device type' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_device_type_state,
 	.on_enter = &co_nmt_boot_chk_device_type_on_enter,
 	.on_up_con = &co_nmt_boot_chk_device_type_on_up_con
 )
 
-//! The entry function of the 'check vendor ID' state.
+/// The entry function of the 'check vendor ID' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check vendor ID'
  * state.
  */
@@ -325,17 +325,17 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_vendor_id_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check vendor ID' state (see Fig. 5 in CiA 302-2 version 4.1.0).
+/// The 'check vendor ID' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_vendor_id_state,
 	.on_enter = &co_nmt_boot_chk_vendor_id_on_enter,
 	.on_up_con = &co_nmt_boot_chk_vendor_id_on_up_con
 )
 
-//! The entry function of the 'check product code' state.
+/// The entry function of the 'check product code' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check product code'
  * state.
  */
@@ -343,16 +343,16 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_product_code_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check product code' state (see Fig. 5 in CiA 302-2 version 4.1.0).
+/// The 'check product code' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_product_code_state,
 	.on_enter = &co_nmt_boot_chk_product_code_on_enter,
 	.on_up_con = &co_nmt_boot_chk_product_code_on_up_con
 )
-//! The entry function of the 'check revision number' state.
+/// The entry function of the 'check revision number' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check revision
  * number' state.
  */
@@ -360,17 +360,17 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_revision_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check revision number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
+/// The 'check revision number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_revision_state,
 	.on_enter = &co_nmt_boot_chk_revision_on_enter,
 	.on_up_con = &co_nmt_boot_chk_revision_on_up_con
 )
 
-//! The entry function of the 'check serial number' state.
+/// The entry function of the 'check serial number' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check serial
  * number' state.
  */
@@ -378,131 +378,131 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_serial_nr_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check serial number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
+/// The 'check serial number' state (see Fig. 5 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_serial_nr_state,
 	.on_enter = &co_nmt_boot_chk_serial_nr_on_enter,
 	.on_up_con = &co_nmt_boot_chk_serial_nr_on_up_con
 )
 
-//! The entry function of the 'check node state' state.
+/// The entry function of the 'check node state' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot);
 
-//! The 'timeout' transition function of the 'check node state' state.
+/// The 'timeout' transition function of the 'check node state' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'check node state' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
-//! The 'check node state' state (see Fig. 6 in CiA 302-2 version 4.1.0).
+/// The 'check node state' state (see Fig. 6 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_node_state,
 	.on_enter = &co_nmt_boot_chk_node_on_enter,
 	.on_time = &co_nmt_boot_chk_node_on_time,
 	.on_recv = &co_nmt_boot_chk_node_on_recv
 )
 
-//! The entry function of the 'check software' state.
+/// The entry function of the 'check software' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check software'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
-//! The 'check software' state (see Fig. 6 in CiA 302-2 version 4.1.0).
+/// The 'check software' state (see Fig. 6 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_sw_state,
 	.on_enter = &co_nmt_boot_chk_sw_on_enter,
 	.on_up_con = &co_nmt_boot_chk_sw_on_up_con
 )
 
-//! The entry function of the 'stop program' state.
+/// The entry function of the 'stop program' state.
 static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'stop program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'stop program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
-//! The 'stop program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'stop program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_stop_prog_state,
 	.on_enter = &co_nmt_boot_stop_prog_on_enter,
 	.on_dn_con = &co_nmt_boot_stop_prog_on_dn_con,
 	.on_up_con = &co_nmt_boot_stop_prog_on_up_con
 )
 
-//! The entry function of the 'clear program' state.
+/// The entry function of the 'clear program' state.
 static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'clear program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_dn_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac);
 
-//! The 'clear program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'clear program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_clear_prog_state,
 	.on_enter = &co_nmt_boot_clear_prog_on_enter,
 	.on_dn_con = &co_nmt_boot_clear_prog_on_dn_con
 )
 
-//! The entry function of the 'download program' state.
+/// The entry function of the 'download program' state.
 static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'download program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_dn_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac);
 
-//! The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_blk_dn_prog_state,
 	.on_enter = &co_nmt_boot_blk_dn_prog_on_enter,
 	.on_dn_con = &co_nmt_boot_blk_dn_prog_on_dn_con
 )
 
-//! The entry function of the 'download program' state.
+/// The entry function of the 'download program' state.
 static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'download program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
-//! The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'download program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_dn_prog_state,
 	.on_enter = &co_nmt_boot_dn_prog_on_enter,
 	.on_dn_con = &co_nmt_boot_dn_prog_on_dn_con
 )
 
-//! The entry function of the 'wait for end of flashing' state.
+/// The entry function of the 'wait for end of flashing' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_enter(
 		co_nmt_boot_t *boot);
 
-//! The 'timeout' transition function of the 'wait for end of flashing' state.
+/// The 'timeout' transition function of the 'wait for end of flashing' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'wait for end of
  * flashing' state.
  */
@@ -510,64 +510,64 @@ static co_nmt_boot_state_t *co_nmt_boot_wait_flash_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-//! The 'check flashing' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'check flashing' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_wait_flash_state,
 	.on_enter = &co_nmt_boot_wait_flash_on_enter,
 	.on_time = &co_nmt_boot_wait_flash_on_time,
 	.on_up_con = &co_nmt_boot_wait_flash_on_up_con
 )
 
-//! The entry function of the 'check program SW ID state.
+/// The entry function of the 'check program SW ID state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_prog_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check program
  * SW ID' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_prog_on_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
-//! The 'check program SW ID' state (see Fig. 8 in CiA 302-2 version 4.1.0).
+/// The 'check program SW ID' state (see Fig. 8 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_prog_state,
 	.on_enter = &co_nmt_boot_chk_prog_on_enter,
 	.on_up_con = &co_nmt_boot_chk_prog_on_up_con
 )
 
-//! The entry function of the 'start program' state.
+/// The entry function of the 'start program' state.
 static co_nmt_boot_state_t *co_nmt_boot_start_prog_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO download confirmation' transition function of the 'start program'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_start_prog_on_dn_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac);
 
-//! The 'start program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
+/// The 'start program' state (see Fig. 3 in CiA 302-3 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_start_prog_state,
 	.on_enter = &co_nmt_boot_start_prog_on_enter,
 	.on_dn_con = &co_nmt_boot_start_prog_on_dn_con
 )
 
-//! The entry function of the 'wait till program is started' state.
+/// The entry function of the 'wait till program is started' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'timeout' transition function of the 'wait till program is started'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'wait till program
  * is started' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac, const void *ptr, size_t n);
 
-/*!
+/**
  * The 'wait till program is started' state (see Fig. 8 in CiA 302-2 version
  * 4.1.0).
  */
@@ -577,11 +577,11 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_wait_prog_state,
 	.on_up_con = &co_nmt_boot_wait_prog_on_up_con
 )
 
-//! The entry function of the 'check configuration date' state.
+/// The entry function of the 'check configuration date' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_enter(
 		co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check configuration
  * date' state.
  */
@@ -589,7 +589,7 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_date_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-/*!
+/**
  * The 'check configuration date' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_date_state,
@@ -597,7 +597,7 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_date_state,
 	.on_up_con = &co_nmt_boot_chk_cfg_date_on_up_con
 )
 
-/*!
+/**
  * The 'SDO upload confirmation' transition function of the 'check configuration
  * time' state.
  */
@@ -605,24 +605,24 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_cfg_time_on_up_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac, const void *ptr,
 		size_t n);
 
-/*!
+/**
  * The 'check configuration time' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_cfg_time_state,
 	.on_up_con = &co_nmt_boot_chk_cfg_time_on_up_con
 )
 
-//! The entry function of the 'update configuration' state.
+/// The entry function of the 'update configuration' state.
 static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot);
 
-/*!
+/**
  * The 'configuration request confirmation' transition unction of the 'update
  * configuration' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_up_cfg_on_cfg_con(co_nmt_boot_t *boot,
 		co_unsigned32_t ac);
 
-/*!
+/**
  * The 'update configuration' state (see Fig. 8 in CiA 302-2 version 4.1.0).
  */
 LELY_CO_DEFINE_STATE(co_nmt_boot_up_cfg_state,
@@ -630,21 +630,21 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_up_cfg_state,
 	.on_cfg_con = &co_nmt_boot_up_cfg_on_cfg_con
 )
 
-//! The entry function of the 'start error control' state.
+/// The entry function of the 'start error control' state.
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot);
 
-//! The 'timeout' transition function of the 'start error control' state.
+/// The 'timeout' transition function of the 'start error control' state.
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_time(co_nmt_boot_t *boot,
 		const struct timespec *tp);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'start error control'
  * state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot,
 		const struct can_msg *msg);
 
-//! The 'start error control' state (see Fig. 11 in CiA 302-2 version 4.1.0).
+/// The 'start error control' state (see Fig. 11 in CiA 302-2 version 4.1.0).
 LELY_CO_DEFINE_STATE(co_nmt_boot_ec_state,
 	.on_enter = &co_nmt_boot_ec_on_enter,
 	.on_time = &co_nmt_boot_ec_on_time,
@@ -653,54 +653,54 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_ec_state,
 
 #undef LELY_CO_DEFINE_STATE
 
-/*!
+/**
  * Issues an SDO download request to the slave. co_nmt_boot_dn_con() is called
  * upon completion of the request.
  *
- * \param boot   a pointer to a 'boot slave' service.
- * \param idx    the remote object index.
- * \param subidx the remote object sub-index.
- * \param type   the data type.
- * \param val    the address of the value to be written.
+ * @param boot   a pointer to a 'boot slave' service.
+ * @param idx    the remote object index.
+ * @param subidx the remote object sub-index.
+ * @param type   the data type.
+ * @param val    the address of the value to be written.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_boot_dn(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val);
 
-/*!
+/**
  * Issues an SDO upload request to the slave. co_nmt_boot_up_con() is called
  * upon completion of the request.
  *
- * \param boot   a pointer to a 'boot slave' service.
- * \param idx    the remote object index.
- * \param subidx the remote object sub-index.
+ * @param boot   a pointer to a 'boot slave' service.
+ * @param idx    the remote object index.
+ * @param subidx the remote object sub-index.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx);
 
-/*!
+/**
  * Compares the result of an SDO upload request to the value of a local
  * sub-object.
  *
- * \param boot   a pointer to a 'boot slave' service.
- * \param idx    the local object index.
- * \param subidx the local object sub-index.
- * \param ptr    a pointer to the uploaded bytes.
- * \param n      the number of bytes at \a ptr.
+ * @param boot   a pointer to a 'boot slave' service.
+ * @param idx    the local object index.
+ * @param subidx the local object sub-index.
+ * @param ptr    a pointer to the uploaded bytes.
+ * @param n      the number of bytes at <b>ptr</b>.
  *
- * \returns 1 if the received value matches that of the specified sub-object,
+ * @returns 1 if the received value matches that of the specified sub-object,
  * and 0 if not.
  */
 static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx, const void *ptr, size_t n);
 
-/*!
+/**
  * Sends a node guarding RTR to the slave.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_boot_send_rtr(co_nmt_boot_t *boot);
 

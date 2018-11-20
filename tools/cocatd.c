@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file contains the CANopen cat daemon. It provides an implementation of
  * object 1026 (OS prompt) by connecting the StdIn, StdOut and StdErr
  * sub-objects to `stdin`, `stdout` and `stderr` of a user-specified process.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

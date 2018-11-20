@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the Receive-PDO declarations. See lely/co/rpdo.h for the C
  * interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 
 namespace lely {
 
-//! The attributes of #co_rpdo_t required by #lely::CORPDO.
+/// The attributes of #co_rpdo_t required by #lely::CORPDO.
 template <>
 struct c_type_traits<__co_rpdo> {
 	typedef __co_rpdo value_type;
@@ -53,7 +53,7 @@ struct c_type_traits<__co_rpdo> {
 	static void fini(pointer p) noexcept { __co_rpdo_fini(p); }
 };
 
-//! An opaque CANopen Receive-PDO service type.
+/// An opaque CANopen Receive-PDO service type.
 class CORPDO: public incomplete_c_type<__co_rpdo> {
 	typedef incomplete_c_type<__co_rpdo> c_base;
 public:

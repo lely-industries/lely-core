@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the CAN library; it contains the CAN frame buffer
  * declarations.
  *
@@ -8,9 +8,9 @@
  * there are at most two threads accessing the buffer at the same time
  * (single-reader single-writer).
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,18 +43,18 @@
 #define LELY_CAN_BUF_INLINE	inline
 #endif
 
-//! A CAN frame buffer.
+/// A CAN frame buffer.
 struct can_buf {
-	//! A pointer to the allocated memory for the buffer.
+	/// A pointer to the allocated memory for the buffer.
 	struct can_msg *ptr;
-	/*!
+	/**
 	 * The total size (in number of frames) of the buffer, excluding the
 	 * unused frame used to distinguish between a full and an empty buffer.
 	 * This needs to be a power of two minus one, so we can use '`& size`'
 	 * instead of '`% (size + 1)`' in wrapping calculations.
 	 */
 	size_t size;
-	/*!
+	/**
 	 * The offset (with respect to #ptr) of the first value available for
 	 * reading (and two past the last available for writing, modulo
 	 * #size + 1).
@@ -64,7 +64,7 @@ struct can_buf {
 #else
 	atomic_size_t begin;
 #endif
-	/*!
+	/**
 	 * The offset (with respect to #ptr) of one past the last value
 	 * available for reading (and the first available for writing, modulo
 	 * #size + 1).
@@ -76,7 +76,7 @@ struct can_buf {
 #endif
 };
 
-//! The static initializer for struct #can_buf.
+/// The static initializer for struct #can_buf.
 #ifdef LELY_NO_ATOMICS
 #define CAN_BUF_INIT	{ NULL, 0, 0, 0 }
 #else
@@ -87,104 +87,104 @@ struct can_buf {
 extern "C" {
 #endif
 
-/*!
+/**
  * Initializes a CAN frame buffer.
  *
- * \param buf  a pointer to a CAN frame buffer.
- * \param size the initial size (in number of frames). The size will be rounded
+ * @param buf  a pointer to a CAN frame buffer.
+ * @param size the initial size (in number of frames). The size will be rounded
  *             up to the nearest power of two minus one.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
- * \see can_buf_fini()
+ * @see can_buf_fini()
  */
 LELY_CAN_EXTERN int can_buf_init(struct can_buf *buf, size_t size);
 
-//! Finalizes a CAN frame buffer. \see can_buf_init()
+/// Finalizes a CAN frame buffer. @see can_buf_init()
 LELY_CAN_EXTERN void can_buf_fini(struct can_buf *buf);
 
-/*!
+/**
  * Allocates and initializes a CAN frame buffer.
  *
- * \param size the initial size (in number of frames). The size will be rounded
+ * @param size the initial size (in number of frames). The size will be rounded
  *             up to the nearest power of two minus one.
  *
- * \returns a pointer to a new frame buffer, or NULL on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to a new frame buffer, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
  *
- * \see can_buf_destroy(), can_buf_init()
+ * @see can_buf_destroy(), can_buf_init()
  */
 LELY_CAN_EXTERN struct can_buf *can_buf_create(size_t size);
 
-// Finalizes and frees a CAN frame buffer. \see can_buf_create(), can_buf_fini()
+// Finalizes and frees a CAN frame buffer. @see can_buf_create(), can_buf_fini()
 LELY_CAN_EXTERN void can_buf_destroy(struct can_buf *buf);
 
-//! Clears a CAN frame buffer.
+/// Clears a CAN frame buffer.
 LELY_CAN_BUF_INLINE void can_buf_clear(struct can_buf *buf);
 
-/*!
+/**
  * Returns the number of frames available for reading in a CAN buffer.
  *
- * \see can_buf_capacity()
+ * @see can_buf_capacity()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_size(const struct can_buf *buf);
 
-/*!
+/**
  * Returns the number of frames available for writing in a CAN buffer.
  *
- * \see can_buf_size()
+ * @see can_buf_size()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_capacity(const struct can_buf *buf);
 
-/*!
- * Resizes a CAN frame buffer, if necessary, to make room for at least \a n
+/**
+ * Resizes a CAN frame buffer, if necessary, to make room for at least <b>n</b>
  * additional frames. Note that the new capacity can be larger than the
  * requested capacity.
  *
- * \returns the new capacity of the buffer (in number of frames), or 0 on error.
- * In the latter case, the error number can be obtained with `get_errnum()`.
+ * @returns the new capacity of the buffer (in number of frames), or 0 on error.
+ * In the latter case, the error number can be obtained with get_errc().
  */
 LELY_CAN_EXTERN size_t can_buf_reserve(struct can_buf *buf, size_t n);
 
-/*!
+/**
  * Reads, but does not remove, frames from a CAN frame buffer.
  *
- * \param buf a pointer to a CAN frame buffer.
- * \param ptr the address at which to store the frames (can be NULL).
- * \param n   the number of frames to read.
+ * @param buf a pointer to a CAN frame buffer.
+ * @param ptr the address at which to store the frames (can be NULL).
+ * @param n   the number of frames to read.
  *
- * \returns the number of frames read.
+ * @returns the number of frames read.
  *
- * \see can_buf_read(), can_buf_write()
+ * @see can_buf_read(), can_buf_write()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_peek(struct can_buf *buf,
 		struct can_msg *ptr, size_t n);
 
-/*!
+/**
  * Reads, and removes, frames from a CAN frame buffer.
  *
- * \param buf a pointer to a CAN frame buffer.
- * \param ptr the address at which to store the frames (can be NULL).
- * \param n   the number of frames to read.
+ * @param buf a pointer to a CAN frame buffer.
+ * @param ptr the address at which to store the frames (can be NULL).
+ * @param n   the number of frames to read.
  *
- * \returns the number of frames read.
+ * @returns the number of frames read.
  *
- * \see can_buf_peek(), can_buf_write()
+ * @see can_buf_peek(), can_buf_write()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_read(struct can_buf *buf,
 		struct can_msg *ptr, size_t n);
 
-/*!
+/**
  * Writes frames to a CAN frame buffer.
  *
- * \param buf a pointer to a CAN frame buffer.
- * \param ptr the address from which to load the frames.
- * \param n   the number of frames to write.
+ * @param buf a pointer to a CAN frame buffer.
+ * @param ptr the address from which to load the frames.
+ * @param n   the number of frames to write.
  *
- * \returns the number of frames written.
+ * @returns the number of frames written.
  *
- * \see can_buf_peek(), can_buf_read()
+ * @see can_buf_peek(), can_buf_read()
  */
 LELY_CAN_BUF_INLINE size_t can_buf_write(struct can_buf *buf,
 		const struct can_msg *ptr, size_t n);

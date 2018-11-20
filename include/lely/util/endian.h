@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 #ifndef LELY_BIG_ENDIAN
 #if (__GNUC__ && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__ARMEB__) \
 		|| defined(__THUMBEB__) || defined(__AARCH64EB__)
-//! The target platform is big-endian.
+/// The target platform is big-endian.
 #define LELY_BIG_ENDIAN	1
 #endif
 #endif
@@ -47,7 +47,7 @@
 		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
 		|| defined(_M_X64) || defined(__x86_64__) || defined(__ARMEL__) \
 		|| defined(__THUMBEL__) || defined(__AARCH64EL__)
-//! The target platform is little-endian.
+/// The target platform is little-endian.
 #define LELY_LITTLE_ENDIAN	1
 #endif
 #endif
@@ -60,228 +60,228 @@
 extern "C" {
 #endif
 
-//! Converts a 16-bit unsigned int from host to big-endian byte order.
+/// Converts a 16-bit unsigned int from host to big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t htobe_u16(uint16_t i);
 
-//! Converts a 16-bit unsigned int from big-endian to host byte order.
+/// Converts a 16-bit unsigned int from big-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t betoh_u16(uint16_t i);
 
-//! Converts a 16-bit unsigned int from host to little-endian byte order.
+/// Converts a 16-bit unsigned int from host to little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t htole_u16(uint16_t i);
 
-//! Converts a 16-bit unsigned int from little-endian to host byte order.
+/// Converts a 16-bit unsigned int from little-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t letoh_u16(uint16_t i);
 
-//! Converts a 16-bit unsigned int from host to network byte order.
+/// Converts a 16-bit unsigned int from host to network byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t hton_u16(uint16_t i);
 
-//! Converts a 16-bit unsigned int from network to host byte order.
+/// Converts a 16-bit unsigned int from network to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t ntoh_u16(uint16_t i);
 
-//! Converts a 32-bit unsigned int from host to big-endian byte order.
+/// Converts a 32-bit unsigned int from host to big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t htobe_u32(uint32_t i);
 
-//! Converts a 32-bit unsigned int from big-endian to host byte order.
+/// Converts a 32-bit unsigned int from big-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t betoh_u32(uint32_t i);
 
-//! Converts a 32-bit unsigned int from host to little-endian byte order.
+/// Converts a 32-bit unsigned int from host to little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t htole_u32(uint32_t i);
 
-//! Converts a 32-bit unsigned int from little-endian to host byte order.
+/// Converts a 32-bit unsigned int from little-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t letoh_u32(uint32_t i);
 
-//! Converts a 32-bit unsigned int from host to network byte order.
+/// Converts a 32-bit unsigned int from host to network byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t hton_u32(uint32_t i);
 
-//! Converts a 32-bit unsigned int from network to host byte order.
+/// Converts a 32-bit unsigned int from network to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t ntoh_u32(uint32_t i);
 
-//! Converts a 64-bit unsigned int from host to big-endian byte order.
+/// Converts a 64-bit unsigned int from host to big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t htobe_u64(uint64_t i);
 
-//! Converts a 64-bit unsigned int from big-endian to host byte order.
+/// Converts a 64-bit unsigned int from big-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t betoh_u64(uint64_t i);
 
-//! Converts a 64-bit unsigned int from host to little-endian byte order.
+/// Converts a 64-bit unsigned int from host to little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t htole_u64(uint64_t i);
 
-//! Converts a 64-bit unsigned int from little-endian to host byte order.
+/// Converts a 64-bit unsigned int from little-endian to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t letoh_u64(uint64_t i);
 
-//! Converts a 64-bit unsigned int from host to network byte order.
+/// Converts a 64-bit unsigned int from host to network byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t hton_u64(uint64_t i);
 
-//! Converts a 64-bit unsigned int from network to host byte order.
+/// Converts a 64-bit unsigned int from network to host byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t ntoh_u64(uint64_t i);
 
-//! Loads a 16-bit signed int in big-endian byte order.
+/// Loads a 16-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int16_t ldbe_i16(const void *ptr);
 
-//! Stores a 16-bit signed int in big-endian byte order.
+/// Stores a 16-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_i16(void *ptr, int16_t i);
 
-//! Loads a 16-bit unsigned int in big-endian byte order.
+/// Loads a 16-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t ldbe_u16(const void *ptr);
 
-//! Stores a 16-bit unsigned int in big-endian byte order.
+/// Stores a 16-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_u16(void *ptr, uint16_t i);
 
-//! Loads a 16-bit signed int in little-endian byte order.
+/// Loads a 16-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int16_t ldle_i16(const void *ptr);
 
-//! Stores a 16-bit signed int in little-endian byte order.
+/// Stores a 16-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_i16(void *ptr, int16_t i);
 
-//! Loads a 16-bit unsigned int in little-endian byte order.
+/// Loads a 16-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t ldle_u16(const void *ptr);
 
-//! Stores a 16-bit unsigned int in little-endian byte order.
+/// Stores a 16-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_u16(void *ptr, uint16_t i);
 
-//! Loads a 16-bit signed int in network byte order.
+/// Loads a 16-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE int16_t ldn_i16(const void *ptr);
 
-//! Stores a 16-bit signed int in network byte order.
+/// Stores a 16-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_i16(void *ptr, int16_t i);
 
-//! Loads a 16-bit unsigned int in network byte order.
+/// Loads a 16-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE uint16_t ldn_u16(const void *ptr);
 
-//! Stores a 16-bit unsigned int in network byte order.
+/// Stores a 16-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_u16(void *ptr, uint16_t i);
 
-//! Loads a 32-bit signed int in big-endian byte order.
+/// Loads a 32-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int32_t ldbe_i32(const void *ptr);
 
-//! Stores a 32-bit signed int in big-endian byte order.
+/// Stores a 32-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_i32(void *ptr, int32_t i);
 
-//! Loads a 32-bit unsigned int in big-endian byte order.
+/// Loads a 32-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t ldbe_u32(const void *ptr);
 
-//! Stores a 32-bit unsigned int in big-endian byte order.
+/// Stores a 32-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_u32(void *ptr, uint32_t i);
 
-//! Loads a 32-bit signed int in little-endian byte order.
+/// Loads a 32-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int32_t ldle_i32(const void *ptr);
 
-//! Stores a 32-bit signed int in little-endian byte order.
+/// Stores a 32-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_i32(void *ptr, int32_t i);
 
-//! Loads a 32-bit unsigned int in little-endian byte order.
+/// Loads a 32-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t ldle_u32(const void *ptr);
 
-//! Stores a 32-bit unsigned int in little-endian byte order.
+/// Stores a 32-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_u32(void *ptr, uint32_t i);
 
-//! Loads a 32-bit signed int in network byte order.
+/// Loads a 32-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE int32_t ldn_i32(const void *ptr);
 
-//! Stores a 32-bit signed int in network byte order.
+/// Stores a 32-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_i32(void *ptr, int32_t i);
 
-//! Loads a 32-bit unsigned int in network byte order.
+/// Loads a 32-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE uint32_t ldn_u32(const void *ptr);
 
-//! Stores a 32-bit unsigned int in network byte order.
+/// Stores a 32-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_u32(void *ptr, uint32_t i);
 
-//! Loads a 64-bit signed int in big-endian byte order.
+/// Loads a 64-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int64_t ldbe_i64(const void *ptr);
 
-//! Stores a 64-bit signed int in big-endian byte order.
+/// Stores a 64-bit signed int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_i64(void *ptr, int64_t i);
 
-//! Loads a 64-bit unsigned int in big-endian byte order.
+/// Loads a 64-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t ldbe_u64(const void *ptr);
 
-//! Stores a 64-bit unsigned int in big-endian byte order.
+/// Stores a 64-bit unsigned int in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_u64(void *ptr, uint64_t i);
 
-//! Loads a 64-bit signed int in little-endian byte order.
+/// Loads a 64-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE int64_t ldle_i64(const void *ptr);
 
-//! Stores a 64-bit signed int in little-endian byte order.
+/// Stores a 64-bit signed int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_i64(void *ptr, int64_t i);
 
-//! Loads a 64-bit unsigned int in little-endian byte order.
+/// Loads a 64-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t ldle_u64(const void *ptr);
 
-//! Stores a 64-bit unsigned int in little-endian byte order.
+/// Stores a 64-bit unsigned int in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_u64(void *ptr, uint64_t i);
 
-//! Loads a 64-bit signed int in network byte order.
+/// Loads a 64-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE int64_t ldn_i64(const void *ptr);
 
-//! Stores a 64-bit signed int in network byte order.
+/// Stores a 64-bit signed int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_i64(void *ptr, int64_t i);
 
-//! Loads a 64-bit unsigned int in network byte order.
+/// Loads a 64-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE uint64_t ldn_u64(const void *ptr);
 
-//! Stores a 64-bit unsigned int in network byte order.
+/// Stores a 64-bit unsigned int in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_u64(void *ptr, uint64_t i);
 
-//! Loads a single-precision floating-point number in big-endian byte order.
+/// Loads a single-precision floating-point number in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE float ldbe_flt(const void *ptr);
 
-//! Stores a single-precision floating-point number in big-endian byte order.
+/// Stores a single-precision floating-point number in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_flt(void *ptr, float f);
 
-//! Loads a single-precision floating-point number in little-endian byte order.
+/// Loads a single-precision floating-point number in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE float ldle_flt(const void *ptr);
 
-//! Stores a single-precision floating-point number in little-endian byte order.
+/// Stores a single-precision floating-point number in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_flt(void *ptr, float f);
 
-//! Loads a single-precision floating-point number in network byte order.
+/// Loads a single-precision floating-point number in network byte order.
 LELY_UTIL_ENDIAN_INLINE float ldn_flt(const void *ptr);
 
-//! Stores a single-precision floating-point number in network byte order.
+/// Stores a single-precision floating-point number in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_flt(void *ptr, float f);
 
-//! Loads a double-precision floating-point number in big-endian byte order.
+/// Loads a double-precision floating-point number in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE double ldbe_dbl(const void *ptr);
 
-//! Stores a double-precision floating-point number in big-endian byte order.
+/// Stores a double-precision floating-point number in big-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stbe_dbl(void *ptr, double d);
 
-//! Loads a double-precision floating-point number in little-endian byte order.
+/// Loads a double-precision floating-point number in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE double ldle_dbl(const void *ptr);
 
-//! Stores a double-precision floating-point number in little-endian byte order.
+/// Stores a double-precision floating-point number in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE void stle_dbl(void *ptr, double d);
 
-//! Loads a double-precision floating-point number in network byte order.
+/// Loads a double-precision floating-point number in network byte order.
 LELY_UTIL_ENDIAN_INLINE double ldn_dbl(const void *ptr);
 
-//! Stores a double-precision floating-point number in network byte order.
+/// Stores a double-precision floating-point number in network byte order.
 LELY_UTIL_ENDIAN_INLINE void stn_dbl(void *ptr, double d);
 
-/*!
- * Copies \a n bits from the source to the destination buffer. The buffers MUST
- * NOT overlap. This function assumes a big-endian bit ordering (i.e., bit 0 is
- * the most significant bit).
+/**
+ * Copies <b>n</b> bits from the source to the destination buffer. The buffers
+ * MUST NOT overlap. This function assumes a big-endian bit ordering (i.e., bit
+ * 0 is the most significant bit).
  *
- * \param dst    a pointer to the destination buffer.
- * \param dstbit the destination offset (in bits) with respect to \a dst.
- * \param src    a pointer to the source buffer.
- * \param srcbit the source offset (in bits) with respect to \a src.
- * \param n      the number of bits to copy.
+ * @param dst    a pointer to the destination buffer.
+ * @param dstbit the destination offset (in bits) with respect to <b>dst</b>.
+ * @param src    a pointer to the source buffer.
+ * @param srcbit the source offset (in bits) with respect to <b>src</b>.
+ * @param n      the number of bits to copy.
  */
 LELY_UTIL_EXTERN void bcpybe(void *dst, int dstbit, const void *src, int srcbit,
 		size_t n);
 
-/*!
- * Copies \a n bits from the source to the destination buffer. The buffers MUST
- * NOT overlap. This function assumes a little-endian bit ordering (i.e., bit 0
- * is the least significant bit).
+/**
+ * Copies <b>n</b> bits from the source to the destination buffer. The buffers
+ * MUST NOT overlap. This function assumes a little-endian bit ordering (i.e.,
+ * bit 0 is the least significant bit).
  *
- * \param dst    a pointer to the destination buffer.
- * \param dstbit the destination offset (in bits) with respect to \a dst.
- * \param src    a pointer to the source buffer.
- * \param srcbit the source offset (in bits) with respect to \a src.
- * \param n      the number of bits to copy.
+ * @param dst    a pointer to the destination buffer.
+ * @param dstbit the destination offset (in bits) with respect to <b>dst</b>.
+ * @param src    a pointer to the source buffer.
+ * @param srcbit the source offset (in bits) with respect to <b>src</b>.
+ * @param n      the number of bits to copy.
  */
 LELY_UTIL_EXTERN void bcpyle(void *dst, int dstbit, const void *src, int srcbit,
 		size_t n);
@@ -763,4 +763,4 @@ stn_dbl(void *ptr, double d)
 }
 #endif
 
-#endif // LELY_UTIL_ENDIAN_H_
+#endif // !LELY_UTIL_ENDIAN_H_

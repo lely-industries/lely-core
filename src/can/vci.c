@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CAN library; it contains the implementation of the
  * IXXAT VCI V4 interface.
  *
- * \see lely/can/vci.h
+ * @see lely/can/vci.h
  *
- * \copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

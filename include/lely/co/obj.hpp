@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the object dictionary. See lely/co/obj.h for the C interface.
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ namespace lely {
 template <co_unsigned16_t> struct COSubDnInd;
 template <co_unsigned16_t> struct COSubUpInd;
 
-//! The attributes of #co_obj_t required by #lely::COObj.
+/// The attributes of #co_obj_t required by #lely::COObj.
 template <>
 struct c_type_traits<__co_obj> {
 	typedef __co_obj value_type;
@@ -58,7 +58,7 @@ struct c_type_traits<__co_obj> {
 	static void fini(pointer p) noexcept { __co_obj_fini(p); }
 };
 
-//! An opaque CANopen object type.
+/// An opaque CANopen object type.
 class COObj: public incomplete_c_type<__co_obj> {
 	typedef incomplete_c_type<__co_obj> c_base;
 public:
@@ -188,7 +188,7 @@ protected:
 	~COObj() {}
 };
 
-//! The attributes of #co_sub_t required by #lely::COSub.
+/// The attributes of #co_sub_t required by #lely::COSub.
 template <>
 struct c_type_traits<__co_sub> {
 	typedef __co_sub value_type;
@@ -209,7 +209,7 @@ struct c_type_traits<__co_sub> {
 	static void fini(pointer p) noexcept { __co_sub_fini(p); }
 };
 
-//! An opaque CANopen sub-object type.
+/// An opaque CANopen sub-object type.
 class COSub: public incomplete_c_type<__co_sub> {
 	typedef incomplete_c_type<__co_sub> c_base;
 public:
@@ -566,10 +566,10 @@ protected:
 	~COSub() {}
 };
 
-/*!
+/**
  * A CANopen CANopen sub-object download indication callback wrapper.
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 template <co_unsigned16_t N>
 struct COSubDnInd {
@@ -595,10 +595,10 @@ struct COSubDnInd {
 	}
 };
 
-/*!
+/**
  * A CANopen CANopen sub-object upload indication callback wrapper.
  *
- * \see co_sub_up_ind_t
+ * @see co_sub_up_ind_t
  */
 template <co_unsigned16_t N>
 struct COSubUpInd {

@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the I/O library; it contains the implementation of the
  * network socket functions.
  *
- * \see lely/io/sock.h
+ * @see lely/io/sock.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,16 +32,16 @@
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-//! A network socket.
+/// A network socket.
 struct sock {
-	//! The I/O device base handle.
+	/// The I/O device base handle.
 	struct io_handle base;
-	/*!
+	/**
 	 * The domain of the socket (one of #IO_SOCK_BTH, #IO_SOCK_IPV4,
 	 * #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
 	 */
 	int domain;
-	//! The type of the socket (#IO_SOCK_STREAM or #IO_SOCK_DGRAM).
+	/// The type of the socket (#IO_SOCK_STREAM or #IO_SOCK_DGRAM).
 	int type;
 };
 

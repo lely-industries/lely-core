@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the CANopen value declarations. See lely/co/val.h for the C
  * interface.
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 
 namespace lely {
 
-//! A CANopen value.
+/// A CANopen value.
 template <co_unsigned16_t N>
 class COVal {
 	typedef co_type_traits_N<N> traits;
@@ -87,7 +87,7 @@ private:
 	type m_val;
 };
 
-//! A CANopen value containing an array of visible characters.
+/// A CANopen value containing an array of visible characters.
 template <>
 class COVal<CO_DEFTYPE_VISIBLE_STRING> {
 	typedef co_type_traits_N<CO_DEFTYPE_VISIBLE_STRING> traits;
@@ -181,7 +181,7 @@ private:
 	type m_val;
 };
 
-//! A CANopen value containing an array of octets.
+/// A CANopen value containing an array of octets.
 template <>
 class COVal<CO_DEFTYPE_OCTET_STRING> {
 	typedef co_type_traits_N<CO_DEFTYPE_OCTET_STRING> traits;
@@ -273,7 +273,7 @@ private:
 	type m_val;
 };
 
-//! A CANopen value containing an array of (16-bit) Unicode characters.
+/// A CANopen value containing an array of (16-bit) Unicode characters.
 template <>
 class COVal<CO_DEFTYPE_UNICODE_STRING> {
 	typedef co_type_traits_N<CO_DEFTYPE_UNICODE_STRING> traits;
@@ -369,7 +369,7 @@ private:
 	type m_val;
 };
 
-//! A CANopen value containing an arbitrary large block of data.
+/// A CANopen value containing an arbitrary large block of data.
 template <>
 class COVal<CO_DEFTYPE_DOMAIN> {
 	typedef co_type_traits_N<CO_DEFTYPE_DOMAIN> traits;

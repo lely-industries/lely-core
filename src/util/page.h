@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This is the internal header file of the thread-safe lock-free memory page
  * functions.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,22 +39,22 @@
 #include <assert.h>
 
 #ifndef LELY_PAGE_SIZE
-//! The minimum size (in bytes) of a single memory page.
+/// The minimum size (in bytes) of a single memory page.
 #define LELY_PAGE_SIZE	65536
 #endif
 
 #ifndef LELY_PAGE_ALIGNMENT
-//! The alignment (in bytes) of a memory page.
+/// The alignment (in bytes) of a memory page.
 #define LELY_PAGE_ALIGNMENT	4096
 #endif
 
-//! A struct representing a single memory page.
+/// A struct representing a single memory page.
 struct page {
-	//! A pointer to the next page.
+	/// A pointer to the next page.
 	struct page *next;
-	//! The size (in bytes) of the page.
+	/// The size (in bytes) of the page.
 	size_t size;
-	/*!
+	/**
 	 * The offset (in bytes) of the free region with respect to the start of
 	 * the page.
 	 */
@@ -73,19 +73,19 @@ typedef _Atomic(struct page *) atomic_page_t;
 extern "C" {
 #endif
 
-/*!
+/**
  * Creates a single memory page and prepends it to a list. This function is
  * thread-safe and lock-free (as long as the platform supports lock-free atomic
  * operations). The size of the page is a power of two times #LELY_PAGE_SIZE
  * with an alignment of #LELY_PAGE_ALIGNMENT.
  *
- * \param next the address of a pointer to the next memory page. On success,
- *             *\a next contains the address of the new page.
- * \param size the minimum number of bytes available on the page.
+ * @param next the address of a pointer to the next memory page. On success,
+ *             *<b>next</b> contains the address of the new page.
+ * @param size the minimum number of bytes available on the page.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  *
- * \see page_destroy()
+ * @see page_destroy()
  */
 #ifdef LELY_NO_ATOMICS
 static int page_create(struct page **next, size_t size);
@@ -93,68 +93,68 @@ static int page_create(struct page **next, size_t size);
 static int page_create(volatile atomic_page_t *next, size_t size);
 #endif
 
-/*!
+/**
  * Destroys a memory page and all pages after it.
  *
- * \see page_create()
+ * @see page_create()
  */
 static void page_destroy(struct page *page);
 
-/*!
+/**
  * Allocates a space on a memory page. The alignment is inferred from the size.
  * The allocation is thread-safe and lock-free (as long as the platform supports
  * lock-free atomic operations).
  *
- * \param page a pointer to a memory #page.
- * \param size the number of bytes to allocate. The value of \a size is used as
- *             the alignment if it is a power of two and smaller than the
+ * @param page a pointer to a memory #page.
+ * @param size the number of bytes to allocate. The value of <b>size</b> is used
+ *             as the alignment if it is a power of two and smaller than the
  *             default alignment (`alignof(max_align_t)`, equal to the alignment
  *             guarantees of malloc()). Otherwise the default alignment is used.
  *
- * \returns a pointer to the allocated memory, or NULL on error.
+ * @returns a pointer to the allocated memory, or NULL on error.
  *
- * \see page_aligned_alloc(), page_aligned_offset_alloc()
+ * @see page_aligned_alloc(), page_aligned_offset_alloc()
  */
 static void *page_alloc(struct page *page, size_t size);
 
-/*!
+/**
  * Allocates a space on a memory page with the specified alignment. This
  * function is equivalent to
  * `page_aligned_offset_alloc(page, alignment, 0, size)`. The allocation is
  * thread-safe and lock-free (as long as the platform supports lock-free atomic
  * operations).
  *
- * \param page      a pointer to a memory #page.
- * \param alignment the alignment requirements (in bytes). The alignment MUST be
+ * @param page      a pointer to a memory #page.
+ * @param alignment the alignment requirements (in bytes). The alignment MUST be
  *                  a power of two and CANNOT be larger than the alignment of
  *                  the page itself.
- * \param size      the number of bytes to allocate.
+ * @param size      the number of bytes to allocate.
  *
- * \returns a pointer to the newly allocated memory, or NULL on error.
+ * @returns a pointer to the newly allocated memory, or NULL on error.
  *
- * \see page_alloc(), page_aligned_offset_alloc()
+ * @see page_alloc(), page_aligned_offset_alloc()
  */
 static inline void *page_aligned_alloc(struct page *page, size_t alignment,
 		size_t size);
 
-/*!
+/**
  * Allocates a space on a memory page with the specified alignment. The
  * allocation is thread-safe and lock-free (as long as the platform supports
  * lock-free atomic operations).
  *
- * \param page      a pointer to a memory #page.
- * \param alignment the alignment requirements (in bytes). The alignment MUST be
+ * @param page      a pointer to a memory #page.
+ * @param alignment the alignment requirements (in bytes). The alignment MUST be
  *                  a power of two and CANNOT be larger than the alignment of
  *                  the page itself.
- * \param offset    the offset (in bytes) into the memory region of the address
+ * @param offset    the offset (in bytes) into the memory region of the address
  *                  that is to be aligned. If non-zero, it is not the beginning
  *                  of the memory region that is aligned, but the byte at the
  *                  offset. This is useful for allocating nested structures.
- * \param size      the number of bytes to allocate.
+ * @param size      the number of bytes to allocate.
  *
- * \returns a pointer to the newly allocated memory, or NULL on error.
+ * @returns a pointer to the newly allocated memory, or NULL on error.
  *
- * \see page_alloc(), page_aligned_alloc()
+ * @see page_alloc(), page_aligned_alloc()
  */
 static void *page_aligned_offset_alloc(struct page *page, size_t alignment,
 		size_t offset, size_t size);

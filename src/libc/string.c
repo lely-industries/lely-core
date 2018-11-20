@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/string.h
+ * @see lely/libc/string.h
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

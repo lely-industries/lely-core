@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CAN library; it contains the SocketCAN
  * interface declarations.
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,66 +36,66 @@ struct canfd_frame;
 extern "C" {
 #endif
 
-/*!
+/**
  * Checks if a SocketCAN CAN frame is an error frame and parses the bus state
  * and error flags if it is.
  *
- * \param frame  a pointer to a SocketCAN CAN frame.
- * \param pstate the address at which to store the updated CAN node state (can
+ * @param frame  a pointer to a SocketCAN CAN frame.
+ * @param pstate the address at which to store the updated CAN node state (can
  *               be NULL). The value is only updated if the error frame
  *               indicates a state change.
- * \param perror the address at which to store the updated CAN bus errors (can
+ * @param perror the address at which to store the updated CAN bus errors (can
  *               be NULL). Any new error flags indicated by by the error frame
- *               are set in *\a perror, but existing flags are not cleared.
+ *               are set in *<b>perror</b>, but existing flags are not cleared.
  *
- * \returns 1 if the CAN frame is an error frame, 0 if not, and -1 on error. In
+ * @returns 1 if the CAN frame is an error frame, 0 if not, and -1 on error. In
  * the latter case, the error number can be obtained with `get_errc()`.
  */
 LELY_CAN_EXTERN int can_frame_is_error(const struct can_frame *frame,
 		enum can_state *pstate, enum can_error *perror);
 
-/*!
+/**
  * Converts a SocketCAN CAN frame to a #can_msg frame.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errc()`.
  *
- * \see can_msg2can_frame()
+ * @see can_msg2can_frame()
  */
 LELY_CAN_EXTERN int can_frame2can_msg(const struct can_frame *src,
 		struct can_msg *dst);
 
-/*!
+/**
  * Converts a #can_msg frame to a SocketCAN CAN frame.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errc()`.
  *
- * \see can_frame2can_msg()
+ * @see can_frame2can_msg()
  */
 LELY_CAN_EXTERN int can_msg2can_frame(const struct can_msg *src,
 		struct can_frame *dst);
 
 #ifndef LELY_NO_CANFD
 
-/*!
+/**
  * Converts a SocketCAN CAN FD frame to a #can_msg frame.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errc()`.
  *
- * \see can_msg2canfd_frame()
+ * @see can_msg2canfd_frame()
  */
 LELY_CAN_EXTERN int canfd_frame2can_msg(const struct canfd_frame *src,
 		struct can_msg *dst);
 
-/*!
+/**
  * Converts a #can_msg frame to a SocketCAN CAN FD frame.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with `get_errc()`.
  *
- * \see canfd_frame2can_msg()
+ * @see canfd_frame2can_msg()
  */
 LELY_CAN_EXTERN int can_msg2canfd_frame(const struct can_msg *src,
 		struct canfd_frame *dst);
@@ -106,4 +106,4 @@ LELY_CAN_EXTERN int can_msg2canfd_frame(const struct can_msg *src,
 }
 #endif
 
-#endif // LELY_CAN_SOCKET_H_
+#endif // !LELY_CAN_SOCKET_H_

@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the thread-safe lock-free memory pool allocator.
  *
- * \see lely/util/pool.h
+ * @see lely/util/pool.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,23 +26,23 @@
 #include <lely/util/pool.h>
 #include "page.h"
 
-//! A memory pool allocator for fixed-size objects.
+/// A memory pool allocator for fixed-size objects.
 struct __pool {
-	//! A pointer to the first free element.
+	/// A pointer to the first free element.
 #ifdef LELY_NO_ATOMICS
 	void *free;
 #else
 	_Atomic(void *) free;
 #endif
-	//! A pointer to the most recently allocated memory #page.
+	/// A pointer to the most recently allocated memory #page.
 #ifdef LELY_NO_ATOMICS
 	struct page *page;
 #else
 	atomic_page_t page;
 #endif
-	//! The minimum number of elements per page.
+	/// The minimum number of elements per page.
 	size_t nmemb;
-	//! The size (in bytes) of each element.
+	/// The size (in bytes) of each element.
 	size_t size;
 };
 

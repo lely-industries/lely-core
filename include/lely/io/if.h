@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the I/O library; it contains network interface
  * declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 
 #include <lely/io/addr.h>
 
-/*!
+/**
  * The maximum number of bytes required to hold the name of a network interface,
  * including the terminating null byte.
  */
@@ -35,44 +35,44 @@
 #endif
 
 enum {
-	//! The interface is running.
+	/// The interface is running.
 	IO_IF_UP = 1 << 0,
-	//! A valid broadcast address is set.
+	/// A valid broadcast address is set.
 	IO_IF_BROADCAST = 1 << 1,
-	//! The interface is a loopback interface.
+	/// The interface is a loopback interface.
 	IO_IF_LOOPBACK = 1 << 2,
-	//! The interface is a point-to-point link.
+	/// The interface is a point-to-point link.
 	IO_IF_POINTTOPOINT = 1 << 3,
-	//! The interface supports multicast.
+	/// The interface supports multicast.
 	IO_IF_MULTICAST = 1 << 4
 };
 
-//! A structure describing a network interface.
+/// A structure describing a network interface.
 struct io_ifinfo {
-	//! The interface index.
+	/// The interface index.
 	unsigned int index;
-	//! The interface name.
+	/// The interface name.
 	char name[IO_IF_NAME_STRLEN];
-	/*!
+	/**
 	 * The domain of the interface (one of #IO_SOCK_BTH, #IO_SOCK_IPV4,
 	 * #IO_SOCK_IPV6 or #IO_SOCK_UNIX).
 	 */
 	int domain;
-	/*!
+	/**
 	 * The status of the interface (any combination of #IO_IF_UP,
 	 * #IO_IF_BROADCAST, #IO_IF_LOOPBACK, #IO_IF_POINTTOPOINT and
 	 * #IO_IF_MULTICAST).
 	 */
 	int flags;
-	//! The address of the interface.
+	/// The address of the interface.
 	io_addr_t addr;
-	//! The netmask used by the interface.
+	/// The netmask used by the interface.
 	io_addr_t netmask;
-	//! The broadcast address of the interface.
+	/// The broadcast address of the interface.
 	io_addr_t broadaddr;
 };
 
-//! The static initializer for struct #io_ifinfo.
+/// The static initializer for struct #io_ifinfo.
 #define IO_IFINFO_INIT \
 	{ 0, { '\0' }, 0, 0, IO_ADDR_INIT, IO_ADDR_INIT, IO_ADDR_INIT }
 
@@ -80,17 +80,17 @@ struct io_ifinfo {
 extern "C" {
 #endif
 
-/*!
+/**
  * Obtains a list of network interfaces.
  *
- * \param maxinfo the maximum number of #io_ifinfo structs to return.
- * \param info    an array of at least \a maxinfo #io_ifinfo structs (can be
- *                NULL). On success, *\a info contains at most \a maxinfo
- *                structures describing the network interfaces.
+ * @param maxinfo the maximum number of #io_ifinfo structs to return.
+ * @param info    an array of at least <b>maxinfo</b> #io_ifinfo structs (can be
+ *                NULL). On success, *<b>info</b> contains at most
+ *                <b>maxinfo</b> structures describing the network interfaces.
  *
- * \returns the total number of interfaces (which may be different from
- * \a maxinfo), or -1 on error. In the latter case, the error number can be
- * obtained with `get_errnum()`.
+ * @returns the total number of interfaces (which may be different from
+ * <b>maxinfo</b>), or -1 on error. In the latter case, the error number can be
+ * obtained with get_errc().
  */
 LELY_IO_EXTERN int io_get_ifinfo(int maxinfo, struct io_ifinfo *info);
 

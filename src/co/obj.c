@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the object dictionary.
  *
- * \see lely/co/obj.h, src/obj.h
+ * @see lely/co/obj.h, src/obj.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,20 +32,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*!
+/**
  * Updates an object by allocating a new memory region containing the members
  * and moving the old values.
  */
 static void co_obj_update(co_obj_t *obj);
 
-//! Destroys all sub-objects.
+/// Destroys all sub-objects.
 static void co_obj_clear(co_obj_t *obj);
 
-//! The default download indication function. \see co_sub_dn_ind_t
+/// The default download indication function. @see co_sub_dn_ind_t
 static co_unsigned32_t default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-//! The default upload indication function. \see co_sub_up_ind_t
+/// The default upload indication function. @see co_sub_up_ind_t
 static co_unsigned32_t default_sub_up_ind(const co_sub_t *sub,
 		struct co_sdo_req *req, void *data);
 

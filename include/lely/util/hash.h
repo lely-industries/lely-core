@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the hash
  * function declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,23 +36,23 @@ extern "C" {
 
 LELY_UTIL_HASH_INLINE size_t hashhash(size_t seed, size_t hash);
 
-//! Returns the hash value of an integer of type `size_t`.
+/// Returns the hash value of an integer of type `size_t`.
 LELY_UTIL_HASH_INLINE size_t sizehash(size_t n);
 
-//! Returns the hash value of a pointer.
+/// Returns the hash value of a pointer.
 LELY_UTIL_HASH_INLINE size_t ptrhash(const void *ptr);
 
-//! Returns the FNV-1a hash of a string.
+/// Returns the FNV-1a hash of a string.
 LELY_UTIL_EXTERN size_t strhash(const char *s);
 
-//! Returns the FNV-1a hash of at most \a n characters of a string.
+/// Returns the FNV-1a hash of at most <b>n</b> characters of a string.
 LELY_UTIL_EXTERN size_t strnhash(const char *s, size_t n);
 
-//! Returns the case-independent FNV-1a hash of a string.
+/// Returns the case-independent FNV-1a hash of a string.
 LELY_UTIL_EXTERN size_t strcasehash(const char *s);
 
-/*!
- * Returns the case-independent FNV-1a hash of at most \a n characters of a
+/**
+ * Returns the case-independent FNV-1a hash of at most <b>n</b> characters of a
  * string.
  */
 LELY_UTIL_EXTERN size_t strncasehash(const char *s, size_t n);

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the static
  * device description declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,73 +26,73 @@
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
 
-//! A static CANopen device. \see co_dev_create_from_sdev()
+/// A static CANopen device. @see co_dev_create_from_sdev()
 struct co_sdev {
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! A pointer to the name of the device.
+	/// A pointer to the name of the device.
 	const char *name;
-	//! A pointer to the vendor name.
+	/// A pointer to the vendor name.
 	const char *vendor_name;
-	//! The vendor ID.
+	/// The vendor ID.
 	co_unsigned32_t vendor_id;
-	//! A pointer to the product name.
+	/// A pointer to the product name.
 	const char *product_name;
-	//! The product code.
+	/// The product code.
 	co_unsigned32_t product_code;
-	//! The revision number.
+	/// The revision number.
 	co_unsigned32_t revision;
-	//! A pointer to the order code.
+	/// A pointer to the order code.
 	const char *order_code;
-	//! The supported bit rates.
+	/// The supported bit rates.
 	unsigned baud:10;
-	//! The (pending) baudrate (in kbit/s).
+	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
-	//! A flag specifying whether LSS is supported (1) or not (0).
+	/// A flag specifying whether LSS is supported (1) or not (0).
 	int lss;
-	//! The data types supported for mapping dummy entries in PDOs.
+	/// The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
-	//! The number of objects in #objs.
+	/// The number of objects in #objs.
 	co_unsigned16_t nobj;
-	//! An array of objects.
+	/// An array of objects.
 	const struct co_sobj *objs;
 };
 
-//! A static CANopen object. \see #co_sdev
+/// A static CANopen object. @see #co_sdev
 struct co_sobj {
-	//! A pointer to the name of the object.
+	/// A pointer to the name of the object.
 	const char *name;
-	//! The object index.
+	/// The object index.
 	co_unsigned16_t idx;
-	//! The object code.
+	/// The object code.
 	co_unsigned8_t code;
-	//! The number of sub-objects in #subs.
+	/// The number of sub-objects in #subs.
 	co_unsigned8_t nsub;
-	//! An array of sub-objects.
+	/// An array of sub-objects.
 	const struct co_ssub *subs;
 };
 
-//! A static CANopen sub-object. \see #co_sobj
+/// A static CANopen sub-object. @see #co_sobj
 struct co_ssub {
-	//! A pointer to the name of the sub-object.
+	/// A pointer to the name of the sub-object.
 	const char *name;
-	//! The object sub-index.
+	/// The object sub-index.
 	co_unsigned8_t subidx;
-	//! The data type.
+	/// The data type.
 	co_unsigned16_t type;
-	//! The lower limit of #val.
+	/// The lower limit of #val.
 	union co_val min;
-	//! The upper limit of #val.
+	/// The upper limit of #val.
 	union co_val max;
-	//! The default value of #val.
+	/// The default value of #val.
 	union co_val def;
-	//! The sub-object value.
+	/// The sub-object value.
 	union co_val val;
-	//! The access type.
+	/// The access type.
 	unsigned access:5;
-	//! A flag indicating if it is possible to map this object into a PDO.
+	/// A flag indicating if it is possible to map this object into a PDO.
 	unsigned pdo_mapping:1;
-	//! The object flags.
+	/// The object flags.
 	unsigned flags:26;
 };
 
@@ -103,41 +103,41 @@ extern "C" {
 LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_sdev(struct __co_dev *dev,
 		const struct co_sdev *sdev);
 
-/*!
+/**
  * Creates a CANopen device from a static device description.
  *
- * \returns a pointer to a new device, or NULL on error. In the latter case, the
- * error number can be obtained with `get_errnum()`.
+ * @returns a pointer to a new device, or NULL on error. In the latter case, the
+ * error number can be obtained with get_errc().
 */
 LELY_CO_EXTERN co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
 
-/*!
+/**
  * Prints a C99 static initializer code fragment for a static device description
  * (struct #co_sdev) to a string buffer.
  *
- * \param s   the address of the output buffer. If \a s is not NULL, at most
+ * @param s   the address of the output buffer. If <b>s</b> is not NULL, at most
  *            `n - 1` characters are written, plus a terminating null byte.
- * \param n   the size (in bytes) of the buffer at \a s. If \a n is zero,
- *            nothing is written.
- * \param dev a pointer to a CANopen device description to be printed.
+ * @param n   the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
+ *            zero, nothing is written.
+ * @param dev a pointer to a CANopen device description to be printed.
  *
- * \returns the number of characters that would have been written had the
+ * @returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
  */
 LELY_CO_EXTERN int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
 
-/*!
+/**
  * Equivalent to snprintf_c99_sdev(), except that it allocates a string large
  * enough to hold the output, including the terminating null byte.
  *
- * \param ps  the address of a value which, on success, contains a pointer to
+ * @param ps  the address of a value which, on success, contains a pointer to
  *            the allocated string. This pointer SHOULD be passed to `free()` to
  *            release the allocated storage.
- * \param dev a pointer to a CANopen device description to be printed.
+ * @param dev a pointer to a CANopen device description to be printed.
  *
- * \returns the number of characters written, not counting the terminating null
+ * @returns the number of characters written, not counting the terminating null
  * byte, or a negative number on error. In the latter case, the error number is
  * stored in `errno`.
  */

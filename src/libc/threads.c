@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/threads.h
+ * @see lely/libc/threads.h
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,71 +47,71 @@
 
 #include <process.h>
 
-//! An entry in the list of flags currently tested by call_once().
+/// An entry in the list of flags currently tested by call_once().
 struct once_info {
-	//! A pointer to the next entry in the list.
+	/// A pointer to the next entry in the list.
 	struct once_info *next;
-	//! The address of a flag object passed to call_once().
+	/// The address of a flag object passed to call_once().
 	once_flag *flag;
-	//! The number of threads currently calling call_once() with #flag.
+	/// The number of threads currently calling call_once() with #flag.
 	int cnt;
-	//! The mutex protecting *#flag.
+	/// The mutex protecting *#flag.
 	mtx_t mtx;
 };
 
-//! The spinlock protecting #once_list.
+/// The spinlock protecting #once_list.
 static volatile LONG once_lock;
 
-/*!
+/**
  * A pointer to the first entry in the list of flags currently tested by
  * call_once()
  */
 static struct once_info *once_list;
 
-/*!
+/**
  * A static instance of #once_info, used to avoid a calling `malloc()` in case
  * call_once() is not invoked concurrently with different flags.
  */
 static struct once_info once_fast;
 
-/*!
+/**
  * Thread-specific data used to synchronize thrd_create(), thrd_detach(),
  * thrd_exit() and thrd_join().
  */
 struct thrd_info {
-	//! The function pointer passed to thrd_create().
+	/// The function pointer passed to thrd_create().
 	thrd_start_t func;
-	//! The argument for #func().
+	/// The argument for #func().
 	void *arg;
-	//! The result of a call to #func().
+	/// The result of a call to #func().
 	int res;
-	//! The condition variable signaling a change in #stat.
+	/// The condition variable signaling a change in #stat.
 	cnd_t cond;
-	//! The mutex protecting #cond and #stat.
+	/// The mutex protecting #cond and #stat.
 	mtx_t mtx;
-	//! The status of the thread.
+	/// The status of the thread.
 	enum {
-		//! The thread is running.
+		/// The thread is running.
 		THRD_STARTED,
-		/*!
+		/**
 		 * The thread has stopped and is waiting to be detached or
 		 * joined.
 		 */
 		THRD_STOPPED,
-		//! The thread has been detached.
+		/// The thread has been detached.
 		THRD_DETACHED
 	} stat;
 };
 
-/*!
+/**
  * A pointer to the #thrd_info instance for the current thread (NULL for the
  * main thread).
  */
 static thread_local struct thrd_info *thrd_self;
 
-/*!
- * The function passed to _beginthread(). \a arglist points to an instance of
- * #thrd_info.
+/**
+ * The function passed to _beginthread(). <b>arglist</b> points to an instance
+ * of #thrd_info.
  */
 static void __cdecl thrd_start(void *arglist);
 

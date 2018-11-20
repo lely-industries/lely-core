@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<string.h>` and defines any missing functionality.
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ extern "C" {
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
 
-/*!
- * Duplicates the string at \a s.
+/**
+ * Duplicates the string at <b>s</b>.
  *
- * \returns a pointer to a new string, or NULL on error. The returned pointer
+ * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
 LELY_LIBC_EXTERN char * __cdecl strdup(const char *s);
@@ -45,11 +45,11 @@ LELY_LIBC_EXTERN char * __cdecl strdup(const char *s);
 
 #if !(_POSIX_C_SOURCE >= 200809L)
 
-/*!
- * Duplicates at most \a size characters (excluding the terminating null byte)
- * from the string at \a s. The resulting string is null-terminated.
+/**
+ * Duplicates at most <b>size</b> characters (excluding the terminating null
+ * byte) from the string at <b>s</b>. The resulting string is null-terminated.
  *
- * \returns a pointer to a new string, or NULL on error. The returned pointer
+ * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
 LELY_LIBC_EXTERN char * __cdecl strndup(const char *s, size_t size);
@@ -59,11 +59,12 @@ LELY_LIBC_EXTERN char * __cdecl strndup(const char *s, size_t size);
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
 
-/*!
- * Computes the length of the string at \a s, not including the terminating null
- * byte. At most \a maxlen characters are examined.
+/**
+ * Computes the length of the string at <b>s</b>, not including the terminating
+ * null byte. At most <b>maxlen</b> characters are examined.
  *
- * \returns the smaller of the length of the string at \a s or \a maxlen.
+ * @returns the smaller of the length of the string at <b>s</b> or
+ * <b>maxlen</b>.
  */
 LELY_LIBC_EXTERN size_t __cdecl strnlen(const char *s, size_t maxlen);
 
@@ -73,4 +74,4 @@ LELY_LIBC_EXTERN size_t __cdecl strnlen(const char *s, size_t maxlen);
 }
 #endif
 
-#endif // LELY_LIBC_STRING_H_
+#endif // !LELY_LIBC_STRING_H_

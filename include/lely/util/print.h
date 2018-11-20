@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the printing
  * function declarations.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 #endif
 
 #ifndef LENll
-//! A cross-platform "ll" length modifier macro for format specifiers.
+/// A cross-platform "ll" length modifier macro for format specifiers.
 #ifdef _WIN32
 #define LENll	"I64"
 #ifdef __MINGW32__
@@ -47,7 +47,7 @@
 #endif
 
 #ifndef LENj
-//! A cross-platform "j" length modifier macro for format specifiers.
+/// A cross-platform "j" length modifier macro for format specifiers.
 #ifdef _WIN32
 #define LENj	LENll
 #else
@@ -56,7 +56,7 @@
 #endif
 
 #ifndef LENz
-//! A cross-platform "z" length modifier macro for format specifiers.
+/// A cross-platform "z" length modifier macro for format specifiers.
 #ifdef _WIN32
 #if __WORDSIZE == 64
 #define LENz	LENll
@@ -69,7 +69,7 @@
 #endif
 
 #ifndef LENt
-//! A cross-platform "t" length modifier macro for format specifiers.
+/// A cross-platform "t" length modifier macro for format specifiers.
 #ifdef _WIN32
 #if __WORDSIZE == 64
 #define LENz	LENll
@@ -85,38 +85,38 @@
 extern "C" {
 #endif
 
-//! Returns the character corresponding to the octal digit \a i. \see ctoo()
+/// Returns the character corresponding to the octal digit <b>i</b>. @see ctoo()
 LELY_UTIL_PRINT_INLINE int otoc(int i);
 
-/*!
- * Returns the character corresponding to the hexadecimal digit \a i.
+/**
+ * Returns the character corresponding to the hexadecimal digit <b>i</b>.
  *
- * \see ctox()
+ * @see ctox()
  */
 LELY_UTIL_PRINT_INLINE int xtoc(int i);
 
-/*!
+/**
  * Prints a formatted string to a memory buffer. Note that the output is _not_
  * null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written.
- * \param format a printf-style format string.
- * \param ...    an optional list of arguments to be printed according to
- *               \a format.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written.
+ * @param format a printf-style format string.
+ * @param ...    an optional list of arguments to be printed according to
+ *               <b>format</b>.
  *
- * \returns the number of characters that would have been written had the buffer
+ * @returns the number of characters that would have been written had the buffer
  * been sufficiently large, or 0 on error. In the latter case, the error number
- * can be obtained with get_errnum().
+ * can be obtained with get_errc().
  */
 LELY_UTIL_EXTERN size_t print_fmt(char **pbegin, char *end, const char *format,
 		...) __format_printf(3, 4);
 
-/*!
+/**
  * Prints a formatted string to a memory buffer. This function is equivalent to
  * #print_fmt(), except that it accepts a `va_list` instead of a variable number
  * of arguments.
@@ -124,103 +124,103 @@ LELY_UTIL_EXTERN size_t print_fmt(char **pbegin, char *end, const char *format,
 LELY_UTIL_EXTERN size_t vprint_fmt(char **pbegin, char *end, const char *format,
 		va_list ap) __format_printf(3, 0);
 
-/*!
+/**
  * Prints a single character to a memory buffer. Note that the output is _not_
  * null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written.
- * \param c      the character to be written.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written.
+ * @param c      the character to be written.
  *
- * \returns 1.
+ * @returns 1.
  */
 LELY_UTIL_PRINT_INLINE size_t print_char(char **pbegin, char *end, int c);
 
-/*!
+/**
  * Prints a UTF-8 encoded Unicode character to a memory buffer. Illegal Unicode
  * code points are silently replaced by the Unicode replacement character
  * (U+FFFD). Note that the output is _not_ null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written, and the output may
- *               be truncated.
- * \param c32    the Unicode character to be written.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written, and the output
+ *               may be truncated.
+ * @param c32    the Unicode character to be written.
  *
- * \returns the number of characters that would have been written had the buffer
+ * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  *
- * \see print_c99_esc()
+ * @see print_c99_esc()
  */
 LELY_UTIL_EXTERN size_t print_utf8(char **pbegin, char *end, char32_t c32);
 
-/*!
+/**
  * Prints a UTF-8 encoded Unicode character to a memory buffer. Non-printable
  * ASCII characters are printed using C99 escape sequences, illegal Unicode code
  * points using hexadecimal escape sequences. Note that the output is _not_
  * null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written, and the output may
- *               be truncated.
- * \param c32    the Unicode character to be written.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written, and the output
+ *               may be truncated.
+ * @param c32    the Unicode character to be written.
  *
- * \returns the number of characters that would have been written had the buffer
+ * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  *
- * \see print_utf8()
+ * @see print_utf8()
  */
 LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
 
-/*!
+/**
  * Prints a UTF-8 encoded Unicode string to a memory buffer. Non-printable ASCII
  * characters are printed using C99 escape sequences, illegal Unicode code
  * points using hexadecimal escape sequences. Note that the output is _not_
  * delimited by double quotes and _not_ null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written, and the output may
- *               be truncated.
- * \param s      a pointer to the string to be written.
- * \param n      the number of characters at \a s.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written, and the output
+ *               may be truncated.
+ * @param s      a pointer to the string to be written.
+ * @param n      the number of characters at <b>s</b>.
  *
- * \returns the number of characters that would have been written had the buffer
+ * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  *
- * \see print_c99_esc()
+ * @see print_c99_esc()
  */
 LELY_UTIL_EXTERN size_t print_c99_str(char **pbegin, char *end, const char *s,
 		size_t n);
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name) \
-	/*! Prints a C99 `type` to a memory buffer. Note that the output is
+	/** Prints a C99 `type` to a memory buffer. Note that the output is
 	_not_ null-terminated.
-	\param pbegin the address of a pointer to the start of the buffer. If
-	              \a pbegin or *\a pbegin is NULL, nothing is written;
-	              Otherwise, on exit, *\a pbegin points to one past the last
-	              character written.
-	\param end    a pointer to the end of the buffer. If \a end is not NULL,
-	              at most `end - *pbegin` characters are written, and the
-	              output may be truncated.
-	\param name   the value to be written.
-	\returns the number of characters that would have been written had the
+	@param pbegin the address of a pointer to the start of the buffer. If
+	              <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is
+	              written; Otherwise, on exit, *<b>pbegin</b> points to one
+	              past the last character written.
+	@param end    a pointer to the end of the buffer. If <b>end</b> is not
+	              NULL, at most `end - *pbegin` characters are written, and
+	              the output may be truncated.
+	@param name   the value to be written.
+	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
-	error number can be obtained with get_errnum().*/ \
+	error number can be obtained with get_errc().*/ \
 	LELY_UTIL_EXTERN size_t print_c99_##suffix(char **pbegin, char *end, \
 			type name);
 
@@ -245,23 +245,23 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64)
 
 #undef LELY_UTIL_DEFINE_PRINT
 
-/*!
+/**
  * Prints the Base64 representation of binary data to a memory buffer. This
  * function implements the MIME variant of Base64 as specified in
  * <a href="https://tools.ietf.org/html/rfc2045">RFC 2045</a>. Note that the
  * output is _not_ null-terminated.
  *
- * \param pbegin the address of a pointer to the start of the buffer. If
- *               \a pbegin or *\a pbegin is NULL, nothing is written; Otherwise,
- *               on exit, *\a pbegin points to one past the last character
- *               written.
- * \param end    a pointer to the end of the buffer. If \a end is not NULL, at
- *               most `end - *pbegin` characters are written, and the output may
- *               be truncated.
- * \param ptr    a pointer to the binary data to be encoded and written.
- * \param n      the number of bytes at \a ptr.
+ * @param pbegin the address of a pointer to the start of the buffer. If
+ *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
+ *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
+ *               character written.
+ * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
+ *               at most `end - *pbegin` characters are written, and the output
+ *               may be truncated.
+ * @param ptr    a pointer to the binary data to be encoded and written.
+ * @param n      the number of bytes at <b>ptr</b>.
  *
- * \returns the number of characters that would have been written had the buffer
+ * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  */
 LELY_UTIL_EXTERN size_t print_base64(char **pbegin, char *end, const void *ptr,

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the I/O library; it contains the C++ interface of
- * the pipe device handle. \see lely/io/pipe.h for the C interface.
+ * the pipe device handle. @see lely/io/pipe.h for the C interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 
 namespace lely {
 
-//! A pipe I/O device handle.
+/// A pipe I/O device handle.
 class IOPipe: public IOHandle {
 public:
 #if __cplusplus >= 201103L

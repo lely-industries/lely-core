@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
- * \see lely/libc/stdio.h
+ * @see lely/libc/stdio.h
  *
- * \copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 #if !(_POSIX_C_SOURCE >= 200809L)
 
 #ifndef LELY_GETDELIM_SIZE
-//! The initial size (in bytes) of the buffer allocated by getdelim().
+/// The initial size (in bytes) of the buffer allocated by getdelim().
 #define LELY_GETDELIM_SIZE	64
 #endif
 

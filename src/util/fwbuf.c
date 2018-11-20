@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the (atomic) write file buffer.
  *
- * \see lely/util/fwbuf.h
+ * @see lely/util/fwbuf.h
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,55 +50,55 @@
 #endif
 #endif
 
-//! An (atomic) write file buffer struct.
+/// An (atomic) write file buffer struct.
 struct __fwbuf {
-	//! A pointer to the name of the file.
+	/// A pointer to the name of the file.
 	char *filename;
 #ifdef _WIN32
-	//! The name of the temporary file.
+	/// The name of the temporary file.
 	char tmpname[MAX_PATH];
-	//! The file handle.
+	/// The file handle.
 	HANDLE hFile;
-	//! The number of the first error that occurred during a file operation.
+	/// The number of the first error that occurred during a file operation.
 	DWORD dwErrCode;
-	//! The handle of the file mapping.
+	/// The handle of the file mapping.
 	HANDLE hFileMappingObject;
-	//! The base address of the file mapping.
+	/// The base address of the file mapping.
 	LPVOID lpBaseAddress;
-	//! The number of bytes mapped at \a lpBaseAddress.
+	/// The number of bytes mapped at <b>lpBaseAddress</b>.
 	SIZE_T dwNumberOfBytesToMap;
 #elif _POSIX_C_SOURCE >= 200112L
-	//! A pointer to the name of the temporary file.
+	/// A pointer to the name of the temporary file.
 	char *tmpname;
-	//! The file descriptor of the directory containing the temporary file.
+	/// The file descriptor of the directory containing the temporary file.
 	int dirfd;
-	//! The file descriptor.
+	/// The file descriptor.
 	int fd;
-	//! The number of the first error that occurred during a file operation.
+	/// The number of the first error that occurred during a file operation.
 	int errsv;
-	//! The base address of the current file mapping.
+	/// The base address of the current file mapping.
 	void *addr;
-	//! The length (in bytes) of the mapping at \a addr.
+	/// The length (in bytes) of the mapping at <b>addr</b>.
 	size_t len;
 #else
-	//! The name of the temporary file.
+	/// The name of the temporary file.
 	char tmpname[L_tmpnam];
-	//! The file stream.
+	/// The file stream.
 	FILE *stream;
-	//! The number of the first error that occurred during a file operation.
+	/// The number of the first error that occurred during a file operation.
 	int errnum;
-	//! The size (in bytes) of the file.
+	/// The size (in bytes) of the file.
 	int64_t size;
-	//! One past the position of the last byte written to the file.
+	/// One past the position of the last byte written to the file.
 	int64_t last;
-	//! The address of the file mapping.
+	/// The address of the file mapping.
 	void *map;
-	/*!
+	/**
 	 * The offset (in bytes) with respect to the beginning of the file of
-	 * the mapping at \a map.
+	 * the mapping at <b>map</b>.
 	 */
 	int64_t pos;
-	//! The length (in bytes) of the mapping at \a map.
+	/// The length (in bytes) of the mapping at <b>map</b>.
 	size_t len;
 #endif
 };

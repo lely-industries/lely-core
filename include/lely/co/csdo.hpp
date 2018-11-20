@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the Client-SDO declarations. See lely/co/csdo.h for the C
  * interface.
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, C* obj)
 			>::function>, static_cast<void*>(obj));
 }
 
-//! The attributes of #co_csdo_t required by #lely::COCSDO.
+/// The attributes of #co_csdo_t required by #lely::COCSDO.
 template <>
 struct c_type_traits<__co_csdo> {
 	typedef __co_csdo value_type;
@@ -153,7 +153,7 @@ struct c_type_traits<__co_csdo> {
 	static void fini(pointer p) noexcept { __co_csdo_fini(p); }
 };
 
-//! An opaque CANopen Client-SDO service type.
+/// An opaque CANopen Client-SDO service type.
 class COCSDO: public incomplete_c_type<__co_csdo> {
 	typedef incomplete_c_type<__co_csdo> c_base;
 public:
@@ -411,11 +411,11 @@ protected:
 	~COCSDO() {}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received value on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <class T>
 struct COCSDOUpCon {
@@ -442,11 +442,11 @@ struct COCSDOUpCon {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received array of visible characters on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon<char*> {
@@ -467,11 +467,11 @@ struct COCSDOUpCon<char*> {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received array of visible characters on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon< ::std::string> {
@@ -508,11 +508,11 @@ struct COCSDOUpCon< ::std::string> {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper for an array of
  * octets.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon<uint8_t*> {
@@ -531,11 +531,11 @@ struct COCSDOUpCon<uint8_t*> {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received array of octets on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon< ::std::vector<uint8_t> > {
@@ -573,11 +573,11 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received array of (16-bit) Unicode characters on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon<char16_t*> {
@@ -598,11 +598,11 @@ struct COCSDOUpCon<char16_t*> {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper that deserializes
  * the received array of (16-bit) Unicode characters on success.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon< ::std::basic_string<char16_t> > {
@@ -643,11 +643,11 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
 	}
 };
 
-/*!
+/**
  * A CANopen Client-SDO upload confirmation callback wrapper for an arbitrary
  * large block of data.
  *
- * \see co_csdo_up_con_t
+ * @see co_csdo_up_con_t
  */
 template <>
 struct COCSDOUpCon<void*> {

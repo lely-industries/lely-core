@@ -1,4 +1,4 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the
  * <a href="https://en.wikipedia.org/wiki/Hash_table">hash table</a>
  * declarations.
@@ -8,9 +8,9 @@
  * of the hash table, the user is responsible for providing suitable comparison
  * and hash functions.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,55 +36,55 @@
 #define LELY_UTIL_HTAB_INLINE	inline
 #endif
 
-/*!
+/**
  * A node in a hash table tree. To associate a value with a node, embed the node
  * in a struct containing the value and use structof() to obtain the struct from
  * the node.
  *
- * \see htab
+ * @see htab
  */
 struct hnode {
-	/*!
+	/**
 	 * A pointer to the key of this node. The key MUST be set before the
 	 * node is inserted into a table and MUST NOT be modified while the node
 	 * is part of the table.
 	 */
 	const void *key;
-	/*!
+	/**
 	 * The hash of #key. This value MUST NOT be modified directly by the
 	 * user. The hash is stored separately, since comparing hashes is
 	 * generally much faster than comparing keys, which requires a callback
 	 * through a function pointer.
 	 */
 	size_t hash;
-	//! A pointer to the next node in the chain.
+	/// A pointer to the next node in the chain.
 	struct hnode *next;
-	/*!
+	/**
 	 * The address of the #next field of the previous node in the slot
 	 * chain or, if this is the first node, the address of the slot itself.
-	 * Note that \a pprev can never be NULL for a node that is part of a
+	 * Note that <b>pprev</b> can never be NULL for a node that is part of a
 	 * slot.
 	 */
 	struct hnode **pprev;
 };
 
-/*!
+/**
  * A hash table. Each slot in the table consists of a chain (doubly-linked list)
  * of nodes.
  */
 struct htab {
-	//! A pointer to the function used to compare two keys for equality.
+	/// A pointer to the function used to compare two keys for equality.
 	int (*eq)(const void *, const void *);
-	//! A pointer to the function used to compute the hash of a key.
+	/// A pointer to the function used to compute the hash of a key.
 	size_t (*hash)(const void *);
-	//! The number of slots.
+	/// The number of slots.
 	size_t num_slots;
-	/*!
+	/**
 	 * A pointer to an array #num_slots slots. Each slot contains a pointer
 	 * to the first node in the chain (or NULL if the chain is empty).
 	 */
 	struct hnode **slots;
-	//! The number of nodes stored in the hash table.
+	/// The number of nodes stored in the hash table.
 	size_t num_nodes;
 };
 
@@ -92,31 +92,31 @@ struct htab {
 extern "C" {
 #endif
 
-/*!
+/**
  * Initializes a node in a hash table.
  *
- * \param node a pointer to the node to be initialized.
- * \param key  a pointer to the key for this node. The key MUST NOT be modified
+ * @param node a pointer to the node to be initialized.
+ * @param key  a pointer to the key for this node. The key MUST NOT be modified
  *             while the node is part of a table.
  */
 LELY_UTIL_HTAB_INLINE void hnode_init(struct hnode *node, const void *key);
 
-/*!
- * Inserts \a node into a chain at *\a pprev, which can point to the previous
- * node or to the chain itself.
+/**
+ * Inserts <b>node</b> into a chain at *<b>pprev</b>, which can point to the
+ * previous node or to the chain itself.
  */
 LELY_UTIL_HTAB_INLINE void hnode_insert(struct hnode **pprev,
 		struct hnode *node);
 
-//! Removes \a node from a chain.
+/// Removes <b>node</b> from a chain.
 LELY_UTIL_HTAB_INLINE void hnode_remove(struct hnode *node);
 
-/*!
+/**
  * Iterates over each node in a slot in a hash table. The order of the nodes is
  * undefined. It is safe to remove the current node during the iteration.
  *
- * \param slot a pointer to the first node in a slot.
- * \param node the name of the pointer to the nodes. This variable is declared
+ * @param slot a pointer to the first node in a slot.
+ * @param node the name of the pointer to the nodes. This variable is declared
  *             in the scope of the loop.
  */
 #ifdef __COUNTER__
@@ -134,88 +134,88 @@ LELY_UTIL_HTAB_INLINE void hnode_remove(struct hnode *node);
 			(node); (node) = _hnode_next_##n, \
 			_hnode_next_##n = (node) ? (node)->next : NULL)
 
-/*!
+/**
  * Initializes a hash table and allocates the slot array.
  *
- * \param tab       a pointer to the table to be initialized.
- * \param eq        a pointer to the function used to compare two keys for
+ * @param tab       a pointer to the table to be initialized.
+ * @param eq        a pointer to the function used to compare two keys for
  *                  equality. This function SHOULD return a non-zero value if
  *                  the keys are equal, and 0 if not.
- * \param hash      a pointer to the function used to compute the hash of a key.
- * \param num_slots the number of slots.
+ * @param hash      a pointer to the function used to compute the hash of a key.
+ * @param num_slots the number of slots.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
- * \see htab_fini()
+ * @see htab_fini()
  */
 LELY_UTIL_EXTERN int htab_init(struct htab *tab,
 		int (*eq)(const void *, const void *),
 		size_t (*hash)(const void *), size_t num_slots);
 
-//! Finalizes a hash table and frees the slot array. \see htab_init()
+/// Finalizes a hash table and frees the slot array. @see htab_init()
 LELY_UTIL_EXTERN void htab_fini(struct htab *tab);
 
-//! Returns 1 if the hash table is empty, and 0 if not.
+/// Returns 1 if the hash table is empty, and 0 if not.
 LELY_UTIL_HTAB_INLINE int htab_empty(const struct htab *tab);
 
-/*!
+/**
  * Returns the size (in number of nodes) of a hash table . This is an O(1)
  * operation.
  */
 LELY_UTIL_HTAB_INLINE size_t htab_size(const struct htab *tab);
 
-/*!
+/**
  * Resizes a hash table. This is an O(n) operation. This function will rehash
  * all node keys and redistribute the nodes over the slots; it MUST therefore
  * NOT be invoked while iterating over the nodes with #htab_foreach().
  *
- * \param tab       a pointer to a hash table.
- * \param num_slots the new number of slots.
+ * @param tab       a pointer to a hash table.
+ * @param num_slots the new number of slots.
  *
- * \returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with `get_errnum()`.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  */
 LELY_UTIL_EXTERN int htab_resize(struct htab *tab, size_t num_slots);
 
-/*!
+/**
  * Inserts a node into a hash table. This is an O(1) operation. This function
  * does not check whether a node with the same key already exists, or whether
  * the node is already part of another hash table.
  *
- * \see htab_remove(), htab_find()
+ * @see htab_remove(), htab_find()
  */
 LELY_UTIL_EXTERN void htab_insert(struct htab *tab, struct hnode *node);
 
-/*!
+/**
  * Removes a node from a hash table. This is an O(1) operation.
  *
- * \see htab_insert()
+ * @see htab_insert()
  */
 LELY_UTIL_EXTERN void htab_remove(struct htab *tab, struct hnode *node);
 
-/*!
+/**
  * Finds and returns a node in a hash table. This is an O(1) operation. If
  * multiple nodes in the table have the same key, the first node in the slot
  * chain with this key is returned. Unless the table has been resized with
  * htab_resize(), this is typically the most recently inserted node.
  *
- * \returns a pointer to the node if found, or NULL if not.
+ * @returns a pointer to the node if found, or NULL if not.
  *
- * \see htab_insert()
+ * @see htab_insert()
  */
 LELY_UTIL_EXTERN struct hnode *htab_find(const struct htab *tab,
 		const void *key);
 
-/*!
+/**
  * Iterates over each node in a hash table. The order of the nodes is undefined.
  * It is safe to remove the current node during the iteration.
  *
- * \param tab  a pointer to a hash table.
- * \param node the name of the pointer to the nodes. This variable is declared
+ * @param tab  a pointer to a hash table.
+ * @param node the name of the pointer to the nodes. This variable is declared
  *             in the scope of the loop.
  *
- * \see hnode_foreach()
+ * @see hnode_foreach()
  */
 #ifdef __COUNTER__
 #define htab_foreach(tab, node) \

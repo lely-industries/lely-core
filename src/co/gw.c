@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the gateway functions.
  *
- * \see lely/co/gw.h
+ * @see lely/co/gw.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,157 +56,157 @@
 
 struct co_gw_job;
 
-//! A CANopen network.
+/// A CANopen network.
 struct co_gw_net {
-	//! A pointer to the CANopen gateway.
+	/// A pointer to the CANopen gateway.
 	co_gw_t *gw;
-	//! The network-ID.
+	/// The network-ID.
 	co_unsigned16_t id;
-	//! A pointer to a CANopen NMT master/slave service.
+	/// A pointer to a CANopen NMT master/slave service.
 	co_nmt_t *nmt;
-	//! The default node-ID.
+	/// The default node-ID.
 	co_unsigned8_t def;
 #ifndef LELY_NO_CO_CSDO
-	//! The SDO timeout (in milliseconds).
+	/// The SDO timeout (in milliseconds).
 	int timeout;
 #endif
-	/*!
+	/**
 	 * A flag indicating whether "boot-up event received" commands should be
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind:1;
 #ifndef LELY_NO_CO_CSDO
-	//! An array of pointers to the SDO upload/download jobs.
+	/// An array of pointers to the SDO upload/download jobs.
 	struct co_gw_job *sdo[CO_NUM_NODES];
 #endif
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
-	//! A pointer to the LSS job.
+	/// A pointer to the LSS job.
 	struct co_gw_job *lss;
 #endif
-	//! A pointer to the original NMT command indication function.
+	/// A pointer to the original NMT command indication function.
 	co_nmt_cs_ind_t *cs_ind;
-	//! A pointer to user-specified data for #cs_ind.
+	/// A pointer to user-specified data for #cs_ind.
 	void *cs_data;
 #ifndef LELY_NO_CO_MASTER
-	//! A pointer to the original node guarding event indication function.
+	/// A pointer to the original node guarding event indication function.
 	co_nmt_ng_ind_t *ng_ind;
-	//! A pointer to user-specified data for #ng_ind.
+	/// A pointer to user-specified data for #ng_ind.
 	void *ng_data;
 #endif
-	//! A pointer to the original life guarding event indication function.
+	/// A pointer to the original life guarding event indication function.
 	co_nmt_lg_ind_t *lg_ind;
-	//! A pointer to user-specified data for #lg_ind.
+	/// A pointer to user-specified data for #lg_ind.
 	void *lg_data;
-	//! A pointer to the original heartbeat event indication function.
+	/// A pointer to the original heartbeat event indication function.
 	co_nmt_hb_ind_t *hb_ind;
-	//! A pointer to user-specified data for #hb_ind.
+	/// A pointer to user-specified data for #hb_ind.
 	void *hb_data;
-	//! A pointer to the original state change event indication function.
+	/// A pointer to the original state change event indication function.
 	co_nmt_st_ind_t *st_ind;
-	//! A pointer to user-specified data for #st_ind.
+	/// A pointer to user-specified data for #st_ind.
 	void *st_data;
 #ifndef LELY_NO_CO_MASTER
-	//! A pointer to the original 'boot slave' indication function.
+	/// A pointer to the original 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
-	//! A pointer to user-specified data for #boot_ind.
+	/// A pointer to user-specified data for #boot_ind.
 	void *boot_data;
-	//! A pointer to the original SDO download progress indication function.
+	/// A pointer to the original SDO download progress indication function.
 	co_nmt_sdo_ind_t *dn_ind;
-	//! A pointer to user-specified data for #dn_ind.
+	/// A pointer to user-specified data for #dn_ind.
 	void *dn_data;
-	//! A pointer to the original SDO upload progress indication function.
+	/// A pointer to the original SDO upload progress indication function.
 	co_nmt_sdo_ind_t *up_ind;
-	//! A pointer to user-specified data for #up_ind.
+	/// A pointer to user-specified data for #up_ind.
 	void *up_data;
 #endif
 };
 
-//! Creates a new CANopen network. \see co_gw_net_destroy()
+/// Creates a new CANopen network. @see co_gw_net_destroy()
 static struct co_gw_net *co_gw_net_create(co_gw_t *gw, co_unsigned16_t id,
 		co_nmt_t *nmt);
 
-//! Destroys a CANopen network. \see co_gw_net_create()
+/// Destroys a CANopen network. @see co_gw_net_create()
 static void co_gw_net_destroy(struct co_gw_net *net);
 
-/*!
+/**
  * The callback function invoked when an NMT command is received by a CANopen
  * gateway.
  *
- * \see co_nmt_cs_ind_t
+ * @see co_nmt_cs_ind_t
  */
 static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The callback function invoked when a node guarding event occurs for a node on
  * a CANopen network.
  *
- * \see co_nmt_ng_ind_t
+ * @see co_nmt_ng_ind_t
  */
 static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 #endif
-/*!
+/**
  * The callback function invoked when a life guarding event occurs for a CANopen
  * gateway.
  *
- * \see co_nmt_lg_ind_t
+ * @see co_nmt_lg_ind_t
  */
 static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
-/*!
+/**
  * The callback function invoked when a heartbeat event occurs for a node on a
  * CANopen network.
  *
- * \see co_nmt_hb_ind_t
+ * @see co_nmt_hb_ind_t
  */
 static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
-/*!
+/**
  * The callback function invoked when a boot-up event or state change is
  * detected for a node on a CANopen network.
  *
- * \see co_nmt_st_ind_t
+ * @see co_nmt_st_ind_t
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The callback function invoked when the 'boot slave' process completes for a
  * node on a CANopen network.
  *
- * \see co_nmt_boot_ind_t
+ * @see co_nmt_boot_ind_t
  */
 static void co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es, void *data);
-/*!
+/**
  * The callback function invoked to notify the user of the progress of an SDO
  * download request during the 'boot slave' process of a node on a CANopen
  * network.
  *
- * \see co_nmt_sdo_ind_t
+ * @see co_nmt_sdo_ind_t
  */
 static void co_gw_net_dn_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
 		size_t nbyte, void *data);
-/*!
+/**
  * The callback function invoked to notify the user of the progress of an SDO
  * upload request during the 'boot slave' process of a node on a CANopen
  * network.
  *
- * \see co_nmt_sdo_ind_t
+ * @see co_nmt_sdo_ind_t
  */
 static void co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
 		size_t nbyte, void *data);
 #endif
 #ifndef LELY_NO_CO_SYNC
-/*!
+/**
  * The callback function invoked when a SYNC message is received from a node on
  * a CANopen network.
  */
 static void co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 #endif
 #ifndef LELY_NO_CO_TIME
-/*!
+/**
  * The callback function invoked when a TIME message is received from a node on
  * a CANopen network.
  */
@@ -214,7 +214,7 @@ static void co_gw_net_time_ind(co_time_t *time, const struct timespec *tp,
 		void *data);
 #endif
 #ifndef LELY_NO_CO_EMCY
-/*!
+/**
  * The callback function invoked when an EMCY message is received from a node on
  * a CANopen network.
  */
@@ -223,7 +223,7 @@ static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
 		void *data);
 #endif
 #ifndef LELY_NO_CO_RPDO
-/*!
+/**
  * The callback function invoked when a PDO is received from a node on a CANopen
  * network.
  */
@@ -231,228 +231,228 @@ static void co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac,
 		const void *ptr, size_t n, void *data);
 #endif
 
-//! A CANopen gateway network job.
+/// A CANopen gateway network job.
 struct co_gw_job {
-	//! The address of the pointer to this job in the network.
+	/// The address of the pointer to this job in the network.
 	struct co_gw_job **pself;
-	//! A pointer to the CANopen network.
+	/// A pointer to the CANopen network.
 	struct co_gw_net *net;
-	//! A pointer to request-specific data.
+	/// A pointer to request-specific data.
 	void *data;
-	//! A pointer to the destructor for #data.
+	/// A pointer to the destructor for #data.
 	void (*dtor)(void *data);
-	//! The service parameters of the request.
+	/// The service parameters of the request.
 	struct co_gw_req req;
 };
 
-//! The minimum size (in bytes) of a CANopen gateway network job.
+/// The minimum size (in bytes) of a CANopen gateway network job.
 #define CO_GW_JOB_SIZE \
 	offsetof(struct co_gw_job, req)
 
-//! Creates a new CANopen gateway network job. \see co_gw_job_destroy()
+/// Creates a new CANopen gateway network job. @see co_gw_job_destroy()
 static struct co_gw_job *co_gw_job_create(struct co_gw_job **pself,
 		struct co_gw_net *net, void *data, void (*dtor)(void *data),
 		const struct co_gw_req *req);
-//! Destroys a CANopen gateway network job. \see co_gw_job_create()
+/// Destroys a CANopen gateway network job. @see co_gw_job_create()
 static void co_gw_job_destroy(struct co_gw_job *job);
 
-//! Removes a CANopen gateway network job from its network.
+/// Removes a CANopen gateway network job from its network.
 static void co_gw_job_remove(struct co_gw_job *job);
 
 #ifndef LELY_NO_CO_CSDO
-//! Creates a new SDO upload/download job.
+/// Creates a new SDO upload/download job.
 static struct co_gw_job *co_gw_job_create_sdo(struct co_gw_job **pself,
 		struct co_gw_net *net, co_unsigned8_t id,
 		const struct co_gw_req *req);
-//! Destroys the Client-SDO service in an SDO upload/download job.
+/// Destroys the Client-SDO service in an SDO upload/download job.
 static void co_gw_job_sdo_dtor(void *data);
-//! The confirmation function for an 'SDO upload' request.
+/// The confirmation function for an 'SDO upload' request.
 static void co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
-//! The confirmation function for an 'SDO download' request.
+/// The confirmation function for an 'SDO download' request.
 static void co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
-//! The progress indication function for an SDO upload/download job.
+/// The progress indication function for an SDO upload/download job.
 static void co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 #endif
 
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
-//! Creates a new LSS job.
+/// Creates a new LSS job.
 static struct co_gw_job *co_gw_job_create_lss(struct co_gw_job **pself,
 		struct co_gw_net *net, const struct co_gw_req *req);
-/*!
+/**
  * The confirmation function for an 'LSS switch state selective', 'LSS identify
  * remote slave' or 'LSS identify non-configured remote slaves' request.
  */
 static void co_gw_job_lss_cs_ind(co_lss_t *lss, co_unsigned8_t cs, void *data);
-/*!
+/**
  * The confirmation function for an 'LSS configure node-ID', 'LSS configure
  * bit-rate' or 'LSS store configuration' request.
  */
 static void co_gw_job_lss_err_ind(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned8_t err, co_unsigned8_t spec, void *data);
-//! The confirmation function for an 'Inquire LSS address' request.
+/// The confirmation function for an 'Inquire LSS address' request.
 static void co_gw_job_lss_lssid_ind(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned32_t id, void *data);
-//! The confirmation function for an 'LSS inquire node-ID' request.
+/// The confirmation function for an 'LSS inquire node-ID' request.
 static void co_gw_job_lss_nid_ind(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned8_t id, void *data);
-//! The confirmation function for an 'LSS Slowscan/Fastscan' request.
+/// The confirmation function for an 'LSS Slowscan/Fastscan' request.
 static void co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs,
 		const struct co_id *id, void *data);
 #endif
 
-//! A CANopen gateway.
+/// A CANopen gateway.
 struct __co_gw {
-	//! An array of pointers to the CANopen networks.
+	/// An array of pointers to the CANopen networks.
 	struct co_gw_net *net[CO_GW_NUM_NET];
-	//! The command timeout (in milliseconds).
+	/// The command timeout (in milliseconds).
 	int timeout;
-	//! The default network-ID.
+	/// The default network-ID.
 	co_unsigned16_t def;
-	/*!
+	/**
 	 * A pointer to the callback function invoked when an indication or
 	 * confirmation needs to be sent.
 	 */
 	co_gw_send_func_t *send_func;
-	//! A pointer to the user-specified data for #send_func.
+	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
-	/*!
+	/**
 	 * A pointer to the callback function invoked when a baudrate switch is
 	 * needed after an 'Initialize gateway' command is received.
 	 */
 	co_gw_rate_func_t *rate_func;
-	//! A pointer to the user-specified data for #rate_func.
+	/// A pointer to the user-specified data for #rate_func.
 	void *rate_data;
 };
 
 #ifndef LELY_NO_CO_CSDO
-//! Processes an 'SDO upload' request.
+/// Processes an 'SDO upload' request.
 static int co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
-//! Processes an 'SDO download' request.
+/// Processes an 'SDO download' request.
 static int co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
-//! Processes a 'Configure SDO time-out' request.
+/// Processes a 'Configure SDO time-out' request.
 static int co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 
 #ifndef LELY_NO_CO_RPDO
-//! Processes a 'Configure RPDO' request.
+/// Processes a 'Configure RPDO' request.
 static int co_gw_recv_set_rpdo(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 #ifndef LELY_NO_CO_TPDO
-//! Processes a 'Configure TPDO' request.
+/// Processes a 'Configure TPDO' request.
 static int co_gw_recv_set_tpdo(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 #ifndef LELY_NO_CO_RPDO
-//! Processes a 'Read PDO data' request.
+/// Processes a 'Read PDO data' request.
 static int co_gw_recv_pdo_read(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 #ifndef LELY_NO_CO_TPDO
-//! Processes a 'Write PDO data' request.
+/// Processes a 'Write PDO data' request.
 static int co_gw_recv_pdo_write(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 
 #ifndef LELY_NO_CO_MASTER
-//! Processes an NMT request.
+/// Processes an NMT request.
 static int co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, co_unsigned8_t cs,
 		const struct co_gw_req *req);
-//! Processes a 'Enable/Disable node guarding' request.
+/// Processes a 'Enable/Disable node guarding' request.
 static int co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
 #endif
-//! Processes a 'Start/Disable heartbeat consumer' request.
+/// Processes a 'Start/Disable heartbeat consumer' request.
 static int co_gw_recv_nmt_set_hb(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
 
-//! Processes an 'Initialize gateway' request.
+/// Processes an 'Initialize gateway' request.
 static int co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes a 'Set heartbeat producer' request.
+/// Processes a 'Set heartbeat producer' request.
 static int co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes a 'Set node-ID' request.
+/// Processes a 'Set node-ID' request.
 static int co_gw_recv_set_id(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #ifndef LELY_NO_CO_EMCY
-//! Processes a 'Start/Stop emergency consumer' request.
+/// Processes a 'Start/Stop emergency consumer' request.
 static int co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
 #endif
-//! Processes a 'Set command time-out' request.
+/// Processes a 'Set command time-out' request.
 static int co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req);
-//! Processes a 'Boot-up forwarding' request.
+/// Processes a 'Boot-up forwarding' request.
 static int co_gw_recv_set_bootup_ind(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 
-//! Processes a 'Set default network' request.
+/// Processes a 'Set default network' request.
 static int co_gw_recv_set_net(co_gw_t *gw, const struct co_gw_req *req);
-//! Processes a 'Set default node-ID' request.
+/// Processes a 'Set default node-ID' request.
 static int co_gw_recv_set_node(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes a 'Get version' request.
+/// Processes a 'Get version' request.
 static int co_gw_recv_get_version(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 
 #if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
-//! Processes an 'LSS switch state global' request.
+/// Processes an 'LSS switch state global' request.
 static int co_gw_recv_lss_switch(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS switch state selective' request.
+/// Processes an 'LSS switch state selective' request.
 static int co_gw_recv_lss_switch_sel(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS configure node-ID' request.
+/// Processes an 'LSS configure node-ID' request.
 static int co_gw_recv_lss_set_id(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS configure bit-rate' request.
+/// Processes an 'LSS configure bit-rate' request.
 static int co_gw_recv_lss_set_rate(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS activate new bit-rate' request.
+/// Processes an 'LSS activate new bit-rate' request.
 static int co_gw_recv_lss_switch_rate(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS store configuration' request.
+/// Processes an 'LSS store configuration' request.
 static int co_gw_recv_lss_store(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'Inquire LSS address' request.
+/// Processes an 'Inquire LSS address' request.
 static int co_gw_recv_lss_get_lssid(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS inquire node-ID' request.
+/// Processes an 'LSS inquire node-ID' request.
 static int co_gw_recv_lss_get_id(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS identify remote slave' request.
+/// Processes an 'LSS identify remote slave' request.
 static int co_gw_recv_lss_id_slave(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS identify non-configured remote slaves' request.
+/// Processes an 'LSS identify non-configured remote slaves' request.
 static int co_gw_recv_lss_id_non_cfg_slave(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 
-//! Processes an 'LSS Slowscan' request.
+/// Processes an 'LSS Slowscan' request.
 static int co_gw_recv__lss_slowscan(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
-//! Processes an 'LSS Fastscan' request.
+/// Processes an 'LSS Fastscan' request.
 static int co_gw_recv__lss_fastscan(co_gw_t *gw, co_unsigned16_t net,
 		const struct co_gw_req *req);
 #endif
 
-//! Sends a confirmation with an internal error code or SDO abort code.
+/// Sends a confirmation with an internal error code or SDO abort code.
 static int co_gw_send_con(co_gw_t *gw, const struct co_gw_req *req, int iec,
 		co_unsigned32_t ac);
-//! Sends an 'Error control event received' indication.
+/// Sends an 'Error control event received' indication.
 static int co_gw_send_ec(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		co_unsigned8_t st, int iec);
-//! Invokes the callback function to send a confirmation or indication.
+/// Invokes the callback function to send a confirmation or indication.
 static int co_gw_send_srv(co_gw_t *gw, const struct co_gw_srv *srv);
 
-//! Converts an error number to an internal error code.
+/// Converts an error number to an internal error code.
 static inline int errnum2iec(errnum_t errnum);
 
 LELY_CO_EXPORT const char *
@@ -1991,7 +1991,7 @@ co_gw_recv_set_sdo_timeout(co_gw_t *gw, co_unsigned16_t net,
 	return co_gw_send_con(gw, req, 0, 0);
 }
 
-#endif //! LELY_NO_CO_CSDO
+#endif /// LELY_NO_CO_CSDO
 
 #ifndef LELY_NO_CO_RPDO
 static int

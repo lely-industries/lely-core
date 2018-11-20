@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the
  * synchronization (SYNC) object declarations.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
-//! The bit in the SYNC COB-ID specifying whether the device is a producer.
+/// The bit in the SYNC COB-ID specifying whether the device is a producer.
 #define CO_SYNC_COBID_PRODUCER	UINT32_C(0x40000000)
 
-/*!
+/**
  * The bit in the SYNC COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
@@ -38,24 +38,24 @@
 extern "C" {
 #endif
 
-/*!
+/**
  * The type of a CANopen SYNC indication function, invoked after a SYNC message
  * is received or transmitted.
  *
- * \param sync a pointer to a SYNC consumer service.
- * \param cnt  the counter.
- * \param data a pointer to user-specified data.
+ * @param sync a pointer to a SYNC consumer service.
+ * @param cnt  the counter.
+ * @param data a pointer to user-specified data.
  */
 typedef void co_sync_ind_t(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 
-/*!
+/**
  * The type of a CANopen SYNC error handling function, invoked when the SYNC
  * data length does not match.
  *
- * \param sync a pointer to a SYNC consumer service.
- * \param eec  the emergency error code (0x8240).
- * \param er   the error register (0x10).
- * \param data a pointer to user-specified data.
+ * @param sync a pointer to a SYNC consumer service.
+ * @param eec  the emergency error code (0x8240).
+ * @param er   the error register (0x10).
+ * @param data a pointer to user-specified data.
  */
 typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
@@ -66,80 +66,80 @@ LELY_CO_EXTERN struct __co_sync *__co_sync_init(struct __co_sync *sync,
 		can_net_t *net, co_dev_t *dev);
 LELY_CO_EXTERN void __co_sync_fini(struct __co_sync *sync);
 
-/*!
+/**
  * Creates a new CANopen SYNC producer/consumer service.
  *
- * \param net  a pointer to a CAN network.
- * \param dev  a pointer to a CANopen device.
+ * @param net  a pointer to a CAN network.
+ * @param dev  a pointer to a CANopen device.
  *
- * \returns a pointer to a new SYNC service, or NULL on error. In the latter
- * case, the error number can be obtained with `get_errnum()`.
+ * @returns a pointer to a new SYNC service, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
  *
- * \see co_sync_destroy()
+ * @see co_sync_destroy()
  */
 LELY_CO_EXTERN co_sync_t *co_sync_create(can_net_t *net, co_dev_t *dev);
 
-//! Destroys a CANopen SYNC producer/consumer service. \see co_sync_create()
+/// Destroys a CANopen SYNC producer/consumer service. @see co_sync_create()
 LELY_CO_EXTERN void co_sync_destroy(co_sync_t *sync);
 
-//! Returns a pointer to the CAN network of a SYNC producer/consumer service.
+/// Returns a pointer to the CAN network of a SYNC producer/consumer service.
 LELY_CO_EXTERN can_net_t *co_sync_get_net(const co_sync_t *sync);
 
-//! Returns a pointer to the CANopen device of a SYNC producer/consumer service.
+/// Returns a pointer to the CANopen device of a SYNC producer/consumer service.
 LELY_CO_EXTERN co_dev_t *co_sync_get_dev(const co_sync_t *sync);
 
-/*!
+/**
  * Retrieves the indication function invoked after a CANopen SYNC message is
  * received or transmitted.
  *
- * \param sync  a pointer to a SYNC consumer service.
- * \param pind  the address at which to store a pointer to the indication
+ * @param sync  a pointer to a SYNC consumer service.
+ * @param pind  the address at which to store a pointer to the indication
  *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
+ * @param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_sync_set_ind()
+ * @see co_sync_set_ind()
  */
 LELY_CO_EXTERN void co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind,
 		void **pdata);
 
-/*!
+/**
  * Sets the indication function invoked after a CANopen SYNC message is received
  * or transmitted.
  *
- * \param sync a pointer to a SYNC consumer service.
- * \param ind  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a ind.
+ * @param sync a pointer to a SYNC consumer service.
+ * @param ind  a pointer to the function to be invoked.
+ * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
+ *             passed as the last parameter to <b>ind</b>.
  *
- * \see co_sync_get_ind()
+ * @see co_sync_get_ind()
  */
 LELY_CO_EXTERN void co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind,
 		void *data);
 
-/*!
+/**
  * Retrieves the error handling function of a SYNC consumer service.
  *
- * \param sync  a pointer to a SYNC consumer service.
- * \param perr  the address at which to store a pointer to the error handling
+ * @param sync  a pointer to a SYNC consumer service.
+ * @param perr  the address at which to store a pointer to the error handling
  *              function (can be NULL).
- * \param pdata the address at which to store a pointer to user-specified data
+ * @param pdata the address at which to store a pointer to user-specified data
  *              (can be NULL).
  *
- * \see co_sync_set_err()
+ * @see co_sync_set_err()
  */
 LELY_CO_EXTERN void co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr,
 		void **pdata);
 
-/*!
+/**
  * Sets the error handling function of a SYNC consumer service.
  *
- * \param sync a pointer to a SYNC consumer service.
- * \param err  a pointer to the function to be invoked.
- * \param data a pointer to user-specified data (can be NULL). \a data is
- *             passed as the last parameter to \a err.
+ * @param sync a pointer to a SYNC consumer service.
+ * @param err  a pointer to the function to be invoked.
+ * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
+ *             passed as the last parameter to <b>err</b>.
  *
- * \see co_sync_get_err()
+ * @see co_sync_get_err()
  */
 LELY_CO_EXTERN void co_sync_set_err(co_sync_t *sync, co_sync_err_t *err,
 		void *data);

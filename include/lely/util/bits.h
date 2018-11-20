@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the bit
  * function definitions.
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,74 +38,121 @@
 extern "C" {
 #endif
 
-//! Reverses the byte order of the 16-bit unsigned integer \a x.
+/// Reverses the byte order of the 16-bit unsigned integer <b>x</b>.
 LELY_UTIL_BITS_INLINE uint16_t bswap16(uint16_t x);
 
-//! Reverses the byte order of the 32-bit unsigned integer \a x.
+/// Reverses the byte order of the 32-bit unsigned integer <b>x</b>.
 LELY_UTIL_BITS_INLINE uint32_t bswap32(uint32_t x);
 
-//! Reverses the byte order of the 64-bit unsigned integer \a x.
+/// Reverses the byte order of the 64-bit unsigned integer <b>x</b>.
 LELY_UTIL_BITS_INLINE uint64_t bswap64(uint64_t x);
 
-//! Counts the number of leading set bits in the unsigned 8-bit integer \a x.
+/**
+ * Counts the number of leading set bits in the unsigned 8-bit integer <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cls8(uint8_t x);
 
-//! Counts the number of leading zero bits in the unsigned 8-bit integer \a x.
+/**
+ * Counts the number of leading zero bits in the unsigned 8-bit integer
+ * <b>x</b>.
+ */
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
 LELY_UTIL_BITS_INLINE int clz8(uint8_t x);
 #else
 LELY_UTIL_EXTERN int cls8(uint8_t x);
 #endif
 
-//! Counts the number of leading set bits in the unsigned 16-bit integer \a x.
+/**
+ * Counts the number of leading set bits in the unsigned 16-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cls16(uint16_t x);
 
-//! Counts the number of leading zero bits in the unsigned 16-bit integer \a x.
+/**
+ * Counts the number of leading zero bits in the unsigned 16-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int clz16(uint16_t x);
 
-//! Counts the number of leading set bits in the unsigned 32-bit integer \a x.
+/**
+ * Counts the number of leading set bits in the unsigned 32-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cls32(uint32_t x);
 
-//! Counts the number of leading zero bits in the unsigned 32-bit integer \a x.
+/**
+ * Counts the number of leading zero bits in the unsigned 32-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int clz32(uint32_t x);
 
-//! Counts the number of leading set bits in the unsigned 64-bit integer \a x.
+/**
+ * Counts the number of leading set bits in the unsigned 64-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cls64(uint64_t x);
 
-//! Counts the number of leading zero bits in the unsigned 64-bit integer \a x.
+/**
+ * Counts the number of leading zero bits in the unsigned 64-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int clz64(uint64_t x);
 
-//! Counts the number of trailing set bits in the unsigned 8-bit integer \a x.
+/**
+ * Counts the number of trailing set bits in the unsigned 8-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cts8(uint8_t x);
 
-//! Counts the number of trailing zero bits in the unsigned 8-bit integer \a x.
+/**
+ * Counts the number of trailing zero bits in the unsigned 8-bit integer
+ * <b>x</b>.
+ */
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
 LELY_UTIL_BITS_INLINE int ctz8(uint8_t x);
 #else
 LELY_UTIL_EXTERN int ctz8(uint8_t x);
 #endif
 
-//! Counts the number of trailing set bits in the unsigned 16-bit integer \a x.
+/**
+ * Counts the number of trailing set bits in the unsigned 16-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cts16(uint16_t x);
 
-//! Counts the number of trailing zero bits in the unsigned 16-bit integer \a x.
+/**
+ * Counts the number of trailing zero bits in the unsigned 16-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int ctz16(uint16_t x);
 
-//! Counts the number of trailing set bits in the unsigned 32-bit integer \a x.
+/**
+ * Counts the number of trailing set bits in the unsigned 32-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cts32(uint32_t x);
 
-//! Counts the number of trailing zero bits in the unsigned 32-bit integer \a x.
+/**
+ * Counts the number of trailing zero bits in the unsigned 32-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int ctz32(uint32_t x);
 
-//! Counts the number of trailing set bits in the unsigned 64-bit integer \a x.
+/**
+ * Counts the number of trailing set bits in the unsigned 64-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int cts64(uint64_t x);
 
-//! Counts the number of trailing zero bits in the unsigned 64-bit integer \a x.
+/**
+ * Counts the number of trailing zero bits in the unsigned 64-bit integer
+ * <b>x</b>.
+ */
 LELY_UTIL_BITS_INLINE int ctz64(uint64_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first set bit in the unsigned
- * 8-bit integer \a x, or 0 if all bits are zero.
+ * 8-bit integer <b>x</b>, or 0 if all bits are zero.
  */
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ffs)
 LELY_UTIL_BITS_INLINE int ffs8(uint8_t x);
@@ -113,67 +160,67 @@ LELY_UTIL_BITS_INLINE int ffs8(uint8_t x);
 LELY_UTIL_EXTERN int ffs8(uint8_t x);
 #endif
 
-/*!
+/**
  * Returns the index (starting from one) of the first zero bit in the unsigned
- * 8-bit integer \a x, or 0 if all bits are set.
+ * 8-bit integer <b>x</b>, or 0 if all bits are set.
  */
 LELY_UTIL_BITS_INLINE int ffz8(uint8_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first set bit in the unsigned
- * 16-bit integer \a x, or 0 if all bits are zero.
+ * 16-bit integer <b>x</b>, or 0 if all bits are zero.
  */
 LELY_UTIL_BITS_INLINE int ffs16(uint16_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first zero bit in the unsigned
- * 16-bit integer \a x, or 0 if all bits are set.
+ * 16-bit integer <b>x</b>, or 0 if all bits are set.
  */
 LELY_UTIL_BITS_INLINE int ffz16(uint16_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first set bit in the unsigned
- * 32-bit integer \a x, or 0 if all bits are zero.
+ * 32-bit integer <b>x</b>, or 0 if all bits are zero.
  */
 LELY_UTIL_BITS_INLINE int ffs32(uint32_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first zero bit in the unsigned
- * 32-bit integer \a x, or 0 if all bits are set.
+ * 32-bit integer <b>x</b>, or 0 if all bits are set.
  */
 LELY_UTIL_BITS_INLINE int ffz32(uint32_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first set bit in the unsigned
- * 64-bit integer \a x, or 0 if all bits are zero.
+ * 64-bit integer <b>x</b>, or 0 if all bits are zero.
  */
 LELY_UTIL_BITS_INLINE int ffs64(uint64_t x);
 
-/*!
+/**
  * Returns the index (starting from one) of the first zero bit in the unsigned
- * 64-bit integer \a x, or 0 if all bits are set.
+ * 64-bit integer <b>x</b>, or 0 if all bits are set.
  */
 LELY_UTIL_BITS_INLINE int ffz64(uint64_t x);
 
-//! Returns the parity of the unsigned 8-bit integer \a x.
+/// Returns the parity of the unsigned 8-bit integer <b>x</b>.
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
 LELY_UTIL_BITS_INLINE int parity8(uint8_t x);
 #else
 LELY_UTIL_EXTERN int parity8(uint8_t x);
 #endif
 
-//! Returns the parity of the unsigned 16-bit integer \a x.
+/// Returns the parity of the unsigned 16-bit integer <b>x</b>.
 LELY_UTIL_BITS_INLINE int parity16(uint16_t x);
 
-//! Returns the parity of the unsigned 32-bit integer \a x.
+/// Returns the parity of the unsigned 32-bit integer <b>x</b>.
 LELY_UTIL_BITS_INLINE int parity32(uint32_t x);
 
-//! Returns the parity of the unsigned 64-bit integer \a x.
+/// Returns the parity of the unsigned 64-bit integer <b>x</b>.
 LELY_UTIL_BITS_INLINE int parity64(uint64_t x);
 
-/*!
+/**
  * Returns the population count (the number of set bits) in the unsigned 8-bit
- * integer \a x.
+ * integer <b>x</b>.
  */
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
 LELY_UTIL_BITS_INLINE int popcount8(uint8_t x);
@@ -181,46 +228,46 @@ LELY_UTIL_BITS_INLINE int popcount8(uint8_t x);
 LELY_UTIL_EXTERN int popcount8(uint8_t x);
 #endif
 
-/*!
+/**
  * Returns the population count (the number of set bits) in the unsigned 16-bit
- * integer \a x.
+ * integer <b>x</b>.
  */
 LELY_UTIL_BITS_INLINE int popcount16(uint16_t x);
 
-/*!
+/**
  * Returns the population count (the number of set bits) in the unsigned 32-bit
- * integer \a x.
+ * integer <b>x</b>.
  */
 LELY_UTIL_BITS_INLINE int popcount32(uint32_t x);
 
-/*!
+/**
  * Returns the population count (the number of set bits) in the unsigned 64-bit
- * integer \a x.
+ * integer <b>x</b>.
  */
 LELY_UTIL_BITS_INLINE int popcount64(uint64_t x);
 
-//! Rotates the 8-bit unsigned integer \a x left by \a n bits.
+/// Rotates the 8-bit unsigned integer <b>x</b> left by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint8_t rol8(uint8_t x, unsigned int n);
 
-//! Rotates the 8-bit unsigned integer \a x right by \a n bits.
+/// Rotates the 8-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint8_t ror8(uint8_t x, unsigned int n);
 
-//! Rotates the 16-bit unsigned integer \a x left by \a n bits.
+/// Rotates the 16-bit unsigned integer <b>x</b> left by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint16_t rol16(uint16_t x, unsigned int n);
 
-//! Rotates the 16-bit unsigned integer \a x right by \a n bits.
+/// Rotates the 16-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint16_t ror16(uint16_t x, unsigned int n);
 
-//! Rotates the 32-bit unsigned integer \a x left by \a n bits.
+/// Rotates the 32-bit unsigned integer <b>x</b> left by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint32_t rol32(uint32_t x, unsigned int n);
 
-//! Rotates the 32-bit unsigned integer \a x right by \a n bits.
+/// Rotates the 32-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint32_t ror32(uint32_t x, unsigned int n);
 
-//! Rotates the 64-bit unsigned integer \a x left by \a n bits.
+/// Rotates the 64-bit unsigned integer <b>x</b> left by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint64_t rol64(uint64_t x, unsigned int n);
 
-//! Rotates the 64-bit unsigned integer \a x right by \a n bits.
+/// Rotates the 64-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint64_t ror64(uint64_t x, unsigned int n);
 
 LELY_UTIL_BITS_INLINE uint16_t
@@ -640,4 +687,4 @@ ror64(uint64_t x, unsigned int n)
 }
 #endif
 
-#endif // LELY_UTIL_BITS_H_
+#endif // !LELY_UTIL_BITS_H_

@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the CANopen type definitions. See lely/co/type.h for the C
  * interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,16 +34,16 @@
 
 namespace lely {
 
-//! A class template mapping CANopen types to C++ types.
+/// A class template mapping CANopen types to C++ types.
 template <co_unsigned16_t N, class T>
 struct co_type_traits {
-	//! The CANopen object index of the type definition.
+	/// The CANopen object index of the type definition.
 	static const co_unsigned16_t index = N;
-	//! The C++ type.
+	/// The C++ type.
 	typedef T type;
 };
 
-//! A class template mapping CANopen types to C++ types.
+/// A class template mapping CANopen types to C++ types.
 template <co_unsigned16_t N> struct co_type_traits_N;
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
@@ -53,7 +53,7 @@ template <co_unsigned16_t N> struct co_type_traits_N;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
 
-//! A class template mapping CANopen types to C++ types.
+/// A class template mapping CANopen types to C++ types.
 template <class T> struct co_type_traits_T;
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \

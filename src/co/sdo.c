@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the Service Data Object (SDO) functions.
  *
- * \see lely/co/sdo.h
+ * @see lely/co/sdo.h
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,24 +33,24 @@
 
 #include <assert.h>
 
-/*!
+/**
  * Copies the next segment of the specified CANopen SDO download request to the
  * internal buffer.
  *
- * \param req    a pointer to a CANopen SDO download request.
- * \param pptr   the address of a pointer which, on success, points to the first
+ * @param req    a pointer to a CANopen SDO download request.
+ * @param pptr   the address of a pointer which, on success, points to the first
  *               byte in the buffer (can be NULL).
- * \param pnbyte the address of a value which, on success, contains the total
+ * @param pnbyte the address of a value which, on success, contains the total
  *               number of bytes in the buffer (can be NULL).
  *
- * \returns 1 if all segments have been copied, 0 if one or more segments
+ * @returns 1 if all segments have been copied, 0 if one or more segments
  * remain, or -1 on error. In the latter case, the error number can be obtained
- * with `get_errnum()`.
+ * with get_errc().
  */
 static int co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr,
 		size_t *pnbyte);
 
-//! Constructs a CANopen SDO upload request from its internal buffer.
+/// Constructs a CANopen SDO upload request from its internal buffer.
 static void co_sdo_req_up_buf(struct co_sdo_req *req);
 
 LELY_CO_EXPORT const char *

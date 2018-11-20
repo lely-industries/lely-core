@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the network management (NMT) functions.
  *
- * \see lely/co/nmt.h
+ * @see lely/co/nmt.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,44 +53,44 @@
 #include <stdlib.h>
 
 struct __co_nmt_state;
-//! An opaque CANopen NMT state type.
+/// An opaque CANopen NMT state type.
 typedef const struct __co_nmt_state co_nmt_state_t;
 
 #ifndef LELY_NO_CO_MASTER
-//! A struct containing the state of an NMT slave.
+/// A struct containing the state of an NMT slave.
 struct co_nmt_slave {
-	//! A pointer to the NMT master service.
+	/// A pointer to the NMT master service.
 	co_nmt_t *nmt;
-	/*!
+	/**
 	 * A pointer to the CAN frame receiver for the boot-up event and node
 	 * guarding messages.
 	 */
 	can_recv_t *recv;
-	//! A pointer to the CAN timer for node guarding.
+	/// A pointer to the CAN timer for node guarding.
 	can_timer_t *timer;
-	//! The NMT slave assignment (object 1F81).
+	/// The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
-	//! The expected state of the slave (excluding the toggle bit).
+	/// The expected state of the slave (excluding the toggle bit).
 	co_unsigned8_t est;
-	//! The received state of the slave (including the toggle bit).
+	/// The received state of the slave (including the toggle bit).
 	co_unsigned8_t rst;
-	//! The error status of the 'boot slave' process.
+	/// The error status of the 'boot slave' process.
 	char es;
-	//! A pointer to the NMT 'boot slave' service.
+	/// A pointer to the NMT 'boot slave' service.
 	co_nmt_boot_t *boot;
-	//! A pointer to the NMT 'update configuration' service.
+	/// A pointer to the NMT 'update configuration' service.
 	co_nmt_cfg_t *cfg;
-	//! A pointer to the NMT 'configuration request' confirmation function.
+	/// A pointer to the NMT 'configuration request' confirmation function.
 	co_nmt_cfg_con_t *cfg_con;
-	//! A pointer to user-specified data for #cfg_con.
+	/// A pointer to user-specified data for #cfg_con.
 	void *cfg_data;
-	//! The guard time (in milliseconds).
+	/// The guard time (in milliseconds).
 	co_unsigned16_t gt;
-	//! The lifetime factor.
+	/// The lifetime factor.
 	co_unsigned8_t ltf;
-	//! The number of unanswered node guarding RTRs.
+	/// The number of unanswered node guarding RTRs.
 	co_unsigned8_t rtr;
-	/*!
+	/**
 	 * Indicates whether a node guarding error occurred (#CO_NMT_EC_OCCURRED
 	 * or #CO_NMT_EC_RESOLVED).
 	 */
@@ -99,323 +99,323 @@ struct co_nmt_slave {
 };
 #endif
 
-//! A CANopen NMT master/slave service.
+/// A CANopen NMT master/slave service.
 struct __co_nmt {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! The pending node-ID.
+	/// The pending node-ID.
 	co_unsigned8_t id;
-	//! The concise DCF of the application parameters.
+	/// The concise DCF of the application parameters.
 	void *dcf_node;
-	//! The concise DCF of the communication parameters.
+	/// The concise DCF of the communication parameters.
 	void *dcf_comm;
-	//! The current state.
+	/// The current state.
 	co_nmt_state_t *state;
-	//! The NMT service manager.
+	/// The NMT service manager.
 	struct co_nmt_srv srv;
-	//! The NMT startup value (object 1F80).
+	/// The NMT startup value (object 1F80).
 	co_unsigned32_t startup;
 #ifndef LELY_NO_CO_MASTER
-	//! A flag specifying whether the NMT service is a master or a slave.
+	/// A flag specifying whether the NMT service is a master or a slave.
 	int master;
 #endif
-	//! A pointer to the CAN frame receiver for NMT messages.
+	/// A pointer to the CAN frame receiver for NMT messages.
 	can_recv_t *recv_000;
-	//! A pointer to the NMT command indication function.
+	/// A pointer to the NMT command indication function.
 	co_nmt_cs_ind_t *cs_ind;
-	//! A pointer to user-specified data for #cs_ind.
+	/// A pointer to user-specified data for #cs_ind.
 	void *cs_data;
-	//! A pointer to the CAN frame receiver for NMT error control messages.
+	/// A pointer to the CAN frame receiver for NMT error control messages.
 	can_recv_t *recv_700;
 #ifndef LELY_NO_CO_MASTER
-	//! A pointer to the node guarding event indication function.
+	/// A pointer to the node guarding event indication function.
 	co_nmt_ng_ind_t *ng_ind;
-	//! A pointer to user-specified data for #ng_ind.
+	/// A pointer to user-specified data for #ng_ind.
 	void *ng_data;
 #endif
-	/*!
+	/**
 	 * A pointer to the CAN timer for life guarding or heartbeat production.
 	 */
 	can_timer_t *ec_timer;
-	//! The state of the NMT service (including the toggle bit).
+	/// The state of the NMT service (including the toggle bit).
 	co_unsigned8_t st;
-	//! The guard time (in milliseconds).
+	/// The guard time (in milliseconds).
 	co_unsigned16_t gt;
-	//! The lifetime factor.
+	/// The lifetime factor.
 	co_unsigned8_t ltf;
-	/*!
+	/**
 	 * Indicates whether a life guarding error occurred (#CO_NMT_EC_OCCURRED
 	 * or #CO_NMT_EC_RESOLVED).
 	 */
 	int lg_state;
-	//! A pointer to the life guarding event indication function.
+	/// A pointer to the life guarding event indication function.
 	co_nmt_lg_ind_t *lg_ind;
-	//! A pointer to user-specified data for #lg_ind.
+	/// A pointer to user-specified data for #lg_ind.
 	void *lg_data;
-	//! The producer heartbeat time (in milliseconds).
+	/// The producer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
-	//! An array of pointers to the heartbeat consumers.
+	/// An array of pointers to the heartbeat consumers.
 	co_nmt_hb_t **hbs;
-	//! The number of heartbeat consumers.
+	/// The number of heartbeat consumers.
 	co_unsigned8_t nhb;
-	//! A pointer to the heartbeat event indication function.
+	/// A pointer to the heartbeat event indication function.
 	co_nmt_hb_ind_t *hb_ind;
-	//! A pointer to user-specified data for #hb_ind.
+	/// A pointer to user-specified data for #hb_ind.
 	void *hb_data;
-	//! A pointer to the state change event indication function.
+	/// A pointer to the state change event indication function.
 	co_nmt_st_ind_t *st_ind;
-	//! A pointer to user-specified data for #st_ind.
+	/// A pointer to user-specified data for #st_ind.
 	void *st_data;
 #ifndef LELY_NO_CO_MASTER
-	//! A pointer to the CAN frame buffer for NMT messages.
+	/// A pointer to the CAN frame buffer for NMT messages.
 	struct can_buf buf;
-	//! The time at which the next NMT message may be sent.
+	/// The time at which the next NMT message may be sent.
 	struct timespec inhibit;
-	//! A pointer to the CAN timer for sending buffered NMT messages.
+	/// A pointer to the CAN timer for sending buffered NMT messages.
 	can_timer_t *cs_timer;
 #ifndef LELY_NO_CO_LSS
-	//! A pointer to the LSS request function.
+	/// A pointer to the LSS request function.
 	co_nmt_lss_req_t *lss_req;
-	//! A pointer to user-specified data for #lss_req.
+	/// A pointer to user-specified data for #lss_req.
 	void *lss_data;
 #endif
-	/*!
+	/**
 	 * A flag indicating if the startup procedure was halted because of a
 	 * mandatory slave boot failure.
 	 */
 	int halt;
-	//! An array containing the state of each NMT slave.
+	/// An array containing the state of each NMT slave.
 	struct co_nmt_slave slaves[CO_NUM_NODES];
-	/*!
+	/**
 	 * The default SDO timeout (in milliseconds) used during the NMT
 	 * 'boot slave' and 'check configuration' processes.
 	 */
 	int timeout;
-	//! A pointer to the NMT 'boot slave' indication function.
+	/// A pointer to the NMT 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
-	//! A pointer to user-specified data for #boot_ind.
+	/// A pointer to user-specified data for #boot_ind.
 	void *boot_data;
-	//! A pointer to the NMT 'configuration request' indication function.
+	/// A pointer to the NMT 'configuration request' indication function.
 	co_nmt_cfg_ind_t *cfg_ind;
-	//! A pointer to user-specified data for #cfg_ind.
+	/// A pointer to user-specified data for #cfg_ind.
 	void *cfg_data;
-	//! A pointer to the SDO download progress indication function.
+	/// A pointer to the SDO download progress indication function.
 	co_nmt_sdo_ind_t *dn_ind;
-	//! A pointer to user-specified data for #dn_ind.
+	/// A pointer to user-specified data for #dn_ind.
 	void *dn_data;
-	//! A pointer to the SDO upload progress indication function.
+	/// A pointer to the SDO upload progress indication function.
 	co_nmt_sdo_ind_t *up_ind;
-	//! A pointer to user-specified data for #up_ind.
+	/// A pointer to user-specified data for #up_ind.
 	void *up_data;
 #endif
-	//! A pointer to the SYNC indication function.
+	/// A pointer to the SYNC indication function.
 	co_nmt_sync_ind_t *sync_ind;
-	//! A pointer to user-specified data for #sync_ind.
+	/// A pointer to user-specified data for #sync_ind.
 	void *sync_data;
 };
 
-/*!
+/**
  * The download indication function for CANopen object 100C (Guard time).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for CANopen object 100D (Life time factor).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for CANopen object 1016 (Consumer heartbeat
  * time).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for CANopen object 1017 (Producer heartbeat
  * time).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1F25
  * (Configuration request).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 #endif
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1F80
  * (NMT startup).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1F80
  * (Request NMT).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 #endif
 
-//! The CAN receive callback function for NMT messages. \see can_recv_func_t
+/// The CAN receive callback function for NMT messages. @see can_recv_func_t
 static int co_nmt_recv_000(const struct can_msg *msg, void *data);
 
-/*!
+/**
  * The CAN receive callback function for NMT error control (node guarding RTR)
  * messages. In case of an NMT master, this function receives and processes the
  * boot-up events (see Fig. 13 in CiA 302-2 version 4.1.0).
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_nmt_recv_700(const struct can_msg *msg, void *data);
 
 #ifndef LELY_NO_CO_MASTER
-//! The CAN timer callback function for node guarding. \see can_timer_func_t
+/// The CAN timer callback function for node guarding. @see can_timer_func_t
 static int co_nmt_ng_timer(const struct timespec *tp, void *data);
 #endif
 
-/*!
+/**
  * The CAN timer callback function for life guarding or heartbeat production.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_nmt_ec_timer(const struct timespec *tp, void *data);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The CAN timer callback function for sending buffered NMT messages.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_nmt_cs_timer(const struct timespec *tp, void *data);
 #endif
 
-/*!
+/**
  * The indication function for state change events.
  *
- * \param nmt a pointer to an NMT master/slave service.
- * \param id  the node-ID (in the range [1..127]).
- * \param st  the state of the node.
+ * @param nmt a pointer to an NMT master/slave service.
+ * @param id  the node-ID (in the range [1..127]).
+ * @param st  the state of the node.
  */
 static void co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
 
 #ifndef LELY_NO_CO_MASTER
-//! The default node guarding event handler. \see co_nmt_ng_ind_t
+/// The default node guarding event handler. @see co_nmt_ng_ind_t
 static void default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 #endif
 
-//! The default life guarding event handler. \see co_nmt_lg_ind_t
+/// The default life guarding event handler. @see co_nmt_lg_ind_t
 static void default_lg_ind(co_nmt_t *nmt, int state, void *data);
 
-//! The default heartbeat event handler. \see co_nmt_hb_ind_t
+/// The default heartbeat event handler. @see co_nmt_hb_ind_t
 static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 		int reason, void *data);
 
-//! The default state change event handler. \see co_nmt_st_ind_t
+/// The default state change event handler. @see co_nmt_st_ind_t
 static void default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 		void *data);
 
 #ifndef LELY_NO_CO_MASTER
 
-//! The SDO download progress indication function. \see co_csdo_ind_t
+/// The SDO download progress indication function. @see co_csdo_ind_t
 static void co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 
-//! The SDO upload progress indication function. \see co_csdo_ind_t
+/// The SDO upload progress indication function. @see co_csdo_ind_t
 static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 
 #endif
 
-/*!
+/**
  * Enters the specified state of an NMT master/slave service and invokes the
  * exit and entry functions.
  */
 static void co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next);
 
-/*!
+/**
  * Invokes the 'NMT command received' transition function of the current state
  * of an NMT master/slave service.
  *
- * \param nmt a pointer to an NMT master/slave service.
- * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
+ * @param nmt a pointer to an NMT master/slave service.
+ * @param cs  the NMT command specifier (one of #CO_NMT_CS_START,
  *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP, #CO_NMT_CS_RESET_NODE or
  *            #CO_NMT_CS_RESET_COMM).
  */
 static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * Invokes the 'boot slave completed' transition function of the current state
  * of an NMT master service.
  *
- * \param nmt a pointer to an NMT master service.
- * \param id  the node-ID of the slave.
- * \param st  the state of the node (including the toggle bit).
- * \param es  the error status (in the range ['A'..'O'], or 0 on success).
+ * @param nmt a pointer to an NMT master service.
+ * @param id  the node-ID of the slave.
+ * @param st  the state of the node (including the toggle bit).
+ * @param es  the error status (in the range ['A'..'O'], or 0 on success).
  */
 static inline void co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es);
 #endif
 
-//! A CANopen NMT state.
+/// A CANopen NMT state.
 struct __co_nmt_state {
-	//! A pointer to the function invoked when a new state is entered.
+	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_state_t *(*on_enter)(co_nmt_t *nmt);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an NMT command is
 	 * received.
 	 *
-	 * \param nmt a pointer to an NMT master/slave service.
-	 * \param cs  the NMT command specifier (one of #CO_NMT_CS_START,
+	 * @param nmt a pointer to an NMT master/slave service.
+	 * @param cs  the NMT command specifier (one of #CO_NMT_CS_START,
 	 *            #CO_NMT_CS_STOP, #CO_NMT_CS_ENTER_PREOP,
 	 *            #CO_NMT_CS_RESET_NODE or #CO_NMT_CS_RESET_COMM).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_state_t *(*on_cs)(co_nmt_t *nmt, co_unsigned8_t cs);
 #ifndef LELY_NO_CO_MASTER
-	/*!
+	/**
 	 * A pointer to the transition function invoked when an 'boot slave'
 	 * process completes.
 	 *
-	 * \param nmt a pointer to an NMT master service.
-	 * \param id  the node-ID of the slave.
-	 * \param st  the state of the node (including the toggle bit).
-	 * \param es  the error status (in the range ['A'..'O'], or 0 on
+	 * @param nmt a pointer to an NMT master service.
+	 * @param id  the node-ID of the slave.
+	 * @param st  the state of the node (including the toggle bit).
+	 * @param es  the error status (in the range ['A'..'O'], or 0 on
 	 *            success).
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_nmt_state_t *(*on_boot)(co_nmt_t *nmt, co_unsigned8_t id,
 			co_unsigned8_t st, char es);
 #endif
-	//! A pointer to the function invoked when the current state is left.
+	/// A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_nmt_t *nmt);
 };
 
@@ -423,66 +423,66 @@ struct __co_nmt_state {
 	static co_nmt_state_t *const name = &(co_nmt_state_t){ __VA_ARGS__ };
 
 #ifndef LELY_NO_CO_MASTER
-//! The default 'boot slave completed' transition function.
+/// The default 'boot slave completed' transition function.
 static co_nmt_state_t *co_nmt_default_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es);
 #endif
 
-//! The 'NMT command received' transition function of the 'initializing' state.
+/// The 'NMT command received' transition function of the 'initializing' state.
 static co_nmt_state_t *co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-//! The 'initializing' state.
+/// The 'initializing' state.
 LELY_CO_DEFINE_STATE(co_nmt_init_state,
 	.on_cs = &co_nmt_init_on_cs
 )
 
-//! The entry function of the 'reset application' state.
+/// The entry function of the 'reset application' state.
 static co_nmt_state_t *co_nmt_reset_node_on_enter(co_nmt_t *nmt);
 
-//! The NMT 'reset application' state.
+/// The NMT 'reset application' state.
 LELY_CO_DEFINE_STATE(co_nmt_reset_node_state,
 	.on_enter = &co_nmt_reset_node_on_enter
 )
 
-//! The entry function of the 'reset communication' state.
+/// The entry function of the 'reset communication' state.
 static co_nmt_state_t *co_nmt_reset_comm_on_enter(co_nmt_t *nmt);
 
-/*!
+/**
  * The 'NMT command received' transition function of the 'reset communication'
  * state.
  */
 static co_nmt_state_t *co_nmt_reset_comm_on_cs(co_nmt_t *nmt,
 		co_unsigned8_t cs);
 
-//! The NMT 'reset communication' state.
+/// The NMT 'reset communication' state.
 LELY_CO_DEFINE_STATE(co_nmt_reset_comm_state,
 	.on_enter = &co_nmt_reset_comm_on_enter,
 	.on_cs = &co_nmt_reset_comm_on_cs
 )
 
-//! The entry function of the 'boot-up' state.
+/// The entry function of the 'boot-up' state.
 static co_nmt_state_t *co_nmt_bootup_on_enter(co_nmt_t *nmt);
 
-//! The 'NMT command received' transition function of the 'boot-up' state.
+/// The 'NMT command received' transition function of the 'boot-up' state.
 static co_nmt_state_t *co_nmt_bootup_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-//! The NMT 'boot-up' state.
+/// The NMT 'boot-up' state.
 LELY_CO_DEFINE_STATE(co_nmt_bootup_state,
 	.on_enter = &co_nmt_bootup_on_enter,
 	.on_cs = &co_nmt_bootup_on_cs
 )
 
-//! The entry function of the 'pre-operational' state.
+/// The entry function of the 'pre-operational' state.
 static co_nmt_state_t *co_nmt_preop_on_enter(co_nmt_t *nmt);
 
-/*!
+/**
  * The 'NMT command received' transition function of the 'pre-operational'
  * state.
  */
 static co_nmt_state_t *co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * The 'boot slave completed' transition function of the 'pre-operational'
  * state.
  */
@@ -490,7 +490,7 @@ static co_nmt_state_t *co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es);
 #endif
 
-//! The NMT 'pre-operational' state.
+/// The NMT 'pre-operational' state.
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 	.on_enter = &co_nmt_preop_on_enter,
@@ -504,13 +504,13 @@ LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 )
 #endif
 
-//! The entry function of the 'operational' state.
+/// The entry function of the 'operational' state.
 static co_nmt_state_t *co_nmt_start_on_enter(co_nmt_t *nmt);
 
-//! The 'NMT command received' transition function of the 'operational' state.
+/// The 'NMT command received' transition function of the 'operational' state.
 static co_nmt_state_t *co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-//! The NMT 'operational' state.
+/// The NMT 'operational' state.
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_start_state,
 	.on_enter = &co_nmt_start_on_enter,
@@ -524,13 +524,13 @@ LELY_CO_DEFINE_STATE(co_nmt_start_state,
 )
 #endif
 
-//! The entry function of the 'stopped' state.
+/// The entry function of the 'stopped' state.
 static co_nmt_state_t *co_nmt_stop_on_enter(co_nmt_t *nmt);
 
-//! The 'NMT command received' transition function of the 'stopped' state.
+/// The 'NMT command received' transition function of the 'stopped' state.
 static co_nmt_state_t *co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-//! The NMT 'stopped' state.
+/// The NMT 'stopped' state.
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 	.on_enter = &co_nmt_stop_on_enter,
@@ -546,77 +546,77 @@ LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 
 #undef LELY_CO_DEFINE_STATE
 
-//! The NMT startup procedure (see Fig. 1 & 2 in CiA 302-2 version 4.1.0).
+/// The NMT startup procedure (see Fig. 1 & 2 in CiA 302-2 version 4.1.0).
 static co_nmt_state_t *co_nmt_startup(co_nmt_t *nmt);
 
 #ifndef LELY_NO_CO_MASTER
-//! The NMT master startup procedure.
+/// The NMT master startup procedure.
 static co_nmt_state_t *co_nmt_startup_master(co_nmt_t *nmt);
 #endif
 
-//! The NMT slave startup procedure.
+/// The NMT slave startup procedure.
 static co_nmt_state_t *co_nmt_startup_slave(co_nmt_t *nmt);
 
-//! Initializes the error control services. \see co_nmt_ec_fini()
+/// Initializes the error control services. @see co_nmt_ec_fini()
 static void co_nmt_ec_init(co_nmt_t *nmt);
 
-//! Finalizes the error control services. \see co_nmt_ec_init()
+/// Finalizes the error control services. @see co_nmt_ec_init()
 static void co_nmt_ec_fini(co_nmt_t *nmt);
 
-/*!
+/**
  * Updates and (de)activates the life guarding or heartbeat production services.
  * This function is invoked by the download indication functions when object
  * 100C (Guard time), 100D (Life time factor) or 1017 (Producer heartbeat time)
  * is updated.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_ec_update(co_nmt_t *nmt);
 
-/*!
+/**
  * Sends an NMT error control response message.
  *
- * \param nmt a pointer to an NMT master/slave service.
- * \param st  the node state and toggle bit.
+ * @param nmt a pointer to an NMT master/slave service.
+ * @param st  the node state and toggle bit.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_ec_send_res(co_nmt_t *nmt, co_unsigned8_t st);
 
-//! Initializes the heartbeat consumer services. \see co_nmt_hb_fini()
+/// Initializes the heartbeat consumer services. @see co_nmt_hb_fini()
 static void co_nmt_hb_init(co_nmt_t *nmt);
 
-//! Finalizes the heartbeat consumer services. \see co_nmt_hb_init()
+/// Finalizes the heartbeat consumer services. @see co_nmt_hb_init()
 static void co_nmt_hb_fini(co_nmt_t *nmt);
 
 #ifndef LELY_NO_CO_MASTER
 
-//! Initializes NMT slave management. \see co_nmt_slaves_fini()
+/// Initializes NMT slave management. @see co_nmt_slaves_fini()
 static void co_nmt_slaves_init(co_nmt_t *nmt);
 
-//! Finalizes NMT slave management. \see co_nmt_slaves_fini()
+/// Finalizes NMT slave management. @see co_nmt_slaves_fini()
 static void co_nmt_slaves_fini(co_nmt_t *nmt);
 
-/*!
+/**
  * Starts the NMT 'boot slave' processes.
  *
- * \returns 1 if at least one mandatory slave is booting, 0 if there are no
+ * @returns 1 if at least one mandatory slave is booting, 0 if there are no
  * mandatory slaves, or -1 if an error occurred for a mandatory slave.
  */
 static int co_nmt_slaves_boot(co_nmt_t *nmt);
 
 #endif
 
-//! The services enabled in the NMT 'pre-operational' state.
+/// The services enabled in the NMT 'pre-operational' state.
 #define CO_NMT_PREOP_SRV \
 	(CO_NMT_STOP_SRV | CO_NMT_SRV_SDO | CO_NMT_SRV_SYNC | CO_NMT_SRV_TIME \
 			| CO_NMT_SRV_EMCY)
 
-//! The services enabled in the NMT 'operational' state.
+/// The services enabled in the NMT 'operational' state.
 #define CO_NMT_START_SRV \
 	(CO_NMT_PREOP_SRV | CO_NMT_SRV_PDO)
 
-//! The services enabled in the NMT 'stopped' state.
+/// The services enabled in the NMT 'stopped' state.
 #define CO_NMT_STOP_SRV	CO_NMT_SRV_LSS
 
 LELY_CO_EXPORT co_unsigned32_t

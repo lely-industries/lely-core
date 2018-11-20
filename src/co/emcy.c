@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the emergency (EMCY) object functions.
  *
- * \see lely/co/emcy.h
+ * @see lely/co/emcy.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,151 +38,151 @@
 #include <assert.h>
 #include <stdlib.h>
 
-//! An EMCY message.
+/// An EMCY message.
 struct co_emcy_msg {
-	//! The emergency error code.
+	/// The emergency error code.
 	co_unsigned16_t eec;
-	//! The error register.
+	/// The error register.
 	co_unsigned8_t er;
 };
 
-//! A remote CANopen EMCY producer node.
+/// A remote CANopen EMCY producer node.
 struct co_emcy_node {
-	//! A pointer to the EMCY service.
+	/// A pointer to the EMCY service.
 	co_emcy_t *emcy;
-	//! The node-ID.
+	/// The node-ID.
 	co_unsigned8_t id;
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 };
 
-/*!
+/**
  * Creates a new remote CANopen EMCY producer node.
  *
- * \param emcy a pointer to an EMCY service.
- * \param id   the node-ID.
+ * @param emcy a pointer to an EMCY service.
+ * @param id   the node-ID.
  *
- * \returns a pointer to a new remote node, or NULL on error.
+ * @returns a pointer to a new remote node, or NULL on error.
  *
- * \see co_emcy_node_destroy()
+ * @see co_emcy_node_destroy()
  */
 static struct co_emcy_node *co_emcy_node_create(co_emcy_t *emcy,
 		co_unsigned8_t id);
 
-//! Destroys a remote CANopen EMCY producer node. \see co_emcy_node_create()
+/// Destroys a remote CANopen EMCY producer node. @see co_emcy_node_create()
 static void co_emcy_node_destroy(struct co_emcy_node *node);
 
-/*!
+/**
  * The CAN receive callback function for a remote CANopen EMCY producer node.
  *
- * \see can_recv_func_t
+ * @see can_recv_func_t
  */
 static int co_emcy_node_recv(const struct can_msg *msg, void *data);
 
-//! A CANopen EMCY producer/consumer service.
+/// A CANopen EMCY producer/consumer service.
 struct __co_emcy {
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! A pointer to the error register object.
+	/// A pointer to the error register object.
 	co_sub_t *sub_1001_00;
-	//! A pointer to the pre-defined error field object.
+	/// A pointer to the pre-defined error field object.
 	co_obj_t *obj_1003;
-	//! The number of messages in #msgs.
+	/// The number of messages in #msgs.
 	size_t nmsg;
-	//! An array of EMCY messages. The first element is the most recent.
+	/// An array of EMCY messages. The first element is the most recent.
 	struct co_emcy_msg *msgs;
-	//! The CAN frame buffer.
+	/// The CAN frame buffer.
 	struct can_buf buf;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	//! The time at which the next EMCY message may be sent.
+	/// The time at which the next EMCY message may be sent.
 	struct timespec inhibit;
-	//! An array of pointers to remote nodes.
+	/// An array of pointers to remote nodes.
 	struct co_emcy_node *nodes[CO_NUM_NODES];
-	//! A pointer to the indication function.
+	/// A pointer to the indication function.
 	co_emcy_ind_t *ind;
-	//! A pointer to user-specified data for #ind.
+	/// A pointer to user-specified data for #ind.
 	void *data;
 };
 
-//! The pre-defined error field.
+/// The pre-defined error field.
 struct co_1003 {
-	//! Number of errors.
+	/// Number of errors.
 	co_unsigned8_t n;
-	//! An array of standard error fields.
+	/// An array of standard error fields.
 	co_unsigned32_t ef[0xfe];
 };
 
-/*!
+/**
  * Sets the value of CANopen object 1003 (Pre-defined error field). This
  * function copies the list of active EMCY messages to the array at object 1003.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_emcy_set_1003(co_emcy_t *emcy);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1003
  * (Pre-defined error field).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1014
  * (COB-ID emergency message).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * Sets the value of CANopen object 1028 (Emergency consumer object).
  *
- * \param emcy  a pointer to an EMCY service.
- * \param id    the node-ID.
- * \param cobid the COB-ID of the EMCY object.
+ * @param emcy  a pointer to an EMCY service.
+ * @param id    the node-ID.
+ * @param cobid the COB-ID of the EMCY object.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned32_t cobid);
 
-/*!
+/**
  * The download indication function for (all sub-objects of) CANopen object 1028
  * (Emergency consumer object).
  *
- * \see co_sub_dn_ind_t
+ * @see co_sub_dn_ind_t
  */
 static co_unsigned32_t co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
 		void *data);
 
-/*!
+/**
  * The CAN timer callback function for an EMCY service.
  *
- * \see can_timer_func_t
+ * @see can_timer_func_t
  */
 static int co_emcy_timer(const struct timespec *tp, void *data);
 
-/*!
+/**
  * Adds an EMCY message to the CAN frame buffer and sends it if possible.
  *
- * \param emcy a pointer to an EMCY service.
- * \param eec  the emergency error code.
- * \param er   the error register.
- * \param msef the manufacturer-specific error code (can be NULL).
+ * @param emcy a pointer to an EMCY service.
+ * @param eec  the emergency error code.
+ * @param er   the error register.
+ * @param msef the manufacturer-specific error code (can be NULL).
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec,
 		co_unsigned8_t er, const uint8_t msef[5]);
 
-/*!
+/**
  * Sends any messages in the CAN frame buffer unless the inhibit time has not
  * yet elapsed, in which case it sets the CAN timer.
  */

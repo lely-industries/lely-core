@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<stdio.h>` and defines any missing functionality.
  *
- * \copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,27 +56,27 @@ extern "C" {
 
 #if !(_POSIX_C_SOURCE >= 200809L)
 
-/*!
+/**
  * Reads a delimited record from a stream.
  *
- * \param lineptr the address of a pointer to the buffer used for storing the
- *                characters read from \a stream. If *\a lineptr is NULL or the
- *                buffer is too small, a new buffer will be allocated (with
- *                `malloc()` or `realloc()`, respectively) and the address will
- *                be stored in *\a lineptr.
- * \param n       the address of a value containing the size of the buffer at
- *                *\a lineptr. On exit, *\a n contains the actual size of the
- *                buffer.
- * \param delim   the delimiter character.
- * \param stream  a pointer to the input stream.
+ * @param lineptr the address of a pointer to the buffer used for storing the
+ *                characters read from <b>stream</b>. If *<b>lineptr</b> is NULL
+ *                or the buffer is too small, a new buffer will be allocated
+ *                (with `malloc()` or `realloc()`, respectively) and the address
+ *                will be stored in *<b>lineptr</b>.
+ * @param n       the address of a value containing the size of the buffer at
+ *                *<b>lineptr</b>. On exit, *<b>n</b> contains the actual size
+ *                of the buffer.
+ * @param delim   the delimiter character.
+ * @param stream  a pointer to the input stream.
  *
- * \returns the number of characters read (including the delimiter but excluding
+ * @returns the number of characters read (including the delimiter but excluding
  * the terminating null byte), or -1 on error or end-of-file.
  */
 LELY_LIBC_EXTERN ssize_t getdelim(char **lineptr, size_t *n, int delim,
 		FILE *stream);
 
-//! Equivalent to #getdelim(lineptr, n, '\\n', stream).
+/// Equivalent to #getdelim(lineptr, n, '\\n', stream).
 LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 #endif // !(_POSIX_C_SOURCE >= 200809L)
@@ -85,80 +85,84 @@ LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 #if !LELY_HAVE_SNPRINTF
 
-/*!
+/**
  * Equivalent to `printf()`, except that the output is written to a string
  * buffer rather than a stream.
  *
- * \param s      the address of the output buffer. If \a s is not NULL, at most
- *               `n - 1` characters are written, plus a terminating null byte.
- * \param n      the size (in bytes) of the buffer at \a s. If \a n is zero,
- *               nothing is written.
- * \param format a printf-style format string.
- * \param ...    an optional list of arguments to be printed according to
- *               \a format.
+ * @param s      the address of the output buffer. If <b>s</b> is not NULL, at
+ *               most `n - 1` characters are written, plus a terminating null
+ *               byte.
+ * @param n      the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
+ *               zero, nothing is written.
+ * @param format a printf-style format string.
+ * @param ...    an optional list of arguments to be printed according to
+ *               <b>format</b>.
  *
- * \returns the number of characters that would have been written had the
+ * @returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
  * negative number on error.
  *
- * \see vsnprintf()
+ * @see vsnprintf()
  */
 LELY_LIBC_EXTERN int __cdecl snprintf(char *s, size_t n, const char *format,
 		...);
 
-/*!
+/**
  * Equivalent to `vprintf()`, except that the output is written to a string
  * buffer rather than a stream.
  *
- * \param s      the address of the output buffer. If \a s is not NULL, at most
- *               `n - 1` characters are written, plus a terminating null byte.
- * \param n      the size (in bytes) of the buffer at \a s. If \a n is zero,
- *               nothing is written.
- * \param format a printf-style format string.
- * \param arg    the list with arguments to be printed according to \a format.
+ * @param s      the address of the output buffer. If <b>s</b> is not NULL, at
+ *               most `n - 1` characters are written, plus a terminating null
+ *               byte.
+ * @param n      the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
+ *               zero, nothing is written.
+ * @param format a printf-style format string.
+ * @param arg    the list with arguments to be printed according to
+ *               <b>format</b>.
  *
- * \returns the number of characters that would have been written had the
+ * @returns the number of characters that would have been written had the
  * buffer been sufficiently large, not counting the terminating null byte, or a
  * negative number on error.
  *
- * \see snprintf()
+ * @see snprintf()
  */
 LELY_LIBC_EXTERN int __cdecl vsnprintf(char *s, size_t n, const char *format,
 		va_list arg);
 
 #endif // !LELY_HAVE_SNPRINTF
 
-/*!
+/**
  * Equivalent to `sprintf()`, except that it allocates a string large enough to
  * hold the output, including the terminating null byte.
  *
- * \param strp the address of a value which, on success, contains a pointer to
+ * @param strp the address of a value which, on success, contains a pointer to
  *             the allocated string. This pointer SHOULD be passed to `free()`
  *             to release the allocated storage.
- * \param fmt  a printf-style format string.
- * \param ...  an optional list of arguments to be printed according to \a fmt.
+ * @param fmt  a printf-style format string.
+ * @param ...  an optional list of arguments to be printed according to
+ *             <b>fmt</b>.
  *
- * \returns the number of characters written, not counting the terminating null
+ * @returns the number of characters written, not counting the terminating null
  * byte, or a negative number on error.
  *
- * \see vasprintf()
+ * @see vasprintf()
  */
 LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
 
-/*!
+/**
  * Equivalent to `vsprintf()`, except that it allocates a string large enough to
  * hold the output, including the terminating null byte.
  *
- * \param strp the address of a value which, on success, contains a pointer to
+ * @param strp the address of a value which, on success, contains a pointer to
  *             the allocated string. This pointer SHOULD be passed to `free()`
  *             to release the allocated storage.
- * \param fmt  a printf-style format string.
- * \param ap   the list with arguments to be printed according to \a fmt.
+ * @param fmt  a printf-style format string.
+ * @param ap   the list with arguments to be printed according to <b>fmt</b>.
  *
- * \returns the number of characters written, not counting the terminating null
+ * @returns the number of characters written, not counting the terminating null
  * byte, or a negative number on error.
  *
- * \see asprintf()
+ * @see asprintf()
  */
 LELY_LIBC_EXTERN int __cdecl vasprintf(char **strp, const char *fmt,
 		va_list ap);
@@ -169,4 +173,4 @@ LELY_LIBC_EXTERN int __cdecl vasprintf(char **strp, const char *fmt,
 }
 #endif
 
-#endif // LELY_LIBC_STDIO_H_
+#endif // !LELY_LIBC_STDIO_H_

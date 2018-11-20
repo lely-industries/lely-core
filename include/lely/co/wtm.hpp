@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the Wireless Transmission Media (WTM) declarations. See
  * lely/co/wtm.h for the C interface.
  *
- * \copyright 2016 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@
 #include <lely/util/c_type.hpp>
 
 namespace lely { class COWTM; }
-//! An opaque CANopen Wireless Transmission Media (WTM) interface type.
+/// An opaque CANopen Wireless Transmission Media (WTM) interface type.
 typedef lely::COWTM co_wtm_t;
 
 #include <lely/co/wtm.h>
 
 namespace lely {
 
-//! The attributes of #co_wtm_t required by #lely::COWTM.
+/// The attributes of #co_wtm_t required by #lely::COWTM.
 template <>
 struct c_type_traits<__co_wtm> {
 	typedef __co_wtm value_type;
@@ -54,7 +54,7 @@ struct c_type_traits<__co_wtm> {
 	static void fini(pointer p) noexcept { __co_wtm_fini(p); }
 };
 
-//! An opaque CANopen Wireless Transmission Media (WTM) interface type.
+/// An opaque CANopen Wireless Transmission Media (WTM) interface type.
 class COWTM: public incomplete_c_type<__co_wtm> {
 	typedef incomplete_c_type<__co_wtm> c_base;
 public:

@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the utilities library; it contains the time
  * function declarations.
  *
- * \copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,65 +34,74 @@
 extern "C" {
 #endif
 
-//! Adds the time interval *\a inc to the time at \a tp.
+/// Adds the time interval *<b>inc</b> to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_add(struct timespec *tp,
 		const struct timespec *inc);
 
-//! Adds \a sec seconds to the time at \a tp.
+/// Adds <b>sec</b> seconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_add_sec(struct timespec *tp, uint64_t sec);
 
-//! Adds \a msec milliseconds to the time at \a tp.
+/// Adds <b>msec</b> milliseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_add_msec(struct timespec *tp,
 		uint64_t msec);
 
-//! Adds \a usec microseconds to the time at \a tp.
+/// Adds <b>usec</b> microseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_add_usec(struct timespec *tp,
 		uint64_t usec);
 
-//! Adds \a nsec nanoseconds to the time at \a tp.
+/// Adds <b>nsec</b> nanoseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_add_nsec(struct timespec *tp,
 		uint64_t nsec);
 
-//! Subtracts the time interval *\a inc to the time at \a tp.
+/// Subtracts the time interval *<b>inc</b> to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub(struct timespec *tp,
 		const struct timespec *dec);
 
-//! Subtracts \a sec seconds to the time at \a tp.
+/// Subtracts <b>sec</b> seconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_sec(struct timespec *tp, uint64_t sec);
 
-//! Subtracts \a msec milliseconds to the time at \a tp.
+/// Subtracts <b>msec</b> milliseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_msec(struct timespec *tp,
 		uint64_t msec);
 
-//! Subtracts \a usec microseconds to the time at \a tp.
+/// Subtracts <b>usec</b> microseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_usec(struct timespec *tp,
 		uint64_t usec);
 
-//! Subtracts \a nsec nanoseconds to the time at \a tp.
+/// Subtracts <b>nsec</b> nanoseconds to the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_nsec(struct timespec *tp,
 		uint64_t nsec);
 
-//! Returns the time difference (in seconds) between *\a t1 and *\a t2.
+/// Returns the time difference (in seconds) between *<b>t1</b> and *<b>t2</b>.
 LELY_UTIL_TIME_INLINE int64_t timespec_diff_sec(const struct timespec *t1,
 		const struct timespec *t2);
 
-//! Returns the time difference (in milliseconds) between *\a t1 and *\a t2.
+/**
+ * Returns the time difference (in milliseconds) between *<b>t1</b> and
+ * *<b>t2</b>.
+ */
 LELY_UTIL_TIME_INLINE int64_t timespec_diff_msec(const struct timespec *t1,
 		const struct timespec *t2);
 
-//! Returns the time difference (in microseconds) between *\a t1 and *\a t2.
+/**
+ * Returns the time difference (in microseconds) between *<b>t1</b> and
+ * *<b>t2</b>.
+ */
 LELY_UTIL_TIME_INLINE int64_t timespec_diff_usec(const struct timespec *t1,
 		const struct timespec *t2);
 
-//! Returns the time difference (in nanoseconds) between *\a t1 and *\a t2.
+/**
+ * Returns the time difference (in nanoseconds) between *<b>t1</b> and
+ * *<b>t2</b>.
+ */
 LELY_UTIL_TIME_INLINE int64_t timespec_diff_nsec(const struct timespec *t1,
 		const struct timespec *t2);
 
-/*!
+/**
  * Compares two times.
  *
- * \returns an integer greater than, equal to, or less than 0 if *\a p1 is
- * greater than, equal to, or less than *\a p2.
+ * @returns an integer greater than, equal to, or less than 0 if *<b>p1</b> is
+ * greater than, equal to, or less than *<b>p2</b>.
  */
 LELY_UTIL_TIME_INLINE int __cdecl timespec_cmp(const void *p1, const void *p2);
 
@@ -246,4 +255,4 @@ timespec_cmp(const void *p1, const void *p2)
 }
 #endif
 
-#endif // LELY_UTIL_TIME_H_
+#endif // !LELY_UTIL_TIME_H_

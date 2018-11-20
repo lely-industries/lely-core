@@ -1,10 +1,10 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the device description. See lely/co/dev.h for the C interface.
  *
- * \copyright 2018 Lely Industries N.V.
+ * @copyright 2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ struct co_sdev;
 
 namespace lely {
 
-//! The attributes of #co_dev_t required by #lely::CODev.
+/// The attributes of #co_dev_t required by #lely::CODev.
 template <>
 struct c_type_traits<__co_dev> {
 	typedef __co_dev value_type;
@@ -62,7 +62,7 @@ struct c_type_traits<__co_dev> {
 	static void fini(pointer p) noexcept { __co_dev_fini(p); }
 };
 
-//! An opaque CANopen device type.
+/// An opaque CANopen device type.
 class CODev: public incomplete_c_type<__co_dev> {
 	typedef incomplete_c_type<__co_dev> c_base;
 public:

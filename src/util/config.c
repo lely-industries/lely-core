@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the utilities library; it contains the implementation of
  * the configuration functions.
  *
- * \see lely/util/config.h
+ * @see lely/util/config.h
  *
- * \copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,17 +31,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-//! A configuration struct.
+/// A configuration struct.
 struct __config {
-	//! The tree containing the sections.
+	/// The tree containing the sections.
 	struct rbtree tree;
 };
 
-//! A section in a configuration struct.
+/// A section in a configuration struct.
 struct config_section {
-	//! The node of this section in the tree of sections.
+	/// The node of this section in the tree of sections.
 	struct rbnode node;
-	//! The tree containing the entries.
+	/// The tree containing the entries.
 	struct rbtree tree;
 };
 
@@ -55,11 +55,11 @@ static const char *config_section_set(struct rbnode *node, const char *key,
 static void config_section_foreach(struct rbnode *node,
 		config_foreach_func_t *func, void *data);
 
-//! An entry in a configuration section.
+/// An entry in a configuration section.
 struct config_entry {
-	//! The node of this entry in the tree of entries.
+	/// The node of this entry in the tree of entries.
 	struct rbnode node;
-	//! The value of the entry.
+	/// The value of the entry.
 	char *value;
 };
 

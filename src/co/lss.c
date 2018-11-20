@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CANopen library; it contains the implementation of
  * the Layer Setting Services (LSS) and protocols functions.
  *
- * \see lely/co/lss.h
+ * @see lely/co/lss.h
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,413 +36,413 @@
 #include <stdlib.h>
 
 struct __co_lss_state;
-//! An opaque CANopen LSS state type.
+/// An opaque CANopen LSS state type.
 typedef const struct __co_lss_state co_lss_state_t;
 
-//! A CANopen LSS master/slave service.
+/// A CANopen LSS master/slave service.
 struct __co_lss {
-	//! A pointer to an NMT master/slave service.
+	/// A pointer to an NMT master/slave service.
 	co_nmt_t *nmt;
-	//! A pointer to a CAN network interface.
+	/// A pointer to a CAN network interface.
 	can_net_t *net;
-	//! A pointer to a CANopen device.
+	/// A pointer to a CANopen device.
 	co_dev_t *dev;
-	//! A pointer to the current state.
+	/// A pointer to the current state.
 	co_lss_state_t *state;
 #ifndef LELY_NO_CO_MASTER
-	//! A flag specifying whether the LSS service is a master or a slave.
+	/// A flag specifying whether the LSS service is a master or a slave.
 	int master;
 #endif
-	//! A pointer to the CAN frame receiver.
+	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 #ifndef LELY_NO_CO_MASTER
-	//! The timeout (in milliseconds).
+	/// The timeout (in milliseconds).
 	int timeout;
-	//! A pointer to the CAN timer.
+	/// A pointer to the CAN timer.
 	can_timer_t *timer;
 #endif
-	//! The expected command specifier.
+	/// The expected command specifier.
 	co_unsigned8_t cs;
-	//! The LSSPos value.
+	/// The LSSPos value.
 	co_unsigned8_t lsspos;
 #ifndef LELY_NO_CO_MASTER
-	//! The lower bound of the LSS address used during the Slowscan service.
+	/// The lower bound of the LSS address used during the Slowscan service.
 	struct co_id lo;
-	//! The upper bound of the LSS address used during the Slowscan service.
+	/// The upper bound of the LSS address used during the Slowscan service.
 	struct co_id hi;
-	//! The mask used during the Fastscan service.
+	/// The mask used during the Fastscan service.
 	struct co_id mask;
-	//! The least-significant bit being checked during the Fastscan service.
+	/// The least-significant bit being checked during the Fastscan service.
 	co_unsigned8_t bitchk;
-	/*!
+	/**
 	 * The index of the current LSS number being checked during the Fastscan
 	 * service.
 	 */
 	co_unsigned8_t lsssub;
-	//! The received error code.
+	/// The received error code.
 	co_unsigned8_t err;
-	//! The received implementation-specific error code.
+	/// The received implementation-specific error code.
 	co_unsigned8_t spec;
-	//! The received LSS number.
+	/// The received LSS number.
 	co_unsigned32_t lssid;
-	//! The received node-ID.
+	/// The received node-ID.
 	co_unsigned8_t nid;
-	//! The LSS address obtained from the LSS Slowscan or Fastscan service.
+	/// The LSS address obtained from the LSS Slowscan or Fastscan service.
 	struct co_id id;
 #endif
-	//! A pointer to the 'activate bit timing' indication function.
+	/// A pointer to the 'activate bit timing' indication function.
 	co_lss_rate_ind_t *rate_ind;
-	//! A pointer to user-specified data for #rate_ind.
+	/// A pointer to user-specified data for #rate_ind.
 	void *rate_data;
-	//! A pointer to the 'store configuration' indication function.
+	/// A pointer to the 'store configuration' indication function.
 	co_lss_store_ind_t *store_ind;
-	//! A pointer to user-specified data for #store_ind.
+	/// A pointer to user-specified data for #store_ind.
 	void *store_data;
 #ifndef LELY_NO_CO_MASTER
-	//! A pointer to the command indication function.
+	/// A pointer to the command indication function.
 	co_lss_cs_ind_t *cs_ind;
-	//! A pointer to user-specified data for #cs_ind.
+	/// A pointer to user-specified data for #cs_ind.
 	void *cs_data;
-	//! A pointer to the error indication function.
+	/// A pointer to the error indication function.
 	co_lss_err_ind_t *err_ind;
-	//! A pointer to user-specified data for #err_ind.
+	/// A pointer to user-specified data for #err_ind.
 	void *err_data;
-	//! A pointer to the inquire identity indication function.
+	/// A pointer to the inquire identity indication function.
 	co_lss_lssid_ind_t *lssid_ind;
-	//! A pointer to user-specified data for #lssid_ind.
+	/// A pointer to user-specified data for #lssid_ind.
 	void *lssid_data;
-	//! A pointer to the inquire node-ID indication function.
+	/// A pointer to the inquire node-ID indication function.
 	co_lss_nid_ind_t *nid_ind;
-	//! A pointer to user-specified data for #nid_ind.
+	/// A pointer to user-specified data for #nid_ind.
 	void *nid_data;
-	//! A pointer to the identify remote slave indication function.
+	/// A pointer to the identify remote slave indication function.
 	co_lss_scan_ind_t *scan_ind;
-	//! A pointer to user-specified data for #scan_ind.
+	/// A pointer to user-specified data for #scan_ind.
 	void *scan_data;
 #endif
 };
 
-//! The CAN receive callback function for an LSS service. \see can_recv_func_t
+/// The CAN receive callback function for an LSS service. @see can_recv_func_t
 static int co_lss_recv(const struct can_msg *msg, void *data);
 
 #ifndef LELY_NO_CO_MASTER
-//! The CAN timer callback function for an LSS service. \see can_timer_func_t
+/// The CAN timer callback function for an LSS service. @see can_timer_func_t
 static int co_lss_timer(const struct timespec *tp, void *data);
 #endif
 
-/*!
+/**
  * Enters the specified state of an LSS service and invokes the exit and entry
  * functions.
  */
 static void co_lss_enter(co_lss_t *lss, co_lss_state_t *next);
 
-/*!
+/**
  * Invokes the 'CAN frame received' transition function of the current state of
  * an LSS service.
  *
- * \param lss a pointer to an LSS service.
- * \param msg a pointer to the received CAN frame.
+ * @param lss a pointer to an LSS service.
+ * @param msg a pointer to the received CAN frame.
  */
 static inline void co_lss_emit_recv(co_lss_t *lss, const struct can_msg *msg);
 
 #ifndef LELY_NO_CO_MASTER
-/*!
+/**
  * Invokes the 'timeout' transition function of the current state of an LSS
  * service.
  *
- * \param lss a pointer to an LSS service.
- * \param tp  a pointer to the current time.
+ * @param lss a pointer to an LSS service.
+ * @param tp  a pointer to the current time.
  */
 static inline void co_lss_emit_time(co_lss_t *lss, const struct timespec *tp);
 #endif
 
-//! A CANopen LSS state.
+/// A CANopen LSS state.
 struct __co_lss_state {
-	//! A pointer to the function invoked when a new state is entered.
+	/// A pointer to the function invoked when a new state is entered.
 	co_lss_state_t *(*on_enter)(co_lss_t *lss);
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a CAN frame has
 	 * been received.
 	 *
-	 * \param lss a pointer to an LSS service.
-	 * \param msg a pointer to the received CAN frame.
+	 * @param lss a pointer to an LSS service.
+	 * @param msg a pointer to the received CAN frame.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_lss_state_t *(*on_recv)(co_lss_t *lss, const struct can_msg *msg);
 #ifndef LELY_NO_CO_MASTER
-	/*!
+	/**
 	 * A pointer to the transition function invoked when a timeout occurs.
 	 *
-	 * \param lss a pointer to an LSS service.
-	 * \param tp  a pointer to the current time.
+	 * @param lss a pointer to an LSS service.
+	 * @param tp  a pointer to the current time.
 	 *
-	 * \returns a pointer to the next state.
+	 * @returns a pointer to the next state.
 	 */
 	co_lss_state_t *(*on_time)(co_lss_t *lss, const struct timespec *tp);
 #endif
-	//! A pointer to the function invoked when the current state is left.
+	/// A pointer to the function invoked when the current state is left.
 	void (*on_leave)(co_lss_t *lss);
 };
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_lss_state_t *const name = &(co_lss_state_t){ __VA_ARGS__ };
 
-//! The entry function of the 'waiting' state an LSS master or slave.
+/// The entry function of the 'waiting' state an LSS master or slave.
 static co_lss_state_t *co_lss_wait_on_enter(co_lss_t *lss);
 
-//! The 'waiting' state of an LSS master or slave.
+/// The 'waiting' state of an LSS master or slave.
 LELY_CO_DEFINE_STATE(co_lss_wait_state,
 	.on_enter = &co_lss_wait_on_enter
 )
 
-//! The entry function of the 'waiting' state of an LSS slave.
+/// The entry function of the 'waiting' state of an LSS slave.
 static co_lss_state_t *co_lss_wait_slave_on_enter(co_lss_t *lss);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'waiting' state of an LSS
  * slave.
  */
 static co_lss_state_t *co_lss_wait_slave_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'waiting' state of an LSS slave.
+/// The 'waiting' state of an LSS slave.
 LELY_CO_DEFINE_STATE(co_lss_wait_slave_state,
 	.on_enter = &co_lss_wait_slave_on_enter,
 	.on_recv = &co_lss_wait_slave_on_recv
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the 'configuration' state of
  * an LSS slave.
  */
 static co_lss_state_t *co_lss_cfg_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'configuration' state of an LSS slave.
+/// The 'configuration' state of an LSS slave.
 LELY_CO_DEFINE_STATE(co_lss_cfg_state,
 	.on_recv = &co_lss_cfg_on_recv
 )
 
 #ifndef LELY_NO_CO_MASTER
 
-//! The 'CAN frame received' transition function of the command received state.
+/// The 'CAN frame received' transition function of the command received state.
 static co_lss_state_t *co_lss_cs_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the command received state.
+/// The 'timeout' transition function of the command received state.
 static co_lss_state_t *co_lss_cs_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The exit function of the command received state.
+/// The exit function of the command received state.
 static void co_lss_cs_on_leave(co_lss_t *lss);
 
-//! The command received state.
+/// The command received state.
 LELY_CO_DEFINE_STATE(co_lss_cs_state,
 	.on_recv = &co_lss_cs_on_recv,
 	.on_time = &co_lss_cs_on_time,
 	.on_leave = &co_lss_cs_on_leave
 )
 
-//! The 'CAN frame received' transition function of the error received state.
+/// The 'CAN frame received' transition function of the error received state.
 static co_lss_state_t *co_lss_err_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the error received state.
+/// The 'timeout' transition function of the error received state.
 static co_lss_state_t *co_lss_err_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The exit function of the error received state.
+/// The exit function of the error received state.
 static void co_lss_err_on_leave(co_lss_t *lss);
 
-//! The error received state.
+/// The error received state.
 LELY_CO_DEFINE_STATE(co_lss_err_state,
 	.on_recv = &co_lss_err_on_recv,
 	.on_time = &co_lss_err_on_time,
 	.on_leave = &co_lss_err_on_leave
 )
 
-//! The 'CAN frame received' transition function of the inquire identity state.
+/// The 'CAN frame received' transition function of the inquire identity state.
 static co_lss_state_t *co_lss_lssid_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the inquire identity state.
+/// The 'timeout' transition function of the inquire identity state.
 static co_lss_state_t *co_lss_lssid_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The exit function of the inquire identity state.
+/// The exit function of the inquire identity state.
 static void co_lss_lssid_on_leave(co_lss_t *lss);
 
-//! The inquire identity state.
+/// The inquire identity state.
 LELY_CO_DEFINE_STATE(co_lss_lssid_state,
 	.on_recv = &co_lss_lssid_on_recv,
 	.on_time = &co_lss_lssid_on_time,
 	.on_leave = &co_lss_lssid_on_leave
 )
 
-//! The 'CAN frame received' transition function of the inquire node-ID state.
+/// The 'CAN frame received' transition function of the inquire node-ID state.
 static co_lss_state_t *co_lss_nid_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the inquire node-ID state.
+/// The 'timeout' transition function of the inquire node-ID state.
 static co_lss_state_t *co_lss_nid_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The exit function of the inquire node-ID state.
+/// The exit function of the inquire node-ID state.
 static void co_lss_nid_on_leave(co_lss_t *lss);
 
-//! The inquire node-ID state.
+/// The inquire node-ID state.
 LELY_CO_DEFINE_STATE(co_lss_nid_state,
 	.on_recv = &co_lss_nid_on_recv,
 	.on_time = &co_lss_nid_on_time,
 	.on_leave = &co_lss_nid_on_leave
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the Slowscan initialization
  * state.
  */
 static co_lss_state_t *co_lss_slowscan_init_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Slowscan initialization state.
+/// The 'timeout' transition function of the Slowscan initialization state.
 static co_lss_state_t *co_lss_slowscan_init_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The Slowscan initialization state.
+/// The Slowscan initialization state.
 LELY_CO_DEFINE_STATE(co_lss_slowscan_init_state,
 	.on_recv = &co_lss_slowscan_init_on_recv,
 	.on_time = &co_lss_slowscan_init_on_time
 )
 
-//! The entry function of the Slowscan scanning state.
+/// The entry function of the Slowscan scanning state.
 static co_lss_state_t *co_lss_slowscan_scan_on_enter(co_lss_t *lss);
 
-//! The 'CAN frame received' transition function of the Slowscan scanning state.
+/// The 'CAN frame received' transition function of the Slowscan scanning state.
 static co_lss_state_t *co_lss_slowscan_scan_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Slowscan scanning state.
+/// The 'timeout' transition function of the Slowscan scanning state.
 static co_lss_state_t *co_lss_slowscan_scan_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
 static co_lss_state_t *co_lss_slowscan_scan_on_res(co_lss_t *lss, int timeout);
 
-//! The Slowscan scanning state.
+/// The Slowscan scanning state.
 LELY_CO_DEFINE_STATE(co_lss_slowscan_scan_state,
 	.on_enter = &co_lss_slowscan_scan_on_enter,
 	.on_recv = &co_lss_slowscan_scan_on_recv,
 	.on_time = &co_lss_slowscan_scan_on_time
 )
 
-//! The 'CAN frame received' transition function of the Slowscan waiting state.
+/// The 'CAN frame received' transition function of the Slowscan waiting state.
 static co_lss_state_t *co_lss_slowscan_wait_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Slowscan waiting state.
+/// The 'timeout' transition function of the Slowscan waiting state.
 static co_lss_state_t *co_lss_slowscan_wait_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The Slowscan waiting state.
+/// The Slowscan waiting state.
 LELY_CO_DEFINE_STATE(co_lss_slowscan_wait_state,
 	.on_recv = &co_lss_slowscan_wait_on_recv,
 	.on_time = &co_lss_slowscan_wait_on_time
 )
 
-//! The entry function of the Slowscan 'switch state selective' state.
+/// The entry function of the Slowscan 'switch state selective' state.
 static co_lss_state_t *co_lss_slowscan_switch_on_enter(co_lss_t *lss);
 
-/*!
+/**
  * The 'CAN frame received' transition function of the Slowscan 'switch state
  * selective' state.
  */
 static co_lss_state_t *co_lss_slowscan_switch_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-/*!
+/**
  * The 'timeout' transition function of the Slowscan 'switch state selective'
  * state.
  */
 static co_lss_state_t *co_lss_slowscan_switch_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The Slowscan 'switch state selective' state.
+/// The Slowscan 'switch state selective' state.
 LELY_CO_DEFINE_STATE(co_lss_slowscan_switch_state,
 	.on_enter = &co_lss_slowscan_switch_on_enter,
 	.on_recv = &co_lss_slowscan_switch_on_recv,
 	.on_time = &co_lss_slowscan_switch_on_time
 )
 
-//! The entry function of the Slowscan finalization state.
+/// The entry function of the Slowscan finalization state.
 static co_lss_state_t *co_lss_slowscan_fini_on_enter(co_lss_t *lss);
 
-//! The exit function of the Slowscan finalization state.
+/// The exit function of the Slowscan finalization state.
 static void co_lss_slowscan_fini_on_leave(co_lss_t *lss);
 
-//! The Slowscan finalization state.
+/// The Slowscan finalization state.
 LELY_CO_DEFINE_STATE(co_lss_slowscan_fini_state,
 	.on_enter = &co_lss_slowscan_fini_on_enter,
 	.on_leave = &co_lss_slowscan_fini_on_leave
 )
 
-/*!
+/**
  * The 'CAN frame received' transition function of the Fastscan initialization
  * state.
  */
 static co_lss_state_t *co_lss_fastscan_init_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Fastscan initialization state.
+/// The 'timeout' transition function of the Fastscan initialization state.
 static co_lss_state_t *co_lss_fastscan_init_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The Fastscan initialization state.
+/// The Fastscan initialization state.
 LELY_CO_DEFINE_STATE(co_lss_fastscan_init_state,
 	.on_recv = &co_lss_fastscan_init_on_recv,
 	.on_time = &co_lss_fastscan_init_on_time
 )
 
-//! The entry function of the Fastscan scanning state.
+/// The entry function of the Fastscan scanning state.
 static co_lss_state_t *co_lss_fastscan_scan_on_enter(co_lss_t *lss);
 
-//! The 'CAN frame received' transition function of the Fastscan scanning state.
+/// The 'CAN frame received' transition function of the Fastscan scanning state.
 static co_lss_state_t *co_lss_fastscan_scan_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Fastscan scanning state.
+/// The 'timeout' transition function of the Fastscan scanning state.
 static co_lss_state_t *co_lss_fastscan_scan_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
 static co_lss_state_t *co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout);
 
-//! The Fastscan scanning state.
+/// The Fastscan scanning state.
 LELY_CO_DEFINE_STATE(co_lss_fastscan_scan_state,
 	.on_enter = &co_lss_fastscan_scan_on_enter,
 	.on_recv = &co_lss_fastscan_scan_on_recv,
 	.on_time = &co_lss_fastscan_scan_on_time
 )
 
-//! The 'CAN frame received' transition function of the Fastscan waiting state.
+/// The 'CAN frame received' transition function of the Fastscan waiting state.
 static co_lss_state_t *co_lss_fastscan_wait_on_recv(co_lss_t *lss,
 		const struct can_msg *msg);
 
-//! The 'timeout' transition function of the Fastscan waiting state.
+/// The 'timeout' transition function of the Fastscan waiting state.
 static co_lss_state_t *co_lss_fastscan_wait_on_time(co_lss_t *lss,
 		const struct timespec *tp);
 
-//! The Fastscan waiting state.
+/// The Fastscan waiting state.
 LELY_CO_DEFINE_STATE(co_lss_fastscan_wait_state,
 	.on_recv = &co_lss_fastscan_wait_on_recv,
 	.on_time = &co_lss_fastscan_wait_on_time
 )
 
-//! The entry function of the Fastscan finalization state.
+/// The entry function of the Fastscan finalization state.
 static co_lss_state_t *co_lss_fastscan_fini_on_enter(co_lss_t *lss);
 
-//! The exit function of the Fastscan finalization state.
+/// The exit function of the Fastscan finalization state.
 static void co_lss_fastscan_fini_on_leave(co_lss_t *lss);
 
-//! The Fastscan finalization state.
+/// The Fastscan finalization state.
 LELY_CO_DEFINE_STATE(co_lss_fastscan_fini_state,
 	.on_enter = &co_lss_fastscan_fini_on_enter,
 	.on_leave = &co_lss_fastscan_fini_on_leave
@@ -452,111 +452,112 @@ LELY_CO_DEFINE_STATE(co_lss_fastscan_fini_state,
 
 #undef LELY_CO_DEFINE_STATE
 
-/*!
+/**
  * Implements the switch state selective service for an LSS slave. See Fig. 32
  * in CiA 305 version 3.0.0.
  *
- * \param lss a pointer to an LSS slave service.
- * \param cs  the command specifier (in the range [0x40..0x43]).
- * \param id  the current LSS number to be checked.
+ * @param lss a pointer to an LSS slave service.
+ * @param cs  the command specifier (in the range [0x40..0x43]).
+ * @param id  the current LSS number to be checked.
  *
- * \returns a pointer to the next state.
+ * @returns a pointer to the next state.
  */
 static co_lss_state_t *co_lss_switch_sel(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned32_t id);
 
-/*!
+/**
  * Implements the LSS identify remote slave service for an LSS slave. See
  * Fig. 42 in CiA 305 version 3.0.0.
  *
- * \param lss a pointer to an LSS slave service.
- * \param cs  the command specifier (in the range [0x46..0x4b]).
- * \param id  the current LSS number to be checked.
+ * @param lss a pointer to an LSS slave service.
+ * @param cs  the command specifier (in the range [0x46..0x4b]).
+ * @param id  the current LSS number to be checked.
  */
 static void co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs,
 		co_unsigned32_t id);
 
-/*!
+/**
  * Implements the LSS identify non-configured remote slave service for an LSS
  * slave. See Fig. 44 in CiA 305 version 3.0.0.
  */
 static void co_lss_id_non_cfg_slave(const co_lss_t *lss);
 
-/*!
+/**
  * Implements the LSS fastscan service for an LSS slave. See Fig. 46 in CiA 305
  * version 3.0.0.
  *
- * \param lss     a pointer to an LSS slave service.
- * \param id      the value of LSS number which is currently determined by the
+ * @param lss     a pointer to an LSS slave service.
+ * @param id      the value of LSS number which is currently determined by the
  *                LSS master.
- * \param bitchk  the least significant bit of \a id to be checked.
- * \param lsssub  the index of \a id in the LSS address (in the range [0..3]).
- * \param lssnext the value if \a lsssub in the next request.
+ * @param bitchk  the least significant bit of <b>id</b> to be checked.
+ * @param lsssub  the index of <b>id</b> in the LSS address (in the range
+ *                [0..3]).
+ * @param lssnext the value if <b>lsssub</b> in the next request.
  *
- * \returns a pointer to the next state.
+ * @returns a pointer to the next state.
  */
 static co_lss_state_t *co_lss_fastscan(co_lss_t *lss, co_unsigned32_t id,
 		co_unsigned8_t bitchk, co_unsigned8_t lsssub,
 		co_unsigned8_t lssnext);
 
-/*!
+/**
  * Initializes an LSS request CAN frame.
  *
- * \param lss a pointer to an LSS service.
- * \param msg a pointer to the CAN frame to be initialized.
- * \param cs  the command specifier.
+ * @param lss a pointer to an LSS service.
+ * @param msg a pointer to the CAN frame to be initialized.
+ * @param cs  the command specifier.
  */
 static void co_lss_init_req(const co_lss_t *lss, struct can_msg *msg,
 		co_unsigned8_t cs);
 
 #ifndef LELY_NO_CO_MASTER
 
-/*!
+/**
  * Sends a switch state selective request (see Fig. 32 in CiA 305 version
  * 3.0.0).
  *
- * \param lss a pointer to an LSS master service.
- * \param id  a pointer to the LSS address of the slave to be configured.
+ * @param lss a pointer to an LSS master service.
+ * @param id  a pointer to the LSS address of the slave to be configured.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_lss_send_switch_sel_req(const co_lss_t *lss,
 		const struct co_id *id);
 
-/*!
+/**
  * Sends an LSS identify remote slave request (see Fig. 42 in CiA 305 version
  * 3.0.0).
  *
- * \param lss a pointer to an LSS master service.
- * \param lo  a pointer to the lower bound of the LSS address.
- * \param hi  a pointer to the upper bound of the LSS address. The vendor-ID and
- *            product-code MUST be the same as in *\a lo.
+ * @param lss a pointer to an LSS master service.
+ * @param lo  a pointer to the lower bound of the LSS address.
+ * @param hi  a pointer to the upper bound of the LSS address. The vendor-ID and
+ *            product-code MUST be the same as in *<b>lo</b>.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi);
 
-/*!
+/**
  * Sends an LSS Fastscan request (see Fig. 46 in CiA 305 version 3.0.0).
  *
- * \param lss     a pointer to an LSS master service.
- * \param id      the current LSS number to be checked.
- * \param bitchk  the least-significant bit to be checked.
- * \param lsssub  the index of \a id.
- * \param lssnext the index of the next LSS number to be checked.
+ * @param lss     a pointer to an LSS master service.
+ * @param id      the current LSS number to be checked.
+ * @param bitchk  the least-significant bit to be checked.
+ * @param lsssub  the index of <b>id</b>.
+ * @param lssnext the index of the next LSS number to be checked.
  *
- * \returns 0 on success, or -1 on error.
+ * @returns 0 on success, or -1 on error.
  */
 static int co_lss_send_fastscan_req(const co_lss_t *lss, co_unsigned32_t id,
 		co_unsigned8_t bitchk, co_unsigned8_t lsssub,
 		co_unsigned8_t lssnext);
 
-/*!
+/**
  * Prepares an LSS master to receive an indication from a slave.
  *
- * \param lss a pointer to an LSS master service.
- * \param cs  the expected command specifier.
+ * @param lss a pointer to an LSS master service.
+ * @param cs  the expected command specifier.
  */
 static void co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs);
 

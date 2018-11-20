@@ -1,12 +1,12 @@
-/*!\file
+/**@file
  * This file is part of the CAN library; it contains the implementation of the
  * CAN frame functions.
  *
- * \see lely/can/msg.h
+ * @see lely/can/msg.h
  *
- * \copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,25 +35,25 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-/*!
+/**
  * Computes a bitwise CRC-15-CAN checksum, based on the 0x4599 generator
  * polynomial. The implementation uses a table with precomputed values for
  * efficiency.
  *
- * \param crc  the initial value.
- * \param ptr  a pointer to the bits to be hashed.
- * \param off  the offset (in bits) with respect to \a ptr of the first bit to
- *             be hashed.
- * \param bits the number of bits to hash.
+ * @param crc  the initial value.
+ * @param ptr  a pointer to the bits to be hashed.
+ * @param off  the offset (in bits) with respect to <b>ptr</b> of the first bit
+ *             to be hashed.
+ * @param bits the number of bits to hash.
  *
- * \returns the updated CRC.
+ * @returns the updated CRC.
  */
 static uint16_t can_crc(uint16_t crc, const void* ptr, int off, size_t bits);
 
-//! Computes a bitwise CRC-15-CAN checksum of a single byte. \see can_crc()
+/// Computes a bitwise CRC-15-CAN checksum of a single byte. @see can_crc()
 static uint16_t can_crc_bits(uint16_t crc, uint8_t byte, int off, int bits);
 
-//! Computes a CRC-15-CAN checksum. \see can_crc()
+/// Computes a CRC-15-CAN checksum. @see can_crc()
 static uint16_t can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n);
 
 LELY_CAN_EXPORT int

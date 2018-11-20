@@ -1,11 +1,11 @@
-/*!\file
+/**@file
  * This header file is part of the CANopen library; it contains the C++
  * interface of the network management (NMT) declarations. See lely/co/nmt.h for
  * the C interface.
  *
- * \copyright 2017 Lely Industries N.V.
+ * @copyright 2017-2018 Lely Industries N.V.
  *
- * \author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ cfgHb(CODev& dev, co_unsigned8_t id, co_unsigned16_t ms) noexcept
 	return co_dev_cfg_hb(&dev, id, ms);
 }
 
-//! The attributes of #co_nmt_t required by #lely::CONMT.
+/// The attributes of #co_nmt_t required by #lely::CONMT.
 template <>
 struct c_type_traits<__co_nmt> {
 	typedef __co_nmt value_type;
@@ -59,7 +59,7 @@ struct c_type_traits<__co_nmt> {
 	static void fini(pointer p) noexcept { __co_nmt_fini(p); }
 };
 
-//! An opaque CANopen NMT master/slave service type.
+/// An opaque CANopen NMT master/slave service type.
 class CONMT: public incomplete_c_type<__co_nmt> {
 	typedef incomplete_c_type<__co_nmt> c_base;
 public:
