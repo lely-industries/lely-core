@@ -19,25 +19,25 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_PDO_H
-#define LELY_CO_PDO_H
+#ifndef LELY_CO_PDO_H_
+#define LELY_CO_PDO_H_
 
 #include <lely/co/type.h>
 
 /// The bit in the PDO COB-ID specifying whether the PDO exists and is valid.
-#define CO_PDO_COBID_VALID	UINT32_C(0x80000000)
+#define CO_PDO_COBID_VALID UINT32_C(0x80000000)
 
 /// The bit in the PDO COB-ID specifying whether RTR is allowed.
-#define CO_PDO_COBID_RTR	UINT32_C(0x40000000)
+#define CO_PDO_COBID_RTR UINT32_C(0x40000000)
 
 /**
  * The bit in the PDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
-#define CO_PDO_COBID_FRAME	UINT32_C(0x20000000)
+#define CO_PDO_COBID_FRAME UINT32_C(0x20000000)
 
 /// The data type (and object index) of a PDO communication parameter record.
-#define CO_DEFSTRUCT_PDO_COMM_PAR	0x0020
+#define CO_DEFSTRUCT_PDO_COMM_PAR 0x0020
 
 /// A PDO communication parameter record.
 struct co_pdo_comm_par {
@@ -57,10 +57,13 @@ struct co_pdo_comm_par {
 };
 
 /// The static initializer from struct #co_pdo_comm_par.
-#define CO_PDO_COMM_PAR_INIT	{ 6, CO_PDO_COBID_VALID, 0, 0, 0, 0, 0 }
+#define CO_PDO_COMM_PAR_INIT \
+	{ \
+		6, CO_PDO_COBID_VALID, 0, 0, 0, 0, 0 \
+	}
 
 /// The data type (and object index) of a PDO mapping parameter record.
-#define CO_DEFSTRUCT_PDO_MAP_PAR	0x0021
+#define CO_DEFSTRUCT_PDO_MAP_PAR 0x0021
 
 /// A PDO mapping parameter record.
 struct co_pdo_map_par {
@@ -71,6 +74,7 @@ struct co_pdo_map_par {
 };
 
 /// The static initializer from struct #co_pdo_map_par.
+// clang-format off
 #define CO_PDO_MAP_PAR_INIT \
 	{ \
 		0, \
@@ -85,6 +89,7 @@ struct co_pdo_map_par {
 			0, 0, 0, 0, 0, 0, 0, 0 \
 		} \
 	}
+// clang-format on
 
 // The CANopen SDO upload/download request from lely/co/sdo.h.
 struct co_sdo_req;
@@ -291,5 +296,4 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_PDO_H_

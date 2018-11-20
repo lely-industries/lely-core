@@ -28,8 +28,7 @@
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
 
-LELY_LIBC_EXPORT char * __cdecl
-strdup(const char *s)
+LELY_LIBC_EXPORT char *__cdecl strdup(const char *s)
 {
 	size_t size = strlen(s) + 1;
 	char *dup = malloc(size);
@@ -42,8 +41,7 @@ strdup(const char *s)
 
 #if !(_POSIX_C_SOURCE >= 200809L)
 
-LELY_LIBC_EXPORT char * __cdecl
-strndup(const char *s, size_t size)
+LELY_LIBC_EXPORT char *__cdecl strndup(const char *s, size_t size)
 {
 	size = strnlen(s, size);
 	char *dup = malloc(size + 1);
@@ -58,8 +56,7 @@ strndup(const char *s, size_t size)
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
 
-LELY_LIBC_EXPORT  size_t __cdecl
-strnlen(const char *s, size_t maxlen)
+LELY_LIBC_EXPORT size_t __cdecl strnlen(const char *s, size_t maxlen)
 {
 	size_t size = 0;
 	while (size < maxlen && *s++)

@@ -22,9 +22,9 @@
  */
 
 #include "io.h"
-#include <lely/util/errnum.h>
 #include <lely/io/if.h>
 #include <lely/io/sock.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -34,8 +34,10 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "iphlpapi.lib")
 #endif
+// clang-format off
 #include <wincrypt.h>
 #include <iphlpapi.h>
+// clang-format on
 #elif defined(__linux__) && defined(HAVE_IFADDRS_H)
 #include <ifaddrs.h>
 #endif
@@ -45,8 +47,8 @@ static void io_addr_set(io_addr_t *addr, const struct sockaddr *address);
 #endif
 
 #ifdef _WIN32
-static NETIO_STATUS WINAPI ConvertLengthToIpv6Mask(ULONG MaskLength,
-		u_char Mask[16]);
+static NETIO_STATUS WINAPI ConvertLengthToIpv6Mask(
+		ULONG MaskLength, u_char Mask[16]);
 #endif
 
 #if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
@@ -63,8 +65,8 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 			| GAA_FLAG_SKIP_FRIENDLY_NAME
 			| GAA_FLAG_INCLUDE_ALL_INTERFACES;
 	DWORD Size = 0;
-	DWORD dwErrCode = GetAdaptersAddresses(AF_UNSPEC, Flags, NULL, NULL,
-			&Size);
+	DWORD dwErrCode = GetAdaptersAddresses(
+			AF_UNSPEC, Flags, NULL, NULL, &Size);
 	if (__unlikely(dwErrCode != ERROR_BUFFER_OVERFLOW)) {
 		SetLastError(dwErrCode);
 		return -1;
@@ -74,8 +76,8 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 	if (__unlikely(!pAdapterAddresses))
 		return -1;
 
-	dwErrCode = GetAdaptersAddresses(AF_UNSPEC, Flags, NULL,
-			pAdapterAddresses, &Size);
+	dwErrCode = GetAdaptersAddresses(
+			AF_UNSPEC, Flags, NULL, pAdapterAddresses, &Size);
 	if (__unlikely(dwErrCode != ERROR_SUCCESS)) {
 		free(pAdapterAddresses);
 		SetLastError(dwErrCode);
@@ -86,8 +88,8 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 	for (PIP_ADAPTER_ADDRESSES paa = pAdapterAddresses; paa;
 			paa = paa->Next) {
 		// Skip interfaces with invalid indices.
-		unsigned int index = paa->IfIndex
-				? paa->IfIndex : paa->Ipv6IfIndex;
+		unsigned int index =
+				paa->IfIndex ? paa->IfIndex : paa->Ipv6IfIndex;
 		if (__unlikely(!index))
 			continue;
 
@@ -106,8 +108,8 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 
 		// Every unicast address represents a network interface.
 		for (PIP_ADAPTER_UNICAST_ADDRESS paua =
-				paa->FirstUnicastAddress; paua;
-				paua = paua->Next) {
+						paa->FirstUnicastAddress;
+				paua; paua = paua->Next) {
 			LPSOCKADDR lpSockaddr = paua->Address.lpSockaddr;
 			if (__unlikely(!lpSockaddr))
 				continue;
@@ -115,14 +117,9 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 			// We only support IPv4 and IPv6.
 			int domain;
 			switch (lpSockaddr->sa_family) {
-			case AF_INET:
-				domain = IO_SOCK_IPV4;
-				break;
-			case AF_INET6:
-				domain = IO_SOCK_IPV6;
-				break;
-			default:
-				continue;
+			case AF_INET: domain = IO_SOCK_IPV4; break;
+			case AF_INET6: domain = IO_SOCK_IPV6; break;
+			default: continue;
 			}
 
 			if (++ninfo > maxinfo)
@@ -156,7 +153,10 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 				if (info->flags & IO_IF_BROADCAST) {
 					// Obtain the broadcast address from the
 					// interface address and the netmask.
-					ULONG BCast = ((struct sockaddr_in *)lpSockaddr)->sin_addr.s_addr | ~Mask;
+					ULONG BCast = ((struct sockaddr_in *)lpSockaddr)
+									->sin_addr
+									.s_addr
+							| ~Mask;
 					io_addr_set_ipv4_n(&info->broadaddr,
 							(uint8_t *)&BCast, 0);
 				}
@@ -187,12 +187,8 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 		int domain = 0;
 		if (ifa->ifa_addr) {
 			switch (ifa->ifa_addr->sa_family) {
-			case AF_INET:
-				domain = IO_SOCK_IPV4;
-				break;
-			case AF_INET6:
-				domain = IO_SOCK_IPV4;
-				break;
+			case AF_INET: domain = IO_SOCK_IPV4; break;
+			case AF_INET6: domain = IO_SOCK_IPV4; break;
 			}
 		}
 		// Skip network interfaces with unknown domains.
@@ -257,24 +253,14 @@ io_addr_set(io_addr_t *addr, const struct sockaddr *address)
 
 	switch (address->sa_family) {
 #if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
-	case AF_CAN:
-		addr->addrlen = sizeof(struct sockaddr_can);
-		break;
+	case AF_CAN: addr->addrlen = sizeof(struct sockaddr_can); break;
 #endif
-	case AF_INET:
-		addr->addrlen = sizeof(struct sockaddr_in);
-		break;
-	case AF_INET6:
-		addr->addrlen = sizeof(struct sockaddr_in6);
-		break;
+	case AF_INET: addr->addrlen = sizeof(struct sockaddr_in); break;
+	case AF_INET6: addr->addrlen = sizeof(struct sockaddr_in6); break;
 #if _POSIX_C_SOURCE >= 200112L
-	case AF_UNIX:
-		addr->addrlen = sizeof(struct sockaddr_un);
-		break;
+	case AF_UNIX: addr->addrlen = sizeof(struct sockaddr_un); break;
 #endif
-	default:
-		addr->addrlen = 0;
-		break;
+	default: addr->addrlen = 0; break;
 	}
 	memcpy(&addr->addr, address, addr->addrlen);
 }
@@ -292,8 +278,7 @@ ConvertLengthToIpv6Mask(ULONG MaskLength, u_char Mask[16])
 	}
 
 	for (LONG i = MaskLength, j = 0; i > 0; i -= 8, j++)
-		Mask[j] = i >= 8 ? 0xff : ((0xff << ( 8 - i)) & 0xff);
+		Mask[j] = i >= 8 ? 0xff : ((0xff << (8 - i)) & 0xff);
 	return NO_ERROR;
 }
 #endif
-

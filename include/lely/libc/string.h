@@ -39,7 +39,7 @@ extern "C" {
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-LELY_LIBC_EXTERN char * __cdecl strdup(const char *s);
+LELY_LIBC_EXTERN char *__cdecl strdup(const char *s);
 
 #endif
 
@@ -52,7 +52,7 @@ LELY_LIBC_EXTERN char * __cdecl strdup(const char *s);
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-LELY_LIBC_EXTERN char * __cdecl strndup(const char *s, size_t size);
+LELY_LIBC_EXTERN char *__cdecl strndup(const char *s, size_t size);
 
 #endif
 

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TPDO_H
-#define LELY_CO_TPDO_H
+#ifndef LELY_CO_TPDO_H_
+#define LELY_CO_TPDO_H_
 
 #include <lely/can/net.h>
 #include <lely/co/pdo.h>
@@ -65,8 +65,8 @@ LELY_CO_EXTERN void __co_tpdo_fini(struct __co_tpdo *pdo);
  *
  * @see co_tpdo_destroy()
  */
-LELY_CO_EXTERN co_tpdo_t *co_tpdo_create(can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num);
+LELY_CO_EXTERN co_tpdo_t *co_tpdo_create(
+		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Transmit-PDO service. @see co_tpdo_create()
 LELY_CO_EXTERN void co_tpdo_destroy(co_tpdo_t *pdo);
@@ -102,8 +102,8 @@ LELY_CO_EXTERN const struct co_pdo_map_par *co_tpdo_get_map_par(
  *
  * @see co_tpdo_set_ind()
  */
-LELY_CO_EXTERN void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind,
-		void **pdata);
+LELY_CO_EXTERN void co_tpdo_get_ind(
+		const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a Transmit-PDO error occurs.
@@ -115,8 +115,8 @@ LELY_CO_EXTERN void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind,
  *
  * @see co_tpdo_get_ind()
  */
-LELY_CO_EXTERN void co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_tpdo_set_ind(
+		co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data);
 
 /**
  * Triggers the transmission of an event-driven (asynchronous) PDO. This
@@ -149,5 +149,4 @@ LELY_CO_EXTERN void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_TPDO_H_

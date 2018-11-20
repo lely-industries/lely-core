@@ -35,28 +35,28 @@
  * January 1, 1601) and the Unix epoch (seconds since 00:00:00 UTC on January 1,
  * 1970) is 369 years and 89 leap days.
  */
-#define FILETIME_EPOCH	((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
+#define FILETIME_EPOCH ((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
 
 /**
  * The maximum number of milliseconds to be spent in `SleepEx()`. This value
  * MUST be smaller than `INFINITE`, to prevent an infinite sleep.
  */
-#define MAX_SLEEP_MS	(ULONG_MAX - 1)
+#define MAX_SLEEP_MS (ULONG_MAX - 1)
 
 #ifdef _USE_32BIT_TIME_T
 /// The lower limit for a value of type `time_t`.
-#define TIME_T_MIN	LONG_MIN
+#define TIME_T_MIN LONG_MIN
 /// The upper limit for a value of type `time_t`.
-#define TIME_T_MAX	LONG_MAX
+#define TIME_T_MAX LONG_MAX
 #else
 /// The lower limit for a value of type `time_t`.
-#define TIME_T_MIN	_I64_MIN
+#define TIME_T_MIN _I64_MIN
 /// The upper limit for a value of type `time_t`.
-#define TIME_T_MAX	_I64_MAX
+#define TIME_T_MAX _I64_MAX
 #endif
 
-LELY_LIBC_EXPORT int __cdecl
-clock_getres(clockid_t clock_id, struct timespec *res)
+LELY_LIBC_EXPORT int __cdecl clock_getres(
+		clockid_t clock_id, struct timespec *res)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -65,10 +65,8 @@ clock_getres(clockid_t clock_id, struct timespec *res)
 		LONGLONG pf = liFrequency.QuadPart;
 
 		if (res)
-			*res = (struct timespec){
-				0,
-				(long)((1000000000l + pf / 2) / pf)
-			};
+			*res = (struct timespec){ 0,
+				(long)((1000000000l + pf / 2) / pf) };
 
 		return 0;
 	}
@@ -76,18 +74,17 @@ clock_getres(clockid_t clock_id, struct timespec *res)
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 	case CLOCK_PROCESS_CPUTIME_ID:
-	case CLOCK_THREAD_CPUTIME_ID:
-		break;
-	default:
-		errno = EINVAL;
-		return -1;
+	case CLOCK_THREAD_CPUTIME_ID: break;
+	default: errno = EINVAL; return -1;
 	}
 
 	DWORD dwTimeAdjustment;
 	DWORD dwTimeIncrement;
 	BOOL bTimeAdjustmentDisabled;
+	// clang-format off
 	if (__unlikely(!GetSystemTimeAdjustment(&dwTimeAdjustment,
 			&dwTimeIncrement, &bTimeAdjustmentDisabled)))
+		// clang-format on
 		return -1;
 
 	if (res)
@@ -96,8 +93,8 @@ clock_getres(clockid_t clock_id, struct timespec *res)
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-clock_gettime(clockid_t clock_id, struct timespec *tp)
+LELY_LIBC_EXPORT int __cdecl clock_gettime(
+		clockid_t clock_id, struct timespec *tp)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -114,8 +111,8 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 		if (tp) {
 			tp->tv_sec = pc / pf;
-			tp->tv_nsec = (long)(((pc % pf)
-					* (1000000000l + pf / 2)) / pf);
+			tp->tv_nsec = (long)(((pc % pf) * (1000000000l + pf / 2))
+					/ pf);
 		}
 
 		return 0;
@@ -139,20 +136,18 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	}
 	case CLOCK_PROCESS_CPUTIME_ID: {
 		FILETIME CreationTime, ExitTime, KernelTime, UserTime;
+		// clang-format off
 		if (__unlikely(!GetProcessTimes(GetCurrentProcess(),
 				&CreationTime, &ExitTime, &KernelTime,
 				&UserTime)))
+			// clang-format on
 			return -1;
 		// Add the time spent in kernel mode and the time spent in user
 		// mode to obtain the total process time.
-		ULARGE_INTEGER kt = {
-			.LowPart = KernelTime.dwLowDateTime,
-			.HighPart = KernelTime.dwHighDateTime
-		};
-		ULARGE_INTEGER ut = {
-			.LowPart = UserTime.dwLowDateTime,
-			.HighPart = UserTime.dwHighDateTime
-		};
+		ULARGE_INTEGER kt = { .LowPart = KernelTime.dwLowDateTime,
+			.HighPart = KernelTime.dwHighDateTime };
+		ULARGE_INTEGER ut = { .LowPart = UserTime.dwLowDateTime,
+			.HighPart = UserTime.dwHighDateTime };
 		if (__unlikely(kt.QuadPart + ut.QuadPart > _I64_MAX)) {
 			errno = EOVERFLOW;
 			return -1;
@@ -162,20 +157,18 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	}
 	case CLOCK_THREAD_CPUTIME_ID: {
 		FILETIME CreationTime, ExitTime, KernelTime, UserTime;
+		// clang-format off
 		if (__unlikely(!GetProcessTimes(GetCurrentThread(),
 				&CreationTime, &ExitTime, &KernelTime,
 				&UserTime)))
+			// clang-format on
 			return -1;
 		// Add the time spent in kernel mode and the time spent in user
 		// mode to obtain the total thread time.
-		ULARGE_INTEGER kt = {
-			.LowPart = KernelTime.dwLowDateTime,
-			.HighPart = KernelTime.dwHighDateTime
-		};
-		ULARGE_INTEGER ut = {
-			.LowPart = UserTime.dwLowDateTime,
-			.HighPart = UserTime.dwHighDateTime
-		};
+		ULARGE_INTEGER kt = { .LowPart = KernelTime.dwLowDateTime,
+			.HighPart = KernelTime.dwHighDateTime };
+		ULARGE_INTEGER ut = { .LowPart = UserTime.dwLowDateTime,
+			.HighPart = UserTime.dwHighDateTime };
 		if (__unlikely(kt.QuadPart + ut.QuadPart > _I64_MAX)) {
 			errno = EOVERFLOW;
 			return -1;
@@ -183,9 +176,7 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 		ft = kt.QuadPart + ut.QuadPart;
 		break;
 	}
-	default:
-		errno = EINVAL;
-		return -1;
+	default: errno = EINVAL; return -1;
 	}
 
 	LONGLONG sec = ft / 10000000l;
@@ -202,19 +193,15 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
-		struct timespec *rmtp)
+LELY_LIBC_EXPORT int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
+		const struct timespec *rqtp, struct timespec *rmtp)
 {
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-	case CLOCK_MONOTONIC:
-		break;
-	case CLOCK_PROCESS_CPUTIME_ID:
-		return ENOTSUP;
+	case CLOCK_MONOTONIC: break;
+	case CLOCK_PROCESS_CPUTIME_ID: return ENOTSUP;
 	case CLOCK_THREAD_CPUTIME_ID:
-	default:
-		return EINVAL;
+	default: return EINVAL;
 	}
 
 	if (__unlikely(rqtp->tv_nsec < 0 || rqtp->tv_nsec >= 1000000000l))
@@ -246,16 +233,19 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 		}
 	}
 
+	// clang-format off
 	while (now.tv_sec < tp.tv_sec || (now.tv_sec == tp.tv_sec
 			&& now.tv_nsec < tp.tv_nsec)) {
+		// clang-format on
 		// Round up to the nearest number of milliseconds, to make sure
 		// we don't wake up too early.
 		LONGLONG llMilliseconds =
 				(LONGLONG)(tp.tv_sec - now.tv_sec) * 1000
 				+ (tp.tv_nsec - now.tv_nsec + 999999l)
-				/ 1000000l;
+						/ 1000000l;
 		DWORD dwMilliseconds = llMilliseconds <= MAX_SLEEP_MS
-				? (DWORD)llMilliseconds : MAX_SLEEP_MS;
+				? (DWORD)llMilliseconds
+				: MAX_SLEEP_MS;
 		DWORD dwResult = SleepEx(dwMilliseconds, TRUE);
 		if (__unlikely(clock_gettime(clock_id, &now) == -1)) {
 			int result = errno;
@@ -280,8 +270,8 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-clock_settime(clockid_t clock_id, const struct timespec *tp)
+LELY_LIBC_EXPORT int __cdecl clock_settime(
+		clockid_t clock_id, const struct timespec *tp)
 {
 	if (__unlikely(clock_id != CLOCK_REALTIME)) {
 		errno = EINVAL;

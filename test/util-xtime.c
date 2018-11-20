@@ -5,8 +5,7 @@
 xtimer_t *timer;
 int count;
 
-void __cdecl
-test_notify(union sigval value)
+void __cdecl test_notify(union sigval value)
 {
 	xclock_t *clock = value.sival_ptr;
 	struct timespec now = { 0, 0 };
@@ -48,4 +47,3 @@ main(void)
 
 	return 0;
 }
-

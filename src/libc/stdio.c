@@ -32,7 +32,7 @@
 
 #ifndef LELY_GETDELIM_SIZE
 /// The initial size (in bytes) of the buffer allocated by getdelim().
-#define LELY_GETDELIM_SIZE	64
+#define LELY_GETDELIM_SIZE 64
 #endif
 
 LELY_LIBC_EXPORT ssize_t
@@ -101,8 +101,8 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !LELY_HAVE_SNPRINTF
 
-LELY_LIBC_EXPORT int __cdecl
-snprintf(char *s, size_t n, const char *format, ...)
+LELY_LIBC_EXPORT int __cdecl snprintf(
+		char *s, size_t n, const char *format, ...)
 {
 	va_list arg;
 	va_start(arg, format);
@@ -111,8 +111,8 @@ snprintf(char *s, size_t n, const char *format, ...)
 	return result;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-vsnprintf(char *s, size_t n, const char *format, va_list arg)
+LELY_LIBC_EXPORT int __cdecl vsnprintf(
+		char *s, size_t n, const char *format, va_list arg)
 {
 	int result = -1;
 	if (n) {
@@ -126,8 +126,7 @@ vsnprintf(char *s, size_t n, const char *format, va_list arg)
 
 #endif // !LELY_HAVE_SNPRINTF
 
-LELY_LIBC_EXPORT int __cdecl
-asprintf(char **strp, const char *fmt, ...)
+LELY_LIBC_EXPORT int __cdecl asprintf(char **strp, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -136,8 +135,7 @@ asprintf(char **strp, const char *fmt, ...)
 	return result;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-vasprintf(char **strp, const char *fmt, va_list ap)
+LELY_LIBC_EXPORT int __cdecl vasprintf(char **strp, const char *fmt, va_list ap)
 {
 	assert(strp);
 

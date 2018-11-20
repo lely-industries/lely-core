@@ -23,12 +23,12 @@
 
 #include "co.h"
 
-#include <lely/util/endian.h>
 #include <lely/can/msg.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
+#include <lely/util/endian.h>
 
 #include <assert.h>
 
@@ -39,8 +39,7 @@ static co_unsigned32_t co_dev_cfg_pdo_map(const co_dev_t *dev,
 		co_unsigned16_t num, const struct co_pdo_map_par *par);
 
 LELY_CO_EXPORT co_unsigned32_t
-co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx)
+co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(dev);
 
@@ -61,8 +60,10 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
 		if (__unlikely(!(access & CO_ACCESS_WRITE)))
 			return CO_SDO_AC_NO_WRITE;
 
+		// clang-format off
 		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-				|| !(access & CO_ACCESS_RPDO)))
+			|| !(access & CO_ACCESS_RPDO)))
+			// clang-format on
 			return CO_SDO_AC_NO_PDO;
 	}
 
@@ -116,8 +117,7 @@ co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 }
 
 LELY_CO_EXPORT co_unsigned32_t
-co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx)
+co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(dev);
 
@@ -133,8 +133,10 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
 	if (__unlikely(!(access & CO_ACCESS_READ)))
 		return CO_SDO_AC_NO_READ;
 
+	// clang-format off
 	if (__unlikely(!co_sub_get_pdo_mapping(sub)
 			|| !(access & CO_ACCESS_TPDO)))
+		// clang-format on
 		return CO_SDO_AC_NO_PDO;
 
 	return 0;
@@ -384,8 +386,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x03);
 		if (__unlikely(!sub))
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16,
-				&par->inhibit);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED16, &par->inhibit);
 	}
 
 	// Configure the event timer.
@@ -424,8 +426,8 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	if (__unlikely(!sub_00))
 		return CO_SDO_AC_NO_SUB;
 	// Disable mapping by setting subindex 0x00 to zero.
-	ac = co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8,
-			&(co_unsigned8_t){ 0 });
+	ac = co_sub_dn_ind_val(
+			sub_00, CO_DEFTYPE_UNSIGNED8, &(co_unsigned8_t){ 0 });
 	if (__unlikely(ac))
 		return ac;
 
@@ -434,8 +436,8 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, i);
 		if (__unlikely(!sub))
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32,
-				&par->map[i - 1]);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED32, &par->map[i - 1]);
 		if (__unlikely(ac))
 			return ac;
 	}
@@ -443,4 +445,3 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	// Enable mapping.
 	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n);
 }
-

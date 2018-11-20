@@ -25,12 +25,12 @@
 
 #ifndef LELY_NO_CO_LSS
 
-#include <lely/util/endian.h>
-#include <lely/util/errnum.h>
 #include <lely/co/lss.h>
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
+#include <lely/util/endian.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -192,9 +192,11 @@ struct __co_lss_state {
 static co_lss_state_t *co_lss_wait_on_enter(co_lss_t *lss);
 
 /// The 'waiting' state of an LSS master or slave.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_wait_state,
 	.on_enter = &co_lss_wait_on_enter
 )
+// clang-format on
 
 /// The entry function of the 'waiting' state of an LSS slave.
 static co_lss_state_t *co_lss_wait_slave_on_enter(co_lss_t *lss);
@@ -203,151 +205,169 @@ static co_lss_state_t *co_lss_wait_slave_on_enter(co_lss_t *lss);
  * The 'CAN frame received' transition function of the 'waiting' state of an LSS
  * slave.
  */
-static co_lss_state_t *co_lss_wait_slave_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_wait_slave_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'waiting' state of an LSS slave.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_wait_slave_state,
 	.on_enter = &co_lss_wait_slave_on_enter,
 	.on_recv = &co_lss_wait_slave_on_recv
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the 'configuration' state of
  * an LSS slave.
  */
-static co_lss_state_t *co_lss_cfg_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_cfg_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'configuration' state of an LSS slave.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_cfg_state,
 	.on_recv = &co_lss_cfg_on_recv
 )
+// clang-format on
 
 #ifndef LELY_NO_CO_MASTER
 
 /// The 'CAN frame received' transition function of the command received state.
-static co_lss_state_t *co_lss_cs_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_cs_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the command received state.
-static co_lss_state_t *co_lss_cs_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_cs_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The exit function of the command received state.
 static void co_lss_cs_on_leave(co_lss_t *lss);
 
 /// The command received state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_cs_state,
 	.on_recv = &co_lss_cs_on_recv,
 	.on_time = &co_lss_cs_on_time,
 	.on_leave = &co_lss_cs_on_leave
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the error received state.
-static co_lss_state_t *co_lss_err_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_err_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the error received state.
-static co_lss_state_t *co_lss_err_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_err_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The exit function of the error received state.
 static void co_lss_err_on_leave(co_lss_t *lss);
 
 /// The error received state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_err_state,
 	.on_recv = &co_lss_err_on_recv,
 	.on_time = &co_lss_err_on_time,
 	.on_leave = &co_lss_err_on_leave
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the inquire identity state.
-static co_lss_state_t *co_lss_lssid_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_lssid_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the inquire identity state.
-static co_lss_state_t *co_lss_lssid_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_lssid_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The exit function of the inquire identity state.
 static void co_lss_lssid_on_leave(co_lss_t *lss);
 
 /// The inquire identity state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_lssid_state,
 	.on_recv = &co_lss_lssid_on_recv,
 	.on_time = &co_lss_lssid_on_time,
 	.on_leave = &co_lss_lssid_on_leave
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the inquire node-ID state.
-static co_lss_state_t *co_lss_nid_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_nid_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the inquire node-ID state.
-static co_lss_state_t *co_lss_nid_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_nid_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The exit function of the inquire node-ID state.
 static void co_lss_nid_on_leave(co_lss_t *lss);
 
 /// The inquire node-ID state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_nid_state,
 	.on_recv = &co_lss_nid_on_recv,
 	.on_time = &co_lss_nid_on_time,
 	.on_leave = &co_lss_nid_on_leave
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the Slowscan initialization
  * state.
  */
-static co_lss_state_t *co_lss_slowscan_init_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_slowscan_init_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Slowscan initialization state.
-static co_lss_state_t *co_lss_slowscan_init_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_slowscan_init_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The Slowscan initialization state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_init_state,
 	.on_recv = &co_lss_slowscan_init_on_recv,
 	.on_time = &co_lss_slowscan_init_on_time
 )
+// clang-format on
 
 /// The entry function of the Slowscan scanning state.
 static co_lss_state_t *co_lss_slowscan_scan_on_enter(co_lss_t *lss);
 
 /// The 'CAN frame received' transition function of the Slowscan scanning state.
-static co_lss_state_t *co_lss_slowscan_scan_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_slowscan_scan_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Slowscan scanning state.
-static co_lss_state_t *co_lss_slowscan_scan_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_slowscan_scan_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 static co_lss_state_t *co_lss_slowscan_scan_on_res(co_lss_t *lss, int timeout);
 
 /// The Slowscan scanning state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_scan_state,
 	.on_enter = &co_lss_slowscan_scan_on_enter,
 	.on_recv = &co_lss_slowscan_scan_on_recv,
 	.on_time = &co_lss_slowscan_scan_on_time
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the Slowscan waiting state.
-static co_lss_state_t *co_lss_slowscan_wait_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_slowscan_wait_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Slowscan waiting state.
-static co_lss_state_t *co_lss_slowscan_wait_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_slowscan_wait_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The Slowscan waiting state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_wait_state,
 	.on_recv = &co_lss_slowscan_wait_on_recv,
 	.on_time = &co_lss_slowscan_wait_on_time
 )
+// clang-format on
 
 /// The entry function of the Slowscan 'switch state selective' state.
 static co_lss_state_t *co_lss_slowscan_switch_on_enter(co_lss_t *lss);
@@ -356,22 +376,24 @@ static co_lss_state_t *co_lss_slowscan_switch_on_enter(co_lss_t *lss);
  * The 'CAN frame received' transition function of the Slowscan 'switch state
  * selective' state.
  */
-static co_lss_state_t *co_lss_slowscan_switch_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_slowscan_switch_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /**
  * The 'timeout' transition function of the Slowscan 'switch state selective'
  * state.
  */
-static co_lss_state_t *co_lss_slowscan_switch_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_slowscan_switch_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The Slowscan 'switch state selective' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_switch_state,
 	.on_enter = &co_lss_slowscan_switch_on_enter,
 	.on_recv = &co_lss_slowscan_switch_on_recv,
 	.on_time = &co_lss_slowscan_switch_on_time
 )
+// clang-format on
 
 /// The entry function of the Slowscan finalization state.
 static co_lss_state_t *co_lss_slowscan_fini_on_enter(co_lss_t *lss);
@@ -380,61 +402,69 @@ static co_lss_state_t *co_lss_slowscan_fini_on_enter(co_lss_t *lss);
 static void co_lss_slowscan_fini_on_leave(co_lss_t *lss);
 
 /// The Slowscan finalization state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_fini_state,
 	.on_enter = &co_lss_slowscan_fini_on_enter,
 	.on_leave = &co_lss_slowscan_fini_on_leave
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the Fastscan initialization
  * state.
  */
-static co_lss_state_t *co_lss_fastscan_init_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_fastscan_init_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Fastscan initialization state.
-static co_lss_state_t *co_lss_fastscan_init_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_fastscan_init_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The Fastscan initialization state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_fastscan_init_state,
 	.on_recv = &co_lss_fastscan_init_on_recv,
 	.on_time = &co_lss_fastscan_init_on_time
 )
+// clang-format on
 
 /// The entry function of the Fastscan scanning state.
 static co_lss_state_t *co_lss_fastscan_scan_on_enter(co_lss_t *lss);
 
 /// The 'CAN frame received' transition function of the Fastscan scanning state.
-static co_lss_state_t *co_lss_fastscan_scan_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_fastscan_scan_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Fastscan scanning state.
-static co_lss_state_t *co_lss_fastscan_scan_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_fastscan_scan_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 static co_lss_state_t *co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout);
 
 /// The Fastscan scanning state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_fastscan_scan_state,
 	.on_enter = &co_lss_fastscan_scan_on_enter,
 	.on_recv = &co_lss_fastscan_scan_on_recv,
 	.on_time = &co_lss_fastscan_scan_on_time
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the Fastscan waiting state.
-static co_lss_state_t *co_lss_fastscan_wait_on_recv(co_lss_t *lss,
-		const struct can_msg *msg);
+static co_lss_state_t *co_lss_fastscan_wait_on_recv(
+		co_lss_t *lss, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the Fastscan waiting state.
-static co_lss_state_t *co_lss_fastscan_wait_on_time(co_lss_t *lss,
-		const struct timespec *tp);
+static co_lss_state_t *co_lss_fastscan_wait_on_time(
+		co_lss_t *lss, const struct timespec *tp);
 
 /// The Fastscan waiting state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_fastscan_wait_state,
 	.on_recv = &co_lss_fastscan_wait_on_recv,
 	.on_time = &co_lss_fastscan_wait_on_time
 )
+// clang-format on
 
 /// The entry function of the Fastscan finalization state.
 static co_lss_state_t *co_lss_fastscan_fini_on_enter(co_lss_t *lss);
@@ -443,10 +473,12 @@ static co_lss_state_t *co_lss_fastscan_fini_on_enter(co_lss_t *lss);
 static void co_lss_fastscan_fini_on_leave(co_lss_t *lss);
 
 /// The Fastscan finalization state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_lss_fastscan_fini_state,
 	.on_enter = &co_lss_fastscan_fini_on_enter,
 	.on_leave = &co_lss_fastscan_fini_on_leave
 )
+// clang-format on
 
 #endif // !LELY_NO_CO_MASTER
 
@@ -462,8 +494,8 @@ LELY_CO_DEFINE_STATE(co_lss_fastscan_fini_state,
  *
  * @returns a pointer to the next state.
  */
-static co_lss_state_t *co_lss_switch_sel(co_lss_t *lss, co_unsigned8_t cs,
-		co_unsigned32_t id);
+static co_lss_state_t *co_lss_switch_sel(
+		co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id);
 
 /**
  * Implements the LSS identify remote slave service for an LSS slave. See
@@ -473,8 +505,8 @@ static co_lss_state_t *co_lss_switch_sel(co_lss_t *lss, co_unsigned8_t cs,
  * @param cs  the command specifier (in the range [0x46..0x4b]).
  * @param id  the current LSS number to be checked.
  */
-static void co_lss_id_slave(co_lss_t *lss, co_unsigned8_t cs,
-		co_unsigned32_t id);
+static void co_lss_id_slave(
+		co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id);
 
 /**
  * Implements the LSS identify non-configured remote slave service for an LSS
@@ -507,8 +539,8 @@ static co_lss_state_t *co_lss_fastscan(co_lss_t *lss, co_unsigned32_t id,
  * @param msg a pointer to the CAN frame to be initialized.
  * @param cs  the command specifier.
  */
-static void co_lss_init_req(const co_lss_t *lss, struct can_msg *msg,
-		co_unsigned8_t cs);
+static void co_lss_init_req(
+		const co_lss_t *lss, struct can_msg *msg, co_unsigned8_t cs);
 
 #ifndef LELY_NO_CO_MASTER
 
@@ -521,8 +553,8 @@ static void co_lss_init_req(const co_lss_t *lss, struct can_msg *msg,
  *
  * @returns 0 on success, or -1 on error.
  */
-static int co_lss_send_switch_sel_req(const co_lss_t *lss,
-		const struct co_id *id);
+static int co_lss_send_switch_sel_req(
+		const co_lss_t *lss, const struct co_id *id);
 
 /**
  * Sends an LSS identify remote slave request (see Fig. 42 in CiA 305 version
@@ -736,8 +768,8 @@ co_lss_set_rate_ind(co_lss_t *lss, co_lss_rate_ind_t *ind, void *data)
 }
 
 LELY_CO_EXPORT void
-co_lss_get_store_ind(const co_lss_t *lss, co_lss_store_ind_t **pind,
-		void **pdata)
+co_lss_get_store_ind(
+		const co_lss_t *lss, co_lss_store_ind_t **pind, void **pdata)
 {
 	assert(lss);
 
@@ -913,9 +945,7 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 	case 20: req.data[2] = 7; break;
 	case 10: req.data[2] = 8; break;
 	case 0: req.data[2] = 9; break;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return 0;
+	default: set_errnum(ERRNUM_INVAL); return 0;
 	}
 
 	trace("LSS: configure bit timing parameters");
@@ -940,8 +970,10 @@ co_lss_switch_rate_req(co_lss_t *lss, int delay)
 		return -1;
 	}
 
+	// clang-format off
 	if (__unlikely(delay < CO_UNSIGNED16_MIN
 			|| delay > CO_UNSIGNED16_MAX)) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1109,8 +1141,8 @@ co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 }
 
 LELY_CO_EXPORT int
-co_lss_id_slave_req(co_lss_t *lss, const struct co_id* lo,
-		const struct co_id* hi, co_lss_cs_ind_t *ind, void *data)
+co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
+		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
 		set_errnum(ERRNUM_PERM);
@@ -1159,8 +1191,8 @@ co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 }
 
 LELY_CO_EXPORT int
-co_lss_slowscan_req(co_lss_t *lss, const struct co_id* lo,
-		const struct co_id* hi, co_lss_scan_ind_t *ind, void *data)
+co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
+		const struct co_id *hi, co_lss_scan_ind_t *ind, void *data)
 {
 	assert(lo);
 	assert(hi);
@@ -1359,20 +1391,26 @@ co_lss_wait_slave_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		}
 		break;
 	// Switch state selective.
-	case 0x40: case 0x41: case 0x42: case 0x43:
+	case 0x40:
+	case 0x41:
+	case 0x42:
+	case 0x43:
 		if (msg->len < 5)
 			return NULL;
 		return co_lss_switch_sel(lss, cs, ldle_u32(msg->data + 1));
 	// LSS identify remote slave.
-	case 0x46: case 0x47: case 0x48: case 0x49: case 0x4a: case 0x4b:
+	case 0x46:
+	case 0x47:
+	case 0x48:
+	case 0x49:
+	case 0x4a:
+	case 0x4b:
 		if (msg->len < 5)
 			return NULL;
 		co_lss_id_slave(lss, msg->data[0], ldle_u32(msg->data + 1));
 		break;
 	// LSS identify non-configured remote slave.
-	case 0x4c:
-		co_lss_id_non_cfg_slave(lss);
-		break;
+	case 0x4c: co_lss_id_non_cfg_slave(lss); break;
 	// LSS Fastscan.
 	case 0x51:
 		if (msg->len < 8)
@@ -1477,9 +1515,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 				if (!(req.data[1] = !(baud & CO_BAUD_AUTO)))
 					co_dev_set_rate(lss->dev, 0);
 				break;
-			default:
-				req.data[1] = 1;
-				break;
+			default: req.data[1] = 1; break;
 			}
 		}
 		can_net_send(lss->net, &req);
@@ -1501,10 +1537,12 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		co_lss_init_req(lss, &req, cs);
 		if (lss->store_ind) {
 			// Store the pending node-ID and baudrate.
+			// clang-format off
 			if (__unlikely(lss->store_ind(lss,
 					co_nmt_get_id(lss->nmt),
 					co_dev_get_rate(lss->dev),
 					lss->store_data) == -1)) {
+				// clang-format on
 				// Discard the error code.
 				set_errc(errc);
 				req.data[1] = 2;
@@ -1515,15 +1553,18 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		can_net_send(lss->net, &req);
 		break;
 	// LSS identify remote slave.
-	case 0x46: case 0x47: case 0x48: case 0x49: case 0x4a: case 0x4b:
+	case 0x46:
+	case 0x47:
+	case 0x48:
+	case 0x49:
+	case 0x4a:
+	case 0x4b:
 		if (msg->len < 5)
 			return NULL;
 		co_lss_id_slave(lss, cs, ldle_u32(msg->data + 1));
 		break;
 	// LSS identify non-configured remote slave.
-	case 0x4c:
-		co_lss_id_non_cfg_slave(lss);
-		break;
+	case 0x4c: co_lss_id_non_cfg_slave(lss); break;
 	// Inquire identity vendor-ID (Fig. 37 in CiA 305 version 3.0.0).
 	case 0x5a:
 		trace("LSS: sending vendor-ID");
@@ -1564,9 +1605,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		case CO_NMT_ST_RESET_COMM:
 			req.data[1] = co_nmt_get_id(lss->nmt);
 			break;
-		default:
-			req.data[1] = co_dev_get_id(lss->dev);
-			break;
+		default: req.data[1] = co_dev_get_id(lss->dev); break;
 		}
 		can_net_send(lss->net, &req);
 		break;
@@ -1937,7 +1976,8 @@ co_lss_fastscan_scan_on_enter(co_lss_t *lss)
 	// Find the next unknown bit.
 	for (; lss->bitchk
 			&& (pmask[lss->lsssub] & (UINT32_C(1) << lss->bitchk));
-			lss->bitchk--);
+			lss->bitchk--)
+		;
 
 	co_unsigned8_t lssnext = lss->lsssub;
 	// If we obtained the complete LSS number, send it again and prepare for
@@ -1951,9 +1991,11 @@ co_lss_fastscan_scan_on_enter(co_lss_t *lss)
 	}
 
 	// LSS Fastscan (see Fig. 46 in CiA 305 version 3.0.0).
+	// clang-format off
 	if (__unlikely(co_lss_send_fastscan_req(lss, pid[lss->lsssub],
 			lss->bitchk, lss->lsssub, lssnext) == -1)) {
 		// Abort if sending the CAN frame failed.
+		// clang-format on
 		lss->cs = 0;
 		return co_lss_fastscan_fini_state;
 	}
@@ -2101,8 +2143,7 @@ co_lss_switch_sel(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id)
 		// Switch to the configuration state.
 		trace("LSS: switching to configuration state");
 		return co_lss_cfg_state;
-	default:
-		return NULL;
+	default: return NULL;
 	}
 }
 
@@ -2182,10 +2223,8 @@ co_lss_id_non_cfg_slave(const co_lss_t *lss)
 	switch (co_nmt_get_st(lss->nmt)) {
 	case CO_NMT_ST_BOOTUP:
 	case CO_NMT_ST_RESET_NODE:
-	case CO_NMT_ST_RESET_COMM:
-		break;
-	default:
-		return;
+	case CO_NMT_ST_RESET_COMM: break;
+	default: return;
 	}
 
 	struct can_msg req;
@@ -2212,12 +2251,10 @@ co_lss_fastscan(co_lss_t *lss, co_unsigned32_t id, co_unsigned8_t bitchk,
 		if (lss->lsspos > 3 || lss->lsspos != lsssub)
 			return NULL;
 		// Check if the unmasked bits of the specified IDNumber match.
-		co_unsigned32_t pid[] = {
-			co_obj_get_val_u32(obj_1018, 0x01),
+		co_unsigned32_t pid[] = { co_obj_get_val_u32(obj_1018, 0x01),
 			co_obj_get_val_u32(obj_1018, 0x02),
 			co_obj_get_val_u32(obj_1018, 0x03),
-			co_obj_get_val_u32(obj_1018, 0x04)
-		};
+			co_obj_get_val_u32(obj_1018, 0x04) };
 		if ((id ^ pid[lss->lsspos]) & ~((UINT32_C(1) << bitchk) - 1))
 			return NULL;
 		lss->lsspos = lssnext;
@@ -2281,10 +2318,12 @@ co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
 	assert(lo);
 	assert(hi);
 
+	// clang-format off
 	if (__unlikely(lo->vendor_id != hi->vendor_id
 			|| lo->product_code != hi->product_code)
 			|| lo->revision > hi->revision
 			|| lo->serial_nr > hi->serial_nr) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2352,4 +2391,3 @@ co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs)
 #endif // !LELY_NO_CO_MASTER
 
 #endif // !LELY_NO_CO_LSS
-

@@ -22,12 +22,12 @@
  */
 
 // Rename error flags to avoid conflicts with definitions in <cantype.h>.
-#define CAN_ERROR_BIT	_CAN_ERROR_BIT
-#define CAN_ERROR_STUFF	_CAN_ERROR_STUFF
-#define CAN_ERROR_CRC	_CAN_ERROR_CRC
-#define CAN_ERROR_FORM	_CAN_ERROR_FORM
-#define CAN_ERROR_ACK	_CAN_ERROR_ACK
-#define CAN_ERROR_OTHER	_CAN_ERROR_OTHER
+#define CAN_ERROR_BIT _CAN_ERROR_BIT
+#define CAN_ERROR_STUFF _CAN_ERROR_STUFF
+#define CAN_ERROR_CRC _CAN_ERROR_CRC
+#define CAN_ERROR_FORM _CAN_ERROR_FORM
+#define CAN_ERROR_ACK _CAN_ERROR_ACK
+#define CAN_ERROR_OTHER _CAN_ERROR_OTHER
 
 #include "can.h"
 
@@ -40,9 +40,9 @@
 
 #ifdef LELY_HAVE_VCI
 
+#include <lely/can/vci.h>
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
-#include <lely/can/vci.h>
 
 #include <assert.h>
 #include <string.h>
@@ -64,24 +64,12 @@ CANMSG_is_error(const void *msg, enum can_state *pstate, enum can_error *perror)
 	enum can_error error = perror ? *perror : 0;
 
 	switch (msg_->abData[0]) {
-	case CAN_ERROR_STUFF:
-		error |= _CAN_ERROR_STUFF;
-		break;
-	case CAN_ERROR_FORM:
-		error |= _CAN_ERROR_FORM;
-		break;
-	case CAN_ERROR_ACK:
-		error |= _CAN_ERROR_ACK;
-		break;
-	case CAN_ERROR_BIT:
-		error |= _CAN_ERROR_BIT;
-		break;
-	case CAN_ERROR_CRC:
-		error |= _CAN_ERROR_CRC;
-		break;
-	case CAN_ERROR_OTHER:
-		error |= _CAN_ERROR_OTHER;
-		break;
+	case CAN_ERROR_STUFF: error |= _CAN_ERROR_STUFF; break;
+	case CAN_ERROR_FORM: error |= _CAN_ERROR_FORM; break;
+	case CAN_ERROR_ACK: error |= _CAN_ERROR_ACK; break;
+	case CAN_ERROR_BIT: error |= _CAN_ERROR_BIT; break;
+	case CAN_ERROR_CRC: error |= _CAN_ERROR_CRC; break;
+	case CAN_ERROR_OTHER: error |= _CAN_ERROR_OTHER; break;
 	}
 
 	if (msg_->abData[1] & CAN_STATUS_BUSOFF) {

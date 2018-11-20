@@ -25,9 +25,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_STDALIGN_H
-#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) \
-		&& __has_include(<stdalign.h>)
-#define LELY_HAVE_STDALIGN_H	1
+#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) && __has_include(<stdalign.h>)
+#define LELY_HAVE_STDALIGN_H 1
 #endif
 #endif
 
@@ -38,19 +37,19 @@
 #ifndef __cplusplus
 
 #ifndef alignas
-#define alignas	_Alignas
+#define alignas _Alignas
 #endif
 
 #ifndef __alignas_is_defined
-#define __alignas_is_defined	1
+#define __alignas_is_defined 1
 #endif
 
 #ifndef alignof
-#define alignof	_Alignof
+#define alignof _Alignof
 #endif
 
 #ifndef __alignof_is_defined
-#define __alignof_is_defined	1
+#define __alignof_is_defined 1
 #endif
 
 #endif

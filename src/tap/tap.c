@@ -146,8 +146,7 @@ tap_vprintf(const char *format, va_list ap)
 			fputc('#', stdout);
 			fputc(' ', stdout);
 			break;
-		default:
-			fputc(*cp, stdout);
+		default: fputc(*cp, stdout);
 		}
 	}
 

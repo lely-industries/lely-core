@@ -22,13 +22,13 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_ENDIAN_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_ENDIAN_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/endian.h>
 
 #include <assert.h>
 
-static inline void bitcpy(unsigned char *dst, unsigned char src,
-		unsigned char mask);
+static inline void bitcpy(
+		unsigned char *dst, unsigned char src, unsigned char mask);
 
 LELY_UTIL_EXPORT void
 bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n)
@@ -71,8 +71,7 @@ bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n)
 			} else if (srcbit + n <= CHAR_BIT) {
 				bitcpy(dp, *sp << left, first);
 			} else {
-				bitcpy(dp, *sp << left | sp[1] >> right,
-						first);
+				bitcpy(dp, *sp << left | sp[1] >> right, first);
 			}
 		} else {
 			unsigned char b = *sp++;
@@ -162,8 +161,7 @@ bcpyle(void *dst, int dstbit, const void *src, int srcbit, size_t n)
 			} else if (srcbit + n <= CHAR_BIT) {
 				bitcpy(dp, *sp >> right, first);
 			} else {
-				bitcpy(dp, *sp >> right | sp[1] << left,
-						first);
+				bitcpy(dp, *sp >> right | sp[1] << left, first);
 			}
 		} else {
 			unsigned char b = *sp++;

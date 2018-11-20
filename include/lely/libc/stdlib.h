@@ -28,7 +28,7 @@
 
 #if __STDC_VERSION__ >= 201112L || defined(__USE_ISOC11)
 
-#define aligned_free	free
+#define aligned_free free
 
 #else
 
@@ -48,7 +48,7 @@ extern "C" {
  *
  * @returns either a NULL pointer or a pointer to the allocated space.
  */
-LELY_LIBC_EXTERN void * __cdecl aligned_alloc(size_t alignment, size_t size);
+LELY_LIBC_EXTERN void *__cdecl aligned_alloc(size_t alignment, size_t size);
 
 /**
  * Causes the space at <b>ptr</b> to be deallocated, that is, made available for
@@ -77,8 +77,8 @@ LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
  * @returns 0 on success, or -1 on error. In the latter case, the environment is
  * unchanged.
  */
-LELY_LIBC_EXTERN int setenv(const char *envname, const char *envval,
-		int overwrite);
+LELY_LIBC_EXTERN int setenv(
+		const char *envname, const char *envval, int overwrite);
 
 #endif // !(_POSIX_C_SOURCE > 200112L)
 

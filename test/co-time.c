@@ -4,8 +4,8 @@
 
 #include "co-test.h"
 
-#define NUM_TEST	8
-#define MSEC	100
+#define NUM_TEST 8
+#define MSEC 100
 
 void time_ind(co_time_t *time, const struct timespec *tp, void *data);
 
@@ -55,4 +55,3 @@ time_ind(co_time_t *time, const struct timespec *tp, void *data)
 
 	co_test_done(test);
 }
-

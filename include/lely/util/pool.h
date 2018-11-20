@@ -43,8 +43,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_POOL_H
-#define LELY_UTIL_POOL_H
+#ifndef LELY_UTIL_POOL_H_
+#define LELY_UTIL_POOL_H_
 
 #include <lely/util/util.h>
 
@@ -62,8 +62,8 @@ extern "C" {
 
 LELY_UTIL_EXTERN void *__pool_alloc(void);
 LELY_UTIL_EXTERN void __pool_free(void *ptr);
-LELY_UTIL_EXTERN struct __pool *__pool_init(struct __pool *pool, size_t nmemb,
-		size_t size);
+LELY_UTIL_EXTERN struct __pool *__pool_init(
+		struct __pool *pool, size_t nmemb, size_t size);
 LELY_UTIL_EXTERN void __pool_fini(struct __pool *pool);
 
 /**
@@ -120,5 +120,4 @@ LELY_UTIL_EXTERN size_t pool_size(const pool_t *pool);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_POOL_H_

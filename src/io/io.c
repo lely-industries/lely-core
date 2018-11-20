@@ -22,8 +22,8 @@
  */
 
 #include "io.h"
-#include <lely/util/errnum.h>
 #include "handle.h"
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 
@@ -196,4 +196,3 @@ io_flush(io_handle_t handle)
 
 	return handle->vtab->flush(handle);
 }
-

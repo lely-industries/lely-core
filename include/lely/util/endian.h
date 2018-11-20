@@ -27,14 +27,14 @@
 #include <string.h>
 
 #ifndef LELY_UTIL_ENDIAN_INLINE
-#define LELY_UTIL_ENDIAN_INLINE	inline
+#define LELY_UTIL_ENDIAN_INLINE inline
 #endif
 
 #ifndef LELY_BIG_ENDIAN
 #if (__GNUC__ && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || defined(__ARMEB__) \
 		|| defined(__THUMBEB__) || defined(__AARCH64EB__)
 /// The target platform is big-endian.
-#define LELY_BIG_ENDIAN	1
+#define LELY_BIG_ENDIAN 1
 #endif
 #endif
 
@@ -43,12 +43,13 @@
 #endif
 
 #ifndef LELY_LITTLE_ENDIAN
-#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || defined(_M_AMD64) \
-		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
-		|| defined(_M_X64) || defined(__x86_64__) || defined(__ARMEL__) \
-		|| defined(__THUMBEL__) || defined(__AARCH64EL__)
+#if (__GNUC__ && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) \
+		|| defined(_M_AMD64) || defined(__amd64__) || defined(_M_IA64) \
+		|| defined(__ia64__) || defined(_M_X64) || defined(__x86_64__) \
+		|| defined(__ARMEL__) || defined(__THUMBEL__) \
+		|| defined(__AARCH64EL__)
 /// The target platform is little-endian.
-#define LELY_LITTLE_ENDIAN	1
+#define LELY_LITTLE_ENDIAN 1
 #endif
 #endif
 
@@ -269,8 +270,8 @@ LELY_UTIL_ENDIAN_INLINE void stn_dbl(void *ptr, double d);
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-LELY_UTIL_EXTERN void bcpybe(void *dst, int dstbit, const void *src, int srcbit,
-		size_t n);
+LELY_UTIL_EXTERN void bcpybe(
+		void *dst, int dstbit, const void *src, int srcbit, size_t n);
 
 /**
  * Copies <b>n</b> bits from the source to the destination buffer. The buffers
@@ -283,8 +284,8 @@ LELY_UTIL_EXTERN void bcpybe(void *dst, int dstbit, const void *src, int srcbit,
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-LELY_UTIL_EXTERN void bcpyle(void *dst, int dstbit, const void *src, int srcbit,
-		size_t n);
+LELY_UTIL_EXTERN void bcpyle(
+		void *dst, int dstbit, const void *src, int srcbit, size_t n);
 
 LELY_UTIL_ENDIAN_INLINE uint16_t
 htobe_u16(uint16_t i)
@@ -300,7 +301,11 @@ htobe_u16(uint16_t i)
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint16_t betoh_u16(uint16_t i) { return htobe_u16(i); }
+LELY_UTIL_ENDIAN_INLINE uint16_t
+betoh_u16(uint16_t i)
+{
+	return htobe_u16(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint16_t
 htole_u16(uint16_t i)
@@ -316,11 +321,23 @@ htole_u16(uint16_t i)
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint16_t letoh_u16(uint16_t i) { return htole_u16(i); }
+LELY_UTIL_ENDIAN_INLINE uint16_t
+letoh_u16(uint16_t i)
+{
+	return htole_u16(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint16_t hton_u16(uint16_t i) { return htobe_u16(i); }
+LELY_UTIL_ENDIAN_INLINE uint16_t
+hton_u16(uint16_t i)
+{
+	return htobe_u16(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint16_t ntoh_u16(uint16_t i) { return hton_u16(i); }
+LELY_UTIL_ENDIAN_INLINE uint16_t
+ntoh_u16(uint16_t i)
+{
+	return hton_u16(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint32_t
 htobe_u32(uint32_t i)
@@ -330,18 +347,18 @@ htobe_u32(uint32_t i)
 #elif LELY_LITTLE_ENDIAN
 	return bswap32(i);
 #else
-	uint8_t b[] = {
-		(uint8_t)(i >> 24),
-		(uint8_t)(i >> 16),
-		(uint8_t)(i >> 8),
-		(uint8_t)i
-	};
+	uint8_t b[] = { (uint8_t)(i >> 24), (uint8_t)(i >> 16),
+		(uint8_t)(i >> 8), (uint8_t)i };
 	memcpy(&i, b, sizeof(i));
 	return i;
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint32_t betoh_u32(uint32_t i) { return htobe_u32(i); }
+LELY_UTIL_ENDIAN_INLINE uint32_t
+betoh_u32(uint32_t i)
+{
+	return htobe_u32(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint32_t
 htole_u32(uint32_t i)
@@ -351,22 +368,30 @@ htole_u32(uint32_t i)
 #elif LELY_LITTLE_ENDIAN
 	return i;
 #else
-	uint8_t b[] = {
-		(uint8_t)i,
-		(uint8_t)(i >> 8),
-		(uint8_t)(i >> 16),
-		(uint8_t)(i >> 24)
-	};
+	uint8_t b[] = { (uint8_t)i, (uint8_t)(i >> 8), (uint8_t)(i >> 16),
+		(uint8_t)(i >> 24) };
 	memcpy(&i, b, sizeof(i));
 	return i;
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint32_t letoh_u32(uint32_t i) { return htole_u32(i); }
+LELY_UTIL_ENDIAN_INLINE uint32_t
+letoh_u32(uint32_t i)
+{
+	return htole_u32(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint32_t hton_u32(uint32_t i) { return htobe_u32(i); }
+LELY_UTIL_ENDIAN_INLINE uint32_t
+hton_u32(uint32_t i)
+{
+	return htobe_u32(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint32_t ntoh_u32(uint32_t i) { return hton_u32(i); }
+LELY_UTIL_ENDIAN_INLINE uint32_t
+ntoh_u32(uint32_t i)
+{
+	return hton_u32(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint64_t
 htobe_u64(uint64_t i)
@@ -376,22 +401,19 @@ htobe_u64(uint64_t i)
 #elif LELY_LITTLE_ENDIAN
 	return bswap64(i);
 #else
-	uint8_t b[] = {
-		(uint8_t)(i >> 56),
-		(uint8_t)(i >> 48),
-		(uint8_t)(i >> 40),
-		(uint8_t)(i >> 32),
-		(uint8_t)(i >> 24),
-		(uint8_t)(i >> 16),
-		(uint8_t)(i >> 8),
-		(uint8_t)i
-	};
+	uint8_t b[] = { (uint8_t)(i >> 56), (uint8_t)(i >> 48),
+		(uint8_t)(i >> 40), (uint8_t)(i >> 32), (uint8_t)(i >> 24),
+		(uint8_t)(i >> 16), (uint8_t)(i >> 8), (uint8_t)i };
 	memcpy(&i, b, sizeof(i));
 	return i;
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint64_t betoh_u64(uint64_t i) { return htobe_u64(i); }
+LELY_UTIL_ENDIAN_INLINE uint64_t
+betoh_u64(uint64_t i)
+{
+	return htobe_u64(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint64_t
 htole_u64(uint64_t i)
@@ -401,26 +423,31 @@ htole_u64(uint64_t i)
 #elif LELY_LITTLE_ENDIAN
 	return i;
 #else
-	uint8_t b[] = {
-		(uint8_t)i,
-		(uint8_t)(i >> 8),
-		(uint8_t)(i >> 16),
-		(uint8_t)(i >> 24),
-		(uint8_t)(i >> 32),
-		(uint8_t)(i >> 40),
-		(uint8_t)(i >> 48),
-		(uint8_t)(i >> 56)
-	};
+	uint8_t b[] = { (uint8_t)i, (uint8_t)(i >> 8), (uint8_t)(i >> 16),
+		(uint8_t)(i >> 24), (uint8_t)(i >> 32), (uint8_t)(i >> 40),
+		(uint8_t)(i >> 48), (uint8_t)(i >> 56) };
 	memcpy(&i, b, sizeof(i));
 	return i;
 #endif
 }
 
-LELY_UTIL_ENDIAN_INLINE uint64_t letoh_u64(uint64_t i) { return htole_u64(i); }
+LELY_UTIL_ENDIAN_INLINE uint64_t
+letoh_u64(uint64_t i)
+{
+	return htole_u64(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint64_t hton_u64(uint64_t i) { return htobe_u64(i); }
+LELY_UTIL_ENDIAN_INLINE uint64_t
+hton_u64(uint64_t i)
+{
+	return htobe_u64(i);
+}
 
-LELY_UTIL_ENDIAN_INLINE uint64_t ntoh_u64(uint64_t i) { return hton_u64(i); }
+LELY_UTIL_ENDIAN_INLINE uint64_t
+ntoh_u64(uint64_t i)
+{
+	return hton_u64(i);
+}
 
 LELY_UTIL_ENDIAN_INLINE int16_t
 ldbe_i16(const void *ptr)
@@ -482,7 +509,11 @@ ldn_i16(const void *ptr)
 	return ldn_u16(ptr);
 }
 
-LELY_UTIL_ENDIAN_INLINE void stn_i16(void *ptr, int16_t i) { stn_u16(ptr, i); }
+LELY_UTIL_ENDIAN_INLINE void
+stn_i16(void *ptr, int16_t i)
+{
+	stn_u16(ptr, i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint16_t
 ldn_u16(const void *ptr)
@@ -559,7 +590,11 @@ ldn_i32(const void *ptr)
 	return ldn_u32(ptr);
 }
 
-LELY_UTIL_ENDIAN_INLINE void stn_i32(void *ptr, int32_t i) { stn_u32(ptr, i); }
+LELY_UTIL_ENDIAN_INLINE void
+stn_i32(void *ptr, int32_t i)
+{
+	stn_u32(ptr, i);
+}
 
 LELY_UTIL_ENDIAN_INLINE uint32_t
 ldn_u32(const void *ptr)

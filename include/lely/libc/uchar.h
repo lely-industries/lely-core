@@ -25,9 +25,8 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_UCHAR_H
-#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) \
-		&& __has_include(<uchar.h>)
-#define LELY_HAVE_UCHAR_H	1
+#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) && __has_include(<uchar.h>)
+#define LELY_HAVE_UCHAR_H 1
 #endif
 #endif
 

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_RPDO_H
-#define LELY_CO_RPDO_H
+#ifndef LELY_CO_RPDO_H_
+#define LELY_CO_RPDO_H_
 
 #include <lely/can/net.h>
 #include <lely/co/pdo.h>
@@ -76,8 +76,8 @@ LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
  *
  * @see co_rpdo_destroy()
  */
-LELY_CO_EXTERN co_rpdo_t *co_rpdo_create(can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num);
+LELY_CO_EXTERN co_rpdo_t *co_rpdo_create(
+		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Receive-PDO service. @see co_rpdo_create()
 LELY_CO_EXTERN void co_rpdo_destroy(co_rpdo_t *pdo);
@@ -112,8 +112,8 @@ LELY_CO_EXTERN const struct co_pdo_map_par *co_rpdo_get_map_par(
  *
  * @see co_rpdo_set_ind()
  */
-LELY_CO_EXTERN void co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind,
-		void **pdata);
+LELY_CO_EXTERN void co_rpdo_get_ind(
+		const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a Receive-PDO error occurs.
@@ -125,8 +125,8 @@ LELY_CO_EXTERN void co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind,
  *
  * @see co_rpdo_get_ind()
  */
-LELY_CO_EXTERN void co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_rpdo_set_ind(
+		co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the error handling function of a Receive-PDO service.
@@ -139,8 +139,8 @@ LELY_CO_EXTERN void co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind,
  *
  * @see co_rpdo_set_err()
  */
-LELY_CO_EXTERN void co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr,
-		void **pdata);
+LELY_CO_EXTERN void co_rpdo_get_err(
+		const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata);
 
 /**
  * Sets the error handling function of a Receive-PDO service.
@@ -152,8 +152,8 @@ LELY_CO_EXTERN void co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr,
  *
  * @see co_rpdo_get_err()
  */
-LELY_CO_EXTERN void co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err,
-		void *data);
+LELY_CO_EXTERN void co_rpdo_set_err(
+		co_rpdo_t *pdo, co_rpdo_err_t *err, void *data);
 
 /**
  * Triggers the actuation of a received synchronous PDO.
@@ -178,5 +178,4 @@ LELY_CO_EXTERN int co_rpdo_rtr(co_rpdo_t *pdo);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_RPDO_H_

@@ -6,7 +6,7 @@
 #endif
 #include <lely/io/poll.h>
 
-#define TIMEOUT	1000
+#define TIMEOUT 1000
 
 int
 main(void)
@@ -35,16 +35,12 @@ main(void)
 	tap_test(event.events == IO_EVENT_SIGNAL);
 	tap_test(event.u.sig == sig);
 
-	struct io_event revent = {
-		.events = IO_EVENT_READ,
-		.u.handle = pipe[0]
-	};
+	struct io_event revent = { .events = IO_EVENT_READ,
+		.u.handle = pipe[0] };
 	tap_assert(!io_poll_watch(poll, pipe[0], &revent, 0));
 
-	struct io_event sevent = {
-		.events = IO_EVENT_WRITE,
-		.u.handle = pipe[1]
-	};
+	struct io_event sevent = { .events = IO_EVENT_WRITE,
+		.u.handle = pipe[1] };
 	tap_assert(!io_poll_watch(poll, pipe[1], &sevent, 0));
 
 	tap_test(io_poll_wait(poll, 1, &event, TIMEOUT) == 1);
@@ -71,4 +67,3 @@ main(void)
 
 	return 0;
 }
-

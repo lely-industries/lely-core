@@ -21,5 +21,5 @@
  */
 
 #include "libc.h"
-#define LELY_LIBC_STDATOMIC_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_LIBC_STDATOMIC_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/libc/stdatomic.h>

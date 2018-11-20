@@ -63,7 +63,7 @@ struct __xtimer {
 	/// The signal value.
 	union sigval value;
 	/// The notification function.
-	void (__cdecl *notify_function)(union sigval);
+	void(__cdecl *notify_function)(union sigval);
 	/// The absolute expiration time.
 	struct timespec expire;
 	/// The period.
@@ -209,8 +209,10 @@ xclock_nanosleep(xclock_t *clock, int flags, const struct timespec *rqtp,
 	}
 
 	while (timespec_cmp(&tp, &clock->now) < 0) {
+		// clang-format off
 		if (__unlikely(cnd_wait(&clock->cond, &clock->mtx)
 				!= thrd_success)) {
+			// clang-format on
 			if (!(flags & TIMER_ABSTIME) && rmtp) {
 				*rmtp = tp;
 				timespec_sub(rmtp, &clock->now);
@@ -252,13 +254,14 @@ xclock_settime(xclock_t *clock, const struct timespec *tp)
 		if (timer->period.tv_sec || timer->period.tv_nsec) {
 			// Compute the timer overrun counter and next expiration
 			// time.
-			uint64_t expire = timespec_diff_nsec(&clock->now,
-					&timer->expire);
+			uint64_t expire = timespec_diff_nsec(
+					&clock->now, &timer->expire);
 			uint64_t period = (uint64_t)timer->period.tv_sec
-					* 1000000000l + timer->period.tv_nsec;
+							* 1000000000l
+					+ timer->period.tv_nsec;
 			uint64_t overrun = expire / period;
-			timespec_add_nsec(&timer->expire,
-					(overrun + 1) * period);
+			timespec_add_nsec(
+					&timer->expire, (overrun + 1) * period);
 			timer->overrun = MIN(overrun, INT_MAX);
 
 			pheap_insert(&clock->timers, &timer->node);
@@ -270,7 +273,7 @@ xclock_settime(xclock_t *clock, const struct timespec *tp)
 
 		if (timer->notify == SIGEV_THREAD) {
 			union sigval value = timer->value;
-			void (__cdecl *notify_function)(union sigval) =
+			void(__cdecl * notify_function)(union sigval) =
 					timer->notify_function;
 #ifndef LELY_NO_THREADS
 			mtx_unlock(&clock->mtx);
@@ -317,8 +320,10 @@ __xtimer_init(struct __xtimer *timer, xclock_t *clock,
 	assert(timer);
 	assert(clock);
 
+	// clang-format off
 	if (!evp || (evp->sigev_notify != SIGEV_NONE
 			&& evp->sigev_notify != SIGEV_THREAD)) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return NULL;
 	}
@@ -437,8 +442,10 @@ xtimer_settime(xtimer_t *timer, int flags, const struct itimerspec *value,
 
 	int arm = expire.tv_sec != 0 || expire.tv_nsec != 0;
 
+	// clang-format off
 	if (__unlikely(arm && (period.tv_nsec < 0
 			|| period.tv_nsec >= 1000000000l))) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -478,4 +485,3 @@ xtimer_settime(xtimer_t *timer, int flags, const struct itimerspec *value,
 
 	return 0;
 }
-

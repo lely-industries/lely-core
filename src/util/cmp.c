@@ -22,6 +22,5 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_CMP_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_CMP_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/cmp.h>
-

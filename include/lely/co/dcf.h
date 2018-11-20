@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_DCF_H
-#define LELY_CO_DCF_H
+#ifndef LELY_CO_DCF_H_
+#define LELY_CO_DCF_H_
 
 #include <lely/co/dev.h>
 
@@ -57,12 +57,11 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
  *
  * @returns a pointer to a new CANopen device, or NULL on error.
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_text(const char *begin,
-		const char *end, struct floc *at);
+LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_text(
+		const char *begin, const char *end, struct floc *at);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_DCF_H_

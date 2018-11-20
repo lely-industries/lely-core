@@ -42,6 +42,7 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 		tab[n] = crc;
 	}
 	*/
+	// clang-format off
 	static const uint16_t tab[] = {
 		0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
 		0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -76,6 +77,7 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 		0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
 		0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 	};
+	// clang-format on
 
 	if (__likely(ptr && n)) {
 		const uint8_t *bp = ptr;
@@ -84,4 +86,3 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 	}
 	return crc;
 }
-

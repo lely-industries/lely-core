@@ -22,9 +22,9 @@
  */
 
 #include "can.h"
-#define LELY_CAN_BUF_INLINE	extern inline LELY_DLL_EXPORT
-#include <lely/util/errnum.h>
+#define LELY_CAN_BUF_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/can/buf.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 
 #ifndef LELY_CAN_BUF_SIZE
 /// The minimum size (in number of frames) of a CAN frame buffer.
-#define LELY_CAN_BUF_SIZE	16
+#define LELY_CAN_BUF_SIZE 16
 #endif
 
 LELY_CAN_EXPORT int
@@ -131,8 +131,8 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 	size--;
 
 	// Reallocate the existing buffer.
-	struct can_msg *ptr = realloc(buf->ptr,
-			(size + 1) * sizeof(struct can_msg));
+	struct can_msg *ptr =
+			realloc(buf->ptr, (size + 1) * sizeof(struct can_msg));
 	if (__unlikely(!ptr)) {
 		set_errno(errno);
 		return 0;
@@ -160,4 +160,3 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 
 	return (begin - end - 1) & buf->size;
 }
-

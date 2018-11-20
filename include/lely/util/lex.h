@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_LEX_H
-#define LELY_UTIL_LEX_H
+#ifndef LELY_UTIL_LEX_H_
+#define LELY_UTIL_LEX_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 #ifndef LELY_UTIL_LEX_INLINE
-#define LELY_UTIL_LEX_INLINE	inline
+#define LELY_UTIL_LEX_INLINE inline
 #endif
 
 // The file location struct from <lely/util/diag.h>.
@@ -69,8 +69,8 @@ LELY_UTIL_LEX_INLINE int ctox(int c);
  *
  * @returns the number of characters read (at most one).
  */
-LELY_UTIL_EXTERN size_t lex_char(int c, const char *begin, const char *end,
-		struct floc *at);
+LELY_UTIL_EXTERN size_t lex_char(
+		int c, const char *begin, const char *end, struct floc *at);
 
 /**
  * Greedily lexes a sequence of characters of the specified class from a memory
@@ -88,8 +88,8 @@ LELY_UTIL_EXTERN size_t lex_char(int c, const char *begin, const char *end,
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_ctype(int (__cdecl *ctype)(int),
-		const char *begin, const char *end, struct floc *at);
+LELY_UTIL_EXTERN size_t lex_ctype(int(__cdecl *ctype)(int), const char *begin,
+		const char *end, struct floc *at);
 
 /**
  * Lexes a single line break from a memory buffer.
@@ -104,8 +104,8 @@ LELY_UTIL_EXTERN size_t lex_ctype(int (__cdecl *ctype)(int),
  *
  * @returns the number of characters read (at most two).
  */
-LELY_UTIL_EXTERN size_t lex_break(const char *begin, const char *end,
-		struct floc *at);
+LELY_UTIL_EXTERN size_t lex_break(
+		const char *begin, const char *end, struct floc *at);
 
 /**
  * Lexes a UTF-8 encoded Unicode character from a memory buffer. Illegal
@@ -213,9 +213,10 @@ LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
-		struct floc *at);
+LELY_UTIL_EXTERN size_t lex_c99_pp_num(
+		const char *begin, const char *end, struct floc *at);
 
+// clang-format off
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, pname) \
 	/** Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
@@ -235,7 +236,9 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
 	@returns the number of characters read. */ \
 	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
+// clang-format on
 
+// clang-format off
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, strtov, pname) \
 	/** Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
@@ -255,6 +258,7 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(const char *begin, const char *end,
 	@returns the number of characters read. */ \
 	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
+// clang-format on
 
 LELY_UTIL_DEFINE_LEX_SIGNED(long, long, strtol, pl)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long, ulong, strtoul, pul)
@@ -269,6 +273,7 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 #undef LELY_UTIL_DEFINE_LEX_UNSIGNED
 #undef LELY_UTIL_DEFINE_LEX_SIGNED
 
+// clang-format off
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, pname) \
 	/** Lexes a C99 `type` from a memory buffer.
 	@param begin a pointer to the start of the buffer.
@@ -287,7 +292,9 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 	@returns the number of characters read. */ \
 	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
+// clang-format on
 
+// clang-format off
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, pname) \
 	/** Lexes a C99 `type` from a memory buffer.
 	@param begin a pointer to the start of the buffer.
@@ -306,6 +313,7 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 	@returns the number of characters read. */ \
 	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
+// clang-format on
 
 LELY_UTIL_DEFINE_LEX_SIGNED(int8_t, i8, pi8)
 LELY_UTIL_DEFINE_LEX_SIGNED(int16_t, i16, pi16)
@@ -365,14 +373,12 @@ LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
 LELY_UTIL_EXTERN size_t lex_base64(const char *begin, const char *end,
 		struct floc *at, void *ptr, size_t *pn);
 
-LELY_UTIL_LEX_INLINE int __cdecl
-isbreak(int c)
+LELY_UTIL_LEX_INLINE int __cdecl isbreak(int c)
 {
 	return c == '\n' || c == '\r';
 }
 
-LELY_UTIL_LEX_INLINE int __cdecl
-isodigit(int c)
+LELY_UTIL_LEX_INLINE int __cdecl isodigit(int c)
 {
 	return c >= '0' && c <= '7';
 }
@@ -392,12 +398,18 @@ ctox(int c)
 	return 10 + (isupper(c) ? c - 'A' : c - 'a');
 #else
 	switch (c) {
-	case 'A': case 'a': return 0xa;
-	case 'B': case 'b': return 0xb;
-	case 'C': case 'c': return 0xc;
-	case 'D': case 'd': return 0xd;
-	case 'E': case 'e': return 0xe;
-	case 'F': case 'f': return 0xf;
+	case 'A':
+	case 'a': return 0xa;
+	case 'B':
+	case 'b': return 0xb;
+	case 'C':
+	case 'c': return 0xc;
+	case 'D':
+	case 'd': return 0xd;
+	case 'E':
+	case 'e': return 0xe;
+	case 'F':
+	case 'f': return 0xf;
 	default: return -1;
 	}
 #endif
@@ -407,5 +419,4 @@ ctox(int c)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_LEX_H_

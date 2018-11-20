@@ -25,14 +25,14 @@
 
 #ifndef LELY_NO_CO_TPDO
 
-#include <lely/util/errnum.h>
-#include <lely/util/time.h>
 #include <lely/can/buf.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/tpdo.h>
 #include <lely/co/val.h>
+#include <lely/util/errnum.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -60,9 +60,9 @@ struct __co_tpdo {
 	/// The time at which the next event-driven TPDO may be sent.
 	struct timespec inhibit;
 	/// A flag indicating the occurrence of an event.
-	unsigned int event:1;
+	unsigned int event : 1;
 	/// A flag indicating the synchronous time window has expired.
-	unsigned int swnd:1;
+	unsigned int swnd : 1;
 	/// The SYNC start value.
 	co_unsigned8_t sync;
 	/// The SYNC counter value.
@@ -116,8 +116,8 @@ static int co_tpdo_init_buf(co_tpdo_t *pdo);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1800_dn_ind(co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1800_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -125,8 +125,8 @@ static co_unsigned32_t co_1800_dn_ind(co_sub_t *sub,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1a00_dn_ind(co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1a00_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN receive callback function for a Transmit-PDO service.
@@ -425,8 +425,8 @@ co_tpdo_event(co_tpdo_t *pdo)
 			return -1;
 
 		if (pdo->comm.inhibit)
-			timespec_add_usec(&pdo->inhibit,
-					pdo->comm.inhibit * 100);
+			timespec_add_usec(
+					&pdo->inhibit, pdo->comm.inhibit * 100);
 	}
 
 	return co_tpdo_init_timer_event(pdo);
@@ -514,8 +514,10 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	// clang-format off
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (pdo->comm.trans == 0xfc
 			|| pdo->comm.trans == 0xfd)) {
+		// clang-format on
 		if (!pdo->recv) {
 			pdo->recv = can_recv_create();
 			if (__unlikely(!pdo->recv))
@@ -545,8 +547,9 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (!pdo->comm.trans
-			|| pdo->comm.trans >= 0xfe) && pdo->comm.event) {
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
+			&& (!pdo->comm.trans || pdo->comm.trans >= 0xfe)
+			&& pdo->comm.event) {
 		if (!pdo->timer_event) {
 			pdo->timer_event = can_timer_create();
 			if (__unlikely(!pdo->timer_event))
@@ -572,8 +575,9 @@ co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
 	// Ignore the synchronous window length unless the TPDO is valid and
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (pdo->comm.trans <= 0xf0
-			|| pdo->comm.trans == 0xfc) && swnd) {
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
+			&& (pdo->comm.trans <= 0xf0 || pdo->comm.trans == 0xfc)
+			&& swnd) {
 		if (!pdo->timer_swnd) {
 			pdo->timer_swnd = can_timer_create();
 			if (__unlikely(!pdo->timer_swnd))
@@ -627,9 +631,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0:
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
+	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
@@ -649,8 +651,10 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
+		// clang-format off
 		if (__unlikely(!(cobid & CO_PDO_COBID_FRAME)
 				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+			// clang-format on
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -684,8 +688,10 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		// Check whether RTR is allowed on this PDO.
+		// clang-format off
 		if (__unlikely((trans == 0xfc || trans == 0xfd)
 				&& (pdo->comm.cobid & CO_PDO_COBID_RTR))) {
+			// clang-format on
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -746,9 +752,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		pdo->comm.sync = sync;
 		break;
 	}
-	default:
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
+	default: ac = CO_SDO_AC_NO_SUB; goto error;
 	}
 
 	co_sub_dn(sub, &val);
@@ -868,8 +872,7 @@ co_tpdo_recv(const struct can_msg *_msg, void *data)
 			pdo->ind(pdo, ac, ac ? NULL : msg.data,
 					ac ? 0 : msg.len, pdo->data);
 	}
-	default:
-		break;
+	default: break;
 	}
 
 	return 0;
@@ -918,8 +921,8 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	}
 
 	size_t n = CAN_MAX_LEN;
-	co_unsigned32_t ac = co_pdo_up(&pdo->map, pdo->dev, &pdo->req,
-			msg->data, &n);
+	co_unsigned32_t ac = co_pdo_up(
+			&pdo->map, pdo->dev, &pdo->req, msg->data, &n);
 	if (__unlikely(ac))
 		return ac;
 	msg->len = n;
@@ -928,4 +931,3 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 }
 
 #endif // !LELY_NO_CO_TPDO
-

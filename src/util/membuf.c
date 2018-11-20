@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_MEMBUF_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_MEMBUF_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 #include <lely/util/membuf.h>
 
@@ -31,7 +31,7 @@
 
 #ifndef LELY_MEMBUF_SIZE
 /// The initial size (in bytes) of a memory buffer.
-#define LELY_MEMBUF_SIZE	16
+#define LELY_MEMBUF_SIZE 16
 #endif
 
 LELY_UTIL_EXPORT void
@@ -81,4 +81,3 @@ membuf_flush(struct membuf *buf, size_t size)
 		memmove(buf->begin, buf->begin + size, membuf_size(buf) - size);
 	buf->cur -= size;
 }
-

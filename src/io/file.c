@@ -24,12 +24,12 @@
 #ifdef __linux__
 // This needs to be defined before any files are included to make lseek64()
 // available.
-#define _LARGEFILE64_SOURCE	1
+#define _LARGEFILE64_SOURCE 1
 #endif
 
+#include "default.h"
 #include "io.h"
 #include <lely/io/file.h>
-#include "default.h"
 
 #include <assert.h>
 
@@ -48,8 +48,8 @@ struct file {
 };
 
 static ssize_t file_read(struct io_handle *handle, void *buf, size_t nbytes);
-static ssize_t file_write(struct io_handle *handle, const void *buf,
-		size_t nbytes);
+static ssize_t file_write(
+		struct io_handle *handle, const void *buf, size_t nbytes);
 static int file_flush(struct io_handle *handle);
 io_off_t file_seek(struct io_handle *handle, io_off_t offset, int whence);
 static ssize_t file_pread(struct io_handle *handle, void *buf, size_t nbytes,
@@ -57,16 +57,14 @@ static ssize_t file_pread(struct io_handle *handle, void *buf, size_t nbytes,
 static ssize_t file_pwrite(struct io_handle *handle, const void *buf,
 		size_t nbytes, io_off_t offset);
 
-static const struct io_handle_vtab file_vtab = {
-	.type = IO_TYPE_FILE,
+static const struct io_handle_vtab file_vtab = { .type = IO_TYPE_FILE,
 	.size = sizeof(struct file),
 	.fini = &default_fini,
 	.read = &file_read,
 	.write = &file_write,
 	.flush = &file_flush,
 	.pread = &file_pread,
-	.pwrite = &file_pwrite
-};
+	.pwrite = &file_pwrite };
 
 #ifdef _WIN32
 static ssize_t _file_read(struct io_handle *handle, void *buf, size_t nbytes,
@@ -105,6 +103,7 @@ io_open_file(const char *path, int flags)
 		dwDesiredAccess |= FILE_WRITE_DATA;
 	}
 
+	// clang-format off
 	DWORD dwCreationDisposition
 			= (flags & IO_FILE_CREATE) && (flags & IO_FILE_NO_EXIST)
 					? CREATE_NEW
@@ -113,14 +112,17 @@ io_open_file(const char *path, int flags)
 			: (flags & IO_FILE_CREATE) ? OPEN_ALWAYS
 			: (flags & IO_FILE_TRUNCATE) ? TRUNCATE_EXISTING
 			: OPEN_EXISTING;
+	// clang-format on
 
 	HANDLE fd = CreateFileA(path, dwDesiredAccess, 0, NULL,
 			dwCreationDisposition, FILE_FLAG_OVERLAPPED, NULL);
 #else
+	// clang-format off
 	int oflag = (flags & IO_FILE_READ) && (flags & IO_FILE_WRITE) ? O_RDWR
 			: flags & IO_FILE_READ ? O_RDONLY
 			: flags & IO_FILE_WRITE ? O_WRONLY
 			: 0;
+	// clang-format on
 	if (flags & IO_FILE_APPEND)
 		oflag |= O_APPEND;
 	if (flags & IO_FILE_CREATE) {
@@ -303,41 +305,25 @@ file_seek(struct io_handle *handle, io_off_t offset, int whence)
 #ifdef _WIN32
 	DWORD dwMoveMethod;
 	switch (whence) {
-	case IO_SEEK_BEGIN:
-		dwMoveMethod = FILE_BEGIN;
-		break;
-	case IO_SEEK_CURRENT:
-		dwMoveMethod = FILE_CURRENT;
-		break;
-	case IO_SEEK_END:
-		dwMoveMethod = FILE_END;
-		break;
-	default:
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return -1;
+	case IO_SEEK_BEGIN: dwMoveMethod = FILE_BEGIN; break;
+	case IO_SEEK_CURRENT: dwMoveMethod = FILE_CURRENT; break;
+	case IO_SEEK_END: dwMoveMethod = FILE_END; break;
+	default: SetLastError(ERROR_INVALID_PARAMETER); return -1;
 	}
 
 	LARGE_INTEGER li;
 	li.QuadPart = offset;
-	li.LowPart = SetFilePointer(handle->fd, li.LowPart, &li.HighPart,
-			dwMoveMethod);
+	li.LowPart = SetFilePointer(
+			handle->fd, li.LowPart, &li.HighPart, dwMoveMethod);
 	if (__unlikely(li.LowPart == INVALID_SET_FILE_POINTER))
 		return -1;
 	return li.QuadPart;
 #else
 	switch (whence) {
-	case IO_SEEK_BEGIN:
-		whence = SEEK_SET;
-		break;
-	case IO_SEEK_CURRENT:
-		whence = SEEK_CUR;
-		break;
-	case IO_SEEK_END:
-		whence = SEEK_END;
-		break;
-	default:
-		errno = EINVAL;
-		return -1;
+	case IO_SEEK_BEGIN: whence = SEEK_SET; break;
+	case IO_SEEK_CURRENT: whence = SEEK_CUR; break;
+	case IO_SEEK_END: whence = SEEK_END; break;
+	default: errno = EINVAL; return -1;
 	}
 
 #if defined(__linux__)
@@ -425,8 +411,10 @@ _file_read(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 
 	DWORD dwNumberOfBytesRead = 0;
 
+	// clang-format off
 	if (ReadFile(handle->fd, buf, nbytes, &dwNumberOfBytesRead,
 			&overlapped))
+		// clang-format on
 		goto done;
 
 	if (__unlikely(GetLastError() != ERROR_IO_PENDING)) {
@@ -434,8 +422,10 @@ _file_read(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 		goto error_ReadFile;
 	}
 
+	// clang-format off
 	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
 			&dwNumberOfBytesRead, TRUE))) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
@@ -474,8 +464,10 @@ _file_write(struct io_handle *handle, const void *buf, size_t nbytes,
 
 	DWORD dwNumberOfBytesWritten = 0;
 
+	// clang-format off
 	if (WriteFile(handle->fd, buf, nbytes, &dwNumberOfBytesWritten,
 			&overlapped))
+		// clang-format on
 		goto done;
 
 	if (__unlikely(GetLastError() != ERROR_IO_PENDING)) {
@@ -483,8 +475,10 @@ _file_write(struct io_handle *handle, const void *buf, size_t nbytes,
 		goto error_WriteFile;
 	}
 
+	// clang-format off
 	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
 			&dwNumberOfBytesWritten, TRUE))) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
@@ -505,4 +499,3 @@ error_CreateEvent:
 #endif // _WIN32
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
-

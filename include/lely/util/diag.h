@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_DIAG_H
-#define LELY_UTIL_DIAG_H
+#ifndef LELY_UTIL_DIAG_H_
+#define LELY_UTIL_DIAG_H_
 
 #include <lely/util/errnum.h>
 
@@ -95,8 +95,8 @@ typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
  *
  * @returns the number of characters read (excluding the termination character).
  */
-LELY_UTIL_EXTERN size_t floc_lex(struct floc *at, const char *begin,
-		const char *end);
+LELY_UTIL_EXTERN size_t floc_lex(
+		struct floc *at, const char *begin, const char *end);
 
 /**
  * Prints a file location to a string buffer. The filename, line and column are
@@ -127,8 +127,8 @@ LELY_UTIL_EXTERN int snprintf_floc(char *s, size_t n, const struct floc *at);
  *
  * @see diag_set_handler()
  */
-LELY_UTIL_EXTERN void diag_get_handler(diag_handler_t **phandler,
-		void **phandle);
+LELY_UTIL_EXTERN void diag_get_handler(
+		diag_handler_t **phandler, void **phandle);
 
 /**
  * Sets the handler function for diag().
@@ -139,8 +139,7 @@ LELY_UTIL_EXTERN void diag_get_handler(diag_handler_t **phandler,
  *
  * @see diag_get_handler()
  */
-LELY_UTIL_EXTERN void diag_set_handler(diag_handler_t *handler,
-		void *handle);
+LELY_UTIL_EXTERN void diag_set_handler(diag_handler_t *handler, void *handle);
 
 /**
  * Retrieves the handler function for diag_at().
@@ -152,8 +151,8 @@ LELY_UTIL_EXTERN void diag_set_handler(diag_handler_t *handler,
  *
  * @see diag_at_set_handler()
  */
-LELY_UTIL_EXTERN void diag_at_get_handler(diag_at_handler_t **phandler,
-		void **phandle);
+LELY_UTIL_EXTERN void diag_at_get_handler(
+		diag_at_handler_t **phandler, void **phandle);
 
 /**
  * Sets the handler function for diag_at().
@@ -164,8 +163,8 @@ LELY_UTIL_EXTERN void diag_at_get_handler(diag_at_handler_t **phandler,
  *
  * @see diag_at_get_handler()
  */
-LELY_UTIL_EXTERN void diag_at_set_handler(diag_at_handler_t *handler,
-		void *handle);
+LELY_UTIL_EXTERN void diag_at_set_handler(
+		diag_at_handler_t *handler, void *handle);
 
 /**
  * Emits a diagnostic message. This function SHOULD print the severity of the
@@ -485,5 +484,4 @@ LELY_UTIL_EXTERN const char *cmdname(const char *path);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_DIAG_H_

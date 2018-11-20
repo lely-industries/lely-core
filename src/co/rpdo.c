@@ -25,12 +25,12 @@
 
 #ifndef LELY_NO_CO_RPDO
 
-#include <lely/util/errnum.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -55,9 +55,9 @@ struct __co_rpdo {
 	/// A pointer to the CAN timer for the synchronous time window.
 	can_timer_t *timer_swnd;
 	/// A flag indicating we're waiting for a SYNC object to process #msg.
-	unsigned int sync:1;
+	unsigned int sync : 1;
 	/// A flag indicating the synchronous time window has expired.
-	unsigned int swnd:1;
+	unsigned int swnd : 1;
 	/// A CAN frame waiting for a SYNC object to be processed.
 	struct can_msg msg;
 	/// The CANopen SDO download request used for writing sub-objects.
@@ -104,8 +104,8 @@ static int co_rpdo_init_timer_swnd(co_rpdo_t *pdo);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1400_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -113,8 +113,8 @@ static co_unsigned32_t co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1600_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN receive callback function for a Receive-PDO service.
@@ -148,8 +148,8 @@ static int co_rpdo_timer_swnd(const struct timespec *tp, void *data);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-static co_unsigned32_t co_rpdo_read_frame(co_rpdo_t *pdo,
-		const struct can_msg *msg);
+static co_unsigned32_t co_rpdo_read_frame(
+		co_rpdo_t *pdo, const struct can_msg *msg);
 
 LELY_CO_EXPORT void *
 __co_rpdo_alloc(void)
@@ -533,9 +533,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0:
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
+	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
@@ -555,8 +553,10 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
+		// clang-format off
 		if (__unlikely(!(cobid & CO_PDO_COBID_FRAME)
 				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+			// clang-format on
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -617,9 +617,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		pdo->comm.event = event;
 		break;
 	}
-	default:
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
+	default: ac = CO_SDO_AC_NO_SUB; goto error;
 	}
 
 	co_sub_dn(sub, &val);
@@ -782,8 +780,8 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	assert(msg);
 
 	size_t n = MIN(msg->len, CAN_MAX_LEN);
-	co_unsigned32_t ac = co_pdo_dn(&pdo->map, pdo->dev, &pdo->req,
-			msg->data, n);
+	co_unsigned32_t ac =
+			co_pdo_dn(&pdo->map, pdo->dev, &pdo->req, msg->data, n);
 
 #ifndef NDEBUG
 	if (ac)
@@ -815,4 +813,3 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 }
 
 #endif // !LELY_NO_CO_RPDO
-

@@ -14,7 +14,7 @@ LELY_UTIL_DEFINE_TYPE(int, int)
 LELY_UTIL_DEFINE_TYPE(uint, unsigned int)
 LELY_UTIL_DEFINE_TYPE(long, long)
 LELY_UTIL_DEFINE_TYPE(ulong, unsigned long)
-#if __STDC_VERSION__ >= 199901L  || __cplusplus >= 201103L
+#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 LELY_UTIL_DEFINE_TYPE(llong, long long)
 LELY_UTIL_DEFINE_TYPE(ullong, unsigned long long)
 #endif
@@ -60,4 +60,3 @@ LELY_UTIL_DEFINE_TYPE(char16, char16_t)
 LELY_UTIL_DEFINE_TYPE(char32, char32_t)
 // From wchar.h:
 LELY_UTIL_DEFINE_TYPE(wint, wint_t)
-

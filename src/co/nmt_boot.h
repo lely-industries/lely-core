@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_NMT_BOOT_H
-#define LELY_CO_INTERN_NMT_BOOT_H
+#ifndef LELY_CO_INTERN_NMT_BOOT_H_
+#define LELY_CO_INTERN_NMT_BOOT_H_
 
 #include "co.h"
 #include <lely/co/csdo.h>
@@ -46,8 +46,8 @@ extern "C" {
  * @param st  the state of the node (including the toggle bit).
  * @param es  the error status (in the range ['A'..'O'], or 0 on success).
  */
-void co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
-		char es);
+void co_nmt_boot_con(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 
 void *__co_nmt_boot_alloc(void);
 void __co_nmt_boot_free(void *ptr);
@@ -95,5 +95,4 @@ int co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_INTERN_NMT_BOOT_H_

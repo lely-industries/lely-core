@@ -18,21 +18,22 @@
  * limitations under the License.
  */
 
-#include <lely/libc/unistd.h>
-#include <lely/util/daemon.h>
-#include <lely/util/diag.h>
-#include <lely/util/time.h>
+#include <lely/co/wtm.h>
 #include <lely/io/addr.h>
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
 #include <lely/io/sock.h>
-#include <lely/co/wtm.h>
+#include <lely/libc/unistd.h>
+#include <lely/util/daemon.h>
+#include <lely/util/diag.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 #define HELP \
 	"Arguments: [options...] <CAN interface> address port\n" \
 	"Options:\n" \
@@ -51,6 +52,7 @@
 	"  -p <local port>, --port=<local port>\n" \
 	"                        Receive UDP frames on <local port>\n" \
 	"  -v, --verbose         Print sent and received CAN frames"
+// clang-format on
 
 int daemon_init(int argc, char *argv[]);
 void daemon_main();
@@ -65,11 +67,11 @@ int wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data);
 int wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 
-#define FLAG_BROADCAST	0x01
-#define FLAG_FLUSH	0x02
-#define FLAG_HELP	0x04
-#define FLAG_NO_DAEMON	0x08
-#define FLAG_VERBOSE	0x10
+#define FLAG_BROADCAST 0x01
+#define FLAG_FLUSH 0x02
+#define FLAG_HELP 0x04
+#define FLAG_NO_DAEMON 0x08
+#define FLAG_VERBOSE 0x10
 
 int flags;
 int keep = 10000;
@@ -105,13 +107,10 @@ main(int argc, char *argv[])
 			if (c == -1)
 				break;
 			switch (c) {
-			case ':': case '?': break;
-			case 'D':
-				flags |= FLAG_NO_DAEMON;
-				break;
-			case 'h':
-				flags |= FLAG_HELP;
-				break;
+			case ':':
+			case '?': break;
+			case 'D': flags |= FLAG_NO_DAEMON; break;
+			case 'h': flags |= FLAG_HELP; break;
 			}
 		}
 	}
@@ -128,9 +127,12 @@ main(int argc, char *argv[])
 		daemon_fini();
 		return EXIT_SUCCESS;
 	} else {
+		// clang-format off
 		return daemon_start(argv[0], &daemon_init, &daemon_main,
 				&daemon_fini, argc, argv)
-				? EXIT_FAILURE : EXIT_SUCCESS;
+				? EXIT_FAILURE
+				: EXIT_SUCCESS;
+		// clang-format on
 	}
 }
 
@@ -158,15 +160,9 @@ daemon_init(int argc, char *argv[])
 		if (*arg != '-') {
 			optind++;
 			switch (optpos++) {
-			case 0:
-				ifname = arg;
-				break;
-			case 1:
-				address = arg;
-				break;
-			case 2:
-				send_port = arg;
-				break;
+			case 0: ifname = arg; break;
+			case 1: address = arg; break;
+			case 2: send_port = arg; break;
 			default:
 				diag(DIAG_ERROR, 0, "extra argument %s", arg);
 				break;
@@ -211,49 +207,25 @@ daemon_init(int argc, char *argv[])
 				diag(DIAG_ERROR, 0, "illegal option -- %c",
 						optopt);
 				break;
-			case '4':
-				recv_domain = IO_SOCK_IPV4;
-				break;
-			case '6':
-				recv_domain = IO_SOCK_IPV6;
-				break;
-			case 'b':
-				flags |= FLAG_BROADCAST;
-				break;
+			case '4': recv_domain = IO_SOCK_IPV4; break;
+			case '6': recv_domain = IO_SOCK_IPV6; break;
+			case 'b': flags |= FLAG_BROADCAST; break;
 			case 'D': break;
-			case 'f':
-				flags |= FLAG_FLUSH;
-				break;
+			case 'f': flags |= FLAG_FLUSH; break;
 			case 'h': break;
-			case 'i':
-				nif = atoi(optarg);
-				break;
-			case 'k':
-				keep = atoi(optarg);
-				break;
-			case 'p':
-				recv_port = optarg;
-				break;
-			case 'v':
-				flags |= FLAG_VERBOSE;
-				break;
+			case 'i': nif = atoi(optarg); break;
+			case 'k': keep = atoi(optarg); break;
+			case 'p': recv_port = optarg; break;
+			case 'v': flags |= FLAG_VERBOSE; break;
 			}
 		}
 	}
 	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
 		switch (optpos++) {
-		case 0:
-			ifname = arg;
-			break;
-		case 1:
-			address = arg;
-			break;
-		case 2:
-			send_port = arg;
-			break;
-		default:
-			diag(DIAG_ERROR, 0, "extra argument %s", arg);
-			break;
+		case 0: ifname = arg; break;
+		case 1: address = arg; break;
+		case 2: send_port = arg; break;
+		default: diag(DIAG_ERROR, 0, "extra argument %s", arg); break;
 		}
 	}
 
@@ -309,8 +281,9 @@ daemon_init(int argc, char *argv[])
 		}
 		event.events = IO_EVENT_READ;
 		event.u.handle = recv_handle;
-		if (__unlikely(io_poll_watch(poll, recv_handle, &event, 1)
-				== -1)) {
+		// clang-format off
+		if (__unlikely(io_poll_watch(poll, recv_handle, &event, 1) == -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(), "unable to watch port %s",
 					recv_port);
 			goto error_watch_recv;
@@ -374,8 +347,10 @@ daemon_main()
 		// Send a keep-alive message if necessary and compute the
 		// timeout (number of ms to next keep-alive message).
 		int timeout = -1;
+		// clang-format off
 		while (keep > 0 && (timeout = timespec_diff_msec(&next, &now))
 				<= 0) {
+			// clang-format on
 			co_wtm_send_alive(wtm);
 			timespec_add_msec(&next, keep);
 		}
@@ -425,8 +400,9 @@ daemon_main()
 				if (flags & FLAG_VERBOSE) {
 					char s[60] = { 0 };
 					snprintf_can_msg(s, sizeof(s), &msg);
-					printf("[%10ld.%09ld] > %s\n", now.tv_sec,
-							now.tv_nsec, s);
+					printf("[%10ld.%09ld] > %s\n",
+							now.tv_sec, now.tv_nsec,
+							s);
 				}
 				// Process the frame.
 				co_wtm_send(wtm, 1, &msg);
@@ -436,12 +412,14 @@ daemon_main()
 			// Treat the reception of an error frame, or any error
 			// other than an empty receive buffer, as an error
 			// event.
+			// clang-format off
 			if (__unlikely(!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
 					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+				// clang-format on
 				event.events |= IO_EVENT_ERROR;
 		} else if (event.u.handle == recv_handle
-				&&(event.events & IO_EVENT_READ)) {
+				&& (event.events & IO_EVENT_READ)) {
 			// Read a single generic frame.
 			char buf[CO_WTM_MAX_LEN];
 			ssize_t result = io_read(recv_handle, buf, sizeof(buf));
@@ -529,11 +507,11 @@ open_send(const char *address, const char *port, int flags)
 
 	errc_t errc = 0;
 
-	struct io_addrinfo hints = {
-		.type = IO_SOCK_DGRAM
-	};
+	struct io_addrinfo hints = { .type = IO_SOCK_DGRAM };
 	struct io_addrinfo info;
+	// clang-format off
 	if (__unlikely(io_get_addrinfo(1, &info, address, port, &hints) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_get_addrinfo;
 	}
@@ -544,8 +522,10 @@ open_send(const char *address, const char *port, int flags)
 		goto error_open_socket;
 	}
 
+	// clang-format off
 	if (__unlikely(info.domain == IO_SOCK_IPV4 && (flags & FLAG_BROADCAST)
 			&& io_sock_set_broadcast(handle, 1) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_set_broadcast;
 	}
@@ -646,4 +626,3 @@ wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 
 	return io_write(handle, buf, nbytes) == (ssize_t)nbytes ? 0 : -1;
 }
-

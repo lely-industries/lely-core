@@ -25,12 +25,12 @@
 
 #ifndef LELY_NO_CO_SYNC
 
-#include <lely/util/errnum.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/sync.h>
 #include <lely/co/val.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -78,8 +78,8 @@ static int co_sync_update(co_sync_t *sync);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1005_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1006
@@ -87,8 +87,8 @@ static co_unsigned32_t co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1006_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1019
@@ -96,8 +96,8 @@ static co_unsigned32_t co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1019_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN receive callback function for a SYNC consumer service.
@@ -408,8 +408,10 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	// clang-format off
 	if (__unlikely(!(cobid & CO_SYNC_COBID_FRAME)
 			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -577,4 +579,3 @@ co_sync_timer(const struct timespec *tp, void *data)
 }
 
 #endif // !LELY_NO_CO_SYNC
-

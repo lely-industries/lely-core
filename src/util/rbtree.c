@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_RBTREE_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_RBTREE_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/rbtree.h>
 
 #include <assert.h>
@@ -116,8 +116,10 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 	struct rbnode *next = tree->root;
 	while (next) {
 		parent = next;
+		// clang-format off
 		next = tree->cmp(node->key, next->key) < 0
 				? next->left : next->right;
+		// clang-format on
 	}
 	// Attach the node to its parent.
 	if (!parent)
@@ -258,8 +260,7 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 					tmp = parent->right;
 				}
 				// Case 4: left rotate at parent and color flip.
-				rbnode_set_color(tmp,
-						rbnode_get_color(parent));
+				rbnode_set_color(tmp, rbnode_get_color(parent));
 				rbnode_set_color(parent, 0);
 				rbnode_set_color(tmp->right, 0);
 				rbtree_rol(tree, parent);
@@ -290,8 +291,7 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 				}
 				// Case 4: right rotate at parent and color
 				// flip.
-				rbnode_set_color(tmp,
-						rbnode_get_color(parent));
+				rbnode_set_color(tmp, rbnode_get_color(parent));
 				rbnode_set_color(parent, 0);
 				rbnode_set_color(tmp->left, 0);
 				rbtree_ror(tree, parent);

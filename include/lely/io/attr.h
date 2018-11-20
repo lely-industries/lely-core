@@ -19,20 +19,31 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_ATTR_H
-#define LELY_IO_ATTR_H
+#ifndef LELY_IO_ATTR_H_
+#define LELY_IO_ATTR_H_
 
 #include <lely/io/io.h>
 
 /// An opaque serial I/O device attributes type.
 #ifdef _WIN32
-union __io_attr { char __size[48]; int __align; };
+union __io_attr {
+	char __size[48];
+	int __align;
+};
 #else
-union __io_attr { char __size[60]; int __align; };
+union __io_attr {
+	char __size[60];
+	int __align;
+};
 #endif
 
 /// The static initializer for #io_attr_t.
-#define IO_ATTR_INIT	{ { 0 } }
+#define IO_ATTR_INIT \
+	{ \
+		{ \
+			0 \
+		} \
+	}
 
 enum {
 	/// No parity.
@@ -90,8 +101,7 @@ LELY_IO_EXTERN int io_attr_get_flow_control(const io_attr_t *attr);
  *
  * @see io_attr_get_flow_control()
  */
-LELY_IO_EXTERN int io_attr_set_flow_control(io_attr_t *attr,
-		int flow_control);
+LELY_IO_EXTERN int io_attr_set_flow_control(io_attr_t *attr, int flow_control);
 
 /**
  * Obtains the parity scheme from the attributes of a serial I/O device.
@@ -140,8 +150,7 @@ LELY_IO_EXTERN int io_attr_get_stop_bits(const io_attr_t *attr);
  *
  * @see io_attr_get_stop_bits()
  */
-LELY_IO_EXTERN int io_attr_set_stop_bits(io_attr_t *attr,
-		int stop_bits);
+LELY_IO_EXTERN int io_attr_set_stop_bits(io_attr_t *attr, int stop_bits);
 
 /**
  * Obtains the character size (in bits) from the attributes of a serial I/O
@@ -163,12 +172,10 @@ LELY_IO_EXTERN int io_attr_get_char_size(const io_attr_t *attr);
  *
  * @see io_attr_get_char_size()
  */
-LELY_IO_EXTERN int io_attr_set_char_size(io_attr_t *attr,
-		int char_size);
+LELY_IO_EXTERN int io_attr_set_char_size(io_attr_t *attr, int char_size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_ATTR_H_

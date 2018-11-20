@@ -24,7 +24,7 @@
 #ifndef _WIN32
 // This needs to be defined before any files are included to make fstat64(),
 // lseek64(), mmap64() and pread64() available.
-#define _LARGEFILE64_SOURCE	1
+#define _LARGEFILE64_SOURCE 1
 #endif
 
 #include "util.h"
@@ -492,15 +492,18 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 
 #ifdef _WIN32
 	DWORD nNumberOfBytesWritten;
+	// clang-format off
 	if (__unlikely(!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten,
 			NULL))) {
+		// clang-format on
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
 	return nNumberOfBytesWritten;
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
-	do result = write(buf->fd, ptr, size);
+	do
+		result = write(buf->fd, ptr, size);
 	while (__unlikely(result == -1 && errno == EINTR));
 	if (__unlikely(result == -1))
 		buf->errsv = errno;
@@ -564,8 +567,10 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 	ULARGE_INTEGER uli = { .QuadPart = pos };
 	Overlapped.Offset = uli.LowPart;
 	Overlapped.OffsetHigh = uli.HighPart;
+	// clang-format off
 	if (__unlikely(!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten,
 			&Overlapped))) {
+		// clang-format on
 		result = -1;
 		buf->dwErrCode = GetLastError();
 		goto error_WriteFile;
@@ -582,9 +587,11 @@ error_pos:
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
 #ifdef __linux__
-	do result = pwrite64(buf->fd, ptr, size, pos);
+	do
+		result = pwrite64(buf->fd, ptr, size, pos);
 #else
-	do result = pwrite(buf->fd, ptr, size, pos);
+	do
+		result = pwrite(buf->fd, ptr, size, pos);
 #endif
 	while (__unlikely(result == -1 && errno == EINTR));
 	if (__unlikely(result == -1))
@@ -778,8 +785,10 @@ error_size:
 		}
 
 		size_t nitems = MIN(size, buf->last - pos);
-		if (__unlikely(fread(buf->map, 1, nitems, buf->stream)
-				!= nitems && ferror(buf->stream))) {
+		// clang-format off
+		if (__unlikely(fread(buf->map, 1, nitems, buf->stream) != nitems
+				&& ferror(buf->stream))) {
+			// clang-format on
 			buf->errnum = errno2num(errno);
 			errc = errno2c(errno);
 			goto error_fread;
@@ -826,18 +835,24 @@ fwbuf_unmap(fwbuf_t *buf)
 	}
 
 	if (buf->hFileMappingObject != INVALID_HANDLE_VALUE) {
+		// clang-format off
 		if (__unlikely(!FlushViewOfFile(buf->lpBaseAddress,
 				buf->dwNumberOfBytesToMap) && !result)) {
+			// clang-format on
 			result = -1;
 			dwErrCode = GetLastError();
 		}
+		// clang-format off
 		if (__unlikely(!UnmapViewOfFile(buf->lpBaseAddress)
 				&& !result)) {
+			// clang-format on
 			result = -1;
 			dwErrCode = GetLastError();
 		}
+		// clang-format off
 		if (__unlikely(!CloseHandle(buf->hFileMappingObject)
 				&& !result)) {
+			// clang-format on
 			result = -1;
 			dwErrCode = GetLastError();
 		}
@@ -892,8 +907,10 @@ fwbuf_unmap(fwbuf_t *buf)
 		// memory map by fwbuf_write().
 		void *map = buf->map;
 		buf->map = NULL;
+		// clang-format off
 		if (__unlikely(fwbuf_pwrite(buf, map, buf->len, buf->pos)
 				!= (ssize_t)buf->len) && !result) {
+			// clang-format on
 			result = -1;
 			errc = get_errc();
 		}
@@ -945,7 +962,6 @@ fwbuf_error(fwbuf_t *buf)
 		set_errnum(buf->errnum);
 	return !!buf->errnum;
 #endif
-
 }
 
 LELY_UTIL_EXPORT void
@@ -989,8 +1005,10 @@ fwbuf_commit(fwbuf_t *buf)
 	}
 	buf->hFile = INVALID_HANDLE_VALUE;
 
+	// clang-format off
 	if (__unlikely(result || !MoveFileExA(buf->tmpname, buf->filename,
 			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))) {
+		// clang-format on
 		if (!result) {
 			result = -1;
 			dwErrCode = GetLastError();
@@ -1094,4 +1112,3 @@ done:
 	return result;
 #endif
 }
-

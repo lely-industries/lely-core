@@ -19,16 +19,16 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_GW_TXT_H
-#define LELY_CO_GW_TXT_H
+#ifndef LELY_CO_GW_TXT_H_
+#define LELY_CO_GW_TXT_H_
 
 #include <lely/co/gw.h>
 
 /// The high number of the version of CiA 309-3 implemented by this gateway.
-#define CO_GW_TXT_IMPL_HI	2
+#define CO_GW_TXT_IMPL_HI 2
 
 /// The low number of the version of CiA 309-3 implemented by this gateway.
-#define CO_GW_TXT_IMPL_LO	1
+#define CO_GW_TXT_IMPL_LO 1
 
 struct __co_gw_txt;
 #ifndef __cplusplus
@@ -123,8 +123,8 @@ LELY_CO_EXTERN void co_gw_txt_get_recv_func(const co_gw_txt_t *gw,
  *
  * @see co_gw_txt_get_recv_func()
  */
-LELY_CO_EXTERN void co_gw_txt_set_recv_func(co_gw_txt_t *gw,
-		co_gw_txt_recv_func_t *func, void *data);
+LELY_CO_EXTERN void co_gw_txt_set_recv_func(
+		co_gw_txt_t *gw, co_gw_txt_recv_func_t *func, void *data);
 
 /**
  * Sends a user request to a CANopen gateway.
@@ -169,12 +169,11 @@ LELY_CO_EXTERN void co_gw_txt_get_send_func(const co_gw_txt_t *gw,
  *
  * @see co_gw_txt_get_send_func()
  */
-LELY_CO_EXTERN void co_gw_txt_set_send_func(co_gw_txt_t *gw,
-		co_gw_txt_send_func_t *func, void *data);
+LELY_CO_EXTERN void co_gw_txt_set_send_func(
+		co_gw_txt_t *gw, co_gw_txt_send_func_t *func, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_GW_TXT_H_

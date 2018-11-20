@@ -21,10 +21,9 @@
  * limitations under the License.
  */
 
-#include "util.h"
-#include <lely/util/errnum.h>
-#include <lely/util/pool.h>
 #include "page.h"
+#include "util.h"
+#include <lely/util/pool.h>
 
 /// A memory pool allocator for fixed-size objects.
 struct __pool {
@@ -147,7 +146,7 @@ pool_alloc(pool_t *pool)
 	if (__unlikely(!pool))
 		return NULL;
 
-	// First try to reuse a previously freed object.
+		// First try to reuse a previously freed object.
 #ifdef LELY_NO_ATOMICS
 	void *ptr = pool->free;
 	if (ptr) {
@@ -156,9 +155,12 @@ pool_alloc(pool_t *pool)
 	}
 #else
 	void *ptr = atomic_load_explicit(&pool->free, memory_order_acquire);
+	// clang-format off
 	while (__unlikely(ptr && !atomic_compare_exchange_weak_explicit(
 			&pool->free, &ptr, *(void **)ptr, memory_order_release,
-			memory_order_relaxed)));
+			memory_order_relaxed)))
+		// clang-format on
+		;
 	if (ptr)
 		return ptr;
 #endif
@@ -167,16 +169,18 @@ pool_alloc(pool_t *pool)
 #ifdef LELY_NO_ATOMICS
 	struct page *page = pool->page;
 #else
-	struct page *page = atomic_load_explicit(&pool->page,
-			memory_order_acquire);
+	struct page *page =
+			atomic_load_explicit(&pool->page, memory_order_acquire);
 #endif
 	ptr = page_alloc(page, pool->size);
 	if (__likely(ptr))
 		return ptr;
 
 	// If no free space remains on the existing page, create a new page.
+	// clang-format off
 	if (__unlikely(page_create(&pool->page, pool->nmemb * pool->size)
 			== -1))
+		// clang-format on
 		return NULL;
 
 	return pool_alloc(pool);
@@ -198,7 +202,8 @@ pool_free(pool_t *pool, void *ptr)
 	*(void **)ptr = atomic_load_explicit(&pool->free, memory_order_acquire);
 	while (__unlikely(!atomic_compare_exchange_weak_explicit(&pool->free,
 			(void **)ptr, ptr, memory_order_release,
-			memory_order_relaxed)));
+			memory_order_relaxed)))
+		;
 #endif
 }
 
@@ -209,4 +214,3 @@ pool_size(const pool_t *pool)
 
 	return pool->size;
 }
-

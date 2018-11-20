@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_FILE_H
-#define LELY_IO_FILE_H
+#ifndef LELY_IO_FILE_H_
+#define LELY_IO_FILE_H_
 
 #include <lely/io/io.h>
 
@@ -82,8 +82,8 @@ LELY_IO_EXTERN io_handle_t io_open_file(const char *path, int flags);
  * on error. In the latter case, the error number can be obtained with
  * get_errc().
  */
-LELY_IO_EXTERN io_off_t io_seek(io_handle_t handle, io_off_t offset,
-		int whence);
+LELY_IO_EXTERN io_off_t io_seek(
+		io_handle_t handle, io_off_t offset, int whence);
 
 /**
  * Performs a read operation at the specified offset, without updating the file
@@ -97,8 +97,8 @@ LELY_IO_EXTERN io_off_t io_seek(io_handle_t handle, io_off_t offset,
  * @returns the number of bytes read on success, or -1 on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_pread(io_handle_t handle, void *buf, size_t nbytes,
-		io_off_t offset);
+LELY_IO_EXTERN ssize_t io_pread(
+		io_handle_t handle, void *buf, size_t nbytes, io_off_t offset);
 
 /**
  * Performs a write operation at the specified offset, without updating the file
@@ -119,5 +119,4 @@ LELY_IO_EXTERN ssize_t io_pwrite(io_handle_t handle, const void *buf,
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_FILE_H_

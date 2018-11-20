@@ -25,11 +25,11 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_BUF_H
-#define LELY_CAN_BUF_H
+#ifndef LELY_CAN_BUF_H_
+#define LELY_CAN_BUF_H_
 
 #ifndef LELY_NO_ATOMICS
-#define LELY_NO_ATOMICS	1
+#define LELY_NO_ATOMICS 1
 #ifndef LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #ifndef __STDC_NO_ATOMICS__
@@ -40,7 +40,7 @@
 #include <lely/can/msg.h>
 
 #ifndef LELY_CAN_BUF_INLINE
-#define LELY_CAN_BUF_INLINE	inline
+#define LELY_CAN_BUF_INLINE inline
 #endif
 
 /// A CAN frame buffer.
@@ -78,9 +78,15 @@ struct can_buf {
 
 /// The static initializer for struct #can_buf.
 #ifdef LELY_NO_ATOMICS
-#define CAN_BUF_INIT	{ NULL, 0, 0, 0 }
+#define CAN_BUF_INIT \
+	{ \
+		NULL, 0, 0, 0 \
+	}
 #else
-#define CAN_BUF_INIT	{ NULL, 0, ATOMIC_VAR_INIT(0), ATOMIC_VAR_INIT(0) }
+#define CAN_BUF_INIT \
+	{ \
+		NULL, 0, ATOMIC_VAR_INIT(0), ATOMIC_VAR_INIT(0) \
+	}
 #endif
 
 #ifdef __cplusplus
@@ -158,8 +164,8 @@ LELY_CAN_EXTERN size_t can_buf_reserve(struct can_buf *buf, size_t n);
  *
  * @see can_buf_read(), can_buf_write()
  */
-LELY_CAN_BUF_INLINE size_t can_buf_peek(struct can_buf *buf,
-		struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_peek(
+		struct can_buf *buf, struct can_msg *ptr, size_t n);
 
 /**
  * Reads, and removes, frames from a CAN frame buffer.
@@ -172,8 +178,8 @@ LELY_CAN_BUF_INLINE size_t can_buf_peek(struct can_buf *buf,
  *
  * @see can_buf_peek(), can_buf_write()
  */
-LELY_CAN_BUF_INLINE size_t can_buf_read(struct can_buf *buf,
-		struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_read(
+		struct can_buf *buf, struct can_msg *ptr, size_t n);
 
 /**
  * Writes frames to a CAN frame buffer.
@@ -186,8 +192,8 @@ LELY_CAN_BUF_INLINE size_t can_buf_read(struct can_buf *buf,
  *
  * @see can_buf_peek(), can_buf_read()
  */
-LELY_CAN_BUF_INLINE size_t can_buf_write(struct can_buf *buf,
-		const struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_write(
+		struct can_buf *buf, const struct can_msg *ptr, size_t n);
 
 LELY_CAN_BUF_INLINE void
 can_buf_clear(struct can_buf *buf)
@@ -207,10 +213,10 @@ can_buf_size(const struct can_buf *buf)
 	size_t begin = buf->begin;
 	size_t end = buf->end;
 #else
-	size_t begin = atomic_load_explicit(&((struct can_buf *)buf)->begin,
-			memory_order_acquire);
-	size_t end = atomic_load_explicit(&((struct can_buf *)buf)->end,
-			memory_order_acquire);
+	size_t begin = atomic_load_explicit(
+			&((struct can_buf *)buf)->begin, memory_order_acquire);
+	size_t end = atomic_load_explicit(
+			&((struct can_buf *)buf)->end, memory_order_acquire);
 #endif
 
 	return (end - begin) & buf->size;
@@ -223,10 +229,10 @@ can_buf_capacity(const struct can_buf *buf)
 	size_t begin = buf->begin;
 	size_t end = buf->end;
 #else
-	size_t begin = atomic_load_explicit(&((struct can_buf *)buf)->begin,
-			memory_order_acquire);
-	size_t end = atomic_load_explicit(&((struct can_buf *)buf)->end,
-			memory_order_acquire);
+	size_t begin = atomic_load_explicit(
+			&((struct can_buf *)buf)->begin, memory_order_acquire);
+	size_t end = atomic_load_explicit(
+			&((struct can_buf *)buf)->end, memory_order_acquire);
 #endif
 
 	return (begin - end - 1) & buf->size;
@@ -244,8 +250,8 @@ can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 #ifdef LELY_NO_ATOMICS
 		size_t end = buf->end;
 #else
-		size_t end = atomic_load_explicit(&buf->end,
-				memory_order_acquire);
+		size_t end = atomic_load_explicit(
+				&buf->end, memory_order_acquire);
 #endif
 		if (__unlikely(!((end - begin) & buf->size)))
 			return i;
@@ -270,8 +276,8 @@ can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 #ifdef LELY_NO_ATOMICS
 		size_t end = buf->end;
 #else
-		size_t end = atomic_load_explicit(&buf->end,
-				memory_order_acquire);
+		size_t end = atomic_load_explicit(
+				&buf->end, memory_order_acquire);
 #endif
 		if (__unlikely(!((end - begin) & buf->size)))
 			return i;
@@ -302,8 +308,8 @@ can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 #ifdef LELY_NO_ATOMICS
 		size_t begin = buf->begin;
 #else
-		size_t begin = atomic_load_explicit(&buf->begin,
-				memory_order_acquire);
+		size_t begin = atomic_load_explicit(
+				&buf->begin, memory_order_acquire);
 #endif
 		if (__unlikely(!((begin - end - 1) & buf->size)))
 			return i;
@@ -324,5 +330,4 @@ can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 }
 #endif
 
-#endif
-
+#endif // !LELY_CAN_BUF_H_

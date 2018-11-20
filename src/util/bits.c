@@ -21,7 +21,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_BITS_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_BITS_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/bits.h>
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_clz)
@@ -29,6 +29,7 @@
 LELY_UTIL_EXPORT int
 clz8(uint8_t x)
 {
+	// clang-format off
 	static const uint8_t tab[] = {
 		8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -47,6 +48,7 @@ clz8(uint8_t x)
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
+	// clang-format on
 
 	return tab[x];
 }
@@ -58,6 +60,7 @@ clz8(uint8_t x)
 LELY_UTIL_EXPORT int
 ctz8(uint8_t x)
 {
+	// clang-format off
 	static const uint8_t tab[] = {
 		8, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 		4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -76,6 +79,7 @@ ctz8(uint8_t x)
 		5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 		4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
 	};
+	// clang-format on
 
 	return tab[x];
 }
@@ -87,6 +91,7 @@ ctz8(uint8_t x)
 LELY_UTIL_EXPORT int
 ffs8(uint8_t x)
 {
+	// clang-format off
 	static const uint8_t tab[] = {
 		0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
 		5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
@@ -105,6 +110,7 @@ ffs8(uint8_t x)
 		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
 		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
 	};
+	// clang-format on
 
 	return tab[x];
 }
@@ -116,6 +122,7 @@ ffs8(uint8_t x)
 LELY_UTIL_EXPORT int
 parity8(uint8_t x)
 {
+	// clang-format off
 	static const uint8_t tab[] = {
 		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
 		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
@@ -134,6 +141,7 @@ parity8(uint8_t x)
 		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
 		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0
 	};
+	// clang-format on
 
 	return tab[x];
 }
@@ -145,6 +153,7 @@ parity8(uint8_t x)
 LELY_UTIL_EXPORT int
 popcount8(uint8_t x)
 {
+	// clang-format off
 	static const uint8_t tab[] = {
 		0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
 		1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -163,6 +172,7 @@ popcount8(uint8_t x)
 		3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
 		4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
 	};
+	// clang-format on
 
 	return tab[x];
 }

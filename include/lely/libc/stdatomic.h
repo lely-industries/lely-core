@@ -28,7 +28,7 @@
 #ifndef LELY_HAVE_STDATOMIC_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) \
 		&& __has_include(<stdatomic.h>)
-#define LELY_HAVE_STDATOMIC_H	1
+#define LELY_HAVE_STDATOMIC_H 1
 #endif
 #endif
 
@@ -38,13 +38,13 @@
 
 #undef __STDC_NO_ATOMICS__
 #if __has_extension(c_atomic)
-#define	LELY_HAVE_CLANG_ATOMIC	1
+#define LELY_HAVE_CLANG_ATOMIC 1
 #elif __GNUC_PREREQ(4, 7)
-#define	LELY_HAVE_GNUC_ATOMIC	1
+#define LELY_HAVE_GNUC_ATOMIC 1
 #elif __GNUC_PREREQ(4, 1)
-#define	LELY_HAVE_SYNC_ATOMIC	1
+#define LELY_HAVE_SYNC_ATOMIC 1
 #else
-#define __STDC_NO_ATOMICS__	1
+#define __STDC_NO_ATOMICS__ 1
 #endif
 
 #ifndef __STDC_NO_ATOMICS__
@@ -55,129 +55,132 @@
 #include <stddef.h>
 
 #ifndef LELY_LIBC_STDATOMIC_INLINE
-#define LELY_LIBC_STDATOMIC_INLINE	inline
+#define LELY_LIBC_STDATOMIC_INLINE inline
 #endif
 
 #undef __atomic_bool
 #ifdef __cplusplus
-#define __atomic_bool	bool
+#define __atomic_bool bool
 #else
-#define __atomic_bool	_Bool
+#define __atomic_bool _Bool
 #endif
 
 #ifdef __GCC_ATOMIC_BOOL_LOCK_FREE
-#define ATOMIC_BOOL_LOCK_FREE		__GCC_ATOMIC_BOOL_LOCK_FREE
+#define ATOMIC_BOOL_LOCK_FREE __GCC_ATOMIC_BOOL_LOCK_FREE
 #else
-#define ATOMIC_BOOL_LOCK_FREE		1
+#define ATOMIC_BOOL_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_CHAR_LOCK_FREE
-#define ATOMIC_CHAR_LOCK_FREE		__GCC_ATOMIC_CHAR_LOCK_FREE
+#define ATOMIC_CHAR_LOCK_FREE __GCC_ATOMIC_CHAR_LOCK_FREE
 #else
-#define ATOMIC_CHAR_LOCK_FREE		1
+#define ATOMIC_CHAR_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_CHAR16_T_LOCK_FREE
-#define ATOMIC_CHAR16_T_LOCK_FREE	__GCC_ATOMIC_CHAR16_T_LOCK_FREE
+#define ATOMIC_CHAR16_T_LOCK_FREE __GCC_ATOMIC_CHAR16_T_LOCK_FREE
 #else
-#define ATOMIC_CHAR16_T_LOCK_FREE	1
+#define ATOMIC_CHAR16_T_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_CHAR32_T_LOCK_FREE
-#define ATOMIC_CHAR32_T_LOCK_FREE	__GCC_ATOMIC_CHAR32_T_LOCK_FREE
+#define ATOMIC_CHAR32_T_LOCK_FREE __GCC_ATOMIC_CHAR32_T_LOCK_FREE
 #else
-#define ATOMIC_CHAR32_T_LOCK_FREE	1
+#define ATOMIC_CHAR32_T_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_WCHAR_T_LOCK_FREE
-#define ATOMIC_WCHAR_T_LOCK_FREE	__GCC_ATOMIC_WCHAR_T_LOCK_FREE
+#define ATOMIC_WCHAR_T_LOCK_FREE __GCC_ATOMIC_WCHAR_T_LOCK_FREE
 #else
-#define ATOMIC_WCHAR_T_LOCK_FREE	1
+#define ATOMIC_WCHAR_T_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_SHORT_LOCK_FREE
-#define ATOMIC_SHORT_LOCK_FREE		__GCC_ATOMIC_SHORT_LOCK_FREE
+#define ATOMIC_SHORT_LOCK_FREE __GCC_ATOMIC_SHORT_LOCK_FREE
 #else
-#define ATOMIC_SHORT_LOCK_FREE		1
+#define ATOMIC_SHORT_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_INT_LOCK_FREE
-#define ATOMIC_INT_LOCK_FREE		__GCC_ATOMIC_INT_LOCK_FREE
+#define ATOMIC_INT_LOCK_FREE __GCC_ATOMIC_INT_LOCK_FREE
 #else
-#define ATOMIC_INT_LOCK_FREE		1
+#define ATOMIC_INT_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_LONG_LOCK_FREE
-#define ATOMIC_LONG_LOCK_FREE		__GCC_ATOMIC_LONG_LOCK_FREE
+#define ATOMIC_LONG_LOCK_FREE __GCC_ATOMIC_LONG_LOCK_FREE
 #else
-#define ATOMIC_LONG_LOCK_FREE		1
+#define ATOMIC_LONG_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_LLONG_LOCK_FREE
-#define ATOMIC_LLONG_LOCK_FREE		__GCC_ATOMIC_LLONG_LOCK_FREE
+#define ATOMIC_LLONG_LOCK_FREE __GCC_ATOMIC_LLONG_LOCK_FREE
 #else
-#define ATOMIC_LLONG_LOCK_FREE		1
+#define ATOMIC_LLONG_LOCK_FREE 1
 #endif
 
 #ifdef __GCC_ATOMIC_POINTER_LOCK_FREE
-#define ATOMIC_POINTER_LOCK_FREE	__GCC_ATOMIC_POINTER_LOCK_FREE
+#define ATOMIC_POINTER_LOCK_FREE __GCC_ATOMIC_POINTER_LOCK_FREE
 #else
-#define ATOMIC_POINTER_LOCK_FREE	1
+#define ATOMIC_POINTER_LOCK_FREE 1
 #endif
 
 #ifndef LELY_HAVE_CLANG_ATOMIC
 #undef _Atomic
-#define _Atomic(T)	struct { T volatile __value; }
+#define _Atomic(T) struct { T volatile __value; }
 #endif
 
-typedef _Atomic(__atomic_bool)		atomic_bool;
-typedef _Atomic(char)			atomic_char;
-typedef _Atomic(signed char)		atomic_schar;
-typedef _Atomic(unsigned char)		atomic_uchar;
-typedef _Atomic(short)			atomic_short;
-typedef _Atomic(unsigned short)		atomic_ushort;
-typedef _Atomic(int)			atomic_int;
-typedef _Atomic(unsigned int)		atomic_uint;
-typedef _Atomic(long)			atomic_long;
-typedef _Atomic(unsigned long)		atomic_ulong;
+typedef _Atomic(__atomic_bool) atomic_bool;
+typedef _Atomic(char) atomic_char;
+typedef _Atomic(signed char) atomic_schar;
+typedef _Atomic(unsigned char) atomic_uchar;
+typedef _Atomic(short) atomic_short;
+typedef _Atomic(unsigned short) atomic_ushort;
+typedef _Atomic(int) atomic_int;
+typedef _Atomic(unsigned int) atomic_uint;
+typedef _Atomic(long) atomic_long;
+typedef _Atomic(unsigned long) atomic_ulong;
 #if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
-typedef _Atomic(long long)		atomic_llong;
-typedef _Atomic(unsigned long long)	atomic_ullong;
+typedef _Atomic(long long) atomic_llong;
+typedef _Atomic(unsigned long long) atomic_ullong;
 #endif
-typedef _Atomic(char16_t)		atomic_char16_t;
-typedef _Atomic(char32_t)		atomic_char32_t;
-typedef _Atomic(wchar_t)		atomic_wchar_t;
-typedef _Atomic(int_least8_t)		atomic_int_least8_t;
-typedef _Atomic(uint_least8_t)		atomic_uint_least8_t;
-typedef _Atomic(int_least16_t)		atomic_int_least16_t;
-typedef _Atomic(uint_least16_t)		atomic_uint_least16_t;
-typedef _Atomic(int_least32_t)		atomic_int_least32_t;
-typedef _Atomic(uint_least32_t)		atomic_uint_least32_t;
-typedef _Atomic(int_least64_t)		atomic_int_least64_t;
-typedef _Atomic(uint_least64_t)		atomic_uint_least64_t;
-typedef _Atomic(int_fast8_t)		atomic_int_fast8_t;
-typedef _Atomic(uint_fast8_t)		atomic_uint_fast8_t;
-typedef _Atomic(int_fast16_t)		atomic_int_fast16_t;
-typedef _Atomic(uint_fast16_t)		atomic_uint_fast16_t;
-typedef _Atomic(int_fast32_t)		atomic_int_fast32_t;
-typedef _Atomic(uint_fast32_t)		atomic_uint_fast32_t;
-typedef _Atomic(int_fast64_t)		atomic_int_fast64_t;
-typedef _Atomic(uint_fast64_t)		atomic_uint_fast64_t;
-typedef _Atomic(intptr_t)		atomic_intptr_t;
-typedef _Atomic(uintptr_t)		atomic_uintptr_t;
-typedef _Atomic(size_t)			atomic_size_t;
-typedef _Atomic(ptrdiff_t)		atomic_ptrdiff_t;
-typedef _Atomic(intmax_t)		atomic_intmax_t;
-typedef _Atomic(uintmax_t)		atomic_uintmax_t;
+typedef _Atomic(char16_t) atomic_char16_t;
+typedef _Atomic(char32_t) atomic_char32_t;
+typedef _Atomic(wchar_t) atomic_wchar_t;
+typedef _Atomic(int_least8_t) atomic_int_least8_t;
+typedef _Atomic(uint_least8_t) atomic_uint_least8_t;
+typedef _Atomic(int_least16_t) atomic_int_least16_t;
+typedef _Atomic(uint_least16_t) atomic_uint_least16_t;
+typedef _Atomic(int_least32_t) atomic_int_least32_t;
+typedef _Atomic(uint_least32_t) atomic_uint_least32_t;
+typedef _Atomic(int_least64_t) atomic_int_least64_t;
+typedef _Atomic(uint_least64_t) atomic_uint_least64_t;
+typedef _Atomic(int_fast8_t) atomic_int_fast8_t;
+typedef _Atomic(uint_fast8_t) atomic_uint_fast8_t;
+typedef _Atomic(int_fast16_t) atomic_int_fast16_t;
+typedef _Atomic(uint_fast16_t) atomic_uint_fast16_t;
+typedef _Atomic(int_fast32_t) atomic_int_fast32_t;
+typedef _Atomic(uint_fast32_t) atomic_uint_fast32_t;
+typedef _Atomic(int_fast64_t) atomic_int_fast64_t;
+typedef _Atomic(uint_fast64_t) atomic_uint_fast64_t;
+typedef _Atomic(intptr_t) atomic_intptr_t;
+typedef _Atomic(uintptr_t) atomic_uintptr_t;
+typedef _Atomic(size_t) atomic_size_t;
+typedef _Atomic(ptrdiff_t) atomic_ptrdiff_t;
+typedef _Atomic(intmax_t) atomic_intmax_t;
+typedef _Atomic(uintmax_t) atomic_uintmax_t;
 
 /**
  * The static initializer for an atomic object of a type that is
  * initialization-compatible with <b>value</b>.
  */
 #if LELY_HAVE_CLANG_ATOMIC
-#define ATOMIC_VAR_INIT(value)	(value)
+#define ATOMIC_VAR_INIT(value) (value)
 #else
-#define ATOMIC_VAR_INIT(value)	{ (value) }
+#define ATOMIC_VAR_INIT(value) \
+	{ \
+		(value) \
+	}
 #endif
 
 /**
@@ -185,28 +188,28 @@ typedef _Atomic(uintmax_t)		atomic_uintmax_t;
  * that this function does not avoid data races.
  */
 #if LELY_HAVE_CLANG_ATOMIC
-#define	atomic_init(obj, value)	__c11_atomic_init(obj, value)
+#define atomic_init(obj, value) __c11_atomic_init(obj, value)
 #else
-#define	atomic_init(obj, value)	((void)((obj)->__value = (value)))
+#define atomic_init(obj, value) ((void)((obj)->__value = (value)))
 #endif
 
 #ifndef __ATOMIC_RELAXED
-#define __ATOMIC_RELAXED	0
+#define __ATOMIC_RELAXED 0
 #endif
 #ifndef __ATOMIC_CONSUME
-#define __ATOMIC_CONSUME	1
+#define __ATOMIC_CONSUME 1
 #endif
 #ifndef __ATOMIC_ACQUIRE
-#define __ATOMIC_ACQUIRE	2
+#define __ATOMIC_ACQUIRE 2
 #endif
 #ifndef __ATOMIC_RELEASE
-#define __ATOMIC_RELEASE	3
+#define __ATOMIC_RELEASE 3
 #endif
 #ifndef __ATOMIC_ACQ_REL
-#define __ATOMIC_ACQ_REL	4
+#define __ATOMIC_ACQ_REL 4
 #endif
 #ifndef __ATOMIC_SEQ_CST
-#define __ATOMIC_SEQ_CST	5
+#define __ATOMIC_SEQ_CST 5
 #endif
 
 /// An enumerated type identifying memory constraints.
@@ -253,8 +256,7 @@ extern "C" {
 #endif
 
 /// Inserts a fence with semantics according to <b>order</b>.
-LELY_LIBC_STDATOMIC_INLINE void __cdecl
-atomic_thread_fence(memory_order order)
+LELY_LIBC_STDATOMIC_INLINE void __cdecl atomic_thread_fence(memory_order order)
 {
 #if LELY_HAVE_CLANG_ATOMIC
 	__c11_atomic_thread_fence(order);
@@ -271,8 +273,7 @@ atomic_thread_fence(memory_order order)
  * ordering constraints are established only between a thread and a signal
  * handler executing in the same thread.
  */
-LELY_LIBC_STDATOMIC_INLINE void __cdecl
-atomic_signal_fence(memory_order order)
+LELY_LIBC_STDATOMIC_INLINE void __cdecl atomic_signal_fence(memory_order order)
 {
 #if LELY_HAVE_CLANG_ATOMIC
 	__c11_atomic_signal_fence(order);
@@ -280,7 +281,7 @@ atomic_signal_fence(memory_order order)
 	__atomic_signal_fence(order);
 #elif defined(__GNUC__)
 	if (order != memory_order_relaxed)
-		__asm volatile (""::: "memory");
+		__asm volatile("" ::: "memory");
 #else
 	__unused_var(order);
 #endif
@@ -297,14 +298,12 @@ atomic_signal_fence(memory_order order)
  * lock-free, and 2 if the type is always lock-free.
  */
 #if LELY_HAVE_CLANG_ATOMIC
-#define atomic_is_lock_free(obj) \
-	(__c11_atomic_is_lock_free(sizeof(*(obj))))
+#define atomic_is_lock_free(obj) (__c11_atomic_is_lock_free(sizeof(*(obj))))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_is_lock_free(obj) \
 	(__atomic_is_lock_free(sizeof((obj)->__value), &(obj)->__value))
 #else
-#define atomic_is_lock_free(obj) \
-	(sizeof((obj)->__value) <= sizeof(void *))
+#define atomic_is_lock_free(obj) (sizeof((obj)->__value) <= sizeof(void *))
 #endif
 
 /**
@@ -384,18 +383,19 @@ atomic_signal_fence(memory_order order)
  * @returns the result of the comparison.
  */
 #if LELY_HAVE_CLANG_ATOMIC
-#define atomic_compare_exchange_strong_explicit(object, expected, desired, \
-		success, failure) \
+#define atomic_compare_exchange_strong_explicit( \
+		object, expected, desired, success, failure) \
 	(__c11_atomic_compare_exchange_strong((object), (expected), (desired), \
 			(success), (failure)))
 #elif LELY_HAVE_GNUC_ATOMIC
-#define atomic_compare_exchange_strong_explicit(object, expected, desired, \
-		success, failure) \
-	(__atomic_compare_exchange_n(&(object)->__value, (expected), (desired), \
-			0, (success), (failure)))
+#define atomic_compare_exchange_strong_explicit( \
+		object, expected, desired, success, failure) \
+	(__atomic_compare_exchange_n(&(object)->__value, (expected), \
+			(desired), 0, (success), (failure)))
 #elif LELY_HAVE_SYNC_ATOMIC
-#define atomic_compare_exchange_strong_explicit(object, expected, desired, \
-		success, failure) \
+// clang-format off
+#define atomic_compare_exchange_strong_explicit( \
+		object, expected, desired, success, failure) \
 	__extension__({ \
 		__unused_var(success); \
 		__unused_var(failure); \
@@ -404,6 +404,7 @@ atomic_signal_fence(memory_order order)
 				&(object)->__value, __expected, (desired))) \
 				== __expected); \
 	})
+// clang-format on
 #endif
 /**
  * Equivalent to #atomic_compare_exchange_strong_explicit(object, expected,
@@ -411,7 +412,8 @@ atomic_signal_fence(memory_order order)
  */
 #define atomic_compare_exchange_strong(object, expected, desired) \
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
-			(desired), memory_order_seq_cst, memory_order_seq_cst))
+			(desired), memory_order_seq_cst, \
+			memory_order_seq_cst))
 
 /**
  * Equivalent to atomic_compare_exchange_strong_explicit(), except that a weak
@@ -427,18 +429,18 @@ atomic_signal_fence(memory_order order)
  * strong one is preferable.
  */
 #if LELY_HAVE_CLANG_ATOMIC
-#define atomic_compare_exchange_weak_explicit(object, expected, desired, \
-		success, failure) \
+#define atomic_compare_exchange_weak_explicit( \
+		object, expected, desired, success, failure) \
 	(__c11_atomic_compare_exchange_weak((object), (expected), (desired), \
 			(success), (failure)))
 #elif LELY_HAVE_GNUC_ATOMIC
-#define atomic_compare_exchange_weak_explicit(object, expected, desired, \
-		success, failure) \
-	(__atomic_compare_exchange_n(&(object)->__value, (expected), (desired), \
-			1, (success), (failure)))
+#define atomic_compare_exchange_weak_explicit( \
+		object, expected, desired, success, failure) \
+	(__atomic_compare_exchange_n(&(object)->__value, (expected), \
+			(desired), 1, (success), (failure)))
 #else
-#define atomic_compare_exchange_weak_explicit(object, expected, desired, \
-		success, failure) \
+#define atomic_compare_exchange_weak_explicit( \
+		object, expected, desired, success, failure) \
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), (success), (failure)))
 #endif
@@ -448,7 +450,8 @@ atomic_signal_fence(memory_order order)
  */
 #define atomic_compare_exchange_weak(object, expected, desired) \
 	(atomic_compare_exchange_weak_explicit((object), (expected), \
-			(desired), memory_order_seq_cst, memory_order_seq_cst))
+			(desired), memory_order_seq_cst, \
+			memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object + operand`.
@@ -581,7 +584,10 @@ typedef struct {
 /**
  * The static initializer used to initialize an #atomic_flag to the clear state.
  */
-#define ATOMIC_FLAG_INIT	{ ATOMIC_VAR_INIT(0) }
+#define ATOMIC_FLAG_INIT \
+	{ \
+		ATOMIC_VAR_INIT(0) \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -593,9 +599,9 @@ extern "C" {
  *
  * @returns the value at <b>object</b> immediately before the effects.
  */
-LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
-atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
-		memory_order order)
+LELY_LIBC_STDATOMIC_INLINE
+__atomic_bool __cdecl atomic_flag_test_and_set_explicit(
+		volatile atomic_flag *object, memory_order order)
 {
 	return atomic_exchange_explicit(&object->__value, 1, order);
 }
@@ -604,8 +610,8 @@ atomic_flag_test_and_set_explicit(volatile atomic_flag *object,
  * Equivalent to #atomic_flag_test_and_set_explicit(object,
  * memory_order_seq_cst).
  */
-LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl
-atomic_flag_test_and_set(volatile atomic_flag *object)
+LELY_LIBC_STDATOMIC_INLINE __atomic_bool __cdecl atomic_flag_test_and_set(
+		volatile atomic_flag *object)
 {
 	return atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
 }
@@ -613,9 +619,9 @@ atomic_flag_test_and_set(volatile atomic_flag *object)
 /**
  * Atomically sets the value at <b>object</b> to false. Memory is affected
  * according to <b>order</b>.
-*/
-LELY_LIBC_STDATOMIC_INLINE void __cdecl
-atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
+ */
+LELY_LIBC_STDATOMIC_INLINE void __cdecl atomic_flag_clear_explicit(
+		volatile atomic_flag *object, memory_order order)
 {
 	atomic_store_explicit(&object->__value, 0, order);
 }
@@ -624,8 +630,8 @@ atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
  * Equivalent to #atomic_flag_test_and_set_explicit(object,
  * memory_order_seq_cst).
  */
-LELY_LIBC_STDATOMIC_INLINE void __cdecl
-atomic_flag_clear(volatile atomic_flag *object)
+LELY_LIBC_STDATOMIC_INLINE void __cdecl atomic_flag_clear(
+		volatile atomic_flag *object)
 {
 	atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
 }

@@ -24,11 +24,11 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_FRBUF_H
-#define LELY_UTIL_FRBUF_H
+#ifndef LELY_UTIL_FRBUF_H_
+#define LELY_UTIL_FRBUF_H_
 
-#include <lely/libc/sys/types.h>
 #include <lely/libc/stdint.h>
+#include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>
@@ -45,8 +45,8 @@ extern "C" {
 
 LELY_UTIL_EXTERN void *__frbuf_alloc(void);
 LELY_UTIL_EXTERN void __frbuf_free(void *ptr);
-LELY_UTIL_EXTERN struct __frbuf *__frbuf_init(struct __frbuf *buf,
-		const char *filename);
+LELY_UTIL_EXTERN struct __frbuf *__frbuf_init(
+		struct __frbuf *buf, const char *filename);
 LELY_UTIL_EXTERN void __frbuf_fini(struct __frbuf *buf);
 
 /**
@@ -128,8 +128,8 @@ LELY_UTIL_EXTERN ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
  *
  * @see frbuf_read()
  */
-LELY_UTIL_EXTERN ssize_t frbuf_pread(frbuf_t *buf, void *ptr, size_t size,
-		int64_t pos);
+LELY_UTIL_EXTERN ssize_t frbuf_pread(
+		frbuf_t *buf, void *ptr, size_t size, int64_t pos);
 
 /**
  * Maps (part of) the contents of a read file buffer to memory. Only a single
@@ -149,8 +149,8 @@ LELY_UTIL_EXTERN ssize_t frbuf_pread(frbuf_t *buf, void *ptr, size_t size,
  * it is an error to modify bytes in the memory map which may lead to a
  * segmentation fault.
  */
-LELY_UTIL_EXTERN const void *frbuf_map(frbuf_t *buf, int64_t pos,
-		size_t *psize);
+LELY_UTIL_EXTERN const void *frbuf_map(
+		frbuf_t *buf, int64_t pos, size_t *psize);
 
 /**
  * Unmaps the current memory map of a read file buffer, if it exists.
@@ -166,5 +166,4 @@ LELY_UTIL_EXTERN int frbuf_unmap(frbuf_t *buf);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_FRBUF_H_

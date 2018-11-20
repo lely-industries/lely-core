@@ -28,7 +28,7 @@
 #ifndef LELY_HAVE_SYS_TYPES_H
 #if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)) \
 		&& __has_include(<sys/types.h>)
-#define LELY_HAVE_SYS_TYPES_H	1
+#define LELY_HAVE_SYS_TYPES_H 1
 #endif
 #endif
 

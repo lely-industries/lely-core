@@ -23,8 +23,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_XTIME_H
-#define LELY_UTIL_XTIME_H
+#ifndef LELY_UTIL_XTIME_H_
+#define LELY_UTIL_XTIME_H_
 
 #include <lely/libc/time.h>
 #include <lely/util/util.h>
@@ -147,8 +147,8 @@ LELY_UTIL_EXTERN void __xtimer_fini(struct __xtimer *timer);
  *
  * @see xtimer_destroy()
  */
-LELY_UTIL_EXTERN xtimer_t *xtimer_create(xclock_t *clock,
-		const struct sigevent *evp);
+LELY_UTIL_EXTERN xtimer_t *xtimer_create(
+		xclock_t *clock, const struct sigevent *evp);
 
 /// Destroys an external timer. @see xtimer_create()
 LELY_UTIL_EXTERN void xtimer_destroy(xtimer_t *timer);
@@ -210,5 +210,4 @@ LELY_UTIL_EXTERN int xtimer_settime(xtimer_t *timer, int flags,
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_XTIME_H_

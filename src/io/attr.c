@@ -21,9 +21,9 @@
  * limitations under the License.
  */
 
+#include "attr.h"
 #include "io.h"
 #include <lely/util/errnum.h>
-#include "attr.h"
 
 #include <assert.h>
 
@@ -99,9 +99,7 @@ io_attr_get_speed(const io_attr_t *attr)
 #ifdef B4000000
 	case B4000000: return 4000000;
 #endif
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 #endif
 }
@@ -179,9 +177,7 @@ io_attr_set_speed(io_attr_t *attr, int speed)
 #ifdef B4000000
 	case 4000000: baud = B4000000; break;
 #endif
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
 	if (__unlikely(cfsetispeed((struct termios *)attr, baud) == -1))
@@ -244,12 +240,9 @@ io_attr_get_parity(const io_attr_t *attr)
 
 #ifdef _WIN32
 	switch (io_attr_lpDCB(attr)->Parity) {
-	case EVENPARITY:
-		return IO_PARITY_EVEN;
-	case ODDPARITY:
-		return IO_PARITY_ODD;
-	default:
-		return IO_PARITY_NONE;
+	case EVENPARITY: return IO_PARITY_EVEN;
+	case ODDPARITY: return IO_PARITY_ODD;
+	default: return IO_PARITY_NONE;
 	}
 #else
 	const struct termios *ios = (const struct termios *)attr;
@@ -279,9 +272,7 @@ io_attr_set_parity(io_attr_t *attr, int parity)
 		lpDCB->fParity = TRUE;
 		lpDCB->Parity = EVENPARITY;
 		return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 #else
 	struct termios *ios = (struct termios *)attr;
@@ -301,9 +292,7 @@ io_attr_set_parity(io_attr_t *attr, int parity)
 		ios->c_iflag |= INPCK;
 		ios->c_cflag |= (PARENB | PARODD);
 		return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 #endif
 }
@@ -357,9 +346,7 @@ io_attr_get_char_size(const io_attr_t *attr)
 	case CS6: return 6;
 	case CS7: return 7;
 	case CS8: return 8;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 #endif
 }
@@ -381,12 +368,9 @@ io_attr_set_char_size(io_attr_t *attr, int char_size)
 	case 6: ios->c_cflag |= CS6; return 0;
 	case 7: ios->c_cflag |= CS7; return 0;
 	case 8: ios->c_cflag |= CS8; return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 #endif
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
-

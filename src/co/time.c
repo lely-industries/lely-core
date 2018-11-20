@@ -25,14 +25,14 @@
 
 #ifndef LELY_NO_CO_TIME
 
-#include <lely/util/endian.h>
-#include <lely/util/errnum.h>
-#include <lely/util/time.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/time.h>
 #include <lely/co/val.h>
+#include <lely/util/endian.h>
+#include <lely/util/errnum.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -74,8 +74,8 @@ static int co_time_update(co_time_t *time);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1012_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN receive callback function for a TIME consumer service.
@@ -113,9 +113,11 @@ co_time_of_day_set(co_time_of_day_t *tod, const struct timespec *tp)
 	// Convert the Unix epoch (seconds since January 1, 1970) to the CANopen
 	// time (seconds since January 1, 1984). This is a difference of 14
 	// years and 3 leap days.
+	// clang-format off
 	co_time_diff_set((co_time_diff_t *)tod, &(struct timespec){
 			tp->tv_sec - (14 * 365 + 3) * 24 * 60 * 60,
 			tp->tv_nsec });
+	// clang-format on
 }
 
 LELY_CO_EXPORT void
@@ -392,8 +394,10 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	// clang-format off
 	if (__unlikely(!(cobid & CO_TIME_COBID_FRAME)
 			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -453,8 +457,9 @@ co_time_timer(const struct timespec *tp, void *data)
 
 	// Update the high-resolution time stamp, if it exists.
 	if (time->sub_1013_00)
-		co_sub_set_val_u32(time->sub_1013_00, (co_unsigned32_t)
-				timespec_diff_usec(tp, &time->start));
+		co_sub_set_val_u32(time->sub_1013_00,
+				(co_unsigned32_t)timespec_diff_usec(
+						tp, &time->start));
 
 	// Convert the time to a TIME_OF_DAY value.
 	co_time_of_day_t tod = { 0, 0 };
@@ -477,4 +482,3 @@ co_time_timer(const struct timespec *tp, void *data)
 }
 
 #endif // !LELY_NO_CO_TIME
-

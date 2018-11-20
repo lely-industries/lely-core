@@ -21,11 +21,11 @@
  * limitations under the License.
  */
 
+#include "handle.h"
 #include "io.h"
-#include <lely/util/errnum.h>
 #include <lely/io/addr.h>
 #include <lely/io/sock.h>
-#include "handle.h"
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <string.h>
@@ -48,8 +48,8 @@ struct sock {
 static void sock_fini(struct io_handle *handle);
 static int sock_flags(struct io_handle *handle, int flags);
 static ssize_t sock_read(struct io_handle *handle, void *buf, size_t nbytes);
-static ssize_t sock_write(struct io_handle *handle, const void *buf,
-		size_t nbytes);
+static ssize_t sock_write(
+		struct io_handle *handle, const void *buf, size_t nbytes);
 static ssize_t sock_recv(struct io_handle *handle, void *buf, size_t nbytes,
 		io_addr_t *addr, int flags);
 static ssize_t sock_send(struct io_handle *handle, const void *buf,
@@ -57,8 +57,7 @@ static ssize_t sock_send(struct io_handle *handle, const void *buf,
 static struct io_handle *sock_accept(struct io_handle *handle, io_addr_t *addr);
 static int sock_connect(struct io_handle *handle, const io_addr_t *addr);
 
-static const struct io_handle_vtab sock_vtab = {
-	.type = IO_TYPE_SOCK,
+static const struct io_handle_vtab sock_vtab = { .type = IO_TYPE_SOCK,
 	.size = sizeof(struct sock),
 	.fini = &sock_fini,
 	.flags = &sock_flags,
@@ -67,8 +66,7 @@ static const struct io_handle_vtab sock_vtab = {
 	.recv = &sock_recv,
 	.send = &sock_send,
 	.accept = &sock_accept,
-	.connect = &sock_connect
-};
+	.connect = &sock_connect };
 
 static int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
 
@@ -90,9 +88,7 @@ io_open_socket(int domain, int type)
 		case IO_SOCK_STREAM:
 			s = socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
@@ -103,9 +99,7 @@ io_open_socket(int domain, int type)
 			s = socket(AF_BLUETOOTH, SOCK_STREAM | flags,
 					BTPROTO_RFCOMM);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #endif
@@ -117,9 +111,7 @@ io_open_socket(int domain, int type)
 		case IO_SOCK_DGRAM:
 			s = socket(AF_INET, SOCK_DGRAM | flags, 0);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 	case IO_SOCK_IPV6:
@@ -130,9 +122,7 @@ io_open_socket(int domain, int type)
 		case IO_SOCK_DGRAM:
 			s = socket(AF_INET6, SOCK_DGRAM | flags, 0);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #if _POSIX_C_SOURCE >= 200112L
@@ -144,15 +134,11 @@ io_open_socket(int domain, int type)
 		case IO_SOCK_DGRAM:
 			s = socket(AF_UNIX, SOCK_DGRAM | flags, 0);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #endif
-	default:
-		errc = errnum2c(ERRNUM_AFNOSUPPORT);
-		goto error_domain;
+	default: errc = errnum2c(ERRNUM_AFNOSUPPORT); goto error_domain;
 	}
 
 	if (__unlikely(s == INVALID_SOCKET)) {
@@ -217,9 +203,7 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 			result = _socketpair(AF_INET, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 	case IO_SOCK_IPV6:
@@ -232,9 +216,7 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 			result = _socketpair(AF_INET6, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #if _POSIX_C_SOURCE >= 200112L
@@ -248,15 +230,11 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 			result = _socketpair(AF_UNIX, SOCK_DGRAM | flags, 0,
 					socket_vector);
 			break;
-		default:
-			errc = errnum2c(ERRNUM_PROTOTYPE);
-			goto error_type;
+		default: errc = errnum2c(ERRNUM_PROTOTYPE); goto error_type;
 		}
 		break;
 #endif
-	default:
-		errc = errnum2c(ERRNUM_AFNOSUPPORT);
-		goto error_domain;
+	default: errc = errnum2c(ERRNUM_AFNOSUPPORT); goto error_domain;
 	}
 
 	if (__unlikely(result == SOCKET_ERROR)) {
@@ -478,9 +456,7 @@ io_sock_shutdown(io_handle_t handle, int how)
 		how = SHUT_RDWR;
 #endif
 		break;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
 	return shutdown((SOCKET)handle->fd, how) ? -1 : 0;
@@ -498,8 +474,10 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 
 	addr->addrlen = sizeof(addr->addr);
 #ifdef _WIN32
+	// clang-format off
 	return getsockname((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
+	// clang-format on
 #else
 	int errsv = errno;
 	int result = getsockname(handle->fd, (struct sockaddr *)&addr->addr,
@@ -526,8 +504,10 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 
 	addr->addrlen = sizeof(addr->addr);
 #ifdef _WIN32
+	// clang-format off
 	return getpeername((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
+	// clang-format on
 #else
 	int errsv = errno;
 	int result = getpeername(handle->fd, (struct sockaddr *)&addr->addr,
@@ -561,8 +541,10 @@ io_sock_get_acceptconn(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ACCEPTCONN,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -580,8 +562,10 @@ io_sock_get_broadcast(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -599,8 +583,10 @@ io_sock_set_broadcast(io_handle_t handle, int broadcast)
 #else
 	int optval = !!broadcast;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -616,8 +602,10 @@ io_sock_get_debug(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DEBUG,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -635,8 +623,10 @@ io_sock_set_debug(io_handle_t handle, int debug)
 #else
 	int optval = !!debug;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DEBUG,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -652,8 +642,10 @@ io_sock_get_dontroute(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DONTROUTE,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -671,8 +663,10 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 #else
 	int optval = !!dontroute;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DONTROUTE,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -683,9 +677,11 @@ io_sock_get_error(io_handle_t handle, int *perror)
 		return -1;
 	}
 
+	// clang-format off
 	return getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ERROR,
 			(char *)perror, &(socklen_t){ sizeof(*perror) })
 			? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -701,8 +697,10 @@ io_sock_get_keepalive(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_KEEPALIVE,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -716,28 +714,34 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 	}
 
 #ifdef _WIN32
-	struct tcp_keepalive kaInBuffer = {
-		.onoff = keepalive,
+	struct tcp_keepalive kaInBuffer = { .onoff = keepalive,
 		// The timeout is specified in milliseconds.
 		.keepalivetime = time * 1000,
 		// The interval is specified in milliseconds.
-		.keepaliveinterval = interval * 1000
-	};
+		.keepaliveinterval = interval * 1000 };
 	DWORD dwBytesReturned;
+	// clang-format off
 	return WSAIoctl((SOCKET)handle->fd, SIO_KEEPALIVE_VALS, &kaInBuffer,
 			sizeof(kaInBuffer), NULL, 0, &dwBytesReturned, NULL,
 			NULL) ? -1 : 0;
+// clang-format on
 #else
+	// clang-format off
 	if (__unlikely(setsockopt(handle->fd, SOL_SOCKET, SO_KEEPALIVE,
 			&keepalive, sizeof(keepalive)) == -1))
+		// clang-format on
 		return -1;
 #ifdef __linux__
 	if (keepalive) {
+		// clang-format off
 		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPIDLE,
 				&time, sizeof(time)) == -1))
+			// clang-format on
 			return -1;
+		// clang-format off
 		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPINTVL,
 				&interval, sizeof(interval)) == -1))
+			// clang-format on
 			return -1;
 	}
 #else
@@ -757,8 +761,10 @@ io_sock_get_linger(io_handle_t handle)
 	}
 
 	struct linger optval;
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_LINGER,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return optval.l_onoff ? optval.l_linger : 0;
 }
@@ -777,8 +783,10 @@ io_sock_set_linger(io_handle_t handle, int time)
 	}
 
 	struct linger optval = { !!time, time };
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_LINGER,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -794,8 +802,10 @@ io_sock_get_oobinline(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_OOBINLINE,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -813,8 +823,10 @@ io_sock_set_oobinline(io_handle_t handle, int oobinline)
 #else
 	int optval = !!oobinline;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_OOBINLINE,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -826,8 +838,10 @@ io_sock_get_rcvbuf(io_handle_t handle)
 	}
 
 	int optval;
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVBUF,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -840,8 +854,10 @@ io_sock_set_rcvbuf(io_handle_t handle, int size)
 		return -1;
 	}
 
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVBUF,
 			(const char *)&size, sizeof(size)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -855,13 +871,13 @@ io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 #ifdef _WIN32
 	DWORD optval = timeout;
 #else
-	struct timeval optval = {
-		.tv_sec = timeout / 1000,
-		.tv_usec = (timeout % 1000) * 1000
-	};
+	struct timeval optval = { .tv_sec = timeout / 1000,
+		.tv_usec = (timeout % 1000) * 1000 };
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVTIMEO,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -877,8 +893,10 @@ io_sock_get_reuseaddr(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -896,8 +914,10 @@ io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 #else
 	int optval = !!reuseaddr;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -909,8 +929,10 @@ io_sock_get_sndbuf(io_handle_t handle)
 	}
 
 	int optval;
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDBUF,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -923,8 +945,10 @@ io_sock_set_sndbuf(io_handle_t handle, int size)
 		return -1;
 	}
 
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDBUF,
 			(const char *)&size, sizeof(size)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -938,13 +962,13 @@ io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 #ifdef _WIN32
 	DWORD optval = timeout;
 #else
-	struct timeval optval = {
-		.tv_sec = timeout / 1000,
-		.tv_usec = (timeout % 1000) * 1000
-	};
+	struct timeval optval = { .tv_sec = timeout / 1000,
+		.tv_usec = (timeout % 1000) * 1000 };
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDTIMEO,
-			(const char *)&optval, sizeof(optval)) ? -1 :0;
+			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -960,8 +984,10 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 #else
 	int optval;
 #endif
+	// clang-format off
 	if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
 			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+		// clang-format on
 		return -1;
 	return !!optval;
 }
@@ -979,8 +1005,10 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 #else
 	int optval = !!nodelay;
 #endif
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
 			(const char *)&optval, sizeof(optval)) ? -1 : 0;
+	// clang-format on
 }
 
 #if defined(_WIN32) || defined(HAVE_SYS_IOCTL_H)
@@ -1034,20 +1062,22 @@ io_sock_get_mcast_loop(io_handle_t handle)
 #endif
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
+		// clang-format off
 		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
 				IP_MULTICAST_LOOP, (char *)&optval,
 				&(socklen_t){ sizeof(optval) })))
+			// clang-format on
 			return -1;
 		break;
 	case IO_SOCK_IPV6:
+		// clang-format off
 		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_LOOP, (char *)&optval,
 				&(socklen_t){ sizeof(optval) })))
+			// clang-format on
 			return -1;
 		break;
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 	return !!optval;
 }
@@ -1072,16 +1102,18 @@ io_sock_set_mcast_loop(io_handle_t handle, int loop)
 #endif
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
+		// clang-format off
 		return setsockopt((SOCKET)handle->fd, IPPROTO_IP,
 				IP_MULTICAST_LOOP, (const char *)&optval,
 				sizeof(optval)) ? -1 : 0;
+		// clang-format on
 	case IO_SOCK_IPV6:
+		// clang-format off
 		return setsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_LOOP, (const char *)&optval,
 				sizeof(optval)) ? -1 : 0;
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+		// clang-format on
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 }
 
@@ -1105,20 +1137,22 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 #endif
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
+		// clang-format off
 		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
 				IP_MULTICAST_TTL, (char *)&optval,
 				&(socklen_t){ sizeof(optval) })))
+			// clang-format on
 			return -1;
 		break;
 	case IO_SOCK_IPV6:
+		// clang-format off
 		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_HOPS, (char *)&optval,
 				&(socklen_t){ sizeof(optval) })))
+			// clang-format on
 			return -1;
 		break;
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 	return optval;
 }
@@ -1143,22 +1177,24 @@ io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 #endif
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
+		// clang-format off
 		return setsockopt((SOCKET)handle->fd, IPPROTO_IP,
 				IP_MULTICAST_TTL, (const char *)&optval,
-				sizeof(optval)) ? -1 :0;
+				sizeof(optval)) ? -1 : 0;
+		// clang-format on
 	case IO_SOCK_IPV6:
+		// clang-format off
 		return setsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_HOPS, (const char *)&optval,
 				sizeof(optval)) ? -1 :0;
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+		// clang-format on
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 }
 
 LELY_IO_EXPORT int
-io_sock_mcast_join_group(io_handle_t handle, unsigned int index,
-		const io_addr_t *group)
+io_sock_mcast_join_group(
+		io_handle_t handle, unsigned int index, const io_addr_t *group)
 {
 	assert(group);
 
@@ -1178,9 +1214,12 @@ io_sock_mcast_join_group(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gr_group, &group->addr, sizeof(greq.gr_group));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_JOIN_GROUP,
 			(const char *)&greq, sizeof(greq)) ? 0 : -1;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -1207,9 +1246,12 @@ io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_BLOCK_SOURCE,
-			(const char *)&greq, sizeof(greq)) ? -1 :0;
+			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -1236,14 +1278,17 @@ io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_UNBLOCK_SOURCE,
 			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
-io_sock_mcast_leave_group(io_handle_t handle, unsigned int index,
-		const io_addr_t *group)
+io_sock_mcast_leave_group(
+		io_handle_t handle, unsigned int index, const io_addr_t *group)
 {
 	assert(group);
 
@@ -1263,9 +1308,12 @@ io_sock_mcast_leave_group(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gr_group, &group->addr, sizeof(greq.gr_group));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_LEAVE_GROUP,
 			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -1292,9 +1340,12 @@ io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_JOIN_SOURCE_GROUP,
-			(const char *)&greq, sizeof(greq)) ? -1 :0;
+			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+	// clang-format on
 }
 
 LELY_IO_EXPORT int
@@ -1318,9 +1369,12 @@ io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
 	memcpy(&greq.gsr_source, &source->addr, sizeof(greq.gsr_source));
 
 	int level = ((struct sock *)handle)->domain == IO_SOCK_IPV6
-			? IPPROTO_IPV6 : IPPROTO_IP;
+			? IPPROTO_IPV6
+			: IPPROTO_IP;
+	// clang-format off
 	return setsockopt((SOCKET)handle->fd, level, MCAST_LEAVE_SOURCE_GROUP,
 			(const char *)&greq, sizeof(greq)) ? -1 : 0;
+	// clang-format on
 }
 
 #endif // _WIN32 || __CYGWIN__ || __linux__
@@ -1423,19 +1477,23 @@ sock_send(struct io_handle *handle, const void *buf, size_t nbytes,
 
 	ssize_t result;
 #ifdef _WIN32
+	// clang-format off
 	result = addr
 			? sendto((SOCKET)handle->fd, buf, nbytes, _flags,
 			(const struct sockaddr *)&addr->addr, addr->addrlen)
 			: send((SOCKET)handle->fd, buf, nbytes, _flags);
+	// clang-format on
 #else
 	int errsv = errno;
 	do {
 		errno = errsv;
+		// clang-format off
 		result = addr
 				? sendto(handle->fd, buf, nbytes, _flags,
 				(const struct sockaddr *)&addr->addr,
 				addr->addrlen)
 				: send(handle->fd, buf, nbytes, _flags);
+		// clang-format on
 	} while (__unlikely(result == -1 && errno == EINTR));
 #endif
 	return result == SOCKET_ERROR ? -1 : result;
@@ -1529,8 +1587,10 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 	assert(handle);
 
 #ifdef _WIN32
+	// clang-format off
 	return connect((SOCKET)handle->fd, (const struct sockaddr *)&addr->addr,
 			addr->addrlen) ? -1 : 0;
+	// clang-format on
 #else
 	int result;
 	int errsv = errno;
@@ -1610,8 +1670,10 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 		errc = get_errc();
 		goto error_bind_1;
 	}
+	// clang-format off
 	if (__unlikely(getsockname(sv[1], name_1, &namelen_1)
 			== SOCKET_ERROR)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_getsockname_1;
 	}
@@ -1634,13 +1696,17 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 			namelen_0 = sizeof(*name_in6_0);
 		}
 
+		// clang-format off
 		if (__unlikely(bind(sv[0], name_0, namelen_0)
 				== SOCKET_ERROR)) {
+			// clang-format on
 			errc = get_errc();
 			goto error_bind_0;
 		}
+		// clang-format off
 		if (__unlikely(getsockname(sv[0], name_0, &namelen_0)
 				== SOCKET_ERROR)) {
+			// clang-format on
 			errc = get_errc();
 			goto error_getsockname_0;
 		}
@@ -1668,8 +1734,10 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 			name_in_0->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		else
 			name_in6_0->sin6_addr = in6addr_loopback;
+		// clang-format off
 		if (__unlikely(connect(sv[1], name_0, namelen_0)
 				== SOCKET_ERROR)) {
+			// clang-format on
 			errc = get_errc();
 			goto error_connect_1;
 		}
@@ -1697,4 +1765,3 @@ error_param:
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
-

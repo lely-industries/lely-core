@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SSDO_H
-#define LELY_CO_SSDO_H
+#ifndef LELY_CO_SSDO_H_
+#define LELY_CO_SSDO_H_
 
 #include <lely/can/net.h>
 #include <lely/co/sdo.h>
@@ -49,8 +49,8 @@ LELY_CO_EXTERN void __co_ssdo_fini(struct __co_ssdo *sdo);
  *
  * @see co_ssdo_destroy()
  */
-LELY_CO_EXTERN co_ssdo_t *co_ssdo_create(can_net_t *net, co_dev_t *dev,
-		co_unsigned8_t num);
+LELY_CO_EXTERN co_ssdo_t *co_ssdo_create(
+		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 
 /// Destroys a CANopen Server-SDO service. @see co_ssdo_create()
 LELY_CO_EXTERN void co_ssdo_destroy(co_ssdo_t *sdo);
@@ -91,5 +91,4 @@ LELY_CO_EXTERN void co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_SSDO_H_

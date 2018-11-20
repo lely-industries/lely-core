@@ -21,10 +21,10 @@
  * limitations under the License.
  */
 
-#include "io.h"
-#include <lely/io/serial.h>
 #include "attr.h"
 #include "default.h"
+#include "io.h"
+#include <lely/io/serial.h>
 
 #include <assert.h>
 #include <string.h>
@@ -34,16 +34,14 @@
 static int serial_flush(struct io_handle *handle);
 static int serial_purge(struct io_handle *handle, int flags);
 
-static const struct io_handle_vtab serial_vtab = {
-	.type = IO_TYPE_SERIAL,
+static const struct io_handle_vtab serial_vtab = { .type = IO_TYPE_SERIAL,
 	.size = sizeof(struct io_handle),
 	.fini = &default_fini,
 	.flags = &default_flags,
 	.read = &default_read,
 	.write = &default_write,
 	.flush = &serial_flush,
-	.purge = &serial_purge
-};
+	.purge = &serial_purge };
 
 LELY_IO_EXPORT io_handle_t
 io_open_serial(const char *path, io_attr_t *attr)
@@ -141,8 +139,8 @@ io_open_serial(const char *path, io_attr_t *attr)
 		*(struct termios *)attr = ios;
 
 	// These options are taken from cfmakeraw() on BSD.
-	ios.c_iflag &= ~(BRKINT | ICRNL | IGNBRK | IGNCR | INLCR | ISTRIP
-			| IXON | PARMRK);
+	ios.c_iflag &= ~(BRKINT | ICRNL | IGNBRK | IGNCR | INLCR | ISTRIP | IXON
+			| PARMRK);
 	ios.c_oflag &= ~OPOST;
 	ios.c_cflag &= ~(CSIZE | PARENB);
 	ios.c_cflag |= CS8;
@@ -227,8 +225,10 @@ io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 	if (__unlikely(!GetCommState(handle->fd, lpDCB)))
 		return -1;
 
+	// clang-format off
 	return GetCommTimeouts(handle->fd, io_attr_lpCommTimeouts(attr))
 			? 0 : -1;
+	// clang-format on
 #else
 	return tcgetattr(handle->fd, (struct termios *)attr);
 #endif
@@ -248,8 +248,10 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 	if (__unlikely(!SetCommState(handle->fd, io_attr_lpDCB(attr))))
 		return -1;
 
-	if (__unlikely(!SetCommTimeouts(handle->fd,
-			io_attr_lpCommTimeouts(attr))))
+	// clang-format off
+	if (__unlikely(!SetCommTimeouts(
+			handle->fd, io_attr_lpCommTimeouts(attr))))
+		// clang-format on
 		return -1;
 
 	return 0;
@@ -297,11 +299,12 @@ serial_purge(struct io_handle *handle, int flags)
 
 	return PurgeComm(handle->fd, dwFlags) ? 0 : -1;
 #else
+	// clang-format off
 	return tcflush(handle->fd, (flags & IO_PURGE_RX)
 			? (flags & IO_PURGE_TX) ? TCIOFLUSH : TCIFLUSH
 			: (flags & IO_PURGE_TX) ? TCOFLUSH : 0);
+	// clang-format on
 #endif
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
-

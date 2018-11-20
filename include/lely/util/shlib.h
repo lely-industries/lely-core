@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_SHLIB_H
-#define LELY_UTIL_SHLIB_H
+#ifndef LELY_UTIL_SHLIB_H_
+#define LELY_UTIL_SHLIB_H_
 
 #include <lely/util/util.h>
 
@@ -96,5 +96,4 @@ LELY_UTIL_EXTERN const char *shlib_suffix(void);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_SHLIB_H_

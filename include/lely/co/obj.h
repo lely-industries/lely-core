@@ -19,99 +19,99 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_OBJ_H
-#define LELY_CO_OBJ_H
+#ifndef LELY_CO_OBJ_H_
+#define LELY_CO_OBJ_H_
 
 #include <lely/co/type.h>
 
 #include <stddef.h>
 
 /// An object with no data fields.
-#define CO_OBJECT_NULL		0x00
+#define CO_OBJECT_NULL 0x00
 
 /// A large variable amount of data.
-#define CO_OBJECT_DOMAIN	0x02
+#define CO_OBJECT_DOMAIN 0x02
 
 /// A type definitions.
-#define CO_OBJECT_DEFTYPE	0x05
+#define CO_OBJECT_DEFTYPE 0x05
 
 /// A record type definition.
-#define CO_OBJECT_DEFSTRUCT	0x06
+#define CO_OBJECT_DEFSTRUCT 0x06
 
 /// A single value.
-#define CO_OBJECT_VAR		0x07
+#define CO_OBJECT_VAR 0x07
 
 /**
  * A multiple data field object where each data field is a simple variable of
  * the same basic data type.
  */
-#define CO_OBJECT_ARRAY		0x08
+#define CO_OBJECT_ARRAY 0x08
 
 /**
  * A multiple data field object where the data fields may be any combination of
  * simple variables.
  */
-#define CO_OBJECT_RECORD	0x09
+#define CO_OBJECT_RECORD 0x09
 
 /// The object can be read.
-#define CO_ACCESS_READ	0x01
+#define CO_ACCESS_READ 0x01
 
 /// The object can be written.
-#define CO_ACCESS_WRITE	0x02
+#define CO_ACCESS_WRITE 0x02
 
 /// The object can be mapped to a TPDO.
-#define CO_ACCESS_TPDO	0x04
+#define CO_ACCESS_TPDO 0x04
 
 /// The object can be mapped to an RPDO.
-#define CO_ACCESS_RPDO	0x08
+#define CO_ACCESS_RPDO 0x08
 
 /// Read-only access.
-#define CO_ACCESS_RO	(CO_ACCESS_READ | CO_ACCESS_TPDO)
+#define CO_ACCESS_RO (CO_ACCESS_READ | CO_ACCESS_TPDO)
 
 /// Write-only access.
-#define CO_ACCESS_WO	(CO_ACCESS_WRITE | CO_ACCESS_RPDO)
+#define CO_ACCESS_WO (CO_ACCESS_WRITE | CO_ACCESS_RPDO)
 
 /// Read or write access.
-#define CO_ACCESS_RW	(CO_ACCESS_RO | CO_ACCESS_WO)
+#define CO_ACCESS_RW (CO_ACCESS_RO | CO_ACCESS_WO)
 
 /// Read or write on process input.
-#define CO_ACCESS_RWR	(CO_ACCESS_RO | CO_ACCESS_WRITE)
+#define CO_ACCESS_RWR (CO_ACCESS_RO | CO_ACCESS_WRITE)
 
 /// Read or write on process output.
-#define CO_ACCESS_RWW	(CO_ACCESS_WO | CO_ACCESS_READ)
+#define CO_ACCESS_RWW (CO_ACCESS_WO | CO_ACCESS_READ)
 
 /// Constant value.
-#define CO_ACCESS_CONST	(CO_ACCESS_RO | 0x10)
+#define CO_ACCESS_CONST (CO_ACCESS_RO | 0x10)
 
 /// Refuse read on scan.
-#define CO_OBJ_FLAGS_READ	0x01
+#define CO_OBJ_FLAGS_READ 0x01
 
 /// Refuse write on download.
-#define CO_OBJ_FLAGS_WRITE	0x02
+#define CO_OBJ_FLAGS_WRITE 0x02
 
 /**
  * If a read access is performed for the object, the data is stored in a file.
  * In this case, the object contains the filename, _not_ the file contents.
  */
-#define CO_OBJ_FLAGS_UPLOAD_FILE	0x04
+#define CO_OBJ_FLAGS_UPLOAD_FILE 0x04
 
 /**
  * If a write access is performed for the object, the data is stored in a file.
  * In this case, the object contains the filename, _not_ the file contents.
  */
-#define CO_OBJ_FLAGS_DOWNLOAD_FILE	0x08
+#define CO_OBJ_FLAGS_DOWNLOAD_FILE 0x08
 
 /// The lower limit of the object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_MIN_NODEID	0x10
+#define CO_OBJ_FLAGS_MIN_NODEID 0x10
 
 /// The upper limit of the object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_MAX_NODEID	0x20
+#define CO_OBJ_FLAGS_MAX_NODEID 0x20
 
 /// The default object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_DEF_NODEID	0x40
+#define CO_OBJ_FLAGS_DEF_NODEID 0x40
 
 /// The current object value is of the form `$NODEID { "+" number }`.
-#define CO_OBJ_FLAGS_VAL_NODEID	0x80
+#define CO_OBJ_FLAGS_VAL_NODEID 0x80
 
 /// The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
 struct co_sdo_req;
@@ -132,8 +132,8 @@ extern "C" {
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-typedef co_unsigned32_t co_sub_dn_ind_t(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+typedef co_unsigned32_t co_sub_dn_ind_t(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The type of a CANopen sub-object upload indication function, invoked by an
@@ -147,13 +147,13 @@ typedef co_unsigned32_t co_sub_dn_ind_t(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-typedef co_unsigned32_t co_sub_up_ind_t(const co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
+typedef co_unsigned32_t co_sub_up_ind_t(
+		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 LELY_CO_EXTERN void *__co_obj_alloc(void);
 LELY_CO_EXTERN void __co_obj_free(void *ptr);
-LELY_CO_EXTERN struct __co_obj *__co_obj_init(struct __co_obj *obj,
-		co_unsigned16_t idx);
+LELY_CO_EXTERN struct __co_obj *__co_obj_init(
+		struct __co_obj *obj, co_unsigned16_t idx);
 LELY_CO_EXTERN void __co_obj_fini(struct __co_obj *obj);
 
 /**
@@ -227,8 +227,8 @@ LELY_CO_EXTERN int co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub);
  *
  * @see co_obj_insert_sub()
  */
-LELY_CO_EXTERN co_sub_t *co_obj_find_sub(const co_obj_t *obj,
-		co_unsigned8_t subidx);
+LELY_CO_EXTERN co_sub_t *co_obj_find_sub(
+		const co_obj_t *obj, co_unsigned8_t subidx);
 
 /// Returns the name of a CANopen object. @see co_obj_set_name()
 LELY_CO_EXTERN const char *co_obj_get_name(const co_obj_t *obj);
@@ -283,8 +283,8 @@ LELY_CO_EXTERN size_t co_obj_sizeof_val(const co_obj_t *obj);
  *
  * @see co_obj_set_val(), co_sub_get_val()
  */
-LELY_CO_EXTERN const void *co_obj_get_val(const co_obj_t *obj,
-		co_unsigned8_t subidx);
+LELY_CO_EXTERN const void *co_obj_get_val(
+		const co_obj_t *obj, co_unsigned8_t subidx);
 
 /**
  * Sets the current value of a CANopen sub-object.
@@ -305,10 +305,10 @@ LELY_CO_EXTERN size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx,
 		const void *ptr, size_t n);
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXTERN co_##b##_t co_obj_get_val_##c(const co_obj_t *obj, \
-			co_unsigned8_t subidx); \
-	LELY_CO_EXTERN size_t co_obj_set_val_##c(co_obj_t *obj, \
-			co_unsigned8_t subidx, co_##b##_t c);
+	LELY_CO_EXTERN co_##b##_t co_obj_get_val_##c( \
+			const co_obj_t *obj, co_unsigned8_t subidx); \
+	LELY_CO_EXTERN size_t co_obj_set_val_##c( \
+			co_obj_t *obj, co_unsigned8_t subidx, co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
@@ -325,8 +325,8 @@ LELY_CO_EXTERN size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_obj_set_dn_ind(
+		co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
 
 /**
  * Sets the upload indication function for a CANopen object. This function
@@ -338,8 +338,8 @@ LELY_CO_EXTERN void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind,
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>func</b>.
  */
-LELY_CO_EXTERN void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_obj_set_up_ind(
+		co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
 
 LELY_CO_EXTERN void *__co_sub_alloc(void);
 LELY_CO_EXTERN void __co_sub_free(void *ptr);
@@ -359,8 +359,8 @@ LELY_CO_EXTERN void __co_sub_fini(struct __co_sub *sub);
  *
  * @see co_sub_destroy()
  */
-LELY_CO_EXTERN co_sub_t *co_sub_create(co_unsigned8_t subidx,
-		co_unsigned16_t type);
+LELY_CO_EXTERN co_sub_t *co_sub_create(
+		co_unsigned8_t subidx, co_unsigned16_t type);
 
 /// Destroys a CANopen sub-object. @see co_sub_create()
 LELY_CO_EXTERN void co_sub_destroy(co_sub_t *sub);
@@ -577,8 +577,8 @@ LELY_CO_EXTERN size_t co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_chk_val(const co_sub_t *sub,
-		co_unsigned16_t type, const void *val);
+LELY_CO_EXTERN co_unsigned32_t co_sub_chk_val(
+		const co_sub_t *sub, co_unsigned16_t type, const void *val);
 
 /// Returns the access type of a CANopen sub-object. @see co_sub_set_access()
 LELY_CO_EXTERN unsigned int co_sub_get_access(const co_sub_t *sub);
@@ -629,8 +629,8 @@ LELY_CO_EXTERN void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
  *
  * @see co_sub_set_dn_ind()
  */
-LELY_CO_EXTERN void co_sub_get_dn_ind(const co_sub_t *sub,
-		co_sub_dn_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_sub_get_dn_ind(
+		const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata);
 
 /**
  * Sets the download indication function for a CANopen sub-object. This function
@@ -645,8 +645,8 @@ LELY_CO_EXTERN void co_sub_get_dn_ind(const co_sub_t *sub,
  *
  * @see co_sub_get_dn_ind()
  */
-LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_sub_set_dn_ind(
+		co_sub_t *sub, co_sub_dn_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a download indication is received by a
@@ -658,8 +658,8 @@ LELY_CO_EXTERN void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind,
  *
  * @see co_sub_dn_ind_t
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(co_sub_t *sub,
-		struct co_sdo_req *req);
+LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(
+		co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -678,8 +678,8 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(co_sub_t *sub,
  *
  * @see co_sub_dn_ind_val()
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(co_sub_t *sub,
-		struct co_sdo_req *req);
+LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -699,8 +699,8 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(co_sub_t *sub,
  *
  * @see co_sub_dn_ind()
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind_val(co_sub_t *sub,
-		co_unsigned16_t type, const void *val);
+LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind_val(
+		co_sub_t *sub, co_unsigned16_t type, const void *val);
 
 /**
  * Downloads (moves) a value into a CANopen sub-object if the
@@ -730,8 +730,8 @@ LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
  *
  * @see co_sub_set_up_ind()
  */
-LELY_CO_EXTERN void co_sub_get_up_ind(const co_sub_t *sub,
-		co_sub_up_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_sub_get_up_ind(
+		const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata);
 
 /**
  * Sets the upload indication function for a CANopen sub-object. This function
@@ -746,8 +746,8 @@ LELY_CO_EXTERN void co_sub_get_up_ind(const co_sub_t *sub,
  *
  * @see co_sub_get_up_ind()
  */
-LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_sub_set_up_ind(
+		co_sub_t *sub, co_sub_up_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when an upload indication is received by a
@@ -759,8 +759,8 @@ LELY_CO_EXTERN void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind,
  *
  * @see co_sub_up_ind_t
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(const co_sub_t *sub,
-		struct co_sdo_req *req);
+LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(
+		const co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the upload indication function of a CANopen sub-object, registered
@@ -774,12 +774,11 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(const co_sub_t *sub,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_up_ind(const co_sub_t *sub,
-		struct co_sdo_req *req);
+LELY_CO_EXTERN co_unsigned32_t co_sub_up_ind(
+		const co_sub_t *sub, struct co_sdo_req *req);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_OBJ_H_

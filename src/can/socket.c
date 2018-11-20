@@ -25,8 +25,8 @@
 
 #ifdef LELY_HAVE_SOCKET_CAN
 
-#include <lely/util/errnum.h>
 #include <lely/can/socket.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <string.h>
@@ -40,7 +40,8 @@
 
 LELY_CAN_EXPORT int
 can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
-		enum can_error *perror) {
+		enum can_error *perror)
+{
 	assert(frame);
 
 	if (!(frame->can_id & CAN_ERR_FLAG))
@@ -66,8 +67,10 @@ can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 		if (frame->data[1] & CAN_ERR_CRTL_ACTIVE)
 			state = CAN_STATE_ACTIVE;
 #endif
+		// clang-format off
 		if (frame->data[1] & (CAN_ERR_CRTL_RX_PASSIVE
 				| CAN_ERR_CRTL_TX_PASSIVE))
+			// clang-format on
 			state = CAN_STATE_PASSIVE;
 	}
 
@@ -78,8 +81,10 @@ can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 			error |= CAN_ERROR_FORM;
 		if (frame->data[2] & CAN_ERR_PROT_STUFF)
 			error |= CAN_ERROR_STUFF;
+		// clang-format off
 		if (frame->data[2] & (CAN_ERR_PROT_BIT0 | CAN_ERR_PROT_BIT1
 				| CAN_ERR_PROT_OVERLOAD))
+			// clang-format on
 			error |= CAN_ERROR_OTHER;
 		if (frame->data[2] & CAN_ERR_PROT_ACTIVE)
 			state = CAN_STATE_ACTIVE;

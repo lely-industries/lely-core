@@ -53,8 +53,8 @@
 
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
 /// Initializes all Receive/Transmit-PDO services. @see co_nmt_srv_fini_pdo()
-static void co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev);
+static void co_nmt_srv_init_pdo(
+		struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev);
 /// Finalizes all Receive/Transmit-PDO services. @see co_nmt_srv_init_pdo()
 static void co_nmt_srv_fini_pdo(struct co_nmt_srv *srv);
 #ifndef LELY_NO_CO_RPDO
@@ -65,20 +65,20 @@ static void co_nmt_srv_rpdo_err(co_rpdo_t *pdo, co_unsigned16_t eec,
 #endif
 
 /// Initializes all Server/Client-SDO services. @see co_nmt_srv_fini_sdo()
-static void co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev);
+static void co_nmt_srv_init_sdo(
+		struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev);
 /// Finalizes all Server/Client-SDO services. @see co_nmt_srv_init_sdo()
 static void co_nmt_srv_fini_sdo(struct co_nmt_srv *srv);
 
 #ifndef LELY_NO_CO_SYNC
 /// Initializes the SYNC producer/consumer service. @see co_nmt_srv_fini_sync()
-static void co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev);
+static void co_nmt_srv_init_sync(
+		struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev);
 /// Finalizes the SYNC producer/consumer service. @see co_nmt_srv_init_sync()
 static void co_nmt_srv_fini_sync(struct co_nmt_srv *srv);
 /// Invokes co_nmt_sync() to handle SYNC objects. @see co_sync_ind_t
-static void co_nmt_srv_sync_ind(co_sync_t *sync, co_unsigned8_t cnt,
-		void *data);
+static void co_nmt_srv_sync_ind(
+		co_sync_t *sync, co_unsigned8_t cnt, void *data);
 /// Invokes co_nmt_err() to handle SYNC errors. @see co_sync_err_t
 static void co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
@@ -86,16 +86,16 @@ static void co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec,
 
 #ifndef LELY_NO_CO_TIME
 /// Initializes the TIME producer/consumer service. @see co_nmt_srv_fini_time()
-static void co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev);
+static void co_nmt_srv_init_time(
+		struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev);
 /// Finalizes the TIME producer/consumer service. @see co_nmt_srv_init_time()
 static void co_nmt_srv_fini_time(struct co_nmt_srv *srv);
 #endif
 
 #ifndef LELY_NO_CO_EMCY
 /// Initializes the EMCY producer/consumer service. @see co_nmt_srv_fini_emcy()
-static void co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net,
-		co_dev_t *dev);
+static void co_nmt_srv_init_emcy(
+		struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev);
 /// Finalizes the EMCY producer/consumer service. @see co_nmt_srv_init_emcy()
 static void co_nmt_srv_fini_emcy(struct co_nmt_srv *srv);
 #endif
@@ -108,10 +108,10 @@ static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 #endif
 
 /// The maximum number of Receive/Transmit-PDOs.
-#define CO_NUM_PDO	512
+#define CO_NUM_PDO 512
 
 /// The maximum number of Client/Server-SDOs.
-#define CO_NUM_SDO	128
+#define CO_NUM_SDO 128
 
 void
 co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
@@ -430,7 +430,8 @@ co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 	srv->sync = co_sync_create(net, dev);
 	if (__unlikely(!srv->sync)) {
-		diag(DIAG_ERROR, get_errc(), "unable to initialize SYNC service");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize SYNC service");
 		return;
 	}
 	co_sync_set_ind(srv->sync, &co_nmt_srv_sync_ind, srv->nmt);
@@ -489,7 +490,8 @@ co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 	srv->time = co_time_create(net, dev);
 	if (__unlikely(!srv->time))
-		diag(DIAG_ERROR, get_errc(), "unable to initialize TIME service");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize TIME service");
 }
 
 static void
@@ -523,7 +525,8 @@ co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 	srv->emcy = co_emcy_create(net, dev);
 	if (__unlikely(!srv->emcy))
-		diag(DIAG_ERROR, get_errc(), "unable to initialize EMCY service");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize EMCY service");
 }
 
 static void
@@ -556,7 +559,8 @@ co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt)
 
 	srv->lss = co_lss_create(nmt);
 	if (__unlikely(!srv->lss))
-		diag(DIAG_ERROR, get_errc(), "unable to initialize LSS service");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize LSS service");
 }
 
 static void
@@ -572,4 +576,3 @@ co_nmt_srv_fini_lss(struct co_nmt_srv *srv)
 }
 
 #endif
-

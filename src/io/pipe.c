@@ -21,9 +21,9 @@
  * limitations under the License.
  */
 
+#include "default.h"
 #include "io.h"
 #include <lely/io/pipe.h>
-#include "default.h"
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
@@ -39,14 +39,12 @@
 static int pipe(HANDLE fildes[2]);
 #endif
 
-static const struct io_handle_vtab pipe_vtab = {
-	.type = IO_TYPE_PIPE,
+static const struct io_handle_vtab pipe_vtab = { .type = IO_TYPE_PIPE,
 	.size = sizeof(struct io_handle),
 	.fini = &default_fini,
 	.flags = &default_flags,
 	.read = &default_read,
-	.write = &default_write
-};
+	.write = &default_write };
 
 LELY_IO_EXPORT int
 io_open_pipe(io_handle_t handle_vector[2])
@@ -131,7 +129,8 @@ pipe(HANDLE fildes[2])
 
 	CHAR Name[MAX_PATH] = { 0 };
 	static LONGLONG cnt;
-	snprintf(Name, sizeof(Name) - 1, "\\\\.\\pipe\\lely-io-pipe-%04lx-%08I64x",
+	snprintf(Name, sizeof(Name) - 1,
+			"\\\\.\\pipe\\lely-io-pipe-%04lx-%08I64x",
 			GetCurrentProcessId(), InterlockedIncrement64(&cnt));
 
 	fildes[0] = CreateNamedPipeA(Name,
@@ -161,4 +160,3 @@ error_CreateNamedPipeA:
 #endif
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
-

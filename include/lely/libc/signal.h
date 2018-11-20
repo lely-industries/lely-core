@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_LIBC_SIGNAL_H
-#define LELY_LIBC_SIGNAL_H
+#ifndef LELY_LIBC_SIGNAL_H_
+#define LELY_LIBC_SIGNAL_H_
 
 #include <lely/libc/sys/types.h>
 
@@ -29,16 +29,16 @@
 #if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_REALTIME_SIGNALS)
 
 /// No asynchronous notification is delivered when the event of interest occurs.
-#define SIGEV_NONE	1
+#define SIGEV_NONE 1
 
 /**
  * A queued signal, with an application-defined value, is generated when the
  * event of interest occurs (not supported with the native Windows API).
  */
-#define SIGEV_SIGNAL	0
+#define SIGEV_SIGNAL 0
 
 /// A notification function is called to perform notification.
-#define SIGEV_THREAD	2
+#define SIGEV_THREAD 2
 
 /// A signal value.
 union sigval {
@@ -60,12 +60,11 @@ struct sigevent {
 	/// The signal value.
 	union sigval sigev_value;
 	/// The notification function.
-	void (__cdecl *sigev_notify_function)(union sigval);
+	void(__cdecl *sigev_notify_function)(union sigval);
 	/// The notification attributes (ignored on Windows).
 	pthread_attr_t *sigev_notify_attributes;
 };
 
 #endif // !_POSIX_C_SOURCE && !_POSIX_REALTIME_SIGNALS
 
-#endif
-
+#endif // !LELY_LIBC_SIGNAL_H_

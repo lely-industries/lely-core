@@ -22,13 +22,13 @@
  */
 
 #include "can.h"
+#include <lely/can/net.h>
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/util/list.h>
 #include <lely/util/pheap.h>
 #include <lely/util/rbtree.h>
 #include <lely/util/time.h>
-#include <lely/can/net.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -154,9 +154,9 @@ __can_net_fini(struct __can_net *net)
 {
 	assert(net);
 
-	rbtree_foreach(&net->recv_tree, node) {
+	rbtree_foreach (&net->recv_tree, node) {
 		can_recv_t *recv = structof(node, can_recv_t, node);
-		dlnode_foreach(&recv->list, node)
+		dlnode_foreach (&recv->list, node)
 			can_recv_stop(structof(node, can_recv_t, list));
 	}
 
@@ -253,8 +253,8 @@ can_net_set_time(can_net_t *net, const struct timespec *tp)
 }
 
 LELY_CAN_EXPORT void
-can_net_get_next_func(const can_net_t *net, can_timer_func_t **pfunc,
-		void **pdata)
+can_net_get_next_func(
+		const can_net_t *net, can_timer_func_t **pfunc, void **pdata)
 {
 	assert(net);
 
@@ -287,7 +287,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	if (node) {
 		// Loop over all matching receivers.
 		can_recv_t *recv = structof(node, can_recv_t, node);
-		dlnode_foreach(&recv->list, node) {
+		dlnode_foreach (&recv->list, node) {
 			recv = structof(node, can_recv_t, list);
 			// Invoke the callback function and check the result.
 			if (recv->func && recv->func(msg, recv->data)
@@ -318,8 +318,8 @@ can_net_send(can_net_t *net, const struct can_msg *msg)
 }
 
 LELY_CAN_EXPORT void
-can_net_get_send_func(const can_net_t *net, can_send_func_t **pfunc,
-		void **pdata)
+can_net_get_send_func(
+		const can_net_t *net, can_send_func_t **pfunc, void **pdata)
 {
 	assert(net);
 
@@ -653,8 +653,7 @@ can_recv_key(uint32_t id, uint8_t flags)
 	return (can_recv_key_t)id | ((can_recv_key_t)flags << 29);
 }
 
-static int __cdecl
-can_recv_key_cmp(const void *p1, const void *p2)
+static int __cdecl can_recv_key_cmp(const void *p1, const void *p2)
 {
 #ifdef LELY_NO_CANFD
 	return uint32_cmp(p1, p2);

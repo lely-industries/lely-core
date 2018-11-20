@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_CRC_H
-#define LELY_CO_CRC_H
+#ifndef LELY_CO_CRC_H_
+#define LELY_CO_CRC_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/co/co.h>
+#include <lely/libc/stdint.h>
 
 #include <stddef.h>
 
@@ -51,5 +51,4 @@ LELY_CO_EXTERN uint16_t co_crc(uint16_t crc, const void *ptr, size_t n);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_CRC_H_

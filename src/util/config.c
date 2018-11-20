@@ -45,15 +45,14 @@ struct config_section {
 	struct rbtree tree;
 };
 
-static struct rbnode *config_section_create(config_t *config,
-		const char *name);
+static struct rbnode *config_section_create(config_t *config, const char *name);
 static void config_section_destroy(struct rbnode *node);
 
-static const char *config_section_set(struct rbnode *node, const char *key,
-		const char *value);
+static const char *config_section_set(
+		struct rbnode *node, const char *key, const char *value);
 
-static void config_section_foreach(struct rbnode *node,
-		config_foreach_func_t *func, void *data);
+static void config_section_foreach(
+		struct rbnode *node, config_foreach_func_t *func, void *data);
 
 /// An entry in a configuration section.
 struct config_entry {
@@ -101,7 +100,7 @@ __config_fini(struct __config *config)
 {
 	assert(config);
 
-	rbtree_foreach(&config->tree, node) {
+	rbtree_foreach (&config->tree, node) {
 		rbtree_remove(&config->tree, node);
 		config_section_destroy(node);
 	}
@@ -240,7 +239,7 @@ config_foreach(const config_t *config, config_foreach_func_t *func, void *data)
 	if (node)
 		config_section_foreach(node, func, data);
 
-	rbtree_foreach(&config->tree, node) {
+	rbtree_foreach (&config->tree, node) {
 		const char *section = node->key;
 		// Skip the root section.
 		if (!section || !*section)
@@ -294,7 +293,7 @@ config_section_destroy(struct rbnode *node)
 
 	free((char *)node->key);
 
-	rbtree_foreach(&section->tree, node) {
+	rbtree_foreach (&section->tree, node) {
 		rbtree_remove(&section->tree, node);
 		config_entry_destroy(node);
 	}
@@ -319,21 +318,23 @@ config_section_set(struct rbnode *node, const char *key, const char *value)
 		return NULL;
 
 	node = config_entry_create(section, key, value);
+	// clang-format off
 	return __likely(node)
 			? structof(node, struct config_entry, node)->value
 			: NULL;
+	// clang-format on
 }
 
 static void
-config_section_foreach(struct rbnode *node, config_foreach_func_t *func,
-		void *data)
+config_section_foreach(
+		struct rbnode *node, config_foreach_func_t *func, void *data)
 {
 	assert(node);
 	struct config_section *section =
 			structof(node, struct config_section, node);
 	assert(func);
 
-	rbtree_foreach(&section->tree, node) {
+	rbtree_foreach (&section->tree, node) {
 		struct config_entry *entry =
 				structof(node, struct config_entry, node);
 		func(section->node.key, entry->node.key, entry->value, data);

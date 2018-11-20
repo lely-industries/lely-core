@@ -18,24 +18,26 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_CO_H
-#define LELY_CO_CO_H
+#ifndef LELY_CO_CO_H_
+#define LELY_CO_CO_H_
 
+#include <lely/can/can.h>
 #include <lely/libc/libc.h>
 #include <lely/util/util.h>
-#include <lely/can/can.h>
 
 #ifndef LELY_CO_EXTERN
 #ifdef LELY_CO_INTERN
-#define LELY_CO_EXTERN	extern LELY_DLL_EXPORT
+#define LELY_CO_EXTERN extern LELY_DLL_EXPORT
 #else
-#define LELY_CO_EXTERN	extern LELY_DLL_IMPORT
+#define LELY_CO_EXTERN extern LELY_DLL_IMPORT
 #endif
 #endif
 
 struct __co_dev;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class CODev; }
+// clang-format on
 typedef lely::CODev co_dev_t;
 #else
 /// An opaque CANopen device type.
@@ -44,7 +46,9 @@ typedef struct __co_dev co_dev_t;
 
 struct __co_obj;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COObj; }
+// clang-format on
 typedef lely::COObj co_obj_t;
 #else
 /// An opaque CANopen object type.
@@ -53,7 +57,9 @@ typedef struct __co_obj co_obj_t;
 
 struct __co_sub;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COSub; }
+// clang-format on
 typedef lely::COSub co_sub_t;
 #else
 /// An opaque CANopen sub-object type.
@@ -62,7 +68,9 @@ typedef struct __co_sub co_sub_t;
 
 struct __co_ssdo;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COSSDO; }
+// clang-format on
 typedef lely::COSSDO co_ssdo_t;
 #else
 /// An opaque CANopen Server-SDO service type.
@@ -71,7 +79,9 @@ typedef struct __co_ssdo co_ssdo_t;
 
 struct __co_csdo;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COCSDO; }
+// clang-format on
 typedef lely::COCSDO co_csdo_t;
 #else
 /// An opaque CANopen Client-SDO service type.
@@ -80,7 +90,9 @@ typedef struct __co_csdo co_csdo_t;
 
 struct __co_rpdo;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class CORPDO; }
+// clang-format on
 typedef lely::CORPDO co_rpdo_t;
 #else
 /// An opaque CANopen Receive-PDO service type.
@@ -89,7 +101,9 @@ typedef struct __co_rpdo co_rpdo_t;
 
 struct __co_tpdo;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COTPDO; }
+// clang-format on
 typedef lely::COTPDO co_tpdo_t;
 #else
 /// An opaque CANopen Transmit-PDO service type.
@@ -98,7 +112,9 @@ typedef struct __co_tpdo co_tpdo_t;
 
 struct __co_sync;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COSync; }
+// clang-format on
 typedef lely::COSync co_sync_t;
 #else
 /// An opaque CANopen SYNC producer/consumer service type.
@@ -107,7 +123,9 @@ typedef struct __co_sync co_sync_t;
 
 struct __co_time;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COTime; }
+// clang-format on
 typedef lely::COTime co_time_t;
 #else
 /// An opaque CANopen TIME producer/consumer service type.
@@ -116,7 +134,9 @@ typedef struct __co_time co_time_t;
 
 struct __co_emcy;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COEmcy; }
+// clang-format on
 typedef lely::COEmcy co_emcy_t;
 #else
 /// An opaque CANopen EMCY producer/consumer service type.
@@ -125,7 +145,9 @@ typedef struct __co_emcy co_emcy_t;
 
 struct __co_nmt;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class CONMT; }
+// clang-format on
 typedef lely::CONMT co_nmt_t;
 #else
 /// An opaque CANopen NMT master/slave service type.
@@ -134,12 +156,13 @@ typedef struct __co_nmt co_nmt_t;
 
 struct __co_lss;
 #ifdef __cplusplus
+// clang-format off
 namespace lely { class COLSS; }
+// clang-format on
 typedef lely::COLSS co_lss_t;
 #else
 /// An opaque CANopen LSS master/slave service type.
 typedef struct __co_lss co_lss_t;
 #endif
 
-#endif
-
+#endif // !LELY_CO_CO_H_

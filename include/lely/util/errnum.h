@@ -54,8 +54,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_ERRNUM_H
-#define LELY_UTIL_ERRNUM_H
+#ifndef LELY_UTIL_ERRNUM_H_
+#define LELY_UTIL_ERRNUM_H_
 
 #include <lely/util/util.h>
 
@@ -68,7 +68,7 @@
 #endif
 
 #ifndef LELY_UTIL_ERRNUM_INLINE
-#define LELY_UTIL_ERRNUM_INLINE	inline
+#define LELY_UTIL_ERRNUM_INLINE inline
 #endif
 
 /// The native error code type.
@@ -117,7 +117,7 @@ enum errnum {
 	ERRNUM_DESTADDRREQ,
 	/// Mathematics argument out of domain of function.
 	ERRNUM_DOM,
-//	ERRNUM_DQUOT,
+	// ERRNUM_DQUOT,
 	/// File exists.
 	ERRNUM_EXIST,
 	/// Bad address.
@@ -150,7 +150,7 @@ enum errnum {
 	ERRNUM_MLINK,
 	/// Message too large.
 	ERRNUM_MSGSIZE,
-//	ERRNUM_MULTIHOP,
+	// ERRNUM_MULTIHOP,
 	/// Filename too long.
 	ERRNUM_NAMETOOLONG,
 	/// Network is down.
@@ -173,7 +173,7 @@ enum errnum {
 	ERRNUM_NOEXEC,
 	/// No locks available.
 	ERRNUM_NOLCK,
-//	ERRNUM_NOLINK,
+	// ERRNUM_NOLINK,
 	/// Not enough space.
 	ERRNUM_NOMEM,
 	/// No message of the desired type.
@@ -228,7 +228,7 @@ enum errnum {
 	ERRNUM_SPIPE,
 	/// No such process.
 	ERRNUM_SRCH,
-//	ERRNUM_STALE,
+	// ERRNUM_STALE,
 	/// Stream ioctl() timeout.
 	ERRNUM_TIME,
 	/// Connection timed out.
@@ -425,5 +425,4 @@ errnum2str(errnum_t errnum)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_ERRNUM_H_

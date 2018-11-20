@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_IO_H
-#define LELY_IO_IO_H
+#ifndef LELY_IO_IO_H_
+#define LELY_IO_IO_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/libc/sys/types.h>
@@ -29,9 +29,9 @@
 
 #ifndef LELY_IO_EXTERN
 #ifdef LELY_IO_INTERN
-#define LELY_IO_EXTERN	extern LELY_DLL_EXPORT
+#define LELY_IO_EXTERN extern LELY_DLL_EXPORT
 #else
-#define LELY_IO_EXTERN	extern LELY_DLL_IMPORT
+#define LELY_IO_EXTERN extern LELY_DLL_IMPORT
 #endif
 #endif
 
@@ -39,7 +39,7 @@
 typedef struct io_handle *io_handle_t;
 
 /// The value of an invalid I/O device handle.
-#define IO_HANDLE_ERROR	((io_handle_t)NULL)
+#define IO_HANDLE_ERROR ((io_handle_t)NULL)
 
 /// A file offset type.
 typedef int64_t io_off_t;
@@ -189,8 +189,8 @@ LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
  * @returns the number of bytes written on success, or -1 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_write(io_handle_t handle, const void *buf,
-		size_t nbytes);
+LELY_IO_EXTERN ssize_t io_write(
+		io_handle_t handle, const void *buf, size_t nbytes);
 
 /**
  * Flushes the write buffer of a an I/O device. This function waits until all
@@ -205,5 +205,4 @@ LELY_IO_EXTERN int io_flush(io_handle_t handle);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_IO_H_

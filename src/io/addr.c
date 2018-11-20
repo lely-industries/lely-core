@@ -22,10 +22,10 @@
  */
 
 #include "io.h"
-#include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
 #include <lely/io/addr.h>
 #include <lely/io/sock.h>
+#include <lely/util/cmp.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <string.h>
@@ -44,8 +44,7 @@ static int bachk(const char *str);
 #include <netdb.h>
 #endif
 
-LELY_IO_EXPORT int __cdecl
-io_addr_cmp(const void *p1, const void *p2)
+LELY_IO_EXPORT int __cdecl io_addr_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;
@@ -64,9 +63,11 @@ io_addr_cmp(const void *p1, const void *p2)
 	return cmp;
 }
 
+// clang-format off
 #if defined(_WIN32) || (defined(__linux__) \
 		&& defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H))
+// clang-format on
 
 LELY_IO_EXPORT int
 io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
@@ -166,7 +167,7 @@ io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 		*port = addr_bth->port == BT_PORT_ANY ? 0 : addr_bth->port;
 	if (ba) {
 		for (int i = 0; i < 6; i++)
-			ba[i] = (addr_bth->btAddr >> (7 - i ) * 8) & 0xff;
+			ba[i] = (addr_bth->btAddr >> (7 - i) * 8) & 0xff;
 	}
 #else
 	if (__unlikely(addr->addrlen < (int)sizeof(struct sockaddr_rc))) {
@@ -243,7 +244,9 @@ io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 #endif
 }
 
+// clang-format off
 #endif // _WIN32 || (__linux__ && HAVE_BLUETOOTH_BLUETOOTH_H && HAVE_BLUETOOTH_RFCOMM_H)
+// clang-format on
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
@@ -266,8 +269,10 @@ io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port)
 
 	if (port)
 		*port = ntohs(addr_in->sin_port);
+	// clang-format off
 	if (ip && __unlikely(!inet_ntop(AF_INET, (void *)&addr_in->sin_addr, ip,
 			IO_ADDR_IPV4_STRLEN)))
+		// clang-format on
 		return -1;
 
 	return 0;
@@ -383,8 +388,10 @@ io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port)
 
 	if (port)
 		*port = ntohs(addr_in6->sin6_port);
+	// clang-format off
 	if (ip && __unlikely(!inet_ntop(AF_INET6, (void *)&addr_in6->sin6_addr,
 			ip, IO_ADDR_IPV6_STRLEN)))
+		// clang-format on
 		return -1;
 
 	return 0;
@@ -402,8 +409,10 @@ io_addr_set_ipv6_a(io_addr_t *addr, const char *ip, int port)
 	addr_in6->sin6_family = AF_INET6;
 	addr_in6->sin6_port = htons(port);
 	if (ip && *ip) {
+		// clang-format off
 		if (__unlikely(inet_pton(AF_INET6, ip, &addr_in6->sin6_addr)
 				!= 1))
+			// clang-format on
 			return -1;
 	} else {
 		addr_in6->sin6_addr = in6addr_any;
@@ -533,9 +542,7 @@ io_addr_get_domain(const io_addr_t *addr)
 #if _POSIX_C_SOURCE >= 200112L
 	case AF_UNIX: return IO_SOCK_UNIX;
 #endif
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 }
 
@@ -559,15 +566,19 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 		const SOCKADDR_BTH *addr_bth =
 				(const SOCKADDR_BTH *)&addr->addr;
 		if (port)
+			// clang-format off
 			*port = addr_bth->port == BT_PORT_ANY
 					? 0 : addr_bth->port;
+		// clang-format on
 		return 0;
 	}
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
 	case AF_BLUETOOTH: {
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_rc))) {
+			// clang-format on
 			errno = EINVAL;
 			return -1;
 		}
@@ -579,8 +590,10 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	}
 #endif
 	case AF_INET: {
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -591,8 +604,10 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 		return 0;
 	}
 	case AF_INET6: {
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in6))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -602,9 +617,7 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 			*port = ntohs(addr_in6->sin6_port);
 		return 0;
 	}
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 }
 
@@ -626,13 +639,16 @@ io_addr_set_port(io_addr_t *addr, int port)
 			return -1;
 		}
 		((SOCKADDR_BTH *)&addr->addr)->port =
-				port ? (ULONG)port : BT_PORT_ANY;;
+				port ? (ULONG)port : BT_PORT_ANY;
+		;
 		return 0;
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
 	case AF_BLUETOOTH:
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_rc))) {
+			// clang-format on
 			errno = EINVAL;
 			return -1;
 		}
@@ -640,24 +656,26 @@ io_addr_set_port(io_addr_t *addr, int port)
 		return 0;
 #endif
 	case AF_INET:
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		((struct sockaddr_in *)&addr->addr)->sin_port = htons(port);
 		return 0;
 	case AF_INET6:
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in6))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		((struct sockaddr_in6 *)&addr->addr)->sin6_port = htons(port);
 		return 0;
-	default:
-		set_errnum(ERRNUM_AFNOSUPPORT);
-		return -1;
+	default: set_errnum(ERRNUM_AFNOSUPPORT); return -1;
 	}
 }
 
@@ -678,16 +696,17 @@ io_addr_is_loopback(const io_addr_t *addr)
 		return ntohl(addr_in->sin_addr.s_addr) == INADDR_LOOPBACK;
 	}
 	case AF_INET6: {
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in6)))
+			// clang-format on
 			return 0;
 		const struct sockaddr_in6 *addr_in6 =
 				(const struct sockaddr_in6 *)&addr->addr;
 		return !memcmp(&addr_in6->sin6_addr, &in6addr_any,
 				sizeof(in6addr_any));
 	}
-	default:
-		return 0;
+	default: return 0;
 	}
 }
 
@@ -707,8 +726,7 @@ io_addr_is_broadcast(const io_addr_t *addr)
 				(const struct sockaddr_in *)&addr->addr;
 		return ntohl(addr_in->sin_addr.s_addr) == INADDR_BROADCAST;
 	}
-	default:
-		return 0;
+	default: return 0;
 	}
 }
 
@@ -729,15 +747,16 @@ io_addr_is_multicast(const io_addr_t *addr)
 		return (ntohl(addr_in->sin_addr.s_addr) >> 28) == 0xe;
 	}
 	case AF_INET6: {
+		// clang-format off
 		if (__unlikely(addr->addrlen
 				< (int)sizeof(struct sockaddr_in6)))
+			// clang-format on
 			return 0;
 		const struct sockaddr_in6 *addr_in6 =
 				(const struct sockaddr_in6 *)&addr->addr;
 		return addr_in6->sin6_addr.s6_addr[0] == 0xff;
 	}
-	default:
-		return 0;
+	default: return 0;
 	}
 }
 
@@ -753,31 +772,17 @@ io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
 	struct addrinfo ai_hints = { .ai_family = AF_UNSPEC };
 	if (hints) {
 		switch (hints->domain) {
-		case 0:
-			break;
-		case IO_SOCK_IPV4:
-			ai_hints.ai_family = AF_INET;
-			break;
-		case IO_SOCK_IPV6:
-			ai_hints.ai_family = AF_INET6;
-			break;
-		default:
-			ecode = EAI_FAMILY;
-			break;
+		case 0: break;
+		case IO_SOCK_IPV4: ai_hints.ai_family = AF_INET; break;
+		case IO_SOCK_IPV6: ai_hints.ai_family = AF_INET6; break;
+		default: ecode = EAI_FAMILY; break;
 		}
 
 		switch (hints->type) {
-		case 0:
-			break;
-		case IO_SOCK_STREAM:
-			ai_hints.ai_socktype = SOCK_STREAM;
-			break;
-		case IO_SOCK_DGRAM:
-			ai_hints.ai_socktype = SOCK_DGRAM;
-			break;
-		default:
-			ecode = EAI_SOCKTYPE;
-			break;
+		case 0: break;
+		case IO_SOCK_STREAM: ai_hints.ai_socktype = SOCK_STREAM; break;
+		case IO_SOCK_DGRAM: ai_hints.ai_socktype = SOCK_DGRAM; break;
+		default: ecode = EAI_SOCKTYPE; break;
 		}
 	}
 
@@ -806,26 +811,16 @@ io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
 	for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
 		int domain;
 		switch (ai->ai_family) {
-		case AF_INET:
-			domain = IO_SOCK_IPV4;
-			break;
-		case AF_INET6:
-			domain = IO_SOCK_IPV6;
-			break;
-		default:
-			continue;
+		case AF_INET: domain = IO_SOCK_IPV4; break;
+		case AF_INET6: domain = IO_SOCK_IPV6; break;
+		default: continue;
 		}
 
 		int type;
 		switch (ai->ai_socktype) {
-		case SOCK_STREAM:
-			type = IO_SOCK_STREAM;
-			break;
-		case SOCK_DGRAM:
-			type = IO_SOCK_DGRAM;
-			break;
-		default:
-			continue;
+		case SOCK_STREAM: type = IO_SOCK_STREAM; break;
+		case SOCK_DGRAM: type = IO_SOCK_DGRAM; break;
+		default: continue;
 		}
 
 		if (ninfo++ < maxinfo) {
@@ -893,4 +888,3 @@ bachk(const char *str)
 }
 
 #endif // _WIN32
-

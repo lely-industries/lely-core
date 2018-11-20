@@ -18,15 +18,16 @@
  * limitations under the License.
  */
 
+#include <lely/co/dcf.h>
+#include <lely/co/sdev.h>
 #include <lely/libc/stdio.h>
 #include <lely/libc/unistd.h>
 #include <lely/util/diag.h>
-#include <lely/co/dcf.h>
-#include <lely/co/sdev.h>
 
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 #define HELP \
 	"Arguments: [options...] filename <variable name>\n" \
 	"Options:\n" \
@@ -34,9 +35,10 @@
 	"  --no-strings          Do not include optional strings in the output\n" \
 	"  -o <file>, --output=<file>\n" \
 	"                        Write the output to <file> instead of stdout"
+// clang-format on
 
-#define FLAG_HELP	0x01
-#define FLAG_NO_STRINGS	0x02
+#define FLAG_HELP 0x01
+#define FLAG_NO_STRINGS 0x02
 
 int
 main(int argc, char *argv[])
@@ -57,12 +59,8 @@ main(int argc, char *argv[])
 		if (*arg != '-') {
 			optind++;
 			switch (optpos++) {
-			case 0:
-				ifname = arg;
-				break;
-			case 1:
-				name = arg;
-				break;
+			case 0: ifname = arg; break;
+			case 1: name = arg; break;
 			default:
 				diag(DIAG_ERROR, 0, "extra argument %s", arg);
 				break;
@@ -95,26 +93,16 @@ main(int argc, char *argv[])
 				diag(DIAG_ERROR, 0, "illegal option -- %c",
 						optopt);
 				break;
-			case 'h':
-				flags |= FLAG_HELP;
-				break;
-			case 'o':
-				ofname = optarg;
-				break;
+			case 'h': flags |= FLAG_HELP; break;
+			case 'o': ofname = optarg; break;
 			}
 		}
 	}
 	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
 		switch (optpos++) {
-		case 0:
-			ifname = arg;
-			break;
-		case 1:
-			name = arg;
-			break;
-		default:
-			diag(DIAG_ERROR, 0, "extra argument %s", arg);
-			break;
+		case 0: ifname = arg; break;
+		case 1: name = arg; break;
+		default: diag(DIAG_ERROR, 0, "extra argument %s", arg); break;
 		}
 	}
 
@@ -171,7 +159,8 @@ main(int argc, char *argv[])
 		}
 	}
 
-	fprintf(stream, "#include <lely/co/sdev.h>\n\n"
+	fprintf(stream,
+			"#include <lely/co/sdev.h>\n\n"
 			"#define CO_SDEV_STRING(s)\t%s\n\n"
 			"const struct co_sdev %s = %s;\n\n",
 			(flags & FLAG_NO_STRINGS) ? "NULL" : "s", name, s);
@@ -192,4 +181,3 @@ error_getdelim:
 error_arg:
 	return EXIT_FAILURE;
 }
-

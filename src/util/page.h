@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_INTERN_PAGE_H
-#define LELY_UTIL_INTERN_PAGE_H
+#ifndef LELY_UTIL_INTERN_PAGE_H_
+#define LELY_UTIL_INTERN_PAGE_H_
 
 #include "util.h"
 #include <lely/libc/stdalign.h>
 #ifndef LELY_NO_ATOMICS
-#define LELY_NO_ATOMICS	1
+#define LELY_NO_ATOMICS 1
 #ifndef LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #ifndef __STDC_NO_ATOMICS__
@@ -35,17 +35,18 @@
 #endif
 #include <lely/libc/stddef.h>
 #include <lely/libc/stdlib.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 
 #ifndef LELY_PAGE_SIZE
 /// The minimum size (in bytes) of a single memory page.
-#define LELY_PAGE_SIZE	65536
+#define LELY_PAGE_SIZE 65536
 #endif
 
 #ifndef LELY_PAGE_ALIGNMENT
 /// The alignment (in bytes) of a memory page.
-#define LELY_PAGE_ALIGNMENT	4096
+#define LELY_PAGE_ALIGNMENT 4096
 #endif
 
 /// A struct representing a single memory page.
@@ -134,8 +135,8 @@ static void *page_alloc(struct page *page, size_t size);
  *
  * @see page_alloc(), page_aligned_offset_alloc()
  */
-static inline void *page_aligned_alloc(struct page *page, size_t alignment,
-		size_t size);
+static inline void *page_aligned_alloc(
+		struct page *page, size_t alignment, size_t size);
 
 /**
  * Allocates a space on a memory page with the specified alignment. The
@@ -196,7 +197,8 @@ page_create(volatile atomic_page_t *next, size_t size)
 	page->next = atomic_load_explicit(next, memory_order_acquire);
 	while (__unlikely(!atomic_compare_exchange_weak_explicit(next,
 			&page->next, page, memory_order_release,
-			memory_order_relaxed)));
+			memory_order_relaxed)))
+		;
 #endif
 
 	return 0;
@@ -229,11 +231,13 @@ page_aligned_alloc(struct page *page, size_t alignment, size_t size)
 }
 
 static void *
-page_aligned_offset_alloc(struct page *page, size_t alignment, size_t offset,
-		size_t size)
+page_aligned_offset_alloc(
+		struct page *page, size_t alignment, size_t offset, size_t size)
 {
+	// clang-format off
 	if (__unlikely(!page || !powerof2(alignment)
 			|| alignment > LELY_PAGE_ALIGNMENT || offset > size))
+		// clang-format on
 		return NULL;
 
 	alignment = MAX(alignment, 1);
@@ -245,8 +249,8 @@ page_aligned_offset_alloc(struct page *page, size_t alignment, size_t offset,
 	page->free = begin + size;
 #else
 	// Try to atomically reserve space on the page.
-	unsigned long free = atomic_load_explicit(&page->free,
-			memory_order_acquire);
+	unsigned long free =
+			atomic_load_explicit(&page->free, memory_order_acquire);
 	size_t begin;
 	do {
 		begin = ALIGN(free + offset, alignment) - offset;
@@ -264,5 +268,4 @@ page_aligned_offset_alloc(struct page *page, size_t alignment, size_t offset,
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_INTERN_PAGE_H_

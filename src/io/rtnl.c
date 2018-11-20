@@ -32,7 +32,7 @@
 #include <string.h>
 
 #ifndef RTNL_BUFSIZE
-#define RTNL_BUFSIZE	8192
+#define RTNL_BUFSIZE 8192
 #endif
 
 static int io_rtnl_getattr_func(struct ifinfomsg *ifi, struct rtattr *rta,
@@ -41,8 +41,8 @@ static int io_rtnl_getattr_func(struct ifinfomsg *ifi, struct rtattr *rta,
 static int io_rtnl_recv(int fd, int (*func)(struct nlmsghdr *nlh, void *data),
 		void *data);
 static int io_rtnl_recv_ack(int fd);
-static int io_rtnl_recv_newlink(int fd, io_rtnl_newlink_func_t *func,
-		void *data);
+static int io_rtnl_recv_newlink(
+		int fd, io_rtnl_newlink_func_t *func, void *data);
 static int io_rtnl_recv_newlink_func(struct nlmsghdr *nlh, void *data);
 
 static ssize_t io_rtnl_send(int fd, struct iovec *iov, int iovlen);
@@ -63,13 +63,13 @@ io_rtnl_socket(__u32 pid, __u32 groups)
 	}
 
 	struct sockaddr_nl addr = {
-		.nl_family = AF_NETLINK,
-		.nl_pid = pid,
-		.nl_groups = groups
+		.nl_family = AF_NETLINK, .nl_pid = pid, .nl_groups = groups
 	};
 
+	// clang-format off
 	if (__unlikely(bind(fd, (struct sockaddr *)&addr, sizeof(addr))
 			== -1)) {
+		// clang-format on
 		errsv = errno;
 		goto error_bind;
 	}
@@ -88,8 +88,10 @@ io_rtnl_newlink(int fd, __u32 seq, __u32 pid, int ifi_index,
 		unsigned int ifi_flags, struct rtattr *rta,
 		unsigned short rtalen)
 {
+	// clang-format off
 	if (__unlikely(io_rtnl_send_newlink(fd, seq, pid, ifi_index, ifi_flags,
 			rta, rtalen) == -1))
+		// clang-format on
 		return -1;
 	return io_rtnl_recv_ack(fd);
 }
@@ -123,8 +125,10 @@ io_rtnl_getattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 		unsigned short payload;
 	} args = { ifi_index, pifi_flags, type, data, payload };
 
+	// clang-format off
 	if (__unlikely(io_rtnl_getlink(fd, seq, pid, &io_rtnl_getattr_func,
 			&args) == -1))
+		// clang-format on
 		return -1;
 
 	// On success, rtnl_getattr_func() sets ifi_index to 0.
@@ -187,15 +191,13 @@ io_rtnl_setattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 	char buf[RTA_SPACE(payload)];
 
 	struct rtattr *rta = (struct rtattr *)buf;
-	*rta = (struct rtattr){
-		.rta_len = RTA_LENGTH(payload),
-		.rta_type = type
-	};
+	*rta = (struct rtattr){ .rta_len = RTA_LENGTH(payload),
+		.rta_type = type };
 	if (data)
 		memcpy(RTA_DATA(rta), data, payload);
 
-	return io_rtnl_newlink(fd, seq, pid, ifi_index, ifi_flags, rta,
-			rta->rta_len);
+	return io_rtnl_newlink(
+			fd, seq, pid, ifi_index, ifi_flags, rta, rta->rta_len);
 }
 
 static int
@@ -288,12 +290,10 @@ io_rtnl_send(int fd, struct iovec *iov, int iovlen)
 {
 	struct sockaddr_nl addr = { .nl_family = AF_NETLINK };
 
-	struct msghdr msg = {
-		.msg_name = &addr,
+	struct msghdr msg = { .msg_name = &addr,
 		.msg_namelen = sizeof(addr),
 		.msg_iov = iov,
-		.msg_iovlen = iovlen
-	};
+		.msg_iovlen = iovlen };
 
 	ssize_t result;
 	int errsv = errno;
@@ -310,13 +310,14 @@ io_rtnl_send_getlink(int fd, __u32 seq, __u32 pid)
 	char buf[NLMSG_SPACE(sizeof(struct rtgenmsg))] = { 0 };
 
 	struct nlmsghdr *nlh = (struct nlmsghdr *)buf;
+	// clang-format off
 	*nlh = (struct nlmsghdr){
 		.nlmsg_len = NLMSG_SPACE(sizeof(struct rtgenmsg)),
 		.nlmsg_type = RTM_GETLINK,
 		.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP,
 		.nlmsg_seq = seq,
-		.nlmsg_pid = pid
-	};
+		.nlmsg_pid = pid };
+	// clang-format on
 
 	struct rtgenmsg *rtgen = NLMSG_DATA(nlh);
 	*rtgen = (struct rtgenmsg){ .rtgen_family = AF_UNSPEC };
@@ -343,16 +344,13 @@ io_rtnl_send_newlink(int fd, __u32 seq, __u32 pid, int ifi_index,
 	};
 
 	struct ifinfomsg *ifi = NLMSG_DATA(nlh);
-	*ifi = (struct ifinfomsg){
-		.ifi_family = AF_UNSPEC,
+	*ifi = (struct ifinfomsg){ .ifi_family = AF_UNSPEC,
 		.ifi_index = ifi_index,
 		.ifi_flags = ifi_flags,
-		.ifi_change = 0xffffffffu
-	};
+		.ifi_change = 0xffffffffu };
 
 	struct iovec iov[] = { { buf, sizeof(buf) }, { rta, rtalen } };
 	return io_rtnl_send(fd, iov, sizeof(iov) / sizeof(*iov));
 }
 
 #endif // #HAVE_LINUX_RTNETLINK_H
-

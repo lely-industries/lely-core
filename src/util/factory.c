@@ -186,19 +186,13 @@ factory_find_dtor(const char *name)
 
 #ifndef LELY_NO_THREADS
 
-static void __cdecl
-factory_init(void)
+static void __cdecl factory_init(void)
 {
 	mtx_init(&factory_mtx, mtx_plain);
 
 	atexit(&factory_fini);
 }
 
-static void __cdecl
-factory_fini(void)
-{
-	mtx_destroy(&factory_mtx);
-}
+static void __cdecl factory_fini(void) { mtx_destroy(&factory_mtx); }
 
 #endif
-

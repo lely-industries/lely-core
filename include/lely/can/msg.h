@@ -22,29 +22,29 @@
 #ifndef LELY_CAN_MSG_H_
 #define LELY_CAN_MSG_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/can/can.h>
+#include <lely/libc/stdint.h>
 
 #include <stddef.h>
 
 /// The mask used to extract the 11-bit Base Identifier from a CAN frame.
-#define CAN_MASK_BID	UINT32_C(0x000007ff)
+#define CAN_MASK_BID UINT32_C(0x000007ff)
 
 /// The mask used to extract the 29-bit Extended Identifier from a CAN frame.
-#define CAN_MASK_EID	UINT32_C(0x1fffffff)
+#define CAN_MASK_EID UINT32_C(0x1fffffff)
 
 /**
  * The Identifier Extension (IDE) flag. If this flag is set, the CAN Extended
  * Format (with a 29-bit identifier) is used, otherwise the CAN Base Format
  * (with an 11-bit identifier) is used.
  */
-#define CAN_FLAG_IDE	0x01
+#define CAN_FLAG_IDE 0x01
 
 /**
  * The Remote Transmission Request (RTR) flag (unavailable in CAN FD format
  * frames). If this flag is set, the frame has no payload.
  */
-#define CAN_FLAG_RTR	0x02
+#define CAN_FLAG_RTR 0x02
 
 #ifndef LELY_NO_CANFD
 
@@ -52,29 +52,29 @@
  * The Extended Data Length (EDL) flag. This flag is set for CAN FD format
  * frames.
  */
-#define CAN_FLAG_EDL	0x04
+#define CAN_FLAG_EDL 0x04
 
 /**
  * The Bit Rate Switch (BRS) flag (only available in CAN FD format frames). If
  * this flag is set, the bit rate is switched from the standard bit rate of the
  * arbitration phase to the preconfigured alternate bit rate of the data phase.
  */
-#define CAN_FLAG_BRS	0x08
+#define CAN_FLAG_BRS 0x08
 
 /**
  * The Error State Indicator (ESI) flag (only available in CAN FD format
  * frames).
  */
-#define CAN_FLAG_ESI	0x10
+#define CAN_FLAG_ESI 0x10
 
 #endif // !LELY_NO_CANFD
 
 /// The maximum number of bytes in the payload of a CAN format frame.
-#define CAN_MAX_LEN	8
+#define CAN_MAX_LEN 8
 
 #ifndef LELY_NO_CANFD
 /// The maximum number of bytes in the payload of a CAN FD format frame.
-#define CANFD_MAX_LEN	64
+#define CANFD_MAX_LEN 64
 #endif
 
 /// The maximum number of bytes in the payload of a #can_msg struct.
@@ -105,8 +105,12 @@ struct can_msg {
 
 /// The static initializer for a #can_msg struct.
 #ifdef LELY_NO_CANFD
-#define CAN_MSG_INIT	{ 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } }
+#define CAN_MSG_INIT \
+	{ \
+		0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } \
+	}
 #else
+// clang-format off
 #define CAN_MSG_INIT \
 	{ \
 		0, 0, 0, \
@@ -117,6 +121,7 @@ struct can_msg {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
 		} \
 	}
+// clang-format on
 #endif
 
 /// The method used to compute te size (in bits) of a CAN frame.
@@ -144,8 +149,8 @@ extern "C" {
  * Returns the number of bits on success, or -1 on error. In the latter case,
  * the error number can be obtained with `get_errc()`.
  */
-LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
-		enum can_msg_bits_mode mode);
+LELY_CAN_EXTERN int can_msg_bits(
+		const struct can_msg *msg, enum can_msg_bits_mode mode);
 
 /**
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The
@@ -162,8 +167,8 @@ LELY_CAN_EXTERN int can_msg_bits(const struct can_msg *msg,
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
  */
-LELY_CAN_EXTERN int snprintf_can_msg(char *s, size_t n,
-		const struct can_msg *msg);
+LELY_CAN_EXTERN int snprintf_can_msg(
+		char *s, size_t n, const struct can_msg *msg);
 
 /**
  * Equivalent to snprintf_can_msg(), except that it allocates a string large

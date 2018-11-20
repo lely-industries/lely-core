@@ -25,9 +25,9 @@
 
 #ifndef LELY_TAP_EXTERN
 #ifdef LELY_TAP_INTERN
-#define LELY_TAP_EXTERN	LELY_DLL_EXPORT
+#define LELY_TAP_EXTERN LELY_DLL_EXPORT
 #else
-#define LELY_TAP_EXTERN	LELY_DLL_IMPORT
+#define LELY_TAP_EXTERN LELY_DLL_IMPORT
 #endif
 #endif
 
@@ -44,13 +44,10 @@
  * the format string.
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_plan(...) \
-	tap_plan_(__VA_ARGS__, "")
-#define tap_plan_(n, ...) \
-	__tap_plan_impl(n, "" __VA_ARGS__)
+#define tap_plan(...) tap_plan_(__VA_ARGS__, "")
+#define tap_plan_(n, ...) __tap_plan_impl(n, "" __VA_ARGS__)
 #else
-#define tap_plan(n) \
-	__tap_plan_impl(n, "")
+#define tap_plan(n) __tap_plan_impl(n, "")
 #endif
 
 /**
@@ -61,13 +58,11 @@
  * arguments are printed under the control of the format string.
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_test(...) \
-	tap_test_(__VA_ARGS__, "")
+#define tap_test(...) tap_test_(__VA_ARGS__, "")
 #define tap_test_(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "" __VA_ARGS__)
 #else
-#define tap_test(expr) \
-	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "")
+#define tap_test(expr) __tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "")
 #endif
 
 /**
@@ -79,11 +74,9 @@
  * @see tap_fail()
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_pass(...) \
-	__tap_test_impl(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
+#define tap_pass(...) __tap_test_impl(1, "", __FILE__, __LINE__, "" __VA_ARGS__)
 #else
-#define tap_pass() \
-	__tap_test_impl(1, "", __FILE__, __LINE__, "")
+#define tap_pass() __tap_test_impl(1, "", __FILE__, __LINE__, "")
 #endif
 
 /**
@@ -95,11 +88,9 @@
  * @see tap_pass()
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_fail(...) \
-	__tap_test_impl(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
+#define tap_fail(...) __tap_test_impl(0, "", __FILE__, __LINE__, "" __VA_ARGS__)
 #else
-#define tap_fail() \
-	__tap_test_impl(0, "", __FILE__, __LINE__, "")
+#define tap_fail() __tap_test_impl(0, "", __FILE__, __LINE__, "")
 #endif
 
 /**
@@ -108,8 +99,7 @@
  * as for tap_test().
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_todo(...) \
-	tap_todo_(__VA_ARGS__, "")
+#define tap_todo(...) tap_todo_(__VA_ARGS__, "")
 #define tap_todo_(expr, ...) \
 	__tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, \
 			" # TODO " __VA_ARGS__)
@@ -123,13 +113,10 @@
  * the same as for tap_test().
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_skip(...) \
-	tap_skip_(__VA_ARGS__, "")
-#define tap_skip_(expr, ...) \
-	tap_pass(" # SKIP " __VA_ARGS__)
+#define tap_skip(...) tap_skip_(__VA_ARGS__, "")
+#define tap_skip_(expr, ...) tap_pass(" # SKIP " __VA_ARGS__)
 #else
-#define tap_skip(expr) \
-	tap_pass(" # SKIP")
+#define tap_skip(expr) tap_pass(" # SKIP")
 #endif
 
 /**
@@ -138,11 +125,9 @@
  * control of the format string.
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_diag(...) \
-	__tap_diag_impl("# " __VA_ARGS__)
+#define tap_diag(...) __tap_diag_impl("# " __VA_ARGS__)
 #else
-#define tap_diag(format) \
-	__tap_diag_impl("# " format)
+#define tap_diag(format) __tap_diag_impl("# " format)
 #endif
 
 /**
@@ -152,11 +137,9 @@
  * function aborts the running process and does not return.
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
-#define tap_abort(...) \
-	__tap_abort_impl("" __VA_ARGS__)
+#define tap_abort(...) __tap_abort_impl("" __VA_ARGS__)
 #else
-#define tap_abort() \
-	__tap_abort_impl("")
+#define tap_abort() __tap_abort_impl("")
 #endif
 
 /**
@@ -164,18 +147,19 @@
  * zero.
  */
 #if !defined(__cplusplus) || __cplusplus >= 201103L
+// clang-format off
 #define tap_assert(expr) \
 	((expr) ? (void)0 \
-		: tap_abort("%s:%d: Assertion `%s' failed.", __FILE__, __LINE__, \
-				#expr))
+		: tap_abort("%s:%d: Assertion `%s' failed.", __FILE__, \
+				__LINE__, #expr))
+// clang-format on
 #else
-#define tap_assert(expr) \
-	tap_assert_(expr, __FILE__, __LINE__)
-#define tap_assert_(expr, file, line) \
-	tap_assert__(expr, file, line)
+#define tap_assert(expr) tap_assert_(expr, __FILE__, __LINE__)
+#define tap_assert_(expr, file, line) tap_assert__(expr, file, line)
 #define tap_assert__(expr, file, line) \
 	((expr) ? (void)0 \
-		: __tap_abort_impl(file ":" #line ": Assertion `" #expr "' failed."))
+		: __tap_abort_impl(file ":" #line ": Assertion `" #expr \
+					"' failed."))
 #endif
 
 #ifdef __cplusplus

@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_INTERN_RTNL_H
-#define LELY_IO_INTERN_RTNL_H
+#ifndef LELY_IO_INTERN_RTNL_H_
+#define LELY_IO_INTERN_RTNL_H_
 
 #include "io.h"
 
@@ -162,8 +162,8 @@ int io_rtnl_setattr(int fd, __u32 seq, __u32 pid, int ifi_index,
  *
  * @returns a pointer to the attribute if found, or NULL if not.
  */
-static inline struct rtattr *io_rta_find(struct rtattr *rta, unsigned short len,
-		unsigned short type);
+static inline struct rtattr *io_rta_find(
+		struct rtattr *rta, unsigned short len, unsigned short type);
 
 static inline struct rtattr *
 io_rta_find(struct rtattr *rta, unsigned short len, unsigned short type)
@@ -181,5 +181,4 @@ io_rta_find(struct rtattr *rta, unsigned short len, unsigned short type)
 
 #endif // HAVE_LINUX_RTNETLINK_H
 
-#endif
-
+#endif // !LELY_IO_INTERN_RTNL_H_

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_FACTORY_H
-#define LELY_UTIL_FACTORY_H
+#ifndef LELY_UTIL_FACTORY_H_
+#define LELY_UTIL_FACTORY_H_
 
 #include <lely/util/util.h>
 
@@ -61,8 +61,8 @@ LELY_UTIL_EXTERN void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
  *
  * @see factory_remove(), factory_find_ctor(), factory_find_dtor().
  */
-LELY_UTIL_EXTERN int factory_insert(const char *name, factory_ctor_t *ctor,
-		factory_dtor_t *dtor);
+LELY_UTIL_EXTERN int factory_insert(
+		const char *name, factory_ctor_t *ctor, factory_dtor_t *dtor);
 
 /**
  * Unregisters the constructor and destructor function for the specified type
@@ -92,5 +92,4 @@ LELY_UTIL_EXTERN factory_dtor_t *factory_find_dtor(const char *name);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_FACTORY_H_

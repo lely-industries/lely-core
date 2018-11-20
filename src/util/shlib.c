@@ -44,8 +44,10 @@ shlib_open(const char *filename)
 		return GetModuleHandle(NULL);
 
 	DWORD dwFlags = 0;
+	// clang-format off
 	if (*filename == '\\' || (isalpha((unsigned char)filename[0])
 			&& filename[1] == ':'))
+		// clang-format on
 		dwFlags |= LOAD_WITH_ALTERED_SEARCH_PATH;
 	HMODULE hModule = LoadLibraryExA(filename, NULL, dwFlags);
 	if (__unlikely(!hModule))
@@ -97,8 +99,10 @@ LELY_UTIL_EXPORT void *
 shlib_open(const char *filename)
 {
 	int mode = RTLD_LAZY | RTLD_GLOBAL;
+	// clang-format off
 	void *handle = filename && *filename
 			? dlopen(filename, mode) : dlopen(NULL, mode);
+	// clang-format on
 	if (__unlikely(!handle)) {
 		char *errstr = dlerror();
 		if (errstr)
@@ -156,4 +160,3 @@ shlib_suffix(void)
 }
 
 #endif // _WIN32
-

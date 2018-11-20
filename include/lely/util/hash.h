@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_HASH_H
-#define LELY_UTIL_HASH_H
+#ifndef LELY_UTIL_HASH_H_
+#define LELY_UTIL_HASH_H_
 
 #include <lely/libc/stddef.h>
 #include <lely/libc/stdint.h>
 #include <lely/util/util.h>
 
 #ifndef LELY_UTIL_HASH_INLINE
-#define LELY_UTIL_HASH_INLINE	inline
+#define LELY_UTIL_HASH_INLINE inline
 #endif
 
 #ifdef __cplusplus
@@ -101,5 +101,4 @@ ptrhash(const void *ptr)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_HASH_H_

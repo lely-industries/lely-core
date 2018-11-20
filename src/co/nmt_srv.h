@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_NMT_SRV_H
-#define LELY_CO_INTERN_NMT_SRV_H
+#ifndef LELY_CO_INTERN_NMT_SRV_H_
+#define LELY_CO_INTERN_NMT_SRV_H_
 
 #include "co.h"
 #include <lely/co/nmt.h>
@@ -63,22 +63,22 @@ struct co_nmt_srv {
 };
 
 /// The Receive/Transmit-PDO services.
-#define CO_NMT_SRV_PDO	0x01
+#define CO_NMT_SRV_PDO 0x01
 
 /// The Server/Client-SDO services.
-#define CO_NMT_SRV_SDO	0x02
+#define CO_NMT_SRV_SDO 0x02
 
 /// The SYNC producer/consumer service
-#define CO_NMT_SRV_SYNC	0x04
+#define CO_NMT_SRV_SYNC 0x04
 
 /// The TIME producer/consumer service.
-#define CO_NMT_SRV_TIME	0x08
+#define CO_NMT_SRV_TIME 0x08
 
 /// The EMCY producer/consumer service.
-#define CO_NMT_SRV_EMCY	0x10
+#define CO_NMT_SRV_EMCY 0x10
 
 /// The LSS master/slave service.
-#define CO_NMT_SRV_LSS	0x20
+#define CO_NMT_SRV_LSS 0x20
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,5 +106,4 @@ void co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_INTERN_NMT_SRV_H_

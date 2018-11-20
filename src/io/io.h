@@ -18,18 +18,18 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_INTERN_IO_H
-#define LELY_IO_INTERN_IO_H
+#ifndef LELY_IO_INTERN_IO_H_
+#define LELY_IO_INTERN_IO_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#define LELY_IO_INTERN	1
+#define LELY_IO_INTERN 1
 #include <lely/io/io.h>
 
 #ifndef LELY_IO_EXPORT
-#define LELY_IO_EXPORT	LELY_DLL_EXPORT
+#define LELY_IO_EXPORT LELY_DLL_EXPORT
 #endif
 
 #ifdef _WIN32
@@ -37,10 +37,12 @@
 #pragma comment(lib, "ws2_32.lib")
 #endif
 #define FD_SETSIZE 1024
+// clang-format off
 #include <winsock2.h>
 #include <ws2bth.h>
 #include <ws2tcpip.h>
 #include <mstcpip.h>
+// clang-format on
 #elif defined(_POSIX_C_SOURCE)
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -76,27 +78,27 @@
 #ifdef _WIN32
 
 #ifndef MCAST_JOIN_GROUP
-#define MCAST_JOIN_GROUP	41
+#define MCAST_JOIN_GROUP 41
 #endif
 
 #ifndef MCAST_LEAVE_GROUP
-#define MCAST_LEAVE_GROUP	42
+#define MCAST_LEAVE_GROUP 42
 #endif
 
 #ifndef MCAST_BLOCK_SOURCE
-#define MCAST_BLOCK_SOURCE	43
+#define MCAST_BLOCK_SOURCE 43
 #endif
 
 #ifndef MCAST_UNBLOCK_SOURCE
-#define MCAST_UNBLOCK_SOURCE	44
+#define MCAST_UNBLOCK_SOURCE 44
 #endif
 
 #ifndef MCAST_JOIN_SOURCE_GROUP
-#define MCAST_JOIN_SOURCE_GROUP	45
+#define MCAST_JOIN_SOURCE_GROUP 45
 #endif
 
 #ifndef MCAST_LEAVE_SOURCE_GROUP
-#define MCAST_LEAVE_SOURCE_GROUP	46
+#define MCAST_LEAVE_SOURCE_GROUP 46
 #endif
 
 typedef USHORT sa_family_t;
@@ -104,16 +106,15 @@ typedef USHORT sa_family_t;
 #else
 
 typedef int HANDLE;
-#define INVALID_HANDLE_VALUE	(-1)
+#define INVALID_HANDLE_VALUE (-1)
 
 typedef int SOCKET;
-#define INVALID_SOCKET	(-1)
+#define INVALID_SOCKET (-1)
 
-#define SOCKET_ERROR	(-1)
+#define SOCKET_ERROR (-1)
 
-#define closesocket	close
+#define closesocket close
 
 #endif // _WIN32
 
-#endif
-
+#endif // !LELY_IO_INTERN_IO_H_

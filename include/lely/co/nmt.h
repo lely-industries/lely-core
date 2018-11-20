@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_NMT_H
-#define LELY_CO_NMT_H
+#ifndef LELY_CO_NMT_H_
+#define LELY_CO_NMT_H_
 
 #include <lely/can/net.h>
 #include <lely/co/type.h>
@@ -30,50 +30,50 @@
  * The default SDO timeout (in milliseconds) for the NMT 'boot slave' and
  * 'check configuration' processes.
  */
-#define LELY_CO_NMT_TIMEOUT	100
+#define LELY_CO_NMT_TIMEOUT 100
 #endif
 
 /// The CAN identifier used for NMT commands.
-#define CO_NMT_CS_CANID	0x000
+#define CO_NMT_CS_CANID 0x000
 
 /// The NMT command specifier 'start'.
-#define CO_NMT_CS_START	0x01
+#define CO_NMT_CS_START 0x01
 
 /// The NMT command specifier 'stop'.
-#define CO_NMT_CS_STOP	0x02
+#define CO_NMT_CS_STOP 0x02
 
 /// The NMT command specifier 'enter pre-operational'.
-#define CO_NMT_CS_ENTER_PREOP	0x80
+#define CO_NMT_CS_ENTER_PREOP 0x80
 
 /// The NMT command specifier 'reset node'.
-#define CO_NMT_CS_RESET_NODE	0x81
+#define CO_NMT_CS_RESET_NODE 0x81
 
 /// The NMT command specifier 'reset communication'.
-#define CO_NMT_CS_RESET_COMM	0x82
+#define CO_NMT_CS_RESET_COMM 0x82
 
 /// The NMT state 'boot-up'.
-#define CO_NMT_ST_BOOTUP	0x00
+#define CO_NMT_ST_BOOTUP 0x00
 
 /// The NMT state 'stopped'.
-#define CO_NMT_ST_STOP	0x04
+#define CO_NMT_ST_STOP 0x04
 
 /// The NMT state 'operational'.
-#define CO_NMT_ST_START	0x05
+#define CO_NMT_ST_START 0x05
 
 /// The NMT sub-state 'reset application'.
-#define CO_NMT_ST_RESET_NODE	0x06
+#define CO_NMT_ST_RESET_NODE 0x06
 
 /// The NMT sub-state 'reset communication'.
-#define CO_NMT_ST_RESET_COMM	0x07
+#define CO_NMT_ST_RESET_COMM 0x07
 
 /// The NMT state 'pre-operational'.
-#define CO_NMT_ST_PREOP	0x7f
+#define CO_NMT_ST_PREOP 0x7f
 
 /// The mask to get/set the toggle bit from an NMT state.
-#define CO_NMT_ST_TOGGLE	0x80
+#define CO_NMT_ST_TOGGLE 0x80
 
 /// The CAN identifier used for both node guarding and heartbeat monitoring.
-#define CO_NMT_EC_CANID(id)	(0x700 + ((id) & 0x7f))
+#define CO_NMT_EC_CANID(id) (0x700 + ((id)&0x7f))
 
 enum {
 	/// An NMT error control event occurred.
@@ -211,8 +211,8 @@ typedef void co_nmt_boot_ind_t(co_nmt_t *nmt, co_unsigned8_t id,
  * @param sdo  a pointer to a Client-SDO connected to the slave.
  * @param data a pointer to user-specified data.
  */
-typedef void co_nmt_cfg_ind_t(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo,
-		void *data);
+typedef void co_nmt_cfg_ind_t(
+		co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo, void *data);
 
 /**
  * The type of a CANopen NMT 'configuration request' confirmation callback
@@ -270,16 +270,16 @@ typedef void co_nmt_sync_ind_t(co_nmt_t *nmt, co_unsigned8_t cnt, void *data);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id,
-		co_unsigned16_t ms);
+LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_hb(
+		co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms);
 
 /// Returns a pointer to a string describing an NMT boot error status.
 LELY_CO_EXTERN const char *co_nmt_es2str(char es);
 
 LELY_CO_EXTERN void *__co_nmt_alloc(void);
 LELY_CO_EXTERN void __co_nmt_free(void *ptr);
-LELY_CO_EXTERN struct __co_nmt *__co_nmt_init(struct __co_nmt *nmt,
-		can_net_t *net, co_dev_t *dev);
+LELY_CO_EXTERN struct __co_nmt *__co_nmt_init(
+		struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev);
 LELY_CO_EXTERN void __co_nmt_fini(struct __co_nmt *nmt);
 
 /**
@@ -315,8 +315,8 @@ LELY_CO_EXTERN co_dev_t *co_nmt_get_dev(const co_nmt_t *nmt);
  *
  * @see co_nmt_set_cs_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_cs_ind(const co_nmt_t *nmt,
-		co_nmt_cs_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_cs_ind(
+		const co_nmt_t *nmt, co_nmt_cs_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when an NMT command is received.
@@ -328,8 +328,8 @@ LELY_CO_EXTERN void co_nmt_get_cs_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_cs_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_cs_ind(co_nmt_t *nmt, co_nmt_cs_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_cs_ind(
+		co_nmt_t *nmt, co_nmt_cs_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked when a node guarding event occurs.
@@ -342,8 +342,8 @@ LELY_CO_EXTERN void co_nmt_set_cs_ind(co_nmt_t *nmt, co_nmt_cs_ind_t *ind,
  *
  * @see co_nmt_set_ng_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
-		co_nmt_ng_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_ng_ind(
+		const co_nmt_t *nmt, co_nmt_ng_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a node guarding event occurs.
@@ -357,8 +357,8 @@ LELY_CO_EXTERN void co_nmt_get_ng_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_ng_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_ng_ind(
+		co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a node guarding event occurs (see
@@ -367,8 +367,8 @@ LELY_CO_EXTERN void co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind,
  *
  * @see co_nmt_ng_ind_t
  */
-LELY_CO_EXTERN void co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason);
+LELY_CO_EXTERN void co_nmt_on_ng(
+		co_nmt_t *nmt, co_unsigned8_t id, int state, int reason);
 
 /**
  * Retrieves the indication function invoked when a life guarding event occurs.
@@ -381,8 +381,8 @@ LELY_CO_EXTERN void co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state,
  *
  * @see co_nmt_set_lg_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
-		co_nmt_lg_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_lg_ind(
+		const co_nmt_t *nmt, co_nmt_lg_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a life guarding event occurs.
@@ -396,8 +396,8 @@ LELY_CO_EXTERN void co_nmt_get_lg_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_lg_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_lg_ind(
+		co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a life guarding event occurs (see
@@ -419,8 +419,8 @@ LELY_CO_EXTERN void co_nmt_on_lg(co_nmt_t *nmt, int state);
  *
  * @see co_nmt_set_hb_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
-		co_nmt_hb_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_hb_ind(
+		const co_nmt_t *nmt, co_nmt_hb_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a heartbeat event occurs.
@@ -434,8 +434,8 @@ LELY_CO_EXTERN void co_nmt_get_hb_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_hb_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_hb_ind(
+		co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a heartbeat event occurs (see sections
@@ -446,8 +446,8 @@ LELY_CO_EXTERN void co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind,
  *
  * @see co_nmt_hb_ind_t
  */
-LELY_CO_EXTERN void co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state,
-		int reason);
+LELY_CO_EXTERN void co_nmt_on_hb(
+		co_nmt_t *nmt, co_unsigned8_t id, int state, int reason);
 
 /**
  * Retrieves the indication function invoked when a state change is detected.
@@ -460,8 +460,8 @@ LELY_CO_EXTERN void co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state,
  *
  * @see co_nmt_set_st_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
-		co_nmt_st_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_st_ind(
+		const co_nmt_t *nmt, co_nmt_st_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a state change is detected.
@@ -475,8 +475,8 @@ LELY_CO_EXTERN void co_nmt_get_st_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_st_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_st_ind(
+		co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a state change is detected by the node
@@ -486,8 +486,8 @@ LELY_CO_EXTERN void co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind,
  *
  * @see co_nmt_st_ind_t
  */
-LELY_CO_EXTERN void co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned8_t st);
+LELY_CO_EXTERN void co_nmt_on_st(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st);
 
 /**
  * Retrieves the request function invoked to perform LSS when booting an NMT
@@ -501,8 +501,8 @@ LELY_CO_EXTERN void co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id,
  *
  * @see co_nmt_set_lss_req()
  */
-LELY_CO_EXTERN void co_nmt_get_lss_req(const co_nmt_t *nmt,
-		co_nmt_lss_req_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_lss_req(
+		const co_nmt_t *nmt, co_nmt_lss_req_t **pind, void **pdata);
 
 /**
  * Sets the request function invoked to perform LSS when booting an NMT master.
@@ -516,8 +516,8 @@ LELY_CO_EXTERN void co_nmt_get_lss_req(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_lss_req()
  */
-LELY_CO_EXTERN void co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_lss_req(
+		co_nmt_t *nmt, co_nmt_lss_req_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked when a CANopen NMT 'boot slave'
@@ -531,8 +531,8 @@ LELY_CO_EXTERN void co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind,
  *
  * @see co_nmt_set_boot_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_boot_ind(const co_nmt_t *nmt,
-		co_nmt_boot_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_boot_ind(
+		const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen NMT 'boot slave' process
@@ -545,8 +545,8 @@ LELY_CO_EXTERN void co_nmt_get_boot_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_boot_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_boot_ind(
+		co_nmt_t *nmt, co_nmt_boot_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked when a CANopen NMT 'configuration
@@ -560,8 +560,8 @@ LELY_CO_EXTERN void co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind,
  *
  * @see co_nmt_set_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
-		co_nmt_cfg_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_cfg_ind(
+		const co_nmt_t *nmt, co_nmt_cfg_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen NMT 'configuration
@@ -574,8 +574,8 @@ LELY_CO_EXTERN void co_nmt_get_cfg_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_cfg_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_cfg_ind(
+		co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of
@@ -589,8 +589,8 @@ LELY_CO_EXTERN void co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind,
  *
  * @see co_nmt_set_dn_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_dn_ind(const co_nmt_t *nmt,
-		co_nmt_sdo_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_dn_ind(
+		const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function used to notify the user of the progress of the
@@ -603,8 +603,8 @@ LELY_CO_EXTERN void co_nmt_get_dn_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_dn_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_dn_ind(
+		co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of
@@ -618,8 +618,8 @@ LELY_CO_EXTERN void co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
  *
  * @see co_nmt_set_up_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_up_ind(const co_nmt_t *nmt,
-		co_nmt_sdo_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_up_ind(
+		const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function used to notify the user of the progress of the
@@ -632,8 +632,8 @@ LELY_CO_EXTERN void co_nmt_get_up_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_up_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_up_ind(
+		co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked by co_nmt_on_sync() after all PDOs
@@ -647,8 +647,8 @@ LELY_CO_EXTERN void co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind,
  *
  * @see co_nmt_set_sync_ind()
  */
-LELY_CO_EXTERN void co_nmt_get_sync_ind(const co_nmt_t *nmt,
-		co_nmt_sync_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_nmt_get_sync_ind(
+		const co_nmt_t *nmt, co_nmt_sync_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked by co_nmt_on_sync() after all PDOs have
@@ -661,8 +661,8 @@ LELY_CO_EXTERN void co_nmt_get_sync_ind(const co_nmt_t *nmt,
  *
  * @see co_nmt_get_sync_ind()
  */
-LELY_CO_EXTERN void co_nmt_set_sync_ind(co_nmt_t *nmt, co_nmt_sync_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_nmt_set_sync_ind(
+		co_nmt_t *nmt, co_nmt_sync_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior after a SYNC object is received or
@@ -745,8 +745,8 @@ LELY_CO_EXTERN void co_nmt_set_timeout(co_nmt_t *nmt, int timeout);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs,
-		co_unsigned8_t id);
+LELY_CO_EXTERN int co_nmt_cs_req(
+		co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id);
 
 /**
  * Confirms the completion of the process when booting an NMT master. The
@@ -769,8 +769,8 @@ LELY_CO_EXTERN int co_nmt_lss_con(co_nmt_t *nmt);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id,
-		int timeout);
+LELY_CO_EXTERN int co_nmt_boot_req(
+		co_nmt_t *nmt, co_unsigned8_t id, int timeout);
 
 /**
  * Returns 1 if the NMT 'boot slave' process is currently running for the
@@ -807,8 +807,8 @@ LELY_CO_EXTERN int co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned32_t ac);
+LELY_CO_EXTERN int co_nmt_cfg_res(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 
 /**
  * Request the node guarding service for the specified node, even if it is not
@@ -874,8 +874,8 @@ LELY_CO_EXTERN int co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id);
  * @param nmt a pointer to an NMT master/slave service.
  * @param n   the PDO number (in the range [1..512]).
  */
-LELY_CO_EXTERN co_rpdo_t *co_nmt_get_rpdo(const co_nmt_t *nmt,
-		co_unsigned16_t n);
+LELY_CO_EXTERN co_rpdo_t *co_nmt_get_rpdo(
+		const co_nmt_t *nmt, co_unsigned16_t n);
 
 /**
  * Returns a pointer to a Transmit-PDO service.
@@ -883,8 +883,8 @@ LELY_CO_EXTERN co_rpdo_t *co_nmt_get_rpdo(const co_nmt_t *nmt,
  * @param nmt a pointer to an NMT master/slave service.
  * @param n   the PDO number (in the range [1..512]).
  */
-LELY_CO_EXTERN co_tpdo_t *co_nmt_get_tpdo(const co_nmt_t *nmt,
-		co_unsigned16_t n);
+LELY_CO_EXTERN co_tpdo_t *co_nmt_get_tpdo(
+		const co_nmt_t *nmt, co_unsigned16_t n);
 
 /**
  * Returns a pointer to a Server-SDO service.
@@ -892,8 +892,8 @@ LELY_CO_EXTERN co_tpdo_t *co_nmt_get_tpdo(const co_nmt_t *nmt,
  * @param nmt a pointer to an NMT master/slave service.
  * @param n   the SDO number (in the range [1..128]).
  */
-LELY_CO_EXTERN co_ssdo_t *co_nmt_get_ssdo(const co_nmt_t *nmt,
-		co_unsigned8_t n);
+LELY_CO_EXTERN co_ssdo_t *co_nmt_get_ssdo(
+		const co_nmt_t *nmt, co_unsigned8_t n);
 
 /**
  * Returns a pointer to a Client-SDO service.
@@ -901,8 +901,8 @@ LELY_CO_EXTERN co_ssdo_t *co_nmt_get_ssdo(const co_nmt_t *nmt,
  * @param nmt a pointer to an NMT master/slave service.
  * @param n   the SDO number (in the range [1..128]).
  */
-LELY_CO_EXTERN co_csdo_t *co_nmt_get_csdo(const co_nmt_t *nmt,
-		co_unsigned8_t n);
+LELY_CO_EXTERN co_csdo_t *co_nmt_get_csdo(
+		const co_nmt_t *nmt, co_unsigned8_t n);
 
 /// Returns a pointer to the SYNC producer/consumer service.
 LELY_CO_EXTERN co_sync_t *co_nmt_get_sync(const co_nmt_t *nmt);
@@ -920,5 +920,4 @@ LELY_CO_EXTERN co_lss_t *co_nmt_get_lss(const co_nmt_t *nmt);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_NMT_H_

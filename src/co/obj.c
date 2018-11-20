@@ -21,12 +21,12 @@
  * limitations under the License.
  */
 
+#include "obj.h"
 #include "co.h"
-#include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>
-#include "obj.h"
+#include <lely/util/cmp.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -42,12 +42,12 @@ static void co_obj_update(co_obj_t *obj);
 static void co_obj_clear(co_obj_t *obj);
 
 /// The default download indication function. @see co_sub_dn_ind_t
-static co_unsigned32_t default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t default_sub_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /// The default upload indication function. @see co_sub_up_ind_t
-static co_unsigned32_t default_sub_up_ind(const co_sub_t *sub,
-		struct co_sdo_req *req, void *data);
+static co_unsigned32_t default_sub_up_ind(
+		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 LELY_CO_EXPORT void *
 __co_obj_alloc(void)
@@ -153,8 +153,8 @@ co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxidx,
 		struct rbnode *node = rbtree_first(&obj->tree);
 		for (size_t i = 0; node && i < maxidx;
 				node = rbnode_next(node), i++)
-			subidx[i] = co_sub_get_subidx(structof(node, co_sub_t,
-					node));
+			subidx[i] = co_sub_get_subidx(
+					structof(node, co_sub_t, node));
 	}
 
 	return (co_unsigned8_t)rbtree_size(&obj->tree);
@@ -266,12 +266,8 @@ co_obj_set_code(co_obj_t *obj, co_unsigned8_t code)
 	case CO_OBJECT_DEFSTRUCT:
 	case CO_OBJECT_VAR:
 	case CO_OBJECT_ARRAY:
-	case CO_OBJECT_RECORD:
-		obj->code = code;
-		return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	case CO_OBJECT_RECORD: obj->code = code; return 0;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 }
 
@@ -309,26 +305,28 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t \
-	co_obj_get_val_##c(const co_obj_t *obj, co_unsigned8_t subidx) \
+	LELY_CO_EXPORT co_##b##_t co_obj_get_val_##c( \
+			const co_obj_t *obj, co_unsigned8_t subidx) \
 	{ \
+		/* clang-format off */ \
 		co_sub_t *sub = __likely(obj) \
 				? co_obj_find_sub(obj, subidx) \
 				: NULL; \
+		/* clang-format on */ \
 		return co_sub_get_val_##c(sub); \
 	} \
-	\
-	LELY_CO_EXPORT size_t \
-	co_obj_set_val_##c(co_obj_t *obj, co_unsigned8_t subidx, co_##b##_t c) \
+\
+	LELY_CO_EXPORT size_t co_obj_set_val_##c( \
+			co_obj_t *obj, co_unsigned8_t subidx, co_##b##_t c) \
 	{ \
 		assert(obj); \
-	\
+\
 		co_sub_t *sub = co_obj_find_sub(obj, subidx); \
 		if (__unlikely(!sub)) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
-	\
+\
 		return co_sub_set_val_##c(sub, c); \
 	}
 #include <lely/co/def/basic.def>
@@ -339,7 +337,7 @@ co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
 {
 	assert(obj);
 
-	rbtree_foreach(&obj->tree, node)
+	rbtree_foreach (&obj->tree, node)
 		co_sub_set_dn_ind(structof(node, co_sub_t, node), ind, data);
 }
 
@@ -348,7 +346,7 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 {
 	assert(obj);
 
-	rbtree_foreach(&obj->tree, node)
+	rbtree_foreach (&obj->tree, node)
 		co_sub_set_up_ind(structof(node, co_sub_t, node), ind, data);
 }
 
@@ -430,7 +428,7 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 	co_sub_t *sub = __co_sub_alloc();
 	if (__unlikely(!sub)) {
 		errc = get_errc();
-		goto error_alloc_sub;;
+		goto error_alloc_sub;
 	}
 
 	if (__unlikely(!__co_sub_init(sub, subidx, type))) {
@@ -455,7 +453,6 @@ co_sub_destroy(co_sub_t *sub)
 		__co_sub_free(sub);
 	}
 }
-
 
 LELY_CO_EXPORT co_obj_t *
 co_sub_get_obj(const co_sub_t *sub)
@@ -628,27 +625,27 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t \
-	co_sub_get_val_##c(const co_sub_t *sub) \
+	LELY_CO_EXPORT co_##b##_t co_sub_get_val_##c(const co_sub_t *sub) \
 	{ \
 		static const co_##b##_t val; \
-	\
+\
+		/* clang-format off */ \
 		if (__unlikely(!sub || sub->type != CO_DEFTYPE_##a \
 				|| !sub->val)) \
+			/* clang-format on */ \
 			return val; \
 		return ((union co_val *)sub->val)->c; \
 	} \
-	\
-	LELY_CO_EXPORT size_t \
-	co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c) \
+\
+	LELY_CO_EXPORT size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c) \
 	{ \
 		assert(sub); \
-	\
+\
 		if (__unlikely(sub->type != CO_DEFTYPE_##a)) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
-	\
+\
 		return co_sub_set_val(sub, &c, sizeof(c)); \
 	}
 #include <lely/co/def/basic.def>
@@ -656,7 +653,8 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 LELY_CO_EXPORT co_unsigned32_t
-co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val) {
+co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
+{
 	assert(sub);
 
 	// Arrays do not have a minimum or maximum value.
@@ -699,12 +697,8 @@ co_sub_set_access(co_sub_t *sub, unsigned int access)
 	case CO_ACCESS_RW:
 	case CO_ACCESS_RWR:
 	case CO_ACCESS_RWW:
-	case CO_ACCESS_CONST:
-		sub->access = access;
-		return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	case CO_ACCESS_CONST: sub->access = access; return 0;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 }
 
@@ -769,8 +763,10 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
 	co_unsigned32_t ac = 0;
 
 #ifndef LELY_NO_CO_OBJ_FILE
+	// clang-format off
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN && (co_sub_get_flags(sub)
 			& CO_OBJ_FLAGS_DOWNLOAD_FILE)) {
+		// clang-format on
 		co_sdo_req_dn_file(req, co_sub_addressof_val(sub), &ac);
 		return ac;
 	}
@@ -913,7 +909,7 @@ co_obj_update(co_obj_t *obj)
 
 	// Compute the total size (in bytes) of the object.
 	size_t size = 0;
-	rbtree_foreach(&obj->tree, node) {
+	rbtree_foreach (&obj->tree, node) {
 		co_sub_t *sub = structof(node, co_sub_t, node);
 		co_unsigned16_t type = co_sub_get_type(sub);
 		size = ALIGN(size, co_type_alignof(type));
@@ -931,7 +927,7 @@ co_obj_update(co_obj_t *obj)
 
 	// Initialize the values of the sub-objects.
 	size = 0;
-	rbtree_foreach(&obj->tree, node) {
+	rbtree_foreach (&obj->tree, node) {
 		co_sub_t *sub = structof(node, co_sub_t, node);
 		co_unsigned16_t type = co_sub_get_type(sub);
 		// Compute the offset of the sub-object.
@@ -954,7 +950,7 @@ co_obj_clear(co_obj_t *obj)
 {
 	assert(obj);
 
-	rbtree_foreach(&obj->tree, node)
+	rbtree_foreach (&obj->tree, node)
 		co_sub_destroy(structof(node, co_sub_t, node));
 
 	free(obj->val);
@@ -976,4 +972,3 @@ default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	return co_sub_on_up(sub, req);
 }
-

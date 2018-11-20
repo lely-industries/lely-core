@@ -19,143 +19,143 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_GW_H
-#define LELY_CO_GW_H
+#ifndef LELY_CO_GW_H_
+#define LELY_CO_GW_H_
 
+#include <lely/co/dev.h>
 #include <lely/libc/time.h>
-#include <lely/co/type.h>
 
 /// The maximum number of networks in a CANopen gateway.
-#define CO_GW_NUM_NET	127
+#define CO_GW_NUM_NET 127
 
 /// The high number of the version of CiA 309-1 implemented by this gateway.
-#define CO_GW_PROT_HI	2
+#define CO_GW_PROT_HI 2
 
 /// The low number of the version of CiA 309-1 implemented by this gateway.
-#define CO_GW_PROT_LO	0
+#define CO_GW_PROT_LO 0
 
 /// CANopen gateway service: SDO upload.
-#define CO_GW_SRV_SDO_UP	0x11
+#define CO_GW_SRV_SDO_UP 0x11
 
 /// CANopen gateway service: SDO download.
-#define CO_GW_SRV_SDO_DN	0x13
+#define CO_GW_SRV_SDO_DN 0x13
 
 /// CANopen gateway service: Configure SDO time-out.
-#define CO_GW_SRV_SET_SDO_TIMEOUT	0x14
+#define CO_GW_SRV_SET_SDO_TIMEOUT 0x14
 
 /// CANopen gateway service: Configure RPDO.
-#define CO_GW_SRV_SET_RPDO	0x21
+#define CO_GW_SRV_SET_RPDO 0x21
 
 /// CANopen gateway service: Configure TPDO.
-#define CO_GW_SRV_SET_TPDO	0x22
+#define CO_GW_SRV_SET_TPDO 0x22
 
 /// CANopen gateway service: Read PDO data.
-#define CO_GW_SRV_PDO_READ	0x23
+#define CO_GW_SRV_PDO_READ 0x23
 
 /// CANopen gateway service: Write PDO data.
-#define CO_GW_SRV_PDO_WRITE	0x24
+#define CO_GW_SRV_PDO_WRITE 0x24
 
 /// CANopen gateway service: RPDO received.
-#define CO_GW_SRV_RPDO	0x25
+#define CO_GW_SRV_RPDO 0x25
 
 /// CANopen gateway service: Start node.
-#define CO_GW_SRV_NMT_START	0x31
+#define CO_GW_SRV_NMT_START 0x31
 
 /// CANopen gateway service: Start node.
-#define CO_GW_SRV_NMT_STOP	0x32
+#define CO_GW_SRV_NMT_STOP 0x32
 
 /// CANopen gateway service: Set node to pre-operational.
-#define CO_GW_SRV_NMT_ENTER_PREOP	0x33
+#define CO_GW_SRV_NMT_ENTER_PREOP 0x33
 
 /// CANopen gateway service: Reset node.
-#define CO_GW_SRV_NMT_RESET_NODE	0x34
+#define CO_GW_SRV_NMT_RESET_NODE 0x34
 
 /// CANopen gateway service: Reset communication.
-#define CO_GW_SRV_NMT_RESET_COMM	0x35
+#define CO_GW_SRV_NMT_RESET_COMM 0x35
 
 /// CANopen gateway service: Enable node guarding.
-#define CO_GW_SRV_NMT_NG_ENABLE	0x36
+#define CO_GW_SRV_NMT_NG_ENABLE 0x36
 
 /// CANopen gateway service: Disable node guarding.
-#define CO_GW_SRV_NMT_NG_DISABLE	0x37
+#define CO_GW_SRV_NMT_NG_DISABLE 0x37
 
 /// CANopen gateway service: Start heartbeat consumer.
-#define CO_GW_SRV_NMT_HB_ENABLE	0x38
+#define CO_GW_SRV_NMT_HB_ENABLE 0x38
 
 /// CANopen gateway service: Disable heartbeat consumer.
-#define CO_GW_SRV_NMT_HB_DISABLE	0x39
+#define CO_GW_SRV_NMT_HB_DISABLE 0x39
 
 /// CANopen gateway service: Error control event received.
-#define CO_GW_SRV_EC	0x3a
+#define CO_GW_SRV_EC 0x3a
 
 /// CANopen gateway service: Emergency event received.
-#define CO_GW_SRV_EMCY	0x42
+#define CO_GW_SRV_EMCY 0x42
 
 /// CANopen gateway service: Initialize gateway.
-#define CO_GW_SRV_INIT	0x51
+#define CO_GW_SRV_INIT 0x51
 
 /// CANopen gateway service: Set heartbeat producer.
-#define CO_GW_SRV_SET_HB	0x54
+#define CO_GW_SRV_SET_HB 0x54
 
 /// CANopen gateway service: Set node-ID.
-#define CO_GW_SRV_SET_ID	0x55
+#define CO_GW_SRV_SET_ID 0x55
 
 /// CANopen gateway service: Start emergency consumer.
-#define CO_GW_SRV_EMCY_START	0x56
+#define CO_GW_SRV_EMCY_START 0x56
 
 /// CANopen gateway service: Stop emergency consumer.
-#define CO_GW_SRV_EMCY_STOP	0x57
+#define CO_GW_SRV_EMCY_STOP 0x57
 
 /// CANopen gateway service: Set command time-out.
-#define CO_GW_SRV_SET_CMD_TIMEOUT	0x58
+#define CO_GW_SRV_SET_CMD_TIMEOUT 0x58
 
 /// CANopen gateway service: Boot-up forwarding.
-#define CO_GW_SRV_SET_BOOTUP_IND	0x59
+#define CO_GW_SRV_SET_BOOTUP_IND 0x59
 
 /// CANopen gateway service: Set default network.
-#define CO_GW_SRV_SET_NET	0x61
+#define CO_GW_SRV_SET_NET 0x61
 
 /// CANopen gateway service: Set default node-ID.
-#define CO_GW_SRV_SET_NODE	0x62
+#define CO_GW_SRV_SET_NODE 0x62
 
 /// CANopen gateway service: Get version.
-#define CO_GW_SRV_GET_VERSION	0x63
+#define CO_GW_SRV_GET_VERSION 0x63
 
 /// CANopen gateway service: Set command size.
-#define CO_GW_SRV_SET_CMD_SIZE	0x64
+#define CO_GW_SRV_SET_CMD_SIZE 0x64
 
 /// CANopen gateway service: LSS switch state global.
-#define CO_GW_SRV_LSS_SWITCH	0x81
+#define CO_GW_SRV_LSS_SWITCH 0x81
 
 /// CANopen gateway service: LSS switch state selective.
-#define CO_GW_SRV_LSS_SWITCH_SEL	0x82
+#define CO_GW_SRV_LSS_SWITCH_SEL 0x82
 
 /// CANopen gateway service: LSS configure node-ID.
-#define CO_GW_SRV_LSS_SET_ID	0x83
+#define CO_GW_SRV_LSS_SET_ID 0x83
 
 /// CANopen gateway service: LSS configure bit-rate.
-#define CO_GW_SRV_LSS_SET_RATE	0x84
+#define CO_GW_SRV_LSS_SET_RATE 0x84
 
 /// CANopen gateway service: LSS activate new bit-rate.
-#define CO_GW_SRV_LSS_SWITCH_RATE	0x85
+#define CO_GW_SRV_LSS_SWITCH_RATE 0x85
 
 /// CANopen gateway service: LSS store configuration.
-#define CO_GW_SRV_LSS_STORE	0x86
+#define CO_GW_SRV_LSS_STORE 0x86
 
 /// CANopen gateway service: Inquire LSS address.
-#define CO_GW_SRV_LSS_GET_LSSID	0x87
+#define CO_GW_SRV_LSS_GET_LSSID 0x87
 
 /// CANopen gateway service: LSS inquire node-ID.
-#define CO_GW_SRV_LSS_GET_ID	0x88
+#define CO_GW_SRV_LSS_GET_ID 0x88
 
 /// CANopen gateway service: LSS identify remote slave.
-#define CO_GW_SRV_LSS_ID_SLAVE	0x89
+#define CO_GW_SRV_LSS_ID_SLAVE 0x89
 
 /// CANopen gateway service: LSS identify non-configured remote slaves.
-#define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE	0x8a
+#define CO_GW_SRV_LSS_ID_NON_CFG_SLAVE 0x8a
 
 /// CANopen gateway service: CiA 301 progress indication download.
-#define CO_GW_SRV_SDO	0x93
+#define CO_GW_SRV_SDO 0x93
 
 /// Lely-specific gateway service: LSS Slowscan.
 #define CO_GW_SRV__LSS_SLOWSCAN 0x101
@@ -173,85 +173,85 @@
 #define CO_GW_SRV__BOOT 0x105
 
 /// CANopen gateway internal error: Request not supported.
-#define CO_GW_IEC_BAD_SRV	100
+#define CO_GW_IEC_BAD_SRV 100
 
 /// CANopen gateway internal error: Syntax error.
-#define CO_GW_IEC_SYNTAX	101
+#define CO_GW_IEC_SYNTAX 101
 
 /// CANopen gateway internal error: Request not processed due to internal state.
-#define CO_GW_IEC_INTERN	102
+#define CO_GW_IEC_INTERN 102
 
 /// CANopen gateway internal error: Time-out.
-#define CO_GW_IEC_TIMEOUT	103
+#define CO_GW_IEC_TIMEOUT 103
 
 /// CANopen gateway internal error: No default net set.
-#define CO_GW_IEC_NO_DEF_NET	104
+#define CO_GW_IEC_NO_DEF_NET 104
 
 /// CANopen gateway internal error: No default node set.
-#define CO_GW_IEC_NO_DEF_NODE	105
+#define CO_GW_IEC_NO_DEF_NODE 105
 
 /// CANopen gateway internal error: Unsupported net.
-#define CO_GW_IEC_BAD_NET	106
+#define CO_GW_IEC_BAD_NET 106
 
 /// CANopen gateway internal error: Unsupported node.
-#define CO_GW_IEC_BAD_NODE	107
+#define CO_GW_IEC_BAD_NODE 107
 
 /// CANopen gateway internal error: Lost guarding message.
-#define CO_GW_IEC_NG_OCCURRED	200
+#define CO_GW_IEC_NG_OCCURRED 200
 
 /// CANopen gateway internal error: Lost connection.
-#define CO_GW_IEC_LG_OCCURRED	201
+#define CO_GW_IEC_LG_OCCURRED 201
 
 /// CANopen gateway internal error: Heartbeat started.
-#define CO_GW_IEC_HB_RESOLVED	202
+#define CO_GW_IEC_HB_RESOLVED 202
 
 /// CANopen gateway internal error: Heartbeat lost.
-#define CO_GW_IEC_HB_OCCURRED	203
+#define CO_GW_IEC_HB_OCCURRED 203
 
 /// CANopen gateway internal error: Wrong NMT state.
-#define CO_GW_IEC_ST_OCCURRED	204
+#define CO_GW_IEC_ST_OCCURRED 204
 
 /// CANopen gateway internal error: Boot-up.
-#define CO_GW_IEC_BOOTUP	205
+#define CO_GW_IEC_BOOTUP 205
 
 /// CANopen gateway internal error: Error passive.
-#define CO_GW_IEC_CAN_PASSIVE	300
+#define CO_GW_IEC_CAN_PASSIVE 300
 
 /// CANopen gateway internal error: Bus off.
-#define CO_GW_IEC_CAN_BUSOFF	301
+#define CO_GW_IEC_CAN_BUSOFF 301
 
 /// CANopen gateway internal error: CAN buffer overflow.
-#define CO_GW_IEC_CAN_OVERFLOW	303
+#define CO_GW_IEC_CAN_OVERFLOW 303
 
 /// CANopen gateway internal error: CAN init.
-#define CO_GW_IEC_CAN_INIT	304
+#define CO_GW_IEC_CAN_INIT 304
 
 /// CANopen gateway internal error: CAN active.
-#define CO_GW_IEC_CAN_ACTIVE	305
+#define CO_GW_IEC_CAN_ACTIVE 305
 
 /// CANopen gateway internal error: PDO already used.
-#define CO_GW_IEC_PDO_INUSE	400
+#define CO_GW_IEC_PDO_INUSE 400
 
 /// CANopen gateway internal error: PDO length exceeded.
-#define CO_GW_IEC_PDO_LEN	401
+#define CO_GW_IEC_PDO_LEN 401
 
 /// CANopen gateway internal error: LSS error.
-#define CO_GW_IEC_LSS	501
+#define CO_GW_IEC_LSS 501
 
 /// CANopen gateway internal error: LSS node-ID not supported.
-#define CO_GW_IEC_LSS_ID	502
+#define CO_GW_IEC_LSS_ID 502
 
 /// CANopen gateway internal error: LSS bit-rate not supported.
-#define CO_GW_IEC_LSS_RATE	503
+#define CO_GW_IEC_LSS_RATE 503
 
 /// CANopen gateway internal error: LSS parameter storing failed.
-#define CO_GW_IEC_LSS_PARAM	504
+#define CO_GW_IEC_LSS_PARAM 504
 
 /// CANopen gateway internal error: LSS command failed because of media error.
-#define CO_GW_IEC_LSS_MEDIA	505
+#define CO_GW_IEC_LSS_MEDIA 505
 
 /// CANopen gateway internal error: Running out of memory.
-#define CO_GW_IEC_NO_MEM	600
+#define CO_GW_IEC_NO_MEM 600
 
 struct __co_gw;
 #ifndef __cplusplus
@@ -346,8 +346,7 @@ struct co_gw_req_sdo_dn {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'SDO download' request.
-#define CO_GW_REQ_SDO_DN_SIZE \
-	offsetof(struct co_gw_req_sdo_dn, val)
+#define CO_GW_REQ_SDO_DN_SIZE offsetof(struct co_gw_req_sdo_dn, val)
 
 /// The parameters of a CANopen gateway 'Configure SDO time-out' request.
 struct co_gw_req_set_sdo_timeout {
@@ -386,8 +385,7 @@ struct co_gw_req_set_rpdo {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'Configure RPDO' request.
-#define CO_GW_REQ_SET_RPDO_SIZE \
-	offsetof(struct co_gw_req_set_rpdo, map)
+#define CO_GW_REQ_SET_RPDO_SIZE offsetof(struct co_gw_req_set_rpdo, map)
 
 /// The parameters of a CANopen gateway 'Configure TPDO' request.
 struct co_gw_req_set_tpdo {
@@ -418,8 +416,7 @@ struct co_gw_req_set_tpdo {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'Configure TPDO' request.
-#define CO_GW_REQ_SET_TPDO_SIZE \
-	offsetof(struct co_gw_req_set_tpdo, map)
+#define CO_GW_REQ_SET_TPDO_SIZE offsetof(struct co_gw_req_set_tpdo, map)
 
 /// The parameters of a CANopen gateway 'Read PDO' request.
 struct co_gw_req_pdo_read {
@@ -454,8 +451,7 @@ struct co_gw_req_pdo_write {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'Write PDO' request.
-#define CO_GW_REQ_PDO_WRITE_SIZE \
-	offsetof(struct co_gw_req_pdo_write, val)
+#define CO_GW_REQ_PDO_WRITE_SIZE offsetof(struct co_gw_req_pdo_write, val)
 
 /// The parameters of a CANopen gateway 'Enable node guarding' request.
 struct co_gw_req_nmt_set_ng {
@@ -561,7 +557,7 @@ struct co_gw_req_set_bootup_ind {
 	 * A flag indicating whether "boot-up event received" commands should be
 	 * forwarded (1) or not (0).
 	 */
-	unsigned cs:1;
+	unsigned cs : 1;
 };
 
 /// The parameters of a CANopen gateway 'Set command size' request.
@@ -726,8 +722,7 @@ struct co_gw_con_sdo_up {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'SDO upload' confirmation.
-#define CO_GW_CON_SDO_UP_SIZE \
-	offsetof(struct co_gw_con_sdo_up, val)
+#define CO_GW_CON_SDO_UP_SIZE offsetof(struct co_gw_con_sdo_up, val)
 
 /// The parameters of a CANopen gateway 'Read PDO' confirmation.
 struct co_gw_con_pdo_read {
@@ -752,8 +747,7 @@ struct co_gw_con_pdo_read {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'Read PDO' confirmation.
-#define CO_GW_CON_PDO_READ_SIZE \
-	offsetof(struct co_gw_con_pdo_read, val)
+#define CO_GW_CON_PDO_READ_SIZE offsetof(struct co_gw_con_pdo_read, val)
 
 /// The parameters of a CANopen gateway 'Get version' confirmation.
 struct co_gw_con_get_version {
@@ -854,8 +848,7 @@ struct co_gw_ind_rpdo {
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'RPDO received' indication.
-#define CO_GW_IND_RPDO_SIZE \
-	offsetof(struct co_gw_ind_rpdo, val)
+#define CO_GW_IND_RPDO_SIZE offsetof(struct co_gw_ind_rpdo, val)
 
 /**
  * The parameters of a CANopen gateway 'Error control event received'
@@ -910,7 +903,7 @@ struct co_gw_ind_sdo {
 	/// The transferred bytes.
 	uint32_t nbyte;
 	/// The transfer direction: download (0) or upload (1).
-	unsigned int up:1;
+	unsigned int up : 1;
 	/// A pointer to user-specified data of the SDO upload/download request.
 	void *data;
 	/// The Lely-specific total value size (in bytes).
@@ -990,8 +983,8 @@ typedef int co_gw_send_func_t(const struct co_gw_srv *srv, void *data);
  * @param rate the baudrate (in kbit/s), or 0 for automatic bit rate detection.
  * @param data a pointer to user-specified data.
  */
-typedef void co_gw_rate_func_t(co_unsigned16_t net, co_unsigned16_t rate,
-		void *data);
+typedef void co_gw_rate_func_t(
+		co_unsigned16_t net, co_unsigned16_t rate, void *data);
 
 /// Returns a string describing an internal error code.
 LELY_CO_EXTERN const char *co_gw_iec2str(int iec);
@@ -1020,8 +1013,8 @@ LELY_CO_EXTERN void co_gw_destroy(co_gw_t *gw);
  *
  * @see co_gw_fini_net()
  */
-LELY_CO_EXTERN int co_gw_init_net(co_gw_t *gw, co_unsigned16_t id,
-		co_nmt_t *nmt);
+LELY_CO_EXTERN int co_gw_init_net(
+		co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt);
 
 /**
  * Unregisters a CANopen network with a gateway.
@@ -1059,8 +1052,8 @@ LELY_CO_EXTERN int co_gw_recv(co_gw_t *gw, const struct co_gw_req *req);
  *
  * @see co_gw_set_send_func()
  */
-LELY_CO_EXTERN void co_gw_get_send_func(const co_gw_t *gw,
-		co_gw_send_func_t **pfunc, void **pdata);
+LELY_CO_EXTERN void co_gw_get_send_func(
+		const co_gw_t *gw, co_gw_send_func_t **pfunc, void **pdata);
 
 /**
  * Sets the callback function used to send indications and confirmations from a
@@ -1074,8 +1067,8 @@ LELY_CO_EXTERN void co_gw_get_send_func(const co_gw_t *gw,
  *
  * @see co_gw_get_send_func()
  */
-LELY_CO_EXTERN void co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func,
-		void *data);
+LELY_CO_EXTERN void co_gw_set_send_func(
+		co_gw_t *gw, co_gw_send_func_t *func, void *data);
 
 /**
  * Retrieves the callback function invoked when a baudrate switch is needed
@@ -1089,8 +1082,8 @@ LELY_CO_EXTERN void co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func,
  *
  * @see co_gw_set_rate_func()
  */
-LELY_CO_EXTERN void co_gw_get_rate_func(const co_gw_t *gw,
-		co_gw_rate_func_t **pfunc, void **pdata);
+LELY_CO_EXTERN void co_gw_get_rate_func(
+		const co_gw_t *gw, co_gw_rate_func_t **pfunc, void **pdata);
 
 /**
  * Sets the callback function invoked when a baudrate switch is needed after an
@@ -1104,12 +1097,11 @@ LELY_CO_EXTERN void co_gw_get_rate_func(const co_gw_t *gw,
  *
  * @see co_gw_get_rate_func()
  */
-LELY_CO_EXTERN void co_gw_set_rate_func(co_gw_t *gw, co_gw_rate_func_t *func,
-		void *data);
+LELY_CO_EXTERN void co_gw_set_rate_func(
+		co_gw_t *gw, co_gw_rate_func_t *func, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_GW_H_

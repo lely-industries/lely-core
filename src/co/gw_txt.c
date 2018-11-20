@@ -25,17 +25,17 @@
 
 #ifndef LELY_NO_CO_GW_TXT
 
-#include <lely/libc/stdio.h>
-#include <lely/libc/strings.h>
-#include <lely/util/diag.h>
-#include <lely/util/lex.h>
-#include <lely/util/print.h>
 #include <lely/co/dev.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
 #include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#include <lely/libc/stdio.h>
+#include <lely/libc/strings.h>
+#include <lely/util/diag.h>
+#include <lely/util/lex.h>
+#include <lely/util/print.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -92,23 +92,22 @@ static int co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 		co_unsigned32_t ac);
 
 /// Processes an 'RPDO received' indication.
-static int co_gw_txt_recv_rpdo(co_gw_txt_t *gw,
-		const struct co_gw_ind_rpdo *ind);
+static int co_gw_txt_recv_rpdo(
+		co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind);
 
 /// Processes an 'Error control event received' indication.
 static int co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind);
 
 /// Processes an 'Emergency event received' indication.
-static int co_gw_txt_recv_emcy(co_gw_txt_t *gw,
-		const struct co_gw_ind_emcy *ind);
+static int co_gw_txt_recv_emcy(
+		co_gw_txt_t *gw, const struct co_gw_ind_emcy *ind);
 
 /// Processes an 'CiA 301 progress indication download' indication.
-static int co_gw_txt_recv_sdo(co_gw_txt_t *gw,
-		const struct co_gw_ind_sdo *ind);
+static int co_gw_txt_recv_sdo(co_gw_txt_t *gw, const struct co_gw_ind_sdo *ind);
 
 /// Processes a 'Boot slave process completed' indication.
-static int co_gw_txt_recv__boot(co_gw_txt_t *gw,
-		const struct co_gw_ind__boot *ind);
+static int co_gw_txt_recv__boot(
+		co_gw_txt_t *gw, const struct co_gw_ind__boot *ind);
 
 /**
  * Formats a received indication or confirmation and invokes the callback
@@ -204,42 +203,42 @@ static size_t co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 		const char *begin, const char *end, struct floc *at);
 
 /// Sends an 'LSS switch state global' request after parsing its parameters.
-static size_t co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 /// Sends an 'LSS switch state selective' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 /// Sends an 'LSS configure node-ID' request after parsing its parameters.
-static size_t co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 /// Sends an 'LSS configure bit-rate' request after parsing its parameters.
-static size_t co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 /// Sends an 'LSS activate new bit-rate' request after parsing its parameters.
 static size_t co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv,
 		void *data, co_unsigned16_t net, const char *begin,
 		const char *end, struct floc *at);
 /// Sends an 'Inquire LSS address' request after parsing its parameters.
-static size_t co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 /// Sends an 'LSS identify remote slave' request after parsing its parameters.
-static size_t co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 
 /// Sends an 'LSS Slowscan' request after parsing its parameters.
-static size_t co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 /// Sends an 'LSS Fastscan' request after parsing its parameters.
-static size_t co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv,
-		void *data, co_unsigned16_t net, const char *begin,
-		const char *end, struct floc *at);
+static size_t co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv, void *data,
+		co_unsigned16_t net, const char *begin, const char *end,
+		struct floc *at);
 
 /**
  * Lexes the prefix (sequence number and optional network and node-ID) of a
@@ -250,12 +249,12 @@ static size_t co_gw_txt_lex_prefix(const char *begin, const char *end,
 		co_unsigned8_t *pnode);
 
 /// Lexes the service number of a request.
-static size_t co_gw_txt_lex_srv(const char *begin, const char *end,
-		struct floc *at, int *psrv);
+static size_t co_gw_txt_lex_srv(
+		const char *begin, const char *end, struct floc *at, int *psrv);
 
 /// Lexes a single command.
-static size_t co_gw_txt_lex_cmd(const char *begin, const char *end,
-		struct floc *at);
+static size_t co_gw_txt_lex_cmd(
+		const char *begin, const char *end, struct floc *at);
 
 /// Lexes the multiplexer and data type of an SDO upload/download request.
 static size_t co_gw_txt_lex_sdo(const char *begin, const char *end,
@@ -444,8 +443,8 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		return co_gw_txt_recv_rpdo(gw,
-				(const struct co_gw_ind_rpdo *)srv);
+		return co_gw_txt_recv_rpdo(
+				gw, (const struct co_gw_ind_rpdo *)srv);
 	case CO_GW_SRV_EC:
 		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
 			set_errnum(ERRNUM_INVAL);
@@ -457,15 +456,15 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		return co_gw_txt_recv_emcy(gw,
-				(const struct co_gw_ind_emcy *)srv);
+		return co_gw_txt_recv_emcy(
+				gw, (const struct co_gw_ind_emcy *)srv);
 	case CO_GW_SRV_SDO:
 		if (__unlikely(srv->size < sizeof(struct co_gw_ind_sdo))) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		return co_gw_txt_recv_sdo(gw,
-				(const struct co_gw_ind_sdo *)srv);
+		return co_gw_txt_recv_sdo(
+				gw, (const struct co_gw_ind_sdo *)srv);
 	case CO_GW_SRV__SYNC:
 	case CO_GW_SRV__TIME:
 		// Ignore synchronization and time stamp events.
@@ -475,11 +474,9 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		return co_gw_txt_recv__boot(gw,
-				(const struct co_gw_ind__boot *)srv);
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+		return co_gw_txt_recv__boot(
+				gw, (const struct co_gw_ind__boot *)srv);
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 }
 
@@ -530,8 +527,10 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	co_unsigned32_t seq = 0;
 	co_unsigned16_t net = 0;
 	co_unsigned8_t node = 0xff;
-	if (__unlikely(!(chars = co_gw_txt_lex_prefix(cp, end, floc, &seq, &net,
-			&node))))
+	// clang-format off
+	if (__unlikely(!(chars = co_gw_txt_lex_prefix(
+			cp, end, floc, &seq, &net, &node))))
+		// clang-format on
 		goto error;
 	cp += chars;
 	void *data = (void *)(uintptr_t)seq;
@@ -595,32 +594,32 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	chars = 0;
 	switch (srv) {
 	case CO_GW_SRV_SDO_UP:
-		chars = co_gw_txt_send_sdo_up(gw, srv, data, net, node, cp, end,
-				floc);
+		chars = co_gw_txt_send_sdo_up(
+				gw, srv, data, net, node, cp, end, floc);
 		break;
 	case CO_GW_SRV_SDO_DN:
-		chars = co_gw_txt_send_sdo_dn(gw, srv, data, net, node, cp, end,
-				floc);
+		chars = co_gw_txt_send_sdo_dn(
+				gw, srv, data, net, node, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
-		chars = co_gw_txt_send_set_sdo_timeout(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send_set_sdo_timeout(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_RPDO:
-		chars = co_gw_txt_send_set_rpdo(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_rpdo(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_TPDO:
-		chars = co_gw_txt_send_set_tpdo(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_tpdo(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_PDO_READ:
-		chars = co_gw_txt_send_pdo_read(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_pdo_read(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_PDO_WRITE:
-		chars = co_gw_txt_send_pdo_write(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_pdo_write(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
@@ -633,49 +632,47 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		// 'reset comm[unication]', 'disable guarding' and
 		// 'disable heartbeat' are node-level commands without any
 		// additional parameters.
-		struct co_gw_req_node req = {
-			.size = sizeof(req),
+		struct co_gw_req_node req = { .size = sizeof(req),
 			.srv = srv,
 			.data = data,
 			.net = net,
-			.node = node
-		};
+			.node = node };
 		co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 		goto done;
 	}
 	case CO_GW_SRV_NMT_NG_ENABLE:
-		chars = co_gw_txt_send_nmt_set_ng(gw, srv, data, net, node, cp,
-				end, floc);
+		chars = co_gw_txt_send_nmt_set_ng(
+				gw, srv, data, net, node, cp, end, floc);
 		break;
 	case CO_GW_SRV_NMT_HB_ENABLE:
-		chars = co_gw_txt_send_nmt_set_hb(gw, srv, data, net, node, cp,
-				end, floc);
+		chars = co_gw_txt_send_nmt_set_hb(
+				gw, srv, data, net, node, cp, end, floc);
 		break;
 	case CO_GW_SRV_INIT:
 		chars = co_gw_txt_send_init(gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_HB:
-		chars = co_gw_txt_send_set_hb(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_hb(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_ID:
-		chars = co_gw_txt_send_set_id(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_id(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_CMD_TIMEOUT:
-		chars = co_gw_txt_send_set_cmd_timeout(gw, srv, data, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_cmd_timeout(
+				gw, srv, data, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_BOOTUP_IND:
-		chars = co_gw_txt_send_set_bootup_ind(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send_set_bootup_ind(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_NET:
 		chars = co_gw_txt_send_set_net(gw, srv, data, cp, end, floc);
 		break;
 	case CO_GW_SRV_SET_NODE:
-		chars = co_gw_txt_send_set_node(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_node(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_GET_VERSION:
 	case CO_GW_SRV_LSS_STORE:
@@ -684,54 +681,52 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		// 'info version', 'lss_store', 'lss_get_node' and
 		// 'lss_ident_nonconf' are network-level commands without any
 		// additional parameters.
-		struct co_gw_req_net req = {
-			.size = sizeof(req),
+		struct co_gw_req_net req = { .size = sizeof(req),
 			.srv = srv,
 			.data = data,
-			.net = net
-		};
+			.net = net };
 		co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 		goto done;
 	}
 	case CO_GW_SRV_SET_CMD_SIZE:
-		chars = co_gw_txt_send_set_cmd_size(gw, srv, data, cp, end,
-				floc);
+		chars = co_gw_txt_send_set_cmd_size(
+				gw, srv, data, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_SWITCH:
-		chars = co_gw_txt_send_lss_switch(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_lss_switch(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_SWITCH_SEL:
-		chars = co_gw_txt_send_lss_switch_sel(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send_lss_switch_sel(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_SET_ID:
-		chars = co_gw_txt_send_lss_set_id(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_lss_set_id(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_SET_RATE:
-		chars = co_gw_txt_send_lss_set_rate(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_lss_set_rate(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_SWITCH_RATE:
-		chars = co_gw_txt_send_lss_switch_rate(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send_lss_switch_rate(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_GET_LSSID:
-		chars = co_gw_txt_send_lss_get_lssid(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send_lss_get_lssid(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV_LSS_ID_SLAVE:
-		chars = co_gw_txt_send_lss_id_slave(gw, srv, data, net, cp, end,
-				floc);
+		chars = co_gw_txt_send_lss_id_slave(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV__LSS_SLOWSCAN:
-		chars = co_gw_txt_send__lss_slowscan(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send__lss_slowscan(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	case CO_GW_SRV__LSS_FASTSCAN:
-		chars = co_gw_txt_send__lss_fastscan(gw, srv, data, net, cp,
-				end, floc);
+		chars = co_gw_txt_send__lss_fastscan(
+				gw, srv, data, net, cp, end, floc);
 		break;
 	}
 	if (__unlikely(!chars))
@@ -752,7 +747,8 @@ done:
 error:
 	// Skip all characters until (and including) the next line break.
 	chars = 0;
-	while ((!end || cp + chars < end) && cp[chars] && cp[chars++] != '\n');
+	while ((!end || cp + chars < end) && cp[chars] && cp[chars++] != '\n')
+		;
 	cp += chars;
 
 	if (iec)
@@ -762,8 +758,8 @@ error:
 }
 
 LELY_CO_EXPORT void
-co_gw_txt_set_recv_func(co_gw_txt_t *gw, co_gw_txt_recv_func_t *func,
-		void *data)
+co_gw_txt_set_recv_func(
+		co_gw_txt_t *gw, co_gw_txt_recv_func_t *func, void *data)
 {
 	assert(gw);
 
@@ -784,8 +780,8 @@ co_gw_txt_get_send_func(const co_gw_txt_t *gw, co_gw_txt_send_func_t **pfunc,
 }
 
 LELY_CO_EXPORT void
-co_gw_txt_set_send_func(co_gw_txt_t *gw, co_gw_txt_send_func_t *func,
-		void *data)
+co_gw_txt_set_send_func(
+		co_gw_txt_t *gw, co_gw_txt_send_func_t *func, void *data)
 {
 	assert(gw);
 
@@ -812,8 +808,8 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
-		return co_gw_txt_recv_sdo_up(gw, seq,
-				(const struct co_gw_con_sdo_up *)con);
+		return co_gw_txt_recv_sdo_up(
+				gw, seq, (const struct co_gw_con_sdo_up *)con);
 	case CO_GW_SRV_PDO_READ:
 		if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE)) {
 			set_errnum(ERRNUM_INVAL);
@@ -822,24 +818,30 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 		return co_gw_txt_recv_pdo_read(gw, seq,
 				(const struct co_gw_con_pdo_read *)con);
 	case CO_GW_SRV_GET_VERSION:
+		// clang-format off
 		if (__unlikely(con->size
 				< sizeof(struct co_gw_con_get_version))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_get_version(gw, seq,
 				(const struct co_gw_con_get_version *)con);
 	case CO_GW_SRV_LSS_GET_LSSID:
+		// clang-format off
 		if (__unlikely(con->size
 				< sizeof(struct co_gw_con_lss_get_lssid))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_lss_get_lssid(gw, seq,
 				(const struct co_gw_con_lss_get_lssid *)con);
 	case CO_GW_SRV_LSS_GET_ID:
+		// clang-format off
 		if (__unlikely(con->size
 				< sizeof(struct co_gw_con_lss_get_id))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -847,15 +849,16 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 				(const struct co_gw_con_lss_get_id *)con);
 	case CO_GW_SRV__LSS_SLOWSCAN:
 	case CO_GW_SRV__LSS_FASTSCAN:
+		// clang-format off
 		if (__unlikely(con->size
 				< sizeof(struct co_gw_con__lss_scan))) {
+			// clang-format on
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv__lss_scan(gw, seq,
 				(const struct co_gw_con__lss_scan *)con);
-	default:
-		return co_gw_txt_recv_err(gw, seq, 0, 0);
+	default: return co_gw_txt_recv_err(gw, seq, 0, 0);
 	}
 }
 
@@ -873,8 +876,10 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 
 	union co_val val;
 	const uint8_t *bp = (const uint8_t *)con->val;
+	// clang-format off
 	if (__unlikely(co_val_read(con->type, &val, bp, bp + con->len)
 			!= con->len))
+		// clang-format on
 		co_gw_txt_recv_err(gw, seq, 0, CO_SDO_AC_TYPE_LEN);
 
 	int result = -1;
@@ -912,8 +917,10 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_PDO_READ);
 
+	// clang-format off
 	if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE
 			+ con->n * sizeof(*con->val))) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -921,8 +928,8 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	errc_t errc = get_errc();
 
 	char *buf;
-	int result = asprintf(&buf, "[%" PRIu32 "] %u pdo %u", seq, con->net,
-			con->n);
+	int result = asprintf(
+			&buf, "[%" PRIu32 "] %u pdo %u", seq, con->net, con->n);
 	if (__unlikely(result < 0)) {
 		errc = get_errc();
 		buf = NULL;
@@ -955,7 +962,9 @@ co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_GET_VERSION);
 
-	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %" PRIu32 " %" PRIu32 " %u.%u %" PRIu32 " %u %u.%u %u.%u",
+	return co_gw_txt_recv_fmt(gw,
+			"[%" PRIu32 "] %" PRIu32 " %" PRIu32 " %u.%u %" PRIu32
+			" %u %u.%u %u.%u",
 			seq, con->vendor_id, con->product_code,
 			(con->revision >> 16) & 0xffff, con->revision & 0xffff,
 			con->serial_nr, con->gw_class, con->prot_hi,
@@ -969,8 +978,8 @@ co_gw_txt_recv_lss_get_lssid(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_LSS_GET_LSSID);
 
-	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] 0x%08" PRIx32, seq,
-			con->id);
+	return co_gw_txt_recv_fmt(
+			gw, "[%" PRIu32 "] 0x%08" PRIx32, seq, con->id);
 }
 
 static int
@@ -989,7 +998,9 @@ co_gw_txt_recv__lss_scan(co_gw_txt_t *gw, co_unsigned32_t seq,
 {
 	assert(con);
 
-	return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] 0x%08" PRIx32 " 0x%08" PRIx32 " 0x%08" PRIx32 " 0x%08" PRIx32,
+	return co_gw_txt_recv_fmt(gw,
+			"[%" PRIu32 "] 0x%08" PRIx32 " 0x%08" PRIx32
+			" 0x%08" PRIx32 " 0x%08" PRIx32,
 			seq, con->id.vendor_id, con->id.product_code,
 			con->id.revision, con->id.serial_nr);
 }
@@ -1017,8 +1028,10 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 	assert(ind);
 	assert(ind->srv == CO_GW_SRV_RPDO);
 
+	// clang-format off
 	if (__unlikely(ind->size < CO_GW_IND_RPDO_SIZE
 			+ ind->n * sizeof(*ind->val))) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1059,8 +1072,8 @@ co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind)
 	assert(ind->srv == CO_GW_SRV_EC);
 
 	if (ind->iec == CO_GW_IEC_BOOTUP)
-		return co_gw_txt_recv_fmt(gw, "%u %u BOOT_UP", ind->net,
-				ind->node);
+		return co_gw_txt_recv_fmt(
+				gw, "%u %u BOOT_UP", ind->net, ind->node);
 
 	const char *str;
 	switch (ind->st) {
@@ -1076,8 +1089,8 @@ co_gw_txt_recv_ec(co_gw_txt_t *gw, const struct co_gw_ind_ec *ind)
 				ind->node, str, ind->iec,
 				co_gw_iec2str(ind->iec));
 	else
-		return co_gw_txt_recv_fmt(gw, "%u %u %s", ind->net,
-				ind->node, str);
+		return co_gw_txt_recv_fmt(
+				gw, "%u %u %s", ind->net, ind->node, str);
 }
 
 static int
@@ -1121,8 +1134,8 @@ co_gw_txt_recv__boot(co_gw_txt_t *gw, const struct co_gw_ind__boot *ind)
 		case CO_NMT_ST_PREOP: str = "PREOP"; break;
 		default: str = "ERROR"; break;
 		}
-		return co_gw_txt_recv_fmt(gw, "%u %u USER BOOT %s",
-				ind->net, ind->node, str);
+		return co_gw_txt_recv_fmt(gw, "%u %u USER BOOT %s", ind->net,
+				ind->node, str);
 	}
 }
 
@@ -1171,14 +1184,13 @@ co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt)
 }
 
 static size_t
-co_gw_txt_print_val(char **pbegin, char *end, co_unsigned16_t type,
-		const void *val)
+co_gw_txt_print_val(
+		char **pbegin, char *end, co_unsigned16_t type, const void *val)
 {
 	const union co_val *u = val;
 	assert(u);
 	switch (type) {
-	case CO_DEFTYPE_REAL32:
-		return print_c99_flt(pbegin, end, u->r32);
+	case CO_DEFTYPE_REAL32: return print_c99_flt(pbegin, end, u->r32);
 	case CO_DEFTYPE_VISIBLE_STRING: {
 		size_t chars = 0;
 		chars += print_char(pbegin, end, '\"');
@@ -1198,10 +1210,8 @@ co_gw_txt_print_val(char **pbegin, char *end, co_unsigned16_t type,
 	}
 	case CO_DEFTYPE_OCTET_STRING:
 		return co_val_print(CO_DEFTYPE_DOMAIN, val, pbegin, end);
-	case CO_DEFTYPE_REAL64:
-		return print_c99_dbl(pbegin, end, u->r64);
-	default:
-		return co_val_print(type, val, pbegin, end);
+	case CO_DEFTYPE_REAL64: return print_c99_dbl(pbegin, end, u->r64);
+	default: return co_val_print(type, val, pbegin, end);
 	}
 }
 
@@ -1219,21 +1229,21 @@ co_gw_txt_send_sdo_up(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	co_unsigned16_t idx = 0;
 	co_unsigned8_t subidx = 0;
 	co_unsigned16_t type = 0;
+	// clang-format off
 	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
 			&subidx, &type))))
+		// clang-format on
 		return 0;
 	cp += chars;
 
-	struct co_gw_req_sdo_up req = {
-		.size = sizeof(req),
+	struct co_gw_req_sdo_up req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.node = node,
 		.idx = idx,
 		.subidx = subidx,
-		.type = type
-	};
+		.type = type };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1253,8 +1263,10 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	co_unsigned16_t idx = 0;
 	co_unsigned8_t subidx = 0;
 	co_unsigned16_t type = 0;
+	// clang-format off
 	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
 			&subidx, &type))))
+		// clang-format on
 		goto error_lex_sdo;
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
@@ -1277,16 +1289,14 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 		goto error_malloc_req;
 	}
 
-	*req = (struct co_gw_req_sdo_dn){
-		.size = size,
+	*req = (struct co_gw_req_sdo_dn){ .size = size,
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.node = node,
 		.idx = idx,
 		.subidx = subidx,
-		.len = n
-	};
+		.len = n };
 
 	uint8_t *bp = (uint8_t *)req->val;
 	if (__unlikely(co_val_write(type, &val, bp, bp + n) != n)) {
@@ -1328,13 +1338,11 @@ co_gw_txt_send_set_sdo_timeout(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_set_sdo_timeout req = {
-		.size = sizeof(req),
+	struct co_gw_req_set_sdo_timeout req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.timeout = timeout
-	};
+		.timeout = timeout };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1354,21 +1362,22 @@ co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
 	co_unsigned16_t num = 0;
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
 	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
-	if (__unlikely(!(chars = co_gw_txt_lex_pdo(cp, end, at, 0, &num, &comm,
-			&map))))
+	// clang-format off
+	if (__unlikely(!(chars = co_gw_txt_lex_pdo(
+			cp, end, at, 0, &num, &comm, &map))))
+		// clang-format on
 		return 0;
 	cp += chars;
 
-	struct co_gw_req_set_rpdo req = {
-		.size = CO_GW_REQ_SET_RPDO_SIZE + map.n * sizeof(*map.map),
+	struct co_gw_req_set_rpdo req = { .size = CO_GW_REQ_SET_RPDO_SIZE
+				+ map.n * sizeof(*map.map),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.num = num,
 		.cobid = comm.cobid,
 		.trans = comm.trans,
-		.n = map.n
-	};
+		.n = map.n };
 	for (co_unsigned8_t i = 0; i < map.n; i++)
 		req.map[i] = map.map[i];
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
@@ -1398,13 +1407,15 @@ co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
 	co_unsigned16_t num = 0;
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
 	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
-	if (__unlikely(!(chars = co_gw_txt_lex_pdo(cp, end, at, ext, &num,
-			&comm, &map))))
+	// clang-format off
+	if (__unlikely(!(chars = co_gw_txt_lex_pdo(
+			cp, end, at, ext, &num, &comm, &map))))
+		// clang-format on
 		return 0;
 	cp += chars;
 
-	struct co_gw_req_set_tpdo req = {
-		.size = CO_GW_REQ_SET_TPDO_SIZE + map.n * sizeof(*map.map),
+	struct co_gw_req_set_tpdo req = { .size = CO_GW_REQ_SET_TPDO_SIZE
+				+ map.n * sizeof(*map.map),
 		.srv = srv,
 		.data = data,
 		.net = net,
@@ -1414,8 +1425,7 @@ co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
 		.inhibit = comm.inhibit,
 		.event = comm.event,
 		.sync = comm.sync,
-		.n = map.n
-	};
+		.n = map.n };
 	for (co_unsigned8_t i = 0; i < map.n; i++)
 		req.map[i] = map.map[i];
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
@@ -1446,13 +1456,11 @@ co_gw_txt_send_pdo_read(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_pdo_read req = {
-		.size = sizeof(req),
+	struct co_gw_req_pdo_read req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.num = num
-	};
+		.num = num };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1484,13 +1492,11 @@ co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	struct co_gw_req_pdo_write req = {
-		.size = CO_GW_REQ_PDO_WRITE_SIZE,
+	struct co_gw_req_pdo_write req = { .size = CO_GW_REQ_PDO_WRITE_SIZE,
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.num = num
-	};
+		.num = num };
 
 	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &req.n)))) {
 		diag_if(DIAG_ERROR, 0, at, "expected number of values");
@@ -1546,15 +1552,13 @@ co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_nmt_set_ng req = {
-		.size = sizeof(req),
+	struct co_gw_req_nmt_set_ng req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.node = node,
 		.gt = gt,
-		.ltf = ltf
-	};
+		.ltf = ltf };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1578,14 +1582,12 @@ co_gw_txt_send_nmt_set_hb(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_nmt_set_hb req = {
-		.size = sizeof(req),
+	struct co_gw_req_nmt_set_hb req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.node = node,
-		.ms = ms
-	};
+		.ms = ms };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1614,22 +1616,19 @@ co_gw_txt_send_init(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 		return 0;
 	}
 
-	struct co_gw_req_init req = {
-		.size = sizeof(req),
+	struct co_gw_req_init req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.bitidx = bitidx
-	};
+		.bitidx = bitidx };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
 }
 
 static size_t
-co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data,
-		co_unsigned16_t net, const char *begin, const char *end,
-		struct floc *at)
+co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
+		const char *begin, const char *end, struct floc *at)
 {
 	assert(srv == CO_GW_SRV_SET_HB);
 	assert(begin);
@@ -1644,22 +1643,19 @@ co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_set_hb req = {
-		.size = sizeof(req),
+	struct co_gw_req_set_hb req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.ms = ms
-	};
+		.ms = ms };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
 }
 
 static size_t
-co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data,
-		co_unsigned16_t net, const char *begin, const char *end,
-		struct floc *at)
+co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
+		const char *begin, const char *end, struct floc *at)
 {
 	assert(srv == CO_GW_SRV_SET_ID);
 	assert(begin);
@@ -1681,13 +1677,11 @@ co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_node req = {
-		.size = sizeof(req),
+	struct co_gw_req_node req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.node = node
-	};
+		.node = node };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1710,12 +1704,10 @@ co_gw_txt_send_set_cmd_timeout(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_set_cmd_timeout req = {
-		.size = sizeof(req),
+	struct co_gw_req_set_cmd_timeout req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
-		.timeout = timeout
-	};
+		.timeout = timeout };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1747,13 +1739,11 @@ co_gw_txt_send_set_bootup_ind(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_set_bootup_ind req = {
-		.size = sizeof(req),
+	struct co_gw_req_set_bootup_ind req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.cs = cs
-	};
+		.cs = cs };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1784,10 +1774,7 @@ co_gw_txt_send_set_net(co_gw_txt_t *gw, int srv, void *data, const char *begin,
 	}
 
 	struct co_gw_req_net req = {
-		.size = sizeof(req),
-		.srv = srv,
-		.data = data,
-		.net = net
+		.size = sizeof(req), .srv = srv, .data = data, .net = net
 	};
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
@@ -1819,13 +1806,11 @@ co_gw_txt_send_set_node(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_node req = {
-		.size = sizeof(req),
+	struct co_gw_req_node req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.node = node
-	};
+		.node = node };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1849,10 +1834,7 @@ co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 	cp += chars;
 
 	struct co_gw_req_set_cmd_size req = {
-		.size = sizeof(req),
-		.srv = srv,
-		.data = data,
-		.n = n
+		.size = sizeof(req), .srv = srv, .data = data, .n = n
 	};
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
@@ -1877,13 +1859,11 @@ co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_lss_switch req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_switch req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.mode = mode
-	};
+		.mode = mode };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1905,13 +1885,11 @@ co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	cp += chars;
 
-	struct co_gw_req_lss_switch_sel req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_switch_sel req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.id = id
-	};
+		.id = id };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1942,13 +1920,11 @@ co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_node req = {
-		.size = sizeof(req),
+	struct co_gw_req_node req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.node = node
-	};
+		.node = node };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -1980,14 +1956,12 @@ co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_lss_set_rate req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_set_rate req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.bitsel = bitsel,
-		.bitidx = bitidx
-	};
+		.bitidx = bitidx };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2011,13 +1985,11 @@ co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req_lss_switch_rate req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_switch_rate req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.delay = delay
-	};
+		.delay = delay };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2046,13 +2018,11 @@ co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	}
 
-	struct co_gw_req_lss_get_lssid req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_get_lssid req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
-		.cs = cs
-	};
+		.cs = cs };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2075,14 +2045,12 @@ co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	cp += chars;
 
-	struct co_gw_req_lss_id_slave req = {
-		.size = sizeof(req),
+	struct co_gw_req_lss_id_slave req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.lo = lo,
-		.hi = hi
-	};
+		.hi = hi };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2105,14 +2073,12 @@ co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv, void *data,
 		return 0;
 	cp += chars;
 
-	struct co_gw_req__lss_scan req = {
-		.size = sizeof(req),
+	struct co_gw_req__lss_scan req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.id_1 = lo,
-		.id_2 = hi
-	};
+		.id_2 = hi };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2153,8 +2119,10 @@ co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv, void *data,
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at,
-			&mask.product_code)))) {
+	// clang-format off
+	if (__unlikely(!(chars = lex_c99_u32(
+			cp, end, at, &mask.product_code)))) {
+		// clang-format on
 		diag_if(DIAG_ERROR, 0, at, "expected product code mask");
 		return 0;
 	}
@@ -2188,14 +2156,12 @@ co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv, void *data,
 	}
 	cp += chars;
 
-	struct co_gw_req__lss_scan req = {
-		.size = sizeof(req),
+	struct co_gw_req__lss_scan req = { .size = sizeof(req),
 		.srv = srv,
 		.data = data,
 		.net = net,
 		.id_1 = id,
-		.id_2 = mask
-	};
+		.id_2 = mask };
 	co_gw_txt_send_req(gw, (struct co_gw_req *)&req);
 
 	return cp - begin;
@@ -2230,7 +2196,7 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 
 	if (__unlikely(!(chars = lex_char('[', cp, end, at))))
 		diag_if(DIAG_WARNING, 0, at,
-					"expected '[' before sequence number");
+				"expected '[' before sequence number");
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
@@ -2299,8 +2265,8 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 }
 
 static size_t
-co_gw_txt_lex_srv(const char *begin, const char *end, struct floc *at,
-		int *psrv)
+co_gw_txt_lex_srv(
+		const char *begin, const char *end, struct floc *at, int *psrv)
 {
 	assert(begin);
 	assert(!end || end >= begin);
@@ -2604,13 +2570,17 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = co_gw_txt_lex_trans(cp, end, at,
-			&comm.trans))))
+	// clang-format off
+	if (__unlikely(!(chars = co_gw_txt_lex_trans(
+			cp, end, at, &comm.trans))))
+		// clang-format on
 		return 0;
 	cp += chars;
 	if (ext && comm.trans >= 0xfe) {
+		// clang-format off
 		if (__unlikely(!(chars = lex_c99_u16(cp, end, at,
 				&comm.inhibit)))) {
+			// clang-format on
 			diag_if(DIAG_ERROR, 0, at, "expected inhibit time");
 			return 0;
 		}
@@ -2619,16 +2589,20 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	if (ext && comm.trans >= 0xfd) {
-		if (__unlikely(!(chars = lex_c99_u16(cp, end, at,
-				&comm.event)))) {
+		// clang-format off
+		if (__unlikely(!(chars = lex_c99_u16(
+				cp, end, at, &comm.event)))) {
+			// clang-format on
 			diag_if(DIAG_ERROR, 0, at, "expected event timer");
 			return 0;
 		}
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 	} else if (ext && comm.trans <= 240) {
-		if (__unlikely(!(chars = lex_c99_u8(cp, end, at,
-				&comm.sync)))) {
+		// clang-format off
+		if (__unlikely(!(chars = lex_c99_u8(
+				cp, end, at, &comm.sync)))) {
+			// clang-format on
 			diag_if(DIAG_ERROR, 0, at, "expected SYNC start value");
 			return 0;
 		}
@@ -2776,7 +2750,6 @@ co_gw_txt_lex_type(const char *begin, const char *end, struct floc *at,
 	return cp - begin;
 }
 
-
 static size_t
 co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 		co_unsigned16_t type, void *val)
@@ -2785,8 +2758,7 @@ co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 	assert(!end || end >= begin);
 
 	switch (type) {
-	case CO_DEFTYPE_REAL32:
-		return lex_c99_flt(begin, end, at, val);
+	case CO_DEFTYPE_REAL32: return lex_c99_flt(begin, end, at, val);
 	case CO_DEFTYPE_VISIBLE_STRING: {
 		const char *cp = begin;
 		size_t chars = 0;
@@ -2820,10 +2792,8 @@ co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 	}
 	case CO_DEFTYPE_OCTET_STRING:
 		return co_val_lex(CO_DEFTYPE_DOMAIN, val, begin, end, at);
-	case CO_DEFTYPE_REAL64:
-		return lex_c99_dbl(begin, end, at, val);
-	default:
-		return co_val_lex(type, val, begin, end, at);
+	case CO_DEFTYPE_REAL64: return lex_c99_dbl(begin, end, at, val);
+	default: return co_val_lex(type, val, begin, end, at);
 	}
 }
 
@@ -2905,7 +2875,8 @@ co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
 		}
 		cp += chars;
 		if (__unlikely(trans > 240)) {
-			diag_if(DIAG_ERROR, 0, at, "SYNC period must be in the range [0..240]");
+			diag_if(DIAG_ERROR, 0, at,
+					"SYNC period must be in the range [0..240]");
 			return 0;
 		}
 	} else {
@@ -3032,4 +3003,3 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 }
 
 #endif // !LELY_NO_CO_GW_TXT
-

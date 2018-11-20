@@ -38,7 +38,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
-#define LELY_UTIL_PHEAP_INLINE	inline
+#define LELY_UTIL_PHEAP_INLINE inline
 #endif
 
 /**
@@ -111,19 +111,18 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
  * @see pnode_next()
  */
 #ifdef __COUNTER__
-#define pnode_foreach(first, node) \
-	pnode_foreach_(__COUNTER__, first, node)
+#define pnode_foreach(first, node) pnode_foreach_(__COUNTER__, first, node)
 #else
-#define pnode_foreach(first, node) \
-	pnode_foreach_(__LINE__, first, node)
+#define pnode_foreach(first, node) pnode_foreach_(__LINE__, first, node)
 #endif
-#define pnode_foreach_(n, first, node) \
-	pnode_foreach__(n, first, node)
+#define pnode_foreach_(n, first, node) pnode_foreach__(n, first, node)
+// clang-format off
 #define pnode_foreach__(n, first, node) \
 	for (struct pnode *(node) = (first), \
 			*_pnode_next_##n = (node) ? pnode_next(node) : NULL; \
 			(node); (node) = _pnode_next_##n, \
 			_pnode_next_##n = (node) ? pnode_next(node) : NULL)
+// clang-format on
 
 /**
  * Initializes a pairing heap.
@@ -166,8 +165,8 @@ LELY_UTIL_EXTERN void pheap_remove(struct pheap *heap, struct pnode *node);
  *
  * @see pheap_insert()
  */
-LELY_UTIL_EXTERN struct pnode *pheap_find(const struct pheap *heap,
-		const void *key);
+LELY_UTIL_EXTERN struct pnode *pheap_find(
+		const struct pheap *heap, const void *key);
 
 /**
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an
@@ -180,8 +179,7 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
  *
  * @see pnode_foreach(), pheap_first()
  */
-#define pheap_foreach(heap, node) \
-	pnode_foreach(pheap_first(heap), node)
+#define pheap_foreach(heap, node) pnode_foreach (pheap_first(heap), node)
 
 LELY_UTIL_PHEAP_INLINE void
 pnode_init(struct pnode *node, const void *key)

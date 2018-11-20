@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_LEX_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_LEX_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/libc/string.h>
 #include <lely/libc/uchar.h>
 #include <lely/util/diag.h>
@@ -48,7 +48,7 @@ lex_char(int c, const char *begin, const char *end, struct floc *at)
 }
 
 LELY_UTIL_EXPORT size_t
-lex_ctype(int (__cdecl *ctype)(int), const char *begin, const char *end,
+lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
 		struct floc *at)
 {
 	assert(ctype);
@@ -106,7 +106,7 @@ lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 				&& ((unsigned char)*cp & 0xc0) == 0x80)
 			cp++;
 		diag_if(DIAG_WARNING, 0, at,
-					"a UTF-8 sequence cannot begin with a continuation byte");
+				"a UTF-8 sequence cannot begin with a continuation byte");
 		goto error;
 	} else if ((c & 0xe0) == 0xc0) {
 		// 110xxxxx is the first byte in a two-byte sequence.
@@ -218,8 +218,8 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 		case 't': c32 = '\t'; break;
 		case 'v': c32 = '\v'; break;
 		case 'x':
-			while ((!end || cp < end) && isxdigit(
-					(unsigned char)*cp)) {
+			while ((!end || cp < end)
+					&& isxdigit((unsigned char)*cp)) {
 				c32 = (c32 << 4) | ctox(*cp);
 				cp++;
 			}
@@ -228,8 +228,8 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 			cp--;
 			diag_if(DIAG_WARNING, 0, at,
 					isgraph((unsigned char)*cp)
-					? "illegal escape sequence '\\%c'"
-					: "illegal escape sequence '\\\\%o'",
+							? "illegal escape sequence '\\%c'"
+							: "illegal escape sequence '\\\\%o'",
 					*cp);
 			// Treat an invalid escape sequence as '\\'.
 			c32 = '\\';
@@ -321,30 +321,29 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 }
 
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, min, max, pname) \
-	LELY_UTIL_EXPORT size_t \
-	lex_c99_##suffix(const char *begin, const char *end, struct floc *at, \
-			type *pname) \
+	LELY_UTIL_EXPORT size_t lex_c99_##suffix(const char *begin, \
+			const char *end, struct floc *at, type *pname) \
 	{ \
 		size_t chars = lex_c99_pp_num(begin, end, NULL); \
 		if (!chars) \
 			return 0; \
-	\
+\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
 			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
 		} \
-	\
+\
 		int errsv = errno; \
 		errno = 0; \
-	\
+\
 		char *endptr; \
 		type result = strtov(buf, &endptr); \
 		chars = endptr - buf; \
-	\
+\
 		free(buf); \
-	\
+\
 		if (__unlikely(errno == ERANGE && result == min)) { \
 			set_errnum(ERRNUM_RANGE); \
 			diag_if(DIAG_WARNING, get_errc(), at, \
@@ -356,38 +355,37 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
-	\
+\
 		if (pname) \
 			*pname = result; \
-	\
+\
 		return floc_lex(at, begin, begin + chars); \
 	}
 
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, strtov, max, pname) \
-	LELY_UTIL_EXPORT size_t \
-	lex_c99_##suffix(const char *begin, const char *end, struct floc *at, \
-			type *pname) \
+	LELY_UTIL_EXPORT size_t lex_c99_##suffix(const char *begin, \
+			const char *end, struct floc *at, type *pname) \
 	{ \
 		size_t chars = lex_c99_pp_num(begin, end, NULL); \
 		if (!chars) \
 			return 0; \
-	\
+\
 		char *buf = strndup(begin, chars); \
 		if (__unlikely(!buf)) { \
 			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
 		} \
-	\
+\
 		int errsv = errno; \
 		errno = 0; \
-	\
+\
 		char *endptr; \
 		type result = strtov(buf, &endptr); \
 		chars = endptr - buf; \
-	\
+\
 		free(buf); \
-	\
+\
 		if (__unlikely(errno == ERANGE && result == max)) { \
 			set_errnum(ERRNUM_RANGE); \
 			diag_if(DIAG_WARNING, get_errc(), at, \
@@ -395,30 +393,30 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 		} else if (!errno) { \
 			errno = errsv; \
 		} \
-	\
+\
 		if (pname) \
 			*pname = result; \
-	\
+\
 		return floc_lex(at, begin, begin + chars); \
 	}
 
-#define strtov(nptr, endptr)	strtol(nptr, endptr, 0)
+#define strtov(nptr, endptr) strtol(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_SIGNED(long, long, strtov, LONG_MIN, LONG_MAX, pl)
 #undef strtov
-#define strtov(nptr, endptr)	strtoul(nptr, endptr, 0)
+#define strtov(nptr, endptr) strtoul(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long, ulong, strtov, ULONG_MAX, pul)
 #undef strtov
-#define strtov(nptr, endptr)	strtoll(nptr, endptr, 0)
+#define strtov(nptr, endptr) strtoll(nptr, endptr, 0)
 LELY_UTIL_DEFINE_LEX_SIGNED(long long, llong, strtov, LLONG_MIN, LLONG_MAX, pll)
 #undef strtov
-#define strtov(nptr, endptr)	strtoull(nptr, endptr, 0)
-LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long long, ullong, strtov, ULLONG_MAX,
-		pull)
+#define strtov(nptr, endptr) strtoull(nptr, endptr, 0)
+LELY_UTIL_DEFINE_LEX_UNSIGNED(
+		unsigned long long, ullong, strtov, ULLONG_MAX, pull)
 #undef strtov
 LELY_UTIL_DEFINE_LEX_SIGNED(float, flt, strtof, -HUGE_VALF, HUGE_VALF, pf)
 LELY_UTIL_DEFINE_LEX_SIGNED(double, dbl, strtod, -HUGE_VAL, HUGE_VAL, pd)
-LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, -HUGE_VALL, HUGE_VALL,
-		pld)
+LELY_UTIL_DEFINE_LEX_SIGNED(
+		long double, ldbl, strtold, -HUGE_VALL, HUGE_VALL, pld)
 
 #undef LELY_UTIL_DEFINE_LEX_UNSIGNED
 #undef LELY_UTIL_DEFINE_LEX_SIGNED
@@ -476,8 +474,10 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 	size_t chars = lex_c99_long(begin, end, at, &i32);
 	if (chars) {
 #if LONG_BIT == 32
+		// clang-format off
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i32 == LONG_MIN)) {
+			// clang-format on
 #else
 		if (__unlikely(i32 < INT32_MIN)) {
 			i32 = INT32_MIN;
@@ -486,8 +486,10 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int32_t underflow");
 #if LONG_BIT == 32
+			// clang-format off
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i32 == LONG_MAX)) {
+			// clang-format on
 #else
 		} else if (__unlikely(i32 > INT32_MAX)) {
 			i32 = INT32_MAX;
@@ -514,22 +516,30 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 #endif
 	if (chars) {
 #if LONG_BIT == 64
+		// clang-format off
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i64 == LONG_MIN)) {
+			// clang-format on
 #else
+		// clang-format off
 		if (__unlikely((get_errnum() == ERRNUM_RANGE
 				&& i64 == LLONG_MIN) || i64 < INT64_MIN)) {
+			// clang-format on
 			i64 = INT64_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int64_t underflow");
 #if LONG_BIT == 64
+			// clang-format off
 		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& i64 == LONG_MAX)) {
+			// clang-format on
 #else
+			// clang-format off
 		} else if (__unlikely((get_errnum() == ERRNUM_RANGE
 				&& i64 == LLONG_MAX) || i64 > INT64_MAX)) {
+			// clang-format on
 			i64 = INT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -585,8 +595,10 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 	size_t chars = lex_c99_ulong(begin, end, at, &u32);
 	if (chars) {
 #if LONG_BIT == 32
+		// clang-format off
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& u32 == ULONG_MAX)) {
+			// clang-format on
 #else
 		if (__unlikely(u32 > UINT32_MAX)) {
 			u32 = UINT32_MAX;
@@ -613,11 +625,15 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 #endif
 	if (chars) {
 #if LONG_BIT == 64
+		// clang-format off
 		if (__unlikely(get_errnum() == ERRNUM_RANGE
 				&& u64 == ULONG_MAX)) {
+			// clang-format on
 #else
+		// clang-format off
 		if (__unlikely((get_errnum() == ERRNUM_RANGE
 				&& u64 == ULONG_MAX) || u64 > UINT64_MAX)) {
+			// clang-format on
 			u64 = UINT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -653,8 +669,8 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 }
 
 LELY_UTIL_EXPORT size_t
-lex_base64(const char *begin, const char *end, struct floc *at,
-		void *ptr, size_t *pn)
+lex_base64(const char *begin, const char *end, struct floc *at, void *ptr,
+		size_t *pn)
 {
 	assert(begin);
 
@@ -736,9 +752,7 @@ lex_base64(const char *begin, const char *end, struct floc *at,
 		}
 		if (bp && bp < endb) {
 			switch (i % 4) {
-			case 0:
-				s = b << 2;
-				break;
+			case 0: s = b << 2; break;
 			case 1:
 				s |= b >> 4;
 				*bp++ = s;
@@ -765,4 +779,3 @@ lex_base64(const char *begin, const char *end, struct floc *at,
 
 	return floc_lex(at, begin, cp);
 }
-

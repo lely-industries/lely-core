@@ -41,7 +41,7 @@
 
 #ifdef _WIN32
 #ifndef LELY_DIALOG_DIAG_TIMEOUT
-#define LELY_DIALOG_DIAG_TIMEOUT	10
+#define LELY_DIALOG_DIAG_TIMEOUT 10
 #endif
 #endif
 
@@ -96,12 +96,18 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 		r = snprintf(s, n, "%s:", at->filename);
 		if (__unlikely(r < 0))
 			return r;
-		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		t += r;
+		r = MIN((size_t)r, n);
+		s += r;
+		n -= r;
 		if (at->line) {
 			r = snprintf(s, n, "%d:", at->line);
 			if (__unlikely(r < 0))
 				return r;
-			t += r; r = MIN((size_t)r, n); s += r; n -= r;
+			t += r;
+			r = MIN((size_t)r, n);
+			s += r;
+			n -= r;
 			if (at->column) {
 				r = snprintf(s, n, "%d:", at->column);
 				if (__unlikely(r < 0))
@@ -213,8 +219,10 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 	int errsv = errno;
 	char *s = NULL;
+	// clang-format off
 	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
 			>= 0)) {
+		// clang-format on
 		fprintf(stderr, "%s\n", s);
 		fflush(stderr);
 	}
@@ -276,24 +284,19 @@ dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 	DWORD Style = MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
 	switch (severity) {
 	case DIAG_DEBUG:
-	case DIAG_INFO:
-		Style |= MB_ICONINFORMATION;
-		break;
-	case DIAG_WARNING:
-		Style |= MB_ICONWARNING;
-		break;
+	case DIAG_INFO: Style |= MB_ICONINFORMATION; break;
+	case DIAG_WARNING: Style |= MB_ICONWARNING; break;
 	case DIAG_ERROR:
-	case DIAG_FATAL:
-		Style |= MB_ICONERROR;
-		break;
-	default:
-		break;
+	case DIAG_FATAL: Style |= MB_ICONERROR; break;
+	default: break;
 	}
 
 	int errsv = errno;
 	char *pMessage = NULL;
+	// clang-format off
 	if (__likely(vasprintf_diag_at(&pMessage, severity, errc, at, format,
 			ap) >= 0)) {
+		// clang-format on
 		DWORD dwResponse;
 		WTSSendMessageA(WTS_CURRENT_SERVER_HANDLE,
 				WTSGetActiveConsoleSessionId(), pTitle,
@@ -337,9 +340,11 @@ log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 #endif
 		if (__likely(timeptr)) {
 			char buf[80];
+			// clang-format off
 			if (strftime(buf, sizeof(buf),
 					"%a, %d %b %Y %H:%M:%S %z", timeptr)
 					> 0) {
+				// clang-format on
 				fprintf(stderr, "%s: ", buf);
 				fflush(stderr);
 			}
@@ -366,27 +371,19 @@ syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 	int priority = LOG_USER;
 	switch (severity) {
-	case DIAG_DEBUG:
-		priority |= LOG_DEBUG;
-		break;
-	case DIAG_INFO:
-		priority |= LOG_INFO;
-		break;
-	case DIAG_WARNING:
-		priority |= LOG_WARNING;
-		break;
-	case DIAG_ERROR:
-		priority |= LOG_ERR;
-		break;
-	case DIAG_FATAL:
-		priority |= LOG_EMERG;
-		break;
+	case DIAG_DEBUG: priority |= LOG_DEBUG; break;
+	case DIAG_INFO: priority |= LOG_INFO; break;
+	case DIAG_WARNING: priority |= LOG_WARNING; break;
+	case DIAG_ERROR: priority |= LOG_ERR; break;
+	case DIAG_FATAL: priority |= LOG_EMERG; break;
 	}
 
 	int errsv = errno;
 	char *s = NULL;
+	// clang-format off
 	if (__likely(vasprintf_diag_at(&s, DIAG_INFO, errc, at, format, ap)
 			>= 0))
+		// clang-format on
 		syslog(priority, "%s", s);
 	free(s);
 	errno = errsv;
@@ -426,47 +423,50 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	if (at && (r = snprintf_floc(s, n, at)) != 0) {
 		if (__unlikely(r < 0))
 			return r;
-		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		t += r;
+		r = MIN((size_t)r, n);
+		s += r;
+		n -= r;
 		r = snprintf(s, n, " ");
 		if (__unlikely(r < 0))
 			return r;
-		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		t += r;
+		r = MIN((size_t)r, n);
+		s += r;
+		n -= r;
 	}
 
 	switch (severity) {
-	case DIAG_DEBUG:
-		r = snprintf(s, n, "debug: ");
-		break;
-	case DIAG_INFO:
-		r = 0;
-		break;
-	case DIAG_WARNING:
-		r = snprintf(s, n, "warning: ");
-		break;
-	case DIAG_ERROR:
-		r = snprintf(s, n, "error: ");
-		break;
-	case DIAG_FATAL:
-		r = snprintf(s, n, "fatal: ");
-		break;
-	default:
-		r = 0;
-		break;
+	case DIAG_DEBUG: r = snprintf(s, n, "debug: "); break;
+	case DIAG_INFO: r = 0; break;
+	case DIAG_WARNING: r = snprintf(s, n, "warning: "); break;
+	case DIAG_ERROR: r = snprintf(s, n, "error: "); break;
+	case DIAG_FATAL: r = snprintf(s, n, "fatal: "); break;
+	default: r = 0; break;
 	}
 	if (__unlikely(r < 0))
 		return r;
-	t += r; r = MIN((size_t)r, n); s += r; n -= r;
+	t += r;
+	r = MIN((size_t)r, n);
+	s += r;
+	n -= r;
 
 	if (format && *format) {
 		r = vsnprintf(s, n, format, ap);
 		if (__unlikely(r < 0))
 			return r;
-		t += r; r = MIN((size_t)r, n); s += r; n -= r;
+		t += r;
+		r = MIN((size_t)r, n);
+		s += r;
+		n -= r;
 		if (errc) {
 			r = snprintf(s, n, ": ");
 			if (__unlikely(r < 0))
 				return r;
-			t += r; r = MIN((size_t)r, n); s += r; n -= r;
+			t += r;
+			r = MIN((size_t)r, n);
+			s += r;
+			n -= r;
 		}
 	}
 
@@ -476,7 +476,8 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 			r = snprintf(s, n, "%s", errstr);
 			if (__unlikely(r < 0))
 				return r;
-			t += r; r = MIN((size_t)r, n);
+			t += r;
+			r = MIN((size_t)r, n);
 		}
 	}
 
@@ -528,4 +529,3 @@ cmdname(const char *path)
 		cmd--;
 	return ++cmd;
 }
-

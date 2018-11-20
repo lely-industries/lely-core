@@ -22,14 +22,14 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_ERRNUM_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_ERRNUM_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 
 #include <string.h>
 
 #ifdef _WIN32
 #ifndef ERRSTR_SIZE
-#define ERRSTR_SIZE	256
+#define ERRSTR_SIZE 256
 #endif
 static _Thread_local char errstr[ERRSTR_SIZE];
 #endif
@@ -99,7 +99,8 @@ errno2num(int errnum)
 #ifdef EDESTADDRREQ
 	case EDESTADDRREQ: return ERRNUM_DESTADDRREQ;
 #endif
-	case EDOM: return ERRNUM_DOM;
+	case EDOM:
+		return ERRNUM_DOM;
 //	case EDQUOT: return ERRNUM_DQUOT;
 #ifdef EEXIST
 	case EEXIST: return ERRNUM_EXIST;
@@ -321,11 +322,11 @@ errc2num(errc_t errc)
 	case ERROR_CALL_NOT_IMPLEMENTED: return ERRNUM_NOSYS;
 	case ERROR_CANCELLED: return ERRNUM_INTR;
 	case ERROR_CANNOT_MAKE: return ERRNUM_ACCES;
-//	case ERROR_CANNOT_MAKE: return ERRNUM_PERM; // Cygwin
+	// case ERROR_CANNOT_MAKE: return ERRNUM_PERM; // Cygwin
 	case ERROR_CANTOPEN: return ERRNUM_IO;
 	case ERROR_CANTREAD: return ERRNUM_IO;
 	case ERROR_CANTWRITE: return ERRNUM_IO;
-//	case ERROR_CHILD_NOT_COMPLETE: return ERRNUM_BUSY; // Cygwin
+	// case ERROR_CHILD_NOT_COMPLETE: return ERRNUM_BUSY; // Cygwin
 	case ERROR_CHILD_NOT_COMPLETE: return ERRNUM_CHILD;
 	case ERROR_COMMITMENT_LIMIT: return ERRNUM_AGAIN;
 	case ERROR_CONNECTION_REFUSED: return ERRNUM_CONNREFUSED;
@@ -333,12 +334,12 @@ errc2num(errc_t errc)
 	case ERROR_CURRENT_DIRECTORY: return ERRNUM_ACCES;
 	case ERROR_DEVICE_DOOR_OPEN: return ERRNUM_IO;
 	case ERROR_DEVICE_IN_USE: return ERRNUM_BUSY;
-//	case ERROR_DEVICE_IN_USE: return ERRNUM_AGAIN; // Cygwin
+	// case ERROR_DEVICE_IN_USE: return ERRNUM_AGAIN; // Cygwin
 	case ERROR_DEVICE_REQUIRES_CLEANING: return ERRNUM_IO;
 	case ERROR_DEV_NOT_EXIST: return ERRNUM_NODEV;
-//	case ERROR_DEV_NOT_EXIST: return ERRNUM_NOENT; // Cywgin
+	// case ERROR_DEV_NOT_EXIST: return ERRNUM_NOENT; // Cywgin
 	case ERROR_DIRECTORY: return ERRNUM_NOTDIR;
-//	case ERROR_DIRECTORY: return ERRNUM_INVAL; // Cygwin, <system_error>
+	// case ERROR_DIRECTORY: return ERRNUM_INVAL; // Cygwin, <system_error>
 	case ERROR_DIR_NOT_EMPTY: return ERRNUM_NOTEMPTY;
 	case ERROR_DISK_CORRUPT: return ERRNUM_IO;
 	case ERROR_DISK_FULL: return ERRNUM_NOSPC;
@@ -358,7 +359,7 @@ errc2num(errc_t errc)
 	case ERROR_FILE_INVALID: return ERRNUM_NXIO;
 	case ERROR_FILEMARK_DETECTED: return ERRNUM_IO;
 	case ERROR_FILENAME_EXCED_RANGE: return ERRNUM_NAMETOOLONG;
-//	case ERROR_FILENAME_EXCED_RANGE: return ERRNUM_NOENT; // Wine
+	// case ERROR_FILENAME_EXCED_RANGE: return ERRNUM_NOENT; // Wine
 	case ERROR_FILE_NOT_FOUND: return ERRNUM_NOENT;
 #ifdef ERROR_FLOAT_MULTIPLE_FAULTS
 	case ERROR_FLOAT_MULTIPLE_FAULTS: return ERRNUM_DOM;
@@ -376,14 +377,15 @@ errc2num(errc_t errc)
 	case ERROR_INVALID_CATEGORY: return ERRNUM_NOTTY;
 	case ERROR_INVALID_DATA: return ERRNUM_INVAL;
 	case ERROR_INVALID_DRIVE: return ERRNUM_NODEV;
-//	case ERROR_INVALID_DRIVE: return ERRNUM_NOENT; // Wine
+	// case ERROR_INVALID_DRIVE: return ERRNUM_NOENT; // Wine
 	case ERROR_INVALID_EA_NAME: return ERRNUM_INVAL;
 	case ERROR_INVALID_EXE_SIGNATURE: return ERRNUM_NOEXEC;
 	case ERROR_INVALID_FUNCTION: return ERRNUM_NOSYS;
-//	case ERROR_INVALID_HANDLE: return ERRNUM_INVAL; // Boost, <system_error>
+	// case ERROR_INVALID_HANDLE: return ERRNUM_INVAL; // Boost,
+	// <system_error>
 	case ERROR_INVALID_HANDLE: return ERRNUM_BADF;
 	case ERROR_INVALID_NAME: return ERRNUM_INVAL;
-//	case ERROR_INVALID_NAME: return ERRNUM_NOENT; // Cygwin
+	// case ERROR_INVALID_NAME: return ERRNUM_NOENT; // Cygwin
 	case ERROR_INVALID_PARAMETER: return ERRNUM_INVAL;
 	case ERROR_INVALID_SIGNAL_NUMBER: return ERRNUM_INVAL;
 	case ERROR_IOPL_NOT_ENABLED: return ERRNUM_NOEXEC;
@@ -392,8 +394,8 @@ errc2num(errc_t errc)
 	case ERROR_IO_PENDING: return ERRNUM_AGAIN;
 	case ERROR_LOCK_FAILED: return ERRNUM_ACCES;
 	case ERROR_LOCK_VIOLATION: return ERRNUM_NOLCK;
-//	case ERROR_LOCK_VIOLATION: return ERRNUM_BUSY; // Cygwin
-//	case ERROR_LOCK_VIOLATION: return ERRNUM_ACCES; // Wine
+	// case ERROR_LOCK_VIOLATION: return ERRNUM_BUSY; // Cygwin
+	// case ERROR_LOCK_VIOLATION: return ERRNUM_ACCES; // Wine
 	case ERROR_LOCKED: return ERRNUM_NOLCK;
 	case ERROR_MAX_THRDS_REACHED: return ERRNUM_AGAIN;
 	case ERROR_META_EXPANSION_TOO_LONG: return ERRNUM_INVAL;
@@ -403,14 +405,14 @@ errc2num(errc_t errc)
 	case ERROR_NESTING_NOT_ALLOWED: return ERRNUM_AGAIN;
 	case ERROR_NETNAME_DELETED: return ERRNUM_NOENT;
 	case ERROR_NETWORK_ACCESS_DENIED: return ERRNUM_ACCES;
-//	case ERROR_NOACCESS: return ERRNUM_ACCES; // Boost, <system_error>
+	// case ERROR_NOACCESS: return ERRNUM_ACCES; // Boost, <system_error>
 	case ERROR_NOACCESS: return ERRNUM_FAULT;
 	case ERROR_NONE_MAPPED: return ERRNUM_INVAL;
 	case ERROR_NONPAGED_SYSTEM_RESOURCES: return ERRNUM_AGAIN;
-//	case ERROR_NOT_CONNECTED: return ERRNUM_NOLINK;
+	// case ERROR_NOT_CONNECTED: return ERRNUM_NOLINK;
 	case ERROR_NOT_ENOUGH_MEMORY: return ERRNUM_NOMEM;
 	case ERROR_NOT_ENOUGH_QUOTA: return ERRNUM_IO;
-//	case ERROR_NOT_ENOUGH_QUOTA: return ERRNUM_NOMEM; // Wine
+	// case ERROR_NOT_ENOUGH_QUOTA: return ERRNUM_NOMEM; // Wine
 	case ERROR_NOT_LOCKED: return ERRNUM_ACCES;
 	case ERROR_NOT_OWNER: return ERRNUM_PERM;
 	case ERROR_NOT_READY: return ERRNUM_AGAIN;
@@ -426,7 +428,7 @@ errc2num(errc_t errc)
 	case ERROR_NO_TOKEN: return ERRNUM_INVAL;
 	case ERROR_OPEN_FAILED: return ERRNUM_IO;
 	case ERROR_OPEN_FILES: return ERRNUM_AGAIN;
-//	case ERROR_OPEN_FILES: return ERRNUM_BUSY; // Cygwin, <system_error>
+	// case ERROR_OPEN_FILES: return ERRNUM_BUSY; // Cygwin, <system_error>
 	case ERROR_OPERATION_ABORTED: return ERRNUM_CANCELED;
 	case ERROR_OUTOFMEMORY: return ERRNUM_NOMEM;
 	case ERROR_PAGED_SYSTEM_RESOURCES: return ERRNUM_AGAIN;
@@ -442,17 +444,17 @@ errc2num(errc_t errc)
 	case ERROR_RETRY: return ERRNUM_AGAIN;
 	case ERROR_SECTOR_NOT_FOUND: return ERRNUM_INVAL;
 	case ERROR_SEEK: return ERRNUM_IO;
-//	case ERROR_SEEK: return ERRNUM_INVAL; // Cygwin
+	// case ERROR_SEEK: return ERRNUM_INVAL; // Cygwin
 	case ERROR_SEEK_ON_DEVICE: return ERRNUM_ACCES;
 	case ERROR_SERVICE_REQUEST_TIMEOUT: return ERRNUM_BUSY;
 	case ERROR_SETMARK_DETECTED: return ERRNUM_IO;
 	case ERROR_SHARING_BUFFER_EXCEEDED: return ERRNUM_NOLCK;
 	case ERROR_SHARING_VIOLATION: return ERRNUM_ACCES;
-//	case ERROR_SHARING_VIOLATION: return ERRNUM_BUSY; // Cygwin
+	// case ERROR_SHARING_VIOLATION: return ERRNUM_BUSY; // Cygwin
 	case ERROR_SIGNAL_PENDING: return ERRNUM_BUSY;
 	case ERROR_SIGNAL_REFUSED: return ERRNUM_IO;
 	case ERROR_THREAD_1_INACTIVE: return ERRNUM_INVAL;
-//	case ERROR_TIMEOUT: return ERRNUM_BUSY; // Cygwin
+	// case ERROR_TIMEOUT: return ERRNUM_BUSY; // Cygwin
 	case ERROR_TIMEOUT: return ERRNUM_TIMEDOUT;
 	case ERROR_TOO_MANY_LINKS: return ERRNUM_MLINK;
 	case ERROR_TOO_MANY_OPEN_FILES: return ERRNUM_MFILE;
@@ -460,7 +462,8 @@ errc2num(errc_t errc)
 	case ERROR_WAIT_NO_CHILDREN: return ERRNUM_CHILD;
 	case ERROR_WORKING_SET_QUOTA: return ERRNUM_AGAIN;
 	case ERROR_WRITE_FAULT: return ERRNUM_IO;
-//	case ERROR_WRITE_PROTECT: return ERRNUM_ACCES; // Boost, <system_error>
+	// case ERROR_WRITE_PROTECT: return ERRNUM_ACCES; // Boost,
+	// <system_error>
 	case ERROR_WRITE_PROTECT: return ERRNUM_ROFS;
 	case WSAEACCES: return ERRNUM_ACCES;
 	case WSAEADDRINUSE: return ERRNUM_ADDRINUSE;
@@ -574,8 +577,12 @@ errnum2no(errnum_t errnum)
 #ifdef EDESTADDRREQ
 	case ERRNUM_DESTADDRREQ: return EDESTADDRREQ;
 #endif
+#ifdef EDOM
 	case ERRNUM_DOM: return EDOM;
-//	case ERRNUM_DQUOT: return EDQUOT;
+#endif
+// #ifdef EDQUOT
+// 	case ERRNUM_DQUOT: return EDQUOT;
+// #endif
 #ifdef EEXIST
 	case ERRNUM_EXIST: return EEXIST;
 #endif
@@ -622,7 +629,9 @@ errnum2no(errnum_t errnum)
 #ifdef EMSGSIZE
 	case ERRNUM_MSGSIZE: return EMSGSIZE;
 #endif
-//	case ERRNUM_MULTIHOP: return EMULTIHOP;
+// #ifdef EMULTIHOP
+// 	case ERRNUM_MULTIHOP: return EMULTIHOP;
+// #endif
 #ifdef ENAMETOOLONG
 	case ERRNUM_NAMETOOLONG: return ENAMETOOLONG;
 #endif
@@ -656,7 +665,9 @@ errnum2no(errnum_t errnum)
 #ifdef ENOLCK
 	case ERRNUM_NOLCK: return ENOLCK;
 #endif
-//	case ERRNUM_NOLINK: return ENOLINK;
+// #ifdef ENOLINK
+// 	case ERRNUM_NOLINK: return ENOLINK;
+// #endif
 #ifdef ENOMEM
 	case ERRNUM_NOMEM: return ENOMEM;
 #endif
@@ -736,7 +747,9 @@ errnum2no(errnum_t errnum)
 #ifdef ESRCH
 	case ERRNUM_SRCH: return ESRCH;
 #endif
-//	case ERRNUM_STALE: return ESTALE;
+// #ifdef ESTALE
+// 	case ERRNUM_STALE: return ESTALE;
+// #endif
 #ifdef ETIME
 	case ERRNUM_TIME: return ETIME;
 #endif
@@ -769,7 +782,7 @@ errnum2c(errnum_t errnum)
 	case ERRNUM_AGAIN: return ERROR_RETRY;
 	case ERRNUM_ALREADY: return WSAEALREADY;
 	case ERRNUM_BADF: return ERROR_INVALID_HANDLE;
-//	case ERRNUM_BADMSG: return ...;
+	// case ERRNUM_BADMSG: return ...;
 	case ERRNUM_BUSY: return ERROR_BUSY;
 	case ERRNUM_CANCELED: return ERROR_OPERATION_ABORTED;
 	case ERRNUM_CHILD: return ERROR_WAIT_NO_CHILDREN;
@@ -781,26 +794,28 @@ errnum2c(errnum_t errnum)
 #ifdef ERROR_FLOAT_MULTIPLE_FAULTS
 	case ERRNUM_DOM: return ERROR_FLOAT_MULTIPLE_FAULTS;
 #endif
-//	case ERRNUM_DQUOT: return ...;
+		//	case ERRNUM_DQUOT: return ...;
 	case ERRNUM_EXIST: return ERROR_FILE_EXISTS;
 	case ERRNUM_FAULT: return ERROR_NOACCESS;
 	case ERRNUM_FBIG: return ERROR_NO_SYSTEM_RESOURCES;
+	// clang-format off
 	case ERRNUM_HOSTUNREACH: return WSAEHOSTUNREACH;
-//	case ERRNUM_IDRM: return ...;
+	// case ERRNUM_IDRM: return ...;
 #ifdef ERROR_ILLEGAL_CHARACTER
 	case ERRNUM_ILSEQ: return ERROR_ILLEGAL_CHARACTER;
 #endif
+	// clang-format on
 	case ERRNUM_INPROGRESS: return WSAEINPROGRESS;
 	case ERRNUM_INTR: return WSAEINTR;
 	case ERRNUM_INVAL: return ERROR_INVALID_PARAMETER;
 	case ERRNUM_IO: return ERROR_IO_DEVICE;
 	case ERRNUM_ISCONN: return WSAEISCONN;
 	case ERRNUM_ISDIR: return ERROR_FILE_EXISTS;
-//	case ERRNUM_LOOP: return ...;
+	// case ERRNUM_LOOP: return ...;
 	case ERRNUM_MFILE: return ERROR_TOO_MANY_OPEN_FILES;
 	case ERRNUM_MLINK: return ERROR_TOO_MANY_LINKS;
 	case ERRNUM_MSGSIZE: return WSAEMSGSIZE;
-//	case ERRNUM_MULTIHOP: return ...;
+	// case ERRNUM_MULTIHOP: return ...;
 	case ERRNUM_NAMETOOLONG: return ERROR_FILENAME_EXCED_RANGE;
 	case ERRNUM_NETDOWN: return WSAENETDOWN;
 	case ERRNUM_NETRESET: return WSAENETRESET;
@@ -811,38 +826,38 @@ errnum2c(errnum_t errnum)
 	case ERRNUM_NOENT: return ERROR_PATH_NOT_FOUND;
 	case ERRNUM_NOEXEC: return ERROR_BAD_FORMAT;
 	case ERRNUM_NOLCK: return ERROR_LOCK_VIOLATION;
-//	case ERRNUM_NOLINK: return ERROR_NOT_CONNECTED;
+	// case ERRNUM_NOLINK: return ERROR_NOT_CONNECTED;
 	case ERRNUM_NOMEM: return ERROR_NOT_ENOUGH_MEMORY;
-//	case ERRNUM_NOMSG: return ...;
+	// case ERRNUM_NOMSG: return ...;
 	case ERRNUM_NOPROTOOPT: return WSAENOPROTOOPT;
 	case ERRNUM_NOSPC: return ERROR_DISK_FULL;
-//	case ERRNUM_NOSR: return ...;
-//	case ERRNUM_NOSTR: return ...;
+	// case ERRNUM_NOSR: return ...;
+	// case ERRNUM_NOSTR: return ...;
 	case ERRNUM_NOSYS: return ERROR_CALL_NOT_IMPLEMENTED;
 	case ERRNUM_NOTCONN: return WSAENOTCONN;
 	case ERRNUM_NOTDIR: return ERROR_DIRECTORY;
 	case ERRNUM_NOTEMPTY: return ERROR_DIR_NOT_EMPTY;
-//	case ERRNUM_NOTRECOVERABLE: return ...;
+	// case ERRNUM_NOTRECOVERABLE: return ...;
 	case ERRNUM_NOTSOCK: return WSAENOTSOCK;
 	case ERRNUM_NOTSUP: return ERROR_EAS_NOT_SUPPORTED;
 	case ERRNUM_NOTTY: return ERROR_INVALID_CATEGORY;
 	case ERRNUM_NXIO: return ERROR_FILE_INVALID;
 	case ERRNUM_OPNOTSUPP: return WSAEOPNOTSUPP;
 	case ERRNUM_OVERFLOW: return ERROR_INVALID_PARAMETER;
-//	case ERRNUM_OWNERDEAD: return ...;
+	// case ERRNUM_OWNERDEAD: return ...;
 	case ERRNUM_PERM: return ERROR_PRIVILEGE_NOT_HELD;
 	case ERRNUM_PIPE: return ERROR_BROKEN_PIPE;
-//	case ERRNUM_PROTO: return ...;
+	// case ERRNUM_PROTO: return ...;
 	case ERRNUM_PROTONOSUPPORT: return WSAEPROTONOSUPPORT;
 	case ERRNUM_PROTOTYPE: return WSAEPROTOTYPE;
 	case ERRNUM_RANGE: return ERROR_ARITHMETIC_OVERFLOW;
 	case ERRNUM_ROFS: return ERROR_WRITE_PROTECT;
 	case ERRNUM_SPIPE: return ERROR_SEEK;
 	case ERRNUM_SRCH: return ERROR_PROC_NOT_FOUND;
-//	case ERRNUM_STALE: return ...;
-//	case ERRNUM_TIME: return ...;
+	// case ERRNUM_STALE: return ...;
+	// case ERRNUM_TIME: return ...;
 	case ERRNUM_TIMEDOUT: return ERROR_TIMEOUT;
-//	case ERRNUM_TXTBSY: return ...;
+	// case ERRNUM_TXTBSY: return ...;
 	case ERRNUM_WOULDBLOCK: return WSAEWOULDBLOCK;
 	case ERRNUM_XDEV: return ERROR_NOT_SAME_DEVICE;
 	case ERRNUM_AI_AGAIN: return WSATRY_AGAIN;
@@ -905,10 +920,12 @@ LELY_UTIL_EXPORT const char *
 errc2str(errc_t errc)
 {
 #ifdef _WIN32
+	// clang-format off
 	if (__unlikely(!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
 			| FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errc,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			errstr, sizeof(errstr), NULL)))
+		// clang-format on
 		return NULL;
 	// Remove terminating line-break ("\r\n") from error message.
 	size_t n = strlen(errstr);
@@ -932,4 +949,3 @@ errc2str(errc_t errc)
 	return errno2str(errc);
 #endif
 }
-

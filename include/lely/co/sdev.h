@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SDEV_H
-#define LELY_CO_SDEV_H
+#ifndef LELY_CO_SDEV_H_
+#define LELY_CO_SDEV_H_
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
@@ -45,7 +45,7 @@ struct co_sdev {
 	/// A pointer to the order code.
 	const char *order_code;
 	/// The supported bit rates.
-	unsigned baud:10;
+	unsigned baud : 10;
 	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
 	/// A flag specifying whether LSS is supported (1) or not (0).
@@ -89,26 +89,26 @@ struct co_ssub {
 	/// The sub-object value.
 	union co_val val;
 	/// The access type.
-	unsigned access:5;
+	unsigned access : 5;
 	/// A flag indicating if it is possible to map this object into a PDO.
-	unsigned pdo_mapping:1;
+	unsigned pdo_mapping : 1;
 	/// The object flags.
-	unsigned flags:26;
+	unsigned flags : 26;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_sdev(struct __co_dev *dev,
-		const struct co_sdev *sdev);
+LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_sdev(
+		struct __co_dev *dev, const struct co_sdev *sdev);
 
 /**
  * Creates a CANopen device from a static device description.
  *
  * @returns a pointer to a new device, or NULL on error. In the latter case, the
  * error number can be obtained with get_errc().
-*/
+ */
 LELY_CO_EXTERN co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
 
 /**
@@ -147,5 +147,4 @@ LELY_CO_EXTERN int asprintf_c99_sdev(char **ps, const co_dev_t *dev);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_SDEV_H_

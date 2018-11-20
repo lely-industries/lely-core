@@ -25,15 +25,15 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_HTAB_H
-#define LELY_UTIL_HTAB_H
+#ifndef LELY_UTIL_HTAB_H_
+#define LELY_UTIL_HTAB_H_
 
 #include <lely/util/util.h>
 
 #include <stddef.h>
 
 #ifndef LELY_UTIL_HTAB_INLINE
-#define LELY_UTIL_HTAB_INLINE	inline
+#define LELY_UTIL_HTAB_INLINE inline
 #endif
 
 /**
@@ -105,8 +105,8 @@ LELY_UTIL_HTAB_INLINE void hnode_init(struct hnode *node, const void *key);
  * Inserts <b>node</b> into a chain at *<b>pprev</b>, which can point to the
  * previous node or to the chain itself.
  */
-LELY_UTIL_HTAB_INLINE void hnode_insert(struct hnode **pprev,
-		struct hnode *node);
+LELY_UTIL_HTAB_INLINE void hnode_insert(
+		struct hnode **pprev, struct hnode *node);
 
 /// Removes <b>node</b> from a chain.
 LELY_UTIL_HTAB_INLINE void hnode_remove(struct hnode *node);
@@ -120,19 +120,18 @@ LELY_UTIL_HTAB_INLINE void hnode_remove(struct hnode *node);
  *             in the scope of the loop.
  */
 #ifdef __COUNTER__
-#define hnode_foreach(slot, node) \
-	hnode_foreach_(__COUNTER__, slot, node)
+#define hnode_foreach(slot, node) hnode_foreach_(__COUNTER__, slot, node)
 #else
-#define hnode_foreach(slot, node) \
-	hnode_foreach_(__LINE__, slot, node)
+#define hnode_foreach(slot, node) hnode_foreach_(__LINE__, slot, node)
 #endif
-#define hnode_foreach_(n, slot, node) \
-	hnode_foreach__(n, slot, node)
+#define hnode_foreach_(n, slot, node) hnode_foreach__(n, slot, node)
+// clang-format off
 #define hnode_foreach__(n, slot, node) \
 	for (struct hnode *(node) = (slot), \
 			*_hnode_next_##n = (node) ? (node)->next : NULL; \
 			(node); (node) = _hnode_next_##n, \
 			_hnode_next_##n = (node) ? (node)->next : NULL)
+// clang-format on
 
 /**
  * Initializes a hash table and allocates the slot array.
@@ -204,8 +203,8 @@ LELY_UTIL_EXTERN void htab_remove(struct htab *tab, struct hnode *node);
  *
  * @see htab_insert()
  */
-LELY_UTIL_EXTERN struct hnode *htab_find(const struct htab *tab,
-		const void *key);
+LELY_UTIL_EXTERN struct hnode *htab_find(
+		const struct htab *tab, const void *key);
 
 /**
  * Iterates over each node in a hash table. The order of the nodes is undefined.
@@ -218,18 +217,17 @@ LELY_UTIL_EXTERN struct hnode *htab_find(const struct htab *tab,
  * @see hnode_foreach()
  */
 #ifdef __COUNTER__
-#define htab_foreach(tab, node) \
-	htab_foreach_(__COUNTER__, tab, node)
+#define htab_foreach(tab, node) htab_foreach_(__COUNTER__, tab, node)
 #else
-#define htab_foreach(tab, node) \
-	htab_foreach_(__LINE__, tab, node)
+#define htab_foreach(tab, node) htab_foreach_(__LINE__, tab, node)
 #endif
-#define htab_foreach_(n, tab, node) \
-	htab_foreach__(n, tab, node)
+#define htab_foreach_(n, tab, node) htab_foreach__(n, tab, node)
+// clang-format off
 #define htab_foreach__(n, tab, node) \
 	for (size_t _htab_slot_##n = 0; _htab_slot_##n < (tab)->num_slots; \
 			_htab_slot_##n++) \
 		hnode_foreach__(n, (tab)->slots[_htab_slot_##n], node)
+// clang-format on
 
 LELY_UTIL_HTAB_INLINE void
 hnode_init(struct hnode *node, const void *key)
@@ -272,5 +270,4 @@ htab_size(const struct htab *tab)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_HTAB_H_

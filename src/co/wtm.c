@@ -25,18 +25,18 @@
 
 #ifndef LELY_NO_CO_WTM
 
+#include <lely/co/crc.h>
+#include <lely/co/wtm.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
 #include <lely/util/time.h>
-#include <lely/co/crc.h>
-#include <lely/co/wtm.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 /// The maximum value of a CAN/WTM interface indicator.
-#define CO_WTM_MAX_NIF	127
+#define CO_WTM_MAX_NIF 127
 
 /// A CANopen WTM CAN interface.
 struct co_wtm_can {
@@ -177,48 +177,33 @@ LELY_CO_EXPORT const char *
 co_wtm_ac_str(uint32_t ac)
 {
 	switch (ac) {
-	case CO_WTM_AC_ERROR:
-		return "General error";
+	case CO_WTM_AC_ERROR: return "General error";
 	case CO_WTM_AC_TIMEOUT:
 		return "Diagnostic protocol timed out limit reached";
-	case CO_WTM_AC_NO_MEM:
-		return "Out of memory";
-	case CO_WTM_AC_HARDWARE:
-		return "Access failed due to a hardware error";
+	case CO_WTM_AC_NO_MEM: return "Out of memory";
+	case CO_WTM_AC_HARDWARE: return "Access failed due to a hardware error";
 	case CO_WTM_AC_DATA:
 		return "Data cannot be transferred or stored to the application";
 	case CO_WTM_AC_DATA_CTL:
 		return "Data cannot be transferred or stored to the application because of local control";
 	case CO_WTM_AC_DATA_DEV:
 		return "Data cannot be transferred or stored to the application because of the present device state";
-	case CO_WTM_AC_NO_DATA:
-		return "No data available";
-	case CO_WTM_AC_NO_IF:
-		return "Requested interface not implemented";
-	case CO_WTM_AC_IF_DOWN:
-		return "Requested interface disabled";
-	case CO_WTM_AC_DIAG:
-		return "Diagnostic data generation not supported";
+	case CO_WTM_AC_NO_DATA: return "No data available";
+	case CO_WTM_AC_NO_IF: return "Requested interface not implemented";
+	case CO_WTM_AC_IF_DOWN: return "Requested interface disabled";
+	case CO_WTM_AC_DIAG: return "Diagnostic data generation not supported";
 	case CO_WTM_AC_DIAG_CAN:
 		return "Diagnostic data generation for requested CAN interface not supported";
 	case CO_WTM_AC_DIAG_WTM:
 		return "Diagnostic data generation for requested WTM interface not supported";
-	case CO_WTM_AC_FRAME:
-		return "General generic frame error";
-	case CO_WTM_AC_PREAMBLE:
-		return "Invalid generic frame preamble";
-	case CO_WTM_AC_SEQ:
-		return "Invalid sequence counter in generic frame";
-	case CO_WTM_AC_TYPE:
-		return "Message type not valid or unknown";
-	case CO_WTM_AC_PAYLOAD:
-		return "Payload field in generic frame invalid";
-	case CO_WTM_AC_CRC:
-		return "CRC error (Generic frame)";
-	case CO_WTM_AC_CAN:
-		return "CAN telegram essentials invalid";
-	default:
-		return "Unknown abort code";
+	case CO_WTM_AC_FRAME: return "General generic frame error";
+	case CO_WTM_AC_PREAMBLE: return "Invalid generic frame preamble";
+	case CO_WTM_AC_SEQ: return "Invalid sequence counter in generic frame";
+	case CO_WTM_AC_TYPE: return "Message type not valid or unknown";
+	case CO_WTM_AC_PAYLOAD: return "Payload field in generic frame invalid";
+	case CO_WTM_AC_CRC: return "CRC error (Generic frame)";
+	case CO_WTM_AC_CAN: return "CAN telegram essentials invalid";
+	default: return "Unknown abort code";
 	}
 }
 
@@ -371,9 +356,7 @@ co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 	case CAN_STATE_PASSIVE: st = 1; break;
 	case CAN_STATE_BUSOFF: st = 2; break;
 	case 0xf: break;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
 	if (err == 0xf) {
@@ -422,8 +405,8 @@ co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_diag_can_con(const co_wtm_t *wtm, co_wtm_diag_can_con_t **pcon,
-		void **pdata)
+co_wtm_get_diag_can_con(
+		const co_wtm_t *wtm, co_wtm_diag_can_con_t **pcon, void **pdata)
 {
 	assert(wtm);
 
@@ -443,8 +426,8 @@ co_wtm_set_diag_can_con(co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_diag_wtm_con(const co_wtm_t *wtm, co_wtm_diag_wtm_con_t **pcon,
-		void **pdata)
+co_wtm_get_diag_wtm_con(
+		const co_wtm_t *wtm, co_wtm_diag_wtm_con_t **pcon, void **pdata)
 {
 	assert(wtm);
 
@@ -464,8 +447,8 @@ co_wtm_set_diag_wtm_con(co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_diag_can_ind(const co_wtm_t *wtm, co_wtm_diag_can_ind_t **pcon,
-		void **pdata)
+co_wtm_get_diag_can_ind(
+		const co_wtm_t *wtm, co_wtm_diag_can_ind_t **pcon, void **pdata)
 {
 	assert(wtm);
 
@@ -485,8 +468,8 @@ co_wtm_set_diag_can_ind(co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm, co_wtm_diag_wtm_ind_t **pcon,
-		void **pdata)
+co_wtm_get_diag_wtm_ind(
+		const co_wtm_t *wtm, co_wtm_diag_wtm_ind_t **pcon, void **pdata)
 {
 	assert(wtm);
 
@@ -506,8 +489,8 @@ co_wtm_set_diag_wtm_ind(co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_diag_ac_ind(const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind,
-		void **pdata)
+co_wtm_get_diag_ac_ind(
+		const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind, void **pdata)
 {
 	assert(wtm);
 
@@ -540,7 +523,9 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		size_t size = 1;
 		if (wtm->recv_nbytes < size) {
 			wtm->recv_buf[wtm->recv_nbytes] = *bp;
-			wtm->recv_nbytes++; bp++; nbytes--;
+			wtm->recv_nbytes++;
+			bp++;
+			nbytes--;
 		}
 		if (__unlikely(wtm->recv_buf[0] != 0x55)) {
 			ac = CO_WTM_AC_PREAMBLE;
@@ -552,7 +537,9 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (wtm->recv_nbytes < size) {
 			size_t n = MIN(nbytes, size - wtm->recv_nbytes);
 			memcpy(wtm->recv_buf + wtm->recv_nbytes, bp, n);
-			wtm->recv_nbytes += n; bp += n; nbytes -= n;
+			wtm->recv_nbytes += n;
+			bp += n;
+			nbytes -= n;
 			if (wtm->recv_nbytes < size)
 				continue;
 		}
@@ -562,7 +549,9 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (wtm->recv_nbytes < size) {
 			size_t n = MIN(nbytes, size - wtm->recv_nbytes);
 			memcpy(wtm->recv_buf + wtm->recv_nbytes, bp, n);
-			wtm->recv_nbytes += n; bp += n; nbytes -= n;
+			wtm->recv_nbytes += n;
+			bp += n;
+			nbytes -= n;
 			if (wtm->recv_nbytes < size)
 				continue;
 		}
@@ -590,8 +579,10 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// 1.0.0).
 		case 0x00:
 			// Process the CAN frames.
+			// clang-format off
 			if (__unlikely((ac = co_wtm_recv_can(wtm,
 					wtm->recv_buf + 4, len)) != 0))
+				// clang-format on
 				goto error;
 			break;
 		// Keep-alive (see section 7.3 in CiA 315 version 1.0.0).
@@ -624,8 +615,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				goto error;
 			}
 			// Add 6553.5 ms to the CAN interface timer.
-			timespec_add_usec(&wtm->can[nif - 1].recv_time,
-					6553500);
+			timespec_add_usec(
+					&wtm->can[nif - 1].recv_time, 6553500);
 			break;
 		// Communication quality request.
 		case 0x12:
@@ -637,8 +628,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			nif = wtm->recv_buf[4];
 			if (nif <= 0x80) {
 				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
-					co_wtm_send_diag_ac(wtm,
-							CO_WTM_AC_NO_IF);
+					co_wtm_send_diag_ac(
+							wtm, CO_WTM_AC_NO_IF);
 					break;
 				}
 				// Send the communication quality response.
@@ -647,8 +638,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				// Only accept communication quality requests
 				// for this WTM interface.
 				if (__unlikely(nif != 0x80 + wtm->nif)) {
-					co_wtm_send_diag_ac(wtm,
-							CO_WTM_AC_NO_IF);
+					co_wtm_send_diag_ac(
+							wtm, CO_WTM_AC_NO_IF);
 					break;
 				}
 				// Send the communication quality response.
@@ -713,8 +704,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			nif = wtm->recv_buf[4];
 			if (nif <= 0x80) {
 				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
-					co_wtm_send_diag_ac(wtm,
-							CO_WTM_AC_NO_IF);
+					co_wtm_send_diag_ac(
+							wtm, CO_WTM_AC_NO_IF);
 					break;
 				}
 				struct co_wtm_can *can = &wtm->can[nif - 1];
@@ -731,8 +722,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				// Only accept communication quality reset
 				// messages for this WTM interface.
 				if (__unlikely(nif != 0x80 + wtm->nif)) {
-					co_wtm_send_diag_ac(wtm,
-							CO_WTM_AC_NO_IF);
+					co_wtm_send_diag_ac(
+							wtm, CO_WTM_AC_NO_IF);
 					break;
 				}
 				wtm->quality = 0xff;
@@ -759,9 +750,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				break;
 			ac = ldle_u32(wtm->recv_buf + 5);
 			break;
-		default:
-			ac = CO_WTM_AC_TYPE;
-			goto error;
+		default: ac = CO_WTM_AC_TYPE; goto error;
 		}
 	error:
 		if (__unlikely(ac))
@@ -772,8 +761,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_recv_func(const co_wtm_t *wtm, co_wtm_recv_func_t **pfunc,
-		void **pdata)
+co_wtm_get_recv_func(
+		const co_wtm_t *wtm, co_wtm_recv_func_t **pfunc, void **pdata)
 {
 	assert(wtm);
 
@@ -890,23 +879,28 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	if (nif != 1)
 		dlc |= 0x80;
 	*bp = dlc;
-	bp++; nbytes++;
+	bp++;
+	nbytes++;
 	// Write the interface indicator.
 	if (nif != 1) {
 		*bp = nif;
-		bp++; nbytes++;
+		bp++;
+		nbytes++;
 	}
 	// Write the CAN identifier.
 	if (msg->flags & CAN_FLAG_IDE) {
 		stle_u32(bp, msg->id & CAN_MASK_EID);
-		bp += 4; nbytes += 4;
+		bp += 4;
+		nbytes += 4;
 	} else {
 		stle_u16(bp, msg->id & CAN_MASK_BID);
-		bp += 2; nbytes += 2;
+		bp += 2;
+		nbytes += 2;
 	}
 	// Copy the frame payload.
 	memcpy(bp, msg->data, msg->len);
-	bp += msg->len; nbytes += msg->len;
+	bp += msg->len;
+	nbytes += msg->len;
 	// Write the time stamp.
 	int64_t usec = timespec_diff_usec(&can->send_next, &can->send_time);
 	stle_u16(bp, (uint16_t)(usec / 100));
@@ -1045,12 +1039,13 @@ co_wtm_flush(co_wtm_t *wtm)
 		return -1;
 	}
 	return wtm->send_func(wtm, wtm->send_buf, 4 + len + 2, wtm->send_data)
-			? -1 : 0;
+			? -1
+			: 0;
 }
 
 LELY_CO_EXPORT void
-co_wtm_get_send_func(const co_wtm_t *wtm, co_wtm_send_func_t **pfunc,
-		void **pdata)
+co_wtm_get_send_func(
+		const co_wtm_t *wtm, co_wtm_send_func_t **pfunc, void **pdata)
 {
 	assert(wtm);
 
@@ -1134,7 +1129,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		struct can_msg msg = CAN_MSG_INIT;
 		// Obtain the data length code.
 		uint8_t dlc = *bp;
-		bp++; nbytes--;
+		bp++;
+		nbytes--;
 		msg.len = dlc & 0x0f;
 		if (__unlikely(msg.len > CAN_MAX_LEN)) {
 			ac = CO_WTM_AC_CAN;
@@ -1150,7 +1146,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				goto error;
 			}
 			nif = *bp;
-			bp++; nbytes--;
+			bp++;
+			nbytes--;
 		}
 		// Obtain the CAN identifier.
 		if (dlc & 0x20) {
@@ -1159,7 +1156,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				goto error;
 			}
 			msg.id = ldle_u32(bp) & CAN_MASK_EID;
-			bp += 4; nbytes -= 4;
+			bp += 4;
+			nbytes -= 4;
 			msg.flags |= CAN_FLAG_IDE;
 		} else {
 			if (__unlikely(nbytes < 2)) {
@@ -1167,7 +1165,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				goto error;
 			}
 			msg.id = ldle_u16(bp) & CAN_MASK_BID;
-			bp += 2; nbytes -= 2;
+			bp += 2;
+			nbytes -= 2;
 		}
 		// Obtain the frame payload.
 		if (__unlikely(nbytes < msg.len)) {
@@ -1175,7 +1174,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			goto error;
 		}
 		memcpy(msg.data, bp, msg.len);
-		bp += msg.len; nbytes -= msg.len;
+		bp += msg.len;
+		nbytes -= msg.len;
 		// Obtain the time stamp.
 		uint16_t ts = 0;
 		if (dlc & 0x40) {
@@ -1184,7 +1184,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				goto error;
 			}
 			ts = ldle_u16(bp);
-			bp += 2; nbytes -= 2;
+			bp += 2;
+			nbytes -= 2;
 		}
 		// Ignore CAN frames with an invalid interface indicator.
 		if (__unlikely(!nif || nif > CO_WTM_MAX_NIF))
@@ -1198,8 +1199,10 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// Invoke the user-specified callback function.
 		if (wtm->recv_func) {
 			errc_t errc = get_errc();
+			// clang-format off
 			if (__unlikely(wtm->recv_func(wtm, nif, tp, &msg,
 					wtm->recv_data))) {
+				// clang-format on
 				// Convert the error number to a WTM abort code.
 				if (!ac) {
 					ac = get_errnum() == ERRNUM_NOMEM
@@ -1216,4 +1219,3 @@ error:
 }
 
 #endif // !LELY_NO_CO_WTM
-

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_PRINT_H
-#define LELY_UTIL_PRINT_H
+#ifndef LELY_UTIL_PRINT_H_
+#define LELY_UTIL_PRINT_H_
 
 #include <lely/libc/uchar.h>
 #include <lely/util/util.h>
@@ -29,29 +29,29 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PRINT_INLINE
-#define LELY_UTIL_PRINT_INLINE	inline
+#define LELY_UTIL_PRINT_INLINE inline
 #endif
 
 #ifndef LENll
 /// A cross-platform "ll" length modifier macro for format specifiers.
 #ifdef _WIN32
-#define LENll	"I64"
+#define LENll "I64"
 #ifdef __MINGW32__
 // Ignore complaints that "I64" is not a valid ISO C length modifier.
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"
 #endif
 #else
-#define LENll	"ll"
+#define LENll "ll"
 #endif
 #endif
 
 #ifndef LENj
 /// A cross-platform "j" length modifier macro for format specifiers.
 #ifdef _WIN32
-#define LENj	LENll
+#define LENj LENll
 #else
-#define LENj	"j"
+#define LENj "j"
 #endif
 #endif
 
@@ -59,12 +59,12 @@
 /// A cross-platform "z" length modifier macro for format specifiers.
 #ifdef _WIN32
 #if __WORDSIZE == 64
-#define LENz	LENll
+#define LENz LENll
 #else
-#define LENz	LENl
+#define LENz LENl
 #endif
 #else
-#define LENz	"z"
+#define LENz "z"
 #endif
 #endif
 
@@ -72,12 +72,12 @@
 /// A cross-platform "t" length modifier macro for format specifiers.
 #ifdef _WIN32
 #if __WORDSIZE == 64
-#define LENz	LENll
+#define LENz LENll
 #else
-#define LENz	LENl
+#define LENz LENl
 #endif
 #else
-#define LENt	"t"
+#define LENt "t"
 #endif
 #endif
 
@@ -204,9 +204,10 @@ LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
  *
  * @see print_c99_esc()
  */
-LELY_UTIL_EXTERN size_t print_c99_str(char **pbegin, char *end, const char *s,
-		size_t n);
+LELY_UTIL_EXTERN size_t print_c99_str(
+		char **pbegin, char *end, const char *s, size_t n);
 
+// clang-format off
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name) \
 	/** Prints a C99 `type` to a memory buffer. Note that the output is
 	_not_ null-terminated.
@@ -221,8 +222,9 @@ LELY_UTIL_EXTERN size_t print_c99_str(char **pbegin, char *end, const char *s,
 	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
 	error number can be obtained with get_errc().*/ \
-	LELY_UTIL_EXTERN size_t print_c99_##suffix(char **pbegin, char *end, \
-			type name);
+	LELY_UTIL_EXTERN size_t print_c99_##suffix( \
+			char **pbegin, char *end, type name);
+// clang-format on
 
 LELY_UTIL_DEFINE_PRINT(long, long, l)
 LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul)
@@ -264,8 +266,8 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64)
  * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  */
-LELY_UTIL_EXTERN size_t print_base64(char **pbegin, char *end, const void *ptr,
-		size_t n);
+LELY_UTIL_EXTERN size_t print_base64(
+		char **pbegin, char *end, const void *ptr, size_t n);
 
 LELY_UTIL_PRINT_INLINE int
 otoc(int i)
@@ -306,5 +308,4 @@ print_char(char **pbegin, char *end, int c)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_PRINT_H_

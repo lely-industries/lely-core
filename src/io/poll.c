@@ -22,11 +22,11 @@
  */
 
 #include "io.h"
+#include <lely/io/poll.h>
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/util/pool.h>
 #include <lely/util/rbtree.h>
-#include <lely/io/poll.h>
 #ifdef _WIN32
 #include <lely/io/sock.h>
 #else
@@ -88,8 +88,8 @@ static void io_poll_lock(io_poll_t *poll);
 static void io_poll_unlock(io_poll_t *poll);
 #endif
 
-static struct io_watch *io_poll_insert(io_poll_t *poll,
-		struct io_handle *handle);
+static struct io_watch *io_poll_insert(
+		io_poll_t *poll, struct io_handle *handle);
 static void io_poll_remove(io_poll_t *poll, struct io_watch *watch);
 
 #if _POSIX_C_SOURCE >= 200112L \
@@ -144,8 +144,10 @@ __io_poll_init(struct __io_poll *poll)
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
 #ifdef _WIN32
+	// clang-format off
 	if (__unlikely(io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM,
 			poll->pipe) == -1)) {
+		// clang-format on
 #else
 	if (__unlikely(io_open_pipe(poll->pipe) == -1)) {
 #endif
@@ -172,12 +174,12 @@ __io_poll_init(struct __io_poll *poll)
 	}
 
 	// Register the read end of the self-pipe with epoll.
-	struct epoll_event ev = {
-		.events = EPOLLIN,
-		.data.ptr = poll->pipe[0]
-	};
+	struct epoll_event ev = { .events = EPOLLIN,
+		.data.ptr = poll->pipe[0] };
+	// clang-format off
 	if (__unlikely(epoll_ctl(poll->epfd, EPOLL_CTL_ADD, poll->pipe[0]->fd,
 			&ev) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_epoll_ctl;
 	}
@@ -207,7 +209,7 @@ __io_poll_fini(struct __io_poll *poll)
 {
 	assert(poll);
 
-	rbtree_foreach(&poll->tree, node)
+	rbtree_foreach (&poll->tree, node)
 		io_poll_remove(poll, structof(node, struct io_watch, node));
 
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
@@ -285,9 +287,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 	case IO_TYPE_SOCK:
 #endif
 		break;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
 	errc_t errc = 0;
@@ -300,9 +300,8 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 #else
 	struct rbnode *node = rbtree_find(&poll->tree, &handle->fd);
 #endif
-	struct io_watch *watch = node
-			? structof(node, struct io_watch, node)
-			: NULL;
+	struct io_watch *watch =
+			node ? structof(node, struct io_watch, node) : NULL;
 	// If event is not NULL, register the device or update the events being
 	// watched. If event is NULL, remove the device.
 	if (event) {
@@ -330,8 +329,10 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 			ev.events |= EPOLLOUT;
 		ev.data.ptr = watch->handle;
 
+		// clang-format off
 		if (__unlikely(epoll_ctl(poll->epfd, op, watch->handle->fd, &ev)
 				== -1)) {
+			// clang-format on
 			errc = get_errc();
 			goto error_epoll_ctl;
 		}
@@ -418,10 +419,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	}
 	io_poll_unlock(poll);
 
-	struct timeval tv = {
-		.tv_sec = timeout / 1000,
-		.tv_usec = (timeout % 1000) * 1000
-	};
+	struct timeval tv = { .tv_sec = timeout / 1000,
+		.tv_usec = (timeout % 1000) * 1000 };
 	int result = select(0, &readfds, nwritefds ? &writefds : NULL,
 			&errorfds, timeout >= 0 ? &tv : NULL);
 	if (__unlikely(result == -1))
@@ -492,8 +491,10 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 			events[nevents].events = 0;
 			// We consider hang up and high-priority (OOB) data an
 			// error.
+			// clang-format off
 			if (ev[i].events & (EPOLLRDHUP | EPOLLPRI | EPOLLERR
 					| EPOLLHUP))
+				// clang-format on
 				events[nevents].events |= IO_EVENT_ERROR;
 			if (ev[i].events & EPOLLIN)
 				events[nevents].events |= IO_EVENT_READ;
@@ -653,7 +654,6 @@ io_poll_insert(io_poll_t *poll, struct io_handle *handle)
 	rbtree_insert(&poll->tree, &watch->node);
 
 	return watch;
-
 }
 
 static void
@@ -676,4 +676,3 @@ _poll(struct pollfd *fds, nfds_t nfds, int timeout)
 	return poll(fds, nfds, timeout);
 }
 #endif
-

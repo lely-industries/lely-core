@@ -132,15 +132,17 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 						s[--chars] = '\0';
 					cp += lex_c99_str(cp, end, NULL, s,
 							&chars);
+					// clang-format off
 					if ((chars = lex_char('\"', cp, end,
 							at)) > 0)
+						// clang-format on
 						cp += chars;
 					else
 						diag_if(DIAG_ERROR, 0, at,
 								"expected '\"' after string");
 				} else {
-					chars = lex_ctype(&isvalue, cp, end,
-							at);
+					chars = lex_ctype(
+							&isvalue, cp, end, at);
 					membuf_print_chars(&value, cp, chars);
 					cp += chars;
 				}
@@ -160,7 +162,7 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 			else
 				diag_if(DIAG_ERROR, 0, at,
 						"unknown character '\\%o'",
-								*cp);
+						*cp);
 			// Skip the offending character.
 			cp += lex_char(*cp, cp, end, at);
 		}
@@ -217,35 +219,24 @@ config_print_ini_text(const config_t *config, char **pbegin, char *end)
 		char *end;
 		const char *section;
 		size_t chars;
-	} ctx = {
-		.pbegin = pbegin,
-		.end = end,
-		.section = NULL,
-		.chars = 0
-	};
+	} ctx = { .pbegin = pbegin, .end = end, .section = NULL, .chars = 0 };
 
 	config_foreach(config, &config_print_ini_func, &ctx);
 
 	return ctx.chars;
 }
 
-static int __cdecl
-issection(int c)
+static int __cdecl issection(int c)
 {
 	return isgraph(c) && c != '#' && c != ';' && c != '[' && c != ']';
 }
 
-static int __cdecl
-iskey(int c)
+static int __cdecl iskey(int c)
 {
 	return isgraph(c) && c != '#' && c != ';' && c != '=';
 }
 
-static int __cdecl
-isvalue(int c)
-{
-	return isprint(c) && c != '#' && c != ';';
-}
+static int __cdecl isvalue(int c) { return isprint(c) && c != '#' && c != ';'; }
 
 static size_t
 skip(const char *begin, const char *end, struct floc *at)
@@ -338,4 +329,3 @@ config_print_ini_func(const char *section, const char *key, const char *value,
 
 	ctx->chars = chars;
 }
-

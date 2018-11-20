@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FILENAME	"util-fbuf.dat"
+#define FILENAME "util-fbuf.dat"
 
-#define SIZE	1024
+#define SIZE 1024
 
-#define TXT1	FILENAME
-#define POS	32
-#define TXT2	"Hello, world!"
+#define TXT1 FILENAME
+#define POS 32
+#define TXT2 "Hello, world!"
 
 void test_frbuf(void);
 void test_fwbuf(void);
@@ -88,4 +88,3 @@ test_fwbuf(void)
 
 	fwbuf_destroy(buf);
 }
-

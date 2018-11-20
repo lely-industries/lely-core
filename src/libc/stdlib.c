@@ -27,7 +27,7 @@
 
 #ifndef LELY_HAVE_POSIX_MEMALIGN
 #if _POSIX_C_SOURCE >= 200112L
-#define LELY_HAVE_POSIX_MEMALIGN	1
+#define LELY_HAVE_POSIX_MEMALIGN 1
 #if defined(__NEWLIB__) && !defined(__rtems__)
 #undef LELY_HAVE_POSIX_MEMALIGN
 #endif
@@ -42,8 +42,7 @@
 #include <lely/libc/stdint.h>
 #endif
 
-LELY_LIBC_EXPORT void * __cdecl
-aligned_alloc(size_t alignment, size_t size)
+LELY_LIBC_EXPORT void *__cdecl aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef _WIN32
 	if (__unlikely(!size))
@@ -60,8 +59,10 @@ aligned_alloc(size_t alignment, size_t size)
 #else
 	// Check if the alignment is a multiple if sizeof(void *) that is also a
 	// power of two
+	// clang-format off
 	if (__unlikely((alignment & (alignment - 1))
 			|| alignment < sizeof(void *)))
+		// clang-format on
 		return NULL;
 	if (__unlikely(!size))
 		return NULL;
@@ -85,8 +86,7 @@ aligned_alloc(size_t alignment, size_t size)
 
 #ifndef __USE_ISOC11
 
-LELY_LIBC_EXPORT void __cdecl
-aligned_free(void *ptr)
+LELY_LIBC_EXPORT void __cdecl aligned_free(void *ptr)
 {
 #ifdef _WIN32
 	_aligned_free(ptr);

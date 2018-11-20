@@ -28,8 +28,8 @@
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
 #endif
-#include <lely/co/dev.h>
 #include "obj.h"
+#include <lely/co/dev.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ struct __co_dev {
 	/// A pointer to the order code.
 	char *order_code;
 	/// The supported bit rates.
-	unsigned baud:10;
+	unsigned baud : 10;
 	/// The (pending) baudrate (in kbit/s).
 	co_unsigned16_t rate;
 	/// A flag specifying whether LSS is supported (1) or not (0).
@@ -66,10 +66,10 @@ struct __co_dev {
 	co_unsigned32_t dummy;
 };
 
-static void co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id,
-		co_unsigned8_t old_id);
-static void co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id,
-		co_unsigned8_t old_id);
+static void co_obj_set_id(
+		co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id);
+static void co_sub_set_id(
+		co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id);
 static void co_val_set_id(co_unsigned16_t type, void *val,
 		co_unsigned8_t new_id, co_unsigned8_t old_id);
 
@@ -127,7 +127,7 @@ __co_dev_fini(struct __co_dev *dev)
 {
 	assert(dev);
 
-	rbtree_foreach(&dev->tree, node)
+	rbtree_foreach (&dev->tree, node)
 		co_obj_destroy(structof(node, co_obj_t, node));
 
 	free(dev->vendor_name);
@@ -212,7 +212,7 @@ co_dev_set_id(co_dev_t *dev, co_unsigned8_t id)
 		return -1;
 	}
 
-	rbtree_foreach(&dev->tree, node)
+	rbtree_foreach (&dev->tree, node)
 		co_obj_set_id(structof(node, co_obj_t, node), id, dev->id);
 
 	dev->id = id;
@@ -528,9 +528,10 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 LELY_CO_EXPORT const void *
 co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
+	// clang-format off
 	co_sub_t *sub = __likely(dev)
-			? co_dev_find_sub(dev, idx, subidx)
-			: NULL;
+			? co_dev_find_sub(dev, idx, subidx) : NULL;
+	// clang-format on
 	return co_sub_get_val(sub);
 }
 
@@ -550,28 +551,27 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t \
-	co_dev_get_val_##c(const co_dev_t *dev, co_unsigned16_t idx, \
-			co_unsigned8_t subidx) \
+	LELY_CO_EXPORT co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
+			co_unsigned16_t idx, co_unsigned8_t subidx) \
 	{ \
 		co_sub_t *sub = __likely(dev) \
 				? co_dev_find_sub(dev, idx, subidx) \
 				: NULL; \
 		return co_sub_get_val_##c(sub); \
 	} \
-	\
-	LELY_CO_EXPORT size_t \
-	co_dev_set_val_##c(co_dev_t *dev, co_unsigned16_t idx, \
-			co_unsigned8_t subidx, co_##b##_t c) \
+\
+	LELY_CO_EXPORT size_t co_dev_set_val_##c(co_dev_t *dev, \
+			co_unsigned16_t idx, co_unsigned8_t subidx, \
+			co_##b##_t c) \
 	{ \
 		assert(dev); \
-	\
+\
 		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx); \
 		if (__unlikely(!sub)) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
-	\
+\
 		return co_sub_set_val_##c(sub, c); \
 	}
 #include <lely/co/def/basic.def>
@@ -586,20 +586,26 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 
 	// Read the object index.
 	co_unsigned16_t idx;
+	// clang-format off
 	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end)
 			!= 2))
+		// clang-format on
 		return 0;
 	begin += 2;
 	// Read the object sub-index.
 	co_unsigned8_t subidx;
+	// clang-format off
 	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end)
 			!= 1))
+		// clang-format on
 		return 0;
 	begin += 1;
 	// Read the value size (in bytes).
 	co_unsigned32_t size;
+	// clang-format off
 	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end)
 			!= 4))
+		// clang-format on
 		return 0;
 	begin += 4;
 
@@ -612,8 +618,10 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		co_unsigned16_t type = co_sub_get_type(sub);
 		union co_val val;
 		co_val_init(type, &val);
+		// clang-format off
 		if (__likely(co_val_read(type, &val, begin, begin + size)
 				== size))
+			// clang-format on
 			co_sub_set_val(sub, co_val_addressof(type, &val),
 					co_val_sizeof(type, &val));
 		co_val_fini(type, &val);
@@ -643,18 +651,24 @@ co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 
 	if (begin && (!end || end - begin >= (ptrdiff_t)(2 + 1 + 4 + size))) {
 		// Write the object index.
-		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED16, &idx,
-				begin, end) != 2))
+		// clang-format off
+		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED16, &idx, begin,
+				end) != 2))
+			// clang-format on
 			return 0;
 		begin += 2;
 		// Write the object sub-index.
+		// clang-format off
 		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED8, &subidx,
 				begin, end) != 1))
+			// clang-format on
 			return 0;
 		begin += 1;
 		// Write the value size (in bytes).
-		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED32, &size,
-				begin, end) != 4))
+		// clang-format off
+		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED32, &size, begin,
+				end) != 4))
+			// clang-format on
 			return 0;
 		begin += 4;
 		// Write the value.
@@ -792,8 +806,8 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 		// Count the number of sub-objects and compute the size (in
 		// bytes).
 		for (size_t j = 0; j < maxsubidx; j++, n++)
-			size += co_dev_write_sub(dev, idx[i], subidx[j], NULL,
-					NULL);
+			size += co_dev_write_sub(
+					dev, idx[i], subidx[j], NULL, NULL);
 	}
 
 	// Create a DOMAIN for the concise DCF.
@@ -818,8 +832,8 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 
 		// Write the value of the sub-object.
 		for (size_t j = 0; j < maxsubidx; j++, n++)
-			begin += co_dev_write_sub(dev, idx[i], subidx[j], begin,
-					end);
+			begin += co_dev_write_sub(
+					dev, idx[i], subidx[j], begin, end);
 	}
 
 	free(idx);
@@ -884,7 +898,7 @@ co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)
 {
 	assert(obj);
 
-	rbtree_foreach(&obj->tree, node)
+	rbtree_foreach (&obj->tree, node)
 		co_sub_set_id(structof(node, co_sub_t, node), new_id, old_id);
 }
 
@@ -923,4 +937,3 @@ co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t new_id,
 #undef LELY_CO_DEFINE_TYPE
 	}
 }
-

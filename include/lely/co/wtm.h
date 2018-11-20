@@ -19,93 +19,93 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_WTM_H
-#define LELY_CO_WTM_H
+#ifndef LELY_CO_WTM_H_
+#define LELY_CO_WTM_H_
 
-#include <lely/libc/time.h>
 #include <lely/can/msg.h>
 #include <lely/co/co.h>
+#include <lely/libc/time.h>
 
 /**
  * The maximum size of a CANopen WTM generic frame (4 (header) + 255 (payload) +
  * 2 (CRC checksum) = 261).
  */
-#define CO_WTM_MAX_LEN	261
+#define CO_WTM_MAX_LEN 261
 
 /// CANopen WTM abort code: General error.
-#define CO_WTM_AC_ERROR		UINT32_C(0x01000000)
+#define CO_WTM_AC_ERROR UINT32_C(0x01000000)
 
 /// CANopen WTM abort code: Diagnostic protocol timed out limit reached.
-#define CO_WTM_AC_TIMEOUT	UINT32_C(0x01000001)
+#define CO_WTM_AC_TIMEOUT UINT32_C(0x01000001)
 
 /// CANopen WTM abort code: Out of memory.
-#define CO_WTM_AC_NO_MEM	UINT32_C(0x01000002)
+#define CO_WTM_AC_NO_MEM UINT32_C(0x01000002)
 
 /// CANopen WTM abort code: Access failed due to a hardware error.
-#define CO_WTM_AC_HARDWARE	UINT32_C(0x01000003)
+#define CO_WTM_AC_HARDWARE UINT32_C(0x01000003)
 
 /**
  * CANopen WTM abort code: Data cannot be transferred or stored to the
  * application.
  */
-#define CO_WTM_AC_DATA		UINT32_C(0x01000004)
+#define CO_WTM_AC_DATA UINT32_C(0x01000004)
 
 /**
  * CANopen WTM abort code: Data cannot be transferred or stored to the
  * application because of local control.
  */
-#define CO_WTM_AC_DATA_CTL	UINT32_C(0x01000005)
+#define CO_WTM_AC_DATA_CTL UINT32_C(0x01000005)
 
 /**
  * CANopen WTM abort code: Data cannot be transferred or stored to the
  * application because of the present device state.
  */
-#define CO_WTM_AC_DATA_DEV	UINT32_C(0x01000006)
+#define CO_WTM_AC_DATA_DEV UINT32_C(0x01000006)
 
 /// CANopen WTM abort code: No data available.
-#define CO_WTM_AC_NO_DATA	UINT32_C(0x01000007)
+#define CO_WTM_AC_NO_DATA UINT32_C(0x01000007)
 
 /// CANopen WTM abort code: Requested interface not implemented.
-#define CO_WTM_AC_NO_IF		UINT32_C(0x01000008)
+#define CO_WTM_AC_NO_IF UINT32_C(0x01000008)
 
 /// CANopen WTM abort code: Requested interface disabled.
-#define CO_WTM_AC_IF_DOWN	UINT32_C(0x01000009)
+#define CO_WTM_AC_IF_DOWN UINT32_C(0x01000009)
 
 /// CANopen WTM abort code: Diagnostic data generation not supported.
-#define CO_WTM_AC_DIAG		UINT32_C(0x0100000a)
+#define CO_WTM_AC_DIAG UINT32_C(0x0100000a)
 
 /**
  * CANopen WTM abort code: Diagnostic data generation for requested CAN
  * interface not supported.
  */
-#define CO_WTM_AC_DIAG_CAN	UINT32_C(0x0100000b)
+#define CO_WTM_AC_DIAG_CAN UINT32_C(0x0100000b)
 
 /**
  * CANopen WTM abort code: Diagnostic data generation for requested WTM
  * interface not supported.
  */
-#define CO_WTM_AC_DIAG_WTM	UINT32_C(0x0100000c)
+#define CO_WTM_AC_DIAG_WTM UINT32_C(0x0100000c)
 
 /// CANopen WTM abort code: General generic frame error.
-#define CO_WTM_AC_FRAME		UINT32_C(0x02000000)
+#define CO_WTM_AC_FRAME UINT32_C(0x02000000)
 
 /// CANopen WTM abort code: Invalid generic frame preamble.
-#define CO_WTM_AC_PREAMBLE	UINT32_C(0x02000001)
+#define CO_WTM_AC_PREAMBLE UINT32_C(0x02000001)
 
 /// CANopen WTM abort code: Invalid sequence counter in generic frame.
-#define CO_WTM_AC_SEQ		UINT32_C(0x02000002)
+#define CO_WTM_AC_SEQ UINT32_C(0x02000002)
 
 /// CANopen WTM abort code: Message type not valid or unknown.
-#define CO_WTM_AC_TYPE		UINT32_C(0x02000003)
+#define CO_WTM_AC_TYPE UINT32_C(0x02000003)
 
 /// CANopen WTM abort code: Payload field in generic frame invalid.
-#define CO_WTM_AC_PAYLOAD	UINT32_C(0x02000004)
+#define CO_WTM_AC_PAYLOAD UINT32_C(0x02000004)
 
 /// CANopen WTM abort code: CRC error (Generic frame).
-#define CO_WTM_AC_CRC		UINT32_C(0x02000005)
+#define CO_WTM_AC_CRC UINT32_C(0x02000005)
 
 /// CANopen WTM abort code: CAN telegram essentials invalid.
-#define CO_WTM_AC_CAN		UINT32_C(0x02000006)
+#define CO_WTM_AC_CAN UINT32_C(0x02000006)
 
 struct __co_wtm;
 #ifndef __cplusplus
@@ -155,8 +155,8 @@ typedef void co_wtm_diag_can_con_t(co_wtm_t *wtm, uint8_t nif, uint8_t st,
  *                the information is not available).
  * @param data    a pointer to user-specified data.
  */
-typedef void co_wtm_diag_wtm_con_t(co_wtm_t *wtm, uint8_t nif, uint8_t quality,
-		void *data);
+typedef void co_wtm_diag_wtm_con_t(
+		co_wtm_t *wtm, uint8_t nif, uint8_t quality, void *data);
 
 /**
  * The type of a CANopen WTM diagnostic indication function, invoked when a CAN
@@ -217,8 +217,8 @@ typedef int co_wtm_recv_func_t(co_wtm_t *wtm, uint8_t nif,
  * @returns 0 on success, or -1 on error. In the latter case, implementations
  * SHOULD set the error number with `set_errnum()`.
  */
-typedef int co_wtm_send_func_t(co_wtm_t *wtm, const void *buf, size_t nbytes,
-		void *data);
+typedef int co_wtm_send_func_t(
+		co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 
 /// Returns a string describing a CANopen WTM abort code.
 LELY_CO_EXTERN const char *co_wtm_ac_str(uint32_t ac);
@@ -332,8 +332,8 @@ LELY_CO_EXTERN void co_wtm_get_diag_can_con(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_can_con()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_can_con(co_wtm_t *wtm,
-		co_wtm_diag_can_con_t *con, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_can_con(
+		co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data);
 
 /**
  * Retrieves the confirmation function invoked when a WTM communication quality
@@ -361,8 +361,8 @@ LELY_CO_EXTERN void co_wtm_get_diag_wtm_con(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_wtm_con()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_wtm_con(co_wtm_t *wtm,
-		co_wtm_diag_wtm_con_t *con, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_wtm_con(
+		co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data);
 
 /**
  * Retrieves the indication function invoked when a CAN communication quality
@@ -390,8 +390,8 @@ LELY_CO_EXTERN void co_wtm_get_diag_can_ind(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_can_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_can_ind(co_wtm_t *wtm,
-		co_wtm_diag_can_ind_t *con, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_can_ind(
+		co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data);
 
 /**
  * Retrieves the indication function invoked when a WTM communication quality
@@ -419,8 +419,8 @@ LELY_CO_EXTERN void co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_wtm_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(co_wtm_t *wtm,
-		co_wtm_diag_wtm_ind_t *con, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(
+		co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data);
 
 /**
  * Retrieves the indication function invoked when an abort code is generated or
@@ -434,8 +434,8 @@ LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(co_wtm_t *wtm,
  *
  * @see co_wtm_set_diag_ac_ind()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(const co_wtm_t *wtm,
-		co_wtm_diag_ac_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(
+		const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when an abort code is generated or
@@ -450,8 +450,8 @@ LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_ac_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_ac_ind(co_wtm_t *wtm,
-		co_wtm_diag_ac_ind_t *ind, void *data);
+LELY_CO_EXTERN void co_wtm_set_diag_ac_ind(
+		co_wtm_t *wtm, co_wtm_diag_ac_ind_t *ind, void *data);
 
 /**
  * Receives and processes a byte stream with a CANopen WTM interface. This
@@ -476,8 +476,8 @@ LELY_CO_EXTERN void co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes);
  *
  * @see co_wtm_set_recv_func()
  */
-LELY_CO_EXTERN void co_wtm_get_recv_func(const co_wtm_t *wtm,
-		co_wtm_recv_func_t **pfunc, void **pdata);
+LELY_CO_EXTERN void co_wtm_get_recv_func(
+		const co_wtm_t *wtm, co_wtm_recv_func_t **pfunc, void **pdata);
 
 /**
  * Sets the callback function invoked when a CAN frame is received by a CANopen
@@ -490,8 +490,8 @@ LELY_CO_EXTERN void co_wtm_get_recv_func(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_recv_func()
  */
-LELY_CO_EXTERN void co_wtm_set_recv_func(co_wtm_t *wtm,
-		co_wtm_recv_func_t *func, void *data);
+LELY_CO_EXTERN void co_wtm_set_recv_func(
+		co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data);
 
 /**
  * Retrieves the current time of a CANopen WTM interface.
@@ -505,8 +505,8 @@ LELY_CO_EXTERN void co_wtm_set_recv_func(co_wtm_t *wtm,
  *
  * @see co_wtm_set_time()
  */
-LELY_CO_EXTERN int co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif,
-		struct timespec *tp);
+LELY_CO_EXTERN int co_wtm_get_time(
+		const co_wtm_t *wtm, uint8_t nif, struct timespec *tp);
 
 /**
  * Sets the current time of a CANopen WTM interface. This function MAY invoke
@@ -521,8 +521,8 @@ LELY_CO_EXTERN int co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif,
  *
  * @see co_wtm_get_time()
  */
-LELY_CO_EXTERN int co_wtm_set_time(co_wtm_t *wtm, uint8_t nif,
-		const struct timespec *tp);
+LELY_CO_EXTERN int co_wtm_set_time(
+		co_wtm_t *wtm, uint8_t nif, const struct timespec *tp);
 
 /**
  * Sends a CAN frame from a CANopen WTM interface. This function MAY invoke the
@@ -537,8 +537,8 @@ LELY_CO_EXTERN int co_wtm_set_time(co_wtm_t *wtm, uint8_t nif,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send(co_wtm_t *wtm, uint8_t nif,
-		const struct can_msg *msg);
+LELY_CO_EXTERN int co_wtm_send(
+		co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg);
 
 /**
  * Sends a keep-alive message from a CANopen WTM interface. This function MAY
@@ -628,8 +628,8 @@ LELY_CO_EXTERN int co_wtm_flush(co_wtm_t *wtm);
  *
  * @see co_wtm_set_send_func()
  */
-LELY_CO_EXTERN void co_wtm_get_send_func(const co_wtm_t *wtm,
-		co_wtm_send_func_t **pfunc, void **pdata);
+LELY_CO_EXTERN void co_wtm_get_send_func(
+		const co_wtm_t *wtm, co_wtm_send_func_t **pfunc, void **pdata);
 
 /**
  * Sets the callback function used to send byte streams from a CANopen WTM
@@ -642,12 +642,11 @@ LELY_CO_EXTERN void co_wtm_get_send_func(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_send_func()
  */
-LELY_CO_EXTERN void co_wtm_set_send_func(co_wtm_t *wtm,
-		co_wtm_send_func_t *func, void *data);
+LELY_CO_EXTERN void co_wtm_set_send_func(
+		co_wtm_t *wtm, co_wtm_send_func_t *func, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_WTM_H_

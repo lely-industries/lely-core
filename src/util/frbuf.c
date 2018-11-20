@@ -24,7 +24,7 @@
 #ifndef _WIN32
 // This needs to be defined before any files are included to make fstat64(),
 // lseek64(), mmap64() and pread64() available.
-#define _LARGEFILE64_SOURCE	1
+#define _LARGEFILE64_SOURCE 1
 #endif
 
 #include "util.h"
@@ -89,8 +89,8 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 	assert(filename);
 
 #ifdef _WIN32
-	buf->hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ,
-			NULL, OPEN_EXISTING,
+	buf->hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL,
+			OPEN_EXISTING,
 			FILE_ATTRIBUTE_READONLY | FILE_FLAG_NO_BUFFERING, NULL);
 	if (__unlikely(buf->hFile == INVALID_HANDLE_VALUE))
 		return NULL;
@@ -275,13 +275,16 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 
 #ifdef _WIN32
 	DWORD nNumberOfBytesRead;
+	// clang-format off
 	if (__unlikely(!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead,
 			NULL)))
+		// clang-format on
 		return -1;
 	return nNumberOfBytesRead;
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
-	do result = read(buf->fd, ptr, size);
+	do
+		result = read(buf->fd, ptr, size);
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 #else
@@ -325,8 +328,10 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	ULARGE_INTEGER uli = { .QuadPart = pos };
 	Overlapped.Offset = uli.LowPart;
 	Overlapped.OffsetHigh = uli.HighPart;
+	// clang-format off
 	if (__unlikely(!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead,
 			&Overlapped))) {
+		// clang-format on
 		result = -1;
 		dwErrCode = GetLastError();
 		goto error_ReadFile;
@@ -343,9 +348,11 @@ error_get_pos:
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
 #ifdef __linux__
-	do result = pread64(buf->fd, ptr, size, pos);
+	do
+		result = pread64(buf->fd, ptr, size, pos);
 #else
-	do result = pread(buf->fd, ptr, size, pos);
+	do
+		result = pread(buf->fd, ptr, size, pos);
 #endif
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
@@ -511,8 +518,10 @@ frbuf_unmap(frbuf_t *buf)
 			result = -1;
 			dwErrCode = GetLastError();
 		}
+		// clang-format off
 		if (__unlikely(!CloseHandle(buf->hFileMappingObject)
 				&& !result)) {
+			// clang-format on
 			result = -1;
 			dwErrCode = GetLastError();
 		}
@@ -538,4 +547,3 @@ frbuf_unmap(frbuf_t *buf)
 
 	return result;
 }
-

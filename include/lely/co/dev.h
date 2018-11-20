@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_DEV_H
-#define LELY_CO_DEV_H
+#ifndef LELY_CO_DEV_H_
+#define LELY_CO_DEV_H_
 
 #include <lely/co/type.h>
 
 #include <stddef.h>
 
 /// The data type (and object index) of an identity record.
-#define CO_DEFSTRUCT_ID	0x0023
+#define CO_DEFSTRUCT_ID 0x0023
 
 /// An identity record.
 struct co_id {
@@ -44,40 +44,43 @@ struct co_id {
 };
 
 /// The static initializer for struct #co_id.
-#define CO_ID_INIT	{ 4, 0, 0, 0, 0 }
+#define CO_ID_INIT \
+	{ \
+		4, 0, 0, 0, 0 \
+	}
 
 /// The maximum number of CANopen networks.
-#define CO_NUM_NETWORKS	127
+#define CO_NUM_NETWORKS 127
 
 /// The maximum number of nodes in a CANopen network.
-#define CO_NUM_NODES	127
+#define CO_NUM_NODES 127
 
 /// A bit rate of 1 Mbit/s.
-#define CO_BAUD_1000	0x0001
+#define CO_BAUD_1000 0x0001
 
 /// A bit rate of 800 kbit/s.
-#define CO_BAUD_800	0x0002
+#define CO_BAUD_800 0x0002
 
 /// A bit rate of 500 kbit/s.
-#define CO_BAUD_500	0x0004
+#define CO_BAUD_500 0x0004
 
 /// A bit rate of 250 kbit/s.
-#define CO_BAUD_250	0x0008
+#define CO_BAUD_250 0x0008
 
 /// A bit rate of 125 kbit/s.
-#define CO_BAUD_125	0x0020
+#define CO_BAUD_125 0x0020
 
 /// A bit rate of 50 kbit/s.
-#define CO_BAUD_50	0x0040
+#define CO_BAUD_50 0x0040
 
 /// A bit rate of 20 kbit/s.
-#define CO_BAUD_20	0x0080
+#define CO_BAUD_20 0x0080
 
 /// A bit rate of 10 kbit/s.
-#define CO_BAUD_10	0x0100
+#define CO_BAUD_10 0x0100
 
 /// Automatic bit rate detection.
-#define CO_BAUD_AUTO	0x0200
+#define CO_BAUD_AUTO 0x0200
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,8 +88,8 @@ extern "C" {
 
 LELY_CO_EXTERN void *__co_dev_alloc(void);
 LELY_CO_EXTERN void __co_dev_free(void *ptr);
-LELY_CO_EXTERN struct __co_dev *__co_dev_init(struct __co_dev *dev,
-		co_unsigned8_t id);
+LELY_CO_EXTERN struct __co_dev *__co_dev_init(
+		struct __co_dev *dev, co_unsigned8_t id);
 LELY_CO_EXTERN void __co_dev_fini(struct __co_dev *dev);
 
 /**
@@ -186,8 +189,8 @@ LELY_CO_EXTERN int co_dev_remove_obj(co_dev_t *dev, co_obj_t *obj);
  *
  * @see co_dev_insert_obj()
  */
-LELY_CO_EXTERN co_obj_t *co_dev_find_obj(const co_dev_t *dev,
-		co_unsigned16_t idx);
+LELY_CO_EXTERN co_obj_t *co_dev_find_obj(
+		const co_dev_t *dev, co_unsigned16_t idx);
 
 /**
  * Finds a sub-object in the object dictionary of a CANopen device.
@@ -229,15 +232,15 @@ LELY_CO_EXTERN const char *co_dev_get_vendor_name(const co_dev_t *dev);
  *
  * @see co_dev_get_vendor_name()
  */
-LELY_CO_EXTERN int co_dev_set_vendor_name(co_dev_t *dev,
-		const char *vendor_name);
+LELY_CO_EXTERN int co_dev_set_vendor_name(
+		co_dev_t *dev, const char *vendor_name);
 
 /// Returns the vendor ID of a CANopen device. @see co_dev_set_vendor_id()
 LELY_CO_EXTERN co_unsigned32_t co_dev_get_vendor_id(const co_dev_t *dev);
 
 /// Sets the vendor ID of a CANopen device. @see co_dev_get_vendor_id()
-LELY_CO_EXTERN void co_dev_set_vendor_id(co_dev_t *dev,
-		co_unsigned32_t vendor_id);
+LELY_CO_EXTERN void co_dev_set_vendor_id(
+		co_dev_t *dev, co_unsigned32_t vendor_id);
 
 /**
  * Returns a pointer to the product name of a CANopen device.
@@ -254,22 +257,22 @@ LELY_CO_EXTERN const char *co_dev_get_product_name(const co_dev_t *dev);
  *
  * @see co_dev_get_product_name()
  */
-LELY_CO_EXTERN int co_dev_set_product_name(co_dev_t *dev,
-		const char *product_name);
+LELY_CO_EXTERN int co_dev_set_product_name(
+		co_dev_t *dev, const char *product_name);
 
 /// Returns the product code of a CANopen device. @see co_dev_set_product_code()
 LELY_CO_EXTERN co_unsigned32_t co_dev_get_product_code(const co_dev_t *dev);
 
 /// Sets the product code of a CANopen device. @see co_dev_get_product_code()
-LELY_CO_EXTERN void co_dev_set_product_code(co_dev_t *dev,
-		co_unsigned32_t product_code);
+LELY_CO_EXTERN void co_dev_set_product_code(
+		co_dev_t *dev, co_unsigned32_t product_code);
 
 /// Returns the revision number of a CANopen device. @see co_dev_set_revision()
 LELY_CO_EXTERN co_unsigned32_t co_dev_get_revision(const co_dev_t *dev);
 
 /// Sets the revision number of a CANopen device. @see co_dev_get_revision()
-LELY_CO_EXTERN void co_dev_set_revision(co_dev_t *dev,
-		co_unsigned32_t revision);
+LELY_CO_EXTERN void co_dev_set_revision(
+		co_dev_t *dev, co_unsigned32_t revision);
 
 /**
  * Returns a pointer to the order code of a CANopen device.
@@ -510,5 +513,4 @@ LELY_CO_EXTERN int co_dev_write_dcf_file(const co_dev_t *dev,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_DEV_H_

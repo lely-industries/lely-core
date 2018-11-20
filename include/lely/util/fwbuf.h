@@ -33,11 +33,11 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_FWBUF_H
-#define LELY_UTIL_FWBUF_H
+#ifndef LELY_UTIL_FWBUF_H_
+#define LELY_UTIL_FWBUF_H_
 
-#include <lely/libc/sys/types.h>
 #include <lely/libc/stdint.h>
+#include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>
@@ -54,8 +54,8 @@ extern "C" {
 
 LELY_UTIL_EXTERN void *__fwbuf_alloc(void);
 LELY_UTIL_EXTERN void __fwbuf_free(void *ptr);
-LELY_UTIL_EXTERN struct __fwbuf *__fwbuf_init(struct __fwbuf *buf,
-		const char *filename);
+LELY_UTIL_EXTERN struct __fwbuf *__fwbuf_init(
+		struct __fwbuf *buf, const char *filename);
 LELY_UTIL_EXTERN void __fwbuf_fini(struct __fwbuf *buf);
 
 /**
@@ -140,8 +140,8 @@ LELY_UTIL_EXTERN int64_t fwbuf_set_pos(fwbuf_t *buf, int64_t pos);
  *
  * @see fwbuf_pwrite()
  */
-LELY_UTIL_EXTERN ssize_t fwbuf_write(fwbuf_t *buf, const void *ptr,
-		size_t size);
+LELY_UTIL_EXTERN ssize_t fwbuf_write(
+		fwbuf_t *buf, const void *ptr, size_t size);
 
 /**
  * Writes bytes to the specified position in a write file buffer. This function
@@ -159,8 +159,8 @@ LELY_UTIL_EXTERN ssize_t fwbuf_write(fwbuf_t *buf, const void *ptr,
  *
  * @see fwbuf_write()
  */
-LELY_UTIL_EXTERN ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr,
-		size_t size, int64_t pos);
+LELY_UTIL_EXTERN ssize_t fwbuf_pwrite(
+		fwbuf_t *buf, const void *ptr, size_t size, int64_t pos);
 
 /**
  * Maps (part of) the contents of a write file buffer to memory. Only a single
@@ -232,5 +232,4 @@ LELY_UTIL_EXTERN int fwbuf_commit(fwbuf_t *buf);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_FWBUF_H_

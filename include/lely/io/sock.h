@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_SOCK_H
-#define LELY_IO_SOCK_H
+#ifndef LELY_IO_SOCK_H_
+#define LELY_IO_SOCK_H_
 
 #include <lely/io/io.h>
 
@@ -99,8 +99,8 @@ LELY_IO_EXTERN io_handle_t io_open_socket(int domain, int type);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_open_socketpair(int domain, int type,
-		io_handle_t handle_vector[2]);
+LELY_IO_EXTERN int io_open_socketpair(
+		int domain, int type, io_handle_t handle_vector[2]);
 
 /**
  * Performs a receive operation on a network socket.
@@ -367,8 +367,8 @@ LELY_IO_EXTERN int io_sock_get_keepalive(io_handle_t handle);
  *
  * @see io_sock_get_keepalive()
  */
-LELY_IO_EXTERN int io_sock_set_keepalive(io_handle_t handle, int keepalive,
-		int time, int interval);
+LELY_IO_EXTERN int io_sock_set_keepalive(
+		io_handle_t handle, int keepalive, int time, int interval);
 
 /**
  * Obtains the linger time (in seconds) of a socket. This function implements
@@ -596,8 +596,8 @@ LELY_IO_EXTERN int io_sock_set_mcast_ttl(io_handle_t handle, int ttl);
  *
  * @see io_sock_mcast_leave_group()
  */
-LELY_IO_EXTERN int io_sock_mcast_join_group(io_handle_t handle,
-		unsigned int index, const io_addr_t *group);
+LELY_IO_EXTERN int io_sock_mcast_join_group(
+		io_handle_t handle, unsigned int index, const io_addr_t *group);
 
 /**
  * Blocks data from a given source to a given multicast group.
@@ -648,8 +648,8 @@ LELY_IO_EXTERN int io_sock_mcast_unblock_source(io_handle_t handle,
  *
  * @see io_sock_mcast_join_group()
  */
-LELY_IO_EXTERN int io_sock_mcast_leave_group(io_handle_t handle,
-		unsigned int index, const io_addr_t *group);
+LELY_IO_EXTERN int io_sock_mcast_leave_group(
+		io_handle_t handle, unsigned int index, const io_addr_t *group);
 
 /**
  * Joins a source-specific multicast group.
@@ -693,5 +693,4 @@ LELY_IO_EXTERN int io_sock_mcast_leave_source_group(io_handle_t handle,
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_SOCK_H_

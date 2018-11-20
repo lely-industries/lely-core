@@ -23,7 +23,7 @@
 
 #include "util.h"
 #include <lely/util/errnum.h>
-#define LELY_UTIL_HTAB_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_HTAB_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/htab.h>
 
 #include <assert.h>
@@ -149,11 +149,12 @@ htab_find(const struct htab *tab, const void *key)
 	size_t hash = tab->hash(key);
 	struct hnode *node = tab->slots[hash % tab->num_slots];
 	while (node) {
+		// clang-format off
 		if (node->hash == hash && (node->key == key
 				|| tab->eq(node->key, key)))
+			// clang-format on
 			return node;
 		node = node->next;
 	}
 	return NULL;
 }
-

@@ -21,9 +21,9 @@
  * limitations under the License.
  */
 
+#include "handle.h"
 #include "io.h"
 #include <lely/util/errnum.h>
-#include "handle.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -33,7 +33,8 @@ io_handle_acquire(io_handle_t handle)
 {
 	if (__likely(handle != IO_HANDLE_ERROR))
 #ifndef LELY_NO_ATOMICS
-		atomic_fetch_add_explicit(&handle->ref, 1, memory_order_relaxed);
+		atomic_fetch_add_explicit(
+				&handle->ref, 1, memory_order_relaxed);
 #elif !defined(LELY_NO_THREADS) && defined(_WIN32)
 		InterlockedIncrementNoFence(&handle->ref);
 #else
@@ -151,4 +152,3 @@ io_handle_unlock(struct io_handle *handle)
 }
 
 #endif // !LELY_NO_THREADS
-

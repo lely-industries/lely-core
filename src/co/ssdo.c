@@ -22,14 +22,14 @@
  */
 
 #include "co.h"
-#include <lely/util/endian.h>
-#include <lely/util/errnum.h>
+#include "sdo.h"
 #include <lely/co/crc.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/ssdo.h>
 #include <lely/co/val.h>
-#include "sdo.h"
+#include <lely/util/endian.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -68,7 +68,7 @@ struct __co_ssdo {
 	/// The sequence number of the last successfully received segment.
 	uint8_t ackseq;
 	/// A flag indicating whether a CRC should be generated.
-	unsigned gencrc:1;
+	unsigned gencrc : 1;
 	/// The generated CRC.
 	uint16_t crc;
 	/// The SDO request.
@@ -93,8 +93,8 @@ static int co_ssdo_update(co_ssdo_t *sdo);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1200_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN receive callback function for a Server-SDO service.
@@ -177,190 +177,204 @@ struct __co_ssdo_state {
 	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__ };
 
 /// The 'abort' transition function of the 'waiting' state.
-static co_ssdo_state_t *co_ssdo_wait_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_wait_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'CAN frame received' transition function of the 'waiting' state.
-static co_ssdo_state_t *co_ssdo_wait_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_wait_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'waiting' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_wait_state,
 	.on_abort = &co_ssdo_wait_on_abort,
 	.on_recv = &co_ssdo_wait_on_recv
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the 'download initiate'
  * state.
  */
-static co_ssdo_state_t *co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_dn_ini_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'download initiate' state.
-//LELY_CO_DEFINE_STATE(co_ssdo_dn_ini_state,
+// LELY_CO_DEFINE_STATE(co_ssdo_dn_ini_state,
 //	.on_recv = &co_ssdo_dn_ini_on_recv
 //)
 
 /// The 'abort' transition function of the 'download segment' state.
-static co_ssdo_state_t *co_ssdo_dn_seg_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_dn_seg_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'download segment' state.
-static co_ssdo_state_t *co_ssdo_dn_seg_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_dn_seg_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /**
  * The 'CAN frame received' transition function of the 'download segment' state.
  */
-static co_ssdo_state_t *co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_dn_seg_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'download segment' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_dn_seg_state,
 	.on_abort = &co_ssdo_dn_seg_on_abort,
 	.on_time = &co_ssdo_dn_seg_on_time,
 	.on_recv = &co_ssdo_dn_seg_on_recv
 )
+// clang-format on
 
 /// The 'CAN frame received' transition function of the 'upload initiate' state.
-static co_ssdo_state_t *co_ssdo_up_ini_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_up_ini_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'upload initiate' state.
-//LELY_CO_DEFINE_STATE(co_ssdo_up_ini_state,
+// LELY_CO_DEFINE_STATE(co_ssdo_up_ini_state,
 //	.on_recv = &co_ssdo_up_ini_on_recv
 //)
 
 /// The 'abort' transition function of the 'upload segment' state.
-static co_ssdo_state_t *co_ssdo_up_seg_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_up_seg_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'upload segment' state.
-static co_ssdo_state_t *co_ssdo_up_seg_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_up_seg_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /// The 'CAN frame received' transition function of the 'upload segment' state.
-static co_ssdo_state_t *co_ssdo_up_seg_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_up_seg_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'upload segment' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_up_seg_state,
 	.on_abort = &co_ssdo_up_seg_on_abort,
 	.on_time = &co_ssdo_up_seg_on_time,
 	.on_recv = &co_ssdo_up_seg_on_recv
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the 'block download initiate'
  * state.
  */
-static co_ssdo_state_t *co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_dn_ini_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block download initiate' state.
-//LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_ini_state,
+// LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_ini_state,
 //	.on_recv = &co_ssdo_blk_dn_ini_on_recv
 //)
 
 /// The 'abort' transition function of the 'block download sub-block' state.
-static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'block download sub-block' state.
-static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /**
  * The 'CAN frame received' transition function of the 'block download
  * sub-block' state.
  */
-static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_dn_sub_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block download sub-block' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_sub_state,
 	.on_abort = &co_ssdo_blk_dn_sub_on_abort,
 	.on_time = &co_ssdo_blk_dn_sub_on_time,
 	.on_recv = &co_ssdo_blk_dn_sub_on_recv
 )
+// clang-format on
 
 /// The 'abort' transition function of the 'block download end' state.
-static co_ssdo_state_t *co_ssdo_blk_dn_end_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_blk_dn_end_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'block download end' state.
-static co_ssdo_state_t *co_ssdo_blk_dn_end_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_blk_dn_end_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /**
  * The 'CAN frame received' transition function of the 'block download end'
  * state.
  */
-static co_ssdo_state_t *co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_dn_end_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block download end' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_blk_dn_end_state,
 	.on_abort = &co_ssdo_blk_dn_end_on_abort,
 	.on_time = &co_ssdo_blk_dn_end_on_time,
 	.on_recv = &co_ssdo_blk_dn_end_on_recv
 )
+// clang-format on
 
 /**
  * The 'CAN frame received' transition function of the 'block upload initiate'
  * state.
  */
-static co_ssdo_state_t *co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_up_ini_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block upload initiate' state.
-//LELY_CO_DEFINE_STATE(co_ssdo_blk_up_ini_state,
+// LELY_CO_DEFINE_STATE(co_ssdo_blk_up_ini_state,
 //	.on_recv = &co_ssdo_blk_up_ini_on_recv
 //)
 
 /// The 'abort' transition function of the 'block upload sub-block' state.
-static co_ssdo_state_t *co_ssdo_blk_up_sub_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_blk_up_sub_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'block upload sub-block' state.
-static co_ssdo_state_t *co_ssdo_blk_up_sub_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_blk_up_sub_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /**
  * The 'CAN frame received' transition function of the 'block upload sub-block'
  * state.
  */
-static co_ssdo_state_t *co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_up_sub_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block upload sub-block' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_blk_up_sub_state,
 	.on_abort = &co_ssdo_blk_up_sub_on_abort,
 	.on_time = &co_ssdo_blk_up_sub_on_time,
 	.on_recv = &co_ssdo_blk_up_sub_on_recv
 )
+// clang-format on
 
 /// The 'abort' transition function of the 'block upload end' state.
-static co_ssdo_state_t *co_ssdo_blk_up_end_on_abort(co_ssdo_t *sdo,
-		co_unsigned32_t ac);
+static co_ssdo_state_t *co_ssdo_blk_up_end_on_abort(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /// The 'timeout' transition function of the 'block upload end' state.
-static co_ssdo_state_t *co_ssdo_blk_up_end_on_time(co_ssdo_t *sdo,
-		const struct timespec *tp);
+static co_ssdo_state_t *co_ssdo_blk_up_end_on_time(
+		co_ssdo_t *sdo, const struct timespec *tp);
 
 /**
  * The 'CAN frame received' transition function of the 'block upload end' state.
  */
-static co_ssdo_state_t *co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo,
-		const struct can_msg *msg);
+static co_ssdo_state_t *co_ssdo_blk_up_end_on_recv(
+		co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// The 'block upload end' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_ssdo_blk_up_end_state,
 	.on_abort = &co_ssdo_blk_up_end_on_abort,
 	.on_time = &co_ssdo_blk_up_end_on_time,
 	.on_recv = &co_ssdo_blk_up_end_on_recv
 )
+// clang-format on
 
 #undef LELY_CO_DEFINE_STATE
 
@@ -467,8 +481,8 @@ static void co_ssdo_send_blk_up_end_res(co_ssdo_t *sdo);
  * @param msg a pointer to the CAN frame to be initialized.
  * @param cs  the command specifier.
  */
-static void co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg,
-		uint8_t cs);
+static void co_ssdo_init_ini_res(
+		co_ssdo_t *sdo, struct can_msg *msg, uint8_t cs);
 
 /**
  * Initializes a Server-SDO download/upload segment response CAN frame.
@@ -477,8 +491,8 @@ static void co_ssdo_init_ini_res(co_ssdo_t *sdo, struct can_msg *msg,
  * @param msg a pointer to the CAN frame to be initialized.
  * @param cs  the command specifier.
  */
-static void co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg,
-		uint8_t cs);
+static void co_ssdo_init_seg_res(
+		co_ssdo_t *sdo, struct can_msg *msg, uint8_t cs);
 
 LELY_CO_EXPORT void *
 __co_ssdo_alloc(void)
@@ -744,9 +758,7 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0:
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
+	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
@@ -766,8 +778,10 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
+		// clang-format off
 		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
 				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+			// clang-format on
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -794,8 +808,10 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
+		// clang-format off
 		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
 				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+			// clang-format on
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -813,9 +829,7 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		sdo->par.id = id;
 		break;
 	}
-	default:
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
+	default: ac = CO_SDO_AC_NO_SUB; goto error;
 	}
 
 	co_sub_dn(sub, &val);
@@ -922,18 +936,12 @@ co_ssdo_wait_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t cs = msg->data[0];
 
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_DN_INI_REQ:
-		return co_ssdo_dn_ini_on_recv(sdo, msg);
-	case CO_SDO_CCS_UP_INI_REQ:
-		return co_ssdo_up_ini_on_recv(sdo, msg);
-	case CO_SDO_CCS_BLK_DN_REQ:
-		return co_ssdo_blk_dn_ini_on_recv(sdo, msg);
-	case CO_SDO_CCS_BLK_UP_REQ:
-		return co_ssdo_blk_up_ini_on_recv(sdo, msg);
-	case CO_SDO_CS_ABORT:
-		return NULL;
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_DN_INI_REQ: return co_ssdo_dn_ini_on_recv(sdo, msg);
+	case CO_SDO_CCS_UP_INI_REQ: return co_ssdo_up_ini_on_recv(sdo, msg);
+	case CO_SDO_CCS_BLK_DN_REQ: return co_ssdo_blk_dn_ini_on_recv(sdo, msg);
+	case CO_SDO_CCS_BLK_UP_REQ: return co_ssdo_blk_up_ini_on_recv(sdo, msg);
+	case CO_SDO_CS_ABORT: return NULL;
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 }
 
@@ -1015,12 +1023,9 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_DN_SEG_REQ:
-		break;
-	case CO_SDO_CS_ABORT:
-		return co_ssdo_abort_ind(sdo);
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_DN_SEG_REQ: break;
+	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the value of the toggle bit.
@@ -1118,12 +1123,9 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_UP_SEG_REQ:
-		break;
-	case CO_SDO_CS_ABORT:
-		return co_ssdo_abort_ind(sdo);
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_UP_SEG_REQ: break;
+	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the value of the toggle bit.
@@ -1233,8 +1235,8 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		sdo->ackseq++;
 		// Update the CRC.
 		if (sdo->gencrc)
-			sdo->crc = co_crc(sdo->crc, sdo->req.buf,
-					sdo->req.nbyte);
+			sdo->crc = co_crc(
+					sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		// Pass the previous frame to the download indication function.
 		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
 		if (__unlikely(ac))
@@ -1286,12 +1288,9 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_BLK_DN_REQ:
-		break;
-	case CO_SDO_CS_ABORT:
-		return co_ssdo_abort_ind(sdo);
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_BLK_DN_REQ: break;
+	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
@@ -1366,8 +1365,10 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// than or equal to the PST, switch to the SDO upload protocol.
 		if (sdo->req.size <= 4) {
 			// Perform an expedited transfer.
+			// clang-format off
 			if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size))
 					!= 0))
+				// clang-format on
 				return co_ssdo_abort_res(sdo, ac);
 			co_ssdo_send_up_exp_res(sdo);
 			return co_ssdo_abort_ind(sdo);
@@ -1412,12 +1413,9 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_BLK_UP_REQ:
-		break;
-	case CO_SDO_CS_ABORT:
-		return co_ssdo_abort_ind(sdo);
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_BLK_UP_REQ: break;
+	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
@@ -1435,8 +1433,10 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 		// Read the number of segments in the next block.
 		sdo->blksize = msg->data[2];
+		// clang-format off
 		if (__unlikely(!sdo->blksize
 				|| sdo->blksize > CO_SDO_MAX_SEQNO))
+			// clang-format on
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 		break;
@@ -1444,8 +1444,7 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		if (__unlikely(!(co_sdo_req_first(&sdo->req) && !sdo->nbyte)))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		break;
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	ptrdiff_t n = sdo->blksize * 7 - membuf_size(&sdo->buf);
@@ -1454,7 +1453,7 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 		co_unsigned32_t ac = co_ssdo_up_buf(sdo, n);
 		if (__unlikely(ac))
-			return co_ssdo_abort_res(sdo, ac);;
+			return co_ssdo_abort_res(sdo, ac);
 		sdo->blksize = (uint8_t)((membuf_size(&sdo->buf) + 6) / 7);
 	}
 	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
@@ -1498,12 +1497,9 @@ co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
-	case CO_SDO_CCS_BLK_UP_REQ:
-		break;
-	case CO_SDO_CS_ABORT:
-		return co_ssdo_abort_ind(sdo);
-	default:
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CCS_BLK_UP_REQ: break;
+	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
@@ -1579,8 +1575,10 @@ co_ssdo_up_ind(co_ssdo_t *sdo)
 		return CO_SDO_AC_NO_SUB;
 
 	// If the object is an array, check whether the element exists.
+	// clang-format off
 	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY && __unlikely(sdo->subidx
 			> co_obj_get_val_u8(obj, 0x00)))
+		// clang-format on
 		return CO_SDO_AC_NO_DATA;
 
 	sdo->nbyte = 0;
@@ -1767,8 +1765,8 @@ co_ssdo_send_blk_up_sub_res(co_ssdo_t *sdo, int last)
 	const char *buf = membuf_begin(&sdo->buf);
 	size_t nbyte = membuf_size(&sdo->buf);
 
-	for (uint8_t seqno = 1; seqno <= sdo->blksize; seqno++, buf += 7,
-			nbyte -= 7) {
+	for (uint8_t seqno = 1; seqno <= sdo->blksize;
+			seqno++, buf += 7, nbyte -= 7) {
 		uint8_t cs = seqno;
 		if (last && nbyte <= 7)
 			cs |= CO_SDO_SEQ_LAST;
@@ -1834,4 +1832,3 @@ co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg, uint8_t cs)
 	msg->len = CAN_MAX_LEN;
 	msg->data[0] = cs;
 }
-

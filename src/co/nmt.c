@@ -24,9 +24,9 @@
 #include "co.h"
 #include <lely/util/diag.h>
 #ifndef LELY_NO_CO_MASTER
-#include <lely/util/time.h>
 #include <lely/can/buf.h>
 #include <lely/co/csdo.h>
+#include <lely/util/time.h>
 #endif
 #include <lely/co/dev.h>
 #ifndef LELY_NO_CO_EMCY
@@ -95,7 +95,6 @@ struct co_nmt_slave {
 	 * or #CO_NMT_EC_RESOLVED).
 	 */
 	int ng_state;
-
 };
 #endif
 
@@ -221,16 +220,16 @@ struct __co_nmt {
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_100c_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for CANopen object 100D (Life time factor).
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_100d_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for CANopen object 1016 (Consumer heartbeat
@@ -238,8 +237,8 @@ static co_unsigned32_t co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1016_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for CANopen object 1017 (Producer heartbeat
@@ -247,8 +246,8 @@ static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1017_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 #ifndef LELY_NO_CO_MASTER
 /**
@@ -257,8 +256,8 @@ static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1f25_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 #endif
 
 /**
@@ -267,8 +266,8 @@ static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1f80_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 #ifndef LELY_NO_CO_MASTER
 /**
@@ -277,8 +276,8 @@ static co_unsigned32_t co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1f82_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 #endif
 
 /// The CAN receive callback function for NMT messages. @see can_recv_func_t
@@ -379,8 +378,8 @@ static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
  * @param st  the state of the node (including the toggle bit).
  * @param es  the error status (in the range ['A'..'O'], or 0 on success).
  */
-static inline void co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned8_t st, char es);
+static inline void co_nmt_emit_boot(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 #endif
 
 /// A CANopen NMT state.
@@ -424,25 +423,29 @@ struct __co_nmt_state {
 
 #ifndef LELY_NO_CO_MASTER
 /// The default 'boot slave completed' transition function.
-static co_nmt_state_t *co_nmt_default_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned8_t st, char es);
+static co_nmt_state_t *co_nmt_default_on_boot(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 #endif
 
 /// The 'NMT command received' transition function of the 'initializing' state.
 static co_nmt_state_t *co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The 'initializing' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_init_state,
 	.on_cs = &co_nmt_init_on_cs
 )
+// clang-format on
 
 /// The entry function of the 'reset application' state.
 static co_nmt_state_t *co_nmt_reset_node_on_enter(co_nmt_t *nmt);
 
 /// The NMT 'reset application' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_reset_node_state,
 	.on_enter = &co_nmt_reset_node_on_enter
 )
+// clang-format on
 
 /// The entry function of the 'reset communication' state.
 static co_nmt_state_t *co_nmt_reset_comm_on_enter(co_nmt_t *nmt);
@@ -451,14 +454,16 @@ static co_nmt_state_t *co_nmt_reset_comm_on_enter(co_nmt_t *nmt);
  * The 'NMT command received' transition function of the 'reset communication'
  * state.
  */
-static co_nmt_state_t *co_nmt_reset_comm_on_cs(co_nmt_t *nmt,
-		co_unsigned8_t cs);
+static co_nmt_state_t *co_nmt_reset_comm_on_cs(
+		co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'reset communication' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_reset_comm_state,
 	.on_enter = &co_nmt_reset_comm_on_enter,
 	.on_cs = &co_nmt_reset_comm_on_cs
 )
+// clang-format on
 
 /// The entry function of the 'boot-up' state.
 static co_nmt_state_t *co_nmt_bootup_on_enter(co_nmt_t *nmt);
@@ -467,10 +472,12 @@ static co_nmt_state_t *co_nmt_bootup_on_enter(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_bootup_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'boot-up' state.
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_bootup_state,
 	.on_enter = &co_nmt_bootup_on_enter,
 	.on_cs = &co_nmt_bootup_on_cs
 )
+// clang-format on
 
 /// The entry function of the 'pre-operational' state.
 static co_nmt_state_t *co_nmt_preop_on_enter(co_nmt_t *nmt);
@@ -486,11 +493,12 @@ static co_nmt_state_t *co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
  * The 'boot slave completed' transition function of the 'pre-operational'
  * state.
  */
-static co_nmt_state_t *co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id,
-		co_unsigned8_t st, char es);
+static co_nmt_state_t *co_nmt_preop_on_boot(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 #endif
 
 /// The NMT 'pre-operational' state.
+// clang-format off
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 	.on_enter = &co_nmt_preop_on_enter,
@@ -503,6 +511,7 @@ LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 	.on_boot = &co_nmt_preop_on_boot
 )
 #endif
+// clang-format on
 
 /// The entry function of the 'operational' state.
 static co_nmt_state_t *co_nmt_start_on_enter(co_nmt_t *nmt);
@@ -511,6 +520,7 @@ static co_nmt_state_t *co_nmt_start_on_enter(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'operational' state.
+// clang-format off
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_start_state,
 	.on_enter = &co_nmt_start_on_enter,
@@ -523,6 +533,7 @@ LELY_CO_DEFINE_STATE(co_nmt_start_state,
 	.on_boot = &co_nmt_default_on_boot
 )
 #endif
+// clang-format on
 
 /// The entry function of the 'stopped' state.
 static co_nmt_state_t *co_nmt_stop_on_enter(co_nmt_t *nmt);
@@ -531,6 +542,7 @@ static co_nmt_state_t *co_nmt_stop_on_enter(co_nmt_t *nmt);
 static co_nmt_state_t *co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'stopped' state.
+// clang-format off
 #ifdef LELY_NO_CO_MASTER
 LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 	.on_enter = &co_nmt_stop_on_enter,
@@ -543,6 +555,7 @@ LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 	.on_boot = &co_nmt_default_on_boot
 )
 #endif
+// clang-format on
 
 #undef LELY_CO_DEFINE_STATE
 
@@ -613,11 +626,10 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 			| CO_NMT_SRV_EMCY)
 
 /// The services enabled in the NMT 'operational' state.
-#define CO_NMT_START_SRV \
-	(CO_NMT_PREOP_SRV | CO_NMT_SRV_PDO)
+#define CO_NMT_START_SRV (CO_NMT_PREOP_SRV | CO_NMT_SRV_PDO)
 
 /// The services enabled in the NMT 'stopped' state.
-#define CO_NMT_STOP_SRV	CO_NMT_SRV_LSS
+#define CO_NMT_STOP_SRV CO_NMT_SRV_LSS
 
 LELY_CO_EXPORT co_unsigned32_t
 co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
@@ -666,20 +678,32 @@ co_nmt_es2str(char es)
 {
 	switch (es) {
 	case 'A': return "The CANopen device is not listed in object 1F81.";
-	case 'B': return "No response received for upload request of object 1000.";
-	case 'C': return "Value of object 1000 from CANopen device is different to value in object 1F84 (Device type).";
-	case 'D': return "Value of object 1018 sub-index 01 from CANopen device is different to value in object 1F85 (Vendor-ID).";
-	case 'E': return "Heartbeat event. No heartbeat message received from CANopen device.";
-	case 'F': return "Node guarding event. No confirmation for guarding request received from CANopen device.";
-	case 'G': return "Objects for program download are not configured or inconsistent.";
-	case 'H': return "Software update is required, but not allowed because of configuration or current status.";
-	case 'I': return "Software update is required, but program download failed.";
+	case 'B':
+		return "No response received for upload request of object 1000.";
+	case 'C':
+		return "Value of object 1000 from CANopen device is different to value in object 1F84 (Device type).";
+	case 'D':
+		return "Value of object 1018 sub-index 01 from CANopen device is different to value in object 1F85 (Vendor-ID).";
+	case 'E':
+		return "Heartbeat event. No heartbeat message received from CANopen device.";
+	case 'F':
+		return "Node guarding event. No confirmation for guarding request received from CANopen device.";
+	case 'G':
+		return "Objects for program download are not configured or inconsistent.";
+	case 'H':
+		return "Software update is required, but not allowed because of configuration or current status.";
+	case 'I':
+		return "Software update is required, but program download failed.";
 	case 'J': return "Configuration download failed.";
-	case 'K': return "Heartbeat event during start error control service. No heartbeat message received from CANopen device during start error control service.";
+	case 'K':
+		return "Heartbeat event during start error control service. No heartbeat message received from CANopen device during start error control service.";
 	case 'L': return "NMT slave was initially operational.";
-	case 'M': return "Value of object 1018 sub-index 02 from CANopen device is different to value in object 1F86 (Product code).";
-	case 'N': return "Value of object 1018 sub-index 03 from CANopen device is different to value in object 1F87 (Revision number).";
-	case 'O': return "Value of object 1018 sub-index 04 from CANopen device is different to value in object 1F88 (Serial number).";
+	case 'M':
+		return "Value of object 1018 sub-index 02 from CANopen device is different to value in object 1F86 (Product code).";
+	case 'N':
+		return "Value of object 1018 sub-index 03 from CANopen device is different to value in object 1F87 (Revision number).";
+	case 'O':
+		return "Value of object 1018 sub-index 04 from CANopen device is different to value in object 1F88 (Serial number).";
 	default: return "Unknown error status";
 	}
 }
@@ -714,15 +738,19 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->id = co_dev_get_id(nmt->dev);
 
 	// Store a concise DCF containing the application parameters.
+	// clang-format off
 	if (__unlikely(co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff,
 			&nmt->dcf_node) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_write_dcf_node;
 	}
 
 	// Store a concise DCF containing the communication parameters.
+	// clang-format off
 	if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
 			&nmt->dcf_comm) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_write_dcf_comm;
 	}
@@ -1435,11 +1463,8 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	case CO_NMT_CS_STOP:
 	case CO_NMT_CS_ENTER_PREOP:
 	case CO_NMT_CS_RESET_NODE:
-	case CO_NMT_CS_RESET_COMM:
-		break;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	case CO_NMT_CS_RESET_COMM: break;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
 	if (__unlikely(id > CO_NUM_NODES)) {
@@ -1498,8 +1523,10 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_param;
 	}
 
+	// clang-format off
 	if (__unlikely(!id || id > CO_NUM_NODES
 			|| id == co_dev_get_id(nmt->dev))) {
+		// clang-format on
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -1518,8 +1545,10 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_create_boot;
 	}
 
+	// clang-format off
 	if (__unlikely(co_nmt_boot_boot_req(slave->boot, id, timeout,
 			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_boot_req;
 	}
@@ -1543,8 +1572,10 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 	if (__unlikely(!nmt->master))
 		return 0;
 
+	// clang-format off
 	if (__unlikely(!id || id > CO_NUM_NODES
 			|| id == co_dev_get_id(nmt->dev)))
+		// clang-format on
 		return 0;
 
 	return !!nmt->slaves[id - 1].boot;
@@ -1563,8 +1594,10 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		goto error_param;
 	}
 
+	// clang-format off
 	if (__unlikely(!id || id > CO_NUM_NODES
 			|| id == co_dev_get_id(nmt->dev))) {
+		// clang-format on
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -1585,8 +1618,10 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	slave->cfg_con = con;
 	slave->cfg_data = data;
 
+	// clang-format off
 	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout,
 			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
+		// clang-format on
 		errc = get_errc();
 		goto error_cfg_req;
 	}
@@ -1631,8 +1666,10 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 		return -1;
 	}
 
+	// clang-format off
 	if (__unlikely(!id || id > CO_NUM_NODES
 			|| id == co_dev_get_id(nmt->dev))) {
+		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1650,8 +1687,8 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 			slave->timer = can_timer_create();
 			if (__unlikely(!slave->timer))
 				return -1;
-			can_timer_set_func(slave->timer, &co_nmt_ng_timer,
-					slave);
+			can_timer_set_func(
+					slave->timer, &co_nmt_ng_timer, slave);
 		}
 
 		slave->gt = gt;
@@ -1680,9 +1717,7 @@ co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
 		trace("NMT: received command specifier %d", cs);
 		co_nmt_emit_cs(nmt, cs);
 		return 0;
-	default:
-		set_errnum(ERRNUM_INVAL);
-		return -1;
+	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 }
 
@@ -1697,9 +1732,7 @@ co_nmt_comm_err_ind(co_nmt_t *nmt)
 		if (co_nmt_get_st(nmt) == CO_NMT_ST_START)
 			co_nmt_cs_ind(nmt, CO_NMT_CS_ENTER_PREOP);
 		break;
-	case 2:
-		co_nmt_cs_ind(nmt, CO_NMT_CS_STOP);
-		break;
+	case 2: co_nmt_cs_ind(nmt, CO_NMT_CS_STOP); break;
 	}
 }
 
@@ -1860,9 +1893,11 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 	// the NMT startup value) and has to start the slaves individually (bit
 	// 1) or is in the operational state, send the NMT 'start' command to
 	// the slave.
+	// clang-format off
 	if (!es && (slave->assignment & 0x05) == 0x05 && !(nmt->startup & 0x08)
 			&& (!(nmt->startup & 0x02)
 			|| co_nmt_get_st(nmt) == CO_NMT_ST_START))
+		// clang-format on
 		co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
 
 	// If the error control service was successfully started, enable
@@ -1883,8 +1918,8 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		co_unsigned16_t gt = (slave->assignment >> 16) & 0xffff;
 		co_unsigned8_t ltf = (slave->assignment >> 8) & 0xff;
 		if (__unlikely(co_nmt_ng_req(nmt, id, gt, ltf) == -1))
-			diag(DIAG_ERROR, get_errc(), "unable to guard node %02X",
-					id);
+			diag(DIAG_ERROR, get_errc(),
+					"unable to guard node %02X", id);
 	}
 
 	trace("NMT: slave %d finished booting with error status %c", id, es);
@@ -1904,7 +1939,8 @@ co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo)
 	if (nmt->cfg_ind) {
 		nmt->cfg_ind(nmt, id, sdo, nmt->cfg_data);
 	} else {
-		diag(DIAG_WARNING, errnum2c(ERRNUM_NOSYS), "skipping NMT update configuration process");
+		diag(DIAG_WARNING, errnum2c(ERRNUM_NOSYS),
+				"skipping NMT update configuration process");
 		co_nmt_cfg_res(nmt, id, 0);
 	}
 }
@@ -2153,8 +2189,10 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
+	// clang-format off
 	if (__unlikely(id > CO_NUM_NODES
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -2168,8 +2206,10 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	if (id) {
 		// Check if the entry for this node is present in object 1F20
 		// (Store DCF) or 1F22 (Concise DCF).
+		// clang-format off
 		if (__unlikely(!co_dev_get_val(nmt->dev, 0x1f20, id)
 				&& !co_dev_get_val(nmt->dev, 0x1f22, id))) {
+			// clang-format on
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}
@@ -2182,8 +2222,10 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	} else {
 		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
 		// exists.
+		// clang-format off
 		if (__unlikely(!co_dev_find_obj(nmt->dev, 0x1f20)
 				&& !co_dev_find_obj(nmt->dev, 0x1f22))) {
+			// clang-format on
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}
@@ -2267,8 +2309,10 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
+	// clang-format off
 	if (__unlikely(id > CO_NUM_NODES
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -2280,12 +2324,8 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	assert(type == CO_DEFTYPE_UNSIGNED8);
 	switch (val.u8) {
-	case CO_NMT_ST_STOP:
-		co_nmt_cs_req(nmt, CO_NMT_CS_STOP, id);
-		break;
-	case CO_NMT_ST_START:
-		co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
-		break;
+	case CO_NMT_ST_STOP: co_nmt_cs_req(nmt, CO_NMT_CS_STOP, id); break;
+	case CO_NMT_ST_START: co_nmt_cs_req(nmt, CO_NMT_CS_START, id); break;
 	case CO_NMT_ST_RESET_NODE:
 		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_NODE, id);
 		break;
@@ -2295,9 +2335,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	case CO_NMT_ST_PREOP:
 		co_nmt_cs_req(nmt, CO_NMT_CS_ENTER_PREOP, id);
 		break;
-	default:
-		ac = CO_SDO_AC_PARAM_VAL;
-		break;
+	default: ac = CO_SDO_AC_PARAM_VAL; break;
 	}
 
 error:
@@ -2399,7 +2437,8 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		// Notify the application of the resolution of a node guarding
 		// timeout.
 		if (slave->rtr >= slave->ltf) {
-			diag(DIAG_INFO, 0, "NMT: node guarding time out resolved for node %d",
+			diag(DIAG_INFO, 0,
+					"NMT: node guarding time out resolved for node %d",
 					id);
 			nmt->ng_ind(nmt, id, CO_NMT_EC_RESOLVED,
 					CO_NMT_EC_TIMEOUT, nmt->ng_data);
@@ -2410,14 +2449,16 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		// unexpected state change.
 		if (slave->est != (st & ~CO_NMT_ST_TOGGLE)
 				&& slave->ng_state == CO_NMT_EC_RESOLVED) {
-			diag(DIAG_INFO, 0, "NMT: node guarding state change occurred for node %d",
+			diag(DIAG_INFO, 0,
+					"NMT: node guarding state change occurred for node %d",
 					id);
 			slave->ng_state = CO_NMT_EC_OCCURRED;
 			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
 					nmt->ng_data);
 		} else if (slave->est == (st & ~CO_NMT_ST_TOGGLE)
 				&& slave->ng_state == CO_NMT_EC_OCCURRED) {
-			diag(DIAG_INFO, 0, "NMT: node guarding state change resolved for node %d",
+			diag(DIAG_INFO, 0,
+					"NMT: node guarding state change resolved for node %d",
 					id);
 			slave->ng_state = CO_NMT_EC_RESOLVED;
 			nmt->ng_ind(nmt, id, slave->ng_state, CO_NMT_EC_STATE,
@@ -2457,9 +2498,12 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 
 	// Notify the application once of the occurrence of a node guarding
 	// timeout.
+	// clang-format off
 	if (__unlikely(slave->rtr <= slave->ltf
 			&& ++slave->rtr == slave->ltf)) {
-		diag(DIAG_INFO, 0, "NMT: node guarding time out occurred for node %d",
+		// clang-format on
+		diag(DIAG_INFO, 0,
+				"NMT: node guarding time out occurred for node %d",
 				id);
 		nmt->ng_ind(nmt, id, CO_NMT_EC_OCCURRED, CO_NMT_EC_TIMEOUT,
 				nmt->ng_data);
@@ -2513,8 +2557,8 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 			nmt->cs_timer = can_timer_create();
 			if (__unlikely(!nmt->cs_timer))
 				return -1;
-			can_timer_set_func(nmt->cs_timer, &co_nmt_cs_timer,
-					nmt);
+			can_timer_set_func(
+					nmt->cs_timer, &co_nmt_cs_timer, nmt);
 		}
 	} else if (nmt->cs_timer) {
 		can_timer_destroy(nmt->cs_timer);
@@ -2692,8 +2736,8 @@ co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 }
 
 static co_nmt_state_t *
-co_nmt_default_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
-		char es)
+co_nmt_default_on_boot(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 {
 	__unused_var(nmt);
 	__unused_var(id);
@@ -2711,10 +2755,8 @@ co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	default: return NULL;
 	}
 }
 
@@ -2744,9 +2786,12 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 	can_recv_stop(nmt->recv_000);
 
 	// Reset application parameters.
+	// clang-format off
 	if (__unlikely(co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_node)
 			== -1))
-		diag(DIAG_ERROR, get_errc(), "unable to reset application parameters");
+		// clang-format on
+		diag(DIAG_ERROR, get_errc(),
+				"unable to reset application parameters");
 
 	nmt->st = CO_NMT_ST_RESET_NODE;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
@@ -2783,17 +2828,23 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	can_recv_stop(nmt->recv_000);
 
 	// Reset communication parameters.
+	// clang-format off
 	if (__unlikely(co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_comm)
 			== -1))
-		diag(DIAG_ERROR, get_errc(), "unable to reset communication parameters");
+		// clang-format on
+		diag(DIAG_ERROR, get_errc(),
+				"unable to reset communication parameters");
 
 	// Update the node-ID if necessary.
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
 		co_dev_set_id(nmt->dev, nmt->id);
 		co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
+		// clang-format off
 		if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
 				&nmt->dcf_comm) == -1))
-			diag(DIAG_ERROR, get_errc(), "unable to store communication parameters");
+			// clang-format on
+			diag(DIAG_ERROR, get_errc(),
+					"unable to store communication parameters");
 	}
 
 	// Load the NMT startup value.
@@ -2837,12 +2888,9 @@ co_nmt_reset_comm_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	case CO_NMT_CS_RESET_COMM:
-		return co_nmt_reset_comm_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM: return co_nmt_reset_comm_state;
+	default: return NULL;
 	}
 }
 
@@ -2875,12 +2923,9 @@ co_nmt_bootup_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	case CO_NMT_CS_RESET_COMM:
-		return co_nmt_reset_comm_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM: return co_nmt_reset_comm_state;
+	default: return NULL;
 	}
 }
 
@@ -2915,23 +2960,18 @@ co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_START:
-		return co_nmt_start_state;
-	case CO_NMT_CS_STOP:
-		return co_nmt_stop_state;
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	case CO_NMT_CS_RESET_COMM:
-		return co_nmt_reset_comm_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_START: return co_nmt_start_state;
+	case CO_NMT_CS_STOP: return co_nmt_stop_state;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM: return co_nmt_reset_comm_state;
+	default: return NULL;
 	}
 }
 
 #ifndef LELY_NO_CO_MASTER
 static co_nmt_state_t *
-co_nmt_preop_on_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
-		char es)
+co_nmt_preop_on_boot(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 {
 	assert(nmt);
 	assert(nmt->master);
@@ -3001,8 +3041,8 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 				// Only start slaves that have finished booting
 				// successfully and are not already (expected to
 				// be) operational.
-				if (!slave->boot && (!slave->es
-						|| slave->es == 'L')
+				if (!slave->boot
+						&& (!slave->es || slave->es == 'L')
 						&& slave->est != CO_NMT_ST_START)
 					co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
 			}
@@ -3022,16 +3062,11 @@ co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_STOP:
-		return co_nmt_stop_state;
-	case CO_NMT_CS_ENTER_PREOP:
-		return co_nmt_preop_state;
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	case CO_NMT_CS_RESET_COMM:
-		return co_nmt_reset_comm_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_STOP: return co_nmt_stop_state;
+	case CO_NMT_CS_ENTER_PREOP: return co_nmt_preop_state;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM: return co_nmt_reset_comm_state;
+	default: return NULL;
 	}
 }
 
@@ -3060,16 +3095,11 @@ co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	__unused_var(nmt);
 
 	switch (cs) {
-	case CO_NMT_CS_START:
-		return co_nmt_start_state;
-	case CO_NMT_CS_ENTER_PREOP:
-		return co_nmt_preop_state;
-	case CO_NMT_CS_RESET_NODE:
-		return co_nmt_reset_node_state;
-	case CO_NMT_CS_RESET_COMM:
-		return co_nmt_reset_comm_state;
-	default:
-		return NULL;
+	case CO_NMT_CS_START: return co_nmt_start_state;
+	case CO_NMT_CS_ENTER_PREOP: return co_nmt_preop_state;
+	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
+	case CO_NMT_CS_RESET_COMM: return co_nmt_reset_comm_state;
+	default: return NULL;
 	}
 }
 
@@ -3122,8 +3152,7 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		// process failed for a mandatory slave.
 		nmt->halt = 1;
 		return NULL;
-	case 0:
-		return co_nmt_startup_slave(nmt);
+	case 0: return co_nmt_startup_slave(nmt);
 	default:
 		// Wait for all mandatory slaves to finish booting.
 		trace("NMT: waiting for mandatory slaves to start");
@@ -3155,8 +3184,9 @@ co_nmt_ec_init(co_nmt_t *nmt)
 	nmt->lg_state = CO_NMT_EC_RESOLVED;
 
 	if (__unlikely(co_nmt_ec_update(nmt) == -1))
-		diag(DIAG_ERROR, get_errc(), "unable to start %s", nmt->ms
-				? "heartbeat production" : "life guarding");
+		diag(DIAG_ERROR, get_errc(), "unable to start %s",
+				nmt->ms ? "heartbeat production"
+					: "life guarding");
 }
 
 static void
@@ -3208,8 +3238,8 @@ co_nmt_ec_update(co_nmt_t *nmt)
 			nmt->ec_timer = can_timer_create();
 			if (__unlikely(!nmt->ec_timer))
 				return -1;
-			can_timer_set_func(nmt->ec_timer, &co_nmt_ec_timer,
-					nmt);
+			can_timer_set_func(
+					nmt->ec_timer, &co_nmt_ec_timer, nmt);
 		}
 		// Start the CAN timer for heartbeat production or life
 		// guarding.
@@ -3252,14 +3282,16 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		if (__unlikely(!nmt->hbs && nmt->nhb)) {
 			nmt->nhb = 0;
 			set_errno(errno);
-			diag(DIAG_ERROR, get_errc(), "unable to create heartbeat consumers");
+			diag(DIAG_ERROR, get_errc(),
+					"unable to create heartbeat consumers");
 		}
 	}
 
 	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
 		nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
 		if (__unlikely(!nmt->hbs[i])) {
-			diag(DIAG_ERROR, get_errc(), "unable to create heartbeat consumer 0x%02X",
+			diag(DIAG_ERROR, get_errc(),
+					"unable to create heartbeat consumer 0x%02X",
 					(co_unsigned8_t)(i + 1));
 			continue;
 		}
@@ -3298,7 +3330,8 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 		slave->recv = can_recv_create();
 		if (__unlikely(!slave->recv)) {
-			diag(DIAG_ERROR, get_errc(), "unable to create CAN frame receiver");
+			diag(DIAG_ERROR, get_errc(),
+					"unable to create CAN frame receiver");
 			continue;
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
@@ -3366,12 +3399,13 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 			res = 1;
 		// Halt the network boot-up procedure if the 'boot slave'
 		// process failed for a mandatory slave.
+		// clang-format off
 		if (__unlikely(co_nmt_boot_req(nmt, id, nmt->timeout) == -1
 				&& mandatory))
+			// clang-format on
 			res = -1;
 	}
 	return res;
 }
 
 #endif // !LELY_NO_CO_MASTER
-

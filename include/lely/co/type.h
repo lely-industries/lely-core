@@ -19,96 +19,95 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TYPE_H
-#define LELY_CO_TYPE_H
+#ifndef LELY_CO_TYPE_H_
+#define LELY_CO_TYPE_H_
 
+#include <lely/co/co.h>
 #include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
-#include <lely/co/co.h>
 
 /// The data type (and object index) of a boolean truth value.
-#define CO_DEFTYPE_BOOLEAN	0x0001
+#define CO_DEFTYPE_BOOLEAN 0x0001
 
 /// The data type (and object index) of an 8-bit signed integer.
-#define CO_DEFTYPE_INTEGER8	0x0002
+#define CO_DEFTYPE_INTEGER8 0x0002
 
 /// The data type (and object index) of a 16-bit signed integer.
-#define CO_DEFTYPE_INTEGER16	0x0003
+#define CO_DEFTYPE_INTEGER16 0x0003
 
 /// The data type (and object index) of a 32-bit signed integer.
-#define CO_DEFTYPE_INTEGER32	0x0004
+#define CO_DEFTYPE_INTEGER32 0x0004
 
 /// The data type (and object index) of an 8-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED8	0x0005
+#define CO_DEFTYPE_UNSIGNED8 0x0005
 
 /// The data type (and object index) of a 16-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED16	0x0006
+#define CO_DEFTYPE_UNSIGNED16 0x0006
 
 /// The data type (and object index) of a 32-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED32	0x0007
+#define CO_DEFTYPE_UNSIGNED32 0x0007
 
 /// The data type (and object index) of a 32-bit IEEE-754 floating-point number.
-#define CO_DEFTYPE_REAL32	0x0008
+#define CO_DEFTYPE_REAL32 0x0008
 
 /// The data type (and object index) of an array of visible characters.
-#define CO_DEFTYPE_VISIBLE_STRING	0x0009
+#define CO_DEFTYPE_VISIBLE_STRING 0x0009
 
 /// The data type (and object index) of an array of octets.
-#define CO_DEFTYPE_OCTET_STRING	0x000a
+#define CO_DEFTYPE_OCTET_STRING 0x000a
 
 /// The data type (and object index) of an array of (16-bit) Unicode characters.
-#define CO_DEFTYPE_UNICODE_STRING	0x000b
+#define CO_DEFTYPE_UNICODE_STRING 0x000b
 
 /**
  * The data type (and object index) of a 48-bit structure representing the
  * absolute time.
  */
-#define CO_DEFTYPE_TIME_OF_DAY	0x000c
+#define CO_DEFTYPE_TIME_OF_DAY 0x000c
 
 /**
  * The data type (and object index) of a 48-bit structure representing a time
  * difference.
  */
-#define CO_DEFTYPE_TIME_DIFF	0x000d
+#define CO_DEFTYPE_TIME_DIFF 0x000d
 
 /// The data type (and object index) of an arbitrary large block of data.
-#define CO_DEFTYPE_DOMAIN	0x000f
+#define CO_DEFTYPE_DOMAIN 0x000f
 
 /// The data type (and object index) of a 24-bit signed integer.
-#define CO_DEFTYPE_INTEGER24	0x0010
+#define CO_DEFTYPE_INTEGER24 0x0010
 
 /// The data type (and object index) of a 64-bit IEEE-754 floating-point number.
-#define CO_DEFTYPE_REAL64	0x0011
+#define CO_DEFTYPE_REAL64 0x0011
 
 /// The data type (and object index) of a 40-bit signed integer.
-#define CO_DEFTYPE_INTEGER40	0x0012
+#define CO_DEFTYPE_INTEGER40 0x0012
 
 /// The data type (and object index) of a 48-bit signed integer.
-#define CO_DEFTYPE_INTEGER48	0x0013
+#define CO_DEFTYPE_INTEGER48 0x0013
 
 /// The data type (and object index) of a 56-bit signed integer.
-#define CO_DEFTYPE_INTEGER56	0x0014
+#define CO_DEFTYPE_INTEGER56 0x0014
 
 /// The data type (and object index) of a 64-bit signed integer.
-#define CO_DEFTYPE_INTEGER64	0x0015
+#define CO_DEFTYPE_INTEGER64 0x0015
 
 /// The data type (and object index) of a 24-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED24	0x0016
+#define CO_DEFTYPE_UNSIGNED24 0x0016
 
 /// The data type (and object index) of a 40-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED40	0x0018
+#define CO_DEFTYPE_UNSIGNED40 0x0018
 
 /// The data type (and object index) of a 48-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED48	0x0019
+#define CO_DEFTYPE_UNSIGNED48 0x0019
 
 /// The data type (and object index) of a 56-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED56	0x001a
+#define CO_DEFTYPE_UNSIGNED56 0x001a
 
 /// The data type (and object index) of a 64-bit unsigned integer.
-#define CO_DEFTYPE_UNSIGNED64	0x001b
+#define CO_DEFTYPE_UNSIGNED64 0x001b
 
-#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	typedef d co_##b##_t;
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) typedef d co_##b##_t;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
 
@@ -160,5 +159,4 @@ LELY_CO_EXTERN size_t co_type_alignof(co_unsigned16_t type);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_TYPE_H_

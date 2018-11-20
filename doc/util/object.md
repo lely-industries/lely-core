@@ -7,8 +7,8 @@ interface for C objects which is as close as possible to a native C++ interface.
 
 Example of a public C header (lely/lib/obj.h):
 ~~~{.c}
-#ifndef LELY_LIB_OBJ_H
-#define LELY_LIB_OBJ_H
+#ifndef LELY_LIB_OBJ_H_
+#define LELY_LIB_OBJ_H_
 
 // The obj_t typedef is only defined for C. This allows the C++ interface to
 // define its own typedef but still call all C functions without requiring a
@@ -48,7 +48,7 @@ LELY_LIB_EXTERN int obj_method(obj_t *obj, Args... args);
 }
 #endif
 
-#endif
+#endif // !LELY_LIB_OBJ_H_
 ~~~
 
 Example of the C implementation (obj.c):
@@ -150,8 +150,8 @@ obj_method(obj_t *obj, Args... args)
 
 Example of a public C++ header (lely/lib/obj.hpp):
 ~~~{.cpp}
-#ifndef LELY_LIB_OBJ_HPP
-#define LELY_LIB_OBJ_HPP
+#ifndef LELY_LIB_OBJ_HPP_
+#define LELY_LIB_OBJ_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/lib/obj.h> for the C interface"
@@ -217,7 +217,7 @@ protected:
 
 } // lely
 
-#endif
+#endif  // !LELY_LIB_OBJ_HPP_
 ~~~
 
 Defining the destructor as `protected` prevents allocating objects on the stack.

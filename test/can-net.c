@@ -1,7 +1,7 @@
-#include <lely/tap/tap.h>
 #include <lely/can/net.h>
+#include <lely/tap/tap.h>
 
-#define MSG_ID	0x123
+#define MSG_ID 0x123
 
 int can_recv(const struct can_msg *msg, void *data);
 
@@ -63,4 +63,3 @@ can_recv(const struct can_msg *msg, void *data)
 
 	return 0;
 }
-

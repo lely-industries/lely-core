@@ -21,8 +21,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_NMT_CFG_H
-#define LELY_CO_INTERN_NMT_CFG_H
+#ifndef LELY_CO_INTERN_NMT_CFG_H_
+#define LELY_CO_INTERN_NMT_CFG_H_
 
 #include "co.h"
 #include <lely/co/csdo.h>
@@ -117,5 +117,4 @@ int co_nmt_cfg_cfg_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_INTERN_NMT_CFG_H_

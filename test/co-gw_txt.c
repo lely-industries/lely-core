@@ -8,8 +8,8 @@
 
 #include "co-test.h"
 
-#define TEST_WAIT	1
-#define TEST_STEP	20
+#define TEST_WAIT 1
+#define TEST_STEP 20
 
 static const char *cmds[] = {
 	"[1] set command_timeout 1000",
@@ -210,7 +210,8 @@ main(void)
 		size_t chars = 0;
 		while ((chars = co_gw_txt_send(gw_txt, cp, NULL, &at))) {
 			cp += chars;
-			do co_test_step(&test);
+			do
+				co_test_step(&test);
 			while (co_gw_txt_pending(gw_txt));
 		}
 	}
@@ -260,4 +261,3 @@ gw_txt_send(const struct co_gw_req *req, void *data)
 
 	return co_gw_recv(gw, req);
 }
-

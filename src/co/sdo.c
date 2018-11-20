@@ -22,7 +22,7 @@
  */
 
 #include "co.h"
-#define LELY_CO_SDO_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_CO_SDO_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/errnum.h>
 #ifndef LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>
@@ -47,8 +47,8 @@
  * remain, or -1 on error. In the latter case, the error number can be obtained
  * with get_errc().
  */
-static int co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr,
-		size_t *pnbyte);
+static int co_sdo_req_dn_buf(
+		struct co_sdo_req *req, const void **pptr, size_t *pnbyte);
 
 /// Constructs a CANopen SDO upload request from its internal buffer.
 static void co_sdo_req_up_buf(struct co_sdo_req *req);
@@ -57,60 +57,41 @@ LELY_CO_EXPORT const char *
 co_sdo_ac2str(co_unsigned32_t ac)
 {
 	switch (ac) {
-	case 0:
-		return "Success";
-	case CO_SDO_AC_TOGGLE:
-		return "Toggle bit not altered";
-	case CO_SDO_AC_TIMEOUT:
-		return "SDO protocol timed out";
+	case 0: return "Success";
+	case CO_SDO_AC_TOGGLE: return "Toggle bit not altered";
+	case CO_SDO_AC_TIMEOUT: return "SDO protocol timed out";
 	case CO_SDO_AC_NO_CS:
 		return "Client/server command specifier not valid or unknown";
-	case CO_SDO_AC_BLK_SIZE:
-		return "Invalid block size";
-	case CO_SDO_AC_BLK_SEQ:
-		return "Invalid sequence number";
-	case CO_SDO_AC_BLK_CRC:
-		return "CRC error";
-	case CO_SDO_AC_NO_MEM:
-		return "Out of memory";
-	case CO_SDO_AC_NO_ACCESS:
-		return "Unsupported access to an object";
-	case CO_SDO_AC_NO_READ:
-		return "Attempt to read a write only object";
-	case CO_SDO_AC_NO_WRITE:
-		return "Attempt to write a read only object";
+	case CO_SDO_AC_BLK_SIZE: return "Invalid block size";
+	case CO_SDO_AC_BLK_SEQ: return "Invalid sequence number";
+	case CO_SDO_AC_BLK_CRC: return "CRC error";
+	case CO_SDO_AC_NO_MEM: return "Out of memory";
+	case CO_SDO_AC_NO_ACCESS: return "Unsupported access to an object";
+	case CO_SDO_AC_NO_READ: return "Attempt to read a write only object";
+	case CO_SDO_AC_NO_WRITE: return "Attempt to write a read only object";
 	case CO_SDO_AC_NO_OBJ:
 		return "Object does not exist in the object dictionary";
-	case CO_SDO_AC_NO_PDO:
-		return "Object cannot be mapped to the PDO";
+	case CO_SDO_AC_NO_PDO: return "Object cannot be mapped to the PDO";
 	case CO_SDO_AC_PDO_LEN:
 		return "The number and length of the objects to be mapped would exceed the PDO length";
-	case CO_SDO_AC_PARAM:
-		return "General parameter incompatibility reason";
+	case CO_SDO_AC_PARAM: return "General parameter incompatibility reason";
 	case CO_SDO_AC_COMPAT:
 		return "General internal incompatibility in the device";
-	case CO_SDO_AC_HARDWARE:
-		return "Access failed due to a hardware error";
+	case CO_SDO_AC_HARDWARE: return "Access failed due to a hardware error";
 	case CO_SDO_AC_TYPE_LEN:
 		return "Data type does not match, length of service parameter does not match";
 	case CO_SDO_AC_TYPE_LEN_HI:
 		return "Data type does not match, length of service parameter too high";
 	case CO_SDO_AC_TYPE_LEN_LO:
 		return "Data type does not match, length of service parameter too low";
-	case CO_SDO_AC_NO_SUB:
-		return "Sub-index does not exist";
-	case CO_SDO_AC_PARAM_VAL:
-		return "Invalid value for parameter";
-	case CO_SDO_AC_PARAM_HI:
-		return "Value of parameter written too high";
-	case CO_SDO_AC_PARAM_LO:
-		return "Value of parameter written too low";
+	case CO_SDO_AC_NO_SUB: return "Sub-index does not exist";
+	case CO_SDO_AC_PARAM_VAL: return "Invalid value for parameter";
+	case CO_SDO_AC_PARAM_HI: return "Value of parameter written too high";
+	case CO_SDO_AC_PARAM_LO: return "Value of parameter written too low";
 	case CO_SDO_AC_PARAM_RANGE:
 		return "Maximum value is less than minimum value";
-	case CO_SDO_AC_NO_SDO:
-		return "Resource not available: SDO connection";
-	case CO_SDO_AC_ERROR:
-		return "General error";
+	case CO_SDO_AC_NO_SDO: return "Resource not available: SDO connection";
+	case CO_SDO_AC_ERROR: return "General error";
 	case CO_SDO_AC_DATA:
 		return "Data cannot be transferred or stored to the application";
 	case CO_SDO_AC_DATA_CTL:
@@ -119,10 +100,8 @@ co_sdo_ac2str(co_unsigned32_t ac)
 		return "Data cannot be transferred or stored to the application because of the present device state";
 	case CO_SDO_AC_NO_OD:
 		return "Object dictionary dynamic generation fails or no object dictionary is present";
-	case CO_SDO_AC_NO_DATA:
-		return "No data available";
-	default:
-		return "Unknown abort code";
+	case CO_SDO_AC_NO_DATA: return "No data available";
+	default: return "Unknown abort code";
 	}
 }
 
@@ -166,8 +145,10 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 	switch (co_sdo_req_dn_buf(req, pptr, pnbyte)) {
 	default:
 		// Convert the error number to an SDO abort code.
+		// clang-format off
 		ac = get_errnum() == ERRNUM_NOMEM
 				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
+		// clang-format on
 		set_errc(errc);
 	// ...falls through ...
 	case 0:
@@ -176,8 +157,7 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 		if (pac)
 			*pac = ac;
 		return -1;
-	case 1:
-		return 0;
+	case 1: return 0;
 	}
 }
 
@@ -396,8 +376,10 @@ co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)
 	} else {
 		if (co_sdo_req_first(req)) {
 			membuf_clear(buf);
+			// clang-format off
 			if (__unlikely(req->size
 					&& !membuf_reserve(buf, req->size)))
+				// clang-format on
 				goto error_reserve;
 		} else {
 			// Adjust the offset if necessary. Only backtracking is
@@ -452,4 +434,3 @@ co_sdo_req_up_buf(struct co_sdo_req *req)
 	req->nbyte = req->size;
 	req->offset = 0;
 }
-

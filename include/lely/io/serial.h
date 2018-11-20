@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_SERIAL_H
-#define LELY_IO_SERIAL_H
+#ifndef LELY_IO_SERIAL_H_
+#define LELY_IO_SERIAL_H_
 
 #include <lely/io/io.h>
 
@@ -80,12 +80,11 @@ LELY_IO_EXTERN int io_serial_get_attr(io_handle_t handle, io_attr_t *attr);
  *
  * @see io_serial_get_attr()
  */
-LELY_IO_EXTERN int io_serial_set_attr(io_handle_t handle,
-		const io_attr_t *attr);
+LELY_IO_EXTERN int io_serial_set_attr(
+		io_handle_t handle, const io_attr_t *attr);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_SERIAL_H_

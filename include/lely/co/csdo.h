@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_CSDO_H
-#define LELY_CO_CSDO_H
+#ifndef LELY_CO_CSDO_H_
+#define LELY_CO_CSDO_H_
 
 #include <lely/can/net.h>
 #include <lely/co/sdo.h>
@@ -159,8 +159,8 @@ LELY_CO_EXTERN void __co_csdo_fini(struct __co_csdo *sdo);
  *
  * @see co_csdo_destroy()
  */
-LELY_CO_EXTERN co_csdo_t *co_csdo_create(can_net_t *net, co_dev_t *dev,
-		co_unsigned8_t num);
+LELY_CO_EXTERN co_csdo_t *co_csdo_create(
+		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 
 /// Destroys a CANopen Client-SDO service. @see co_csdo_create()
 LELY_CO_EXTERN void co_csdo_destroy(co_csdo_t *sdo);
@@ -209,8 +209,8 @@ LELY_CO_EXTERN void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
  *
  * @see co_csdo_set_dn_ind()
  */
-LELY_CO_EXTERN void co_csdo_get_dn_ind(const co_csdo_t *sdo,
-		co_csdo_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_csdo_get_dn_ind(
+		const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function used to notify the user of the progress of the
@@ -223,8 +223,8 @@ LELY_CO_EXTERN void co_csdo_get_dn_ind(const co_csdo_t *sdo,
  *
  * @see co_csdo_get_dn_ind()
  */
-LELY_CO_EXTERN void co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_csdo_set_dn_ind(
+		co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of
@@ -238,8 +238,8 @@ LELY_CO_EXTERN void co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind,
  *
  * @see co_csdo_set_up_ind()
  */
-LELY_CO_EXTERN void co_csdo_get_up_ind(const co_csdo_t *sdo,
-		co_csdo_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_csdo_get_up_ind(
+		const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function used to notify the user of the progress of the
@@ -252,8 +252,8 @@ LELY_CO_EXTERN void co_csdo_get_up_ind(const co_csdo_t *sdo,
  *
  * @see co_csdo_get_up_ind()
  */
-LELY_CO_EXTERN void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_csdo_set_up_ind(
+		co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
@@ -384,5 +384,4 @@ LELY_CO_EXTERN int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_CSDO_H_

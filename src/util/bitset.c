@@ -30,7 +30,7 @@
 #include <stdlib.h>
 
 #undef INT_BIT
-#define INT_BIT	(sizeof(int) * CHAR_BIT)
+#define INT_BIT (sizeof(int) * CHAR_BIT)
 
 LELY_UTIL_EXPORT int
 bitset_init(struct bitset *set, int size)
@@ -222,4 +222,3 @@ bitset_fnz(const struct bitset *set, int n)
 	}
 	return 0;
 }
-

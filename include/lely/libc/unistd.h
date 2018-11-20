@@ -27,7 +27,7 @@
 #ifndef LELY_HAVE_UNISTD_H
 #if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)) \
 		&& __has_include(<unistd.h>)
-#define LELY_HAVE_UNISTD_H	1
+#define LELY_HAVE_UNISTD_H 1
 #endif
 #endif
 
@@ -71,8 +71,8 @@ LELY_LIBC_EXTERN int optopt;
  * missing argument is detected, or -1 if all the argument is not an option or
  * all options are parsed.
  */
-LELY_LIBC_EXTERN int getopt(int argc, char *const argv[],
-		const char *optstring);
+LELY_LIBC_EXTERN int getopt(
+		int argc, char *const argv[], const char *optstring);
 
 /**
  * Sleeps until the specified number of realtime seconds has elapsed or the

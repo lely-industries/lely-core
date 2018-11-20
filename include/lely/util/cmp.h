@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_CMP_H
-#define LELY_UTIL_CMP_H
+#ifndef LELY_UTIL_CMP_H_
+#define LELY_UTIL_CMP_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/libc/strings.h>
@@ -32,7 +32,7 @@
 #include <wchar.h>
 
 #ifndef LELY_UTIL_CMP_INLINE
-#define LELY_UTIL_CMP_INLINE	inline
+#define LELY_UTIL_CMP_INLINE inline
 #endif
 
 #ifdef __cplusplus
@@ -50,26 +50,26 @@ extern "C" {
 typedef int __cdecl cmp_t(const void *p1, const void *p2);
 
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
-	LELY_UTIL_CMP_INLINE int __cdecl name##_cmp(const void *p1, \
-			const void *p2);
+	LELY_UTIL_CMP_INLINE int __cdecl name##_cmp( \
+			const void *p1, const void *p2);
 #include <lely/util/def/type.def>
-LELY_UTIL_DEFINE_TYPE(ptr,)
-LELY_UTIL_DEFINE_TYPE(str,)
-LELY_UTIL_DEFINE_TYPE(str_case,)
+LELY_UTIL_DEFINE_TYPE(ptr, )
+LELY_UTIL_DEFINE_TYPE(str, )
+LELY_UTIL_DEFINE_TYPE(str_case, )
 #undef LELY_UTIL_DEFINE_TYPE
 
 #define LELY_UTIL_DEFINE_TYPE(name, type) \
-	LELY_UTIL_CMP_INLINE int __cdecl \
-	name##_cmp(const void *p1, const void *p2) \
+	LELY_UTIL_CMP_INLINE int __cdecl name##_cmp( \
+			const void *p1, const void *p2) \
 	{ \
 		if (p1 == p2) \
 			return 0; \
-	\
+\
 		if (__unlikely(!p1)) \
 			return -1; \
 		if (__unlikely(!p2)) \
 			return 1; \
-	\
+\
 		type v1 = *(const type *)p1; \
 		type v2 = *(const type *)p2; \
 		return (v2 < v1) - (v1 < v2); \
@@ -77,16 +77,14 @@ LELY_UTIL_DEFINE_TYPE(str_case,)
 #include <lely/util/def/type.def>
 #undef LELY_UTIL_DEFINE_TYPE
 
-LELY_UTIL_CMP_INLINE int __cdecl
-ptr_cmp(const void *p1, const void *p2)
+LELY_UTIL_CMP_INLINE int __cdecl ptr_cmp(const void *p1, const void *p2)
 {
 	uintptr_t v1 = (uintptr_t)p1;
 	uintptr_t v2 = (uintptr_t)p2;
 	return (v2 < v1) - (v1 < v2);
 }
 
-LELY_UTIL_CMP_INLINE int __cdecl
-str_cmp(const void *p1, const void *p2)
+LELY_UTIL_CMP_INLINE int __cdecl str_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;
@@ -99,8 +97,7 @@ str_cmp(const void *p1, const void *p2)
 	return strcmp((const char *)p1, (const char *)p2);
 }
 
-LELY_UTIL_CMP_INLINE int __cdecl
-str_case_cmp(const void *p1, const void *p2)
+LELY_UTIL_CMP_INLINE int __cdecl str_case_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;
@@ -117,5 +114,4 @@ str_case_cmp(const void *p1, const void *p2)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_CMP_H_

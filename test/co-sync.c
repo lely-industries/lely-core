@@ -4,7 +4,7 @@
 
 #include "co-test.h"
 
-#define NUM_TEST	8
+#define NUM_TEST 8
 
 void sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 
@@ -50,4 +50,3 @@ sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 
 	co_test_done(test);
 }
-

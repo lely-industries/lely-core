@@ -26,33 +26,33 @@
 
 #ifndef LELY_NO_CO_DCF
 
+#include "obj.h"
+#include <lely/co/dcf.h>
+#include <lely/co/pdo.h>
 #include <lely/libc/stdio.h>
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
-#include <lely/co/dcf.h>
-#include <lely/co/pdo.h>
-#include "obj.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-static struct __co_dev *__co_dev_init_from_dcf_cfg(struct __co_dev *dev,
-		const config_t *cfg);
+static struct __co_dev *__co_dev_init_from_dcf_cfg(
+		struct __co_dev *dev, const config_t *cfg);
 
 static int co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg);
 
-static int co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg,
-		const char *section);
+static int co_obj_parse_cfg(
+		co_obj_t *obj, const config_t *cfg, const char *section);
 #ifndef LELY_NO_CO_OBJ_NAME
 static int co_obj_parse_names(co_obj_t *obj, const config_t *cfg);
 #endif
 static int co_obj_parse_values(co_obj_t *obj, const config_t *cfg);
 static co_obj_t *co_obj_build(co_dev_t *dev, co_unsigned16_t idx);
 
-static int co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg,
-		const char *section);
+static int co_sub_parse_cfg(
+		co_sub_t *sub, const config_t *cfg, const char *section);
 static co_sub_t *co_sub_build(co_obj_t *obj, co_unsigned8_t subidx,
 		co_unsigned16_t type, const char *name);
 
@@ -64,13 +64,13 @@ static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
 static co_unsigned16_t config_get_idx(const config_t *cfg, const char *section,
 		co_unsigned16_t maxidx, co_unsigned16_t *idx);
 
-
 LELY_CO_EXPORT struct __co_dev *
 __co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (__unlikely(!cfg)) {
-		diag(DIAG_ERROR, get_errc(), "unable to create configuration struct");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to create configuration struct");
 		goto error_create_cfg;
 	}
 
@@ -122,7 +122,8 @@ __co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (__unlikely(!cfg)) {
-		diag(DIAG_ERROR, get_errc(), "unable to create configuration struct");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to create configuration struct");
 		goto error_create_cfg;
 	}
 
@@ -175,7 +176,8 @@ __co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 	assert(cfg);
 
 	if (__unlikely(!__co_dev_init(dev, 0xff))) {
-		diag(DIAG_ERROR, get_errc(), "unable to initialize device description");
+		diag(DIAG_ERROR, get_errc(),
+				"unable to initialize device description");
 		goto error_init_dev;
 	}
 
@@ -198,8 +200,10 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	const char *val;
 
+	// clang-format off
 	if (__unlikely(co_dev_set_vendor_name(dev,
 			config_get(cfg, "DeviceInfo", "VendorName")) == -1)) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set vendor name");
 		goto error_parse_dev;
 	}
@@ -208,8 +212,10 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (val && *val)
 		co_dev_set_vendor_id(dev, strtoul(val, NULL, 0));
 
+	// clang-format off
 	if (__unlikely(co_dev_set_product_name(dev,
 			config_get(cfg, "DeviceInfo", "ProductName")) == -1)) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set product name");
 		goto error_parse_dev;
 	}
@@ -222,10 +228,12 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	if (val && *val)
 		co_dev_set_revision(dev, strtoul(val, NULL, 0));
 
+	// clang-format off
 	if (__unlikely(co_dev_set_order_code(dev,
 			config_get(cfg, "DeviceInfo", "OrderCode")) == -1)) {
 		diag(DIAG_ERROR, get_errc(), "unable to set order code");
 		goto error_parse_dev;
+		// clang-format on
 	}
 
 	unsigned int baud = 0;
@@ -282,7 +290,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	// Parse the object indices.
 	co_unsigned16_t *idx = malloc(n * sizeof(co_unsigned16_t));
 	if (__unlikely(!idx)) {
-		diag(DIAG_ERROR, errno2c(errno), "unable to create object list");
+		diag(DIAG_ERROR, errno2c(errno),
+				"unable to create object list");
 		goto error_parse_idx;
 	}
 	co_unsigned16_t i = 0;
@@ -344,24 +353,30 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "NodeID");
+	// clang-format off
 	if (val && *val && co_dev_set_id(dev,
 			(co_unsigned8_t)strtoul(val, NULL, 0)) == -1) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "invalid node-ID (%s) specified",
 				val);
 		goto error_parse_dcf;
 	}
 
 	val = config_get(cfg, "DeviceComissioning", "NetNumber");
+	// clang-format off
 	if (val && *val && co_dev_set_netid(dev,
 			(co_unsigned32_t)strtoul(val, NULL, 0)) == -1) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(),
 				"invalid network-ID (%s) specified", val);
 		goto error_parse_dcf;
 	}
 
+	// clang-format off
 	if (__unlikely(co_dev_set_name(dev,
 			config_get(cfg, "DeviceComissioning", "NodeName"))
 			== -1)) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set node name");
 		goto error_parse_dcf;
 	}
@@ -371,8 +386,10 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		co_dev_set_rate(dev, (co_unsigned16_t)strtoul(val, NULL, 0));
 
 	val = config_get(cfg, "DeviceComissioning", "LSS_SerialNumber");
+	// clang-format off
 	if (val && *val && !co_dev_set_val_u32(dev, 0x1018, 0x04,
 			strtoul(val, NULL, 0))) {
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set serial number");
 		goto error_parse_dcf;
 	}
@@ -403,7 +420,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 
 	const char *name = config_get(cfg, section, "ParameterName");
 	if (__unlikely(!name || !*name)) {
-		diag(DIAG_ERROR, 0, "ParameterName not specified for object 0x%04X",
+		diag(DIAG_ERROR, 0,
+				"ParameterName not specified for object 0x%04X",
 				idx);
 		return -1;
 	}
@@ -412,8 +430,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	if (val && *val)
 		name = val;
 	if (__unlikely(co_obj_set_name(obj, name) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to set name of object 0x%04X",
-				idx);
+		diag(DIAG_ERROR, get_errc(),
+				"unable to set name of object 0x%04X", idx);
 		return -1;
 	}
 #endif
@@ -423,7 +441,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	if (val && *val) {
 		code = (co_unsigned8_t)strtoul(val, NULL, 0);
 		if (__unlikely(co_obj_set_code(obj, code) == -1)) {
-			diag(DIAG_ERROR, 0, "ObjectType = 0x%x for object 0x%04X",
+			diag(DIAG_ERROR, 0,
+					"ObjectType = 0x%x for object 0x%04X",
 					code, idx);
 			return -1;
 		}
@@ -440,12 +459,14 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		if (val && *val)
 			subobj = (co_unsigned8_t)strtoul(val, NULL, 0);
 		if (__unlikely(!subnum && !subobj)) {
-			diag(DIAG_ERROR, 0, "neither SubNumber nor CompactSubObj specified for object 0x%04X",
+			diag(DIAG_ERROR, 0,
+					"neither SubNumber nor CompactSubObj specified for object 0x%04X",
 					idx);
 			return -1;
 		}
 		if (__unlikely(subnum && subobj)) {
-			diag(DIAG_ERROR, 0, "both SubNumber and CompactSubObj specified for object 0x%04X",
+			diag(DIAG_ERROR, 0,
+					"both SubNumber and CompactSubObj specified for object 0x%04X",
 					idx);
 			return -1;
 		}
@@ -459,8 +480,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 
 			// Check whether the sub-index exists by checking the
 			// presence of the mandatory ParameterName keyword.
-			const char *name = config_get(cfg, section,
-					"ParameterName");
+			const char *name = config_get(
+					cfg, section, "ParameterName");
 			if (!name || !*name)
 				continue;
 			subnum--;
@@ -474,7 +495,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Obtain the data type of the sub-object.
 			val = config_get(cfg, section, "DataType");
 			if (!val || !*val) {
-				diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
+				diag_at(DIAG_ERROR, 0, &at,
+						"DataType not specified");
 				return -1;
 			}
 			co_unsigned16_t type =
@@ -487,8 +509,10 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				return -1;
 
 			// Parse the configuration section for the sub-object.
+			// clang-format off
 			if (__unlikely(co_sub_parse_cfg(sub, cfg, section)
 					== -1))
+				// clang-format on
 				return -1;
 		}
 
@@ -508,7 +532,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Obtain the data type of the sub-object.
 			val = config_get(cfg, section, "DataType");
 			if (!val || !*val) {
-				diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
+				diag_at(DIAG_ERROR, 0, &at,
+						"DataType not specified");
 				return -1;
 			}
 			co_unsigned16_t type =
@@ -518,8 +543,10 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			for (size_t subidx = 1; subidx <= subobj; subidx++) {
 				// Create name of the sub-object.
 				char *subname = NULL;
+				// clang-format off
 				if (__unlikely(asprintf(&subname, "%s%u", name,
 						(co_unsigned8_t)subidx) < 0))
+					// clang-format on
 					return -1;
 
 				// Create and insert the sub-object.
@@ -531,8 +558,10 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 
 				// Parse the configuration section for the
 				// sub-object.
+				// clang-format off
 				if (__unlikely(co_sub_parse_cfg(sub, cfg,
 						section) == -1))
+					// clang-format on
 					return -1;
 			}
 
@@ -548,9 +577,12 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		}
 
 		co_sub_t *sub = co_obj_find_sub(obj, 0x00);
+		// clang-format off
 		if (__unlikely(!sub || co_sub_get_type(sub)
 				!= CO_DEFTYPE_UNSIGNED8)) {
-			diag(DIAG_ERROR, 0, "object 0x%04X does not provide the highest sub-index implemented",
+			// clang-format on
+			diag(DIAG_ERROR, 0,
+					"object 0x%04X does not provide the highest sub-index implemented",
 					idx);
 			return -1;
 		}
@@ -558,7 +590,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		// Obtain the data type of the object (optional for DOMAIN
 		// objects).
 		co_unsigned16_t type = code == CO_OBJECT_DOMAIN
-				? CO_DEFTYPE_DOMAIN : 0;
+				? CO_DEFTYPE_DOMAIN
+				: 0;
 		val = config_get(cfg, section, "DataType");
 		if (val && *val)
 			type = (co_unsigned16_t)strtoul(val, NULL, 0);
@@ -605,11 +638,14 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 		val = config_get(cfg, section, key);
 		if (val && *val) {
 			n--;
-			co_sub_t *sub = co_obj_find_sub(obj,
-					(co_unsigned8_t)subidx);
+			co_sub_t *sub = co_obj_find_sub(
+					obj, (co_unsigned8_t)subidx);
+			// clang-format off
 			if (sub && __unlikely(co_sub_set_name(sub, val)
 					== -1)) {
-				diag(DIAG_ERROR, get_errc(), "unable to set name of sub-object %Xsub%X",
+				// clang-format on
+				diag(DIAG_ERROR, get_errc(),
+						"unable to set name of sub-object %Xsub%X",
 						(co_unsigned16_t)idx,
 						(co_unsigned8_t)subidx);
 				return -1;
@@ -647,19 +683,22 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 		val = config_get(cfg, section, key);
 		if (val && *val) {
 			n--;
-			co_sub_t *sub = co_obj_find_sub(obj,
-					(co_unsigned8_t)subidx);
+			co_sub_t *sub = co_obj_find_sub(
+					obj, (co_unsigned8_t)subidx);
 			co_unsigned16_t type = co_sub_get_type(sub);
 			co_val_fini(type, sub->val);
 			if (!strncmp(val, "$NODEID", 7)) {
 				val += 7;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
-			if (__unlikely(!co_val_lex(type, sub->val, val, NULL,
-					&at))) {
-				diag(DIAG_ERROR, get_errc(), "unable to set value of sub-object %Xsub%X",
-					(co_unsigned16_t)idx,
-					(co_unsigned8_t)subidx);
+			// clang-format off
+			if (__unlikely(!co_val_lex(
+					type, sub->val, val, NULL, &at))) {
+				// clang-format on
+				diag(DIAG_ERROR, get_errc(),
+						"unable to set value of sub-object %Xsub%X",
+						(co_unsigned16_t)idx,
+						(co_unsigned8_t)subidx);
 				return -1;
 			}
 			if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
@@ -683,7 +722,8 @@ co_obj_build(co_dev_t *dev, co_unsigned16_t idx)
 	}
 
 	if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
-		diag(DIAG_ERROR, 0, "unable to insert object 0x%04X into the object dictionary",
+		diag(DIAG_ERROR, 0,
+				"unable to insert object 0x%04X into the object dictionary",
 				idx);
 		co_obj_destroy(obj);
 		return NULL;
@@ -712,7 +752,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			sub->flags |= CO_OBJ_FLAGS_MIN_NODEID;
 		}
 		if (__unlikely(!co_val_lex(type, &sub->min, val, NULL, &at))) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse LowLimit");
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse LowLimit");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MIN_NODEID)
@@ -726,7 +767,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			sub->flags |= CO_OBJ_FLAGS_MAX_NODEID;
 		}
 		if (__unlikely(!co_val_lex(type, &sub->max, val, NULL, &at))) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse HighLimit");
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse HighLimit");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MAX_NODEID)
@@ -766,7 +808,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
 		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, &at))) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse DefaultValue");
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse DefaultValue");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
@@ -788,7 +831,8 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 		}
 		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, &at))) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse ParameterValue");
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse ParameterValue");
 			return -1;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
@@ -796,9 +840,10 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 #ifndef LELY_NO_CO_OBJ_FILE
 	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "UploadFile"))
-			!= NULL) {
+					!= NULL) {
 		if (!(access & CO_ACCESS_READ) || (access & CO_ACCESS_WRITE)) {
-			diag_at(DIAG_WARNING, 0, &at, "AccessType must be 'ro' or 'const' when using UploadFile");
+			diag_at(DIAG_WARNING, 0, &at,
+					"AccessType must be 'ro' or 'const' when using UploadFile");
 			access |= CO_ACCESS_READ;
 			access &= ~CO_ACCESS_WRITE;
 			co_sub_set_access(sub, access);
@@ -807,16 +852,20 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
+		// clang-format off
 		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
 				== -1)) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse UploadFile");
+			// clang-format on
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse UploadFile");
 			return -1;
 		}
 	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "DownloadFile"))
-			!= NULL) {
+					!= NULL) {
 		if ((access & CO_ACCESS_READ) || !(access & CO_ACCESS_WRITE)) {
-			diag_at(DIAG_WARNING, 0, &at, "AccessType must be 'wo' when using DownloadFile");
+			diag_at(DIAG_WARNING, 0, &at,
+					"AccessType must be 'wo' when using DownloadFile");
 			access &= ~CO_ACCESS_READ;
 			access |= CO_ACCESS_WRITE;
 			co_sub_set_access(sub, access);
@@ -824,9 +873,12 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
+		// clang-format off
 		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
 				== -1)) {
-			diag_at(DIAG_ERROR, get_errc(), &at, "unable to parse DownloadFile");
+			// clang-format on
+			diag_at(DIAG_ERROR, get_errc(), &at,
+					"unable to parse DownloadFile");
 			return -1;
 		}
 #endif
@@ -843,17 +895,20 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		const void *def = co_sub_addressof_def(sub);
 		const void *val = co_sub_addressof_val(sub);
 		if (co_val_cmp(type, min, max) > 0)
-			diag_at(DIAG_WARNING, 0, &at, "LowLimit exceeds HighLimit");
+			diag_at(DIAG_WARNING, 0, &at,
+					"LowLimit exceeds HighLimit");
 		if (co_val_cmp(type, def, min) < 0)
 			diag_at(DIAG_WARNING, 0, &at, "DefaultValue underflow");
 		if (co_val_cmp(type, def, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at, "DefaultValue overflow");
 		if (co_val_cmp(type, val, def)
 				&& co_val_cmp(type, val, min) < 0)
-			diag_at(DIAG_WARNING, 0, &at, "ParameterValue underflow");
+			diag_at(DIAG_WARNING, 0, &at,
+					"ParameterValue underflow");
 		if (co_val_cmp(type, val, def)
 				&& co_val_cmp(type, val, max) > 0)
-			diag_at(DIAG_WARNING, 0, &at, "ParameterValue overflow");
+			diag_at(DIAG_WARNING, 0, &at,
+					"ParameterValue overflow");
 	}
 #endif
 
@@ -870,21 +925,24 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 
 	co_sub_t *sub = co_sub_create(subidx, type);
 	if (__unlikely(!sub)) {
-		diag(DIAG_ERROR, get_errc(), "unable to create sub-object %Xsub%X",
-				idx, subidx);
+		diag(DIAG_ERROR, get_errc(),
+				"unable to create sub-object %Xsub%X", idx,
+				subidx);
 		goto error;
 	}
 
 	if (__unlikely(co_obj_insert_sub(obj, sub) == -1)) {
-		diag(DIAG_ERROR, 0, "unable to insert sub-object %Xsub%X into the object dictionary",
+		diag(DIAG_ERROR, 0,
+				"unable to insert sub-object %Xsub%X into the object dictionary",
 				idx, subidx);
 		goto error;
 	}
 
 #ifndef LELY_NO_CO_OBJ_NAME
 	if (__unlikely(co_sub_set_name(sub, name) == -1)) {
-		diag(DIAG_ERROR, get_errc(), "unable to set name of sub-object %Xsub%X",
-				idx, subidx);
+		diag(DIAG_ERROR, get_errc(),
+				"unable to set name of sub-object %Xsub%X", idx,
+				subidx);
 		goto error;
 	}
 #else
@@ -918,8 +976,10 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (__unlikely(!obj))
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
+		// clang-format off
 		if (__unlikely(co_obj_set_name(obj,
 				"RPDO communication parameter") == -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
@@ -999,8 +1059,10 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (__unlikely(!obj))
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		if (__unlikely(co_obj_set_name(obj,
-				"RPDO mapping parameter") == -1)) {
+		// clang-format off
+		if (__unlikely(co_obj_set_name(obj, "RPDO mapping parameter")
+				== -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
@@ -1018,8 +1080,8 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 			char name[22];
 			sprintf(name, "Application object %u", i);
 
-			co_sub_t *sub = co_sub_build(obj, i,
-					CO_DEFTYPE_UNSIGNED32, name);
+			co_sub_t *sub = co_sub_build(
+					obj, i, CO_DEFTYPE_UNSIGNED32, name);
 			if (__unlikely(!sub))
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
@@ -1049,8 +1111,10 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (__unlikely(!obj))
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
+		// clang-format off
 		if (__unlikely(co_obj_set_name(obj,
 				"TPDO communication parameter") == -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
@@ -1130,8 +1194,10 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (__unlikely(!obj))
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		if (__unlikely(co_obj_set_name(obj,
-				"TPDO mapping parameter") == -1)) {
+		// clang-format off
+		if (__unlikely(co_obj_set_name(obj, "TPDO mapping parameter")
+				== -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
@@ -1149,8 +1215,8 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 			char name[22];
 			sprintf(name, "Application object %u", i);
 
-			co_sub_t *sub = co_sub_build(obj, i,
-					CO_DEFTYPE_UNSIGNED32, name);
+			co_sub_t *sub = co_sub_build(
+					obj, i, CO_DEFTYPE_UNSIGNED32, name);
 			if (__unlikely(!sub))
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
@@ -1195,12 +1261,13 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 		sprintf(key, "%u", (co_unsigned16_t)(i + 1));
 
 		val = config_get(cfg, section, key);
+		// clang-format off
 		idx[i] = val && *val
 				? (co_unsigned16_t)strtoul(val, NULL, 0) : 0;
+		// clang-format on
 	}
 
 	return n;
 }
 
 #endif // !LELY_NO_CO_DCF
-

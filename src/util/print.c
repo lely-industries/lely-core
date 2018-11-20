@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_PRINT_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_PRINT_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/libc/stdint.h>
 #include <lely/libc/stdio.h>
 #include <lely/libc/uchar.h>
@@ -94,11 +94,11 @@ print_utf8(char **pbegin, char *end, char32_t c32)
 		c32 = 0xfffd;
 
 	int n = c32 <= 0x07ff ? 1 : (c32 <= 0xffff ? 2 : 3);
-	size_t chars = print_char(pbegin, end,
-			((c32 >> (n * 6)) & 0x3f) | mark[n]);
+	size_t chars = print_char(
+			pbegin, end, ((c32 >> (n * 6)) & 0x3f) | mark[n]);
 	while (n--)
-		chars += print_char(pbegin, end,
-				((c32 >> (n * 6)) & 0x3f) | 0x80);
+		chars += print_char(
+				pbegin, end, ((c32 >> (n * 6)) & 0x3f) | 0x80);
 	return chars;
 }
 
@@ -166,8 +166,10 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 			}
 			break;
 		}
+		// clang-format off
 	} else if (__likely((c32 < 0xd800 || c32 > 0xdfff)
 			&& c32 <= 0x10ffff)) {
+		// clang-format on
 		chars += print_utf8(pbegin, end, c32);
 	} else {
 		// For invalid Unicode code points, we use a hexadecimal escape
@@ -204,8 +206,8 @@ print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 }
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format) \
-	LELY_UTIL_EXPORT size_t \
-	print_c99_##suffix(char **pbegin, char *end, type name) \
+	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
+			char **pbegin, char *end, type name) \
 	{ \
 		return print_fmt(pbegin, end, format, name); \
 	}
@@ -218,8 +220,8 @@ LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%" LENll "u")
 #undef LELY_UTIL_DEFINE_PRINT
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format, dig) \
-	LELY_UTIL_EXPORT size_t \
-	print_c99_##suffix(char **pbegin, char *end, type name) \
+	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
+			char **pbegin, char *end, type name) \
 	{ \
 		return print_fmt(pbegin, end, format, dig, name); \
 	}
@@ -233,8 +235,8 @@ LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld, "%.*Lg", LDBL_DIG)
 #undef LELY_UTIL_DEFINE_PRINT
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, alias) \
-	LELY_UTIL_EXPORT size_t \
-	print_c99_##suffix(char **pbegin, char *end, type name) \
+	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
+			char **pbegin, char *end, type name) \
 	{ \
 		return print_c99_##alias(pbegin, end, name); \
 	}
@@ -261,9 +263,11 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ulong)
 LELY_UTIL_EXPORT size_t
 print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 {
+	// clang-format off
 	static const char tab[64] =
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 			"ghijklmnopqrstuvwxyz0123456789+/";
+	// clang-format on
 
 	size_t chars = 0;
 
@@ -283,8 +287,10 @@ print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 			chars += print_char(pbegin, end, '\n');
 		}
 
+		// clang-format off
 		c = n ? tab[((bp[1] << 2) + (--n ? (bp[2] >> 6) : 0)) & 0x3f]
 				: '=';
+		// clang-format on
 		chars += print_char(pbegin, end, c);
 		if (!((chars + 2) % 78)) {
 			chars += print_char(pbegin, end, '\r');
@@ -303,4 +309,3 @@ print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 
 	return chars;
 }
-

@@ -58,8 +58,8 @@ typedef void config_foreach_func_t(const char *section, const char *key,
 
 LELY_UTIL_EXTERN void *__config_alloc(void);
 LELY_UTIL_EXTERN void __config_free(void *ptr);
-LELY_UTIL_EXTERN struct __config *__config_init(struct __config *config,
-		int flags);
+LELY_UTIL_EXTERN struct __config *__config_init(
+		struct __config *config, int flags);
 LELY_UTIL_EXTERN void __config_fini(struct __config *config);
 
 /**
@@ -91,8 +91,8 @@ LELY_UTIL_EXTERN void config_destroy(config_t *config);
  *
  * @see config_get_keys()
  */
-LELY_UTIL_EXTERN size_t config_get_sections(const config_t *config, size_t n,
-		const char **sections);
+LELY_UTIL_EXTERN size_t config_get_sections(
+		const config_t *config, size_t n, const char **sections);
 
 /**
  * Retrieves a list of key names from a section in a configuration struct.
@@ -122,8 +122,8 @@ LELY_UTIL_EXTERN size_t config_get_keys(const config_t *config,
  *
  * @returns a pointer to the value of the key, or NULL if not found.
  */
-LELY_UTIL_EXTERN const char *config_get(const config_t *config,
-		const char *section, const char *key);
+LELY_UTIL_EXTERN const char *config_get(
+		const config_t *config, const char *section, const char *key);
 
 /**
  * Sets a key in or removes a key from a configuration struct.
@@ -142,8 +142,8 @@ LELY_UTIL_EXTERN const char *config_get(const config_t *config,
  * duplication), or NULL on error or when the key is deleted. In case of an
  * error, the error number can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN const char *config_set(config_t *config,
-		const char *section, const char *key, const char *value);
+LELY_UTIL_EXTERN const char *config_set(config_t *config, const char *section,
+		const char *key, const char *value);
 
 /**
  * Invokes a function for each key in a configuration struct.
@@ -164,8 +164,8 @@ LELY_UTIL_EXTERN void config_foreach(const config_t *config,
  *
  * @see config_parse_ini_text()
  */
-LELY_UTIL_EXTERN size_t config_parse_ini_file(config_t *config,
-		const char *filename);
+LELY_UTIL_EXTERN size_t config_parse_ini_file(
+		config_t *config, const char *filename);
 
 /**
  * Parses a string in INI-format and adds the keys to a configuration struct.
@@ -194,8 +194,8 @@ LELY_UTIL_EXTERN size_t config_parse_ini_text(config_t *config,
  *
  * @see config_print_ini_text()
  */
-LELY_UTIL_EXTERN size_t config_print_ini_file(const config_t *config,
-		const char *filename);
+LELY_UTIL_EXTERN size_t config_print_ini_file(
+		const config_t *config, const char *filename);
 
 /**
  * Prints a configuration struct in INI-format to a memory buffer. Note that the
@@ -215,8 +215,8 @@ LELY_UTIL_EXTERN size_t config_print_ini_file(const config_t *config,
  *
  * @see config_print_ini_file()
  */
-LELY_UTIL_EXTERN size_t config_print_ini_text(const config_t *config,
-		char **pbegin, char *end);
+LELY_UTIL_EXTERN size_t config_print_ini_text(
+		const config_t *config, char **pbegin, char *end);
 
 #ifdef __cplusplus
 }

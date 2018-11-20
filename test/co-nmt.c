@@ -13,7 +13,7 @@
 
 #include "co-test.h"
 
-#define NMT_TIMEOUT	1000
+#define NMT_TIMEOUT 1000
 
 void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
@@ -35,8 +35,8 @@ void scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
 		void *data);
 #endif
 
-co_unsigned32_t co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+co_unsigned32_t co_1f51_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 co_dev_t *mdev;
 co_nmt_t *master;
@@ -118,10 +118,13 @@ hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason, void *data)
 	__unused_var(nmt);
 	__unused_var(data);
 
+	// clang-format off
 	tap_diag("heartbeat %s %s for node %d",
-			reason == CO_NMT_EC_TIMEOUT ? "timeout" : "state change",
+			reason == CO_NMT_EC_TIMEOUT
+					? "timeout" : "state change",
 			state == CO_NMT_EC_OCCURRED ? "occurred" : "resolved",
 			id);
+	// clang-format on
 }
 
 void
@@ -145,20 +148,11 @@ lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 	struct co_test *test = data;
 	tap_assert(test);
 
-	struct co_id lo = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
-		0,
-		0
-	};
-	struct co_id hi = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
-		UINT32_MAX,
-		UINT32_MAX
-	};
+	struct co_id lo = { 4, co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02), 0, 0 };
+	struct co_id hi = { 4, co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+		co_dev_get_val_u32(mdev, 0x1f86, 0x02), UINT32_MAX,
+		UINT32_MAX };
 	tap_test(!co_lss_slowscan_req(lss, &lo, &hi, &scan_ind, test),
 			"LSS slowscan");
 	co_test_wait(test);
@@ -166,20 +160,11 @@ lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 	tap_test(!co_lss_switch_req(lss, 0), "switch state global");
 	co_test_step(test);
 
-	struct co_id id = {
-		4,
-		co_dev_get_val_u32(mdev, 0x1f85, 0x02),
+	struct co_id id = { 4, co_dev_get_val_u32(mdev, 0x1f85, 0x02),
 		co_dev_get_val_u32(mdev, 0x1f86, 0x02),
 		co_dev_get_val_u32(mdev, 0x1f87, 0x02),
-		co_dev_get_val_u32(mdev, 0x1f88, 0x02)
-	};
-	struct co_id mask = {
-		4,
-		UINT32_MAX,
-		UINT32_MAX,
-		0,
-		0
-	};
+		co_dev_get_val_u32(mdev, 0x1f88, 0x02) };
+	struct co_id mask = { 4, UINT32_MAX, UINT32_MAX, 0, 0 };
 	tap_test(!co_lss_fastscan_req(lss, &id, &mask, &scan_ind, test),
 			"LSS fastscan");
 	co_test_wait(test);
@@ -200,8 +185,7 @@ lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 			"inquire identity serial-nunber");
 	co_test_wait(test);
 
-	tap_test(!co_lss_get_id_req(lss, &nid_ind, test),
-			"inquire node-ID");
+	tap_test(!co_lss_get_id_req(lss, &nid_ind, test), "inquire node-ID");
 	co_test_wait(test);
 
 	tap_test(!co_lss_set_id_req(lss, 0x02, &err_ind, test),
@@ -243,7 +227,8 @@ err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 	tap_assert(test);
 
 	if (err == 0xff)
-		tap_diag("received implementation-specific error code 0x%02X", spec);
+		tap_diag("received implementation-specific error code 0x%02X",
+				spec);
 	else if (err)
 		tap_diag("received error code 0x%02X", err);
 
@@ -258,20 +243,11 @@ lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id, void *data)
 	tap_assert(test);
 
 	switch (cs) {
-	case 0x5a:
-		tap_pass("received vendor-ID 0x%08X", id);
-		break;
-	case 0x5b:
-		tap_pass("received product-code 0x%08X", id);
-		break;
-	case 0x5c:
-		tap_pass("received revision-number 0x%08X", id);
-		break;
-	case 0x5d:
-		tap_pass("received serial-number 0x%08X", id);
-		break;
-	default:
-		tap_fail("unknown command specifier: %02X", cs);
+	case 0x5a: tap_pass("received vendor-ID 0x%08X", id); break;
+	case 0x5b: tap_pass("received product-code 0x%08X", id); break;
+	case 0x5c: tap_pass("received revision-number 0x%08X", id); break;
+	case 0x5d: tap_pass("received serial-number 0x%08X", id); break;
+	default: tap_fail("unknown command specifier: %02X", cs);
 	}
 
 	co_test_done(test);
@@ -337,18 +313,11 @@ co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	tap_assert(type == CO_DEFTYPE_UNSIGNED8);
 	switch (val.u8) {
-	case 0:
-		break;
-	case 1:
-		break;
-	case 2:
-		break;
-	case 3:
-		co_dev_set_val_u32(dev, 0x1f56, subidx, 0x12345678);
-		break;
-	default:
-		ac = CO_SDO_AC_PARAM_VAL;
-		break;
+	case 0: break;
+	case 1: break;
+	case 2: break;
+	case 3: co_dev_set_val_u32(dev, 0x1f56, subidx, 0x12345678); break;
+	default: ac = CO_SDO_AC_PARAM_VAL; break;
 	}
 
 	co_sub_dn(sub, &val);
@@ -356,4 +325,3 @@ error:
 	co_val_fini(type, &val);
 	return ac;
 }
-

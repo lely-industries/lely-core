@@ -4,8 +4,8 @@
 
 #include "co-test.h"
 
-#define VAL_2000	0x01234567u
-#define VAL_2001	0x89abcdefu
+#define VAL_2000 0x01234567u
+#define VAL_2001 0x89abcdefu
 
 int
 main(void)
@@ -57,4 +57,3 @@ main(void)
 
 	return 0;
 }
-

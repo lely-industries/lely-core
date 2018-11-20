@@ -25,15 +25,15 @@
 
 #ifndef LELY_UTIL_EXTERN
 #ifdef LELY_UTIL_INTERN
-#define LELY_UTIL_EXTERN	LELY_DLL_EXPORT
+#define LELY_UTIL_EXTERN LELY_DLL_EXPORT
 #else
-#define LELY_UTIL_EXTERN	LELY_DLL_IMPORT
+#define LELY_UTIL_EXTERN LELY_DLL_IMPORT
 #endif
 #endif
 
 #ifndef ABS
 /// Returns the absolute value of <b>a</b>.
-#define ABS(a)	((a) < 0 ? -(a) : (a))
+#define ABS(a) ((a) < 0 ? -(a) : (a))
 #endif
 
 #ifndef ALIGN
@@ -44,14 +44,14 @@
  * two.
  */
 #ifdef __GNUC__
-#define ALIGN(x, a)	__ALIGN_MASK((x), (__typeof__(x))(a) - 1)
+#define ALIGN(x, a) __ALIGN_MASK((x), (__typeof__(x))(a)-1)
 #else
-#define ALIGN(x, a)	__ALIGN_MASK((x), (a) - 1)
+#define ALIGN(x, a) __ALIGN_MASK((x), (a)-1)
 #endif
 #endif
 
 #ifndef __ALIGN_MASK
-#define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
+#define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
 #endif
 
 #ifndef MIN
@@ -60,7 +60,7 @@
  * opposite of MAX(), i.e., if MAX() returns <b>a</b> then MIN() returns
  * <b>b</b> and vice versa.
  */
-#define MIN(a, b)	((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 #ifndef MAX
@@ -68,7 +68,7 @@
  * Returns the maximum of <b>a</b> and <b>b</b>. Guaranteed to return the
  * opposite of MIN().
  */
-#define MAX(a, b)	((a) < (b) ? (b) : (a))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
 #ifndef powerof2
@@ -76,12 +76,12 @@
  * Returns 1 if <b>x</b> is a power of two, and 0 otherwise. Note that zero is
  * considered to be a power of two.
  */
-#define powerof2(x)	(!((x) & ((x) - 1)))
+#define powerof2(x) (!((x) & ((x)-1)))
 #endif
 
 #ifndef STRINGIFY
 /// Expands and stringifies <b>x</b>. @see QUOTE()
-#define STRINGIFY(x)	QUOTE(x)
+#define STRINGIFY(x) QUOTE(x)
 #endif
 
 #ifndef structof
@@ -95,12 +95,12 @@
  * @param member the name of member.
  */
 #define structof(ptr, type, member) \
-	((type *)((char *)(ptr) - offsetof(type, member)))
+	((type *)((char *)(ptr)-offsetof(type, member)))
 #endif
 
 #ifndef QUOTE
 /// Stringifies <b>x</b> without expanding. @see STRINGIFY()
-#define QUOTE(x)	#x
+#define QUOTE(x) #x
 #endif
 
 #endif // !LELY_UTIL_UTIL_H_

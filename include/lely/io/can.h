@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_CAN_H
-#define LELY_IO_CAN_H
+#ifndef LELY_IO_CAN_H_
+#define LELY_IO_CAN_H_
 
 #include <lely/io/io.h>
 
@@ -113,8 +113,8 @@ LELY_IO_EXTERN int io_can_get_error(io_handle_t handle, int *perror);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_can_get_ec(io_handle_t handle, uint16_t *ptxec,
-		uint16_t *prxec);
+LELY_IO_EXTERN int io_can_get_ec(
+		io_handle_t handle, uint16_t *ptxec, uint16_t *prxec);
 
 /**
  * Obtains the bitrate (in bit/s) of a CAN device and stores the value in
@@ -168,5 +168,4 @@ LELY_IO_EXTERN int io_can_set_txqlen(io_handle_t handle, size_t txqlen);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_CAN_H_

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_VAL_H
-#define LELY_CO_VAL_H
+#ifndef LELY_CO_VAL_H_
+#define LELY_CO_VAL_H_
 
 #include <lely/co/type.h>
 
@@ -28,142 +28,147 @@
 #include <stddef.h>
 
 /// The minimum value of a boolean truth value (false).
-#define CO_BOOLEAN_MIN		0
+#define CO_BOOLEAN_MIN 0
 
 /// The maximum value of a boolean truth value (true).
-#define CO_BOOLEAN_MAX		1
+#define CO_BOOLEAN_MAX 1
 
 /// The minimum value of an 8-bit signed integer.
-#define CO_INTEGER8_MIN		INT8_MIN
+#define CO_INTEGER8_MIN INT8_MIN
 
 /// The maximum value of an 8-bit signed integer.
-#define CO_INTEGER8_MAX		INT8_MAX
+#define CO_INTEGER8_MAX INT8_MAX
 
 /// The minimum value of a 16-bit signed integer.
-#define CO_INTEGER16_MIN	INT16_MIN
+#define CO_INTEGER16_MIN INT16_MIN
 
 /// The maximum value of a 16-bit signed integer.
-#define CO_INTEGER16_MAX	INT16_MAX
+#define CO_INTEGER16_MAX INT16_MAX
 
 /// The minimum value of a 32-bit signed integer.
-#define CO_INTEGER32_MIN	INT32_MIN
+#define CO_INTEGER32_MIN INT32_MIN
 
 /// The maximum value of a 32-bit signed integer.
-#define CO_INTEGER32_MAX	INT32_MAX
+#define CO_INTEGER32_MAX INT32_MAX
 
 /// The minimum value of an 8-bit unsigned integer.
-#define CO_UNSIGNED8_MIN	0
+#define CO_UNSIGNED8_MIN 0
 
 /// The maximum value of an 8-bit unsigned integer.
-#define CO_UNSIGNED8_MAX	UINT8_MAX
+#define CO_UNSIGNED8_MAX UINT8_MAX
 
 /// The minimum value of a 16-bit unsigned integer.
-#define CO_UNSIGNED16_MIN	0
+#define CO_UNSIGNED16_MIN 0
 
 /// The maximum value of a 16-bit unsigned integer.
-#define CO_UNSIGNED16_MAX	UINT16_MAX
+#define CO_UNSIGNED16_MAX UINT16_MAX
 
 /// The minimum value of a 32-bit unsigned integer.
-#define CO_UNSIGNED32_MIN	0
+#define CO_UNSIGNED32_MIN 0
 
 /// The maximum value of a 32-bit unsigned integer.
-#define CO_UNSIGNED32_MAX	UINT32_MAX
+#define CO_UNSIGNED32_MAX UINT32_MAX
 
 /// The minimum value of a 32-bit IEEE-754 floating-point number.
-#define CO_REAL32_MIN		(-FLT_MAX)
+#define CO_REAL32_MIN (-FLT_MAX)
 
 /// The maximum value of a 32-bit IEEE-754 floating-point number.
-#define CO_REAL32_MAX		FLT_MAX
+#define CO_REAL32_MAX FLT_MAX
 
 /// The minimum value of a 48-bit structure representing the absolute time.
-#define CO_TIME_OF_DAY_MIN	{ 0, 0 }
+#define CO_TIME_OF_DAY_MIN \
+	{ \
+		0, 0 \
+	}
 
 /// The maximum value of a 48-bit structure representing the absolute time.
-#define CO_TIME_OF_DAY_MAX	{ UINT32_C(0x0fffffff), UINT16_MAX }
+#define CO_TIME_OF_DAY_MAX \
+	{ \
+		UINT32_C(0x0fffffff), UINT16_MAX \
+	}
 
 /// The minimum value of a 48-bit structure representing a time difference.
-#define CO_TIME_DIFF_MIN	CO_TIME_OF_DAY_MIN
+#define CO_TIME_DIFF_MIN CO_TIME_OF_DAY_MIN
 
 /// The maximum value of a 48-bit structure representing a time difference.
-#define CO_TIME_DIFF_MAX	CO_TIME_OF_DAY_MAX
+#define CO_TIME_DIFF_MAX CO_TIME_OF_DAY_MAX
 
 /// The minimum value of a 24-bit signed integer (encoded as an int32_t).
-#define CO_INTEGER24_MIN	(-INT32_C(0x00800000))
+#define CO_INTEGER24_MIN (-INT32_C(0x00800000))
 
 /// The maximum value of a 24-bit signed integer (encoded as an int32_t).
-#define CO_INTEGER24_MAX	INT32_C(0x007fffff)
+#define CO_INTEGER24_MAX INT32_C(0x007fffff)
 
 /// The minimum value of a 64-bit IEEE-754 floating-point number.
-#define CO_REAL64_MIN		(-DBL_MAX)
+#define CO_REAL64_MIN (-DBL_MAX)
 
 /// The maximum value of a 64-bit IEEE-754 floating-point number.
-#define CO_REAL64_MAX		DBL_MAX
+#define CO_REAL64_MAX DBL_MAX
 
 /// The minimum value of a 40-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER40_MIN	(-INT64_C(0x0000008000000000))
+#define CO_INTEGER40_MIN (-INT64_C(0x0000008000000000))
 
 /// The maximum value of a 40-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER40_MAX	INT64_C(0x0000007fffffffff)
+#define CO_INTEGER40_MAX INT64_C(0x0000007fffffffff)
 
 /// The minimum value of a 48-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER48_MIN	(-INT64_C(0x0000800000000000))
+#define CO_INTEGER48_MIN (-INT64_C(0x0000800000000000))
 
 /// The maximum value of a 48-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER48_MAX	INT64_C(0x00007fffffffffff)
+#define CO_INTEGER48_MAX INT64_C(0x00007fffffffffff)
 
 /// The minimum value of a 56-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER56_MIN	(-INT64_C(0x0080000000000000))
+#define CO_INTEGER56_MIN (-INT64_C(0x0080000000000000))
 
 /// The maximum value of a 56-bit signed integer (encoded as an int64_t).
-#define CO_INTEGER56_MAX	INT64_C(0x007fffffffffffff)
+#define CO_INTEGER56_MAX INT64_C(0x007fffffffffffff)
 
 /// The minimum value of a 64-bit signed integer.
-#define CO_INTEGER64_MIN	INT64_MIN
+#define CO_INTEGER64_MIN INT64_MIN
 
 /// The maximum value of a 64-bit signed integer.
-#define CO_INTEGER64_MAX	INT64_MAX
+#define CO_INTEGER64_MAX INT64_MAX
 
 /// The minimum value of a 24-bit unsigned integer (encoded as a uint32_t).
-#define CO_UNSIGNED24_MIN	0
+#define CO_UNSIGNED24_MIN 0
 
 /// The maximum value of a 24-bit unsigned integer (encoded as a uint32_t).
-#define CO_UNSIGNED24_MAX	UINT32_C(0x00ffffff)
+#define CO_UNSIGNED24_MAX UINT32_C(0x00ffffff)
 
 /// The minimum value of a 40-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED40_MIN	0
+#define CO_UNSIGNED40_MIN 0
 
 /// The maximum value of a 40-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED40_MAX	UINT64_C(0x000000ffffffffff)
+#define CO_UNSIGNED40_MAX UINT64_C(0x000000ffffffffff)
 
 /// The minimum value of a 48-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED48_MIN	0
+#define CO_UNSIGNED48_MIN 0
 
 /// The maximum value of a 48-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED48_MAX	UINT64_C(0x0000ffffffffffff)
+#define CO_UNSIGNED48_MAX UINT64_C(0x0000ffffffffffff)
 
 /// The minimum value of a 56-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED56_MIN	0
+#define CO_UNSIGNED56_MIN 0
 
 /// The maximum value of a 56-bit unsigned integer (encoded as a uint64_t).
-#define CO_UNSIGNED56_MAX	UINT64_C(0x00ffffffffffffff)
+#define CO_UNSIGNED56_MAX UINT64_C(0x00ffffffffffffff)
 
 /// The minimum value of a 64-bit unsigned integer.
-#define CO_UNSIGNED64_MIN	0
+#define CO_UNSIGNED64_MIN 0
 
 /// The maximum value of a 64-bit unsigned integer.
-#define CO_UNSIGNED64_MAX	UINT64_MAX
+#define CO_UNSIGNED64_MAX UINT64_MAX
 
 /// A union of the CANopen static data types.
 union co_val {
-#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	co_##b##_t c;
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) co_##b##_t c;
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
 };
 
 #if __STDC_VERSION__ >= 199901L
 
-#define _CO_ARRAY(...)	__VA_ARGS__
+#define _CO_ARRAY(...) __VA_ARGS__
 
 /// Converts a visible string literal to a CANopen array.
 #define CO_VISIBLE_STRING_C(c) \
@@ -173,10 +178,8 @@ union co_val {
 			union co_val val; \
 			char vs[sizeof(c)]; \
 		} u; \
-	}){ \
-		.size = sizeof(c) - 1, \
-		.u = { .vs = c } \
-	}).u.vs)
+	}){ .size = sizeof(c) - 1, .u = { .vs = c } }) \
+					.u.vs)
 
 /// Converts an octet string literal to a CANopen array.
 #define CO_OCTET_STRING_C(c) \
@@ -186,15 +189,13 @@ union co_val {
 			union co_val val; \
 			uint8_t os[sizeof(c)]; \
 		} u; \
-	}){ \
-		.size = sizeof(c) - 1, \
-		.u = { .os = c } \
-	}).u.os)
+	}){ .size = sizeof(c) - 1, .u = { .os = c } }) \
+					.u.os)
 
 /// Converts a (16-bit) Unicode string literal to a CANopen array.
-#define CO_UNICODE_STRING_C(...) \
-	_CO_UNICODE_STRING_C(_CO_ARRAY(__VA_ARGS__))
+#define CO_UNICODE_STRING_C(...) _CO_UNICODE_STRING_C(_CO_ARRAY(__VA_ARGS__))
 
+// clang-format off
 #define _CO_UNICODE_STRING_C(c) \
 	(((struct { \
 		size_t size; \
@@ -202,17 +203,16 @@ union co_val {
 			union co_val val; \
 			char16_t us[sizeof((char16_t[])c) / sizeof(char16_t)]; \
 		} u; \
-	}){ \
-		.size = sizeof((char16_t[])c) - sizeof(char16_t), \
-		.u = { .us = c } \
-	}).u.us)
+	}){ .size = sizeof((char16_t[])c) - sizeof(char16_t), \
+			.u = { .us = c } }) \
+					.u.us)
+// clang-format on
 
 /**
  * Converts an array literal with elements of type <b>type</b> to a CANopen
  * array.
  */
-#define CO_DOMAIN_C(type, ...) \
-	_CO_DOMAIN_C(type, _CO_ARRAY(__VA_ARGS__))
+#define CO_DOMAIN_C(type, ...) _CO_DOMAIN_C(type, _CO_ARRAY(__VA_ARGS__))
 
 #define _CO_DOMAIN_C(type, c) \
 	(((struct { \
@@ -221,10 +221,8 @@ union co_val {
 			union co_val val; \
 			type dom[sizeof((type[])c) / sizeof(type)]; \
 		} u; \
-	}){ \
-		.size = sizeof((type[])c), \
-		.u = { .dom = c } \
-	}).u.dom)
+	}){ .size = sizeof((type[])c), .u = { .dom = c } }) \
+					.u.dom)
 
 #endif // __STDC_VERSION__ >= 199901L
 
@@ -366,8 +364,8 @@ LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_us_n(char16_t **val, const char16_t *us,
-		size_t n);
+LELY_CO_EXTERN int co_val_init_us_n(
+		char16_t **val, const char16_t *us, size_t n);
 
 /**
  * Initializes an arbitrary large block of data (#CO_DEFTYPE_DOMAIN).
@@ -411,8 +409,8 @@ LELY_CO_EXTERN void co_val_fini(co_unsigned16_t type, void *val);
  *
  * @see co_val_sizeof()
  */
-LELY_CO_EXTERN const void *co_val_addressof(co_unsigned16_t type,
-		const void *val);
+LELY_CO_EXTERN const void *co_val_addressof(
+		co_unsigned16_t type, const void *val);
 
 /**
  * Returns the size (in bytes) of a value of the specified data type. In the
@@ -443,8 +441,8 @@ LELY_CO_EXTERN size_t co_val_sizeof(co_unsigned16_t type, const void *val);
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_CO_EXTERN size_t co_val_make(co_unsigned16_t type, void *val,
-		const void *ptr, size_t n);
+LELY_CO_EXTERN size_t co_val_make(
+		co_unsigned16_t type, void *val, const void *ptr, size_t n);
 
 /**
  * Copies one value to another. In case of strings or domains, this function
@@ -464,8 +462,8 @@ LELY_CO_EXTERN size_t co_val_make(co_unsigned16_t type, void *val,
  *
  * @see co_val_move()
  */
-LELY_CO_EXTERN size_t co_val_copy(co_unsigned16_t type, void *dst,
-		const void *src);
+LELY_CO_EXTERN size_t co_val_copy(
+		co_unsigned16_t type, void *dst, const void *src);
 
 /**
  * Moves one value to another. In case of strings or domains, this function
@@ -501,8 +499,8 @@ LELY_CO_EXTERN size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
  * @returns an integer greater than, equal to, or less than 0 if *<b>v1</b> is
  * greater than, equal to, or less than *<b>v2</b>.
  */
-LELY_CO_EXTERN int co_val_cmp(co_unsigned16_t type, const void *v1,
-		const void *v2);
+LELY_CO_EXTERN int co_val_cmp(
+		co_unsigned16_t type, const void *v1, const void *v2);
 
 /**
  * Reads a value of the specified data type from a memory buffer.
@@ -544,8 +542,8 @@ LELY_CO_EXTERN size_t co_val_read(co_unsigned16_t type, void *val,
  *
  * @see co_val_read()
  */
-LELY_CO_EXTERN co_unsigned32_t co_val_read_sdo(co_unsigned16_t type, void *val,
-		const void *ptr, size_t n);
+LELY_CO_EXTERN co_unsigned32_t co_val_read_sdo(
+		co_unsigned16_t type, void *val, const void *ptr, size_t n);
 
 /**
  * Writes a value of the specified data type to a memory buffer.
@@ -617,5 +615,4 @@ LELY_CO_EXTERN size_t co_val_print(co_unsigned16_t type, const void *val,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_VAL_H_

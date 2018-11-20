@@ -18,12 +18,12 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_INTERN_HANDLE_H
-#define LELY_IO_INTERN_HANDLE_H
+#ifndef LELY_IO_INTERN_HANDLE_H_
+#define LELY_IO_INTERN_HANDLE_H_
 
 #include "io.h"
 #ifndef LELY_NO_ATOMICS
-#define LELY_NO_ATOMICS	1x
+#define LELY_NO_ATOMICS 1
 #ifndef LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #ifndef __STDC_NO_ATOMICS__
@@ -160,5 +160,4 @@ void io_handle_unlock(struct io_handle *handle);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_INTERN_HANDLE_H_

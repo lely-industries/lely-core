@@ -26,8 +26,8 @@
 #if !defined(LELY_NO_CAN) && defined(__linux__) && defined(HAVE_LINUX_CAN_H)
 #include <lely/can/socket.h>
 #endif
-#include <lely/io/can.h>
 #include "handle.h"
+#include <lely/io/can.h>
 #ifdef __linux
 #include "rtnl.h"
 #endif
@@ -67,8 +67,8 @@ struct can {
 	 */
 	int state;
 	/** The last error (any combination of `CAN_ERROR_BIT`,
-	* `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM` and
-	* `CAN_ERROR_ACK`).
+	 * `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM` and
+	 * `CAN_ERROR_ACK`).
 	 */
 	int error;
 };
@@ -76,17 +76,15 @@ struct can {
 static void can_fini(struct io_handle *handle);
 static int can_flags(struct io_handle *handle, int flags);
 static ssize_t can_read(struct io_handle *handle, void *buf, size_t nbytes);
-static ssize_t can_write(struct io_handle *handle, const void *buf,
-		size_t nbytes);
+static ssize_t can_write(
+		struct io_handle *handle, const void *buf, size_t nbytes);
 
-static const struct io_handle_vtab can_vtab = {
-	.type = IO_TYPE_CAN,
+static const struct io_handle_vtab can_vtab = { .type = IO_TYPE_CAN,
 	.size = sizeof(struct can),
 	.fini = &can_fini,
 	.flags = &can_flags,
 	.read = &can_read,
-	.write = &can_write
-};
+	.write = &can_write };
 
 static int can_err(struct can *can, const struct can_frame *frame);
 
@@ -117,8 +115,10 @@ io_open_can(const char *path)
 	int canfd = 0;
 #ifdef HAVE_CAN_RAW_FD_FRAMES
 	errsv = errno;
+	// clang-format off
 	if (__likely(!setsockopt(s, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &(int){ 1 },
 			sizeof(int))))
+		// clang-format on
 		canfd = 1;
 	else
 		errno = errsv;
@@ -126,9 +126,11 @@ io_open_can(const char *path)
 #endif
 
 #ifdef HAVE_LINUX_CAN_RAW_H
+	// clang-format off
 	if (__unlikely(setsockopt(s, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
 			&(can_err_mask_t){ CAN_ERR_MASK },
 			sizeof(can_err_mask_t)) == -1)) {
+		// clang-format on
 		errsv = errno;
 		goto error_setsockopt;
 	}
@@ -140,10 +142,8 @@ io_open_can(const char *path)
 		goto error_if_nametoindex;
 	}
 
-	struct sockaddr_can addr = {
-		.can_family = AF_CAN,
-		.can_ifindex = ifindex
-	};
+	struct sockaddr_can addr = { .can_family = AF_CAN,
+		.can_ifindex = ifindex };
 
 	if (__unlikely(bind(s, (struct sockaddr *)&addr, sizeof(addr)) == -1)) {
 		errsv = errno;
@@ -239,8 +239,10 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 		} else if (nbytes == CAN_MTU) {
 			if (__unlikely(frame.can_id & CAN_ERR_FLAG))
 				return can_err(can, (struct can_frame *)&frame);
+			// clang-format off
 			if (__unlikely(can_frame2can_msg(
 					(struct can_frame *)&frame, msg) == -1))
+				// clang-format on
 				return 0;
 			return 1;
 		}
@@ -329,8 +331,10 @@ io_can_start(io_handle_t handle)
 	if (__unlikely(fd == -1))
 		return -1;
 
+	// clang-format off
 	if (__unlikely(io_rtnl_newlink(fd, 0, 0, can->ifindex,
 			can->ifflags | IFF_UP, NULL, 0) == -1)) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -359,8 +363,10 @@ io_can_stop(io_handle_t handle)
 	if (__unlikely(fd == -1))
 		return -1;
 
+	// clang-format off
 	if (__unlikely(io_rtnl_newlink(fd, 0, 0, can->ifindex,
 			can->ifflags & ~IFF_UP, NULL, 0) == -1)) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -395,9 +401,11 @@ io_can_get_state(io_handle_t handle)
 		goto error;
 
 	__u32 attr = 0;
+	// clang-format off
 	if (__unlikely(can_getattr(fd, 0, 0, can->ifindex, &can->ifflags,
 			IFLA_CAN_STATE, &attr, sizeof(attr))
 			< (int)sizeof(attr))) {
+		// clang-format on
 		close(fd);
 		goto error;
 	}
@@ -406,15 +414,9 @@ io_can_get_state(io_handle_t handle)
 
 	switch (attr) {
 	case CAN_STATE_ERROR_ACTIVE:
-	case CAN_STATE_ERROR_WARNING:
-		can->state = CAN_STATE_ACTIVE;
-		break;
-	case CAN_STATE_ERROR_PASSIVE:
-		can->state = CAN_STATE_PASSIVE;
-		break;
-	case CAN_STATE_BUS_OFF:
-		can->state = CAN_STATE_BUSOFF;
-		break;
+	case CAN_STATE_ERROR_WARNING: can->state = CAN_STATE_ACTIVE; break;
+	case CAN_STATE_ERROR_PASSIVE: can->state = CAN_STATE_PASSIVE; break;
+	case CAN_STATE_BUS_OFF: can->state = CAN_STATE_BUSOFF; break;
 	};
 
 error:
@@ -467,9 +469,11 @@ io_can_get_ec(io_handle_t handle, uint16_t *ptxec, uint16_t *prxec)
 		return -1;
 
 	struct can_berr_counter attr = { 0 };
+	// clang-format off
 	if (__unlikely(can_getattr(fd, 0, 0, can->ifindex, &can->ifflags,
 			IFLA_CAN_BERR_COUNTER, &attr, sizeof(attr))
 			< (int)sizeof(attr))) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -505,9 +509,11 @@ io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate)
 		return -1;
 
 	struct can_bittiming attr = { 0 };
+	// clang-format off
 	if (__unlikely(can_getattr(fd, 0, 0, can->ifindex, &can->ifflags,
 			IFLA_CAN_BITTIMING, &attr, sizeof(attr))
 			< (int)sizeof(attr))) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -547,15 +553,19 @@ io_can_set_bitrate(io_handle_t handle, uint32_t bitrate)
 
 	// Deactivate the network interface, if necessary, before changing the
 	// bitrate.
+	// clang-format off
 	if (__unlikely((can->ifflags & IFF_UP) && io_rtnl_newlink(fd, 0, 0,
 			can->ifindex, can->ifflags & ~IFF_UP, NULL, 0) == -1)) {
+		// clang-format on
 		errsv = errno;
 		goto error_newlink;
 	}
 
 	struct can_bittiming attr = { .bitrate = bitrate };
+	// clang-format off
 	if (__unlikely(can_setattr(fd, 0, 0, can->ifindex, can->ifflags,
 			IFLA_CAN_BITTIMING, &attr, sizeof(attr)) == -1)) {
+		// clang-format on
 		errsv = errno;
 		goto error_setattr;
 	}
@@ -590,9 +600,11 @@ io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen)
 		return -1;
 
 	__u32 attr = 0;
+	// clang-format off
 	if (__unlikely(io_rtnl_getattr(fd, 0, 0, can->ifindex, &can->ifflags,
 			IFLA_TXQLEN, &attr, sizeof(attr))
 			< (int)sizeof(attr))) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -626,8 +638,10 @@ io_can_set_txqlen(io_handle_t handle, size_t txqlen)
 		return -1;
 
 	__u32 attr = txqlen;
+	// clang-format off
 	if (__unlikely(io_rtnl_setattr(fd, 0, 0, can->ifindex, can->ifflags,
 			IFLA_TXQLEN, &attr, sizeof(attr)) == -1)) {
+		// clang-format on
 		int errsv = errno;
 		close(fd);
 		errno = errsv;
@@ -660,23 +674,29 @@ can_flags(struct io_handle *handle, int flags)
 	int errsv = 0;
 
 	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK)) {
+		// clang-format off
 		if (__unlikely(fcntl(handle->fd, F_SETFL, arg | O_NONBLOCK)
 				== -1)) {
+			// clang-format on
 			errsv = errno;
 			goto error_fcntl;
 		}
 	} else if (!(flags & IO_FLAG_NONBLOCK) && (arg & O_NONBLOCK)) {
+		// clang-format off
 		if (__unlikely(fcntl(handle->fd, F_SETFL, arg & ~O_NONBLOCK)
 				== -1)) {
+			// clang-format on
 			errsv = errno;
 			goto error_fcntl;
 		}
 	}
 
 	int optval = !!(flags & IO_FLAG_LOOPBACK);
+	// clang-format off
 	if (__unlikely(setsockopt(handle->fd, SOL_CAN_RAW,
 			CAN_RAW_RECV_OWN_MSGS, (const char *)&optval,
 			sizeof(optval)) == -1)) {
+		// clang-format on
 		errsv = errno;
 		goto error_setsockopt;
 	}
@@ -742,8 +762,10 @@ can_err(struct can *can, const struct can_frame *frame)
 		if (frame->data[1] & CAN_ERR_CRTL_ACTIVE)
 			state = CAN_STATE_ACTIVE;
 #endif
+		// clang-format off
 		if (frame->data[1] & (CAN_ERR_CRTL_RX_PASSIVE
 				| CAN_ERR_CRTL_TX_PASSIVE))
+			// clang-format on
 			state = CAN_STATE_PASSIVE;
 	}
 
@@ -792,8 +814,8 @@ can_getattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 	if (__unlikely(len == -1))
 		return -1;
 
-	struct rtattr *rta = io_rta_find((struct rtattr *)buf, len,
-			IFLA_INFO_DATA);
+	struct rtattr *rta =
+			io_rta_find((struct rtattr *)buf, len, IFLA_INFO_DATA);
 	if (__likely(rta))
 		rta = io_rta_find(RTA_DATA(rta), RTA_PAYLOAD(rta), type);
 	if (__unlikely(!rta)) {
@@ -818,26 +840,20 @@ can_setattr(int fd, __u32 seq, __u32 pid, int ifi_index, unsigned int ifi_flags,
 
 	const char *kind = "can";
 	struct rtattr *info_kind = (struct rtattr *)buf;
-	*info_kind = (struct rtattr){
-		.rta_len = RTA_LENGTH(strlen(kind)),
-		.rta_type = IFLA_INFO_KIND
-	};
+	*info_kind = (struct rtattr){ .rta_len = RTA_LENGTH(strlen(kind)),
+		.rta_type = IFLA_INFO_KIND };
 	memcpy(RTA_DATA(info_kind), kind, strlen(kind));
 
 	len += RTA_ALIGN(info_kind->rta_len);
 
 	struct rtattr *info_data = RTA_TAIL(info_kind);
-	*info_data = (struct rtattr){
-		.rta_len = RTA_LENGTH(0),
-		.rta_type = IFLA_INFO_DATA
-	};
+	*info_data = (struct rtattr){ .rta_len = RTA_LENGTH(0),
+		.rta_type = IFLA_INFO_DATA };
 
 	if (data) {
 		struct rtattr *rta = RTA_DATA(info_data);
-		*rta = (struct rtattr){
-			.rta_len = RTA_LENGTH(payload),
-			.rta_type = type
-		};
+		*rta = (struct rtattr){ .rta_len = RTA_LENGTH(payload),
+			.rta_type = type };
 		memcpy(RTA_DATA(rta), data, payload);
 
 		info_data->rta_len += RTA_ALIGN(rta->rta_len);
@@ -852,4 +868,3 @@ can_setattr(int fd, __u32 seq, __u32 pid, int ifi_index, unsigned int ifi_flags,
 #endif // HAVE_LINUX_CAN_NETLINK_H && HAVE_LINUX_RTNETLINK_H
 
 #endif // __linux__ && HAVE_LINUX_CAN_H
-

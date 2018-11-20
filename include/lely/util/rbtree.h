@@ -39,7 +39,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_RBTREE_INLINE
-#define LELY_UTIL_RBTREE_INLINE	inline
+#define LELY_UTIL_RBTREE_INLINE inline
 #endif
 
 /**
@@ -128,19 +128,18 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
  * @see rbnode_next()
  */
 #ifdef __COUNTER__
-#define rbnode_foreach(first, node) \
-	rbnode_foreach_(__COUNTER__, first, node)
+#define rbnode_foreach(first, node) rbnode_foreach_(__COUNTER__, first, node)
 #else
-#define rbnode_foreach(first, node) \
-	rbnode_foreach_(__LINE__, first, node)
+#define rbnode_foreach(first, node) rbnode_foreach_(__LINE__, first, node)
 #endif
-#define rbnode_foreach_(n, first, node) \
-	rbnode_foreach__(n, first, node)
+#define rbnode_foreach_(n, first, node) rbnode_foreach__(n, first, node)
+// clang-format off
 #define rbnode_foreach__(n, first, node) \
 	for (struct rbnode *(node) = (first), \
 			*_rbnode_next_##n = (node) ? rbnode_next(node) : NULL; \
 			(node); (node) = _rbnode_next_##n, \
 			_rbnode_next_##n = (node) ? rbnode_next(node) : NULL)
+// clang-format on
 
 /**
  * Initializes a red-black tree.
@@ -148,8 +147,8 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
  * @param tree a pointer to the tree to be initialized.
  * @param cmp  a pointer to the function used to compare two keys.
  */
-LELY_UTIL_RBTREE_INLINE void rbtree_init(struct rbtree *tree,
-		rbtree_cmp_t *cmp);
+LELY_UTIL_RBTREE_INLINE void rbtree_init(
+		struct rbtree *tree, rbtree_cmp_t *cmp);
 
 /// Returns 1 if the red-black tree is empty, and 0 if not.
 LELY_UTIL_RBTREE_INLINE int rbtree_empty(const struct rbtree *tree);
@@ -183,8 +182,8 @@ LELY_UTIL_EXTERN void rbtree_remove(struct rbtree *tree, struct rbnode *node);
  *
  * @see rbtree_insert()
  */
-LELY_UTIL_EXTERN struct rbnode *rbtree_find(const struct rbtree *tree,
-		const void *key);
+LELY_UTIL_EXTERN struct rbnode *rbtree_find(
+		const struct rbtree *tree, const void *key);
 
 /**
  * Returns a pointer to the first (leftmost) node in a red-black tree. This is
@@ -213,8 +212,7 @@ LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
  *
  * @see rbnode_foreach(), rbtree_first()
  */
-#define rbtree_foreach(tree, node) \
-	rbnode_foreach(rbtree_first(tree), node)
+#define rbtree_foreach(tree, node) rbnode_foreach (rbtree_first(tree), node)
 
 LELY_UTIL_RBTREE_INLINE void
 rbnode_init(struct rbnode *node, const void *key)
@@ -234,13 +232,22 @@ rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 }
 
 LELY_UTIL_RBTREE_INLINE int
-rbtree_empty(const struct rbtree *tree) { return !rbtree_size(tree); }
+rbtree_empty(const struct rbtree *tree)
+{
+	return !rbtree_size(tree);
+}
 
 LELY_UTIL_RBTREE_INLINE size_t
-rbtree_size(const struct rbtree *tree) { return tree->num_nodes; }
+rbtree_size(const struct rbtree *tree)
+{
+	return tree->num_nodes;
+}
 
 LELY_UTIL_RBTREE_INLINE struct rbnode *
-rbtree_root(const struct rbtree *tree) { return tree->root; }
+rbtree_root(const struct rbtree *tree)
+{
+	return tree->root;
+}
 
 #ifdef __cplusplus
 }

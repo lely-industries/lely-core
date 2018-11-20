@@ -18,18 +18,18 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_CO_H
-#define LELY_CO_INTERN_CO_H
+#ifndef LELY_CO_INTERN_CO_H_
+#define LELY_CO_INTERN_CO_H_
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#define LELY_CO_INTERN	1
+#define LELY_CO_INTERN 1
 #include <lely/co/co.h>
 
 #ifndef LELY_CO_EXPORT
-#define LELY_CO_EXPORT	LELY_DLL_EXPORT
+#define LELY_CO_EXPORT LELY_DLL_EXPORT
 #endif
 
 #ifdef NDEBUG
@@ -41,5 +41,4 @@
 			__VA_ARGS__)
 #endif
 
-#endif
-
+#endif // !LELY_CO_INTERN_CO_H_

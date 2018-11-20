@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_POLL_H
-#define LELY_IO_POLL_H
+#ifndef LELY_IO_POLL_H_
+#define LELY_IO_POLL_H_
 
 #include <lely/io/io.h>
 
@@ -69,7 +69,10 @@ struct io_event {
 };
 
 /// The static initializer for struct #io_event.
-#define IO_EVENT_INIT	{ 0, { 0 } }
+#define IO_EVENT_INIT \
+	{ \
+		0, { 0 } \
+	}
 
 struct __io_poll;
 #ifndef __cplusplus
@@ -156,5 +159,4 @@ LELY_IO_EXTERN int io_poll_signal(io_poll_t *poll, unsigned char sig);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_POLL_H_

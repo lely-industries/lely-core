@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_INTERN_DEFAULT_H
-#define LELY_IO_INTERN_DEFAULT_H
+#ifndef LELY_IO_INTERN_DEFAULT_H_
+#define LELY_IO_INTERN_DEFAULT_H_
 
+#include "handle.h"
 #include "io.h"
 #include <lely/util/errnum.h>
-#include "handle.h"
 
 #include <assert.h>
 
@@ -36,10 +36,10 @@ extern "C" {
 
 static inline void default_fini(struct io_handle *handle);
 static inline int default_flags(struct io_handle *handle, int flags);
-static inline ssize_t default_read(struct io_handle *handle, void *buf,
-		size_t nbytes);
-static inline ssize_t default_write(struct io_handle *handle, const void *buf,
-		size_t nbytes);
+static inline ssize_t default_read(
+		struct io_handle *handle, void *buf, size_t nbytes);
+static inline ssize_t default_write(
+		struct io_handle *handle, const void *buf, size_t nbytes);
 
 static inline void
 default_fini(struct io_handle *handle)
@@ -99,30 +99,33 @@ retry:
 	int flags = handle->flags;
 	io_handle_unlock(handle);
 
+	// clang-format off
 	if (ReadFile(handle->fd, buf, nbytes, &dwNumberOfBytesRead,
 			&overlapped))
+		// clang-format on
 		goto done;
 
 	switch (GetLastError()) {
-	case ERROR_IO_PENDING:
-		break;
+	case ERROR_IO_PENDING: break;
 	case ERROR_OPERATION_ABORTED:
 		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
 			goto retry;
 		// ... falls through ...
-	default:
-		dwErrCode = GetLastError();
-		goto error_ReadFile;
+	default: dwErrCode = GetLastError(); goto error_ReadFile;
 	}
 
+	// clang-format off
 	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
 			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_CancelIoEx;
 	}
 
+	// clang-format off
 	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
 			&dwNumberOfBytesRead, TRUE))) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
@@ -180,30 +183,33 @@ retry:
 	int flags = handle->flags;
 	io_handle_unlock(handle);
 
+	// clang-format off
 	if (WriteFile(handle->fd, buf, nbytes, &dwNumberOfBytesWritten,
 			&overlapped))
+		// clang-format on
 		goto done;
 
 	switch (GetLastError()) {
-	case ERROR_IO_PENDING:
-		break;
+	case ERROR_IO_PENDING: break;
 	case ERROR_OPERATION_ABORTED:
 		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
 			goto retry;
 		// ... falls through ...
-	default:
-		dwErrCode = GetLastError();
-		goto error_WriteFile;
+	default: dwErrCode = GetLastError(); goto error_WriteFile;
 	}
 
+	// clang-format off
 	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
 			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_CancelIoEx;
 	}
 
+	// clang-format off
 	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
 			&dwNumberOfBytesWritten, TRUE))) {
+		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
@@ -245,5 +251,4 @@ error_CreateEvent:
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_INTERN_DEFAULT_H_

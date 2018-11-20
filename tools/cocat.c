@@ -18,20 +18,21 @@
  * limitations under the License.
  */
 
+#include <lely/can/net.h>
+#include <lely/co/pdo.h>
+#include <lely/io/can.h>
+#include <lely/io/poll.h>
 #include <lely/libc/threads.h>
 #include <lely/libc/unistd.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
-#include <lely/can/net.h>
-#include <lely/io/can.h>
-#include <lely/io/poll.h>
-#include <lely/co/pdo.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 #define HELP \
 	"Arguments: [options...] [<CAN interface> [StdIn PDO COB-ID] [StdOut PDO COB-ID]\n" \
 	"           [StdErr PDO COB-ID]\n" \
@@ -40,12 +41,13 @@
 	"  -i <ms>, --inhibit=<ms>\n" \
 	"                        Wait at least <ms> milliseconds between PDOs\n" \
 	"                        (default: 1)"
+// clang-format on
 
-#define FLAG_HELP	0x01
+#define FLAG_HELP 0x01
 
-#define INHIBIT	1
+#define INHIBIT 1
 
-#define POLL_TIMEOUT	100
+#define POLL_TIMEOUT 100
 
 int can_recv(const struct can_msg *msg, void *data);
 int can_send(const struct can_msg *msg, void *data);
@@ -75,18 +77,10 @@ main(int argc, char *argv[])
 		if (*arg != '-') {
 			optind++;
 			switch (optpos++) {
-			case 0:
-				ifname = arg;
-				break;
-			case 1:
-				cobid_in = strtoul(arg, NULL, 0);
-				break;
-			case 2:
-				cobid_out = strtoul(arg, NULL, 0);
-				break;
-			case 3:
-				cobid_err = strtoul(arg, NULL, 0);
-				break;
+			case 0: ifname = arg; break;
+			case 1: cobid_in = strtoul(arg, NULL, 0); break;
+			case 2: cobid_out = strtoul(arg, NULL, 0); break;
+			case 3: cobid_err = strtoul(arg, NULL, 0); break;
 			default:
 				diag(DIAG_ERROR, 0, "extra argument %s", arg);
 				break;
@@ -108,33 +102,20 @@ main(int argc, char *argv[])
 			if (c == -1)
 				break;
 			switch (c) {
-			case ':': case '?': break;
-			case 'h':
-				flags |= FLAG_HELP;
-				break;
-			case 'i':
-				inhibit = atoi(optarg);
-				break;
+			case ':':
+			case '?': break;
+			case 'h': flags |= FLAG_HELP; break;
+			case 'i': inhibit = atoi(optarg); break;
 			}
 		}
 	}
 	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
 		switch (optpos++) {
-		case 0:
-			ifname = arg;
-			break;
-		case 1:
-			cobid_in = strtoul(arg, NULL, 0);
-			break;
-		case 2:
-			cobid_out = strtoul(arg, NULL, 0);
-			break;
-		case 3:
-			cobid_err = strtoul(arg, NULL, 0);
-			break;
-		default:
-			diag(DIAG_ERROR, 0, "extra argument %s", arg);
-			break;
+		case 0: ifname = arg; break;
+		case 1: cobid_in = strtoul(arg, NULL, 0); break;
+		case 2: cobid_out = strtoul(arg, NULL, 0); break;
+		case 3: cobid_err = strtoul(arg, NULL, 0); break;
+		default: diag(DIAG_ERROR, 0, "extra argument %s", arg); break;
 		}
 	}
 
@@ -250,8 +231,10 @@ main(int argc, char *argv[])
 	}
 
 	thrd_t thr;
+	// clang-format off
 	if (__unlikely(thrd_create(&thr, &io_thrd_start, poll)
 			!= thrd_success)) {
+		// clang-format on
 		diag(DIAG_ERROR, 0, "unable to create thread");
 		goto error_create_thr;
 	}
@@ -357,8 +340,7 @@ can_send(const struct can_msg *msg, void *data)
 	return io_can_write(handle, msg) == 1 ? 0 : -1;
 }
 
-int __cdecl
-io_thrd_start(void *arg)
+int __cdecl io_thrd_start(void *arg)
 {
 	io_poll_t *poll = arg;
 	assert(poll);
@@ -380,4 +362,3 @@ io_thrd_start(void *arg)
 
 	return 0;
 }
-

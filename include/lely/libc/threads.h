@@ -27,7 +27,7 @@
 #ifndef LELY_HAVE_THREADS_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__) \
 		&& __has_include(<threads.h>)
-#define LELY_HAVE_THREADS_H	1
+#define LELY_HAVE_THREADS_H 1
 #endif
 #endif
 
@@ -44,17 +44,24 @@
 #if __cplusplus >= 201103L
 // thread_local is a keyword in C++11 and later.
 #else
-#define thread_local	_Thread_local
+#define thread_local _Thread_local
 #endif
 #endif
 
 /// A complete object type that holds an identifier for a condition variable.
 #ifdef __MINGW32__
-typedef struct { void *__cond; } cnd_t;
+typedef struct {
+	void *__cond;
+} cnd_t;
 #elif defined(_WIN32)
-typedef struct { CONDITION_VARIABLE __cond; } cnd_t;
+typedef struct {
+	CONDITION_VARIABLE __cond;
+} cnd_t;
 #else
-typedef union { char __size[48]; long __align; } cnd_t;
+typedef union {
+	char __size[48];
+	long __align;
+} cnd_t;
 #endif
 
 /// A complete object type that holds an identifier for a thread.
@@ -83,16 +90,20 @@ typedef unsigned int tss_t;
  * terminates.
  */
 #ifdef _WIN32
-#define TSS_DTOR_ITERATIONS	256
+#define TSS_DTOR_ITERATIONS 256
 #else
-#define TSS_DTOR_ITERATIONS	4
+#define TSS_DTOR_ITERATIONS 4
 #endif
 
 /// A complete object type that holds an identifier for a mutex.
 #ifdef __MINGW32__
-typedef struct { void *__mtx; } mtx_t;
+typedef struct {
+	void *__mtx;
+} mtx_t;
 #elif defined(_WIN32)
-typedef struct { CRITICAL_SECTION __mtx; } mtx_t;
+typedef struct {
+	CRITICAL_SECTION __mtx;
+} mtx_t;
 #else
 typedef union {
 #if __WORDSIZE == 64
@@ -112,7 +123,7 @@ typedef int once_flag;
 #endif
 
 /// The static initializer for an object of type #once_flag.
-#define ONCE_FLAG_INIT	0
+#define ONCE_FLAG_INIT 0
 
 enum {
 	/// A mutex type that supports neither timeout nor test and return.
@@ -156,16 +167,16 @@ extern "C" {
  * The function pointer type that is passed to thrd_create() to create a new
  * thread.
  */
-typedef int (__cdecl *thrd_start_t)(void *);
+typedef int(__cdecl *thrd_start_t)(void *);
 
 /**
  * The function pointer type used for a destructor for a thread-specific storage
  * pointer.
  */
 #if defined(_WIN32) && !defined(__MINGW32__)
-typedef void (WINAPI *tss_dtor_t)(void *);
+typedef void(WINAPI *tss_dtor_t)(void *);
 #else
-typedef void (__cdecl *tss_dtor_t)(void *);
+typedef void(__cdecl *tss_dtor_t)(void *);
 #endif
 
 /**
@@ -175,8 +186,8 @@ typedef void (__cdecl *tss_dtor_t)(void *);
  * function synchronizes with all subsequent calls to the call_once function
  * with the same value of <b>flag</b>.
  */
-LELY_LIBC_EXTERN void __cdecl call_once(once_flag *flag,
-		void (__cdecl *func)(void));
+LELY_LIBC_EXTERN void __cdecl call_once(
+		once_flag *flag, void(__cdecl *func)(void));
 
 /**
  * Unblocks all of the threads that are blocked on the condition variable at
@@ -231,8 +242,8 @@ LELY_LIBC_EXTERN int __cdecl cnd_signal(cnd_t *cond);
  * in the call was reached without acquiring the requested resource, or
  * #thrd_error if the request could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_timedwait(cnd_t *cond, mtx_t *mtx,
-		const struct timespec *ts);
+LELY_LIBC_EXTERN int __cdecl cnd_timedwait(
+		cnd_t *cond, mtx_t *mtx, const struct timespec *ts);
 
 /**
  * Atomically unlocks the mutex at <b>mtx</b> and endeavors to block until the
@@ -288,8 +299,8 @@ LELY_LIBC_EXTERN int __cdecl mtx_lock(mtx_t *mtx);
  * was reached without acquiring the requested resource, or #thrd_error if the
  * request could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_timedlock(mtx_t *mtx,
-		const struct timespec *ts);
+LELY_LIBC_EXTERN int __cdecl mtx_timedlock(
+		mtx_t *mtx, const struct timespec *ts);
 
 /**
  * Endeavors to lock the mutex at <b>mtx</b>. If the mutex is already locked,
@@ -322,8 +333,8 @@ LELY_LIBC_EXTERN int __cdecl mtx_unlock(mtx_t *mtx);
  * allocated for the thread requested, or #thrd_error if the request could not
  * be honored.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_create(thrd_t *thr, thrd_start_t func,
-		void *arg);
+LELY_LIBC_EXTERN int __cdecl thrd_create(
+		thrd_t *thr, thrd_start_t func, void *arg);
 
 /**
  * Identifies the thread that called it.
@@ -392,8 +403,8 @@ LELY_LIBC_EXTERN int __cdecl thrd_join(thrd_t thr, int *res);
  * @returns zero if the requested time has elapsed, -1 if it has been
  * interrupted by a signal, or a negative value if it fails.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_sleep(const struct timespec *duration,
-		struct timespec *remaining);
+LELY_LIBC_EXTERN int __cdecl thrd_sleep(
+		const struct timespec *duration, struct timespec *remaining);
 
 /**
  * Endeavors to permit other threads to run, even if the current thread would
@@ -428,7 +439,7 @@ LELY_LIBC_EXTERN void __cdecl tss_delete(tss_t key);
  * @returns the value for the current thread if successful, or zero if
  * unsuccessful.
  */
-LELY_LIBC_EXTERN void * __cdecl tss_get(tss_t key);
+LELY_LIBC_EXTERN void *__cdecl tss_get(tss_t key);
 
 /**
  * Sets the value for the current thread held in the thread-specific storage

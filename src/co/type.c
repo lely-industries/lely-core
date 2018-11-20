@@ -22,20 +22,18 @@
  */
 
 #include "co.h"
-#include <lely/libc/stdalign.h>
 #include <lely/co/type.h>
+#include <lely/libc/stdalign.h>
 
 LELY_CO_EXPORT int
 co_type_is_basic(co_unsigned16_t type)
 {
 	switch (type) {
-#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	case CO_DEFTYPE_##a:
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) case CO_DEFTYPE_##a:
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 		return 1;
-	default:
-		return 0;
+	default: return 0;
 	}
 }
 
@@ -46,10 +44,8 @@ co_type_is_array(co_unsigned16_t type)
 	case CO_DEFTYPE_VISIBLE_STRING:
 	case CO_DEFTYPE_OCTET_STRING:
 	case CO_DEFTYPE_UNICODE_STRING:
-	case CO_DEFTYPE_DOMAIN:
-		return 1;
-	default:
-		return 0;
+	case CO_DEFTYPE_DOMAIN: return 1;
+	default: return 0;
 	}
 }
 
@@ -62,8 +58,7 @@ co_type_sizeof(co_unsigned16_t type)
 		return sizeof(co_##b##_t);
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
-	default:
-		return 0;
+	default: return 0;
 	}
 }
 
@@ -76,8 +71,6 @@ co_type_alignof(co_unsigned16_t type)
 		return alignof(co_##b##_t);
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
-	default:
-		return 1;
+	default: return 1;
 	}
 }
-

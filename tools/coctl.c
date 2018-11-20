@@ -18,17 +18,17 @@
  * limitations under the License.
  */
 
+#include <lely/co/dcf.h>
+#include <lely/co/gw_txt.h>
+#include <lely/co/nmt.h>
+#include <lely/io/can.h>
+#include <lely/io/poll.h>
 #include <lely/libc/stdio.h>
 #include <lely/libc/threads.h>
 #include <lely/libc/unistd.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/time.h>
-#include <lely/io/can.h>
-#include <lely/io/poll.h>
-#include <lely/co/dcf.h>
-#include <lely/co/nmt.h>
-#include <lely/co/gw_txt.h>
 
 #include <assert.h>
 #include <signal.h>
@@ -49,6 +49,7 @@ struct co_net {
 	co_nmt_t *nmt;
 };
 
+// clang-format off
 #define HELP \
 	"Arguments: [options...] [<CAN interface> <EDS/DCF filename>]...\n" \
 	"Options:\n" \
@@ -60,15 +61,16 @@ struct co_net {
 	"  -m, --monitor         Do not exit on EOF (monitor mode)\n" \
 	"  -W, --no-wait         Do not wait for the previous command to complete\n" \
 	"                        before accepting the next one"
+// clang-format on
 
-#define FLAG_EXIT	0x01
-#define FLAG_HELP	0x02
-#define FLAG_MONITOR	0x04
-#define FLAG_NO_WAIT	0x08
+#define FLAG_EXIT 0x01
+#define FLAG_HELP 0x02
+#define FLAG_MONITOR 0x04
+#define FLAG_NO_WAIT 0x08
 
-#define INHIBIT	100
+#define INHIBIT 100
 
-#define POLL_TIMEOUT	10
+#define POLL_TIMEOUT 10
 
 int can_send(const struct can_msg *msg, void *data);
 
@@ -157,25 +159,14 @@ main(int argc, char *argv[])
 						optopt);
 				break;
 			case '?':
-				diag(DIAG_ERROR, 0,
-						"illegal option -- %c",
+				diag(DIAG_ERROR, 0, "illegal option -- %c",
 						optopt);
 				break;
-			case 'e':
-				flags |= FLAG_EXIT;
-				break;
-			case 'h':
-				flags |= FLAG_HELP;
-				break;
-			case 'i':
-				inhibit = atoi(optarg);
-				break;
-			case 'm':
-				flags |= FLAG_MONITOR;
-				break;
-			case 'W':
-				flags |= FLAG_NO_WAIT;
-				break;
+			case 'e': flags |= FLAG_EXIT; break;
+			case 'h': flags |= FLAG_HELP; break;
+			case 'i': inhibit = atoi(optarg); break;
+			case 'm': flags |= FLAG_MONITOR; break;
+			case 'W': flags |= FLAG_NO_WAIT; break;
 			}
 		}
 	}
@@ -223,8 +214,10 @@ main(int argc, char *argv[])
 					net[id - 1].can_path);
 			goto error_net;
 		}
+		// clang-format off
 		if (__unlikely(io_set_flags(net[id - 1].handle,
 				IO_FLAG_NONBLOCK) == -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(),
 					"unable to set CAN device flags");
 			goto error_net;
@@ -232,8 +225,10 @@ main(int argc, char *argv[])
 		// Watch the CAN device for incoming frames.
 		event.events = IO_EVENT_READ;
 		event.u.data = &net[id - 1];
+		// clang-format off
 		if (__unlikely(io_poll_watch(poll, net[id - 1].handle, &event,
 				1) == -1)) {
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(),
 					"unable to watch CAN device");
 			goto error_net;
@@ -257,8 +252,8 @@ main(int argc, char *argv[])
 		if (__unlikely(!net[id - 1].dev))
 			goto error_net;
 		// Create the NMT service.
-		net[id - 1].nmt = co_nmt_create(net[id - 1].net,
-				net[id - 1].dev);
+		net[id - 1].nmt =
+				co_nmt_create(net[id - 1].net, net[id - 1].dev);
 		if (__unlikely(!net[id - 1].nmt)) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create NMT service");
@@ -304,8 +299,10 @@ main(int argc, char *argv[])
 	send_buf = NULL;
 
 	thrd_t thr;
+	// clang-format off
 	if (__unlikely(thrd_create(&thr, &io_thrd_start, gw_txt)
 			!= thrd_success)) {
+		// clang-format on
 		diag(DIAG_ERROR, 0, "unable to create thread");
 		goto error_create_thr;
 	}
@@ -374,7 +371,7 @@ main(int argc, char *argv[])
 				fputc('\n', stdout);
 			if (ferror(stdin)) {
 				diag(DIAG_ERROR, errno2c(errno),
-					"error reading from stdin");
+						"error reading from stdin");
 				// Abort on a stream error.
 				break;
 			}
@@ -405,19 +402,24 @@ main(int argc, char *argv[])
 			continue;
 		// If a line ends with a continuation character, buffer it.
 		cp = line + strlen(line);
-		while (isspace(*--cp));
+		while (isspace(*--cp))
+			;
 		if (*cp == '\\') {
 			*cp = '\0';
 			if (cmd) {
 				char *tmp;
+				// clang-format off
 				if (__unlikely(asprintf(&tmp, "%s%s", cmd, line)
 						== -1))
+					// clang-format on
 					break;
 				free(cmd);
 				cmd = tmp;
 			} else {
+				// clang-format off
 				if (__unlikely(asprintf(&cmd, "[%u] %s", seq,
 						line) == -1)) {
+					// clang-format on
 					cmd = NULL;
 					break;
 				}
@@ -464,10 +466,8 @@ main(int argc, char *argv[])
 
 			// Signal the I/O thread and wait for one poll cycle.
 			io_poll_signal(poll, 0);
-			const struct timespec duration = {
-				POLL_TIMEOUT / 1000,
-				(POLL_TIMEOUT % 1000) * 1000000
-			};
+			const struct timespec duration = { POLL_TIMEOUT / 1000,
+				(POLL_TIMEOUT % 1000) * 1000000 };
 			thrd_sleep(&duration, NULL);
 		}
 	}
@@ -588,8 +588,7 @@ gw_txt_send(const struct co_gw_req *req, void *data)
 	return co_gw_recv(gw_txt, req);
 }
 
-void __cdecl
-sig_done(int sig)
+void __cdecl sig_done(int sig)
 {
 	__unused_var(sig);
 
@@ -607,8 +606,7 @@ sig_done(int sig)
 	mtx_unlock(&send_mtx);
 }
 
-int __cdecl
-io_thrd_start(void *arg)
+int __cdecl io_thrd_start(void *arg)
 {
 	co_gw_txt_t *gw = arg;
 	assert(gw);
@@ -661,8 +659,10 @@ io_thrd_start(void *arg)
 			timespec_get(&now, TIME_UTC);
 		}
 		// Process user requests.
+		// clang-format off
 		if (buf && (!inhibit || timespec_diff_msec(&now, &last)
 				>= inhibit)) {
+			// clang-format on
 			size_t chars = co_gw_txt_send(gw, cp, end, &at);
 			if (chars) {
 				cp += chars;
@@ -690,9 +690,11 @@ io_thrd_start(void *arg)
 			// Treat the reception of an error frame, or any error
 			// other than an empty receive buffer, as an error
 			// event.
+			// clang-format off
 			if (__unlikely(!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
 					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+				// clang-format on
 				event.events |= IO_EVENT_ERROR;
 		}
 		if (net->st == CAN_STATE_BUSOFF
@@ -720,4 +722,3 @@ co_net_err(struct co_net *net)
 		net->st = st;
 	}
 }
-

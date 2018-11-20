@@ -39,10 +39,10 @@
  * January 1, 1601) and the Unix epoch (seconds since 00:00:00 UTC on January 1,
  * 1970) is 369 years and 89 leap days.
  */
-#define FILETIME_EPOCH	((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
+#define FILETIME_EPOCH ((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
 
 /// The magic number used to check the validity of a timer ("LELY").
-#define TIMER_MAGIC	0x594c454c
+#define TIMER_MAGIC 0x594c454c
 
 /// The timer struct.
 struct timer {
@@ -56,7 +56,7 @@ struct timer {
 	/// The signal value.
 	union sigval sigev_value;
 	/// The notification function.
-	void (__cdecl *sigev_notify_function)(union sigval);
+	void(__cdecl *sigev_notify_function)(union sigval);
 	/// The waitable timer object.
 	HANDLE hTimer;
 	/// The mutex protecting #expire, #period, #armed and #overrun.
@@ -105,42 +105,32 @@ static HANDLE timer_exit;
 static uintptr_t timer_thr = -1;
 
 /// Adds the time interval *<b>inc</b> to the time at <b>tp</b>.
-static inline void timespec_add(struct timespec *tp,
-		const struct timespec *inc);
+static inline void timespec_add(
+		struct timespec *tp, const struct timespec *inc);
 
 /// Subtracts the time interval *<b>dec</b> from the time at <b>tp</b>.
-static inline void timespec_sub(struct timespec *tp,
-		const struct timespec *dec);
+static inline void timespec_sub(
+		struct timespec *tp, const struct timespec *dec);
 
-LELY_LIBC_EXPORT int __cdecl
-timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid)
+LELY_LIBC_EXPORT int __cdecl timer_create(
+		clockid_t clockid, struct sigevent *evp, timer_t *timerid)
 {
 	switch (clockid) {
-	case CLOCK_REALTIME:
-		break;
+	case CLOCK_REALTIME: break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_PROCESS_CPUTIME_ID:
-	case CLOCK_THREAD_CPUTIME_ID:
-		errno = ENOTSUP;
-		return -1;
-	default:
-		errno = EINVAL;
-		return -1;
+	case CLOCK_THREAD_CPUTIME_ID: errno = ENOTSUP; return -1;
+	default: errno = EINVAL; return -1;
 	}
 
 	int sigev_notify = SIGEV_SIGNAL;
 	if (evp)
 		sigev_notify = evp->sigev_notify;
 	switch (sigev_notify) {
-	case SIGEV_SIGNAL:
-		errno = ENOTSUP;
-		return -1;
+	case SIGEV_SIGNAL: errno = ENOTSUP; return -1;
 	case SIGEV_NONE:
-	case SIGEV_THREAD:
-		break;
-	default:
-		errno = EINVAL;
-		return -1;
+	case SIGEV_THREAD: break;
+	default: errno = EINVAL; return -1;
 	}
 
 	int errsv = 0;
@@ -186,8 +176,7 @@ error_malloc_timer:
 	return -1;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-timer_delete(timer_t timerid)
+LELY_LIBC_EXPORT int __cdecl timer_delete(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -208,8 +197,7 @@ timer_delete(timer_t timerid)
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-timer_getoverrun(timer_t timerid)
+LELY_LIBC_EXPORT int __cdecl timer_getoverrun(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -224,8 +212,8 @@ timer_getoverrun(timer_t timerid)
 	return overrun;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-timer_gettime(timer_t timerid, struct itimerspec *value)
+LELY_LIBC_EXPORT int __cdecl timer_gettime(
+		timer_t timerid, struct itimerspec *value)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -251,9 +239,8 @@ timer_gettime(timer_t timerid, struct itimerspec *value)
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl
-timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
-		struct itimerspec *ovalue)
+LELY_LIBC_EXPORT int __cdecl timer_settime(timer_t timerid, int flags,
+		const struct itimerspec *value, struct itimerspec *ovalue)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -266,8 +253,10 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 
 	int arm = expire.tv_sec != 0 || expire.tv_nsec != 0;
 
+	// clang-format off
 	if (__unlikely(arm && (period.tv_nsec < 0
 			|| period.tv_nsec >= 1000000000l))) {
+		// clang-format on
 		errno = EINVAL;
 		return -1;
 	}
@@ -284,10 +273,8 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 			return -1;
 		}
 		lPeriod = (LONG)llPeriod;
-		period = (struct timespec) {
-			lPeriod / 1000,
-			(lPeriod % 1000) * 1000000l
-		};
+		period = (struct timespec){ lPeriod / 1000,
+			(lPeriod % 1000) * 1000000l };
 	}
 
 	struct timespec now = { 0, 0 };
@@ -315,7 +302,8 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 
 		// Remove the timer from the queue, if present.
 		struct timer **ptimer = &timer_list;
-		for (; *ptimer && *ptimer != timer; ptimer = &(*ptimer)->next);
+		for (; *ptimer && *ptimer != timer; ptimer = &(*ptimer)->next)
+			;
 		if (*ptimer)
 			*ptimer = (*ptimer)->next;
 	}
@@ -347,7 +335,8 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 		timer->next = NULL;
 		// Append the timer to the queue.
 		struct timer **ptimer = &timer_list;
-		for (; *ptimer; ptimer = &(*ptimer)->next);
+		for (; *ptimer; ptimer = &(*ptimer)->next)
+			;
 		*ptimer = timer;
 	} else {
 		timer->armed = arm;
@@ -364,8 +353,7 @@ timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
 	return 0;
 }
 
-static void __cdecl
-timer_init(void)
+static void __cdecl timer_init(void)
 {
 	mtx_init(&timer_mtx, mtx_plain);
 
@@ -392,14 +380,9 @@ error_create_timer_exit:
 	mtx_destroy(&timer_mtx);
 }
 
-static void __cdecl
-timer_fini(void)
-{
-	SetEvent(timer_exit);
-}
+static void __cdecl timer_fini(void) { SetEvent(timer_exit); }
 
-static void __cdecl
-timer_start(void *arglist)
+static void __cdecl timer_start(void *arglist)
 {
 	__unused_var(arglist);
 
@@ -407,15 +390,15 @@ timer_start(void *arglist)
 	// wait to allow timer_apc_set() and timer_apc_proc() to run on this
 	// thread.
 	while (WaitForSingleObjectEx(timer_exit, INFINITE, TRUE)
-			== WAIT_IO_COMPLETION);
+			== WAIT_IO_COMPLETION)
+		;
 	// Finalize the objects initialized by timer_init().
 	CloseHandle(timer_exit);
 
 	mtx_destroy(&timer_mtx);
 }
 
-static void __stdcall
-timer_apc_set(ULONG_PTR dwParam)
+static void __stdcall timer_apc_set(ULONG_PTR dwParam)
 {
 	__unused_var(dwParam);
 
@@ -434,14 +417,13 @@ timer_apc_set(ULONG_PTR dwParam)
 	mtx_unlock(&timer_mtx);
 }
 
-static void __stdcall
-timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
-		DWORD dwTimerHighValue)
+static void __stdcall timer_apc_proc(LPVOID lpArgToCompletionRoutine,
+		DWORD dwTimerLowValue, DWORD dwTimerHighValue)
 {
 	struct timer *timer = lpArgToCompletionRoutine;
 
 	union sigval sigev_value;
-	void (__cdecl *sigev_notify_function)(union sigval) = NULL;
+	void(__cdecl * sigev_notify_function)(union sigval) = NULL;
 
 	mtx_lock(&timer->mtx);
 	if (timer->armed) {
@@ -450,29 +432,29 @@ timer_apc_proc(LPVOID lpArgToCompletionRoutine, DWORD dwTimerLowValue,
 
 		if (timer->period.tv_sec || timer->period.tv_nsec) {
 			// Obtain the actual expiration time.
-			ULARGE_INTEGER st = {
-				.LowPart = dwTimerLowValue,
-				.HighPart = dwTimerHighValue
-			};
-			LONGLONG ft = st.QuadPart - (ULONGLONG)FILETIME_EPOCH
-					* 10000000ul;
+			ULARGE_INTEGER st = { .LowPart = dwTimerLowValue,
+				.HighPart = dwTimerHighValue };
+			LONGLONG ft = st.QuadPart
+					- (ULONGLONG)FILETIME_EPOCH
+							* 10000000ul;
 			// Compute the overrun counter.
 			LONGLONG expire = (LONGLONG)timer->expire.tv_sec
-					* 10000000l
+							* 10000000l
 					+ timer->expire.tv_nsec / 100;
 			LONGLONG period = (LONGLONG)timer->period.tv_sec
-					* 10000000l
+							* 10000000l
 					+ timer->period.tv_nsec / 100;
 			LONGLONG overrun = 0;
 			if (ft > expire)
 				overrun = (ft - expire) / period;
 			expire += (overrun + 1) * period;
-			timer->expire = (struct timespec){
-				.tv_sec = expire / 10000000l,
-				.tv_nsec = (expire % 10000000l) * 100
-			};
+			timer->expire = (struct timespec){ .tv_sec = expire
+						/ 10000000l,
+				.tv_nsec = (expire % 10000000l) * 100 };
+			// clang-format off
 			timer->overrun = overrun <= INT_MAX
 					? (int)overrun : INT_MAX;
+			// clang-format on
 		} else {
 			// Reset the timer if it is non-periodic.
 			timer->expire = (struct timespec){ 0, 0 };

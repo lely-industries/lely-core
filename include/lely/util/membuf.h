@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_MEMBUF_H
-#define LELY_UTIL_MEMBUF_H
+#ifndef LELY_UTIL_MEMBUF_H_
+#define LELY_UTIL_MEMBUF_H_
 
 #include <lely/util/util.h>
 
@@ -28,7 +28,7 @@
 #include <string.h>
 
 #ifndef LELY_UTIL_MEMBUF_INLINE
-#define LELY_UTIL_MEMBUF_INLINE	inline
+#define LELY_UTIL_MEMBUF_INLINE inline
 #endif
 
 /// A memory buffer.
@@ -42,7 +42,10 @@ struct membuf {
 };
 
 /// The static initializer for struct #membuf.
-#define MEMBUF_INIT	{ NULL, NULL, NULL }
+#define MEMBUF_INIT \
+	{ \
+		NULL, NULL, NULL \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,8 +96,8 @@ LELY_UTIL_EXTERN size_t membuf_reserve(struct membuf *buf, size_t size);
  *
  * @returns the actual applied offset.
  */
-LELY_UTIL_MEMBUF_INLINE ptrdiff_t membuf_seek(struct membuf *buf,
-		ptrdiff_t offset);
+LELY_UTIL_MEMBUF_INLINE ptrdiff_t membuf_seek(
+		struct membuf *buf, ptrdiff_t offset);
 
 /**
  * Creates region of *<b>size</b> bytes in a memory buffer, starting at the
@@ -125,8 +128,8 @@ LELY_UTIL_MEMBUF_INLINE void *membuf_alloc(struct membuf *buf, size_t *size);
  * @returns the number of bytes written, which may be smaller than <b>size</b>
  * in case of insufficient capacity.
  */
-LELY_UTIL_MEMBUF_INLINE size_t membuf_write(struct membuf *buf, const void *ptr,
-		size_t size);
+LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
+		struct membuf *buf, const void *ptr, size_t size);
 
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
 LELY_UTIL_EXTERN void membuf_flush(struct membuf *buf, size_t size);
@@ -197,5 +200,4 @@ membuf_write(struct membuf *buf, const void *ptr, size_t size)
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_MEMBUF_H_

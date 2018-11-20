@@ -1,10 +1,10 @@
-#ifndef LELY_CO_TEST_TEST_H
-#define LELY_CO_TEST_TEST_H
+#ifndef LELY_CO_TEST_TEST_H_
+#define LELY_CO_TEST_TEST_H_
 
-#include <lely/tap/tap.h>
-#include <lely/util/diag.h>
 #include <lely/can/buf.h>
 #include <lely/can/net.h>
+#include <lely/tap/tap.h>
+#include <lely/util/diag.h>
 #ifndef LELY_CO_NO_WTM
 #include <lely/co/wtm.h>
 #endif
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 
 #ifndef CO_TEST_BUFSIZE
-#define CO_TEST_BUFSIZE	256
+#define CO_TEST_BUFSIZE 256
 #endif
 
 struct co_test {
@@ -49,8 +49,8 @@ static int co_test_send(const struct can_msg *msg, void *data);
 static int co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif,
 		const struct timespec *tp, const struct can_msg *msg,
 		void *data);
-static int co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes,
-		void *data);
+static int co_test_wtm_send(
+		co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 #endif
 
 static void
@@ -68,8 +68,10 @@ co_test_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 	int errsv = errno;
 	char *s = NULL;
+	// clang-format off
 	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
 			>= 0))
+		// clang-format on
 		tap_diag("%s", s);
 	free(s);
 	errno = errsv;
@@ -141,10 +143,8 @@ co_test_step(struct co_test *test)
 	}
 
 	if (test->wait > 0) {
-		const struct timespec wait = {
-			test->wait / 1000,
-			(test->wait % 1000) * 1000000
-		};
+		const struct timespec wait = { test->wait / 1000,
+			(test->wait % 1000) * 1000000 };
 		nanosleep(&wait, NULL);
 	}
 }
@@ -154,7 +154,8 @@ co_test_wait(struct co_test *test)
 {
 	tap_assert(test);
 
-	do co_test_step(test);
+	do
+		co_test_step(test);
 	while (!test->done);
 	test->done = 0;
 }
@@ -222,5 +223,4 @@ co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_TEST_TEST_H_

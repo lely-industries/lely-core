@@ -27,7 +27,7 @@
 
 #ifndef LELY_HAVE_STDNORETURN_H
 #if __STDC_VERSION__ >= 201112L && __has_include(<stdnoreturn.h>)
-#define LELY_HAVE_STDNORETURN_H	1
+#define LELY_HAVE_STDNORETURN_H 1
 #endif
 #endif
 
@@ -38,7 +38,7 @@
 #ifndef __cplusplus
 
 #ifndef noreturn
-#define noreturn	_Noreturn
+#define noreturn _Noreturn
 #endif
 
 #endif

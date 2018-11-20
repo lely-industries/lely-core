@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 #ifndef LELY_DAEMON_TIMEOUT
-#define LELY_DAEMON_TIMEOUT	1000
+#define LELY_DAEMON_TIMEOUT 1000
 #endif
 
 static daemon_handler_t *daemon_handler = &default_daemon_handler;
@@ -62,8 +62,7 @@ static SERVICE_STATUS ServiceStatus = {
 	.dwServiceType = SERVICE_WIN32_OWN_PROCESS,
 	.dwControlsAccepted = SERVICE_ACCEPT_STOP
 			| SERVICE_ACCEPT_PAUSE_CONTINUE
-			| SERVICE_ACCEPT_SHUTDOWN
-			| SERVICE_ACCEPT_PARAMCHANGE,
+			| SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PARAMCHANGE,
 	.dwWin32ExitCode = NO_ERROR,
 	.dwWaitHint = 2 * LELY_DAEMON_TIMEOUT
 };
@@ -81,8 +80,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	daemon_fini = fini;
 
 	SERVICE_TABLE_ENTRYA ServiceTable[] = {
-		{ (LPSTR)daemon_name, &ServiceMain },
-		{ NULL, NULL }
+		{ (LPSTR)daemon_name, &ServiceMain }, { NULL, NULL }
 	};
 	return StartServiceCtrlDispatcherA(ServiceTable) ? 0 : -1;
 }
@@ -107,20 +105,11 @@ daemon_status(int status)
 	DWORD dwCurrentState = 0;
 	switch (status) {
 	case DAEMON_START:
-	case DAEMON_CONTINUE:
-		dwCurrentState = SERVICE_RUNNING;
-		break;
-	case DAEMON_STOP:
-		dwCurrentState = SERVICE_STOPPED;
-		break;
-	case DAEMON_PAUSE:
-		dwCurrentState = SERVICE_PAUSED;
-		break;
-	case DAEMON_RELOAD:
-		break;
-	default:
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return -1;
+	case DAEMON_CONTINUE: dwCurrentState = SERVICE_RUNNING; break;
+	case DAEMON_STOP: dwCurrentState = SERVICE_STOPPED; break;
+	case DAEMON_PAUSE: dwCurrentState = SERVICE_PAUSED; break;
+	case DAEMON_RELOAD: break;
+	default: SetLastError(ERROR_INVALID_PARAMETER); return -1;
 	}
 
 	return ReportStatus(dwCurrentState);
@@ -199,9 +188,7 @@ Handler(DWORD fdwControl)
 		ReportStatus(SERVICE_CONTINUE_PENDING);
 		sig = DAEMON_CONTINUE;
 		break;
-	case SERVICE_CONTROL_PARAMCHANGE:
-		sig = DAEMON_RELOAD;
-		break;
+	case SERVICE_CONTROL_PARAMCHANGE: sig = DAEMON_RELOAD; break;
 	default:
 		if (fdwControl >= 128 && fdwControl <= 255)
 			sig = DAEMON_USER_MIN + (fdwControl - 128);
@@ -229,11 +216,8 @@ ReportStatus(DWORD dwCurrentState)
 		break;
 	case SERVICE_STOPPED:
 	case SERVICE_RUNNING:
-	case SERVICE_PAUSED:
-		ServiceStatus.dwCheckPoint = 0;
-		break;
-	default:
-		break;
+	case SERVICE_PAUSED: ServiceStatus.dwCheckPoint = 0; break;
+	default: break;
 	}
 
 	return SetServiceStatus(hServiceStatus, &ServiceStatus) ? 0 : -1;
@@ -308,8 +292,10 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		errsv = errno;
 		goto error_fcntl;
 	}
+	// clang-format off
 	if (__unlikely(fcntl(daemon_pipe[0], F_SETFL, flags | O_NONBLOCK)
 			== -1)) {
+		// clang-format on
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
@@ -319,8 +305,10 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		errsv = errno;
 		goto error_fcntl;
 	}
+	// clang-format off
 	if (__unlikely(fcntl(daemon_pipe[1], F_SETFL, flags | O_NONBLOCK)
 			== -1)) {
+		// clang-format on
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
@@ -351,8 +339,10 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 
 #ifndef LELY_NO_THREADS
 	thrd_t thr;
+	// clang-format off
 	if (__unlikely(thrd_create(&thr, &daemon_thrd_start, NULL)
 			!= thrd_success)) {
+		// clang-format on
 		result = -1;
 		goto error_thrd_create;
 	}
@@ -410,7 +400,8 @@ daemon_signal(int sig)
 	}
 
 	int result;
-	do result = write(daemon_pipe[1], &(unsigned char){ sig }, 1);
+	do
+		result = write(daemon_pipe[1], &(unsigned char){ sig }, 1);
 	while (__unlikely(result == -1 && errno == EINTR));
 	return result;
 }
@@ -492,8 +483,10 @@ daemon_proc(void)
 	fclose(stdout);
 	close(STDOUT_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
+	// clang-format off
 	if (__unlikely(open("/dev/null", O_WRONLY | O_CLOEXEC)
 			!= STDOUT_FILENO))
+		// clang-format on
 		return -1;
 #else
 	if (__unlikely(open("/dev/null", O_WRONLY) != STDOUT_FILENO))
@@ -529,14 +522,9 @@ static void
 daemon_signal_func(int sig)
 {
 	switch (sig) {
-	case SIGTERM:
-		daemon_stop();
-		break;
-	case SIGHUP:
-		daemon_reload();
-		break;
-	default:
-		break;
+	case SIGTERM: daemon_stop(); break;
+	case SIGHUP: daemon_reload(); break;
+	default: break;
 	}
 }
 
@@ -549,17 +537,16 @@ daemon_thrd_start(void *arg)
 	for (;;) {
 		int result;
 		// Monitor the read end of the pipe for incoming data.
-		struct pollfd fds = {
-			.fd = daemon_pipe[0],
-			.events = POLLIN
-		};
-		do result = poll(&fds, 1, LELY_DAEMON_TIMEOUT);
+		struct pollfd fds = { .fd = daemon_pipe[0], .events = POLLIN };
+		do
+			result = poll(&fds, 1, LELY_DAEMON_TIMEOUT);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result != 1))
 			continue;
 		// Read a single signal value.
 		unsigned char uc = 0;
-		do result = read(daemon_pipe[0], &uc, 1);
+		do
+			result = read(daemon_pipe[0], &uc, 1);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result < 1))
 			continue;
@@ -631,4 +618,3 @@ default_daemon_handler(int sig, void *handle)
 }
 
 #endif // !LELY_NO_DAEMON
-

@@ -69,4 +69,3 @@ emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 
 	co_test_done(test);
 }
-

@@ -23,8 +23,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_RAND_H
-#define LELY_UTIL_RAND_H
+#ifndef LELY_UTIL_RAND_H_
+#define LELY_UTIL_RAND_H_
 
 #include <lely/libc/stdint.h>
 #include <lely/util/util.h>
@@ -125,5 +125,4 @@ LELY_UTIL_EXTERN void rand8_discard(struct rand8 *r, uint64_t z);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_RAND_H_

@@ -25,9 +25,9 @@
 
 #ifndef LELY_NO_CO_MASTER
 
-#include <lely/util/errnum.h>
-#include <lely/co/dev.h>
 #include "nmt_cfg.h"
+#include <lely/co/dev.h>
+#include <lely/util/errnum.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -131,20 +131,24 @@ struct __co_nmt_cfg_state {
 static co_nmt_cfg_state_t *co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg);
 
 /// The 'result received' function of the 'initialization' state.
-static co_nmt_cfg_state_t *co_nmt_cfg_init_on_res(co_nmt_cfg_t *cfg,
-		co_unsigned32_t ac);
+static co_nmt_cfg_state_t *co_nmt_cfg_init_on_res(
+		co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_cfg_init_state,
 	.on_enter = &co_nmt_cfg_init_on_enter,
 	.on_res = &co_nmt_cfg_init_on_res
 )
+// clang-format on
 
 /// The entry function of the 'abort' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg);
 
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_cfg_abort_state,
 	.on_enter = &co_nmt_cfg_abort_on_enter
 )
+// clang-format on
 
 /// The entry function of the 'restore configuration' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg);
@@ -156,10 +160,12 @@ static co_nmt_cfg_state_t *co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg);
 static co_nmt_cfg_state_t *co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg,
 		co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned32_t ac);
 
+// clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_cfg_restore_state,
 	.on_enter = &co_nmt_cfg_restore_on_enter,
 	.on_dn_con = &co_nmt_cfg_restore_on_dn_con
 )
+// clang-format on
 
 #undef LELY_CO_DEFINE_STATE
 
@@ -395,10 +401,12 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 		return co_nmt_cfg_abort_state;
 
 	// Write the value 'load' to sub-index of object 1011 on the slave.
+	// clang-format off
 	if (__unlikely(co_csdo_dn_val_req(cfg->sdo, 0x1011, subidx,
 			CO_DEFTYPE_UNSIGNED32,
 			&(co_unsigned32_t){ UINT32_C(0x64616f6c) },
 			&co_nmt_cfg_dn_con, cfg) == -1)) {
+		// clang-format on
 		cfg->ac = CO_SDO_AC_ERROR;
 		return co_nmt_cfg_abort_state;
 	}
@@ -435,4 +443,3 @@ co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 }
 
 #endif // !LELY_NO_CO_MASTER
-

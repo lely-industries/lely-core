@@ -19,20 +19,20 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SYNC_H
-#define LELY_CO_SYNC_H
+#ifndef LELY_CO_SYNC_H_
+#define LELY_CO_SYNC_H_
 
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
 /// The bit in the SYNC COB-ID specifying whether the device is a producer.
-#define CO_SYNC_COBID_PRODUCER	UINT32_C(0x40000000)
+#define CO_SYNC_COBID_PRODUCER UINT32_C(0x40000000)
 
 /**
  * The bit in the SYNC COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
-#define CO_SYNC_COBID_FRAME	UINT32_C(0x20000000)
+#define CO_SYNC_COBID_FRAME UINT32_C(0x20000000)
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,8 +62,8 @@ typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
 
 LELY_CO_EXTERN void *__co_sync_alloc(void);
 LELY_CO_EXTERN void __co_sync_free(void *ptr);
-LELY_CO_EXTERN struct __co_sync *__co_sync_init(struct __co_sync *sync,
-		can_net_t *net, co_dev_t *dev);
+LELY_CO_EXTERN struct __co_sync *__co_sync_init(
+		struct __co_sync *sync, can_net_t *net, co_dev_t *dev);
 LELY_CO_EXTERN void __co_sync_fini(struct __co_sync *sync);
 
 /**
@@ -100,8 +100,8 @@ LELY_CO_EXTERN co_dev_t *co_sync_get_dev(const co_sync_t *sync);
  *
  * @see co_sync_set_ind()
  */
-LELY_CO_EXTERN void co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind,
-		void **pdata);
+LELY_CO_EXTERN void co_sync_get_ind(
+		const co_sync_t *sync, co_sync_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked after a CANopen SYNC message is received
@@ -114,8 +114,8 @@ LELY_CO_EXTERN void co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind,
  *
  * @see co_sync_get_ind()
  */
-LELY_CO_EXTERN void co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_sync_set_ind(
+		co_sync_t *sync, co_sync_ind_t *ind, void *data);
 
 /**
  * Retrieves the error handling function of a SYNC consumer service.
@@ -128,8 +128,8 @@ LELY_CO_EXTERN void co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind,
  *
  * @see co_sync_set_err()
  */
-LELY_CO_EXTERN void co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr,
-		void **pdata);
+LELY_CO_EXTERN void co_sync_get_err(
+		const co_sync_t *sync, co_sync_err_t **perr, void **pdata);
 
 /**
  * Sets the error handling function of a SYNC consumer service.
@@ -141,12 +141,11 @@ LELY_CO_EXTERN void co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr,
  *
  * @see co_sync_get_err()
  */
-LELY_CO_EXTERN void co_sync_set_err(co_sync_t *sync, co_sync_err_t *err,
-		void *data);
+LELY_CO_EXTERN void co_sync_set_err(
+		co_sync_t *sync, co_sync_err_t *err, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_SYNC_H_

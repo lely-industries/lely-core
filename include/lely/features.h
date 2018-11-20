@@ -35,7 +35,7 @@
 #error This file requires Microsoft Visual C++ 2013 or later.
 #endif
 // Disable warnings about deprecated POSIX functions.
-#pragma warning(disable: 4996)
+#pragma warning(disable : 4996)
 #endif
 
 #ifdef _WIN32
@@ -76,7 +76,7 @@
 #define __CLANG_PREREQ(major, minor) \
 	((__clang_major__ << 16) + __clang_minor__ >= ((major) << 16) + (minor))
 #else
-#define __CLANG_PREREQ(major, minor)	0
+#define __CLANG_PREREQ(major, minor) 0
 #endif
 #endif
 
@@ -85,37 +85,37 @@
 #define __GNUC_PREREQ(major, minor) \
 	((__GNUC__ << 16) + __GNUC_MINOR__ >= ((major) << 16) + (minor))
 #else
-#define __GNUC_PREREQ(major, minor)	0
+#define __GNUC_PREREQ(major, minor) 0
 #endif
 #endif
 
 #ifndef __has_attribute
-#define __has_attribute(x)	0
+#define __has_attribute(x) 0
 #endif
 
 #ifndef __has_builtin
-#define __has_builtin(x)	0
+#define __has_builtin(x) 0
 #endif
 
 #ifndef __has_declspec_attribute
-#define __has_declspec_attribute(x)	0
+#define __has_declspec_attribute(x) 0
 #endif
 
 #ifndef __has_extension
-#define __has_extension	__has_feature
+#define __has_extension __has_feature
 #endif
 
 #ifndef __has_feature
-#define __has_feature(x)	0
+#define __has_feature(x) 0
 #endif
 
 #ifndef __has_include
-#define __has_include(x)	1
+#define __has_include(x) 1
 #endif
 
 #ifndef __STDC_HOSTED__
 #if defined(_MSC_VER) && _MSC_VER < 1900
-#define __STDC_HOSTED__	1
+#define __STDC_HOSTED__ 1
 #endif
 #endif
 
@@ -124,7 +124,7 @@
 // <stdatomic.h>.
 #if defined(__cplusplus) || defined(_MSC_VER) \
 		|| (defined(__GNUC__) && !__GNUC_PREREQ(4, 9))
-#define __STDC_NO_ATOMICS__	1
+#define __STDC_NO_ATOMICS__ 1
 #endif
 #endif
 
@@ -132,13 +132,13 @@
 // Although recent versions of Cygwin do provide <threads.h>, it requires
 // <machine/_threads.h>, which is missing.
 #if defined(__cplusplus) || defined(_MSC_VER) || defined(__CYGWIN__)
-#define __STDC_NO_THREADS__	1
+#define __STDC_NO_THREADS__ 1
 #endif
 #endif
 
 #ifndef __STDC_NO_VLA__
 #if defined(__cplusplus) || defined(_MSC_VER)
-#define __STDC_NO_VLA__	1
+#define __STDC_NO_VLA__ 1
 #endif
 #endif
 
@@ -148,7 +148,7 @@
 #if (defined(_MSC_VER) && _HAS_EXCEPTIONS) \
 		|| (defined(__GNUC__) && defined(__EXCEPTIONS)) \
 		|| (defined(__clang__) && __has_feature(cxx_exceptions))
-#define __cpp_exceptions	__cplusplus
+#define __cpp_exceptions __cplusplus
 #endif
 #endif
 
@@ -156,41 +156,45 @@
 #if (defined(_MSC_VER) && _CPPRTTI) \
 		|| (defined(__GNUC__) && defined(__GXX_RTTI)) \
 		|| (defined(__clang__) && __has_feature(cxx_rtti))
-#define __cpp_rtti	__cplusplus
+#define __cpp_rtti __cplusplus
 #endif
 #endif
 
 #endif // __cplusplus
 
 /// Specifies the alignment requirement of the declared object or member.
+// clang-format off
 #if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
+// clang-format on
 #if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignas))
-#define _Alignas	alignas
+#define _Alignas alignas
 #elif defined(__GNUC__) || __has_attribute(__aligned__)
-#define _Alignas(x)	__attribute__((__aligned__(x)))
+#define _Alignas(x) __attribute__((__aligned__(x)))
 #elif defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(align)
-#define _Alignas(x)	__declspec(align(x))
+#define _Alignas(x) __declspec(align(x))
 #else
 #define _Alignas(x)
 #endif
 #endif
 
 /// Yields the alignment requirement of its operand type.
+// clang-format off
 #if !defined(_Alignof) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
+// clang-format on
 #if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignof))
-#define _Alignof	alignof
+#define _Alignof alignof
 #elif defined(__GNUC__)
-#define _Alignof(x)	__alignof__(x)
+#define _Alignof(x) __alignof__(x)
 #elif defined(_MSC_VER)
-#define _Alignof(x)	__alignof(x)
+#define _Alignof(x) __alignof(x)
 #else
 #include <stddef.h>
-#define _Alignof(type)	(offsetof(struct { char c; type x; }, x))
+#define _Alignof(type)(offsetof(struct { char c; type x; }, x))
 #endif
 #endif
 
@@ -198,13 +202,15 @@
  * A function declared with a `_Noreturn` function specifier SHALL not return to
  * its caller.
  */
+// clang-format off
 #if !defined(_Noreturn) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __CLANG_PREREQ(3, 3)))
+// clang-format on
 #if defined(__GNUC__) || __has_attribute(__noreturn__)
-#define _Noreturn	__attribute__((__noreturn__))
+#define _Noreturn __attribute__((__noreturn__))
 #elif defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(noreturn)
-#define _Noreturn	__declspec(noreturn)
+#define _Noreturn __declspec(noreturn)
 #else
 #define _Noreturn
 #endif
@@ -216,21 +222,20 @@
  * produced which may, depending on the implementation, include the text of
  * <b>msg</b>.
  */
+// clang-format off
 #if !defined(_Static_assert) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
+// clang-format on
 #if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 3) || __has_feature(cxx_static_assert))
-#define _Static_assert	static_assert
+#define _Static_assert static_assert
 #else
 #ifdef __COUNTER__
-#define _Static_assert(expr, msg) \
-	__Static_assert(expr, __COUNTER__)
+#define _Static_assert(expr, msg) __Static_assert(expr, __COUNTER__)
 #else
-#define _Static_assert(expr, msg) \
-	__Static_assert(expr, __LINE__)
+#define _Static_assert(expr, msg) __Static_assert(expr, __LINE__)
 #endif
-#define __Static_assert(expr, n) \
-	___Static_assert(expr, n)
+#define __Static_assert(expr, n) ___Static_assert(expr, n)
 #define ___Static_assert(expr, n) \
 	typedef char ___Static_assert_##n[(expr) ? 1 : -1]
 #endif
@@ -244,16 +249,18 @@
  * thread, and use of the declared name in an expression refers to the object
  * associated with the thread evaluating the expression.
  */
+// clang-format off
 #if !defined(_Thread_local) && !(__STDC_VERSION__ >= 201112L \
 		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_thread_local)))
+// clang-format on
 #if __cplusplus >= 201103L \
 		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_thread_local))
-#define _Thread_local	thread_local
+#define _Thread_local thread_local
 #elif defined(__GNUC__)
-#define _Thread_local	__thread
+#define _Thread_local __thread
 #elif defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(thread)
-#define _Thread_local	__declspec(thread)
+#define _Thread_local __declspec(thread)
 #else
 #define _Thread_local
 #endif
@@ -262,7 +269,7 @@
 #ifndef __builtin_expect
 #if defined(__GNUC__) || __has_builtin(__builtin_expect)
 #else
-#define __builtin_expect(exp, c)	(exp)
+#define __builtin_expect(exp, c) (exp)
 #endif
 #endif
 
@@ -273,27 +280,31 @@
 #ifndef __deprecated
 /// Mark a function as deprecated.
 #if defined(__GNUC__) || __has_attribute(__deprecated__)
-#define __deprecated	__attribute__((__deprecated__))
+#define __deprecated __attribute__((__deprecated__))
 #else
 #define __deprecated
 #endif
 #endif
 
 #ifndef __dllexport
+// clang-format off
 #if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(dllexport))
-#define __dllexport	__declspec(dllexport)
+// clang-format on
+#define __dllexport __declspec(dllexport)
 #elif defined(__GNUC__)
-#define __dllexport	__attribute__((visibility("default")))
+#define __dllexport __attribute__((visibility("default")))
 #else
 #define __dllexport
 #endif
 #endif
 
 #ifndef __dllimport
+// clang-format off
 #if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
 		|| __has_declspec_attribute(dllimport))
-#define __dllimport	__declspec(dllimport)
+// clang-format on
+#define __dllimport __declspec(dllimport)
 #else
 #define __dllimport
 #endif
@@ -309,18 +320,17 @@
 #define __format_printf(i, j) \
 	__attribute__((__format__(__gnu_printf__, (i), (j))))
 #else
-#define __format_printf(i, j) \
-	__attribute__((__format__(__printf__, (i), (j))))
+#define __format_printf(i, j) __attribute__((__format__(__printf__, (i), (j))))
 #endif
 #else
-#define	__format_printf(i, j)
+#define __format_printf(i, j)
 #endif
 #endif
 
 #if !defined(__cplusplus) && defined(_MSC_VER) && _MSC_VER < 1900
 // Microsoft Visual C++ 2013 and earlier do not support the C99 inline keyword.
 #ifndef inline
-#define inline	__inline
+#define inline __inline
 #endif
 #endif
 
@@ -329,7 +339,7 @@
  * Indicates to the compiler that the expression is most-likely true. Subject to
  * the same considerations as __unlikely().
  */
-#define __likely(x)	__builtin_expect(!!(x), 1)
+#define __likely(x) __builtin_expect(!!(x), 1)
 #endif
 
 #ifndef __unlikely
@@ -342,15 +352,15 @@
  *
  * @see __likely()
  */
-#define __unlikely(x)	__builtin_expect(!!(x), 0)
+#define __unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
 #ifndef __unused_arg
 /// Suppresses a compiler warning about an unused function argument.
 #ifdef _MSC_VER
-#define __unused_arg	__pragma(warning(suppress: 4100))
+#define __unused_arg __pragma(warning(suppress : 4100))
 #elif defined(__GNUC__) || __has_attribute(__unused__)
-#define __unused_arg	__attribute__((__unused__))
+#define __unused_arg __attribute__((__unused__))
 #else
 #define __unused_arg
 #endif
@@ -359,21 +369,23 @@
 #ifndef __unused_var
 /// Suppresses a compiler warning about an unused variable.
 #ifdef _MSC_VER
-#define __unused_var(x)	__pragma(warning(suppress: 4100 4101)) x
+#define __unused_var(x) __pragma(warning(suppress : 4100 4101)) x
 #else
-#define __unused_var(x)	((void)(0 ? ((void)(x), 0) : 0))
+#define __unused_var(x) ((void)(0 ? ((void)(x), 0) : 0))
 #endif
 #endif
 
 #ifndef __WORDSIZE
 /// The native word size (in bits).
+// clang-format off
 #if !defined(__ILP32__) && (defined(__LP64__) || defined(_WIN64) \
 		|| defined(_M_AMD64) || defined(__amd64__) || defined(_M_IA64) \
 		|| defined(__ia64__) || defined(_M_X64) || defined(__x86_64__) \
 		|| defined(__aarch64__))
-#define __WORDSIZE	64
+// clang-format on
+#define __WORDSIZE 64
 #else
-#define __WORDSIZE	32
+#define __WORDSIZE 32
 #endif
 #endif
 
@@ -381,15 +393,15 @@
 /// The number of bits in a long.
 #ifdef _WIN32
 // long remains 32-bits on 64-bit Windows.
-#define LONG_BIT	32
+#define LONG_BIT 32
 #else
-#define LONG_BIT	__WORDSIZE
+#define LONG_BIT __WORDSIZE
 #endif
 #endif
 
 #ifndef LEVEL1_DCACHE_LINESIZE
 /// The size (in bytes) of the level 1 (L1) data cache.
-#define LEVEL1_DCACHE_LINESIZE	64
+#define LEVEL1_DCACHE_LINESIZE 64
 #endif
 
 #endif // LELY_FEATURES_H_

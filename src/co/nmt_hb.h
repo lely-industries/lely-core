@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_NMT_HB_H
-#define LELY_CO_INTERN_NMT_HB_H
+#ifndef LELY_CO_INTERN_NMT_HB_H_
+#define LELY_CO_INTERN_NMT_HB_H_
 
 #include "co.h"
 #include <lely/co/nmt.h>
@@ -54,8 +54,8 @@ void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 void *__co_nmt_hb_alloc(void);
 void __co_nmt_hb_free(void *ptr);
-struct __co_nmt_hb *__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net,
-		co_nmt_t *nmt);
+struct __co_nmt_hb *__co_nmt_hb_init(
+		struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt);
 void __co_nmt_hb_fini(struct __co_nmt_hb *hb);
 
 /**
@@ -103,5 +103,4 @@ void co_nmt_hb_set_st(co_nmt_hb_t *hb, co_unsigned8_t st);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_INTERN_NMT_HB_H_

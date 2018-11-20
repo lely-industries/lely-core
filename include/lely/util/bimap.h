@@ -1,7 +1,7 @@
 /**@file
  * This header file is part of the utilities library; it contains the
- * <a href="https://en.wikipedia.org/wiki/Bidirectional_map">bidirectional map</a>
- * declarations.
+ * <a href="https://en.wikipedia.org/wiki/Bidirectional_map">bidirectional
+ * map</a> declarations.
  *
  * The bidirectional map is implemented as a pair of red-black trees, one for
  * lookups by key, the other for lookups by value. The implementation is generic
@@ -33,7 +33,7 @@
 #include <lely/util/rbtree.h>
 
 #ifndef LELY_UTIL_BIMAP_INLINE
-#define LELY_UTIL_BIMAP_INLINE	inline
+#define LELY_UTIL_BIMAP_INLINE inline
 #endif
 
 /**
@@ -71,8 +71,8 @@ extern "C" {
  * @param value a pointer to the value of the node. The value MUST NOT be
  *              modified while the node is part of a map.
  */
-LELY_UTIL_BIMAP_INLINE void binode_init(struct binode *node, const void *key,
-		const void *value);
+LELY_UTIL_BIMAP_INLINE void binode_init(
+		struct binode *node, const void *key, const void *value);
 
 /**
  * Returns a pointer to the previous (in-order) node by key in a bidirectional
@@ -133,6 +133,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 #endif
 #define _binode_foreach_by_key(first, node, n) \
 	__binode_foreach_by_key(first, node, n)
+// clang-format off
 #define __binode_foreach_by_key(first, node, n) \
 	for (struct binode *(node) = (first), \
 			*__binode_next_by_key_##n = (node) \
@@ -140,6 +141,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 			(node); (node) = __binode_next_by_key_##n, \
 			__binode_next_by_key_##n = (node) \
 			? binode_next_by_key(node) : NULL)
+// clang-format on
 
 /**
  * Iterates over each node in a bidirectional map in ascending order by value.
@@ -160,6 +162,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 #endif
 #define _binode_foreach_by_value(first, node, n) \
 	__binode_foreach_by_value(first, node, n)
+// clang-format off
 #define __binode_foreach_by_value(first, node, n) \
 	for (struct binode *(node) = (first), \
 			*__binode_next_by_value_##n = (node) \
@@ -167,6 +170,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 			(node); (node) = __binode_next_by_value_##n, \
 			__binode_next_by_value_##n = (node) \
 			? binode_next_by_value(node) : NULL)
+// clang-format on
 
 /**
  * Initializes a bidirectional map.
@@ -175,8 +179,8 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
  * @param key_cmp   a pointer to the function used to compare two keys.
  * @param value_cmp a pointer to the function used to compare two values.
  */
-LELY_UTIL_BIMAP_INLINE void bimap_init(struct bimap *map, cmp_t *key_cmp,
-		cmp_t *value_cmp);
+LELY_UTIL_BIMAP_INLINE void bimap_init(
+		struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp);
 
 /// Returns 1 if the bidirectional map is empty, and 0 if not.
 LELY_UTIL_BIMAP_INLINE int bimap_empty(const struct bimap *map);
@@ -194,16 +198,16 @@ LELY_UTIL_BIMAP_INLINE size_t bimap_size(const struct bimap *map);
  *
  * @see bimap_remove(), bimap_find_by_key(), bimap_find_by_value()
  */
-LELY_UTIL_BIMAP_INLINE void bimap_insert(struct bimap *map,
-		struct binode *node);
+LELY_UTIL_BIMAP_INLINE void bimap_insert(
+		struct bimap *map, struct binode *node);
 
 /**
  * Removes a node from a bidirectional map. This is an O(log(n)) operation.
  *
  * @see bimap_insert()
  */
-LELY_UTIL_BIMAP_INLINE void bimap_remove(struct bimap *map,
-		struct binode *node);
+LELY_UTIL_BIMAP_INLINE void bimap_remove(
+		struct bimap *map, struct binode *node);
 
 /**
  * Finds a node by key in a bidirectional map. This is an O(log(n)) operation.
@@ -212,8 +216,8 @@ LELY_UTIL_BIMAP_INLINE void bimap_remove(struct bimap *map,
  *
  * @see bimap_insert(), bimap_find_by_value()
  */
-LELY_UTIL_BIMAP_INLINE struct binode *bimap_find_by_key(const struct bimap *map,
-		const void *key);
+LELY_UTIL_BIMAP_INLINE struct binode *bimap_find_by_key(
+		const struct bimap *map, const void *key);
 
 /**
  * Finds a node by value in a bidirectional map. This is an O(log(n)) operation.
@@ -267,7 +271,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_value(
  * @see binode_foreach_by_key(), bimap_first_by_key()
  */
 #define bimap_foreach_by_key(map, node) \
-	binode_foreach_by_key(bimap_first_by_key(map), node)
+	binode_foreach_by_key (bimap_first_by_key(map), node)
 
 /**
  * Iterates over each node in a bidirectional map in ascending order by value.
@@ -275,7 +279,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_value(
  * @see binode_foreach_by_value(), bimap_first_by_value()
  */
 #define bimap_foreach_by_value(map, node) \
-	binode_foreach_by_value(bimap_first_by_value(map), node)
+	binode_foreach_by_value (bimap_first_by_value(map), node)
 
 LELY_UTIL_BIMAP_INLINE void
 binode_init(struct binode *node, const void *key, const void *value)

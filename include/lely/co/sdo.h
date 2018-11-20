@@ -19,27 +19,27 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SDO_H
-#define LELY_CO_SDO_H
+#ifndef LELY_CO_SDO_H_
+#define LELY_CO_SDO_H_
 
-#include <lely/util/membuf.h>
 #include <lely/co/type.h>
+#include <lely/util/membuf.h>
 
 #ifndef LELY_CO_SDO_INLINE
-#define LELY_CO_SDO_INLINE	inline
+#define LELY_CO_SDO_INLINE inline
 #endif
 
 /// The bit in the SDO COB-ID specifying whether the SDO exists and is valid.
-#define CO_SDO_COBID_VALID	UINT32_C(0x80000000)
+#define CO_SDO_COBID_VALID UINT32_C(0x80000000)
 
 /**
  * The bit in the SDO COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
-#define CO_SDO_COBID_FRAME	UINT32_C(0x20000000)
+#define CO_SDO_COBID_FRAME UINT32_C(0x20000000)
 
 /// The data type (and object index) of an SDO parameter record.
-#define CO_DEFSTRUCT_SDO_PAR	0x0022
+#define CO_DEFSTRUCT_SDO_PAR 0x0022
 
 /// An SDO parameter record.
 struct co_sdo_par {
@@ -54,122 +54,125 @@ struct co_sdo_par {
 };
 
 /// The static initializer for struct #co_sdo_par.
-#define CO_SDO_PAR_INIT	{ 3, CO_SDO_COBID_VALID, CO_SDO_COBID_VALID, 0 }
+#define CO_SDO_PAR_INIT \
+	{ \
+		3, CO_SDO_COBID_VALID, CO_SDO_COBID_VALID, 0 \
+	}
 
 /// SDO abort code: Toggle bit not altered.
-#define CO_SDO_AC_TOGGLE	UINT32_C(0x05030000)
+#define CO_SDO_AC_TOGGLE UINT32_C(0x05030000)
 
 /// SDO abort code: SDO protocol timed out.
-#define CO_SDO_AC_TIMEOUT	UINT32_C(0x05040000)
+#define CO_SDO_AC_TIMEOUT UINT32_C(0x05040000)
 
 /// SDO abort code: Client/server command specifier not valid or unknown.
-#define CO_SDO_AC_NO_CS		UINT32_C(0x05040001)
+#define CO_SDO_AC_NO_CS UINT32_C(0x05040001)
 
 /// SDO abort code: Invalid block size (block mode only).
-#define CO_SDO_AC_BLK_SIZE	UINT32_C(0x05040002)
+#define CO_SDO_AC_BLK_SIZE UINT32_C(0x05040002)
 
 /// SDO abort code: Invalid sequence number (block mode only).
-#define CO_SDO_AC_BLK_SEQ	UINT32_C(0x05040003)
+#define CO_SDO_AC_BLK_SEQ UINT32_C(0x05040003)
 
 /// SDO abort code: CRC error (block mode only).
-#define CO_SDO_AC_BLK_CRC	UINT32_C(0x05040004)
+#define CO_SDO_AC_BLK_CRC UINT32_C(0x05040004)
 
 /// SDO abort code: Out of memory.
-#define CO_SDO_AC_NO_MEM	UINT32_C(0x05040005)
+#define CO_SDO_AC_NO_MEM UINT32_C(0x05040005)
 
 /// SDO abort code: Unsupported access to an object.
-#define CO_SDO_AC_NO_ACCESS	UINT32_C(0x06010000)
+#define CO_SDO_AC_NO_ACCESS UINT32_C(0x06010000)
 
 /// SDO abort code: Attempt to read a write only object.
-#define CO_SDO_AC_NO_READ	UINT32_C(0x06010001)
+#define CO_SDO_AC_NO_READ UINT32_C(0x06010001)
 
 /// SDO abort code: Attempt to write a read only object.
-#define CO_SDO_AC_NO_WRITE	UINT32_C(0x06010002)
+#define CO_SDO_AC_NO_WRITE UINT32_C(0x06010002)
 
 /// SDO abort code: Object does not exist in the object dictionary.
-#define CO_SDO_AC_NO_OBJ	UINT32_C(0x06020000)
+#define CO_SDO_AC_NO_OBJ UINT32_C(0x06020000)
 
 /// SDO abort code: Object cannot be mapped to the PDO.
-#define CO_SDO_AC_NO_PDO	UINT32_C(0x06040041)
+#define CO_SDO_AC_NO_PDO UINT32_C(0x06040041)
 
 /**
  * SDO abort code: The number and length of the objects to be mapped would
  * exceed the PDO length.
  */
-#define CO_SDO_AC_PDO_LEN	UINT32_C(0x06040042)
+#define CO_SDO_AC_PDO_LEN UINT32_C(0x06040042)
 
 /// SDO abort code: General parameter incompatibility reason.
-#define CO_SDO_AC_PARAM		UINT32_C(0x06040043)
+#define CO_SDO_AC_PARAM UINT32_C(0x06040043)
 
 /// SDO abort code: General internal incompatibility in the device.
-#define CO_SDO_AC_COMPAT	UINT32_C(0x06040047)
+#define CO_SDO_AC_COMPAT UINT32_C(0x06040047)
 
 /// SDO abort code: Access failed due to a hardware error.
-#define CO_SDO_AC_HARDWARE	UINT32_C(0x06060000)
+#define CO_SDO_AC_HARDWARE UINT32_C(0x06060000)
 
 /**
  * SDO abort code: Data type does not match, length of service parameter does
  * not match.
  */
-#define CO_SDO_AC_TYPE_LEN	UINT32_C(0x06070010)
+#define CO_SDO_AC_TYPE_LEN UINT32_C(0x06070010)
 
 /**
  * SDO abort code: Data type does not match, length of service parameter too
  * high.
  */
-#define CO_SDO_AC_TYPE_LEN_HI	UINT32_C(0x06070012)
+#define CO_SDO_AC_TYPE_LEN_HI UINT32_C(0x06070012)
 
 /**
  * SDO abort code: Data type does not match, length of service parameter too
  * low.
  */
-#define CO_SDO_AC_TYPE_LEN_LO	UINT32_C(0x06070013)
+#define CO_SDO_AC_TYPE_LEN_LO UINT32_C(0x06070013)
 
 /// SDO abort code: Sub-index does not exist.
-#define CO_SDO_AC_NO_SUB	UINT32_C(0x06090011)
+#define CO_SDO_AC_NO_SUB UINT32_C(0x06090011)
 
 /// SDO abort code: Invalid value for parameter (download only).
-#define CO_SDO_AC_PARAM_VAL	UINT32_C(0x06090030)
+#define CO_SDO_AC_PARAM_VAL UINT32_C(0x06090030)
 
 /// SDO abort code: Value of parameter written too high (download only).
-#define CO_SDO_AC_PARAM_HI	UINT32_C(0x06090031)
+#define CO_SDO_AC_PARAM_HI UINT32_C(0x06090031)
 
 /// SDO abort code: Value of parameter written too low (download only).
-#define CO_SDO_AC_PARAM_LO	UINT32_C(0x06090032)
+#define CO_SDO_AC_PARAM_LO UINT32_C(0x06090032)
 
 /// SDO abort code: Maximum value is less than minimum value (download only).
-#define CO_SDO_AC_PARAM_RANGE	UINT32_C(0x06090036)
+#define CO_SDO_AC_PARAM_RANGE UINT32_C(0x06090036)
 
 /// SDO abort code: Resource not available: SDO connection.
-#define CO_SDO_AC_NO_SDO	UINT32_C(0x060a0023)
+#define CO_SDO_AC_NO_SDO UINT32_C(0x060a0023)
 
 /// SDO abort code: General error.
-#define CO_SDO_AC_ERROR		UINT32_C(0x08000000)
+#define CO_SDO_AC_ERROR UINT32_C(0x08000000)
 
 /// SDO abort code: Data cannot be transferred or stored to the application.
-#define CO_SDO_AC_DATA		UINT32_C(0x08000020)
+#define CO_SDO_AC_DATA UINT32_C(0x08000020)
 
 /**
  * SDO abort code: Data cannot be transferred or stored to the application
  * because of local control.
  */
-#define CO_SDO_AC_DATA_CTL	UINT32_C(0x08000021)
+#define CO_SDO_AC_DATA_CTL UINT32_C(0x08000021)
 
 /**
  * SDO abort code: Data cannot be transferred or stored to the application
  * because of the present device state.
  */
-#define CO_SDO_AC_DATA_DEV	UINT32_C(0x08000022)
+#define CO_SDO_AC_DATA_DEV UINT32_C(0x08000022)
 
 /**
  * SDO abort code: Object dictionary dynamic generation fails or no object
  * dictionary is present (e.g. object dictionary is generated from file and
  * generation fails because of a file error).
  */
-#define CO_SDO_AC_NO_OD		UINT32_C(0x08000023)
+#define CO_SDO_AC_NO_OD UINT32_C(0x08000023)
 
 /// SDO abort code: No data available.
-#define CO_SDO_AC_NO_DATA	UINT32_C(0x08000024)
+#define CO_SDO_AC_NO_DATA UINT32_C(0x08000024)
 
 /// A CANopen SDO upload/download request.
 struct co_sdo_req {
@@ -197,7 +200,10 @@ struct co_sdo_req {
 };
 
 /// The static initializer for struct #co_sdo_req.
-#define CO_SDO_REQ_INIT	{ 0, NULL, 0, 0, MEMBUF_INIT }
+#define CO_SDO_REQ_INIT \
+	{ \
+		0, NULL, 0, 0, MEMBUF_INIT \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -346,5 +352,4 @@ co_sdo_req_last(const struct co_sdo_req *req)
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_SDO_H_

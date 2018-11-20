@@ -21,18 +21,18 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_HASH_INLINE	extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_HASH_INLINE extern inline LELY_DLL_EXPORT
 #include <lely/util/hash.h>
 
 #include <assert.h>
 #include <ctype.h>
 
 #if __WORDSIZE == 64
-#define FNV_OFFSET	UINT64_C(14695981039346656037)
-#define FNV_PRIME	UINT64_C(1099511628211)
+#define FNV_OFFSET UINT64_C(14695981039346656037)
+#define FNV_PRIME UINT64_C(1099511628211)
 #else
-#define FNV_OFFSET	UINT32_C(2166136261)
-#define FNV_PRIME	UINT32_C(16777619)
+#define FNV_OFFSET UINT32_C(2166136261)
+#define FNV_PRIME UINT32_C(16777619)
 #endif
 
 LELY_UTIL_EXPORT size_t
@@ -78,4 +78,3 @@ strncasehash(const char *s, size_t n)
 		hash = (hash ^ tolower((unsigned char)*s++)) * FNV_PRIME;
 	return hash;
 }
-

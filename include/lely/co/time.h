@@ -19,23 +19,23 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TIME_H
-#define LELY_CO_TIME_H
+#ifndef LELY_CO_TIME_H_
+#define LELY_CO_TIME_H_
 
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
 /// The bit in the TIME COB-ID specifying whether the device is a consumer.
-#define CO_TIME_COBID_CONSUMER	UINT32_C(0x80000000)
+#define CO_TIME_COBID_CONSUMER UINT32_C(0x80000000)
 
 /// The bit in the TIME COB-ID specifying whether the device is a producer.
-#define CO_TIME_COBID_PRODUCER	UINT32_C(0x40000000)
+#define CO_TIME_COBID_PRODUCER UINT32_C(0x40000000)
 
 /**
  * The bit in the TIME COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
-#define CO_TIME_COBID_FRAME	UINT32_C(0x20000000)
+#define CO_TIME_COBID_FRAME UINT32_C(0x20000000)
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,45 +49,45 @@ extern "C" {
  * @param tp   a pointer to the absolute time.
  * @param data a pointer to user-specified data.
  */
-typedef void co_time_ind_t(co_time_t *time, const struct timespec *tp,
-		void *data);
+typedef void co_time_ind_t(
+		co_time_t *time, const struct timespec *tp, void *data);
 
 /**
  * Loads the absolute time from a CANopen TIME_OF_DAY value.
  *
  * @see co_time_of_day_set()
  */
-LELY_CO_EXTERN void co_time_of_day_get(const co_time_of_day_t *tod,
-		struct timespec *tp);
+LELY_CO_EXTERN void co_time_of_day_get(
+		const co_time_of_day_t *tod, struct timespec *tp);
 
 /**
  * Stores the absolute time into a CANopen TIME_OF_DAY value.
  *
  * @see co_time_of_day_get()
  */
-LELY_CO_EXTERN void co_time_of_day_set(co_time_of_day_t *tod,
-		const struct timespec *tp);
+LELY_CO_EXTERN void co_time_of_day_set(
+		co_time_of_day_t *tod, const struct timespec *tp);
 
 /**
  * Loads a time difference from a CANopen TIME_DIFFERENCE value.
  *
  * @see co_time_diff_set()
  */
-LELY_CO_EXTERN void co_time_diff_get(const co_time_diff_t *td,
-		struct timespec *tp);
+LELY_CO_EXTERN void co_time_diff_get(
+		const co_time_diff_t *td, struct timespec *tp);
 
 /**
  * Stores a time difference into a CANopen TIME_DIFFERENCE value.
  *
  * @see co_time_diff_get()
  */
-LELY_CO_EXTERN void co_time_diff_set(co_time_diff_t *td,
-		const struct timespec *tp);
+LELY_CO_EXTERN void co_time_diff_set(
+		co_time_diff_t *td, const struct timespec *tp);
 
 LELY_CO_EXTERN void *__co_time_alloc(void);
 LELY_CO_EXTERN void __co_time_free(void *ptr);
-LELY_CO_EXTERN struct __co_time *__co_time_init(struct __co_time *time,
-		can_net_t *net, co_dev_t *dev);
+LELY_CO_EXTERN struct __co_time *__co_time_init(
+		struct __co_time *time, can_net_t *net, co_dev_t *dev);
 LELY_CO_EXTERN void __co_time_fini(struct __co_time *time);
 
 /**
@@ -124,8 +124,8 @@ LELY_CO_EXTERN co_dev_t *co_time_get_dev(const co_time_t *time);
  *
  * @see co_time_set_ind()
  */
-LELY_CO_EXTERN void co_time_get_ind(const co_time_t *time, co_time_ind_t **pind,
-		void **pdata);
+LELY_CO_EXTERN void co_time_get_ind(
+		const co_time_t *time, co_time_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen time stamp is received.
@@ -137,8 +137,8 @@ LELY_CO_EXTERN void co_time_get_ind(const co_time_t *time, co_time_ind_t **pind,
  *
  * @see co_time_get_ind()
  */
-LELY_CO_EXTERN void co_time_set_ind(co_time_t *time, co_time_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_time_set_ind(
+		co_time_t *time, co_time_ind_t *ind, void *data);
 
 /**
  * Starts a CANopen TIME producer. This function has no effect if the TIME
@@ -166,5 +166,4 @@ LELY_CO_EXTERN void co_time_stop(co_time_t *time);
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_TIME_H_

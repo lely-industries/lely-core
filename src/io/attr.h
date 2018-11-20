@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_INTERN_ATTR_H
-#define LELY_IO_INTERN_ATTR_H
+#ifndef LELY_IO_INTERN_ATTR_H_
+#define LELY_IO_INTERN_ATTR_H_
 
 #include "io.h"
 #include <lely/io/attr.h>
@@ -63,5 +63,4 @@ io_attr_lpCommTimeouts(const io_attr_t *attr)
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_INTERN_ATTR_H_

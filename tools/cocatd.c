@@ -20,25 +20,26 @@
  * limitations under the License.
  */
 
-#include <lely/libc/unistd.h>
-#include <lely/util/daemon.h>
-#include <lely/util/diag.h>
-#include <lely/util/time.h>
-#include <lely/io/can.h>
-#include <lely/io/pipe.h>
-#include <lely/io/poll.h>
 #include <lely/co/dcf.h>
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/tpdo.h>
 #include <lely/co/val.h>
+#include <lely/io/can.h>
+#include <lely/io/pipe.h>
+#include <lely/io/poll.h>
+#include <lely/libc/unistd.h>
+#include <lely/util/daemon.h>
+#include <lely/util/diag.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 #define HELP \
 	"Arguments: [options...] <CAN interface> command\n" \
 	"Options:\n" \
@@ -49,8 +50,9 @@
 	"  -h, --help            Display this information\n" \
 	"  -n <node-ID> --node=<node-ID>\n" \
 	"                        Use <node-ID> as the CANopen node-ID"
+// clang-format on
 
-#define POLL_TIMEOUT	100
+#define POLL_TIMEOUT 100
 
 int daemon_init(int argc, char *argv[]);
 void daemon_main();
@@ -63,13 +65,13 @@ int can_timer(const struct timespec *tp, void *data);
 
 void can_err(io_handle_t handle, int *pst, co_nmt_t *nmt);
 
-co_unsigned32_t co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
-co_unsigned32_t co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+co_unsigned32_t co_1026_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
+co_unsigned32_t co_1026_up_ind(
+		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
-#define FLAG_HELP	0x01
-#define FLAG_NO_DAEMON	0x02
+#define FLAG_HELP 0x01
+#define FLAG_NO_DAEMON 0x02
 
 int flags;
 io_poll_t *poll;
@@ -107,13 +109,10 @@ main(int argc, char *argv[])
 			if (c == -1)
 				break;
 			switch (c) {
-			case ':': case '?': break;
-			case 'D':
-				flags |= FLAG_NO_DAEMON;
-				break;
-			case 'h':
-				flags |= FLAG_HELP;
-				break;
+			case ':':
+			case '?': break;
+			case 'D': flags |= FLAG_NO_DAEMON; break;
+			case 'h': flags |= FLAG_HELP; break;
 			}
 		}
 	}
@@ -130,9 +129,11 @@ main(int argc, char *argv[])
 		daemon_fini();
 		return EXIT_SUCCESS;
 	} else {
+		// clang-format off
 		return daemon_start(argv[0], &daemon_init, &daemon_main,
 				&daemon_fini, argc, argv)
 				? EXIT_FAILURE : EXIT_SUCCESS;
+		// clang-format on
 	}
 }
 
@@ -158,12 +159,8 @@ daemon_init(int argc, char *argv[])
 		if (*arg != '-') {
 			optind++;
 			switch (optpos++) {
-			case 0:
-				ifname = arg;
-				break;
-			case 1:
-				command = arg;
-				break;
+			case 0: ifname = arg; break;
+			case 1: command = arg; break;
 			default:
 				diag(DIAG_ERROR, 0, "extra argument %s", arg);
 				break;
@@ -197,27 +194,20 @@ daemon_init(int argc, char *argv[])
 						optopt);
 				break;
 			case 'D': break;
-			case 'f':
-				filename = optarg;
-				break;
+			case 'f': filename = optarg; break;
 			case 'h': break;
 			case 'n':
-				id = strtoul(optarg, NULL, 0);;
+				id = strtoul(optarg, NULL, 0);
+				;
 				break;
 			}
 		}
 	}
 	for (char *arg = argv[optind]; optind < argc; arg = argv[++optind]) {
 		switch (optpos++) {
-		case 0:
-			ifname = arg;
-			break;
-		case 1:
-			command = arg;
-			break;
-		default:
-			diag(DIAG_ERROR, 0, "extra argument %s", arg);
-			break;
+		case 0: ifname = arg; break;
+		case 1: command = arg; break;
+		default: diag(DIAG_ERROR, 0, "extra argument %s", arg); break;
 		}
 	}
 
@@ -321,19 +311,22 @@ daemon_init(int argc, char *argv[])
 
 		int result;
 
-		do result = dup2(io_get_fd(hin), STDIN_FILENO);
+		do
+			result = dup2(io_get_fd(hin), STDIN_FILENO);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result == -1))
 			goto error_dup_hin;
 		io_close(hin);
 
-		do result = dup2(io_get_fd(hout), STDOUT_FILENO);
+		do
+			result = dup2(io_get_fd(hout), STDOUT_FILENO);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result == -1))
 			goto error_dup_hout;
 		io_close(hout);
 
-		do result = dup2(io_get_fd(herr), STDERR_FILENO);
+		do
+			result = dup2(io_get_fd(herr), STDERR_FILENO);
 		while (__unlikely(result == -1 && errno == EINTR));
 		if (__unlikely(result == -1))
 			goto error_dup_herr;
@@ -385,21 +378,24 @@ daemon_init(int argc, char *argv[])
 
 	co_sub_t *sub_1026_01 = co_dev_find_sub(dev, 0x1026, 0x01);
 	if (__unlikely(!sub_1026_01)) {
-		diag(DIAG_ERROR, 0, "sub-object 1026:01 not found in object dictionary");
+		diag(DIAG_ERROR, 0,
+				"sub-object 1026:01 not found in object dictionary");
 		goto error_find_sub_1026_01;
 	}
 	co_sub_set_dn_ind(sub_1026_01, &co_1026_dn_ind, (void *)hin);
 
 	co_sub_t *sub_1026_02 = co_dev_find_sub(dev, 0x1026, 0x02);
 	if (__unlikely(!sub_1026_02)) {
-		diag(DIAG_ERROR, 0, "sub-object 1026:02 not found in object dictionary");
+		diag(DIAG_ERROR, 0,
+				"sub-object 1026:02 not found in object dictionary");
 		goto error_find_sub_1026_02;
 	}
 	co_sub_set_up_ind(sub_1026_02, &co_1026_up_ind, (void *)hout);
 
 	co_sub_t *sub_1026_03 = co_dev_find_sub(dev, 0x1026, 0x03);
 	if (__unlikely(!sub_1026_03)) {
-		diag(DIAG_ERROR, 0, "sub-object 1026:01 not found in object dictionary");
+		diag(DIAG_ERROR, 0,
+				"sub-object 1026:01 not found in object dictionary");
 		goto error_find_sub_1026_03;
 	}
 	co_sub_set_up_ind(sub_1026_03, &co_1026_up_ind, (void *)herr);
@@ -511,8 +507,7 @@ daemon_main()
 			continue;
 		if (event.events == IO_EVENT_SIGNAL) {
 			switch (event.u.sig) {
-			case DAEMON_STOP:
-				goto done;
+			case DAEMON_STOP: goto done;
 			case DAEMON_PAUSE:
 				io_poll_watch(poll, hcan, NULL, 0);
 
@@ -546,10 +541,11 @@ daemon_main()
 				// Treat the reception of an error frame, or any
 				// error other than an empty receive buffer, as
 				// an error event.
+				// clang-format off
 				if (__unlikely(!result || (result == -1
 						&& get_errnum() != ERRNUM_AGAIN
-						&& get_errnum()
-						!= ERRNUM_WOULDBLOCK)))
+						&& get_errnum() != ERRNUM_WOULDBLOCK)))
+					// clang-format on
 					event.events |= IO_EVENT_ERROR;
 			} else if (event.u.handle == hout) {
 				co_tpdo_event(pdo_out);
@@ -567,8 +563,10 @@ daemon_main()
 				can_timer_start(timer_err, net, &start, NULL);
 			}
 		}
+		// clang-format off
 		if (event.u.handle == hcan && (st == CAN_STATE_BUSOFF
 				|| (event.events & IO_EVENT_ERROR)))
+			// clang-format on
 			can_err(hcan, &st, nmt);
 	}
 
@@ -682,8 +680,10 @@ co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned8_t val = 0;
 
 	co_unsigned32_t ac = 0;
+	// clang-format off
 	if (__unlikely(co_sdo_req_dn_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac)
 			== -1))
+		// clang-format on
 		return ac;
 
 	if (__unlikely(io_write(handle, &val, 1) != 1))
@@ -711,4 +711,3 @@ co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_sdo_req_up_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac);
 	return ac;
 }
-

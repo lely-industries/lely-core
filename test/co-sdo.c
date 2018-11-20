@@ -6,10 +6,10 @@
 #include "co-test.h"
 
 // A value small enough for a single CAN frame.
-#define EXP_VALUE	"42"
+#define EXP_VALUE "42"
 
 // A value too large for a single CAN frame.
-#define SEG_VALUE	"Hello, world!"
+#define SEG_VALUE "Hello, world!"
 
 // A value too large for a single (127 * 7 bytes) block.
 #define BLK_VALUE \
@@ -60,27 +60,33 @@ main(void)
 	co_csdo_t *csdo = co_csdo_create(net, cdev, 1);
 	tap_assert(csdo);
 
+	// clang-format off
 	tap_test(!co_csdo_dn_req(csdo, 0x2000, 0x00, EXP_VALUE,
 			strlen(EXP_VALUE), &dn_con, &test),
 			"expedited SDO download");
+	// clang-format on
 	co_test_wait(&test);
 
 	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, &up_con, &test),
 			"expedited SDO upload");
 	co_test_wait(&test);
 
+	// clang-format off
 	tap_test(!co_csdo_dn_req(csdo, 0x2000, 0x00, SEG_VALUE,
 			strlen(SEG_VALUE), &dn_con, &test),
 			"segmented SDO download");
+	// clang-format on
 	co_test_wait(&test);
 
 	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, &up_con, &test),
 			"segmented SDO upload");
 	co_test_wait(&test);
 
+	// clang-format off
 	tap_test(!co_csdo_blk_dn_req(csdo, 0x2000, 0x00, BLK_VALUE,
 			strlen(BLK_VALUE), &dn_con, &test),
 			"SDO block download");
+	// clang-format on
 	co_test_wait(&test);
 
 	tap_test(!co_csdo_blk_up_req(csdo, 0x2000, 0x00, 0, &up_con, &test),
@@ -125,8 +131,10 @@ up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (__likely(!ac)) {
 		union co_val val;
 		co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val);
+		// clang-format off
 		if (__likely(!n || co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val,
 				ptr, (const uint8_t *)ptr + n) == n))
+			// clang-format on
 			tap_pass("value received\n%s", val.vs);
 		else
 			tap_fail("unable to read value");
@@ -138,4 +146,3 @@ up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	co_test_done(test);
 }
-

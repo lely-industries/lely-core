@@ -29,7 +29,7 @@
 #ifndef LELY_HAVE_ITIMERSPEC
 #if defined(_POSIX_C_SOURCE) || defined(_POSIX_TIMERS) \
 		|| defined(_TIMESPEC_DEFINED)
-#define LELY_HAVE_ITIMERSPEC	1
+#define LELY_HAVE_ITIMERSPEC 1
 #endif
 #endif
 
@@ -37,14 +37,14 @@
 #if __STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
 		|| _POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
 		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined)
-#define LELY_HAVE_TIMESPEC	1
+#define LELY_HAVE_TIMESPEC 1
 #endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC_GET
 #if (__STDC_VERSION__ >= 201112L || __USE_ISOC11 || _MSC_VER >= 1900) \
 		&& defined(TIME_UTC)
-#define LELY_HAVE_TIMESPEC_GET	1
+#define LELY_HAVE_TIMESPEC_GET 1
 #endif
 #endif
 
@@ -52,29 +52,29 @@
 		&& !defined(__MINGW32__)
 
 /// The identifier of the system-wide clock measuring real time.
-#define CLOCK_REALTIME	0
+#define CLOCK_REALTIME 0
 
 /**
  * The identifier for the system-wide monotonic clock, which is defined as a
  * clock measuring real time, whose value cannot be set via `clock_settime()`
  * and which cannot have negative clock jumps.
  */
-#define CLOCK_MONOTONIC	1
+#define CLOCK_MONOTONIC 1
 
 /**
  * The identifier of the CPU-time clock associated with the process making a
  * `clock_*()` function call (not supported on Windows).
  */
-#define CLOCK_PROCESS_CPUTIME_ID	2
+#define CLOCK_PROCESS_CPUTIME_ID 2
 
 /**
  * The identifier of the CPU-time clock associated with the thread making a
  * `clock_*()` function call (not supported on Windows).
  */
-#define CLOCK_THREAD_CPUTIME_ID	3
+#define CLOCK_THREAD_CPUTIME_ID 3
 
 /// Flag indicating time is absolute.
-#define TIMER_ABSTIME	1
+#define TIMER_ABSTIME 1
 
 #endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
@@ -123,8 +123,8 @@ extern "C" {
  *
  * @see clock_gettime(), clock_settime()
  */
-LELY_LIBC_EXTERN int __cdecl clock_getres(clockid_t clock_id,
-		struct timespec *res);
+LELY_LIBC_EXTERN int __cdecl clock_getres(
+		clockid_t clock_id, struct timespec *res);
 
 /**
  * Obtains the current value of a clock.
@@ -140,8 +140,8 @@ LELY_LIBC_EXTERN int __cdecl clock_getres(clockid_t clock_id,
  *
  * @see clock_getres(), clock_settime()
  */
-LELY_LIBC_EXTERN int __cdecl clock_gettime(clockid_t clock_id,
-		struct timespec *tp);
+LELY_LIBC_EXTERN int __cdecl clock_gettime(
+		clockid_t clock_id, struct timespec *tp);
 
 /**
  * Sleeps until a time interval or absolute time has elapsed on a clock. If the
@@ -173,8 +173,8 @@ LELY_LIBC_EXTERN int __cdecl clock_gettime(clockid_t clock_id,
  *
  * @returns 0 on success, or an error number on error.
  */
-LELY_LIBC_EXTERN int __cdecl clock_nanosleep(clockid_t clock_id,
-		int flags, const struct timespec *rqtp, struct timespec *rmtp);
+LELY_LIBC_EXTERN int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
+		const struct timespec *rqtp, struct timespec *rmtp);
 
 /**
  * Sets the value of a clock.
@@ -188,15 +188,15 @@ LELY_LIBC_EXTERN int __cdecl clock_nanosleep(clockid_t clock_id,
  *
  * @see clock_getres(), clock_gettime()
  */
-LELY_LIBC_EXTERN int __cdecl clock_settime(clockid_t clock_id,
-		const struct timespec *tp);
+LELY_LIBC_EXTERN int __cdecl clock_settime(
+		clockid_t clock_id, const struct timespec *tp);
 
 /**
  * Equivalent to `clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp)`, except that
  * on error, it returns -1 and sets `errno` to indicate the error.
  */
-LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
-		struct timespec *rmtp);
+LELY_LIBC_EXTERN int __cdecl nanosleep(
+		const struct timespec *rqtp, struct timespec *rmtp);
 
 #endif // !_POSIX_TIMERS && !__MINGW32__
 
@@ -226,8 +226,8 @@ LELY_LIBC_EXTERN int __cdecl nanosleep(const struct timespec *rqtp,
  *
  * @see timer_delete()
  */
-LELY_LIBC_EXTERN int __cdecl timer_create(clockid_t clockid,
-		struct sigevent *evp, timer_t *timerid);
+LELY_LIBC_EXTERN int __cdecl timer_create(
+		clockid_t clockid, struct sigevent *evp, timer_t *timerid);
 
 /**
  * Deletes the specified timer created with timer_create(). If the timer is
@@ -266,8 +266,8 @@ LELY_LIBC_EXTERN int __cdecl timer_getoverrun(timer_t timerid);
  * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
  */
-LELY_LIBC_EXTERN int __cdecl timer_gettime(timer_t timerid,
-		struct itimerspec *value);
+LELY_LIBC_EXTERN int __cdecl timer_gettime(
+		timer_t timerid, struct itimerspec *value);
 
 /**
  * Arms or disarms a timer. If the specified timer was already armed, the
@@ -301,7 +301,7 @@ LELY_LIBC_EXTERN int __cdecl timer_settime(timer_t timerid, int flags,
 
 #ifndef TIME_UTC
 /// An integer constant greater than 0 that designates the UTC time base.
-#define TIME_UTC	1
+#define TIME_UTC 1
 #endif
 
 /**

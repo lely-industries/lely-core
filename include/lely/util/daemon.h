@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_DAEMON_H
-#define LELY_UTIL_DAEMON_H
+#ifndef LELY_UTIL_DAEMON_H_
+#define LELY_UTIL_DAEMON_H_
 
 #include <lely/util/util.h>
 
@@ -43,12 +43,14 @@ enum {
 	DAEMON_RELOAD,
 	/// The smallest possible value of a user-defined signal.
 	DAEMON_USER_MIN,
+// clang-format off
 	/// The largest possible value of a user-defined signal.
 #ifdef _WIN32
 	DAEMON_USER_MAX = DAEMON_USER_MIN + 128
 #else
 	DAEMON_USER_MAX = 255
 #endif
+	// clang-format on
 };
 
 #ifdef __cplusplus
@@ -161,8 +163,8 @@ LELY_UTIL_EXTERN int daemon_status(int status);
  *
  * @see daemon_set_handler()
  */
-LELY_UTIL_EXTERN void daemon_get_handler(daemon_handler_t **phandler,
-		void **phandle);
+LELY_UTIL_EXTERN void daemon_get_handler(
+		daemon_handler_t **phandler, void **phandle);
 
 /**
  * Sets the current daemon handler and its (optional) handle argument. The
@@ -171,8 +173,8 @@ LELY_UTIL_EXTERN void daemon_get_handler(daemon_handler_t **phandler,
  *
  * @see daemon_get_handler()
  */
-LELY_UTIL_EXTERN void daemon_set_handler(daemon_handler_t *handler,
-		void *handle);
+LELY_UTIL_EXTERN void daemon_set_handler(
+		daemon_handler_t *handler, void *handle);
 
 /// The default daemon_signal() handler. @see daemon_handler_t
 LELY_UTIL_EXTERN void default_daemon_handler(int sig, void *handle);
@@ -181,5 +183,4 @@ LELY_UTIL_EXTERN void default_daemon_handler(int sig, void *handle);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_DAEMON_H_

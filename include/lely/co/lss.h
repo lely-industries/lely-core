@@ -19,19 +19,19 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_LSS_H
-#define LELY_CO_LSS_H
+#ifndef LELY_CO_LSS_H_
+#define LELY_CO_LSS_H_
 
 #include <lely/can/net.h>
 #include <lely/co/dev.h>
 
 #ifndef LELY_CO_LSS_TIMEOUT
 /// The default LSS timeout (in milliseconds).
-#define LELY_CO_LSS_TIMEOUT	100
+#define LELY_CO_LSS_TIMEOUT 100
 #endif
 
 /// The CAN identifier used for LSS by the master (1) or the slave (0).
-#define CO_LSS_CANID(master)	(0x7e4 + !!(master))
+#define CO_LSS_CANID(master) (0x7e4 + !!(master))
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,8 +48,8 @@ extern "C" {
  *              after the switch during which CAN frames MUST NOT be sent.
  * @param data  a pointer to user-specified data.
  */
-typedef void co_lss_rate_ind_t(co_lss_t *lss, co_unsigned16_t rate, int delay,
-		void *data);
+typedef void co_lss_rate_ind_t(
+		co_lss_t *lss, co_unsigned16_t rate, int delay, void *data);
 
 /**
  * The type of a CANopen LSS 'store configuration' indication function, invoked
@@ -137,8 +137,8 @@ typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 
 LELY_CO_EXTERN void *__co_lss_alloc(void);
 LELY_CO_EXTERN void __co_lss_free(void *ptr);
-LELY_CO_EXTERN struct __co_lss *__co_lss_init(struct __co_lss *lss,
-		co_nmt_t *nmt);
+LELY_CO_EXTERN struct __co_lss *__co_lss_init(
+		struct __co_lss *lss, co_nmt_t *nmt);
 LELY_CO_EXTERN void __co_lss_fini(struct __co_lss *lss);
 
 /**
@@ -171,8 +171,8 @@ LELY_CO_EXTERN co_nmt_t *co_lss_get_nmt(const co_lss_t *lss);
  *
  * @see co_lss_set_rate_ind()
  */
-LELY_CO_EXTERN void co_lss_get_rate_ind(const co_lss_t *lss,
-		co_lss_rate_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_lss_get_rate_ind(
+		const co_lss_t *lss, co_lss_rate_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when an LSS 'activate bit timing'
@@ -185,8 +185,8 @@ LELY_CO_EXTERN void co_lss_get_rate_ind(const co_lss_t *lss,
  *
  * @see co_lss_get_rate_ind()
  */
-LELY_CO_EXTERN void co_lss_set_rate_ind(co_lss_t *lss, co_lss_rate_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_lss_set_rate_ind(
+		co_lss_t *lss, co_lss_rate_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function invoked when an LSS 'store configuration'
@@ -200,8 +200,8 @@ LELY_CO_EXTERN void co_lss_set_rate_ind(co_lss_t *lss, co_lss_rate_ind_t *ind,
  *
  * @see co_lss_set_store_ind()
  */
-LELY_CO_EXTERN void co_lss_get_store_ind(const co_lss_t *lss,
-		co_lss_store_ind_t **pind, void **pdata);
+LELY_CO_EXTERN void co_lss_get_store_ind(
+		const co_lss_t *lss, co_lss_store_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when an LSS 'store configuration'
@@ -214,8 +214,8 @@ LELY_CO_EXTERN void co_lss_get_store_ind(const co_lss_t *lss,
  *
  * @see co_lss_get_store_ind()
  */
-LELY_CO_EXTERN void co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_lss_set_store_ind(
+		co_lss_t *lss, co_lss_store_ind_t *ind, void *data);
 
 /**
  * Returns the timeout (in milliseconds) of an LSS master service. A return
@@ -348,8 +348,8 @@ LELY_CO_EXTERN int co_lss_switch_rate_req(co_lss_t *lss, int delay);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN int co_lss_store_req(
+		co_lss_t *lss, co_lss_err_ind_t *ind, void *data);
 
 /**
  * Requests the 'inquire identity vendor-ID' service. It is the responsibility
@@ -366,8 +366,8 @@ LELY_CO_EXTERN int co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_get_vendor_id_req(co_lss_t *lss,
-		co_lss_lssid_ind_t *ind, void *data);
+LELY_CO_EXTERN int co_lss_get_vendor_id_req(
+		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
 
 /**
  * Requests the 'inquire identity product-code' service. It is the
@@ -384,8 +384,8 @@ LELY_CO_EXTERN int co_lss_get_vendor_id_req(co_lss_t *lss,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_get_product_code_req(co_lss_t *lss,
-		co_lss_lssid_ind_t *ind, void *data);
+LELY_CO_EXTERN int co_lss_get_product_code_req(
+		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
 
 /**
  * Requests the 'inquire identity revision-number' service. It is the
@@ -402,8 +402,8 @@ LELY_CO_EXTERN int co_lss_get_product_code_req(co_lss_t *lss,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_get_revision_req(co_lss_t *lss,
-		co_lss_lssid_ind_t *ind, void *data);
+LELY_CO_EXTERN int co_lss_get_revision_req(
+		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
 
 /**
  * Requests the 'inquire identity serial-number' service. It is the
@@ -420,8 +420,8 @@ LELY_CO_EXTERN int co_lss_get_revision_req(co_lss_t *lss,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_get_serial_nr_req(co_lss_t *lss,
-		co_lss_lssid_ind_t *ind, void *data);
+LELY_CO_EXTERN int co_lss_get_serial_nr_req(
+		co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data);
 
 /**
  * Requests the 'inquire node-ID' service. It is the responsibility of the LSS
@@ -437,8 +437,8 @@ LELY_CO_EXTERN int co_lss_get_serial_nr_req(co_lss_t *lss,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN int co_lss_get_id_req(
+		co_lss_t *lss, co_lss_nid_ind_t *ind, void *data);
 
 /**
  * Requests the 'LSS identify remote slave' service. The specified indication
@@ -474,8 +474,8 @@ LELY_CO_EXTERN int co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_lss_id_non_cfg_slave_req(co_lss_t *lss,
-		co_lss_cs_ind_t *ind, void *data);
+LELY_CO_EXTERN int co_lss_id_non_cfg_slave_req(
+		co_lss_t *lss, co_lss_cs_ind_t *ind, void *data);
 
 /**
  * Requests the 'LSS Slowscan' service. This service performs a binary search
@@ -510,8 +510,8 @@ LELY_CO_EXTERN int co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
  *             already known and can be skipped during scanning (can be NULL).
  * @param mask a pointer to a struct containing the mask specifying which bits
  *             in *<b>id</b> are already known (can be NULL). If a bit in
-  *            *<b>mask</b> is 1, the corresponding bit in *<b>id</b> is _not_
-  *            checked.
+ *            *<b>mask</b> is 1, the corresponding bit in *<b>id</b> is _not_
+ *            checked.
  * @param ind  a pointer to the indication function (can be NULL).
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
@@ -526,5 +526,4 @@ LELY_CO_EXTERN int co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_LSS_H_

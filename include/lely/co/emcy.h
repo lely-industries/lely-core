@@ -19,20 +19,20 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_EMCY_H
-#define LELY_CO_EMCY_H
+#ifndef LELY_CO_EMCY_H_
+#define LELY_CO_EMCY_H_
 
 #include <lely/can/net.h>
 #include <lely/co/type.h>
 
 /// The bit in the EMCY COB-ID specifying whether the EMCY exists and is valid.
-#define CO_EMCY_COBID_VALID	UINT32_C(0x80000000)
+#define CO_EMCY_COBID_VALID UINT32_C(0x80000000)
 
 /**
  * The bit in the EMCY COB-ID specifying whether to use an 11-bit (0) or 29-bit
  * (1) CAN-ID.
  */
-#define CO_EMCY_COBID_FRAME	UINT32_C(0x20000000)
+#define CO_EMCY_COBID_FRAME UINT32_C(0x20000000)
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,8 +55,8 @@ typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
 
 LELY_CO_EXTERN void *__co_emcy_alloc(void);
 LELY_CO_EXTERN void __co_emcy_free(void *ptr);
-LELY_CO_EXTERN struct __co_emcy *__co_emcy_init(struct __co_emcy *emcy,
-		can_net_t *net, co_dev_t *dev);
+LELY_CO_EXTERN struct __co_emcy *__co_emcy_init(
+		struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev);
 LELY_CO_EXTERN void __co_emcy_fini(struct __co_emcy *emcy);
 
 /**
@@ -114,8 +114,8 @@ LELY_CO_EXTERN int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec,
  *
  * @see co_emcy_push(), co_emcy_peek(), co_emcy_clear()
  */
-LELY_CO_EXTERN int co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec,
-		co_unsigned8_t *per);
+LELY_CO_EXTERN int co_emcy_pop(
+		co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per);
 
 /**
  * Retrieves, but does not pop, the most recent CANopen EMCY message from the
@@ -154,8 +154,8 @@ LELY_CO_EXTERN int co_emcy_clear(co_emcy_t *emcy);
  *
  * @see co_emcy_set_ind()
  */
-LELY_CO_EXTERN void co_emcy_get_ind(const co_emcy_t *emcy, co_emcy_ind_t **pind,
-		void **pdata);
+LELY_CO_EXTERN void co_emcy_get_ind(
+		const co_emcy_t *emcy, co_emcy_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen EMCY message is received.
@@ -167,12 +167,11 @@ LELY_CO_EXTERN void co_emcy_get_ind(const co_emcy_t *emcy, co_emcy_ind_t **pind,
  *
  * @see co_emcy_get_ind()
  */
-LELY_CO_EXTERN void co_emcy_set_ind(co_emcy_t *emcy, co_emcy_ind_t *ind,
-		void *data);
+LELY_CO_EXTERN void co_emcy_set_ind(
+		co_emcy_t *emcy, co_emcy_ind_t *ind, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
+#endif // !LELY_CO_EMCY_H_

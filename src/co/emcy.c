@@ -25,15 +25,15 @@
 
 #ifndef LELY_NO_CO_EMCY
 
-#include <lely/util/endian.h>
-#include <lely/util/diag.h>
-#include <lely/util/time.h>
 #include <lely/can/buf.h>
 #include <lely/co/dev.h>
 #include <lely/co/emcy.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#include <lely/util/diag.h>
+#include <lely/util/endian.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -66,8 +66,8 @@ struct co_emcy_node {
  *
  * @see co_emcy_node_destroy()
  */
-static struct co_emcy_node *co_emcy_node_create(co_emcy_t *emcy,
-		co_unsigned8_t id);
+static struct co_emcy_node *co_emcy_node_create(
+		co_emcy_t *emcy, co_unsigned8_t id);
 
 /// Destroys a remote CANopen EMCY producer node. @see co_emcy_node_create()
 static void co_emcy_node_destroy(struct co_emcy_node *node);
@@ -129,8 +129,8 @@ static int co_emcy_set_1003(co_emcy_t *emcy);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1003_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1014
@@ -138,8 +138,8 @@ static co_unsigned32_t co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1014_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * Sets the value of CANopen object 1028 (Emergency consumer object).
@@ -150,8 +150,8 @@ static co_unsigned32_t co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
  *
  * @returns 0 on success, or -1 on error.
  */
-static int co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id,
-		co_unsigned32_t cobid);
+static int co_emcy_set_1028(
+		co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1028
@@ -159,8 +159,8 @@ static int co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id,
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
-		void *data);
+static co_unsigned32_t co_1028_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 /**
  * The CAN timer callback function for an EMCY service.
@@ -179,8 +179,8 @@ static int co_emcy_timer(const struct timespec *tp, void *data);
  *
  * @returns 0 on success, or -1 on error.
  */
-static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec,
-		co_unsigned8_t er, const uint8_t msef[5]);
+static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5]);
 
 /**
  * Sends any messages in the CAN frame buffer unless the inhibit time has not
@@ -264,8 +264,10 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		for (co_unsigned8_t id = 1; id <= maxid; id++) {
 			co_unsigned32_t cobid =
 					co_obj_get_val_u32(obj_1028, id);
+			// clang-format off
 			if (__unlikely(co_emcy_set_1028(emcy, id, cobid)
 					== -1)) {
+				// clang-format on
 				errc = get_errc();
 				goto error_set_1028;
 			}
@@ -571,8 +573,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	co_unsigned8_t er = msg->len >= 3 ? msg->data[2] : 0;
 	co_unsigned8_t msef[5] = { 0 };
 	if (msg->len >= 4)
-		memcpy(msef, msg->data + 3,
-				MAX((uint8_t)(msg->len - 3), 5));
+		memcpy(msef, msg->data + 3, MAX((uint8_t)(msg->len - 3), 5));
 
 	// Notify the user.
 	trace("EMCY: received %04X %02X", eec, er);
@@ -681,8 +682,10 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	// clang-format off
 	if (__unlikely(!(cobid & CO_EMCY_COBID_FRAME)
 			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -770,8 +773,10 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
+	// clang-format off
 	if (__unlikely(!(cobid & CO_EMCY_COBID_FRAME)
 			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
+		// clang-format on
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -869,4 +874,3 @@ co_emcy_flush(co_emcy_t *emcy)
 }
 
 #endif // !LELY_NO_CO_EMCY
-

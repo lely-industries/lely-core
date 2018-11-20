@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_IF_H
-#define LELY_IO_IF_H
+#ifndef LELY_IO_IF_H_
+#define LELY_IO_IF_H_
 
 #include <lely/io/addr.h>
 
@@ -29,9 +29,9 @@
  * including the terminating null byte.
  */
 #ifdef _WIN32
-#define IO_IF_NAME_STRLEN	256
+#define IO_IF_NAME_STRLEN 256
 #else
-#define IO_IF_NAME_STRLEN	16
+#define IO_IF_NAME_STRLEN 16
 #endif
 
 enum {
@@ -74,7 +74,9 @@ struct io_ifinfo {
 
 /// The static initializer for struct #io_ifinfo.
 #define IO_IFINFO_INIT \
-	{ 0, { '\0' }, 0, 0, IO_ADDR_INIT, IO_ADDR_INIT, IO_ADDR_INIT }
+	{ \
+		0, { '\0' }, 0, 0, IO_ADDR_INIT, IO_ADDR_INIT, IO_ADDR_INIT \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,5 +100,4 @@ LELY_IO_EXTERN int io_get_ifinfo(int maxinfo, struct io_ifinfo *info);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_IF_H_

@@ -31,7 +31,7 @@
 #endif
 
 #ifndef LELY_UTIL_BITS_INLINE
-#define LELY_UTIL_BITS_INLINE	inline
+#define LELY_UTIL_BITS_INLINE inline
 #endif
 
 #ifdef __cplusplus
@@ -310,7 +310,11 @@ bswap64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cls8(uint8_t x) { return clz8(~x); }
+LELY_UTIL_BITS_INLINE int
+cls8(uint8_t x)
+{
+	return clz8(~x);
+}
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
 
@@ -327,7 +331,11 @@ clz8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int cls16(uint16_t x) { return clz16(~x); }
+LELY_UTIL_BITS_INLINE int
+cls16(uint16_t x)
+{
+	return clz16(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 clz16(uint16_t x)
@@ -342,7 +350,11 @@ clz16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cls32(uint32_t x) { return clz32(~x); }
+LELY_UTIL_BITS_INLINE int
+cls32(uint32_t x)
+{
+	return clz32(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 clz32(uint32_t x)
@@ -359,7 +371,11 @@ clz32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cls64(uint64_t x) { return clz64(~x); }
+LELY_UTIL_BITS_INLINE int
+cls64(uint64_t x)
+{
+	return clz64(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 clz64(uint64_t x)
@@ -376,7 +392,11 @@ clz64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cts8(uint8_t x) { return ctz8(~x); }
+LELY_UTIL_BITS_INLINE int
+cts8(uint8_t x)
+{
+	return ctz8(~x);
+}
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
 
@@ -393,7 +413,11 @@ ctz8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int cts16(uint16_t x) { return ctz16(~x); }
+LELY_UTIL_BITS_INLINE int
+cts16(uint16_t x)
+{
+	return ctz16(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ctz16(uint16_t x)
@@ -408,7 +432,11 @@ ctz16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cts32(uint32_t x) { return ctz32(~x); }
+LELY_UTIL_BITS_INLINE int
+cts32(uint32_t x)
+{
+	return ctz32(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ctz32(uint32_t x)
@@ -425,7 +453,11 @@ ctz32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int cts64(uint64_t x) { return ctz64(~x); }
+LELY_UTIL_BITS_INLINE int
+cts64(uint64_t x)
+{
+	return ctz64(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ctz64(uint64_t x)
@@ -454,7 +486,11 @@ ffs8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int ffz8(uint8_t x) { return ffs8(~x); }
+LELY_UTIL_BITS_INLINE int
+ffz8(uint8_t x)
+{
+	return ffs8(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ffs16(uint16_t x)
@@ -469,7 +505,11 @@ ffs16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int ffz16(uint16_t x) { return ffs16(~x); }
+LELY_UTIL_BITS_INLINE int
+ffz16(uint16_t x)
+{
+	return ffs16(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ffs32(uint32_t x)
@@ -482,12 +522,18 @@ ffs32(uint32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffsl)
 	return __builtin_ffsl(x);
 #else
-	return x ? ((x & 0xffffu)
-			? ffs16((uint16_t)x) : ffs16(x >> 16) + 16) : 0;
+	// clang-format off
+	return x ? ((x & 0xffffu) ? ffs16((uint16_t)x)
+			: ffs16(x >> 16) + 16) : 0;
+	// clang-format on
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int ffz32(uint32_t x) { return ffs32(~x); }
+LELY_UTIL_BITS_INLINE int
+ffz32(uint32_t x)
+{
+	return ffs32(~x);
+}
 
 LELY_UTIL_BITS_INLINE int
 ffs64(uint64_t x)
@@ -500,12 +546,18 @@ ffs64(uint64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffsll)
 	return __builtin_ffsll(x);
 #else
+	// clang-format off
 	return x ? ((x & 0xfffffffful)
 			? ffs32((uint32_t)x) : ffs32(x >> 32) + 32) : 0;
+	// clang-format on
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int ffz64(uint64_t x) { return ffs64(~x); }
+LELY_UTIL_BITS_INLINE int
+ffz64(uint64_t x)
+{
+	return ffs64(~x);
+}
 
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
 
@@ -542,8 +594,7 @@ parity32(uint32_t x)
 LELY_UTIL_BITS_INLINE int
 parity64(uint64_t x)
 {
-#if (defined(__GNUC__) || __has_builtin(__builtin_parityl)) \
-		&& __WORDSIZE == 64
+#if (defined(__GNUC__) || __has_builtin(__builtin_parityl)) && __WORDSIZE == 64
 	return __builtin_parityl(x);
 #elif defined(__GNUC__) || __has_builtin(__builtin_parityll)
 	return __builtin_parityll(x);

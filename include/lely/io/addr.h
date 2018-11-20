@@ -19,46 +19,57 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_ADDR_H
-#define LELY_IO_ADDR_H
+#ifndef LELY_IO_ADDR_H_
+#define LELY_IO_ADDR_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/io/io.h>
+#include <lely/libc/stdint.h>
 
 /// An opaque network address type.
 struct __io_addr {
 	/// The size (in bytes) of #addr.
 	int addrlen;
 	/// The network address.
-	union { char __size[128]; long __align; } addr;
+	union {
+		char __size[128];
+		long __align;
+	} addr;
 };
 
 /// The static initializer for #io_addr_t.
-#define IO_ADDR_INIT	{ 0, { { 0 } } }
+#define IO_ADDR_INIT \
+	{ \
+		0, \
+		{ \
+			{ \
+				0 \
+			} \
+		} \
+	}
 
 /**
  * The maximum number of bytes required to hold the text representation of a
  * Bluetooth device address, including the terminating null byte.
  */
-#define IO_ADDR_BTH_STRLEN	18
+#define IO_ADDR_BTH_STRLEN 18
 
 /**
  * The maximum number of bytes required to hold the text representation of an
  * IPv4 internet address, including the terminating null byte.
  */
-#define IO_ADDR_IPV4_STRLEN	16
+#define IO_ADDR_IPV4_STRLEN 16
 
 /**
  * The maximum number of bytes required to hold the text representation of an
  * IPv6 internet address, including the terminating null byte.
  */
-#define IO_ADDR_IPV6_STRLEN	46
+#define IO_ADDR_IPV6_STRLEN 46
 
 /**
  * The maximum number of bytes required to hold the text representation of a
  * UNIX domain socket path name, including the terminating null byte.
  */
-#define IO_ADDR_UNIX_STRLEN	108
+#define IO_ADDR_UNIX_STRLEN 108
 
 /// A network address info structure.
 struct io_addrinfo {
@@ -74,7 +85,10 @@ struct io_addrinfo {
 };
 
 /// The static initializer for struct #io_addrinfo.
-#define IO_ADDRINFO_INIT	{ 0, 0, IO_ADDR_INIT }
+#define IO_ADDRINFO_INIT \
+	{ \
+		0, 0, IO_ADDR_INIT \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,8 +120,8 @@ LELY_IO_EXTERN int __cdecl io_addr_cmp(const void *p1, const void *p2);
  *
  * @see io_addr_set_rfcomm_a()
  */
-LELY_IO_EXTERN int io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba,
-		int *port);
+LELY_IO_EXTERN int io_addr_get_rfcomm_a(
+		const io_addr_t *addr, char *ba, int *port);
 
 /**
  * Initializes a network address from an RFCOMM Bluetooth device address and
@@ -125,8 +139,8 @@ LELY_IO_EXTERN int io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba,
  *
  * @see io_addr_get_rfcomm_a()
  */
-LELY_IO_EXTERN int io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba,
-		int port);
+LELY_IO_EXTERN int io_addr_set_rfcomm_a(
+		io_addr_t *addr, const char *ba, int port);
 
 /**
  * Obtains an RFCOMM Bluetooth device address and port number from a network
@@ -145,8 +159,8 @@ LELY_IO_EXTERN int io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba,
  *
  * @see io_addr_set_rfcomm_n()
  */
-LELY_IO_EXTERN int io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6],
-		int *port);
+LELY_IO_EXTERN int io_addr_get_rfcomm_n(
+		const io_addr_t *addr, uint8_t ba[6], int *port);
 
 /**
  * Initializes a network address from an RFCOMM Bluetooth device address and
@@ -160,8 +174,8 @@ LELY_IO_EXTERN int io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6],
  *
  * @see io_addr_get_rfcomm_n()
  */
-LELY_IO_EXTERN void io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6],
-		int port);
+LELY_IO_EXTERN void io_addr_set_rfcomm_n(
+		io_addr_t *addr, const uint8_t ba[6], int port);
 
 /**
  * Initializes a network address with the local Bluetooth (RFCOMM) device
@@ -189,8 +203,8 @@ LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
  *
  * @see io_addr_set_ipv4_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv4_a(const io_addr_t *addr, char *ip,
-		int *port);
+LELY_IO_EXTERN int io_addr_get_ipv4_a(
+		const io_addr_t *addr, char *ip, int *port);
 
 /**
  * Initializes a network address from an IPv4 address and port number.
@@ -202,8 +216,8 @@ LELY_IO_EXTERN int io_addr_get_ipv4_a(const io_addr_t *addr, char *ip,
  *
  * @see io_addr_get_ipv4_a()
  */
-LELY_IO_EXTERN int io_addr_set_ipv4_a(io_addr_t *addr, const char *ip,
-		int port);
+LELY_IO_EXTERN int io_addr_set_ipv4_a(
+		io_addr_t *addr, const char *ip, int port);
 
 /**
  * Obtains an IPv4 address and port number from a network address.
@@ -220,8 +234,8 @@ LELY_IO_EXTERN int io_addr_set_ipv4_a(io_addr_t *addr, const char *ip,
  *
  * @see io_addr_set_ipv4_n()
  */
-LELY_IO_EXTERN int io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4],
-		int *port);
+LELY_IO_EXTERN int io_addr_get_ipv4_n(
+		const io_addr_t *addr, uint8_t ip[4], int *port);
 
 /**
  * Initializes a network address from an IPv4 address and port number.
@@ -233,8 +247,8 @@ LELY_IO_EXTERN int io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4],
  *
  * @see io_addr_get_ipv4_n()
  */
-LELY_IO_EXTERN void io_addr_set_ipv4_n(io_addr_t *addr, const uint8_t ip[4],
-		int port);
+LELY_IO_EXTERN void io_addr_set_ipv4_n(
+		io_addr_t *addr, const uint8_t ip[4], int port);
 
 /**
  * Initializes a network address with the IPv4 loopback address and a port
@@ -269,8 +283,8 @@ LELY_IO_EXTERN void io_addr_set_ipv4_broadcast(io_addr_t *addr, int port);
  *
  * @see io_addr_set_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv6_a(const io_addr_t *addr, char *ip,
-		int *port);
+LELY_IO_EXTERN int io_addr_get_ipv6_a(
+		const io_addr_t *addr, char *ip, int *port);
 
 /**
  * Initializes a network address from an IPv6 address and port number.
@@ -285,8 +299,8 @@ LELY_IO_EXTERN int io_addr_get_ipv6_a(const io_addr_t *addr, char *ip,
  *
  * @see io_addr_get_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_set_ipv6_a(io_addr_t *addr, const char *ip,
-		int port);
+LELY_IO_EXTERN int io_addr_set_ipv6_a(
+		io_addr_t *addr, const char *ip, int port);
 
 /**
  * Obtains an IPv6 address and port number from a network address.
@@ -303,8 +317,8 @@ LELY_IO_EXTERN int io_addr_set_ipv6_a(io_addr_t *addr, const char *ip,
  *
  * @see io_addr_set_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16],
-		int *port);
+LELY_IO_EXTERN int io_addr_get_ipv6_n(
+		const io_addr_t *addr, uint8_t ip[16], int *port);
 
 /**
  * Initializes a network address from an IPv6 address and port number.
@@ -316,8 +330,8 @@ LELY_IO_EXTERN int io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16],
  *
  * @see io_addr_get_ipv6_a()
  */
-LELY_IO_EXTERN void io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16],
-		int port);
+LELY_IO_EXTERN void io_addr_set_ipv6_n(
+		io_addr_t *addr, const uint8_t ip[16], int port);
 
 /**
  * Initializes a network address with the IPv6 loopback address and a port
@@ -429,5 +443,4 @@ LELY_IO_EXTERN int io_get_addrinfo(int maxinfo, struct io_addrinfo *info,
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_ADDR_H_

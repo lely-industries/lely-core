@@ -25,7 +25,7 @@
 #include <lely/libc/libc.h>
 
 #ifndef LELY_HAVE_SNPRINTF
-#define LELY_HAVE_SNPRINTF	1
+#define LELY_HAVE_SNPRINTF 1
 // Microsoft Visual C++ 2013 and earlier do not have snprintf().
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #undef LELY_HAVE_SNPRINTF
@@ -35,9 +35,9 @@
 #if !LELY_HAVE_SNPRINTF
 // Hide existing (and non-conformant) definitions of snprintf() and vsnprintf().
 #undef snprintf
-#define snprintf	__no_snprintf
+#define snprintf __no_snprintf
 #undef vsnprintf
-#define vsnprintf	__no_vsnprintf
+#define vsnprintf __no_vsnprintf
 #endif
 
 #include <lely/libc/sys/types.h>
@@ -73,8 +73,8 @@ extern "C" {
  * @returns the number of characters read (including the delimiter but excluding
  * the terminating null byte), or -1 on error or end-of-file.
  */
-LELY_LIBC_EXTERN ssize_t getdelim(char **lineptr, size_t *n, int delim,
-		FILE *stream);
+LELY_LIBC_EXTERN ssize_t getdelim(
+		char **lineptr, size_t *n, int delim, FILE *stream);
 
 /// Equivalent to #getdelim(lineptr, n, '\\n', stream).
 LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
@@ -104,8 +104,8 @@ LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
  *
  * @see vsnprintf()
  */
-LELY_LIBC_EXTERN int __cdecl snprintf(char *s, size_t n, const char *format,
-		...);
+LELY_LIBC_EXTERN int __cdecl snprintf(
+		char *s, size_t n, const char *format, ...);
 
 /**
  * Equivalent to `vprintf()`, except that the output is written to a string
@@ -126,8 +126,8 @@ LELY_LIBC_EXTERN int __cdecl snprintf(char *s, size_t n, const char *format,
  *
  * @see snprintf()
  */
-LELY_LIBC_EXTERN int __cdecl vsnprintf(char *s, size_t n, const char *format,
-		va_list arg);
+LELY_LIBC_EXTERN int __cdecl vsnprintf(
+		char *s, size_t n, const char *format, va_list arg);
 
 #endif // !LELY_HAVE_SNPRINTF
 
@@ -164,8 +164,8 @@ LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
  *
  * @see asprintf()
  */
-LELY_LIBC_EXTERN int __cdecl vasprintf(char **strp, const char *fmt,
-		va_list ap);
+LELY_LIBC_EXTERN int __cdecl vasprintf(
+		char **strp, const char *fmt, va_list ap);
 
 #endif // !_GNU_SOURCE || __MINGW32__
 

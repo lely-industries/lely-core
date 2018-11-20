@@ -36,4 +36,3 @@ LELY_CO_DEFINE_TYPE(REAL64, real64, r64, double)
 LELY_CO_DEFINE_TYPE(INTEGER64, integer64, i64, int64_t)
 // A 64-bit unsigned integer.
 LELY_CO_DEFINE_TYPE(UNSIGNED64, unsigned64, u64, uint64_t)
-

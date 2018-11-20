@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_PIPE_H
-#define LELY_IO_PIPE_H
+#ifndef LELY_IO_PIPE_H_
+#define LELY_IO_PIPE_H_
 
 #include <lely/io/io.h>
 
@@ -44,5 +44,4 @@ LELY_IO_EXTERN int io_open_pipe(io_handle_t handle_vector[2]);
 }
 #endif
 
-#endif
-
+#endif // !LELY_IO_PIPE_H_

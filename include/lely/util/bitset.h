@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_BITSET_H
-#define LELY_UTIL_BITSET_H
+#ifndef LELY_UTIL_BITSET_H_
+#define LELY_UTIL_BITSET_H_
 
 #include <lely/util/util.h>
 
@@ -114,5 +114,4 @@ LELY_UTIL_EXTERN int bitset_fnz(const struct bitset *set, int n);
 }
 #endif
 
-#endif
-
+#endif // !LELY_UTIL_BITSET_H_

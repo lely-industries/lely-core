@@ -27,13 +27,13 @@
 #ifndef LELY_DLL
 // libtool defines DLL_EXPORT for a shared library.
 #ifdef DLL_EXPORT
-#define LELY_DLL	1
+#define LELY_DLL 1
 #endif
 #endif
 
 #ifndef LELY_DLL_EXPORT
 #if LELY_DLL
-#define LELY_DLL_EXPORT	__dllexport
+#define LELY_DLL_EXPORT __dllexport
 #else
 #define LELY_DLL_EXPORT
 #endif
@@ -41,7 +41,7 @@
 
 #ifndef LELY_DLL_IMPORT
 #if LELY_DLL
-#define LELY_DLL_IMPORT	__dllimport
+#define LELY_DLL_IMPORT __dllimport
 #else
 #define LELY_DLL_IMPORT
 #endif

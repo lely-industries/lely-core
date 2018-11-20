@@ -25,11 +25,11 @@
 #include <config.h>
 #endif
 
-#define LELY_UTIL_INTERN	1
+#define LELY_UTIL_INTERN 1
 #include <lely/util/util.h>
 
 #ifndef LELY_UTIL_EXPORT
-#define LELY_UTIL_EXPORT	LELY_DLL_EXPORT
+#define LELY_UTIL_EXPORT LELY_DLL_EXPORT
 #endif
 
 #ifdef _WIN32
@@ -44,15 +44,15 @@
  * to the number of least-significant bits in a pointer guaranteed to be zero.
  */
 #if __WORDSIZE == 64
-#define ALIGNED_ALLOC_BITS	4
+#define ALIGNED_ALLOC_BITS 4
 #else
-#define ALIGNED_ALLOC_BITS	3
+#define ALIGNED_ALLOC_BITS 3
 #endif
 #endif
 
 #ifndef ALIGNED_ALLOC_SIZE
 /// The minimum alignment (in bytes) of heap-allocated objects.
-#define ALIGNED_ALLOC_SIZE	((size_t)(1 << (ALIGNED_ALLOC_BITS)))
+#define ALIGNED_ALLOC_SIZE ((size_t)(1 << (ALIGNED_ALLOC_BITS)))
 #endif
 
 #endif // !LELY_UTIL_INTERN_UTIL_H_

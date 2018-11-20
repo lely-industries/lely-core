@@ -25,11 +25,11 @@
 #include <config.h>
 #endif
 
-#define LELY_TAP_INTERN	1
+#define LELY_TAP_INTERN 1
 #include <lely/tap/tap.h>
 
 #ifndef LELY_TAP_EXPORT
-#define LELY_TAP_EXPORT	LELY_DLL_EXPORT
+#define LELY_TAP_EXPORT LELY_DLL_EXPORT
 #endif
 
 #endif // !LELY_TAP_INTERN_TAP_H_
