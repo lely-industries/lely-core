@@ -30,6 +30,12 @@
 #ifdef _WIN32
 #include <lely/libc/stdio.h>
 
+#ifdef __MINGW32__
+// Ignore complaints that "I64" is not a valid ISO C length modifier.
+#pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
+#endif
+
 static int pipe(HANDLE fildes[2]);
 #endif
 
@@ -125,7 +131,7 @@ pipe(HANDLE fildes[2])
 
 	CHAR Name[MAX_PATH] = { 0 };
 	static LONGLONG cnt;
-	snprintf(Name, sizeof(Name) - 1, "\\\\.\\pipe\\lely-io-pipe-%04x-%08x",
+	snprintf(Name, sizeof(Name) - 1, "\\\\.\\pipe\\lely-io-pipe-%04lx-%08I64x",
 			GetCurrentProcessId(), InterlockedIncrement64(&cnt));
 
 	fildes[0] = CreateNamedPipeA(Name,

@@ -245,7 +245,7 @@ LELY_LIBC_EXTERN int __cdecl cnd_timedwait(cnd_t *cond, mtx_t *mtx,
  */
 LELY_LIBC_EXTERN int __cdecl cnd_wait(cnd_t *cond, mtx_t *mtx);
 
-/*
+/*!
  * Releases any resources used by the mutex at \a mtx. No threads can be blocked
  * waiting for the mutex at \a mtx.
  */
@@ -304,7 +304,7 @@ LELY_LIBC_EXTERN int __cdecl mtx_trylock(mtx_t *mtx);
  * Unlocks the mutex at \a mtx. The mutex at \a mtx SHALL be locked by the
  * calling thread.
  *
- * \return #thrd_success on success or #thrd_error if the request could not be
+ * \returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
 LELY_LIBC_EXTERN int __cdecl mtx_unlock(mtx_t *mtx);

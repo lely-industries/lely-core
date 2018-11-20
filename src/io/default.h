@@ -109,6 +109,7 @@ retry:
 	case ERROR_OPERATION_ABORTED:
 		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
 			goto retry;
+		// ... falls through ...
 	default:
 		dwErrCode = GetLastError();
 		goto error_ReadFile;
@@ -189,6 +190,7 @@ retry:
 	case ERROR_OPERATION_ABORTED:
 		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
 			goto retry;
+		// ... falls through ...
 	default:
 		dwErrCode = GetLastError();
 		goto error_WriteFile;
