@@ -1,0 +1,111 @@
+variables:
+  GIT_STRATEGY: clone
+  REVISION: "1"
+
+cache:
+  key: none
+  paths: []
+  policy: pull
+
+.build: &build
+  stage: build
+  tags:
+    - docker
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        dh-autoreconf
+        dh-python
+        doxygen
+        graphviz
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev:$ARCH
+    - apt-get install -qy --no-install-recommends
+        cython
+        libpython-dev:$ARCH
+        python
+        python-setuptools
+        python-wheel
+    - apt-get install -qy --no-install-recommends
+        cython3
+        libpython3-dev:$ARCH
+        python3
+        python3-setuptools
+        python3-wheel
+  script:
+    - SOURCE=$(dpkg-parsechangelog -S Source)
+    - VERSION=$(dpkg-parsechangelog -S Version | sed 's/\-.*$//')
+    - sed -i "s/[)] UNRELEASED/-0$DIST$REVISION) $SUITE/" debian/changelog
+    - if [ "$ARCH" = "$(dpkg-architecture -qDEB_BUILD_ARCH)" ]; then
+        git archive -o ../${SOURCE}_${VERSION}.orig.tar HEAD;
+        xz ../${SOURCE}_${VERSION}.orig.tar;
+      else
+        export CONFIG_SITE=/etc/dpkg-cross/cross-config.$ARCH;
+      fi
+    - debuild $DEBUILD_OPTS
+  after_script:
+    - SOURCE=$(dpkg-parsechangelog -S Source)
+    - VERSION=$(dpkg-parsechangelog -S Version | sed 's/\-.*$//')
+    - mkdir -p build
+    - mv ../${SOURCE}_${VERSION}* ../*.deb ../*.ddeb build/
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
+
+build:bionic-amd64:
+  <<: *build
+  image: lely/debuild:$DIST-$ARCH
+  variables:
+    ARCH: amd64
+    DEBUILD_OPTS: -uc -us
+    DIST: bionic
+    SUITE: $DIST
+
+.test: &test
+  stage: test
+  tags:
+    - docker
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        dh-autoreconf
+        doxygen
+        graphviz
+        lcov
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev:$ARCH
+  script:
+    - autoreconf -i
+    - ./configure --host=$TARGET --enable-code-coverage --disable-shared
+    - make
+    - make check-code-coverage
+    - make html
+    - lcov --summary coverage.info --rc lcov_branch_coverage=1
+  artifacts:
+    paths:
+      - coverage/
+      - doc/
+    expire_in: 1 week
+
+test:bionic-amd64:
+  <<: *test
+  image: lely/build-essential:$DIST-$ARCH
+  variables:
+    ARCH: amd64
+    DIST: bionic
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - test:bionic-amd64
+  script:
+    - mkdir -p public
+    - mv coverage public/lcov
+    - mv doc/html public/doxygen
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 weeks
