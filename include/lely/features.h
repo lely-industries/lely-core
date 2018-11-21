@@ -71,21 +71,21 @@
 #include <sys/features.h>
 #endif
 
-#ifndef __CLANG_PREREQ
+#ifndef CLANG_PREREQ
 #if defined(__clang__) && defined(__clang_major__) && defined(__clang_minor__)
-#define __CLANG_PREREQ(major, minor) \
+#define CLANG_PREREQ(major, minor) \
 	((__clang_major__ << 16) + __clang_minor__ >= ((major) << 16) + (minor))
 #else
-#define __CLANG_PREREQ(major, minor) 0
+#define CLANG_PREREQ(major, minor) 0
 #endif
 #endif
 
-#ifndef __GNUC_PREREQ
+#ifndef GNUC_PREREQ
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
-#define __GNUC_PREREQ(major, minor) \
+#define GNUC_PREREQ(major, minor) \
 	((__GNUC__ << 16) + __GNUC_MINOR__ >= ((major) << 16) + (minor))
 #else
-#define __GNUC_PREREQ(major, minor) 0
+#define GNUC_PREREQ(major, minor) 0
 #endif
 #endif
 
@@ -123,7 +123,7 @@
 // GCC versions older than 4.9 do not properly advertise the absence of
 // <stdatomic.h>.
 #if defined(__cplusplus) || defined(_MSC_VER) \
-		|| (defined(__GNUC__) && !__GNUC_PREREQ(4, 9))
+		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9))
 #define __STDC_NO_ATOMICS__ 1
 #endif
 #endif
@@ -165,10 +165,9 @@
 /// Specifies the alignment requirement of the declared object or member.
 // clang-format off
 #if !defined(_Alignas) && !(__STDC_VERSION__ >= 201112L \
-		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
+		&& (GNUC_PREREQ(4, 7) || __has_feature(c_alignas)))
 // clang-format on
-#if __cplusplus >= 201103L \
-		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignas))
+#if __cplusplus >= 201103L && (GNUC_PREREQ(4, 8) || __has_feature(cxx_alignas))
 #define _Alignas alignas
 #elif defined(__GNUC__) || __has_attribute(__aligned__)
 #define _Alignas(x) __attribute__((__aligned__(x)))
@@ -183,10 +182,9 @@
 /// Yields the alignment requirement of its operand type.
 // clang-format off
 #if !defined(_Alignof) && !(__STDC_VERSION__ >= 201112L \
-		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
+		&& (GNUC_PREREQ(4, 7) || __has_feature(c_alignof)))
 // clang-format on
-#if __cplusplus >= 201103L \
-		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_alignof))
+#if __cplusplus >= 201103L && (GNUC_PREREQ(4, 8) || __has_feature(cxx_alignof))
 #define _Alignof alignof
 #elif defined(__GNUC__)
 #define _Alignof(x) __alignof__(x)
@@ -204,7 +202,7 @@
  */
 // clang-format off
 #if !defined(_Noreturn) && !(__STDC_VERSION__ >= 201112L \
-		&& (__GNUC_PREREQ(4, 7) || __CLANG_PREREQ(3, 3)))
+		&& (GNUC_PREREQ(4, 7) || CLANG_PREREQ(3, 3)))
 // clang-format on
 #if defined(__GNUC__) || __has_attribute(__noreturn__)
 #define _Noreturn __attribute__((__noreturn__))
@@ -224,10 +222,10 @@
  */
 // clang-format off
 #if !defined(_Static_assert) && !(__STDC_VERSION__ >= 201112L \
-		&& (__GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
+		&& (GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
 // clang-format on
 #if __cplusplus >= 201103L \
-		&& (__GNUC_PREREQ(4, 3) || __has_feature(cxx_static_assert))
+		&& (GNUC_PREREQ(4, 3) || __has_feature(cxx_static_assert))
 #define _Static_assert static_assert
 #else
 #ifdef __COUNTER__
@@ -251,10 +249,10 @@
  */
 // clang-format off
 #if !defined(_Thread_local) && !(__STDC_VERSION__ >= 201112L \
-		&& (__GNUC_PREREQ(4, 7) || __has_feature(c_thread_local)))
+		&& (GNUC_PREREQ(4, 7) || __has_feature(c_thread_local)))
 // clang-format on
 #if __cplusplus >= 201103L \
-		&& (__GNUC_PREREQ(4, 8) || __has_feature(cxx_thread_local))
+		&& (GNUC_PREREQ(4, 8) || __has_feature(cxx_thread_local))
 #define _Thread_local thread_local
 #elif defined(__GNUC__)
 #define _Thread_local __thread
@@ -286,16 +284,16 @@
 #define __extension__
 #endif
 
-#ifndef __format_printf
+#ifndef format_printf__
 #if defined(__GNUC__) || __has_attribute(__format__)
 #ifdef __MINGW32__
-#define __format_printf(i, j) \
+#define format_printf__(i, j) \
 	__attribute__((__format__(__gnu_printf__, (i), (j))))
 #else
-#define __format_printf(i, j) __attribute__((__format__(__printf__, (i), (j))))
+#define format_printf__(i, j) __attribute__((__format__(__printf__, (i), (j))))
 #endif
 #else
-#define __format_printf(i, j)
+#define format_printf__(i, j)
 #endif
 #endif
 

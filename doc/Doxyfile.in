@@ -2057,8 +2057,14 @@ PREDEFINED             =
 
 PREDEFINED             += __STDC_VERSION__=199901L
 
-PREDEFINED             += __GNUC__=5
-PREDEFINED             += __GNUC_MINOR__=4
+PREDEFINED             += __clang__=1
+PREDEFINED             += __clang_major__=6
+PREDEFINED             += __clang_minor__=0
+
+PREDEFINED             += __GNUC__=7
+PREDEFINED             += __GNUC_MINOR__=3
+
+PREDEFINED             += "format_printf__(i, j)="
 
 PREDEFINED             += LELY_HAVE_PTHREAD=1
 PREDEFINED             += LELY_HAVE_SOCKET_CAN=1
@@ -2102,8 +2108,6 @@ PREDEFINED             += LELY_CAN_BUF_INLINE=inline
 
 PREDEFINED             += LELY_CO_SDO_INLINE=inline
 
-PREDEFINED             += "__format_printf(i, j)="
-
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
 # macro definition that is found in the sources will be used. Use the PREDEFINED
@@ -2112,6 +2116,8 @@ PREDEFINED             += "__format_printf(i, j)="
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 EXPAND_AS_DEFINED      =
+
+EXPAND_AS_DEFINED      += format_printf__
 
 EXPAND_AS_DEFINED      += LELY_LIBC_STDATOMIC_INLINE
 EXPAND_AS_DEFINED      += LELY_LIBC_STRINGS_INLINE
@@ -2145,8 +2151,6 @@ EXPAND_AS_DEFINED      += LELY_CO_DEFINE_BAUD
 EXPAND_AS_DEFINED      += LELY_CO_DEFINE_FLAGS
 EXPAND_AS_DEFINED      += LELY_CO_DEFINE_STATE
 EXPAND_AS_DEFINED      += LELY_CO_DEFINE_TYPE
-
-EXPAND_AS_DEFINED      += __format_printf
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have

@@ -116,7 +116,7 @@ static int co_gw_txt_recv__boot(
  * @see co_gw_txt_recv_txt()
  */
 static int co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
-		__format_printf(2, 3);
+		format_printf__(2, 3);
 
 /**
  * Invokes the callback function to process a received indication or

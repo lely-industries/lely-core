@@ -114,7 +114,7 @@ LELY_UTIL_PRINT_INLINE int xtoc(int i);
  * can be obtained with get_errc().
  */
 size_t print_fmt(char **pbegin, char *end, const char *format, ...)
-		__format_printf(3, 4);
+		format_printf__(3, 4);
 
 /**
  * Prints a formatted string to a memory buffer. This function is equivalent to
@@ -122,7 +122,7 @@ size_t print_fmt(char **pbegin, char *end, const char *format, ...)
  * of arguments.
  */
 size_t vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
-		__format_printf(3, 0);
+		format_printf__(3, 0);
 
 /**
  * Prints a single character to a memory buffer. Note that the output is _not_

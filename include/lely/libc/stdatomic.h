@@ -39,9 +39,9 @@
 #undef __STDC_NO_ATOMICS__
 #if __has_extension(c_atomic)
 #define LELY_HAVE_CLANG_ATOMIC 1
-#elif __GNUC_PREREQ(4, 7)
+#elif GNUC_PREREQ(4, 7)
 #define LELY_HAVE_GNUC_ATOMIC 1
-#elif __GNUC_PREREQ(4, 1)
+#elif GNUC_PREREQ(4, 1)
 #define LELY_HAVE_SYNC_ATOMIC 1
 #else
 #define __STDC_NO_ATOMICS__ 1

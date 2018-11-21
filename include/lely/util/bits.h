@@ -275,7 +275,7 @@ bswap16(uint16_t x)
 {
 #ifdef _MSC_VER
 	return _byteswap_ushort(x);
-#elif __GNUC_PREREQ(4, 8) || __has_builtin(__builtin_bswap16)
+#elif GNUC_PREREQ(4, 8) || __has_builtin(__builtin_bswap16)
 	return __builtin_bswap16(x);
 #else
 	return ((x & 0xff) << 8) | ((x >> 8) & 0xff);
@@ -287,7 +287,7 @@ bswap32(uint32_t x)
 {
 #ifdef _MSC_VER
 	return _byteswap_ulong(x);
-#elif __GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap32)
+#elif GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap32)
 	return __builtin_bswap32(x);
 #else
 	return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x >> 8) & 0xff00)
@@ -300,7 +300,7 @@ bswap64(uint64_t x)
 {
 #ifdef _MSC_VER
 	return _byteswap_uint64(x);
-#elif __GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap64)
+#elif GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap64)
 	return __builtin_bswap64(x);
 #else
 	return ((x & 0xff) << 56) | ((x & 0xff00) << 40)

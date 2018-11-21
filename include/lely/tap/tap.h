@@ -158,11 +158,11 @@
 extern "C" {
 #endif
 
-void __tap_plan_impl(int n, const char *format, ...) __format_printf(2, 3);
+void __tap_plan_impl(int n, const char *format, ...) format_printf__(2, 3);
 int __tap_test_impl(int test, const char *expr, const char *file, int line,
-		const char *format, ...) __format_printf(5, 6);
-void __tap_diag_impl(const char *format, ...) __format_printf(1, 2);
-_Noreturn void __tap_abort_impl(const char *format, ...) __format_printf(1, 2);
+		const char *format, ...) format_printf__(5, 6);
+void __tap_diag_impl(const char *format, ...) format_printf__(1, 2);
+_Noreturn void __tap_abort_impl(const char *format, ...) format_printf__(1, 2);
 
 #ifdef __cplusplus
 }
