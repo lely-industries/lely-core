@@ -61,8 +61,7 @@ class IOSock : public IOHandle {
   static int
   open(int domain, int type, IOSock sock[2]) noexcept {
     io_handle_t handle_vector[2];
-    if (__unlikely(io_open_socketpair(domain, type, handle_vector) == -1))
-      return -1;
+    if (io_open_socketpair(domain, type, handle_vector) == -1) return -1;
     sock[0] = IOSock(handle_vector[0]);
     sock[1] = IOSock(handle_vector[1]);
     return 0;

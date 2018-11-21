@@ -90,9 +90,7 @@ class IOHandle {
 
 #ifdef _WIN32
   HANDLE
-  getFd() const noexcept {
-    return io_get_fd(*this);
-  }
+  getFd() const noexcept { return io_get_fd(*this); }
 #else
   int
   getFd() const noexcept {

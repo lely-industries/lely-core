@@ -63,7 +63,7 @@ class IOPipe : public IOHandle {
   static int
   open(IOPipe pipe[2]) noexcept {
     io_handle_t handle_vector[2];
-    if (__unlikely(io_open_pipe(handle_vector) == -1)) return -1;
+    if (io_open_pipe(handle_vector) == -1) return -1;
     pipe[0] = IOPipe(handle_vector[0]);
     pipe[1] = IOPipe(handle_vector[1]);
     return 0;

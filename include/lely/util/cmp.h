@@ -63,9 +63,9 @@ LELY_UTIL_DEFINE_TYPE(str_case, )
 		if (p1 == p2) \
 			return 0; \
 \
-		if (__unlikely(!p1)) \
+		if (!p1) \
 			return -1; \
-		if (__unlikely(!p2)) \
+		if (!p2) \
 			return 1; \
 \
 		type v1 = *(const type *)p1; \
@@ -89,9 +89,9 @@ str_cmp(const void *p1, const void *p2)
 	if (p1 == p2)
 		return 0;
 
-	if (__unlikely(!p1))
+	if (!p1)
 		return -1;
-	if (__unlikely(!p2))
+	if (!p2)
 		return 1;
 
 	return strcmp((const char *)p1, (const char *)p2);
@@ -103,9 +103,9 @@ str_case_cmp(const void *p1, const void *p2)
 	if (p1 == p2)
 		return 0;
 
-	if (__unlikely(!p1))
+	if (!p1)
 		return -1;
-	if (__unlikely(!p2))
+	if (!p2)
 		return 1;
 
 	return strcasecmp((const char *)p1, (const char *)p2);

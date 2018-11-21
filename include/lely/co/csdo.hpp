@@ -402,15 +402,15 @@ struct COCSDOUpCon {
   static void
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
-    if (__likely(!ac)) {
-      if (__unlikely(!ptr || n < sizeof(T))) {
+    if (!ac) {
+      if (!ptr || n < sizeof(T)) {
         ac = CO_SDO_AC_TYPE_LEN_LO;
-      } else if (__unlikely(n > sizeof(T))) {
+      } else if (n > sizeof(T)) {
         ac = CO_SDO_AC_TYPE_LEN_HI;
       }
     }
     COVal<co_type_traits_T<T>::index> val;
-    if (__likely(!ac)) ac = co_val_read_sdo(val.index, &val, ptr, n);
+    if (!ac) ac = co_val_read_sdo(val.index, &val, ptr, n);
     return (*M)(sdo, idx, subidx, ac, val, data);
   }
 };
@@ -431,8 +431,7 @@ struct COCSDOUpCon<char*> {
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
     COVal<CO_DEFTYPE_VISIBLE_STRING> val;
-    if (__likely(!ac && ptr && n))
-      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    if (!ac && ptr && n) ac = co_val_read_sdo(val.index, &val, ptr, n);
     return (*M)(sdo, idx, subidx, ac, val, data);
   }
 };
@@ -459,7 +458,7 @@ struct COCSDOUpCon<::std::string> {
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
     const char* vs = static_cast<const char*>(ptr);
-    if (__likely(!ac && vs && n)) {
+    if (!ac && vs && n) {
 #if !__cpp_exceptions
       try {
 #endif
@@ -517,7 +516,7 @@ struct COCSDOUpCon<::std::vector<uint8_t>> {
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
     const uint8_t* os = static_cast<const uint8_t*>(ptr);
-    if (__likely(!ac && os && n)) {
+    if (!ac && os && n) {
 #if !__cpp_exceptions
       try {
 #endif
@@ -549,8 +548,7 @@ struct COCSDOUpCon<char16_t*> {
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
     COVal<CO_DEFTYPE_UNICODE_STRING> val;
-    if (__likely(!ac && ptr && n))
-      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    if (!ac && ptr && n) ac = co_val_read_sdo(val.index, &val, ptr, n);
     return (*M)(sdo, idx, subidx, ac, val, data);
   }
 };
@@ -577,10 +575,9 @@ struct COCSDOUpCon<::std::basic_string<char16_t>> {
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
     COVal<CO_DEFTYPE_UNICODE_STRING> val;
-    if (__likely(!ac && ptr && n))
-      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    if (!ac && ptr && n) ac = co_val_read_sdo(val.index, &val, ptr, n);
     const char16_t* us = val;
-    if (__likely(!ac && us && n)) {
+    if (!ac && us && n) {
 #if !__cpp_exceptions
       try {
 #endif

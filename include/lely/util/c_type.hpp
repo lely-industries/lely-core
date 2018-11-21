@@ -365,7 +365,7 @@ class incomplete_c_type {
   static void*
   operator new(std::size_t size) {
     void* ptr = operator new(size, ::std::nothrow);
-    if (__unlikely(!ptr)) throw_or_abort(std::bad_alloc());
+    if (!ptr) throw_or_abort(std::bad_alloc());
     return ptr;
   }
 

@@ -253,7 +253,7 @@ can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 		size_t end = atomic_load_explicit(
 				&buf->end, memory_order_acquire);
 #endif
-		if (__unlikely(!((end - begin) & buf->size)))
+		if (!((end - begin) & buf->size))
 			return i;
 
 		if (ptr)
@@ -279,7 +279,7 @@ can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 		size_t end = atomic_load_explicit(
 				&buf->end, memory_order_acquire);
 #endif
-		if (__unlikely(!((end - begin) & buf->size)))
+		if (!((end - begin) & buf->size))
 			return i;
 
 		if (ptr)
@@ -311,7 +311,7 @@ can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 		size_t begin = atomic_load_explicit(
 				&buf->begin, memory_order_acquire);
 #endif
-		if (__unlikely(!((begin - end - 1) & buf->size)))
+		if (!((begin - end - 1) & buf->size))
 			return i;
 
 		buf->ptr[end++ & buf->size] = ptr[i];

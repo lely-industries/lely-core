@@ -546,11 +546,11 @@ struct COSubDnInd {
     uint32_t ac = 0;
 
     COVal<N> val;
-    if (__unlikely(co_sdo_req_dn_val(req, N, &val, &ac) == -1)) return ac;
+    if (co_sdo_req_dn_val(req, N, &val, &ac) == -1) return ac;
 
-    if (__unlikely(ac = sub->chkVal(val))) return ac;
+    if (ac = sub->chkVal(val)) return ac;
 
-    if (__unlikely(ac = (*M)(sub, val, data))) return ac;
+    if (ac = (*M)(sub, val, data)) return ac;
 
     sub->dn(val);
     return ac;
@@ -573,7 +573,7 @@ struct COSubUpInd {
 
     COVal<N> val = sub->getVal<N>();
 
-    if (__unlikely(ac = (*M)(sub, val, data))) return ac;
+    if (ac = (*M)(sub, val, data)) return ac;
 
     co_sdo_req_up_val(req, N, &val, &ac);
     return ac;

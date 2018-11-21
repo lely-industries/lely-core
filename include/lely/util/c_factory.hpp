@@ -87,7 +87,7 @@ class c_factory<R*(Args...), U*> : public c_factory<R*, U*>,
   virtual U*
   create(Args... args) override {
     auto ptr = factory_ctor_create(c_factory::m_ctor, args...);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -109,7 +109,7 @@ class c_factory<R*(), U*> : public c_factory<R*, U*>, public factory<U*()> {
   virtual U*
   create() {
     void* ptr = factory_ctor_create(c_factory::m_ctor);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -129,7 +129,7 @@ class c_factory<R*(T0), U*> : public c_factory<R*, U*>, public factory<U*(T0)> {
   virtual U*
   create(T0 t0) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -150,7 +150,7 @@ class c_factory<R*(T0, T1), U*> : public c_factory<R*, U*>,
   virtual U*
   create(T0 t0, T1 t1) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -171,7 +171,7 @@ class c_factory<R*(T0, T1, T2), U*> : public c_factory<R*, U*>,
   virtual U*
   create(T0 t0, T1 t1, T2 t2) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -192,7 +192,7 @@ class c_factory<R*(T0, T1, T2, T3), U*> : public c_factory<R*, U*>,
   virtual U*
   create(T0 t0, T1 t1, T2 t2, T3 t3) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -213,7 +213,7 @@ class c_factory<R*(T0, T1, T2, T3, T4), U*>
   virtual U*
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -235,7 +235,7 @@ class c_factory<R*(T0, T1, T2, T3, T4, T5), U*>
   virtual U*
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4, t5);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -258,7 +258,7 @@ class c_factory<R*(T0, T1, T2, T3, T4, T5, T6), U*>
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
     void* ptr =
         factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4, t5, t6);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -282,7 +282,7 @@ class c_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7), U*>
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7) {
     void* ptr =
         factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4, t5, t6, t7);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -306,7 +306,7 @@ class c_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8), U*>
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4, t5,
                                     t6, t7, t8);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -330,7 +330,7 @@ class c_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9), U*>
   create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9) {
     void* ptr = factory_ctor_create(c_factory::m_ctor, t0, t1, t2, t3, t4, t5,
                                     t6, t7, t8, t9);
-    if (__unlikely(!ptr)) impl::throw_bad_init();
+    if (!ptr) impl::throw_bad_init();
     return static_cast<R*>(ptr);
   }
 };
@@ -693,7 +693,7 @@ struct c_static_factory {
   static c_static_factory instance;
 
   explicit c_static_factory(const ::std::string& name) : m_name(name) {
-    if (__unlikely(factory_insert(m_name.c_str(), ctor, dtor) == -1))
+    if (factory_insert(m_name.c_str(), ctor, dtor) == -1)
       impl::throw_bad_init();
   }
 

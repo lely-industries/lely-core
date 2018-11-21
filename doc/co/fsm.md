@@ -136,7 +136,7 @@ fsm_req(fsm_t *fsm, Args... args)
 {
 	assert(fsm);
 
-	if (__unlikely(!fsm_is_idle(fsm))) {
+	if (!fsm_is_idle(fsm)) {
 		set_errnum(ERRNUM_INPROGRESS)
 		return -1;
 	}

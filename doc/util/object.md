@@ -67,7 +67,7 @@ void *
 __obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __obj));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		// On POSIX platforms this is a no-op (errno = errno), but on
 		// Windows this converts errno into a system error code and
 		// invokes SetLastError().
@@ -108,12 +108,12 @@ obj_create(Args... args)
 	errc_t errc = 0;
 
 	obj_t *obj = __obj_alloc();
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		errc = get_errc();
 		goto error_alloc_obj;
 	}
 
-	if (__unlikely(!__obj_init(obj, args...))) {
+	if (!__obj_init(obj, args...)) {
 		errc = get_errc();
 		goto error_init_obj;
 	}

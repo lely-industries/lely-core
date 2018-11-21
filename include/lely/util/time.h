@@ -225,9 +225,9 @@ timespec_cmp(const void *p1, const void *p2)
 	if (p1 == p2)
 		return 0;
 
-	if (__unlikely(!p1))
+	if (!p1)
 		return -1;
-	if (__unlikely(!p2))
+	if (!p2)
 		return 1;
 
 	const struct timespec *t1 = (const struct timespec *)p1;

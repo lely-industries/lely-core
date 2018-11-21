@@ -59,8 +59,7 @@ class COVal {
 #endif
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (__unlikely(!co_val_make(index, this, ptr, n)))
-      throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
 
 #if __cplusplus >= 201103L
@@ -122,8 +121,7 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
 #endif
   COVal(const void* ptr, ::std::size_t n) {
-    if (__unlikely(!co_val_make(index, this, ptr, n)))
-      throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
 
   COVal(const char* vs) { init(vs); }
@@ -134,8 +132,7 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
   COVal&
   operator=(const COVal& val) {
     this->~COVal();
-    if (__unlikely(!co_val_copy(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_copy());
+    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
     return *this;
   }
 
@@ -143,8 +140,7 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
-    if (__unlikely(!co_val_move(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_move());
+    if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
 #endif
@@ -176,8 +172,7 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
  private:
   void
   init(const char* vs) {
-    if (__unlikely(co_val_init_vs(&m_val, vs) == -1))
-      throw_or_abort(bad_init());
+    if (co_val_init_vs(&m_val, vs) == -1) throw_or_abort(bad_init());
   }
 
   void
@@ -212,8 +207,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
 #endif
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (__unlikely(!co_val_make(index, this, ptr, n)))
-      throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
 
   COVal(const uint8_t* os, ::std::size_t n) { init(os, n); }
@@ -224,8 +218,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
   COVal&
   operator=(const COVal& val) {
     this->~COVal();
-    if (__unlikely(!co_val_copy(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_copy());
+    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
     return *this;
   }
 
@@ -233,8 +226,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
-    if (__unlikely(!co_val_move(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_move());
+    if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
 #endif
@@ -259,7 +251,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
  private:
   void
   init(const uint8_t* os, ::std::size_t n) {
-    if (__unlikely(co_val_init_os(&m_val, os, n))) throw_or_abort(bad_init());
+    if (co_val_init_os(&m_val, os, n)) throw_or_abort(bad_init());
   }
 
   void
@@ -294,8 +286,7 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
 #endif
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (__unlikely(!co_val_make(index, this, ptr, n)))
-      throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
 
   COVal(const char16_t* us) { init(us); }
@@ -306,8 +297,7 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
   COVal&
   operator=(const COVal& val) {
     this->~COVal();
-    if (__unlikely(!co_val_copy(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_copy());
+    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
     return *this;
   }
 
@@ -315,8 +305,7 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
-    if (__unlikely(!co_val_move(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_move());
+    if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
 #endif
@@ -348,8 +337,7 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
  private:
   void
   init(const char16_t* us) {
-    if (__unlikely(co_val_init_us(&m_val, us) == -1))
-      throw_or_abort(bad_init());
+    if (co_val_init_us(&m_val, us) == -1) throw_or_abort(bad_init());
   }
 
   void
@@ -379,7 +367,7 @@ class COVal<CO_DEFTYPE_DOMAIN> {
 #endif
 
   COVal(const void* dom, ::std::size_t n) {
-    if (__unlikely(co_val_init_dom(&m_val, dom, n))) throw_or_abort(bad_init());
+    if (co_val_init_dom(&m_val, dom, n)) throw_or_abort(bad_init());
   }
 
   ~COVal() { co_val_fini(index, &m_val); }
@@ -387,8 +375,7 @@ class COVal<CO_DEFTYPE_DOMAIN> {
   COVal&
   operator=(const COVal& val) {
     this->~COVal();
-    if (__unlikely(!co_val_copy(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_copy());
+    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
     return *this;
   }
 
@@ -396,8 +383,7 @@ class COVal<CO_DEFTYPE_DOMAIN> {
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
-    if (__unlikely(!co_val_move(index, &m_val, &val.m_val)))
-      throw_or_abort(bad_move());
+    if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
 #endif

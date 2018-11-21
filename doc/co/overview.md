@@ -70,14 +70,14 @@ my_can_init(struct my_can *can, const char *ifname)
 	errc_t errc = 0;
 
 	// Initialize the I/O library.
-	if (__unlikely(lely_io_init() == -1)) {
+	if (lely_io_init() == -1) {
 		errc = get_errc();
 		goto error_init_io;
 	}
 
 	// Open a handle to the CAN bus.
 	can->handle = io_open_can(ifname);
-	if (__unlikely(can->handle == IO_HANDLE_ERROR)) {
+	if (can->handle == IO_HANDLE_ERROR) {
 		errc = get_errc();
 		goto error_open_can;
 	}
@@ -85,14 +85,14 @@ my_can_init(struct my_can *can, const char *ifname)
 
 	// Create a new I/O polling interface.
 	can->poll = io_poll_create();
-	if (__unlikely(!can->poll)) {
+	if (!can->poll) {
 		errc = get_errc();
 		goto error_create_poll;
 	}
 
 	// Create a CAN network object.
 	can->net = can_net_create();
-	if (__unlikely(!can->net)) {
+	if (!can->net) {
 		errc = get_errc();
 		goto error_create_net;
 	}
@@ -190,9 +190,8 @@ my_can_step(struct my_can *can, int timeout)
 			can_net_recv(can->net, &msg);
 		// Treat the reception of an error frame, or any error other
 		// than an empty receive buffer, as an error event.
-		if (__unlikely(!result || (result == -1
-				&& get_errnum() != ERRNUM_AGAIN
-				&& get_errnum() != ERRNUM_WOULDBLOCK)))
+		if (!result || (result == -1 && get_errnum() != ERRNUM_AGAIN
+				&& get_errnum() != ERRNUM_WOULDBLOCK))
 			event.events |= IO_EVENT_ERROR;
 	}
 
@@ -324,9 +323,9 @@ public:
 			// Treat the reception of an error frame, or any error
 			// other than an empty receive buffer, as an error
 			// event.
-			if (__unlikely(!result || (result == -1
+			if (!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
-					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+					&& get_errnum() != ERRNUM_WOULDBLOCK))
 				event.events |= IO_EVENT_ERROR;
 		}
 
@@ -456,21 +455,21 @@ main(void)
 {
 	// Initialize the CAN network.
 	struct my_can can;
-	if (__unlikely(my_can_init(&can, "can0") == -1)) {
+	if (my_can_init(&can, "can0") == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to initialize CAN network");
 		goto error_init_can;
 	}
 
 	// Load the object dictionary from a DCF file.
 	co_dev_t *dev = co_dev_create_from_dcf_file("test.dcf");
-	if (__unlikely(!dev)) {
+	if (!dev) {
 		diag(DIAG_ERROR, get_errc(), "unable to load object dictionary");
 		goto error_create_dev;
 	}
 
 	// Create the NMT service.
 	co_nmt_t *nmt = co_nmt_create(can.net, dev);
-	if (__unlikely(!nmt)) {
+	if (!nmt) {
 		diag(DIAG_ERROR, get_errc(), "unable to create NMT service");
 		goto error_create_nmt;
 	}

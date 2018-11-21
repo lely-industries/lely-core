@@ -168,10 +168,10 @@ inline ptrdiff_t
 membuf_seek(struct membuf *buf, ptrdiff_t offset)
 {
 	char *cur = buf->cur + offset;
-	if (__unlikely(cur - buf->begin < 0)) {
+	if (cur - buf->begin < 0) {
 		cur = buf->begin;
 		offset = cur - buf->cur;
-	} else if (__unlikely(buf->end - cur < 0)) {
+	} else if (buf->end - cur < 0) {
 		cur = buf->end;
 		offset = cur - buf->cur;
 	}
