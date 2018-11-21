@@ -3,9 +3,7 @@ C11 and POSIX compatibility library overview
 
 The C11 and POSIX compatibility library provides:
 - compiler feature definitions: lely/features.h
-- `static_assert()`: lely/libc/assert.h
 - `union sigval` and `struct sigevent`: lely/libc/signal.h
-- `alignas()` and `alignof()`: lely/libc/stdalign.h
 - atomics: lely/libc/stdatomic.h
 - `max_align_t`: lely/libc/stddef.h
 - integer types: lely/libc/stdint.h

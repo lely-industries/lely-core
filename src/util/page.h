@@ -23,7 +23,6 @@
 #define LELY_UTIL_INTERN_PAGE_H_
 
 #include "util.h"
-#include <lely/libc/stdalign.h>
 #ifndef LELY_NO_ATOMICS
 #define LELY_NO_ATOMICS 1
 #ifndef LELY_NO_THREADS
@@ -109,8 +108,9 @@ static void page_destroy(struct page *page);
  * @param page a pointer to a memory #page.
  * @param size the number of bytes to allocate. The value of <b>size</b> is used
  *             as the alignment if it is a power of two and smaller than the
- *             default alignment (`alignof(max_align_t)`, equal to the alignment
- *             guarantees of malloc()). Otherwise the default alignment is used.
+ *             default alignment (`_Alignof(max_align_t)`, equal to the
+ *             alignment guarantees of malloc()). Otherwise the default
+ *             alignment is used.
  *
  * @returns a pointer to the allocated memory, or NULL on error.
  *
@@ -217,7 +217,7 @@ page_destroy(struct page *page)
 static inline void *
 page_alloc(struct page *page, size_t size)
 {
-	size_t alignment = alignof(max_align_t);
+	size_t alignment = _Alignof(max_align_t);
 	if (powerof2(size))
 		alignment = MIN(alignment, size);
 

@@ -72,7 +72,7 @@ __pool_init(struct __pool *pool, size_t nmemb, size_t size)
 
 	// Round the size up to the nearest alignment.
 	if (!powerof2(size))
-		size = ALIGN(size, alignof(max_align_t));
+		size = ALIGN(size, _Alignof(max_align_t));
 
 #ifdef LELY_NO_ATOMICS
 	pool->free = NULL;

@@ -215,31 +215,6 @@
 #endif
 
 /**
- * If the value of <b>expr</b> compares unequal to 0, the declaration has no
- * effect. Otherwise, the constraint is violated and a diagnostic message is
- * produced which may, depending on the implementation, include the text of
- * <b>msg</b>.
- */
-// clang-format off
-#if !defined(_Static_assert) && !(__STDC_VERSION__ >= 201112L \
-		&& (GNUC_PREREQ(4, 6) || __has_feature(c_static_assert)))
-// clang-format on
-#if __cplusplus >= 201103L \
-		&& (GNUC_PREREQ(4, 3) || __has_feature(cxx_static_assert))
-#define _Static_assert static_assert
-#else
-#ifdef __COUNTER__
-#define _Static_assert(expr, msg) __Static_assert(expr, __COUNTER__)
-#else
-#define _Static_assert(expr, msg) __Static_assert(expr, __LINE__)
-#endif
-#define __Static_assert(expr, n) ___Static_assert(expr, n)
-#define ___Static_assert(expr, n) \
-	typedef char ___Static_assert_##n[(expr) ? 1 : -1]
-#endif
-#endif
-
-/**
  * An object whose identifier is declared with the storage-class specifier
  * `_Thread_local` has thread storage duration. Its lifetime is the entire
  * execution of the thread for which it is created, and its stored value is
@@ -268,15 +243,6 @@
 #if defined(__GNUC__) || __has_builtin(__builtin_expect)
 #else
 #define __builtin_expect(exp, c) (exp)
-#endif
-#endif
-
-#ifndef __deprecated
-/// Mark a function as deprecated.
-#if defined(__GNUC__) || __has_attribute(__deprecated__)
-#define __deprecated __attribute__((__deprecated__))
-#else
-#define __deprecated
 #endif
 #endif
 
@@ -347,11 +313,6 @@
 #else
 #define LONG_BIT __WORDSIZE
 #endif
-#endif
-
-#ifndef LEVEL1_DCACHE_LINESIZE
-/// The size (in bytes) of the level 1 (L1) data cache.
-#define LEVEL1_DCACHE_LINESIZE 64
 #endif
 
 #endif // LELY_FEATURES_H_

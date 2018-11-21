@@ -24,7 +24,6 @@
 #include "co.h"
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
-#include <lely/libc/stdalign.h>
 #include <lely/libc/string.h>
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
@@ -77,7 +76,7 @@
 #define CO_DOMAIN_MIN NULL
 #define CO_DOMAIN_MAX NULL
 
-#define CO_ARRAY_OFFSET ALIGN(sizeof(size_t), alignof(union co_val))
+#define CO_ARRAY_OFFSET ALIGN(sizeof(size_t), _Alignof(union co_val))
 
 static int co_array_alloc(void *val, size_t size);
 static void co_array_free(void *val);

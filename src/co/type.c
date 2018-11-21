@@ -23,7 +23,6 @@
 
 #include "co.h"
 #include <lely/co/type.h>
-#include <lely/libc/stdalign.h>
 
 int
 co_type_is_basic(co_unsigned16_t type)
@@ -68,7 +67,7 @@ co_type_alignof(co_unsigned16_t type)
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
-		return alignof(co_##b##_t);
+		return _Alignof(co_##b##_t);
 #include <lely/co/def/type.def>
 #undef LELY_CO_DEFINE_TYPE
 	default: return 1;
