@@ -22,12 +22,12 @@
 
 #include "libc.h"
 
-#if !LELY_NO_RT
-
 #include <lely/libc/time.h>
 #include <lely/libc/unistd.h>
 
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if !LELY_NO_RT
+
+#if _WIN32 && !defined(__MINGW32__)
 
 #include <errno.h>
 
@@ -35,7 +35,7 @@ int
 nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
 	int errsv = clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
-	if (__unlikely(errsv)) {
+	if (errsv) {
 		errno = errsv;
 		return -1;
 	}
@@ -48,7 +48,7 @@ sleep(unsigned seconds)
 	struct timespec rqtp = { seconds, 0 };
 	struct timespec rmtp = { 0, 0 };
 	int errsv = errno;
-	if (__unlikely(nanosleep(&rqtp, &rmtp) == -1)) {
+	if (nanosleep(&rqtp, &rmtp) == -1) {
 		errno = errsv;
 		return (unsigned)rmtp.tv_sec;
 	}

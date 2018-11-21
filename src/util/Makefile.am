@@ -31,7 +31,6 @@ src += rbtree.c
 src += shlib.c
 src += time.c
 src += util.h
-src += xtime.c
 
 lib_LTLIBRARIES = liblely-util.la
 liblely_util_la_CPPFLAGS = -I$(top_srcdir)/include

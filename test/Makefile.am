@@ -11,8 +11,6 @@ bin += test-util-c_factory
 test_util_c_factory_SOURCES = util-c_factory.cpp
 bin += test-util-fbuf
 test_util_fbuf_SOURCES = util-fbuf.c
-bin += test-util-xtime
-test_util_xtime_SOURCES = util-xtime.c
 
 bin += test-can-net
 test_can_net_SOURCES = can-net.c

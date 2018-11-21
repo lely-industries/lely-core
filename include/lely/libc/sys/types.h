@@ -26,16 +26,14 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
-#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)) \
-		&& __has_include(<sys/types.h>)
+#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__))
 #define LELY_HAVE_SYS_TYPES_H 1
 #endif
 #endif
 
 #if LELY_HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#else
-
+#else // !LELY_HAVE_SYS_TYPES_H
 #include <stddef.h>
 
 /// Used for clock ID type in the clock and timer functions.
@@ -44,17 +42,6 @@ typedef int clockid_t;
 /// Used for a count of bytes or an error indication.
 typedef ptrdiff_t ssize_t;
 
-#endif // LELY_HAVE_SYS_TYPES_H
-
-#if (!defined(_POSIX_C_SOURCE) || defined(__NEWLIB__)) \
-		&& !defined(_POSIX_THREADS)
-/// Used to identify a thread attribute object.
-typedef struct pthread_attr_t pthread_attr_t;
-#endif
-
-#if !defined(_POSIX_C_SOURCE) && (defined(_WIN32) || !defined(_POSIX_TIMERS))
-/// Used for timer ID returned by `timer_create()`.
-typedef void *timer_t;
-#endif
+#endif // !LELY_HAVE_SYS_TYPES_H
 
 #endif // !LELY_LIBC_SYS_TYPES_H_

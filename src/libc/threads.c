@@ -37,6 +37,10 @@
 
 #include <errno.h>
 
+#if _WIN32
+#include <windows.h>
+#endif
+
 #if LELY_HAVE_PTHREAD
 
 #include <lely/libc/stdint.h>

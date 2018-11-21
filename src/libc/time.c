@@ -31,9 +31,7 @@
 int
 timespec_get(struct timespec *ts, int base)
 {
-	if (__unlikely(base != TIME_UTC))
-		return 0;
-	if (__unlikely(clock_gettime(CLOCK_REALTIME, ts) == -1))
+	if (base != TIME_UTC || clock_gettime(CLOCK_REALTIME, ts) == -1)
 		return 0;
 	return base;
 }

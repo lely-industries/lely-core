@@ -2,7 +2,6 @@ inc =
 inc += lely/features.h
 
 inc += lely/libc/sys/types.h
-inc += lely/libc/signal.h
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h
 inc += lely/libc/stdint.h
@@ -62,7 +61,6 @@ inc += lely/util/rbtree.h
 inc += lely/util/shlib.h
 inc += lely/util/time.h
 inc += lely/util/util.h
-inc += lely/util/xtime.h
 
 inc += lely/can/buf.h
 if !NO_CXX

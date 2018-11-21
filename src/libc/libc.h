@@ -27,8 +27,17 @@
 
 #include <lely/features.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+LELY_INGORE_EMPTY_TRANSLATION_UNIT
+
+#if _WIN32
+
+/**
+ * The maximum number of milliseconds to be spent in `SleepEx()` and
+ * `SleepConditionVariableCS()`. This value MUST be smaller than `INFINITE`, to
+ * prevent an infinite sleep.
+ */
+#define MAX_SLEEP_MS (ULONG_MAX - 1)
+
+#endif // _WIN32
 
 #endif // !LELY_LIBC_INTERN_LIBC_H_

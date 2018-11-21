@@ -75,7 +75,7 @@
  * Returns 1 if <b>x</b> is a power of two, and 0 otherwise. Note that zero is
  * considered to be a power of two.
  */
-#define powerof2(x)	(!((x) & ((x) - 1)))
+#define powerof2(x) (!((x) & ((x)-1)))
 #endif
 
 #ifndef structof

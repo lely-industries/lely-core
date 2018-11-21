@@ -24,11 +24,13 @@
 
 #if !LELY_NO_RT
 
+#if _WIN32 && !defined(__MINGW32__)
+
 #include <lely/libc/time.h>
 
 #include <errno.h>
 
-#if defined(_WIN32) && !defined(__MINGW32__)
+#include <windows.h>
 
 /**
  * The difference between Windows file time (seconds since 00:00:00 UTC on
@@ -36,12 +38,6 @@
  * 1970) is 369 years and 89 leap days.
  */
 #define FILETIME_EPOCH ((LONGLONG)(369 * 365 + 89) * 24 * 60 * 60)
-
-/**
- * The maximum number of milliseconds to be spent in `SleepEx()`. This value
- * MUST be smaller than `INFINITE`, to prevent an infinite sleep.
- */
-#define MAX_SLEEP_MS (ULONG_MAX - 1)
 
 #ifdef _USE_32BIT_TIME_T
 /// The lower limit for a value of type `time_t`.
@@ -82,8 +78,8 @@ clock_getres(clockid_t clock_id, struct timespec *res)
 	DWORD dwTimeIncrement;
 	BOOL bTimeAdjustmentDisabled;
 	// clang-format off
-	if (__unlikely(!GetSystemTimeAdjustment(&dwTimeAdjustment,
-			&dwTimeIncrement, &bTimeAdjustmentDisabled)))
+	if (!GetSystemTimeAdjustment(&dwTimeAdjustment, &dwTimeIncrement,
+			&bTimeAdjustmentDisabled))
 		// clang-format on
 		return -1;
 
@@ -104,7 +100,7 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 		LARGE_INTEGER liPerformanceCount;
 		QueryPerformanceCounter(&liPerformanceCount);
 		LONGLONG pc = liPerformanceCount.QuadPart;
-		if (__unlikely(pc / pf > TIME_T_MAX)) {
+		if (pc / pf > TIME_T_MAX) {
 			errno = EOVERFLOW;
 			return -1;
 		}
@@ -137,9 +133,8 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	case CLOCK_PROCESS_CPUTIME_ID: {
 		FILETIME CreationTime, ExitTime, KernelTime, UserTime;
 		// clang-format off
-		if (__unlikely(!GetProcessTimes(GetCurrentProcess(),
-				&CreationTime, &ExitTime, &KernelTime,
-				&UserTime)))
+		if (!GetProcessTimes(GetCurrentProcess(), &CreationTime,
+				&ExitTime, &KernelTime, &UserTime))
 			// clang-format on
 			return -1;
 		// Add the time spent in kernel mode and the time spent in user
@@ -148,7 +143,7 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 			.HighPart = KernelTime.dwHighDateTime };
 		ULARGE_INTEGER ut = { .LowPart = UserTime.dwLowDateTime,
 			.HighPart = UserTime.dwHighDateTime };
-		if (__unlikely(kt.QuadPart + ut.QuadPart > _I64_MAX)) {
+		if (kt.QuadPart + ut.QuadPart > _I64_MAX) {
 			errno = EOVERFLOW;
 			return -1;
 		}
@@ -158,9 +153,8 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	case CLOCK_THREAD_CPUTIME_ID: {
 		FILETIME CreationTime, ExitTime, KernelTime, UserTime;
 		// clang-format off
-		if (__unlikely(!GetProcessTimes(GetCurrentThread(),
-				&CreationTime, &ExitTime, &KernelTime,
-				&UserTime)))
+		if (!GetProcessTimes(GetCurrentThread(), &CreationTime,
+				&ExitTime, &KernelTime, &UserTime))
 			// clang-format on
 			return -1;
 		// Add the time spent in kernel mode and the time spent in user
@@ -169,7 +163,7 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 			.HighPart = KernelTime.dwHighDateTime };
 		ULARGE_INTEGER ut = { .LowPart = UserTime.dwLowDateTime,
 			.HighPart = UserTime.dwHighDateTime };
-		if (__unlikely(kt.QuadPart + ut.QuadPart > _I64_MAX)) {
+		if (kt.QuadPart + ut.QuadPart > _I64_MAX) {
 			errno = EOVERFLOW;
 			return -1;
 		}
@@ -180,7 +174,7 @@ clock_gettime(clockid_t clock_id, struct timespec *tp)
 	}
 
 	LONGLONG sec = ft / 10000000l;
-	if (__unlikely(sec < TIME_T_MIN || sec > TIME_T_MAX)) {
+	if (sec < TIME_T_MIN || sec > TIME_T_MAX) {
 		errno = EOVERFLOW;
 		return -1;
 	}
@@ -205,13 +199,13 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 	default: return EINVAL;
 	}
 
-	if (__unlikely(rqtp->tv_nsec < 0 || rqtp->tv_nsec >= 1000000000l))
+	if (rqtp->tv_nsec < 0 || rqtp->tv_nsec >= 1000000000l)
 		return EINVAL;
 
 	int errsv = errno;
 
 	struct timespec now = { 0, 0 };
-	if (__unlikely(clock_gettime(clock_id, &now) == -1)) {
+	if (clock_gettime(clock_id, &now) == -1) {
 		int result = errno;
 		errno = errsv;
 		return result;
@@ -222,12 +216,12 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 	if (!(flags & TIMER_ABSTIME)) {
 		if (tp.tv_sec < 0 || (!tp.tv_sec && !tp.tv_nsec))
 			return 0;
-		if (__unlikely(now.tv_sec > TIME_T_MAX - tp.tv_sec))
+		if (now.tv_sec > TIME_T_MAX - tp.tv_sec)
 			return EINVAL;
 		tp.tv_sec += now.tv_sec;
 		tp.tv_nsec += now.tv_nsec;
 		if (tp.tv_nsec >= 1000000000l) {
-			if (__unlikely(tp.tv_sec == TIME_T_MAX))
+			if (tp.tv_sec == TIME_T_MAX)
 				return EINVAL;
 			tp.tv_sec++;
 			tp.tv_nsec -= 1000000000l;
@@ -248,7 +242,7 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 				? (DWORD)llMilliseconds
 				: MAX_SLEEP_MS;
 		DWORD dwResult = SleepEx(dwMilliseconds, TRUE);
-		if (__unlikely(clock_gettime(clock_id, &now) == -1)) {
+		if (clock_gettime(clock_id, &now) == -1) {
 			int result = errno;
 			errno = errsv;
 			return result;
@@ -274,27 +268,27 @@ clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
 int
 clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
-	if (__unlikely(clock_id != CLOCK_REALTIME)) {
+	if (clock_id != CLOCK_REALTIME) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	if (__unlikely(tp->tv_nsec < 0 || tp->tv_nsec >= 1000000000l)) {
+	if (tp->tv_nsec < 0 || tp->tv_nsec >= 1000000000l) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	if (__unlikely(tp->tv_sec + FILETIME_EPOCH < 0)) {
+	if (tp->tv_sec + FILETIME_EPOCH < 0) {
 		errno = EINVAL;
 		return -1;
 	}
 	ULARGE_INTEGER li = { .QuadPart = tp->tv_sec + FILETIME_EPOCH };
-	if (__unlikely(li.QuadPart > _UI64_MAX / 10000000ul)) {
+	if (li.QuadPart > _UI64_MAX / 10000000ul) {
 		errno = EINVAL;
 		return -1;
 	}
 	li.QuadPart *= 10000000ul;
-	if (__unlikely(li.QuadPart > _UI64_MAX - tp->tv_nsec / 100)) {
+	if (li.QuadPart > _UI64_MAX - tp->tv_nsec / 100) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -302,11 +296,11 @@ clock_settime(clockid_t clock_id, const struct timespec *tp)
 
 	FILETIME ft = { li.LowPart, li.HighPart };
 	SYSTEMTIME st;
-	if (__unlikely(!FileTimeToSystemTime(&ft, &st))) {
+	if (!FileTimeToSystemTime(&ft, &st)) {
 		errno = EINVAL;
 		return -1;
 	}
-	if (__unlikely(!SetSystemTime(&st))) {
+	if (!SetSystemTime(&st)) {
 		errno = EPERM;
 		return -1;
 	}

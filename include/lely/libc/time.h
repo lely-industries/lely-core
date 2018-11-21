@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_TIME_H_
 #define LELY_LIBC_TIME_H_
 
-#include <lely/libc/signal.h>
+#include <lely/libc/sys/types.h>
 
 #include <time.h>
 
@@ -33,12 +33,11 @@
 #endif
 #endif
 
-#ifndef LELY_HAVE_TIMESPEC
+#undef LELY_HAVE_TIMESPEC
 #if __STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
 		|| _POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
 		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined)
 #define LELY_HAVE_TIMESPEC 1
-#endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC_GET
@@ -88,19 +87,19 @@ struct timespec {
 	long tv_nsec;
 };
 
-#endif
+#endif // !LELY_HAVE_TIMESPEC
 
 #if !LELY_HAVE_ITIMERSPEC
 
-/// A struct specifying an interval and initial value for a timer.
+//! A struct specifying an interval and initial value for a timer.
 struct itimerspec {
-	/// The timer period.
+	//! The timer period.
 	struct timespec it_interval;
-	/// The timer expiration.
+	//! The timer expiration.
 	struct timespec it_value;
 };
 
-#endif
+#endif // !LELY_HAVE_ITIMERSPEC
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,101 +195,6 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 #endif // !_POSIX_TIMERS && !__MINGW32__
 
-#if defined(_WIN32) || !defined(_POSIX_TIMERS)
-
-/**
- * Creates a per-process timer using the specified clock as the timing base.
- *
- * @param clockid the identifier of the clock (one of #CLOCK_REALTIME,
- *                #CLOCK_MONOTONIC, #CLOCK_PROCESS_CPUTIME_ID or
- *                #CLOCK_THREAD_CPUTIME_ID). On Windows, only #CLOCK_REALTIME is
- *                supported.
- * @param evp     a pointer to a #sigevent struct defining the asynchronous
- *                notification to occur when the timer expires. If <b>evp</b> is
- *                NULL, a default #sigevent struct is used where the
- *                <b>sigev_notify</b> member has the value #SIGEV_SIGNAL, the
- *                <b>sigev_signal</b> member equals the default signal number,
- *                and the <b>sigev_value</b> member contains the timer ID. On
- *                Windows, only #SIGEV_NONE and #SIGEV_THREAD are supported for
- *                <b>sigev_notify</b>.
- * @param timerid the address at which to store the timer ID. The timer ID is
- *                guaranteed to be unique within the calling process until the
- *                timer is deleted.
- *
- * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
- * indicate the error.
- *
- * @see timer_delete()
- */
-int timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid);
-
-/**
- * Deletes the specified timer created with timer_create(). If the timer is
- * armed when timer_delete() is called, the behavior shall be as if the timer is
- * automatically disarmed before removal.
- *
- * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
- * indicate the error.
- */
-int timer_delete(timer_t timerid);
-
-/**
- * Returns the timer expiration overrun count for the specified timer. Only a
- * single notification shall be issued for a given timer at any point in time.
- * When a timer expires with a pending notification, no notification is issued,
- * and a timer overrun shall occur. The overrun count contains the number of
- * extra timer expirations that occurred between the time the notification was
- * issued and when it was delivered.
- *
- * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
- * indicate the error.
- */
-int timer_getoverrun(timer_t timerid);
-
-/**
- * Obtains the amount of time until the specified timer expires and the reload
- * value of the timer.
- *
- * @param timerid a timer ID created with `timer_create()`.
- * @param value   the address of an #itimerspec struct. On success, the
- *                <b>it_value</b> member shall contain the time until the next
- *                expiration, or zero if the timer is disarmed. The
- *                <b>it_interval</b> member shall contain the reload value last
- *                set by `timer_settime()`.
- *
- * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
- * indicate the error.
- */
-int timer_gettime(timer_t timerid, struct itimerspec *value);
-
-/**
- * Arms or disarms a timer. If the specified timer was already armed, the
- * expiration time shall be reset to the specified value.
- *
- * @param timerid a timer ID created with `timer_create()`.
- * @param flags   if the #TIMER_ABSTIME is set in <b>flags</b>, the
- *                <b>it_value</b> member of *<b>value</b> contains the absolute
- *                time of the first expiration. If #TIMER_ABSTIME is not set,
- *                the <b>it_value</b> member contains the time interval until
- *                the first expiration.
- * @param value   a pointer to an #itimerspec struct containing the period and
- *                expiration of the timer. If the <b>it_value</b> member is
- *                zero, the timer shall be disarmed. If the <b>it_interval</b>
- *                member is non-zero, a periodic (or repetitive) timer is
- *                specified. The period is rounded up to the nearest multiple of
- *                the clock resolution.
- * @param ovalue  if not NULL, the address at which to store  previous amount of
- *                time before the timer would have expired, or zero if the timer
- *                was disarmed, together with the previous timer reload value.
- *
- * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
- * indicate the error.
- */
-int timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
-		struct itimerspec *ovalue);
-
-#endif // _WIN32 || !_POSIX_TIMERS
-
 #if !LELY_HAVE_TIMESPEC_GET
 
 #ifndef TIME_UTC
@@ -302,9 +206,9 @@ int timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
  * Sets the interval at <b>ts</b> to hold the current calendar time based on the
  * specified time base.
  *
- * If base is `TIME_UTC`, the <b>tv_sec</b> member is set to the number of
- * seconds since an implementation defined epoch, truncated to a whole value and
- * the <b>tv_nsec</b> member is set to the integral number of nanoseconds,
+ * If <b>base</b> is `TIME_UTC`, the <b>tv_sec</b> member is set to the number
+ * of seconds since an implementation defined epoch, truncated to a whole value
+ * and the <b>tv_nsec</b> member is set to the integral number of nanoseconds,
  * rounded to the resolution of the system clock.
  *
  * @returns the nonzero value <b>base</b> on success; otherwise, it returns

@@ -315,4 +315,7 @@
 #endif
 #endif
 
+#define LELY_INGORE_EMPTY_TRANSLATION_UNIT \
+	typedef int lely_ignore_empty_translation_unit__;
+
 #endif // LELY_FEATURES_H_

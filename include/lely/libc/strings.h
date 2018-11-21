@@ -54,7 +54,11 @@ extern "C" {
 		&& !defined(__BSD_VISIBLE)
 LELY_LIBC_STRINGS_INLINE int ffs(int i);
 
-inline ffs(int i) { return __builtin_ffs(i); }
+inline int
+ffs(int i)
+{
+	return __builtin_ffs(i);
+}
 #else
 int ffs(int i);
 #endif
