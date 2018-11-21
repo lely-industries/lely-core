@@ -33,7 +33,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_HTAB_INLINE
-#define LELY_UTIL_HTAB_INLINE inline
+#define LELY_UTIL_HTAB_INLINE static inline
 #endif
 
 /**
@@ -227,7 +227,7 @@ struct hnode *htab_find(const struct htab *tab, const void *key);
 		hnode_foreach__(n, (tab)->slots[_htab_slot_##n], node)
 // clang-format on
 
-LELY_UTIL_HTAB_INLINE void
+inline void
 hnode_init(struct hnode *node, const void *key)
 {
 	node->key = key;
@@ -236,7 +236,7 @@ hnode_init(struct hnode *node, const void *key)
 	node->pprev = NULL;
 }
 
-LELY_UTIL_HTAB_INLINE void
+inline void
 hnode_insert(struct hnode **pprev, struct hnode *node)
 {
 	if ((node->next = *pprev))
@@ -245,20 +245,20 @@ hnode_insert(struct hnode **pprev, struct hnode *node)
 	*node->pprev = node;
 }
 
-LELY_UTIL_HTAB_INLINE void
+inline void
 hnode_remove(struct hnode *node)
 {
 	if ((*node->pprev = node->next))
 		node->next->pprev = node->pprev;
 }
 
-LELY_UTIL_HTAB_INLINE int
+inline int
 htab_empty(const struct htab *tab)
 {
 	return !htab_size(tab);
 }
 
-LELY_UTIL_HTAB_INLINE size_t
+inline size_t
 htab_size(const struct htab *tab)
 {
 	return tab->num_nodes;

@@ -28,7 +28,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_LIST_INLINE
-#define LELY_UTIL_LIST_INLINE inline
+#define LELY_UTIL_LIST_INLINE static inline
 #endif
 
 /**
@@ -361,13 +361,13 @@ LELY_UTIL_LIST_INLINE struct dlnode *dllist_last(const struct dllist *list);
  */
 #define dllist_foreach(list, node) dlnode_foreach (dllist_first(list), node)
 
-LELY_UTIL_LIST_INLINE void
+inline void
 slnode_init(struct slnode *node)
 {
 	node->next = NULL;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 slnode_insert_after(struct slnode *prev, struct slnode *node)
 {
 	node->next = prev->next;
@@ -375,33 +375,33 @@ slnode_insert_after(struct slnode *prev, struct slnode *node)
 	return !node->next;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 slnode_insert_before(struct slnode **pnext, struct slnode *node)
 {
 	node->next = *pnext;
 	*pnext = node;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 slnode_remove(struct slnode **pnode)
 {
 	return !(*pnode = (*pnode)->next);
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_init(struct sllist *list)
 {
 	list->first = NULL;
 	list->plast = &list->first;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 sllist_empty(const struct sllist *list)
 {
 	return !list->first;
 }
 
-LELY_UTIL_LIST_INLINE size_t
+inline size_t
 sllist_size(const struct sllist *list)
 {
 	size_t size = 0;
@@ -410,7 +410,7 @@ sllist_size(const struct sllist *list)
 	return size;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_push_front(struct sllist *list, struct slnode *node)
 {
 	if (!(node->next = list->first))
@@ -418,7 +418,7 @@ sllist_push_front(struct sllist *list, struct slnode *node)
 	list->first = node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_push_back(struct sllist *list, struct slnode *node)
 {
 	node->next = NULL;
@@ -426,7 +426,7 @@ sllist_push_back(struct sllist *list, struct slnode *node)
 	list->plast = &(*list->plast)->next;
 }
 
-LELY_UTIL_LIST_INLINE struct slnode *
+inline struct slnode *
 sllist_pop_front(struct sllist *list)
 {
 	struct slnode *node = list->first;
@@ -435,7 +435,7 @@ sllist_pop_front(struct sllist *list)
 	return node;
 }
 
-LELY_UTIL_LIST_INLINE struct slnode *
+inline struct slnode *
 sllist_pop_back(struct sllist *list)
 {
 	if (!*(list->plast = &list->first))
@@ -447,7 +447,7 @@ sllist_pop_back(struct sllist *list)
 	return node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_insert_after(
 		struct sllist *list, struct slnode *prev, struct slnode *node)
 {
@@ -455,7 +455,7 @@ sllist_insert_after(
 		list->plast = &node->next;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_insert_before(
 		struct sllist *list, struct slnode *next, struct slnode *node)
 {
@@ -465,7 +465,7 @@ sllist_insert_before(
 	slnode_insert_before(pnext, node);
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 sllist_remove(struct sllist *list, struct slnode *node)
 {
 	struct slnode **pnode;
@@ -475,26 +475,26 @@ sllist_remove(struct sllist *list, struct slnode *node)
 		list->plast = pnode;
 }
 
-LELY_UTIL_LIST_INLINE struct slnode *
+inline struct slnode *
 sllist_first(const struct sllist *list)
 {
 	return list->first;
 }
 
-LELY_UTIL_LIST_INLINE struct slnode *
+inline struct slnode *
 sllist_last(const struct sllist *list)
 {
 	return list->first ? structof(list->plast, struct slnode, next) : NULL;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dlnode_init(struct dlnode *node)
 {
 	node->prev = NULL;
 	node->next = NULL;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
 	node->prev = prev;
@@ -504,7 +504,7 @@ dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 	return !node->next;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
 	node->next = next;
@@ -514,7 +514,7 @@ dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 	return !node->prev;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dlnode_remove(struct dlnode *node)
 {
 	if (node->prev)
@@ -523,20 +523,20 @@ dlnode_remove(struct dlnode *node)
 		node->next->prev = node->prev;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_init(struct dllist *list)
 {
 	list->first = NULL;
 	list->last = NULL;
 }
 
-LELY_UTIL_LIST_INLINE int
+inline int
 dllist_empty(const struct dllist *list)
 {
 	return !list->first;
 }
 
-LELY_UTIL_LIST_INLINE size_t
+inline size_t
 dllist_size(const struct dllist *list)
 {
 	size_t size = 0;
@@ -545,7 +545,7 @@ dllist_size(const struct dllist *list)
 	return size;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_push_front(struct dllist *list, struct dlnode *node)
 {
 	node->prev = NULL;
@@ -556,7 +556,7 @@ dllist_push_front(struct dllist *list, struct dlnode *node)
 	list->first = node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_push_back(struct dllist *list, struct dlnode *node)
 {
 	node->next = NULL;
@@ -567,7 +567,7 @@ dllist_push_back(struct dllist *list, struct dlnode *node)
 	list->last = node;
 }
 
-LELY_UTIL_LIST_INLINE struct dlnode *
+inline struct dlnode *
 dllist_pop_front(struct dllist *list)
 {
 	struct dlnode *node = list->first;
@@ -580,7 +580,7 @@ dllist_pop_front(struct dllist *list)
 	return node;
 }
 
-LELY_UTIL_LIST_INLINE struct dlnode *
+inline struct dlnode *
 dllist_pop_back(struct dllist *list)
 {
 	struct dlnode *node = list->last;
@@ -593,7 +593,7 @@ dllist_pop_back(struct dllist *list)
 	return node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_insert_after(
 		struct dllist *list, struct dlnode *prev, struct dlnode *node)
 {
@@ -601,7 +601,7 @@ dllist_insert_after(
 		list->last = node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_insert_before(
 		struct dllist *list, struct dlnode *next, struct dlnode *node)
 {
@@ -609,7 +609,7 @@ dllist_insert_before(
 		list->first = node;
 }
 
-LELY_UTIL_LIST_INLINE void
+inline void
 dllist_remove(struct dllist *list, struct dlnode *node)
 {
 	if (!node->prev)
@@ -619,13 +619,13 @@ dllist_remove(struct dllist *list, struct dlnode *node)
 	dlnode_remove(node);
 }
 
-LELY_UTIL_LIST_INLINE struct dlnode *
+inline struct dlnode *
 dllist_first(const struct dllist *list)
 {
 	return list->first;
 }
 
-LELY_UTIL_LIST_INLINE struct dlnode *
+inline struct dlnode *
 dllist_last(const struct dllist *list)
 {
 	return list->last;

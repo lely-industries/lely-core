@@ -27,7 +27,7 @@
 #include <lely/util/util.h>
 
 #ifndef LELY_UTIL_HASH_INLINE
-#define LELY_UTIL_HASH_INLINE inline
+#define LELY_UTIL_HASH_INLINE static inline
 #endif
 
 #ifdef __cplusplus
@@ -57,7 +57,7 @@ size_t strcasehash(const char *s);
  */
 size_t strncasehash(const char *s, size_t n);
 
-LELY_UTIL_HASH_INLINE size_t
+inline size_t
 hashhash(size_t seed, size_t hash)
 {
 	// The constant is 2^n / phi, where phi = (1 + sqrt(5)) / 2, i.e., the
@@ -71,7 +71,7 @@ hashhash(size_t seed, size_t hash)
 	return seed;
 }
 
-LELY_UTIL_HASH_INLINE size_t
+inline size_t
 sizehash(size_t n)
 {
 	// The constant is 2^n / phi, where phi = (1 + sqrt(5)) / 2, i.e., the
@@ -88,7 +88,7 @@ sizehash(size_t n)
 	return (n << bits) | (n >> bits);
 }
 
-LELY_UTIL_HASH_INLINE size_t
+inline size_t
 ptrhash(const void *ptr)
 {
 	uintptr_t x = (uintptr_t)ptr;

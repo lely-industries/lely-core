@@ -37,7 +37,7 @@
 #include <stddef.h>
 
 #ifndef LELY_LIBC_STRINGS_INLINE
-#define LELY_LIBC_STRINGS_INLINE inline
+#define LELY_LIBC_STRINGS_INLINE static inline
 #endif
 
 #ifdef __cplusplus
@@ -52,11 +52,9 @@ extern "C" {
  */
 #if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
 		&& !defined(__BSD_VISIBLE)
-LELY_LIBC_STRINGS_INLINE int
-ffs(int i)
-{
-	return __builtin_ffs(i);
-}
+LELY_LIBC_STRINGS_INLINE int ffs(int i);
+
+inline ffs(int i) { return __builtin_ffs(i); }
 #else
 int ffs(int i);
 #endif

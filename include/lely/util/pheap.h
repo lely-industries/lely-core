@@ -38,7 +38,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
-#define LELY_UTIL_PHEAP_INLINE inline
+#define LELY_UTIL_PHEAP_INLINE static inline
 #endif
 
 /**
@@ -180,13 +180,13 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
  */
 #define pheap_foreach(heap, node) pnode_foreach (pheap_first(heap), node)
 
-LELY_UTIL_PHEAP_INLINE void
+inline void
 pnode_init(struct pnode *node, const void *key)
 {
 	node->key = key;
 }
 
-LELY_UTIL_PHEAP_INLINE struct pnode *
+inline struct pnode *
 pnode_next(const struct pnode *node)
 {
 	if (node->child)
@@ -198,7 +198,7 @@ pnode_next(const struct pnode *node)
 	return NULL;
 }
 
-LELY_UTIL_PHEAP_INLINE void
+inline void
 pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 {
 	heap->cmp = cmp;
@@ -206,19 +206,19 @@ pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 	heap->num_nodes = 0;
 }
 
-LELY_UTIL_PHEAP_INLINE int
+inline int
 pheap_empty(const struct pheap *heap)
 {
 	return !pheap_size(heap);
 }
 
-LELY_UTIL_PHEAP_INLINE size_t
+inline size_t
 pheap_size(const struct pheap *heap)
 {
 	return heap->num_nodes;
 }
 
-LELY_UTIL_PHEAP_INLINE struct pnode *
+inline struct pnode *
 pheap_first(const struct pheap *heap)
 {
 	return heap->root;

@@ -29,7 +29,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PRINT_INLINE
-#define LELY_UTIL_PRINT_INLINE inline
+#define LELY_UTIL_PRINT_INLINE static inline
 #endif
 
 #ifndef LENll
@@ -267,13 +267,13 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64)
  */
 size_t print_base64(char **pbegin, char *end, const void *ptr, size_t n);
 
-LELY_UTIL_PRINT_INLINE int
+inline int
 otoc(int i)
 {
 	return '0' + (i & 7);
 }
 
-LELY_UTIL_PRINT_INLINE int
+inline int
 xtoc(int i)
 {
 	i &= 0xf;
@@ -294,7 +294,7 @@ xtoc(int i)
 #endif
 }
 
-LELY_UTIL_PRINT_INLINE size_t
+inline size_t
 print_char(char **pbegin, char *end, int c)
 {
 	if (pbegin && *pbegin && (!end || *pbegin < end))

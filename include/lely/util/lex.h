@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 #ifndef LELY_UTIL_LEX_INLINE
-#define LELY_UTIL_LEX_INLINE inline
+#define LELY_UTIL_LEX_INLINE static inline
 #endif
 
 // The file location struct from <lely/util/diag.h>.
@@ -370,25 +370,25 @@ size_t lex_line_comment(const char *delim, const char *begin, const char *end,
 size_t lex_base64(const char *begin, const char *end, struct floc *at,
 		void *ptr, size_t *pn);
 
-LELY_UTIL_LEX_INLINE int
+inline int
 isbreak(int c)
 {
 	return c == '\n' || c == '\r';
 }
 
-LELY_UTIL_LEX_INLINE int
+inline int
 isodigit(int c)
 {
 	return c >= '0' && c <= '7';
 }
 
-LELY_UTIL_LEX_INLINE int
+inline int
 ctoo(int c)
 {
 	return c - '0';
 }
 
-LELY_UTIL_LEX_INLINE int
+inline int
 ctox(int c)
 {
 	if (isdigit(c))

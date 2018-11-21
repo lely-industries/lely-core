@@ -68,7 +68,7 @@
 #endif
 
 #ifndef LELY_UTIL_ERRNUM_INLINE
-#define LELY_UTIL_ERRNUM_INLINE inline
+#define LELY_UTIL_ERRNUM_INLINE static inline
 #endif
 
 /// The native error code type.
@@ -391,31 +391,31 @@ const char *errc2str(errc_t errc);
  */
 LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
 
-LELY_UTIL_ERRNUM_INLINE int
+inline int
 get_errno(void)
 {
 	return errc2no(get_errc());
 }
 
-LELY_UTIL_ERRNUM_INLINE void
+inline void
 set_errno(int errnum)
 {
 	set_errc(errno2c(errnum));
 }
 
-LELY_UTIL_ERRNUM_INLINE errnum_t
+inline errnum_t
 get_errnum(void)
 {
 	return errc2num(get_errc());
 }
 
-LELY_UTIL_ERRNUM_INLINE void
+inline void
 set_errnum(errnum_t errnum)
 {
 	set_errc(errnum2c(errnum));
 }
 
-LELY_UTIL_ERRNUM_INLINE const char *
+inline const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));

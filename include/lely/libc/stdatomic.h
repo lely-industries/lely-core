@@ -55,7 +55,7 @@
 #include <stddef.h>
 
 #ifndef LELY_LIBC_STDATOMIC_INLINE
-#define LELY_LIBC_STDATOMIC_INLINE inline
+#define LELY_LIBC_STDATOMIC_INLINE static inline
 #endif
 
 #undef __atomic_bool
@@ -256,38 +256,14 @@ extern "C" {
 #endif
 
 /// Inserts a fence with semantics according to <b>order</b>.
-LELY_LIBC_STDATOMIC_INLINE void
-atomic_thread_fence(memory_order order)
-{
-#if LELY_HAVE_CLANG_ATOMIC
-	__c11_atomic_thread_fence(order);
-#elif LELY_HAVE_GNUC_ATOMIC
-	__atomic_thread_fence(order);
-#elif LELY_HAVE_SYNC_ATOMIC
-	if (order != memory_order_relaxed)
-		__sync_synchronize();
-#endif
-}
+LELY_LIBC_STDATOMIC_INLINE void atomic_thread_fence(memory_order order);
 
 /**
  * Equivalent to `atomic_thread_fence(order)`, except that the resulting
  * ordering constraints are established only between a thread and a signal
  * handler executing in the same thread.
  */
-LELY_LIBC_STDATOMIC_INLINE void
-atomic_signal_fence(memory_order order)
-{
-#if LELY_HAVE_CLANG_ATOMIC
-	__c11_atomic_signal_fence(order);
-#elif LELY_HAVE_GNUC_ATOMIC
-	__atomic_signal_fence(order);
-#elif defined(__GNUC__)
-	if (order != memory_order_relaxed)
-		__asm volatile("" ::: "memory");
-#else
-	__unused_var(order);
-#endif
-}
+LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 
 #ifdef __cplusplus
 }
@@ -602,38 +578,77 @@ extern "C" {
  * @returns the value at <b>object</b> immediately before the effects.
  */
 LELY_LIBC_STDATOMIC_INLINE
-__atomic_bool
+__atomic_bool atomic_flag_test_and_set_explicit(
+		volatile atomic_flag *object, memory_order order);
+
+/**
+ * Equivalent to #atomic_flag_test_and_set_explicit(object,
+ * memory_order_seq_cst).
+ */
+LELY_LIBC_STDATOMIC_INLINE __atomic_bool atomic_flag_test_and_set(
+		volatile atomic_flag *object);
+
+/**
+ * Atomically sets the value at <b>object</b> to false. Memory is affected
+ * according to <b>order</b>.
+ */
+LELY_LIBC_STDATOMIC_INLINE void atomic_flag_clear_explicit(
+		volatile atomic_flag *object, memory_order order);
+
+/**
+ * Equivalent to #atomic_flag_test_and_set_explicit(object,
+ * memory_order_seq_cst).
+ */
+LELY_LIBC_STDATOMIC_INLINE void atomic_flag_clear(volatile atomic_flag *object);
+
+inline void
+atomic_thread_fence(memory_order order)
+{
+#if LELY_HAVE_CLANG_ATOMIC
+	__c11_atomic_thread_fence(order);
+#elif LELY_HAVE_GNUC_ATOMIC
+	__atomic_thread_fence(order);
+#elif LELY_HAVE_SYNC_ATOMIC
+	if (order != memory_order_relaxed)
+		__sync_synchronize();
+#endif
+}
+
+inline void
+atomic_signal_fence(memory_order order)
+{
+#if LELY_HAVE_CLANG_ATOMIC
+	__c11_atomic_signal_fence(order);
+#elif LELY_HAVE_GNUC_ATOMIC
+	__atomic_signal_fence(order);
+#elif defined(__GNUC__)
+	if (order != memory_order_relaxed)
+		__asm volatile("" ::: "memory");
+#else
+	__unused_var(order);
+#endif
+}
+
+inline __atomic_bool
 atomic_flag_test_and_set_explicit(
 		volatile atomic_flag *object, memory_order order)
 {
 	return atomic_exchange_explicit(&object->__value, 1, order);
 }
 
-/**
- * Equivalent to #atomic_flag_test_and_set_explicit(object,
- * memory_order_seq_cst).
- */
-LELY_LIBC_STDATOMIC_INLINE __atomic_bool
+inline __atomic_bool
 atomic_flag_test_and_set(volatile atomic_flag *object)
 {
 	return atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
 }
 
-/**
- * Atomically sets the value at <b>object</b> to false. Memory is affected
- * according to <b>order</b>.
- */
-LELY_LIBC_STDATOMIC_INLINE void
+inline void
 atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
 {
 	atomic_store_explicit(&object->__value, 0, order);
 }
 
-/**
- * Equivalent to #atomic_flag_test_and_set_explicit(object,
- * memory_order_seq_cst).
- */
-LELY_LIBC_STDATOMIC_INLINE void
+inline void
 atomic_flag_clear(volatile atomic_flag *object)
 {
 	atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);

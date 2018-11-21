@@ -33,7 +33,7 @@
 #include <lely/util/rbtree.h>
 
 #ifndef LELY_UTIL_BIMAP_INLINE
-#define LELY_UTIL_BIMAP_INLINE inline
+#define LELY_UTIL_BIMAP_INLINE static inline
 #endif
 
 /**
@@ -281,110 +281,110 @@ LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_value(
 #define bimap_foreach_by_value(map, node) \
 	binode_foreach_by_value (bimap_first_by_value(map), node)
 
-LELY_UTIL_BIMAP_INLINE void
+inline void
 binode_init(struct binode *node, const void *key, const void *value)
 {
 	rbnode_init(&node->key, key);
 	rbnode_init(&node->value, value);
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 binode_prev_by_key(const struct binode *node)
 {
 	struct rbnode *prev = rbnode_prev(&node->key);
 	return prev ? structof(prev, struct binode, key) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 binode_next_by_key(const struct binode *node)
 {
 	struct rbnode *next = rbnode_next(&node->key);
 	return next ? structof(next, struct binode, key) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 binode_prev_by_value(const struct binode *node)
 {
 	struct rbnode *prev = rbnode_prev(&node->value);
 	return prev ? structof(prev, struct binode, value) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 binode_next_by_value(const struct binode *node)
 {
 	struct rbnode *next = rbnode_next(&node->value);
 	return next ? structof(next, struct binode, value) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE void
+inline void
 bimap_init(struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp)
 {
 	rbtree_init(&map->keys, key_cmp);
 	rbtree_init(&map->values, value_cmp);
 }
 
-LELY_UTIL_BIMAP_INLINE int
+inline int
 bimap_empty(const struct bimap *map)
 {
 	return !bimap_size(map);
 }
 
-LELY_UTIL_BIMAP_INLINE size_t
+inline size_t
 bimap_size(const struct bimap *map)
 {
 	return rbtree_size(&map->keys);
 }
 
-LELY_UTIL_BIMAP_INLINE void
+inline void
 bimap_insert(struct bimap *map, struct binode *node)
 {
 	rbtree_insert(&map->keys, &node->key);
 	rbtree_insert(&map->values, &node->value);
 }
 
-LELY_UTIL_BIMAP_INLINE void
+inline void
 bimap_remove(struct bimap *map, struct binode *node)
 {
 	rbtree_remove(&map->keys, &node->key);
 	rbtree_remove(&map->values, &node->value);
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_find_by_key(const struct bimap *map, const void *key)
 {
 	struct rbnode *node = rbtree_find(&map->keys, key);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_find_by_value(const struct bimap *map, const void *value)
 {
 	struct rbnode *node = rbtree_find(&map->values, value);
 	return node ? structof(node, struct binode, value) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_first_by_key(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_first(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_last_by_key(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_last(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_first_by_value(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_first(&map->values);
 	return node ? structof(node, struct binode, value) : NULL;
 }
 
-LELY_UTIL_BIMAP_INLINE struct binode *
+inline struct binode *
 bimap_last_by_value(const struct bimap *map)
 {
 	struct rbnode *node = rbtree_last(&map->values);

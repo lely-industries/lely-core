@@ -39,7 +39,7 @@
 #include <stddef.h>
 
 #ifndef LELY_UTIL_RBTREE_INLINE
-#define LELY_UTIL_RBTREE_INLINE inline
+#define LELY_UTIL_RBTREE_INLINE static inline
 #endif
 
 /**
@@ -213,7 +213,7 @@ LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
  */
 #define rbtree_foreach(tree, node) rbnode_foreach (rbtree_first(tree), node)
 
-LELY_UTIL_RBTREE_INLINE void
+inline void
 rbnode_init(struct rbnode *node, const void *key)
 {
 	node->key = key;
@@ -222,7 +222,7 @@ rbnode_init(struct rbnode *node, const void *key)
 	node->right = NULL;
 }
 
-LELY_UTIL_RBTREE_INLINE void
+inline void
 rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 {
 	tree->cmp = cmp;
@@ -230,19 +230,19 @@ rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 	tree->num_nodes = 0;
 }
 
-LELY_UTIL_RBTREE_INLINE int
+inline int
 rbtree_empty(const struct rbtree *tree)
 {
 	return !rbtree_size(tree);
 }
 
-LELY_UTIL_RBTREE_INLINE size_t
+inline size_t
 rbtree_size(const struct rbtree *tree)
 {
 	return tree->num_nodes;
 }
 
-LELY_UTIL_RBTREE_INLINE struct rbnode *
+inline struct rbnode *
 rbtree_root(const struct rbtree *tree)
 {
 	return tree->root;

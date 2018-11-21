@@ -31,7 +31,7 @@
 #endif
 
 #ifndef LELY_UTIL_BITS_INLINE
-#define LELY_UTIL_BITS_INLINE inline
+#define LELY_UTIL_BITS_INLINE static inline
 #endif
 
 #ifdef __cplusplus
@@ -270,7 +270,7 @@ LELY_UTIL_BITS_INLINE uint64_t rol64(uint64_t x, unsigned int n);
 /// Rotates the 64-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint64_t ror64(uint64_t x, unsigned int n);
 
-LELY_UTIL_BITS_INLINE uint16_t
+inline uint16_t
 bswap16(uint16_t x)
 {
 #ifdef _MSC_VER
@@ -282,7 +282,7 @@ bswap16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint32_t
+inline uint32_t
 bswap32(uint32_t x)
 {
 #ifdef _MSC_VER
@@ -295,7 +295,7 @@ bswap32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint64_t
+inline uint64_t
 bswap64(uint64_t x)
 {
 #ifdef _MSC_VER
@@ -310,7 +310,7 @@ bswap64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cls8(uint8_t x)
 {
 	return clz8(~x);
@@ -318,7 +318,7 @@ cls8(uint8_t x)
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
 
-LELY_UTIL_BITS_INLINE int
+inline int
 clz8(uint8_t x)
 {
 #ifdef _MSC_VER
@@ -331,13 +331,13 @@ clz8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cls16(uint16_t x)
 {
 	return clz16(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 clz16(uint16_t x)
 {
 #ifdef _MSC_VER
@@ -350,13 +350,13 @@ clz16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cls32(uint32_t x)
 {
 	return clz32(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 clz32(uint32_t x)
 {
 #ifdef _MSC_VER
@@ -371,13 +371,13 @@ clz32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cls64(uint64_t x)
 {
 	return clz64(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 clz64(uint64_t x)
 {
 #if defined(_MSC_VER) && defined(_WIN64)
@@ -392,7 +392,7 @@ clz64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cts8(uint8_t x)
 {
 	return ctz8(~x);
@@ -400,7 +400,7 @@ cts8(uint8_t x)
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ctz8(uint8_t x)
 {
 #ifdef _MSC_VER
@@ -413,13 +413,13 @@ ctz8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cts16(uint16_t x)
 {
 	return ctz16(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ctz16(uint16_t x)
 {
 #ifdef _MSC_VER
@@ -432,13 +432,13 @@ ctz16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cts32(uint32_t x)
 {
 	return ctz32(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ctz32(uint32_t x)
 {
 #ifdef _MSC_VER
@@ -453,13 +453,13 @@ ctz32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 cts64(uint64_t x)
 {
 	return ctz64(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ctz64(uint64_t x)
 {
 #if (defined(__GNUC__) || __has_builtin(__builtin_ctzl)) && __WORDSIZE == 64
@@ -473,7 +473,7 @@ ctz64(uint64_t x)
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ffs)
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffs8(uint8_t x)
 {
 #ifdef _MSC_VER
@@ -486,13 +486,13 @@ ffs8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffz8(uint8_t x)
 {
 	return ffs8(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffs16(uint16_t x)
 {
 #ifdef _MSC_VER
@@ -505,13 +505,13 @@ ffs16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffz16(uint16_t x)
 {
 	return ffs16(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffs32(uint32_t x)
 {
 #ifdef _MSC_VER
@@ -529,13 +529,13 @@ ffs32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffz32(uint32_t x)
 {
 	return ffs32(~x);
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffs64(uint64_t x)
 {
 #if defined(_MSC_VER) && defined(_WIN64)
@@ -553,7 +553,7 @@ ffs64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 ffz64(uint64_t x)
 {
 	return ffs64(~x);
@@ -561,7 +561,7 @@ ffz64(uint64_t x)
 
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
 
-LELY_UTIL_BITS_INLINE int
+inline int
 parity8(uint8_t x)
 {
 	return __builtin_parity(x);
@@ -569,7 +569,7 @@ parity8(uint8_t x)
 
 #endif
 
-LELY_UTIL_BITS_INLINE int
+inline int
 parity16(uint16_t x)
 {
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
@@ -579,7 +579,7 @@ parity16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 parity32(uint32_t x)
 {
 #if (defined(__GNUC__) || __has_builtin(__builtin_parity)) && __WORDSIZE == 64
@@ -591,7 +591,7 @@ parity32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 parity64(uint64_t x)
 {
 #if (defined(__GNUC__) || __has_builtin(__builtin_parityl)) && __WORDSIZE == 64
@@ -604,14 +604,14 @@ parity64(uint64_t x)
 }
 
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
-LELY_UTIL_BITS_INLINE int
+inline int
 popcount8(uint8_t x)
 {
 	return __builtin_popcount(x);
 }
 #endif
 
-LELY_UTIL_BITS_INLINE int
+inline int
 popcount16(uint16_t x)
 {
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
@@ -621,7 +621,7 @@ popcount16(uint16_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 popcount32(uint32_t x)
 {
 #if (defined(__GNUC__) || __has_builtin(__builtin_popcount)) && __WORDSIZE == 64
@@ -633,7 +633,7 @@ popcount32(uint32_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE int
+inline int
 popcount64(uint64_t x)
 {
 #if (defined(__GNUC__) || __has_builtin(__builtin_popcountl)) \
@@ -646,7 +646,7 @@ popcount64(uint64_t x)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint8_t
+inline uint8_t
 rol8(uint8_t x, unsigned int n)
 {
 	n %= 8;
@@ -657,7 +657,7 @@ rol8(uint8_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint8_t
+inline uint8_t
 ror8(uint8_t x, unsigned int n)
 {
 	n %= 8;
@@ -668,7 +668,7 @@ ror8(uint8_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint16_t
+inline uint16_t
 rol16(uint16_t x, unsigned int n)
 {
 	n %= 16;
@@ -679,7 +679,7 @@ rol16(uint16_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint16_t
+inline uint16_t
 ror16(uint16_t x, unsigned int n)
 {
 	n %= 16;
@@ -690,7 +690,7 @@ ror16(uint16_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint32_t
+inline uint32_t
 rol32(uint32_t x, unsigned int n)
 {
 	n %= 32;
@@ -701,7 +701,7 @@ rol32(uint32_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint32_t
+inline uint32_t
 ror32(uint32_t x, unsigned int n)
 {
 	n %= 32;
@@ -712,7 +712,7 @@ ror32(uint32_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint64_t
+inline uint64_t
 rol64(uint64_t x, unsigned int n)
 {
 	n %= 64;
@@ -723,7 +723,7 @@ rol64(uint64_t x, unsigned int n)
 #endif
 }
 
-LELY_UTIL_BITS_INLINE uint64_t
+inline uint64_t
 ror64(uint64_t x, unsigned int n)
 {
 	n %= 64;

@@ -28,7 +28,7 @@
 #include <string.h>
 
 #ifndef LELY_UTIL_MEMBUF_INLINE
-#define LELY_UTIL_MEMBUF_INLINE inline
+#define LELY_UTIL_MEMBUF_INLINE static inline
 #endif
 
 /// A memory buffer.
@@ -134,37 +134,37 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
 void membuf_flush(struct membuf *buf, size_t size);
 
-LELY_UTIL_MEMBUF_INLINE void
+inline void
 membuf_init(struct membuf *buf)
 {
 	buf->begin = buf->end = buf->cur = NULL;
 }
 
-LELY_UTIL_MEMBUF_INLINE void *
+inline void *
 membuf_begin(const struct membuf *buf)
 {
 	return buf->begin;
 }
 
-LELY_UTIL_MEMBUF_INLINE void
+inline void
 membuf_clear(struct membuf *buf)
 {
 	buf->cur = buf->begin;
 }
 
-LELY_UTIL_MEMBUF_INLINE size_t
+inline size_t
 membuf_size(const struct membuf *buf)
 {
 	return buf->cur - buf->begin;
 }
 
-LELY_UTIL_MEMBUF_INLINE size_t
+inline size_t
 membuf_capacity(const struct membuf *buf)
 {
 	return buf->end - buf->cur;
 }
 
-LELY_UTIL_MEMBUF_INLINE ptrdiff_t
+inline ptrdiff_t
 membuf_seek(struct membuf *buf, ptrdiff_t offset)
 {
 	char *cur = buf->cur + offset;
@@ -180,7 +180,7 @@ membuf_seek(struct membuf *buf, ptrdiff_t offset)
 	return offset;
 }
 
-LELY_UTIL_MEMBUF_INLINE void *
+inline void *
 membuf_alloc(struct membuf *buf, size_t *size)
 {
 	void *cur = buf->cur;
@@ -188,7 +188,7 @@ membuf_alloc(struct membuf *buf, size_t *size)
 	return cur;
 }
 
-LELY_UTIL_MEMBUF_INLINE size_t
+inline size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
 	void *cur = membuf_alloc(buf, &size);

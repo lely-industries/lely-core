@@ -26,7 +26,7 @@
 #include <lely/util/membuf.h>
 
 #ifndef LELY_CO_SDO_INLINE
-#define LELY_CO_SDO_INLINE inline
+#define LELY_CO_SDO_INLINE static inline
 #endif
 
 /// The bit in the SDO COB-ID specifying whether the SDO exists and is valid.
@@ -336,13 +336,13 @@ int co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type,
 int co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac);
 
-LELY_CO_SDO_INLINE int
+inline int
 co_sdo_req_first(const struct co_sdo_req *req)
 {
 	return !req->offset;
 }
 
-LELY_CO_SDO_INLINE int
+inline int
 co_sdo_req_last(const struct co_sdo_req *req)
 {
 	return req->offset + req->nbyte >= req->size;
