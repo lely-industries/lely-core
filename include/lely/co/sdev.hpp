@@ -33,12 +33,10 @@
 namespace lely {
 
 inline typename c_type_traits<__co_dev>::pointer
-c_type_traits<__co_dev>::init(pointer p, const co_sdev* sdev) noexcept
-{
-	return __co_dev_init_from_sdev(p, sdev);
+c_type_traits<__co_dev>::init(pointer p, const co_sdev* sdev) noexcept {
+  return __co_dev_init_from_sdev(p, sdev);
 }
 
-} // lely
+}  // namespace lely
 
 #endif
-

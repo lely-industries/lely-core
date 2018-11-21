@@ -28,7 +28,9 @@
 
 #include <lely/util/c_type.hpp>
 
-namespace lely { class IOPoll; }
+namespace lely {
+class IOPoll;
+}
 /// An opaque I/O polling interface type.
 typedef lely::IOPoll io_poll_t;
 
@@ -39,49 +41,58 @@ namespace lely {
 /// The attributes of #io_poll_t required by #lely::IOPoll.
 template <>
 struct c_type_traits<__io_poll> {
-	typedef __io_poll value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __io_poll value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __io_poll_alloc(); }
-	static void free(void* ptr) noexcept { __io_poll_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __io_poll_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __io_poll_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __io_poll_init(p); }
-	static void fini(pointer p) noexcept { __io_poll_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __io_poll_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __io_poll_fini(p);
+  }
 };
 
 /// An opaque I/O polling interface type.
-class IOPoll: public incomplete_c_type<__io_poll> {
-	typedef incomplete_c_type<__io_poll> c_base;
-public:
-	IOPoll(): c_base() {}
+class IOPoll : public incomplete_c_type<__io_poll> {
+  typedef incomplete_c_type<__io_poll> c_base;
 
-	int
-	watch(io_handle_t handle, struct io_event* event, bool keep = false)
-			noexcept
-	{
-		return io_poll_watch(this, handle, event, keep);
-	}
+ public:
+  IOPoll() : c_base() {}
 
-	int
-	wait(int maxevents, struct io_event* events, int timeout = 0) noexcept
-	{
-		return io_poll_wait(this, maxevents, events, timeout);
-	}
+  int
+  watch(io_handle_t handle, struct io_event* event,
+        bool keep = false) noexcept {
+    return io_poll_watch(this, handle, event, keep);
+  }
 
-	int
-	signal(unsigned char sig) noexcept
-	{
-		return io_poll_signal(this, sig);
-	}
+  int
+  wait(int maxevents, struct io_event* events, int timeout = 0) noexcept {
+    return io_poll_wait(this, maxevents, events, timeout);
+  }
 
-protected:
-	~IOPoll() {}
+  int
+  signal(unsigned char sig) noexcept {
+    return io_poll_signal(this, sig);
+  }
+
+ protected:
+  ~IOPoll() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

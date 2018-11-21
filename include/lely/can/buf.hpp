@@ -34,103 +34,103 @@ namespace lely {
 /// The attributes of #can_buf required by #lely::CANBuf.
 template <>
 struct c_type_traits<can_buf> {
-	typedef can_buf value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef can_buf value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static pointer
-	init(pointer p, ::std::size_t size) noexcept
-	{
-		return can_buf_init(p, size) ? 0 : p;
-	}
+  static pointer
+  init(pointer p, ::std::size_t size) noexcept {
+    return can_buf_init(p, size) ? 0 : p;
+  }
 
-	static void fini(pointer p) noexcept { can_buf_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    can_buf_fini(p);
+  }
 };
 
 /// A CAN frame buffer.
-class CANBuf: public standard_c_type<can_buf> {
-	typedef standard_c_type<can_buf> c_base;
-public:
-	explicit CANBuf(::std::size_t size = 0): c_base(size) {}
+class CANBuf : public standard_c_type<can_buf> {
+  typedef standard_c_type<can_buf> c_base;
 
-	void clear() noexcept { can_buf_clear(c_ptr()); }
+ public:
+  explicit CANBuf(::std::size_t size = 0) : c_base(size) {}
 
-	::std::size_t size() const noexcept { return can_buf_size(c_ptr()); }
+  void
+  clear() noexcept {
+    can_buf_clear(c_ptr());
+  }
 
-	::std::size_t
-	capacity() const noexcept
-	{
-		return can_buf_capacity(c_ptr());
-	}
+  ::std::size_t
+  size() const noexcept {
+    return can_buf_size(c_ptr());
+  }
 
-	::std::size_t
-	reserve(::std::size_t n) noexcept
-	{
-		return can_buf_reserve(c_ptr(), n);
-	}
+  ::std::size_t
+  capacity() const noexcept {
+    return can_buf_capacity(c_ptr());
+  }
 
-	::std::size_t
-	peek(can_msg* ptr, ::std::size_t n) noexcept
-	{
-		return can_buf_peek(c_ptr(), ptr, n);
-	}
+  ::std::size_t
+  reserve(::std::size_t n) noexcept {
+    return can_buf_reserve(c_ptr(), n);
+  }
 
-	bool
-	peek(can_msg& msg) noexcept
-	{
-		return !!peek(&msg, 1);
-	}
+  ::std::size_t
+  peek(can_msg* ptr, ::std::size_t n) noexcept {
+    return can_buf_peek(c_ptr(), ptr, n);
+  }
 
-	::std::size_t
-	read(can_msg* ptr, ::std::size_t n) noexcept
-	{
-		return can_buf_read(c_ptr(), ptr, n);
-	}
+  bool
+  peek(can_msg& msg) noexcept {
+    return !!peek(&msg, 1);
+  }
 
-	bool
-	read(can_msg& msg) noexcept
-	{
-		return !!read(&msg, 1);
-	}
+  ::std::size_t
+  read(can_msg* ptr, ::std::size_t n) noexcept {
+    return can_buf_read(c_ptr(), ptr, n);
+  }
 
-	::std::size_t
-	write(const can_msg* ptr, ::std::size_t n) noexcept
-	{
-		return can_buf_write(c_ptr(), ptr, n);
-	}
+  bool
+  read(can_msg& msg) noexcept {
+    return !!read(&msg, 1);
+  }
 
-	bool
-	write(const can_msg& msg) noexcept
-	{
-		return !!write(&msg, 1);
-	}
+  ::std::size_t
+  write(const can_msg* ptr, ::std::size_t n) noexcept {
+    return can_buf_write(c_ptr(), ptr, n);
+  }
+
+  bool
+  write(const can_msg& msg) noexcept {
+    return !!write(&msg, 1);
+  }
 
 #if __cplusplus >= 201103L
-public:
-	CANBuf& operator=(const CANBuf&) = delete;
+ public:
+  CANBuf& operator=(const CANBuf&) = delete;
 #else
-private:
-	CANBuf& operator=(const CANBuf&);
+ private:
+  CANBuf& operator=(const CANBuf&);
 #endif
 
-private:
-	can_msg* m_ptr;
-	::std::size_t m_size;
+ private:
+  can_msg* m_ptr;
+  ::std::size_t m_size;
 #ifdef LELY_NO_ATOMICS
-	::std::size_t m_begin;
+  ::std::size_t m_begin;
 #else
-	atomic_size_t m_begin;
+  atomic_size_t m_begin;
 #endif
 #ifdef LELY_NO_ATOMICS
-	::std::size_t m_end;
+  ::std::size_t m_end;
 #else
-	atomic_size_t m_end;
+  atomic_size_t m_end;
 #endif
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

@@ -32,55 +32,50 @@
 namespace lely {
 
 /// A serial I/O device handle.
-class IOSerial: public IOHandle {
-public:
-	IOSerial(const char* path, io_attr_t* attr = 0)
-		: IOHandle(io_open_serial(path, attr))
-	{
-		if (!operator bool())
-			throw_or_abort(bad_init());
-	}
+class IOSerial : public IOHandle {
+ public:
+  IOSerial(const char* path, io_attr_t* attr = 0)
+      : IOHandle(io_open_serial(path, attr)) {
+    if (!operator bool()) throw_or_abort(bad_init());
+  }
 
-	IOSerial(const IOSerial& serial) noexcept : IOHandle(serial) {}
+  IOSerial(const IOSerial& serial) noexcept : IOHandle(serial) {}
 
 #if __cplusplus >= 201103L
-	IOSerial(IOSerial&& serial) noexcept
-		: IOHandle(::std::forward<IOSerial>(serial))
-	{}
+  IOSerial(IOSerial&& serial) noexcept
+      : IOHandle(::std::forward<IOSerial>(serial)) {}
 #endif
 
-	IOSerial&
-	operator=(const IOSerial& serial) noexcept
-	{
-		IOHandle::operator=(serial);
-		return *this;
-	}
+  IOSerial&
+  operator=(const IOSerial& serial) noexcept {
+    IOHandle::operator=(serial);
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	IOSerial&
-	operator=(IOSerial&& serial) noexcept
-	{
-		IOHandle::operator=(::std::forward<IOSerial>(serial));
-		return *this;
-	}
+  IOSerial&
+  operator=(IOSerial&& serial) noexcept {
+    IOHandle::operator=(::std::forward<IOSerial>(serial));
+    return *this;
+  }
 #endif
 
-	int purge(int flags) noexcept { return io_purge(*this, flags); }
+  int
+  purge(int flags) noexcept {
+    return io_purge(*this, flags);
+  }
 
-	int
-	getAttr(io_attr_t& attr) noexcept
-	{
-		return io_serial_get_attr(*this, &attr);
-	}
+  int
+  getAttr(io_attr_t& attr) noexcept {
+    return io_serial_get_attr(*this, &attr);
+  }
 
-	int
-	setAttr(const io_attr_t& attr) noexcept
-	{
-		return io_serial_set_attr(*this, &attr);
-	}
+  int
+  setAttr(const io_attr_t& attr) noexcept {
+    return io_serial_set_attr(*this, &attr);
+  }
 };
 
-} //lely
+}  // namespace lely
 
 #endif
-

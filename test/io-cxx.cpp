@@ -9,10 +9,8 @@
 using namespace lely;
 
 int
-main()
-{
-	tap_plan(0);
+main() {
+  tap_plan(0);
 
-	return 0;
+  return 0;
 }
-

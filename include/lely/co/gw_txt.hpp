@@ -29,7 +29,9 @@
 
 #include <lely/util/c_type.hpp>
 
-namespace lely { class COGWTxt; }
+namespace lely {
+class COGWTxt;
+}
 /// An opaque CANopen ASCII gateway client type.
 typedef lely::COGWTxt co_gw_txt_t;
 
@@ -40,106 +42,110 @@ namespace lely {
 /// The attributes of #co_gw_txt_t required by #lely::COGWTxt.
 template <>
 struct c_type_traits<__co_gw_txt> {
-	typedef __co_gw_txt value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_gw_txt value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_gw_txt_alloc(); }
-	static void free(void* ptr) noexcept { __co_gw_txt_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_gw_txt_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_gw_txt_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __co_gw_txt_init(p); }
-	static void fini(pointer p) noexcept { __co_gw_txt_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __co_gw_txt_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __co_gw_txt_fini(p);
+  }
 };
 
 /// An opaque CANopen ASCII gateway client type.
-class COGWTxt: public incomplete_c_type<__co_gw_txt> {
-	typedef incomplete_c_type<__co_gw_txt> c_base;
-public:
-	COGWTxt(): c_base() {}
+class COGWTxt : public incomplete_c_type<__co_gw_txt> {
+  typedef incomplete_c_type<__co_gw_txt> c_base;
 
-	int iec() noexcept { return co_gw_txt_iec(this); }
+ public:
+  COGWTxt() : c_base() {}
 
-	::std::size_t
-	pending() const noexcept
-	{
-		return co_gw_txt_pending(this);
-	}
+  int
+  iec() noexcept {
+    return co_gw_txt_iec(this);
+  }
 
-	int
-	recv(const co_gw_srv* srv) noexcept
-	{
-		return co_gw_txt_recv(this, srv);
-	}
+  ::std::size_t
+  pending() const noexcept {
+    return co_gw_txt_pending(this);
+  }
 
-	void
-	getRecvFunc(co_gw_txt_recv_func_t** pfunc, void** pdata) const noexcept
-	{
-		co_gw_txt_get_recv_func(this, pfunc, pdata);
-	}
+  int
+  recv(const co_gw_srv* srv) noexcept {
+    return co_gw_txt_recv(this, srv);
+  }
 
-	void
-	setRecvFunc(co_gw_txt_recv_func_t* func, void* data) noexcept
-	{
-		co_gw_txt_set_recv_func(this, func, data);
-	}
+  void
+  getRecvFunc(co_gw_txt_recv_func_t** pfunc, void** pdata) const noexcept {
+    co_gw_txt_get_recv_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setRecvFunc(F* f) noexcept
-	{
-		setRecvFunc(&c_obj_call<co_gw_txt_recv_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setRecvFunc(co_gw_txt_recv_func_t* func, void* data) noexcept {
+    co_gw_txt_set_recv_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_gw_txt_recv_func_t*, C>::type M>
-	void
-	setRecvFunc(C* obj) noexcept
-	{
-		setRecvFunc(&c_mem_call<co_gw_txt_recv_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setRecvFunc(F* f) noexcept {
+    setRecvFunc(&c_obj_call<co_gw_txt_recv_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-	int
-	send(const char* begin, const char* end = 0, floc* at = 0) noexcept
-	{
-		return co_gw_txt_send(this, begin, end, at);
-	}
+  template <class C, typename c_mem_fn<co_gw_txt_recv_func_t*, C>::type M>
+  void
+  setRecvFunc(C* obj) noexcept {
+    setRecvFunc(&c_mem_call<co_gw_txt_recv_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
 
-	void
-	getSendFunc(co_gw_txt_send_func_t** pfunc, void** pdata) const noexcept
-	{
-		co_gw_txt_get_send_func(this, pfunc, pdata);
-	}
+  int
+  send(const char* begin, const char* end = 0, floc* at = 0) noexcept {
+    return co_gw_txt_send(this, begin, end, at);
+  }
 
-	void
-	setSendFunc(co_gw_txt_send_func_t* func, void* data) noexcept
-	{
-		co_gw_txt_set_send_func(this, func, data);
-	}
+  void
+  getSendFunc(co_gw_txt_send_func_t** pfunc, void** pdata) const noexcept {
+    co_gw_txt_get_send_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setSendFunc(F* f) noexcept
-	{
-		setSendFunc(&c_obj_call<co_gw_txt_send_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setSendFunc(co_gw_txt_send_func_t* func, void* data) noexcept {
+    co_gw_txt_set_send_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_gw_txt_send_func_t*, C>::type M>
-	void
-	setSendFunc(C* obj) noexcept
-	{
-		setSendFunc(&c_mem_call<co_gw_txt_send_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setSendFunc(F* f) noexcept {
+    setSendFunc(&c_obj_call<co_gw_txt_send_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-protected:
-	~COGWTxt() {}
+  template <class C, typename c_mem_fn<co_gw_txt_send_func_t*, C>::type M>
+  void
+  setSendFunc(C* obj) noexcept {
+    setSendFunc(&c_mem_call<co_gw_txt_send_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
+
+ protected:
+  ~COGWTxt() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

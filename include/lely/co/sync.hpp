@@ -35,94 +35,98 @@ namespace lely {
 /// The attributes of #co_sync_t required by #lely::COSync.
 template <>
 struct c_type_traits<__co_sync> {
-	typedef __co_sync value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_sync value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_sync_alloc(); }
-	static void free(void* ptr) noexcept { __co_sync_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_sync_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_sync_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, CANNet* net, CODev* dev) noexcept
-	{
-		return __co_sync_init(p, net, dev);
-	}
+  static pointer
+  init(pointer p, CANNet* net, CODev* dev) noexcept {
+    return __co_sync_init(p, net, dev);
+  }
 
-	static void fini(pointer p) noexcept { __co_sync_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_sync_fini(p);
+  }
 };
 
 /// An opaque CANopen SYNC producer/consumer service type.
-class COSync: public incomplete_c_type<__co_sync> {
-	typedef incomplete_c_type<__co_sync> c_base;
-public:
-	COSync(CANNet* net, CODev* dev): c_base(net, dev) {}
+class COSync : public incomplete_c_type<__co_sync> {
+  typedef incomplete_c_type<__co_sync> c_base;
 
-	CANNet* getNet() const noexcept { return co_sync_get_net(this); }
-	CODev* getDev() const noexcept { return co_sync_get_dev(this); }
+ public:
+  COSync(CANNet* net, CODev* dev) : c_base(net, dev) {}
 
-	void
-	getInd(co_sync_ind_t** pind, void** pdata) const noexcept
-	{
-		co_sync_get_ind(this, pind, pdata);
-	}
+  CANNet*
+  getNet() const noexcept {
+    return co_sync_get_net(this);
+  }
+  CODev*
+  getDev() const noexcept {
+    return co_sync_get_dev(this);
+  }
 
-	void
-	setInd(co_sync_ind_t* ind, void* data) noexcept
-	{
-		co_sync_set_ind(this, ind, data);
-	}
+  void
+  getInd(co_sync_ind_t** pind, void** pdata) const noexcept {
+    co_sync_get_ind(this, pind, pdata);
+  }
 
-	template <class F>
-	void
-	setInd(F* f) noexcept
-	{
-		setInd(&c_obj_call<co_sync_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setInd(co_sync_ind_t* ind, void* data) noexcept {
+    co_sync_set_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_sync_ind_t*, C>::type M>
-	void
-	setInd(C* obj) noexcept
-	{
-		setInd(&c_mem_call<co_sync_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setInd(F* f) noexcept {
+    setInd(&c_obj_call<co_sync_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	getErr(co_sync_err_t** perr, void** pdata) const noexcept
-	{
-		co_sync_get_err(this, perr, pdata);
-	}
+  template <class C, typename c_mem_fn<co_sync_ind_t*, C>::type M>
+  void
+  setInd(C* obj) noexcept {
+    setInd(&c_mem_call<co_sync_ind_t*, C, M>::function,
+           static_cast<void*>(obj));
+  }
 
-	void
-	setErr(co_sync_err_t* err, void* data) noexcept
-	{
-		co_sync_set_err(this, err, data);
-	}
+  void
+  getErr(co_sync_err_t** perr, void** pdata) const noexcept {
+    co_sync_get_err(this, perr, pdata);
+  }
 
-	template <class F>
-	void
-	setErr(F* f) noexcept
-	{
-		setErr(&c_obj_call<co_sync_err_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setErr(co_sync_err_t* err, void* data) noexcept {
+    co_sync_set_err(this, err, data);
+  }
 
-	template <class C, typename c_mem_fn<co_sync_err_t*, C>::type M>
-	void
-	setErr(C* obj) noexcept
-	{
-		setErr(&c_mem_call<co_sync_err_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setErr(F* f) noexcept {
+    setErr(&c_obj_call<co_sync_err_t*, F>::function, static_cast<void*>(f));
+  }
 
-protected:
-	~COSync() {}
+  template <class C, typename c_mem_fn<co_sync_err_t*, C>::type M>
+  void
+  setErr(C* obj) noexcept {
+    setErr(&c_mem_call<co_sync_err_t*, C, M>::function,
+           static_cast<void*>(obj));
+  }
+
+ protected:
+  ~COSync() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

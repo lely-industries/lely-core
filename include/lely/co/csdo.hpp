@@ -33,382 +33,358 @@
 
 namespace lely {
 
-template <class> struct COCSDOUpCon;
+template <class>
+struct COCSDOUpCon;
 
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-		size_t n, co_csdo_dn_con_t* con, void* data) noexcept
-{
-	return co_dev_dn_req(&dev, idx, subidx, ptr, n, con, data);
+      size_t n, co_csdo_dn_con_t* con, void* data) noexcept {
+  return co_dev_dn_req(&dev, idx, subidx, ptr, n, con, data);
 }
 
 template <class F>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-		size_t n, F* f) noexcept
-{
-	return dnReq(dev, idx, subidx, ptr, n,
-			&c_obj_call<co_csdo_dn_con_t*, F>::function,
-			static_cast<void*>(f));
+      size_t n, F* f) noexcept {
+  return dnReq(dev, idx, subidx, ptr, n,
+               &c_obj_call<co_csdo_dn_con_t*, F>::function,
+               static_cast<void*>(f));
 }
 
 template <class T, typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-		size_t n, T* t) noexcept
-{
-	return dnReq(dev, idx, subidx, ptr, n,
-			&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
-			static_cast<void*>(t));
+      size_t n, T* t) noexcept {
+  return dnReq(dev, idx, subidx, ptr, n,
+               &c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+               static_cast<void*>(t));
 }
 
 template <co_unsigned16_t N>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		const COVal<N>& val, co_csdo_dn_con_t* con, void* data) noexcept
-{
-	return co_dev_dn_val_req(&dev, idx, subidx, N, &val, con, data);
+      const COVal<N>& val, co_csdo_dn_con_t* con, void* data) noexcept {
+  return co_dev_dn_val_req(&dev, idx, subidx, N, &val, con, data);
 }
 
 template <co_unsigned16_t N, class F>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		const COVal<N>& val, F* f) noexcept
-{
-	return dnReq<N>(dev, idx, subidx, val,
-			&c_obj_call<co_csdo_dn_con_t*, F>::function,
-			static_cast<void*>(f));
+      const COVal<N>& val, F* f) noexcept {
+  return dnReq<N>(dev, idx, subidx, val,
+                  &c_obj_call<co_csdo_dn_con_t*, F>::function,
+                  static_cast<void*>(f));
 }
 
 template <co_unsigned16_t N, class T,
-		typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
+          typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		const COVal<N>& val, T* t) noexcept
-{
-	return dnReq<N>(dev, idx, subidx, val,
-			&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
-			static_cast<void*>(t));
+      const COVal<N>& val, T* t) noexcept {
+  return dnReq<N>(dev, idx, subidx, val,
+                  &c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+                  static_cast<void*>(t));
 }
 
 inline int
 upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_csdo_up_con_t* con, void* data) noexcept
-{
-	return co_dev_up_req(&dev, idx, subidx, con, data);
+      co_csdo_up_con_t* con, void* data) noexcept {
+  return co_dev_up_req(&dev, idx, subidx, con, data);
 }
 
 template <class T, typename COCSDOUpCon<T>::type M>
 inline int
-upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, void* data)
-		noexcept
-{
-	return upReq(dev, idx, subidx, &COCSDOUpCon<T>::template function<M>,
-			data);
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+      void* data) noexcept {
+  return upReq(dev, idx, subidx, &COCSDOUpCon<T>::template function<M>, data);
 }
 
 template <class T, class F>
 inline int
-upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, F* f)
-		noexcept
-{
-	return upReq(dev, idx, subidx,
-			&COCSDOUpCon<T>::template function<&c_obj_call<
-				typename COCSDOUpCon<T>::type, F
-			>::function>, static_cast<void*>(f));
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+      F* f) noexcept {
+  return upReq(dev, idx, subidx,
+               &COCSDOUpCon<T>::template function<
+                   &c_obj_call<typename COCSDOUpCon<T>::type, F>::function>,
+               static_cast<void*>(f));
 }
 
-template <
-	class T, class C,
-	typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
->
+template <class T, class C,
+          typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M>
 inline int
-upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx, C* obj)
-		noexcept
-{
-	return upReq(dev, idx, subidx,
-			&COCSDOUpCon<T>::template function<&c_mem_call<
-				typename COCSDOUpCon<T>::type, C, M
-			>::function>, static_cast<void*>(obj));
+upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+      C* obj) noexcept {
+  return upReq(dev, idx, subidx,
+               &COCSDOUpCon<T>::template function<
+                   &c_mem_call<typename COCSDOUpCon<T>::type, C, M>::function>,
+               static_cast<void*>(obj));
 }
 
 /// The attributes of #co_csdo_t required by #lely::COCSDO.
 template <>
 struct c_type_traits<__co_csdo> {
-	typedef __co_csdo value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_csdo value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_csdo_alloc(); }
-	static void free(void* ptr) noexcept { __co_csdo_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_csdo_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_csdo_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, CANNet* net, CODev* dev, co_unsigned8_t num) noexcept
-	{
-		return __co_csdo_init(p, net, dev, num);
-	}
+  static pointer
+  init(pointer p, CANNet* net, CODev* dev, co_unsigned8_t num) noexcept {
+    return __co_csdo_init(p, net, dev, num);
+  }
 
-	static void fini(pointer p) noexcept { __co_csdo_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_csdo_fini(p);
+  }
 };
 
 /// An opaque CANopen Client-SDO service type.
-class COCSDO: public incomplete_c_type<__co_csdo> {
-	typedef incomplete_c_type<__co_csdo> c_base;
-public:
-	COCSDO(CANNet* net, CODev* dev, co_unsigned8_t num)
-		: c_base(net, dev, num)
-	{}
+class COCSDO : public incomplete_c_type<__co_csdo> {
+  typedef incomplete_c_type<__co_csdo> c_base;
 
-	CANNet* getNet() const noexcept { return co_csdo_get_net(this); }
-	CODev* getDev() const noexcept { return co_csdo_get_dev(this); }
-	co_unsigned8_t getNum() const noexcept { return co_csdo_get_num(this); }
+ public:
+  COCSDO(CANNet* net, CODev* dev, co_unsigned8_t num) : c_base(net, dev, num) {}
 
-	const co_sdo_par&
-	getPar() const noexcept
-	{
-		return *co_csdo_get_par(this);
-	}
+  CANNet*
+  getNet() const noexcept {
+    return co_csdo_get_net(this);
+  }
+  CODev*
+  getDev() const noexcept {
+    return co_csdo_get_dev(this);
+  }
+  co_unsigned8_t
+  getNum() const noexcept {
+    return co_csdo_get_num(this);
+  }
 
-	int getTimeout() const noexcept { return co_csdo_get_timeout(this); }
+  const co_sdo_par&
+  getPar() const noexcept {
+    return *co_csdo_get_par(this);
+  }
 
-	void
-	setTimeout(int timeout) noexcept
-	{
-		co_csdo_set_timeout(this, timeout);
-	}
+  int
+  getTimeout() const noexcept {
+    return co_csdo_get_timeout(this);
+  }
 
-	void
-	getDnInd(co_csdo_ind_t** pind, void** pdata) const noexcept
-	{
-		co_csdo_get_dn_ind(this, pind, pdata);
-	}
+  void
+  setTimeout(int timeout) noexcept {
+    co_csdo_set_timeout(this, timeout);
+  }
 
-	void
-	setDnInd(co_csdo_ind_t* ind, void* data) noexcept
-	{
-		co_csdo_set_dn_ind(this, ind, data);
-	}
+  void
+  getDnInd(co_csdo_ind_t** pind, void** pdata) const noexcept {
+    co_csdo_get_dn_ind(this, pind, pdata);
+  }
 
-	template <class F>
-	void
-	setDnInd(F* f) noexcept
-	{
-		setDnInd(&c_obj_call<co_csdo_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDnInd(co_csdo_ind_t* ind, void* data) noexcept {
+    co_csdo_set_dn_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_csdo_ind_t*, C>::type M>
-	void
-	setDnInd(C* obj) noexcept
-	{
-		setDnInd(&c_mem_call<co_csdo_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDnInd(F* f) noexcept {
+    setDnInd(&c_obj_call<co_csdo_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	getUpInd(co_csdo_ind_t** pind, void** pdata) const noexcept
-	{
-		co_csdo_get_up_ind(this, pind, pdata);
-	}
+  template <class C, typename c_mem_fn<co_csdo_ind_t*, C>::type M>
+  void
+  setDnInd(C* obj) noexcept {
+    setDnInd(&c_mem_call<co_csdo_ind_t*, C, M>::function,
+             static_cast<void*>(obj));
+  }
 
-	void
-	setUpInd(co_csdo_ind_t* ind, void* data) noexcept
-	{
-		co_csdo_set_up_ind(this, ind, data);
-	}
+  void
+  getUpInd(co_csdo_ind_t** pind, void** pdata) const noexcept {
+    co_csdo_get_up_ind(this, pind, pdata);
+  }
 
-	template <class F>
-	void
-	setUpInd(F* f) noexcept
-	{
-		setUpInd(&c_obj_call<co_csdo_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setUpInd(co_csdo_ind_t* ind, void* data) noexcept {
+    co_csdo_set_up_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_csdo_ind_t*, C>::type M>
-	void
-	setUpInd(C* obj) noexcept
-	{
-		setUpInd(&c_mem_call<co_csdo_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setUpInd(F* f) noexcept {
+    setUpInd(&c_obj_call<co_csdo_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	bool isIdle() const noexcept { return !!co_csdo_is_idle(this); }
+  template <class C, typename c_mem_fn<co_csdo_ind_t*, C>::type M>
+  void
+  setUpInd(C* obj) noexcept {
+    setUpInd(&c_mem_call<co_csdo_ind_t*, C, M>::function,
+             static_cast<void*>(obj));
+  }
 
-	void
-	abortReq(co_unsigned32_t ac = CO_SDO_AC_ERROR) noexcept
-	{
-		co_csdo_abort_req(this, ac);
-	}
+  bool
+  isIdle() const noexcept {
+    return !!co_csdo_is_idle(this);
+  }
 
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, co_csdo_dn_con_t* con, void* data) noexcept
-	{
-		return co_csdo_dn_req(this, idx, subidx, ptr, n, con, data);
-	}
+  void
+  abortReq(co_unsigned32_t ac = CO_SDO_AC_ERROR) noexcept {
+    co_csdo_abort_req(this, ac);
+  }
 
-	template <class F>
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, F* f) noexcept
-	{
-		return dnReq(idx, subidx, ptr, n,
-				&c_obj_call<co_csdo_dn_con_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr, size_t n,
+        co_csdo_dn_con_t* con, void* data) noexcept {
+    return co_csdo_dn_req(this, idx, subidx, ptr, n, con, data);
+  }
 
-	template <class T, typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, T* t) noexcept
-	{
-		return dnReq(idx, subidx, ptr, n,
-				&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
-				static_cast<void*>(t));
-	}
+  template <class F>
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr, size_t n,
+        F* f) noexcept {
+    return dnReq(idx, subidx, ptr, n,
+                 &c_obj_call<co_csdo_dn_con_t*, F>::function,
+                 static_cast<void*>(f));
+  }
 
-	template <co_unsigned16_t N>
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
-			co_csdo_dn_con_t* con, void* data) noexcept
-	{
-		return co_csdo_dn_val_req(this, idx, subidx, N, &val, con,
-				data);
-	}
+  template <class T, typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr, size_t n,
+        T* t) noexcept {
+    return dnReq(idx, subidx, ptr, n,
+                 &c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+                 static_cast<void*>(t));
+  }
 
-	template <co_unsigned16_t N, class F>
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
-			F* f) noexcept
-	{
-		return dnReq<N>(idx, subidx, val,
-				&c_obj_call<co_csdo_dn_con_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  template <co_unsigned16_t N>
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
+        co_csdo_dn_con_t* con, void* data) noexcept {
+    return co_csdo_dn_val_req(this, idx, subidx, N, &val, con, data);
+  }
 
-	template <co_unsigned16_t N, class T,
-			typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
-	int
-	dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
-			T* t) noexcept
-	{
-		return dnReq<N>(idx, subidx, val,
-				&c_mem_call<co_csdo_dn_con_t*, T, M>::function,
-				static_cast<void*>(t));
-	}
+  template <co_unsigned16_t N, class F>
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
+        F* f) noexcept {
+    return dnReq<N>(idx, subidx, val,
+                    &c_obj_call<co_csdo_dn_con_t*, F>::function,
+                    static_cast<void*>(f));
+  }
 
-	int
-	upReq(co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_csdo_up_con_t* con, void* data) noexcept
-	{
-		return co_csdo_up_req(this, idx, subidx, con, data);
-	}
+  template <co_unsigned16_t N, class T,
+            typename c_mem_fn<co_csdo_dn_con_t*, T>::type M>
+  int
+  dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
+        T* t) noexcept {
+    return dnReq<N>(idx, subidx, val,
+                    &c_mem_call<co_csdo_dn_con_t*, T, M>::function,
+                    static_cast<void*>(t));
+  }
 
-	template <class T, typename COCSDOUpCon<T>::type M>
-	int
-	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, void* data) noexcept
-	{
-		return upReq(idx, subidx, &COCSDOUpCon<T>::template function<M>,
-				data);
-	}
+  int
+  upReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_csdo_up_con_t* con,
+        void* data) noexcept {
+    return co_csdo_up_req(this, idx, subidx, con, data);
+  }
 
-	template <class T, class F>
-	int
-	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, F* f) noexcept
-	{
-		return upReq(idx, subidx,
-				&COCSDOUpCon<T>::template function<&c_obj_call<
-					typename COCSDOUpCon<T>::type, F
-				>::function>, static_cast<void*>(f));
-	}
+  template <class T, typename COCSDOUpCon<T>::type M>
+  int
+  upReq(co_unsigned16_t idx, co_unsigned8_t subidx, void* data) noexcept {
+    return upReq(idx, subidx, &COCSDOUpCon<T>::template function<M>, data);
+  }
 
-	template <
-		class T, class C,
-		typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
-	>
-	int
-	upReq(co_unsigned16_t idx, co_unsigned8_t subidx, C* obj) noexcept
-	{
-		return upReq(idx, subidx,
-				&COCSDOUpCon<T>::template function<&c_mem_call<
-					typename COCSDOUpCon<T>::type, C, M
-				>::function>, static_cast<void*>(obj));
-	}
+  template <class T, class F>
+  int
+  upReq(co_unsigned16_t idx, co_unsigned8_t subidx, F* f) noexcept {
+    return upReq(idx, subidx,
+                 &COCSDOUpCon<T>::template function<
+                     &c_obj_call<typename COCSDOUpCon<T>::type, F>::function>,
+                 static_cast<void*>(f));
+  }
 
-	int
-	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, co_csdo_dn_con_t* con, void* data)
-			noexcept
-	{
-		return co_csdo_blk_dn_req(this, idx, subidx, ptr, n, con, data);
-	}
+  template <class T, class C,
+            typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M>
+  int
+  upReq(co_unsigned16_t idx, co_unsigned8_t subidx, C* obj) noexcept {
+    return upReq(
+        idx, subidx,
+        &COCSDOUpCon<T>::template function<
+            &c_mem_call<typename COCSDOUpCon<T>::type, C, M>::function>,
+        static_cast<void*>(obj));
+  }
 
-	template <class F>
-	int
-	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, F* f) noexcept
-	{
-		return blkDnReq(idx, subidx, ptr, n,
-				&c_obj_call<co_csdo_dn_con_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  int
+  blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+           size_t n, co_csdo_dn_con_t* con, void* data) noexcept {
+    return co_csdo_blk_dn_req(this, idx, subidx, ptr, n, con, data);
+  }
 
-	template <class C, typename c_mem_fn<co_csdo_dn_con_t*, C>::type M>
-	int
-	blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
-			size_t n, C* obj) noexcept
-	{
-		return blkDnReq(idx, subidx, ptr, n,
-				&c_mem_call<co_csdo_dn_con_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  int
+  blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+           size_t n, F* f) noexcept {
+    return blkDnReq(idx, subidx, ptr, n,
+                    &c_obj_call<co_csdo_dn_con_t*, F>::function,
+                    static_cast<void*>(f));
+  }
 
-	int
-	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
-			co_csdo_up_con_t* con, void* data) noexcept
-	{
-		return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
-	}
+  template <class C, typename c_mem_fn<co_csdo_dn_con_t*, C>::type M>
+  int
+  blkDnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const void* ptr,
+           size_t n, C* obj) noexcept {
+    return blkDnReq(idx, subidx, ptr, n,
+                    &c_mem_call<co_csdo_dn_con_t*, C, M>::function,
+                    static_cast<void*>(obj));
+  }
 
-	template <class T, typename COCSDOUpCon<T>::type M>
-	int
-	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
-			void* data) noexcept
-	{
-		return blkUpReq(idx, subidx, pst,
-				&COCSDOUpCon<T>::template function<M>, data);
-	}
+  int
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+           co_csdo_up_con_t* con, void* data) noexcept {
+    return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
+  }
 
-	template <class T, class F>
-	int
-	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst, F* f)
-			noexcept
-	{
-		return blkUpReq(idx, subidx, pst,
-				&COCSDOUpCon<T>::template function<&c_obj_call<
-					typename COCSDOUpCon<T>::type, F
-				>::function>, static_cast<void*>(f));
-	}
+  template <class T, typename COCSDOUpCon<T>::type M>
+  int
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+           void* data) noexcept {
+    return blkUpReq(idx, subidx, pst, &COCSDOUpCon<T>::template function<M>,
+                    data);
+  }
 
-	template <
-		class T, class C,
-		typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M
-	>
-	int
-	blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
-			C* obj) noexcept
-	{
-		return blkUpReq(idx, subidx, pst,
-				&COCSDOUpCon<T>::template function<&c_mem_call<
-					typename COCSDOUpCon<T>::type, C, M
-				>::function>, static_cast<void*>(obj));
-	}
+  template <class T, class F>
+  int
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+           F* f) noexcept {
+    return blkUpReq(
+        idx, subidx, pst,
+        &COCSDOUpCon<T>::template function<
+            &c_obj_call<typename COCSDOUpCon<T>::type, F>::function>,
+        static_cast<void*>(f));
+  }
 
-protected:
-	~COCSDO() {}
+  template <class T, class C,
+            typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M>
+  int
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+           C* obj) noexcept {
+    return blkUpReq(
+        idx, subidx, pst,
+        &COCSDOUpCon<T>::template function<
+            &c_mem_call<typename COCSDOUpCon<T>::type, C, M>::function>,
+        static_cast<void*>(obj));
+  }
+
+ protected:
+  ~COCSDO() {}
 };
 
 /**
@@ -419,27 +395,24 @@ protected:
  */
 template <class T>
 struct COCSDOUpCon {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, T val, void* data);
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac, T val, void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		if (__likely(!ac)) {
-			if (__unlikely(!ptr || n < sizeof(T))) {
-				ac = CO_SDO_AC_TYPE_LEN_LO;
-			} else if (__unlikely(n > sizeof(T))) {
-				ac = CO_SDO_AC_TYPE_LEN_HI;
-			}
-		}
-		COVal<co_type_traits_T<T>::index> val;
-		if (__likely(!ac))
-			ac = co_val_read_sdo(val.index, &val, ptr, n);
-		return (*M)(sdo, idx, subidx, ac, val, data);
-	}
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    if (__likely(!ac)) {
+      if (__unlikely(!ptr || n < sizeof(T))) {
+        ac = CO_SDO_AC_TYPE_LEN_LO;
+      } else if (__unlikely(n > sizeof(T))) {
+        ac = CO_SDO_AC_TYPE_LEN_HI;
+      }
+    }
+    COVal<co_type_traits_T<T>::index> val;
+    if (__likely(!ac)) ac = co_val_read_sdo(val.index, &val, ptr, n);
+    return (*M)(sdo, idx, subidx, ac, val, data);
+  }
 };
 
 /**
@@ -450,21 +423,18 @@ struct COCSDOUpCon {
  */
 template <>
 struct COCSDOUpCon<char*> {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, const char* vs,
-		void* data);
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac, const char* vs, void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		COVal<CO_DEFTYPE_VISIBLE_STRING> val;
-		if (__likely(!ac && ptr && n))
-			ac = co_val_read_sdo(val.index, &val, ptr, n);
-		return (*M)(sdo, idx, subidx, ac, val, data);
-	}
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    COVal<CO_DEFTYPE_VISIBLE_STRING> val;
+    if (__likely(!ac && ptr && n))
+      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    return (*M)(sdo, idx, subidx, ac, val, data);
+  }
 };
 
 /**
@@ -474,38 +444,34 @@ struct COCSDOUpCon<char*> {
  * @see co_csdo_up_con_t
  */
 template <>
-struct COCSDOUpCon< ::std::string> {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac,
+struct COCSDOUpCon<::std::string> {
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac,
 #if __cplusplus >= 201103L
-		::std::string vs,
+                       ::std::string vs,
 #else
-		const ::std::string& vs,
+                       const ::std::string& vs,
 #endif
-		void* data);
+                       void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		const char* vs = static_cast<const char*>(ptr);
-		if (__likely(!ac && vs && n)) {
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    const char* vs = static_cast<const char*>(ptr);
+    if (__likely(!ac && vs && n)) {
 #if !__cpp_exceptions
-			try {
+      try {
 #endif
-				return (*M)(sdo, idx, subidx, ac,
-						::std::string(vs, vs + n),
-						data);
+        return (*M)(sdo, idx, subidx, ac, ::std::string(vs, vs + n), data);
 #if !__cpp_exceptions
-			} catch (...) {
-				ac = CO_SDO_AC_NO_MEM;
-			}
+      } catch (...) {
+        ac = CO_SDO_AC_NO_MEM;
+      }
 #endif
-		}
-		return (*M)(sdo, idx, subidx, ac, ::std::string(), data);
-	}
+    }
+    return (*M)(sdo, idx, subidx, ac, ::std::string(), data);
+  }
 };
 
 /**
@@ -516,19 +482,17 @@ struct COCSDOUpCon< ::std::string> {
  */
 template <>
 struct COCSDOUpCon<uint8_t*> {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, const uint8_t* os,
-		size_t n, void* data);
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac, const uint8_t* os, size_t n,
+                       void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		const uint8_t* os = static_cast<const uint8_t*>(ptr);
-		return (*M)(sdo, idx, subidx, ac, n ? os : 0, n, data);
-	}
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    const uint8_t* os = static_cast<const uint8_t*>(ptr);
+    return (*M)(sdo, idx, subidx, ac, n ? os : 0, n, data);
+  }
 };
 
 /**
@@ -538,39 +502,35 @@ struct COCSDOUpCon<uint8_t*> {
  * @see co_csdo_up_con_t
  */
 template <>
-struct COCSDOUpCon< ::std::vector<uint8_t> > {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac,
+struct COCSDOUpCon<::std::vector<uint8_t>> {
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac,
 #if __cplusplus >= 201103L
-		::std::vector<uint8_t> os,
+                       ::std::vector<uint8_t> os,
 #else
-		const ::std::vector<uint8_t>& os,
+                       const ::std::vector<uint8_t>& os,
 #endif
-		void* data);
+                       void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		const uint8_t* os = static_cast<const uint8_t*>(ptr);
-		if (__likely(!ac && os && n)) {
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    const uint8_t* os = static_cast<const uint8_t*>(ptr);
+    if (__likely(!ac && os && n)) {
 #if !__cpp_exceptions
-			try {
+      try {
 #endif
-				return (*M)(sdo, idx, subidx, ac,
-						::std::vector<uint8_t>(os,
-						os + n), data);
+        return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(os, os + n),
+                    data);
 #if !__cpp_exceptions
-			} catch (...) {
-				ac = CO_SDO_AC_NO_MEM;
-			}
+      } catch (...) {
+        ac = CO_SDO_AC_NO_MEM;
+      }
 #endif
-		}
-		return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(),
-				data);
-	}
+    }
+    return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(), data);
+  }
 };
 
 /**
@@ -581,21 +541,18 @@ struct COCSDOUpCon< ::std::vector<uint8_t> > {
  */
 template <>
 struct COCSDOUpCon<char16_t*> {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, const char16_t* us,
-		void* data);
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac, const char16_t* us, void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac && ptr && n))
-			ac = co_val_read_sdo(val.index, &val, ptr, n);
-		return (*M)(sdo, idx, subidx, ac, val, data);
-	}
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    COVal<CO_DEFTYPE_UNICODE_STRING> val;
+    if (__likely(!ac && ptr && n))
+      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    return (*M)(sdo, idx, subidx, ac, val, data);
+  }
 };
 
 /**
@@ -605,42 +562,38 @@ struct COCSDOUpCon<char16_t*> {
  * @see co_csdo_up_con_t
  */
 template <>
-struct COCSDOUpCon< ::std::basic_string<char16_t> > {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac,
+struct COCSDOUpCon<::std::basic_string<char16_t>> {
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac,
 #if __cplusplus >= 201103L
-		::std::basic_string<char16_t> us,
+                       ::std::basic_string<char16_t> us,
 #else
-		const ::std::basic_string<char16_t>& us,
+                       const ::std::basic_string<char16_t>& us,
 #endif
-		void* data);
+                       void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		COVal<CO_DEFTYPE_UNICODE_STRING> val;
-		if (__likely(!ac && ptr && n))
-			ac = co_val_read_sdo(val.index, &val, ptr, n);
-		const char16_t* us = val;
-		if (__likely(!ac && us && n)) {
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    COVal<CO_DEFTYPE_UNICODE_STRING> val;
+    if (__likely(!ac && ptr && n))
+      ac = co_val_read_sdo(val.index, &val, ptr, n);
+    const char16_t* us = val;
+    if (__likely(!ac && us && n)) {
 #if !__cpp_exceptions
-			try {
+      try {
 #endif
-				return (*M)(sdo, idx, subidx, ac,
-						::std::basic_string<char16_t>(
-						us, us + n), data);
+        return (*M)(sdo, idx, subidx, ac,
+                    ::std::basic_string<char16_t>(us, us + n), data);
 #if !__cpp_exceptions
-			} catch (...) {
-				ac = CO_SDO_AC_NO_MEM;
-			}
+      } catch (...) {
+        ac = CO_SDO_AC_NO_MEM;
+      }
 #endif
-		}
-		return (*M)(sdo, idx, subidx, ac,
-				::std::basic_string<char16_t>(), data);
-	}
+    }
+    return (*M)(sdo, idx, subidx, ac, ::std::basic_string<char16_t>(), data);
+  }
 };
 
 /**
@@ -651,21 +604,18 @@ struct COCSDOUpCon< ::std::basic_string<char16_t> > {
  */
 template <>
 struct COCSDOUpCon<void*> {
-	typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned32_t ac, const void* dom,
-		size_t n, void* data);
+  typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+                       co_unsigned32_t ac, const void* dom, size_t n,
+                       void* data);
 
-	template <type M>
-	static void
-	function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-			co_unsigned32_t ac, const void* ptr, size_t n,
-			void* data) noexcept
-	{
-		return (*M)(sdo, idx, subidx, ac, n ? ptr : 0, n, data);
-	}
+  template <type M>
+  static void
+  function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+           co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
+    return (*M)(sdo, idx, subidx, ac, n ? ptr : 0, n, data);
+  }
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

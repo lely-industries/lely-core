@@ -36,56 +36,57 @@ namespace lely {
  * The type of objects thrown as exceptions to report a failure to initialize an
  * instantiation of a C type.
  */
-class bad_init: public error {};
+class bad_init : public error {};
 
 /**
  * The type of objects thrown as exceptions to report a failure to copy an
  * instantiation of a C type.
  */
-class bad_copy: public error {};
+class bad_copy : public error {};
 
 /**
  * The type of objects thrown as exceptions to report a failure to move an
  * instantiation of a C type.
  */
-class bad_move: public error {};
+class bad_move : public error {};
 
 namespace impl {
 
 inline void
 throw_bad_init() {
-	if (get_errnum() == ERRNUM_NOMEM)
-		throw_or_abort(::std::bad_alloc());
-	throw_or_abort(bad_init());
+  if (get_errnum() == ERRNUM_NOMEM) throw_or_abort(::std::bad_alloc());
+  throw_or_abort(bad_init());
 }
 
 inline void
 throw_bad_copy() {
-	if (get_errnum() == ERRNUM_NOMEM)
-		throw_or_abort(::std::bad_alloc());
-	throw_or_abort(bad_copy());
+  if (get_errnum() == ERRNUM_NOMEM) throw_or_abort(::std::bad_alloc());
+  throw_or_abort(bad_copy());
 }
 
 inline void
 throw_bad_move() {
-	if (get_errnum() == ERRNUM_NOMEM)
-		throw_or_abort(::std::bad_alloc());
-	throw_or_abort(bad_move());
+  if (get_errnum() == ERRNUM_NOMEM) throw_or_abort(::std::bad_alloc());
+  throw_or_abort(bad_move());
 }
 
-} // impl
+}  // namespace impl
 
 /// The deleter for trivial, standard layout and incomplete C types.
 template <class T>
 struct delete_c_type {
 #if __cplusplus >= 201103L
-	constexpr delete_c_type() noexcept = default;
+  constexpr delete_c_type() noexcept = default;
 #else
-	delete_c_type() noexcept {};
+  delete_c_type() noexcept {};
 #endif
-	template <class U> delete_c_type(const delete_c_type<U>&) noexcept {}
+  template <class U>
+  delete_c_type(const delete_c_type<U>&) noexcept {}
 
-	void operator()(T* p) const { destroy(p); }
+  void
+  operator()(T* p) const {
+    destroy(p);
+  }
 };
 
 #if __cplusplus >= 201103L
@@ -96,17 +97,17 @@ struct delete_c_type {
  */
 template <class T, class... Args>
 inline ::std::shared_ptr<T>
-make_shared_c(Args&&... args)
-{
-	return ::std::shared_ptr<T>(new T(::std::forward<Args>(args)...),
-			delete_c_type<T>());
+make_shared_c(Args&&... args) {
+  return ::std::shared_ptr<T>(new T(::std::forward<Args>(args)...),
+                              delete_c_type<T>());
 }
 
 /**
  * A specialization of std::unique_ptr for trivial, standard layout or
  * incomplete C types, using #lely::delete_c_type as the deleter.
  */
-template <class T> using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
+template <class T>
+using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
 
 /**
  * Creates an instance of a trivial, standard layout or incomplete C type and
@@ -114,9 +115,8 @@ template <class T> using unique_c_ptr = ::std::unique_ptr<T, delete_c_type<T>>;
  */
 template <class T, class... Args>
 inline unique_c_ptr<T>
-make_unique_c(Args&&... args)
-{
-	return unique_c_ptr<T>(new T(::std::forward<Args>(args)...));
+make_unique_c(Args&&... args) {
+  return unique_c_ptr<T>(new T(::std::forward<Args>(args)...));
 }
 
 #endif
@@ -125,189 +125,198 @@ make_unique_c(Args&&... args)
  * A class template supplying a uniform interface to certain attributes of C
  * types.
  */
-template <class T> struct c_type_traits;
+template <class T>
+struct c_type_traits;
 
 /// The base class for a C++ interface to a trivial C type.
 template <class T>
 struct trivial_c_type {
-	typedef typename c_type_traits<T>::value_type c_value_type;
-	typedef typename c_type_traits<T>::reference c_reference;
-	typedef typename c_type_traits<T>::const_reference c_const_reference;
-	typedef typename c_type_traits<T>::pointer c_pointer;
-	typedef typename c_type_traits<T>::const_pointer c_const_pointer;
+  typedef typename c_type_traits<T>::value_type c_value_type;
+  typedef typename c_type_traits<T>::reference c_reference;
+  typedef typename c_type_traits<T>::const_reference c_const_reference;
+  typedef typename c_type_traits<T>::pointer c_pointer;
+  typedef typename c_type_traits<T>::const_pointer c_const_pointer;
 
-	operator c_value_type() const noexcept { return c_ref(); }
-	operator c_reference() noexcept { return c_ref(); }
-	operator c_const_reference() const noexcept { return c_ref(); }
+  operator c_value_type() const noexcept { return c_ref(); }
+  operator c_reference() noexcept { return c_ref(); }
+  operator c_const_reference() const noexcept { return c_ref(); }
 
-	c_reference c_ref() noexcept { return *c_ptr(); }
-	c_const_reference c_ref() const noexcept { return *c_ptr(); }
+  c_reference
+  c_ref() noexcept {
+    return *c_ptr();
+  }
+  c_const_reference
+  c_ref() const noexcept {
+    return *c_ptr();
+  }
 
-	c_pointer c_ptr() noexcept { return reinterpret_cast<c_pointer>(this); }
+  c_pointer
+  c_ptr() noexcept {
+    return reinterpret_cast<c_pointer>(this);
+  }
 
-	c_const_pointer
-	c_ptr() const noexcept
-	{
-		return reinterpret_cast<c_const_pointer>(this);
-	}
+  c_const_pointer
+  c_ptr() const noexcept {
+    return reinterpret_cast<c_const_pointer>(this);
+  }
 
-	static void dtor(trivial_c_type* p) noexcept { delete p; }
-	void destroy() noexcept { dtor(this); }
+  static void
+  dtor(trivial_c_type* p) noexcept {
+    delete p;
+  }
+  void
+  destroy() noexcept {
+    dtor(this);
+  }
 };
 
 template <class T>
-inline void destroy(trivial_c_type<T>* p) noexcept { p->destroy(); }
+inline void
+destroy(trivial_c_type<T>* p) noexcept {
+  p->destroy();
+}
 
 /// The base class for a C++ interface to a standard layout C type.
 template <class T>
 class standard_c_type {
-public:
-	typedef typename c_type_traits<T>::value_type c_value_type;
-	typedef typename c_type_traits<T>::reference c_reference;
-	typedef typename c_type_traits<T>::const_reference c_const_reference;
-	typedef typename c_type_traits<T>::pointer c_pointer;
-	typedef typename c_type_traits<T>::const_pointer c_const_pointer;
+ public:
+  typedef typename c_type_traits<T>::value_type c_value_type;
+  typedef typename c_type_traits<T>::reference c_reference;
+  typedef typename c_type_traits<T>::const_reference c_const_reference;
+  typedef typename c_type_traits<T>::pointer c_pointer;
+  typedef typename c_type_traits<T>::const_pointer c_const_pointer;
 
-	operator c_value_type() const noexcept { return c_ref(); }
-	operator c_reference() noexcept { return c_ref(); }
-	operator c_const_reference() const noexcept { return c_ref(); }
+  operator c_value_type() const noexcept { return c_ref(); }
+  operator c_reference() noexcept { return c_ref(); }
+  operator c_const_reference() const noexcept { return c_ref(); }
 
-	c_reference c_ref() noexcept { return *c_ptr(); }
-	c_const_reference c_ref() const noexcept { return *c_ptr(); }
+  c_reference
+  c_ref() noexcept {
+    return *c_ptr();
+  }
+  c_const_reference
+  c_ref() const noexcept {
+    return *c_ptr();
+  }
 
-	c_pointer c_ptr() noexcept { return reinterpret_cast<c_pointer>(this); }
+  c_pointer
+  c_ptr() noexcept {
+    return reinterpret_cast<c_pointer>(this);
+  }
 
-	c_const_pointer
-	c_ptr() const noexcept
-	{
-		return reinterpret_cast<c_const_pointer>(this);
-	}
+  c_const_pointer
+  c_ptr() const noexcept {
+    return reinterpret_cast<c_const_pointer>(this);
+  }
 
-	static void dtor(standard_c_type* p) noexcept { delete p; }
-	void destroy() noexcept { dtor(this); }
+  static void
+  dtor(standard_c_type* p) noexcept {
+    delete p;
+  }
+  void
+  destroy() noexcept {
+    dtor(this);
+  }
 
-	standard_c_type&
-	operator=(const standard_c_type& val)
-	{
-		if (!c_type_traits<T>::copy(c_ptr(), val.c_ptr()))
-			impl::throw_bad_copy();
-		return *this;
-	}
+  standard_c_type&
+  operator=(const standard_c_type& val) {
+    if (!c_type_traits<T>::copy(c_ptr(), val.c_ptr())) impl::throw_bad_copy();
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	standard_c_type&
-	operator=(standard_c_type&& val)
-	{
-		if (!c_type_traits<T>::move(c_ptr(), val.c_ptr()))
-			impl::throw_bad_move();
-		return *this;
-	}
+  standard_c_type&
+  operator=(standard_c_type&& val) {
+    if (!c_type_traits<T>::move(c_ptr(), val.c_ptr())) impl::throw_bad_move();
+    return *this;
+  }
 #endif
 
-protected:
+ protected:
 #if __cplusplus >= 201103L
-	template <class... Args>
-	explicit
-	standard_c_type(Args&&... args)
-	{
-		if (!c_type_traits<T>::init(c_ptr(),
-				std::forward<Args>(args)...))
-			impl::throw_bad_init();
-	}
+  template <class... Args>
+  explicit standard_c_type(Args&&... args) {
+    if (!c_type_traits<T>::init(c_ptr(), std::forward<Args>(args)...))
+      impl::throw_bad_init();
+  }
 #else
-	standard_c_type()
-	{
-		if (!c_type_traits<T>::init(c_ptr()))
-			impl::throw_bad_init();
-	}
+  standard_c_type() {
+    if (!c_type_traits<T>::init(c_ptr())) impl::throw_bad_init();
+  }
 
-	template <class U0>
-	explicit
-	standard_c_type(U0 u0)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0))
-			impl::throw_bad_init();
-	}
+  template <class U0>
+  explicit standard_c_type(U0 u0) {
+    if (!c_type_traits<T>::init(c_ptr(), u0)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1>
-	standard_c_type(U0 u0, U1 u1)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1>
+  standard_c_type(U0 u0, U1 u1) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2>
-	standard_c_type(U0 u0, U1 u1, U2 u2)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2>
+  standard_c_type(U0 u0, U1 u1, U2 u2) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5,
-				u6))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7, class U8>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
-			U8 u8)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7, u8))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7, class U8>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
+                  U8 u8) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7, class U8, class U9>
-	standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
-			U8 u8, U9 u9)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7, u8, u9))
-			impl::throw_bad_init();
-	}
-#endif // __cplusplus >= 201103L
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7, class U8, class U9>
+  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7, U8 u8,
+                  U9 u9) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8,
+                                u9))
+      impl::throw_bad_init();
+  }
+#endif  // __cplusplus >= 201103L
 
-	~standard_c_type() { c_type_traits<T>::fini(c_ptr()); }
+  ~standard_c_type() { c_type_traits<T>::fini(c_ptr()); }
 };
 
 template <class T>
-inline void destroy(standard_c_type<T>* p) noexcept { p->destroy(); }
+inline void
+destroy(standard_c_type<T>* p) noexcept {
+  p->destroy();
+}
 
 /**
  * The base class for a C++ interface to an incomplete C type. This class
@@ -315,195 +324,179 @@ inline void destroy(standard_c_type<T>* p) noexcept { p->destroy(); }
  */
 template <class T>
 class incomplete_c_type {
-public:
-	typedef typename c_type_traits<T>::value_type c_value_type;
-	typedef typename c_type_traits<T>::reference c_reference;
-	typedef typename c_type_traits<T>::const_reference c_const_reference;
-	typedef typename c_type_traits<T>::pointer c_pointer;
-	typedef typename c_type_traits<T>::const_pointer c_const_pointer;
+ public:
+  typedef typename c_type_traits<T>::value_type c_value_type;
+  typedef typename c_type_traits<T>::reference c_reference;
+  typedef typename c_type_traits<T>::const_reference c_const_reference;
+  typedef typename c_type_traits<T>::pointer c_pointer;
+  typedef typename c_type_traits<T>::const_pointer c_const_pointer;
 
-	operator c_reference() noexcept { return c_ref(); }
-	operator c_const_reference() const noexcept { return c_ref(); }
+  operator c_reference() noexcept { return c_ref(); }
+  operator c_const_reference() const noexcept { return c_ref(); }
 
-	c_reference c_ref() noexcept { return *c_ptr(); }
-	c_const_reference c_ref() const noexcept { return *c_ptr(); }
+  c_reference
+  c_ref() noexcept {
+    return *c_ptr();
+  }
+  c_const_reference
+  c_ref() const noexcept {
+    return *c_ptr();
+  }
 
-	c_pointer c_ptr() noexcept { return reinterpret_cast<c_pointer>(this); }
+  c_pointer
+  c_ptr() noexcept {
+    return reinterpret_cast<c_pointer>(this);
+  }
 
-	c_const_pointer
-	c_ptr() const noexcept
-	{
-		return reinterpret_cast<c_const_pointer>(this);
-	}
+  c_const_pointer
+  c_ptr() const noexcept {
+    return reinterpret_cast<c_const_pointer>(this);
+  }
 
-	static void dtor(incomplete_c_type* p) noexcept { delete p; }
-	void destroy() noexcept { dtor(this); }
+  static void
+  dtor(incomplete_c_type* p) noexcept {
+    delete p;
+  }
+  void
+  destroy() noexcept {
+    dtor(this);
+  }
 
-	static void*
-	operator new(std::size_t size)
-	{
-		void* ptr = operator new(size, ::std::nothrow);
-		if (__unlikely(!ptr))
-			throw_or_abort(std::bad_alloc());
-		return ptr;
-	}
+  static void*
+  operator new(std::size_t size) {
+    void* ptr = operator new(size, ::std::nothrow);
+    if (__unlikely(!ptr)) throw_or_abort(std::bad_alloc());
+    return ptr;
+  }
 
-	static void*
-	operator new(std::size_t, const ::std::nothrow_t&) noexcept
-	{
-		return c_type_traits<T>::alloc();
-	}
+  static void*
+  operator new(std::size_t, const ::std::nothrow_t&) noexcept {
+    return c_type_traits<T>::alloc();
+  }
 
-	static void
-	operator delete(void* ptr) noexcept
-	{
-		operator delete(ptr, ::std::nothrow);
-	}
+  static void
+  operator delete(void* ptr) noexcept {
+    operator delete(ptr, ::std::nothrow);
+  }
 
-	static void
-	operator delete(void* ptr, const ::std::nothrow_t&) noexcept
-	{
-		c_type_traits<T>::free(ptr);
-	}
+  static void
+  operator delete(void* ptr, const ::std::nothrow_t&)noexcept {
+    c_type_traits<T>::free(ptr);
+  }
 
-	incomplete_c_type&
-	operator=(const incomplete_c_type& val)
-	{
-		if (!c_type_traits<T>::copy(c_ptr(), val.c_ptr()))
-			impl::throw_bad_copy();
-		return *this;
-	}
+  incomplete_c_type&
+  operator=(const incomplete_c_type& val) {
+    if (!c_type_traits<T>::copy(c_ptr(), val.c_ptr())) impl::throw_bad_copy();
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	incomplete_c_type&
-	operator=(incomplete_c_type&& val)
-	{
-		if (!c_type_traits<T>::move(c_ptr(), val.c_ptr()))
-			impl::throw_bad_move();
-		return *this;
-	}
+  incomplete_c_type&
+  operator=(incomplete_c_type&& val) {
+    if (!c_type_traits<T>::move(c_ptr(), val.c_ptr())) impl::throw_bad_move();
+    return *this;
+  }
 #endif
 
-protected:
+ protected:
 #if __cplusplus >= 201103L
-	template <class... Args>
-	explicit
-	incomplete_c_type(Args&&... args)
-	{
-		if (!c_type_traits<T>::init(c_ptr(),
-				::std::forward<Args>(args)...))
-			impl::throw_bad_init();
-	}
+  template <class... Args>
+  explicit incomplete_c_type(Args&&... args) {
+    if (!c_type_traits<T>::init(c_ptr(), ::std::forward<Args>(args)...))
+      impl::throw_bad_init();
+  }
 #else
-	incomplete_c_type()
-	{
-		if (!c_type_traits<T>::init(c_ptr()))
-			impl::throw_bad_init();
-	}
+  incomplete_c_type() {
+    if (!c_type_traits<T>::init(c_ptr())) impl::throw_bad_init();
+  }
 
-	template <class U0>
-	explicit
-	incomplete_c_type(U0 u0)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0))
-			impl::throw_bad_init();
-	}
+  template <class U0>
+  explicit incomplete_c_type(U0 u0) {
+    if (!c_type_traits<T>::init(c_ptr(), u0)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1>
-	incomplete_c_type(U0 u0, U1 u1)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1>
+  incomplete_c_type(U0 u0, U1 u1) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2)) impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5,
-				u6))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6,
-			U7 u7)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7, class U8>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6,
-			U7 u7, U8 u8)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7, u8))
-			impl::throw_bad_init();
-	}
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7, class U8>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
+                    U8 u8) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8))
+      impl::throw_bad_init();
+  }
 
-	template <class U0, class U1, class U2, class U3, class U4, class U5,
-			class U6, class U7, class U8, class U9>
-	incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6,
-			U7 u7, U8 u8, U9 u9)
-	{
-		if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6,
-				u7, u8, u9))
-			impl::throw_bad_init();
-	}
-#endif // __cplusplus >= 201103L
+  template <class U0, class U1, class U2, class U3, class U4, class U5,
+            class U6, class U7, class U8, class U9>
+  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
+                    U8 u8, U9 u9) {
+    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8,
+                                u9))
+      impl::throw_bad_init();
+  }
+#endif  // __cplusplus >= 201103L
 
-	~incomplete_c_type() { c_type_traits<T>::fini(c_ptr()); }
+  ~incomplete_c_type() { c_type_traits<T>::fini(c_ptr()); }
 
 #if __cplusplus >= 201103L
-public:
-	static void* operator new[](std::size_t) = delete;
-	static void* operator new[](std::size_t, const ::std::nothrow_t&)
-			= delete;
-	static void operator delete[](void*) = delete;
-	static void operator delete[](void*, const ::std::nothrow_t&) = delete;
+ public:
+  static void* operator new[](std::size_t) = delete;
+  static void* operator new[](std::size_t, const ::std::nothrow_t&) = delete;
+  static void operator delete[](void*) = delete;
+  static void operator delete[](void*, const ::std::nothrow_t&) = delete;
 #else
-private:
-	static void* operator new[](std::size_t);
-	static void* operator new[](std::size_t, const ::std::nothrow_t&);
-	static void operator delete[](void*);
-	static void operator delete[](void*, const ::std::nothrow_t&);
+ private:
+  static void* operator new[](std::size_t);
+  static void* operator new[](std::size_t, const ::std::nothrow_t&);
+  static void operator delete[](void*);
+  static void operator delete[](void*, const ::std::nothrow_t&);
 #endif
 };
 
 template <class T>
-inline void destroy(incomplete_c_type<T>* p) noexcept { p->destroy(); }
+inline void
+destroy(incomplete_c_type<T>* p) noexcept {
+  p->destroy();
+}
 
 /**
  * A class template supplying a uniform interface to certain attributes of
@@ -511,51 +504,52 @@ inline void destroy(incomplete_c_type<T>* p) noexcept { p->destroy(); }
  */
 template <class T>
 struct c_type_traits {
-	typedef T value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef T value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void*
-	alloc() noexcept
-	{
-		return operator new(sizeof(T), ::std::nothrow);
-	}
+  static void*
+  alloc() noexcept {
+    return operator new(sizeof(T), ::std::nothrow);
+  }
 
-	static void
-	free(void* ptr) noexcept
-	{
-		operator delete(ptr, ::std::nothrow);
-	}
+  static void
+  free(void* ptr) noexcept {
+    operator delete(ptr, ::std::nothrow);
+  }
 
-	static pointer init(pointer p) noexcept { return p; }
+  static pointer
+  init(pointer p) noexcept {
+    return p;
+  }
 
-	static pointer
-	init(pointer p, const T& val) noexcept
-	{
-		return new (static_cast<void*>(p)) T(val);
-	}
+  static pointer
+  init(pointer p, const T& val) noexcept {
+    return new (static_cast<void*>(p)) T(val);
+  }
 
-	static void fini(pointer p) noexcept { p->~T(); }
+  static void
+  fini(pointer p) noexcept {
+    p->~T();
+  }
 
-	static pointer
-	copy(pointer p1, const_pointer p2) noexcept
-	{
-		*p1 = *p2;
-		return p1;
-	}
+  static pointer
+  copy(pointer p1, const_pointer p2) noexcept {
+    *p1 = *p2;
+    return p1;
+  }
 
-	static pointer
-	move(pointer p1, pointer p2) noexcept
-	{
+  static pointer
+  move(pointer p1, pointer p2) noexcept {
 #if __cplusplus >= 201103L
-		*p1 = ::std::move(*p2);
+    *p1 = ::std::move(*p2);
 #else
-		*p1 = *p2;
+    *p1 = *p2;
 #endif
-		return p1;
-	}
+    return p1;
+  }
 };
 
 /**
@@ -564,47 +558,49 @@ struct c_type_traits {
  */
 template <>
 struct c_type_traits<void> {
-	typedef void value_type;
-	typedef struct {} __type;
-	typedef __type& reference;
-	typedef const __type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef void value_type;
+  typedef struct {
+  } __type;
+  typedef __type& reference;
+  typedef const __type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void*
-	alloc() noexcept
-	{
-		return operator new(0, ::std::nothrow);
-	}
+  static void*
+  alloc() noexcept {
+    return operator new(0, ::std::nothrow);
+  }
 
-	static void
-	free(void* ptr) noexcept
-	{
-		operator delete(ptr, ::std::nothrow);
-	}
+  static void
+  free(void* ptr) noexcept {
+    operator delete(ptr, ::std::nothrow);
+  }
 
-	static pointer init(pointer p) noexcept { return p; }
+  static pointer
+  init(pointer p) noexcept {
+    return p;
+  }
 
-	static void fini(pointer p) noexcept { (void)p; }
+  static void
+  fini(pointer p) noexcept {
+    (void)p;
+  }
 
-	static pointer
-	copy(pointer p1, const_pointer p2) noexcept
-	{
-		(void)p2;
+  static pointer
+  copy(pointer p1, const_pointer p2) noexcept {
+    (void)p2;
 
-		return p1;
-	}
+    return p1;
+  }
 
-	static pointer
-	move(pointer p1, pointer p2) noexcept
-	{
-		(void)p2;
+  static pointer
+  move(pointer p1, pointer p2) noexcept {
+    (void)p2;
 
-		return p1;
-	}
+    return p1;
+  }
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

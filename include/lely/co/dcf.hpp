@@ -33,19 +33,16 @@
 namespace lely {
 
 inline typename c_type_traits<__co_dev>::pointer
-c_type_traits<__co_dev>::init(pointer p, const char* filename) noexcept
-{
-	return __co_dev_init_from_dcf_file(p, filename);
+c_type_traits<__co_dev>::init(pointer p, const char* filename) noexcept {
+  return __co_dev_init_from_dcf_file(p, filename);
 }
 
 inline typename c_type_traits<__co_dev>::pointer
 c_type_traits<__co_dev>::init(pointer p, const char* begin, const char* end,
-		floc* at) noexcept
-{
-	return __co_dev_init_from_dcf_text(p, begin, end, at);
+                              floc* at) noexcept {
+  return __co_dev_init_from_dcf_text(p, begin, end, at);
 }
 
-} // lely
+}  // namespace lely
 
 #endif
-

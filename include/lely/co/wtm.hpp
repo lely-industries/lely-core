@@ -30,7 +30,9 @@
 #include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 
-namespace lely { class COWTM; }
+namespace lely {
+class COWTM;
+}
 /// An opaque CANopen Wireless Transmission Media (WTM) interface type.
 typedef lely::COWTM co_wtm_t;
 
@@ -41,315 +43,287 @@ namespace lely {
 /// The attributes of #co_wtm_t required by #lely::COWTM.
 template <>
 struct c_type_traits<__co_wtm> {
-	typedef __co_wtm value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_wtm value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_wtm_alloc(); }
-	static void free(void* ptr) noexcept { __co_wtm_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_wtm_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_wtm_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __co_wtm_init(p); }
-	static void fini(pointer p) noexcept { __co_wtm_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __co_wtm_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __co_wtm_fini(p);
+  }
 };
 
 /// An opaque CANopen Wireless Transmission Media (WTM) interface type.
-class COWTM: public incomplete_c_type<__co_wtm> {
-	typedef incomplete_c_type<__co_wtm> c_base;
-public:
-	COWTM(): c_base() {}
+class COWTM : public incomplete_c_type<__co_wtm> {
+  typedef incomplete_c_type<__co_wtm> c_base;
 
-	uint8_t getNIF() const noexcept { return co_wtm_get_nif(this); }
+ public:
+  COWTM() : c_base() {}
 
-	int
-	setNIF(uint8_t nif = 1) noexcept
-	{
-		return co_wtm_set_nif(this, nif);
-	}
+  uint8_t
+  getNIF() const noexcept {
+    return co_wtm_get_nif(this);
+  }
 
-	int
-	setDiagCAN(uint8_t nif, uint8_t st = 0xf, uint8_t err = 0xf,
-			uint8_t load = 0xff, uint16_t ec = 0xffff,
-			uint16_t foc = 0xffff, uint16_t coc = 0xffff) noexcept
-	{
-		return co_wtm_set_diag_can(this, nif, st, err, load, ec, foc,
-				coc);
-	}
+  int
+  setNIF(uint8_t nif = 1) noexcept {
+    return co_wtm_set_nif(this, nif);
+  }
 
-	int
-	setDiagWTM(uint8_t quality = 0xff) noexcept
-	{
-		return co_wtm_set_diag_wtm(this, quality);
-	}
+  int
+  setDiagCAN(uint8_t nif, uint8_t st = 0xf, uint8_t err = 0xf,
+             uint8_t load = 0xff, uint16_t ec = 0xffff, uint16_t foc = 0xffff,
+             uint16_t coc = 0xffff) noexcept {
+    return co_wtm_set_diag_can(this, nif, st, err, load, ec, foc, coc);
+  }
 
-	void
-	getDiagCANCon(co_wtm_diag_can_con_t** pfunc, void** pdata) const
-			noexcept
-	{
-		co_wtm_get_diag_can_con(this, pfunc, pdata);
-	}
+  int
+  setDiagWTM(uint8_t quality = 0xff) noexcept {
+    return co_wtm_set_diag_wtm(this, quality);
+  }
 
-	void
-	setDiagCANCon(co_wtm_diag_can_con_t* func, void* data) noexcept
-	{
-		co_wtm_set_diag_can_con(this, func, data);
-	}
+  void
+  getDiagCANCon(co_wtm_diag_can_con_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_diag_can_con(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setDiagCANCon(F* f) noexcept
-	{
-		setDiagCANCon(&c_obj_call<co_wtm_diag_can_con_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDiagCANCon(co_wtm_diag_can_con_t* func, void* data) noexcept {
+    co_wtm_set_diag_can_con(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_diag_can_con_t*, C>::type M>
-	void
-	setDiagCANCon(C* obj) noexcept
-	{
-		setDiagCANCon(&c_mem_call<
-					co_wtm_diag_can_con_t*, C, M
-				>::function, static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDiagCANCon(F* f) noexcept {
+    setDiagCANCon(&c_obj_call<co_wtm_diag_can_con_t*, F>::function,
+                  static_cast<void*>(f));
+  }
 
-	void
-	getDiagWTMCon(co_wtm_diag_wtm_con_t** pfunc, void** pdata) const
-			noexcept
-	{
-		co_wtm_get_diag_wtm_con(this, pfunc, pdata);
-	}
+  template <class C, typename c_mem_fn<co_wtm_diag_can_con_t*, C>::type M>
+  void
+  setDiagCANCon(C* obj) noexcept {
+    setDiagCANCon(&c_mem_call<co_wtm_diag_can_con_t*, C, M>::function,
+                  static_cast<void*>(obj));
+  }
 
-	void
-	setDiagWTMCon(co_wtm_diag_wtm_con_t* func, void* data) noexcept
-	{
-		co_wtm_set_diag_wtm_con(this, func, data);
-	}
+  void
+  getDiagWTMCon(co_wtm_diag_wtm_con_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_diag_wtm_con(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setDiagWTMCon(F* f) noexcept
-	{
-		setDiagWTMCon(&c_obj_call<co_wtm_diag_wtm_con_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDiagWTMCon(co_wtm_diag_wtm_con_t* func, void* data) noexcept {
+    co_wtm_set_diag_wtm_con(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_diag_wtm_con_t*, C>::type M>
-	void
-	setDiagWTMCon(C* obj) noexcept
-	{
-		setDiagWTMCon(&c_mem_call<
-					co_wtm_diag_wtm_con_t*, C, M
-				>::function, static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDiagWTMCon(F* f) noexcept {
+    setDiagWTMCon(&c_obj_call<co_wtm_diag_wtm_con_t*, F>::function,
+                  static_cast<void*>(f));
+  }
 
-	void
-	getDiagCANInd(co_wtm_diag_can_ind_t** pfunc, void** pdata) const
-			noexcept
-	{
-		co_wtm_get_diag_can_ind(this, pfunc, pdata);
-	}
+  template <class C, typename c_mem_fn<co_wtm_diag_wtm_con_t*, C>::type M>
+  void
+  setDiagWTMCon(C* obj) noexcept {
+    setDiagWTMCon(&c_mem_call<co_wtm_diag_wtm_con_t*, C, M>::function,
+                  static_cast<void*>(obj));
+  }
 
-	void
-	setDiagCANInd(co_wtm_diag_can_ind_t* func, void* data) noexcept
-	{
-		co_wtm_set_diag_can_ind(this, func, data);
-	}
+  void
+  getDiagCANInd(co_wtm_diag_can_ind_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_diag_can_ind(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setDiagCANInd(F* f) noexcept
-	{
-		setDiagCANInd(&c_obj_call<co_wtm_diag_can_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDiagCANInd(co_wtm_diag_can_ind_t* func, void* data) noexcept {
+    co_wtm_set_diag_can_ind(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_diag_can_ind_t*, C>::type M>
-	void
-	setDiagCANInd(C* obj) noexcept
-	{
-		setDiagCANInd(&c_mem_call<
-					co_wtm_diag_can_ind_t*, C, M
-				>::function, static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDiagCANInd(F* f) noexcept {
+    setDiagCANInd(&c_obj_call<co_wtm_diag_can_ind_t*, F>::function,
+                  static_cast<void*>(f));
+  }
 
-	void
-	getDiagWTMInd(co_wtm_diag_wtm_ind_t** pfunc, void** pdata) const
-			noexcept
-	{
-		co_wtm_get_diag_wtm_ind(this, pfunc, pdata);
-	}
+  template <class C, typename c_mem_fn<co_wtm_diag_can_ind_t*, C>::type M>
+  void
+  setDiagCANInd(C* obj) noexcept {
+    setDiagCANInd(&c_mem_call<co_wtm_diag_can_ind_t*, C, M>::function,
+                  static_cast<void*>(obj));
+  }
 
-	void
-	setDiagWTMInd(co_wtm_diag_wtm_ind_t* func, void* data) noexcept
-	{
-		co_wtm_set_diag_wtm_ind(this, func, data);
-	}
+  void
+  getDiagWTMInd(co_wtm_diag_wtm_ind_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_diag_wtm_ind(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setDiagWTMInd(F* f) noexcept
-	{
-		setDiagWTMInd(&c_obj_call<co_wtm_diag_wtm_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDiagWTMInd(co_wtm_diag_wtm_ind_t* func, void* data) noexcept {
+    co_wtm_set_diag_wtm_ind(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_diag_wtm_ind_t*, C>::type M>
-	void
-	setDiagWTMInd(C* obj) noexcept
-	{
-		setDiagWTMInd(&c_mem_call<
-					co_wtm_diag_wtm_ind_t*, C, M
-				>::function, static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDiagWTMInd(F* f) noexcept {
+    setDiagWTMInd(&c_obj_call<co_wtm_diag_wtm_ind_t*, F>::function,
+                  static_cast<void*>(f));
+  }
 
-	void
-	getDiagACInd(co_wtm_diag_ac_ind_t** pfunc, void** pdata) const noexcept
-	{
-		co_wtm_get_diag_ac_ind(this, pfunc, pdata);
-	}
+  template <class C, typename c_mem_fn<co_wtm_diag_wtm_ind_t*, C>::type M>
+  void
+  setDiagWTMInd(C* obj) noexcept {
+    setDiagWTMInd(&c_mem_call<co_wtm_diag_wtm_ind_t*, C, M>::function,
+                  static_cast<void*>(obj));
+  }
 
-	void
-	setDiagACInd(co_wtm_diag_ac_ind_t* func, void* data) noexcept
-	{
-		co_wtm_set_diag_ac_ind(this, func, data);
-	}
+  void
+  getDiagACInd(co_wtm_diag_ac_ind_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_diag_ac_ind(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setDiagACInd(F* f) noexcept
-	{
-		setDiagACInd(&c_obj_call<co_wtm_diag_ac_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDiagACInd(co_wtm_diag_ac_ind_t* func, void* data) noexcept {
+    co_wtm_set_diag_ac_ind(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_diag_ac_ind_t*, C>::type M>
-	void
-	setDiagACInd(C* obj) noexcept
-	{
-		setDiagACInd(&c_mem_call<co_wtm_diag_ac_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDiagACInd(F* f) noexcept {
+    setDiagACInd(&c_obj_call<co_wtm_diag_ac_ind_t*, F>::function,
+                 static_cast<void*>(f));
+  }
 
-	void
-	recv(const void* buf, size_t nbytes) noexcept
-	{
-		co_wtm_recv(this, buf, nbytes);
-	}
+  template <class C, typename c_mem_fn<co_wtm_diag_ac_ind_t*, C>::type M>
+  void
+  setDiagACInd(C* obj) noexcept {
+    setDiagACInd(&c_mem_call<co_wtm_diag_ac_ind_t*, C, M>::function,
+                 static_cast<void*>(obj));
+  }
 
-	void
-	getRecvFunc(co_wtm_recv_func_t** pfunc, void** pdata) const noexcept
-	{
-		co_wtm_get_recv_func(this, pfunc, pdata);
-	}
+  void
+  recv(const void* buf, size_t nbytes) noexcept {
+    co_wtm_recv(this, buf, nbytes);
+  }
 
-	void
-	setRecvFunc(co_wtm_recv_func_t* func, void* data) noexcept
-	{
-		co_wtm_set_recv_func(this, func, data);
-	}
+  void
+  getRecvFunc(co_wtm_recv_func_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_recv_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setRecvFunc(F* f) noexcept
-	{
-		setRecvFunc(&c_obj_call<co_wtm_recv_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setRecvFunc(co_wtm_recv_func_t* func, void* data) noexcept {
+    co_wtm_set_recv_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_recv_func_t*, C>::type M>
-	void
-	setRecvFunc(C* obj) noexcept
-	{
-		setRecvFunc(&c_mem_call<co_wtm_recv_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setRecvFunc(F* f) noexcept {
+    setRecvFunc(&c_obj_call<co_wtm_recv_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-	int
-	getTime(uint8_t nif, timespec* tp) const noexcept
-	{
-		return co_wtm_get_time(this, nif, tp);
-	}
+  template <class C, typename c_mem_fn<co_wtm_recv_func_t*, C>::type M>
+  void
+  setRecvFunc(C* obj) noexcept {
+    setRecvFunc(&c_mem_call<co_wtm_recv_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
 
-	int
-	setTime(uint8_t nif, const timespec& tp) noexcept
-	{
-		return co_wtm_set_time(this, nif, &tp);
-	}
+  int
+  getTime(uint8_t nif, timespec* tp) const noexcept {
+    return co_wtm_get_time(this, nif, tp);
+  }
 
-	int
-	send(uint8_t nif, const can_msg& msg) noexcept
-	{
-		return co_wtm_send(this, nif, &msg);
-	}
+  int
+  setTime(uint8_t nif, const timespec& tp) noexcept {
+    return co_wtm_set_time(this, nif, &tp);
+  }
 
-	int sendAlive() noexcept { return co_wtm_send_alive(this); }
+  int
+  send(uint8_t nif, const can_msg& msg) noexcept {
+    return co_wtm_send(this, nif, &msg);
+  }
 
-	int
-	sendDiagCANReq(uint8_t nif) noexcept
-	{
-		return co_wtm_send_diag_can_req(this, nif);
-	}
+  int
+  sendAlive() noexcept {
+    return co_wtm_send_alive(this);
+  }
 
-	int
-	sendDiagWTMReq(uint8_t nif) noexcept
-	{
-		return co_wtm_send_diag_wtm_req(this, nif);
-	}
+  int
+  sendDiagCANReq(uint8_t nif) noexcept {
+    return co_wtm_send_diag_can_req(this, nif);
+  }
 
-	int
-	sendDiagCANRst(uint8_t nif) noexcept
-	{
-		return co_wtm_send_diag_can_rst(this, nif);
-	}
+  int
+  sendDiagWTMReq(uint8_t nif) noexcept {
+    return co_wtm_send_diag_wtm_req(this, nif);
+  }
 
-	int
-	sendDiagWTMRst(uint8_t nif) noexcept
-	{
-		return co_wtm_send_diag_wtm_rst(this, nif);
-	}
+  int
+  sendDiagCANRst(uint8_t nif) noexcept {
+    return co_wtm_send_diag_can_rst(this, nif);
+  }
 
-	int
-	sendDiagAC(uint32_t ac) noexcept
-	{
-		return co_wtm_send_diag_ac(this, ac);
-	}
+  int
+  sendDiagWTMRst(uint8_t nif) noexcept {
+    return co_wtm_send_diag_wtm_rst(this, nif);
+  }
 
-	int flush() noexcept { return co_wtm_flush(this); }
+  int
+  sendDiagAC(uint32_t ac) noexcept {
+    return co_wtm_send_diag_ac(this, ac);
+  }
 
-	void
-	getSendFunc(co_wtm_send_func_t** pfunc, void** pdata) const noexcept
-	{
-		co_wtm_get_send_func(this, pfunc, pdata);
-	}
+  int
+  flush() noexcept {
+    return co_wtm_flush(this);
+  }
 
-	void
-	setSendFunc(co_wtm_send_func_t* func, void* data) noexcept
-	{
-		co_wtm_set_send_func(this, func, data);
-	}
+  void
+  getSendFunc(co_wtm_send_func_t** pfunc, void** pdata) const noexcept {
+    co_wtm_get_send_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setSendFunc(F* f) noexcept
-	{
-		setSendFunc(&c_obj_call<co_wtm_send_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setSendFunc(co_wtm_send_func_t* func, void* data) noexcept {
+    co_wtm_set_send_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<co_wtm_send_func_t*, C>::type M>
-	void
-	setSendFunc(C* obj) noexcept
-	{
-		setSendFunc(&c_mem_call<co_wtm_send_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setSendFunc(F* f) noexcept {
+    setSendFunc(&c_obj_call<co_wtm_send_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-protected:
-	~COWTM() {}
+  template <class C, typename c_mem_fn<co_wtm_send_func_t*, C>::type M>
+  void
+  setSendFunc(C* obj) noexcept {
+    setSendFunc(&c_mem_call<co_wtm_send_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
+
+ protected:
+  ~COWTM() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

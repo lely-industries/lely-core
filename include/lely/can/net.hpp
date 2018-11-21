@@ -29,15 +29,21 @@
 #include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 
-namespace lely { class CANNet; }
+namespace lely {
+class CANNet;
+}
 /// An opaque CAN network interface type.
 typedef lely::CANNet can_net_t;
 
-namespace lely { class CANTimer; }
+namespace lely {
+class CANTimer;
+}
 /// An opaque CAN timer type.
 typedef lely::CANTimer can_timer_t;
 
-namespace lely { class CANRecv; }
+namespace lely {
+class CANRecv;
+}
 /// An opaque CAN frame receiver type.
 typedef lely::CANRecv can_recv_t;
 
@@ -48,241 +54,260 @@ namespace lely {
 /// The attributes of #can_net_t required by #lely::CANNet.
 template <>
 struct c_type_traits<__can_net> {
-	typedef __can_net value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __can_net value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __can_net_alloc(); }
-	static void free(void* ptr) noexcept { __can_net_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __can_net_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __can_net_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __can_net_init(p); }
-	static void fini(pointer p) noexcept { __can_net_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __can_net_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __can_net_fini(p);
+  }
 };
 
 /// An opaque CAN network interface type.
-class CANNet: public incomplete_c_type<__can_net> {
-	typedef incomplete_c_type<__can_net> c_base;
-public:
-	CANNet(): c_base() {}
+class CANNet : public incomplete_c_type<__can_net> {
+  typedef incomplete_c_type<__can_net> c_base;
 
-	void
-	getTime(timespec* tp) const noexcept
-	{
-		can_net_get_time(this, tp);
-	}
+ public:
+  CANNet() : c_base() {}
 
-	int
-	setTime(const timespec& tp) noexcept
-	{
-		return can_net_set_time(this, &tp);
-	}
+  void
+  getTime(timespec* tp) const noexcept {
+    can_net_get_time(this, tp);
+  }
 
-	void
-	getNextFunc(can_timer_func_t** pfunc, void** pdata) const noexcept
-	{
-		can_net_get_next_func(this, pfunc, pdata);
-	}
+  int
+  setTime(const timespec& tp) noexcept {
+    return can_net_set_time(this, &tp);
+  }
 
-	void
-	setNextFunc(can_timer_func_t* func, void* data) noexcept
-	{
-		can_net_set_next_func(this, func, data);
-	}
+  void
+  getNextFunc(can_timer_func_t** pfunc, void** pdata) const noexcept {
+    can_net_get_next_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setNextFunc(F* f) noexcept
-	{
-		setNextFunc(&c_obj_call<can_timer_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setNextFunc(can_timer_func_t* func, void* data) noexcept {
+    can_net_set_next_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<can_timer_func_t*, C>::type M>
-	void
-	setNextFunc(C* obj) noexcept
-	{
-		setNextFunc(&c_mem_call<can_timer_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setNextFunc(F* f) noexcept {
+    setNextFunc(&c_obj_call<can_timer_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-	int
-	recv(const can_msg& msg) noexcept
-	{
-		return can_net_recv(this, &msg);
-	}
+  template <class C, typename c_mem_fn<can_timer_func_t*, C>::type M>
+  void
+  setNextFunc(C* obj) noexcept {
+    setNextFunc(&c_mem_call<can_timer_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
 
-	int
-	send(const can_msg& msg) noexcept
-	{
-		return can_net_send(this, &msg);
-	}
+  int
+  recv(const can_msg& msg) noexcept {
+    return can_net_recv(this, &msg);
+  }
 
-	void
-	getSendFunc(can_send_func_t** pfunc, void** pdata) const noexcept
-	{
-		can_net_get_send_func(this, pfunc, pdata);
-	}
+  int
+  send(const can_msg& msg) noexcept {
+    return can_net_send(this, &msg);
+  }
 
-	void
-	setSendFunc(can_send_func_t* func, void* data) noexcept
-	{
-		can_net_set_send_func(this, func, data);
-	}
+  void
+  getSendFunc(can_send_func_t** pfunc, void** pdata) const noexcept {
+    can_net_get_send_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setSendFunc(F* f) noexcept
-	{
-		setSendFunc(&c_obj_call<can_send_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setSendFunc(can_send_func_t* func, void* data) noexcept {
+    can_net_set_send_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<can_send_func_t*, C>::type M>
-	void
-	setSendFunc(C* obj) noexcept
-	{
-		setSendFunc(&c_mem_call<can_send_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setSendFunc(F* f) noexcept {
+    setSendFunc(&c_obj_call<can_send_func_t*, F>::function,
+                static_cast<void*>(f));
+  }
 
-protected:
-	~CANNet() {}
+  template <class C, typename c_mem_fn<can_send_func_t*, C>::type M>
+  void
+  setSendFunc(C* obj) noexcept {
+    setSendFunc(&c_mem_call<can_send_func_t*, C, M>::function,
+                static_cast<void*>(obj));
+  }
+
+ protected:
+  ~CANNet() {}
 };
 
 /// The attributes of #can_timer_t required by #lely::CANTimer.
 template <>
 struct c_type_traits<__can_timer> {
-	typedef __can_timer value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __can_timer value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __can_timer_alloc(); }
-	static void free(void* ptr) noexcept { __can_timer_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __can_timer_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __can_timer_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __can_timer_init(p); }
-	static void fini(pointer p) noexcept { __can_timer_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __can_timer_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __can_timer_fini(p);
+  }
 };
 
 /// An opaque CAN timer type.
-class CANTimer: public incomplete_c_type<__can_timer> {
-	typedef incomplete_c_type<__can_timer> c_base;
-public:
-	CANTimer(): c_base() {}
+class CANTimer : public incomplete_c_type<__can_timer> {
+  typedef incomplete_c_type<__can_timer> c_base;
 
-	void
-	getFunc(can_timer_func_t** pfunc, void** pdata) const noexcept
-	{
-		can_timer_get_func(this, pfunc, pdata);
-	}
+ public:
+  CANTimer() : c_base() {}
 
-	void
-	setFunc(can_timer_func_t* func, void* data) noexcept
-	{
-		can_timer_set_func(this, func, data);
-	}
+  void
+  getFunc(can_timer_func_t** pfunc, void** pdata) const noexcept {
+    can_timer_get_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setFunc(F* f) noexcept
-	{
-		setFunc(&c_obj_call<can_timer_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setFunc(can_timer_func_t* func, void* data) noexcept {
+    can_timer_set_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<can_timer_func_t*, C>::type M>
-	void
-	setFunc(C* obj) noexcept
-	{
-		setFunc(&c_mem_call<can_timer_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setFunc(F* f) noexcept {
+    setFunc(&c_obj_call<can_timer_func_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	start(CANNet& net, const timespec* start = 0,
-			const timespec* interval = 0) noexcept
-	{
-		can_timer_start(this, &net, start, interval);
-	}
+  template <class C, typename c_mem_fn<can_timer_func_t*, C>::type M>
+  void
+  setFunc(C* obj) noexcept {
+    setFunc(&c_mem_call<can_timer_func_t*, C, M>::function,
+            static_cast<void*>(obj));
+  }
 
-	void stop() noexcept { can_timer_stop(this); }
+  void
+  start(CANNet& net, const timespec* start = 0,
+        const timespec* interval = 0) noexcept {
+    can_timer_start(this, &net, start, interval);
+  }
 
-	void
-	timeout(CANNet& net, int timeout) noexcept
-	{
-		can_timer_timeout(this, &net, timeout);
-	}
+  void
+  stop() noexcept {
+    can_timer_stop(this);
+  }
 
-protected:
-	~CANTimer() {}
+  void
+  timeout(CANNet& net, int timeout) noexcept {
+    can_timer_timeout(this, &net, timeout);
+  }
+
+ protected:
+  ~CANTimer() {}
 };
 
 /// The attributes of #can_recv_t required by #lely::CANRecv.
 template <>
 struct c_type_traits<__can_recv> {
-	typedef __can_recv value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __can_recv value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __can_recv_alloc(); }
-	static void free(void* ptr) noexcept { __can_recv_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __can_recv_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __can_recv_free(ptr);
+  }
 
-	static pointer init(pointer p) noexcept { return __can_recv_init(p); }
-	static void fini(pointer p) noexcept { __can_recv_fini(p); }
+  static pointer
+  init(pointer p) noexcept {
+    return __can_recv_init(p);
+  }
+  static void
+  fini(pointer p) noexcept {
+    __can_recv_fini(p);
+  }
 };
 
 /// An opaque CAN frame receiver type.
-class CANRecv: public incomplete_c_type<__can_recv> {
-	typedef incomplete_c_type<__can_recv> c_base;
-public:
-	CANRecv(): c_base() {}
+class CANRecv : public incomplete_c_type<__can_recv> {
+  typedef incomplete_c_type<__can_recv> c_base;
 
-	void
-	getFunc(can_recv_func_t** pfunc, void** pdata) const noexcept
-	{
-		can_recv_get_func(this, pfunc, pdata);
-	}
+ public:
+  CANRecv() : c_base() {}
 
-	void
-	setFunc(can_recv_func_t* func, void* data) noexcept
-	{
-		can_recv_set_func(this, func, data);
-	}
+  void
+  getFunc(can_recv_func_t** pfunc, void** pdata) const noexcept {
+    can_recv_get_func(this, pfunc, pdata);
+  }
 
-	template <class F>
-	void
-	setFunc(F* f) noexcept
-	{
-		setFunc(&c_obj_call<can_recv_func_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setFunc(can_recv_func_t* func, void* data) noexcept {
+    can_recv_set_func(this, func, data);
+  }
 
-	template <class C, typename c_mem_fn<can_recv_func_t*, C>::type M>
-	void
-	setFunc(C* obj) noexcept
-	{
-		setFunc(&c_mem_call<can_recv_func_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setFunc(F* f) noexcept {
+    setFunc(&c_obj_call<can_recv_func_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	start(CANNet& net, uint32_t id, uint8_t flags = 0) noexcept
-	{
-		can_recv_start(this, &net, id, flags);
-	}
+  template <class C, typename c_mem_fn<can_recv_func_t*, C>::type M>
+  void
+  setFunc(C* obj) noexcept {
+    setFunc(&c_mem_call<can_recv_func_t*, C, M>::function,
+            static_cast<void*>(obj));
+  }
 
-	void stop() noexcept { can_recv_stop(this); }
+  void
+  start(CANNet& net, uint32_t id, uint8_t flags = 0) noexcept {
+    can_recv_start(this, &net, id, flags);
+  }
 
-protected:
-	~CANRecv() {}
+  void
+  stop() noexcept {
+    can_recv_stop(this);
+  }
+
+ protected:
+  ~CANRecv() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

@@ -34,49 +34,55 @@ namespace lely {
 /// An abstract factory.
 template <class T>
 class factory {
-public:
-	typedef T value_type;
+ public:
+  typedef T value_type;
 
 #if __cplusplus >= 201103L
-	virtual ~factory() = default;
+  virtual ~factory() = default;
 #else
-	virtual ~factory() {}
+  virtual ~factory() {}
 #endif
 
-	virtual void destroy(T) = 0;
+  virtual void destroy(T) = 0;
 };
 
 /// An abstract factory for heap-allocated objects.
 template <class T>
 class factory<T*> {
-public:
-	typedef T* value_type;
+ public:
+  typedef T* value_type;
 
-	/**
-	 * The deleter used by `shared_ptr` and `unique_ptr` to delete objects
-	 * created with this factory.
-	 */
-	class deleter_type {
-		friend class factory;
+  /**
+   * The deleter used by `shared_ptr` and `unique_ptr` to delete objects
+   * created with this factory.
+   */
+  class deleter_type {
+    friend class factory;
 
-	public:
-		void operator()(T* p) const noexcept { m_f.destroy(p); }
+   public:
+    void
+    operator()(T* p) const noexcept {
+      m_f.destroy(p);
+    }
 
-	private:
-		deleter_type(factory& f): m_f(f) {}
+   private:
+    deleter_type(factory& f) : m_f(f) {}
 
-		factory& m_f;
-	};
+    factory& m_f;
+  };
 
 #if __cplusplus >= 201103L
-	virtual ~factory() = default;
+  virtual ~factory() = default;
 #else
-	virtual ~factory() {}
+  virtual ~factory() {}
 #endif
 
-	virtual void destroy(T*) noexcept = 0;
+  virtual void destroy(T*) noexcept = 0;
 
-	deleter_type get_deleter() const noexcept { return deleter_type(this); }
+  deleter_type
+  get_deleter() const noexcept {
+    return deleter_type(this);
+  }
 };
 
 #if __cplusplus >= 201103L
@@ -86,25 +92,22 @@ public:
  * an arbitrary number of arguments.
  */
 template <class R, class... Args>
-class factory<R*(Args...)>: public virtual factory<R*> {
-public:
-	using typename factory<R*>::deleter_type;
+class factory<R*(Args...)> : public virtual factory<R*> {
+ public:
+  using typename factory<R*>::deleter_type;
 
-	virtual R* create(Args...) = 0;
+  virtual R* create(Args...) = 0;
 
-	::std::shared_ptr<R>
-	make_shared(Args... args)
-	{
-		return ::std::shared_ptr<R>(create(args...),
-				factory::get_deleter());
-	}
+  ::std::shared_ptr<R>
+  make_shared(Args... args) {
+    return ::std::shared_ptr<R>(create(args...), factory::get_deleter());
+  }
 
-	::std::unique_ptr<R, deleter_type>
-	make_unique(Args... args)
-	{
-		return ::std::unique_ptr<R, deleter_type>(create(args...),
-				factory::get_deleter());
-	}
+  ::std::unique_ptr<R, deleter_type>
+  make_unique(Args... args) {
+    return ::std::unique_ptr<R, deleter_type>(create(args...),
+                                              factory::get_deleter());
+  }
 };
 
 #else
@@ -114,17 +117,15 @@ public:
  * without arguments.
  */
 template <class R>
-class factory<R*()>: public virtual factory<R*> {
-public:
-	virtual R* create() = 0;
+class factory<R*()> : public virtual factory<R*> {
+ public:
+  virtual R* create() = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared()
-	{
-		return ::std::tr1::shared_ptr<R>(create(),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared() {
+    return ::std::tr1::shared_ptr<R>(create(), factory::get_deleter());
+  }
 #endif
 };
 
@@ -133,17 +134,15 @@ public:
  * one argument.
  */
 template <class R, class T0>
-class factory<R*(T0)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0) = 0;
+class factory<R*(T0)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0) {
+    return ::std::tr1::shared_ptr<R>(create(t0), factory::get_deleter());
+  }
 #endif
 };
 
@@ -152,17 +151,15 @@ public:
  * two arguments.
  */
 template <class R, class T0, class T1>
-class factory<R*(T0, T1)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1) = 0;
+class factory<R*(T0, T1)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0, t1),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1), factory::get_deleter());
+  }
 #endif
 };
 
@@ -171,17 +168,16 @@ public:
  * three arguments.
  */
 template <class R, class T0, class T1, class T2>
-class factory<R*(T0, T1, T2)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2) = 0;
+class factory<R*(T0, T1, T2)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0, t1, t2),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -190,17 +186,16 @@ public:
  * four arguments.
  */
 template <class R, class T0, class T1, class T2, class T3>
-class factory<R*(T0, T1, T2, T3)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3) = 0;
+class factory<R*(T0, T1, T2, T3)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -209,17 +204,16 @@ public:
  * five arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4>
-class factory<R*(T0, T1, T2, T3, T4)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4) = 0;
+class factory<R*(T0, T1, T2, T3, T4)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -228,17 +222,16 @@ public:
  * six arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5>
-class factory<R*(T0, T1, T2, T3, T4, T5)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4, T5) = 0;
+class factory<R*(T0, T1, T2, T3, T4, T5)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4, T5) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
-	{
-		return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4, t5),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4, t5),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -247,19 +240,17 @@ public:
  * seven arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6>
-class factory<R*(T0, T1, T2, T3, T4, T5, T6)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4, T5, T6) = 0;
+          class T6>
+class factory<R*(T0, T1, T2, T3, T4, T5, T6)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4, T5, T6) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6)
-	{
-		return ::std::tr1::shared_ptr<R>(
-				create(t0, t1, t2, t3, t4, t5, t6),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4, t5, t6),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -268,19 +259,17 @@ public:
  * eight arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7>
-class factory<R*(T0, T1, T2, T3, T4, T5, T6, T7)>: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7) = 0;
+          class T6, class T7>
+class factory<R*(T0, T1, T2, T3, T4, T5, T6, T7)> : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7)
-	{
-		return ::std::tr1::shared_ptr<R>(
-				create(t0, t1, t2, t3, t4, t5, t6, t7),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4, t5, t6, t7),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -289,21 +278,18 @@ public:
  * nine arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8>
+          class T6, class T7, class T8>
 class factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
-: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7, T8) = 0;
+    : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7, T8) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
-			T8 t8)
-	{
-		return ::std::tr1::shared_ptr<R>(
-				create(t0, t1, t2, t3, t4, t5, t6, t7, t8),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) {
+    return ::std::tr1::shared_ptr<R>(create(t0, t1, t2, t3, t4, t5, t6, t7, t8),
+                                     factory::get_deleter());
+  }
 #endif
 };
 
@@ -312,111 +298,133 @@ public:
  * ten arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8, class T9>
+          class T6, class T7, class T8, class T9>
 class factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
-: public virtual factory<R*> {
-public:
-	virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9) = 0;
+    : public virtual factory<R*> {
+ public:
+  virtual R* create(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9) = 0;
 
 #if defined(__GNUC__) || defined(_MSC_VER)
-	::std::tr1::shared_ptr<R>
-	make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
-			T8 t8, T9 t9)
-	{
-		return ::std::tr1::shared_ptr<R>(
-				create(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9),
-				factory::get_deleter());
-	}
+  ::std::tr1::shared_ptr<R>
+  make_shared(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
+              T9 t9) {
+    return ::std::tr1::shared_ptr<R>(
+        create(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9), factory::get_deleter());
+  }
 #endif
 };
 
-#endif // __cplusplus >= 201103L
+#endif  // __cplusplus >= 201103L
 
 namespace impl {
 
 /// Removes the arguments from the given function type.
-template <class T> struct remove_arguments { typedef T type; };
+template <class T>
+struct remove_arguments {
+  typedef T type;
+};
 
 #if __cplusplus >= 201103L
 
 /// Removes the arguments from the given function type.
 template <class R, class... Args>
-struct remove_arguments<R(Args...)> { using type = R; };
+struct remove_arguments<R(Args...)> {
+  using type = R;
+};
 
 #else
 
 /// Removes the arguments from the given function type.
 template <class R>
-struct remove_arguments<R()> { typedef R type; };
+struct remove_arguments<R()> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0>
-struct remove_arguments<R(T0)> { typedef R type; };
+struct remove_arguments<R(T0)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1>
-struct remove_arguments<R(T0, T1)> { typedef R type; };
+struct remove_arguments<R(T0, T1)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2>
-struct remove_arguments<R(T0, T1, T2)> { typedef R type; };
+struct remove_arguments<R(T0, T1, T2)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3>
-struct remove_arguments<R(T0, T1, T2, T3)> { typedef R type; };
+struct remove_arguments<R(T0, T1, T2, T3)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4>
-struct remove_arguments<R(T0, T1, T2, T3, T4)> { typedef R type; };
+struct remove_arguments<R(T0, T1, T2, T3, T4)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5>
-struct remove_arguments<R(T0, T1, T2, T3, T4, T5)> { typedef R type; };
+struct remove_arguments<R(T0, T1, T2, T3, T4, T5)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6>
-struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6)> { typedef R type; };
+          class T6>
+struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7>
-struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7)> { typedef R type; };
+          class T6, class T7>
+struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7)> {
+  typedef R type;
+};
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8>
+          class T6, class T7, class T8>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
-	typedef R type;
+  typedef R type;
 };
 
 /// Removes the arguments from the given function type.
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8, class T9>
+          class T6, class T7, class T8, class T9>
 struct remove_arguments<R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
-	typedef R type;
+  typedef R type;
 };
 
-#endif // __cplusplus >= 201103L
+#endif  // __cplusplus >= 201103L
 
-} // impl
+}  // namespace impl
 
 /// The default factory.
-template <class, class> class default_factory;
+template <class, class>
+class default_factory;
 
 /// The default factory for heap-allocated objects.
 template <class T, class U>
-class default_factory<T*, U*>: public virtual factory<U*> {
-public:
-	virtual void
+class default_factory<T*, U*> : public virtual factory<U*> {
+ public:
+  virtual void
 #if __cplusplus >= 201103L
-	destroy(U* p) noexcept override
+  destroy(U* p) noexcept override
 #else
-	destroy(U* p)
+  destroy(U* p)
 #endif
-	{
-		delete p;
-	}
+  {
+    delete p;
+  }
 };
 
 #if __cplusplus >= 201103L
@@ -426,10 +434,13 @@ public:
  * an arbitrary number of arguments.
  */
 template <class R, class... Args, class U>
-class default_factory<R*(Args...), U*>
-: public default_factory<R*, U*>, public factory<U*(Args...)> {
-public:
-	virtual U* create(Args... args) override { return new R(args...); }
+class default_factory<R*(Args...), U*> : public default_factory<R*, U*>,
+                                         public factory<U*(Args...)> {
+ public:
+  virtual U*
+  create(Args... args) override {
+    return new R(args...);
+  }
 };
 
 #else
@@ -439,10 +450,13 @@ public:
  * without arguments.
  */
 template <class R, class U>
-class default_factory<R*(), U*>
-: public default_factory<R*, U*>, public factory<U*()> {
-public:
-	virtual U* create() { return new R(); }
+class default_factory<R*(), U*> : public default_factory<R*, U*>,
+                                  public factory<U*()> {
+ public:
+  virtual U*
+  create() {
+    return new R();
+  }
 };
 
 /**
@@ -450,10 +464,13 @@ public:
  * one argument.
  */
 template <class R, class T0, class U>
-class default_factory<R*(T0), U*>
-: public default_factory<R*, U*>, public factory<U*(T0)> {
-public:
-	virtual U* create(T0 t0) { return new R(t0); }
+class default_factory<R*(T0), U*> : public default_factory<R*, U*>,
+                                    public factory<U*(T0)> {
+ public:
+  virtual U*
+  create(T0 t0) {
+    return new R(t0);
+  }
 };
 
 /**
@@ -461,10 +478,13 @@ public:
  * two arguments.
  */
 template <class R, class T0, class T1, class U>
-class default_factory<R*(T0, T1), U*>
-: public default_factory<R*, U*>, public factory<U*(T0, T1)> {
-public:
-	virtual U* create(T0 t0, T1 t1) { return new R(t0, t1); }
+class default_factory<R*(T0, T1), U*> : public default_factory<R*, U*>,
+                                        public factory<U*(T0, T1)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1) {
+    return new R(t0, t1);
+  }
 };
 
 /**
@@ -472,10 +492,13 @@ public:
  * three arguments.
  */
 template <class R, class T0, class T1, class T2, class U>
-class default_factory<R*(T0, T1, T2), U*>
-: public default_factory<R*, U>, public factory<U*(T0, T1, T2)> {
-public:
-	virtual U* create(T0 t0, T1 t1, T2 t2) { return new R(t0, t1, t2); }
+class default_factory<R*(T0, T1, T2), U*> : public default_factory<R*, U>,
+                                            public factory<U*(T0, T1, T2)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2) {
+    return new R(t0, t1, t2);
+  }
 };
 
 /**
@@ -484,10 +507,12 @@ public:
  */
 template <class R, class T0, class T1, class T2, class T3, class U>
 class default_factory<R*(T0, T1, T2, T3), U*>
-: public default_factory<R*, U>, public factory<U*(T0, T1, T2, T3)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3) { return new R(t0, t1, t2, t3); }
+    : public default_factory<R*, U>, public factory<U*(T0, T1, T2, T3)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3) {
+    return new R(t0, t1, t2, t3);
+  }
 };
 
 /**
@@ -496,13 +521,12 @@ public:
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class U>
 class default_factory<R*(T0, T1, T2, T3, T4), U*>
-: public default_factory<R*, U>, public factory<U*(T0, T1, T2, T3, T4)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4)
-	{
-		return new R(t0, t1, t2, t3, t4);
-	}
+    : public default_factory<R*, U>, public factory<U*(T0, T1, T2, T3, T4)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4) {
+    return new R(t0, t1, t2, t3, t4);
+  }
 };
 
 /**
@@ -510,15 +534,15 @@ public:
  * six arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class U>
+          class U>
 class default_factory<R*(T0, T1, T2, T3, T4, T5), U*>
-: public default_factory<R*, U>, public factory<U*(T0, T1, T2, T3, T4, T5)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5)
-	{
-		return new R(t0, t1, t2, t3, t4, t5);
-	}
+    : public default_factory<R*, U>,
+      public factory<U*(T0, T1, T2, T3, T4, T5)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
+    return new R(t0, t1, t2, t3, t4, t5);
+  }
 };
 
 /**
@@ -526,16 +550,15 @@ public:
  * seven arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class U>
+          class T6, class U>
 class default_factory<R*(T0, T1, T2, T3, T4, T5, T6), U*>
-: public default_factory<R*, U>
-, public factory<U*(T0, T1, T2, T3, T4, T5, T6)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6)
-	{
-		return new R(t0, t1, t2, t3, t4, t5, t6);
-	}
+    : public default_factory<R*, U>,
+      public factory<U*(T0, T1, T2, T3, T4, T5, T6)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
+    return new R(t0, t1, t2, t3, t4, t5, t6);
+  }
 };
 
 /**
@@ -543,16 +566,15 @@ public:
  * eight arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class U>
+          class T6, class T7, class U>
 class default_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7), U*>
-: public default_factory<R*, U>
-, public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7)
-	{
-		return new R(t0, t1, t2, t3, t4, t5, t6, t7);
-	}
+    : public default_factory<R*, U>,
+      public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7) {
+    return new R(t0, t1, t2, t3, t4, t5, t6, t7);
+  }
 };
 
 /**
@@ -560,16 +582,15 @@ public:
  * nine arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8, class U>
+          class T6, class T7, class T8, class U>
 class default_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8), U*>
-: public default_factory<R*, U>
-, public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8)
-	{
-		return new R(t0, t1, t2, t3, t4, t5, t6, t7, t8);
-	}
+    : public default_factory<R*, U>,
+      public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8) {
+    return new R(t0, t1, t2, t3, t4, t5, t6, t7, t8);
+  }
 };
 
 /**
@@ -577,22 +598,19 @@ public:
  * ten arguments.
  */
 template <class R, class T0, class T1, class T2, class T3, class T4, class T5,
-		class T6, class T7, class T8, class T9, class U>
+          class T6, class T7, class T8, class T9, class U>
 class default_factory<R*(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9), U*>
-: public default_factory<R*, U>
-, public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
-public:
-	virtual U*
-	create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
-			T9 t9)
-	{
-		return new R(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9);
-	}
+    : public default_factory<R*, U>,
+      public factory<U*(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
+ public:
+  virtual U*
+  create(T0 t0, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9) {
+    return new R(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9);
+  }
 };
 
-#endif // __cplusplus >= 201103L
+#endif  // __cplusplus >= 201103L
 
-} // lely
+}  // namespace lely
 
 #endif
-

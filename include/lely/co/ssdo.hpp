@@ -35,55 +35,71 @@ namespace lely {
 /// The attributes of #co_ssdo_t required by #lely::COSSDO.
 template <>
 struct c_type_traits<__co_ssdo> {
-	typedef __co_ssdo value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_ssdo value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_ssdo_alloc(); }
-	static void free(void* ptr) noexcept { __co_ssdo_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_ssdo_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_ssdo_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, CANNet* net, CODev* dev, co_unsigned8_t num) noexcept
-	{
-		return __co_ssdo_init(p, net, dev, num);
-	}
+  static pointer
+  init(pointer p, CANNet* net, CODev* dev, co_unsigned8_t num) noexcept {
+    return __co_ssdo_init(p, net, dev, num);
+  }
 
-	static void fini(pointer p) noexcept { __co_ssdo_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_ssdo_fini(p);
+  }
 };
 
 /// An opaque CANopen Server-SDO service type.
-class COSSDO: public incomplete_c_type<__co_ssdo> {
-	typedef incomplete_c_type<__co_ssdo> c_base;
-public:
-	COSSDO(CANNet* net, CODev* dev, co_unsigned8_t num)
-		: c_base(net, dev, num)
-	{}
+class COSSDO : public incomplete_c_type<__co_ssdo> {
+  typedef incomplete_c_type<__co_ssdo> c_base;
 
-	CANNet* getNet() const noexcept { return co_ssdo_get_net(this); }
-	CODev* getDev() const noexcept { return co_ssdo_get_dev(this); }
-	co_unsigned8_t getNum() const noexcept { return co_ssdo_get_num(this); }
+ public:
+  COSSDO(CANNet* net, CODev* dev, co_unsigned8_t num) : c_base(net, dev, num) {}
 
-	const co_sdo_par&
-	getPar() const noexcept
-	{
-		return *co_ssdo_get_par(this);
-	}
+  CANNet*
+  getNet() const noexcept {
+    return co_ssdo_get_net(this);
+  }
+  CODev*
+  getDev() const noexcept {
+    return co_ssdo_get_dev(this);
+  }
+  co_unsigned8_t
+  getNum() const noexcept {
+    return co_ssdo_get_num(this);
+  }
 
-	int getTimeout() const noexcept { return co_ssdo_get_timeout(this); }
+  const co_sdo_par&
+  getPar() const noexcept {
+    return *co_ssdo_get_par(this);
+  }
 
-	void
-	setTimeout(int timeout) noexcept
-	{
-		co_ssdo_set_timeout(this, timeout);
-	}
+  int
+  getTimeout() const noexcept {
+    return co_ssdo_get_timeout(this);
+  }
 
-protected:
-	~COSSDO() {}
+  void
+  setTimeout(int timeout) noexcept {
+    co_ssdo_set_timeout(this, timeout);
+  }
+
+ protected:
+  ~COSSDO() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

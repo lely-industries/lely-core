@@ -32,14 +32,11 @@
 extern "C" {
 
 _Noreturn void
-__throw_or_abort(const char *what) noexcept
-{
-	(void)what;
+__throw_or_abort(const char* what) noexcept {
+  (void)what;
 
-	::std::abort();
+  ::std::abort();
 }
-
 }
 
 #endif
-

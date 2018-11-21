@@ -35,122 +35,124 @@ namespace lely {
 /// The attributes of #co_rpdo_t required by #lely::CORPDO.
 template <>
 struct c_type_traits<__co_rpdo> {
-	typedef __co_rpdo value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_rpdo value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_rpdo_alloc(); }
-	static void free(void* ptr) noexcept { __co_rpdo_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_rpdo_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_rpdo_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num) noexcept
-	{
-		return __co_rpdo_init(p, net, dev, num);
-	}
+  static pointer
+  init(pointer p, CANNet* net, CODev* dev, co_unsigned16_t num) noexcept {
+    return __co_rpdo_init(p, net, dev, num);
+  }
 
-	static void fini(pointer p) noexcept { __co_rpdo_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_rpdo_fini(p);
+  }
 };
 
 /// An opaque CANopen Receive-PDO service type.
-class CORPDO: public incomplete_c_type<__co_rpdo> {
-	typedef incomplete_c_type<__co_rpdo> c_base;
-public:
-	CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num)
-		: c_base(net, dev, num)
-	{}
+class CORPDO : public incomplete_c_type<__co_rpdo> {
+  typedef incomplete_c_type<__co_rpdo> c_base;
 
-	CANNet* getNet() const noexcept { return co_rpdo_get_net(this); }
-	CODev* getDev() const noexcept { return co_rpdo_get_dev(this); }
+ public:
+  CORPDO(CANNet* net, CODev* dev, co_unsigned16_t num)
+      : c_base(net, dev, num) {}
 
-	co_unsigned16_t
-	getNum() const noexcept
-	{
-		return co_rpdo_get_num(this);
-	}
+  CANNet*
+  getNet() const noexcept {
+    return co_rpdo_get_net(this);
+  }
+  CODev*
+  getDev() const noexcept {
+    return co_rpdo_get_dev(this);
+  }
 
-	const co_pdo_comm_par&
-	getCommPar() const noexcept
-	{
-		return *co_rpdo_get_comm_par(this);
-	}
+  co_unsigned16_t
+  getNum() const noexcept {
+    return co_rpdo_get_num(this);
+  }
 
-	const co_pdo_map_par&
-	getMapPar() const noexcept
-	{
-		return *co_rpdo_get_map_par(this);
-	}
+  const co_pdo_comm_par&
+  getCommPar() const noexcept {
+    return *co_rpdo_get_comm_par(this);
+  }
 
-	void
-	getInd(co_rpdo_ind_t** pind, void** pdata) const noexcept
-	{
-		co_rpdo_get_ind(this, pind, pdata);
-	}
+  const co_pdo_map_par&
+  getMapPar() const noexcept {
+    return *co_rpdo_get_map_par(this);
+  }
 
-	void
-	setInd(co_rpdo_ind_t* ind, void* data) noexcept
-	{
-		co_rpdo_set_ind(this, ind, data);
-	}
+  void
+  getInd(co_rpdo_ind_t** pind, void** pdata) const noexcept {
+    co_rpdo_get_ind(this, pind, pdata);
+  }
 
-	template <class F>
-	void
-	setInd(F* f) noexcept
-	{
-		setInd(&c_obj_call<co_rpdo_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setInd(co_rpdo_ind_t* ind, void* data) noexcept {
+    co_rpdo_set_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_rpdo_ind_t*, C>::type M>
-	void
-	setInd(C* obj) noexcept
-	{
-		setInd(&c_mem_call<co_rpdo_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setInd(F* f) noexcept {
+    setInd(&c_obj_call<co_rpdo_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	getErr(co_rpdo_err_t** perr, void** pdata) const noexcept
-	{
-		co_rpdo_get_err(this, perr, pdata);
-	}
+  template <class C, typename c_mem_fn<co_rpdo_ind_t*, C>::type M>
+  void
+  setInd(C* obj) noexcept {
+    setInd(&c_mem_call<co_rpdo_ind_t*, C, M>::function,
+           static_cast<void*>(obj));
+  }
 
-	void
-	setErr(co_rpdo_err_t* err, void* data) noexcept
-	{
-		co_rpdo_set_err(this, err, data);
-	}
+  void
+  getErr(co_rpdo_err_t** perr, void** pdata) const noexcept {
+    co_rpdo_get_err(this, perr, pdata);
+  }
 
-	template <class F>
-	void
-	setErr(F* f) noexcept
-	{
-		setErr(&c_obj_call<co_rpdo_err_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setErr(co_rpdo_err_t* err, void* data) noexcept {
+    co_rpdo_set_err(this, err, data);
+  }
 
-	template <class C, typename c_mem_fn<co_rpdo_err_t*, C>::type M>
-	void
-	setErr(C* obj) noexcept
-	{
-		setErr(&c_mem_call<co_rpdo_err_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setErr(F* f) noexcept {
+    setErr(&c_obj_call<co_rpdo_err_t*, F>::function, static_cast<void*>(f));
+  }
 
-	int
-	sync(co_unsigned8_t cnt) noexcept
-	{
-		return co_rpdo_sync(this, cnt);
-	}
+  template <class C, typename c_mem_fn<co_rpdo_err_t*, C>::type M>
+  void
+  setErr(C* obj) noexcept {
+    setErr(&c_mem_call<co_rpdo_err_t*, C, M>::function,
+           static_cast<void*>(obj));
+  }
 
-	int rtr() noexcept { return co_rpdo_rtr(this); }
+  int
+  sync(co_unsigned8_t cnt) noexcept {
+    return co_rpdo_sync(this, cnt);
+  }
 
-protected:
-	~CORPDO() {}
+  int
+  rtr() noexcept {
+    return co_rpdo_rtr(this);
+  }
+
+ protected:
+  ~CORPDO() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

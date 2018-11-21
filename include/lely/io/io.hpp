@@ -33,97 +33,105 @@ namespace lely {
 
 /// An I/O device handle.
 class IOHandle {
-public:
-	operator io_handle_t() const noexcept { return m_handle; }
+ public:
+  operator io_handle_t() const noexcept { return m_handle; }
 
-	IOHandle() noexcept : m_handle(IO_HANDLE_ERROR) {}
+  IOHandle() noexcept : m_handle(IO_HANDLE_ERROR) {}
 
-	IOHandle(const IOHandle& handle) noexcept
-		: m_handle(io_handle_acquire(handle.m_handle))
-	{}
-
-#if __cplusplus >= 201103L
-	IOHandle(IOHandle&& handle) noexcept
-		: m_handle(handle.m_handle)
-	{
-		handle.m_handle = IO_HANDLE_ERROR;
-	}
-#endif
-
-	virtual ~IOHandle() { io_handle_release(m_handle); }
-
-	IOHandle&
-	operator=(const IOHandle& handle) noexcept
-	{
-		if (this != &handle) {
-			io_handle_t tmp = io_handle_acquire(handle.m_handle);
-			io_handle_release(m_handle);
-			m_handle = tmp;
-		}
-		return *this;
-	}
+  IOHandle(const IOHandle& handle) noexcept
+      : m_handle(io_handle_acquire(handle.m_handle)) {}
 
 #if __cplusplus >= 201103L
-	IOHandle&
-	operator=(IOHandle&& handle) noexcept
-	{
-		io_handle_release(m_handle);
-		m_handle = handle.m_handle;
-		handle.m_handle = IO_HANDLE_ERROR;
-		return *this;
-	}
+  IOHandle(IOHandle&& handle) noexcept : m_handle(handle.m_handle) {
+    handle.m_handle = IO_HANDLE_ERROR;
+  }
 #endif
 
-	operator bool() const noexcept { return m_handle != IO_HANDLE_ERROR; }
+  virtual ~IOHandle() { io_handle_release(m_handle); }
 
-	bool unique() const noexcept { return !!io_handle_unique(m_handle); }
+  IOHandle&
+  operator=(const IOHandle& handle) noexcept {
+    if (this != &handle) {
+      io_handle_t tmp = io_handle_acquire(handle.m_handle);
+      io_handle_release(m_handle);
+      m_handle = tmp;
+    }
+    return *this;
+  }
 
-	int
-	close() noexcept
-	{
-		io_handle_t handle = m_handle;
-		m_handle = IO_HANDLE_ERROR;
-		return io_close(handle);
-	}
+#if __cplusplus >= 201103L
+  IOHandle&
+  operator=(IOHandle&& handle) noexcept {
+    io_handle_release(m_handle);
+    m_handle = handle.m_handle;
+    handle.m_handle = IO_HANDLE_ERROR;
+    return *this;
+  }
+#endif
 
-	int getType() const noexcept { return io_get_type(*this); }
+  operator bool() const noexcept { return m_handle != IO_HANDLE_ERROR; }
+
+  bool
+  unique() const noexcept {
+    return !!io_handle_unique(m_handle);
+  }
+
+  int
+  close() noexcept {
+    io_handle_t handle = m_handle;
+    m_handle = IO_HANDLE_ERROR;
+    return io_close(handle);
+  }
+
+  int
+  getType() const noexcept {
+    return io_get_type(*this);
+  }
 
 #ifdef _WIN32
-	HANDLE getFd() const noexcept { return io_get_fd(*this); }
+  HANDLE
+  getFd() const noexcept {
+    return io_get_fd(*this);
+  }
 #else
-	int getFd() const noexcept { return io_get_fd(*this); }
+  int
+  getFd() const noexcept {
+    return io_get_fd(*this);
+  }
 #endif
 
-	int getFlags() const noexcept { return io_get_flags(*this); }
+  int
+  getFlags() const noexcept {
+    return io_get_flags(*this);
+  }
 
-	int
-	setFlags(int flags) noexcept
-	{
-		return io_set_flags(*this, flags);
-	}
+  int
+  setFlags(int flags) noexcept {
+    return io_set_flags(*this, flags);
+  }
 
-	ssize_t
-	read(void* buf, size_t nbytes) noexcept
-	{
-		return io_read(*this, buf, nbytes);
-	}
+  ssize_t
+  read(void* buf, size_t nbytes) noexcept {
+    return io_read(*this, buf, nbytes);
+  }
 
-	ssize_t
-	write(const void* buf, size_t nbytes) noexcept
-	{
-		return io_write(*this, buf, nbytes);
-	}
+  ssize_t
+  write(const void* buf, size_t nbytes) noexcept {
+    return io_write(*this, buf, nbytes);
+  }
 
-	int flush() noexcept { return io_flush(*this); }
+  int
+  flush() noexcept {
+    return io_flush(*this);
+  }
 
-protected:
-	IOHandle(io_handle_t handle) noexcept : m_handle(handle) {}
+ protected:
+  IOHandle(io_handle_t handle) noexcept : m_handle(handle) {}
 
-private:
-	io_handle_t m_handle;
+ private:
+  io_handle_t m_handle;
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

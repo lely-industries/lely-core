@@ -32,54 +32,47 @@
 namespace lely {
 
 /// A pipe I/O device handle.
-class IOPipe: public IOHandle {
-public:
+class IOPipe : public IOHandle {
+ public:
 #if __cplusplus >= 201103L
-	IOPipe() = default;
+  IOPipe() = default;
 #else
-	IOPipe() {}
+  IOPipe() {}
 #endif
 
-	IOPipe(const IOPipe& pipe) noexcept : IOHandle(pipe) {}
+  IOPipe(const IOPipe& pipe) noexcept : IOHandle(pipe) {}
 
 #if __cplusplus >= 201103L
-	IOPipe(IOPipe&& pipe) noexcept
-		: IOHandle(::std::forward<IOPipe>(pipe))
-	{}
+  IOPipe(IOPipe&& pipe) noexcept : IOHandle(::std::forward<IOPipe>(pipe)) {}
 #endif
 
-	IOPipe&
-	operator=(const IOPipe& pipe) noexcept
-	{
-		IOHandle::operator=(pipe);
-		return *this;
-	}
+  IOPipe&
+  operator=(const IOPipe& pipe) noexcept {
+    IOHandle::operator=(pipe);
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	IOPipe&
-	operator=(IOPipe&& pipe) noexcept
-	{
-		IOHandle::operator=(::std::forward<IOPipe>(pipe));
-		return *this;
-	}
+  IOPipe&
+  operator=(IOPipe&& pipe) noexcept {
+    IOHandle::operator=(::std::forward<IOPipe>(pipe));
+    return *this;
+  }
 #endif
 
-	static int
-	open(IOPipe pipe[2]) noexcept
-	{
-		io_handle_t handle_vector[2];
-		if (__unlikely(io_open_pipe(handle_vector) == -1))
-			return -1;
-		pipe[0] = IOPipe(handle_vector[0]);
-		pipe[1] = IOPipe(handle_vector[1]);
-		return 0;
-	}
+  static int
+  open(IOPipe pipe[2]) noexcept {
+    io_handle_t handle_vector[2];
+    if (__unlikely(io_open_pipe(handle_vector) == -1)) return -1;
+    pipe[0] = IOPipe(handle_vector[0]);
+    pipe[1] = IOPipe(handle_vector[1]);
+    return 0;
+  }
 
-protected:
-	IOPipe(io_handle_t handle) noexcept : IOHandle(handle) {}
+ protected:
+  IOPipe(io_handle_t handle) noexcept : IOHandle(handle) {}
 };
 
-} //lely
+}  // namespace lely
 
 #endif
-

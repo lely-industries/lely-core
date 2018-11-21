@@ -34,536 +34,501 @@
 
 namespace lely {
 
-template <co_unsigned16_t> struct COSubDnInd;
-template <co_unsigned16_t> struct COSubUpInd;
+template <co_unsigned16_t>
+struct COSubDnInd;
+template <co_unsigned16_t>
+struct COSubUpInd;
 
 /// The attributes of #co_obj_t required by #lely::COObj.
 template <>
 struct c_type_traits<__co_obj> {
-	typedef __co_obj value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_obj value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_obj_alloc(); }
-	static void free(void* ptr) noexcept { __co_obj_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_obj_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_obj_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, co_unsigned16_t idx) noexcept
-	{
-		return __co_obj_init(p, idx);
-	}
+  static pointer
+  init(pointer p, co_unsigned16_t idx) noexcept {
+    return __co_obj_init(p, idx);
+  }
 
-	static void fini(pointer p) noexcept { __co_obj_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_obj_fini(p);
+  }
 };
 
 /// An opaque CANopen object type.
-class COObj: public incomplete_c_type<__co_obj> {
-	typedef incomplete_c_type<__co_obj> c_base;
-public:
-	explicit COObj(co_unsigned16_t idx): c_base(idx) {}
+class COObj : public incomplete_c_type<__co_obj> {
+  typedef incomplete_c_type<__co_obj> c_base;
 
-	CODev* getDev() const noexcept { return co_obj_get_dev(this); }
+ public:
+  explicit COObj(co_unsigned16_t idx) : c_base(idx) {}
 
-	co_unsigned16_t getIdx() const noexcept { return co_obj_get_idx(this); }
+  CODev*
+  getDev() const noexcept {
+    return co_obj_get_dev(this);
+  }
 
-	co_unsigned8_t
-	getSubidx(co_unsigned8_t maxsubidx, co_unsigned8_t* subidx) const
-			noexcept
-	{
-		return co_obj_get_subidx(this, maxsubidx, subidx);
-	}
+  co_unsigned16_t
+  getIdx() const noexcept {
+    return co_obj_get_idx(this);
+  }
 
-	::std::vector<co_unsigned8_t>
-	getSubidx() const
-	{
-		std::vector<co_unsigned8_t> subidx(getSubidx(0, 0));
-		getSubidx(subidx.size(), subidx.data());
-		return subidx;
-	}
+  co_unsigned8_t
+  getSubidx(co_unsigned8_t maxsubidx, co_unsigned8_t* subidx) const noexcept {
+    return co_obj_get_subidx(this, maxsubidx, subidx);
+  }
 
-	int insert(COSub* sub) noexcept { return co_obj_insert_sub(this, sub); }
-	int remove(COSub* sub) noexcept { return co_obj_remove_sub(this, sub); }
+  ::std::vector<co_unsigned8_t>
+  getSubidx() const {
+    std::vector<co_unsigned8_t> subidx(getSubidx(0, 0));
+    getSubidx(subidx.size(), subidx.data());
+    return subidx;
+  }
 
-	COSub*
-	find(co_unsigned8_t subidx) const noexcept
-	{
-		return co_obj_find_sub(this, subidx);
-	}
+  int
+  insert(COSub* sub) noexcept {
+    return co_obj_insert_sub(this, sub);
+  }
+  int
+  remove(COSub* sub) noexcept {
+    return co_obj_remove_sub(this, sub);
+  }
 
-	const char* getName() const noexcept { return co_obj_get_name(this); }
+  COSub*
+  find(co_unsigned8_t subidx) const noexcept {
+    return co_obj_find_sub(this, subidx);
+  }
 
-	int
-	setName(const char* name) noexcept
-	{
-		return co_obj_set_name(this, name);
-	}
+  const char*
+  getName() const noexcept {
+    return co_obj_get_name(this);
+  }
 
-	co_unsigned8_t
-	getCode() const noexcept
-	{
-		return co_obj_get_code(this);
-	}
+  int
+  setName(const char* name) noexcept {
+    return co_obj_set_name(this, name);
+  }
 
-	int
-	setCode(co_unsigned8_t code) noexcept
-	{
-		return co_obj_set_code(this, code);
-	}
+  co_unsigned8_t
+  getCode() const noexcept {
+    return co_obj_get_code(this);
+  }
 
-	template <co_unsigned16_t N>
-	const COVal<N>&
-	getVal(co_unsigned8_t subidx) const noexcept
-	{
-		return *reinterpret_cast<const COVal<N>*>(
-				co_obj_get_val(this, subidx));
-	}
+  int
+  setCode(co_unsigned8_t code) noexcept {
+    return co_obj_set_code(this, code);
+  }
 
-	::std::size_t
-	setVal(co_unsigned8_t subidx, const void *ptr, ::std::size_t n) noexcept
-	{
-		return co_obj_set_val(this, subidx, ptr, n);
-	}
+  template <co_unsigned16_t N>
+  const COVal<N>&
+  getVal(co_unsigned8_t subidx) const noexcept {
+    return *reinterpret_cast<const COVal<N>*>(co_obj_get_val(this, subidx));
+  }
 
-	template <co_unsigned16_t N>
-	::std::size_t
-	setVal(co_unsigned8_t subidx, const COVal<N>& val) noexcept
-	{
-		return setVal(subidx, val.address(), val.size());
-	}
+  ::std::size_t
+  setVal(co_unsigned8_t subidx, const void* ptr, ::std::size_t n) noexcept {
+    return co_obj_set_val(this, subidx, ptr, n);
+  }
 
-	template <class T>
-	::std::size_t
-	setVal(co_unsigned8_t subidx, const T& val) noexcept
-	{
-		return setVal<co_type_traits_T<T>::index>(subidx, val);
-	}
+  template <co_unsigned16_t N>
+  ::std::size_t
+  setVal(co_unsigned8_t subidx, const COVal<N>& val) noexcept {
+    return setVal(subidx, val.address(), val.size());
+  }
 
-	void
-	setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept
-	{
-		co_obj_set_dn_ind(this, ind, data);
-	}
+  template <class T>
+  ::std::size_t
+  setVal(co_unsigned8_t subidx, const T& val) noexcept {
+    return setVal<co_type_traits_T<T>::index>(subidx, val);
+  }
 
-	template <class F>
-	void
-	setDnInd(F* f) noexcept
-	{
-		setDnInd(&c_obj_call<co_sub_dn_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept {
+    co_obj_set_dn_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_sub_dn_ind_t*, C>::type M>
-	void
-	setDnInd(C* obj) noexcept
-	{
-		setDnInd(&c_mem_call<co_sub_dn_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setDnInd(F* f) noexcept {
+    setDnInd(&c_obj_call<co_sub_dn_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	setUpInd(co_sub_up_ind_t* ind, void* data) noexcept
-	{
-		co_obj_set_up_ind(this, ind, data);
-	}
+  template <class C, typename c_mem_fn<co_sub_dn_ind_t*, C>::type M>
+  void
+  setDnInd(C* obj) noexcept {
+    setDnInd(&c_mem_call<co_sub_dn_ind_t*, C, M>::function,
+             static_cast<void*>(obj));
+  }
 
-	template <class F>
-	void
-	setUpInd(F* f) noexcept
-	{
-		setUpInd(&c_obj_call<co_sub_up_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setUpInd(co_sub_up_ind_t* ind, void* data) noexcept {
+    co_obj_set_up_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_sub_up_ind_t*, C>::type M>
-	void
-	setUpInd(C* obj) noexcept
-	{
-		setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setUpInd(F* f) noexcept {
+    setUpInd(&c_obj_call<co_sub_up_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-protected:
-	~COObj() {}
+  template <class C, typename c_mem_fn<co_sub_up_ind_t*, C>::type M>
+  void
+  setUpInd(C* obj) noexcept {
+    setUpInd(&c_mem_call<co_sub_up_ind_t*, C, M>::function,
+             static_cast<void*>(obj));
+  }
+
+ protected:
+  ~COObj() {}
 };
 
 /// The attributes of #co_sub_t required by #lely::COSub.
 template <>
 struct c_type_traits<__co_sub> {
-	typedef __co_sub value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_sub value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_sub_alloc(); }
-	static void free(void* ptr) noexcept { __co_sub_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_sub_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_sub_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, co_unsigned8_t subidx, co_unsigned16_t type) noexcept
-	{
-		return __co_sub_init(p, subidx, type);
-	}
+  static pointer
+  init(pointer p, co_unsigned8_t subidx, co_unsigned16_t type) noexcept {
+    return __co_sub_init(p, subidx, type);
+  }
 
-	static void fini(pointer p) noexcept { __co_sub_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_sub_fini(p);
+  }
 };
 
 /// An opaque CANopen sub-object type.
-class COSub: public incomplete_c_type<__co_sub> {
-	typedef incomplete_c_type<__co_sub> c_base;
-public:
-	COSub(co_unsigned8_t subidx, co_unsigned16_t type): c_base(subidx, type)
-	{}
+class COSub : public incomplete_c_type<__co_sub> {
+  typedef incomplete_c_type<__co_sub> c_base;
 
-	COObj* getObj() const noexcept { return co_sub_get_obj(this); }
+ public:
+  COSub(co_unsigned8_t subidx, co_unsigned16_t type) : c_base(subidx, type) {}
 
-	co_unsigned8_t
-	getSubidx() const noexcept
-	{
-		return co_sub_get_subidx(this);
-	}
+  COObj*
+  getObj() const noexcept {
+    return co_sub_get_obj(this);
+  }
 
-	const char* getName() const noexcept { return co_sub_get_name(this); }
+  co_unsigned8_t
+  getSubidx() const noexcept {
+    return co_sub_get_subidx(this);
+  }
 
-	int
-	setName(const char* name) noexcept
-	{
-		return co_sub_set_name(this, name);
-	}
+  const char*
+  getName() const noexcept {
+    return co_sub_get_name(this);
+  }
 
-	co_unsigned8_t
-	getType() const noexcept
-	{
-		return co_sub_get_type(this);
-	}
+  int
+  setName(const char* name) noexcept {
+    return co_sub_set_name(this, name);
+  }
 
-	const void*
-	addressofMin() const noexcept
-	{
-		return co_sub_addressof_min(this);
-	}
+  co_unsigned8_t
+  getType() const noexcept {
+    return co_sub_get_type(this);
+  }
 
-	::std::size_t
-	sizeofMin() const noexcept
-	{
-		return co_sub_sizeof_min(this);
-	}
+  const void*
+  addressofMin() const noexcept {
+    return co_sub_addressof_min(this);
+  }
 
-	template <co_unsigned16_t N>
-	const COVal<N>&
-	getMin() const noexcept
-	{
-		return *reinterpret_cast<const COVal<N>*>(co_sub_get_min(this));
-	}
+  ::std::size_t
+  sizeofMin() const noexcept {
+    return co_sub_sizeof_min(this);
+  }
 
-	::std::size_t
-	setMin(const void *ptr, ::std::size_t n) noexcept
-	{
-		return co_sub_set_min(this, ptr, n);
-	}
+  template <co_unsigned16_t N>
+  const COVal<N>&
+  getMin() const noexcept {
+    return *reinterpret_cast<const COVal<N>*>(co_sub_get_min(this));
+  }
 
-	template <co_unsigned16_t N>
-	::std::size_t
-	setMin(const COVal<N>& val) noexcept
-	{
-		return setMin(val.address(), val.size());
-	}
+  ::std::size_t
+  setMin(const void* ptr, ::std::size_t n) noexcept {
+    return co_sub_set_min(this, ptr, n);
+  }
 
-	template <class T>
-	::std::size_t
-	setMin(const T& val) noexcept
-	{
-		return setMin<co_type_traits_T<T>::index>(val);
-	}
+  template <co_unsigned16_t N>
+  ::std::size_t
+  setMin(const COVal<N>& val) noexcept {
+    return setMin(val.address(), val.size());
+  }
 
-	const void*
-	addressofMax() const noexcept
-	{
-		return co_sub_addressof_max(this);
-	}
+  template <class T>
+  ::std::size_t
+  setMin(const T& val) noexcept {
+    return setMin<co_type_traits_T<T>::index>(val);
+  }
 
-	::std::size_t
-	sizeofMax() const noexcept
-	{
-		return co_sub_sizeof_max(this);
-	}
+  const void*
+  addressofMax() const noexcept {
+    return co_sub_addressof_max(this);
+  }
 
-	template <co_unsigned16_t N>
-	const COVal<N>&
-	getMax() const noexcept
-	{
-		return *reinterpret_cast<const COVal<N>*>(co_sub_get_max(this));
-	}
+  ::std::size_t
+  sizeofMax() const noexcept {
+    return co_sub_sizeof_max(this);
+  }
 
-	::std::size_t
-	setMax(const void *ptr, ::std::size_t n) noexcept
-	{
-		return co_sub_set_max(this, ptr, n);
-	}
+  template <co_unsigned16_t N>
+  const COVal<N>&
+  getMax() const noexcept {
+    return *reinterpret_cast<const COVal<N>*>(co_sub_get_max(this));
+  }
 
-	template <co_unsigned16_t N>
-	::std::size_t
-	setMax(const COVal<N>& val) noexcept
-	{
-		return setMax(val.address(), val.size());
-	}
+  ::std::size_t
+  setMax(const void* ptr, ::std::size_t n) noexcept {
+    return co_sub_set_max(this, ptr, n);
+  }
 
-	template <class T>
-	::std::size_t
-	setMax(const T& val) noexcept
-	{
-		return setMax<co_type_traits_T<T>::index>(val);
-	}
+  template <co_unsigned16_t N>
+  ::std::size_t
+  setMax(const COVal<N>& val) noexcept {
+    return setMax(val.address(), val.size());
+  }
 
-	const void*
-	addressofDef() const noexcept
-	{
-		return co_sub_addressof_def(this);
-	}
+  template <class T>
+  ::std::size_t
+  setMax(const T& val) noexcept {
+    return setMax<co_type_traits_T<T>::index>(val);
+  }
 
-	::std::size_t
-	sizeofDef() const noexcept
-	{
-		return co_sub_sizeof_def(this);
-	}
+  const void*
+  addressofDef() const noexcept {
+    return co_sub_addressof_def(this);
+  }
 
-	template <co_unsigned16_t N>
-	const COVal<N>&
-	getDef() const noexcept
-	{
-		return *reinterpret_cast<const COVal<N>*>(co_sub_get_def(this));
-	}
+  ::std::size_t
+  sizeofDef() const noexcept {
+    return co_sub_sizeof_def(this);
+  }
 
-	::std::size_t
-	setDef(const void *ptr, ::std::size_t n) noexcept
-	{
-		return co_sub_set_def(this, ptr, n);
-	}
+  template <co_unsigned16_t N>
+  const COVal<N>&
+  getDef() const noexcept {
+    return *reinterpret_cast<const COVal<N>*>(co_sub_get_def(this));
+  }
 
-	template <co_unsigned16_t N>
-	::std::size_t
-	setDef(const COVal<N>& val) noexcept
-	{
-		return setDef(val.address(), val.size());
-	}
+  ::std::size_t
+  setDef(const void* ptr, ::std::size_t n) noexcept {
+    return co_sub_set_def(this, ptr, n);
+  }
 
-	template <class T>
-	::std::size_t
-	setDef(const T& val) noexcept
-	{
-		return setDef<co_type_traits_T<T>::index>(val);
-	}
+  template <co_unsigned16_t N>
+  ::std::size_t
+  setDef(const COVal<N>& val) noexcept {
+    return setDef(val.address(), val.size());
+  }
 
-	const void*
-	addressofVal() const noexcept
-	{
-		return co_sub_addressof_val(this);
-	}
+  template <class T>
+  ::std::size_t
+  setDef(const T& val) noexcept {
+    return setDef<co_type_traits_T<T>::index>(val);
+  }
 
-	::std::size_t
-	sizeofVal() const noexcept
-	{
-		return co_sub_sizeof_val(this);
-	}
+  const void*
+  addressofVal() const noexcept {
+    return co_sub_addressof_val(this);
+  }
 
-	template <co_unsigned16_t N>
-	const COVal<N>&
-	getVal() const noexcept
-	{
-		return *reinterpret_cast<const COVal<N>*>(co_sub_get_val(this));
-	}
+  ::std::size_t
+  sizeofVal() const noexcept {
+    return co_sub_sizeof_val(this);
+  }
 
-	::std::size_t
-	setVal(const void *ptr, ::std::size_t n) noexcept
-	{
-		return co_sub_set_val(this, ptr, n);
-	}
+  template <co_unsigned16_t N>
+  const COVal<N>&
+  getVal() const noexcept {
+    return *reinterpret_cast<const COVal<N>*>(co_sub_get_val(this));
+  }
 
-	template <co_unsigned16_t N>
-	::std::size_t
-	setVal(const COVal<N>& val) noexcept
-	{
-		return setVal(val.address(), val.size());
-	}
+  ::std::size_t
+  setVal(const void* ptr, ::std::size_t n) noexcept {
+    return co_sub_set_val(this, ptr, n);
+  }
 
-	template <class T>
-	::std::size_t
-	setVal(const T& val) noexcept
-	{
-		return setVal<co_type_traits_T<T>::index>(val);
-	}
+  template <co_unsigned16_t N>
+  ::std::size_t
+  setVal(const COVal<N>& val) noexcept {
+    return setVal(val.address(), val.size());
+  }
 
-	template <co_unsigned16_t N>
-	co_unsigned32_t
-	chkVal(const COVal<N>& val) const noexcept
-	{
-		return co_sub_chk_val(this, N, &val);
-	}
+  template <class T>
+  ::std::size_t
+  setVal(const T& val) noexcept {
+    return setVal<co_type_traits_T<T>::index>(val);
+  }
 
-	template <class T>
-	co_unsigned32_t
-	chkVal(const T& val) const noexcept
-	{
-		return chkVal<co_type_traits_T<T>::index>(val);
-	}
+  template <co_unsigned16_t N>
+  co_unsigned32_t
+  chkVal(const COVal<N>& val) const noexcept {
+    return co_sub_chk_val(this, N, &val);
+  }
 
-	unsigned int
-	getAccess() const noexcept
-	{
-		return co_sub_get_access(this);
-	}
+  template <class T>
+  co_unsigned32_t
+  chkVal(const T& val) const noexcept {
+    return chkVal<co_type_traits_T<T>::index>(val);
+  }
 
-	int
-	setAccess(unsigned int access) noexcept
-	{
-		return co_sub_set_access(this, access);
-	}
+  unsigned int
+  getAccess() const noexcept {
+    return co_sub_get_access(this);
+  }
 
-	int
-	getPDOMapping() const noexcept
-	{
-		return co_sub_get_pdo_mapping(this);
-	}
+  int
+  setAccess(unsigned int access) noexcept {
+    return co_sub_set_access(this, access);
+  }
 
-	void
-	setPDOMapping(unsigned int pdo_mapping) noexcept
-	{
-		co_sub_set_pdo_mapping(this, pdo_mapping);
-	}
+  int
+  getPDOMapping() const noexcept {
+    return co_sub_get_pdo_mapping(this);
+  }
 
-	unsigned int
-	getFlags() const noexcept
-	{
-		return co_sub_get_flags(this);
-	}
+  void
+  setPDOMapping(unsigned int pdo_mapping) noexcept {
+    co_sub_set_pdo_mapping(this, pdo_mapping);
+  }
 
-	void
-	setFlags(unsigned int flags) noexcept
-	{
-		co_sub_set_flags(this, flags);
-	}
+  unsigned int
+  getFlags() const noexcept {
+    return co_sub_get_flags(this);
+  }
 
-	void
-	getDnInd(co_sub_dn_ind_t** pind, void** pdata) noexcept
-	{
-		co_sub_get_dn_ind(this, pind, pdata);
-	}
+  void
+  setFlags(unsigned int flags) noexcept {
+    co_sub_set_flags(this, flags);
+  }
 
-	void
-	setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept
-	{
-		co_sub_set_dn_ind(this, ind, data);
-	}
+  void
+  getDnInd(co_sub_dn_ind_t** pind, void** pdata) noexcept {
+    co_sub_get_dn_ind(this, pind, pdata);
+  }
 
-	template <co_unsigned16_t N, typename COSubDnInd<N>::type M>
-	void
-	setDnInd(void* data) noexcept
-	{
-		setDnInd(&COSubDnInd<N>::template function<M>, data);
-	}
+  void
+  setDnInd(co_sub_dn_ind_t* ind, void* data) noexcept {
+    co_sub_set_dn_ind(this, ind, data);
+  }
 
-	template <co_unsigned16_t N, class F>
-	void
-	setDnInd(F* f) noexcept
-	{
-		setDnInd(&COSubDnInd<N>::template function<&c_obj_call<
-					typename COSubDnInd<N>::type, F
-				>::function>, static_cast<void*>(f));
-	}
+  template <co_unsigned16_t N, typename COSubDnInd<N>::type M>
+  void
+  setDnInd(void* data) noexcept {
+    setDnInd(&COSubDnInd<N>::template function<M>, data);
+  }
 
-	template <
-		co_unsigned16_t N, class C,
-		typename c_mem_fn<typename COSubDnInd<N>::type, C>::type M
-	>
-	void
-	setDnInd(C* obj) noexcept
-	{
-		setDnInd(&COSubDnInd<N>::template function<&c_mem_call<
-					typename COSubDnInd<N>::type, C, M
-				>::function>, static_cast<void*>(obj));
-	}
+  template <co_unsigned16_t N, class F>
+  void
+  setDnInd(F* f) noexcept {
+    setDnInd(&COSubDnInd<N>::template function<
+                 &c_obj_call<typename COSubDnInd<N>::type, F>::function>,
+             static_cast<void*>(f));
+  }
 
-	co_unsigned32_t
-	onDn(co_sdo_req& req) noexcept
-	{
-		return co_sub_on_dn(this, &req);
-	}
+  template <co_unsigned16_t N, class C,
+            typename c_mem_fn<typename COSubDnInd<N>::type, C>::type M>
+  void
+  setDnInd(C* obj) noexcept {
+    setDnInd(&COSubDnInd<N>::template function<
+                 &c_mem_call<typename COSubDnInd<N>::type, C, M>::function>,
+             static_cast<void*>(obj));
+  }
 
-	co_unsigned32_t
-	dnInd(co_sdo_req& req) noexcept
-	{
-		return co_sub_dn_ind(this, &req);
-	}
+  co_unsigned32_t
+  onDn(co_sdo_req& req) noexcept {
+    return co_sub_on_dn(this, &req);
+  }
 
-	template <co_unsigned16_t N>
-	co_unsigned32_t
-	dnInd(const COVal<N>& val) noexcept
-	{
-		return co_sub_dn_ind_val(this, N, &val);
-	}
+  co_unsigned32_t
+  dnInd(co_sdo_req& req) noexcept {
+    return co_sub_dn_ind(this, &req);
+  }
 
-	template <co_unsigned16_t N>
-	int
-	dn(COVal<N>& val) noexcept
-	{
-		return co_sub_dn(this, &val);
-	}
+  template <co_unsigned16_t N>
+  co_unsigned32_t
+  dnInd(const COVal<N>& val) noexcept {
+    return co_sub_dn_ind_val(this, N, &val);
+  }
 
-	void
-	getUpInd(co_sub_up_ind_t** pind, void** pdata) noexcept
-	{
-		co_sub_get_up_ind(this, pind, pdata);
-	}
+  template <co_unsigned16_t N>
+  int
+  dn(COVal<N>& val) noexcept {
+    return co_sub_dn(this, &val);
+  }
 
-	void
-	setUpInd(co_sub_up_ind_t* ind, void* data) noexcept
-	{
-		co_sub_set_up_ind(this, ind, data);
-	}
+  void
+  getUpInd(co_sub_up_ind_t** pind, void** pdata) noexcept {
+    co_sub_get_up_ind(this, pind, pdata);
+  }
 
-	template <co_unsigned16_t N, typename COSubUpInd<N>::type M>
-	void
-	setUpInd(void* data) noexcept
-	{
-		setUpInd(&COSubUpInd<N>::template function<M>, data);
-	}
+  void
+  setUpInd(co_sub_up_ind_t* ind, void* data) noexcept {
+    co_sub_set_up_ind(this, ind, data);
+  }
 
-	template <co_unsigned16_t N, class F>
-	void
-	setUpInd(F* f) noexcept
-	{
-		setUpInd(&COSubUpInd<N>::template function<&c_obj_call<
-					typename COSubUpInd<N>::type, F
-				>::function>, static_cast<void*>(f));
-	}
+  template <co_unsigned16_t N, typename COSubUpInd<N>::type M>
+  void
+  setUpInd(void* data) noexcept {
+    setUpInd(&COSubUpInd<N>::template function<M>, data);
+  }
 
-	template <
-		co_unsigned16_t N, class C,
-		typename c_mem_fn<typename COSubUpInd<N>::type, C>::type M
-	>
-	void
-	setUpInd(C* obj) noexcept
-	{
-		setUpInd(&COSubUpInd<N>::template function<&c_mem_call<
-					typename COSubUpInd<N>::type, C, M
-				>::function>, static_cast<void*>(obj));
-	}
+  template <co_unsigned16_t N, class F>
+  void
+  setUpInd(F* f) noexcept {
+    setUpInd(&COSubUpInd<N>::template function<
+                 &c_obj_call<typename COSubUpInd<N>::type, F>::function>,
+             static_cast<void*>(f));
+  }
 
-	co_unsigned32_t
-	onUp(co_sdo_req& req) const noexcept
-	{
-		return co_sub_on_up(this, &req);
-	}
+  template <co_unsigned16_t N, class C,
+            typename c_mem_fn<typename COSubUpInd<N>::type, C>::type M>
+  void
+  setUpInd(C* obj) noexcept {
+    setUpInd(&COSubUpInd<N>::template function<
+                 &c_mem_call<typename COSubUpInd<N>::type, C, M>::function>,
+             static_cast<void*>(obj));
+  }
 
-	co_unsigned32_t
-	upInd(co_sdo_req& req) const noexcept
-	{
-		return co_sub_up_ind(this, &req);
-	}
+  co_unsigned32_t
+  onUp(co_sdo_req& req) const noexcept {
+    return co_sub_on_up(this, &req);
+  }
 
-protected:
-	~COSub() {}
+  co_unsigned32_t
+  upInd(co_sdo_req& req) const noexcept {
+    return co_sub_up_ind(this, &req);
+  }
+
+ protected:
+  ~COSub() {}
 };
 
 /**
@@ -573,26 +538,23 @@ protected:
  */
 template <co_unsigned16_t N>
 struct COSubDnInd {
-	typedef co_unsigned32_t (*type)(COSub* sub, COVal<N>& val, void *data);
+  typedef co_unsigned32_t (*type)(COSub* sub, COVal<N>& val, void* data);
 
-	template <type M>
-	static co_unsigned32_t
-	function(COSub* sub, co_sdo_req* req, void *data) noexcept {
-		uint32_t ac = 0;
+  template <type M>
+  static co_unsigned32_t
+  function(COSub* sub, co_sdo_req* req, void* data) noexcept {
+    uint32_t ac = 0;
 
-		COVal<N> val;
-		if (__unlikely(co_sdo_req_dn_val(req, N, &val, &ac) == -1))
-			return ac;
+    COVal<N> val;
+    if (__unlikely(co_sdo_req_dn_val(req, N, &val, &ac) == -1)) return ac;
 
-		if (__unlikely(ac = sub->chkVal(val)))
-			return ac;
+    if (__unlikely(ac = sub->chkVal(val))) return ac;
 
-		if (__unlikely(ac = (*M)(sub, val, data)))
-			return ac;
+    if (__unlikely(ac = (*M)(sub, val, data))) return ac;
 
-		sub->dn(val);
-		return ac;
-	}
+    sub->dn(val);
+    return ac;
+  }
 };
 
 /**
@@ -602,25 +564,22 @@ struct COSubDnInd {
  */
 template <co_unsigned16_t N>
 struct COSubUpInd {
-	typedef co_unsigned32_t (*type)(const COSub* sub, COVal<N>& val,
-			void *data);
+  typedef co_unsigned32_t (*type)(const COSub* sub, COVal<N>& val, void* data);
 
-	template <type M>
-	static co_unsigned32_t
-	function(const COSub* sub, co_sdo_req* req, void *data) noexcept {
-		uint32_t ac = 0;
+  template <type M>
+  static co_unsigned32_t
+  function(const COSub* sub, co_sdo_req* req, void* data) noexcept {
+    uint32_t ac = 0;
 
-		COVal<N> val = sub->getVal<N>();
+    COVal<N> val = sub->getVal<N>();
 
-		if (__unlikely(ac = (*M)(sub, val, data)))
-			return ac;
+    if (__unlikely(ac = (*M)(sub, val, data))) return ac;
 
-		co_sdo_req_up_val(req, N, &val, &ac);
-		return ac;
-	}
+    co_sdo_req_up_val(req, N, &val, &ac);
+    return ac;
+  }
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

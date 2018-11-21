@@ -23,7 +23,7 @@ LELY_CO_DEFINE_TYPE(OCTET_STRING, octet_string, os, ::std::vector<uint8_t>)
 // An array of (16-bit) Unicode characters.
 LELY_CO_DEFINE_TYPE(UNICODE_STRING, unicode_string, us, char16_t*)
 LELY_CO_DEFINE_TYPE(UNICODE_STRING, unicode_string, us,
-		::std::basic_string<char16_t>)
+                    ::std::basic_string<char16_t>)
 // An absolute time (with respect to January 1, 1984).
 LELY_CO_DEFINE_TYPE(TIME_OF_DAY, time_of_day, t, co_time_of_day_t)
 // A time difference.

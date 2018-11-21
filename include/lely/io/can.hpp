@@ -33,90 +33,87 @@
 namespace lely {
 
 /// A Controller Area Network (CAN) device handle.
-class IOCAN: public IOHandle {
-public:
-	IOCAN(const char* path)
-		: IOHandle(io_open_can(path))
-	{
-		if (!operator bool())
-			throw_or_abort(bad_init());
-	}
+class IOCAN : public IOHandle {
+ public:
+  IOCAN(const char* path) : IOHandle(io_open_can(path)) {
+    if (!operator bool()) throw_or_abort(bad_init());
+  }
 
-	IOCAN(const IOCAN& can) noexcept : IOHandle(can) {}
+  IOCAN(const IOCAN& can) noexcept : IOHandle(can) {}
 
 #if __cplusplus >= 201103L
-	IOCAN(IOCAN&& can) noexcept
-		: IOHandle(::std::forward<IOCAN>(can))
-	{}
+  IOCAN(IOCAN&& can) noexcept : IOHandle(::std::forward<IOCAN>(can)) {}
 #endif
 
-	IOCAN&
-	operator=(const IOCAN& can) noexcept
-	{
-		IOHandle::operator=(can);
-		return *this;
-	}
+  IOCAN&
+  operator=(const IOCAN& can) noexcept {
+    IOHandle::operator=(can);
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	IOCAN&
-	operator=(IOCAN&& can) noexcept
-	{
-		IOHandle::operator=(::std::forward<IOCAN>(can));
-		return *this;
-	}
+  IOCAN&
+  operator=(IOCAN&& can) noexcept {
+    IOHandle::operator=(::std::forward<IOCAN>(can));
+    return *this;
+  }
 #endif
 
-	int read(can_msg& msg) noexcept { return io_can_read(*this, &msg); }
+  int
+  read(can_msg& msg) noexcept {
+    return io_can_read(*this, &msg);
+  }
 
-	int
-	write(const can_msg& msg) noexcept
-	{
-		return io_can_write(*this, &msg);
-	}
+  int
+  write(const can_msg& msg) noexcept {
+    return io_can_write(*this, &msg);
+  }
 
-	int start() noexcept { return io_can_start(*this); }
-	int stop() noexcept { return io_can_stop(*this); }
+  int
+  start() noexcept {
+    return io_can_start(*this);
+  }
+  int
+  stop() noexcept {
+    return io_can_stop(*this);
+  }
 
-	int getState() noexcept { return io_can_get_state(*this); }
+  int
+  getState() noexcept {
+    return io_can_get_state(*this);
+  }
 
-	int
-	getError(int& error) noexcept
-	{
-		return io_can_get_error(*this, &error);
-	}
+  int
+  getError(int& error) noexcept {
+    return io_can_get_error(*this, &error);
+  }
 
-	int
-	getEC(uint16_t& txec, uint16_t& rxec) noexcept
-	{
-		return io_can_get_ec(*this, &txec, &rxec);
-	}
+  int
+  getEC(uint16_t& txec, uint16_t& rxec) noexcept {
+    return io_can_get_ec(*this, &txec, &rxec);
+  }
 
-	int
-	getBitrate(uint32_t& bitrate) noexcept
-	{
-		return io_can_get_bitrate(*this, &bitrate);
-	}
+  int
+  getBitrate(uint32_t& bitrate) noexcept {
+    return io_can_get_bitrate(*this, &bitrate);
+  }
 
-	int
-	setBitrate(uint32_t bitrate) noexcept
-	{
-		return io_can_set_bitrate(*this, bitrate);
-	}
+  int
+  setBitrate(uint32_t bitrate) noexcept {
+    return io_can_set_bitrate(*this, bitrate);
+  }
 
-	int
-	getTXQLen(size_t& txqlen) noexcept
-	{
-		return io_can_get_txqlen(*this, &txqlen);
-	}
+  int
+  getTXQLen(size_t& txqlen) noexcept {
+    return io_can_get_txqlen(*this, &txqlen);
+  }
 
-	int
-	setTXQLen(size_t txqlen) noexcept
-	{
-		return io_can_set_txqlen(*this, txqlen);
-	}
+  int
+  setTXQLen(size_t txqlen) noexcept {
+    return io_can_set_txqlen(*this, txqlen);
+  }
 };
 
-} //lely
+}  // namespace lely
 
 #endif
-

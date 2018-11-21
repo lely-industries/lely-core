@@ -29,16 +29,18 @@
 #include <system_error>
 #endif
 
-#if !defined(noexcept) && !(__cplusplus >= 201103L && (__GNUC_PREREQ(4, 6) \
-		|| __has_feature(cxx_noexcept))) && !(_MSC_VER >= 1900)
+#if !defined(noexcept) && \
+    !(__cplusplus >= 201103L && \
+      (__GNUC_PREREQ(4, 6) || __has_feature(cxx_noexcept))) && \
+    !(_MSC_VER >= 1900)
 #define noexcept
 #endif
 
 #ifndef nothrow_or_noexcept
 #if __cplusplus >= 201103L
-#define nothrow_or_noexcept	noexcept
+#define nothrow_or_noexcept noexcept
 #else
-#define nothrow_or_noexcept	throw()
+#define nothrow_or_noexcept throw()
 #endif
 #endif
 
@@ -48,17 +50,16 @@
  * exception.
  */
 #if __cpp_exceptions
-#define throw_or_abort(e)	__throw_or_abort((e).what())
+#define throw_or_abort(e) __throw_or_abort((e).what())
 #else
-#define throw_or_abort(e)	throw(e)
+#define throw_or_abort(e) throw(e)
 #endif
 #endif
 
 extern "C" {
 
 /// Aborts the process instead of throwing an exception.
-_Noreturn void __throw_or_abort(const char *what) noexcept;
-
+_Noreturn void __throw_or_abort(const char* what) noexcept;
 }
 
 namespace lely {
@@ -68,28 +69,34 @@ namespace lely {
  * associated error code.
  */
 #if __cplusplus >= 201103L
-class error: public ::std::system_error {
+class error : public ::std::system_error {
 #else
-class error: public ::std::runtime_error {
+class error : public ::std::runtime_error {
 #endif
-public:
-	error(errc_t errc = get_errc())
+ public:
+  error(errc_t errc = get_errc())
 #if __cplusplus >= 201103L
-	: ::std::system_error(errc, ::std::system_category())
+      : ::std::system_error(errc, ::std::system_category())
 #else
-	: ::std::runtime_error(errc2str(errc))
+      : ::std::runtime_error(errc2str(errc))
 #endif
-	, m_errc(errc)
-	{}
+        ,
+        m_errc(errc) {
+  }
 
-	errc_t errc() const noexcept { return m_errc; }
-	errnum_t errnum() const noexcept { return errc2num(errc()); }
+  errc_t
+  errc() const noexcept {
+    return m_errc;
+  }
+  errnum_t
+  errnum() const noexcept {
+    return errc2num(errc());
+  }
 
-private:
-	errc_t m_errc;
+ private:
+  errc_t m_errc;
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

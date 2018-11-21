@@ -35,74 +35,85 @@ namespace lely {
 /// The attributes of #co_time_t required by #lely::COTime.
 template <>
 struct c_type_traits<__co_time> {
-	typedef __co_time value_type;
-	typedef value_type& reference;
-	typedef const value_type& const_reference;
-	typedef value_type* pointer;
-	typedef const value_type* const_pointer;
+  typedef __co_time value_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
 
-	static void* alloc() noexcept { return __co_time_alloc(); }
-	static void free(void* ptr) noexcept { __co_time_free(ptr); }
+  static void*
+  alloc() noexcept {
+    return __co_time_alloc();
+  }
+  static void
+  free(void* ptr) noexcept {
+    __co_time_free(ptr);
+  }
 
-	static pointer
-	init(pointer p, CANNet* net, CODev* dev) noexcept
-	{
-		return __co_time_init(p, net, dev);
-	}
+  static pointer
+  init(pointer p, CANNet* net, CODev* dev) noexcept {
+    return __co_time_init(p, net, dev);
+  }
 
-	static void fini(pointer p) noexcept { __co_time_fini(p); }
+  static void
+  fini(pointer p) noexcept {
+    __co_time_fini(p);
+  }
 };
 
 /// An opaque CANopen TIME producer/consumer service type.
-class COTime: public incomplete_c_type<__co_time> {
-	typedef incomplete_c_type<__co_time> c_base;
-public:
-	COTime(CANNet* net, CODev* dev): c_base(net, dev) {}
+class COTime : public incomplete_c_type<__co_time> {
+  typedef incomplete_c_type<__co_time> c_base;
 
-	CANNet* getNet() const noexcept { return co_time_get_net(this); }
-	CODev* getDev() const noexcept { return co_time_get_dev(this); }
+ public:
+  COTime(CANNet* net, CODev* dev) : c_base(net, dev) {}
 
-	void
-	getInd(co_time_ind_t** pind, void** pdata) const noexcept
-	{
-		co_time_get_ind(this, pind, pdata);
-	}
+  CANNet*
+  getNet() const noexcept {
+    return co_time_get_net(this);
+  }
+  CODev*
+  getDev() const noexcept {
+    return co_time_get_dev(this);
+  }
 
-	void
-	setInd(co_time_ind_t* ind, void* data) noexcept
-	{
-		co_time_set_ind(this, ind, data);
-	}
+  void
+  getInd(co_time_ind_t** pind, void** pdata) const noexcept {
+    co_time_get_ind(this, pind, pdata);
+  }
 
-	template <class F>
-	void
-	setInd(F* f) noexcept
-	{
-		setInd(&c_obj_call<co_time_ind_t*, F>::function,
-				static_cast<void*>(f));
-	}
+  void
+  setInd(co_time_ind_t* ind, void* data) noexcept {
+    co_time_set_ind(this, ind, data);
+  }
 
-	template <class C, typename c_mem_fn<co_time_ind_t*, C>::type M>
-	void
-	setInd(C* obj) noexcept
-	{
-		setInd(&c_mem_call<co_time_ind_t*, C, M>::function,
-				static_cast<void*>(obj));
-	}
+  template <class F>
+  void
+  setInd(F* f) noexcept {
+    setInd(&c_obj_call<co_time_ind_t*, F>::function, static_cast<void*>(f));
+  }
 
-	void
-	start(const timespec* start = 0, const timespec* interval = 0) noexcept
-	{
-		co_time_start(this, start, interval);
-	}
+  template <class C, typename c_mem_fn<co_time_ind_t*, C>::type M>
+  void
+  setInd(C* obj) noexcept {
+    setInd(&c_mem_call<co_time_ind_t*, C, M>::function,
+           static_cast<void*>(obj));
+  }
 
-	void stop() noexcept { co_time_stop(this); }
+  void
+  start(const timespec* start = 0, const timespec* interval = 0) noexcept {
+    co_time_start(this, start, interval);
+  }
 
-protected:
-	~COTime() {}
+  void
+  stop() noexcept {
+    co_time_stop(this);
+  }
+
+ protected:
+  ~COTime() {}
 };
 
-} // lely
+}  // namespace lely
 
 #endif
-

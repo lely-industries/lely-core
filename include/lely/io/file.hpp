@@ -32,59 +32,48 @@
 namespace lely {
 
 /// A regular file device handle.
-class IOFile: public IOHandle {
-public:
-	IOFile(const char* path, int flags)
-		: IOHandle(io_open_file(path, flags))
-	{
-		if (!operator bool())
-			throw_or_abort(bad_init());
-	}
+class IOFile : public IOHandle {
+ public:
+  IOFile(const char* path, int flags) : IOHandle(io_open_file(path, flags)) {
+    if (!operator bool()) throw_or_abort(bad_init());
+  }
 
-	IOFile(const IOFile& file) noexcept : IOHandle(file) {}
+  IOFile(const IOFile& file) noexcept : IOHandle(file) {}
 
 #if __cplusplus >= 201103L
-	IOFile(IOFile&& file) noexcept
-		: IOHandle(::std::forward<IOFile>(file))
-	{}
+  IOFile(IOFile&& file) noexcept : IOHandle(::std::forward<IOFile>(file)) {}
 #endif
 
-	IOFile&
-	operator=(const IOFile& file) noexcept
-	{
-		IOHandle::operator=(file);
-		return *this;
-	}
+  IOFile&
+  operator=(const IOFile& file) noexcept {
+    IOHandle::operator=(file);
+    return *this;
+  }
 
 #if __cplusplus >= 201103L
-	IOFile&
-	operator=(IOFile&& file) noexcept
-	{
-		IOHandle::operator=(::std::forward<IOFile>(file));
-		return *this;
-	}
+  IOFile&
+  operator=(IOFile&& file) noexcept {
+    IOHandle::operator=(::std::forward<IOFile>(file));
+    return *this;
+  }
 #endif
 
-	io_off_t
-	seek(io_off_t offset, int whence) noexcept
-	{
-		return io_seek(*this, offset, whence);
-	}
+  io_off_t
+  seek(io_off_t offset, int whence) noexcept {
+    return io_seek(*this, offset, whence);
+  }
 
-	ssize_t
-	pread(void* buf, size_t nbytes, io_off_t offset) noexcept
-	{
-		return io_pread(*this, buf, nbytes, offset);
-	}
+  ssize_t
+  pread(void* buf, size_t nbytes, io_off_t offset) noexcept {
+    return io_pread(*this, buf, nbytes, offset);
+  }
 
-	ssize_t
-	pwrite(const void* buf, size_t nbytes, io_off_t offset) noexcept
-	{
-		return io_pwrite(*this, buf, nbytes, offset);
-	}
+  ssize_t
+  pwrite(const void* buf, size_t nbytes, io_off_t offset) noexcept {
+    return io_pwrite(*this, buf, nbytes, offset);
+  }
 };
 
-} //lely
+}  // namespace lely
 
 #endif
-
