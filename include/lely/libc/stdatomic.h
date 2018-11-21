@@ -316,7 +316,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_load_n(&(object)->__value, (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_load_explicit(object, order) \
-	(__unused_var(order), __sync_fetch_and_add(&(object)->__value, 0))
+	((void)order, __sync_fetch_and_add(&(object)->__value, 0))
 #endif
 /// Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
 #define atomic_load(object) \
@@ -375,8 +375,8 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 #define atomic_compare_exchange_strong_explicit( \
 		object, expected, desired, success, failure) \
 	__extension__({ \
-		__unused_var(success); \
-		__unused_var(failure); \
+		(void)success; \
+		(void)failure; \
 		__typeof__(*(expected)) __expected = *(expected); \
 		(__atomic_bool)((*(expected) = __sync_val_compare_and_swap( \
 				&(object)->__value, __expected, (desired))) \
@@ -445,8 +445,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_fetch_add(&(object)->__value, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
-	(__unused_var(order), \
-			__sync_fetch_and_add(&(object)->__value, (operand)))
+	((void)order, __sync_fetch_and_add(&(object)->__value, (operand)))
 #endif
 /**
  * Equivalent to #atomic_fetch_add_explicit(object, operand,
@@ -469,8 +468,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_fetch_sub(&(object)->__value, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
-	(__unused_var(order), \
-			__sync_fetch_and_sub(&(object)->__value, (operand)))
+	((void)order, __sync_fetch_and_sub(&(object)->__value, (operand)))
 #endif
 /**
  * Equivalent to #atomic_fetch_sub_explicit(object, operand,
@@ -493,8 +491,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_fetch_or(&(object)->__value, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
-	(__unused_var(order), \
-			__sync_fetch_and_or(&(object)->__value, (operand)))
+	((void)order, __sync_fetch_and_or(&(object)->__value, (operand)))
 #endif
 /**
  * Equivalent to #atomic_fetch_or_explicit(object, operand,
@@ -517,8 +514,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_fetch_xor(&(object)->__value, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
-	(__unused_var(order), \
-			__sync_fetch_and_xor(&(object)->__value, (operand)))
+	((void)order, __sync_fetch_and_xor(&(object)->__value, (operand)))
 #endif
 /**
  * Equivalent to #atomic_fetch_xor_explicit(object, operand,
@@ -541,8 +537,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__atomic_fetch_and(&(object)->__value, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
-	(__unused_var(order), \
-			__sync_fetch_and_and(&(object)->__value, (operand)))
+	((void)order, __sync_fetch_and_and(&(object)->__value, (operand)))
 #endif
 /**
  * Equivalent to #atomic_fetch_and_explicit(object, operand,
@@ -625,7 +620,7 @@ atomic_signal_fence(memory_order order)
 	if (order != memory_order_relaxed)
 		__asm volatile("" ::: "memory");
 #else
-	__unused_var(order);
+	(void)order;
 #endif
 }
 

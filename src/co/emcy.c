@@ -651,7 +651,7 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1014);
 	assert(req);
-	__unused_var(data);
+	(void)data;
 
 	co_unsigned32_t ac = 0;
 
@@ -795,7 +795,7 @@ error:
 static int
 co_emcy_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_emcy_t *emcy = data;
 	assert(emcy);
 

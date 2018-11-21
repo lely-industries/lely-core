@@ -64,7 +64,7 @@ static void
 co_test_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
-	__unused_var(handle);
+	(void)handle;
 
 	int errsv = errno;
 	char *s = NULL;
@@ -198,9 +198,9 @@ static int
 co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data)
 {
-	__unused_var(wtm);
-	__unused_var(nif);
-	__unused_var(tp);
+	(void)wtm;
+	(void)nif;
+	(void)tp;
 	struct co_test *test = data;
 	tap_assert(test);
 
@@ -210,7 +210,7 @@ co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 static int
 co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	co_wtm_recv(wtm, buf, nbytes);
 

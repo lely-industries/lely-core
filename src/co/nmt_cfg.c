@@ -296,7 +296,7 @@ static void
 co_nmt_cfg_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, void *data)
 {
-	__unused_var(sdo);
+	(void)sdo;
 	co_nmt_cfg_t *cfg = data;
 	assert(cfg);
 
@@ -419,7 +419,7 @@ co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac)
 {
 	assert(cfg);
-	__unused_var(idx);
+	(void)idx;
 
 	if (__unlikely(ac)) {
 		cfg->ac = ac;

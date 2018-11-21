@@ -109,7 +109,7 @@ void
 dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, void *data)
 {
-	__unused_var(sdo);
+	(void)sdo;
 	struct co_test *test = data;
 
 	if (__likely(!ac))
@@ -125,7 +125,7 @@ void
 up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
 {
-	__unused_var(sdo);
+	(void)sdo;
 	struct co_test *test = data;
 
 	if (__likely(!ac)) {

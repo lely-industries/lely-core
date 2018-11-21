@@ -946,7 +946,7 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 		goto error;
 	}
 #else
-	__unused_var(name);
+	(void)name;
 #endif
 
 	return sub;

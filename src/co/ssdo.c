@@ -919,8 +919,8 @@ co_ssdo_emit_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_wait_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	__unused_var(sdo);
-	__unused_var(ac);
+	(void)sdo;
+	(void)ac;
 
 	return NULL;
 }
@@ -1006,7 +1006,7 @@ co_ssdo_dn_seg_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_dn_seg_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1106,7 +1106,7 @@ co_ssdo_up_seg_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_up_seg_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1205,7 +1205,7 @@ co_ssdo_blk_dn_sub_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_blk_dn_sub_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1271,7 +1271,7 @@ co_ssdo_blk_dn_end_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_blk_dn_end_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1396,7 +1396,7 @@ co_ssdo_blk_up_sub_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_blk_up_sub_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1480,7 +1480,7 @@ co_ssdo_blk_up_end_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 static co_ssdo_state_t *
 co_ssdo_blk_up_end_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }

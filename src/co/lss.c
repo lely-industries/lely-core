@@ -815,7 +815,7 @@ int
 co_lss_is_master(const co_lss_t *lss)
 {
 #ifdef LELY_NO_CO_MASTER
-	__unused_var(lss);
+	(void)lss;
 
 	return 0;
 #else
@@ -1632,7 +1632,7 @@ static co_lss_state_t *
 co_lss_cs_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	lss->cs = 0;
 	return co_lss_wait_state;
@@ -1668,7 +1668,7 @@ static co_lss_state_t *
 co_lss_err_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	lss->cs = 0;
 	return co_lss_wait_state;
@@ -1703,7 +1703,7 @@ static co_lss_state_t *
 co_lss_lssid_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	lss->cs = 0;
 	return co_lss_wait_state;
@@ -1738,7 +1738,7 @@ static co_lss_state_t *
 co_lss_nid_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	lss->cs = 0;
 	return co_lss_wait_state;
@@ -1772,7 +1772,7 @@ static co_lss_state_t *
 co_lss_slowscan_init_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	// Abort if we did not receive a response on the first request.
 	lss->cs = 0;
@@ -1824,7 +1824,7 @@ static co_lss_state_t *
 co_lss_slowscan_scan_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	return co_lss_slowscan_scan_on_res(lss, 1);
 }
@@ -1863,8 +1863,8 @@ co_lss_slowscan_scan_on_res(co_lss_t *lss, int timeout)
 static co_lss_state_t *
 co_lss_slowscan_wait_on_recv(co_lss_t *lss, const struct can_msg *msg)
 {
-	__unused_var(lss);
-	__unused_var(msg);
+	(void)lss;
+	(void)msg;
 
 	// Ignore further responses from slaves.
 	return NULL;
@@ -1873,8 +1873,8 @@ co_lss_slowscan_wait_on_recv(co_lss_t *lss, const struct can_msg *msg)
 static co_lss_state_t *
 co_lss_slowscan_wait_on_time(co_lss_t *lss, const struct timespec *tp)
 {
-	__unused_var(lss);
-	__unused_var(tp);
+	(void)lss;
+	(void)tp;
 
 	// All slaves should have responded by now.
 	return co_lss_slowscan_scan_on_res(lss, 0);
@@ -1913,7 +1913,7 @@ static co_lss_state_t *
 co_lss_slowscan_switch_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	// Abort if no response was received.
 	lss->cs = 0;
@@ -1923,7 +1923,7 @@ co_lss_slowscan_switch_on_time(co_lss_t *lss, const struct timespec *tp)
 static co_lss_state_t *
 co_lss_slowscan_fini_on_enter(co_lss_t *lss)
 {
-	__unused_var(lss);
+	(void)lss;
 
 	return co_lss_wait_state;
 }
@@ -1958,7 +1958,7 @@ static co_lss_state_t *
 co_lss_fastscan_init_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	// Abort if we did not receive a response on the reset request.
 	lss->cs = 0;
@@ -2022,7 +2022,7 @@ static co_lss_state_t *
 co_lss_fastscan_scan_on_time(co_lss_t *lss, const struct timespec *tp)
 {
 	assert(lss);
-	__unused_var(tp);
+	(void)tp;
 
 	return co_lss_fastscan_scan_on_res(lss, 1);
 }
@@ -2061,8 +2061,8 @@ co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout)
 static co_lss_state_t *
 co_lss_fastscan_wait_on_recv(co_lss_t *lss, const struct can_msg *msg)
 {
-	__unused_var(lss);
-	__unused_var(msg);
+	(void)lss;
+	(void)msg;
 
 	// Ignore further responses from slaves.
 	return NULL;
@@ -2071,8 +2071,8 @@ co_lss_fastscan_wait_on_recv(co_lss_t *lss, const struct can_msg *msg)
 static co_lss_state_t *
 co_lss_fastscan_wait_on_time(co_lss_t *lss, const struct timespec *tp)
 {
-	__unused_var(lss);
-	__unused_var(tp);
+	(void)lss;
+	(void)tp;
 
 	// All slaves should have responded by now.
 	return co_lss_fastscan_scan_on_res(lss, 0);
@@ -2081,7 +2081,7 @@ co_lss_fastscan_wait_on_time(co_lss_t *lss, const struct timespec *tp)
 static co_lss_state_t *
 co_lss_fastscan_fini_on_enter(co_lss_t *lss)
 {
-	__unused_var(lss);
+	(void)lss;
 
 	return co_lss_wait_state;
 }

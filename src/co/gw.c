@@ -1288,7 +1288,7 @@ co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
 static void
 co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 {
-	__unused_var(sync);
+	(void)sync;
 	struct co_gw_net *net = data;
 	assert(net);
 
@@ -1306,7 +1306,7 @@ co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 static void
 co_gw_net_time_ind(co_time_t *time, const struct timespec *tp, void *data)
 {
-	__unused_var(time);
+	(void)time;
 	struct co_gw_net *net = data;
 	assert(net);
 
@@ -1323,7 +1323,7 @@ static void
 co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 		co_unsigned8_t er, uint8_t msef[5], void *data)
 {
-	__unused_var(emcy);
+	(void)emcy;
 	struct co_gw_net *net = data;
 	assert(net);
 
@@ -1366,7 +1366,7 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 static void
 co_gw_job_destroy(struct co_gw_job *job)
 {
-	__unused_var(co_gw_job_create);
+	(void)co_gw_job_create;
 
 	if (job) {
 		co_gw_job_remove(job);
@@ -1447,9 +1447,9 @@ static void
 co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
 {
-	__unused_var(sdo);
-	__unused_var(idx);
-	__unused_var(subidx);
+	(void)sdo;
+	(void)idx;
+	(void)subidx;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1491,9 +1491,9 @@ static void
 co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, void *data)
 {
-	__unused_var(sdo);
-	__unused_var(idx);
-	__unused_var(subidx);
+	(void)sdo;
+	(void)idx;
+	(void)subidx;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1510,9 +1510,9 @@ static void
 co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data)
 {
-	__unused_var(sdo);
-	__unused_var(idx);
-	__unused_var(subidx);
+	(void)sdo;
+	(void)idx;
+	(void)subidx;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1564,7 +1564,7 @@ co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
 static void
 co_gw_job_lss_cs_ind(co_lss_t *lss, co_unsigned8_t cs, void *data)
 {
-	__unused_var(lss);
+	(void)lss;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1598,8 +1598,8 @@ static void
 co_gw_job_lss_err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 		co_unsigned8_t spec, void *data)
 {
-	__unused_var(lss);
-	__unused_var(spec);
+	(void)lss;
+	(void)spec;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1633,7 +1633,7 @@ static void
 co_gw_job_lss_lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id,
 		void *data)
 {
-	__unused_var(lss);
+	(void)lss;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1668,7 +1668,7 @@ static void
 co_gw_job_lss_nid_ind(
 		co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id, void *data)
 {
-	__unused_var(lss);
+	(void)lss;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);
@@ -1699,7 +1699,7 @@ static void
 co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
 		void *data)
 {
-	__unused_var(lss);
+	(void)lss;
 	struct co_gw_job *job = data;
 	assert(job);
 	assert(job->net);

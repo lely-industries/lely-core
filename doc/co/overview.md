@@ -553,8 +553,8 @@ void
 onUp(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, co_unsigned32_t val, void* data)
 {
-	__unused_var(sdo);
-	__unused_var(data);
+	(void)sdo;
+	(void)data;
 
 	if (ac)
 		// Print an error message if an abort code was received.

@@ -960,7 +960,7 @@ co_obj_clear(co_obj_t *obj)
 static co_unsigned32_t
 default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	return co_sub_on_dn(sub, req);
 }
@@ -968,7 +968,7 @@ default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 static co_unsigned32_t
 default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	return co_sub_on_up(sub, req);
 }

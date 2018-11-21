@@ -60,8 +60,8 @@ default_flags(struct io_handle *handle, int flags)
 	assert(handle);
 
 #ifdef _WIN32
-	__unused_var(handle);
-	__unused_var(flags);
+	(void)handle;
+	(void)flags;
 
 	return 0;
 #else

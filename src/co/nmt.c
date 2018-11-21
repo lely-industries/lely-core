@@ -1091,7 +1091,7 @@ void
 co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 {
 	assert(nmt);
-	__unused_var(reason);
+	(void)reason;
 
 	if (__unlikely(id || id >= CO_NUM_NODES))
 		return;
@@ -1199,8 +1199,8 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 		return;
 
 #ifdef LELY_NO_CO_MASTER
-	__unused_var(nmt);
-	__unused_var(st);
+	(void)nmt;
+	(void)st;
 #else
 	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP) {
 		errc_t errc = get_errc();
@@ -1372,8 +1372,8 @@ co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 
 	if (eec) {
 #ifdef LELY_NO_CO_EMCY
-		__unused_var(er);
-		__unused_var(msef);
+		(void)er;
+		(void)msef;
 #else
 		if (nmt->srv.emcy)
 			co_emcy_push(nmt->srv.emcy, eec, er, msef);
@@ -1420,7 +1420,7 @@ int
 co_nmt_is_master(const co_nmt_t *nmt)
 {
 #ifdef LELY_NO_CO_MASTER
-	__unused_var(nmt);
+	(void)nmt;
 
 	return 0;
 #else
@@ -2251,7 +2251,7 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f80);
 	assert(req);
-	__unused_var(data);
+	(void)data;
 
 	co_unsigned32_t ac = 0;
 
@@ -2478,7 +2478,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 static int
 co_nmt_ng_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	struct co_nmt_slave *slave = data;
 	assert(slave);
 	assert(slave->gt && slave->ltf);
@@ -2521,7 +2521,7 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 static int
 co_nmt_ec_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_nmt_t *nmt = data;
 	assert(nmt);
 	assert(nmt->lg_ind);
@@ -2543,7 +2543,7 @@ co_nmt_ec_timer(const struct timespec *tp, void *data)
 int
 co_nmt_cs_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_nmt_t *nmt = data;
 	assert(nmt);
 	assert(nmt->master);
@@ -2638,7 +2638,7 @@ static void
 default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	co_nmt_on_ng(nmt, id, state, reason);
 }
@@ -2647,7 +2647,7 @@ default_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 static void
 default_lg_ind(co_nmt_t *nmt, int state, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	co_nmt_on_lg(nmt, state);
 }
@@ -2656,7 +2656,7 @@ static void
 default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	co_nmt_on_hb(nmt, id, state, reason);
 }
@@ -2664,7 +2664,7 @@ default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 static void
 default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	co_nmt_on_st(nmt, id, st);
 }
@@ -2739,10 +2739,10 @@ static co_nmt_state_t *
 co_nmt_default_on_boot(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 {
-	__unused_var(nmt);
-	__unused_var(id);
-	__unused_var(st);
-	__unused_var(es);
+	(void)nmt;
+	(void)id;
+	(void)st;
+	(void)es;
 
 	return NULL;
 }
@@ -2752,7 +2752,7 @@ co_nmt_default_on_boot(
 static co_nmt_state_t *
 co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
@@ -2885,7 +2885,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 static co_nmt_state_t *
 co_nmt_reset_comm_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
@@ -2920,7 +2920,7 @@ co_nmt_bootup_on_enter(co_nmt_t *nmt)
 static co_nmt_state_t *
 co_nmt_bootup_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_RESET_NODE: return co_nmt_reset_node_state;
@@ -2957,7 +2957,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 static co_nmt_state_t *
 co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_START: return co_nmt_start_state;
@@ -2976,7 +2976,7 @@ co_nmt_preop_on_boot(
 	assert(nmt);
 	assert(nmt->master);
 	assert(id && id <= CO_NUM_NODES);
-	__unused_var(st);
+	(void)st;
 
 	// If the 'boot slave' process failed for a mandatory slave, halt the
 	// network boot-up procedure.
@@ -3059,7 +3059,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 static co_nmt_state_t *
 co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_STOP: return co_nmt_stop_state;
@@ -3092,7 +3092,7 @@ co_nmt_stop_on_enter(co_nmt_t *nmt)
 static co_nmt_state_t *
 co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 {
-	__unused_var(nmt);
+	(void)nmt;
 
 	switch (cs) {
 	case CO_NMT_CS_START: return co_nmt_start_state;

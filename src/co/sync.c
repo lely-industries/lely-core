@@ -552,7 +552,7 @@ co_sync_recv(const struct can_msg *msg, void *data)
 static int
 co_sync_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_sync_t *sync = data;
 	assert(sync);
 

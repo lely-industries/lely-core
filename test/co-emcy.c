@@ -61,8 +61,8 @@ void
 emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 		co_unsigned8_t er, uint8_t msef[5], void *data)
 {
-	__unused_var(emcy);
-	__unused_var(msef);
+	(void)emcy;
+	(void)msef;
 	struct co_test *test = data;
 
 	tap_pass("received EMCY [%d: %04X (%02X)]", id, ec, er);

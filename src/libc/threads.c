@@ -219,7 +219,7 @@ cnd_destroy(cnd_t *cond)
 #if LELY_HAVE_PTHREAD
 	pthread_cond_destroy((pthread_cond_t *)cond);
 #elif defined(_WIN32)
-	__unused_var(cond);
+	(void)cond;
 #endif
 }
 
@@ -361,8 +361,8 @@ mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 	default: return thrd_error;
 	}
 #else
-	__unused_var(mtx);
-	__unused_var(ts);
+	(void)mtx;
+	(void)ts;
 
 	return thrd_error;
 #endif

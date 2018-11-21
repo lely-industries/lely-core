@@ -585,12 +585,12 @@ struct c_type_traits<void> {
 
 	static pointer init(pointer p) noexcept { return p; }
 
-	static void fini(pointer p) noexcept { __unused_var(p); }
+	static void fini(pointer p) noexcept { (void)p; }
 
 	static pointer
 	copy(pointer p1, const_pointer p2) noexcept
 	{
-		__unused_var(p2);
+		(void)p2;
 
 		return p1;
 	}
@@ -598,7 +598,7 @@ struct c_type_traits<void> {
 	static pointer
 	move(pointer p1, pointer p2) noexcept
 	{
-		__unused_var(p2);
+		(void)p2;
 
 		return p1;
 	}

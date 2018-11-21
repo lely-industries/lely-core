@@ -930,9 +930,9 @@ static void
 co_nmt_boot_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, void *data)
 {
-	__unused_var(sdo);
-	__unused_var(idx);
-	__unused_var(subidx);
+	(void)sdo;
+	(void)idx;
+	(void)subidx;
 	co_nmt_boot_t *boot = data;
 	assert(boot);
 
@@ -943,9 +943,9 @@ static void
 co_nmt_boot_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned32_t ac, const void *ptr, size_t n, void *data)
 {
-	__unused_var(sdo);
-	__unused_var(idx);
-	__unused_var(subidx);
+	(void)sdo;
+	(void)idx;
+	(void)subidx;
 	co_nmt_boot_t *boot = data;
 	assert(boot);
 
@@ -956,8 +956,8 @@ static void
 co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac,
 		void *data)
 {
-	__unused_var(nmt);
-	__unused_var(id);
+	(void)nmt;
+	(void)id;
 	co_nmt_boot_t *boot = data;
 	assert(boot);
 
@@ -1034,8 +1034,8 @@ co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 static co_nmt_boot_state_t *
 co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
-	__unused_var(boot);
-	__unused_var(tp);
+	(void)boot;
+	(void)tp;
 
 	boot->st = 0;
 	boot->es = 0;
@@ -1115,7 +1115,7 @@ co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_error_on_enter(co_nmt_boot_t *boot)
 {
-	__unused_var(boot);
+	(void)boot;
 
 	return co_nmt_boot_wait_state;
 }
@@ -1366,8 +1366,8 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_chk_node_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
-	__unused_var(boot);
-	__unused_var(tp);
+	(void)boot;
+	(void)tp;
 
 	return co_nmt_boot_abort_state;
 }
@@ -1591,7 +1591,7 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
-	__unused_var(boot);
+	(void)boot;
 
 	// Retry the SDO request on timeout (this includes the first attempt).
 	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
@@ -1672,7 +1672,7 @@ static co_nmt_boot_state_t *
 co_nmt_boot_wait_flash_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	assert(boot);
-	__unused_var(tp);
+	(void)tp;
 
 	// Read the flash status indication of the slave (sub-object 1F57:01).
 	if (__unlikely(co_nmt_boot_up(boot, 0x1f57, 0x01) == -1))
@@ -1831,7 +1831,7 @@ static co_nmt_boot_state_t *
 co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	assert(boot);
-	__unused_var(tp);
+	(void)tp;
 
 	// The 'start program' step may take some time to complete, causing an
 	// immediate SDO upload request to generate a timeout. Start the first
@@ -2008,8 +2008,8 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_ec_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
-	__unused_var(boot);
-	__unused_var(tp);
+	(void)boot;
+	(void)tp;
 
 	return co_nmt_boot_abort_state;
 }

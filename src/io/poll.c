@@ -586,7 +586,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	io_poll_unlock(poll);
 #endif // __linux__ && HAVE_SYS_EPOLL_H
 #else
-	__unused_var(timeout);
+	(void)timeout;
 #endif // _WIN32
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L

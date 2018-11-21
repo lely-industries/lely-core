@@ -215,7 +215,7 @@ void
 default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
-	__unused_var(handle);
+	(void)handle;
 
 	int errsv = errno;
 	char *s = NULL;
@@ -367,7 +367,7 @@ syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 #if _POSIX_C_SOURCE >= 200809L
-	__unused_var(handle);
+	(void)handle;
 
 	int priority = LOG_USER;
 	switch (severity) {

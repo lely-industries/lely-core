@@ -71,8 +71,8 @@ int
 daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		void (*fini)(void), int argc, char *argv[])
 {
-	__unused_var(argc);
-	__unused_var(argv);
+	(void)argc;
+	(void)argv;
 
 	daemon_name = name;
 	daemon_init = init;
@@ -532,7 +532,7 @@ daemon_signal_func(int sig)
 static int
 daemon_thrd_start(void *arg)
 {
-	__unused_var(arg);
+	(void)arg;
 
 	for (;;) {
 		int result;
@@ -608,7 +608,7 @@ daemon_set_handler(daemon_handler_t *handler, void *handle)
 void
 default_daemon_handler(int sig, void *handle)
 {
-	__unused_var(handle);
+	(void)handle;
 
 	switch (sig) {
 	case DAEMON_STOP: daemon_status(DAEMON_STOP); break;

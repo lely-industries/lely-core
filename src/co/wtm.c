@@ -279,7 +279,7 @@ __co_wtm_init(struct __co_wtm *wtm)
 void
 __co_wtm_fini(struct __co_wtm *wtm)
 {
-	__unused_var(wtm);
+	(void)wtm;
 }
 
 co_wtm_t *
@@ -1110,8 +1110,8 @@ co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac)
 static void
 default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data)
 {
-	__unused_var(wtm);
-	__unused_var(data);
+	(void)wtm;
+	(void)data;
 
 	diag(DIAG_WARNING, 0, "received WTM abort code %08X: %s", ac,
 			co_wtm_ac_str(ac));

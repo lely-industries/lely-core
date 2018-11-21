@@ -1352,8 +1352,8 @@ co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg)
 static co_csdo_state_t *
 co_csdo_wait_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 {
-	__unused_var(sdo);
-	__unused_var(ac);
+	(void)sdo;
+	(void)ac;
 
 	return NULL;
 }
@@ -1380,7 +1380,7 @@ co_csdo_wait_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 static co_csdo_state_t *
 co_csdo_abort_on_enter(co_csdo_t *sdo)
 {
-	__unused_var(sdo);
+	(void)sdo;
 
 	can_timer_stop(sdo->timer);
 
@@ -1421,7 +1421,7 @@ co_csdo_dn_ini_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_dn_ini_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1485,7 +1485,7 @@ co_csdo_dn_seg_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_dn_seg_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1526,7 +1526,7 @@ co_csdo_up_ini_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_up_ini_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1603,7 +1603,7 @@ co_csdo_up_seg_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_up_seg_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1674,7 +1674,7 @@ co_csdo_blk_dn_ini_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_dn_ini_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1757,7 +1757,7 @@ co_csdo_blk_dn_sub_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_dn_sub_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1818,7 +1818,7 @@ co_csdo_blk_dn_end_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_dn_end_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1859,7 +1859,7 @@ co_csdo_blk_up_ini_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_up_ini_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1932,7 +1932,7 @@ co_csdo_blk_up_sub_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_up_sub_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }
@@ -1989,7 +1989,7 @@ co_csdo_blk_up_end_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
 static co_csdo_state_t *
 co_csdo_blk_up_end_on_time(co_csdo_t *sdo, const struct timespec *tp)
 {
-	__unused_var(tp);
+	(void)tp;
 
 	return co_csdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
 }

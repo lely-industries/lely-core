@@ -242,7 +242,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 static int
 co_nmt_hb_timer(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 

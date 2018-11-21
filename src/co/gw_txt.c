@@ -328,7 +328,7 @@ __co_gw_txt_init(struct __co_gw_txt *gw)
 void
 __co_gw_txt_fini(struct __co_gw_txt *gw)
 {
-	__unused_var(gw);
+	(void)gw;
 }
 
 co_gw_txt_t *

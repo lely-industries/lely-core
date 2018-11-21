@@ -548,7 +548,7 @@ gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data)
 {
 	assert(id && id <= CO_GW_NUM_NET);
 	uint32_t bitrate = rate * 1000;
-	__unused_var(data);
+	(void)data;
 
 	if (!net[id - 1].handle || !bitrate)
 		return;
@@ -561,7 +561,7 @@ gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data)
 int
 gw_txt_recv(const char *txt, void *data)
 {
-	__unused_var(data);
+	(void)data;
 
 	mtx_lock(&send_mtx);
 	if (send_buf) {
@@ -591,7 +591,7 @@ gw_txt_send(const struct co_gw_req *req, void *data)
 void
 sig_done(int sig)
 {
-	__unused_var(sig);
+	(void)sig;
 
 	done = 1;
 

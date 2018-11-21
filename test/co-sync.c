@@ -43,7 +43,7 @@ main(void)
 void
 sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 {
-	__unused_var(sync);
+	(void)sync;
 	struct co_test *test = data;
 
 	tap_pass("received SYNC [%d]", cnt);

@@ -598,7 +598,7 @@ int
 wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data)
 {
-	__unused_var(wtm);
+	(void)wtm;
 	assert(msg);
 	io_handle_t handle = data;
 	assert(handle != IO_HANDLE_ERROR);
@@ -620,7 +620,7 @@ wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
 int
 wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 {
-	__unused_var(wtm);
+	(void)wtm;
 	io_handle_t handle = data;
 	assert(handle != IO_HANDLE_ERROR);
 

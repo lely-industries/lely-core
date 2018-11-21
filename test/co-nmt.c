@@ -105,7 +105,7 @@ main(void)
 void
 cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 {
-	__unused_var(nmt);
+	(void)nmt;
 	co_dev_t *dev = data;
 	tap_assert(dev);
 
@@ -115,8 +115,8 @@ cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 void
 hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason, void *data)
 {
-	__unused_var(nmt);
-	__unused_var(data);
+	(void)nmt;
+	(void)data;
 
 	// clang-format off
 	tap_diag("heartbeat %s %s for node %d",
@@ -131,7 +131,7 @@ void
 st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 {
 	tap_assert(nmt);
-	__unused_var(data);
+	(void)data;
 
 	tap_diag("state %02x reported for node %d", st, id);
 
@@ -205,8 +205,8 @@ void
 boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 		void *data)
 {
-	__unused_var(nmt);
-	__unused_var(st);
+	(void)nmt;
+	(void)st;
 	struct co_test *test = data;
 	tap_assert(test);
 
@@ -221,8 +221,8 @@ void
 err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 		co_unsigned8_t spec, void *data)
 {
-	__unused_var(lss);
-	__unused_var(cs);
+	(void)lss;
+	(void)cs;
 	struct co_test *test = data;
 	tap_assert(test);
 
@@ -238,7 +238,7 @@ err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 void
 lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id, void *data)
 {
-	__unused_var(lss);
+	(void)lss;
 	struct co_test *test = data;
 	tap_assert(test);
 
@@ -256,8 +256,8 @@ lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id, void *data)
 void
 nid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id, void *data)
 {
-	__unused_var(lss);
-	__unused_var(cs);
+	(void)lss;
+	(void)cs;
 	struct co_test *test = data;
 	tap_assert(test);
 
@@ -269,8 +269,8 @@ nid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t id, void *data)
 void
 scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id, void *data)
 {
-	__unused_var(lss);
-	__unused_var(cs);
+	(void)lss;
+	(void)cs;
 	struct co_test *test = data;
 	tap_assert(test);
 

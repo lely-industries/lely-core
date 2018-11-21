@@ -747,7 +747,7 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 static int
 co_rpdo_timer_event(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_rpdo_t *pdo = data;
 	assert(pdo);
 
@@ -763,7 +763,7 @@ co_rpdo_timer_event(const struct timespec *tp, void *data)
 static int
 co_rpdo_timer_swnd(const struct timespec *tp, void *data)
 {
-	__unused_var(tp);
+	(void)tp;
 	co_rpdo_t *pdo = data;
 	assert(pdo);
 

@@ -198,7 +198,7 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 		co_nmt_srv_init_emcy(srv, net, dev);
 #endif
 #ifdef LELY_NO_CO_LSS
-	__unused_var(nmt);
+	(void)nmt;
 #else
 	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_init_lss(srv, nmt);
@@ -310,7 +310,7 @@ static void
 co_nmt_srv_rpdo_err(co_rpdo_t *pdo, co_unsigned16_t eec, co_unsigned8_t er,
 		void *data)
 {
-	__unused_var(pdo);
+	(void)pdo;
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
@@ -453,7 +453,7 @@ co_nmt_srv_fini_sync(struct co_nmt_srv *srv)
 static void
 co_nmt_srv_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 {
-	__unused_var(sync);
+	(void)sync;
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
@@ -464,7 +464,7 @@ static void
 co_nmt_srv_sync_err(co_sync_t *sync, co_unsigned16_t eec, co_unsigned8_t er,
 		void *data)
 {
-	__unused_var(sync);
+	(void)sync;
 	co_nmt_t *nmt = data;
 	assert(nmt);
 

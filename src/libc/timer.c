@@ -393,7 +393,7 @@ timer_fini(void)
 static void
 timer_start(void *arglist)
 {
-	__unused_var(arglist);
+	(void)arglist;
 
 	// Wait until the #timer_exit event is signaled. We use an alertable
 	// wait to allow timer_apc_set() and timer_apc_proc() to run on this
@@ -409,7 +409,7 @@ timer_start(void *arglist)
 
 static void __stdcall timer_apc_set(ULONG_PTR dwParam)
 {
-	__unused_var(dwParam);
+	(void)dwParam;
 
 	// Arm all queued timers.
 	mtx_lock(&timer_mtx);

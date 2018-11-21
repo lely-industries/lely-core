@@ -47,7 +47,7 @@ main(void)
 void
 time_ind(co_time_t *time, const struct timespec *tp, void *data)
 {
-	__unused_var(time);
+	(void)time;
 	tap_assert(tp);
 	struct co_test *test = data;
 

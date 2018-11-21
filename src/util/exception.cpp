@@ -34,7 +34,7 @@ extern "C" {
 _Noreturn void
 __throw_or_abort(const char *what) noexcept
 {
-	__unused_var(what);
+	(void)what;
 
 	::std::abort();
 }

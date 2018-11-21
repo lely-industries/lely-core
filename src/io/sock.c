@@ -745,8 +745,8 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 			return -1;
 	}
 #else
-	__unused_var(time);
-	__unused_var(interval);
+	(void)time;
+	(void)interval;
 #endif
 	return 0;
 #endif
