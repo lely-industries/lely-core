@@ -92,7 +92,7 @@ typedef uint64_t can_recv_key_t;
 static inline can_recv_key_t can_recv_key(uint32_t id, uint8_t flags);
 
 /// The function used to compare to CAN receiver keys.
-static int __cdecl can_recv_key_cmp(const void *p1, const void *p2);
+static int can_recv_key_cmp(const void *p1, const void *p2);
 
 /// A CAN frame receiver.
 struct __can_recv {
@@ -653,7 +653,8 @@ can_recv_key(uint32_t id, uint8_t flags)
 	return (can_recv_key_t)id | ((can_recv_key_t)flags << 29);
 }
 
-static int __cdecl can_recv_key_cmp(const void *p1, const void *p2)
+static int
+can_recv_key_cmp(const void *p1, const void *p2)
 {
 #ifdef LELY_NO_CANFD
 	return uint32_cmp(p1, p2);

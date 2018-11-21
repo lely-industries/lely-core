@@ -78,7 +78,7 @@ extern "C" {
  * @returns an integer greater than, equal to, or less than 0 if the object at
  * <b>p1</b> is greater than, equal to, or less than the object at <b>p2</b>.
  */
-typedef int __cdecl rbtree_cmp_t(const void *, const void *);
+typedef int rbtree_cmp_t(const void *, const void *);
 
 /// A red-black tree.
 struct rbtree {

@@ -50,9 +50,9 @@ struct factory_entry {
 /// The flag ensuring factory_init() is only called once.
 static once_flag factory_once = ONCE_FLAG_INIT;
 /// The initialization function for #factory_mtx.
-static void __cdecl factory_init(void);
+static void factory_init(void);
 /// The finalization function for #factory_mtx.
-static void __cdecl factory_fini(void);
+static void factory_fini(void);
 /// The mutex protecting #factory.
 static mtx_t factory_mtx;
 #endif
@@ -186,13 +186,18 @@ factory_find_dtor(const char *name)
 
 #ifndef LELY_NO_THREADS
 
-static void __cdecl factory_init(void)
+static void
+factory_init(void)
 {
 	mtx_init(&factory_mtx, mtx_plain);
 
 	atexit(&factory_fini);
 }
 
-static void __cdecl factory_fini(void) { mtx_destroy(&factory_mtx); }
+static void
+factory_fini(void)
+{
+	mtx_destroy(&factory_mtx);
+}
 
 #endif

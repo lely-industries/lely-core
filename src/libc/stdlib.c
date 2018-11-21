@@ -42,7 +42,8 @@
 #include <lely/libc/stdint.h>
 #endif
 
-void *__cdecl aligned_alloc(size_t alignment, size_t size)
+void *
+aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef _WIN32
 	if (__unlikely(!size))
@@ -86,7 +87,8 @@ void *__cdecl aligned_alloc(size_t alignment, size_t size)
 
 #ifndef __USE_ISOC11
 
-void __cdecl aligned_free(void *ptr)
+void
+aligned_free(void *ptr)
 {
 #ifdef _WIN32
 	_aligned_free(ptr);

@@ -55,7 +55,8 @@
 #define TIME_T_MAX _I64_MAX
 #endif
 
-int __cdecl clock_getres(clockid_t clock_id, struct timespec *res)
+int
+clock_getres(clockid_t clock_id, struct timespec *res)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -92,7 +93,8 @@ int __cdecl clock_getres(clockid_t clock_id, struct timespec *res)
 	return 0;
 }
 
-int __cdecl clock_gettime(clockid_t clock_id, struct timespec *tp)
+int
+clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -191,8 +193,9 @@ int __cdecl clock_gettime(clockid_t clock_id, struct timespec *tp)
 	return 0;
 }
 
-int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
-		const struct timespec *rqtp, struct timespec *rmtp)
+int
+clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
+		struct timespec *rmtp)
 {
 	switch (clock_id) {
 	case CLOCK_REALTIME:
@@ -268,7 +271,8 @@ int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
 	return 0;
 }
 
-int __cdecl clock_settime(clockid_t clock_id, const struct timespec *tp)
+int
+clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
 	if (__unlikely(clock_id != CLOCK_REALTIME)) {
 		errno = EINVAL;

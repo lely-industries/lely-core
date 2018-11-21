@@ -82,7 +82,7 @@ int getopt(int argc, char *const argv[], const char *optstring);
  *
  * @see nanosleep()
  */
-unsigned __cdecl sleep(unsigned seconds);
+unsigned sleep(unsigned seconds);
 
 #ifdef __cplusplus
 }

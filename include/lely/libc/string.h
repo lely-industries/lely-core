@@ -39,7 +39,7 @@ extern "C" {
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-char *__cdecl strdup(const char *s);
+char *strdup(const char *s);
 
 #endif
 
@@ -52,7 +52,7 @@ char *__cdecl strdup(const char *s);
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-char *__cdecl strndup(const char *s, size_t size);
+char *strndup(const char *s, size_t size);
 
 #endif
 
@@ -66,7 +66,7 @@ char *__cdecl strndup(const char *s, size_t size);
  * @returns the smaller of the length of the string at <b>s</b> or
  * <b>maxlen</b>.
  */
-size_t __cdecl strnlen(const char *s, size_t maxlen);
+size_t strnlen(const char *s, size_t maxlen);
 
 #endif
 

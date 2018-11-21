@@ -52,9 +52,13 @@ extern "C" {
  */
 #if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
 		&& !defined(__BSD_VISIBLE)
-LELY_LIBC_STRINGS_INLINE int __cdecl ffs(int i) { return __builtin_ffs(i); }
+LELY_LIBC_STRINGS_INLINE int
+ffs(int i)
+{
+	return __builtin_ffs(i);
+}
 #else
-int __cdecl ffs(int i);
+int ffs(int i);
 #endif
 
 /**
@@ -64,7 +68,7 @@ int __cdecl ffs(int i);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int __cdecl strcasecmp(const char *s1, const char *s2);
+int strcasecmp(const char *s1, const char *s2);
 
 /**
  * Compares at most <b>n</b> characters from the the string at <b>s1</b> to the
@@ -73,7 +77,7 @@ int __cdecl strcasecmp(const char *s1, const char *s2);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int __cdecl strncasecmp(const char *s1, const char *s2, size_t n);
+int strncasecmp(const char *s1, const char *s2, size_t n);
 
 #ifdef __cplusplus
 }

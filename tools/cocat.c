@@ -52,7 +52,7 @@
 int can_recv(const struct can_msg *msg, void *data);
 int can_send(const struct can_msg *msg, void *data);
 
-int __cdecl io_thrd_start(void *arg);
+int io_thrd_start(void *arg);
 
 can_net_t *net;
 
@@ -340,7 +340,8 @@ can_send(const struct can_msg *msg, void *data)
 	return io_can_write(handle, msg) == 1 ? 0 : -1;
 }
 
-int __cdecl io_thrd_start(void *arg)
+int
+io_thrd_start(void *arg)
 {
 	io_poll_t *poll = arg;
 	assert(poll);

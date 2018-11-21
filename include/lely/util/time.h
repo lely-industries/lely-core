@@ -103,7 +103,7 @@ LELY_UTIL_TIME_INLINE int64_t timespec_diff_nsec(
  * @returns an integer greater than, equal to, or less than 0 if *<b>p1</b> is
  * greater than, equal to, or less than *<b>p2</b>.
  */
-LELY_UTIL_TIME_INLINE int __cdecl timespec_cmp(const void *p1, const void *p2);
+LELY_UTIL_TIME_INLINE int timespec_cmp(const void *p1, const void *p2);
 
 LELY_UTIL_TIME_INLINE void
 timespec_add(struct timespec *tp, const struct timespec *inc)
@@ -219,7 +219,8 @@ timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 			+ ((int64_t)t1->tv_nsec - (int64_t)t2->tv_nsec);
 }
 
-LELY_UTIL_TIME_INLINE int __cdecl timespec_cmp(const void *p1, const void *p2)
+LELY_UTIL_TIME_INLINE int
+timespec_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;

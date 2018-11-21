@@ -28,7 +28,8 @@
 
 #if !LELY_HAVE_TIMESPEC_GET
 
-int __cdecl timespec_get(struct timespec *ts, int base)
+int
+timespec_get(struct timespec *ts, int base)
 {
 	if (__unlikely(base != TIME_UTC))
 		return 0;

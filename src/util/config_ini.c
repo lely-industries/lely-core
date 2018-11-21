@@ -32,9 +32,9 @@
 
 #include <assert.h>
 
-static int __cdecl issection(int c);
-static int __cdecl iskey(int c);
-static int __cdecl isvalue(int c);
+static int issection(int c);
+static int iskey(int c);
+static int isvalue(int c);
 
 static size_t skip(const char *begin, const char *end, struct floc *at);
 
@@ -226,17 +226,23 @@ config_print_ini_text(const config_t *config, char **pbegin, char *end)
 	return ctx.chars;
 }
 
-static int __cdecl issection(int c)
+static int
+issection(int c)
 {
 	return isgraph(c) && c != '#' && c != ';' && c != '[' && c != ']';
 }
 
-static int __cdecl iskey(int c)
+static int
+iskey(int c)
 {
 	return isgraph(c) && c != '#' && c != ';' && c != '=';
 }
 
-static int __cdecl isvalue(int c) { return isprint(c) && c != '#' && c != ';'; }
+static int
+isvalue(int c)
+{
+	return isprint(c) && c != '#' && c != ';';
+}
 
 static size_t
 skip(const char *begin, const char *end, struct floc *at)

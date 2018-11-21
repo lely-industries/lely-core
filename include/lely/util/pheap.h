@@ -74,7 +74,7 @@ extern "C" {
  * @returns an integer greater than, equal to, or less than 0 if the object at
  * <b>p1</b> is greater than, equal to, or less than the object at <b>p2</b>.
  */
-typedef int __cdecl pheap_cmp_t(const void *p1, const void *p2);
+typedef int pheap_cmp_t(const void *p1, const void *p2);
 
 /// A pairing heap.
 struct pheap {

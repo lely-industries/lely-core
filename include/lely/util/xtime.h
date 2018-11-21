@@ -26,7 +26,6 @@
 #ifndef LELY_UTIL_XTIME_H_
 #define LELY_UTIL_XTIME_H_
 
-#include <lely/libc/signal.h>
 #include <lely/libc/time.h>
 #include <lely/util/util.h>
 

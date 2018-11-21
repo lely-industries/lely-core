@@ -273,10 +273,6 @@
 #endif
 #endif
 
-#if !defined(__cdecl) && !defined(_MSC_VER)
-#define __cdecl
-#endif
-
 #ifndef __deprecated
 /// Mark a function as deprecated.
 #if defined(__GNUC__) || __has_attribute(__deprecated__)

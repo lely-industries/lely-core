@@ -51,7 +51,8 @@ static const int ffs_tab[] = {
 };
 // clang-format on
 
-int __cdecl ffs(int i)
+int
+ffs(int i)
 {
 	unsigned int x = i & -i;
 	unsigned int n = x > 0x00ffffff
@@ -62,7 +63,8 @@ int __cdecl ffs(int i)
 
 #endif
 
-int __cdecl strcasecmp(const char *s1, const char *s2)
+int
+strcasecmp(const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return 0;
@@ -76,7 +78,8 @@ int __cdecl strcasecmp(const char *s1, const char *s2)
 	return result;
 }
 
-int __cdecl strncasecmp(const char *s1, const char *s2, size_t n)
+int
+strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	if (s1 == s2 || !n)
 		return 0;

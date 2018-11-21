@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_TIME_H_
 #define LELY_LIBC_TIME_H_
 
-#include <lely/features.h>
+#include <lely/libc/signal.h>
 
 #include <time.h>
 
@@ -123,7 +123,7 @@ extern "C" {
  *
  * @see clock_gettime(), clock_settime()
  */
-int __cdecl clock_getres(clockid_t clock_id, struct timespec *res);
+int clock_getres(clockid_t clock_id, struct timespec *res);
 
 /**
  * Obtains the current value of a clock.
@@ -139,7 +139,7 @@ int __cdecl clock_getres(clockid_t clock_id, struct timespec *res);
  *
  * @see clock_getres(), clock_settime()
  */
-int __cdecl clock_gettime(clockid_t clock_id, struct timespec *tp);
+int clock_gettime(clockid_t clock_id, struct timespec *tp);
 
 /**
  * Sleeps until a time interval or absolute time has elapsed on a clock. If the
@@ -171,8 +171,8 @@ int __cdecl clock_gettime(clockid_t clock_id, struct timespec *tp);
  *
  * @returns 0 on success, or an error number on error.
  */
-int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
-		const struct timespec *rqtp, struct timespec *rmtp);
+int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp,
+		struct timespec *rmtp);
 
 /**
  * Sets the value of a clock.
@@ -186,13 +186,13 @@ int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
  *
  * @see clock_getres(), clock_gettime()
  */
-int __cdecl clock_settime(clockid_t clock_id, const struct timespec *tp);
+int clock_settime(clockid_t clock_id, const struct timespec *tp);
 
 /**
  * Equivalent to `clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp)`, except that
  * on error, it returns -1 and sets `errno` to indicate the error.
  */
-int __cdecl nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 #endif // !_POSIX_TIMERS && !__MINGW32__
 
@@ -222,8 +222,7 @@ int __cdecl nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
  *
  * @see timer_delete()
  */
-int __cdecl timer_create(
-		clockid_t clockid, struct sigevent *evp, timer_t *timerid);
+int timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid);
 
 /**
  * Deletes the specified timer created with timer_create(). If the timer is
@@ -233,7 +232,7 @@ int __cdecl timer_create(
  * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
  */
-int __cdecl timer_delete(timer_t timerid);
+int timer_delete(timer_t timerid);
 
 /**
  * Returns the timer expiration overrun count for the specified timer. Only a
@@ -246,7 +245,7 @@ int __cdecl timer_delete(timer_t timerid);
  * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
  */
-int __cdecl timer_getoverrun(timer_t timerid);
+int timer_getoverrun(timer_t timerid);
 
 /**
  * Obtains the amount of time until the specified timer expires and the reload
@@ -262,7 +261,7 @@ int __cdecl timer_getoverrun(timer_t timerid);
  * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
  */
-int __cdecl timer_gettime(timer_t timerid, struct itimerspec *value);
+int timer_gettime(timer_t timerid, struct itimerspec *value);
 
 /**
  * Arms or disarms a timer. If the specified timer was already armed, the
@@ -287,8 +286,8 @@ int __cdecl timer_gettime(timer_t timerid, struct itimerspec *value);
  * @returns 0 on success, or -1 on error. In the latter case, `errno` is set to
  * indicate the error.
  */
-int __cdecl timer_settime(timer_t timerid, int flags,
-		const struct itimerspec *value, struct itimerspec *ovalue);
+int timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
+		struct itimerspec *ovalue);
 
 #endif // _WIN32 || !_POSIX_TIMERS
 
@@ -311,7 +310,7 @@ int __cdecl timer_settime(timer_t timerid, int flags,
  * @returns the nonzero value <b>base</b> on success; otherwise, it returns
  * zero.
  */
-int __cdecl timespec_get(struct timespec *ts, int base);
+int timespec_get(struct timespec *ts, int base);
 
 #endif // !LELY_HAVE_TIMESPEC_GET
 

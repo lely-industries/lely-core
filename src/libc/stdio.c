@@ -101,7 +101,8 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !LELY_HAVE_SNPRINTF
 
-int __cdecl snprintf(char *s, size_t n, const char *format, ...)
+int
+snprintf(char *s, size_t n, const char *format, ...)
 {
 	va_list arg;
 	va_start(arg, format);
@@ -110,7 +111,8 @@ int __cdecl snprintf(char *s, size_t n, const char *format, ...)
 	return result;
 }
 
-int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg)
+int
+vsnprintf(char *s, size_t n, const char *format, va_list arg)
 {
 	int result = -1;
 	if (n) {
@@ -124,7 +126,8 @@ int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg)
 
 #endif // !LELY_HAVE_SNPRINTF
 
-int __cdecl asprintf(char **strp, const char *fmt, ...)
+int
+asprintf(char **strp, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -133,7 +136,8 @@ int __cdecl asprintf(char **strp, const char *fmt, ...)
 	return result;
 }
 
-int __cdecl vasprintf(char **strp, const char *fmt, va_list ap)
+int
+vasprintf(char **strp, const char *fmt, va_list ap)
 {
 	assert(strp);
 

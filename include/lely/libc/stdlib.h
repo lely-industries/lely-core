@@ -48,7 +48,7 @@ extern "C" {
  *
  * @returns either a NULL pointer or a pointer to the allocated space.
  */
-void *__cdecl aligned_alloc(size_t alignment, size_t size);
+void *aligned_alloc(size_t alignment, size_t size);
 
 /**
  * Causes the space at <b>ptr</b> to be deallocated, that is, made available for
@@ -57,7 +57,7 @@ void *__cdecl aligned_alloc(size_t alignment, size_t size);
  * aligned_alloc(), or if the space has been deallocated by a call to
  * aligned_free(), the behavior is undefined.
  */
-void __cdecl aligned_free(void *ptr);
+void aligned_free(void *ptr);
 
 #ifdef __cplusplus
 }

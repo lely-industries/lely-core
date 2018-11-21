@@ -44,7 +44,8 @@ static int bachk(const char *str);
 #include <netdb.h>
 #endif
 
-int __cdecl io_addr_cmp(const void *p1, const void *p2)
+int
+io_addr_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;

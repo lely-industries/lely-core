@@ -100,7 +100,7 @@ extern "C" {
  * @returns an integer greater than, equal to, or less than 0 if the address at
  * <b>p1</b> is greater than, equal to, or less than the address at <b>p2</b>.
  */
-int __cdecl io_addr_cmp(const void *p1, const void *p2);
+int io_addr_cmp(const void *p1, const void *p2);
 
 /**
  * Obtains an RFCOMM Bluetooth device address and port number from a network

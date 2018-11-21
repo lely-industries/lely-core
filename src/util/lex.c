@@ -48,7 +48,7 @@ lex_char(int c, const char *begin, const char *end, struct floc *at)
 }
 
 size_t
-lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
+lex_ctype(int (*ctype)(int), const char *begin, const char *end,
 		struct floc *at)
 {
 	assert(ctype);

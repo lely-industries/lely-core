@@ -103,7 +103,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
  *
  * @see vsnprintf()
  */
-int __cdecl snprintf(char *s, size_t n, const char *format, ...);
+int snprintf(char *s, size_t n, const char *format, ...);
 
 /**
  * Equivalent to `vprintf()`, except that the output is written to a string
@@ -124,7 +124,7 @@ int __cdecl snprintf(char *s, size_t n, const char *format, ...);
  *
  * @see snprintf()
  */
-int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg);
+int vsnprintf(char *s, size_t n, const char *format, va_list arg);
 
 #endif // !LELY_HAVE_SNPRINTF
 
@@ -144,7 +144,7 @@ int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg);
  *
  * @see vasprintf()
  */
-int __cdecl asprintf(char **strp, const char *fmt, ...);
+int asprintf(char **strp, const char *fmt, ...);
 
 /**
  * Equivalent to `vsprintf()`, except that it allocates a string large enough to
@@ -161,7 +161,7 @@ int __cdecl asprintf(char **strp, const char *fmt, ...);
  *
  * @see asprintf()
  */
-int __cdecl vasprintf(char **strp, const char *fmt, va_list ap);
+int vasprintf(char **strp, const char *fmt, va_list ap);
 
 #endif // !_GNU_SOURCE || __MINGW32__
 

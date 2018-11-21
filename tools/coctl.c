@@ -79,8 +79,8 @@ void gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data);
 int gw_txt_recv(const char *txt, void *data);
 int gw_txt_send(const struct co_gw_req *req, void *data);
 
-void __cdecl sig_done(int sig);
-int __cdecl io_thrd_start(void *arg);
+void sig_done(int sig);
+int io_thrd_start(void *arg);
 
 void co_net_err(struct co_net *net);
 
@@ -588,7 +588,8 @@ gw_txt_send(const struct co_gw_req *req, void *data)
 	return co_gw_recv(gw_txt, req);
 }
 
-void __cdecl sig_done(int sig)
+void
+sig_done(int sig)
 {
 	__unused_var(sig);
 
@@ -606,7 +607,8 @@ void __cdecl sig_done(int sig)
 	mtx_unlock(&send_mtx);
 }
 
-int __cdecl io_thrd_start(void *arg)
+int
+io_thrd_start(void *arg)
 {
 	co_gw_txt_t *gw = arg;
 	assert(gw);

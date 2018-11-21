@@ -60,7 +60,7 @@ struct sigevent {
 	/// The signal value.
 	union sigval sigev_value;
 	/// The notification function.
-	void(__cdecl *sigev_notify_function)(union sigval);
+	void (*sigev_notify_function)(union sigval);
 	/// The notification attributes (ignored on Windows).
 	pthread_attr_t *sigev_notify_attributes;
 };

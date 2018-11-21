@@ -63,7 +63,7 @@ struct __xtimer {
 	/// The signal value.
 	union sigval value;
 	/// The notification function.
-	void(__cdecl *notify_function)(union sigval);
+	void (*notify_function)(union sigval);
 	/// The absolute expiration time.
 	struct timespec expire;
 	/// The period.
@@ -273,7 +273,7 @@ xclock_settime(xclock_t *clock, const struct timespec *tp)
 
 		if (timer->notify == SIGEV_THREAD) {
 			union sigval value = timer->value;
-			void(__cdecl * notify_function)(union sigval) =
+			void (*notify_function)(union sigval) =
 					timer->notify_function;
 #ifndef LELY_NO_THREADS
 			mtx_unlock(&clock->mtx);

@@ -40,10 +40,10 @@ extern "C" {
 #endif
 
 /// Returns 1 if <b>c</b> is a line break character, and 0 otherwise.
-LELY_UTIL_LEX_INLINE int __cdecl isbreak(int c);
+LELY_UTIL_LEX_INLINE int isbreak(int c);
 
 /// Returns 1 if <b>c</b> is an octal digit, and 0 otherwise.
-LELY_UTIL_LEX_INLINE int __cdecl isodigit(int c);
+LELY_UTIL_LEX_INLINE int isodigit(int c);
 
 /// Returns the octal digit corresponding to the character <b>c</b>. @see otoc()
 LELY_UTIL_LEX_INLINE int ctoo(int c);
@@ -87,7 +87,7 @@ size_t lex_char(int c, const char *begin, const char *end, struct floc *at);
  *
  * @returns the number of characters read.
  */
-size_t lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
+size_t lex_ctype(int (*ctype)(int), const char *begin, const char *end,
 		struct floc *at);
 
 /**
@@ -370,12 +370,14 @@ size_t lex_line_comment(const char *delim, const char *begin, const char *end,
 size_t lex_base64(const char *begin, const char *end, struct floc *at,
 		void *ptr, size_t *pn);
 
-LELY_UTIL_LEX_INLINE int __cdecl isbreak(int c)
+LELY_UTIL_LEX_INLINE int
+isbreak(int c)
 {
 	return c == '\n' || c == '\r';
 }
 
-LELY_UTIL_LEX_INLINE int __cdecl isodigit(int c)
+LELY_UTIL_LEX_INLINE int
+isodigit(int c)
 {
 	return c >= '0' && c <= '7';
 }

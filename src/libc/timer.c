@@ -56,7 +56,7 @@ struct timer {
 	/// The signal value.
 	union sigval sigev_value;
 	/// The notification function.
-	void(__cdecl *sigev_notify_function)(union sigval);
+	void (*sigev_notify_function)(union sigval);
 	/// The waitable timer object.
 	HANDLE hTimer;
 	/// The mutex protecting #expire, #period, #armed and #overrun.
@@ -78,11 +78,11 @@ struct timer {
 };
 
 /// Initializes #timer_mtx and #timer_exit and starts the timer thread.
-static void __cdecl timer_init(void);
+static void timer_init(void);
 /// Signals the timer thread to exit.
-static void __cdecl timer_fini(void);
+static void timer_fini(void);
 /// The function running in the timer thread.
-static void __cdecl timer_start(void *arglist);
+static void timer_start(void *arglist);
 
 /// The asynchronous procedure used to arm queued timers.
 static void __stdcall timer_apc_set(ULONG_PTR dwParam);
@@ -112,8 +112,8 @@ static inline void timespec_add(
 static inline void timespec_sub(
 		struct timespec *tp, const struct timespec *dec);
 
-int __cdecl timer_create(
-		clockid_t clockid, struct sigevent *evp, timer_t *timerid)
+int
+timer_create(clockid_t clockid, struct sigevent *evp, timer_t *timerid)
 {
 	switch (clockid) {
 	case CLOCK_REALTIME: break;
@@ -176,7 +176,8 @@ error_malloc_timer:
 	return -1;
 }
 
-int __cdecl timer_delete(timer_t timerid)
+int
+timer_delete(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -197,7 +198,8 @@ int __cdecl timer_delete(timer_t timerid)
 	return 0;
 }
 
-int __cdecl timer_getoverrun(timer_t timerid)
+int
+timer_getoverrun(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -212,7 +214,8 @@ int __cdecl timer_getoverrun(timer_t timerid)
 	return overrun;
 }
 
-int __cdecl timer_gettime(timer_t timerid, struct itimerspec *value)
+int
+timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -238,8 +241,9 @@ int __cdecl timer_gettime(timer_t timerid, struct itimerspec *value)
 	return 0;
 }
 
-int __cdecl timer_settime(timer_t timerid, int flags,
-		const struct itimerspec *value, struct itimerspec *ovalue)
+int
+timer_settime(timer_t timerid, int flags, const struct itimerspec *value,
+		struct itimerspec *ovalue)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -352,7 +356,8 @@ int __cdecl timer_settime(timer_t timerid, int flags,
 	return 0;
 }
 
-static void __cdecl timer_init(void)
+static void
+timer_init(void)
 {
 	mtx_init(&timer_mtx, mtx_plain);
 
@@ -379,9 +384,14 @@ error_create_timer_exit:
 	mtx_destroy(&timer_mtx);
 }
 
-static void __cdecl timer_fini(void) { SetEvent(timer_exit); }
+static void
+timer_fini(void)
+{
+	SetEvent(timer_exit);
+}
 
-static void __cdecl timer_start(void *arglist)
+static void
+timer_start(void *arglist)
 {
 	__unused_var(arglist);
 
@@ -422,7 +432,7 @@ static void __stdcall timer_apc_proc(LPVOID lpArgToCompletionRoutine,
 	struct timer *timer = lpArgToCompletionRoutine;
 
 	union sigval sigev_value;
-	void(__cdecl * sigev_notify_function)(union sigval) = NULL;
+	void (*sigev_notify_function)(union sigval) = NULL;
 
 	mtx_lock(&timer->mtx);
 	if (timer->armed) {
