@@ -47,7 +47,7 @@ static int snprintf_c99_sval(
 		char *s, size_t n, co_unsigned16_t type, const void *val);
 static int snprintf_c99_esc(char *s, size_t n, const char *esc);
 
-LELY_CO_EXPORT struct __co_dev *
+struct __co_dev *
 __co_dev_init_from_sdev(struct __co_dev *dev, const struct co_sdev *sdev)
 {
 	assert(dev);
@@ -79,7 +79,7 @@ error_param:
 	return NULL;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_dev_create_from_sdev(const struct co_sdev *sdev)
 {
 	errc_t errc = 0;
@@ -104,7 +104,7 @@ error_alloc_dev:
 	return NULL;
 }
 
-LELY_CO_EXPORT int
+int
 snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 {
 	if (!s)
@@ -401,7 +401,7 @@ error_print_dev:
 	return r;
 }
 
-LELY_CO_EXPORT int
+int
 asprintf_c99_sdev(char **ps, const co_dev_t *dev)
 {
 	int n = snprintf_c99_sdev(NULL, 0, dev);

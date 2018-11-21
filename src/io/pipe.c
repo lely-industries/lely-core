@@ -46,7 +46,7 @@ static const struct io_handle_vtab pipe_vtab = { .type = IO_TYPE_PIPE,
 	.read = &default_read,
 	.write = &default_write };
 
-LELY_IO_EXPORT int
+int
 io_open_pipe(io_handle_t handle_vector[2])
 {
 	assert(handle_vector);

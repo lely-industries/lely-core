@@ -148,7 +148,7 @@ LELY_UTIL_PHEAP_INLINE size_t pheap_size(const struct pheap *heap);
  *
  * @see pheap_remove(), pheap_find()
  */
-LELY_UTIL_EXTERN void pheap_insert(struct pheap *heap, struct pnode *node);
+void pheap_insert(struct pheap *heap, struct pnode *node);
 
 /**
  * Removes a node from a pairing heap. This is an (amortized) O(log(n))
@@ -156,7 +156,7 @@ LELY_UTIL_EXTERN void pheap_insert(struct pheap *heap, struct pnode *node);
  *
  * @see pheap_insert()
  */
-LELY_UTIL_EXTERN void pheap_remove(struct pheap *heap, struct pnode *node);
+void pheap_remove(struct pheap *heap, struct pnode *node);
 
 /**
  * Finds a node in a pairing heap. This is an O(n) operation.
@@ -165,8 +165,7 @@ LELY_UTIL_EXTERN void pheap_remove(struct pheap *heap, struct pnode *node);
  *
  * @see pheap_insert()
  */
-LELY_UTIL_EXTERN struct pnode *pheap_find(
-		const struct pheap *heap, const void *key);
+struct pnode *pheap_find(const struct pheap *heap, const void *key);
 
 /**
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an

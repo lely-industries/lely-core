@@ -151,7 +151,7 @@ static int co_rpdo_timer_swnd(const struct timespec *tp, void *data);
 static co_unsigned32_t co_rpdo_read_frame(
 		co_rpdo_t *pdo, const struct can_msg *msg);
 
-LELY_CO_EXPORT void *
+void *
 __co_rpdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_rpdo));
@@ -160,13 +160,13 @@ __co_rpdo_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_rpdo_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_rpdo *
+struct __co_rpdo *
 __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 		co_unsigned16_t num)
 {
@@ -248,7 +248,7 @@ error_param:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_rpdo_fini(struct __co_rpdo *pdo)
 {
 	assert(pdo);
@@ -274,7 +274,7 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 	can_recv_destroy(pdo->recv);
 }
 
-LELY_CO_EXPORT co_rpdo_t *
+co_rpdo_t *
 co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
 	trace("creating Receive-PDO %d", num);
@@ -301,7 +301,7 @@ error_alloc_pdo:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_rpdo_destroy(co_rpdo_t *rpdo)
 {
 	if (rpdo) {
@@ -311,7 +311,7 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_rpdo_get_net(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -319,7 +319,7 @@ co_rpdo_get_net(const co_rpdo_t *pdo)
 	return pdo->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_rpdo_get_dev(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -327,7 +327,7 @@ co_rpdo_get_dev(const co_rpdo_t *pdo)
 	return pdo->dev;
 }
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_rpdo_get_num(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -335,7 +335,7 @@ co_rpdo_get_num(const co_rpdo_t *pdo)
 	return pdo->num;
 }
 
-LELY_CO_EXPORT const struct co_pdo_comm_par *
+const struct co_pdo_comm_par *
 co_rpdo_get_comm_par(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -343,7 +343,7 @@ co_rpdo_get_comm_par(const co_rpdo_t *pdo)
 	return &pdo->comm;
 }
 
-LELY_CO_EXPORT const struct co_pdo_map_par *
+const struct co_pdo_map_par *
 co_rpdo_get_map_par(const co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -351,7 +351,7 @@ co_rpdo_get_map_par(const co_rpdo_t *pdo)
 	return &pdo->map;
 }
 
-LELY_CO_EXPORT void
+void
 co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata)
 {
 	assert(pdo);
@@ -362,7 +362,7 @@ co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata)
 		*pdata = pdo->ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data)
 {
 	assert(pdo);
@@ -371,7 +371,7 @@ co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data)
 	pdo->ind_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata)
 {
 	assert(pdo);
@@ -382,7 +382,7 @@ co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata)
 		*pdata = pdo->err_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err, void *data)
 {
 	assert(pdo);
@@ -391,7 +391,7 @@ co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err, void *data)
 	pdo->err_data = data;
 }
 
-LELY_CO_EXPORT int
+int
 co_rpdo_rtr(co_rpdo_t *pdo)
 {
 	assert(pdo);
@@ -412,7 +412,7 @@ co_rpdo_rtr(co_rpdo_t *pdo)
 	return can_net_send(pdo->net, &msg);
 }
 
-LELY_CO_EXPORT int
+int
 co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt)
 {
 	assert(pdo);

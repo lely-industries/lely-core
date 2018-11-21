@@ -57,7 +57,7 @@
 extern "C" {
 
 /// Aborts the process instead of throwing an exception.
-LELY_UTIL_EXTERN _Noreturn void __throw_or_abort(const char *what) noexcept;
+_Noreturn void __throw_or_abort(const char *what) noexcept;
 
 }
 

@@ -32,11 +32,11 @@ another state.
 Example of a public C header (lely/lib/fsm.h):
 ~~~{.c}
 // Check if the FSM is currently in the idle state.
-LELY_LIB_EXTERN int fsm_is_idle(const fsm_t *fsm);
+int fsm_is_idle(const fsm_t *fsm);
 
 // Issue a request to the FSM. This function returns 0 on success, or -1 on
 // error (e.g., because the FSM is not in the idle state).
-LELY_LIB_EXTERN int fsm_req(fsm_t *fsm, Args... args);
+int fsm_req(fsm_t *fsm, Args... args);
 ~~~
 
 Example of the C implementation (fsm.c):
@@ -121,7 +121,7 @@ __fsm_init(struct __fsm *fsm, Args... args)
 	...
 }
 
-LELY_LIB_EXPORT int
+int
 fsm_is_idle(const fsm_t *fsm)
 {
 	assert(fsm);
@@ -131,7 +131,7 @@ fsm_is_idle(const fsm_t *fsm)
 	return fsm->state == fsm_idle_state;
 }
 
-LELY_LIB_EXPORT int
+int
 fsm_req(fsm_t *fsm, Args... args)
 {
 	assert(fsm);

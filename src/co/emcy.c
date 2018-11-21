@@ -188,7 +188,7 @@ static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
  */
 static void co_emcy_flush(co_emcy_t *emcy);
 
-LELY_CO_EXPORT void *
+void *
 __co_emcy_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_emcy));
@@ -197,13 +197,13 @@ __co_emcy_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_emcy_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_emcy *
+struct __co_emcy *
 __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 {
 	assert(emcy);
@@ -292,7 +292,7 @@ error_sub_1001_00:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_emcy_fini(struct __co_emcy *emcy)
 {
 	assert(emcy);
@@ -323,7 +323,7 @@ __co_emcy_fini(struct __co_emcy *emcy)
 	free(emcy->msgs);
 }
 
-LELY_CO_EXPORT co_emcy_t *
+co_emcy_t *
 co_emcy_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating EMCY producer service");
@@ -350,7 +350,7 @@ error_alloc_emcy:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_emcy_destroy(co_emcy_t *emcy)
 {
 	if (emcy) {
@@ -360,7 +360,7 @@ co_emcy_destroy(co_emcy_t *emcy)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_emcy_get_net(const co_emcy_t *emcy)
 {
 	assert(emcy);
@@ -368,7 +368,7 @@ co_emcy_get_net(const co_emcy_t *emcy)
 	return emcy->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_emcy_get_dev(const co_emcy_t *emcy)
 {
 	assert(emcy);
@@ -376,7 +376,7 @@ co_emcy_get_dev(const co_emcy_t *emcy)
 	return emcy->dev;
 }
 
-LELY_CO_EXPORT int
+int
 co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 		const uint8_t msef[5])
 {
@@ -422,7 +422,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	return co_emcy_send(emcy, eec, er, msef);
 }
 
-LELY_CO_EXPORT int
+int
 co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 {
 	assert(emcy);
@@ -452,7 +452,7 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 {
 	assert(emcy);
@@ -463,7 +463,7 @@ co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 		*per = emcy->nmsg ? emcy->msgs[0].er : 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_emcy_clear(co_emcy_t *emcy)
 {
 	assert(emcy);
@@ -482,7 +482,7 @@ co_emcy_clear(co_emcy_t *emcy)
 	return co_emcy_send(emcy, 0, 0, NULL);
 }
 
-LELY_CO_EXPORT void
+void
 co_emcy_get_ind(const co_emcy_t *emcy, co_emcy_ind_t **pind, void **pdata)
 {
 	assert(emcy);
@@ -493,7 +493,7 @@ co_emcy_get_ind(const co_emcy_t *emcy, co_emcy_ind_t **pind, void **pdata)
 		*pdata = emcy->data;
 }
 
-LELY_CO_EXPORT void
+void
 co_emcy_set_ind(co_emcy_t *emcy, co_emcy_ind_t *ind, void *data)
 {
 	assert(emcy);

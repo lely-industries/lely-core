@@ -21,7 +21,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_HASH_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_HASH_INLINE extern inline
 #include <lely/util/hash.h>
 
 #include <assert.h>
@@ -35,7 +35,7 @@
 #define FNV_PRIME UINT32_C(16777619)
 #endif
 
-LELY_UTIL_EXPORT size_t
+size_t
 strhash(const char *s)
 {
 	assert(s);
@@ -46,7 +46,7 @@ strhash(const char *s)
 	return hash;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 strnhash(const char *s, size_t n)
 {
 	assert(s || !n);
@@ -57,7 +57,7 @@ strnhash(const char *s, size_t n)
 	return hash;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 strcasehash(const char *s)
 {
 	assert(s);
@@ -68,7 +68,7 @@ strcasehash(const char *s)
 	return hash;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 strncasehash(const char *s, size_t n)
 {
 	assert(s || !n);

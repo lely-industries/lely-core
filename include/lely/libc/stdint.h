@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STDINT_H_
 #define LELY_LIBC_STDINT_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_STDINT_H
 #if (__STDC_VERSION__ >= 199901L || __cplusplus >= 201103L \

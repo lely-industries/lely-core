@@ -21,15 +21,7 @@
 #ifndef LELY_UTIL_UTIL_H_
 #define LELY_UTIL_UTIL_H_
 
-#include <lely/lely.h>
-
-#ifndef LELY_UTIL_EXTERN
-#ifdef LELY_UTIL_INTERN
-#define LELY_UTIL_EXTERN LELY_DLL_EXPORT
-#else
-#define LELY_UTIL_EXTERN LELY_DLL_IMPORT
-#endif
-#endif
+#include <lely/features.h>
 
 #ifndef ABS
 /// Returns the absolute value of <b>a</b>.

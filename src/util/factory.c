@@ -59,7 +59,7 @@ static mtx_t factory_mtx;
 /// The tree containing all registered constructor and destructor functions.
 static struct rbtree factory = { &str_cmp, NULL, 0 };
 
-LELY_UTIL_EXPORT void *
+void *
 factory_ctor_create(factory_ctor_t *ctor, ...)
 {
 	va_list ap;
@@ -69,7 +69,7 @@ factory_ctor_create(factory_ctor_t *ctor, ...)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void *
+void *
 factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap)
 {
 	assert(ctor);
@@ -77,14 +77,14 @@ factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap)
 	return ctor(ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 factory_dtor_destroy(factory_dtor_t *dtor, void *ptr)
 {
 	if (dtor)
 		dtor(ptr);
 }
 
-LELY_UTIL_EXPORT int
+int
 factory_insert(const char *name, factory_ctor_t *ctor, factory_dtor_t *dtor)
 {
 	assert(name);
@@ -126,7 +126,7 @@ factory_insert(const char *name, factory_ctor_t *ctor, factory_dtor_t *dtor)
 	return 0;
 }
 
-LELY_UTIL_EXPORT void
+void
 factory_remove(const char *name)
 {
 	assert(name);
@@ -146,7 +146,7 @@ factory_remove(const char *name)
 		free(structof(node, struct factory_entry, node));
 }
 
-LELY_UTIL_EXPORT factory_ctor_t *
+factory_ctor_t *
 factory_find_ctor(const char *name)
 {
 	factory_ctor_t *ctor = NULL;
@@ -165,7 +165,7 @@ factory_find_ctor(const char *name)
 	return ctor;
 }
 
-LELY_UTIL_EXPORT factory_dtor_t *
+factory_dtor_t *
 factory_find_dtor(const char *name)
 {
 	factory_dtor_t *dtor = NULL;

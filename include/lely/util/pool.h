@@ -60,11 +60,10 @@ typedef struct __pool pool_t;
 extern "C" {
 #endif
 
-LELY_UTIL_EXTERN void *__pool_alloc(void);
-LELY_UTIL_EXTERN void __pool_free(void *ptr);
-LELY_UTIL_EXTERN struct __pool *__pool_init(
-		struct __pool *pool, size_t nmemb, size_t size);
-LELY_UTIL_EXTERN void __pool_fini(struct __pool *pool);
+void *__pool_alloc(void);
+void __pool_free(void *ptr);
+struct __pool *__pool_init(struct __pool *pool, size_t nmemb, size_t size);
+void __pool_fini(struct __pool *pool);
 
 /**
  * Creates a new pool allocator with enough space for <b>nmemb</b> objects of
@@ -79,14 +78,14 @@ LELY_UTIL_EXTERN void __pool_fini(struct __pool *pool);
  *
  * @see pool_destroy()
  */
-LELY_UTIL_EXTERN pool_t *pool_create(size_t nmemb, size_t size);
+pool_t *pool_create(size_t nmemb, size_t size);
 
 /**
  * Destroys a pool allocator and frees all objects allocated with it.
  *
  * @see pool_create()
  */
-LELY_UTIL_EXTERN void pool_destroy(pool_t *pool);
+void pool_destroy(pool_t *pool);
 
 /**
  * Allocates an object of pool_size() bytes from a pool. The allocation is
@@ -100,7 +99,7 @@ LELY_UTIL_EXTERN void pool_destroy(pool_t *pool);
  *
  * @see pool_free()
  */
-LELY_UTIL_EXTERN void *pool_alloc(pool_t *pool);
+void *pool_alloc(pool_t *pool);
 
 /**
  * Frees the memory allocated for an object. The deallocation is thread-safe and
@@ -111,10 +110,10 @@ LELY_UTIL_EXTERN void *pool_alloc(pool_t *pool);
  *
  * @see pool_alloc()
  */
-LELY_UTIL_EXTERN void pool_free(pool_t *pool, void *ptr);
+void pool_free(pool_t *pool, void *ptr);
 
 /// Returns the size (in bytes) of the objects in a pool.
-LELY_UTIL_EXTERN size_t pool_size(const pool_t *pool);
+size_t pool_size(const pool_t *pool);
 
 #ifdef __cplusplus
 }

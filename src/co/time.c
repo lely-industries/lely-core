@@ -91,7 +91,7 @@ static int co_time_recv(const struct can_msg *msg, void *data);
  */
 static int co_time_timer(const struct timespec *tp, void *data);
 
-LELY_CO_EXPORT void
+void
 co_time_of_day_get(const co_time_of_day_t *tod, struct timespec *tp)
 {
 	assert(tod);
@@ -104,7 +104,7 @@ co_time_of_day_get(const co_time_of_day_t *tod, struct timespec *tp)
 	tp->tv_sec += (14 * 365 + 3) * 24 * 60 * 60;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_of_day_set(co_time_of_day_t *tod, const struct timespec *tp)
 {
 	assert(tod);
@@ -120,7 +120,7 @@ co_time_of_day_set(co_time_of_day_t *tod, const struct timespec *tp)
 	// clang-format on
 }
 
-LELY_CO_EXPORT void
+void
 co_time_diff_get(const co_time_diff_t *td, struct timespec *tp)
 {
 	assert(td);
@@ -130,7 +130,7 @@ co_time_diff_get(const co_time_diff_t *td, struct timespec *tp)
 	tp->tv_nsec = (long)(td->ms % 1000) * 1000000;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_diff_set(co_time_diff_t *td, const struct timespec *tp)
 {
 	assert(td);
@@ -142,7 +142,7 @@ co_time_diff_set(co_time_diff_t *td, const struct timespec *tp)
 	td->days = (co_unsigned16_t)(tp->tv_sec / (24 * 60 * 60));
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_time_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_time));
@@ -151,13 +151,13 @@ __co_time_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_time_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_time *
+struct __co_time *
 __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 {
 	assert(time);
@@ -204,7 +204,7 @@ error_obj_1012:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_time_fini(struct __co_time *time)
 {
 	assert(time);
@@ -219,7 +219,7 @@ __co_time_fini(struct __co_time *time)
 	can_recv_destroy(time->recv);
 }
 
-LELY_CO_EXPORT co_time_t *
+co_time_t *
 co_time_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating TIME service");
@@ -246,7 +246,7 @@ error_alloc_time:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_destroy(co_time_t *time)
 {
 	if (time) {
@@ -256,7 +256,7 @@ co_time_destroy(co_time_t *time)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_time_get_net(const co_time_t *time)
 {
 	assert(time);
@@ -264,7 +264,7 @@ co_time_get_net(const co_time_t *time)
 	return time->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_time_get_dev(const co_time_t *time)
 {
 	assert(time);
@@ -272,7 +272,7 @@ co_time_get_dev(const co_time_t *time)
 	return time->dev;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_get_ind(const co_time_t *time, co_time_ind_t **pind, void **pdata)
 {
 	assert(time);
@@ -283,7 +283,7 @@ co_time_get_ind(const co_time_t *time, co_time_ind_t **pind, void **pdata)
 		*pdata = time->data;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data)
 {
 	assert(time);
@@ -292,7 +292,7 @@ co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data)
 	time->data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_time_start(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval)
 {
@@ -302,7 +302,7 @@ co_time_start(co_time_t *time, const struct timespec *start,
 		can_timer_start(time->timer, time->net, start, interval);
 }
 
-LELY_CO_EXPORT void
+void
 co_time_stop(co_time_t *time)
 {
 	assert(time);

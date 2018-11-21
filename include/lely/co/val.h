@@ -246,7 +246,7 @@ extern "C" {
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init(co_unsigned16_t type, void *val);
+int co_val_init(co_unsigned16_t type, void *val);
 
 /**
  * Initializes a value of the specified data type with its lower limit.
@@ -262,7 +262,7 @@ LELY_CO_EXTERN int co_val_init(co_unsigned16_t type, void *val);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_min(co_unsigned16_t type, void *val);
+int co_val_init_min(co_unsigned16_t type, void *val);
 
 /**
  * Initializes a value of the specified data type with its upper limit.
@@ -278,7 +278,7 @@ LELY_CO_EXTERN int co_val_init_min(co_unsigned16_t type, void *val);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_max(co_unsigned16_t type, void *val);
+int co_val_init_max(co_unsigned16_t type, void *val);
 
 /**
  * Initializes an array of visible characters (#CO_DEFTYPE_VISIBLE_STRING).
@@ -293,7 +293,7 @@ LELY_CO_EXTERN int co_val_init_max(co_unsigned16_t type, void *val);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_vs(char **val, const char *vs);
+int co_val_init_vs(char **val, const char *vs);
 
 /**
  * Initializes an array of visible characters (#CO_DEFTYPE_VISIBLE_STRING).
@@ -311,7 +311,7 @@ LELY_CO_EXTERN int co_val_init_vs(char **val, const char *vs);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_vs_n(char **val, const char *vs, size_t n);
+int co_val_init_vs_n(char **val, const char *vs, size_t n);
 
 /**
  * Initializes an array of octets (#CO_DEFTYPE_OCTET_STRING).
@@ -328,7 +328,7 @@ LELY_CO_EXTERN int co_val_init_vs_n(char **val, const char *vs, size_t n);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_os(uint8_t **val, const uint8_t *os, size_t n);
+int co_val_init_os(uint8_t **val, const uint8_t *os, size_t n);
 
 /**
  * Initializes an array of (16-bit) Unicode characters
@@ -344,7 +344,7 @@ LELY_CO_EXTERN int co_val_init_os(uint8_t **val, const uint8_t *os, size_t n);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
+int co_val_init_us(char16_t **val, const char16_t *us);
 
 /**
  * Initializes an array of (16-bit) Unicode characters
@@ -364,8 +364,7 @@ LELY_CO_EXTERN int co_val_init_us(char16_t **val, const char16_t *us);
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_us_n(
-		char16_t **val, const char16_t *us, size_t n);
+int co_val_init_us_n(char16_t **val, const char16_t *us, size_t n);
 
 /**
  * Initializes an arbitrary large block of data (#CO_DEFTYPE_DOMAIN).
@@ -382,7 +381,7 @@ LELY_CO_EXTERN int co_val_init_us_n(
  *
  * @see co_val_fini()
  */
-LELY_CO_EXTERN int co_val_init_dom(void **val, const void *dom, size_t n);
+int co_val_init_dom(void **val, const void *dom, size_t n);
 
 /**
  * Finalizes a value of the specified data type. It is safe to invoke this
@@ -395,7 +394,7 @@ LELY_CO_EXTERN int co_val_init_dom(void **val, const void *dom, size_t n);
  *
  * @see co_val_init()
  */
-LELY_CO_EXTERN void co_val_fini(co_unsigned16_t type, void *val);
+void co_val_fini(co_unsigned16_t type, void *val);
 
 /**
  * Returns the address of the first byte in a value of the specified data type.
@@ -409,8 +408,7 @@ LELY_CO_EXTERN void co_val_fini(co_unsigned16_t type, void *val);
  *
  * @see co_val_sizeof()
  */
-LELY_CO_EXTERN const void *co_val_addressof(
-		co_unsigned16_t type, const void *val);
+const void *co_val_addressof(co_unsigned16_t type, const void *val);
 
 /**
  * Returns the size (in bytes) of a value of the specified data type. In the
@@ -423,7 +421,7 @@ LELY_CO_EXTERN const void *co_val_addressof(
  *
  * @see co_val_addressof()
  */
-LELY_CO_EXTERN size_t co_val_sizeof(co_unsigned16_t type, const void *val);
+size_t co_val_sizeof(co_unsigned16_t type, const void *val);
 
 /**
  * Constructs a value of the specified data type.
@@ -441,8 +439,7 @@ LELY_CO_EXTERN size_t co_val_sizeof(co_unsigned16_t type, const void *val);
  * @returns the number of bytes copied (i.e., <b>n</b>), or 0 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_CO_EXTERN size_t co_val_make(
-		co_unsigned16_t type, void *val, const void *ptr, size_t n);
+size_t co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n);
 
 /**
  * Copies one value to another. In case of strings or domains, this function
@@ -462,8 +459,7 @@ LELY_CO_EXTERN size_t co_val_make(
  *
  * @see co_val_move()
  */
-LELY_CO_EXTERN size_t co_val_copy(
-		co_unsigned16_t type, void *dst, const void *src);
+size_t co_val_copy(co_unsigned16_t type, void *dst, const void *src);
 
 /**
  * Moves one value to another. In case of strings or domains, this function
@@ -484,7 +480,7 @@ LELY_CO_EXTERN size_t co_val_copy(
  *
  * @see co_val_copy()
  */
-LELY_CO_EXTERN size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
+size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
 
 /**
  * Compares two values of the specified data type.
@@ -499,8 +495,7 @@ LELY_CO_EXTERN size_t co_val_move(co_unsigned16_t type, void *dst, void *src);
  * @returns an integer greater than, equal to, or less than 0 if *<b>v1</b> is
  * greater than, equal to, or less than *<b>v2</b>.
  */
-LELY_CO_EXTERN int co_val_cmp(
-		co_unsigned16_t type, const void *v1, const void *v2);
+int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
 
 /**
  * Reads a value of the specified data type from a memory buffer.
@@ -522,8 +517,8 @@ LELY_CO_EXTERN int co_val_cmp(
  *
  * @see co_val_write()
  */
-LELY_CO_EXTERN size_t co_val_read(co_unsigned16_t type, void *val,
-		const uint8_t *begin, const uint8_t *end);
+size_t co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
+		const uint8_t *end);
 
 /**
  * Reads a value of the specified data type from an SDO buffer.
@@ -542,7 +537,7 @@ LELY_CO_EXTERN size_t co_val_read(co_unsigned16_t type, void *val,
  *
  * @see co_val_read()
  */
-LELY_CO_EXTERN co_unsigned32_t co_val_read_sdo(
+co_unsigned32_t co_val_read_sdo(
 		co_unsigned16_t type, void *val, const void *ptr, size_t n);
 
 /**
@@ -564,8 +559,8 @@ LELY_CO_EXTERN co_unsigned32_t co_val_read_sdo(
  *
  * @see co_val_read()
  */
-LELY_CO_EXTERN size_t co_val_write(co_unsigned16_t type, const void *val,
-		uint8_t *begin, uint8_t *end);
+size_t co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
+		uint8_t *end);
 
 /**
  * Lexes a value of the specified data type from a memory buffer.
@@ -587,8 +582,8 @@ LELY_CO_EXTERN size_t co_val_write(co_unsigned16_t type, const void *val,
  *
  * @returns the number of characters read.
  */
-LELY_CO_EXTERN size_t co_val_lex(co_unsigned16_t type, void *val,
-		const char *begin, const char *end, struct floc *at);
+size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
+		const char *end, struct floc *at);
 
 /**
  * Prints a value of the specified data type to a memory buffer.
@@ -608,8 +603,8 @@ LELY_CO_EXTERN size_t co_val_lex(co_unsigned16_t type, void *val,
  * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  */
-LELY_CO_EXTERN size_t co_val_print(co_unsigned16_t type, const void *val,
-		char **pbegin, char *end);
+size_t co_val_print(co_unsigned16_t type, const void *val, char **pbegin,
+		char *end);
 
 #ifdef __cplusplus
 }

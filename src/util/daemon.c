@@ -67,7 +67,7 @@ static SERVICE_STATUS ServiceStatus = {
 	.dwWaitHint = 2 * LELY_DAEMON_TIMEOUT
 };
 
-LELY_UTIL_EXPORT int
+int
 daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		void (*fini)(void), int argc, char *argv[])
 {
@@ -85,7 +85,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	return StartServiceCtrlDispatcherA(ServiceTable) ? 0 : -1;
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_signal(int sig)
 {
 	if (__unlikely(sig < 0 || sig > DAEMON_USER_MAX)) {
@@ -99,7 +99,7 @@ daemon_signal(int sig)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_status(int status)
 {
 	DWORD dwCurrentState = 0;
@@ -238,7 +238,7 @@ static int daemon_thrd_start(void *arg);
 
 static int daemon_pipe[2] = { -1, -1 };
 
-LELY_UTIL_EXPORT int
+int
 daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		void (*fini)(void), int argc, char *argv[])
 {
@@ -391,7 +391,7 @@ error_init:
 	return result;
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_signal(int sig)
 {
 	if (__unlikely(sig < 0 || sig > DAEMON_USER_MAX)) {
@@ -406,7 +406,7 @@ daemon_signal(int sig)
 	return result;
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_status(int status)
 {
 	if (__unlikely(status < 0 || status >= DAEMON_USER_MIN)) {
@@ -565,31 +565,31 @@ daemon_thrd_start(void *arg)
 
 #endif // _WIN32
 
-LELY_UTIL_EXPORT int
+int
 daemon_stop(void)
 {
 	return daemon_signal(DAEMON_STOP);
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_reload(void)
 {
 	return daemon_signal(DAEMON_RELOAD);
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_pause(void)
 {
 	return daemon_signal(DAEMON_PAUSE);
 }
 
-LELY_UTIL_EXPORT int
+int
 daemon_continue(void)
 {
 	return daemon_signal(DAEMON_CONTINUE);
 }
 
-LELY_UTIL_EXPORT void
+void
 daemon_get_handler(daemon_handler_t **phandler, void **phandle)
 {
 	if (phandler)
@@ -598,14 +598,14 @@ daemon_get_handler(daemon_handler_t **phandler, void **phandle)
 		*phandle = daemon_handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 daemon_set_handler(daemon_handler_t *handler, void *handle)
 {
 	daemon_handler = handler;
 	daemon_handle = handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 default_daemon_handler(int sig, void *handle)
 {
 	__unused_var(handle);

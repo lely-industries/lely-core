@@ -21,5 +21,5 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_TIME_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_TIME_INLINE extern inline
 #include <lely/util/time.h>

@@ -1,10 +1,8 @@
 inc =
 inc += lely/features.h
-inc += lely/lely.h
 
 inc += lely/libc/sys/types.h
 inc += lely/libc/assert.h
-inc += lely/libc/libc.h
 inc += lely/libc/signal.h
 inc += lely/libc/stdalign.h
 inc += lely/libc/stdatomic.h

@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_THREADS_H_
 #define LELY_LIBC_THREADS_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_THREADS_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__) \
@@ -186,8 +186,7 @@ typedef void(__cdecl *tss_dtor_t)(void *);
  * function synchronizes with all subsequent calls to the call_once function
  * with the same value of <b>flag</b>.
  */
-LELY_LIBC_EXTERN void __cdecl call_once(
-		once_flag *flag, void(__cdecl *func)(void));
+void __cdecl call_once(once_flag *flag, void(__cdecl *func)(void));
 
 /**
  * Unblocks all of the threads that are blocked on the condition variable at
@@ -198,14 +197,14 @@ LELY_LIBC_EXTERN void __cdecl call_once(
  * @returns #thrd_success on success, or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_broadcast(cnd_t *cond);
+int __cdecl cnd_broadcast(cnd_t *cond);
 
 /**
  * Releases all resources used by the condition variable at <b>cond</b>. This
  * function requires that no threads be blocked waiting for the condition
  * variable at <b>cond</b>.
  */
-LELY_LIBC_EXTERN void __cdecl cnd_destroy(cnd_t *cond);
+void __cdecl cnd_destroy(cnd_t *cond);
 
 /**
  * Creates a condition variable. If it succeeds it sets the variable at
@@ -217,7 +216,7 @@ LELY_LIBC_EXTERN void __cdecl cnd_destroy(cnd_t *cond);
  * allocated for the newly created condition, or #thrd_error if the request
  * could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_init(cnd_t *cond);
+int __cdecl cnd_init(cnd_t *cond);
 
 /**
  * Unblocks one of the threads that are blocked on the condition variable at
@@ -228,7 +227,7 @@ LELY_LIBC_EXTERN int __cdecl cnd_init(cnd_t *cond);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_signal(cnd_t *cond);
+int __cdecl cnd_signal(cnd_t *cond);
 
 /**
  * Atomically unlocks the mutex at <b>mtx</b> and endeavors to block until the
@@ -242,8 +241,7 @@ LELY_LIBC_EXTERN int __cdecl cnd_signal(cnd_t *cond);
  * in the call was reached without acquiring the requested resource, or
  * #thrd_error if the request could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_timedwait(
-		cnd_t *cond, mtx_t *mtx, const struct timespec *ts);
+int __cdecl cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts);
 
 /**
  * Atomically unlocks the mutex at <b>mtx</b> and endeavors to block until the
@@ -255,13 +253,13 @@ LELY_LIBC_EXTERN int __cdecl cnd_timedwait(
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl cnd_wait(cnd_t *cond, mtx_t *mtx);
+int __cdecl cnd_wait(cnd_t *cond, mtx_t *mtx);
 
 /**
  * Releases any resources used by the mutex at <b>mtx</b>. No threads can be
  * blocked waiting for the mutex at <b>mtx</b>.
  */
-LELY_LIBC_EXTERN void __cdecl mtx_destroy(mtx_t *mtx);
+void __cdecl mtx_destroy(mtx_t *mtx);
 
 /**
  * Creates a mutex object with properties indicated by <b>type</b>, which must
@@ -277,7 +275,7 @@ LELY_LIBC_EXTERN void __cdecl mtx_destroy(mtx_t *mtx);
  * @returns #thrd_success on success, or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_init(mtx_t *mtx, int type);
+int __cdecl mtx_init(mtx_t *mtx, int type);
 
 /**
  * Blocks until it locks the mutex at <b>mtx</b>. If the mutex is non-recursive,
@@ -287,7 +285,7 @@ LELY_LIBC_EXTERN int __cdecl mtx_init(mtx_t *mtx, int type);
  * @returns #thrd_success on success, or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_lock(mtx_t *mtx);
+int __cdecl mtx_lock(mtx_t *mtx);
 
 /**
  * Endeavors to block until it locks the mutex at <b>mtx</b> or until after the
@@ -299,8 +297,7 @@ LELY_LIBC_EXTERN int __cdecl mtx_lock(mtx_t *mtx);
  * was reached without acquiring the requested resource, or #thrd_error if the
  * request could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_timedlock(
-		mtx_t *mtx, const struct timespec *ts);
+int __cdecl mtx_timedlock(mtx_t *mtx, const struct timespec *ts);
 
 /**
  * Endeavors to lock the mutex at <b>mtx</b>. If the mutex is already locked,
@@ -310,7 +307,7 @@ LELY_LIBC_EXTERN int __cdecl mtx_timedlock(
  * @returns #thrd_success on success, or #thrd_busy if the resource requested is
  * already in use, or #thrd_error if the request could not be honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_trylock(mtx_t *mtx);
+int __cdecl mtx_trylock(mtx_t *mtx);
 
 /**
  * Unlocks the mutex at <b>mtx</b>. The mutex at <b>mtx</b> SHALL be locked by
@@ -319,7 +316,7 @@ LELY_LIBC_EXTERN int __cdecl mtx_trylock(mtx_t *mtx);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl mtx_unlock(mtx_t *mtx);
+int __cdecl mtx_unlock(mtx_t *mtx);
 
 /**
  * Creates a new thread executing `func(arg)`. If this function succeeds, it
@@ -333,15 +330,14 @@ LELY_LIBC_EXTERN int __cdecl mtx_unlock(mtx_t *mtx);
  * allocated for the thread requested, or #thrd_error if the request could not
  * be honored.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_create(
-		thrd_t *thr, thrd_start_t func, void *arg);
+int __cdecl thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
 
 /**
  * Identifies the thread that called it.
  *
  * @returns the identifier of the thread that called it.
  */
-LELY_LIBC_EXTERN thrd_t __cdecl thrd_current(void);
+thrd_t __cdecl thrd_current(void);
 
 /**
  * Tells the operating system to dispose of any resources allocated to the
@@ -352,7 +348,7 @@ LELY_LIBC_EXTERN thrd_t __cdecl thrd_current(void);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_detach(thrd_t thr);
+int __cdecl thrd_detach(thrd_t thr);
 
 /**
  * Determines whether the thread identified by <b>thr0</b> refers to the thread
@@ -361,7 +357,7 @@ LELY_LIBC_EXTERN int __cdecl thrd_detach(thrd_t thr);
  * @returns zero if the thread <b>thr0</b> and the thread <b>thr1</b> refer to
  * different threads. Otherwise this function returns a nonzero value.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_equal(thrd_t thr0, thrd_t thr1);
+int __cdecl thrd_equal(thrd_t thr0, thrd_t thr1);
 
 /**
  * Terminates execution of the calling thread and sets its result code to
@@ -371,7 +367,7 @@ LELY_LIBC_EXTERN int __cdecl thrd_equal(thrd_t thr0, thrd_t thr1);
  * terminated. The behavior shall be as if the program called the exit()
  * function with the status `EXIT_SUCCESS` at thread termination time.
  */
-_Noreturn LELY_LIBC_EXTERN void __cdecl thrd_exit(int res);
+_Noreturn void __cdecl thrd_exit(int res);
 
 /**
  * Joins the thread identified by <b>thr</b> with the current thread by blocking
@@ -384,7 +380,7 @@ _Noreturn LELY_LIBC_EXTERN void __cdecl thrd_exit(int res);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_join(thrd_t thr, int *res);
+int __cdecl thrd_join(thrd_t thr, int *res);
 
 /**
  * Suspends execution of the calling thread until either the interval specified
@@ -403,14 +399,14 @@ LELY_LIBC_EXTERN int __cdecl thrd_join(thrd_t thr, int *res);
  * @returns zero if the requested time has elapsed, -1 if it has been
  * interrupted by a signal, or a negative value if it fails.
  */
-LELY_LIBC_EXTERN int __cdecl thrd_sleep(
+int __cdecl thrd_sleep(
 		const struct timespec *duration, struct timespec *remaining);
 
 /**
  * Endeavors to permit other threads to run, even if the current thread would
  * ordinarily continue to run.
  */
-LELY_LIBC_EXTERN void __cdecl thrd_yield(void);
+void __cdecl thrd_yield(void);
 
 /**
  * Creates a thread-specific storage pointer with destructor <b>dtor</b>, which
@@ -424,13 +420,13 @@ LELY_LIBC_EXTERN void __cdecl thrd_yield(void);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl tss_create(tss_t *key, tss_dtor_t dtor);
+int __cdecl tss_create(tss_t *key, tss_dtor_t dtor);
 
 /**
  * Releases any resources used by the thread-specific storage identified by
  * <b>key</b>.
  */
-LELY_LIBC_EXTERN void __cdecl tss_delete(tss_t key);
+void __cdecl tss_delete(tss_t key);
 
 /**
  * Returns the value for the current thread held in the thread-specific storage
@@ -439,7 +435,7 @@ LELY_LIBC_EXTERN void __cdecl tss_delete(tss_t key);
  * @returns the value for the current thread if successful, or zero if
  * unsuccessful.
  */
-LELY_LIBC_EXTERN void *__cdecl tss_get(tss_t key);
+void *__cdecl tss_get(tss_t key);
 
 /**
  * Sets the value for the current thread held in the thread-specific storage
@@ -448,7 +444,7 @@ LELY_LIBC_EXTERN void *__cdecl tss_get(tss_t key);
  * @returns #thrd_success on success or #thrd_error if the request could not be
  * honored.
  */
-LELY_LIBC_EXTERN int __cdecl tss_set(tss_t key, void *val);
+int __cdecl tss_set(tss_t key, void *val);
 
 #ifdef __cplusplus
 }

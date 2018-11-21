@@ -105,10 +105,10 @@ extern "C" {
  *
  * @see can_buf_fini()
  */
-LELY_CAN_EXTERN int can_buf_init(struct can_buf *buf, size_t size);
+int can_buf_init(struct can_buf *buf, size_t size);
 
 /// Finalizes a CAN frame buffer. @see can_buf_init()
-LELY_CAN_EXTERN void can_buf_fini(struct can_buf *buf);
+void can_buf_fini(struct can_buf *buf);
 
 /**
  * Allocates and initializes a CAN frame buffer.
@@ -121,10 +121,10 @@ LELY_CAN_EXTERN void can_buf_fini(struct can_buf *buf);
  *
  * @see can_buf_destroy(), can_buf_init()
  */
-LELY_CAN_EXTERN struct can_buf *can_buf_create(size_t size);
+struct can_buf *can_buf_create(size_t size);
 
 // Finalizes and frees a CAN frame buffer. @see can_buf_create(), can_buf_fini()
-LELY_CAN_EXTERN void can_buf_destroy(struct can_buf *buf);
+void can_buf_destroy(struct can_buf *buf);
 
 /// Clears a CAN frame buffer.
 LELY_CAN_BUF_INLINE void can_buf_clear(struct can_buf *buf);
@@ -151,7 +151,7 @@ LELY_CAN_BUF_INLINE size_t can_buf_capacity(const struct can_buf *buf);
  * @returns the new capacity of the buffer (in number of frames), or 0 on error.
  * In the latter case, the error number can be obtained with get_errc().
  */
-LELY_CAN_EXTERN size_t can_buf_reserve(struct can_buf *buf, size_t n);
+size_t can_buf_reserve(struct can_buf *buf, size_t n);
 
 /**
  * Reads, but does not remove, frames from a CAN frame buffer.

@@ -37,7 +37,7 @@
 
 #include <ctype.h>
 
-LELY_UTIL_EXPORT void *
+void *
 shlib_open(const char *filename)
 {
 	if (filename && *filename)
@@ -55,7 +55,7 @@ shlib_open(const char *filename)
 	return hModule;
 }
 
-LELY_UTIL_EXPORT void
+void
 shlib_close(void *handle)
 {
 	if (handle != GetModuleHandle(NULL)) {
@@ -64,13 +64,13 @@ shlib_close(void *handle)
 	}
 }
 
-LELY_UTIL_EXPORT void *
+void *
 shlib_find_data(void *handle, const char *name)
 {
 	return (void *)shlib_find_func(handle, name);
 }
 
-LELY_UTIL_EXPORT shlib_func_t *
+shlib_func_t *
 shlib_find_func(void *handle, const char *name)
 {
 	shlib_func_t *func = GetProcAddress(handle, name);
@@ -79,13 +79,13 @@ shlib_find_func(void *handle, const char *name)
 	return func;
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 shlib_prefix(void)
 {
 	return "";
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 shlib_suffix(void)
 {
 	return ".dll";
@@ -95,7 +95,7 @@ shlib_suffix(void)
 
 #include <dlfcn.h>
 
-LELY_UTIL_EXPORT void *
+void *
 shlib_open(const char *filename)
 {
 	int mode = RTLD_LAZY | RTLD_GLOBAL;
@@ -111,7 +111,7 @@ shlib_open(const char *filename)
 	return handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 shlib_close(void *handle)
 {
 	if (__unlikely(dlclose(handle))) {
@@ -121,7 +121,7 @@ shlib_close(void *handle)
 	}
 }
 
-LELY_UTIL_EXPORT void *
+void *
 shlib_find_data(void *handle, const char *name)
 {
 	void *data = dlsym(handle, name);
@@ -133,13 +133,13 @@ shlib_find_data(void *handle, const char *name)
 	return data;
 }
 
-LELY_UTIL_EXPORT shlib_func_t *
+shlib_func_t *
 shlib_find_func(void *handle, const char *name)
 {
 	return (shlib_func_t *)shlib_find_data(handle, name);
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 shlib_prefix(void)
 {
 #ifdef __CYGWIN__
@@ -149,7 +149,7 @@ shlib_prefix(void)
 #endif
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 shlib_suffix(void)
 {
 #ifdef __CYGWIN__

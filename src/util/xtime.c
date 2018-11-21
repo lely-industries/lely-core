@@ -74,7 +74,7 @@ struct __xtimer {
 	int overrun;
 };
 
-LELY_UTIL_EXPORT void *
+void *
 __xclock_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __xclock));
@@ -83,13 +83,13 @@ __xclock_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __xclock_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __xclock *
+struct __xclock *
 __xclock_init(struct __xclock *clock)
 {
 	assert(clock);
@@ -107,7 +107,7 @@ __xclock_init(struct __xclock *clock)
 	return clock;
 }
 
-LELY_UTIL_EXPORT void
+void
 __xclock_fini(struct __xclock *clock)
 {
 	assert(clock);
@@ -118,7 +118,7 @@ __xclock_fini(struct __xclock *clock)
 #endif
 }
 
-LELY_UTIL_EXPORT xclock_t *
+xclock_t *
 xclock_create(void)
 {
 	errc_t errc = 0;
@@ -143,7 +143,7 @@ error_alloc_clock:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 xclock_destroy(xclock_t *clock)
 {
 	if (clock) {
@@ -152,7 +152,7 @@ xclock_destroy(xclock_t *clock)
 	}
 }
 
-LELY_UTIL_EXPORT int
+int
 xclock_getres(xclock_t *clock, struct timespec *res)
 {
 	assert(clock);
@@ -168,7 +168,7 @@ xclock_getres(xclock_t *clock, struct timespec *res)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 xclock_gettime(xclock_t *clock, struct timespec *tp)
 {
 	assert(clock);
@@ -185,7 +185,7 @@ xclock_gettime(xclock_t *clock, struct timespec *tp)
 }
 
 #ifndef LELY_NO_THREADS
-LELY_UTIL_EXPORT int
+int
 xclock_nanosleep(xclock_t *clock, int flags, const struct timespec *rqtp,
 		struct timespec *rmtp)
 {
@@ -229,7 +229,7 @@ xclock_nanosleep(xclock_t *clock, int flags, const struct timespec *rqtp,
 }
 #endif // !LELY_NO_THREADS
 
-LELY_UTIL_EXPORT int
+int
 xclock_settime(xclock_t *clock, const struct timespec *tp)
 {
 	assert(clock);
@@ -298,7 +298,7 @@ xclock_settime(xclock_t *clock, const struct timespec *tp)
 	return 0;
 }
 
-LELY_UTIL_EXPORT void *
+void *
 __xtimer_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __xtimer));
@@ -307,13 +307,13 @@ __xtimer_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __xtimer_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __xtimer *
+struct __xtimer *
 __xtimer_init(struct __xtimer *timer, xclock_t *clock,
 		const struct sigevent *evp)
 {
@@ -344,7 +344,7 @@ __xtimer_init(struct __xtimer *timer, xclock_t *clock,
 	return timer;
 }
 
-LELY_UTIL_EXPORT void
+void
 __xtimer_fini(struct __xtimer *timer)
 {
 	assert(timer);
@@ -353,7 +353,7 @@ __xtimer_fini(struct __xtimer *timer)
 			NULL);
 }
 
-LELY_UTIL_EXPORT xtimer_t *
+xtimer_t *
 xtimer_create(xclock_t *clock, const struct sigevent *evp)
 {
 	errc_t errc = 0;
@@ -378,7 +378,7 @@ error_alloc_timer:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 xtimer_destroy(xtimer_t *timer)
 {
 	if (timer) {
@@ -387,7 +387,7 @@ xtimer_destroy(xtimer_t *timer)
 	}
 }
 
-LELY_UTIL_EXPORT int
+int
 xtimer_getoverrun(xtimer_t *timer)
 {
 	assert(timer);
@@ -403,7 +403,7 @@ xtimer_getoverrun(xtimer_t *timer)
 	return overrun;
 }
 
-LELY_UTIL_EXPORT int
+int
 xtimer_gettime(xtimer_t *timer, struct itimerspec *value)
 {
 	assert(timer);
@@ -428,7 +428,7 @@ xtimer_gettime(xtimer_t *timer, struct itimerspec *value)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 xtimer_settime(xtimer_t *timer, int flags, const struct itimerspec *value,
 		struct itimerspec *ovalue)
 {

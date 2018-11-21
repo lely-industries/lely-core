@@ -73,7 +73,7 @@ static ssize_t _file_write(struct io_handle *handle, const void *buf,
 		size_t nbytes, io_off_t offset);
 #endif
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_open_file(const char *path, int flags)
 {
 	assert(path);
@@ -177,7 +177,7 @@ error_param:
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT io_off_t
+io_off_t
 io_seek(io_handle_t handle, io_off_t offset, int whence)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -194,7 +194,7 @@ io_seek(io_handle_t handle, io_off_t offset, int whence)
 	return handle->vtab->seek(handle, offset, whence);
 }
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -211,7 +211,7 @@ io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset)
 	return handle->vtab->pread(handle, buf, nbytes, offset);
 }
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_pwrite(io_handle_t handle, const void *buf, size_t nbytes, io_off_t offset)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {

@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_ERRNUM_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_ERRNUM_INLINE extern inline
 #include <lely/util/errnum.h>
 
 #include <string.h>
@@ -34,7 +34,7 @@
 static _Thread_local char errstr[ERRSTR_SIZE];
 #endif
 
-LELY_UTIL_EXPORT errc_t
+errc_t
 errno2c(int errnum)
 {
 #ifdef _WIN32
@@ -44,7 +44,7 @@ errno2c(int errnum)
 #endif
 }
 
-LELY_UTIL_EXPORT errnum_t
+errnum_t
 errno2num(int errnum)
 {
 	switch (errnum) {
@@ -282,7 +282,7 @@ errno2num(int errnum)
 	}
 }
 
-LELY_UTIL_EXPORT int
+int
 errc2no(errc_t errc)
 {
 #ifdef _WIN32
@@ -292,7 +292,7 @@ errc2no(errc_t errc)
 #endif
 }
 
-LELY_UTIL_EXPORT errnum_t
+errnum_t
 errc2num(errc_t errc)
 {
 #ifdef _WIN32
@@ -522,7 +522,7 @@ errc2num(errc_t errc)
 #endif // _WIN32
 }
 
-LELY_UTIL_EXPORT int
+int
 errnum2no(errnum_t errnum)
 {
 	switch (errnum) {
@@ -769,7 +769,7 @@ errnum2no(errnum_t errnum)
 	}
 }
 
-LELY_UTIL_EXPORT errc_t
+errc_t
 errnum2c(errnum_t errnum)
 {
 #ifdef _WIN32
@@ -890,7 +890,7 @@ errnum2c(errnum_t errnum)
 #endif // _WIN32
 }
 
-LELY_UTIL_EXPORT errc_t
+errc_t
 get_errc(void)
 {
 #ifdef _WIN32
@@ -900,7 +900,7 @@ get_errc(void)
 #endif
 }
 
-LELY_UTIL_EXPORT void
+void
 set_errc(errc_t errc)
 {
 #ifdef _WIN32
@@ -910,13 +910,13 @@ set_errc(errc_t errc)
 #endif
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 errno2str(int errnum)
 {
 	return strerror(errnum);
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 errc2str(errc_t errc)
 {
 #ifdef _WIN32

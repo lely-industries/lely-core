@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STDLIB_H_
 #define LELY_LIBC_STDLIB_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #include <stdlib.h>
 
@@ -48,7 +48,7 @@ extern "C" {
  *
  * @returns either a NULL pointer or a pointer to the allocated space.
  */
-LELY_LIBC_EXTERN void *__cdecl aligned_alloc(size_t alignment, size_t size);
+void *__cdecl aligned_alloc(size_t alignment, size_t size);
 
 /**
  * Causes the space at <b>ptr</b> to be deallocated, that is, made available for
@@ -57,7 +57,7 @@ LELY_LIBC_EXTERN void *__cdecl aligned_alloc(size_t alignment, size_t size);
  * aligned_alloc(), or if the space has been deallocated by a call to
  * aligned_free(), the behavior is undefined.
  */
-LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
+void __cdecl aligned_free(void *ptr);
 
 #ifdef __cplusplus
 }
@@ -77,8 +77,7 @@ LELY_LIBC_EXTERN void __cdecl aligned_free(void *ptr);
  * @returns 0 on success, or -1 on error. In the latter case, the environment is
  * unchanged.
  */
-LELY_LIBC_EXTERN int setenv(
-		const char *envname, const char *envval, int overwrite);
+int setenv(const char *envname, const char *envval, int overwrite);
 
 #endif // !(_POSIX_C_SOURCE > 200112L)
 

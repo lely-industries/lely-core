@@ -73,7 +73,7 @@ static void co_sub_set_id(
 static void co_val_set_id(co_unsigned16_t type, void *val,
 		co_unsigned8_t new_id, co_unsigned8_t old_id);
 
-LELY_CO_EXPORT void *
+void *
 __co_dev_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_dev));
@@ -82,13 +82,13 @@ __co_dev_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_dev_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_dev *
+struct __co_dev *
 __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 {
 	assert(dev);
@@ -122,7 +122,7 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 	return dev;
 }
 
-LELY_CO_EXPORT void
+void
 __co_dev_fini(struct __co_dev *dev)
 {
 	assert(dev);
@@ -137,7 +137,7 @@ __co_dev_fini(struct __co_dev *dev)
 	free(dev->name);
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_dev_create(co_unsigned8_t id)
 {
 	errc_t errc = 0;
@@ -162,7 +162,7 @@ error_alloc_dev:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_destroy(co_dev_t *dev)
 {
 	if (dev) {
@@ -171,7 +171,7 @@ co_dev_destroy(co_dev_t *dev)
 	}
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_dev_get_netid(const co_dev_t *dev)
 {
 	assert(dev);
@@ -179,7 +179,7 @@ co_dev_get_netid(const co_dev_t *dev)
 	return dev->netid;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_netid(co_dev_t *dev, co_unsigned8_t id)
 {
 	assert(dev);
@@ -194,7 +194,7 @@ co_dev_set_netid(co_dev_t *dev, co_unsigned8_t id)
 	return 0;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_dev_get_id(const co_dev_t *dev)
 {
 	assert(dev);
@@ -202,7 +202,7 @@ co_dev_get_id(const co_dev_t *dev)
 	return dev->id;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_id(co_dev_t *dev, co_unsigned8_t id)
 {
 	assert(dev);
@@ -220,7 +220,7 @@ co_dev_set_id(co_dev_t *dev, co_unsigned8_t id)
 	return 0;
 }
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_dev_get_idx(const co_dev_t *dev, co_unsigned16_t maxidx,
 		co_unsigned16_t *idx)
 {
@@ -239,7 +239,7 @@ co_dev_get_idx(const co_dev_t *dev, co_unsigned16_t maxidx,
 	return (co_unsigned16_t)rbtree_size(&dev->tree);
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_insert_obj(co_dev_t *dev, co_obj_t *obj)
 {
 	assert(dev);
@@ -260,7 +260,7 @@ co_dev_insert_obj(co_dev_t *dev, co_obj_t *obj)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_remove_obj(co_dev_t *dev, co_obj_t *obj)
 {
 	assert(dev);
@@ -275,7 +275,7 @@ co_dev_remove_obj(co_dev_t *dev, co_obj_t *obj)
 	return 0;
 }
 
-LELY_CO_EXPORT co_obj_t *
+co_obj_t *
 co_dev_find_obj(const co_dev_t *dev, co_unsigned16_t idx)
 {
 	assert(dev);
@@ -286,14 +286,14 @@ co_dev_find_obj(const co_dev_t *dev, co_unsigned16_t idx)
 	return structof(node, co_obj_t, node);
 }
 
-LELY_CO_EXPORT co_sub_t *
+co_sub_t *
 co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
 	return __likely(obj) ? co_obj_find_sub(obj, subidx) : NULL;
 }
 
-LELY_CO_EXPORT const char *
+const char *
 co_dev_get_name(const co_dev_t *dev)
 {
 	assert(dev);
@@ -301,7 +301,7 @@ co_dev_get_name(const co_dev_t *dev)
 	return dev->name;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_name(co_dev_t *dev, const char *name)
 {
 	assert(dev);
@@ -323,7 +323,7 @@ co_dev_set_name(co_dev_t *dev, const char *name)
 	return 0;
 }
 
-LELY_CO_EXPORT const char *
+const char *
 co_dev_get_vendor_name(const co_dev_t *dev)
 {
 	assert(dev);
@@ -331,7 +331,7 @@ co_dev_get_vendor_name(const co_dev_t *dev)
 	return dev->vendor_name;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 {
 	assert(dev);
@@ -353,7 +353,7 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 	return 0;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_dev_get_vendor_id(const co_dev_t *dev)
 {
 	assert(dev);
@@ -361,7 +361,7 @@ co_dev_get_vendor_id(const co_dev_t *dev)
 	return dev->vendor_id;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_vendor_id(co_dev_t *dev, co_unsigned32_t vendor_id)
 {
 	assert(dev);
@@ -369,7 +369,7 @@ co_dev_set_vendor_id(co_dev_t *dev, co_unsigned32_t vendor_id)
 	dev->vendor_id = vendor_id;
 }
 
-LELY_CO_EXPORT const char *
+const char *
 co_dev_get_product_name(const co_dev_t *dev)
 {
 	assert(dev);
@@ -377,7 +377,7 @@ co_dev_get_product_name(const co_dev_t *dev)
 	return dev->product_name;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 {
 	assert(dev);
@@ -399,7 +399,7 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 	return 0;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_dev_get_product_code(const co_dev_t *dev)
 {
 	assert(dev);
@@ -407,7 +407,7 @@ co_dev_get_product_code(const co_dev_t *dev)
 	return dev->product_code;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_product_code(co_dev_t *dev, co_unsigned32_t product_code)
 {
 	assert(dev);
@@ -415,7 +415,7 @@ co_dev_set_product_code(co_dev_t *dev, co_unsigned32_t product_code)
 	dev->product_code = product_code;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_dev_get_revision(const co_dev_t *dev)
 {
 	assert(dev);
@@ -423,7 +423,7 @@ co_dev_get_revision(const co_dev_t *dev)
 	return dev->revision;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_revision(co_dev_t *dev, co_unsigned32_t revision)
 {
 	assert(dev);
@@ -431,7 +431,7 @@ co_dev_set_revision(co_dev_t *dev, co_unsigned32_t revision)
 	dev->revision = revision;
 }
 
-LELY_CO_EXPORT const char *
+const char *
 co_dev_get_order_code(const co_dev_t *dev)
 {
 	assert(dev);
@@ -439,7 +439,7 @@ co_dev_get_order_code(const co_dev_t *dev)
 	return dev->order_code;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 {
 	assert(dev);
@@ -461,7 +461,7 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 	return 0;
 }
 
-LELY_CO_EXPORT unsigned int
+unsigned int
 co_dev_get_baud(const co_dev_t *dev)
 {
 	assert(dev);
@@ -469,7 +469,7 @@ co_dev_get_baud(const co_dev_t *dev)
 	return dev->baud;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_baud(co_dev_t *dev, unsigned int baud)
 {
 	assert(dev);
@@ -477,7 +477,7 @@ co_dev_set_baud(co_dev_t *dev, unsigned int baud)
 	dev->baud = baud;
 }
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_dev_get_rate(const co_dev_t *dev)
 {
 	assert(dev);
@@ -485,7 +485,7 @@ co_dev_get_rate(const co_dev_t *dev)
 	return dev->rate;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate)
 {
 	assert(dev);
@@ -493,7 +493,7 @@ co_dev_set_rate(co_dev_t *dev, co_unsigned16_t rate)
 	dev->rate = rate;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_get_lss(const co_dev_t *dev)
 {
 	assert(dev);
@@ -501,7 +501,7 @@ co_dev_get_lss(const co_dev_t *dev)
 	return dev->lss;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_lss(co_dev_t *dev, int lss)
 {
 	assert(dev);
@@ -509,7 +509,7 @@ co_dev_set_lss(co_dev_t *dev, int lss)
 	dev->lss = !!lss;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_dev_get_dummy(const co_dev_t *dev)
 {
 	assert(dev);
@@ -517,7 +517,7 @@ co_dev_get_dummy(const co_dev_t *dev)
 	return dev->dummy;
 }
 
-LELY_CO_EXPORT void
+void
 co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 {
 	assert(dev);
@@ -525,7 +525,7 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 	dev->dummy = dummy;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	// clang-format off
@@ -535,7 +535,7 @@ co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 	return co_sub_get_val(sub);
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n)
 {
@@ -551,7 +551,7 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
+	co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
 			co_unsigned16_t idx, co_unsigned8_t subidx) \
 	{ \
 		co_sub_t *sub = __likely(dev) \
@@ -560,9 +560,8 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		return co_sub_get_val_##c(sub); \
 	} \
 \
-	LELY_CO_EXPORT size_t co_dev_set_val_##c(co_dev_t *dev, \
-			co_unsigned16_t idx, co_unsigned8_t subidx, \
-			co_##b##_t c) \
+	size_t co_dev_set_val_##c(co_dev_t *dev, co_unsigned16_t idx, \
+			co_unsigned8_t subidx, co_##b##_t c) \
 	{ \
 		assert(dev); \
 \
@@ -577,7 +576,7 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
-LELY_CO_EXPORT size_t
+size_t
 co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		const uint8_t *begin, const uint8_t *end)
 {
@@ -635,7 +634,7 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 	return 2 + 1 + 4 + size;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end)
 {
@@ -679,7 +678,7 @@ co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 	return 2 + 1 + 4 + size;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 		void *const *ptr)
 {
@@ -722,7 +721,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 }
 
 #ifndef LELY_NO_CO_DCF
-LELY_CO_EXPORT int
+int
 co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 		co_unsigned16_t *pmax, const char *filename)
 {
@@ -773,7 +772,7 @@ error_create_buf:
 }
 #endif
 
-LELY_CO_EXPORT int
+int
 co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 		void **ptr)
 {
@@ -848,7 +847,7 @@ error_malloc_idx:
 }
 
 #ifndef LELY_NO_CO_DCF
-LELY_CO_EXPORT int
+int
 co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, const char *filename)
 {

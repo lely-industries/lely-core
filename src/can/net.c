@@ -113,7 +113,7 @@ struct __can_recv {
 	void *data;
 };
 
-LELY_CAN_EXPORT void *
+void *
 __can_net_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_net));
@@ -122,13 +122,13 @@ __can_net_alloc(void)
 	return ptr;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_net_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CAN_EXPORT struct __can_net *
+struct __can_net *
 __can_net_init(struct __can_net *net)
 {
 	assert(net);
@@ -149,7 +149,7 @@ __can_net_init(struct __can_net *net)
 	return net;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_net_fini(struct __can_net *net)
 {
 	assert(net);
@@ -165,7 +165,7 @@ __can_net_fini(struct __can_net *net)
 		can_timer_stop(structof(node, can_timer_t, node));
 }
 
-LELY_CAN_EXPORT can_net_t *
+can_net_t *
 can_net_create(void)
 {
 	errc_t errc = 0;
@@ -190,7 +190,7 @@ error_alloc_net:
 	return NULL;
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_destroy(can_net_t *net)
 {
 	if (net) {
@@ -199,7 +199,7 @@ can_net_destroy(can_net_t *net)
 	}
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_get_time(const can_net_t *net, struct timespec *tp)
 {
 	assert(net);
@@ -208,7 +208,7 @@ can_net_get_time(const can_net_t *net, struct timespec *tp)
 		*tp = net->time;
 }
 
-LELY_CAN_EXPORT int
+int
 can_net_set_time(can_net_t *net, const struct timespec *tp)
 {
 	assert(net);
@@ -252,7 +252,7 @@ can_net_set_time(can_net_t *net, const struct timespec *tp)
 	return result;
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_get_next_func(
 		const can_net_t *net, can_timer_func_t **pfunc, void **pdata)
 {
@@ -264,7 +264,7 @@ can_net_get_next_func(
 		*pdata = net->next_data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
 {
 	assert(net);
@@ -273,7 +273,7 @@ can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data)
 	net->next_data = data;
 }
 
-LELY_CAN_EXPORT int
+int
 can_net_recv(can_net_t *net, const struct can_msg *msg)
 {
 	assert(net);
@@ -303,7 +303,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	return result;
 }
 
-LELY_CAN_EXPORT int
+int
 can_net_send(can_net_t *net, const struct can_msg *msg)
 {
 	assert(net);
@@ -317,7 +317,7 @@ can_net_send(can_net_t *net, const struct can_msg *msg)
 	return net->send_func(msg, net->send_data);
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_get_send_func(
 		const can_net_t *net, can_send_func_t **pfunc, void **pdata)
 {
@@ -329,7 +329,7 @@ can_net_get_send_func(
 		*pdata = net->send_data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 {
 	assert(net);
@@ -338,7 +338,7 @@ can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 	net->send_data = data;
 }
 
-LELY_CAN_EXPORT void *
+void *
 __can_timer_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_timer));
@@ -347,13 +347,13 @@ __can_timer_alloc(void)
 	return ptr;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_timer_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CAN_EXPORT struct __can_timer *
+struct __can_timer *
 __can_timer_init(struct __can_timer *timer)
 {
 	assert(timer);
@@ -371,13 +371,13 @@ __can_timer_init(struct __can_timer *timer)
 	return timer;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_timer_fini(struct __can_timer *timer)
 {
 	can_timer_stop(timer);
 }
 
-LELY_CAN_EXPORT can_timer_t *
+can_timer_t *
 can_timer_create(void)
 {
 	errc_t errc = 0;
@@ -402,7 +402,7 @@ error_alloc_timer:
 	return NULL;
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_destroy(can_timer_t *timer)
 {
 	if (timer) {
@@ -411,7 +411,7 @@ can_timer_destroy(can_timer_t *timer)
 	}
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_get_func(const can_timer_t *timer, can_timer_func_t **pfunc,
 		void **pdata)
 {
@@ -423,7 +423,7 @@ can_timer_get_func(const can_timer_t *timer, can_timer_func_t **pfunc,
 		*pdata = timer->data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_set_func(can_timer_t *timer, can_timer_func_t *func, void *data)
 {
 	assert(timer);
@@ -432,7 +432,7 @@ can_timer_set_func(can_timer_t *timer, can_timer_func_t *func, void *data)
 	timer->data = data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_start(can_timer_t *timer, can_net_t *net,
 		const struct timespec *start, const struct timespec *interval)
 {
@@ -463,7 +463,7 @@ can_timer_start(can_timer_t *timer, can_net_t *net,
 	can_net_set_next(net);
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_stop(can_timer_t *timer)
 {
 	assert(timer);
@@ -479,7 +479,7 @@ can_timer_stop(can_timer_t *timer)
 	can_net_set_next(net);
 }
 
-LELY_CAN_EXPORT void
+void
 can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
 {
 	if (timeout < 0) {
@@ -493,7 +493,7 @@ can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
 	}
 }
 
-LELY_CAN_EXPORT void *
+void *
 __can_recv_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_recv));
@@ -502,13 +502,13 @@ __can_recv_alloc(void)
 	return ptr;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_recv_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CAN_EXPORT struct __can_recv *
+struct __can_recv *
 __can_recv_init(struct __can_recv *recv)
 {
 	assert(recv);
@@ -526,13 +526,13 @@ __can_recv_init(struct __can_recv *recv)
 	return recv;
 }
 
-LELY_CAN_EXPORT void
+void
 __can_recv_fini(struct __can_recv *recv)
 {
 	can_recv_stop(recv);
 }
 
-LELY_CAN_EXPORT can_recv_t *
+can_recv_t *
 can_recv_create(void)
 {
 	errc_t errc = 0;
@@ -557,7 +557,7 @@ error_alloc_recv:
 	return NULL;
 }
 
-LELY_CAN_EXPORT void
+void
 can_recv_destroy(can_recv_t *recv)
 {
 	if (recv) {
@@ -566,7 +566,7 @@ can_recv_destroy(can_recv_t *recv)
 	}
 }
 
-LELY_CAN_EXPORT void
+void
 can_recv_get_func(const can_recv_t *recv, can_recv_func_t **pfunc, void **pdata)
 {
 	assert(recv);
@@ -577,7 +577,7 @@ can_recv_get_func(const can_recv_t *recv, can_recv_func_t **pfunc, void **pdata)
 		*pdata = recv->data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data)
 {
 	assert(recv);
@@ -586,7 +586,7 @@ can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data)
 	recv->data = data;
 }
 
-LELY_CAN_EXPORT void
+void
 can_recv_start(can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags)
 {
 	assert(recv);
@@ -607,7 +607,7 @@ can_recv_start(can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags)
 	}
 }
 
-LELY_CAN_EXPORT void
+void
 can_recv_stop(can_recv_t *recv)
 {
 	assert(recv);

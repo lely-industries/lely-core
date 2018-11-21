@@ -45,7 +45,7 @@ struct __pool {
 	size_t size;
 };
 
-LELY_UTIL_EXPORT void *
+void *
 __pool_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __pool));
@@ -54,13 +54,13 @@ __pool_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __pool_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __pool *
+struct __pool *
 __pool_init(struct __pool *pool, size_t nmemb, size_t size)
 {
 	assert(pool);
@@ -94,7 +94,7 @@ __pool_init(struct __pool *pool, size_t nmemb, size_t size)
 	return pool;
 }
 
-LELY_UTIL_EXPORT void
+void
 __pool_fini(struct __pool *pool)
 {
 	assert(pool);
@@ -106,7 +106,7 @@ __pool_fini(struct __pool *pool)
 #endif
 }
 
-LELY_UTIL_EXPORT pool_t *
+pool_t *
 pool_create(size_t nmemb, size_t size)
 {
 	errc_t errc = 0;
@@ -131,7 +131,7 @@ error_alloc_pool:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 pool_destroy(pool_t *pool)
 {
 	if (pool) {
@@ -140,7 +140,7 @@ pool_destroy(pool_t *pool)
 	}
 }
 
-LELY_UTIL_EXPORT void *
+void *
 pool_alloc(pool_t *pool)
 {
 	if (__unlikely(!pool))
@@ -186,7 +186,7 @@ pool_alloc(pool_t *pool)
 	return pool_alloc(pool);
 }
 
-LELY_UTIL_EXPORT void
+void
 pool_free(pool_t *pool, void *ptr)
 {
 	assert(pool);
@@ -207,7 +207,7 @@ pool_free(pool_t *pool, void *ptr)
 #endif
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 pool_size(const pool_t *pool)
 {
 	assert(pool);

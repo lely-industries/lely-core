@@ -39,7 +39,7 @@ extern "C" {
  * @returns a new I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN io_handle_t io_open_can(const char *path);
+io_handle_t io_open_can(const char *path);
 
 /**
  * Reads a single CAN or CAN FD frame.
@@ -52,7 +52,7 @@ LELY_IO_EXTERN io_handle_t io_open_can(const char *path);
  * an I/O error (`ERRNUM_IO`), the CAN device state and error can be obtained
  * with io_can_get_state() and io_can_get_error(), respectively.
  */
-LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
+int io_can_read(io_handle_t handle, struct can_msg *msg);
 
 /**
  * Writes a single CAN or CAN FD frame.
@@ -63,7 +63,7 @@ LELY_IO_EXTERN int io_can_read(io_handle_t handle, struct can_msg *msg);
  * @returns the number of frames sent (at most 1), or -1 on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
+int io_can_write(io_handle_t handle, const struct can_msg *msg);
 
 /**
  * Starts transmission and reception on a CAN device. On Linux, this operation
@@ -74,7 +74,7 @@ LELY_IO_EXTERN int io_can_write(io_handle_t handle, const struct can_msg *msg);
  *
  * @see io_can_stop()
  */
-LELY_IO_EXTERN int io_can_start(io_handle_t handle);
+int io_can_start(io_handle_t handle);
 
 /**
  * Stops transmission and reception on a CAN device. On Linux, this operation
@@ -85,7 +85,7 @@ LELY_IO_EXTERN int io_can_start(io_handle_t handle);
  *
  * @see io_can_start()
  */
-LELY_IO_EXTERN int io_can_stop(io_handle_t handle);
+int io_can_stop(io_handle_t handle);
 
 /**
  * Obtains the state of a CAN device.
@@ -94,7 +94,7 @@ LELY_IO_EXTERN int io_can_stop(io_handle_t handle);
  * on error. In the latter case, the error number can be obtained with
  * get_errc().
  */
-LELY_IO_EXTERN int io_can_get_state(io_handle_t handle);
+int io_can_get_state(io_handle_t handle);
 
 /**
  * Obtains and clears the current error number of a CAN device, and stores the
@@ -104,7 +104,7 @@ LELY_IO_EXTERN int io_can_get_state(io_handle_t handle);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_can_get_error(io_handle_t handle, int *perror);
+int io_can_get_error(io_handle_t handle, int *perror);
 
 /**
  * Obtains the transmit and/or receive error count of a CAN device and stores
@@ -113,8 +113,7 @@ LELY_IO_EXTERN int io_can_get_error(io_handle_t handle, int *perror);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_can_get_ec(
-		io_handle_t handle, uint16_t *ptxec, uint16_t *prxec);
+int io_can_get_ec(io_handle_t handle, uint16_t *ptxec, uint16_t *prxec);
 
 /**
  * Obtains the bitrate (in bit/s) of a CAN device and stores the value in
@@ -125,7 +124,7 @@ LELY_IO_EXTERN int io_can_get_ec(
  *
  * @see io_can_set_bitrate()
  */
-LELY_IO_EXTERN int io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate);
+int io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate);
 
 /**
  * Sets the bitrate (in bit/s) of a CAN device. Note that not all bitrates are
@@ -139,7 +138,7 @@ LELY_IO_EXTERN int io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate);
  *
  * @see io_can_get_bitrate()
  */
-LELY_IO_EXTERN int io_can_set_bitrate(io_handle_t handle, uint32_t bitrate);
+int io_can_set_bitrate(io_handle_t handle, uint32_t bitrate);
 
 /**
  * Obtains the length of the transmission queue (in number of CAN frames) of a
@@ -150,7 +149,7 @@ LELY_IO_EXTERN int io_can_set_bitrate(io_handle_t handle, uint32_t bitrate);
  *
  * @see io_can_set_txqlen()
  */
-LELY_IO_EXTERN int io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen);
+int io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen);
 
 /**
  * Sets the length of the transmission queue (in number of CAN frames) of a CAN
@@ -162,7 +161,7 @@ LELY_IO_EXTERN int io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen);
  *
  * @see io_can_get_txqlen()
  */
-LELY_IO_EXTERN int io_can_set_txqlen(io_handle_t handle, size_t txqlen);
+int io_can_set_txqlen(io_handle_t handle, size_t txqlen);
 
 #ifdef __cplusplus
 }

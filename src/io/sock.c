@@ -70,7 +70,7 @@ static const struct io_handle_vtab sock_vtab = { .type = IO_TYPE_SOCK,
 
 static int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_open_socket(int domain, int type)
 {
 	errc_t errc = 0;
@@ -177,7 +177,7 @@ error_domain:
 	return IO_HANDLE_ERROR;
 }
 
-LELY_IO_EXPORT int
+int
 io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 {
 	assert(handle_vector);
@@ -297,7 +297,7 @@ error_domain:
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
 		int flags)
 {
@@ -315,7 +315,7 @@ io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
 	return handle->vtab->recv(handle, buf, nbytes, addr, flags);
 }
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_send(io_handle_t handle, const void *buf, size_t nbytes,
 		const io_addr_t *addr, int flags)
 {
@@ -333,7 +333,7 @@ io_send(io_handle_t handle, const void *buf, size_t nbytes,
 	return handle->vtab->send(handle, buf, nbytes, addr, flags);
 }
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_accept(io_handle_t handle, io_addr_t *addr)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -350,7 +350,7 @@ io_accept(io_handle_t handle, io_addr_t *addr)
 	return handle->vtab->accept(handle, addr);
 }
 
-LELY_IO_EXPORT int
+int
 io_connect(io_handle_t handle, const io_addr_t *addr)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -369,7 +369,7 @@ io_connect(io_handle_t handle, const io_addr_t *addr)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_sock_get_domain(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -385,7 +385,7 @@ io_sock_get_domain(io_handle_t handle)
 	return ((struct sock *)handle)->domain;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_type(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -401,7 +401,7 @@ io_sock_get_type(io_handle_t handle)
 	return ((struct sock *)handle)->type;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 {
 	assert(addr);
@@ -415,7 +415,7 @@ io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 			addr->addrlen);
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_listen(io_handle_t handle, int backlog)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -426,7 +426,7 @@ io_sock_listen(io_handle_t handle, int backlog)
 	return listen((SOCKET)handle->fd, backlog) ? -1 : 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_shutdown(io_handle_t handle, int how)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -462,7 +462,7 @@ io_sock_shutdown(io_handle_t handle, int how)
 	return shutdown((SOCKET)handle->fd, how) ? -1 : 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
@@ -492,7 +492,7 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
@@ -522,13 +522,13 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_maxconn(void)
 {
 	return SOMAXCONN;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_acceptconn(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -549,7 +549,7 @@ io_sock_get_acceptconn(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_broadcast(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -570,7 +570,7 @@ io_sock_get_broadcast(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_broadcast(io_handle_t handle, int broadcast)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -589,7 +589,7 @@ io_sock_set_broadcast(io_handle_t handle, int broadcast)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_debug(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -610,7 +610,7 @@ io_sock_get_debug(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_debug(io_handle_t handle, int debug)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -629,7 +629,7 @@ io_sock_set_debug(io_handle_t handle, int debug)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_dontroute(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -650,7 +650,7 @@ io_sock_get_dontroute(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_dontroute(io_handle_t handle, int dontroute)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -669,7 +669,7 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_error(io_handle_t handle, int *perror)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -684,7 +684,7 @@ io_sock_get_error(io_handle_t handle, int *perror)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_keepalive(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -705,7 +705,7 @@ io_sock_get_keepalive(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -752,7 +752,7 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_linger(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -769,7 +769,7 @@ io_sock_get_linger(io_handle_t handle)
 	return optval.l_onoff ? optval.l_linger : 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_linger(io_handle_t handle, int time)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -789,7 +789,7 @@ io_sock_set_linger(io_handle_t handle, int time)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_oobinline(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -810,7 +810,7 @@ io_sock_get_oobinline(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_oobinline(io_handle_t handle, int oobinline)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -829,7 +829,7 @@ io_sock_set_oobinline(io_handle_t handle, int oobinline)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_rcvbuf(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -846,7 +846,7 @@ io_sock_get_rcvbuf(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_rcvbuf(io_handle_t handle, int size)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -860,7 +860,7 @@ io_sock_set_rcvbuf(io_handle_t handle, int size)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -880,7 +880,7 @@ io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_reuseaddr(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -901,7 +901,7 @@ io_sock_get_reuseaddr(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -920,7 +920,7 @@ io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_sndbuf(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -937,7 +937,7 @@ io_sock_get_sndbuf(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_sndbuf(io_handle_t handle, int size)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -951,7 +951,7 @@ io_sock_set_sndbuf(io_handle_t handle, int size)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -971,7 +971,7 @@ io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_tcp_nodelay(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -992,7 +992,7 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1012,7 +1012,7 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 }
 
 #if defined(_WIN32) || defined(HAVE_SYS_IOCTL_H)
-LELY_IO_EXTERN ssize_t
+ssize_t
 io_sock_get_nread(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1042,7 +1042,7 @@ io_sock_get_nread(io_handle_t handle)
 
 #if defined(_WIN32) || defined(__CYGWIN__) || defined(__linux__)
 
-LELY_IO_EXPORT int
+int
 io_sock_get_mcast_loop(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1082,7 +1082,7 @@ io_sock_get_mcast_loop(io_handle_t handle)
 	return !!optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_mcast_loop(io_handle_t handle, int loop)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1117,7 +1117,7 @@ io_sock_set_mcast_loop(io_handle_t handle, int loop)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_get_mcast_ttl(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1157,7 +1157,7 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 	return optval;
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -1192,7 +1192,7 @@ io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_join_group(
 		io_handle_t handle, unsigned int index, const io_addr_t *group)
 {
@@ -1222,7 +1222,7 @@ io_sock_mcast_join_group(
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {
@@ -1254,7 +1254,7 @@ io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {
@@ -1286,7 +1286,7 @@ io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_leave_group(
 		io_handle_t handle, unsigned int index, const io_addr_t *group)
 {
@@ -1316,7 +1316,7 @@ io_sock_mcast_leave_group(
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {
@@ -1348,7 +1348,7 @@ io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
 	// clang-format on
 }
 
-LELY_IO_EXPORT int
+int
 io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {

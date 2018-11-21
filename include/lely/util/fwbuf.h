@@ -52,11 +52,10 @@ typedef struct __fwbuf fwbuf_t;
 extern "C" {
 #endif
 
-LELY_UTIL_EXTERN void *__fwbuf_alloc(void);
-LELY_UTIL_EXTERN void __fwbuf_free(void *ptr);
-LELY_UTIL_EXTERN struct __fwbuf *__fwbuf_init(
-		struct __fwbuf *buf, const char *filename);
-LELY_UTIL_EXTERN void __fwbuf_fini(struct __fwbuf *buf);
+void *__fwbuf_alloc(void);
+void __fwbuf_free(void *ptr);
+struct __fwbuf *__fwbuf_init(struct __fwbuf *buf, const char *filename);
+void __fwbuf_fini(struct __fwbuf *buf);
 
 /**
  * Creates a new (atomic) write file buffer.
@@ -69,7 +68,7 @@ LELY_UTIL_EXTERN void __fwbuf_fini(struct __fwbuf *buf);
  *
  * @see fwbuf_destroy()
  */
-LELY_UTIL_EXTERN fwbuf_t *fwbuf_create(const char *filename);
+fwbuf_t *fwbuf_create(const char *filename);
 
 /**
  * Destroys a write file buffer. fwbuf_unmap() is invoked, if necessary, before
@@ -78,7 +77,7 @@ LELY_UTIL_EXTERN fwbuf_t *fwbuf_create(const char *filename);
  *
  * @see fwbuf_create()
  */
-LELY_UTIL_EXTERN void fwbuf_destroy(fwbuf_t *buf);
+void fwbuf_destroy(fwbuf_t *buf);
 
 /**
  * Returns the current size (in bytes) of the a write file buffer, or -1 on
@@ -87,7 +86,7 @@ LELY_UTIL_EXTERN void fwbuf_destroy(fwbuf_t *buf);
  *
  * @see fwbuf_set_size()
  */
-LELY_UTIL_EXTERN int64_t fwbuf_get_size(fwbuf_t *buf);
+int64_t fwbuf_get_size(fwbuf_t *buf);
 
 /**
  * Sets the new size (in bytes) of the a write file buffer. This function
@@ -100,7 +99,7 @@ LELY_UTIL_EXTERN int64_t fwbuf_get_size(fwbuf_t *buf);
  *
  * @see fwbuf_get_size()
  */
-LELY_UTIL_EXTERN int fwbuf_set_size(fwbuf_t *buf, int64_t size);
+int fwbuf_set_size(fwbuf_t *buf, int64_t size);
 
 /**
  * Returns the current offset (in bytes) of a write file buffer with respect to
@@ -111,7 +110,7 @@ LELY_UTIL_EXTERN int fwbuf_set_size(fwbuf_t *buf, int64_t size);
  * will start writing, and it is only updated by that function or
  * fwbuf_set_pos().
  */
-LELY_UTIL_EXTERN int64_t fwbuf_get_pos(fwbuf_t *buf);
+int64_t fwbuf_get_pos(fwbuf_t *buf);
 
 /**
  * Sets the current offset (in bytes) of a write file buffer with respect to the
@@ -124,7 +123,7 @@ LELY_UTIL_EXTERN int64_t fwbuf_get_pos(fwbuf_t *buf);
  *
  * @see fwbuf_get_pos()
  */
-LELY_UTIL_EXTERN int64_t fwbuf_set_pos(fwbuf_t *buf, int64_t pos);
+int64_t fwbuf_set_pos(fwbuf_t *buf, int64_t pos);
 
 /**
  * Writes bytes to the current position in a write file buffer. Note that this
@@ -140,8 +139,7 @@ LELY_UTIL_EXTERN int64_t fwbuf_set_pos(fwbuf_t *buf, int64_t pos);
  *
  * @see fwbuf_pwrite()
  */
-LELY_UTIL_EXTERN ssize_t fwbuf_write(
-		fwbuf_t *buf, const void *ptr, size_t size);
+ssize_t fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size);
 
 /**
  * Writes bytes to the specified position in a write file buffer. This function
@@ -159,8 +157,7 @@ LELY_UTIL_EXTERN ssize_t fwbuf_write(
  *
  * @see fwbuf_write()
  */
-LELY_UTIL_EXTERN ssize_t fwbuf_pwrite(
-		fwbuf_t *buf, const void *ptr, size_t size, int64_t pos);
+ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos);
 
 /**
  * Maps (part of) the contents of a write file buffer to memory. Only a single
@@ -180,7 +177,7 @@ LELY_UTIL_EXTERN ssize_t fwbuf_pwrite(
  * @returns a pointer to the first byte in the memory map, or NULL on error. In
  * the latter case, the error number can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN void *fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize);
+void *fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize);
 
 /**
  * Unmaps the current memory map of a write file buffer, if it exists, and
@@ -191,7 +188,7 @@ LELY_UTIL_EXTERN void *fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize);
  *
  * @see fwbuf_map()
  */
-LELY_UTIL_EXTERN int fwbuf_unmap(fwbuf_t *buf);
+int fwbuf_unmap(fwbuf_t *buf);
 
 /**
  * Clears the error indicator of a write file buffer, allowing fwbuf_commit() to
@@ -199,7 +196,7 @@ LELY_UTIL_EXTERN int fwbuf_unmap(fwbuf_t *buf);
  *
  * @see fwbuf_error()
  */
-LELY_UTIL_EXTERN void fwbuf_clearerr(fwbuf_t *buf);
+void fwbuf_clearerr(fwbuf_t *buf);
 
 /**
  * Returns 1 if the error indicator of a write file buffer is set, and 0 if not.
@@ -208,13 +205,13 @@ LELY_UTIL_EXTERN void fwbuf_clearerr(fwbuf_t *buf);
  *
  * @see fwbuf_clearerr()
  */
-LELY_UTIL_EXTERN int fwbuf_error(fwbuf_t *buf);
+int fwbuf_error(fwbuf_t *buf);
 
 /**
  * Cancels any further file operations by setting the error indicator of a write
  * file buffer to #ERRNUM_CANCELED (if it was not already set).
  */
-LELY_UTIL_EXTERN void fwbuf_cancel(fwbuf_t *buf);
+void fwbuf_cancel(fwbuf_t *buf);
 
 /**
  * Commits all changes to a write file buffer to disk if all previous file
@@ -226,7 +223,7 @@ LELY_UTIL_EXTERN void fwbuf_cancel(fwbuf_t *buf);
  * of the first error encountered during a file operation can be obtained with
  * get_errc().
  */
-LELY_UTIL_EXTERN int fwbuf_commit(fwbuf_t *buf);
+int fwbuf_commit(fwbuf_t *buf);
 
 #ifdef __cplusplus
 }

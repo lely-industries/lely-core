@@ -117,7 +117,7 @@ static char16_t *str16ncpy(char16_t *dst, const char16_t *src, size_t n);
  */
 static int str16ncmp(const char16_t *s1, const char16_t *s2, size_t n);
 
-LELY_CO_EXPORT int
+int
 co_val_init(co_unsigned16_t type, void *val)
 {
 	union co_val *u = val;
@@ -134,7 +134,7 @@ co_val_init(co_unsigned16_t type, void *val)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_min(co_unsigned16_t type, void *val)
 {
 	union co_val *u = val;
@@ -151,7 +151,7 @@ co_val_init_min(co_unsigned16_t type, void *val)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_max(co_unsigned16_t type, void *val)
 {
 	union co_val *u = val;
@@ -168,7 +168,7 @@ co_val_init_max(co_unsigned16_t type, void *val)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_vs(char **val, const char *vs)
 {
 	assert(val);
@@ -181,7 +181,7 @@ co_val_init_vs(char **val, const char *vs)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_vs_n(char **val, const char *vs, size_t n)
 {
 	assert(val);
@@ -200,7 +200,7 @@ co_val_init_vs_n(char **val, const char *vs, size_t n)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_os(uint8_t **val, const uint8_t *os, size_t n)
 {
 	assert(val);
@@ -219,7 +219,7 @@ co_val_init_os(uint8_t **val, const uint8_t *os, size_t n)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_us(char16_t **val, const char16_t *us)
 {
 	assert(val);
@@ -232,7 +232,7 @@ co_val_init_us(char16_t **val, const char16_t *us)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_us_n(char16_t **val, const char16_t *us, size_t n)
 {
 	assert(val);
@@ -251,7 +251,7 @@ co_val_init_us_n(char16_t **val, const char16_t *us, size_t n)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_init_dom(void **val, const void *dom, size_t n)
 {
 	assert(val);
@@ -270,7 +270,7 @@ co_val_init_dom(void **val, const void *dom, size_t n)
 	return 0;
 }
 
-LELY_CO_EXPORT void
+void
 co_val_fini(co_unsigned16_t type, void *val)
 {
 	assert(val);
@@ -281,7 +281,7 @@ co_val_fini(co_unsigned16_t type, void *val)
 	}
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_val_addressof(co_unsigned16_t type, const void *val)
 {
 	if (__unlikely(!val))
@@ -290,7 +290,7 @@ co_val_addressof(co_unsigned16_t type, const void *val)
 	return co_type_is_array(type) ? *(const void **)val : val;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_sizeof(co_unsigned16_t type, const void *val)
 {
 	if (__unlikely(!val))
@@ -303,7 +303,7 @@ co_val_sizeof(co_unsigned16_t type, const void *val)
 	// clang-format on
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 {
 	assert(val);
@@ -330,7 +330,7 @@ co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 	return n;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 {
 	assert(dst);
@@ -368,7 +368,7 @@ co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 	return n;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_move(co_unsigned16_t type, void *dst, void *src)
 {
 	assert(dst);
@@ -383,7 +383,7 @@ co_val_move(co_unsigned16_t type, void *dst, void *src)
 	return n;
 }
 
-LELY_CO_EXPORT int
+int
 co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 {
 	if (v1 == v2)
@@ -467,7 +467,7 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 	}
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 		const uint8_t *end)
 {
@@ -695,7 +695,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 	}
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 {
 	errc_t errc = get_errc();
@@ -715,7 +715,7 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 	return ac;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 		uint8_t *end)
 {
@@ -866,7 +866,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 	}
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		struct floc *at)
 {
@@ -1311,7 +1311,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 	return floc_lex(at, begin, cp);
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 {
 	if (co_type_is_array(type)) {

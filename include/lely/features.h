@@ -286,30 +286,6 @@
 #endif
 #endif
 
-#ifndef __dllexport
-// clang-format off
-#if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
-		|| __has_declspec_attribute(dllexport))
-// clang-format on
-#define __dllexport __declspec(dllexport)
-#elif defined(__GNUC__)
-#define __dllexport __attribute__((visibility("default")))
-#else
-#define __dllexport
-#endif
-#endif
-
-#ifndef __dllimport
-// clang-format off
-#if defined(_WIN32) && (defined(_MSC_VER) || defined(__declspec) \
-		|| __has_declspec_attribute(dllimport))
-// clang-format on
-#define __dllimport __declspec(dllimport)
-#else
-#define __dllimport
-#endif
-#endif
-
 #if !defined(__extension__) && !defined(__GNUC__)
 #define __extension__
 #endif

@@ -148,12 +148,11 @@ LELY_UTIL_HTAB_INLINE void hnode_remove(struct hnode *node);
  *
  * @see htab_fini()
  */
-LELY_UTIL_EXTERN int htab_init(struct htab *tab,
-		int (*eq)(const void *, const void *),
+int htab_init(struct htab *tab, int (*eq)(const void *, const void *),
 		size_t (*hash)(const void *), size_t num_slots);
 
 /// Finalizes a hash table and frees the slot array. @see htab_init()
-LELY_UTIL_EXTERN void htab_fini(struct htab *tab);
+void htab_fini(struct htab *tab);
 
 /// Returns 1 if the hash table is empty, and 0 if not.
 LELY_UTIL_HTAB_INLINE int htab_empty(const struct htab *tab);
@@ -175,7 +174,7 @@ LELY_UTIL_HTAB_INLINE size_t htab_size(const struct htab *tab);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int htab_resize(struct htab *tab, size_t num_slots);
+int htab_resize(struct htab *tab, size_t num_slots);
 
 /**
  * Inserts a node into a hash table. This is an O(1) operation. This function
@@ -184,14 +183,14 @@ LELY_UTIL_EXTERN int htab_resize(struct htab *tab, size_t num_slots);
  *
  * @see htab_remove(), htab_find()
  */
-LELY_UTIL_EXTERN void htab_insert(struct htab *tab, struct hnode *node);
+void htab_insert(struct htab *tab, struct hnode *node);
 
 /**
  * Removes a node from a hash table. This is an O(1) operation.
  *
  * @see htab_insert()
  */
-LELY_UTIL_EXTERN void htab_remove(struct htab *tab, struct hnode *node);
+void htab_remove(struct htab *tab, struct hnode *node);
 
 /**
  * Finds and returns a node in a hash table. This is an O(1) operation. If
@@ -203,8 +202,7 @@ LELY_UTIL_EXTERN void htab_remove(struct htab *tab, struct hnode *node);
  *
  * @see htab_insert()
  */
-LELY_UTIL_EXTERN struct hnode *htab_find(
-		const struct htab *tab, const void *key);
+struct hnode *htab_find(const struct htab *tab, const void *key);
 
 /**
  * Iterates over each node in a hash table. The order of the nodes is undefined.

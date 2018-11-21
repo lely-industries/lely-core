@@ -37,7 +37,7 @@ static int tap_num;
 
 static void tap_vprintf(const char *format, va_list ap);
 
-LELY_TAP_EXPORT void
+void
 __tap_plan_impl(int n, const char *format, ...)
 {
 	if (__unlikely(tap_num))
@@ -71,7 +71,7 @@ __tap_plan_impl(int n, const char *format, ...)
 #endif
 }
 
-LELY_TAP_EXPORT int
+int
 __tap_test_impl(int test, const char *expr, const char *file, int line,
 		const char *format, ...)
 {
@@ -95,7 +95,7 @@ __tap_test_impl(int test, const char *expr, const char *file, int line,
 	return test;
 }
 
-LELY_TAP_EXPORT void
+void
 __tap_diag_impl(const char *format, ...)
 {
 	assert(format);
@@ -107,7 +107,7 @@ __tap_diag_impl(const char *format, ...)
 	fputc('\n', stdout);
 }
 
-LELY_TAP_EXPORT _Noreturn void
+_Noreturn void
 __tap_abort_impl(const char *format, ...)
 {
 	assert(format);

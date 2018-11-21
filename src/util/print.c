@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_PRINT_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_PRINT_INLINE extern inline
 #include <lely/libc/stdint.h>
 #include <lely/libc/stdio.h>
 #include <lely/libc/uchar.h>
@@ -36,7 +36,7 @@
 #endif
 #include <string.h>
 
-LELY_UTIL_EXPORT size_t
+size_t
 print_fmt(char **pbegin, char *end, const char *format, ...)
 {
 	va_list ap;
@@ -46,7 +46,7 @@ print_fmt(char **pbegin, char *end, const char *format, ...)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
 {
 #if __STDC_NO_VLA__
@@ -80,7 +80,7 @@ vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
 #endif
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 print_utf8(char **pbegin, char *end, char32_t c32)
 {
 	static const unsigned char mark[] = { 0x00, 0xc0, 0xe0, 0xf0 };
@@ -102,7 +102,7 @@ print_utf8(char **pbegin, char *end, char32_t c32)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 print_c99_esc(char **pbegin, char *end, char32_t c32)
 {
 	size_t chars = 0;
@@ -189,7 +189,7 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 {
 	assert(s);
@@ -206,8 +206,7 @@ print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 }
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format) \
-	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
-			char **pbegin, char *end, type name) \
+	size_t print_c99_##suffix(char **pbegin, char *end, type name) \
 	{ \
 		return print_fmt(pbegin, end, format, name); \
 	}
@@ -220,8 +219,7 @@ LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ull, "%" LENll "u")
 #undef LELY_UTIL_DEFINE_PRINT
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, format, dig) \
-	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
-			char **pbegin, char *end, type name) \
+	size_t print_c99_##suffix(char **pbegin, char *end, type name) \
 	{ \
 		return print_fmt(pbegin, end, format, dig, name); \
 	}
@@ -235,8 +233,7 @@ LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld, "%.*Lg", LDBL_DIG)
 #undef LELY_UTIL_DEFINE_PRINT
 
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name, alias) \
-	LELY_UTIL_EXPORT size_t print_c99_##suffix( \
-			char **pbegin, char *end, type name) \
+	size_t print_c99_##suffix(char **pbegin, char *end, type name) \
 	{ \
 		return print_c99_##alias(pbegin, end, name); \
 	}
@@ -260,7 +257,7 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ulong)
 
 #undef LELY_UTIL_DEFINE_PRINT
 
-LELY_UTIL_EXPORT size_t
+size_t
 print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 {
 	// clang-format off

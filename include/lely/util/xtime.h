@@ -26,6 +26,7 @@
 #ifndef LELY_UTIL_XTIME_H_
 #define LELY_UTIL_XTIME_H_
 
+#include <lely/libc/signal.h>
 #include <lely/libc/time.h>
 #include <lely/util/util.h>
 
@@ -45,10 +46,10 @@ typedef struct __xtimer xtimer_t;
 extern "C" {
 #endif
 
-LELY_UTIL_EXTERN void *__xclock_alloc(void);
-LELY_UTIL_EXTERN void __xclock_free(void *ptr);
-LELY_UTIL_EXTERN struct __xclock *__xclock_init(struct __xclock *clock);
-LELY_UTIL_EXTERN void __xclock_fini(struct __xclock *clock);
+void *__xclock_alloc(void);
+void __xclock_free(void *ptr);
+struct __xclock *__xclock_init(struct __xclock *clock);
+void __xclock_fini(struct __xclock *clock);
 
 /**
  * Creates an external clock.
@@ -58,10 +59,10 @@ LELY_UTIL_EXTERN void __xclock_fini(struct __xclock *clock);
  *
  * @see xclock_destroy()
  */
-LELY_UTIL_EXTERN xclock_t *xclock_create(void);
+xclock_t *xclock_create(void);
 
 /// Destroys an external clock. @see xclock_create()
-LELY_UTIL_EXTERN void xclock_destroy(xclock_t *clock);
+void xclock_destroy(xclock_t *clock);
 
 /**
  * Obtains the resolution of an external clock. The resolution is defined as the
@@ -75,7 +76,7 @@ LELY_UTIL_EXTERN void xclock_destroy(xclock_t *clock);
  *
  * @see xclock_gettime(), xclock_settime()
  */
-LELY_UTIL_EXTERN int xclock_getres(xclock_t *clock, struct timespec *res);
+int xclock_getres(xclock_t *clock, struct timespec *res);
 
 /**
  * Obtains the current value of an external clock.
@@ -89,7 +90,7 @@ LELY_UTIL_EXTERN int xclock_getres(xclock_t *clock, struct timespec *res);
  *
  * @see xclock_getres(), xclock_settime()
  */
-LELY_UTIL_EXTERN int xclock_gettime(xclock_t *clock, struct timespec *tp);
+int xclock_gettime(xclock_t *clock, struct timespec *tp);
 
 /**
  * Sleeps until a time interval or absolute time has elapsed on an external
@@ -109,8 +110,8 @@ LELY_UTIL_EXTERN int xclock_gettime(xclock_t *clock, struct timespec *tp);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int xclock_nanosleep(xclock_t *clock, int flags,
-		const struct timespec *rqtp, struct timespec *rmtp);
+int xclock_nanosleep(xclock_t *clock, int flags, const struct timespec *rqtp,
+		struct timespec *rmtp);
 
 /**
  * Sets the value of a clock. This function MAY wake up threads waiting on
@@ -125,13 +126,13 @@ LELY_UTIL_EXTERN int xclock_nanosleep(xclock_t *clock, int flags,
  *
  * @see xclock_getres(), xclock_gettime()
  */
-LELY_UTIL_EXTERN int xclock_settime(xclock_t *clock, const struct timespec *tp);
+int xclock_settime(xclock_t *clock, const struct timespec *tp);
 
-LELY_UTIL_EXTERN void *__xtimer_alloc(void);
-LELY_UTIL_EXTERN void __xtimer_free(void *ptr);
-LELY_UTIL_EXTERN struct __xtimer *__xtimer_init(struct __xtimer *timer,
-		xclock_t *clock, const struct sigevent *evp);
-LELY_UTIL_EXTERN void __xtimer_fini(struct __xtimer *timer);
+void *__xtimer_alloc(void);
+void __xtimer_free(void *ptr);
+struct __xtimer *__xtimer_init(struct __xtimer *timer, xclock_t *clock,
+		const struct sigevent *evp);
+void __xtimer_fini(struct __xtimer *timer);
 
 /**
  * Creates an external timer. The timer is triggered by `xclock_settime()`.
@@ -147,11 +148,10 @@ LELY_UTIL_EXTERN void __xtimer_fini(struct __xtimer *timer);
  *
  * @see xtimer_destroy()
  */
-LELY_UTIL_EXTERN xtimer_t *xtimer_create(
-		xclock_t *clock, const struct sigevent *evp);
+xtimer_t *xtimer_create(xclock_t *clock, const struct sigevent *evp);
 
 /// Destroys an external timer. @see xtimer_create()
-LELY_UTIL_EXTERN void xtimer_destroy(xtimer_t *timer);
+void xtimer_destroy(xtimer_t *timer);
 
 /**
  * Returns the timer expiration overrun count for the specified external timer.
@@ -164,7 +164,7 @@ LELY_UTIL_EXTERN void xtimer_destroy(xtimer_t *timer);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int xtimer_getoverrun(xtimer_t *timer);
+int xtimer_getoverrun(xtimer_t *timer);
 
 /**
  * Obtains the amount of time until an external timer expires and the reload
@@ -180,7 +180,7 @@ LELY_UTIL_EXTERN int xtimer_getoverrun(xtimer_t *timer);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int xtimer_gettime(xtimer_t *timer, struct itimerspec *value);
+int xtimer_gettime(xtimer_t *timer, struct itimerspec *value);
 
 /**
  * Arms or disarms an external timer. If the specified timer was already armed,
@@ -203,8 +203,8 @@ LELY_UTIL_EXTERN int xtimer_gettime(xtimer_t *timer, struct itimerspec *value);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int xtimer_settime(xtimer_t *timer, int flags,
-		const struct itimerspec *value, struct itimerspec *ovalue);
+int xtimer_settime(xtimer_t *timer, int flags, const struct itimerspec *value,
+		struct itimerspec *ovalue);
 
 #ifdef __cplusplus
 }

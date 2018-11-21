@@ -64,7 +64,7 @@ static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
 static co_unsigned16_t config_get_idx(const config_t *cfg, const char *section,
 		co_unsigned16_t maxidx, co_unsigned16_t *idx);
 
-LELY_CO_EXPORT struct __co_dev *
+struct __co_dev *
 __co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
@@ -91,7 +91,7 @@ error_create_cfg:
 	return NULL;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_dev_create_from_dcf_file(const char *filename)
 {
 	errc_t errc = 0;
@@ -116,7 +116,7 @@ error_alloc_dev:
 	return NULL;
 }
 
-LELY_CO_EXPORT struct __co_dev *
+struct __co_dev *
 __co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
 		const char *end, struct floc *at)
 {
@@ -144,7 +144,7 @@ error_create_cfg:
 	return NULL;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 {
 	errc_t errc = 0;

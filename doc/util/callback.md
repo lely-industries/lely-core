@@ -17,13 +17,11 @@ extern "C" {
 typedef void callback_func_t(Args... args, void *data);
 
 // Retrieves a pointer to the callback function and the user-specified data.
-LELY_LIB_EXTERN void obj_get_func(const obj_t *obj, callback_func_t **pfunc,
-		void **pdata);
+void obj_get_func(const obj_t *obj, callback_func_t **pfunc, void **pdata);
 
 // Sets a callback function. The data pointer is passed as the last argument in
 // each invocation of func.
-LELY_LIB_EXTERN void obj_set_func(obj_t *obj, callback_func_t *func,
-		void *data);
+void obj_set_func(obj_t *obj, callback_func_t *func, void *data);
 
 #ifdef __cplusplus
 }
@@ -42,7 +40,7 @@ struct obj {
 // An internal helper function that invokes the callback if it is set.
 static void obj_callback(obj_t *obj, Args... args);
 
-LELY_LIB_EXPORT struct __obj *
+struct __obj *
 __obj_init(struct __obj *obj, Args... args)
 {
 	...
@@ -53,7 +51,7 @@ __obj_init(struct __obj *obj, Args... args)
 	...
 }
 
-LELY_LIB_EXPORT void
+void
 obj_get_func(const obj_t *obj, callback_func_t **pfunc, void **pdata)
 {
 	assert(obj);
@@ -64,7 +62,7 @@ obj_get_func(const obj_t *obj, callback_func_t **pfunc, void **pdata)
 		*pdata = obj->callback_data;
 }
 
-LELY_LIB_EXPORT void
+void
 obj_set_func(obj_t *obj, callback_func_t *func, void *data)
 {
 	assert(obj);

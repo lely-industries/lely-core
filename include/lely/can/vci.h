@@ -43,7 +43,7 @@ extern "C" {
  * @returns 1 if the CAN message is an error message, 0 if not, and -1 on error.
  * In the latter case, the error number can be obtained with `get_errc()`.
  */
-LELY_CAN_EXTERN int CANMSG_is_error(const void *msg, enum can_state *pstate,
+int CANMSG_is_error(const void *msg, enum can_state *pstate,
 		enum can_error *perror);
 
 /**
@@ -54,7 +54,7 @@ LELY_CAN_EXTERN int CANMSG_is_error(const void *msg, enum can_state *pstate,
  *
  * @see can_msg2CANMSG()
  */
-LELY_CAN_EXTERN int CANMSG2can_msg(const void *src, struct can_msg *dst);
+int CANMSG2can_msg(const void *src, struct can_msg *dst);
 
 /**
  * Converts a #can_msg frame to an IXXAT VCI CAN message.
@@ -64,7 +64,7 @@ LELY_CAN_EXTERN int CANMSG2can_msg(const void *src, struct can_msg *dst);
  *
  * @see CANMSG2can_msg()
  */
-LELY_CAN_EXTERN int can_msg2CANMSG(const struct can_msg *src, void *dst);
+int can_msg2CANMSG(const struct can_msg *src, void *dst);
 
 #ifdef __cplusplus
 }

@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_PHEAP_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_PHEAP_INLINE extern inline
 #include <lely/util/pheap.h>
 
 #include <assert.h>
@@ -33,7 +33,7 @@ static struct pnode *pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp);
 static struct pnode *pnode_find(
 		struct pnode *node, const void *key, pheap_cmp_t *cmp);
 
-LELY_UTIL_EXPORT void
+void
 pheap_insert(struct pheap *heap, struct pnode *node)
 {
 	assert(heap);
@@ -61,7 +61,7 @@ pheap_insert(struct pheap *heap, struct pnode *node)
 	heap->num_nodes++;
 }
 
-LELY_UTIL_EXPORT void
+void
 pheap_remove(struct pheap *heap, struct pnode *node)
 {
 	assert(heap);
@@ -87,7 +87,7 @@ pheap_remove(struct pheap *heap, struct pnode *node)
 	heap->num_nodes--;
 }
 
-LELY_UTIL_EXPORT struct pnode *
+struct pnode *
 pheap_find(const struct pheap *heap, const void *key)
 {
 	assert(heap);

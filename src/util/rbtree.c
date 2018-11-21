@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_RBTREE_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_RBTREE_INLINE extern inline
 #include <lely/util/rbtree.h>
 
 #include <assert.h>
@@ -70,7 +70,7 @@ static void rbtree_ror(struct rbtree *tree, struct rbnode *node);
 static void rbtree_replace(struct rbtree *tree, struct rbnode *old_node,
 		struct rbnode *new_node);
 
-LELY_UTIL_EXPORT struct rbnode *
+struct rbnode *
 rbnode_prev(const struct rbnode *node)
 {
 	assert(node);
@@ -87,7 +87,7 @@ rbnode_prev(const struct rbnode *node)
 	return parent;
 }
 
-LELY_UTIL_EXPORT struct rbnode *
+struct rbnode *
 rbnode_next(const struct rbnode *node)
 {
 	assert(node);
@@ -104,7 +104,7 @@ rbnode_next(const struct rbnode *node)
 	return parent;
 }
 
-LELY_UTIL_EXPORT void
+void
 rbtree_insert(struct rbtree *tree, struct rbnode *node)
 {
 	assert(tree);
@@ -184,7 +184,7 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 	tree->num_nodes++;
 }
 
-LELY_UTIL_EXPORT void
+void
 rbtree_remove(struct rbtree *tree, struct rbnode *node)
 {
 	assert(tree);
@@ -304,7 +304,7 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 	tree->num_nodes--;
 }
 
-LELY_UTIL_EXPORT struct rbnode *
+struct rbnode *
 rbtree_find(const struct rbtree *tree, const void *key)
 {
 	assert(tree);
@@ -320,7 +320,7 @@ rbtree_find(const struct rbtree *tree, const void *key)
 	return node;
 }
 
-LELY_UTIL_EXPORT struct rbnode *
+struct rbnode *
 rbtree_first(const struct rbtree *tree)
 {
 	assert(tree);
@@ -328,7 +328,7 @@ rbtree_first(const struct rbtree *tree)
 	return tree->root ? rbnode_min(tree->root) : NULL;
 }
 
-LELY_UTIL_EXPORT struct rbnode *
+struct rbnode *
 rbtree_last(const struct rbtree *tree)
 {
 	assert(tree);

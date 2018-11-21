@@ -31,7 +31,7 @@
 
 extern "C" {
 
-LELY_UTIL_EXPORT _Noreturn void
+_Noreturn void
 __throw_or_abort(const char *what) noexcept
 {
 	__unused_var(what);

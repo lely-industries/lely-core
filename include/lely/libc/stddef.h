@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STDDEF_H_
 #define LELY_LIBC_STDDEF_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #include <stddef.h>
 

@@ -494,7 +494,7 @@ static void co_ssdo_init_ini_res(
 static void co_ssdo_init_seg_res(
 		co_ssdo_t *sdo, struct can_msg *msg, uint8_t cs);
 
-LELY_CO_EXPORT void *
+void *
 __co_ssdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_ssdo));
@@ -503,13 +503,13 @@ __co_ssdo_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_ssdo_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_ssdo *
+struct __co_ssdo *
 __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 		co_unsigned8_t num)
 {
@@ -603,7 +603,7 @@ error_param:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_ssdo_fini(struct __co_ssdo *sdo)
 {
 	assert(sdo);
@@ -626,7 +626,7 @@ __co_ssdo_fini(struct __co_ssdo *sdo)
 	can_recv_destroy(sdo->recv);
 }
 
-LELY_CO_EXPORT co_ssdo_t *
+co_ssdo_t *
 co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
 	trace("creating Server-SDO %d", num);
@@ -653,7 +653,7 @@ error_alloc_sdo:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_ssdo_destroy(co_ssdo_t *ssdo)
 {
 	if (ssdo) {
@@ -663,7 +663,7 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_ssdo_get_net(const co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -671,7 +671,7 @@ co_ssdo_get_net(const co_ssdo_t *sdo)
 	return sdo->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_ssdo_get_dev(const co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -679,7 +679,7 @@ co_ssdo_get_dev(const co_ssdo_t *sdo)
 	return sdo->dev;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_ssdo_get_num(const co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -687,7 +687,7 @@ co_ssdo_get_num(const co_ssdo_t *sdo)
 	return sdo->num;
 }
 
-LELY_CO_EXPORT const struct co_sdo_par *
+const struct co_sdo_par *
 co_ssdo_get_par(const co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -695,7 +695,7 @@ co_ssdo_get_par(const co_ssdo_t *sdo)
 	return &sdo->par;
 }
 
-LELY_CO_EXPORT int
+int
 co_ssdo_get_timeout(const co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -703,7 +703,7 @@ co_ssdo_get_timeout(const co_ssdo_t *sdo)
 	return sdo->timeout;
 }
 
-LELY_CO_EXPORT void
+void
 co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout)
 {
 	assert(sdo);

@@ -84,16 +84,16 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
-LELY_CAN_EXTERN void *__can_net_alloc(void);
-LELY_CAN_EXTERN void __can_net_free(void *ptr);
-LELY_CAN_EXTERN struct __can_net *__can_net_init(struct __can_net *net);
-LELY_CAN_EXTERN void __can_net_fini(struct __can_net *net);
+void *__can_net_alloc(void);
+void __can_net_free(void *ptr);
+struct __can_net *__can_net_init(struct __can_net *net);
+void __can_net_fini(struct __can_net *net);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
-LELY_CAN_EXTERN can_net_t *can_net_create(void);
+can_net_t *can_net_create(void);
 
 /// Destroys a CAN network interface. @see can_net_create()
-LELY_CAN_EXTERN void can_net_destroy(can_net_t *net);
+void can_net_destroy(can_net_t *net);
 
 /**
  * Retrieves the current time of a CAN network interface.
@@ -103,8 +103,7 @@ LELY_CAN_EXTERN void can_net_destroy(can_net_t *net);
  *
  * @see can_net_set_time()
  */
-LELY_CAN_EXTERN void can_net_get_time(
-		const can_net_t *net, struct timespec *tp);
+void can_net_get_time(const can_net_t *net, struct timespec *tp);
 
 /**
  * Sets the current time of a CAN network interface. This MAY invoke one or more
@@ -119,7 +118,7 @@ LELY_CAN_EXTERN void can_net_get_time(
  *
  * @see can_net_get_time()
  */
-LELY_CAN_EXTERN int can_net_set_time(can_net_t *net, const struct timespec *tp);
+int can_net_set_time(can_net_t *net, const struct timespec *tp);
 
 /**
  * Retrieves the callback function invoked when the time at which the next CAN
@@ -133,7 +132,7 @@ LELY_CAN_EXTERN int can_net_set_time(can_net_t *net, const struct timespec *tp);
  *
  * @see can_net_set_next_func()
  */
-LELY_CAN_EXTERN void can_net_get_next_func(
+void can_net_get_next_func(
 		const can_net_t *net, can_timer_func_t **pfunc, void **pdata);
 
 /**
@@ -147,8 +146,7 @@ LELY_CAN_EXTERN void can_net_get_next_func(
  *
  * @see can_net_get_next_func()
  */
-LELY_CAN_EXTERN void can_net_set_next_func(
-		can_net_t *net, can_timer_func_t *func, void *data);
+void can_net_set_next_func(can_net_t *net, can_timer_func_t *func, void *data);
 
 /**
  * Receives a CAN frame with a network interface and processes it with the
@@ -162,7 +160,7 @@ LELY_CAN_EXTERN void can_net_set_next_func(
  * set by the first failed CAN frame receiver callback function can be obtained
  * with get_errc().
  */
-LELY_CAN_EXTERN int can_net_recv(can_net_t *net, const struct can_msg *msg);
+int can_net_recv(can_net_t *net, const struct can_msg *msg);
 
 /**
  * Sends a CAN frame from a network interface. This function invokes the
@@ -174,7 +172,7 @@ LELY_CAN_EXTERN int can_net_recv(can_net_t *net, const struct can_msg *msg);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * set by the CAN send callback function can be obtained with get_errc().
  */
-LELY_CAN_EXTERN int can_net_send(can_net_t *net, const struct can_msg *msg);
+int can_net_send(can_net_t *net, const struct can_msg *msg);
 
 /**
  * Retrieves the callback function used to send CAN frames from a network
@@ -188,7 +186,7 @@ LELY_CAN_EXTERN int can_net_send(can_net_t *net, const struct can_msg *msg);
  *
  * @see can_net_set_send_func()
  */
-LELY_CAN_EXTERN void can_net_get_send_func(
+void can_net_get_send_func(
 		const can_net_t *net, can_send_func_t **pfunc, void **pdata);
 
 /**
@@ -201,19 +199,18 @@ LELY_CAN_EXTERN void can_net_get_send_func(
  *
  * @see can_net_get_send_func()
  */
-LELY_CAN_EXTERN void can_net_set_send_func(
-		can_net_t *net, can_send_func_t *func, void *data);
+void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
-LELY_CAN_EXTERN void *__can_timer_alloc(void);
-LELY_CAN_EXTERN void __can_timer_free(void *ptr);
-LELY_CAN_EXTERN struct __can_timer *__can_timer_init(struct __can_timer *timer);
-LELY_CAN_EXTERN void __can_timer_fini(struct __can_timer *timer);
+void *__can_timer_alloc(void);
+void __can_timer_free(void *ptr);
+struct __can_timer *__can_timer_init(struct __can_timer *timer);
+void __can_timer_fini(struct __can_timer *timer);
 
 /// Creates a new CAN timer. @see can_timer_destroy()
-LELY_CAN_EXTERN can_timer_t *can_timer_create(void);
+can_timer_t *can_timer_create(void);
 
 /// Destroys a CAN timer. @see can_timer_create()
-LELY_CAN_EXTERN void can_timer_destroy(can_timer_t *timer);
+void can_timer_destroy(can_timer_t *timer);
 
 /**
  * Retrieves the callback function invoked when a CAN timer is triggered.
@@ -226,8 +223,8 @@ LELY_CAN_EXTERN void can_timer_destroy(can_timer_t *timer);
  *
  * @see can_timer_set_func()
  */
-LELY_CAN_EXTERN void can_timer_get_func(const can_timer_t *timer,
-		can_timer_func_t **pfunc, void **pdata);
+void can_timer_get_func(const can_timer_t *timer, can_timer_func_t **pfunc,
+		void **pdata);
 
 /**
  * Sets the callback function invoked when a CAN timer is triggered.
@@ -239,8 +236,7 @@ LELY_CAN_EXTERN void can_timer_get_func(const can_timer_t *timer,
  *
  * @see can_timer_get_func()
  */
-LELY_CAN_EXTERN void can_timer_set_func(
-		can_timer_t *timer, can_timer_func_t *func, void *data);
+void can_timer_set_func(can_timer_t *timer, can_timer_func_t *func, void *data);
 
 /**
  * Starts a CAN timer and registers it with a network interface.
@@ -258,7 +254,7 @@ LELY_CAN_EXTERN void can_timer_set_func(
  *
  * @see can_timer_stop()
  */
-LELY_CAN_EXTERN void can_timer_start(can_timer_t *timer, can_net_t *net,
+void can_timer_start(can_timer_t *timer, can_net_t *net,
 		const struct timespec *start, const struct timespec *interval);
 
 /**
@@ -266,7 +262,7 @@ LELY_CAN_EXTERN void can_timer_start(can_timer_t *timer, can_net_t *net,
  *
  * @see can_timer_start()
  */
-LELY_CAN_EXTERN void can_timer_stop(can_timer_t *timer);
+void can_timer_stop(can_timer_t *timer);
 
 /**
  * Starts a CAN timer and registers it with a network interface. The timer will
@@ -280,19 +276,18 @@ LELY_CAN_EXTERN void can_timer_stop(can_timer_t *timer);
  *
  * @see can_timer_start(), can_timer_stop()
  */
-LELY_CAN_EXTERN void can_timer_timeout(
-		can_timer_t *timer, can_net_t *net, int timeout);
+void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
 
-LELY_CAN_EXTERN void *__can_recv_alloc(void);
-LELY_CAN_EXTERN void __can_recv_free(void *ptr);
-LELY_CAN_EXTERN struct __can_recv *__can_recv_init(struct __can_recv *recv);
-LELY_CAN_EXTERN void __can_recv_fini(struct __can_recv *recv);
+void *__can_recv_alloc(void);
+void __can_recv_free(void *ptr);
+struct __can_recv *__can_recv_init(struct __can_recv *recv);
+void __can_recv_fini(struct __can_recv *recv);
 
 /// Creates a new CAN frame receiver. @see can_recv_destroy()
-LELY_CAN_EXTERN can_recv_t *can_recv_create(void);
+can_recv_t *can_recv_create(void);
 
 /// Destroys a CAN frame receiver. @see can_recv_create()
-LELY_CAN_EXTERN void can_recv_destroy(can_recv_t *recv);
+void can_recv_destroy(can_recv_t *recv);
 
 /**
  * Retrieves the callback function used to process CAN frames with a receiver.
@@ -305,7 +300,7 @@ LELY_CAN_EXTERN void can_recv_destroy(can_recv_t *recv);
  *
  * @see can_recv_set_func()
  */
-LELY_CAN_EXTERN void can_recv_get_func(
+void can_recv_get_func(
 		const can_recv_t *recv, can_recv_func_t **pfunc, void **pdata);
 
 /**
@@ -318,8 +313,7 @@ LELY_CAN_EXTERN void can_recv_get_func(
  *
  * @see can_recv_get_func()
  */
-LELY_CAN_EXTERN void can_recv_set_func(
-		can_recv_t *recv, can_recv_func_t *func, void *data);
+void can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data);
 
 /**
  * Registers a CAN frame receiver with a network interface and starts processing
@@ -332,7 +326,7 @@ LELY_CAN_EXTERN void can_recv_set_func(
  *
  * @see can_recv_stop()
  */
-LELY_CAN_EXTERN void can_recv_start(
+void can_recv_start(
 		can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags);
 
 /**
@@ -341,7 +335,7 @@ LELY_CAN_EXTERN void can_recv_start(
  *
  * @see can_recv_start()
  */
-LELY_CAN_EXTERN void can_recv_stop(can_recv_t *recv);
+void can_recv_stop(can_recv_t *recv);
 
 #ifdef __cplusplus
 }

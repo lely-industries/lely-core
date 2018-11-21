@@ -69,8 +69,7 @@ LELY_UTIL_LEX_INLINE int ctox(int c);
  *
  * @returns the number of characters read (at most one).
  */
-LELY_UTIL_EXTERN size_t lex_char(
-		int c, const char *begin, const char *end, struct floc *at);
+size_t lex_char(int c, const char *begin, const char *end, struct floc *at);
 
 /**
  * Greedily lexes a sequence of characters of the specified class from a memory
@@ -88,8 +87,8 @@ LELY_UTIL_EXTERN size_t lex_char(
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_ctype(int(__cdecl *ctype)(int), const char *begin,
-		const char *end, struct floc *at);
+size_t lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
+		struct floc *at);
 
 /**
  * Lexes a single line break from a memory buffer.
@@ -104,8 +103,7 @@ LELY_UTIL_EXTERN size_t lex_ctype(int(__cdecl *ctype)(int), const char *begin,
  *
  * @returns the number of characters read (at most two).
  */
-LELY_UTIL_EXTERN size_t lex_break(
-		const char *begin, const char *end, struct floc *at);
+size_t lex_break(const char *begin, const char *end, struct floc *at);
 
 /**
  * Lexes a UTF-8 encoded Unicode character from a memory buffer. Illegal
@@ -126,8 +124,8 @@ LELY_UTIL_EXTERN size_t lex_break(
  *
  * @see lex_c99_esc()
  */
-LELY_UTIL_EXTERN size_t lex_utf8(const char *begin, const char *end,
-		struct floc *at, char32_t *pc32);
+size_t lex_utf8(const char *begin, const char *end, struct floc *at,
+		char32_t *pc32);
 
 /**
  * Lexes a C99 identifier from a memory buffer.
@@ -147,8 +145,8 @@ LELY_UTIL_EXTERN size_t lex_utf8(const char *begin, const char *end,
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_c99_id(const char *begin, const char *end,
-		struct floc *at, char *s, size_t *pn);
+size_t lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
+		size_t *pn);
 
 /**
  * Lexes a C99 character escape sequence from a memory buffer if the buffer
@@ -171,8 +169,8 @@ LELY_UTIL_EXTERN size_t lex_c99_id(const char *begin, const char *end,
  *
  * @see lex_utf8()
  */
-LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
-		struct floc *at, char32_t *pc32);
+size_t lex_c99_esc(const char *begin, const char *end, struct floc *at,
+		char32_t *pc32);
 
 /**
  * Lexes a UTF-8 encoded Unicode string from a memory buffer. The string MAY
@@ -196,8 +194,8 @@ LELY_UTIL_EXTERN size_t lex_c99_esc(const char *begin, const char *end,
  *
  * @see lex_c99_esc()
  */
-LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
-		struct floc *at, char *s, size_t *pn);
+size_t lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
+		size_t *pn);
 
 /**
  * Lexes a C99 preprocessing number from a memory buffer. Note that this does
@@ -213,8 +211,7 @@ LELY_UTIL_EXTERN size_t lex_c99_str(const char *begin, const char *end,
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_c99_pp_num(
-		const char *begin, const char *end, struct floc *at);
+size_t lex_c99_pp_num(const char *begin, const char *end, struct floc *at);
 
 // clang-format off
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, pname) \
@@ -234,7 +231,7 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(
 	             minimum/maximum value and get_errnum() returns
 	             #ERRNUM_RANGE.
 	@returns the number of characters read. */ \
-	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
+	size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
 // clang-format on
 
@@ -256,7 +253,7 @@ LELY_UTIL_EXTERN size_t lex_c99_pp_num(
 	             minimum/maximum value and get_errnum() returns
 	             #ERRNUM_RANGE.
 	@returns the number of characters read. */ \
-	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
+	size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
 // clang-format on
 
@@ -290,7 +287,7 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 	             minimum/maximum value and get_errnum() returns
 	             #ERRNUM_RANGE.
 	@returns the number of characters read. */ \
-	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
+	size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
 // clang-format on
 
@@ -311,7 +308,7 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 	             minimum/maximum value and get_errnum() returns
 	             #ERRNUM_RANGE.
 	@returns the number of characters read. */ \
-	LELY_UTIL_EXTERN size_t lex_c99_##suffix(const char *begin, \
+	size_t lex_c99_##suffix(const char *begin, \
 			const char *end, struct floc *at, type *pname);
 // clang-format on
 
@@ -344,8 +341,8 @@ LELY_UTIL_DEFINE_LEX_UNSIGNED(uint64_t, u64, pu64)
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
-		const char *end, struct floc *at);
+size_t lex_line_comment(const char *delim, const char *begin, const char *end,
+		struct floc *at);
 
 /**
  * Lexwes and decodes the Base64 representation of binary data from a memory
@@ -370,8 +367,8 @@ LELY_UTIL_EXTERN size_t lex_line_comment(const char *delim, const char *begin,
  *
  * @returns the number of characters read.
  */
-LELY_UTIL_EXTERN size_t lex_base64(const char *begin, const char *end,
-		struct floc *at, void *ptr, size_t *pn);
+size_t lex_base64(const char *begin, const char *end, struct floc *at,
+		void *ptr, size_t *pn);
 
 LELY_UTIL_LEX_INLINE int __cdecl isbreak(int c)
 {

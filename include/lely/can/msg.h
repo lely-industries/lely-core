@@ -149,8 +149,7 @@ extern "C" {
  * Returns the number of bits on success, or -1 on error. In the latter case,
  * the error number can be obtained with `get_errc()`.
  */
-LELY_CAN_EXTERN int can_msg_bits(
-		const struct can_msg *msg, enum can_msg_bits_mode mode);
+int can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
 
 /**
  * Prints the contents of a CAN or CAN FD format frame to a string buffer. The
@@ -167,8 +166,7 @@ LELY_CAN_EXTERN int can_msg_bits(
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
  */
-LELY_CAN_EXTERN int snprintf_can_msg(
-		char *s, size_t n, const struct can_msg *msg);
+int snprintf_can_msg(char *s, size_t n, const struct can_msg *msg);
 
 /**
  * Equivalent to snprintf_can_msg(), except that it allocates a string large
@@ -183,7 +181,7 @@ LELY_CAN_EXTERN int snprintf_can_msg(
  * byte, or a negative number on error. In the latter case, the error number is
  * stored in `errno`.
  */
-LELY_CAN_EXTERN int asprintf_can_msg(char **ps, const struct can_msg *msg);
+int asprintf_can_msg(char **ps, const struct can_msg *msg);
 
 #ifdef __cplusplus
 }

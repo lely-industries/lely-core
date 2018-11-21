@@ -49,7 +49,7 @@ static co_unsigned32_t default_sub_dn_ind(
 static co_unsigned32_t default_sub_up_ind(
 		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
-LELY_CO_EXPORT void *
+void *
 __co_obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_obj));
@@ -58,13 +58,13 @@ __co_obj_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_obj_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_obj *
+struct __co_obj *
 __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 {
 	assert(obj);
@@ -87,7 +87,7 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 	return obj;
 }
 
-LELY_CO_EXPORT void
+void
 __co_obj_fini(struct __co_obj *obj)
 {
 	assert(obj);
@@ -102,7 +102,7 @@ __co_obj_fini(struct __co_obj *obj)
 #endif
 }
 
-LELY_CO_EXPORT co_obj_t *
+co_obj_t *
 co_obj_create(co_unsigned16_t idx)
 {
 	trace("creating object %04X", idx);
@@ -114,7 +114,7 @@ co_obj_create(co_unsigned16_t idx)
 	return __co_obj_init(obj, idx);
 }
 
-LELY_CO_EXPORT void
+void
 co_obj_destroy(co_obj_t *obj)
 {
 	if (obj) {
@@ -124,7 +124,7 @@ co_obj_destroy(co_obj_t *obj)
 	}
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_obj_get_dev(const co_obj_t *obj)
 {
 	assert(obj);
@@ -132,7 +132,7 @@ co_obj_get_dev(const co_obj_t *obj)
 	return obj->dev;
 }
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_obj_get_idx(const co_obj_t *obj)
 {
 	assert(obj);
@@ -140,7 +140,7 @@ co_obj_get_idx(const co_obj_t *obj)
 	return obj->idx;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxidx,
 		co_unsigned8_t *subidx)
 {
@@ -160,7 +160,7 @@ co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxidx,
 	return (co_unsigned8_t)rbtree_size(&obj->tree);
 }
 
-LELY_CO_EXPORT int
+int
 co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 {
 	assert(obj);
@@ -183,7 +183,7 @@ co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 {
 	assert(obj);
@@ -203,7 +203,7 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 	return 0;
 }
 
-LELY_CO_EXPORT co_sub_t *
+co_sub_t *
 co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx)
 {
 	assert(obj);
@@ -214,7 +214,7 @@ co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx)
 
 #ifndef LELY_NO_CO_OBJ_NAME
 
-LELY_CO_EXPORT const char *
+const char *
 co_obj_get_name(const co_obj_t *obj)
 {
 	assert(obj);
@@ -222,7 +222,7 @@ co_obj_get_name(const co_obj_t *obj)
 	return obj->name;
 }
 
-LELY_CO_EXPORT int
+int
 co_obj_set_name(co_obj_t *obj, const char *name)
 {
 	assert(obj);
@@ -246,7 +246,7 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 
 #endif // LELY_NO_CO_OBJ_NAME
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_obj_get_code(const co_obj_t *obj)
 {
 	assert(obj);
@@ -254,7 +254,7 @@ co_obj_get_code(const co_obj_t *obj)
 	return obj->code;
 }
 
-LELY_CO_EXPORT int
+int
 co_obj_set_code(co_obj_t *obj, co_unsigned8_t code)
 {
 	assert(obj);
@@ -271,26 +271,26 @@ co_obj_set_code(co_obj_t *obj, co_unsigned8_t code)
 	}
 }
 
-LELY_CO_EXPORT void *
+void *
 co_obj_addressof_val(const co_obj_t *obj)
 {
 	return __likely(obj) ? obj->val : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_obj_sizeof_val(const co_obj_t *obj)
 {
 	return __likely(obj) ? obj->size : 0;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_obj_get_val(const co_obj_t *obj, co_unsigned8_t subidx)
 {
 	co_sub_t *sub = __likely(obj) ? co_obj_find_sub(obj, subidx) : NULL;
 	return co_sub_get_val(sub);
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 {
 	assert(obj);
@@ -305,7 +305,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t co_obj_get_val_##c( \
+	co_##b##_t co_obj_get_val_##c( \
 			const co_obj_t *obj, co_unsigned8_t subidx) \
 	{ \
 		/* clang-format off */ \
@@ -316,7 +316,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 		return co_sub_get_val_##c(sub); \
 	} \
 \
-	LELY_CO_EXPORT size_t co_obj_set_val_##c( \
+	size_t co_obj_set_val_##c( \
 			co_obj_t *obj, co_unsigned8_t subidx, co_##b##_t c) \
 	{ \
 		assert(obj); \
@@ -332,7 +332,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
-LELY_CO_EXPORT void
+void
 co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
 {
 	assert(obj);
@@ -341,7 +341,7 @@ co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
 		co_sub_set_dn_ind(structof(node, co_sub_t, node), ind, data);
 }
 
-LELY_CO_EXPORT void
+void
 co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 {
 	assert(obj);
@@ -350,7 +350,7 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 		co_sub_set_up_ind(structof(node, co_sub_t, node), ind, data);
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_sub_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sub));
@@ -359,13 +359,13 @@ __co_sub_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_sub_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_sub *
+struct __co_sub *
 __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 {
 	assert(sub);
@@ -401,7 +401,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	return sub;
 }
 
-LELY_CO_EXPORT void
+void
 __co_sub_fini(struct __co_sub *sub)
 {
 	assert(sub);
@@ -420,7 +420,7 @@ __co_sub_fini(struct __co_sub *sub)
 #endif
 }
 
-LELY_CO_EXPORT co_sub_t *
+co_sub_t *
 co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 {
 	errc_t errc = 0;
@@ -445,7 +445,7 @@ error_alloc_sub:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_destroy(co_sub_t *sub)
 {
 	if (sub) {
@@ -454,7 +454,7 @@ co_sub_destroy(co_sub_t *sub)
 	}
 }
 
-LELY_CO_EXPORT co_obj_t *
+co_obj_t *
 co_sub_get_obj(const co_sub_t *sub)
 {
 	assert(sub);
@@ -462,7 +462,7 @@ co_sub_get_obj(const co_sub_t *sub)
 	return sub->obj;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_sub_get_subidx(const co_sub_t *sub)
 {
 	assert(sub);
@@ -472,7 +472,7 @@ co_sub_get_subidx(const co_sub_t *sub)
 
 #ifndef LELY_NO_CO_OBJ_NAME
 
-LELY_CO_EXPORT const char *
+const char *
 co_sub_get_name(const co_sub_t *sub)
 {
 	assert(sub);
@@ -480,7 +480,7 @@ co_sub_get_name(const co_sub_t *sub)
 	return sub->name;
 }
 
-LELY_CO_EXPORT int
+int
 co_sub_set_name(co_sub_t *sub, const char *name)
 {
 	assert(sub);
@@ -504,7 +504,7 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 
 #endif // LELY_NO_CO_OBJ_NAME
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_sub_get_type(const co_sub_t *sub)
 {
 	assert(sub);
@@ -514,25 +514,25 @@ co_sub_get_type(const co_sub_t *sub)
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_addressof_min(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_addressof(sub->type, &sub->min) : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_sizeof_min(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_sizeof(sub->type, &sub->min) : 0;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_get_min(const co_sub_t *sub)
 {
 	return __likely(sub) ? &sub->min : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n)
 {
 	assert(sub);
@@ -541,25 +541,25 @@ co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n)
 	return co_val_make(sub->type, &sub->min, ptr, n);
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_addressof_max(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_addressof(sub->type, &sub->max) : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_sizeof_max(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_sizeof(sub->type, &sub->max) : 0;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_get_max(const co_sub_t *sub)
 {
 	return __likely(sub) ? &sub->max : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 {
 	assert(sub);
@@ -570,25 +570,25 @@ co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 
 #endif // LELY_NO_CO_OBJ_LIMITS
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_addressof_def(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_addressof(sub->type, &sub->def) : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_sizeof_def(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_sizeof(sub->type, &sub->def) : 0;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_get_def(const co_sub_t *sub)
 {
 	return __likely(sub) ? &sub->def : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n)
 {
 	assert(sub);
@@ -597,25 +597,25 @@ co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n)
 	return co_val_make(sub->type, &sub->def, ptr, n);
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_addressof_val(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_addressof(sub->type, sub->val) : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_sizeof_val(const co_sub_t *sub)
 {
 	return __likely(sub) ? co_val_sizeof(sub->type, sub->val) : 0;
 }
 
-LELY_CO_EXPORT const void *
+const void *
 co_sub_get_val(const co_sub_t *sub)
 {
 	return __likely(sub) ? sub->val : NULL;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 {
 	assert(sub);
@@ -625,7 +625,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXPORT co_##b##_t co_sub_get_val_##c(const co_sub_t *sub) \
+	co_##b##_t co_sub_get_val_##c(const co_sub_t *sub) \
 	{ \
 		static const co_##b##_t val; \
 \
@@ -637,7 +637,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 		return ((union co_val *)sub->val)->c; \
 	} \
 \
-	LELY_CO_EXPORT size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c) \
+	size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c) \
 	{ \
 		assert(sub); \
 \
@@ -652,7 +652,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 #undef LELY_CO_DEFINE_TYPE
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
 {
 	assert(sub);
@@ -678,7 +678,7 @@ co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
 }
 #endif
 
-LELY_CO_EXPORT unsigned int
+unsigned int
 co_sub_get_access(const co_sub_t *sub)
 {
 	assert(sub);
@@ -686,7 +686,7 @@ co_sub_get_access(const co_sub_t *sub)
 	return sub->access;
 }
 
-LELY_CO_EXPORT int
+int
 co_sub_set_access(co_sub_t *sub, unsigned int access)
 {
 	assert(sub);
@@ -702,7 +702,7 @@ co_sub_set_access(co_sub_t *sub, unsigned int access)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_sub_get_pdo_mapping(const co_sub_t *sub)
 {
 	assert(sub);
@@ -710,7 +710,7 @@ co_sub_get_pdo_mapping(const co_sub_t *sub)
 	return sub->pdo_mapping;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping)
 {
 	assert(sub);
@@ -718,7 +718,7 @@ co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping)
 	sub->pdo_mapping = !!pdo_mapping;
 }
 
-LELY_CO_EXPORT unsigned int
+unsigned int
 co_sub_get_flags(const co_sub_t *sub)
 {
 	assert(sub);
@@ -726,7 +726,7 @@ co_sub_get_flags(const co_sub_t *sub)
 	return sub->flags;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 {
 	assert(sub);
@@ -734,7 +734,7 @@ co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 	sub->flags = flags;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_get_dn_ind(const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata)
 {
 	assert(sub);
@@ -745,7 +745,7 @@ co_sub_get_dn_ind(const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata)
 		*pdata = sub->dn_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 {
 	assert(sub);
@@ -754,7 +754,7 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 	sub->dn_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
 {
 	assert(sub);
@@ -790,7 +790,7 @@ error_req:
 	return ac;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 {
 	if (__unlikely(!sub))
@@ -806,7 +806,7 @@ co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 	return sub->dn_ind(sub, req, sub->dn_data);
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 {
 	if (__unlikely(co_sub_get_type(sub) != type))
@@ -828,7 +828,7 @@ error:
 	return ac;
 }
 
-LELY_CO_EXPORT int
+int
 co_sub_dn(co_sub_t *sub, void *val)
 {
 	assert(sub);
@@ -842,7 +842,7 @@ co_sub_dn(co_sub_t *sub, void *val)
 	return 0;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
 {
 	assert(sub);
@@ -853,7 +853,7 @@ co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
 		*pdata = sub->up_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 {
 	assert(sub);
@@ -862,7 +862,7 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 	sub->up_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
 {
 	assert(sub);
@@ -886,7 +886,7 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
 	return ac;
 }
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 {
 	if (__unlikely(!sub))

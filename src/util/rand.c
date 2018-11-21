@@ -26,7 +26,7 @@
 
 #include <assert.h>
 
-LELY_UTIL_EXPORT void
+void
 rand64_seed(struct rand64 *r, uint64_t seed)
 {
 	assert(r);
@@ -43,7 +43,7 @@ rand64_seed(struct rand64 *r, uint64_t seed)
 	rand64_discard(r, 1);
 }
 
-LELY_UTIL_EXPORT uint64_t
+uint64_t
 rand64_get(struct rand64 *r)
 {
 	rand64_discard(r, 1);
@@ -54,7 +54,7 @@ rand64_get(struct rand64 *r)
 	return (x + r->v) ^ r->w;
 }
 
-LELY_UTIL_EXPORT void
+void
 rand64_discard(struct rand64 *r, uint64_t z)
 {
 	assert(r);
@@ -71,7 +71,7 @@ rand64_discard(struct rand64 *r, uint64_t z)
 }
 
 #define LELY_UTIL_DEFINE_RAND(b) \
-	LELY_UTIL_EXPORT void rand##b##_seed(struct rand##b *r, uint64_t seed) \
+	void rand##b##_seed(struct rand##b *r, uint64_t seed) \
 	{ \
 		assert(r); \
 \
@@ -80,7 +80,7 @@ rand64_discard(struct rand64 *r, uint64_t z)
 		r->n = 0; \
 	} \
 \
-	LELY_UTIL_EXPORT uint##b##_t rand##b##_get(struct rand##b *r) \
+	uint##b##_t rand##b##_get(struct rand##b *r) \
 	{ \
 		if (r->n < b) { \
 			r->x = rand64_get(&r->r); \
@@ -91,7 +91,7 @@ rand64_discard(struct rand64 *r, uint64_t z)
 		return (uint##b##_t)(r->x >>= b); \
 	} \
 \
-	LELY_UTIL_EXPORT void rand##b##_discard(struct rand##b *r, uint64_t z) \
+	void rand##b##_discard(struct rand##b *r, uint64_t z) \
 	{ \
 		if (z > r->n / b) { \
 			z -= r->n / b; \

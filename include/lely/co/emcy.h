@@ -53,11 +53,11 @@ typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t eec, co_unsigned8_t er, uint8_t msef[5],
 		void *data);
 
-LELY_CO_EXTERN void *__co_emcy_alloc(void);
-LELY_CO_EXTERN void __co_emcy_free(void *ptr);
-LELY_CO_EXTERN struct __co_emcy *__co_emcy_init(
+void *__co_emcy_alloc(void);
+void __co_emcy_free(void *ptr);
+struct __co_emcy *__co_emcy_init(
 		struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev);
-LELY_CO_EXTERN void __co_emcy_fini(struct __co_emcy *emcy);
+void __co_emcy_fini(struct __co_emcy *emcy);
 
 /**
  * Creates a new CANopen EMCY producer/consumer service.
@@ -70,18 +70,18 @@ LELY_CO_EXTERN void __co_emcy_fini(struct __co_emcy *emcy);
  *
  * @see co_emcy_destroy()
  */
-LELY_CO_EXTERN co_emcy_t *co_emcy_create(can_net_t *net, co_dev_t *dev);
+co_emcy_t *co_emcy_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen EMCY producer/consumer service. @see co_emcy_create()
-LELY_CO_EXTERN void co_emcy_destroy(co_emcy_t *emcy);
+void co_emcy_destroy(co_emcy_t *emcy);
 
 /// Returns a pointer to the CAN network of an EMCY producer/consumer service.
-LELY_CO_EXTERN can_net_t *co_emcy_get_net(const co_emcy_t *emcy);
+can_net_t *co_emcy_get_net(const co_emcy_t *emcy);
 
 /**
  * Returns a pointer to the CANopen device of an EMCY producer/consumer service.
  */
-LELY_CO_EXTERN co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
+co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
 
 /**
  * Pushes a CANopen EMCY message to the stack and broadcasts it if the EMCY
@@ -97,8 +97,8 @@ LELY_CO_EXTERN co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
  *
  * @see co_emcy_pop(), co_emcy_peek(), co_emcy_clear()
  */
-LELY_CO_EXTERN int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec,
-		co_unsigned8_t er, const uint8_t msef[5]);
+int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
+		const uint8_t msef[5]);
 
 /**
  * Pops the most recent CANopen EMCY message from the stack and broadcasts an
@@ -114,8 +114,7 @@ LELY_CO_EXTERN int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec,
  *
  * @see co_emcy_push(), co_emcy_peek(), co_emcy_clear()
  */
-LELY_CO_EXTERN int co_emcy_pop(
-		co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per);
+int co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per);
 
 /**
  * Retrieves, but does not pop, the most recent CANopen EMCY message from the
@@ -128,7 +127,7 @@ LELY_CO_EXTERN int co_emcy_pop(
  *
  * @see co_emcy_push(), co_emcy_pop(), co_emcy_clear()
  */
-LELY_CO_EXTERN void co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec,
+void co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec,
 		co_unsigned8_t *per);
 
 /**
@@ -140,7 +139,7 @@ LELY_CO_EXTERN void co_emcy_peek(const co_emcy_t *emcy, co_unsigned16_t *peec,
  *
  * @see co_emcy_push(), co_emcy_pop(), co_emcy_peek()
  */
-LELY_CO_EXTERN int co_emcy_clear(co_emcy_t *emcy);
+int co_emcy_clear(co_emcy_t *emcy);
 
 /**
  * Retrieves the indication function invoked when a CANopen EMCY message is
@@ -154,8 +153,7 @@ LELY_CO_EXTERN int co_emcy_clear(co_emcy_t *emcy);
  *
  * @see co_emcy_set_ind()
  */
-LELY_CO_EXTERN void co_emcy_get_ind(
-		const co_emcy_t *emcy, co_emcy_ind_t **pind, void **pdata);
+void co_emcy_get_ind(const co_emcy_t *emcy, co_emcy_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen EMCY message is received.
@@ -167,8 +165,7 @@ LELY_CO_EXTERN void co_emcy_get_ind(
  *
  * @see co_emcy_get_ind()
  */
-LELY_CO_EXTERN void co_emcy_set_ind(
-		co_emcy_t *emcy, co_emcy_ind_t *ind, void *data);
+void co_emcy_set_ind(co_emcy_t *emcy, co_emcy_ind_t *ind, void *data);
 
 #ifdef __cplusplus
 }

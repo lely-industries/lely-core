@@ -29,7 +29,7 @@
 
 static int lely_io_ref;
 
-LELY_IO_EXPORT int
+int
 lely_io_init(void)
 {
 	if (lely_io_ref++)
@@ -55,7 +55,7 @@ error_WSAStartup:
 	return -1;
 }
 
-LELY_IO_EXPORT void
+void
 lely_io_fini(void)
 {
 	if (__unlikely(lely_io_ref <= 0)) {
@@ -70,7 +70,7 @@ lely_io_fini(void)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_close(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -83,7 +83,7 @@ io_close(io_handle_t handle)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_get_type(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -95,7 +95,7 @@ io_get_type(io_handle_t handle)
 	return handle->vtab->type;
 }
 
-LELY_IO_EXPORT HANDLE
+HANDLE
 io_get_fd(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -106,7 +106,7 @@ io_get_fd(io_handle_t handle)
 	return handle->fd;
 }
 
-LELY_IO_EXPORT int
+int
 io_get_flags(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -120,7 +120,7 @@ io_get_flags(io_handle_t handle)
 	return flags;
 }
 
-LELY_IO_EXPORT int
+int
 io_set_flags(io_handle_t handle, int flags)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -146,7 +146,7 @@ io_set_flags(io_handle_t handle, int flags)
 	return result;
 }
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_read(io_handle_t handle, void *buf, size_t nbytes)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -163,7 +163,7 @@ io_read(io_handle_t handle, void *buf, size_t nbytes)
 	return handle->vtab->read(handle, buf, nbytes);
 }
 
-LELY_IO_EXPORT ssize_t
+ssize_t
 io_write(io_handle_t handle, const void *buf, size_t nbytes)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -180,7 +180,7 @@ io_write(io_handle_t handle, const void *buf, size_t nbytes)
 	return handle->vtab->write(handle, buf, nbytes);
 }
 
-LELY_IO_EXPORT int
+int
 io_flush(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {

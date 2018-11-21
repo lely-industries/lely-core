@@ -284,14 +284,14 @@ extern "C" {
  *
  * @see errc2no()
  */
-LELY_UTIL_EXTERN errc_t errno2c(int errnum);
+errc_t errno2c(int errnum);
 
 /**
  * Transforms a standard C error number to a platform-independent error number.
  *
  * @see errnum2no()
  */
-LELY_UTIL_EXTERN errnum_t errno2num(int errnum);
+errnum_t errno2num(int errnum);
 
 /**
  * Transforms a native error code to a standard C error number. This is
@@ -300,28 +300,28 @@ LELY_UTIL_EXTERN errnum_t errno2num(int errnum);
  *
  * @see errc2no()
  */
-LELY_UTIL_EXTERN int errc2no(errc_t errc);
+int errc2no(errc_t errc);
 
 /**
  * Transforms a native error code to a platform-independent error number.
  *
  * @see errnum2c()
  */
-LELY_UTIL_EXTERN errnum_t errc2num(errc_t errc);
+errnum_t errc2num(errc_t errc);
 
 /**
  * Transforms a platform-independent error number to a standard C error number.
  *
  * @see errno2num()
  */
-LELY_UTIL_EXTERN int errnum2no(errnum_t errnum);
+int errnum2no(errnum_t errnum);
 
 /**
  * Transforms a platform-independent error number to a native error code.
  *
  * @see err2num()
  */
-LELY_UTIL_EXTERN errc_t errnum2c(errnum_t errnum);
+errc_t errnum2c(errnum_t errnum);
 
 /**
  * Returns the last (thread-specific) standard C error number set by a system
@@ -348,7 +348,7 @@ LELY_UTIL_ERRNUM_INLINE void set_errno(int errnum);
  *
  * @see set_errc()
  */
-LELY_UTIL_EXTERN errc_t get_errc(void);
+errc_t get_errc(void);
 
 /**
  * Sets the current (thread-specific) native error code to <b>errc</b>. This is
@@ -357,7 +357,7 @@ LELY_UTIL_EXTERN errc_t get_errc(void);
  *
  * @see get_errc()
  */
-LELY_UTIL_EXTERN void set_errc(errc_t errc);
+void set_errc(errc_t errc);
 
 /**
  * Returns the last (thread-specific) platform-independent error number set by a
@@ -380,10 +380,10 @@ LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
  * Returns a string describing a standard C error number. This is equivalent to
  * `strerror(errnum)`.
  */
-LELY_UTIL_EXTERN const char *errno2str(int errnum);
+const char *errno2str(int errnum);
 
 /// Returns a string describing a native error code.
-LELY_UTIL_EXTERN const char *errc2str(errc_t errc);
+const char *errc2str(errc_t errc);
 
 /**
  * Returns a string describing a platform-independent error number. This is

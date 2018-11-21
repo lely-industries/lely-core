@@ -29,10 +29,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
-LELY_LIBC_EXPORT char *optarg;
-LELY_LIBC_EXPORT int optind = 1;
-LELY_LIBC_EXPORT int opterr = 1;
-LELY_LIBC_EXPORT int optopt;
+char *optarg;
+int optind = 1;
+int opterr = 1;
+int optopt;
 
 /**
  * The offset (in characters) of the next option with respect to the beginning
@@ -40,7 +40,7 @@ LELY_LIBC_EXPORT int optopt;
  */
 static int optoff;
 
-LELY_LIBC_EXPORT int
+int
 getopt(int argc, char *const argv[], const char *optstring)
 {
 	assert(argv);

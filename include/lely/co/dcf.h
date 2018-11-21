@@ -31,7 +31,7 @@ struct floc;
 extern "C" {
 #endif
 
-LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_file(
+struct __co_dev *__co_dev_init_from_dcf_file(
 		struct __co_dev *dev, const char *filename);
 
 /**
@@ -39,11 +39,10 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_file(
  *
  * @returns a pointer to a new CANopen device, or NULL on error.
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_file(const char *filename);
+co_dev_t *co_dev_create_from_dcf_file(const char *filename);
 
-LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
-		struct __co_dev *dev, const char *begin, const char *end,
-		struct floc *at);
+struct __co_dev *__co_dev_init_from_dcf_text(struct __co_dev *dev,
+		const char *begin, const char *end, struct floc *at);
 
 /**
  * Creates a CANopen device from an EDS or DCF text string.
@@ -57,7 +56,7 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_dcf_text(
  *
  * @returns a pointer to a new CANopen device, or NULL on error.
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_dcf_text(
+co_dev_t *co_dev_create_from_dcf_text(
 		const char *begin, const char *end, struct floc *at);
 
 #ifdef __cplusplus

@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_LEX_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_LEX_INLINE extern inline
 #include <lely/libc/string.h>
 #include <lely/libc/uchar.h>
 #include <lely/util/diag.h>
@@ -34,7 +34,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_char(int c, const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
@@ -47,7 +47,7 @@ lex_char(int c, const char *begin, const char *end, struct floc *at)
 	return floc_lex(at, begin, begin + 1);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
 		struct floc *at)
 {
@@ -62,7 +62,7 @@ lex_ctype(int(__cdecl *ctype)(int), const char *begin, const char *end,
 	return floc_lex(at, begin, cp);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_break(const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
@@ -79,7 +79,7 @@ lex_break(const char *begin, const char *end, struct floc *at)
 	return floc_lex(at, begin, cp);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_utf8(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 {
 	assert(begin);
@@ -155,7 +155,7 @@ error:
 	goto done;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
 		size_t *pn)
 {
@@ -180,7 +180,7 @@ lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
 	return floc_lex(at, begin, cp);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 {
 	assert(begin);
@@ -243,7 +243,7 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 	return floc_lex(at, begin, cp);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
 		size_t *pn)
 {
@@ -281,7 +281,7 @@ lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
 	return cp - begin;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 {
 	assert(begin);
@@ -321,8 +321,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 }
 
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, strtov, min, max, pname) \
-	LELY_UTIL_EXPORT size_t lex_c99_##suffix(const char *begin, \
-			const char *end, struct floc *at, type *pname) \
+	size_t lex_c99_##suffix(const char *begin, const char *end, \
+			struct floc *at, type *pname) \
 	{ \
 		size_t chars = lex_c99_pp_num(begin, end, NULL); \
 		if (!chars) \
@@ -363,8 +363,8 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 	}
 
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, strtov, max, pname) \
-	LELY_UTIL_EXPORT size_t lex_c99_##suffix(const char *begin, \
-			const char *end, struct floc *at, type *pname) \
+	size_t lex_c99_##suffix(const char *begin, const char *end, \
+			struct floc *at, type *pname) \
 	{ \
 		size_t chars = lex_c99_pp_num(begin, end, NULL); \
 		if (!chars) \
@@ -421,7 +421,7 @@ LELY_UTIL_DEFINE_LEX_SIGNED(
 #undef LELY_UTIL_DEFINE_LEX_UNSIGNED
 #undef LELY_UTIL_DEFINE_LEX_SIGNED
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 {
 	long i8;
@@ -444,7 +444,7 @@ lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 {
 	long i16;
@@ -467,7 +467,7 @@ lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 {
 	long i32;
@@ -504,7 +504,7 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 {
 #if LONG_BIT == 64
@@ -552,7 +552,7 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 {
 	unsigned long u8;
@@ -570,7 +570,7 @@ lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 {
 	unsigned long u16;
@@ -588,7 +588,7 @@ lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 {
 	unsigned long u32;
@@ -613,7 +613,7 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 {
 #if LONG_BIT == 64
@@ -646,7 +646,7 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_line_comment(const char *delim, const char *begin, const char *end,
 		struct floc *at)
 {
@@ -668,7 +668,7 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 	return floc_lex(at, begin, cp);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 lex_base64(const char *begin, const char *end, struct floc *at, void *ptr,
 		size_t *pn)
 {

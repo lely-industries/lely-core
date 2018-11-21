@@ -53,7 +53,7 @@ static NETIO_STATUS WINAPI ConvertLengthToIpv6Mask(
 
 #if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
 
-LELY_IO_EXPORT int
+int
 io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 {
 	if (!info)

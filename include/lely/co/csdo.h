@@ -95,9 +95,8 @@ typedef void co_csdo_ind_t(const co_csdo_t *sdo, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, const void *ptr, size_t n,
-		co_csdo_dn_con_t *con, void *data);
+int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data);
 
 /**
  * Submits a download request to a local device. This is equivalent to a write
@@ -117,9 +116,9 @@ LELY_CO_EXTERN int co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
-		co_csdo_dn_con_t *con, void *data);
+int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
+		void *data);
 
 /**
  * Submits an upload request to a local device. This is equivalent to a read
@@ -135,14 +134,14 @@ LELY_CO_EXTERN int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
+int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_csdo_up_con_t *con, void *data);
 
-LELY_CO_EXTERN void *__co_csdo_alloc(void);
-LELY_CO_EXTERN void __co_csdo_free(void *ptr);
-LELY_CO_EXTERN struct __co_csdo *__co_csdo_init(struct __co_csdo *sdo,
-		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
-LELY_CO_EXTERN void __co_csdo_fini(struct __co_csdo *sdo);
+void *__co_csdo_alloc(void);
+void __co_csdo_free(void *ptr);
+struct __co_csdo *__co_csdo_init(struct __co_csdo *sdo, can_net_t *net,
+		co_dev_t *dev, co_unsigned8_t num);
+void __co_csdo_fini(struct __co_csdo *sdo);
 
 /**
  * Creates a new CANopen Client-SDO service.
@@ -159,23 +158,22 @@ LELY_CO_EXTERN void __co_csdo_fini(struct __co_csdo *sdo);
  *
  * @see co_csdo_destroy()
  */
-LELY_CO_EXTERN co_csdo_t *co_csdo_create(
-		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
+co_csdo_t *co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 
 /// Destroys a CANopen Client-SDO service. @see co_csdo_create()
-LELY_CO_EXTERN void co_csdo_destroy(co_csdo_t *sdo);
+void co_csdo_destroy(co_csdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Client-SDO.
-LELY_CO_EXTERN can_net_t *co_csdo_get_net(const co_csdo_t *sdo);
+can_net_t *co_csdo_get_net(const co_csdo_t *sdo);
 
 /// Returns a pointer to the CANopen device of a Client-SDO.
-LELY_CO_EXTERN co_dev_t *co_csdo_get_dev(const co_csdo_t *sdo);
+co_dev_t *co_csdo_get_dev(const co_csdo_t *sdo);
 
 /// Returns the SDO number of a Client-SDO.
-LELY_CO_EXTERN co_unsigned8_t co_csdo_get_num(const co_csdo_t *sdo);
+co_unsigned8_t co_csdo_get_num(const co_csdo_t *sdo);
 
 /// Returns a pointer to the SDO parameter record of a Client-SDO.
-LELY_CO_EXTERN const struct co_sdo_par *co_csdo_get_par(const co_csdo_t *sdo);
+const struct co_sdo_par *co_csdo_get_par(const co_csdo_t *sdo);
 
 /**
  * Returns the timeout (in milliseconds) of a Client-SDO. A return value of 0
@@ -183,7 +181,7 @@ LELY_CO_EXTERN const struct co_sdo_par *co_csdo_get_par(const co_csdo_t *sdo);
  *
  * @see co_csdo_set_timeout()
  */
-LELY_CO_EXTERN int co_csdo_get_timeout(const co_csdo_t *sdo);
+int co_csdo_get_timeout(const co_csdo_t *sdo);
 
 /**
  * Sets the timeout of a Client-SDO. If the timeout expires before receiving a
@@ -195,7 +193,7 @@ LELY_CO_EXTERN int co_csdo_get_timeout(const co_csdo_t *sdo);
  *
  * @see co_csdo_get_timeout()
  */
-LELY_CO_EXTERN void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
+void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of
@@ -209,7 +207,7 @@ LELY_CO_EXTERN void co_csdo_set_timeout(co_csdo_t *sdo, int timeout);
  *
  * @see co_csdo_set_dn_ind()
  */
-LELY_CO_EXTERN void co_csdo_get_dn_ind(
+void co_csdo_get_dn_ind(
 		const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata);
 
 /**
@@ -223,8 +221,7 @@ LELY_CO_EXTERN void co_csdo_get_dn_ind(
  *
  * @see co_csdo_get_dn_ind()
  */
-LELY_CO_EXTERN void co_csdo_set_dn_ind(
-		co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
+void co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the indication function used to notify the user of the progress of
@@ -238,7 +235,7 @@ LELY_CO_EXTERN void co_csdo_set_dn_ind(
  *
  * @see co_csdo_set_up_ind()
  */
-LELY_CO_EXTERN void co_csdo_get_up_ind(
+void co_csdo_get_up_ind(
 		const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata);
 
 /**
@@ -252,14 +249,13 @@ LELY_CO_EXTERN void co_csdo_get_up_ind(
  *
  * @see co_csdo_get_up_ind()
  */
-LELY_CO_EXTERN void co_csdo_set_up_ind(
-		co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
+void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
  * ongoing.
  */
-LELY_CO_EXTERN int co_csdo_is_idle(const co_csdo_t *sdo);
+int co_csdo_is_idle(const co_csdo_t *sdo);
 
 /**
  * Submits an abort transfer request to a remote Server-SDO. This function has
@@ -268,7 +264,7 @@ LELY_CO_EXTERN int co_csdo_is_idle(const co_csdo_t *sdo);
  * @param sdo a pointer to a Client-SDO service.
  * @param ac  the abort code.
  */
-LELY_CO_EXTERN void co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac);
+void co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac);
 
 /**
  * Submits a download request to a remote Server-SDO. This requests the server
@@ -288,9 +284,8 @@ LELY_CO_EXTERN void co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, const void *ptr, size_t n,
-		co_csdo_dn_con_t *con, void *data);
+int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data);
 
 /**
  * Submits a download request to a remote Server-SDO. This requests the server
@@ -312,7 +307,7 @@ LELY_CO_EXTERN int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
+int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
 		co_csdo_dn_con_t *con, void *data);
 
@@ -332,8 +327,8 @@ LELY_CO_EXTERN int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_csdo_up_con_t *con, void *data);
+int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_csdo_up_con_t *con, void *data);
 
 /**
  * Submits a block download request to a remote Server-SDO. This requests the
@@ -353,7 +348,7 @@ LELY_CO_EXTERN int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
+int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, const void *ptr, size_t n,
 		co_csdo_dn_con_t *con, void *data);
 
@@ -376,7 +371,7 @@ LELY_CO_EXTERN int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
+int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, uint8_t pst, co_csdo_up_con_t *con,
 		void *data);
 

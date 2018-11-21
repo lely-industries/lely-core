@@ -29,7 +29,7 @@
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_attr_get_speed(const io_attr_t *attr)
 {
 	assert(attr);
@@ -104,7 +104,7 @@ io_attr_get_speed(const io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_set_speed(io_attr_t *attr, int speed)
 {
 	assert(attr);
@@ -189,7 +189,7 @@ io_attr_set_speed(io_attr_t *attr, int speed)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_get_flow_control(const io_attr_t *attr)
 {
 	assert(attr);
@@ -202,7 +202,7 @@ io_attr_get_flow_control(const io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_set_flow_control(io_attr_t *attr, int flow_control)
 {
 	assert(attr);
@@ -233,7 +233,7 @@ io_attr_set_flow_control(io_attr_t *attr, int flow_control)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_get_parity(const io_attr_t *attr)
 {
 	assert(attr);
@@ -252,7 +252,7 @@ io_attr_get_parity(const io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_set_parity(io_attr_t *attr, int parity)
 {
 	assert(attr);
@@ -297,7 +297,7 @@ io_attr_set_parity(io_attr_t *attr, int parity)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_get_stop_bits(const io_attr_t *attr)
 {
 	assert(attr);
@@ -309,7 +309,7 @@ io_attr_get_stop_bits(const io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_set_stop_bits(io_attr_t *attr, int stop_bits)
 {
 	assert(attr);
@@ -333,7 +333,7 @@ io_attr_set_stop_bits(io_attr_t *attr, int stop_bits)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_get_char_size(const io_attr_t *attr)
 {
 	assert(attr);
@@ -351,7 +351,7 @@ io_attr_get_char_size(const io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_attr_set_char_size(io_attr_t *attr, int char_size)
 {
 	assert(attr);

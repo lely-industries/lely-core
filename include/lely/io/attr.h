@@ -64,7 +64,7 @@ extern "C" {
  *
  * @see io_attr_set_speed()
  */
-LELY_IO_EXTERN int io_attr_get_speed(const io_attr_t *attr);
+int io_attr_get_speed(const io_attr_t *attr);
 
 /**
  * Sets the baud rate of a serial I/O device. Note that the new device
@@ -79,7 +79,7 @@ LELY_IO_EXTERN int io_attr_get_speed(const io_attr_t *attr);
  *
  * @see io_attr_get_speed()
  */
-LELY_IO_EXTERN int io_attr_set_speed(io_attr_t *attr, int speed);
+int io_attr_set_speed(io_attr_t *attr, int speed);
 
 /**
  * Checks if flow control is enabled in the attributes of a serial I/O device.
@@ -89,7 +89,7 @@ LELY_IO_EXTERN int io_attr_set_speed(io_attr_t *attr, int speed);
  *
  * @see io_attr_set_flow_control()
  */
-LELY_IO_EXTERN int io_attr_get_flow_control(const io_attr_t *attr);
+int io_attr_get_flow_control(const io_attr_t *attr);
 
 /**
  * Disables flow control for a serial I/O device if <b>flow_control</b> is zero,
@@ -101,7 +101,7 @@ LELY_IO_EXTERN int io_attr_get_flow_control(const io_attr_t *attr);
  *
  * @see io_attr_get_flow_control()
  */
-LELY_IO_EXTERN int io_attr_set_flow_control(io_attr_t *attr, int flow_control);
+int io_attr_set_flow_control(io_attr_t *attr, int flow_control);
 
 /**
  * Obtains the parity scheme from the attributes of a serial I/O device.
@@ -111,7 +111,7 @@ LELY_IO_EXTERN int io_attr_set_flow_control(io_attr_t *attr, int flow_control);
  *
  * @see io_attr_set_parity()
  */
-LELY_IO_EXTERN int io_attr_get_parity(const io_attr_t *attr);
+int io_attr_get_parity(const io_attr_t *attr);
 
 /**
  * Sets the parity scheme of a serial I/O device. Note that the new device
@@ -126,7 +126,7 @@ LELY_IO_EXTERN int io_attr_get_parity(const io_attr_t *attr);
  *
  * @see io_attr_get_parity()
  */
-LELY_IO_EXTERN int io_attr_set_parity(io_attr_t *attr, int parity);
+int io_attr_set_parity(io_attr_t *attr, int parity);
 
 /**
  * Obtains the number of stop bits used from the attributes of a serial I/O
@@ -138,7 +138,7 @@ LELY_IO_EXTERN int io_attr_set_parity(io_attr_t *attr, int parity);
  *
  * @see io_attr_set_stop_bits()
  */
-LELY_IO_EXTERN int io_attr_get_stop_bits(const io_attr_t *attr);
+int io_attr_get_stop_bits(const io_attr_t *attr);
 
 /**
  * Sets the number of stop bits used in a serial I/O device to one if
@@ -150,7 +150,7 @@ LELY_IO_EXTERN int io_attr_get_stop_bits(const io_attr_t *attr);
  *
  * @see io_attr_get_stop_bits()
  */
-LELY_IO_EXTERN int io_attr_set_stop_bits(io_attr_t *attr, int stop_bits);
+int io_attr_set_stop_bits(io_attr_t *attr, int stop_bits);
 
 /**
  * Obtains the character size (in bits) from the attributes of a serial I/O
@@ -161,7 +161,7 @@ LELY_IO_EXTERN int io_attr_set_stop_bits(io_attr_t *attr, int stop_bits);
  *
  * @see io_attr_set_char_size()
  */
-LELY_IO_EXTERN int io_attr_get_char_size(const io_attr_t *attr);
+int io_attr_get_char_size(const io_attr_t *attr);
 
 /**
  * Sets the character size (in bits) of a serial I/O device. Note that the new
@@ -172,7 +172,7 @@ LELY_IO_EXTERN int io_attr_get_char_size(const io_attr_t *attr);
  *
  * @see io_attr_get_char_size()
  */
-LELY_IO_EXTERN int io_attr_set_char_size(io_attr_t *attr, int char_size);
+int io_attr_set_char_size(io_attr_t *attr, int char_size);
 
 #ifdef __cplusplus
 }

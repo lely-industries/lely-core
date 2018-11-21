@@ -38,7 +38,7 @@ extern "C" {
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_open_pipe(io_handle_t handle_vector[2]);
+int io_open_pipe(io_handle_t handle_vector[2]);
 
 #ifdef __cplusplus
 }

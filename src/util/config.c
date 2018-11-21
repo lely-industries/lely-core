@@ -66,7 +66,7 @@ static struct rbnode *config_entry_create(struct config_section *section,
 		const char *key, const char *value);
 static void config_entry_destroy(struct rbnode *node);
 
-LELY_UTIL_EXPORT void *
+void *
 __config_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __config));
@@ -75,13 +75,13 @@ __config_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __config_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __config *
+struct __config *
 __config_init(struct __config *config, int flags)
 {
 	assert(config);
@@ -95,7 +95,7 @@ __config_init(struct __config *config, int flags)
 	return config;
 }
 
-LELY_UTIL_EXPORT void
+void
 __config_fini(struct __config *config)
 {
 	assert(config);
@@ -106,7 +106,7 @@ __config_fini(struct __config *config)
 	}
 }
 
-LELY_UTIL_EXPORT config_t *
+config_t *
 config_create(int flags)
 {
 	errc_t errc = 0;
@@ -131,7 +131,7 @@ error_alloc_config:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 config_destroy(config_t *config)
 {
 	if (config) {
@@ -140,7 +140,7 @@ config_destroy(config_t *config)
 	}
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_get_sections(const config_t *config, size_t n, const char **sections)
 {
 	assert(config);
@@ -157,7 +157,7 @@ config_get_sections(const config_t *config, size_t n, const char **sections)
 	return rbtree_size(&config->tree);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_get_keys(const config_t *config, const char *section, size_t n,
 		const char **keys)
 {
@@ -184,7 +184,7 @@ config_get_keys(const config_t *config, const char *section, size_t n,
 	return rbtree_size(tree);
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 config_get(const config_t *config, const char *section, const char *key)
 {
 	assert(config);
@@ -209,7 +209,7 @@ config_get(const config_t *config, const char *section, const char *key)
 	return structof(node, struct config_entry, node)->value;
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 config_set(config_t *config, const char *section, const char *key,
 		const char *value)
 {
@@ -229,7 +229,7 @@ config_set(config_t *config, const char *section, const char *key,
 	return node ? config_section_set(node, key, value) : NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 config_foreach(const config_t *config, config_foreach_func_t *func, void *data)
 {
 	assert(config);

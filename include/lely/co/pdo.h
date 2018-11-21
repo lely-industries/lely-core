@@ -108,8 +108,8 @@ extern "C" {
  * @returns 0 if the object is valid and can be mapped, or an SDO abort code on
  * error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_chk_rpdo(const co_dev_t *dev,
-		co_unsigned16_t idx, co_unsigned8_t subidx);
+co_unsigned32_t co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx);
 
 /**
  * Configures the communication and parameters of a Receive-PDO service. This
@@ -125,8 +125,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_chk_rpdo(const co_dev_t *dev,
  *
  * @see co_dev_cfg_rpdo_comm(), co_dev_cfg_rpdo_map()
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_comm_par *comm,
+co_unsigned32_t co_dev_cfg_rpdo(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *comm,
 		const struct co_pdo_map_par *map);
 
 /**
@@ -139,8 +139,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo(const co_dev_t *dev,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_comm(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_comm_par *par);
+co_unsigned32_t co_dev_cfg_rpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *par);
 
 /**
  * Configures the mapping parameters of a Receive-PDO service by updating
@@ -153,8 +153,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_comm(const co_dev_t *dev,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_map(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_map_par *par);
+co_unsigned32_t co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_map_par *par);
 
 /**
  * Checks if the specified object is valid and can be mapped into a
@@ -167,8 +167,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_rpdo_map(const co_dev_t *dev,
  * @returns 0 if the object is valid and can be mapped, or an SDO abort code on
  * error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_chk_tpdo(const co_dev_t *dev,
-		co_unsigned16_t idx, co_unsigned8_t subidx);
+co_unsigned32_t co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx);
 
 /**
  * Configures the communication and parameters of a Transmit-PDO service. This
@@ -184,8 +184,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_chk_tpdo(const co_dev_t *dev,
  *
  * @see co_dev_cfg_tpdo_comm(), co_dev_cfg_tpdo_map()
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_comm_par *comm,
+co_unsigned32_t co_dev_cfg_tpdo(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *comm,
 		const struct co_pdo_map_par *map);
 
 /**
@@ -198,8 +198,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo(const co_dev_t *dev,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_comm(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_comm_par *par);
+co_unsigned32_t co_dev_cfg_tpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_comm_par *par);
 
 /**
  * Configures the mapping parameters of a Transmit-PDO service by updating
@@ -212,8 +212,8 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_comm(const co_dev_t *dev,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev,
-		co_unsigned16_t num, const struct co_pdo_map_par *par);
+co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
+		const struct co_pdo_map_par *par);
 
 /**
  * Maps values into a PDO.
@@ -231,7 +231,7 @@ LELY_CO_EXTERN co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev,
  *
  * @see co_pdo_unmap()
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
+co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
 		const co_unsigned64_t *val, co_unsigned8_t n, uint8_t *buf,
 		size_t *pn);
 
@@ -251,7 +251,7 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
  *
  * @see co_pdo_map()
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
+co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
 		const uint8_t *buf, size_t n, co_unsigned64_t *val,
 		co_unsigned8_t *pn);
 
@@ -268,9 +268,8 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par,
-		co_dev_t *dev, struct co_sdo_req *req, const uint8_t *buf,
-		size_t n);
+co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
+		struct co_sdo_req *req, const uint8_t *buf, size_t n);
 
 /**
  * Reads mapped PDO values from the object dictionary through a local SDO upload
@@ -288,9 +287,8 @@ LELY_CO_EXTERN co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par,
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par,
-		const co_dev_t *dev, struct co_sdo_req *req, uint8_t *buf,
-		size_t *pn);
+co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
+		struct co_sdo_req *req, uint8_t *buf, size_t *pn);
 
 #ifdef __cplusplus
 }

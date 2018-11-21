@@ -100,7 +100,7 @@ struct co_ssub {
 extern "C" {
 #endif
 
-LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_sdev(
+struct __co_dev *__co_dev_init_from_sdev(
 		struct __co_dev *dev, const struct co_sdev *sdev);
 
 /**
@@ -109,7 +109,7 @@ LELY_CO_EXTERN struct __co_dev *__co_dev_init_from_sdev(
  * @returns a pointer to a new device, or NULL on error. In the latter case, the
  * error number can be obtained with get_errc().
  */
-LELY_CO_EXTERN co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
+co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
 
 /**
  * Prints a C99 static initializer code fragment for a static device description
@@ -126,7 +126,7 @@ LELY_CO_EXTERN co_dev_t *co_dev_create_from_sdev(const struct co_sdev *sdev);
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
  */
-LELY_CO_EXTERN int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
+int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
 
 /**
  * Equivalent to snprintf_c99_sdev(), except that it allocates a string large
@@ -141,7 +141,7 @@ LELY_CO_EXTERN int snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev);
  * byte, or a negative number on error. In the latter case, the error number is
  * stored in `errno`.
  */
-LELY_CO_EXTERN int asprintf_c99_sdev(char **ps, const co_dev_t *dev);
+int asprintf_c99_sdev(char **ps, const co_dev_t *dev);
 
 #ifdef __cplusplus
 }

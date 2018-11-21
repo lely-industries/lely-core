@@ -21,12 +21,12 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_BITS_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_BITS_INLINE extern inline
 #include <lely/util/bits.h>
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_clz)
 
-LELY_UTIL_EXPORT int
+int
 clz8(uint8_t x)
 {
 	// clang-format off
@@ -57,7 +57,7 @@ clz8(uint8_t x)
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ctz)
 
-LELY_UTIL_EXPORT int
+int
 ctz8(uint8_t x)
 {
 	// clang-format off
@@ -88,7 +88,7 @@ ctz8(uint8_t x)
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ffs)
 
-LELY_UTIL_EXPORT int
+int
 ffs8(uint8_t x)
 {
 	// clang-format off
@@ -119,7 +119,7 @@ ffs8(uint8_t x)
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_parity)
 
-LELY_UTIL_EXPORT int
+int
 parity8(uint8_t x)
 {
 	// clang-format off
@@ -150,7 +150,7 @@ parity8(uint8_t x)
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_popcount)
 
-LELY_UTIL_EXPORT int
+int
 popcount8(uint8_t x)
 {
 	// clang-format off

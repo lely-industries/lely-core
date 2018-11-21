@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_MEMBUF_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_MEMBUF_INLINE extern inline
 #include <lely/util/errnum.h>
 #include <lely/util/membuf.h>
 
@@ -34,7 +34,7 @@
 #define LELY_MEMBUF_SIZE 16
 #endif
 
-LELY_UTIL_EXPORT void
+void
 membuf_fini(struct membuf *buf)
 {
 	assert(buf);
@@ -42,7 +42,7 @@ membuf_fini(struct membuf *buf)
 	free(buf->begin);
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 membuf_reserve(struct membuf *buf, size_t size)
 {
 	assert(buf);
@@ -71,7 +71,7 @@ membuf_reserve(struct membuf *buf, size_t size)
 	return membuf_capacity(buf);
 }
 
-LELY_UTIL_EXPORT void
+void
 membuf_flush(struct membuf *buf, size_t size)
 {
 	assert(buf);

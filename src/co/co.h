@@ -25,12 +25,7 @@
 #include <config.h>
 #endif
 
-#define LELY_CO_INTERN 1
 #include <lely/co/co.h>
-
-#ifndef LELY_CO_EXPORT
-#define LELY_CO_EXPORT LELY_DLL_EXPORT
-#endif
 
 #ifdef NDEBUG
 #define trace(...)

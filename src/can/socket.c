@@ -38,7 +38,7 @@
 #include <linux/can/error.h>
 #endif
 
-LELY_CAN_EXPORT int
+int
 can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 		enum can_error *perror)
 {
@@ -111,7 +111,7 @@ can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 	return 1;
 }
 
-LELY_CAN_EXPORT int
+int
 can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
 {
 	assert(src);
@@ -139,7 +139,7 @@ can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
 	return 0;
 }
 
-LELY_CAN_EXPORT int
+int
 can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 {
 	assert(src);
@@ -171,7 +171,7 @@ can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
 
-LELY_CAN_EXPORT int
+int
 canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst)
 {
 	assert(src);
@@ -200,7 +200,7 @@ canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst)
 	return 0;
 }
 
-LELY_CAN_EXPORT int
+int
 can_msg2canfd_frame(const struct can_msg *src, struct canfd_frame *dst)
 {
 	assert(src);

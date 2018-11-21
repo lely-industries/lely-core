@@ -42,7 +42,7 @@
 #include <lely/libc/stdint.h>
 #endif
 
-LELY_LIBC_EXPORT void *__cdecl aligned_alloc(size_t alignment, size_t size)
+void *__cdecl aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef _WIN32
 	if (__unlikely(!size))
@@ -86,7 +86,7 @@ LELY_LIBC_EXPORT void *__cdecl aligned_alloc(size_t alignment, size_t size)
 
 #ifndef __USE_ISOC11
 
-LELY_LIBC_EXPORT void __cdecl aligned_free(void *ptr)
+void __cdecl aligned_free(void *ptr)
 {
 #ifdef _WIN32
 	_aligned_free(ptr);
@@ -108,7 +108,7 @@ LELY_LIBC_EXPORT void __cdecl aligned_free(void *ptr)
 
 #include <errno.h>
 
-LELY_LIBC_EXPORT int
+int
 setenv(const char *envname, const char *envval, int overwrite)
 {
 	if (__unlikely(!envname)) {

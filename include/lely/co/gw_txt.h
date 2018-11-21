@@ -69,22 +69,22 @@ typedef int co_gw_txt_recv_func_t(const char *txt, void *data);
  */
 typedef int co_gw_txt_send_func_t(const struct co_gw_req *req, void *data);
 
-LELY_CO_EXTERN void *__co_gw_txt_alloc(void);
-LELY_CO_EXTERN void __co_gw_txt_free(void *ptr);
-LELY_CO_EXTERN struct __co_gw_txt *__co_gw_txt_init(struct __co_gw_txt *gw);
-LELY_CO_EXTERN void __co_gw_txt_fini(struct __co_gw_txt *gw);
+void *__co_gw_txt_alloc(void);
+void __co_gw_txt_free(void *ptr);
+struct __co_gw_txt *__co_gw_txt_init(struct __co_gw_txt *gw);
+void __co_gw_txt_fini(struct __co_gw_txt *gw);
 
 /// Creates a new CANopen ASCII gateway. @see co_gw_txt_destroy()
-LELY_CO_EXTERN co_gw_txt_t *co_gw_txt_create(void);
+co_gw_txt_t *co_gw_txt_create(void);
 
 /// Destroys a CANopen ASCII gateway. @see co_gw_txt_create()
-LELY_CO_EXTERN void co_gw_txt_destroy(co_gw_txt_t *gw);
+void co_gw_txt_destroy(co_gw_txt_t *gw);
 
 /// Returns (and clears) the last internal error code.
-LELY_CO_EXTERN int co_gw_txt_iec(co_gw_txt_t *gw);
+int co_gw_txt_iec(co_gw_txt_t *gw);
 
 /// Returns the number of pending (i.e., unconfirmed) requests.
-LELY_CO_EXTERN size_t co_gw_txt_pending(const co_gw_txt_t *gw);
+size_t co_gw_txt_pending(const co_gw_txt_t *gw);
 
 /**
  * Receives and forwards an indication or confirmation from a CANopen gateway.
@@ -95,7 +95,7 @@ LELY_CO_EXTERN size_t co_gw_txt_pending(const co_gw_txt_t *gw);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv);
+int co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv);
 
 /**
  * Retrieves the callback function used to forward indications and confirmations
@@ -109,7 +109,7 @@ LELY_CO_EXTERN int co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv);
  *
  * @see co_gw_txt_set_recv_func()
  */
-LELY_CO_EXTERN void co_gw_txt_get_recv_func(const co_gw_txt_t *gw,
+void co_gw_txt_get_recv_func(const co_gw_txt_t *gw,
 		co_gw_txt_recv_func_t **pfunc, void **pdata);
 
 /**
@@ -123,7 +123,7 @@ LELY_CO_EXTERN void co_gw_txt_get_recv_func(const co_gw_txt_t *gw,
  *
  * @see co_gw_txt_get_recv_func()
  */
-LELY_CO_EXTERN void co_gw_txt_set_recv_func(
+void co_gw_txt_set_recv_func(
 		co_gw_txt_t *gw, co_gw_txt_recv_func_t *func, void *data);
 
 /**
@@ -140,8 +140,8 @@ LELY_CO_EXTERN void co_gw_txt_set_recv_func(
  *
  * @returns the number of characters read.
  */
-LELY_CO_EXTERN size_t co_gw_txt_send(co_gw_txt_t *gw, const char *begin,
-		const char *end, struct floc *at);
+size_t co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
+		struct floc *at);
 
 /**
  * Retrieves the callback function used to send requests from the user to a
@@ -155,7 +155,7 @@ LELY_CO_EXTERN size_t co_gw_txt_send(co_gw_txt_t *gw, const char *begin,
  *
  * @see co_gw_txt_set_send_func()
  */
-LELY_CO_EXTERN void co_gw_txt_get_send_func(const co_gw_txt_t *gw,
+void co_gw_txt_get_send_func(const co_gw_txt_t *gw,
 		co_gw_txt_send_func_t **pfunc, void **pdata);
 
 /**
@@ -169,7 +169,7 @@ LELY_CO_EXTERN void co_gw_txt_get_send_func(const co_gw_txt_t *gw,
  *
  * @see co_gw_txt_get_send_func()
  */
-LELY_CO_EXTERN void co_gw_txt_set_send_func(
+void co_gw_txt_set_send_func(
 		co_gw_txt_t *gw, co_gw_txt_send_func_t *func, void *data);
 
 #ifdef __cplusplus

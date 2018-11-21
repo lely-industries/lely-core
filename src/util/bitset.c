@@ -32,7 +32,7 @@
 #undef INT_BIT
 #define INT_BIT (sizeof(int) * CHAR_BIT)
 
-LELY_UTIL_EXPORT int
+int
 bitset_init(struct bitset *set, int size)
 {
 	assert(set);
@@ -51,7 +51,7 @@ bitset_init(struct bitset *set, int size)
 	return 0;
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_fini(struct bitset *set)
 {
 	assert(set);
@@ -61,13 +61,13 @@ bitset_fini(struct bitset *set)
 	set->bits = NULL;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_size(const struct bitset *set)
 {
 	return set->size * INT_BIT;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_resize(struct bitset *set, int size)
 {
 	assert(set);
@@ -90,13 +90,13 @@ bitset_resize(struct bitset *set, int size)
 	return bitset_size(set);
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_get_size(const struct bitset *set)
 {
 	return set->size * INT_BIT;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_test(const struct bitset *set, int n)
 {
 	if (__unlikely(n < 0 || n >= bitset_size(set)))
@@ -104,7 +104,7 @@ bitset_test(const struct bitset *set, int n)
 	return (set->bits[n / INT_BIT] >> (n & (INT_BIT - 1))) & 1u;
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_set(struct bitset *set, int n)
 {
 	if (__unlikely(n < 0 || n >= bitset_size(set)))
@@ -112,14 +112,14 @@ bitset_set(struct bitset *set, int n)
 	set->bits[n / INT_BIT] |= 1u << (n & (INT_BIT - 1));
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_set_all(struct bitset *set)
 {
 	for (int i = 0; i < set->size; i++)
 		set->bits[i] = ~0u;
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_clr(struct bitset *set, int n)
 {
 	if (__unlikely(n < 0 || n >= bitset_size(set)))
@@ -127,21 +127,21 @@ bitset_clr(struct bitset *set, int n)
 	set->bits[n / INT_BIT] &= ~(1u << (n & (INT_BIT - 1)));
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_clr_all(struct bitset *set)
 {
 	for (int i = 0; i < set->size; i++)
 		set->bits[i] = 0;
 }
 
-LELY_UTIL_EXPORT void
+void
 bitset_compl(struct bitset *set)
 {
 	for (int i = 0; i < set->size; i++)
 		set->bits[i] = ~set->bits[i];
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_ffs(const struct bitset *set)
 {
 	const unsigned int *bits = set->bits;
@@ -155,7 +155,7 @@ bitset_ffs(const struct bitset *set)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_ffz(const struct bitset *set)
 {
 	const unsigned int *bits = set->bits;
@@ -169,7 +169,7 @@ bitset_ffz(const struct bitset *set)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_fns(const struct bitset *set, int n)
 {
 	if (__unlikely(n < 0))
@@ -196,7 +196,7 @@ bitset_fns(const struct bitset *set, int n)
 	return 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 bitset_fnz(const struct bitset *set, int n)
 {
 	if (__unlikely(n < 0))

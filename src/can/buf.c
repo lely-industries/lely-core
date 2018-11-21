@@ -22,7 +22,7 @@
  */
 
 #include "can.h"
-#define LELY_CAN_BUF_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_CAN_BUF_INLINE extern inline
 #include <lely/can/buf.h>
 #include <lely/util/errnum.h>
 
@@ -35,7 +35,7 @@
 #define LELY_CAN_BUF_SIZE 16
 #endif
 
-LELY_CAN_EXPORT int
+int
 can_buf_init(struct can_buf *buf, size_t size)
 {
 	assert(buf);
@@ -63,7 +63,7 @@ can_buf_init(struct can_buf *buf, size_t size)
 	return 0;
 }
 
-LELY_CAN_EXPORT void
+void
 can_buf_fini(struct can_buf *buf)
 {
 	assert(buf);
@@ -71,7 +71,7 @@ can_buf_fini(struct can_buf *buf)
 	free(buf->ptr);
 }
 
-LELY_CAN_EXPORT struct can_buf *
+struct can_buf *
 can_buf_create(size_t size)
 {
 	errc_t errc = 0;
@@ -96,7 +96,7 @@ error_alloc_buf:
 	return NULL;
 }
 
-LELY_CAN_EXPORT void
+void
 can_buf_destroy(struct can_buf *buf)
 {
 	if (__unlikely(!buf))
@@ -107,7 +107,7 @@ can_buf_destroy(struct can_buf *buf)
 	free(buf);
 }
 
-LELY_CAN_EXPORT size_t
+size_t
 can_buf_reserve(struct can_buf *buf, size_t n)
 {
 	assert(buf);

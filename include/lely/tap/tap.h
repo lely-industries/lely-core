@@ -21,15 +21,7 @@
 #ifndef LELY_TAP_TAP_H_
 #define LELY_TAP_TAP_H_
 
-#include <lely/lely.h>
-
-#ifndef LELY_TAP_EXTERN
-#ifdef LELY_TAP_INTERN
-#define LELY_TAP_EXTERN LELY_DLL_EXPORT
-#else
-#define LELY_TAP_EXTERN LELY_DLL_IMPORT
-#endif
-#endif
+#include <lely/features.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-zero-length"
@@ -166,15 +158,11 @@
 extern "C" {
 #endif
 
-LELY_TAP_EXTERN void __tap_plan_impl(int n, const char *format, ...)
-		__format_printf(2, 3);
-LELY_TAP_EXTERN int __tap_test_impl(int test, const char *expr,
-		const char *file, int line, const char *format, ...)
-		__format_printf(5, 6);
-LELY_TAP_EXTERN void __tap_diag_impl(const char *format, ...)
-		__format_printf(1, 2);
-LELY_TAP_EXTERN _Noreturn void __tap_abort_impl(const char *format, ...)
-		__format_printf(1, 2);
+void __tap_plan_impl(int n, const char *format, ...) __format_printf(2, 3);
+int __tap_test_impl(int test, const char *expr, const char *file, int line,
+		const char *format, ...) __format_printf(5, 6);
+void __tap_diag_impl(const char *format, ...) __format_printf(1, 2);
+_Noreturn void __tap_abort_impl(const char *format, ...) __format_printf(1, 2);
 
 #ifdef __cplusplus
 }

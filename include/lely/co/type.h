@@ -132,10 +132,10 @@ extern "C" {
 #endif
 
 /// Returns 1 if the specified (static) data type is a basic type, and 0 if not.
-LELY_CO_EXTERN int co_type_is_basic(co_unsigned16_t type);
+int co_type_is_basic(co_unsigned16_t type);
 
 /// Returns 1 if the specified (static) data type is an array, and 0 if not.
-LELY_CO_EXTERN int co_type_is_array(co_unsigned16_t type);
+int co_type_is_array(co_unsigned16_t type);
 
 /**
  * Returns the native size (in bytes) of a value of the specified data type, or
@@ -144,7 +144,7 @@ LELY_CO_EXTERN int co_type_is_array(co_unsigned16_t type);
  *
  * @see co_type_alignof()
  */
-LELY_CO_EXTERN size_t co_type_sizeof(co_unsigned16_t type);
+size_t co_type_sizeof(co_unsigned16_t type);
 
 /**
  * Returns the alignment requirements (in bytes) of a value of the specified
@@ -153,7 +153,7 @@ LELY_CO_EXTERN size_t co_type_sizeof(co_unsigned16_t type);
  *
  * @see co_type_sizeof()
  */
-LELY_CO_EXTERN size_t co_type_alignof(co_unsigned16_t type);
+size_t co_type_alignof(co_unsigned16_t type);
 
 #ifdef __cplusplus
 }

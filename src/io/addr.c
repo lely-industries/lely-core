@@ -44,7 +44,7 @@ static int bachk(const char *str);
 #include <netdb.h>
 #endif
 
-LELY_IO_EXPORT int __cdecl io_addr_cmp(const void *p1, const void *p2)
+int __cdecl io_addr_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
 		return 0;
@@ -69,7 +69,7 @@ LELY_IO_EXPORT int __cdecl io_addr_cmp(const void *p1, const void *p2)
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H))
 // clang-format on
 
-LELY_IO_EXPORT int
+int
 io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
 {
 	assert(addr);
@@ -112,7 +112,7 @@ io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port)
 {
 	assert(addr);
@@ -146,7 +146,7 @@ io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 {
 	assert(addr);
@@ -191,7 +191,7 @@ io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6], int port)
 {
 	assert(addr);
@@ -221,7 +221,7 @@ io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6], int port)
 #endif
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 {
 	assert(addr);
@@ -250,7 +250,7 @@ io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port)
 {
 	assert(addr);
@@ -278,7 +278,7 @@ io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_set_ipv4_a(io_addr_t *addr, const char *ip, int port)
 {
 	assert(addr);
@@ -299,7 +299,7 @@ io_addr_set_ipv4_a(io_addr_t *addr, const char *ip, int port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4], int *port)
 {
 	assert(addr);
@@ -324,7 +324,7 @@ io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4], int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_ipv4_n(io_addr_t *addr, const uint8_t ip[4], int port)
 {
 	assert(addr);
@@ -341,7 +341,7 @@ io_addr_set_ipv4_n(io_addr_t *addr, const uint8_t ip[4], int port)
 		addr_in->sin_addr.s_addr = htonl(INADDR_ANY);
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_ipv4_loopback(io_addr_t *addr, int port)
 {
 	assert(addr);
@@ -355,7 +355,7 @@ io_addr_set_ipv4_loopback(io_addr_t *addr, int port)
 	addr_in->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_ipv4_broadcast(io_addr_t *addr, int port)
 {
 	assert(addr);
@@ -369,7 +369,7 @@ io_addr_set_ipv4_broadcast(io_addr_t *addr, int port)
 	addr_in->sin_addr.s_addr = htonl(INADDR_BROADCAST);
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port)
 {
 	assert(addr);
@@ -397,7 +397,7 @@ io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_set_ipv6_a(io_addr_t *addr, const char *ip, int port)
 {
 	assert(addr);
@@ -421,7 +421,7 @@ io_addr_set_ipv6_a(io_addr_t *addr, const char *ip, int port)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16], int *port)
 {
 	assert(addr);
@@ -446,7 +446,7 @@ io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16], int *port)
 	return 0;
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16], int port)
 {
 	assert(addr);
@@ -463,7 +463,7 @@ io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16], int port)
 		addr_in6->sin6_addr = in6addr_any;
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_ipv6_loopback(io_addr_t *addr, int port)
 {
 	assert(addr);
@@ -481,7 +481,7 @@ io_addr_set_ipv6_loopback(io_addr_t *addr, int port)
 
 #if _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_addr_get_unix(const io_addr_t *addr, char *path)
 {
 	assert(addr);
@@ -504,7 +504,7 @@ io_addr_get_unix(const io_addr_t *addr, char *path)
 	return 0;
 }
 
-LELY_IO_EXPORT void
+void
 io_addr_set_unix(io_addr_t *addr, const char *path)
 {
 	assert(addr);
@@ -525,7 +525,7 @@ io_addr_set_unix(io_addr_t *addr, const char *path)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_addr_get_domain(const io_addr_t *addr)
 {
 	assert(addr);
@@ -546,7 +546,7 @@ io_addr_get_domain(const io_addr_t *addr)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_get_port(const io_addr_t *addr, int *port)
 {
 	assert(addr);
@@ -621,7 +621,7 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_set_port(io_addr_t *addr, int port)
 {
 	assert(addr);
@@ -679,7 +679,7 @@ io_addr_set_port(io_addr_t *addr, int port)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_is_loopback(const io_addr_t *addr)
 {
 	assert(addr);
@@ -710,7 +710,7 @@ io_addr_is_loopback(const io_addr_t *addr)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_is_broadcast(const io_addr_t *addr)
 {
 	assert(addr);
@@ -730,7 +730,7 @@ io_addr_is_broadcast(const io_addr_t *addr)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_addr_is_multicast(const io_addr_t *addr)
 {
 	assert(addr);
@@ -760,7 +760,7 @@ io_addr_is_multicast(const io_addr_t *addr)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
 		const char *servname, const struct io_addrinfo *hints)
 {

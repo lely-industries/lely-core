@@ -43,7 +43,7 @@ static void membuf_print_chars(struct membuf *buf, const char *s, size_t n);
 static void config_print_ini_func(const char *section, const char *key,
 		const char *value, void *data);
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_parse_ini_file(config_t *config, const char *filename)
 {
 	frbuf_t *buf = frbuf_create(filename);
@@ -71,7 +71,7 @@ config_parse_ini_file(config_t *config, const char *filename)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_parse_ini_text(config_t *config, const char *begin, const char *end,
 		struct floc *at)
 {
@@ -175,7 +175,7 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 	return cp - begin;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_print_ini_file(const config_t *config, const char *filename)
 {
 	fwbuf_t *buf = fwbuf_create(filename);
@@ -209,7 +209,7 @@ config_print_ini_file(const config_t *config, const char *filename)
 	return chars;
 }
 
-LELY_UTIL_EXPORT size_t
+size_t
 config_print_ini_text(const config_t *config, char **pbegin, char *end)
 {
 	assert(config);

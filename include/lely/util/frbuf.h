@@ -43,11 +43,10 @@ typedef struct __frbuf frbuf_t;
 extern "C" {
 #endif
 
-LELY_UTIL_EXTERN void *__frbuf_alloc(void);
-LELY_UTIL_EXTERN void __frbuf_free(void *ptr);
-LELY_UTIL_EXTERN struct __frbuf *__frbuf_init(
-		struct __frbuf *buf, const char *filename);
-LELY_UTIL_EXTERN void __frbuf_fini(struct __frbuf *buf);
+void *__frbuf_alloc(void);
+void __frbuf_free(void *ptr);
+struct __frbuf *__frbuf_init(struct __frbuf *buf, const char *filename);
+void __frbuf_fini(struct __frbuf *buf);
 
 /**
  * Creates a new read file buffer.
@@ -59,7 +58,7 @@ LELY_UTIL_EXTERN void __frbuf_fini(struct __frbuf *buf);
  *
  * @see frbuf_destroy()
  */
-LELY_UTIL_EXTERN frbuf_t *frbuf_create(const char *filename);
+frbuf_t *frbuf_create(const char *filename);
 
 /**
  * Destroys a read file buffer. frbuf_unmap() is invoked, if necessary, before
@@ -67,13 +66,13 @@ LELY_UTIL_EXTERN frbuf_t *frbuf_create(const char *filename);
  *
  * @see frbuf_create()
  */
-LELY_UTIL_EXTERN void frbuf_destroy(frbuf_t *buf);
+void frbuf_destroy(frbuf_t *buf);
 
 /**
  * Returns the size (in bytes) of the a read file buffer, or -1 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int64_t frbuf_get_size(frbuf_t *buf);
+int64_t frbuf_get_size(frbuf_t *buf);
 
 /**
  * Returns the current offset (in bytes) of a read file buffer with respect to
@@ -84,7 +83,7 @@ LELY_UTIL_EXTERN int64_t frbuf_get_size(frbuf_t *buf);
  * will starting reading, and it is only updated by that function or
  * frbuf_set_pos().
  */
-LELY_UTIL_EXTERN int64_t frbuf_get_pos(frbuf_t *buf);
+int64_t frbuf_get_pos(frbuf_t *buf);
 
 /**
  * Sets the current offset (in bytes) of a read file buffer with respect to the
@@ -96,7 +95,7 @@ LELY_UTIL_EXTERN int64_t frbuf_get_pos(frbuf_t *buf);
  *
  * @see frbuf_get_pos()
  */
-LELY_UTIL_EXTERN int64_t frbuf_set_pos(frbuf_t *buf, int64_t pos);
+int64_t frbuf_set_pos(frbuf_t *buf, int64_t pos);
 
 /**
  * Reads bytes from the current position in a read file buffer. Note that this
@@ -111,7 +110,7 @@ LELY_UTIL_EXTERN int64_t frbuf_set_pos(frbuf_t *buf, int64_t pos);
  *
  * @see frbuf_pread()
  */
-LELY_UTIL_EXTERN ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
+ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
 
 /**
  * Reads bytes from the specified position in a read file buffer. This function
@@ -128,8 +127,7 @@ LELY_UTIL_EXTERN ssize_t frbuf_read(frbuf_t *buf, void *ptr, size_t size);
  *
  * @see frbuf_read()
  */
-LELY_UTIL_EXTERN ssize_t frbuf_pread(
-		frbuf_t *buf, void *ptr, size_t size, int64_t pos);
+ssize_t frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos);
 
 /**
  * Maps (part of) the contents of a read file buffer to memory. Only a single
@@ -149,8 +147,7 @@ LELY_UTIL_EXTERN ssize_t frbuf_pread(
  * it is an error to modify bytes in the memory map which may lead to a
  * segmentation fault.
  */
-LELY_UTIL_EXTERN const void *frbuf_map(
-		frbuf_t *buf, int64_t pos, size_t *psize);
+const void *frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize);
 
 /**
  * Unmaps the current memory map of a read file buffer, if it exists.
@@ -160,7 +157,7 @@ LELY_UTIL_EXTERN const void *frbuf_map(
  *
  * @see frbuf_map()
  */
-LELY_UTIL_EXTERN int frbuf_unmap(frbuf_t *buf);
+int frbuf_unmap(frbuf_t *buf);
 
 #ifdef __cplusplus
 }

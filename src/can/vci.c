@@ -51,7 +51,7 @@
 #include <cantype.h>
 #endif
 
-LELY_CAN_EXPORT int
+int
 CANMSG_is_error(const void *msg, enum can_state *pstate, enum can_error *perror)
 {
 	const CANMSG *msg_ = msg;
@@ -89,7 +89,7 @@ CANMSG_is_error(const void *msg, enum can_state *pstate, enum can_error *perror)
 	return 1;
 }
 
-LELY_CAN_EXPORT int
+int
 CANMSG2can_msg(const void *src, struct can_msg *dst)
 {
 	const CANMSG *msg = src;
@@ -118,7 +118,7 @@ CANMSG2can_msg(const void *src, struct can_msg *dst)
 	return 0;
 }
 
-LELY_CAN_EXPORT int
+int
 can_msg2CANMSG(const struct can_msg *src, void *dst)
 {
 	assert(src);

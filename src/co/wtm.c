@@ -173,7 +173,7 @@ static void default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data);
  */
 static uint32_t co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes);
 
-LELY_CO_EXPORT const char *
+const char *
 co_wtm_ac_str(uint32_t ac)
 {
 	switch (ac) {
@@ -207,7 +207,7 @@ co_wtm_ac_str(uint32_t ac)
 	}
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_wtm_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_wtm));
@@ -216,13 +216,13 @@ __co_wtm_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_wtm_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_wtm *
+struct __co_wtm *
 __co_wtm_init(struct __co_wtm *wtm)
 {
 	assert(wtm);
@@ -276,13 +276,13 @@ __co_wtm_init(struct __co_wtm *wtm)
 	return wtm;
 }
 
-LELY_CO_EXPORT void
+void
 __co_wtm_fini(struct __co_wtm *wtm)
 {
 	__unused_var(wtm);
 }
 
-LELY_CO_EXPORT co_wtm_t *
+co_wtm_t *
 co_wtm_create(void)
 {
 	errc_t errc = 0;
@@ -307,7 +307,7 @@ error_alloc_wtm:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_destroy(co_wtm_t *wtm)
 {
 	if (wtm) {
@@ -316,7 +316,7 @@ co_wtm_destroy(co_wtm_t *wtm)
 	}
 }
 
-LELY_CO_EXPORT uint8_t
+uint8_t
 co_wtm_get_nif(const co_wtm_t *wtm)
 {
 	assert(wtm);
@@ -324,7 +324,7 @@ co_wtm_get_nif(const co_wtm_t *wtm)
 	return wtm->nif;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
@@ -339,7 +339,7 @@ co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 		uint8_t load, uint16_t ec, uint16_t foc, uint16_t coc)
 {
@@ -389,7 +389,7 @@ co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
 {
 	assert(wtm);
@@ -404,7 +404,7 @@ co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
 	return 0;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_diag_can_con(
 		const co_wtm_t *wtm, co_wtm_diag_can_con_t **pcon, void **pdata)
 {
@@ -416,7 +416,7 @@ co_wtm_get_diag_can_con(
 		*pdata = wtm->diag_can_con_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_diag_can_con(co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data)
 {
 	assert(wtm);
@@ -425,7 +425,7 @@ co_wtm_set_diag_can_con(co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data)
 	wtm->diag_can_con_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_diag_wtm_con(
 		const co_wtm_t *wtm, co_wtm_diag_wtm_con_t **pcon, void **pdata)
 {
@@ -437,7 +437,7 @@ co_wtm_get_diag_wtm_con(
 		*pdata = wtm->diag_wtm_con_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_diag_wtm_con(co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data)
 {
 	assert(wtm);
@@ -446,7 +446,7 @@ co_wtm_set_diag_wtm_con(co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data)
 	wtm->diag_wtm_con_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_diag_can_ind(
 		const co_wtm_t *wtm, co_wtm_diag_can_ind_t **pcon, void **pdata)
 {
@@ -458,7 +458,7 @@ co_wtm_get_diag_can_ind(
 		*pdata = wtm->diag_can_ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_diag_can_ind(co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data)
 {
 	assert(wtm);
@@ -467,7 +467,7 @@ co_wtm_set_diag_can_ind(co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data)
 	wtm->diag_can_ind_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_diag_wtm_ind(
 		const co_wtm_t *wtm, co_wtm_diag_wtm_ind_t **pcon, void **pdata)
 {
@@ -479,7 +479,7 @@ co_wtm_get_diag_wtm_ind(
 		*pdata = wtm->diag_wtm_ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_diag_wtm_ind(co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data)
 {
 	assert(wtm);
@@ -488,7 +488,7 @@ co_wtm_set_diag_wtm_ind(co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data)
 	wtm->diag_wtm_ind_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_diag_ac_ind(
 		const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind, void **pdata)
 {
@@ -500,7 +500,7 @@ co_wtm_get_diag_ac_ind(
 		*pdata = wtm->diag_ac_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_diag_ac_ind(co_wtm_t *wtm, co_wtm_diag_ac_ind_t *ind, void *data)
 {
 	assert(wtm);
@@ -509,7 +509,7 @@ co_wtm_set_diag_ac_ind(co_wtm_t *wtm, co_wtm_diag_ac_ind_t *ind, void *data)
 	wtm->diag_ac_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 {
 	assert(wtm);
@@ -760,7 +760,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_recv_func(
 		const co_wtm_t *wtm, co_wtm_recv_func_t **pfunc, void **pdata)
 {
@@ -772,7 +772,7 @@ co_wtm_get_recv_func(
 		*pdata = wtm->recv_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_recv_func(co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data)
 {
 	assert(wtm);
@@ -781,7 +781,7 @@ co_wtm_set_recv_func(co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data)
 	wtm->recv_data = data;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp)
 {
 	assert(wtm);
@@ -797,7 +797,7 @@ co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
 {
 	assert(wtm);
@@ -831,7 +831,7 @@ co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 {
 	assert(wtm);
@@ -912,7 +912,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_alive(co_wtm_t *wtm)
 {
 	assert(wtm);
@@ -926,7 +926,7 @@ co_wtm_send_alive(co_wtm_t *wtm)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
@@ -944,7 +944,7 @@ co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
@@ -962,7 +962,7 @@ co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
@@ -980,7 +980,7 @@ co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
@@ -998,7 +998,7 @@ co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac)
 {
 	assert(wtm);
@@ -1013,7 +1013,7 @@ co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac)
 	return co_wtm_flush(wtm);
 }
 
-LELY_CO_EXPORT int
+int
 co_wtm_flush(co_wtm_t *wtm)
 {
 	assert(wtm);
@@ -1043,7 +1043,7 @@ co_wtm_flush(co_wtm_t *wtm)
 			: 0;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_get_send_func(
 		const co_wtm_t *wtm, co_wtm_send_func_t **pfunc, void **pdata)
 {
@@ -1055,7 +1055,7 @@ co_wtm_get_send_func(
 		*pdata = wtm->send_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_wtm_set_send_func(co_wtm_t *wtm, co_wtm_send_func_t *func, void *data)
 {
 	assert(wtm);

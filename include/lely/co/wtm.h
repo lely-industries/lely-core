@@ -221,12 +221,12 @@ typedef int co_wtm_send_func_t(
 		co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 
 /// Returns a string describing a CANopen WTM abort code.
-LELY_CO_EXTERN const char *co_wtm_ac_str(uint32_t ac);
+const char *co_wtm_ac_str(uint32_t ac);
 
-LELY_CO_EXTERN void *__co_wtm_alloc(void);
-LELY_CO_EXTERN void __co_wtm_free(void *ptr);
-LELY_CO_EXTERN struct __co_wtm *__co_wtm_init(struct __co_wtm *wtm);
-LELY_CO_EXTERN void __co_wtm_fini(struct __co_wtm *wtm);
+void *__co_wtm_alloc(void);
+void __co_wtm_free(void *ptr);
+struct __co_wtm *__co_wtm_init(struct __co_wtm *wtm);
+void __co_wtm_fini(struct __co_wtm *wtm);
 
 /**
  * Creates a new CANopen Wireless Transmission Media (WTM) interface.
@@ -236,21 +236,21 @@ LELY_CO_EXTERN void __co_wtm_fini(struct __co_wtm *wtm);
  *
  * @see co_wtm_destroy()
  */
-LELY_CO_EXTERN co_wtm_t *co_wtm_create(void);
+co_wtm_t *co_wtm_create(void);
 
 /**
  * Destroys a CANopen Wireless Transmission Media (WTM) interface.
  *
  * @see co_wtm_create()
  */
-LELY_CO_EXTERN void co_wtm_destroy(co_wtm_t *wtm);
+void co_wtm_destroy(co_wtm_t *wtm);
 
 /**
  * Returns the interface indicator of a CANopen WTM interface.
  *
  * @see co_wtm_set_nif()
  */
-LELY_CO_EXTERN uint8_t co_wtm_get_nif(const co_wtm_t *wtm);
+uint8_t co_wtm_get_nif(const co_wtm_t *wtm);
 
 /**
  * Sets the interface indicator of a CANopen WTM interface.
@@ -263,7 +263,7 @@ LELY_CO_EXTERN uint8_t co_wtm_get_nif(const co_wtm_t *wtm);
  *
  * @see co_wtm_get_nif()
  */
-LELY_CO_EXTERN int co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif);
+int co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif);
 
 /**
  * Sets the diagnostic parameters of a CAN interface.
@@ -290,9 +290,8 @@ LELY_CO_EXTERN int co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st,
-		uint8_t err, uint8_t load, uint16_t ec, uint16_t foc,
-		uint16_t coc);
+int co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
+		uint8_t load, uint16_t ec, uint16_t foc, uint16_t coc);
 
 /**
  * Sets the diagnostic parameters of a WTM interface.
@@ -304,7 +303,7 @@ LELY_CO_EXTERN int co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality);
+int co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality);
 
 /**
  * Retrieves the confirmation function invoked when a CAN communication quality
@@ -318,8 +317,8 @@ LELY_CO_EXTERN int co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality);
  *
  * @see co_wtm_set_diag_can_con()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_can_con(const co_wtm_t *wtm,
-		co_wtm_diag_can_con_t **pcon, void **pdata);
+void co_wtm_get_diag_can_con(const co_wtm_t *wtm, co_wtm_diag_can_con_t **pcon,
+		void **pdata);
 
 /**
  * Sets the confirmation function invoked when a CAN communication quality
@@ -332,7 +331,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_can_con(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_can_con()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_can_con(
+void co_wtm_set_diag_can_con(
 		co_wtm_t *wtm, co_wtm_diag_can_con_t *con, void *data);
 
 /**
@@ -347,8 +346,8 @@ LELY_CO_EXTERN void co_wtm_set_diag_can_con(
  *
  * @see co_wtm_set_diag_wtm_con()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_wtm_con(const co_wtm_t *wtm,
-		co_wtm_diag_wtm_con_t **pcon, void **pdata);
+void co_wtm_get_diag_wtm_con(const co_wtm_t *wtm, co_wtm_diag_wtm_con_t **pcon,
+		void **pdata);
 
 /**
  * Sets the confirmation function invoked when a WTM communication quality
@@ -361,7 +360,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_wtm_con(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_wtm_con()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_wtm_con(
+void co_wtm_set_diag_wtm_con(
 		co_wtm_t *wtm, co_wtm_diag_wtm_con_t *con, void *data);
 
 /**
@@ -376,8 +375,8 @@ LELY_CO_EXTERN void co_wtm_set_diag_wtm_con(
  *
  * @see co_wtm_set_diag_can_ind()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_can_ind(const co_wtm_t *wtm,
-		co_wtm_diag_can_ind_t **pcon, void **pdata);
+void co_wtm_get_diag_can_ind(const co_wtm_t *wtm, co_wtm_diag_can_ind_t **pcon,
+		void **pdata);
 
 /**
  * Sets the indication function invoked when a CAN communication quality reset
@@ -390,7 +389,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_can_ind(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_can_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_can_ind(
+void co_wtm_set_diag_can_ind(
 		co_wtm_t *wtm, co_wtm_diag_can_ind_t *con, void *data);
 
 /**
@@ -405,8 +404,8 @@ LELY_CO_EXTERN void co_wtm_set_diag_can_ind(
  *
  * @see co_wtm_set_diag_wtm_ind()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm,
-		co_wtm_diag_wtm_ind_t **pcon, void **pdata);
+void co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm, co_wtm_diag_wtm_ind_t **pcon,
+		void **pdata);
 
 /**
  * Sets the indication function invoked when a WTM communication quality reset
@@ -419,7 +418,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_wtm_ind(const co_wtm_t *wtm,
  *
  * @see co_wtm_get_diag_wtm_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(
+void co_wtm_set_diag_wtm_ind(
 		co_wtm_t *wtm, co_wtm_diag_wtm_ind_t *con, void *data);
 
 /**
@@ -434,7 +433,7 @@ LELY_CO_EXTERN void co_wtm_set_diag_wtm_ind(
  *
  * @see co_wtm_set_diag_ac_ind()
  */
-LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(
+void co_wtm_get_diag_ac_ind(
 		const co_wtm_t *wtm, co_wtm_diag_ac_ind_t **pind, void **pdata);
 
 /**
@@ -450,7 +449,7 @@ LELY_CO_EXTERN void co_wtm_get_diag_ac_ind(
  *
  * @see co_wtm_get_diag_ac_ind()
  */
-LELY_CO_EXTERN void co_wtm_set_diag_ac_ind(
+void co_wtm_set_diag_ac_ind(
 		co_wtm_t *wtm, co_wtm_diag_ac_ind_t *ind, void *data);
 
 /**
@@ -462,7 +461,7 @@ LELY_CO_EXTERN void co_wtm_set_diag_ac_ind(
  * @param buf    a pointer to the bytes to be processed.
  * @param nbytes the number of bytes received.
  */
-LELY_CO_EXTERN void co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes);
+void co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes);
 
 /**
  * Retrieves the callback function invoked when a CAN frame is received by a
@@ -476,7 +475,7 @@ LELY_CO_EXTERN void co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes);
  *
  * @see co_wtm_set_recv_func()
  */
-LELY_CO_EXTERN void co_wtm_get_recv_func(
+void co_wtm_get_recv_func(
 		const co_wtm_t *wtm, co_wtm_recv_func_t **pfunc, void **pdata);
 
 /**
@@ -490,8 +489,7 @@ LELY_CO_EXTERN void co_wtm_get_recv_func(
  *
  * @see co_wtm_get_recv_func()
  */
-LELY_CO_EXTERN void co_wtm_set_recv_func(
-		co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data);
+void co_wtm_set_recv_func(co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data);
 
 /**
  * Retrieves the current time of a CANopen WTM interface.
@@ -505,8 +503,7 @@ LELY_CO_EXTERN void co_wtm_set_recv_func(
  *
  * @see co_wtm_set_time()
  */
-LELY_CO_EXTERN int co_wtm_get_time(
-		const co_wtm_t *wtm, uint8_t nif, struct timespec *tp);
+int co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp);
 
 /**
  * Sets the current time of a CANopen WTM interface. This function MAY invoke
@@ -521,8 +518,7 @@ LELY_CO_EXTERN int co_wtm_get_time(
  *
  * @see co_wtm_get_time()
  */
-LELY_CO_EXTERN int co_wtm_set_time(
-		co_wtm_t *wtm, uint8_t nif, const struct timespec *tp);
+int co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp);
 
 /**
  * Sends a CAN frame from a CANopen WTM interface. This function MAY invoke the
@@ -537,8 +533,7 @@ LELY_CO_EXTERN int co_wtm_set_time(
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send(
-		co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg);
+int co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg);
 
 /**
  * Sends a keep-alive message from a CANopen WTM interface. This function MAY
@@ -547,7 +542,7 @@ LELY_CO_EXTERN int co_wtm_send(
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_alive(co_wtm_t *wtm);
+int co_wtm_send_alive(co_wtm_t *wtm);
 
 /**
  * Sends a CAN communication quality request. The function specified to
@@ -559,7 +554,7 @@ LELY_CO_EXTERN int co_wtm_send_alive(co_wtm_t *wtm);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif);
+int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif);
 
 /**
  * Sends a WTM communication quality request. The function specified to
@@ -571,7 +566,7 @@ LELY_CO_EXTERN int co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif);
+int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif);
 
 /**
  * Sends a CAN communication quality reset message.
@@ -582,7 +577,7 @@ LELY_CO_EXTERN int co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif);
+int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif);
 
 /**
  * Sends a WTM communication quality reset message.
@@ -593,7 +588,7 @@ LELY_CO_EXTERN int co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif);
+int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif);
 
 /**
  * Sends a diagnostic abort message from a CANopen WTM interface. This function
@@ -605,7 +600,7 @@ LELY_CO_EXTERN int co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac);
+int co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac);
 
 /**
  * Flushes the current send buffer of a CANopen WTM interface. This function MAY
@@ -614,7 +609,7 @@ LELY_CO_EXTERN int co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_wtm_flush(co_wtm_t *wtm);
+int co_wtm_flush(co_wtm_t *wtm);
 
 /**
  * Retrieves the callback function used to send byte streams from a CANopen WTM
@@ -628,7 +623,7 @@ LELY_CO_EXTERN int co_wtm_flush(co_wtm_t *wtm);
  *
  * @see co_wtm_set_send_func()
  */
-LELY_CO_EXTERN void co_wtm_get_send_func(
+void co_wtm_get_send_func(
 		const co_wtm_t *wtm, co_wtm_send_func_t **pfunc, void **pdata);
 
 /**
@@ -642,8 +637,7 @@ LELY_CO_EXTERN void co_wtm_get_send_func(
  *
  * @see co_wtm_get_send_func()
  */
-LELY_CO_EXTERN void co_wtm_set_send_func(
-		co_wtm_t *wtm, co_wtm_send_func_t *func, void *data);
+void co_wtm_set_send_func(co_wtm_t *wtm, co_wtm_send_func_t *func, void *data);
 
 #ifdef __cplusplus
 }

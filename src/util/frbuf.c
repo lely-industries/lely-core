@@ -67,7 +67,7 @@ struct __frbuf {
 #endif
 };
 
-LELY_UTIL_EXPORT void *
+void *
 __frbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __frbuf));
@@ -76,13 +76,13 @@ __frbuf_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __frbuf_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __frbuf *
+struct __frbuf *
 __frbuf_init(struct __frbuf *buf, const char *filename)
 {
 	assert(buf);
@@ -113,7 +113,7 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 	return buf;
 }
 
-LELY_UTIL_EXPORT void
+void
 __frbuf_fini(struct __frbuf *buf)
 {
 	frbuf_unmap(buf);
@@ -127,7 +127,7 @@ __frbuf_fini(struct __frbuf *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT frbuf_t *
+frbuf_t *
 frbuf_create(const char *filename)
 {
 	errc_t errc = 0;
@@ -152,7 +152,7 @@ error_alloc_buf:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 frbuf_destroy(frbuf_t *buf)
 {
 	if (buf) {
@@ -161,7 +161,7 @@ frbuf_destroy(frbuf_t *buf)
 	}
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 frbuf_get_size(frbuf_t *buf)
 {
 	assert(buf);
@@ -206,7 +206,7 @@ frbuf_get_size(frbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 frbuf_get_pos(frbuf_t *buf)
 {
 	assert(buf);
@@ -230,7 +230,7 @@ frbuf_get_pos(frbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 frbuf_set_pos(frbuf_t *buf, int64_t pos)
 {
 	assert(buf);
@@ -264,7 +264,7 @@ frbuf_set_pos(frbuf_t *buf, int64_t pos)
 #endif
 }
 
-LELY_UTIL_EXPORT ssize_t
+ssize_t
 frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 {
 	assert(buf);
@@ -298,7 +298,7 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 #endif
 }
 
-LELY_UTIL_EXPORT ssize_t
+ssize_t
 frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 {
 	assert(buf);
@@ -386,7 +386,7 @@ error_get_pos:
 #endif
 }
 
-LELY_UTIL_EXPORT const void *
+const void *
 frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 {
 	frbuf_unmap(buf);
@@ -504,7 +504,7 @@ error_malloc_map:
 #endif
 }
 
-LELY_UTIL_EXPORT int
+int
 frbuf_unmap(frbuf_t *buf)
 {
 	assert(buf);

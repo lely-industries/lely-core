@@ -97,7 +97,7 @@ static void io_poll_remove(io_poll_t *poll, struct io_watch *watch);
 static int _poll(struct pollfd *fds, nfds_t nfds, int timeout);
 #endif
 
-LELY_IO_EXPORT void *
+void *
 __io_poll_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __io_poll));
@@ -106,13 +106,13 @@ __io_poll_alloc(void)
 	return ptr;
 }
 
-LELY_IO_EXPORT void
+void
 __io_poll_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_IO_EXPORT struct __io_poll *
+struct __io_poll *
 __io_poll_init(struct __io_poll *poll)
 {
 	assert(poll);
@@ -204,7 +204,7 @@ error_create_pool:
 	return NULL;
 }
 
-LELY_IO_EXPORT void
+void
 __io_poll_fini(struct __io_poll *poll)
 {
 	assert(poll);
@@ -228,7 +228,7 @@ __io_poll_fini(struct __io_poll *poll)
 #endif
 }
 
-LELY_IO_EXPORT io_poll_t *
+io_poll_t *
 io_poll_create(void)
 {
 	errc_t errc = 0;
@@ -253,7 +253,7 @@ error_alloc_poll:
 	return NULL;
 }
 
-LELY_IO_EXPORT void
+void
 io_poll_destroy(io_poll_t *poll)
 {
 	if (poll) {
@@ -262,7 +262,7 @@ io_poll_destroy(io_poll_t *poll)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 		int keep)
 {
@@ -365,7 +365,7 @@ error_watch:
 	return -1;
 }
 
-LELY_IO_EXPORT int
+int
 io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		int timeout)
 {
@@ -606,7 +606,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 }
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
-LELY_IO_EXPORT int
+int
 io_poll_signal(io_poll_t *poll, unsigned char sig)
 {
 	assert(poll);

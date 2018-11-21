@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_handle_acquire(io_handle_t handle)
 {
 	if (__likely(handle != IO_HANDLE_ERROR))
@@ -43,7 +43,7 @@ io_handle_acquire(io_handle_t handle)
 	return handle;
 }
 
-LELY_IO_EXPORT void
+void
 io_handle_release(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR))
@@ -63,7 +63,7 @@ io_handle_release(io_handle_t handle)
 	}
 }
 
-LELY_IO_EXPORT int
+int
 io_handle_unique(io_handle_t handle)
 {
 #ifndef LELY_NO_ATOMICS

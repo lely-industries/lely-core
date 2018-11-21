@@ -27,22 +27,22 @@ extern "C" {
 // C implementation of these steps is exposed so they can be used by the C++
 // interface. Users of the C interface SHOULD not invoke these functions
 // directly, but use obj_create() and obj_destroy() instead.
-LELY_LIB_EXTERN void *__obj_alloc(void);
-LELY_LIB_EXTERN void __obj_free(void *ptr);
-LELY_LIB_EXTERN struct __obj *__obj_init(struct __obj *obj, Args... args);
-LELY_LIB_EXTERN void __obj_fini(struct __obj *obj);
+void *__obj_alloc(void);
+void __obj_free(void *ptr);
+struct __obj *__obj_init(struct __obj *obj, Args... args);
+void __obj_fini(struct __obj *obj);
 
 // Creates a new object instance. Internally, this function invokes
 // __obj_alloc() followed by __obj_init().
-LELY_LIB_EXTERN obj_t *obj_create(Args... args);
+obj_t *obj_create(Args... args);
 
 // Destroys an object instance. Internally, this function invokes __obj_fini()
 // followed by obj_free().
-LELY_LIB_EXTERN void obj_destroy(obj_t *obj);
+void obj_destroy(obj_t *obj);
 
 // An example of an object method. The first parameter is always a pointer to
 // the object (cf. "this" in C++).
-LELY_LIB_EXTERN int obj_method(obj_t *obj, Args... args);
+int obj_method(obj_t *obj, Args... args);
 
 #ifdef __cplusplus
 }
@@ -63,7 +63,7 @@ struct __obj {
 	...
 };
 
-LELY_LIB_EXPORT void *
+void *
 __obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __obj));
@@ -75,13 +75,13 @@ __obj_alloc(void)
 	return ptr;
 }
 
-LELY_LIB_EXPORT void
+void
 __obj_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_LIB_EXPORT struct __obj *
+struct __obj *
 __obj_init(struct __obj *obj, Args... args)
 {
 	assert(obj);
@@ -93,7 +93,7 @@ __obj_init(struct __obj *obj, Args... args)
 	return obj;
 }
 
-LELY_LIB_EXPORT void
+void
 __obj_fini(struct __obj *obj)
 {
 	assert(obj);
@@ -102,7 +102,7 @@ __obj_fini(struct __obj *obj)
 	...;
 }
 
-LELY_LIB_EXPORT obj_t *
+obj_t *
 obj_create(Args... args)
 {
 	errc_t errc = 0;
@@ -127,7 +127,7 @@ error_alloc_obj:
 	return NULL;
 }
 
-LELY_LIB_EXPORT void
+void
 obj_destroy(obj_t *obj)
 {
 	// obj_destroy() and obj_free() are the only methods which can be called
@@ -138,7 +138,7 @@ obj_destroy(obj_t *obj)
 	}
 }
 
-LELY_LIB_EXPORT int
+int
 obj_method(obj_t *obj, Args... args)
 {
 	assert(obj);

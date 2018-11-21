@@ -95,8 +95,7 @@ typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
  *
  * @returns the number of characters read (excluding the termination character).
  */
-LELY_UTIL_EXTERN size_t floc_lex(
-		struct floc *at, const char *begin, const char *end);
+size_t floc_lex(struct floc *at, const char *begin, const char *end);
 
 /**
  * Prints a file location to a string buffer. The filename, line and column are
@@ -115,7 +114,7 @@ LELY_UTIL_EXTERN size_t floc_lex(
  * negative number on error. In the latter case, the error number is stored in
  * `errno`.
  */
-LELY_UTIL_EXTERN int snprintf_floc(char *s, size_t n, const struct floc *at);
+int snprintf_floc(char *s, size_t n, const struct floc *at);
 
 /**
  * Retrieves the handler function for diag().
@@ -127,8 +126,7 @@ LELY_UTIL_EXTERN int snprintf_floc(char *s, size_t n, const struct floc *at);
  *
  * @see diag_set_handler()
  */
-LELY_UTIL_EXTERN void diag_get_handler(
-		diag_handler_t **phandler, void **phandle);
+void diag_get_handler(diag_handler_t **phandler, void **phandle);
 
 /**
  * Sets the handler function for diag().
@@ -139,7 +137,7 @@ LELY_UTIL_EXTERN void diag_get_handler(
  *
  * @see diag_get_handler()
  */
-LELY_UTIL_EXTERN void diag_set_handler(diag_handler_t *handler, void *handle);
+void diag_set_handler(diag_handler_t *handler, void *handle);
 
 /**
  * Retrieves the handler function for diag_at().
@@ -151,8 +149,7 @@ LELY_UTIL_EXTERN void diag_set_handler(diag_handler_t *handler, void *handle);
  *
  * @see diag_at_set_handler()
  */
-LELY_UTIL_EXTERN void diag_at_get_handler(
-		diag_at_handler_t **phandler, void **phandle);
+void diag_at_get_handler(diag_at_handler_t **phandler, void **phandle);
 
 /**
  * Sets the handler function for diag_at().
@@ -163,8 +160,7 @@ LELY_UTIL_EXTERN void diag_at_get_handler(
  *
  * @see diag_at_get_handler()
  */
-LELY_UTIL_EXTERN void diag_at_set_handler(
-		diag_at_handler_t *handler, void *handle);
+void diag_at_set_handler(diag_at_handler_t *handler, void *handle);
 
 /**
  * Emits a diagnostic message. This function SHOULD print the severity of the
@@ -186,15 +182,15 @@ LELY_UTIL_EXTERN void diag_at_set_handler(
  *
  * @see diag_set_handler(), diag_at()
  */
-LELY_UTIL_EXTERN void diag(enum diag_severity severity, errc_t errc,
-		const char *format, ...) __format_printf(3, 4);
+void diag(enum diag_severity severity, errc_t errc, const char *format, ...)
+		__format_printf(3, 4);
 
 /**
  * Emits a diagnostic message. This function is equivalent to #diag(), except
  * that it accepts a `va_list` instead of a variable number of arguments.
  */
-LELY_UTIL_EXTERN void vdiag(enum diag_severity severity, errc_t errc,
-		const char *format, va_list ap) __format_printf(3, 0);
+void vdiag(enum diag_severity severity, errc_t errc, const char *format,
+		va_list ap) __format_printf(3, 0);
 
 /**
  * Emits a diagnostic message occurring at a location in a text file. This
@@ -221,18 +217,16 @@ LELY_UTIL_EXTERN void vdiag(enum diag_severity severity, errc_t errc,
  *
  * @see diag_at_set_handler(), diag()
  */
-LELY_UTIL_EXTERN void diag_at(enum diag_severity severity, errc_t errc,
-		const struct floc *at, const char *format, ...)
-		__format_printf(4, 5);
+void diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, ...) __format_printf(4, 5);
 
 /**
  * Emits a diagnostic message occurring at a location in a text file. This
  * function is equivalent to #diag_at(), except that it accepts a `va_list`
  * instead of a variable number of arguments.
  */
-LELY_UTIL_EXTERN void vdiag_at(enum diag_severity severity, errc_t errc,
-		const struct floc *at, const char *format, va_list ap)
-		__format_printf(4, 0);
+void vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * Emits a diagnostic message occurring at a location in a text file. This
@@ -240,9 +234,8 @@ LELY_UTIL_EXTERN void vdiag_at(enum diag_severity severity, errc_t errc,
  * handler if <b>at</b> is not NULL. It therefore MUST NOT be used with severity
  * #DIAG_FATAL unless <b>at</b> is guaranteed to be non-NULL.
  */
-LELY_UTIL_EXTERN void diag_if(enum diag_severity severity, errc_t errc,
-		const struct floc *at, const char *format, ...)
-		__format_printf(4, 5);
+void diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, ...) __format_printf(4, 5);
 
 /**
  * Emits a diagnostic message occurring at a location in a text file. This
@@ -250,107 +243,101 @@ LELY_UTIL_EXTERN void diag_if(enum diag_severity severity, errc_t errc,
  * handler if <b>at</b> is not NULL. It therefore MUST NOT be used with severity
  * #DIAG_FATAL unless <b>at</b> is guaranteed to be non-NULL.
  */
-LELY_UTIL_EXTERN void vdiag_if(enum diag_severity severity, errc_t errc,
-		const struct floc *at, const char *format, va_list ap)
-		__format_printf(4, 0);
+void vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The default diag() handler. This function prints the string generated by
  * vsnprintf_diag() to `stderr`. If <b>severity</b> equals #DIAG_FATAL, this
  * function calls `exit(EXIT_FAILURE)` instead of returning.
  */
-LELY_UTIL_EXTERN void default_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void default_diag_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const char *format, va_list ap)
+		__format_printf(4, 0);
 
 /**
  * The default diag_at() handler. This function is similar to
  * default_diag_handler(), except that it prints the string generated by
  * vsnprintf_diag_at().
  */
-LELY_UTIL_EXTERN void default_diag_at_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(5, 0);
+void default_diag_at_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap) __format_printf(5, 0);
 
 /**
  * The diag() handler used for command-line programs. This function prints the
  * string at <b>handle</b>, which SHOULD point to the name of the program (see
  * cmdname()), and then calls default_diag_handler().
  */
-LELY_UTIL_EXTERN void cmd_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The diag() handler for daemons. On Windows this function is equivalent to
  * dialog_diag_handler(), on other platforms to syslog_diag_handler().
  */
-LELY_UTIL_EXTERN void daemon_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The diag_at() handler for daemons. This function is similar to
  * daemon_diag_handler(), except that it prints the string generated by
  * vsnprintf_diag_at().
  */
-LELY_UTIL_EXTERN void daemon_diag_at_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(5, 0);
+void daemon_diag_at_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap) __format_printf(5, 0);
 
 /**
  * The diag() handler for dialog boxes. It expects <b>handle</b> to point to the
  * caption and prints the string generated by vsnprintf_diag() as the message.
  * Note that this function is only available on Windows.
  */
-LELY_UTIL_EXTERN void dialog_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The diag_at() handler for dialog boxes. This function is similar to
  * dialog_diag_handler(), except that it prints the string generated by
  * vsnprintf_diag_at().
  */
-LELY_UTIL_EXTERN void dialog_diag_at_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(5, 0);
+void dialog_diag_at_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap) __format_printf(5, 0);
 
 /**
  * The diag() handler for log files. This function is similar to
  * default_diag_handler(), except that it prepends each message with a
  * RFC-2822-compliant timestamp.
  */
-LELY_UTIL_EXTERN void log_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The diag_at() handler used for log-files. This function is similar to
  * default_diag_at_handler(), except that it prepends each message with a
  * RFC-2822-compliant timestamp.
  */
-LELY_UTIL_EXTERN void log_diag_at_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(5, 0);
+void log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+		__format_printf(5, 0);
 
 /**
  * The diag() handler used for the system logging facilities. On POSIX platforms
  * this function invokes syslog(); on other platforms this function is
  * equivalent to log_diag_handler().
  */
-LELY_UTIL_EXTERN void syslog_diag_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(4, 0);
+void syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * The diag_at() handler used for the system logging facilities. On POSIX
  * platforms this function invokes syslog(); on other platforms this function is
  * equivalent to log_diag_at_handler().
  */
-LELY_UTIL_EXTERN void syslog_diag_at_handler(void *handle,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(5, 0);
+void syslog_diag_at_handler(void *handle, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap) __format_printf(5, 0);
 
 /**
  * Prints a diagnostic message to a string buffer. This function prints the
@@ -379,9 +366,8 @@ LELY_UTIL_EXTERN void syslog_diag_at_handler(void *handle,
  *
  * @see vsnprintf_diag_at()
  */
-LELY_UTIL_EXTERN int vsnprintf_diag(char *s, size_t n,
-		enum diag_severity severity, errc_t errc, const char *format,
-		va_list ap) __format_printf(5, 0);
+int vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(5, 0);
 
 /**
  * Equivalent to vsnprintf_diag(), except that it allocates a string large
@@ -405,9 +391,8 @@ LELY_UTIL_EXTERN int vsnprintf_diag(char *s, size_t n,
  *
  * @see vasprintf_diag_at()
  */
-LELY_UTIL_EXTERN int vasprintf_diag(char **ps, enum diag_severity severity,
-		errc_t errc, const char *format, va_list ap)
-		__format_printf(4, 0);
+int vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
+		const char *format, va_list ap) __format_printf(4, 0);
 
 /**
  * Prints a diagnostic message occurring at a location in a text file to a
@@ -441,9 +426,9 @@ LELY_UTIL_EXTERN int vasprintf_diag(char **ps, enum diag_severity severity,
  *
  * @see vsnprintf_diag()
  */
-LELY_UTIL_EXTERN int vsnprintf_diag_at(char *s, size_t n,
-		enum diag_severity severity, errc_t errc, const struct floc *at,
-		const char *format, va_list ap) __format_printf(6, 0);
+int vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity,
+		errc_t errc, const struct floc *at, const char *format,
+		va_list ap) __format_printf(6, 0);
 
 /**
  * Equivalent to vsnprintf_diag_at(), except that it allocates a string large
@@ -470,15 +455,15 @@ LELY_UTIL_EXTERN int vsnprintf_diag_at(char *s, size_t n,
  *
  * @see vasprintf_diag()
  */
-LELY_UTIL_EXTERN int vasprintf_diag_at(char **ps, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) __format_printf(5, 0);
+int vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
+		const struct floc *at, const char *format, va_list ap)
+		__format_printf(5, 0);
 
 /**
  * Extracts the command name from a path. This function returns a pointer to the
  * first character after the last separator ('/' or '\\') in <b>path</b>.
  */
-LELY_UTIL_EXTERN const char *cmdname(const char *path);
+const char *cmdname(const char *path);
 
 #ifdef __cplusplus
 }

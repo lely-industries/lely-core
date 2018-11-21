@@ -150,11 +150,10 @@ typedef co_unsigned32_t co_sub_dn_ind_t(
 typedef co_unsigned32_t co_sub_up_ind_t(
 		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
-LELY_CO_EXTERN void *__co_obj_alloc(void);
-LELY_CO_EXTERN void __co_obj_free(void *ptr);
-LELY_CO_EXTERN struct __co_obj *__co_obj_init(
-		struct __co_obj *obj, co_unsigned16_t idx);
-LELY_CO_EXTERN void __co_obj_fini(struct __co_obj *obj);
+void *__co_obj_alloc(void);
+void __co_obj_free(void *ptr);
+struct __co_obj *__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx);
+void __co_obj_fini(struct __co_obj *obj);
 
 /**
  * Creates a CANopen object.
@@ -166,16 +165,16 @@ LELY_CO_EXTERN void __co_obj_fini(struct __co_obj *obj);
  *
  * @see co_obj_destroy()
  */
-LELY_CO_EXTERN co_obj_t *co_obj_create(co_unsigned16_t idx);
+co_obj_t *co_obj_create(co_unsigned16_t idx);
 
 /// Destroys a CANopen object, including its sub-objects. @see co_obj_create()
-LELY_CO_EXTERN void co_obj_destroy(co_obj_t *obj);
+void co_obj_destroy(co_obj_t *obj);
 
 /// Returns a pointer to the CANopen device containing the specified object.
-LELY_CO_EXTERN co_dev_t *co_obj_get_dev(const co_obj_t *obj);
+co_dev_t *co_obj_get_dev(const co_obj_t *obj);
 
 /// Returns the index of a CANopen object.
-LELY_CO_EXTERN co_unsigned16_t co_obj_get_idx(const co_obj_t *obj);
+co_unsigned16_t co_obj_get_idx(const co_obj_t *obj);
 
 /**
  * Retrieves a list of sub-indices in a CANopen object.
@@ -188,8 +187,8 @@ LELY_CO_EXTERN co_unsigned16_t co_obj_get_idx(const co_obj_t *obj);
  * @returns the total number of sub-indices in the object (which may be
  * different from <b>maxsubidx</b>).
  */
-LELY_CO_EXTERN co_unsigned8_t co_obj_get_subidx(const co_obj_t *obj,
-		co_unsigned8_t maxsubidx, co_unsigned8_t *subidx);
+co_unsigned8_t co_obj_get_subidx(const co_obj_t *obj, co_unsigned8_t maxsubidx,
+		co_unsigned8_t *subidx);
 
 /**
  * Inserts a sub-object into a CANopen object. This function fails if the
@@ -203,7 +202,7 @@ LELY_CO_EXTERN co_unsigned8_t co_obj_get_subidx(const co_obj_t *obj,
  *
  * @see co_obj_remove_sub(), co_obj_find_sub()
  */
-LELY_CO_EXTERN int co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub);
+int co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub);
 
 /**
  * Removes a sub-object from a CANopen object.
@@ -215,7 +214,7 @@ LELY_CO_EXTERN int co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub);
  *
  * @see co_obj_insert_sub()
  */
-LELY_CO_EXTERN int co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub);
+int co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub);
 
 /**
  * Finds a sub-object in a CANopen object.
@@ -227,11 +226,10 @@ LELY_CO_EXTERN int co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub);
  *
  * @see co_obj_insert_sub()
  */
-LELY_CO_EXTERN co_sub_t *co_obj_find_sub(
-		const co_obj_t *obj, co_unsigned8_t subidx);
+co_sub_t *co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx);
 
 /// Returns the name of a CANopen object. @see co_obj_set_name()
-LELY_CO_EXTERN const char *co_obj_get_name(const co_obj_t *obj);
+const char *co_obj_get_name(const co_obj_t *obj);
 
 /**
  * Sets the name of a CANopen object.
@@ -241,10 +239,10 @@ LELY_CO_EXTERN const char *co_obj_get_name(const co_obj_t *obj);
  *
  * @see co_obj_get_name()
  */
-LELY_CO_EXTERN int co_obj_set_name(co_obj_t *obj, const char *name);
+int co_obj_set_name(co_obj_t *obj, const char *name);
 
 /// Returns the object code of a CANopen object. @see co_obj_set_code()
-LELY_CO_EXTERN co_unsigned8_t co_obj_get_code(const co_obj_t *obj);
+co_unsigned8_t co_obj_get_code(const co_obj_t *obj);
 
 /**
  * Sets the code (type) of a CANopen object.
@@ -259,7 +257,7 @@ LELY_CO_EXTERN co_unsigned8_t co_obj_get_code(const co_obj_t *obj);
  *
  * @see co_obj_get_code()
  */
-LELY_CO_EXTERN int co_obj_set_code(co_obj_t *obj, co_unsigned8_t code);
+int co_obj_set_code(co_obj_t *obj, co_unsigned8_t code);
 
 /**
  * Returns the address of the value of a CANopen object. In case of compound
@@ -267,14 +265,14 @@ LELY_CO_EXTERN int co_obj_set_code(co_obj_t *obj, co_unsigned8_t code);
  *
  * @see co_obj_sizeof_val()
  */
-LELY_CO_EXTERN void *co_obj_addressof_val(const co_obj_t *obj);
+void *co_obj_addressof_val(const co_obj_t *obj);
 
 /**
  * Returns size (in bytes) of the value of a CANopen object.
  *
  * @see co_obj_addressof_val()
  */
-LELY_CO_EXTERN size_t co_obj_sizeof_val(const co_obj_t *obj);
+size_t co_obj_sizeof_val(const co_obj_t *obj);
 
 /**
  * Returns a pointer to the current value of a CANopen sub-object. In the case
@@ -283,8 +281,7 @@ LELY_CO_EXTERN size_t co_obj_sizeof_val(const co_obj_t *obj);
  *
  * @see co_obj_set_val(), co_sub_get_val()
  */
-LELY_CO_EXTERN const void *co_obj_get_val(
-		const co_obj_t *obj, co_unsigned8_t subidx);
+const void *co_obj_get_val(const co_obj_t *obj, co_unsigned8_t subidx);
 
 /**
  * Sets the current value of a CANopen sub-object.
@@ -301,13 +298,13 @@ LELY_CO_EXTERN const void *co_obj_get_val(
  *
  * @see co_obj_get_val(), co_sub_set_val()
  */
-LELY_CO_EXTERN size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx,
-		const void *ptr, size_t n);
+size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr,
+		size_t n);
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXTERN co_##b##_t co_obj_get_val_##c( \
+	co_##b##_t co_obj_get_val_##c( \
 			const co_obj_t *obj, co_unsigned8_t subidx); \
-	LELY_CO_EXTERN size_t co_obj_set_val_##c( \
+	size_t co_obj_set_val_##c( \
 			co_obj_t *obj, co_unsigned8_t subidx, co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
@@ -325,8 +322,7 @@ LELY_CO_EXTERN size_t co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN void co_obj_set_dn_ind(
-		co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
+void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
 
 /**
  * Sets the upload indication function for a CANopen object. This function
@@ -338,14 +334,13 @@ LELY_CO_EXTERN void co_obj_set_dn_ind(
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>func</b>.
  */
-LELY_CO_EXTERN void co_obj_set_up_ind(
-		co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
+void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
 
-LELY_CO_EXTERN void *__co_sub_alloc(void);
-LELY_CO_EXTERN void __co_sub_free(void *ptr);
-LELY_CO_EXTERN struct __co_sub *__co_sub_init(struct __co_sub *sub,
-		co_unsigned8_t subidx, co_unsigned16_t type);
-LELY_CO_EXTERN void __co_sub_fini(struct __co_sub *sub);
+void *__co_sub_alloc(void);
+void __co_sub_free(void *ptr);
+struct __co_sub *__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx,
+		co_unsigned16_t type);
+void __co_sub_fini(struct __co_sub *sub);
 
 /**
  * Creates a CANopen sub-object.
@@ -359,23 +354,22 @@ LELY_CO_EXTERN void __co_sub_fini(struct __co_sub *sub);
  *
  * @see co_sub_destroy()
  */
-LELY_CO_EXTERN co_sub_t *co_sub_create(
-		co_unsigned8_t subidx, co_unsigned16_t type);
+co_sub_t *co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type);
 
 /// Destroys a CANopen sub-object. @see co_sub_create()
-LELY_CO_EXTERN void co_sub_destroy(co_sub_t *sub);
+void co_sub_destroy(co_sub_t *sub);
 
 /**
  * Returns the a pointer to the CANopen object containing the specified
  * sub-object.
  */
-LELY_CO_EXTERN co_obj_t *co_sub_get_obj(const co_sub_t *sub);
+co_obj_t *co_sub_get_obj(const co_sub_t *sub);
 
 /// Returns the sub-index of a CANopen sub-object.
-LELY_CO_EXTERN co_unsigned8_t co_sub_get_subidx(const co_sub_t *sub);
+co_unsigned8_t co_sub_get_subidx(const co_sub_t *sub);
 
 /// Returns the name of a CANopen sub-object. @see co_sub_set_name()
-LELY_CO_EXTERN const char *co_sub_get_name(const co_sub_t *sub);
+const char *co_sub_get_name(const co_sub_t *sub);
 
 /**
  * Sets the name of a CANopen sub-object.
@@ -385,10 +379,10 @@ LELY_CO_EXTERN const char *co_sub_get_name(const co_sub_t *sub);
  *
  * @see co_sub_get_name()
  */
-LELY_CO_EXTERN int co_sub_set_name(co_sub_t *sub, const char *name);
+int co_sub_set_name(co_sub_t *sub, const char *name);
 
 /// Returns the data type of a CANopen sub-object.
-LELY_CO_EXTERN co_unsigned16_t co_sub_get_type(const co_sub_t *sub);
+co_unsigned16_t co_sub_get_type(const co_sub_t *sub);
 
 /**
  * Returns the address of the lower limit of the value of a CANopen sub-object.
@@ -397,7 +391,7 @@ LELY_CO_EXTERN co_unsigned16_t co_sub_get_type(const co_sub_t *sub);
  *
  * @see co_sub_sizeof_min()
  */
-LELY_CO_EXTERN const void *co_sub_addressof_min(const co_sub_t *sub);
+const void *co_sub_addressof_min(const co_sub_t *sub);
 
 /**
  * Returns size (in bytes) of the lower limit of the value of a CANopen
@@ -406,7 +400,7 @@ LELY_CO_EXTERN const void *co_sub_addressof_min(const co_sub_t *sub);
  *
  * @see co_sub_addressof_min()
  */
-LELY_CO_EXTERN size_t co_sub_sizeof_min(const co_sub_t *sub);
+size_t co_sub_sizeof_min(const co_sub_t *sub);
 
 /**
  * Returns a pointer to the lower limit of the value of a CANopen sub-object. In
@@ -415,7 +409,7 @@ LELY_CO_EXTERN size_t co_sub_sizeof_min(const co_sub_t *sub);
  *
  * @see co_sub_set_min()
  */
-LELY_CO_EXTERN const void *co_sub_get_min(const co_sub_t *sub);
+const void *co_sub_get_min(const co_sub_t *sub);
 
 /**
  * Sets the lower limit of a value of a CANopen sub-object.
@@ -431,7 +425,7 @@ LELY_CO_EXTERN const void *co_sub_get_min(const co_sub_t *sub);
  *
  * @see co_sub_get_min()
  */
-LELY_CO_EXTERN size_t co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n);
+size_t co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n);
 
 /**
  * Returns the address of the upper limit of the value of a CANopen sub-object.
@@ -440,7 +434,7 @@ LELY_CO_EXTERN size_t co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n);
  *
  * @see co_sub_sizeof_max()
  */
-LELY_CO_EXTERN const void *co_sub_addressof_max(const co_sub_t *sub);
+const void *co_sub_addressof_max(const co_sub_t *sub);
 
 /**
  * Returns size (in bytes) of the upper limit of the value of a CANopen
@@ -449,7 +443,7 @@ LELY_CO_EXTERN const void *co_sub_addressof_max(const co_sub_t *sub);
  *
  * @see co_sub_addressof_max()
  */
-LELY_CO_EXTERN size_t co_sub_sizeof_max(const co_sub_t *sub);
+size_t co_sub_sizeof_max(const co_sub_t *sub);
 
 /**
  * Returns a pointer to the upper limit of the value of a CANopen sub-object. In
@@ -458,7 +452,7 @@ LELY_CO_EXTERN size_t co_sub_sizeof_max(const co_sub_t *sub);
  *
  * @see co_sub_set_max()
  */
-LELY_CO_EXTERN const void *co_sub_get_max(const co_sub_t *sub);
+const void *co_sub_get_max(const co_sub_t *sub);
 
 /**
  * Sets the upper limit of a value of a CANopen sub-object.
@@ -474,7 +468,7 @@ LELY_CO_EXTERN const void *co_sub_get_max(const co_sub_t *sub);
  *
  * @see co_sub_get_max()
  */
-LELY_CO_EXTERN size_t co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n);
+size_t co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n);
 
 /**
  * Returns the address of the default value of a CANopen sub-object. In the case
@@ -482,7 +476,7 @@ LELY_CO_EXTERN size_t co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n);
  *
  * @see co_sub_sizeof_def()
  */
-LELY_CO_EXTERN const void *co_sub_addressof_def(const co_sub_t *sub);
+const void *co_sub_addressof_def(const co_sub_t *sub);
 
 /**
  * Returns size (in bytes) of the default value of a CANopen sub-object. In the
@@ -490,7 +484,7 @@ LELY_CO_EXTERN const void *co_sub_addressof_def(const co_sub_t *sub);
  *
  * @see co_sub_addressof_def()
  */
-LELY_CO_EXTERN size_t co_sub_sizeof_def(const co_sub_t *sub);
+size_t co_sub_sizeof_def(const co_sub_t *sub);
 
 /**
  * Returns a pointer to the default value of a CANopen sub-object. In the case
@@ -499,7 +493,7 @@ LELY_CO_EXTERN size_t co_sub_sizeof_def(const co_sub_t *sub);
  *
  * @see co_sub_set_def()
  */
-LELY_CO_EXTERN const void *co_sub_get_def(const co_sub_t *sub);
+const void *co_sub_get_def(const co_sub_t *sub);
 
 /**
  * Sets the default value of a CANopen sub-object.
@@ -515,7 +509,7 @@ LELY_CO_EXTERN const void *co_sub_get_def(const co_sub_t *sub);
  *
  * @see co_sub_get_def()
  */
-LELY_CO_EXTERN size_t co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n);
+size_t co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n);
 
 /**
  * Returns the address of the current value of a CANopen sub-object. In the case
@@ -523,7 +517,7 @@ LELY_CO_EXTERN size_t co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n);
  *
  * @see co_sub_sizeof_val()
  */
-LELY_CO_EXTERN const void *co_sub_addressof_val(const co_sub_t *sub);
+const void *co_sub_addressof_val(const co_sub_t *sub);
 
 /**
  * Returns size (in bytes) of the current value of a CANopen sub-object. In the
@@ -531,7 +525,7 @@ LELY_CO_EXTERN const void *co_sub_addressof_val(const co_sub_t *sub);
  *
  * @see co_sub_addressof_val()
  */
-LELY_CO_EXTERN size_t co_sub_sizeof_val(const co_sub_t *sub);
+size_t co_sub_sizeof_val(const co_sub_t *sub);
 
 /**
  * Returns a pointer to the current value of a CANopen sub-object. In the case
@@ -540,7 +534,7 @@ LELY_CO_EXTERN size_t co_sub_sizeof_val(const co_sub_t *sub);
  *
  * @see co_sub_set_val()
  */
-LELY_CO_EXTERN const void *co_sub_get_val(const co_sub_t *sub);
+const void *co_sub_get_val(const co_sub_t *sub);
 
 /**
  * Sets the current value of a CANopen sub-object.
@@ -556,11 +550,11 @@ LELY_CO_EXTERN const void *co_sub_get_val(const co_sub_t *sub);
  *
  * @see co_sub_get_val()
  */
-LELY_CO_EXTERN size_t co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n);
+size_t co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n);
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
-	LELY_CO_EXTERN co_##b##_t co_sub_get_val_##c(const co_sub_t *sub); \
-	LELY_CO_EXTERN size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c);
+	co_##b##_t co_sub_get_val_##c(const co_sub_t *sub); \
+	size_t co_sub_set_val_##c(co_sub_t *sub, co_##b##_t c);
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
@@ -577,11 +571,11 @@ LELY_CO_EXTERN size_t co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_chk_val(
+co_unsigned32_t co_sub_chk_val(
 		const co_sub_t *sub, co_unsigned16_t type, const void *val);
 
 /// Returns the access type of a CANopen sub-object. @see co_sub_set_access()
-LELY_CO_EXTERN unsigned int co_sub_get_access(const co_sub_t *sub);
+unsigned int co_sub_get_access(const co_sub_t *sub);
 
 /**
  * Sets the name of a CANopen sub-object.
@@ -595,7 +589,7 @@ LELY_CO_EXTERN unsigned int co_sub_get_access(const co_sub_t *sub);
  *
  * @see co_sub_get_access()
  */
-LELY_CO_EXTERN int co_sub_set_access(co_sub_t *sub, unsigned int access);
+int co_sub_set_access(co_sub_t *sub, unsigned int access);
 
 /**
  * Returns 1 if it is possible to map the specified CANopen sub-object into a
@@ -603,20 +597,20 @@ LELY_CO_EXTERN int co_sub_set_access(co_sub_t *sub, unsigned int access);
  *
  * @see co_sub_set_pdo_mapping()
  */
-LELY_CO_EXTERN int co_sub_get_pdo_mapping(const co_sub_t *sub);
+int co_sub_get_pdo_mapping(const co_sub_t *sub);
 
 /**
  * Enables or disables PDO mapping a CANopen sub-object.
  *
  * @see co_sub_get_pdo_mapping()
  */
-LELY_CO_EXTERN void co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping);
+void co_sub_set_pdo_mapping(co_sub_t *sub, int pdo_mapping);
 
 /// Returns the object flags of a CANopen sub-object. @see co_sub_set_flags()
-LELY_CO_EXTERN unsigned int co_sub_get_flags(const co_sub_t *sub);
+unsigned int co_sub_get_flags(const co_sub_t *sub);
 
 /// Sets the object flags of a CANopen sub-object. @see co_sub_get_flags()
-LELY_CO_EXTERN void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
+void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
 
 /**
  * Retrieves the download indication function for a CANopen sub-object.
@@ -629,7 +623,7 @@ LELY_CO_EXTERN void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
  *
  * @see co_sub_set_dn_ind()
  */
-LELY_CO_EXTERN void co_sub_get_dn_ind(
+void co_sub_get_dn_ind(
 		const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata);
 
 /**
@@ -645,8 +639,7 @@ LELY_CO_EXTERN void co_sub_get_dn_ind(
  *
  * @see co_sub_get_dn_ind()
  */
-LELY_CO_EXTERN void co_sub_set_dn_ind(
-		co_sub_t *sub, co_sub_dn_ind_t *ind, void *data);
+void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when a download indication is received by a
@@ -658,8 +651,7 @@ LELY_CO_EXTERN void co_sub_set_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(
-		co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -678,8 +670,7 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_on_dn(
  *
  * @see co_sub_dn_ind_val()
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -699,7 +690,7 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind(
  *
  * @see co_sub_dn_ind()
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind_val(
+co_unsigned32_t co_sub_dn_ind_val(
 		co_sub_t *sub, co_unsigned16_t type, const void *val);
 
 /**
@@ -717,7 +708,7 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_dn_ind_val(
  *
  * @see co_val_move()
  */
-LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
+int co_sub_dn(co_sub_t *sub, void *val);
 
 /**
  * Retrieves the upload indication function for a CANopen sub-object.
@@ -730,7 +721,7 @@ LELY_CO_EXTERN int co_sub_dn(co_sub_t *sub, void *val);
  *
  * @see co_sub_set_up_ind()
  */
-LELY_CO_EXTERN void co_sub_get_up_ind(
+void co_sub_get_up_ind(
 		const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata);
 
 /**
@@ -746,8 +737,7 @@ LELY_CO_EXTERN void co_sub_get_up_ind(
  *
  * @see co_sub_get_up_ind()
  */
-LELY_CO_EXTERN void co_sub_set_up_ind(
-		co_sub_t *sub, co_sub_up_ind_t *ind, void *data);
+void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data);
 
 /**
  * Implements the default behavior when an upload indication is received by a
@@ -759,8 +749,7 @@ LELY_CO_EXTERN void co_sub_set_up_ind(
  *
  * @see co_sub_up_ind_t
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(
-		const co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req);
 
 /**
  * Invokes the upload indication function of a CANopen sub-object, registered
@@ -774,8 +763,7 @@ LELY_CO_EXTERN co_unsigned32_t co_sub_on_up(
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-LELY_CO_EXTERN co_unsigned32_t co_sub_up_ind(
-		const co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req);
 
 #ifdef __cplusplus
 }

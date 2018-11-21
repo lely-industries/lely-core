@@ -21,7 +21,7 @@
  */
 
 #include "libc.h"
-#define LELY_LIBC_STRINGS_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_LIBC_STRINGS_INLINE extern inline
 #include <lely/libc/strings.h>
 
 #if !LELY_HAVE_STRINGS_H
@@ -51,7 +51,7 @@ static const int ffs_tab[] = {
 };
 // clang-format on
 
-LELY_LIBC_EXPORT int __cdecl ffs(int i)
+int __cdecl ffs(int i)
 {
 	unsigned int x = i & -i;
 	unsigned int n = x > 0x00ffffff
@@ -62,7 +62,7 @@ LELY_LIBC_EXPORT int __cdecl ffs(int i)
 
 #endif
 
-LELY_LIBC_EXPORT int __cdecl strcasecmp(const char *s1, const char *s2)
+int __cdecl strcasecmp(const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return 0;
@@ -76,8 +76,7 @@ LELY_LIBC_EXPORT int __cdecl strcasecmp(const char *s1, const char *s2)
 	return result;
 }
 
-LELY_LIBC_EXPORT int __cdecl strncasecmp(
-		const char *s1, const char *s2, size_t n)
+int __cdecl strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	if (s1 == s2 || !n)
 		return 0;

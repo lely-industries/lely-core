@@ -987,18 +987,18 @@ typedef void co_gw_rate_func_t(
 		co_unsigned16_t net, co_unsigned16_t rate, void *data);
 
 /// Returns a string describing an internal error code.
-LELY_CO_EXTERN const char *co_gw_iec2str(int iec);
+const char *co_gw_iec2str(int iec);
 
-LELY_CO_EXTERN void *__co_gw_alloc(void);
-LELY_CO_EXTERN void __co_gw_free(void *ptr);
-LELY_CO_EXTERN struct __co_gw *__co_gw_init(struct __co_gw *gw);
-LELY_CO_EXTERN void __co_gw_fini(struct __co_gw *gw);
+void *__co_gw_alloc(void);
+void __co_gw_free(void *ptr);
+struct __co_gw *__co_gw_init(struct __co_gw *gw);
+void __co_gw_fini(struct __co_gw *gw);
 
 /// Creates a new CANopen gateway. @see co_gw_destroy()
-LELY_CO_EXTERN co_gw_t *co_gw_create(void);
+co_gw_t *co_gw_create(void);
 
 /// Destroys a CANopen gateway. @see co_gw_create()
-LELY_CO_EXTERN void co_gw_destroy(co_gw_t *gw);
+void co_gw_destroy(co_gw_t *gw);
 
 /**
  * Registers a CANopen network with a gateway.
@@ -1013,8 +1013,7 @@ LELY_CO_EXTERN void co_gw_destroy(co_gw_t *gw);
  *
  * @see co_gw_fini_net()
  */
-LELY_CO_EXTERN int co_gw_init_net(
-		co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt);
+int co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt);
 
 /**
  * Unregisters a CANopen network with a gateway.
@@ -1027,7 +1026,7 @@ LELY_CO_EXTERN int co_gw_init_net(
  *
  * @see co_gw_init_net()
  */
-LELY_CO_EXTERN int co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id);
+int co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id);
 
 /**
  * Receives and processes a request with a CANopen gateway.
@@ -1038,7 +1037,7 @@ LELY_CO_EXTERN int co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_gw_recv(co_gw_t *gw, const struct co_gw_req *req);
+int co_gw_recv(co_gw_t *gw, const struct co_gw_req *req);
 
 /**
  * Retrieves the callback function used to send indications and confirmations
@@ -1052,7 +1051,7 @@ LELY_CO_EXTERN int co_gw_recv(co_gw_t *gw, const struct co_gw_req *req);
  *
  * @see co_gw_set_send_func()
  */
-LELY_CO_EXTERN void co_gw_get_send_func(
+void co_gw_get_send_func(
 		const co_gw_t *gw, co_gw_send_func_t **pfunc, void **pdata);
 
 /**
@@ -1067,8 +1066,7 @@ LELY_CO_EXTERN void co_gw_get_send_func(
  *
  * @see co_gw_get_send_func()
  */
-LELY_CO_EXTERN void co_gw_set_send_func(
-		co_gw_t *gw, co_gw_send_func_t *func, void *data);
+void co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func, void *data);
 
 /**
  * Retrieves the callback function invoked when a baudrate switch is needed
@@ -1082,7 +1080,7 @@ LELY_CO_EXTERN void co_gw_set_send_func(
  *
  * @see co_gw_set_rate_func()
  */
-LELY_CO_EXTERN void co_gw_get_rate_func(
+void co_gw_get_rate_func(
 		const co_gw_t *gw, co_gw_rate_func_t **pfunc, void **pdata);
 
 /**
@@ -1097,8 +1095,7 @@ LELY_CO_EXTERN void co_gw_get_rate_func(
  *
  * @see co_gw_get_rate_func()
  */
-LELY_CO_EXTERN void co_gw_set_rate_func(
-		co_gw_t *gw, co_gw_rate_func_t *func, void *data);
+void co_gw_set_rate_func(co_gw_t *gw, co_gw_rate_func_t *func, void *data);
 
 #ifdef __cplusplus
 }

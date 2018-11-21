@@ -41,16 +41,16 @@ typedef void factory_dtor_t(void *ptr);
  *
  * @returns a pinter to the newly created object.
  */
-LELY_UTIL_EXTERN void *factory_ctor_create(factory_ctor_t *ctor, ...);
+void *factory_ctor_create(factory_ctor_t *ctor, ...);
 
 /**
  * Invokes a constructor. This function is equivalent to #factory_ctor_create(),
  * except that it accepts a `va_list` instead of a variable number of arguments.
  */
-LELY_UTIL_EXTERN void *factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap);
+void *factory_ctor_vcreate(factory_ctor_t *ctor, va_list ap);
 
 /// Invokes a destructor on the object at <b>ptr</b>.
-LELY_UTIL_EXTERN void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
+void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
 
 /**
  * Registers a constructor and destructor function for the specified type name,
@@ -61,7 +61,7 @@ LELY_UTIL_EXTERN void factory_dtor_destroy(factory_dtor_t *dtor, void *ptr);
  *
  * @see factory_remove(), factory_find_ctor(), factory_find_dtor().
  */
-LELY_UTIL_EXTERN int factory_insert(
+int factory_insert(
 		const char *name, factory_ctor_t *ctor, factory_dtor_t *dtor);
 
 /**
@@ -70,7 +70,7 @@ LELY_UTIL_EXTERN int factory_insert(
  *
  * @see factory_insert()
  */
-LELY_UTIL_EXTERN void factory_remove(const char *name);
+void factory_remove(const char *name);
 
 /**
  * Returns a pointer to the constructor function for the specified type name, or
@@ -78,7 +78,7 @@ LELY_UTIL_EXTERN void factory_remove(const char *name);
  *
  * @see factory_insert()
  */
-LELY_UTIL_EXTERN factory_ctor_t *factory_find_ctor(const char *name);
+factory_ctor_t *factory_find_ctor(const char *name);
 
 /**
  * Returns a pointer to the destructor function for the specified type name, or
@@ -86,7 +86,7 @@ LELY_UTIL_EXTERN factory_ctor_t *factory_find_ctor(const char *name);
  *
  * @see factory_insert()
  */
-LELY_UTIL_EXTERN factory_dtor_t *factory_find_dtor(const char *name);
+factory_dtor_t *factory_find_dtor(const char *name);
 
 #ifdef __cplusplus
 }

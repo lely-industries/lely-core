@@ -55,7 +55,7 @@ extern "C" {
 LELY_UTIL_MEMBUF_INLINE void membuf_init(struct membuf *buf);
 
 /// Finalizes a memory buffer. @see membuf_init()
-LELY_UTIL_EXTERN void membuf_fini(struct membuf *buf);
+void membuf_fini(struct membuf *buf);
 
 /// Returns a pointer to the first byte in a memory buffer.
 LELY_UTIL_MEMBUF_INLINE void *membuf_begin(const struct membuf *buf);
@@ -82,7 +82,7 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_capacity(const struct membuf *buf);
  * @returns the new capacity of the buffer, or 0 on error. The new capacity can
  * be larger than the requested capacity.
  */
-LELY_UTIL_EXTERN size_t membuf_reserve(struct membuf *buf, size_t size);
+size_t membuf_reserve(struct membuf *buf, size_t size);
 
 /**
  * Adjusts the position indicator of a memory buffer by <b>offset</b> bytes. The
@@ -132,7 +132,7 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
 		struct membuf *buf, const void *ptr, size_t size);
 
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
-LELY_UTIL_EXTERN void membuf_flush(struct membuf *buf, size_t size);
+void membuf_flush(struct membuf *buf, size_t size);
 
 LELY_UTIL_MEMBUF_INLINE void
 membuf_init(struct membuf *buf)

@@ -29,11 +29,11 @@
 extern "C" {
 #endif
 
-LELY_CO_EXTERN void *__co_ssdo_alloc(void);
-LELY_CO_EXTERN void __co_ssdo_free(void *ptr);
-LELY_CO_EXTERN struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo,
-		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
-LELY_CO_EXTERN void __co_ssdo_fini(struct __co_ssdo *sdo);
+void *__co_ssdo_alloc(void);
+void __co_ssdo_free(void *ptr);
+struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net,
+		co_dev_t *dev, co_unsigned8_t num);
+void __co_ssdo_fini(struct __co_ssdo *sdo);
 
 /**
  * Creates a new CANopen Server-SDO service.
@@ -49,23 +49,22 @@ LELY_CO_EXTERN void __co_ssdo_fini(struct __co_ssdo *sdo);
  *
  * @see co_ssdo_destroy()
  */
-LELY_CO_EXTERN co_ssdo_t *co_ssdo_create(
-		can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
+co_ssdo_t *co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 
 /// Destroys a CANopen Server-SDO service. @see co_ssdo_create()
-LELY_CO_EXTERN void co_ssdo_destroy(co_ssdo_t *sdo);
+void co_ssdo_destroy(co_ssdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Server-SDO.
-LELY_CO_EXTERN can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);
+can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);
 
 /// Returns a pointer to the CANopen device of a Server-SDO.
-LELY_CO_EXTERN co_dev_t *co_ssdo_get_dev(const co_ssdo_t *sdo);
+co_dev_t *co_ssdo_get_dev(const co_ssdo_t *sdo);
 
 /// Returns the SDO number of a Server-SDO.
-LELY_CO_EXTERN co_unsigned8_t co_ssdo_get_num(const co_ssdo_t *sdo);
+co_unsigned8_t co_ssdo_get_num(const co_ssdo_t *sdo);
 
 /// Returns a pointer to the SDO parameter record of a Server-SDO.
-LELY_CO_EXTERN const struct co_sdo_par *co_ssdo_get_par(const co_ssdo_t *sdo);
+const struct co_sdo_par *co_ssdo_get_par(const co_ssdo_t *sdo);
 
 /**
  * Returns the timeout (in milliseconds) of a Server-SDO. A return value of 0
@@ -73,7 +72,7 @@ LELY_CO_EXTERN const struct co_sdo_par *co_ssdo_get_par(const co_ssdo_t *sdo);
  *
  * @see co_ssdo_set_timeout()
  */
-LELY_CO_EXTERN int co_ssdo_get_timeout(const co_ssdo_t *sdo);
+int co_ssdo_get_timeout(const co_ssdo_t *sdo);
 
 /**
  * Sets the timeout of a Server-SDO. If the timeout expires before receiving a
@@ -85,7 +84,7 @@ LELY_CO_EXTERN int co_ssdo_get_timeout(const co_ssdo_t *sdo);
  *
  * @see co_ssdo_get_timeout()
  */
-LELY_CO_EXTERN void co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout);
+void co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout);
 
 #ifdef __cplusplus
 }

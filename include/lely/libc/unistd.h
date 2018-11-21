@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_UNISTD_H_
 #define LELY_LIBC_UNISTD_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_UNISTD_H
 #if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)) \
@@ -40,20 +40,20 @@ extern "C" {
 #endif
 
 /// A pointer to the argument of the current option.
-LELY_LIBC_EXTERN char *optarg;
+char *optarg;
 
 /// The index of the next argument to be parsed by getopt().
-LELY_LIBC_EXTERN int optind;
+int optind;
 
 /**
  * A flag indicating whether a diagnostic message should be printed if an
  * unknown option character or missing argument is detected by getopt(). The
  * default value is 1.
  */
-LELY_LIBC_EXTERN int opterr;
+int opterr;
 
 /// The last option character to cause an error.
-LELY_LIBC_EXTERN int optopt;
+int optopt;
 
 /**
  * Parses options passed as arguments to `main()`.
@@ -71,8 +71,7 @@ LELY_LIBC_EXTERN int optopt;
  * missing argument is detected, or -1 if all the argument is not an option or
  * all options are parsed.
  */
-LELY_LIBC_EXTERN int getopt(
-		int argc, char *const argv[], const char *optstring);
+int getopt(int argc, char *const argv[], const char *optstring);
 
 /**
  * Sleeps until the specified number of realtime seconds has elapsed or the
@@ -83,7 +82,7 @@ LELY_LIBC_EXTERN int getopt(
  *
  * @see nanosleep()
  */
-LELY_LIBC_EXTERN unsigned __cdecl sleep(unsigned seconds);
+unsigned __cdecl sleep(unsigned seconds);
 
 #ifdef __cplusplus
 }

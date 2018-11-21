@@ -35,7 +35,7 @@
 #define LELY_GETDELIM_SIZE 64
 #endif
 
-LELY_LIBC_EXPORT ssize_t
+ssize_t
 getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 {
 	if (__unlikely(!lineptr || !n)) {
@@ -89,7 +89,7 @@ getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 	return cp - *lineptr;
 }
 
-LELY_LIBC_EXPORT ssize_t
+ssize_t
 getline(char **lineptr, size_t *n, FILE *stream)
 {
 	return getdelim(lineptr, n, '\n', stream);
@@ -101,8 +101,7 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !LELY_HAVE_SNPRINTF
 
-LELY_LIBC_EXPORT int __cdecl snprintf(
-		char *s, size_t n, const char *format, ...)
+int __cdecl snprintf(char *s, size_t n, const char *format, ...)
 {
 	va_list arg;
 	va_start(arg, format);
@@ -111,8 +110,7 @@ LELY_LIBC_EXPORT int __cdecl snprintf(
 	return result;
 }
 
-LELY_LIBC_EXPORT int __cdecl vsnprintf(
-		char *s, size_t n, const char *format, va_list arg)
+int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg)
 {
 	int result = -1;
 	if (n) {
@@ -126,7 +124,7 @@ LELY_LIBC_EXPORT int __cdecl vsnprintf(
 
 #endif // !LELY_HAVE_SNPRINTF
 
-LELY_LIBC_EXPORT int __cdecl asprintf(char **strp, const char *fmt, ...)
+int __cdecl asprintf(char **strp, const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -135,7 +133,7 @@ LELY_LIBC_EXPORT int __cdecl asprintf(char **strp, const char *fmt, ...)
 	return result;
 }
 
-LELY_LIBC_EXPORT int __cdecl vasprintf(char **strp, const char *fmt, va_list ap)
+int __cdecl vasprintf(char **strp, const char *fmt, va_list ap)
 {
 	assert(strp);
 

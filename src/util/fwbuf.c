@@ -103,7 +103,7 @@ struct __fwbuf {
 #endif
 };
 
-LELY_UTIL_EXPORT void *
+void *
 __fwbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __fwbuf));
@@ -112,13 +112,13 @@ __fwbuf_alloc(void)
 	return ptr;
 }
 
-LELY_UTIL_EXPORT void
+void
 __fwbuf_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_UTIL_EXPORT struct __fwbuf *
+struct __fwbuf *
 __fwbuf_init(struct __fwbuf *buf, const char *filename)
 {
 	assert(buf);
@@ -281,7 +281,7 @@ error_strdup:
 #endif
 }
 
-LELY_UTIL_EXPORT void
+void
 __fwbuf_fini(struct __fwbuf *buf)
 {
 	errc_t errc = get_errc();
@@ -295,7 +295,7 @@ __fwbuf_fini(struct __fwbuf *buf)
 	free(buf->filename);
 }
 
-LELY_UTIL_EXPORT fwbuf_t *
+fwbuf_t *
 fwbuf_create(const char *filename)
 {
 	errc_t errc = 0;
@@ -320,7 +320,7 @@ error_alloc_buf:
 	return NULL;
 }
 
-LELY_UTIL_EXPORT void
+void
 fwbuf_destroy(fwbuf_t *buf)
 {
 	if (buf) {
@@ -329,7 +329,7 @@ fwbuf_destroy(fwbuf_t *buf)
 	}
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 fwbuf_get_size(fwbuf_t *buf)
 {
 	if (__unlikely(fwbuf_error(buf)))
@@ -359,7 +359,7 @@ fwbuf_get_size(fwbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT int
+int
 fwbuf_set_size(fwbuf_t *buf, int64_t size)
 {
 	if (__unlikely(fwbuf_unmap(buf) == -1))
@@ -405,7 +405,7 @@ fwbuf_set_size(fwbuf_t *buf, int64_t size)
 #endif
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 fwbuf_get_pos(fwbuf_t *buf)
 {
 	if (__unlikely(fwbuf_error(buf)))
@@ -437,7 +437,7 @@ fwbuf_get_pos(fwbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT int64_t
+int64_t
 fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
 {
 	if (__unlikely(fwbuf_error(buf)))
@@ -479,7 +479,7 @@ fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
 #endif
 }
 
-LELY_UTIL_EXPORT ssize_t
+ssize_t
 fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 {
 	assert(ptr || !size);
@@ -536,7 +536,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 #endif
 }
 
-LELY_UTIL_EXPORT ssize_t
+ssize_t
 fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 {
 	assert(ptr || !size);
@@ -651,7 +651,7 @@ error_pos:
 #endif
 }
 
-LELY_UTIL_EXPORT void *
+void *
 fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 {
 	if (__unlikely(fwbuf_unmap(buf) == -1))
@@ -821,7 +821,7 @@ error_malloc_map:
 #endif
 }
 
-LELY_UTIL_EXPORT int
+int
 fwbuf_unmap(fwbuf_t *buf)
 {
 	assert(buf);
@@ -930,7 +930,7 @@ fwbuf_unmap(fwbuf_t *buf)
 	return result;
 }
 
-LELY_UTIL_EXPORT void
+void
 fwbuf_clearerr(fwbuf_t *buf)
 {
 	assert(buf);
@@ -944,7 +944,7 @@ fwbuf_clearerr(fwbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT int
+int
 fwbuf_error(fwbuf_t *buf)
 {
 	assert(buf);
@@ -964,7 +964,7 @@ fwbuf_error(fwbuf_t *buf)
 #endif
 }
 
-LELY_UTIL_EXPORT void
+void
 fwbuf_cancel(fwbuf_t *buf)
 {
 	assert(buf);

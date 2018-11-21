@@ -52,7 +52,7 @@ typedef int shlib_func_t();
  *
  * @see shlib_close()
  */
-LELY_UTIL_EXTERN void *shlib_open(const char *filename);
+void *shlib_open(const char *filename);
 
 /**
  * Closes the handle to a shared library. If all handles to the library are
@@ -60,21 +60,21 @@ LELY_UTIL_EXTERN void *shlib_open(const char *filename);
  *
  * @see shlib_open()
  */
-LELY_UTIL_EXTERN void shlib_close(void *handle);
+void shlib_close(void *handle);
 
 /**
  * Retrieves the address of a data object in a shared library.
  *
  * @see shlib_find_func()
  */
-LELY_UTIL_EXTERN void *shlib_find_data(void *handle, const char *name);
+void *shlib_find_data(void *handle, const char *name);
 
 /**
  * Retrieves the address of a function object in a shared library.
  *
  * @see shlib_find_data()
  */
-LELY_UTIL_EXTERN shlib_func_t *shlib_find_func(void *handle, const char *name);
+shlib_func_t *shlib_find_func(void *handle, const char *name);
 
 /**
  * Returns a pointer to the platform-dependent prefix of shared library
@@ -82,7 +82,7 @@ LELY_UTIL_EXTERN shlib_func_t *shlib_find_func(void *handle, const char *name);
  *
  * @see shlib_suffix()
  */
-LELY_UTIL_EXTERN const char *shlib_prefix(void);
+const char *shlib_prefix(void);
 
 /**
  * Returns a pointer to the platform-dependent suffix (or extension) of shared
@@ -90,7 +90,7 @@ LELY_UTIL_EXTERN const char *shlib_prefix(void);
  *
  * @see shlib_prefix()
  */
-LELY_UTIL_EXTERN const char *shlib_suffix(void);
+const char *shlib_suffix(void);
 
 #ifdef __cplusplus
 }

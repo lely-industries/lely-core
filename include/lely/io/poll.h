@@ -84,16 +84,16 @@ typedef struct __io_poll io_poll_t;
 extern "C" {
 #endif
 
-LELY_IO_EXTERN void *__io_poll_alloc(void);
-LELY_IO_EXTERN void __io_poll_free(void *ptr);
-LELY_IO_EXTERN struct __io_poll *__io_poll_init(struct __io_poll *poll);
-LELY_IO_EXTERN void __io_poll_fini(struct __io_poll *poll);
+void *__io_poll_alloc(void);
+void __io_poll_free(void *ptr);
+struct __io_poll *__io_poll_init(struct __io_poll *poll);
+void __io_poll_fini(struct __io_poll *poll);
 
 /// Creates a new I/O polling interface. @see io_poll_destroy()
-LELY_IO_EXTERN io_poll_t *io_poll_create(void);
+io_poll_t *io_poll_create(void);
 
 /// Destroys an I/O polling interface. @see io_poll_create()
-LELY_IO_EXTERN void io_poll_destroy(io_poll_t *poll);
+void io_poll_destroy(io_poll_t *poll);
 
 /**
  * Registers an I/O device with an I/O polling interface and instructs it to
@@ -113,8 +113,8 @@ LELY_IO_EXTERN void io_poll_destroy(io_poll_t *poll);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_poll_watch(io_poll_t *poll, io_handle_t handle,
-		struct io_event *event, int keep);
+int io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
+		int keep);
 
 /**
  * Waits at most <b>timeout</b> milliseconds for at most <b>maxevents</b> I/O
@@ -139,8 +139,8 @@ LELY_IO_EXTERN int io_poll_watch(io_poll_t *poll, io_handle_t handle,
  * latter case, the error number can be obtained with get_errc(). This
  * function returns 0 if the timeout elapses without an event occurring.
  */
-LELY_IO_EXTERN int io_poll_wait(io_poll_t *poll, int maxevents,
-		struct io_event *events, int timeout);
+int io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
+		int timeout);
 
 /**
  * Generates a signal event. This function can be used to interrupt
@@ -153,7 +153,7 @@ LELY_IO_EXTERN int io_poll_wait(io_poll_t *poll, int maxevents,
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_poll_signal(io_poll_t *poll, unsigned char sig);
+int io_poll_signal(io_poll_t *poll, unsigned char sig);
 
 #ifdef __cplusplus
 }

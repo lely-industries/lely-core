@@ -25,12 +25,7 @@
 #include <config.h>
 #endif
 
-#define LELY_UTIL_INTERN 1
 #include <lely/util/util.h>
-
-#ifndef LELY_UTIL_EXPORT
-#define LELY_UTIL_EXPORT LELY_DLL_EXPORT
-#endif
 
 #ifdef _WIN32
 #include <windows.h>

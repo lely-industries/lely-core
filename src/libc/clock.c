@@ -55,8 +55,7 @@
 #define TIME_T_MAX _I64_MAX
 #endif
 
-LELY_LIBC_EXPORT int __cdecl clock_getres(
-		clockid_t clock_id, struct timespec *res)
+int __cdecl clock_getres(clockid_t clock_id, struct timespec *res)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -93,8 +92,7 @@ LELY_LIBC_EXPORT int __cdecl clock_getres(
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl clock_gettime(
-		clockid_t clock_id, struct timespec *tp)
+int __cdecl clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	if (clock_id == CLOCK_MONOTONIC) {
 		// On Windows XP or later, this will always succeed.
@@ -193,7 +191,7 @@ LELY_LIBC_EXPORT int __cdecl clock_gettime(
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
+int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
 		const struct timespec *rqtp, struct timespec *rmtp)
 {
 	switch (clock_id) {
@@ -270,8 +268,7 @@ LELY_LIBC_EXPORT int __cdecl clock_nanosleep(clockid_t clock_id, int flags,
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl clock_settime(
-		clockid_t clock_id, const struct timespec *tp)
+int __cdecl clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
 	if (__unlikely(clock_id != CLOCK_REALTIME)) {
 		errno = EINVAL;

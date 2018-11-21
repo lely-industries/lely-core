@@ -56,11 +56,11 @@ typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 typedef void co_rpdo_err_t(co_rpdo_t *pdo, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
-LELY_CO_EXTERN void *__co_rpdo_alloc(void);
-LELY_CO_EXTERN void __co_rpdo_free(void *ptr);
-LELY_CO_EXTERN struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo,
-		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
-LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
+void *__co_rpdo_alloc(void);
+void __co_rpdo_free(void *ptr);
+struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net,
+		co_dev_t *dev, co_unsigned16_t num);
+void __co_rpdo_fini(struct __co_rpdo *pdo);
 
 /**
  * Creates a new CANopen Receive-PDO service.
@@ -76,30 +76,27 @@ LELY_CO_EXTERN void __co_rpdo_fini(struct __co_rpdo *pdo);
  *
  * @see co_rpdo_destroy()
  */
-LELY_CO_EXTERN co_rpdo_t *co_rpdo_create(
-		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
+co_rpdo_t *co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Receive-PDO service. @see co_rpdo_create()
-LELY_CO_EXTERN void co_rpdo_destroy(co_rpdo_t *pdo);
+void co_rpdo_destroy(co_rpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Receive-PDO.
-LELY_CO_EXTERN can_net_t *co_rpdo_get_net(const co_rpdo_t *pdo);
+can_net_t *co_rpdo_get_net(const co_rpdo_t *pdo);
 
 /// Returns a pointer to the CANopen device of a Receive-PDO.
-LELY_CO_EXTERN co_dev_t *co_rpdo_get_dev(const co_rpdo_t *pdo);
+co_dev_t *co_rpdo_get_dev(const co_rpdo_t *pdo);
 
 /// Returns the PDO number of a Receive-PDO.
-LELY_CO_EXTERN co_unsigned16_t co_rpdo_get_num(const co_rpdo_t *pdo);
+co_unsigned16_t co_rpdo_get_num(const co_rpdo_t *pdo);
 
 /**
  * Returns a pointer to the PDO communication parameter record of a Receive-PDO.
  */
-LELY_CO_EXTERN const struct co_pdo_comm_par *co_rpdo_get_comm_par(
-		const co_rpdo_t *pdo);
+const struct co_pdo_comm_par *co_rpdo_get_comm_par(const co_rpdo_t *pdo);
 
 /// Returns a pointer to the PDO mapping parameter record of a Receive-PDO.
-LELY_CO_EXTERN const struct co_pdo_map_par *co_rpdo_get_map_par(
-		const co_rpdo_t *pdo);
+const struct co_pdo_map_par *co_rpdo_get_map_par(const co_rpdo_t *pdo);
 
 /**
  * Retrieves the indication function invoked when a Receive-PDO error occurs.
@@ -112,8 +109,7 @@ LELY_CO_EXTERN const struct co_pdo_map_par *co_rpdo_get_map_par(
  *
  * @see co_rpdo_set_ind()
  */
-LELY_CO_EXTERN void co_rpdo_get_ind(
-		const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata);
+void co_rpdo_get_ind(const co_rpdo_t *pdo, co_rpdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a Receive-PDO error occurs.
@@ -125,8 +121,7 @@ LELY_CO_EXTERN void co_rpdo_get_ind(
  *
  * @see co_rpdo_get_ind()
  */
-LELY_CO_EXTERN void co_rpdo_set_ind(
-		co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data);
+void co_rpdo_set_ind(co_rpdo_t *pdo, co_rpdo_ind_t *ind, void *data);
 
 /**
  * Retrieves the error handling function of a Receive-PDO service.
@@ -139,8 +134,7 @@ LELY_CO_EXTERN void co_rpdo_set_ind(
  *
  * @see co_rpdo_set_err()
  */
-LELY_CO_EXTERN void co_rpdo_get_err(
-		const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata);
+void co_rpdo_get_err(const co_rpdo_t *pdo, co_rpdo_err_t **perr, void **pdata);
 
 /**
  * Sets the error handling function of a Receive-PDO service.
@@ -152,8 +146,7 @@ LELY_CO_EXTERN void co_rpdo_get_err(
  *
  * @see co_rpdo_get_err()
  */
-LELY_CO_EXTERN void co_rpdo_set_err(
-		co_rpdo_t *pdo, co_rpdo_err_t *err, void *data);
+void co_rpdo_set_err(co_rpdo_t *pdo, co_rpdo_err_t *err, void *data);
 
 /**
  * Triggers the actuation of a received synchronous PDO.
@@ -164,7 +157,7 @@ LELY_CO_EXTERN void co_rpdo_set_err(
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt);
+int co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt);
 
 /**
  * Requests the transmission of a PDO.
@@ -172,7 +165,7 @@ LELY_CO_EXTERN int co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_CO_EXTERN int co_rpdo_rtr(co_rpdo_t *pdo);
+int co_rpdo_rtr(co_rpdo_t *pdo);
 
 #ifdef __cplusplus
 }

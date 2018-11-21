@@ -27,14 +27,6 @@
 
 #include <stddef.h>
 
-#ifndef LELY_IO_EXTERN
-#ifdef LELY_IO_INTERN
-#define LELY_IO_EXTERN extern LELY_DLL_EXPORT
-#else
-#define LELY_IO_EXTERN extern LELY_DLL_IMPORT
-#endif
-#endif
-
 /// An opaque I/O device handle type.
 typedef struct io_handle *io_handle_t;
 
@@ -85,7 +77,7 @@ extern "C" {
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int lely_io_init(void);
+int lely_io_init(void);
 
 /**
  * Finalizes the I/O library and terminates the availability of the I/O
@@ -93,7 +85,7 @@ LELY_IO_EXTERN int lely_io_init(void);
  * function MUST be invoked once for each corresponding call to lely_io_init().
  * Only the last invocation will finalize the library.
  */
-LELY_IO_EXTERN void lely_io_fini(void);
+void lely_io_fini(void);
 
 /**
  * Increments the reference count of an I/O device handle.
@@ -102,7 +94,7 @@ LELY_IO_EXTERN void lely_io_fini(void);
  *
  * @see io_handle_release()
  */
-LELY_IO_EXTERN io_handle_t io_handle_acquire(io_handle_t handle);
+io_handle_t io_handle_acquire(io_handle_t handle);
 
 /**
  * Decrements the reference count of an I/O device handle. If the count reaches
@@ -110,13 +102,13 @@ LELY_IO_EXTERN io_handle_t io_handle_acquire(io_handle_t handle);
  *
  * @see io_handle_acquire()
  */
-LELY_IO_EXTERN void io_handle_release(io_handle_t handle);
+void io_handle_release(io_handle_t handle);
 
 /**
  * Returns 1 if there is only a single reference to the specified I/O device
  * handle, and 0 otherwise.
  */
-LELY_IO_EXTERN int io_handle_unique(io_handle_t handle);
+int io_handle_unique(io_handle_t handle);
 
 /**
  * Closes an I/O device.
@@ -124,20 +116,20 @@ LELY_IO_EXTERN int io_handle_unique(io_handle_t handle);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_close(io_handle_t handle);
+int io_close(io_handle_t handle);
 
 /**
  * Returns the type of an I/O device (one of #IO_TYPE_CAN, #IO_TYPE_FILE,
  * #IO_TYPE_PIPE, #IO_TYPE_SERIAL or #IO_TYPE_SOCK), or -1 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_get_type(io_handle_t handle);
+int io_get_type(io_handle_t handle);
 
 /// Returns the native file descriptor of an I/O device.
 #ifdef _WIN32
-LELY_IO_EXTERN HANDLE io_get_fd(io_handle_t handle);
+HANDLE io_get_fd(io_handle_t handle);
 #else
-LELY_IO_EXTERN int io_get_fd(io_handle_t handle);
+int io_get_fd(io_handle_t handle);
 #endif
 
 /**
@@ -149,7 +141,7 @@ LELY_IO_EXTERN int io_get_fd(io_handle_t handle);
  *
  * @see io_set_flags()
  */
-LELY_IO_EXTERN int io_get_flags(io_handle_t handle);
+int io_get_flags(io_handle_t handle);
 
 /**
  * Sets the flags of an I/O device.
@@ -163,7 +155,7 @@ LELY_IO_EXTERN int io_get_flags(io_handle_t handle);
  *
  * @see io_get_flags()
  */
-LELY_IO_EXTERN int io_set_flags(io_handle_t handle, int flags);
+int io_set_flags(io_handle_t handle, int flags);
 
 /**
  * Performs a read operation. For regular files, this function updates the file
@@ -176,7 +168,7 @@ LELY_IO_EXTERN int io_set_flags(io_handle_t handle, int flags);
  * @returns the number of bytes read on success, or -1 on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
+ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
 
 /**
  * Performs a write operation. For regular files, this function updates the file
@@ -189,8 +181,7 @@ LELY_IO_EXTERN ssize_t io_read(io_handle_t handle, void *buf, size_t nbytes);
  * @returns the number of bytes written on success, or -1 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_write(
-		io_handle_t handle, const void *buf, size_t nbytes);
+ssize_t io_write(io_handle_t handle, const void *buf, size_t nbytes);
 
 /**
  * Flushes the write buffer of a an I/O device. This function waits until all
@@ -199,7 +190,7 @@ LELY_IO_EXTERN ssize_t io_write(
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_IO_EXTERN int io_flush(io_handle_t handle);
+int io_flush(io_handle_t handle);
 
 #ifdef __cplusplus
 }

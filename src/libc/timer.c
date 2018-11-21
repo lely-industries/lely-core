@@ -112,7 +112,7 @@ static inline void timespec_add(
 static inline void timespec_sub(
 		struct timespec *tp, const struct timespec *dec);
 
-LELY_LIBC_EXPORT int __cdecl timer_create(
+int __cdecl timer_create(
 		clockid_t clockid, struct sigevent *evp, timer_t *timerid)
 {
 	switch (clockid) {
@@ -176,7 +176,7 @@ error_malloc_timer:
 	return -1;
 }
 
-LELY_LIBC_EXPORT int __cdecl timer_delete(timer_t timerid)
+int __cdecl timer_delete(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -197,7 +197,7 @@ LELY_LIBC_EXPORT int __cdecl timer_delete(timer_t timerid)
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl timer_getoverrun(timer_t timerid)
+int __cdecl timer_getoverrun(timer_t timerid)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -212,8 +212,7 @@ LELY_LIBC_EXPORT int __cdecl timer_getoverrun(timer_t timerid)
 	return overrun;
 }
 
-LELY_LIBC_EXPORT int __cdecl timer_gettime(
-		timer_t timerid, struct itimerspec *value)
+int __cdecl timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct timer *timer = timerid;
 	if (__unlikely(!timer || timer->magic != TIMER_MAGIC)) {
@@ -239,7 +238,7 @@ LELY_LIBC_EXPORT int __cdecl timer_gettime(
 	return 0;
 }
 
-LELY_LIBC_EXPORT int __cdecl timer_settime(timer_t timerid, int flags,
+int __cdecl timer_settime(timer_t timerid, int flags,
 		const struct itimerspec *value, struct itimerspec *ovalue)
 {
 	struct timer *timer = timerid;

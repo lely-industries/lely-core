@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STRING_H_
 #define LELY_LIBC_STRING_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #include <string.h>
 
@@ -39,7 +39,7 @@ extern "C" {
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-LELY_LIBC_EXTERN char *__cdecl strdup(const char *s);
+char *__cdecl strdup(const char *s);
 
 #endif
 
@@ -52,7 +52,7 @@ LELY_LIBC_EXTERN char *__cdecl strdup(const char *s);
  * @returns a pointer to a new string, or NULL on error. The returned pointer
  * can be passed to free().
  */
-LELY_LIBC_EXTERN char *__cdecl strndup(const char *s, size_t size);
+char *__cdecl strndup(const char *s, size_t size);
 
 #endif
 
@@ -66,7 +66,7 @@ LELY_LIBC_EXTERN char *__cdecl strndup(const char *s, size_t size);
  * @returns the smaller of the length of the string at <b>s</b> or
  * <b>maxlen</b>.
  */
-LELY_LIBC_EXTERN size_t __cdecl strnlen(const char *s, size_t maxlen);
+size_t __cdecl strnlen(const char *s, size_t maxlen);
 
 #endif
 

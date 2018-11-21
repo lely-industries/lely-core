@@ -454,7 +454,7 @@ static int co_gw_send_srv(co_gw_t *gw, const struct co_gw_srv *srv);
 /// Converts an error number to an internal error code.
 static inline int errnum2iec(errnum_t errnum);
 
-LELY_CO_EXPORT const char *
+const char *
 co_gw_iec2str(int iec)
 {
 	switch (iec) {
@@ -491,7 +491,7 @@ co_gw_iec2str(int iec)
 	}
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_gw_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw));
@@ -500,13 +500,13 @@ __co_gw_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_gw_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_gw *
+struct __co_gw *
 __co_gw_init(struct __co_gw *gw)
 {
 	assert(gw);
@@ -526,7 +526,7 @@ __co_gw_init(struct __co_gw *gw)
 	return gw;
 }
 
-LELY_CO_EXPORT void
+void
 __co_gw_fini(struct __co_gw *gw)
 {
 	assert(gw);
@@ -535,7 +535,7 @@ __co_gw_fini(struct __co_gw *gw)
 		co_gw_net_destroy(gw->net[id - 1]);
 }
 
-LELY_CO_EXPORT co_gw_t *
+co_gw_t *
 co_gw_create(void)
 {
 	errc_t errc = 0;
@@ -560,7 +560,7 @@ error_alloc_gw:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_destroy(co_gw_t *gw)
 {
 	if (gw) {
@@ -569,7 +569,7 @@ co_gw_destroy(co_gw_t *gw)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 {
 	assert(gw);
@@ -584,7 +584,7 @@ co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	return __likely(gw->net[id - 1]) ? 0 : -1;
 }
 
-LELY_CO_EXPORT int
+int
 co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id)
 {
 	assert(gw);
@@ -600,7 +600,7 @@ co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 {
 	assert(gw);
@@ -901,7 +901,7 @@ error:
 	return co_gw_send_con(gw, req, iec, 0);
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_get_send_func(const co_gw_t *gw, co_gw_send_func_t **pfunc, void **pdata)
 {
 	assert(gw);
@@ -912,7 +912,7 @@ co_gw_get_send_func(const co_gw_t *gw, co_gw_send_func_t **pfunc, void **pdata)
 		*pdata = gw->send_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func, void *data)
 {
 	assert(gw);
@@ -921,7 +921,7 @@ co_gw_set_send_func(co_gw_t *gw, co_gw_send_func_t *func, void *data)
 	gw->send_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_get_rate_func(const co_gw_t *gw, co_gw_rate_func_t **pfunc, void **pdata)
 {
 	assert(gw);
@@ -932,7 +932,7 @@ co_gw_get_rate_func(const co_gw_t *gw, co_gw_rate_func_t **pfunc, void **pdata)
 		*pdata = gw->rate_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_set_rate_func(co_gw_t *gw, co_gw_rate_func_t *func, void *data)
 {
 	assert(gw);

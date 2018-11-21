@@ -24,7 +24,7 @@
 #include "co.h"
 #include <lely/co/crc.h>
 
-LELY_CO_EXPORT uint16_t
+uint16_t
 co_crc(uint16_t crc, const void *ptr, size_t n)
 {
 	// This table contains precomputed CRC-16 checksums for each of the 256

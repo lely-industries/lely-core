@@ -59,7 +59,7 @@ LELY_UTIL_BITS_INLINE int cls8(uint8_t x);
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
 LELY_UTIL_BITS_INLINE int clz8(uint8_t x);
 #else
-LELY_UTIL_EXTERN int cls8(uint8_t x);
+int cls8(uint8_t x);
 #endif
 
 /**
@@ -111,7 +111,7 @@ LELY_UTIL_BITS_INLINE int cts8(uint8_t x);
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
 LELY_UTIL_BITS_INLINE int ctz8(uint8_t x);
 #else
-LELY_UTIL_EXTERN int ctz8(uint8_t x);
+int ctz8(uint8_t x);
 #endif
 
 /**
@@ -157,7 +157,7 @@ LELY_UTIL_BITS_INLINE int ctz64(uint64_t x);
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ffs)
 LELY_UTIL_BITS_INLINE int ffs8(uint8_t x);
 #else
-LELY_UTIL_EXTERN int ffs8(uint8_t x);
+int ffs8(uint8_t x);
 #endif
 
 /**
@@ -206,7 +206,7 @@ LELY_UTIL_BITS_INLINE int ffz64(uint64_t x);
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
 LELY_UTIL_BITS_INLINE int parity8(uint8_t x);
 #else
-LELY_UTIL_EXTERN int parity8(uint8_t x);
+int parity8(uint8_t x);
 #endif
 
 /// Returns the parity of the unsigned 16-bit integer <b>x</b>.
@@ -225,7 +225,7 @@ LELY_UTIL_BITS_INLINE int parity64(uint64_t x);
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
 LELY_UTIL_BITS_INLINE int popcount8(uint8_t x);
 #else
-LELY_UTIL_EXTERN int popcount8(uint8_t x);
+int popcount8(uint8_t x);
 #endif
 
 /**

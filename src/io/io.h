@@ -25,12 +25,7 @@
 #include <config.h>
 #endif
 
-#define LELY_IO_INTERN 1
 #include <lely/io/io.h>
-
-#ifndef LELY_IO_EXPORT
-#define LELY_IO_EXPORT LELY_DLL_EXPORT
-#endif
 
 #ifdef _WIN32
 #ifdef _MSC_VER

@@ -94,7 +94,7 @@ typedef void daemon_handler_t(int sig, void *handle);
  * @returns 0 on completion, or -1 on error. In the latter case, the error
  * number can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int daemon_start(const char *name, int (*init)(int, char **),
+int daemon_start(const char *name, int (*init)(int, char **),
 		void (*main)(void), void (*fini)(void), int argc, char *argv[]);
 
 /**
@@ -105,7 +105,7 @@ LELY_UTIL_EXTERN int daemon_start(const char *name, int (*init)(int, char **),
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int daemon_stop(void);
+int daemon_stop(void);
 
 /**
  * Sends the pause signal to the daemon handler. This function is equivalent to
@@ -115,7 +115,7 @@ LELY_UTIL_EXTERN int daemon_stop(void);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int daemon_pause(void);
+int daemon_pause(void);
 
 /**
  * Sends the continue signal to the daemon handler. This function is equivalent
@@ -126,7 +126,7 @@ LELY_UTIL_EXTERN int daemon_pause(void);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int daemon_continue(void);
+int daemon_continue(void);
 
 /**
  * Sends the reload signal to the daemon handler. This function is equivalent to
@@ -136,14 +136,14 @@ LELY_UTIL_EXTERN int daemon_continue(void);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int daemon_reload(void);
+int daemon_reload(void);
 
 /**
  * Sends a signal to a daemon, triggering the execution of the daemon handler.
  * On POSIX platforms, the handler is executed asynchronously (in a separate
  * thread), and this function can safely be called from a `signal()` handler.
  */
-LELY_UTIL_EXTERN int daemon_signal(int sig);
+int daemon_signal(int sig);
 
 /**
  * Sets the current daemon status (one of #DAEMON_START, #DAEMON_STOP,
@@ -151,7 +151,7 @@ LELY_UTIL_EXTERN int daemon_signal(int sig);
  * update the status in a timely manner after receiving a start, stop, pause or
  * continue signal.
  */
-LELY_UTIL_EXTERN int daemon_status(int status);
+int daemon_status(int status);
 
 /**
  * Retrieves current daemon handler and handle argument.
@@ -163,8 +163,7 @@ LELY_UTIL_EXTERN int daemon_status(int status);
  *
  * @see daemon_set_handler()
  */
-LELY_UTIL_EXTERN void daemon_get_handler(
-		daemon_handler_t **phandler, void **phandle);
+void daemon_get_handler(daemon_handler_t **phandler, void **phandle);
 
 /**
  * Sets the current daemon handler and its (optional) handle argument. The
@@ -173,11 +172,10 @@ LELY_UTIL_EXTERN void daemon_get_handler(
  *
  * @see daemon_get_handler()
  */
-LELY_UTIL_EXTERN void daemon_set_handler(
-		daemon_handler_t *handler, void *handle);
+void daemon_set_handler(daemon_handler_t *handler, void *handle);
 
 /// The default daemon_signal() handler. @see daemon_handler_t
-LELY_UTIL_EXTERN void default_daemon_handler(int sig, void *handle);
+void default_daemon_handler(int sig, void *handle);
 
 #ifdef __cplusplus
 }

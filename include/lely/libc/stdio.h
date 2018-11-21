@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STDIO_H_
 #define LELY_LIBC_STDIO_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_SNPRINTF
 #define LELY_HAVE_SNPRINTF 1
@@ -73,11 +73,10 @@ extern "C" {
  * @returns the number of characters read (including the delimiter but excluding
  * the terminating null byte), or -1 on error or end-of-file.
  */
-LELY_LIBC_EXTERN ssize_t getdelim(
-		char **lineptr, size_t *n, int delim, FILE *stream);
+ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
 
 /// Equivalent to #getdelim(lineptr, n, '\\n', stream).
-LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 #endif // !(_POSIX_C_SOURCE >= 200809L)
 
@@ -104,8 +103,7 @@ LELY_LIBC_EXTERN ssize_t getline(char **lineptr, size_t *n, FILE *stream);
  *
  * @see vsnprintf()
  */
-LELY_LIBC_EXTERN int __cdecl snprintf(
-		char *s, size_t n, const char *format, ...);
+int __cdecl snprintf(char *s, size_t n, const char *format, ...);
 
 /**
  * Equivalent to `vprintf()`, except that the output is written to a string
@@ -126,8 +124,7 @@ LELY_LIBC_EXTERN int __cdecl snprintf(
  *
  * @see snprintf()
  */
-LELY_LIBC_EXTERN int __cdecl vsnprintf(
-		char *s, size_t n, const char *format, va_list arg);
+int __cdecl vsnprintf(char *s, size_t n, const char *format, va_list arg);
 
 #endif // !LELY_HAVE_SNPRINTF
 
@@ -147,7 +144,7 @@ LELY_LIBC_EXTERN int __cdecl vsnprintf(
  *
  * @see vasprintf()
  */
-LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
+int __cdecl asprintf(char **strp, const char *fmt, ...);
 
 /**
  * Equivalent to `vsprintf()`, except that it allocates a string large enough to
@@ -164,8 +161,7 @@ LELY_LIBC_EXTERN int __cdecl asprintf(char **strp, const char *fmt, ...);
  *
  * @see asprintf()
  */
-LELY_LIBC_EXTERN int __cdecl vasprintf(
-		char **strp, const char *fmt, va_list ap);
+int __cdecl vasprintf(char **strp, const char *fmt, va_list ap);
 
 #endif // !_GNU_SOURCE || __MINGW32__
 

@@ -105,7 +105,7 @@ LELY_UTIL_RBTREE_INLINE void rbnode_init(struct rbnode *node, const void *key);
  *
  * @see rbnode_next()
  */
-LELY_UTIL_EXTERN struct rbnode *rbnode_prev(const struct rbnode *node);
+struct rbnode *rbnode_prev(const struct rbnode *node);
 
 /**
  * Returns a pointer to the next (in-order) node in a red-black tree with
@@ -115,7 +115,7 @@ LELY_UTIL_EXTERN struct rbnode *rbnode_prev(const struct rbnode *node);
  *
  * @see rbnode_prev()
  */
-LELY_UTIL_EXTERN struct rbnode *rbnode_next(const struct rbnode *node);
+struct rbnode *rbnode_next(const struct rbnode *node);
 
 /**
  * Iterates over each node in a red-black tree in ascending order. It is safe to
@@ -166,14 +166,14 @@ LELY_UTIL_RBTREE_INLINE size_t rbtree_size(const struct rbtree *tree);
  *
  * @see rbtree_remove(), rbtree_find()
  */
-LELY_UTIL_EXTERN void rbtree_insert(struct rbtree *tree, struct rbnode *node);
+void rbtree_insert(struct rbtree *tree, struct rbnode *node);
 
 /**
  * Removes a node from a red-black tree. This is an O(log(n)) operation.
  *
  * @see rbtree_insert()
  */
-LELY_UTIL_EXTERN void rbtree_remove(struct rbtree *tree, struct rbnode *node);
+void rbtree_remove(struct rbtree *tree, struct rbnode *node);
 
 /**
  * Finds a node in a red-black tree. This is an O(log(n)) operation.
@@ -182,8 +182,7 @@ LELY_UTIL_EXTERN void rbtree_remove(struct rbtree *tree, struct rbnode *node);
  *
  * @see rbtree_insert()
  */
-LELY_UTIL_EXTERN struct rbnode *rbtree_find(
-		const struct rbtree *tree, const void *key);
+struct rbnode *rbtree_find(const struct rbtree *tree, const void *key);
 
 /**
  * Returns a pointer to the first (leftmost) node in a red-black tree. This is
@@ -191,7 +190,7 @@ LELY_UTIL_EXTERN struct rbnode *rbtree_find(
  *
  * @see rbtree_last()
  */
-LELY_UTIL_EXTERN struct rbnode *rbtree_first(const struct rbtree *tree);
+struct rbnode *rbtree_first(const struct rbtree *tree);
 
 /**
  * Returns a pointer to the last (rightmost) node in a red-black tree. This is
@@ -199,7 +198,7 @@ LELY_UTIL_EXTERN struct rbnode *rbtree_first(const struct rbtree *tree);
  *
  * @see rbtree_first()
  */
-LELY_UTIL_EXTERN struct rbnode *rbtree_last(const struct rbtree *tree);
+struct rbnode *rbtree_last(const struct rbtree *tree);
 
 /**
  * Returns a pointer to the root node in a red-black tree. This is an O(1)

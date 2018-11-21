@@ -113,7 +113,7 @@ static int co_sync_recv(const struct can_msg *msg, void *data);
  */
 static int co_sync_timer(const struct timespec *tp, void *data);
 
-LELY_CO_EXPORT void *
+void *
 __co_sync_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sync));
@@ -122,13 +122,13 @@ __co_sync_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_sync_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_sync *
+struct __co_sync *
 __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 {
 	assert(sync);
@@ -198,7 +198,7 @@ error_obj_1005:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_sync_fini(struct __co_sync *sync)
 {
 	assert(sync);
@@ -225,7 +225,7 @@ __co_sync_fini(struct __co_sync *sync)
 	can_recv_destroy(sync->recv);
 }
 
-LELY_CO_EXPORT co_sync_t *
+co_sync_t *
 co_sync_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating SYNC service");
@@ -252,7 +252,7 @@ error_alloc_sync:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_sync_destroy(co_sync_t *sync)
 {
 	if (sync) {
@@ -262,7 +262,7 @@ co_sync_destroy(co_sync_t *sync)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_sync_get_net(const co_sync_t *sync)
 {
 	assert(sync);
@@ -270,7 +270,7 @@ co_sync_get_net(const co_sync_t *sync)
 	return sync->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_sync_get_dev(const co_sync_t *sync)
 {
 	assert(sync);
@@ -278,7 +278,7 @@ co_sync_get_dev(const co_sync_t *sync)
 	return sync->dev;
 }
 
-LELY_CO_EXPORT void
+void
 co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind, void **pdata)
 {
 	assert(sync);
@@ -289,7 +289,7 @@ co_sync_get_ind(const co_sync_t *sync, co_sync_ind_t **pind, void **pdata)
 		*pdata = sync->ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind, void *data)
 {
 	assert(sync);
@@ -298,7 +298,7 @@ co_sync_set_ind(co_sync_t *sync, co_sync_ind_t *ind, void *data)
 	sync->ind_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr, void **pdata)
 {
 	assert(sync);
@@ -309,7 +309,7 @@ co_sync_get_err(const co_sync_t *sync, co_sync_err_t **perr, void **pdata)
 		*pdata = sync->err_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_sync_set_err(co_sync_t *sync, co_sync_err_t *err, void *data)
 {
 	assert(sync);

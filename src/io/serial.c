@@ -43,7 +43,7 @@ static const struct io_handle_vtab serial_vtab = { .type = IO_TYPE_SERIAL,
 	.flush = &serial_flush,
 	.purge = &serial_purge };
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_open_serial(const char *path, io_attr_t *attr)
 {
 	assert(path);
@@ -189,7 +189,7 @@ error_open:
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_purge(io_handle_t handle, int flags)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -208,7 +208,7 @@ io_purge(io_handle_t handle, int flags)
 
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
-LELY_IO_EXPORT int
+int
 io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 {
 	assert(attr);
@@ -234,7 +234,7 @@ io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 #endif
 }
 
-LELY_IO_EXPORT int
+int
 io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 {
 	assert(attr);

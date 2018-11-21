@@ -25,7 +25,7 @@
 #include <lely/co/type.h>
 #include <lely/libc/stdalign.h>
 
-LELY_CO_EXPORT int
+int
 co_type_is_basic(co_unsigned16_t type)
 {
 	switch (type) {
@@ -37,7 +37,7 @@ co_type_is_basic(co_unsigned16_t type)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_type_is_array(co_unsigned16_t type)
 {
 	switch (type) {
@@ -49,7 +49,7 @@ co_type_is_array(co_unsigned16_t type)
 	}
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_type_sizeof(co_unsigned16_t type)
 {
 	switch (type) {
@@ -62,7 +62,7 @@ co_type_sizeof(co_unsigned16_t type)
 	}
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_type_alignof(co_unsigned16_t type)
 {
 	switch (type) {

@@ -293,7 +293,7 @@ static size_t co_gw_txt_lex_id(const char *begin, const char *end,
 static size_t co_gw_txt_lex_id_sel(const char *begin, const char *end,
 		struct floc *at, struct co_id *plo, struct co_id *phi);
 
-LELY_CO_EXPORT void *
+void *
 __co_gw_txt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw_txt));
@@ -302,13 +302,13 @@ __co_gw_txt_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_gw_txt_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_gw_txt *
+struct __co_gw_txt *
 __co_gw_txt_init(struct __co_gw_txt *gw)
 {
 	assert(gw);
@@ -325,13 +325,13 @@ __co_gw_txt_init(struct __co_gw_txt *gw)
 	return gw;
 }
 
-LELY_CO_EXPORT void
+void
 __co_gw_txt_fini(struct __co_gw_txt *gw)
 {
 	__unused_var(gw);
 }
 
-LELY_CO_EXPORT co_gw_txt_t *
+co_gw_txt_t *
 co_gw_txt_create(void)
 {
 	errc_t errc = 0;
@@ -356,7 +356,7 @@ error_alloc_gw:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_txt_destroy(co_gw_txt_t *gw)
 {
 	if (gw) {
@@ -365,7 +365,7 @@ co_gw_txt_destroy(co_gw_txt_t *gw)
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_gw_txt_iec(co_gw_txt_t *gw)
 {
 	assert(gw);
@@ -375,7 +375,7 @@ co_gw_txt_iec(co_gw_txt_t *gw)
 	return iec;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_gw_txt_pending(const co_gw_txt_t *gw)
 {
 	assert(gw);
@@ -383,7 +383,7 @@ co_gw_txt_pending(const co_gw_txt_t *gw)
 	return gw->pending;
 }
 
-LELY_CO_EXPORT int
+int
 co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 {
 	assert(srv);
@@ -480,7 +480,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_txt_get_recv_func(const co_gw_txt_t *gw, co_gw_txt_recv_func_t **pfunc,
 		void **pdata)
 {
@@ -492,7 +492,7 @@ co_gw_txt_get_recv_func(const co_gw_txt_t *gw, co_gw_txt_recv_func_t **pfunc,
 		*pdata = gw->recv_data;
 }
 
-LELY_CO_EXPORT size_t
+size_t
 co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		struct floc *at)
 {
@@ -757,7 +757,7 @@ error:
 	return floc_lex(at, begin, cp);
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_txt_set_recv_func(
 		co_gw_txt_t *gw, co_gw_txt_recv_func_t *func, void *data)
 {
@@ -767,7 +767,7 @@ co_gw_txt_set_recv_func(
 	gw->recv_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_txt_get_send_func(const co_gw_txt_t *gw, co_gw_txt_send_func_t **pfunc,
 		void **pdata)
 {
@@ -779,7 +779,7 @@ co_gw_txt_get_send_func(const co_gw_txt_t *gw, co_gw_txt_send_func_t **pfunc,
 		*pdata = gw->send_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_gw_txt_set_send_func(
 		co_gw_txt_t *gw, co_gw_txt_send_func_t *func, void *data)
 {

@@ -43,19 +43,19 @@ LELY_UTIL_HASH_INLINE size_t sizehash(size_t n);
 LELY_UTIL_HASH_INLINE size_t ptrhash(const void *ptr);
 
 /// Returns the FNV-1a hash of a string.
-LELY_UTIL_EXTERN size_t strhash(const char *s);
+size_t strhash(const char *s);
 
 /// Returns the FNV-1a hash of at most <b>n</b> characters of a string.
-LELY_UTIL_EXTERN size_t strnhash(const char *s, size_t n);
+size_t strnhash(const char *s, size_t n);
 
 /// Returns the case-independent FNV-1a hash of a string.
-LELY_UTIL_EXTERN size_t strcasehash(const char *s);
+size_t strcasehash(const char *s);
 
 /**
  * Returns the case-independent FNV-1a hash of at most <b>n</b> characters of a
  * string.
  */
-LELY_UTIL_EXTERN size_t strncasehash(const char *s, size_t n);
+size_t strncasehash(const char *s, size_t n);
 
 LELY_UTIL_HASH_INLINE size_t
 hashhash(size_t seed, size_t hash)

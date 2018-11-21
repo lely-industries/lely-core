@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_STRINGS_H_
 #define LELY_LIBC_STRINGS_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_STRINGS_H
 #if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__)) && __has_include(<strings.h>)
@@ -54,7 +54,7 @@ extern "C" {
 		&& !defined(__BSD_VISIBLE)
 LELY_LIBC_STRINGS_INLINE int __cdecl ffs(int i) { return __builtin_ffs(i); }
 #else
-LELY_LIBC_EXTERN int __cdecl ffs(int i);
+int __cdecl ffs(int i);
 #endif
 
 /**
@@ -64,7 +64,7 @@ LELY_LIBC_EXTERN int __cdecl ffs(int i);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-LELY_LIBC_EXTERN int __cdecl strcasecmp(const char *s1, const char *s2);
+int __cdecl strcasecmp(const char *s1, const char *s2);
 
 /**
  * Compares at most <b>n</b> characters from the the string at <b>s1</b> to the
@@ -73,8 +73,7 @@ LELY_LIBC_EXTERN int __cdecl strcasecmp(const char *s1, const char *s2);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-LELY_LIBC_EXTERN int __cdecl strncasecmp(
-		const char *s1, const char *s2, size_t n);
+int __cdecl strncasecmp(const char *s1, const char *s2, size_t n);
 
 #ifdef __cplusplus
 }

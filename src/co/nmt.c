@@ -631,7 +631,7 @@ static int co_nmt_slaves_boot(co_nmt_t *nmt);
 /// The services enabled in the NMT 'stopped' state.
 #define CO_NMT_STOP_SRV CO_NMT_SRV_LSS
 
-LELY_CO_EXPORT co_unsigned32_t
+co_unsigned32_t
 co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 {
 	assert(dev);
@@ -673,7 +673,7 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 	return co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &val);
 }
 
-LELY_CO_EXPORT const char *
+const char *
 co_nmt_es2str(char es)
 {
 	switch (es) {
@@ -708,7 +708,7 @@ co_nmt_es2str(char es)
 	}
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_nmt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt));
@@ -717,13 +717,13 @@ __co_nmt_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_nmt_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_nmt *
+struct __co_nmt *
 __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 {
 	assert(nmt);
@@ -924,7 +924,7 @@ error_write_dcf_node:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_nmt_fini(struct __co_nmt *nmt)
 {
 	assert(nmt);
@@ -995,7 +995,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
 }
 
-LELY_CO_EXPORT co_nmt_t *
+co_nmt_t *
 co_nmt_create(can_net_t *net, co_dev_t *dev)
 {
 	errc_t errc = 0;
@@ -1020,7 +1020,7 @@ error_alloc_nmt:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_destroy(co_nmt_t *nmt)
 {
 	if (nmt) {
@@ -1029,7 +1029,7 @@ co_nmt_destroy(co_nmt_t *nmt)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_nmt_get_net(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1037,7 +1037,7 @@ co_nmt_get_net(const co_nmt_t *nmt)
 	return nmt->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_nmt_get_dev(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1045,7 +1045,7 @@ co_nmt_get_dev(const co_nmt_t *nmt)
 	return nmt->dev;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_cs_ind(const co_nmt_t *nmt, co_nmt_cs_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1056,7 +1056,7 @@ co_nmt_get_cs_ind(const co_nmt_t *nmt, co_nmt_cs_ind_t **pind, void **pdata)
 		*pdata = nmt->cs_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_cs_ind(co_nmt_t *nmt, co_nmt_cs_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1067,7 +1067,7 @@ co_nmt_set_cs_ind(co_nmt_t *nmt, co_nmt_cs_ind_t *ind, void *data)
 
 #ifndef LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_ng_ind(const co_nmt_t *nmt, co_nmt_ng_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1078,7 +1078,7 @@ co_nmt_get_ng_ind(const co_nmt_t *nmt, co_nmt_ng_ind_t **pind, void **pdata)
 		*pdata = nmt->ng_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1087,7 +1087,7 @@ co_nmt_set_ng_ind(co_nmt_t *nmt, co_nmt_ng_ind_t *ind, void *data)
 	nmt->ng_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 {
 	assert(nmt);
@@ -1102,7 +1102,7 @@ co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 
 #endif // !LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_lg_ind(const co_nmt_t *nmt, co_nmt_lg_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1113,7 +1113,7 @@ co_nmt_get_lg_ind(const co_nmt_t *nmt, co_nmt_lg_ind_t **pind, void **pdata)
 		*pdata = nmt->lg_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1122,7 +1122,7 @@ co_nmt_set_lg_ind(co_nmt_t *nmt, co_nmt_lg_ind_t *ind, void *data)
 	nmt->lg_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_lg(co_nmt_t *nmt, int state)
 {
 	assert(nmt);
@@ -1131,7 +1131,7 @@ co_nmt_on_lg(co_nmt_t *nmt, int state)
 		co_nmt_on_err(nmt, 0x8130, 0x10, NULL);
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_hb_ind(const co_nmt_t *nmt, co_nmt_hb_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1142,7 +1142,7 @@ co_nmt_get_hb_ind(const co_nmt_t *nmt, co_nmt_hb_ind_t **pind, void **pdata)
 		*pdata = nmt->hb_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1151,7 +1151,7 @@ co_nmt_set_hb_ind(co_nmt_t *nmt, co_nmt_hb_ind_t *ind, void *data)
 	nmt->hb_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 {
 	assert(nmt);
@@ -1170,7 +1170,7 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_st_ind(const co_nmt_t *nmt, co_nmt_st_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1181,7 +1181,7 @@ co_nmt_get_st_ind(const co_nmt_t *nmt, co_nmt_st_ind_t **pind, void **pdata)
 		*pdata = nmt->st_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1190,7 +1190,7 @@ co_nmt_set_st_ind(co_nmt_t *nmt, co_nmt_st_ind_t *ind, void *data)
 	nmt->st_data = ind ? data : NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 {
 	assert(nmt);
@@ -1214,7 +1214,7 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 
 #ifndef LELY_NO_CO_LSS
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_lss_req(const co_nmt_t *nmt, co_nmt_lss_req_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1225,7 +1225,7 @@ co_nmt_get_lss_req(const co_nmt_t *nmt, co_nmt_lss_req_t **pind, void **pdata)
 		*pdata = nmt->lss_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind, void *data)
 {
 	assert(nmt);
@@ -1236,7 +1236,7 @@ co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind, void *data)
 
 #endif
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_boot_ind(const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1247,7 +1247,7 @@ co_nmt_get_boot_ind(const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata)
 		*pdata = nmt->boot_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1256,7 +1256,7 @@ co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind, void *data)
 	nmt->boot_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_cfg_ind(const co_nmt_t *nmt, co_nmt_cfg_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1267,7 +1267,7 @@ co_nmt_get_cfg_ind(const co_nmt_t *nmt, co_nmt_cfg_ind_t **pind, void **pdata)
 		*pdata = nmt->cfg_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1276,7 +1276,7 @@ co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data)
 	nmt->cfg_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_dn_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1287,7 +1287,7 @@ co_nmt_get_dn_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
 		*pdata = nmt->dn_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1296,7 +1296,7 @@ co_nmt_set_dn_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
 	nmt->dn_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_up_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1307,7 +1307,7 @@ co_nmt_get_up_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
 		*pdata = nmt->up_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1318,7 +1318,7 @@ co_nmt_set_up_ind(co_nmt_t *nmt, co_nmt_sdo_ind_t *ind, void *data)
 
 #endif // !LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT void
+void
 co_nmt_get_sync_ind(const co_nmt_t *nmt, co_nmt_sync_ind_t **pind, void **pdata)
 {
 	assert(nmt);
@@ -1329,7 +1329,7 @@ co_nmt_get_sync_ind(const co_nmt_t *nmt, co_nmt_sync_ind_t **pind, void **pdata)
 		*pdata = nmt->sync_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_sync_ind(co_nmt_t *nmt, co_nmt_sync_ind_t *ind, void *data)
 {
 	assert(nmt);
@@ -1338,7 +1338,7 @@ co_nmt_set_sync_ind(co_nmt_t *nmt, co_nmt_sync_ind_t *ind, void *data)
 	nmt->sync_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
 {
 	assert(nmt);
@@ -1364,7 +1364,7 @@ co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
 		nmt->sync_ind(nmt, cnt, nmt->sync_data);
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 		const uint8_t msef[5])
 {
@@ -1385,7 +1385,7 @@ co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 	}
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_nmt_get_id(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1393,7 +1393,7 @@ co_nmt_get_id(const co_nmt_t *nmt)
 	return nmt->id;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
@@ -1408,7 +1408,7 @@ co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id)
 	return 0;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_nmt_get_st(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1416,7 +1416,7 @@ co_nmt_get_st(const co_nmt_t *nmt)
 	return nmt->st & ~CO_NMT_ST_TOGGLE;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_is_master(const co_nmt_t *nmt)
 {
 #ifdef LELY_NO_CO_MASTER
@@ -1432,7 +1432,7 @@ co_nmt_is_master(const co_nmt_t *nmt)
 
 #ifndef LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT int
+int
 co_nmt_get_timeout(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1440,7 +1440,7 @@ co_nmt_get_timeout(const co_nmt_t *nmt)
 	return nmt->timeout;
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
 {
 	assert(nmt);
@@ -1448,7 +1448,7 @@ co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
 	nmt->timeout = timeout;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 {
 	assert(nmt);
@@ -1495,7 +1495,7 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 }
 
 #ifndef LELY_NO_CO_LSS
-LELY_CO_EXPORT int
+int
 co_nmt_lss_con(co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1511,7 +1511,7 @@ co_nmt_lss_con(co_nmt_t *nmt)
 }
 #endif
 
-LELY_CO_EXPORT int
+int
 co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 {
 	assert(nmt);
@@ -1564,7 +1564,7 @@ error_param:
 	return -1;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
@@ -1581,7 +1581,7 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 	return !!nmt->slaves[id - 1].boot;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		co_nmt_cfg_con_t *con, void *data)
 {
@@ -1637,7 +1637,7 @@ error_param:
 	return -1;
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 {
 	assert(nmt);
@@ -1655,7 +1655,7 @@ co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	return co_nmt_cfg_cfg_res(nmt->slaves[id - 1].cfg, ac);
 }
 
-LELY_CO_EXPORT int
+int
 co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 		co_unsigned8_t ltf)
 {
@@ -1703,7 +1703,7 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 
 #endif // !LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT int
+int
 co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
 {
 	assert(nmt);
@@ -1721,7 +1721,7 @@ co_nmt_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_nmt_comm_err_ind(co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1737,7 +1737,7 @@ co_nmt_comm_err_ind(co_nmt_t *nmt)
 }
 
 #ifndef LELY_NO_CO_MASTER
-LELY_CO_EXPORT int
+int
 co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
@@ -1784,7 +1784,7 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 }
 #endif
 
-LELY_CO_EXPORT co_rpdo_t *
+co_rpdo_t *
 co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
 	assert(nmt);
@@ -1795,7 +1795,7 @@ co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 	return nmt->srv.rpdos[n - 1];
 }
 
-LELY_CO_EXPORT co_tpdo_t *
+co_tpdo_t *
 co_nmt_get_tpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
 	assert(nmt);
@@ -1806,7 +1806,7 @@ co_nmt_get_tpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 	return nmt->srv.tpdos[n - 1];
 }
 
-LELY_CO_EXPORT co_ssdo_t *
+co_ssdo_t *
 co_nmt_get_ssdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
 	assert(nmt);
@@ -1817,7 +1817,7 @@ co_nmt_get_ssdo(const co_nmt_t *nmt, co_unsigned8_t n)
 	return nmt->srv.ssdos[n - 1];
 }
 
-LELY_CO_EXPORT co_csdo_t *
+co_csdo_t *
 co_nmt_get_csdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
 	assert(nmt);
@@ -1828,7 +1828,7 @@ co_nmt_get_csdo(const co_nmt_t *nmt, co_unsigned8_t n)
 	return nmt->srv.csdos[n - 1];
 }
 
-LELY_CO_EXPORT co_sync_t *
+co_sync_t *
 co_nmt_get_sync(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1836,7 +1836,7 @@ co_nmt_get_sync(const co_nmt_t *nmt)
 	return nmt->srv.sync;
 }
 
-LELY_CO_EXPORT co_time_t *
+co_time_t *
 co_nmt_get_time(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1844,7 +1844,7 @@ co_nmt_get_time(const co_nmt_t *nmt)
 	return nmt->srv.time;
 }
 
-LELY_CO_EXPORT co_emcy_t *
+co_emcy_t *
 co_nmt_get_emcy(const co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -1852,7 +1852,7 @@ co_nmt_get_emcy(const co_nmt_t *nmt)
 	return nmt->srv.emcy;
 }
 
-LELY_CO_EXPORT co_lss_t *
+co_lss_t *
 co_nmt_get_lss(const co_nmt_t *nmt)
 {
 	assert(nmt);

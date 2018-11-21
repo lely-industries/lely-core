@@ -23,7 +23,7 @@
 #ifndef LELY_LIBC_STDATOMIC_H_
 #define LELY_LIBC_STDATOMIC_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #ifndef LELY_HAVE_STDATOMIC_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) \

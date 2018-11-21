@@ -50,7 +50,7 @@ static void *diag_handle;
 static diag_at_handler_t *diag_at_handler = &default_diag_at_handler;
 static void *diag_at_handle;
 
-LELY_UTIL_EXPORT size_t
+size_t
 floc_lex(struct floc *at, const char *begin, const char *end)
 {
 	assert(begin);
@@ -82,7 +82,7 @@ floc_lex(struct floc *at, const char *begin, const char *end)
 	return cp - begin;
 }
 
-LELY_UTIL_EXPORT int
+int
 snprintf_floc(char *s, size_t n, const struct floc *at)
 {
 	assert(at);
@@ -120,7 +120,7 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 	return t;
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_get_handler(diag_handler_t **phandler, void **phandle)
 {
 	if (phandler)
@@ -129,14 +129,14 @@ diag_get_handler(diag_handler_t **phandler, void **phandle)
 		*phandle = diag_handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_set_handler(diag_handler_t *handler, void *handle)
 {
 	diag_handler = handler;
 	diag_handle = handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_at_get_handler(diag_at_handler_t **phandler, void **phandle)
 {
 	if (phandler)
@@ -145,14 +145,14 @@ diag_at_get_handler(diag_at_handler_t **phandler, void **phandle)
 		*phandle = diag_at_handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_at_set_handler(diag_at_handler_t *handler, void *handle)
 {
 	diag_at_handler = handler;
 	diag_at_handle = handle;
 }
 
-LELY_UTIL_EXPORT void
+void
 diag(enum diag_severity severity, errc_t errc, const char *format, ...)
 {
 	va_list ap;
@@ -161,14 +161,14 @@ diag(enum diag_severity severity, errc_t errc, const char *format, ...)
 	va_end(ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 vdiag(enum diag_severity severity, errc_t errc, const char *format, va_list ap)
 {
 	if (diag_handler)
 		diag_handler(diag_handle, severity, errc, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, ...)
 {
@@ -178,7 +178,7 @@ diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 	va_end(ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, va_list ap)
 {
@@ -186,7 +186,7 @@ vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 		diag_at_handler(diag_at_handle, severity, errc, at, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, ...)
 {
@@ -196,7 +196,7 @@ diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 	va_end(ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 		const char *format, va_list ap)
 {
@@ -204,14 +204,14 @@ vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 		vdiag_at(severity, errc, at, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 default_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	default_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -233,7 +233,7 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		abort();
 }
 
-LELY_UTIL_EXPORT void
+void
 cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
@@ -248,14 +248,14 @@ cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 	default_diag_handler(handle, severity, errc, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	daemon_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 daemon_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -268,14 +268,14 @@ daemon_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 #ifdef _WIN32
 
-LELY_UTIL_EXPORT void
+void
 dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	dialog_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -313,14 +313,14 @@ dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 
 #endif // _WIN32
 
-LELY_UTIL_EXPORT void
+void
 log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	log_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -355,14 +355,14 @@ log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 	default_diag_at_handler(handle, severity, errc, at, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	syslog_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT void
+void
 syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -395,21 +395,21 @@ syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 #endif
 }
 
-LELY_UTIL_EXPORT int
+int
 vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	return vsnprintf_diag_at(s, n, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT int
+int
 vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
 		const char *format, va_list ap)
 {
 	return vasprintf_diag_at(ps, severity, errc, NULL, format, ap);
 }
 
-LELY_UTIL_EXPORT int
+int
 vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -484,7 +484,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 	return t;
 }
 
-LELY_UTIL_EXPORT int
+int
 vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
 		const struct floc *at, const char *format, va_list ap)
 {
@@ -513,7 +513,7 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
 	return n;
 }
 
-LELY_UTIL_EXPORT const char *
+const char *
 cmdname(const char *path)
 {
 	assert(path);

@@ -100,7 +100,7 @@ static int can_setattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 
 #endif
 
-LELY_IO_EXPORT io_handle_t
+io_handle_t
 io_open_can(const char *path)
 {
 	int errsv = 0;
@@ -207,7 +207,7 @@ error_socket:
 
 #ifndef LELY_NO_CAN
 
-LELY_IO_EXPORT int
+int
 io_can_read(io_handle_t handle, struct can_msg *msg)
 {
 	assert(msg);
@@ -267,7 +267,7 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_write(io_handle_t handle, const struct can_msg *msg)
 {
 	assert(msg);
@@ -313,7 +313,7 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 
 #if defined(HAVE_LINUX_CAN_NETLINK_H) && defined(HAVE_LINUX_RTNETLINK_H)
 
-LELY_IO_EXPORT int
+int
 io_can_start(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -345,7 +345,7 @@ io_can_start(io_handle_t handle)
 	return close(fd);
 }
 
-LELY_IO_EXPORT int
+int
 io_can_stop(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -379,7 +379,7 @@ io_can_stop(io_handle_t handle)
 
 #endif // HAVE_LINUX_CAN_NETLINK_H && HAVE_LINUX_RTNETLINK_H
 
-LELY_IO_EXPORT int
+int
 io_can_get_state(io_handle_t handle)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -428,7 +428,7 @@ error:
 	return can->state;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_get_error(io_handle_t handle, int *perror)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -450,7 +450,7 @@ io_can_get_error(io_handle_t handle, int *perror)
 
 #if defined(HAVE_LINUX_CAN_NETLINK_H) && defined(HAVE_LINUX_RTNETLINK_H)
 
-LELY_IO_EXPORT int
+int
 io_can_get_ec(io_handle_t handle, uint16_t *ptxec, uint16_t *prxec)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -490,7 +490,7 @@ io_can_get_ec(io_handle_t handle, uint16_t *ptxec, uint16_t *prxec)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -528,7 +528,7 @@ io_can_get_bitrate(io_handle_t handle, uint32_t *pbitrate)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_set_bitrate(io_handle_t handle, uint32_t bitrate)
 {
 	int result = -1;
@@ -581,7 +581,7 @@ error_param:
 	return result;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -619,7 +619,7 @@ io_can_get_txqlen(io_handle_t handle, size_t *ptxqlen)
 	return 0;
 }
 
-LELY_IO_EXPORT int
+int
 io_can_set_txqlen(io_handle_t handle, size_t txqlen)
 {
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {

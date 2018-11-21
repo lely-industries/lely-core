@@ -48,13 +48,13 @@ extern "C" {
  *
  * @see bitset_fini()
  */
-LELY_UTIL_EXTERN int bitset_init(struct bitset *set, int size);
+int bitset_init(struct bitset *set, int size);
 
 /// Finalizes a bitset. @see bitset_init().
-LELY_UTIL_EXTERN void bitset_fini(struct bitset *set);
+void bitset_fini(struct bitset *set);
 
 /// Returns the size (in number of bits) of <b>set</b>.
-LELY_UTIL_EXTERN int bitset_size(const struct bitset *set);
+int bitset_size(const struct bitset *set);
 
 /**
  * Resizes a bitset. On success, if the set has grown, all new bits are cleared.
@@ -66,49 +66,49 @@ LELY_UTIL_EXTERN int bitset_size(const struct bitset *set);
  * @returns the new size (in number of bits) of the bitset, or 0 on error. In
  * the latter case, the error number can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN int bitset_resize(struct bitset *set, int size);
+int bitset_resize(struct bitset *set, int size);
 
 /// Returns 1 if bit <b>n</b> in <b>set</b> is set, and 0 otherwise.
-LELY_UTIL_EXTERN int bitset_test(const struct bitset *set, int n);
+int bitset_test(const struct bitset *set, int n);
 
 /// Sets bit <b>n</b> in <b>set</b>.
-LELY_UTIL_EXTERN void bitset_set(struct bitset *set, int n);
+void bitset_set(struct bitset *set, int n);
 
 /// Sets all bits in <b>set</b>.
-LELY_UTIL_EXTERN void bitset_set_all(struct bitset *set);
+void bitset_set_all(struct bitset *set);
 
 /// Clears bit <b>n</b> in <b>set</b>.
-LELY_UTIL_EXTERN void bitset_clr(struct bitset *set, int n);
+void bitset_clr(struct bitset *set, int n);
 
 /// Clears all bits in <b>set</b>.
-LELY_UTIL_EXTERN void bitset_clr_all(struct bitset *set);
+void bitset_clr_all(struct bitset *set);
 
 /// Flip all bits in <b>set</b>.
-LELY_UTIL_EXTERN void bitset_compl(struct bitset *set);
+void bitset_compl(struct bitset *set);
 
 /**
  * Returns the index (starting from one) of the first set bit in <b>set</b>, or
  * 0 if all bits are zero.
  */
-LELY_UTIL_EXTERN int bitset_ffs(const struct bitset *set);
+int bitset_ffs(const struct bitset *set);
 
 /**
  * Returns the index (starting from one) of the first zero bit in <b>set</b>, or
  * 0 if all bits are set.
  */
-LELY_UTIL_EXTERN int bitset_ffz(const struct bitset *set);
+int bitset_ffz(const struct bitset *set);
 
 /**
  * Returns the index (starting from one) of the first set bit higher or equal to
  * <b>n</b> in <b>set</b>, or 0 if all bits starting from <b>n</b> are zero.
  */
-LELY_UTIL_EXTERN int bitset_fns(const struct bitset *set, int n);
+int bitset_fns(const struct bitset *set, int n);
 
 /**
  * Returns the index (starting from one) of the first zero bit higher or equal
  * to <b>n</b> in <b>set</b>, or 0 if all bits starting from <b>n</b> are set.
  */
-LELY_UTIL_EXTERN int bitset_fnz(const struct bitset *set, int n);
+int bitset_fnz(const struct bitset *set, int n);
 
 #ifdef __cplusplus
 }

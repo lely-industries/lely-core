@@ -86,40 +86,40 @@ extern "C" {
 #endif
 
 /// Initializes a 64-bit random number generator with a seed.
-LELY_UTIL_EXTERN void rand64_seed(struct rand64 *r, uint64_t seed);
+void rand64_seed(struct rand64 *r, uint64_t seed);
 
 /// Generates an unsigned 64-bit random number.
-LELY_UTIL_EXTERN uint64_t rand64_get(struct rand64 *r);
+uint64_t rand64_get(struct rand64 *r);
 
 /// Discards the next <b>z</b> random numbers from the sequence.
-LELY_UTIL_EXTERN void rand64_discard(struct rand64 *r, uint64_t z);
+void rand64_discard(struct rand64 *r, uint64_t z);
 
 /// Initializes a 32-bit random number generator with a seed.
-LELY_UTIL_EXTERN void rand32_seed(struct rand32 *r, uint64_t seed);
+void rand32_seed(struct rand32 *r, uint64_t seed);
 
 /// Generates an unsigned 32-bit random number.
-LELY_UTIL_EXTERN uint32_t rand32_get(struct rand32 *r);
+uint32_t rand32_get(struct rand32 *r);
 
 /// Discards the next <b>z</b> random numbers from the sequence.
-LELY_UTIL_EXTERN void rand32_discard(struct rand32 *r, uint64_t z);
+void rand32_discard(struct rand32 *r, uint64_t z);
 
 /// Initializes a 16-bit random number generator with a seed.
-LELY_UTIL_EXTERN void rand16_seed(struct rand16 *r, uint64_t seed);
+void rand16_seed(struct rand16 *r, uint64_t seed);
 
 /// Generates an unsigned 16-bit random number.
-LELY_UTIL_EXTERN uint16_t rand16_get(struct rand16 *r);
+uint16_t rand16_get(struct rand16 *r);
 
 /// Discards the next <b>z</b> random numbers from the sequence.
-LELY_UTIL_EXTERN void rand16_discard(struct rand16 *r, uint64_t z);
+void rand16_discard(struct rand16 *r, uint64_t z);
 
 /// Initializes a 8-bit random number generator with a seed.
-LELY_UTIL_EXTERN void rand8_seed(struct rand8 *r, uint64_t seed);
+void rand8_seed(struct rand8 *r, uint64_t seed);
 
 /// Generates an unsigned 8-bit random number.
-LELY_UTIL_EXTERN uint8_t rand8_get(struct rand8 *r);
+uint8_t rand8_get(struct rand8 *r);
 
 /// Discards the next <b>z</b> random numbers from the sequence.
-LELY_UTIL_EXTERN void rand8_discard(struct rand8 *r, uint64_t z);
+void rand8_discard(struct rand8 *r, uint64_t z);
 
 #ifdef __cplusplus
 }

@@ -22,16 +22,7 @@
 #define LELY_CO_CO_H_
 
 #include <lely/can/can.h>
-#include <lely/libc/libc.h>
 #include <lely/util/util.h>
-
-#ifndef LELY_CO_EXTERN
-#ifdef LELY_CO_INTERN
-#define LELY_CO_EXTERN extern LELY_DLL_EXPORT
-#else
-#define LELY_CO_EXTERN extern LELY_DLL_IMPORT
-#endif
-#endif
 
 struct __co_dev;
 #ifdef __cplusplus

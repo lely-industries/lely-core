@@ -45,11 +45,11 @@ extern "C" {
 typedef void co_tpdo_ind_t(co_tpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
-LELY_CO_EXTERN void *__co_tpdo_alloc(void);
-LELY_CO_EXTERN void __co_tpdo_free(void *ptr);
-LELY_CO_EXTERN struct __co_tpdo *__co_tpdo_init(struct __co_tpdo *pdo,
-		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
-LELY_CO_EXTERN void __co_tpdo_fini(struct __co_tpdo *pdo);
+void *__co_tpdo_alloc(void);
+void __co_tpdo_free(void *ptr);
+struct __co_tpdo *__co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net,
+		co_dev_t *dev, co_unsigned16_t num);
+void __co_tpdo_fini(struct __co_tpdo *pdo);
 
 /**
  * Creates a new CANopen Transmit-PDO service.
@@ -65,31 +65,28 @@ LELY_CO_EXTERN void __co_tpdo_fini(struct __co_tpdo *pdo);
  *
  * @see co_tpdo_destroy()
  */
-LELY_CO_EXTERN co_tpdo_t *co_tpdo_create(
-		can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
+co_tpdo_t *co_tpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Transmit-PDO service. @see co_tpdo_create()
-LELY_CO_EXTERN void co_tpdo_destroy(co_tpdo_t *pdo);
+void co_tpdo_destroy(co_tpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Transmit-PDO.
-LELY_CO_EXTERN can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);
+can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);
 
 /// Returns a pointer to the CANopen device of a Transmit-PDO.
-LELY_CO_EXTERN co_dev_t *co_tpdo_get_dev(const co_tpdo_t *pdo);
+co_dev_t *co_tpdo_get_dev(const co_tpdo_t *pdo);
 
 /// Returns the PDO number of a Transmit-PDO.
-LELY_CO_EXTERN co_unsigned16_t co_tpdo_get_num(const co_tpdo_t *pdo);
+co_unsigned16_t co_tpdo_get_num(const co_tpdo_t *pdo);
 
 /**
  * Returns a pointer to the PDO communication parameter record of a
  * Transmit-PDO.
  */
-LELY_CO_EXTERN const struct co_pdo_comm_par *co_tpdo_get_comm_par(
-		const co_tpdo_t *pdo);
+const struct co_pdo_comm_par *co_tpdo_get_comm_par(const co_tpdo_t *pdo);
 
 /// Returns a pointer to the PDO mapping parameter record of a Transmit-PDO.
-LELY_CO_EXTERN const struct co_pdo_map_par *co_tpdo_get_map_par(
-		const co_tpdo_t *pdo);
+const struct co_pdo_map_par *co_tpdo_get_map_par(const co_tpdo_t *pdo);
 
 /**
  * Retrieves the indication function invoked when a Transmit-PDO error occurs.
@@ -102,8 +99,7 @@ LELY_CO_EXTERN const struct co_pdo_map_par *co_tpdo_get_map_par(
  *
  * @see co_tpdo_set_ind()
  */
-LELY_CO_EXTERN void co_tpdo_get_ind(
-		const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
+void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a Transmit-PDO error occurs.
@@ -115,8 +111,7 @@ LELY_CO_EXTERN void co_tpdo_get_ind(
  *
  * @see co_tpdo_get_ind()
  */
-LELY_CO_EXTERN void co_tpdo_set_ind(
-		co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data);
+void co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data);
 
 /**
  * Triggers the transmission of an event-driven (asynchronous) PDO. This
@@ -127,7 +122,7 @@ LELY_CO_EXTERN void co_tpdo_set_ind(
  *
  * @see co_tpdo_sync()
  */
-LELY_CO_EXTERN int co_tpdo_event(co_tpdo_t *pdo);
+int co_tpdo_event(co_tpdo_t *pdo);
 
 /**
  * Triggers the transmission of a synchronous PDO.
@@ -140,10 +135,10 @@ LELY_CO_EXTERN int co_tpdo_event(co_tpdo_t *pdo);
  *
  * @see co_tpdo_event()
  */
-LELY_CO_EXTERN int co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt);
+int co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt);
 
 /// Retrieves the time at which the next event-driven TPDO may be sent.
-LELY_CO_EXTERN void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
+void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
 
 #ifdef __cplusplus
 }

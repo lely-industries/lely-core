@@ -45,7 +45,7 @@ extern "C" {
  *
  * @returns the updated CRC.
  */
-LELY_CO_EXTERN uint16_t co_crc(uint16_t crc, const void *ptr, size_t n);
+uint16_t co_crc(uint16_t crc, const void *ptr, size_t n);
 
 #ifdef __cplusplus
 }

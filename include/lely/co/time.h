@@ -57,38 +57,34 @@ typedef void co_time_ind_t(
  *
  * @see co_time_of_day_set()
  */
-LELY_CO_EXTERN void co_time_of_day_get(
-		const co_time_of_day_t *tod, struct timespec *tp);
+void co_time_of_day_get(const co_time_of_day_t *tod, struct timespec *tp);
 
 /**
  * Stores the absolute time into a CANopen TIME_OF_DAY value.
  *
  * @see co_time_of_day_get()
  */
-LELY_CO_EXTERN void co_time_of_day_set(
-		co_time_of_day_t *tod, const struct timespec *tp);
+void co_time_of_day_set(co_time_of_day_t *tod, const struct timespec *tp);
 
 /**
  * Loads a time difference from a CANopen TIME_DIFFERENCE value.
  *
  * @see co_time_diff_set()
  */
-LELY_CO_EXTERN void co_time_diff_get(
-		const co_time_diff_t *td, struct timespec *tp);
+void co_time_diff_get(const co_time_diff_t *td, struct timespec *tp);
 
 /**
  * Stores a time difference into a CANopen TIME_DIFFERENCE value.
  *
  * @see co_time_diff_get()
  */
-LELY_CO_EXTERN void co_time_diff_set(
-		co_time_diff_t *td, const struct timespec *tp);
+void co_time_diff_set(co_time_diff_t *td, const struct timespec *tp);
 
-LELY_CO_EXTERN void *__co_time_alloc(void);
-LELY_CO_EXTERN void __co_time_free(void *ptr);
-LELY_CO_EXTERN struct __co_time *__co_time_init(
+void *__co_time_alloc(void);
+void __co_time_free(void *ptr);
+struct __co_time *__co_time_init(
 		struct __co_time *time, can_net_t *net, co_dev_t *dev);
-LELY_CO_EXTERN void __co_time_fini(struct __co_time *time);
+void __co_time_fini(struct __co_time *time);
 
 /**
  * Creates a new CANopen TIME producer/consumer service.
@@ -101,16 +97,16 @@ LELY_CO_EXTERN void __co_time_fini(struct __co_time *time);
  *
  * @see co_time_destroy()
  */
-LELY_CO_EXTERN co_time_t *co_time_create(can_net_t *net, co_dev_t *dev);
+co_time_t *co_time_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen TIME producer/consumer service. @see co_time_create()
-LELY_CO_EXTERN void co_time_destroy(co_time_t *time);
+void co_time_destroy(co_time_t *time);
 
 /// Returns a pointer to the CAN network of a TIME producer/consumer service.
-LELY_CO_EXTERN can_net_t *co_time_get_net(const co_time_t *time);
+can_net_t *co_time_get_net(const co_time_t *time);
 
 /// Returns a pointer to the CANopen device of a TIME producer/consumer service.
-LELY_CO_EXTERN co_dev_t *co_time_get_dev(const co_time_t *time);
+co_dev_t *co_time_get_dev(const co_time_t *time);
 
 /**
  * Retrieves the indication function invoked when a CANopen time stamp is
@@ -124,8 +120,7 @@ LELY_CO_EXTERN co_dev_t *co_time_get_dev(const co_time_t *time);
  *
  * @see co_time_set_ind()
  */
-LELY_CO_EXTERN void co_time_get_ind(
-		const co_time_t *time, co_time_ind_t **pind, void **pdata);
+void co_time_get_ind(const co_time_t *time, co_time_ind_t **pind, void **pdata);
 
 /**
  * Sets the indication function invoked when a CANopen time stamp is received.
@@ -137,8 +132,7 @@ LELY_CO_EXTERN void co_time_get_ind(
  *
  * @see co_time_get_ind()
  */
-LELY_CO_EXTERN void co_time_set_ind(
-		co_time_t *time, co_time_ind_t *ind, void *data);
+void co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data);
 
 /**
  * Starts a CANopen TIME producer. This function has no effect if the TIME
@@ -156,11 +150,11 @@ LELY_CO_EXTERN void co_time_set_ind(
  *
  * @see co_time_stop()
  */
-LELY_CO_EXTERN void co_time_start(co_time_t *time, const struct timespec *start,
+void co_time_start(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval);
 
 /// Stops a CANopen TIME producer. @see co_time_start()
-LELY_CO_EXTERN void co_time_stop(co_time_t *time);
+void co_time_stop(co_time_t *time);
 
 #ifdef __cplusplus
 }

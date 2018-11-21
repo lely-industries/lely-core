@@ -94,7 +94,7 @@ extern "C" {
  * <b>maxinfo</b>), or -1 on error. In the latter case, the error number can be
  * obtained with get_errc().
  */
-LELY_IO_EXTERN int io_get_ifinfo(int maxinfo, struct io_ifinfo *info);
+int io_get_ifinfo(int maxinfo, struct io_ifinfo *info);
 
 #ifdef __cplusplus
 }

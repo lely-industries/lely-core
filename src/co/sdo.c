@@ -22,7 +22,7 @@
  */
 
 #include "co.h"
-#define LELY_CO_SDO_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_CO_SDO_INLINE extern inline
 #include <lely/util/errnum.h>
 #ifndef LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>
@@ -53,7 +53,7 @@ static int co_sdo_req_dn_buf(
 /// Constructs a CANopen SDO upload request from its internal buffer.
 static void co_sdo_req_up_buf(struct co_sdo_req *req);
 
-LELY_CO_EXPORT const char *
+const char *
 co_sdo_ac2str(co_unsigned32_t ac)
 {
 	switch (ac) {
@@ -105,7 +105,7 @@ co_sdo_ac2str(co_unsigned32_t ac)
 	}
 }
 
-LELY_CO_EXPORT void
+void
 co_sdo_req_init(struct co_sdo_req *req)
 {
 	assert(req);
@@ -117,7 +117,7 @@ co_sdo_req_init(struct co_sdo_req *req)
 	membuf_init(&req->membuf);
 }
 
-LELY_CO_EXPORT void
+void
 co_sdo_req_fini(struct co_sdo_req *req)
 {
 	assert(req);
@@ -125,7 +125,7 @@ co_sdo_req_fini(struct co_sdo_req *req)
 	membuf_fini(&req->membuf);
 }
 
-LELY_CO_EXPORT void
+void
 co_sdo_req_clear(struct co_sdo_req *req)
 {
 	req->size = 0;
@@ -135,7 +135,7 @@ co_sdo_req_clear(struct co_sdo_req *req)
 	membuf_clear(&req->membuf);
 }
 
-LELY_CO_EXPORT int
+int
 co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 		co_unsigned32_t *pac)
 {
@@ -161,7 +161,7 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_sdo_req_dn_val(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 		co_unsigned32_t *pac)
 {
@@ -202,7 +202,7 @@ error_read:
 }
 
 #ifndef LELY_NO_CO_OBJ_FILE
-LELY_CO_EXPORT int
+int
 co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)
 {
@@ -247,7 +247,7 @@ error_create_fbuf:
 }
 #endif // !LELY_NO_CO_OBJ_FILE
 
-LELY_CO_EXPORT int
+int
 co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
 		co_unsigned32_t *pac)
 {
@@ -274,7 +274,7 @@ error_reserve:
 	return -1;
 }
 
-LELY_CO_EXPORT int
+int
 co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 		co_unsigned32_t *pac)
 {
@@ -308,7 +308,7 @@ error_reserve:
 }
 
 #ifndef LELY_NO_CO_OBJ_FILE
-LELY_CO_EXPORT int
+int
 co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)
 {

@@ -22,7 +22,7 @@
 #ifndef LELY_LIBC_ASSERT_H_
 #define LELY_LIBC_ASSERT_H_
 
-#include <lely/libc/libc.h>
+#include <lely/features.h>
 
 #include <assert.h>
 

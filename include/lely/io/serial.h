@@ -45,7 +45,7 @@ extern "C" {
  * @returns a I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN io_handle_t io_open_serial(const char *path, io_attr_t *attr);
+io_handle_t io_open_serial(const char *path, io_attr_t *attr);
 
 /**
  * Purges the receive and/or transmit buffers of a serial I/O device.
@@ -59,7 +59,7 @@ LELY_IO_EXTERN io_handle_t io_open_serial(const char *path, io_attr_t *attr);
  *
  * @see io_serial_flush()
  */
-LELY_IO_EXTERN int io_purge(io_handle_t handle, int flags);
+int io_purge(io_handle_t handle, int flags);
 
 /**
  * Retrieves the current attributes of a serial I/O device and stores them in
@@ -70,7 +70,7 @@ LELY_IO_EXTERN int io_purge(io_handle_t handle, int flags);
  *
  * @see io_serial_set_attr()
  */
-LELY_IO_EXTERN int io_serial_get_attr(io_handle_t handle, io_attr_t *attr);
+int io_serial_get_attr(io_handle_t handle, io_attr_t *attr);
 
 /**
  * Sets the attributes of a serial I/O device to those in *<b>attr</b>.
@@ -80,8 +80,7 @@ LELY_IO_EXTERN int io_serial_get_attr(io_handle_t handle, io_attr_t *attr);
  *
  * @see io_serial_get_attr()
  */
-LELY_IO_EXTERN int io_serial_set_attr(
-		io_handle_t handle, const io_attr_t *attr);
+int io_serial_set_attr(io_handle_t handle, const io_attr_t *attr);
 
 #ifdef __cplusplus
 }

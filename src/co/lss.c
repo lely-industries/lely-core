@@ -595,7 +595,7 @@ static void co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs);
 
 #endif
 
-LELY_CO_EXPORT void *
+void *
 __co_lss_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_lss));
@@ -604,13 +604,13 @@ __co_lss_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_lss_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_lss *
+struct __co_lss *
 __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 {
 	assert(lss);
@@ -691,7 +691,7 @@ error_create_recv:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_lss_fini(struct __co_lss *lss)
 {
 	assert(lss);
@@ -702,7 +702,7 @@ __co_lss_fini(struct __co_lss *lss)
 	can_recv_destroy(lss->recv);
 }
 
-LELY_CO_EXPORT co_lss_t *
+co_lss_t *
 co_lss_create(co_nmt_t *nmt)
 {
 	trace("creating LSS");
@@ -729,7 +729,7 @@ error_alloc_lss:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_destroy(co_lss_t *lss)
 {
 	if (lss) {
@@ -739,7 +739,7 @@ co_lss_destroy(co_lss_t *lss)
 	}
 }
 
-LELY_CO_EXPORT co_nmt_t *
+co_nmt_t *
 co_lss_get_nmt(const co_lss_t *lss)
 {
 	assert(lss);
@@ -747,7 +747,7 @@ co_lss_get_nmt(const co_lss_t *lss)
 	return lss->nmt;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_get_rate_ind(const co_lss_t *lss, co_lss_rate_ind_t **pind, void **pdata)
 {
 	assert(lss);
@@ -758,7 +758,7 @@ co_lss_get_rate_ind(const co_lss_t *lss, co_lss_rate_ind_t **pind, void **pdata)
 		*pdata = lss->rate_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_set_rate_ind(co_lss_t *lss, co_lss_rate_ind_t *ind, void *data)
 {
 	assert(lss);
@@ -767,7 +767,7 @@ co_lss_set_rate_ind(co_lss_t *lss, co_lss_rate_ind_t *ind, void *data)
 	lss->rate_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_get_store_ind(
 		const co_lss_t *lss, co_lss_store_ind_t **pind, void **pdata)
 {
@@ -779,7 +779,7 @@ co_lss_get_store_ind(
 		*pdata = lss->store_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind, void *data)
 {
 	assert(lss);
@@ -790,7 +790,7 @@ co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind, void *data)
 
 #ifndef LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT int
+int
 co_lss_get_timeout(const co_lss_t *lss)
 {
 	assert(lss);
@@ -798,7 +798,7 @@ co_lss_get_timeout(const co_lss_t *lss)
 	return lss->timeout;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_set_timeout(co_lss_t *lss, int timeout)
 {
 	assert(lss);
@@ -811,7 +811,7 @@ co_lss_set_timeout(co_lss_t *lss, int timeout)
 
 #endif
 
-LELY_CO_EXPORT int
+int
 co_lss_is_master(const co_lss_t *lss)
 {
 #ifdef LELY_NO_CO_MASTER
@@ -827,7 +827,7 @@ co_lss_is_master(const co_lss_t *lss)
 
 #ifndef LELY_NO_CO_MASTER
 
-LELY_CO_EXPORT int
+int
 co_lss_is_idle(const co_lss_t *lss)
 {
 	assert(lss);
@@ -835,7 +835,7 @@ co_lss_is_idle(const co_lss_t *lss)
 	return lss->state == co_lss_wait_state;
 }
 
-LELY_CO_EXPORT void
+void
 co_lss_abort_req(co_lss_t *lss)
 {
 	assert(lss);
@@ -843,7 +843,7 @@ co_lss_abort_req(co_lss_t *lss)
 	co_lss_enter(lss, co_lss_wait_state);
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -865,7 +865,7 @@ co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 	return can_net_send(lss->net, &req);
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data)
 {
@@ -889,7 +889,7 @@ co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 		void *data)
 {
@@ -921,7 +921,7 @@ co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 		void *data)
 {
@@ -962,7 +962,7 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_switch_rate_req(co_lss_t *lss, int delay)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -988,7 +988,7 @@ co_lss_switch_rate_req(co_lss_t *lss, int delay)
 	return can_net_send(lss->net, &req);
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1013,7 +1013,7 @@ co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1038,7 +1038,7 @@ co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1063,7 +1063,7 @@ co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1089,7 +1089,7 @@ co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1115,7 +1115,7 @@ co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1140,7 +1140,7 @@ co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data)
 {
@@ -1164,7 +1164,7 @@ co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 {
 	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
@@ -1190,7 +1190,7 @@ co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_scan_ind_t *ind, void *data)
 {
@@ -1224,7 +1224,7 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 		const struct co_id *mask, co_lss_scan_ind_t *ind, void *data)
 {

@@ -56,7 +56,7 @@ static uint16_t can_crc_bits(uint16_t crc, uint8_t byte, int off, int bits);
 /// Computes a CRC-15-CAN checksum. @see can_crc()
 static uint16_t can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n);
 
-LELY_CAN_EXPORT int
+int
 can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 {
 	assert(msg);
@@ -192,7 +192,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	return bits;
 }
 
-LELY_CAN_EXPORT int
+int
 snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 {
 	if (!s)
@@ -250,7 +250,7 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	return t;
 }
 
-LELY_CAN_EXPORT int
+int
 asprintf_can_msg(char **ps, const struct can_msg *msg)
 {
 	int n = snprintf_can_msg(NULL, 0, msg);

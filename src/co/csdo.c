@@ -596,7 +596,7 @@ static void co_csdo_init_ini_req(
 static void co_csdo_init_seg_req(
 		co_csdo_t *sdo, struct can_msg *msg, uint8_t cs);
 
-LELY_CO_EXPORT int
+int
 co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data)
 {
@@ -633,7 +633,7 @@ done:
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
 		void *data)
@@ -671,7 +671,7 @@ done:
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_csdo_up_con_t *con, void *data)
 {
@@ -724,7 +724,7 @@ done:
 	return 0;
 }
 
-LELY_CO_EXPORT void *
+void *
 __co_csdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_csdo));
@@ -733,13 +733,13 @@ __co_csdo_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_csdo_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_csdo *
+struct __co_csdo *
 __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 		co_unsigned8_t num)
 {
@@ -843,7 +843,7 @@ error_param:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_csdo_fini(struct __co_csdo *sdo)
 {
 	assert(sdo);
@@ -863,7 +863,7 @@ __co_csdo_fini(struct __co_csdo *sdo)
 	can_recv_destroy(sdo->recv);
 }
 
-LELY_CO_EXPORT co_csdo_t *
+co_csdo_t *
 co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
 	trace("creating Client-SDO %d", num);
@@ -890,7 +890,7 @@ error_alloc_sdo:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_destroy(co_csdo_t *csdo)
 {
 	if (csdo) {
@@ -900,7 +900,7 @@ co_csdo_destroy(co_csdo_t *csdo)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_csdo_get_net(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -908,7 +908,7 @@ co_csdo_get_net(const co_csdo_t *sdo)
 	return sdo->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_csdo_get_dev(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -916,7 +916,7 @@ co_csdo_get_dev(const co_csdo_t *sdo)
 	return sdo->dev;
 }
 
-LELY_CO_EXPORT co_unsigned8_t
+co_unsigned8_t
 co_csdo_get_num(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -924,7 +924,7 @@ co_csdo_get_num(const co_csdo_t *sdo)
 	return sdo->num;
 }
 
-LELY_CO_EXPORT const struct co_sdo_par *
+const struct co_sdo_par *
 co_csdo_get_par(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -932,7 +932,7 @@ co_csdo_get_par(const co_csdo_t *sdo)
 	return &sdo->par;
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_get_timeout(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -940,7 +940,7 @@ co_csdo_get_timeout(const co_csdo_t *sdo)
 	return sdo->timeout;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_set_timeout(co_csdo_t *sdo, int timeout)
 {
 	assert(sdo);
@@ -951,7 +951,7 @@ co_csdo_set_timeout(co_csdo_t *sdo, int timeout)
 	sdo->timeout = MAX(0, timeout);
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_get_dn_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
 {
 	assert(sdo);
@@ -962,7 +962,7 @@ co_csdo_get_dn_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
 		*pdata = sdo->dn_ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 {
 	assert(sdo);
@@ -971,7 +971,7 @@ co_csdo_set_dn_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 	sdo->dn_ind_data = data;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_get_up_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
 {
 	assert(sdo);
@@ -982,7 +982,7 @@ co_csdo_get_up_ind(const co_csdo_t *sdo, co_csdo_ind_t **pind, void **pdata)
 		*pdata = sdo->up_ind_data;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 {
 	assert(sdo);
@@ -991,7 +991,7 @@ co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 	sdo->up_ind_data = data;
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_is_idle(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -999,7 +999,7 @@ co_csdo_is_idle(const co_csdo_t *sdo)
 	return sdo->state == co_csdo_wait_state;
 }
 
-LELY_CO_EXPORT void
+void
 co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac)
 {
 	assert(sdo);
@@ -1007,7 +1007,7 @@ co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac)
 	co_csdo_emit_abort(sdo, ac);
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data)
 {
@@ -1032,7 +1032,7 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
 		void *data)
@@ -1076,7 +1076,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	}
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_csdo_up_con_t *con, void *data)
 {
@@ -1095,7 +1095,7 @@ co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data)
 {
@@ -1117,7 +1117,7 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	return 0;
 }
 
-LELY_CO_EXPORT int
+int
 co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		uint8_t pst, co_csdo_up_con_t *con, void *data)
 {

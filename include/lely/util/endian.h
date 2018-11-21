@@ -270,8 +270,7 @@ LELY_UTIL_ENDIAN_INLINE void stn_dbl(void *ptr, double d);
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-LELY_UTIL_EXTERN void bcpybe(
-		void *dst, int dstbit, const void *src, int srcbit, size_t n);
+void bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n);
 
 /**
  * Copies <b>n</b> bits from the source to the destination buffer. The buffers
@@ -284,8 +283,7 @@ LELY_UTIL_EXTERN void bcpybe(
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-LELY_UTIL_EXTERN void bcpyle(
-		void *dst, int dstbit, const void *src, int srcbit, size_t n);
+void bcpyle(void *dst, int dstbit, const void *src, int srcbit, size_t n);
 
 LELY_UTIL_ENDIAN_INLINE uint16_t
 htobe_u16(uint16_t i)

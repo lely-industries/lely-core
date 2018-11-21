@@ -100,7 +100,7 @@ extern "C" {
  * @returns an integer greater than, equal to, or less than 0 if the address at
  * <b>p1</b> is greater than, equal to, or less than the address at <b>p2</b>.
  */
-LELY_IO_EXTERN int __cdecl io_addr_cmp(const void *p1, const void *p2);
+int __cdecl io_addr_cmp(const void *p1, const void *p2);
 
 /**
  * Obtains an RFCOMM Bluetooth device address and port number from a network
@@ -120,8 +120,7 @@ LELY_IO_EXTERN int __cdecl io_addr_cmp(const void *p1, const void *p2);
  *
  * @see io_addr_set_rfcomm_a()
  */
-LELY_IO_EXTERN int io_addr_get_rfcomm_a(
-		const io_addr_t *addr, char *ba, int *port);
+int io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port);
 
 /**
  * Initializes a network address from an RFCOMM Bluetooth device address and
@@ -139,8 +138,7 @@ LELY_IO_EXTERN int io_addr_get_rfcomm_a(
  *
  * @see io_addr_get_rfcomm_a()
  */
-LELY_IO_EXTERN int io_addr_set_rfcomm_a(
-		io_addr_t *addr, const char *ba, int port);
+int io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port);
 
 /**
  * Obtains an RFCOMM Bluetooth device address and port number from a network
@@ -159,8 +157,7 @@ LELY_IO_EXTERN int io_addr_set_rfcomm_a(
  *
  * @see io_addr_set_rfcomm_n()
  */
-LELY_IO_EXTERN int io_addr_get_rfcomm_n(
-		const io_addr_t *addr, uint8_t ba[6], int *port);
+int io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port);
 
 /**
  * Initializes a network address from an RFCOMM Bluetooth device address and
@@ -174,8 +171,7 @@ LELY_IO_EXTERN int io_addr_get_rfcomm_n(
  *
  * @see io_addr_get_rfcomm_n()
  */
-LELY_IO_EXTERN void io_addr_set_rfcomm_n(
-		io_addr_t *addr, const uint8_t ba[6], int port);
+void io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6], int port);
 
 /**
  * Initializes a network address with the local Bluetooth (RFCOMM) device
@@ -186,7 +182,7 @@ LELY_IO_EXTERN void io_addr_set_rfcomm_n(
  *             <b>port</b> is 0, io_socket_bind() will dynamically assign a port
  *             number.
  */
-LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
+void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
 
 /**
  * Obtains an IPv4 address and port number from a network address.
@@ -203,8 +199,7 @@ LELY_IO_EXTERN void io_addr_set_rfcomm_local(io_addr_t *addr, int port);
  *
  * @see io_addr_set_ipv4_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv4_a(
-		const io_addr_t *addr, char *ip, int *port);
+int io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port);
 
 /**
  * Initializes a network address from an IPv4 address and port number.
@@ -216,8 +211,7 @@ LELY_IO_EXTERN int io_addr_get_ipv4_a(
  *
  * @see io_addr_get_ipv4_a()
  */
-LELY_IO_EXTERN int io_addr_set_ipv4_a(
-		io_addr_t *addr, const char *ip, int port);
+int io_addr_set_ipv4_a(io_addr_t *addr, const char *ip, int port);
 
 /**
  * Obtains an IPv4 address and port number from a network address.
@@ -234,8 +228,7 @@ LELY_IO_EXTERN int io_addr_set_ipv4_a(
  *
  * @see io_addr_set_ipv4_n()
  */
-LELY_IO_EXTERN int io_addr_get_ipv4_n(
-		const io_addr_t *addr, uint8_t ip[4], int *port);
+int io_addr_get_ipv4_n(const io_addr_t *addr, uint8_t ip[4], int *port);
 
 /**
  * Initializes a network address from an IPv4 address and port number.
@@ -247,8 +240,7 @@ LELY_IO_EXTERN int io_addr_get_ipv4_n(
  *
  * @see io_addr_get_ipv4_n()
  */
-LELY_IO_EXTERN void io_addr_set_ipv4_n(
-		io_addr_t *addr, const uint8_t ip[4], int port);
+void io_addr_set_ipv4_n(io_addr_t *addr, const uint8_t ip[4], int port);
 
 /**
  * Initializes a network address with the IPv4 loopback address and a port
@@ -257,7 +249,7 @@ LELY_IO_EXTERN void io_addr_set_ipv4_n(
  * @param addr a pointer to the network address to be initialized.
  * @param port the port number.
  */
-LELY_IO_EXTERN void io_addr_set_ipv4_loopback(io_addr_t *addr, int port);
+void io_addr_set_ipv4_loopback(io_addr_t *addr, int port);
 
 /**
  * Initializes a network address with the IPv4 broadcast address and a port
@@ -266,7 +258,7 @@ LELY_IO_EXTERN void io_addr_set_ipv4_loopback(io_addr_t *addr, int port);
  * @param addr a pointer to the network address to be initialized.
  * @param port the port number.
  */
-LELY_IO_EXTERN void io_addr_set_ipv4_broadcast(io_addr_t *addr, int port);
+void io_addr_set_ipv4_broadcast(io_addr_t *addr, int port);
 
 /**
  * Obtains an IPv6 address and port number from a network address.
@@ -283,8 +275,7 @@ LELY_IO_EXTERN void io_addr_set_ipv4_broadcast(io_addr_t *addr, int port);
  *
  * @see io_addr_set_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv6_a(
-		const io_addr_t *addr, char *ip, int *port);
+int io_addr_get_ipv6_a(const io_addr_t *addr, char *ip, int *port);
 
 /**
  * Initializes a network address from an IPv6 address and port number.
@@ -299,8 +290,7 @@ LELY_IO_EXTERN int io_addr_get_ipv6_a(
  *
  * @see io_addr_get_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_set_ipv6_a(
-		io_addr_t *addr, const char *ip, int port);
+int io_addr_set_ipv6_a(io_addr_t *addr, const char *ip, int port);
 
 /**
  * Obtains an IPv6 address and port number from a network address.
@@ -317,8 +307,7 @@ LELY_IO_EXTERN int io_addr_set_ipv6_a(
  *
  * @see io_addr_set_ipv6_a()
  */
-LELY_IO_EXTERN int io_addr_get_ipv6_n(
-		const io_addr_t *addr, uint8_t ip[16], int *port);
+int io_addr_get_ipv6_n(const io_addr_t *addr, uint8_t ip[16], int *port);
 
 /**
  * Initializes a network address from an IPv6 address and port number.
@@ -330,8 +319,7 @@ LELY_IO_EXTERN int io_addr_get_ipv6_n(
  *
  * @see io_addr_get_ipv6_a()
  */
-LELY_IO_EXTERN void io_addr_set_ipv6_n(
-		io_addr_t *addr, const uint8_t ip[16], int port);
+void io_addr_set_ipv6_n(io_addr_t *addr, const uint8_t ip[16], int port);
 
 /**
  * Initializes a network address with the IPv6 loopback address and a port
@@ -340,7 +328,7 @@ LELY_IO_EXTERN void io_addr_set_ipv6_n(
  * @param addr a pointer to the network address to be initialized.
  * @param port the port number.
  */
-LELY_IO_EXTERN void io_addr_set_ipv6_loopback(io_addr_t *addr, int port);
+void io_addr_set_ipv6_loopback(io_addr_t *addr, int port);
 
 /**
  * Obtains a UNIX domain socket path name from a network address.
@@ -355,7 +343,7 @@ LELY_IO_EXTERN void io_addr_set_ipv6_loopback(io_addr_t *addr, int port);
  *
  * @see io_addr_set_unix()
  */
-LELY_IO_EXTERN int io_addr_get_unix(const io_addr_t *addr, char *path);
+int io_addr_get_unix(const io_addr_t *addr, char *path);
 
 /**
  * Initializes a network address from a UNIX domain socket path name.
@@ -365,7 +353,7 @@ LELY_IO_EXTERN int io_addr_get_unix(const io_addr_t *addr, char *path);
  *
  * @see io_addr_get_unix()
  */
-LELY_IO_EXTERN void io_addr_set_unix(io_addr_t *addr, const char *path);
+void io_addr_set_unix(io_addr_t *addr, const char *path);
 
 /**
  * Obtains the domain of a network address.
@@ -376,7 +364,7 @@ LELY_IO_EXTERN void io_addr_set_unix(io_addr_t *addr, const char *path);
  *
  * @see io_sock_get_domain()
  */
-LELY_IO_EXTERN int io_addr_get_domain(const io_addr_t *addr);
+int io_addr_get_domain(const io_addr_t *addr);
 
 /**
  * Obtains the port number of an IPv4 or IPv6 network address.
@@ -390,7 +378,7 @@ LELY_IO_EXTERN int io_addr_get_domain(const io_addr_t *addr);
  *
  * @see io_addr_set_port()
  */
-LELY_IO_EXTERN int io_addr_get_port(const io_addr_t *addr, int *port);
+int io_addr_get_port(const io_addr_t *addr, int *port);
 
 /**
  * Initializes the port number of an IPv4 or IPv6 network address.
@@ -403,16 +391,16 @@ LELY_IO_EXTERN int io_addr_get_port(const io_addr_t *addr, int *port);
  *
  * @see io_addr_set_port()
  */
-LELY_IO_EXTERN int io_addr_set_port(io_addr_t *addr, int port);
+int io_addr_set_port(io_addr_t *addr, int port);
 
 /// Returns 1 if the network address is a loopback address, and 0 if not.
-LELY_IO_EXTERN int io_addr_is_loopback(const io_addr_t *addr);
+int io_addr_is_loopback(const io_addr_t *addr);
 
 /// Returns 1 if the network address is a broadcast address, and 0 if not.
-LELY_IO_EXTERN int io_addr_is_broadcast(const io_addr_t *addr);
+int io_addr_is_broadcast(const io_addr_t *addr);
 
 /// Returns 1 if the network address is a multicast address, and 0 if not.
-LELY_IO_EXTERN int io_addr_is_multicast(const io_addr_t *addr);
+int io_addr_is_multicast(const io_addr_t *addr);
 
 /**
  * Obtains a list of network addresses corresponding to a host and/or service
@@ -435,9 +423,8 @@ LELY_IO_EXTERN int io_addr_is_multicast(const io_addr_t *addr);
  * <b>maxinfo</b>), or -1 on error. In the latter case, the error number can be
  * obtained with get_errc().
  */
-LELY_IO_EXTERN int io_get_addrinfo(int maxinfo, struct io_addrinfo *info,
-		const char *nodename, const char *servname,
-		const struct io_addrinfo *hints);
+int io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
+		const char *servname, const struct io_addrinfo *hints);
 
 #ifdef __cplusplus
 }

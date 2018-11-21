@@ -160,7 +160,7 @@ static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
  */
 static co_unsigned32_t co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
 
-LELY_CO_EXPORT void *
+void *
 __co_tpdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_tpdo));
@@ -169,13 +169,13 @@ __co_tpdo_alloc(void)
 	return ptr;
 }
 
-LELY_CO_EXPORT void
+void
 __co_tpdo_free(void *ptr)
 {
 	free(ptr);
 }
 
-LELY_CO_EXPORT struct __co_tpdo *
+struct __co_tpdo *
 __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 		co_unsigned16_t num)
 {
@@ -266,7 +266,7 @@ error_param:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 __co_tpdo_fini(struct __co_tpdo *pdo)
 {
 	assert(pdo);
@@ -294,7 +294,7 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 	can_recv_destroy(pdo->recv);
 }
 
-LELY_CO_EXPORT co_tpdo_t *
+co_tpdo_t *
 co_tpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
 	trace("creating Transmit-PDO %d", num);
@@ -321,7 +321,7 @@ error_alloc_pdo:
 	return NULL;
 }
 
-LELY_CO_EXPORT void
+void
 co_tpdo_destroy(co_tpdo_t *tpdo)
 {
 	if (tpdo) {
@@ -331,7 +331,7 @@ co_tpdo_destroy(co_tpdo_t *tpdo)
 	}
 }
 
-LELY_CO_EXPORT can_net_t *
+can_net_t *
 co_tpdo_get_net(const co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -339,7 +339,7 @@ co_tpdo_get_net(const co_tpdo_t *pdo)
 	return pdo->net;
 }
 
-LELY_CO_EXPORT co_dev_t *
+co_dev_t *
 co_tpdo_get_dev(const co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -347,7 +347,7 @@ co_tpdo_get_dev(const co_tpdo_t *pdo)
 	return pdo->dev;
 }
 
-LELY_CO_EXPORT co_unsigned16_t
+co_unsigned16_t
 co_tpdo_get_num(const co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -355,7 +355,7 @@ co_tpdo_get_num(const co_tpdo_t *pdo)
 	return pdo->num;
 }
 
-LELY_CO_EXPORT const struct co_pdo_comm_par *
+const struct co_pdo_comm_par *
 co_tpdo_get_comm_par(const co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -363,7 +363,7 @@ co_tpdo_get_comm_par(const co_tpdo_t *pdo)
 	return &pdo->comm;
 }
 
-LELY_CO_EXPORT const struct co_pdo_map_par *
+const struct co_pdo_map_par *
 co_tpdo_get_map_par(const co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -371,7 +371,7 @@ co_tpdo_get_map_par(const co_tpdo_t *pdo)
 	return &pdo->map;
 }
 
-LELY_CO_EXPORT void
+void
 co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata)
 {
 	assert(pdo);
@@ -382,7 +382,7 @@ co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata)
 		*pdata = pdo->data;
 }
 
-LELY_CO_EXPORT void
+void
 co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data)
 {
 	assert(pdo);
@@ -391,7 +391,7 @@ co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data)
 	pdo->data = data;
 }
 
-LELY_CO_EXPORT int
+int
 co_tpdo_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -432,7 +432,7 @@ co_tpdo_event(co_tpdo_t *pdo)
 	return co_tpdo_init_timer_event(pdo);
 }
 
-LELY_CO_EXPORT int
+int
 co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 {
 	assert(pdo);
@@ -500,7 +500,7 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 	return 0;
 }
 
-LELY_CO_EXPORT void
+void
 co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp)
 {
 	assert(pdo);

@@ -23,13 +23,13 @@
 
 #include "util.h"
 #include <lely/util/errnum.h>
-#define LELY_UTIL_HTAB_INLINE extern inline LELY_DLL_EXPORT
+#define LELY_UTIL_HTAB_INLINE extern inline
 #include <lely/util/htab.h>
 
 #include <assert.h>
 #include <stdlib.h>
 
-LELY_UTIL_EXPORT int
+int
 htab_init(struct htab *tab, int (*eq)(const void *, const void *),
 		size_t (*hash)(const void *), size_t num_slots)
 {
@@ -59,7 +59,7 @@ htab_init(struct htab *tab, int (*eq)(const void *, const void *),
 	return 0;
 }
 
-LELY_UTIL_EXPORT void
+void
 htab_fini(struct htab *tab)
 {
 	assert(tab);
@@ -72,7 +72,7 @@ htab_fini(struct htab *tab)
 	tab->num_nodes = 0;
 }
 
-LELY_UTIL_EXPORT int
+int
 htab_resize(struct htab *tab, size_t num_slots)
 {
 	assert(tab);
@@ -113,7 +113,7 @@ htab_resize(struct htab *tab, size_t num_slots)
 	return 0;
 }
 
-LELY_UTIL_EXPORT void
+void
 htab_insert(struct htab *tab, struct hnode *node)
 {
 	assert(tab);
@@ -127,7 +127,7 @@ htab_insert(struct htab *tab, struct hnode *node)
 	tab->num_nodes++;
 }
 
-LELY_UTIL_EXPORT void
+void
 htab_remove(struct htab *tab, struct hnode *node)
 {
 	assert(tab);
@@ -138,7 +138,7 @@ htab_remove(struct htab *tab, struct hnode *node)
 	tab->num_nodes--;
 }
 
-LELY_UTIL_EXPORT struct hnode *
+struct hnode *
 htab_find(const struct htab *tab, const void *key)
 {
 	assert(tab);

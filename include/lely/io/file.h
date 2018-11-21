@@ -66,7 +66,7 @@ extern "C" {
  * @returns a I/O device handle, or #IO_HANDLE_ERROR on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN io_handle_t io_open_file(const char *path, int flags);
+io_handle_t io_open_file(const char *path, int flags);
 
 /**
  * Moves the current read/write offset of an open file.
@@ -82,8 +82,7 @@ LELY_IO_EXTERN io_handle_t io_open_file(const char *path, int flags);
  * on error. In the latter case, the error number can be obtained with
  * get_errc().
  */
-LELY_IO_EXTERN io_off_t io_seek(
-		io_handle_t handle, io_off_t offset, int whence);
+io_off_t io_seek(io_handle_t handle, io_off_t offset, int whence);
 
 /**
  * Performs a read operation at the specified offset, without updating the file
@@ -97,8 +96,7 @@ LELY_IO_EXTERN io_off_t io_seek(
  * @returns the number of bytes read on success, or -1 on error. In the latter
  * case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_pread(
-		io_handle_t handle, void *buf, size_t nbytes, io_off_t offset);
+ssize_t io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset);
 
 /**
  * Performs a write operation at the specified offset, without updating the file
@@ -112,8 +110,8 @@ LELY_IO_EXTERN ssize_t io_pread(
  * @returns the number of bytes written on success, or -1 on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-LELY_IO_EXTERN ssize_t io_pwrite(io_handle_t handle, const void *buf,
-		size_t nbytes, io_off_t offset);
+ssize_t io_pwrite(io_handle_t handle, const void *buf, size_t nbytes,
+		io_off_t offset);
 
 #ifdef __cplusplus
 }

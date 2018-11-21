@@ -25,11 +25,6 @@
 #include <config.h>
 #endif
 
-#define LELY_CAN_INTERN 1
 #include <lely/can/can.h>
-
-#ifndef LELY_CAN_EXPORT
-#define LELY_CAN_EXPORT LELY_DLL_EXPORT
-#endif
 
 #endif // !LELY_CAN_INTERN_CAN_H_

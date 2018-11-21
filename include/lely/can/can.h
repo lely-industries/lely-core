@@ -21,15 +21,7 @@
 #ifndef LELY_CAN_CAN_H_
 #define LELY_CAN_CAN_H_
 
-#include <lely/lely.h>
-
-#ifndef LELY_CAN_EXTERN
-#ifdef LELY_CAN_INTERN
-#define LELY_CAN_EXTERN LELY_DLL_EXPORT
-#else
-#define LELY_CAN_EXTERN LELY_DLL_IMPORT
-#endif
-#endif
+#include <lely/features.h>
 
 /// The states of a CAN node, dependening on the TX/RX error count.
 enum can_state {

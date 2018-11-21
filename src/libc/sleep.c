@@ -31,8 +31,7 @@
 
 #include <errno.h>
 
-LELY_LIBC_EXPORT int __cdecl nanosleep(
-		const struct timespec *rqtp, struct timespec *rmtp)
+int __cdecl nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
 	int errsv = clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
 	if (__unlikely(errsv)) {
@@ -42,7 +41,7 @@ LELY_LIBC_EXPORT int __cdecl nanosleep(
 	return 0;
 }
 
-LELY_LIBC_EXPORT unsigned __cdecl sleep(unsigned seconds)
+unsigned __cdecl sleep(unsigned seconds)
 {
 	struct timespec rqtp = { seconds, 0 };
 	struct timespec rmtp = { 0, 0 };

@@ -113,16 +113,16 @@ LELY_UTIL_PRINT_INLINE int xtoc(int i);
  * been sufficiently large, or 0 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-LELY_UTIL_EXTERN size_t print_fmt(char **pbegin, char *end, const char *format,
-		...) __format_printf(3, 4);
+size_t print_fmt(char **pbegin, char *end, const char *format, ...)
+		__format_printf(3, 4);
 
 /**
  * Prints a formatted string to a memory buffer. This function is equivalent to
  * #print_fmt(), except that it accepts a `va_list` instead of a variable number
  * of arguments.
  */
-LELY_UTIL_EXTERN size_t vprint_fmt(char **pbegin, char *end, const char *format,
-		va_list ap) __format_printf(3, 0);
+size_t vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
+		__format_printf(3, 0);
 
 /**
  * Prints a single character to a memory buffer. Note that the output is _not_
@@ -159,7 +159,7 @@ LELY_UTIL_PRINT_INLINE size_t print_char(char **pbegin, char *end, int c);
  *
  * @see print_c99_esc()
  */
-LELY_UTIL_EXTERN size_t print_utf8(char **pbegin, char *end, char32_t c32);
+size_t print_utf8(char **pbegin, char *end, char32_t c32);
 
 /**
  * Prints a UTF-8 encoded Unicode character to a memory buffer. Non-printable
@@ -181,7 +181,7 @@ LELY_UTIL_EXTERN size_t print_utf8(char **pbegin, char *end, char32_t c32);
  *
  * @see print_utf8()
  */
-LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
+size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
 
 /**
  * Prints a UTF-8 encoded Unicode string to a memory buffer. Non-printable ASCII
@@ -204,8 +204,7 @@ LELY_UTIL_EXTERN size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
  *
  * @see print_c99_esc()
  */
-LELY_UTIL_EXTERN size_t print_c99_str(
-		char **pbegin, char *end, const char *s, size_t n);
+size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 
 // clang-format off
 #define LELY_UTIL_DEFINE_PRINT(type, suffix, name) \
@@ -222,7 +221,7 @@ LELY_UTIL_EXTERN size_t print_c99_str(
 	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
 	error number can be obtained with get_errc().*/ \
-	LELY_UTIL_EXTERN size_t print_c99_##suffix( \
+	size_t print_c99_##suffix( \
 			char **pbegin, char *end, type name);
 // clang-format on
 
@@ -266,8 +265,7 @@ LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64)
  * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
  */
-LELY_UTIL_EXTERN size_t print_base64(
-		char **pbegin, char *end, const void *ptr, size_t n);
+size_t print_base64(char **pbegin, char *end, const void *ptr, size_t n);
 
 LELY_UTIL_PRINT_INLINE int
 otoc(int i)
