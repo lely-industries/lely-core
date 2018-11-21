@@ -1,4 +1,4 @@
-/**@file
+/*!@file
  * This file is part of the C11 and POSIX compatibility library.
  *
  * @see lely/libc/threads.h
@@ -22,33 +22,13 @@
 
 #include "libc.h"
 
-#ifndef LELY_NO_THREADS
-#if !LELY_HAVE_PTHREAD && !defined(_WIN32)
-#define LELY_NO_THREADS 1
-#endif
-#endif
-
-#if !LELY_NO_THREADS
+#if !LELY_NO_THREADS && _WIN32 && !defined(__MINGW32__)
 
 #include <lely/libc/threads.h>
 
 #include <assert.h>
-#include <lely/libc/time.h>
-
 #include <errno.h>
-
-#if _WIN32
-#include <windows.h>
-#endif
-
-#if LELY_HAVE_PTHREAD
-
-#include <lely/libc/stdint.h>
-
-#include <pthread.h>
-
-#elif defined(_WIN32)
-
+#include <stdint.h>
 #include <stdlib.h>
 
 #include <process.h>
@@ -60,7 +40,7 @@ struct once_info {
 	/// The address of a flag object passed to call_once().
 	once_flag *flag;
 	/// The number of threads currently calling call_once() with #flag.
-	int cnt;
+	size_t cnt;
 	/// The mutex protecting *#flag.
 	mtx_t mtx;
 };
@@ -121,23 +101,14 @@ static thread_local struct thrd_info *thrd_self;
  */
 static void thrd_start(void *arglist);
 
-#endif // LELY_HAVE_PTHREAD
-
-#undef LELY_HAVE_SCHED
-#if _POSIX_C_SOURCE >= 200112L && defined(_POSIX_PRIORITY_SCHEDULING) \
-		&& __has_include(<sched.h>)
-#define LELY_HAVE_SCHED 1
-#include <sched.h>
-#endif
-
 void
 call_once(once_flag *flag, void (*func)(void))
 {
-#if LELY_HAVE_PTHREAD
-	pthread_once((pthread_once_t *)flag, func);
-#else
+	assert(flag);
+	assert(func);
+
 	// Perform a quick (atomic) check to see if the flag is already set.
-	if (__likely(InterlockedCompareExchange(flag, 0, 0)))
+	if (InterlockedCompareExchange(flag, 0, 0))
 		return;
 
 	struct once_info *info;
@@ -200,219 +171,132 @@ call_once(once_flag *flag, void (*func)(void))
 	}
 
 	InterlockedExchange(&once_lock, 0);
-#endif // LELY_HAVE_PTHREAD
 }
 
 int
 cnd_broadcast(cnd_t *cond)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_cond_broadcast((pthread_cond_t *)cond))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
-	WakeAllConditionVariable(&cond->__cond);
+	WakeAllConditionVariable(cond);
 
 	return thrd_success;
-#endif
 }
 
 void
 cnd_destroy(cnd_t *cond)
 {
-#if LELY_HAVE_PTHREAD
-	pthread_cond_destroy((pthread_cond_t *)cond);
-#elif defined(_WIN32)
 	(void)cond;
-#endif
 }
 
 int
 cnd_init(cnd_t *cond)
 {
-#if LELY_HAVE_PTHREAD
-	switch (pthread_cond_init((pthread_cond_t *)cond, NULL)) {
-	case 0: return thrd_success;
-	case ENOMEM: return thrd_nomem;
-	default: return thrd_error;
-	}
-#elif defined(_WIN32)
-	InitializeConditionVariable(&cond->__cond);
+	InitializeConditionVariable(cond);
 
 	return thrd_success;
-#endif
 }
 
 int
 cnd_signal(cnd_t *cond)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_cond_signal((pthread_cond_t *)cond))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
-	WakeConditionVariable(&cond->__cond);
+	WakeConditionVariable(cond);
 
 	return thrd_success;
-#endif
 }
 
 int
 cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 {
-#if LELY_HAVE_PTHREAD
-	switch (pthread_cond_timedwait(
-			(pthread_cond_t *)cond, (pthread_mutex_t *)mtx, ts)) {
-	case 0: return thrd_success;
-	case ETIMEDOUT: return thrd_timedout;
-	default: return thrd_error;
-	}
-#elif defined(_WIN32)
 	struct timespec now = { 0, 0 };
 	timespec_get(&now, TIME_UTC);
-	int64_t msec = ((int64_t)now.tv_sec - (int64_t)ts->tv_sec) * 1000
-			+ ((int64_t)now.tv_nsec - (int64_t)ts->tv_nsec)
-					/ 1000000l;
-
-	// clang-format off
-	return SleepConditionVariableCS(&cond->__cond, &mtx->__mtx,
-			(DWORD)(msec > 0 ? msec : 0))
-			? thrd_success : GetLastError() == ERROR_TIMEOUT
-			? thrd_timedout : thrd_error;
+	do {
+		// Round up to the nearest number of milliseconds, to make sure
+		// we don't wake up too early.
+		LONGLONG llMilliseconds =
+				(LONGLONG)(ts->tv_sec - now.tv_sec) * 1000
+				+ (ts->tv_nsec - now.tv_nsec + 999999l)
+						/ 1000000l;
+		if (llMilliseconds < 0)
+			llMilliseconds = 0;
+		DWORD dwMilliseconds = llMilliseconds <= MAX_SLEEP_MS
+				? (DWORD)llMilliseconds
+				: MAX_SLEEP_MS;
+		DWORD dwResult = SleepConditionVariableCS(
+				cond, mtx, dwMilliseconds);
+		if (!dwResult)
+			return thrd_success;
+		if (GetLastError() != ERROR_TIMEOUT)
+			return thrd_error;
+		timespec_get(&now, TIME_UTC);
+		// clang-format off
+	} while (now.tv_sec < ts->tv_sec || (now.tv_sec == ts->tv_sec
+			&& now.tv_nsec < ts->tv_nsec));
 	// clang-format on
-#endif
+	return thrd_timedout;
 }
 
 int
 cnd_wait(cnd_t *cond, mtx_t *mtx)
 {
-#if LELY_HAVE_PTHREAD
 	// clang-format off
-	return __unlikely(pthread_cond_wait((pthread_cond_t *)cond,
-			(pthread_mutex_t *)mtx)) ? thrd_error : thrd_success;
-	// clang-format on
-#elif defined(_WIN32)
-	return SleepConditionVariableCS(&cond->__cond, &mtx->__mtx, INFINITE)
+	return SleepConditionVariableCS(cond, mtx, INFINITE)
 			? thrd_success
 			: thrd_error;
-#endif
+	// clang-format on
 }
 
 void
 mtx_destroy(mtx_t *mtx)
 {
-#if LELY_HAVE_PTHREAD
-	pthread_mutex_destroy((pthread_mutex_t *)mtx);
-#elif defined(_WIN32)
-	DeleteCriticalSection(&mtx->__mtx);
-#endif
+	DeleteCriticalSection(mtx);
 }
 
 int
 mtx_init(mtx_t *mtx, int type)
 {
-#if LELY_HAVE_PTHREAD
-	pthread_mutexattr_t attr;
-	if (__unlikely(pthread_mutexattr_init(&attr)))
-		goto error_mutexattr_init;
-	// clang-format off
-	if (__unlikely(pthread_mutexattr_settype(&attr, (type & mtx_recursive)
-			? PTHREAD_MUTEX_RECURSIVE : PTHREAD_MUTEX_NORMAL)))
-		// clang-format on
-		goto error_mutexattr_settype;
-	if (__unlikely(pthread_mutex_init((pthread_mutex_t *)mtx, &attr)))
-		goto error_mutex_init;
-
-	pthread_mutexattr_destroy(&attr);
-	return thrd_success;
-
-error_mutex_init:
-error_mutexattr_settype:
-	pthread_mutexattr_destroy(&attr);
-error_mutexattr_init:
-	return thrd_error;
-#elif defined(_WIN32)
-	if (__unlikely(type & mtx_timed))
+	if (type & mtx_timed)
 		return thrd_error;
 
-	InitializeCriticalSection(&mtx->__mtx);
+	InitializeCriticalSection(mtx);
 
 	return thrd_success;
-#endif
 }
 
 int
 mtx_lock(mtx_t *mtx)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_mutex_lock((pthread_mutex_t *)mtx))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
-	EnterCriticalSection(&mtx->__mtx);
+	EnterCriticalSection(mtx);
 
 	return thrd_success;
-#endif
 }
 
 int
 mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 {
-#if _POSIX_TIMEOUTS >= 200112L
-	switch (pthread_mutex_timedlock((pthread_mutex_t *)mtx, ts)) {
-	case 0: return thrd_success;
-	case ETIMEDOUT: return thrd_timedout;
-	default: return thrd_error;
-	}
-#else
 	(void)mtx;
 	(void)ts;
 
 	return thrd_error;
-#endif
 }
 
 int
 mtx_trylock(mtx_t *mtx)
 {
-#if LELY_HAVE_PTHREAD
-	switch (pthread_mutex_trylock((pthread_mutex_t *)mtx)) {
-	case 0: return thrd_success;
-	case EBUSY: return thrd_busy;
-	default: return thrd_error;
-	}
-#elif defined(_WIN32)
-	return TryEnterCriticalSection(&mtx->__mtx) ? thrd_success : thrd_busy;
-#endif
+	return TryEnterCriticalSection(mtx) ? thrd_success : thrd_busy;
 }
 
 int
 mtx_unlock(mtx_t *mtx)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_mutex_unlock((pthread_mutex_t *)mtx))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
-	LeaveCriticalSection(&mtx->__mtx);
+	LeaveCriticalSection(mtx);
 
 	return thrd_success;
-#endif
 }
 
 int
 thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
-#if LELY_HAVE_PTHREAD
-	switch (pthread_create(
-			(pthread_t *)thr, NULL, (void *(*)(void *))func, arg)) {
-	case 0: return thrd_success;
-	case EAGAIN: return thrd_nomem;
-	default: return thrd_error;
-	}
-#elif defined(_WIN32)
 	struct thrd_info *info = malloc(sizeof(*info));
-	if (__unlikely(!info))
+	if (!info)
 		return thrd_nomem;
 
 	info->func = func;
@@ -423,7 +307,7 @@ thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 	mtx_init(&info->mtx, mtx_plain);
 	info->stat = THRD_STARTED;
 
-	if (__unlikely(_beginthread(&thrd_start, 0, &info) == (uintptr_t)-1)) {
+	if (_beginthread(&thrd_start, 0, info) == (uintptr_t)-1) {
 		mtx_destroy(&info->mtx);
 		cnd_destroy(&info->cond);
 		free(info);
@@ -433,28 +317,17 @@ thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 	*thr = (thrd_t)info;
 
 	return thrd_success;
-#endif
 }
 
 thrd_t
 thrd_current(void)
 {
-#if LELY_HAVE_PTHREAD
-	return (thrd_t)pthread_self();
-#elif defined(_WIN32)
 	return (thrd_t)thrd_self;
-#endif
 }
 
 int
 thrd_detach(thrd_t thr)
 {
-#if LELY_HAVE_PTHREAD
-	// clang-format off
-	return __unlikely(pthread_detach((pthread_t)thr))
-			? thrd_error : thrd_success;
-	// clang-format on
-#elif defined(_WIN32)
 	struct thrd_info *info = (struct thrd_info *)thr;
 
 	mtx_lock(&info->mtx);
@@ -471,25 +344,17 @@ thrd_detach(thrd_t thr)
 	}
 
 	return thrd_success;
-#endif
 }
 
 int
 thrd_equal(thrd_t thr0, thrd_t thr1)
 {
-#if LELY_HAVE_PTHREAD
-	return pthread_equal((pthread_t)thr0, (pthread_t)thr1);
-#elif defined(_WIN32)
 	return thr0 == thr1;
-#endif
 }
 
 _Noreturn void
 thrd_exit(int res)
 {
-#if LELY_HAVE_PTHREAD
-	pthread_exit((void *)(intptr_t)res);
-#elif defined(_WIN32)
 	struct thrd_info *info = (struct thrd_info *)thrd_current();
 
 	info->res = res;
@@ -509,7 +374,6 @@ thrd_exit(int res)
 	}
 
 	_endthread();
-#endif
 	for (;;)
 		;
 }
@@ -517,21 +381,14 @@ thrd_exit(int res)
 int
 thrd_join(thrd_t thr, int *res)
 {
-#if LELY_HAVE_PTHREAD
-	void *value_ptr = NULL;
-	if (__unlikely(pthread_join((pthread_t)thr, &value_ptr)))
-		return thrd_error;
-	if (res)
-		*res = (intptr_t)value_ptr;
-#elif defined(_WIN32)
 	struct thrd_info *info = (struct thrd_info *)thr;
 
 	mtx_lock(&info->mtx);
 	while (info->stat == THRD_STARTED) {
-		if (__unlikely(cnd_wait(&info->cond, &info->mtx) == thrd_error))
+		if (cnd_wait(&info->cond, &info->mtx) == thrd_error)
 			break;
 	}
-	if (__unlikely(info->stat != THRD_STOPPED)) {
+	if (info->stat != THRD_STOPPED) {
 		mtx_unlock(&info->mtx);
 		return thrd_error;
 	}
@@ -545,92 +402,55 @@ thrd_join(thrd_t thr, int *res)
 	free(info);
 
 	return thrd_success;
-#endif
-	return thrd_success;
 }
-
-#if !LELY_NO_RT
 
 int
 thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
 	int errsv = errno;
 	int res = nanosleep(duration, remaining);
-	if (__unlikely(res)) {
-#if defined(_WIN32) || defined(_POSIX_C_SOURCE)
+	if (res) {
 		res = errno == EINTR ? -1 : -2;
-#else
-		res = -2;
-#endif
 		errno = errsv;
 	}
 	return res;
 }
 
-#endif
-
 void
 thrd_yield(void)
 {
-#ifdef _WIN32
 	SwitchToThread();
-#elif LELY_HAVE_SCHED
-	sched_yield();
-#endif
 }
 
 int
 tss_create(tss_t *key, tss_dtor_t dtor)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_key_create((pthread_key_t *)key, dtor))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
 	DWORD dwFlsIndex = FlsAlloc(dtor);
-	if (__unlikely(dwFlsIndex == FLS_OUT_OF_INDEXES))
+	if (dwFlsIndex == FLS_OUT_OF_INDEXES)
 		return thrd_error;
 
 	*key = dwFlsIndex;
 
 	return thrd_success;
-#endif
 }
 
 void
 tss_delete(tss_t key)
 {
-#if LELY_HAVE_PTHREAD
-	pthread_key_delete((pthread_key_t)key);
-#elif defined(_WIN32)
 	FlsFree(key);
-#endif
 }
 
 void *
 tss_get(tss_t key)
 {
-#if LELY_HAVE_PTHREAD
-	return pthread_getspecific((pthread_key_t)key);
-#elif defined(_WIN32)
 	return FlsGetValue(key);
-#endif
 }
 
 int
 tss_set(tss_t key, void *val)
 {
-#if LELY_HAVE_PTHREAD
-	return __unlikely(pthread_setspecific((pthread_key_t)key, val))
-			? thrd_error
-			: thrd_success;
-#elif defined(_WIN32)
 	return FlsSetValue(key, val) ? thrd_success : thrd_error;
-#endif
 }
-
-#if LELY_HAVE_PTHREAD
-#elif defined(_WIN32)
 
 static void
 thrd_start(void *arglist)
@@ -642,6 +462,4 @@ thrd_start(void *arglist)
 	thrd_exit(info->func(info->arg));
 }
 
-#endif
-
-#endif // !LELY_NO_THREADS
+#endif // !LELY_NO_THREADS && _WIN32 && !__MINGW32__

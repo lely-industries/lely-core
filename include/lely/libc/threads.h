@@ -24,21 +24,30 @@
 
 #include <lely/features.h>
 
+// clang-format off
 #ifndef LELY_HAVE_THREADS_H
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__) \
-		&& __has_include(<threads.h>)
+// Although recent versions of Cygwin do provide <threads.h>, it requires
+// <machine/_threads.h>, which is missing.
+#if __STDC_VERSION__ >= 201112L && !(defined(__STDC_NO_THREADS__) \
+		|| defined(_MSC_VER) || defined(__CYGWIN__))
 #define LELY_HAVE_THREADS_H 1
 #endif
 #endif
+// clang-format on
 
 #if LELY_HAVE_THREADS_H
 #include <threads.h>
-#else
+#else // !LELY_HAVE_UNISTD_H
 
-#ifdef _WIN32
-#include <lely/libc/stdint.h>
-#endif
 #include <lely/libc/time.h>
+
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#include <pthread.h>
+#elif _WIN32
+#include <windows.h>
+#else
+#error This file requires POSIX Threads or Windows.
+#endif
 
 #ifndef thread_local
 #if __cplusplus >= 201103L
@@ -48,82 +57,49 @@
 #endif
 #endif
 
-/// A complete object type that holds an identifier for a condition variable.
-#ifdef __MINGW32__
-typedef struct {
-	void *__cond;
-} cnd_t;
-#elif defined(_WIN32)
-typedef struct {
-	CONDITION_VARIABLE __cond;
-} cnd_t;
-#else
-typedef union {
-	char __size[48];
-	long __align;
-} cnd_t;
-#endif
-
-/// A complete object type that holds an identifier for a thread.
-#ifdef _WIN32
-typedef uintptr_t thrd_t;
-#else
-typedef unsigned long thrd_t;
-#endif
-
-/**
- * A complete object type that holds an identifier for a thread-specific storage
- * pointer.
- */
-#ifdef __MINGW32__
-typedef unsigned int tss_t;
-#elif defined(__CYGWIN__)
-typedef void *tss_t;
-#elif defined(_WIN32)
-typedef DWORD tss_t;
-#else
-typedef unsigned int tss_t;
+/// The static initializer for an object of type #once_flag.
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
+#elif _WIN32
+#define ONCE_FLAG_INIT 0
 #endif
 
 /**
  * The maximum number of times that destructors will be called when a thread
  * terminates.
  */
-#ifdef _WIN32
-#define TSS_DTOR_ITERATIONS 256
-#else
-#define TSS_DTOR_ITERATIONS 4
+#define TSS_DTOR_ITERATIONS 1
+
+/// A complete object type that holds an identifier for a condition variable.
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef pthread_cond_t cnd_t;
+#elif _WIN32
+typedef CONDITION_VARIABLE cnd_t;
+#endif
+
+/// A complete object type that holds an identifier for a thread.
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef pthread_t thrd_t;
+#elif _WIN32
+typedef void *thrd_t;
+#endif
+
+/**
+ * A complete object type that holds an identifier for a thread-specific storage
+ * pointer.
+ */
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef pthread_key_t tss_t;
+#elif _WIN32
+typedef DWORD tss_t;
 #endif
 
 /// A complete object type that holds an identifier for a mutex.
-#ifdef __MINGW32__
-typedef struct {
-	void *__mtx;
-} mtx_t;
-#elif defined(_WIN32)
-typedef struct {
-	CRITICAL_SECTION __mtx;
-} mtx_t;
-#else
-typedef union {
-#if __WORDSIZE == 64
-	char __size[40];
-#else
-	char __size[24];
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef pthread_mutex_t mtx_t;
+#elif _WIN32
+typedef CRITICAL_SECTION mtx_t;
 #endif
-	long __align;
-} mtx_t;
-#endif
-
-/// A complete object type that holds a flag for use by call_once().
-#ifdef _WIN32
-typedef long once_flag;
-#else
-typedef int once_flag;
-#endif
-
-/// The static initializer for an object of type #once_flag.
-#define ONCE_FLAG_INIT 0
 
 enum {
 	/// A mutex type that supports neither timeout nor test and return.
@@ -159,8 +135,27 @@ enum {
 	thrd_nomem
 };
 
+/// A complete object type that holds a flag for use by call_once().
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef pthread_once_t once_flag;
+#elif _WIN32
+typedef long once_flag;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/**
+ * The function pointer type used for a destructor for a thread-specific storage
+ * pointer.
+ */
+#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+typedef void (*tss_dtor_t)(void *);
+#elif _WIN32
+// clang-format off
+typedef void (WINAPI *tss_dtor_t)(void *);
+// clang-format on
 #endif
 
 /**
@@ -170,20 +165,10 @@ extern "C" {
 typedef int (*thrd_start_t)(void *);
 
 /**
- * The function pointer type used for a destructor for a thread-specific storage
- * pointer.
- */
-#if defined(_WIN32) && !defined(__MINGW32__)
-typedef void(WINAPI *tss_dtor_t)(void *);
-#else
-typedef void (*tss_dtor_t)(void *);
-#endif
-
-/**
  * Uses the #once_flag at <b>flag</b> to ensure that <b>func</b> is called
  * exactly once, the first time the call_once() functions is called with that
- * value of <b>flag</b>. Completion of an effective call to the call_once
- * function synchronizes with all subsequent calls to the call_once function
+ * value of <b>flag</b>. Completion of an effective call to the call_once()
+ * function synchronizes with all subsequent calls to the call_once() function
  * with the same value of <b>flag</b>.
  */
 void call_once(once_flag *flag, void (*func)(void));
@@ -449,6 +434,6 @@ int tss_set(tss_t key, void *val);
 }
 #endif
 
-#endif // LELY_HAVE_THREADS_H
+#endif // !LELY_HAVE_THREADS_H
 
 #endif // !LELY_LIBC_THREADS_H_

@@ -13,7 +13,12 @@ if !NO_RT
 src += sleep.c
 endif
 if !NO_THREADS
-src += threads.c
+if HAVE_PTHREAD
+src += threads-pthread.c
+endif
+if PLATFORM_WIN32
+src += threads-win32.c
+endif
 endif
 if !NO_RT
 src += time.c

@@ -26,18 +26,22 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_STDATOMIC_H
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) \
-		&& __has_include(<stdatomic.h>)
+// GCC versions older than 4.9 do not properly advertise the absence of
+// <stdatomic.h>.
+// clang-format off
+#if __STDC_VERSION__ >= 201112L && !(defined(__STDC_NO_ATOMICS__) \
+		|| defined(_MSC_VER) \
+		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9)))
+// clang-format on
 #define LELY_HAVE_STDATOMIC_H 1
 #endif
 #endif
 
 #if LELY_HAVE_STDATOMIC_H
 #include <stdatomic.h>
-#else
+#else // !LELY_HAVE_STDATOMIC_H
 
-#undef __STDC_NO_ATOMICS__
-#if __has_extension(c_atomic)
+#if defined(__clang__) && __has_extension(c_atomic)
 #define LELY_HAVE_CLANG_ATOMIC 1
 #elif GNUC_PREREQ(4, 7)
 #define LELY_HAVE_GNUC_ATOMIC 1
@@ -47,7 +51,7 @@
 #define __STDC_NO_ATOMICS__ 1
 #endif
 
-#ifndef __STDC_NO_ATOMICS__
+#if !__STDC_NO_ATOMICS__
 
 #include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
@@ -58,17 +62,10 @@
 #define LELY_LIBC_STDATOMIC_INLINE static inline
 #endif
 
-#undef __atomic_bool
-#ifdef __cplusplus
-#define __atomic_bool bool
-#else
-#define __atomic_bool _Bool
-#endif
-
 #ifdef __GCC_ATOMIC_BOOL_LOCK_FREE
 #define ATOMIC_BOOL_LOCK_FREE __GCC_ATOMIC_BOOL_LOCK_FREE
 #else
-#define ATOMIC_BOOL_LOCK_FREE 1
+#define ATOMIC_BOOL_LOCK_FREE 2
 #endif
 
 #ifdef __GCC_ATOMIC_CHAR_LOCK_FREE
@@ -125,12 +122,160 @@
 #define ATOMIC_POINTER_LOCK_FREE 1
 #endif
 
+/**
+ * The static initializer used to initialize an #atomic_flag to the clear state.
+ */
+#define ATOMIC_FLAG_INIT \
+	{ \
+		ATOMIC_VAR_INIT(0) \
+	}
+
+/// An enumerated type identifying memory constraints.
+typedef enum {
+/// No operation orders memory.
+#ifdef __ATOMIC_RELAXED
+	memory_order_relaxed = __ATOMIC_RELAXED,
+#else
+	memory_order_relaxed = 0,
+#endif
+/**
+ * A load operation performs a consume operation on the affected memory
+ * location.
+ */
+#ifdef __ATOMIC_CONSUME
+	memory_order_consume = __ATOMIC_CONSUME,
+#else
+	memory_order_consume = 1,
+#endif
+/**
+ * A load operation performs an acquire operation on the affected memory
+ * location.
+ */
+#ifdef __ATOMIC_ACQUIRE
+	memory_order_acquire = __ATOMIC_ACQUIRE,
+#else
+	memory_order_acquire = 2,
+#endif
+/**
+ * A store operation performs a release operation on the affected memory
+ * location.
+ */
+#ifdef __ATOMIC_RELEASE
+	memory_order_release = __ATOMIC_RELEASE,
+#else
+	memory_order_release = 3,
+#endif
+/**
+ * A load operation performs an acquire operation on the affected memory
+ * location, and a store operation performs a release operation on the
+ * affected memory location.
+ */
+#ifdef __ATOMIC_ACQ_REL
+	memory_order_acq_rel = __ATOMIC_ACQ_REL,
+#else
+	memory_order_acq_rel = 4,
+#endif
+/// Enforces a single total order on all affected locations.
+#ifdef __ATOMIC_SEQ_CST
+	memory_order_seq_cst = __ATOMIC_SEQ_CST
+#else
+	memory_order_seq_cst = 5,
+#endif
+} memory_order;
+
 #ifndef LELY_HAVE_CLANG_ATOMIC
 #undef _Atomic
-#define _Atomic(T) struct { T volatile __value; }
+#define _Atomic(T) struct { T volatile _value_; }
 #endif
 
-typedef _Atomic(__atomic_bool) atomic_bool;
+#ifndef ATOMIC_BOOL_TYPE
+#ifdef __cplusplus
+#define ATOMIC_BOOL_TYPE bool
+#else
+#define ATOMIC_BOOL_TYPE _Bool
+#endif
+#endif
+
+/**
+ * An atomic type providing the classic test-and-set functionality. It has two
+ * states, set and clear. Operations on objects of this type are lock free.
+ */
+typedef struct {
+	_Atomic(ATOMIC_BOOL_TYPE) _value_;
+} atomic_flag;
+
+/**
+ * The static initializer for an atomic object of a type that is
+ * initialization-compatible with <b>value</b>.
+ */
+#if LELY_HAVE_CLANG_ATOMIC
+#define ATOMIC_VAR_INIT(value) (value)
+#else
+#define ATOMIC_VAR_INIT(value) \
+	{ \
+		(value) \
+	}
+#endif
+
+/**
+ * Initializes the atomic object at <b>obj</b> with the value <b>value</b>. Note
+ * that this function does not avoid data races.
+ */
+#if LELY_HAVE_CLANG_ATOMIC
+#define atomic_init(obj, value) __c11_atomic_init(obj, value)
+#else
+#define atomic_init(obj, value) \
+	atomic_store_explicit(obj, value, memory_order_relaxed)
+#endif
+
+/**
+ * Terminates a dependency chain; the argument does not carry a dependency to
+ * the return value.
+ */
+#if defined(__GNUC__) || (__clang__)
+#define kill_dependency(y) \
+	__extension__({ \
+		__typeof__(y) _tmp_ = (y); \
+		_tmp_; \
+	})
+#else
+#define kill_dependency(y)
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// Inserts a fence with semantics according to <b>order</b>.
+LELY_LIBC_STDATOMIC_INLINE void atomic_thread_fence(memory_order order);
+
+/**
+ * Equivalent to `atomic_thread_fence(order)`, except that the resulting
+ * ordering constraints are established only between a thread and a signal
+ * handler executing in the same thread.
+ */
+LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
+
+#ifdef __cplusplus
+}
+#endif
+
+/**
+ * Indicates the lock-free property of integer and address atomic types.
+ *
+ * @returns 0 if the type is never lock-free, 1 if the type is sometimes
+ * lock-free, and 2 if the type is always lock-free.
+ */
+#if LELY_HAVE_CLANG_ATOMIC
+#define atomic_is_lock_free(obj) (__c11_atomic_is_lock_free(sizeof(*(obj))))
+#elif LELY_HAVE_GNUC_ATOMIC
+#define atomic_is_lock_free(obj) \
+	(__atomic_is_lock_free(sizeof((obj)->_value_), &(obj)->_value_))
+#else
+#define atomic_is_lock_free(obj) (sizeof((obj)->_value_) <= sizeof(void *))
+#endif
+
+typedef _Atomic(ATOMIC_BOOL_TYPE) atomic_bool;
 typedef _Atomic(char) atomic_char;
 typedef _Atomic(signed char) atomic_schar;
 typedef _Atomic(unsigned char) atomic_uchar;
@@ -171,118 +316,10 @@ typedef _Atomic(intmax_t) atomic_intmax_t;
 typedef _Atomic(uintmax_t) atomic_uintmax_t;
 
 /**
- * The static initializer for an atomic object of a type that is
- * initialization-compatible with <b>value</b>.
+ * Equivalent to #atomic_store_explicit(object, desired, memory_order_seq_cst).
  */
-#if LELY_HAVE_CLANG_ATOMIC
-#define ATOMIC_VAR_INIT(value) (value)
-#else
-#define ATOMIC_VAR_INIT(value) \
-	{ \
-		(value) \
-	}
-#endif
-
-/**
- * Initializes the atomic object at <b>obj</b> with the value <b>value</b>. Note
- * that this function does not avoid data races.
- */
-#if LELY_HAVE_CLANG_ATOMIC
-#define atomic_init(obj, value) __c11_atomic_init(obj, value)
-#else
-#define atomic_init(obj, value) ((void)((obj)->__value = (value)))
-#endif
-
-#ifndef __ATOMIC_RELAXED
-#define __ATOMIC_RELAXED 0
-#endif
-#ifndef __ATOMIC_CONSUME
-#define __ATOMIC_CONSUME 1
-#endif
-#ifndef __ATOMIC_ACQUIRE
-#define __ATOMIC_ACQUIRE 2
-#endif
-#ifndef __ATOMIC_RELEASE
-#define __ATOMIC_RELEASE 3
-#endif
-#ifndef __ATOMIC_ACQ_REL
-#define __ATOMIC_ACQ_REL 4
-#endif
-#ifndef __ATOMIC_SEQ_CST
-#define __ATOMIC_SEQ_CST 5
-#endif
-
-/// An enumerated type identifying memory constraints.
-typedef enum {
-	/// No operation orders memory.
-	memory_order_relaxed = __ATOMIC_RELAXED,
-	/**
-	 * A load operation performs a consume operation on the affected memory
-	 * location.
-	 */
-	memory_order_consume = __ATOMIC_CONSUME,
-	/**
-	 * A load operation performs an acquire operation on the affected memory
-	 * location.
-	 */
-	memory_order_acquire = __ATOMIC_ACQUIRE,
-	/**
-	 * A store operation performs a release operation on the affected memory
-	 * location.
-	 */
-	memory_order_release = __ATOMIC_RELEASE,
-	/**
-	 * A load operation performs an acquire operation on the affected memory
-	 * location, and a store operation performs a release operation on the
-	 * affected memory location.
-	 */
-	memory_order_acq_rel = __ATOMIC_ACQ_REL,
-	/// Enforces a single total order on all affected locations.
-	memory_order_seq_cst = __ATOMIC_SEQ_CST
-} memory_order;
-
-/**
- * Terminates a dependency chain; the argument does not carry a dependency to
- * the return value.
- */
-#define kill_dependency(y) \
-	__extension__({ \
-		__typeof__(y) __y = y; \
-		__y; \
-	})
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/// Inserts a fence with semantics according to <b>order</b>.
-LELY_LIBC_STDATOMIC_INLINE void atomic_thread_fence(memory_order order);
-
-/**
- * Equivalent to `atomic_thread_fence(order)`, except that the resulting
- * ordering constraints are established only between a thread and a signal
- * handler executing in the same thread.
- */
-LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
-
-#ifdef __cplusplus
-}
-#endif
-
-/**
- * Indicates the lock-free property of integer and address atomic types.
- *
- * @returns 0 if the type is never lock-free, 1 if the type is sometimes
- * lock-free, and 2 if the type is always lock-free.
- */
-#if LELY_HAVE_CLANG_ATOMIC
-#define atomic_is_lock_free(obj) (__c11_atomic_is_lock_free(sizeof(*(obj))))
-#elif LELY_HAVE_GNUC_ATOMIC
-#define atomic_is_lock_free(obj) \
-	(__atomic_is_lock_free(sizeof((obj)->__value), &(obj)->__value))
-#else
-#define atomic_is_lock_free(obj) (sizeof((obj)->__value) <= sizeof(void *))
-#endif
+#define atomic_store(object, desired) \
+	(atomic_store_explicit((object), (desired), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with the value of
@@ -293,16 +330,15 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_store((object), (desired), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_store_explicit(object, desired, order) \
-	(__atomic_store_n(&(object)->__value, (desired), (order)))
+	(__atomic_store_n(&(object)->_value_, (desired), (order)))
 #else
 #define atomic_store_explicit(object, desired, order) \
 	((void)atomic_exchange_explicit((object), (desired), (order)))
 #endif
-/**
- * Equivalent to #atomic_store_explicit(object, desired, memory_order_seq_cst).
- */
-#define atomic_store(object, desired) \
-	(atomic_store_explicit((object), (desired), memory_order_seq_cst))
+
+/// Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
+#define atomic_load(object) \
+	(atomic_load_explicit((object), memory_order_seq_cst))
 
 /**
  * Atomically returns the value at <b>object</b>. Memory is affected according
@@ -313,14 +349,18 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_load((object), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_load_explicit(object, order) \
-	(__atomic_load_n(&(object)->__value, (order)))
+	(__atomic_load_n(&(object)->_value_, (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_load_explicit(object, order) \
-	((void)order, __sync_fetch_and_add(&(object)->__value, 0))
+	((void)(order), __sync_fetch_and_add(&(object)->_value_, 0))
 #endif
-/// Equivalent to #atomic_load_explicit(object, memory_order_seq_cst).
-#define atomic_load(object) \
-	(atomic_load_explicit((object), memory_order_seq_cst))
+
+/**
+ * Equivalent to #atomic_exchange_explicit(object, desired,
+ * memory_order_seq_cst).
+ */
+#define atomic_exchange(object, desired) \
+	(atomic_exchange_explicit((object), (desired), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with <b>desired</b>. Memory is
@@ -333,22 +373,25 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_exchange((object), (desired), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
-	(__atomic_exchange_n(&(object)->__value, (desired), (order)))
+	(__atomic_exchange_n(&(object)->_value_, (desired), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_exchange_explicit(object, desired, order) \
 	__extension__({ \
 		__typeof__(object) __object = (object); \
 		__typeof__(desired) __desired = (desired); \
 		atomic_thread_fence(order); \
-		__sync_lock_test_and_set(&(__object)->__value, __desired); \
+		__sync_lock_test_and_set(&(__object)->_value_, __desired); \
 	})
 #endif
+
 /**
- * Equivalent to #atomic_exchange_explicit(object, desired,
- * memory_order_seq_cst).
+ * Equivalent to #atomic_compare_exchange_strong_explicit(object, expected,
+ * desired, memory_order_seq_cst, memory_order_seq_cst).
  */
-#define atomic_exchange(object, desired) \
-	(atomic_exchange_explicit((object), (desired), memory_order_seq_cst))
+#define atomic_compare_exchange_strong(object, expected, desired) \
+	(atomic_compare_exchange_strong_explicit((object), (expected), \
+			(desired), memory_order_seq_cst, \
+			memory_order_seq_cst))
 
 /**
  * Atomically compares the value at <b>object</b> for equality with that at
@@ -368,28 +411,29 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_compare_exchange_strong_explicit( \
 		object, expected, desired, success, failure) \
-	(__atomic_compare_exchange_n(&(object)->__value, (expected), \
+	(__atomic_compare_exchange_n(&(object)->_value_, (expected), \
 			(desired), 0, (success), (failure)))
 #elif LELY_HAVE_SYNC_ATOMIC
 // clang-format off
-#define atomic_compare_exchange_strong_explicit( \
-		object, expected, desired, success, failure) \
+#define atomic_compare_exchange_strong_explicit(object, expected, desired, \
+		success, failure) \
 	__extension__({ \
-		(void)success; \
-		(void)failure; \
-		__typeof__(*(expected)) __expected = *(expected); \
-		(__atomic_bool)((*(expected) = __sync_val_compare_and_swap( \
-				&(object)->__value, __expected, (desired))) \
-				== __expected); \
+		(void)(success); \
+		(void)(failure); \
+		__typeof__(*(expected)) _expected_ = *(expected); \
+		(ATOMIC_BOOL_TYPE)((*(expected) = __sync_val_compare_and_swap( \
+				&(object)->_value_, _expected_, (desired))) \
+				== _expected_); \
 	})
 // clang-format on
 #endif
+
 /**
- * Equivalent to #atomic_compare_exchange_strong_explicit(object, expected,
+ * Equivalent to #atomic_compare_exchange_weak_explicit(object, expected,
  * desired, memory_order_seq_cst, memory_order_seq_cst).
  */
-#define atomic_compare_exchange_strong(object, expected, desired) \
-	(atomic_compare_exchange_strong_explicit((object), (expected), \
+#define atomic_compare_exchange_weak(object, expected, desired) \
+	(atomic_compare_exchange_weak_explicit((object), (expected), \
 			(desired), memory_order_seq_cst, \
 			memory_order_seq_cst))
 
@@ -414,7 +458,7 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_compare_exchange_weak_explicit( \
 		object, expected, desired, success, failure) \
-	(__atomic_compare_exchange_n(&(object)->__value, (expected), \
+	(__atomic_compare_exchange_n(&(object)->_value_, (expected), \
 			(desired), 1, (success), (failure)))
 #else
 #define atomic_compare_exchange_weak_explicit( \
@@ -422,14 +466,13 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(atomic_compare_exchange_strong_explicit((object), (expected), \
 			(desired), (success), (failure)))
 #endif
+
 /**
- * Equivalent to #atomic_compare_exchange_weak_explicit(object, expected,
- * desired, memory_order_seq_cst, memory_order_seq_cst).
+ * Equivalent to #atomic_fetch_add_explicit(object, operand,
+ * memory_order_seq_cst).
  */
-#define atomic_compare_exchange_weak(object, expected, desired) \
-	(atomic_compare_exchange_weak_explicit((object), (expected), \
-			(desired), memory_order_seq_cst, \
-			memory_order_seq_cst))
+#define atomic_fetch_add(object, operand) \
+	(atomic_fetch_add_explicit((object), (operand), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object + operand`.
@@ -442,17 +485,18 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_fetch_add((object), (operand), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
-	(__atomic_fetch_add(&(object)->__value, (operand), (order)))
+	(__atomic_fetch_add(&(object)->_value_, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_add_explicit(object, operand, order) \
-	((void)order, __sync_fetch_and_add(&(object)->__value, (operand)))
+	((void)(order), __sync_fetch_and_add(&(object)->_value_, (operand)))
 #endif
+
 /**
- * Equivalent to #atomic_fetch_add_explicit(object, operand,
+ * Equivalent to #atomic_fetch_sub_explicit(object, operand,
  * memory_order_seq_cst).
  */
-#define atomic_fetch_add(object, operand) \
-	(atomic_fetch_add_explicit((object), (operand), memory_order_seq_cst))
+#define atomic_fetch_sub(object, operand) \
+	(atomic_fetch_sub_explicit((object), (operand), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object - operand`.
@@ -465,17 +509,18 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_fetch_sub((object), (operand), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
-	(__atomic_fetch_sub(&(object)->__value, (operand), (order)))
+	(__atomic_fetch_sub(&(object)->_value_, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_sub_explicit(object, operand, order) \
-	((void)order, __sync_fetch_and_sub(&(object)->__value, (operand)))
+	((void)(order), __sync_fetch_and_sub(&(object)->_value_, (operand)))
 #endif
+
 /**
- * Equivalent to #atomic_fetch_sub_explicit(object, operand,
+ * Equivalent to #atomic_fetch_or_explicit(object, operand,
  * memory_order_seq_cst).
  */
-#define atomic_fetch_sub(object, operand) \
-	(atomic_fetch_sub_explicit((object), (operand), memory_order_seq_cst))
+#define atomic_fetch_or(object, operand) \
+	(atomic_fetch_or_explicit((object), (operand), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object | operand`.
@@ -488,17 +533,18 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_fetch_or((object), (operand), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
-	(__atomic_fetch_or(&(object)->__value, (operand), (order)))
+	(__atomic_fetch_or(&(object)->_value_, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_or_explicit(object, operand, order) \
-	((void)order, __sync_fetch_and_or(&(object)->__value, (operand)))
+	((void)(order), __sync_fetch_and_or(&(object)->_value_, (operand)))
 #endif
+
 /**
- * Equivalent to #atomic_fetch_or_explicit(object, operand,
+ * Equivalent to #atomic_fetch_xor_explicit(object, operand,
  * memory_order_seq_cst).
  */
-#define atomic_fetch_or(object, operand) \
-	(atomic_fetch_or_explicit((object), (operand), memory_order_seq_cst))
+#define atomic_fetch_xor(object, operand) \
+	(atomic_fetch_xor_explicit((object), (operand), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object ^ operand`.
@@ -511,17 +557,18 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_fetch_xor((object), (operand), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
-	(__atomic_fetch_xor(&(object)->__value, (operand), (order)))
+	(__atomic_fetch_xor(&(object)->_value_, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_xor_explicit(object, operand, order) \
-	((void)order, __sync_fetch_and_xor(&(object)->__value, (operand)))
+	((void)(order), __sync_fetch_and_xor(&(object)->_value_, (operand)))
 #endif
+
 /**
- * Equivalent to #atomic_fetch_xor_explicit(object, operand,
+ * Equivalent to #atomic_fetch_and_explicit(object, operand,
  * memory_order_seq_cst).
  */
-#define atomic_fetch_xor(object, operand) \
-	(atomic_fetch_xor_explicit((object), (operand), memory_order_seq_cst))
+#define atomic_fetch_and(object, operand) \
+	(atomic_fetch_and_explicit((object), (operand), memory_order_seq_cst))
 
 /**
  * Atomically replaces the value at <b>object</b> with `*object & operand`.
@@ -534,33 +581,11 @@ LELY_LIBC_STDATOMIC_INLINE void atomic_signal_fence(memory_order order);
 	(__c11_atomic_fetch_and((object), (operand), (order)))
 #elif LELY_HAVE_GNUC_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
-	(__atomic_fetch_and(&(object)->__value, (operand), (order)))
+	(__atomic_fetch_and(&(object)->_value_, (operand), (order)))
 #elif LELY_HAVE_SYNC_ATOMIC
 #define atomic_fetch_and_explicit(object, operand, order) \
-	((void)order, __sync_fetch_and_and(&(object)->__value, (operand)))
+	((void)(order), __sync_fetch_and_and(&(object)->_value_, (operand)))
 #endif
-/**
- * Equivalent to #atomic_fetch_and_explicit(object, operand,
- * memory_order_seq_cst).
- */
-#define atomic_fetch_and(object, operand) \
-	(atomic_fetch_and_explicit((object), (operand), memory_order_seq_cst))
-
-/**
- * An atomic type providing the classic test-and-set functionality. It has two
- * states, set and clear. Operations on objects of this type are lock free.
- */
-typedef struct {
-	atomic_bool __value;
-} atomic_flag;
-
-/**
- * The static initializer used to initialize an #atomic_flag to the clear state.
- */
-#define ATOMIC_FLAG_INIT \
-	{ \
-		ATOMIC_VAR_INIT(0) \
-	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -572,15 +597,14 @@ extern "C" {
  *
  * @returns the value at <b>object</b> immediately before the effects.
  */
-LELY_LIBC_STDATOMIC_INLINE
-__atomic_bool atomic_flag_test_and_set_explicit(
+LELY_LIBC_STDATOMIC_INLINE ATOMIC_BOOL_TYPE atomic_flag_test_and_set_explicit(
 		volatile atomic_flag *object, memory_order order);
 
 /**
  * Equivalent to #atomic_flag_test_and_set_explicit(object,
  * memory_order_seq_cst).
  */
-LELY_LIBC_STDATOMIC_INLINE __atomic_bool atomic_flag_test_and_set(
+LELY_LIBC_STDATOMIC_INLINE ATOMIC_BOOL_TYPE atomic_flag_test_and_set(
 		volatile atomic_flag *object);
 
 /**
@@ -619,19 +643,17 @@ atomic_signal_fence(memory_order order)
 #elif defined(__GNUC__)
 	if (order != memory_order_relaxed)
 		__asm volatile("" ::: "memory");
-#else
-	(void)order;
 #endif
 }
 
-inline __atomic_bool
+inline ATOMIC_BOOL_TYPE
 atomic_flag_test_and_set_explicit(
 		volatile atomic_flag *object, memory_order order)
 {
-	return atomic_exchange_explicit(&object->__value, 1, order);
+	return atomic_exchange_explicit(&object->_value_, 1, order);
 }
 
-inline __atomic_bool
+inline ATOMIC_BOOL_TYPE
 atomic_flag_test_and_set(volatile atomic_flag *object)
 {
 	return atomic_flag_test_and_set_explicit(object, memory_order_seq_cst);
@@ -640,7 +662,7 @@ atomic_flag_test_and_set(volatile atomic_flag *object)
 inline void
 atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order)
 {
-	atomic_store_explicit(&object->__value, 0, order);
+	atomic_store_explicit(&object->_value_, 0, order);
 }
 
 inline void
@@ -653,10 +675,8 @@ atomic_flag_clear(volatile atomic_flag *object)
 }
 #endif
 
-#undef __atomic_bool
-
 #endif // !__STDC_NO_ATOMICS__
 
-#endif // LELY_HAVE_STDATOMIC_H
+#endif // !LELY_HAVE_STDATOMIC_H
 
 #endif // !LELY_LIBC_STDATOMIC_H_

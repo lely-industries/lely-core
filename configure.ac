@@ -72,29 +72,26 @@ AS_IF([test "$enable_rt" != "no"], [
 ])
 AC_SUBST([RT_LIBS])
 
-with_pthread=no
-AX_PTHREAD([
-	with_pthread=yes
-	AC_DEFINE([LELY_HAVE_PTHREAD], [1], [Define to 1 if you have pthread.])
-])
-
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-
 AM_CONDITIONAL([NO_THREADS], [false])
+AM_CONDITIONAL([HAVE_PTHREAD], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "$platform_win32" == "no" -a "$with_pthread" == "no"], [
-	enable_threads=no
+AS_IF([test "$enable_threads" != "no"], [
+	AX_PTHREAD([
+		AM_CONDITIONAL([HAVE_PTHREAD], [true])
+		CC="$PTHREAD_CC"
+		CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+		LIBS="$PTHREAD_LIBS $LIBS"
+	], [
+		enable_threads=no
+	])
 ])
 AS_IF([test "$enable_threads" == "no"], [
 	AM_CONDITIONAL([NO_THREADS], [true])
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
-	AS_IF([test "$platform_win32" == "yes"], [LIBS="$RT_LIBS $LIBS"])
-], [test "$with_pthread" == "yes"], [
-	CC="$PTHREAD_CC"
-	CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
-	LIBS="$PTHREAD_LIBS $LIBS"
 ])
+
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
