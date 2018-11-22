@@ -33,7 +33,7 @@
 #ifndef LELY_UTIL_PHEAP_H_
 #define LELY_UTIL_PHEAP_H_
 
-#include <lely/util/util.h>
+#include <lely/features.h>
 
 #include <stddef.h>
 
@@ -43,10 +43,10 @@
 
 /**
  * A node in a pairing heap. To associate a value with a node, embed the node in
- * a struct containing the value and use `structof()` to obtain the struct from
+ * a struct containing the value and use structof() to obtain the struct from
  * the node.
  *
- * @see pheap_in
+ * @see pheap
  */
 struct pnode {
 	/**
@@ -62,6 +62,12 @@ struct pnode {
 	/// A pointer to the first child node.
 	struct pnode *child;
 };
+
+/// The static initializer for #pnode.
+#define PNODE_INIT \
+	{ \
+		NULL, NULL, NULL, NULL \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,6 +91,12 @@ struct pheap {
 	/// The number of nodes stored in the heap.
 	size_t num_nodes;
 };
+
+/// The static initializer for #pheap.
+#define PHEAP_INIT \
+	{ \
+		NULL, NULL, 0 \
+	}
 
 /**
  * Initializes a node in a paring heap.

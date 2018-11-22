@@ -33,7 +33,7 @@
 #ifndef LELY_UTIL_RBTREE_H_
 #define LELY_UTIL_RBTREE_H_
 
-#include <lely/util/util.h>
+#include <lely/features.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -44,8 +44,8 @@
 
 /**
  * A node in a red-black tree. To associate a value with a node, embed the node
- * in a struct containing the value and use `structof()` to obtain the struct
- * from the node.
+ * in a struct containing the value and use structof() to obtain the struct from
+ * the node.
  *
  * @see rbtree
  */
@@ -66,6 +66,12 @@ struct rbnode {
 	/// A pointer to the right child node.
 	struct rbnode *right;
 };
+
+/// The static initializer for #rbnode.
+#define RBNODE_INIT \
+	{ \
+		NULL, 0, NULL, NULL \
+	}
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,6 +95,12 @@ struct rbtree {
 	/// The number of nodes stored in the tree.
 	size_t num_nodes;
 };
+
+/// The static initializer for #rbtree.
+#define RBTREE_INIT \
+	{ \
+		NULL, NULL, 0 \
+	}
 
 /**
  * Initializes a node in a red-black tree.

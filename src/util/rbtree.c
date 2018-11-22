@@ -40,8 +40,8 @@ static void rbnode_set_parent(struct rbnode *node, const struct rbnode *parent);
 static inline int rbnode_get_color(const struct rbnode *node);
 
 /**
- * Sets the color of <b>node</b> to 0 (black) if <b>color</b> 0, or to 1 (red)
- * otherwise. If <b>node</b> is NULL, this function has no effect.
+ * Sets the color of <b>node</b> to 0 (black) if <b>color</b> is 0, or to 1
+ * (red) otherwise. If <b>node</b> is NULL, this function has no effect.
  */
 static inline void rbnode_set_color(struct rbnode *node, int color);
 
@@ -345,7 +345,7 @@ rbnode_get_parent(const struct rbnode *node)
 static void
 rbnode_set_parent(struct rbnode *node, const struct rbnode *parent)
 {
-	if (__unlikely(!node))
+	if (!node)
 		return;
 
 	node->parent = (uintptr_t)parent | rbnode_get_color(node);
@@ -360,7 +360,7 @@ rbnode_get_color(const struct rbnode *node)
 static inline void
 rbnode_set_color(struct rbnode *node, int color)
 {
-	if (__unlikely(!node))
+	if (!node)
 		return;
 
 	if (color)
