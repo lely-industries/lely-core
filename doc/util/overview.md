@@ -60,9 +60,6 @@ all operations completed successfully.
 A lightweight in-memory buffer with a similar API is provided in
 lely/util/membuf.h.
 
-Allocation of large numbers of objects with the same size of best achieved with
-a memory pool (see lely/util/pool.h).
-
 Text handling
 -------------
 

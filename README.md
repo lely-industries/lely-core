@@ -173,11 +173,6 @@ in the background as a daemon/service. This functionality can be disabled with
 the `--disable-daemon` option to `configure` or by defining the `LELY_NO_DAEMON`
 preprocessor macro.
 
-The memory pool allocator allocates its memory in pages. By default these pages
-are 64 KiB large and aligned on a 4 KiB boundary. For embedded systems this may
-be far too large. The `LELY_PAGE_SIZE` and `LELY_PAGE_ALIGNMENT` preprocessor
-macros can be used to set the size and alignment of memory pages (in bytes).
-
 The CAN library provides a generic CAN message type suitable for both CAN and
 CAN FD frames. If CAN FD support is not required, the message size can be
 reduced by specifying the `--disable-canfd` option to `configure` or by defining

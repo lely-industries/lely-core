@@ -25,7 +25,6 @@
 #include <lely/io/poll.h>
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
-#include <lely/util/pool.h>
 #include <lely/util/rbtree.h>
 #ifdef _WIN32
 #include <lely/io/sock.h>
@@ -53,8 +52,6 @@ struct __io_poll {
 #endif
 	/// The tree containing the I/O device handles being watched.
 	struct rbtree tree;
-	/// A pointer to the pool allocator used to allocate the nodes in #tree.
-	pool_t *pool;
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	/// A self-pipe used to generate signal events.
 	io_handle_t pipe[2];
@@ -135,12 +132,6 @@ __io_poll_init(struct __io_poll *poll)
 #endif
 #endif
 
-	poll->pool = pool_create(0, sizeof(struct io_watch));
-	if (__unlikely(!poll->pool)) {
-		errc = get_errc();
-		goto error_create_pool;
-	}
-
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
 #ifdef _WIN32
@@ -198,8 +189,6 @@ error_set_flags:
 	io_close(poll->pipe[0]);
 error_open_pipe:
 #endif
-	pool_destroy(poll->pool);
-error_create_pool:
 	set_errc(errc);
 	return NULL;
 }
@@ -220,8 +209,6 @@ __io_poll_fini(struct __io_poll *poll)
 	io_close(poll->pipe[1]);
 	io_close(poll->pipe[0]);
 #endif
-
-	pool_destroy(poll->pool);
 
 #ifndef LELY_NO_THREADS
 	mtx_destroy(&poll->mtx);
@@ -641,7 +628,7 @@ io_poll_insert(io_poll_t *poll, struct io_handle *handle)
 	assert(poll);
 	assert(handle);
 
-	struct io_watch *watch = pool_alloc(poll->pool);
+	struct io_watch *watch = malloc(sizeof(*watch));
 	if (__unlikely(!watch))
 		return NULL;
 
@@ -664,7 +651,7 @@ io_poll_remove(io_poll_t *poll, struct io_watch *watch)
 
 	struct io_handle *handle = watch->handle;
 	rbtree_remove(&poll->tree, &watch->node);
-	pool_free(poll->pool, watch);
+	free(watch);
 	io_handle_release(handle);
 }
 
