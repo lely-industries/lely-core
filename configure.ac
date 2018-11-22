@@ -324,8 +324,6 @@ AS_IF([test "$platform_win32" == "yes"], [
 	AC_MSG_RESULT([$ax_iphlpapi_ok])
 
 	LDFLAGS="$LDFLAGS -Wc,-static-libgcc,-static-libstdc++"
-], [
-	AC_SEARCH_LIBS([dlopen], [dl])
 ])
 
 AM_CONDITIONAL([HAVE_SOCKET_CAN], [false])

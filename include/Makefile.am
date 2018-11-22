@@ -49,7 +49,6 @@ if !NO_CXX
 inc += lely/util/rand.hpp
 endif
 inc += lely/util/rbtree.h
-inc += lely/util/shlib.h
 inc += lely/util/time.h
 inc += lely/util/util.h
 
