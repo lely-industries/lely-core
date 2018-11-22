@@ -43,8 +43,6 @@ inc += lely/util/factory.hpp
 endif
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
-inc += lely/util/hash.h
-inc += lely/util/htab.h
 inc += lely/util/lex.h
 inc += lely/util/list.h
 inc += lely/util/membuf.h

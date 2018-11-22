@@ -17,8 +17,6 @@ endif
 src += factory.c
 src += frbuf.c
 src += fwbuf.c
-src += hash.c
-src += htab.c
 src += lex.c
 src += list.c
 src += membuf.c

@@ -17,8 +17,6 @@ ForEachMacros:
   - binode_foreach_by_value
   - dllist_foreach
   - dlnode_foreach
-  - hnode_foreach
-  - htab_foreach
   - pheap_foreach
   - pnode_foreach
   - rbnode_foreach

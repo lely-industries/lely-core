@@ -6,7 +6,6 @@ Data structures
 
 The utilities library implements the following data structures:
 - bidirectional map: lely/util/bimap.h
-- hash table: lely/util/htab.h
 - linked list: lely/util/list.h
 - pairing heap: lely/util/pheap.h
 - red-black tree: lely/util/rbtree.h
@@ -22,8 +21,8 @@ Numerics
 Bit counting and manipulation functions are provided in lely/util/bits.h and
 lely/util/bitset.h.
 
-Comparison and hash function for integers, pointers and strings can be found in
-lely/util/cmp.h and lely/util/hash.h, respectively.
+Comparison functions for integers, pointers and strings can be found in
+lely/util/cmp.h.
 
 A uniformly distributed random number generator for unsigned integers is given
 in lely/util/rand.h. A C++ interface, that meets the C++11 random number engine
