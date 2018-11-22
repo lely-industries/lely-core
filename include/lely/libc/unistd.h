@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<unistd.h>`, if it exists, and defines any missing functionality.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,16 +24,17 @@
 
 #include <lely/features.h>
 
+// clang-format off
 #ifndef LELY_HAVE_UNISTD_H
-#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)) \
-		&& __has_include(<unistd.h>)
+#if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)
 #define LELY_HAVE_UNISTD_H 1
 #endif
 #endif
+// clang-format on
 
 #if LELY_HAVE_UNISTD_H
 #include <unistd.h>
-#else
+#else // !LELY_HAVE_UNISTD_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,6 +89,6 @@ unsigned sleep(unsigned seconds);
 }
 #endif
 
-#endif // LELY_HAVE_UNISTD_H
+#endif // !LELY_HAVE_UNISTD_H
 
 #endif // !LELY_LIBC_UNISTD_H_

@@ -30,6 +30,8 @@
 
 #if !(defined(__GNUC__) || __has_builtin(__builtin_ffs))
 
+#include <stdint.h>
+
 // clang-format off
 static const int ffs_tab[] = {
 	0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -55,10 +57,12 @@ int
 ffs(int i)
 {
 	unsigned int x = i & -i;
-	unsigned int n = x > 0x00ffffff
-			? 24
-			: (x > 0xffff ? 16 : (x > 0xff ? 8 : 0));
-	return n + ffs_tab[x >> n];
+	// clang-format off
+	unsigned int n = x > UINT32_C(0x00ffffff)
+			? 24 : (x > UINT16_C(0xffffu)
+			? 16 : (x > UINT8_C(0xff) ? 8 : 0));
+	// clang-format on
+	return n + ffs_tab[(x >> n) & UINT8_C(0xff)];
 }
 
 #endif

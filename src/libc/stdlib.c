@@ -34,7 +34,7 @@
 #endif
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 #include <malloc.h>
 #elif defined(LELY_HAVE_POSIX_MEMALIGN)
 #include <errno.h>
@@ -45,34 +45,33 @@
 void *
 aligned_alloc(size_t alignment, size_t size)
 {
-#ifdef _WIN32
-	if (__unlikely(!size))
+#if _WIN32
+	if (!size)
 		return NULL;
 	return _aligned_malloc(size, alignment);
 #elif LELY_HAVE_POSIX_MEMALIGN
 	void *ptr = NULL;
 	int errnum = posix_memalign(&ptr, alignment, size);
-	if (__unlikely(errnum)) {
+	if (errnum) {
 		errno = errnum;
 		return NULL;
 	}
 	return ptr;
-#else
+	// clang-format off
+#else // !_WIN32 && !LELY_HAVE_POSIX_MEMALIGN
 	// Check if the alignment is a multiple if sizeof(void *) that is also a
 	// power of two
-	// clang-format off
-	if (__unlikely((alignment & (alignment - 1))
-			|| alignment < sizeof(void *)))
-		// clang-format on
+	if ((alignment & (alignment - 1)) || alignment < sizeof(void *))
 		return NULL;
-	if (__unlikely(!size))
+	// clang-format on
+	if (!size)
 		return NULL;
 
 	// malloc() is guaranteed to return a pointer aligned to at at least
 	// sizeof(void *), the minimum value of 'alignment'. We therefore need
 	// at most 'alignment' extra bytes.
 	void *ptr = malloc(size + alignment);
-	if (__unlikely(!ptr))
+	if (!ptr)
 		return NULL;
 	// Align the pointer.
 	void *aligned_ptr = (void *)(((uintptr_t)(char *)ptr + alignment - 1)
@@ -82,7 +81,7 @@ aligned_alloc(size_t alignment, size_t size)
 	((void **)aligned_ptr)[-1] = ptr;
 
 	return aligned_ptr;
-#endif
+#endif // !_WIN32 && !LELY_HAVE_POSIX_MEMALIGN
 }
 
 #ifndef __USE_ISOC11
@@ -90,21 +89,21 @@ aligned_alloc(size_t alignment, size_t size)
 void
 aligned_free(void *ptr)
 {
-#ifdef _WIN32
+#if _WIN32
 	_aligned_free(ptr);
 #elif LELY_HAVE_POSIX_MEMALIGN
 	free(ptr);
 #else
-	if (__likely(ptr))
+	if (ptr)
 		free(((void **)ptr)[-1]);
 #endif
 }
 
-#endif
+#endif // !__USE_ISOC11
 
 #endif // !(__STDC_VERSION__ >= 201112L)
 
-#ifdef _WIN32
+#if _WIN32
 
 #include <lely/libc/stdio.h>
 
@@ -113,7 +112,7 @@ aligned_free(void *ptr)
 int
 setenv(const char *envname, const char *envval, int overwrite)
 {
-	if (__unlikely(!envname)) {
+	if (!envname) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -122,17 +121,17 @@ setenv(const char *envname, const char *envval, int overwrite)
 		return 0;
 
 	for (const char *cp = envname; *cp; cp++) {
-		if (__unlikely(*cp == '=')) {
+		if (*cp == '=') {
 			errno = EINVAL;
 			return -1;
 		}
 	}
 
 	char *string = NULL;
-	if (__unlikely(asprintf(&string, "%s=%s", envname, envval) < 0))
+	if (asprintf(&string, "%s=%s", envname, envval) < 0)
 		return -1;
 
-	if (__unlikely(_putenv(string))) {
+	if (_putenv(string)) {
 		int errsv = errno;
 		free(string);
 		errno = errsv;

@@ -33,7 +33,7 @@ strdup(const char *s)
 {
 	size_t size = strlen(s) + 1;
 	char *dup = malloc(size);
-	if (__unlikely(!dup))
+	if (!dup)
 		return NULL;
 	return memcpy(dup, s, size);
 }
@@ -47,7 +47,7 @@ strndup(const char *s, size_t size)
 {
 	size = strnlen(s, size);
 	char *dup = malloc(size + 1);
-	if (__unlikely(!dup))
+	if (!dup)
 		return NULL;
 	dup[size] = '\0';
 	return memcpy(dup, s, size);

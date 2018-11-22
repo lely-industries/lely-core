@@ -101,7 +101,9 @@ getopt(int argc, char *const argv[], const char *optstring)
 		if (optind > argc) {
 			optopt = c;
 			if (opterr && *optstring != ':')
-				fprintf(stderr, "%s: option requires an argument -- %c\n",
+				fprintf(stderr,
+						"%s: option requires an "
+						"argument -- %c\n",
 						argv[0], optopt);
 			return *optstring == ':' ? ':' : '?';
 		}

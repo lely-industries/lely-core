@@ -30,7 +30,7 @@
 
 #define aligned_free free
 
-#else
+#else // !(__STDC_VERSION__ >= 201112L || __USE_ISOC11)
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +63,7 @@ void aligned_free(void *ptr);
 }
 #endif
 
-#endif // __STDC_VERSION__ >= 201112L || __USE_ISOC11
+#endif // !(__STDC_VERSION__ >= 201112L || __USE_ISOC11)
 
 #if !(_POSIX_C_SOURCE > 200112L)
 

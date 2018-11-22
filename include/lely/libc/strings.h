@@ -25,14 +25,14 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_STRINGS_H
-#if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__)) && __has_include(<strings.h>)
+#if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))
 #define LELY_HAVE_STRINGS_H 1
 #endif
 #endif
 
 #if LELY_HAVE_STRINGS_H
 #include <strings.h>
-#else
+#else // !LELY_HAVE_STRINGS_H
 
 #include <stddef.h>
 
@@ -85,6 +85,6 @@ int strncasecmp(const char *s1, const char *s2, size_t n);
 }
 #endif
 
-#endif // LELY_HAVE_STRINGS_H
+#endif // !LELY_HAVE_STRINGS_H
 
 #endif // !LELY_LIBC_STRINGS_H_

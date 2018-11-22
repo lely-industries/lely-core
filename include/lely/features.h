@@ -248,10 +248,6 @@
 #endif
 #endif
 
-#if !defined(__extension__) && !defined(__GNUC__)
-#define __extension__
-#endif
-
 #ifndef format_printf__
 #if defined(__GNUC__) || __has_attribute(__format__)
 #ifdef __MINGW32__
