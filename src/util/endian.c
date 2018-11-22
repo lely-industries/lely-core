@@ -1,6 +1,6 @@
 /**@file
- * This file is part of the utilities library; it exposes the byte order
- * functions.
+ * This file is part of the utilities library; it contains the implementation of
+ * the byte order functions.
  *
  * @see lely/util/endian.h
  *

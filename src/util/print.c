@@ -56,7 +56,7 @@ vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
 		va_copy(aq, ap);
 		int chars = vasprintf(&buf, format, aq);
 		va_end(aq);
-		if (__unlikely(chars < 0))
+		if (chars < 0)
 			return 0;
 		memcpy(*pbegin, buf, end ? MIN(end - *pbegin, chars) : chars);
 		(*pbegin) += chars;
@@ -86,11 +86,11 @@ print_utf8(char **pbegin, char *end, char32_t c32)
 	static const unsigned char mark[] = { 0x00, 0xc0, 0xe0, 0xf0 };
 
 	// Fast path for ASCII characters.
-	if (__likely(c32 <= 0x7f))
+	if (c32 <= 0x7f)
 		return print_char(pbegin, end, c32);
 
 	// Replace invalid characters by the replacement character (U+FFFD).
-	if (__unlikely((c32 >= 0xd800 && c32 <= 0xdfff) || c32 > 0x10ffff))
+	if ((c32 >= 0xd800 && c32 <= 0xdfff) || c32 > 0x10ffff)
 		c32 = 0xfffd;
 
 	int n = c32 <= 0x07ff ? 1 : (c32 <= 0xffff ? 2 : 3);
@@ -150,7 +150,7 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 			chars += print_char(pbegin, end, 'v');
 			break;
 		default:
-			if (__likely(isprint(c32))) {
+			if (isprint(c32)) {
 				chars += print_char(pbegin, end, c32);
 			} else {
 				// For non-printable characters, we use an octal
@@ -166,10 +166,7 @@ print_c99_esc(char **pbegin, char *end, char32_t c32)
 			}
 			break;
 		}
-		// clang-format off
-	} else if (__likely((c32 < 0xd800 || c32 > 0xdfff)
-			&& c32 <= 0x10ffff)) {
-		// clang-format on
+	} else if ((c32 < 0xd800 || c32 > 0xdfff) && c32 <= 0x10ffff) {
 		chars += print_utf8(pbegin, end, c32);
 	} else {
 		// For invalid Unicode code points, we use a hexadecimal escape
@@ -238,21 +235,21 @@ LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld, "%.*Lg", LDBL_DIG)
 		return print_c99_##alias(pbegin, end, name); \
 	}
 
-LELY_UTIL_DEFINE_PRINT(int8_t, i8, i8, long)
-LELY_UTIL_DEFINE_PRINT(int16_t, i16, i16, long)
-LELY_UTIL_DEFINE_PRINT(int32_t, i32, i32, long)
+LELY_UTIL_DEFINE_PRINT(int_least8_t, i8, i8, long)
+LELY_UTIL_DEFINE_PRINT(int_least16_t, i16, i16, long)
+LELY_UTIL_DEFINE_PRINT(int_least32_t, i32, i32, long)
 #if LONG_BIT == 32
-LELY_UTIL_DEFINE_PRINT(int64_t, i64, i64, llong)
+LELY_UTIL_DEFINE_PRINT(int_least64_t, i64, i64, llong)
 #else
-LELY_UTIL_DEFINE_PRINT(int64_t, i64, i64, long)
+LELY_UTIL_DEFINE_PRINT(int_least64_t, i64, i64, long)
 #endif
-LELY_UTIL_DEFINE_PRINT(uint8_t, u8, u8, ulong)
-LELY_UTIL_DEFINE_PRINT(uint16_t, u16, u16, ulong)
-LELY_UTIL_DEFINE_PRINT(uint32_t, u32, u32, ulong)
+LELY_UTIL_DEFINE_PRINT(uint_least8_t, u8, u8, ulong)
+LELY_UTIL_DEFINE_PRINT(uint_least16_t, u16, u16, ulong)
+LELY_UTIL_DEFINE_PRINT(uint_least32_t, u32, u32, ulong)
 #if LONG_BIT == 32
-LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ullong)
+LELY_UTIL_DEFINE_PRINT(uint_least64_t, u64, u64, ullong)
 #else
-LELY_UTIL_DEFINE_PRINT(uint64_t, u64, u64, ulong)
+LELY_UTIL_DEFINE_PRINT(uint_least64_t, u64, u64, ulong)
 #endif
 
 #undef LELY_UTIL_DEFINE_PRINT

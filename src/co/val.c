@@ -567,7 +567,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			if (__unlikely(n < 4))
 				return 0;
 			if (u)
-				u->r32 = ldle_flt(begin);
+				u->r32 = ldle_flt32(begin);
 			return 4;
 		case CO_DEFTYPE_TIME_OF_DAY:
 		case CO_DEFTYPE_TIME_DIFF:
@@ -596,7 +596,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			if (__unlikely(n < 8))
 				return 0;
 			if (u)
-				u->r64 = ldle_dbl(begin);
+				u->r64 = ldle_flt64(begin);
 			return 8;
 		case CO_DEFTYPE_INTEGER40:
 			if (__unlikely(n < 5))
@@ -779,7 +779,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 			return 4;
 		case CO_DEFTYPE_REAL32:
 			if (begin && (!end || end - begin >= 4))
-				stle_flt(begin, u->r32);
+				stle_flt32(begin, u->r32);
 			return 4;
 		case CO_DEFTYPE_TIME_OF_DAY:
 		case CO_DEFTYPE_TIME_DIFF:
@@ -799,7 +799,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
 			return 3;
 		case CO_DEFTYPE_REAL64:
 			if (begin && (!end || end - begin >= 8))
-				stle_dbl(begin, u->r64);
+				stle_flt64(begin, u->r64);
 			return 8;
 		case CO_DEFTYPE_INTEGER40:
 			if (begin && (!end || end - begin >= 5)) {
@@ -1080,7 +1080,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 			assert(us);
 			lex_base64(cp, end, NULL, us, &n);
 			for (size_t i = 0; i + 1 < n; i += 2)
-				us[i / 2] = letoh_u16(us[i / 2]);
+				us[i / 2] = letoh16(us[i / 2]);
 		}
 		cp += chars;
 		break;
@@ -1336,7 +1336,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 				return 0;
 			assert(us);
 			for (size_t i = 0; i + 1 < n; i += 2)
-				us[i / 2] = htole_u16(us[i / 2]);
+				us[i / 2] = htole16(us[i / 2]);
 			size_t chars = print_base64(pbegin, end, us, n);
 			co_val_fini(type, &us);
 			return chars;

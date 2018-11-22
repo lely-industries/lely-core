@@ -1,5 +1,6 @@
 /**@file
- * This file is part of the utilities library; it exposes the bit functions.
+ * This file is part of the utilities library; it contains the fallback
+ * implementation of the bit functions.
  *
  * @see lely/util/bits.h
  *
@@ -25,12 +26,11 @@
 #include <lely/util/bits.h>
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_clz)
-
 int
-clz8(uint8_t x)
+clz8(uint_least8_t x)
 {
 	// clang-format off
-	static const uint8_t tab[] = {
+	static const uint_least8_t tab[] = {
 		8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -49,19 +49,16 @@ clz8(uint8_t x)
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 	// clang-format on
-
-	return tab[x];
+	return tab[x & UINT8_C(0xff)];
 }
-
-#endif
+#endif // !_MSC_VER && !__GNUC__ && !__has_builtin(__builtin_clz)
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ctz)
-
 int
-ctz8(uint8_t x)
+ctz8(uint_least8_t x)
 {
 	// clang-format off
-	static const uint8_t tab[] = {
+	static const uint_least8_t tab[] = {
 		8, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 		4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 		5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -80,19 +77,16 @@ ctz8(uint8_t x)
 		4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
 	};
 	// clang-format on
-
-	return tab[x];
+	return tab[x & UINT8_C(0xff)];
 }
-
-#endif
+#endif // !_MSC_VER && !__GNUC__ && !__has_builtin(__builtin_ctz)
 
 #if !defined(_MSC_VER) && !defined(__GNUC__) && !__has_builtin(__builtin_ffs)
-
 int
-ffs8(uint8_t x)
+ffs8(uint_least8_t x)
 {
 	// clang-format off
-	static const uint8_t tab[] = {
+	static const uint_least8_t tab[] = {
 		0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
 		5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 		6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
@@ -111,19 +105,16 @@ ffs8(uint8_t x)
 		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
 	};
 	// clang-format on
-
-	return tab[x];
+	return tab[x & UINT8_C(0xff)];
 }
-
-#endif
+#endif // !_MSC_VER && !__GNUC__ && !__has_builtin(__builtin_ffs)
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_parity)
-
 int
-parity8(uint8_t x)
+parity8(uint_least8_t x)
 {
 	// clang-format off
-	static const uint8_t tab[] = {
+	static const uint_least8_t tab[] = {
 		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
 		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
 		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
@@ -142,19 +133,16 @@ parity8(uint8_t x)
 		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0
 	};
 	// clang-format on
-
-	return tab[x];
+	return tab[x & UINT8_C(0xff)];
 }
-
-#endif
+#endif // !__GNUC__ && !__has_builtin(__builtin_parity)
 
 #if !defined(__GNUC__) && !__has_builtin(__builtin_popcount)
-
 int
-popcount8(uint8_t x)
+popcount8(uint_least8_t x)
 {
 	// clang-format off
-	static const uint8_t tab[] = {
+	static const uint_least8_t tab[] = {
 		0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
 		1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
 		1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -173,8 +161,6 @@ popcount8(uint8_t x)
 		4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
 	};
 	// clang-format on
-
-	return tab[x];
+	return tab[x & UINT8_C(0xff)];
 }
-
-#endif
+#endif // !__GNUC__ && !__has_builtin(__builtin_popcount)

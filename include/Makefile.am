@@ -37,6 +37,7 @@ inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
 endif
+inc += lely/util/float.h
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
 inc += lely/util/lex.h

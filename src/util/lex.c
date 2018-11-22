@@ -187,14 +187,14 @@ lex_c99_esc(const char *begin, const char *end, struct floc *at, char32_t *pc32)
 
 	const char *cp = begin;
 
-	if (__unlikely(end && cp >= end))
+	if (end && cp >= end)
 		return 0;
 
 	if (*cp++ != '\\')
 		return lex_utf8(begin, end, at, pc32);
 
 	// Treat a backslash at the end as '\\'.
-	if (__unlikely(end && cp >= end))
+	if (end && cp >= end)
 		cp--;
 
 	char32_t c32 = 0;
@@ -329,7 +329,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 			return 0; \
 \
 		char *buf = strndup(begin, chars); \
-		if (__unlikely(!buf)) { \
+		if (!buf) { \
 			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
@@ -344,11 +344,11 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 \
 		free(buf); \
 \
-		if (__unlikely(errno == ERANGE && result == min)) { \
+		if (errno == ERANGE && result == min) { \
 			set_errnum(ERRNUM_RANGE); \
 			diag_if(DIAG_WARNING, get_errc(), at, \
 					#type " underflow"); \
-		} else if (__unlikely(errno == ERANGE && result == max)) { \
+		} else if (errno == ERANGE && result == max) { \
 			set_errnum(ERRNUM_RANGE); \
 			diag_if(DIAG_WARNING, get_errc(), at, \
 					#type " overflow"); \
@@ -371,7 +371,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 			return 0; \
 \
 		char *buf = strndup(begin, chars); \
-		if (__unlikely(!buf)) { \
+		if (!buf) { \
 			diag_if(DIAG_ERROR, errno2c(errno), at, \
 					"unable to duplicate string"); \
 			return 0; \
@@ -386,7 +386,7 @@ lex_c99_pp_num(const char *begin, const char *end, struct floc *at)
 \
 		free(buf); \
 \
-		if (__unlikely(errno == ERANGE && result == max)) { \
+		if (errno == ERANGE && result == max) { \
 			set_errnum(ERRNUM_RANGE); \
 			diag_if(DIAG_WARNING, get_errc(), at, \
 					#type " overflow"); \
@@ -422,76 +422,73 @@ LELY_UTIL_DEFINE_LEX_SIGNED(
 #undef LELY_UTIL_DEFINE_LEX_SIGNED
 
 size_t
-lex_c99_i8(const char *begin, const char *end, struct floc *at, int8_t *pi8)
+lex_c99_i8(const char *begin, const char *end, struct floc *at,
+		int_least8_t *pi8)
 {
 	long i8;
 	size_t chars = lex_c99_long(begin, end, at, &i8);
 	if (chars) {
-		if (__unlikely(i8 < INT8_MIN)) {
+		if (i8 < INT8_MIN) {
 			i8 = INT8_MIN;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int8_t underflow");
-		} else if (__unlikely(i8 > INT8_MAX)) {
+		} else if (i8 > INT8_MAX) {
 			i8 = INT8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int8_t overflow");
 		}
 		if (pi8)
-			*pi8 = (int8_t)i8;
+			*pi8 = (int_least8_t)i8;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_i16(const char *begin, const char *end, struct floc *at, int16_t *pi16)
+lex_c99_i16(const char *begin, const char *end, struct floc *at,
+		int_least16_t *pi16)
 {
 	long i16;
 	size_t chars = lex_c99_long(begin, end, at, &i16);
 	if (chars) {
-		if (__unlikely(i16 < INT16_MIN)) {
+		if (i16 < INT16_MIN) {
 			i16 = INT16_MIN;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int16_t underflow");
-		} else if (__unlikely(i16 > INT16_MAX)) {
+		} else if (i16 > INT16_MAX) {
 			i16 = INT16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int16_t overflow");
 		}
 		if (pi16)
-			*pi16 = (int16_t)i16;
+			*pi16 = (int_least16_t)i16;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
+lex_c99_i32(const char *begin, const char *end, struct floc *at,
+		int_least32_t *pi32)
 {
 	long i32;
 	size_t chars = lex_c99_long(begin, end, at, &i32);
 	if (chars) {
 #if LONG_BIT == 32
-		// clang-format off
-		if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& i32 == LONG_MIN)) {
-			// clang-format on
+		if (get_errnum() == ERRNUM_RANGE && i32 == LONG_MIN) {
 #else
-		if (__unlikely(i32 < INT32_MIN)) {
+		if (i32 < INT32_MIN) {
 			i32 = INT32_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int32_t underflow");
 #if LONG_BIT == 32
-			// clang-format off
-		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& i32 == LONG_MAX)) {
-			// clang-format on
+		} else if (get_errnum() == ERRNUM_RANGE && i32 == LONG_MAX) {
 #else
-		} else if (__unlikely(i32 > INT32_MAX)) {
+		} else if (i32 > INT32_MAX) {
 			i32 = INT32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -499,13 +496,14 @@ lex_c99_i32(const char *begin, const char *end, struct floc *at, int32_t *pi32)
 					"int32_t overflow");
 		}
 		if (pi32)
-			*pi32 = (int32_t)i32;
+			*pi32 = (int_least32_t)i32;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
+lex_c99_i64(const char *begin, const char *end, struct floc *at,
+		int_least64_t *pi64)
 {
 #if LONG_BIT == 64
 	long i64;
@@ -516,30 +514,20 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 #endif
 	if (chars) {
 #if LONG_BIT == 64
-		// clang-format off
-		if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& i64 == LONG_MIN)) {
-			// clang-format on
+		if (get_errnum() == ERRNUM_RANGE && i64 == LONG_MIN) {
 #else
-		// clang-format off
-		if (__unlikely((get_errnum() == ERRNUM_RANGE
-				&& i64 == LLONG_MIN) || i64 < INT64_MIN)) {
-			// clang-format on
+		if ((get_errnum() == ERRNUM_RANGE && i64 == LLONG_MIN)
+				|| i64 < INT64_MIN) {
 			i64 = INT64_MIN;
 			set_errnum(ERRNUM_RANGE);
 #endif
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"int64_t underflow");
 #if LONG_BIT == 64
-			// clang-format off
-		} else if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& i64 == LONG_MAX)) {
-			// clang-format on
+		} else if (get_errnum() == ERRNUM_RANGE && i64 == LONG_MAX) {
 #else
-			// clang-format off
-		} else if (__unlikely((get_errnum() == ERRNUM_RANGE
-				&& i64 == LLONG_MAX) || i64 > INT64_MAX)) {
-			// clang-format on
+		} else if ((get_errnum() == ERRNUM_RANGE && i64 == LLONG_MAX)
+				|| i64 > INT64_MAX) {
 			i64 = INT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -547,60 +535,60 @@ lex_c99_i64(const char *begin, const char *end, struct floc *at, int64_t *pi64)
 					"int64_t overflow");
 		}
 		if (pi64)
-			*pi64 = (int64_t)i64;
+			*pi64 = (int_least64_t)i64;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_u8(const char *begin, const char *end, struct floc *at, uint8_t *pu8)
+lex_c99_u8(const char *begin, const char *end, struct floc *at,
+		uint_least8_t *pu8)
 {
 	unsigned long u8;
 	size_t chars = lex_c99_ulong(begin, end, at, &u8);
 	if (chars) {
-		if (__unlikely(u8 > UINT8_MAX)) {
+		if (u8 > UINT8_MAX) {
 			u8 = UINT8_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"uint8_t overflow");
 		}
 		if (pu8)
-			*pu8 = (uint8_t)u8;
+			*pu8 = (uint_least8_t)u8;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_u16(const char *begin, const char *end, struct floc *at, uint16_t *pu16)
+lex_c99_u16(const char *begin, const char *end, struct floc *at,
+		uint_least16_t *pu16)
 {
 	unsigned long u16;
 	size_t chars = lex_c99_ulong(begin, end, at, &u16);
 	if (chars) {
-		if (__unlikely(u16 > UINT16_MAX)) {
+		if (u16 > UINT16_MAX) {
 			u16 = UINT16_MAX;
 			set_errnum(ERRNUM_RANGE);
 			diag_if(DIAG_WARNING, get_errc(), at,
 					"uint16_t overflow");
 		}
 		if (pu16)
-			*pu16 = (uint16_t)u16;
+			*pu16 = (uint_least16_t)u16;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
+lex_c99_u32(const char *begin, const char *end, struct floc *at,
+		uint_least32_t *pu32)
 {
 	unsigned long u32;
 	size_t chars = lex_c99_ulong(begin, end, at, &u32);
 	if (chars) {
 #if LONG_BIT == 32
-		// clang-format off
-		if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& u32 == ULONG_MAX)) {
-			// clang-format on
+		if (get_errnum() == ERRNUM_RANGE && u32 == ULONG_MAX) {
 #else
-		if (__unlikely(u32 > UINT32_MAX)) {
+		if (u32 > UINT32_MAX) {
 			u32 = UINT32_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -608,13 +596,14 @@ lex_c99_u32(const char *begin, const char *end, struct floc *at, uint32_t *pu32)
 					"uint32_t overflow");
 		}
 		if (pu32)
-			*pu32 = (uint32_t)u32;
+			*pu32 = (uint_least32_t)u32;
 	}
 	return chars;
 }
 
 size_t
-lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
+lex_c99_u64(const char *begin, const char *end, struct floc *at,
+		uint_least64_t *pu64)
 {
 #if LONG_BIT == 64
 	unsigned long u64;
@@ -625,15 +614,10 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 #endif
 	if (chars) {
 #if LONG_BIT == 64
-		// clang-format off
-		if (__unlikely(get_errnum() == ERRNUM_RANGE
-				&& u64 == ULONG_MAX)) {
-			// clang-format on
+		if (get_errnum() == ERRNUM_RANGE && u64 == ULONG_MAX) {
 #else
-		// clang-format off
-		if (__unlikely((get_errnum() == ERRNUM_RANGE
-				&& u64 == ULONG_MAX) || u64 > UINT64_MAX)) {
-			// clang-format on
+		if ((get_errnum() == ERRNUM_RANGE && u64 == ULONG_MAX)
+				|| u64 > UINT64_MAX) {
 			u64 = UINT64_MAX;
 			set_errnum(ERRNUM_RANGE);
 #endif
@@ -641,7 +625,7 @@ lex_c99_u64(const char *begin, const char *end, struct floc *at, uint64_t *pu64)
 					"uint64_t overflow");
 		}
 		if (pu64)
-			*pu64 = (uint64_t)u64;
+			*pu64 = (uint_least64_t)u64;
 	}
 	return chars;
 }

@@ -24,6 +24,7 @@
 
 #include <lely/co/co.h>
 #include <lely/libc/uchar.h>
+#include <lely/util/float.h>
 
 #include <stdint.h>
 
