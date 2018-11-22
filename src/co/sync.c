@@ -118,7 +118,7 @@ __co_sync_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sync));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -135,7 +135,7 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	sync->net = net;
 	sync->dev = dev;
@@ -230,7 +230,7 @@ co_sync_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating SYNC service");
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_sync_t *sync = __co_sync_alloc();
 	if (__unlikely(!sync)) {

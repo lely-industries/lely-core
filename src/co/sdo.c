@@ -141,7 +141,7 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 {
 	co_unsigned32_t ac = 0;
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	switch (co_sdo_req_dn_buf(req, pptr, pnbyte)) {
 	default:
 		// Convert the error number to an SDO abort code.
@@ -206,7 +206,7 @@ int
 co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)
 {
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	co_unsigned32_t ac = 0;
 
 	const void *ptr = NULL;

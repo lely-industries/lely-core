@@ -102,7 +102,7 @@ __io_poll_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __io_poll));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -117,7 +117,7 @@ __io_poll_init(struct __io_poll *poll)
 {
 	assert(poll);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 #ifndef LELY_NO_THREADS
 	mtx_init(&poll->mtx, mtx_plain);
@@ -231,7 +231,7 @@ __io_poll_fini(struct __io_poll *poll)
 io_poll_t *
 io_poll_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	io_poll_t *poll = __io_poll_alloc();
 	if (__unlikely(!poll)) {
@@ -290,7 +290,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	io_poll_lock(poll);
 

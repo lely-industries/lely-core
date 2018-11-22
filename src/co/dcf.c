@@ -94,7 +94,7 @@ error_create_cfg:
 co_dev_t *
 co_dev_create_from_dcf_file(const char *filename)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
 	if (__unlikely(!dev)) {
@@ -147,7 +147,7 @@ error_create_cfg:
 co_dev_t *
 co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
 	if (__unlikely(!dev)) {

@@ -156,7 +156,7 @@ __co_rpdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_rpdo));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -174,7 +174,7 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!num || num > 512)) {
 		errc = errnum2c(ERRNUM_INVAL);
@@ -279,7 +279,7 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
 	trace("creating Receive-PDO %d", num);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_rpdo_t *pdo = __co_rpdo_alloc();
 	if (__unlikely(!pdo)) {

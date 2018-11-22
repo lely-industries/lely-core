@@ -18,15 +18,14 @@
  *
  * In order to minimize information loss, we would like to keep track of
  * platform-dependent error numbers when storing or propagating errors, but do
- * so in a platform-independent way. The #errc_t data type can be used to store
- * native error codes, while get_errc() and set_errc() provide access to the
- * current (thread-local) error code. These functions are equivalent to
+ * so in a platform-independent way. #get_errc() and #set_errc() provide access
+ * to the current (thread-local) error code. These functions are equivalent to
  * `GetLastError()` and `SetLastError()` on Windows and map to `errno` on other
  * platforms. Negative `errno` values are used to store the error codes returned
  * by `getaddrinfo()` and `getnameinfo()`, even if the original error codes are
  * positive (e.g., on Cygwin). Since Windows also uses `errno` (for standard C
- * functions), `set_errno(errno)` can be used to portably translate `errno` to a
- * native error code(this is a no-op on POSIX platforms).
+ * functions), `set_errc(errno2c(errno))` can be used to portably translate
+ * `errno` to a native error code (this is a no-op on POSIX platforms).
  *
  * When responding to errors it is desirable to have a list of
  * platform-independent error numbers. The #errnum_t data type provides the
@@ -37,7 +36,7 @@
  * and platform-independent error numbers can be  done with errc2num() and
  * errnum2c().
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2013-2018 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -57,11 +56,11 @@
 #ifndef LELY_UTIL_ERRNUM_H_
 #define LELY_UTIL_ERRNUM_H_
 
-#include <lely/util/util.h>
+#include <lely/features.h>
 
 #include <errno.h>
 
-#ifdef _WIN32
+#if _WIN32
 #include <winerror.h>
 #elif _POSIX_C_SOURCE >= 200112L
 #include <netdb.h>
@@ -71,18 +70,10 @@
 #define LELY_UTIL_ERRNUM_INLINE static inline
 #endif
 
-/// The native error code type.
-#ifdef _WIN32
-typedef DWORD errc_t;
-#else
-typedef int errc_t;
-#endif
-
 /// The platform-independent error numbers.
 enum errnum {
-	__ERRNUM_MIN,
 	/// Argument list too long.
-	ERRNUM_2BIG,
+	ERRNUM_2BIG = 0,
 	/// Permission denied.
 	ERRNUM_ACCES,
 	/// Address in use.
@@ -262,8 +253,7 @@ enum errnum {
 	/// The service passed was not recognized for the specified socket type.
 	ERRNUM_AI_SERVICE,
 	/// The intended socket type was not recognized.
-	ERRNUM_AI_SOCKTYPE,
-	__ERRNUM_MAX
+	ERRNUM_AI_SOCKTYPE
 };
 
 /// The platform-independent error number type.
@@ -284,7 +274,7 @@ extern "C" {
  *
  * @see errc2no()
  */
-errc_t errno2c(int errnum);
+int errno2c(int errnum);
 
 /**
  * Transforms a standard C error number to a platform-independent error number.
@@ -300,14 +290,14 @@ errnum_t errno2num(int errnum);
  *
  * @see errc2no()
  */
-int errc2no(errc_t errc);
+int errc2no(int errc);
 
 /**
  * Transforms a native error code to a platform-independent error number.
  *
  * @see errnum2c()
  */
-errnum_t errc2num(errc_t errc);
+errnum_t errc2num(int errc);
 
 /**
  * Transforms a platform-independent error number to a standard C error number.
@@ -321,23 +311,7 @@ int errnum2no(errnum_t errnum);
  *
  * @see err2num()
  */
-errc_t errnum2c(errnum_t errnum);
-
-/**
- * Returns the last (thread-specific) standard C error number set by a system
- * call or library function. This is equivalent to `errc2no(get_errc())`.
- *
- * @see set_errno()
- */
-LELY_UTIL_ERRNUM_INLINE int get_errno(void);
-
-/**
- * Sets the current (thread-specific) standard C error number to <b>errnum</b>.
- * This is equivalent to `set_errc(errno2c(errnum))`.
- *
- * @see get_errno()
- */
-LELY_UTIL_ERRNUM_INLINE void set_errno(int errnum);
+int errnum2c(errnum_t errnum);
 
 /**
  * Returns the last (thread-specific) native error code set by a system call or
@@ -348,7 +322,7 @@ LELY_UTIL_ERRNUM_INLINE void set_errno(int errnum);
  *
  * @see set_errc()
  */
-errc_t get_errc(void);
+int get_errc(void);
 
 /**
  * Sets the current (thread-specific) native error code to <b>errc</b>. This is
@@ -357,7 +331,7 @@ errc_t get_errc(void);
  *
  * @see get_errc()
  */
-void set_errc(errc_t errc);
+void set_errc(int errc);
 
 /**
  * Returns the last (thread-specific) platform-independent error number set by a
@@ -383,25 +357,13 @@ LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
 const char *errno2str(int errnum);
 
 /// Returns a string describing a native error code.
-const char *errc2str(errc_t errc);
+const char *errc2str(int errc);
 
 /**
  * Returns a string describing a platform-independent error number. This is
  * equivalent to `errc2str(errnum2c(errnum))`.
  */
 LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
-
-inline int
-get_errno(void)
-{
-	return errc2no(get_errc());
-}
-
-inline void
-set_errno(int errnum)
-{
-	set_errc(errno2c(errnum));
-}
 
 inline errnum_t
 get_errnum(void)

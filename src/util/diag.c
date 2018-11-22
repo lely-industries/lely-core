@@ -153,7 +153,7 @@ diag_at_set_handler(diag_at_handler_t *handler, void *handle)
 }
 
 void
-diag(enum diag_severity severity, errc_t errc, const char *format, ...)
+diag(enum diag_severity severity, int errc, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
@@ -162,14 +162,14 @@ diag(enum diag_severity severity, errc_t errc, const char *format, ...)
 }
 
 void
-vdiag(enum diag_severity severity, errc_t errc, const char *format, va_list ap)
+vdiag(enum diag_severity severity, int errc, const char *format, va_list ap)
 {
 	if (diag_handler)
 		diag_handler(diag_handle, severity, errc, format, ap);
 }
 
 void
-diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+diag_at(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, ...)
 {
 	va_list ap;
@@ -179,7 +179,7 @@ diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 }
 
 void
-vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+vdiag_at(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, va_list ap)
 {
 	if (diag_at_handler)
@@ -187,7 +187,7 @@ vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
 }
 
 void
-diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+diag_if(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, ...)
 {
 	va_list ap;
@@ -197,7 +197,7 @@ diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 }
 
 void
-vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+vdiag_if(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, va_list ap)
 {
 	if (at)
@@ -205,14 +205,14 @@ vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
 }
 
 void
-default_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+default_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	default_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 void
-default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+default_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	(void)handle;
@@ -234,7 +234,7 @@ default_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 }
 
 void
-cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+cmd_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	const char *cmd = handle;
@@ -249,14 +249,14 @@ cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
 }
 
 void
-daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+daemon_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	daemon_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 void
-daemon_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+daemon_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 #ifdef _WIN32
@@ -269,14 +269,14 @@ daemon_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 #ifdef _WIN32
 
 void
-dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+dialog_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	dialog_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 void
-dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+dialog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	LPSTR pTitle = (LPSTR)(handle ? handle : "");
@@ -314,14 +314,14 @@ dialog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 #endif // _WIN32
 
 void
-log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+log_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	log_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 void
-log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	int errsv = errno;
@@ -356,14 +356,14 @@ log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 }
 
 void
-syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+syslog_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	syslog_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 void
-syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+syslog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 #if _POSIX_C_SOURCE >= 200809L
@@ -396,21 +396,21 @@ syslog_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
 }
 
 int
-vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
+vsnprintf_diag(char *s, size_t n, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	return vsnprintf_diag_at(s, n, severity, errc, NULL, format, ap);
 }
 
 int
-vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
+vasprintf_diag(char **ps, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	return vasprintf_diag_at(ps, severity, errc, NULL, format, ap);
 }
 
 int
-vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
+vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	assert(format);
@@ -485,7 +485,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, errc_t errc,
 }
 
 int
-vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
+vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	assert(ps);

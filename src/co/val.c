@@ -697,7 +697,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 co_unsigned32_t
 co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 {
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	co_unsigned32_t ac = 0;
 
 	const uint8_t *begin = ptr;
@@ -1410,7 +1410,7 @@ co_array_alloc(void *val, size_t size)
 	if (size) {
 		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
 		if (__unlikely(!ptr)) {
-			set_errno(errno);
+			set_errc(errno2c(errno));
 			return -1;
 		}
 		*(char **)val = ptr + CO_ARRAY_OFFSET;

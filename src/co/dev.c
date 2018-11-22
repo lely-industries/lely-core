@@ -78,7 +78,7 @@ __co_dev_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_dev));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -140,7 +140,7 @@ __co_dev_fini(struct __co_dev *dev)
 co_dev_t *
 co_dev_create(co_unsigned8_t id)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
 	if (__unlikely(!dev)) {
@@ -314,7 +314,7 @@ co_dev_set_name(co_dev_t *dev, const char *name)
 
 	void *ptr = realloc(dev->name, strlen(name) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	dev->name = ptr;
@@ -344,7 +344,7 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 
 	void *ptr = realloc(dev->vendor_name, strlen(vendor_name) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	dev->vendor_name = ptr;
@@ -390,7 +390,7 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 
 	void *ptr = realloc(dev->product_name, strlen(product_name) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	dev->product_name = ptr;
@@ -452,7 +452,7 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 
 	void *ptr = realloc(dev->order_code, strlen(order_code) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	dev->order_code = ptr;
@@ -725,7 +725,7 @@ int
 co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 		co_unsigned16_t *pmax, const char *filename)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	frbuf_t *buf = frbuf_create(filename);
 	if (__unlikely(!buf)) {
@@ -779,7 +779,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	assert(dev);
 	assert(ptr);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	// Get the list of object indices.
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
@@ -851,7 +851,7 @@ int
 co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, const char *filename)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	void *dom = NULL;
 	if (__unlikely(co_dev_write_dcf(dev, min, max, &dom) == -1)) {

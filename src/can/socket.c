@@ -27,6 +27,7 @@
 
 #include <lely/can/socket.h>
 #include <lely/util/errnum.h>
+#include <lely/util/util.h>
 
 #include <assert.h>
 #include <string.h>

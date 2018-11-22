@@ -54,7 +54,7 @@ __co_obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_obj));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -235,7 +235,7 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 
 	void *ptr = realloc(obj->name, strlen(name) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	obj->name = ptr;
@@ -355,7 +355,7 @@ __co_sub_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sub));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -423,7 +423,7 @@ __co_sub_fini(struct __co_sub *sub)
 co_sub_t *
 co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_sub_t *sub = __co_sub_alloc();
 	if (__unlikely(!sub)) {
@@ -493,7 +493,7 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 
 	void *ptr = realloc(sub->name, strlen(name) + 1);
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	sub->name = ptr;
@@ -815,7 +815,7 @@ co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 	struct co_sdo_req req = CO_SDO_REQ_INIT;
 	co_unsigned32_t ac = 0;
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	if (__unlikely(co_sdo_req_up_val(&req, type, val, &ac) == -1))
 		goto error;
@@ -920,7 +920,7 @@ co_obj_update(co_obj_t *obj)
 	if (size) {
 		val = calloc(1, size);
 		if (__unlikely(!val)) {
-			set_errno(errno);
+			set_errc(errno2c(errno));
 			return;
 		}
 	}

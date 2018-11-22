@@ -53,20 +53,21 @@ namespace lely {
  */
 class error : public ::std::system_error {
  public:
-  error(errc_t errc = get_errc())
+  error(int errc = get_errc())
       : ::std::system_error(errc, ::std::system_category()), m_errc(errc) {}
 
-  errc_t
+  int
   errc() const noexcept {
     return m_errc;
   }
+
   errnum_t
   errnum() const noexcept {
     return errc2num(errc());
   }
 
  private:
-  errc_t m_errc;
+  int m_errc;
 };
 
 }  // namespace lely

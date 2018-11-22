@@ -600,7 +600,7 @@ __co_lss_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_lss));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -616,7 +616,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	assert(lss);
 	assert(nmt);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	lss->nmt = nmt;
 	lss->net = co_nmt_get_net(lss->nmt);
@@ -707,7 +707,7 @@ co_lss_create(co_nmt_t *nmt)
 {
 	trace("creating LSS");
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_lss_t *lss = __co_lss_alloc();
 	if (__unlikely(!lss)) {
@@ -1428,7 +1428,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	assert(lss);
 	assert(msg);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	co_obj_t *obj_1018 = co_dev_find_obj(lss->dev, 0x1018);
 	struct can_msg req;
 

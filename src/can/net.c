@@ -118,7 +118,7 @@ __can_net_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_net));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -168,7 +168,7 @@ __can_net_fini(struct __can_net *net)
 can_net_t *
 can_net_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	can_net_t *net = __can_net_alloc();
 	if (__unlikely(!net)) {
@@ -216,7 +216,7 @@ can_net_set_time(can_net_t *net, const struct timespec *tp)
 
 	net->time = *tp;
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	int result = 0;
 
 	// Keep processing the first timer until we're done.
@@ -279,7 +279,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	assert(net);
 	assert(msg);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	int result = 0;
 
 	can_recv_key_t key = can_recv_key(msg->id, msg->flags);
@@ -343,7 +343,7 @@ __can_timer_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_timer));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -380,7 +380,7 @@ __can_timer_fini(struct __can_timer *timer)
 can_timer_t *
 can_timer_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	can_timer_t *timer = __can_timer_alloc();
 	if (__unlikely(!timer)) {
@@ -498,7 +498,7 @@ __can_recv_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_recv));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -535,7 +535,7 @@ __can_recv_fini(struct __can_recv *recv)
 can_recv_t *
 can_recv_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	can_recv_t *recv = __can_recv_alloc();
 	if (__unlikely(!recv)) {

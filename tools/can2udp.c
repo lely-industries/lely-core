@@ -478,7 +478,7 @@ open_can(const char *ifname)
 {
 	assert(ifname);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	io_handle_t handle = io_open_can(ifname);
 	if (__unlikely(handle == IO_HANDLE_ERROR)) {
@@ -505,7 +505,7 @@ open_send(const char *address, const char *port, int flags)
 {
 	assert(address);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	struct io_addrinfo hints = { .type = IO_SOCK_DGRAM };
 	struct io_addrinfo info;
@@ -555,7 +555,7 @@ error_get_addrinfo:
 io_handle_t
 open_recv(int domain, const char *port)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	io_handle_t handle = io_open_socket(domain, IO_SOCK_DGRAM);
 	if (__unlikely(!handle)) {

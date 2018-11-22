@@ -41,7 +41,7 @@ bitset_init(struct bitset *set, int size)
 
 	unsigned int *bits = malloc(size * sizeof(int));
 	if (__unlikely(!bits && size)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 
@@ -76,7 +76,7 @@ bitset_resize(struct bitset *set, int size)
 
 	unsigned int *bits = realloc(set->bits, size * sizeof(int));
 	if (__unlikely(!bits && size)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return 0;
 	}
 

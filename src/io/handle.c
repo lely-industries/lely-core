@@ -81,7 +81,7 @@ io_handle_alloc(const struct io_handle_vtab *vtab)
 
 	struct io_handle *handle = malloc(vtab->size);
 	if (__unlikely(!handle)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return NULL;
 	}
 

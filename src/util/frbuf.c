@@ -72,7 +72,7 @@ __frbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __frbuf));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -130,7 +130,7 @@ __frbuf_fini(struct __frbuf *buf)
 frbuf_t *
 frbuf_create(const char *filename)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	frbuf_t *buf = __frbuf_alloc();
 	if (__unlikely(!buf)) {
@@ -185,20 +185,20 @@ frbuf_get_size(frbuf_t *buf)
 #else
 	long offset = ftell(buf->stream);
 	if (__unlikely(offset == -1)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 
 	// WARNING: This is not guaranteed to work, but there exists no standard
 	// C alternative.
 	if (__unlikely(fseek(buf->stream, 0, SEEK_END))) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 
 	long size = ftell(buf->stream);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	fseek(buf->stream, offset, SEEK_SET);
 	set_errc(errc);
 
@@ -225,7 +225,7 @@ frbuf_get_pos(frbuf_t *buf)
 #else
 	long pos = ftell(buf->stream);
 	if (__unlikely(pos == -1))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return pos;
 #endif
 }
@@ -257,7 +257,7 @@ frbuf_set_pos(frbuf_t *buf, int64_t pos)
 		return -1;
 	}
 	if (__unlikely(fseek(buf->stream, pos, SEEK_SET))) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	return frbuf_get_pos(buf);
@@ -290,7 +290,7 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 #else
 	size_t result = fread(ptr, 1, size, buf->stream);
 	if (__unlikely(result != size && ferror(buf->stream))) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		if (!result)
 			return -1;
 	}
@@ -358,7 +358,7 @@ error_get_pos:
 	return result;
 #else
 	ssize_t result = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	int64_t oldpos = frbuf_get_pos(buf);
 	if (__unlikely(oldpos == -1)) {
@@ -475,7 +475,7 @@ error_size:
 
 	return (char *)buf->addr + off;
 #else
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	buf->map = malloc(size);
 	if (__unlikely(!buf->map)) {

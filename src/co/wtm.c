@@ -212,7 +212,7 @@ __co_wtm_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_wtm));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -285,7 +285,7 @@ __co_wtm_fini(struct __co_wtm *wtm)
 co_wtm_t *
 co_wtm_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_wtm_t *wtm = __co_wtm_alloc();
 	if (__unlikely(!wtm)) {
@@ -1198,7 +1198,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		}
 		// Invoke the user-specified callback function.
 		if (wtm->recv_func) {
-			errc_t errc = get_errc();
+			int errc = get_errc();
 			// clang-format off
 			if (__unlikely(wtm->recv_func(wtm, nif, tp, &msg,
 					wtm->recv_data))) {

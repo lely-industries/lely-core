@@ -67,7 +67,7 @@ int my_can_on_send(const struct can_msg *msg, void *data);
 int
 my_can_init(struct my_can *can, const char *ifname)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	// Initialize the I/O library.
 	if (lely_io_init() == -1) {

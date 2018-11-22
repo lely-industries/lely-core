@@ -298,7 +298,7 @@ __co_gw_txt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw_txt));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -334,7 +334,7 @@ __co_gw_txt_fini(struct __co_gw_txt *gw)
 co_gw_txt_t *
 co_gw_txt_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_gw_txt_t *gw = __co_gw_txt_alloc();
 	if (__unlikely(!gw)) {
@@ -925,7 +925,7 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 		return -1;
 	}
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	char *buf;
 	int result = asprintf(
@@ -1036,7 +1036,7 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 		return -1;
 	}
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	char *buf;
 	int result = asprintf(&buf, "%u pdo %u %u", ind->net, ind->num, ind->n);

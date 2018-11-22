@@ -52,7 +52,7 @@ io_open_pipe(io_handle_t handle_vector[2])
 	assert(handle_vector);
 	handle_vector[0] = handle_vector[1] = IO_HANDLE_ERROR;
 
-	errc_t errc = 0;
+	int errc = 0;
 
 #ifdef _WIN32
 	HANDLE fd[2];

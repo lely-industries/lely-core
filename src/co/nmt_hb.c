@@ -71,7 +71,7 @@ __co_nmt_hb_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_hb));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -88,7 +88,7 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 	assert(net);
 	assert(nmt);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	hb->net = net;
 	hb->nmt = nmt;
@@ -134,7 +134,7 @@ __co_nmt_hb_fini(struct __co_nmt_hb *hb)
 co_nmt_hb_t *
 co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_nmt_hb_t *hb = __co_nmt_hb_alloc();
 	if (__unlikely(!hb)) {

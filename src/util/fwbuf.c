@@ -108,7 +108,7 @@ __fwbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __fwbuf));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -248,7 +248,7 @@ error_strdup_filename:
 	errno = errsv;
 	return NULL;
 #else
-	errc_t errc = 0;
+	int errc = 0;
 
 	buf->filename = strdup(filename);
 	if (__unlikely(!buf->filename)) {
@@ -284,7 +284,7 @@ error_strdup:
 void
 __fwbuf_fini(struct __fwbuf *buf)
 {
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	fwbuf_cancel(buf);
 	fwbuf_commit(buf);
 	set_errc(errc);
@@ -298,7 +298,7 @@ __fwbuf_fini(struct __fwbuf *buf)
 fwbuf_t *
 fwbuf_create(const char *filename)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	fwbuf_t *buf = __fwbuf_alloc();
 	if (__unlikely(!buf)) {
@@ -431,7 +431,7 @@ fwbuf_get_pos(fwbuf_t *buf)
 	long pos = ftell(buf->stream);
 	if (__unlikely(pos == -1)) {
 		buf->errnum = errno2num(errno);
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	}
 	return pos;
 #endif
@@ -471,7 +471,7 @@ fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
 
 	if (__unlikely(fseek(buf->stream, pos, SEEK_SET))) {
 		buf->errnum = errno2num(errno);
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 
@@ -516,7 +516,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 	size_t result = fwrite(ptr, 1, size, buf->stream);
 	if (__unlikely(result != size && ferror(buf->stream))) {
 		buf->errnum = errno2num(errno);
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		if (!result)
 			return -1;
 	}
@@ -599,7 +599,7 @@ error_pos:
 	return result;
 #else
 	ssize_t result = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	if (__unlikely(pos < 0)) {
 		result = -1;
@@ -755,7 +755,7 @@ error_size:
 
 	return (char *)buf->addr + off;
 #else
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely((uint64_t)size > SIZE_MAX)) {
 		set_errnum(buf->errnum = ERRNUM_OVERFLOW);
@@ -895,7 +895,7 @@ fwbuf_unmap(fwbuf_t *buf)
 		errno = errsv;
 	}
 #else
-	errc_t errc = 0;
+	int errc = 0;
 	if (buf->errnum) {
 		result = -1;
 		errc = errnum2c(buf->errnum);
@@ -1060,7 +1060,7 @@ done:
 	errno = buf->errsv = errsv;
 	return result;
 #else
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	if (!buf->stream)
 		goto done;

@@ -176,7 +176,7 @@ page_create(volatile atomic_page_t *next, size_t size)
 
 	struct page *page = aligned_alloc(LELY_PAGE_ALIGNMENT, page_size);
 	if (__unlikely(!page)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 

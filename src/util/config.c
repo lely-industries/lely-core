@@ -71,7 +71,7 @@ __config_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __config));
 	if (__unlikely(ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -109,7 +109,7 @@ __config_fini(struct __config *config)
 config_t *
 config_create(int flags)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	config_t *config = __config_alloc();
 	if (__unlikely(!config)) {
@@ -254,7 +254,7 @@ config_section_create(config_t *config, const char *name)
 	assert(config);
 	assert(name);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	struct config_section *section = malloc(sizeof(*section));
 	if (__unlikely(!section)) {
@@ -348,7 +348,7 @@ config_entry_create(struct config_section *section, const char *key,
 	assert(section);
 	assert(key);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	struct config_entry *entry = malloc(sizeof(*entry));
 	if (__unlikely(!entry)) {

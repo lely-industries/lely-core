@@ -499,7 +499,7 @@ __co_ssdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_ssdo));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -517,7 +517,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!num || num > 128)) {
 		errc = errnum2c(ERRNUM_INVAL);
@@ -631,7 +631,7 @@ co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
 	trace("creating Server-SDO %d", num);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_ssdo_t *sdo = __co_ssdo_alloc();
 	if (__unlikely(!sdo)) {

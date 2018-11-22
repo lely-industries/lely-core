@@ -78,7 +78,7 @@ io_open_file(const char *path, int flags)
 {
 	assert(path);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!(flags & (IO_FILE_READ | IO_FILE_WRITE)))) {
 		errc = errnum2c(ERRNUM_INVAL);

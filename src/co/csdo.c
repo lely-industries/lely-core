@@ -602,7 +602,7 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(dev);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	struct co_sdo_req req = CO_SDO_REQ_INIT;
 
 	co_unsigned32_t ac = 0;
@@ -640,7 +640,7 @@ co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(dev);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	struct co_sdo_req req = CO_SDO_REQ_INIT;
 
 	co_unsigned32_t ac = 0;
@@ -677,7 +677,7 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(dev);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	struct membuf buf = MEMBUF_INIT;
 	co_unsigned32_t ac = 0;
 
@@ -729,7 +729,7 @@ __co_csdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_csdo));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -746,7 +746,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	assert(sdo);
 	assert(net);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!num || num > (dev ? 128 : CO_NUM_NODES))) {
 		errc = errnum2c(ERRNUM_INVAL);
@@ -868,7 +868,7 @@ co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
 	trace("creating Client-SDO %d", num);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_csdo_t *sdo = __co_csdo_alloc();
 	if (__unlikely(!sdo)) {
@@ -1046,7 +1046,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	if (co_type_is_array(type) || n > 8) {
 		int res = 0;
-		errc_t errc = get_errc();
+		int errc = get_errc();
 
 		uint8_t *buf = n ? malloc(n) : NULL;
 		if (__unlikely(n && !buf)) {

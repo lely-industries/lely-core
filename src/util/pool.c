@@ -50,7 +50,7 @@ __pool_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __pool));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -109,7 +109,7 @@ __pool_fini(struct __pool *pool)
 pool_t *
 pool_create(size_t nmemb, size_t size)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	pool_t *pool = __pool_alloc();
 	if (__unlikely(!pool)) {

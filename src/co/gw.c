@@ -496,7 +496,7 @@ __co_gw_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -538,7 +538,7 @@ __co_gw_fini(struct __co_gw *gw)
 co_gw_t *
 co_gw_create(void)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_gw_t *gw = __co_gw_alloc();
 	if (__unlikely(!gw)) {
@@ -949,7 +949,7 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 
 	struct co_gw_net *net = malloc(sizeof(*net));
 	if (__unlikely(!net)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return NULL;
 	}
 
@@ -1350,7 +1350,7 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 
 	*pself = malloc(CO_GW_JOB_SIZE + req->size);
 	if (__unlikely(!*pself)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return NULL;
 	}
 
@@ -1398,7 +1398,7 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 
 	co_gw_t *gw = net->gw;
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(*pself)) {
 		errc = errnum2c(ERRNUM_BUSY);
@@ -1464,7 +1464,7 @@ co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_gw_send_con(job->net->gw, &job->req, 0, ac);
 	} else {
 		size_t size = CO_GW_CON_SDO_UP_SIZE + MAX(n, 1);
-		errc_t errc = get_errc();
+		int errc = get_errc();
 		struct co_gw_con_sdo_up *con = malloc(size);
 		if (__likely(con)) {
 			*con = (struct co_gw_con_sdo_up){ .size = size,
@@ -1786,7 +1786,7 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			(const struct co_gw_req_sdo_up *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = NULL;
 	if (node == co_dev_get_id(dev)) {
@@ -1863,7 +1863,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	}
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = NULL;
 	if (node == co_dev_get_id(dev)) {
@@ -2158,7 +2158,7 @@ co_gw_recv_pdo_write(
 		goto error;
 
 	// Trigger the event-based TPDO, if necessary.
-	errc_t errc = 0;
+	int errc = 0;
 	if (__unlikely(co_tpdo_event(pdo) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2183,7 +2183,7 @@ co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 	int iec = 0;
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	if (__unlikely(co_nmt_cs_req(nmt, cs, node) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2221,7 +2221,7 @@ co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 	int iec = 0;
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	if (__unlikely(co_nmt_ng_req(nmt, node, gt, ltf) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2353,7 +2353,7 @@ co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 	if (gw->rate_func)
 		gw->rate_func(net, rate, gw->rate_data);
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	if (__unlikely(co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2638,7 +2638,7 @@ co_gw_recv_lss_switch(
 		goto error;
 	}
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	if (__unlikely(co_lss_switch_req(lss, par->mode) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2665,7 +2665,7 @@ co_gw_recv_lss_switch_sel(
 			(const struct co_gw_req_lss_switch_sel *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2707,7 +2707,7 @@ co_gw_recv_lss_set_id(
 	const struct co_gw_req_node *par = (const struct co_gw_req_node *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2770,7 +2770,7 @@ co_gw_recv_lss_set_rate(
 	default: iec = CO_GW_IEC_LSS_RATE; goto error_srv;
 	}
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2823,7 +2823,7 @@ co_gw_recv_lss_switch_rate(
 		goto error;
 	}
 
-	errc_t errc = get_errc();
+	int errc = get_errc();
 	if (__unlikely(co_lss_switch_rate_req(lss, par->delay) == -1)) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
@@ -2843,7 +2843,7 @@ co_gw_recv_lss_store(
 	assert(req->srv == CO_GW_SRV_LSS_STORE);
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2886,7 +2886,7 @@ co_gw_recv_lss_get_lssid(
 			(const struct co_gw_req_lss_get_lssid *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2955,7 +2955,7 @@ co_gw_recv_lss_get_id(
 	assert(req->srv == CO_GW_SRV_LSS_GET_ID);
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -2998,7 +2998,7 @@ co_gw_recv_lss_id_slave(
 			(const struct co_gw_req_lss_id_slave *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -3034,7 +3034,7 @@ co_gw_recv_lss_id_non_cfg_slave(
 	assert(req->srv == CO_GW_SRV_LSS_ID_NON_CFG_SLAVE);
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -3077,7 +3077,7 @@ co_gw_recv__lss_slowscan(
 			(const struct co_gw_req__lss_scan *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
@@ -3120,7 +3120,7 @@ co_gw_recv__lss_fastscan(
 			(const struct co_gw_req__lss_scan *)req;
 
 	int iec = 0;
-	errc_t errc = get_errc();
+	int errc = get_errc();
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);

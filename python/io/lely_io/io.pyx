@@ -7,16 +7,11 @@ from lely_io.serial cimport IOSerial_new
 from lely_io.sock cimport IOSock_new
 
 cdef extern from "lely/util/errnum.h":
-    IF UNAME_SYSNAME == "Windows":
-        ctypedef DWORD errc_t
-    ELSE:
-        ctypedef int errc_t
-
-    errc_t get_errc() nogil
-    const char* errc2str(errc_t errc) nogil
+    int get_errc() nogil
+    const char* errc2str(int errc) nogil
 
 cdef void io_error() except *:
-    cdef errc_t errc = get_errc()
+    cdef int errc = get_errc()
     PyErr_SetObject(IOError, (errc, errc2str(errc)))
 
 IO_TYPE_CAN = _IO_TYPE_CAN

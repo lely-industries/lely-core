@@ -35,7 +35,7 @@ lely_io_init(void)
 	if (lely_io_ref++)
 		return 0;
 
-	errc_t errc = 0;
+	int errc = 0;
 
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(2, 2);

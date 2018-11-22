@@ -60,7 +60,7 @@ membuf_reserve(struct membuf *buf, size_t size)
 
 	char *begin = realloc(buf->begin, buf_size);
 	if (__unlikely(!begin)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return 0;
 	}
 

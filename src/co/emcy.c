@@ -193,7 +193,7 @@ __co_emcy_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_emcy));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -210,7 +210,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	emcy->net = net;
 	emcy->dev = dev;
@@ -328,7 +328,7 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating EMCY producer service");
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_emcy_t *emcy = __co_emcy_alloc();
 	if (__unlikely(!emcy)) {
@@ -399,7 +399,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
 	if (__unlikely(!msgs)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 	emcy->msgs = msgs;
@@ -510,7 +510,7 @@ co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 
 	trace("creating EMCY consumer service for node %d", id);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	struct co_emcy_node *node = malloc(sizeof(*node));
 	if (__unlikely(!node)) {

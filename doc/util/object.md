@@ -71,7 +71,7 @@ __obj_alloc(void)
 		// On POSIX platforms this is a no-op (errno = errno), but on
 		// Windows this converts errno into a system error code and
 		// invokes SetLastError().
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -105,7 +105,7 @@ __obj_fini(struct __obj *obj)
 obj_t *
 obj_create(Args... args)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	obj_t *obj = __obj_alloc();
 	if (!obj) {

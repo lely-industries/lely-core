@@ -30,9 +30,9 @@ extern "C" {
 #endif
 
 static void co_test_diag_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const char *format, va_list ap);
+		int errc, const char *format, va_list ap);
 static void co_test_diag_at_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
+		int errc, const struct floc *at, const char *format,
 		va_list ap);
 
 static void co_test_init(struct co_test *test, can_net_t *net, int wait);
@@ -54,14 +54,14 @@ static int co_test_wtm_send(
 #endif
 
 static void
-co_test_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
 {
 	co_test_diag_at_handler(handle, severity, errc, NULL, format, ap);
 }
 
 static void
-co_test_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
 	(void)handle;

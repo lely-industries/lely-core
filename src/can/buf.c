@@ -48,7 +48,7 @@ can_buf_init(struct can_buf *buf, size_t size)
 
 	buf->ptr = malloc((buf->size + 1) * sizeof(struct can_msg));
 	if (__unlikely(!buf->ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return -1;
 	}
 
@@ -74,7 +74,7 @@ can_buf_fini(struct can_buf *buf)
 struct can_buf *
 can_buf_create(size_t size)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	struct can_buf *buf = malloc(sizeof(*buf));
 	if (__unlikely(!buf)) {
@@ -134,7 +134,7 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 	struct can_msg *ptr =
 			realloc(buf->ptr, (size + 1) * sizeof(struct can_msg));
 	if (__unlikely(!ptr)) {
-		set_errno(errno);
+		set_errc(errno2c(errno));
 		return 0;
 	}
 	buf->ptr = ptr;

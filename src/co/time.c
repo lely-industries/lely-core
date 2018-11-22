@@ -147,7 +147,7 @@ __co_time_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_time));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -164,7 +164,7 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	time->net = net;
 	time->dev = dev;
@@ -224,7 +224,7 @@ co_time_create(can_net_t *net, co_dev_t *dev)
 {
 	trace("creating TIME service");
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_time_t *time = __co_time_alloc();
 	if (__unlikely(!time)) {

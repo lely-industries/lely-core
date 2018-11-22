@@ -73,7 +73,7 @@ static int _socketpair(int af, int type, int protocol, SOCKET sv[2]);
 io_handle_t
 io_open_socket(int domain, int type)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	int flags = 0;
 #if defined(__CYGWIN__) || defined(__linux__)
@@ -183,7 +183,7 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	assert(handle_vector);
 	handle_vector[0] = handle_vector[1] = IO_HANDLE_ERROR;
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	int flags = 0;
 #if defined(__CYGWIN__) || defined(__linux__)
@@ -1505,7 +1505,7 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 	struct sock *sock = (struct sock *)handle;
 	assert(sock);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	SOCKET s;
 	if (addr) {
@@ -1615,7 +1615,7 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 		return socketpair(af, type, protocol, sv);
 #endif
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(af != AF_INET && af != AF_INET6)) {
 		errc = errnum2c(ERRNUM_AFNOSUPPORT);

@@ -52,7 +52,7 @@ __co_dev_init_from_sdev(struct __co_dev *dev, const struct co_sdev *sdev)
 {
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!sdev)) {
 		errc = errnum2c(ERRNUM_INVAL);
@@ -82,7 +82,7 @@ error_param:
 co_dev_t *
 co_dev_create_from_sdev(const struct co_sdev *sdev)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
 	if (__unlikely(!dev)) {
@@ -460,7 +460,7 @@ co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 		if (__unlikely(!obj))
 			return -1;
 		if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
-			errc_t errc = get_errc();
+			int errc = get_errc();
 			co_obj_destroy(obj);
 			set_errc(errc);
 			return -1;
@@ -492,7 +492,7 @@ co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj)
 		if (__unlikely(!sub))
 			return -1;
 		if (__unlikely(co_obj_insert_sub(obj, sub) == -1)) {
-			errc_t errc = get_errc();
+			int errc = get_errc();
 			co_sub_destroy(sub);
 			set_errc(errc);
 			return -1;

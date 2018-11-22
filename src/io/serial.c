@@ -48,7 +48,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 {
 	assert(path);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 #ifdef _WIN32
 	HANDLE fd = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, NULL,

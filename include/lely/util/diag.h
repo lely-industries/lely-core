@@ -65,9 +65,8 @@ extern "C" {
  * @param ap       the list with arguments to be printed according to
  *                 <b>format</b>.
  */
-typedef void diag_handler_t(void *handle, enum diag_severity severity,
-		errc_t errc, const char *format, va_list ap)
-		format_printf__(4, 0);
+typedef void diag_handler_t(void *handle, enum diag_severity severity, int errc,
+		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
  * The function type of a handler for diag_at().
@@ -81,8 +80,8 @@ typedef void diag_handler_t(void *handle, enum diag_severity severity,
  *                 <b>format</b>.
  */
 typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(5, 0);
+		int errc, const struct floc *at, const char *format, va_list ap)
+		format_printf__(5, 0);
 
 /**
  * Increments a file location by reading characters from a memory buffer. This
@@ -182,14 +181,14 @@ void diag_at_set_handler(diag_at_handler_t *handler, void *handle);
  *
  * @see diag_set_handler(), diag_at()
  */
-void diag(enum diag_severity severity, errc_t errc, const char *format, ...)
+void diag(enum diag_severity severity, int errc, const char *format, ...)
 		format_printf__(3, 4);
 
 /**
  * Emits a diagnostic message. This function is equivalent to #diag(), except
  * that it accepts a `va_list` instead of a variable number of arguments.
  */
-void vdiag(enum diag_severity severity, errc_t errc, const char *format,
+void vdiag(enum diag_severity severity, int errc, const char *format,
 		va_list ap) format_printf__(3, 0);
 
 /**
@@ -217,7 +216,7 @@ void vdiag(enum diag_severity severity, errc_t errc, const char *format,
  *
  * @see diag_at_set_handler(), diag()
  */
-void diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+void diag_at(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, ...) format_printf__(4, 5);
 
 /**
@@ -225,7 +224,7 @@ void diag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
  * function is equivalent to #diag_at(), except that it accepts a `va_list`
  * instead of a variable number of arguments.
  */
-void vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
+void vdiag_at(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -234,7 +233,7 @@ void vdiag_at(enum diag_severity severity, errc_t errc, const struct floc *at,
  * handler if <b>at</b> is not NULL. It therefore MUST NOT be used with severity
  * #DIAG_FATAL unless <b>at</b> is guaranteed to be non-NULL.
  */
-void diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+void diag_if(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, ...) format_printf__(4, 5);
 
 /**
@@ -243,7 +242,7 @@ void diag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
  * handler if <b>at</b> is not NULL. It therefore MUST NOT be used with severity
  * #DIAG_FATAL unless <b>at</b> is guaranteed to be non-NULL.
  */
-void vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
+void vdiag_if(enum diag_severity severity, int errc, const struct floc *at,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -251,9 +250,8 @@ void vdiag_if(enum diag_severity severity, errc_t errc, const struct floc *at,
  * vsnprintf_diag() to `stderr`. If <b>severity</b> equals #DIAG_FATAL, this
  * function calls `exit(EXIT_FAILURE)` instead of returning.
  */
-void default_diag_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const char *format, va_list ap)
-		format_printf__(4, 0);
+void default_diag_handler(void *handle, enum diag_severity severity, int errc,
+		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
  * The default diag_at() handler. This function is similar to
@@ -261,22 +259,22 @@ void default_diag_handler(void *handle, enum diag_severity severity,
  * vsnprintf_diag_at().
  */
 void default_diag_at_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(5, 0);
+		int errc, const struct floc *at, const char *format, va_list ap)
+		format_printf__(5, 0);
 
 /**
  * The diag() handler used for command-line programs. This function prints the
  * string at <b>handle</b>, which SHOULD point to the name of the program (see
  * cmdname()), and then calls default_diag_handler().
  */
-void cmd_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+void cmd_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
  * The diag() handler for daemons. On Windows this function is equivalent to
  * dialog_diag_handler(), on other platforms to syslog_diag_handler().
  */
-void daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+void daemon_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -284,16 +282,16 @@ void daemon_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
  * daemon_diag_handler(), except that it prints the string generated by
  * vsnprintf_diag_at().
  */
-void daemon_diag_at_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(5, 0);
+void daemon_diag_at_handler(void *handle, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap)
+		format_printf__(5, 0);
 
 /**
  * The diag() handler for dialog boxes. It expects <b>handle</b> to point to the
  * caption and prints the string generated by vsnprintf_diag() as the message.
  * Note that this function is only available on Windows.
  */
-void dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+void dialog_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -301,16 +299,16 @@ void dialog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
  * dialog_diag_handler(), except that it prints the string generated by
  * vsnprintf_diag_at().
  */
-void dialog_diag_at_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(5, 0);
+void dialog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap)
+		format_printf__(5, 0);
 
 /**
  * The diag() handler for log files. This function is similar to
  * default_diag_handler(), except that it prepends each message with a
  * RFC-2822-compliant timestamp.
  */
-void log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+void log_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -318,7 +316,7 @@ void log_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
  * default_diag_at_handler(), except that it prepends each message with a
  * RFC-2822-compliant timestamp.
  */
-void log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
+void log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 		format_printf__(5, 0);
 
@@ -327,7 +325,7 @@ void log_diag_at_handler(void *handle, enum diag_severity severity, errc_t errc,
  * this function invokes syslog(); on other platforms this function is
  * equivalent to log_diag_handler().
  */
-void syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
+void syslog_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -335,9 +333,9 @@ void syslog_diag_handler(void *handle, enum diag_severity severity, errc_t errc,
  * platforms this function invokes syslog(); on other platforms this function is
  * equivalent to log_diag_at_handler().
  */
-void syslog_diag_at_handler(void *handle, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(5, 0);
+void syslog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap)
+		format_printf__(5, 0);
 
 /**
  * Prints a diagnostic message to a string buffer. This function prints the
@@ -366,7 +364,7 @@ void syslog_diag_at_handler(void *handle, enum diag_severity severity,
  *
  * @see vsnprintf_diag_at()
  */
-int vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
+int vsnprintf_diag(char *s, size_t n, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(5, 0);
 
 /**
@@ -391,7 +389,7 @@ int vsnprintf_diag(char *s, size_t n, enum diag_severity severity, errc_t errc,
  *
  * @see vasprintf_diag_at()
  */
-int vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
+int vasprintf_diag(char **ps, enum diag_severity severity, int errc,
 		const char *format, va_list ap) format_printf__(4, 0);
 
 /**
@@ -426,9 +424,9 @@ int vasprintf_diag(char **ps, enum diag_severity severity, errc_t errc,
  *
  * @see vsnprintf_diag()
  */
-int vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity,
-		errc_t errc, const struct floc *at, const char *format,
-		va_list ap) format_printf__(6, 0);
+int vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap)
+		format_printf__(6, 0);
 
 /**
  * Equivalent to vsnprintf_diag_at(), except that it allocates a string large
@@ -455,7 +453,7 @@ int vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity,
  *
  * @see vasprintf_diag()
  */
-int vasprintf_diag_at(char **ps, enum diag_severity severity, errc_t errc,
+int vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 		format_printf__(5, 0);
 

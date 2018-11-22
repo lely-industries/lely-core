@@ -174,7 +174,7 @@ __co_nmt_cfg_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_cfg));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -220,7 +220,7 @@ __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 co_nmt_cfg_t *
 co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_nmt_cfg_t *cfg = __co_nmt_cfg_alloc();
 	if (__unlikely(!cfg)) {

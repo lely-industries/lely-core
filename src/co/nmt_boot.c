@@ -754,7 +754,7 @@ __co_nmt_boot_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_boot));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -773,7 +773,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	assert(dev);
 	assert(nmt);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	boot->net = net;
 	boot->dev = dev;
@@ -839,7 +839,7 @@ __co_nmt_boot_fini(struct __co_nmt_boot *boot)
 co_nmt_boot_t *
 co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_nmt_boot_t *boot = __co_nmt_boot_alloc();
 	if (__unlikely(!boot)) {

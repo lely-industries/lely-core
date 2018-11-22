@@ -713,7 +713,7 @@ __co_nmt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt));
 	if (__unlikely(!ptr))
-		set_errno(errno);
+		set_errc(errno2c(errno));
 	return ptr;
 }
 
@@ -730,7 +730,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	assert(net);
 	assert(dev);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	nmt->net = net;
 	nmt->dev = dev;
@@ -998,7 +998,7 @@ __co_nmt_fini(struct __co_nmt *nmt)
 co_nmt_t *
 co_nmt_create(can_net_t *net, co_dev_t *dev)
 {
-	errc_t errc = 0;
+	int errc = 0;
 
 	co_nmt_t *nmt = __co_nmt_alloc();
 	if (__unlikely(!nmt)) {
@@ -1203,7 +1203,7 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 	(void)st;
 #else
 	if (co_nmt_is_master(nmt) && st == CO_NMT_ST_BOOTUP) {
-		errc_t errc = get_errc();
+		int errc = get_errc();
 		co_nmt_boot_req(nmt, id, nmt->timeout);
 		set_errc(errc);
 	}
@@ -1516,7 +1516,7 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 {
 	assert(nmt);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!nmt->master)) {
 		errc = errnum2c(ERRNUM_PERM);
@@ -1587,7 +1587,7 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 {
 	assert(nmt);
 
-	errc_t errc = 0;
+	int errc = 0;
 
 	if (__unlikely(!nmt->master)) {
 		errc = errnum2c(ERRNUM_PERM);
@@ -3281,7 +3281,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
 		if (__unlikely(!nmt->hbs && nmt->nhb)) {
 			nmt->nhb = 0;
-			set_errno(errno);
+			set_errc(errno2c(errno));
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumers");
 		}
