@@ -86,7 +86,7 @@ void fwbuf_destroy(fwbuf_t *buf);
  *
  * @see fwbuf_set_size()
  */
-int64_t fwbuf_get_size(fwbuf_t *buf);
+intmax_t fwbuf_get_size(fwbuf_t *buf);
 
 /**
  * Sets the new size (in bytes) of the a write file buffer. This function
@@ -99,7 +99,7 @@ int64_t fwbuf_get_size(fwbuf_t *buf);
  *
  * @see fwbuf_get_size()
  */
-int fwbuf_set_size(fwbuf_t *buf, int64_t size);
+int fwbuf_set_size(fwbuf_t *buf, intmax_t size);
 
 /**
  * Returns the current offset (in bytes) of a write file buffer with respect to
@@ -110,7 +110,7 @@ int fwbuf_set_size(fwbuf_t *buf, int64_t size);
  * will start writing, and it is only updated by that function or
  * fwbuf_set_pos().
  */
-int64_t fwbuf_get_pos(fwbuf_t *buf);
+intmax_t fwbuf_get_pos(fwbuf_t *buf);
 
 /**
  * Sets the current offset (in bytes) of a write file buffer with respect to the
@@ -123,7 +123,7 @@ int64_t fwbuf_get_pos(fwbuf_t *buf);
  *
  * @see fwbuf_get_pos()
  */
-int64_t fwbuf_set_pos(fwbuf_t *buf, int64_t pos);
+intmax_t fwbuf_set_pos(fwbuf_t *buf, intmax_t pos);
 
 /**
  * Writes bytes to the current position in a write file buffer. Note that this
@@ -157,7 +157,7 @@ ssize_t fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size);
  *
  * @see fwbuf_write()
  */
-ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos);
+ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, intmax_t pos);
 
 /**
  * Maps (part of) the contents of a write file buffer to memory. Only a single
@@ -177,7 +177,7 @@ ssize_t fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos);
  * @returns a pointer to the first byte in the memory map, or NULL on error. In
  * the latter case, the error number can be obtained with get_errc().
  */
-void *fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize);
+void *fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize);
 
 /**
  * Unmaps the current memory map of a write file buffer, if it exists, and

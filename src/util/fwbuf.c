@@ -88,16 +88,16 @@ struct __fwbuf {
 	/// The number of the first error that occurred during a file operation.
 	int errnum;
 	/// The size (in bytes) of the file.
-	int64_t size;
+	intmax_t size;
 	/// One past the position of the last byte written to the file.
-	int64_t last;
+	intmax_t last;
 	/// The address of the file mapping.
 	void *map;
 	/**
 	 * The offset (in bytes) with respect to the beginning of the file of
 	 * the mapping at <b>map</b>.
 	 */
-	int64_t pos;
+	intmax_t pos;
 	/// The length (in bytes) of the mapping at <b>map</b>.
 	size_t len;
 #endif
@@ -329,7 +329,7 @@ fwbuf_destroy(fwbuf_t *buf)
 	}
 }
 
-int64_t
+intmax_t
 fwbuf_get_size(fwbuf_t *buf)
 {
 	if (fwbuf_error(buf))
@@ -360,13 +360,13 @@ fwbuf_get_size(fwbuf_t *buf)
 }
 
 int
-fwbuf_set_size(fwbuf_t *buf, int64_t size)
+fwbuf_set_size(fwbuf_t *buf, intmax_t size)
 {
 	if (fwbuf_unmap(buf) == -1)
 		return -1;
 
 #ifdef _WIN32
-	int64_t pos = fwbuf_get_pos(buf);
+	intmax_t pos = fwbuf_get_pos(buf);
 	if (pos == -1)
 		return -1;
 
@@ -405,7 +405,7 @@ fwbuf_set_size(fwbuf_t *buf, int64_t size)
 #endif
 }
 
-int64_t
+intmax_t
 fwbuf_get_pos(fwbuf_t *buf)
 {
 	if (fwbuf_error(buf))
@@ -420,9 +420,9 @@ fwbuf_get_pos(fwbuf_t *buf)
 	return li.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
 #ifdef __linux__
-	int64_t pos = lseek64(buf->fd, 0, SEEK_CUR);
+	intmax_t pos = lseek64(buf->fd, 0, SEEK_CUR);
 #else
-	int64_t pos = lseek(buf->fd, 0, SEEK_CUR);
+	intmax_t pos = lseek(buf->fd, 0, SEEK_CUR);
 #endif
 	if (pos == -1)
 		buf->errsv = errno;
@@ -437,8 +437,8 @@ fwbuf_get_pos(fwbuf_t *buf)
 #endif
 }
 
-int64_t
-fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
+intmax_t
+fwbuf_set_pos(fwbuf_t *buf, intmax_t pos)
 {
 	if (fwbuf_error(buf))
 		return -1;
@@ -506,7 +506,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 		buf->errsv = errno;
 	return result;
 #else
-	int64_t pos = fwbuf_get_pos(buf);
+	intmax_t pos = fwbuf_get_pos(buf);
 	if (pos < 0)
 		return -1;
 
@@ -519,14 +519,14 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 	}
 
 	// Update the memory map, if necessary.
-	if (buf->map && pos < buf->pos + (int64_t)buf->len
-			&& pos + (int64_t)size > buf->pos) {
+	if (buf->map && pos < buf->pos + (intmax_t)buf->len
+			&& pos + (intmax_t)size > buf->pos) {
 		size_t begin = MAX(pos - buf->pos, 0);
 		size_t end = MIN(pos + size - buf->pos, buf->len);
 		memmove((char *)buf->map + begin, ptr, end - begin);
 	}
 
-	buf->last = MAX(buf->last, pos + (int64_t)result);
+	buf->last = MAX(buf->last, pos + (intmax_t)result);
 	buf->size = MAX(buf->size, buf->last);
 
 	return result;
@@ -534,7 +534,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 }
 
 ssize_t
-fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
+fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, intmax_t pos)
 {
 	assert(ptr || !size);
 
@@ -553,7 +553,7 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 		goto error_pos;
 	}
 
-	int64_t oldpos = fwbuf_get_pos(buf);
+	intmax_t oldpos = fwbuf_get_pos(buf);
 	if (oldpos == -1) {
 		result = -1;
 		goto error_get_pos;
@@ -604,7 +604,7 @@ error_pos:
 		goto error_pos;
 	}
 
-	int64_t oldpos = fwbuf_get_pos(buf);
+	intmax_t oldpos = fwbuf_get_pos(buf);
 	if (oldpos == -1) {
 		result = -1;
 		errc = get_errc();
@@ -649,12 +649,12 @@ error_pos:
 }
 
 void *
-fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
+fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 {
 	if (fwbuf_unmap(buf) == -1)
 		return NULL;
 
-	int64_t size = fwbuf_get_size(buf);
+	intmax_t size = fwbuf_get_size(buf);
 	if (size < 0)
 		return NULL;
 	if (pos < 0) {
@@ -667,7 +667,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 #endif
 		return NULL;
 	}
-	if (pos > (int64_t)size) {
+	if (pos > (intmax_t)size) {
 #ifdef _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
 #elif _POSIX_C_SOURCE >= 200112L
@@ -680,13 +680,13 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 	size -= pos;
 
 	if (psize && *psize)
-		size = MIN((uint64_t)size, *psize);
+		size = MIN((uintmax_t)size, *psize);
 
 #ifdef _WIN32
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
-	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
+	if ((uintmax_t)size > (uintmax_t)(SIZE_MAX - off)) {
 		buf->dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_size;
 	}
@@ -727,8 +727,8 @@ error_size:
 		buf->errsv = errno;
 		return NULL;
 	}
-	int64_t off = pos % page_size;
-	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
+	intmax_t off = pos % page_size;
+	if ((uintmax_t)size > (uintmax_t)(SIZE_MAX - off)) {
 		errno = buf->errsv = EOVERFLOW;
 		return NULL;
 	}
@@ -754,7 +754,7 @@ error_size:
 #else
 	int errc = 0;
 
-	if ((uint64_t)size > SIZE_MAX) {
+	if ((uintmax_t)size > SIZE_MAX) {
 		set_errnum(buf->errnum = ERRNUM_OVERFLOW);
 		return NULL;
 	}
@@ -768,7 +768,7 @@ error_size:
 
 	// Copy bytes that have been written to the file to the mapped memory
 	// region.
-	int64_t oldpos = 0;
+	intmax_t oldpos = 0;
 	if (pos < buf->last) {
 		oldpos = fwbuf_get_pos(buf);
 		if (oldpos == -1) {

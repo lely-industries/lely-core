@@ -161,7 +161,7 @@ frbuf_destroy(frbuf_t *buf)
 	}
 }
 
-int64_t
+intmax_t
 frbuf_get_size(frbuf_t *buf)
 {
 	assert(buf);
@@ -206,7 +206,7 @@ frbuf_get_size(frbuf_t *buf)
 #endif
 }
 
-int64_t
+intmax_t
 frbuf_get_pos(frbuf_t *buf)
 {
 	assert(buf);
@@ -230,8 +230,8 @@ frbuf_get_pos(frbuf_t *buf)
 #endif
 }
 
-int64_t
-frbuf_set_pos(frbuf_t *buf, int64_t pos)
+intmax_t
+frbuf_set_pos(frbuf_t *buf, intmax_t pos)
 {
 	assert(buf);
 
@@ -296,7 +296,7 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 }
 
 ssize_t
-frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
+frbuf_pread(frbuf_t *buf, void *ptr, size_t size, intmax_t pos)
 {
 	assert(buf);
 	assert(ptr || !size);
@@ -313,7 +313,7 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	ssize_t result = 0;
 	DWORD dwErrCode = GetLastError();
 
-	int64_t oldpos = frbuf_get_pos(buf);
+	intmax_t oldpos = frbuf_get_pos(buf);
 	if (oldpos == -1) {
 		result = -1;
 		dwErrCode = GetLastError();
@@ -357,7 +357,7 @@ error_get_pos:
 	ssize_t result = 0;
 	int errc = get_errc();
 
-	int64_t oldpos = frbuf_get_pos(buf);
+	intmax_t oldpos = frbuf_get_pos(buf);
 	if (oldpos == -1) {
 		result = -1;
 		errc = get_errc();
@@ -384,25 +384,25 @@ error_get_pos:
 }
 
 const void *
-frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
+frbuf_map(frbuf_t *buf, intmax_t pos, size_t *psize)
 {
 	frbuf_unmap(buf);
 
-	int64_t size = frbuf_get_size(buf);
+	intmax_t size = frbuf_get_size(buf);
 	if (size < 0)
 		return NULL;
 	if (pos < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return NULL;
 	}
-	if (pos > (int64_t)size) {
+	if (pos > (intmax_t)size) {
 		set_errnum(ERRNUM_OVERFLOW);
 		return NULL;
 	}
 	size -= pos;
 
 	if (psize && *psize)
-		size = MIN((uint64_t)size, *psize);
+		size = MIN((uintmax_t)size, *psize);
 
 #ifdef _WIN32
 	DWORD dwErrCode = 0;
@@ -410,7 +410,7 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
-	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
+	if ((uintmax_t)size > (uintmax_t)(SIZE_MAX - off)) {
 		dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_size;
 	}
@@ -449,8 +449,8 @@ error_size:
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	if (page_size <= 0)
 		return NULL;
-	int64_t off = pos % page_size;
-	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
+	intmax_t off = pos % page_size;
+	if ((uintmax_t)size > (uintmax_t)(SIZE_MAX - off)) {
 		errno = EOVERFLOW;
 		return NULL;
 	}
