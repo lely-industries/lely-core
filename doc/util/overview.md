@@ -25,10 +25,6 @@ lely/util/bitset.h.
 Comparison functions for integers, pointers and strings can be found in
 lely/util/cmp.h.
 
-A uniformly distributed random number generator for unsigned integers is given
-in lely/util/rand.h. A C++ interface, that meets the C++11 random number engine
-requirements, can be found in lely/util/rand.hpp.
-
 System support
 --------------
 
