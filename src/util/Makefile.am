@@ -9,6 +9,7 @@ if !NO_DAEMON
 src += daemon.c
 endif
 src += diag.c
+src += dllist.c
 src += endian.c
 src += errnum.c
 if !NO_CXX
@@ -17,7 +18,6 @@ endif
 src += frbuf.c
 src += fwbuf.c
 src += lex.c
-src += list.c
 src += membuf.c
 src += page.h
 src += pheap.c
@@ -25,6 +25,7 @@ src += pool.c
 src += print.c
 src += rand.c
 src += rbtree.c
+src += sllist.c
 src += time.c
 src += util.h
 

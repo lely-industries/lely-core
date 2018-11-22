@@ -1,8 +1,8 @@
 /**@file
- * This file is part of the utilities library; it exposes the linked list
+ * This file is part of the utilities library; it exposes the doubly-linked list
  * functions.
  *
- * @see lely/util/list.h
+ * @see lely/util/dllist.h
  *
  * @copyright 2013-2018 Lely Industries N.V.
  *
@@ -22,5 +22,5 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_LIST_INLINE extern inline
-#include <lely/util/list.h>
+#define LELY_UTIL_DLLIST_INLINE extern inline
+#include <lely/util/dllist.h>

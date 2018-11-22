@@ -6,9 +6,10 @@ Data structures
 
 The utilities library implements the following data structures:
 - bidirectional map: lely/util/bimap.h
-- linked list: lely/util/list.h
+- doubly linked list: lely/util/dllist.h
 - pairing heap: lely/util/pheap.h
 - red-black tree: lely/util/rbtree.h
+- singly linked list: lely/util/sllist.h
 
 All implementations are intrusive. The user must embed a node in the struct
 containing the value to be stored. This is generally more performant than a

@@ -31,6 +31,7 @@ if !NO_DAEMON
 inc += lely/util/daemon.h
 endif
 inc += lely/util/diag.h
+inc += lely/util/dllist.h
 inc += lely/util/endian.h
 inc += lely/util/errnum.h
 if !NO_CXX
@@ -39,7 +40,6 @@ endif
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
 inc += lely/util/lex.h
-inc += lely/util/list.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h
 inc += lely/util/pool.h
@@ -49,6 +49,7 @@ if !NO_CXX
 inc += lely/util/rand.hpp
 endif
 inc += lely/util/rbtree.h
+inc += lely/util/sllist.h
 inc += lely/util/time.h
 inc += lely/util/util.h
 
