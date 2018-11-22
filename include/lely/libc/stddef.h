@@ -27,22 +27,16 @@
 #include <stddef.h>
 
 #if !(__STDC_VERSION__ >= 201112L) && !(__cplusplus >= 201103L)
-
 /**
  * An object type whose alignment is as great as is supported by the
  * implementation in all contexts.
  */
 typedef union {
-#ifdef __cplusplus
-	long __l;
-#else
-	long long __ll;
-#endif
-	long double __ld;
-	void *__ptr;
-	int (*__fptr)(void);
+	long long _ll;
+	long double _ld;
+	void *_ptr;
+	int (*_fptr)(void);
 } max_align_t;
-
 #endif
 
 #endif // !LELY_LIBC_STDDEF_H_

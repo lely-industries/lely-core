@@ -26,7 +26,7 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
-#if (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__))
+#if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)
 #define LELY_HAVE_SYS_TYPES_H 1
 #endif
 #endif

@@ -26,10 +26,7 @@
 
 // clang-format off
 #ifndef LELY_HAVE_THREADS_H
-// Although recent versions of Cygwin do provide <threads.h>, it requires
-// <machine/_threads.h>, which is missing.
-#if __STDC_VERSION__ >= 201112L && !(defined(__STDC_NO_THREADS__) \
-		|| defined(_MSC_VER) || defined(__CYGWIN__))
+#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 #define LELY_HAVE_THREADS_H 1
 #endif
 #endif

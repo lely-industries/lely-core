@@ -26,13 +26,7 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_STDATOMIC_H
-// GCC versions older than 4.9 do not properly advertise the absence of
-// <stdatomic.h>.
-// clang-format off
-#if __STDC_VERSION__ >= 201112L && !(defined(__STDC_NO_ATOMICS__) \
-		|| defined(_MSC_VER) \
-		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9)))
-// clang-format on
+#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
 #define LELY_HAVE_STDATOMIC_H 1
 #endif
 #endif

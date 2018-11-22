@@ -24,13 +24,11 @@
 
 #include <lely/features.h>
 
-// clang-format off
 #ifndef LELY_HAVE_UNISTD_H
 #if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)
 #define LELY_HAVE_UNISTD_H 1
 #endif
 #endif
-// clang-format on
 
 #if LELY_HAVE_UNISTD_H
 #include <unistd.h>
