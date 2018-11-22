@@ -94,7 +94,7 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 
 	if (at->filename) {
 		r = snprintf(s, n, "%s:", at->filename);
-		if (__unlikely(r < 0))
+		if (r < 0)
 			return r;
 		t += r;
 		r = MIN((size_t)r, n);
@@ -102,7 +102,7 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 		n -= r;
 		if (at->line) {
 			r = snprintf(s, n, "%d:", at->line);
-			if (__unlikely(r < 0))
+			if (r < 0)
 				return r;
 			t += r;
 			r = MIN((size_t)r, n);
@@ -110,7 +110,7 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 			n -= r;
 			if (at->column) {
 				r = snprintf(s, n, "%d:", at->column);
-				if (__unlikely(r < 0))
+				if (r < 0)
 					return r;
 				t += r;
 			}
@@ -219,10 +219,7 @@ default_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 
 	int errsv = errno;
 	char *s = NULL;
-	// clang-format off
-	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
-			>= 0)) {
-		// clang-format on
+	if (vasprintf_diag_at(&s, severity, errc, at, format, ap) >= 0) {
 		fprintf(stderr, "%s\n", s);
 		fflush(stderr);
 	}
@@ -293,10 +290,7 @@ dialog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 
 	int errsv = errno;
 	char *pMessage = NULL;
-	// clang-format off
-	if (__likely(vasprintf_diag_at(&pMessage, severity, errc, at, format,
-			ap) >= 0)) {
-		// clang-format on
+	if (vasprintf_diag_at(&pMessage, severity, errc, at, format, ap) >= 0) {
 		DWORD dwResponse;
 		WTSSendMessageA(WTS_CURRENT_SERVER_HANDLE,
 				WTSGetActiveConsoleSessionId(), pTitle,
@@ -326,11 +320,11 @@ log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 {
 	int errsv = errno;
 	time_t timer;
-	if (__likely(time(&timer) != -1)) {
+	if (time(&timer) != -1) {
 		struct tm *timeptr = NULL;
 #ifdef _WIN32
 		struct tm time;
-		if (__likely(localtime_s(&time, &timer)))
+		if (localtime_s(&time, &timer))
 			timeptr = &time;
 #elif defined(_POSIX_C_SOURCE)
 		struct tm time;
@@ -338,7 +332,7 @@ log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 #else
 		timeptr = localtime(&timer);
 #endif
-		if (__likely(timeptr)) {
+		if (timeptr) {
 			char buf[80];
 			// clang-format off
 			if (strftime(buf, sizeof(buf),
@@ -380,10 +374,7 @@ syslog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 
 	int errsv = errno;
 	char *s = NULL;
-	// clang-format off
-	if (__likely(vasprintf_diag_at(&s, DIAG_INFO, errc, at, format, ap)
-			>= 0))
-		// clang-format on
+	if (vasprintf_diag_at(&s, DIAG_INFO, errc, at, format, ap) >= 0)
 		syslog(priority, "%s", s);
 	free(s);
 	errno = errsv;
@@ -421,14 +412,14 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 	int r, t = 0;
 
 	if (at && (r = snprintf_floc(s, n, at)) != 0) {
-		if (__unlikely(r < 0))
+		if (r < 0)
 			return r;
 		t += r;
 		r = MIN((size_t)r, n);
 		s += r;
 		n -= r;
 		r = snprintf(s, n, " ");
-		if (__unlikely(r < 0))
+		if (r < 0)
 			return r;
 		t += r;
 		r = MIN((size_t)r, n);
@@ -444,7 +435,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 	case DIAG_FATAL: r = snprintf(s, n, "fatal: "); break;
 	default: r = 0; break;
 	}
-	if (__unlikely(r < 0))
+	if (r < 0)
 		return r;
 	t += r;
 	r = MIN((size_t)r, n);
@@ -453,7 +444,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 
 	if (format && *format) {
 		r = vsnprintf(s, n, format, ap);
-		if (__unlikely(r < 0))
+		if (r < 0)
 			return r;
 		t += r;
 		r = MIN((size_t)r, n);
@@ -461,7 +452,7 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 		n -= r;
 		if (errc) {
 			r = snprintf(s, n, ": ");
-			if (__unlikely(r < 0))
+			if (r < 0)
 				return r;
 			t += r;
 			r = MIN((size_t)r, n);
@@ -472,9 +463,9 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 
 	if (errc) {
 		const char *errstr = errc2str(errc);
-		if (__likely(errstr)) {
+		if (errstr) {
 			r = snprintf(s, n, "%s", errstr);
-			if (__unlikely(r < 0))
+			if (r < 0)
 				return r;
 			t += r;
 			r = MIN((size_t)r, n);
@@ -494,15 +485,15 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 	va_copy(aq, ap);
 	int n = vsnprintf_diag_at(NULL, 0, severity, errc, at, format, aq);
 	va_end(aq);
-	if (__unlikely(n < 0))
+	if (n < 0)
 		return n;
 
 	char *s = malloc(n + 1);
-	if (__unlikely(!s))
+	if (!s)
 		return -1;
 
 	n = vsnprintf_diag_at(s, n + 1, severity, errc, at, format, ap);
-	if (__unlikely(n < 0)) {
+	if (n < 0) {
 		int errsv = errno;
 		free(s);
 		errno = errsv;

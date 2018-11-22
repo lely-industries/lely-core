@@ -48,7 +48,7 @@ membuf_reserve(struct membuf *buf, size_t size)
 	assert(buf);
 
 	size_t capacity = membuf_capacity(buf);
-	if (__likely(size <= capacity))
+	if (size <= capacity)
 		return capacity;
 
 	// The required size equals the size of the data already in the buffer,
@@ -59,7 +59,7 @@ membuf_reserve(struct membuf *buf, size_t size)
 		buf_size *= 2;
 
 	char *begin = realloc(buf->begin, buf_size);
-	if (__unlikely(!begin)) {
+	if (!begin) {
 		set_errc(errno2c(errno));
 		return 0;
 	}

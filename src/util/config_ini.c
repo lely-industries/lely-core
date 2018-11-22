@@ -47,14 +47,14 @@ size_t
 config_parse_ini_file(config_t *config, const char *filename)
 {
 	frbuf_t *buf = frbuf_create(filename);
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		return 0;
 	}
 
 	size_t size = 0;
 	const void *map = frbuf_map(buf, 0, &size);
-	if (__unlikely(!map)) {
+	if (!map) {
 		diag(DIAG_ERROR, get_errc(), "%s: unable to map file",
 				filename);
 		frbuf_destroy(buf);
@@ -128,7 +128,7 @@ config_parse_ini_text(config_t *config, const char *begin, const char *end,
 					membuf_clear(&value);
 					membuf_reserve(&value, chars);
 					char *s = membuf_alloc(&value, &chars);
-					if (__likely(s && chars))
+					if (s && chars)
 						s[--chars] = '\0';
 					cp += lex_c99_str(cp, end, NULL, s,
 							&chars);
@@ -179,14 +179,14 @@ size_t
 config_print_ini_file(const config_t *config, const char *filename)
 {
 	fwbuf_t *buf = fwbuf_create(filename);
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		return 0;
 	}
 
 	size_t size = config_print_ini_text(config, NULL, NULL);
 	void *map = fwbuf_map(buf, 0, &size);
-	if (__unlikely(!map)) {
+	if (!map) {
 		diag(DIAG_ERROR, get_errc(), "%s: unable to map file",
 				filename);
 		fwbuf_destroy(buf);
@@ -197,7 +197,7 @@ config_print_ini_file(const config_t *config, const char *filename)
 	char *end = begin + size;
 	size_t chars = config_print_ini_text(config, &begin, end);
 
-	if (__unlikely(fwbuf_commit(buf) == -1)) {
+	if (fwbuf_commit(buf) == -1) {
 		diag(DIAG_ERROR, get_errc(), "%s: unable to commit file",
 				filename);
 		fwbuf_destroy(buf);
@@ -268,7 +268,7 @@ membuf_print_chars(struct membuf *buf, const char *s, size_t n)
 		n--;
 
 	membuf_clear(buf);
-	if (__unlikely(!membuf_reserve(buf, n + 1)))
+	if (!membuf_reserve(buf, n + 1))
 		return;
 	membuf_write(buf, s, n);
 	membuf_write(buf, "", 1);

@@ -88,7 +88,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 int
 daemon_signal(int sig)
 {
-	if (__unlikely(sig < 0 || sig > DAEMON_USER_MAX)) {
+	if (sig < 0 || sig > DAEMON_USER_MAX) {
 		SetLastError(ERROR_INVALID_PARAMETER);
 		return -1;
 	}
@@ -121,7 +121,7 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 	assert(lpszArgv);
 
 	hServiceStatus = RegisterServiceCtrlHandlerA(daemon_name, Handler);
-	if (__unlikely(!hServiceStatus))
+	if (!hServiceStatus)
 		goto error_RegisterServiceCtrlHandlerA;
 	ReportStatus(SERVICE_START_PENDING);
 
@@ -138,12 +138,12 @@ ServiceMain(DWORD dwArgc, LPSTR *lpszArgv)
 	if (daemon_init) {
 		// Make sure the argument list is NULL-terminated.
 		char **argv = malloc((dwArgc + 1) * sizeof(char *));
-		if (__unlikely(!argv))
+		if (!argv)
 			goto error_init;
 		for (DWORD i = 0; i < dwArgc; i++)
 			argv[i] = lpszArgv[i];
 		argv[dwArgc] = NULL;
-		if (__unlikely(daemon_init(dwArgc, argv))) {
+		if (daemon_init(dwArgc, argv)) {
 			free(argv);
 			goto error_init;
 		}
@@ -249,13 +249,13 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	int result = 0;
 	int errsv = errno;
 
-	if (__unlikely(init && init(argc, argv))) {
+	if (init && init(argc, argv)) {
 		result = -1;
 		errsv = errno;
 		goto error_init;
 	}
 
-	if (__unlikely(daemon_proc() == -1)) {
+	if (daemon_proc() == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_proc;
@@ -264,51 +264,45 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	// Create a non-blocking self-pipe.
 #if defined(__CYGWIN__) || defined(__linux__)
 	result = pipe2(daemon_pipe, O_NONBLOCK | O_CLOEXEC);
-	if (__unlikely(result == -1)) {
+	if (result == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_pipe;
 	}
 #else
 	result = pipe(daemon_pipe);
-	if (__unlikely(result == -1)) {
+	if (result == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_pipe;
 	}
-	if (__unlikely(fcntl(daemon_pipe[0], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(daemon_pipe[0], F_SETFD, FD_CLOEXEC) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
 	}
-	if (__unlikely(fcntl(daemon_pipe[1], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(daemon_pipe[1], F_SETFD, FD_CLOEXEC) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
 	}
 	int flags;
-	if (__unlikely((flags = fcntl(daemon_pipe[0], F_GETFL, 0)) == -1)) {
+	if ((flags = fcntl(daemon_pipe[0], F_GETFL, 0)) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
 	}
-	// clang-format off
-	if (__unlikely(fcntl(daemon_pipe[0], F_SETFL, flags | O_NONBLOCK)
-			== -1)) {
-		// clang-format on
+	if (fcntl(daemon_pipe[0], F_SETFL, flags | O_NONBLOCK) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
 	}
-	if (__unlikely((flags = fcntl(daemon_pipe[1], F_GETFL, 0)) == -1)) {
+	if ((flags = fcntl(daemon_pipe[1], F_GETFL, 0)) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
 	}
-	// clang-format off
-	if (__unlikely(fcntl(daemon_pipe[1], F_SETFL, flags | O_NONBLOCK)
-			== -1)) {
-		// clang-format on
+	if (fcntl(daemon_pipe[1], F_SETFL, flags | O_NONBLOCK) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_fcntl;
@@ -320,7 +314,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	new_hup.sa_handler = &daemon_signal_func;
 	sigemptyset(&new_hup.sa_mask);
 	new_hup.sa_flags = 0;
-	if (__unlikely(sigaction(SIGHUP, &new_hup, &old_hup) == -1)) {
+	if (sigaction(SIGHUP, &new_hup, &old_hup) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_sighup;
@@ -331,7 +325,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	new_term.sa_handler = &daemon_signal_func;
 	sigemptyset(&new_term.sa_mask);
 	new_term.sa_flags = 0;
-	if (__unlikely(sigaction(SIGTERM, &new_term, &old_term) == -1)) {
+	if (sigaction(SIGTERM, &new_term, &old_term) == -1) {
 		result = -1;
 		errsv = errno;
 		goto error_sigterm;
@@ -339,10 +333,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 
 #ifndef LELY_NO_THREADS
 	thrd_t thr;
-	// clang-format off
-	if (__unlikely(thrd_create(&thr, &daemon_thrd_start, NULL)
-			!= thrd_success)) {
-		// clang-format on
+	if (thrd_create(&thr, &daemon_thrd_start, NULL) != thrd_success) {
 		result = -1;
 		goto error_thrd_create;
 	}
@@ -394,7 +385,7 @@ error_init:
 int
 daemon_signal(int sig)
 {
-	if (__unlikely(sig < 0 || sig > DAEMON_USER_MAX)) {
+	if (sig < 0 || sig > DAEMON_USER_MAX) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -402,14 +393,14 @@ daemon_signal(int sig)
 	int result;
 	do
 		result = write(daemon_pipe[1], &(unsigned char){ sig }, 1);
-	while (__unlikely(result == -1 && errno == EINTR));
+	while (result == -1 && errno == EINTR);
 	return result;
 }
 
 int
 daemon_status(int status)
 {
-	if (__unlikely(status < 0 || status >= DAEMON_USER_MIN)) {
+	if (status < 0 || status >= DAEMON_USER_MIN) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -429,14 +420,14 @@ daemon_proc(void)
 	}
 
 	// Change working directory to a known path.
-	if (__unlikely(chdir("/") == -1))
+	if (chdir("/") == -1)
 		return -1;
 
 	// Prevent insecure file privileges.
 	umask(0);
 
 	// Detach the child process from the parent's tty.
-	if (__unlikely(setsid() == -1))
+	if (setsid() == -1)
 		return -1;
 
 	// Because of the call to setsid(), we are now session leader, which
@@ -466,16 +457,16 @@ daemon_proc(void)
 	fclose(stdin);
 	close(STDIN_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
-	if (__unlikely(open("/dev/null", O_RDONLY | O_CLOEXEC) != STDIN_FILENO))
+	if (open("/dev/null", O_RDONLY | O_CLOEXEC) != STDIN_FILENO)
 		return -1;
 #else
-	if (__unlikely(open("/dev/null", O_RDONLY) != STDIN_FILENO))
+	if (open("/dev/null", O_RDONLY) != STDIN_FILENO)
 		return -1;
-	if (__unlikely(fcntl(STDIN_FILENO, F_SETFD, FD_CLOEXEC) == -1))
+	if (fcntl(STDIN_FILENO, F_SETFD, FD_CLOEXEC) == -1)
 		return -1;
 #endif
 	stdin = fdopen(STDIN_FILENO, "r");
-	if (__unlikely(!stdin))
+	if (!stdin)
 		return -1;
 
 	fflush(stdout);
@@ -483,19 +474,16 @@ daemon_proc(void)
 	fclose(stdout);
 	close(STDOUT_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
-	// clang-format off
-	if (__unlikely(open("/dev/null", O_WRONLY | O_CLOEXEC)
-			!= STDOUT_FILENO))
-		// clang-format on
+	if (open("/dev/null", O_WRONLY | O_CLOEXEC) != STDOUT_FILENO)
 		return -1;
 #else
-	if (__unlikely(open("/dev/null", O_WRONLY) != STDOUT_FILENO))
+	if (open("/dev/null", O_WRONLY) != STDOUT_FILENO)
 		return -1;
-	if (__unlikely(fcntl(STDOUT_FILENO, F_SETFD, FD_CLOEXEC) == -1))
+	if (fcntl(STDOUT_FILENO, F_SETFD, FD_CLOEXEC) == -1)
 		return -1;
 #endif
 	stdout = fdopen(STDOUT_FILENO, "w");
-	if (__unlikely(!stdout))
+	if (!stdout)
 		return -1;
 
 	fflush(stderr);
@@ -503,16 +491,16 @@ daemon_proc(void)
 	fclose(stderr);
 	close(STDERR_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
-	if (__unlikely(open("/dev/null", O_RDWR | O_CLOEXEC) != STDERR_FILENO))
+	if (open("/dev/null", O_RDWR | O_CLOEXEC) != STDERR_FILENO)
 		return -1;
 #else
-	if (__unlikely(open("/dev/null", O_RDWR) != STDERR_FILENO))
+	if (open("/dev/null", O_RDWR) != STDERR_FILENO)
 		return -1;
-	if (__unlikely(fcntl(STDERR_FILENO, F_SETFD, FD_CLOEXEC) == -1))
+	if (fcntl(STDERR_FILENO, F_SETFD, FD_CLOEXEC) == -1)
 		return -1;
 #endif
 	stderr = fdopen(STDERR_FILENO, "rw");
-	if (__unlikely(!stderr))
+	if (!stderr)
 		return -1;
 
 	return 0;
@@ -540,15 +528,15 @@ daemon_thrd_start(void *arg)
 		struct pollfd fds = { .fd = daemon_pipe[0], .events = POLLIN };
 		do
 			result = poll(&fds, 1, LELY_DAEMON_TIMEOUT);
-		while (__unlikely(result == -1 && errno == EINTR));
-		if (__unlikely(result != 1))
+		while (result == -1 && errno == EINTR);
+		if (result != 1)
 			continue;
 		// Read a single signal value.
 		unsigned char uc = 0;
 		do
 			result = read(daemon_pipe[0], &uc, 1);
-		while (__unlikely(result == -1 && errno == EINTR));
-		if (__unlikely(result < 1))
+		while (result == -1 && errno == EINTR);
+		if (result < 1)
 			continue;
 		int sig = uc;
 		// Execute the signal handler.

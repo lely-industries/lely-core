@@ -40,7 +40,7 @@ bitset_init(struct bitset *set, int size)
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = malloc(size * sizeof(int));
-	if (__unlikely(!bits && size)) {
+	if (!bits && size) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -75,7 +75,7 @@ bitset_resize(struct bitset *set, int size)
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
 	unsigned int *bits = realloc(set->bits, size * sizeof(int));
-	if (__unlikely(!bits && size)) {
+	if (!bits && size) {
 		set_errc(errno2c(errno));
 		return 0;
 	}
@@ -99,7 +99,7 @@ bitset_get_size(const struct bitset *set)
 int
 bitset_test(const struct bitset *set, int n)
 {
-	if (__unlikely(n < 0 || n >= bitset_size(set)))
+	if (n < 0 || n >= bitset_size(set))
 		return 0;
 	return (set->bits[n / INT_BIT] >> (n & (INT_BIT - 1))) & 1u;
 }
@@ -107,7 +107,7 @@ bitset_test(const struct bitset *set, int n)
 void
 bitset_set(struct bitset *set, int n)
 {
-	if (__unlikely(n < 0 || n >= bitset_size(set)))
+	if (n < 0 || n >= bitset_size(set))
 		return;
 	set->bits[n / INT_BIT] |= 1u << (n & (INT_BIT - 1));
 }
@@ -122,7 +122,7 @@ bitset_set_all(struct bitset *set)
 void
 bitset_clr(struct bitset *set, int n)
 {
-	if (__unlikely(n < 0 || n >= bitset_size(set)))
+	if (n < 0 || n >= bitset_size(set))
 		return;
 	set->bits[n / INT_BIT] &= ~(1u << (n & (INT_BIT - 1)));
 }
@@ -172,9 +172,9 @@ bitset_ffz(const struct bitset *set)
 int
 bitset_fns(const struct bitset *set, int n)
 {
-	if (__unlikely(n < 0))
+	if (n < 0)
 		n = 0;
-	if (__unlikely(n >= bitset_size(set)))
+	if (n >= bitset_size(set))
 		return 0;
 
 	int size = set->size - n / INT_BIT;
@@ -199,9 +199,9 @@ bitset_fns(const struct bitset *set, int n)
 int
 bitset_fnz(const struct bitset *set, int n)
 {
-	if (__unlikely(n < 0))
+	if (n < 0)
 		n = 0;
-	if (__unlikely(n >= bitset_size(set)))
+	if (n >= bitset_size(set))
 		return 0;
 
 	int size = set->size - n / INT_BIT;

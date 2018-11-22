@@ -107,7 +107,7 @@ void *
 __fwbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __fwbuf));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -128,7 +128,7 @@ __fwbuf_init(struct __fwbuf *buf, const char *filename)
 	DWORD dwErrCode = 0;
 
 	buf->filename = strdup(filename);
-	if (__unlikely(!buf->filename)) {
+	if (!buf->filename) {
 		dwErrCode = errno2c(errno);
 		goto error_strdup;
 	}
@@ -143,14 +143,14 @@ __fwbuf_init(struct __fwbuf *buf, const char *filename)
 		dir[1] = '\0';
 	}
 
-	if (__unlikely(!GetTempFileNameA(dir, "tmp", 0, buf->tmpname))) {
+	if (!GetTempFileNameA(dir, "tmp", 0, buf->tmpname)) {
 		dwErrCode = GetLastError();
 		goto error_GetTempFileNameA;
 	}
 
 	buf->hFile = CreateFileA(buf->tmpname, GENERIC_READ | GENERIC_WRITE, 0,
 			NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (__unlikely(buf->hFile == INVALID_HANDLE_VALUE)) {
+	if (buf->hFile == INVALID_HANDLE_VALUE) {
 		dwErrCode = GetLastError();
 		goto error_CreateFileA;
 	}
@@ -174,13 +174,13 @@ error_strdup:
 	int errsv = 0;
 
 	buf->filename = strdup(filename);
-	if (__unlikely(!buf->filename)) {
+	if (!buf->filename) {
 		errsv = errno;
 		goto error_strdup_filename;
 	}
 
 	char *tmp = strdup(buf->filename);
-	if (__unlikely(!tmp)) {
+	if (!tmp) {
 		errsv = errno;
 		goto error_strdup_tmp;
 	}
@@ -188,13 +188,13 @@ error_strdup:
 	size_t n = strlen(dir);
 
 	buf->dirfd = open(dir, O_RDONLY | O_CLOEXEC | O_DIRECTORY);
-	if (__unlikely(buf->dirfd == -1)) {
+	if (buf->dirfd == -1) {
 		errsv = errno;
 		goto error_open_dirfd;
 	}
 
 	buf->tmpname = malloc(n + 13);
-	if (__unlikely(!buf->tmpname)) {
+	if (!buf->tmpname) {
 		errsv = errno;
 		goto error_malloc_tmpname;
 	}
@@ -213,13 +213,13 @@ error_strdup:
 #else
 	buf->fd = mkstemp(buf->tmpname);
 #endif
-	if (__unlikely(buf->fd == -1)) {
+	if (buf->fd == -1) {
 		errsv = errno;
 		goto error_open_fd;
 	}
 
 #ifndef _GNU_SOURCE
-	if (__unlikely(fcntl(buf->fd, F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(buf->fd, F_SETFD, FD_CLOEXEC) == -1) {
 		errsv = errno;
 		goto error_fcntl;
 	}
@@ -251,13 +251,13 @@ error_strdup_filename:
 	int errc = 0;
 
 	buf->filename = strdup(filename);
-	if (__unlikely(!buf->filename)) {
+	if (!buf->filename) {
 		errc = errno2c(errno);
 		goto error_strdup;
 	}
 
 	buf->stream = fopen(tmpnam(buf->tmpname), "w+b");
-	if (__unlikely(!buf->stream)) {
+	if (!buf->stream) {
 		errc = errno2c(errno);
 		goto error_fopen;
 	}
@@ -301,12 +301,12 @@ fwbuf_create(const char *filename)
 	int errc = 0;
 
 	fwbuf_t *buf = __fwbuf_alloc();
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		errc = get_errc();
 		goto error_alloc_buf;
 	}
 
-	if (__unlikely(!__fwbuf_init(buf, filename))) {
+	if (!__fwbuf_init(buf, filename)) {
 		errc = get_errc();
 		goto error_init_buf;
 	}
@@ -332,12 +332,12 @@ fwbuf_destroy(fwbuf_t *buf)
 int64_t
 fwbuf_get_size(fwbuf_t *buf)
 {
-	if (__unlikely(fwbuf_error(buf)))
+	if (fwbuf_error(buf))
 		return -1;
 
 #ifdef _WIN32
 	LARGE_INTEGER FileSize;
-	if (__unlikely(!GetFileSizeEx(buf->hFile, &FileSize))) {
+	if (!GetFileSizeEx(buf->hFile, &FileSize)) {
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
@@ -345,10 +345,10 @@ fwbuf_get_size(fwbuf_t *buf)
 #elif _POSIX_C_SOURCE >= 200112L
 #ifdef __linux__
 	struct stat64 stat;
-	if (__unlikely(fstat64(buf->fd, &stat) == -1)) {
+	if (fstat64(buf->fd, &stat) == -1) {
 #else
 	struct stat stat;
-	if (__unlikely(fstat(buf->fd, &stat) == -1)) {
+	if (fstat(buf->fd, &stat) == -1) {
 #endif
 		buf->errsv = errno;
 		return -1;
@@ -362,39 +362,39 @@ fwbuf_get_size(fwbuf_t *buf)
 int
 fwbuf_set_size(fwbuf_t *buf, int64_t size)
 {
-	if (__unlikely(fwbuf_unmap(buf) == -1))
+	if (fwbuf_unmap(buf) == -1)
 		return -1;
 
 #ifdef _WIN32
 	int64_t pos = fwbuf_get_pos(buf);
-	if (__unlikely(pos == -1))
+	if (pos == -1)
 		return -1;
 
-	if (__unlikely(fwbuf_set_pos(buf, size) == -1))
+	if (fwbuf_set_pos(buf, size) == -1)
 		return -1;
 
-	if (__unlikely(!SetEndOfFile(buf->hFile))) {
+	if (!SetEndOfFile(buf->hFile)) {
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
 
-	if (__unlikely(fwbuf_set_pos(buf, pos) == -1))
+	if (fwbuf_set_pos(buf, pos) == -1)
 		return -1;
 
 	return 0;
 #elif _POSIX_C_SOURCE >= 200112L
 #ifdef __linux__
-	if (__unlikely(ftruncate64(buf->fd, size) == -1)) {
+	if (ftruncate64(buf->fd, size) == -1) {
 #else
 	// TODO: Check if size does not overflow the range of off_t.
-	if (__unlikely(ftruncate(buf->fd, size) == -1)) {
+	if (ftruncate(buf->fd, size) == -1) {
 #endif
 		buf->errsv = errno;
 		return -1;
 	}
 	return 0;
 #else
-	if (__unlikely(size < buf->last)) {
+	if (size < buf->last) {
 		set_errnum(buf->errnum = ERRNUM_INVAL);
 		return -1;
 	}
@@ -408,12 +408,12 @@ fwbuf_set_size(fwbuf_t *buf, int64_t size)
 int64_t
 fwbuf_get_pos(fwbuf_t *buf)
 {
-	if (__unlikely(fwbuf_error(buf)))
+	if (fwbuf_error(buf))
 		return -1;
 
 #ifdef _WIN32
 	LARGE_INTEGER li = { .QuadPart = 0 };
-	if (__unlikely(!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT))) {
+	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT)) {
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
@@ -424,12 +424,12 @@ fwbuf_get_pos(fwbuf_t *buf)
 #else
 	int64_t pos = lseek(buf->fd, 0, SEEK_CUR);
 #endif
-	if (__unlikely(pos == -1))
+	if (pos == -1)
 		buf->errsv = errno;
 	return pos;
 #else
 	long pos = ftell(buf->stream);
-	if (__unlikely(pos == -1)) {
+	if (pos == -1) {
 		buf->errnum = errno2num(errno);
 		set_errc(errno2c(errno));
 	}
@@ -440,12 +440,12 @@ fwbuf_get_pos(fwbuf_t *buf)
 int64_t
 fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
 {
-	if (__unlikely(fwbuf_error(buf)))
+	if (fwbuf_error(buf))
 		return -1;
 
 #ifdef _WIN32
 	LARGE_INTEGER li = { .QuadPart = pos };
-	if (__unlikely(!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN))) {
+	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN)) {
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
@@ -456,20 +456,20 @@ fwbuf_set_pos(fwbuf_t *buf, int64_t pos)
 #else
 	pos = lseek(buf->fd, pos, SEEK_SET);
 #endif
-	if (__unlikely(pos == -1))
+	if (pos == -1)
 		buf->errsv = errno;
 	return pos;
 #else
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		set_errnum(buf->errnum = ERRNUM_INVAL);
 		return -1;
 	}
-	if (__unlikely(pos > LONG_MAX)) {
+	if (pos > LONG_MAX) {
 		set_errnum(buf->errnum = ERRNUM_OVERFLOW);
 		return -1;
 	}
 
-	if (__unlikely(fseek(buf->stream, pos, SEEK_SET))) {
+	if (fseek(buf->stream, pos, SEEK_SET)) {
 		buf->errnum = errno2num(errno);
 		set_errc(errno2c(errno));
 		return -1;
@@ -484,7 +484,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 {
 	assert(ptr || !size);
 
-	if (__unlikely(fwbuf_error(buf)))
+	if (fwbuf_error(buf))
 		return -1;
 
 	if (!size)
@@ -492,10 +492,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 
 #ifdef _WIN32
 	DWORD nNumberOfBytesWritten;
-	// clang-format off
-	if (__unlikely(!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten,
-			NULL))) {
-		// clang-format on
+	if (!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten, NULL)) {
 		buf->dwErrCode = GetLastError();
 		return -1;
 	}
@@ -504,17 +501,17 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 	ssize_t result;
 	do
 		result = write(buf->fd, ptr, size);
-	while (__unlikely(result == -1 && errno == EINTR));
-	if (__unlikely(result == -1))
+	while (result == -1 && errno == EINTR);
+	if (result == -1)
 		buf->errsv = errno;
 	return result;
 #else
 	int64_t pos = fwbuf_get_pos(buf);
-	if (__unlikely(pos < 0))
+	if (pos < 0)
 		return -1;
 
 	size_t result = fwrite(ptr, 1, size, buf->stream);
-	if (__unlikely(result != size && ferror(buf->stream))) {
+	if (result != size && ferror(buf->stream)) {
 		buf->errnum = errno2num(errno);
 		set_errc(errno2c(errno));
 		if (!result)
@@ -541,7 +538,7 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 {
 	assert(ptr || !size);
 
-	if (__unlikely(fwbuf_error(buf)))
+	if (fwbuf_error(buf))
 		return -1;
 
 	if (!size)
@@ -550,14 +547,14 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 #ifdef _WIN32
 	ssize_t result = 0;
 
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		result = -1;
 		buf->dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_pos;
 	}
 
 	int64_t oldpos = fwbuf_get_pos(buf);
-	if (__unlikely(oldpos == -1)) {
+	if (oldpos == -1) {
 		result = -1;
 		goto error_get_pos;
 	}
@@ -568,8 +565,8 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, int64_t pos)
 	Overlapped.Offset = uli.LowPart;
 	Overlapped.OffsetHigh = uli.HighPart;
 	// clang-format off
-	if (__unlikely(!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten,
-			&Overlapped))) {
+	if (!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten,
+			&Overlapped)) {
 		// clang-format on
 		result = -1;
 		buf->dwErrCode = GetLastError();
@@ -593,22 +590,22 @@ error_pos:
 	do
 		result = pwrite(buf->fd, ptr, size, pos);
 #endif
-	while (__unlikely(result == -1 && errno == EINTR));
-	if (__unlikely(result == -1))
+	while (result == -1 && errno == EINTR);
+	if (result == -1)
 		buf->errsv = errno;
 	return result;
 #else
 	ssize_t result = 0;
 	int errc = get_errc();
 
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		result = -1;
 		errc = errnum2c(buf->errnum = ERRNUM_INVAL);
 		goto error_pos;
 	}
 
 	int64_t oldpos = fwbuf_get_pos(buf);
-	if (__unlikely(oldpos == -1)) {
+	if (oldpos == -1) {
 		result = -1;
 		errc = get_errc();
 		goto error_get_pos;
@@ -616,12 +613,12 @@ error_pos:
 
 	// Move to the requested position and fill any gap with zeros.
 	if (buf->last < pos) {
-		if (__unlikely(fwbuf_set_pos(buf, buf->last) != buf->last)) {
+		if (fwbuf_set_pos(buf, buf->last) != buf->last) {
 			errc = get_errc();
 			goto error_set_pos;
 		}
 		while (buf->last < pos) {
-			if (__unlikely(fputc(0, buf->stream) == EOF)) {
+			if (fputc(0, buf->stream) == EOF) {
 				buf->errnum = errno2num(errno);
 				errc = errno2c(errno);
 				goto error_fputc;
@@ -630,19 +627,19 @@ error_pos:
 			buf->size = MAX(buf->size, buf->last);
 		}
 	} else {
-		if (__unlikely(fwbuf_set_pos(buf, pos) != pos)) {
+		if (fwbuf_set_pos(buf, pos) != pos) {
 			errc = get_errc();
 			goto error_set_pos;
 		}
 	}
 
 	result = fwbuf_write(buf, ptr, size);
-	if (__unlikely(result == -1 || (size_t)result != size))
+	if (result == -1 || (size_t)result != size)
 		errc = get_errc();
 
 error_fputc:
 error_set_pos:
-	if (__unlikely(fwbuf_set_pos(buf, oldpos) == -1 && !errc))
+	if (fwbuf_set_pos(buf, oldpos) == -1 && !errc)
 		errc = get_errc();
 error_get_pos:
 error_pos:
@@ -654,13 +651,13 @@ error_pos:
 void *
 fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 {
-	if (__unlikely(fwbuf_unmap(buf) == -1))
+	if (fwbuf_unmap(buf) == -1)
 		return NULL;
 
 	int64_t size = fwbuf_get_size(buf);
-	if (__unlikely(size < 0))
+	if (size < 0)
 		return NULL;
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 #ifdef _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
 #elif _POSIX_C_SOURCE >= 200112L
@@ -670,7 +667,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 #endif
 		return NULL;
 	}
-	if (__unlikely(pos > (int64_t)size)) {
+	if (pos > (int64_t)size) {
 #ifdef _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
 #elif _POSIX_C_SOURCE >= 200112L
@@ -689,7 +686,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
-	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
+	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
 		buf->dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_size;
 	}
@@ -698,7 +695,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 	buf->hFileMappingObject = CreateFileMapping(buf->hFile, NULL,
 			PAGE_READWRITE, MaximumSize.HighPart,
 			MaximumSize.LowPart, NULL);
-	if (__unlikely(buf->hFileMappingObject == INVALID_HANDLE_VALUE)) {
+	if (buf->hFileMappingObject == INVALID_HANDLE_VALUE) {
 		buf->dwErrCode = GetLastError();
 		goto error_CreateFileMapping;
 	}
@@ -707,7 +704,7 @@ fwbuf_map(fwbuf_t *buf, int64_t pos, size_t *psize)
 	buf->lpBaseAddress = MapViewOfFile(buf->hFileMappingObject,
 			FILE_MAP_WRITE, FileOffset.HighPart, FileOffset.LowPart,
 			(SIZE_T)(off + size));
-	if (__unlikely(!buf->lpBaseAddress)) {
+	if (!buf->lpBaseAddress) {
 		buf->dwErrCode = GetLastError();
 		goto error_MapViewOfFile;
 	}
@@ -726,12 +723,12 @@ error_size:
 	return NULL;
 #elif _POSIX_C_SOURCE >= 200112L
 	long page_size = sysconf(_SC_PAGE_SIZE);
-	if (__unlikely(page_size <= 0)) {
+	if (page_size <= 0) {
 		buf->errsv = errno;
 		return NULL;
 	}
 	int64_t off = pos % page_size;
-	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
+	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
 		errno = buf->errsv = EOVERFLOW;
 		return NULL;
 	}
@@ -744,7 +741,7 @@ error_size:
 	buf->addr = mmap(NULL, off + size, PROT_READ | PROT_WRITE, MAP_SHARED,
 			buf->fd, pos - off);
 #endif
-	if (__unlikely(buf->addr == MAP_FAILED)) {
+	if (buf->addr == MAP_FAILED) {
 		buf->errsv = errno;
 		return NULL;
 	}
@@ -757,13 +754,13 @@ error_size:
 #else
 	int errc = 0;
 
-	if (__unlikely((uint64_t)size > SIZE_MAX)) {
+	if ((uint64_t)size > SIZE_MAX) {
 		set_errnum(buf->errnum = ERRNUM_OVERFLOW);
 		return NULL;
 	}
 
 	buf->map = calloc(size, 1);
-	if (__unlikely(!buf->map)) {
+	if (!buf->map) {
 		buf->errnum = errno2num(errno);
 		errc = errno2c(errno);
 		goto error_malloc_map;
@@ -774,27 +771,25 @@ error_size:
 	int64_t oldpos = 0;
 	if (pos < buf->last) {
 		oldpos = fwbuf_get_pos(buf);
-		if (__unlikely(oldpos == -1)) {
+		if (oldpos == -1) {
 			errc = get_errc();
 			goto error_get_pos;
 		}
 
-		if (__unlikely(fwbuf_set_pos(buf, pos) != pos)) {
+		if (fwbuf_set_pos(buf, pos) != pos) {
 			errc = get_errc();
 			goto error_set_pos;
 		}
 
 		size_t nitems = MIN(size, buf->last - pos);
-		// clang-format off
-		if (__unlikely(fread(buf->map, 1, nitems, buf->stream) != nitems
-				&& ferror(buf->stream))) {
-			// clang-format on
+		if (fread(buf->map, 1, nitems, buf->stream) != nitems
+				&& ferror(buf->stream)) {
 			buf->errnum = errno2num(errno);
 			errc = errno2c(errno);
 			goto error_fread;
 		}
 
-		if (__unlikely(fwbuf_set_pos(buf, oldpos) == oldpos)) {
+		if (fwbuf_set_pos(buf, oldpos) == oldpos) {
 			errc = get_errc();
 			goto error_set_pos;
 		}
@@ -810,7 +805,7 @@ error_size:
 
 error_fread:
 error_set_pos:
-	if (__unlikely(fwbuf_set_pos(buf, oldpos) == -1 && !errc))
+	if (fwbuf_set_pos(buf, oldpos) == -1 && !errc)
 		errc = get_errc();
 error_get_pos:
 	free(buf->map);
@@ -829,30 +824,24 @@ fwbuf_unmap(fwbuf_t *buf)
 	int result = 0;
 #ifdef _WIN32
 	DWORD dwErrCode = 0;
-	if (__unlikely(buf->dwErrCode)) {
+	if (buf->dwErrCode) {
 		result = -1;
 		dwErrCode = buf->dwErrCode;
 	}
 
 	if (buf->hFileMappingObject != INVALID_HANDLE_VALUE) {
 		// clang-format off
-		if (__unlikely(!FlushViewOfFile(buf->lpBaseAddress,
-				buf->dwNumberOfBytesToMap) && !result)) {
+		if (!FlushViewOfFile(buf->lpBaseAddress,
+				buf->dwNumberOfBytesToMap) && !result) {
 			// clang-format on
 			result = -1;
 			dwErrCode = GetLastError();
 		}
-		// clang-format off
-		if (__unlikely(!UnmapViewOfFile(buf->lpBaseAddress)
-				&& !result)) {
-			// clang-format on
+		if (!UnmapViewOfFile(buf->lpBaseAddress) && !result) {
 			result = -1;
 			dwErrCode = GetLastError();
 		}
-		// clang-format off
-		if (__unlikely(!CloseHandle(buf->hFileMappingObject)
-				&& !result)) {
-			// clang-format on
+		if (!CloseHandle(buf->hFileMappingObject) && !result) {
 			result = -1;
 			dwErrCode = GetLastError();
 		}
@@ -875,12 +864,11 @@ fwbuf_unmap(fwbuf_t *buf)
 	}
 
 	if (buf->addr != MAP_FAILED) {
-		if (__unlikely(msync(buf->addr, buf->len, MS_SYNC) == -1)
-				&& !result) {
+		if (msync(buf->addr, buf->len, MS_SYNC) == -1 && !result) {
 			result = -1;
 			errsv = errno;
 		}
-		if (__unlikely(munmap(buf->addr, buf->len) == -1 && !result)) {
+		if (munmap(buf->addr, buf->len) == -1 && !result) {
 			result = -1;
 			errsv = errno;
 		}
@@ -907,10 +895,9 @@ fwbuf_unmap(fwbuf_t *buf)
 		// memory map by fwbuf_write().
 		void *map = buf->map;
 		buf->map = NULL;
-		// clang-format off
-		if (__unlikely(fwbuf_pwrite(buf, map, buf->len, buf->pos)
-				!= (ssize_t)buf->len) && !result) {
-			// clang-format on
+		if (fwbuf_pwrite(buf, map, buf->len, buf->pos)
+						!= (ssize_t)buf->len
+				&& !result) {
 			result = -1;
 			errc = get_errc();
 		}
@@ -994,20 +981,20 @@ fwbuf_commit(fwbuf_t *buf)
 		goto done;
 
 	// Only invoke FlushFileBuffers() if no error occurred.
-	if (__unlikely(!result && !FlushFileBuffers(buf->hFile))) {
+	if (!result && !FlushFileBuffers(buf->hFile)) {
 		result = -1;
 		dwErrCode = GetLastError();
 	}
 
-	if (__unlikely(!CloseHandle(buf->hFile) && !result)) {
+	if (!CloseHandle(buf->hFile) && !result) {
 		result = -1;
 		dwErrCode = GetLastError();
 	}
 	buf->hFile = INVALID_HANDLE_VALUE;
 
 	// clang-format off
-	if (__unlikely(result || !MoveFileExA(buf->tmpname, buf->filename,
-			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))) {
+	if (result || !MoveFileExA(buf->tmpname, buf->filename,
+			MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
 		// clang-format on
 		if (!result) {
 			result = -1;
@@ -1026,18 +1013,18 @@ done:
 		goto done;
 
 	// Only invoke fsync() if no error occurred.
-	if (__unlikely(!result && fsync(buf->fd) == -1)) {
+	if (!result && fsync(buf->fd) == -1) {
 		result = -1;
 		errsv = errno;
 	}
 
-	if (__unlikely(close(buf->fd) == -1 && !result)) {
+	if (close(buf->fd) == -1 && !result) {
 		result = -1;
 		errsv = errno;
 	}
 	buf->fd = -1;
 
-	if (__unlikely(result || rename(buf->tmpname, buf->filename) == -1)) {
+	if (result || rename(buf->tmpname, buf->filename) == -1) {
 		if (!result) {
 			result = -1;
 			errsv = errno;
@@ -1045,12 +1032,12 @@ done:
 		remove(buf->tmpname);
 	}
 
-	if (__unlikely(!result && fsync(buf->dirfd) == -1)) {
+	if (!result && fsync(buf->dirfd) == -1) {
 		result = -1;
 		errsv = errno;
 	}
 
-	if (__unlikely(close(buf->dirfd) == -1 && !result)) {
+	if (close(buf->dirfd) == -1 && !result) {
 		result = -1;
 		errsv = errno;
 	}
@@ -1067,12 +1054,12 @@ done:
 
 	// Add zeros to the end of the file to reach the requested size.
 	if (!result && buf->last < buf->size) {
-		if (__unlikely(fwbuf_set_pos(buf, buf->last) != buf->last)) {
+		if (fwbuf_set_pos(buf, buf->last) != buf->last) {
 			result = -1;
 			errc = errno2c(errno);
 		}
 		while (!result && buf->last < buf->size) {
-			if (__unlikely(fputc(0, buf->stream) == EOF)) {
+			if (fputc(0, buf->stream) == EOF) {
 				result = -1;
 				buf->errnum = errno2num(errno);
 				errc = errno2c(errno);
@@ -1082,13 +1069,13 @@ done:
 	}
 
 	// Only invoke fflush() if no error occurred.
-	if (__unlikely(!result && fflush(buf->stream) == EOF)) {
+	if (!result && fflush(buf->stream) == EOF) {
 		result = -1;
 		buf->errnum = errno2num(errno);
 		errc = errno2c(errno);
 	}
 
-	if (__unlikely(fclose(buf->stream) == EOF && !result)) {
+	if (fclose(buf->stream) == EOF && !result) {
 		result = -1;
 		buf->errnum = errno2num(errno);
 		errc = errno2c(errno);
@@ -1098,7 +1085,7 @@ done:
 	// WARNING: rename() may fail if the file already exists. Unfortunately,
 	// if we remove the old file, we cannot guarantee that we won't lose
 	// data.
-	if (__unlikely(result || rename(buf->tmpname, buf->filename))) {
+	if (result || rename(buf->tmpname, buf->filename)) {
 		if (!result) {
 			result = -1;
 			buf->errnum = errno2num(errno);

@@ -70,7 +70,7 @@ void *
 __config_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __config));
-	if (__unlikely(ptr))
+	if (ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -89,7 +89,7 @@ __config_init(struct __config *config, int flags)
 	rbtree_init(&config->tree,
 			(flags & CONFIG_CASE) ? str_case_cmp : str_cmp);
 
-	if (__unlikely(!config_section_create(config, "")))
+	if (!config_section_create(config, ""))
 		return NULL;
 
 	return config;
@@ -112,12 +112,12 @@ config_create(int flags)
 	int errc = 0;
 
 	config_t *config = __config_alloc();
-	if (__unlikely(!config)) {
+	if (!config) {
 		errc = get_errc();
 		goto error_alloc_config;
 	}
 
-	if (__unlikely(!__config_init(config, flags))) {
+	if (!__config_init(config, flags)) {
 		errc = get_errc();
 		goto error_init_config;
 	}
@@ -192,19 +192,19 @@ config_get(const config_t *config, const char *section, const char *key)
 	if (!section)
 		section = "";
 
-	if (__unlikely(!key))
+	if (!key)
 		return NULL;
 
 	const struct rbtree *tree = &config->tree;
 	struct rbnode *node;
 
 	node = rbtree_find(tree, section);
-	if (__unlikely(!node))
+	if (!node)
 		return NULL;
 	tree = &structof(node, struct config_section, node)->tree;
 
 	node = rbtree_find(tree, key);
-	if (__unlikely(!node))
+	if (!node)
 		return NULL;
 	return structof(node, struct config_entry, node)->value;
 }
@@ -218,7 +218,7 @@ config_set(config_t *config, const char *section, const char *key,
 	if (!section)
 		section = "";
 
-	if (__unlikely(!key))
+	if (!key)
 		return NULL;
 
 	struct rbnode *node = rbtree_find(&config->tree, section);
@@ -257,7 +257,7 @@ config_section_create(config_t *config, const char *name)
 	int errc = 0;
 
 	struct config_section *section = malloc(sizeof(*section));
-	if (__unlikely(!section)) {
+	if (!section) {
 		errc = errno2c(errno);
 		goto error_alloc_section;
 	}
@@ -265,7 +265,7 @@ config_section_create(config_t *config, const char *name)
 	struct rbnode *node = &section->node;
 
 	node->key = malloc(strlen(name) + 1);
-	if (__unlikely(!node->key)) {
+	if (!node->key) {
 		errc = errno2c(errno);
 		goto error_alloc_key;
 	}
@@ -318,11 +318,7 @@ config_section_set(struct rbnode *node, const char *key, const char *value)
 		return NULL;
 
 	node = config_entry_create(section, key, value);
-	// clang-format off
-	return __likely(node)
-			? structof(node, struct config_entry, node)->value
-			: NULL;
-	// clang-format on
+	return node ? structof(node, struct config_entry, node)->value : NULL;
 }
 
 static void
@@ -351,7 +347,7 @@ config_entry_create(struct config_section *section, const char *key,
 	int errc = 0;
 
 	struct config_entry *entry = malloc(sizeof(*entry));
-	if (__unlikely(!entry)) {
+	if (!entry) {
 		errc = errno2c(errno);
 		goto error_alloc_entry;
 	}
@@ -359,14 +355,14 @@ config_entry_create(struct config_section *section, const char *key,
 	struct rbnode *node = &entry->node;
 
 	node->key = malloc(strlen(key) + 1);
-	if (__unlikely(!node->key)) {
+	if (!node->key) {
 		errc = errno2c(errno);
 		goto error_alloc_key;
 	}
 	strcpy((char *)node->key, key);
 
 	entry->value = malloc(strlen(value) + 1);
-	if (__unlikely(!entry->value)) {
+	if (!entry->value) {
 		errc = errno2c(errno);
 		goto error_alloc_value;
 	}

@@ -71,7 +71,7 @@ void *
 __frbuf_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __frbuf));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -92,21 +92,21 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 	buf->hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL,
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_READONLY | FILE_FLAG_NO_BUFFERING, NULL);
-	if (__unlikely(buf->hFile == INVALID_HANDLE_VALUE))
+	if (buf->hFile == INVALID_HANDLE_VALUE)
 		return NULL;
 
 	buf->hFileMappingObject = INVALID_HANDLE_VALUE;
 	buf->lpBaseAddress = NULL;
 #elif _POSIX_C_SOURCE >= 200112L
 	buf->fd = open(filename, O_RDONLY | O_CLOEXEC);
-	if (__unlikely(buf->fd == -1))
+	if (buf->fd == -1)
 		return NULL;
 
 	buf->addr = MAP_FAILED;
 	buf->len = 0;
 #else
 	buf->stream = fopen(filename, "rb");
-	if (__unlikely(!buf->stream))
+	if (!buf->stream)
 		return NULL;
 #endif
 
@@ -133,12 +133,12 @@ frbuf_create(const char *filename)
 	int errc = 0;
 
 	frbuf_t *buf = __frbuf_alloc();
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		errc = get_errc();
 		goto error_alloc_buf;
 	}
 
-	if (__unlikely(!__frbuf_init(buf, filename))) {
+	if (!__frbuf_init(buf, filename)) {
 		errc = get_errc();
 		goto error_init_buf;
 	}
@@ -168,30 +168,30 @@ frbuf_get_size(frbuf_t *buf)
 
 #ifdef _WIN32
 	LARGE_INTEGER FileSize;
-	if (__unlikely(!GetFileSizeEx(buf->hFile, &FileSize)))
+	if (!GetFileSizeEx(buf->hFile, &FileSize))
 		return -1;
 	return FileSize.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
 #ifdef __linux__
 	struct stat64 stat;
-	if (__unlikely(fstat64(buf->fd, &stat) == -1))
+	if (fstat64(buf->fd, &stat) == -1)
 		return -1;
 #else
 	struct stat stat;
-	if (__unlikely(fstat(buf->fd, &stat) == -1))
+	if (fstat(buf->fd, &stat) == -1)
 		return -1;
 #endif
 	return stat.st_size;
 #else
 	long offset = ftell(buf->stream);
-	if (__unlikely(offset == -1)) {
+	if (offset == -1) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
 
 	// WARNING: This is not guaranteed to work, but there exists no standard
 	// C alternative.
-	if (__unlikely(fseek(buf->stream, 0, SEEK_END))) {
+	if (fseek(buf->stream, 0, SEEK_END)) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -213,7 +213,7 @@ frbuf_get_pos(frbuf_t *buf)
 
 #ifdef _WIN32
 	LARGE_INTEGER li = { .QuadPart = 0 };
-	if (__unlikely(!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT)))
+	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT))
 		return -1;
 	return li.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
@@ -224,7 +224,7 @@ frbuf_get_pos(frbuf_t *buf)
 #endif
 #else
 	long pos = ftell(buf->stream);
-	if (__unlikely(pos == -1))
+	if (pos == -1)
 		set_errc(errno2c(errno));
 	return pos;
 #endif
@@ -235,14 +235,14 @@ frbuf_set_pos(frbuf_t *buf, int64_t pos)
 {
 	assert(buf);
 
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
 #ifdef _WIN32
 	LARGE_INTEGER li = { .QuadPart = pos };
-	if (__unlikely(!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN)))
+	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN))
 		return -1;
 	return li.QuadPart;
 #elif _POSIX_C_SOURCE >= 200112L
@@ -252,11 +252,11 @@ frbuf_set_pos(frbuf_t *buf, int64_t pos)
 	return lseek(buf->fd, pos, SEEK_SET);
 #endif
 #else
-	if (__unlikely(pos > LONG_MAX)) {
+	if (pos > LONG_MAX) {
 		set_errnum(ERRNUM_OVERFLOW);
 		return -1;
 	}
-	if (__unlikely(fseek(buf->stream, pos, SEEK_SET))) {
+	if (fseek(buf->stream, pos, SEEK_SET)) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -275,21 +275,18 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 
 #ifdef _WIN32
 	DWORD nNumberOfBytesRead;
-	// clang-format off
-	if (__unlikely(!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead,
-			NULL)))
-		// clang-format on
+	if (!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead, NULL))
 		return -1;
 	return nNumberOfBytesRead;
 #elif _POSIX_C_SOURCE >= 200112L
 	ssize_t result;
 	do
 		result = read(buf->fd, ptr, size);
-	while (__unlikely(result == -1 && errno == EINTR));
+	while (result == -1 && errno == EINTR);
 	return result;
 #else
 	size_t result = fread(ptr, 1, size, buf->stream);
-	if (__unlikely(result != size && ferror(buf->stream))) {
+	if (result != size && ferror(buf->stream)) {
 		set_errc(errno2c(errno));
 		if (!result)
 			return -1;
@@ -307,7 +304,7 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	if (!size)
 		return 0;
 
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -317,7 +314,7 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	DWORD dwErrCode = GetLastError();
 
 	int64_t oldpos = frbuf_get_pos(buf);
-	if (__unlikely(oldpos == -1)) {
+	if (oldpos == -1) {
 		result = -1;
 		dwErrCode = GetLastError();
 		goto error_get_pos;
@@ -329,8 +326,8 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	Overlapped.Offset = uli.LowPart;
 	Overlapped.OffsetHigh = uli.HighPart;
 	// clang-format off
-	if (__unlikely(!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead,
-			&Overlapped))) {
+	if (!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead,
+			&Overlapped)) {
 		// clang-format on
 		result = -1;
 		dwErrCode = GetLastError();
@@ -340,7 +337,7 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, int64_t pos)
 	result = nNumberOfBytesRead;
 
 error_ReadFile:
-	if (__unlikely(frbuf_set_pos(buf, oldpos) == -1 && !dwErrCode))
+	if (frbuf_set_pos(buf, oldpos) == -1 && !dwErrCode)
 		dwErrCode = GetLastError();
 error_get_pos:
 	SetLastError(dwErrCode);
@@ -354,31 +351,31 @@ error_get_pos:
 	do
 		result = pread(buf->fd, ptr, size, pos);
 #endif
-	while (__unlikely(result == -1 && errno == EINTR));
+	while (result == -1 && errno == EINTR);
 	return result;
 #else
 	ssize_t result = 0;
 	int errc = get_errc();
 
 	int64_t oldpos = frbuf_get_pos(buf);
-	if (__unlikely(oldpos == -1)) {
+	if (oldpos == -1) {
 		result = -1;
 		errc = get_errc();
 		goto error_get_pos;
 	}
 
-	if (__unlikely(frbuf_set_pos(buf, pos) != pos)) {
+	if (frbuf_set_pos(buf, pos) != pos) {
 		result = -1;
 		errc = get_errc();
 		goto error_set_pos;
 	}
 
 	result = frbuf_read(buf, ptr, size);
-	if (__unlikely(result == -1 || (size_t)result != size))
+	if (result == -1 || (size_t)result != size)
 		errc = get_errc();
 
 error_set_pos:
-	if (__unlikely(frbuf_set_pos(buf, oldpos) == -1 && !errc))
+	if (frbuf_set_pos(buf, oldpos) == -1 && !errc)
 		errc = get_errc();
 error_get_pos:
 	set_errc(errc);
@@ -392,13 +389,13 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	frbuf_unmap(buf);
 
 	int64_t size = frbuf_get_size(buf);
-	if (__unlikely(size < 0))
+	if (size < 0)
 		return NULL;
-	if (__unlikely(pos < 0)) {
+	if (pos < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return NULL;
 	}
-	if (__unlikely(pos > (int64_t)size)) {
+	if (pos > (int64_t)size) {
 		set_errnum(ERRNUM_OVERFLOW);
 		return NULL;
 	}
@@ -413,7 +410,7 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
-	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
+	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
 		dwErrCode = ERROR_INVALID_PARAMETER;
 		goto error_size;
 	}
@@ -422,7 +419,7 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	buf->hFileMappingObject = CreateFileMapping(buf->hFile, NULL,
 			PAGE_READONLY, MaximumSize.HighPart,
 			MaximumSize.LowPart, NULL);
-	if (__unlikely(buf->hFileMappingObject == INVALID_HANDLE_VALUE)) {
+	if (buf->hFileMappingObject == INVALID_HANDLE_VALUE) {
 		dwErrCode = GetLastError();
 		goto error_CreateFileMapping;
 	}
@@ -431,7 +428,7 @@ frbuf_map(frbuf_t *buf, int64_t pos, size_t *psize)
 	buf->lpBaseAddress = MapViewOfFile(buf->hFileMappingObject,
 			FILE_MAP_READ, FileOffset.HighPart, FileOffset.LowPart,
 			(SIZE_T)(off + size));
-	if (__unlikely(!buf->lpBaseAddress)) {
+	if (!buf->lpBaseAddress) {
 		dwErrCode = GetLastError();
 		goto error_MapViewOfFile;
 	}
@@ -450,10 +447,10 @@ error_size:
 	return NULL;
 #elif _POSIX_C_SOURCE >= 200112L
 	long page_size = sysconf(_SC_PAGE_SIZE);
-	if (__unlikely(page_size <= 0))
+	if (page_size <= 0)
 		return NULL;
 	int64_t off = pos % page_size;
-	if (__unlikely((uint64_t)size > (uint64_t)(SIZE_MAX - off))) {
+	if ((uint64_t)size > (uint64_t)(SIZE_MAX - off)) {
 		errno = EOVERFLOW;
 		return NULL;
 	}
@@ -466,7 +463,7 @@ error_size:
 	buf->addr = mmap(NULL, off + size, PROT_READ, MAP_SHARED, buf->fd,
 			pos - off);
 #endif
-	if (__unlikely(buf->addr == MAP_FAILED))
+	if (buf->addr == MAP_FAILED)
 		return NULL;
 	buf->len = off + size;
 
@@ -478,13 +475,13 @@ error_size:
 	int errc = get_errc();
 
 	buf->map = malloc(size);
-	if (__unlikely(!buf->map)) {
+	if (!buf->map) {
 		errc = errno2c(errno);
 		goto error_malloc_map;
 	}
 
 	ssize_t result = frbuf_pread(buf, buf->map, size, pos);
-	if (__unlikely(result == -1)) {
+	if (result == -1) {
 		errc = get_errc();
 		goto error_pread;
 	}
@@ -514,14 +511,11 @@ frbuf_unmap(frbuf_t *buf)
 #ifdef _WIN32
 	if (buf->hFileMappingObject != INVALID_HANDLE_VALUE) {
 		DWORD dwErrCode = GetLastError();
-		if (__unlikely(!UnmapViewOfFile(buf->lpBaseAddress))) {
+		if (!UnmapViewOfFile(buf->lpBaseAddress)) {
 			result = -1;
 			dwErrCode = GetLastError();
 		}
-		// clang-format off
-		if (__unlikely(!CloseHandle(buf->hFileMappingObject)
-				&& !result)) {
-			// clang-format on
+		if (!CloseHandle(buf->hFileMappingObject) && !result) {
 			result = -1;
 			dwErrCode = GetLastError();
 		}
