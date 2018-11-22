@@ -7,8 +7,6 @@ bin += test-util-config
 test_util_config_SOURCES = util-config.c
 bin += test-util-endian
 test_util_endian_SOURCES = util-endian.c
-bin += test-util-c_factory
-test_util_c_factory_SOURCES = util-c_factory.cpp
 bin += test-util-fbuf
 test_util_fbuf_SOURCES = util-fbuf.c
 

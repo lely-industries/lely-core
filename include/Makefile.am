@@ -23,7 +23,6 @@ inc += lely/util/bits.h
 inc += lely/util/bitset.h
 if !NO_CXX
 inc += lely/util/c_call.hpp
-inc += lely/util/c_factory.hpp
 inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
@@ -36,10 +35,6 @@ inc += lely/util/endian.h
 inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
-endif
-inc += lely/util/factory.h
-if !NO_CXX
-inc += lely/util/factory.hpp
 endif
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h

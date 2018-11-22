@@ -14,7 +14,6 @@ src += errnum.c
 if !NO_CXX
 src += exception.cpp
 endif
-src += factory.c
 src += frbuf.c
 src += fwbuf.c
 src += lex.c
