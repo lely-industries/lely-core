@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SYNC_HPP
-#define LELY_CO_SYNC_HPP
+#ifndef LELY_CO_SYNC_HPP_
+#define LELY_CO_SYNC_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/sync.h> for the C interface"
@@ -129,4 +129,4 @@ class COSync : public incomplete_c_type<__co_sync> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_SYNC_HPP_

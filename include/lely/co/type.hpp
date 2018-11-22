@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TYPE_HPP
-#define LELY_CO_TYPE_HPP
+#ifndef LELY_CO_TYPE_HPP_
+#define LELY_CO_TYPE_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/type.h> for the C interface"
@@ -74,4 +74,4 @@ struct co_type_traits_T<char16_t[N]>
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_TYPE_HPP_

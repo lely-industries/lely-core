@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_OBJ_HPP
-#define LELY_CO_OBJ_HPP
+#ifndef LELY_CO_OBJ_HPP_
+#define LELY_CO_OBJ_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/obj.h> for the C interface"
@@ -582,4 +582,4 @@ struct COSubUpInd {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_OBJ_HPP_

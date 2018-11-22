@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_SOCK_HPP
-#define LELY_IO_SOCK_HPP
+#ifndef LELY_IO_SOCK_HPP_
+#define LELY_IO_SOCK_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/sock.h> for the C interface"
@@ -40,9 +40,7 @@ class IOSock : public IOHandle {
 
   IOSock(const IOSock& sock) noexcept : IOHandle(sock) {}
 
-#if __cplusplus >= 201103L
   IOSock(IOSock&& sock) noexcept : IOHandle(::std::forward<IOSock>(sock)) {}
-#endif
 
   IOSock&
   operator=(const IOSock& sock) noexcept {
@@ -50,13 +48,11 @@ class IOSock : public IOHandle {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   IOSock&
   operator=(IOSock&& sock) noexcept {
     IOHandle::operator=(::std::forward<IOSock>(sock));
     return *this;
   }
-#endif
 
   static int
   open(int domain, int type, IOSock sock[2]) noexcept {
@@ -312,4 +308,4 @@ class IOSock : public IOHandle {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_SOCK_HPP_

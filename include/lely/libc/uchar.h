@@ -25,7 +25,7 @@
 #include <lely/features.h>
 
 #ifndef LELY_HAVE_UCHAR_H
-#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) && __has_include(<uchar.h>)
+#if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L)
 #define LELY_HAVE_UCHAR_H 1
 #endif
 #endif
@@ -40,13 +40,13 @@
 // char16_t and char32_t are built-in types in C++11 and later.
 #else
 
-#include <lely/libc/stdint.h>
+#include <stdint.h>
 
 typedef uint_least16_t char16_t;
 typedef uint_least32_t char32_t;
 
 #endif
 
-#endif // LELY_HAVE_UCHAR_H
+#endif // !LELY_HAVE_UCHAR_H
 
 #endif // !LELY_LIBC_UCHAR_H_

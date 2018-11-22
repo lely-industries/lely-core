@@ -25,6 +25,8 @@
 #include <config.h>
 #endif
 
-#include <lely/tap/tap.h>
+#include <lely/features.h>
+
+LELY_INGORE_EMPTY_TRANSLATION_UNIT
 
 #endif // !LELY_TAP_INTERN_TAP_H_

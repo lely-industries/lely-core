@@ -26,8 +26,8 @@
 #error This file requires compiler and library support for the ISO C99 standard.
 #endif
 
-#if defined(__cplusplus) && __cplusplus < 199711L
-#error This file requires compiler and library support for the ISO C++98 standard.
+#if defined(__cplusplus) && __cplusplus < 201103L
+#error This file requires compiler and library support for the ISO C++11 standard.
 #endif
 
 #ifdef _MSC_VER

@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_VAL_HPP
-#define LELY_CO_VAL_HPP
+#ifndef LELY_CO_VAL_HPP_
+#define LELY_CO_VAL_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/val.h> for the C interface"
@@ -48,42 +48,29 @@ class COVal {
 
   COVal() : m_val() {}
 
-#if __cplusplus >= 201103L
   COVal(const COVal&) = default;
   COVal(COVal&&) = default;
   COVal(const type& val) : m_val(val) {}
   COVal(type&& val) : m_val(::std::move(val)) {}
-#else
-  COVal(const COVal& val) : m_val(val.m_val) {}
-  COVal(const type& val) : m_val(val) {}
-#endif
 
   COVal(const void* ptr, ::std::size_t n) {
     if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
 
-#if __cplusplus >= 201103L
   COVal& operator=(const COVal&) = default;
   COVal& operator=(COVal&&) = default;
-#else
-  COVal&
-  operator=(const COVal& val) {
-    m_val = val.m_val;
-    return *this;
-  }
-#endif
+
   COVal&
   operator=(const type& val) {
     m_val = val;
     return *this;
   }
-#if __cplusplus >= 201103L
+
   COVal&
   operator=(type&& val) {
     m_val = ::std::move(val);
     return *this;
   }
-#endif
 
   const void*
   address() const noexcept {
@@ -117,9 +104,8 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
 
   COVal() : m_val() {}
   COVal(const COVal& val) : m_val() { *this = val; }
-#if __cplusplus >= 201103L
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
-#endif
+
   COVal(const void* ptr, ::std::size_t n) {
     if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
   }
@@ -136,14 +122,12 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
     if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
-#endif
 
   COVal&
   operator=(const char* vs) {
@@ -202,9 +186,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
 
   COVal() : m_val() {}
   COVal(const COVal& val) : m_val() { *this = val; }
-#if __cplusplus >= 201103L
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
-#endif
 
   COVal(const void* ptr, ::std::size_t n) {
     if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
@@ -222,14 +204,12 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
     if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
-#endif
 
   COVal&
   operator=(const ::std::vector<uint8_t>& os) {
@@ -281,9 +261,7 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
 
   COVal() : m_val() {}
   COVal(const COVal& val) : m_val() { *this = val; }
-#if __cplusplus >= 201103L
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
-#endif
 
   COVal(const void* ptr, ::std::size_t n) {
     if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
@@ -301,14 +279,12 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
     if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
-#endif
 
   COVal&
   operator=(const char16_t* us) {
@@ -362,9 +338,7 @@ class COVal<CO_DEFTYPE_DOMAIN> {
 
   COVal() : m_val() {}
   COVal(const COVal& val) : m_val() { *this = val; }
-#if __cplusplus >= 201103L
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
-#endif
 
   COVal(const void* dom, ::std::size_t n) {
     if (co_val_init_dom(&m_val, dom, n)) throw_or_abort(bad_init());
@@ -379,14 +353,12 @@ class COVal<CO_DEFTYPE_DOMAIN> {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   COVal&
   operator=(COVal&& val) {
     this->~COVal();
     if (!co_val_move(index, &m_val, &val.m_val)) throw_or_abort(bad_move());
     return *this;
   }
-#endif
 
   const void*
   address() const noexcept {
@@ -404,4 +376,4 @@ class COVal<CO_DEFTYPE_DOMAIN> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_VAL_HPP_

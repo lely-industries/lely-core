@@ -23,6 +23,7 @@
 
 #include "tap.h"
 #include <lely/libc/stdio.h>
+#include <lely/tap/tap.h>
 
 #include <assert.h>
 #include <stdarg.h>
@@ -38,9 +39,9 @@ static int tap_num;
 static void tap_vprintf(const char *format, va_list ap);
 
 void
-__tap_plan_impl(int n, const char *format, ...)
+tap_plan_impl(int n, const char *format, ...)
 {
-	if (__unlikely(tap_num))
+	if (tap_num)
 		return;
 
 #ifdef __MINGW32__
@@ -72,7 +73,7 @@ __tap_plan_impl(int n, const char *format, ...)
 }
 
 int
-__tap_test_impl(int test, const char *expr, const char *file, int line,
+tap_test_impl(int test, const char *expr, const char *file, int line,
 		const char *format, ...)
 {
 	assert(expr);
@@ -96,7 +97,7 @@ __tap_test_impl(int test, const char *expr, const char *file, int line,
 }
 
 void
-__tap_diag_impl(const char *format, ...)
+tap_diag_impl(const char *format, ...)
 {
 	assert(format);
 
@@ -108,7 +109,7 @@ __tap_diag_impl(const char *format, ...)
 }
 
 _Noreturn void
-__tap_abort_impl(const char *format, ...)
+tap_abort_impl(const char *format, ...)
 {
 	assert(format);
 
@@ -132,7 +133,7 @@ tap_vprintf(const char *format, va_list ap)
 
 	char *s = NULL;
 	int n = vasprintf(&s, format, ap);
-	if (__unlikely(n < 0))
+	if (n < 0)
 		return;
 
 	for (char *cp = s; cp < s + n; cp++) {

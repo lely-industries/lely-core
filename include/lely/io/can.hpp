@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_CAN_HPP
-#define LELY_IO_CAN_HPP
+#ifndef LELY_IO_CAN_HPP_
+#define LELY_IO_CAN_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/can.h> for the C interface"
@@ -41,9 +41,7 @@ class IOCAN : public IOHandle {
 
   IOCAN(const IOCAN& can) noexcept : IOHandle(can) {}
 
-#if __cplusplus >= 201103L
   IOCAN(IOCAN&& can) noexcept : IOHandle(::std::forward<IOCAN>(can)) {}
-#endif
 
   IOCAN&
   operator=(const IOCAN& can) noexcept {
@@ -51,13 +49,11 @@ class IOCAN : public IOHandle {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   IOCAN&
   operator=(IOCAN&& can) noexcept {
     IOHandle::operator=(::std::forward<IOCAN>(can));
     return *this;
   }
-#endif
 
   int
   read(can_msg& msg) noexcept {
@@ -116,4 +112,4 @@ class IOCAN : public IOHandle {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_CAN_HPP_

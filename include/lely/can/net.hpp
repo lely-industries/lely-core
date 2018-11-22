@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_NET_HPP
-#define LELY_CAN_NET_HPP
+#ifndef LELY_CAN_NET_HPP_
+#define LELY_CAN_NET_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/can/net.h> for the C interface"
@@ -310,4 +310,4 @@ class CANRecv : public incomplete_c_type<__can_recv> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CAN_NET_HPP_

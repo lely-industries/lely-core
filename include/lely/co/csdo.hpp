@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_CSDO_HPP
-#define LELY_CO_CSDO_HPP
+#ifndef LELY_CO_CSDO_HPP_
+#define LELY_CO_CSDO_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/csdo.h> for the C interface"
@@ -445,13 +445,7 @@ struct COCSDOUpCon<char*> {
 template <>
 struct COCSDOUpCon<::std::string> {
   typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-                       co_unsigned32_t ac,
-#if __cplusplus >= 201103L
-                       ::std::string vs,
-#else
-                       const ::std::string& vs,
-#endif
-                       void* data);
+                       co_unsigned32_t ac, ::std::string vs, void* data);
 
   template <type M>
   static void
@@ -503,12 +497,7 @@ struct COCSDOUpCon<uint8_t*> {
 template <>
 struct COCSDOUpCon<::std::vector<uint8_t>> {
   typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-                       co_unsigned32_t ac,
-#if __cplusplus >= 201103L
-                       ::std::vector<uint8_t> os,
-#else
-                       const ::std::vector<uint8_t>& os,
-#endif
+                       co_unsigned32_t ac, ::std::vector<uint8_t> os,
                        void* data);
 
   template <type M>
@@ -562,12 +551,7 @@ struct COCSDOUpCon<char16_t*> {
 template <>
 struct COCSDOUpCon<::std::basic_string<char16_t>> {
   typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-                       co_unsigned32_t ac,
-#if __cplusplus >= 201103L
-                       ::std::basic_string<char16_t> us,
-#else
-                       const ::std::basic_string<char16_t>& us,
-#endif
+                       co_unsigned32_t ac, ::std::basic_string<char16_t> us,
                        void* data);
 
   template <type M>
@@ -615,4 +599,4 @@ struct COCSDOUpCon<void*> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_CSDO_HPP_

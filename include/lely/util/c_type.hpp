@@ -19,14 +19,12 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_C_TYPE_HPP
-#define LELY_UTIL_C_TYPE_HPP
+#ifndef LELY_UTIL_C_TYPE_HPP_
+#define LELY_UTIL_C_TYPE_HPP_
 
 #include <lely/util/exception.hpp>
 
-#if __cplusplus >= 201103L
 #include <memory>
-#endif
 #include <new>
 #include <utility>
 
@@ -75,11 +73,7 @@ throw_bad_move() {
 /// The deleter for trivial, standard layout and incomplete C types.
 template <class T>
 struct delete_c_type {
-#if __cplusplus >= 201103L
   constexpr delete_c_type() noexcept = default;
-#else
-  delete_c_type() noexcept {};
-#endif
   template <class U>
   delete_c_type(const delete_c_type<U>&) noexcept {}
 
@@ -88,8 +82,6 @@ struct delete_c_type {
     destroy(p);
   }
 };
-
-#if __cplusplus >= 201103L
 
 /**
  * Creates an instance of a trivial, standard layout or incomplete C type and
@@ -118,8 +110,6 @@ inline unique_c_ptr<T>
 make_unique_c(Args&&... args) {
   return unique_c_ptr<T>(new T(::std::forward<Args>(args)...));
 }
-
-#endif
 
 /**
  * A class template supplying a uniform interface to certain attributes of C
@@ -224,90 +214,18 @@ class standard_c_type {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   standard_c_type&
   operator=(standard_c_type&& val) {
     if (!c_type_traits<T>::move(c_ptr(), val.c_ptr())) impl::throw_bad_move();
     return *this;
   }
-#endif
 
  protected:
-#if __cplusplus >= 201103L
   template <class... Args>
   explicit standard_c_type(Args&&... args) {
     if (!c_type_traits<T>::init(c_ptr(), std::forward<Args>(args)...))
       impl::throw_bad_init();
   }
-#else
-  standard_c_type() {
-    if (!c_type_traits<T>::init(c_ptr())) impl::throw_bad_init();
-  }
-
-  template <class U0>
-  explicit standard_c_type(U0 u0) {
-    if (!c_type_traits<T>::init(c_ptr(), u0)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1>
-  standard_c_type(U0 u0, U1 u1) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2>
-  standard_c_type(U0 u0, U1 u1, U2 u2) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7, class U8>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
-                  U8 u8) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7, class U8, class U9>
-  standard_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7, U8 u8,
-                  U9 u9) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8,
-                                u9))
-      impl::throw_bad_init();
-  }
-#endif  // __cplusplus >= 201103L
 
   ~standard_c_type() { c_type_traits<T>::fini(c_ptr()); }
 };
@@ -390,106 +308,25 @@ class incomplete_c_type {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   incomplete_c_type&
   operator=(incomplete_c_type&& val) {
     if (!c_type_traits<T>::move(c_ptr(), val.c_ptr())) impl::throw_bad_move();
     return *this;
   }
-#endif
+
+  static void* operator new[](std::size_t) = delete;
+  static void* operator new[](std::size_t, const ::std::nothrow_t&) = delete;
+  static void operator delete[](void*) = delete;
+  static void operator delete[](void*, const ::std::nothrow_t&) = delete;
 
  protected:
-#if __cplusplus >= 201103L
   template <class... Args>
   explicit incomplete_c_type(Args&&... args) {
     if (!c_type_traits<T>::init(c_ptr(), ::std::forward<Args>(args)...))
       impl::throw_bad_init();
   }
-#else
-  incomplete_c_type() {
-    if (!c_type_traits<T>::init(c_ptr())) impl::throw_bad_init();
-  }
-
-  template <class U0>
-  explicit incomplete_c_type(U0 u0) {
-    if (!c_type_traits<T>::init(c_ptr(), u0)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1>
-  incomplete_c_type(U0 u0, U1 u1) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2)) impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7, class U8>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
-                    U8 u8) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8))
-      impl::throw_bad_init();
-  }
-
-  template <class U0, class U1, class U2, class U3, class U4, class U5,
-            class U6, class U7, class U8, class U9>
-  incomplete_c_type(U0 u0, U1 u1, U2 u2, U3 u3, U4 u4, U5 u5, U6 u6, U7 u7,
-                    U8 u8, U9 u9) {
-    if (!c_type_traits<T>::init(c_ptr(), u0, u1, u2, u3, u4, u5, u6, u7, u8,
-                                u9))
-      impl::throw_bad_init();
-  }
-#endif  // __cplusplus >= 201103L
 
   ~incomplete_c_type() { c_type_traits<T>::fini(c_ptr()); }
-
-#if __cplusplus >= 201103L
- public:
-  static void* operator new[](std::size_t) = delete;
-  static void* operator new[](std::size_t, const ::std::nothrow_t&) = delete;
-  static void operator delete[](void*) = delete;
-  static void operator delete[](void*, const ::std::nothrow_t&) = delete;
-#else
- private:
-  static void* operator new[](std::size_t);
-  static void* operator new[](std::size_t, const ::std::nothrow_t&);
-  static void operator delete[](void*);
-  static void operator delete[](void*, const ::std::nothrow_t&);
-#endif
 };
 
 template <class T>
@@ -543,11 +380,7 @@ struct c_type_traits {
 
   static pointer
   move(pointer p1, pointer p2) noexcept {
-#if __cplusplus >= 201103L
     *p1 = ::std::move(*p2);
-#else
-    *p1 = *p2;
-#endif
     return p1;
   }
 };
@@ -603,4 +436,4 @@ struct c_type_traits<void> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_UTIL_C_TYPE_HPP_

@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_DCF_HPP
-#define LELY_CO_DCF_HPP
+#ifndef LELY_CO_DCF_HPP_
+#define LELY_CO_DCF_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/dcf.h> for the C interface"
@@ -45,4 +45,4 @@ c_type_traits<__co_dev>::init(pointer p, const char* begin, const char* end,
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_DCF_HPP_

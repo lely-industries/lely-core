@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_EMCY_HPP
-#define LELY_CO_EMCY_HPP
+#ifndef LELY_CO_EMCY_HPP_
+#define LELY_CO_EMCY_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/emcy.h> for the C interface"
@@ -127,4 +127,4 @@ class COEmcy : public incomplete_c_type<__co_emcy> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_EMCY_HPP_

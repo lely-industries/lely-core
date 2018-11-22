@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_IO_HPP
-#define LELY_IO_IO_HPP
+#ifndef LELY_IO_IO_HPP_
+#define LELY_IO_IO_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/io.h> for the C interface"
@@ -41,11 +41,9 @@ class IOHandle {
   IOHandle(const IOHandle& handle) noexcept
       : m_handle(io_handle_acquire(handle.m_handle)) {}
 
-#if __cplusplus >= 201103L
   IOHandle(IOHandle&& handle) noexcept : m_handle(handle.m_handle) {
     handle.m_handle = IO_HANDLE_ERROR;
   }
-#endif
 
   virtual ~IOHandle() { io_handle_release(m_handle); }
 
@@ -59,7 +57,6 @@ class IOHandle {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   IOHandle&
   operator=(IOHandle&& handle) noexcept {
     io_handle_release(m_handle);
@@ -67,7 +64,6 @@ class IOHandle {
     handle.m_handle = IO_HANDLE_ERROR;
     return *this;
   }
-#endif
 
   operator bool() const noexcept { return m_handle != IO_HANDLE_ERROR; }
 
@@ -132,4 +128,4 @@ class IOHandle {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_IO_HPP_

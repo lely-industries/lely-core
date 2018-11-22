@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_RPDO_HPP
-#define LELY_CO_RPDO_HPP
+#ifndef LELY_CO_RPDO_HPP_
+#define LELY_CO_RPDO_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/rpdo.h> for the C interface"
@@ -155,4 +155,4 @@ class CORPDO : public incomplete_c_type<__co_rpdo> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_RPDO_HPP_

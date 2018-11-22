@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_GW_HPP
-#define LELY_CO_GW_HPP
+#ifndef LELY_CO_GW_HPP_
+#define LELY_CO_GW_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/gw.h> for the C interface"
@@ -142,4 +142,4 @@ class COGW : public incomplete_c_type<__co_gw> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_GW_HPP_

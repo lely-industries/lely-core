@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_FILE_HPP
-#define LELY_IO_FILE_HPP
+#ifndef LELY_IO_FILE_HPP_
+#define LELY_IO_FILE_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/file.h> for the C interface"
@@ -40,9 +40,7 @@ class IOFile : public IOHandle {
 
   IOFile(const IOFile& file) noexcept : IOHandle(file) {}
 
-#if __cplusplus >= 201103L
   IOFile(IOFile&& file) noexcept : IOHandle(::std::forward<IOFile>(file)) {}
-#endif
 
   IOFile&
   operator=(const IOFile& file) noexcept {
@@ -50,13 +48,11 @@ class IOFile : public IOHandle {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   IOFile&
   operator=(IOFile&& file) noexcept {
     IOHandle::operator=(::std::forward<IOFile>(file));
     return *this;
   }
-#endif
 
   io_off_t
   seek(io_off_t offset, int whence) noexcept {
@@ -76,4 +72,4 @@ class IOFile : public IOHandle {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_FILE_HPP_

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_RAND_HPP
-#define LELY_UTIL_RAND_HPP
+#ifndef LELY_UTIL_RAND_HPP_
+#define LELY_UTIL_RAND_HPP_
 
 #include <lely/util/c_type.hpp>
 #include <lely/util/rand.h>
@@ -28,9 +28,7 @@
 #include <istream>
 #include <limits>
 #include <ostream>
-#if __cplusplus >= 201103L
 #include <type_traits>
-#endif
 
 namespace lely {
 
@@ -53,46 +51,31 @@ class Rand : public standard_c_type<typename impl::rand_traits<T>::c_type>,
  public:
   typedef T result_type;
 
-#if __cplusplus >= 201103L
   static constexpr result_type
-#else
-  static result_type
-#endif
   min() {
     return ::std::numeric_limits<result_type>::min();
   }
 
-#if __cplusplus >= 201103L
   static constexpr result_type
-#else
-  static result_type
-#endif
   max() {
     return ::std::numeric_limits<result_type>::max();
   }
 
-#if __cplusplus >= 201103L
   static constexpr result_type default_seed = 0;
-#else
-  static const result_type default_seed = 0;
-#endif
 
   explicit Rand(result_type s = default_seed) { seed(s); }
 
-#if __cplusplus >= 201103L
   template <class Sseq, class = typename ::std::enable_if<
                             !::std::is_same<Sseq, Rand>::value>::type>
   explicit Rand(Sseq& q) {
     seed(q);
   }
-#endif
 
   void
   seed(result_type s = default_seed) {
     impl::rand_traits<T>::seed(c_base::c_ptr(), s);
   }
 
-#if __cplusplus >= 201103L
   template <class Sseq>
   typename ::std::enable_if<::std::is_class<Sseq>::value>::type
   seed(Sseq& q) {
@@ -104,7 +87,6 @@ class Rand : public standard_c_type<typename impl::rand_traits<T>::c_type>,
 
     impl::rand_traits<T>::seed(c_base::c_ptr(), s);
   }
-#endif
 
   result_type
   operator()() {
@@ -112,12 +94,7 @@ class Rand : public standard_c_type<typename impl::rand_traits<T>::c_type>,
   }
 
   void
-#if __cplusplus >= 201103L
-  discard(unsigned long long z)
-#else
-  discard(uint64_t z)
-#endif
-  {
+  discard(unsigned long long z) {
     impl::rand_traits<T>::discard(c_base::c_ptr(), z);
   }
 
@@ -347,4 +324,4 @@ typedef Rand<uint64_t> Rand64;
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_UTIL_RAND_HPP_

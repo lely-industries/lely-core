@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_DEV_HPP
-#define LELY_CO_DEV_HPP
+#ifndef LELY_CO_DEV_HPP_
+#define LELY_CO_DEV_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/dev.h> for the C interface"
@@ -314,4 +314,4 @@ class CODev : public incomplete_c_type<__co_dev> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_DEV_HPP_

@@ -227,10 +227,8 @@ size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 
 LELY_UTIL_DEFINE_PRINT(long, long, l)
 LELY_UTIL_DEFINE_PRINT(unsigned long, ulong, ul)
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 LELY_UTIL_DEFINE_PRINT(long long, llong, ll)
 LELY_UTIL_DEFINE_PRINT(unsigned long long, ullong, ul)
-#endif
 LELY_UTIL_DEFINE_PRINT(float, flt, f)
 LELY_UTIL_DEFINE_PRINT(double, dbl, d)
 LELY_UTIL_DEFINE_PRINT(long double, ldbl, ld)

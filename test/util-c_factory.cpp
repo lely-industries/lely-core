@@ -1,9 +1,6 @@
 #include <lely/tap/tap.h>
 #include <lely/util/c_factory.hpp>
 
-#undef tap_test
-#define tap_test(expr) __tap_test_impl(!!(expr), #expr, __FILE__, __LINE__, "")
-
 class Base {
  public:
   virtual ~Base(){};

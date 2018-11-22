@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_BUF_HPP
-#define LELY_CAN_BUF_HPP
+#ifndef LELY_CAN_BUF_HPP_
+#define LELY_CAN_BUF_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/can/buf.h> for the C interface"
@@ -57,6 +57,8 @@ class CANBuf : public standard_c_type<can_buf> {
 
  public:
   explicit CANBuf(::std::size_t size = 0) : c_base(size) {}
+
+  CANBuf& operator=(const CANBuf&) = delete;
 
   void
   clear() noexcept {
@@ -108,14 +110,6 @@ class CANBuf : public standard_c_type<can_buf> {
     return !!write(&msg, 1);
   }
 
-#if __cplusplus >= 201103L
- public:
-  CANBuf& operator=(const CANBuf&) = delete;
-#else
- private:
-  CANBuf& operator=(const CANBuf&);
-#endif
-
  private:
   can_msg* m_ptr;
   ::std::size_t m_size;
@@ -133,4 +127,4 @@ class CANBuf : public standard_c_type<can_buf> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CAN_BUF_HPP_

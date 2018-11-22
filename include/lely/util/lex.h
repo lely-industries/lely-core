@@ -259,10 +259,8 @@ size_t lex_c99_pp_num(const char *begin, const char *end, struct floc *at);
 
 LELY_UTIL_DEFINE_LEX_SIGNED(long, long, strtol, pl)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long, ulong, strtoul, pul)
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 LELY_UTIL_DEFINE_LEX_SIGNED(long long, llong, strtoll, pll)
 LELY_UTIL_DEFINE_LEX_UNSIGNED(unsigned long long, ullong, strtoull, pul)
-#endif
 LELY_UTIL_DEFINE_LEX_SIGNED(float, flt, strtof, pf)
 LELY_UTIL_DEFINE_LEX_SIGNED(double, dbl, strtod, pd)
 LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)

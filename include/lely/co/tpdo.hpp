@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TPDO_HPP
-#define LELY_CO_TPDO_HPP
+#ifndef LELY_CO_TPDO_HPP_
+#define LELY_CO_TPDO_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/tpdo.h> for the C interface"
@@ -137,4 +137,4 @@ class COTPDO : public incomplete_c_type<__co_tpdo> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_TPDO_HPP_

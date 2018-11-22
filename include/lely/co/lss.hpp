@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_LSS_HPP
-#define LELY_CO_LSS_HPP
+#ifndef LELY_CO_LSS_HPP_
+#define LELY_CO_LSS_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/lss.h> for the C interface"
@@ -413,4 +413,4 @@ class COLSS : public incomplete_c_type<__co_lss> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_LSS_HPP_

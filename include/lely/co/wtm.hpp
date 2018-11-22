@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_WTM_HPP
-#define LELY_CO_WTM_HPP
+#ifndef LELY_CO_WTM_HPP_
+#define LELY_CO_WTM_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/wtm.h> for the C interface"
@@ -326,4 +326,4 @@ class COWTM : public incomplete_c_type<__co_wtm> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_WTM_HPP_

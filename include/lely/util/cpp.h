@@ -24,8 +24,6 @@
 
 #include <lely/util/util.h>
 
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
-
 /**
  * Repeats all but the first argument <b>n</b> times. <b>n</b> can be at most
  * #CPP_MAX_SIZE.
@@ -563,7 +561,5 @@
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
 #endif // __cplusplus >= 201103L
 // clang-format on
-
-#endif // __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 
 #endif // !LELY_UTIL_CPP_H_

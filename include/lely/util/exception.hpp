@@ -19,30 +19,13 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_EXCEPTION_HPP
-#define LELY_UTIL_EXCEPTION_HPP
+#ifndef LELY_UTIL_EXCEPTION_HPP_
+#define LELY_UTIL_EXCEPTION_HPP_
 
 #include <lely/util/errnum.h>
 
 #include <stdexcept>
-#if __cplusplus >= 201103L
 #include <system_error>
-#endif
-
-#if !defined(noexcept) && \
-    !(__cplusplus >= 201103L && \
-      (GNUC_PREREQ(4, 6) || __has_feature(cxx_noexcept))) && \
-    !(_MSC_VER >= 1900)
-#define noexcept
-#endif
-
-#ifndef nothrow_or_noexcept
-#if __cplusplus >= 201103L
-#define nothrow_or_noexcept noexcept
-#else
-#define nothrow_or_noexcept throw()
-#endif
-#endif
 
 #ifndef throw_or_abort
 /**
@@ -68,21 +51,10 @@ namespace lely {
  * The type of objects thrown as exceptions to report a system error with an
  * associated error code.
  */
-#if __cplusplus >= 201103L
 class error : public ::std::system_error {
-#else
-class error : public ::std::runtime_error {
-#endif
  public:
   error(errc_t errc = get_errc())
-#if __cplusplus >= 201103L
-      : ::std::system_error(errc, ::std::system_category())
-#else
-      : ::std::runtime_error(errc2str(errc))
-#endif
-        ,
-        m_errc(errc) {
-  }
+      : ::std::system_error(errc, ::std::system_category()), m_errc(errc) {}
 
   errc_t
   errc() const noexcept {
@@ -99,4 +71,4 @@ class error : public ::std::runtime_error {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_UTIL_EXCEPTION_HPP_

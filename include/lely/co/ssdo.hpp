@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SSDO_HPP
-#define LELY_CO_SSDO_HPP
+#ifndef LELY_CO_SSDO_HPP_
+#define LELY_CO_SSDO_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/ssdo.h> for the C interface"
@@ -102,4 +102,4 @@ class COSSDO : public incomplete_c_type<__co_ssdo> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_SSDO_HPP_

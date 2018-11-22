@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_TIME_HPP
-#define LELY_CO_TIME_HPP
+#ifndef LELY_CO_TIME_HPP_
+#define LELY_CO_TIME_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/time.h> for the C interface"
@@ -116,4 +116,4 @@ class COTime : public incomplete_c_type<__co_time> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_TIME_HPP_

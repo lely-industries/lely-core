@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_SERIAL_HPP
-#define LELY_IO_SERIAL_HPP
+#ifndef LELY_IO_SERIAL_HPP_
+#define LELY_IO_SERIAL_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/serial.h> for the C interface"
@@ -41,10 +41,8 @@ class IOSerial : public IOHandle {
 
   IOSerial(const IOSerial& serial) noexcept : IOHandle(serial) {}
 
-#if __cplusplus >= 201103L
   IOSerial(IOSerial&& serial) noexcept
       : IOHandle(::std::forward<IOSerial>(serial)) {}
-#endif
 
   IOSerial&
   operator=(const IOSerial& serial) noexcept {
@@ -52,13 +50,11 @@ class IOSerial : public IOHandle {
     return *this;
   }
 
-#if __cplusplus >= 201103L
   IOSerial&
   operator=(IOSerial&& serial) noexcept {
     IOHandle::operator=(::std::forward<IOSerial>(serial));
     return *this;
   }
-#endif
 
   int
   purge(int flags) noexcept {
@@ -78,4 +74,4 @@ class IOSerial : public IOHandle {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_SERIAL_HPP_

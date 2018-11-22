@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_SDEV_HPP
-#define LELY_CO_SDEV_HPP
+#ifndef LELY_CO_SDEV_HPP_
+#define LELY_CO_SDEV_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/sdev.h> for the C interface"
@@ -39,4 +39,4 @@ c_type_traits<__co_dev>::init(pointer p, const co_sdev* sdev) noexcept {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_SDEV_HPP_

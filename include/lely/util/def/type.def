@@ -14,10 +14,8 @@ LELY_UTIL_DEFINE_TYPE(int, int)
 LELY_UTIL_DEFINE_TYPE(uint, unsigned int)
 LELY_UTIL_DEFINE_TYPE(long, long)
 LELY_UTIL_DEFINE_TYPE(ulong, unsigned long)
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 201103L
 LELY_UTIL_DEFINE_TYPE(llong, long long)
 LELY_UTIL_DEFINE_TYPE(ullong, unsigned long long)
-#endif
 // Floating-point numbers:
 LELY_UTIL_DEFINE_TYPE(flt, float)
 LELY_UTIL_DEFINE_TYPE(dbl, double)

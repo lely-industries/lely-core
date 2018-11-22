@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_GW_TXT_HPP
-#define LELY_CO_GW_TXT_HPP
+#ifndef LELY_CO_GW_TXT_HPP_
+#define LELY_CO_GW_TXT_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/gw_txt.h> for the C interface"
@@ -148,4 +148,4 @@ class COGWTxt : public incomplete_c_type<__co_gw_txt> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_GW_TXT_HPP_

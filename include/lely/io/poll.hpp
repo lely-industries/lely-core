@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO_POLL_HPP
-#define LELY_IO_POLL_HPP
+#ifndef LELY_IO_POLL_HPP_
+#define LELY_IO_POLL_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/io/poll.h> for the C interface"
@@ -95,4 +95,4 @@ class IOPoll : public incomplete_c_type<__io_poll> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_IO_POLL_HPP_

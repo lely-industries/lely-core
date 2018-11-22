@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_NMT_HPP
-#define LELY_CO_NMT_HPP
+#ifndef LELY_CO_NMT_HPP_
+#define LELY_CO_NMT_HPP_
 
 #ifndef __cplusplus
 #error "include <lely/co/nmt.h> for the C interface"
@@ -513,4 +513,4 @@ class CONMT : public incomplete_c_type<__co_nmt> {
 
 }  // namespace lely
 
-#endif
+#endif  // !LELY_CO_NMT_HPP_
