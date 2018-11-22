@@ -96,7 +96,7 @@ CANMSG2can_msg(const void *src, struct can_msg *dst)
 	assert(msg);
 	assert(dst);
 
-	if (__unlikely(msg->uMsgInfo.Bits.type != CAN_MSGTYPE_DATA)) {
+	if (msg->uMsgInfo.Bits.type != CAN_MSGTYPE_DATA) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -126,7 +126,7 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	assert(msg);
 
 #ifndef LELY_NO_CANFD
-	if (__unlikely(src->flags & CAN_FLAG_EDL)) {
+	if (src->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}

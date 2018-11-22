@@ -295,7 +295,7 @@ class CANRecv : public incomplete_c_type<__can_recv> {
   }
 
   void
-  start(CANNet& net, uint32_t id, uint8_t flags = 0) noexcept {
+  start(CANNet& net, uint_least32_t id, uint_least8_t flags = 0) noexcept {
     can_recv_start(this, &net, id, flags);
   }
 

@@ -46,7 +46,7 @@
  */
 #define CAN_FLAG_RTR 0x02
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 
 /**
  * The Extended Data Length (EDL) flag. This flag is set for CAN FD format
@@ -78,7 +78,7 @@
 #endif
 
 /// The maximum number of bytes in the payload of a #can_msg struct.
-#ifdef LELY_NO_CANFD
+#if LELY_NO_CANFD
 #define CAN_MSG_MAX_LEN CAN_MAX_LEN
 #else
 #define CAN_MSG_MAX_LEN CANFD_MAX_LEN
@@ -87,24 +87,24 @@
 /// A CAN or CAN FD format frame.
 struct can_msg {
 	/// The identifier (11 or 29 bits, depending on the #CAN_FLAG_IDE flag).
-	uint32_t id;
+	uint_least32_t id;
 	/**
 	 * The flags (any combination of #CAN_FLAG_IDE, #CAN_FLAG_RTR,
 	 * #CAN_FLAG_EDL, #CAN_FLAG_BRS and #CAN_FLAG_ESI).
 	 */
-	uint8_t flags;
+	uint_least8_t flags;
 	/**
 	 * The number of bytes in #data (or the requested number of bytes in
 	 * case of a remote frame). The maximum value is 8 for CAN format frames
 	 * and 64 for CAN FD format frames.
 	 */
-	uint8_t len;
+	uint_least8_t len;
 	/// The frame payload (in case of a data frame).
-	uint8_t data[CAN_MSG_MAX_LEN];
+	uint_least8_t data[CAN_MSG_MAX_LEN];
 };
 
-/// The static initializer for a #can_msg struct.
-#ifdef LELY_NO_CANFD
+/// The static initializer for #can_msg.
+#if LELY_NO_CANFD
 #define CAN_MSG_INIT \
 	{ \
 		0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 } \
@@ -146,8 +146,8 @@ extern "C" {
  *             #CAN_MSG_BITS_MODE_NO_STUFF, #CAN_MSG_BITS_MODE_WORST or
  *             #CAN_MSG_BITS_MODE_EXACT).
  *
- * Returns the number of bits on success, or -1 on error. In the latter case,
- * the error number can be obtained with `get_errc()`.
+ * @returns the number of bits on success, or -1 on error. In the latter case,
+ * the error number can be obtained with get_errc().
  */
 int can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
 

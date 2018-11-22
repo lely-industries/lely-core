@@ -23,13 +23,12 @@
 
 #include "can.h"
 #include <lely/can/msg.h>
-#include <lely/libc/stdio.h>
 #include <lely/util/bits.h>
-#include <lely/util/endian.h>
 #include <lely/util/errnum.h>
 #include <lely/util/util.h>
 
 #include <assert.h>
+#include <stdio.h>
 // Include inttypes.h after stdio.h to enforce declarations of format specifiers
 // in Newlib.
 #include <inttypes.h>
@@ -48,27 +47,30 @@
  *
  * @returns the updated CRC.
  */
-static uint16_t can_crc(uint16_t crc, const void *ptr, int off, size_t bits);
+static uint_least16_t can_crc(
+		uint_least16_t crc, const void *ptr, int off, size_t bits);
 
 /// Computes a bitwise CRC-15-CAN checksum of a single byte. @see can_crc()
-static uint16_t can_crc_bits(uint16_t crc, uint8_t byte, int off, int bits);
+static uint_least16_t can_crc_bits(
+		uint_least16_t crc, uint_least8_t byte, int off, int bits);
 
 /// Computes a CRC-15-CAN checksum. @see can_crc()
-static uint16_t can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n);
+static uint_least16_t can_crc_bytes(
+		uint_least16_t crc, const unsigned char *bp, size_t n);
 
 int
 can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 {
 	assert(msg);
 
-#ifndef LELY_NO_CANFD
-	if (__unlikely(msg->flags & CAN_FLAG_EDL)) {
+#if !LELY_NO_CANFD
+	if (msg->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 #endif
 
-	if (__unlikely(msg->len > CAN_MAX_LEN)) {
+	if (msg->len > CAN_MAX_LEN) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -90,8 +92,8 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
-	uint8_t data[16] = { 0 };
-	uint8_t *bp = data;
+	uint_least8_t data[16] = { 0 };
+	uint_least8_t *bp = data;
 	int off = 0;
 	int bits = 0;
 
@@ -103,7 +105,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		// data[4-7]   |ER10DLC4 00000000 11111111 22222222|
 		// data[8-11]  |33333333 44444444 55555555 66666666|
 		// data[12-14] |77777777 CCCCCCCC CCCCCCC. ........|
-		uint32_t id = msg->id & CAN_MASK_EID;
+		uint_least32_t id = msg->id & CAN_MASK_EID;
 		off = 1;
 		*bp++ = (id >> 23) & 0x3f; // SOF = 0, base (Indentifier)
 		bits += 8 - off;
@@ -130,7 +132,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		// data[4-7]   |11111111 22222222 33333333 44444444|
 		// data[8-11]  |55555555 66666666 77777777 CCCCCCCC|
 		// data[12-14] |CCCCCCC. ........ ........ ........|
-		uint32_t id = msg->id & CAN_MASK_BID;
+		uint_least32_t id = msg->id & CAN_MASK_BID;
 		off = 5;
 		*bp++ = (id >> 9) & 0x03; // SOF = 0, base (Indentifier)
 		bits += 8 - off;
@@ -145,28 +147,28 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	}
 
 	if (!(msg->flags & CAN_FLAG_RTR) && msg->len) {
-		memcpy(bp, msg->data, msg->len);
-		bp += msg->len;
-		bits += msg->len * 8;
+		for (uint_least8_t i = 0; i < msg->len; i++, bits += 8)
+			*bp++ = msg->data[i] & 0xff;
 	}
 
-	// Compute and append the CRC.
-	uint16_t crc = can_crc(0, data, off, bits);
+	uint_least16_t crc = can_crc(0, data, off, bits);
 	assert(!((off + bits) % 8));
-	stbe_u16(bp, crc << 1);
-	bp += 2;
+	*bp++ = (crc >> 7) & 0xff;
+	*bp++ = (crc << 1) & 0xff;
 	bits += 15;
 
 	// Count the stuffed bits.
 	int stuff = 0;
-	uint8_t mask = 0x1f;
-	uint8_t same = mask;
+	uint_least8_t mask = 0x1f;
+	uint_least8_t same = mask;
 	for (int i = off; i < off + bits;) {
 		// Alternate between looking for a series of zeros and ones.
 		same = same ? 0 : mask;
 		// Extract 5 bits at i at look for a bit flip.
-		uint8_t five = (((uint16_t)data[i / 8] << 8) | data[i / 8 + 1])
-				>> (16 - 5 - i % 8);
+		// clang-format off
+		uint_least8_t five = (((uint_least16_t)data[i / 8] << 8)
+				| data[i / 8 + 1]) >> (16 - 5 - i % 8);
+		// clang-format on
 		int n = clz8((five & mask) ^ same) - 3;
 		i += n;
 		if (n < 5) {
@@ -198,11 +200,11 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	if (!s)
 		n = 0;
 
-	if (__unlikely(!msg))
+	if (!msg)
 		return 0;
 
-	uint8_t len = msg->len;
-#ifndef LELY_NO_CANFD
+	uint_least8_t len = msg->len;
+#if !LELY_NO_CANFD
 	if (msg->flags & CAN_FLAG_EDL)
 		len = MIN(len, CANFD_MAX_LEN);
 	else
@@ -215,15 +217,20 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 		r = snprintf(s, n, "%08" PRIX32, msg->id & CAN_MASK_EID);
 	else
 		r = snprintf(s, n, "%03" PRIX32, msg->id & CAN_MASK_BID);
-	if (__unlikely(r < 0))
+	if (r < 0)
 		return r;
 	t += r;
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, "   [%d] ", len);
-	if (__unlikely(r < 0))
+#if !LELY_NO_CANFD
+	if (msg->flags & CAN_FLAG_EDL)
+		r = snprintf(s, n, "  [%02d] ", len);
+	else
+#endif
+		r = snprintf(s, n, "   [%d] ", len);
+	if (r < 0)
 		return r;
 	t += r;
 	r = MIN((size_t)r, n);
@@ -232,13 +239,13 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 
 	if (msg->flags & CAN_FLAG_RTR) {
 		r = snprintf(s, n, " remote request");
-		if (__unlikely(r < 0))
+		if (r < 0)
 			return r;
 		t += r;
 	} else {
-		for (uint8_t i = 0; i < len; i++) {
+		for (uint_least8_t i = 0; i < len; i++) {
 			int r = snprintf(s, n, " %02X", msg->data[i]);
-			if (__unlikely(r < 0))
+			if (r < 0)
 				return r;
 			t += r;
 			r = MIN((size_t)r, n);
@@ -254,15 +261,15 @@ int
 asprintf_can_msg(char **ps, const struct can_msg *msg)
 {
 	int n = snprintf_can_msg(NULL, 0, msg);
-	if (__unlikely(n < 0))
+	if (n < 0)
 		return n;
 
 	char *s = malloc(n + 1);
-	if (__unlikely(!s))
+	if (!s)
 		return -1;
 
 	n = snprintf_can_msg(s, n + 1, msg);
-	if (__unlikely(n < 0)) {
+	if (n < 0) {
 		int errsv = errno;
 		free(s);
 		errno = errsv;
@@ -273,12 +280,12 @@ asprintf_can_msg(char **ps, const struct can_msg *msg)
 	return n;
 }
 
-static uint16_t
-can_crc(uint16_t crc, const void *ptr, int off, size_t bits)
+static uint_least16_t
+can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 {
 	assert(ptr || !bits);
 
-	const uint8_t *bp = ptr;
+	const uint_least8_t *bp = ptr;
 	bp += off / 8;
 	off %= 8;
 	if (off < 0) {
@@ -303,8 +310,8 @@ can_crc(uint16_t crc, const void *ptr, int off, size_t bits)
 	return crc;
 }
 
-static uint16_t
-can_crc_bits(uint16_t crc, uint8_t byte, int off, int bits)
+static uint_least16_t
+can_crc_bits(uint_least16_t crc, uint_least8_t byte, int off, int bits)
 {
 	assert(off >= 0);
 	assert(bits >= 0);
@@ -319,17 +326,17 @@ can_crc_bits(uint16_t crc, uint8_t byte, int off, int bits)
 	return crc & 0x7fff;
 }
 
-static uint16_t
-can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n)
+static uint_least16_t
+can_crc_bytes(uint_least16_t crc, const unsigned char *bp, size_t n)
 {
 	assert(bp || !n);
 
 	// This table contains precomputed CRC-15-CAN checksums for each of the
 	// 256 bytes. The table was computed with the following code:
 	/*
-	uint16_t tab[256];
+	uint_least16_t tab[256];
 	for (int n = 0; n < 256; n++) {
-		uint16_t crc = n << 7;
+		uint_least16_t crc = n << 7;
 		for (int k = 0; k < 8; k++) {
 			if (crc & 0x4000)
 				crc = (crc << 1) ^ 0x4599;
@@ -340,7 +347,7 @@ can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n)
 	}
 	*/
 	// clang-format off
-	static const uint16_t tab[] = {
+	static const uint_least16_t tab[] = {
 		0x0000, 0x4599, 0x4eab, 0x0b32, 0x58cf, 0x1d56, 0x1664, 0x53fd,
 		0x7407, 0x319e, 0x3aac, 0x7f35, 0x2cc8, 0x6951, 0x6263, 0x27fa,
 		0x2d97, 0x680e, 0x633c, 0x26a5, 0x7558, 0x30c1, 0x3bf3, 0x7e6a,
@@ -377,6 +384,6 @@ can_crc_bytes(uint16_t crc, const uint8_t *bp, size_t n)
 	// clang-format on
 
 	while (n--)
-		crc = (tab[*bp++ ^ (crc >> 7)] ^ (crc << 8)) & 0x7fff;
+		crc = (tab[(*bp++ ^ (crc >> 7)) & 0xff] ^ (crc << 8)) & 0x7fff;
 	return crc;
 }

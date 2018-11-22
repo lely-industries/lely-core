@@ -83,13 +83,14 @@ struct __can_timer {
  * is a combination of the CAN identifier and the flags.
  */
 #ifdef LELY_NO_CANFD
-typedef uint32_t can_recv_key_t;
+typedef uint_least32_t can_recv_key_t;
 #else
-typedef uint64_t can_recv_key_t;
+typedef uint_least64_t can_recv_key_t;
 #endif
 
 /// Computes a CAN receiver key from a CAN identifier and flags.
-static inline can_recv_key_t can_recv_key(uint32_t id, uint8_t flags);
+static inline can_recv_key_t can_recv_key(
+		uint_least32_t id, uint_least8_t flags);
 
 /// The function used to compare to CAN receiver keys.
 static int can_recv_key_cmp(const void *p1, const void *p2);
@@ -117,7 +118,7 @@ void *
 __can_net_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_net));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -171,12 +172,12 @@ can_net_create(void)
 	int errc = 0;
 
 	can_net_t *net = __can_net_alloc();
-	if (__unlikely(!net)) {
+	if (!net) {
 		errc = get_errc();
 		goto error_alloc_net;
 	}
 
-	if (__unlikely(!__can_net_init(net))) {
+	if (!__can_net_init(net)) {
 		errc = get_errc();
 		goto error_init_net;
 	}
@@ -309,7 +310,7 @@ can_net_send(can_net_t *net, const struct can_msg *msg)
 	assert(net);
 	assert(msg);
 
-	if (__unlikely(!net->send_func)) {
+	if (!net->send_func) {
 		set_errnum(ERRNUM_NOSYS);
 		return -1;
 	}
@@ -342,7 +343,7 @@ void *
 __can_timer_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_timer));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -383,12 +384,12 @@ can_timer_create(void)
 	int errc = 0;
 
 	can_timer_t *timer = __can_timer_alloc();
-	if (__unlikely(!timer)) {
+	if (!timer) {
 		errc = get_errc();
 		goto error_alloc_timer;
 	}
 
-	if (__unlikely(!__can_timer_init(timer))) {
+	if (!__can_timer_init(timer)) {
 		errc = get_errc();
 		goto error_init_timer;
 	}
@@ -497,7 +498,7 @@ void *
 __can_recv_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_recv));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -538,12 +539,12 @@ can_recv_create(void)
 	int errc = 0;
 
 	can_recv_t *recv = __can_recv_alloc();
-	if (__unlikely(!recv)) {
+	if (!recv) {
 		errc = get_errc();
 		goto error_alloc_recv;
 	}
 
-	if (__unlikely(!__can_recv_init(recv))) {
+	if (!__can_recv_init(recv)) {
 		errc = get_errc();
 		goto error_init_recv;
 	}
@@ -587,7 +588,8 @@ can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data)
 }
 
 void
-can_recv_start(can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags)
+can_recv_start(can_recv_t *recv, can_net_t *net, uint_least32_t id,
+		uint_least8_t flags)
 {
 	assert(recv);
 	assert(net);
@@ -647,7 +649,7 @@ can_net_set_next(can_net_t *net)
 }
 
 static inline can_recv_key_t
-can_recv_key(uint32_t id, uint8_t flags)
+can_recv_key(uint_least32_t id, uint_least8_t flags)
 {
 	id &= (flags & CAN_FLAG_IDE) ? CAN_MASK_EID : CAN_MASK_BID;
 	return (can_recv_key_t)id | ((can_recv_key_t)flags << 29);

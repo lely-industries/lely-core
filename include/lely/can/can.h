@@ -23,7 +23,7 @@
 
 #include <lely/features.h>
 
-/// The states of a CAN node, dependening on the TX/RX error count.
+/// The states of a CAN node, depending on the TX/RX error count.
 enum can_state {
 	/// The error active state (TX/RX error count < 128).
 	CAN_STATE_ACTIVE,

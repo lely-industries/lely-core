@@ -326,8 +326,8 @@ void can_recv_set_func(can_recv_t *recv, can_recv_func_t *func, void *data);
  *
  * @see can_recv_stop()
  */
-void can_recv_start(
-		can_recv_t *recv, can_net_t *net, uint32_t id, uint8_t flags);
+void can_recv_start(can_recv_t *recv, can_net_t *net, uint_least32_t id,
+		uint_least8_t flags);
 
 /**
  * Stops a CAN frame receiver from processing frames and unregisters it with the

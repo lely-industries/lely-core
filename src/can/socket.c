@@ -52,7 +52,7 @@ can_frame_is_error(const struct can_frame *frame, enum can_state *pstate,
 	enum can_error error = perror ? *perror : 0;
 
 #ifdef HAVE_LINUX_CAN_ERROR_H
-	if (__unlikely(frame->can_dlc != CAN_ERR_DLC)) {
+	if (frame->can_dlc != CAN_ERR_DLC) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -118,7 +118,7 @@ can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
 	assert(src);
 	assert(dst);
 
-	if (__unlikely(src->can_id & CAN_ERR_FLAG)) {
+	if (src->can_id & CAN_ERR_FLAG) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -147,7 +147,7 @@ can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 	assert(dst);
 
 #ifndef LELY_NO_CANFD
-	if (__unlikely(src->flags & CAN_FLAG_EDL)) {
+	if (src->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -178,7 +178,7 @@ canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst)
 	assert(src);
 	assert(dst);
 
-	if (__unlikely(src->can_id & CAN_ERR_FLAG)) {
+	if (src->can_id & CAN_ERR_FLAG) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -207,7 +207,7 @@ can_msg2canfd_frame(const struct can_msg *src, struct canfd_frame *dst)
 	assert(src);
 	assert(dst);
 
-	if (__unlikely(!(src->flags & CAN_FLAG_EDL))) {
+	if (!(src->flags & CAN_FLAG_EDL)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}

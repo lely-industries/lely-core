@@ -47,7 +47,7 @@ can_buf_init(struct can_buf *buf, size_t size)
 	buf->size--;
 
 	buf->ptr = malloc((buf->size + 1) * sizeof(struct can_msg));
-	if (__unlikely(!buf->ptr)) {
+	if (!buf->ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -77,12 +77,12 @@ can_buf_create(size_t size)
 	int errc = 0;
 
 	struct can_buf *buf = malloc(sizeof(*buf));
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		errc = errno2c(errno);
 		goto error_alloc_buf;
 	}
 
-	if (__unlikely(can_buf_init(buf, size) == -1)) {
+	if (can_buf_init(buf, size) == -1) {
 		errc = get_errc();
 		goto error_init_buf;
 	}
@@ -99,7 +99,7 @@ error_alloc_buf:
 void
 can_buf_destroy(struct can_buf *buf)
 {
-	if (__unlikely(!buf))
+	if (!buf)
 		return;
 
 	can_buf_fini(buf);
@@ -133,7 +133,7 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 	// Reallocate the existing buffer.
 	struct can_msg *ptr =
 			realloc(buf->ptr, (size + 1) * sizeof(struct can_msg));
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return 0;
 	}
