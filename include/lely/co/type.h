@@ -23,8 +23,9 @@
 #define LELY_CO_TYPE_H_
 
 #include <lely/co/co.h>
-#include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
+
+#include <stdint.h>
 
 /// The data type (and object index) of a boolean truth value.
 #define CO_DEFTYPE_BOOLEAN 0x0001

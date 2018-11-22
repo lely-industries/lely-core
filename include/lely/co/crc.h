@@ -23,9 +23,9 @@
 #define LELY_CO_CRC_H_
 
 #include <lely/co/co.h>
-#include <lely/libc/stdint.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -33,10 +33,10 @@
 #ifndef LELY_UTIL_RBTREE_H_
 #define LELY_UTIL_RBTREE_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef LELY_UTIL_RBTREE_INLINE
 #define LELY_UTIL_RBTREE_INLINE static inline

@@ -23,7 +23,8 @@
 #define LELY_IO_ADDR_H_
 
 #include <lely/io/io.h>
-#include <lely/libc/stdint.h>
+
+#include <stdint.h>
 
 /// An opaque network address type.
 struct __io_addr {

@@ -31,8 +31,8 @@
 #endif
 
 #ifdef _MSC_VER
-#if _MSC_VER < 1800
-#error This file requires Microsoft Visual C++ 2013 or later.
+#if _MSC_VER < 1900
+#error This file requires Microsoft Visual C++ 2015 or later.
 #endif
 // Disable warnings about deprecated POSIX functions.
 #pragma warning(disable : 4996)
@@ -113,10 +113,12 @@
 #define __has_include(x) 1
 #endif
 
-#ifndef __STDC_HOSTED__
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define __STDC_HOSTED__ 1
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS 1
 #endif
+
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS 1
 #endif
 
 #ifndef __STDC_NO_ATOMICS__
@@ -260,13 +262,6 @@
 #endif
 #else
 #define format_printf__(i, j)
-#endif
-#endif
-
-#if !defined(__cplusplus) && defined(_MSC_VER) && _MSC_VER < 1900
-// Microsoft Visual C++ 2013 and earlier do not support the C99 inline keyword.
-#ifndef inline
-#define inline __inline
 #endif
 #endif
 

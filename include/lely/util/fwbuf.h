@@ -36,11 +36,11 @@
 #ifndef LELY_UTIL_FWBUF_H_
 #define LELY_UTIL_FWBUF_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/libc/sys/types.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 struct __fwbuf;
 #ifndef __cplusplus

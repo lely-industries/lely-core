@@ -22,8 +22,9 @@
 #ifndef LELY_UTIL_BITS_H_
 #define LELY_UTIL_BITS_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/util/util.h>
+
+#include <stdint.h>
 
 #ifdef _MSC_VER
 #include <intrin.h>

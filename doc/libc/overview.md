@@ -3,16 +3,14 @@ C11 and POSIX compatibility library overview
 
 The C11 and POSIX compatibility library provides:
 - compiler feature definitions: lely/features.h
-- `union sigval` and `struct sigevent`: lely/libc/signal.h
 - atomics: lely/libc/stdatomic.h
 - `max_align_t`: lely/libc/stddef.h
-- integer types: lely/libc/stdint.h
 - `getdelim()`, `getline()`, `asprintf()` and `vasprintf()`: lely/libc/stdio.h
 - `aligned_alloc()`, `aligned_free()` and `setenv()`: lely/libc/stdlib.h
 - `noreturn`: lely/libc/stdnoreturn.h
 - `strdup()`, `strndup()` and `strnlen()`: lely/libc/string.h
 - `ffs()`, `strcasecmp()` and `strncasecmp()`: lely/libc/strings.h
-- `clockid_t`, `ssize_t`, `timer_t`: lely/libc/sys/types.h
+- `clockid_t`, `ssize_t`: lely/libc/sys/types.h
 - threads: lely/libc/threads.h
 - `struct timespec`, `nanosleep()`, `timespec_get()` and POSIX Realtime
   Extensions: lely/libc/time.h

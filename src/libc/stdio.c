@@ -30,15 +30,15 @@
 
 #if !(_POSIX_C_SOURCE >= 200809L)
 
-#ifndef LELY_GETDELIM_SIZE
+#ifndef LELY_LIBC_GETDELIM_SIZE
 /// The initial size (in bytes) of the buffer allocated by getdelim().
-#define LELY_GETDELIM_SIZE 64
+#define LELY_LIBC_GETDELIM_SIZE 64
 #endif
 
 ssize_t
 getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 {
-	if (__unlikely(!lineptr || !n)) {
+	if (!lineptr || !n) {
 #ifdef EINVAL
 		errno = EINVAL;
 #endif
@@ -48,7 +48,7 @@ getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 		*lineptr = NULL;
 	else if (!*lineptr)
 		*n = 0;
-	size_t size = LELY_GETDELIM_SIZE;
+	size_t size = LELY_LIBC_GETDELIM_SIZE;
 
 	char *cp = *lineptr;
 	for (;;) {
@@ -61,14 +61,14 @@ getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
 			while (size < (size_t)(cp - *lineptr + 2))
 				size *= 2;
 			char *tmp = realloc(*lineptr, size);
-			if (__unlikely(!tmp)) {
+			if (!tmp) {
 				errno = errsv;
 				// If doubling the buffer fails, try to allocate
 				// just enough memory for the next character
 				// (including the terminating null byte).
 				size = cp - *lineptr + 2;
 				tmp = realloc(*lineptr, size);
-				if (__unlikely(!tmp))
+				if (!tmp)
 					return -1;
 			}
 			cp = tmp + (cp - *lineptr);
@@ -99,33 +99,6 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
 
-#if !LELY_HAVE_SNPRINTF
-
-int
-snprintf(char *s, size_t n, const char *format, ...)
-{
-	va_list arg;
-	va_start(arg, format);
-	int result = vsnprintf(s, n, format, arg);
-	va_end(arg);
-	return result;
-}
-
-int
-vsnprintf(char *s, size_t n, const char *format, va_list arg)
-{
-	int result = -1;
-	if (n) {
-		va_list ap;
-		va_copy(ap, arg);
-		result = _vsnprintf_s(s, n, _TRUNCATE, format, ap);
-		va_end(ap);
-	}
-	return result == -1 ? _vscprintf(format, arg) : result;
-}
-
-#endif // !LELY_HAVE_SNPRINTF
-
 int
 asprintf(char **strp, const char *fmt, ...)
 {
@@ -143,17 +116,18 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 
 	va_list aq;
 	va_copy(aq, ap);
+	// NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
 	int n = vsnprintf(NULL, 0, fmt, aq);
 	va_end(aq);
-	if (__unlikely(n < 0))
+	if (n < 0)
 		return n;
 
 	char *s = malloc(n + 1);
-	if (__unlikely(!s))
+	if (!s)
 		return -1;
 
 	n = vsnprintf(s, n + 1, fmt, ap);
-	if (__unlikely(n < 0)) {
+	if (n < 0) {
 		int errsv = errno;
 		free(s);
 		errno = errsv;

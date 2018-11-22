@@ -23,9 +23,9 @@
 #define LELY_CAN_MSG_H_
 
 #include <lely/can/can.h>
-#include <lely/libc/stdint.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 /// The mask used to extract the 11-bit Base Identifier from a CAN frame.
 #define CAN_MASK_BID UINT32_C(0x000007ff)

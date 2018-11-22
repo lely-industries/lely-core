@@ -26,8 +26,9 @@
 #ifndef LELY_UTIL_RAND_H_
 #define LELY_UTIL_RAND_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/util/util.h>
+
+#include <stdint.h>
 
 /// A 64-bit uniformly distributed unsigned random number generator.
 struct rand64 {

@@ -39,7 +39,7 @@
 #elif defined(LELY_HAVE_POSIX_MEMALIGN)
 #include <errno.h>
 #else
-#include <lely/libc/stdint.h>
+#include <stdint.h>
 #endif
 
 void *

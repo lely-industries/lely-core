@@ -23,8 +23,9 @@
 #define LELY_UTIL_HASH_H_
 
 #include <lely/libc/stddef.h>
-#include <lely/libc/stdint.h>
 #include <lely/util/util.h>
+
+#include <stdint.h>
 
 #ifndef LELY_UTIL_HASH_INLINE
 #define LELY_UTIL_HASH_INLINE static inline

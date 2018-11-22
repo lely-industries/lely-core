@@ -22,33 +22,10 @@
 #ifndef LELY_LIBC_STDIO_H_
 #define LELY_LIBC_STDIO_H_
 
-#include <lely/features.h>
-
-#ifndef LELY_HAVE_SNPRINTF
-#define LELY_HAVE_SNPRINTF 1
-// Microsoft Visual C++ 2013 and earlier do not have snprintf().
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#undef LELY_HAVE_SNPRINTF
-#endif
-#endif
-
-#if !LELY_HAVE_SNPRINTF
-// Hide existing (and non-conformant) definitions of snprintf() and vsnprintf().
-#undef snprintf
-#define snprintf __no_snprintf
-#undef vsnprintf
-#define vsnprintf __no_vsnprintf
-#endif
-
 #include <lely/libc/sys/types.h>
 
 #include <stdarg.h>
 #include <stdio.h>
-
-#if !LELY_HAVE_SNPRINTF
-#undef vsnprintf
-#undef snprintf
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,8 +47,8 @@ extern "C" {
  * @param delim   the delimiter character.
  * @param stream  a pointer to the input stream.
  *
- * @returns the number of characters read (including the delimiter but excluding
- * the terminating null byte), or -1 on error or end-of-file.
+ * @returns the number of characters read (including the delimiter but
+ * excluding the terminating null byte), or -1 on error or end-of-file.
  */
 ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
 
@@ -81,52 +58,6 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 #endif // !(_POSIX_C_SOURCE >= 200809L)
 
 #if !defined(_GNU_SOURCE) || defined(__MINGW32__)
-
-#if !LELY_HAVE_SNPRINTF
-
-/**
- * Equivalent to `printf()`, except that the output is written to a string
- * buffer rather than a stream.
- *
- * @param s      the address of the output buffer. If <b>s</b> is not NULL, at
- *               most `n - 1` characters are written, plus a terminating null
- *               byte.
- * @param n      the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
- *               zero, nothing is written.
- * @param format a printf-style format string.
- * @param ...    an optional list of arguments to be printed according to
- *               <b>format</b>.
- *
- * @returns the number of characters that would have been written had the
- * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
- *
- * @see vsnprintf()
- */
-int snprintf(char *s, size_t n, const char *format, ...);
-
-/**
- * Equivalent to `vprintf()`, except that the output is written to a string
- * buffer rather than a stream.
- *
- * @param s      the address of the output buffer. If <b>s</b> is not NULL, at
- *               most `n - 1` characters are written, plus a terminating null
- *               byte.
- * @param n      the size (in bytes) of the buffer at <b>s</b>. If <b>n</b> is
- *               zero, nothing is written.
- * @param format a printf-style format string.
- * @param arg    the list with arguments to be printed according to
- *               <b>format</b>.
- *
- * @returns the number of characters that would have been written had the
- * buffer been sufficiently large, not counting the terminating null byte, or a
- * negative number on error.
- *
- * @see snprintf()
- */
-int vsnprintf(char *s, size_t n, const char *format, va_list arg);
-
-#endif // !LELY_HAVE_SNPRINTF
 
 /**
  * Equivalent to `sprintf()`, except that it allocates a string large enough to

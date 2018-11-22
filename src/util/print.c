@@ -23,7 +23,6 @@
 
 #include "util.h"
 #define LELY_UTIL_PRINT_INLINE extern inline
-#include <lely/libc/stdint.h>
 #include <lely/libc/stdio.h>
 #include <lely/libc/uchar.h>
 #include <lely/util/lex.h>
@@ -31,6 +30,7 @@
 
 #include <assert.h>
 #include <float.h>
+#include <stdint.h>
 #if __STDC_NO_VLA__
 #include <stdlib.h>
 #endif

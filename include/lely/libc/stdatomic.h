@@ -53,10 +53,10 @@
 
 #if !__STDC_NO_ATOMICS__
 
-#include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef LELY_LIBC_STDATOMIC_INLINE
 #define LELY_LIBC_STDATOMIC_INLINE static inline

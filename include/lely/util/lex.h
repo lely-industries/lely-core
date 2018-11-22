@@ -22,11 +22,11 @@
 #ifndef LELY_UTIL_LEX_H_
 #define LELY_UTIL_LEX_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/libc/uchar.h>
 #include <lely/util/util.h>
 
 #include <ctype.h>
+#include <stdint.h>
 
 #ifndef LELY_UTIL_LEX_INLINE
 #define LELY_UTIL_LEX_INLINE static inline

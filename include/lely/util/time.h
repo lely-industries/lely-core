@@ -22,9 +22,10 @@
 #ifndef LELY_UTIL_TIME_H_
 #define LELY_UTIL_TIME_H_
 
-#include <lely/libc/stdint.h>
 #include <lely/libc/time.h>
 #include <lely/util/util.h>
+
+#include <stdint.h>
 
 #ifndef LELY_UTIL_TIME_INLINE
 #define LELY_UTIL_TIME_INLINE static inline
