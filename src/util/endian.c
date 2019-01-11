@@ -21,6 +21,10 @@
  * limitations under the License.
  */
 
+// Disable macro definitions of htobe*() and htole*(). This ensures our
+// implementation of these functions is exported.
+#define __NO_STRING_INLINES
+
 #include "util.h"
 #define LELY_UTIL_ENDIAN_INLINE extern inline
 #include <lely/util/endian.h>
