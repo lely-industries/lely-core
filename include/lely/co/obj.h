@@ -578,7 +578,7 @@ co_unsigned32_t co_sub_chk_val(
 unsigned int co_sub_get_access(const co_sub_t *sub);
 
 /**
- * Sets the name of a CANopen sub-object.
+ * Sets the access type of a CANopen sub-object.
  *
  * @param sub    a pointer to a CANopen sub-object.
  * @param access the access type (one of #CO_ACCESS_RO, #CO_ACCESS_WO,
