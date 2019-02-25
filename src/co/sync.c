@@ -4,7 +4,7 @@
  *
  * @see lely/co/sync.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -354,9 +354,17 @@ co_sync_update(co_sync_t *sync)
 				return -1;
 			can_timer_set_func(sync->timer, co_sync_timer, sync);
 		}
-		// Start SYNC transmission after 1 SYNC cycle.
+		// Start SYNC transmission at the next multiple of the SYNC
+		// period.
+		struct timespec start = { 0, 0 };
+		can_net_get_time(sync->net, &start);
+		intmax_t us = start.tv_sec * INTMAX_C(1000000)
+				+ start.tv_nsec / 1000;
+		us = us - (us % sync->us) + sync->us;
+		start.tv_sec = us / 1000000l;
+		start.tv_nsec = (us % 1000000l) * 1000;
 		struct timespec interval = { 0, 1000 * sync->us };
-		can_timer_start(sync->timer, sync->net, NULL, &interval);
+		can_timer_start(sync->timer, sync->net, &start, &interval);
 	} else if (sync->timer) {
 		// Destroy the SYNC timer unless we are an active SYNC producer
 		// (with a non-zero communication cycle period).
