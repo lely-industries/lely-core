@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -76,6 +76,8 @@ struct co_nmt_slave {
 	co_unsigned8_t rst;
 	/// The error status of the 'boot slave' process.
 	char es;
+	/// A flag specifying whether the 'boot slave' process has ended.
+	int booted;
 	/// A pointer to the NMT 'boot slave' service.
 	co_nmt_boot_t *boot;
 	/// A pointer to the NMT 'update configuration' service.
@@ -826,6 +828,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booted = 0;
 		slave->boot = NULL;
 
 		slave->cfg = NULL;
@@ -1775,11 +1778,7 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 		// If the slave is not mandatory, or bits 4 and 6 of the NMT
 		// startup value are zero, reset the node individually.
 		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_NODE, id);
-		// We're done if we are not allowed to boot the slave (bit 2) or
-		// the slave is already booting.
-		if (!(assignment & 0x04) || nmt->slaves[id - 1].boot)
-			return 0;
-		return co_nmt_boot_req(nmt, id, nmt->timeout);
+		return 0;
 	}
 }
 #endif
@@ -1880,6 +1879,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		slave->est = CO_NMT_ST_PREOP;
 	slave->rst = st;
 	slave->es = es;
+	slave->booted = 1;
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
 
@@ -2492,8 +2492,9 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 	// Reset the timer for the next RTR.
 	can_timer_timeout(slave->timer, nmt->net, slave->gt);
 
-	// Do not send node guarding RTRs to booting slaves.
-	if (slave->boot)
+	// Do not send node guarding RTRs to slaves that have not finished
+	// booting.
+	if (!slave->booted)
 		return 0;
 
 	// Notify the application once of the occurrence of a node guarding
@@ -3023,7 +3024,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 				continue;
 			// Check if the slave finished booting successfully and
 			// can be started by the master.
-			boot = !slave->boot && (!slave->es || slave->es == 'L')
+			boot = slave->booted && (!slave->es || slave->es == 'L')
 					&& !(slave->assignment & 0x04);
 		}
 		if (boot) {
@@ -3041,7 +3042,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 				// Only start slaves that have finished booting
 				// successfully and are not already (expected to
 				// be) operational.
-				if (!slave->boot
+				if (slave->booted
 						&& (!slave->es || slave->es == 'L')
 						&& slave->est != CO_NMT_ST_START)
 					co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
@@ -3366,6 +3367,7 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booted = 0;
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
 
@@ -3397,8 +3399,13 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 		// Wait for all mandatory slaves to finish booting.
 		if (!res && mandatory)
 			res = 1;
+		// Nodes with the keep-alive bit _not_ set are booted when we
+		// receive their boot-up signal.
+		if (!(slave->assignment & 0x10))
+			continue;
 		// Halt the network boot-up procedure if the 'boot slave'
-		// process failed for a mandatory slave.
+		// process failed for a mandatory slave with the keep-alive bit
+		// set.
 		// clang-format off
 		if (__unlikely(co_nmt_boot_req(nmt, id, nmt->timeout) == -1
 				&& mandatory))
