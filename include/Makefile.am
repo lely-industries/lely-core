@@ -98,6 +98,53 @@ if !NO_CXX
 inc += lely/io/sock.hpp
 endif
 
+if !NO_CXX
+inc += lely/aio/detail/cbase.hpp
+inc += lely/aio/detail/timespec.hpp
+endif
+inc += lely/aio/aio.h
+if !NO_CXX
+inc += lely/aio/aio.hpp
+endif
+inc += lely/aio/can_bus.h
+if !NO_CXX
+inc += lely/aio/can_bus.hpp
+endif
+inc += lely/aio/context.h
+if !NO_CXX
+inc += lely/aio/context.hpp
+endif
+inc += lely/aio/exec.h
+if !NO_CXX
+inc += lely/aio/exec.hpp
+endif
+inc += lely/aio/future.h
+if !NO_CXX
+inc += lely/aio/future.hpp
+endif
+inc += lely/aio/loop.h
+if !NO_CXX
+inc += lely/aio/loop.hpp
+endif
+inc += lely/aio/poll.h
+if !NO_CXX
+inc += lely/aio/poll.hpp
+endif
+inc += lely/aio/queue.h
+inc += lely/aio/reactor.h
+if !NO_CXX
+inc += lely/aio/reactor.hpp
+endif
+inc += lely/aio/self_pipe.h
+inc += lely/aio/strand.h
+if !NO_CXX
+inc += lely/aio/strand.hpp
+endif
+inc += lely/aio/timer.h
+if !NO_CXX
+inc += lely/aio/timer.hpp
+endif
+
 inc += lely/co/def/basic.def
 if !NO_CXX
 inc += lely/co/def/cxx.def
@@ -201,6 +248,27 @@ if !NO_CO_WTM
 inc += lely/co/wtm.h
 if !NO_CXX
 inc += lely/co/wtm.hpp
+endif
+endif
+
+if !NO_CXX
+inc += lely/coapp/detail/chrono.hpp
+inc += lely/coapp/detail/mutex.hpp
+inc += lely/coapp/detail/type_traits.hpp
+inc += lely/coapp/coapp.hpp
+inc += lely/coapp/device.hpp
+if !NO_COAPP_MASTER
+inc += lely/coapp/driver.hpp
+endif
+inc += lely/coapp/io_context.hpp
+if !NO_COAPP_MASTER
+inc += lely/coapp/master.hpp
+endif
+inc += lely/coapp/node.hpp
+inc += lely/coapp/sdo.hpp
+inc += lely/coapp/sdo_error.hpp
+if !NO_COAPP_SLAVE
+inc += lely/coapp/slave.hpp
 endif
 endif
 

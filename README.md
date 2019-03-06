@@ -43,6 +43,11 @@ use of the reactor pattern.
 See [doc/io/overview.md](@ref md_doc_io_overview) for an overview of the
 provided functionality.
 
+### Asynchronous I/O library (liblely-aio)
+
+liblely-aio provides an event loop and asynchronous I/O. Currently only timers
+and CAN devices are supported.
+
 ### CANopen library (liblely-co)
 
 liblely-co is a CANopen implementation for both masters and slaves. Most of the
@@ -62,6 +67,13 @@ Additionally, several tools are provided:
 
 See [doc/co/overview.md](@ref md_doc_co_overview) for an overview of the
 provided functionality.
+
+### C++ CANopen application library (liblely-coapp)
+
+liblely-coapp provides a high-level application interface in C++ for liblely-co.
+It is intended to simplify the development of CANopen master applications (and,
+to a lesser extent, slaves) by providing a driver model and combining it with an
+event loop (from liblely-aio).
 
 Download
 --------
@@ -215,6 +227,15 @@ space on embedded devices. liblely-co supports the following `configure` options
 * `--disable-gw-txt` (`LELY_NO_CO_GW_TXT`):
   disable ASCII gateway support.
 
+Additionally, master and/or slave support for the C++ CANopen application
+library can be disabled with the following `configure` options (or preprocessor
+macros):
+
+* `--disable-coapp-master` (`LELY_NO_COAPP_MASTER`):
+  disable C++ CANopen application master support.
+* `--disable-coapp-slave` (`LELY_NO_COAPP_SLAVE`):
+  disable C++ CANopen application slave support.
+
 The following preprocessor macros can be defined to change the default timeouts
 used by an NMT master when booting a slave:
 
@@ -239,7 +260,8 @@ used by an NMT master when booting a slave:
 Although the Lely core libraries are written in C, C++ interfaces are provided
 for a subset of the functionality. These interfaces can be disabled with the
 `--disable-cxx` option to `configure` or by defining the `LELY_NO_CXX`
-preprocessor macro.
+preprocessor macro. This also disables the entire C++ CANopen application
+library.
 
 The Python bindings can be disabled by specifying the `--disable-python` option
 to `configure`.
@@ -253,7 +275,7 @@ http://lely_industries.gitlab.io/lely-core/doxygen/.
 Licensing
 ---------
 
-Copyright 2013-2018 [Lely Industries N.V.]
+Copyright 2013-2019 [Lely Industries N.V.]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

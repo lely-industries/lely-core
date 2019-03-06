@@ -66,7 +66,7 @@
 #endif
 
 #ifndef countof
-//! Returns the number of array members in <b>a</b>.
+/// Returns the number of array members in <b>a</b>.
 #define countof(a) (sizeof(a) / sizeof(0 [a]))
 #endif
 

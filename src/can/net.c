@@ -24,8 +24,8 @@
 #include "can.h"
 #include <lely/can/net.h>
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
 #include <lely/util/dllist.h>
+#include <lely/util/errnum.h>
 #include <lely/util/pheap.h>
 #include <lely/util/rbtree.h>
 #include <lely/util/time.h>

@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the object dictionary. See lely/co/obj.h for the C interface.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -548,9 +548,9 @@ struct COSubDnInd {
     COVal<N> val;
     if (co_sdo_req_dn_val(req, N, &val, &ac) == -1) return ac;
 
-    if (ac = sub->chkVal(val)) return ac;
+    if ((ac = sub->chkVal(val))) return ac;
 
-    if (ac = (*M)(sub, val, data)) return ac;
+    if ((ac = (*M)(sub, val, data))) return ac;
 
     sub->dn(val);
     return ac;
@@ -573,7 +573,7 @@ struct COSubUpInd {
 
     COVal<N> val = sub->getVal<N>();
 
-    if (ac = (*M)(sub, val, data)) return ac;
+    if ((ac = (*M)(sub, val, data))) return ac;
 
     co_sdo_req_up_val(req, N, &val, &ac);
     return ac;

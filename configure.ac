@@ -4,7 +4,7 @@ LT_PREREQ(2.4.2)
 AC_INIT([Lely core libraries], [1.9.0], [], [lely-core])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
@@ -248,6 +248,25 @@ AS_IF([test "$enable_gw_txt" == "no"], [
 	AC_DEFINE([LELY_NO_CO_GW_TXT], [1], [Define to 1 if ASCII gateway support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_COAPP_MASTER], [false])
+AC_ARG_ENABLE([slave],
+	AS_HELP_STRING([--disable-coapp-master], [disable C++ CANopen application master support]))
+AS_IF([test "$enable_master" == "no"], [enable_coapp_master=no])
+AS_IF([test "$enable_cxx" == "no"], [enable_coapp_master=no])
+AS_IF([test "$enable_coapp_master" == "no"], [
+	AM_CONDITIONAL([NO_COAPP_MASTER], [true])
+	AC_DEFINE([LELY_NO_COAPP_MASTER], [1], [Define to 1 if C++ CANopen application master support is disabled.])
+])
+
+AM_CONDITIONAL([NO_COAPP_SLAVE], [false])
+AC_ARG_ENABLE([slave],
+	AS_HELP_STRING([--disable-coapp-slave], [disable C++ CANopen application slave support]))
+AS_IF([test "$enable_cxx" == "no"], [enable_coapp_slave=no])
+AS_IF([test "$enable_coapp_slave" == "no"], [
+	AM_CONDITIONAL([NO_COAPP_SLAVE], [true])
+	AC_DEFINE([LELY_NO_COAPP_SLAVE], [1], [Define to 1 if C++ CANopen application slave support is disabled.])
+])
+
 AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
@@ -379,8 +398,10 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
+	pkgconfig/liblely-aio.pc
 	pkgconfig/liblely-can.pc
 	pkgconfig/liblely-co.pc
+	pkgconfig/liblely-coapp.pc
 	pkgconfig/liblely-io.pc
 	pkgconfig/liblely-libc.pc
 	pkgconfig/liblely-libc_rt.pc
@@ -390,10 +411,14 @@ AC_CONFIG_FILES([
 	python/can/Makefile
 	python/io/Makefile
 	python/Makefile
+	src/aio/Makefile
+	src/aio/version.rc
 	src/can/Makefile
 	src/can/version.rc
 	src/co/Makefile
 	src/co/version.rc
+	src/coapp/Makefile
+	src/coapp/version.rc
 	src/io/Makefile
 	src/io/version.rc
 	src/libc/Makefile

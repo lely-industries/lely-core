@@ -1,4 +1,4 @@
-/*!@file
+/**@file
  * This file is part of the C11 and POSIX compatibility library.
  *
  * @see lely/libc/threads.h

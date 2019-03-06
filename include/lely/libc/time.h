@@ -91,11 +91,11 @@ struct timespec {
 
 #if !LELY_HAVE_ITIMERSPEC
 
-//! A struct specifying an interval and initial value for a timer.
+/// A struct specifying an interval and initial value for a timer.
 struct itimerspec {
-	//! The timer period.
+	/// The timer period.
 	struct timespec it_interval;
-	//! The timer expiration.
+	/// The timer expiration.
 	struct timespec it_value;
 };
 
