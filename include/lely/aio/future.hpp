@@ -28,6 +28,11 @@
 
 #include <chrono>
 
+#if _WIN32 && defined(ERROR)
+// ERROR is defined as a macro in wingdi.h.
+#undef ERROR
+#endif
+
 namespace lely {
 
 namespace aio {

@@ -48,7 +48,7 @@ inline timespec
 ToTimespec(const ::std::chrono::duration<Rep, Period>& d) {
   auto sec = ::std::chrono::duration_cast<::std::chrono::seconds>(d);
   auto nsec = ::std::chrono::duration_cast<::std::chrono::nanoseconds>(d - sec);
-  return timespec{sec.count(), nsec.count()};
+  return timespec{time_t(sec.count()), long(nsec.count())};
 }
 
 template <class Clock, class Duration>

@@ -48,12 +48,12 @@ class CBase {
   }
 
   friend bool
-  operator==(const CBase& lhs, nullptr_t) noexcept {
+  operator==(const CBase& lhs, ::std::nullptr_t) noexcept {
     return !lhs;
   }
 
   friend bool
-  operator==(nullptr_t, const CBase& rhs) noexcept {
+  operator==(::std::nullptr_t, const CBase& rhs) noexcept {
     return !rhs;
   }
 
@@ -63,12 +63,12 @@ class CBase {
   }
 
   friend bool
-  operator!=(const CBase& lhs, nullptr_t) noexcept {
+  operator!=(const CBase& lhs, ::std::nullptr_t) noexcept {
     return lhs;
   }
 
   friend bool
-  operator!=(nullptr_t, const CBase& rhs) noexcept {
+  operator!=(::std::nullptr_t, const CBase& rhs) noexcept {
     return rhs;
   }
 

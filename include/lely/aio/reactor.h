@@ -21,6 +21,7 @@
 #ifndef LELY_AIO_REACTOR_H_
 #define LELY_AIO_REACTOR_H_
 
+#include <lely/aio/exec.h>
 #include <lely/aio/poll.h>
 
 #if !LELY_AIO_WITH_IOCP

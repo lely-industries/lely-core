@@ -23,6 +23,10 @@
 
 #include <lely/features.h>
 
+#if _WIN32
+#include <windows.h>
+#endif
+
 struct aio_context;
 typedef struct aio_context aio_context_t;
 
@@ -61,7 +65,7 @@ struct aio_iocp {
 
 #define AIO_IOCP_INIT \
 	{ \
-		{ NULL, NULL, { { 0, 0 } }, NULL }, NULL \
+		{ 0, 0, { { 0, 0 } }, NULL }, NULL \
 	}
 
 #endif

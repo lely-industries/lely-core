@@ -790,7 +790,11 @@ aio_future_create(aio_promise_t *promise)
 #if LELY_NO_THREADS || __STDC_NO_ATOMICS__
 	promise->refcnt++;
 #elif _WIN32
+#ifdef __MINGW32__
+	InterlockedIncrement(&promise->refcnt);
+#else
 	InterlockedIncrementNoFence(&promise->refcnt);
+#endif
 #else
 	atomic_fetch_add_explicit(&promise->refcnt, 1, memory_order_relaxed);
 #endif
