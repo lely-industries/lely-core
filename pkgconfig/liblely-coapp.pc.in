@@ -9,4 +9,4 @@ URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
 Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-aio >= @PACKAGE_VERSION@ liblely-co >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lcoapp
+Libs: -L${libdir} -llely-coapp
