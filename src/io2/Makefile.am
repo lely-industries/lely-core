@@ -2,14 +2,15 @@ src =
 if PLATFORM_LINUX
 src += linux/io.h
 src += linux/poll.c
+src += linux/timer.c
 endif
 if PLATFORM_POSIX
 src += posix/io.c
 src += posix/io.h
 if !PLATFORM_LINUX
 src += posix/poll.c
-endif
 src += posix/timer.c
+endif
 endif
 src += sys/clock.c
 if PLATFORM_WIN32
