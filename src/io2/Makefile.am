@@ -15,6 +15,7 @@ src += win32/io.c
 src += win32/io.h
 src += win32/poll.c
 endif
+src += clock.c
 src += ctx.c
 src += dev.c
 src += io2.h
