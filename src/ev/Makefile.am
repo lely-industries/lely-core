@@ -1,5 +1,6 @@
 src =
 src += ev.h
+src += exec.c
 src += task.c
 
 lib_LTLIBRARIES = liblely-ev.la

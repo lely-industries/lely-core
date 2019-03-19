@@ -33,6 +33,8 @@
 namespace lely {
 namespace ev {
 
+class Executor;
+
 namespace detail {
 
 template <class Invoker>
@@ -105,6 +107,9 @@ class Task : public ev_task {
   Task(const Task&) = delete;
 
   Task& operator=(const Task&) = delete;
+
+  /// Returns the executor to which the task is (to be) submitted.
+  Executor get_executor() const noexcept;
 
  private:
   ::std::function<Signature> func_;
