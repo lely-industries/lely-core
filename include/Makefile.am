@@ -41,6 +41,9 @@ endif
 inc += lely/util/diag.h
 inc += lely/util/dllist.h
 inc += lely/util/endian.h
+if !NO_CXX
+inc += lely/util/error.hpp
+endif
 inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
