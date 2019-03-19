@@ -420,6 +420,7 @@ AC_CONFIG_FILES([
 	pkgconfig/liblely-coapp.pc
 	pkgconfig/liblely-ev.pc
 	pkgconfig/liblely-io.pc
+	pkgconfig/liblely-io2.pc
 	pkgconfig/liblely-libc.pc
 	pkgconfig/liblely-libc_rt.pc
 	pkgconfig/liblely-tap.pc
@@ -440,6 +441,8 @@ AC_CONFIG_FILES([
 	src/ev/version.rc
 	src/io/Makefile
 	src/io/version.rc
+	src/io2/Makefile
+	src/io2/version.rc
 	src/libc/Makefile
 	src/libc/version.rc
 	src/tap/Makefile

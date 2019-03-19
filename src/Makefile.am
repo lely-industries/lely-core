@@ -1,4 +1,4 @@
-SUBDIRS = libc tap util can ev co
+SUBDIRS = libc tap util can ev io2 co
 if PLATFORM_LINUX
 SUBDIRS += io
 endif

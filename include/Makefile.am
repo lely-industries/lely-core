@@ -202,6 +202,8 @@ if !NO_CXX
 inc += lely/ev/thrd_loop.hpp
 endif
 
+inc += lely/io2/io2.h
+
 inc += lely/co/def/basic.def
 if !NO_CXX
 inc += lely/co/def/cxx.def
