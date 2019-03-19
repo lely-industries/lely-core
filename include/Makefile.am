@@ -59,6 +59,9 @@ inc += lely/util/membuf.h
 inc += lely/util/pheap.h
 inc += lely/util/print.h
 inc += lely/util/rbtree.h
+if !NO_CXX
+inc += lely/util/result.hpp
+endif
 inc += lely/util/sllist.h
 inc += lely/util/time.h
 inc += lely/util/util.h
