@@ -69,6 +69,12 @@ test_ev_future_SOURCES = test.h ev-future.cpp
 test_ev_future_LDADD = $(LELY_EV_LIBS)
 endif
 
+if !NO_CXX
+bin += test-ev-loop
+test_ev_loop_SOURCES = test.h ev-loop.cpp
+test_ev_loop_LDADD = $(LELY_EV_LIBS)
+endif
+
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)
