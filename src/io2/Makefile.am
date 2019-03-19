@@ -1,4 +1,5 @@
 src =
+src += ctx.c
 src += io2.h
 
 lib_LTLIBRARIES = liblely-io2.la
