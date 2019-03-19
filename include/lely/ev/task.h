@@ -63,6 +63,22 @@ struct ev_task {
  */
 struct ev_task *ev_task_from_node(struct slnode *node);
 
+/**
+ * Post the tasks in <b>queue</b> to their respective executors and invokes
+ * ev_exec_on_task_fini() for each of them.
+ *
+ * @returns the number of tasks in <b>queue</b>.
+ */
+size_t ev_task_queue_post(struct sllist *queue);
+
+/**
+ * Aborts the tasks in <b>queue</b> by invoking ev_exec_on_task_fini() for each
+ * of them.
+ *
+ * @returns the number of tasks in <b>queue</b>.
+ */
+size_t ev_task_queue_abort(struct sllist *queue);
+
 #ifdef __cplusplus
 }
 #endif

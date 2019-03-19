@@ -1,6 +1,7 @@
 src =
 src += ev.h
 src += exec.c
+src += future.c
 src += std_exec.c
 src += strand.c
 src += task.c

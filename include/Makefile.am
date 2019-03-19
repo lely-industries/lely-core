@@ -172,6 +172,10 @@ inc += lely/ev/exec.h
 if !NO_CXX
 inc += lely/ev/exec.hpp
 endif
+inc += lely/ev/future.h
+if !NO_CXX
+inc += lely/ev/future.hpp
+endif
 inc += lely/ev/std_exec.h
 inc += lely/ev/strand.h
 if !NO_CXX

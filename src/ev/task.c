@@ -22,11 +22,46 @@
  */
 
 #include "ev.h"
+#include <lely/ev/exec.h>
 #include <lely/ev/task.h>
 #include <lely/util/util.h>
+
+#include <stdint.h>
 
 struct ev_task *
 ev_task_from_node(struct slnode *node)
 {
 	return node ? structof(node, struct ev_task, _node) : NULL;
+}
+
+size_t
+ev_task_queue_post(struct sllist *queue)
+{
+	size_t n = 0;
+
+	struct slnode *node;
+	while ((node = sllist_pop_front(queue))) {
+		struct ev_task *task = ev_task_from_node(node);
+		ev_exec_t *exec = task->exec;
+		ev_exec_post(exec, task);
+		ev_exec_on_task_fini(exec);
+		n += n < SIZE_MAX;
+	}
+
+	return n;
+}
+
+size_t
+ev_task_queue_abort(struct sllist *queue)
+{
+	size_t n = 0;
+
+	struct slnode *node;
+	while ((node = sllist_pop_front(queue))) {
+		struct ev_task *task = ev_task_from_node(node);
+		ev_exec_on_task_fini(task->exec);
+		n += n < SIZE_MAX;
+	}
+
+	return n;
 }
