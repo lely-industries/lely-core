@@ -13,6 +13,7 @@ endif
 if PLATFORM_WIN32
 src += win32/io.c
 src += win32/io.h
+src += win32/poll.c
 endif
 src += ctx.c
 src += io2.h

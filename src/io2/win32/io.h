@@ -23,4 +23,24 @@
 
 #include "../io2.h"
 
+#if _WIN32
+
+#include <winternl.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef ULONG(NTAPI *LPFN_RTLNTSTATUSTODOSERROR)(NTSTATUS Status);
+extern LPFN_RTLNTSTATUSTODOSERROR lpfnRtlNtStatusToDosError;
+
+int io_win32_ntdll_init(void);
+void io_win32_ntdll_fini(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _WIN32
+
 #endif // LELY_IO2_INTERN_WIN32_IO_H_

@@ -212,6 +212,12 @@ inc += lely/io2/sys/io.h
 if !NO_CXX
 inc += lely/io2/sys/io.hpp
 endif
+if PLATFORM_WIN32
+inc += lely/io2/win32/poll.h
+if !NO_CXX
+inc += lely/io2/win32/poll.hpp
+endif
+endif
 inc += lely/io2/ctx.h
 if !NO_CXX
 inc += lely/io2/ctx.hpp
