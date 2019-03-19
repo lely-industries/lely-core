@@ -1,11 +1,14 @@
 src =
 if PLATFORM_LINUX
 src += linux/io.h
+src += linux/poll.c
 endif
 if PLATFORM_POSIX
 src += posix/io.c
 src += posix/io.h
+if !PLATFORM_LINUX
 src += posix/poll.c
+endif
 endif
 if PLATFORM_WIN32
 src += win32/io.c
