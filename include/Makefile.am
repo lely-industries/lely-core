@@ -222,6 +222,10 @@ inc += lely/io2/ctx.h
 if !NO_CXX
 inc += lely/io2/ctx.hpp
 endif
+inc += lely/io2/dev.h
+if !NO_CXX
+inc += lely/io2/dev.hpp
+endif
 inc += lely/io2/event.h
 if !NO_CXX
 inc += lely/io2/event.hpp

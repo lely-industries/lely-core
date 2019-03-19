@@ -16,6 +16,7 @@ src += win32/io.h
 src += win32/poll.c
 endif
 src += ctx.c
+src += dev.c
 src += io2.h
 
 lib_LTLIBRARIES = liblely-io2.la
