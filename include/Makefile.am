@@ -166,6 +166,7 @@ inc += lely/ev/exec.h
 if !NO_CXX
 inc += lely/ev/exec.hpp
 endif
+inc += lely/ev/std_exec.h
 inc += lely/ev/task.h
 if !NO_CXX
 inc += lely/ev/task.hpp
