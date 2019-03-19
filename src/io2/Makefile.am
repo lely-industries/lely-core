@@ -26,6 +26,7 @@ src += dev.c
 src += io2.h
 src += timer.c
 src += timer.h
+src += tqueue.c
 
 lib_LTLIBRARIES = liblely-io2.la
 liblely_io2_la_CPPFLAGS = -I$(top_srcdir)/include
