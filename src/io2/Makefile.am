@@ -9,6 +9,7 @@ src += posix/io.h
 if !PLATFORM_LINUX
 src += posix/poll.c
 endif
+src += posix/timer.c
 endif
 src += sys/clock.c
 if PLATFORM_WIN32
@@ -21,6 +22,7 @@ src += ctx.c
 src += dev.c
 src += io2.h
 src += timer.c
+src += timer.h
 
 lib_LTLIBRARIES = liblely-io2.la
 liblely_io2_la_CPPFLAGS = -I$(top_srcdir)/include
@@ -44,6 +46,7 @@ liblely_io2_la_LIBADD =
 liblely_io2_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/ev/liblely-ev.la
+liblely_io2_la_LIBADD += $(RT_LIBS)
 if CODE_COVERAGE_ENABLED
 liblely_io2_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
