@@ -155,6 +155,10 @@ endif
 endif
 
 inc += lely/ev/ev.h
+inc += lely/ev/task.h
+if !NO_CXX
+inc += lely/ev/task.hpp
+endif
 
 inc += lely/co/def/basic.def
 if !NO_CXX

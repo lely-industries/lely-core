@@ -1,5 +1,6 @@
 src =
 src += ev.h
+src += task.c
 
 lib_LTLIBRARIES = liblely-ev.la
 liblely_ev_la_CPPFLAGS = -I$(top_srcdir)/include
