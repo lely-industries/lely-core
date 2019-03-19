@@ -223,6 +223,10 @@ inc += lely/io2/sys/timer.h
 if !NO_CXX
 inc += lely/io2/sys/timer.hpp
 endif
+inc += lely/io2/user/timer.h
+if !NO_CXX
+inc += lely/io2/user/timer.hpp
+endif
 if PLATFORM_WIN32
 inc += lely/io2/win32/poll.h
 if !NO_CXX

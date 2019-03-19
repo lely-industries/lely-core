@@ -13,6 +13,7 @@ src += posix/timer.c
 endif
 endif
 src += sys/clock.c
+src += user/timer.c
 if PLATFORM_WIN32
 src += win32/io.c
 src += win32/io.h
