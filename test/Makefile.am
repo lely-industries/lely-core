@@ -58,6 +58,17 @@ bin += test-io-poll
 test_io_poll_SOURCES = test.h io-poll.c
 test_io_poll_LDADD = $(LELY_IO_LIBS)
 
+# Event library tests
+
+LELY_EV_LIBS = $(LELY_UTIL_LIBS)
+LELY_EV_LIBS += $(top_builddir)/src/ev/liblely-ev.la
+
+if !NO_CXX
+bin += test-ev-future
+test_ev_future_SOURCES = test.h ev-future.cpp
+test_ev_future_LDADD = $(LELY_EV_LIBS)
+endif
+
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)
