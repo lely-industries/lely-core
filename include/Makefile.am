@@ -154,6 +154,8 @@ inc += lely/aio/timer.hpp
 endif
 endif
 
+inc += lely/ev/ev.h
+
 inc += lely/co/def/basic.def
 if !NO_CXX
 inc += lely/co/def/cxx.def

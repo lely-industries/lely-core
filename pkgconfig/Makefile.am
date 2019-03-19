@@ -6,6 +6,7 @@ pkgconfig_DATA += liblely-co.pc
 if !NO_CXX
 pkgconfig_DATA += liblely-coapp.pc
 endif
+pkgconfig_DATA += liblely-ev.pc
 pkgconfig_DATA += liblely-io.pc
 pkgconfig_DATA += liblely-libc.pc
 if !NO_RT
