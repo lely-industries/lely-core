@@ -158,6 +158,9 @@ inc += lely/aio/timer.hpp
 endif
 endif
 
+if !NO_CXX
+inc += lely/ev/co_task.hpp
+endif
 inc += lely/ev/ev.h
 inc += lely/ev/exec.h
 if !NO_CXX
