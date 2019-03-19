@@ -16,6 +16,9 @@ if !NO_THREADS
 inc += lely/libc/threads.h
 endif
 inc += lely/libc/time.h
+if !NO_CXX
+inc += lely/libc/type_traits.hpp
+endif
 inc += lely/libc/uchar.h
 inc += lely/libc/unistd.h
 if !NO_CXX
