@@ -2,6 +2,7 @@ src =
 src += ev.h
 src += exec.c
 src += std_exec.c
+src += strand.c
 src += task.c
 
 lib_LTLIBRARIES = liblely-ev.la

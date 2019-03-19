@@ -170,6 +170,10 @@ if !NO_CXX
 inc += lely/ev/exec.hpp
 endif
 inc += lely/ev/std_exec.h
+inc += lely/ev/strand.h
+if !NO_CXX
+inc += lely/ev/strand.hpp
+endif
 inc += lely/ev/task.h
 if !NO_CXX
 inc += lely/ev/task.hpp
