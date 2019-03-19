@@ -37,10 +37,12 @@ AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
 platform_linux=no
+platform_posix=no
 platform_win32=no
 case "$host" in
 *linux*)
 	platform_linux=yes
+	platform_posix=yes
 	;;
 *-*-mingw*)
 	platform_win32=yes
@@ -53,6 +55,7 @@ case "$host" in
 	;;
 esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
+AM_CONDITIONAL([PLATFORM_POSIX], [test "$platform_posix" == "yes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
 AS_IF([test "$host_cpu" != "$build_cpu"], [

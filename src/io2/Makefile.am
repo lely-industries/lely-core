@@ -1,4 +1,15 @@
 src =
+if PLATFORM_LINUX
+src += linux/io.h
+endif
+if PLATFORM_POSIX
+src += posix/io.c
+src += posix/io.h
+endif
+if PLATFORM_WIN32
+src += win32/io.c
+src += win32/io.h
+endif
 src += ctx.c
 src += io2.h
 
