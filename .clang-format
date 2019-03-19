@@ -15,6 +15,7 @@ Cpp11BracedListStyle: false
 ForEachMacros:
   - binode_foreach_by_key
   - binode_foreach_by_value
+  - co_reenter
   - dllist_foreach
   - dlnode_foreach
   - pheap_foreach

@@ -30,6 +30,10 @@ inc += lely/util/c_call.hpp
 inc += lely/util/c_type.hpp
 endif
 inc += lely/util/config.h
+inc += lely/util/coroutine.h
+if !NO_CXX
+inc += lely/util/coroutine.hpp
+endif
 inc += lely/util/cmp.h
 if !NO_DAEMON
 inc += lely/util/daemon.h
