@@ -239,6 +239,10 @@ if !NO_CXX
 inc += lely/io2/event.hpp
 endif
 inc += lely/io2/io2.h
+inc += lely/io2/timer.h
+if !NO_CXX
+inc += lely/io2/timer.hpp
+endif
 
 inc += lely/co/def/basic.def
 if !NO_CXX

@@ -20,6 +20,7 @@ src += clock.c
 src += ctx.c
 src += dev.c
 src += io2.h
+src += timer.c
 
 lib_LTLIBRARIES = liblely-io2.la
 liblely_io2_la_CPPFLAGS = -I$(top_srcdir)/include
