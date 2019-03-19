@@ -10,6 +10,7 @@ if !PLATFORM_LINUX
 src += posix/poll.c
 endif
 endif
+src += sys/clock.c
 if PLATFORM_WIN32
 src += win32/io.c
 src += win32/io.h
