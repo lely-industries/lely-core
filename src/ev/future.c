@@ -39,6 +39,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifndef LELY_EV_FUTURE_MAX
+#define LELY_EV_FUTURE_MAX MAX((LELY_VLA_SIZE_MAX / sizeof(ev_future_t *)), 1)
+#endif
+
 /// The state of a future.
 enum ev_future_state {
 	/// The future is waiting.
@@ -118,6 +122,30 @@ static void ev_promise_fini(ev_promise_t *promise);
 
 static void ev_future_pop(ev_future_t *future, struct sllist *queue,
 		struct ev_task *task);
+
+static ev_future_t *ev_future_when_all_nv(
+		ev_exec_t *exec, size_t n, ev_future_t *future, va_list ap);
+
+struct ev_future_when_all {
+	size_t idx;
+	ev_promise_t *promise;
+	struct ev_task task;
+	size_t n;
+	ev_future_t *futures[];
+};
+
+static void ev_future_when_all_func(struct ev_task *task);
+
+static ev_future_t *ev_future_when_any_nv(
+		ev_exec_t *exec, size_t n, ev_future_t *future, va_list ap);
+
+struct ev_future_when_any {
+	size_t idx;
+	ev_promise_t *promise;
+	struct ev_task task;
+};
+
+static void ev_future_when_any_func(struct ev_task *task);
 
 ev_promise_t *
 ev_promise_create(size_t size, ev_promise_dtor_t *dtor)
@@ -380,6 +408,125 @@ ev_future_abort(ev_future_t *future, struct ev_task *task)
 	return ev_task_queue_abort(&queue);
 }
 
+ev_future_t *
+ev_future_when_all(ev_exec_t *exec, ev_future_t *future, ...)
+{
+	va_list ap;
+	va_start(ap, future);
+	ev_future_t *result = ev_future_when_all_v(exec, future, ap);
+	va_end(ap);
+	return result;
+}
+
+ev_future_t *
+ev_future_when_all_v(ev_exec_t *exec, ev_future_t *future, va_list ap)
+{
+	size_t n;
+	va_list aq;
+	va_copy(aq, ap);
+	ev_future_t *arg = future;
+	// NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
+	for (n = 0; arg; n++, arg = va_arg(aq, ev_future_t *))
+		;
+	va_end(aq);
+	return ev_future_when_all_nv(exec, n, future, ap);
+}
+
+ev_future_t *
+ev_future_when_all_n(ev_exec_t *exec, size_t n, ev_future_t *const *futures)
+{
+	assert(exec);
+	assert(!n || futures);
+
+	ev_promise_t *promise = ev_promise_create(
+			sizeof(struct ev_future_when_all)
+					+ n * sizeof(ev_future_t *),
+			NULL);
+	if (!promise)
+		return NULL;
+
+	struct ev_future_when_all *when = ev_promise_data(promise);
+	when->idx = 0;
+	when->promise = promise;
+	when->task = (struct ev_task)EV_TASK_INIT(
+			exec, &ev_future_when_all_func);
+
+	if ((when->n = n)) {
+		for (size_t i = 0; i < n; i++) {
+			assert(futures[i]);
+			when->futures[i] = ev_future_acquire(futures[i]);
+		}
+		ev_future_submit(when->futures[when->idx], &when->task);
+	} else {
+		ev_promise_set(promise, NULL);
+	}
+
+	return ev_promise_get_future(promise);
+}
+
+ev_future_t *
+ev_future_when_any(ev_exec_t *exec, ev_future_t *future, ...)
+{
+	va_list ap;
+	va_start(ap, future);
+	ev_future_t *result = ev_future_when_any_v(exec, future, ap);
+	va_end(ap);
+	return result;
+}
+
+ev_future_t *
+ev_future_when_any_v(ev_exec_t *exec, ev_future_t *future, va_list ap)
+{
+	size_t n;
+	va_list aq;
+	va_copy(aq, ap);
+	ev_future_t *arg = future;
+	// NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
+	for (n = 0; arg; n++, arg = va_arg(aq, ev_future_t *))
+		;
+	va_end(aq);
+	return ev_future_when_any_nv(exec, n, future, ap);
+}
+
+ev_future_t *
+ev_future_when_any_n(ev_exec_t *exec, size_t n, ev_future_t *const *futures)
+{
+	assert(exec);
+	assert(!n || futures);
+
+	ev_promise_t *promise = ev_promise_create(
+			n * sizeof(struct ev_future_when_any), NULL);
+	if (!promise)
+		return NULL;
+
+	if (n) {
+		struct ev_future_when_any *wait = ev_promise_data(promise);
+		for (size_t i = 0; i < n; i++) {
+			assert(futures[i]);
+			wait[i].idx = i;
+			wait[i].promise = ev_promise_acquire(promise);
+			wait[i].task = (struct ev_task)EV_TASK_INIT(
+					exec, &ev_future_when_any_func);
+			ev_future_submit(futures[i], &wait[i].task);
+		}
+	} else {
+		ev_promise_set(promise, NULL);
+	}
+
+	ev_future_t *future = ev_promise_get_future(promise);
+#if LELY_NO_THREADS || LELY_NO_ATOMICS
+	assert(promise->refcnt >= 2);
+#else
+	assert(atomic_load(&promise->refcnt) >= 2);
+#endif
+	// Prevent false positive in scan-build.
+#ifndef __clang_analyzer__
+	ev_promise_release(promise);
+#endif
+	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
+	return future;
+}
+
 static ev_future_t *
 ev_future_init(ev_future_t *future)
 {
@@ -480,4 +627,106 @@ ev_promise_fini(ev_promise_t *promise)
 
 	if (promise->dtor)
 		promise->dtor(ev_promise_data(promise));
+}
+
+static ev_future_t *
+ev_future_when_all_nv(
+		ev_exec_t *exec, size_t n, ev_future_t *future, va_list ap)
+{
+	if (n <= LELY_EV_FUTURE_MAX) {
+#if __STDC_NO_VLA__ || defined(_MSC_VER)
+		ev_future_t *futures[LELY_EV_FUTURE_MAX];
+#else
+		ev_future_t *futures[n ? n : 1];
+#endif
+		for (size_t i = 0; i < n; i++) {
+			futures[i] = future;
+			future = va_arg(ap, ev_future_t *);
+		}
+		return ev_future_when_all_n(exec, n, futures);
+	} else {
+		ev_future_t **futures = malloc(n * sizeof(*futures));
+		if (!futures) {
+			set_errc(errno2c(errno));
+			return NULL;
+		}
+		for (size_t i = 0; i < n; i++) {
+			futures[i] = future;
+			future = va_arg(ap, ev_future_t *);
+		}
+		ev_future_t *result = ev_future_when_all_n(exec, n, futures);
+		int errsv = errno;
+		free(futures);
+		errno = errsv;
+		return result;
+	}
+}
+
+static void
+ev_future_when_all_func(struct ev_task *task)
+{
+	assert(task);
+	struct ev_future_when_all *when =
+			structof(task, struct ev_future_when_all, task);
+
+	ev_future_t **pfuture = when->futures + when->idx;
+	if (ev_future_is_ready(*pfuture)) {
+		ev_future_release(*pfuture);
+		while (++when->idx < when->n && ev_future_is_unique(*++pfuture))
+			ev_future_release(*pfuture);
+		if (when->idx < when->n) {
+			ev_future_submit(*pfuture, &when->task);
+			return;
+		}
+	} else {
+		for (size_t i = when->idx; i < when->n; i++)
+			ev_future_release(*pfuture++);
+	}
+
+	ev_promise_set(when->promise, &when->idx);
+	ev_promise_release(when->promise);
+}
+
+static ev_future_t *
+ev_future_when_any_nv(
+		ev_exec_t *exec, size_t n, ev_future_t *future, va_list ap)
+{
+	if (n <= LELY_EV_FUTURE_MAX) {
+#if __STDC_NO_VLA__ || defined(_MSC_VER)
+		ev_future_t *futures[LELY_EV_FUTURE_MAX];
+#else
+		ev_future_t *futures[n ? n : 1];
+#endif
+		for (size_t i = 0; i < n; i++) {
+			futures[i] = future;
+			future = va_arg(ap, ev_future_t *);
+		}
+		return ev_future_when_any_n(exec, n, futures);
+	} else {
+		ev_future_t **futures = malloc(n * sizeof(*futures));
+		if (!futures) {
+			set_errc(errno2c(errno));
+			return NULL;
+		}
+		for (size_t i = 0; i < n; i++) {
+			futures[i] = future;
+			future = va_arg(ap, ev_future_t *);
+		}
+		ev_future_t *result = ev_future_when_any_n(exec, n, futures);
+		int errsv = errno;
+		free(futures);
+		errno = errsv;
+		return result;
+	}
+}
+
+static void
+ev_future_when_any_func(struct ev_task *task)
+{
+	assert(task);
+	struct ev_future_when_any *when =
+			structof(task, struct ev_future_when_any, task);
+
+	ev_promise_set(when->promise, &when->idx);
+	ev_promise_release(when->promise);
 }

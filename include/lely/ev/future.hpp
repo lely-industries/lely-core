@@ -24,10 +24,12 @@
 #ifndef LELY_EV_FUTURE_HPP_
 #define LELY_EV_FUTURE_HPP_
 
+#include <lely/ev/exec.hpp>
 #include <lely/ev/future.h>
 #include <lely/util/result.hpp>
 
 #include <utility>
+#include <vector>
 
 namespace lely {
 namespace ev {
@@ -343,6 +345,46 @@ class Future {
  private:
   ev_future_t* future_{nullptr};
 };
+
+/// @see ev_future_when_all_n()
+template <class InputIt>
+inline Future<::std::size_t, void>
+when_all(ev_exec_t* exec, InputIt first, InputIt last) {
+  ::std::vector<ev_future_t*> futures(first, last);
+  auto f = ev_future_when_all_n(exec, futures.size(), futures.data());
+  if (!f) util::throw_errc("when_all");
+  return Future<::std::size_t, void>(f);
+}
+
+/// @see ev_future_when_all_n()
+template <class... Futures>
+inline Future<::std::size_t, void>
+when_all(ev_exec_t* exec, Futures&&... futures) {
+  auto f =
+      ev_future_when_all(exec, static_cast<ev_future_t*>(futures)..., nullptr);
+  if (!f) util::throw_errc("when_all");
+  return Future<::std::size_t, void>(f);
+}
+
+/// @see ev_future_when_any_n()
+template <class InputIt>
+inline Future<::std::size_t, void>
+when_any(ev_exec_t* exec, InputIt first, InputIt last) {
+  ::std::vector<ev_future_t*> futures(first, last);
+  auto f = ev_future_when_any_n(exec, futures.size(), futures.data());
+  if (!f) util::throw_errc("when_any");
+  return Future<::std::size_t, void>(f);
+}
+
+/// @see ev_future_when_any_n()
+template <class... Futures>
+inline Future<::std::size_t, void>
+when_any(ev_exec_t* exec, Futures&&... futures) {
+  auto f =
+      ev_future_when_any(exec, static_cast<ev_future_t*>(futures)..., nullptr);
+  if (!f) util::throw_errc("when_any");
+  return Future<::std::size_t, void>(f);
+}
 
 }  // namespace ev
 }  // namespace lely

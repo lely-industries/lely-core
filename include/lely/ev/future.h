@@ -222,6 +222,81 @@ size_t ev_future_cancel(ev_future_t *future, struct ev_task *task);
  */
 size_t ev_future_abort(ev_future_t *future, struct ev_task *task);
 
+/**
+ * Equivalent to ev_future_when_all_n(), except that it accepts a variable
+ * number of arguments instead of a list of futures. The last argument MUST be a
+ * NULL pointer.
+ */
+ev_future_t *ev_future_when_all(ev_exec_t *exec, ev_future_t *future, ...);
+
+/**
+ * Equivalent to ev_future_when_all(), except that it accepts a `va_list`
+ * instead of a variable number of arguments.
+ */
+ev_future_t *ev_future_when_all_v(
+		ev_exec_t *exec, ev_future_t *future, va_list ap);
+
+/**
+ * Creates a future that becomes ready when all of the input futures become
+ * ready or one of the input futures is abandoned before becoming ready. The
+ * result of the created future, once it becomes ready, is a `size_t` value
+ * containing the number of ready futures or the index of the first abandoned
+ * future. If no input futures are specified, a ready future is returned with an
+ * empty result (ev_future_get() returns NULL).
+ *
+ * This function acquires references to each of the input futures and submits
+ * tasks waiting for them to become ready. It is the responsibility of the
+ * caller to ensure that these tasks are not aborted with ev_future_abort(), as
+ * that would lead to a resource leak.
+ *
+ * @param exec    a pointer the executor used for the waiting tasks.
+ * @param n       the number of (pointers to) futures in <b>futures</b>.
+ * @param futures an array of pointers to futures (can be NULL if <b>n</b> is
+ *                0).
+ *
+ * @returns a pointer to a new future, or NULL on error. In the latter case, the
+ * error number can be obtained with get_errc().
+ */
+ev_future_t *ev_future_when_all_n(
+		ev_exec_t *exec, size_t n, ev_future_t *const *futures);
+
+/**
+ * Equivalent to ev_future_when_any_n(), except that it accepts a variable
+ * number of arguments instead of a list of futures. The last argument MUST be a
+ * NULL pointer.
+ */
+ev_future_t *ev_future_when_any(ev_exec_t *exec, ev_future_t *future, ...);
+
+/**
+ * Equivalent to ev_future_when_any(), except that it accepts a `va_list`
+ * instead of a variable number of arguments.
+ */
+ev_future_t *ev_future_when_any_v(
+		ev_exec_t *exec, ev_future_t *future, va_list ap);
+
+/**
+ * Creates a future that becomes ready when at least one of the input futures
+ * becomes ready or is abandoned. The result of the created future, once it
+ * becomes ready, is a `size_t` value containing the index of the first ready (or
+ * abandoned) future. If no input futures are specified, a ready future is
+ * returned with an empty result (ev_future_get() returns NULL).
+ *
+ * This function acquires references to each of the input futures and submits
+ * tasks waiting for them to become ready. It is the responsibility of the
+ * caller to ensure that these tasks are not aborted with ev_future_abort(), as
+ * that would lead to a resource leak.
+ *
+ * @param exec    a pointer the executor used for the waiting tasks.
+ * @param n       the number of (pointers to) futures in <b>futures</b>.
+ * @param futures an array of pointers to futures (can be NULL if <b>n</b> is
+ *                0).
+ *
+ * @returns a pointer to a new future, or NULL on error. In the latter case, the
+ * error number can be obtained with get_errc().
+ */
+ev_future_t *ev_future_when_any_n(
+		ev_exec_t *exec, size_t n, ev_future_t *const *futures);
+
 #ifdef __cplusplus
 }
 #endif
