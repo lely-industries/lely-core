@@ -24,6 +24,9 @@
 
 #include <lely/io2/io2.h>
 
+/// The system-dependent I/O polling interface.
+typedef struct io_poll io_poll_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

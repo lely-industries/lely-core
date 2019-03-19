@@ -5,6 +5,7 @@ endif
 if PLATFORM_POSIX
 src += posix/io.c
 src += posix/io.h
+src += posix/poll.c
 endif
 if PLATFORM_WIN32
 src += win32/io.c
