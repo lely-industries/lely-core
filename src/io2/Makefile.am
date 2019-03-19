@@ -24,6 +24,7 @@ src += clock.c
 src += ctx.c
 src += dev.c
 src += io2.h
+src += sigset.c
 src += timer.c
 src += timer.h
 src += tqueue.c
