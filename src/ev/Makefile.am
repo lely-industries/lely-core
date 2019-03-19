@@ -2,6 +2,7 @@ src =
 src += ev.h
 src += exec.c
 src += future.c
+src += loop.c
 src += poll.c
 src += std_exec.c
 src += strand.c

@@ -180,6 +180,10 @@ inc += lely/ev/future.h
 if !NO_CXX
 inc += lely/ev/future.hpp
 endif
+inc += lely/ev/loop.h
+if !NO_CXX
+inc += lely/ev/loop.hpp
+endif
 inc += lely/ev/poll.h
 if !NO_CXX
 inc += lely/ev/poll.hpp
