@@ -4,6 +4,7 @@ src += exec.c
 src += std_exec.c
 src += strand.c
 src += task.c
+src += thrd_loop.c
 
 lib_LTLIBRARIES = liblely-ev.la
 liblely_ev_la_CPPFLAGS = -I$(top_srcdir)/include

@@ -178,6 +178,10 @@ inc += lely/ev/task.h
 if !NO_CXX
 inc += lely/ev/task.hpp
 endif
+inc += lely/ev/thrd_loop.h
+if !NO_CXX
+inc += lely/ev/thrd_loop.hpp
+endif
 
 inc += lely/co/def/basic.def
 if !NO_CXX
