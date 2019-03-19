@@ -1,8 +1,4 @@
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <lely/tap/tap.h>
+#include "test.h"
 #ifndef LELY_NO_CO_CSDO
 #include <lely/co/csdo.hpp>
 #endif

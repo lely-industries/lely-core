@@ -1,67 +1,131 @@
 bin =
 
+# C11 and POSIX compatibility library tests
+
+LELY_LIBC_LIBS =
+if CODE_COVERAGE_ENABLED
+LELY_LIBC_LIBS += $(CODE_COVERAGE_LIBS)
+endif
+LELY_LIBC_LIBS += $(top_builddir)/src/libc/liblely-libc.la
+LELY_LIBC_LIBS += $(top_builddir)/src/tap/liblely-tap.la
+
+# Test Anything Protocol (TAP) library tests
+
+LELY_TAP_LIBS = $(LELY_LIBC_LIBS)
+
 bin += test-tap
-test_tap_SOURCES = tap.c
+test_tap_SOURCES = test.h tap.c
+test_tap_LDADD = $(LELY_TAP_LIBS)
+
+# Utilities library tests
+
+LELY_UTIL_LIBS = $(LELY_TAP_LIBS)
+LELY_UTIL_LIBS += $(top_builddir)/src/util/liblely-util.la
 
 bin += test-util-config
-test_util_config_SOURCES = util-config.c
+test_util_config_SOURCES = test.h util-config.c
+test_util_config_LDADD = $(LELY_UTIL_LIBS)
+
 bin += test-util-endian
-test_util_endian_SOURCES = util-endian.c
+test_util_endian_SOURCES = test.h util-endian.c
+test_util_endian_LDADD = $(LELY_UTIL_LIBS)
+
 bin += test-util-fbuf
-test_util_fbuf_SOURCES = util-fbuf.c
+test_util_fbuf_SOURCES = test.h util-fbuf.c
+test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
+
+# CAN library tests
+
+LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
+LELY_CAN_LIBS += $(top_builddir)/src/can/liblely-can.la
 
 bin += test-can-net
-test_can_net_SOURCES = can-net.c
+test_can_net_SOURCES = test.h can-net.c
+test_can_net_LDADD = $(LELY_CAN_LIBS)
 
+# I/O library tests
+
+LELY_IO_LIBS = $(LELY_CAN_LIBS)
+LELY_IO_LIBS += $(top_builddir)/src/io/liblely-io.la
+
+if !NO_CXX
 bin += test-io-cxx
-test_io_cxx_SOURCES = io-cxx.cpp
+test_io_cxx_SOURCES = test.h io-cxx.cpp
+test_io_cxx_LDADD = $(LELY_IO_LIBS)
+endif
+
 bin += test-io-poll
-test_io_poll_SOURCES = io-poll.c
+test_io_poll_SOURCES = test.h io-poll.c
+test_io_poll_LDADD = $(LELY_IO_LIBS)
+
+# CANopen library tests
+
+LELY_CO_LIBS = $(LELY_CAN_LIBS)
+LELY_CO_LIBS += $(top_builddir)/src/co/liblely-co.la
 
 if !NO_CXX
 bin += test-co-cxx
-test_co_cxx_SOURCES = co-cxx.cpp
+test_co_cxx_SOURCES = test.h co-cxx.cpp
+test_co_cxx_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_DCF
+
 if !NO_CO_EMCY
 bin += test-co-emcy
 test_co_emcy_SOURCES = co-test.h co-emcy.c
+test_co_emcy_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_GW_TXT
 bin += test-co-gw_txt
 test_co_gw_txt_SOURCES = co-test.h co-gw_txt.c
+test_co_gw_txt_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_MASTER
 bin += test-co-nmt
 test_co_nmt_SOURCES = co-test.h co-nmt.c
+test_co_nmt_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_RPDO
 if !NO_CO_TPDO
 bin += test-co-pdo
 test_co_pdo_SOURCES = co-test.h co-pdo.c
+test_co_pdo_LDADD = $(LELY_CO_LIBS)
 endif
 endif
+
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += test-co-sdev
 test_co_sdev_SOURCES = co-test.h co-sdev.c
 nodist_test_co_sdev_SOURCES = test-co-sdev.h
+test_co_sdev_LDADD = $(LELY_CO_LIBS)
 test-co-sdev.h: co-sdev.dcf $(top_builddir)/tools/dcf2c$(EXEEXT)
 	$(EXEC) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
 endif
 endif
+
 if !NO_CO_CSDO
 bin += test-co-sdo
 test_co_sdo_SOURCES = co-test.h co-sdo.c
+test_co_sdo_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_SYNC
 bin += test-co-sync
 test_co_sync_SOURCES = co-test.h co-sync.c
+test_co_sync_LDADD = $(LELY_CO_LIBS)
 endif
+
 if !NO_CO_TIME
 bin += test-co-time
 test_co_time_SOURCES = co-test.h co-time.c
+test_co_time_LDADD = $(LELY_CO_LIBS)
 endif
+
 endif
 
 EXTRA_DIST =
@@ -99,18 +163,6 @@ AM_CFLAGS =
 if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
-
-LDADD =
-LDADD += $(top_builddir)/src/libc/liblely-libc.la
-LDADD += $(top_builddir)/src/tap/liblely-tap.la
-LDADD += $(top_builddir)/src/util/liblely-util.la
-LDADD += $(top_builddir)/src/can/liblely-can.la
-LDADD += $(top_builddir)/src/io/liblely-io.la
-LDADD += $(top_builddir)/src/co/liblely-co.la
-if CODE_COVERAGE_ENABLED
-LDADD += $(CODE_COVERAGE_LIBS)
-endif
-
 TESTS = $(check_PROGRAMS)
 
 EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh

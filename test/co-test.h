@@ -1,9 +1,9 @@
-#ifndef LELY_CO_TEST_TEST_H_
-#define LELY_CO_TEST_TEST_H_
+#ifndef LELY_TEST_INTERN_CO_TEST_H_
+#define LELY_TEST_INTERN_CO_TEST_H_
 
+#include "test.h"
 #include <lely/can/buf.h>
 #include <lely/can/net.h>
-#include <lely/tap/tap.h>
 #include <lely/util/diag.h>
 #ifndef LELY_CO_NO_WTM
 #include <lely/co/wtm.h>
@@ -223,4 +223,4 @@ co_test_wtm_send(co_wtm_t *wtm, const void *buf, size_t nbytes, void *data)
 }
 #endif
 
-#endif // !LELY_CO_TEST_TEST_H_
+#endif // !LELY_TEST_INTERN_CO_TEST_H_
