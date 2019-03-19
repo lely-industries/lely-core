@@ -5,10 +5,15 @@ src += linux/poll.c
 src += linux/timer.c
 endif
 if PLATFORM_POSIX
+src += posix/fd.c
+src += posix/fd.h
 src += posix/io.c
 src += posix/io.h
 if !PLATFORM_LINUX
 src += posix/poll.c
+endif
+src += posix/sigset.c
+if !PLATFORM_LINUX
 src += posix/timer.c
 endif
 endif
@@ -25,6 +30,7 @@ src += ctx.c
 src += dev.c
 src += io2.h
 src += sigset.c
+src += sigset.h
 src += timer.c
 src += timer.h
 src += tqueue.c
