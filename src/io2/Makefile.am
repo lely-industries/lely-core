@@ -1,4 +1,5 @@
 src =
+src += can/msg.c
 if PLATFORM_LINUX
 src += linux/io.h
 src += linux/poll.c
