@@ -80,6 +80,14 @@ endif
 LELY_IO2_LIBS = $(LELY_EV_LIBS)
 LELY_IO2_LIBS += $(top_builddir)/src/io2/liblely-io2.la
 
+if PLATFORM_POSIX
+if !NO_CXX
+bin += test-io2-sigset
+test_io2_sigset_SOURCES = test.h io2-sigset.cpp
+test_io2_sigset_LDADD = $(LELY_IO2_LIBS)
+endif
+endif
+
 if !NO_CXX
 bin += test-io2-timer
 test_io2_timer_SOURCES = test.h io2-timer.cpp
