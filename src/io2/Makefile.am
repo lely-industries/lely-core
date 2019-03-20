@@ -27,6 +27,7 @@ src += win32/poll.c
 src += win32/sigset.c
 src += win32/timer.c
 endif
+src += can.c
 src += clock.c
 src += ctx.c
 src += dev.c

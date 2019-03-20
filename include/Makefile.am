@@ -245,6 +245,10 @@ if !NO_CXX
 inc += lely/io2/win32/poll.hpp
 endif
 endif
+inc += lely/io2/can.h
+if !NO_CXX
+inc += lely/io2/can.hpp
+endif
 inc += lely/io2/clock.h
 if !NO_CXX
 inc += lely/io2/clock.hpp
