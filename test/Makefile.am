@@ -75,6 +75,17 @@ test_ev_loop_SOURCES = test.h ev-loop.cpp
 test_ev_loop_LDADD = $(LELY_EV_LIBS)
 endif
 
+# I/O library tests
+
+LELY_IO2_LIBS = $(LELY_EV_LIBS)
+LELY_IO2_LIBS += $(top_builddir)/src/io2/liblely-io2.la
+
+if !NO_CXX
+bin += test-io2-timer
+test_io2_timer_SOURCES = test.h io2-timer.cpp
+test_io2_timer_LDADD = $(LELY_IO2_LIBS)
+endif
+
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)
