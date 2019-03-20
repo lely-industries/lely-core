@@ -213,6 +213,12 @@ inc += lely/io2/can/msg.h
 if !NO_CXX
 inc += lely/io2/can/msg.hpp
 endif
+if PLATFORM_LINUX
+inc += lely/io2/linux/can.h
+if !NO_CXX
+inc += lely/io2/linux/can.hpp
+endif
+endif
 if PLATFORM_POSIX
 inc += lely/io2/posix/poll.h
 if !NO_CXX
