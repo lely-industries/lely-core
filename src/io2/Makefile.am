@@ -3,6 +3,7 @@ src += can/msg.c
 if PLATFORM_LINUX
 src += linux/io.h
 src += linux/poll.c
+src += linux/rtnl.h
 src += linux/timer.c
 endif
 if PLATFORM_POSIX
