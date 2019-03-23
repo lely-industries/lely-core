@@ -1,6 +1,8 @@
 src =
 src += can/msg.c
 if PLATFORM_LINUX
+src += linux/can_err.h
+src += linux/can_msg.h
 src += linux/if.h
 src += linux/ifreq.h
 src += linux/io.h
