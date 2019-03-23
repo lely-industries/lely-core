@@ -27,6 +27,7 @@ src += posix/timer.c
 endif
 endif
 src += sys/clock.c
+src += user/can.c
 src += user/timer.c
 if PLATFORM_WIN32
 src += win32/io.c
