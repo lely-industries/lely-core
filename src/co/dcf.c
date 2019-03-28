@@ -779,17 +779,17 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	unsigned int access = co_sub_get_access(sub);
 	val = config_get(cfg, section, "AccessType");
 	if (val && *val) {
-		if (!strcmp(val, "ro")) {
+		if (!strcasecmp(val, "ro")) {
 			access = CO_ACCESS_RO;
-		} else if (!strcmp(val, "wo")) {
+		} else if (!strcasecmp(val, "wo")) {
 			access = CO_ACCESS_WO;
-		} else if (!strcmp(val, "rw")) {
+		} else if (!strcasecmp(val, "rw")) {
 			access = CO_ACCESS_RW;
-		} else if (!strcmp(val, "rwr")) {
+		} else if (!strcasecmp(val, "rwr")) {
 			access = CO_ACCESS_RWR;
-		} else if (!strcmp(val, "rww")) {
+		} else if (!strcasecmp(val, "rww")) {
 			access = CO_ACCESS_RWW;
-		} else if (!strcmp(val, "const")) {
+		} else if (!strcasecmp(val, "const")) {
 			access = CO_ACCESS_CONST;
 		} else {
 			diag_at(DIAG_ERROR, 0, &at, "AccessType = %s", val);
