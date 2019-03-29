@@ -252,6 +252,7 @@ endif
 inc += lely/io2/clock.h
 if !NO_CXX
 inc += lely/io2/clock.hpp
+inc += lely/io2/co_can.hpp
 inc += lely/io2/co_sigset.hpp
 inc += lely/io2/co_timer.hpp
 inc += lely/io2/co_tqueue.hpp
