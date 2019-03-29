@@ -85,6 +85,115 @@ class CanController : public CanControllerBase {
   }
 };
 
+/// A CAN channel.
+class CanChannel : public CanChannelBase {
+ public:
+  /// @see io_can_chan_create()
+  CanChannel(io_poll_t* poll, ev_exec_t* exec, ::std::size_t rxlen = 0)
+      : CanChannelBase(io_can_chan_create(poll, exec, rxlen)) {
+    if (!chan) util::throw_errc("CanChannel");
+  }
+
+  CanChannel(const CanChannel&) = delete;
+
+  CanChannel(CanChannel&& other) noexcept : CanChannelBase(other.chan) {
+    other.chan = nullptr;
+    other.dev = nullptr;
+  }
+
+  CanChannel& operator=(const CanChannel&) = delete;
+
+  CanChannel&
+  operator=(CanChannel&& other) noexcept {
+    using ::std::swap;
+    swap(chan, other.chan);
+    swap(dev, other.dev);
+    return *this;
+  }
+
+  /// @see io_can_chan_destroy()
+  ~CanChannel() { io_can_chan_destroy(*this); }
+
+  /// @see io_can_chan_get_handle()
+  int
+  get_handle() const noexcept {
+    return io_can_chan_get_handle(*this);
+  }
+
+  /// @see io_can_chan_open()
+  void
+  open(const io_can_ctrl_t* ctrl, CanBusFlag flags,
+       ::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_chan_open(*this, ctrl, static_cast<int>(flags)))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_can_chan_open()
+  void
+  open(const io_can_ctrl_t* ctrl, CanBusFlag flags = CanBusFlag::NONE) {
+    ::std::error_code ec;
+    open(ctrl, flags, ec);
+    if (ec) throw ::std::system_error(ec, "open");
+  }
+
+  /// @see io_can_chan_assign()
+  void
+  assign(int fd, ::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_chan_assign(*this, fd))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_can_chan_assign()
+  void
+  assign(int fd) {
+    ::std::error_code ec;
+    assign(fd, ec);
+    if (ec) throw ::std::system_error(ec, "assign");
+  }
+
+  /// @see io_can_chan_release()
+  int
+  release() noexcept {
+    return io_can_chan_release(*this);
+  }
+
+  /// @see io_can_chan_is_open()
+  bool
+  is_open() const noexcept {
+    return io_can_chan_is_open(*this) != 0;
+  }
+
+  /// @see io_can_chan_close()
+  void
+  close(::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_chan_close(*this))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_can_chan_close()
+  void
+  close() {
+    ::std::error_code ec;
+    close(ec);
+    if (ec) throw ::std::system_error(ec, "close");
+  }
+};
+
 }  // namespace io
 }  // namespace lely
 

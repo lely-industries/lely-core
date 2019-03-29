@@ -2,6 +2,7 @@ src =
 src += can/msg.c
 if PLATFORM_LINUX
 src += linux/can_attr.h
+src += linux/can_chan.c
 src += linux/can_ctrl.c
 src += linux/can_err.h
 src += linux/can_msg.h
@@ -35,6 +36,7 @@ src += win32/sigset.c
 src += win32/timer.c
 endif
 src += can.c
+src += can.h
 src += cbuf.h
 src += clock.c
 src += ctx.c

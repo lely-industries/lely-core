@@ -25,6 +25,8 @@
 
 #if _POSIX_C_SOURCE >= 200112L
 
+#include <sys/socket.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +46,35 @@ int io_fd_set_cloexec(int fd);
  * can be obtained from `errno`.
  */
 int io_fd_set_nonblock(int fd);
+
+/**
+ * Waits for one or more of the I/O events in *<b>events</b> to occur as if by
+ * POSIX `poll()`. On succes, the reported events are stored in *<b>events</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained from `errno`.
+ */
+int io_fd_wait(int fd, int *events, int timeout);
+
+/**
+ * Equivalent to POSIX `recvmsg(fd, msg, flags)`, except that if <b>fd</b> is
+ * non-blocking (or the implementation supports the `MSG_DONTWAIT` flag) and
+ * <b>timeout</b> is non-negative, this function behaves as if <b>fd</b> is
+ * blocking and the `SO_RCVTIMEO` option is set with <b>timeout</b>
+ * milliseconds. The timeout interval will be rounded up to the system clock
+ * granularity, but this function MAY return early if interrupted by a signal.
+ */
+ssize_t io_fd_recvmsg(int fd, struct msghdr *msg, int flags, int timeout);
+
+/**
+ * Equivalent to POSIX `sendmsg(fd, msg, flags | MSG_NOSIGNAL)`, except that if
+ * <b>fd</b> is non-blocking (or the implementation supports the `MSG_DONTWAIT`
+ * flag) and <b>timeout</b> is non-negative, this function behaves as if
+ * <b>fd</b> is blocking and the `SO_SNDTIMEO` option is set with <b>timeout</b>
+ * milliseconds. The timeout interval will be rounded up to the system clock
+ * granularity, but this function MAY return early if interrupted by a signal.
+ */
+ssize_t io_fd_sendmsg(int fd, const struct msghdr *msg, int flags, int timeout);
 
 #ifdef __cplusplus
 }

@@ -26,4 +26,14 @@
 /// An I/O context.
 typedef struct io_ctx io_ctx_t;
 
+#ifndef LELY_IO_RX_TIMEOUT
+/// The default timeout (in milliseconds) for I/O read operations.
+#define LELY_IO_RX_TIMEOUT 100
+#endif
+
+#ifndef LELY_IO_TX_TIMEOUT
+/// The default timeout (in milliseconds) for I/O write operations.
+#define LELY_IO_TX_TIMEOUT 10
+#endif
+
 #endif // !LELY_IO2_IO2_H_
