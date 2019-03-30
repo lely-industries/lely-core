@@ -1,7 +1,8 @@
 /**@file
- * This is the public header file of the CAN library.
+ * This header file is part of the CAN library; it contains CAN bus error
+ * definitions.
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CAN_CAN_H_
-#define LELY_CAN_CAN_H_
+#ifndef LELY_CAN_ERR_H_
+#define LELY_CAN_ERR_H_
 
 #include <lely/features.h>
 
@@ -30,7 +31,11 @@ enum can_state {
 	/// The error passive state (TX/RX error count < 256).
 	CAN_STATE_PASSIVE,
 	/// The bus off state (TX/RX error count >= 256).
-	CAN_STATE_BUSOFF
+	CAN_STATE_BUSOFF,
+	/// The device is in sleep mode.
+	CAN_STATE_SLEEPING,
+	/// The device is stopped.
+	CAN_STATE_STOPPED
 };
 
 /// The error flags of a CAN bus, which are not mutually exclusive.
@@ -46,7 +51,7 @@ enum can_error {
 	/// An acknowledgment error.
 	CAN_ERROR_ACK = 1u << 4,
 	/// One or more other errors.
-	CAN_ERROR_OTHER = 1 << 5
+	CAN_ERROR_OTHER = 1u << 5
 };
 
-#endif // !LELY_CAN_CAN_H_
+#endif // !LELY_CAN_ERR_H_

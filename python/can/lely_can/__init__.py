@@ -5,6 +5,6 @@ __author__ = 'J. S. Seldenthuis <jseldenthuis@lely.com>'
 __version__ = '1.9.2'
 __license__ = 'Apache-2.0'
 
-from lely_can.can import *
+from lely_can.err import *
 from lely_can.msg import *
 

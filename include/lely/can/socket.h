@@ -22,6 +22,7 @@
 #ifndef LELY_CAN_SOCKET_H_
 #define LELY_CAN_SOCKET_H_
 
+#include <lely/can/err.h>
 #include <lely/can/msg.h>
 
 // The SocketCAN CAN frame struct from <linux/can.h>

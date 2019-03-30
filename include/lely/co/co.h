@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the CANopen library.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,6 @@
 #ifndef LELY_CO_CO_H_
 #define LELY_CO_CO_H_
 
-#include <lely/can/can.h>
 #include <lely/util/util.h>
 
 struct __co_dev;

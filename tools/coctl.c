@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CANopen control tool (a CiA 309-3 gateway).
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+#include <lely/can/err.h>
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>

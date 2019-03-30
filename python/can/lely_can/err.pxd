@@ -1,8 +1,10 @@
-cdef extern from "lely/can/can.h":
+cdef extern from "lely/can/err.h":
     enum can_state:
         _CAN_STATE_ACTIVE "CAN_STATE_ACTIVE"
         _CAN_STATE_PASSIVE "CAN_STATE_PASSIVE"
         _CAN_STATE_BUSOFF "CAN_STATE_BUSOFF"
+        _CAN_STATE_SLEEPING "CAN_STATE_SLEEPING"
+        _CAN_STATE_STOPPED "CAN_STATE_STOPPED"
 
     enum can_error:
         _CAN_ERROR_BIT "CAN_ERROR_BIT"
