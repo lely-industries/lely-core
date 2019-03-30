@@ -237,6 +237,7 @@ inc += lely/io2/clock.h
 if !NO_CXX
 inc += lely/io2/clock.hpp
 inc += lely/io2/co_timer.hpp
+inc += lely/io2/co_tqueue.hpp
 endif
 inc += lely/io2/ctx.h
 if !NO_CXX
