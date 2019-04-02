@@ -1,6 +1,5 @@
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA =
-pkgconfig_DATA += liblely-aio.pc
 pkgconfig_DATA += liblely-can.pc
 pkgconfig_DATA += liblely-co.pc
 if !NO_CXX

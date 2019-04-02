@@ -844,7 +844,6 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       =
-EXCLUDE_PATTERNS       += */aio/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -2112,13 +2111,6 @@ PREDEFINED             += LELY_UTIL_SLLIST_INLINE=inline
 PREDEFINED             += LELY_UTIL_TIME_INLINE=inline
 
 PREDEFINED             += LELY_CAN_BUF_INLINE=inline
-
-PREDEFINED             += LELY_AIO_CAN_BUS_INLINE=
-PREDEFINED             += LELY_AIO_EXEC_INLINE=
-PREDEFINED             += LELY_AIO_POLL_INLINE=
-PREDEFINED             += LELY_AIO_QUEUE_INLINE=
-PREDEFINED             += LELY_AIO_REACTOR_INLINE=
-PREDEFINED             += LELY_AIO_TIMER_INLINE=
 
 PREDEFINED             += LELY_EV_EXEC_INLINE=inline
 PREDEFINED             += LELY_EV_LOOP_INLINE=inline

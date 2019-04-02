@@ -125,55 +125,6 @@ if !NO_CXX
 inc += lely/io/sock.hpp
 endif
 
-if PLATFORM_LINUX
-if !NO_CXX
-inc += lely/aio/detail/cbase.hpp
-inc += lely/aio/detail/timespec.hpp
-endif
-inc += lely/aio/aio.h
-if !NO_CXX
-inc += lely/aio/aio.hpp
-endif
-inc += lely/aio/can_bus.h
-if !NO_CXX
-inc += lely/aio/can_bus.hpp
-endif
-inc += lely/aio/context.h
-if !NO_CXX
-inc += lely/aio/context.hpp
-endif
-inc += lely/aio/exec.h
-if !NO_CXX
-inc += lely/aio/exec.hpp
-endif
-inc += lely/aio/future.h
-if !NO_CXX
-inc += lely/aio/future.hpp
-endif
-inc += lely/aio/loop.h
-if !NO_CXX
-inc += lely/aio/loop.hpp
-endif
-inc += lely/aio/poll.h
-if !NO_CXX
-inc += lely/aio/poll.hpp
-endif
-inc += lely/aio/queue.h
-inc += lely/aio/reactor.h
-if !NO_CXX
-inc += lely/aio/reactor.hpp
-endif
-inc += lely/aio/self_pipe.h
-inc += lely/aio/strand.h
-if !NO_CXX
-inc += lely/aio/strand.hpp
-endif
-inc += lely/aio/timer.h
-if !NO_CXX
-inc += lely/aio/timer.hpp
-endif
-endif
-
 if !NO_CXX
 inc += lely/ev/co_task.hpp
 endif
@@ -432,6 +383,3 @@ endif
 endif
 
 nobase_include_HEADERS = $(inc)
-
-EXTRA_DIST =
-EXTRA_DIST += lely/CPPLINT.cfg

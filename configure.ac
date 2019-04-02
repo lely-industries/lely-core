@@ -446,7 +446,6 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
-	pkgconfig/liblely-aio.pc
 	pkgconfig/liblely-can.pc
 	pkgconfig/liblely-co.pc
 	pkgconfig/liblely-coapp.pc
@@ -461,8 +460,6 @@ AC_CONFIG_FILES([
 	python/can/Makefile
 	python/io/Makefile
 	python/Makefile
-	src/aio/Makefile
-	src/aio/version.rc
 	src/can/Makefile
 	src/can/version.rc
 	src/co/Makefile
