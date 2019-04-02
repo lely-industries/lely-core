@@ -63,6 +63,9 @@ inc += lely/util/invoker.hpp
 endif
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
+if !NO_CXX
+inc += lely/util/mutex.hpp
+endif
 inc += lely/util/pheap.h
 inc += lely/util/print.h
 inc += lely/util/rbtree.h
