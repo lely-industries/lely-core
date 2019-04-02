@@ -413,12 +413,8 @@ inc += lely/co/wtm.hpp
 endif
 endif
 
-if PLATFORM_LINUX
 if !NO_CXX
-inc += lely/coapp/detail/chrono.hpp
-inc += lely/coapp/detail/mutex.hpp
 inc += lely/coapp/detail/type_traits.hpp
-inc += lely/coapp/coapp.hpp
 inc += lely/coapp/device.hpp
 if !NO_COAPP_MASTER
 inc += lely/coapp/driver.hpp
@@ -432,7 +428,6 @@ inc += lely/coapp/sdo.hpp
 inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
-endif
 endif
 endif
 

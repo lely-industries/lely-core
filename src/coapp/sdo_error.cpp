@@ -27,6 +27,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <string>
 
 namespace lely {
 
@@ -43,9 +44,6 @@ class SdoErrcCategory : public ::std::error_category {
 
   ::std::error_condition default_error_condition(int ev) const
       noexcept override;
-  // bool equivalent(int code, const ::std::error_condition& condition) const
-  // noexcept override; bool equivalent(const std::error_code& code, int
-  // condition) const noexcept override;
 
   ::std::string
   message(int ev) const override {
@@ -102,9 +100,11 @@ SdoErrcCategory::default_error_condition(int ev) const noexcept {
     case SdoErrc::DATA_CTL:
     case SdoErrc::DATA_DEV:
       return ::std::errc::device_or_resource_busy;
-    // case SdoErrc::NO_OD:
+      // case SdoErrc::NO_OD:
+#if !defined(__MINGW32__) || defined(ENODATA)
     case SdoErrc::NO_VAL:
       return ::std::errc::no_message_available;
+#endif
     default:
       return ::std::error_condition(ev, *this);
   }

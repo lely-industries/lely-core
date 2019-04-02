@@ -28,6 +28,9 @@
 #include <lely/coapp/slave.hpp>
 
 #include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <cassert>
 
@@ -69,16 +72,16 @@ struct BasicSlave::Impl_ {
   ::std::map<uint32_t, ::std::function<uint32_t(const COSub*, void*)>> up_ind;
 };
 
-BasicSlave::BasicSlave(aio::TimerBase& timer, aio::CanBusBase& bus,
+BasicSlave::BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
                        const ::std::string& dcf_txt,
                        const ::std::string& dcf_bin, uint8_t id)
-    : Node(timer, bus, dcf_txt, dcf_bin, id),
+    : Node(timer, chan, dcf_txt, dcf_bin, id),
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicSlave::~BasicSlave() = default;
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
                    ::std::function<OnReadSignature<T>> ind) {
   ::std::error_code ec;
@@ -89,7 +92,7 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
 namespace {
 
 template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value,
+typename ::std::enable_if<detail::is_canopen_basic<T>::value,
                           ::std::error_code>::type
 OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
   assert(sub);
@@ -102,7 +105,7 @@ OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
 }
 
 template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value,
+typename ::std::enable_if<detail::is_canopen_array<T>::value,
                           ::std::error_code>::type
 OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
   assert(sub);
@@ -120,7 +123,7 @@ OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
                    ::std::function<OnReadSignature<T>> ind,
                    ::std::error_code& ec) {
@@ -138,7 +141,7 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
     return;
   }
 
-  if (!detail::IsCanopenSame(N, sub->getType())) {
+  if (!detail::is_canopen_same(N, sub->getType())) {
     ec = SdoErrc::TYPE_LEN;
     return;
   }
@@ -156,7 +159,7 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
                     ::std::function<OnWriteSignature<T>> ind) {
   ::std::error_code ec;
@@ -167,7 +170,7 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
 namespace {
 
 template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value,
+typename ::std::enable_if<detail::is_canopen_basic<T>::value,
                           ::std::error_code>::type
 OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
   assert(sub);
@@ -181,7 +184,7 @@ OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
 }
 
 template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value,
+typename ::std::enable_if<detail::is_canopen_array<T>::value,
                           ::std::error_code>::type
 OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
   assert(sub);
@@ -199,7 +202,7 @@ OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
                     ::std::function<OnWriteSignature<T>> ind,
                     ::std::error_code& ec) {
@@ -217,7 +220,7 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
     return;
   }
 
-  if (!detail::IsCanopenSame(N, sub->getType())) {
+  if (!detail::is_canopen_same(N, sub->getType())) {
     ec = SdoErrc::TYPE_LEN;
     return;
   }

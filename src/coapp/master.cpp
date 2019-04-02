@@ -25,11 +25,12 @@
 
 #if !LELY_NO_COAPP_MASTER
 
-#include <lely/coapp/detail/chrono.hpp>
 #include <lely/coapp/driver.hpp>
 
 #include <algorithm>
 #include <array>
+#include <map>
+#include <string>
 
 #include <cassert>
 
@@ -52,59 +53,59 @@ struct BasicMaster::Impl_ {
   ::std::map<uint8_t, Sdo> sdos;
 };
 
-BasicMaster::BasicMaster(aio::TimerBase& timer, aio::CanBusBase& bus,
+BasicMaster::BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
                          const ::std::string& dcf_txt,
                          const ::std::string& dcf_bin, uint8_t id)
-    : Node(timer, bus, dcf_txt, dcf_bin, id),
+    : Node(timer, chan, dcf_txt, dcf_bin, id),
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicMaster::~BasicMaster() = default;
 
 void
 BasicMaster::Error(uint8_t id) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  if (nmt()->nodeErrInd(id) == -1) throw_errc("Error");
+  if (nmt()->nodeErrInd(id) == -1) util::throw_errc("Error");
 }
 
 void
 BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::Error(eec, er, msef);
 }
 
 void
 BasicMaster::RpdoRtr(int num) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::RpdoRtr(num);
 }
 
 void
 BasicMaster::TpdoEvent(int num) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::TpdoEvent(num);
 }
 
 ::std::chrono::milliseconds
 BasicMaster::GetTimeout() const {
-  ::std::lock_guard<BasicLockable> lock(const_cast<BasicMaster&>(*this));
+  ::std::lock_guard<util::BasicLockable> lock(const_cast<BasicMaster&>(*this));
 
-  return detail::FromTimeout(nmt()->getTimeout());
+  return detail::from_sdo_timeout(nmt()->getTimeout());
 }
 
 void
 BasicMaster::SetTimeout(const ::std::chrono::milliseconds& timeout) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  nmt()->setTimeout(detail::ToTimeout(timeout));
+  nmt()->setTimeout(detail::to_sdo_timeout(timeout));
 }
 
 void
 BasicMaster::Insert(DriverBase& driver) {
-  ::std::lock_guard<BasicLockable> lock(*this);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
   if (!driver.id() || driver.id() > 0x7f)
     throw ::std::out_of_range("invalid node-ID: " +
@@ -121,24 +122,29 @@ BasicMaster::Insert(DriverBase& driver) {
 
 void
 BasicMaster::Erase(DriverBase& driver) {
-  ::std::lock_guard<BasicLockable> lock(*this);
-  assert(find(driver.id()) != end() && find(driver.id())->second == &driver);
+  ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  erase(driver.id());
+  auto id = driver.id();
+  auto it = find(id);
+  if (it != end() && it->second == &driver) {
+    CancelSdo(id);
+    erase(id);
+  }
 }
 
 void
-BasicMaster::OnCanError(CanError error) noexcept {
+BasicMaster::OnCanError(io::CanError error) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnCanError(error);
   }
 }
 
 void
-BasicMaster::OnCanState(CanState new_state, CanState old_state) noexcept {
+BasicMaster::OnCanState(io::CanState new_state,
+                        io::CanState old_state) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnCanState(new_state, old_state);
   }
 }
@@ -149,7 +155,7 @@ BasicMaster::OnCommand(NmtCommand cs) noexcept {
   // pre-operational or operational state.
   if (cs != NmtCommand::ENTER_PREOP && cs != NmtCommand::START) CancelSdo();
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnCommand(cs);
   }
 }
@@ -158,7 +164,7 @@ void
 BasicMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
   auto it = find(id);
   if (it != end()) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnNodeGuarding(occurred);
   }
 }
@@ -167,7 +173,7 @@ void
 BasicMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
   auto it = find(id);
   if (it != end()) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnHeartbeat(occurred);
   }
 }
@@ -179,7 +185,7 @@ BasicMaster::OnState(uint8_t id, NmtState st) noexcept {
   if (st == NmtState::BOOTUP) CancelSdo(id);
   auto it = find(id);
   if (it != end()) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnState(st);
   }
 }
@@ -189,7 +195,7 @@ BasicMaster::OnBoot(uint8_t id, NmtState st, char es,
                     const ::std::string& what) noexcept {
   auto it = find(id);
   if (it != end()) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnBoot(st, es, what);
   }
 }
@@ -204,9 +210,9 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
     return;
   }
   // Let the driver perform the configuration update.
-  detail::UnlockGuard<BasicLockable> unlock(*this);
+  util::UnlockGuard<util::BasicLockable> unlock(*this);
   it->second->OnConfig([=](::std::error_code ec) {
-    ::std::lock_guard<BasicLockable> lock(*this);
+    ::std::lock_guard<util::BasicLockable> lock(*this);
     // Report the result of the 'update configuration' process.
     ConfigResult(id, ec);
   });
@@ -225,7 +231,7 @@ void
 BasicMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
                     ::std::size_t n) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnRpdo(num, ec, p, n);
   }
 }
@@ -233,7 +239,7 @@ BasicMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
 void
 BasicMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnRpdoError(num, eec, er);
   }
 }
@@ -242,7 +248,7 @@ void
 BasicMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
                     ::std::size_t n) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnTpdo(num, ec, p, n);
   }
 }
@@ -250,7 +256,7 @@ BasicMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
 void
 BasicMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnSync(cnt, t);
   }
 }
@@ -258,7 +264,7 @@ BasicMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
 void
 BasicMaster::OnSyncError(uint16_t eec, uint8_t er) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnSyncError(eec, er);
   }
 }
@@ -267,7 +273,7 @@ void
 BasicMaster::OnTime(
     const ::std::chrono::system_clock::time_point& abs_time) noexcept {
   for (const auto& it : *this) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnTime(abs_time);
   }
 }
@@ -277,7 +283,7 @@ BasicMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
                     uint8_t msef[5]) noexcept {
   auto it = find(id);
   if (it != end()) {
-    detail::UnlockGuard<BasicLockable> unlock(*this);
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnEmcy(eec, er, msef);
   }
 }
@@ -310,24 +316,20 @@ BasicMaster::CancelSdo(uint8_t id) {
 }
 
 void
-AsyncMaster::OnCanError(CanError error) noexcept {
+AsyncMaster::OnCanError(io::CanError error) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnCanError(error);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnCanError(error); });
   }
 }
 
 void
-AsyncMaster::OnCanState(CanState new_state, CanState old_state) noexcept {
+AsyncMaster::OnCanState(io::CanState new_state,
+                        io::CanState old_state) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnCanState(new_state, old_state);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post(
+        [=]() { driver->OnCanState(new_state, old_state); });
   }
 }
 
@@ -338,10 +340,7 @@ AsyncMaster::OnCommand(NmtCommand cs) noexcept {
   if (cs != NmtCommand::ENTER_PREOP && cs != NmtCommand::START) CancelSdo();
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnCommand(cs);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnCommand(cs); });
   }
 }
 
@@ -350,10 +349,7 @@ AsyncMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnNodeGuarding(occurred);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnNodeGuarding(occurred); });
   }
 }
 
@@ -362,10 +358,7 @@ AsyncMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnHeartbeat(occurred);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnHeartbeat(occurred); });
   }
 }
 
@@ -377,10 +370,7 @@ AsyncMaster::OnState(uint8_t id, NmtState st) noexcept {
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnState(st);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnState(st); });
   }
 }
 
@@ -390,10 +380,7 @@ AsyncMaster::OnBoot(uint8_t id, NmtState st, char es,
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnBoot(st, es, what);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnBoot(st, es, what); });
   }
 }
 
@@ -409,18 +396,12 @@ AsyncMaster::OnConfig(uint8_t id) noexcept {
 
   // Let the driver perform the configuration update.
   DriverBase* driver = it->second;
-  auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-    if (!ec) {
-      driver->OnConfig([=](::std::error_code ec) {
-        ::std::lock_guard<BasicLockable> lock(*this);
-        ConfigResult(id, ec);
-      });
-    } else {
-      ::std::lock_guard<BasicLockable> lock(*this);
-      ConfigResult(id, SdoErrc::ERROR);
-    }
+  driver->GetExecutor().post([=]() {
+    driver->OnConfig([=](::std::error_code ec) {
+      ::std::lock_guard<util::BasicLockable> lock(*this);
+      ConfigResult(id, ec);
+    });
   });
-  driver->GetExecutor().Post(*op);
 }
 
 void
@@ -431,11 +412,8 @@ AsyncMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
                 value.begin());
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    // TODO: Ensure lifetime of value.
-    auto op = new aio::TaskWrapper([=](::std::error_code ec_) {
-      if (!ec_) driver->OnRpdo(num, ec, value.data(), value.size());
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post(
+        [=]() { driver->OnRpdo(num, ec, value.data(), value.size()); });
   }
 }
 
@@ -443,10 +421,7 @@ void
 AsyncMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnRpdoError(num, eec, er);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnRpdoError(num, eec, er); });
   }
 }
 
@@ -458,10 +433,8 @@ AsyncMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
                 value.begin());
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec_) {
-      if (!ec_) driver->OnTpdo(num, ec, value.data(), value.size());
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post(
+        [=]() { driver->OnTpdo(num, ec, value.data(), value.size()); });
   }
 }
 
@@ -469,10 +442,7 @@ void
 AsyncMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnSync(cnt, t);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnSync(cnt, t); });
   }
 }
 
@@ -480,10 +450,7 @@ void
 AsyncMaster::OnSyncError(uint16_t eec, uint8_t er) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnSyncError(eec, er);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnSyncError(eec, er); });
   }
 }
 
@@ -492,10 +459,7 @@ AsyncMaster::OnTime(
     const ::std::chrono::system_clock::time_point& abs_time) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) driver->OnTime(abs_time);
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post([=]() { driver->OnTime(abs_time); });
   }
 }
 
@@ -507,10 +471,8 @@ AsyncMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    auto op = new aio::TaskWrapper([=](::std::error_code ec) mutable {
-      if (!ec) driver->OnEmcy(eec, er, value.data());
-    });
-    driver->GetExecutor().Post(*op);
+    driver->GetExecutor().post(
+        [=]() mutable { driver->OnEmcy(eec, er, value.data()); });
   }
 }
 

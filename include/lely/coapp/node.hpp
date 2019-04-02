@@ -25,6 +25,9 @@
 #include <lely/coapp/device.hpp>
 #include <lely/coapp/io_context.hpp>
 
+#include <memory>
+#include <string>
+
 namespace lely {
 
 // The CANopen NMT node service from <lely/co/nmt.hpp>.
@@ -101,12 +104,12 @@ operator^=(NmtState& lhs, NmtState rhs) noexcept {
 /**
  * The base class for CANopen nodes.
  *
- * This class implements the #lely::canopen::BasicLockable mutex used by
+ * This class implements the #lely::util::BasicLockable mutex used by
  * #lely::canopen::IoContext and #lely::canopen::Device. The mutex MUST be
  * unlocked when any public member function is invoked (#Reset()); it will be
  * locked for the duration of any call to a virtual member function.
  */
-class Node : protected BasicLockable, public IoContext, public Device {
+class Node : protected util::BasicLockable, public IoContext, public Device {
  public:
   using time_point = ::std::chrono::steady_clock::time_point;
 
@@ -116,7 +119,7 @@ class Node : protected BasicLockable, public IoContext, public Device {
    * communication. Call #Reset() to start the boot-up process.
    *
    * @param timer   the timer used for CANopen events.
-   * @param bus     a handle to the CAN bus.
+   * @param chan    a CAN channel.
    * @param dcf_txt the path of the text EDS or DCF containing the device
    *                description.
    * @param dcf_bin the path of the (binary) concise DCF containing the values
@@ -125,7 +128,7 @@ class Node : protected BasicLockable, public IoContext, public Device {
    * @param id      the node-ID (in the range [1..127, 255]). If <b>id</b> is
    *                255 (unconfigured), the node-ID is obtained from the DCF.
    */
-  Node(aio::TimerBase& timer, aio::CanBusBase& bus,
+  Node(io::TimerBase& timer, io::CanChannelBase& chan,
        const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
        uint8_t id = 0xff);
 
@@ -143,15 +146,16 @@ class Node : protected BasicLockable, public IoContext, public Device {
   void Reset();
 
  protected:
-  virtual void lock() final override;
-  virtual void unlock() final override;
+  void lock() final;
+  void unlock() final;
 
   /**
    * Implements the default behavior for a CAN bus state change. If the CAN bus
    * is in error passive mode or has recovered from bus off, an EMCY message is
    * sent (see Table 26 in CiA 301 v4.2.0).
    */
-  void OnCanState(CanState new_state, CanState old_state) noexcept override;
+  void OnCanState(io::CanState new_state,
+                  io::CanState old_state) noexcept override;
 
   /**
    * Returns a pointer to the internal CANopen NMT master/slave service from
@@ -173,21 +177,23 @@ class Node : protected BasicLockable, public IoContext, public Device {
   /**
    * Requests the transmission of a PDO.
    *
-   * @param num the PDO number (in the range [1..512]).
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is requested.
    */
   void RpdoRtr(int num = 0);
 
   /**
    * Triggers the transmission of an event-driven (asynchronous) PDO.
    *
-   * @param num the PDO number (in the range [1..512]).
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is triggered.
    *
    * @throws std::system_error(std::errc::resource_unavailable_try_again) if the
    * inhibit time has not yet elapsed.
    */
   void TpdoEvent(int num = 0);
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
  private:
 #endif
   /**

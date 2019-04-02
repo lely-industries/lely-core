@@ -23,27 +23,32 @@
 
 #include "coapp.hpp"
 #include <lely/coapp/device.hpp>
-
-#include <mutex>
+#include <lely/util/error.hpp>
 
 #include <lely/co/csdo.hpp>
 #include <lely/co/dcf.hpp>
 #include <lely/co/obj.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace lely {
 
 namespace canopen {
 
 /// The internal implementation of the CANopen device description.
-struct Device::Impl_ : public BasicLockable {
+struct Device::Impl_ : public util::BasicLockable {
   Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin, uint8_t id,
-        BasicLockable* mutex);
+        util::BasicLockable* mutex);
+  virtual ~Impl_() = default;
 
-  virtual void
+  void
   lock() override {
     if (mutex) mutex->lock();
   }
-  virtual void
+
+  void
   unlock() override {
     if (mutex) mutex->unlock();
   }
@@ -52,6 +57,7 @@ struct Device::Impl_ : public BasicLockable {
   netid() const noexcept {
     return dev->getNetid();
   }
+
   uint8_t
   id() const noexcept {
     return dev->getId();
@@ -76,7 +82,7 @@ struct Device::Impl_ : public BasicLockable {
 };
 
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
-               uint8_t id, BasicLockable* mutex)
+               uint8_t id, util::BasicLockable* mutex)
     : impl_(new Impl_(dcf_txt, dcf_bin, id, mutex)) {}
 
 Device& Device::operator=(Device&&) = default;
@@ -114,7 +120,7 @@ OnUpCon(COCSDO*, uint16_t, uint8_t, uint32_t ac, T value, void* data) noexcept {
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(Read<T>(idx, subidx, ec));
@@ -123,7 +129,7 @@ Device::Read(uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
   uint32_t ac = 0;
   T value = T();
@@ -131,7 +137,7 @@ Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
 
   ::std::lock_guard<Impl_> lock(*impl_);
   if (upReq<T, &OnUpCon<T>>(*impl_->dev, idx, subidx, &t) == -1)
-    throw_errc("Read");
+    util::throw_errc("Read");
 
   if (ac)
     ec = static_cast<SdoErrc>(ac);
@@ -141,7 +147,7 @@ Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
@@ -149,14 +155,14 @@ Device::Write(uint16_t idx, uint8_t subidx, T value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
   constexpr auto N = co_type_traits_T<T>::index;
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
   if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    throw_errc("Write");
+    util::throw_errc("Write");
 
   if (ac)
     ec = static_cast<SdoErrc>(ac);
@@ -165,7 +171,7 @@ Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
@@ -173,7 +179,7 @@ Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value,
               ::std::error_code& ec) {
   constexpr auto N = co_type_traits_T<T>::index;
@@ -181,7 +187,7 @@ Device::Write(uint16_t idx, uint8_t subidx, const T& value,
 
   ::std::lock_guard<Impl_> lock(*impl_);
   if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    throw_errc("Write");
+    util::throw_errc("Write");
 
   if (ac)
     ec = static_cast<SdoErrc>(ac);
@@ -351,9 +357,9 @@ Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value,
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
-  // TODO: Prevent unnecessary copy.
+  // TODO(jseldenthuis@lely.com): Prevent unnecessary copy.
   if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    throw_errc("Write");
+    util::throw_errc("Write");
 
   if (ac)
     ec = static_cast<SdoErrc>(ac);
@@ -375,7 +381,7 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
 
   ::std::lock_guard<Impl_> lock(*impl_);
   if (dnReq(*impl_->dev, idx, subidx, p, n, &OnDnCon, &ac) == -1)
-    throw_errc("Write");
+    util::throw_errc("Write");
 
   if (ac)
     ec = static_cast<SdoErrc>(ac);
@@ -458,7 +464,7 @@ Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = Get<T>(idx, subidx, ec);
@@ -467,7 +473,7 @@ Device::Get(uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type
+typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
   constexpr auto N = co_type_traits_T<T>::index;
 
@@ -483,7 +489,7 @@ Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
     return T();
   }
 
-  if (!detail::IsCanopenSame(N, sub->getType())) {
+  if (!detail::is_canopen_same(N, sub->getType())) {
     ec = SdoErrc::TYPE_LEN;
     return T();
   }
@@ -495,7 +501,7 @@ Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
@@ -503,7 +509,7 @@ Device::Set(uint16_t idx, uint8_t subidx, T value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
   constexpr auto N = co_type_traits_T<T>::index;
 
@@ -511,7 +517,7 @@ Device::Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
@@ -519,7 +525,7 @@ Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type
+typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value,
             ::std::error_code& ec) {
   impl_->Set(idx, subidx, value, ec);
@@ -700,12 +706,12 @@ Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
 }
 
 Device::Impl_::Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
-                     uint8_t id, BasicLockable* mutex_)
+                     uint8_t id, util::BasicLockable* mutex_)
     : mutex(mutex_), dev(make_unique_c<CODev>(dcf_txt.c_str())) {
   if (!dcf_bin.empty() && dev->readDCF(nullptr, nullptr, dcf_bin.c_str()) == -1)
-    throw_errc("Device");
+    util::throw_errc("Device");
 
-  if (id != 0xff && dev->setId(id) == -1) throw_errc("Device");
+  if (id != 0xff && dev->setId(id) == -1) util::throw_errc("Device");
 }
 
 void
@@ -743,7 +749,7 @@ Device::Impl_::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
     return;
   }
 
-  if (!detail::IsCanopenSame(N, sub->getType())) {
+  if (!detail::is_canopen_same(N, sub->getType())) {
     ec = SdoErrc::TYPE_LEN;
     return;
   }

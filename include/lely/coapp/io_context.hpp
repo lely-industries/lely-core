@@ -22,9 +22,9 @@
 #ifndef LELY_COAPP_IO_CONTEXT_HPP_
 #define LELY_COAPP_IO_CONTEXT_HPP_
 
-#include <lely/aio/can_bus.hpp>
-#include <lely/aio/timer.hpp>
-#include <lely/coapp/coapp.hpp>
+#include <lely/io2/can.hpp>
+#include <lely/io2/timer.hpp>
+#include <lely/util/mutex.hpp>
 
 #include <memory>
 
@@ -41,38 +41,28 @@ namespace canopen {
  */
 class IoContext {
  public:
-  using CanState = aio::CanBus::State;
-  using CanError = aio::CanBus::Error;
-
   /**
    * Creates a new I/O context.
    *
    * @param timer  the timer used for CANopen events.
-   * @param bus    a handle to the CAN bus.
+   * @param chan   a CAN channel.
    * @param mutex  an (optional) pointer to the mutex to be locked while timer
    *               and I/O events are processed. The mutex MUST be unlocked when
    *               any public member function is invoked; it will be locked for
    *               the duration of any call to a virtual member function
    *               (#OnCanState() or #OnCanError()).
    */
-  IoContext(aio::TimerBase& timer, aio::CanBusBase& bus,
-            BasicLockable* mutex = nullptr);
+  IoContext(io::TimerBase& timer, io::CanChannelBase& chan,
+            util::BasicLockable* mutex = nullptr);
 
   IoContext(const IoContext&) = delete;
   IoContext& operator=(const IoContext&) = delete;
 
   /// Returns the executor used to process I/O events on the CAN bus.
-  aio::ExecutorBase GetExecutor() const noexcept;
+  ev::Executor GetExecutor() const noexcept;
 
-  /// Schedules the specified Callable object for execution. @see GetExecutor()
-  template <class F>
-  void
-  Post(F&& f) {
-    auto* op = new aio::TaskWrapper([=](::std::error_code ec) {
-      if (!ec) f();
-    });
-    GetExecutor().Post(*op);
-  }
+  /// Returns the underlyign I/O context with which this context is registered.
+  io::ContextBase GetContext() const noexcept;
 
  protected:
   ~IoContext();
@@ -88,8 +78,8 @@ class IoContext {
    * MUST be locked for the duration of this call.
    */
   void SetTime();
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
  private:
 #endif
   /**
@@ -101,7 +91,7 @@ class IoContext {
    * @param old_state the previous state of the CAN bus.
    */
   virtual void
-  OnCanState(CanState new_state, CanState old_state) noexcept {
+  OnCanState(io::CanState new_state, io::CanState old_state) noexcept {
     (void)new_state;
     (void)old_state;
   }
@@ -114,7 +104,7 @@ class IoContext {
    *              `CanError::OTHER`.
    */
   virtual void
-  OnCanError(CanError error) noexcept {
+  OnCanError(io::CanError error) noexcept {
     (void)error;
   }
 

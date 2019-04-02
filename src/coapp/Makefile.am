@@ -33,7 +33,8 @@ liblely_coapp_la_LIBADD =
 liblely_coapp_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
-liblely_coapp_la_LIBADD += $(top_builddir)/src/aio/liblely-aio.la
+liblely_coapp_la_LIBADD += $(top_builddir)/src/ev/liblely-ev.la
+liblely_coapp_la_LIBADD += $(top_builddir)/src/io2/liblely-io2.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/co/liblely-co.la
 if CODE_COVERAGE_ENABLED
 liblely_coapp_la_LIBADD += $(CODE_COVERAGE_LIBS)

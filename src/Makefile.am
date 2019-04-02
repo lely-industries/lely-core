@@ -7,9 +7,9 @@ SUBDIRS += io
 endif
 if PLATFORM_LINUX
 SUBDIRS += aio
+endif
 if !NO_CXX
 SUBDIRS += coapp
-endif
 endif
 
 EXTRA_DIST =

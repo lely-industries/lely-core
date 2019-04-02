@@ -22,11 +22,13 @@
 #ifndef LELY_COCPP_MASTER_HPP_
 #define LELY_COCPP_MASTER_HPP_
 
-#include <lely/coapp/detail/mutex.hpp>
 #include <lely/coapp/node.hpp>
 #include <lely/coapp/sdo.hpp>
 
 #include <map>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace lely {
 
@@ -116,8 +118,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      *
      * @returns the result of the SDO request, or an empty value on error.
      *
-     * @see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
-     * const
+     * @see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
@@ -148,11 +149,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @param value the value to be written.
      * @param ec    on error, the SDO abort code is stored in <b>ec</b>.
      *
-     * @see Device::Write(uint16_t idx, uint8_t subidx, T value,
-     * ::std::error_code& ec), Device::Write(uint16_t idx, uint8_t subidx, const
-     * T& value, ::std::error_code& ec), Device::Write(uint16_t idx, uint8_t
-     * subidx, const char* value, ::std::error_code& ec), Device::Write(uint16_t
-     * idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
      */
     template <class T>
     void
@@ -169,8 +169,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      *
      * @throws #lely::canopen::SdoError on error.
      *
-     * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p,
-     * ::std::size_t n)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n)
      */
     void
     Write(const void* p, ::std::size_t n) {
@@ -185,8 +184,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @param n  the number of bytes to write.
      * @param ec on error, the SDO abort code is stored in <b>ec</b>.
      *
-     * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p,
-     * ::std::size_t n, ::std::error_code& ec)
+     * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
      */
     void
     Write(const void* p, ::std::size_t n, ::std::error_code& ec) {
@@ -377,7 +375,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * communication. Call #Reset() to start the boot-up process.
    *
    * @param timer   the timer used for CANopen events.
-   * @param bus     a handle to the CAN bus.
+   * @param chan    a CAN channel.
    * @param dcf_txt the path of the text EDS or DCF containing the device
    *                description.
    * @param dcf_bin the path of the (binary) concise DCF containing the values
@@ -386,7 +384,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @param id      the node-ID (in the range [1..127, 255]). If <b>id</b> is
    *                255 (unconfigured), the node-ID is obtained from the DCF.
    */
-  BasicMaster(aio::TimerBase& timer, aio::CanBusBase& bus,
+  BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
               const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
               uint8_t id = 0xff);
 
@@ -441,14 +439,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /**
    * Requests the transmission of a PDO.
    *
-   * @param num the PDO number (in the range [1..512]).
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is requested.
    */
   void RpdoRtr(int num = 0);
 
   /**
    * Triggers the transmission of an event-driven (asynchronous) PDO.
    *
-   * @param num the PDO number (in the range [1..512]).
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is triggered.
    *
    * @throws std::system_error(std::errc::resource_unavailable_try_again) if the
    * inhibit time has not yet elapsed.
@@ -473,12 +473,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
-   * #SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req, ::std::error_code& ec),
+   * #SubmitRead(uint8_t id, SdoUploadRequest<T>& req, ::std::error_code& ec),
    * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T>
   void
-  SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req) {
+  SubmitRead(uint8_t id, SdoUploadRequest<T>& req) {
     ::std::error_code ec;
     SubmitRead<T>(id, req, ec);
     if (ec) throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitRead");
@@ -494,7 +494,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class T>
   void
-  SubmitRead(uint8_t id, Sdo::UploadRequest<T>& req, ::std::error_code& ec) {
+  SubmitRead(uint8_t id, SdoUploadRequest<T>& req, ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
     ec.clear();
@@ -509,43 +509,40 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
-   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase&
-   * exec, F&& con, ::std::error_code& ec), except that it throws
-   * #lely::canopen::SdoError on error.
+   * #SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T, class F>
   void
-  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
+  SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              F&& con) {
-    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), GetTimeout());
+    SubmitRead<T>(exec, id, idx, subidx, ::std::forward<F>(con), GetTimeout());
   }
 
   /**
    * Equivalent to
-   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase&
-   * exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec), except
-   * that it uses the SDO timeout given by #GetTimeout().
+   * #SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T, class F>
   void
-  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
-             F&& con, ::std::error_code& ec) {
-    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), GetTimeout(),
+  SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con,
+             ::std::error_code& ec) {
+    SubmitRead<T>(exec, id, idx, subidx, ::std::forward<F>(con), GetTimeout(),
                   ec);
   }
 
   /**
    * Equivalent to
-   * #SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase&
-   * exec, F&& con, const Sdo::duration& timeout, ::std::error_code& ec), except
-   * that it throws #lely::canopen::SdoError on error.
+   * #SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T, class F>
   void
-  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
-             F&& con, const Sdo::duration& timeout) {
+  SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con,
+             const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
-    SubmitRead<T>(id, idx, subidx, exec, ::std::forward<F>(con), timeout, ec);
+    SubmitRead<T>(exec, id, idx, subidx, ::std::forward<F>(con), timeout, ec);
     if (ec) throw SdoError(netid(), id, idx, subidx, ec, "SubmitRead");
   }
 
@@ -553,10 +550,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * Queues an asynchronous read (SDO upload) operation. This function reads the
    * value of a sub-object in a remote object dictionary.
    *
+   * @param exec    the executor used to execute the completion task.
    * @param id      the node-ID (in the range[1..127]).
    * @param idx     the object index.
    * @param subidx  the object sub-index.
-   * @param exec    the executor used to execute the confirmation function.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
    * @param timeout the SDO timeout. If, after the request is initiated, the
@@ -568,24 +565,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class T, class F>
   void
-  SubmitRead(uint8_t id, uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
-             F&& con, const Sdo::duration& timeout, ::std::error_code& ec) {
+  SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con,
+             const ::std::chrono::milliseconds& timeout,
+             ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
     ec.clear();
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      if (con) {
-        sdo->SubmitUpload<T>(
-            idx, subidx, exec,
-            [=](uint16_t idx, uint8_t subidx, ::std::error_code ec, T value) {
-              con(id, idx, subidx, ec, ::std::move(value));
-            },
-            timeout);
-      } else {
-        sdo->SubmitUpload<T>(idx, subidx, exec, nullptr, timeout);
-      }
+      sdo->SubmitUpload(exec, idx, subidx, ::std::forward<F>(con), timeout);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -593,12 +582,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
-   * #SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req, ::std::error_code&
-   * ec), except that it throws #lely::canopen::SdoError on error.
+   * #SubmitWrite(uint8_t id, SdoDownloadRequest<T>& req, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T>
   void
-  SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req) {
+  SubmitWrite(uint8_t id, SdoDownloadRequest<T>& req) {
     ::std::error_code ec;
     SubmitWrite<T>(id, req, ec);
     if (ec) throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitWrite");
@@ -614,7 +603,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class T>
   void
-  SubmitWrite(uint8_t id, Sdo::DownloadRequest<T>& req, ::std::error_code& ec) {
+  SubmitWrite(uint8_t id, SdoDownloadRequest<T>& req, ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
     ec.clear();
@@ -629,47 +618,42 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
-   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-   * aio::ExecutorBase& exec, F&& con, ::std::error_code& ec), except that it
-   * throws #lely::canopen::SdoError on error.
+   * #SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T, class F>
   void
-  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-              aio::ExecutorBase& exec, F&& con) {
-    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
-                ::std::forward<F>(con), GetTimeout());
+  SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+              T&& value, F&& con) {
+    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
+                   ::std::forward<F>(con), GetTimeout());
   }
 
   /**
    * Equivalent to
-   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-   * aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout,
-   * ::std::error_code& ec), except that it uses the SDO timeout given by
-   * #GetTimeout().
+   * #SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T, class F>
   void
-  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-              aio::ExecutorBase& exec, F&& con, ::std::error_code& ec) {
-    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
-                ::std::forward<F>(con), GetTimeout(), ec);
+  SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+              T&& value, F&& con, ::std::error_code& ec) {
+    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
+                   ::std::forward<F>(con), GetTimeout(), ec);
   }
 
   /**
    * Equivalent to
-   * #SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-   * aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout,
-   * ::std::error_code& ec), except that it throws #lely::canopen::SdoError on
-   * error.
+   * #SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T, class F>
   void
-  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-              aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout) {
+  SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+              T&& value, F&& con, const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
-    SubmitWrite(id, idx, subidx, ::std::forward<T>(value), exec,
-                ::std::forward<F>(con), timeout, ec);
+    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
+                   ::std::forward<F>(con), timeout, ec);
     if (ec) throw SdoError(netid(), id, idx, subidx, ec, "SubmitWrite");
   }
 
@@ -677,11 +661,11 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * Queues an asynchronous write (SDO download) operation. This function writes
    * a value to a sub-object in a remote object dictionary.
    *
+   * @param exec    the executor used to execute the completion task.
    * @param id      the node-ID (in the range[1..127]).
    * @param idx     the object index.
    * @param subidx  the object sub-index.
    * @param value   the value to be written.
-   * @param exec    the executor used to execute the confirmation function.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
    * @param timeout the SDO timeout. If, after the request is initiated, the
@@ -693,8 +677,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class T, class F>
   void
-  SubmitWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value,
-              aio::ExecutorBase& exec, F&& con, const Sdo::duration& timeout,
+  SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+              T&& value, F&& con, const ::std::chrono::milliseconds& timeout,
               ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
@@ -702,17 +686,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      if (con) {
-        sdo->SubmitDownload(
-            idx, subidx, ::std::forward<T>(value), exec,
-            [=](uint16_t idx, uint8_t subidx, ::std::error_code ec) {
-              con(id, idx, subidx, ec);
-            },
-            timeout);
-      } else {
-        sdo->SubmitDownload(idx, subidx, ::std::forward<T>(value), exec,
-                            nullptr, timeout);
-      }
+      sdo->SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
+                          ::std::forward<F>(con), timeout);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -720,23 +695,20 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
-   * #AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-   * uint16_t idx, uint8_t subidx, const Sdo::duration& timeout), except that it
-   * uses the SDO timeout given by #GetTimeout().
+   * #AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  aio::Future<::std::tuple<::std::error_code, T>>
-  AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-            uint16_t idx, uint8_t subidx) {
-    return AsyncRead<T>(loop, exec, id, idx, subidx, GetTimeout());
+  ev::Future<T>
+  AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx) {
+    return AsyncRead<T>(exec, id, idx, subidx, GetTimeout());
   }
 
   /**
-   * Queues an asynchronous read (SDO upload) operation and returns a future.
+   * Queues an asynchronous read (SDO upload) operation and creates a future
+   * which becomes ready once the request completes (or is canceled).
    *
-   * @param loop    the event loop used to create the future.
-   * @param exec    the executor used to create the future. The executor SHOULD
-   *                be based on <b>loop</b>.
+   * @param exec    the executor used to execute the completion task.
    * @param id      the node-ID (in the range[1..127]).
    * @param idx     the object index.
    * @param subidx  the object sub-index.
@@ -745,45 +717,43 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which, on completion, holds the SDO abort code and the
-   * received value. Note that if the client-SDO service is not available, the
-   * returned future is invalid.
+   * @returns a future which holds the received value on success and the SDO
+   * abort code on failure. Note that if the client-SDO service is not
+   * available, the returned future is invalid.
    */
   template <class T>
-  aio::Future<::std::tuple<::std::error_code, T>>
-  AsyncRead(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-            uint16_t idx, uint8_t subidx, const Sdo::duration& timeout) {
+  ev::Future<T>
+  AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+            const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
-    aio::Future<::std::tuple<::std::error_code, T>> future(nullptr);
+    ev::Future<T> f;
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      future = sdo->AsyncUpload<T>(loop, exec, idx, subidx, timeout);
+      f = sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
     }
-    return future;
+    return f;
   }
 
   /**
    * Equivalent to
-   * #AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-   * uint16_t idx, uint8_t subidx, T&& value, const Sdo::duration& timeout),
+   * #AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout),
    * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  aio::Future<::std::error_code>
-  AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-             uint16_t idx, uint8_t subidx, T&& value) {
-    return AsyncWrite(loop, exec, id, idx, subidx, ::std::forward<T>(value),
+  ev::Future<void>
+  AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+             T&& value) {
+    return AsyncWrite(exec, id, idx, subidx, ::std::forward<T>(value),
                       GetTimeout());
   }
 
   /**
-   * Queues an asynchronous write (SDO download) operation and returns a future.
+   * Queues an asynchronous write (SDO download) operation and creates a future
+   * which becomes ready once the request completes (or is canceled).
    *
-   * @param loop    the event loop used to create the future.
-   * @param exec    the executor used to create the future. The executor SHOULD
-   *                be based on <b>loop</b>.
+   * @param exec    the executor used to execute the completion task.
    * @param id      the node-ID (in the range[1..127]).
    * @param idx     the object index.
    * @param subidx  the object sub-index.
@@ -793,24 +763,23 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which, on completion, holds the SDO abort code. Note that
-   * if the client-SDO service is not available, the returned future is invalid.
+   * @returns a future which holds the SDO abort code on failure. Note that if
+   * the client-SDO service is not available, the returned future is invalid.
    */
   template <class T>
-  aio::Future<::std::error_code>
-  AsyncWrite(aio::LoopBase& loop, aio::ExecutorBase& exec, uint8_t id,
-             uint16_t idx, uint8_t subidx, T&& value,
-             const Sdo::duration& timeout) {
+  ev::Future<void>
+  AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+             T&& value, const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
-    aio::Future<::std::error_code> future(nullptr);
+    ev::Future<void> f;
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      future = sdo->AsyncDownload(loop, exec, idx, subidx,
-                                  ::std::forward<T>(value), timeout);
+      f = sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
+                                timeout);
     }
-    return future;
+    return f;
   }
 
   /**
@@ -839,7 +808,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *
    * @see IoContext::OnCanError(), DriverBase::OnCanError()
    */
-  void OnCanError(CanError error) noexcept override;
+  void OnCanError(io::CanError error) noexcept override;
 
   /**
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
@@ -847,7 +816,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *
    * @see IoContext::OnCanState(), DriverBase::OnCanState()
    */
-  void OnCanState(CanState new_state, CanState old_state) noexcept override;
+  void OnCanState(io::CanState new_state,
+                  io::CanState old_state) noexcept override;
 
   /**
    * The default implementation notifies all registered drivers. Unless the
@@ -1052,7 +1022,7 @@ class AsyncMaster : public BasicMaster {
    *
    * @see IoContext::OnCanError(), DriverBase::OnCanError()
    */
-  void OnCanError(CanError error) noexcept override;
+  void OnCanError(io::CanError error) noexcept override;
 
   /**
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
@@ -1060,7 +1030,8 @@ class AsyncMaster : public BasicMaster {
    *
    * @see IoContext::OnCanState(), DriverBase::OnCanState()
    */
-  void OnCanState(CanState new_state, CanState old_state) noexcept override;
+  void OnCanState(io::CanState new_state,
+                  io::CanState old_state) noexcept override;
 
   /**
    * The default implementation queues a notification for all registered

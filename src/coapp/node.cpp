@@ -22,10 +22,9 @@
  */
 
 #include "coapp.hpp"
-#include <lely/aio/detail/timespec.hpp>
 #include <lely/coapp/node.hpp>
 
-#include <mutex>
+#include <string>
 
 #include <cassert>
 
@@ -45,17 +44,16 @@ namespace lely {
 namespace canopen {
 
 /// The internal implementation of the CANopen node.
-struct Node::Impl_ : public BasicLockable {
+struct Node::Impl_ : public util::BasicLockable {
   Impl_(Node* self, CANNet* net, CODev* dev);
-
-#if !LELY_NO_THREADS
-#ifdef __MINGW32__
-  ~Impl_();
+#if !LELY_NO_THREADS && defined(__MINGW32__)
+  virtual ~Impl_();
+#else
+  virtual ~Impl_() = default;
 #endif
-#endif
 
-  virtual void lock() override;
-  virtual void unlock() override;
+  void lock() override;
+  void unlock() override;
 
   void OnCsInd(CONMT* nmt, uint8_t cs) noexcept;
   void OnHbInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept;
@@ -90,10 +88,10 @@ struct Node::Impl_ : public BasicLockable {
   unique_c_ptr<CONMT> nmt;
 };
 
-Node::Node(aio::TimerBase& timer, aio::CanBusBase& bus,
+Node::Node(io::TimerBase& timer, io::CanChannelBase& chan,
            const ::std::string& dcf_txt, const ::std::string& dcf_bin,
            uint8_t id)
-    : IoContext(timer, bus, this),
+    : IoContext(timer, chan, this),
       Device(dcf_txt, dcf_bin, id, this),
       impl_(new Impl_(this, IoContext::net(), Device::dev())) {}
 
@@ -107,7 +105,7 @@ Node::Reset() {
   // master, this ensures that SDO timeouts do not occur too soon.
   SetTime();
 
-  if (impl_->nmt->csInd(CO_NMT_CS_RESET_NODE) == -1) throw_errc("Reset");
+  if (impl_->nmt->csInd(CO_NMT_CS_RESET_NODE) == -1) util::throw_errc("Reset");
 }
 
 void
@@ -120,14 +118,14 @@ Node::unlock() {
 }
 
 void
-Node::OnCanState(CanState new_state, CanState old_state) noexcept {
+Node::OnCanState(io::CanState new_state, io::CanState old_state) noexcept {
   assert(new_state != old_state);
 
-  // TODO: Clear EMCY in error active mode.
-  if (new_state == CanState::PASSIVE) {
+  // TODO(jseldenthuis@lely.com): Clear EMCY in error active mode.
+  if (new_state == io::CanState::PASSIVE) {
     // CAN in error passive mode.
     Error(0x8120, 0x10);
-  } else if (old_state == CanState::BUSOFF) {
+  } else if (old_state == io::CanState::BUSOFF) {
     // Recovered from bus off.
     Error(0x8140, 0x10);
   }
@@ -165,7 +163,7 @@ Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
     : self(self_), nmt(make_unique_c<CONMT>(net, dev)) {
 #if !LELY_NO_THREADS
 #ifdef __MINGW32__
-  if (mtx_init(&mutex, mtx_plain) != thrd_success) throw_errc("mtx_init");
+  if (mtx_init(&mutex, mtx_plain) != thrd_success) util::throw_errc("mtx_init");
 #endif
 #endif
 
@@ -176,8 +174,7 @@ Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
   nmt->setSyncInd<Impl_, &Impl_::OnSyncInd>(this);
 }
 
-#if !LELY_NO_THREADS
-#ifdef __MINGW32__
+#if !LELY_NO_THREADS && defined(__MINGW32__)
 Node::Impl_::~Impl_() {
   // Make sure no callback functions will be invoked after the mutex is
   // destroyed.
@@ -186,13 +183,12 @@ Node::Impl_::~Impl_() {
   mtx_destroy(&mutex);
 }
 #endif
-#endif
 
 void
 Node::Impl_::lock() {
 #if !LELY_NO_THREADS
 #ifdef __MINGW32__
-  if (mtx_lock(&mutex) != thrd_success) throw_errc("mtx_lock");
+  if (mtx_lock(&mutex) != thrd_success) util::throw_errc("mtx_lock");
 #else
   mutex.lock();
 #endif
@@ -203,7 +199,7 @@ void
 Node::Impl_::unlock() {
 #if !LELY_NO_THREADS
 #ifdef __MINGW32__
-  if (mtx_unlock(&mutex) != thrd_success) throw_errc("mtx_lock");
+  if (mtx_unlock(&mutex) != thrd_success) util::throw_errc("mtx_lock");
 #else
   mutex.unlock();
 #endif
@@ -289,8 +285,7 @@ Node::Impl_::OnSyncErr(COSync*, uint16_t eec, uint8_t er) noexcept {
 void
 Node::Impl_::OnTimeInd(COTime*, const timespec* tp) noexcept {
   assert(tp);
-  ::std::chrono::system_clock::time_point abs_time(
-      aio::detail::FromTimespec(*tp));
+  ::std::chrono::system_clock::time_point abs_time(util::from_timespec(*tp));
   self->OnTime(abs_time);
 }
 
@@ -303,13 +298,13 @@ Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
 void
 Node::Impl_::RpdoRtr(int num) {
   auto pdo = nmt->getRPDO(num);
-  if (pdo && pdo->rtr() == -1) throw_errc("RpdoRtr");
+  if (pdo && pdo->rtr() == -1) util::throw_errc("RpdoRtr");
 }
 
 void
 Node::Impl_::TpdoEvent(int num) {
   auto pdo = nmt->getTPDO(num);
-  if (pdo && pdo->event() == -1) throw_errc("TpdoEvent");
+  if (pdo && pdo->event() == -1) util::throw_errc("TpdoEvent");
 }
 
 }  // namespace canopen

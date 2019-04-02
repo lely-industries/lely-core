@@ -22,12 +22,17 @@
 #ifndef LELY_COAPP_SDO_ERROR_HPP_
 #define LELY_COAPP_SDO_ERROR_HPP_
 
-#include <lely/coapp/coapp.hpp>
+#include <lely/features.h>
 
 #include <stdexcept>
+#include <string>
 #include <system_error>
 
 #include <cstdint>
+
+#ifdef ERROR
+#undef ERROR
+#endif
 
 namespace lely {
 
