@@ -1096,7 +1096,7 @@ co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	assert(nmt);
 	(void)reason;
 
-	if (__unlikely(id || id >= CO_NUM_NODES))
+	if (__unlikely(!id || id > CO_NUM_NODES))
 		return;
 
 	if (co_nmt_is_master(nmt) && state == CO_NMT_EC_OCCURRED)
@@ -1159,7 +1159,7 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 {
 	assert(nmt);
 
-	if (__unlikely(!id || id >= CO_NUM_NODES))
+	if (__unlikely(!id || id > CO_NUM_NODES))
 		return;
 
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
@@ -1198,7 +1198,7 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 {
 	assert(nmt);
 
-	if (__unlikely(!id || id >= CO_NUM_NODES))
+	if (__unlikely(!id || id > CO_NUM_NODES))
 		return;
 
 #ifdef LELY_NO_CO_MASTER
@@ -1922,7 +1922,8 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 					"unable to guard node %02X", id);
 	}
 
-	trace("NMT: slave %d finished booting with error status %c", id, es);
+	trace("NMT: slave %d finished booting with error status %c", id,
+			es ? es : '0');
 	if (nmt->boot_ind)
 		nmt->boot_ind(nmt, id, st, es, nmt->boot_data);
 
