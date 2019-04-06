@@ -47,7 +47,7 @@ struct io_handle {
 #elif !defined(LELY_NO_THREADS) && defined(_WIN32)
 	volatile LONG ref;
 #else
-	atomic_size_t ref;
+	size_t ref;
 #endif
 	/// The native file descriptor.
 #ifdef _WIN32
