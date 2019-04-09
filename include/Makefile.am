@@ -246,6 +246,12 @@ if !NO_CXX
 inc += lely/io2/user/timer.hpp
 endif
 if PLATFORM_WIN32
+if HAVE_IXXAT
+inc += lely/io2/win32/ixxat.h
+if !NO_CXX
+inc += lely/io2/win32/ixxat.hpp
+endif
+endif
 inc += lely/io2/win32/poll.h
 if !NO_CXX
 inc += lely/io2/win32/poll.hpp

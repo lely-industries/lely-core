@@ -31,6 +31,10 @@ src += user/timer.c
 if PLATFORM_WIN32
 src += win32/io.c
 src += win32/io.h
+if HAVE_IXXAT
+src += win32/ixxat.c
+src += win32/ixxat.inc
+endif
 src += win32/poll.c
 src += win32/sigset.c
 src += win32/timer.c
