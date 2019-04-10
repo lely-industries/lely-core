@@ -38,7 +38,7 @@ if PLATFORM_WIN32
 liblely_libc_la_LDFLAGS += -Wl,--output-def,liblely-libc-$(VERSION_MAJOR).def
 endif
 liblely_libc_la_LDFLAGS += -Wl,--as-needed
-liblely_libc_la_LIBADD =
+liblely_libc_la_LIBADD = $(RT_LIBS)
 if CODE_COVERAGE_ENABLED
 liblely_libc_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
