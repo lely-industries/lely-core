@@ -21,10 +21,9 @@
  */
 
 #include "libc.h"
+#include <lely/libc/threads.h>
 
 #if !LELY_NO_THREADS && _WIN32 && !LELY_HAVE_PTHREAD_H
-
-#include <lely/libc/threads.h>
 
 #include <assert.h>
 #include <errno.h>
