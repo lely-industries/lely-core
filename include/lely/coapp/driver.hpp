@@ -187,6 +187,22 @@ class DriverBase {
       ::std::function<void(::std::error_code ec)> res) noexcept = 0;
 
   /**
+   * The function invoked by BasicMaster::AsyncDeconfig() to start the
+   * deconfiguration process. The process does not complete until the result is
+   * communicated to the master.
+   *
+   * Note that `OnDeconfig()` MUST be a non-blocking function; the
+   * deconfiguration process MUST be executed asynchronously or run in a
+   * different thread.
+   *
+   * @param res the function to invoke when the deconfiguration process
+   *            completes. The argument to <b>res</b> is the result: 0 on
+   *            success, or an error code on failure.
+   */
+  virtual void OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept = 0;
+
+  /**
    * The function invoked when a Receive-PDO is processed by the master. In case
    * of a PDO length mismatch error, #OnRpdoError() is invoked after this
    * function.
@@ -331,6 +347,18 @@ class BasicDriver : private DriverBase {
   uint8_t
   id() const noexcept final {
     return id_;
+  }
+
+  /**
+   * Returns true if the remote node is ready (i.e., the NMT `boot slave`
+   * process has successfully completed and no subsequent boot-up event has been
+   * received) and false if not.
+   *
+   * @see BasicMaster::IsReady()
+   */
+  bool
+  IsReady() const {
+    return master.IsReady(id());
   }
 
   /**
@@ -587,6 +615,12 @@ class BasicDriver : private DriverBase {
 
   void
   OnConfig(::std::function<void(::std::error_code ec)> res) noexcept override {
+    res(::std::error_code());
+  }
+
+  void
+  OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override {
     res(::std::error_code());
   }
 
