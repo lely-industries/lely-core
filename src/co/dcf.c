@@ -5,7 +5,7 @@
  *
  * @see lely/co/dcf.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,6 +29,7 @@
 #include "obj.h"
 #include <lely/co/dcf.h>
 #include <lely/co/pdo.h>
+#include <lely/libc/strings.h>
 #include <lely/libc/stdio.h>
 #include <lely/util/config.h>
 #include <lely/util/diag.h>

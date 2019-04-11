@@ -3,7 +3,7 @@
  *
  * @see lely/libc/threads.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 
 #include "libc.h"
 
-#if !LELY_NO_THREADS && (_POSIX_THREADS >= 200112L || defined(__MINGW32__))
+#if !LELY_NO_THREADS && LELY_HAVE_PTHREAD_H
 
 #include <lely/libc/threads.h>
 
@@ -304,4 +304,4 @@ tss_set(tss_t key, void *val)
 	return thrd_success;
 }
 
-#endif // !LELY_NO_THREADS && (_POSIX_THREADS >= 200112L || __MINGW32__)
+#endif // !LELY_NO_THREADS && LELY_HAVE_PTHREAD_H

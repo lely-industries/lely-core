@@ -2,7 +2,7 @@
  * This header file is part of the C11 and POSIX compatibility library; it
  * includes `<threads.h>`, if it exists, and defines any missing functionality.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,13 @@
 
 #include <lely/libc/time.h>
 
+#ifndef LELY_HAVE_PTHREAD_H
 #if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#define LELY_HAVE_PTHREAD_H 1
+#endif
+#endif
+
+#if LELY_HAVE_PTHREAD_H
 #include <pthread.h>
 #elif _WIN32
 #include <windows.h>
@@ -55,7 +61,7 @@
 #endif
 
 /// The static initializer for an object of type #once_flag.
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #elif _WIN32
 #define ONCE_FLAG_INIT 0
@@ -68,14 +74,14 @@
 #define TSS_DTOR_ITERATIONS 1
 
 /// A complete object type that holds an identifier for a condition variable.
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef pthread_cond_t cnd_t;
 #elif _WIN32
 typedef CONDITION_VARIABLE cnd_t;
 #endif
 
 /// A complete object type that holds an identifier for a thread.
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef pthread_t thrd_t;
 #elif _WIN32
 typedef void *thrd_t;
@@ -85,14 +91,14 @@ typedef void *thrd_t;
  * A complete object type that holds an identifier for a thread-specific storage
  * pointer.
  */
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef pthread_key_t tss_t;
 #elif _WIN32
 typedef DWORD tss_t;
 #endif
 
 /// A complete object type that holds an identifier for a mutex.
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef pthread_mutex_t mtx_t;
 #elif _WIN32
 typedef CRITICAL_SECTION mtx_t;
@@ -133,7 +139,7 @@ enum {
 };
 
 /// A complete object type that holds a flag for use by call_once().
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef pthread_once_t once_flag;
 #elif _WIN32
 typedef long once_flag;
@@ -147,7 +153,7 @@ extern "C" {
  * The function pointer type used for a destructor for a thread-specific storage
  * pointer.
  */
-#if _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+#if LELY_HAVE_PTHREAD_H
 typedef void (*tss_dtor_t)(void *);
 #elif _WIN32
 // clang-format off

@@ -3,7 +3,7 @@
  *
  * @see lely/libc/threads.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 
 #include "libc.h"
 
-#if !LELY_NO_THREADS && _WIN32 && !defined(__MINGW32__)
+#if !LELY_NO_THREADS && _WIN32 && !LELY_HAVE_PTHREAD_H
 
 #include <lely/libc/threads.h>
 
@@ -462,4 +462,4 @@ thrd_start(void *arglist)
 	thrd_exit(info->func(info->arg));
 }
 
-#endif // !LELY_NO_THREADS && _WIN32 && !__MINGW32__
+#endif // !LELY_NO_THREADS && _WIN32 && !LELY_HAVE_PTHREAD_H
