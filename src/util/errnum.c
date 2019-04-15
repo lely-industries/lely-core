@@ -4,7 +4,7 @@
  *
  * @see lely/util/errnum.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -875,7 +875,7 @@ errnum2c(errnum_t errnum)
 	case ERRNUM_NFILE: return ERROR_NO_MORE_SEARCH_HANDLES;
 	case ERRNUM_NOBUFS: return WSAENOBUFS;
 	case ERRNUM_NODATA: return ERROR_HANDLE_EOF;
-	case ERRNUM_NODEV: ERROR_DEV_NOT_EXIST;
+	case ERRNUM_NODEV: return ERROR_DEV_NOT_EXIST;
 	case ERRNUM_NOENT: return ERROR_PATH_NOT_FOUND;
 	case ERRNUM_NOEXEC: return ERROR_BAD_FORMAT;
 	case ERRNUM_NOLCK: return ERROR_LOCK_VIOLATION;
