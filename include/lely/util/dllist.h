@@ -3,7 +3,7 @@
  * <a href="https://en.wikipedia.org/wiki/Doubly_linked_list">doubly-linked
  * list</a> declarations.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

@@ -13,7 +13,7 @@
  * initialization of the tree, the user is responsible for providing a suitable
  * comparison function (#rbtree_cmp_t).
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -147,7 +147,7 @@ struct rbnode *rbnode_next(const struct rbnode *node);
 #define rbnode_foreach_(n, first, node) rbnode_foreach__(n, first, node)
 // clang-format off
 #define rbnode_foreach__(n, first, node) \
-	for (struct rbnode *(node) = (first), \
+	for (struct rbnode *node = (first), \
 			*_rbnode_next_##n = (node) ? rbnode_next(node) : NULL; \
 			(node); (node) = _rbnode_next_##n, \
 			_rbnode_next_##n = (node) ? rbnode_next(node) : NULL)

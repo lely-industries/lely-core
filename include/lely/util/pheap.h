@@ -13,7 +13,7 @@
  * of the heap, the user is responsible for providing a suitable comparison
  * function (#pheap_cmp_t).
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -130,7 +130,7 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pnode_next(const struct pnode *node);
 #define pnode_foreach_(n, first, node) pnode_foreach__(n, first, node)
 // clang-format off
 #define pnode_foreach__(n, first, node) \
-	for (struct pnode *(node) = (first), \
+	for (struct pnode *node = (first), \
 			*_pnode_next_##n = (node) ? pnode_next(node) : NULL; \
 			(node); (node) = _pnode_next_##n, \
 			_pnode_next_##n = (node) ? pnode_next(node) : NULL)

@@ -9,7 +9,7 @@
  * and values are stored. Upon initialization of the map, the user is
  * responsible for providing suitable comparison functions (#cmp_t).
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -135,7 +135,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 	__binode_foreach_by_key(first, node, n)
 // clang-format off
 #define __binode_foreach_by_key(first, node, n) \
-	for (struct binode *(node) = (first), \
+	for (struct binode *node = (first), \
 			*__binode_next_by_key_##n = (node) \
 			? binode_next_by_key(node) : NULL; \
 			(node); (node) = __binode_next_by_key_##n, \
@@ -164,7 +164,7 @@ LELY_UTIL_BIMAP_INLINE struct binode *binode_next_by_value(
 	__binode_foreach_by_value(first, node, n)
 // clang-format off
 #define __binode_foreach_by_value(first, node, n) \
-	for (struct binode *(node) = (first), \
+	for (struct binode *node = (first), \
 			*__binode_next_by_value_##n = (node) \
 			? binode_next_by_value(node) : NULL; \
 			(node); (node) = __binode_next_by_value_##n, \

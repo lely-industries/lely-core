@@ -3,7 +3,7 @@
  * singly-<a href="https://en.wikipedia.org/wiki/Linked_list">linked list</a>
  * declarations.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -78,7 +78,7 @@ LELY_UTIL_SLLIST_INLINE void slnode_init(struct slnode *node);
 #define slnode_foreach_(n, first, node) slnode_foreach__(n, first, node)
 // clang-format off
 #define slnode_foreach__(n, first, node) \
-	for (struct slnode *(node) = (first), \
+	for (struct slnode *node = (first), \
 			*_slnode_next_##n = (node) ? (node)->next : NULL; \
 			(node); (node) = _slnode_next_##n, \
 			_slnode_next_##n = (node) ? (node)->next : NULL)
