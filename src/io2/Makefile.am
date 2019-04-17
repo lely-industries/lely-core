@@ -42,6 +42,7 @@ src += win32/timer.c
 endif
 src += can.c
 src += can.h
+src += can_rt.c
 src += cbuf.h
 src += clock.c
 src += ctx.c
