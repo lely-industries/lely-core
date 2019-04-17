@@ -37,6 +37,9 @@ extern LPFN_RTLNTSTATUSTODOSERROR lpfnRtlNtStatusToDosError;
 int io_win32_ntdll_init(void);
 void io_win32_ntdll_fini(void);
 
+int io_win32_sigset_init(void);
+void io_win32_sigset_fini(void);
+
 #ifdef __cplusplus
 }
 #endif

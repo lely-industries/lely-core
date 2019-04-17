@@ -28,6 +28,10 @@
 
 #include <signal.h>
 
+#if _WIN32 && !defined(SIGHUP)
+#define SIGHUP 1
+#endif
+
 #ifndef LELY_IO_SIGSET_INLINE
 #define LELY_IO_SIGSET_INLINE static inline
 #endif
