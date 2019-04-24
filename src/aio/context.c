@@ -95,7 +95,7 @@ aio_context_fini(aio_context_t *ctx)
 	assert(aio_context_init_cnt);
 
 #if LELY_NO_THREADS
-	__unused_var(ctx);
+	(void)ctx;
 #else
 	mtx_destroy(&ctx->mtx);
 #endif

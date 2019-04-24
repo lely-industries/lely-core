@@ -117,7 +117,7 @@ aio_strand_fini(aio_exec_t *exec)
 	struct aio_strand *strand = aio_strand_from_exec(exec);
 
 #if LELY_NO_THREADS
-	__unused_var(strand);
+	(void)strand;
 #else
 	mtx_destroy(&strand->mtx);
 #endif
