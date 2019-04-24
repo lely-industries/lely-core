@@ -4,6 +4,7 @@ inc += lely/features.h
 inc += lely/libc/sys/types.h
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h
+inc += lely/libc/stdint.h
 inc += lely/libc/stdio.h
 inc += lely/libc/stdlib.h
 inc += lely/libc/string.h
