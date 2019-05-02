@@ -456,6 +456,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void Error(uint16_t eec, uint8_t er, const uint8_t msef[5] = nullptr);
 
   /**
+   * Issues an NMT command to a slave.
+   *
+   * @param cs the NMT command specifier.
+   * @param id the node-ID (0 for all nodes, [1..127] for a specific slave).
+   */
+  void Command(NmtCommand cs, uint8_t id = 0);
+
+  /**
    * Requests the transmission of a PDO.
    *
    * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the

@@ -101,6 +101,14 @@ BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
 }
 
 void
+BasicMaster::Command(NmtCommand cs, uint8_t id) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+
+  if (nmt()->csReq(static_cast<uint8_t>(cs), id) == -1)
+    util::throw_errc("Command");
+}
+
+void
 BasicMaster::RpdoRtr(int num) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
