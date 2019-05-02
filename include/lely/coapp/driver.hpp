@@ -687,6 +687,12 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   }
 
   /**
+   * Returns a future which becomes ready once the dedicated event loop of the
+   * driver is stopped and the thread is (about to be) terminated.
+   */
+  ev::Future<void, void> AsyncStoppped() noexcept;
+
+  /**
    * Equivalent to
    * #RunRead(uint16_t idx, uint8_t subidx, ::std::error_code& ec),
    * except that it throws #lely::canopen::SdoError on error.
