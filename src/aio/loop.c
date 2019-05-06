@@ -1051,7 +1051,7 @@ aio_future_fini(aio_future_t *future)
 	assert(future);
 
 #if LELY_NO_THREADS
-	__unused_var(future);
+	(void)future;
 #else
 	cnd_destroy(&future->cond);
 #endif
