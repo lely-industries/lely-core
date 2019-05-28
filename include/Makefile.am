@@ -64,6 +64,7 @@ inc += lely/util/invoker.hpp
 endif
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
+inc += lely/util/mkjmp.h
 if !NO_CXX
 inc += lely/util/mutex.hpp
 endif

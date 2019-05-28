@@ -19,6 +19,7 @@ src += frbuf.c
 src += fwbuf.c
 src += lex.c
 src += membuf.c
+src += mkjmp.c
 src += pheap.c
 src += print.c
 src += rbtree.c
