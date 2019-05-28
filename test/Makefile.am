@@ -34,6 +34,12 @@ bin += test-util-fbuf
 test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
 
+if !NO_CXX
+bin += test-util-fiber
+test_util_fiber_SOURCES = test.h util-fiber.cpp
+test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
+endif
+
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
