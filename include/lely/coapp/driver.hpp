@@ -350,6 +350,34 @@ class BasicDriver : private DriverBase {
   }
 
   /**
+   * Configures heartbeat consumption by updating CANopen object 1016 (Consumer
+   * heartbeat time).
+   *
+   * @param ms the heartbeat timeout (in milliseconds).
+   * @param ec if heartbeat consumption cannot be configured, the SDO abort code
+   *           is stored in <b>ec</b>.
+   */
+  void
+  ConfigHeartbeat(const ::std::chrono::milliseconds& ms,
+                  ::std::error_code& ec) {
+    master.ConfigHeartbeat(id(), ms, ec);
+  }
+
+  /**
+   * Configures heartbeat consumption by updating CANopen object 1016 (Consumer
+   * heartbeat time).
+   *
+   * @param ms the heartbeat timeout (in milliseconds).
+   *
+   * @throws #lely::canopen::SdoError if heartbeat consumption cannot be
+   * configured.
+   */
+  void
+  ConfigHeartbeat(const ::std::chrono::milliseconds& ms) {
+    master.ConfigHeartbeat(id(), ms);
+  }
+
+  /**
    * Returns true if the remote node is ready (i.e., the NMT `boot slave`
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not.

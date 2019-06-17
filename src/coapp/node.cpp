@@ -109,6 +109,27 @@ Node::Reset() {
 }
 
 void
+Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms,
+                      ::std::error_code& ec) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+
+  auto ac = co_dev_cfg_hb(dev(), id, ms.count());
+
+  if (ac)
+    ec = static_cast<SdoErrc>(ac);
+  else
+    ec.clear();
+}
+
+void
+Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms) {
+  ::std::error_code ec;
+  ConfigHeartbeat(id, ms, ec);
+  if (ec)
+    throw SdoError(netid(), Device::id(), 0x1016, 0, ec, "ConfigHeartbeat");
+}
+
+void
 Node::lock() {
   impl_->lock();
 }
