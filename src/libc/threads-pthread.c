@@ -28,6 +28,10 @@
 #include <errno.h>
 #include <stdint.h>
 
+#if _WIN32
+#include <processthreadsapi.h>
+#endif
+
 #undef LELY_HAVE_SCHED
 #if _POSIX_C_SOURCE >= 200112L && defined(_POSIX_PRIORITY_SCHEDULING)
 #define LELY_HAVE_SCHED 1
@@ -261,7 +265,13 @@ thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 	return res;
 }
 
-#if LELY_HAVE_SCHED
+#if _WIN32
+void
+thrd_yield(void)
+{
+	SwitchToThread();
+}
+#elif LELY_HAVE_SCHED
 void
 thrd_yield(void)
 {
