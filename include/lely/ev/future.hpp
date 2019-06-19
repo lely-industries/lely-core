@@ -591,6 +591,23 @@ when_any(ev_exec_t* exec, Futures&&... futures) {
   return Future<::std::size_t, void>(f);
 }
 
+/**
+ * Creates a task containing a Callable and its arguments, submits it for
+ * execution to the specified executor and returns a future that will eventually
+ * hold the result (or the exception, if thrown) of the invocation.
+ */
+template <class F, class... Args>
+inline typename AsyncTask<F, Args...>::future_type
+async(ev_exec_t* exec, F&& f, Args&&... args) {
+  auto task = make_async_task(exec, ::std::forward<F>(f),
+                              ::std::forward<Args>(args)...);
+  // Obtain a reference to the future before submitting the task to avoid a
+  // potential race condition.
+  auto future = task->get_future();
+  task->get_executor().submit(*task);
+  return ::std::move(future);
+}
+
 }  // namespace ev
 }  // namespace lely
 
