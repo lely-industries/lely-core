@@ -44,6 +44,9 @@ endif
 inc += lely/util/float.h
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
+if !NO_CXX
+inc += lely/util/invoker.hpp
+endif
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h
