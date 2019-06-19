@@ -26,6 +26,7 @@
 
 #include <lely/ev/exec.hpp>
 #include <lely/ev/future.h>
+#include <lely/util/invoker.hpp>
 #include <lely/util/result.hpp>
 
 #include <utility>
@@ -179,6 +180,191 @@ class Promise {
  private:
   ev_promise_t* promise_{nullptr};
 };
+
+namespace detail {
+
+template <class F, class... Args, class R = compat::invoke_result_t<F, Args...>>
+inline typename ::std::enable_if<!::std::is_void<R>::value,
+                                 util::Result<R, ::std::exception_ptr>>::type
+catch_result(F&& f, Args&&... args) {
+  try {
+    return compat::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+template <class F, class... Args, class R = compat::invoke_result_t<F, Args...>>
+inline typename ::std::enable_if<::std::is_void<R>::value,
+                                 util::Result<R, ::std::exception_ptr>>::type
+catch_result(F&& f, Args&&... args) {
+  try {
+    compat::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
+    return nullptr;
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+template <class>
+struct is_future : ::std::false_type {};
+
+template <class T, class E>
+struct is_future<Future<T, E>> : ::std::true_type {};
+
+template <class, class = void>
+class AsyncTask;
+
+template <class Invoker>
+class AsyncTask<Invoker, typename ::std::enable_if<!is_future<
+                             compat::invoke_result_t<Invoker>>::value>::type>
+    : public ev_task {
+ public:
+  using value_type = compat::invoke_result_t<Invoker>;
+  using error_type = ::std::exception_ptr;
+  using future_type = Future<value_type, error_type>;
+
+  template <class F, class... Args>
+  AsyncTask(ev_promise_t* promise, ev_exec_t* exec, F&& f,
+            Args&&... args) noexcept
+      : ev_task EV_TASK_INIT(exec,
+                             [](ev_task * task) noexcept {
+                               auto self = static_cast<AsyncTask*>(task);
+                               auto promise = ::std::move(self->promise_);
+                               if (ev_promise_set_acquire(promise)) {
+                                 self->result_ = self->invoker_();
+                                 ev_promise_set_release(
+                                     promise, ::std::addressof(self->result_));
+                               }
+                             }),
+        promise_(promise),
+        invoker_(::std::forward<F>(f), ::std::forward<Args>(args)...) {}
+
+  AsyncTask(const AsyncTask&) = delete;
+
+  AsyncTask& operator=(const AsyncTask&) = delete;
+
+  Executor
+  get_executor() const noexcept {
+    return exec;
+  }
+
+  future_type
+  get_future() const noexcept {
+    return promise_.get_future();
+  }
+
+ private:
+  Promise<value_type, error_type> promise_;
+  Invoker invoker_;
+  util::Result<value_type, error_type> result_;
+};
+
+template <class Invoker>
+class AsyncTask<Invoker, typename ::std::enable_if<is_future<
+                             compat::invoke_result_t<Invoker>>::value>::type>
+    : public ev_task {
+  using inner_future_type = compat::invoke_result_t<Invoker>;
+
+ public:
+  using value_type = typename inner_future_type::result_type::value_type;
+  using error_type = ::std::exception_ptr;
+  using future_type = Future<value_type, error_type>;
+
+  template <class F, class... Args>
+  AsyncTask(ev_promise_t* promise, ev_exec_t* exec, F&& f,
+            Args&&... args) noexcept
+      : ev_task
+        EV_TASK_INIT(exec,
+                     [](ev_task * task) noexcept {
+                       auto self = static_cast<AsyncTask*>(task);
+                       // Prepare the task for the next future.
+                       task->func = [](ev_task * task) noexcept {
+                         auto self = static_cast<AsyncTask*>(task);
+                         auto promise = ::std::move(self->promise_);
+                         // Satisfy the promise with the result of the future
+                         // (and convert the error value, if any, to an
+                         // exception pointer).
+                         if (ev_promise_set_acquire(promise)) {
+                           self->result_ = catch_result(
+                               [](inner_future_type future) {
+                                 return future.get().value();
+                               },
+                               ::std::move(self->inner_future_));
+                           ev_promise_set_release(
+                               promise, ::std::addressof(self->result_));
+                         }
+                       };
+                       try {
+                         // Store (a reference to) the future returned by the
+                         // function.
+                         self->inner_future_ = self->invoker_();
+                         // Resubmit the task to the new future.
+                         self->inner_future_.submit(*self);
+                       } catch (...) {
+                         // If the function threw an exception, satisfy the
+                         // promise immediately.
+                         auto promise = ::std::move(self->promise_);
+                         if (ev_promise_set_acquire(promise)) {
+                           self->result_ = ::std::current_exception();
+                           ev_promise_set_release(
+                               promise, ::std::addressof(self->result_));
+                         }
+                       }
+                     }),
+        promise_(promise),
+        invoker_(::std::forward<F>(f), ::std::forward<Args>(args)...) {}
+
+  AsyncTask(const AsyncTask&) = delete;
+
+  AsyncTask& operator=(const AsyncTask&) = delete;
+
+  Executor
+  get_executor() const noexcept {
+    return exec;
+  }
+
+  future_type
+  get_future() const noexcept {
+    return promise_.get_future();
+  }
+
+ private:
+  Promise<value_type, error_type> promise_;
+  Invoker invoker_;
+  inner_future_type inner_future_;
+  util::Result<value_type, error_type> result_;
+};
+
+}  // namespace detail
+
+/**
+ * A helper alias template for the result of
+ * #lely::ev::make_async_task<F, Args...>().
+ */
+template <class F, class... Args>
+using AsyncTask = detail::AsyncTask<util::invoker_t<F, Args...>>;
+
+/**
+ * Creates a task containing a Callable and its arguments and a future that will
+ * eventually hold the result (or the exception, if thrown) of the invocation.
+ */
+template <class F, class... Args>
+inline AsyncTask<F, Args...>*
+make_async_task(ev_exec_t* exec, F&& f, Args&&... args) {
+  // Create a promise with enough space to store the task and register the
+  // destructor.
+  auto promise =
+      ev_promise_create(sizeof(AsyncTask<F, Args...>), [](void* ptr) noexcept {
+        static_cast<AsyncTask<F, Args...>*>(ptr)->~AsyncTask();
+      });
+  if (!promise) util::throw_errc("make_async_task");
+  // Construct the task. Since the destructor is already registered, we cannot
+  // handle exceptions thrown by the constructor, so it is defined with the
+  // noexcept attribute (see above).
+  return new (ev_promise_data(promise)) AsyncTask<F, Args...>(
+      promise, exec, ::std::forward<F>(f), ::std::forward<Args>(args)...);
+}
 
 /// A future. @see ev_future_t
 template <class T, class E>
@@ -340,6 +526,25 @@ class Future {
   ::std::size_t
   abort_all() noexcept {
     return ev_future_abort(*this, nullptr);
+  }
+
+  /**
+   * Attaches a continuation function to a future and returns a new future which
+   * becomes ready once the continuation completes. The continuation receives a
+   * single parameter: `*this`. The result of the continuation (or any exception
+   * thrown during invocation) is stored in the future, unless the continuation
+   * returns a future. In that case, the result of that future (as obtained by
+   * `get().value()`) is used instead. This is known as _implicit unwrapping_.
+   */
+  template <class F>
+  typename AsyncTask<F, Future>::future_type
+  then(ev_exec_t* exec, F&& f) {
+    auto task = make_async_task(exec, ::std::forward<F>(f), *this);
+    // Obtain a reference to the future before submitting the continuation to
+    // avoid a potential race condition.
+    auto future = task->get_future();
+    submit(*task);
+    return ::std::move(future);
   }
 
  private:
