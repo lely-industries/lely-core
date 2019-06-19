@@ -15,6 +15,9 @@ endif
 inc += lely/libc/time.h
 inc += lely/libc/uchar.h
 inc += lely/libc/unistd.h
+if !NO_CXX
+inc += lely/libc/utility.hpp
+endif
 
 inc += lely/tap/tap.h
 
