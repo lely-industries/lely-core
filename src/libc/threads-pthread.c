@@ -199,7 +199,14 @@ mtx_unlock(mtx_t *mtx)
 int
 thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
 	int errsv = pthread_create(thr, NULL, (void *(*)(void *))func, arg);
+#if __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 	if (errsv) {
 		errno = errsv;
 		return errsv == EAGAIN ? thrd_nomem : thrd_error;
