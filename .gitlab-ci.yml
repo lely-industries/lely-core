@@ -173,3 +173,52 @@ test:x86_64-w64-mingw32:
   <<: *test
   variables:
     WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
+
+lcov:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+    - apt-get install -qy --no-install-recommends
+        doxygen
+        graphviz
+        lcov
+  script:
+    - autoreconf -i
+    - ./configure --enable-code-coverage --disable-shared
+    - make
+    - make check-code-coverage
+    - make html
+    - lcov --summary coverage.info --rc lcov_branch_coverage=1
+  artifacts:
+    paths:
+      - coverage/
+      - doc/
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  only:
+    - master
+  image: alpine:latest
+  dependencies:
+    - lcov
+  script:
+    - mkdir -p public
+    - mv coverage public/lcov
+    - mv doc/html public/doxygen
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 weeks
