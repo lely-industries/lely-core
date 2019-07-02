@@ -207,6 +207,32 @@ lcov:
       - doc/
     expire_in: 1 week
 
+scan-build:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        clang-tools
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+  script:
+    - autoreconf -i
+    - scan-build ./configure --disable-python
+    - scan-build --keep-cc -o ./scan-build make check
+  artifacts:
+    paths:
+      - scan-build/
+    expire_in: 1 week
+
 pages:
   stage: deploy
   only:
@@ -214,10 +240,12 @@ pages:
   image: alpine:latest
   dependencies:
     - lcov
+    - scan-build
   script:
     - mkdir -p public
     - mv coverage public/lcov
     - mv doc/html public/doxygen
+    - mv scan-build/* public/scan-build
   artifacts:
     paths:
       - public
