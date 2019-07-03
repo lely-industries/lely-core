@@ -353,6 +353,72 @@ scan-build:
       - scan-build/
     expire_in: 1 week
 
+cppcheck:linux:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        cppcheck
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+  script:
+    - autoreconf -i
+    - ./configure --disable-python
+    - cppcheck
+        -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
+        --enable=warning,style,performance,portability
+        --error-exitcode=1
+        --force
+        -I/usr/include -I. -I./include
+        --inline-suppr
+        --platform=unix64
+        --quiet
+        --std=c11 --std=c++11
+        --suppressions-list=suppressions.txt
+        include src
+
+cppcheck:mingw32:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        cppcheck
+        mingw-w64
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+  script:
+    - autoreconf -i
+    - ./configure --host=x86_64-w64-mingw32 --disable-python
+    - cppcheck
+        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
+        --enable=warning,style,performance,portability
+        --error-exitcode=1
+        --force
+        -I/usr/x86_64-w64-mingw32/include -I. -I./include
+        --inline-suppr
+        --platform=win64
+        --quiet
+        --std=c11 --std=c++11
+        --suppress=va_list_usedBeforeStarted
+        --suppressions-list=suppressions.txt
+        include src
+
 pages:
   stage: deploy
   only:
