@@ -117,3 +117,59 @@ test:gcc:9:
     - build:gcc:9
   <<: *gcc-deps
   <<: *test
+
+.mingw-deps: &mingw-deps
+  tags:
+    - docker
+    - linux
+  image: debian:buster
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        apt-transport-https
+        build-essential
+        curl
+        gnupg
+        software-properties-common
+    - apt-get install -qy --no-install-recommends
+        mingw-w64
+    - curl -L https://dl.winehq.org/wine-builds/winehq.key | apt-key add -
+    - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ buster main'
+    - dpkg --add-architecture i386
+    - apt-get update -q
+    - apt-get install -qy
+        winehq-stable
+    - wineboot -i
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+
+build:i686-w64-mingw32:
+  <<: *mingw-deps
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
+    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\8.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
+
+test:i686-w64-mingw32:
+  dependencies:
+    - build:i686-w64-mingw32
+  <<: *mingw-deps
+  <<: *test
+  variables:
+    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\8.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
+
+build:x86_64-w64-mingw32:
+  <<: *mingw-deps
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
+    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
+
+test:x86_64-w64-mingw32:
+  dependencies:
+    - build:x86_64-w64-mingw32
+  <<: *mingw-deps
+  <<: *test
+  variables:
+    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
