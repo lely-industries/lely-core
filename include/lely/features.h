@@ -2,7 +2,7 @@
  * This header file is part of the Lely libraries; it contains the compiler
  * feature definitions.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -124,8 +124,12 @@
 #ifndef __STDC_NO_ATOMICS__
 // GCC versions older than 4.9 do not properly advertise the absence of
 // <stdatomic.h>.
+// clang-format off
 #if defined(__cplusplus) || defined(_MSC_VER) \
-		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9))
+		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9) \
+				&& !defined(__clang__)) \
+		|| (defined(__clang__) && !__has_extension(c_atomic))
+// clang-format on
 #define __STDC_NO_ATOMICS__ 1
 #endif
 #endif

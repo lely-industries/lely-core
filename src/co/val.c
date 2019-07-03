@@ -4,7 +4,7 @@
  *
  * @see lely/co/val.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1332,13 +1332,13 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		}
 		case CO_DEFTYPE_UNICODE_STRING: {
 			char16_t *us = NULL;
-			if (__unlikely(co_val_copy(type, &us, val) != n))
+			if (__unlikely(!co_val_copy(type, &us, val) && !us))
 				return 0;
 			assert(us);
 			for (size_t i = 0; i + 1 < n; i += 2)
 				us[i / 2] = htole16(us[i / 2]);
 			size_t chars = print_base64(pbegin, end, us, n);
-			co_val_fini(type, &us);
+			co_array_free(&us);
 			return chars;
 		}
 		case CO_DEFTYPE_DOMAIN:

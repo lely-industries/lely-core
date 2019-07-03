@@ -4,7 +4,7 @@
  *
  * @see lely/util/diag.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -468,7 +468,6 @@ vsnprintf_diag_at(char *s, size_t n, enum diag_severity severity, int errc,
 			if (r < 0)
 				return r;
 			t += r;
-			r = MIN((size_t)r, n);
 		}
 	}
 

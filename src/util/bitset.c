@@ -4,7 +4,7 @@
  *
  * @see lely/util/bitset.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -39,7 +39,7 @@ bitset_init(struct bitset *set, int size)
 
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
-	unsigned int *bits = malloc(size * sizeof(int));
+	unsigned int *bits = malloc(size * sizeof(unsigned int));
 	if (!bits && size) {
 		set_errc(errno2c(errno));
 		return -1;
@@ -71,10 +71,11 @@ int
 bitset_resize(struct bitset *set, int size)
 {
 	assert(set);
+	assert(set->size >= 0);
 
 	size = MAX(0, (size + INT_BIT - 1) / INT_BIT);
 
-	unsigned int *bits = realloc(set->bits, size * sizeof(int));
+	unsigned int *bits = realloc(set->bits, size * sizeof(unsigned int));
 	if (!bits && size) {
 		set_errc(errno2c(errno));
 		return 0;
