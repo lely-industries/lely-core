@@ -174,6 +174,33 @@ test:x86_64-w64-mingw32:
   variables:
     WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
 
+valgrind:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        valgrind
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+  script:
+    - autoreconf -i
+    - ./configure --disable-python
+    - make
+    - make check-valgrind-memcheck
+  artifacts:
+    paths:
+      - test/test-*.log
+    expire_in: 1 week
+
 lcov:
   stage: test
   tags:

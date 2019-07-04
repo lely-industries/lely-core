@@ -15,6 +15,8 @@ AS_IF([test "$enable_code_coverage" == "yes"], [
 	${CXXFLAGS=""}
 ])
 
+AX_VALGRIND_CHECK
+
 AC_LANG([C])
 AC_PROG_CC_STDC
 AC_USE_SYSTEM_EXTENSIONS
