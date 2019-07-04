@@ -278,3 +278,6 @@ endif
 endif
 
 nobase_include_HEADERS = $(inc)
+
+EXTRA_DIST =
+EXTRA_DIST += lely/CPPLINT.cfg

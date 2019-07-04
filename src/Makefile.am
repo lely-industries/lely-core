@@ -5,3 +5,6 @@ if !NO_CXX
 SUBDIRS += coapp
 endif
 endif
+
+EXTRA_DIST =
+EXTRA_DIST += CPPLINT.cfg
