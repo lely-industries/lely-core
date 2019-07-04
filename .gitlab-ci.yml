@@ -267,12 +267,10 @@ pages:
   image: alpine:latest
   dependencies:
     - lcov
-    - scan-build
   script:
     - mkdir -p public
     - mv coverage public/lcov
     - mv doc/html public/doxygen
-    - mv scan-build/* public/scan-build
   artifacts:
     paths:
       - public
