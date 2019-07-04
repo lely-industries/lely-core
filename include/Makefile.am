@@ -99,6 +99,7 @@ if !NO_CXX
 inc += lely/io/sock.hpp
 endif
 
+if PLATFORM_LINUX
 if !NO_CXX
 inc += lely/aio/detail/cbase.hpp
 inc += lely/aio/detail/timespec.hpp
@@ -144,6 +145,7 @@ endif
 inc += lely/aio/timer.h
 if !NO_CXX
 inc += lely/aio/timer.hpp
+endif
 endif
 
 inc += lely/co/def/basic.def
@@ -252,6 +254,7 @@ inc += lely/co/wtm.hpp
 endif
 endif
 
+if PLATFORM_LINUX
 if !NO_CXX
 inc += lely/coapp/detail/chrono.hpp
 inc += lely/coapp/detail/mutex.hpp
@@ -270,6 +273,7 @@ inc += lely/coapp/sdo.hpp
 inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
+endif
 endif
 endif
 
