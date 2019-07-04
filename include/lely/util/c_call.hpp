@@ -1,3 +1,4 @@
+// NOLINT(legal/copyright)
 /**@file
  * This header file is part of the utilities library; it contains the C callback
  * wrapper declarations.
@@ -33,7 +34,7 @@
  * The definition of #lely::c_mem_call makes use of the fact that member
  * function pointers can be template parameters.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

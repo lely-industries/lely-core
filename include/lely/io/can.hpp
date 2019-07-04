@@ -3,7 +3,7 @@
  * the Controller Area Network (CAN) device handle. @see lely/io/can.h for the C
  * interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,6 +29,8 @@
 
 #include <lely/io/can.h>
 #include <lely/io/io.hpp>
+
+#include <utility>
 
 namespace lely {
 

@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the C++ interface of
  * the network socket device handle. @see lely/io/sock.h for the C interface.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,6 +28,8 @@
 
 #include <lely/io/io.hpp>
 #include <lely/io/sock.h>
+
+#include <utility>
 
 namespace lely {
 

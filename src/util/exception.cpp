@@ -4,7 +4,7 @@
  *
  * @see lely/util/exception.hpp
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+// NOLINTNEXTLINE(build/include)
 #include "util.h"
 
 #ifndef LELY_NO_CXX

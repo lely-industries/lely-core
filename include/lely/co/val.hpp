@@ -3,7 +3,7 @@
  * interface of the CANopen value declarations. See lely/co/val.h for the C
  * interface.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,6 +30,10 @@
 #include <lely/util/c_type.hpp>
 #include <lely/co/type.hpp>
 #include <lely/co/val.h>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace lely {
 

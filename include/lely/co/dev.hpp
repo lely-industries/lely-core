@@ -30,6 +30,8 @@
 #include <lely/co/dev.h>
 #include <lely/co/val.hpp>
 
+#include <vector>
+
 struct floc;
 struct co_sdev;
 

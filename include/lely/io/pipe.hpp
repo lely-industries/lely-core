@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the C++ interface of
  * the pipe device handle. @see lely/io/pipe.h for the C interface.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,6 +28,8 @@
 
 #include <lely/io/io.hpp>
 #include <lely/io/pipe.h>
+
+#include <utility>
 
 namespace lely {
 

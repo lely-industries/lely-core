@@ -32,6 +32,8 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.hpp>
 
+#include <vector>
+
 namespace lely {
 
 template <co_unsigned16_t>

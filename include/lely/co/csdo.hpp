@@ -3,7 +3,7 @@
  * interface of the Client-SDO declarations. See lely/co/csdo.h for the C
  * interface.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,6 +30,9 @@
 #include <lely/can/net.hpp>
 #include <lely/co/csdo.h>
 #include <lely/co/val.hpp>
+
+#include <string>
+#include <vector>
 
 namespace lely {
 
