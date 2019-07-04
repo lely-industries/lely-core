@@ -1463,7 +1463,8 @@ co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (ac) {
 		co_gw_send_con(job->net->gw, &job->req, 0, ac);
 	} else {
-		size_t size = CO_GW_CON_SDO_UP_SIZE + MAX(n, 1);
+		size_t size = MAX(CO_GW_CON_SDO_UP_SIZE + n,
+				sizeof(struct co_gw_con_sdo_up));
 		int errc = get_errc();
 		struct co_gw_con_sdo_up *con = malloc(size);
 		if (__likely(con)) {
@@ -2144,7 +2145,7 @@ co_gw_recv_pdo_write(
 	const struct co_pdo_map_par *map = co_tpdo_get_map_par(pdo);
 
 	// Map the values into a PDO.
-	uint8_t buf[CAN_MAX_LEN];
+	uint8_t buf[CAN_MAX_LEN] = { 0 };
 	size_t n = sizeof(buf);
 	ac = co_pdo_map(map, par->val, par->n, buf, &n);
 	if (__unlikely(ac))

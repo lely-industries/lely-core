@@ -1282,7 +1282,8 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 
 	size_t n = co_val_write(type, &val, NULL, NULL);
 
-	size_t size = CO_GW_REQ_SDO_DN_SIZE + MAX(n, 1);
+	size_t size = MAX(CO_GW_REQ_SDO_DN_SIZE + n,
+			sizeof(struct co_gw_req_sdo_dn));
 	struct co_gw_req_sdo_dn *req = malloc(size);
 	if (__unlikely(!req)) {
 		diag_if(DIAG_ERROR, get_errc(), at, "unable to create value");
