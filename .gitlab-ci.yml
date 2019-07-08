@@ -242,8 +242,9 @@ build:arm-none-eabi:
         automake
         libtool
   variables:
-    CFLAGS: -D__NEWLIB__
+    CFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-python --disable-threads --disable-daemon
+    CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
 cpplint:
