@@ -552,7 +552,7 @@ errc2num(int errc)
 	default: return 0;
 	}
 #else
-#if _POSIX_C_SOURCE >= 200112L
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errc) {
 	case -ABS(EAI_AGAIN): return ERRNUM_AI_AGAIN;
 	case -ABS(EAI_BADFLAGS): return ERRNUM_AI_BADFLAGS;
@@ -925,7 +925,7 @@ errnum2c(errnum_t errnum)
 	default: return 0;
 	}
 #else
-#if _POSIX_C_SOURCE >= 200112L
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errnum) {
 	case ERRNUM_AI_AGAIN: return -ABS(EAI_AGAIN);
 	case ERRNUM_AI_BADFLAGS: return -ABS(EAI_BADFLAGS);
@@ -986,7 +986,7 @@ errc2str(int errc)
 		errstr[n - 2] = '\0';
 	return errstr;
 #else
-#if _POSIX_C_SOURCE >= 200112L
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errc) {
 	case -ABS(EAI_AGAIN): return gai_strerror(EAI_AGAIN);
 	case -ABS(EAI_BADFLAGS): return gai_strerror(EAI_BADFLAGS);

@@ -4,7 +4,7 @@
  *
  * @see lely/util/frbuf.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,9 @@
 #include <stdio.h>
 #if _POSIX_C_SOURCE >= 200112L
 #include <fcntl.h>
+#if _POSIX_MAPPED_FILES >= 200112L
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #endif
 #endif
@@ -52,7 +54,7 @@ struct __frbuf {
 	HANDLE hFileMappingObject;
 	/// The base address of the file mapping.
 	LPVOID lpBaseAddress;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	/// The file descriptor.
 	int fd;
 	/// The base address of the current file mapping.
@@ -97,7 +99,7 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 
 	buf->hFileMappingObject = INVALID_HANDLE_VALUE;
 	buf->lpBaseAddress = NULL;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	buf->fd = open(filename, O_RDONLY | O_CLOEXEC);
 	if (buf->fd == -1)
 		return NULL;
@@ -120,7 +122,7 @@ __frbuf_fini(struct __frbuf *buf)
 
 #ifdef _WIN32
 	CloseHandle(buf->hFile);
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	close(buf->fd);
 #else
 	fclose(buf->stream);
@@ -171,7 +173,7 @@ frbuf_get_size(frbuf_t *buf)
 	if (!GetFileSizeEx(buf->hFile, &FileSize))
 		return -1;
 	return FileSize.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	struct stat64 stat;
 	if (fstat64(buf->fd, &stat) == -1)
@@ -216,7 +218,7 @@ frbuf_get_pos(frbuf_t *buf)
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT))
 		return -1;
 	return li.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	return lseek64(buf->fd, 0, SEEK_CUR);
 #else
@@ -245,7 +247,7 @@ frbuf_set_pos(frbuf_t *buf, intmax_t pos)
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN))
 		return -1;
 	return li.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	return lseek64(buf->fd, pos, SEEK_SET);
 #else
@@ -278,7 +280,7 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 	if (!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead, NULL))
 		return -1;
 	return nNumberOfBytesRead;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	ssize_t result;
 	do
 		result = read(buf->fd, ptr, size);
@@ -342,7 +344,7 @@ error_ReadFile:
 error_get_pos:
 	SetLastError(dwErrCode);
 	return result;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	ssize_t result;
 #ifdef __linux__
 	do
@@ -445,7 +447,7 @@ error_CreateFileMapping:
 error_size:
 	SetLastError(dwErrCode);
 	return NULL;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	if (page_size <= 0)
 		return NULL;
@@ -524,7 +526,7 @@ frbuf_unmap(frbuf_t *buf)
 		buf->hFileMappingObject = INVALID_HANDLE_VALUE;
 		buf->lpBaseAddress = NULL;
 	}
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 	if (buf->addr != MAP_FAILED) {
 		result = munmap(buf->addr, buf->len);
 

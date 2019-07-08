@@ -35,7 +35,7 @@
 #ifdef _MSC_VER
 #pragma comment(lib, "wtsapi32.lib")
 #endif
-#elif _POSIX_C_SOURCE >= 200809L
+#elif _POSIX_C_SOURCE >= 200809L && !defined(__NEWLIB__)
 #include <syslog.h>
 #endif
 
@@ -360,7 +360,7 @@ void
 syslog_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
-#if _POSIX_C_SOURCE >= 200809L
+#if _POSIX_C_SOURCE >= 200809L && !defined(__NEWLIB__)
 	(void)handle;
 
 	int priority = LOG_USER;

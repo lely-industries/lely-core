@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw_txt.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -966,7 +966,8 @@ co_gw_txt_recv_get_version(co_gw_txt_t *gw, co_unsigned32_t seq,
 			"[%" PRIu32 "] %" PRIu32 " %" PRIu32 " %u.%u %" PRIu32
 			" %u %u.%u %u.%u",
 			seq, con->vendor_id, con->product_code,
-			(con->revision >> 16) & 0xffff, con->revision & 0xffff,
+			(uint_least16_t)((con->revision >> 16) & 0xffff),
+			(uint_least16_t)(con->revision & 0xffff),
 			con->serial_nr, con->gw_class, con->prot_hi,
 			con->prot_lo, CO_GW_TXT_IMPL_HI, CO_GW_TXT_IMPL_LO);
 }
@@ -1015,8 +1016,9 @@ co_gw_txt_recv_err(co_gw_txt_t *gw, co_unsigned32_t seq, int iec,
 				seq, iec, co_gw_iec2str(iec));
 	} else if (ac) {
 		gw->iec = CO_GW_IEC_INTERN;
-		return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] ERROR: %08X (%s)",
-				seq, ac, co_sdo_ac2str(ac));
+		return co_gw_txt_recv_fmt(gw,
+				"[%" PRIu32 "] ERROR: %08" PRIX32 " (%s)", seq,
+				ac, co_sdo_ac2str(ac));
 	} else {
 		return co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] OK", seq);
 	}

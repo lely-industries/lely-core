@@ -4,7 +4,7 @@
  *
  * @see lely/util/fwbuf.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,7 +45,9 @@
 #if _POSIX_C_SOURCE >= 200112L
 #include <fcntl.h>
 #include <libgen.h>
+#if _POSIX_MAPPED_FILES >= 200112L
 #include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 #endif
 #endif
@@ -67,7 +69,7 @@ struct __fwbuf {
 	LPVOID lpBaseAddress;
 	/// The number of bytes mapped at <b>lpBaseAddress</b>.
 	SIZE_T dwNumberOfBytesToMap;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	/// A pointer to the name of the temporary file.
 	char *tmpname;
 	/// The file descriptor of the directory containing the temporary file.
@@ -170,7 +172,7 @@ error_GetTempFileNameA:
 error_strdup:
 	SetLastError(dwErrCode);
 	return NULL;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	int errsv = 0;
 
 	buf->filename = strdup(filename);
@@ -289,7 +291,7 @@ __fwbuf_fini(struct __fwbuf *buf)
 	fwbuf_commit(buf);
 	set_errc(errc);
 
-#if _POSIX_C_SOURCE >= 200112L
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	free(buf->tmpname);
 #endif
 	free(buf->filename);
@@ -342,7 +344,7 @@ fwbuf_get_size(fwbuf_t *buf)
 		return -1;
 	}
 	return FileSize.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	struct stat64 stat;
 	if (fstat64(buf->fd, &stat) == -1) {
@@ -382,7 +384,7 @@ fwbuf_set_size(fwbuf_t *buf, intmax_t size)
 		return -1;
 
 	return 0;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	if (ftruncate64(buf->fd, size) == -1) {
 #else
@@ -418,7 +420,7 @@ fwbuf_get_pos(fwbuf_t *buf)
 		return -1;
 	}
 	return li.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	intmax_t pos = lseek64(buf->fd, 0, SEEK_CUR);
 #else
@@ -450,7 +452,7 @@ fwbuf_set_pos(fwbuf_t *buf, intmax_t pos)
 		return -1;
 	}
 	return li.QuadPart;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #ifdef __linux__
 	pos = lseek64(buf->fd, pos, SEEK_SET);
 #else
@@ -497,7 +499,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 		return -1;
 	}
 	return nNumberOfBytesWritten;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	ssize_t result;
 	do
 		result = write(buf->fd, ptr, size);
@@ -581,7 +583,7 @@ error_get_pos:
 error_pos:
 	SetLastError(buf->dwErrCode);
 	return result;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	ssize_t result;
 #ifdef __linux__
 	do
@@ -660,7 +662,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 	if (pos < 0) {
 #ifdef _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 		errno = buf->errsv = EINVAL;
 #else
 		set_errnum(buf->errnum = ERRNUM_INVAL);
@@ -670,7 +672,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 	if (pos > (intmax_t)size) {
 #ifdef _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 		errno = buf->errsv = EOVERFLOW;
 #else
 		set_errnum(buf->errnum = ERRNUM_OVERFLOW);
@@ -721,7 +723,7 @@ error_CreateFileMapping:
 error_size:
 	SetLastError(buf->dwErrCode);
 	return NULL;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 	long page_size = sysconf(_SC_PAGE_SIZE);
 	if (page_size <= 0) {
 		buf->errsv = errno;
@@ -856,7 +858,7 @@ fwbuf_unmap(fwbuf_t *buf)
 			buf->dwErrCode = dwErrCode;
 		SetLastError(dwErrCode);
 	}
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_MAPPED_FILES >= 200112L
 	int errsv = 0;
 	if (buf->errsv) {
 		result = -1;
@@ -924,7 +926,7 @@ fwbuf_clearerr(fwbuf_t *buf)
 
 #ifdef _WIN32
 	buf->dwErrCode = 0;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	buf->errsv = 0;
 #else
 	buf->errnum = 0;
@@ -940,7 +942,7 @@ fwbuf_error(fwbuf_t *buf)
 	if (buf->dwErrCode)
 		SetLastError(buf->dwErrCode);
 	return !!buf->dwErrCode;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	if (buf->errsv)
 		errno = buf->errsv;
 	return !!buf->errsv;
@@ -959,7 +961,7 @@ fwbuf_cancel(fwbuf_t *buf)
 #ifdef _WIN32
 	if (!buf->dwErrCode)
 		buf->dwErrCode = ERROR_OPERATION_ABORTED;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	if (!buf->errsv)
 		buf->errsv = ECANCELED;
 #else
@@ -1006,7 +1008,7 @@ fwbuf_commit(fwbuf_t *buf)
 done:
 	SetLastError(buf->dwErrCode = dwErrCode);
 	return result;
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	int errsv = errno;
 
 	if (buf->fd == -1)

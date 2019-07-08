@@ -4,7 +4,7 @@
  *
  * @see lely/co/wtm.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,6 +32,7 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1113,7 +1114,7 @@ default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data)
 	(void)wtm;
 	(void)data;
 
-	diag(DIAG_WARNING, 0, "received WTM abort code %08X: %s", ac,
+	diag(DIAG_WARNING, 0, "received WTM abort code %08" PRIX32 ": %s", ac,
 			co_wtm_ac_str(ac));
 }
 

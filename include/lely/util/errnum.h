@@ -36,7 +36,7 @@
  * and platform-independent error numbers can be  done with errc2num() and
  * errnum2c().
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -62,7 +62,7 @@
 
 #if _WIN32
 #include <winerror.h>
-#elif _POSIX_C_SOURCE >= 200112L
+#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #include <netdb.h>
 #endif
 
