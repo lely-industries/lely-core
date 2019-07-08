@@ -226,6 +226,26 @@ test:aarch64-linux-gnu:
     ARCH: arm64
   allow_failure: true
 
+build:arm-none-eabi:
+  <<: *build
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        gcc-arm-none-eabi
+        libstdc++-arm-none-eabi-newlib
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+  variables:
+    CFLAGS: -D__NEWLIB__
+    CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-python --disable-threads --disable-daemon
+    LDFLAGS: --specs=nosys.specs
+
 cpplint:
   stage: test
   tags:
