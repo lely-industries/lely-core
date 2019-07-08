@@ -59,6 +59,20 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
+AM_CONDITIONAL([NO_TOOLS], [false])
+AC_ARG_ENABLE([tools],
+	AS_HELP_STRING([--disable-tools], [disable tools]))
+AS_IF([test "$enable_tools" == "no"], [
+	AM_CONDITIONAL([NO_TOOLS], [true])
+])
+
+AM_CONDITIONAL([NO_TESTS], [false])
+AC_ARG_ENABLE([tests],
+	AS_HELP_STRING([--disable-tests], [disable tests]))
+AS_IF([test "$enable_tests" == "no"], [
+	AM_CONDITIONAL([NO_TESTS], [true])
+])
+
 RT_LIBS=
 AM_CONDITIONAL([NO_RT], [false])
 AC_ARG_ENABLE([rt],

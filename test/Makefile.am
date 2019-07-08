@@ -97,6 +97,7 @@ test_co_pdo_LDADD = $(LELY_CO_LIBS)
 endif
 endif
 
+if !NO_TOOLS
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += test-co-sdev
@@ -105,6 +106,7 @@ nodist_test_co_sdev_SOURCES = test-co-sdev.h
 test_co_sdev_LDADD = $(LELY_CO_LIBS)
 test-co-sdev.h: co-sdev.dcf $(top_builddir)/tools/dcf2c$(EXEEXT)
 	$(EXEC) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
+endif
 endif
 endif
 
@@ -144,7 +146,9 @@ EXTRA_DIST += co-sync.dcf
 EXTRA_DIST += co-time.dcf
 
 BUILT_SOURCES =
+if !NO_TOOLS
 BUILT_SOURCES += test-co-sdev.h
+endif
 
 CLEANFILES =
 CLEANFILES += util-fbuf.dat

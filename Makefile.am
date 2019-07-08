@@ -1,6 +1,12 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc include src python tools pkgconfig test
+SUBDIRS = doc include src python pkgconfig
+if !NO_TOOLS
+SUBDIRS += tools
+endif
+if !NO_TESTS
+SUBDIRS += test
+endif
 
 EXTRA_DIST =
 EXTRA_DIST += CPPLINT.cfg
