@@ -606,6 +606,10 @@ static void co_nmt_hb_fini(co_nmt_t *nmt);
 
 #ifndef LELY_NO_CO_MASTER
 
+/// Find the heartbeat consumer for the specified node.
+static co_nmt_hb_t *co_nmt_hb_find(
+		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t *pms);
+
 /// Initializes NMT slave management. @see co_nmt_slaves_fini()
 static void co_nmt_slaves_init(co_nmt_t *nmt);
 
@@ -1547,6 +1551,11 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_boot_req;
 	}
 
+	// Disable the heartbeat consumer during the 'boot slave' process.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
+
 	return 0;
 
 error_boot_req:
@@ -1613,6 +1622,11 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		errc = get_errc();
 		goto error_cfg_req;
 	}
+
+	// Disable the heartbeat consumer during a configuration request.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
 
 	return 0;
 
@@ -1865,6 +1879,12 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
 
+	// Re-enable the heartbeat consumer for the node, if necessary.
+	co_unsigned16_t ms = 0;
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, &ms);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, ms);
+
 	// Update object 1F82 (Request NMT) with the NMT state.
 	co_sub_t *sub = co_dev_find_sub(nmt->dev, 0x1f82, id);
 	if (sub)
@@ -1882,26 +1902,23 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		// clang-format on
 		co_nmt_cs_req(nmt, CO_NMT_CS_START, id);
 
-	// If the error control service was successfully started, enable
+	// If the error control service was successfully started, resume
 	// heartbeat consumption or node guarding.
 	if (!es || es == 'L') {
-		co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-		for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
-			co_unsigned32_t val =
-					co_obj_get_val_u32(obj_1016, i + 1);
-			if (id != ((val >> 16) & 0xff))
-				continue;
-			co_nmt_hb_set_st(nmt->hbs[i], st);
+		if (hb) {
+			co_nmt_hb_set_st(hb, st);
 			// Disable node guarding.
 			slave->assignment &= 0xff;
+		} else {
+			// Enable node guarding if the guard time and lifetime
+			// factor are non-zero.
+			co_unsigned16_t gt = (slave->assignment >> 16) & 0xffff;
+			co_unsigned8_t ltf = (slave->assignment >> 8) & 0xff;
+			if (co_nmt_ng_req(nmt, id, gt, ltf) == -1)
+				diag(DIAG_ERROR, get_errc(),
+						"unable to guard node %02X",
+						id);
 		}
-		// Enable node guarding if the guard time and lifetime factor
-		// are non-zero.
-		co_unsigned16_t gt = (slave->assignment >> 16) & 0xffff;
-		co_unsigned8_t ltf = (slave->assignment >> 8) & 0xff;
-		if (co_nmt_ng_req(nmt, id, gt, ltf) == -1)
-			diag(DIAG_ERROR, get_errc(),
-					"unable to guard node %02X", id);
 	}
 
 	trace("NMT: slave %d finished booting with error status %c", id,
@@ -1938,6 +1955,14 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
+
+	// Re-enable the heartbeat consumer for the node, if necessary.
+	if (!slave->boot) {
+		co_unsigned16_t ms = 0;
+		co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, &ms);
+		if (hb)
+			co_nmt_hb_set_1016(hb, id, ms);
+	}
 
 	trace("NMT: update configuration process completed for slave %d", id);
 	if (slave->cfg_con)
@@ -2093,6 +2118,12 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 				goto error;
 			}
 		}
+#ifndef LELY_NO_CO_MASTER
+		// Disable heartbeat consumption for booting slaves or slaves
+		// that are being configured.
+		if (nmt->slaves[id - 1].boot || nmt->slaves[id - 1].cfg)
+			ms = 0;
+#endif
 	}
 
 	co_sub_dn(sub, &val);
@@ -2382,8 +2413,9 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			return 0;
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		// Ignore messages from booting slaves.
-		if (slave->boot)
+		// Ignore messages from booting slaves or slaves that are being
+		// configured.
+		if (slave->boot || slave->cfg)
 			return 0;
 
 		if (msg->len < 1)
@@ -3282,6 +3314,27 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 }
 
 #ifndef LELY_NO_CO_MASTER
+
+static co_nmt_hb_t *
+co_nmt_hb_find(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t *pms)
+{
+	assert(nmt);
+	assert(id && id <= CO_NUM_NODES);
+
+	const co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	if (!obj_1016)
+		return NULL;
+
+	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
+		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
+		if (id == ((val >> 16) & 0xff)) {
+			if (pms)
+				*pms = val & 0xffff;
+			return nmt->hbs[i];
+		}
+	}
+	return NULL;
+}
 
 static void
 co_nmt_slaves_init(co_nmt_t *nmt)
