@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0,@VERSION_MAJOR@,0,@VERSION_MINOR@
-PRODUCTVERSION  0,@VERSION_MAJOR@,0,@VERSION_MINOR@
+FILEVERSION     0,1,0,9
+PRODUCTVERSION  0,1,0,9
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT
@@ -15,12 +15,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName",      "Lely Industries N.V."
       VALUE "FileDescription",  "Lely I/O library"
-      VALUE "FileVersion",      "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
+      VALUE "FileVersion",      "1.9.2"
       VALUE "InternalName",     "liblely-io"
-      VALUE "LegalCopyright",   "2018 Lely Industries N.V."
-      VALUE "OriginalFilename", "liblely-io-@VERSION_MAJOR@.dll"
+      VALUE "LegalCopyright",   "2019 Lely Industries N.V."
+      VALUE "OriginalFilename", "liblely-io-1.dll"
       VALUE "ProductName",      "Lely I/O library"
-      VALUE "ProductVersion",   "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
+      VALUE "ProductVersion",   "1.9.2"
     END
   END
   BLOCK "VarFileInfo"

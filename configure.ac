@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 LT_PREREQ(2.4.2)
 
-AC_INIT([Lely core libraries], [1.9.2], [], [lely-core])
+AC_INIT([Lely core libraries], [2.0.0], [], [lely-core])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([foreign subdir-objects])
@@ -461,7 +461,6 @@ AC_CONFIG_FILES([
 	python/io/Makefile
 	python/Makefile
 	src/can/Makefile
-	src/can/version.rc
 	src/co/Makefile
 	src/co/version.rc
 	src/coapp/Makefile
@@ -469,7 +468,6 @@ AC_CONFIG_FILES([
 	src/ev/Makefile
 	src/ev/version.rc
 	src/io/Makefile
-	src/io/version.rc
 	src/io2/Makefile
 	src/io2/version.rc
 	src/libc/Makefile
