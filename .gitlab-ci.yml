@@ -357,6 +357,9 @@ pages:
   stage: deploy
   only:
     - master
+  tags:
+    - docker
+    - linux
   image: alpine:latest
   dependencies:
     - lcov
