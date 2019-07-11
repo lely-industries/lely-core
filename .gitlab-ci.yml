@@ -419,6 +419,50 @@ cppcheck:mingw32:
         --suppressions-list=suppressions.txt
         include src
 
+coverity:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        ca-certificates
+        curl
+        git
+        wget
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+    - wget https://scan.coverity.com/download/linux64
+        --post-data "token=$COVERITY_TOKEN&project=$COVERITY_PROJECT"
+        -O coverity_tool.tgz
+    - wget https://scan.coverity.com/download/linux64
+        --post-data "token=$COVERITY_TOKEN&project=$COVERITY_PROJECT&md5=1"
+        -O coverity_tool.md5
+    - echo " coverity_tool.tgz" >> coverity_tool.md5
+    - md5sum -c coverity_tool.md5
+    - mkdir coverity_tool
+    - tar xf coverity_tool.tgz -C coverity_tool --strip-components 1
+  script:
+    - autoreconf -i
+    - ./configure --disable-python
+    - coverity_tool/bin/cov-build --dir cov-int make check
+  after_script:
+    - tar caf $CI_PROJECT_NAME.xz cov-int
+    - curl --form token=$COVERITY_TOKEN
+        --form email=$COVERITY_EMAIL
+        --form file=@$CI_PROJECT_NAME.xz
+        --form version="$(git describe --abbrev=0 --tags | sed s/^v//)"
+        --form description="$CI_COMMIT_REF_NAME"
+        https://scan.coverity.com/builds?project=$COVERITY_PROJECT
+  when: manual
+
 pages:
   stage: deploy
   only:
