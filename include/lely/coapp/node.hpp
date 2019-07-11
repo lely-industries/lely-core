@@ -145,6 +145,30 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    */
   void Reset();
 
+  /**
+   * Configures heartbeat consumption for the specified node by updating CANopen
+   * object 1016 (Consumer heartbeat time).
+   *
+   * @param id the node-ID (in the range [1..127]).
+   * @param ms the heartbeat timeout (in milliseconds).
+   * @param ec if heartbeat consumption cannot be configured, the SDO abort code
+   *           is stored in <b>ec</b>.
+   */
+  void ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms,
+                       ::std::error_code& ec);
+
+  /**
+   * Configures heartbeat consumption for the specified node by updating CANopen
+   * object 1016 (Consumer heartbeat time).
+   *
+   * @param id the node-ID (in the range [1..127]).
+   * @param ms the heartbeat timeout (in milliseconds).
+   *
+   * @throws #lely::canopen::SdoError if heartbeat consumption cannot be
+   * configured.
+   */
+  void ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms);
+
  protected:
   void lock() final;
   void unlock() final;

@@ -50,6 +50,7 @@ struct BasicMaster::Impl_ {
   void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
 
   BasicMaster* self;
+  ::std::array<bool, CO_NUM_NODES> ready{{false}};
   ::std::map<uint8_t, Sdo> sdos;
 };
 
@@ -60,6 +61,30 @@ BasicMaster::BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicMaster::~BasicMaster() = default;
+
+bool
+BasicMaster::IsReady(uint8_t id) const {
+  if (!id || id > CO_NUM_NODES) return false;
+
+  ::std::lock_guard<util::BasicLockable> lock(const_cast<BasicMaster&>(*this));
+  return impl_->ready[id - 1];
+}
+
+ev::Future<void>
+BasicMaster::AsyncDeconfig(uint8_t id) {
+  ev::Promise<void> p;
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  IsReady(id, false);
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
+  } else {
+    p.set(::std::error_code{});
+  }
+  return p.get_future();
+}
 
 void
 BasicMaster::Error(uint8_t id) {
@@ -73,6 +98,14 @@ BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::Error(eec, er, msef);
+}
+
+void
+BasicMaster::Command(NmtCommand cs, uint8_t id) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+
+  if (nmt()->csReq(static_cast<uint8_t>(cs), id) == -1)
+    util::throw_errc("Command");
 }
 
 void
@@ -133,6 +166,11 @@ BasicMaster::Erase(DriverBase& driver) {
 }
 
 void
+BasicMaster::IsReady(uint8_t id, bool ready) noexcept {
+  if (id && id <= CO_NUM_NODES) impl_->ready[id - 1] = ready;
+}
+
+void
 BasicMaster::OnCanError(io::CanError error) noexcept {
   for (const auto& it : *this) {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
@@ -180,9 +218,12 @@ BasicMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
 
 void
 BasicMaster::OnState(uint8_t id, NmtState st) noexcept {
-  // Abort any ongoing or pending SDO requests for the slave, since the master
-  // MAY need the Client-SDO service for the NMT 'boot slave' process.
-  if (st == NmtState::BOOTUP) CancelSdo(id);
+  if (st == NmtState::BOOTUP) {
+    IsReady(id, false);
+    // Abort any ongoing or pending SDO requests for the slave, since the master
+    // MAY need the Client-SDO service for the NMT 'boot slave' process.
+    CancelSdo(id);
+  }
   auto it = find(id);
   if (it != end()) {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
@@ -315,6 +356,23 @@ BasicMaster::CancelSdo(uint8_t id) {
     impl_->sdos.clear();
 }
 
+ev::Future<void>
+AsyncMaster::AsyncDeconfig(uint8_t id) {
+  ev::Promise<void> p;
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  IsReady(id, false);
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    driver->GetExecutor().post([=]() mutable {
+      driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
+    });
+  } else {
+    p.set(::std::error_code{});
+  }
+  return p.get_future();
+}
+
 void
 AsyncMaster::OnCanError(io::CanError error) noexcept {
   for (const auto& it : *this) {
@@ -364,9 +422,12 @@ AsyncMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
 
 void
 AsyncMaster::OnState(uint8_t id, NmtState st) noexcept {
-  // Abort any ongoing or pending SDO requests for the slave, since the master
-  // MAY need the Client-SDO service for the NMT 'boot slave' process.
-  if (st == NmtState::BOOTUP) CancelSdo(id);
+  if (st == NmtState::BOOTUP) {
+    IsReady(id, false);
+    // Abort any ongoing or pending SDO requests for the slave, since the master
+    // MAY need the Client-SDO service for the NMT 'boot slave' process.
+    CancelSdo(id);
+  }
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
@@ -497,6 +558,7 @@ BasicMaster::Impl_::OnNgInd(CONMT* nmt, uint8_t id, int state,
 void
 BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st,
                               char es) noexcept {
+  if (id && id <= CO_NUM_NODES && (!es || es == 'L')) ready[id - 1] = true;
   self->OnBoot(id, static_cast<NmtState>(st), es, es ? co_nmt_es2str(es) : "");
 }
 

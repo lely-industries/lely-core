@@ -415,6 +415,25 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   ConstObject operator[](uint16_t idx) const { return ConstObject(this, idx); }
 
   /**
+   * Returns true if the remote node is ready (i.e., the NMT `boot slave`
+   * process has successfully completed and no subsequent boot-up event has been
+   * received) and false if not. Invoking AsyncDeconfig() will also mark a node
+   * as not ready.
+   */
+  bool IsReady(uint8_t id) const;
+
+  /**
+   * Invokes the DriverBase::OnDeconfig() method for the driver with the
+   * specified node-ID and creates a future which becomes ready once
+   * deconfiguration process completes.
+   *
+   * @returns a future which holds an error code on failure.
+   *
+   * @post IsReady(id) returns false.
+   */
+  virtual ev::Future<void> AsyncDeconfig(uint8_t id);
+
+  /**
    * Indicates the occurrence of an error event on a remote node and triggers
    * the error handling process (see Fig. 12 in CiA 302-2 v4.1.0). Note that
    * depending on the value of objects 1F80 (NMT startup) and 1F81 (NMT slave
@@ -435,6 +454,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @param msef the manufacturer-specific error code.
    */
   void Error(uint16_t eec, uint8_t er, const uint8_t msef[5] = nullptr);
+
+  /**
+   * Issues an NMT command to a slave.
+   *
+   * @param cs the NMT command specifier.
+   * @param id the node-ID (0 for all nodes, [1..127] for a specific slave).
+   */
+  void Command(NmtCommand cs, uint8_t id = 0);
 
   /**
    * Requests the transmission of a PDO.
@@ -804,6 +831,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   using MapType = ::std::map<uint8_t, DriverBase*>;
 
   /**
+   * Marks a remote note as ready or not ready.
+   *
+   * @post IsReady(id) returns <b>ready</b>.
+   */
+  void IsReady(uint8_t id, bool ready) noexcept;
+
+  /**
    * The default implementation notifies all registered drivers.
    *
    * @see IoContext::OnCanError(), DriverBase::OnCanError()
@@ -1014,6 +1048,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 class AsyncMaster : public BasicMaster {
  public:
   using BasicMaster::BasicMaster;
+
+  /**
+   * Equivalent to BasicMaster::AsyncDeconfig(), except that it queues the call
+   * to DriverBase::OnDeconfig() instead of invoking it directly.
+   */
+  ev::Future<void> AsyncDeconfig(uint8_t id) override;
 
  protected:
   /**

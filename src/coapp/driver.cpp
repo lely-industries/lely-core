@@ -53,6 +53,7 @@ struct LoopDriver::Impl_ : public io_svc {
 
   LoopDriver* self{nullptr};
   io::ContextBase ctx{nullptr};
+  ev::Promise<void, void> stopped;
 #ifdef __MINGW32__
   thrd_t thr;
 #else
@@ -90,6 +91,11 @@ LoopDriver::LoopDriver(BasicMaster& master, uint8_t id)
       impl_(new Impl_(this, master.GetContext())) {}
 
 LoopDriver::~LoopDriver() = default;
+
+ev::Future<void, void>
+LoopDriver::AsyncStoppped() noexcept {
+  return impl_->stopped.get_future();
+}
 
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
     : io_svc IO_SVC_INIT(&svc_vtbl),
@@ -140,6 +146,10 @@ LoopDriver::Impl_::Start() {
   // Finish remaining tasks, but do not block.
   loop.restart();
   loop.poll();
+
+  // Satisfy the promise to signal that the thread is about to terminate and it
+  // a call to the destructor will not block.
+  stopped.set(0);
 }
 
 void

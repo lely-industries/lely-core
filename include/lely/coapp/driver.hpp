@@ -187,6 +187,22 @@ class DriverBase {
       ::std::function<void(::std::error_code ec)> res) noexcept = 0;
 
   /**
+   * The function invoked by BasicMaster::AsyncDeconfig() to start the
+   * deconfiguration process. The process does not complete until the result is
+   * communicated to the master.
+   *
+   * Note that `OnDeconfig()` MUST be a non-blocking function; the
+   * deconfiguration process MUST be executed asynchronously or run in a
+   * different thread.
+   *
+   * @param res the function to invoke when the deconfiguration process
+   *            completes. The argument to <b>res</b> is the result: 0 on
+   *            success, or an error code on failure.
+   */
+  virtual void OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept = 0;
+
+  /**
    * The function invoked when a Receive-PDO is processed by the master. In case
    * of a PDO length mismatch error, #OnRpdoError() is invoked after this
    * function.
@@ -331,6 +347,46 @@ class BasicDriver : private DriverBase {
   uint8_t
   id() const noexcept final {
     return id_;
+  }
+
+  /**
+   * Configures heartbeat consumption by updating CANopen object 1016 (Consumer
+   * heartbeat time).
+   *
+   * @param ms the heartbeat timeout (in milliseconds).
+   * @param ec if heartbeat consumption cannot be configured, the SDO abort code
+   *           is stored in <b>ec</b>.
+   */
+  void
+  ConfigHeartbeat(const ::std::chrono::milliseconds& ms,
+                  ::std::error_code& ec) {
+    master.ConfigHeartbeat(id(), ms, ec);
+  }
+
+  /**
+   * Configures heartbeat consumption by updating CANopen object 1016 (Consumer
+   * heartbeat time).
+   *
+   * @param ms the heartbeat timeout (in milliseconds).
+   *
+   * @throws #lely::canopen::SdoError if heartbeat consumption cannot be
+   * configured.
+   */
+  void
+  ConfigHeartbeat(const ::std::chrono::milliseconds& ms) {
+    master.ConfigHeartbeat(id(), ms);
+  }
+
+  /**
+   * Returns true if the remote node is ready (i.e., the NMT `boot slave`
+   * process has successfully completed and no subsequent boot-up event has been
+   * received) and false if not.
+   *
+   * @see BasicMaster::IsReady()
+   */
+  bool
+  IsReady() const {
+    return master.IsReady(id());
   }
 
   /**
@@ -591,6 +647,12 @@ class BasicDriver : private DriverBase {
   }
 
   void
+  OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override {
+    res(::std::error_code());
+  }
+
+  void
   OnRpdo(int /*num*/, ::std::error_code /*ec*/, const void* /*p*/,
          ::std::size_t /*n*/) noexcept override {}
 
@@ -651,6 +713,12 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   GetStrand() const noexcept {
     return strand;
   }
+
+  /**
+   * Returns a future which becomes ready once the dedicated event loop of the
+   * driver is stopped and the thread is (about to be) terminated.
+   */
+  ev::Future<void, void> AsyncStoppped() noexcept;
 
   /**
    * Equivalent to
