@@ -58,6 +58,54 @@ bin += test-io-poll
 test_io_poll_SOURCES = test.h io-poll.c
 test_io_poll_LDADD = $(LELY_IO_LIBS)
 
+# Event library tests
+
+LELY_EV_LIBS = $(LELY_UTIL_LIBS)
+LELY_EV_LIBS += $(top_builddir)/src/ev/liblely-ev.la
+
+if !NO_CXX
+bin += test-ev-future
+test_ev_future_SOURCES = test.h ev-future.cpp
+test_ev_future_LDADD = $(LELY_EV_LIBS)
+endif
+
+if !NO_CXX
+bin += test-ev-loop
+test_ev_loop_SOURCES = test.h ev-loop.cpp
+test_ev_loop_LDADD = $(LELY_EV_LIBS)
+endif
+
+# I/O library tests
+
+LELY_IO2_LIBS = $(LELY_EV_LIBS)
+LELY_IO2_LIBS += $(top_builddir)/src/io2/liblely-io2.la
+
+if !NO_CXX
+bin += test-io2-can_rt
+test_io2_can_rt_SOURCES = test.h io2-can_rt.cpp
+test_io2_can_rt_LDADD = $(LELY_IO2_LIBS)
+endif
+
+if PLATFORM_POSIX
+if !NO_CXX
+bin += test-io2-sigset
+test_io2_sigset_SOURCES = test.h io2-sigset.cpp
+test_io2_sigset_LDADD = $(LELY_IO2_LIBS)
+endif
+endif
+
+if !NO_CXX
+bin += test-io2-timer
+test_io2_timer_SOURCES = test.h io2-timer.cpp
+test_io2_timer_LDADD = $(LELY_IO2_LIBS)
+endif
+
+if !NO_CXX
+bin += test-io2-tqueue
+test_io2_tqueue_SOURCES = test.h io2-tqueue.cpp
+test_io2_tqueue_LDADD = $(LELY_IO2_LIBS)
+endif
+
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)

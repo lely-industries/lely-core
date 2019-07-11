@@ -25,6 +25,7 @@
 
 #ifndef LELY_NO_CO_WTM
 
+#include <lely/can/err.h>
 #include <lely/co/crc.h>
 #include <lely/co/wtm.h>
 #include <lely/util/diag.h>

@@ -43,9 +43,13 @@ use of the reactor pattern.
 See [doc/io/overview.md](@ref md_doc_io_overview) for an overview of the
 provided functionality.
 
-### Asynchronous I/O library (liblely-aio)
+### Event library (liblely-ev)
 
-liblely-aio provides an event loop and asynchronous I/O. Currently only timers
+liblely-ev provides an event loop and asynchronous promises and futures.
+
+### Asynchronous I/O library (liblely-io2)
+
+liblely-io2 provides asynchronous I/O. Currently only timers, signal handlers
 and CAN devices are supported.
 
 ### CANopen library (liblely-co)
@@ -73,7 +77,7 @@ provided functionality.
 liblely-coapp provides a high-level application interface in C++ for liblely-co.
 It is intended to simplify the development of CANopen master applications (and,
 to a lesser extent, slaves) by providing a driver model and combining it with an
-event loop (from liblely-aio).
+event loop (from liblely-ev).
 
 Download
 --------

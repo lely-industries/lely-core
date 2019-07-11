@@ -7,6 +7,6 @@ Name: liblely-coapp
 Description: C++ CANopen application library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-aio >= @PACKAGE_VERSION@ liblely-co >= @PACKAGE_VERSION@
+Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-io2 >= @PACKAGE_VERSION@ liblely-co >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llely-coapp

@@ -23,7 +23,6 @@
 #define LELY_COAPP_DETAIL_TYPE_TRAITS_HPP_
 
 #include <lely/co/type.h>
-#include <lely/coapp/coapp.hpp>
 
 #include <string>
 #include <type_traits>
@@ -40,100 +39,100 @@ namespace detail {
  * `value` equal to `true`. For any other type, `value` is `false`.
  */
 template <class T>
-struct IsCanopenBasic : ::std::false_type {};
+struct is_canopen_basic : ::std::false_type {};
 
 /**
  * If <b>T</b> is one of the CANopen array types, provides the member constant
  * `value` equal to `true`. For any other type, `value` is `false`.
  */
 template <class T>
-struct IsCanopenArray : ::std::false_type {};
+struct is_canopen_array : ::std::false_type {};
 
 /**
  * If <b>T</b> is one of the CANopen basic or array types, provides the member
  * constant `value` equal to `true`. For any other type, `value` is `false`.
  */
 template <class T>
-struct IsCanopenType
-    : ::std::integral_constant<bool, IsCanopenBasic<T>::value ||
-                                         IsCanopenArray<T>::value> {};
+struct is_canopen_type
+    : ::std::integral_constant<bool, is_canopen_basic<T>::value ||
+                                         is_canopen_array<T>::value> {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type BOOLEAN.
  */
 template <>
-struct IsCanopenBasic<bool> : ::std::true_type {};
+struct is_canopen_basic<bool> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type INTEGER8.
  */
 template <>
-struct IsCanopenBasic<int8_t> : ::std::true_type {};
+struct is_canopen_basic<int8_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type INTEGER16.
  */
 template <>
-struct IsCanopenBasic<int16_t> : ::std::true_type {};
+struct is_canopen_basic<int16_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type INTEGER32.
  */
 template <>
-struct IsCanopenBasic<int32_t> : ::std::true_type {};
+struct is_canopen_basic<int32_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type UNSIGNED8.
  */
 template <>
-struct IsCanopenBasic<uint8_t> : ::std::true_type {};
+struct is_canopen_basic<uint8_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type UNSIGNED16.
  */
 template <>
-struct IsCanopenBasic<uint16_t> : ::std::true_type {};
+struct is_canopen_basic<uint16_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type UNSIGNED32.
  */
 template <>
-struct IsCanopenBasic<uint32_t> : ::std::true_type {};
+struct is_canopen_basic<uint32_t> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type REAL32.
  */
 template <>
-struct IsCanopenBasic<float> : ::std::true_type {};
+struct is_canopen_basic<float> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenArray for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_array for the CANopen
  * array type VISIBLE_STRING.
  */
 template <>
-struct IsCanopenArray<::std::string> : ::std::true_type {};
+struct is_canopen_array<::std::string> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenArray for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_array for the CANopen
  * array type OCTET_STRING.
  */
 template <>
-struct IsCanopenArray<::std::vector<uint8_t>> : ::std::true_type {};
+struct is_canopen_array<::std::vector<uint8_t>> : ::std::true_type {};
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenArray for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_array for the CANopen
  * array type UNICODE_STRING.
  */
 template <>
-struct IsCanopenArray<::std::basic_string<char16_t>> : ::std::true_type {};
+struct is_canopen_array<::std::basic_string<char16_t>> : ::std::true_type {};
 
 // TIME_OF_DAY
 // TIME_DIFFERENCE
@@ -141,22 +140,22 @@ struct IsCanopenArray<::std::basic_string<char16_t>> : ::std::true_type {};
 // INTEGER24
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type REAL64.
  */
 template <>
-struct IsCanopenBasic<double> : ::std::true_type {};
+struct is_canopen_basic<double> : ::std::true_type {};
 
 // INTEGER40
 // INTEGER48
 // INTEGER56
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type INTEGER64.
  */
 template <>
-struct IsCanopenBasic<int64_t> : ::std::true_type {};
+struct is_canopen_basic<int64_t> : ::std::true_type {};
 
 // UNSIGNED24
 // UNSIGNED40
@@ -164,18 +163,18 @@ struct IsCanopenBasic<int64_t> : ::std::true_type {};
 // UNSIGNED56
 
 /**
- * Specialization of #lely::canopen::detail::IsCanopenBasic for the CANopen
+ * Specialization of #lely::canopen::detail::is_canopen_basic for the CANopen
  * basic type UNSIGNED64.
  */
 template <>
-struct IsCanopenBasic<uint64_t> : ::std::true_type {};
+struct is_canopen_basic<uint64_t> : ::std::true_type {};
 
 /**
  * Returns `true` if the CANopen data types <b>t1</b> and <b>t2</b> map to the
  * same C++ type, and `false` if not.
  */
 inline bool
-IsCanopenSame(uint16_t t1, uint16_t t2) {
+is_canopen_same(uint16_t t1, uint16_t t2) {
   if (t1 == t2) return true;
 
   // OCTET_STRING and DOMAIN are both byte arrays.

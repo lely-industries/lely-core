@@ -24,8 +24,10 @@
 
 #include <lely/coapp/detail/type_traits.hpp>
 #include <lely/coapp/sdo_error.hpp>
+#include <lely/util/mutex.hpp>
 
 #include <memory>
+#include <string>
 #include <typeinfo>
 
 namespace lely {
@@ -56,7 +58,7 @@ class Device {
    *                unlocked when any member function is invoked.
    */
   Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
-         uint8_t id = 0xff, BasicLockable* mutex = nullptr);
+         uint8_t id = 0xff, util::BasicLockable* mutex = nullptr);
 
   Device(const Device&) = delete;
   Device(Device&&) = default;
@@ -83,7 +85,7 @@ class Device {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type Read(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Read(
       uint16_t idx, uint8_t subidx) const;
 
   /**
@@ -98,7 +100,7 @@ class Device {
    * @returns the result of the SDO request, or an empty value on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type Read(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Read(
       uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
 
   /**
@@ -113,7 +115,7 @@ class Device {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type Write(
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Write(
       uint16_t idx, uint8_t subidx, T value);
 
   /**
@@ -127,7 +129,7 @@ class Device {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type Write(
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Write(
       uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
 
   /**
@@ -142,7 +144,7 @@ class Device {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type Write(
+  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Write(
       uint16_t idx, uint8_t subidx, const T& value);
 
   /**
@@ -156,7 +158,7 @@ class Device {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type Write(
+  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Write(
       uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
 
   /**
@@ -288,7 +290,7 @@ class Device {
    * type does not match.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type Get(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Get(
       uint16_t idx, uint8_t subidx) const;
 
   /**
@@ -304,7 +306,7 @@ class Device {
    * @returns a copy of the value of the sub-object, or an empty value on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value, T>::type Get(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Get(
       uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
 
   /**
@@ -320,7 +322,7 @@ class Device {
    * type does not match.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type Set(
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Set(
       uint16_t idx, uint8_t subidx, T value);
 
   /**
@@ -335,7 +337,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenBasic<T>::value>::type Set(
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Set(
       uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
 
   /**
@@ -351,7 +353,7 @@ class Device {
    * type does not match.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type Set(
+  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Set(
       uint16_t idx, uint8_t subidx, const T& value);
 
   /**
@@ -366,7 +368,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenArray<T>::value>::type Set(
+  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Set(
       uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
 
   /**

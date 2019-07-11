@@ -313,4 +313,9 @@
 #define LELY_INGORE_EMPTY_TRANSLATION_UNIT \
 	typedef int lely_ignore_empty_translation_unit__;
 
+#ifndef LELY_VLA_SIZE_MAX
+/// The maximum size (in bytes) of stack-allocated arrays.
+#define LELY_VLA_SIZE_MAX 256
+#endif
+
 #endif // LELY_FEATURES_H_

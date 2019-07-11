@@ -6,6 +6,7 @@ cdef extern from "lely/can/msg.h":
         _CAN_MASK_EID "CAN_MASK_EID"
         _CAN_FLAG_IDE "CAN_FLAG_IDE"
         _CAN_FLAG_RTR "CAN_FLAG_RTR"
+        _CAN_FLAG_FDF "CAN_FLAG_FDF"
         _CAN_FLAG_EDL "CAN_FLAG_EDL"
         _CAN_FLAG_BRS "CAN_FLAG_BRS"
         _CAN_FLAG_ESI "CAN_FLAG_ESI"

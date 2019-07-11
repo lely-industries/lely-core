@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the utilities library.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -48,6 +48,13 @@
 #ifndef ALIGNED_ALLOC_SIZE
 /// The minimum alignment (in bytes) of heap-allocated objects.
 #define ALIGNED_ALLOC_SIZE ((size_t)(1 << (ALIGNED_ALLOC_BITS)))
+#endif
+
+#ifdef __cplusplus
+namespace lely {
+/// The global namespace for the utilities library.
+namespace util {}
+}  // namespace lely
 #endif
 
 #endif // !LELY_UTIL_INTERN_UTIL_H_

@@ -23,33 +23,20 @@
 
 #include "coapp.hpp"
 
-#include <lely/coapp/detail/chrono.hpp>
 #include <lely/coapp/sdo.hpp>
+#include <lely/co/csdo.hpp>
+
+#include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <cassert>
-
-#include <lely/aio/queue.h>
-#include <lely/co/csdo.hpp>
 
 namespace lely {
 
 namespace canopen {
-
-namespace {
-
-::std::error_code
-ErrorCode(int errc, uint32_t ac) {
-  if (errc)
-    return ::std::error_code(errc, ::std::system_category());
-  else if (ac)
-    return static_cast<SdoErrc>(ac);
-  else
-    return {};
-}
-
-}  // namespace
-
-using namespace aio;
 
 /// The internal implementation of the Client-SDO queue.
 struct Sdo::Impl_ {
@@ -57,15 +44,14 @@ struct Sdo::Impl_ {
   Impl_(COCSDO* sdo, int timeout);
   ~Impl_();
 
-  void Submit(RequestBase_& req);
-
-  ::std::size_t Cancel(RequestBase_* req, SdoErrc ac);
-
-  template <class T, class U>
-  void OnRequest(uint16_t idx, uint8_t subidx, U&& value);
+  void Submit(detail::SdoRequestBase& req);
+  ::std::size_t Cancel(detail::SdoRequestBase* req, SdoErrc ac);
 
   template <class T>
-  void OnRequest(uint16_t idx, uint8_t subidx);
+  void OnDownload(detail::SdoDownloadRequestBase<T>* req) noexcept;
+
+  template <class T>
+  void OnUpload(detail::SdoUploadRequestBase<T>* req) noexcept;
 
   void OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
 
@@ -73,211 +59,98 @@ struct Sdo::Impl_ {
   void OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
                T value) noexcept;
 
-  void OnTaskFinished(RequestBase_& op) noexcept;
+  void OnCompletion(detail::SdoRequestBase& req) noexcept;
 
-  aio_queue queue;
   ::std::shared_ptr<COCSDO> sdo;
+  sllist queue;
 };
 
+namespace detail {
+
 template <class T>
 void
-Sdo::DownloadRequest<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx, this->value);
+SdoDownloadRequestWrapper<T>::operator()() noexcept {
+  auto id = this->id;
+  auto idx = this->idx;
+  auto subidx = this->subidx;
+  auto ec = this->ec;
+  ::std::function<Signature> con;
+  con.swap(this->con_);
+  delete this;
+  if (con) con(id, idx, subidx, ec);
 }
 
 template <class T>
 void
-Sdo::DownloadRequest<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::DownloadRequest<T>*>(task);
-
-  if (self->con_)
-    self->con_(self->idx, self->subidx, ErrorCode(self->errc, self->ac));
+SdoDownloadRequestWrapper<T>::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnDownload(this);
 }
 
 template <class T>
 void
-Sdo::UploadRequest<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx);
+SdoUploadRequestWrapper<T>::operator()() noexcept {
+  auto id = this->id;
+  auto idx = this->idx;
+  auto subidx = this->subidx;
+  auto ec = this->ec;
+  T value = ::std::move(this->value);
+  ::std::function<Signature> con;
+  con.swap(this->con_);
+  delete this;
+  if (con) con(id, idx, subidx, ec, ::std::move(value));
 }
 
 template <class T>
 void
-Sdo::UploadRequest<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::UploadRequest<T>*>(task);
-
-  if (self->con_)
-    self->con_(self->idx, self->subidx, ErrorCode(self->errc, self->ac),
-               ::std::move(self->value));
-}
-
-template <class T>
-void
-Sdo::DownloadRequestWrapper<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx, this->value);
-}
-
-template <class T>
-void
-Sdo::DownloadRequestWrapper<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::DownloadRequestWrapper<T>*>(task);
-
-  ::std::function<DownloadSignature> con = ::std::move(self->con_);
-  auto idx = self->idx;
-  auto subidx = self->subidx;
-  auto ec = ErrorCode(self->errc, self->ac);
-  delete self;
-
-  if (con) con(idx, subidx, ec);
-}
-
-template <class T>
-void
-Sdo::UploadRequestWrapper<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx);
-}
-
-template <class T>
-void
-Sdo::UploadRequestWrapper<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::UploadRequestWrapper<T>*>(task);
-
-  ::std::function<UploadSignature<T>> con = ::std::move(self->con_);
-  auto idx = self->idx;
-  auto subidx = self->subidx;
-  auto ec = ErrorCode(self->errc, self->ac);
-  T value = ::std::move(self->value);
-  delete self;
-
-  if (con) con(idx, subidx, ec, ::std::move(value));
-}
-
-template <class T>
-void
-Sdo::AsyncDownloadRequest<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx, this->value);
-}
-
-template <class T>
-void
-Sdo::AsyncDownloadRequest<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::AsyncDownloadRequest<T>*>(task);
-
-  aio::Promise<::std::error_code> promise = ::std::move(self->promise_);
-  auto ec = ErrorCode(self->errc, self->ac);
-  delete self;
-
-  promise.SetValue(ec);
-}
-
-template <class T>
-void
-Sdo::AsyncUploadRequest<T>::OnRequest(Impl_* impl) noexcept {
-  impl->OnRequest<T>(this->idx, this->subidx);
-}
-
-template <class T>
-void
-Sdo::AsyncUploadRequest<T>::Func_(aio_task* task) noexcept {
-  auto self = static_cast<Sdo::AsyncUploadRequest<T>*>(task);
-
-  aio::Promise<::std::tuple<::std::error_code, T>> promise =
-      ::std::move(self->promise_);
-  auto value = ::std::make_tuple(ErrorCode(self->errc, self->ac),
-                                 ::std::move(self->value));
-  delete self;
-
-  promise.SetValue(value);
+SdoUploadRequestWrapper<T>::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnUpload(this);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 // BOOLEAN
-template class Sdo::DownloadRequest<bool>;
-template class Sdo::UploadRequest<bool>;
-template class Sdo::DownloadRequestWrapper<bool>;
-template class Sdo::UploadRequestWrapper<bool>;
-template class Sdo::AsyncDownloadRequest<bool>;
-template class Sdo::AsyncUploadRequest<bool>;
+template class SdoDownloadRequestWrapper<bool>;
+template class SdoUploadRequestWrapper<bool>;
 
 // INTEGER8
-template class Sdo::DownloadRequest<int8_t>;
-template class Sdo::UploadRequest<int8_t>;
-template class Sdo::DownloadRequestWrapper<int8_t>;
-template class Sdo::UploadRequestWrapper<int8_t>;
-template class Sdo::AsyncDownloadRequest<int8_t>;
-template class Sdo::AsyncUploadRequest<int8_t>;
+template class SdoDownloadRequestWrapper<int8_t>;
+template class SdoUploadRequestWrapper<int8_t>;
 
 // INTEGER16
-template class Sdo::DownloadRequest<int16_t>;
-template class Sdo::UploadRequest<int16_t>;
-template class Sdo::DownloadRequestWrapper<int16_t>;
-template class Sdo::UploadRequestWrapper<int16_t>;
-template class Sdo::AsyncDownloadRequest<int16_t>;
-template class Sdo::AsyncUploadRequest<int16_t>;
+template class SdoDownloadRequestWrapper<int16_t>;
+template class SdoUploadRequestWrapper<int16_t>;
 
 // INTEGER32
-template class Sdo::DownloadRequest<int32_t>;
-template class Sdo::UploadRequest<int32_t>;
-template class Sdo::DownloadRequestWrapper<int32_t>;
-template class Sdo::UploadRequestWrapper<int32_t>;
-template class Sdo::AsyncDownloadRequest<int32_t>;
-template class Sdo::AsyncUploadRequest<int32_t>;
+template class SdoDownloadRequestWrapper<int32_t>;
+template class SdoUploadRequestWrapper<int32_t>;
 
 // UNSIGNED8
-template class Sdo::DownloadRequest<uint8_t>;
-template class Sdo::UploadRequest<uint8_t>;
-template class Sdo::DownloadRequestWrapper<uint8_t>;
-template class Sdo::UploadRequestWrapper<uint8_t>;
-template class Sdo::AsyncDownloadRequest<uint8_t>;
-template class Sdo::AsyncUploadRequest<uint8_t>;
+template class SdoDownloadRequestWrapper<uint8_t>;
+template class SdoUploadRequestWrapper<uint8_t>;
 
 // UNSIGNED16
-template class Sdo::DownloadRequest<uint16_t>;
-template class Sdo::UploadRequest<uint16_t>;
-template class Sdo::DownloadRequestWrapper<uint16_t>;
-template class Sdo::UploadRequestWrapper<uint16_t>;
-template class Sdo::AsyncDownloadRequest<uint16_t>;
-template class Sdo::AsyncUploadRequest<uint16_t>;
+template class SdoDownloadRequestWrapper<uint16_t>;
+template class SdoUploadRequestWrapper<uint16_t>;
 
 // UNSIGNED32
-template class Sdo::DownloadRequest<uint32_t>;
-template class Sdo::UploadRequest<uint32_t>;
-template class Sdo::DownloadRequestWrapper<uint32_t>;
-template class Sdo::UploadRequestWrapper<uint32_t>;
-template class Sdo::AsyncDownloadRequest<uint32_t>;
-template class Sdo::AsyncUploadRequest<uint32_t>;
+template class SdoDownloadRequestWrapper<uint32_t>;
+template class SdoUploadRequestWrapper<uint32_t>;
 
 // REAL32
-template class Sdo::DownloadRequest<float>;
-template class Sdo::UploadRequest<float>;
-template class Sdo::DownloadRequestWrapper<float>;
-template class Sdo::UploadRequestWrapper<float>;
-template class Sdo::AsyncDownloadRequest<float>;
-template class Sdo::AsyncUploadRequest<float>;
+template class SdoDownloadRequestWrapper<float>;
+template class SdoUploadRequestWrapper<float>;
 
 // VISIBLE_STRING
-template class Sdo::DownloadRequest<::std::string>;
-template class Sdo::UploadRequest<::std::string>;
-template class Sdo::DownloadRequestWrapper<::std::string>;
-template class Sdo::UploadRequestWrapper<::std::string>;
-template class Sdo::AsyncDownloadRequest<::std::string>;
-template class Sdo::AsyncUploadRequest<::std::string>;
+template class SdoDownloadRequestWrapper<::std::string>;
+template class SdoUploadRequestWrapper<::std::string>;
 
 // OCTET_STRING
-template class Sdo::DownloadRequest<::std::vector<uint8_t>>;
-template class Sdo::UploadRequest<::std::vector<uint8_t>>;
-template class Sdo::DownloadRequestWrapper<::std::vector<uint8_t>>;
-template class Sdo::UploadRequestWrapper<::std::vector<uint8_t>>;
-template class Sdo::AsyncDownloadRequest<::std::vector<uint8_t>>;
-template class Sdo::AsyncUploadRequest<::std::vector<uint8_t>>;
+template class SdoDownloadRequestWrapper<::std::vector<uint8_t>>;
+template class SdoUploadRequestWrapper<::std::vector<uint8_t>>;
 
 // UNICODE_STRING
-template class Sdo::DownloadRequest<::std::basic_string<char16_t>>;
-template class Sdo::UploadRequest<::std::basic_string<char16_t>>;
-template class Sdo::DownloadRequestWrapper<::std::basic_string<char16_t>>;
-template class Sdo::UploadRequestWrapper<::std::basic_string<char16_t>>;
-template class Sdo::AsyncDownloadRequest<::std::basic_string<char16_t>>;
-template class Sdo::AsyncUploadRequest<::std::basic_string<char16_t>>;
+template class SdoDownloadRequestWrapper<::std::basic_string<char16_t>>;
+template class SdoUploadRequestWrapper<::std::basic_string<char16_t>>;
 
 // TIME_OF_DAY
 // TIME_DIFFERENCE
@@ -285,24 +158,16 @@ template class Sdo::AsyncUploadRequest<::std::basic_string<char16_t>>;
 // INTEGER24
 
 // REAL64
-template class Sdo::DownloadRequest<double>;
-template class Sdo::UploadRequest<double>;
-template class Sdo::DownloadRequestWrapper<double>;
-template class Sdo::UploadRequestWrapper<double>;
-template class Sdo::AsyncDownloadRequest<double>;
-template class Sdo::AsyncUploadRequest<double>;
+template class SdoDownloadRequestWrapper<double>;
+template class SdoUploadRequestWrapper<double>;
 
 // INTEGER40
 // INTEGER48
 // INTEGER56
 
 // INTEGER64
-template class Sdo::DownloadRequest<int64_t>;
-template class Sdo::UploadRequest<int64_t>;
-template class Sdo::DownloadRequestWrapper<int64_t>;
-template class Sdo::UploadRequestWrapper<int64_t>;
-template class Sdo::AsyncDownloadRequest<int64_t>;
-template class Sdo::AsyncUploadRequest<int64_t>;
+template class SdoDownloadRequestWrapper<int64_t>;
+template class SdoUploadRequestWrapper<int64_t>;
 
 // UNSIGNED24
 // UNSIGNED40
@@ -310,12 +175,109 @@ template class Sdo::AsyncUploadRequest<int64_t>;
 // UNSIGNED56
 
 // UNSIGNED64
-template class Sdo::DownloadRequest<uint64_t>;
-template class Sdo::UploadRequest<uint64_t>;
-template class Sdo::DownloadRequestWrapper<uint64_t>;
-template class Sdo::UploadRequestWrapper<uint64_t>;
-template class Sdo::AsyncDownloadRequest<uint64_t>;
-template class Sdo::AsyncUploadRequest<uint64_t>;
+template class SdoDownloadRequestWrapper<uint64_t>;
+template class SdoUploadRequestWrapper<uint64_t>;
+
+#endif  // !DOXYGEN_SHOULD_SKIP_THIS
+
+}  // namespace detail
+
+template <class T>
+void
+SdoDownloadRequest<T>::operator()() noexcept {
+  if (con_) con_(this->id, this->idx, this->subidx, this->ec);
+}
+
+template <class T>
+void
+SdoDownloadRequest<T>::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnDownload(this);
+}
+
+template <class T>
+void
+SdoUploadRequest<T>::operator()() noexcept {
+  if (con_)
+    con_(this->id, this->idx, this->subidx, this->ec, ::std::move(this->value));
+}
+
+template <class T>
+void
+SdoUploadRequest<T>::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnUpload(this);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+// BOOLEAN
+template class SdoDownloadRequest<bool>;
+template class SdoUploadRequest<bool>;
+
+// INTEGER8
+template class SdoDownloadRequest<int8_t>;
+template class SdoUploadRequest<int8_t>;
+
+// INTEGER16
+template class SdoDownloadRequest<int16_t>;
+template class SdoUploadRequest<int16_t>;
+
+// INTEGER32
+template class SdoDownloadRequest<int32_t>;
+template class SdoUploadRequest<int32_t>;
+
+// UNSIGNED8
+template class SdoDownloadRequest<uint8_t>;
+template class SdoUploadRequest<uint8_t>;
+
+// UNSIGNED16
+template class SdoDownloadRequest<uint16_t>;
+template class SdoUploadRequest<uint16_t>;
+
+// UNSIGNED32
+template class SdoDownloadRequest<uint32_t>;
+template class SdoUploadRequest<uint32_t>;
+
+// REAL32
+template class SdoDownloadRequest<float>;
+template class SdoUploadRequest<float>;
+
+// VISIBLE_STRING
+template class SdoDownloadRequest<::std::string>;
+template class SdoUploadRequest<::std::string>;
+
+// OCTET_STRING
+template class SdoDownloadRequest<::std::vector<uint8_t>>;
+template class SdoUploadRequest<::std::vector<uint8_t>>;
+
+// UNICODE_STRING
+template class SdoDownloadRequest<::std::basic_string<char16_t>>;
+template class SdoUploadRequest<::std::basic_string<char16_t>>;
+
+// TIME_OF_DAY
+// TIME_DIFFERENCE
+// DOMAIN
+// INTEGER24
+
+// REAL64
+template class SdoDownloadRequest<double>;
+template class SdoUploadRequest<double>;
+
+// INTEGER40
+// INTEGER48
+// INTEGER56
+
+// INTEGER64
+template class SdoDownloadRequest<int64_t>;
+template class SdoUploadRequest<int64_t>;
+
+// UNSIGNED24
+// UNSIGNED40
+// UNSIGNED48
+// UNSIGNED56
+
+// UNSIGNED64
+template class SdoDownloadRequest<uint64_t>;
+template class SdoUploadRequest<uint64_t>;
 
 #endif  // !DOXYGEN_SHOULD_SKIP_THIS
 
@@ -333,13 +295,13 @@ Sdo& Sdo::operator=(Sdo&&) = default;
 Sdo::~Sdo() = default;
 
 void
-Sdo::Submit(RequestBase_& op) {
-  impl_->Submit(op);
+Sdo::Submit(detail::SdoRequestBase& req) {
+  impl_->Submit(req);
 }
 
-::std::size_t
-Sdo::Cancel(RequestBase_& op, SdoErrc ac) {
-  return impl_->Cancel(&op, ac);
+void
+Sdo::Cancel(detail::SdoRequestBase& req, SdoErrc ac) {
+  impl_->Cancel(&req, ac);
 }
 
 ::std::size_t
@@ -349,126 +311,153 @@ Sdo::Cancel(SdoErrc ac) {
 
 Sdo::Impl_::Impl_(CANNet* net, CODev* dev, uint8_t num)
     : sdo(make_shared_c<COCSDO>(net, dev, num)) {
-  aio_queue_init(&queue);
+  sllist_init(&queue);
 }
 
 Sdo::Impl_::Impl_(COCSDO* sdo_, int timeout)
     : sdo(sdo_, [=](COCSDO* sdo) { sdo->setTimeout(timeout); }) {
-  aio_queue_init(&queue);
+  sllist_init(&queue);
 }
 
 Sdo::Impl_::~Impl_() { Cancel(nullptr, SdoErrc::NO_SDO); }
 
 void
-Sdo::Impl_::Submit(RequestBase_& req) {
+Sdo::Impl_::Submit(detail::SdoRequestBase& req) {
   assert(req.exec);
-  req.GetExecutor().OnTaskStarted();
-  req.errc = errnum2c(ERRNUM_INPROGRESS);
+  ev::Executor exec(req.exec);
 
+  exec.on_task_init();
   if (!sdo) {
-    req.errc = 0;
-    req.ac = static_cast<uint32_t>(SdoErrc::NO_SDO);
-    OnTaskFinished(req);
+    req.id = 0;
+    req.ec = SdoErrc::NO_SDO;
+    exec.post(req);
+    exec.on_task_fini();
   } else {
-    bool first = aio_queue_empty(&queue);
-    aio_queue_push(&queue, &req);
+    req.id = sdo->getPar().id;
+    bool first = sllist_empty(&queue);
+    sllist_push_back(&queue, &req._node);
     if (first) req.OnRequest(this);
   }
 }
 
 ::std::size_t
-Sdo::Impl_::Cancel(RequestBase_* req, SdoErrc ac) {
-  aio_queue queue_;
-  aio_queue_init(&queue_);
+Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
+  sllist queue;
+  sllist_init(&queue);
 
-  if (!req || req != aio_queue_front(&queue)) {
-    auto task = aio_queue_pop(&queue);
-    aio_queue_move(&queue_, &queue, req);
-    if (task) aio_queue_push(&queue, task);
-    req = task && !req ? static_cast<RequestBase_*>(task) : nullptr;
+  if (!req) {
+    // Cancel all pending requests except for the first (ongoing) request.
+    auto node = sllist_pop_front(&this->queue);
+    sllist_append(&queue, &this->queue);
+    if (node) {
+      sllist_push_front(&this->queue, node);
+      req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
+    }
+  } else if (&req->_node != sllist_first(&this->queue) &&
+             sllist_remove(&queue, &req->_node)) {
+    sllist_push_back(&this->queue, &req->_node);
+    req = nullptr;
   }
 
   if (req) {
-    assert(req == aio_queue_front(&queue));
+    assert(sdo);
     sdo->abortReq(static_cast<uint32_t>(ac));
   }
 
-  auto n = aio_queue_cancel(&queue_, errnum2c(ERRNUM_CANCELED));
-  if (req) n += n < ::std::numeric_limits<decltype(n)>::max();
-  return n;
-}
+  ::std::size_t n = 0;
 
-template <class T, class U>
-void
-Sdo::Impl_::OnRequest(uint16_t idx, uint8_t subidx, U&& value) {
-  constexpr auto N = co_type_traits_T<T>::index;
+  slnode* node;
+  while ((node = sllist_pop_front(&queue))) {
+    req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
+    req->ec = ac;
 
-  auto task = aio_queue_front(&queue);
-  assert(task);
-  auto& req = *static_cast<Sdo::RequestBase_*>(task);
+    ev::Executor exec(req->exec);
+    exec.post(*req);
+    exec.on_task_fini();
 
-  sdo->setTimeout(detail::ToTimeout(req.timeout));
-  if (sdo->dnReq<N, Impl_, &Impl_::OnDnCon>(
-          idx, subidx, ::std::forward<U>(value), this) == -1) {
-    req.errc = get_errc();
-    OnTaskFinished(req);
+    n += n < ::std::numeric_limits<::std::size_t>::max();
   }
+
+  return n;
 }
 
 template <class T>
 void
-Sdo::Impl_::OnRequest(uint16_t idx, uint8_t subidx) {
-  auto task = aio_queue_front(&queue);
-  assert(task);
-  auto& req = *static_cast<Sdo::RequestBase_*>(task);
+Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>* req) noexcept {
+  constexpr auto N = co_type_traits_T<T>::index;
+  assert(req);
+  assert(&req->_node == sllist_first(&queue));
 
-  sdo->setTimeout(detail::ToTimeout(req.timeout));
-  if (sdo->upReq<T, Impl_, &Impl_::OnUpCon<T>>(idx, subidx, this) == -1) {
-    req.errc = get_errc();
-    OnTaskFinished(req);
+  int errsv = get_errc();
+  set_errc(0);
+
+  sdo->setTimeout(detail::to_sdo_timeout(req->timeout));
+  if (sdo->dnReq<N, Impl_, &Impl_::OnDnCon>(req->idx, req->subidx, req->value,
+                                            this) == -1) {
+    req->ec = util::make_error_code();
+    OnCompletion(*req);
   }
+
+  set_errc(errsv);
+}
+
+template <class T>
+void
+Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>* req) noexcept {
+  assert(req);
+  assert(&req->_node == sllist_first(&queue));
+
+  int errsv = get_errc();
+  set_errc(0);
+
+  sdo->setTimeout(detail::to_sdo_timeout(req->timeout));
+  if (sdo->upReq<T, Impl_, &Impl_::OnUpCon<T>>(req->idx, req->subidx, this) ==
+      -1) {
+    req->ec = util::make_error_code();
+    OnCompletion(*req);
+  }
+
+  set_errc(errsv);
 }
 
 void
 Sdo::Impl_::OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx,
                     uint32_t ac) noexcept {
-  auto task = aio_queue_pop(&queue);
+  auto task = ev_task_from_node(sllist_pop_front(&queue));
   assert(task);
-  auto& req = *static_cast<Sdo::RequestBase_*>(task);
+  auto req = static_cast<detail::SdoRequestBase*>(task);
 
-  req.errc = 0;
-  req.idx = idx;
-  req.subidx = subidx;
-  req.ac = ac;
+  req->idx = idx;
+  req->subidx = subidx;
+  req->ec = SdoErrc(ac);
 
-  OnTaskFinished(req);
+  OnCompletion(*req);
 }
 
 template <class T>
 void
 Sdo::Impl_::OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
                     T value) noexcept {
-  auto task = aio_queue_pop(&queue);
+  auto task = ev_task_from_node(sllist_pop_front(&queue));
   assert(task);
-  auto& req = *static_cast<Sdo::UploadRequestBase_<T>*>(task);
+  auto req = static_cast<detail::SdoUploadRequestBase<T>*>(task);
 
-  req.errc = 0;
-  req.idx = idx;
-  req.subidx = subidx;
-  req.ac = ac;
-  req.value = ::std::move(value);
+  req->idx = idx;
+  req->subidx = subidx;
+  req->ec = SdoErrc(ac);
+  req->value = ::std::move(value);
 
-  OnTaskFinished(req);
+  OnCompletion(*req);
 }
 
 void
-Sdo::Impl_::OnTaskFinished(RequestBase_& req) noexcept {
-  auto exec = req.GetExecutor();
-  exec.Post(req);
-  exec.OnTaskFinished();
+Sdo::Impl_::OnCompletion(detail::SdoRequestBase& req) noexcept {
+  ev::Executor exec(req.exec);
+  exec.post(req);
+  exec.on_task_fini();
 
-  auto task = aio_queue_front(&queue);
-  if (task) static_cast<Sdo::RequestBase_*>(task)->OnRequest(this);
+  auto task = ev_task_from_node(sllist_first(&queue));
+  if (task) static_cast<detail::SdoRequestBase*>(task)->OnRequest(this);
 }
 
 }  // namespace canopen

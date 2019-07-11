@@ -1,4 +1,4 @@
-from lely_can.can cimport *
+from lely_can.err cimport *
 from lely_can.msg cimport *
 from lely_io.io cimport *
 

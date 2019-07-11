@@ -22,14 +22,14 @@
 #ifndef LELY_COAPP_SDO_HPP_
 #define LELY_COAPP_SDO_HPP_
 
-#include <lely/aio/exec.hpp>
-#include <lely/aio/future.hpp>
 #include <lely/coapp/detail/type_traits.hpp>
 #include <lely/coapp/sdo_error.hpp>
+#include <lely/ev/future.hpp>
 
 #include <chrono>
+#include <limits>
 #include <memory>
-#include <tuple>
+#include <utility>
 
 namespace lely {
 
@@ -44,75 +44,147 @@ class COCSDO;
 
 namespace canopen {
 
-/// The Client-SDO queue.
-class Sdo {
+class Sdo;
+
+namespace detail {
+
+/// Converts an SDO timeout to a duration.
+inline ::std::chrono::milliseconds
+from_sdo_timeout(int timeout) {
+  using ::std::chrono::milliseconds;
+  return timeout <= 0 ? milliseconds::max() : milliseconds(timeout);
+}
+
+/// Converts a duration to an SDO timeout.
+template <class Rep, class Period>
+inline int
+to_sdo_timeout(const ::std::chrono::duration<Rep, Period>& d) {
+  using ::std::chrono::duration;
+  using ::std::chrono::duration_cast;
+  using ::std::chrono::milliseconds;
+  // The maximum duration is interpreted as an infinite timeout.
+  if (d == duration<Rep, Period>::max()) return 0;
+  auto timeout = duration_cast<milliseconds>(d).count();
+  // A timeout less than 1 ms is rounded up to keep it finite.
+  if (timeout < 1) return 1;
+  if (timeout > ::std::numeric_limits<int>::max())
+    return ::std::numeric_limits<int>::max();
+  return timeout;
+}
+
+class SdoRequestBase : public ev_task {
+  friend class canopen::Sdo;
+
  public:
-  /// The type used to represent an SDO timeout duration.
-  using duration = ::std::chrono::milliseconds;
+  SdoRequestBase(ev_exec_t* exec, uint16_t idx_ = 0, uint8_t subidx_ = 0,
+                 const ::std::chrono::milliseconds& timeout_ = {})
+      : ev_task EV_TASK_INIT(exec,
+                             [](ev_task * task) noexcept {
+                               (*static_cast<SdoRequestBase*>(task))();
+                             }),
+        idx(idx_),
+        subidx(subidx_),
+        timeout(timeout_) {}
+
+  SdoRequestBase(const SdoRequestBase&) = delete;
+
+  SdoRequestBase& operator=(const SdoRequestBase&) = delete;
+
+  virtual ~SdoRequestBase() = default;
+
+  /// The node-ID.
+  uint8_t id{0};
+  /// The object index.
+  uint16_t idx{0};
+  /// The object sub-index.
+  uint8_t subidx{0};
+  /**
+   * The SDO timeout. If, after the request is initiated, the timeout expires
+   * before receiving a response from the server, the client aborts the transfer
+   * with abort code #SdoErrc::TIMEOUT.
+   */
+  ::std::chrono::milliseconds timeout;
+  /// The SDO abort code (0 on success).
+  ::std::error_code ec;
 
  private:
-  struct Impl_;
+  virtual void operator()() noexcept = 0;
 
-  class RequestBase_ : public aio_task {
-    friend class Sdo;
+  virtual void OnRequest(void* data) noexcept = 0;
+};
 
-   public:
-    RequestBase_(aio::ExecutorBase& exec, aio_task_func_t* func)
-        : aio_task AIO_TASK_INIT(exec, func) {}
+template <class T>
+class SdoDownloadRequestBase : public SdoRequestBase {
+ public:
+  using SdoRequestBase::SdoRequestBase;
 
-    RequestBase_(aio::ExecutorBase& exec, aio_task_func_t* func, uint16_t idx_,
-                 uint8_t subidx_, const duration& timeout_)
-        : aio_task AIO_TASK_INIT(exec, func),
-          idx(idx_),
-          subidx(subidx_),
-          timeout(timeout_) {}
+  template <class U>
+  SdoDownloadRequestBase(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                         U&& value_,
+                         const ::std::chrono::milliseconds& timeout = {})
+      : SdoRequestBase(exec, idx, subidx, timeout),
+        value(::std::forward<U>(value_)) {}
 
-    RequestBase_(const RequestBase_&) = delete;
+  /// The value to be written.
+  T value{};
+};
 
-    RequestBase_& operator=(const RequestBase_&) = delete;
+template <class T>
+class SdoUploadRequestBase : public SdoRequestBase {
+ public:
+  using SdoRequestBase::SdoRequestBase;
 
-    virtual ~RequestBase_() = default;
+  /// The value received from the SDO server.
+  T value{};
+};
 
-    aio::ExecutorBase
-    GetExecutor() const noexcept {
-      return aio::ExecutorBase(exec);
-    }
+template <class T>
+class SdoDownloadRequestWrapper : public SdoDownloadRequestBase<T> {
+ public:
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec);
 
-    uint16_t idx{0};
-    uint8_t subidx{0};
-    duration timeout{};
-    uint32_t ac{0};
+  template <class U, class F>
+  SdoDownloadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                            U&& value, F&& con,
+                            const ::std::chrono::milliseconds& timeout)
+      : SdoDownloadRequestBase<T>(exec, idx, subidx, ::std::forward<U>(value),
+                                  timeout),
+        con_(::std::forward<F>(con)) {}
 
-   private:
-    virtual void OnRequest(Impl_* impl) noexcept = 0;
-  };
+ private:
+  void operator()() noexcept final;
 
-  template <class T>
-  class DownloadRequestBase_ : public RequestBase_ {
-   public:
-    DownloadRequestBase_(aio::ExecutorBase& exec, aio_task_func_t* func)
-        : RequestBase_(exec, func) {}
+  void OnRequest(void* data) noexcept final;
 
-    template <class U>
-    DownloadRequestBase_(aio::ExecutorBase& exec, aio_task_func_t* func,
-                         uint16_t idx, uint8_t subidx, U&& value_,
-                         const duration& timeout)
-        : RequestBase_(exec, func, idx, subidx, timeout),
-          value(::std::forward<U>(value_)) {}
+  ::std::function<Signature> con_;
+};
 
-    T value{};
-  };
+template <class T>
+class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
+ public:
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec, T value);
 
-  template <class T>
-  class UploadRequestBase_ : public RequestBase_ {
-    friend Impl_;
+  template <class F>
+  SdoUploadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                          F&& con, const ::std::chrono::milliseconds& timeout)
+      : SdoUploadRequestBase<T>(exec, idx, subidx, timeout),
+        con_(::std::forward<F>(con)) {}
 
-   public:
-    using RequestBase_::RequestBase_;
+ private:
+  void operator()() noexcept final;
 
-    T value{};
-  };
+  void OnRequest(void* data) noexcept final;
 
+  ::std::function<Signature> con_;
+};
+
+}  // namespace detail
+
+/// An SDO download (i.e., write) request.
+template <class T>
+class SdoDownloadRequest : public detail::SdoDownloadRequestBase<T> {
  public:
   /**
    * The signature of the callback function invoked on completion of an SDO
@@ -120,126 +192,147 @@ class Sdo {
    * exceptions. Since it is invoked from C, any exception that is thrown cannot
    * be caught and will result in a call to `std::terminate()`.
    *
+   * @param id     the node-ID.
    * @param idx    the object index.
    * @param subidx the object sub-index.
    * @param ec     the SDO abort code (0 on success).
    */
-  using DownloadSignature = void(uint16_t idx, uint8_t subidx,
-                                 ::std::error_code ec);
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec);
 
-  /// An SDO download request.
-  template <class T>
-  class DownloadRequest : public DownloadRequestBase_<T> {
-   public:
-    /**
-     * Constructs an empty SDO download request. The object index and sub-index,
-     * the value to be written and, optionally, the SDO timeout have to be set
-     * before the request can be submitted.
-     *
-     * @param exec    the executor used to execute the confirmation function.
-     * @param con     the confirmation function to be called on completion of
-     *                the SDO request.
-     *
-     * @see Sdo::SubmitDownload<T>()
-     */
-    template <class F>
-    DownloadRequest(aio::ExecutorBase& exec, F&& con)
-        : DownloadRequestBase_<T>(exec, &Func_), con_(::std::forward<F>(con)) {}
+  /**
+   * Constructs an empty SDO download request. The object index and sub-index,
+   * the value to be written and, optionally, the SDO timeout have to be set
+   * before the request can be submitted.
+   */
+  template <class F>
+  SdoDownloadRequest(ev_exec_t* exec, F&& con)
+      : detail::SdoDownloadRequestBase<T>(exec), con_(::std::forward<F>(con)) {}
 
-    /**
-     * Constructs an SDO download request.
-     *
-     * @param idx     the object index.
-     * @param subidx  the object sub-index.
-     * @param value   the value to be written.
-     * @param exec    the executor used to execute the confirmation function.
-     * @param con     the confirmation function to be called on completion of
-     *                the SDO request.
-     * @param timeout the SDO timeout. If, after the request is initiated, the
-     *                timeout expires before receiving a response from the
-     *                server, the client aborts the transfer with abort code
-     *                #SdoErrc::TIMEOUT.
-     *
-     * @see Sdo::SubmitDownload<T>()
-     */
-    template <class U, class F>
-    DownloadRequest(uint16_t idx, uint8_t subidx, U&& value,
-                    aio::ExecutorBase& exec, F&& con, const duration& timeout)
-        : DownloadRequestBase_<T>(exec, &Func_, idx, subidx,
-                                  ::std::forward<U>(value), timeout),
-          con_(::std::forward<F>(con)) {}
+  /// Returns the executor to which the completion task is (to be) submitted.
+  ev::Executor
+  GetExecutor() const noexcept {
+    return ev::Executor(ev_task::exec);
+  }
 
-   private:
-    void OnRequest(Impl_* impl) noexcept override;
+ private:
+  void operator()() noexcept final;
 
-    static void Func_(aio_task* task) noexcept;
+  void OnRequest(void* data) noexcept final;
 
-    ::std::function<DownloadSignature> con_{nullptr};
-  };
+  ::std::function<Signature> con_;
+};
 
+/// An SDO upload (i.e., read) request.
+template <class T>
+class SdoUploadRequest : public detail::SdoUploadRequestBase<T> {
+ public:
   /**
    * The signature of the callback function invoked on completion of an SDO
    * upload request. Note that the callback function SHOULD NOT throw
    * exceptions. Since it is invoked from C, any exception that is thrown cannot
    * be caught and will result in a call to `std::terminate()`.
    *
+   * @param id     the node-ID.
    * @param idx    the object index.
    * @param subidx the object sub-index.
    * @param ec     the SDO abort code (0 on success).
    * @param value  the value received from the SDO server.
    */
-  template <class T>
-  using UploadSignature = void(uint16_t idx, uint8_t subidx,
-                               ::std::error_code ec, T value);
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec, T value);
 
-  /// An SDO upload request.
-  template <class T>
-  class UploadRequest : public UploadRequestBase_<T> {
-   public:
-    /**
-     * Constructs an empty SDO upload request. The object index and sub-index
-     * and, optionally, the SDO timeout have to be set before the request can be
-     * submitted.
-     *
-     * @param exec    the executor used to execute the confirmation function.
-     * @param con     the confirmation function to be called on completion of
-     *                the SDO request.
-     *
-     * @see Sdo::SubmitUpload<T>()
-     */
-    template <class F>
-    UploadRequest(aio::ExecutorBase& exec, F&& con)
-        : UploadRequestBase_<T>(exec, &Func_), con_(::std::forward<F>(con)) {}
+  /**
+   * Constructs an empty SDO upload request. The object index and sub-index and,
+   * optionally, the SDO timeout have to be set before the request can be
+   * submitted.
+   */
+  template <class F>
+  SdoUploadRequest(ev_exec_t* exec, F&& con)
+      : detail::SdoUploadRequestBase<T>(exec), con_(::std::forward<F>(con)) {}
 
-    /**
-     * Constructs an SDO upload request.
-     *
-     * @param idx     the object index.
-     * @param subidx  the object sub-index.
-     * @param exec    the executor used to execute the confirmation function.
-     * @param con     the confirmation function to be called on completion of
-     *                the SDO request.
-     * @param timeout the SDO timeout. If, after the request is initiated, the
-     *                timeout expires before receiving a response from the
-     *                server, the client aborts the transfer with abort code
-     *                #SdoErrc::TIMEOUT.
-     *
-     * @see Sdo::SubmitUpload<T>()
-     */
-    template <class F>
-    UploadRequest(uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
-                  F&& con, const duration& timeout)
-        : UploadRequestBase_<T>(exec, &Func_, idx, subidx, timeout),
-          con_(::std::forward<F>(con)) {}
+  /// Returns the executor to which the completion task is (to be) submitted.
+  ev::Executor
+  GetExecutor() const noexcept {
+    return ev::Executor(ev_task::exec);
+  }
 
-   private:
-    void OnRequest(Impl_* impl) noexcept override;
+ private:
+  void operator()() noexcept final;
 
-    static void Func_(aio_task* task) noexcept;
+  void OnRequest(void* data) noexcept final;
 
-    ::std::function<UploadSignature<T>> con_{nullptr};
-  };
+  ::std::function<Signature> con_;
+};
 
+/**
+ * Creates an SDO download request with a completion task. The request deletes
+ * itself after it is completed, so it MUST NOT be deleted once it is submitted
+ * to a Client-SDO queue.
+ *
+ * @param exec    the executor used to execute the completion task.
+ * @param idx     the object index.
+ * @param subidx  the object sub-index.
+ * @param value   the value to be written.
+ * @param con     the confirmation function to be called on completion of the
+ *                SDO request.
+ * @param timeout the SDO timeout. If, after the request is initiated, the
+ *                timeout expires before receiving a response from the server,
+ *                the client aborts the transfer with abort code
+ *                #SdoErrc::TIMEOUT.
+ *
+ * @returns a pointer to a new SDO download request.
+ */
+template <class T, class U, class F>
+inline detail::SdoDownloadRequestWrapper<T>*
+make_sdo_download_request(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                          U&& value, F&& con,
+                          const ::std::chrono::milliseconds& timeout = {}) {
+  return new detail::SdoDownloadRequestWrapper<T>(
+      exec, idx, subidx, ::std::forward<U>(value), ::std::forward<F>(con),
+      timeout);
+}
+
+/**
+ * Creates an SDO upload request with a completion task. The request deletes
+ * itself after it is completed, so it MUST NOT be deleted once it is submitted
+ * to a Client-SDO queue.
+ *
+ * @param exec    the executor used to execute the completion task.
+ * @param idx     the object index.
+ * @param subidx  the object sub-index.
+ * @param con     the confirmation function to be called on completion of the
+ *                SDO request.
+ * @param timeout the SDO timeout. If, after the request is initiated, the
+ *                timeout expires before receiving a response from the server,
+ *                the client aborts the transfer with abort code
+ *                #SdoErrc::TIMEOUT.
+ *
+ * @returns a pointer to a new SDO upload request.
+ */
+template <class T, class F>
+inline detail::SdoUploadRequestWrapper<T>*
+make_sdo_upload_request(ev_exec_t* exec, uint16_t idx, uint8_t subidx, F&& con,
+                        const ::std::chrono::milliseconds& timeout = {}) {
+  return new detail::SdoUploadRequestWrapper<T>(
+      exec, idx, subidx, ::std::forward<F>(con), timeout);
+}
+
+/// A Client-SDO queue.
+class Sdo {
+  template <class>
+  friend class SdoDownloadRequest;
+
+  template <class>
+  friend class SdoUploadRequest;
+
+  template <class>
+  friend class detail::SdoDownloadRequestWrapper;
+
+  template <class>
+  friend class detail::SdoUploadRequestWrapper;
+
+ public:
   /// Default-constructs an invalid Client-SDO queue.
   Sdo();
 
@@ -272,7 +365,7 @@ class Sdo {
    * @param sdo a pointer to a CANopen Client-SDO service (from
                 <lely/co/csdo.hpp>).
    */
-  explicit Sdo(COCSDO* sdo);
+  Sdo(COCSDO* sdo);
 
   Sdo(const Sdo&) = delete;
   Sdo(Sdo&&) = default;
@@ -291,19 +384,19 @@ class Sdo {
 
   /// Queues an SDO download request.
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
-  SubmitDownload(DownloadRequest<T>& req) {
-    Submit(static_cast<RequestBase_&>(req));
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  SubmitDownload(SdoDownloadRequest<T>& req) {
+    Submit(req);
   }
 
   /**
    * Queues an SDO download request. This function writes a value to a
    * sub-object in a remote object dictionary.
    *
+   * @param exec    the executor used to execute the completion task.
    * @param idx     the object index.
    * @param subidx  the object sub-index.
    * @param value   the value to be written.
-   * @param exec    the executor used to execute the confirmation function.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
    * @param timeout the SDO timeout. If, after the request is initiated, the
@@ -312,14 +405,12 @@ class Sdo {
    *                #SdoErrc::TIMEOUT.
    */
   template <class T, class F, class U = typename ::std::decay<T>::type>
-  typename ::std::enable_if<
-      detail::IsCanopenType<typename ::std::decay<U>::type>::value>::type
-  SubmitDownload(uint16_t idx, uint8_t subidx, T&& value,
-                 aio::ExecutorBase& exec, F&& con, const duration& timeout) {
-    auto req =
-        new DownloadRequestWrapper<U>(idx, subidx, ::std::forward<T>(value),
-                                      exec, ::std::forward<F>(con), timeout);
-    Submit(*req);
+  typename ::std::enable_if<detail::is_canopen_type<U>::value>::type
+  SubmitDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
+                 F&& con, const ::std::chrono::milliseconds& timeout = {}) {
+    Submit(*make_sdo_download_request<U>(exec, idx, subidx,
+                                         ::std::forward<T>(value),
+                                         ::std::forward<F>(con), timeout));
   }
 
   /**
@@ -329,26 +420,25 @@ class Sdo {
    * @param ac  the SDO abort code in case of an ongoing request.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value,
-                            ::std::size_t>::type
-  CancelDownload(DownloadRequest<T>& req, SdoErrc ac) {
-    return Cancel(req, ac);
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  CancelDownload(SdoDownloadRequest<T>& req, SdoErrc ac) {
+    Cancel(req, ac);
   }
 
   /// Queues an SDO upload request.
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
-  SubmitUpload(UploadRequest<T>& req) {
-    Submit(static_cast<RequestBase_&>(req));
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  SubmitUpload(SdoUploadRequest<T>& req) {
+    Submit(req);
   }
 
   /**
    * Queues an SDO upload request. This function reads the value of a sub-object
    * in a remote object dictionary.
    *
+   * @param exec    the executor used to execute the completion task.
    * @param idx     the object index.
    * @param subidx  the object sub-index.
-   * @param exec    the executor used to execute the confirmation function.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
    * @param timeout the SDO timeout. If, after the request is initiated, the
@@ -357,12 +447,11 @@ class Sdo {
    *                #SdoErrc::TIMEOUT.
    */
   template <class T, class F>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type
-  SubmitUpload(uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec, F&& con,
-               const duration& timeout) {
-    auto req = new UploadRequestWrapper<T>(idx, subidx, exec,
-                                           ::std::forward<F>(con), timeout);
-    Submit(*req);
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  SubmitUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, F&& con,
+               const ::std::chrono::milliseconds& timeout = {}) {
+    Submit(*make_sdo_upload_request<T>(exec, idx, subidx,
+                                       ::std::forward<F>(con), timeout));
   }
 
   /**
@@ -372,25 +461,25 @@ class Sdo {
    * @param ac  the SDO abort code in case of an ongoing request.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value,
-                            ::std::size_t>::type
-  CancelUpload(UploadRequest<T>& req, SdoErrc ac) {
-    return Cancel(req, ac);
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  CancelUpload(SdoUploadRequest<T>& req, SdoErrc ac) {
+    Cancel(req, ac);
   }
 
   /**
    * Aborts the ongoing and all pending SDO requests.
    *
    * @param ac the SDO abort code.
+   *
+   * @returns the number of canceled requests.
    */
   ::std::size_t Cancel(SdoErrc ac);
 
   /**
-   * Queues an asynchronous SDO download request and returns a future.
+   * Queues an asynchronous SDO download request and creates a future which
+   * becomes ready once the request completes (or is canceled).
    *
-   * @param loop    the event loop used to create the future.
-   * @param exec    the executor used to create the future. The executor SHOULD
-   *                be based on <b>loop</b>.
+   * @param exec    the executor used to execute the completion task.
    * @param idx     the object index.
    * @param subidx  the object sub-index.
    * @param value   the value to be written.
@@ -399,25 +488,26 @@ class Sdo {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which, on completion, holds the SDO abort code.
+   * @returns a future which holds the SDO abort code on failure.
    */
   template <class T, class U = typename ::std::decay<T>::type>
-  typename ::std::enable_if<detail::IsCanopenType<U>::value,
-                            aio::Future<::std::error_code>>::type
-  AsyncDownload(aio::LoopBase& loop, aio::ExecutorBase& exec, int16_t idx,
-                uint8_t subidx, T&& value, const duration& timeout) {
-    auto req = new AsyncDownloadRequest<U>(loop, exec, idx, subidx,
-                                           ::std::forward<T>(value), timeout);
-    Submit(*req);
-    return req->GetFuture();
+  typename ::std::enable_if<detail::is_canopen_type<U>::value,
+                            ev::Future<void>>::type
+  AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
+                const ::std::chrono::milliseconds& timeout = {}) {
+    ev::Promise<void> p;
+    SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
+                   [p](uint8_t, uint16_t, uint8_t,
+                       ::std::error_code ec) mutable { p.set(ec); },
+                   timeout);
+    return p.get_future();
   }
 
   /**
-   * Queues an asynchronous SDO upload request and returns a future.
+   * Queues an asynchronous SDO upload request and creates a future which
+   * becomes ready once the request completes (or is canceled).
    *
-   * @param loop    the event loop used to create the future.
-   * @param exec    the executor used to create the future. The executor SHOULD
-   *                be based on <b>loop</b>.
+   * @param exec    the executor used to execute the completion task.
    * @param idx     the object index.
    * @param subidx  the object sub-index.
    * @param timeout the SDO timeout. If, after the request is initiated, the
@@ -425,114 +515,32 @@ class Sdo {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which, on completion, holds the SDO abort code and the
-   * received value.
+   * @returns a future which holds the received value on success and the SDO
+   * abort code on failure.
    */
   template <class T>
-  typename ::std::enable_if<
-      detail::IsCanopenType<T>::value,
-      aio::Future<::std::tuple<::std::error_code, T>>>::type
-  AsyncUpload(aio::LoopBase& loop, aio::ExecutorBase& exec, int16_t idx,
-              uint8_t subidx, const duration& timeout) {
-    auto req = new AsyncUploadRequest<T>(loop, exec, idx, subidx, timeout);
-    Submit(*req);
-    return req->GetFuture();
+  typename ::std::enable_if<detail::is_canopen_type<T>::value,
+                            ev::Future<T>>::type
+  AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+              const ::std::chrono::milliseconds& timeout = {}) {
+    ev::Promise<T> p;
+    SubmitUpload<T>(
+        exec, idx, subidx,
+        [p](uint8_t, uint16_t, uint8_t, ::std::error_code ec, T value) mutable {
+          if (ec)
+            p.set(ec);
+          else
+            p.set(::std::move(value));
+        },
+        timeout);
+    return p.get_future();
   }
 
  private:
-  template <class T>
-  class DownloadRequestWrapper : public DownloadRequestBase_<T> {
-   public:
-    template <class U, class F>
-    DownloadRequestWrapper(uint16_t idx, int8_t subidx, U&& value,
-                           aio::ExecutorBase& exec, F&& con,
-                           const duration& timeout)
-        : DownloadRequestBase_<T>(exec, &Func_, idx, subidx,
-                                  ::std::forward<U>(value), timeout),
-          con_(::std::forward<F>(con)) {}
+  void Submit(detail::SdoRequestBase& req);
+  void Cancel(detail::SdoRequestBase& req, SdoErrc ac);
 
-   private:
-    ~DownloadRequestWrapper() = default;
-
-    void OnRequest(Impl_* impl) noexcept override;
-
-    static void Func_(aio_task* task) noexcept;
-
-    ::std::function<DownloadSignature> con_{nullptr};
-  };
-
-  template <class T>
-  class UploadRequestWrapper : public UploadRequestBase_<T> {
-   public:
-    template <class F>
-    UploadRequestWrapper(uint16_t idx, uint8_t subidx, aio::ExecutorBase& exec,
-                         F&& con, const duration& timeout)
-        : UploadRequestBase_<T>(exec, &Func_, idx, subidx, timeout),
-          con_(::std::forward<F>(con)) {}
-
-   private:
-    ~UploadRequestWrapper() = default;
-
-    void OnRequest(Impl_* impl) noexcept override;
-
-    static void Func_(aio_task* task) noexcept;
-
-    ::std::function<UploadSignature<T>> con_{nullptr};
-  };
-
-  template <class T>
-  class AsyncDownloadRequest : public DownloadRequestBase_<T> {
-   public:
-    template <class U>
-    AsyncDownloadRequest(aio::LoopBase& loop, aio::ExecutorBase& exec,
-                         uint16_t idx, int8_t subidx, U&& value,
-                         const duration& timeout)
-        : DownloadRequestBase_<T>(exec, &Func_, idx, subidx,
-                                  ::std::forward<U>(value), timeout),
-          promise_(loop, exec) {}
-
-    aio::Future<::std::error_code>
-    GetFuture() noexcept {
-      return promise_.GetFuture();
-    }
-
-   private:
-    ~AsyncDownloadRequest() = default;
-
-    void OnRequest(Impl_* impl) noexcept override;
-
-    static void Func_(aio_task* task) noexcept;
-
-    aio::Promise<::std::error_code> promise_;
-  };
-
-  template <class T>
-  class AsyncUploadRequest : public UploadRequestBase_<T> {
-   public:
-    AsyncUploadRequest(aio::LoopBase& loop, aio::ExecutorBase& exec,
-                       uint16_t idx, int8_t subidx, const duration& timeout)
-        : UploadRequestBase_<T>(exec, &Func_, idx, subidx, timeout),
-          promise_(loop, exec) {}
-
-    aio::Future<::std::tuple<::std::error_code, T>>
-    GetFuture() noexcept {
-      return promise_.GetFuture();
-    }
-
-   private:
-    ~AsyncUploadRequest() = default;
-
-    void OnRequest(Impl_* impl) noexcept override;
-
-    static void Func_(aio_task* task) noexcept;
-
-    aio::Promise<::std::tuple<::std::error_code, T>> promise_;
-  };
-
-  void Submit(RequestBase_& req);
-
-  ::std::size_t Cancel(RequestBase_& req, SdoErrc ac);
-
+  struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };
 

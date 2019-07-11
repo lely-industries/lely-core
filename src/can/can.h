@@ -25,6 +25,8 @@
 #include <config.h>
 #endif
 
-#include <lely/can/can.h>
+#include <lely/features.h>
+
+LELY_INGORE_EMPTY_TRANSLATION_UNIT
 
 #endif // !LELY_CAN_INTERN_CAN_H_

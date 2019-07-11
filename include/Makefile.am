@@ -2,6 +2,9 @@ inc =
 inc += lely/features.h
 
 inc += lely/libc/sys/types.h
+if !NO_CXX
+inc += lely/libc/chrono.hpp
+endif
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h
 inc += lely/libc/stdint.h
@@ -13,8 +16,14 @@ if !NO_THREADS
 inc += lely/libc/threads.h
 endif
 inc += lely/libc/time.h
+if !NO_CXX
+inc += lely/libc/type_traits.hpp
+endif
 inc += lely/libc/uchar.h
 inc += lely/libc/unistd.h
+if !NO_CXX
+inc += lely/libc/utility.hpp
+endif
 
 inc += lely/tap/tap.h
 
@@ -25,8 +34,13 @@ inc += lely/util/bitset.h
 if !NO_CXX
 inc += lely/util/c_call.hpp
 inc += lely/util/c_type.hpp
+inc += lely/util/chrono.hpp
 endif
 inc += lely/util/config.h
+inc += lely/util/coroutine.h
+if !NO_CXX
+inc += lely/util/coroutine.hpp
+endif
 inc += lely/util/cmp.h
 if !NO_DAEMON
 inc += lely/util/daemon.h
@@ -34,6 +48,9 @@ endif
 inc += lely/util/diag.h
 inc += lely/util/dllist.h
 inc += lely/util/endian.h
+if !NO_CXX
+inc += lely/util/error.hpp
+endif
 inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
@@ -41,11 +58,20 @@ endif
 inc += lely/util/float.h
 inc += lely/util/frbuf.h
 inc += lely/util/fwbuf.h
+if !NO_CXX
+inc += lely/util/invoker.hpp
+endif
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
+if !NO_CXX
+inc += lely/util/mutex.hpp
+endif
 inc += lely/util/pheap.h
 inc += lely/util/print.h
 inc += lely/util/rbtree.h
+if !NO_CXX
+inc += lely/util/result.hpp
+endif
 inc += lely/util/sllist.h
 inc += lely/util/time.h
 inc += lely/util/util.h
@@ -54,7 +80,7 @@ inc += lely/can/buf.h
 if !NO_CXX
 inc += lely/can/buf.hpp
 endif
-inc += lely/can/can.h
+inc += lely/can/err.h
 inc += lely/can/msg.h
 inc += lely/can/net.h
 if !NO_CXX
@@ -99,53 +125,137 @@ if !NO_CXX
 inc += lely/io/sock.hpp
 endif
 
+if !NO_CXX
+inc += lely/ev/co_task.hpp
+endif
+inc += lely/ev/ev.h
+inc += lely/ev/exec.h
+if !NO_CXX
+inc += lely/ev/exec.hpp
+endif
+inc += lely/ev/future.h
+if !NO_CXX
+inc += lely/ev/future.hpp
+endif
+inc += lely/ev/loop.h
+if !NO_CXX
+inc += lely/ev/loop.hpp
+endif
+inc += lely/ev/poll.h
+if !NO_CXX
+inc += lely/ev/poll.hpp
+endif
+inc += lely/ev/std_exec.h
+inc += lely/ev/strand.h
+if !NO_CXX
+inc += lely/ev/strand.hpp
+endif
+inc += lely/ev/task.h
+if !NO_CXX
+inc += lely/ev/task.hpp
+endif
+inc += lely/ev/thrd_loop.h
+if !NO_CXX
+inc += lely/ev/thrd_loop.hpp
+endif
+
+inc += lely/io2/can/err.h
+if !NO_CXX
+inc += lely/io2/can/err.hpp
+endif
+inc += lely/io2/can/msg.h
+if !NO_CXX
+inc += lely/io2/can/msg.hpp
+endif
 if PLATFORM_LINUX
+inc += lely/io2/linux/can.h
 if !NO_CXX
-inc += lely/aio/detail/cbase.hpp
-inc += lely/aio/detail/timespec.hpp
+inc += lely/io2/linux/can.hpp
 endif
-inc += lely/aio/aio.h
+endif
+if PLATFORM_POSIX
+inc += lely/io2/posix/poll.h
 if !NO_CXX
-inc += lely/aio/aio.hpp
+inc += lely/io2/posix/poll.hpp
 endif
-inc += lely/aio/can_bus.h
+endif
+inc += lely/io2/sys/clock.h
 if !NO_CXX
-inc += lely/aio/can_bus.hpp
+inc += lely/io2/sys/clock.hpp
 endif
-inc += lely/aio/context.h
+inc += lely/io2/sys/io.h
 if !NO_CXX
-inc += lely/aio/context.hpp
+inc += lely/io2/sys/io.hpp
 endif
-inc += lely/aio/exec.h
+inc += lely/io2/sys/sigset.h
 if !NO_CXX
-inc += lely/aio/exec.hpp
+inc += lely/io2/sys/sigset.hpp
 endif
-inc += lely/aio/future.h
+inc += lely/io2/sys/timer.h
 if !NO_CXX
-inc += lely/aio/future.hpp
+inc += lely/io2/sys/timer.hpp
 endif
-inc += lely/aio/loop.h
+inc += lely/io2/user/can.h
 if !NO_CXX
-inc += lely/aio/loop.hpp
+inc += lely/io2/user/can.hpp
 endif
-inc += lely/aio/poll.h
+inc += lely/io2/user/timer.h
 if !NO_CXX
-inc += lely/aio/poll.hpp
+inc += lely/io2/user/timer.hpp
 endif
-inc += lely/aio/queue.h
-inc += lely/aio/reactor.h
+if PLATFORM_WIN32
+if HAVE_IXXAT
+inc += lely/io2/win32/ixxat.h
 if !NO_CXX
-inc += lely/aio/reactor.hpp
+inc += lely/io2/win32/ixxat.hpp
 endif
-inc += lely/aio/self_pipe.h
-inc += lely/aio/strand.h
+endif
+inc += lely/io2/win32/poll.h
 if !NO_CXX
-inc += lely/aio/strand.hpp
+inc += lely/io2/win32/poll.hpp
 endif
-inc += lely/aio/timer.h
+endif
+inc += lely/io2/can.h
 if !NO_CXX
-inc += lely/aio/timer.hpp
+inc += lely/io2/can.hpp
 endif
+inc += lely/io2/can_rt.h
+if !NO_CXX
+inc += lely/io2/can_rt.hpp
+endif
+inc += lely/io2/clock.h
+if !NO_CXX
+inc += lely/io2/clock.hpp
+inc += lely/io2/co_can.hpp
+inc += lely/io2/co_can_rt.hpp
+inc += lely/io2/co_sigset.hpp
+inc += lely/io2/co_timer.hpp
+inc += lely/io2/co_tqueue.hpp
+endif
+inc += lely/io2/ctx.h
+if !NO_CXX
+inc += lely/io2/ctx.hpp
+endif
+inc += lely/io2/dev.h
+if !NO_CXX
+inc += lely/io2/dev.hpp
+endif
+inc += lely/io2/event.h
+if !NO_CXX
+inc += lely/io2/event.hpp
+endif
+inc += lely/io2/io2.h
+inc += lely/io2/sigset.h
+if !NO_CXX
+inc += lely/io2/sigset.hpp
+endif
+inc += lely/io2/timer.h
+if !NO_CXX
+inc += lely/io2/timer.hpp
+endif
+inc += lely/io2/tqueue.h
+if !NO_CXX
+inc += lely/io2/tqueue.hpp
 endif
 
 inc += lely/co/def/basic.def
@@ -254,12 +364,8 @@ inc += lely/co/wtm.hpp
 endif
 endif
 
-if PLATFORM_LINUX
 if !NO_CXX
-inc += lely/coapp/detail/chrono.hpp
-inc += lely/coapp/detail/mutex.hpp
 inc += lely/coapp/detail/type_traits.hpp
-inc += lely/coapp/coapp.hpp
 inc += lely/coapp/device.hpp
 if !NO_COAPP_MASTER
 inc += lely/coapp/driver.hpp
@@ -275,9 +381,5 @@ if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
 endif
 endif
-endif
 
 nobase_include_HEADERS = $(inc)
-
-EXTRA_DIST =
-EXTRA_DIST += lely/CPPLINT.cfg

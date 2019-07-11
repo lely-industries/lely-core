@@ -37,10 +37,12 @@ AC_SUBST(VERSION_MINOR, m4_argn(2, version_split))
 AC_SUBST(VERSION_PATCH, m4_argn(3, version_split))
 
 platform_linux=no
+platform_posix=no
 platform_win32=no
 case "$host" in
 *linux*)
 	platform_linux=yes
+	platform_posix=yes
 	;;
 *-*-mingw*)
 	platform_win32=yes
@@ -53,6 +55,7 @@ case "$host" in
 	;;
 esac
 AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
+AM_CONDITIONAL([PLATFORM_POSIX], [test "$platform_posix" == "yes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
 AS_IF([test "$host_cpu" != "$build_cpu"], [
@@ -283,9 +286,38 @@ AS_IF([test "$enable_coapp_slave" == "no"], [
 	AC_DEFINE([LELY_NO_COAPP_SLAVE], [1], [Define to 1 if C++ CANopen application slave support is disabled.])
 ])
 
+AM_CONDITIONAL([HAVE_IXXAT], [false])
 AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [
 	CFLAGS="$CFLAGS -std=c99 -Wno-error=attributes"
+
+	AC_ARG_WITH([ixxat],
+		[AS_HELP_STRING(
+			[--with-ixxat@<:@=DIR@:>@],
+			[search for the IXXAT VCI SDK (in DIR if specified)]
+		)],,
+		[with_ixxat=no]
+	)
+	AS_IF([test "$with_ixxat" != "no"], [
+		save_CPPFLAGS="$CPPFLAGS"
+		AS_IF([test "$with_ixxat" != "yes"], [
+			CPPFLAGS="$CPPFLAGS -I$with_ixxat/inc"
+		])
+		AM_COND_IF([NO_CANFD], [
+			ixxat_header="vcinpl.h"
+		], [
+			ixxat_header="vcinpl2.h"
+		])
+		AC_CHECK_HEADERS($ixxat_header, [
+			AM_CONDITIONAL([HAVE_IXXAT], [true])
+			AC_DEFINE([LELY_HAVE_IXXAT], [1], [Define to 1 if you have the IXXAT VCI SDK.])
+		], [
+			CPPFLAGS="$save_CPPFLAGS"
+		], [
+			#include <windows.h>
+			#define _MSC_VER 1900
+		])
+	])
 
 	AC_MSG_CHECKING([for PathRemoveFileSpecA in shlwapi])
 	ax_shlwapi_ok=no
@@ -414,11 +446,12 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
-	pkgconfig/liblely-aio.pc
 	pkgconfig/liblely-can.pc
 	pkgconfig/liblely-co.pc
 	pkgconfig/liblely-coapp.pc
+	pkgconfig/liblely-ev.pc
 	pkgconfig/liblely-io.pc
+	pkgconfig/liblely-io2.pc
 	pkgconfig/liblely-libc.pc
 	pkgconfig/liblely-libc_rt.pc
 	pkgconfig/liblely-tap.pc
@@ -427,16 +460,18 @@ AC_CONFIG_FILES([
 	python/can/Makefile
 	python/io/Makefile
 	python/Makefile
-	src/aio/Makefile
-	src/aio/version.rc
 	src/can/Makefile
 	src/can/version.rc
 	src/co/Makefile
 	src/co/version.rc
 	src/coapp/Makefile
 	src/coapp/version.rc
+	src/ev/Makefile
+	src/ev/version.rc
 	src/io/Makefile
 	src/io/version.rc
+	src/io2/Makefile
+	src/io2/version.rc
 	src/libc/Makefile
 	src/libc/version.rc
 	src/tap/Makefile

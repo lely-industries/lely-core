@@ -25,28 +25,19 @@
 #include <config.h>
 #endif
 
-#define LELY_COAPP_INTERN 1
-#include <lely/coapp/coapp.hpp>
-
-#include <lely/util/errnum.h>
-
-#include <system_error>
+#include <lely/features.h>
 
 namespace lely {
-
+/// The namespace for the C++ CANopen application library.
 namespace canopen {
-
-namespace {
-
-_Noreturn inline void
-throw_errc(const char* what, int errc = get_errc()) {
-  throw ::std::system_error(errc, ::std::system_category(), what);
-}
-
-}  // namespace
-
+/**
+ * The namespace for implementation details of the C++ CANopen application
+ * library.
+ */
+namespace detail {}
 }  // namespace canopen
-
 }  // namespace lely
+
+LELY_INGORE_EMPTY_TRANSLATION_UNIT
 
 #endif  // LELY_COAPP_INTERN_COAPP_HPP_

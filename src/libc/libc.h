@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the C11 and POSIX compatibility library.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,6 +26,13 @@
 #endif
 
 #include <lely/features.h>
+
+#ifdef __cplusplus
+namespace lely {
+/// The global namespace for the compatibility library.
+namespace compat {}
+}  // namespace lely
+#endif
 
 LELY_INGORE_EMPTY_TRANSLATION_UNIT
 

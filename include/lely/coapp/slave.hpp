@@ -24,6 +24,10 @@
 
 #include <lely/coapp/node.hpp>
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace lely {
 
 namespace canopen {
@@ -37,7 +41,7 @@ class BasicSlave : public Node {
    * communication. Call #Reset() to start the boot-up process.
    *
    * @param timer   the timer used for CANopen events.
-   * @param bus     a handle to the CAN bus.
+   * @param chan    a CAN channel.
    * @param dcf_txt the path of the text EDS or DCF containing the device
    *                description.
    * @param dcf_bin the path of the (binary) concise DCF containing the values
@@ -46,7 +50,7 @@ class BasicSlave : public Node {
    * @param id      the node-ID (in the range [1..127, 255]). If <b>id</b> is
    *                255 (unconfigured), the node-ID is obtained from the DCF.
    */
-  BasicSlave(aio::TimerBase& timer, aio::CanBusBase& bus,
+  BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
              const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
              uint8_t id = 0xff);
 
@@ -124,8 +128,7 @@ class BasicSlave : public Node {
      * @returns a reference to an `std::type_info` object representing the type,
      * or `typeid(void)` if unknown.
      *
-     * @see Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
-     * const
+     * @see Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     const ::std::type_info&
     Type(::std::error_code& ec) const {
@@ -157,8 +160,7 @@ class BasicSlave : public Node {
      * @returns a copy of the value of the sub-object, or an empty value on
      * error.
      *
-     * @see Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
-     * const
+     * @see Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
@@ -189,11 +191,10 @@ class BasicSlave : public Node {
      * @param ec    if the sub-object does not exist or the type does not match,
      *              the SDO abort code is stored in <b>ec</b>.
      *
-     * @see Device::Set(uint16_t idx, uint8_t subidx, T value,
-     * ::std::error_code& ec), Device::Set(uint16_t idx, uint8_t subidx, const
-     * T& value, ::std::error_code& ec), Device::Set(uint16_t idx, uint8_t
-     * subidx, const char* value, ::std::error_code& ec), Device::Set(uint16_t
-     * idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
      */
     template <class T>
     void
@@ -210,8 +211,7 @@ class BasicSlave : public Node {
      * @throws #lely::canopen::SdoError if the sub-object does not exist or the
      * type does not match.
      *
-     * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p,
-     * ::std::size_t n)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n)
      */
     void
     Set(const void* p, ::std::size_t n) {
@@ -226,8 +226,7 @@ class BasicSlave : public Node {
      * @param ec if the sub-object does not exist or the type does not match,
      *           the SDO abort code is stored in <b>ac</b>.
      *
-     * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p,
-     * ::std::size_t n, ::std::error_code& ec)
+     * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
      */
     void
     Set(const void* p, ::std::size_t n, ::std::error_code& ec) {
@@ -418,8 +417,8 @@ class BasicSlave : public Node {
    * to the local object dictionary. Note that the callback function SHOULD NOT
    * throw exceptions. Since it is invoked from C, any exception that is thrown
    * cannot be caught and will result in a call to `std::terminate()`. The
-   * #lely::canopen::BasicLockable mutex implemented by this class is held for
-   * the duration of the call.
+   * #lely::util::BasicLockable mutex implemented by this class is held for the
+   * duration of the call.
    *
    * @param idx    the object index.
    * @param subidx the object sub-index.
@@ -437,8 +436,8 @@ class BasicSlave : public Node {
    * access to the local object dictionary. Note that the callback function
    * SHOULD NOT throw exceptions. Since it is invoked from C, any exception that
    * is thrown cannot be caught and will result in a call to `std::terminate()`.
-   * The #lely::canopen::BasicLockable mutex implemented by this class is held
-   * for the duration of the call.
+   * The #lely::util::BasicLockable mutex implemented by this class is held for
+   * the duration of the call.
    *
    * @param idx     the object index.
    * @param subidx  the object sub-index.
@@ -451,7 +450,7 @@ class BasicSlave : public Node {
    */
   template <class T>
   using OnWriteSignature = typename ::std::conditional<
-      detail::IsCanopenBasic<T>::value,
+      detail::is_canopen_basic<T>::value,
       ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val, T old_val),
       ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val)>::type;
 
@@ -492,7 +491,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type OnRead(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
       uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind);
 
   /**
@@ -507,7 +506,7 @@ class BasicSlave : public Node {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type OnRead(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
       uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind,
       ::std::error_code& ec);
 
@@ -525,7 +524,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type OnWrite(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
       uint16_t idx, uint8_t subidx, ::std::function<OnWriteSignature<T>> ind);
 
   /**
@@ -541,11 +540,11 @@ class BasicSlave : public Node {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::IsCanopenType<T>::value>::type OnWrite(
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
       uint16_t idx, uint8_t subidx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
  private:
 #endif
   /**

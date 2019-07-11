@@ -4,7 +4,7 @@
  *
  * @see lely/can/msg.h
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -64,7 +64,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	assert(msg);
 
 #if !LELY_NO_CANFD
-	if (msg->flags & CAN_FLAG_EDL) {
+	if (msg->flags & CAN_FLAG_FDF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -205,7 +205,7 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 
 	uint_least8_t len = msg->len;
 #if !LELY_NO_CANFD
-	if (msg->flags & CAN_FLAG_EDL)
+	if (msg->flags & CAN_FLAG_FDF)
 		len = MIN(len, CANFD_MAX_LEN);
 	else
 #endif
@@ -225,7 +225,7 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	n -= r;
 
 #if !LELY_NO_CANFD
-	if (msg->flags & CAN_FLAG_EDL)
+	if (msg->flags & CAN_FLAG_FDF)
 		r = snprintf(s, n, "  [%02d] ", len);
 	else
 #endif

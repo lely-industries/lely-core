@@ -3,8 +3,8 @@ pkg = lely_can
 src =
 src += $(pkg)/__init__.pxd
 src += $(pkg)/__init__.py
-src += $(pkg)/can.pxd
-src += $(pkg)/can.pyx
+src += $(pkg)/err.pxd
+src += $(pkg)/err.pyx
 src += $(pkg)/msg.pxd
 src += $(pkg)/msg.pyx
 

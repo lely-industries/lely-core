@@ -4,7 +4,7 @@
  *
  * @see lely/io/can.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,8 +41,12 @@
 #include <linux/can/error.h>
 #endif
 #ifdef HAVE_LINUX_CAN_NETLINK_H
-#define can_state _can_state
+#define can_state can_state_
+#define CAN_STATE_STOPPED CAN_STATE_STOPPED_
+#define CAN_STATE_SLEEPING CAN_STATE_SLEEPING_
 #include <linux/can/netlink.h>
+#undef CAN_STATE_SLEEPING
+#undef CAN_STATE_STOPPED
 #undef can_state
 #endif
 #ifdef HAVE_LINUX_CAN_RAW_H
