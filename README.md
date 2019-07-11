@@ -83,7 +83,7 @@ lely-core is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/lely-core.git
 
 or download the latest release
-([v1.9.1](https://gitlab.com/lely_industries/lely-core/tags/v1.9.1)).
+([v1.9.2](https://gitlab.com/lely_industries/lely-core/tags/v1.9.2)).
 
 Build and install
 -----------------
