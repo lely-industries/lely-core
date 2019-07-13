@@ -22,7 +22,7 @@ struct MyOp : public CoTimerWait {
   void
   operator()(int overrun, ::std::error_code ec) noexcept override {
     co_reenter (*this) {
-      for (n = 0; n < NUM_OP; n++) {
+      for (; n < NUM_OP; n++) {
         if (!ec) {
           auto s = ::std::chrono::duration<double>(
                        timer.get_clock().gettime().time_since_epoch())
@@ -35,7 +35,7 @@ struct MyOp : public CoTimerWait {
   }
 
   TimerBase& timer;
-  ::std::size_t n;
+  ::std::size_t n{0};
 };
 
 int

@@ -33,9 +33,9 @@ test_frbuf(void)
 	frbuf_t *buf = frbuf_create(FILENAME);
 	tap_assert(buf);
 
-	char txt1[sizeof(TXT1)];
+	char txt1[sizeof(TXT1)] = { '\0' };
 	tap_test(frbuf_read(buf, txt1, sizeof(TXT1)) != -1);
-	tap_test(!strcmp(txt1, TXT1));
+	tap_test(!strncmp(txt1, TXT1, sizeof(TXT1)));
 
 	int64_t pos = frbuf_get_pos(buf);
 	tap_test(pos == (int64_t)sizeof(TXT1));
@@ -45,11 +45,11 @@ test_frbuf(void)
 	tap_assert(map);
 	tap_test(size == SIZE - POS);
 
-	char txt2[sizeof(TXT2)];
+	char txt2[sizeof(TXT2)] = { '\0' };
 	tap_test(frbuf_pread(buf, txt2, sizeof(TXT2), POS) != -1);
-	tap_test(!strcmp(txt2, TXT2));
+	tap_test(!strncmp(txt2, TXT2, sizeof(TXT2)));
 
-	tap_test(!strcmp(map, TXT2));
+	tap_test(!strncmp(map, TXT2, sizeof(TXT2)));
 
 	tap_test(!frbuf_unmap(buf));
 

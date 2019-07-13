@@ -429,8 +429,10 @@ main(int argc, char *argv[])
 				else
 					result = asprintf(&tmp, "%s[%u] %s",
 							recv_buf, seq, line);
-				if (result < 0)
+				if (result < 0) {
+					mtx_unlock(&recv_mtx);
 					break;
+				}
 				free(recv_buf);
 				recv_buf = tmp;
 			} else {
@@ -442,6 +444,7 @@ main(int argc, char *argv[])
 							seq, line);
 				if (result < 0) {
 					recv_buf = NULL;
+					mtx_unlock(&recv_mtx);
 					break;
 				}
 			}
@@ -553,12 +556,15 @@ gw_txt_recv(const char *txt, void *data)
 	mtx_lock(&send_mtx);
 	if (send_buf) {
 		char *buf = NULL;
-		if (asprintf(&buf, "%s%s\n", send_buf, txt) > 0) {
-			free(send_buf);
-			send_buf = buf;
+		if (asprintf(&buf, "%s%s\n", send_buf, txt) == -1) {
+			mtx_unlock(&send_mtx);
+			return -1;
 		}
-	} else {
-		asprintf(&send_buf, "%s\n", txt);
+		free(send_buf);
+		send_buf = buf;
+	} else if (asprintf(&send_buf, "%s\n", txt) == -1) {
+		mtx_unlock(&send_mtx);
+		return -1;
 	}
 	cnd_signal(&send_cond);
 	mtx_unlock(&send_mtx);

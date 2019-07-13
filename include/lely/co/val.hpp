@@ -58,7 +58,8 @@ class COVal {
   COVal(type&& val) : m_val(::std::move(val)) {}
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n) && ptr && n)
+      throw_or_abort(bad_init());
   }
 
   COVal& operator=(const COVal&) = default;
@@ -111,7 +112,8 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n) && ptr && n)
+      throw_or_abort(bad_init());
   }
 
   COVal(const char* vs) { init(vs); }
@@ -193,7 +195,8 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n) && ptr && n)
+      throw_or_abort(bad_init());
   }
 
   COVal(const uint8_t* os, ::std::size_t n) { init(os, n); }
@@ -268,7 +271,8 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
   COVal(COVal&& val) : m_val() { *this = ::std::move(val); }
 
   COVal(const void* ptr, ::std::size_t n) {
-    if (!co_val_make(index, this, ptr, n)) throw_or_abort(bad_init());
+    if (!co_val_make(index, this, ptr, n) && ptr && n)
+      throw_or_abort(bad_init());
   }
 
   COVal(const char16_t* us) { init(us); }

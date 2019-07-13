@@ -706,11 +706,11 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (!ac && req.size && !membuf_reserve(&buf, req.size))
 		ac = CO_SDO_AC_NO_MEM;
 
-	do {
+	while (!ac && membuf_size(&buf) < req.size) {
 		membuf_write(&buf, req.buf, req.nbyte);
 		if (!co_sdo_req_last(&req))
 			ac = co_sub_up_ind(sub, &req);
-	} while (!ac && membuf_size(&buf) < req.size);
+	}
 
 	co_sdo_req_fini(&req);
 
