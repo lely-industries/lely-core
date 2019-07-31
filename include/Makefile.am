@@ -4,6 +4,7 @@ inc += lely/features.h
 inc += lely/libc/sys/types.h
 if !NO_CXX
 inc += lely/libc/chrono.hpp
+inc += lely/libc/functional.hpp
 endif
 inc += lely/libc/stdatomic.h
 inc += lely/libc/stddef.h

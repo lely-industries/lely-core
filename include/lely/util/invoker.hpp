@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_INVOKER_HPP_
 #define LELY_UTIL_INVOKER_HPP_
 
-#include <lely/libc/type_traits.hpp>
+#include <lely/libc/functional.hpp>
 #include <lely/libc/utility.hpp>
 
 #include <tuple>
@@ -76,7 +76,7 @@ using invoker_t =
 
 /**
  * Creates a function object containing a Callable and its arguments. The
- * resulting functionobject is callable without any arguments.
+ * resulting function object is callable without any arguments.
  */
 template <class F, class... Args>
 inline invoker_t<F, Args...>
