@@ -197,16 +197,6 @@ struct is_invocable : detail::is_invocable<invoke_result<F, Args...>, void> {};
 template <class R, class F, class... Args>
 struct is_invocable_r : detail::is_invocable<invoke_result<F, Args...>, R> {};
 
-/**
- * Invokes <b>f</b> with the arguments <b>args...</b> as if by
- * `INVOKE(forward<F>(f), forward<Args>(args)...)`.
- */
-template <class F, class... Args>
-inline invoke_result_t<F, Args...>
-invoke(F&& f, Args&&... args) {
-  return detail::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
-}
-
 #endif  // __cplusplus < 201703L
 
 }  // namespace compat
