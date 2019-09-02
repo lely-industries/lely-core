@@ -30,6 +30,8 @@
 
 #include <errno.h>
 
+#include <net/if.h>
+
 #include <linux/can.h>
 #if !LELY_NO_CANFD && !defined(CANFD_MTU)
 #error CAN FD not supported.
