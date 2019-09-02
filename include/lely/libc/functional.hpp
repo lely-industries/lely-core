@@ -28,6 +28,7 @@
 #endif
 
 #include <functional>
+#include <utility>
 
 namespace lely {
 namespace compat {
