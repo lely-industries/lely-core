@@ -68,10 +68,7 @@ co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 
 	int errsv = errno;
 	char *s = NULL;
-	// clang-format off
-	if (__likely(vasprintf_diag_at(&s, severity, errc, at, format, ap)
-			>= 0))
-		// clang-format on
+	if (vasprintf_diag_at(&s, severity, errc, at, format, ap) >= 0)
 		tap_diag("%s", s);
 	free(s);
 	errno = errsv;
