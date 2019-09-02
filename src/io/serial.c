@@ -4,7 +4,7 @@
  *
  * @see lely/io/serial.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -53,12 +53,12 @@ io_open_serial(const char *path, io_attr_t *attr)
 #ifdef _WIN32
 	HANDLE fd = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-	if (__unlikely(fd == INVALID_HANDLE_VALUE)) {
+	if (fd == INVALID_HANDLE_VALUE) {
 		errc = get_errc();
 		goto error_CreateFile;
 	}
 
-	if (__unlikely(!SetCommMask(fd, EV_RXCHAR))) {
+	if (!SetCommMask(fd, EV_RXCHAR)) {
 		errc = get_errc();
 		goto error_SetCommMask;
 	}
@@ -66,13 +66,13 @@ io_open_serial(const char *path, io_attr_t *attr)
 	DCB DCB;
 	memset(&DCB, 0, sizeof(DCB));
 	DCB.DCBlength = sizeof(DCB);
-	if (__unlikely(!GetCommState(fd, &DCB))) {
+	if (!GetCommState(fd, &DCB)) {
 		errc = get_errc();
 		goto error_GetCommState;
 	}
 
 	COMMTIMEOUTS CommTimeouts;
-	if (__unlikely(!GetCommTimeouts(fd, &CommTimeouts))) {
+	if (!GetCommTimeouts(fd, &CommTimeouts)) {
 		errc = get_errc();
 		goto error_GetCommTimeouts;
 	}
@@ -98,7 +98,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 	DCB.ByteSize = 8;
 	DCB.Parity = NOPARITY;
 
-	if (__unlikely(!SetCommState(fd, &DCB))) {
+	if (!SetCommState(fd, &DCB)) {
 		errc = get_errc();
 		goto error_SetCommState;
 	}
@@ -113,7 +113,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 	CommTimeouts.WriteTotalTimeoutMultiplier = 0;
 	CommTimeouts.WriteTotalTimeoutConstant = 0;
 
-	if (__unlikely(!SetCommTimeouts(fd, &CommTimeouts))) {
+	if (!SetCommTimeouts(fd, &CommTimeouts)) {
 		errc = get_errc();
 		goto error_SetCommTimeouts;
 	}
@@ -123,14 +123,14 @@ io_open_serial(const char *path, io_attr_t *attr)
 	do {
 		errno = errsv;
 		fd = open(path, O_RDWR | O_NOCTTY | O_CLOEXEC);
-	} while (__unlikely(fd == -1 && errno == EINTR));
-	if (__unlikely(fd == -1)) {
+	} while (fd == -1 && errno == EINTR);
+	if (fd == -1) {
 		errc = get_errc();
 		goto error_open;
 	}
 
 	struct termios ios;
-	if (__unlikely(tcgetattr(fd, &ios) == -1)) {
+	if (tcgetattr(fd, &ios) == -1) {
 		errc = get_errc();
 		goto error_tcgetattr;
 	}
@@ -152,14 +152,14 @@ io_open_serial(const char *path, io_attr_t *attr)
 	ios.c_cc[VMIN] = 1;
 	ios.c_cc[VTIME] = 0;
 
-	if (__unlikely(tcsetattr(fd, TCSANOW, &ios) == -1)) {
+	if (tcsetattr(fd, TCSANOW, &ios) == -1) {
 		errc = get_errc();
 		goto error_tcsetattr;
 	}
 #endif
 
 	struct io_handle *handle = io_handle_alloc(&serial_vtab);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		errc = get_errc();
 		goto error_alloc_handle;
 	}
@@ -192,13 +192,13 @@ error_open:
 int
 io_purge(io_handle_t handle, int flags)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->purge)) {
+	if (!handle->vtab->purge) {
 		set_errnum(ERRNUM_NOTTY);
 		return -1;
 	}
@@ -213,7 +213,7 @@ io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 {
 	assert(attr);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -222,7 +222,7 @@ io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	memset(lpDCB, 0, sizeof(*lpDCB));
 	lpDCB->DCBlength = sizeof(*lpDCB);
-	if (__unlikely(!GetCommState(handle->fd, lpDCB)))
+	if (!GetCommState(handle->fd, lpDCB))
 		return -1;
 
 	// clang-format off
@@ -239,19 +239,16 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 {
 	assert(attr);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 #ifdef _WIN32
-	if (__unlikely(!SetCommState(handle->fd, io_attr_lpDCB(attr))))
+	if (!SetCommState(handle->fd, io_attr_lpDCB(attr)))
 		return -1;
 
-	// clang-format off
-	if (__unlikely(!SetCommTimeouts(
-			handle->fd, io_attr_lpCommTimeouts(attr))))
-		// clang-format on
+	if (!SetCommTimeouts(handle->fd, io_attr_lpCommTimeouts(attr)))
 		return -1;
 
 	return 0;
@@ -262,7 +259,7 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 		errno = errsv;
 		result = tcsetattr(handle->fd, TCSANOW,
 				(const struct termios *)attr);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -280,7 +277,7 @@ serial_flush(struct io_handle *handle)
 	do {
 		errno = errsv;
 		result = tcdrain(handle->fd);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }

@@ -4,7 +4,7 @@
  *
  * @see lely/io/if.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -67,18 +67,18 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 	DWORD Size = 0;
 	DWORD dwErrCode = GetAdaptersAddresses(
 			AF_UNSPEC, Flags, NULL, NULL, &Size);
-	if (__unlikely(dwErrCode != ERROR_BUFFER_OVERFLOW)) {
+	if (dwErrCode != ERROR_BUFFER_OVERFLOW) {
 		SetLastError(dwErrCode);
 		return -1;
 	}
 
 	PIP_ADAPTER_ADDRESSES pAdapterAddresses = malloc(Size);
-	if (__unlikely(!pAdapterAddresses))
+	if (!pAdapterAddresses)
 		return -1;
 
 	dwErrCode = GetAdaptersAddresses(
 			AF_UNSPEC, Flags, NULL, pAdapterAddresses, &Size);
-	if (__unlikely(dwErrCode != ERROR_SUCCESS)) {
+	if (dwErrCode != ERROR_SUCCESS) {
 		free(pAdapterAddresses);
 		SetLastError(dwErrCode);
 		return -1;
@@ -90,7 +90,7 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 		// Skip interfaces with invalid indices.
 		unsigned int index =
 				paa->IfIndex ? paa->IfIndex : paa->Ipv6IfIndex;
-		if (__unlikely(!index))
+		if (!index)
 			continue;
 
 		// Copy the status.
@@ -111,7 +111,7 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 						paa->FirstUnicastAddress;
 				paua; paua = paua->Next) {
 			LPSOCKADDR lpSockaddr = paua->Address.lpSockaddr;
-			if (__unlikely(!lpSockaddr))
+			if (!lpSockaddr)
 				continue;
 
 			// We only support IPv4 and IPv6.
@@ -178,7 +178,7 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 	free(pAdapterAddresses);
 #else
 	struct ifaddrs *res = NULL;
-	if (__unlikely(getifaddrs(&res) == -1))
+	if (getifaddrs(&res) == -1)
 		return -1;
 
 	int ninfo = 0;
@@ -271,7 +271,7 @@ io_addr_set(io_addr_t *addr, const struct sockaddr *address)
 static NETIO_STATUS WINAPI
 ConvertLengthToIpv6Mask(ULONG MaskLength, u_char Mask[16])
 {
-	if (__unlikely(MaskLength > 128)) {
+	if (MaskLength > 128) {
 		for (int i = 0; i < 16; i++)
 			Mask[i] = 0;
 		return ERROR_INVALID_PARAMETER;

@@ -4,7 +4,7 @@
  *
  * @see lely/io/attr.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -180,9 +180,9 @@ io_attr_set_speed(io_attr_t *attr, int speed)
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
-	if (__unlikely(cfsetispeed((struct termios *)attr, baud) == -1))
+	if (cfsetispeed((struct termios *)attr, baud) == -1)
 		return -1;
-	if (__unlikely(cfsetospeed((struct termios *)attr, baud) == -1))
+	if (cfsetospeed((struct termios *)attr, baud) == -1)
 		return -1;
 
 	return 0;

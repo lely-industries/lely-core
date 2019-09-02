@@ -4,7 +4,7 @@
  *
  * @see lely/io/pipe.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -60,34 +60,34 @@ io_open_pipe(io_handle_t handle_vector[2])
 	int fd[2];
 #endif
 #if defined(__CYGWIN__) || defined(__linux__)
-	if (__unlikely(pipe2(fd, O_CLOEXEC) == -1)) {
+	if (pipe2(fd, O_CLOEXEC) == -1) {
 #else
-	if (__unlikely(pipe(fd) == -1)) {
+	if (pipe(fd) == -1) {
 #endif
 		errc = get_errc();
 		goto error_pipe;
 	}
 
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
-	if (__unlikely(fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(fd[0], F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
-	if (__unlikely(fcntl(fd[1], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(fd[1], F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
 #endif
 
 	handle_vector[0] = io_handle_alloc(&pipe_vtab);
-	if (__unlikely(!handle_vector[0])) {
+	if (!handle_vector[0]) {
 		errc = get_errc();
 		goto error_alloc_handle_vector_0;
 	}
 	handle_vector[0]->fd = fd[0];
 
 	handle_vector[1] = io_handle_alloc(&pipe_vtab);
-	if (__unlikely(!handle_vector[1])) {
+	if (!handle_vector[1]) {
 		errc = get_errc();
 		goto error_alloc_handle_vector_1;
 	}
@@ -136,14 +136,14 @@ pipe(HANDLE fildes[2])
 	fildes[0] = CreateNamedPipeA(Name,
 			PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
 			PIPE_TYPE_BYTE | PIPE_WAIT, 1, 1, 1, 0, NULL);
-	if (__unlikely(fildes[0] == INVALID_HANDLE_VALUE)) {
+	if (fildes[0] == INVALID_HANDLE_VALUE) {
 		dwErrCode = GetLastError();
 		goto error_CreateNamedPipeA;
 	}
 
 	fildes[1] = CreateFileA(Name, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
-	if (__unlikely(fildes[1] == INVALID_HANDLE_VALUE)) {
+	if (fildes[1] == INVALID_HANDLE_VALUE) {
 		dwErrCode = GetLastError();
 		goto error_CreateFileA;
 	}

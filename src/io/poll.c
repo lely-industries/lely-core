@@ -4,7 +4,7 @@
  *
  * @see lely/io/poll.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -98,7 +98,7 @@ void *
 __io_poll_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __io_poll));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -135,23 +135,21 @@ __io_poll_init(struct __io_poll *poll)
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
 #ifdef _WIN32
-	// clang-format off
-	if (__unlikely(io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM,
-			poll->pipe) == -1)) {
-		// clang-format on
+	if (io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, poll->pipe)
+			== -1) {
 #else
-	if (__unlikely(io_open_pipe(poll->pipe) == -1)) {
+	if (io_open_pipe(poll->pipe) == -1) {
 #endif
 		errc = get_errc();
 		goto error_open_pipe;
 	}
 
 	// Make the both ends of the self-pipe non-blocking.
-	if (__unlikely(io_set_flags(poll->pipe[0], IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(poll->pipe[0], IO_FLAG_NONBLOCK) == -1) {
 		errc = get_errc();
 		goto error_set_flags;
 	}
-	if (__unlikely(io_set_flags(poll->pipe[1], IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(poll->pipe[1], IO_FLAG_NONBLOCK) == -1) {
 		errc = get_errc();
 		goto error_set_flags;
 	}
@@ -159,7 +157,7 @@ __io_poll_init(struct __io_poll *poll)
 
 #if defined(__linux__) && defined(HAVE_SYS_EPOLL_H)
 	poll->epfd = epoll_create1(EPOLL_CLOEXEC);
-	if (__unlikely(poll->epfd == -1)) {
+	if (poll->epfd == -1) {
 		errc = get_errc();
 		goto error_epoll_create1;
 	}
@@ -167,10 +165,8 @@ __io_poll_init(struct __io_poll *poll)
 	// Register the read end of the self-pipe with epoll.
 	struct epoll_event ev = { .events = EPOLLIN,
 		.data.ptr = poll->pipe[0] };
-	// clang-format off
-	if (__unlikely(epoll_ctl(poll->epfd, EPOLL_CTL_ADD, poll->pipe[0]->fd,
-			&ev) == -1)) {
-		// clang-format on
+	if (epoll_ctl(poll->epfd, EPOLL_CTL_ADD, poll->pipe[0]->fd, &ev)
+			== -1) {
 		errc = get_errc();
 		goto error_epoll_ctl;
 	}
@@ -221,12 +217,12 @@ io_poll_create(void)
 	int errc = 0;
 
 	io_poll_t *poll = __io_poll_alloc();
-	if (__unlikely(!poll)) {
+	if (!poll) {
 		errc = get_errc();
 		goto error_alloc_poll;
 	}
 
-	if (__unlikely(!__io_poll_init(poll))) {
+	if (!__io_poll_init(poll)) {
 		errc = get_errc();
 		goto error_init_poll;
 	}
@@ -255,7 +251,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 {
 	assert(poll);
 
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -294,7 +290,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 	if (event) {
 		if (!watch) {
 			watch = io_poll_insert(poll, handle);
-			if (__unlikely(!watch)) {
+			if (!watch) {
 				errc = get_errc();
 				goto error_watch;
 			}
@@ -316,16 +312,13 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 			ev.events |= EPOLLOUT;
 		ev.data.ptr = watch->handle;
 
-		// clang-format off
-		if (__unlikely(epoll_ctl(poll->epfd, op, watch->handle->fd, &ev)
-				== -1)) {
-			// clang-format on
+		if (epoll_ctl(poll->epfd, op, watch->handle->fd, &ev) == -1) {
 			errc = get_errc();
 			goto error_epoll_ctl;
 		}
 #endif
 	} else {
-		if (__unlikely(!watch)) {
+		if (!watch) {
 			errc = errnum2c(ERRNUM_INVAL);
 			goto error_watch;
 		}
@@ -358,12 +351,12 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 {
 	assert(poll);
 
-	if (__unlikely(maxevents < 0)) {
+	if (maxevents < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(!maxevents || !events))
+	if (!maxevents || !events)
 		return 0;
 
 	int nevents = 0;
@@ -410,7 +403,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		.tv_usec = (timeout % 1000) * 1000 };
 	int result = select(0, &readfds, nwritefds ? &writefds : NULL,
 			&errorfds, timeout >= 0 ? &tv : NULL);
-	if (__unlikely(result == -1))
+	if (result == -1)
 		return -1;
 
 	// Check the read end of the self-pipe.
@@ -457,8 +450,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		errno = errsv;
 		nfds = epoll_wait(poll->epfd, ev, maxevents,
 				timeout >= 0 ? timeout : -1);
-	} while (__unlikely(nfds == -1 && errno == EINTR));
-	if (__unlikely(nfds == -1))
+	} while (nfds == -1 && errno == EINTR);
+	if (nfds == -1)
 		return -1;
 
 	io_poll_lock(poll);
@@ -470,7 +463,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		}
 
 		struct rbnode *node = rbtree_find(&poll->tree, ev[i].data.ptr);
-		if (__unlikely(!node))
+		if (!node)
 			continue;
 		struct io_watch *watch = structof(node, struct io_watch, node);
 
@@ -531,8 +524,8 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	do {
 		errno = errsv;
 		n = _poll(fds, nfds, timeout >= 0 ? timeout : -1);
-	} while (__unlikely(n == -1 && errno == EINTR));
-	if (__unlikely(n == -1))
+	} while (n == -1 && errno == EINTR);
+	if (n == -1)
 		return -1;
 	maxevents = MIN(n, maxevents);
 
@@ -558,7 +551,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 			continue;
 
 		struct rbnode *node = rbtree_find(&poll->tree, &fds[nfd].fd);
-		if (__unlikely(!node))
+		if (!node)
 			continue;
 		struct io_watch *watch = structof(node, struct io_watch, node);
 
@@ -629,7 +622,7 @@ io_poll_insert(io_poll_t *poll, struct io_handle *handle)
 	assert(handle);
 
 	struct io_watch *watch = malloc(sizeof(*watch));
-	if (__unlikely(!watch))
+	if (!watch)
 		return NULL;
 
 	watch->handle = io_handle_acquire(handle);

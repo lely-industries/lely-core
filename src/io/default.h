@@ -2,7 +2,7 @@
  * This is the internal header file of the default implementation of the I/O
  * device handle methods.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -66,7 +66,7 @@ default_flags(struct io_handle *handle, int flags)
 	return 0;
 #else
 	int arg = fcntl(handle->fd, F_GETFL, 0);
-	if (__unlikely(arg == -1))
+	if (arg == -1)
 		return -1;
 
 	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK))
@@ -87,7 +87,7 @@ default_read(struct io_handle *handle, void *buf, size_t nbytes)
 
 	OVERLAPPED overlapped = { 0 };
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
+	if (!overlapped.hEvent) {
 		dwErrCode = GetLastError();
 		goto error_CreateEvent;
 	}
@@ -108,29 +108,27 @@ retry:
 	switch (GetLastError()) {
 	case ERROR_IO_PENDING: break;
 	case ERROR_OPERATION_ABORTED:
-		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
+		if (ClearCommError(handle->fd, NULL, NULL))
 			goto retry;
 		// ... falls through ...
 	default: dwErrCode = GetLastError(); goto error_ReadFile;
 	}
 
-	// clang-format off
-	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
-			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
-		// clang-format on
+	if ((flags & IO_FLAG_NONBLOCK) && !CancelIoEx(handle->fd, &overlapped)
+			&& GetLastError() == ERROR_NOT_FOUND) {
 		dwErrCode = GetLastError();
 		goto error_CancelIoEx;
 	}
 
 	// clang-format off
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesRead, TRUE))) {
+	if (!GetOverlappedResult(handle->fd, &overlapped, &dwNumberOfBytesRead,
+			TRUE)) {
 		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
 
-	if (__unlikely(nbytes && !dwNumberOfBytesRead)) {
+	if (nbytes && !dwNumberOfBytesRead) {
 		if (!(flags & IO_FLAG_NONBLOCK))
 			goto retry;
 		dwErrCode = errnum2c(ERRNUM_AGAIN);
@@ -156,7 +154,7 @@ error_CreateEvent:
 	do {
 		errno = errsv;
 		result = read(handle->fd, buf, nbytes);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -171,7 +169,7 @@ default_write(struct io_handle *handle, const void *buf, size_t nbytes)
 
 	OVERLAPPED overlapped = { 0 };
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
+	if (!overlapped.hEvent) {
 		dwErrCode = GetLastError();
 		goto error_CreateEvent;
 	}
@@ -192,29 +190,27 @@ retry:
 	switch (GetLastError()) {
 	case ERROR_IO_PENDING: break;
 	case ERROR_OPERATION_ABORTED:
-		if (__likely(ClearCommError(handle->fd, NULL, NULL)))
+		if (ClearCommError(handle->fd, NULL, NULL))
 			goto retry;
 		// ... falls through ...
 	default: dwErrCode = GetLastError(); goto error_WriteFile;
 	}
 
-	// clang-format off
-	if ((flags & IO_FLAG_NONBLOCK) && __unlikely(!CancelIoEx(handle->fd,
-			&overlapped) && GetLastError() == ERROR_NOT_FOUND)) {
-		// clang-format on
+	if ((flags & IO_FLAG_NONBLOCK) && !CancelIoEx(handle->fd, &overlapped)
+			&& GetLastError() == ERROR_NOT_FOUND) {
 		dwErrCode = GetLastError();
 		goto error_CancelIoEx;
 	}
 
 	// clang-format off
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesWritten, TRUE))) {
+	if (!GetOverlappedResult(handle->fd, &overlapped,
+			&dwNumberOfBytesWritten, TRUE)) {
 		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
 	}
 
-	if (__unlikely(nbytes && !dwNumberOfBytesWritten)) {
+	if (nbytes && !dwNumberOfBytesWritten) {
 		if (!(flags & IO_FLAG_NONBLOCK))
 			goto retry;
 		dwErrCode = errnum2c(ERRNUM_AGAIN);
@@ -240,7 +236,7 @@ error_CreateEvent:
 	do {
 		errno = errsv;
 		result = write(handle->fd, buf, nbytes);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }

@@ -4,7 +4,7 @@
  *
  * @see src/handle.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,7 +31,7 @@
 io_handle_t
 io_handle_acquire(io_handle_t handle)
 {
-	if (__likely(handle != IO_HANDLE_ERROR))
+	if (handle != IO_HANDLE_ERROR)
 #ifndef LELY_NO_ATOMICS
 		atomic_fetch_add_explicit(
 				&handle->ref, 1, memory_order_relaxed);
@@ -46,7 +46,7 @@ io_handle_acquire(io_handle_t handle)
 void
 io_handle_release(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR))
+	if (handle == IO_HANDLE_ERROR)
 		return;
 
 #ifndef LELY_NO_ATOMICS
@@ -80,7 +80,7 @@ io_handle_alloc(const struct io_handle_vtab *vtab)
 	assert(vtab->size >= sizeof(struct io_handle));
 
 	struct io_handle *handle = malloc(vtab->size);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		set_errc(errno2c(errno));
 		return NULL;
 	}

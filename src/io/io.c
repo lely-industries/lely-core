@@ -4,7 +4,7 @@
  *
  * @see lely/io/io.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -40,7 +40,7 @@ lely_io_init(void)
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(2, 2);
 	WSADATA wsaData;
-	if (__unlikely(errc = WSAStartup(wVersionRequested, &wsaData)))
+	if ((errc = WSAStartup(wVersionRequested, &wsaData)))
 		goto error_WSAStartup;
 #endif
 
@@ -58,7 +58,7 @@ error_WSAStartup:
 void
 lely_io_fini(void)
 {
-	if (__unlikely(lely_io_ref <= 0)) {
+	if (lely_io_ref <= 0) {
 		lely_io_ref = 0;
 		return;
 	}
@@ -73,7 +73,7 @@ lely_io_fini(void)
 int
 io_close(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -86,7 +86,7 @@ io_close(io_handle_t handle)
 int
 io_get_type(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -98,7 +98,7 @@ io_get_type(io_handle_t handle)
 HANDLE
 io_get_fd(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return INVALID_HANDLE_VALUE;
 	}
@@ -109,7 +109,7 @@ io_get_fd(io_handle_t handle)
 int
 io_get_flags(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -123,7 +123,7 @@ io_get_flags(io_handle_t handle)
 int
 io_set_flags(io_handle_t handle, int flags)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -133,9 +133,9 @@ io_set_flags(io_handle_t handle, int flags)
 	int result = 0;
 	io_handle_lock(handle);
 	if (flags != handle->flags) {
-		if (__likely(handle->vtab->flags)) {
+		if (handle->vtab->flags) {
 			result = handle->vtab->flags(handle, flags);
-			if (__likely(!result))
+			if (!result)
 				handle->flags = flags;
 		} else {
 			set_errnum(ERRNUM_NXIO);
@@ -149,13 +149,13 @@ io_set_flags(io_handle_t handle, int flags)
 ssize_t
 io_read(io_handle_t handle, void *buf, size_t nbytes)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->read)) {
+	if (!handle->vtab->read) {
 		set_errnum(ERRNUM_NXIO);
 		return -1;
 	}
@@ -166,13 +166,13 @@ io_read(io_handle_t handle, void *buf, size_t nbytes)
 ssize_t
 io_write(io_handle_t handle, const void *buf, size_t nbytes)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->write)) {
+	if (!handle->vtab->write) {
 		set_errnum(ERRNUM_NXIO);
 		return -1;
 	}
@@ -183,13 +183,13 @@ io_write(io_handle_t handle, const void *buf, size_t nbytes)
 int
 io_flush(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->flush)) {
+	if (!handle->vtab->flush) {
 		set_errnum(ERRNUM_NXIO);
 		return -1;
 	}

@@ -4,7 +4,7 @@
  *
  * @see lely/io/file.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -80,7 +80,7 @@ io_open_file(const char *path, int flags)
 
 	int errc = 0;
 
-	if (__unlikely(!(flags & (IO_FILE_READ | IO_FILE_WRITE)))) {
+	if (!(flags & (IO_FILE_READ | IO_FILE_WRITE))) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -144,16 +144,16 @@ io_open_file(const char *path, int flags)
 	do {
 		errno = errsv;
 		fd = open(path, oflag, mode);
-	} while (__unlikely(fd == -1 && errno == EINTR));
+	} while (fd == -1 && errno == EINTR);
 #endif
 
-	if (__unlikely(fd == INVALID_HANDLE_VALUE)) {
+	if (fd == INVALID_HANDLE_VALUE) {
 		errc = get_errc();
 		goto error_open;
 	}
 
 	struct io_handle *handle = io_handle_alloc(&file_vtab);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		errc = get_errc();
 		goto error_alloc_handle;
 	}
@@ -180,13 +180,13 @@ error_param:
 io_off_t
 io_seek(io_handle_t handle, io_off_t offset, int whence)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->seek)) {
+	if (!handle->vtab->seek) {
 		set_errnum(ERRNUM_SPIPE);
 		return -1;
 	}
@@ -197,13 +197,13 @@ io_seek(io_handle_t handle, io_off_t offset, int whence)
 ssize_t
 io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->pread)) {
+	if (!handle->vtab->pread) {
 		set_errnum(ERRNUM_SPIPE);
 		return -1;
 	}
@@ -214,13 +214,13 @@ io_pread(io_handle_t handle, void *buf, size_t nbytes, io_off_t offset)
 ssize_t
 io_pwrite(io_handle_t handle, const void *buf, size_t nbytes, io_off_t offset)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->pwrite)) {
+	if (!handle->vtab->pwrite) {
 		set_errnum(ERRNUM_SPIPE);
 		return -1;
 	}
@@ -237,7 +237,7 @@ file_read(struct io_handle *handle, void *buf, size_t nbytes)
 
 #ifdef _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
-	if (__unlikely(current == -1))
+	if (current == -1)
 		return -1;
 	return _file_read(handle, buf, nbytes, current);
 #else
@@ -246,7 +246,7 @@ file_read(struct io_handle *handle, void *buf, size_t nbytes)
 	do {
 		errno = errsv;
 		result = read(handle->fd, buf, nbytes);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -264,7 +264,7 @@ file_write(struct io_handle *handle, const void *buf, size_t nbytes)
 		current = UINT64_MAX;
 	} else {
 		current = file_seek(handle, 0, IO_SEEK_CURRENT);
-		if (__unlikely(current == -1))
+		if (current == -1)
 			return -1;
 	}
 	return _file_write(handle, buf, nbytes, current);
@@ -274,7 +274,7 @@ file_write(struct io_handle *handle, const void *buf, size_t nbytes)
 	do {
 		errno = errsv;
 		result = write(handle->fd, buf, nbytes);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -292,7 +292,7 @@ file_flush(struct io_handle *handle)
 	do {
 		errno = errsv;
 		result = fsync(handle->fd);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -315,7 +315,7 @@ file_seek(struct io_handle *handle, io_off_t offset, int whence)
 	li.QuadPart = offset;
 	li.LowPart = SetFilePointer(
 			handle->fd, li.LowPart, &li.HighPart, dwMoveMethod);
-	if (__unlikely(li.LowPart == INVALID_SET_FILE_POINTER))
+	if (li.LowPart == INVALID_SET_FILE_POINTER)
 		return -1;
 	return li.QuadPart;
 #else
@@ -341,13 +341,13 @@ file_pread(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 
 #ifdef _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
-	if (__unlikely(current == -1))
+	if (current == -1)
 		return -1;
 	ssize_t result = _file_read(handle, buf, nbytes, offset);
-	if (__unlikely(result == -1))
+	if (result == -1)
 		return -1;
 	// pread() does not change the file pointer.
-	if (__unlikely(file_seek(handle, current, IO_SEEK_BEGIN) == -1))
+	if (file_seek(handle, current, IO_SEEK_BEGIN) == -1)
 		return -1;
 	return result;
 #else
@@ -356,7 +356,7 @@ file_pread(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 	do {
 		errno = errsv;
 		result = pread(handle->fd, buf, nbytes, offset);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -369,13 +369,13 @@ file_pwrite(struct io_handle *handle, const void *buf, size_t nbytes,
 
 #ifdef _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
-	if (__unlikely(current == -1))
+	if (current == -1)
 		return -1;
 	ssize_t result = _file_write(handle, buf, nbytes, offset);
-	if (__unlikely(result == -1))
+	if (result == -1)
 		return -1;
 	// pwrite() does not change the file pointer.
-	if (__unlikely(file_seek(handle, current, IO_SEEK_BEGIN) == -1))
+	if (file_seek(handle, current, IO_SEEK_BEGIN) == -1)
 		return -1;
 	return result;
 #else
@@ -384,7 +384,7 @@ file_pwrite(struct io_handle *handle, const void *buf, size_t nbytes,
 	do {
 		errno = errsv;
 		result = pwrite(handle->fd, buf, nbytes, offset);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -404,7 +404,7 @@ _file_read(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 	overlapped.Offset = li.LowPart;
 	overlapped.OffsetHigh = li.HighPart;
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
+	if (!overlapped.hEvent) {
 		dwErrCode = GetLastError();
 		goto error_CreateEvent;
 	}
@@ -417,14 +417,14 @@ _file_read(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 		// clang-format on
 		goto done;
 
-	if (__unlikely(GetLastError() != ERROR_IO_PENDING)) {
+	if (GetLastError() != ERROR_IO_PENDING) {
 		dwErrCode = GetLastError();
 		goto error_ReadFile;
 	}
 
 	// clang-format off
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesRead, TRUE))) {
+	if (!GetOverlappedResult(handle->fd, &overlapped, &dwNumberOfBytesRead,
+			TRUE)) {
 		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
@@ -457,7 +457,7 @@ _file_write(struct io_handle *handle, const void *buf, size_t nbytes,
 	overlapped.Offset = li.LowPart;
 	overlapped.OffsetHigh = li.HighPart;
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (__unlikely(!overlapped.hEvent)) {
+	if (!overlapped.hEvent) {
 		dwErrCode = GetLastError();
 		goto error_CreateEvent;
 	}
@@ -470,14 +470,14 @@ _file_write(struct io_handle *handle, const void *buf, size_t nbytes,
 		// clang-format on
 		goto done;
 
-	if (__unlikely(GetLastError() != ERROR_IO_PENDING)) {
+	if (GetLastError() != ERROR_IO_PENDING) {
 		dwErrCode = GetLastError();
 		goto error_WriteFile;
 	}
 
 	// clang-format off
-	if (__unlikely(!GetOverlappedResult(handle->fd, &overlapped,
-			&dwNumberOfBytesWritten, TRUE))) {
+	if (!GetOverlappedResult(handle->fd, &overlapped,
+			&dwNumberOfBytesWritten, TRUE)) {
 		// clang-format on
 		dwErrCode = GetLastError();
 		goto error_GetOverlappedResult;
