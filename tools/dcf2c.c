@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CANopen EDS/DCF to C conversion tool.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -111,12 +111,12 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if (__unlikely(optpos < 1 || !ifname)) {
+	if (optpos < 1 || !ifname) {
 		diag(DIAG_ERROR, 0, "no filename specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(optpos < 2 || !name)) {
+	if (optpos < 2 || !name) {
 		diag(DIAG_ERROR, 0, "no variable name specified");
 		goto error_arg;
 	}
@@ -137,12 +137,12 @@ main(int argc, char *argv[])
 	} else {
 		dev = co_dev_create_from_dcf_file(ifname);
 	}
-	if (__unlikely(!dev))
+	if (!dev)
 		goto errror_create_dev;
 
 	size_t n = snprintf_c99_sdev(NULL, 0, dev);
 	char *s = malloc(n + 1);
-	if (__unlikely(n && !s)) {
+	if (n && !s) {
 		diag(DIAG_ERROR, get_errc(), "unable to allocate string");
 		goto error_malloc_s;
 	}
@@ -151,7 +151,7 @@ main(int argc, char *argv[])
 	FILE *stream = stdout;
 	if (ofname) {
 		stream = fopen(ofname, "w");
-		if (__unlikely(!stream)) {
+		if (!stream) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to open %s for writing",
 					ofname);
