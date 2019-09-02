@@ -4,7 +4,7 @@
  *
  * @see lely/co/lss.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -599,7 +599,7 @@ void *
 __co_lss_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_lss));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -629,7 +629,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 #endif
 
 	lss->recv = can_recv_create();
-	if (__unlikely(!lss->recv)) {
+	if (!lss->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
@@ -639,7 +639,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->timeout = LELY_CO_LSS_TIMEOUT;
 
 	lss->timer = can_timer_create();
-	if (__unlikely(!lss->timer)) {
+	if (!lss->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -710,12 +710,12 @@ co_lss_create(co_nmt_t *nmt)
 	int errc = 0;
 
 	co_lss_t *lss = __co_lss_alloc();
-	if (__unlikely(!lss)) {
+	if (!lss) {
 		errc = get_errc();
 		goto error_alloc_lss;
 	}
 
-	if (__unlikely(!__co_lss_init(lss, nmt))) {
+	if (!__co_lss_init(lss, nmt)) {
 		errc = get_errc();
 		goto error_init_lss;
 	}
@@ -846,12 +846,12 @@ co_lss_abort_req(co_lss_t *lss)
 int
 co_lss_switch_req(co_lss_t *lss, co_unsigned8_t mode)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
-	if (__unlikely(mode > 0x01)) {
+	if (mode > 0x01) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -869,7 +869,7 @@ int
 co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -877,7 +877,7 @@ co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 	trace("LSS: switch state selective");
 
 	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
-	if (__unlikely(co_lss_send_switch_sel_req(lss, id) == -1))
+	if (co_lss_send_switch_sel_req(lss, id) == -1)
 		return -1;
 
 	// Wait for response.
@@ -893,12 +893,12 @@ int
 co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 		void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
-	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
+	if (!id || (id > CO_NUM_NODES && id != 0xff)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -909,7 +909,7 @@ co_lss_set_id_req(co_lss_t *lss, co_unsigned8_t id, co_lss_err_ind_t *ind,
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x11);
 	req.data[1] = id;
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -925,7 +925,7 @@ int
 co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 		void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -950,7 +950,7 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 
 	trace("LSS: configure bit timing parameters");
 
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -965,15 +965,12 @@ co_lss_set_rate_req(co_lss_t *lss, co_unsigned16_t rate, co_lss_err_ind_t *ind,
 int
 co_lss_switch_rate_req(co_lss_t *lss, int delay)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
-	// clang-format off
-	if (__unlikely(delay < CO_UNSIGNED16_MIN
-			|| delay > CO_UNSIGNED16_MAX)) {
-		// clang-format on
+	if (delay < CO_UNSIGNED16_MIN || delay > CO_UNSIGNED16_MAX) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -991,7 +988,7 @@ co_lss_switch_rate_req(co_lss_t *lss, int delay)
 int
 co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1001,7 +998,7 @@ co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 	// Store configuration (see Fig. 36 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x17);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1016,7 +1013,7 @@ co_lss_store_req(co_lss_t *lss, co_lss_err_ind_t *ind, void *data)
 int
 co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1026,7 +1023,7 @@ co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	// Inquire identity vendor-ID (see Fig. 37 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5a);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1041,7 +1038,7 @@ co_lss_get_vendor_id_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 int
 co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1051,7 +1048,7 @@ co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	// Inquire identity product-code (see Fig. 38 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5b);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1066,7 +1063,7 @@ co_lss_get_product_code_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 int
 co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1077,7 +1074,7 @@ co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	// 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5c);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1092,7 +1089,7 @@ co_lss_get_revision_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 int
 co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1103,7 +1100,7 @@ co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 	// 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5d);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1118,7 +1115,7 @@ co_lss_get_serial_nr_req(co_lss_t *lss, co_lss_lssid_ind_t *ind, void *data)
 int
 co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1128,7 +1125,7 @@ co_lss_get_id_req(co_lss_t *lss, co_lss_nid_ind_t *ind, void *data)
 	// Inquire node-ID (see Fig. 41 in CiA 305 version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x5e);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response.
@@ -1144,7 +1141,7 @@ int
 co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1152,7 +1149,7 @@ co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 	trace("LSS: identify remote slave");
 
 	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (__unlikely(co_lss_send_id_slave_req(lss, lo, hi) == -1))
+	if (co_lss_send_id_slave_req(lss, lo, hi) == -1)
 		return -1;
 
 	// Wait for response (see Fig. 43 in CiA 305 version 3.0.0).
@@ -1167,7 +1164,7 @@ co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 int
 co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1178,7 +1175,7 @@ co_lss_id_non_cfg_slave_req(co_lss_t *lss, co_lss_cs_ind_t *ind, void *data)
 	// version 3.0.0).
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x4c);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response (see Fig. 45 in CiA 305 version 3.0.0).
@@ -1197,7 +1194,7 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 	assert(lo);
 	assert(hi);
 
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1210,7 +1207,7 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 	lss->hi.n = 4;
 
 	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (__unlikely(co_lss_send_id_slave_req(lss, &lss->lo, &lss->hi) == -1))
+	if (co_lss_send_id_slave_req(lss, &lss->lo, &lss->hi) == -1)
 		return -1;
 
 	lss->id = (struct co_id)CO_ID_INIT;
@@ -1228,7 +1225,7 @@ int
 co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 		const struct co_id *mask, co_lss_scan_ind_t *ind, void *data)
 {
-	if (__unlikely(!co_lss_is_master(lss) || !co_lss_is_idle(lss))) {
+	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1257,7 +1254,7 @@ co_lss_fastscan_req(co_lss_t *lss, const struct co_id *id,
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x51);
 	req.data[5] = lss->bitchk;
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	// Wait for response (see Fig. 43 in CiA 305 version 3.0.0).
@@ -1370,14 +1367,14 @@ co_lss_wait_slave_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	assert(lss);
 	assert(msg);
 
-	if (__unlikely(!msg->len))
+	if (!msg->len)
 		return NULL;
 
 	uint8_t cs = msg->data[0];
 	switch (cs) {
 	// Switch state global (see Fig. 31 in CiA 305 version 3.0.0).
 	case 0x04:
-		if (__unlikely(msg->len < 2))
+		if (msg->len < 2)
 			return NULL;
 		switch (msg->data[1]) {
 		case 0x00:
@@ -1432,14 +1429,14 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	co_obj_t *obj_1018 = co_dev_find_obj(lss->dev, 0x1018);
 	struct can_msg req;
 
-	if (__unlikely(!msg->len))
+	if (!msg->len)
 		return NULL;
 
 	co_unsigned8_t cs = msg->data[0];
 	switch (cs) {
 	// Switch state global (see Fig. 31 in CiA 305 version 3.0.0).
 	case 0x04:
-		if (__unlikely(msg->len < 2))
+		if (msg->len < 2)
 			return NULL;
 		switch (msg->data[1]) {
 		case 0x00:
@@ -1474,7 +1471,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		// Configure the pending baudrate.
 		trace("LSS: configuring bit timing parameters");
 		co_lss_init_req(lss, &req, cs);
-		if (__unlikely(!lss->rate_ind || msg->data[1])) {
+		if (!lss->rate_ind || msg->data[1]) {
 			req.data[1] = 1;
 		} else {
 			unsigned int baud = co_dev_get_baud(lss->dev);
@@ -1538,10 +1535,9 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 		if (lss->store_ind) {
 			// Store the pending node-ID and baudrate.
 			// clang-format off
-			if (__unlikely(lss->store_ind(lss,
-					co_nmt_get_id(lss->nmt),
+			if (lss->store_ind(lss, co_nmt_get_id(lss->nmt),
 					co_dev_get_rate(lss->dev),
-					lss->store_data) == -1)) {
+					lss->store_data) == -1) {
 				// clang-format on
 				// Discard the error code.
 				set_errc(errc);
@@ -1796,7 +1792,7 @@ co_lss_slowscan_scan_on_enter(co_lss_t *lss)
 	}
 
 	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (__unlikely(co_lss_send_id_slave_req(lss, &lss->lo, id) == -1)) {
+	if (co_lss_send_id_slave_req(lss, &lss->lo, id) == -1) {
 		// Abort if sending the CAN frame failed.
 		lss->cs = 0;
 		return co_lss_slowscan_fini_state;
@@ -1886,7 +1882,7 @@ co_lss_slowscan_switch_on_enter(co_lss_t *lss)
 	assert(lss);
 
 	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
-	if (__unlikely(co_lss_send_switch_sel_req(lss, &lss->id) == -1)) {
+	if (co_lss_send_switch_sel_req(lss, &lss->id) == -1) {
 		// Abort if sending the CAN frame failed.
 		lss->cs = 0;
 		return co_lss_slowscan_fini_state;
@@ -1992,8 +1988,8 @@ co_lss_fastscan_scan_on_enter(co_lss_t *lss)
 
 	// LSS Fastscan (see Fig. 46 in CiA 305 version 3.0.0).
 	// clang-format off
-	if (__unlikely(co_lss_send_fastscan_req(lss, pid[lss->lsssub],
-			lss->bitchk, lss->lsssub, lssnext) == -1)) {
+	if (co_lss_send_fastscan_req(lss, pid[lss->lsssub], lss->bitchk,
+			lss->lsssub, lssnext) == -1) {
 		// Abort if sending the CAN frame failed.
 		// clang-format on
 		lss->cs = 0;
@@ -2039,7 +2035,7 @@ co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout)
 
 	if (!lss->bitchk && (pmask[lss->lsssub] & 1)) {
 		// Abort if we timeout after sending the complete LSS number.
-		if (__unlikely(timeout)) {
+		if (timeout) {
 			lss->cs = 0;
 			return co_lss_fastscan_fini_state;
 		}
@@ -2242,7 +2238,7 @@ co_lss_fastscan(co_lss_t *lss, co_unsigned32_t id, co_unsigned8_t bitchk,
 	struct can_msg req;
 	co_lss_state_t *next = NULL;
 
-	if (__unlikely(bitchk > 31 && bitchk != 0x80))
+	if (bitchk > 31 && bitchk != 0x80)
 		return NULL;
 
 	if (bitchk == 0x80) {
@@ -2293,19 +2289,19 @@ co_lss_send_switch_sel_req(const co_lss_t *lss, const struct co_id *id)
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x40);
 	stle_u32(req.data + 1, id->vendor_id);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x41);
 	stle_u32(req.data + 1, id->product_code);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x42);
 	stle_u32(req.data + 1, id->revision);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x43);
 	stle_u32(req.data + 1, id->serial_nr);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	return 0;
@@ -2318,12 +2314,10 @@ co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
 	assert(lo);
 	assert(hi);
 
-	// clang-format off
-	if (__unlikely(lo->vendor_id != hi->vendor_id
-			|| lo->product_code != hi->product_code)
+	if (lo->vendor_id != hi->vendor_id
+			|| lo->product_code != hi->product_code
 			|| lo->revision > hi->revision
 			|| lo->serial_nr > hi->serial_nr) {
-		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2332,27 +2326,27 @@ co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
 	struct can_msg req;
 	co_lss_init_req(lss, &req, 0x46);
 	stle_u32(req.data + 1, lo->vendor_id);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x47);
 	stle_u32(req.data + 1, lo->product_code);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x48);
 	stle_u32(req.data + 1, lo->revision);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x49);
 	stle_u32(req.data + 1, hi->revision);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x4a);
 	stle_u32(req.data + 1, lo->serial_nr);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 	co_lss_init_req(lss, &req, 0x4b);
 	stle_u32(req.data + 1, hi->serial_nr);
-	if (__unlikely(can_net_send(lss->net, &req) == -1))
+	if (can_net_send(lss->net, &req) == -1)
 		return -1;
 
 	return 0;

@@ -4,7 +4,7 @@
  *
  * @see src/nmt_srv.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -229,7 +229,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_rpdo_t **rpdos =
 				realloc(srv->rpdos, (i + 1) * sizeof(*rpdos));
-		if (__unlikely(!rpdos)) {
+		if (!rpdos) {
 			set_errc(errno2c(errno));
 			goto error;
 		}
@@ -238,7 +238,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		for (size_t j = srv->nrpdo; j < i; j++)
 			srv->rpdos[j] = NULL;
 		srv->rpdos[i] = co_rpdo_create(net, dev, i + 1);
-		if (__unlikely(!srv->rpdos[i]))
+		if (!srv->rpdos[i])
 			goto error;
 		co_rpdo_set_err(srv->rpdos[i], &co_nmt_srv_rpdo_err, srv->nmt);
 
@@ -256,7 +256,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_tpdo_t **tpdos =
 				realloc(srv->tpdos, (i + 1) * sizeof(*tpdos));
-		if (__unlikely(!tpdos)) {
+		if (!tpdos) {
 			set_errc(errno2c(errno));
 			goto error;
 		}
@@ -265,7 +265,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		for (size_t j = srv->ntpdo; j < i; j++)
 			srv->tpdos[j] = NULL;
 		srv->tpdos[i] = co_tpdo_create(net, dev, i + 1);
-		if (__unlikely(!srv->tpdos[i]))
+		if (!srv->tpdos[i])
 			goto error;
 
 		srv->ntpdo = i + 1;
@@ -342,7 +342,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_ssdo_t **ssdos =
 				realloc(srv->ssdos, (i + 1) * sizeof(*ssdos));
-		if (__unlikely(!ssdos)) {
+		if (!ssdos) {
 			set_errc(errno2c(errno));
 			goto error;
 		}
@@ -351,7 +351,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		for (size_t j = srv->nssdo; j < i; j++)
 			srv->ssdos[j] = NULL;
 		srv->ssdos[i] = co_ssdo_create(net, dev, i + 1);
-		if (__unlikely(!srv->ssdos[i]))
+		if (!srv->ssdos[i])
 			goto error;
 
 		srv->nssdo = i + 1;
@@ -366,7 +366,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		co_csdo_t **csdos =
 				realloc(srv->csdos, (i + 1) * sizeof(*csdos));
-		if (__unlikely(!csdos)) {
+		if (!csdos) {
 			set_errc(errno2c(errno));
 			goto error;
 		}
@@ -375,7 +375,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		for (size_t j = srv->ncsdo; j < i; j++)
 			srv->csdos[j] = NULL;
 		srv->csdos[i] = co_csdo_create(net, dev, i + 1);
-		if (__unlikely(!srv->csdos[i]))
+		if (!srv->csdos[i])
 			goto error;
 
 		srv->ncsdo = i + 1;
@@ -429,7 +429,7 @@ co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		return;
 
 	srv->sync = co_sync_create(net, dev);
-	if (__unlikely(!srv->sync)) {
+	if (!srv->sync) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize SYNC service");
 		return;
@@ -489,7 +489,7 @@ co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		return;
 
 	srv->time = co_time_create(net, dev);
-	if (__unlikely(!srv->time))
+	if (!srv->time)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize TIME service");
 }
@@ -520,11 +520,11 @@ co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 	srv->set |= CO_NMT_SRV_EMCY;
 
 	co_obj_t *obj_1001 = co_dev_find_obj(dev, 0x1001);
-	if (__unlikely(!obj_1001))
+	if (!obj_1001)
 		return;
 
 	srv->emcy = co_emcy_create(net, dev);
-	if (__unlikely(!srv->emcy))
+	if (!srv->emcy)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize EMCY service");
 }
@@ -558,7 +558,7 @@ co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt)
 	srv->set |= CO_NMT_SRV_LSS;
 
 	srv->lss = co_lss_create(nmt);
-	if (__unlikely(!srv->lss))
+	if (!srv->lss)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize LSS service");
 }

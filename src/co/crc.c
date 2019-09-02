@@ -4,7 +4,7 @@
  *
  * @see lely/co/crc.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -79,7 +79,7 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 	};
 	// clang-format on
 
-	if (__likely(ptr && n)) {
+	if (ptr && n) {
 		const uint8_t *bp = ptr;
 		while (n--)
 			crc = tab[*bp++ ^ (crc >> 8)] ^ (crc << 8);

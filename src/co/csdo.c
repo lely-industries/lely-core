@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, src/sdo.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -608,18 +608,18 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_unsigned32_t ac = 0;
 
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		ac = CO_SDO_AC_NO_OBJ;
 		goto done;
 	}
 
 	co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto done;
 	}
 
-	if (__unlikely(co_sdo_req_up(&req, ptr, n, &ac) == -1))
+	if (co_sdo_req_up(&req, ptr, n, &ac) == -1)
 		goto done;
 
 	ac = co_sub_dn_ind(sub, &req);
@@ -646,18 +646,18 @@ co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_unsigned32_t ac = 0;
 
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		ac = CO_SDO_AC_NO_OBJ;
 		goto done;
 	}
 
 	co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto done;
 	}
 
-	if (__unlikely(co_sdo_req_up_val(&req, type, val, &ac) == -1))
+	if (co_sdo_req_up_val(&req, type, val, &ac) == -1)
 		goto done;
 
 	ac = co_sub_dn_ind(sub, &req);
@@ -682,20 +682,20 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_unsigned32_t ac = 0;
 
 	const co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		ac = CO_SDO_AC_NO_OBJ;
 		goto done;
 	}
 
 	const co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto done;
 	}
 
 	// If the object is an array, check whether the element exists.
 	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY
-			&& __unlikely(subidx > co_obj_get_val_u8(obj, 0))) {
+			&& subidx > co_obj_get_val_u8(obj, 0)) {
 		ac = CO_SDO_AC_NO_DATA;
 		goto done;
 	}
@@ -728,7 +728,7 @@ void *
 __co_csdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_csdo));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -748,7 +748,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (__unlikely(!num || num > (dev ? 128 : CO_NUM_NODES))) {
+	if (!num || num > (dev ? 128 : CO_NUM_NODES)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -756,7 +756,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	// Find the SDO client parameter in the object dictionary.
 	co_obj_t *obj_1280 =
 			dev ? co_dev_find_obj(dev, 0x1280 + num - 1) : NULL;
-	if (__unlikely(dev && !obj_1280)) {
+	if (dev && !obj_1280) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -779,7 +779,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 
 	sdo->recv = can_recv_create();
-	if (__unlikely(!sdo->recv)) {
+	if (!sdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
@@ -788,7 +788,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->timeout = 0;
 
 	sdo->timer = can_timer_create();
-	if (__unlikely(!sdo->timer)) {
+	if (!sdo->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -824,7 +824,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	if (obj_1280)
 		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
 
-	if (__unlikely(co_csdo_update(sdo) == -1)) {
+	if (co_csdo_update(sdo) == -1) {
 		errc = get_errc();
 		goto error_update;
 	}
@@ -871,12 +871,12 @@ co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	int errc = 0;
 
 	co_csdo_t *sdo = __co_csdo_alloc();
-	if (__unlikely(!sdo)) {
+	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
 	}
 
-	if (__unlikely(!__co_csdo_init(sdo, net, dev, num))) {
+	if (!__co_csdo_init(sdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_sdo;
 	}
@@ -1013,10 +1013,7 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	// clang-format off
-	if (__unlikely(co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data)
-			== -1))
-		// clang-format on
+	if (co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate download", idx, subidx);
@@ -1041,7 +1038,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	// Obtain the size of the serialized value (which may be 0 for arrays).
 	size_t n = co_val_write(type, val, NULL, NULL);
-	if (__unlikely(!n && co_val_sizeof(type, val)))
+	if (!n && co_val_sizeof(type, val))
 		return -1;
 
 	if (co_type_is_array(type) || n > 8) {
@@ -1049,12 +1046,12 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int errc = get_errc();
 
 		uint8_t *buf = n ? malloc(n) : NULL;
-		if (__unlikely(n && !buf)) {
+		if (n && !buf) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;
 		}
 
-		if (__unlikely(co_val_write(type, val, buf, buf + n) != n)) {
+		if (co_val_write(type, val, buf, buf + n) != n) {
 			errc = get_errc();
 			goto error_write_val;
 		}
@@ -1070,7 +1067,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		// Fast path for values small enough to be allocated on the
 		// heap.
 		uint8_t buf[8];
-		if (__unlikely(co_val_write(type, val, buf, buf + n) != n))
+		if (co_val_write(type, val, buf, buf + n) != n)
 			return -1;
 		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
 	}
@@ -1082,7 +1079,7 @@ co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	if (__unlikely(co_csdo_up_ind(sdo, idx, subidx, con, data) == -1))
+	if (co_csdo_up_ind(sdo, idx, subidx, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate upload", idx, subidx);
@@ -1101,10 +1098,7 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	// clang-format off
-	if (__unlikely(co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data)
-			== -1))
-		// clang-format on
+	if (co_csdo_dn_ind(sdo, idx, subidx, ptr, n, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate block download", idx, subidx);
@@ -1123,7 +1117,7 @@ co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	if (__unlikely(co_csdo_up_ind(sdo, idx, subidx, con, data) == -1))
+	if (co_csdo_up_ind(sdo, idx, subidx, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate block upload", idx, subidx);
@@ -1179,7 +1173,7 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
@@ -1197,16 +1191,14 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint32_t canid = cobid & CAN_MASK_EID;
 		uint32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (__unlikely(valid && valid_old && canid != canid_old)) {
+		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		// clang-format off
-		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-			// clang-format on
+		if (!(cobid & CO_SDO_COBID_FRAME)
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -1227,16 +1219,14 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint32_t canid = cobid & CAN_MASK_EID;
 		uint32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (__unlikely(valid && valid_old && canid != canid_old)) {
+		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		// clang-format off
-		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-			// clang-format on
+		if (!(cobid & CO_SDO_COBID_FRAME)
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -1276,12 +1266,12 @@ co_csdo_recv(const struct can_msg *msg, void *data)
 	assert(sdo);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
@@ -1364,7 +1354,7 @@ co_csdo_wait_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1432,7 +1422,7 @@ co_csdo_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1447,11 +1437,11 @@ co_csdo_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the object index and sub-index.
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 	co_unsigned16_t idx = ldle_u16(msg->data + 1);
 	co_unsigned8_t subidx = msg->data[3];
-	if (__unlikely(idx != sdo->idx || subidx != sdo->subidx))
+	if (idx != sdo->idx || subidx != sdo->subidx)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 
 	return co_csdo_dn_seg_state;
@@ -1496,7 +1486,7 @@ co_csdo_dn_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1511,7 +1501,7 @@ co_csdo_dn_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the value of the toggle bit.
-	if (__unlikely((cs & CO_SDO_SEG_TOGGLE) == sdo->toggle))
+	if ((cs & CO_SDO_SEG_TOGGLE) == sdo->toggle)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_TOGGLE);
 
 	return co_csdo_dn_seg_state;
@@ -1537,7 +1527,7 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1552,11 +1542,11 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the object index and sub-index.
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 	co_unsigned16_t idx = ldle_u16(msg->data + 1);
 	co_unsigned8_t subidx = msg->data[3];
-	if (__unlikely(idx != sdo->idx || subidx != sdo->subidx))
+	if (idx != sdo->idx || subidx != sdo->subidx)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 
 	// Obtain the size from the command specifier.
@@ -1568,13 +1558,13 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		else
 			sdo->size = msg->len - 4;
 	} else if (cs & CO_SDO_INI_SIZE_IND) {
-		if (__unlikely(msg->len < 8))
+		if (msg->len < 8)
 			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		sdo->size = ldle_u32(msg->data + 4);
 	}
 
 	// Allocate the buffer.
-	if (__unlikely(sdo->size && !membuf_reserve(&sdo->buf, sdo->size)))
+	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	if (exp) {
@@ -1614,7 +1604,7 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1629,17 +1619,17 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the value of the toggle bit.
-	if (__unlikely((cs & CO_SDO_SEG_TOGGLE) == sdo->toggle))
+	if ((cs & CO_SDO_SEG_TOGGLE) == sdo->toggle)
 		return co_csdo_up_seg_state;
 
 	// Obtain the size of the segment.
 	size_t n = CO_SDO_SEG_SIZE_GET(cs);
-	if (__unlikely(msg->len < 1 + n))
+	if (msg->len < 1 + n)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
 	// Reserve room in the buffer, if necessary.
-	if (__unlikely(n && !membuf_reserve(&sdo->buf, n)))
+	if (n && !membuf_reserve(&sdo->buf, n))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	// Copy the data to the buffer.
@@ -1651,10 +1641,7 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
 				membuf_size(&sdo->buf), sdo->up_ind_data);
 	if (last) {
-		// clang-format off
-		if (__unlikely(sdo->size
-				&& membuf_size(&sdo->buf) != sdo->size))
-			// clang-format on
+		if (sdo->size && membuf_size(&sdo->buf) != sdo->size)
 			return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
@@ -1685,7 +1672,7 @@ co_csdo_blk_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1700,25 +1687,25 @@ co_csdo_blk_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the server subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_INI_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_INI_BLK)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check if the server supports generating a CRC.
 	sdo->crc = !!(cs & CO_SDO_BLK_CRC);
 
 	// Check the object index and sub-index.
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 	co_unsigned16_t idx = ldle_u16(msg->data + 1);
 	co_unsigned8_t subidx = msg->data[3];
-	if (__unlikely(idx != sdo->idx || subidx != sdo->subidx))
+	if (idx != sdo->idx || subidx != sdo->subidx)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 
 	// Load the number of segments per block.
-	if (__unlikely(msg->len < 5))
+	if (msg->len < 5)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[4];
-	if (__unlikely(!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO))
+	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	return co_csdo_blk_dn_sub_state;
@@ -1768,7 +1755,7 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1783,10 +1770,10 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the server subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_BLK_RES))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_BLK_RES)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
 	uint8_t ackseq = msg->data[1];
 	if (ackseq < sdo->blksize) {
@@ -1800,10 +1787,10 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Read the number of segments in the next block.
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[2];
-	if (__unlikely(!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO))
+	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	return co_csdo_blk_dn_sub_state;
@@ -1829,7 +1816,7 @@ co_csdo_blk_dn_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1844,7 +1831,7 @@ co_csdo_blk_dn_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the server subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	return co_csdo_abort_ind(sdo, 0);
@@ -1870,7 +1857,7 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1889,30 +1876,30 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the server subcommand.
-	if (__unlikely((cs & 0x01) != CO_SDO_SC_INI_BLK))
+	if ((cs & 0x01) != CO_SDO_SC_INI_BLK)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check if the server supports generating a CRC.
 	sdo->crc = !!(cs & CO_SDO_BLK_CRC);
 
 	// Check the object index and sub-index.
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 	co_unsigned16_t idx = ldle_u16(msg->data + 1);
 	co_unsigned8_t subidx = msg->data[3];
-	if (__unlikely(idx != sdo->idx || subidx != sdo->subidx))
+	if (idx != sdo->idx || subidx != sdo->subidx)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 
 	// Obtain the data set size.
 	sdo->size = 0;
 	if (cs & CO_SDO_BLK_SIZE_IND) {
-		if (__unlikely(msg->len < 8))
+		if (msg->len < 8)
 			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		sdo->size = ldle_u32(msg->data + 4);
 	}
 
 	// Allocate the buffer.
-	if (__unlikely(sdo->size && !membuf_reserve(&sdo->buf, sdo->size)))
+	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	sdo->ackseq = 0;
@@ -1943,11 +1930,11 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
-	if (__unlikely(cs == CO_SDO_CS_ABORT)) {
+	if (cs == CO_SDO_CS_ABORT) {
 		co_unsigned32_t ac = msg->len < 8 ? 0 : ldle_u32(msg->data + 4);
 		return co_csdo_abort_ind(sdo, ac ? ac : CO_SDO_AC_ERROR);
 	}
@@ -1961,7 +1948,7 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		sdo->ackseq++;
 
 		// Reserve room in the buffer, if necessary.
-		if (__unlikely(!membuf_reserve(&sdo->buf, 7)))
+		if (!membuf_reserve(&sdo->buf, 7))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 		// Copy the data to the buffer.
@@ -2000,7 +1987,7 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -2015,20 +2002,20 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the server subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Discard the bytes in the last segment that did not contain data.
 	sdo->buf.cur -= 7 - CO_SDO_BLK_SIZE_GET(cs);
 
 	// Check the total length.
-	if (__unlikely(sdo->size && membuf_size(&sdo->buf) != sdo->size))
+	if (sdo->size && membuf_size(&sdo->buf) != sdo->size)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
 
 	// Check the CRC.
 	if (sdo->crc) {
 		uint16_t crc = ldle_u16(msg->data + 1);
-		if (__unlikely(crc != co_crc(0, sdo->buf.begin, sdo->size)))
+		if (crc != co_crc(0, sdo->buf.begin, sdo->size))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
@@ -2061,13 +2048,13 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	// Check whether the SDO exists and is valid.
 	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
 	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
-	if (__unlikely(!valid_req || !valid_res)) {
+	if (!valid_req || !valid_res) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
 	// Check whether we are in the waiting state.
-	if (__unlikely(!co_csdo_is_idle(sdo))) {
+	if (!co_csdo_is_idle(sdo)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2084,7 +2071,7 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	// Allocate the buffer.
 	membuf_clear(&sdo->buf);
-	if (__unlikely(sdo->size && !membuf_reserve(&sdo->buf, sdo->size)))
+	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
 		return -1;
 
 	// Copy the bytes to the buffer.
@@ -2109,13 +2096,13 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	// Check whether the SDO exists and is valid.
 	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
 	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
-	if (__unlikely(!valid_req || !valid_res)) {
+	if (!valid_req || !valid_res) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
 	// Check whether we are in the waiting state.
-	if (__unlikely(!co_csdo_is_idle(sdo))) {
+	if (!co_csdo_is_idle(sdo)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}

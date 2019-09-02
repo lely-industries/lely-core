@@ -4,7 +4,7 @@
  *
  * @see lely/co/time.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -146,7 +146,7 @@ void *
 __co_time_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_time));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -171,7 +171,7 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 
 	// Retrieve the TIME COB-ID.
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
-	if (__unlikely(!obj_1012)) {
+	if (!obj_1012) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_obj_1012;
 	}
@@ -190,7 +190,7 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	// Set the download indication function for the TIME COB-ID object.
 	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
 
-	if (__unlikely(co_time_update(time) == -1)) {
+	if (co_time_update(time) == -1) {
 		errc = get_errc();
 		goto error_update;
 	}
@@ -227,12 +227,12 @@ co_time_create(can_net_t *net, co_dev_t *dev)
 	int errc = 0;
 
 	co_time_t *time = __co_time_alloc();
-	if (__unlikely(!time)) {
+	if (!time) {
 		errc = get_errc();
 		goto error_alloc_time;
 	}
 
-	if (__unlikely(!__co_time_init(time, net, dev))) {
+	if (!__co_time_init(time, net, dev)) {
 		errc = get_errc();
 		goto error_init_time;
 	}
@@ -298,7 +298,7 @@ co_time_start(co_time_t *time, const struct timespec *start,
 {
 	assert(time);
 
-	if (__likely(time->timer))
+	if (time->timer)
 		can_timer_start(time->timer, time->net, start, interval);
 }
 
@@ -307,7 +307,7 @@ co_time_stop(co_time_t *time)
 {
 	assert(time);
 
-	if (__likely(time->timer))
+	if (time->timer)
 		can_timer_stop(time->timer);
 }
 
@@ -319,7 +319,7 @@ co_time_update(co_time_t *time)
 	if (time->cobid & CO_TIME_COBID_CONSUMER) {
 		if (!time->recv) {
 			time->recv = can_recv_create();
-			if (__unlikely(!time->recv))
+			if (!time->recv)
 				return -1;
 			can_recv_set_func(time->recv, &co_time_recv, time);
 		}
@@ -341,7 +341,7 @@ co_time_update(co_time_t *time)
 	if (time->cobid & CO_TIME_COBID_PRODUCER) {
 		if (!time->timer) {
 			time->timer = can_timer_create();
-			if (__unlikely(!time->timer))
+			if (!time->timer)
 				return -1;
 			can_timer_set_func(time->timer, &co_time_timer, time);
 		}
@@ -366,10 +366,10 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -394,10 +394,8 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	// clang-format off
-	if (__unlikely(!(cobid & CO_TIME_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-		// clang-format on
+	if (!(cobid & CO_TIME_COBID_FRAME)
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -423,16 +421,16 @@ co_time_recv(const struct can_msg *msg, void *data)
 	assert(time);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
-	if (__unlikely(msg->len < 6))
+	if (msg->len < 6)
 		return 0;
 
 	co_time_of_day_t tod;

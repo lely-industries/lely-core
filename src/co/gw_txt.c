@@ -297,7 +297,7 @@ void *
 __co_gw_txt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw_txt));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -337,12 +337,12 @@ co_gw_txt_create(void)
 	int errc = 0;
 
 	co_gw_txt_t *gw = __co_gw_txt_alloc();
-	if (__unlikely(!gw)) {
+	if (!gw) {
 		errc = get_errc();
 		goto error_alloc_gw;
 	}
 
-	if (__unlikely(!__co_gw_txt_init(gw))) {
+	if (!__co_gw_txt_init(gw)) {
 		errc = get_errc();
 		goto error_init_gw;
 	}
@@ -388,7 +388,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 {
 	assert(srv);
 
-	if (__unlikely(srv->size < sizeof(*srv))) {
+	if (srv->size < sizeof(*srv)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -431,7 +431,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 	case CO_GW_SRV_LSS_ID_NON_CFG_SLAVE:
 	case CO_GW_SRV__LSS_SLOWSCAN:
 	case CO_GW_SRV__LSS_FASTSCAN:
-		if (__unlikely(srv->size < sizeof(struct co_gw_con))) {
+		if (srv->size < sizeof(struct co_gw_con)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -439,27 +439,27 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		co_unsigned32_t seq = (uintptr_t)con->data;
 		return co_gw_txt_recv_con(gw, seq, con);
 	case CO_GW_SRV_RPDO:
-		if (__unlikely(srv->size < CO_GW_IND_RPDO_SIZE)) {
+		if (srv->size < CO_GW_IND_RPDO_SIZE) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_rpdo(
 				gw, (const struct co_gw_ind_rpdo *)srv);
 	case CO_GW_SRV_EC:
-		if (__unlikely(srv->size < sizeof(struct co_gw_ind_ec))) {
+		if (srv->size < sizeof(struct co_gw_ind_ec)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_ec(gw, (const struct co_gw_ind_ec *)srv);
 	case CO_GW_SRV_EMCY:
-		if (__unlikely(srv->size < sizeof(struct co_gw_ind_emcy))) {
+		if (srv->size < sizeof(struct co_gw_ind_emcy)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_emcy(
 				gw, (const struct co_gw_ind_emcy *)srv);
 	case CO_GW_SRV_SDO:
-		if (__unlikely(srv->size < sizeof(struct co_gw_ind_sdo))) {
+		if (srv->size < sizeof(struct co_gw_ind_sdo)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -470,7 +470,7 @@ co_gw_txt_recv(co_gw_txt_t *gw, const struct co_gw_srv *srv)
 		// Ignore synchronization and time stamp events.
 		return 0;
 	case CO_GW_SRV__BOOT:
-		if (__unlikely(srv->size < sizeof(struct co_gw_ind__boot))) {
+		if (srv->size < sizeof(struct co_gw_ind__boot)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -527,16 +527,13 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	co_unsigned32_t seq = 0;
 	co_unsigned16_t net = 0;
 	co_unsigned8_t node = 0xff;
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_prefix(
-			cp, end, floc, &seq, &net, &node))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_prefix(cp, end, floc, &seq, &net, &node)))
 		goto error;
 	cp += chars;
 	void *data = (void *)(uintptr_t)seq;
 
 	int srv = 0;
-	if (__unlikely(!(chars = co_gw_txt_lex_srv(cp, end, floc, &srv))))
+	if (!(chars = co_gw_txt_lex_srv(cp, end, floc, &srv)))
 		goto error;
 	cp += chars;
 
@@ -545,12 +542,12 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 	case CO_GW_SRV_SET_NET:
 	case CO_GW_SRV_GET_VERSION:
 	case CO_GW_SRV_SET_CMD_SIZE:
-		if (__unlikely(node != 0xff)) {
+		if (node != 0xff) {
 			diag_if(DIAG_ERROR, 0, floc,
 					"node-ID specified before global command");
 			goto error;
 		}
-		if (__unlikely(net)) {
+		if (net) {
 			diag_if(DIAG_ERROR, 0, floc,
 					"network-ID specified before global command");
 			goto error;
@@ -579,7 +576,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 		// A single number preceding the command is normally interpreted
 		// as the node-ID. However, in this case we take it to be the
 		// network-ID.
-		if (__unlikely(net)) {
+		if (net) {
 			diag_if(DIAG_ERROR, 0, floc,
 					"node-ID specified before network-level command");
 			goto error;
@@ -729,7 +726,7 @@ co_gw_txt_send(co_gw_txt_t *gw, const char *begin, const char *end,
 				gw, srv, data, net, cp, end, floc);
 		break;
 	}
-	if (__unlikely(!chars))
+	if (!chars)
 		goto error;
 	cp += chars;
 
@@ -796,7 +793,7 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(gw);
 	assert(con);
 
-	if (__likely(gw->pending))
+	if (gw->pending)
 		gw->pending--;
 
 	if (con->iec || con->ac)
@@ -804,44 +801,35 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 
 	switch (con->srv) {
 	case CO_GW_SRV_SDO_UP:
-		if (__unlikely(con->size < CO_GW_CON_SDO_UP_SIZE)) {
+		if (con->size < CO_GW_CON_SDO_UP_SIZE) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_sdo_up(
 				gw, seq, (const struct co_gw_con_sdo_up *)con);
 	case CO_GW_SRV_PDO_READ:
-		if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE)) {
+		if (con->size < CO_GW_CON_PDO_READ_SIZE) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_pdo_read(gw, seq,
 				(const struct co_gw_con_pdo_read *)con);
 	case CO_GW_SRV_GET_VERSION:
-		// clang-format off
-		if (__unlikely(con->size
-				< sizeof(struct co_gw_con_get_version))) {
-			// clang-format on
+		if (con->size < sizeof(struct co_gw_con_get_version)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_get_version(gw, seq,
 				(const struct co_gw_con_get_version *)con);
 	case CO_GW_SRV_LSS_GET_LSSID:
-		// clang-format off
-		if (__unlikely(con->size
-				< sizeof(struct co_gw_con_lss_get_lssid))) {
-			// clang-format on
+		if (con->size < sizeof(struct co_gw_con_lss_get_lssid)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		return co_gw_txt_recv_lss_get_lssid(gw, seq,
 				(const struct co_gw_con_lss_get_lssid *)con);
 	case CO_GW_SRV_LSS_GET_ID:
-		// clang-format off
-		if (__unlikely(con->size
-				< sizeof(struct co_gw_con_lss_get_id))) {
-			// clang-format on
+		if (con->size < sizeof(struct co_gw_con_lss_get_id)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -849,10 +837,7 @@ co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
 				(const struct co_gw_con_lss_get_id *)con);
 	case CO_GW_SRV__LSS_SLOWSCAN:
 	case CO_GW_SRV__LSS_FASTSCAN:
-		// clang-format off
-		if (__unlikely(con->size
-				< sizeof(struct co_gw_con__lss_scan))) {
-			// clang-format on
+		if (con->size < sizeof(struct co_gw_con__lss_scan)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -869,17 +854,14 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_SDO_UP);
 
-	if (__unlikely(con->size < CO_GW_CON_SDO_UP_SIZE + con->len)) {
+	if (con->size < CO_GW_CON_SDO_UP_SIZE + con->len) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
 	union co_val val;
 	const uint8_t *bp = (const uint8_t *)con->val;
-	// clang-format off
-	if (__unlikely(co_val_read(con->type, &val, bp, bp + con->len)
-			!= con->len))
-		// clang-format on
+	if (co_val_read(con->type, &val, bp, bp + con->len) != con->len)
 		co_gw_txt_recv_err(gw, seq, 0, CO_SDO_AC_TYPE_LEN);
 
 	int result = -1;
@@ -887,7 +869,7 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	size_t chars = co_gw_txt_print_val(NULL, NULL, con->type, &val);
 #if __STDC_NO_VLA__
 	char *buf = malloc(chars + 1);
-	if (__likely(buf)) {
+	if (buf) {
 		char *cp = buf;
 		co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
 		*cp = '\0';
@@ -917,10 +899,7 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	assert(con);
 	assert(con->srv == CO_GW_SRV_PDO_READ);
 
-	// clang-format off
-	if (__unlikely(con->size < CO_GW_CON_PDO_READ_SIZE
-			+ con->n * sizeof(*con->val))) {
-		// clang-format on
+	if (con->size < CO_GW_CON_PDO_READ_SIZE + con->n * sizeof(*con->val)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -930,7 +909,7 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	char *buf;
 	int result = asprintf(
 			&buf, "[%" PRIu32 "] %u pdo %u", seq, con->net, con->n);
-	if (__unlikely(result < 0)) {
+	if (result < 0) {
 		errc = get_errc();
 		buf = NULL;
 		goto error;
@@ -939,7 +918,7 @@ co_gw_txt_recv_pdo_read(co_gw_txt_t *gw, co_unsigned32_t seq,
 	for (co_unsigned8_t i = 0; i < con->n; i++) {
 		char *tmp;
 		result = asprintf(&tmp, "%s 0x%" PRIx64, buf, con->val[i]);
-		if (__unlikely(result < 0)) {
+		if (result < 0) {
 			errc = get_errc();
 			goto error;
 		}
@@ -1030,10 +1009,7 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 	assert(ind);
 	assert(ind->srv == CO_GW_SRV_RPDO);
 
-	// clang-format off
-	if (__unlikely(ind->size < CO_GW_IND_RPDO_SIZE
-			+ ind->n * sizeof(*ind->val))) {
-		// clang-format on
+	if (ind->size < CO_GW_IND_RPDO_SIZE + ind->n * sizeof(*ind->val)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1042,7 +1018,7 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 
 	char *buf;
 	int result = asprintf(&buf, "%u pdo %u %u", ind->net, ind->num, ind->n);
-	if (__unlikely(result < 0)) {
+	if (result < 0) {
 		errc = get_errc();
 		buf = NULL;
 		goto error;
@@ -1051,7 +1027,7 @@ co_gw_txt_recv_rpdo(co_gw_txt_t *gw, const struct co_gw_ind_rpdo *ind)
 	for (co_unsigned8_t i = 0; i < ind->n; i++) {
 		char *tmp;
 		result = asprintf(&tmp, "%s 0x%" PRIx64, buf, ind->val[i]);
-		if (__unlikely(result < 0)) {
+		if (result < 0) {
 			errc = get_errc();
 			goto error;
 		}
@@ -1151,7 +1127,7 @@ co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
 #if __STDC_NO_VLA__
 	char *buf = NULL;
 	int n = vasprintf(&buf, format, ap);
-	if (__likely(n > 0)) {
+	if (n > 0) {
 		result = co_gw_txt_recv_txt(gw, buf);
 		free(buf);
 	}
@@ -1177,7 +1153,7 @@ co_gw_txt_recv_txt(co_gw_txt_t *gw, const char *txt)
 	assert(gw);
 	assert(txt);
 
-	if (__unlikely(!gw->recv_func)) {
+	if (!gw->recv_func) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1231,10 +1207,7 @@ co_gw_txt_send_sdo_up(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	co_unsigned16_t idx = 0;
 	co_unsigned8_t subidx = 0;
 	co_unsigned16_t type = 0;
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
-			&subidx, &type))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx, &subidx, &type)))
 		return 0;
 	cp += chars;
 
@@ -1265,10 +1238,7 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	co_unsigned16_t idx = 0;
 	co_unsigned8_t subidx = 0;
 	co_unsigned16_t type = 0;
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx,
-			&subidx, &type))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_sdo(begin, end, at, &idx, &subidx, &type)))
 		goto error_lex_sdo;
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
@@ -1276,7 +1246,7 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	union co_val val;
 	co_val_init(type, &val);
 
-	if (__unlikely(!(chars = co_gw_txt_lex_val(cp, end, at, type, &val)))) {
+	if (!(chars = co_gw_txt_lex_val(cp, end, at, type, &val))) {
 		diag_if(DIAG_ERROR, 0, at, "unable to parse value");
 		goto error_lex_val;
 	}
@@ -1287,7 +1257,7 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	size_t size = MAX(CO_GW_REQ_SDO_DN_SIZE + n,
 			sizeof(struct co_gw_req_sdo_dn));
 	struct co_gw_req_sdo_dn *req = malloc(size);
-	if (__unlikely(!req)) {
+	if (!req) {
 		diag_if(DIAG_ERROR, get_errc(), at, "unable to create value");
 		goto error_malloc_req;
 	}
@@ -1302,7 +1272,7 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 		.len = n };
 
 	uint8_t *bp = (uint8_t *)req->val;
-	if (__unlikely(co_val_write(type, &val, bp, bp + n) != n)) {
+	if (co_val_write(type, &val, bp, bp + n) != n) {
 		diag_if(DIAG_ERROR, get_errc(), at, "unable to write value");
 		goto error_write_val;
 	}
@@ -1335,7 +1305,7 @@ co_gw_txt_send_set_sdo_timeout(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	long timeout = 0;
-	if (__unlikely(!(chars = lex_c99_long(cp, end, at, &timeout)))) {
+	if (!(chars = lex_c99_long(cp, end, at, &timeout))) {
 		diag_if(DIAG_ERROR, 0, at, "expected SDO time-out");
 		return 0;
 	}
@@ -1365,10 +1335,7 @@ co_gw_txt_send_set_rpdo(co_gw_txt_t *gw, int srv, void *data,
 	co_unsigned16_t num = 0;
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
 	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_pdo(
-			cp, end, at, 0, &num, &comm, &map))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_pdo(cp, end, at, 0, &num, &comm, &map)))
 		return 0;
 	cp += chars;
 
@@ -1410,10 +1377,7 @@ co_gw_txt_send_set_tpdo(co_gw_txt_t *gw, int srv, void *data,
 	co_unsigned16_t num = 0;
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
 	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_pdo(
-			cp, end, at, ext, &num, &comm, &map))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_pdo(cp, end, at, ext, &num, &comm, &map)))
 		return 0;
 	cp += chars;
 
@@ -1448,12 +1412,12 @@ co_gw_txt_send_pdo_read(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned16_t num = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &num))) {
 		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
 		return 0;
 	}
 	cp += chars;
-	if (__unlikely(!num || num > 512)) {
+	if (!num || num > 512) {
 		diag_if(DIAG_ERROR, 0, at,
 				"PDO number must be in the range [1..512]");
 		return 0;
@@ -1481,13 +1445,13 @@ co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned16_t num = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &num))) {
 		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(!num || num > 512)) {
+	if (!num || num > 512) {
 		diag_if(DIAG_ERROR, 0, at,
 				"PDO number must be in the range [1..512]");
 		return 0;
@@ -1501,12 +1465,12 @@ co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 		.net = net,
 		.num = num };
 
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &req.n)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &req.n))) {
 		diag_if(DIAG_ERROR, 0, at, "expected number of values");
 		return 0;
 	}
 	cp += chars;
-	if (__unlikely(req.n > 0x40)) {
+	if (req.n > 0x40) {
 		diag_if(DIAG_ERROR, 0, at,
 				"number of values must be in the range [0..64]");
 		return 0;
@@ -1516,7 +1480,7 @@ co_gw_txt_send_pdo_write(co_gw_txt_t *gw, int srv, void *data,
 		cp += lex_ctype(&isblank, cp, end, at);
 
 		chars = lex_c99_u64(cp, end, at, &req.val[i]);
-		if (__unlikely(!chars)) {
+		if (!chars) {
 			diag_if(DIAG_ERROR, 0, at, "expected value");
 			return 0;
 		}
@@ -1541,7 +1505,7 @@ co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned16_t gt = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &gt)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &gt))) {
 		diag_if(DIAG_ERROR, 0, at, "expected guard time");
 		return 0;
 	}
@@ -1549,7 +1513,7 @@ co_gw_txt_send_nmt_set_ng(co_gw_txt_t *gw, int srv, void *data,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	co_unsigned8_t ltf = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &ltf)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &ltf))) {
 		diag_if(DIAG_ERROR, 0, at, "expected lifetime factor");
 		return 0;
 	}
@@ -1579,7 +1543,7 @@ co_gw_txt_send_nmt_set_hb(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned16_t ms = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &ms)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &ms))) {
 		diag_if(DIAG_ERROR, 0, at, "expected heartbeat time");
 		return 0;
 	}
@@ -1607,13 +1571,13 @@ co_gw_txt_send_init(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	size_t chars = 0;
 
 	co_unsigned8_t bitidx = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &bitidx)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &bitidx))) {
 		diag_if(DIAG_ERROR, 0, at, "expected bit timing index");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(bitidx > 9)) {
+	if (bitidx > 9) {
 		diag_if(DIAG_ERROR, 0, at,
 				"the bit timing must be in the range [0..9]");
 		return 0;
@@ -1640,7 +1604,7 @@ co_gw_txt_send_set_hb(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	size_t chars = 0;
 
 	co_unsigned16_t ms = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &ms)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &ms))) {
 		diag_if(DIAG_ERROR, 0, at, "expected heartbeat time");
 		return 0;
 	}
@@ -1667,13 +1631,13 @@ co_gw_txt_send_set_id(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 	size_t chars = 0;
 
 	co_unsigned8_t node = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &node)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &node))) {
 		diag_if(DIAG_ERROR, 0, at, "expected node-ID");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(!node || (node > CO_NUM_NODES && node != 0xff))) {
+	if (!node || (node > CO_NUM_NODES && node != 0xff)) {
 		diag_if(DIAG_ERROR, 0, at,
 				"the node-ID must be in the range [1..%u, 255]",
 				CO_NUM_NODES);
@@ -1701,7 +1665,7 @@ co_gw_txt_send_set_cmd_timeout(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	long timeout = 0;
-	if (__unlikely(!(chars = lex_c99_long(cp, end, at, &timeout)))) {
+	if (!(chars = lex_c99_long(cp, end, at, &timeout))) {
 		diag_if(DIAG_ERROR, 0, at, "expected command time-out");
 		return 0;
 	}
@@ -1763,13 +1727,13 @@ co_gw_txt_send_set_net(co_gw_txt_t *gw, int srv, void *data, const char *begin,
 	size_t chars = 0;
 
 	co_unsigned16_t net = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &net)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &net))) {
 		diag_if(DIAG_ERROR, 0, at, "expected network-ID");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(net > CO_GW_NUM_NET)) {
+	if (net > CO_GW_NUM_NET) {
 		diag_if(DIAG_ERROR, 0, at,
 				"the network-ID must be in the range [0, 1..%u]",
 				CO_GW_NUM_NET);
@@ -1796,13 +1760,13 @@ co_gw_txt_send_set_node(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned8_t node = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &node)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &node))) {
 		diag_if(DIAG_ERROR, 0, at, "expected node-ID");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(node > CO_NUM_NODES)) {
+	if (node > CO_NUM_NODES) {
 		diag_if(DIAG_ERROR, 0, at,
 				"the node-ID must be in the range [0, 1..%u]",
 				CO_NUM_NODES);
@@ -1830,7 +1794,7 @@ co_gw_txt_send_set_cmd_size(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned32_t n = 0;
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &n)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &n))) {
 		diag_if(DIAG_ERROR, 0, at, "expected command size");
 		return 0;
 	}
@@ -1856,7 +1820,7 @@ co_gw_txt_send_lss_switch(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned8_t mode = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &mode)) || mode > 1)) {
+	if (!(chars = lex_c99_u8(cp, end, at, &mode)) || mode > 1) {
 		diag_if(DIAG_ERROR, 0, at, "expected 0 or 1");
 		return 0;
 	}
@@ -1884,7 +1848,7 @@ co_gw_txt_send_lss_switch_sel(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	struct co_id id = CO_ID_INIT;
-	if (__unlikely(!(chars = co_gw_txt_lex_id(cp, end, at, &id))))
+	if (!(chars = co_gw_txt_lex_id(cp, end, at, &id)))
 		return 0;
 	cp += chars;
 
@@ -1910,13 +1874,13 @@ co_gw_txt_send_lss_set_id(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned8_t node = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &node)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &node))) {
 		diag_if(DIAG_ERROR, 0, at, "expected node-ID");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(!node || (node > CO_NUM_NODES && node != 0xff))) {
+	if (!node || (node > CO_NUM_NODES && node != 0xff)) {
 		diag_if(DIAG_ERROR, 0, at,
 				"the node-ID must be in the range [1..%u, 255]",
 				CO_NUM_NODES);
@@ -1945,7 +1909,7 @@ co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned8_t bitsel = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &bitsel)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &bitsel))) {
 		diag_if(DIAG_ERROR, 0, at, "expected table selector");
 		return 0;
 	}
@@ -1953,7 +1917,7 @@ co_gw_txt_send_lss_set_rate(co_gw_txt_t *gw, int srv, void *data,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	co_unsigned8_t bitidx = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &bitidx)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &bitidx))) {
 		diag_if(DIAG_ERROR, 0, at, "expected table index");
 		return 0;
 	}
@@ -1982,7 +1946,7 @@ co_gw_txt_send_lss_switch_rate(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned16_t delay = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &delay)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &delay))) {
 		diag_if(DIAG_ERROR, 0, at, "expected switch delay");
 		return 0;
 	}
@@ -2010,12 +1974,12 @@ co_gw_txt_send_lss_get_lssid(co_gw_txt_t *gw, int srv, void *data,
 	size_t chars = 0;
 
 	co_unsigned8_t cs = 0;
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &cs)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &cs))) {
 		diag_if(DIAG_ERROR, 0, at, "expected code for LSS number");
 		return 0;
 	}
 	cp += chars;
-	if (__unlikely(cs < 0x5a || cs > 0x5d)) {
+	if (cs < 0x5a || cs > 0x5d) {
 		diag_if(DIAG_ERROR, 0, at,
 				"code must be in the range [0x5A..0x5D]");
 		return 0;
@@ -2044,7 +2008,7 @@ co_gw_txt_send_lss_id_slave(co_gw_txt_t *gw, int srv, void *data,
 
 	struct co_id lo = CO_ID_INIT;
 	struct co_id hi = CO_ID_INIT;
-	if (__unlikely(!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi))))
+	if (!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi)))
 		return 0;
 	cp += chars;
 
@@ -2072,7 +2036,7 @@ co_gw_txt_send__lss_slowscan(co_gw_txt_t *gw, int srv, void *data,
 
 	struct co_id lo = CO_ID_INIT;
 	struct co_id hi = CO_ID_INIT;
-	if (__unlikely(!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi))))
+	if (!(chars = co_gw_txt_lex_id_sel(cp, end, at, &lo, &hi)))
 		return 0;
 	cp += chars;
 
@@ -2101,59 +2065,56 @@ co_gw_txt_send__lss_fastscan(co_gw_txt_t *gw, int srv, void *data,
 	struct co_id id = CO_ID_INIT;
 	struct co_id mask = CO_ID_INIT;
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.vendor_id)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.vendor_id))) {
 		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.vendor_id)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &mask.vendor_id))) {
 		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID mask");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.product_code)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.product_code))) {
 		diag_if(DIAG_ERROR, 0, at, "expected product code");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	// clang-format off
-	if (__unlikely(!(chars = lex_c99_u32(
-			cp, end, at, &mask.product_code)))) {
-		// clang-format on
+	if (!(chars = lex_c99_u32(cp, end, at, &mask.product_code))) {
 		diag_if(DIAG_ERROR, 0, at, "expected product code mask");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.revision)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.revision))) {
 		diag_if(DIAG_ERROR, 0, at, "expected revision number");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.revision)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &mask.revision))) {
 		diag_if(DIAG_ERROR, 0, at, "expected revision number mask");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.serial_nr)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.serial_nr))) {
 		diag_if(DIAG_ERROR, 0, at, "expected serial number");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &mask.serial_nr)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &mask.serial_nr))) {
 		diag_if(DIAG_ERROR, 0, at, "expected serial number mask");
 		return 0;
 	}
@@ -2178,7 +2139,7 @@ co_gw_txt_send_req(co_gw_txt_t *gw, const struct co_gw_req *req)
 
 	if (gw->send_func) {
 		gw->pending++;
-		if (__unlikely(gw->send_func(req, gw->send_data))) {
+		if (gw->send_func(req, gw->send_data)) {
 			gw->pending--;
 			diag(DIAG_ERROR, get_errc(),
 					"unable to send gateway request");
@@ -2197,21 +2158,21 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 	const char *cp = begin;
 	size_t chars = 0;
 
-	if (__unlikely(!(chars = lex_char('[', cp, end, at))))
+	if (!(chars = lex_char('[', cp, end, at)))
 		diag_if(DIAG_WARNING, 0, at,
 				"expected '[' before sequence number");
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	co_unsigned32_t seq = 0;
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &seq)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &seq))) {
 		diag_if(DIAG_ERROR, 0, at, "expected sequence number");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_char(']', cp, end, at))))
+	if (!(chars = lex_char(']', cp, end, at)))
 		diag_if(DIAG_WARNING, 0, at,
 				"expected ']' after sequence number");
 	cp += chars;
@@ -2230,21 +2191,21 @@ co_gw_txt_lex_prefix(const char *begin, const char *end, struct floc *at,
 			cp += chars;
 			cp += lex_ctype(&isblank, cp, end, at);
 
-			if (__unlikely(!net || net > CO_GW_NUM_NET)) {
+			if (!net || net > CO_GW_NUM_NET) {
 				diag_if(DIAG_ERROR, 0, at,
 						"the network-ID must be in the range [1..%u]",
 						CO_GW_NUM_NET);
 				return 0;
 			}
 
-			if (__unlikely(node > CO_NUM_NODES)) {
+			if (node > CO_NUM_NODES) {
 				diag_if(DIAG_ERROR, 0, at,
 						"the node-ID must be in the range [0..%u]",
 						CO_NUM_NODES);
 				return 0;
 			}
 		} else {
-			if (__unlikely(net > CO_NUM_NODES)) {
+			if (net > CO_NUM_NODES) {
 				diag_if(DIAG_ERROR, 0, at,
 						"the node-ID must be in the range [0..%u]",
 						CO_NUM_NODES);
@@ -2282,7 +2243,7 @@ co_gw_txt_lex_srv(
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	chars = co_gw_txt_lex_cmd(cp, end, at);
-	if (__unlikely(!chars)) {
+	if (!chars) {
 		diag_if(DIAG_ERROR, 0, at, "expected command");
 		return 0;
 	}
@@ -2518,21 +2479,21 @@ co_gw_txt_lex_sdo(const char *begin, const char *end, struct floc *at,
 	const char *cp = begin;
 	size_t chars = 0;
 
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, pidx)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, pidx))) {
 		diag_if(DIAG_ERROR, 0, at, "expected object index");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, psubidx)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, psubidx))) {
 		diag_if(DIAG_ERROR, 0, at, "expected object sub-index");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = co_gw_txt_lex_type(cp, end, at, ptype))))
+	if (!(chars = co_gw_txt_lex_type(cp, end, at, ptype)))
 		return 0;
 	cp += chars;
 
@@ -2550,13 +2511,13 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 	size_t chars = 0;
 
 	co_unsigned16_t num = 0;
-	if (__unlikely(!(chars = lex_c99_u16(cp, end, at, &num)))) {
+	if (!(chars = lex_c99_u16(cp, end, at, &num))) {
 		diag_if(DIAG_ERROR, 0, at, "expected PDO number");
 		return 0;
 	}
 	cp += chars;
 
-	if (__unlikely(!num || num > 512)) {
+	if (!num || num > 512) {
 		diag_if(DIAG_ERROR, 0, at,
 				"PDO number must be in the range [1..512]");
 		return 0;
@@ -2566,24 +2527,18 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 
 	struct co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &comm.cobid)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &comm.cobid))) {
 		diag_if(DIAG_ERROR, 0, at, "expected COB-ID");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	// clang-format off
-	if (__unlikely(!(chars = co_gw_txt_lex_trans(
-			cp, end, at, &comm.trans))))
-		// clang-format on
+	if (!(chars = co_gw_txt_lex_trans(cp, end, at, &comm.trans)))
 		return 0;
 	cp += chars;
 	if (ext && comm.trans >= 0xfe) {
-		// clang-format off
-		if (__unlikely(!(chars = lex_c99_u16(cp, end, at,
-				&comm.inhibit)))) {
-			// clang-format on
+		if (!(chars = lex_c99_u16(cp, end, at, &comm.inhibit))) {
 			diag_if(DIAG_ERROR, 0, at, "expected inhibit time");
 			return 0;
 		}
@@ -2592,20 +2547,14 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 	cp += lex_ctype(&isblank, cp, end, at);
 
 	if (ext && comm.trans >= 0xfd) {
-		// clang-format off
-		if (__unlikely(!(chars = lex_c99_u16(
-				cp, end, at, &comm.event)))) {
-			// clang-format on
+		if (!(chars = lex_c99_u16(cp, end, at, &comm.event))) {
 			diag_if(DIAG_ERROR, 0, at, "expected event timer");
 			return 0;
 		}
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, at);
 	} else if (ext && comm.trans <= 240) {
-		// clang-format off
-		if (__unlikely(!(chars = lex_c99_u8(
-				cp, end, at, &comm.sync)))) {
-			// clang-format on
+		if (!(chars = lex_c99_u8(cp, end, at, &comm.sync))) {
 			diag_if(DIAG_ERROR, 0, at, "expected SYNC start value");
 			return 0;
 		}
@@ -2615,12 +2564,12 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 
 	struct co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
 
-	if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &map.n)))) {
+	if (!(chars = lex_c99_u8(cp, end, at, &map.n))) {
 		diag_if(DIAG_ERROR, 0, at, "expected number of values");
 		return 0;
 	}
 	cp += chars;
-	if (__unlikely(map.n > 0x40)) {
+	if (map.n > 0x40) {
 		diag_if(DIAG_ERROR, 0, at,
 				"number of mapped values must be in the range [0..64]");
 		return 0;
@@ -2637,7 +2586,7 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 			cp += lex_ctype(&isblank, cp, end, at);
 
 			chars = lex_c99_u8(cp, end, at, &subidx);
-			if (__unlikely(!chars)) {
+			if (!chars) {
 				diag_if(DIAG_ERROR, 0, at,
 						"expected object sub-index");
 				return 0;
@@ -2648,10 +2597,10 @@ co_gw_txt_lex_pdo(const char *begin, const char *end, struct floc *at, int ext,
 
 		co_unsigned16_t type = 0;
 		chars = co_gw_txt_lex_type(cp, end, at, &type);
-		if (__unlikely(!chars))
+		if (!chars)
 			return 0;
 		cp += chars;
-		if (__unlikely(!co_type_is_basic(type))) {
+		if (!co_type_is_basic(type)) {
 			diag_if(DIAG_ERROR, 0, at,
 					"only basic types can be mapped to PDOs");
 			return 0;
@@ -2766,7 +2715,7 @@ co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 		const char *cp = begin;
 		size_t chars = 0;
 
-		if (__unlikely(!(chars = lex_char('\"', cp, end, at))))
+		if (!(chars = lex_char('\"', cp, end, at)))
 			diag_if(DIAG_WARNING, 0, at,
 					"expected '\"' before string");
 		cp += chars;
@@ -2774,7 +2723,7 @@ co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 		size_t n = 0;
 		chars = co_gw_txt_lex_vs(cp, end, at, NULL, &n);
 		if (val) {
-			if (__unlikely(co_val_init_vs_n(val, 0, n) == -1)) {
+			if (co_val_init_vs_n(val, 0, n) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type VISIBLE_STRING");
 				return 0;
@@ -2786,7 +2735,7 @@ co_gw_txt_lex_val(const char *begin, const char *end, struct floc *at,
 		}
 		cp += chars;
 
-		if (__unlikely(!(chars = lex_char('\"', cp, end, at))))
+		if (!(chars = lex_char('\"', cp, end, at)))
 			diag_if(DIAG_WARNING, 0, at,
 					"expected '\"' after string");
 		cp += chars;
@@ -2853,7 +2802,7 @@ co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
 	size_t chars = 0;
 
 	chars = co_gw_txt_lex_cmd(cp, end, at);
-	if (__unlikely(!chars)) {
+	if (!chars) {
 		diag_if(DIAG_ERROR, 0, at, "expected transmission type");
 		return 0;
 	}
@@ -2872,12 +2821,12 @@ co_gw_txt_lex_trans(const char *begin, const char *end, struct floc *at,
 		cp += 4;
 		if (at)
 			at->column -= chars - 4;
-		if (__unlikely(!(chars = lex_c99_u8(cp, end, at, &trans)))) {
+		if (!(chars = lex_c99_u8(cp, end, at, &trans))) {
 			diag_if(DIAG_ERROR, 0, at, "expected SYNC period");
 			return 0;
 		}
 		cp += chars;
-		if (__unlikely(trans > 240)) {
+		if (trans > 240) {
 			diag_if(DIAG_ERROR, 0, at,
 					"SYNC period must be in the range [0..240]");
 			return 0;
@@ -2905,28 +2854,28 @@ co_gw_txt_lex_id(const char *begin, const char *end, struct floc *at,
 
 	struct co_id id = CO_ID_INIT;
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.vendor_id)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.vendor_id))) {
 		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.product_code)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.product_code))) {
 		diag_if(DIAG_ERROR, 0, at, "expected product code");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.revision)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.revision))) {
 		diag_if(DIAG_ERROR, 0, at, "expected revision number");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &id.serial_nr)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &id.serial_nr))) {
 		diag_if(DIAG_ERROR, 0, at, "expected serial number");
 		return 0;
 	}
@@ -2949,14 +2898,14 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 
 	struct co_id lo = CO_ID_INIT;
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.vendor_id)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &lo.vendor_id))) {
 		diag_if(DIAG_ERROR, 0, at, "expected vendor-ID");
 		return 0;
 	}
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.product_code)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &lo.product_code))) {
 		diag_if(DIAG_ERROR, 0, at, "expected product code");
 		return 0;
 	}
@@ -2965,7 +2914,7 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 
 	struct co_id hi = lo;
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.revision)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &lo.revision))) {
 		diag_if(DIAG_ERROR, 0, at,
 				"expected lower bound for revision number");
 		return 0;
@@ -2973,7 +2922,7 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &hi.revision)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &hi.revision))) {
 		diag_if(DIAG_ERROR, 0, at,
 				"expected upper bound for revision number");
 		return 0;
@@ -2981,7 +2930,7 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &lo.serial_nr)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &lo.serial_nr))) {
 		diag_if(DIAG_ERROR, 0, at,
 				"expected lower bound for serial number");
 		return 0;
@@ -2989,7 +2938,7 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 	cp += chars;
 	cp += lex_ctype(&isblank, cp, end, at);
 
-	if (__unlikely(!(chars = lex_c99_u32(cp, end, at, &hi.serial_nr)))) {
+	if (!(chars = lex_c99_u32(cp, end, at, &hi.serial_nr))) {
 		diag_if(DIAG_ERROR, 0, at,
 				"expected upper bound for serial number");
 		return 0;
