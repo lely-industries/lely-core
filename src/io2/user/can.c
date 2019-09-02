@@ -147,6 +147,7 @@ io_user_can_chan_alloc(void)
 	struct io_user_can_chan *user = malloc(sizeof(*user));
 	if (!user)
 		set_errc(errno2c(errno));
+	// cppcheck-suppress memleak symbolName=user
 	return user ? &user->chan_vptr : NULL;
 }
 
@@ -690,6 +691,7 @@ io_user_can_chan_write_task_func(struct ev_task *task)
 	}
 	user->current_task = NULL;
 
+	// cppcheck-suppress knownConditionTrueFalse
 	int post_write = !user->write_posted
 			&& !sllist_empty(&user->write_queue);
 	if (post_write)

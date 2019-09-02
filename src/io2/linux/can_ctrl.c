@@ -80,6 +80,7 @@ void *
 io_can_ctrl_alloc(void)
 {
 	struct io_can_ctrl_impl *impl = malloc(sizeof(*impl));
+	// cppcheck-suppress memleak symbolName=impl
 	return impl ? &impl->ctrl_vptr : NULL;
 }
 

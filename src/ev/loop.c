@@ -434,7 +434,7 @@ ev_loop_kill(ev_loop_t *loop, void *thr_)
 	assert(loop);
 #endif
 	struct ev_loop_thrd *thr = thr_;
-	assert(thr_);
+	assert(thr);
 
 	int result = 0;
 	int errc = get_errc();
@@ -619,7 +619,6 @@ ev_loop_ctx_create(ev_loop_t *loop, ev_future_t *future)
 	ctx->thr = loop->poll ? ev_poll_self(loop->poll) : NULL;
 
 	dlnode_init(&ctx->node);
-	ctx->next = NULL;
 
 	ctx->next = ev_loop_thrd.ctx;
 	ev_loop_thrd.ctx = ctx;

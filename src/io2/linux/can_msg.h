@@ -69,6 +69,7 @@ can_frame2can_msg(const struct can_frame *src, struct can_msg *dst)
 	if (src->can_id & CAN_RTR_FLAG)
 		dst->flags |= CAN_FLAG_RTR;
 	dst->len = MIN(src->can_dlc, CAN_MAX_LEN);
+	// cppcheck-suppress knownConditionTrueFalse
 	if (!(dst->flags & CAN_FLAG_RTR))
 		memcpy(dst->data, src->data, dst->len);
 

@@ -90,10 +90,10 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 	if (!s)
 		n = 0;
 
-	int r, t = 0;
+	int t = 0;
 
 	if (at->filename) {
-		r = snprintf(s, n, "%s:", at->filename);
+		int r = snprintf(s, n, "%s:", at->filename);
 		if (r < 0)
 			return r;
 		t += r;
@@ -321,16 +321,16 @@ log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	int errsv = errno;
 	time_t timer;
 	if (time(&timer) != -1) {
-		struct tm *timeptr = NULL;
 #ifdef _WIN32
-		struct tm time;
-		if (localtime_s(&time, &timer))
-			timeptr = &time;
+		struct tm tm;
+		struct tm *timeptr = NULL;
+		if (localtime_s(&tm, &timer))
+			timeptr = &tm;
 #elif defined(_POSIX_C_SOURCE)
-		struct tm time;
-		timeptr = localtime_r(&timer, &time);
+		struct tm tm;
+		struct tm *timeptr = localtime_r(&timer, &tm);
 #else
-		timeptr = localtime(&timer);
+		struct tm *timeptr = localtime(&timer);
 #endif
 		if (timeptr) {
 			char buf[80];

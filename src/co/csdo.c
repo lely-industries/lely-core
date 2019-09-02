@@ -1051,6 +1051,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 			goto error_malloc_buf;
 		}
 
+		// cppcheck-suppress nullPointerArithmetic
 		if (co_val_write(type, val, buf, buf + n) != n) {
 			errc = get_errc();
 			goto error_write_val;

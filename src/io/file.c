@@ -119,8 +119,8 @@ io_open_file(const char *path, int flags)
 #else
 	// clang-format off
 	int oflag = (flags & IO_FILE_READ) && (flags & IO_FILE_WRITE) ? O_RDWR
-			: flags & IO_FILE_READ ? O_RDONLY
-			: flags & IO_FILE_WRITE ? O_WRONLY
+			: (flags & IO_FILE_READ) ? O_RDONLY
+			: (flags & IO_FILE_WRITE) ? O_WRONLY
 			: 0;
 	// clang-format on
 	if (flags & IO_FILE_APPEND)

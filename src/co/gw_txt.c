@@ -864,10 +864,9 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	if (co_val_read(con->type, &val, bp, bp + con->len) != con->len)
 		co_gw_txt_recv_err(gw, seq, 0, CO_SDO_AC_TYPE_LEN);
 
-	int result = -1;
-
 	size_t chars = co_gw_txt_print_val(NULL, NULL, con->type, &val);
 #if __STDC_NO_VLA__
+	int result = -1;
 	char *buf = malloc(chars + 1);
 	if (buf) {
 		char *cp = buf;
@@ -884,7 +883,7 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	co_gw_txt_print_val(&cp, cp + chars, con->type, &val);
 	*cp = '\0';
 
-	result = co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %s", seq, buf);
+	int result = co_gw_txt_recv_fmt(gw, "[%" PRIu32 "] %s", seq, buf);
 #endif
 
 	co_val_fini(con->type, &val);
@@ -1120,11 +1119,10 @@ co_gw_txt_recv__boot(co_gw_txt_t *gw, const struct co_gw_ind__boot *ind)
 static int
 co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
 {
-	int result = -1;
-
 	va_list ap;
 	va_start(ap, format);
 #if __STDC_NO_VLA__
+	int result = -1;
 	char *buf = NULL;
 	int n = vasprintf(&buf, format, ap);
 	if (n > 0) {
@@ -1140,7 +1138,7 @@ co_gw_txt_recv_fmt(co_gw_txt_t *gw, const char *format, ...)
 	assert(n > 0);
 	char buf[n + 1];
 	vsprintf(buf, format, ap);
-	result = co_gw_txt_recv_txt(gw, buf);
+	int result = co_gw_txt_recv_txt(gw, buf);
 #endif
 	va_end(ap);
 
@@ -1697,7 +1695,7 @@ co_gw_txt_send_set_bootup_ind(co_gw_txt_t *gw, int srv, void *data,
 	if (!strncasecmp("Disable", cp, chars)) {
 		cp += chars;
 		cs = 0;
-	} else if (!strncasecmp("Disable", cp, chars)) {
+	} else if (!strncasecmp("Enable", cp, chars)) {
 		cp += chars;
 		cs = 1;
 	} else {

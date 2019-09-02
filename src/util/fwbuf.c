@@ -258,6 +258,7 @@ error_strdup_filename:
 		goto error_strdup;
 	}
 
+	// cppcheck-suppress tmpnamCalled
 	buf->stream = fopen(tmpnam(buf->tmpname), "w+b");
 	if (!buf->stream) {
 		errc = errno2c(errno);

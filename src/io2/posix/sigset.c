@@ -178,6 +178,7 @@ void *
 io_sigset_alloc(void)
 {
 	struct io_sigset_impl *impl = malloc(sizeof(*impl));
+	// cppcheck-suppress memleak symbolName=impl
 	return impl ? &impl->sigset_vptr : NULL;
 }
 
