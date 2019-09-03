@@ -4,7 +4,7 @@
  *
  * @see lely/io/sock.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -141,20 +141,20 @@ io_open_socket(int domain, int type)
 	default: errc = errnum2c(ERRNUM_AFNOSUPPORT); goto error_domain;
 	}
 
-	if (__unlikely(s == INVALID_SOCKET)) {
+	if (s == INVALID_SOCKET) {
 		errc = get_errc();
 		goto error_socket;
 	}
 
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
-	if (__unlikely(fcntl(s, F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(s, F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
 #endif
 
 	struct io_handle *handle = io_handle_alloc(&sock_vtab);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		errc = get_errc();
 		goto error_alloc_handle;
 	}
@@ -237,24 +237,24 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	default: errc = errnum2c(ERRNUM_AFNOSUPPORT); goto error_domain;
 	}
 
-	if (__unlikely(result == SOCKET_ERROR)) {
+	if (result == SOCKET_ERROR) {
 		errc = get_errc();
 		goto error_socketpair;
 	}
 
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
-	if (__unlikely(fcntl(socket_vector[0], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(socket_vector[0], F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
-	if (__unlikely(fcntl(socket_vector[1], F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(socket_vector[1], F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
 #endif
 
 	handle_vector[0] = io_handle_alloc(&sock_vtab);
-	if (__unlikely(!handle_vector[0])) {
+	if (!handle_vector[0]) {
 		errc = get_errc();
 		goto error_alloc_handle_vector_0;
 	}
@@ -264,7 +264,7 @@ io_open_socketpair(int domain, int type, io_handle_t handle_vector[2])
 	((struct sock *)handle_vector[0])->type = type;
 
 	handle_vector[1] = io_handle_alloc(&sock_vtab);
-	if (__unlikely(!handle_vector[1])) {
+	if (!handle_vector[1]) {
 		errc = get_errc();
 		goto error_alloc_handle_vector_1;
 	}
@@ -301,13 +301,13 @@ ssize_t
 io_recv(io_handle_t handle, void *buf, size_t nbytes, io_addr_t *addr,
 		int flags)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->recv)) {
+	if (!handle->vtab->recv) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -319,13 +319,13 @@ ssize_t
 io_send(io_handle_t handle, const void *buf, size_t nbytes,
 		const io_addr_t *addr, int flags)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->send)) {
+	if (!handle->vtab->send) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -336,13 +336,13 @@ io_send(io_handle_t handle, const void *buf, size_t nbytes,
 io_handle_t
 io_accept(io_handle_t handle, io_addr_t *addr)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return IO_HANDLE_ERROR;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->accept)) {
+	if (!handle->vtab->accept) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return IO_HANDLE_ERROR;
 	}
@@ -353,13 +353,13 @@ io_accept(io_handle_t handle, io_addr_t *addr)
 int
 io_connect(io_handle_t handle, const io_addr_t *addr)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	assert(handle->vtab);
-	if (__unlikely(!handle->vtab->connect)) {
+	if (!handle->vtab->connect) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -372,12 +372,12 @@ io_connect(io_handle_t handle, const io_addr_t *addr)
 int
 io_sock_get_domain(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -388,12 +388,12 @@ io_sock_get_domain(io_handle_t handle)
 int
 io_sock_get_type(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -406,7 +406,7 @@ io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -418,7 +418,7 @@ io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 int
 io_sock_listen(io_handle_t handle, int backlog)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -429,7 +429,7 @@ io_sock_listen(io_handle_t handle, int backlog)
 int
 io_sock_shutdown(io_handle_t handle, int how)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -467,7 +467,7 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -497,7 +497,7 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -531,7 +531,7 @@ io_sock_get_maxconn(void)
 int
 io_sock_get_acceptconn(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -542,8 +542,8 @@ io_sock_get_acceptconn(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ACCEPTCONN,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_ACCEPTCONN,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -552,7 +552,7 @@ io_sock_get_acceptconn(io_handle_t handle)
 int
 io_sock_get_broadcast(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -563,8 +563,8 @@ io_sock_get_broadcast(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_BROADCAST,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -573,7 +573,7 @@ io_sock_get_broadcast(io_handle_t handle)
 int
 io_sock_set_broadcast(io_handle_t handle, int broadcast)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -592,7 +592,7 @@ io_sock_set_broadcast(io_handle_t handle, int broadcast)
 int
 io_sock_get_debug(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -603,8 +603,8 @@ io_sock_get_debug(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DEBUG,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DEBUG,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -613,7 +613,7 @@ io_sock_get_debug(io_handle_t handle)
 int
 io_sock_set_debug(io_handle_t handle, int debug)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -632,7 +632,7 @@ io_sock_set_debug(io_handle_t handle, int debug)
 int
 io_sock_get_dontroute(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -643,8 +643,8 @@ io_sock_get_dontroute(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DONTROUTE,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_DONTROUTE,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -653,7 +653,7 @@ io_sock_get_dontroute(io_handle_t handle)
 int
 io_sock_set_dontroute(io_handle_t handle, int dontroute)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -672,7 +672,7 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 int
 io_sock_get_error(io_handle_t handle, int *perror)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -687,7 +687,7 @@ io_sock_get_error(io_handle_t handle, int *perror)
 int
 io_sock_get_keepalive(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -698,8 +698,8 @@ io_sock_get_keepalive(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_KEEPALIVE,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_KEEPALIVE,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -708,7 +708,7 @@ io_sock_get_keepalive(io_handle_t handle)
 int
 io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -727,20 +727,20 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 // clang-format on
 #else
 	// clang-format off
-	if (__unlikely(setsockopt(handle->fd, SOL_SOCKET, SO_KEEPALIVE,
-			&keepalive, sizeof(keepalive)) == -1))
+	if (setsockopt(handle->fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive,
+			sizeof(keepalive)) == -1)
 		// clang-format on
 		return -1;
 #ifdef __linux__
 	if (keepalive) {
 		// clang-format off
-		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPIDLE,
-				&time, sizeof(time)) == -1))
+		if (setsockopt(handle->fd, SOL_TCP, TCP_KEEPIDLE, &time,
+				sizeof(time)) == -1)
 			// clang-format on
 			return -1;
 		// clang-format off
-		if (__unlikely(setsockopt(handle->fd, SOL_TCP, TCP_KEEPINTVL,
-				&interval, sizeof(interval)) == -1))
+		if (setsockopt(handle->fd, SOL_TCP, TCP_KEEPINTVL, &interval,
+				sizeof(interval)) == -1)
 			// clang-format on
 			return -1;
 	}
@@ -755,15 +755,15 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 int
 io_sock_get_linger(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	struct linger optval;
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_LINGER,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_LINGER,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return optval.l_onoff ? optval.l_linger : 0;
@@ -772,12 +772,12 @@ io_sock_get_linger(io_handle_t handle)
 int
 io_sock_set_linger(io_handle_t handle, int time)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(time < 0)) {
+	if (time < 0) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -792,7 +792,7 @@ io_sock_set_linger(io_handle_t handle, int time)
 int
 io_sock_get_oobinline(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -803,8 +803,8 @@ io_sock_get_oobinline(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_OOBINLINE,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_OOBINLINE,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -813,7 +813,7 @@ io_sock_get_oobinline(io_handle_t handle)
 int
 io_sock_set_oobinline(io_handle_t handle, int oobinline)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -832,15 +832,15 @@ io_sock_set_oobinline(io_handle_t handle, int oobinline)
 int
 io_sock_get_rcvbuf(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	int optval;
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVBUF,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_RCVBUF,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -849,7 +849,7 @@ io_sock_get_rcvbuf(io_handle_t handle)
 int
 io_sock_set_rcvbuf(io_handle_t handle, int size)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -863,7 +863,7 @@ io_sock_set_rcvbuf(io_handle_t handle, int size)
 int
 io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -883,7 +883,7 @@ io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 int
 io_sock_get_reuseaddr(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -894,8 +894,8 @@ io_sock_get_reuseaddr(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_REUSEADDR,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -904,7 +904,7 @@ io_sock_get_reuseaddr(io_handle_t handle)
 int
 io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -923,15 +923,15 @@ io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 int
 io_sock_get_sndbuf(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 	int optval;
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDBUF,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, SOL_SOCKET, SO_SNDBUF,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -940,7 +940,7 @@ io_sock_get_sndbuf(io_handle_t handle)
 int
 io_sock_set_sndbuf(io_handle_t handle, int size)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -954,7 +954,7 @@ io_sock_set_sndbuf(io_handle_t handle, int size)
 int
 io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -974,7 +974,7 @@ io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 int
 io_sock_get_tcp_nodelay(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -985,8 +985,8 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 	int optval;
 #endif
 	// clang-format off
-	if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
-			(char *)&optval, &(socklen_t){ sizeof(optval) })))
+	if (getsockopt((SOCKET)handle->fd, IPPROTO_TCP, TCP_NODELAY,
+			(char *)&optval, &(socklen_t){ sizeof(optval) }))
 		// clang-format on
 		return -1;
 	return !!optval;
@@ -995,7 +995,7 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 int
 io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1015,14 +1015,14 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 ssize_t
 io_sock_get_nread(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
 #ifdef _WIN32
 	u_long optval;
-	if (__unlikely(ioctlsocket((SOCKET)handle->fd, FIONREAD, &optval)))
+	if (ioctlsocket((SOCKET)handle->fd, FIONREAD, &optval))
 		return -1;
 	return optval;
 #else
@@ -1032,8 +1032,8 @@ io_sock_get_nread(io_handle_t handle)
 	do {
 		errno = errsv;
 		result = ioctl(handle->fd, FIONREAD, &optval);
-	} while (__unlikely(result == -1 && errno == EINTR));
-	if (__unlikely(result == -1))
+	} while (result == -1 && errno == EINTR);
+	if (result == -1)
 		return -1;
 	return optval;
 #endif
@@ -1045,12 +1045,12 @@ io_sock_get_nread(io_handle_t handle)
 int
 io_sock_get_mcast_loop(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1063,17 +1063,17 @@ io_sock_get_mcast_loop(io_handle_t handle)
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
 		// clang-format off
-		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
+		if (getsockopt((SOCKET)handle->fd, IPPROTO_IP,
 				IP_MULTICAST_LOOP, (char *)&optval,
-				&(socklen_t){ sizeof(optval) })))
+				&(socklen_t){ sizeof(optval) }))
 			// clang-format on
 			return -1;
 		break;
 	case IO_SOCK_IPV6:
 		// clang-format off
-		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+		if (getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_LOOP, (char *)&optval,
-				&(socklen_t){ sizeof(optval) })))
+				&(socklen_t){ sizeof(optval) }))
 			// clang-format on
 			return -1;
 		break;
@@ -1085,12 +1085,12 @@ io_sock_get_mcast_loop(io_handle_t handle)
 int
 io_sock_set_mcast_loop(io_handle_t handle, int loop)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1120,12 +1120,12 @@ io_sock_set_mcast_loop(io_handle_t handle, int loop)
 int
 io_sock_get_mcast_ttl(io_handle_t handle)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1138,17 +1138,17 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 	switch (((struct sock *)handle)->domain) {
 	case IO_SOCK_IPV4:
 		// clang-format off
-		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IP,
-				IP_MULTICAST_TTL, (char *)&optval,
-				&(socklen_t){ sizeof(optval) })))
+		if (getsockopt((SOCKET)handle->fd, IPPROTO_IP, IP_MULTICAST_TTL,
+				(char *)&optval,
+				&(socklen_t){ sizeof(optval) }))
 			// clang-format on
 			return -1;
 		break;
 	case IO_SOCK_IPV6:
 		// clang-format off
-		if (__unlikely(getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
+		if (getsockopt((SOCKET)handle->fd, IPPROTO_IPV6,
 				IPV6_MULTICAST_HOPS, (char *)&optval,
-				&(socklen_t){ sizeof(optval) })))
+				&(socklen_t){ sizeof(optval) }))
 			// clang-format on
 			return -1;
 		break;
@@ -1160,12 +1160,12 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 int
 io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1198,12 +1198,12 @@ io_sock_mcast_join_group(
 {
 	assert(group);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1229,12 +1229,12 @@ io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1261,12 +1261,12 @@ io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1292,12 +1292,12 @@ io_sock_mcast_leave_group(
 {
 	assert(group);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1323,12 +1323,12 @@ io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1352,12 +1352,12 @@ int
 io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle != IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
 
-	if (__unlikely(handle->vtab != &sock_vtab)) {
+	if (handle->vtab != &sock_vtab) {
 		set_errnum(ERRNUM_NOTSOCK);
 		return -1;
 	}
@@ -1396,7 +1396,7 @@ sock_flags(struct io_handle *handle, int flags)
 	return ioctlsocket((SOCKET)handle->fd, FIONBIO, &iMode) ? -1 : 0;
 #else
 	int arg = fcntl(handle->fd, F_GETFL, 0);
-	if (__unlikely(arg == -1))
+	if (arg == -1)
 		return -1;
 
 	if ((flags & IO_FLAG_NONBLOCK) && !(arg & O_NONBLOCK))
@@ -1446,7 +1446,7 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
 			result = recvfrom(handle->fd, buf, nbytes, _flags,
 					(struct sockaddr *)&addr->addr,
 					(socklen_t *)&addr->addrlen);
-		} while (__unlikely(result == -1 && errno == EINTR));
+		} while (result == -1 && errno == EINTR);
 #endif
 	} else {
 #ifdef _WIN32
@@ -1456,7 +1456,7 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
 		do {
 			errno = errsv;
 			result = recv(handle->fd, buf, nbytes, _flags);
-		} while (__unlikely(result == -1 && errno == EINTR));
+		} while (result == -1 && errno == EINTR);
 #endif
 	}
 	return result == SOCKET_ERROR ? -1 : result;
@@ -1494,7 +1494,7 @@ sock_send(struct io_handle *handle, const void *buf, size_t nbytes,
 				addr->addrlen)
 				: send(handle->fd, buf, nbytes, _flags);
 		// clang-format on
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 #endif
 	return result == SOCKET_ERROR ? -1 : result;
 }
@@ -1525,7 +1525,7 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 			s = accept(handle->fd, (struct sockaddr *)&addr->addr,
 					(socklen_t *)&addr->addrlen);
 #endif
-		} while (__unlikely(s == -1 && errno == EINTR));
+		} while (s == -1 && errno == EINTR);
 #endif
 	} else {
 #ifdef _WIN32
@@ -1539,24 +1539,24 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 #else
 			s = accept(handle->fd, NULL, NULL);
 #endif
-		} while (__unlikely(s == -1 && errno == EINTR));
+		} while (s == -1 && errno == EINTR);
 #endif
 	}
 
-	if (__unlikely(s == INVALID_SOCKET)) {
+	if (s == INVALID_SOCKET) {
 		errc = get_errc();
 		goto error_accept;
 	}
 
 #if _POSIX_C_SOURCE >= 200112L && !defined(_GNU_SOURCE)
-	if (__unlikely(fcntl(s, F_SETFD, FD_CLOEXEC) == -1)) {
+	if (fcntl(s, F_SETFD, FD_CLOEXEC) == -1) {
 		errc = get_errc();
 		goto error_fcntl;
 	}
 #endif
 
 	handle = io_handle_alloc(&sock_vtab);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		errc = get_errc();
 		goto error_alloc_handle;
 	}
@@ -1599,7 +1599,7 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 		result = connect(handle->fd,
 				(const struct sockaddr *)&addr->addr,
 				addr->addrlen);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 #endif
 }
@@ -1617,7 +1617,7 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 
 	int errc = 0;
 
-	if (__unlikely(af != AF_INET && af != AF_INET6)) {
+	if (af != AF_INET && af != AF_INET6) {
 		errc = errnum2c(ERRNUM_AFNOSUPPORT);
 		goto error_param;
 	}
@@ -1628,19 +1628,19 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 	type &= ~flags;
 #endif
 
-	if (__unlikely(type != SOCK_STREAM && type != SOCK_DGRAM)) {
+	if (type != SOCK_STREAM && type != SOCK_DGRAM) {
 		errc = errnum2c(ERRNUM_PROTOTYPE);
 		goto error_param;
 	}
 
 	sv[0] = socket(af, type | flags, protocol);
-	if (__unlikely(sv[0] == INVALID_SOCKET)) {
+	if (sv[0] == INVALID_SOCKET) {
 		errc = get_errc();
 		goto error_socket_0;
 	}
 
 	sv[1] = socket(af, type | flags, protocol);
-	if (__unlikely(sv[1] == INVALID_SOCKET)) {
+	if (sv[1] == INVALID_SOCKET) {
 		errc = get_errc();
 		goto error_socket_1;
 	}
@@ -1666,20 +1666,17 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 		namelen_1 = sizeof(*name_in6_1);
 	}
 
-	if (__unlikely(bind(sv[1], name_1, namelen_1) == SOCKET_ERROR)) {
+	if (bind(sv[1], name_1, namelen_1) == SOCKET_ERROR) {
 		errc = get_errc();
 		goto error_bind_1;
 	}
-	// clang-format off
-	if (__unlikely(getsockname(sv[1], name_1, &namelen_1)
-			== SOCKET_ERROR)) {
-		// clang-format on
+	if (getsockname(sv[1], name_1, &namelen_1) == SOCKET_ERROR) {
 		errc = get_errc();
 		goto error_getsockname_1;
 	}
 
 	if (type == SOCK_STREAM) {
-		if (__unlikely(listen(sv[1], 1) == SOCKET_ERROR)) {
+		if (listen(sv[1], 1) == SOCKET_ERROR) {
 			errc = get_errc();
 			goto error_listen;
 		}
@@ -1696,17 +1693,11 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 			namelen_0 = sizeof(*name_in6_0);
 		}
 
-		// clang-format off
-		if (__unlikely(bind(sv[0], name_0, namelen_0)
-				== SOCKET_ERROR)) {
-			// clang-format on
+		if (bind(sv[0], name_0, namelen_0) == SOCKET_ERROR) {
 			errc = get_errc();
 			goto error_bind_0;
 		}
-		// clang-format off
-		if (__unlikely(getsockname(sv[0], name_0, &namelen_0)
-				== SOCKET_ERROR)) {
-			// clang-format on
+		if (getsockname(sv[0], name_0, &namelen_0) == SOCKET_ERROR) {
 			errc = get_errc();
 			goto error_getsockname_0;
 		}
@@ -1716,14 +1707,14 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 		name_in_1->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	else
 		name_in6_1->sin6_addr = in6addr_loopback;
-	if (__unlikely(connect(sv[0], name_1, namelen_1) == SOCKET_ERROR)) {
+	if (connect(sv[0], name_1, namelen_1) == SOCKET_ERROR) {
 		errc = get_errc();
 		goto error_connect_0;
 	}
 
 	if (type == SOCK_STREAM) {
 		SOCKET s = accept(sv[1], NULL, NULL);
-		if (__unlikely(s == INVALID_SOCKET)) {
+		if (s == INVALID_SOCKET) {
 			errc = get_errc();
 			goto error_accept;
 		}
@@ -1734,10 +1725,7 @@ _socketpair(int af, int type, int protocol, SOCKET sv[2])
 			name_in_0->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		else
 			name_in6_0->sin6_addr = in6addr_loopback;
-		// clang-format off
-		if (__unlikely(connect(sv[1], name_0, namelen_0)
-				== SOCKET_ERROR)) {
-			// clang-format on
+		if (connect(sv[1], name_0, namelen_0) == SOCKET_ERROR) {
 			errc = get_errc();
 			goto error_connect_1;
 		}

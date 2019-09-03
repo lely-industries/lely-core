@@ -4,7 +4,7 @@
  *
  * @see src/nmt_cfg.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -173,7 +173,7 @@ void *
 __co_nmt_cfg_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_cfg));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -223,12 +223,12 @@ co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	int errc = 0;
 
 	co_nmt_cfg_t *cfg = __co_nmt_cfg_alloc();
-	if (__unlikely(!cfg)) {
+	if (!cfg) {
 		errc = get_errc();
 		goto error_alloc_cfg;
 	}
 
-	if (__unlikely(!__co_nmt_cfg_init(cfg, net, dev, nmt))) {
+	if (!__co_nmt_cfg_init(cfg, net, dev, nmt)) {
 		errc = get_errc();
 		goto error_init_cfg;
 	}
@@ -257,12 +257,12 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
 {
 	assert(cfg);
 
-	if (__unlikely(!id || id > CO_NUM_NODES)) {
+	if (!id || id > CO_NUM_NODES) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(cfg->state)) {
+	if (cfg->state) {
 		set_errnum(ERRNUM_INPROGRESS);
 		return -1;
 	}
@@ -271,7 +271,7 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
 
 	co_csdo_destroy(cfg->sdo);
 	cfg->sdo = co_csdo_create(cfg->net, NULL, cfg->id);
-	if (__unlikely(!cfg->sdo))
+	if (!cfg->sdo)
 		return -1;
 	co_csdo_set_timeout(cfg->sdo, timeout);
 	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);
@@ -365,7 +365,7 @@ co_nmt_cfg_init_on_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 {
 	assert(cfg);
 
-	if (__unlikely(ac)) {
+	if (ac) {
 		cfg->ac = ac;
 		return co_nmt_cfg_abort_state;
 	}
@@ -402,10 +402,9 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// Write the value 'load' to sub-index of object 1011 on the slave.
 	// clang-format off
-	if (__unlikely(co_csdo_dn_val_req(cfg->sdo, 0x1011, subidx,
-			CO_DEFTYPE_UNSIGNED32,
+	if (co_csdo_dn_val_req(cfg->sdo, 0x1011, subidx, CO_DEFTYPE_UNSIGNED32,
 			&(co_unsigned32_t){ UINT32_C(0x64616f6c) },
-			&co_nmt_cfg_dn_con, cfg) == -1)) {
+			&co_nmt_cfg_dn_con, cfg) == -1) {
 		// clang-format on
 		cfg->ac = CO_SDO_AC_ERROR;
 		return co_nmt_cfg_abort_state;
@@ -421,7 +420,7 @@ co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 	assert(cfg);
 	(void)idx;
 
-	if (__unlikely(ac)) {
+	if (ac) {
 		cfg->ac = ac;
 		return co_nmt_cfg_abort_state;
 	}

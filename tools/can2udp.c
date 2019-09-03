@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CAN to UDP forwarding tool.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 	}
 
 	if (flags & FLAG_NO_DAEMON) {
-		if (__unlikely(daemon_init(argc, argv)))
+		if (daemon_init(argc, argv))
 			return EXIT_FAILURE;
 		daemon_main();
 		daemon_fini();
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
 int
 daemon_init(int argc, char *argv[])
 {
-	if (__unlikely(lely_io_init() == -1)) {
+	if (lely_io_init() == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize I/O library");
 		goto error_io_init;
@@ -229,23 +229,23 @@ daemon_init(int argc, char *argv[])
 		}
 	}
 
-	if (__unlikely(optpos < 1 || !ifname)) {
+	if (optpos < 1 || !ifname) {
 		diag(DIAG_ERROR, 0, "no CAN interface specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(optpos < 2 || !address)) {
+	if (optpos < 2 || !address) {
 		diag(DIAG_ERROR, 0, "no address specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(optpos < 3 || !send_port)) {
+	if (optpos < 3 || !send_port) {
 		diag(DIAG_ERROR, 0, "no port specified");
 		goto error_arg;
 	}
 
 	poll = io_poll_create();
-	if (__unlikely(!poll)) {
+	if (!poll) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create I/O polling interface");
 		goto error_create_poll;
@@ -253,20 +253,20 @@ daemon_init(int argc, char *argv[])
 	struct io_event event = IO_EVENT_INIT;
 
 	can_handle = open_can(ifname);
-	if (__unlikely(can_handle == IO_HANDLE_ERROR)) {
+	if (can_handle == IO_HANDLE_ERROR) {
 		diag(DIAG_ERROR, get_errc(), "%s is not a suitable CAN device",
 				ifname);
 		goto error_open_can;
 	}
 	event.events = IO_EVENT_READ;
 	event.u.handle = can_handle;
-	if (__unlikely(io_poll_watch(poll, can_handle, &event, 1) == -1)) {
+	if (io_poll_watch(poll, can_handle, &event, 1) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to watch %s", ifname);
 		goto error_watch_can;
 	}
 
 	send_handle = open_send(address, send_port, flags);
-	if (__unlikely(send_handle == IO_HANDLE_ERROR)) {
+	if (send_handle == IO_HANDLE_ERROR) {
 		diag(DIAG_ERROR, get_errc(), "unable to connect to [%s]:%s",
 				address, send_port);
 		goto error_open_send;
@@ -274,16 +274,14 @@ daemon_init(int argc, char *argv[])
 
 	if (recv_port) {
 		recv_handle = open_recv(recv_domain, recv_port);
-		if (__unlikely(recv_handle == IO_HANDLE_ERROR)) {
+		if (recv_handle == IO_HANDLE_ERROR) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to bind to port %s", recv_port);
 			goto error_open_recv;
 		}
 		event.events = IO_EVENT_READ;
 		event.u.handle = recv_handle;
-		// clang-format off
-		if (__unlikely(io_poll_watch(poll, recv_handle, &event, 1) == -1)) {
-			// clang-format on
+		if (io_poll_watch(poll, recv_handle, &event, 1) == -1) {
 			diag(DIAG_ERROR, get_errc(), "unable to watch port %s",
 					recv_port);
 			goto error_watch_recv;
@@ -291,11 +289,11 @@ daemon_init(int argc, char *argv[])
 	}
 
 	wtm = co_wtm_create();
-	if (__unlikely(!wtm)) {
+	if (!wtm) {
 		diag(DIAG_ERROR, get_errc(), "unable to create WTM interface");
 		goto error_create_wtm;
 	}
-	if (__unlikely(co_wtm_set_nif(wtm, nif) == -1)) {
+	if (co_wtm_set_nif(wtm, nif) == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"invalid WTM interface indicator: %d", nif);
 		goto error_set_nif;
@@ -413,9 +411,9 @@ daemon_main()
 			// other than an empty receive buffer, as an error
 			// event.
 			// clang-format off
-			if (__unlikely(!result || (result == -1
+			if (!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
-					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+					&& get_errnum() != ERRNUM_WOULDBLOCK))
 				// clang-format on
 				event.events |= IO_EVENT_ERROR;
 		} else if (event.u.handle == recv_handle
@@ -423,7 +421,7 @@ daemon_main()
 			// Read a single generic frame.
 			char buf[CO_WTM_MAX_LEN];
 			ssize_t result = io_read(recv_handle, buf, sizeof(buf));
-			if (__unlikely(result == -1))
+			if (result == -1)
 				continue;
 			// Process the frame.
 			co_wtm_recv(wtm, buf, result);
@@ -481,12 +479,12 @@ open_can(const char *ifname)
 	int errc = 0;
 
 	io_handle_t handle = io_open_can(ifname);
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		errc = get_errc();
 		goto error_open_can;
 	}
 
-	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(handle, IO_FLAG_NONBLOCK) == -1) {
 		errc = get_errc();
 		goto error_set_flags;
 	}
@@ -510,32 +508,30 @@ open_send(const char *address, const char *port, int flags)
 	struct io_addrinfo hints = { .type = IO_SOCK_DGRAM };
 	struct io_addrinfo info;
 	// clang-format off
-	if (__unlikely(io_get_addrinfo(1, &info, address, port, &hints) == -1)) {
+	if (io_get_addrinfo(1, &info, address, port, &hints) == -1) {
 		// clang-format on
 		errc = get_errc();
 		goto error_get_addrinfo;
 	}
 
 	io_handle_t handle = io_open_socket(info.domain, info.type);
-	if (__unlikely(handle == IO_HANDLE_ERROR)) {
+	if (handle == IO_HANDLE_ERROR) {
 		errc = get_errc();
 		goto error_open_socket;
 	}
 
-	// clang-format off
-	if (__unlikely(info.domain == IO_SOCK_IPV4 && (flags & FLAG_BROADCAST)
-			&& io_sock_set_broadcast(handle, 1) == -1)) {
-		// clang-format on
+	if (info.domain == IO_SOCK_IPV4 && (flags & FLAG_BROADCAST)
+			&& io_sock_set_broadcast(handle, 1) == -1) {
 		errc = get_errc();
 		goto error_set_broadcast;
 	}
 
-	if (__unlikely(io_connect(handle, &info.addr) == -1)) {
+	if (io_connect(handle, &info.addr) == -1) {
 		errc = get_errc();
 		goto error_connect;
 	}
 
-	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(handle, IO_FLAG_NONBLOCK) == -1) {
 		errc = get_errc();
 		goto error_set_flags;
 	}
@@ -558,12 +554,12 @@ open_recv(int domain, const char *port)
 	int errc = 0;
 
 	io_handle_t handle = io_open_socket(domain, IO_SOCK_DGRAM);
-	if (__unlikely(!handle)) {
+	if (!handle) {
 		errc = get_errc();
 		goto error_open_socket;
 	}
 
-	if (__unlikely(io_sock_set_reuseaddr(handle, 1) == -1)) {
+	if (io_sock_set_reuseaddr(handle, 1) == -1) {
 		errc = get_errc();
 		goto error_set_reuseaddr;
 	}
@@ -573,12 +569,12 @@ open_recv(int domain, const char *port)
 		io_addr_set_ipv6_n(&addr, NULL, atoi(port));
 	else
 		io_addr_set_ipv4_n(&addr, NULL, atoi(port));
-	if (__unlikely(io_sock_bind(handle, &addr) == -1)) {
+	if (io_sock_bind(handle, &addr) == -1) {
 		errc = get_errc();
 		goto error_bind;
 	}
 
-	if (__unlikely(io_set_flags(handle, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(handle, IO_FLAG_NONBLOCK) == -1) {
 		errc = get_errc();
 		goto error_set_flags;
 	}

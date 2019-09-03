@@ -4,7 +4,7 @@
  *
  * @see lely/co/obj.h, src/obj.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -53,7 +53,7 @@ void *
 __co_obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_obj));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -108,7 +108,7 @@ co_obj_create(co_unsigned16_t idx)
 	trace("creating object %04X", idx);
 
 	co_obj_t *obj = __co_obj_alloc();
-	if (__unlikely(!obj))
+	if (!obj)
 		return NULL;
 
 	return __co_obj_init(obj, idx);
@@ -166,13 +166,13 @@ co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 	assert(obj);
 	assert(sub);
 
-	if (__unlikely(sub->obj && sub->obj != obj))
+	if (sub->obj && sub->obj != obj)
 		return -1;
 
-	if (__unlikely(sub->obj == obj))
+	if (sub->obj == obj)
 		return 0;
 
-	if (__unlikely(rbtree_find(&obj->tree, sub->node.key)))
+	if (rbtree_find(&obj->tree, sub->node.key))
 		return -1;
 
 	sub->obj = obj;
@@ -189,7 +189,7 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 	assert(obj);
 	assert(sub);
 
-	if (__unlikely(sub->obj != obj))
+	if (sub->obj != obj)
 		return -1;
 
 	rbtree_remove(&sub->obj->tree, &sub->node);
@@ -209,7 +209,7 @@ co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx)
 	assert(obj);
 
 	struct rbnode *node = rbtree_find(&obj->tree, &subidx);
-	return __likely(node) ? structof(node, co_sub_t, node) : NULL;
+	return node ? structof(node, co_sub_t, node) : NULL;
 }
 
 #ifndef LELY_NO_CO_OBJ_NAME
@@ -234,7 +234,7 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 	}
 
 	void *ptr = realloc(obj->name, strlen(name) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -274,19 +274,19 @@ co_obj_set_code(co_obj_t *obj, co_unsigned8_t code)
 void *
 co_obj_addressof_val(const co_obj_t *obj)
 {
-	return __likely(obj) ? obj->val : NULL;
+	return obj ? obj->val : NULL;
 }
 
 size_t
 co_obj_sizeof_val(const co_obj_t *obj)
 {
-	return __likely(obj) ? obj->size : 0;
+	return obj ? obj->size : 0;
 }
 
 const void *
 co_obj_get_val(const co_obj_t *obj, co_unsigned8_t subidx)
 {
-	co_sub_t *sub = __likely(obj) ? co_obj_find_sub(obj, subidx) : NULL;
+	co_sub_t *sub = obj ? co_obj_find_sub(obj, subidx) : NULL;
 	return co_sub_get_val(sub);
 }
 
@@ -296,7 +296,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 	assert(obj);
 
 	co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		set_errnum(ERRNUM_INVAL);
 		return 0;
 	}
@@ -309,7 +309,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 			const co_obj_t *obj, co_unsigned8_t subidx) \
 	{ \
 		/* clang-format off */ \
-		co_sub_t *sub = __likely(obj) \
+		co_sub_t *sub = obj \
 				? co_obj_find_sub(obj, subidx) \
 				: NULL; \
 		/* clang-format on */ \
@@ -322,7 +322,7 @@ co_obj_set_val(co_obj_t *obj, co_unsigned8_t subidx, const void *ptr, size_t n)
 		assert(obj); \
 \
 		co_sub_t *sub = co_obj_find_sub(obj, subidx); \
-		if (__unlikely(!sub)) { \
+		if (!sub) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
@@ -354,7 +354,7 @@ void *
 __co_sub_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sub));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -380,12 +380,12 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 
 	sub->type = type;
 #ifndef LELY_NO_CO_OBJ_LIMITS
-	if (__unlikely(co_val_init_min(sub->type, &sub->min) == -1))
+	if (co_val_init_min(sub->type, &sub->min) == -1)
 		return NULL;
-	if (__unlikely(co_val_init_max(sub->type, &sub->max) == -1))
+	if (co_val_init_max(sub->type, &sub->max) == -1)
 		return NULL;
 #endif
-	if (__unlikely(co_val_init(sub->type, &sub->def) == -1))
+	if (co_val_init(sub->type, &sub->def) == -1)
 		return NULL;
 	sub->val = NULL;
 
@@ -426,12 +426,12 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 	int errc = 0;
 
 	co_sub_t *sub = __co_sub_alloc();
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		errc = get_errc();
 		goto error_alloc_sub;
 	}
 
-	if (__unlikely(!__co_sub_init(sub, subidx, type))) {
+	if (!__co_sub_init(sub, subidx, type)) {
 		errc = get_errc();
 		goto error_init_sub;
 	}
@@ -492,7 +492,7 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 	}
 
 	void *ptr = realloc(sub->name, strlen(name) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -517,19 +517,19 @@ co_sub_get_type(const co_sub_t *sub)
 const void *
 co_sub_addressof_min(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_addressof(sub->type, &sub->min) : NULL;
+	return sub ? co_val_addressof(sub->type, &sub->min) : NULL;
 }
 
 size_t
 co_sub_sizeof_min(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_sizeof(sub->type, &sub->min) : 0;
+	return sub ? co_val_sizeof(sub->type, &sub->min) : 0;
 }
 
 const void *
 co_sub_get_min(const co_sub_t *sub)
 {
-	return __likely(sub) ? &sub->min : NULL;
+	return sub ? &sub->min : NULL;
 }
 
 size_t
@@ -544,19 +544,19 @@ co_sub_set_min(co_sub_t *sub, const void *ptr, size_t n)
 const void *
 co_sub_addressof_max(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_addressof(sub->type, &sub->max) : NULL;
+	return sub ? co_val_addressof(sub->type, &sub->max) : NULL;
 }
 
 size_t
 co_sub_sizeof_max(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_sizeof(sub->type, &sub->max) : 0;
+	return sub ? co_val_sizeof(sub->type, &sub->max) : 0;
 }
 
 const void *
 co_sub_get_max(const co_sub_t *sub)
 {
-	return __likely(sub) ? &sub->max : NULL;
+	return sub ? &sub->max : NULL;
 }
 
 size_t
@@ -573,19 +573,19 @@ co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 const void *
 co_sub_addressof_def(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_addressof(sub->type, &sub->def) : NULL;
+	return sub ? co_val_addressof(sub->type, &sub->def) : NULL;
 }
 
 size_t
 co_sub_sizeof_def(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_sizeof(sub->type, &sub->def) : 0;
+	return sub ? co_val_sizeof(sub->type, &sub->def) : 0;
 }
 
 const void *
 co_sub_get_def(const co_sub_t *sub)
 {
-	return __likely(sub) ? &sub->def : NULL;
+	return sub ? &sub->def : NULL;
 }
 
 size_t
@@ -600,19 +600,19 @@ co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n)
 const void *
 co_sub_addressof_val(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_addressof(sub->type, sub->val) : NULL;
+	return sub ? co_val_addressof(sub->type, sub->val) : NULL;
 }
 
 size_t
 co_sub_sizeof_val(const co_sub_t *sub)
 {
-	return __likely(sub) ? co_val_sizeof(sub->type, sub->val) : 0;
+	return sub ? co_val_sizeof(sub->type, sub->val) : 0;
 }
 
 const void *
 co_sub_get_val(const co_sub_t *sub)
 {
-	return __likely(sub) ? sub->val : NULL;
+	return sub ? sub->val : NULL;
 }
 
 size_t
@@ -629,10 +629,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 	{ \
 		static const co_##b##_t val; \
 \
-		/* clang-format off */ \
-		if (__unlikely(!sub || sub->type != CO_DEFTYPE_##a \
-				|| !sub->val)) \
-			/* clang-format on */ \
+		if (!sub || sub->type != CO_DEFTYPE_##a || !sub->val) \
 			return val; \
 		return ((union co_val *)sub->val)->c; \
 	} \
@@ -641,7 +638,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 	{ \
 		assert(sub); \
 \
-		if (__unlikely(sub->type != CO_DEFTYPE_##a)) { \
+		if (sub->type != CO_DEFTYPE_##a) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
@@ -661,17 +658,17 @@ co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
 	if (!co_type_is_basic(sub->type))
 		return 0;
 
-	if (__unlikely(sub->type != type))
+	if (sub->type != type)
 		return CO_SDO_AC_TYPE_LEN;
 
 	assert(val);
 
 	// Check whether the value is within bounds.
-	if (__unlikely(co_val_cmp(sub->type, &sub->min, &sub->max) > 0))
+	if (co_val_cmp(sub->type, &sub->min, &sub->max) > 0)
 		return CO_SDO_AC_PARAM_RANGE;
-	if (__unlikely(co_val_cmp(sub->type, val, &sub->max) > 0))
+	if (co_val_cmp(sub->type, val, &sub->max) > 0)
 		return CO_SDO_AC_PARAM_HI;
-	if (__unlikely(co_val_cmp(sub->type, val, &sub->min) < 0))
+	if (co_val_cmp(sub->type, val, &sub->min) < 0)
 		return CO_SDO_AC_PARAM_LO;
 
 	return 0;
@@ -775,14 +772,14 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
 	// Read the value.
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		goto error_req;
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	// Accept the value if it is within bounds.
 	ac = co_sub_chk_val(sub, type, &val);
 #endif
-	if (__likely(!ac))
+	if (!ac)
 		co_sub_dn(sub, &val);
 
 	co_val_fini(type, &val);
@@ -793,13 +790,13 @@ error_req:
 co_unsigned32_t
 co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 {
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
-	if (__unlikely(!(sub->access & CO_ACCESS_WRITE)))
+	if (!(sub->access & CO_ACCESS_WRITE))
 		return CO_SDO_AC_NO_WRITE;
 
-	if (__unlikely(!req))
+	if (!req)
 		return CO_SDO_AC_ERROR;
 
 	assert(sub->dn_ind);
@@ -809,7 +806,7 @@ co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 co_unsigned32_t
 co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 {
-	if (__unlikely(co_sub_get_type(sub) != type))
+	if (co_sub_get_type(sub) != type)
 		return CO_SDO_AC_TYPE_LEN;
 
 	struct co_sdo_req req = CO_SDO_REQ_INIT;
@@ -817,7 +814,7 @@ co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 
 	int errc = get_errc();
 
-	if (__unlikely(co_sdo_req_up_val(&req, type, val, &ac) == -1))
+	if (co_sdo_req_up_val(&req, type, val, &ac) == -1)
 		goto error;
 
 	ac = co_sub_dn_ind(sub, &req);
@@ -835,7 +832,7 @@ co_sub_dn(co_sub_t *sub, void *val)
 
 	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
 		co_val_fini(sub->type, sub->val);
-		if (__unlikely(!co_val_move(sub->type, sub->val, val)))
+		if (!co_val_move(sub->type, sub->val, val))
 			return -1;
 	}
 
@@ -879,7 +876,7 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
 #endif
 
 	const void *val = co_sub_get_val(sub);
-	if (__unlikely(!val))
+	if (!val)
 		return CO_SDO_AC_NO_DATA;
 
 	co_sdo_req_up_val(req, co_sub_get_type(sub), val, &ac);
@@ -889,13 +886,13 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
 co_unsigned32_t
 co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 {
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
-	if (__unlikely(!(sub->access & CO_ACCESS_READ)))
+	if (!(sub->access & CO_ACCESS_READ))
 		return CO_SDO_AC_NO_READ;
 
-	if (__unlikely(!req))
+	if (!req)
 		return CO_SDO_AC_ERROR;
 
 	assert(sub->up_ind);
@@ -919,7 +916,7 @@ co_obj_update(co_obj_t *obj)
 	void *val = NULL;
 	if (size) {
 		val = calloc(1, size);
-		if (__unlikely(!val)) {
+		if (!val) {
 			set_errc(errno2c(errno));
 			return;
 		}

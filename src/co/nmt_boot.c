@@ -754,7 +754,7 @@ void *
 __co_nmt_boot_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_boot));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -783,14 +783,14 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->state = NULL;
 
 	boot->recv = can_recv_create();
-	if (__unlikely(!boot->recv)) {
+	if (!boot->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(boot->recv, &co_nmt_boot_recv, boot);
 
 	boot->timer = can_timer_create();
-	if (__unlikely(!boot->timer)) {
+	if (!boot->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -843,12 +843,12 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	int errc = 0;
 
 	co_nmt_boot_t *boot = __co_nmt_boot_alloc();
-	if (__unlikely(!boot)) {
+	if (!boot) {
 		errc = get_errc();
 		goto error_alloc_boot;
 	}
 
-	if (__unlikely(!__co_nmt_boot_init(boot, net, dev, nmt))) {
+	if (!__co_nmt_boot_init(boot, net, dev, nmt)) {
 		errc = get_errc();
 		goto error_init_boot;
 	}
@@ -877,12 +877,12 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 {
 	assert(boot);
 
-	if (__unlikely(!id || id > CO_NUM_NODES)) {
+	if (!id || id > CO_NUM_NODES) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(boot->state != co_nmt_boot_wait_state)) {
+	if (boot->state != co_nmt_boot_wait_state) {
 		set_errnum(ERRNUM_INPROGRESS);
 		return -1;
 	}
@@ -892,7 +892,7 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 	boot->timeout = timeout;
 	co_csdo_destroy(boot->sdo);
 	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
-	if (__unlikely(!boot->sdo))
+	if (!boot->sdo)
 		return -1;
 	co_csdo_set_timeout(boot->sdo, boot->timeout);
 	co_csdo_set_dn_ind(boot->sdo, dn_ind, data);
@@ -1154,10 +1154,10 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// Retry the SDO request on timeout (this includes the first attempt).
 	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
 		// Read the device type of the slave (object 1000).
-		if (__unlikely(co_nmt_boot_up(boot, 0x1000, 0x00) == -1))
+		if (co_nmt_boot_up(boot, 0x1000, 0x00) == -1)
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of object 1000 (Device type) to node %02X: %s",
@@ -1169,10 +1169,7 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// and proceed with the vendor ID.
 	co_unsigned32_t device_type =
 			co_dev_get_val_u32(boot->dev, 0x1f84, boot->id);
-	// clang-format off
-	if (__unlikely(device_type && !co_nmt_boot_chk(boot, 0x1f84, boot->id,
-			ptr, n))) {
-		// clang-format on
+	if (device_type && !co_nmt_boot_chk(boot, 0x1f84, boot->id, ptr, n)) {
 		boot->es = 'C';
 		return co_nmt_boot_abort_state;
 	}
@@ -1195,7 +1192,7 @@ co_nmt_boot_chk_vendor_id_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'D';
 
 	// Read the vendor ID of the slave (sub-object 1018:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x01) == -1))
+	if (co_nmt_boot_up(boot, 0x1018, 0x01) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1207,13 +1204,13 @@ co_nmt_boot_chk_vendor_id_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:01 (Vendor-ID) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f85, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f85, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_product_code_state;
@@ -1234,7 +1231,7 @@ co_nmt_boot_chk_product_code_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'M';
 
 	// Read the product code of the slave (sub-object 1018:02).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x02) == -1))
+	if (co_nmt_boot_up(boot, 0x1018, 0x02) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1246,13 +1243,13 @@ co_nmt_boot_chk_product_code_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:02 (Product code) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f86, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f86, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_revision_state;
@@ -1273,7 +1270,7 @@ co_nmt_boot_chk_revision_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'N';
 
 	// Read the revision number of the slave (sub-object 1018:03).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x03) == -1))
+	if (co_nmt_boot_up(boot, 0x1018, 0x03) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1285,13 +1282,13 @@ co_nmt_boot_chk_revision_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:03 (Revision number) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f87, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f87, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_serial_nr_state;
@@ -1312,7 +1309,7 @@ co_nmt_boot_chk_serial_nr_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'O';
 
 	// Read the serial number of the slave (sub-object 1018:04).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1018, 0x04) == -1))
+	if (co_nmt_boot_up(boot, 0x1018, 0x04) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1324,13 +1321,13 @@ co_nmt_boot_chk_serial_nr_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:04 (Serial number) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f88, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f88, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_node_state;
@@ -1444,10 +1441,10 @@ co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
 		// Read the program software identification of the slave
 		// (sub-object 1F56:01).
-		if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
+		if (co_nmt_boot_up(boot, 0x1f56, 0x01) == -1)
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
@@ -1478,7 +1475,7 @@ co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot)
 	assert(boot);
 
 	// Read the program control of the slave (sub-object 1F51:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
+	if (co_nmt_boot_up(boot, 0x1f51, 0x01) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1492,7 +1489,7 @@ co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 	// The download SDO request may be unconfirmed on some devices since it
 	// stops the program on the slave (and may cause a restart of the
 	// bootloader). We therefore ignore timeouts.
-	if (__unlikely(ac && ac != CO_SDO_AC_TIMEOUT)) {
+	if (ac && ac != CO_SDO_AC_TIMEOUT) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
@@ -1521,8 +1518,8 @@ co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// Write a 0 (Stop program) to the program control of the slave
 	// (sub-object 1F51:01).
 	// clang-format off
-	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
-			&(co_unsigned8_t){ 0 }) == -1))
+	if (co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 0 }) == -1)
 		// clang-format on
 		return co_nmt_boot_abort_state;
 
@@ -1552,13 +1549,12 @@ co_nmt_boot_clear_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		// Write a 3 (Clear program) to the program control of the slave
 		// (sub-object 1F51:01).
 		// clang-format off
-		if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01,
-				CO_DEFTYPE_UNSIGNED8, &(co_unsigned8_t){ 3 })
-				== -1))
+		if (co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+				&(co_unsigned8_t){ 3 }) == -1)
 			// clang-format on
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
@@ -1575,14 +1571,14 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 	assert(boot);
 
 	co_sub_t *sub = co_dev_find_sub(boot->dev, 0x1f58, boot->id);
-	if (__unlikely(!sub))
+	if (!sub)
 		return co_nmt_boot_abort_state;
 
 	// Upload the program data.
 	struct co_sdo_req *req = &boot->req;
 	co_sdo_req_clear(req);
 	co_unsigned32_t ac = co_sub_up_ind(sub, req);
-	if (__unlikely(ac || !co_sdo_req_first(req) || !co_sdo_req_last(req))) {
+	if (ac || !co_sdo_req_first(req) || !co_sdo_req_last(req)) {
 		if (ac)
 			diag(DIAG_ERROR, 0,
 					"SDO abort code %08" PRIX32
@@ -1610,13 +1606,12 @@ co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		// data of the slave (sub-object 1F50:01) using SDO block
 		// transfer.
 		// clang-format off
-		if (__unlikely(co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01,
-				req->buf, req->size, &co_nmt_boot_dn_con, boot)
-				== -1))
+		if (co_csdo_blk_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
+				req->size, &co_nmt_boot_dn_con, boot) == -1)
 			// clang-format on
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		// If SDO block transfer is not supported, fall back to SDO
 		// segmented transfer.
 		return co_nmt_boot_dn_prog_state;
@@ -1650,13 +1645,12 @@ co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		// data of the slave (sub-object 1F50:01) using SDO segmented
 		// transfer.
 		// clang-format off
-		if (__unlikely(co_csdo_dn_req(boot->sdo, 0x1f50, 0x01, req->buf,
-				req->size, &co_nmt_boot_dn_con,
-				boot) == -1))
+		if (co_csdo_dn_req(boot->sdo, 0x1f50, 0x01, req->buf, req->size,
+				&co_nmt_boot_dn_con, boot) == -1)
 			// clang-format on
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
@@ -1686,7 +1680,7 @@ co_nmt_boot_wait_flash_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	(void)tp;
 
 	// Read the flash status indication of the slave (sub-object 1F57:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1f57, 0x01) == -1))
+	if (co_nmt_boot_up(boot, 0x1f57, 0x01) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1698,7 +1692,7 @@ co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F57:01 (Flash status indication) to node %02X: %s",
@@ -1707,8 +1701,8 @@ co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// If the flash status indication is not valid, try again.
 	co_unsigned32_t val = 0;
 	// clang-format off
-	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
-			(const uint8_t *)ptr + n) || (val & 0x01)))
+	if (!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
+			(const uint8_t *)ptr + n) || (val & 0x01))
 		// clang-format on
 		return co_nmt_boot_wait_flash_state;
 
@@ -1774,7 +1768,7 @@ co_nmt_boot_chk_prog_on_enter(co_nmt_boot_t *boot)
 
 	// Read the program software identification of the slave (sub-object
 	// 1F56:01).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1f56, 0x01) == -1))
+	if (co_nmt_boot_up(boot, 0x1f56, 0x01) == -1)
 		return co_nmt_boot_abort_state;
 
 	return NULL;
@@ -1786,13 +1780,13 @@ co_nmt_boot_chk_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
 
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f55, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f55, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_start_prog_state;
@@ -1806,8 +1800,8 @@ co_nmt_boot_start_prog_on_enter(co_nmt_boot_t *boot)
 	// Write a 1 (Start program) to the program control of the slave
 	// (sub-object 1F51:01).
 	// clang-format off
-	if (__unlikely(co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
-			&(co_unsigned8_t){ 1 }) == -1))
+	if (co_nmt_boot_dn(boot, 0x1f51, 0x01, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 1 }) == -1)
 		// clang-format on
 		return co_nmt_boot_abort_state;
 
@@ -1819,7 +1813,7 @@ co_nmt_boot_start_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
@@ -1867,10 +1861,10 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// Retry the SDO request on timeout (this includes the first attempt).
 	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
 		// Read the program control of the slave (sub-object 1F51:01).
-		if (__unlikely(co_nmt_boot_up(boot, 0x1f51, 0x01) == -1))
+		if (co_nmt_boot_up(boot, 0x1f51, 0x01) == -1)
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
@@ -1881,8 +1875,8 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	// If the program control differs from 'Program started', try again.
 	co_unsigned8_t val = 0;
 	// clang-format off
-	if (__unlikely(!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
-			(const uint8_t *)ptr + n) || val != 1))
+	if (!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
+			(const uint8_t *)ptr + n) || val != 1)
 		// clang-format on
 		return co_nmt_boot_wait_prog_state;
 
@@ -1925,10 +1919,10 @@ co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	if (ac == CO_SDO_AC_TIMEOUT && boot->retry--) {
 		// Read the configuration date of the slave (sub-object
 		// 1020:01).
-		if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x01) == -1))
+		if (co_nmt_boot_up(boot, 0x1020, 0x01) == -1)
 			return co_nmt_boot_abort_state;
 		return NULL;
-	} else if (__unlikely(ac)) {
+	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1020:01 (Configuration date) to node %02X: %s",
@@ -1937,11 +1931,11 @@ co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 
 	// If the configuration date does not match the expected value, skip
 	// checking the time and proceed to 'update configuration'.
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f26, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f26, boot->id, ptr, n))
 		return co_nmt_boot_up_cfg_state;
 
 	// Read the configuration time of the slave (sub-object 1020:02).
-	if (__unlikely(co_nmt_boot_up(boot, 0x1020, 0x02) == -1))
+	if (co_nmt_boot_up(boot, 0x1020, 0x02) == -1)
 		return co_nmt_boot_abort_state;
 
 	return co_nmt_boot_chk_cfg_time_state;
@@ -1953,7 +1947,7 @@ co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
-	if (__unlikely(ac))
+	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1020:02 (Configuration time) to node %02X: %s",
@@ -1961,7 +1955,7 @@ co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 
 	// If the configuration time does not match the expected value, proceed
 	// to 'update configuration'.
-	if (__unlikely(ac || !co_nmt_boot_chk(boot, 0x1f27, boot->id, ptr, n)))
+	if (ac || !co_nmt_boot_chk(boot, 0x1f27, boot->id, ptr, n))
 		return co_nmt_boot_up_cfg_state;
 
 	return co_nmt_boot_ec_state;
@@ -1975,8 +1969,8 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'J';
 
 	// clang-format off
-	if (__unlikely(co_nmt_cfg_req(boot->nmt, boot->id, boot->timeout,
-			&co_nmt_boot_cfg_con, boot) == -1))
+	if (co_nmt_cfg_req(boot->nmt, boot->id, boot->timeout,
+			&co_nmt_boot_cfg_con, boot) == -1)
 		// clang-format on
 		return co_nmt_boot_abort_state;
 
@@ -1988,7 +1982,7 @@ co_nmt_boot_up_cfg_on_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
 	assert(boot);
 
-	if (__unlikely(ac)) {
+	if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received while updating the configuration of node %02X: %s",
@@ -2077,12 +2071,12 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 	assert(boot);
 
 	co_sub_t *sub = co_dev_find_sub(boot->dev, idx, subidx);
-	if (__unlikely(!sub))
+	if (!sub)
 		return 0;
 	co_unsigned16_t type = co_sub_get_type(sub);
 
 	union co_val val;
-	if (__unlikely(!co_val_read(type, &val, ptr, (const uint8_t *)ptr + n)))
+	if (!co_val_read(type, &val, ptr, (const uint8_t *)ptr + n))
 		return 0;
 
 	int eq = !co_val_cmp(type, &val, co_sub_get_val(sub));

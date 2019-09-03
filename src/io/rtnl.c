@@ -4,7 +4,7 @@
  *
  * @see lely/io/rtnl.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -57,7 +57,7 @@ io_rtnl_socket(__u32 pid, __u32 groups)
 	int errsv = 0;
 
 	int fd = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, NETLINK_ROUTE);
-	if (__unlikely(fd == -1)) {
+	if (fd == -1) {
 		errsv = errno;
 		goto error_socket;
 	}
@@ -66,10 +66,7 @@ io_rtnl_socket(__u32 pid, __u32 groups)
 		.nl_family = AF_NETLINK, .nl_pid = pid, .nl_groups = groups
 	};
 
-	// clang-format off
-	if (__unlikely(bind(fd, (struct sockaddr *)&addr, sizeof(addr))
-			== -1)) {
-		// clang-format on
+	if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
 		errsv = errno;
 		goto error_bind;
 	}
@@ -89,8 +86,8 @@ io_rtnl_newlink(int fd, __u32 seq, __u32 pid, int ifi_index,
 		unsigned short rtalen)
 {
 	// clang-format off
-	if (__unlikely(io_rtnl_send_newlink(fd, seq, pid, ifi_index, ifi_flags,
-			rta, rtalen) == -1))
+	if (io_rtnl_send_newlink(fd, seq, pid, ifi_index, ifi_flags, rta,
+			rtalen) == -1)
 		// clang-format on
 		return -1;
 	return io_rtnl_recv_ack(fd);
@@ -100,7 +97,7 @@ int
 io_rtnl_getlink(int fd, __u32 seq, __u32 pid, io_rtnl_newlink_func_t *func,
 		void *data)
 {
-	if (__unlikely(io_rtnl_send_getlink(fd, seq, pid) == -1))
+	if (io_rtnl_send_getlink(fd, seq, pid) == -1)
 		return -1;
 	return io_rtnl_recv_newlink(fd, func, data);
 }
@@ -112,7 +109,7 @@ io_rtnl_getattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 {
 	assert(data || !payload);
 
-	if (__unlikely(ifi_index <= 0)) {
+	if (ifi_index <= 0) {
 		errno = ENODEV;
 		return -1;
 	}
@@ -125,14 +122,11 @@ io_rtnl_getattr(int fd, __u32 seq, __u32 pid, int ifi_index,
 		unsigned short payload;
 	} args = { ifi_index, pifi_flags, type, data, payload };
 
-	// clang-format off
-	if (__unlikely(io_rtnl_getlink(fd, seq, pid, &io_rtnl_getattr_func,
-			&args) == -1))
-		// clang-format on
+	if (io_rtnl_getlink(fd, seq, pid, &io_rtnl_getattr_func, &args) == -1)
 		return -1;
 
 	// On success, rtnl_getattr_func() sets ifi_index to 0.
-	if (__unlikely(args.ifi_index)) {
+	if (args.ifi_index) {
 		errno = ENODEV;
 		return -1;
 	}
@@ -167,7 +161,7 @@ io_rtnl_getattr_func(struct ifinfomsg *ifi, struct rtattr *rta,
 		*pargs->pifi_flags = ifi->ifi_flags;
 
 	rta = io_rta_find(rta, rtalen, pargs->type);
-	if (__unlikely(!rta)) {
+	if (!rta) {
 		errno = EOPNOTSUPP;
 		return -1;
 	}
@@ -214,8 +208,8 @@ io_rtnl_recv(int fd, int (*func)(struct nlmsghdr *nlh, void *data), void *data)
 		do {
 			errno = errsv;
 			len = recv(fd, buf, sizeof(buf), 0);
-		} while (__unlikely(len == -1 && errno == EINTR));
-		if (__unlikely(len <= 0)) {
+		} while (len == -1 && errno == EINTR);
+		if (len <= 0) {
 			if (len < 0) {
 				result = -1;
 				errsv = errno;
@@ -230,14 +224,14 @@ io_rtnl_recv(int fd, int (*func)(struct nlmsghdr *nlh, void *data), void *data)
 				done = 1;
 			if (nlh->nlmsg_type == NLMSG_ERROR) {
 				struct nlmsgerr *err = NLMSG_DATA(nlh);
-				if (__unlikely(err->error < 0 && !result)) {
+				if (err->error < 0 && !result) {
 					result = -1;
 					errsv = -err->error;
 				}
 			}
 			if (nlh->nlmsg_type < NLMSG_MIN_TYPE)
 				continue;
-			if (__unlikely(func && func(nlh, data) && !result)) {
+			if (func && func(nlh, data) && !result) {
 				result = -1;
 				errsv = errno;
 			}
@@ -300,7 +294,7 @@ io_rtnl_send(int fd, struct iovec *iov, int iovlen)
 	do {
 		errno = errsv;
 		result = sendmsg(fd, &msg, 0);
-	} while (__unlikely(result == -1 && errno == EINTR));
+	} while (result == -1 && errno == EINTR);
 	return result;
 }
 

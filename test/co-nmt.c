@@ -302,11 +302,11 @@ co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (__unlikely(!subidx)) {
+	if (!subidx) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}

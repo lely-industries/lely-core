@@ -29,8 +29,8 @@
 #include "obj.h"
 #include <lely/co/dcf.h>
 #include <lely/co/pdo.h>
-#include <lely/libc/strings.h>
 #include <lely/libc/stdio.h>
+#include <lely/libc/strings.h>
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
@@ -69,16 +69,16 @@ struct __co_dev *
 __co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
-	if (__unlikely(!cfg)) {
+	if (!cfg) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create configuration struct");
 		goto error_create_cfg;
 	}
 
-	if (__unlikely(!config_parse_ini_file(cfg, filename)))
+	if (!config_parse_ini_file(cfg, filename))
 		goto error_parse_ini_file;
 
-	if (__unlikely(!__co_dev_init_from_dcf_cfg(dev, cfg)))
+	if (!__co_dev_init_from_dcf_cfg(dev, cfg))
 		goto error_init_dev;
 
 	config_destroy(cfg);
@@ -98,12 +98,12 @@ co_dev_create_from_dcf_file(const char *filename)
 	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
-	if (__unlikely(!dev)) {
+	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (__unlikely(!__co_dev_init_from_dcf_file(dev, filename))) {
+	if (!__co_dev_init_from_dcf_file(dev, filename)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -122,16 +122,16 @@ __co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
 		const char *end, struct floc *at)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
-	if (__unlikely(!cfg)) {
+	if (!cfg) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create configuration struct");
 		goto error_create_cfg;
 	}
 
-	if (__unlikely(!config_parse_ini_text(cfg, begin, end, at)))
+	if (!config_parse_ini_text(cfg, begin, end, at))
 		goto error_parse_ini_text;
 
-	if (__unlikely(!__co_dev_init_from_dcf_cfg(dev, cfg)))
+	if (!__co_dev_init_from_dcf_cfg(dev, cfg))
 		goto error_init_dev;
 
 	config_destroy(cfg);
@@ -151,12 +151,12 @@ co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
-	if (__unlikely(!dev)) {
+	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (__unlikely(!__co_dev_init_from_dcf_text(dev, begin, end, at))) {
+	if (!__co_dev_init_from_dcf_text(dev, begin, end, at)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -176,13 +176,13 @@ __co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 	assert(dev);
 	assert(cfg);
 
-	if (__unlikely(!__co_dev_init(dev, 0xff))) {
+	if (!__co_dev_init(dev, 0xff)) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize device description");
 		goto error_init_dev;
 	}
 
-	if (__unlikely(co_dev_parse_cfg(dev, cfg) == -1))
+	if (co_dev_parse_cfg(dev, cfg) == -1)
 		goto error_parse_cfg;
 
 	return dev;
@@ -202,8 +202,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	const char *val;
 
 	// clang-format off
-	if (__unlikely(co_dev_set_vendor_name(dev,
-			config_get(cfg, "DeviceInfo", "VendorName")) == -1)) {
+	if (co_dev_set_vendor_name(dev,
+			config_get(cfg, "DeviceInfo", "VendorName")) == -1) {
 		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set vendor name");
 		goto error_parse_dev;
@@ -214,8 +214,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		co_dev_set_vendor_id(dev, strtoul(val, NULL, 0));
 
 	// clang-format off
-	if (__unlikely(co_dev_set_product_name(dev,
-			config_get(cfg, "DeviceInfo", "ProductName")) == -1)) {
+	if (co_dev_set_product_name(dev,
+			config_get(cfg, "DeviceInfo", "ProductName")) == -1) {
 		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set product name");
 		goto error_parse_dev;
@@ -230,8 +230,8 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		co_dev_set_revision(dev, strtoul(val, NULL, 0));
 
 	// clang-format off
-	if (__unlikely(co_dev_set_order_code(dev,
-			config_get(cfg, "DeviceInfo", "OrderCode")) == -1)) {
+	if (co_dev_set_order_code(dev,
+			config_get(cfg, "DeviceInfo", "OrderCode")) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to set order code");
 		goto error_parse_dev;
 		// clang-format on
@@ -290,7 +290,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 	// Parse the object indices.
 	co_unsigned16_t *idx = malloc(n * sizeof(co_unsigned16_t));
-	if (__unlikely(!idx)) {
+	if (!idx) {
 		diag(DIAG_ERROR, errno2c(errno),
 				"unable to create object list");
 		goto error_parse_idx;
@@ -301,7 +301,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	config_get_idx(cfg, "ManufacturerObjects", n - i, idx + i);
 
 	for (i = 0; i < n; i++) {
-		if (__unlikely(!idx[i])) {
+		if (!idx[i]) {
 			diag(DIAG_ERROR, 0, "entry (%d) missing in object list",
 					i);
 			goto error_parse_obj;
@@ -313,11 +313,11 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 		// Create the object and add it to the dictionary.
 		co_obj_t *obj = co_obj_build(dev, idx[i]);
-		if (__unlikely(!obj))
+		if (!obj)
 			goto error_parse_obj;
 
 		// Parse the configuration section for the object.
-		if (__unlikely(co_obj_parse_cfg(obj, cfg, section) == -1))
+		if (co_obj_parse_cfg(obj, cfg, section) == -1)
 			goto error_parse_obj;
 	}
 
@@ -339,7 +339,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (val && *val)
 			nrpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
 		for (co_unsigned16_t num = 1; num <= nrpdo; num++) {
-			if (__unlikely(co_rpdo_build(dev, num, mask) == -1))
+			if (co_rpdo_build(dev, num, mask) == -1)
 				goto error_parse_pdo;
 		}
 
@@ -348,7 +348,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (val && *val)
 			ntpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
 		for (co_unsigned16_t num = 1; num <= ntpdo; num++) {
-			if (__unlikely(co_tpdo_build(dev, num, mask) == -1))
+			if (co_tpdo_build(dev, num, mask) == -1)
 				goto error_parse_pdo;
 		}
 	}
@@ -374,9 +374,9 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	}
 
 	// clang-format off
-	if (__unlikely(co_dev_set_name(dev,
+	if (co_dev_set_name(dev,
 			config_get(cfg, "DeviceComissioning", "NodeName"))
-			== -1)) {
+			== -1) {
 		// clang-format on
 		diag(DIAG_ERROR, get_errc(), "unable to set node name");
 		goto error_parse_dcf;
@@ -420,7 +420,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
 	const char *name = config_get(cfg, section, "ParameterName");
-	if (__unlikely(!name || !*name)) {
+	if (!name || !*name) {
 		diag(DIAG_ERROR, 0,
 				"ParameterName not specified for object 0x%04X",
 				idx);
@@ -430,7 +430,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	val = config_get(cfg, section, "Denotation");
 	if (val && *val)
 		name = val;
-	if (__unlikely(co_obj_set_name(obj, name) == -1)) {
+	if (co_obj_set_name(obj, name) == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to set name of object 0x%04X", idx);
 		return -1;
@@ -441,7 +441,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	val = config_get(cfg, section, "ObjectType");
 	if (val && *val) {
 		code = (co_unsigned8_t)strtoul(val, NULL, 0);
-		if (__unlikely(co_obj_set_code(obj, code) == -1)) {
+		if (co_obj_set_code(obj, code) == -1) {
 			diag(DIAG_ERROR, 0,
 					"ObjectType = 0x%x for object 0x%04X",
 					code, idx);
@@ -459,13 +459,13 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		val = config_get(cfg, section, "CompactSubObj");
 		if (val && *val)
 			subobj = (co_unsigned8_t)strtoul(val, NULL, 0);
-		if (__unlikely(!subnum && !subobj)) {
+		if (!subnum && !subobj) {
 			diag(DIAG_ERROR, 0,
 					"neither SubNumber nor CompactSubObj specified for object 0x%04X",
 					idx);
 			return -1;
 		}
-		if (__unlikely(subnum && subobj)) {
+		if (subnum && subobj) {
 			diag(DIAG_ERROR, 0,
 					"both SubNumber and CompactSubObj specified for object 0x%04X",
 					idx);
@@ -506,14 +506,11 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// Create and insert the sub-object.
 			co_sub_t *sub = co_sub_build(obj,
 					(co_unsigned8_t)subidx, type, name);
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 
 			// Parse the configuration section for the sub-object.
-			// clang-format off
-			if (__unlikely(co_sub_parse_cfg(sub, cfg, section)
-					== -1))
-				// clang-format on
+			if (co_sub_parse_cfg(sub, cfg, section) == -1)
 				return -1;
 		}
 
@@ -521,7 +518,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		if (subobj) {
 			co_sub_t *sub = co_sub_build(obj, 0,
 					CO_DEFTYPE_UNSIGNED8, "NrOfObjects");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_val_make(sub->type, &sub->def, &subobj,
 					sizeof(subobj));
@@ -545,8 +542,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				// Create name of the sub-object.
 				char *subname = NULL;
 				// clang-format off
-				if (__unlikely(asprintf(&subname, "%s%u", name,
-						(co_unsigned8_t)subidx) < 0))
+				if (asprintf(&subname, "%s%u", name,
+						(co_unsigned8_t)subidx) < 0)
 					// clang-format on
 					return -1;
 
@@ -554,34 +551,28 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				sub = co_sub_build(obj, (co_unsigned8_t)subidx,
 						type, subname);
 				free(subname);
-				if (__unlikely(!sub))
+				if (!sub)
 					return -1;
 
 				// Parse the configuration section for the
 				// sub-object.
-				// clang-format off
-				if (__unlikely(co_sub_parse_cfg(sub, cfg,
-						section) == -1))
-					// clang-format on
+				if (co_sub_parse_cfg(sub, cfg, section) == -1)
 					return -1;
 			}
 
 #ifndef LELY_NO_CO_OBJ_NAME
 			// Parse the names of the sub-objects.
-			if (__unlikely(co_obj_parse_names(obj, cfg) == -1))
+			if (co_obj_parse_names(obj, cfg) == -1)
 				return -1;
 #endif
 
 			// Parse the values of the sub-objects.
-			if (__unlikely(co_obj_parse_values(obj, cfg) == -1))
+			if (co_obj_parse_values(obj, cfg) == -1)
 				return -1;
 		}
 
 		co_sub_t *sub = co_obj_find_sub(obj, 0x00);
-		// clang-format off
-		if (__unlikely(!sub || co_sub_get_type(sub)
-				!= CO_DEFTYPE_UNSIGNED8)) {
-			// clang-format on
+		if (!sub || co_sub_get_type(sub) != CO_DEFTYPE_UNSIGNED8) {
 			diag(DIAG_ERROR, 0,
 					"object 0x%04X does not provide the highest sub-index implemented",
 					idx);
@@ -596,18 +587,18 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		val = config_get(cfg, section, "DataType");
 		if (val && *val)
 			type = (co_unsigned16_t)strtoul(val, NULL, 0);
-		if (__unlikely(!type)) {
+		if (!type) {
 			diag_at(DIAG_ERROR, 0, &at, "DataType not specified");
 			return -1;
 		}
 
 		// Create and insert the sub-object.
 		co_sub_t *sub = co_sub_build(obj, 0, type, name);
-		if (__unlikely(!sub))
+		if (!sub)
 			return -1;
 
 		// Parse the configuration section for the sub-object.
-		if (__unlikely(co_sub_parse_cfg(sub, cfg, section) == -1))
+		if (co_sub_parse_cfg(sub, cfg, section) == -1)
 			return -1;
 	}
 
@@ -641,10 +632,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 			n--;
 			co_sub_t *sub = co_obj_find_sub(
 					obj, (co_unsigned8_t)subidx);
-			// clang-format off
-			if (sub && __unlikely(co_sub_set_name(sub, val)
-					== -1)) {
-				// clang-format on
+			if (sub && co_sub_set_name(sub, val) == -1) {
 				diag(DIAG_ERROR, get_errc(),
 						"unable to set name of sub-object %Xsub%X",
 						(co_unsigned16_t)idx,
@@ -692,10 +680,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 				val += 7;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
-			// clang-format off
-			if (__unlikely(!co_val_lex(
-					type, sub->val, val, NULL, &at))) {
-				// clang-format on
+			if (!co_val_lex(type, sub->val, val, NULL, &at)) {
 				diag(DIAG_ERROR, get_errc(),
 						"unable to set value of sub-object %Xsub%X",
 						(co_unsigned16_t)idx,
@@ -716,13 +701,13 @@ co_obj_build(co_dev_t *dev, co_unsigned16_t idx)
 	assert(dev);
 
 	co_obj_t *obj = co_obj_create(idx);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		diag(DIAG_ERROR, get_errc(), "unable to create object 0x%04X",
 				idx);
 		return NULL;
 	}
 
-	if (__unlikely(co_dev_insert_obj(dev, obj) == -1)) {
+	if (co_dev_insert_obj(dev, obj) == -1) {
 		diag(DIAG_ERROR, 0,
 				"unable to insert object 0x%04X into the object dictionary",
 				idx);
@@ -752,7 +737,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_MIN_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->min, val, NULL, &at))) {
+		if (!co_val_lex(type, &sub->min, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse LowLimit");
 			return -1;
@@ -767,7 +752,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_MAX_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->max, val, NULL, &at))) {
+		if (!co_val_lex(type, &sub->max, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse HighLimit");
 			return -1;
@@ -808,7 +793,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, &sub->def, val, NULL, &at))) {
+		if (!co_val_lex(type, &sub->def, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse DefaultValue");
 			return -1;
@@ -831,7 +816,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 		}
-		if (__unlikely(!co_val_lex(type, sub->val, val, NULL, &at))) {
+		if (!co_val_lex(type, sub->val, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse ParameterValue");
 			return -1;
@@ -853,10 +838,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		sub->flags |= CO_OBJ_FLAGS_UPLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
-		// clang-format off
-		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
-				== -1)) {
-			// clang-format on
+		if (co_val_init_dom(sub->val, val, strlen(val) + 1) == -1) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse UploadFile");
 			return -1;
@@ -874,10 +856,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		sub->flags |= CO_OBJ_FLAGS_DOWNLOAD_FILE;
 		// Store the filename instead of its contents in the object
 		// dictionary.
-		// clang-format off
-		if (__unlikely(co_val_init_dom(sub->val, val, strlen(val) + 1)
-				== -1)) {
-			// clang-format on
+		if (co_val_init_dom(sub->val, val, strlen(val) + 1) == -1) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse DownloadFile");
 			return -1;
@@ -925,14 +904,14 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
 	co_sub_t *sub = co_sub_create(subidx, type);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create sub-object %Xsub%X", idx,
 				subidx);
 		goto error;
 	}
 
-	if (__unlikely(co_obj_insert_sub(obj, sub) == -1)) {
+	if (co_obj_insert_sub(obj, sub) == -1) {
 		diag(DIAG_ERROR, 0,
 				"unable to insert sub-object %Xsub%X into the object dictionary",
 				idx, subidx);
@@ -940,7 +919,7 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 	}
 
 #ifndef LELY_NO_CO_OBJ_NAME
-	if (__unlikely(co_sub_set_name(sub, name) == -1)) {
+	if (co_sub_set_name(sub, name) == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to set name of sub-object %Xsub%X", idx,
 				subidx);
@@ -974,13 +953,11 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	// Create the RPDO communication parameter if it does not exist.
 	if (!co_dev_find_obj(dev, 0x1400 + num - 1)) {
 		co_obj_t *obj = co_obj_build(dev, 0x1400 + num - 1);
-		if (__unlikely(!obj))
+		if (!obj)
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		// clang-format off
-		if (__unlikely(co_obj_set_name(obj,
-				"RPDO communication parameter") == -1)) {
-			// clang-format on
+		if (co_obj_set_name(obj, "RPDO communication parameter")
+				== -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
@@ -990,7 +967,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
 				"Highest sub-index supported");
-		if (__unlikely(!sub))
+		if (!sub)
 			return -1;
 		co_val_make(sub->type, &sub->def, &n, sizeof(n));
 		co_val_copy(sub->type, sub->val, &sub->def);
@@ -999,7 +976,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x01) {
 			sub = co_sub_build(obj, 1, CO_DEFTYPE_UNSIGNED32,
 					"COB-ID used by RPDO");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_unsigned32_t cobid = CO_PDO_COBID_VALID;
 			if (num <= 4) {
@@ -1016,7 +993,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x02) {
 			sub = co_sub_build(obj, 2, CO_DEFTYPE_UNSIGNED8,
 					"Transmission type");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1024,7 +1001,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x04) {
 			sub = co_sub_build(obj, 3, CO_DEFTYPE_UNSIGNED16,
 					"Inhibit time");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1032,7 +1009,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x08) {
 			sub = co_sub_build(obj, 4, CO_DEFTYPE_UNSIGNED8,
 					"Compatibility entry");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1040,7 +1017,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x10) {
 			sub = co_sub_build(obj, 5, CO_DEFTYPE_UNSIGNED16,
 					"Event timer");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1048,7 +1025,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x20) {
 			sub = co_sub_build(obj, 6, CO_DEFTYPE_UNSIGNED8,
 					"SYNC start value");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1057,13 +1034,10 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	// Create the RPDO mapping parameter if it does not exist.
 	if (!co_dev_find_obj(dev, 0x1600 + num - 1)) {
 		co_obj_t *obj = co_obj_build(dev, 0x1600 + num - 1);
-		if (__unlikely(!obj))
+		if (!obj)
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		// clang-format off
-		if (__unlikely(co_obj_set_name(obj, "RPDO mapping parameter")
-				== -1)) {
-			// clang-format on
+		if (co_obj_set_name(obj, "RPDO mapping parameter") == -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
 			return -1;
@@ -1073,7 +1047,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
 				"Highest sub-index supported");
-		if (__unlikely(!sub))
+		if (!sub)
 			return -1;
 		co_sub_set_access(sub, CO_ACCESS_RW);
 
@@ -1083,7 +1057,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 			co_sub_t *sub = co_sub_build(
 					obj, i, CO_DEFTYPE_UNSIGNED32, name);
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1109,13 +1083,11 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	// Create the TPDO communication parameter if it does not exist.
 	if (!co_dev_find_obj(dev, 0x1800 + num - 1)) {
 		co_obj_t *obj = co_obj_build(dev, 0x1800 + num - 1);
-		if (__unlikely(!obj))
+		if (!obj)
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		// clang-format off
-		if (__unlikely(co_obj_set_name(obj,
-				"TPDO communication parameter") == -1)) {
-			// clang-format on
+		if (co_obj_set_name(obj, "TPDO communication parameter")
+				== -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
@@ -1125,7 +1097,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
 				"Highest sub-index supported");
-		if (__unlikely(!sub))
+		if (!sub)
 			return -1;
 		co_val_make(sub->type, &sub->def, &n, sizeof(n));
 		co_val_copy(sub->type, sub->val, &sub->def);
@@ -1134,7 +1106,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x01) {
 			sub = co_sub_build(obj, 1, CO_DEFTYPE_UNSIGNED32,
 					"COB-ID used by TPDO");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_unsigned32_t cobid = CO_PDO_COBID_VALID;
 			if (num <= 4) {
@@ -1151,7 +1123,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x02) {
 			sub = co_sub_build(obj, 2, CO_DEFTYPE_UNSIGNED8,
 					"Transmission type");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1159,7 +1131,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x04) {
 			sub = co_sub_build(obj, 3, CO_DEFTYPE_UNSIGNED16,
 					"Inhibit time");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1167,7 +1139,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x08) {
 			sub = co_sub_build(obj, 4, CO_DEFTYPE_UNSIGNED8,
 					"Reserved");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1175,7 +1147,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x10) {
 			sub = co_sub_build(obj, 5, CO_DEFTYPE_UNSIGNED16,
 					"Event timer");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1183,7 +1155,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (mask & 0x20) {
 			sub = co_sub_build(obj, 6, CO_DEFTYPE_UNSIGNED8,
 					"SYNC start value");
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1192,13 +1164,10 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	// Create the TPDO mapping parameter if it does not exist.
 	if (!co_dev_find_obj(dev, 0x1a00 + num - 1)) {
 		co_obj_t *obj = co_obj_build(dev, 0x1a00 + num - 1);
-		if (__unlikely(!obj))
+		if (!obj)
 			return -1;
 #ifndef LELY_NO_CO_OBJ_NAME
-		// clang-format off
-		if (__unlikely(co_obj_set_name(obj, "TPDO mapping parameter")
-				== -1)) {
-			// clang-format on
+		if (co_obj_set_name(obj, "TPDO mapping parameter") == -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);
 			return -1;
@@ -1208,7 +1177,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		co_sub_t *sub = co_sub_build(obj, 0, CO_DEFTYPE_UNSIGNED8,
 				"Highest sub-index supported");
-		if (__unlikely(!sub))
+		if (!sub)
 			return -1;
 		co_sub_set_access(sub, CO_ACCESS_RW);
 
@@ -1218,7 +1187,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 			co_sub_t *sub = co_sub_build(
 					obj, i, CO_DEFTYPE_UNSIGNED32, name);
-			if (__unlikely(!sub))
+			if (!sub)
 				return -1;
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
@@ -1253,7 +1222,7 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 		maxidx = 0;
 
 	const char *val = config_get(cfg, section, "SupportedObjects");
-	if (__unlikely(!val || !*val))
+	if (!val || !*val)
 		return 0;
 
 	co_unsigned16_t n = (co_unsigned16_t)strtoul(val, NULL, 0);

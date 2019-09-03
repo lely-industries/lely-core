@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -495,7 +495,7 @@ void *
 __co_gw_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_gw));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -541,12 +541,12 @@ co_gw_create(void)
 	int errc = 0;
 
 	co_gw_t *gw = __co_gw_alloc();
-	if (__unlikely(!gw)) {
+	if (!gw) {
 		errc = get_errc();
 		goto error_alloc_gw;
 	}
 
-	if (__unlikely(!__co_gw_init(gw))) {
+	if (!__co_gw_init(gw)) {
 		errc = get_errc();
 		goto error_init_gw;
 	}
@@ -577,11 +577,11 @@ co_gw_init_net(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	if (!id)
 		id = co_dev_get_netid(co_nmt_get_dev(nmt));
 
-	if (__unlikely(co_gw_fini_net(gw, id) == -1))
+	if (co_gw_fini_net(gw, id) == -1)
 		return -1;
 
 	gw->net[id - 1] = co_gw_net_create(gw, id, nmt);
-	return __likely(gw->net[id - 1]) ? 0 : -1;
+	return gw->net[id - 1] ? 0 : -1;
 }
 
 int
@@ -589,7 +589,7 @@ co_gw_fini_net(co_gw_t *gw, co_unsigned16_t id)
 {
 	assert(gw);
 
-	if (__unlikely(!id || id > CO_GW_NUM_NET)) {
+	if (!id || id > CO_GW_NUM_NET) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -606,7 +606,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	assert(gw);
 	assert(req);
 
-	if (__unlikely(req->size < sizeof(*req))) {
+	if (req->size < sizeof(*req)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -669,20 +669,17 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV__LSS_SLOWSCAN:
 	case CO_GW_SRV__LSS_FASTSCAN:
 #endif
-		if (__unlikely(req->size < sizeof(struct co_gw_req_net))) {
+		if (req->size < sizeof(struct co_gw_req_net)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		struct co_gw_req_net *par = (struct co_gw_req_net *)req;
 		if (par->net)
 			net = par->net;
-		if (__unlikely(!net)) {
+		if (!net) {
 			iec = CO_GW_IEC_NO_DEF_NET;
 			goto error;
-			// clang-format off
-		} else if (__unlikely(net > CO_GW_NUM_NET
-				|| !gw->net[net - 1])) {
-			// clang-format on
+		} else if (net > CO_GW_NUM_NET || !gw->net[net - 1]) {
 			iec = CO_GW_IEC_BAD_NET;
 			goto error;
 		}
@@ -714,14 +711,14 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 #endif
-		if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+		if (req->size < sizeof(struct co_gw_req_node)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
 		struct co_gw_req_node *par = (struct co_gw_req_node *)req;
 		if (par->node != 0xff)
 			node = par->node;
-		if (__unlikely(node > CO_NUM_NODES)) {
+		if (node > CO_NUM_NODES) {
 			iec = CO_GW_IEC_BAD_NODE;
 			goto error;
 		}
@@ -745,7 +742,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 #endif
-		if (__unlikely(!node)) {
+		if (!node) {
 			iec = CO_GW_IEC_NO_DEF_NODE;
 			goto error;
 		}
@@ -948,7 +945,7 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	assert(nmt);
 
 	struct co_gw_net *net = malloc(sizeof(*net));
-	if (__unlikely(!net)) {
+	if (!net) {
 		set_errc(errno2c(errno));
 		return NULL;
 	}
@@ -1349,7 +1346,7 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 		co_gw_job_destroy(*pself);
 
 	*pself = malloc(CO_GW_JOB_SIZE + req->size);
-	if (__unlikely(!*pself)) {
+	if (!*pself) {
 		set_errc(errno2c(errno));
 		return NULL;
 	}
@@ -1400,13 +1397,13 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 
 	int errc = 0;
 
-	if (__unlikely(*pself)) {
+	if (*pself) {
 		errc = errnum2c(ERRNUM_BUSY);
 		goto error_param;
 	}
 
 	co_csdo_t *sdo = co_csdo_create(co_nmt_get_net(net->nmt), NULL, id);
-	if (__unlikely(!sdo)) {
+	if (!sdo) {
 		errc = get_errc();
 		goto error_create_sdo;
 	}
@@ -1420,7 +1417,7 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 
 	struct co_gw_job *job = co_gw_job_create(
 			pself, net, sdo, &co_gw_job_sdo_dtor, req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		errc = get_errc();
 		goto error_create_job;
 	}
@@ -1456,7 +1453,7 @@ co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	co_gw_job_remove(job);
 
-	if (__unlikely(job->req.srv != CO_GW_SRV_SDO_UP))
+	if (job->req.srv != CO_GW_SRV_SDO_UP)
 		goto done;
 	struct co_gw_req_sdo_up *req = (struct co_gw_req_sdo_up *)&job->req;
 
@@ -1467,7 +1464,7 @@ co_gw_job_sdo_up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 				sizeof(struct co_gw_con_sdo_up));
 		int errc = get_errc();
 		struct co_gw_con_sdo_up *con = malloc(size);
-		if (__likely(con)) {
+		if (con) {
 			*con = (struct co_gw_con_sdo_up){ .size = size,
 				.srv = req->srv,
 				.data = req->data,
@@ -1501,7 +1498,7 @@ co_gw_job_sdo_dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 	co_gw_job_remove(job);
 
-	if (__likely(job->req.srv == CO_GW_SRV_SDO_DN))
+	if (job->req.srv == CO_GW_SRV_SDO_DN)
 		co_gw_send_con(job->net->gw, &job->req, 0, ac);
 
 	co_gw_job_destroy(job);
@@ -1542,13 +1539,13 @@ co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
 
 	co_gw_t *gw = net->gw;
 
-	if (__unlikely(*pself)) {
+	if (*pself) {
 		set_errnum(ERRNUM_BUSY);
 		return NULL;
 	}
 
 	co_lss_t *lss = co_nmt_get_lss(net->nmt);
-	if (__unlikely(!lss)) {
+	if (!lss) {
 		set_errnum(ERRNUM_PERM);
 		return NULL;
 	}
@@ -1746,7 +1743,7 @@ co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 	struct co_gw_net *net = data;
 	assert(net);
 
-	if (__unlikely(ac))
+	if (ac)
 		return;
 
 	struct co_gw_ind_rpdo ind = { .size = CO_GW_IND_RPDO_SIZE,
@@ -1756,7 +1753,7 @@ co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		.n = 0x40 };
 
 	const struct co_pdo_map_par *par = co_rpdo_get_map_par(pdo);
-	if (__unlikely(co_pdo_unmap(par, ptr, n, ind.val, &ind.n)))
+	if (co_pdo_unmap(par, ptr, n, ind.val, &ind.n))
 		return;
 	ind.size += ind.n * sizeof(*ind.val);
 
@@ -1779,7 +1776,7 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_sdo_up))) {
+	if (req->size < sizeof(struct co_gw_req_sdo_up)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1793,14 +1790,14 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	if (node == co_dev_get_id(dev)) {
 		job = co_gw_job_create(&gw->net[net - 1]->sdo[node - 1],
 				gw->net[net - 1], NULL, NULL, req);
-		if (__unlikely(!job)) {
+		if (!job) {
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
 
 		// clang-format off
-		if (__unlikely(co_dev_up_req(dev, par->idx, par->subidx,
-				&co_gw_job_sdo_up_con, job) == -1)) {
+		if (co_dev_up_req(dev, par->idx, par->subidx,
+				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_up_req;
@@ -1815,15 +1812,15 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 		job = co_gw_job_create_sdo(&gw->net[net - 1]->sdo[node - 1],
 				gw->net[net - 1], node, req);
-		if (__unlikely(!job)) {
+		if (!job) {
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
 
 		co_csdo_set_up_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
-		if (__unlikely(co_csdo_up_req(job->data, par->idx, par->subidx,
-				&co_gw_job_sdo_up_con, job) == -1)) {
+		if (co_csdo_up_req(job->data, par->idx, par->subidx,
+				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_up_req;
@@ -1852,13 +1849,13 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < CO_GW_REQ_SDO_DN_SIZE)) {
+	if (req->size < CO_GW_REQ_SDO_DN_SIZE) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 	const struct co_gw_req_sdo_dn *par =
 			(const struct co_gw_req_sdo_dn *)req;
-	if (__unlikely(par->size < CO_GW_REQ_SDO_DN_SIZE + par->len)) {
+	if (par->size < CO_GW_REQ_SDO_DN_SIZE + par->len) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1870,15 +1867,14 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	if (node == co_dev_get_id(dev)) {
 		job = co_gw_job_create(&gw->net[net - 1]->sdo[node - 1],
 				gw->net[net - 1], NULL, NULL, req);
-		if (__unlikely(!job)) {
+		if (!job) {
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
 
 		// clang-format off
-		if (__unlikely(co_dev_dn_req(dev, par->idx, par->subidx,
-				par->val, par->len, &co_gw_job_sdo_dn_con, job)
-				== -1)) {
+		if (co_dev_dn_req(dev, par->idx, par->subidx, par->val,
+				par->len, &co_gw_job_sdo_dn_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_dn_req;
@@ -1893,16 +1889,15 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 		job = co_gw_job_create_sdo(&gw->net[net - 1]->sdo[node - 1],
 				gw->net[net - 1], node, req);
-		if (__unlikely(!job)) {
+		if (!job) {
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
 
 		co_csdo_set_dn_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
-		if (__unlikely(co_csdo_dn_req(job->data, par->idx, par->subidx,
-				par->val, par->len, &co_gw_job_sdo_dn_con, job)
-				== -1)) {
+		if (co_csdo_dn_req(job->data, par->idx, par->subidx, par->val,
+				par->len, &co_gw_job_sdo_dn_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_dn_req;
@@ -1932,7 +1927,7 @@ co_gw_recv_set_sdo_timeout(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 #endif
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_set_sdo_timeout))) {
+	if (req->size < sizeof(struct co_gw_req_set_sdo_timeout)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1968,15 +1963,15 @@ co_gw_recv_set_rpdo(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < CO_GW_REQ_SET_RPDO_SIZE)) {
+	if (req->size < CO_GW_REQ_SET_RPDO_SIZE) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 	const struct co_gw_req_set_rpdo *par =
 			(const struct co_gw_req_set_rpdo *)req;
 	// clang-format off
-	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_SET_RPDO_SIZE
-			+ par->n * sizeof(*par->map))) {
+	if (par->n > 0x40 || par->size < CO_GW_REQ_SET_RPDO_SIZE
+			+ par->n * sizeof(*par->map)) {
 		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -2010,15 +2005,15 @@ co_gw_recv_set_tpdo(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < CO_GW_REQ_SET_TPDO_SIZE)) {
+	if (req->size < CO_GW_REQ_SET_TPDO_SIZE) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 	const struct co_gw_req_set_tpdo *par =
 			(const struct co_gw_req_set_tpdo *)req;
 	// clang-format off
-	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_SET_TPDO_SIZE
-			+ par->n * sizeof(*par->map))) {
+	if (par->n > 0x40 || par->size < CO_GW_REQ_SET_TPDO_SIZE
+			+ par->n * sizeof(*par->map)) {
 		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -2055,7 +2050,7 @@ co_gw_recv_pdo_read(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_pdo_read))) {
+	if (req->size < sizeof(struct co_gw_req_pdo_read)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2066,7 +2061,7 @@ co_gw_recv_pdo_read(
 	co_unsigned32_t ac = 0;
 
 	co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, par->num);
-	if (__unlikely(!pdo)) {
+	if (!pdo) {
 		iec = CO_GW_IEC_INTERN;
 		goto error;
 	}
@@ -2085,7 +2080,7 @@ co_gw_recv_pdo_read(
 	size_t n = sizeof(buf);
 	ac = co_pdo_up(map, dev, &sdo_req, buf, &n);
 	co_sdo_req_fini(&sdo_req);
-	if (__unlikely(ac))
+	if (ac)
 		goto error;
 
 	struct co_gw_con_pdo_read con = { .size = sizeof(con),
@@ -2096,7 +2091,7 @@ co_gw_recv_pdo_read(
 
 	// Unmap the PDO values.
 	ac = co_pdo_unmap(map, buf, n, con.val, &con.n);
-	if (__unlikely(ac))
+	if (ac)
 		goto error;
 
 	con.size += con.n * sizeof(*con.val);
@@ -2120,15 +2115,15 @@ co_gw_recv_pdo_write(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < CO_GW_REQ_PDO_WRITE_SIZE)) {
+	if (req->size < CO_GW_REQ_PDO_WRITE_SIZE) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 	const struct co_gw_req_pdo_write *par =
 			(const struct co_gw_req_pdo_write *)req;
 	// clang-format off
-	if (__unlikely(par->n > 0x40 || par->size < CO_GW_REQ_PDO_WRITE_SIZE
-			+ par->n * sizeof(*par->val))) {
+	if (par->n > 0x40 || par->size < CO_GW_REQ_PDO_WRITE_SIZE
+			+ par->n * sizeof(*par->val)) {
 		// clang-format on
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -2138,7 +2133,7 @@ co_gw_recv_pdo_write(
 	co_unsigned32_t ac = 0;
 
 	co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, par->num);
-	if (__unlikely(!pdo)) {
+	if (!pdo) {
 		iec = CO_GW_IEC_INTERN;
 		goto error;
 	}
@@ -2148,19 +2143,19 @@ co_gw_recv_pdo_write(
 	uint8_t buf[CAN_MAX_LEN] = { 0 };
 	size_t n = sizeof(buf);
 	ac = co_pdo_map(map, par->val, par->n, buf, &n);
-	if (__unlikely(ac))
+	if (ac)
 		goto error;
 
 	// Write the mapped values to the object dictionary.
 	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
 	ac = co_pdo_dn(map, dev, &sdo_req, buf, n);
 	co_sdo_req_fini(&sdo_req);
-	if (__unlikely(ac))
+	if (ac)
 		goto error;
 
 	// Trigger the event-based TPDO, if necessary.
 	int errc = 0;
-	if (__unlikely(co_tpdo_event(pdo) == -1)) {
+	if (co_tpdo_event(pdo) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2185,7 +2180,7 @@ co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	int iec = 0;
 
 	int errc = get_errc();
-	if (__unlikely(co_nmt_cs_req(nmt, cs, node) == -1)) {
+	if (co_nmt_cs_req(nmt, cs, node) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2206,10 +2201,7 @@ co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	co_unsigned16_t gt = 0;
 	co_unsigned8_t ltf = 0;
 	if (req->srv == CO_GW_SRV_NMT_NG_ENABLE) {
-		// clang-format off
-		if (__unlikely(req->size
-				< sizeof(struct co_gw_req_nmt_set_ng))) {
-			// clang-format on
+		if (req->size < sizeof(struct co_gw_req_nmt_set_ng)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -2223,7 +2215,7 @@ co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	int iec = 0;
 
 	int errc = get_errc();
-	if (__unlikely(co_nmt_ng_req(nmt, node, gt, ltf) == -1)) {
+	if (co_nmt_ng_req(nmt, node, gt, ltf) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2246,10 +2238,7 @@ co_gw_recv_nmt_set_hb(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 	co_unsigned16_t ms = 0;
 	if (req->srv == CO_GW_SRV_NMT_HB_ENABLE) {
-		// clang-format off
-		if (__unlikely(req->size
-				< sizeof(struct co_gw_req_nmt_set_hb))) {
-			// clang-format on
+		if (req->size < sizeof(struct co_gw_req_nmt_set_hb)) {
 			set_errnum(ERRNUM_INVAL);
 			return -1;
 		}
@@ -2275,7 +2264,7 @@ co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_init))) {
+	if (req->size < sizeof(struct co_gw_req_init)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2287,63 +2276,63 @@ co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 	co_unsigned16_t rate;
 	switch (par->bitidx) {
 	case 0:
-		if (__unlikely(!(baud & CO_BAUD_1000))) {
+		if (!(baud & CO_BAUD_1000)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 1000;
 		break;
 	case 1:
-		if (__unlikely(!(baud & CO_BAUD_800))) {
+		if (!(baud & CO_BAUD_800)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 800;
 		break;
 	case 2:
-		if (__unlikely(!(baud & CO_BAUD_500))) {
+		if (!(baud & CO_BAUD_500)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 500;
 		break;
 	case 3:
-		if (__unlikely(!(baud & CO_BAUD_250))) {
+		if (!(baud & CO_BAUD_250)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 250;
 		break;
 	case 4:
-		if (__unlikely(!(baud & CO_BAUD_125))) {
+		if (!(baud & CO_BAUD_125)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 125;
 		break;
 	case 6:
-		if (__unlikely(!(baud & CO_BAUD_50))) {
+		if (!(baud & CO_BAUD_50)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 50;
 		break;
 	case 7:
-		if (__unlikely(!(baud & CO_BAUD_20))) {
+		if (!(baud & CO_BAUD_20)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 20;
 		break;
 	case 8:
-		if (__unlikely(!(baud & CO_BAUD_10))) {
+		if (!(baud & CO_BAUD_10)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
 		rate = 10;
 		break;
 	case 9:
-		if (__unlikely(!(baud & CO_BAUD_AUTO))) {
+		if (!(baud & CO_BAUD_AUTO)) {
 			iec = CO_GW_IEC_LSS_RATE;
 			goto error;
 		}
@@ -2355,7 +2344,7 @@ co_gw_recv_init(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 		gw->rate_func(net, rate, gw->rate_data);
 
 	int errc = get_errc();
-	if (__unlikely(co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE) == -1)) {
+	if (co_nmt_cs_ind(nmt, CO_NMT_CS_RESET_NODE) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2375,7 +2364,7 @@ co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_set_hb))) {
+	if (req->size < sizeof(struct co_gw_req_set_hb)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2385,12 +2374,12 @@ co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 	co_unsigned32_t ac = 0;
 
 	co_obj_t *obj = co_dev_find_obj(dev, 0x1017);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		ac = CO_SDO_AC_NO_OBJ;
 		goto error;
 	}
 	co_sub_t *sub = co_obj_find_sub(obj, 0x00);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2410,7 +2399,7 @@ co_gw_recv_set_id(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+	if (req->size < sizeof(struct co_gw_req_node)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2418,10 +2407,7 @@ co_gw_recv_set_id(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 
 	int iec = 0;
 
-	// clang-format off
-	if (__unlikely(!par->node
-			|| (par->node > CO_NUM_NODES && par->node != 0xff))) {
-		// clang-format on
+	if (!par->node || (par->node > CO_NUM_NODES && par->node != 0xff)) {
 		iec = CO_GW_IEC_BAD_NODE;
 		goto error;
 	}
@@ -2443,7 +2429,7 @@ co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_dev_t *dev = co_nmt_get_dev(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_set_emcy))) {
+	if (req->size < sizeof(struct co_gw_req_set_emcy)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2459,12 +2445,12 @@ co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		cobid |= CO_EMCY_COBID_VALID;
 
 	co_obj_t *obj = co_dev_find_obj(dev, 0x1028);
-	if (__unlikely(!obj)) {
+	if (!obj) {
 		ac = CO_SDO_AC_NO_OBJ;
 		goto error;
 	}
 	co_sub_t *sub = co_obj_find_sub(obj, node);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2482,7 +2468,7 @@ co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_CMD_TIMEOUT);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_set_cmd_timeout))) {
+	if (req->size < sizeof(struct co_gw_req_set_cmd_timeout)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2520,7 +2506,7 @@ co_gw_recv_set_bootup_ind(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_BOOTUP_IND);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_set_bootup_ind))) {
+	if (req->size < sizeof(struct co_gw_req_set_bootup_ind)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2539,7 +2525,7 @@ co_gw_recv_set_net(co_gw_t *gw, const struct co_gw_req *req)
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_NET);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_net))) {
+	if (req->size < sizeof(struct co_gw_req_net)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2547,7 +2533,7 @@ co_gw_recv_set_net(co_gw_t *gw, const struct co_gw_req *req)
 
 	int iec = 0;
 
-	if (__unlikely(par->net > CO_GW_NUM_NET)) {
+	if (par->net > CO_GW_NUM_NET) {
 		iec = CO_GW_IEC_BAD_NET;
 		goto error;
 	}
@@ -2567,7 +2553,7 @@ co_gw_recv_set_node(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_NODE);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+	if (req->size < sizeof(struct co_gw_req_node)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2575,7 +2561,7 @@ co_gw_recv_set_node(
 
 	int iec = 0;
 
-	if (__unlikely(par->node > CO_NUM_NODES)) {
+	if (par->node > CO_NUM_NODES) {
 		iec = CO_GW_IEC_BAD_NODE;
 		goto error;
 	}
@@ -2625,7 +2611,7 @@ co_gw_recv_lss_switch(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_lss_t *lss = co_nmt_get_lss(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch))) {
+	if (req->size < sizeof(struct co_gw_req_lss_switch)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2634,13 +2620,13 @@ co_gw_recv_lss_switch(
 
 	int iec = 0;
 
-	if (__unlikely(!lss)) {
+	if (!lss) {
 		iec = CO_GW_IEC_BAD_SRV;
 		goto error;
 	}
 
 	int errc = get_errc();
-	if (__unlikely(co_lss_switch_req(lss, par->mode) == -1)) {
+	if (co_lss_switch_req(lss, par->mode) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2658,7 +2644,7 @@ co_gw_recv_lss_switch_sel(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_LSS_SWITCH_SEL);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch_sel))) {
+	if (req->size < sizeof(struct co_gw_req_lss_switch_sel)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2670,14 +2656,14 @@ co_gw_recv_lss_switch_sel(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
 	// clang-format off
-	if (__unlikely(co_lss_switch_sel_req(job->data, &par->id,
-			&co_gw_job_lss_cs_ind, job) == -1)) {
+	if (co_lss_switch_sel_req(job->data, &par->id, &co_gw_job_lss_cs_ind,
+			job) == -1) {
 		// clang-format on
 		iec = errnum2iec(get_errnum());
 		goto error_switch_sel_req;
@@ -2701,7 +2687,7 @@ co_gw_recv_lss_set_id(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_LSS_SET_ID);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_node))) {
+	if (req->size < sizeof(struct co_gw_req_node)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2712,15 +2698,13 @@ co_gw_recv_lss_set_id(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
-	// clang-format off
-	if (__unlikely(co_lss_set_id_req(job->data, par->node,
-			&co_gw_job_lss_err_ind, job) == -1)) {
-		// clang-format on
+	if (co_lss_set_id_req(job->data, par->node, &co_gw_job_lss_err_ind, job)
+			== -1) {
 		iec = errnum2iec(get_errnum());
 		goto error_set_id_req;
 	}
@@ -2743,7 +2727,7 @@ co_gw_recv_lss_set_rate(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_LSS_SET_RATE);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_set_rate))) {
+	if (req->size < sizeof(struct co_gw_req_lss_set_rate)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2752,7 +2736,7 @@ co_gw_recv_lss_set_rate(
 
 	int iec = 0;
 
-	if (__unlikely(par->bitsel)) {
+	if (par->bitsel) {
 		iec = CO_GW_IEC_LSS_RATE;
 		goto error_srv;
 	}
@@ -2775,15 +2759,13 @@ co_gw_recv_lss_set_rate(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
-	// clang-format off
-	if (__unlikely(co_lss_set_rate_req(job->data, rate,
-			&co_gw_job_lss_err_ind, job) == -1)) {
-		// clang-format on
+	if (co_lss_set_rate_req(job->data, rate, &co_gw_job_lss_err_ind, job)
+			== -1) {
 		iec = errnum2iec(get_errnum());
 		goto error_set_rate_req;
 	}
@@ -2810,7 +2792,7 @@ co_gw_recv_lss_switch_rate(
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 	co_lss_t *lss = co_nmt_get_lss(nmt);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_switch_rate))) {
+	if (req->size < sizeof(struct co_gw_req_lss_switch_rate)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2819,13 +2801,13 @@ co_gw_recv_lss_switch_rate(
 
 	int iec = 0;
 
-	if (__unlikely(!lss)) {
+	if (!lss) {
 		iec = CO_GW_IEC_BAD_SRV;
 		goto error;
 	}
 
 	int errc = get_errc();
-	if (__unlikely(co_lss_switch_rate_req(lss, par->delay) == -1)) {
+	if (co_lss_switch_rate_req(lss, par->delay) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);
 	}
@@ -2848,15 +2830,12 @@ co_gw_recv_lss_store(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
-	// clang-format off
-	if (__unlikely(co_lss_store_req(job->data, &co_gw_job_lss_err_ind, job)
-			== -1)) {
-		// clang-format on
+	if (co_lss_store_req(job->data, &co_gw_job_lss_err_ind, job) == -1) {
 		iec = errnum2iec(get_errnum());
 		goto error_store_req;
 	}
@@ -2879,7 +2858,7 @@ co_gw_recv_lss_get_lssid(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_LSS_GET_LSSID);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_get_lssid))) {
+	if (req->size < sizeof(struct co_gw_req_lss_get_lssid)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2891,7 +2870,7 @@ co_gw_recv_lss_get_lssid(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
@@ -2899,8 +2878,8 @@ co_gw_recv_lss_get_lssid(
 	switch (par->cs) {
 	case 0x5a:
 		// clang-format off
-		if (__unlikely(co_lss_get_vendor_id_req(job->data,
-				&co_gw_job_lss_lssid_ind, job) == -1)) {
+		if (co_lss_get_vendor_id_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_switch_sel_req;
@@ -2908,8 +2887,8 @@ co_gw_recv_lss_get_lssid(
 		break;
 	case 0x5b:
 		// clang-format off
-		if (__unlikely(co_lss_get_product_code_req(job->data,
-				&co_gw_job_lss_lssid_ind, job) == -1)) {
+		if (co_lss_get_product_code_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_switch_sel_req;
@@ -2917,8 +2896,8 @@ co_gw_recv_lss_get_lssid(
 		break;
 	case 0x5c:
 		// clang-format off
-		if (__unlikely(co_lss_get_revision_req(job->data,
-				&co_gw_job_lss_lssid_ind, job) == -1)) {
+		if (co_lss_get_revision_req(job->data, &co_gw_job_lss_lssid_ind,
+				job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_switch_sel_req;
@@ -2926,8 +2905,8 @@ co_gw_recv_lss_get_lssid(
 		break;
 	case 0x5d:
 		// clang-format off
-		if (__unlikely(co_lss_get_serial_nr_req(job->data,
-				&co_gw_job_lss_lssid_ind, job) == -1)) {
+		if (co_lss_get_serial_nr_req(job->data,
+				&co_gw_job_lss_lssid_ind, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
 			goto error_switch_sel_req;
@@ -2960,15 +2939,12 @@ co_gw_recv_lss_get_id(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
-	// clang-format off
-	if (__unlikely(co_lss_get_id_req(job->data, &co_gw_job_lss_nid_ind, job)
-			== -1)) {
-		// clang-format on
+	if (co_lss_get_id_req(job->data, &co_gw_job_lss_nid_ind, job) == -1) {
 		iec = errnum2iec(get_errnum());
 		goto error_get_id_req;
 	}
@@ -2991,7 +2967,7 @@ co_gw_recv_lss_id_slave(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_LSS_ID_SLAVE);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req_lss_id_slave))) {
+	if (req->size < sizeof(struct co_gw_req_lss_id_slave)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -3003,14 +2979,14 @@ co_gw_recv_lss_id_slave(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
 	// clang-format off
-	if (__unlikely(co_lss_id_slave_req(job->data, &par->lo, &par->hi,
-			&co_gw_job_lss_cs_ind, job) == -1)) {
+	if (co_lss_id_slave_req(job->data, &par->lo, &par->hi,
+			&co_gw_job_lss_cs_ind, job) == -1) {
 		// clang-format on
 		iec = errnum2iec(get_errnum());
 		goto error_id_slave_req;
@@ -3039,15 +3015,13 @@ co_gw_recv_lss_id_non_cfg_slave(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
-	// clang-format off
-	if (__unlikely(co_lss_id_non_cfg_slave_req(
-			job->data, &co_gw_job_lss_cs_ind, job) == -1)) {
-		// clang-format on
+	if (co_lss_id_non_cfg_slave_req(job->data, &co_gw_job_lss_cs_ind, job)
+			== -1) {
 		iec = errnum2iec(get_errnum());
 		goto error_id_non_cfg_slave_req;
 	}
@@ -3070,7 +3044,7 @@ co_gw_recv__lss_slowscan(
 	assert(req);
 	assert(req->srv == CO_GW_SRV__LSS_SLOWSCAN);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req__lss_scan))) {
+	if (req->size < sizeof(struct co_gw_req__lss_scan)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -3082,14 +3056,14 @@ co_gw_recv__lss_slowscan(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
 	// clang-format off
-	if (__unlikely(co_lss_slowscan_req(job->data, &par->id_1, &par->id_2,
-			&co_gw_job_lss_scan_ind, job) == -1)) {
+	if (co_lss_slowscan_req(job->data, &par->id_1, &par->id_2,
+			&co_gw_job_lss_scan_ind, job) == -1) {
 		// clang-format on
 		iec = errnum2iec(get_errnum());
 		goto error_slowscan_req;
@@ -3113,7 +3087,7 @@ co_gw_recv__lss_fastscan(
 	assert(req);
 	assert(req->srv == CO_GW_SRV__LSS_FASTSCAN);
 
-	if (__unlikely(req->size < sizeof(struct co_gw_req__lss_scan))) {
+	if (req->size < sizeof(struct co_gw_req__lss_scan)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -3125,14 +3099,14 @@ co_gw_recv__lss_fastscan(
 
 	struct co_gw_job *job = co_gw_job_create_lss(
 			&gw->net[net - 1]->lss, gw->net[net - 1], req);
-	if (__unlikely(!job)) {
+	if (!job) {
 		iec = errnum2iec(get_errnum());
 		goto error_create_job;
 	}
 
 	// clang-format off
-	if (__unlikely(co_lss_fastscan_req(job->data, &par->id_1, &par->id_2,
-			&co_gw_job_lss_scan_ind, job) == -1)) {
+	if (co_lss_fastscan_req(job->data, &par->id_1, &par->id_2,
+			&co_gw_job_lss_scan_ind, job) == -1) {
 		// clang-format on
 		iec = errnum2iec(get_errnum());
 		goto error_fastscan_req;
@@ -3198,7 +3172,7 @@ co_gw_send_srv(co_gw_t *gw, const struct co_gw_srv *srv)
 	assert(gw);
 	assert(srv);
 
-	if (__unlikely(!gw->send_func)) {
+	if (!gw->send_func) {
 		set_errnum(ERRNUM_NOSYS);
 		return -1;
 	}

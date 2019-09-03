@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CANopen cat tool.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -124,47 +124,47 @@ main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	if (__unlikely(optpos < 1 || !ifname)) {
+	if (optpos < 1 || !ifname) {
 		diag(DIAG_ERROR, 0, "no CAN interface specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(lely_io_init() == -1)) {
+	if (lely_io_init() == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize I/O library");
 		goto error_io_init;
 	}
 
-	if (__unlikely(!freopen(NULL, "rb", stdin))) {
+	if (!freopen(NULL, "rb", stdin)) {
 		diag(DIAG_ERROR, get_errc(), "unable to reopen stdin");
 		goto error_freopen;
 	}
 
-	if (__unlikely(!freopen(NULL, "wb", stdout))) {
+	if (!freopen(NULL, "wb", stdout)) {
 		diag(DIAG_ERROR, get_errc(), "unable to reopen stdout");
 		goto error_freopen;
 	}
 
-	if (__unlikely(!freopen(NULL, "wb", stderr))) {
+	if (!freopen(NULL, "wb", stderr)) {
 		diag(DIAG_ERROR, get_errc(), "unable to reopen stderr");
 		goto error_freopen;
 	}
 
 	io_poll_t *poll = io_poll_create();
-	if (__unlikely(!poll)) {
+	if (!poll) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create I/O polling interface");
 		goto error_create_poll;
 	}
 
 	io_handle_t hcan = io_open_can(ifname);
-	if (__unlikely(hcan == IO_HANDLE_ERROR)) {
+	if (hcan == IO_HANDLE_ERROR) {
 		diag(DIAG_ERROR, get_errc(), "%s is not a suitable CAN device",
 				ifname);
 		goto error_open_can;
 	}
 
-	if (__unlikely(io_set_flags(hcan, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(hcan, IO_FLAG_NONBLOCK) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to configure %s", ifname);
 		goto error_set_flags_can;
 	}
@@ -172,13 +172,13 @@ main(int argc, char *argv[])
 	struct io_event event = IO_EVENT_INIT;
 	event.events = IO_EVENT_READ;
 	event.u.handle = hcan;
-	if (__unlikely(io_poll_watch(poll, hcan, &event, 1) == -1)) {
+	if (io_poll_watch(poll, hcan, &event, 1) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to watch %s", ifname);
 		goto error_watch_can;
 	}
 
 	net = can_net_create();
-	if (__unlikely(!net)) {
+	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;
 	}
@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 	can_recv_t *recv_out = NULL;
 	if (!(cobid_out & CO_PDO_COBID_VALID)) {
 		recv_out = can_recv_create();
-		if (__unlikely(!recv_out)) {
+		if (!recv_out) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN frame receiver");
 			goto error_create_recv_out;
@@ -212,7 +212,7 @@ main(int argc, char *argv[])
 	can_recv_t *recv_err = NULL;
 	if (!(cobid_err & CO_PDO_COBID_VALID)) {
 		recv_err = can_recv_create();
-		if (__unlikely(!recv_err)) {
+		if (!recv_err) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN frame receiver");
 			goto error_create_recv_err;
@@ -231,10 +231,7 @@ main(int argc, char *argv[])
 	}
 
 	thrd_t thr;
-	// clang-format off
-	if (__unlikely(thrd_create(&thr, &io_thrd_start, poll)
-			!= thrd_success)) {
-		// clang-format on
+	if (thrd_create(&thr, &io_thrd_start, poll) != thrd_success) {
 		diag(DIAG_ERROR, 0, "unable to create thread");
 		goto error_create_thr;
 	}
@@ -316,17 +313,17 @@ can_recv(const struct can_msg *msg, void *data)
 	assert(stream);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
 	// Only accept single-byte PDOs.
-	if (__unlikely(msg->len != 1))
+	if (msg->len != 1)
 		return 0;
 
 	return fputc(msg->data[0], stream) != EOF ? 0 : -1;

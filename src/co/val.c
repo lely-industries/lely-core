@@ -186,7 +186,7 @@ co_val_init_vs_n(char **val, const char *vs, size_t n)
 	assert(val);
 
 	if (n) {
-		if (__unlikely(co_array_alloc(val, n + 1) == -1))
+		if (co_array_alloc(val, n + 1) == -1)
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
@@ -205,7 +205,7 @@ co_val_init_os(uint8_t **val, const uint8_t *os, size_t n)
 	assert(val);
 
 	if (n) {
-		if (__unlikely(co_array_alloc(val, n + 1) == -1))
+		if (co_array_alloc(val, n + 1) == -1)
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
@@ -237,7 +237,7 @@ co_val_init_us_n(char16_t **val, const char16_t *us, size_t n)
 	assert(val);
 
 	if (n) {
-		if (__unlikely(co_array_alloc(val, 2 * (n + 1)) == -1))
+		if (co_array_alloc(val, 2 * (n + 1)) == -1)
 			return -1;
 		assert(*val);
 		co_array_init(val, 2 * n);
@@ -256,7 +256,7 @@ co_val_init_dom(void **val, const void *dom, size_t n)
 	assert(val);
 
 	if (n) {
-		if (__unlikely(co_array_alloc(val, n) == -1))
+		if (co_array_alloc(val, n) == -1)
 			return -1;
 		assert(*val);
 		co_array_init(val, n);
@@ -283,7 +283,7 @@ co_val_fini(co_unsigned16_t type, void *val)
 const void *
 co_val_addressof(co_unsigned16_t type, const void *val)
 {
-	if (__unlikely(!val))
+	if (!val)
 		return NULL;
 
 	return co_type_is_array(type) ? *(const void **)val : val;
@@ -292,7 +292,7 @@ co_val_addressof(co_unsigned16_t type, const void *val)
 size_t
 co_val_sizeof(co_unsigned16_t type, const void *val)
 {
-	if (__unlikely(!val))
+	if (!val)
 		return 0;
 
 	// clang-format off
@@ -322,7 +322,7 @@ co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 		break;
 	case CO_DEFTYPE_DOMAIN: co_val_init_dom(val, ptr, n); break;
 	default:
-		if (__unlikely(!ptr || co_type_sizeof(type) != n))
+		if (!ptr || co_type_sizeof(type) != n)
 			return 0;
 		memcpy(val, ptr, n);
 	}
@@ -341,19 +341,19 @@ co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 		n = co_val_sizeof(type, src);
 		switch (type) {
 		case CO_DEFTYPE_VISIBLE_STRING:
-			if (__unlikely(co_val_init_vs(dst, ptr) == -1))
+			if (co_val_init_vs(dst, ptr) == -1)
 				return 0;
 			break;
 		case CO_DEFTYPE_OCTET_STRING:
-			if (__unlikely(co_val_init_os(dst, ptr, n) == -1))
+			if (co_val_init_os(dst, ptr, n) == -1)
 				return 0;
 			break;
 		case CO_DEFTYPE_UNICODE_STRING:
-			if (__unlikely(co_val_init_us(dst, ptr) == -1))
+			if (co_val_init_us(dst, ptr) == -1)
 				return 0;
 			break;
 		case CO_DEFTYPE_DOMAIN:
-			if (__unlikely(co_val_init_dom(dst, ptr, n) == -1))
+			if (co_val_init_dom(dst, ptr, n) == -1)
 				return 0;
 			break;
 		default:
@@ -388,9 +388,9 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 	if (v1 == v2)
 		return 0;
 
-	if (__unlikely(!v1))
+	if (!v1)
 		return -1;
-	if (__unlikely(!v2))
+	if (!v2)
 		return 1;
 
 	int cmp = 0;
@@ -480,23 +480,17 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			switch (type) {
 			case CO_DEFTYPE_VISIBLE_STRING:
 				// clang-format off
-				if (__unlikely(co_val_init_vs_n(val,
-						(const char *)begin, n) == -1))
+				if (co_val_init_vs_n(val, (const char *)begin,
+						n) == -1)
 					// clang-format on
 					return 0;
 				break;
 			case CO_DEFTYPE_OCTET_STRING:
-				// clang-format off
-				if (__unlikely(co_val_init_os(val, begin, n)
-						== -1))
-					// clang-format on
+				if (co_val_init_os(val, begin, n) == -1)
 					return 0;
 				break;
 			case CO_DEFTYPE_UNICODE_STRING:
-				// clang-format off
-				if (__unlikely(co_val_init_us_n(val, NULL,
-						n / 2) == -1))
-					// clang-format on
+				if (co_val_init_us_n(val, NULL, n / 2) == -1)
 					return 0;
 				if (n) {
 					char16_t *us = *(char16_t **)val;
@@ -506,10 +500,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 				}
 				break;
 			case CO_DEFTYPE_DOMAIN:
-				// clang-format off
-				if (__unlikely(co_val_init_dom(val, begin, n)
-						== -1))
-					// clang-format on
+				if (co_val_init_dom(val, begin, n) == -1)
 					return 0;
 				break;
 			default:
@@ -522,56 +513,56 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 		union co_val *u = val;
 		switch (type) {
 		case CO_DEFTYPE_BOOLEAN:
-			if (__unlikely(n < 1))
+			if (n < 1)
 				return 0;
 			if (u)
 				u->b = !!*(const co_boolean_t *)begin;
 			return 1;
 		case CO_DEFTYPE_INTEGER8:
-			if (__unlikely(n < 1))
+			if (n < 1)
 				return 0;
 			if (u)
 				u->i8 = *(const co_integer8_t *)begin;
 			return 1;
 		case CO_DEFTYPE_INTEGER16:
-			if (__unlikely(n < 2))
+			if (n < 2)
 				return 0;
 			if (u)
 				u->i16 = ldle_i16(begin);
 			return 2;
 		case CO_DEFTYPE_INTEGER32:
-			if (__unlikely(n < 4))
+			if (n < 4)
 				return 0;
 			if (u)
 				u->i32 = ldle_i32(begin);
 			return 4;
 		case CO_DEFTYPE_UNSIGNED8:
-			if (__unlikely(n < 1))
+			if (n < 1)
 				return 0;
 			if (u)
 				u->u8 = *(const co_unsigned8_t *)begin;
 			return 1;
 		case CO_DEFTYPE_UNSIGNED16:
-			if (__unlikely(n < 2))
+			if (n < 2)
 				return 0;
 			if (u)
 				u->u16 = ldle_u16(begin);
 			return 2;
 		case CO_DEFTYPE_UNSIGNED32:
-			if (__unlikely(n < 4))
+			if (n < 4)
 				return 0;
 			if (u)
 				u->u32 = ldle_u32(begin);
 			return 4;
 		case CO_DEFTYPE_REAL32:
-			if (__unlikely(n < 4))
+			if (n < 4)
 				return 0;
 			if (u)
 				u->r32 = ldle_flt32(begin);
 			return 4;
 		case CO_DEFTYPE_TIME_OF_DAY:
 		case CO_DEFTYPE_TIME_DIFF:
-			if (__unlikely(n < 6))
+			if (n < 6)
 				return 0;
 			if (u) {
 				u->t.ms = ldle_u32(begin)
@@ -580,7 +571,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER24:
-			if (__unlikely(n < 3))
+			if (n < 3)
 				return 0;
 			if (u) {
 				co_unsigned24_t u24 = 0;
@@ -593,13 +584,13 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 3;
 		case CO_DEFTYPE_REAL64:
-			if (__unlikely(n < 8))
+			if (n < 8)
 				return 0;
 			if (u)
 				u->r64 = ldle_flt64(begin);
 			return 8;
 		case CO_DEFTYPE_INTEGER40:
-			if (__unlikely(n < 5))
+			if (n < 5)
 				return 0;
 			if (u) {
 				co_unsigned40_t u40 = 0;
@@ -612,7 +603,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 5;
 		case CO_DEFTYPE_INTEGER48:
-			if (__unlikely(n < 6))
+			if (n < 6)
 				return 0;
 			if (u) {
 				co_unsigned48_t u48 = 0;
@@ -625,7 +616,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 6;
 		case CO_DEFTYPE_INTEGER56:
-			if (__unlikely(n < 7))
+			if (n < 7)
 				return 0;
 			if (u) {
 				co_unsigned56_t u56 = 0;
@@ -638,13 +629,13 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 7;
 		case CO_DEFTYPE_INTEGER64:
-			if (__unlikely(n < 8))
+			if (n < 8)
 				return 0;
 			if (u)
 				u->i64 = ldle_i64(begin);
 			return 8;
 		case CO_DEFTYPE_UNSIGNED24:
-			if (__unlikely(n < 3))
+			if (n < 3)
 				return 0;
 			if (u) {
 				u->u24 = 0;
@@ -654,7 +645,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 3;
 		case CO_DEFTYPE_UNSIGNED40:
-			if (__unlikely(n < 5))
+			if (n < 5)
 				return 0;
 			if (u) {
 				u->u40 = 0;
@@ -664,7 +655,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 5;
 		case CO_DEFTYPE_UNSIGNED48:
-			if (__unlikely(n < 6))
+			if (n < 6)
 				return 0;
 			if (u) {
 				u->u48 = 0;
@@ -674,7 +665,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 6;
 		case CO_DEFTYPE_UNSIGNED56:
-			if (__unlikely(n < 7))
+			if (n < 7)
 				return 0;
 			if (u) {
 				u->u56 = 0;
@@ -684,7 +675,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
 			}
 			return 7;
 		case CO_DEFTYPE_UNSIGNED64:
-			if (__unlikely(n < 8))
+			if (n < 8)
 				return 0;
 			if (u)
 				u->u64 = ldle_u64(begin);
@@ -702,7 +693,7 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 
 	const uint8_t *begin = ptr;
 	const uint8_t *end = begin ? begin + n : NULL;
-	if (__unlikely(n && !co_val_read(type, val, begin, end))) {
+	if (n && !co_val_read(type, val, begin, end)) {
 		// clang-format off
 		ac = get_errnum() == ERRNUM_NOMEM
 				? CO_SDO_AC_NO_MEM
@@ -885,7 +876,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u8(cp, end, NULL, &u.u8);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.u8 > CO_BOOLEAN_MAX)) {
+			if (u.u8 > CO_BOOLEAN_MAX) {
 				u.u8 = CO_BOOLEAN_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -899,16 +890,11 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i8(cp, end, NULL, &u.i8);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i8 == INT8_MIN))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.i8 == INT8_MIN)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"8-bit signed integer underflow");
-			// clang-format off
-			else if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i8 == INT8_MAX))
-				// clang-format on
+			else if (get_errnum() == ERRNUM_RANGE
+					&& u.i8 == INT8_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"8-bit signed integer overflow");
 			if (val)
@@ -919,16 +905,11 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i16(cp, end, NULL, &u.i16);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i16 == INT16_MIN))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.i16 == INT16_MIN)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"16-bit signed integer underflow");
-			// clang-format off
-			else if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i16 == INT16_MAX))
-				// clang-format on
+			else if (get_errnum() == ERRNUM_RANGE
+					&& u.i16 == INT16_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"16-bit signed integer overflow");
 			if (val)
@@ -939,16 +920,11 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i32(cp, end, NULL, &u.i32);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i32 == INT32_MIN))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.i32 == INT32_MIN)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"32-bit signed integer underflow");
-			// clang-format off
-			else if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i32 == INT32_MAX))
-				// clang-format on
+			else if (get_errnum() == ERRNUM_RANGE
+					&& u.i32 == INT32_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"32-bit signed integer overflow");
 			if (val)
@@ -959,10 +935,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u8(cp, end, NULL, &u.u8);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u8 == UINT8_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u8 == UINT8_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"8-bit unsigned integer overflow");
 			if (val)
@@ -973,10 +946,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u16(cp, end, NULL, &u.u16);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u16 == UINT16_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u16 == UINT16_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"16-bit unsigned integer overflow");
 			if (val)
@@ -987,10 +957,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u32(cp, end, NULL, &u.u32);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u32 == UINT32_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u32 == UINT32_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"32-bit unsigned integer overflow");
 			if (val)
@@ -1001,10 +968,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u32(cp, end, NULL, &u.u32);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u32 == UINT32_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u32 == UINT32_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"32-bit unsigned integer overflow");
 			// clang-format off
@@ -1021,7 +985,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		size_t n = 0;
 		chars = lex_c99_str(cp, end, NULL, NULL, &n);
 		if (val) {
-			if (__unlikely(co_val_init_vs_n(val, 0, n) == -1)) {
+			if (co_val_init_vs_n(val, 0, n) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type VISIBLE_STRING");
 				return 0;
@@ -1040,10 +1004,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 				&& isxdigit((unsigned char)cp[chars]))
 			chars++;
 		if (val) {
-			// clang-format off
-			if (__unlikely(co_val_init_os(val, NULL,
-					(chars + 1) / 2) == -1)) {
-				// clang-format on
+			if (co_val_init_os(val, NULL, (chars + 1) / 2) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type OCTET_STRING");
 				return 0;
@@ -1067,10 +1028,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		size_t n = 0;
 		chars = lex_base64(cp, end, NULL, NULL, &n);
 		if (val) {
-			// clang-format off
-			if (__unlikely(co_val_init_us_n(val, NULL, n / 2)
-					== -1)) {
-				// clang-format on
+			if (co_val_init_us_n(val, NULL, n / 2) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type UNICODE_STRING");
 				return 0;
@@ -1088,12 +1046,12 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 	case CO_DEFTYPE_TIME_OF_DAY:
 	case CO_DEFTYPE_TIME_DIFF:
 		chars = lex_c99_u16(cp, end, NULL, &u.t.days);
-		if (__unlikely(!chars))
+		if (!chars)
 			return 0;
 		cp += chars;
 		cp += lex_ctype(&isblank, cp, end, NULL);
 		chars = lex_c99_u32(cp, end, NULL, &u.t.ms);
-		if (__unlikely(!chars))
+		if (!chars)
 			return 0;
 		cp += chars;
 		if (val)
@@ -1103,7 +1061,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		size_t n = 0;
 		chars = lex_base64(cp, end, NULL, NULL, &n);
 		if (val) {
-			if (__unlikely(co_val_init_dom(val, NULL, n) == -1)) {
+			if (co_val_init_dom(val, NULL, n) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type DOMAIN");
 				return 0;
@@ -1119,12 +1077,12 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i32(cp, end, NULL, &u.i32);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.i32 < CO_INTEGER24_MIN)) {
+			if (u.i32 < CO_INTEGER24_MIN) {
 				u.i32 = CO_INTEGER24_MIN;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"24-bit signed integer underflow");
-			} else if (__unlikely(u.i32 > CO_INTEGER24_MAX)) {
+			} else if (u.i32 > CO_INTEGER24_MAX) {
 				u.i32 = CO_INTEGER24_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1138,10 +1096,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u64(cp, end, NULL, &u.u64);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u64 == UINT64_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u64 == UINT64_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"64-bit unsigned integer overflow");
 			// clang-format off
@@ -1158,12 +1113,12 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i64(cp, end, NULL, &u.i64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.i64 < CO_INTEGER40_MIN)) {
+			if (u.i64 < CO_INTEGER40_MIN) {
 				u.i64 = CO_INTEGER40_MIN;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"40-bit signed integer underflow");
-			} else if (__unlikely(u.i64 > CO_INTEGER40_MAX)) {
+			} else if (u.i64 > CO_INTEGER40_MAX) {
 				u.i64 = CO_INTEGER40_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1177,12 +1132,12 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i64(cp, end, NULL, &u.i64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.i64 < CO_INTEGER48_MIN)) {
+			if (u.i64 < CO_INTEGER48_MIN) {
 				u.i64 = CO_INTEGER48_MIN;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"48-bit signed integer underflow");
-			} else if (__unlikely(u.i64 > CO_INTEGER48_MAX)) {
+			} else if (u.i64 > CO_INTEGER48_MAX) {
 				u.i64 = CO_INTEGER48_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1196,12 +1151,12 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i64(cp, end, NULL, &u.i64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.i64 < CO_INTEGER56_MIN)) {
+			if (u.i64 < CO_INTEGER56_MIN) {
 				u.i64 = CO_INTEGER56_MIN;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"56-bit signed integer underflow");
-			} else if (__unlikely(u.i64 > CO_INTEGER56_MAX)) {
+			} else if (u.i64 > CO_INTEGER56_MAX) {
 				u.i64 = CO_INTEGER56_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1215,16 +1170,11 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_i64(cp, end, NULL, &u.i64);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i64 == INT64_MIN))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.i64 == INT64_MIN)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"64-bit signed integer underflow");
-			// clang-format off
-			else if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.i64 == INT64_MAX))
-				// clang-format on
+			else if (get_errnum() == ERRNUM_RANGE
+					&& u.i64 == INT64_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"64-bit signed integer overflow");
 			if (val)
@@ -1235,7 +1185,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u32(cp, end, NULL, &u.u32);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.u32 > CO_UNSIGNED24_MAX)) {
+			if (u.u32 > CO_UNSIGNED24_MAX) {
 				u.u32 = CO_UNSIGNED24_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1249,7 +1199,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u64(cp, end, NULL, &u.u64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.u64 > CO_UNSIGNED40_MAX)) {
+			if (u.u64 > CO_UNSIGNED40_MAX) {
 				u.u64 = CO_UNSIGNED40_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1263,7 +1213,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u64(cp, end, NULL, &u.u64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.u64 > CO_UNSIGNED48_MAX)) {
+			if (u.u64 > CO_UNSIGNED48_MAX) {
 				u.u64 = CO_UNSIGNED48_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1277,7 +1227,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u64(cp, end, NULL, &u.u64);
 		if (chars) {
 			cp += chars;
-			if (__unlikely(u.u64 > CO_UNSIGNED56_MAX)) {
+			if (u.u64 > CO_UNSIGNED56_MAX) {
 				u.u64 = CO_UNSIGNED56_MAX;
 				set_errnum(ERRNUM_RANGE);
 				diag_if(DIAG_WARNING, get_errc(), at,
@@ -1291,10 +1241,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		chars = lex_c99_u64(cp, end, NULL, &u.u64);
 		if (chars) {
 			cp += chars;
-			// clang-format off
-			if (__unlikely(get_errnum() == ERRNUM_RANGE
-					&& u.u64 == UINT64_MAX))
-				// clang-format on
+			if (get_errnum() == ERRNUM_RANGE && u.u64 == UINT64_MAX)
 				diag_if(DIAG_WARNING, get_errc(), at,
 						"64-bit unsigned integer overflow");
 			if (val)
@@ -1332,7 +1279,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		}
 		case CO_DEFTYPE_UNICODE_STRING: {
 			char16_t *us = NULL;
-			if (__unlikely(!co_val_copy(type, &us, val) && !us))
+			if (!co_val_copy(type, &us, val) && !us)
 				return 0;
 			assert(us);
 			for (size_t i = 0; i + 1 < n; i += 2)
@@ -1409,7 +1356,7 @@ co_array_alloc(void *val, size_t size)
 
 	if (size) {
 		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
-		if (__unlikely(!ptr)) {
+		if (!ptr) {
 			set_errc(errno2c(errno));
 			return -1;
 		}

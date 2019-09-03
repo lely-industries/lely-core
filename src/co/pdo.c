@@ -4,7 +4,7 @@
  *
  * @see lely/co/pdo.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,25 +45,22 @@ co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 
 	if (co_type_is_basic(idx) && !subidx) {
 		// If the object is a dummy entry, check if it is enabled.
-		if (__unlikely(!(co_dev_get_dummy(dev) & (1 << idx))))
+		if (!(co_dev_get_dummy(dev) & (1 << idx)))
 			return CO_SDO_AC_NO_OBJ;
 	} else {
 		co_obj_t *obj = co_dev_find_obj(dev, idx);
-		if (__unlikely(!obj))
+		if (!obj)
 			return CO_SDO_AC_NO_OBJ;
 
 		co_sub_t *sub = co_obj_find_sub(obj, subidx);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 
 		unsigned int access = co_sub_get_access(sub);
-		if (__unlikely(!(access & CO_ACCESS_WRITE)))
+		if (!(access & CO_ACCESS_WRITE))
 			return CO_SDO_AC_NO_WRITE;
 
-		// clang-format off
-		if (__unlikely(!co_sub_get_pdo_mapping(sub)
-			|| !(access & CO_ACCESS_RPDO)))
-			// clang-format on
+		if (!co_sub_get_pdo_mapping(sub) || !(access & CO_ACCESS_RPDO))
 			return CO_SDO_AC_NO_PDO;
 	}
 
@@ -83,11 +80,11 @@ co_dev_cfg_rpdo(const co_dev_t *dev, co_unsigned16_t num,
 	// Disable the RPDO service before configuring any parameters.
 	par.cobid |= CO_PDO_COBID_VALID;
 	ac = co_dev_cfg_rpdo_comm(dev, num, &par);
-	if (__unlikely(ac))
+	if (ac)
 		return ac;
 
 	ac = co_dev_cfg_rpdo_map(dev, num, map);
-	if (__unlikely(ac))
+	if (ac)
 		return ac;
 
 	// Re-enable the RPDO service if necessary.
@@ -100,7 +97,7 @@ co_unsigned32_t
 co_dev_cfg_rpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_comm_par *par)
 {
-	if (__unlikely(!num || num > 512))
+	if (!num || num > 512)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_comm(dev, 0x1400 + num - 1, par);
@@ -110,7 +107,7 @@ co_unsigned32_t
 co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_map_par *par)
 {
-	if (__unlikely(!num || num > 512))
+	if (!num || num > 512)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_map(dev, 0x1600 + num - 1, par);
@@ -122,21 +119,18 @@ co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 	assert(dev);
 
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj))
+	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
 	co_sub_t *sub = co_obj_find_sub(obj, subidx);
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
 	unsigned int access = co_sub_get_access(sub);
-	if (__unlikely(!(access & CO_ACCESS_READ)))
+	if (!(access & CO_ACCESS_READ))
 		return CO_SDO_AC_NO_READ;
 
-	// clang-format off
-	if (__unlikely(!co_sub_get_pdo_mapping(sub)
-			|| !(access & CO_ACCESS_TPDO)))
-		// clang-format on
+	if (!co_sub_get_pdo_mapping(sub) || !(access & CO_ACCESS_TPDO))
 		return CO_SDO_AC_NO_PDO;
 
 	return 0;
@@ -155,11 +149,11 @@ co_dev_cfg_tpdo(const co_dev_t *dev, co_unsigned16_t num,
 	// Disable the TPDO service before configuring any parameters.
 	par.cobid |= CO_PDO_COBID_VALID;
 	ac = co_dev_cfg_tpdo_comm(dev, num, &par);
-	if (__unlikely(ac))
+	if (ac)
 		return ac;
 
 	ac = co_dev_cfg_tpdo_map(dev, num, map);
-	if (__unlikely(ac))
+	if (ac)
 		return ac;
 
 	// Re-enable the TPDO service if necessary.
@@ -172,7 +166,7 @@ co_unsigned32_t
 co_dev_cfg_tpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_comm_par *par)
 {
-	if (__unlikely(!num || num > 512))
+	if (!num || num > 512)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_comm(dev, 0x1800 + num - 1, par);
@@ -182,7 +176,7 @@ co_unsigned32_t
 co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_map_par *par)
 {
-	if (__unlikely(!num || num > 512))
+	if (!num || num > 512)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_map(dev, 0x1a00 + num - 1, par);
@@ -195,14 +189,14 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 	assert(par);
 	assert(val);
 
-	if (__unlikely(par->n > 0x40 || n != par->n))
+	if (par->n > 0x40 || n != par->n)
 		return CO_SDO_AC_PDO_LEN;
 
 	size_t offset = 0;
 	for (size_t i = 0; i < par->n; i++) {
 		co_unsigned8_t len = par->map[i] & 0xff;
 
-		if (__unlikely(offset + len > CAN_MAX_LEN * 8))
+		if (offset + len > CAN_MAX_LEN * 8)
 			return CO_SDO_AC_PDO_LEN;
 
 		uint8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
@@ -226,14 +220,14 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
 	assert(par);
 	assert(buf);
 
-	if (__unlikely(par->n > 0x40))
+	if (par->n > 0x40)
 		return CO_SDO_AC_PDO_LEN;
 
 	size_t offset = 0;
 	for (size_t i = 0; i < par->n; i++) {
 		co_unsigned8_t len = par->map[i] & 0xff;
 
-		if (__unlikely(offset + len > n * 8))
+		if (offset + len > n * 8)
 			return CO_SDO_AC_PDO_LEN;
 
 		uint8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
@@ -259,7 +253,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 	assert(req);
 	assert(buf);
 
-	if (__unlikely(n > CAN_MAX_LEN))
+	if (n > CAN_MAX_LEN)
 		return CO_SDO_AC_PDO_LEN;
 
 	co_unsigned32_t ac = 0;
@@ -272,13 +266,13 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		co_unsigned8_t len = map & 0xff;
 
 		// Check the PDO length.
-		if (__unlikely(offset + len > n * 8))
+		if (offset + len > n * 8)
 			return CO_SDO_AC_PDO_LEN;
 
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO (or is a valid dummy entry).
 		ac = co_dev_chk_rpdo(dev, idx, subidx);
-		if (__unlikely(ac))
+		if (ac)
 			return ac;
 
 		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
@@ -291,7 +285,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 			req->buf = tmp;
 			req->nbyte = req->size;
 			ac = co_sub_dn_ind(sub, req);
-			if (__unlikely(ac))
+			if (ac)
 				return ac;
 		}
 
@@ -319,21 +313,21 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 		co_unsigned8_t len = map & 0xff;
 
 		// Check the PDO length.
-		if (__unlikely(offset + len > CAN_MAX_LEN * 8))
+		if (offset + len > CAN_MAX_LEN * 8)
 			return CO_SDO_AC_PDO_LEN;
 
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO.
 		ac = co_dev_chk_tpdo(dev, idx, subidx);
-		if (__unlikely(ac))
+		if (ac)
 			return ac;
 
 		// Upload the value of the sub-object and copy the value.
 		co_sdo_req_clear(req);
 		ac = co_sub_up_ind(co_dev_find_sub(dev, idx, subidx), req);
-		if (__unlikely(ac))
+		if (ac)
 			return ac;
-		if (__unlikely(!co_sdo_req_first(req) || !co_sdo_req_last(req)))
+		if (!co_sdo_req_first(req) || !co_sdo_req_last(req))
 			return CO_SDO_AC_PDO_LEN;
 		if (buf && pn && offset + len <= *pn * 8)
 			bcpyle(buf, offset, req->buf, 0, len);
@@ -357,18 +351,18 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 	co_unsigned32_t ac = 0;
 
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj))
+	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
 	// Check if all sub-objects are available.
 	co_unsigned8_t n = co_obj_get_val_u8(obj, 0x00);
-	if (__unlikely(par->n > n))
+	if (par->n > n)
 		return CO_SDO_AC_NO_SUB;
 
 	// Configure the COB-ID.
 	if (par->n >= 1 && !ac) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x01);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &par->cobid);
 	}
@@ -376,7 +370,7 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 	// Configure the transmission type.
 	if (par->n >= 2 && !ac) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x02);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->trans);
 	}
@@ -384,7 +378,7 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 	// Configure the inhibit time.
 	if (par->n >= 3 && !ac) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x03);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(
 				sub, CO_DEFTYPE_UNSIGNED16, &par->inhibit);
@@ -393,7 +387,7 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 	// Configure the event timer.
 	if (par->n >= 5 && !ac) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x05);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->event);
 	}
@@ -401,7 +395,7 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 	// Configure the SYNC start value.
 	if (par->n >= 6 && !ac) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x06);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->sync);
 	}
@@ -419,26 +413,26 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	co_unsigned32_t ac = 0;
 
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	if (__unlikely(!obj))
+	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
 	co_sub_t *sub_00 = co_obj_find_sub(obj, 0x00);
-	if (__unlikely(!sub_00))
+	if (!sub_00)
 		return CO_SDO_AC_NO_SUB;
 	// Disable mapping by setting subindex 0x00 to zero.
 	ac = co_sub_dn_ind_val(
 			sub_00, CO_DEFTYPE_UNSIGNED8, &(co_unsigned8_t){ 0 });
-	if (__unlikely(ac))
+	if (ac)
 		return ac;
 
 	// Copy the mapping parameters.
 	for (co_unsigned8_t i = 1; i <= par->n; i++) {
 		co_sub_t *sub = co_obj_find_sub(obj, i);
-		if (__unlikely(!sub))
+		if (!sub)
 			return CO_SDO_AC_NO_SUB;
 		ac = co_sub_dn_ind_val(
 				sub, CO_DEFTYPE_UNSIGNED32, &par->map[i - 1]);
-		if (__unlikely(ac))
+		if (ac)
 			return ac;
 	}
 

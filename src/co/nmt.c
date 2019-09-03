@@ -639,7 +639,7 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 	assert(dev);
 
 	co_obj_t *obj_1016 = co_dev_find_obj(dev, 0x1016);
-	if (__unlikely(!obj_1016))
+	if (!obj_1016)
 		return CO_SDO_AC_NO_OBJ;
 
 	co_unsigned8_t n = co_obj_get_val_u8(obj_1016, 0x00);
@@ -665,10 +665,10 @@ co_dev_cfg_hb(co_dev_t *dev, co_unsigned8_t id, co_unsigned16_t ms)
 		}
 	}
 
-	if (__unlikely(!i || i > n))
+	if (!i || i > n)
 		return CO_SDO_AC_NO_SUB;
 	co_sub_t *sub = co_obj_find_sub(obj_1016, i);
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
 	co_unsigned32_t val = ((co_unsigned32_t)id << 16) | ms;
@@ -714,7 +714,7 @@ void *
 __co_nmt_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -740,19 +740,13 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->id = co_dev_get_id(nmt->dev);
 
 	// Store a concise DCF containing the application parameters.
-	// clang-format off
-	if (__unlikely(co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff,
-			&nmt->dcf_node) == -1)) {
-		// clang-format on
+	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, &nmt->dcf_node) == -1) {
 		errc = get_errc();
 		goto error_write_dcf_node;
 	}
 
 	// Store a concise DCF containing the communication parameters.
-	// clang-format off
-	if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
-			&nmt->dcf_comm) == -1)) {
-		// clang-format on
+	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm) == -1) {
 		errc = get_errc();
 		goto error_write_dcf_comm;
 	}
@@ -768,7 +762,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	// Create the CAN frame receiver for NMT messages.
 	nmt->recv_000 = can_recv_create();
-	if (__unlikely(!nmt->recv_000)) {
+	if (!nmt->recv_000) {
 		errc = get_errc();
 		goto error_create_recv_000;
 	}
@@ -1004,12 +998,12 @@ co_nmt_create(can_net_t *net, co_dev_t *dev)
 	int errc = 0;
 
 	co_nmt_t *nmt = __co_nmt_alloc();
-	if (__unlikely(!nmt)) {
+	if (!nmt) {
 		errc = get_errc();
 		goto error_alloc_nmt;
 	}
 
-	if (__unlikely(!__co_nmt_init(nmt, net, dev))) {
+	if (!__co_nmt_init(nmt, net, dev)) {
 		errc = get_errc();
 		goto error_init_nmt;
 	}
@@ -1096,7 +1090,7 @@ co_nmt_on_ng(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 	assert(nmt);
 	(void)reason;
 
-	if (__unlikely(!id || id > CO_NUM_NODES))
+	if (!id || id > CO_NUM_NODES)
 		return;
 
 	if (co_nmt_is_master(nmt) && state == CO_NMT_EC_OCCURRED)
@@ -1159,7 +1153,7 @@ co_nmt_on_hb(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason)
 {
 	assert(nmt);
 
-	if (__unlikely(!id || id > CO_NUM_NODES))
+	if (!id || id > CO_NUM_NODES)
 		return;
 
 	if (state == CO_NMT_EC_OCCURRED && reason == CO_NMT_EC_TIMEOUT) {
@@ -1198,7 +1192,7 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 {
 	assert(nmt);
 
-	if (__unlikely(!id || id > CO_NUM_NODES))
+	if (!id || id > CO_NUM_NODES)
 		return;
 
 #ifdef LELY_NO_CO_MASTER
@@ -1401,7 +1395,7 @@ co_nmt_set_id(co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
 
-	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
+	if (!id || (id > CO_NUM_NODES && id != 0xff)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1456,7 +1450,7 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 {
 	assert(nmt);
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1470,7 +1464,7 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
 
-	if (__unlikely(id > CO_NUM_NODES)) {
+	if (id > CO_NUM_NODES) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1487,8 +1481,8 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	msg.data[1] = id;
 
 	// Add the frame to the buffer.
-	if (__unlikely(!can_buf_write(&nmt->buf, &msg, 1))) {
-		if (__unlikely(!can_buf_reserve(&nmt->buf, 1)))
+	if (!can_buf_write(&nmt->buf, &msg, 1)) {
+		if (!can_buf_reserve(&nmt->buf, 1))
 			return -1;
 		can_buf_write(&nmt->buf, &msg, 1);
 	}
@@ -1503,7 +1497,7 @@ co_nmt_lss_con(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	if (__unlikely(!nmt->master || nmt->state != co_nmt_reset_comm_state)) {
+	if (!nmt->master || nmt->state != co_nmt_reset_comm_state) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
@@ -1521,21 +1515,18 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 
 	int errc = 0;
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		errc = errnum2c(ERRNUM_PERM);
 		goto error_param;
 	}
 
-	// clang-format off
-	if (__unlikely(!id || id > CO_NUM_NODES
-			|| id == co_dev_get_id(nmt->dev))) {
-		// clang-format on
+	if (!id || id > CO_NUM_NODES || id == co_dev_get_id(nmt->dev)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (__unlikely(slave->boot)) {
+	if (slave->boot) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
@@ -1543,14 +1534,14 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 	trace("NMT: booting slave %d", id);
 
 	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
-	if (__unlikely(!slave->boot)) {
+	if (!slave->boot) {
 		errc = get_errc();
 		goto error_create_boot;
 	}
 
 	// clang-format off
-	if (__unlikely(co_nmt_boot_boot_req(slave->boot, id, timeout,
-			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
+	if (co_nmt_boot_boot_req(slave->boot, id, timeout, &co_nmt_dn_ind,
+			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
 		goto error_boot_req;
@@ -1572,13 +1563,10 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(nmt);
 
-	if (__unlikely(!nmt->master))
+	if (!nmt->master)
 		return 0;
 
-	// clang-format off
-	if (__unlikely(!id || id > CO_NUM_NODES
-			|| id == co_dev_get_id(nmt->dev)))
-		// clang-format on
+	if (!id || id > CO_NUM_NODES || id == co_dev_get_id(nmt->dev))
 		return 0;
 
 	return !!nmt->slaves[id - 1].boot;
@@ -1592,21 +1580,18 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 
 	int errc = 0;
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		errc = errnum2c(ERRNUM_PERM);
 		goto error_param;
 	}
 
-	// clang-format off
-	if (__unlikely(!id || id > CO_NUM_NODES
-			|| id == co_dev_get_id(nmt->dev))) {
-		// clang-format on
+	if (!id || id > CO_NUM_NODES || id == co_dev_get_id(nmt->dev)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (__unlikely(slave->cfg)) {
+	if (slave->cfg) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
@@ -1614,7 +1599,7 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	trace("NMT: starting update configuration process for node %d", id);
 
 	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
-	if (__unlikely(!slave->cfg)) {
+	if (!slave->cfg) {
 		errc = get_errc();
 		goto error_create_cfg;
 	}
@@ -1622,8 +1607,8 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	slave->cfg_data = data;
 
 	// clang-format off
-	if (__unlikely(co_nmt_cfg_cfg_req(slave->cfg, id, timeout,
-			&co_nmt_dn_ind, &co_nmt_up_ind, nmt) == -1)) {
+	if (co_nmt_cfg_cfg_req(slave->cfg, id, timeout, &co_nmt_dn_ind,
+			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
 		goto error_cfg_req;
@@ -1645,12 +1630,12 @@ co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 {
 	assert(nmt);
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
-	if (__unlikely(!id || id > CO_NUM_NODES || !nmt->slaves[id - 1].cfg)) {
+	if (!id || id > CO_NUM_NODES || !nmt->slaves[id - 1].cfg) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1664,15 +1649,12 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 {
 	assert(nmt);
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
-	// clang-format off
-	if (__unlikely(!id || id > CO_NUM_NODES
-			|| id == co_dev_get_id(nmt->dev))) {
-		// clang-format on
+	if (!id || id > CO_NUM_NODES || id == co_dev_get_id(nmt->dev)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1688,7 +1670,7 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 	} else {
 		if (!slave->timer) {
 			slave->timer = can_timer_create();
-			if (__unlikely(!slave->timer))
+			if (!slave->timer)
 				return -1;
 			can_timer_set_func(
 					slave->timer, &co_nmt_ng_timer, slave);
@@ -1750,7 +1732,7 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 		return -1;
 	}
 
-	if (__unlikely(!id || id > CO_NUM_NODES)) {
+	if (!id || id > CO_NUM_NODES) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -1788,7 +1770,7 @@ co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
 	assert(nmt);
 
-	if (__unlikely(!n || n > nmt->srv.nrpdo))
+	if (!n || n > nmt->srv.nrpdo)
 		return NULL;
 
 	return nmt->srv.rpdos[n - 1];
@@ -1799,7 +1781,7 @@ co_nmt_get_tpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
 	assert(nmt);
 
-	if (__unlikely(!n || n > nmt->srv.ntpdo))
+	if (!n || n > nmt->srv.ntpdo)
 		return NULL;
 
 	return nmt->srv.tpdos[n - 1];
@@ -1810,7 +1792,7 @@ co_nmt_get_ssdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
 	assert(nmt);
 
-	if (__unlikely(!n || n > nmt->srv.nssdo))
+	if (!n || n > nmt->srv.nssdo)
 		return NULL;
 
 	return nmt->srv.ssdos[n - 1];
@@ -1821,7 +1803,7 @@ co_nmt_get_csdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
 	assert(nmt);
 
-	if (__unlikely(!n || n > nmt->srv.ncsdo))
+	if (!n || n > nmt->srv.ncsdo)
 		return NULL;
 
 	return nmt->srv.csdos[n - 1];
@@ -1917,7 +1899,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		// are non-zero.
 		co_unsigned16_t gt = (slave->assignment >> 16) & 0xffff;
 		co_unsigned8_t ltf = (slave->assignment >> 8) & 0xff;
-		if (__unlikely(co_nmt_ng_req(nmt, id, gt, ltf) == -1))
+		if (co_nmt_ng_req(nmt, id, gt, ltf) == -1)
 			diag(DIAG_ERROR, get_errc(),
 					"unable to guard node %02X", id);
 	}
@@ -1971,7 +1953,7 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 	assert(nmt);
 	assert(nmt->hb_ind);
 
-	if (__unlikely(!id || id > CO_NUM_NODES))
+	if (!id || id > CO_NUM_NODES)
 		return;
 
 	nmt->hb_ind(nmt, id, state, reason, nmt->hb_data);
@@ -1993,10 +1975,10 @@ co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2033,10 +2015,10 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2073,15 +2055,15 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (__unlikely(!subidx)) {
+	if (!subidx) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
-	if (__unlikely(subidx > nmt->nhb)) {
+	if (subidx > nmt->nhb) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2106,7 +2088,7 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned16_t ms_i = val_i & 0xffff;
 			// It's not allowed to have two active heartbeat
 			// consumers with the same node-ID.
-			if (__unlikely(id_i == id && ms_i)) {
+			if (id_i == id && ms_i) {
 				ac = CO_SDO_AC_PARAM;
 				goto error;
 			}
@@ -2137,10 +2119,10 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2178,11 +2160,11 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (__unlikely(!subidx)) {
+	if (!subidx) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
@@ -2190,16 +2172,14 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
-	// clang-format off
-	if (__unlikely(id > CO_NUM_NODES
-			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
-		// clang-format on
+	if (id > CO_NUM_NODES
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
 	// Check if the value 'conf' was downloaded.
-	if (__unlikely(!nmt->master || val.u32 != UINT32_C(0x666e6f63))) {
+	if (!nmt->master || val.u32 != UINT32_C(0x666e6f63)) {
 		ac = CO_SDO_AC_DATA_CTL;
 		goto error;
 	}
@@ -2207,15 +2187,13 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	if (id) {
 		// Check if the entry for this node is present in object 1F20
 		// (Store DCF) or 1F22 (Concise DCF).
-		// clang-format off
-		if (__unlikely(!co_dev_get_val(nmt->dev, 0x1f20, id)
-				&& !co_dev_get_val(nmt->dev, 0x1f22, id))) {
-			// clang-format on
+		if (!co_dev_get_val(nmt->dev, 0x1f20, id)
+				&& !co_dev_get_val(nmt->dev, 0x1f22, id)) {
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}
 		// Abort if the slave is already being configured.
-		if (__unlikely(nmt->slaves[id - 1].cfg)) {
+		if (nmt->slaves[id - 1].cfg) {
 			ac = CO_SDO_AC_DATA_DEV;
 			goto error;
 		}
@@ -2223,10 +2201,8 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	} else {
 		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
 		// exists.
-		// clang-format off
-		if (__unlikely(!co_dev_find_obj(nmt->dev, 0x1f20)
-				&& !co_dev_find_obj(nmt->dev, 0x1f22))) {
-			// clang-format on
+		if (!co_dev_find_obj(nmt->dev, 0x1f20)
+				&& !co_dev_find_obj(nmt->dev, 0x1f22)) {
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}
@@ -2258,10 +2234,10 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -2273,7 +2249,7 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		goto error;
 
 	// Only bits 0..4 and 6 are supported.
-	if (__unlikely((startup ^ startup_old) != 0x5f)) {
+	if ((startup ^ startup_old) != 0x5f) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -2298,11 +2274,11 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (__unlikely(!subidx)) {
+	if (!subidx) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
@@ -2310,15 +2286,13 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
-	// clang-format off
-	if (__unlikely(id > CO_NUM_NODES
-			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))) {
-		// clang-format on
+	if (id > CO_NUM_NODES
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
-	if (__unlikely(!nmt->master)) {
+	if (!nmt->master) {
 		ac = CO_SDO_AC_DATA_CTL;
 		goto error;
 	}
@@ -2358,7 +2332,7 @@ co_nmt_recv_000(const struct can_msg *msg, void *data)
 		return 0;
 #endif
 
-	if (__unlikely(msg->len < 2))
+	if (msg->len < 2)
 		return 0;
 	co_unsigned8_t cs = msg->data[0];
 	co_unsigned8_t id = msg->data[1];
@@ -2404,7 +2378,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		assert(nmt->ng_ind);
 
 		co_unsigned8_t id = (msg->id - 0x700) & 0x7f;
-		if (__unlikely(!id))
+		if (!id)
 			return 0;
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
@@ -2412,7 +2386,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 		if (slave->boot)
 			return 0;
 
-		if (__unlikely(msg->len < 1))
+		if (msg->len < 1)
 			return 0;
 		co_unsigned8_t st = msg->data[0];
 
@@ -2431,7 +2405,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 		// Check the toggle bit and ignore the message if it does not
 		// match.
-		if (__unlikely(!((st ^ slave->rst) & CO_NMT_ST_TOGGLE)))
+		if (!((st ^ slave->rst) & CO_NMT_ST_TOGGLE))
 			return 0;
 		slave->rst ^= CO_NMT_ST_TOGGLE;
 
@@ -2500,10 +2474,7 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 
 	// Notify the application once of the occurrence of a node guarding
 	// timeout.
-	// clang-format off
-	if (__unlikely(slave->rtr <= slave->ltf
-			&& ++slave->rtr == slave->ltf)) {
-		// clang-format on
+	if (slave->rtr <= slave->ltf && ++slave->rtr == slave->ltf) {
 		diag(DIAG_INFO, 0,
 				"NMT: node guarding time out occurred for node %d",
 				id);
@@ -2557,7 +2528,7 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 			can_timer_stop(nmt->cs_timer);
 		} else {
 			nmt->cs_timer = can_timer_create();
-			if (__unlikely(!nmt->cs_timer))
+			if (!nmt->cs_timer)
 				return -1;
 			can_timer_set_func(
 					nmt->cs_timer, &co_nmt_cs_timer, nmt);
@@ -2581,7 +2552,7 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 			return 0;
 		}
 		// Try to send the frame.
-		if (__unlikely(can_net_send(nmt->net, &msg) == -1))
+		if (can_net_send(nmt->net, &msg) == -1)
 			return -1;
 		can_buf_read(&nmt->buf, NULL, 1);
 		// Update the expected state of the node(s).
@@ -2618,7 +2589,7 @@ co_nmt_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 	assert(nmt);
 	assert(nmt->st_ind);
 
-	if (__unlikely(!id || id > CO_NUM_NODES))
+	if (!id || id > CO_NUM_NODES)
 		return;
 
 #ifndef LELY_NO_CO_MASTER
@@ -2788,10 +2759,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 	can_recv_stop(nmt->recv_000);
 
 	// Reset application parameters.
-	// clang-format off
-	if (__unlikely(co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_node)
-			== -1))
-		// clang-format on
+	if (co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_node) == -1)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to reset application parameters");
 
@@ -2830,10 +2798,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	can_recv_stop(nmt->recv_000);
 
 	// Reset communication parameters.
-	// clang-format off
-	if (__unlikely(co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_comm)
-			== -1))
-		// clang-format on
+	if (co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_comm) == -1)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to reset communication parameters");
 
@@ -2841,10 +2806,8 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
 		co_dev_set_id(nmt->dev, nmt->id);
 		co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
-		// clang-format off
-		if (__unlikely(co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
-				&nmt->dcf_comm) == -1))
-			// clang-format on
+		if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm)
+				== -1)
 			diag(DIAG_ERROR, get_errc(),
 					"unable to store communication parameters");
 	}
@@ -3185,7 +3148,7 @@ co_nmt_ec_init(co_nmt_t *nmt)
 
 	nmt->lg_state = CO_NMT_EC_RESOLVED;
 
-	if (__unlikely(co_nmt_ec_update(nmt) == -1))
+	if (co_nmt_ec_update(nmt) == -1)
 		diag(DIAG_ERROR, get_errc(), "unable to start %s",
 				nmt->ms ? "heartbeat production"
 					: "life guarding");
@@ -3222,7 +3185,7 @@ co_nmt_ec_update(co_nmt_t *nmt)
 	if (lt) {
 		if (!nmt->recv_700) {
 			nmt->recv_700 = can_recv_create();
-			if (__unlikely(!nmt->recv_700))
+			if (!nmt->recv_700)
 				return -1;
 			can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
 		}
@@ -3238,7 +3201,7 @@ co_nmt_ec_update(co_nmt_t *nmt)
 	if (nmt->ms || lt) {
 		if (!nmt->ec_timer) {
 			nmt->ec_timer = can_timer_create();
-			if (__unlikely(!nmt->ec_timer))
+			if (!nmt->ec_timer)
 				return -1;
 			can_timer_set_func(
 					nmt->ec_timer, &co_nmt_ec_timer, nmt);
@@ -3281,7 +3244,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	if (obj_1016) {
 		nmt->nhb = co_obj_get_val_u8(obj_1016, 0x00);
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
-		if (__unlikely(!nmt->hbs && nmt->nhb)) {
+		if (!nmt->hbs && nmt->nhb) {
 			nmt->nhb = 0;
 			set_errc(errno2c(errno));
 			diag(DIAG_ERROR, get_errc(),
@@ -3291,7 +3254,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 
 	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
 		nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
-		if (__unlikely(!nmt->hbs[i])) {
+		if (!nmt->hbs[i]) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumer 0x%02X",
 					(co_unsigned8_t)(i + 1));
@@ -3331,7 +3294,7 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 		slave->recv = can_recv_create();
-		if (__unlikely(!slave->recv)) {
+		if (!slave->recv) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN frame receiver");
 			continue;
@@ -3342,7 +3305,7 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 	}
 
 	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
-	if (__unlikely(!obj_1f81))
+	if (!obj_1f81)
 		return;
 
 	co_unsigned8_t n = co_obj_get_val_u8(obj_1f81, 0x00);
@@ -3407,10 +3370,7 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 		// Halt the network boot-up procedure if the 'boot slave'
 		// process failed for a mandatory slave with the keep-alive bit
 		// set.
-		// clang-format off
-		if (__unlikely(co_nmt_boot_req(nmt, id, nmt->timeout) == -1
-				&& mandatory))
-			// clang-format on
+		if (co_nmt_boot_req(nmt, id, nmt->timeout) == -1 && mandatory)
 			res = -1;
 	}
 	return res;
