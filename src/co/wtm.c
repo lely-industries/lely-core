@@ -213,7 +213,7 @@ void *
 __co_wtm_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_wtm));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -290,12 +290,12 @@ co_wtm_create(void)
 	int errc = 0;
 
 	co_wtm_t *wtm = __co_wtm_alloc();
-	if (__unlikely(!wtm)) {
+	if (!wtm) {
 		errc = get_errc();
 		goto error_alloc_wtm;
 	}
 
-	if (__unlikely(!__co_wtm_init(wtm))) {
+	if (!__co_wtm_init(wtm)) {
 		errc = get_errc();
 		goto error_init_wtm;
 	}
@@ -331,7 +331,7 @@ co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -347,7 +347,7 @@ co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -376,7 +376,7 @@ co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 		err = 0xf;
 	}
 
-	if (__unlikely(load > 100 && load != 0xff)) {
+	if (load > 100 && load != 0xff) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -396,7 +396,7 @@ co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
 {
 	assert(wtm);
 
-	if (__unlikely(quality > 100 && quality != 0xff)) {
+	if (quality > 100 && quality != 0xff) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -529,7 +529,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			bp++;
 			nbytes--;
 		}
-		if (__unlikely(wtm->recv_buf[0] != 0x55)) {
+		if (wtm->recv_buf[0] != 0x55) {
 			ac = CO_WTM_AC_PREAMBLE;
 			goto error;
 		}
@@ -560,14 +560,14 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// Check the CRC checksum (see section 5.7 in CiA 315 version
 		// 1.0.0).
 		uint16_t crc = co_crc(0xffff, wtm->recv_buf, 4 + len);
-		if (__unlikely(crc != ldle_u16(wtm->recv_buf + 4 + len))) {
+		if (crc != ldle_u16(wtm->recv_buf + 4 + len)) {
 			ac = CO_WTM_AC_CRC;
 			goto error;
 		}
 		// Check the sequence counter (see section 5.4 in CiA 315
 		// version 1.0.0).
 		uint8_t seq = wtm->recv_buf[2];
-		if (__unlikely(seq != wtm->recv_nseq))
+		if (seq != wtm->recv_nseq)
 			// Generate an error, but do not abort processing the
 			// message.
 			co_wtm_diag_ac(wtm, CO_WTM_AC_SEQ);
@@ -581,38 +581,36 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// 1.0.0).
 		case 0x00:
 			// Process the CAN frames.
-			// clang-format off
-			if (__unlikely((ac = co_wtm_recv_can(wtm,
-					wtm->recv_buf + 4, len)) != 0))
-				// clang-format on
+			if ((ac = co_wtm_recv_can(wtm, wtm->recv_buf + 4, len))
+					!= 0)
 				goto error;
 			break;
 		// Keep-alive (see section 7.3 in CiA 315 version 1.0.0).
 		case 0x10:
-			if (__unlikely(len < 1)) {
+			if (len < 1) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the WTM interface indicator.
 			nif = wtm->recv_buf[4];
-			if (__unlikely(nif <= 0x80)) {
+			if (nif <= 0x80) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Ignore keep-alive messages for other WTM interfaces.
-			if (__unlikely(nif != 0x80 + wtm->nif))
+			if (nif != 0x80 + wtm->nif)
 				break;
 			// TODO: handle keep-alive message.
 			break;
 		// Timer-overrun (see section 7.4 in CiA 315 version 1.0.0).
 		case 0x11:
-			if (__unlikely(len < 1)) {
+			if (len < 1) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the CAN interface indicator.
 			nif = wtm->recv_buf[4];
-			if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+			if (!nif || nif > CO_WTM_MAX_NIF) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
@@ -622,14 +620,14 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			break;
 		// Communication quality request.
 		case 0x12:
-			if (__unlikely(len < 1)) {
+			if (len < 1) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the interface indicator.
 			nif = wtm->recv_buf[4];
 			if (nif <= 0x80) {
-				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+				if (!nif || nif > CO_WTM_MAX_NIF) {
 					co_wtm_send_diag_ac(
 							wtm, CO_WTM_AC_NO_IF);
 					break;
@@ -639,7 +637,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			} else {
 				// Only accept communication quality requests
 				// for this WTM interface.
-				if (__unlikely(nif != 0x80 + wtm->nif)) {
+				if (nif != 0x80 + wtm->nif) {
 					co_wtm_send_diag_ac(
 							wtm, CO_WTM_AC_NO_IF);
 					break;
@@ -650,18 +648,18 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			break;
 		// Communication quality response.
 		case 0x13:
-			if (__unlikely(len < 2)) {
+			if (len < 2) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the interface indicator.
 			nif = wtm->recv_buf[4];
-			if (__unlikely(!nif || nif == 0x80)) {
+			if (!nif || nif == 0x80) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			if (nif < 0x80) {
-				if (__unlikely(len < 9)) {
+				if (len < 9) {
 					ac = CO_WTM_AC_PAYLOAD;
 					goto error;
 				}
@@ -698,14 +696,14 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			break;
 		// Communication quality reset.
 		case 0x14:
-			if (__unlikely(len < 1)) {
+			if (len < 1) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the interface indicator.
 			nif = wtm->recv_buf[4];
 			if (nif <= 0x80) {
-				if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+				if (!nif || nif > CO_WTM_MAX_NIF) {
 					co_wtm_send_diag_ac(
 							wtm, CO_WTM_AC_NO_IF);
 					break;
@@ -723,7 +721,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			} else {
 				// Only accept communication quality reset
 				// messages for this WTM interface.
-				if (__unlikely(nif != 0x80 + wtm->nif)) {
+				if (nif != 0x80 + wtm->nif) {
 					co_wtm_send_diag_ac(
 							wtm, CO_WTM_AC_NO_IF);
 					break;
@@ -736,26 +734,26 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			break;
 		// Diagnostic abort message.
 		case 0x15:
-			if (__unlikely(len < 5)) {
+			if (len < 5) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Obtain the WTM interface indicator.
 			nif = wtm->recv_buf[4];
-			if (__unlikely(nif <= 0x80)) {
+			if (nif <= 0x80) {
 				ac = CO_WTM_AC_PAYLOAD;
 				goto error;
 			}
 			// Ignore diagnostic abort messages for other WTM
 			// interfaces.
-			if (__unlikely(nif != 0x80 + wtm->nif))
+			if (nif != 0x80 + wtm->nif)
 				break;
 			ac = ldle_u32(wtm->recv_buf + 5);
 			break;
 		default: ac = CO_WTM_AC_TYPE; goto error;
 		}
 	error:
-		if (__unlikely(ac))
+		if (ac)
 			co_wtm_diag_ac(wtm, ac);
 		// Empty the buffer for the next message.
 		wtm->recv_nbytes = 0;
@@ -788,7 +786,7 @@ co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -805,7 +803,7 @@ co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
 	assert(wtm);
 	assert(tp);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -821,7 +819,7 @@ co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
 	// If the difference between the current (reference) and next time is
 	// larger than 6553.5 ms, send a timer-overrun message.
 	while (timespec_diff_usec(&can->send_next, &can->send_time) > 6553500) {
-		if (__unlikely(co_wtm_flush(wtm) == -1))
+		if (co_wtm_flush(wtm) == -1)
 			return -1;
 		wtm->send_buf[3] = 0x11;
 		wtm->send_buf[4] = nif;
@@ -839,7 +837,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	assert(wtm);
 	assert(msg);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -847,13 +845,13 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 
 #ifndef LELY_NO_CANFD
 	// CAN FD frames are not supported.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL)) {
+	if (msg->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 #endif
 
-	if (__unlikely(msg->len > CAN_MAX_LEN)) {
+	if (msg->len > CAN_MAX_LEN) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -864,7 +862,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	// Flush the buffer if necessary.
 	if ((wtm->send_nbytes > 3 && wtm->send_buf[3] != 0x00)
 			|| wtm->send_nbytes + len + 2 > CO_WTM_MAX_LEN) {
-		if (__unlikely(co_wtm_flush(wtm) == -1))
+		if (co_wtm_flush(wtm) == -1)
 			return -1;
 	}
 	wtm->send_buf[3] = 0x00;
@@ -920,7 +918,7 @@ co_wtm_send_alive(co_wtm_t *wtm)
 	assert(wtm);
 	assert(wtm->nif && wtm->nif <= CO_WTM_MAX_NIF);
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x10;
 	wtm->send_buf[4] = 0x80 + wtm->nif;
@@ -933,12 +931,12 @@ co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x12;
 	wtm->send_buf[4] = nif;
@@ -951,12 +949,12 @@ co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x12;
 	wtm->send_buf[4] = 0x80 + nif;
@@ -969,12 +967,12 @@ co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x14;
 	wtm->send_buf[4] = nif;
@@ -987,12 +985,12 @@ co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
 {
 	assert(wtm);
 
-	if (__unlikely(!nif || nif > CO_WTM_MAX_NIF)) {
+	if (!nif || nif > CO_WTM_MAX_NIF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x14;
 	wtm->send_buf[4] = 0x80 + nif;
@@ -1006,7 +1004,7 @@ co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac)
 	assert(wtm);
 	assert(wtm->nif && wtm->nif <= CO_WTM_MAX_NIF);
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x15;
 	wtm->send_buf[4] = 0x80 + wtm->nif;
@@ -1036,7 +1034,7 @@ co_wtm_flush(co_wtm_t *wtm)
 
 	// Invoke the user-specified callback function to send the generic
 	// frame.
-	if (__unlikely(!wtm->send_func)) {
+	if (!wtm->send_func) {
 		set_errnum(ERRNUM_NOSYS);
 		return -1;
 	}
@@ -1073,7 +1071,7 @@ co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif)
 	assert(nif && nif <= CO_WTM_MAX_NIF);
 	struct co_wtm_can *can = &wtm->can[nif - 1];
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x13;
 	wtm->send_buf[4] = nif;
@@ -1091,7 +1089,7 @@ co_wtm_send_diag_wtm_res(co_wtm_t *wtm)
 {
 	assert(wtm);
 
-	if (__unlikely(co_wtm_flush(wtm) == -1))
+	if (co_wtm_flush(wtm) == -1)
 		return -1;
 	wtm->send_buf[3] = 0x13;
 	wtm->send_buf[4] = 0x80 + wtm->nif;
@@ -1134,7 +1132,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		bp++;
 		nbytes--;
 		msg.len = dlc & 0x0f;
-		if (__unlikely(msg.len > CAN_MAX_LEN)) {
+		if (msg.len > CAN_MAX_LEN) {
 			ac = CO_WTM_AC_CAN;
 			goto error;
 		}
@@ -1143,7 +1141,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// Obtain the CAN interface indicator.
 		uint8_t nif = 1;
 		if (dlc & 0x80) {
-			if (__unlikely(nbytes < 1)) {
+			if (nbytes < 1) {
 				ac = CO_WTM_AC_CAN;
 				goto error;
 			}
@@ -1153,7 +1151,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		}
 		// Obtain the CAN identifier.
 		if (dlc & 0x20) {
-			if (__unlikely(nbytes < 4)) {
+			if (nbytes < 4) {
 				ac = CO_WTM_AC_CAN;
 				goto error;
 			}
@@ -1162,7 +1160,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			nbytes -= 4;
 			msg.flags |= CAN_FLAG_IDE;
 		} else {
-			if (__unlikely(nbytes < 2)) {
+			if (nbytes < 2) {
 				ac = CO_WTM_AC_CAN;
 				goto error;
 			}
@@ -1171,7 +1169,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			nbytes -= 2;
 		}
 		// Obtain the frame payload.
-		if (__unlikely(nbytes < msg.len)) {
+		if (nbytes < msg.len) {
 			ac = CO_WTM_AC_CAN;
 			goto error;
 		}
@@ -1181,7 +1179,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		// Obtain the time stamp.
 		uint16_t ts = 0;
 		if (dlc & 0x40) {
-			if (__unlikely(nbytes < 2)) {
+			if (nbytes < 2) {
 				ac = CO_WTM_AC_CAN;
 				goto error;
 			}
@@ -1190,7 +1188,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 			nbytes -= 2;
 		}
 		// Ignore CAN frames with an invalid interface indicator.
-		if (__unlikely(!nif || nif > CO_WTM_MAX_NIF))
+		if (!nif || nif > CO_WTM_MAX_NIF)
 			continue;
 		// Update the CAN interface timer.
 		struct timespec *tp = NULL;
@@ -1202,8 +1200,8 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (wtm->recv_func) {
 			int errc = get_errc();
 			// clang-format off
-			if (__unlikely(wtm->recv_func(wtm, nif, tp, &msg,
-					wtm->recv_data))) {
+			if (wtm->recv_func(wtm, nif, tp, &msg,
+					wtm->recv_data)) {
 				// clang-format on
 				// Convert the error number to a WTM abort code.
 				if (!ac) {

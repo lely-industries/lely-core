@@ -4,7 +4,7 @@
  *
  * @see lely/co/sdo.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -178,15 +178,15 @@ co_sdo_req_dn_val(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 
 	// Check the size of the value.
 	if (co_type_is_array(type)) {
-		if (__unlikely(size != nbyte)) {
+		if (size != nbyte) {
 			ac = CO_SDO_AC_NO_MEM;
 			goto error_read;
 		}
 	} else {
-		if (__unlikely(!size)) {
+		if (!size) {
 			ac = CO_SDO_AC_TYPE_LEN_LO;
 			goto error_read;
-		} else if (__unlikely(size < nbyte)) {
+		} else if (size < nbyte) {
 			ac = CO_SDO_AC_TYPE_LEN_HI;
 			goto error_read;
 		}
@@ -215,19 +215,19 @@ co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 		return -1;
 
 	fwbuf_t *fbuf = fwbuf_create(filename);
-	if (__unlikely(!fbuf)) {
+	if (!fbuf) {
 		ac = CO_SDO_AC_DATA;
 		set_errc(errc);
 		goto error_create_fbuf;
 	}
 
-	if (__unlikely(fwbuf_write(fbuf, ptr, nbyte) != (ssize_t)nbyte)) {
+	if (fwbuf_write(fbuf, ptr, nbyte) != (ssize_t)nbyte) {
 		ac = CO_SDO_AC_DATA;
 		set_errc(errc);
 		goto error_write;
 	}
 
-	if (__unlikely(fwbuf_commit(fbuf) == -1)) {
+	if (fwbuf_commit(fbuf) == -1) {
 		ac = CO_SDO_AC_DATA;
 		set_errc(errc);
 		goto error_commit;
@@ -257,7 +257,7 @@ co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
 	co_unsigned32_t ac = 0;
 
 	membuf_clear(buf);
-	if (__unlikely(n && !membuf_reserve(buf, n))) {
+	if (n && !membuf_reserve(buf, n)) {
 		ac = CO_SDO_AC_NO_MEM;
 		goto error_reserve;
 	}
@@ -286,13 +286,13 @@ co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 	size_t size = co_val_write(type, val, NULL, NULL);
 
 	membuf_clear(buf);
-	if (__unlikely(size && !membuf_reserve(buf, size))) {
+	if (size && !membuf_reserve(buf, size)) {
 		ac = CO_SDO_AC_NO_MEM;
 		goto error_reserve;
 	}
 
 	uint8_t *begin = membuf_alloc(buf, &size);
-	if (__unlikely(co_val_write(type, val, begin, begin + size) != size)) {
+	if (co_val_write(type, val, begin, begin + size) != size) {
 		ac = CO_SDO_AC_ERROR;
 		goto error_write;
 	}
@@ -318,26 +318,26 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 	co_unsigned32_t ac = 0;
 
 	frbuf_t *fbuf = frbuf_create(filename);
-	if (__unlikely(!fbuf)) {
+	if (!fbuf) {
 		ac = CO_SDO_AC_DATA;
 		goto error_create_fbuf;
 	}
 
 	int64_t size = frbuf_get_size(fbuf);
-	if (__unlikely(size == -1)) {
+	if (size == -1) {
 		ac = CO_SDO_AC_DATA;
 		goto error_get_size;
 	}
 	size_t nbyte = (size_t)size;
 
 	membuf_clear(buf);
-	if (__unlikely(size && !membuf_reserve(buf, nbyte))) {
+	if (size && !membuf_reserve(buf, nbyte)) {
 		ac = CO_SDO_AC_NO_MEM;
 		goto error_reserve;
 	}
 
 	void *ptr = membuf_alloc(buf, &nbyte);
-	if (__unlikely(frbuf_read(fbuf, ptr, nbyte) != (ssize_t)nbyte)) {
+	if (frbuf_read(fbuf, ptr, nbyte) != (ssize_t)nbyte) {
 		ac = CO_SDO_AC_DATA;
 		goto error_read;
 	}
@@ -376,17 +376,14 @@ co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)
 	} else {
 		if (co_sdo_req_first(req)) {
 			membuf_clear(buf);
-			// clang-format off
-			if (__unlikely(req->size
-					&& !membuf_reserve(buf, req->size)))
-				// clang-format on
+			if (req->size && !membuf_reserve(buf, req->size))
 				goto error_reserve;
 		} else {
 			// Adjust the offset if necessary. Only backtracking is
 			// allowed.
 			offset += req->offset;
 			if (offset) {
-				if (__unlikely(offset > 0)) {
+				if (offset > 0) {
 					set_errnum(ERRNUM_INVAL);
 					goto error_offset;
 				}
@@ -395,7 +392,7 @@ co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)
 		}
 
 		if (req->nbyte) {
-			if (__unlikely(req->nbyte > membuf_capacity(buf))) {
+			if (req->nbyte > membuf_capacity(buf)) {
 				set_errnum(ERRNUM_INVAL);
 				goto error_nbyte;
 			}

@@ -112,7 +112,7 @@ dn_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	(void)sdo;
 	struct co_test *test = data;
 
-	if (__likely(!ac))
+	if (!ac)
 		tap_pass("value sent");
 	else
 		tap_fail("received abort code %08X for SDO %Xsub%X: %s", ac,
@@ -128,12 +128,12 @@ up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	(void)sdo;
 	struct co_test *test = data;
 
-	if (__likely(!ac)) {
+	if (!ac) {
 		union co_val val;
 		co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val);
 		// clang-format off
-		if (__likely(!n || co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val,
-				ptr, (const uint8_t *)ptr + n) == n))
+		if (!n || co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val, ptr,
+				(const uint8_t *)ptr + n) == n)
 			// clang-format on
 			tap_pass("value received\n%s", val.vs);
 		else

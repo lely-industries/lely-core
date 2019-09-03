@@ -124,7 +124,7 @@ main(int argc, char *argv[])
 	}
 
 	if (flags & FLAG_NO_DAEMON) {
-		if (__unlikely(daemon_init(argc, argv)))
+		if (daemon_init(argc, argv))
 			return EXIT_FAILURE;
 		daemon_main();
 		daemon_fini();
@@ -141,7 +141,7 @@ main(int argc, char *argv[])
 int
 daemon_init(int argc, char *argv[])
 {
-	if (__unlikely(lely_io_init() == -1)) {
+	if (lely_io_init() == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize I/O library");
 		goto error_io_init;
@@ -212,31 +212,31 @@ daemon_init(int argc, char *argv[])
 		}
 	}
 
-	if (__unlikely(optpos < 1 || !ifname)) {
+	if (optpos < 1 || !ifname) {
 		diag(DIAG_ERROR, 0, "no CAN interface specified");
 		goto error_arg;
 	}
 
-	if (__unlikely(optpos < 2 || !command)) {
+	if (optpos < 2 || !command) {
 		diag(DIAG_ERROR, 0, "no command specified");
 		goto error_arg;
 	}
 
 	poll = io_poll_create();
-	if (__unlikely(!poll)) {
+	if (!poll) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create I/O polling interface");
 		goto error_create_poll;
 	}
 
 	hcan = io_open_can(ifname);
-	if (__unlikely(hcan == IO_HANDLE_ERROR)) {
+	if (hcan == IO_HANDLE_ERROR) {
 		diag(DIAG_ERROR, get_errc(), "%s is not a suitable CAN device",
 				ifname);
 		goto error_open_can;
 	}
 
-	if (__unlikely(io_set_flags(hcan, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(hcan, IO_FLAG_NONBLOCK) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to configure %s", ifname);
 		goto error_set_flags_can;
 	}
@@ -244,13 +244,13 @@ daemon_init(int argc, char *argv[])
 	struct io_event event = IO_EVENT_INIT;
 	event.events = IO_EVENT_READ;
 	event.u.handle = hcan;
-	if (__unlikely(io_poll_watch(poll, hcan, &event, 1) == -1)) {
+	if (io_poll_watch(poll, hcan, &event, 1) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to watch %s", ifname);
 		goto error_watch_can;
 	}
 
 	net = can_net_create();
-	if (__unlikely(!net)) {
+	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;
 	}
@@ -261,37 +261,37 @@ daemon_init(int argc, char *argv[])
 	can_net_set_time(net, &now);
 
 	dev = co_dev_create_from_dcf_file(filename);
-	if (__unlikely(!dev))
+	if (!dev)
 		goto error_create_dev;
 	if (id)
 		co_dev_set_id(dev, id);
 
 	nmt = co_nmt_create(net, dev);
-	if (__unlikely(!nmt)) {
+	if (!nmt) {
 		diag(DIAG_ERROR, get_errc(), "unable to create NMT service");
 		goto error_create_nmt;
 	}
 
 	io_handle_t hvin[2] = { IO_HANDLE_ERROR, IO_HANDLE_ERROR };
-	if (__unlikely(io_open_pipe(hvin) == -1)) {
+	if (io_open_pipe(hvin) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to open pipe");
 		goto error_open_hvin;
 	}
 
 	io_handle_t hvout[2] = { IO_HANDLE_ERROR, IO_HANDLE_ERROR };
-	if (__unlikely(io_open_pipe(hvout) == -1)) {
+	if (io_open_pipe(hvout) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to open pipe");
 		goto error_open_hvout;
 	}
 
 	io_handle_t hverr[2] = { IO_HANDLE_ERROR, IO_HANDLE_ERROR };
-	if (__unlikely(io_open_pipe(hverr) == -1)) {
+	if (io_open_pipe(hverr) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to open pipe");
 		goto error_open_hverr;
 	}
 
 	pid_t pid = fork();
-	if (__unlikely(pid == -1)) {
+	if (pid == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to fork process");
 		goto error_fork;
 	}
@@ -314,22 +314,22 @@ daemon_init(int argc, char *argv[])
 
 		do
 			result = dup2(io_get_fd(hin), STDIN_FILENO);
-		while (__unlikely(result == -1 && errno == EINTR));
-		if (__unlikely(result == -1))
+		while (result == -1 && errno == EINTR);
+		if (result == -1)
 			goto error_dup_hin;
 		io_close(hin);
 
 		do
 			result = dup2(io_get_fd(hout), STDOUT_FILENO);
-		while (__unlikely(result == -1 && errno == EINTR));
-		if (__unlikely(result == -1))
+		while (result == -1 && errno == EINTR);
+		if (result == -1)
 			goto error_dup_hout;
 		io_close(hout);
 
 		do
 			result = dup2(io_get_fd(herr), STDERR_FILENO);
-		while (__unlikely(result == -1 && errno == EINTR));
-		if (__unlikely(result == -1))
+		while (result == -1 && errno == EINTR);
+		if (result == -1)
 			goto error_dup_herr;
 		io_close(herr);
 
@@ -354,7 +354,7 @@ daemon_init(int argc, char *argv[])
 	hvin[0] = IO_HANDLE_ERROR;
 	hin = hvin[1];
 
-	if (__unlikely(io_set_flags(hin, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(hin, IO_FLAG_NONBLOCK) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to configure pipe");
 		goto error_set_flags_hin;
 	}
@@ -363,7 +363,7 @@ daemon_init(int argc, char *argv[])
 	io_close(hvout[1]);
 	hvout[1] = IO_HANDLE_ERROR;
 
-	if (__unlikely(io_set_flags(hout, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(hout, IO_FLAG_NONBLOCK) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to configure pipe");
 		goto error_set_flags_hout;
 	}
@@ -372,13 +372,13 @@ daemon_init(int argc, char *argv[])
 	io_close(hverr[1]);
 	hverr[1] = IO_HANDLE_ERROR;
 
-	if (__unlikely(io_set_flags(herr, IO_FLAG_NONBLOCK) == -1)) {
+	if (io_set_flags(herr, IO_FLAG_NONBLOCK) == -1) {
 		diag(DIAG_ERROR, get_errc(), "unable to configure pipe");
 		goto error_set_flags_herr;
 	}
 
 	co_sub_t *sub_1026_01 = co_dev_find_sub(dev, 0x1026, 0x01);
-	if (__unlikely(!sub_1026_01)) {
+	if (!sub_1026_01) {
 		diag(DIAG_ERROR, 0,
 				"sub-object 1026:01 not found in object dictionary");
 		goto error_find_sub_1026_01;
@@ -386,7 +386,7 @@ daemon_init(int argc, char *argv[])
 	co_sub_set_dn_ind(sub_1026_01, &co_1026_dn_ind, (void *)hin);
 
 	co_sub_t *sub_1026_02 = co_dev_find_sub(dev, 0x1026, 0x02);
-	if (__unlikely(!sub_1026_02)) {
+	if (!sub_1026_02) {
 		diag(DIAG_ERROR, 0,
 				"sub-object 1026:02 not found in object dictionary");
 		goto error_find_sub_1026_02;
@@ -394,7 +394,7 @@ daemon_init(int argc, char *argv[])
 	co_sub_set_up_ind(sub_1026_02, &co_1026_up_ind, (void *)hout);
 
 	co_sub_t *sub_1026_03 = co_dev_find_sub(dev, 0x1026, 0x03);
-	if (__unlikely(!sub_1026_03)) {
+	if (!sub_1026_03) {
 		diag(DIAG_ERROR, 0,
 				"sub-object 1026:01 not found in object dictionary");
 		goto error_find_sub_1026_03;
@@ -457,7 +457,7 @@ daemon_main()
 
 	int watch_out = 1;
 	can_timer_t *timer_out = can_timer_create();
-	if (__unlikely(!timer_out)) {
+	if (!timer_out) {
 		diag(DIAG_ERROR, get_errc(), "unable to create timer");
 		goto error_create_timer_out;
 	}
@@ -465,7 +465,7 @@ daemon_main()
 
 	int watch_err = 1;
 	can_timer_t *timer_err = can_timer_create();
-	if (__unlikely(!timer_err)) {
+	if (!timer_err) {
 		diag(DIAG_ERROR, get_errc(), "unable to create timer");
 		goto error_create_timer_err;
 	}
@@ -543,9 +543,9 @@ daemon_main()
 				// error other than an empty receive buffer, as
 				// an error event.
 				// clang-format off
-				if (__unlikely(!result || (result == -1
+				if (!result || (result == -1
 						&& get_errnum() != ERRNUM_AGAIN
-						&& get_errnum() != ERRNUM_WOULDBLOCK)))
+						&& get_errnum() != ERRNUM_WOULDBLOCK))
 					// clang-format on
 					event.events |= IO_EVENT_ERROR;
 			} else if (event.u.handle == hout) {
@@ -681,13 +681,10 @@ co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned8_t val = 0;
 
 	co_unsigned32_t ac = 0;
-	// clang-format off
-	if (__unlikely(co_sdo_req_dn_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac)
-			== -1))
-		// clang-format on
+	if (co_sdo_req_dn_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(io_write(handle, &val, 1) != 1))
+	if (io_write(handle, &val, 1) != 1)
 		return CO_SDO_AC_DATA;
 
 	return 0;
@@ -705,7 +702,7 @@ co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 	io_handle_t handle = (io_handle_t)data;
 
 	co_unsigned8_t val = 0;
-	if (__unlikely(io_read(handle, &val, 1) != 1))
+	if (io_read(handle, &val, 1) != 1)
 		return CO_SDO_AC_NO_DATA;
 
 	co_unsigned32_t ac = 0;

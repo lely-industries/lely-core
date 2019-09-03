@@ -4,7 +4,7 @@
  *
  * @see lely/co/rpdo.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -155,7 +155,7 @@ void *
 __co_rpdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_rpdo));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -176,7 +176,7 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (__unlikely(!num || num > 512)) {
+	if (!num || num > 512) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -184,7 +184,7 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	// Find the PDO parameters in the object dictionary.
 	co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + num - 1);
 	co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + num - 1);
-	if (__unlikely(!obj_1400 || !obj_1600)) {
+	if (!obj_1400 || !obj_1600) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -226,12 +226,12 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	// Set the download indication functions PDO mapping parameter record.
 	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
 
-	if (__unlikely(co_rpdo_init_recv(pdo) == -1)) {
+	if (co_rpdo_init_recv(pdo) == -1) {
 		errc = get_errc();
 		goto error_init_recv;
 	}
 
-	if (__unlikely(co_rpdo_init_timer_swnd(pdo) == -1)) {
+	if (co_rpdo_init_timer_swnd(pdo) == -1) {
 		errc = get_errc();
 		goto error_init_timer_swnd;
 	}
@@ -282,12 +282,12 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	int errc = 0;
 
 	co_rpdo_t *pdo = __co_rpdo_alloc();
-	if (__unlikely(!pdo)) {
+	if (!pdo) {
 		errc = get_errc();
 		goto error_alloc_pdo;
 	}
 
-	if (__unlikely(!__co_rpdo_init(pdo, net, dev, num))) {
+	if (!__co_rpdo_init(pdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_pdo;
 	}
@@ -417,7 +417,7 @@ co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt)
 {
 	assert(pdo);
 
-	if (__unlikely(cnt > 240)) {
+	if (cnt > 240) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -446,7 +446,7 @@ co_rpdo_init_recv(co_rpdo_t *pdo)
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)) {
 		if (!pdo->recv) {
 			pdo->recv = can_recv_create();
-			if (__unlikely(!pdo->recv))
+			if (!pdo->recv)
 				return -1;
 			can_recv_set_func(pdo->recv, co_rpdo_recv, pdo);
 		}
@@ -476,7 +476,7 @@ co_rpdo_init_timer_event(co_rpdo_t *pdo)
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.event) {
 		if (!pdo->timer_event) {
 			pdo->timer_event = can_timer_create();
-			if (__unlikely(!pdo->timer_event))
+			if (!pdo->timer_event)
 				return -1;
 			can_timer_set_func(pdo->timer_event,
 					co_rpdo_timer_event, pdo);
@@ -502,7 +502,7 @@ co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 			&& swnd) {
 		if (!pdo->timer_swnd) {
 			pdo->timer_swnd = can_timer_create();
-			if (__unlikely(!pdo->timer_swnd))
+			if (!pdo->timer_swnd)
 				return -1;
 			can_timer_set_func(pdo->timer_swnd, co_rpdo_timer_swnd,
 					pdo);
@@ -529,7 +529,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
@@ -547,16 +547,14 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_PDO_COBID_VALID);
 		uint32_t canid = cobid & CAN_MASK_EID;
 		uint32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (__unlikely(valid && valid_old && canid != canid_old)) {
+		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		// clang-format off
-		if (__unlikely(!(cobid & CO_PDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-			// clang-format on
+		if (!(cobid & CO_PDO_COBID_FRAME)
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -578,7 +576,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			goto error;
 
 		// Transmission types 0xF1..0xFD are reserved.
-		if (__unlikely(trans > 0xf0 && trans < 0xfe)) {
+		if (trans > 0xf0 && trans < 0xfe) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -599,7 +597,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		// The inhibit time cannot be changed while the PDO exists and
 		// is valid.
-		if (__unlikely(!(pdo->comm.cobid & CO_PDO_COBID_VALID))) {
+		if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -639,7 +637,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	int valid = !(pdo->comm.cobid & CO_PDO_COBID_VALID);
@@ -652,7 +650,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			goto error;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (__unlikely(valid || n > 0x40)) {
+		if (valid || n > 0x40) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -665,7 +663,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned8_t len = map & 0xff;
 
 			// Check the PDO length.
-			if (__unlikely((bits += len) > CAN_MAX_LEN * 8)) {
+			if ((bits += len) > CAN_MAX_LEN * 8) {
 				ac = CO_SDO_AC_PDO_LEN;
 				goto error;
 			}
@@ -673,7 +671,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO (or is a valid dummy entry).
 			ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-			if (__unlikely(ac))
+			if (ac)
 				goto error;
 		}
 
@@ -687,7 +685,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		// The PDO mapping cannot be changed when the PDO is valid or
 		// sub-index 0x00 is non-zero.
-		if (__unlikely(valid || pdo->map.n)) {
+		if (valid || pdo->map.n) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -697,7 +695,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		// Check whether the sub-object exists and can be mapped into a
 		// PDO (or is a valid dummy entry).
 		ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-		if (__unlikely(ac))
+		if (ac)
 			goto error;
 
 		pdo->map.map[co_sub_get_subidx(sub) - 1] = map;
@@ -717,12 +715,12 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 	assert(pdo);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
@@ -802,7 +800,7 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 			size_t offset = 0;
 			for (size_t i = 0; i < MIN(pdo->map.n, 0x40u); i++)
 				offset += (pdo->map.map[i]) & 0xff;
-			if (__unlikely((offset + 7) / 8 < n))
+			if ((offset + 7) / 8 < n)
 				// Generate an error message if the PDO length
 				// exceeds the mapping.
 				pdo->err(pdo, 0x8220, 0x10, pdo->err_data);

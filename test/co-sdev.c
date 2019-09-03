@@ -51,7 +51,7 @@ main(void)
 			char *cp = buf;
 			size_t chars = co_val_print(
 					type, val, &cp, cp + sizeof(buf));
-			if (__unlikely(chars >= sizeof(buf)))
+			if (chars >= sizeof(buf))
 				continue;
 			*cp = '\0';
 

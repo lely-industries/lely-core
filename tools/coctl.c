@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 		char *arg = argv[optind];
 		if (*arg != '-') {
 			optind++;
-			if (__likely(num_net < CO_GW_NUM_NET)) {
+			if (num_net < CO_GW_NUM_NET) {
 				if (!net[num_net].can_path)
 					net[num_net].can_path = arg;
 				else
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 		}
 	}
 	for (; optind < argc; optind++) {
-		if (__likely(num_net < CO_GW_NUM_NET)) {
+		if (num_net < CO_GW_NUM_NET) {
 			if (!net[num_net].can_path)
 				net[num_net].can_path = argv[optind];
 			else
@@ -195,7 +195,7 @@ main(int argc, char *argv[])
 	}
 
 	poll = io_poll_create();
-	if (__unlikely(!poll)) {
+	if (!poll) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to create I/O polling interface");
 		goto error_create_poll;
@@ -209,16 +209,13 @@ main(int argc, char *argv[])
 			break;
 		// Create a non-blocking CAN device handle.
 		net[id - 1].handle = io_open_can(net[id - 1].can_path);
-		if (__unlikely(net[id - 1].handle == IO_HANDLE_ERROR)) {
+		if (net[id - 1].handle == IO_HANDLE_ERROR) {
 			diag(DIAG_ERROR, get_errc(),
 					"%s is not a suitable CAN device",
 					net[id - 1].can_path);
 			goto error_net;
 		}
-		// clang-format off
-		if (__unlikely(io_set_flags(net[id - 1].handle,
-				IO_FLAG_NONBLOCK) == -1)) {
-			// clang-format on
+		if (io_set_flags(net[id - 1].handle, IO_FLAG_NONBLOCK) == -1) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to set CAN device flags");
 			goto error_net;
@@ -226,10 +223,7 @@ main(int argc, char *argv[])
 		// Watch the CAN device for incoming frames.
 		event.events = IO_EVENT_READ;
 		event.u.data = &net[id - 1];
-		// clang-format off
-		if (__unlikely(io_poll_watch(poll, net[id - 1].handle, &event,
-				1) == -1)) {
-			// clang-format on
+		if (io_poll_watch(poll, net[id - 1].handle, &event, 1) == -1) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to watch CAN device");
 			goto error_net;
@@ -237,7 +231,7 @@ main(int argc, char *argv[])
 		net[id - 1].st = io_can_get_state(net[id - 1].handle);
 		// Create a CAN network object.
 		net[id - 1].net = can_net_create();
-		if (__unlikely(!net[id - 1].net)) {
+		if (!net[id - 1].net) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN network interface");
 			goto error_net;
@@ -250,19 +244,19 @@ main(int argc, char *argv[])
 		// Load the EDS/DCF from file.
 		net[id - 1].dev = co_dev_create_from_dcf_file(
 				net[id - 1].dcf_path);
-		if (__unlikely(!net[id - 1].dev))
+		if (!net[id - 1].dev)
 			goto error_net;
 		// Create the NMT service.
 		net[id - 1].nmt =
 				co_nmt_create(net[id - 1].net, net[id - 1].dev);
-		if (__unlikely(!net[id - 1].nmt)) {
+		if (!net[id - 1].nmt) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create NMT service");
 		}
 	}
 
 	co_gw_t *gw = co_gw_create();
-	if (__unlikely(!gw)) {
+	if (!gw) {
 		diag(DIAG_ERROR, 0, "unable to create gateway");
 		goto error_create_gw;
 	}
@@ -270,14 +264,14 @@ main(int argc, char *argv[])
 	for (co_unsigned16_t id = 1; id <= num_net; id++) {
 		if (!net[id - 1].nmt)
 			break;
-		if (__unlikely(co_gw_init_net(gw, id, net[id - 1].nmt) == -1)) {
+		if (co_gw_init_net(gw, id, net[id - 1].nmt) == -1) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to initialize CANopen network");
 		}
 	}
 
 	co_gw_txt_t *gw_txt = co_gw_txt_create();
-	if (__unlikely(!gw_txt)) {
+	if (!gw_txt) {
 		diag(DIAG_ERROR, 0, "unable to create gateway");
 		goto error_create_gw_txt;
 	}
@@ -300,10 +294,7 @@ main(int argc, char *argv[])
 	send_buf = NULL;
 
 	thrd_t thr;
-	// clang-format off
-	if (__unlikely(thrd_create(&thr, &io_thrd_start, gw_txt)
-			!= thrd_success)) {
-		// clang-format on
+	if (thrd_create(&thr, &io_thrd_start, gw_txt) != thrd_success) {
 		diag(DIAG_ERROR, 0, "unable to create thread");
 		goto error_create_thr;
 	}
@@ -409,18 +400,13 @@ main(int argc, char *argv[])
 			*cp = '\0';
 			if (cmd) {
 				char *tmp;
-				// clang-format off
-				if (__unlikely(asprintf(&tmp, "%s%s", cmd, line)
-						== -1))
-					// clang-format on
+				if (asprintf(&tmp, "%s%s", cmd, line) == -1)
 					break;
 				free(cmd);
 				cmd = tmp;
 			} else {
-				// clang-format off
-				if (__unlikely(asprintf(&cmd, "[%u] %s", seq,
-						line) == -1)) {
-					// clang-format on
+				if (asprintf(&cmd, "[%u] %s", seq, line)
+						== -1) {
 					cmd = NULL;
 					break;
 				}
@@ -443,7 +429,7 @@ main(int argc, char *argv[])
 				else
 					result = asprintf(&tmp, "%s[%u] %s",
 							recv_buf, seq, line);
-				if (__unlikely(result < 0))
+				if (result < 0)
 					break;
 				free(recv_buf);
 				recv_buf = tmp;
@@ -454,7 +440,7 @@ main(int argc, char *argv[])
 				else
 					result = asprintf(&recv_buf, "[%u] %s",
 							seq, line);
-				if (__unlikely(result < 0)) {
+				if (result < 0) {
 					recv_buf = NULL;
 					break;
 				}
@@ -554,7 +540,7 @@ gw_rate(co_unsigned16_t id, co_unsigned16_t rate, void *data)
 	if (!net[id - 1].handle || !bitrate)
 		return;
 
-	if (__unlikely(io_can_set_bitrate(net[id - 1].handle, bitrate) == -1))
+	if (io_can_set_bitrate(net[id - 1].handle, bitrate) == -1)
 		diag(DIAG_ERROR, 0, "unable to set bitrate of %s to %u bit/s",
 				net[id - 1].can_path, bitrate);
 }
@@ -567,7 +553,7 @@ gw_txt_recv(const char *txt, void *data)
 	mtx_lock(&send_mtx);
 	if (send_buf) {
 		char *buf = NULL;
-		if (__likely(asprintf(&buf, "%s%s\n", send_buf, txt) > 0)) {
+		if (asprintf(&buf, "%s%s\n", send_buf, txt) > 0) {
 			free(send_buf);
 			send_buf = buf;
 		}
@@ -694,9 +680,9 @@ io_thrd_start(void *arg)
 			// other than an empty receive buffer, as an error
 			// event.
 			// clang-format off
-			if (__unlikely(!result || (result == -1
+			if (!result || (result == -1
 					&& get_errnum() != ERRNUM_AGAIN
-					&& get_errnum() != ERRNUM_WOULDBLOCK)))
+					&& get_errnum() != ERRNUM_WOULDBLOCK))
 				// clang-format on
 				event.events |= IO_EVENT_ERROR;
 		}

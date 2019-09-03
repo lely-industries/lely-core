@@ -4,7 +4,7 @@
  *
  * @see lely/co/ssdo.h, src/sdo.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -498,7 +498,7 @@ void *
 __co_ssdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_ssdo));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -519,7 +519,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (__unlikely(!num || num > 128)) {
+	if (!num || num > 128) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -527,7 +527,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	// Find the SDO server parameter in the object dictionary. The default
 	// SDO (1200) is optional.
 	co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + num - 1);
-	if (__unlikely(num != 1 && !obj_1200)) {
+	if (num != 1 && !obj_1200) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -550,7 +550,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 
 	sdo->recv = can_recv_create();
-	if (__unlikely(!sdo->recv)) {
+	if (!sdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
@@ -559,7 +559,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->timeout = 0;
 
 	sdo->timer = can_timer_create();
-	if (__unlikely(!sdo->timer)) {
+	if (!sdo->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -584,7 +584,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	if (obj_1200)
 		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
 
-	if (__unlikely(co_ssdo_update(sdo) == -1)) {
+	if (co_ssdo_update(sdo) == -1) {
 		errc = get_errc();
 		goto error_update;
 	}
@@ -634,12 +634,12 @@ co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	int errc = 0;
 
 	co_ssdo_t *sdo = __co_ssdo_alloc();
-	if (__unlikely(!sdo)) {
+	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
 	}
 
-	if (__unlikely(!__co_ssdo_init(sdo, net, dev, num))) {
+	if (!__co_ssdo_init(sdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_sdo;
 	}
@@ -754,7 +754,7 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
@@ -772,16 +772,14 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint32_t canid = cobid & CAN_MASK_EID;
 		uint32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (__unlikely(valid && valid_old && canid != canid_old)) {
+		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		// clang-format off
-		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-			// clang-format on
+		if (!(cobid & CO_SDO_COBID_FRAME)
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -802,16 +800,14 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint32_t canid = cobid & CAN_MASK_EID;
 		uint32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (__unlikely(valid && valid_old && canid != canid_old)) {
+		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
-		// clang-format off
-		if (__unlikely(!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-			// clang-format on
+		if (!(cobid & CO_SDO_COBID_FRAME)
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
 		}
@@ -851,12 +847,12 @@ co_ssdo_recv(const struct can_msg *msg, void *data)
 	assert(sdo);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
@@ -931,7 +927,7 @@ co_ssdo_wait_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -955,10 +951,10 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t cs = msg->data[0];
 
 	// Load the object index and sub-index from the CAN frame.
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
@@ -974,7 +970,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		else
 			sdo->req.size = msg->len - 4;
 	} else if (cs & CO_SDO_INI_SIZE_IND) {
-		if (__unlikely(msg->len < 8))
+		if (msg->len < 8)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		sdo->req.size = ldle_u32(msg->data + 4);
 	}
@@ -984,7 +980,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		sdo->req.buf = msg->data + 4;
 		sdo->req.nbyte = sdo->req.size;
 		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
-		if (__unlikely(ac))
+		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		// Finalize the transfer.
 		co_ssdo_send_dn_ini_res(sdo);
@@ -1017,7 +1013,7 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1029,12 +1025,12 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the value of the toggle bit.
-	if (__unlikely((cs & CO_SDO_SEG_TOGGLE) != sdo->toggle))
+	if ((cs & CO_SDO_SEG_TOGGLE) != sdo->toggle)
 		return co_ssdo_dn_seg_state;
 
 	// Obtain the size of the segment.
 	size_t n = CO_SDO_SEG_SIZE_GET(cs);
-	if (__unlikely(msg->len < 1 + n))
+	if (msg->len < 1 + n)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
@@ -1042,11 +1038,11 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	sdo->req.offset += sdo->req.nbyte;
 	sdo->req.nbyte = n;
 
-	if (__unlikely(last && !co_sdo_req_last(&sdo->req)))
+	if (last && !co_sdo_req_last(&sdo->req))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
 
 	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
-	if (__unlikely(ac))
+	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
 	co_ssdo_send_dn_seg_res(sdo);
@@ -1067,10 +1063,10 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(msg);
 
 	// Load the object index and sub-index from the CAN frame.
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
@@ -1080,12 +1076,12 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Perform access checks and start serializing the value.
 	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
-	if (__unlikely(ac))
+	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
 	if (sdo->req.size && sdo->req.size <= 4) {
 		// Perform an expedited transfer.
-		if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0))
+		if ((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0)
 			return co_ssdo_abort_res(sdo, ac);
 		co_ssdo_send_up_exp_res(sdo);
 		return co_ssdo_abort_ind(sdo);
@@ -1117,7 +1113,7 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1129,12 +1125,12 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the value of the toggle bit.
-	if (__unlikely((cs & CO_SDO_SEG_TOGGLE) != sdo->toggle))
+	if ((cs & CO_SDO_SEG_TOGGLE) != sdo->toggle)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_TOGGLE);
 
 	membuf_clear(&sdo->buf);
 	co_unsigned32_t ac = co_ssdo_up_buf(sdo, 7);
-	if (__unlikely(ac))
+	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
 	int last = co_sdo_req_last(&sdo->req) && sdo->nbyte == sdo->req.nbyte;
@@ -1160,17 +1156,17 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t cs = msg->data[0];
 
 	// Check the client subcommand.
-	if (__unlikely((cs & 0x01) != CO_SDO_SC_INI_BLK))
+	if ((cs & 0x01) != CO_SDO_SC_INI_BLK)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check if the client supports generating a CRC.
 	sdo->gencrc = !!(cs & CO_SDO_BLK_CRC);
 
 	// Load the object index and sub-index from the CAN frame.
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
@@ -1180,7 +1176,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Obtain the data set size.
 	co_sdo_req_clear(&sdo->req);
 	if (cs & CO_SDO_BLK_SIZE_IND) {
-		if (__unlikely(msg->len < 8))
+		if (msg->len < 8)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		sdo->req.size = ldle_u32(msg->data + 4);
 	}
@@ -1216,17 +1212,17 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
-	if (__unlikely(cs == CO_SDO_CS_ABORT))
+	if (cs == CO_SDO_CS_ABORT)
 		return co_ssdo_abort_ind(sdo);
 
 	uint8_t seqno = cs & ~CO_SDO_SEQ_LAST;
 	int last = !!(cs & CO_SDO_SEQ_LAST);
 
-	if (__unlikely(!seqno || seqno > sdo->blksize))
+	if (!seqno || seqno > sdo->blksize)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
 
 	// Only accept sequential segments. Dropped segments will be resent
@@ -1239,11 +1235,11 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 					sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		// Pass the previous frame to the download indication function.
 		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
-		if (__unlikely(ac))
+		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		// Copy the new frame to the SDO request.
 		membuf_clear(&sdo->buf);
-		if (__unlikely(!membuf_reserve(&sdo->buf, 7)))
+		if (!membuf_reserve(&sdo->buf, 7))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 		membuf_write(&sdo->buf, msg->data + 1, 7);
 		sdo->req.buf = membuf_begin(&sdo->buf);
@@ -1282,7 +1278,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1294,7 +1290,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the client subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Discard the bytes in the last segment that did not contain data.
@@ -1304,12 +1300,12 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (sdo->gencrc) {
 		sdo->crc = co_crc(sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		uint16_t crc = ldle_u16(msg->data + 1);
-		if (__unlikely(sdo->crc != crc))
+		if (sdo->crc != crc)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
 	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
-	if (__unlikely(ac))
+	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
 	// Finalize the transfer.
@@ -1327,17 +1323,17 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	uint8_t cs = msg->data[0];
 
 	// Check the client subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_INI_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_INI_BLK)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check if the client supports generating a CRC.
 	sdo->gencrc = !!(cs & CO_SDO_BLK_CRC);
 
 	// Load the object index and sub-index from the CAN frame.
-	if (__unlikely(msg->len < 3))
+	if (msg->len < 3)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_OBJ);
 	sdo->idx = ldle_u16(msg->data + 1);
-	if (__unlikely(msg->len < 4))
+	if (msg->len < 4)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_SUB);
 	sdo->subidx = msg->data[3];
 
@@ -1345,10 +1341,10 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			sdo->subidx);
 
 	// Load the number of segments per block.
-	if (__unlikely(msg->len < 5))
+	if (msg->len < 5)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[4];
-	if (__unlikely(!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO))
+	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	// Load the protocol switch threshold (PST).
@@ -1357,7 +1353,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Perform access checks and start serializing the value.
 	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
-	if (__unlikely(ac))
+	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
 	if (pst && sdo->req.size <= pst) {
@@ -1365,10 +1361,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// than or equal to the PST, switch to the SDO upload protocol.
 		if (sdo->req.size <= 4) {
 			// Perform an expedited transfer.
-			// clang-format off
-			if (__unlikely((ac = co_ssdo_up_buf(sdo, sdo->req.size))
-					!= 0))
-				// clang-format on
+			if ((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0)
 				return co_ssdo_abort_res(sdo, ac);
 			co_ssdo_send_up_exp_res(sdo);
 			return co_ssdo_abort_ind(sdo);
@@ -1407,7 +1400,7 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1421,10 +1414,10 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Check the client subcommand.
 	switch (cs & CO_SDO_SC_MASK) {
 	case CO_SDO_SC_BLK_RES:
-		if (__unlikely(co_sdo_req_first(&sdo->req) && !sdo->nbyte))
+		if (co_sdo_req_first(&sdo->req) && !sdo->nbyte)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
-		if (__unlikely(msg->len < 3))
+		if (msg->len < 3)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
 
 		// Flush the successfully sent segments from the buffer.
@@ -1433,15 +1426,12 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 		// Read the number of segments in the next block.
 		sdo->blksize = msg->data[2];
-		// clang-format off
-		if (__unlikely(!sdo->blksize
-				|| sdo->blksize > CO_SDO_MAX_SEQNO))
-			// clang-format on
+		if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 		break;
 	case CO_SDO_SC_START_UP:
-		if (__unlikely(!(co_sdo_req_first(&sdo->req) && !sdo->nbyte)))
+		if (!(co_sdo_req_first(&sdo->req) && !sdo->nbyte))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 		break;
 	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1449,10 +1439,10 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	ptrdiff_t n = sdo->blksize * 7 - membuf_size(&sdo->buf);
 	if (n > 0) {
-		if (__unlikely(!membuf_reserve(&sdo->buf, n)))
+		if (!membuf_reserve(&sdo->buf, n))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 		co_unsigned32_t ac = co_ssdo_up_buf(sdo, n);
-		if (__unlikely(ac))
+		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		sdo->blksize = (uint8_t)((membuf_size(&sdo->buf) + 6) / 7);
 	}
@@ -1491,7 +1481,7 @@ co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	uint8_t cs = msg->data[0];
 
@@ -1503,7 +1493,7 @@ co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Check the client subcommand.
-	if (__unlikely((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK))
+	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	return co_ssdo_abort_ind(sdo);
@@ -1548,12 +1538,12 @@ co_ssdo_dn_ind(co_ssdo_t *sdo)
 
 	// Find the object in the object dictionary.
 	co_obj_t *obj = co_dev_find_obj(sdo->dev, sdo->idx);
-	if (__unlikely(!obj))
+	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
 	// Find the sub-object.
 	co_sub_t *sub = co_obj_find_sub(obj, sdo->subidx);
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
 	return co_sub_dn_ind(sub, &sdo->req);
@@ -1566,19 +1556,17 @@ co_ssdo_up_ind(co_ssdo_t *sdo)
 
 	// Find the object in the object dictionary.
 	const co_obj_t *obj = co_dev_find_obj(sdo->dev, sdo->idx);
-	if (__unlikely(!obj))
+	if (!obj)
 		return CO_SDO_AC_NO_OBJ;
 
 	// Find the sub-object.
 	const co_sub_t *sub = co_obj_find_sub(obj, sdo->subidx);
-	if (__unlikely(!sub))
+	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
 	// If the object is an array, check whether the element exists.
-	// clang-format off
-	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY && __unlikely(sdo->subidx
-			> co_obj_get_val_u8(obj, 0x00)))
-		// clang-format on
+	if (co_obj_get_code(obj) == CO_OBJECT_ARRAY
+			&& sdo->subidx > co_obj_get_val_u8(obj, 0x00))
 		return CO_SDO_AC_NO_DATA;
 
 	sdo->nbyte = 0;
@@ -1590,13 +1578,13 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 {
 	co_unsigned32_t ac = 0;
 
-	if (__unlikely(nbyte && !membuf_reserve(&sdo->buf, nbyte)))
+	if (nbyte && !membuf_reserve(&sdo->buf, nbyte))
 		return CO_SDO_AC_NO_MEM;
 
 	while (nbyte) {
 		if (sdo->nbyte >= sdo->req.nbyte) {
 			if (co_sdo_req_last(&sdo->req)
-					|| __unlikely(ac = co_ssdo_up_ind(sdo)))
+					|| (ac = co_ssdo_up_ind(sdo)))
 				break;
 			sdo->nbyte = 0;
 		}

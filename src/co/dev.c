@@ -4,7 +4,7 @@
  *
  * @see lely/co/dev.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -77,7 +77,7 @@ void *
 __co_dev_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_dev));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -95,7 +95,7 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 
 	dev->netid = 0;
 
-	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
+	if (!id || (id > CO_NUM_NODES && id != 0xff)) {
 		set_errnum(ERRNUM_INVAL);
 		return NULL;
 	}
@@ -143,12 +143,12 @@ co_dev_create(co_unsigned8_t id)
 	int errc = 0;
 
 	co_dev_t *dev = __co_dev_alloc();
-	if (__unlikely(!dev)) {
+	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (__unlikely(!__co_dev_init(dev, id))) {
+	if (!__co_dev_init(dev, id)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -184,7 +184,7 @@ co_dev_set_netid(co_dev_t *dev, co_unsigned8_t id)
 {
 	assert(dev);
 
-	if (__unlikely(id > CO_NUM_NETWORKS && id != 0xff)) {
+	if (id > CO_NUM_NETWORKS && id != 0xff) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -207,7 +207,7 @@ co_dev_set_id(co_dev_t *dev, co_unsigned8_t id)
 {
 	assert(dev);
 
-	if (__unlikely(!id || (id > CO_NUM_NODES && id != 0xff))) {
+	if (!id || (id > CO_NUM_NODES && id != 0xff)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -245,13 +245,13 @@ co_dev_insert_obj(co_dev_t *dev, co_obj_t *obj)
 	assert(dev);
 	assert(obj);
 
-	if (__unlikely(obj->dev && obj->dev != dev))
+	if (obj->dev && obj->dev != dev)
 		return -1;
 
-	if (__unlikely(obj->dev == dev))
+	if (obj->dev == dev)
 		return 0;
 
-	if (__unlikely(rbtree_find(&dev->tree, obj->node.key)))
+	if (rbtree_find(&dev->tree, obj->node.key))
 		return -1;
 
 	obj->dev = dev;
@@ -266,7 +266,7 @@ co_dev_remove_obj(co_dev_t *dev, co_obj_t *obj)
 	assert(dev);
 	assert(obj);
 
-	if (__unlikely(obj->dev != dev))
+	if (obj->dev != dev)
 		return -1;
 
 	rbtree_remove(&obj->dev->tree, &obj->node);
@@ -290,7 +290,7 @@ co_sub_t *
 co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	co_obj_t *obj = co_dev_find_obj(dev, idx);
-	return __likely(obj) ? co_obj_find_sub(obj, subidx) : NULL;
+	return obj ? co_obj_find_sub(obj, subidx) : NULL;
 }
 
 const char *
@@ -313,7 +313,7 @@ co_dev_set_name(co_dev_t *dev, const char *name)
 	}
 
 	void *ptr = realloc(dev->name, strlen(name) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -343,7 +343,7 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 	}
 
 	void *ptr = realloc(dev->vendor_name, strlen(vendor_name) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -389,7 +389,7 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 	}
 
 	void *ptr = realloc(dev->product_name, strlen(product_name) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -451,7 +451,7 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 	}
 
 	void *ptr = realloc(dev->order_code, strlen(order_code) + 1);
-	if (__unlikely(!ptr)) {
+	if (!ptr) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -528,10 +528,7 @@ co_dev_set_dummy(co_dev_t *dev, co_unsigned32_t dummy)
 const void *
 co_dev_get_val(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
-	// clang-format off
-	co_sub_t *sub = __likely(dev)
-			? co_dev_find_sub(dev, idx, subidx) : NULL;
-	// clang-format on
+	co_sub_t *sub = dev ? co_dev_find_sub(dev, idx, subidx) : NULL;
 	return co_sub_get_val(sub);
 }
 
@@ -542,7 +539,7 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	assert(dev);
 
 	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
-	if (__unlikely(!sub)) {
+	if (!sub) {
 		set_errnum(ERRNUM_INVAL);
 		return 0;
 	}
@@ -554,9 +551,11 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_##b##_t co_dev_get_val_##c(const co_dev_t *dev, \
 			co_unsigned16_t idx, co_unsigned8_t subidx) \
 	{ \
-		co_sub_t *sub = __likely(dev) \
+		/* clang-format off */ \
+		co_sub_t *sub = dev \
 				? co_dev_find_sub(dev, idx, subidx) \
 				: NULL; \
+		/* clang-format on */ \
 		return co_sub_get_val_##c(sub); \
 	} \
 \
@@ -566,7 +565,7 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		assert(dev); \
 \
 		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx); \
-		if (__unlikely(!sub)) { \
+		if (!sub) { \
 			set_errnum(ERRNUM_INVAL); \
 			return 0; \
 		} \
@@ -580,35 +579,26 @@ size_t
 co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		const uint8_t *begin, const uint8_t *end)
 {
-	if (__unlikely(!begin || !end || end - begin < 2 + 1 + 4))
+	if (!begin || !end || end - begin < 2 + 1 + 4)
 		return 0;
 
 	// Read the object index.
 	co_unsigned16_t idx;
-	// clang-format off
-	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end)
-			!= 2))
-		// clang-format on
+	if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2)
 		return 0;
 	begin += 2;
 	// Read the object sub-index.
 	co_unsigned8_t subidx;
-	// clang-format off
-	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end)
-			!= 1))
-		// clang-format on
+	if (co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end) != 1)
 		return 0;
 	begin += 1;
 	// Read the value size (in bytes).
 	co_unsigned32_t size;
-	// clang-format off
-	if (__unlikely(co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end)
-			!= 4))
-		// clang-format on
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end) != 4)
 		return 0;
 	begin += 4;
 
-	if (__unlikely(end - begin < (ptrdiff_t)size))
+	if (end - begin < (ptrdiff_t)size)
 		return 0;
 
 	// Read the value into the sub-object, if it exists.
@@ -617,10 +607,7 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 		co_unsigned16_t type = co_sub_get_type(sub);
 		union co_val val;
 		co_val_init(type, &val);
-		// clang-format off
-		if (__likely(co_val_read(type, &val, begin, begin + size)
-				== size))
-			// clang-format on
+		if (co_val_read(type, &val, begin, begin + size) == size)
 			co_sub_set_val(sub, co_val_addressof(type, &val),
 					co_val_sizeof(type, &val));
 		co_val_fini(type, &val);
@@ -639,39 +626,31 @@ co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end)
 {
 	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
-	if (__unlikely(!sub))
+	if (!sub)
 		return 0;
 	co_unsigned16_t type = co_sub_get_type(sub);
 	const void *val = co_sub_get_val(sub);
 
 	co_unsigned32_t size = co_val_write(type, val, NULL, NULL);
-	if (__unlikely(!size && co_val_sizeof(type, val)))
+	if (!size && co_val_sizeof(type, val))
 		return 0;
 
 	if (begin && (!end || end - begin >= (ptrdiff_t)(2 + 1 + 4 + size))) {
 		// Write the object index.
-		// clang-format off
-		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED16, &idx, begin,
-				end) != 2))
-			// clang-format on
+		if (co_val_write(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2)
 			return 0;
 		begin += 2;
 		// Write the object sub-index.
-		// clang-format off
-		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED8, &subidx,
-				begin, end) != 1))
-			// clang-format on
+		if (co_val_write(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end)
+				!= 1)
 			return 0;
 		begin += 1;
 		// Write the value size (in bytes).
-		// clang-format off
-		if (__unlikely(co_val_write(CO_DEFTYPE_UNSIGNED32, &size, begin,
-				end) != 4))
-			// clang-format on
+		if (co_val_write(CO_DEFTYPE_UNSIGNED32, &size, begin, end) != 4)
 			return 0;
 		begin += 4;
 		// Write the value.
-		if (__unlikely(co_val_write(type, val, begin, end) != size))
+		if (co_val_write(type, val, begin, end) != size)
 			return 0;
 	}
 
@@ -695,7 +674,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	// Read the total number of sub-indices.
 	co_unsigned32_t n;
 	size = co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
-	if (__unlikely(size != 4))
+	if (size != 4)
 		return 0;
 	begin += size;
 
@@ -703,7 +682,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 		// Read the value of the sub-object.
 		co_unsigned16_t idx;
 		size = co_dev_read_sub(dev, &idx, NULL, begin, end);
-		if (__unlikely(!size))
+		if (!size)
 			return 0;
 		begin += size;
 
@@ -728,7 +707,7 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 	int errc = 0;
 
 	frbuf_t *buf = frbuf_create(filename);
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		errc = get_errc();
 		goto error_create_buf;
 	}
@@ -740,12 +719,12 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 	}
 
 	void *dom = NULL;
-	if (__unlikely(co_val_init_dom(&dom, NULL, size) == -1)) {
+	if (co_val_init_dom(&dom, NULL, size) == -1) {
 		errc = get_errc();
 		goto error_init_dom;
 	}
 
-	if (__unlikely(frbuf_read(buf, dom, size) != size)) {
+	if (frbuf_read(buf, dom, size) != size) {
 		errc = get_errc();
 		goto error_read;
 	}
@@ -784,7 +763,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	// Get the list of object indices.
 	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
 	co_unsigned16_t *idx = calloc(maxidx, sizeof(co_unsigned16_t));
-	if (__unlikely(!idx)) {
+	if (!idx) {
 		errc = errno2c(errno);
 		goto error_malloc_idx;
 	}
@@ -810,7 +789,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	}
 
 	// Create a DOMAIN for the concise DCF.
-	if (__unlikely(co_val_init_dom(ptr, NULL, size) == -1)) {
+	if (co_val_init_dom(ptr, NULL, size) == -1) {
 		errc = get_errc();
 		goto error_init_dom;
 	}
@@ -854,24 +833,24 @@ co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 	int errc = 0;
 
 	void *dom = NULL;
-	if (__unlikely(co_dev_write_dcf(dev, min, max, &dom) == -1)) {
+	if (co_dev_write_dcf(dev, min, max, &dom) == -1) {
 		errc = get_errc();
 		goto error_write_dcf;
 	}
 
 	fwbuf_t *buf = fwbuf_create(filename);
-	if (__unlikely(!buf)) {
+	if (!buf) {
 		errc = get_errc();
 		goto error_create_buf;
 	}
 
 	size_t nbyte = co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
-	if (__unlikely(fwbuf_write(buf, dom, nbyte) != (ssize_t)nbyte)) {
+	if (fwbuf_write(buf, dom, nbyte) != (ssize_t)nbyte) {
 		errc = get_errc();
 		goto error_write;
 	}
 
-	if (__unlikely(fwbuf_commit(buf) == -1)) {
+	if (fwbuf_commit(buf) == -1) {
 		errc = get_errc();
 		goto error_commit;
 	}

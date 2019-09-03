@@ -4,7 +4,7 @@
  *
  * @see src/nmt_ec.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -70,7 +70,7 @@ void *
 __co_nmt_hb_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_hb));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -94,14 +94,14 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 	hb->nmt = nmt;
 
 	hb->recv = can_recv_create();
-	if (__unlikely(!hb->recv)) {
+	if (!hb->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(hb->recv, &co_nmt_hb_recv, hb);
 
 	hb->timer = can_timer_create();
-	if (__unlikely(!hb->timer)) {
+	if (!hb->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -137,12 +137,12 @@ co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 	int errc = 0;
 
 	co_nmt_hb_t *hb = __co_nmt_hb_alloc();
-	if (__unlikely(!hb)) {
+	if (!hb) {
 		errc = get_errc();
 		goto error_alloc_hb;
 	}
 
-	if (__unlikely(!__co_nmt_hb_init(hb, net, nmt))) {
+	if (!__co_nmt_hb_init(hb, net, nmt)) {
 		errc = get_errc();
 		goto error_init_hb;
 	}
@@ -207,10 +207,10 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 
 	// Obtain the node status from the CAN frame. Ignore if the toggle bit
 	// is set, since then it is not a heartbeat message.
-	if (__unlikely(msg->len < 1))
+	if (msg->len < 1)
 		return 0;
 	co_unsigned8_t st = msg->data[0];
-	if (__unlikely(st & CO_NMT_ST_TOGGLE))
+	if (st & CO_NMT_ST_TOGGLE)
 		return 0;
 
 	// Update the state.

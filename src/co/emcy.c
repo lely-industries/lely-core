@@ -4,7 +4,7 @@
  *
  * @see lely/co/emcy.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -192,7 +192,7 @@ void *
 __co_emcy_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_emcy));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -216,7 +216,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->dev = dev;
 
 	emcy->sub_1001_00 = co_dev_find_sub(emcy->dev, 0x1001, 0x00);
-	if (__unlikely(!emcy->sub_1001_00)) {
+	if (!emcy->sub_1001_00) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_sub_1001_00;
 	}
@@ -225,13 +225,13 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->nmsg = 0;
 	emcy->msgs = NULL;
 
-	if (__unlikely(can_buf_init(&emcy->buf, 0) == -1)) {
+	if (can_buf_init(&emcy->buf, 0) == -1) {
 		errc = get_errc();
 		goto error_init_buf;
 	}
 
 	emcy->timer = can_timer_create();
-	if (__unlikely(!emcy->timer)) {
+	if (!emcy->timer) {
 		errc = get_errc();
 		goto error_create_timer;
 	}
@@ -264,10 +264,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		for (co_unsigned8_t id = 1; id <= maxid; id++) {
 			co_unsigned32_t cobid =
 					co_obj_get_val_u32(obj_1028, id);
-			// clang-format off
-			if (__unlikely(co_emcy_set_1028(emcy, id, cobid)
-					== -1)) {
-				// clang-format on
+			if (co_emcy_set_1028(emcy, id, cobid) == -1) {
 				errc = get_errc();
 				goto error_set_1028;
 			}
@@ -331,12 +328,12 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 	int errc = 0;
 
 	co_emcy_t *emcy = __co_emcy_alloc();
-	if (__unlikely(!emcy)) {
+	if (!emcy) {
 		errc = get_errc();
 		goto error_alloc_emcy;
 	}
 
-	if (__unlikely(!__co_emcy_init(emcy, net, dev))) {
+	if (!__co_emcy_init(emcy, net, dev)) {
 		errc = get_errc();
 		goto error_init_emcy;
 	}
@@ -382,7 +379,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 {
 	assert(emcy);
 
-	if (__unlikely(!eec)) {
+	if (!eec) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -398,7 +395,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	// Make room on the stack.
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
-	if (__unlikely(!msgs)) {
+	if (!msgs) {
 		set_errc(errno2c(errno));
 		return -1;
 	}
@@ -513,7 +510,7 @@ co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 	int errc = 0;
 
 	struct co_emcy_node *node = malloc(sizeof(*node));
-	if (__unlikely(!node)) {
+	if (!node) {
 		errc = errno2c(errno);
 		goto error_alloc_node;
 	}
@@ -522,7 +519,7 @@ co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 	node->id = id;
 
 	node->recv = can_recv_create();
-	if (__unlikely(!node->recv)) {
+	if (!node->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
@@ -557,12 +554,12 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	assert(emcy);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
@@ -591,7 +588,7 @@ co_emcy_set_1003(co_emcy_t *emcy)
 
 	struct co_1003 *val_1003 = co_obj_addressof_val(emcy->obj_1003);
 	co_unsigned8_t nsubidx = co_obj_get_subidx(emcy->obj_1003, 0, NULL);
-	if (__unlikely(!nsubidx))
+	if (!nsubidx)
 		return 0;
 
 	// Copy the emergency error codes.
@@ -617,17 +614,17 @@ co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 
 	// Only the value 0 is allowed.
 	assert(type == CO_DEFTYPE_UNSIGNED8);
-	if (__unlikely(val.u8)) {
+	if (val.u8) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -657,10 +654,10 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -676,16 +673,14 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
 	uint32_t canid = cobid & CAN_MASK_EID;
 	uint32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (__unlikely(valid && valid_old && canid != canid_old)) {
+	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	// clang-format off
-	if (__unlikely(!(cobid & CO_EMCY_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-		// clang-format on
+	if (!(cobid & CO_EMCY_COBID_FRAME)
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -706,7 +701,7 @@ co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid)
 	if (!(cobid & CO_EMCY_COBID_VALID)) {
 		if (!node) {
 			node = co_emcy_node_create(emcy, id);
-			if (__unlikely(!node))
+			if (!node)
 				return -1;
 			emcy->nodes[id - 1] = node;
 		}
@@ -741,17 +736,17 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t id = co_sub_get_subidx(sub);
-	if (__unlikely(!id)) {
+	if (!id) {
 		ac = CO_SDO_AC_NO_WRITE;
 		goto error;
 	}
 	co_unsigned8_t maxid = MIN(co_obj_get_val_u8(co_sub_get_obj(sub), 0),
 			CO_NUM_NODES);
-	if (__unlikely(id > maxid)) {
+	if (id > maxid) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -767,21 +762,19 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
 	uint32_t canid = cobid & CAN_MASK_EID;
 	uint32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (__unlikely(valid && valid_old && canid != canid_old)) {
+	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	// clang-format off
-	if (__unlikely(!(cobid & CO_EMCY_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-		// clang-format on
+	if (!(cobid & CO_EMCY_COBID_FRAME)
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
 
-	if (__unlikely(co_emcy_set_1028(emcy, id, cobid) == -1)) {
+	if (co_emcy_set_1028(emcy, id, cobid) == -1) {
 		ac = CO_SDO_AC_ERROR;
 		goto error;
 	}
@@ -837,8 +830,8 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 		memcpy(msg.data + 3, msef, 5);
 
 	// Add the frame to the buffer.
-	if (__unlikely(!can_buf_write(&emcy->buf, &msg, 1))) {
-		if (__unlikely(!can_buf_reserve(&emcy->buf, 1)))
+	if (!can_buf_write(&emcy->buf, &msg, 1)) {
+		if (!can_buf_reserve(&emcy->buf, 1))
 			return -1;
 		can_buf_write(&emcy->buf, &msg, 1);
 	}
@@ -868,7 +861,7 @@ co_emcy_flush(co_emcy_t *emcy)
 		timespec_add_usec(&emcy->inhibit, inhibit * 100);
 		// Send the frame.
 		struct can_msg msg;
-		if (__likely(can_buf_read(&emcy->buf, &msg, 1)))
+		if (can_buf_read(&emcy->buf, &msg, 1))
 			can_net_send(emcy->net, &msg);
 	}
 }

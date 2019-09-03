@@ -117,7 +117,7 @@ void *
 __co_sync_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sync));
-	if (__unlikely(!ptr))
+	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
@@ -142,7 +142,7 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 
 	// Retrieve the SYNC COB-ID.
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
-	if (__unlikely(!obj_1005)) {
+	if (!obj_1005) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_obj_1005;
 	}
@@ -180,7 +180,7 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	if (obj_1019)
 		co_obj_set_dn_ind(obj_1019, &co_1019_dn_ind, sync);
 
-	if (__unlikely(co_sync_update(sync) == -1)) {
+	if (co_sync_update(sync) == -1) {
 		errc = get_errc();
 		goto error_update;
 	}
@@ -233,12 +233,12 @@ co_sync_create(can_net_t *net, co_dev_t *dev)
 	int errc = 0;
 
 	co_sync_t *sync = __co_sync_alloc();
-	if (__unlikely(!sync)) {
+	if (!sync) {
 		errc = get_errc();
 		goto error_alloc_sync;
 	}
 
-	if (__unlikely(!__co_sync_init(sync, net, dev))) {
+	if (!__co_sync_init(sync, net, dev)) {
 		errc = get_errc();
 		goto error_init_sync;
 	}
@@ -326,7 +326,7 @@ co_sync_update(co_sync_t *sync)
 	if (!(sync->cobid & CO_SYNC_COBID_PRODUCER)) {
 		if (!sync->recv) {
 			sync->recv = can_recv_create();
-			if (__unlikely(!sync->recv))
+			if (!sync->recv)
 				return -1;
 			can_recv_set_func(sync->recv, &co_sync_recv, sync);
 		}
@@ -350,7 +350,7 @@ co_sync_update(co_sync_t *sync)
 	if ((sync->cobid & CO_SYNC_COBID_PRODUCER) && sync->us) {
 		if (!sync->timer) {
 			sync->timer = can_timer_create();
-			if (__unlikely(!sync->timer))
+			if (!sync->timer)
 				return -1;
 			can_timer_set_func(sync->timer, co_sync_timer, sync);
 		}
@@ -390,10 +390,10 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -416,10 +416,8 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
-	// clang-format off
-	if (__unlikely(!(cobid & CO_SYNC_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))) {
-		// clang-format on
+	if (!(cobid & CO_SYNC_COBID_FRAME)
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -450,10 +448,10 @@ co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -490,10 +488,10 @@ co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (__unlikely(co_sdo_req_dn_val(req, type, &val, &ac) == -1))
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (__unlikely(co_sub_get_subidx(sub))) {
+	if (co_sub_get_subidx(sub)) {
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
@@ -506,12 +504,12 @@ co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	// The synchronous counter overflow value cannot be changed while the
 	// communication cycle period is non-zero.
-	if (__unlikely(sync->us)) {
+	if (sync->us) {
 		ac = CO_SDO_AC_DATA_DEV;
 		goto error;
 	}
 
-	if (__unlikely(max_cnt == 1 || max_cnt > 240)) {
+	if (max_cnt == 1 || max_cnt > 240) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
 	}
@@ -537,17 +535,17 @@ co_sync_recv(const struct can_msg *msg, void *data)
 	assert(sync);
 
 	// Ignore remote frames.
-	if (__unlikely(msg->flags & CAN_FLAG_RTR))
+	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
 #ifndef LELY_NO_CANFD
 	// Ignore CAN FD format frames.
-	if (__unlikely(msg->flags & CAN_FLAG_EDL))
+	if (msg->flags & CAN_FLAG_EDL)
 		return 0;
 #endif
 
 	uint8_t len = sync->max_cnt ? 1 : 0;
-	if (__unlikely(msg->len != len && sync->err))
+	if (msg->len != len && sync->err)
 		sync->err(sync, 0x8240, 0x10, sync->err_data);
 
 	co_unsigned8_t cnt = len && msg->len == len ? msg->data[0] : 0;
