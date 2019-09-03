@@ -245,13 +245,6 @@
 #endif
 #endif
 
-#ifndef __builtin_expect
-#if defined(__GNUC__) || __has_builtin(__builtin_expect)
-#else
-#define __builtin_expect(exp, c) (exp)
-#endif
-#endif
-
 #ifndef format_printf__
 #if defined(__GNUC__) || __has_attribute(__format__)
 #ifdef __MINGW32__
@@ -263,27 +256,6 @@
 #else
 #define format_printf__(i, j)
 #endif
-#endif
-
-#ifndef __likely
-/**
- * Indicates to the compiler that the expression is most-likely true. Subject to
- * the same considerations as __unlikely().
- */
-#define __likely(x) __builtin_expect(!!(x), 1)
-#endif
-
-#ifndef __unlikely
-/**
- * Indicates to the compiler that the expression is most-likely false. This
- * should only be used in performance-critical sections as compilers are very
- * good at branch prediction nowadays. The only exception to this rule is error
- * and exception checking, e.g. `if (__unlikely(!ptr)) { handle NULL pointer }`,
- * since we never optimize exceptions.
- *
- * @see __likely()
- */
-#define __unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
 #ifndef __WORDSIZE
