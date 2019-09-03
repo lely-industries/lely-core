@@ -388,7 +388,7 @@ io_sock_get_domain(io_handle_t handle)
 int
 io_sock_get_type(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -406,7 +406,7 @@ io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 {
 	assert(addr);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -418,7 +418,7 @@ io_sock_bind(io_handle_t handle, const io_addr_t *addr)
 int
 io_sock_listen(io_handle_t handle, int backlog)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -429,7 +429,7 @@ io_sock_listen(io_handle_t handle, int backlog)
 int
 io_sock_shutdown(io_handle_t handle, int how)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -467,7 +467,7 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -497,7 +497,7 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 {
 	assert(addr);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -531,7 +531,7 @@ io_sock_get_maxconn(void)
 int
 io_sock_get_acceptconn(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -552,7 +552,7 @@ io_sock_get_acceptconn(io_handle_t handle)
 int
 io_sock_get_broadcast(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -573,7 +573,7 @@ io_sock_get_broadcast(io_handle_t handle)
 int
 io_sock_set_broadcast(io_handle_t handle, int broadcast)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -592,7 +592,7 @@ io_sock_set_broadcast(io_handle_t handle, int broadcast)
 int
 io_sock_get_debug(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -613,7 +613,7 @@ io_sock_get_debug(io_handle_t handle)
 int
 io_sock_set_debug(io_handle_t handle, int debug)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -632,7 +632,7 @@ io_sock_set_debug(io_handle_t handle, int debug)
 int
 io_sock_get_dontroute(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -653,7 +653,7 @@ io_sock_get_dontroute(io_handle_t handle)
 int
 io_sock_set_dontroute(io_handle_t handle, int dontroute)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -672,7 +672,7 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 int
 io_sock_get_error(io_handle_t handle, int *perror)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -687,7 +687,7 @@ io_sock_get_error(io_handle_t handle, int *perror)
 int
 io_sock_get_keepalive(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -708,7 +708,7 @@ io_sock_get_keepalive(io_handle_t handle)
 int
 io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -755,7 +755,7 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 int
 io_sock_get_linger(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -772,7 +772,7 @@ io_sock_get_linger(io_handle_t handle)
 int
 io_sock_set_linger(io_handle_t handle, int time)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -792,7 +792,7 @@ io_sock_set_linger(io_handle_t handle, int time)
 int
 io_sock_get_oobinline(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -813,7 +813,7 @@ io_sock_get_oobinline(io_handle_t handle)
 int
 io_sock_set_oobinline(io_handle_t handle, int oobinline)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -832,7 +832,7 @@ io_sock_set_oobinline(io_handle_t handle, int oobinline)
 int
 io_sock_get_rcvbuf(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -849,7 +849,7 @@ io_sock_get_rcvbuf(io_handle_t handle)
 int
 io_sock_set_rcvbuf(io_handle_t handle, int size)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -863,7 +863,7 @@ io_sock_set_rcvbuf(io_handle_t handle, int size)
 int
 io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -883,7 +883,7 @@ io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 int
 io_sock_get_reuseaddr(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -904,7 +904,7 @@ io_sock_get_reuseaddr(io_handle_t handle)
 int
 io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -923,7 +923,7 @@ io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 int
 io_sock_get_sndbuf(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -940,7 +940,7 @@ io_sock_get_sndbuf(io_handle_t handle)
 int
 io_sock_set_sndbuf(io_handle_t handle, int size)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -954,7 +954,7 @@ io_sock_set_sndbuf(io_handle_t handle, int size)
 int
 io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -974,7 +974,7 @@ io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 int
 io_sock_get_tcp_nodelay(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -995,7 +995,7 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 int
 io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1015,7 +1015,7 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 ssize_t
 io_sock_get_nread(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1045,7 +1045,7 @@ io_sock_get_nread(io_handle_t handle)
 int
 io_sock_get_mcast_loop(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1085,7 +1085,7 @@ io_sock_get_mcast_loop(io_handle_t handle)
 int
 io_sock_set_mcast_loop(io_handle_t handle, int loop)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1120,7 +1120,7 @@ io_sock_set_mcast_loop(io_handle_t handle, int loop)
 int
 io_sock_get_mcast_ttl(io_handle_t handle)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1160,7 +1160,7 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 int
 io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1198,7 +1198,7 @@ io_sock_mcast_join_group(
 {
 	assert(group);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1229,7 +1229,7 @@ io_sock_mcast_block_source(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1261,7 +1261,7 @@ io_sock_mcast_unblock_source(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1292,7 +1292,7 @@ io_sock_mcast_leave_group(
 {
 	assert(group);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1323,7 +1323,7 @@ io_sock_mcast_join_source_group(io_handle_t handle, unsigned int index,
 	assert(group);
 	assert(source);
 
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
@@ -1352,7 +1352,7 @@ int
 io_sock_mcast_leave_source_group(io_handle_t handle, unsigned int index,
 		const io_addr_t *group, const io_addr_t *source)
 {
-	if (handle != IO_HANDLE_ERROR) {
+	if (handle == IO_HANDLE_ERROR) {
 		set_errnum(ERRNUM_BADF);
 		return -1;
 	}
