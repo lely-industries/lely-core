@@ -80,6 +80,7 @@ ev_std_exec_alloc(void)
 	struct ev_std_exec *exec = malloc(sizeof(*exec));
 	if (!exec)
 		set_errc(errno2c(errno));
+	// cppcheck-suppress memleak symbolName=exec
 	return exec ? &exec->exec_vptr : NULL;
 }
 

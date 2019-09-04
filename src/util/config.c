@@ -4,7 +4,7 @@
  *
  * @see lely/util/config.h
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -370,6 +370,7 @@ config_entry_create(struct config_section *section, const char *key,
 
 	rbtree_insert(&section->tree, node);
 
+	// cppcheck-suppress memleak symbolName=entry.value
 	return node;
 
 error_alloc_value:

@@ -2154,7 +2154,7 @@ co_gw_recv_pdo_write(
 		goto error;
 
 	// Trigger the event-based TPDO, if necessary.
-	int errc = 0;
+	int errc = get_errc();
 	if (co_tpdo_event(pdo) == -1) {
 		iec = errnum2iec(get_errnum());
 		set_errc(errc);

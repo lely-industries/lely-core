@@ -118,6 +118,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	int r, t = 0;
 	const char *name;
 
+	// cppcheck-suppress nullPointerRedundantCheck symbolName=s
 	r = snprintf(s, n, "{\n\t.id = 0x%02x,\n", co_dev_get_id(dev));
 	if (r < 0) {
 		errsv = errno;
@@ -881,6 +882,8 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	LELY_CO_DEFINE_FLAGS(MIN_NODEID)
 	LELY_CO_DEFINE_FLAGS(MAX_NODEID)
 	LELY_CO_DEFINE_FLAGS(DEF_NODEID)
+	// cppcheck-suppress uselessAssignmentArg
+	// cppcheck-suppress uselessAssignmentPtrArg
 	LELY_CO_DEFINE_FLAGS(VAL_NODEID)
 
 #undef LELY_CO_DEFINE_FLAGS
@@ -1221,13 +1224,12 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 	if (!esc)
 		return 0;
 
-	int r, t = 0;
+	int t = 0;
 
-	size_t chars = 0;
 	for (;;) {
 		// Read the next UTF-8 encoded Unicode character.
 		char32_t c32;
-		chars = lex_utf8(esc, NULL, NULL, &c32);
+		size_t chars = lex_utf8(esc, NULL, NULL, &c32);
 		if (!chars || !c32)
 			break;
 		esc += chars;
@@ -1236,7 +1238,7 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 		char *cp = buf;
 		print_c99_esc(&cp, buf + sizeof(buf), c32);
 		// Print the character to the string.
-		r = snprintf(s, n, "%s", buf);
+		int r = snprintf(s, n, "%s", buf);
 		if (r < 0)
 			return r;
 		t += r;

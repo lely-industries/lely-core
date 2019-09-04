@@ -1355,6 +1355,7 @@ co_array_alloc(void *val, size_t size)
 	assert(val);
 
 	if (size) {
+		// cppcheck-suppress AssignmentAddressToInteger
 		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
 		if (!ptr) {
 			set_errc(errno2c(errno));

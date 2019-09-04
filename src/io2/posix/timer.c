@@ -115,6 +115,7 @@ void *
 io_timer_alloc(void)
 {
 	struct io_timer_impl *impl = malloc(sizeof(*impl));
+	// cppcheck-suppress memleak symbolName=impl
 	return impl ? &impl->timer_vptr : NULL;
 }
 

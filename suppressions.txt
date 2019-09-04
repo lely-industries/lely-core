@@ -1,0 +1,4 @@
+*:/usr/*
+*:include/lely/co/def/*
+shadowVar
+unreadVariable

@@ -202,6 +202,7 @@ void *
 io_can_chan_alloc(void)
 {
 	struct io_can_chan_impl *impl = malloc(sizeof(*impl));
+	// cppcheck-suppress memleak symbolName=impl
 	return impl ? &impl->chan_vptr : NULL;
 }
 
@@ -1185,7 +1186,7 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 #if !LELY_NO_THREADS
 		pthread_mutex_unlock(&impl->io_mtx);
 #endif
-		int wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
+		wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
 		if (!wouldblock && errc)
 			// The operation failed immediately.
 			io_can_chan_write_post(write, errc);
@@ -1369,7 +1370,7 @@ io_can_chan_impl_do_read(struct io_can_chan_impl *impl, struct sllist *queue)
 			break;
 		void *data = &frame->frame;
 
-		struct ev_task *task = task = ev_task_from_node(node);
+		struct ev_task *task = ev_task_from_node(node);
 		struct io_can_chan_read *read =
 				io_can_chan_read_from_task(task);
 
