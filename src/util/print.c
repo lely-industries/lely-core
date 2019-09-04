@@ -4,7 +4,7 @@
  *
  * @see lely/util/print.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -191,6 +191,7 @@ print_c99_str(char **pbegin, char *end, const char *s, size_t n)
 {
 	assert(s);
 
+	// cppcheck-suppress nullPointerArithmeticRedundantCheck
 	const char *ends = s + (s ? n : 0);
 
 	size_t chars = 0;

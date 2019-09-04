@@ -259,7 +259,6 @@ io_sigset_t *
 io_sigset_create(io_poll_t *poll, ev_exec_t *exec)
 {
 	DWORD dwErrCode = 0;
-	;
 
 	io_sigset_t *sigset = io_sigset_alloc();
 	if (!sigset) {

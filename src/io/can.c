@@ -781,7 +781,7 @@ can_err(struct can *can, const struct can_frame *frame)
 #endif
 
 	can->state = state;
-	can->state = error;
+	can->error = error;
 
 	if (state != CAN_STATE_ACTIVE || error) {
 		errno = EIO;

@@ -4,7 +4,7 @@
  *
  * @see lely/util/daemon.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -452,14 +452,15 @@ daemon_proc(void)
 	// file descriptors and streams is implementation-defined, we close and
 	// open both, to be on the safe side.
 
-	fflush(stdin);
 	fsync(STDIN_FILENO);
 	fclose(stdin);
 	close(STDIN_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_RDONLY | O_CLOEXEC) != STDIN_FILENO)
 		return -1;
 #else
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_RDONLY) != STDIN_FILENO)
 		return -1;
 	if (fcntl(STDIN_FILENO, F_SETFD, FD_CLOEXEC) == -1)
@@ -474,9 +475,11 @@ daemon_proc(void)
 	fclose(stdout);
 	close(STDOUT_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_WRONLY | O_CLOEXEC) != STDOUT_FILENO)
 		return -1;
 #else
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_WRONLY) != STDOUT_FILENO)
 		return -1;
 	if (fcntl(STDOUT_FILENO, F_SETFD, FD_CLOEXEC) == -1)
@@ -491,9 +494,11 @@ daemon_proc(void)
 	fclose(stderr);
 	close(STDERR_FILENO);
 #if defined(__CYGWIN__) || defined(__linux__)
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_RDWR | O_CLOEXEC) != STDERR_FILENO)
 		return -1;
 #else
+	// cppcheck-suppress leakReturnValNotUsed
 	if (open("/dev/null", O_RDWR) != STDERR_FILENO)
 		return -1;
 	if (fcntl(STDERR_FILENO, F_SETFD, FD_CLOEXEC) == -1)

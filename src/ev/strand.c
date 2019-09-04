@@ -82,6 +82,7 @@ ev_strand_alloc(void)
 	struct ev_strand *strand = malloc(sizeof(*strand));
 	if (!strand)
 		set_errc(errno2c(errno));
+	// cppcheck-suppress memleak symbolName=strand
 	return strand ? &strand->exec_vptr : NULL;
 }
 
