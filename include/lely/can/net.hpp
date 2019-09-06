@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the C++ interface of
  * the CAN network interface. @see lely/can/net.h for the C interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -155,7 +155,7 @@ class CANNet : public incomplete_c_type<__can_net> {
   }
 
  protected:
-  ~CANNet() {}
+  ~CANNet() = default;
 };
 
 /// The attributes of #can_timer_t required by #lely::CANTimer.
@@ -233,7 +233,7 @@ class CANTimer : public incomplete_c_type<__can_timer> {
   }
 
  protected:
-  ~CANTimer() {}
+  ~CANTimer() = default;
 };
 
 /// The attributes of #can_recv_t required by #lely::CANRecv.
@@ -305,7 +305,7 @@ class CANRecv : public incomplete_c_type<__can_recv> {
   }
 
  protected:
-  ~CANRecv() {}
+  ~CANRecv() = default;
 };
 
 }  // namespace lely

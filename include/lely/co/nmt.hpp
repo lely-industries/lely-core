@@ -3,7 +3,7 @@
  * interface of the network management (NMT) declarations. See lely/co/nmt.h for
  * the C interface.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -508,7 +508,7 @@ class CONMT : public incomplete_c_type<__co_nmt> {
   }
 
  protected:
-  ~CONMT() {}
+  ~CONMT() = default;
 };
 
 }  // namespace lely

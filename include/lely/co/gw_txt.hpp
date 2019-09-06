@@ -143,7 +143,7 @@ class COGWTxt : public incomplete_c_type<__co_gw_txt> {
   }
 
  protected:
-  ~COGWTxt() {}
+  ~COGWTxt() = default;
 };
 
 }  // namespace lely

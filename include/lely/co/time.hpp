@@ -3,7 +3,7 @@
  * interface of the time stamp (TIME) object. See lely/co/time.h for the C
  * interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -111,7 +111,7 @@ class COTime : public incomplete_c_type<__co_time> {
   }
 
  protected:
-  ~COTime() {}
+  ~COTime() = default;
 };
 
 }  // namespace lely

@@ -193,7 +193,7 @@ class COObj : public incomplete_c_type<__co_obj> {
   }
 
  protected:
-  ~COObj() {}
+  ~COObj() = default;
 };
 
 /// The attributes of #co_sub_t required by #lely::COSub.
@@ -530,7 +530,7 @@ class COSub : public incomplete_c_type<__co_sub> {
   }
 
  protected:
-  ~COSub() {}
+  ~COSub() = default;
 };
 
 /**
