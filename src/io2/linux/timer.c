@@ -193,7 +193,7 @@ io_timer_init(io_timer_t *timer, io_poll_t *poll, ev_exec_t *exec,
 
 	return timer;
 
-	io_timer_impl_close(impl);
+	// io_timer_impl_close(impl);
 error_open:
 #if !LELY_NO_THREADS
 	pthread_mutex_destroy(&impl->mtx);

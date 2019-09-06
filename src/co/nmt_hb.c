@@ -114,7 +114,7 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 
 	return hb;
 
-	can_timer_destroy(hb->timer);
+	// can_timer_destroy(hb->timer);
 error_create_timer:
 	can_recv_destroy(hb->recv);
 error_create_recv:

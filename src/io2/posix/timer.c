@@ -173,7 +173,7 @@ io_timer_init(io_timer_t *timer, io_poll_t *poll, ev_exec_t *exec,
 	return timer;
 
 #if !LELY_NO_THREADS
-	pthread_mutex_destroy(&impl->mtx);
+	// pthread_mutex_destroy(&impl->mtx);
 error_init_mtx:
 #endif
 	timer_delete(impl->timerid);

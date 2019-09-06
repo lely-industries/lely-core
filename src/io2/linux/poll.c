@@ -186,7 +186,7 @@ io_poll_init(io_poll_t *poll, io_ctx_t *ctx, int signo)
 
 	return poll;
 
-	io_poll_close(poll);
+	// io_poll_close(poll);
 error_open:
 #if !LELY_NO_THREADS
 	pthread_mutex_destroy(&poll->mtx);
