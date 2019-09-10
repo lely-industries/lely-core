@@ -892,25 +892,25 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	co_nmt_enter(nmt, co_nmt_init_state);
 	return nmt;
 
-#ifndef LELY_NO_CO_MASTER
-	if (obj_1f82)
-		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
-#endif
-	if (obj_1f80)
-		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
-#ifndef LELY_NO_CO_MASTER
-	if (obj_1f25)
-		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
-#endif
-	if (obj_1017)
-		co_obj_set_dn_ind(obj_1017, NULL, NULL);
-	if (obj_1016)
-		co_obj_set_dn_ind(obj_1016, NULL, NULL);
-	if (obj_100d)
-		co_obj_set_dn_ind(obj_100d, NULL, NULL);
-	if (obj_100c)
-		co_obj_set_dn_ind(obj_100c, NULL, NULL);
-	can_recv_destroy(nmt->recv_000);
+// #ifndef LELY_NO_CO_MASTER
+// 	if (obj_1f82)
+// 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+// #endif
+// 	if (obj_1f80)
+// 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
+// #ifndef LELY_NO_CO_MASTER
+// 	if (obj_1f25)
+// 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+// #endif
+// 	if (obj_1017)
+// 		co_obj_set_dn_ind(obj_1017, NULL, NULL);
+// 	if (obj_1016)
+// 		co_obj_set_dn_ind(obj_1016, NULL, NULL);
+// 	if (obj_100d)
+// 		co_obj_set_dn_ind(obj_100d, NULL, NULL);
+// 	if (obj_100c)
+// 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+// 	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);

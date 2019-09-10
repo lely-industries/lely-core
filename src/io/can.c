@@ -229,7 +229,7 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 
 #if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
 	if (((struct can *)handle)->canfd) {
-		struct canfd_frame frame;
+		struct canfd_frame frame = { .can_id = 0 };
 		ssize_t nbytes = can_read(handle, &frame, sizeof(frame));
 		if (nbytes < 0)
 			return -1;
@@ -253,7 +253,7 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 	}
 #endif
 
-	struct can_frame frame;
+	struct can_frame frame = { .can_id = 0 };
 	ssize_t nbytes = can_read(handle, &frame, sizeof(frame));
 	if (nbytes < 0)
 		return -1;

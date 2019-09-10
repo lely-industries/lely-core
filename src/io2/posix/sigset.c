@@ -244,7 +244,7 @@ io_sigset_init(io_sigset_t *sigset, io_poll_t *poll, ev_exec_t *exec)
 
 	return sigset;
 
-	io_sigset_impl_close(impl);
+	// io_sigset_impl_close(impl);
 error_open:
 #if !LELY_NO_THREADS
 	pthread_mutex_destroy(&impl->mtx);

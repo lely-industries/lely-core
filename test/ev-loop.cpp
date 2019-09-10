@@ -11,13 +11,13 @@ class MyOp : public CoTask {
   virtual void
   operator()() noexcept override {
     co_reenter (*this) {
-      for (n = 0; n < NUM_OP; n++)
+      for (; n < NUM_OP; n++)
         co_yield get_executor().post((ev_task&)(*this));
     }
   }
 
  private:
-  ::std::size_t n;
+  ::std::size_t n{0};
 };
 
 int

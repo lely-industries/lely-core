@@ -3,7 +3,7 @@
  * interface of the Server-SDO declarations. See lely/co/ssdo.h for the C
  * interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -97,7 +97,7 @@ class COSSDO : public incomplete_c_type<__co_ssdo> {
   }
 
  protected:
-  ~COSSDO() {}
+  ~COSSDO() = default;
 };
 
 }  // namespace lely

@@ -682,7 +682,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	return lss;
 
 #ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(lss->timer);
+	// can_timer_destroy(lss->timer);
 error_create_timer:
 #endif
 	can_recv_destroy(lss->recv);

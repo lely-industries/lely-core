@@ -20,7 +20,7 @@ struct MyOp : public CoSignalSetWait {
   void
   operator()(int signo) noexcept override {
     co_reenter (*this) {
-      for (n = 0; n < NUM_OP; n++) {
+      for (; n < NUM_OP; n++) {
         tap_pass();
         raise(signo);
         co_yield sigset.submit_wait(*this);
@@ -29,7 +29,7 @@ struct MyOp : public CoSignalSetWait {
   }
 
   SignalSetBase& sigset;
-  ::std::size_t n;
+  ::std::size_t n{0};
 };
 
 int

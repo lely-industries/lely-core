@@ -118,7 +118,7 @@ io_poll_init(io_poll_t *poll, io_ctx_t *ctx)
 
 	return poll;
 
-	CloseHandle(poll->CompletionPort);
+	// CloseHandle(poll->CompletionPort);
 error_CreateIoCompletionPort:
 	SetLastError(dwErrCode);
 	return NULL;

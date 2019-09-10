@@ -35,9 +35,9 @@ lely_io_init(void)
 	if (lely_io_ref++)
 		return 0;
 
+#ifdef _WIN32
 	int errc = 0;
 
-#ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(2, 2);
 	WSADATA wsaData;
 	if ((errc = WSAStartup(wVersionRequested, &wsaData)))
@@ -47,12 +47,12 @@ lely_io_init(void)
 	return 0;
 
 #ifdef _WIN32
-	WSACleanup();
+	// WSACleanup();
 error_WSAStartup:
-#endif
 	lely_io_ref--;
 	set_errc(errc);
 	return -1;
+#endif
 }
 
 void

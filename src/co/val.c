@@ -307,20 +307,29 @@ co_val_make(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 {
 	assert(val);
 
-	if (!ptr)
-		n = 0;
-
 	switch (type) {
 	case CO_DEFTYPE_VISIBLE_STRING:
 		n = ptr ? strlen(ptr) : 0;
-		co_val_init_vs(val, ptr);
+		if (co_val_init_vs(val, ptr) == -1)
+			return 0;
 		break;
-	case CO_DEFTYPE_OCTET_STRING: co_val_init_os(val, ptr, n); break;
+	case CO_DEFTYPE_OCTET_STRING:
+		if (!ptr)
+			n = 0;
+		if (co_val_init_os(val, ptr, n) == -1)
+			return 0;
+		break;
 	case CO_DEFTYPE_UNICODE_STRING:
 		n = ptr ? str16len(ptr) : 0;
-		co_val_init_us(val, ptr);
+		if (co_val_init_us(val, ptr) == -1)
+			return 0;
 		break;
-	case CO_DEFTYPE_DOMAIN: co_val_init_dom(val, ptr, n); break;
+	case CO_DEFTYPE_DOMAIN:
+		if (!ptr)
+			n = 0;
+		if (co_val_init_dom(val, ptr, n) == -1)
+			return 0;
+		break;
 	default:
 		if (!ptr || co_type_sizeof(type) != n)
 			return 0;

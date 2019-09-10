@@ -191,8 +191,9 @@ io_can_rt_init(io_can_rt_t *rt, io_can_chan_t *chan, ev_exec_t *exec)
 	io_ctx_insert(rt->ctx, &rt->svc);
 
 	return rt;
+
 #if !LELY_NO_THREADS
-	mtx_destroy(&rt->mtx);
+	// mtx_destroy(&rt->mtx);
 error_init_mtx:
 #endif
 	ev_strand_destroy(rt->exec);

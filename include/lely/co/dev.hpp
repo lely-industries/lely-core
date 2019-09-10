@@ -311,7 +311,7 @@ class CODev : public incomplete_c_type<__co_dev> {
   }
 
  protected:
-  ~CODev() {}
+  ~CODev() = default;
 };
 
 }  // namespace lely
