@@ -387,7 +387,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   }
 
  protected:
-  ~COCSDO() {}
+  ~COCSDO() = default;
 };
 
 /**

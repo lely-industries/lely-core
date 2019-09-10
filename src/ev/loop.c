@@ -516,7 +516,7 @@ ev_loop_ctx_alloc(void)
 	return ctx;
 
 #if !LELY_NO_THREADS
-	cnd_destroy(&ctx->cond);
+	// cnd_destroy(&ctx->cond);
 error_init_cond:
 #endif
 	free(ctx);

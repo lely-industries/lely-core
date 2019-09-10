@@ -208,9 +208,6 @@ io_can_ctrl_impl_stopped(const io_can_ctrl_t *ctrl)
 {
 	const struct io_can_ctrl_impl *impl = io_can_ctrl_impl_from_ctrl(ctrl);
 
-	(void)impl;
-	return 0;
-
 	int flags = ifr_get_flags(impl->name);
 	return flags == -1 ? -1 : !(flags & IFF_UP);
 }

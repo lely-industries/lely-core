@@ -55,7 +55,7 @@ io_init(void)
 
 	return 0;
 
-	io_win32_sigset_fini();
+	// io_win32_sigset_fini();
 error_sigset_init:
 	io_win32_ntdll_fini();
 error_ntdll_init:
@@ -97,7 +97,7 @@ io_win32_ntdll_init(void)
 
 	return 0;
 
-	lpfnRtlNtStatusToDosError = NULL;
+	// lpfnRtlNtStatusToDosError = NULL;
 error_RtlNtStatusToDosError:
 error_ntdll:
 	return -1;

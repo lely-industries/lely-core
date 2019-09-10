@@ -816,7 +816,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
 	return boot;
 
-	can_timer_destroy(boot->timer);
+	// can_timer_destroy(boot->timer);
 error_create_timer:
 	can_recv_destroy(boot->recv);
 error_create_recv:

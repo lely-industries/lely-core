@@ -1146,7 +1146,7 @@ co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 
 	if (state == CO_NMT_EC_OCCURRED) {
 		int iec = 0;
-		switch (state) {
+		switch (reason) {
 		case CO_NMT_EC_TIMEOUT: iec = CO_GW_IEC_NG_OCCURRED; break;
 		case CO_NMT_EC_STATE: iec = CO_GW_IEC_ST_OCCURRED; break;
 		}

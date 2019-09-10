@@ -221,7 +221,7 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 
 	return chan;
 
-	io_user_can_buf_fini(&user->rxbuf);
+	// io_user_can_buf_fini(&user->rxbuf);
 error_init_rxbuf:
 #if !LELY_NO_THREADS
 	mtx_destroy(&user->mtx);

@@ -285,7 +285,7 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 
 	return chan;
 
-	io_can_buf_fini(&impl->rxbuf);
+	// io_can_buf_fini(&impl->rxbuf);
 error_init_rxbuf:
 #if !LELY_NO_THREADS
 	pthread_mutex_destroy(&impl->io_mtx);

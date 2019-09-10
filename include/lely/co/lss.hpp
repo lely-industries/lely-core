@@ -3,7 +3,7 @@
  * interface of the Layer Setting Services (LSS) and protocols declarations. See
  * lely/co/lss.h for the C interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -408,7 +408,7 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
  protected:
-  ~COLSS() {}
+  ~COLSS() = default;
 };
 
 }  // namespace lely

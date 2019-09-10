@@ -72,6 +72,7 @@ ifr_open(struct ifr_handle *ifh, const char *name)
 
 	memset(&ifh->ifr, 0, sizeof(ifh->ifr));
 	strncpy(ifh->ifr.ifr_name, name, IFNAMSIZ);
+	ifh->ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 
 	return 0;
 }
