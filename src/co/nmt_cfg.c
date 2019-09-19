@@ -32,6 +32,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#ifndef LELY_CO_NMT_CFG_RESET_TIMEOUT
+/**
+ * The timeout (in milliseconds) after sending the NMT 'reset communication' or
+ * 'reset node' command.
+ */
+#define LELY_CO_NMT_CFG_RESET_TIMEOUT 1000
+#endif
+
 struct __co_nmt_cfg_state;
 /// An opaque CANopen NMT 'configuration request' state type.
 typedef const struct __co_nmt_cfg_state co_nmt_cfg_state_t;
@@ -46,6 +54,10 @@ struct __co_nmt_cfg {
 	co_nmt_t *nmt;
 	/// A pointer to the current state.
 	co_nmt_cfg_state_t *state;
+	/// A pointer to the CAN frame receiver.
+	can_recv_t *recv;
+	/// A pointer to the CAN timer.
+	can_timer_t *timer;
 	/// The node-ID.
 	co_unsigned8_t id;
 	/// The NMT slave assignment (object 1F81).
@@ -55,6 +67,20 @@ struct __co_nmt_cfg {
 	/// The SDO abort code.
 	co_unsigned32_t ac;
 };
+
+/**
+ * The CAN receive callback function for a 'configuration request'.
+ *
+ * @see can_recv_func_t
+ */
+static int co_nmt_cfg_recv(const struct can_msg *msg, void *data);
+
+/**
+ * The CAN timer callback function for a 'configuration request'.
+ *
+ * @see can_timer_func_t
+ */
+static int co_nmt_cfg_timer(const struct timespec *tp, void *data);
 
 /**
  * The CANopen SDO download confirmation callback function for a 'configuration
@@ -72,8 +98,28 @@ static void co_nmt_cfg_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
 static void co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next);
 
 /**
+ * Invokes the 'CAN frame received' transition function of the current state of
+ * a 'configuration request'.
+ *
+ * @param cfg a pointer to a 'configuration request'.
+ * @param msg a pointer to the received CAN frame.
+ */
+static inline void co_nmt_cfg_emit_recv(
+		co_nmt_cfg_t *cfg, const struct can_msg *msg);
+
+/**
+ * Invokes the 'timeout' transition function of the current state of a
+ * 'configuration request'.
+ *
+ * @param cfg a pointer to a 'configuration request'.
+ * @param tp  a pointer to the current time.
+ */
+static inline void co_nmt_cfg_emit_time(
+		co_nmt_cfg_t *cfg, const struct timespec *tp);
+
+/**
  * Invokes the 'SDO download confirmation' transition function of the current
- * state of a 'boot slave' service.
+ * state of a 'configuration request'.
  *
  * @param cfg    a pointer to a 'configuration request'.
  * @param ac     the SDO abort code (0 on success).
@@ -96,6 +142,27 @@ static inline void co_nmt_cfg_emit_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 struct __co_nmt_cfg_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_cfg_state_t *(*on_enter)(co_nmt_cfg_t *cfg);
+	/**
+	 * A pointer to the transition function invoked when a CAN frame has
+	 * been received.
+	 *
+	 * @param cfg a pointer to a 'configuration request'.
+	 * @param msg a pointer to the received CAN frame.
+	 *
+	 * @returns a pointer to the next state.
+	 */
+	co_nmt_cfg_state_t *(*on_recv)(
+			co_nmt_cfg_t *cfg, const struct can_msg *msg);
+	/**
+	 * A pointer to the transition function invoked when a timeout occurs.
+	 *
+	 * @param cfg a pointer to a 'configuration request'.
+	 * @param tp  a pointer to the current time.
+	 *
+	 * @returns a pointer to the next state.
+	 */
+	co_nmt_cfg_state_t *(*on_time)(
+			co_nmt_cfg_t *cfg, const struct timespec *tp);
 	/**
 	 * A pointer to the transition function invoked when an NMT'update
 	 * configuration' step completes.
@@ -127,20 +194,6 @@ struct __co_nmt_cfg_state {
 	static co_nmt_cfg_state_t *const name = \
 			&(co_nmt_cfg_state_t){ __VA_ARGS__ };
 
-/// The entry function of the 'initialization' state.
-static co_nmt_cfg_state_t *co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg);
-
-/// The 'result received' function of the 'initialization' state.
-static co_nmt_cfg_state_t *co_nmt_cfg_init_on_res(
-		co_nmt_cfg_t *cfg, co_unsigned32_t ac);
-
-// clang-format off
-LELY_CO_DEFINE_STATE(co_nmt_cfg_init_state,
-	.on_enter = &co_nmt_cfg_init_on_enter,
-	.on_res = &co_nmt_cfg_init_on_res
-)
-// clang-format on
-
 /// The entry function of the 'abort' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg);
 
@@ -164,6 +217,39 @@ static co_nmt_cfg_state_t *co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg,
 LELY_CO_DEFINE_STATE(co_nmt_cfg_restore_state,
 	.on_enter = &co_nmt_cfg_restore_on_enter,
 	.on_dn_con = &co_nmt_cfg_restore_on_dn_con
+)
+// clang-format on
+
+/// The entry function of the 'reset' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_reset_on_enter(co_nmt_cfg_t *cfg);
+
+/// The 'CAN frame received' transition function of the 'reset' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_reset_on_recv(
+		co_nmt_cfg_t *cfg, const struct can_msg *msg);
+
+/// The 'timeout' transition function of the 'reset' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_reset_on_time(
+		co_nmt_cfg_t *cfg, const struct timespec *tp);
+
+// clang-format off
+LELY_CO_DEFINE_STATE(co_nmt_cfg_reset_state,
+	.on_enter = &co_nmt_cfg_reset_on_enter,
+	.on_recv = &co_nmt_cfg_reset_on_recv,
+	.on_time = &co_nmt_cfg_reset_on_time
+)
+// clang-format on
+
+/// The entry function of the 'user-defined configuration' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_user_on_enter(co_nmt_cfg_t *cfg);
+
+/// The 'result received' function of the 'user-defined configuration' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_user_on_res(
+		co_nmt_cfg_t *cfg, co_unsigned32_t ac);
+
+// clang-format off
+LELY_CO_DEFINE_STATE(co_nmt_cfg_user_state,
+	.on_enter = &co_nmt_cfg_user_on_enter,
+	.on_res = &co_nmt_cfg_user_on_res
 )
 // clang-format on
 
@@ -193,11 +279,27 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 	assert(dev);
 	assert(nmt);
 
+	int errc = 0;
+
 	cfg->net = net;
 	cfg->dev = dev;
 	cfg->nmt = nmt;
 
 	cfg->state = NULL;
+
+	cfg->recv = can_recv_create();
+	if (!cfg->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(cfg->recv, &co_nmt_cfg_recv, cfg);
+
+	cfg->timer = can_timer_create();
+	if (!cfg->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(cfg->timer, &co_nmt_cfg_timer, cfg);
 
 	cfg->id = 0;
 	cfg->assignment = 0;
@@ -207,6 +309,13 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 	cfg->ac = 0;
 
 	return cfg;
+
+	// can_timer_destroy(cfg->timer);
+error_create_timer:
+	can_recv_destroy(cfg->recv);
+error_create_recv:
+	set_errc(errc);
+	return NULL;
 }
 
 void
@@ -215,6 +324,9 @@ __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 	assert(cfg);
 
 	co_csdo_destroy(cfg->sdo);
+
+	can_timer_destroy(cfg->timer);
+	can_recv_destroy(cfg->recv);
 }
 
 co_nmt_cfg_t *
@@ -277,7 +389,7 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
 	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);
 	co_csdo_set_up_ind(cfg->sdo, up_ind, data);
 
-	co_nmt_cfg_enter(cfg, co_nmt_cfg_init_state);
+	co_nmt_cfg_enter(cfg, co_nmt_cfg_restore_state);
 
 	return 0;
 }
@@ -288,6 +400,30 @@ co_nmt_cfg_cfg_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 	assert(cfg);
 
 	co_nmt_cfg_emit_res(cfg, ac);
+
+	return 0;
+}
+
+static int
+co_nmt_cfg_recv(const struct can_msg *msg, void *data)
+{
+	assert(msg);
+	co_nmt_cfg_t *cfg = data;
+	assert(cfg);
+
+	co_nmt_cfg_emit_recv(cfg, msg);
+
+	return 0;
+}
+
+static int
+co_nmt_cfg_timer(const struct timespec *tp, void *data)
+{
+	assert(tp);
+	co_nmt_cfg_t *cfg = data;
+	assert(cfg);
+
+	co_nmt_cfg_emit_time(cfg, tp);
 
 	return 0;
 }
@@ -320,6 +456,26 @@ co_nmt_cfg_enter(co_nmt_cfg_t *cfg, co_nmt_cfg_state_t *next)
 }
 
 static inline void
+co_nmt_cfg_emit_recv(co_nmt_cfg_t *cfg, const struct can_msg *msg)
+{
+	assert(cfg);
+	assert(cfg->state);
+	assert(cfg->state->on_recv);
+
+	co_nmt_cfg_enter(cfg, cfg->state->on_recv(cfg, msg));
+}
+
+static inline void
+co_nmt_cfg_emit_time(co_nmt_cfg_t *cfg, const struct timespec *tp)
+{
+	assert(cfg);
+	assert(cfg->state);
+	assert(cfg->state->on_time);
+
+	co_nmt_cfg_enter(cfg, cfg->state->on_time(cfg, tp));
+}
+
+static inline void
 co_nmt_cfg_emit_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac)
 {
@@ -341,7 +497,20 @@ co_nmt_cfg_emit_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 }
 
 static co_nmt_cfg_state_t *
-co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg)
+co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	can_recv_stop(cfg->recv);
+	can_timer_stop(cfg->timer);
+
+	co_nmt_cfg_con(cfg->nmt, cfg->id, cfg->ac);
+
+	return NULL;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 {
 	assert(cfg);
 
@@ -355,42 +524,9 @@ co_nmt_cfg_init_on_enter(co_nmt_cfg_t *cfg)
 	if (!(cfg->assignment & 0x01))
 		return co_nmt_cfg_abort_state;
 
-	co_nmt_cfg_ind(cfg->nmt, cfg->id, cfg->sdo);
-
-	return NULL;
-}
-
-static co_nmt_cfg_state_t *
-co_nmt_cfg_init_on_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
-{
-	assert(cfg);
-
-	if (ac) {
-		cfg->ac = ac;
-		return co_nmt_cfg_abort_state;
-	}
-
-	// We are done if the slave can be used without prior resetting (bit 7).
+	// Check if the slave can be used without prior resetting (bit 7).
 	if (!(cfg->assignment & 0x80))
-		return co_nmt_cfg_abort_state;
-
-	return co_nmt_cfg_restore_state;
-}
-
-static co_nmt_cfg_state_t *
-co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg)
-{
-	assert(cfg);
-
-	co_nmt_cfg_con(cfg->nmt, cfg->id, cfg->ac);
-
-	return NULL;
-}
-
-static co_nmt_cfg_state_t *
-co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
-{
-	assert(cfg);
+		return co_nmt_cfg_user_state;
 
 	// Retrieve the sub-index of object 1011 of the slave that is used to
 	// initiate the restore operation.
@@ -398,7 +534,7 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// If the sub-index is 0, no restore is sent to the slave.
 	if (!subidx)
-		return co_nmt_cfg_abort_state;
+		return co_nmt_cfg_user_state;
 
 	// Write the value 'load' to sub-index of object 1011 on the slave.
 	// clang-format off
@@ -438,6 +574,58 @@ co_nmt_cfg_restore_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		break;
 	}
 
+	return co_nmt_cfg_reset_state;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_reset_on_enter(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	// Start the CAN frame receiver for the boot-up message.
+	can_recv_start(cfg->recv, cfg->net, CO_NMT_EC_CANID(cfg->id), 0);
+	// Wait until we receive a boot-up message.
+	can_timer_timeout(cfg->timer, cfg->net, LELY_CO_NMT_CFG_RESET_TIMEOUT);
+
+	return NULL;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_reset_on_recv(co_nmt_cfg_t *cfg, const struct can_msg *msg)
+{
+	(void)cfg;
+	(void)msg;
+
+	can_recv_stop(cfg->recv);
+	return co_nmt_cfg_user_state;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_reset_on_time(co_nmt_cfg_t *cfg, const struct timespec *tp)
+{
+	assert(cfg);
+	(void)tp;
+
+	cfg->ac = CO_SDO_AC_TIMEOUT;
+	return co_nmt_cfg_abort_state;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_user_on_enter(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	co_nmt_cfg_ind(cfg->nmt, cfg->id, cfg->sdo);
+
+	return NULL;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_user_on_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
+{
+	assert(cfg);
+
+	cfg->ac = ac;
 	return co_nmt_cfg_abort_state;
 }
 
