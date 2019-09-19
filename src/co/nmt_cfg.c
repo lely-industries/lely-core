@@ -27,9 +27,12 @@
 
 #include "nmt_cfg.h"
 #include <lely/co/dev.h>
-#include <lely/util/errnum.h>
+#include <lely/co/obj.h>
+#include <lely/co/val.h>
+#include <lely/util/diag.h>
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 #ifndef LELY_CO_NMT_CFG_RESET_TIMEOUT
@@ -66,6 +69,10 @@ struct __co_nmt_cfg {
 	co_csdo_t *sdo;
 	/// The SDO abort code.
 	co_unsigned32_t ac;
+	/// The CANopen SDO upload request used for reading sub-objects.
+	struct co_sdo_req req;
+	/// The number of entries in the concise DCF in object 1F22.
+	co_unsigned32_t n_1f22;
 };
 
 /**
@@ -239,6 +246,32 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_reset_state,
 )
 // clang-format on
 
+/// The entry function of the 'store object 1F20' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg);
+
+// clang-format off
+LELY_CO_DEFINE_STATE(co_nmt_cfg_store_1f20_state,
+	.on_enter = &co_nmt_cfg_store_1f20_on_enter
+)
+// clang-format on
+
+/// The entry function of the 'store object 1F22' state.
+static co_nmt_cfg_state_t *co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg);
+
+/**
+ * The 'SDO download confirmation' transition function of the 'store object
+ * 1F22' state.
+ */
+static co_nmt_cfg_state_t *co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg,
+		co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned32_t ac);
+
+// clang-format off
+LELY_CO_DEFINE_STATE(co_nmt_cfg_store_1f22_state,
+	.on_enter = &co_nmt_cfg_store_1f22_on_enter,
+	.on_dn_con = &co_nmt_cfg_store_1f22_on_dn_con
+)
+// clang-format on
+
 /// The entry function of the 'user-defined configuration' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_user_on_enter(co_nmt_cfg_t *cfg);
 
@@ -308,6 +341,9 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 
 	cfg->ac = 0;
 
+	co_sdo_req_init(&cfg->req);
+	cfg->n_1f22 = 0;
+
 	return cfg;
 
 	// can_timer_destroy(cfg->timer);
@@ -322,6 +358,8 @@ void
 __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 {
 	assert(cfg);
+
+	co_sdo_req_fini(&cfg->req);
 
 	co_csdo_destroy(cfg->sdo);
 
@@ -526,7 +564,7 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// Check if the slave can be used without prior resetting (bit 7).
 	if (!(cfg->assignment & 0x80))
-		return co_nmt_cfg_user_state;
+		return co_nmt_cfg_store_1f20_state;
 
 	// Retrieve the sub-index of object 1011 of the slave that is used to
 	// initiate the restore operation.
@@ -534,7 +572,7 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// If the sub-index is 0, no restore is sent to the slave.
 	if (!subidx)
-		return co_nmt_cfg_user_state;
+		return co_nmt_cfg_store_1f20_state;
 
 	// Write the value 'load' to sub-index of object 1011 on the slave.
 	// clang-format off
@@ -597,7 +635,7 @@ co_nmt_cfg_reset_on_recv(co_nmt_cfg_t *cfg, const struct can_msg *msg)
 	(void)msg;
 
 	can_recv_stop(cfg->recv);
-	return co_nmt_cfg_user_state;
+	return co_nmt_cfg_store_1f20_state;
 }
 
 static co_nmt_cfg_state_t *
@@ -608,6 +646,115 @@ co_nmt_cfg_reset_on_time(co_nmt_cfg_t *cfg, const struct timespec *tp)
 
 	cfg->ac = CO_SDO_AC_TIMEOUT;
 	return co_nmt_cfg_abort_state;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
+{
+	(void)cfg;
+
+	return co_nmt_cfg_store_1f22_state;
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	co_sub_t *sub = co_dev_find_sub(cfg->dev, 0x1f22, cfg->id);
+	if (!sub)
+		return co_nmt_cfg_user_state;
+
+	// Upload the concise DCF.
+	struct co_sdo_req *req = &cfg->req;
+	co_sdo_req_clear(req);
+	cfg->ac = co_sub_up_ind(sub, req);
+	if (cfg->ac) {
+		diag(DIAG_ERROR, 0,
+				"SDO abort code %08" PRIX32
+				" on upload request of object 1F22:%02X (Concise DCF): %s",
+				cfg->ac, cfg->id, co_sdo_ac2str(cfg->ac));
+		return co_nmt_cfg_abort_state;
+	}
+
+	if (!co_sdo_req_first(req) || !co_sdo_req_last(req)) {
+		diag(DIAG_WARNING, 0,
+				"object 1F22:%02X (Concise DCF) unusable for configuration request",
+				cfg->id);
+		return co_nmt_cfg_user_state;
+	}
+
+	const uint8_t *begin = req->buf;
+	const uint8_t *end = begin + req->nbyte;
+
+	// Read the total number of entries.
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &cfg->n_1f22, begin, end) != 4) {
+		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+		return co_nmt_cfg_abort_state;
+	}
+
+	req->nbyte = end - begin;
+	req->offset = begin - (const uint8_t *)req->buf;
+
+	return co_nmt_cfg_store_1f22_on_dn_con(cfg, 0, 0, 0);
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac)
+{
+	assert(cfg);
+	struct co_sdo_req *req = &cfg->req;
+
+	if (ac) {
+		cfg->ac = ac;
+		return co_nmt_cfg_abort_state;
+	}
+
+	if (!cfg->n_1f22--)
+		return co_nmt_cfg_user_state;
+
+	const uint8_t *begin = (const uint8_t *)req->buf + req->offset;
+	const uint8_t *end = begin + req->nbyte;
+
+	// Read the object index.
+	if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2) {
+		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+		return co_nmt_cfg_abort_state;
+	}
+	begin += 2;
+	// Read the object sub-index.
+	if (co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end) != 1) {
+		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+		return co_nmt_cfg_abort_state;
+	}
+	begin += 1;
+	// Read the value size (in bytes).
+	co_unsigned32_t size;
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end) != 4) {
+		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+		return co_nmt_cfg_abort_state;
+	}
+	begin += 4;
+
+	if (end - begin < (ptrdiff_t)size) {
+		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+		return co_nmt_cfg_abort_state;
+	}
+
+	req->nbyte = end - begin;
+	req->offset = begin - (const uint8_t *)req->buf;
+
+	// Write the value to the slave.
+	// clang-format off
+	if (co_csdo_dn_req(cfg->sdo, idx, subidx, begin, size,
+			&co_nmt_cfg_dn_con, cfg) == -1) {
+		// clang-format on
+		cfg->ac = CO_SDO_AC_ERROR;
+		return co_nmt_cfg_abort_state;
+	}
+
+	return NULL;
 }
 
 static co_nmt_cfg_state_t *

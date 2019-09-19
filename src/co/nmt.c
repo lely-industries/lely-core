@@ -1939,8 +1939,6 @@ co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo)
 	if (nmt->cfg_ind) {
 		nmt->cfg_ind(nmt, id, sdo, nmt->cfg_data);
 	} else {
-		diag(DIAG_WARNING, errnum2c(ERRNUM_NOSYS),
-				"skipping NMT update configuration process");
 		co_nmt_cfg_res(nmt, id, 0);
 	}
 }
