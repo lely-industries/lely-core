@@ -26,6 +26,7 @@
 #ifndef LELY_NO_CO_MASTER
 
 #include "nmt_cfg.h"
+#include <lely/co/dcf.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
@@ -71,6 +72,8 @@ struct __co_nmt_cfg {
 	co_unsigned32_t ac;
 	/// The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
+	/// The object dictionary stored in object 1F20 (Store DCF).
+	co_dev_t *dev_1f20;
 	/// The number of entries in the concise DCF in object 1F22.
 	co_unsigned32_t n_1f22;
 };
@@ -249,9 +252,21 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_reset_state,
 /// The entry function of the 'store object 1F20' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg);
 
+/**
+ * The 'SDO download confirmation' transition function of the 'store object
+ * 1F20' state.
+ */
+static co_nmt_cfg_state_t *co_nmt_cfg_store_1f20_on_dn_con(co_nmt_cfg_t *cfg,
+		co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned32_t ac);
+
+/// The exit function of the 'store object 1F20' state.
+static void co_nmt_cfg_store_1f20_on_leave(co_nmt_cfg_t *cfg);
+
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_cfg_store_1f20_state,
-	.on_enter = &co_nmt_cfg_store_1f20_on_enter
+	.on_enter = &co_nmt_cfg_store_1f20_on_enter,
+	.on_dn_con = &co_nmt_cfg_store_1f20_on_dn_con,
+	.on_leave = &co_nmt_cfg_store_1f20_on_leave
 )
 // clang-format on
 
@@ -342,6 +357,7 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 	cfg->ac = 0;
 
 	co_sdo_req_init(&cfg->req);
+	cfg->dev_1f20 = NULL;
 	cfg->n_1f22 = 0;
 
 	return cfg;
@@ -359,6 +375,7 @@ __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 {
 	assert(cfg);
 
+	assert(!cfg->dev_1f20);
 	co_sdo_req_fini(&cfg->req);
 
 	co_csdo_destroy(cfg->sdo);
@@ -651,9 +668,124 @@ co_nmt_cfg_reset_on_time(co_nmt_cfg_t *cfg, const struct timespec *tp)
 static co_nmt_cfg_state_t *
 co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
 {
+#if LELY_NO_CO_DCF
 	(void)cfg;
 
 	return co_nmt_cfg_store_1f22_state;
+#else // !LELY_NO_CO_DCF
+	assert(cfg);
+
+	// Check if the DCF is available and the format is plain ASCII.
+	co_sub_t *sub = co_dev_find_sub(cfg->dev, 0x1f20, cfg->id);
+	if (!sub || co_dev_get_val_u8(cfg->dev, 0x1f21, cfg->id) != 0)
+		return co_nmt_cfg_store_1f22_state;
+
+	// Upload the DCF.
+	struct co_sdo_req *req = &cfg->req;
+	co_sdo_req_clear(req);
+	cfg->ac = co_sub_up_ind(sub, req);
+	if (cfg->ac) {
+		diag(DIAG_ERROR, 0,
+				"SDO abort code %08" PRIX32
+				" on upload request of object 1F20:%02X (Store DCF): %s",
+				cfg->ac, cfg->id, co_sdo_ac2str(cfg->ac));
+		return co_nmt_cfg_abort_state;
+	}
+
+	if (!co_sdo_req_first(req) || !co_sdo_req_last(req)) {
+		diag(DIAG_WARNING, 0,
+				"object 1F20:%02X (Store DCF) unusable for configuration request",
+				cfg->id);
+		return co_nmt_cfg_store_1f22_state;
+	}
+
+	// Parse the DCF.
+	assert(!cfg->dev_1f20);
+	cfg->dev_1f20 = co_dev_create_from_dcf_text(
+			req->buf, (const char *)req->buf + req->nbyte, NULL);
+	if (!cfg->dev_1f20) {
+		cfg->ac = CO_SDO_AC_ERROR;
+		return co_nmt_cfg_abort_state;
+	}
+
+	return co_nmt_cfg_store_1f20_on_dn_con(cfg, 0, 0, 0);
+#endif // !LELY_NO_CO_DCF
+}
+
+static co_nmt_cfg_state_t *
+co_nmt_cfg_store_1f20_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac)
+{
+	assert(cfg);
+	assert(cfg->dev_1f20);
+
+	if (ac) {
+		cfg->ac = ac;
+		return co_nmt_cfg_abort_state;
+	}
+
+	// Find the next (or first) sub-object in the object dictionary.
+	co_obj_t *obj;
+	co_sub_t *sub;
+	if (idx) {
+		obj = co_dev_find_obj(cfg->dev_1f20, idx);
+		assert(obj);
+		sub = co_obj_find_sub(obj, subidx);
+		assert(sub);
+		sub = co_sub_next(sub);
+	} else {
+		obj = co_dev_first_obj(cfg->dev_1f20);
+		if (!obj)
+			return co_nmt_cfg_store_1f22_state;
+		sub = co_obj_first_sub(obj);
+	}
+
+	// Find the next sub-object to be written.
+	co_unsigned16_t type;
+	const void *val;
+	for (;; sub = co_sub_next(sub)) {
+		while (!sub) {
+			obj = co_obj_next(obj);
+			if (!obj)
+				return co_nmt_cfg_store_1f22_state;
+			sub = co_obj_first_sub(obj);
+		}
+		// Skip read-only sub-objects.
+		if (!(co_sub_get_access(sub) & CO_ACCESS_WRITE))
+			continue;
+		// Skip file-based sub-objects.
+		if (co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE)
+			continue;
+		// Skip sub-objects containing the default value.
+		type = co_sub_get_type(sub);
+		const void *def = co_sub_get_def(sub);
+		val = co_sub_get_val(sub);
+		if (!co_val_cmp(type, def, val))
+			continue;
+		break;
+	}
+
+	// Write the value to the slave.
+	idx = co_obj_get_idx(obj);
+	subidx = co_sub_get_subidx(sub);
+	// clang-format off
+	if (co_csdo_dn_val_req(cfg->sdo, idx, subidx, type, val,
+			&co_nmt_cfg_dn_con, cfg) == -1) {
+		// clang-format on
+		cfg->ac = CO_SDO_AC_ERROR;
+		return co_nmt_cfg_abort_state;
+	}
+
+	return NULL;
+}
+
+static void
+co_nmt_cfg_store_1f20_on_leave(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	co_dev_destroy(cfg->dev_1f20);
+	cfg->dev_1f20 = NULL;
 }
 
 static co_nmt_cfg_state_t *
