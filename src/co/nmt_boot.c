@@ -51,6 +51,14 @@
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT 100
 #endif
 
+#ifndef LELY_CO_NMT_BOOT_RESET_TIMEOUT
+/**
+ * The timeout (in milliseconds) after sending the NMT 'reset communication'
+ * command.
+ */
+#define LELY_CO_NMT_BOOT_RESET_TIMEOUT 1000
+#endif
+
 #ifndef LELY_CO_NMT_BOOT_CHECK_TIMEOUT
 /**
  * The timeout (in milliseconds) before checking the flash status indication or
@@ -148,16 +156,6 @@ static void co_nmt_boot_cfg_con(co_nmt_t *nmt, co_unsigned8_t id,
 static void co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next);
 
 /**
- * Invokes the 'timeout' transition function of the current state of a 'boot
- * slave' service.
- *
- * @param boot a pointer to a 'boot slave' service.
- * @param tp   a pointer to the current time.
- */
-static inline void co_nmt_boot_emit_time(
-		co_nmt_boot_t *boot, const struct timespec *tp);
-
-/**
  * Invokes the 'CAN frame received' transition function of the current state of
  * a 'boot slave' service.
  *
@@ -166,6 +164,16 @@ static inline void co_nmt_boot_emit_time(
  */
 static inline void co_nmt_boot_emit_recv(
 		co_nmt_boot_t *boot, const struct can_msg *msg);
+
+/**
+ * Invokes the 'timeout' transition function of the current state of a 'boot
+ * slave' service.
+ *
+ * @param boot a pointer to a 'boot slave' service.
+ * @param tp   a pointer to the current time.
+ */
+static inline void co_nmt_boot_emit_time(
+		co_nmt_boot_t *boot, const struct timespec *tp);
 
 /**
  * Invokes the 'SDO download confirmation' transition function of the current
@@ -204,16 +212,6 @@ struct __co_nmt_boot_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
 	/**
-	 * A pointer to the transition function invoked when a timeout occurs.
-	 *
-	 * @param boot a pointer to a 'boot slave' service.
-	 * @param tp   a pointer to the current time.
-	 *
-	 * @returns a pointer to the next state.
-	 */
-	co_nmt_boot_state_t *(*on_time)(
-			co_nmt_boot_t *boot, const struct timespec *tp);
-	/**
 	 * A pointer to the transition function invoked when a CAN frame has
 	 * been received.
 	 *
@@ -224,6 +222,16 @@ struct __co_nmt_boot_state {
 	 */
 	co_nmt_boot_state_t *(*on_recv)(
 			co_nmt_boot_t *boot, const struct can_msg *msg);
+	/**
+	 * A pointer to the transition function invoked when a timeout occurs.
+	 *
+	 * @param boot a pointer to a 'boot slave' service.
+	 * @param tp   a pointer to the current time.
+	 *
+	 * @returns a pointer to the next state.
+	 */
+	co_nmt_boot_state_t *(*on_time)(
+			co_nmt_boot_t *boot, const struct timespec *tp);
 	/**
 	 * A pointer to the transition function invoked when an SDO download
 	 * request completes.
@@ -266,6 +274,10 @@ struct __co_nmt_boot_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_nmt_boot_state_t *const name = \
 			&(co_nmt_boot_state_t){ __VA_ARGS__ };
+
+/// The default 'CAN frame received' transition function.
+static co_nmt_boot_state_t *co_nmt_boot_default_on_recv(
+		co_nmt_boot_t *boot, const struct can_msg *msg);
 
 /// The 'timeout' transition function of the 'wait asynchronously' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_on_time(
@@ -318,6 +330,7 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_up_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_device_type_state,
 	.on_enter = &co_nmt_boot_chk_device_type_on_enter,
+	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_up_con = &co_nmt_boot_chk_device_type_on_up_con
 )
 // clang-format on
@@ -405,22 +418,50 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_chk_serial_nr_state,
 /// The entry function of the 'check node state' state.
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot);
 
-/// The 'timeout' transition function of the 'check node state' state.
-static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_time(
-		co_nmt_boot_t *boot, const struct timespec *tp);
-
 /**
  * The 'CAN frame received' transition function of the 'check node state' state.
  */
 static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_recv(
 		co_nmt_boot_t *boot, const struct can_msg *msg);
 
+/// The 'timeout' transition function of the 'check node state' state.
+static co_nmt_boot_state_t *co_nmt_boot_chk_node_on_time(
+		co_nmt_boot_t *boot, const struct timespec *tp);
+
+/// The exit function of the 'check node state' state.
+static void co_nmt_boot_chk_node_on_leave(co_nmt_boot_t *boot);
+
 /// The 'check node state' state (see Fig. 6 in CiA 302-2 version 4.1.0).
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_node_state,
 	.on_enter = &co_nmt_boot_chk_node_on_enter,
+	.on_recv = &co_nmt_boot_chk_node_on_recv,
 	.on_time = &co_nmt_boot_chk_node_on_time,
-	.on_recv = &co_nmt_boot_chk_node_on_recv
+	.on_leave = &co_nmt_boot_chk_node_on_leave
+)
+// clang-format on
+
+/// The entry function of the 'reset communication' state.
+static co_nmt_boot_state_t *co_nmt_boot_reset_comm_on_enter(
+		co_nmt_boot_t *boot);
+
+/**
+ * The 'CAN frame received' transition function of the 'reset communication'
+ * state.
+ */
+static co_nmt_boot_state_t *co_nmt_boot_reset_comm_on_recv(
+		co_nmt_boot_t *boot, const struct can_msg *msg);
+
+/// The 'timeout' transition function of the 'reset communication' state.
+static co_nmt_boot_state_t *co_nmt_boot_reset_comm_on_time(
+		co_nmt_boot_t *boot, const struct timespec *tp);
+
+/// The 'reset communication' state (see Fig. 6 in CiA 302-2 version 4.1.0).
+// clang-format off
+LELY_CO_DEFINE_STATE(co_nmt_boot_reset_comm_state,
+	.on_enter = &co_nmt_boot_reset_comm_on_enter,
+	.on_recv = &co_nmt_boot_reset_comm_on_recv,
+	.on_time = &co_nmt_boot_reset_comm_on_time
 )
 // clang-format on
 
@@ -483,6 +524,7 @@ static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_clear_prog_state,
 	.on_enter = &co_nmt_boot_clear_prog_on_enter,
+	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_clear_prog_on_dn_con
 )
 // clang-format on
@@ -502,6 +544,7 @@ static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_blk_dn_prog_state,
 	.on_enter = &co_nmt_boot_blk_dn_prog_on_enter,
+	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_blk_dn_prog_on_dn_con
 )
 // clang-format on
@@ -520,6 +563,7 @@ static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_dn_prog_state,
 	.on_enter = &co_nmt_boot_dn_prog_on_enter,
+	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_dn_prog_on_dn_con
 )
 // clang-format on
@@ -610,6 +654,7 @@ static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot,
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_wait_prog_state,
 	.on_enter = &co_nmt_boot_wait_prog_on_enter,
+	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_time = &co_nmt_boot_wait_prog_on_time,
 	.on_up_con = &co_nmt_boot_wait_prog_on_up_con
 )
@@ -677,10 +722,6 @@ LELY_CO_DEFINE_STATE(co_nmt_boot_up_cfg_state,
 /// The entry function of the 'start error control' state.
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot);
 
-/// The 'timeout' transition function of the 'start error control' state.
-static co_nmt_boot_state_t *co_nmt_boot_ec_on_time(
-		co_nmt_boot_t *boot, const struct timespec *tp);
-
 /**
  * The 'CAN frame received' transition function of the 'start error control'
  * state.
@@ -688,12 +729,16 @@ static co_nmt_boot_state_t *co_nmt_boot_ec_on_time(
 static co_nmt_boot_state_t *co_nmt_boot_ec_on_recv(
 		co_nmt_boot_t *boot, const struct can_msg *msg);
 
+/// The 'timeout' transition function of the 'start error control' state.
+static co_nmt_boot_state_t *co_nmt_boot_ec_on_time(
+		co_nmt_boot_t *boot, const struct timespec *tp);
+
 /// The 'start error control' state (see Fig. 11 in CiA 302-2 version 4.1.0).
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_ec_state,
 	.on_enter = &co_nmt_boot_ec_on_enter,
-	.on_time = &co_nmt_boot_ec_on_time,
-	.on_recv = &co_nmt_boot_ec_on_recv
+	.on_recv = &co_nmt_boot_ec_on_recv,
+	.on_time = &co_nmt_boot_ec_on_time
 )
 // clang-format on
 
@@ -982,16 +1027,6 @@ co_nmt_boot_enter(co_nmt_boot_t *boot, co_nmt_boot_state_t *next)
 }
 
 static inline void
-co_nmt_boot_emit_time(co_nmt_boot_t *boot, const struct timespec *tp)
-{
-	assert(boot);
-	assert(boot->state);
-	assert(boot->state->on_time);
-
-	co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
-}
-
-static inline void
 co_nmt_boot_emit_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 {
 	assert(boot);
@@ -999,6 +1034,16 @@ co_nmt_boot_emit_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 	assert(boot->state->on_recv);
 
 	co_nmt_boot_enter(boot, boot->state->on_recv(boot, msg));
+}
+
+static inline void
+co_nmt_boot_emit_time(co_nmt_boot_t *boot, const struct timespec *tp)
+{
+	assert(boot);
+	assert(boot->state);
+	assert(boot->state->on_time);
+
+	co_nmt_boot_enter(boot, boot->state->on_time(boot, tp));
 }
 
 static inline void
@@ -1030,6 +1075,23 @@ co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 	assert(boot->state->on_cfg_con);
 
 	co_nmt_boot_enter(boot, boot->state->on_cfg_con(boot, ac));
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_default_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
+{
+	assert(boot);
+	assert(msg);
+	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(boot->id));
+
+	if (msg->len >= 1) {
+		co_unsigned8_t st = msg->data[0];
+		// Abort the SDO request if the node has not finished rebooting.
+		if (st == CO_NMT_ST_BOOTUP)
+			co_csdo_abort_req(boot->sdo, CO_SDO_AC_TIMEOUT);
+	}
+	// Ignore heartbeat and node guarding messages.
+	return NULL;
 }
 
 static co_nmt_boot_state_t *
@@ -1137,9 +1199,11 @@ co_nmt_boot_chk_device_type_on_enter(co_nmt_boot_t *boot)
 	boot->es = 'B';
 
 	// The device type check may follow an NMT 'reset communication'
-	// command, in which case we may have to give the slave some time to
-	// complete the state change. Start the first SDO request by simulating
-	// a timeout.
+	// command. Start the CAN frame receiver for the boot-up message.
+	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
+
+	// If the slave is rebooting, we may need to give it some time to
+	// finish. Start the first SDO request by simulating a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_chk_device_type_on_up_con(
 			boot, CO_SDO_AC_TIMEOUT, NULL, 0);
@@ -1174,6 +1238,7 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 		return co_nmt_boot_abort_state;
 	}
 
+	can_recv_stop(boot->recv);
 	return co_nmt_boot_chk_vendor_id_state;
 }
 
@@ -1367,6 +1432,32 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 }
 
 static co_nmt_boot_state_t *
+co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
+{
+	assert(boot);
+	assert(msg);
+	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(boot->id));
+
+	can_timer_stop(boot->timer);
+
+	if (msg->len >= 1) {
+		boot->st = msg->data[0];
+		if ((boot->st & ~CO_NMT_ST_TOGGLE) == CO_NMT_ST_START)
+			// If the node is already operational, skip the 'check
+			// and update software version' and 'check
+			// configuration' steps and proceed immediately to
+			// 'start error control service'.
+			return co_nmt_boot_ec_state;
+	}
+	boot->st = 0;
+	// If the node is not operational, send the NMT 'reset
+	// communication' command and proceed as if the keep-alive bit
+	// was not set.
+	co_nmt_cs_req(boot->nmt, CO_NMT_CS_RESET_COMM, boot->id);
+	return co_nmt_boot_reset_comm_state;
+}
+
+static co_nmt_boot_state_t *
 co_nmt_boot_chk_node_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	(void)boot;
@@ -1375,31 +1466,45 @@ co_nmt_boot_chk_node_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	return co_nmt_boot_abort_state;
 }
 
-static co_nmt_boot_state_t *
-co_nmt_boot_chk_node_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
+static void
+co_nmt_boot_chk_node_on_leave(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
 	can_recv_stop(boot->recv);
-	can_timer_stop(boot->timer);
+}
 
-	assert(msg);
-	assert(msg->len >= 1);
-	boot->st = msg->data[0];
+static co_nmt_boot_state_t *
+co_nmt_boot_reset_comm_on_enter(co_nmt_boot_t *boot)
+{
+	assert(boot);
 
-	if ((boot->st & ~CO_NMT_ST_TOGGLE) == CO_NMT_ST_START) {
-		// If the node is already operational, skip the 'check and
-		// update software version' and 'check configuration' steps and
-		// proceed immediately to 'start error control service'.
-		return co_nmt_boot_ec_state;
-	} else {
-		boot->st = 0;
-		// If the node is not operational, send the NMT 'reset
-		// communication' command and proceed as if the keep-alive bit
-		// was not set.
-		co_nmt_cs_req(boot->nmt, CO_NMT_CS_RESET_COMM, boot->id);
-		return co_nmt_boot_chk_sw_state;
-	}
+	// Start the CAN frame receiver for the boot-up message.
+	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
+	// Wait until we receive a boot-up message.
+	can_timer_timeout(
+			boot->timer, boot->net, LELY_CO_NMT_BOOT_RESET_TIMEOUT);
+
+	return NULL;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_reset_comm_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
+{
+	(void)boot;
+	(void)msg;
+
+	can_recv_stop(boot->recv);
+	return co_nmt_boot_chk_sw_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_reset_comm_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
+{
+	(void)boot;
+	(void)tp;
+
+	return co_nmt_boot_abort_state;
 }
 
 static co_nmt_boot_state_t *
@@ -1532,9 +1637,12 @@ co_nmt_boot_clear_prog_on_enter(co_nmt_boot_t *boot)
 	assert(boot);
 
 	// The 'clear program' command follows the 'stop program' command, which
-	// may have triggered a reboot of the slave. In that case we may have to
-	// give the slave some time to finish booting. Start the first SDO
-	// request by simulating a timeout.
+	// may have triggered a reboot of the slave. Start the CAN frame
+	// receiver for the boot-up message.
+	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
+
+	// If the slave is rebooting, we may need to give it some time to
+	// finish. Start the first SDO request by simulating a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_clear_prog_on_dn_con(boot, CO_SDO_AC_TIMEOUT);
 }
@@ -1617,6 +1725,7 @@ co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		return co_nmt_boot_dn_prog_state;
 	}
 
+	can_recv_stop(boot->recv);
 	return co_nmt_boot_wait_flash_state;
 }
 
@@ -1658,6 +1767,7 @@ co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		return co_nmt_boot_abort_state;
 	}
 
+	can_recv_stop(boot->recv);
 	return co_nmt_boot_wait_flash_state;
 }
 
@@ -1842,9 +1952,11 @@ co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	assert(boot);
 	(void)tp;
 
-	// The 'start program' step may take some time to complete, causing an
-	// immediate SDO upload request to generate a timeout. Start the first
-	// attempt by simulating a timeout.
+	// The 'start program' command may cause the slave to reboot. Start the
+	// CAN frame receiver for the boot-up message.
+	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
+
+	// Start the first SDO request by simulating a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_wait_prog_on_up_con(
 			boot, CO_SDO_AC_TIMEOUT, NULL, 0);
@@ -1880,6 +1992,7 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 		// clang-format on
 		return co_nmt_boot_wait_prog_state;
 
+	can_recv_stop(boot->recv);
 	return co_nmt_boot_chk_device_type_state;
 }
 
@@ -2000,9 +2113,6 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 
 	if (boot->ms) {
 		boot->es = 'K';
-		// Start the CAN frame receiver for heartbeat messages.
-		can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id),
-				0);
 		// Wait for the first heartbeat indication.
 		can_timer_timeout(boot->timer, boot->net, boot->ms);
 		return NULL;
@@ -2019,19 +2129,11 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_ec_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
-{
-	(void)boot;
-	(void)tp;
-
-	return co_nmt_boot_abort_state;
-}
-
-static co_nmt_boot_state_t *
 co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 {
 	assert(boot);
 	assert(msg);
+	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(boot->id));
 
 	if (msg->len >= 1) {
 		co_unsigned8_t st = msg->data[0];
@@ -2041,6 +2143,15 @@ co_nmt_boot_ec_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
 		boot->st = st;
 		boot->es = 0;
 	}
+
+	return co_nmt_boot_abort_state;
+}
+
+static co_nmt_boot_state_t *
+co_nmt_boot_ec_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
+{
+	(void)boot;
+	(void)tp;
 
 	return co_nmt_boot_abort_state;
 }
