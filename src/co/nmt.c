@@ -2413,11 +2413,6 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			return 0;
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		// Ignore messages from booting slaves or slaves that are being
-		// configured.
-		if (slave->boot || slave->cfg)
-			return 0;
-
 		if (msg->len < 1)
 			return 0;
 		co_unsigned8_t st = msg->data[0];
@@ -2430,6 +2425,11 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			co_nmt_st_ind(nmt, id, st);
 			return 0;
 		}
+
+		// Ignore messages from booting slaves or slaves that are being
+		// configured.
+		if (slave->boot || slave->cfg)
+			return 0;
 
 		// Ignore messages if node guarding is disabled.
 		if (!slave->gt || !slave->ltf)
