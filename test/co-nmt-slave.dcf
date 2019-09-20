@@ -50,7 +50,8 @@ AccessType=ro
 ParameterName=Producer heartbeat time
 DataType=0x0006
 AccessType=rw
-DefaultValue=100
+DefaultValue=0
+ParameterValue=100
 
 [1018]
 SubNumber=5
@@ -158,5 +159,5 @@ DefaultValue=0x00000000
 ParameterName=NMT startup
 DataType=0x0007
 AccessType=rw
-ParameterValue=0x00000004
+DefaultValue=0x00000004
 
