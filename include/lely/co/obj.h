@@ -170,6 +170,25 @@ co_obj_t *co_obj_create(co_unsigned16_t idx);
 /// Destroys a CANopen object, including its sub-objects. @see co_obj_create()
 void co_obj_destroy(co_obj_t *obj);
 
+/**
+ * Finds the previous object in the object dictionary of a CANopen device.
+ *
+ * @returns a pointer to the previous object, or NULL if this is the first
+ * object.
+ *
+ * @see co_dev_last_obj(), co_obj_next()
+ */
+co_obj_t *co_obj_prev(const co_obj_t *obj);
+
+/**
+ * Finds the next object in the object dictionary of a CANopen device.
+ *
+ * @returns a pointer to the next object, or NULL if this is the first object.
+ *
+ * @see co_dev_first_obj(), co_obj_prev()
+ */
+co_obj_t *co_obj_next(const co_obj_t *obj);
+
 /// Returns a pointer to the CANopen device containing the specified object.
 co_dev_t *co_obj_get_dev(const co_obj_t *obj);
 
@@ -227,6 +246,24 @@ int co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub);
  * @see co_obj_insert_sub()
  */
 co_sub_t *co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx);
+
+/**
+ * Finds the first sub-object (with the lowest sub-index) in a CANopen object.
+ *
+ * @returns a pointer to the first sub-object, or NULL if the object is empty.
+ *
+ * @see co_dev_last_obj(), co_sub_next()
+ */
+co_sub_t *co_obj_first_sub(const co_obj_t *obj);
+
+/**
+ * Finds the last sub-object (with the highest sub-index) in a CANopen object.
+ *
+ * @returns a pointer to the last sub-object, or NULL if the object is empty.
+ *
+ * @see co_obj_first_sub(), co_sub_prev()
+ */
+co_sub_t *co_obj_last_sub(const co_obj_t *obj);
 
 /// Returns the name of a CANopen object. @see co_obj_set_name()
 const char *co_obj_get_name(const co_obj_t *obj);
@@ -358,6 +395,26 @@ co_sub_t *co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type);
 
 /// Destroys a CANopen sub-object. @see co_sub_create()
 void co_sub_destroy(co_sub_t *sub);
+
+/**
+ * Finds the previous sub-object in a CANopen object.
+ *
+ * @returns a pointer to the previous sub-object, or NULL if this is the first
+ * sub-object.
+ *
+ * @see co_obj_last_sub(), co_sub_next()
+ */
+co_sub_t *co_sub_prev(const co_sub_t *sub);
+
+/**
+ * Finds the next sub-object in a CANopen object.
+ *
+ * @returns a pointer to the next sub-object, or NULL if this is the first
+ * sub-object.
+ *
+ * @see co_obj_first_sub(), co_sub_prev()
+ */
+co_sub_t *co_sub_next(const co_sub_t *sub);
 
 /**
  * Returns the a pointer to the CANopen object containing the specified

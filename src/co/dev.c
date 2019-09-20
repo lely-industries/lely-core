@@ -293,6 +293,24 @@ co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 	return obj ? co_obj_find_sub(obj, subidx) : NULL;
 }
 
+co_obj_t *
+co_dev_first_obj(const co_dev_t *dev)
+{
+	assert(dev);
+
+	struct rbnode *node = rbtree_first(&dev->tree);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
+co_obj_t *
+co_dev_last_obj(const co_dev_t *dev)
+{
+	assert(dev);
+
+	struct rbnode *node = rbtree_last(&dev->tree);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
 const char *
 co_dev_get_name(const co_dev_t *dev)
 {

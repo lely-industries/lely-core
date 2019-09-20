@@ -202,6 +202,28 @@ co_obj_t *co_dev_find_obj(const co_dev_t *dev, co_unsigned16_t idx);
 co_sub_t *co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx);
 
+/**
+ * Finds the first object (with the lowest index) in the object dictionary of a
+ * CANopen device.
+ *
+ * @returns a pointer to the first object, or NULL if the object dictionary is
+ * empty.
+ *
+ * @see co_dev_last_obj(), co_obj_next()
+ */
+co_obj_t *co_dev_first_obj(const co_dev_t *dev);
+
+/**
+ * Finds the last object (with the highest index) in the object dictionary of a
+ * CANopen device.
+ *
+ * @returns a pointer to the last object, or NULL if the object dictionary is
+ * empty.
+ *
+ * @see co_dev_first_obj(), co_obj_prev()
+ */
+co_obj_t *co_dev_last_obj(const co_dev_t *dev);
+
 /// Returns the name of a CANopen device. @see co_dev_set_name()
 const char *co_dev_get_name(const co_dev_t *dev);
 

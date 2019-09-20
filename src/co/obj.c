@@ -124,6 +124,24 @@ co_obj_destroy(co_obj_t *obj)
 	}
 }
 
+co_obj_t *
+co_obj_prev(const co_obj_t *obj)
+{
+	assert(obj);
+
+	struct rbnode *node = rbnode_prev(&obj->node);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
+co_obj_t *
+co_obj_next(const co_obj_t *obj)
+{
+	assert(obj);
+
+	struct rbnode *node = rbnode_next(&obj->node);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
 co_dev_t *
 co_obj_get_dev(const co_obj_t *obj)
 {
@@ -209,6 +227,24 @@ co_obj_find_sub(const co_obj_t *obj, co_unsigned8_t subidx)
 	assert(obj);
 
 	struct rbnode *node = rbtree_find(&obj->tree, &subidx);
+	return node ? structof(node, co_sub_t, node) : NULL;
+}
+
+co_sub_t *
+co_obj_first_sub(const co_obj_t *obj)
+{
+	assert(obj);
+
+	struct rbnode *node = rbtree_first(&obj->tree);
+	return node ? structof(node, co_sub_t, node) : NULL;
+}
+
+co_sub_t *
+co_obj_last_sub(const co_obj_t *obj)
+{
+	assert(obj);
+
+	struct rbnode *node = rbtree_last(&obj->tree);
 	return node ? structof(node, co_sub_t, node) : NULL;
 }
 
@@ -452,6 +488,24 @@ co_sub_destroy(co_sub_t *sub)
 		__co_sub_fini(sub);
 		__co_sub_free(sub);
 	}
+}
+
+co_sub_t *
+co_sub_prev(const co_sub_t *sub)
+{
+	assert(sub);
+
+	struct rbnode *node = rbnode_prev(&sub->node);
+	return node ? structof(node, co_sub_t, node) : NULL;
+}
+
+co_sub_t *
+co_sub_next(const co_sub_t *sub)
+{
+	assert(sub);
+
+	struct rbnode *node = rbnode_next(&sub->node);
+	return node ? structof(node, co_sub_t, node) : NULL;
 }
 
 co_obj_t *
