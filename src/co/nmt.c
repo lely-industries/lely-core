@@ -1939,8 +1939,6 @@ co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo)
 	if (nmt->cfg_ind) {
 		nmt->cfg_ind(nmt, id, sdo, nmt->cfg_data);
 	} else {
-		diag(DIAG_WARNING, errnum2c(ERRNUM_NOSYS),
-				"skipping NMT update configuration process");
 		co_nmt_cfg_res(nmt, id, 0);
 	}
 }
@@ -2218,8 +2216,12 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	if (id) {
 		// Check if the entry for this node is present in object 1F20
 		// (Store DCF) or 1F22 (Concise DCF).
+#if LELY_NO_CO_DCF
+		if (!co_dev_get_val(nmt->dev, 0x1f22, id)) {
+#else
 		if (!co_dev_get_val(nmt->dev, 0x1f20, id)
 				&& !co_dev_get_val(nmt->dev, 0x1f22, id)) {
+#endif
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}
@@ -2232,8 +2234,12 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	} else {
 		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
 		// exists.
+#if LELY_NO_CO_DCF
+		if (!co_dev_find_obj(nmt->dev, 0x1f22)) {
+#else
 		if (!co_dev_find_obj(nmt->dev, 0x1f20)
 				&& !co_dev_find_obj(nmt->dev, 0x1f22)) {
+#endif
 			ac = CO_SDO_AC_NO_DATA;
 			goto error;
 		}

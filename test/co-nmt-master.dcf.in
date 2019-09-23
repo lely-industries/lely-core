@@ -21,17 +21,19 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=10
+SupportedObjects=12
 1=0x1016
-2=0x1F55
-3=0x1F58
-4=0x1F80
-5=0x1F81
-6=0x1F84
-7=0x1F85
-8=0x1F86
-9=0x1F87
-10=0x1F88
+2=0x1F20
+3=0x1F21
+4=0x1F55
+5=0x1F58
+6=0x1F80
+7=0x1F81
+8=0x1F84
+9=0x1F85
+10=0x1F86
+11=0x1F87
+12=0x1F88
 
 [ManufacturerObjects]
 SupportedObjects=0
@@ -88,6 +90,39 @@ AccessType=ro
 ParameterName=Serial number
 DataType=0x0007
 AccessType=ro
+
+[1F20]
+SubNumber=3
+ParameterName=Store DCF
+ObjectType=0x08
+
+[1F20sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=2
+
+[1F20sub1]
+ParameterName=Node-ID 1
+DataType=0x000F
+AccessType=ro
+
+[1F20sub2]
+ParameterName=Node-ID 2
+DataType=0x000F
+AccessType=ro
+UploadFile=@srcdir@/co-nmt-slave.dcf
+
+[1F21]
+ParameterName=Store format
+ObjectType=0x08
+DataType=0x0005
+AccessType=rw
+CompactSubObj=2
+
+[1F21Value]
+NrOfEntries=1
+2=0
 
 [1F55]
 ParameterName=Expected software identification

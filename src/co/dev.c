@@ -293,6 +293,24 @@ co_dev_find_sub(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 	return obj ? co_obj_find_sub(obj, subidx) : NULL;
 }
 
+co_obj_t *
+co_dev_first_obj(const co_dev_t *dev)
+{
+	assert(dev);
+
+	struct rbnode *node = rbtree_first(&dev->tree);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
+co_obj_t *
+co_dev_last_obj(const co_dev_t *dev)
+{
+	assert(dev);
+
+	struct rbnode *node = rbtree_last(&dev->tree);
+	return node ? structof(node, co_obj_t, node) : NULL;
+}
+
 const char *
 co_dev_get_name(const co_dev_t *dev)
 {
@@ -758,71 +776,52 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	assert(dev);
 	assert(ptr);
 
-	int errc = 0;
-
-	// Get the list of object indices.
-	co_unsigned16_t maxidx = co_dev_get_idx(dev, 0, NULL);
-	co_unsigned16_t *idx = calloc(maxidx, sizeof(co_unsigned16_t));
-	if (!idx) {
-		errc = errno2c(errno);
-		goto error_malloc_idx;
-	}
-	maxidx = co_dev_get_idx(dev, maxidx, idx);
-
 	size_t size = 4;
 	co_unsigned32_t n = 0;
 
-	for (size_t i = 0; i < maxidx; i++) {
-		if (idx[i] < min || idx[i] > max)
+	// Count the number of matching sub-objects and compute the total size
+	// (in bytes).
+	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
+			obj = co_obj_next(obj)) {
+		co_unsigned16_t idx = co_obj_get_idx(obj);
+		if (idx < min)
 			continue;
-
-		// Get the list of object sub-indices.
-		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
-		co_unsigned8_t subidx[0xff];
-		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0xff, subidx);
-
-		// Count the number of sub-objects and compute the size (in
-		// bytes).
-		for (size_t j = 0; j < maxsubidx; j++, n++)
-			size += co_dev_write_sub(
-					dev, idx[i], subidx[j], NULL, NULL);
+		if (idx > max)
+			break;
+		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
+				sub = co_sub_next(sub)) {
+			co_unsigned8_t subidx = co_sub_get_subidx(sub);
+			size += co_dev_write_sub(dev, idx, subidx, NULL, NULL);
+			n++;
+		}
 	}
 
 	// Create a DOMAIN for the concise DCF.
-	if (co_val_init_dom(ptr, NULL, size) == -1) {
-		errc = get_errc();
-		goto error_init_dom;
-	}
+	if (co_val_init_dom(ptr, NULL, size) == -1)
+		return -1;
+
 	uint8_t *begin = *ptr;
 	uint8_t *end = begin + size;
 
 	// Write the total number of sub-indices.
 	begin += co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
 
-	for (size_t i = 0; i < maxidx; i++) {
-		if (idx[i] < min || idx[i] > max)
+	// Write the sub-objects.
+	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
+			obj = co_obj_next(obj)) {
+		co_unsigned16_t idx = co_obj_get_idx(obj);
+		if (idx < min)
 			continue;
-
-		// Get the list of object sub-indices.
-		co_obj_t *obj = co_dev_find_obj(dev, idx[i]);
-		co_unsigned8_t subidx[0xff];
-		co_unsigned8_t maxsubidx = co_obj_get_subidx(obj, 0xff, subidx);
-
-		// Write the value of the sub-object.
-		for (size_t j = 0; j < maxsubidx; j++, n++)
-			begin += co_dev_write_sub(
-					dev, idx[i], subidx[j], begin, end);
+		if (idx > max)
+			break;
+		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
+				sub = co_sub_next(sub)) {
+			co_unsigned8_t subidx = co_sub_get_subidx(sub);
+			begin += co_dev_write_sub(dev, idx, subidx, begin, end);
+		}
 	}
 
-	free(idx);
-
 	return 0;
-
-error_init_dom:
-	free(idx);
-error_malloc_idx:
-	set_errc(errc);
-	return -1;
 }
 
 #ifndef LELY_NO_CO_DCF
