@@ -275,10 +275,6 @@ struct __co_nmt_boot_state {
 	static co_nmt_boot_state_t *const name = \
 			&(co_nmt_boot_state_t){ __VA_ARGS__ };
 
-/// The default 'CAN frame received' transition function.
-static co_nmt_boot_state_t *co_nmt_boot_default_on_recv(
-		co_nmt_boot_t *boot, const struct can_msg *msg);
-
 /// The 'timeout' transition function of the 'wait asynchronously' state.
 static co_nmt_boot_state_t *co_nmt_boot_wait_on_time(
 		co_nmt_boot_t *boot, const struct timespec *tp);
@@ -330,7 +326,6 @@ static co_nmt_boot_state_t *co_nmt_boot_chk_device_type_on_up_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_chk_device_type_state,
 	.on_enter = &co_nmt_boot_chk_device_type_on_enter,
-	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_up_con = &co_nmt_boot_chk_device_type_on_up_con
 )
 // clang-format on
@@ -524,7 +519,6 @@ static co_nmt_boot_state_t *co_nmt_boot_clear_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_clear_prog_state,
 	.on_enter = &co_nmt_boot_clear_prog_on_enter,
-	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_clear_prog_on_dn_con
 )
 // clang-format on
@@ -544,7 +538,6 @@ static co_nmt_boot_state_t *co_nmt_boot_blk_dn_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_blk_dn_prog_state,
 	.on_enter = &co_nmt_boot_blk_dn_prog_on_enter,
-	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_blk_dn_prog_on_dn_con
 )
 // clang-format on
@@ -563,7 +556,6 @@ static co_nmt_boot_state_t *co_nmt_boot_dn_prog_on_dn_con(
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_dn_prog_state,
 	.on_enter = &co_nmt_boot_dn_prog_on_enter,
-	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_dn_con = &co_nmt_boot_dn_prog_on_dn_con
 )
 // clang-format on
@@ -654,7 +646,6 @@ static co_nmt_boot_state_t *co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot,
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_boot_wait_prog_state,
 	.on_enter = &co_nmt_boot_wait_prog_on_enter,
-	.on_recv = &co_nmt_boot_default_on_recv,
 	.on_time = &co_nmt_boot_wait_prog_on_time,
 	.on_up_con = &co_nmt_boot_wait_prog_on_up_con
 )
@@ -1078,23 +1069,6 @@ co_nmt_boot_emit_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 }
 
 static co_nmt_boot_state_t *
-co_nmt_boot_default_on_recv(co_nmt_boot_t *boot, const struct can_msg *msg)
-{
-	assert(boot);
-	assert(msg);
-	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(boot->id));
-
-	if (msg->len >= 1) {
-		co_unsigned8_t st = msg->data[0];
-		// Abort the SDO request if the node has not finished rebooting.
-		if (st == CO_NMT_ST_BOOTUP)
-			co_csdo_abort_req(boot->sdo, CO_SDO_AC_TIMEOUT);
-	}
-	// Ignore heartbeat and node guarding messages.
-	return NULL;
-}
-
-static co_nmt_boot_state_t *
 co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 {
 	(void)boot;
@@ -1198,12 +1172,10 @@ co_nmt_boot_chk_device_type_on_enter(co_nmt_boot_t *boot)
 
 	boot->es = 'B';
 
-	// The device type check may follow an NMT 'reset communication'
-	// command. Start the CAN frame receiver for the boot-up message.
-	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
-
-	// If the slave is rebooting, we may need to give it some time to
-	// finish. Start the first SDO request by simulating a timeout.
+ 	// The device type check may follow an NMT 'reset communication'
+	// command, in which case we may have to give the slave some time to
+	// complete the state change. Start the first SDO request by simulating
+	// a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_chk_device_type_on_up_con(
 			boot, CO_SDO_AC_TIMEOUT, NULL, 0);
@@ -1636,13 +1608,10 @@ co_nmt_boot_clear_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	// The 'clear program' command follows the 'stop program' command, which
-	// may have triggered a reboot of the slave. Start the CAN frame
-	// receiver for the boot-up message.
-	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
-
-	// If the slave is rebooting, we may need to give it some time to
-	// finish. Start the first SDO request by simulating a timeout.
+ 	// The 'clear program' command follows the 'stop program' command, which
+	// may have triggered a reboot of the slave. In that case we may have to
+	// give the slave some time to finish booting. Start the first SDO
+	// request by simulating a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_clear_prog_on_dn_con(boot, CO_SDO_AC_TIMEOUT);
 }
@@ -1725,7 +1694,6 @@ co_nmt_boot_blk_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		return co_nmt_boot_dn_prog_state;
 	}
 
-	can_recv_stop(boot->recv);
 	return co_nmt_boot_wait_flash_state;
 }
 
@@ -1767,7 +1735,6 @@ co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 		return co_nmt_boot_abort_state;
 	}
 
-	can_recv_stop(boot->recv);
 	return co_nmt_boot_wait_flash_state;
 }
 
@@ -1952,11 +1919,9 @@ co_nmt_boot_wait_prog_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 	assert(boot);
 	(void)tp;
 
-	// The 'start program' command may cause the slave to reboot. Start the
-	// CAN frame receiver for the boot-up message.
-	can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id), 0);
-
-	// Start the first SDO request by simulating a timeout.
+	// The 'start program' step may take some time to complete, causing an
+	// immediate SDO upload request to generate a timeout. Start the first
+	// attempt by simulating a timeout.
 	boot->retry = LELY_CO_NMT_BOOT_SDO_RETRY + 1;
 	return co_nmt_boot_wait_prog_on_up_con(
 			boot, CO_SDO_AC_TIMEOUT, NULL, 0);
@@ -1992,7 +1957,6 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 		// clang-format on
 		return co_nmt_boot_wait_prog_state;
 
-	can_recv_stop(boot->recv);
 	return co_nmt_boot_chk_device_type_state;
 }
 
@@ -2113,6 +2077,9 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 
 	if (boot->ms) {
 		boot->es = 'K';
+		// Start the CAN frame receiver for heartbeat messages.
+		can_recv_start(boot->recv, boot->net, CO_NMT_EC_CANID(boot->id),
+				0);
 		// Wait for the first heartbeat indication.
 		can_timer_timeout(boot->timer, boot->net, boot->ms);
 		return NULL;

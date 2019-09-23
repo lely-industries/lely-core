@@ -210,7 +210,8 @@ boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 	struct co_test *test = data;
 	tap_assert(test);
 
-	tap_pass("error status %c reported for node %d", ec ? ec : '0', id);
+	tap_test(!ec, "error status %c reported for node %d", ec ? ec : '0',
+			id);
 
 	co_test_done(test);
 }
