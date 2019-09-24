@@ -331,6 +331,11 @@ Node::Impl_::OnCsInd(CONMT* nmt, uint8_t cs) noexcept {
     }
   }
 
+  if (cs != CO_NMT_CS_RESET_NODE && cs != CO_NMT_CS_RESET_COMM) {
+    self->UpdateRpdoMapping();
+    self->UpdateTpdoMapping();
+  }
+
   self->OnCommand(static_cast<NmtCommand>(cs));
 
   if (on_command) {
