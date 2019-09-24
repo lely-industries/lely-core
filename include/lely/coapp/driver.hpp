@@ -544,6 +544,22 @@ class BasicDriver : DriverBase {
   /// A reference to the master with which this driver is registered.
   BasicMaster& master;
 
+  /**
+   * An accessor providing read-only access to RPDO-mapped objects in the remote
+   * object dictionary.
+   *
+   * @see BasicMaster::RpdoMapped()
+   */
+  class BasicMaster::RpdoMapped rpdo_mapped;
+
+  /**
+   * A mutator providing read/write access to TPDO-mapped objects in the remote
+   * object dictionary.
+   *
+   * @see BasicMaster::TpdoMapped()
+   */
+  class BasicMaster::TpdoMapped tpdo_mapped;
+
  private:
   void
   OnCanState(io::CanState /*new_state*/,
@@ -596,7 +612,7 @@ class BasicDriver : DriverBase {
          uint8_t /*msef*/[5]) noexcept override {}
 
   ev_exec_t* exec_{nullptr};
-  uint8_t id_{0xff};
+  const uint8_t id_{0xff};
 };
 
 }  // namespace canopen

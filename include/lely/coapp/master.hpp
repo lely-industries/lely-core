@@ -103,11 +103,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @throws #lely::canopen::SdoError on error.
      *
      * @see Device::Read(uint16_t idx, uint8_t subidx) const
+     * @see Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const
      */
     template <class T>
     T
     Read() const {
-      return master_->Read<T>(idx_, subidx_);
+      return id_ ? master_->TpdoRead<T>(id_, idx_, subidx_)
+                 : master_->Read<T>(idx_, subidx_);
     }
 
     /**
@@ -119,11 +121,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns the result of the SDO request, or an empty value on error.
      *
      * @see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
     Read(::std::error_code& ec) const {
-      return master_->Read<T>(idx_, subidx_, ec);
+      return id_ ? master_->TpdoRead<T>(id_, idx_, subidx_, ec)
+                 : master_->Read<T>(idx_, subidx_, ec);
     }
 
     /**
@@ -135,11 +139,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @throws #lely::canopen::SdoError on error.
      *
      * @see Device::Write(uint16_t idx, uint8_t subidx, T&& value)
+     * @see Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value)
      */
     template <class T>
     void
     Write(T&& value) {
-      master_->Write(idx_, subidx_, ::std::forward<T>(value));
+      if (id_)
+        master_->TpdoWrite(id_, idx_, subidx_, ::std::forward<T>(value));
+      else
+        master_->Write(idx_, subidx_, ::std::forward<T>(value));
     }
 
     /**
@@ -153,11 +161,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @see Device::Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
      * @see Device::Write(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
      * @see Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
+     * @see Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value, ::std::error_code& ec)
      */
     template <class T>
     void
     Write(T&& value, ::std::error_code& ec) {
-      master_->Write(idx_, subidx_, ::std::forward<T>(value), ec);
+      if (id_)
+        master_->TpdoWrite(id_, idx_, subidx_, ::std::forward<T>(value), ec);
+      else
+        master_->Write(idx_, subidx_, ::std::forward<T>(value), ec);
     }
 
     /**
@@ -193,11 +205,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
    private:
     SubObject(BasicMaster* master, uint16_t idx, uint8_t subidx)
-        : master_(master), idx_(idx), subidx_(subidx) {}
+        : SubObject(master, 0, idx, subidx) {}
+
+    SubObject(BasicMaster* master, uint8_t id, uint16_t idx, uint8_t subidx)
+        : master_(master), idx_(idx), subidx_(subidx), id_(id) {}
 
     BasicMaster* master_;
     uint16_t idx_;
     uint8_t subidx_;
+    uint8_t id_;
   };
 
   /**
@@ -231,11 +247,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @throws #lely::canopen::SdoError on error.
      *
      * @see Device::Read(uint16_t idx, uint8_t subidx) const
+     * @see Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const
+     * @see Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const
      */
     template <class T>
     T
     Read() const {
-      return master_->Read<T>(idx_, subidx_);
+      return id_ ? (is_rpdo_ ? master_->RpdoRead<T>(id_, idx_, subidx_)
+                             : master_->TpdoRead<T>(id_, idx_, subidx_))
+                 : master_->Read<T>(idx_, subidx_);
     }
 
     /**
@@ -246,36 +266,54 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      *
      * @returns the result of the SDO request, or an empty value on error.
      *
-     * @see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
-     * const
+     * @see Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
     Read(::std::error_code& ec) const {
-      return master_->Read<T>(idx_, subidx_, ec);
+      return id_ ? (is_rpdo_ ? master_->RpdoRead<T>(id_, idx_, subidx_, ec)
+                             : master_->TpdoRead<T>(id_, idx_, subidx_, ec))
+                 : master_->Read<T>(idx_, subidx_, ec);
     }
 
    private:
     ConstSubObject(const BasicMaster* master, uint16_t idx, uint8_t subidx)
-        : master_(master), idx_(idx), subidx_(subidx) {}
+        : ConstSubObject(master, 0, idx, subidx, false) {}
+
+    ConstSubObject(const BasicMaster* master, uint8_t id, uint16_t idx,
+                   uint8_t subidx, bool is_rpdo)
+        : master_(master),
+          idx_(idx),
+          subidx_(subidx),
+          id_(id),
+          is_rpdo_(is_rpdo) {}
 
     const BasicMaster* master_;
     uint16_t idx_;
     uint8_t subidx_;
+    uint8_t id_ : 7;
+    uint8_t is_rpdo_ : 1;
   };
+
+  class RpdoMapped;
+  class TpdoMapped;
 
   /**
    * A mutator providing read/write access to a CANopen object in a local object
    * dictionary.
    */
   class Object {
+    friend class TpdoMapped;
     friend class BasicMaster;
 
    public:
     /**
      * Returns a mutator object that provides read/write access to the specified
-     * CANopen sub-object in the local object dictionary. Note that this
-     * function succeeds even if the sub-object does not exist.
+     * CANopen sub-object in the local object dictionary (or the TPDO-mapped
+     * sub-object in the remote object dictionary). Note that this function
+     * succeeds even if the sub-object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -283,13 +321,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * dictionary.
      */
     SubObject operator[](uint8_t subidx) {
-      return SubObject(master_, idx_, subidx);
+      return SubObject(master_, id_, idx_, subidx);
     }
 
     /**
      * Returns an accessor object that provides read-only access to the
-     * specified CANopen sub-object in the local object dictionary. Note that
-     * this function succeeds even if the object does not exist.
+     * specified CANopen sub-object in the local object dictionary (or the
+     * TPDO-mapped sub-object in the remote object dictionary). Note that this
+     * function succeeds even if the object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -297,14 +336,18 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * dictionary.
      */
     ConstSubObject operator[](uint8_t subidx) const {
-      return ConstSubObject(master_, idx_, subidx);
+      return ConstSubObject(master_, id_, idx_, subidx, false);
     }
 
    private:
-    Object(BasicMaster* master, uint16_t idx) : master_(master), idx_(idx) {}
+    Object(BasicMaster* master, uint16_t idx) : Object(master, 0, idx) {}
+
+    Object(BasicMaster* master, uint8_t id, uint16_t idx)
+        : master_(master), idx_(idx), id_(id) {}
 
     BasicMaster* master_;
     uint16_t idx_;
+    uint8_t id_;
   };
 
   /**
@@ -312,13 +355,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * object dictionary.
    */
   class ConstObject {
+    friend class RpdoMapped;
+    friend class TpdoMapped;
     friend class BasicMaster;
 
    public:
     /**
      * Returns an accessor object that provides read-only access to the
-     * specified CANopen sub-object in the local object dictionary. Note that
-     * this function succeeds even if the object does not exist.
+     * specified CANopen sub-object in the local object dictionary (or the
+     * PDO-mapped sub-object in the remote object dictionary). Note that this
+     * function succeeds even if the object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -326,15 +372,92 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * dictionary.
      */
     ConstSubObject operator[](uint8_t subidx) const {
-      return ConstSubObject(master_, idx_, subidx);
+      return ConstSubObject(master_, id_, idx_, subidx, is_rpdo_);
     }
 
    private:
     ConstObject(const BasicMaster* master, uint16_t idx)
-        : master_(master), idx_(idx) {}
+        : ConstObject(master, 0, idx, false) {}
+
+    ConstObject(const BasicMaster* master, uint8_t id, uint16_t idx,
+                bool is_rpdo)
+        : master_(master), idx_(idx), id_(id), is_rpdo_(is_rpdo) {}
 
     const BasicMaster* master_;
     uint16_t idx_;
+    uint8_t id_ : 7;
+    uint8_t is_rpdo_ : 1;
+  };
+
+  /**
+   * An accessor providing read-only access to TPDO-mapped objects in a remote
+   * object dictionary.
+   */
+  class RpdoMapped {
+    friend class BasicMaster;
+
+   public:
+    /**
+     * Returns an accessor object that provides read-only access to the
+     * specified RPDO-mapped object in the remote object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns an accessor object for a CANopen object in the remote object
+     * dictionary.
+     */
+    ConstObject operator[](uint16_t idx) const {
+      return ConstObject(master_, id_, idx, true);
+    }
+
+   private:
+    RpdoMapped(const BasicMaster* master, uint8_t id)
+        : master_(master), id_(id) {}
+
+    const BasicMaster* master_;
+    uint8_t id_;
+  };
+
+  /**
+   * A mutator providing read/write access to TPDO-mapped objects in a remote
+   * object dictionary.
+   */
+  class TpdoMapped {
+    friend class BasicMaster;
+
+   public:
+    /**
+     * Returns a mutator object that provides read/write access to the specified
+     * PDO-mapped object in the remote object dictionary. Note that this
+     * function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns a mutator object for a CANopen object in the remote object
+     * dictionary.
+     */
+    Object operator[](uint16_t idx) { return Object(master_, id_, idx); }
+
+    /**
+     * Returns an accessor object that provides read-only access to the
+     * specified TPDO-mapped object in the remote object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns an accessor object for a CANopen object in the remote object
+     * dictionary.
+     */
+    ConstObject operator[](uint16_t idx) const {
+      return ConstObject(master_, id_, idx, false);
+    }
+
+   private:
+    TpdoMapped(BasicMaster* master, uint8_t id) : master_(master), id_(id) {}
+
+    BasicMaster* master_;
+    uint8_t id_;
   };
 
   /**
@@ -413,6 +536,30 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * dictionary.
    */
   ConstObject operator[](uint16_t idx) const { return ConstObject(this, idx); }
+
+  /**
+   * Returns an accessor object that provides read-only access to RPDO-mapped
+   * objects in the remote object dictionary of the specified node. Note that
+   * this function succeeds even if no RPDO-mapped objects exist.
+   *
+   * @param id the node-ID.
+   *
+   * @returns an accessor object for RPDO-mapped objects in a remote object
+   * dictionary.
+   */
+  RpdoMapped RpdoMapped(uint8_t id) const { return {this, id}; }
+
+  /**
+   * Returns a mutator object that provides read/write access to TPDO-mapped
+   * objects in the remote object dictionary of the specified node. Note that
+   * this function succeeds even if no TPDO-mapped objects exist.
+   *
+   * @param id the node-ID.
+   *
+   * @returns a mutator object for TPDO-mapped objects in a remote object
+   * dictionary.
+   */
+  TpdoMapped TpdoMapped(uint8_t id) { return {this, id}; }
 
   /**
    * Returns true if the remote node is ready (i.e., the NMT `boot slave`
