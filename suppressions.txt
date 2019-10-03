@@ -1,4 +1,5 @@
 *:/usr/*
 *:include/lely/co/def/*
-shadowVar
+shadowArgument
+shadowVariable
 unreadVariable

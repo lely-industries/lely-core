@@ -2763,6 +2763,7 @@ co_gw_txt_lex_vs(const char *begin, const char *end, struct floc *at, char *s,
 	const char *cp = begin;
 
 	size_t n = 0;
+	// cppcheck-suppress nullPointerArithmetic
 	char *ends = s + (s && pn ? *pn : 0);
 
 	while ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp)) {
