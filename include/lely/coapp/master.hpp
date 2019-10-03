@@ -970,29 +970,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /**
    * The default implementation notifies all registered drivers.
    *
-   * @see Node::OnRpdo(), DriverBase::OnRpdo()
-   */
-  void OnRpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnRpdoError(), DriverBase::OnRpdoError()
-   */
-  void OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnTpdo(), DriverBase::OnTpdo()
-   */
-  void OnTpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
    * @see Node::OnSync(), DriverBase::OnSync()
    */
   void OnSync(uint8_t cnt, const time_point& t) noexcept override;
@@ -1123,32 +1100,6 @@ class AsyncMaster : public BasicMaster {
    * @see BasicMaster::OnConfig(), DriverBase::OnConfig()
    */
   void OnConfig(uint8_t id) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnRpdo(), DriverBase::OnRpdo()
-   */
-  void OnRpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnRpdoError(), DriverBase::OnRpdoError()
-   */
-  void OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnTpdo(), DriverBase::OnTpdo()
-   */
-  void OnTpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
 
   /**
    * The default implementation queues a notification for all registered

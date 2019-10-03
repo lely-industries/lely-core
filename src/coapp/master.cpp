@@ -269,32 +269,6 @@ BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
 }
 
 void
-BasicMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnRpdo(num, ec, p, n);
-  }
-}
-
-void
-BasicMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnRpdoError(num, eec, er);
-  }
-}
-
-void
-BasicMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnTpdo(num, ec, p, n);
-  }
-}
-
-void
 BasicMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
@@ -463,40 +437,6 @@ AsyncMaster::OnConfig(uint8_t id) noexcept {
       ConfigResult(id, ec);
     });
   });
-}
-
-void
-AsyncMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  ::std::array<uint8_t, CAN_MAX_LEN> value;
-  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
-                value.begin());
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post(
-        [=]() { driver->OnRpdo(num, ec, value.data(), value.size()); });
-  }
-}
-
-void
-AsyncMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post([=]() { driver->OnRpdoError(num, eec, er); });
-  }
-}
-
-void
-AsyncMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  ::std::array<uint8_t, CAN_MAX_LEN> value;
-  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
-                value.begin());
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post(
-        [=]() { driver->OnTpdo(num, ec, value.data(), value.size()); });
-  }
 }
 
 void
