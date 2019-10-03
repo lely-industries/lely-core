@@ -44,7 +44,7 @@ make_error_code(int errc = get_errc()) noexcept {
  * Throws an std::system_error exception corresponding to the specified or
  * current (thread-specific) native error number.
  */
-inline void
+[[noreturn]] inline void
 throw_errc(int errc = get_errc()) {
   throw ::std::system_error(errc, ::std::system_category());
 }
@@ -55,13 +55,13 @@ throw_errc(int errc = get_errc()) {
  * `what()` method of the resulting exception is guaranteed to contain
  * <b>what_arg</b> as a substring.
  */
-inline void
+[[noreturn]] inline void
 throw_errc(const ::std::string& what_arg, int errc = get_errc()) {
   throw ::std::system_error(errc, ::std::system_category(), what_arg);
 }
 
 /// @see lely::util::throw_errc(const ::std::string& what_arg, int errc)
-inline void
+[[noreturn]] inline void
 throw_errc(const char* what_arg, int errc = get_errc()) {
   throw ::std::system_error(errc, ::std::system_category(), what_arg);
 }
@@ -70,7 +70,7 @@ throw_errc(const char* what_arg, int errc = get_errc()) {
  * Throws an std::system_error exception corresponding to the specified
  * platform-independent error number.
  */
-inline void
+[[noreturn]] inline void
 throw_errnum(int errnum) {
   throw_errc(errnum2c(errnum));
 }
@@ -81,13 +81,13 @@ throw_errnum(int errnum) {
  * method of the resulting exception is guaranteed to contain <b>what_arg</b> as
  * a substring.
  */
-inline void
+[[noreturn]] inline void
 throw_errnum(const ::std::string& what_arg, int errnum) {
   throw_errc(what_arg, errnum2c(errnum));
 }
 
 /// @see lely::util::throw_errnum(const ::std::string& what_arg, int errnum)
-inline void
+[[noreturn]] inline void
 throw_errnum(const char* what_arg, int errnum) {
   throw_errc(what_arg, errnum2c(errnum));
 }
