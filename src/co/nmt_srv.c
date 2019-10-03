@@ -153,9 +153,6 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 {
 	assert(srv);
 
-	can_net_t *net = nmt ? co_nmt_get_net(nmt) : NULL;
-	co_dev_t *dev = nmt ? co_nmt_get_dev(nmt) : NULL;
-
 #ifndef LELY_NO_CO_LSS
 	if ((srv->set & ~set) & CO_NMT_SRV_LSS)
 		co_nmt_srv_fini_lss(srv);
@@ -179,30 +176,32 @@ co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set)
 		co_nmt_srv_fini_pdo(srv);
 #endif
 
+	if (nmt) {
+		can_net_t *net = co_nmt_get_net(nmt);
+		co_dev_t *dev = co_nmt_get_dev(nmt);
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)
-	if ((set & ~srv->set) & CO_NMT_SRV_PDO)
-		co_nmt_srv_init_pdo(srv, net, dev);
+		if ((set & ~srv->set) & CO_NMT_SRV_PDO)
+			co_nmt_srv_init_pdo(srv, net, dev);
 #endif
-	if ((set & ~srv->set) & CO_NMT_SRV_SDO)
-		co_nmt_srv_init_sdo(srv, net, dev);
+		if ((set & ~srv->set) & CO_NMT_SRV_SDO)
+			co_nmt_srv_init_sdo(srv, net, dev);
 #ifndef LELY_NO_CO_SYNC
-	if ((set & ~srv->set) & CO_NMT_SRV_SYNC)
-		co_nmt_srv_init_sync(srv, net, dev);
+		if ((set & ~srv->set) & CO_NMT_SRV_SYNC)
+			co_nmt_srv_init_sync(srv, net, dev);
 #endif
 #ifndef LELY_NO_CO_TIME
-	if ((set & ~srv->set) & CO_NMT_SRV_TIME)
-		co_nmt_srv_init_time(srv, net, dev);
+		if ((set & ~srv->set) & CO_NMT_SRV_TIME)
+			co_nmt_srv_init_time(srv, net, dev);
 #endif
 #ifndef LELY_NO_CO_EMCY
-	if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
-		co_nmt_srv_init_emcy(srv, net, dev);
+		if ((set & ~srv->set) & CO_NMT_SRV_EMCY)
+			co_nmt_srv_init_emcy(srv, net, dev);
 #endif
-#ifdef LELY_NO_CO_LSS
-	(void)nmt;
-#else
-	if ((set & ~srv->set) & CO_NMT_SRV_LSS)
-		co_nmt_srv_init_lss(srv, nmt);
+#ifndef LELY_NO_CO_LSS
+		if ((set & ~srv->set) & CO_NMT_SRV_LSS)
+			co_nmt_srv_init_lss(srv, nmt);
 #endif
+	}
 }
 
 #if !defined(LELY_NO_CO_RPDO) || !defined(LELY_NO_CO_TPDO)

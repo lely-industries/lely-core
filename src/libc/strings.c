@@ -3,7 +3,7 @@
  *
  * @see lely/libc/strings.h
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -56,6 +56,7 @@ static const int ffs_tab[] = {
 int
 ffs(int i)
 {
+	// cppcheck-suppress oppositeExpression
 	unsigned int x = i & -i;
 	// clang-format off
 	unsigned int n = x > UINT32_C(0x00ffffff)
