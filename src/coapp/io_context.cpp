@@ -59,6 +59,9 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   int OnNext(const timespec* tp) noexcept;
   int OnSend(const can_msg* msg) noexcept;
 
+  void OnCanState(io::CanState new_state, io::CanState old_state) noexcept;
+  void OnCanError(io::CanError error) noexcept;
+
   static const io_svc_vtbl svc_vtbl;
 
   IoContext* self{nullptr};
@@ -83,6 +86,9 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   util::BasicLockable* mutex{nullptr};
 
   unique_c_ptr<CANNet> net;
+
+  ::std::function<void(io::CanState, io::CanState)> on_can_state;
+  ::std::function<void(io::CanError)> on_can_error;
 };
 
 // clang-format off
@@ -107,6 +113,19 @@ IoContext::GetExecutor() const noexcept {
 io::ContextBase
 IoContext::GetContext() const noexcept {
   return impl_->ctx;
+}
+
+void
+IoContext::OnCanState(
+    ::std::function<void(io::CanState, io::CanState)> on_can_state) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_can_state = on_can_state;
+}
+
+void
+IoContext::OnCanError(::std::function<void(io::CanError)> on_can_error) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_can_error = on_can_error;
 }
 
 CANNet*
@@ -189,12 +208,12 @@ IoContext::Impl_::OnRead(int result, ::std::error_code) noexcept {
     } else if (!result) {
       if (err.state != state) {
         ::std::swap(err.state, state);
-        self->OnCanState(static_cast<io::CanState>(state),
-                         static_cast<io::CanState>(err.state));
+        OnCanState(static_cast<io::CanState>(state),
+                   static_cast<io::CanState>(err.state));
       }
       if (err.error != error) {
         error = err.error;
-        self->OnCanError(static_cast<io::CanError>(error));
+        OnCanError(static_cast<io::CanError>(error));
       }
     }
   }
@@ -223,6 +242,27 @@ IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
     return -1;
   }
   return 0;
+}
+
+void
+IoContext::Impl_::OnCanState(io::CanState new_state,
+                             io::CanState old_state) noexcept {
+  self->OnCanState(new_state, old_state);
+  if (on_can_state) {
+    auto f = on_can_state;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(new_state, old_state);
+  }
+}
+
+void
+IoContext::Impl_::OnCanError(io::CanError error) noexcept {
+  self->OnCanError(error);
+  if (on_can_error) {
+    auto f = on_can_error;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(error);
+  }
 }
 
 }  // namespace canopen

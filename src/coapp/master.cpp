@@ -50,6 +50,8 @@ struct BasicMaster::Impl_ {
   void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
 
   BasicMaster* self;
+  ::std::function<void(uint8_t, bool)> on_node_guarding;
+  ::std::function<void(uint8_t, NmtState, char, const ::std::string&)> on_boot;
   ::std::array<bool, CO_NUM_NODES> ready{{false}};
   ::std::map<uint8_t, Sdo> sdos;
 };
@@ -163,6 +165,21 @@ BasicMaster::Erase(DriverBase& driver) {
     CancelSdo(id);
     erase(id);
   }
+}
+
+void
+BasicMaster::OnNodeGuarding(
+    ::std::function<void(uint8_t, bool)> on_node_guarding) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_node_guarding = on_node_guarding;
+}
+
+void
+BasicMaster::OnBoot(
+    ::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
+        on_boot) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_boot = on_boot;
 }
 
 void
@@ -492,14 +509,26 @@ BasicMaster::Impl_::OnNgInd(CONMT* nmt, uint8_t id, int state,
   // OnSt().
   if (reason != CO_NMT_EC_TIMEOUT) return;
   // Notify the implementation.
-  self->OnNodeGuarding(id, state == CO_NMT_EC_OCCURRED);
+  bool occurred = state == CO_NMT_EC_OCCURRED;
+  self->OnNodeGuarding(id, occurred);
+  if (on_node_guarding) {
+    auto f = on_node_guarding;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(id, occurred);
+  }
 }
 
 void
 BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st,
                               char es) noexcept {
   if (id && id <= CO_NUM_NODES && (!es || es == 'L')) ready[id - 1] = true;
-  self->OnBoot(id, static_cast<NmtState>(st), es, es ? co_nmt_es2str(es) : "");
+  ::std::string what = es ? co_nmt_es2str(es) : "";
+  self->OnBoot(id, static_cast<NmtState>(st), es, what);
+  if (on_boot) {
+    auto f = on_boot;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(id, static_cast<NmtState>(st), es, what);
+  }
 }
 
 void
