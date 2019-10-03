@@ -592,6 +592,54 @@ when_any(ev_exec_t* exec, Futures&&... futures) {
 }
 
 /**
+ * Creates a shared state of type `#lely::util::Result<void, E>` that is
+ * immediately ready, with a successful result, then returns a future associated
+ * with that shared state.
+ *
+ * @see make_ready_future(), make_error_future()
+ */
+template <class E = ::std::error_code>
+inline Future<void, E>
+make_empty_future() {
+  Promise<void, E> p;
+  p.set(util::success());
+  return p.get_future();
+}
+
+/**
+ * Creates a shared state of type `#lely::util::Result<V, E>` that is
+ * immediately ready, with a successul result constructed from
+ * `std::forward<T>(value)`, then returns a future associated with that shared
+ * state.
+ *
+ * @see make_ready_future(), make_error_future()
+ */
+template <class T, class E = ::std::error_code,
+          class V = typename ::std::decay<T>::type>
+inline Future<V, E>
+make_ready_future(T&& value) {
+  Promise<V, E> p;
+  p.set(util::success(::std::forward<T>(value)));
+  return p.get_future();
+}
+
+/**
+ * Creates a shared state of type `#lely::util::Result<T, V>` that is
+ * immediately ready, with a failure result constructed from
+ * `std::forward<E>(error)`, then returns a future associated with that shared
+ * state.
+ *
+ * @see make_ready_future(), make_error_future()
+ */
+template <class T, class E, class V = typename ::std::decay<E>::type>
+inline Future<T, V>
+make_error_future(E&& error) {
+  Promise<T, V> p;
+  p.set(util::failure(::std::forward<E>(error)));
+  return p.get_future();
+}
+
+/**
  * Creates a task containing a Callable and its arguments, submits it for
  * execution to the specified executor and returns a future that will eventually
  * hold the result (or the exception, if thrown) of the invocation.
