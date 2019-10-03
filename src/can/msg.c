@@ -214,6 +214,7 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	int r, t = 0;
 
 	if (msg->flags & CAN_FLAG_IDE)
+		// cppcheck-suppress nullPointer symbolName=s
 		r = snprintf(s, n, "%08" PRIX32, msg->id & CAN_MASK_EID);
 	else
 		// cppcheck-suppress nullPointer symbolName=s
