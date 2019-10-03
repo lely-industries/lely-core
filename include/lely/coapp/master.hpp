@@ -754,13 +754,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
             const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
-    ev::Future<T> f;
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      f = sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
+      return sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
+    } else {
+      return ev::make_error_future<T, ::std::error_code>(SdoErrc::NO_SDO);
     }
-    return f;
   }
 
   /**
@@ -799,14 +799,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
              T&& value, const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
-    ev::Future<void> f;
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      f = sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
+      return sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
                                 timeout);
+    } else {
+      return ev::make_error_future<void, ::std::error_code>(SdoErrc::NO_SDO);
     }
-    return f;
   }
 
   /**
