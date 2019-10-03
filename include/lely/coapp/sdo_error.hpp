@@ -177,6 +177,50 @@ const ::std::error_category& SdoCategory() noexcept;
 /// Creates an error condition corresponding to an SDO abort code.
 ::std::error_condition make_error_condition(SdoErrc e) noexcept;
 
+/**
+ * Throws a #lely::canopen::SdoError with the specified attributes if <b>ec</b>
+ * is an SDO error (`ec.category() == SdoCategory()`), or an std::system_error
+ * if not.
+ */
+[[noreturn]] inline void
+throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+                ::std::error_code ec) {
+  if (ec.category() == SdoCategory())
+    throw SdoError(netid, id, idx, subidx, ec);
+  else
+    throw ::std::system_error(ec);
+}
+
+/**
+ * Throws a #lely::canopen::SdoError with the specified attributes if <b>ec</b>
+ * is an SDO error (`ec.category() == SdoCategory()`), or an std::system_error
+ * if not. The string returned by the `what()` method of the resulting exception
+ * is guaranteed to contain <b>what_arg</b> as a substring.
+ */
+[[noreturn]] inline void
+throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+                ::std::error_code ec, const ::std::string& what_arg) {
+  if (ec.category() == SdoCategory())
+    throw SdoError(netid, id, idx, subidx, ec, what_arg);
+  else
+    throw ::std::system_error(ec, what_arg);
+}
+
+/**
+ * Throws a #lely::canopen::SdoError with the specified attributes if <b>ec</b>
+ * is an SDO error (`ec.category() == SdoCategory()`), or an std::system_error
+ * if not. The string returned by the `what()` method of the resulting exception
+ * is guaranteed to contain <b>what_arg</b> as a substring.
+ */
+[[noreturn]] inline void
+throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+                ::std::error_code ec, const char* what_arg) {
+  if (ec.category() == SdoCategory())
+    throw SdoError(netid, id, idx, subidx, ec, what_arg);
+  else
+    throw ::std::system_error(ec, what_arg);
+}
+
 }  // namespace canopen
 
 }  // namespace lely
