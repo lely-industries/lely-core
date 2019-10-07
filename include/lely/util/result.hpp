@@ -370,6 +370,10 @@ class Result<void, E> {
 
   Result() = default;
 
+  Result(const detail::Success<void>&) {}
+
+  Result(detail::Success<void>&&) {}
+
   template <class U>
   Result(const detail::Failure<U>& f) : error_{f.error()} {}
 

@@ -232,7 +232,7 @@ class AsyncTask<Invoker, typename ::std::enable_if<!is_future<
                                auto self = static_cast<AsyncTask*>(task);
                                auto promise = ::std::move(self->promise_);
                                if (ev_promise_set_acquire(promise)) {
-                                 self->result_ = self->invoker_();
+                                 self->result_ = catch_result(self->invoker_);
                                  ev_promise_set_release(
                                      promise, ::std::addressof(self->result_));
                                }
