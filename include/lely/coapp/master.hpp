@@ -507,7 +507,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void
   SubmitRead(uint8_t id, SdoUploadRequest<T>& req) {
     ::std::error_code ec;
-    SubmitRead<T>(id, req, ec);
+    SubmitRead(id, req, ec);
     if (ec) throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitRead");
   }
 
@@ -528,7 +528,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      sdo->SubmitUpload<T>(req);
+      sdo->SubmitUpload(req);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -601,7 +601,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      sdo->SubmitUpload(exec, idx, subidx, ::std::forward<F>(con), timeout);
+      sdo->SubmitUpload<T>(exec, idx, subidx, ::std::forward<F>(con), timeout);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -616,7 +616,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void
   SubmitWrite(uint8_t id, SdoDownloadRequest<T>& req) {
     ::std::error_code ec;
-    SubmitWrite<T>(id, req, ec);
+    SubmitWrite(id, req, ec);
     if (ec) throw SdoError(netid(), id, req.idx, req.subidx, ec, "SubmitWrite");
   }
 
@@ -637,7 +637,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      sdo->SubmitDownload<T>(req);
+      sdo->SubmitDownload(req);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -652,8 +652,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void
   SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
               T&& value, F&& con) {
-    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
-                   ::std::forward<F>(con), GetTimeout());
+    SubmitWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                ::std::forward<F>(con), GetTimeout());
   }
 
   /**
@@ -665,8 +665,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void
   SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
               T&& value, F&& con, ::std::error_code& ec) {
-    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
-                   ::std::forward<F>(con), GetTimeout(), ec);
+    SubmitWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                ::std::forward<F>(con), GetTimeout(), ec);
   }
 
   /**
@@ -679,8 +679,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
               T&& value, F&& con, const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
-    SubmitWrite<T>(exec, id, idx, subidx, ::std::forward<T>(value),
-                   ::std::forward<F>(con), timeout, ec);
+    SubmitWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                ::std::forward<F>(con), timeout, ec);
     if (ec) throw SdoError(netid(), id, idx, subidx, ec, "SubmitWrite");
   }
 
