@@ -537,7 +537,7 @@ class BasicDriver : private DriverBase {
    * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
-  ev::Future<T>
+  ev::Future<T, ::std::exception_ptr>
   AsyncRead(uint16_t idx, uint8_t subidx) {
     return master.AsyncRead<T>(GetExecutor(), id(), idx, subidx);
   }
@@ -554,11 +554,10 @@ class BasicDriver : private DriverBase {
    *                #SdoErrc::TIMEOUT.
    *
    * @returns a future which holds the received value on success and the SDO
-   * abort code on failure. Note that if the client-SDO service is not
-   * available, the returned future is invalid.
+   * error on failure.
    */
   template <class T>
-  ev::Future<T>
+  ev::Future<T, ::std::exception_ptr>
   AsyncRead(uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
     return master.AsyncRead<T>(GetExecutor(), id(), idx, subidx, timeout);
@@ -571,7 +570,7 @@ class BasicDriver : private DriverBase {
    * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
-  ev::Future<void>
+  ev::Future<void, ::std::exception_ptr>
   AsyncWrite(uint16_t idx, uint8_t subidx, T&& value) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,
                              ::std::forward<T>(value));
@@ -589,11 +588,10 @@ class BasicDriver : private DriverBase {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which holds the SDO abort code on failure. Note that if
-   * the client-SDO service is not available, the returned future is invalid.
+   * @returns a future which holds the SDO error on failure.
    */
   template <class T>
-  ev::Future<void>
+  ev::Future<void, ::std::exception_ptr>
   AsyncWrite(uint16_t idx, uint8_t subidx, T&& value,
              const ::std::chrono::milliseconds& timeout) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,
@@ -858,7 +856,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
  protected:
   template <class T>
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
-  Wait(ev::Future<T> f, ::std::error_code& ec) {
+  Wait(ev::Future<T, ::std::exception_ptr> f, ::std::error_code& ec) {
     GetLoop().wait(f, ec);
     if (!f.is_ready()) {
       ec = ::std::make_error_code(::std::errc::resource_unavailable_try_again);
@@ -869,23 +867,32 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
       ec.clear();
       return result.value();
     } else {
-      ec = result.error();
+      try {
+        ::std::rethrow_exception(result.error());
+      } catch (const ::std::system_error& e) {
+        ec = e.code();
+      }
       return T{};
     }
   }
 
   void
-  Wait(ev::Future<void> f, ::std::error_code& ec) {
+  Wait(ev::Future<void, ::std::exception_ptr> f, ::std::error_code& ec) {
     GetLoop().wait(f, ec);
     if (!f.is_ready()) {
       ec = ::std::make_error_code(::std::errc::resource_unavailable_try_again);
       return;
     }
     auto& result = f.get();
-    if (result.has_value())
+    if (result.has_value()) {
       ec.clear();
-    else
-      ec = result.error();
+    } else {
+      try {
+        ::std::rethrow_exception(result.error());
+      } catch (const ::std::system_error& e) {
+        ec = e.code();
+      }
+    }
   }
 
  private:

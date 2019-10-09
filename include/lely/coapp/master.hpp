@@ -726,7 +726,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  ev::Future<T>
+  ev::Future<T, ::std::exception_ptr>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx) {
     return AsyncRead<T>(exec, id, idx, subidx, GetTimeout());
   }
@@ -745,11 +745,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *                #SdoErrc::TIMEOUT.
    *
    * @returns a future which holds the received value on success and the SDO
-   * abort code on failure. Note that if the client-SDO service is not
-   * available, the returned future is invalid.
+   * error on failure.
    */
   template <class T>
-  ev::Future<T>
+  ev::Future<T, ::std::exception_ptr>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -759,7 +758,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
       SetTime();
       return sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
     } else {
-      return ev::make_error_future<T, ::std::error_code>(SdoErrc::NO_SDO);
+      return ev::make_error_future<void>(make_sdo_exception_ptr(
+          id, idx, subidx, SdoErrc::NO_SDO, "AsyncWrite"));
     }
   }
 
@@ -769,7 +769,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  ev::Future<void>
+  ev::Future<void, ::std::exception_ptr>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value) {
     return AsyncWrite(exec, id, idx, subidx, ::std::forward<T>(value),
@@ -790,11 +790,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *                the client aborts the transfer with abort code
    *                #SdoErrc::TIMEOUT.
    *
-   * @returns a future which holds the SDO abort code on failure. Note that if
-   * the client-SDO service is not available, the returned future is invalid.
+   * @returns a future which holds the SDO error on failure.
    */
   template <class T>
-  ev::Future<void>
+  ev::Future<void, ::std::exception_ptr>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value, const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -805,7 +804,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
       return sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
                                    timeout);
     } else {
-      return ev::make_error_future<void, ::std::error_code>(SdoErrc::NO_SDO);
+      return ev::make_error_future<void>(make_sdo_exception_ptr(
+          id, idx, subidx, SdoErrc::NO_SDO, "AsyncWrite"));
     }
   }
 
