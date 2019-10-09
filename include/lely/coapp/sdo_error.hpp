@@ -118,7 +118,7 @@ enum class SdoErrc : uint32_t {
 };
 
 /// The type of exception thrown when an SDO abort code is received.
-class SdoError : public ::std::runtime_error {
+class SdoError : public ::std::system_error {
  public:
   SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
            ::std::error_code ec);
@@ -126,9 +126,11 @@ class SdoError : public ::std::runtime_error {
            ::std::error_code ec, const ::std::string& what_arg);
   SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
            ::std::error_code ec, const char* what_arg);
+  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev);
+  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+           const std::string& what_arg);
   SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev,
            const char* what_arg);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev);
 
   /// Returns the network-ID.
   uint8_t
@@ -154,18 +156,11 @@ class SdoError : public ::std::runtime_error {
     return subidx_;
   }
 
-  /// Returns the stored error code.
-  const ::std::error_code&
-  code() const noexcept {
-    return ec_;
-  }
-
  private:
   uint8_t netid_{0};
   uint8_t id_{0};
   uint16_t idx_{0};
   uint8_t subidx_{0};
-  ::std::error_code ec_;
 };
 
 /// Returns a reference to the error category object for SDO abort codes.

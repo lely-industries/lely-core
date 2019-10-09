@@ -127,30 +127,31 @@ SdoWhat(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
 
 SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec)),
+    : ::std::system_error(ec, SdoWhat(netid, id, idx, subidx, ec)),
       netid_(netid),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
 
 SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec, const ::std::string& what_arg)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec, what_arg)),
+    : ::std::system_error(ec, SdoWhat(netid, id, idx, subidx, ec, what_arg)),
       netid_(netid),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
 
 SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec, const char* what_arg)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec, what_arg)),
+    : ::std::system_error(ec, SdoWhat(netid, id, idx, subidx, ec, what_arg)),
       netid_(netid),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
+
+SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+                   int ev)
+    : SdoError(netid, id, idx, subidx, ::std::error_code(ev, SdoCategory())) {}
 
 SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
                    int ev, const char* what_arg)
@@ -158,8 +159,9 @@ SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
                what_arg) {}
 
 SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-                   int ev)
-    : SdoError(netid, id, idx, subidx, ::std::error_code(ev, SdoCategory())) {}
+                   int ev, const ::std::string& what_arg)
+    : SdoError(netid, id, idx, subidx, ::std::error_code(ev, SdoCategory()),
+               what_arg) {}
 
 const ::std::error_category&
 SdoCategory() noexcept {
