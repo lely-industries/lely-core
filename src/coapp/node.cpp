@@ -125,8 +125,7 @@ void
 Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms) {
   ::std::error_code ec;
   ConfigHeartbeat(id, ms, ec);
-  if (ec)
-    throw SdoError(netid(), Device::id(), 0x1016, 0, ec, "ConfigHeartbeat");
+  if (ec) throw SdoError(Device::id(), 0x1016, 0, ec, "ConfigHeartbeat");
 }
 
 void

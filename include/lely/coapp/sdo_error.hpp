@@ -120,23 +120,16 @@ enum class SdoErrc : uint32_t {
 /// The type of exception thrown when an SDO abort code is received.
 class SdoError : public ::std::system_error {
  public:
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-           ::std::error_code ec);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-           ::std::error_code ec, const ::std::string& what_arg);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-           ::std::error_code ec, const char* what_arg);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev,
-           const std::string& what_arg);
-  SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec);
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+           const ::std::string& what_arg);
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
            const char* what_arg);
-
-  /// Returns the network-ID.
-  uint8_t
-  netid() const noexcept {
-    return netid_;
-  }
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev);
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+           const std::string& what_arg);
+  SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+           const char* what_arg);
 
   /// Returns the node-ID.
   uint8_t
@@ -157,7 +150,6 @@ class SdoError : public ::std::system_error {
   }
 
  private:
-  uint8_t netid_{0};
   uint8_t id_{0};
   uint16_t idx_{0};
   uint8_t subidx_{0};
@@ -178,10 +170,10 @@ const ::std::error_category& SdoCategory() noexcept;
  * if not.
  */
 [[noreturn]] inline void
-throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+throw_sdo_error(uint8_t id, uint16_t idx, uint8_t subidx,
                 ::std::error_code ec) {
   if (ec.category() == SdoCategory())
-    throw SdoError(netid, id, idx, subidx, ec);
+    throw SdoError(id, idx, subidx, ec);
   else
     throw ::std::system_error(ec);
 }
@@ -193,10 +185,10 @@ throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
  * is guaranteed to contain <b>what_arg</b> as a substring.
  */
 [[noreturn]] inline void
-throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-                ::std::error_code ec, const ::std::string& what_arg) {
+throw_sdo_error(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+                const ::std::string& what_arg) {
   if (ec.category() == SdoCategory())
-    throw SdoError(netid, id, idx, subidx, ec, what_arg);
+    throw SdoError(id, idx, subidx, ec, what_arg);
   else
     throw ::std::system_error(ec, what_arg);
 }
@@ -208,10 +200,10 @@ throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
  * is guaranteed to contain <b>what_arg</b> as a substring.
  */
 [[noreturn]] inline void
-throw_sdo_error(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-                ::std::error_code ec, const char* what_arg) {
+throw_sdo_error(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+                const char* what_arg) {
   if (ec.category() == SdoCategory())
-    throw SdoError(netid, id, idx, subidx, ec, what_arg);
+    throw SdoError(id, idx, subidx, ec, what_arg);
   else
     throw ::std::system_error(ec, what_arg);
 }

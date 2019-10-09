@@ -124,7 +124,7 @@ typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(Read<T>(idx, subidx, ec));
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Read");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Read");
   return value;
 }
 
@@ -151,7 +151,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
 }
 
 template <class T>
@@ -175,7 +175,7 @@ typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
 }
 
 template <class T>
@@ -334,7 +334,7 @@ void
 Device::Write(uint16_t idx, uint8_t subidx, const char* value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -347,7 +347,7 @@ void
 Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -371,7 +371,7 @@ void
 Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
   ::std::error_code ec;
   Write(idx, subidx, p, n, ec);
-  if (ec) throw SdoError(netid(), id(), idx, subidx, ec, "Write");
+  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -398,7 +398,7 @@ const ::std::type_info&
 Device::Type(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto& ti = Type(idx, subidx, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Type");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Type");
   return ti;
 }
 
@@ -468,7 +468,7 @@ typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = Get<T>(idx, subidx, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Get");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Get");
   return value;
 }
 
@@ -505,7 +505,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
 }
 
 template <class T>
@@ -521,7 +521,7 @@ typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
 }
 
 template <class T>
@@ -670,7 +670,7 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const char* value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void
@@ -683,7 +683,7 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void
@@ -696,7 +696,7 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
   ::std::error_code ec;
   Set(idx, subidx, p, n, ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void

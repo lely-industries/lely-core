@@ -730,7 +730,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   RunRead(uint16_t idx, uint8_t subidx) {
     ::std::error_code ec;
     auto result = RunRead<T>(idx, subidx, ec);
-    if (ec) throw_sdo_error(netid(), id(), idx, subidx, ec, "RunRead");
+    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunRead");
     return result;
   }
 
@@ -757,7 +757,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
           const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
     auto result = RunRead<T>(idx, subidx, timeout, ec);
-    if (ec) throw_sdo_error(netid(), id(), idx, subidx, ec, "RunRead");
+    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunRead");
     return result;
   }
 
@@ -793,7 +793,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   RunWrite(uint16_t idx, uint8_t subidx, T&& value) {
     ::std::error_code ec;
     RunWrite(idx, subidx, ::std::forward<T>(value), ec);
-    if (ec) throw_sdo_error(netid(), id(), idx, subidx, ec, "RunWrite");
+    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunWrite");
   }
 
   /**
@@ -819,7 +819,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
            const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
     RunWrite(idx, subidx, ::std::forward<T>(value), timeout, ec);
-    if (ec) throw_sdo_error(netid(), id(), idx, subidx, ec, "RunWrite");
+    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunWrite");
   }
 
   /**
