@@ -188,9 +188,10 @@ inline typename ::std::enable_if<!::std::is_void<R>::value,
                                  util::Result<R, ::std::exception_ptr>>::type
 catch_result(F&& f, Args&&... args) {
   try {
-    return compat::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
+    return util::success(
+        compat::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...));
   } catch (...) {
-    return ::std::current_exception();
+    return util::failure(::std::current_exception());
   }
 }
 
@@ -200,9 +201,9 @@ inline typename ::std::enable_if<::std::is_void<R>::value,
 catch_result(F&& f, Args&&... args) {
   try {
     compat::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
-    return nullptr;
+    return util::success();
   } catch (...) {
-    return ::std::current_exception();
+    return util::failure(::std::current_exception());
   }
 }
 
