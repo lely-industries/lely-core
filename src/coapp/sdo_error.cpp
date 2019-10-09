@@ -175,6 +175,46 @@ make_error_condition(SdoErrc e) noexcept {
   return {static_cast<int>(e), SdoCategory()};
 }
 
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec));
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec,
+                       const ::std::string& what_arg) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec, what_arg));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec, what_arg));
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec, const char* what_arg) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec, what_arg));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec, what_arg));
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
 }  // namespace canopen
 
 }  // namespace lely

@@ -165,6 +165,49 @@ const ::std::error_category& SdoCategory() noexcept;
 ::std::error_condition make_error_condition(SdoErrc e) noexcept;
 
 /**
+ * Creates an `std::exception_ptr` that holds a reference to a
+ * #lely::canopen::SdoError with the specified attributes if <b>ec</b> is an SDO
+ * error (`ec.category() == SdoCategory()`), or to an std::system_error if not.
+ *
+ * @returns an instance of `std::exception_ptr` holding a reference to the newly
+ * created exception object, or to an instance of `std::bad_alloc` or
+ * `std::bad_exception` if an exception was thrown during the construction of
+ * the exception object.
+ */
+::std::exception_ptr make_sdo_exception_ptr(uint8_t id, uint16_t idx,
+                                            uint8_t subidx,
+                                            ::std::error_code ec) noexcept;
+
+/**
+ * Creates an `std::exception_ptr` that holds a reference to a
+ * #lely::canopen::SdoError with the specified attributes if <b>ec</b> is an SDO
+ * error (`ec.category() == SdoCategory()`), or to an std::system_error if not.
+ *
+ * @returns an instance of `std::exception_ptr` holding a reference to the newly
+ * created exception object, or to an instance of `std::bad_alloc` or
+ * `std::bad_exception` if an exception was thrown during the construction of
+ * the exception object.
+ */
+::std::exception_ptr make_sdo_exception_ptr(
+    uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+    const ::std::string& what_arg) noexcept;
+
+/**
+ * Creates an `std::exception_ptr` that holds a reference to a
+ * #lely::canopen::SdoError with the specified attributes if <b>ec</b> is an SDO
+ * error (`ec.category() == SdoCategory()`), or to an std::system_error if not.
+ *
+ * @returns an instance of `std::exception_ptr` holding a reference to the newly
+ * created exception object, or to an instance of `std::bad_alloc` or
+ * `std::bad_exception` if an exception was thrown during the construction of
+ * the exception object.
+ */
+::std::exception_ptr make_sdo_exception_ptr(uint8_t id, uint16_t idx,
+                                            uint8_t subidx,
+                                            ::std::error_code ec,
+                                            const char* what_arg) noexcept;
+
+/**
  * Throws a #lely::canopen::SdoError with the specified attributes if <b>ec</b>
  * is an SDO error (`ec.category() == SdoCategory()`), or an std::system_error
  * if not.
