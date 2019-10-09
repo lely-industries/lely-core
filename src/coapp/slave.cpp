@@ -86,7 +86,7 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
                    ::std::function<OnReadSignature<T>> ind) {
   ::std::error_code ec;
   OnRead<T>(idx, subidx, ::std::move(ind), ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec);
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec);
 }
 
 namespace {
@@ -164,7 +164,7 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
                     ::std::function<OnWriteSignature<T>> ind) {
   ::std::error_code ec;
   OnWrite<T>(idx, subidx, ::std::move(ind), ec);
-  if (ec) throw SdoError(impl_->netid(), impl_->id(), idx, subidx, ec);
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec);
 }
 
 namespace {

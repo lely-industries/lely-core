@@ -111,12 +111,12 @@ SdoErrcCategory::default_error_condition(int ev) const noexcept {
 }
 
 ::std::string
-SdoWhat(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-        ::std::error_code ec, const ::std::string& what_arg = "") {
+SdoWhat(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+        const ::std::string& what_arg = "") {
   ::std::stringstream ss;
   ss << ::std::uppercase << ::std::setfill('0') << ::std::hex;
   if (!what_arg.empty()) ss << what_arg << ':';
-  ss << ::std::setw(2) << int(netid) << ':' << int(id) << ':';
+  ss << ::std::setw(2) << int(id) << ':';
   ss << ::std::setw(4) << idx << ':' << ::std::setw(2) << int(subidx) << ": ";
   ss << ec.message();
   ss << " (" << ::std::setw(8) << uint32_t(ec.value()) << ')';
@@ -125,41 +125,39 @@ SdoWhat(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
 
 }  // namespace
 
-SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec)),
-      netid_(netid),
+    : ::std::system_error(ec, SdoWhat(id, idx, subidx, ec)),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
 
-SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec, const ::std::string& what_arg)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec, what_arg)),
-      netid_(netid),
+    : ::std::system_error(ec, SdoWhat(id, idx, subidx, ec, what_arg)),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
 
-SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx,
                    ::std::error_code ec, const char* what_arg)
-    : ::std::runtime_error(SdoWhat(netid, id, idx, subidx, ec, what_arg)),
-      netid_(netid),
+    : ::std::system_error(ec, SdoWhat(id, idx, subidx, ec, what_arg)),
       id_(id),
       idx_(idx),
-      subidx_(subidx),
-      ec_(ec) {}
+      subidx_(subidx) {}
 
-SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-                   int ev, const char* what_arg)
-    : SdoError(netid, id, idx, subidx, ::std::error_code(ev, SdoCategory()),
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev)
+    : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory())) {}
+
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+                   const char* what_arg)
+    : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory()),
                what_arg) {}
 
-SdoError::SdoError(uint8_t netid, uint8_t id, uint16_t idx, uint8_t subidx,
-                   int ev)
-    : SdoError(netid, id, idx, subidx, ::std::error_code(ev, SdoCategory())) {}
+SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
+                   const ::std::string& what_arg)
+    : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory()),
+               what_arg) {}
 
 const ::std::error_category&
 SdoCategory() noexcept {
@@ -175,6 +173,46 @@ make_error_code(SdoErrc e) noexcept {
 ::std::error_condition
 make_error_condition(SdoErrc e) noexcept {
   return {static_cast<int>(e), SdoCategory()};
+}
+
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec));
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec,
+                       const ::std::string& what_arg) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec, what_arg));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec, what_arg));
+  } catch (...) {
+    return ::std::current_exception();
+  }
+}
+
+::std::exception_ptr
+make_sdo_exception_ptr(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec, const char* what_arg) noexcept {
+  try {
+    if (ec.category() == SdoCategory())
+      return ::std::make_exception_ptr(SdoError(id, idx, subidx, ec, what_arg));
+    else
+      return ::std::make_exception_ptr(::std::system_error(ec, what_arg));
+  } catch (...) {
+    return ::std::current_exception();
+  }
 }
 
 }  // namespace canopen

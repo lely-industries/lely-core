@@ -363,7 +363,7 @@ class Sdo {
    * available during the lifetime of the queue.
    *
    * @param sdo a pointer to a CANopen Client-SDO service (from
-                <lely/co/csdo.hpp>).
+   *            <lely/co/csdo.hpp>).
    */
   Sdo(COCSDO* sdo);
 
@@ -492,13 +492,16 @@ class Sdo {
    */
   template <class T, class U = typename ::std::decay<T>::type>
   typename ::std::enable_if<detail::is_canopen_type<U>::value,
-                            ev::Future<void>>::type
+                            ev::Future<void, ::std::exception_ptr>>::type
   AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
                 const ::std::chrono::milliseconds& timeout = {}) {
-    ev::Promise<void> p;
+    ev::Promise<void, ::std::exception_ptr> p;
     SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
-                   [p](uint8_t, uint16_t, uint8_t,
-                       ::std::error_code ec) mutable { p.set(ec); },
+                   [p](uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code ec) mutable {
+                     p.set(util::failure(make_sdo_exception_ptr(
+                         id, idx, subidx, ec, "AsyncDownload")));
+                   },
                    timeout);
     return p.get_future();
   }
@@ -520,19 +523,20 @@ class Sdo {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_type<T>::value,
-                            ev::Future<T>>::type
+                            ev::Future<T, ::std::exception_ptr>>::type
   AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
               const ::std::chrono::milliseconds& timeout = {}) {
-    ev::Promise<T> p;
-    SubmitUpload<T>(
-        exec, idx, subidx,
-        [p](uint8_t, uint16_t, uint8_t, ::std::error_code ec, T value) mutable {
-          if (ec)
-            p.set(ec);
-          else
-            p.set(::std::move(value));
-        },
-        timeout);
+    ev::Promise<T, ::std::exception_ptr> p;
+    SubmitUpload<T>(exec, idx, subidx,
+                    [p](uint8_t id, uint16_t idx, uint8_t subidx,
+                        ::std::error_code ec, T value) mutable {
+                      if (ec)
+                        p.set(util::failure(make_sdo_exception_ptr(
+                            id, idx, subidx, ec, "AsyncUpload")));
+                      else
+                        p.set(util::success(::std::move(value)));
+                    },
+                    timeout);
     return p.get_future();
   }
 
