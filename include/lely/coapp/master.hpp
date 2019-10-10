@@ -1019,6 +1019,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
                   io::CanState old_state) noexcept override;
 
   /**
+   * The default implementation notifies the driver registered for node
+   * <b>id</b>.
+   *
+   * @see Device::OnRpdoWrite(), DriverBase::OnRpdoWrite()
+   */
+  void OnRpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) noexcept override;
+
+  /**
    * The default implementation notifies all registered drivers. Unless the
    * master enters the pre-operational or operational state, all ongoing and
    * pending SDO requests are aborted.
@@ -1214,6 +1222,14 @@ class AsyncMaster : public BasicMaster {
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
+
+  /**
+   * The default implementation queues a notification for the driver registered
+   * for node <b>id</b>.
+   *
+   * @see Device::OnRpdoWrite(), DriverBase::OnRpdoWrite()
+   */
+  void OnRpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) noexcept override;
 
   /**
    * The default implementation queues a notification for all registered

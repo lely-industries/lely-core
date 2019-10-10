@@ -71,6 +71,16 @@ class DriverBase {
    */
   virtual void OnCanError(io::CanError error) noexcept = 0;
 
+  /*
+   * The function invoked when a value is successfully written to an RPDO-mapped
+   * object in the local object dictionary by a Receive-PDO (or SDO download)
+   * request.
+   *
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   */
+  virtual void OnRpdoWrite(uint16_t idx, uint8_t subidx) noexcept = 0;
+
   /**
    * The function invoked when an NMT state change occurs on the master.
    *
@@ -567,6 +577,9 @@ class BasicDriver : DriverBase {
 
   void
   OnCanError(io::CanError /*error*/) noexcept override {}
+
+  void
+  OnRpdoWrite(uint16_t /*idx*/, uint8_t /*subidx*/) noexcept override {}
 
   void
   OnCommand(NmtCommand /*cs*/) noexcept override {}

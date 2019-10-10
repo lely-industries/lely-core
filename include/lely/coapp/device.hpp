@@ -26,6 +26,7 @@
 #include <lely/coapp/sdo_error.hpp>
 #include <lely/util/mutex.hpp>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <typeinfo>
@@ -61,10 +62,7 @@ class Device {
          uint8_t id = 0xff, util::BasicLockable* mutex = nullptr);
 
   Device(const Device&) = delete;
-  Device(Device&&) = default;
-
   Device& operator=(const Device&) = delete;
-  Device& operator=(Device&&);
 
   /// Returns the network-ID.
   uint8_t netid() const noexcept;
@@ -367,6 +365,26 @@ class Device {
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
       uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /*
+   * Registers the function to be invoked when a value is successfully written
+   * to the local object dictionary by an SDO download (or Receive-PDO) request.
+   * Only a single function can be registered at any one time. If
+   * <b>on_write</b> contains a callable function target, a copy of the target
+   * is invoked _after_ OnWrite(uint16_t, uint8_t) completes.
+   */
+  void OnWrite(::std::function<void(uint16_t, uint8_t)> on_write);
+
+  /*
+   * Registers the function to be invoked when a value is successfully written
+   * to an RPDO-mapped object in the local object dictionary by a Receive-PDO
+   * (or SDO download). Only a single function can be registered at any one
+   * time. If <b>on_tpdo_write</b> contains a callable function target, a copy
+   * of the target is invoked _after_ OnRpdoWrite(uint8_t, uint16_t, uint8_t)
+   * completes.
+   */
+  void OnRpdoWrite(
+      ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write);
 
  protected:
   ~Device();
@@ -734,6 +752,31 @@ class Device {
    * mapping).
    */
   void UpdateTpdoMapping();
+
+  /*
+   * The function invoked when a value is successfully written to the local
+   * object dictionary by an SDO download (or Receive-PDO) request.
+   *
+   * @param idx    the object index (in the range [0x2000..0xBFFF]).
+   * @param subidx the object sub-index.
+   */
+  virtual void
+  OnWrite(uint16_t /*idx*/, uint8_t /*subidx*/) noexcept {}
+
+  /*
+   * The function invoked when a value is successfully written to an RPDO-mapped
+   * object in the local object dictionary by a Receive-PDO (or SDO download)
+   * request.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @pre a valid mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
+   */
+  virtual void
+  OnRpdoWrite(uint8_t /*id*/, uint16_t /*idx*/, uint8_t /*subidx*/) noexcept {}
 
  private:
   struct Impl_;

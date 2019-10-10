@@ -195,7 +195,7 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
   void OnState(::std::function<void(uint8_t, NmtState)> on_state);
 
   /**
-   * Registers the function to be invoked when a Receive-PDO is processed .Only
+   * Registers the function to be invoked when a Receive-PDO is processed. Only
    * a single function can be registered at any one time. If <b>on_rpdo</b>
    * contains a callable function target, a copy of the target is invoked
    * _after_ OnRpdo(int, ::std::error_code, const void*, ::std::size_t)
