@@ -817,40 +817,41 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 	sub->dn_data = ind ? data : NULL;
 }
 
-co_unsigned32_t
-co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req)
+int
+co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 {
 	assert(sub);
 	assert(req);
 
-	co_unsigned32_t ac = 0;
-
 #ifndef LELY_NO_CO_OBJ_FILE
 	// clang-format off
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN && (co_sub_get_flags(sub)
-			& CO_OBJ_FLAGS_DOWNLOAD_FILE)) {
+			& CO_OBJ_FLAGS_DOWNLOAD_FILE))
 		// clang-format on
-		co_sdo_req_dn_file(req, co_sub_addressof_val(sub), &ac);
-		return ac;
-	}
+		return co_sdo_req_dn_file(req, co_sub_addressof_val(sub), pac);
 #endif
 
 	// Read the value.
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
-	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
-		goto error_req;
+	if (co_sdo_req_dn_val(req, type, &val, pac) == -1)
+		return -1;
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	// Accept the value if it is within bounds.
-	ac = co_sub_chk_val(sub, type, &val);
+	co_unsigned32_t ac = co_sub_chk_val(sub, type, &val);
+	if (ac) {
+		co_val_fini(type, &val);
+		if (pac)
+			*pac = ac;
+		return -1;
+	}
 #endif
-	if (!ac)
-		co_sub_dn(sub, &val);
 
+	co_sub_dn(sub, &val);
 	co_val_fini(type, &val);
-error_req:
-	return ac;
+
+	return 0;
 }
 
 co_unsigned32_t
@@ -929,28 +930,26 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 
 #endif // !LELY_NO_CO_OBJ_UPLOAD
 
-co_unsigned32_t
-co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
+int
+co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 {
 	assert(sub);
 	assert(req);
 
-	co_unsigned32_t ac = 0;
-
 #ifndef LELY_NO_CO_OBJ_FILE
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
-			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)) {
-		co_sdo_req_up_file(req, co_sub_addressof_val(sub), &ac);
-		return ac;
-	}
+			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE))
+		return co_sdo_req_up_file(req, co_sub_addressof_val(sub), pac);
 #endif
 
 	const void *val = co_sub_get_val(sub);
-	if (!val)
-		return CO_SDO_AC_NO_DATA;
+	if (!val) {
+		if (pac)
+			*pac = CO_SDO_AC_NO_DATA;
+		return -1;
+	}
 
-	co_sdo_req_up_val(req, co_sub_get_type(sub), val, &ac);
-	return ac;
+	return co_sdo_req_up_val(req, co_sub_get_type(sub), val, pac);
 }
 
 co_unsigned32_t
@@ -1033,7 +1032,9 @@ default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
 	(void)data;
 
-	return co_sub_on_dn(sub, req);
+	co_unsigned32_t ac = 0;
+	co_sub_on_dn(sub, req, &ac);
+	return ac;
 }
 
 static co_unsigned32_t
@@ -1041,5 +1042,7 @@ default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
 	(void)data;
 
-	return co_sub_on_up(sub, req);
+	co_unsigned32_t ac = 0;
+	co_sub_on_up(sub, req, &ac);
+	return ac;
 }

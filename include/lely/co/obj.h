@@ -122,9 +122,10 @@ extern "C" {
 
 /**
  * The type of a CANopen sub-object download indication function, invoked by an
- * SDO download request or Receive-PDO indication.
+ * SDO download request or Receive-PDO indication. In case of an SDO request,
+ * this function is invoked for each segment.
  *
- * @param sub  a pointer to a CANopen sub-object, containing the new value.
+ * @param sub  a pointer to a CANopen sub-object.
  * @param req  a pointer to a CANopen SDO download request. The <b>size</b>,
  *             <b>buf</b>, <b>nbyte</b> and <b>offset</b> members of *<b>req</b>
  *             are set by the caller.
@@ -137,7 +138,7 @@ typedef co_unsigned32_t co_sub_dn_ind_t(
 
 /**
  * The type of a CANopen sub-object upload indication function, invoked by an
- * SDO upload request.
+ * SDO upload request or Transmit-PDO indication.
  *
  * @param sub  a pointer to a CANopen sub-object, containing the new value.
  * @param req  a pointer to a CANopen SDO upload request. On the first
@@ -706,9 +707,17 @@ void co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data);
  * co_sdo_req_dn_val() and, if it is within the specified range, written to the
  * object dictionary with co_sub_dn().
  *
- * @see co_sub_dn_ind_t
+ * @param sub a pointer to a CANopen sub-object.
+ * @param req a pointer to a CANopen SDO download request.
+ * @param pac the address of a value which, on error, contains the SDO abort
+ *            code (can be NULL).
+ *
+ * @returns 0 if all segments have been received and the value has been
+ * successfully written to the object dictionary, and -1 if one or more segments
+ * remain or an error has occurred. In the latter case, *<b>pac</b> contains the
+ * SDO abort code.
  */
-co_unsigned32_t co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req);
+int co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -804,9 +813,16 @@ void co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data);
  * co_sub_get_val() and written to the SDO upload request with
  * co_sdo_req_up_val().
  *
- * @see co_sub_up_ind_t
+ * @param sub a pointer to a CANopen sub-object.
+ * @param req a pointer to a CANopen SDO upload request.
+ * @param pac the address of a value which, on error, contains the SDO abort
+ *            code (can be NULL).
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, *<b>pac</b>
+ * contains the SDO abort code.
  */
-co_unsigned32_t co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req);
+int co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t *pac);
 
 /**
  * Invokes the upload indication function of a CANopen sub-object, registered
