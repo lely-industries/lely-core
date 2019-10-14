@@ -48,7 +48,7 @@
 /// An event loop context.
 struct ev_loop_ctx {
 	/**
-	 * The number of references to this contex. Once the reference count
+	 * The number of references to this context. Once the reference count
 	 * reaches zero, this struct is reclaimed.
 	 */
 	size_t refcnt;

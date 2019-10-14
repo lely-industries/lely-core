@@ -55,7 +55,7 @@ ev_exec_t *ev_strand_create(ev_exec_t *inner_exec);
 /// Destroys a strand executor. @see ev_strand_create()
 void ev_strand_destroy(ev_exec_t *exec);
 
-/// Returns a pointer to the inner executor.
+/// Returns a pointer to the inner executor of a strand.
 ev_exec_t *ev_strand_get_inner_exec(const ev_exec_t *exec);
 
 #ifdef __cplusplus
