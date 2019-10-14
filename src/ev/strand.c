@@ -66,9 +66,9 @@ struct ev_strand {
 	const int *thr;
 };
 
-static inline struct ev_strand *ev_strand_from_exec(const ev_exec_t *exec);
-
 static void ev_strand_func(struct ev_task *task);
+
+static inline struct ev_strand *ev_strand_from_exec(const ev_exec_t *exec);
 
 #if LELY_NO_THREADS
 static const int ev_strand_thrd;
@@ -121,15 +121,17 @@ ev_strand_init(ev_exec_t *exec, ev_exec_t *inner_exec)
 void
 ev_strand_fini(ev_exec_t *exec)
 {
+	struct ev_strand *strand = ev_strand_from_exec(exec);
+
 	ev_strand_exec_abort(exec, NULL);
 
 #if !LELY_NO_THREADS
-	struct ev_strand *strand = ev_strand_from_exec(exec);
-
 	mtx_lock(&strand->mtx);
+#endif
 	// Abort ev_strand_func().
-	if (strand->posted && ev_exec_abort(strand->inner_exec, &strand->task))
+	if (strand->posted && ev_exec_abort(strand->task.exec, &strand->task))
 		strand->posted = 0;
+#if !LELY_NO_THREADS
 	// If necessary, busy-wait until ev_strand_func() completes.
 	while (strand->posted) {
 		mtx_unlock(&strand->mtx);
@@ -187,19 +189,19 @@ ev_strand_get_inner_exec(const ev_exec_t *exec)
 }
 
 static void
+ev_strand_exec_on_task_init(ev_exec_t *exec)
+{
+	struct ev_strand *strand = ev_strand_from_exec(exec);
+
+	ev_exec_on_task_init(strand->inner_exec);
+}
+
+static void
 ev_strand_exec_on_task_fini(ev_exec_t *exec)
 {
 	struct ev_strand *strand = ev_strand_from_exec(exec);
 
 	ev_exec_on_task_fini(strand->inner_exec);
-}
-
-static inline struct ev_strand *
-ev_strand_from_exec(const ev_exec_t *exec)
-{
-	assert(exec);
-
-	return structof(exec, struct ev_strand, exec_vptr);
 }
 
 static int
@@ -232,7 +234,7 @@ ev_strand_exec_dispatch(ev_exec_t *exec, struct ev_task *task)
 		mtx_unlock(&strand->mtx);
 #endif
 		if (post)
-			ev_exec_post(strand->inner_exec, &strand->task);
+			ev_exec_post(strand->task.exec, &strand->task);
 		return 0;
 	}
 }
@@ -258,7 +260,7 @@ ev_strand_exec_defer(ev_exec_t *exec, struct ev_task *task)
 	mtx_unlock(&strand->mtx);
 #endif
 	if (post)
-		ev_exec_post(strand->inner_exec, &strand->task);
+		ev_exec_post(strand->task.exec, &strand->task);
 }
 
 static size_t
@@ -286,14 +288,6 @@ ev_strand_exec_abort(ev_exec_t *exec, struct ev_task *task)
 		n += n < SIZE_MAX;
 	}
 	return n;
-}
-
-static void
-ev_strand_exec_on_task_init(ev_exec_t *exec)
-{
-	struct ev_strand *strand = ev_strand_from_exec(exec);
-
-	ev_exec_on_task_init(strand->inner_exec);
 }
 
 static void
@@ -329,5 +323,13 @@ ev_strand_func(struct ev_task *task)
 	mtx_unlock(&strand->mtx);
 #endif
 	if (post)
-		ev_exec_post(strand->inner_exec, &strand->task);
+		ev_exec_post(strand->task.exec, &strand->task);
+}
+
+static inline struct ev_strand *
+ev_strand_from_exec(const ev_exec_t *exec)
+{
+	assert(exec);
+
+	return structof(exec, struct ev_strand, exec_vptr);
 }
