@@ -139,6 +139,10 @@ inc += lely/ev/exec.h
 if !NO_CXX
 inc += lely/ev/exec.hpp
 endif
+inc += lely/ev/fiber_exec.h
+if !NO_CXX
+inc += lely/ev/fiber_exec.hpp
+endif
 inc += lely/ev/future.h
 if !NO_CXX
 inc += lely/ev/future.hpp
