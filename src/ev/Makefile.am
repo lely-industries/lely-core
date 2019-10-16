@@ -1,6 +1,7 @@
 src =
 src += ev.h
 src += exec.c
+src += fiber_exec.c
 src += future.c
 src += loop.c
 src += poll.c

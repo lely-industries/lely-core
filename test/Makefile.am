@@ -34,6 +34,12 @@ bin += test-util-fbuf
 test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
 
+if !NO_CXX
+bin += test-util-fiber
+test_util_fiber_SOURCES = test.h util-fiber.cpp
+test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
+endif
+
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
@@ -62,6 +68,12 @@ test_io_poll_LDADD = $(LELY_IO_LIBS)
 
 LELY_EV_LIBS = $(LELY_UTIL_LIBS)
 LELY_EV_LIBS += $(top_builddir)/src/ev/liblely-ev.la
+
+if !NO_CXX
+bin += test-ev-fiber
+test_ev_fiber_SOURCES = test.h ev-fiber.cpp
+test_ev_fiber_LDADD = $(LELY_EV_LIBS)
+endif
 
 if !NO_CXX
 bin += test-ev-future

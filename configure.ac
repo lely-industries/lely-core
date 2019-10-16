@@ -286,6 +286,10 @@ AS_IF([test "$enable_coapp_slave" == "no"], [
 	AC_DEFINE([LELY_NO_COAPP_SLAVE], [1], [Define to 1 if C++ CANopen application slave support is disabled.])
 ])
 
+AC_CHECK_HEADER([valgrind/valgrind.h], [
+	AC_DEFINE([LELY_HAVE_VALGRIND], [1], [Define to 1 if you have the <valgrind/valgrind.h> header file.])
+])
+
 AM_CONDITIONAL([HAVE_IXXAT], [false])
 AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [
