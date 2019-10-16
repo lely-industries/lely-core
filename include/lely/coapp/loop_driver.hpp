@@ -79,10 +79,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   template <class T>
   T
   RunRead(uint16_t idx, uint8_t subidx) {
-    ::std::error_code ec;
-    auto result = RunRead<T>(idx, subidx, ec);
-    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunRead");
-    return result;
+    return Wait(AsyncRead<T>(idx, subidx));
   }
 
   /**
@@ -107,10 +104,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   T
   RunRead(uint16_t idx, uint8_t subidx,
           const ::std::chrono::milliseconds& timeout) {
-    ::std::error_code ec;
-    auto result = RunRead<T>(idx, subidx, timeout, ec);
-    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunRead");
-    return result;
+    return Wait(AsyncRead<T>(idx, subidx, timeout));
   }
 
   /**
@@ -143,9 +137,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   template <class T>
   void
   RunWrite(uint16_t idx, uint8_t subidx, T&& value) {
-    ::std::error_code ec;
-    RunWrite(idx, subidx, ::std::forward<T>(value), ec);
-    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunWrite");
+    Wait(AsyncWrite(idx, subidx, ::std::forward<T>(value)));
   }
 
   /**
@@ -170,9 +162,7 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   void
   RunWrite(uint16_t idx, uint8_t subidx, T&& value,
            const ::std::chrono::milliseconds& timeout) {
-    ::std::error_code ec;
-    RunWrite(idx, subidx, ::std::forward<T>(value), timeout, ec);
-    if (ec) throw_sdo_error(id(), idx, subidx, ec, "RunWrite");
+    Wait(AsyncWrite(idx, subidx, ::std::forward<T>(value), timeout));
   }
 
   /**
@@ -209,6 +199,16 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
   }
 
  protected:
+  template <class T>
+  T
+  Wait(ev::Future<T, ::std::exception_ptr> f) {
+    GetLoop().wait(f);
+    if (!f.is_ready())
+      throw ::std::system_error(
+          ::std::make_error_code(::std::errc::operation_canceled), "Wait");
+    return f.get().value();
+  }
+
   template <class T>
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
   Wait(ev::Future<T, ::std::exception_ptr> f, ::std::error_code& ec) {
