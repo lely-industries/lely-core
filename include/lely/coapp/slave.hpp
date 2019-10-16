@@ -56,6 +56,14 @@ class BasicSlave : public Node {
 
   virtual ~BasicSlave();
 
+  /**
+   * Registers the function to be invoked when a life guarding event occurs or
+   * is resolved. Only a single function can be registered at any one time. If
+   * <b>on_life_guarding</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnLifeGuarding(bool) completes.
+   */
+  void OnLifeGuarding(::std::function<void(bool)> on_life_guarding);
+
  protected:
   class Object;
   class ConstObject;

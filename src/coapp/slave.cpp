@@ -70,6 +70,8 @@ struct BasicSlave::Impl_ {
 
   ::std::map<uint32_t, ::std::function<uint32_t(COSub*, void*)>> dn_ind;
   ::std::map<uint32_t, ::std::function<uint32_t(const COSub*, void*)>> up_ind;
+
+  ::std::function<void(bool)> on_life_guarding;
 };
 
 BasicSlave::BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
@@ -79,6 +81,12 @@ BasicSlave::BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicSlave::~BasicSlave() = default;
+
+void
+BasicSlave::OnLifeGuarding(::std::function<void(bool)> on_life_guarding) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_life_guarding = on_life_guarding;
+}
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
@@ -439,7 +447,13 @@ BasicSlave::Impl_::OnLgInd(CONMT* nmt, int state) noexcept {
   // Invoke the default behavior before notifying the implementation.
   nmt->onLg(state);
   // Notify the implementation.
-  self->OnLifeGuarding(state == CO_NMT_EC_OCCURRED);
+  bool occurred = state == CO_NMT_EC_OCCURRED;
+  self->OnLifeGuarding(occurred);
+  if (on_life_guarding) {
+    auto f = on_life_guarding;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(occurred);
+  }
 }
 
 template <uint16_t N>

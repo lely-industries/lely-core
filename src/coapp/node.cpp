@@ -86,6 +86,19 @@ struct Node::Impl_ : public util::BasicLockable {
 #endif
 
   unique_c_ptr<CONMT> nmt;
+
+  ::std::function<void(NmtCommand)> on_command;
+  ::std::function<void(uint8_t, bool)> on_heartbeat;
+  ::std::function<void(uint8_t, NmtState)> on_state;
+  ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+      on_rpdo;
+  ::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error;
+  ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+      on_tpdo;
+  ::std::function<void(uint8_t, const time_point&)> on_sync;
+  ::std::function<void(uint16_t, uint8_t)> on_sync_error;
+  ::std::function<void(const ::std::chrono::system_clock::time_point&)> on_time;
+  ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy;
 };
 
 Node::Node(io::TimerBase& timer, io::CanChannelBase& chan,
@@ -126,6 +139,73 @@ Node::ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms) {
   ::std::error_code ec;
   ConfigHeartbeat(id, ms, ec);
   if (ec) throw SdoError(Device::id(), 0x1016, 0, ec, "ConfigHeartbeat");
+}
+
+void
+Node::OnCommand(::std::function<void(NmtCommand)> on_command) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_command = on_command;
+}
+
+void
+Node::OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_heartbeat = on_heartbeat;
+}
+
+void
+Node::OnState(::std::function<void(uint8_t, NmtState)> on_state) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_state = on_state;
+}
+
+void
+Node::OnRpdo(
+    ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+        on_rpdo) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_rpdo = on_rpdo;
+}
+
+void
+Node::OnRpdoError(::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_rpdo_error = on_rpdo_error;
+}
+
+void
+Node::OnTpdo(
+    ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+        on_tpdo) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_tpdo = on_tpdo;
+}
+
+void
+Node::OnSync(::std::function<void(uint8_t, const time_point&)> on_sync) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_sync = on_sync;
+}
+
+void
+Node::OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_sync_error = on_sync_error;
+}
+
+void
+Node::OnTime(
+    ::std::function<void(const ::std::chrono::system_clock::time_point&)>
+        on_time) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_time = on_time;
+}
+
+void
+Node::OnEmcy(
+    ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_emcy = on_emcy;
 }
 
 void
@@ -252,6 +332,12 @@ Node::Impl_::OnCsInd(CONMT* nmt, uint8_t cs) noexcept {
   }
 
   self->OnCommand(static_cast<NmtCommand>(cs));
+
+  if (on_command) {
+    auto f = on_command;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(static_cast<NmtCommand>(cs));
+  }
 }
 
 void
@@ -261,7 +347,14 @@ Node::Impl_::OnHbInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept {
   // Only handle heartbeat timeout events. State changes are handled by OnSt().
   if (reason != CO_NMT_EC_TIMEOUT) return;
   // Notify the implementation.
-  self->OnHeartbeat(id, state == CO_NMT_EC_OCCURRED);
+  bool occurred = state == CO_NMT_EC_OCCURRED;
+  self->OnHeartbeat(id, occurred);
+
+  if (on_heartbeat) {
+    auto f = on_heartbeat;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(id, occurred);
+  }
 }
 
 void
@@ -272,6 +365,12 @@ Node::Impl_::OnStInd(CONMT* nmt, uint8_t id, uint8_t st) noexcept {
   if (id == nmt->getDev()->getId()) return;
   // Notify the implementation.
   self->OnState(id, static_cast<NmtState>(st));
+
+  if (on_state) {
+    auto f = on_state;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(id, static_cast<NmtState>(st));
+  }
 }
 
 void
@@ -279,27 +378,60 @@ Node::Impl_::OnRpdoInd(CORPDO* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
   int num = pdo->getNum();
   self->OnRpdo(num, static_cast<SdoErrc>(ac), ptr, n);
+
+  if (on_rpdo) {
+    auto f = on_rpdo;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(num, static_cast<SdoErrc>(ac), ptr, n);
+  }
 }
 
 void
 Node::Impl_::OnRpdoErr(CORPDO* pdo, uint16_t eec, uint8_t er) noexcept {
-  self->OnRpdoError(pdo->getNum(), eec, er);
+  int num = pdo->getNum();
+  self->OnRpdoError(num, eec, er);
+
+  if (on_rpdo_error) {
+    auto f = on_rpdo_error;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(num, eec, er);
+  }
 }
 
 void
 Node::Impl_::OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
-  self->OnTpdo(pdo->getNum(), static_cast<SdoErrc>(ac), ptr, n);
+  int num = pdo->getNum();
+  self->OnTpdo(num, static_cast<SdoErrc>(ac), ptr, n);
+
+  if (on_tpdo) {
+    auto f = on_tpdo;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(num, static_cast<SdoErrc>(ac), ptr, n);
+  }
 }
 
 void
 Node::Impl_::OnSyncInd(CONMT*, uint8_t cnt) noexcept {
-  self->OnSync(cnt, Node::time_point::clock::now());
+  auto t = Node::time_point::clock::now();
+  self->OnSync(cnt, t);
+
+  if (on_sync) {
+    auto f = on_sync;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(cnt, t);
+  }
 }
 
 void
 Node::Impl_::OnSyncErr(COSync*, uint16_t eec, uint8_t er) noexcept {
   self->OnSyncError(eec, er);
+
+  if (on_sync_error) {
+    auto f = on_sync_error;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(eec, er);
+  }
 }
 
 void
@@ -307,12 +439,24 @@ Node::Impl_::OnTimeInd(COTime*, const timespec* tp) noexcept {
   assert(tp);
   ::std::chrono::system_clock::time_point abs_time(util::from_timespec(*tp));
   self->OnTime(abs_time);
+
+  if (on_time) {
+    auto f = on_time;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(abs_time);
+  }
 }
 
 void
 Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
                        uint8_t msef[5]) noexcept {
   self->OnEmcy(id, ec, er, msef);
+
+  if (on_emcy) {
+    auto f = on_emcy;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(id, ec, er, msef);
+  }
 }
 
 void

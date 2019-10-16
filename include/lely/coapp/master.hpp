@@ -827,6 +827,24 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void Erase(DriverBase& driver);
 
+  /**
+   * Registers the function invoked when a node guarding timeout event occurs or
+   * is resolved. Only a single function can be registered at any one time. If
+   * <b>on_node_guarding</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnNodeGuarding(uint8_t, bool) completes.
+   */
+  void OnNodeGuarding(::std::function<void(uint8_t, bool)> on_node_guarding);
+
+  /**
+   * Registers the function invoked when the NMT 'boot slave' process completes.
+   * Only a single function can be registered at any one time. If <b>on_boot</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnBoot(uint8_t, NmtState, char, const ::std::string&) completes.
+   */
+  void OnBoot(
+      ::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
+          on_boot);
+
  protected:
   using MapType = ::std::map<uint8_t, DriverBase*>;
 
@@ -970,29 +988,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /**
    * The default implementation notifies all registered drivers.
    *
-   * @see Node::OnRpdo(), DriverBase::OnRpdo()
-   */
-  void OnRpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnRpdoError(), DriverBase::OnRpdoError()
-   */
-  void OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnTpdo(), DriverBase::OnTpdo()
-   */
-  void OnTpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
    * @see Node::OnSync(), DriverBase::OnSync()
    */
   void OnSync(uint8_t cnt, const time_point& t) noexcept override;
@@ -1123,32 +1118,6 @@ class AsyncMaster : public BasicMaster {
    * @see BasicMaster::OnConfig(), DriverBase::OnConfig()
    */
   void OnConfig(uint8_t id) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnRpdo(), DriverBase::OnRpdo()
-   */
-  void OnRpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnRpdoError(), DriverBase::OnRpdoError()
-   */
-  void OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept override;
-
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnTpdo(), DriverBase::OnTpdo()
-   */
-  void OnTpdo(int num, ::std::error_code ec, const void* p,
-              ::std::size_t n) noexcept override;
 
   /**
    * The default implementation queues a notification for all registered

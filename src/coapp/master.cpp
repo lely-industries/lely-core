@@ -50,6 +50,8 @@ struct BasicMaster::Impl_ {
   void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
 
   BasicMaster* self;
+  ::std::function<void(uint8_t, bool)> on_node_guarding;
+  ::std::function<void(uint8_t, NmtState, char, const ::std::string&)> on_boot;
   ::std::array<bool, CO_NUM_NODES> ready{{false}};
   ::std::map<uint8_t, Sdo> sdos;
 };
@@ -166,6 +168,21 @@ BasicMaster::Erase(DriverBase& driver) {
 }
 
 void
+BasicMaster::OnNodeGuarding(
+    ::std::function<void(uint8_t, bool)> on_node_guarding) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_node_guarding = on_node_guarding;
+}
+
+void
+BasicMaster::OnBoot(
+    ::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
+        on_boot) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_boot = on_boot;
+}
+
+void
 BasicMaster::IsReady(uint8_t id, bool ready) noexcept {
   if (id && id <= CO_NUM_NODES) impl_->ready[id - 1] = ready;
 }
@@ -266,32 +283,6 @@ BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
   impl_->sdos.erase(id);
   // Ignore any errors, since we cannot handle them here.
   nmt()->cfgRes(id, ec.value());
-}
-
-void
-BasicMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnRpdo(num, ec, p, n);
-  }
-}
-
-void
-BasicMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnRpdoError(num, eec, er);
-  }
-}
-
-void
-BasicMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnTpdo(num, ec, p, n);
-  }
 }
 
 void
@@ -466,40 +457,6 @@ AsyncMaster::OnConfig(uint8_t id) noexcept {
 }
 
 void
-AsyncMaster::OnRpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  ::std::array<uint8_t, CAN_MAX_LEN> value;
-  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
-                value.begin());
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post(
-        [=]() { driver->OnRpdo(num, ec, value.data(), value.size()); });
-  }
-}
-
-void
-AsyncMaster::OnRpdoError(int num, uint16_t eec, uint8_t er) noexcept {
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post([=]() { driver->OnRpdoError(num, eec, er); });
-  }
-}
-
-void
-AsyncMaster::OnTpdo(int num, ::std::error_code ec, const void* p,
-                    ::std::size_t n) noexcept {
-  ::std::array<uint8_t, CAN_MAX_LEN> value;
-  ::std::copy_n(static_cast<const uint8_t*>(p), ::std::min(n, value.size()),
-                value.begin());
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post(
-        [=]() { driver->OnTpdo(num, ec, value.data(), value.size()); });
-  }
-}
-
-void
 AsyncMaster::OnSync(uint8_t cnt, const time_point& t) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
@@ -552,14 +509,26 @@ BasicMaster::Impl_::OnNgInd(CONMT* nmt, uint8_t id, int state,
   // OnSt().
   if (reason != CO_NMT_EC_TIMEOUT) return;
   // Notify the implementation.
-  self->OnNodeGuarding(id, state == CO_NMT_EC_OCCURRED);
+  bool occurred = state == CO_NMT_EC_OCCURRED;
+  self->OnNodeGuarding(id, occurred);
+  if (on_node_guarding) {
+    auto f = on_node_guarding;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(id, occurred);
+  }
 }
 
 void
 BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st,
                               char es) noexcept {
   if (id && id <= CO_NUM_NODES && (!es || es == 'L')) ready[id - 1] = true;
-  self->OnBoot(id, static_cast<NmtState>(st), es, es ? co_nmt_es2str(es) : "");
+  ::std::string what = es ? co_nmt_es2str(es) : "";
+  self->OnBoot(id, static_cast<NmtState>(st), es, what);
+  if (on_boot) {
+    auto f = on_boot;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(id, static_cast<NmtState>(st), es, what);
+  }
 }
 
 void

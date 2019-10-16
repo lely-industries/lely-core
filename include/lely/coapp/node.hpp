@@ -169,6 +169,98 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    */
   void ConfigHeartbeat(uint8_t id, const ::std::chrono::milliseconds& ms);
 
+  /**
+   * Registers the function to be invoked when an NMT command is received from
+   * the master. Only a single function can be registered at any one time. If
+   * <b>on_command</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnCommand(NmtCommand) completes.
+   */
+  void OnCommand(::std::function<void(NmtCommand)> on_command);
+
+  /**
+   * Registers the function to be invoked when a heartbeat timeout event occurs
+   * or is resolved. Only a single function can be registered at any one time.
+   * If <b>on_heartbeat</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnHeartbeat(uint8_t, bool) completes.
+   */
+  void OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat);
+
+  /**
+   * Registers the function to be invoked whenan NMT state change or boot-up
+   * event is detected for a remote node by the heartbeat protocol. Only a
+   * single function can be registered at any one time. If <b>on_state</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnState(uint8_t, NmtState) completes.
+   */
+  void OnState(::std::function<void(uint8_t, NmtState)> on_state);
+
+  /**
+   * Registers the function to be invoked when a Receive-PDO is processed .Only
+   * a single function can be registered at any one time. If <b>on_rpdo</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnRpdo(int, ::std::error_code, const void*, ::std::size_t)
+   * completes.
+   */
+  void OnRpdo(
+      ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+          on_rpdo);
+
+  /**
+   * Registers the function to be invoked when a Receive-PDO length mismatch or
+   * timeout error occurs. Only a single function can be registered at any one
+   * time. If <b>on_rpdo_error</b> contains a callable function target, a copy
+   * of the target is invoked _after_ OnRpdoError(int, uint16_t, uint8_t)
+   * completes.
+   */
+  void OnRpdoError(::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error);
+
+  /**
+   * Registers the function to be invoked after a Transmit-PDO is sent or an
+   * error occurs. Only a single function can be registered at any one time. If
+   * <b>on_tpdo</b> contains a callable function target, a copy of the target is
+   * invoked _after_ OnTpdo(int, ::std::error_code, const void*, ::std::size_t)
+   * completes.
+   */
+  void OnTpdo(
+      ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
+          on_tpdo);
+
+  /**
+   * Registers the function to be invoked when a SYNC message is sent/received.
+   * Only a single function can be registered at any one time. If <b>on_sync</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnSync(uint8_t, const time_point&) completes.
+   */
+  void OnSync(::std::function<void(uint8_t, const time_point&)> on_sync);
+
+  /**
+   * Registers the function to be invoked when the data length of a received
+   * SYNC message does not match. Only a single function can be registered at
+   * any one time. If <b>on_sync_error</b> contains a callable function target,
+   * a copy of the target is invoked _after_ OnSyncError(uint16_t, uint8_t)
+   * completes.
+   */
+  void OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error);
+
+  /**
+   * Registers the function to be invoked when a TIME message is received. Only
+   * a single function can be registered at any one time. If <b>on_time</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnTime(const ::std::chrono::system_clock::time_point&) completes.
+   */
+  void OnTime(
+      ::std::function<void(const ::std::chrono::system_clock::time_point&)>
+          on_time);
+
+  /**
+   * Registers the function to be invoked when an EMCY message is received. Only
+   * a single function can be registered at any one time. If <b>on_emcy</b>
+   * contains a callable function target, a copy of the target is invoked
+   * _after_ OnEmcy(uint8_t, uint16_t, uint8_t, uint8_t[5]) completes.
+   */
+  void OnEmcy(
+      ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy);
+
  protected:
   void lock() final;
   void unlock() final;

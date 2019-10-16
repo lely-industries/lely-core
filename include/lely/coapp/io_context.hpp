@@ -26,6 +26,7 @@
 #include <lely/io2/timer.hpp>
 #include <lely/util/mutex.hpp>
 
+#include <functional>
 #include <memory>
 
 namespace lely {
@@ -61,8 +62,25 @@ class IoContext {
   /// Returns the executor used to process I/O events on the CAN bus.
   ev::Executor GetExecutor() const noexcept;
 
-  /// Returns the underlyign I/O context with which this context is registered.
+  /// Returns the underlying I/O context with which this context is registered.
   io::ContextBase GetContext() const noexcept;
+
+  /**
+   * Registers the function to be invoked when a CAN bus state change is
+   * detected. Only a single function can be registered at any one time. If
+   * <b>on_can_state</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnCanState(io::CanState, io::CanState) completes.
+   */
+  void OnCanState(
+      ::std::function<void(io::CanState, io::CanState)> on_can_state);
+
+  /**
+   * Registers the function to be invoked when an error is detected on the CAN
+   * bus. Only a single function can be registered at any one time. If
+   * <b>on_can_error</b> contains a callable function target, a copy of the
+   * target is invoked _after_ OnCanError(io::CanError) completes.
+   */
+  void OnCanError(::std::function<void(io::CanError)> on_can_error);
 
  protected:
   ~IoContext();
