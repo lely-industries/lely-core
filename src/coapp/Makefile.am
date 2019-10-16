@@ -6,6 +6,7 @@ src += driver.cpp
 endif
 src += io_context.cpp
 if !NO_COAPP_MASTER
+src += loop_driver.cpp
 src += master.cpp
 endif
 src += node.cpp

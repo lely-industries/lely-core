@@ -382,6 +382,7 @@ inc += lely/coapp/driver.hpp
 endif
 inc += lely/coapp/io_context.hpp
 if !NO_COAPP_MASTER
+inc += lely/coapp/loop_driver.hpp
 inc += lely/coapp/master.hpp
 endif
 inc += lely/coapp/node.hpp
