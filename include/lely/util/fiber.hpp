@@ -300,7 +300,7 @@ class Fiber {
     }
   }
 
-  /// Checks whether `*this` is a valid fiber and can be resumed.
+  /// Checks whether `*this` is a valid fiber.
   explicit operator bool() const noexcept { return fiber_ != nullptr; }
 
   operator fiber_t*() && noexcept {
@@ -310,12 +310,13 @@ class Fiber {
   }
 
   /**
-   * Suspends the calling fiber and resumes `*this`.
+   * Suspends the calling fiber and resumes `*this`. If `*this` is an invalid
+   * fiber (#operator bool() returns false), the fiber associated with the
+   * calling thread is resumed.
    *
    * @returns the fiber that has been suspended in order to resume the current
    * fiber.
    *
-   * @pre `*this` is a valid fiber (#operator bool() returns true).
    * @pre the calling thread is the thread on which `*this` was created.
    * @post `*this` is an invalid fiber (#operator bool() returns false).
    * @throw fiber_unwind if the fiber is being destroyed. This exception MUST
@@ -330,11 +331,11 @@ class Fiber {
    * Suspends the calling fiber and resumes `*this`, but calls <b>f(other)</b>
    * in the resumed fiber as if called by the suspended callable object, where
    * <b>other</b> is the fiber that has been suspended in order to resume the
-   * current fiber.
+   * current fiber. If `*this` is an invalid fiber (#operator bool() returns
+   * false), the fiber associated with the calling thread is resumed.
    *
    * @returns the result of <b>f()</b>.
    *
-   * @pre `*this` is a valid fiber (#operator bool() returns true).
    * @pre the calling thread is the thread on which `*this` was created.
    * @post `*this` is an invalid fiber (#operator bool() returns false).
    * @throw fiber_unwind if the fiber is being destroyed. This exception MUST

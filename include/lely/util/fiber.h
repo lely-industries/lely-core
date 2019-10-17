@@ -4,7 +4,7 @@
  *
  * <a href="https://en.wikipedia.org/wiki/Fiber_(computer_science)">Fibers</a>
  * are user-space threads. They provide cooperative multitasking and can be used
- * as a primitive for implementing stackfull coroutines.
+ * as a primitive for implementing stackful coroutines.
  *
  * The fiber implementation on Windows is based on CreateFiber()/SwitchToFiber()
  * and allows fibers to be migrated between threads. All other platforms use
@@ -166,7 +166,8 @@ fiber_t *fiber_resume(fiber_t *fiber);
  * Note that this function MUST be called from a valid fiber created
  * by fiber_create() or fiber_thrd_init().
  *
- * @param fiber a pointer to the fiber to be resumed.
+ * @param fiber a pointer to the fiber to be resumed. If <b>fiber</b> is NULL,
+ *              the fiber associated with the calling thread is resumed.
  * @param func  a pointer to the function to be executed in the context of
  *              <b>fiber</b> before the suspended function resumes. If not NULL,
  *              a pointer to the calling fiber is supplied as the first argument

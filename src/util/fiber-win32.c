@@ -59,6 +59,8 @@ static _Thread_local struct fiber_thrd {
 
 static void CALLBACK fiber_start(void *arg);
 
+static fiber_t *fiber_switch(fiber_t *fiber);
+
 int
 fiber_thrd_init(int flags)
 {
@@ -187,48 +189,28 @@ fiber_data(const fiber_t *fiber)
 fiber_t *
 fiber_resume(fiber_t *fiber)
 {
-	assert(fiber);
-	struct fiber_thrd *thr = &fiber_thrd;
-	fiber_t *curr = thr->curr;
-	assert(curr);
-	assert(fiber != curr);
+	if (!fiber)
+		fiber = &fiber_thrd.main;
 
-	if (curr->flags & FIBER_SAVE_ERROR) {
-		curr->dwErrCode = GetLastError();
-		curr->errsv = errno;
-	}
+	if (fiber == fiber_thrd.curr)
+		return fiber->from = fiber;
 
-	fiber->from = thr->curr;
-	thr->curr = fiber;
-	assert(fiber->lpFiber);
-	SwitchToFiber(fiber->lpFiber);
-	assert(curr == thr->curr);
-
-	if (curr->flags & FIBER_SAVE_ERROR) {
-		errno = curr->errsv;
-		SetLastError(curr->dwErrCode);
-	}
-
-	if (curr->func) {
-		fiber_func_t *func = curr->func;
-		curr->func = NULL;
-		void *arg = curr->arg;
-		curr->arg = NULL;
-		curr->from = func(curr->from, arg);
-	}
-
-	return curr->from;
+	return fiber_switch(fiber);
 }
 
 fiber_t *
 fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 {
-	assert(fiber);
+	if (!fiber)
+		fiber = &fiber_thrd.main;
+
+	if (fiber == fiber_thrd.curr)
+		return fiber->from = func ? func(fiber, arg) : fiber;
 
 	fiber->func = func;
 	fiber->arg = arg;
 
-	return fiber_resume(fiber);
+	return fiber_switch(fiber);
 }
 
 static void CALLBACK
@@ -266,6 +248,42 @@ fiber_start(void *arg)
 	// The function has terminated, so return to the caller immediately.
 	for (;;)
 		fiber = fiber_resume(fiber);
+}
+
+static fiber_t *
+fiber_switch(fiber_t *fiber)
+{
+	assert(fiber);
+	struct fiber_thrd *thr = &fiber_thrd;
+	fiber_t *curr = thr->curr;
+	assert(curr);
+	assert(fiber != curr);
+
+	if (curr->flags & FIBER_SAVE_ERROR) {
+		curr->dwErrCode = GetLastError();
+		curr->errsv = errno;
+	}
+
+	fiber->from = thr->curr;
+	thr->curr = fiber;
+	assert(fiber->lpFiber);
+	SwitchToFiber(fiber->lpFiber);
+	assert(curr == thr->curr);
+
+	if (curr->flags & FIBER_SAVE_ERROR) {
+		errno = curr->errsv;
+		SetLastError(curr->dwErrCode);
+	}
+
+	if (curr->func) {
+		fiber_func_t *func = curr->func;
+		curr->func = NULL;
+		void *arg = curr->arg;
+		curr->arg = NULL;
+		curr->from = func(curr->from, arg);
+	}
+
+	return curr->from;
 }
 
 #endif // _WIN32

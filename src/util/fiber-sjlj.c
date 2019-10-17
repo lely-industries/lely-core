@@ -102,6 +102,8 @@ static _Thread_local struct fiber_thrd {
 
 static void fiber_start(void *arg);
 
+static fiber_t *fiber_switch(fiber_t *fiber);
+
 int
 fiber_thrd_init(int flags)
 {
@@ -319,6 +321,70 @@ fiber_data(const fiber_t *fiber)
 fiber_t *
 fiber_resume(fiber_t *fiber)
 {
+	if (!fiber)
+		fiber = &fiber_thrd.main;
+
+	if (fiber == fiber->thr->curr)
+		return fiber->from = fiber;
+
+	return fiber_switch(fiber);
+}
+
+fiber_t *
+fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
+{
+	if (!fiber)
+		fiber = &fiber_thrd.main;
+
+	if (fiber == fiber->thr->curr)
+		return fiber->from = func ? func(fiber, arg) : fiber;
+
+	fiber->func = func;
+	fiber->arg = arg;
+
+	return fiber_switch(fiber);
+}
+
+static void
+fiber_start(void *arg)
+{
+	fiber_t *fiber = arg;
+	assert(fiber);
+
+	// Copy the function to be executed to the stack for later reference.
+	fiber_func_t *func = fiber->func;
+	fiber->func = NULL;
+	arg = fiber->arg;
+	fiber->arg = NULL;
+
+	// Resume fiber_create().
+	fiber = fiber_resume(fiber->from);
+
+	// If the fiber is started with fiber_resume_with(), execute that
+	// function before starting the original function.
+	if (fiber->func) {
+		fiber_func_t *func = fiber->func;
+		fiber->func = NULL;
+		void *arg = fiber->arg;
+		fiber->arg = NULL;
+		fiber = func(fiber, arg);
+	}
+
+	if (func)
+		fiber = func(fiber, arg);
+
+	// If no valid fiber is returned, return to the main context.
+	if (!fiber)
+		fiber = &fiber_thrd.main;
+
+	// The function has terminated, so return to the caller immediately.
+	for (;;)
+		fiber = fiber_resume(fiber);
+}
+
+static fiber_t *
+fiber_switch(fiber_t *fiber)
+{
 	assert(fiber);
 	struct fiber_thrd *thr = fiber->thr;
 	assert(thr == &fiber_thrd);
@@ -366,54 +432,6 @@ fiber_resume(fiber_t *fiber)
 	}
 
 	return curr->from;
-}
-
-fiber_t *
-fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
-{
-	assert(fiber);
-
-	fiber->func = func;
-	fiber->arg = arg;
-
-	return fiber_resume(fiber);
-}
-
-static void
-fiber_start(void *arg)
-{
-	fiber_t *fiber = arg;
-	assert(fiber);
-
-	// Copy the function to be executed to the stack for later reference.
-	fiber_func_t *func = fiber->func;
-	fiber->func = NULL;
-	arg = fiber->arg;
-	fiber->arg = NULL;
-
-	// Resume fiber_create().
-	fiber = fiber_resume(fiber->from);
-
-	// If the fiber is started with fiber_resume_with(), execute that
-	// function before starting the original function.
-	if (fiber->func) {
-		fiber_func_t *func = fiber->func;
-		fiber->func = NULL;
-		void *arg = fiber->arg;
-		fiber->arg = NULL;
-		fiber = func(fiber, arg);
-	}
-
-	if (func)
-		fiber = func(fiber, arg);
-
-	// If no valid fiber is returned, return to the main context.
-	if (!fiber)
-		fiber = &fiber_thrd.main;
-
-	// The function has terminated, so return to the caller immediately.
-	for (;;)
-		fiber = fiber_resume(fiber);
 }
 
 #endif // !_WIN32

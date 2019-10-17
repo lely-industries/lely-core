@@ -8,9 +8,9 @@ main() {
   tap_plan(3);
 
 #if __MINGW32__ && !_WIN64
-  // For some reason, on 32-bit platforms, either MinGW or Wine throws the
-  // fiber_unwind exception from the thread instead of the fiber when destroying
-  // a fiber.
+  // On 32-bit platforms, either MinGW or Wine causes terminate to be called if
+  // an exception is thrown from Fiber::resume(). This prevents the use of
+  // fiber_unwind and therefore the proper destruction of fibers.
   for (int i = 0; i < 3; i++)
     tap_skip();
 #else
