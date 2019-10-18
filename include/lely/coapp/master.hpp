@@ -758,8 +758,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
       SetTime();
       return sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
     } else {
-      return ev::make_error_future<void>(make_sdo_exception_ptr(
-          id, idx, subidx, SdoErrc::NO_SDO, "AsyncWrite"));
+      return ev::make_error_future<T>(make_sdo_exception_ptr(
+          id, idx, subidx, SdoErrc::NO_SDO, "AsyncRead"));
     }
   }
 
