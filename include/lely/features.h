@@ -282,6 +282,16 @@
 #endif
 #endif
 
+#ifndef LEVEL1_DCACHE_LINESIZE
+/**
+ * The presumed size (in bytes) of a line in the L1 data cache. This value can
+ * be used with _Alignas() to prevent variables from sharing a cache line, which
+ * may increase the performance of some data structures in a multithreaded
+ * environment.
+ */
+#define LEVEL1_DCACHE_LINESIZE 64
+#endif
+
 #define LELY_INGORE_EMPTY_TRANSLATION_UNIT \
 	typedef int lely_ignore_empty_translation_unit__;
 
