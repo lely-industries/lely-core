@@ -268,6 +268,10 @@ inc += lely/io2/tqueue.h
 if !NO_CXX
 inc += lely/io2/tqueue.hpp
 endif
+inc += lely/io2/vcan.h
+if !NO_CXX
+inc += lely/io2/vcan.hpp
+endif
 
 inc += lely/co/def/basic.def
 if !NO_CXX

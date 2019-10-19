@@ -53,6 +53,7 @@ src += sigset.h
 src += timer.c
 src += timer.h
 src += tqueue.c
+src += vcan.c
 
 lib_LTLIBRARIES = liblely-io2.la
 liblely_io2_la_CPPFLAGS = -I$(top_srcdir)/include
