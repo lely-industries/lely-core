@@ -2066,6 +2066,8 @@ PREDEFINED             += __clang_minor__=0
 PREDEFINED             += __GNUC__=7
 PREDEFINED             += __GNUC_MINOR__=3
 
+PREDEFINED             += "_Alignas(x)="
+
 PREDEFINED             += "format_printf__(i, j)="
 
 PREDEFINED             += __WORDSIZE=64

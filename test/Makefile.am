@@ -40,6 +40,12 @@ test_util_fiber_SOURCES = test.h util-fiber.cpp
 test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
 endif
 
+if !NO_THREADS
+bin += test-util-spscring
+test_util_spscring_SOURCES = test.h util-spscring.c
+test_util_spscring_LDADD = $(LELY_UTIL_LIBS)
+endif
+
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
