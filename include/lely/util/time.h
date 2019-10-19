@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the time
  * function declarations.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -54,23 +54,23 @@ LELY_UTIL_TIME_INLINE void timespec_add_usec(
 LELY_UTIL_TIME_INLINE void timespec_add_nsec(
 		struct timespec *tp, uint_least64_t nsec);
 
-/// Subtracts the time interval *<b>inc</b> to the time at <b>tp</b>.
+/// Subtracts the time interval *<b>dec</b> from the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub(
 		struct timespec *tp, const struct timespec *dec);
 
-/// Subtracts <b>sec</b> seconds to the time at <b>tp</b>.
+/// Subtracts <b>sec</b> seconds from the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_sec(
 		struct timespec *tp, uint_least64_t sec);
 
-/// Subtracts <b>msec</b> milliseconds to the time at <b>tp</b>.
+/// Subtracts <b>msec</b> milliseconds from the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_msec(
 		struct timespec *tp, uint_least64_t msec);
 
-/// Subtracts <b>usec</b> microseconds to the time at <b>tp</b>.
+/// Subtracts <b>usec</b> microseconds from the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_usec(
 		struct timespec *tp, uint_least64_t usec);
 
-/// Subtracts <b>nsec</b> nanoseconds to the time at <b>tp</b>.
+/// Subtracts <b>nsec</b> nanoseconds from the time at <b>tp</b>.
 LELY_UTIL_TIME_INLINE void timespec_sub_nsec(
 		struct timespec *tp, uint_least64_t nsec);
 
