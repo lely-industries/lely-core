@@ -79,6 +79,7 @@ if !NO_CXX
 inc += lely/util/result.hpp
 endif
 inc += lely/util/sllist.h
+inc += lely/util/spscring.h
 inc += lely/util/time.h
 inc += lely/util/util.h
 

@@ -30,6 +30,7 @@ src += pheap.c
 src += print.c
 src += rbtree.c
 src += sllist.c
+src += spscring.c
 src += time.c
 src += util.h
 
