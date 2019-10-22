@@ -22,9 +22,9 @@ liblely_coapp_la_CPPFLAGS = -I$(top_srcdir)/include
 if CODE_COVERAGE_ENABLED
 liblely_coapp_la_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
 endif
-liblely_coapp_la_CFLAGS =
+liblely_coapp_la_CXXFLAGS =
 if CODE_COVERAGE_ENABLED
-liblely_coapp_la_CFLAGS += $(CODE_COVERAGE_CFLAGS)
+liblely_coapp_la_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
 endif
 liblely_coapp_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
