@@ -79,6 +79,7 @@ if !NO_CXX
 inc += lely/util/result.hpp
 endif
 inc += lely/util/sllist.h
+inc += lely/util/spscring.h
 inc += lely/util/time.h
 inc += lely/util/util.h
 
@@ -266,6 +267,10 @@ endif
 inc += lely/io2/tqueue.h
 if !NO_CXX
 inc += lely/io2/tqueue.hpp
+endif
+inc += lely/io2/vcan.h
+if !NO_CXX
+inc += lely/io2/vcan.hpp
 endif
 
 inc += lely/co/def/basic.def

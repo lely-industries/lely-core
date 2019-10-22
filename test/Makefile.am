@@ -40,6 +40,12 @@ test_util_fiber_SOURCES = test.h util-fiber.cpp
 test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
 endif
 
+if !NO_THREADS
+bin += test-util-spscring
+test_util_spscring_SOURCES = test.h util-spscring.c
+test_util_spscring_LDADD = $(LELY_UTIL_LIBS)
+endif
+
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
@@ -118,6 +124,12 @@ test_io2_tqueue_SOURCES = test.h io2-tqueue.cpp
 test_io2_tqueue_LDADD = $(LELY_IO2_LIBS)
 endif
 
+if !NO_CXX
+bin += test-io2-vcan
+test_io2_vcan_SOURCES = test.h io2-vcan.cpp
+test_io2_vcan_LDADD = $(LELY_IO2_LIBS)
+endif
+
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)
@@ -190,6 +202,17 @@ endif
 
 endif
 
+# C++ CANopen application library tests
+
+LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
+LELY_COAPP_LIBS += $(top_builddir)/src/coapp/liblely-coapp.la
+
+if !NO_CXX
+bin += test-coapp-fiber
+test_coapp_fiber_SOURCES = test.h coapp-fiber.cpp
+test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
+endif
+
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini
 EXTRA_DIST += co-emcy.dcf
@@ -204,6 +227,8 @@ EXTRA_DIST += co-sdo-client.dcf
 EXTRA_DIST += co-sdo-server.dcf
 EXTRA_DIST += co-sync.dcf
 EXTRA_DIST += co-time.dcf
+EXTRA_DIST += coapp-fiber-master.dcf
+EXTRA_DIST += coapp-fiber-slave.dcf
 
 BUILT_SOURCES =
 if !NO_TOOLS
