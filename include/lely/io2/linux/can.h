@@ -177,7 +177,7 @@ int io_can_chan_assign(io_can_chan_t *chan, int fd);
 int io_can_chan_release(io_can_chan_t *chan);
 
 /**
- * Returns 1 is the CAN channel is open and 0 if not. This function is
+ * Returns 1 if the CAN channel is open and 0 if not. This function is
  * equivalent to `io_can_chan_get_handle(chan) != -1`.
  */
 int io_can_chan_is_open(const io_can_chan_t *chan);

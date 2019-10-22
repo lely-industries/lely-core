@@ -61,7 +61,7 @@ void io_user_can_chan_fini(io_can_chan_t *chan);
  * Creates a new user-defined CAN channel.
  *
  * @param ctx     a pointer to the I/O context with which the channel should be
- *                be registered.
+ *                registered.
  * @param exec    a pointer to the executor used to execute asynchronous tasks.
  * @param flags   the flags specifying which CAN bus features MUST be enabled
  *                (any combination of #IO_CAN_BUS_FLAG_ERR, #IO_CAN_BUS_FLAG_FDF
