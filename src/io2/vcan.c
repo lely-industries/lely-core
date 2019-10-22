@@ -313,7 +313,7 @@ io_vcan_ctrl_init(io_can_ctrl_t *ctrl, io_clock_t *clock, int flags,
 	return ctrl;
 
 #if !LELY_NO_THREADS
-	cnd_destroy(&vcan->cond);
+	// cnd_destroy(&vcan->cond);
 error_init_cond:
 	mtx_destroy(&vcan->mtx);
 error_init_mtx:
@@ -499,7 +499,7 @@ io_vcan_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 	return chan;
 
 #if !LELY_NO_THREADS
-	cnd_destroy(&vcan->cond);
+	// cnd_destroy(&vcan->cond);
 error_init_cond:
 	mtx_destroy(&vcan->mtx);
 error_init_mtx:
@@ -1247,7 +1247,7 @@ io_vcan_chan_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 #endif
 	if (vcan->shutdown) {
 #if !LELY_NO_THREADS
-		mtx_lock(&vcan->mtx);
+		mtx_unlock(&vcan->mtx);
 #endif
 		io_can_chan_read_post(read, -1, errnum2c(ERRNUM_CANCELED));
 	} else if (!vcan->ctrl) {
@@ -1302,7 +1302,7 @@ io_vcan_chan_submit_write(io_can_chan_t *chan, struct io_can_chan_write *write)
 #endif
 	if (vcan->shutdown) {
 #if !LELY_NO_THREADS
-		mtx_lock(&vcan->mtx);
+		mtx_unlock(&vcan->mtx);
 #endif
 		io_can_chan_write_post(write, errnum2c(ERRNUM_CANCELED));
 	} else if (!vcan->ctrl) {

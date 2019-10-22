@@ -165,7 +165,7 @@ vfd_open(size_t size, int nonblock)
 
 	return fd;
 
-	cnd_destroy(&fd->write.cond);
+	// cnd_destroy(&fd->write.cond);
 error_init_write_cond:
 	mtx_destroy(&fd->write.mtx);
 error_init_write_mtx:
