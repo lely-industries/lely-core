@@ -329,7 +329,7 @@ ev_future_t *io_can_chan_async_read(io_can_chan_t *chan, ev_exec_t *exec,
 		struct io_can_chan_read **pread);
 
 /**
- * Writes a CAN frameto a CAN channel. This function blocks until the frame is
+ * Writes a CAN frame to a CAN channel. This function blocks until the frame is
  * written or an error occurs.
  *
  * @param chan    a pointer to a CAN channel.

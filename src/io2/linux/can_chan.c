@@ -380,7 +380,7 @@ io_can_chan_destroy(io_can_chan_t *chan)
 }
 
 int
-io_can_chan_get_fd(const io_can_chan_t *chan)
+io_can_chan_get_handle(const io_can_chan_t *chan)
 {
 	const struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
@@ -534,7 +534,7 @@ io_can_chan_release(io_can_chan_t *chan)
 int
 io_can_chan_is_open(const io_can_chan_t *chan)
 {
-	return io_can_chan_get_fd(chan) != -1;
+	return io_can_chan_get_handle(chan) != -1;
 }
 
 int
