@@ -108,8 +108,10 @@ struct __co_nmt {
 	co_dev_t *dev;
 	/// The pending node-ID.
 	co_unsigned8_t id;
+#ifndef LELY_NO_CO_DCF_RESTORE
 	/// The concise DCF of the application parameters.
 	void *dcf_node;
+#endif
 	/// The concise DCF of the communication parameters.
 	void *dcf_comm;
 	/// The current state.
@@ -739,11 +741,13 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->id = co_dev_get_id(nmt->dev);
 
+#ifndef LELY_NO_CO_DCF_RESTORE
 	// Store a concise DCF containing the application parameters.
 	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, &nmt->dcf_node) == -1) {
 		errc = get_errc();
 		goto error_write_dcf_node;
 	}
+#endif
 
 	// Store a concise DCF containing the communication parameters.
 	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm) == -1) {
@@ -915,8 +919,10 @@ error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
 error_write_dcf_comm:
+#ifndef LELY_NO_CO_DCF_RESTORE
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
 error_write_dcf_node:
+#endif
 	set_errc(errc);
 	return NULL;
 }
@@ -989,7 +995,9 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	co_nmt_srv_fini(&nmt->srv);
 
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
+#ifndef LELY_NO_CO_DCF_RESTORE
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
+#endif
 }
 
 co_nmt_t *
@@ -2758,10 +2766,12 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 	// Stop receiving NMT commands.
 	can_recv_stop(nmt->recv_000);
 
+#ifndef LELY_NO_CO_DCF_RESTORE
 	// Reset application parameters.
 	if (co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_node) == -1)
 		diag(DIAG_ERROR, get_errc(),
 				"unable to reset application parameters");
+#endif
 
 	nmt->st = CO_NMT_ST_RESET_NODE;
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), 0);
