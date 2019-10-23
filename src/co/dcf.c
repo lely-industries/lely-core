@@ -520,9 +520,11 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 					CO_DEFTYPE_UNSIGNED8, "NrOfObjects");
 			if (!sub)
 				return -1;
-			co_val_make(sub->type, &sub->def, &subobj,
+			co_val_make(sub->type, sub->val, &subobj,
 					sizeof(subobj));
-			co_val_copy(sub->type, sub->val, &sub->def);
+#ifndef LELY_NO_CO_OBJ_DEFAULT
+			co_val_copy(sub->type, &sub->def, sub->val);
+#endif
 			co_sub_set_access(sub, CO_ACCESS_RO);
 
 			name = config_get(cfg, section, "ParameterName");
@@ -724,11 +726,18 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	assert(sub);
 	assert(cfg);
 
+	int result = -1;
+
 	const char *val;
 	struct floc at = { section, 0, 0 };
 
 	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
 	co_unsigned16_t type = co_sub_get_type(sub);
+
+#ifdef LELY_NO_CO_OBJ_DEFAULT
+	union co_val def;
+	co_val_init(type, &def);
+#endif
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	val = config_get(cfg, section, "LowLimit");
@@ -740,7 +749,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (!co_val_lex(type, &sub->min, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse LowLimit");
-			return -1;
+			goto error;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MIN_NODEID)
 			co_val_set_id(type, &sub->min, id);
@@ -755,7 +764,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (!co_val_lex(type, &sub->max, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse HighLimit");
-			return -1;
+			goto error;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_MAX_NODEID)
 			co_val_set_id(type, &sub->max, id);
@@ -779,12 +788,12 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			access = CO_ACCESS_CONST;
 		} else {
 			diag_at(DIAG_ERROR, 0, &at, "AccessType = %s", val);
-			return -1;
+			goto error;
 		}
 		co_sub_set_access(sub, access);
 	} else if (type != CO_DEFTYPE_DOMAIN) {
 		diag_at(DIAG_ERROR, 0, &at, "AccessType not specified");
-		return -1;
+		goto error;
 	}
 
 	val = config_get(cfg, section, "DefaultValue");
@@ -793,13 +802,21 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += 7;
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
+#ifdef LELY_NO_CO_OBJ_DEFAULT
+		if (!co_val_lex(type, &def, val, NULL, &at)) {
+#else
 		if (!co_val_lex(type, &sub->def, val, NULL, &at)) {
+#endif
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse DefaultValue");
-			return -1;
+			goto error;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
+#ifdef LELY_NO_CO_OBJ_DEFAULT
+			co_val_set_id(type, &def, id);
+#else
 			co_val_set_id(type, &sub->def, id);
+#endif
 	}
 
 	val = config_get(cfg, section, "PDOMapping");
@@ -819,7 +836,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (!co_val_lex(type, sub->val, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse ParameterValue");
-			return -1;
+			goto error;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
 			co_val_set_id(type, sub->val, id);
@@ -841,7 +858,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (co_val_init_dom(sub->val, val, strlen(val) + 1) == -1) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse UploadFile");
-			return -1;
+			goto error;
 		}
 	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "DownloadFile"))
@@ -859,40 +876,52 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		if (co_val_init_dom(sub->val, val, strlen(val) + 1) == -1) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse DownloadFile");
-			return -1;
+			goto error;
 		}
 #endif
 	} else {
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
+#ifdef LELY_NO_CO_OBJ_DEFAULT
+		co_val_copy(type, sub->val, &def);
+#else
 		co_val_copy(type, sub->val, &sub->def);
+#endif
 	}
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	if (co_type_is_basic(type)) {
 		const void *min = co_sub_addressof_min(sub);
 		const void *max = co_sub_addressof_max(sub);
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 		const void *def = co_sub_addressof_def(sub);
+#endif
 		const void *val = co_sub_addressof_val(sub);
 		if (co_val_cmp(type, min, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at,
 					"LowLimit exceeds HighLimit");
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 		if (co_val_cmp(type, def, min) < 0)
 			diag_at(DIAG_WARNING, 0, &at, "DefaultValue underflow");
 		if (co_val_cmp(type, def, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at, "DefaultValue overflow");
-		if (co_val_cmp(type, val, def)
-				&& co_val_cmp(type, val, min) < 0)
+#endif
+		if (co_val_cmp(type, val, min) < 0)
 			diag_at(DIAG_WARNING, 0, &at,
 					"ParameterValue underflow");
-		if (co_val_cmp(type, val, def)
-				&& co_val_cmp(type, val, max) > 0)
+		if (co_val_cmp(type, val, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at,
 					"ParameterValue overflow");
 	}
 #endif
 
-	return 0;
+	result = 0;
+
+error:
+#ifdef LELY_NO_CO_OBJ_DEFAULT
+	co_val_fini(type, &def);
+#endif
+	return result;
 }
 
 static co_sub_t *
@@ -969,8 +998,10 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				"Highest sub-index supported");
 		if (!sub)
 			return -1;
-		co_val_make(sub->type, &sub->def, &n, sizeof(n));
-		co_val_copy(sub->type, sub->val, &sub->def);
+		co_val_make(sub->type, sub->val, &n, sizeof(n));
+#ifndef LELY_NO_CO_OBJ_DEFAULT
+		co_val_copy(sub->type, &sub->def, sub->val);
+#endif
 		co_sub_set_access(sub, CO_ACCESS_CONST);
 
 		if (mask & 0x01) {
@@ -984,9 +1015,10 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
-			co_val_make(sub->type, &sub->def, &cobid,
-					sizeof(cobid));
-			co_val_copy(sub->type, sub->val, &sub->def);
+			co_val_make(sub->type, sub->val, &cobid, sizeof(cobid));
+#ifndef LELY_NO_CO_OBJ_DEFAULT
+			co_val_copy(sub->type, &sub->def, sub->val);
+#endif
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
 
@@ -1099,8 +1131,10 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				"Highest sub-index supported");
 		if (!sub)
 			return -1;
-		co_val_make(sub->type, &sub->def, &n, sizeof(n));
-		co_val_copy(sub->type, sub->val, &sub->def);
+		co_val_make(sub->type, sub->val, &n, sizeof(n));
+#ifndef LELY_NO_CO_OBJ_DEFAULT
+		co_val_copy(sub->type, &sub->def, sub->val);
+#endif
 		co_sub_set_access(sub, CO_ACCESS_CONST);
 
 		if (mask & 0x01) {
@@ -1114,9 +1148,10 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
-			co_val_make(sub->type, &sub->def, &cobid,
-					sizeof(cobid));
-			co_val_copy(sub->type, sub->val, &sub->def);
+			co_val_make(sub->type, sub->val, &cobid, sizeof(cobid));
+#ifndef LELY_NO_CO_OBJ_DEFAULT
+			co_val_copy(sub->type, &sub->def, sub->val);
+#endif
 			co_sub_set_access(sub, CO_ACCESS_RW);
 		}
 

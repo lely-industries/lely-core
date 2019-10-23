@@ -534,10 +534,12 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 		return -1;
 #endif
 
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	ptr = co_val_addressof(ssub->type, &ssub->def);
 	n = co_val_sizeof(ssub->type, &ssub->def);
 	if (n && !co_sub_set_def(sub, ptr, n))
 		return -1;
+#endif
 
 	ptr = co_val_addressof(ssub->type, &ssub->val);
 	n = co_val_sizeof(ssub->type, &ssub->val);
@@ -787,7 +789,14 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	r = snprintf_c99_sval(s, n, type, co_sub_get_def(sub));
+#else
+	union co_val def;
+	co_val_init_min(type, &def);
+	r = snprintf_c99_sval(s, n, type, &def);
+	co_val_fini(type, &def);
+#endif
 	if (r < 0)
 		return r;
 	t += r;

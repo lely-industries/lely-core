@@ -892,8 +892,10 @@ co_sub_set_id(co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id)
 	if (flags & CO_OBJ_FLAGS_MAX_NODEID)
 		co_val_set_id(type, &sub->max, new_id, old_id);
 #endif
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	if (flags & CO_OBJ_FLAGS_DEF_NODEID)
 		co_val_set_id(type, &sub->def, new_id, old_id);
+#endif
 	if (flags & CO_OBJ_FLAGS_VAL_NODEID)
 		co_val_set_id(type, sub->val, new_id, old_id);
 }
