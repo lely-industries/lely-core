@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the static
  * device description declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -89,11 +89,11 @@ struct co_ssub {
 	/// The sub-object value.
 	union co_val val;
 	/// The access type.
-	unsigned access : 5;
+	unsigned long access : 5;
 	/// A flag indicating if it is possible to map this object into a PDO.
-	unsigned pdo_mapping : 1;
+	unsigned long pdo_mapping : 1;
 	/// The object flags.
-	unsigned flags : 26;
+	unsigned long flags : 26;
 };
 
 #ifdef __cplusplus

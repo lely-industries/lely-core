@@ -75,11 +75,11 @@ struct __co_sub {
 	/// A pointer to the sub-object value.
 	void *val;
 	/// The access type.
-	unsigned access : 5;
+	unsigned long access : 5;
 	/// A flag indicating if it is possible to map this object into a PDO.
-	unsigned pdo_mapping : 1;
+	unsigned long pdo_mapping : 1;
 	/// The object flags.
-	unsigned flags : 26;
+	unsigned long flags : 26;
 	/// A pointer to the download indication function.
 	co_sub_dn_ind_t *dn_ind;
 	/// A pointer to user-specified data for #dn_ind.
