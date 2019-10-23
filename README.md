@@ -200,6 +200,8 @@ space on embedded devices. liblely-co supports the following `configure` options
 
 * `--disable-dcf` (`LELY_NO_CO_DCF`):
   disable EDS/DCF support.
+* `--disable-dcf-restore` (`LELY_NO_CO_DCF_RESTORE`):
+  do not (re)store concise DCF of the application parameters.
 * `--disable-obj-default` (`LELY_NO_CO_OBJ_DEFAULT`):
   disable default values in the object dictionary.
 * `--disable-obj-file` (`LELY_NO_CO_OBJ_FILE`):

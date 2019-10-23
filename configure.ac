@@ -145,6 +145,14 @@ AS_IF([test "$enable_dcf" == "no"], [
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_DCF_RESTORE], [false])
+AC_ARG_ENABLE([dcf-restore],
+	AS_HELP_STRING([--disable-dcf-restore], [do not (re)store concise DCF of the application parameters]))
+AS_IF([test "$enable_dcf_restore" == "no"], [
+	AM_CONDITIONAL([NO_CO_DCF_RESTORE], [true])
+	AC_DEFINE([LELY_NO_CO_DCF_RESTORE], [1], [Define to 1 if concise DCF of the application parameters is not (re)stored.])
+])
+
 AM_CONDITIONAL([NO_CO_OBJ_DEFAULT], [false])
 AC_ARG_ENABLE([obj-default],
 	AS_HELP_STRING([--disable-obj-default], [disable default values in the object dictionary]))
