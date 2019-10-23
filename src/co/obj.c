@@ -244,7 +244,7 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 	return 0;
 }
 
-#endif // LELY_NO_CO_OBJ_NAME
+#endif // !LELY_NO_CO_OBJ_NAME
 
 co_unsigned8_t
 co_obj_get_code(const co_obj_t *obj)
@@ -341,6 +341,7 @@ co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
 		co_sub_set_dn_ind(structof(node, co_sub_t, node), ind, data);
 }
 
+#ifndef LELY_NO_CO_OBJ_UPLOAD
 void
 co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 {
@@ -349,6 +350,7 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 	rbtree_foreach (&obj->tree, node)
 		co_sub_set_up_ind(structof(node, co_sub_t, node), ind, data);
 }
+#endif
 
 void *
 __co_sub_alloc(void)
@@ -385,8 +387,10 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	if (co_val_init_max(sub->type, &sub->max) == -1)
 		return NULL;
 #endif
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	if (co_val_init(sub->type, &sub->def) == -1)
 		return NULL;
+#endif
 	sub->val = NULL;
 
 	sub->access = CO_ACCESS_RW;
@@ -395,8 +399,10 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 
 	sub->dn_ind = &default_sub_dn_ind;
 	sub->dn_data = NULL;
+#ifndef LELY_NO_CO_OBJ_UPLOAD
 	sub->up_ind = &default_sub_up_ind;
 	sub->up_data = NULL;
+#endif
 
 	return sub;
 }
@@ -409,7 +415,9 @@ __co_sub_fini(struct __co_sub *sub)
 	if (sub->obj)
 		co_obj_remove_sub(sub->obj, sub);
 
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	co_val_fini(sub->type, &sub->def);
+#endif
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	co_val_fini(sub->type, &sub->max);
 	co_val_fini(sub->type, &sub->min);
@@ -502,7 +510,7 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 	return 0;
 }
 
-#endif // LELY_NO_CO_OBJ_NAME
+#endif // !LELY_NO_CO_OBJ_NAME
 
 co_unsigned16_t
 co_sub_get_type(const co_sub_t *sub)
@@ -568,7 +576,9 @@ co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 	return co_val_make(sub->type, &sub->max, ptr, n);
 }
 
-#endif // LELY_NO_CO_OBJ_LIMITS
+#endif // !LELY_NO_CO_OBJ_LIMITS
+
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 
 const void *
 co_sub_addressof_def(const co_sub_t *sub)
@@ -596,6 +606,8 @@ co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n)
 	co_val_fini(sub->type, &sub->def);
 	return co_val_make(sub->type, &sub->def, ptr, n);
 }
+
+#endif // !LELY_NO_CO_OBJ_DEFAULT
 
 const void *
 co_sub_addressof_val(const co_sub_t *sub)
@@ -839,6 +851,8 @@ co_sub_dn(co_sub_t *sub, void *val)
 	return 0;
 }
 
+#ifndef LELY_NO_CO_OBJ_UPLOAD
+
 void
 co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
 {
@@ -858,6 +872,8 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 	sub->up_ind = ind ? ind : &default_sub_up_ind;
 	sub->up_data = ind ? data : NULL;
 }
+
+#endif // !LELY_NO_CO_OBJ_UPLOAD
 
 co_unsigned32_t
 co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req)
@@ -895,8 +911,12 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 	if (!req)
 		return CO_SDO_AC_ERROR;
 
+#ifdef LELY_NO_CO_OBJ_UPLOAD
+	return default_sub_up_ind(sub, req, NULL);
+#else
 	assert(sub->up_ind);
 	return sub->up_ind(sub, req, sub->up_data);
+#endif
 }
 
 static void
