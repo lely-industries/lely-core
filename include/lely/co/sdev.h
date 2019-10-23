@@ -60,8 +60,10 @@ struct co_sdev {
 
 /// A static CANopen object. @see #co_sdev
 struct co_sobj {
+#ifndef LELY_NO_CO_OBJ_NAME
 	/// A pointer to the name of the object.
 	const char *name;
+#endif
 	/// The object index.
 	co_unsigned16_t idx;
 	/// The object code.
@@ -74,18 +76,24 @@ struct co_sobj {
 
 /// A static CANopen sub-object. @see #co_sobj
 struct co_ssub {
+#ifndef LELY_NO_CO_OBJ_NAME
 	/// A pointer to the name of the sub-object.
 	const char *name;
+#endif
 	/// The object sub-index.
 	co_unsigned8_t subidx;
 	/// The data type.
 	co_unsigned16_t type;
+#ifndef LELY_NO_CO_OBJ_LIMITS
 	/// The lower limit of #val.
 	union co_val min;
 	/// The upper limit of #val.
 	union co_val max;
+#endif
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	/// The default value of #val.
 	union co_val def;
+#endif
 	/// The sub-object value.
 	union co_val val;
 	/// The access type.
