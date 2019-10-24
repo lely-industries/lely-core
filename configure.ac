@@ -145,6 +145,22 @@ AS_IF([test "$enable_dcf" == "no"], [
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_DCF_RESTORE], [false])
+AC_ARG_ENABLE([dcf-restore],
+	AS_HELP_STRING([--disable-dcf-restore], [do not (re)store concise DCF of the application parameters]))
+AS_IF([test "$enable_dcf_restore" == "no"], [
+	AM_CONDITIONAL([NO_CO_DCF_RESTORE], [true])
+	AC_DEFINE([LELY_NO_CO_DCF_RESTORE], [1], [Define to 1 if concise DCF of the application parameters is not (re)stored.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_DEFAULT], [false])
+AC_ARG_ENABLE([obj-default],
+	AS_HELP_STRING([--disable-obj-default], [disable default values in the object dictionary]))
+AS_IF([test "$enable_obj_default" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_DEFAULT], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_DEFAULT], [1], [Define to 1 if default values are disabled in the object dictionary.])
+])
+
 AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
 AC_ARG_ENABLE([obj-file],
 	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
@@ -167,6 +183,14 @@ AC_ARG_ENABLE([obj-name],
 AS_IF([test "$enable_obj_name" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_NAME], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_NAME], [1], [Define to 1 if names are disabled in the object dictionary.])
+])
+
+AM_CONDITIONAL([NO_CO_OBJ_UPLOAD], [false])
+AC_ARG_ENABLE([obj-up-ind],
+	AS_HELP_STRING([--disable-obj-upload], [disable custom upload indication functions in the object dictionary]))
+AS_IF([test "$enable_obj_upload" == "no"], [
+	AM_CONDITIONAL([NO_CO_OBJ_UPLOAD], [true])
+	AC_DEFINE([LELY_NO_CO_OBJ_UPLOAD], [1], [Define to 1 if custom upload indication functions are disabled in the object dictionary.])
 ])
 
 AM_CONDITIONAL([NO_CO_SDEV], [false])

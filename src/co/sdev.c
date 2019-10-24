@@ -534,10 +534,12 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 		return -1;
 #endif
 
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	ptr = co_val_addressof(ssub->type, &ssub->def);
 	n = co_val_sizeof(ssub->type, &ssub->def);
 	if (n && !co_sub_set_def(sub, ptr, n))
 		return -1;
+#endif
 
 	ptr = co_val_addressof(ssub->type, &ssub->val);
 	n = co_val_sizeof(ssub->type, &ssub->val);
@@ -564,7 +566,8 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 #ifndef LELY_NO_CO_OBJ_NAME
 	const char *name = co_obj_get_name(obj);
 	if (name) {
-		r = snprintf(s, n, "\t\t.name = CO_SDEV_STRING(\"");
+		r = snprintf(s, n,
+				"#if !LELY_NO_CO_OBJ_NAME\n\t\t.name = CO_SDEV_STRING(\"");
 		if (r < 0)
 			return r;
 		t += r;
@@ -581,7 +584,8 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 		r = snprintf(s, n, "\"),\n");
 	} else {
 #endif
-		r = snprintf(s, n, "\t\t.name = NULL,\n");
+		r = snprintf(s, n,
+				"#if !LELY_NO_CO_OBJ_NAME\n\t\t.name = NULL,\n");
 #ifndef LELY_NO_CO_OBJ_NAME
 	}
 #endif
@@ -592,7 +596,7 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, "\t\t.idx = 0x%04x,\n\t\t.code = ",
+	r = snprintf(s, n, "#endif\n\t\t.idx = 0x%04x,\n\t\t.code = ",
 			co_obj_get_idx(obj));
 	if (r < 0)
 		return r;
@@ -682,7 +686,8 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 #ifndef LELY_NO_CO_OBJ_NAME
 	const char *name = co_sub_get_name(sub);
 	if (name) {
-		r = snprintf(s, n, "\t\t\t.name = CO_SDEV_STRING(\"");
+		r = snprintf(s, n,
+				"#if !LELY_NO_CO_OBJ_NAME\n\t\t\t.name = CO_SDEV_STRING(\"");
 		if (r < 0)
 			return r;
 		t += r;
@@ -699,7 +704,8 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 		r = snprintf(s, n, "\"),\n");
 	} else {
 #endif
-		r = snprintf(s, n, "\t\t\t.name = NULL,\n");
+		r = snprintf(s, n,
+				"#if !LELY_NO_CO_OBJ_NAME\n\t\t\t.name = NULL,\n");
 #ifndef LELY_NO_CO_OBJ_NAME
 	}
 #endif
@@ -710,7 +716,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, "\t\t\t.subidx = 0x%02x,\n\t\t\t.type = ",
+	r = snprintf(s, n, "#endif\n\t\t\t.subidx = 0x%02x,\n\t\t\t.type = ",
 			co_sub_get_subidx(sub));
 	if (r < 0)
 		return r;
@@ -736,7 +742,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, "\t\t\t.min = ");
+	r = snprintf(s, n, "#if !LELY_NO_CO_OBJ_LIMITS\n\t\t\t.min = ");
 	if (r < 0)
 		return r;
 	t += r;
@@ -780,14 +786,22 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, ",\n\t\t\t.def = ");
+	r = snprintf(s, n,
+			",\n#endif\n#if !LELY_NO_CO_OBJ_DEFAULT\n\t\t\t.def = ");
 	if (r < 0)
 		return r;
 	t += r;
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	r = snprintf_c99_sval(s, n, type, co_sub_get_def(sub));
+#else
+	union co_val def;
+	co_val_init_min(type, &def);
+	r = snprintf_c99_sval(s, n, type, &def);
+	co_val_fini(type, &def);
+#endif
 	if (r < 0)
 		return r;
 	t += r;
@@ -795,7 +809,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	s += r;
 	n -= r;
 
-	r = snprintf(s, n, ",\n\t\t\t.val = ");
+	r = snprintf(s, n, ",\n#endif\n\t\t\t.val = ");
 	if (r < 0)
 		return r;
 	t += r;

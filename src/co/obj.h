@@ -3,7 +3,7 @@
  *
  * @see lely/co/obj.h
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -70,24 +70,28 @@ struct __co_sub {
 	/// The upper limit of the object value.
 	union co_val max;
 #endif
+#ifndef LELY_NO_CO_OBJ_DEFAULT
 	/// The default value.
 	union co_val def;
+#endif
 	/// A pointer to the sub-object value.
 	void *val;
 	/// The access type.
-	unsigned access : 5;
+	unsigned long access : 5;
 	/// A flag indicating if it is possible to map this object into a PDO.
-	unsigned pdo_mapping : 1;
+	unsigned long pdo_mapping : 1;
 	/// The object flags.
-	unsigned flags : 26;
+	unsigned long flags : 26;
 	/// A pointer to the download indication function.
 	co_sub_dn_ind_t *dn_ind;
 	/// A pointer to user-specified data for #dn_ind.
 	void *dn_data;
+#ifndef LELY_NO_CO_OBJ_UPLOAD
 	/// A pointer to the upload indication function.
 	co_sub_up_ind_t *up_ind;
 	/// A pointer to user-specified data for #up_ind.
 	void *up_data;
+#endif
 };
 
 #endif // !LELY_CO_INTERN_OBJ_H_
