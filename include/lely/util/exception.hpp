@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the C++
  * exception declarations.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -33,9 +33,9 @@
  * exception.
  */
 #if __cpp_exceptions
-#define throw_or_abort(e) __throw_or_abort((e).what())
-#else
 #define throw_or_abort(e) throw(e)
+#else
+#define throw_or_abort(e) __throw_or_abort((e).what())
 #endif
 #endif
 
