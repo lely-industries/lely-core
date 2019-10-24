@@ -418,6 +418,7 @@ cppcheck:mingw32:
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
         include src
+  when: manual
 
 coverity:
   stage: test
