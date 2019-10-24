@@ -13,6 +13,7 @@ EXTRA_DIST += CPPLINT.cfg
 EXTRA_DIST += LICENSE
 EXTRA_DIST += NOTICE
 EXTRA_DIST += README.md
+EXTRA_DIST += suppressions.txt
 EXTRA_DIST += .clang-format.c
 EXTRA_DIST += .clang-format.cpp
 EXTRA_DIST += .cquery

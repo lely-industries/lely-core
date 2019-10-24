@@ -36,7 +36,7 @@ if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
 if PLATFORM_WIN32
-dcf2c_SOURCES += version.dcf2c.rc
+nodist_dcf2c_SOURCES = version.dcf2c.rc
 endif
 endif
 endif
