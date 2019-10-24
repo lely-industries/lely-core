@@ -247,6 +247,34 @@ build:arm-none-eabi:
     CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
+doc:
+  stage: build
+  tags:
+    - docker
+    - linux
+  image: debian:sid
+  dependencies: []
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+    - apt-get install -qy --no-install-recommends
+        automake
+        libtool
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev
+    - apt-get install -qy --no-install-recommends
+        doxygen
+        graphviz
+  script:
+    - autoreconf -i
+    - ./configure
+    - make html
+  artifacts:
+    paths:
+      - doc/
+    expire_in: 1 week
+
 cpplint:
   stage: test
   tags:
@@ -319,12 +347,10 @@ lcov:
     - ./configure --enable-code-coverage --disable-shared
     - make
     - make check-code-coverage
-    - make html
     - lcov --summary coverage.info --rc lcov_branch_coverage=1
   artifacts:
     paths:
       - coverage/
-      - doc/
     expire_in: 1 week
 
 scan-build:
@@ -473,6 +499,7 @@ pages:
     - linux
   image: alpine:latest
   dependencies:
+    - doc
     - lcov
   script:
     - mkdir -p public
