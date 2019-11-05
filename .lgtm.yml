@@ -1,0 +1,8 @@
+extraction:
+  cpp:
+    after_prepare:
+      - pip install --upgrade --user cython setuptools wheel
+      - pip3 install --upgrade --user cython setuptools wheel
+    index:
+      build_command:
+        - make check
