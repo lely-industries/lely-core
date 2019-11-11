@@ -25,10 +25,12 @@ bin += cocat
 cocat_SOURCES = cocat.c
 endif
 if !NO_CO_TPDO
+if !NO_CO_DCF
 bin += cocatd
 cocatd_SOURCES = cocatd.c
 etc += cocatd.dcf
 AM_CPPFLAGS += -DCOCATD_DCF="\"$(sysconfdir)/cocatd.dcf\""
+endif
 endif
 endif
 if !NO_CO_DCF
