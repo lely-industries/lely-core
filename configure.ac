@@ -186,7 +186,7 @@ AS_IF([test "$enable_obj_name" == "no"], [
 ])
 
 AM_CONDITIONAL([NO_CO_OBJ_UPLOAD], [false])
-AC_ARG_ENABLE([obj-up-ind],
+AC_ARG_ENABLE([obj-upload],
 	AS_HELP_STRING([--disable-obj-upload], [disable custom upload indication functions in the object dictionary]))
 AS_IF([test "$enable_obj_upload" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_UPLOAD], [true])
