@@ -93,29 +93,37 @@ void io_user_can_chan_destroy(io_can_chan_t *chan);
  * Processes an incoming CAN frame and submits the completion task of the first
  * pending read operation, if any, for execution.
  *
- * @param chan a pointer to a user-defined CAN channel.
- * @param msg  a pointer to the incoming CAN frame.
- * @param tp   a pointer to the system time at which the CAN frame was received
- *             (can be NULL).
+ * @param chan    a pointer to a user-defined CAN channel.
+ * @param msg     a pointer to the incoming CAN frame.
+ * @param tp      a pointer to the system time at which the CAN frame was
+ *                received (can be NULL).
+ * @param timeout the maximum number of milliseconds this function will block
+ *                when the receive queue is full. If <b>timeout</b> is negative,
+ *                this function will block indefinitely.
  *
- * @returns 1 if a pending read operation was completed, and 0 if not.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  */
 int io_user_can_chan_on_msg(io_can_chan_t *chan, const struct can_msg *msg,
-		const struct timespec *tp);
+		const struct timespec *tp, int timeout);
 
 /**
  * Processes an incoming CAN error frame and submits the completion task of the
  * first pending read operation, if any, for execution.
  *
- * @param chan a pointer to a user-defined CAN channel.
- * @param err  a pointer to the incoming CAN error frame.
- * @param tp   a pointer to the system time at which the CAN error frame was
- *             received (can be NULL).
+ * @param chan    a pointer to a user-defined CAN channel.
+ * @param err     a pointer to the incoming CAN error frame.
+ * @param tp      a pointer to the system time at which the CAN error frame was
+ *                received (can be NULL).
+ * @param timeout the maximum number of milliseconds this function will block
+ *                when the receive queue is full. If <b>timeout</b> is negative,
+ *                this function will block indefinitely.
  *
- * @returns 1 if a pending read operation was completed, and 0 if not.
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
  */
 int io_user_can_chan_on_err(io_can_chan_t *chan, const struct can_err *err,
-		const struct timespec *tp);
+		const struct timespec *tp, int timeout);
 
 #ifdef __cplusplus
 }

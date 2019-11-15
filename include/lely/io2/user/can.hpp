@@ -67,29 +67,89 @@ class UserCanChannel : public CanChannelBase {
   ~UserCanChannel() { io_user_can_chan_destroy(*this); }
 
   /// @see io_user_can_chan_on_msg()
-  bool
-  on_read(const can_msg* msg, const ::std::chrono::nanoseconds& d) noexcept {
+  void
+  on_read(const can_msg* msg, const ::std::chrono::nanoseconds& d, int timeout,
+          ::std::error_code& ec) noexcept {
     auto ts = util::to_timespec(d);
-    return io_user_can_chan_on_msg(*this, msg, &ts) != 0;
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_user_can_chan_on_msg(*this, msg, &ts, timeout))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
   }
 
   /// @see io_user_can_chan_on_msg()
-  bool
-  on_read(const can_msg* msg) noexcept {
-    return io_user_can_chan_on_msg(*this, msg, nullptr) != 0;
+  void
+  on_read(const can_msg* msg, const ::std::chrono::nanoseconds& d,
+          int timeout = -1) {
+    ::std::error_code ec;
+    on_read(msg, d, timeout, ec);
+    if (ec) throw ::std::system_error(ec, "on_read");
+  }
+
+  /// @see io_user_can_chan_on_msg()
+  void
+  on_read(const can_msg* msg, int timeout, ::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_user_can_chan_on_msg(*this, msg, nullptr, timeout))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_user_can_chan_on_msg()
+  void
+  on_read(const can_msg* msg, int timeout = -1) {
+    ::std::error_code ec;
+    on_read(msg, timeout, ec);
+    if (ec) throw ::std::system_error(ec, "on_read");
   }
 
   /// @see io_user_can_chan_on_err()
-  bool
-  on_read(const can_err* err, const ::std::chrono::nanoseconds& d) noexcept {
+  void
+  on_read(const can_err* err, const ::std::chrono::nanoseconds& d, int timeout,
+          ::std::error_code& ec) noexcept {
     auto ts = util::to_timespec(d);
-    return io_user_can_chan_on_err(*this, err, &ts) != 0;
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_user_can_chan_on_err(*this, err, &ts, timeout))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
   }
 
   /// @see io_user_can_chan_on_err()
-  bool
-  on_read(const can_err* err) noexcept {
-    return io_user_can_chan_on_err(*this, err, nullptr) != 0;
+  void
+  on_read(const can_err* err, const ::std::chrono::nanoseconds& d,
+          int timeout = -1) {
+    ::std::error_code ec;
+    on_read(err, d, timeout, ec);
+    if (ec) throw ::std::system_error(ec, "on_read");
+  }
+
+  /// @see io_user_can_chan_on_err()
+  void
+  on_read(const can_err* err, int timeout, ::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_user_can_chan_on_err(*this, err, nullptr, timeout))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_user_can_chan_on_err()
+  void
+  on_read(const can_err* err, int timeout = -1) {
+    ::std::error_code ec;
+    on_read(err, timeout, ec);
+    if (ec) throw ::std::system_error(ec, "on_read");
   }
 };
 
