@@ -612,6 +612,7 @@ io_user_can_chan_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 #if !LELY_NO_THREADS
 		mtx_unlock(&user->mtx);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (post_read)
 			ev_exec_post(user->read_task.exec, &user->read_task);
 	}
@@ -693,6 +694,7 @@ io_user_can_chan_submit_write(
 #if !LELY_NO_THREADS
 		mtx_unlock(&user->mtx);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (post_write)
 			ev_exec_post(user->write_task.exec, &user->write_task);
 	}
@@ -716,6 +718,7 @@ io_user_can_chan_svc_shutdown(struct io_svc *svc)
 #if !LELY_NO_THREADS
 	mtx_unlock(&user->mtx);
 #endif
+	// cppcheck-suppress duplicateCondition
 	if (shutdown)
 		// Cancel all pending operations.
 		io_user_can_chan_dev_cancel(dev, NULL);
@@ -972,6 +975,7 @@ io_user_can_chan_c_signal(struct spscring *ring, void *arg)
 	cnd_broadcast(&user->c_cond);
 	mtx_unlock(&user->mtx);
 #endif
+	// cppcheck-suppress duplicateCondition
 	if (post_read)
 		ev_exec_post(user->read_task.exec, &user->read_task);
 }
