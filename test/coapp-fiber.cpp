@@ -110,12 +110,13 @@ main() {
   VirtualCanChannel schan(ctx, exec);
   schan.open(ctrl);
   tap_test(schan.is_open());
-  MySlave slave(timer, schan, "coapp-fiber-slave.dcf", "", 127);
+  MySlave slave(timer, schan, TEST_SRCDIR "/coapp-fiber-slave.dcf", "", 127);
 
   VirtualCanChannel mchan(ctx, exec);
   mchan.open(ctrl);
   tap_test(mchan.is_open());
-  AsyncMaster master(timer, mchan, "coapp-fiber-master.dcf", "", 1);
+  AsyncMaster master(timer, mchan, TEST_SRCDIR "/coapp-fiber-master.dcf", "",
+                     1);
   MyDriver driver(exec, master, 127);
 
   slave.Reset();
