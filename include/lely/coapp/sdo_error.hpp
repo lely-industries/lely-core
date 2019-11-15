@@ -127,7 +127,7 @@ class SdoError : public ::std::system_error {
            const char* what_arg);
   SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev);
   SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
-           const std::string& what_arg);
+           const ::std::string& what_arg);
   SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
            const char* what_arg);
 

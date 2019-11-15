@@ -150,12 +150,12 @@ SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev)
     : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory())) {}
 
 SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
-                   const char* what_arg)
+                   const ::std::string& what_arg)
     : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory()),
                what_arg) {}
 
 SdoError::SdoError(uint8_t id, uint16_t idx, uint8_t subidx, int ev,
-                   const ::std::string& what_arg)
+                   const char* what_arg)
     : SdoError(id, idx, subidx, ::std::error_code(ev, SdoCategory()),
                what_arg) {}
 

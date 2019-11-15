@@ -67,7 +67,7 @@
 #define TAP_ARGS_AT_63_(_63, ...) _63
 #endif // __cplusplus
 
-/// Appends <b>arg<b> if the variadic argument list contains a single argument.
+/// Appends <b>arg</b> if the variadic argument list contains a single argument.
 #define TAP_ARGS_DEFAULT(arg, ...) \
 	TAP_ARGS_DEFAULT_(TAP_ARGS_HAS_COMMA(__VA_ARGS__), arg, __VA_ARGS__)
 #define TAP_ARGS_DEFAULT_(n, ...) TAP_ARGS_DEFAULT__(n, __VA_ARGS__)

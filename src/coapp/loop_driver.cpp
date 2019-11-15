@@ -133,8 +133,8 @@ LoopDriver::Impl_::Start() {
   auto& loop = self->GetLoop();
   auto exec = self->GetExecutor();
 
-  // Start the event loop. Signal the existence of a fake task to
-  // prevent the loop for stopping early.
+  // Start the event loop. Signal the existence of a fake task to prevent the
+  // loop for stopping early.
   exec.on_task_init();
   loop.run();
   exec.on_task_fini();

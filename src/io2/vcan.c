@@ -86,7 +86,7 @@ struct io_vcan_ctrl {
 	 * frames.
 	 */
 	io_clock_t *clock;
-	/// the flags specifying which CAN bus features are enabled.
+	/// The flags specifying which CAN bus features are enabled.
 	int flags;
 #if !LELY_NO_THREADS
 	/**
@@ -183,9 +183,9 @@ struct io_vcan_chan {
 	io_ctx_t *ctx;
 	/// A pointer to the executor used to execute all I/O tasks.
 	ev_exec_t *exec;
-	/// The task responsible for intiating read operations.
+	/// The task responsible for initiating read operations.
 	struct ev_task read_task;
-	/// The task responsible for intiating write operations.
+	/// The task responsible for initiating write operations.
 	struct ev_task write_task;
 	/// The ring buffer used to control the receive queue.
 	struct spscring rxring;
@@ -1132,7 +1132,6 @@ io_vcan_chan_read(io_can_chan_t *chan, struct can_msg *msg, struct can_err *err,
 		struct timespec *tp, int timeout)
 {
 	struct io_vcan_chan *vcan = io_vcan_chan_from_chan(chan);
-	(void)err;
 
 #if !LELY_NO_THREADS
 	// Compute the absolute timeout for cnd_timedwait().

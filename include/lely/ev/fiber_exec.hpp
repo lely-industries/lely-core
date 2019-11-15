@@ -58,7 +58,7 @@ class FiberThread {
    *                   stack is always at least #LELY_FIBER_MINSTKSZ bytes.
    * @param max_unused the maximum number of unused fibers kept alive for future
    *                   tasks. If 0, the default number
-   *                   (#LELY_EV_FIBER_MAX_UNUSED) used.
+   *                   (#LELY_EV_FIBER_MAX_UNUSED) is used.
    */
   FiberThread(FiberFlag flags = static_cast<FiberFlag>(0),
               ::std::size_t stack_size = 0, ::std::size_t max_unused = 0) {
@@ -83,7 +83,7 @@ class FiberThread {
    *                   stack is always at least #LELY_FIBER_MINSTKSZ bytes.
    * @param max_unused the maximum number of unused coroutines kept alive for
    *                   future tasks. If 0, the default number
-   *                   (#LELY_EV_CO_EXEC_MAX_UNUSED) used.
+   *                   (#LELY_EV_FIBER_MAX_UNUSED) is used.
    * @param already    set to true if the calling thread was already
    *                   initialized, and to false if not. In the former case, the
    *                   values of <b>flags</b>, <b>stack_size</b> and

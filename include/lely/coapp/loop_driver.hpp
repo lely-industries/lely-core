@@ -84,9 +84,9 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
 
   /**
    * Equivalent to
-   * #RunRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds&
-   * timeout, ::std::error_code& ec), except that it uses the SDO timeout given
-   * by #lely::canopen::BasicMaster::GetTimeout().
+   * #RunRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
   T
@@ -96,9 +96,8 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
 
   /**
    * Equivalent to
-   * #RunRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds&
-   * timeout, ::std::error_code& ec), except that it throws
-   * #lely::canopen::SdoError on error.
+   * #RunRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T>
   T
@@ -142,9 +141,9 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
 
   /**
    * Equivalent to
-   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const
-   * ::std::chrono::milliseconds& timeout, ::std::error_code& ec), except that
-   * it uses the SDO timeout given by #lely::canopen::BasicMaster::GetTimeout().
+   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
   void
@@ -154,9 +153,8 @@ class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
 
   /**
    * Equivalent to
-   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const
-   * ::std::chrono::milliseconds& timeout, ::std::error_code& ec), except that
-   * it throws #lely::canopen::SdoError on error.
+   * #RunWrite(uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
    */
   template <class T>
   void
