@@ -898,7 +898,7 @@ io_user_can_chan_on_frame(struct io_user_can_chan *user,
 			break;
 		if (!timeout) {
 #if !LELY_NO_THREADS
-			mtx_unlock(&user->mtx);
+			mtx_unlock(&user->p_mtx);
 #endif
 			set_errnum(ERRNUM_AGAIN);
 			return -1;
