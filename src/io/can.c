@@ -418,7 +418,7 @@ io_can_get_state(io_handle_t handle)
 	case CAN_STATE_ERROR_WARNING: can->state = CAN_STATE_ACTIVE; break;
 	case CAN_STATE_ERROR_PASSIVE: can->state = CAN_STATE_PASSIVE; break;
 	case CAN_STATE_BUS_OFF: can->state = CAN_STATE_BUSOFF; break;
-	};
+	}
 
 error:
 	// The virtual CAN driver does not provide the state through rtnetlink.

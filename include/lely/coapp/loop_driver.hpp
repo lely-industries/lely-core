@@ -48,7 +48,7 @@ class LoopDriverBase {
 }  // namespace detail
 
 /// A CANopen driver running its own dedicated event loop in a separate thread.
-class LoopDriver : private detail::LoopDriverBase, public BasicDriver {
+class LoopDriver : detail::LoopDriverBase, public BasicDriver {
  public:
   LoopDriver(BasicMaster& master, uint8_t id);
   ~LoopDriver();

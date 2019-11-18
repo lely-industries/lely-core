@@ -44,7 +44,7 @@ namespace lely {
 namespace canopen {
 
 /// The internal implementation of the CANopen node.
-struct Node::Impl_ : public util::BasicLockable {
+struct Node::Impl_ : util::BasicLockable {
   Impl_(Node* self, CANNet* net, CODev* dev);
 #if !LELY_NO_THREADS && defined(__MINGW32__)
   virtual ~Impl_();

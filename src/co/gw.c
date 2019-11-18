@@ -1363,8 +1363,6 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 static void
 co_gw_job_destroy(struct co_gw_job *job)
 {
-	(void)co_gw_job_create;
-
 	if (job) {
 		co_gw_job_remove(job);
 

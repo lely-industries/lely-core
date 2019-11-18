@@ -51,7 +51,7 @@ class FiberDriverBase {
  * A CANopen driver running its tasks and callbacks in fibers. The driver MUST
  * be instantiated on the thread on which its task are run.
  */
-class FiberDriver : private detail::FiberDriverBase, public BasicDriver {
+class FiberDriver : detail::FiberDriverBase, public BasicDriver {
  public:
   FiberDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id);
 

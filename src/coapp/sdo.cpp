@@ -42,6 +42,8 @@ namespace canopen {
 struct Sdo::Impl_ {
   Impl_(CANNet* net, CODev* dev, uint8_t num);
   Impl_(COCSDO* sdo, int timeout);
+  Impl_(const Impl_&) = delete;
+  Impl_& operator=(const Impl_&) = delete;
   ~Impl_();
 
   void Submit(detail::SdoRequestBase& req);

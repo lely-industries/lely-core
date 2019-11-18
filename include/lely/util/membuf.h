@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the memory
  * buffer declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -192,7 +192,8 @@ inline size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
 	void *cur = membuf_alloc(buf, &size);
-	memcpy(cur, ptr, size);
+	if (size)
+		memcpy(cur, ptr, size);
 	return size;
 }
 
