@@ -26,7 +26,7 @@
 
 enum {
 	/// An event representing the occurrence of a signal.
-	IO_EVENT_SIGNAL,
+	IO_EVENT_SIGNAL = 0,
 	/**
 	 * An event signaling that an error has occurred for a file descriptor.
 	 * Errors will always be reported by io_poll_wait(), even if not

@@ -38,8 +38,10 @@ namespace lely {
 namespace canopen {
 
 /// The internal implementation of #lely::canopen::LoopDriver.
-struct LoopDriver::Impl_ : public io_svc {
+struct LoopDriver::Impl_ : io_svc {
   explicit Impl_(LoopDriver* self, io::ContextBase ctx);
+  Impl_(const Impl_&) = delete;
+  Impl_& operator=(const Impl_&) = delete;
   ~Impl_();
 
   void Start();

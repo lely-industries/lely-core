@@ -30,12 +30,14 @@
 int
 io_init(void)
 {
+	// POSIX platforms do not require initialization or finalization.
 	return 0;
 }
 
 void
 io_fini(void)
 {
+	// POSIX platforms do not require initialization or finalization.
 }
 
 #endif // _POSIX_C_SOURCE

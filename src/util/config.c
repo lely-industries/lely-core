@@ -87,7 +87,7 @@ __config_init(struct __config *config, int flags)
 	assert(config);
 
 	rbtree_init(&config->tree,
-			(flags & CONFIG_CASE) ? str_case_cmp : str_cmp);
+			(flags & CONFIG_CASE) ? &str_case_cmp : &str_cmp);
 
 	if (!config_section_create(config, ""))
 		return NULL;

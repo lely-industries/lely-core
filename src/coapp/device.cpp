@@ -38,7 +38,7 @@ namespace lely {
 namespace canopen {
 
 /// The internal implementation of the CANopen device description.
-struct Device::Impl_ : public util::BasicLockable {
+struct Device::Impl_ : util::BasicLockable {
   Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin, uint8_t id,
         util::BasicLockable* mutex);
   virtual ~Impl_() = default;

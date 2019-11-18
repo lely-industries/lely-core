@@ -64,6 +64,7 @@ struct c_type_traits<__can_net> {
   alloc() noexcept {
     return __can_net_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __can_net_free(ptr);
@@ -73,6 +74,7 @@ struct c_type_traits<__can_net> {
   init(pointer p) noexcept {
     return __can_net_init(p);
   }
+
   static void
   fini(pointer p) noexcept {
     __can_net_fini(p);

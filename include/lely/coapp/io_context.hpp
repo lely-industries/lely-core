@@ -125,8 +125,10 @@ class IoContext {
   OnCanError(io::CanError error) noexcept {
     (void)error;
   }
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
+#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };

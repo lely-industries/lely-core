@@ -568,8 +568,10 @@ class BasicSlave : public Node {
   OnLifeGuarding(bool occurred) noexcept {
     (void)occurred;
   };
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
+#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };

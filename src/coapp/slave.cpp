@@ -156,9 +156,9 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
 
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->up_ind[key] = [=](const COSub* sub, void* p) -> uint32_t {
+    impl_->up_ind[key] = [=](const COSub* sub, void* p) {
       auto ec = OnUpInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
-      return ec.value();
+      return static_cast<uint32_t>(ec.value());
     };
     sub->setUpInd<N, Impl_, &Impl_::OnUpInd>(impl_.get());
   } else {
@@ -235,9 +235,9 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
 
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->dn_ind[key] = [=](COSub* sub, void* p) -> uint32_t {
+    impl_->dn_ind[key] = [=](COSub* sub, void* p) {
       auto ec = OnDnInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
-      return ec.value();
+      return static_cast<uint32_t>(ec.value());
     };
     sub->setDnInd<N, Impl_, &Impl_::OnDnInd>(impl_.get());
   } else {

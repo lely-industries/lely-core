@@ -485,8 +485,10 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
     (void)er;
     (void)msef;
   }
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
+#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };

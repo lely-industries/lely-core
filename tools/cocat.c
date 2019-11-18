@@ -243,9 +243,9 @@ main(int argc, char *argv[])
 
 		// Wait until the inhibit time has passed.
 		if (inhibit > 0) {
-			int64_t timeout = timespec_diff_msec(&next, &now);
-			if (timeout > 0)
-				usleep(timeout * 1000);
+			struct timespec req = next;
+			timespec_sub(&req, &now);
+			nanosleep(&req, NULL);
 		}
 
 		struct can_msg msg = CAN_MSG_INIT;

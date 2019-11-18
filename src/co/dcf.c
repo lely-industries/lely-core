@@ -274,7 +274,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	for (int i = 0; i < 0x20; i++) {
 		// Create the key name.
 		char key[10];
-		sprintf(key, "Dummy%04X", (co_unsigned16_t)i);
+		snprintf(key, sizeof(key), "Dummy%04X", (co_unsigned16_t)i);
 
 		val = config_get(cfg, "DummyUsage", key);
 		if (val && *val && strtoul(val, NULL, 0))
@@ -309,7 +309,7 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 
 		// Create the section name for the object.
 		char section[5];
-		sprintf(section, "%X", idx[i]);
+		snprintf(section, sizeof(section), "%X", idx[i]);
 
 		// Create the object and add it to the dictionary.
 		co_obj_t *obj = co_obj_build(dev, idx[i]);
@@ -476,7 +476,8 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		for (size_t subidx = 0; subnum && subidx < 0xff; subidx++) {
 			// Create section name for the sub-object.
 			char section[10];
-			sprintf(section, "%Xsub%X", (co_unsigned16_t)idx,
+			snprintf(section, sizeof(section), "%Xsub%X",
+					(co_unsigned16_t)idx,
 					(co_unsigned8_t)subidx);
 
 			// Check whether the sub-index exists by checking the
@@ -618,7 +619,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 
 	// Create the section name for the explicit names of the sub-objects.
 	char section[9];
-	sprintf(section, "%XName", idx);
+	snprintf(section, sizeof(section), "%XName", idx);
 
 	const char *val = config_get(cfg, section, "NrOfEntries");
 	if (!val || !*val)
@@ -627,7 +628,7 @@ co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 	co_unsigned8_t n = (co_unsigned8_t)strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
 		char key[4];
-		sprintf(key, "%u", (co_unsigned8_t)subidx);
+		snprintf(key, sizeof(key), "%u", (co_unsigned8_t)subidx);
 
 		val = config_get(cfg, section, key);
 		if (val && *val) {
@@ -659,7 +660,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 
 	// Create the section name for the explicit values of the sub-objects.
 	char section[10];
-	sprintf(section, "%XValue", (co_unsigned16_t)idx);
+	snprintf(section, sizeof(section), "%XValue", (co_unsigned16_t)idx);
 	struct floc at = { section, 0, 0 };
 
 	const char *val = config_get(cfg, section, "NrOfEntries");
@@ -669,7 +670,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 	co_unsigned8_t n = (co_unsigned8_t)strtoul(val, NULL, 0);
 	for (size_t subidx = 1; n && subidx < 0xff; subidx++) {
 		char key[4];
-		sprintf(key, "%u", (co_unsigned8_t)subidx);
+		snprintf(key, sizeof(key), "%u", (co_unsigned8_t)subidx);
 
 		val = config_get(cfg, section, key);
 		if (val && *val) {
@@ -1085,7 +1086,8 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		for (co_unsigned8_t i = 1; i <= 0x40; i++) {
 			char name[22];
-			sprintf(name, "Application object %u", i);
+			snprintf(name, sizeof(name), "Application object %u",
+					i);
 
 			co_sub_t *sub = co_sub_build(
 					obj, i, CO_DEFTYPE_UNSIGNED32, name);
@@ -1218,7 +1220,8 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 
 		for (co_unsigned8_t i = 1; i <= 0x40; i++) {
 			char name[22];
-			sprintf(name, "Application object %u", i);
+			snprintf(name, sizeof(name), "Application object %u",
+					i);
 
 			co_sub_t *sub = co_sub_build(
 					obj, i, CO_DEFTYPE_UNSIGNED32, name);
@@ -1263,7 +1266,7 @@ config_get_idx(const config_t *cfg, const char *section, co_unsigned16_t maxidx,
 	co_unsigned16_t n = (co_unsigned16_t)strtoul(val, NULL, 0);
 	for (size_t i = 0; i < (size_t)MIN(n, maxidx); i++) {
 		char key[6];
-		sprintf(key, "%u", (co_unsigned16_t)(i + 1));
+		snprintf(key, sizeof(key), "%u", (co_unsigned16_t)(i + 1));
 
 		val = config_get(cfg, section, key);
 		// clang-format off

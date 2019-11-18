@@ -100,7 +100,7 @@ static _Thread_local struct fiber_thrd {
 	fiber_t *curr;
 } fiber_thrd;
 
-static void fiber_start(void *arg);
+static _Noreturn void fiber_start(void *arg);
 
 static fiber_t *fiber_switch(fiber_t *fiber);
 
@@ -345,7 +345,7 @@ fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 	return fiber_switch(fiber);
 }
 
-static void
+static _Noreturn void
 fiber_start(void *arg)
 {
 	fiber_t *fiber = arg;

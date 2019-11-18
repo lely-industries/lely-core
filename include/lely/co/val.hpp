@@ -123,8 +123,10 @@ class COVal<CO_DEFTYPE_VISIBLE_STRING> {
 
   COVal&
   operator=(const COVal& val) {
-    this->~COVal();
-    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    if (this != &val) {
+      this->~COVal();
+      if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    }
     return *this;
   }
 
@@ -206,8 +208,10 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
 
   COVal&
   operator=(const COVal& val) {
-    this->~COVal();
-    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    if (this != &val) {
+      this->~COVal();
+      if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    }
     return *this;
   }
 
@@ -282,8 +286,10 @@ class COVal<CO_DEFTYPE_UNICODE_STRING> {
 
   COVal&
   operator=(const COVal& val) {
-    this->~COVal();
-    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    if (this != &val) {
+      this->~COVal();
+      if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    }
     return *this;
   }
 
@@ -356,8 +362,10 @@ class COVal<CO_DEFTYPE_DOMAIN> {
 
   COVal&
   operator=(const COVal& val) {
-    this->~COVal();
-    if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    if (this != &val) {
+      this->~COVal();
+      if (!co_val_copy(index, &m_val, &val.m_val)) throw_or_abort(bad_copy());
+    }
     return *this;
   }
 

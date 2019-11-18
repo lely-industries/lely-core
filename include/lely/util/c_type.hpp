@@ -136,6 +136,7 @@ struct trivial_c_type {
   c_ref() noexcept {
     return *c_ptr();
   }
+
   c_const_reference
   c_ref() const noexcept {
     return *c_ptr();
@@ -155,6 +156,7 @@ struct trivial_c_type {
   dtor(trivial_c_type* p) noexcept {
     delete p;
   }
+
   void
   destroy() noexcept {
     dtor(this);
@@ -185,6 +187,7 @@ class standard_c_type {
   c_ref() noexcept {
     return *c_ptr();
   }
+
   c_const_reference
   c_ref() const noexcept {
     return *c_ptr();
@@ -204,6 +207,7 @@ class standard_c_type {
   dtor(standard_c_type* p) noexcept {
     delete p;
   }
+
   void
   destroy() noexcept {
     dtor(this);
@@ -257,6 +261,7 @@ class incomplete_c_type {
   c_ref() noexcept {
     return *c_ptr();
   }
+
   c_const_reference
   c_ref() const noexcept {
     return *c_ptr();
@@ -276,29 +281,30 @@ class incomplete_c_type {
   dtor(incomplete_c_type* p) noexcept {
     delete p;
   }
+
   void
   destroy() noexcept {
     dtor(this);
   }
 
-  static void*
+  void*
   operator new(std::size_t size) {
     void* ptr = operator new(size, ::std::nothrow);
     if (!ptr) throw_or_abort(std::bad_alloc());
     return ptr;
   }
 
-  static void*
+  void*
   operator new(std::size_t, const ::std::nothrow_t&) noexcept {
     return c_type_traits<T>::alloc();
   }
 
-  static void
+  void
   operator delete(void* ptr) noexcept {
     operator delete(ptr, ::std::nothrow);
   }
 
-  static void
+  void
   operator delete(void* ptr, const ::std::nothrow_t&)noexcept {
     c_type_traits<T>::free(ptr);
   }
@@ -315,10 +321,10 @@ class incomplete_c_type {
     return *this;
   }
 
-  static void* operator new[](std::size_t) = delete;
-  static void* operator new[](std::size_t, const ::std::nothrow_t&) = delete;
-  static void operator delete[](void*) = delete;
-  static void operator delete[](void*, const ::std::nothrow_t&) = delete;
+  void* operator new[](std::size_t) = delete;
+  void* operator new[](std::size_t, const ::std::nothrow_t&) = delete;
+  void operator delete[](void*) = delete;
+  void operator delete[](void*, const ::std::nothrow_t&) = delete;
 
  protected:
   template <class... Args>

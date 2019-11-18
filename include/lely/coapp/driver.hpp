@@ -245,7 +245,7 @@ class DriverBase {
 };
 
 /// The base class for drivers for remote CANopen nodes.
-class BasicDriver : private DriverBase {
+class BasicDriver : DriverBase {
   friend class BasicMaster;
   friend class LoopDriver;
 

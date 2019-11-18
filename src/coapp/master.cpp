@@ -269,7 +269,7 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
   }
   // Let the driver perform the configuration update.
   util::UnlockGuard<util::BasicLockable> unlock(*this);
-  it->second->OnConfig([=](::std::error_code ec) {
+  it->second->OnConfig([this, id](::std::error_code ec) {
     ::std::lock_guard<util::BasicLockable> lock(*this);
     // Report the result of the 'update configuration' process.
     ConfigResult(id, ec);
@@ -448,8 +448,8 @@ AsyncMaster::OnConfig(uint8_t id) noexcept {
 
   // Let the driver perform the configuration update.
   DriverBase* driver = it->second;
-  driver->GetExecutor().post([=]() {
-    driver->OnConfig([=](::std::error_code ec) {
+  driver->GetExecutor().post([this, id, driver]() {
+    driver->OnConfig([this, id](::std::error_code ec) {
       ::std::lock_guard<util::BasicLockable> lock(*this);
       ConfigResult(id, ec);
     });
