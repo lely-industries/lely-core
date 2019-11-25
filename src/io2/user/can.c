@@ -129,22 +129,26 @@ struct io_user_can_chan {
 	struct ev_task read_task;
 	/// The task responsible for initiating write operations.
 	struct ev_task write_task;
+#if !LELY_NO_THREADS
+	/// The mutex protecting the receive queue producer.
+	mtx_t p_mtx;
+	/// The condition variable used to wake up the receive queue producer.
+	cnd_t p_cond;
+	/// The mutex protecting the receive queue consumer.
+	mtx_t c_mtx;
+	/// The condition variable used to wake up the receive queue consumer.
+	cnd_t c_cond;
+#endif
 	/// The ring buffer used to control the receive queue.
 	struct spscring rxring;
 	/// The receive queue.
 	struct io_user_can_frame *rxbuf;
 #if !LELY_NO_THREADS
 	/**
-	 * The mutex protecting the channel, the queues of pending operations
-	 * and the receive buffer consumer.
+	 * The mutex protecting the channel and the queues of pending
+	 * operations.
 	 */
 	mtx_t mtx;
-	/// The condition variable used to wake up the receive queue consumer.
-	cnd_t c_cond;
-	/// The mutex protecting the receive queue producer.
-	mtx_t p_mtx;
-	/// The condition variable used to wake up the receive queue producer.
-	cnd_t p_cond;
 #endif
 	/// A flag indicating whether the I/O service has been shut down.
 	unsigned shutdown : 1;
@@ -156,6 +160,8 @@ struct io_user_can_chan {
 	struct sllist read_queue;
 	/// The queue containing pending write operations.
 	struct sllist write_queue;
+	/// The read operation currently being executed.
+	struct ev_task *current_read;
 	/// The write operation currently being executed.
 	struct ev_task *current_write;
 };
@@ -240,6 +246,28 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 	user->write_task = (struct ev_task)EV_TASK_INIT(
 			user->exec, &io_user_can_chan_write_task_func);
 
+#if !LELY_NO_THREADS
+	if (mtx_init(&user->p_mtx, mtx_plain) != thrd_success) {
+		errc = get_errc();
+		goto error_init_p_mtx;
+	}
+
+	if (cnd_init(&user->p_cond) != thrd_success) {
+		errc = get_errc();
+		goto error_init_p_cond;
+	}
+
+	if (mtx_init(&user->c_mtx, mtx_plain) != thrd_success) {
+		errc = get_errc();
+		goto error_init_c_mtx;
+	}
+
+	if (cnd_init(&user->c_cond) != thrd_success) {
+		errc = get_errc();
+		goto error_init_c_cond;
+	}
+#endif
+
 	spscring_init(&user->rxring, rxlen);
 	user->rxbuf = calloc(rxlen, sizeof(struct io_user_can_frame));
 	if (!user->rxbuf) {
@@ -252,21 +280,6 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 		errc = get_errc();
 		goto error_init_mtx;
 	}
-
-	if (cnd_init(&user->c_cond) != thrd_success) {
-		errc = get_errc();
-		goto error_init_c_cond;
-	}
-
-	if (mtx_init(&user->p_mtx, mtx_plain) != thrd_success) {
-		errc = get_errc();
-		goto error_init_p_mtx;
-	}
-
-	if (cnd_init(&user->p_cond) != thrd_success) {
-		errc = get_errc();
-		goto error_init_p_cond;
-	}
 #endif
 
 	user->shutdown = 0;
@@ -275,6 +288,7 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 
 	sllist_init(&user->read_queue);
 	sllist_init(&user->write_queue);
+	user->current_read = NULL;
 	user->current_write = NULL;
 
 	io_ctx_insert(user->ctx, &user->svc);
@@ -282,17 +296,21 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 	return chan;
 
 #if !LELY_NO_THREADS
-	// cnd_destroy(&user->p_cond);
-error_init_p_cond:
-	mtx_destroy(&user->p_mtx);
-error_init_p_mtx:
-	cnd_destroy(&user->c_cond);
-error_init_c_cond:
-	mtx_destroy(&user->mtx);
+	// mtx_destroy(&user->mtx);
 error_init_mtx:
 #endif
 	free(user->rxbuf);
 error_alloc_rxbuf:
+#if !LELY_NO_THREADS
+	cnd_destroy(&user->c_cond);
+error_init_c_cond:
+	mtx_destroy(&user->c_mtx);
+error_init_c_mtx:
+	cnd_destroy(&user->p_cond);
+error_init_p_cond:
+	mtx_destroy(&user->p_mtx);
+error_init_p_mtx:
+#endif
 	set_errc(errc);
 	return NULL;
 }
@@ -325,13 +343,17 @@ io_user_can_chan_fini(io_can_chan_t *chan)
 	}
 	mtx_unlock(&user->mtx);
 
-	cnd_destroy(&user->p_cond);
-	mtx_destroy(&user->p_mtx);
-	cnd_destroy(&user->c_cond);
 	mtx_destroy(&user->mtx);
 #endif
 
 	free(user->rxbuf);
+
+#if !LELY_NO_THREADS
+	cnd_destroy(&user->c_cond);
+	mtx_destroy(&user->c_mtx);
+	cnd_destroy(&user->p_cond);
+	mtx_destroy(&user->p_mtx);
+#endif
 }
 
 io_can_chan_t *
@@ -445,6 +467,10 @@ io_user_can_chan_dev_cancel(io_dev_t *dev, struct ev_task *task)
 #if !LELY_NO_THREADS
 	mtx_lock(&user->mtx);
 #endif
+	if (user->current_read && (!task || task == user->current_read)) {
+		user->current_read = NULL;
+		n++;
+	}
 	if (user->current_write && (!task || task == user->current_write)) {
 		user->current_write = NULL;
 		n++;
@@ -521,7 +547,7 @@ io_user_can_chan_read(io_can_chan_t *chan, struct can_msg *msg,
 #endif
 
 #if !LELY_NO_THREADS
-	mtx_lock(&user->mtx);
+	mtx_lock(&user->c_mtx);
 #endif
 	size_t i = 0;
 	for (;;) {
@@ -530,9 +556,14 @@ io_user_can_chan_read(io_can_chan_t *chan, struct can_msg *msg,
 		i = spscring_c_alloc(&user->rxring, &n);
 		if (n)
 			break;
-		// Always submit a wait operation, even when timeout is 0, so
-		// pending read operations will be signaled once a frame is
-		// available.
+		if (!timeout) {
+#if !LELY_NO_THREADS
+			mtx_unlock(&user->c_mtx);
+#endif
+			set_errnum(ERRNUM_AGAIN);
+			return -1;
+		}
+		// Submit a wait operation for a single frame.
 		// clang-format off
 		if (!spscring_c_submit_wait(&user->rxring, 1,
 				&io_user_can_chan_c_signal, user))
@@ -540,25 +571,19 @@ io_user_can_chan_read(io_can_chan_t *chan, struct can_msg *msg,
 			// If the wait condition was already satisfied, try
 			// again.
 			continue;
-		// Wait for the buffer to signal that a frame is available, or
-		// time out if that takes too long.
-		if (!timeout) {
-#if !LELY_NO_THREADS
-			mtx_unlock(&user->mtx);
-#endif
-			set_errnum(ERRNUM_AGAIN);
-			return -1;
-		}
+			// Wait for the buffer to signal that a frame is
+			// available, or time out if that takes too long.
 #if !LELY_NO_THREADS
 		int result;
 #if !LELY_NO_TIMEOUT
 		if (timeout > 0)
-			result = cnd_timedwait(&user->c_cond, &user->mtx, &ts);
+			result = cnd_timedwait(
+					&user->c_cond, &user->c_mtx, &ts);
 		else
 #endif
-			result = cnd_wait(&user->c_cond, &user->mtx);
+			result = cnd_wait(&user->c_cond, &user->c_mtx);
 		if (result != thrd_success) {
-			mtx_unlock(&user->mtx);
+			mtx_unlock(&user->c_mtx);
 #if !LELY_NO_TIMEOUT
 			if (result == thrd_timedout)
 				set_errnum(ERRNUM_AGAIN);
@@ -578,7 +603,7 @@ io_user_can_chan_read(io_can_chan_t *chan, struct can_msg *msg,
 		*tp = frame->ts;
 	spscring_c_commit(&user->rxring, 1);
 #if !LELY_NO_THREADS
-	mtx_unlock(&user->mtx);
+	mtx_unlock(&user->c_mtx);
 #endif
 
 	return !is_err;
@@ -730,47 +755,79 @@ io_user_can_chan_read_task_func(struct ev_task *task)
 	assert(task);
 	struct io_user_can_chan *user =
 			structof(task, struct io_user_can_chan, read_task);
+	io_can_chan_t *chan = &user->chan_vptr;
+
+	int errsv = get_errc();
+
+	int wouldblock = 0;
 
 #if !LELY_NO_THREADS
 	mtx_lock(&user->mtx);
 #endif
-	user->read_posted = 0;
 	// Try to process all pending read operations at once.
-	while ((task = ev_task_from_node(sllist_first(&user->read_queue)))) {
-		// Check if a frame is available in the receive queue.
-		size_t n = 1;
-		size_t i = spscring_c_alloc(&user->rxring, &n);
-		if (!n) {
-			// If the queue is empty, register a wait operation and
-			// return.
-			// clang-format off
-			if (!spscring_c_submit_wait(&user->rxring, 1,
-					io_user_can_chan_c_signal, user))
-				// clang-format on
-				continue;
-			break;
-		}
-		sllist_pop_front(&user->read_queue);
-		struct io_user_can_frame *frame = &user->rxbuf[i];
-
+	while ((task = user->current_read = ev_task_from_node(
+				sllist_pop_front(&user->read_queue)))) {
+#if !LELY_NO_THREADS
+		mtx_unlock(&user->mtx);
+#endif
 		struct io_can_chan_read *read =
 				io_can_chan_read_from_task(task);
-		if (!frame->is_err && read->msg)
-			*read->msg = frame->u.msg;
-		if (frame->is_err && read->err)
-			*read->err = frame->u.err;
-		if (read->tp)
-			*read->tp = frame->ts;
-		io_can_chan_read_post(read, !frame->is_err, 0);
-
-		spscring_c_commit(&user->rxring, 1);
+		int result = io_user_can_chan_read(
+				chan, read->msg, read->err, read->tp, 0);
+		int errc = result >= 0 ? 0 : get_errc();
+		wouldblock = errc == errnum2c(ERRNUM_AGAIN)
+				|| errc == errnum2c(ERRNUM_WOULDBLOCK);
+		if (!wouldblock)
+			// The operation succeeded or failed immediately.
+			io_can_chan_read_post(read, result, errc);
+#if !LELY_NO_THREADS
+		mtx_lock(&user->mtx);
+#endif
+		if (task == user->current_read) {
+			// Put the read operation back on the queue if it would
+			// block, unless it was canceled.
+			if (wouldblock) {
+				sllist_push_front(&user->read_queue,
+						&task->_node);
+				task = NULL;
+			}
+			user->current_read = NULL;
+		}
+		assert(!user->current_read);
+		// Stop if the operation did or would block.
+		if (wouldblock)
+			break;
 	}
+	// Repost this task if any read operations remain in the queue.
+	int post_read = !sllist_empty(&user->read_queue) && !user->shutdown;
+	// Register a wait operation if the receive queue is empty.
+	if (post_read && wouldblock) {
+#if !LELY_NO_THREADS
+		mtx_lock(&user->c_mtx);
+#endif
+		// Do not repost this task unless the wait condition can be
+		// satisfied immediately.
+		post_read = !spscring_c_submit_wait(&user->rxring, 1,
+				io_user_can_chan_c_signal, user);
+#if !LELY_NO_THREADS
+		mtx_unlock(&user->c_mtx);
+#endif
+	}
+	user->read_posted = post_read;
 #if !LELY_NO_THREADS
 	mtx_unlock(&user->mtx);
 #endif
 
-	if (task) {
-	}
+	if (task && wouldblock)
+		// The operation would block but was canceled before it could be
+		// requeued.
+		io_can_chan_read_post(io_can_chan_read_from_task(task), -1,
+				errnum2c(ERRNUM_CANCELED));
+
+	if (post_read)
+		ev_exec_post(user->read_task.exec, &user->read_task);
+
+	set_errc(errsv);
 }
 
 static void
@@ -779,60 +836,58 @@ io_user_can_chan_write_task_func(struct ev_task *task)
 	assert(task);
 	struct io_user_can_chan *user =
 			structof(task, struct io_user_can_chan, write_task);
+	io_can_chan_t *chan = &user->chan_vptr;
 
 	int errsv = get_errc();
 
+	int wouldblock = 0;
+
 #if !LELY_NO_THREADS
 	mtx_lock(&user->mtx);
 #endif
-	task = user->current_write =
-			ev_task_from_node(sllist_pop_front(&user->write_queue));
+	// clang-format off
+	if ((task = user->current_write = ev_task_from_node(
+			sllist_pop_front(&user->write_queue)))) {
+		// clang-format on
 #if !LELY_NO_THREADS
-	mtx_unlock(&user->mtx);
+		mtx_unlock(&user->mtx);
 #endif
-
-	int result = 0;
-	int errc = 0;
-	if (task) {
 		struct io_can_chan_write *write =
 				io_can_chan_write_from_task(task);
-		assert(write->msg);
-		set_errc(0);
-		assert(user->func);
-		result = user->func(write->msg, user->txtimeo, user->arg);
-		if (result < 0)
-			errc = get_errc();
-	}
-
-	// clang-format off
-	int wouldblock = result < 0 && (errc2num(errc) == ERRNUM_AGAIN
-			|| errc2num(errc) == ERRNUM_WOULDBLOCK);
-	// clang-format on
-
+		int result = io_user_can_chan_write(
+				chan, write->msg, user->txtimeo);
+		int errc = !result ? 0 : get_errc();
+		wouldblock = errc == errnum2c(ERRNUM_AGAIN)
+				|| errc == errnum2c(ERRNUM_WOULDBLOCK);
+		if (!wouldblock)
+			// The operation succeeded or failed immediately.
+			io_can_chan_write_post(write, errc);
 #if !LELY_NO_THREADS
-	mtx_lock(&user->mtx);
+		mtx_lock(&user->mtx);
 #endif
-	if (wouldblock && task == user->current_write) {
-		// Put the write operation back on the queue if it would block,
-		// unless it was canceled.
-		sllist_push_front(&user->write_queue, &task->_node);
-		task = NULL;
+		if (task == user->current_write) {
+			// Put the read operation back on the queue if it would
+			// block, unless it was canceled.
+			if (wouldblock) {
+				sllist_push_front(&user->write_queue,
+						&task->_node);
+				task = NULL;
+			}
+			user->current_write = NULL;
+		}
+		assert(!user->current_write);
 	}
-	user->current_write = NULL;
-
 	int post_write = user->write_posted =
 			!sllist_empty(&user->write_queue) && !user->shutdown;
 #if !LELY_NO_THREADS
 	mtx_unlock(&user->mtx);
 #endif
 
-	if (task) {
-		if (wouldblock)
-			errc = errnum2c(ERRNUM_CANCELED);
-		struct io_can_chan_write *write =
-				io_can_chan_write_from_task(task);
-		io_can_chan_write_post(write, errc);
-	}
+	if (task && wouldblock)
+		// The operation would block but was canceled before it could be
+		// requeued.
+		io_can_chan_write_post(io_can_chan_write_from_task(task),
+				errnum2c(ERRNUM_CANCELED));
 
 	if (post_write)
 		ev_exec_post(user->write_task.exec, &user->write_task);
@@ -922,7 +977,7 @@ io_user_can_chan_on_frame(struct io_user_can_chan *user,
 #endif
 			result = cnd_wait(&user->p_cond, &user->p_mtx);
 		if (result != thrd_success) {
-			mtx_unlock(&user->mtx);
+			mtx_unlock(&user->p_mtx);
 #if !LELY_NO_TIMEOUT
 			if (result == thrd_timedout)
 				set_errnum(ERRNUM_AGAIN);
@@ -966,13 +1021,19 @@ io_user_can_chan_c_signal(struct spscring *ring, void *arg)
 	assert(user);
 
 #if !LELY_NO_THREADS
+	mtx_lock(&user->c_mtx);
+	cnd_broadcast(&user->c_cond);
+	mtx_unlock(&user->c_mtx);
+#endif
+
+#if !LELY_NO_THREADS
 	mtx_lock(&user->mtx);
 #endif
-	int post_read = !user->read_posted && !sllist_empty(&user->read_queue);
+	int post_read = !user->read_posted && !sllist_empty(&user->read_queue)
+			&& !user->shutdown;
 	if (post_read)
 		user->read_posted = 1;
 #if !LELY_NO_THREADS
-	cnd_broadcast(&user->c_cond);
 	mtx_unlock(&user->mtx);
 #endif
 	// cppcheck-suppress duplicateCondition

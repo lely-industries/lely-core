@@ -90,8 +90,7 @@ io_can_chan_t *io_user_can_chan_create(io_ctx_t *ctx, ev_exec_t *exec,
 void io_user_can_chan_destroy(io_can_chan_t *chan);
 
 /**
- * Processes an incoming CAN frame and submits the completion task of the first
- * pending read operation, if any, for execution.
+ * Processes an incoming CAN frame.
  *
  * @param chan    a pointer to a user-defined CAN channel.
  * @param msg     a pointer to the incoming CAN frame.
@@ -108,8 +107,7 @@ int io_user_can_chan_on_msg(io_can_chan_t *chan, const struct can_msg *msg,
 		const struct timespec *tp, int timeout);
 
 /**
- * Processes an incoming CAN error frame and submits the completion task of the
- * first pending read operation, if any, for execution.
+ * Processes an incoming CAN error frame.
  *
  * @param chan    a pointer to a user-defined CAN channel.
  * @param err     a pointer to the incoming CAN error frame.
