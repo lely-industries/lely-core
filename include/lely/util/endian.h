@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -130,76 +130,76 @@ LELY_UTIL_ENDIAN_INLINE uint_least64_t letoh64(uint_least64_t x);
 #endif
 
 /// Stores a 16-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_i16(void *ptr, int_least16_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_i16(uint_least8_t dst[2], int_least16_t x);
 
 /// Loads a 16-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least16_t ldbe_i16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least16_t ldbe_i16(const uint_least8_t src[2]);
 
 /// Stores a 16-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_u16(void *ptr, uint_least16_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_u16(uint_least8_t dst[2], uint_least16_t x);
 
 /// Loads a 16-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least16_t ldbe_u16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least16_t ldbe_u16(const uint_least8_t src[2]);
 
 /// Stores a 16-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_i16(void *ptr, int_least16_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_i16(uint_least8_t dst[2], int_least16_t x);
 
 /// Loads a 16-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least16_t ldle_i16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least16_t ldle_i16(const uint_least8_t src[2]);
 
 /// Stores a 16-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_u16(void *ptr, uint_least16_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_u16(uint_least8_t dst[2], uint_least16_t x);
 
 /// Loads a 16-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least16_t ldle_u16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least16_t ldle_u16(const uint_least8_t src[2]);
 
 /// Stores a 32-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_i32(void *ptr, int_least32_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_i32(uint_least8_t dst[4], int_least32_t x);
 
 /// Loads a 32-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least32_t ldbe_i32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least32_t ldbe_i32(const uint_least8_t src[4]);
 
 /// Stores a 32-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_u32(void *ptr, uint_least32_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_u32(uint_least8_t dst[4], uint_least32_t x);
 
 /// Loads a 32-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least32_t ldbe_u32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least32_t ldbe_u32(const uint_least8_t src[4]);
 
 /// Stores a 32-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_i32(void *ptr, int_least32_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_i32(uint_least8_t dst[4], int_least32_t x);
 
 /// Loads a 32-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least32_t ldle_i32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least32_t ldle_i32(const uint_least8_t src[4]);
 
 /// Stores a 32-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_u32(void *ptr, uint_least32_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_u32(uint_least8_t dst[4], uint_least32_t x);
 
 /// Loads a 32-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least32_t ldle_u32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least32_t ldle_u32(const uint_least8_t src[4]);
 
 /// Stores a 64-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_i64(void *ptr, int_least64_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_i64(uint_least8_t dst[8], int_least64_t x);
 
 /// Loads a 64-bit signed integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least64_t ldbe_i64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least64_t ldbe_i64(const uint_least8_t src[8]);
 
 /// Stores a 64-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stbe_u64(void *ptr, uint_least64_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_u64(uint_least8_t dst[8], uint_least64_t x);
 
 /// Loads a 64-bit unsigned integer in big-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least64_t ldbe_u64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least64_t ldbe_u64(const uint_least8_t src[8]);
 
 /// Stores a 64-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_i64(void *ptr, int_least64_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_i64(uint_least8_t dst[8], int_least64_t x);
 
 /// Loads a 64-bit signed integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE int_least64_t ldle_i64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE int_least64_t ldle_i64(const uint_least8_t src[8]);
 
 /// Stores a 64-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE void stle_u64(void *ptr, uint_least64_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_u64(uint_least8_t dst[8], uint_least64_t x);
 
 /// Loads a 64-bit unsigned integer in little-endian byte order.
-LELY_UTIL_ENDIAN_INLINE uint_least64_t ldle_u64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE uint_least64_t ldle_u64(const uint_least8_t src[8]);
 
 #ifdef LELY_FLT16_TYPE
 
@@ -207,25 +207,25 @@ LELY_UTIL_ENDIAN_INLINE uint_least64_t ldle_u64(const void *ptr);
  * Stores an IEEE 754 half-precision binary floating-point number in big-endian
  * byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stbe_flt16(void *ptr, flt16_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_flt16(uint_least8_t dst[2], flt16_t x);
 
 /**
  * Loads an IEEE 754 half-precision binary floating-point number in big-endian
  * byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt16_t ldbe_flt16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt16_t ldbe_flt16(const uint_least8_t src[2]);
 
 /**
  * Stores an IEEE 754 half-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stle_flt16(void *ptr, flt16_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_flt16(uint_least8_t dst[2], flt16_t x);
 
 /**
  * Loads an IEEE 754 half-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt16_t ldle_flt16(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt16_t ldle_flt16(const uint_least8_t src[2]);
 
 #endif // LELY_FLT16_TYPE
 
@@ -235,25 +235,25 @@ LELY_UTIL_ENDIAN_INLINE flt16_t ldle_flt16(const void *ptr);
  * Stores an IEEE 754 single-precision binary floating-point number in
  * big-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stbe_flt32(void *ptr, flt32_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_flt32(uint_least8_t dst[4], flt32_t x);
 
 /**
  * Loads an IEEE 754 single-precision binary floating-point number in
  * big-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt32_t ldbe_flt32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt32_t ldbe_flt32(const uint_least8_t src[4]);
 
 /**
  * Stores an IEEE 754 single-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stle_flt32(void *ptr, flt32_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_flt32(uint_least8_t dst[4], flt32_t x);
 
 /**
  * Loads an IEEE 754 single-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt32_t ldle_flt32(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt32_t ldle_flt32(const uint_least8_t src[4]);
 
 #endif // LELY_FLT32_TYPE
 
@@ -263,32 +263,33 @@ LELY_UTIL_ENDIAN_INLINE flt32_t ldle_flt32(const void *ptr);
  * Stores an IEEE 754 double-precision binary floating-point number in
  * big-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stbe_flt64(void *ptr, flt64_t x);
+LELY_UTIL_ENDIAN_INLINE void stbe_flt64(uint_least8_t dst[8], flt64_t x);
 
 /**
  * Loads an IEEE 754 double-precision binary floating-point number in
  * big-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt64_t ldbe_flt64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt64_t ldbe_flt64(const uint_least8_t src[8]);
 
 /**
  * Stores an IEEE 754 double-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE void stle_flt64(void *ptr, flt64_t x);
+LELY_UTIL_ENDIAN_INLINE void stle_flt64(uint_least8_t dst[8], flt64_t x);
 
 /**
  * Loads an IEEE 754 double-precision binary floating-point number in
  * little-endian byte order.
  */
-LELY_UTIL_ENDIAN_INLINE flt64_t ldle_flt64(const void *ptr);
+LELY_UTIL_ENDIAN_INLINE flt64_t ldle_flt64(const uint_least8_t src[8]);
 
 #endif // LELY_FLT64_TYPE
 
 /**
  * Copies <b>n</b> bits from a source to a destination buffer. The buffers MUST
  * NOT overlap. This function assumes a big-endian bit ordering (i.e., bit 0 is
- * the most significant bit).
+ * the most significant bit). On platforms where `CHAR_BIT != 8`, only the 8
+ * least significant bits of each byte are copied.
  *
  * @param dst    a pointer to the destination buffer.
  * @param dstbit the destination offset (in bits) with respect to <b>dst</b>.
@@ -296,12 +297,14 @@ LELY_UTIL_ENDIAN_INLINE flt64_t ldle_flt64(const void *ptr);
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-void bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n);
+void bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
+		int srcbit, size_t n);
 
 /**
  * Copies <b>n</b> bits from a source to a destination buffer. The buffers MUST
  * NOT overlap. This function assumes a little-endian bit ordering (i.e., bit 0
- * is the least significant bit).
+ * is the least significant bit). On platforms where `CHAR_BIT != 8`, only the 8
+ * least significant bits of each byte are copied.
  *
  * @param dst    a pointer to the destination buffer.
  * @param dstbit the destination offset (in bits) with respect to <b>dst</b>.
@@ -309,7 +312,8 @@ void bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n);
  * @param srcbit the source offset (in bits) with respect to <b>src</b>.
  * @param n      the number of bits to copy.
  */
-void bcpyle(void *dst, int dstbit, const void *src, int srcbit, size_t n);
+void bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
+		int srcbit, size_t n);
 
 #ifndef htobe16
 inline uint_least16_t
@@ -438,199 +442,291 @@ letoh64(uint_least64_t x)
 #endif
 
 inline void
-stbe_i16(void *ptr, int_least16_t x)
+stbe_i16(uint_least8_t dst[2], int_least16_t x)
 {
-	stbe_u16(ptr, x);
+	stbe_u16(dst, x);
 }
 
 inline int_least16_t
-ldbe_i16(const void *ptr)
+ldbe_i16(const uint_least8_t src[2])
 {
-	return ldbe_u16(ptr);
+	return ldbe_u16(src);
 }
 
 inline void
-stbe_u16(void *ptr, uint_least16_t x)
+stbe_u16(uint_least8_t dst[2], uint_least16_t x)
 {
+#if CHAR_BIT == 8
 	x = htobe16(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = (x >> 8) & 0xff;
+	dst[1] = x & 0xff;
+#endif
 }
 
 inline uint_least16_t
-ldbe_u16(const void *ptr)
+ldbe_u16(const uint_least8_t src[2])
 {
+#if CHAR_BIT == 8
 	uint_least16_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return betoh16(x);
+#else
+	return ((uint_least16_t)(src[0] & 0xff) << 8)
+			| ((uint_least16_t)(src[1] & 0xff));
+#endif
 }
 
 inline void
-stle_i16(void *ptr, int_least16_t x)
+stle_i16(uint_least8_t dst[2], int_least16_t x)
 {
-	stle_u16(ptr, x);
+	stle_u16(dst, x);
 }
 
 inline int_least16_t
-ldle_i16(const void *ptr)
+ldle_i16(const uint_least8_t src[2])
 {
-	return ldle_u16(ptr);
+	return ldle_u16(src);
 }
 
 inline void
-stle_u16(void *ptr, uint_least16_t x)
+stle_u16(uint_least8_t dst[2], uint_least16_t x)
 {
+#if CHAR_BIT == 8
 	x = htole16(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = x & 0xff;
+	dst[1] = (x >> 8) & 0xff;
+#endif
 }
 
 inline uint_least16_t
-ldle_u16(const void *ptr)
+ldle_u16(const uint_least8_t src[2])
 {
+#if CHAR_BIT == 8
 	uint_least16_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return letoh16(x);
+#else
+	return (uint_least16_t)(src[0] & 0xff)
+			| ((uint_least16_t)(src[1] & 0xff) << 8);
+#endif
 }
 
 inline void
-stbe_i32(void *ptr, int_least32_t x)
+stbe_i32(uint_least8_t dst[4], int_least32_t x)
 {
-	stbe_u32(ptr, x);
+	stbe_u32(dst, x);
 }
 
 inline int_least32_t
-ldbe_i32(const void *ptr)
+ldbe_i32(const uint_least8_t src[4])
 {
-	return ldbe_u32(ptr);
+	return ldbe_u32(src);
 }
 
 inline void
-stbe_u32(void *ptr, uint_least32_t x)
+stbe_u32(uint_least8_t dst[4], uint_least32_t x)
 {
+#if CHAR_BIT == 8
 	x = htobe32(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = (x >> 24) & 0xff;
+	dst[1] = (x >> 16) & 0xff;
+	dst[2] = (x >> 8) & 0xff;
+	dst[3] = x & 0xff;
+#endif
 }
 
 inline uint_least32_t
-ldbe_u32(const void *ptr)
+ldbe_u32(const uint_least8_t src[4])
 {
+#if CHAR_BIT == 8
 	uint_least32_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return betoh32(x);
+#else
+	return ((uint_least32_t)(src[0] & 0xff) << 24)
+			| ((uint_least32_t)(src[1] & 0xff) << 16)
+			| ((uint_least32_t)(src[2] & 0xff) << 8)
+			| ((uint_least32_t)(src[3] & 0xff));
+#endif
 }
 
 inline void
-stle_i32(void *ptr, int_least32_t x)
+stle_i32(uint_least8_t dst[4], int_least32_t x)
 {
-	stle_u32(ptr, x);
+	stle_u32(dst, x);
 }
 
 inline int_least32_t
-ldle_i32(const void *ptr)
+ldle_i32(const uint_least8_t src[4])
 {
-	return ldle_u32(ptr);
+	return ldle_u32(src);
 }
 
 inline void
-stle_u32(void *ptr, uint_least32_t x)
+stle_u32(uint_least8_t dst[4], uint_least32_t x)
 {
+#if CHAR_BIT == 8
 	x = htole32(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = x & 0xff;
+	dst[1] = (x >> 8) & 0xff;
+	dst[2] = (x >> 16) & 0xff;
+	dst[3] = (x >> 24) & 0xff;
+#endif
 }
 
 inline uint_least32_t
-ldle_u32(const void *ptr)
+ldle_u32(const uint_least8_t src[4])
 {
+#if CHAR_BIT == 8
 	uint_least32_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return letoh32(x);
+#else
+	return (uint_least32_t)(src[0] & 0xff)
+			| ((uint_least32_t)(src[1] & 0xff) << 8)
+			| ((uint_least32_t)(src[2] & 0xff) << 16)
+			| ((uint_least32_t)(src[3] & 0xff) << 24);
+#endif
 }
 
 inline void
-stbe_i64(void *ptr, int_least64_t x)
+stbe_i64(uint_least8_t dst[8], int_least64_t x)
 {
-	stbe_u64(ptr, x);
+	stbe_u64(dst, x);
 }
 
 inline int_least64_t
-ldbe_i64(const void *ptr)
+ldbe_i64(const uint_least8_t src[8])
 {
-	return ldbe_u64(ptr);
+	return ldbe_u64(src);
 }
 
 inline void
-stbe_u64(void *ptr, uint_least64_t x)
+stbe_u64(uint_least8_t dst[8], uint_least64_t x)
 {
+#if CHAR_BIT == 8
 	x = htobe64(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = (x >> 56) & 0xff;
+	dst[1] = (x >> 48) & 0xff;
+	dst[2] = (x >> 40) & 0xff;
+	dst[3] = (x >> 32) & 0xff;
+	dst[4] = (x >> 24) & 0xff;
+	dst[5] = (x >> 16) & 0xff;
+	dst[6] = (x >> 8) & 0xff;
+	dst[7] = x & 0xff;
+#endif
 }
 
 inline uint_least64_t
-ldbe_u64(const void *ptr)
+ldbe_u64(const uint_least8_t src[8])
 {
+#if CHAR_BIT == 8
 	uint_least64_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return betoh64(x);
+#else
+	return ((uint_least64_t)(src[0] & 0xff) << 56)
+			| ((uint_least64_t)(src[1] & 0xff) << 48)
+			| ((uint_least64_t)(src[2] & 0xff) << 40)
+			| ((uint_least64_t)(src[3] & 0xff) << 32)
+			| ((uint_least64_t)(src[4] & 0xff) << 24)
+			| ((uint_least64_t)(src[5] & 0xff) << 16)
+			| ((uint_least64_t)(src[6] & 0xff) << 8)
+			| ((uint_least64_t)(src[7] & 0xff));
+#endif
 }
 
 inline void
-stle_i64(void *ptr, int_least64_t x)
+stle_i64(uint_least8_t dst[8], int_least64_t x)
 {
-	stle_u64(ptr, x);
+	stle_u64(dst, x);
 }
 
 inline int_least64_t
-ldle_i64(const void *ptr)
+ldle_i64(const uint_least8_t src[8])
 {
-	return ldle_u64(ptr);
+	return ldle_u64(src);
 }
 
 inline void
-stle_u64(void *ptr, uint_least64_t x)
+stle_u64(uint_least8_t dst[8], uint_least64_t x)
 {
+#if CHAR_BIT == 8
 	x = htole64(x);
-	memcpy(ptr, &x, sizeof(x));
+	memcpy(dst, &x, sizeof(x));
+#else
+	dst[0] = x & 0xff;
+	dst[1] = (x >> 8) & 0xff;
+	dst[2] = (x >> 16) & 0xff;
+	dst[3] = (x >> 24) & 0xff;
+	dst[4] = (x >> 32) & 0xff;
+	dst[5] = (x >> 40) & 0xff;
+	dst[6] = (x >> 48) & 0xff;
+	dst[7] = (x >> 56) & 0xff;
+#endif
 }
 
 inline uint_least64_t
-ldle_u64(const void *ptr)
+ldle_u64(const uint_least8_t src[8])
 {
+#if CHAR_BIT == 8
 	uint_least64_t x = 0;
-	memcpy(&x, ptr, sizeof(x));
+	memcpy(&x, src, sizeof(x));
 	return letoh64(x);
+#else
+	return (uint_least64_t)(src[0] & 0xff)
+			| ((uint_least64_t)(src[1] & 0xff) << 8)
+			| ((uint_least64_t)(src[2] & 0xff) << 16)
+			| ((uint_least64_t)(src[3] & 0xff) << 24)
+			| ((uint_least64_t)(src[4] & 0xff) << 32)
+			| ((uint_least64_t)(src[5] & 0xff) << 40)
+			| ((uint_least64_t)(src[6] & 0xff) << 48)
+			| ((uint_least64_t)(src[7] & 0xff) << 56);
+#endif
 }
 
 #ifdef LELY_FLT16_TYPE
 
 inline void
-stbe_flt16(void *ptr, flt16_t x)
+stbe_flt16(uint_least8_t dst[2], flt16_t x)
 {
 	uint_least16_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stbe_u16(ptr, tmp);
+	stbe_u16(dst, tmp);
 }
 
 inline flt16_t
-ldbe_flt16(const void *ptr)
+ldbe_flt16(const uint_least8_t src[2])
 {
 	flt16_t x = 0;
-	uint_least16_t tmp = ldbe_u16(ptr);
+	uint_least16_t tmp = ldbe_u16(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }
 
 inline void
-stle_flt16(void *ptr, flt16_t x)
+stle_flt16(uint_least8_t dst[2], flt16_t x)
 {
 	uint_least16_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stle_u16(ptr, tmp);
+	stle_u16(dst, tmp);
 }
 
 inline flt16_t
-ldle_flt16(const void *ptr)
+ldle_flt16(const uint_least8_t src[2])
 {
 	flt16_t x = 0;
-	uint_least16_t tmp = ldle_u16(ptr);
+	uint_least16_t tmp = ldle_u16(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }
@@ -640,35 +736,35 @@ ldle_flt16(const void *ptr)
 #ifdef LELY_FLT32_TYPE
 
 inline void
-stbe_flt32(void *ptr, flt32_t x)
+stbe_flt32(uint_least8_t dst[4], flt32_t x)
 {
 	uint_least32_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stbe_u32(ptr, tmp);
+	stbe_u32(dst, tmp);
 }
 
 inline flt32_t
-ldbe_flt32(const void *ptr)
+ldbe_flt32(const uint_least8_t src[4])
 {
 	flt32_t x = 0;
-	uint_least32_t tmp = ldbe_u32(ptr);
+	uint_least32_t tmp = ldbe_u32(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }
 
 inline void
-stle_flt32(void *ptr, flt32_t x)
+stle_flt32(uint_least8_t dst[4], flt32_t x)
 {
 	uint_least32_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stle_u32(ptr, tmp);
+	stle_u32(dst, tmp);
 }
 
 inline flt32_t
-ldle_flt32(const void *ptr)
+ldle_flt32(const uint_least8_t src[4])
 {
 	flt32_t x = 0;
-	uint_least32_t tmp = ldle_u32(ptr);
+	uint_least32_t tmp = ldle_u32(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }
@@ -678,35 +774,35 @@ ldle_flt32(const void *ptr)
 #ifdef LELY_FLT64_TYPE
 
 inline void
-stbe_flt64(void *ptr, flt64_t x)
+stbe_flt64(uint_least8_t dst[8], flt64_t x)
 {
 	uint_least64_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stbe_u64(ptr, tmp);
+	stbe_u64(dst, tmp);
 }
 
 inline flt64_t
-ldbe_flt64(const void *ptr)
+ldbe_flt64(const uint_least8_t src[8])
 {
 	flt64_t x = 0;
-	uint_least64_t tmp = ldbe_u64(ptr);
+	uint_least64_t tmp = ldbe_u64(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }
 
 inline void
-stle_flt64(void *ptr, flt64_t x)
+stle_flt64(uint_least8_t dst[8], flt64_t x)
 {
 	uint_least64_t tmp = 0;
 	memcpy(&tmp, &x, sizeof(x));
-	stle_u64(ptr, tmp);
+	stle_u64(dst, tmp);
 }
 
 inline flt64_t
-ldle_flt64(const void *ptr)
+ldle_flt64(const uint_least8_t src[8])
 {
 	flt64_t x = 0;
-	uint_least64_t tmp = ldle_u64(ptr);
+	uint_least64_t tmp = ldle_u64(src);
 	memcpy(&x, &tmp, sizeof(x));
 	return x;
 }

@@ -16,16 +16,16 @@ main(void)
 {
 	tap_plan(3);
 
-	unsigned char buf[sizeof(uint64_t)] = { 0 };
+	uint_least8_t buf[8] = { 0 };
 
 	stle_u64(buf, VALUE);
 	tap_test(ldle_u64(buf) == VALUE);
 
-	unsigned char tmp[sizeof(buf)] = { 0 };
+	uint_least8_t tmp[8] = { 0 };
 	bcpybe(tmp, 10, buf, 6, 48);
-	tap_test(!memcmp(tmp, (unsigned char[])BVAL_BE, sizeof(tmp)));
+	tap_test(!memcmp(tmp, (uint_least8_t[])BVAL_BE, sizeof(tmp)));
 	bcpyle(tmp, 10, buf, 6, 48);
-	tap_test(!memcmp(tmp, (unsigned char[])BVAL_LE, sizeof(tmp)));
+	tap_test(!memcmp(tmp, (uint_least8_t[])BVAL_LE, sizeof(tmp)));
 
 	return 0;
 }

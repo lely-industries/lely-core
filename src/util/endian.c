@@ -4,7 +4,7 @@
  *
  * @see lely/util/endian.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,10 +32,11 @@
 #include <assert.h>
 
 static inline void bitcpy(
-		unsigned char *dst, unsigned char src, unsigned char mask);
+		uint_least8_t *dst, uint_least8_t src, uint_least8_t mask);
 
 void
-bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n)
+bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
+		size_t n)
 {
 	if (!n)
 		return;
@@ -43,89 +44,89 @@ bcpybe(void *dst, int dstbit, const void *src, int srcbit, size_t n)
 	assert(dst);
 	assert(src);
 
-	unsigned char *dp = dst;
-	dp += dstbit / CHAR_BIT;
-	dstbit %= CHAR_BIT;
+	dst += dstbit / 8;
+	dstbit %= 8;
 	if (dstbit < 0) {
-		dp--;
-		dstbit += CHAR_BIT;
+		dst--;
+		dstbit += 8;
 	}
 
-	const unsigned char *sp = src;
-	sp += srcbit / CHAR_BIT;
-	srcbit %= CHAR_BIT;
+	src += srcbit / 8;
+	srcbit %= 8;
 	if (srcbit < 0) {
-		sp--;
-		srcbit += CHAR_BIT;
+		src--;
+		srcbit += 8;
 	}
 
-	unsigned char first = UCHAR_MAX >> dstbit;
-	unsigned char last = ~(UCHAR_MAX >> ((dstbit + n) % CHAR_BIT));
+	uint_least8_t first = 0xff >> dstbit;
+	uint_least8_t last = ~(0xff >> ((dstbit + n) % 8));
 
 	int shift = dstbit - srcbit;
 	if (shift) {
-		int right = shift & (CHAR_BIT - 1);
-		int left = -shift & (CHAR_BIT - 1);
+		int right = shift & (8 - 1);
+		int left = -shift & (8 - 1);
 
-		if (dstbit + n <= CHAR_BIT) {
+		if (dstbit + n <= 8) {
 			if (last)
 				first &= last;
 			if (shift > 0) {
-				bitcpy(dp, *sp >> right, first);
-			} else if (srcbit + n <= CHAR_BIT) {
-				bitcpy(dp, *sp << left, first);
+				bitcpy(dst, *src >> right, first);
+			} else if (srcbit + n <= 8) {
+				bitcpy(dst, *src << left, first);
 			} else {
-				bitcpy(dp, *sp << left | sp[1] >> right, first);
+				bitcpy(dst, *src << left | src[1] >> right,
+						first);
 			}
 		} else {
-			unsigned char b = *sp++;
+			uint_least8_t b = *src++ & 0xff;
 			if (shift > 0) {
-				bitcpy(dp, b >> right, first);
+				bitcpy(dst, b >> right, first);
 			} else {
-				bitcpy(dp, b << left | *sp >> right, first);
-				b = *sp++;
+				bitcpy(dst, b << left | *src >> right, first);
+				b = *src++ & 0xff;
 			}
-			dp++;
-			n -= CHAR_BIT - dstbit;
+			dst++;
+			n -= 8 - dstbit;
 
-			int m = n % CHAR_BIT;
-			n /= CHAR_BIT;
+			int m = n % 8;
+			n /= 8;
 			while (n--) {
-				*dp++ = b << left | *sp >> right;
-				b = *sp++;
+				*dst++ = (b << left | *src >> right) & 0xff;
+				b = *src++ & 0xff;
 			}
 
 			if (last) {
 				if (m <= right)
-					bitcpy(dp, b << left, last);
+					bitcpy(dst, b << left, last);
 				else
-					bitcpy(dp, b << left | *sp >> right,
+					bitcpy(dst, b << left | *src >> right,
 							last);
 			}
 		}
 	} else {
-		if (dstbit + n <= CHAR_BIT) {
+		if (dstbit + n <= 8) {
 			if (last)
 				first &= last;
-			bitcpy(dp, *sp, first);
+			bitcpy(dst, *src, first);
 		} else {
 			if (first) {
-				bitcpy(dp++, *sp++, first);
-				n -= CHAR_BIT - dstbit;
+				bitcpy(dst++, *src++, first);
+				n -= 8 - dstbit;
 			}
 
-			n /= CHAR_BIT;
+			n /= 8;
 			while (n--)
-				*dp++ = *sp++;
+				*dst++ = *src++;
 
 			if (last)
-				bitcpy(dp, *sp, last);
+				bitcpy(dst, *src, last);
 		}
 	}
 }
 
 void
-bcpyle(void *dst, int dstbit, const void *src, int srcbit, size_t n)
+bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
+		size_t n)
 {
 	if (!n)
 		return;
@@ -133,89 +134,88 @@ bcpyle(void *dst, int dstbit, const void *src, int srcbit, size_t n)
 	assert(dst);
 	assert(src);
 
-	unsigned char *dp = dst;
-	dp += dstbit / CHAR_BIT;
-	dstbit %= CHAR_BIT;
+	dst += dstbit / 8;
+	dstbit %= 8;
 	if (dstbit < 0) {
-		dp--;
-		dstbit += CHAR_BIT;
+		dst--;
+		dstbit += 8;
 	}
 
-	const unsigned char *sp = src;
-	sp += srcbit / CHAR_BIT;
-	srcbit %= CHAR_BIT;
+	src += srcbit / 8;
+	srcbit %= 8;
 	if (srcbit < 0) {
-		sp--;
-		srcbit += CHAR_BIT;
+		src--;
+		srcbit += 8;
 	}
 
-	unsigned char first = UCHAR_MAX << dstbit;
-	unsigned char last = ~(UCHAR_MAX << ((dstbit + n) % CHAR_BIT));
+	uint_least8_t first = 0xff << dstbit;
+	uint_least8_t last = ~(0xff << ((dstbit + n) % 8));
 
 	int shift = dstbit - srcbit;
 	if (shift) {
-		int right = -shift & (CHAR_BIT - 1);
-		int left = shift & (CHAR_BIT - 1);
+		int right = -shift & (8 - 1);
+		int left = shift & (8 - 1);
 
-		if (dstbit + n <= CHAR_BIT) {
+		if (dstbit + n <= 8) {
 			if (last)
 				first &= last;
 			if (shift > 0) {
-				bitcpy(dp, *sp << left, first);
-			} else if (srcbit + n <= CHAR_BIT) {
-				bitcpy(dp, *sp >> right, first);
+				bitcpy(dst, *src << left, first);
+			} else if (srcbit + n <= 8) {
+				bitcpy(dst, *src >> right, first);
 			} else {
-				bitcpy(dp, *sp >> right | sp[1] << left, first);
+				bitcpy(dst, *src >> right | src[1] << left,
+						first);
 			}
 		} else {
-			unsigned char b = *sp++;
+			uint_least8_t b = *src++ & 0xff;
 			if (shift > 0) {
-				bitcpy(dp, b << left, first);
+				bitcpy(dst, b << left, first);
 			} else {
-				bitcpy(dp, b >> right | *sp << left, first);
-				b = *sp++;
+				bitcpy(dst, b >> right | *src << left, first);
+				b = *src++ & 0xff;
 			}
-			dp++;
-			n -= CHAR_BIT - dstbit;
+			dst++;
+			n -= 8 - dstbit;
 
-			int m = n % CHAR_BIT;
-			n /= CHAR_BIT;
+			int m = n % 8;
+			n /= 8;
 			while (n--) {
-				*dp++ = b >> right | *sp << left;
-				b = *sp++;
+				*dst++ = (b >> right | *src << left) & 0xff;
+				b = *src++ & 0xff;
 			}
 
 			if (last) {
 				if (m <= right)
-					bitcpy(dp, b >> right, last);
+					bitcpy(dst, b >> right, last);
 				else
-					bitcpy(dp, b >> right | *sp << left,
+					bitcpy(dst, b >> right | *src << left,
 							last);
 			}
 		}
 	} else {
-		if (dstbit + n <= CHAR_BIT) {
+		if (dstbit + n <= 8) {
 			if (last)
 				first &= last;
-			bitcpy(dp, *sp, first);
+			bitcpy(dst, *src, first);
 		} else {
 			if (first) {
-				bitcpy(dp++, *sp++, first);
-				n -= CHAR_BIT - dstbit;
+				bitcpy(dst++, *src++, first);
+				n -= 8 - dstbit;
 			}
 
-			n /= CHAR_BIT;
+			n /= 8;
 			while (n--)
-				*dp++ = *sp++;
+				*dst++ = *src++;
 
 			if (last)
-				bitcpy(dp, *sp, last);
+				bitcpy(dst, *src, last);
 		}
 	}
 }
 
 static inline void
-bitcpy(unsigned char *dst, unsigned char src, unsigned char mask)
+bitcpy(uint_least8_t *dst, uint_least8_t src, uint_least8_t mask)
 {
-	*dst = ((src ^ *dst) & mask) ^ *dst;
+	*dst = (((src ^ *dst) & mask) ^ *dst) & 0xff;
 }
