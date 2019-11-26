@@ -4,7 +4,7 @@
  *
  * @see lely/can/vci.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -104,10 +104,10 @@ CANMSG2can_msg(const void *src, struct can_msg *dst)
 	memset(dst, 0, sizeof(*dst));
 	dst->flags = 0;
 	if (msg->uMsgInfo.Bits.ext) {
-		dst->id = ldle_u32(&msg->dwMsgId) & CAN_MASK_EID;
+		dst->id = letoh32(msg->dwMsgId) & CAN_MASK_EID;
 		dst->flags |= CAN_FLAG_IDE;
 	} else {
-		dst->id = ldle_u32(&msg->dwMsgId) & CAN_MASK_BID;
+		dst->id = letoh32(msg->dwMsgId) & CAN_MASK_BID;
 	}
 	if (msg->uMsgInfo.Bits.rtr)
 		dst->flags |= CAN_FLAG_RTR;
@@ -136,10 +136,10 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	msg->dwTime = 0;
 	msg->uMsgInfo.Bits.type = CAN_MSGTYPE_DATA;
 	if (src->flags & CAN_FLAG_IDE) {
-		stle_u32(&msg->dwMsgId, src->id & CAN_MASK_EID);
+		msg->dwMsgId = htole32(src->id & CAN_MASK_EID);
 		msg->uMsgInfo.Bits.ext = 1;
 	} else {
-		stle_u32(&msg->dwMsgId, src->id & CAN_MASK_BID);
+		msg->dwMsgId = htole32(src->id & CAN_MASK_BID);
 	}
 	msg->uMsgInfo.Bits.dlc = MIN(src->len, CAN_MAX_LEN);
 	if (src->flags & CAN_FLAG_RTR)

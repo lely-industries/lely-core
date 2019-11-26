@@ -518,7 +518,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 	assert(wtm->diag_ac_ind);
 	assert(buf);
 
-	for (const char *bp = buf; nbytes;) {
+	for (const uint_least8_t *bp = buf; nbytes;) {
 		uint32_t ac = 0;
 		// Search for the preamble (see section 5.2 in CiA 315 version
 		// 1.0.0).
@@ -1125,7 +1125,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 	assert(nbytes);
 
 	uint32_t ac = 0;
-	for (const char *bp = buf; nbytes;) {
+	for (const uint_least8_t *bp = buf; nbytes;) {
 		struct can_msg msg = CAN_MSG_INIT;
 		// Obtain the data length code.
 		uint8_t dlc = *bp;

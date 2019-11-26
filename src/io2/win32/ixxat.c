@@ -867,10 +867,10 @@ io_ixxat_read(HANDLE hCanChn, struct can_msg *msg, struct can_err *err,
 
 		*msg = (struct can_msg)CAN_MSG_INIT;
 		if (CanMsg.uMsgInfo.Bits.ext) {
-			msg->id = ldle_u32(&CanMsg.dwMsgId) & CAN_MASK_EID;
+			msg->id = letoh32(CanMsg.dwMsgId) & CAN_MASK_EID;
 			msg->flags |= CAN_FLAG_IDE;
 		} else {
-			msg->id = ldle_u32(&CanMsg.dwMsgId) & CAN_MASK_BID;
+			msg->id = letoh32(CanMsg.dwMsgId) & CAN_MASK_BID;
 		}
 		if (CanMsg.uMsgInfo.Bits.rtr)
 			msg->flags |= CAN_FLAG_RTR;
@@ -925,10 +925,10 @@ io_ixxat_write(HANDLE hCanChn, const struct can_msg *msg, int timeout)
 	CANMSG2 CanMsg = { .dwMsgId = 0 };
 #endif
 	if (msg->flags & CAN_FLAG_IDE) {
-		stle_u32(&CanMsg.dwMsgId, msg->id & CAN_MASK_EID);
+		CanMsg.dwMsgId = htole32(msg->id & CAN_MASK_EID);
 		CanMsg.uMsgInfo.Bits.ext = 1;
 	} else {
-		stle_u32(&CanMsg.dwMsgId, msg->id & CAN_MASK_BID);
+		CanMsg.dwMsgId = htole32(msg->id & CAN_MASK_BID);
 	}
 	CanMsg.uMsgInfo.Bits.type = CAN_MSGTYPE_DATA;
 	if (msg->flags & CAN_FLAG_RTR)
