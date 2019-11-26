@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the bit
  * function definitions.
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -39,13 +39,22 @@
 extern "C" {
 #endif
 
-/// Reverses the byte order of the 16-bit unsigned integer <b>x</b>.
+/**
+ * Reverses the byte order of the 16-bit unsigned integer <b>x</b>. This
+ * function assumes 8-bit bytes.
+ */
 LELY_UTIL_BITS_INLINE uint_least16_t bswap16(uint_least16_t x);
 
-/// Reverses the byte order of the 32-bit unsigned integer <b>x</b>.
+/**
+ * Reverses the byte order of the 32-bit unsigned integer <b>x</b>. This
+ * function assumes 8-bit bytes.
+ */
 LELY_UTIL_BITS_INLINE uint_least32_t bswap32(uint_least32_t x);
 
-/// Reverses the byte order of the 64-bit unsigned integer <b>x</b>.
+/**
+ * Reverses the byte order of the 64-bit unsigned integer <b>x</b>. This
+ * function assumes 8-bit bytes.
+ */
 LELY_UTIL_BITS_INLINE uint_least64_t bswap64(uint_least64_t x);
 /**
  * Counts the number of leading set bits in the unsigned 8-bit integer <b>x</b>.
@@ -270,16 +279,6 @@ LELY_UTIL_BITS_INLINE uint_least64_t rol64(uint_least64_t x, unsigned int n);
 /// Rotates the 64-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint_least64_t ror64(uint_least64_t x, unsigned int n);
 
-#define LELY_UTIL_DEFINE_BSWAP_IMPL(type) \
-	type r = 0; \
-	for (unsigned int i = 0; i < sizeof(x) / 2; i++) \
-		r |= (x & ((type)UCHAR_MAX << (i * CHAR_BIT))) \
-				<< ((sizeof(x) - 2 * i - 1) * CHAR_BIT); \
-	for (unsigned int i = sizeof(x) / 2; i < sizeof(x); i++) \
-		r |= (x & ((type)UCHAR_MAX << (i * CHAR_BIT))) \
-				>> ((2 * i + 1 - sizeof(x)) * CHAR_BIT); \
-	return r;
-
 inline uint_least16_t
 bswap16(uint_least16_t x)
 {
@@ -288,7 +287,7 @@ bswap16(uint_least16_t x)
 #elif GNUC_PREREQ(4, 8) || __has_builtin(__builtin_bswap16)
 	return __builtin_bswap16(x);
 #else
-	LELY_UTIL_DEFINE_BSWAP_IMPL(uint_least16_t)
+	return ((x & 0xff) << 8) | ((x >> 8) & 0xff);
 #endif
 }
 
@@ -300,7 +299,8 @@ bswap32(uint_least32_t x)
 #elif GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap32)
 	return __builtin_bswap32(x);
 #else
-	LELY_UTIL_DEFINE_BSWAP_IMPL(uint_least32_t)
+	return ((x & 0xff) << 24) | ((x & 0xff00u) << 8) | ((x >> 8) & 0xff00u)
+			| ((x >> 24) & 0xff);
 #endif
 }
 
@@ -312,11 +312,12 @@ bswap64(uint_least64_t x)
 #elif GNUC_PREREQ(4, 3) || __has_builtin(__builtin_bswap64)
 	return __builtin_bswap64(x);
 #else
-	LELY_UTIL_DEFINE_BSWAP_IMPL(uint_least64_t)
+	return ((x & 0xff) << 56) | ((x & 0xff00u) << 40)
+			| ((x & 0xff0000ul) << 24) | ((x & 0xff000000ul) << 8)
+			| ((x >> 8) & 0xff000000ul) | ((x >> 24) & 0xff0000ul)
+			| ((x >> 40) & 0xff00u) | ((x >> 56) & 0xff);
 #endif
 }
-
-#undef LELY_UTIL_DEFINE_BSWAP_IMPL
 
 inline int
 cls8(uint_least8_t x)
