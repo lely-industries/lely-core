@@ -26,10 +26,11 @@
 #ifdef __linux__
 
 #include "../can.h"
-#include <lely/ev/strand.h>
 #include <lely/io2/ctx.h>
 #include <lely/io2/linux/can.h>
 #include <lely/io2/posix/poll.h>
+#include <lely/util/spscring.h>
+#include <lely/util/time.h>
 #include <lely/util/util.h>
 
 #include <assert.h>
@@ -44,7 +45,6 @@
 #include <linux/can/raw.h>
 #include <sys/ioctl.h>
 
-#include "../cbuf.h"
 #include "../posix/fd.h"
 #include "can_attr.h"
 #include "can_err.h"
@@ -64,15 +64,6 @@ struct io_can_frame {
 	size_t nbytes;
 	struct timespec ts;
 };
-
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#endif
-LELY_IO_DEFINE_CBUF(io_can_buf, struct io_can_frame)
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 static int io_can_fd_set_default(int fd);
 #if LELY_NO_CANFD
@@ -136,35 +127,71 @@ static const struct io_svc_vtbl io_can_chan_impl_svc_vtbl = {
 };
 // clang-format on
 
+/// The implementation of a CAN channel.
 struct io_can_chan_impl {
+	/// A pointer to the virtual table for the I/O device interface.
 	const struct io_dev_vtbl *dev_vptr;
+	/// A pointer to the virtual table for the CAN channel interface.
 	const struct io_can_chan_vtbl *chan_vptr;
+	/**
+	 * A pointer to the polling instance used to watch for I/O events. If
+	 * <b>poll</b> is NULL, operations are performed in blocking mode and
+	 * the executor is used as a worker thread.
+	 */
 	io_poll_t *poll;
+	/// The I/O service representing the channel.
 	struct io_svc svc;
+	/// A pointer to the I/O context with which the channel is registered.
 	io_ctx_t *ctx;
+	/// A pointer to the executor used to execute all I/O tasks.
 	ev_exec_t *exec;
+	/// The object used to monitor the file descriptor for I/O events.
 	struct io_poll_watch watch;
-	ev_exec_t *strand;
+	/// The task responsible for filling the receive queue.
 	struct ev_task rxbuf_task;
+	/// The task responsible for initiating read operations.
 	struct ev_task read_task;
+	/// The task responsible for initiating write operations.
 	struct ev_task write_task;
 #if !LELY_NO_THREADS
-	pthread_mutex_t task_mtx;
+	/// The mutex protecting the receive queue consumer.
+	pthread_mutex_t c_mtx;
+	/// The condition variable used to wake up the receive queue consumer.
+	pthread_cond_t c_cond;
 #endif
-	unsigned shutdown : 1;
-	unsigned rxbuf_posted : 1;
-	unsigned read_posted : 1;
-	unsigned write_posted : 1;
-	struct sllist read_queue;
-	struct sllist write_queue;
-	struct ev_task *current_write;
-	struct sllist confirm_queue;
+	/// The ring buffer used to control the receive queue.
+	struct spscring rxring;
+	/// The receive queue.
+	struct io_can_frame *rxbuf;
 #if !LELY_NO_THREADS
-	pthread_mutex_t io_mtx;
+	/**
+	 * The mutex protecting the file descriptor, the flags and the queues of
+	 * pending operations.
+	 */
+	pthread_mutex_t mtx;
 #endif
-	struct io_can_buf rxbuf;
+	/// The SocketCAN file descriptor.
 	int fd;
+	/// The flags with which #fd has been opened.
 	int flags;
+	/// The I/O events currently being monitored by #poll for #fd.
+	int events;
+	/// A flag indicating whether the I/O service has been shut down.
+	unsigned shutdown : 1;
+	/// A flag indicating whether #rxbuf_task has been posted to #exec.
+	unsigned rxbuf_posted : 1;
+	/// A flag indicating whether #read_task has been posted to #exec.
+	unsigned read_posted : 1;
+	/// A flag indicating whether #write_task has been posted to #exec.
+	unsigned write_posted : 1;
+	/// The queue containing pending read operations.
+	struct sllist read_queue;
+	/// The queue containing pending write operations.
+	struct sllist write_queue;
+	/// The queue containing write operations waiting to be confirmed.
+	struct sllist confirm_queue;
+	/// The write operation currently being executed.
+	struct ev_task *current_write;
 };
 
 static void io_can_chan_impl_watch_func(
@@ -180,16 +207,14 @@ static inline struct io_can_chan_impl *io_can_chan_impl_from_chan(
 static inline struct io_can_chan_impl *io_can_chan_impl_from_svc(
 		const struct io_svc *svc);
 
-static int io_can_chan_impl_read_impl(struct io_can_chan_impl *impl,
-		struct can_msg *msg, struct can_err *err, struct timespec *tp,
-		int timeout);
+static void io_can_chan_impl_c_signal(struct spscring *ring, void *arg);
 
 static void io_can_chan_impl_do_pop(struct io_can_chan_impl *impl,
 		struct sllist *read_queue, struct sllist *write_queue,
 		struct sllist *confirm_queue, struct ev_task *task);
 
-static void io_can_chan_impl_do_read(
-		struct io_can_chan_impl *impl, struct sllist *queue);
+static void io_can_chan_impl_do_read(struct io_can_chan_impl *impl,
+		struct sllist *queue, int *pwouldblock);
 static void io_can_chan_impl_do_confirm(struct io_can_chan_impl *impl,
 		struct sllist *queue, const struct can_msg *msg);
 
@@ -239,23 +264,35 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 	impl->watch = (struct io_poll_watch)IO_POLL_WATCH_INIT(
 			&io_can_chan_impl_watch_func);
 
-	impl->strand = ev_strand_create(impl->exec);
-	if (!impl->strand) {
-		errsv = errno;
-		goto error_create_strand;
-	}
-
 	impl->rxbuf_task = (struct ev_task)EV_TASK_INIT(
-			impl->strand, &io_can_chan_impl_rxbuf_task_func);
+			impl->exec, &io_can_chan_impl_rxbuf_task_func);
 	impl->read_task = (struct ev_task)EV_TASK_INIT(
-			impl->strand, &io_can_chan_impl_read_task_func);
+			impl->exec, &io_can_chan_impl_read_task_func);
 	impl->write_task = (struct ev_task)EV_TASK_INIT(
-			impl->strand, &io_can_chan_impl_write_task_func);
+			impl->exec, &io_can_chan_impl_write_task_func);
 
 #if !LELY_NO_THREADS
-	if ((errsv = pthread_mutex_init(&impl->task_mtx, NULL)))
-		goto error_init_task_mtx;
+	if ((errsv = pthread_mutex_init(&impl->c_mtx, NULL)))
+		goto error_init_c_mtx;
+	if ((errsv = pthread_cond_init(&impl->c_cond, NULL)))
+		goto error_init_c_cond;
 #endif
+
+	spscring_init(&impl->rxring, rxlen);
+	impl->rxbuf = calloc(rxlen, sizeof(struct io_can_frame));
+	if (!impl->rxbuf) {
+		errsv = errno;
+		goto error_alloc_rxbuf;
+	}
+
+#if !LELY_NO_THREADS
+	if ((errsv = pthread_mutex_init(&impl->mtx, NULL)))
+		goto error_init_mtx;
+#endif
+
+	impl->fd = -1;
+	impl->flags = 0;
+	impl->events = 0;
 
 	impl->shutdown = 0;
 	impl->rxbuf_posted = 0;
@@ -264,37 +301,23 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 
 	sllist_init(&impl->read_queue);
 	sllist_init(&impl->write_queue);
-	impl->current_write = NULL;
 	sllist_init(&impl->confirm_queue);
-
-#if !LELY_NO_THREADS
-	if ((errsv = pthread_mutex_init(&impl->io_mtx, NULL)))
-		goto error_init_io_mtx;
-#endif
-
-	if (io_can_buf_init(&impl->rxbuf, rxlen) == -1) {
-		errsv = errno;
-		goto error_init_rxbuf;
-	}
-
-	impl->fd = -1;
-	impl->flags = 0;
-
-	if (impl->ctx)
-		io_ctx_insert(impl->ctx, &impl->svc);
+	impl->current_write = NULL;
 
 	return chan;
 
-	// io_can_buf_fini(&impl->rxbuf);
-error_init_rxbuf:
 #if !LELY_NO_THREADS
-	pthread_mutex_destroy(&impl->io_mtx);
-error_init_io_mtx:
-	pthread_mutex_destroy(&impl->task_mtx);
-error_init_task_mtx:
+	// pthread_mutex_destroy(&impl->mtx);
+error_init_mtx:
 #endif
-	ev_strand_destroy(impl->strand);
-error_create_strand:
+	free(impl->rxbuf);
+error_alloc_rxbuf:
+#if !LELY_NO_THREADS
+	pthread_cond_destroy(&impl->c_cond);
+error_init_c_cond:
+	pthread_mutex_destroy(&impl->c_mtx);
+error_init_c_mtx:
+#endif
 	errno = errsv;
 	return NULL;
 }
@@ -310,7 +333,13 @@ io_can_chan_fini(io_can_chan_t *chan)
 	io_can_chan_impl_svc_shutdown(&impl->svc);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	// Abort any consumer wait operation running in a task.
+	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
+		;
+	spscring_c_abort_wait(&impl->rxring);
+	pthread_mutex_unlock(&impl->c_mtx);
+
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 	// If necessary, busy-wait until io_can_chan_impl_rxbuf_task_func(),
 	// io_can_chan_impl_read_task_func() and
@@ -318,29 +347,31 @@ io_can_chan_fini(io_can_chan_t *chan)
 	while (impl->rxbuf_posted || impl->read_posted || impl->write_posted) {
 		if (io_can_chan_impl_do_abort_tasks(impl))
 			continue;
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 		do
 			sched_yield();
-		while (pthread_mutex_lock(&impl->task_mtx) == EINTR);
+		while (pthread_mutex_lock(&impl->mtx) == EINTR);
 	}
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	// Close the socket.
 	if (impl->fd != -1) {
-		if (!impl->shutdown && impl->poll)
+		if (impl->events)
 			io_poll_watch(impl->poll, impl->fd, 0, &impl->watch);
 		close(impl->fd);
 	}
 
-	io_can_buf_fini(&impl->rxbuf);
-
 #if !LELY_NO_THREADS
-	pthread_mutex_destroy(&impl->io_mtx);
-	pthread_mutex_destroy(&impl->task_mtx);
+	pthread_mutex_destroy(&impl->mtx);
 #endif
 
-	ev_strand_destroy(impl->strand);
+	free(impl->rxbuf);
+
+#if !LELY_NO_THREADS
+	pthread_cond_destroy(&impl->c_cond);
+	pthread_mutex_destroy(&impl->c_mtx);
+#endif
 }
 
 io_can_chan_t *
@@ -385,12 +416,12 @@ io_can_chan_get_handle(const io_can_chan_t *chan)
 	const struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock((pthread_mutex_t *)&impl->mtx) == EINTR)
 		;
 #endif
 	int fd = impl->fd;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock((pthread_mutex_t *)&impl->io_mtx);
+	pthread_mutex_unlock((pthread_mutex_t *)&impl->mtx);
 #endif
 	return fd;
 }
@@ -614,11 +645,16 @@ io_can_fd_read(int fd, struct canfd_frame *frame, size_t *pnbytes, int *pflags,
 		*pflags = msg.msg_flags;
 
 	if (tp) {
-		struct timeval tv = { 0, 0 };
-		if (ioctl(fd, SIOCGSTAMP, &tv) == -1)
-			return -1;
-		tp->tv_sec = tv.tv_sec;
-		tp->tv_nsec = tv.tv_usec * 1000;
+		if (msg.msg_flags & MSG_CONFIRM) {
+			// Ignore the timestamp for write confirmations.
+			*tp = (struct timespec){ 0, 0 };
+		} else {
+			struct timeval tv = { 0, 0 };
+			if (ioctl(fd, SIOCGSTAMP, &tv) == -1)
+				return -1;
+			tp->tv_sec = tv.tv_sec;
+			tp->tv_nsec = tv.tv_usec * 1000;
+		}
 	}
 
 	return 0;
@@ -697,7 +733,7 @@ io_can_chan_impl_dev_cancel(io_dev_t *dev, struct ev_task *task)
 	sllist_init(&confirm_queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	io_can_chan_impl_do_pop(
@@ -708,7 +744,7 @@ io_can_chan_impl_dev_cancel(io_dev_t *dev, struct ev_task *task)
 		n++;
 	}
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	size_t nread = io_can_chan_read_queue_post(&read_queue, -1, ECANCELED);
@@ -731,17 +767,16 @@ io_can_chan_impl_dev_abort(io_dev_t *dev, struct ev_task *task)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	io_can_chan_impl_do_pop(impl, &queue, &queue, &queue, task);
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	return ev_task_queue_abort(&queue);
 }
-
 static io_dev_t *
 io_can_chan_impl_get_dev(const io_can_chan_t *chan)
 {
@@ -756,12 +791,12 @@ io_can_chan_impl_get_flags(const io_can_chan_t *chan)
 	const struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock((pthread_mutex_t *)&impl->mtx) == EINTR)
 		;
 #endif
 	int flags = impl->flags;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock((pthread_mutex_t *)&impl->io_mtx);
+	pthread_mutex_unlock((pthread_mutex_t *)&impl->mtx);
 #endif
 	return flags;
 }
@@ -772,7 +807,78 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 {
 	struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
-	return io_can_chan_impl_read_impl(impl, msg, err, tp, timeout);
+#if !LELY_NO_THREADS
+	// Compute the absolute timeout for pthread_cond_timedwait().
+	struct timespec ts = { 0, 0 };
+	if (timeout > 0) {
+		if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+			return -1;
+		timespec_add_msec(&ts, timeout);
+	}
+#endif
+
+#if !LELY_NO_THREADS
+	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
+		;
+#endif
+	size_t i = 0;
+	for (;;) {
+		// Check if a frame is available in the receive queue.
+		size_t n = 1;
+		i = spscring_c_alloc(&impl->rxring, &n);
+		if (n)
+			break;
+		if (!timeout) {
+#if !LELY_NO_THREADS
+			pthread_mutex_unlock(&impl->c_mtx);
+#endif
+			errno = EAGAIN;
+			return -1;
+		}
+		// Submit a wait operation for a single frame.
+		// clang-format off
+		if (!spscring_c_submit_wait(&impl->rxring, 1,
+				&io_can_chan_impl_c_signal, impl))
+			// clang-format on
+			// If the wait condition was already satisfied, try
+			// again.
+			continue;
+#if !LELY_NO_THREADS
+		// Wait for the buffer to signal that a frame is available, or
+		// time out if that takes too long.
+		int errc;
+		if (timeout > 0)
+			errc = pthread_cond_timedwait(
+					&impl->c_cond, &impl->c_mtx, &ts);
+		else
+			errc = pthread_cond_wait(&impl->c_cond, &impl->c_mtx);
+		if (errc) {
+			pthread_mutex_unlock(&impl->c_mtx);
+			errno = errc == ETIMEDOUT ? EAGAIN : errc;
+			return -1;
+		}
+#endif
+	}
+	// Copy the frame from the buffer.
+	struct io_can_frame *frame = &impl->rxbuf[i];
+	void *data = &frame->frame;
+	int is_err = can_frame2can_err(data, err);
+	if (!is_err && msg) {
+#if !LELY_NO_CANFD
+		if (frame->nbytes == CANFD_MTU)
+			canfd_frame2can_msg(data, msg);
+		else
+#endif
+			can_frame2can_msg(data, msg);
+	}
+	if (tp)
+		*tp = frame->ts;
+	spscring_c_commit(&impl->rxring, 1);
+#if !LELY_NO_THREADS
+	pthread_mutex_unlock(&impl->c_mtx);
+#endif
+
+	return is_err == -1 ? -1 : !is_err;
 }
 
 static void
@@ -787,12 +893,12 @@ io_can_chan_impl_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		io_can_chan_read_post(read, -1, ECANCELED);
 	} else {
@@ -802,7 +908,7 @@ io_can_chan_impl_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 		if (post_read)
 			impl->read_posted = 1;
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		if (post_read)
 			ev_exec_post(impl->read_task.exec, &impl->read_task);
@@ -824,13 +930,13 @@ io_can_chan_impl_write(
 #endif
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 #if !LELY_NO_CANFD
 	if ((flags & impl->flags) != flags) {
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->io_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		errno = EINVAL;
 		return -1;
@@ -838,7 +944,7 @@ io_can_chan_impl_write(
 #endif
 	int fd = impl->fd;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->io_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	return io_can_fd_write_msg(fd, msg, timeout);
@@ -866,18 +972,18 @@ io_can_chan_impl_submit_write(
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		io_can_chan_write_post(write, ECANCELED);
 #if !LELY_NO_CANFD
 	} else if ((flags & impl->flags) != flags) {
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		io_can_chan_write_post(write, EINVAL);
 #endif
@@ -888,7 +994,7 @@ io_can_chan_impl_submit_write(
 		if (post_write)
 			impl->write_posted = 1;
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		if (post_write)
 			ev_exec_post(impl->write_task.exec, &impl->write_task);
@@ -902,29 +1008,25 @@ io_can_chan_impl_svc_shutdown(struct io_svc *svc)
 	io_dev_t *dev = &impl->dev_vptr;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	int shutdown = !impl->shutdown;
 	impl->shutdown = 1;
 	if (shutdown) {
-#if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-			;
-#endif
-		if (impl->poll && impl->fd != -1)
+		if (impl->events) {
+			impl->events = 0;
 			// Stop monitoring I/O events.
-			io_poll_watch(impl->poll, impl->fd, 0, &impl->watch);
-#if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->io_mtx);
-#endif
+			io_poll_watch(impl->poll, impl->fd, impl->events,
+					&impl->watch);
+		}
 		// Try to abort io_can_chan_impl_rxbuf_task_func(),
 		// io_can_chan_impl_read_task_func() and
 		// io_can_chan_impl_write_task_func().
 		io_can_chan_impl_do_abort_tasks(impl);
 	}
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	if (shutdown)
@@ -939,34 +1041,22 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 	struct io_can_chan_impl *impl =
 			structof(watch, struct io_can_chan_impl, watch);
 
-	struct ev_task *write_task = NULL;
-
-	int errc = 0;
-	if (events & IO_EVENT_ERR) {
-		int errsv = errno;
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-			;
-#endif
-		// clang-format off
-		if (getsockopt(impl->fd, SOL_SOCKET, SO_ERROR, &errc,
-				&(socklen_t){ sizeof(int) }) == -1)
-			// clang-format on
-			errc = errno;
-#if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->io_mtx);
-#endif
-		errno = errsv;
-	}
-
-#if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
-	// Report a socket error to the first pending write operation.
-	if (errc)
-		write_task = ev_task_from_node(
-				sllist_pop_front(&impl->write_queue));
+	impl->events &= ~events;
+	if (impl->events && impl->fd != -1 && !impl->shutdown) {
+		int errsv = errno;
+		// clang-format off
+		if (io_poll_watch(impl->poll, impl->fd, impl->events,
+				&impl->watch) == -1) {
+			// clang-format on
+			impl->events = 0;
+			events |= IO_EVENT_ERR;
+		}
+		errno = errsv;
+	}
 
 	// Process incoming CAN frames.
 	int post_rxbuf = 0;
@@ -984,14 +1074,8 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 		impl->write_posted = 1;
 	}
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
-
-	if (write_task) {
-		struct io_can_chan_write *write =
-				io_can_chan_write_from_task(write_task);
-		io_can_chan_write_post(write, errc);
-	}
 
 	if (post_rxbuf)
 		ev_exec_post(impl->rxbuf_task.exec, &impl->rxbuf_task);
@@ -1010,101 +1094,108 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 
 	struct sllist queue;
 	sllist_init(&queue);
-	struct io_can_chan_read *read = NULL;
+
 	int result = 0;
+	int errc = 0;
 	int wouldblock = 0;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
-	while (!result && !wouldblock) {
+	// Only try to fill the receive queue if there are pending read
+	// operations and there is an empty slot in the queue, ir of there are
+	// pending write confirmations.
+	// clang-format off
+	while ((!sllist_empty(&impl->read_queue)
+				&& spscring_p_capacity(&impl->rxring))
+			|| !sllist_empty(&impl->confirm_queue)) {
+		// clang-format on
+		int fd = impl->fd;
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-			;
+		pthread_mutex_unlock(&impl->mtx);
 #endif
-		// Process any pending read operations to clear the read buffer
-		// as much as possible.
-		io_can_chan_impl_do_read(impl, &queue);
-#if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->task_mtx);
-#endif
-		struct io_can_frame frame;
+
+		struct io_can_frame frame_;
+		struct io_can_frame *frame = &frame_;
+		// Try to obtain an empty slot in the receive queue.
+		size_t n = 1;
+		size_t i = spscring_p_alloc(&impl->rxring, &n);
+		if (n)
+			frame = &impl->rxbuf[i];
+
+		// Try to read a CAN or CAN FD format frame from the CAN bus.
 		int flags = 0;
-		// Try to read a CAN or CAN FD format frame from the CAN bus and
-		// push it to the read buffer unless it is a write confirmation.
-		result = io_can_fd_read(impl->fd, &frame.frame, &frame.nbytes,
-				&flags, &frame.ts,
+		result = io_can_fd_read(fd, &frame->frame, &frame->nbytes,
+				&flags, &frame->ts,
 				impl->poll ? 0 : LELY_IO_RX_TIMEOUT);
-		int errc = !result ? 0 : errno;
-		if (!result && !(flags & MSG_CONFIRM)
-				&& io_can_buf_capacity(&impl->rxbuf))
-			*io_can_buf_push(&impl->rxbuf) = frame;
-#if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->io_mtx);
-#endif
+		errc = !result ? 0 : errno;
 		wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
+
 		// Convert the frame from the SocktetCAN format if it is a write
 		// confirmation.
 		struct can_msg msg;
 		if (!result && (flags & MSG_CONFIRM)) {
-			void *src = &frame.frame;
+			void *src = &frame->frame;
 #if !LELY_NO_CANFD
-			if (frame.nbytes == CANFD_MTU)
+			if (frame->nbytes == CANFD_MTU)
 				canfd_frame2can_msg(src, &msg);
 			else
 #endif
 				can_frame2can_msg(src, &msg);
 		}
+
+		// Make the frame available for reading.
+		if (!result && !(flags & MSG_CONFIRM))
+			spscring_p_commit(&impl->rxring, n);
+
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+		while (pthread_mutex_lock(&impl->mtx) == EINTR)
 			;
 #endif
-		if (!result && (flags & MSG_CONFIRM)) {
-			// Process the write confirmation, if any.
+		// Process the write confirmation, if any.
+		if (!result && flags & MSG_CONFIRM)
 			io_can_chan_impl_do_confirm(impl, &queue, &msg);
-		} else if (result < 0 && !wouldblock) {
-			// Cancel all outstanding read operations on error.
-			while ((task = ev_task_from_node(sllist_pop_front(
-						&impl->read_queue)))) {
-				read = io_can_chan_read_from_task(task);
-				read->r.result = result;
-				read->r.errc = errc;
-				sllist_push_back(&queue, &task->_node);
-			}
-		}
-		// Only read a single frame at a time in blocking mode.
-		if (!impl->poll)
+
+		// Stop if the operation did or would block, or if an error
+		// occurred.
+		if (!impl->poll || result < 0)
 			break;
 	}
-#if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-		;
-#endif
-	// Process any pending read operations.
-	io_can_chan_impl_do_read(impl, &queue);
-	// clang-format off
-	if (impl->poll && wouldblock && !(sllist_empty(&impl->read_queue)
-			&& sllist_empty(&impl->confirm_queue)) && impl->fd != -1
-			&& !impl->shutdown) {
-		// clang-format on
-		int events = IO_EVENT_IN;
-		if (!impl->write_posted && !sllist_empty(&impl->write_queue))
-			events |= IO_EVENT_OUT;
-		io_poll_watch(impl->poll, impl->fd, events, &impl->watch);
+	// Cancel all pending read operations on error.
+	if (result < 0 && !wouldblock) {
+		io_can_chan_impl_do_read(impl, &queue, NULL);
+		while ((task = ev_task_from_node(
+					sllist_pop_front(&impl->read_queue)))) {
+			struct io_can_chan_read *read =
+					io_can_chan_read_from_task(task);
+			read->r.result = result;
+			read->r.errc = errc;
+			sllist_push_back(&queue, &task->_node);
+		}
 	}
-#if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->io_mtx);
-#endif
 	// clang-format off
-	int post_rxbuf = impl->rxbuf_posted =
-			!(sllist_empty(&impl->read_queue)
-			&& sllist_empty(&impl->confirm_queue))
-			&& !(impl->poll && wouldblock)
-			&& !impl->shutdown;
+	int post_rxbuf = !(sllist_empty(&impl->read_queue)
+					&& sllist_empty(&impl->confirm_queue))
+			&& impl->fd != -1 && !impl->shutdown;
 	// clang-format on
+	// If a read operation would block, start monitoring the file descriptor
+	// for I/O events.
+	if (post_rxbuf && impl->poll && wouldblock) {
+		int events = impl->events | IO_EVENT_IN;
+		// clang-format off
+		if (!io_poll_watch(impl->poll, impl->fd, events,
+				&impl->watch)) {
+			// clang-format on
+			impl->events = events;
+			// Do not repost this thask unless registering the file
+			// descriptor fails.
+			post_rxbuf = 0;
+		}
+	}
+	impl->rxbuf_posted = post_rxbuf;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	ev_task_queue_post(&queue);
@@ -1122,28 +1213,42 @@ io_can_chan_impl_read_task_func(struct ev_task *task)
 	struct io_can_chan_impl *impl =
 			structof(task, struct io_can_chan_impl, read_task);
 
-	int errsv = errno;
-
 	struct sllist queue;
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
-		;
-	while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
-	io_can_chan_impl_do_read(impl, &queue);
+	// Process any pending read operations that can be satisfied.
+	int wouldblock = 0;
+	io_can_chan_impl_do_read(impl, &queue, &wouldblock);
+	int post_rxbuf = 0;
+	// Repost this task if any read operations remain in the queue.
+	int post_read = !sllist_empty(&impl->read_queue) && !impl->shutdown;
+	// Register a wait operation if the receive queue is empty.
+	if (post_read && wouldblock) {
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->io_mtx);
+		while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
+			;
 #endif
-	int post_rxbuf = impl->read_posted = !impl->rxbuf_posted
-			&& !sllist_empty(&impl->read_queue) && !impl->shutdown;
-	if (post_rxbuf)
-		impl->rxbuf_posted = 1;
-	impl->read_posted = 0;
+		// Do not repost this task unless the wait condition can be
+		// satisfied immediately.
+		post_read = !spscring_c_submit_wait(&impl->rxring, 1,
+				io_can_chan_impl_c_signal, impl);
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->c_mtx);
+#endif
+		if (!post_read)
+			// If the receive queue is empty, start reading more CAN
+			// frames, unless we're already waiting for one.
+			post_rxbuf = !impl->rxbuf_posted
+					&& !(impl->events & IO_EVENT_IN)
+					&& impl->fd != -1;
+	}
+	impl->read_posted = post_read;
+#if !LELY_NO_THREADS
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	ev_task_queue_post(&queue);
@@ -1151,7 +1256,8 @@ io_can_chan_impl_read_task_func(struct ev_task *task)
 	if (post_rxbuf)
 		ev_exec_post(impl->rxbuf_task.exec, &impl->rxbuf_task);
 
-	errno = errsv;
+	if (post_read)
+		ev_exec_post(impl->read_task.exec, &impl->read_task);
 }
 
 static void
@@ -1163,35 +1269,31 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 
 	int errsv = errno;
 
-	struct io_can_chan_write *write = NULL;
 	int wouldblock = 0;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 	// Try to process all pending write operations at once, unless we're in
 	// blocking mode.
 	while ((task = impl->current_write = ev_task_from_node(
 				sllist_pop_front(&impl->write_queue)))) {
-		write = io_can_chan_write_from_task(task);
+		int fd = impl->fd;
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-			;
-		pthread_mutex_unlock(&impl->task_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
-		int result = io_can_fd_write_msg(impl->fd, write->msg,
+		struct io_can_chan_write *write =
+				io_can_chan_write_from_task(task);
+		int result = io_can_fd_write_msg(fd, write->msg,
 				impl->poll ? 0 : LELY_IO_TX_TIMEOUT);
 		int errc = !result ? 0 : errno;
-#if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->io_mtx);
-#endif
 		wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
 		if (!wouldblock && errc)
 			// The operation failed immediately.
 			io_can_chan_write_post(write, errc);
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
+		while (pthread_mutex_lock(&impl->mtx) == EINTR)
 			;
 #endif
 		if (!errc)
@@ -1212,37 +1314,34 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 		if (!impl->poll || wouldblock)
 			break;
 	}
-#if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
-		;
-#endif
-	// If the operation would block, start watching the file descriptor.
-	// (unless it has been closed in the mean time).
-	if (impl->poll && wouldblock && !sllist_empty(&impl->write_queue)
-			&& impl->fd != -1 && !impl->shutdown) {
-		int events = IO_EVENT_OUT;
-		// clang-format off
-		if (!impl->rxbuf_posted && (!sllist_empty(&impl->read_queue)
-				|| !sllist_empty(&impl->confirm_queue)))
-			// clang-format on
-			events |= IO_EVENT_IN;
-		io_poll_watch(impl->poll, impl->fd, events, &impl->watch);
-	}
-#if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->io_mtx);
-#endif
-	// Start reading CAN frames if we're waiting for a write confirmation.
+	// If we're waiting for a write confirmation, start reading more CAN
+	// frames, unless we're already waiting for one.
 	int post_rxbuf = !impl->rxbuf_posted
 			&& !sllist_empty(&impl->confirm_queue)
+			&& !(impl->events & IO_EVENT_IN) && impl->fd != -1
 			&& !impl->shutdown;
 	if (post_rxbuf)
 		impl->rxbuf_posted = 1;
-	// Repost this task if any write operations remain in the queue, unless
-	// we're waiting the file descriptor to become ready.
-	int post_write = impl->write_posted = !sllist_empty(&impl->write_queue)
-			&& !(impl->poll && wouldblock) && !impl->shutdown;
+	// Repost this task if any write operations remain in the queue.
+	int post_write = !sllist_empty(&impl->write_queue) && impl->fd != -1
+			&& !impl->shutdown;
+	// If a write operation would block, start monitoring the file
+	// descriptor for I/O events.
+	if (post_write && impl->poll && wouldblock) {
+		int events = impl->events | IO_EVENT_OUT;
+		// clang-format off
+		if (!io_poll_watch(impl->poll, impl->fd, events,
+				&impl->watch)) {
+			// clang-format on
+			impl->events = events;
+			// Do not repost this thask unless registering the file
+			// descriptor fails.
+			post_write = 0;
+		}
+	}
+	impl->write_posted = post_write;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	if (task && wouldblock)
@@ -1284,54 +1383,33 @@ io_can_chan_impl_from_svc(const struct io_svc *svc)
 	return structof(svc, struct io_can_chan_impl, svc);
 }
 
-static int
-io_can_chan_impl_read_impl(struct io_can_chan_impl *impl, struct can_msg *msg,
-		struct can_err *err, struct timespec *tp, int timeout)
+static void
+io_can_chan_impl_c_signal(struct spscring *ring, void *arg)
 {
+	(void)ring;
+	struct io_can_chan_impl *impl = arg;
 	assert(impl);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
+		;
+	pthread_cond_broadcast(&impl->c_cond);
+	pthread_mutex_unlock(&impl->c_mtx);
+#endif
+
+#if !LELY_NO_THREADS
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
-	struct io_can_frame *frame = io_can_buf_pop(&impl->rxbuf);
-	int fd = impl->fd;
+	int post_read = !impl->read_posted && !sllist_empty(&impl->read_queue)
+			&& !impl->shutdown;
+	if (post_read)
+		impl->read_posted = 1;
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock((pthread_mutex_t *)&impl->io_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
-
-	struct io_can_frame frame_;
-	if (!frame) {
-		frame = &frame_;
-		int result;
-		int flags = 0;
-		do
-			result = io_can_fd_read(fd, &frame->frame,
-					&frame->nbytes, &flags, &frame->ts,
-					timeout);
-		while (result > 0 && (flags & MSG_CONFIRM));
-		if (result < 0)
-			return result;
-	}
-
-	int is_err = can_frame2can_err((struct can_frame *)&frame->frame, err);
-	if (is_err == -1)
-		return -1;
-
-	if (!is_err && msg) {
-#if !LELY_NO_CANFD
-		if (frame->nbytes == CANFD_MTU)
-			canfd_frame2can_msg(&frame->frame, msg);
-		else
-#endif
-			can_frame2can_msg(
-					(struct can_frame *)&frame->frame, msg);
-	}
-
-	if (tp)
-		*tp = frame->ts;
-
-	return !is_err;
+	if (post_read)
+		ev_exec_post(impl->read_task.exec, &impl->read_task);
 }
 
 static void
@@ -1358,45 +1436,39 @@ io_can_chan_impl_do_pop(struct io_can_chan_impl *impl,
 }
 
 static void
-io_can_chan_impl_do_read(struct io_can_chan_impl *impl, struct sllist *queue)
+io_can_chan_impl_do_read(struct io_can_chan_impl *impl, struct sllist *queue,
+		int *pwouldblock)
 {
 	assert(impl);
+	io_can_chan_t *chan = &impl->chan_vptr;
 	assert(queue);
+
+	int errsv = errno;
+
+	int wouldblock = 0;
 
 	struct slnode *node;
 	while ((node = sllist_first(&impl->read_queue))) {
-		struct io_can_frame *frame = io_can_buf_pop(&impl->rxbuf);
-		if (!frame)
-			break;
-		void *data = &frame->frame;
-
 		struct ev_task *task = ev_task_from_node(node);
 		struct io_can_chan_read *read =
 				io_can_chan_read_from_task(task);
 
-		int is_err = can_frame2can_err(data, read->err);
-		if (is_err == -1) {
-			continue;
-		} else if (is_err) {
-			read->r.result = 0;
-		} else {
-			if (read->msg) {
-#if !LELY_NO_CANFD
-				if (frame->nbytes == CANFD_MTU)
-					canfd_frame2can_msg(data, read->msg);
-				else
-#endif
-					can_frame2can_msg(data, read->msg);
-			}
-			read->r.result = 1;
-		}
-		read->r.errc = 0;
-		if (read->tp)
-			*read->tp = frame->ts;
+		read->r.result = io_can_chan_impl_read(
+				chan, read->msg, read->err, read->tp, 0);
+		read->r.errc = read->r.result >= 0 ? 0 : errno;
+		wouldblock = read->r.errc == EAGAIN
+				|| read->r.errc == EWOULDBLOCK;
+		if (wouldblock)
+			break;
 
 		sllist_pop_front(&impl->read_queue);
 		sllist_push_back(queue, node);
 	}
+
+	if (pwouldblock)
+		*pwouldblock = wouldblock;
+
+	errno = errsv;
 }
 
 static void
@@ -1485,27 +1557,38 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 	sllist_init(&confirm_queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->task_mtx) == EINTR)
-		;
-	while (pthread_mutex_lock(&impl->io_mtx) == EINTR)
+	while (pthread_mutex_lock(&impl->mtx) == EINTR)
 		;
 #endif
 
-	if (impl->fd != -1 && !impl->shutdown && impl->poll)
+	if (impl->events) {
+		impl->events = 0;
 		// Stop monitoring I/O events.
-		io_poll_watch(impl->poll, impl->fd, 0, &impl->watch);
+		io_poll_watch(impl->poll, impl->fd, impl->events, &impl->watch);
+	}
 
-	io_can_buf_clear(&impl->rxbuf);
+#if !LELY_NO_THREADS
+	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
+		;
+#endif
+	spscring_c_abort_wait(&impl->rxring);
+	// Clear the receive queue.
+	for (;;) {
+		size_t n = SIZE_MAX;
+		spscring_c_alloc(&impl->rxring, &n);
+		if (!n)
+			break;
+		spscring_c_commit(&impl->rxring, n);
+	}
+#if !LELY_NO_THREADS
+	pthread_mutex_unlock(&impl->c_mtx);
+#endif
 
 	int tmp = impl->fd;
 	impl->fd = fd;
 	fd = tmp;
 
 	impl->flags = flags;
-
-#if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->io_mtx);
-#endif
 
 	// Cancel pending operations.
 	sllist_append(&read_queue, &impl->read_queue);
@@ -1516,7 +1599,7 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 	impl->current_write = NULL;
 
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->task_mtx);
+	pthread_mutex_unlock(&impl->mtx);
 #endif
 
 	io_can_chan_read_queue_post(&read_queue, -1, ECANCELED);
