@@ -70,7 +70,7 @@ struct __co_ssdo {
 	/// A flag indicating whether a CRC should be generated.
 	unsigned gencrc : 1;
 	/// The generated CRC.
-	uint16_t crc;
+	co_unsigned16_t crc;
 	/// The SDO request.
 	struct co_sdo_req req;
 	/// The buffer.
@@ -1299,7 +1299,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Check the CRC.
 	if (sdo->gencrc) {
 		sdo->crc = co_crc(sdo->crc, sdo->req.buf, sdo->req.nbyte);
-		uint16_t crc = ldle_u16(msg->data + 1);
+		co_unsigned16_t crc = ldle_u16(msg->data + 1);
 		if (sdo->crc != crc)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
@@ -1588,7 +1588,8 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 				break;
 			sdo->nbyte = 0;
 		}
-		const char *src = (const char *)sdo->req.buf + sdo->nbyte;
+		const uint_least8_t *src = (const uint_least8_t *)sdo->req.buf
+				+ sdo->nbyte;
 		size_t n = MIN(nbyte, sdo->req.nbyte - sdo->nbyte);
 
 		if (sdo->gencrc)

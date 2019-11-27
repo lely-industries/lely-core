@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the CANopen
  * value declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -187,7 +187,7 @@ union co_val {
 		size_t size; \
 		union { \
 			union co_val val; \
-			uint8_t os[sizeof(c)]; \
+			uint_least8_t os[sizeof(c)]; \
 		} u; \
 	}){ .size = sizeof(c) - 1, .u = { .os = c } }) \
 					.u.os)
@@ -328,7 +328,7 @@ int co_val_init_vs_n(char **val, const char *vs, size_t n);
  *
  * @see co_val_fini()
  */
-int co_val_init_os(uint8_t **val, const uint8_t *os, size_t n);
+int co_val_init_os(uint_least8_t **val, const uint_least8_t *os, size_t n);
 
 /**
  * Initializes an array of (16-bit) Unicode characters
@@ -517,8 +517,8 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
  *
  * @see co_val_write()
  */
-size_t co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
-		const uint8_t *end);
+size_t co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
+		const uint_least8_t *end);
 
 /**
  * Reads a value of the specified data type from an SDO buffer.
@@ -559,8 +559,8 @@ co_unsigned32_t co_val_read_sdo(
  *
  * @see co_val_read()
  */
-size_t co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
-		uint8_t *end);
+size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
+		uint_least8_t *end);
 
 /**
  * Lexes a value of the specified data type from a memory buffer.

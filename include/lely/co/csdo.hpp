@@ -477,16 +477,16 @@ struct COCSDOUpCon<::std::string> {
  * @see co_csdo_up_con_t
  */
 template <>
-struct COCSDOUpCon<uint8_t*> {
+struct COCSDOUpCon<uint_least8_t*> {
   typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-                       co_unsigned32_t ac, const uint8_t* os, size_t n,
+                       co_unsigned32_t ac, const uint_least8_t* os, size_t n,
                        void* data);
 
   template <type M>
   static void
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
-    const uint8_t* os = static_cast<const uint8_t*>(ptr);
+    const uint_least8_t* os = static_cast<const uint_least8_t*>(ptr);
     return (*M)(sdo, idx, subidx, ac, n ? os : 0, n, data);
   }
 };
@@ -498,29 +498,29 @@ struct COCSDOUpCon<uint8_t*> {
  * @see co_csdo_up_con_t
  */
 template <>
-struct COCSDOUpCon<::std::vector<uint8_t>> {
+struct COCSDOUpCon<::std::vector<uint_least8_t>> {
   typedef void (*type)(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-                       co_unsigned32_t ac, ::std::vector<uint8_t> os,
+                       co_unsigned32_t ac, ::std::vector<uint_least8_t> os,
                        void* data);
 
   template <type M>
   static void
   function(COCSDO* sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
            co_unsigned32_t ac, const void* ptr, size_t n, void* data) noexcept {
-    const uint8_t* os = static_cast<const uint8_t*>(ptr);
+    const uint_least8_t* os = static_cast<const uint_least8_t*>(ptr);
     if (!ac && os && n) {
 #if !__cpp_exceptions
       try {
 #endif
-        return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(os, os + n),
-                    data);
+        return (*M)(sdo, idx, subidx, ac,
+                    ::std::vector<uint_least8_t>(os, os + n), data);
 #if !__cpp_exceptions
       } catch (...) {
         ac = CO_SDO_AC_NO_MEM;
       }
 #endif
     }
-    return (*M)(sdo, idx, subidx, ac, ::std::vector<uint8_t>(), data);
+    return (*M)(sdo, idx, subidx, ac, ::std::vector<uint_least8_t>(), data);
   }
 };
 

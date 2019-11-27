@@ -867,7 +867,7 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	}
 	wtm->send_buf[3] = 0x00;
 	wtm->send_nbytes = MAX(wtm->send_nbytes, 4);
-	uint8_t *bp = wtm->send_buf + wtm->send_nbytes;
+	uint_least8_t *bp = wtm->send_buf + wtm->send_nbytes;
 	size_t nbytes = wtm->send_nbytes;
 
 	// Write the data length code.

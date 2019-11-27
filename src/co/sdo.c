@@ -174,7 +174,8 @@ co_sdo_req_dn_val(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 
 	// Read the value.
 	co_val_init(type, val);
-	size_t size = co_val_read(type, val, ptr, (const uint8_t *)ptr + nbyte);
+	size_t size = co_val_read(
+			type, val, ptr, (const uint_least8_t *)ptr + nbyte);
 
 	// Check the size of the value.
 	if (co_type_is_array(type)) {
@@ -291,7 +292,7 @@ co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 		goto error_reserve;
 	}
 
-	uint8_t *begin = membuf_alloc(buf, &size);
+	uint_least8_t *begin = membuf_alloc(buf, &size);
 	if (co_val_write(type, val, begin, begin + size) != size) {
 		ac = CO_SDO_AC_ERROR;
 		goto error_write;

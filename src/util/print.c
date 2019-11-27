@@ -266,7 +266,7 @@ print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 
 	size_t chars = 0;
 
-	const uint8_t *bp = ptr;
+	const unsigned char *bp = ptr;
 	while (n) {
 		char c = tab[(bp[0] >> 2) & 0x3f];
 		chars += print_char(pbegin, end, c);

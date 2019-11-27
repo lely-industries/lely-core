@@ -4,7 +4,7 @@
 #include "co-test.h"
 
 void emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
-		co_unsigned8_t er, uint8_t msef[5], void *data);
+		co_unsigned8_t er, co_unsigned8_t msef[5], void *data);
 
 int
 main(void)
@@ -59,7 +59,7 @@ main(void)
 
 void
 emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
-		co_unsigned8_t er, uint8_t msef[5], void *data)
+		co_unsigned8_t er, co_unsigned8_t msef[5], void *data)
 {
 	(void)emcy;
 	(void)msef;

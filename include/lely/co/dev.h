@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the device
  * description declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -424,8 +424,8 @@ size_t co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @see co_dev_write_sub()
  */
 size_t co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx,
-		co_unsigned8_t *psubidx, const uint8_t *begin,
-		const uint8_t *end);
+		co_unsigned8_t *psubidx, const uint_least8_t *begin,
+		const uint_least8_t *end);
 
 /**
  * Loads the value of a sub-object from the object dictionary of a CANopen
@@ -446,7 +446,8 @@ size_t co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx,
  * @see co_dev_read_sub()
  */
 size_t co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end);
+		co_unsigned8_t subidx, uint_least8_t *begin,
+		uint_least8_t *end);
 
 /**
  * Reads the values of a range of objects from a memory buffer, in the concise

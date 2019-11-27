@@ -219,7 +219,7 @@ static void co_gw_net_time_ind(
  * a CANopen network.
  */
 static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
-		co_unsigned16_t ec, co_unsigned8_t er, uint8_t msef[5],
+		co_unsigned16_t ec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 #endif
 #ifndef LELY_NO_CO_RPDO
@@ -1318,7 +1318,7 @@ co_gw_net_time_ind(co_time_t *time, const struct timespec *tp, void *data)
 #ifndef LELY_NO_CO_EMCY
 static void
 co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
-		co_unsigned8_t er, uint8_t msef[5], void *data)
+		co_unsigned8_t er, co_unsigned8_t msef[5], void *data)
 {
 	(void)emcy;
 	struct co_gw_net *net = data;
@@ -2074,7 +2074,7 @@ co_gw_recv_pdo_read(
 
 	// Read the mapped values from the object dictionary.
 	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
-	uint8_t buf[CAN_MAX_LEN];
+	uint_least8_t buf[CAN_MAX_LEN];
 	size_t n = sizeof(buf);
 	ac = co_pdo_up(map, dev, &sdo_req, buf, &n);
 	co_sdo_req_fini(&sdo_req);
@@ -2138,7 +2138,7 @@ co_gw_recv_pdo_write(
 	const struct co_pdo_map_par *map = co_tpdo_get_map_par(pdo);
 
 	// Map the values into a PDO.
-	uint8_t buf[CAN_MAX_LEN] = { 0 };
+	uint_least8_t buf[CAN_MAX_LEN] = { 0 };
 	size_t n = sizeof(buf);
 	ac = co_pdo_map(map, par->val, par->n, buf, &n);
 	if (ac)

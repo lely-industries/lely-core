@@ -180,7 +180,7 @@ static int co_emcy_timer(const struct timespec *tp, void *data);
  * @returns 0 on success, or -1 on error.
  */
 static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5]);
+		const co_unsigned8_t msef[5]);
 
 /**
  * Sends any messages in the CAN frame buffer unless the inhibit time has not
@@ -375,7 +375,7 @@ co_emcy_get_dev(const co_emcy_t *emcy)
 
 int
 co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
+		const co_unsigned8_t msef[5])
 {
 	assert(emcy);
 
@@ -441,7 +441,7 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 	if (emcy->nmsg) {
 		// Store the next error in the error register and the
 		// manufacturer-specific field.
-		uint8_t msef[5] = { 0 };
+		co_unsigned8_t msef[5] = { 0 };
 		stle_u16(msef, emcy->msgs[0].eec);
 		return co_emcy_send(emcy, 0, emcy->msgs[0].er, msef);
 	} else {
@@ -570,7 +570,8 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	co_unsigned8_t er = msg->len >= 3 ? msg->data[2] : 0;
 	co_unsigned8_t msef[5] = { 0 };
 	if (msg->len >= 4)
-		memcpy(msef, msg->data + 3, MAX((uint8_t)(msg->len - 3), 5));
+		memcpy(msef, msg->data + 3,
+				MAX((uint_least8_t)(msg->len - 3), 5));
 
 	// Notify the user.
 	trace("EMCY: received %04X %02X", eec, er);
@@ -799,7 +800,7 @@ co_emcy_timer(const struct timespec *tp, void *data)
 
 static int
 co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
+		const co_unsigned8_t msef[5])
 {
 	assert(emcy);
 

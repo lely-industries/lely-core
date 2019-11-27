@@ -1375,7 +1375,7 @@ co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt)
 
 void
 co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
+		const co_unsigned8_t msef[5])
 {
 	assert(nmt);
 

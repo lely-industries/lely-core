@@ -669,7 +669,7 @@ void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
  * @see co_rpdo_err_t, co_sync_err_t
  */
 void co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5]);
+		const co_unsigned8_t msef[5]);
 
 /// Returns the pending node-ID. @see co_nmt_set_id()
 co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);

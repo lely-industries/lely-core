@@ -1045,7 +1045,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int res = 0;
 		int errc = get_errc();
 
-		uint8_t *buf = n ? malloc(n) : NULL;
+		uint_least8_t *buf = n ? malloc(n) : NULL;
 		if (n && !buf) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;
@@ -1067,7 +1067,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	} else {
 		// Fast path for values small enough to be allocated on the
 		// heap.
-		uint8_t buf[8];
+		uint_least8_t buf[8];
 		if (co_val_write(type, val, buf, buf + n) != n)
 			return -1;
 		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
@@ -2015,8 +2015,9 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	// Check the CRC.
 	if (sdo->crc) {
-		uint16_t crc = ldle_u16(msg->data + 1);
-		if (crc != co_crc(0, sdo->buf.begin, sdo->size))
+		co_unsigned16_t crc = ldle_u16(msg->data + 1);
+		uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
+		if (crc != co_crc(0, buf, sdo->size))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
@@ -2268,7 +2269,8 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 	uint8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK
 			| CO_SDO_BLK_SIZE_SET(n);
 
-	uint16_t crc = sdo->crc ? co_crc(0, sdo->buf.begin, sdo->size) : 0;
+	uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
+	co_unsigned16_t crc = sdo->crc ? co_crc(0, buf, sdo->size) : 0;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);

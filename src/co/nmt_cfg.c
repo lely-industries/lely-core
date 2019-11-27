@@ -818,8 +818,8 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 		return co_nmt_cfg_user_state;
 	}
 
-	const uint8_t *begin = req->buf;
-	const uint8_t *end = begin + req->nbyte;
+	const uint_least8_t *begin = req->buf;
+	const uint_least8_t *end = begin + req->nbyte;
 
 	// Read the total number of entries.
 	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &cfg->n_1f22, begin, end) != 4) {
@@ -828,7 +828,7 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 	}
 
 	req->nbyte = end - begin;
-	req->offset = begin - (const uint8_t *)req->buf;
+	req->offset = begin - (const uint_least8_t *)req->buf;
 
 	return co_nmt_cfg_store_1f22_on_dn_con(cfg, 0, 0, 0);
 }
@@ -848,8 +848,9 @@ co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 	if (!cfg->n_1f22--)
 		return co_nmt_cfg_user_state;
 
-	const uint8_t *begin = (const uint8_t *)req->buf + req->offset;
-	const uint8_t *end = begin + req->nbyte;
+	const uint_least8_t *begin =
+			(const uint_least8_t *)req->buf + req->offset;
+	const uint_least8_t *end = begin + req->nbyte;
 
 	// Read the object index.
 	if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2) {
@@ -877,7 +878,7 @@ co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 	}
 
 	req->nbyte = end - begin;
-	req->offset = begin - (const uint8_t *)req->buf;
+	req->offset = begin - (const uint_least8_t *)req->buf;
 
 	// Write the value to the slave.
 	// clang-format off
