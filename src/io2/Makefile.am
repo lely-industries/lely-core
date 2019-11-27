@@ -43,7 +43,6 @@ endif
 src += can.c
 src += can.h
 src += can_rt.c
-src += cbuf.h
 src += clock.c
 src += ctx.c
 src += dev.c
