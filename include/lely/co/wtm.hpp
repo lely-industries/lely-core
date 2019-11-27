@@ -75,25 +75,26 @@ class COWTM : public incomplete_c_type<__co_wtm> {
  public:
   COWTM() : c_base() {}
 
-  uint8_t
+  uint_least8_t
   getNIF() const noexcept {
     return co_wtm_get_nif(this);
   }
 
   int
-  setNIF(uint8_t nif = 1) noexcept {
+  setNIF(uint_least8_t nif = 1) noexcept {
     return co_wtm_set_nif(this, nif);
   }
 
   int
-  setDiagCAN(uint8_t nif, uint8_t st = 0xf, uint8_t err = 0xf,
-             uint8_t load = 0xff, uint16_t ec = 0xffff, uint16_t foc = 0xffff,
-             uint16_t coc = 0xffff) noexcept {
+  setDiagCAN(uint_least8_t nif, uint_least8_t st = 0xf, uint_least8_t err = 0xf,
+             uint_least8_t load = 0xff, uint_least16_t ec = 0xffff,
+             uint_least16_t foc = 0xffff,
+             uint_least16_t coc = 0xffff) noexcept {
     return co_wtm_set_diag_can(this, nif, st, err, load, ec, foc, coc);
   }
 
   int
-  setDiagWTM(uint8_t quality = 0xff) noexcept {
+  setDiagWTM(uint_least8_t quality = 0xff) noexcept {
     return co_wtm_set_diag_wtm(this, quality);
   }
 
@@ -247,17 +248,17 @@ class COWTM : public incomplete_c_type<__co_wtm> {
   }
 
   int
-  getTime(uint8_t nif, timespec* tp) const noexcept {
+  getTime(uint_least8_t nif, timespec* tp) const noexcept {
     return co_wtm_get_time(this, nif, tp);
   }
 
   int
-  setTime(uint8_t nif, const timespec& tp) noexcept {
+  setTime(uint_least8_t nif, const timespec& tp) noexcept {
     return co_wtm_set_time(this, nif, &tp);
   }
 
   int
-  send(uint8_t nif, const can_msg& msg) noexcept {
+  send(uint_least8_t nif, const can_msg& msg) noexcept {
     return co_wtm_send(this, nif, &msg);
   }
 
@@ -267,27 +268,27 @@ class COWTM : public incomplete_c_type<__co_wtm> {
   }
 
   int
-  sendDiagCANReq(uint8_t nif) noexcept {
+  sendDiagCANReq(uint_least8_t nif) noexcept {
     return co_wtm_send_diag_can_req(this, nif);
   }
 
   int
-  sendDiagWTMReq(uint8_t nif) noexcept {
+  sendDiagWTMReq(uint_least8_t nif) noexcept {
     return co_wtm_send_diag_wtm_req(this, nif);
   }
 
   int
-  sendDiagCANRst(uint8_t nif) noexcept {
+  sendDiagCANRst(uint_least8_t nif) noexcept {
     return co_wtm_send_diag_can_rst(this, nif);
   }
 
   int
-  sendDiagWTMRst(uint8_t nif) noexcept {
+  sendDiagWTMRst(uint_least8_t nif) noexcept {
     return co_wtm_send_diag_wtm_rst(this, nif);
   }
 
   int
-  sendDiagAC(uint32_t ac) noexcept {
+  sendDiagAC(uint_least32_t ac) noexcept {
     return co_wtm_send_diag_ac(this, ac);
   }
 

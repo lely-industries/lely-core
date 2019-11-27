@@ -505,7 +505,7 @@ io_timer_impl_wait_task_func(struct ev_task *task)
 
 	ssize_t result;
 	for (;;) {
-		uint64_t value = 0;
+		uintmax_t value = 0;
 		do {
 			errno = 0;
 			result = read(impl->tfd, &value, sizeof(value));
@@ -513,8 +513,8 @@ io_timer_impl_wait_task_func(struct ev_task *task)
 		if (result != sizeof(value))
 			break;
 
-		if (value > (uint64_t)INT_MAX + 1)
-			value = (uint64_t)INT_MAX + 1;
+		if (value > (uintmax_t)INT_MAX + 1)
+			value = (uintmax_t)INT_MAX + 1;
 		if (overrun > (int)(INT_MAX - value))
 			overrun = INT_MAX;
 		else

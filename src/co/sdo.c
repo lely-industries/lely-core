@@ -324,7 +324,7 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		goto error_create_fbuf;
 	}
 
-	int64_t size = frbuf_get_size(fbuf);
+	intmax_t size = frbuf_get_size(fbuf);
 	if (size == -1) {
 		ac = CO_SDO_AC_DATA;
 		goto error_get_size;

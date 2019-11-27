@@ -730,7 +730,7 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 		goto error_create_buf;
 	}
 
-	int64_t size = frbuf_get_size(buf);
+	intmax_t size = frbuf_get_size(buf);
 	if (size == -1) {
 		errc = get_errc();
 		goto error_get_size;

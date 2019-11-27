@@ -672,8 +672,8 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
 	int valid = !(cobid & CO_EMCY_COBID_VALID);
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
@@ -707,8 +707,8 @@ co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid)
 			emcy->nodes[id - 1] = node;
 		}
 		// Register the receiver under the specified CAN-ID.
-		uint32_t id = cobid;
-		uint8_t flags = 0;
+		uint_least32_t id = cobid;
+		uint_least8_t flags = 0;
 		if (id & CO_EMCY_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -761,8 +761,8 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
 	int valid = !(cobid & CO_EMCY_COBID_VALID);
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;

@@ -545,7 +545,7 @@ struct COSubDnInd {
   template <type M>
   static co_unsigned32_t
   function(COSub* sub, co_sdo_req* req, void* data) noexcept {
-    uint32_t ac = 0;
+    co_unsigned32_t ac = 0;
 
     COVal<N> val;
     if (co_sdo_req_dn_val(req, N, &val, &ac) == -1) return ac;
@@ -571,7 +571,7 @@ struct COSubUpInd {
   template <type M>
   static co_unsigned32_t
   function(const COSub* sub, co_sdo_req* req, void* data) noexcept {
-    uint32_t ac = 0;
+    co_unsigned32_t ac = 0;
 
     COVal<N> val = sub->getVal<N>();
 

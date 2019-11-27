@@ -44,7 +44,7 @@ struct __co_time {
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
 	/// The TIME COB-ID.
-	uint32_t cobid;
+	co_unsigned32_t cobid;
 	/// A pointer to the high-resolution time stamp sub-object.
 	co_sub_t *sub_1013_00;
 	/// A pointer to the CAN frame receiver.
@@ -324,8 +324,8 @@ co_time_update(co_time_t *time)
 			can_recv_set_func(time->recv, &co_time_recv, time);
 		}
 		// Register the receiver under the specified CAN-ID.
-		uint32_t id = time->cobid;
-		uint8_t flags = 0;
+		uint_least32_t id = time->cobid;
+		uint_least8_t flags = 0;
 		if (id & CO_TIME_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -386,8 +386,8 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			|| (cobid & CO_TIME_COBID_CONSUMER);
 	int active_old = (cobid_old & CO_TIME_COBID_PRODUCER)
 			|| (cobid_old & CO_TIME_COBID_CONSUMER);
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (active && active_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;

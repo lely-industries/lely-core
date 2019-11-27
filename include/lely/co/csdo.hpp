@@ -350,14 +350,14 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   }
 
   int
-  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned8_t pst,
            co_csdo_up_con_t* con, void* data) noexcept {
     return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
   }
 
   template <class T, typename COCSDOUpCon<T>::type M>
   int
-  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned8_t pst,
            void* data) noexcept {
     return blkUpReq(idx, subidx, pst, &COCSDOUpCon<T>::template function<M>,
                     data);
@@ -365,7 +365,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
 
   template <class T, class F>
   int
-  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned8_t pst,
            F* f) noexcept {
     return blkUpReq(
         idx, subidx, pst,
@@ -377,7 +377,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   template <class T, class C,
             typename c_mem_fn<typename COCSDOUpCon<T>::type, C>::type M>
   int
-  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t pst,
+  blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned8_t pst,
            C* obj) noexcept {
     return blkUpReq(
         idx, subidx, pst,

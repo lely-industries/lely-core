@@ -901,13 +901,13 @@ struct co_gw_ind_sdo {
 	/// The node-ID.
 	co_unsigned8_t node;
 	/// The transferred bytes.
-	uint32_t nbyte;
+	co_unsigned32_t nbyte;
 	/// The transfer direction: download (0) or upload (1).
 	unsigned int up : 1;
 	/// A pointer to user-specified data of the SDO upload/download request.
 	void *data;
 	/// The Lely-specific total value size (in bytes).
-	uint32_t _size;
+	co_unsigned32_t _size;
 };
 
 /**

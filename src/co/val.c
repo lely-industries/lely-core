@@ -982,7 +982,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 						"32-bit unsigned integer overflow");
 			// clang-format off
 			u.r32 = ((union {
-				uint32_t u32;
+				uint_least32_t u32;
 				co_real32_t r32;
 			}){ u.u32 }).r32;
 			// clang-format on
@@ -1110,7 +1110,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 						"64-bit unsigned integer overflow");
 			// clang-format off
 			u.r64 = ((union {
-				uint64_t u64;
+				uint_least64_t u64;
 				co_real64_t r64;
 			}){ u.u64 }).r64;
 			// clang-format on
