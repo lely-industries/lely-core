@@ -200,7 +200,7 @@ co_val_init_vs_n(char **val, const char *vs, size_t n)
 }
 
 int
-co_val_init_os(uint8_t **val, const uint8_t *os, size_t n)
+co_val_init_os(uint_least8_t **val, const uint_least8_t *os, size_t n)
 {
 	assert(val);
 
@@ -476,8 +476,8 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 }
 
 size_t
-co_val_read(co_unsigned16_t type, void *val, const uint8_t *begin,
-		const uint8_t *end)
+co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
+		const uint_least8_t *end)
 {
 	assert(begin || begin == end);
 	assert(!end || end >= begin);
@@ -700,8 +700,8 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 	int errc = get_errc();
 	co_unsigned32_t ac = 0;
 
-	const uint8_t *begin = ptr;
-	const uint8_t *end = begin ? begin + n : NULL;
+	const uint_least8_t *begin = ptr;
+	const uint_least8_t *end = begin ? begin + n : NULL;
 	if (n && !co_val_read(type, val, begin, end)) {
 		// clang-format off
 		ac = get_errnum() == ERRNUM_NOMEM
@@ -715,8 +715,8 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 }
 
 size_t
-co_val_write(co_unsigned16_t type, const void *val, uint8_t *begin,
-		uint8_t *end)
+co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
+		uint_least8_t *end)
 {
 	assert(val);
 
@@ -982,7 +982,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 						"32-bit unsigned integer overflow");
 			// clang-format off
 			u.r32 = ((union {
-				uint32_t u32;
+				uint_least32_t u32;
 				co_real32_t r32;
 			}){ u.u32 }).r32;
 			// clang-format on
@@ -1019,7 +1019,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 				return 0;
 			}
 			// Parse the octets.
-			uint8_t *os = *(void **)val;
+			uint_least8_t *os = *(void **)val;
 			assert(os);
 			for (size_t i = 0; i < chars; i++) {
 				if (i % 2) {
@@ -1110,7 +1110,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 						"64-bit unsigned integer overflow");
 			// clang-format off
 			u.r64 = ((union {
-				uint64_t u64;
+				uint_least64_t u64;
 				co_real64_t r64;
 			}){ u.u64 }).r64;
 			// clang-format on
@@ -1279,7 +1279,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 			return print_c99_str(pbegin, end, ptr, n);
 		case CO_DEFTYPE_OCTET_STRING: {
 			size_t chars = 0;
-			for (const uint8_t *os = ptr; n; n--, os++) {
+			for (const uint_least8_t *os = ptr; n; n--, os++) {
 				chars += print_char(
 						pbegin, end, xtoc(*os >> 4));
 				chars += print_char(pbegin, end, xtoc(*os));

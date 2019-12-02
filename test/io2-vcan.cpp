@@ -11,7 +11,7 @@ using namespace lely::io;
 #define NUM_OP 4
 
 struct MyOp : public CoCanChannelRead {
-  MyOp(CanChannelBase& chan_, uint8_t id_)
+  MyOp(CanChannelBase& chan_, uint_least8_t id_)
       : CoCanChannelRead(&msg, &err), chan(chan_), id(id_) {}
 
   void
@@ -30,7 +30,7 @@ struct MyOp : public CoCanChannelRead {
   can_msg msg CAN_MSG_INIT;
   can_err err CAN_ERR_INIT;
   CanChannelBase& chan;
-  uint8_t id{0};
+  uint_least8_t id{0};
   ::std::size_t n{0};
 };
 

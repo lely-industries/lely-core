@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the emergency
  * (EMCY) object declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -50,7 +50,7 @@ extern "C" {
  * @param data a pointer to user-specified data.
  */
 typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
-		co_unsigned16_t eec, co_unsigned8_t er, uint8_t msef[5],
+		co_unsigned16_t eec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 
 void *__co_emcy_alloc(void);
@@ -98,7 +98,7 @@ co_dev_t *co_emcy_get_dev(const co_emcy_t *emcy);
  * @see co_emcy_pop(), co_emcy_peek(), co_emcy_clear()
  */
 int co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5]);
+		const co_unsigned8_t msef[5]);
 
 /**
  * Pops the most recent CANopen EMCY message from the stack and broadcasts an

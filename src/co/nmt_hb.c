@@ -206,7 +206,7 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	co_nmt_hb_t *hb = data;
 	assert(hb);
 	assert(hb->id && hb->id <= CO_NUM_NODES);
-	assert(msg->id == (uint32_t)CO_NMT_EC_CANID(hb->id));
+	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(hb->id));
 	assert(hb->ms);
 
 	// Obtain the node status from the CAN frame. Ignore if the toggle bit

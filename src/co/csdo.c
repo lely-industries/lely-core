@@ -66,13 +66,13 @@ struct __co_csdo {
 	/// The current object sub-index.
 	co_unsigned8_t subidx;
 	/// The data set size (in bytes).
-	uint32_t size;
+	co_unsigned32_t size;
 	/// The current value of the toggle bit.
-	uint8_t toggle;
+	co_unsigned8_t toggle;
 	/// The number of segments per block.
-	uint8_t blksize;
+	co_unsigned8_t blksize;
 	/// The sequence number of the last successfully received segment.
-	uint8_t ackseq;
+	co_unsigned8_t ackseq;
 	/// A flag indicating whether a CRC should be generated.
 	unsigned crc : 1;
 	/// The buffer.
@@ -537,7 +537,8 @@ static void co_csdo_send_dn_ini_req(co_csdo_t *sdo);
  *             [1..7]).
  * @param last a flag indicating whether this is the last segment.
  */
-static void co_csdo_send_dn_seg_req(co_csdo_t *sdo, uint32_t n, int last);
+static void co_csdo_send_dn_seg_req(
+		co_csdo_t *sdo, co_unsigned32_t n, int last);
 
 /// Sends a Client-SDO 'upload initiate' request.
 static void co_csdo_send_up_ini_req(co_csdo_t *sdo);
@@ -554,7 +555,7 @@ static void co_csdo_send_blk_dn_ini_req(co_csdo_t *sdo);
  * @param sdo   a pointer to a Client-SDO service.
  * @param seqno the sequence number (in the range [1..127]).
  */
-static void co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, uint8_t seqno);
+static void co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno);
 
 /// Sends a Client-SDO 'block download end' request.
 static void co_csdo_send_blk_dn_end_req(co_csdo_t *sdo);
@@ -565,7 +566,7 @@ static void co_csdo_send_blk_dn_end_req(co_csdo_t *sdo);
  * @param sdo a pointer to a Client-SDO service.
  * @param pst the protocol switch threshold.
  */
-static void co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, uint8_t pst);
+static void co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, co_unsigned8_t pst);
 
 /// Sends a Client-SDO 'start upload' request.
 static void co_csdo_send_start_up_req(co_csdo_t *sdo);
@@ -584,7 +585,7 @@ static void co_csdo_send_blk_up_end_res(co_csdo_t *sdo);
  * @param cs  the command specifier.
  */
 static void co_csdo_init_ini_req(
-		co_csdo_t *sdo, struct can_msg *msg, uint8_t cs);
+		co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 /**
  * Initializes a Client-SDO download/upload segment request CAN frame.
@@ -594,7 +595,7 @@ static void co_csdo_init_ini_req(
  * @param cs  the command specifier.
  */
 static void co_csdo_init_seg_req(
-		co_csdo_t *sdo, struct can_msg *msg, uint8_t cs);
+		co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
 int
 co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
@@ -1045,7 +1046,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int res = 0;
 		int errc = get_errc();
 
-		uint8_t *buf = n ? malloc(n) : NULL;
+		uint_least8_t *buf = n ? malloc(n) : NULL;
 		if (n && !buf) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;
@@ -1067,7 +1068,7 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	} else {
 		// Fast path for values small enough to be allocated on the
 		// heap.
-		uint8_t buf[8];
+		uint_least8_t buf[8];
 		if (co_val_write(type, val, buf, buf + n) != n)
 			return -1;
 		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
@@ -1114,7 +1115,7 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 int
 co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		uint8_t pst, co_csdo_up_con_t *con, void *data)
+		co_unsigned8_t pst, co_csdo_up_con_t *con, void *data)
 {
 	assert(sdo);
 
@@ -1145,8 +1146,8 @@ co_csdo_update(co_csdo_t *sdo)
 	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
 	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
 	if (valid_req && valid_res) {
-		uint32_t id = sdo->par.cobid_res;
-		uint8_t flags = 0;
+		uint_least32_t id = sdo->par.cobid_res;
+		uint_least8_t flags = 0;
 		if (id & CO_SDO_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -1190,8 +1191,8 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		// valid.
 		int valid = !(cobid & CO_SDO_COBID_VALID);
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint32_t canid = cobid & CAN_MASK_EID;
-		uint32_t canid_old = cobid_old & CAN_MASK_EID;
+		uint_least32_t canid = cobid & CAN_MASK_EID;
+		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
@@ -1218,8 +1219,8 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		// valid.
 		int valid = !(cobid & CO_SDO_COBID_VALID);
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
-		uint32_t canid = cobid & CAN_MASK_EID;
-		uint32_t canid_old = cobid_old & CAN_MASK_EID;
+		uint_least32_t canid = cobid & CAN_MASK_EID;
+		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 		if (valid && valid_old && canid != canid_old) {
 			ac = CO_SDO_AC_PARAM_VAL;
 			goto error;
@@ -1357,7 +1358,7 @@ co_csdo_wait_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	co_unsigned32_t ac;
 	switch (cs & CO_SDO_CS_MASK) {
@@ -1425,7 +1426,7 @@ co_csdo_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1489,7 +1490,7 @@ co_csdo_dn_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1530,7 +1531,7 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1607,7 +1608,7 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1675,7 +1676,7 @@ co_csdo_blk_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1718,7 +1719,7 @@ co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 	assert(sdo);
 
 	size_t n = sdo->size - membuf_size(&sdo->buf);
-	sdo->blksize = (uint8_t)MIN((n + 6) / 7, sdo->blksize);
+	sdo->blksize = (co_unsigned8_t)MIN((n + 6) / 7, sdo->blksize);
 
 	if (sdo->size && sdo->dn_ind)
 		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
@@ -1727,7 +1728,7 @@ co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	if (n) {
 		// Send all segments in the current block.
-		for (uint8_t seqno = 1; seqno <= sdo->blksize; seqno++)
+		for (co_unsigned8_t seqno = 1; seqno <= sdo->blksize; seqno++)
 			co_csdo_send_blk_dn_sub_req(sdo, seqno);
 		return NULL;
 	} else {
@@ -1758,7 +1759,7 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1776,7 +1777,7 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 3)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
-	uint8_t ackseq = msg->data[1];
+	co_unsigned8_t ackseq = msg->data[1];
 	if (ackseq < sdo->blksize) {
 		// If the sequence number of the last segment that was
 		// successfully received is smaller than the number of segments
@@ -1819,7 +1820,7 @@ co_csdo_blk_dn_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1860,7 +1861,7 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -1933,14 +1934,14 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	if (cs == CO_SDO_CS_ABORT) {
 		co_unsigned32_t ac = msg->len < 8 ? 0 : ldle_u32(msg->data + 4);
 		return co_csdo_abort_ind(sdo, ac ? ac : CO_SDO_AC_ERROR);
 	}
 
-	uint8_t seqno = cs & ~CO_SDO_SEQ_LAST;
+	co_unsigned8_t seqno = cs & ~CO_SDO_SEQ_LAST;
 	int last = !!(cs & CO_SDO_SEQ_LAST);
 
 	// Only accept sequential segments. Dropped segments will be resent
@@ -1990,7 +1991,7 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 
 	// Check the server command specifier.
 	co_unsigned32_t ac;
@@ -2015,8 +2016,9 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	// Check the CRC.
 	if (sdo->crc) {
-		uint16_t crc = ldle_u16(msg->data + 1);
-		if (crc != co_crc(0, sdo->buf.begin, sdo->size))
+		co_unsigned16_t crc = ldle_u16(msg->data + 1);
+		uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
+		if (crc != co_crc(0, buf, sdo->size))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
@@ -2146,7 +2148,8 @@ co_csdo_send_dn_exp_req(co_csdo_t *sdo)
 	assert(sdo);
 	assert(sdo->size && sdo->size <= 4);
 
-	uint8_t cs = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_EXP_SET(sdo->size);
+	co_unsigned8_t cs = CO_SDO_CCS_DN_INI_REQ
+			| CO_SDO_INI_SIZE_EXP_SET(sdo->size);
 
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
@@ -2161,7 +2164,7 @@ co_csdo_send_dn_ini_req(co_csdo_t *sdo)
 	assert(sdo);
 	assert(!sdo->size || sdo->size > 4);
 
-	uint8_t cs = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND;
+	co_unsigned8_t cs = CO_SDO_CCS_DN_INI_REQ | CO_SDO_INI_SIZE_IND;
 
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
@@ -2174,12 +2177,12 @@ co_csdo_send_dn_ini_req(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_send_dn_seg_req(co_csdo_t *sdo, uint32_t n, int last)
+co_csdo_send_dn_seg_req(co_csdo_t *sdo, co_unsigned32_t n, int last)
 {
 	assert(sdo);
 	assert(n <= 7);
 
-	uint8_t cs = CO_SDO_CCS_DN_SEG_REQ | sdo->toggle
+	co_unsigned8_t cs = CO_SDO_CCS_DN_SEG_REQ | sdo->toggle
 			| CO_SDO_SEG_SIZE_SET(n);
 	sdo->toggle ^= CO_SDO_SEG_TOGGLE;
 	if (last)
@@ -2202,7 +2205,7 @@ co_csdo_send_up_ini_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_UP_INI_REQ;
+	co_unsigned8_t cs = CO_SDO_CCS_UP_INI_REQ;
 
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
@@ -2214,7 +2217,7 @@ co_csdo_send_up_seg_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_UP_SEG_REQ | sdo->toggle;
+	co_unsigned8_t cs = CO_SDO_CCS_UP_SEG_REQ | sdo->toggle;
 	sdo->toggle ^= CO_SDO_SEG_TOGGLE;
 
 	struct can_msg msg;
@@ -2227,7 +2230,7 @@ co_csdo_send_blk_dn_ini_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_BLK_CRC
 			| CO_SDO_BLK_SIZE_IND | CO_SDO_SC_INI_BLK;
 
 	struct can_msg msg;
@@ -2237,7 +2240,7 @@ co_csdo_send_blk_dn_ini_req(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, uint8_t seqno)
+co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno)
 {
 	assert(sdo);
 	assert(seqno && seqno <= CO_SDO_MAX_SEQNO);
@@ -2246,7 +2249,7 @@ co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, uint8_t seqno)
 	int last = n <= 7;
 	n = MIN(n, 7);
 
-	uint8_t cs = seqno;
+	co_unsigned8_t cs = seqno;
 	if (last)
 		cs |= CO_SDO_SEQ_LAST;
 
@@ -2263,12 +2266,13 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 	assert(sdo);
 
 	// Compute the number of bytes in the last segment containing data.
-	uint8_t n = sdo->size ? (sdo->size - 1) % 7 + 1 : 0;
+	co_unsigned8_t n = sdo->size ? (sdo->size - 1) % 7 + 1 : 0;
 
-	uint8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK
 			| CO_SDO_BLK_SIZE_SET(n);
 
-	uint16_t crc = sdo->crc ? co_crc(0, sdo->buf.begin, sdo->size) : 0;
+	uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
+	co_unsigned16_t crc = sdo->crc ? co_crc(0, buf, sdo->size) : 0;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
@@ -2277,11 +2281,12 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, uint8_t pst)
+co_csdo_send_blk_up_ini_req(co_csdo_t *sdo, co_unsigned8_t pst)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC | CO_SDO_SC_INI_BLK;
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_BLK_CRC
+			| CO_SDO_SC_INI_BLK;
 
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
@@ -2295,7 +2300,7 @@ co_csdo_send_start_up_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_START_UP;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
@@ -2311,7 +2316,7 @@ co_csdo_send_blk_up_sub_res(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
@@ -2329,7 +2334,7 @@ co_csdo_send_blk_up_end_res(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	uint8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_END_BLK;
+	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_END_BLK;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
@@ -2337,7 +2342,7 @@ co_csdo_send_blk_up_end_res(co_csdo_t *sdo)
 }
 
 static void
-co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg, uint8_t cs)
+co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);
@@ -2357,7 +2362,7 @@ co_csdo_init_ini_req(co_csdo_t *sdo, struct can_msg *msg, uint8_t cs)
 }
 
 static void
-co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg, uint8_t cs)
+co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 {
 	assert(sdo);
 	assert(msg);

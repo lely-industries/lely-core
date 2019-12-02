@@ -133,7 +133,7 @@ up_con(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val);
 		// clang-format off
 		if (!n || co_val_read(CO_DEFTYPE_VISIBLE_STRING, &val, ptr,
-				(const uint8_t *)ptr + n) == n)
+				(const uint_least8_t *)ptr + n) == n)
 			// clang-format on
 			tap_pass("value received\n%s", val.vs);
 		else

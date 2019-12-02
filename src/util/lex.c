@@ -4,7 +4,7 @@
  *
  * @see lely/util/lex.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -660,13 +660,13 @@ lex_base64(const char *begin, const char *end, struct floc *at, void *ptr,
 
 	const char *cp = begin;
 
-	uint8_t *bp = ptr;
-	uint8_t *endb = bp + (ptr && pn ? *pn : 0);
+	unsigned char *bp = ptr;
+	unsigned char *endb = bp + (ptr && pn ? *pn : 0);
 
 	size_t n = 0, i = 0;
-	uint8_t s = 0;
+	unsigned char s = 0;
 	while ((!end || cp < end) && *cp) {
-		uint8_t b;
+		unsigned char b;
 		switch (*cp++) {
 		case 'A': b = 0; break;
 		case 'B': b = 1; break;

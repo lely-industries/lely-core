@@ -47,35 +47,35 @@ struct co_wtm_can {
 	 * `CAN_STATE_PASSIVE` or `CAN_STATE_BUSOFF`, or 0xf if the information
 	 * is not available).
 	 */
-	uint8_t st;
+	uint_least8_t st;
 	/**
 	 * The last detected error (0 if no error was detected, one of
 	 * `CAN_ERROR_BIT`, `CAN_ERROR_STUFF`, `CAN_ERROR_CRC`, `CAN_ERROR_FORM`
 	 * or `CAN_ERROR_ACK` in case of an error, or 0xf if the information is
 	 * not available).
 	 */
-	uint8_t err;
+	uint_least8_t err;
 	/**
 	 * The current busload percentage (in the range [0..100], or 0xff if the
 	 * information is not available).
 	 */
-	uint8_t load;
+	uint_least8_t load;
 	/**
 	 * The number of detected errors that led to the increase of one of the
 	 * CAN controller internal error counters (in the range [0..0xfffe], or
 	 * 0xffff if the information is not available).
 	 */
-	uint16_t ec;
+	uint_least16_t ec;
 	/**
 	 * The FIFO overrun counter (in the range [0..0xfffe], or 0xffff if the
 	 * information is not available).
 	 */
-	uint16_t foc;
+	uint_least16_t foc;
 	/**
 	 * The CAN controller overrun counter (in the range [0..0xfffe], or
 	 * 0xffff if the information is not available).
 	 */
-	uint16_t coc;
+	uint_least16_t coc;
 	/// The current time of the CAN frame receiver.
 	struct timespec recv_time;
 	/// The current time of the CAN frame sender.
@@ -87,12 +87,12 @@ struct co_wtm_can {
 /// A CANopen Wireless Transmission Media (WTM) interface.
 struct __co_wtm {
 	/// The WTM interface indicator.
-	uint8_t nif;
+	uint_least8_t nif;
 	/**
 	 * The link quality percentage (in the range [0..100], or 0xff if the
 	 * information is not available).
 	 */
-	uint8_t quality;
+	uint_least8_t quality;
 	/// The CAN interfaces.
 	struct co_wtm_can can[CO_WTM_MAX_NIF];
 	/**
@@ -139,30 +139,31 @@ struct __co_wtm {
 	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
 	/// The buffer used to receive byte streams.
-	uint8_t recv_buf[CO_WTM_MAX_LEN];
+	uint_least8_t recv_buf[CO_WTM_MAX_LEN];
 	/// The number of bytes in #recv_buf.
 	size_t recv_nbytes;
 	/// The sequence number for received generic frames.
-	uint8_t recv_nseq;
+	uint_least8_t recv_nseq;
 	/// The buffer used to send byte streams.
-	uint8_t send_buf[CO_WTM_MAX_LEN];
+	uint_least8_t send_buf[CO_WTM_MAX_LEN];
 	/// The number of bytes in #send_buf.
 	size_t send_nbytes;
 	/// The sequence number for sent generic frames.
-	uint8_t send_nseq;
+	uint_least8_t send_nseq;
 };
 
 /// Sends a communication quality response for a CAN interface.
-static int co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif);
+static int co_wtm_send_diag_can_res(co_wtm_t *wtm, uint_least8_t nif);
 
 /// Sends a communication quality response for a WTM interface.
 static int co_wtm_send_diag_wtm_res(co_wtm_t *wtm);
 
 /// Invokes the diagnostic indication function.
-static void co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac);
+static void co_wtm_diag_ac(co_wtm_t *wtm, uint_least32_t ac);
 
 /// The default diagnostic indication function. @see co_wtm_diag_ac_ind_t
-static void default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data);
+static void default_wtm_diag_ac_ind(
+		co_wtm_t *wtm, uint_least32_t ac, void *data);
 
 /**
  * Processes a generic frame containing CAN messages.
@@ -173,10 +174,11 @@ static void default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data);
  *
  * @returns 0 on success, or a WTM abort code on error.
  */
-static uint32_t co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes);
+static uint_least32_t co_wtm_recv_can(
+		co_wtm_t *wtm, const void *buf, size_t nbytes);
 
 const char *
-co_wtm_ac_str(uint32_t ac)
+co_wtm_ac_str(uint_least32_t ac)
 {
 	switch (ac) {
 	case CO_WTM_AC_ERROR: return "General error";
@@ -233,7 +235,7 @@ __co_wtm_init(struct __co_wtm *wtm)
 
 	wtm->quality = 0xff;
 
-	for (uint8_t nif = 1; nif <= CO_WTM_MAX_NIF; nif++) {
+	for (uint_least8_t nif = 1; nif <= CO_WTM_MAX_NIF; nif++) {
 		struct co_wtm_can *can = &wtm->can[nif - 1];
 
 		can->st = 0xf;
@@ -318,7 +320,7 @@ co_wtm_destroy(co_wtm_t *wtm)
 	}
 }
 
-uint8_t
+uint_least8_t
 co_wtm_get_nif(const co_wtm_t *wtm)
 {
 	assert(wtm);
@@ -327,7 +329,7 @@ co_wtm_get_nif(const co_wtm_t *wtm)
 }
 
 int
-co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
+co_wtm_set_nif(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 
@@ -342,8 +344,9 @@ co_wtm_set_nif(co_wtm_t *wtm, uint8_t nif)
 }
 
 int
-co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
-		uint8_t load, uint16_t ec, uint16_t foc, uint16_t coc)
+co_wtm_set_diag_can(co_wtm_t *wtm, uint_least8_t nif, uint_least8_t st,
+		uint_least8_t err, uint_least8_t load, uint_least16_t ec,
+		uint_least16_t foc, uint_least16_t coc)
 {
 	assert(wtm);
 
@@ -392,7 +395,7 @@ co_wtm_set_diag_can(co_wtm_t *wtm, uint8_t nif, uint8_t st, uint8_t err,
 }
 
 int
-co_wtm_set_diag_wtm(co_wtm_t *wtm, uint8_t quality)
+co_wtm_set_diag_wtm(co_wtm_t *wtm, uint_least8_t quality)
 {
 	assert(wtm);
 
@@ -519,7 +522,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 	assert(buf);
 
 	for (const uint_least8_t *bp = buf; nbytes;) {
-		uint32_t ac = 0;
+		uint_least32_t ac = 0;
 		// Search for the preamble (see section 5.2 in CiA 315 version
 		// 1.0.0).
 		size_t size = 1;
@@ -546,7 +549,7 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				continue;
 		}
 		// Copy the payload (plus the CRC checksum).
-		uint8_t len = wtm->recv_buf[1];
+		uint_least8_t len = wtm->recv_buf[1];
 		size += len;
 		if (wtm->recv_nbytes < size) {
 			size_t n = MIN(nbytes, size - wtm->recv_nbytes);
@@ -559,14 +562,14 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		}
 		// Check the CRC checksum (see section 5.7 in CiA 315 version
 		// 1.0.0).
-		uint16_t crc = co_crc(0xffff, wtm->recv_buf, 4 + len);
+		uint_least16_t crc = co_crc(0xffff, wtm->recv_buf, 4 + len);
 		if (crc != ldle_u16(wtm->recv_buf + 4 + len)) {
 			ac = CO_WTM_AC_CRC;
 			goto error;
 		}
 		// Check the sequence counter (see section 5.4 in CiA 315
 		// version 1.0.0).
-		uint8_t seq = wtm->recv_buf[2];
+		uint_least8_t seq = wtm->recv_buf[2];
 		if (seq != wtm->recv_nseq)
 			// Generate an error, but do not abort processing the
 			// message.
@@ -574,8 +577,8 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		wtm->recv_nseq = seq + 1;
 		// Process message payload based on its type (see Table 2 in CiA
 		// 315 version 1.0.0).
-		uint8_t type = wtm->recv_buf[3];
-		uint8_t nif;
+		uint_least8_t type = wtm->recv_buf[3];
+		uint_least8_t nif;
 		switch (type) {
 		// CAN messages forwarding (see section 6 in CiA 315 version
 		// 1.0.0).
@@ -665,13 +668,13 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				}
 				if (!wtm->diag_can_con)
 					continue;
-				uint8_t st = 0xf;
+				uint_least8_t st = 0xf;
 				switch ((wtm->recv_buf[5] >> 4) & 0xf) {
 				case 0: st = CAN_STATE_ACTIVE; break;
 				case 1: st = CAN_STATE_PASSIVE; break;
 				case 2: st = CAN_STATE_BUSOFF; break;
 				}
-				uint8_t err = 0xf;
+				uint_least8_t err = 0xf;
 				switch (wtm->recv_buf[5] & 0xf) {
 				case 1: err = CAN_ERROR_BIT; break;
 				case 2: err = CAN_ERROR_STUFF; break;
@@ -679,17 +682,19 @@ co_wtm_recv(co_wtm_t *wtm, const void *buf, size_t nbytes)
 				case 4: err = CAN_ERROR_FORM; break;
 				case 5: err = CAN_ERROR_ACK; break;
 				}
-				uint8_t load = wtm->recv_buf[6];
-				uint16_t ec = ldle_u16(wtm->recv_buf + 7);
-				uint16_t foc = ldle_u16(wtm->recv_buf + 9);
-				uint16_t coc = ldle_u16(wtm->recv_buf + 11);
+				uint_least8_t load = wtm->recv_buf[6];
+				uint_least16_t ec = ldle_u16(wtm->recv_buf + 7);
+				uint_least16_t foc =
+						ldle_u16(wtm->recv_buf + 9);
+				uint_least16_t coc =
+						ldle_u16(wtm->recv_buf + 11);
 				wtm->diag_can_con(wtm, nif, st, err, load, ec,
 						foc, coc,
 						wtm->diag_can_con_data);
 			} else {
 				if (!wtm->diag_wtm_con)
 					continue;
-				uint8_t quality = wtm->recv_buf[5];
+				uint_least8_t quality = wtm->recv_buf[5];
 				wtm->diag_wtm_con(wtm, nif - 0x80, quality,
 						wtm->diag_wtm_con_data);
 			}
@@ -782,7 +787,7 @@ co_wtm_set_recv_func(co_wtm_t *wtm, co_wtm_recv_func_t *func, void *data)
 }
 
 int
-co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp)
+co_wtm_get_time(const co_wtm_t *wtm, uint_least8_t nif, struct timespec *tp)
 {
 	assert(wtm);
 
@@ -798,7 +803,7 @@ co_wtm_get_time(const co_wtm_t *wtm, uint8_t nif, struct timespec *tp)
 }
 
 int
-co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
+co_wtm_set_time(co_wtm_t *wtm, uint_least8_t nif, const struct timespec *tp)
 {
 	assert(wtm);
 	assert(tp);
@@ -832,7 +837,7 @@ co_wtm_set_time(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp)
 }
 
 int
-co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
+co_wtm_send(co_wtm_t *wtm, uint_least8_t nif, const struct can_msg *msg)
 {
 	assert(wtm);
 	assert(msg);
@@ -867,11 +872,11 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	}
 	wtm->send_buf[3] = 0x00;
 	wtm->send_nbytes = MAX(wtm->send_nbytes, 4);
-	uint8_t *bp = wtm->send_buf + wtm->send_nbytes;
+	uint_least8_t *bp = wtm->send_buf + wtm->send_nbytes;
 	size_t nbytes = wtm->send_nbytes;
 
 	// Write the data length code.
-	uint8_t dlc = msg->len | 0x40;
+	uint_least8_t dlc = msg->len | 0x40;
 	if (msg->flags & CAN_FLAG_RTR)
 		dlc |= 0x10;
 	if (msg->flags & CAN_FLAG_IDE)
@@ -902,8 +907,9 @@ co_wtm_send(co_wtm_t *wtm, uint8_t nif, const struct can_msg *msg)
 	bp += msg->len;
 	nbytes += msg->len;
 	// Write the time stamp.
-	int64_t usec = timespec_diff_usec(&can->send_next, &can->send_time);
-	stle_u16(bp, (uint16_t)(usec / 100));
+	int_least64_t usec =
+			timespec_diff_usec(&can->send_next, &can->send_time);
+	stle_u16(bp, (uint_least16_t)(usec / 100));
 	nbytes += 2;
 
 	assert(nbytes + 2 <= CO_WTM_MAX_LEN);
@@ -927,7 +933,7 @@ co_wtm_send_alive(co_wtm_t *wtm)
 }
 
 int
-co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
+co_wtm_send_diag_can_req(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 
@@ -945,7 +951,7 @@ co_wtm_send_diag_can_req(co_wtm_t *wtm, uint8_t nif)
 }
 
 int
-co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
+co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 
@@ -963,7 +969,7 @@ co_wtm_send_diag_wtm_req(co_wtm_t *wtm, uint8_t nif)
 }
 
 int
-co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
+co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 
@@ -981,7 +987,7 @@ co_wtm_send_diag_can_rst(co_wtm_t *wtm, uint8_t nif)
 }
 
 int
-co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
+co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 
@@ -999,7 +1005,7 @@ co_wtm_send_diag_wtm_rst(co_wtm_t *wtm, uint8_t nif)
 }
 
 int
-co_wtm_send_diag_ac(co_wtm_t *wtm, uint32_t ac)
+co_wtm_send_diag_ac(co_wtm_t *wtm, uint_least32_t ac)
 {
 	assert(wtm);
 	assert(wtm->nif && wtm->nif <= CO_WTM_MAX_NIF);
@@ -1021,7 +1027,7 @@ co_wtm_flush(co_wtm_t *wtm)
 	// Do not flush if there is no header.
 	if (wtm->send_nbytes < 4)
 		return 0;
-	uint8_t len = (uint8_t)(wtm->send_nbytes - 4);
+	uint_least8_t len = (uint_least8_t)(wtm->send_nbytes - 4);
 	wtm->send_nbytes = 0;
 
 	// Fill in the header fields.
@@ -1029,7 +1035,7 @@ co_wtm_flush(co_wtm_t *wtm)
 	wtm->send_buf[1] = len;
 	wtm->send_buf[2] = wtm->send_nseq++;
 	// Compute the CRC checksum.
-	uint16_t crc = co_crc(0xffff, wtm->send_buf, 4 + len);
+	uint_least16_t crc = co_crc(0xffff, wtm->send_buf, 4 + len);
 	stle_u16(wtm->send_buf + 4 + len, crc);
 
 	// Invoke the user-specified callback function to send the generic
@@ -1065,7 +1071,7 @@ co_wtm_set_send_func(co_wtm_t *wtm, co_wtm_send_func_t *func, void *data)
 }
 
 static int
-co_wtm_send_diag_can_res(co_wtm_t *wtm, uint8_t nif)
+co_wtm_send_diag_can_res(co_wtm_t *wtm, uint_least8_t nif)
 {
 	assert(wtm);
 	assert(nif && nif <= CO_WTM_MAX_NIF);
@@ -1099,7 +1105,7 @@ co_wtm_send_diag_wtm_res(co_wtm_t *wtm)
 }
 
 static void
-co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac)
+co_wtm_diag_ac(co_wtm_t *wtm, uint_least32_t ac)
 {
 	assert(wtm);
 	assert(wtm->diag_ac_ind);
@@ -1108,7 +1114,7 @@ co_wtm_diag_ac(co_wtm_t *wtm, uint32_t ac)
 }
 
 static void
-default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data)
+default_wtm_diag_ac_ind(co_wtm_t *wtm, uint_least32_t ac, void *data)
 {
 	(void)wtm;
 	(void)data;
@@ -1117,18 +1123,18 @@ default_wtm_diag_ac_ind(co_wtm_t *wtm, uint32_t ac, void *data)
 			co_wtm_ac_str(ac));
 }
 
-static uint32_t
+static uint_least32_t
 co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 {
 	assert(wtm);
 	assert(buf);
 	assert(nbytes);
 
-	uint32_t ac = 0;
+	uint_least32_t ac = 0;
 	for (const uint_least8_t *bp = buf; nbytes;) {
 		struct can_msg msg = CAN_MSG_INIT;
 		// Obtain the data length code.
-		uint8_t dlc = *bp;
+		uint_least8_t dlc = *bp;
 		bp++;
 		nbytes--;
 		msg.len = dlc & 0x0f;
@@ -1139,7 +1145,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		if (dlc & 0x10)
 			msg.flags |= CAN_FLAG_RTR;
 		// Obtain the CAN interface indicator.
-		uint8_t nif = 1;
+		uint_least8_t nif = 1;
 		if (dlc & 0x80) {
 			if (nbytes < 1) {
 				ac = CO_WTM_AC_CAN;
@@ -1177,7 +1183,7 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 		bp += msg.len;
 		nbytes -= msg.len;
 		// Obtain the time stamp.
-		uint16_t ts = 0;
+		uint_least16_t ts = 0;
 		if (dlc & 0x40) {
 			if (nbytes < 2) {
 				ac = CO_WTM_AC_CAN;

@@ -79,7 +79,7 @@ class COEmcy : public incomplete_c_type<__co_emcy> {
 
   int
   push(co_unsigned16_t eec, co_unsigned8_t er,
-       const uint8_t msef[5] = 0) noexcept {
+       const co_unsigned8_t msef[5] = 0) noexcept {
     return co_emcy_push(this, eec, er, msef);
   }
 

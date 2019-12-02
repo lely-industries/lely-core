@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Process Data
  * Object (PDO) declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -232,8 +232,8 @@ co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
  * @see co_pdo_unmap()
  */
 co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
-		const co_unsigned64_t *val, co_unsigned8_t n, uint8_t *buf,
-		size_t *pn);
+		const co_unsigned64_t *val, co_unsigned8_t n,
+		uint_least8_t *buf, size_t *pn);
 
 /**
  * Unmaps a PDO into its constituent values.
@@ -252,7 +252,7 @@ co_unsigned32_t co_pdo_map(const struct co_pdo_map_par *par,
  * @see co_pdo_map()
  */
 co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
-		const uint8_t *buf, size_t n, co_unsigned64_t *val,
+		const uint_least8_t *buf, size_t n, co_unsigned64_t *val,
 		co_unsigned8_t *pn);
 
 /**
@@ -269,7 +269,7 @@ co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
  * @returns 0 on success, or an SDO abort code on error.
  */
 co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
-		struct co_sdo_req *req, const uint8_t *buf, size_t n);
+		struct co_sdo_req *req, const uint_least8_t *buf, size_t n);
 
 /**
  * Reads mapped PDO values from the object dictionary through a local SDO upload
@@ -288,7 +288,7 @@ co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
  * @returns 0 on success, or an SDO abort code on error.
  */
 co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
-		struct co_sdo_req *req, uint8_t *buf, size_t *pn);
+		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn);
 
 #ifdef __cplusplus
 }

@@ -184,7 +184,7 @@ co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 
 co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
-		co_unsigned8_t n, uint8_t *buf, size_t *pn)
+		co_unsigned8_t n, uint_least8_t *buf, size_t *pn)
 {
 	assert(par);
 	assert(val);
@@ -199,7 +199,7 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 		if (offset + len > CAN_MAX_LEN * 8)
 			return CO_SDO_AC_PDO_LEN;
 
-		uint8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
+		uint_least8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
 		stle_u64(tmp, val[i]);
 		if (buf && pn && offset + len <= *pn * 8)
 			bcpyle(buf, offset, tmp, 0, len);
@@ -214,8 +214,8 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 }
 
 co_unsigned32_t
-co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
-		co_unsigned64_t *val, co_unsigned8_t *pn)
+co_pdo_unmap(const struct co_pdo_map_par *par, const uint_least8_t *buf,
+		size_t n, co_unsigned64_t *val, co_unsigned8_t *pn)
 {
 	assert(par);
 	assert(buf);
@@ -230,7 +230,7 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
 		if (offset + len > n * 8)
 			return CO_SDO_AC_PDO_LEN;
 
-		uint8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
+		uint_least8_t tmp[sizeof(co_unsigned64_t)] = { 0 };
 		bcpyle(tmp, 0, buf, offset, len);
 		if (val && pn && i < *pn)
 			val[i] = ldle_u64(tmp);
@@ -246,7 +246,7 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint8_t *buf, size_t n,
 
 co_unsigned32_t
 co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
-		struct co_sdo_req *req, const uint8_t *buf, size_t n)
+		struct co_sdo_req *req, const uint_least8_t *buf, size_t n)
 {
 	assert(par);
 	assert(dev);
@@ -278,7 +278,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 		if (sub) {
 			// Copy the value and download it into the sub-object.
-			uint8_t tmp[CAN_MAX_LEN] = { 0 };
+			uint_least8_t tmp[CAN_MAX_LEN] = { 0 };
 			bcpyle(tmp, 0, buf, offset, len);
 			co_sdo_req_clear(req);
 			req->size = (len + 7) / 8;
@@ -297,7 +297,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 
 co_unsigned32_t
 co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
-		struct co_sdo_req *req, uint8_t *buf, size_t *pn)
+		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn)
 {
 	assert(par);
 	assert(dev);

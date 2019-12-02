@@ -37,8 +37,8 @@ test_frbuf(void)
 	tap_test(frbuf_read(buf, txt1, sizeof(TXT1)) != -1);
 	tap_test(!strncmp(txt1, TXT1, sizeof(TXT1)));
 
-	int64_t pos = frbuf_get_pos(buf);
-	tap_test(pos == (int64_t)sizeof(TXT1));
+	intmax_t pos = frbuf_get_pos(buf);
+	tap_test(pos == (intmax_t)sizeof(TXT1));
 
 	size_t size = 0;
 	const void *map = frbuf_map(buf, POS, &size);
@@ -68,8 +68,8 @@ test_fwbuf(void)
 
 	tap_test(fwbuf_write(buf, TXT1, sizeof(TXT1)) != -1);
 
-	int64_t pos = fwbuf_get_pos(buf);
-	tap_test(pos == (int64_t)sizeof(TXT1));
+	intmax_t pos = fwbuf_get_pos(buf);
+	tap_test(pos == (intmax_t)sizeof(TXT1));
 
 	size_t size = 0;
 	void *map = fwbuf_map(buf, POS, &size);

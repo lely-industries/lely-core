@@ -1370,7 +1370,7 @@ co_lss_wait_slave_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	if (!msg->len)
 		return NULL;
 
-	uint8_t cs = msg->data[0];
+	co_unsigned8_t cs = msg->data[0];
 	switch (cs) {
 	// Switch state global (see Fig. 31 in CiA 305 version 3.0.0).
 	case 0x04:

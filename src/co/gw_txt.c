@@ -860,7 +860,7 @@ co_gw_txt_recv_sdo_up(co_gw_txt_t *gw, co_unsigned32_t seq,
 	}
 
 	union co_val val;
-	const uint8_t *bp = (const uint8_t *)con->val;
+	const uint_least8_t *bp = con->val;
 	if (co_val_read(con->type, &val, bp, bp + con->len) != con->len)
 		co_gw_txt_recv_err(gw, seq, 0, CO_SDO_AC_TYPE_LEN);
 
@@ -1269,7 +1269,7 @@ co_gw_txt_send_sdo_dn(co_gw_txt_t *gw, int srv, void *data, co_unsigned16_t net,
 		.subidx = subidx,
 		.len = n };
 
-	uint8_t *bp = (uint8_t *)req->val;
+	uint_least8_t *bp = req->val;
 	if (co_val_write(type, &val, bp, bp + n) != n) {
 		diag_if(DIAG_ERROR, get_errc(), at, "unable to write value");
 		goto error_write_val;

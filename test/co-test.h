@@ -46,7 +46,7 @@ static inline void co_test_done(struct co_test *test);
 static int co_test_recv(struct co_test *test, const struct can_msg *msg);
 static int co_test_send(const struct can_msg *msg, void *data);
 #ifndef LELY_CO_NO_WTM
-static int co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif,
+static int co_test_wtm_recv(co_wtm_t *wtm, uint_least8_t nif,
 		const struct timespec *tp, const struct can_msg *msg,
 		void *data);
 static int co_test_wtm_send(
@@ -192,7 +192,7 @@ co_test_send(const struct can_msg *msg, void *data)
 #ifndef LELY_CO_NO_WTM
 
 static int
-co_test_wtm_recv(co_wtm_t *wtm, uint8_t nif, const struct timespec *tp,
+co_test_wtm_recv(co_wtm_t *wtm, uint_least8_t nif, const struct timespec *tp,
 		const struct can_msg *msg, void *data)
 {
 	(void)wtm;

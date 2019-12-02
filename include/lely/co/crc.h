@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Cyclic
  * Redundancy Check (CRC) declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -40,12 +40,12 @@ extern "C" {
  * (with an initial value of 0x0000) is 0x31c3.
  *
  * @param crc the initial value.
- * @param ptr a pointer to the bytes to be hashed.
+ * @param bp  a pointer to the bytes to be hashed.
  * @param n   the number of bytes to hash.
  *
  * @returns the updated CRC.
  */
-uint16_t co_crc(uint16_t crc, const void *ptr, size_t n);
+uint_least16_t co_crc(uint_least16_t crc, const uint_least8_t *bp, size_t n);
 
 #ifdef __cplusplus
 }

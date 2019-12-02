@@ -42,7 +42,7 @@ struct __co_sync {
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
 	/// The SYNC COB-ID.
-	uint32_t cobid;
+	co_unsigned32_t cobid;
 	/// The communication cycle period (in microseconds).
 	co_unsigned32_t us;
 	/// The synchronous counter overflow value.
@@ -331,8 +331,8 @@ co_sync_update(co_sync_t *sync)
 			can_recv_set_func(sync->recv, &co_sync_recv, sync);
 		}
 		// Register the receiver under the specified CAN-ID.
-		uint32_t id = sync->cobid;
-		uint8_t flags = 0;
+		uint_least32_t id = sync->cobid;
+		uint_least8_t flags = 0;
 		if (id & CO_SYNC_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -408,8 +408,8 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// active.
 	int active = cobid & CO_SYNC_COBID_PRODUCER;
 	int active_old = cobid_old & CO_SYNC_COBID_PRODUCER;
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (active && active_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
@@ -544,7 +544,7 @@ co_sync_recv(const struct can_msg *msg, void *data)
 		return 0;
 #endif
 
-	uint8_t len = sync->max_cnt ? 1 : 0;
+	co_unsigned8_t len = sync->max_cnt ? 1 : 0;
 	if (msg->len != len && sync->err)
 		sync->err(sync, 0x8240, 0x10, sync->err_data);
 

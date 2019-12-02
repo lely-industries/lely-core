@@ -368,7 +368,7 @@ class CONMT : public incomplete_c_type<__co_nmt> {
 
   void
   onErr(co_unsigned16_t eec, co_unsigned8_t er,
-        const uint8_t msef[5] = 0) noexcept {
+        const co_unsigned8_t msef[5] = 0) noexcept {
     co_nmt_on_err(this, eec, er, msef);
   }
 

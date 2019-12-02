@@ -24,15 +24,15 @@
 #include "co.h"
 #include <lely/co/crc.h>
 
-uint16_t
-co_crc(uint16_t crc, const void *ptr, size_t n)
+uint_least16_t
+co_crc(uint_least16_t crc, const uint_least8_t *bp, size_t n)
 {
 	// This table contains precomputed CRC-16 checksums for each of the 256
 	// bytes. The table was computed with the following code:
 	/*
-	uint16_t tab[256];
+	uint_least16_t tab[256];
 	for (int n = 0; n < 256; n++) {
-		uint16_t crc = n << 8;
+		uint_least16_t crc = n << 8;
 		for (int k = 0; k < 8; k++) {
 			if (crc & 0x8000)
 				crc = (crc << 1) ^ 0x1021;
@@ -43,7 +43,7 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 	}
 	*/
 	// clang-format off
-	static const uint16_t tab[] = {
+	static const uint_least16_t tab[] = {
 		0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
 		0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
 		0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
@@ -79,8 +79,7 @@ co_crc(uint16_t crc, const void *ptr, size_t n)
 	};
 	// clang-format on
 
-	if (ptr && n) {
-		const uint8_t *bp = ptr;
+	if (bp && n) {
 		while (n--)
 			crc = tab[*bp++ ^ (crc >> 8)] ^ (crc << 8);
 	}

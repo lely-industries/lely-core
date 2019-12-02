@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the gateway
  * declarations (see CiA 309-1 version 2.0).
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -342,7 +342,7 @@ struct co_gw_req_sdo_dn {
 	/// The length of the value (in bytes).
 	co_unsigned32_t len;
 	/// The (first byte in the) value.
-	char val[1];
+	uint_least8_t val[1];
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'SDO download' request.
@@ -718,7 +718,7 @@ struct co_gw_con_sdo_up {
 	/// The length of the value (in bytes).
 	co_unsigned32_t len;
 	/// The (first byte in the) value.
-	char val[1];
+	uint_least8_t val[1];
 };
 
 /// The minimum size (in bytes) of a CANopen gateway 'SDO upload' confirmation.
@@ -884,7 +884,7 @@ struct co_gw_ind_emcy {
 	/// The error register.
 	co_unsigned8_t er;
 	/// The manufacturer-specific error code.
-	uint8_t msef[5];
+	co_unsigned8_t msef[5];
 };
 
 /**
@@ -901,13 +901,13 @@ struct co_gw_ind_sdo {
 	/// The node-ID.
 	co_unsigned8_t node;
 	/// The transferred bytes.
-	uint32_t nbyte;
+	co_unsigned32_t nbyte;
 	/// The transfer direction: download (0) or upload (1).
 	unsigned int up : 1;
 	/// A pointer to user-specified data of the SDO upload/download request.
 	void *data;
 	/// The Lely-specific total value size (in bytes).
-	uint32_t _size;
+	co_unsigned32_t _size;
 };
 
 /**

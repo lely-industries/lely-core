@@ -1172,7 +1172,7 @@ co_nmt_boot_chk_device_type_on_enter(co_nmt_boot_t *boot)
 
 	boot->es = 'B';
 
- 	// The device type check may follow an NMT 'reset communication'
+	// The device type check may follow an NMT 'reset communication'
 	// command, in which case we may have to give the slave some time to
 	// complete the state change. Start the first SDO request by simulating
 	// a timeout.
@@ -1588,7 +1588,7 @@ co_nmt_boot_stop_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	co_unsigned8_t val = 0;
 	// clang-format off
 	if (!ac && co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
-			(const uint8_t *)ptr + n) && !val)
+			(const uint_least8_t *)ptr + n) && !val)
 		// clang-format on
 		return co_nmt_boot_clear_prog_state;
 
@@ -1608,7 +1608,7 @@ co_nmt_boot_clear_prog_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
- 	// The 'clear program' command follows the 'stop program' command, which
+	// The 'clear program' command follows the 'stop program' command, which
 	// may have triggered a reboot of the slave. In that case we may have to
 	// give the slave some time to finish booting. Start the first SDO
 	// request by simulating a timeout.
@@ -1779,7 +1779,7 @@ co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	co_unsigned32_t val = 0;
 	// clang-format off
 	if (!co_val_read(CO_DEFTYPE_UNSIGNED32, &val, ptr,
-			(const uint8_t *)ptr + n) || (val & 0x01))
+			(const uint_least8_t *)ptr + n) || (val & 0x01))
 		// clang-format on
 		return co_nmt_boot_wait_flash_state;
 
@@ -1953,7 +1953,7 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 	co_unsigned8_t val = 0;
 	// clang-format off
 	if (!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
-			(const uint8_t *)ptr + n) || val != 1)
+			(const uint_least8_t *)ptr + n) || val != 1)
 		// clang-format on
 		return co_nmt_boot_wait_prog_state;
 
@@ -2154,7 +2154,7 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 	co_unsigned16_t type = co_sub_get_type(sub);
 
 	union co_val val;
-	if (!co_val_read(type, &val, ptr, (const uint8_t *)ptr + n))
+	if (!co_val_read(type, &val, ptr, (const uint_least8_t *)ptr + n))
 		return 0;
 
 	int eq = !co_val_cmp(type, &val, co_sub_get_val(sub));

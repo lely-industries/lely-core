@@ -187,9 +187,9 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
 
   operator type() const noexcept { return m_val; }
 
-  operator ::std::vector<uint8_t>() const {
-    return m_val ? ::std::vector<uint8_t>(m_val, m_val + size())
-                 : ::std::vector<uint8_t>();
+  operator ::std::vector<uint_least8_t>() const {
+    return m_val ? ::std::vector<uint_least8_t>(m_val, m_val + size())
+                 : ::std::vector<uint_least8_t>();
   }
 
   COVal() : m_val() {}
@@ -201,8 +201,8 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
       throw_or_abort(bad_init());
   }
 
-  COVal(const uint8_t* os, ::std::size_t n) { init(os, n); }
-  COVal(const ::std::vector<uint8_t>& os) { init(os); }
+  COVal(const uint_least8_t* os, ::std::size_t n) { init(os, n); }
+  COVal(const ::std::vector<uint_least8_t>& os) { init(os); }
 
   ~COVal() { co_val_fini(index, &m_val); }
 
@@ -223,7 +223,7 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
   }
 
   COVal&
-  operator=(const ::std::vector<uint8_t>& os) {
+  operator=(const ::std::vector<uint_least8_t>& os) {
     this->~COVal();
     init(os);
     return *this;
@@ -241,12 +241,12 @@ class COVal<CO_DEFTYPE_OCTET_STRING> {
 
  private:
   void
-  init(const uint8_t* os, ::std::size_t n) {
+  init(const uint_least8_t* os, ::std::size_t n) {
     if (co_val_init_os(&m_val, os, n)) throw_or_abort(bad_init());
   }
 
   void
-  init(const ::std::vector<uint8_t>& os) {
+  init(const ::std::vector<uint_least8_t>& os) {
     init(os.data(), os.size());
   }
 

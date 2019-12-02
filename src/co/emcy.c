@@ -180,7 +180,7 @@ static int co_emcy_timer(const struct timespec *tp, void *data);
  * @returns 0 on success, or -1 on error.
  */
 static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5]);
+		const co_unsigned8_t msef[5]);
 
 /**
  * Sends any messages in the CAN frame buffer unless the inhibit time has not
@@ -375,7 +375,7 @@ co_emcy_get_dev(const co_emcy_t *emcy)
 
 int
 co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
+		const co_unsigned8_t msef[5])
 {
 	assert(emcy);
 
@@ -441,7 +441,7 @@ co_emcy_pop(co_emcy_t *emcy, co_unsigned16_t *peec, co_unsigned8_t *per)
 	if (emcy->nmsg) {
 		// Store the next error in the error register and the
 		// manufacturer-specific field.
-		uint8_t msef[5] = { 0 };
+		co_unsigned8_t msef[5] = { 0 };
 		stle_u16(msef, emcy->msgs[0].eec);
 		return co_emcy_send(emcy, 0, emcy->msgs[0].er, msef);
 	} else {
@@ -570,7 +570,8 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	co_unsigned8_t er = msg->len >= 3 ? msg->data[2] : 0;
 	co_unsigned8_t msef[5] = { 0 };
 	if (msg->len >= 4)
-		memcpy(msef, msg->data + 3, MAX((uint8_t)(msg->len - 3), 5));
+		memcpy(msef, msg->data + 3,
+				MAX((uint_least8_t)(msg->len - 3), 5));
 
 	// Notify the user.
 	trace("EMCY: received %04X %02X", eec, er);
@@ -671,8 +672,8 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
 	int valid = !(cobid & CO_EMCY_COBID_VALID);
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
@@ -706,8 +707,8 @@ co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid)
 			emcy->nodes[id - 1] = node;
 		}
 		// Register the receiver under the specified CAN-ID.
-		uint32_t id = cobid;
-		uint8_t flags = 0;
+		uint_least32_t id = cobid;
+		uint_least8_t flags = 0;
 		if (id & CO_EMCY_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -760,8 +761,8 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	// The CAN-ID cannot be changed when the EMCY is and remains valid.
 	int valid = !(cobid & CO_EMCY_COBID_VALID);
 	int valid_old = !(cobid_old & CO_EMCY_COBID_VALID);
-	uint32_t canid = cobid & CAN_MASK_EID;
-	uint32_t canid_old = cobid_old & CAN_MASK_EID;
+	uint_least32_t canid = cobid & CAN_MASK_EID;
+	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
 	if (valid && valid_old && canid != canid_old) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
@@ -799,7 +800,7 @@ co_emcy_timer(const struct timespec *tp, void *data)
 
 static int
 co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
-		const uint8_t msef[5])
+		const co_unsigned8_t msef[5])
 {
 	assert(emcy);
 

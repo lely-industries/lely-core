@@ -595,7 +595,7 @@ co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 size_t
 co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
-		const uint8_t *begin, const uint8_t *end)
+		const uint_least8_t *begin, const uint_least8_t *end)
 {
 	if (!begin || !end || end - begin < 2 + 1 + 4)
 		return 0;
@@ -641,7 +641,7 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 
 size_t
 co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
-		co_unsigned8_t subidx, uint8_t *begin, uint8_t *end)
+		co_unsigned8_t subidx, uint_least8_t *begin, uint_least8_t *end)
 {
 	co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
 	if (!sub)
@@ -686,8 +686,8 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	co_unsigned16_t max = CO_UNSIGNED16_MIN;
 
 	size_t size = co_val_sizeof(CO_DEFTYPE_DOMAIN, ptr);
-	const uint8_t *begin = *ptr;
-	const uint8_t *end = begin + size;
+	const uint_least8_t *begin = *ptr;
+	const uint_least8_t *end = begin + size;
 
 	// Read the total number of sub-indices.
 	co_unsigned32_t n;
@@ -730,7 +730,7 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 		goto error_create_buf;
 	}
 
-	int64_t size = frbuf_get_size(buf);
+	intmax_t size = frbuf_get_size(buf);
 	if (size == -1) {
 		errc = get_errc();
 		goto error_get_size;
@@ -800,8 +800,8 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	if (co_val_init_dom(ptr, NULL, size) == -1)
 		return -1;
 
-	uint8_t *begin = *ptr;
-	uint8_t *end = begin + size;
+	uint_least8_t *begin = *ptr;
+	uint_least8_t *end = begin + size;
 
 	// Write the total number of sub-indices.
 	begin += co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end);

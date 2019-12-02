@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the device description. See lely/co/dev.h for the C interface.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -274,14 +274,14 @@ class CODev : public incomplete_c_type<__co_dev> {
   }
 
   ::std::size_t
-  readSub(co_unsigned16_t* pidx, co_unsigned8_t* psubidx, const uint8_t* begin,
-          const uint8_t* end) noexcept {
+  readSub(co_unsigned16_t* pidx, co_unsigned8_t* psubidx,
+          const uint_least8_t* begin, const uint_least8_t* end) noexcept {
     return co_dev_read_sub(this, pidx, psubidx, begin, end);
   }
 
   ::std::size_t
-  writeSub(co_unsigned16_t idx, co_unsigned8_t subidx, uint8_t* begin,
-           uint8_t* end = 0) const noexcept {
+  writeSub(co_unsigned16_t idx, co_unsigned8_t subidx, uint_least8_t* begin,
+           uint_least8_t* end = 0) const noexcept {
     return co_dev_write_sub(this, idx, subidx, begin, end);
   }
 
