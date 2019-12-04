@@ -28,8 +28,11 @@
 #include <lely/co/csdo.hpp>
 #include <lely/co/dcf.hpp>
 #include <lely/co/obj.hpp>
+#include <lely/co/pdo.h>
 
+#include <map>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -76,9 +79,44 @@ struct Device::Impl_ : util::BasicLockable {
   void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
            ::std::error_code& ec);
 
+  ::std::tuple<uint16_t, uint8_t>
+  RpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
+              ::std::error_code& ec) const noexcept {
+    auto it = rpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
+                                (static_cast<uint32_t>(idx) << 8) | subidx);
+    if (it != rpdo_mapping.end()) {
+      idx = (it->second >> 8) & 0xffff;
+      subidx = it->second & 0xff;
+    } else {
+      ec = SdoErrc::NO_PDO;
+      idx = 0;
+      subidx = 0;
+    }
+    return ::std::make_tuple(idx, subidx);
+  }
+
+  ::std::tuple<uint16_t, uint8_t>
+  TpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
+              ::std::error_code& ec) const noexcept {
+    auto it = tpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
+                                (static_cast<uint32_t>(idx) << 8) | subidx);
+    if (it != tpdo_mapping.end()) {
+      idx = (it->second >> 8) & 0xffff;
+      subidx = it->second & 0xff;
+    } else {
+      ec = SdoErrc::NO_PDO;
+      idx = 0;
+      subidx = 0;
+    }
+    return ::std::make_tuple(idx, subidx);
+  }
+
   BasicLockable* mutex{nullptr};
 
   unique_c_ptr<CODev> dev;
+
+  ::std::map<uint32_t, uint32_t> rpdo_mapping;
+  ::std::map<uint32_t, uint32_t> tpdo_mapping;
 };
 
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
@@ -388,6 +426,212 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   else
     ec.clear();
 }
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  T value(RpdoRead<T>(id, idx, subidx, ec));
+  if (ec) throw SdoError(id, idx, subidx, ec, "RpdoRead");
+  return value;
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
+                 ::std::error_code& ec) const {
+  ec.clear();
+  {
+    ::std::lock_guard<Impl_> lock(*impl_);
+    ::std::tie(idx, subidx) = impl_->RpdoMapping(id, idx, subidx, ec);
+  }
+  if (ec) return T();
+  return Read<T>(idx, subidx, ec);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  T value(TpdoRead<T>(id, idx, subidx, ec));
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoRead");
+  return value;
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
+                 ::std::error_code& ec) const {
+  ec.clear();
+  {
+    ::std::lock_guard<Impl_> lock(*impl_);
+    ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
+  }
+  if (ec) return T();
+  return Read<T>(idx, subidx, ec);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
+  ::std::error_code ec;
+  TpdoWrite(id, idx, subidx, value, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoWrite");
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value,
+                  ::std::error_code& ec) {
+  ec.clear();
+  {
+    ::std::lock_guard<Impl_> lock(*impl_);
+    ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
+  }
+  if (!ec) Write<T>(idx, subidx, value, ec);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+// BOOLEAN
+template bool Device::RpdoRead<bool>(uint8_t, uint16_t, uint8_t) const;
+template bool Device::RpdoRead<bool>(uint8_t, uint16_t, uint8_t,
+                                     ::std::error_code&) const;
+template bool Device::TpdoRead<bool>(uint8_t, uint16_t, uint8_t) const;
+template bool Device::TpdoRead<bool>(uint8_t, uint16_t, uint8_t,
+                                     ::std::error_code&) const;
+template void Device::TpdoWrite<bool>(uint8_t, uint16_t, uint8_t, bool);
+template void Device::TpdoWrite<bool>(uint8_t, uint16_t, uint8_t, bool,
+                                      ::std::error_code&);
+
+// INTEGER8
+template int8_t Device::RpdoRead<int8_t>(uint8_t, uint16_t, uint8_t) const;
+template int8_t Device::RpdoRead<int8_t>(uint8_t, uint16_t, uint8_t,
+                                         ::std::error_code&) const;
+template int8_t Device::TpdoRead<int8_t>(uint8_t, uint16_t, uint8_t) const;
+template int8_t Device::TpdoRead<int8_t>(uint8_t, uint16_t, uint8_t,
+                                         ::std::error_code&) const;
+template void Device::TpdoWrite<int8_t>(uint8_t, uint16_t, uint8_t, int8_t);
+template void Device::TpdoWrite<int8_t>(uint8_t, uint16_t, uint8_t, int8_t,
+                                        ::std::error_code&);
+
+// INTEGER16
+template int16_t Device::RpdoRead<int16_t>(uint8_t, uint16_t, uint8_t) const;
+template int16_t Device::RpdoRead<int16_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template int16_t Device::TpdoRead<int16_t>(uint8_t, uint16_t, uint8_t) const;
+template int16_t Device::TpdoRead<int16_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template void Device::TpdoWrite<int16_t>(uint8_t, uint16_t, uint8_t, int16_t);
+template void Device::TpdoWrite<int16_t>(uint8_t, uint16_t, uint8_t, int16_t,
+                                         ::std::error_code&);
+
+// INTEGER32
+template int32_t Device::RpdoRead<int32_t>(uint8_t, uint16_t, uint8_t) const;
+template int32_t Device::RpdoRead<int32_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template int32_t Device::TpdoRead<int32_t>(uint8_t, uint16_t, uint8_t) const;
+template int32_t Device::TpdoRead<int32_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template void Device::TpdoWrite<int32_t>(uint8_t, uint16_t, uint8_t, int32_t);
+template void Device::TpdoWrite<int32_t>(uint8_t, uint16_t, uint8_t, int32_t,
+                                         ::std::error_code&);
+
+// UNSIGNED8
+template uint8_t Device::RpdoRead<uint8_t>(uint8_t, uint16_t, uint8_t) const;
+template uint8_t Device::RpdoRead<uint8_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template uint8_t Device::TpdoRead<uint8_t>(uint8_t, uint16_t, uint8_t) const;
+template uint8_t Device::TpdoRead<uint8_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template void Device::TpdoWrite<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t);
+template void Device::TpdoWrite<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t,
+                                         ::std::error_code&);
+
+// UNSIGNED16
+template uint16_t Device::RpdoRead<uint16_t>(uint8_t, uint16_t, uint8_t) const;
+template uint16_t Device::RpdoRead<uint16_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template uint16_t Device::TpdoRead<uint16_t>(uint8_t, uint16_t, uint8_t) const;
+template uint16_t Device::TpdoRead<uint16_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template void Device::TpdoWrite<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t);
+template void Device::TpdoWrite<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t,
+                                          ::std::error_code&);
+
+// UNSIGNED32
+template uint32_t Device::RpdoRead<uint32_t>(uint8_t, uint16_t, uint8_t) const;
+template uint32_t Device::RpdoRead<uint32_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template uint32_t Device::TpdoRead<uint32_t>(uint8_t, uint16_t, uint8_t) const;
+template uint32_t Device::TpdoRead<uint32_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template void Device::TpdoWrite<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t);
+template void Device::TpdoWrite<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t,
+                                          ::std::error_code&);
+
+// REAL32
+template float Device::RpdoRead<float>(uint8_t, uint16_t, uint8_t) const;
+template float Device::RpdoRead<float>(uint8_t, uint16_t, uint8_t,
+                                       ::std::error_code&) const;
+template float Device::TpdoRead<float>(uint8_t, uint16_t, uint8_t) const;
+template float Device::TpdoRead<float>(uint8_t, uint16_t, uint8_t,
+                                       ::std::error_code&) const;
+template void Device::TpdoWrite<float>(uint8_t, uint16_t, uint8_t, float);
+template void Device::TpdoWrite<float>(uint8_t, uint16_t, uint8_t, float,
+                                       ::std::error_code&);
+
+// VISIBLE_STRING
+// OCTET_STRING
+// UNICODE_STRING
+// TIME_OF_DAY
+// TIME_DIFFERENCE
+// DOMAIN
+// INTEGER24
+
+// REAL64
+template double Device::RpdoRead<double>(uint8_t, uint16_t, uint8_t) const;
+template double Device::RpdoRead<double>(uint8_t, uint16_t, uint8_t,
+                                         ::std::error_code&) const;
+template double Device::TpdoRead<double>(uint8_t, uint16_t, uint8_t) const;
+template double Device::TpdoRead<double>(uint8_t, uint16_t, uint8_t,
+                                         ::std::error_code&) const;
+template void Device::TpdoWrite<double>(uint8_t, uint16_t, uint8_t, double);
+template void Device::TpdoWrite<double>(uint8_t, uint16_t, uint8_t, double,
+                                        ::std::error_code&);
+
+// INTEGER40
+// INTEGER48
+// INTEGER56
+
+// INTEGER64
+template int64_t Device::RpdoRead<int64_t>(uint8_t, uint16_t, uint8_t) const;
+template int64_t Device::RpdoRead<int64_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template int64_t Device::TpdoRead<int64_t>(uint8_t, uint16_t, uint8_t) const;
+template int64_t Device::TpdoRead<int64_t>(uint8_t, uint16_t, uint8_t,
+                                           ::std::error_code&) const;
+template void Device::TpdoWrite<int64_t>(uint8_t, uint16_t, uint8_t, int64_t);
+template void Device::TpdoWrite<int64_t>(uint8_t, uint16_t, uint8_t, int64_t,
+                                         ::std::error_code&);
+
+// UNSIGNED24
+// UNSIGNED40
+// UNSIGNED48
+// UNSIGNED56
+
+// UNSIGNED64
+template uint64_t Device::RpdoRead<uint64_t>(uint8_t, uint16_t, uint8_t) const;
+template uint64_t Device::RpdoRead<uint64_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template uint64_t Device::TpdoRead<uint64_t>(uint8_t, uint16_t, uint8_t) const;
+template uint64_t Device::TpdoRead<uint64_t>(uint8_t, uint16_t, uint8_t,
+                                             ::std::error_code&) const;
+template void Device::TpdoWrite<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t);
+template void Device::TpdoWrite<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
+                                          ::std::error_code&);
+
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
 
 CODev*
 Device::dev() const noexcept {
@@ -703,6 +947,311 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
             ::std::error_code& ec) {
   impl_->Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, p, n, ec);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  auto value = RpdoGet<T>(id, idx, subidx, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "RpdoGet");
+  return value;
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
+                ::std::error_code& ec) const {
+  ec.clear();
+  ::std::tie(idx, subidx) = impl_->RpdoMapping(id, idx, subidx, ec);
+  if (ec) return T();
+  return Get<T>(idx, subidx, ec);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  auto value = TpdoGet<T>(id, idx, subidx, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoGet");
+  return value;
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
+                ::std::error_code& ec) const {
+  ec.clear();
+  ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
+  if (ec) return T();
+  return Get<T>(idx, subidx, ec);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
+  ::std::error_code ec;
+  TpdoSet(id, idx, subidx, value, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoSet");
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value,
+                ::std::error_code& ec) {
+  ec.clear();
+  ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
+  if (!ec) Set<T>(idx, subidx, value, ec);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+// BOOLEAN
+template bool Device::RpdoGet<bool>(uint8_t, uint16_t, uint8_t) const;
+template bool Device::RpdoGet<bool>(uint8_t, uint16_t, uint8_t,
+                                    ::std::error_code&) const;
+template bool Device::TpdoGet<bool>(uint8_t, uint16_t, uint8_t) const;
+template bool Device::TpdoGet<bool>(uint8_t, uint16_t, uint8_t,
+                                    ::std::error_code&) const;
+template void Device::TpdoSet<bool>(uint8_t, uint16_t, uint8_t, bool);
+template void Device::TpdoSet<bool>(uint8_t, uint16_t, uint8_t, bool,
+                                    ::std::error_code&);
+
+// INTEGER8
+template int8_t Device::RpdoGet<int8_t>(uint8_t, uint16_t, uint8_t) const;
+template int8_t Device::RpdoGet<int8_t>(uint8_t, uint16_t, uint8_t,
+                                        ::std::error_code&) const;
+template int8_t Device::TpdoGet<int8_t>(uint8_t, uint16_t, uint8_t) const;
+template int8_t Device::TpdoGet<int8_t>(uint8_t, uint16_t, uint8_t,
+                                        ::std::error_code&) const;
+template void Device::TpdoSet<int8_t>(uint8_t, uint16_t, uint8_t, int8_t);
+template void Device::TpdoSet<int8_t>(uint8_t, uint16_t, uint8_t, int8_t,
+                                      ::std::error_code&);
+
+// INTEGER16
+template int16_t Device::RpdoGet<int16_t>(uint8_t, uint16_t, uint8_t) const;
+template int16_t Device::RpdoGet<int16_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template int16_t Device::TpdoGet<int16_t>(uint8_t, uint16_t, uint8_t) const;
+template int16_t Device::TpdoGet<int16_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template void Device::TpdoSet<int16_t>(uint8_t, uint16_t, uint8_t, int16_t);
+template void Device::TpdoSet<int16_t>(uint8_t, uint16_t, uint8_t, int16_t,
+                                       ::std::error_code&);
+
+// INTEGER32
+template int32_t Device::RpdoGet<int32_t>(uint8_t, uint16_t, uint8_t) const;
+template int32_t Device::RpdoGet<int32_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template int32_t Device::TpdoGet<int32_t>(uint8_t, uint16_t, uint8_t) const;
+template int32_t Device::TpdoGet<int32_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template void Device::TpdoSet<int32_t>(uint8_t, uint16_t, uint8_t, int32_t);
+template void Device::TpdoSet<int32_t>(uint8_t, uint16_t, uint8_t, int32_t,
+                                       ::std::error_code&);
+
+// UNSIGNED8
+template uint8_t Device::RpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t) const;
+template uint8_t Device::RpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template uint8_t Device::TpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t) const;
+template uint8_t Device::TpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template void Device::TpdoSet<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t);
+template void Device::TpdoSet<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t,
+                                       ::std::error_code&);
+
+// UNSIGNED16
+template uint16_t Device::RpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t) const;
+template uint16_t Device::RpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template uint16_t Device::TpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t) const;
+template uint16_t Device::TpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template void Device::TpdoSet<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t);
+template void Device::TpdoSet<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t,
+                                        ::std::error_code&);
+
+// UNSIGNED32
+template uint32_t Device::RpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t) const;
+template uint32_t Device::RpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template uint32_t Device::TpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t) const;
+template uint32_t Device::TpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template void Device::TpdoSet<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t);
+template void Device::TpdoSet<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t,
+                                        ::std::error_code&);
+
+// REAL32
+template float Device::RpdoGet<float>(uint8_t, uint16_t, uint8_t) const;
+template float Device::RpdoGet<float>(uint8_t, uint16_t, uint8_t,
+                                      ::std::error_code&) const;
+template float Device::TpdoGet<float>(uint8_t, uint16_t, uint8_t) const;
+template float Device::TpdoGet<float>(uint8_t, uint16_t, uint8_t,
+                                      ::std::error_code&) const;
+template void Device::TpdoSet<float>(uint8_t, uint16_t, uint8_t, float);
+template void Device::TpdoSet<float>(uint8_t, uint16_t, uint8_t, float,
+                                     ::std::error_code&);
+
+// VISIBLE_STRING
+// OCTET_STRING
+// UNICODE_STRING
+// TIME_OF_DAY
+// TIME_DIFFERENCE
+// DOMAIN
+// INTEGER24
+
+// REAL64
+template double Device::RpdoGet<double>(uint8_t, uint16_t, uint8_t) const;
+template double Device::RpdoGet<double>(uint8_t, uint16_t, uint8_t,
+                                        ::std::error_code&) const;
+template double Device::TpdoGet<double>(uint8_t, uint16_t, uint8_t) const;
+template double Device::TpdoGet<double>(uint8_t, uint16_t, uint8_t,
+                                        ::std::error_code&) const;
+template void Device::TpdoSet<double>(uint8_t, uint16_t, uint8_t, double);
+template void Device::TpdoSet<double>(uint8_t, uint16_t, uint8_t, double,
+                                      ::std::error_code&);
+
+// INTEGER40
+// INTEGER48
+// INTEGER56
+
+// INTEGER64
+template int64_t Device::RpdoGet<int64_t>(uint8_t, uint16_t, uint8_t) const;
+template int64_t Device::RpdoGet<int64_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template int64_t Device::TpdoGet<int64_t>(uint8_t, uint16_t, uint8_t) const;
+template int64_t Device::TpdoGet<int64_t>(uint8_t, uint16_t, uint8_t,
+                                          ::std::error_code&) const;
+template void Device::TpdoSet<int64_t>(uint8_t, uint16_t, uint8_t, int64_t);
+template void Device::TpdoSet<int64_t>(uint8_t, uint16_t, uint8_t, int64_t,
+                                       ::std::error_code&);
+
+// UNSIGNED24
+// UNSIGNED40
+// UNSIGNED48
+// UNSIGNED56
+
+// UNSIGNED64
+template uint64_t Device::RpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t) const;
+template uint64_t Device::RpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template uint64_t Device::TpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t) const;
+template uint64_t Device::TpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t,
+                                            ::std::error_code&) const;
+template void Device::TpdoSet<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t);
+template void Device::TpdoSet<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
+                                        ::std::error_code&);
+
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
+
+void
+Device::UpdateRpdoMapping() {
+  impl_->rpdo_mapping.clear();
+
+  for (int i = 0; i < 512; i++) {
+    auto obj_1400 = impl_->dev->find(0x1400 + i);
+    if (!obj_1400) continue;
+    // Skip invalid PDOs.
+    auto cobid = obj_1400->getVal<CO_DEFTYPE_UNSIGNED32>(1);
+    if (cobid & CO_PDO_COBID_VALID) continue;
+    // Obtain the remote node-ID.
+    uint8_t id = 0;
+    auto obj_5800 = impl_->dev->find(0x5800 + i);
+    if (obj_5800) {
+      id = obj_5800->getVal<CO_DEFTYPE_UNSIGNED32>(0) & 0xff;
+    } else {
+      // Obtain the node-ID from the predefined connection, if possible.
+      if (cobid & CO_PDO_COBID_FRAME) continue;
+      switch (cobid & 0x780) {
+        case 0x180:
+        case 0x280:
+        case 0x380:
+        case 0x480:
+          id = cobid & 0x7f;
+          break;
+        default:
+          continue;
+      }
+    }
+    // Skip invalid node-IDs.
+    if (!id || id > CO_NUM_NODES) continue;
+    // Obtain the local RPDO mapping.
+    auto obj_1600 = impl_->dev->find(0x1600 + i);
+    if (!obj_1600) continue;
+    // Obtain the remote TPDO mapping.
+    auto obj_5a00 = impl_->dev->find(0x5a00 + i);
+    if (!obj_5a00) continue;
+    // Check if the number of mapped objects is the same.
+    auto n = obj_1600->getVal<CO_DEFTYPE_UNSIGNED8>(0);
+    if (n != obj_5a00->getVal<CO_DEFTYPE_UNSIGNED8>(0)) continue;
+    for (int i = 1; i <= n; i++) {
+      auto rmap = obj_1600->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      auto tmap = obj_5a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      // Check if the mapped objects have the same length.
+      if ((rmap & 0xff) != (tmap & 0xff)) break;
+      rmap >>= 8;
+      tmap >>= 8;
+      // Skip dummy-mapped objects.
+      if (co_type_is_basic((rmap >> 8) & 0xffff) && !(rmap & 0xff)) continue;
+      tmap |= static_cast<uint32_t>(id) << 24;
+      impl_->rpdo_mapping[tmap] = rmap;
+    }
+  }
+}
+
+void
+Device::UpdateTpdoMapping() {
+  impl_->tpdo_mapping.clear();
+
+  for (int i = 0; i < 512; i++) {
+    auto obj_1800 = impl_->dev->find(0x1800 + i);
+    if (!obj_1800) continue;
+    // Skip invalid PDOs.
+    auto cobid = obj_1800->getVal<CO_DEFTYPE_UNSIGNED32>(1);
+    if (cobid & CO_PDO_COBID_VALID) continue;
+    // Obtain the remote node-ID.
+    uint8_t id = 0;
+    auto obj_5c00 = impl_->dev->find(0x5c00 + i);
+    if (obj_5c00) {
+      id = obj_5c00->getVal<CO_DEFTYPE_UNSIGNED32>(0) & 0xff;
+    } else {
+      // Obtain the node-ID from the predefined connection, if possible.
+      if (cobid & CO_PDO_COBID_FRAME) continue;
+      switch (cobid & 0x780) {
+        case 0x200:
+        case 0x300:
+        case 0x400:
+        case 0x500:
+          id = cobid & 0x7f;
+          break;
+        default:
+          continue;
+      }
+    }
+    // Skip invalid node-IDs.
+    if (!id || id > CO_NUM_NODES) continue;
+    // Obtain the local TPDO mapping.
+    auto obj_1a00 = impl_->dev->find(0x1a00 + i);
+    if (!obj_1a00) continue;
+    // Obtain the remote RPDO mapping.
+    auto obj_5e00 = impl_->dev->find(0x5e00 + i);
+    if (!obj_5e00) continue;
+    // Check if the number of mapped objects is the same.
+    auto n = obj_1a00->getVal<CO_DEFTYPE_UNSIGNED8>(0);
+    if (n != obj_5e00->getVal<CO_DEFTYPE_UNSIGNED8>(0)) continue;
+    for (int i = 1; i <= n; i++) {
+      auto tmap = obj_1a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      auto rmap = obj_5e00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      // Check if the mapped objects have the same length.
+      if ((tmap & 0xff) != (rmap & 0xff)) break;
+      tmap >>= 8;
+      rmap >>= 8;
+      rmap |= static_cast<uint32_t>(id) << 24;
+      impl_->tpdo_mapping[rmap] = tmap;
+    }
+  }
 }
 
 Device::Impl_::Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin,

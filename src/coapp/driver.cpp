@@ -32,7 +32,11 @@ namespace lely {
 namespace canopen {
 
 BasicDriver::BasicDriver(ev_exec_t* exec, BasicMaster& master_, uint8_t id)
-    : master(master_), exec_(exec), id_(id) {
+    : master(master_),
+      rpdo_mapped(master.RpdoMapped(id)),
+      tpdo_mapped(master.TpdoMapped(id)),
+      exec_(exec),
+      id_(id) {
   master.Insert(*this);
 }
 

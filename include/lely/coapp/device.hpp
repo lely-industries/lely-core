@@ -78,7 +78,7 @@ class Device {
    * executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    *
    * @returns the result of the SDO request.
    *
@@ -94,7 +94,7 @@ class Device {
    * executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    *
    * @returns the result of the SDO request, or an empty value on error.
@@ -109,7 +109,7 @@ class Device {
    * access and range checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    *
    * @throws #lely::canopen::SdoError on error.
@@ -124,7 +124,7 @@ class Device {
    * access and range checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
@@ -138,7 +138,7 @@ class Device {
    * access checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    *
    * @throws #lely::canopen::SdoError on error.
@@ -153,7 +153,7 @@ class Device {
    * access checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
@@ -167,7 +167,7 @@ class Device {
    * checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) string to be written.
    *
    * @throws #lely::canopen::SdoError on error.
@@ -180,7 +180,7 @@ class Device {
    * checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) string to be written.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
@@ -193,7 +193,7 @@ class Device {
    * checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) UCS-2 string to be
    *               written.
    *
@@ -207,7 +207,7 @@ class Device {
    * checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) UCS-2 string to be
    *               written.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
@@ -221,7 +221,7 @@ class Device {
    * honoring all access checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param p      a pointer to the bytes to be written.
    * @param n      the number of bytes to write.
    *
@@ -235,13 +235,138 @@ class Device {
    * honoring all access checks and executing any registered callback function.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param p      a pointer to the bytes to be written.
    * @param n      the number of bytes to write.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   void Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
              ::std::error_code& ec);
+
+  /**
+   * Reads the value of a sub-object in a remote object dictionary by submitting
+   * an SDO upload request to the corresponding PDO-mapped sub-object in the
+   * local object dictionary. This function honors all access checks of the
+   * local object dictionary and executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @returns the result of the SDO request.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   *
+   * @pre a valid mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Reads the value of a sub-object in a remote object dictionary by submitting
+   * an SDO upload request to the corresponding PDO-mapped sub-object in the
+   * local object dictionary. This function honors all access checks of the
+   * local object dictionary and executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @returns the result of the SDO request, or an empty value on error.
+   *
+   * @pre a valid mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
+           ::std::error_code& ec) const;
+
+  /**
+   * Submits an SDO upload request to a TPDO-mapped sub-object in the local
+   * object dictionary, which reads the value that will be written to an
+   * RPDO-mapped sub-object in a remote object dictionary by a Transmit-PDO.
+   * This function honors all access checks of the local object dictionary and
+   * executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @returns the result of the SDO request.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Submits an SDO upload request to a TPDO-mapped sub-object in the local
+   * object dictionary, which reads the value that will be written to an
+   * RPDO-mapped sub-object in a remote object dictionary by a Transmit-PDO.
+   * This function honors all access checks of the local object dictionary and
+   * executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @returns the result of the SDO request, or an empty value on error.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
+           ::std::error_code& ec) const;
+
+  /**
+   * Writes a value to a sub-object in a remote object dictionary by submitting
+   * an SDO download request to the corresponding PDO-mapped sub-object in the
+   * local object dictionary. This function honors all access checks of the
+   * local object dictionary and executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be written.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
+      uint8_t id, uint16_t idx, uint8_t subidx, T value);
+
+  /**
+   * Writes a value to a sub-object in a remote object dictionary by submitting
+   * an SDO download request to the corresponding PDO-mapped sub-object in the
+   * local object dictionary. This function honors all access checks of the
+   * local object dictionary and executes any registered callback function.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be written.
+   * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
+      uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
 
  protected:
   ~Device();
@@ -253,7 +378,7 @@ class Device {
    * Returns the type of a sub-object.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    *
    * @returns a reference to an `std::type_info` object representing the type,
    * or `typeid(void)` if unknown.
@@ -266,7 +391,7 @@ class Device {
    * Returns the type of a sub-object.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param ec     if the sub-object does not exist, the SDO abort code is
    *               stored in <b>ec</b>.
    *
@@ -282,7 +407,7 @@ class Device {
    * callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    *
    * @returns a copy of the value of the sub-object.
    *
@@ -299,7 +424,7 @@ class Device {
    * callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param ec     if the sub-object does not exist or the type does not match,
    *               the SDO abort code is stored in <b>ec</b>.
    *
@@ -315,7 +440,7 @@ class Device {
    * checks or registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    *
    * @throws #lely::canopen::SdoError if the sub-object does not exist or the
@@ -331,7 +456,7 @@ class Device {
    * checks or registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    * @param ec     if the sub-object does not exist or the type does not match,
    *               the SDO abort code is stored in <b>ec</b>.
@@ -346,7 +471,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    *
    * @throws #lely::canopen::SdoError if the sub-object does not exist or the
@@ -362,7 +487,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  the value to be written.
    * @param ec     if the sub-object does not exist or the type does not match,
    *               the SDO abort code is stored in <b>ec</b>.
@@ -377,7 +502,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) string to be written.
    *
    * @throws #lely::canopen::SdoError if the sub-object does not exist or the
@@ -391,7 +516,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) string to be written.
    * @param ec     if the sub-object does not exist or the type does not match,
    *               the SDO abort code is stored in <b>ec</b>.
@@ -405,7 +530,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) UCS-2 string to be
    *               written.
    *
@@ -420,7 +545,7 @@ class Device {
    * registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param value  a pointer to the (null-terminated) UCS-2 string to be
    *               written.
    * @param ec     if the sub-object does not exist or the type does not match,
@@ -435,7 +560,7 @@ class Device {
    * checks or registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param p      a pointer to the bytes to be written.
    * @param n      the number of bytes to write.
    *
@@ -450,7 +575,7 @@ class Device {
    * checks or registered callback functions.
    *
    * @param idx    the object index.
-   * @param subidx the object sub-index
+   * @param subidx the object sub-index.
    * @param p      a pointer to the bytes to be written.
    * @param n      the number of bytes to write.
    * @param ec     if the sub-object does not exist or the type does not match,
@@ -458,6 +583,157 @@ class Device {
    */
   void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
            ::std::error_code& ec);
+
+  /**
+   * Reads the value of a sub-object in a remote object dictionary by reading
+   * the corresponding PDO-mapped sub-object in the local object dictionary.
+   * This function reads the value directly from the local object dictionary and
+   * bypasses any access checks or registered callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @returns a copy of the value of the PDO-mapped sub-object.
+   *
+   * @throws #lely::canopen::SdoError if the PDO-mapped sub-object does not
+   * exist or the type does not match.
+   *
+   * @pre a valid mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Reads the value of a sub-object in a remote object dictionary by reading
+   * the corresponding PDO-mapped sub-object in the local object dictionary.
+   * This function reads the value directly from the local object dictionary and
+   * bypasses any access checks or registered callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     if the PDO-mapped sub-object does not exist or the type does
+   *               not match, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @returns a copy of the value of the PDO-mapped sub-object, or an empty
+   * value on error.
+   *
+   * @pre a valid mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
+          ::std::error_code& ec) const;
+
+  /**
+   * Reads the value of a TPDO-mapped sub-object in the local object dictionary
+   * that will be written to an RPDO-mapped sub-object in a remote object
+   * dictionary by a Transmit-PDO. This function reads the value directly from
+   * the local object dictionary and bypasses any access checks or registered
+   * callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @returns a copy of the value of the PDO-mapped sub-object.
+   *
+   * @throws #lely::canopen::SdoError if the PDO-mapped sub-object does not
+   * exist or the type does not match.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Reads the value of a TPDO-mapped sub-object in the local object dictionary
+   * that will be written to an RPDO-mapped sub-object in a remote object
+   * dictionary by a Transmit-PDO. This function reads the value directly from
+   * the local object dictionary and bypasses any access checks or registered
+   * callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     if the PDO-mapped sub-object does not exist or the type does
+   *               not match, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @returns a copy of the value of the PDO-mapped sub-object, or an empty
+   * value on error.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
+          ::std::error_code& ec) const;
+
+  /**
+   * Writes a value to a sub-object in a remote object dictionary by writing to
+   * the corresponding PDO-mapped sub-object in the local object dictionary.
+   * This function writes the value directly to the local object dictionary and
+   * bypasses any access and range checks or registered callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be written.
+   *
+   * @throws #lely::canopen::SdoError if the PDO-mapped sub-object does not
+   * exist or the type does not match.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
+      uint8_t id, uint16_t idx, uint8_t subidx, T value);
+
+  /**
+   * Writes a value to a sub-object in a remote object dictionary by writing to
+   * the corresponding PDO-mapped sub-object in the local object dictionary.
+   * This function writes the value directly to the local object dictionary and
+   * bypasses any access and range checks or registered callback functions.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be written.
+   * @param ec     if the PDO-mapped sub-object does not exist or the type does
+   *               not match, the SDO abort code is stored in <b>ec</b>.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
+      uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /**
+   * Updates the mapping from remote TPDO-mapped sub-objects to local
+   * RPDO-mapped sub-objects. The mapping is constructed from the RPDO
+   * communication and mapping parameters, and the Lely-specific objects
+   * 5800..59FF (Remote TPDO number and node-ID) and 5A00..5BFF (Remote TPDO
+   * mapping).
+   */
+  void UpdateRpdoMapping();
+
+  /**
+   * Updates the mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects. The mapping is constructed from the TPDO
+   * communication and mapping parameters, and the Lely-specific objects
+   * 5C00..5DFF (Remote RPDO number and node-ID) and 5E00..5FFF (Remote RPDO
+   * mapping).
+   */
+  void UpdateTpdoMapping();
 
  private:
   struct Impl_;

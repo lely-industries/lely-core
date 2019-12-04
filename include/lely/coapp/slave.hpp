@@ -152,11 +152,13 @@ class BasicSlave : public Node {
      * type does not match.
      *
      * @see Device::Get(uint16_t idx, uint8_t subidx) const
+     * @see Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const
      */
     template <class T>
     T
     Get() const {
-      return slave_->Get<T>(idx_, subidx_);
+      return id_ ? slave_->TpdoGet<T>(id_, idx_, subidx_)
+                 : slave_->Get<T>(idx_, subidx_);
     }
 
     /**
@@ -169,11 +171,13 @@ class BasicSlave : public Node {
      * error.
      *
      * @see Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
     Get(::std::error_code& ec) const {
-      return slave_->Get<T>(idx_, subidx_, ec);
+      return id_ ? slave_->TpdoGet<T>(id_, idx_, subidx_, ec)
+                 : slave_->Get<T>(idx_, subidx_, ec);
     }
 
     /**
@@ -185,11 +189,15 @@ class BasicSlave : public Node {
      * type does not match.
      *
      * @see Device::Set(uint16_t idx, uint8_t subidx, T&& value)
+     * @see Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T&& value)
      */
     template <class T>
     void
     Set(T&& value) {
-      slave_->Set(idx_, subidx_, ::std::forward<T>(value));
+      if (id_)
+        slave_->TpdoSet(id_, idx_, subidx_, ::std::forward<T>(value));
+      else
+        slave_->Set(idx_, subidx_, ::std::forward<T>(value));
     }
 
     /**
@@ -203,11 +211,15 @@ class BasicSlave : public Node {
      * @see Device::Set(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
      * @see Device::Set(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
      * @see Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value, ::std::error_code& ec)
+     * @see Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
      */
     template <class T>
     void
     Set(T&& value, ::std::error_code& ec) {
-      slave_->Set(idx_, subidx_, ::std::forward<T>(value), ec);
+      if (id_)
+        slave_->TpdoSet(id_, idx_, subidx_, ::std::forward<T>(value), ec);
+      else
+        slave_->Set(idx_, subidx_, ::std::forward<T>(value), ec);
     }
 
     /**
@@ -242,12 +254,13 @@ class BasicSlave : public Node {
     }
 
    private:
-    SubObject(BasicSlave* slave, uint16_t idx, uint8_t subidx)
-        : slave_(slave), idx_(idx), subidx_(subidx) {}
+    SubObject(BasicSlave* slave, uint8_t id, uint16_t idx, uint8_t subidx)
+        : slave_(slave), idx_(idx), subidx_(subidx), id_(id) {}
 
     BasicSlave* slave_;
     uint16_t idx_;
     uint8_t subidx_;
+    uint8_t id_;
   };
 
   /**
@@ -313,11 +326,15 @@ class BasicSlave : public Node {
      * type does not match.
      *
      * @see Device::Get(uint16_t idx, uint8_t subidx) const
+     * @see Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const
+     * @see Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const
      */
     template <class T>
     T
     Get() const {
-      return slave_->Get<T>(idx_, subidx_);
+      return id_ ? (is_rpdo_ ? slave_->RpdoGet<T>(id_, idx_, subidx_)
+                             : slave_->TpdoGet<T>(id_, idx_, subidx_))
+                 : slave_->Get<T>(idx_, subidx_);
     }
 
     /**
@@ -329,36 +346,51 @@ class BasicSlave : public Node {
      * @returns a copy of the value of the sub-object, or an empty value on
      * error.
      *
-     * @see Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
-     * const
+     * @see Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+     * @see Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     template <class T>
     T
     Get(::std::error_code& ec) const {
-      return slave_->Get<T>(idx_, subidx_, ec);
+      return id_ ? (is_rpdo_ ? slave_->RpdoGet<T>(id_, idx_, subidx_, ec)
+                             : slave_->TpdoGet<T>(id_, idx_, subidx_, ec))
+                 : slave_->Get<T>(idx_, subidx_, ec);
     }
 
    private:
-    ConstSubObject(const BasicSlave* slave, uint16_t idx, uint8_t subidx)
-        : slave_(slave), idx_(idx), subidx_(subidx) {}
+    ConstSubObject(const BasicSlave* slave, uint8_t id, uint16_t idx,
+                   uint8_t subidx, bool is_rpdo)
+        : slave_(slave),
+          idx_(idx),
+          subidx_(subidx),
+          id_(id),
+          is_rpdo_(is_rpdo) {}
 
     const BasicSlave* slave_;
     uint16_t idx_;
     uint8_t subidx_;
+    uint8_t id_ : 7;
+    uint8_t is_rpdo_ : 1;
   };
+
+  class RpdoMapped;
+  class TpdoMapped;
 
   /**
    * A mutator providing read/write access to a CANopen object in a local object
    * dictionary.
    */
   class Object {
+    class Mapped;
     friend class BasicSlave;
 
    public:
     /**
      * Returns a mutator object that provides read/write access to the specified
-     * CANopen sub-object in the local object dictionary. Note that this
-     * function succeeds even if the sub-object does not exist.
+     * CANopen sub-object in the local object dictionary (or the TPDO-mapped
+     * sub-object in the remote object dictionary). Note that this function
+     * succeeds even if the sub-object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -366,13 +398,14 @@ class BasicSlave : public Node {
      * dictionary.
      */
     SubObject operator[](uint8_t subidx) {
-      return SubObject(slave_, idx_, subidx);
+      return SubObject(slave_, id_, idx_, subidx);
     }
 
     /**
      * Returns an accessor object that provides read-only access to the
-     * specified CANopen sub-object in the local object dictionary. Note that
-     * this function succeeds even if the object does not exist.
+     * specified CANopen sub-object in the local object dictionary (or the
+     * TPDO-mapped sub-object in the remote object dictionary). Note that this
+     * function succeeds even if the object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -380,14 +413,18 @@ class BasicSlave : public Node {
      * dictionary.
      */
     ConstSubObject operator[](uint8_t subidx) const {
-      return ConstSubObject(slave_, idx_, subidx);
+      return ConstSubObject(slave_, id_, idx_, subidx, false);
     }
 
    private:
-    Object(BasicSlave* slave, uint16_t idx) : slave_(slave), idx_(idx) {}
+    Object(BasicSlave* slave, uint16_t idx) : Object(slave, 0, idx) {}
+
+    Object(BasicSlave* slave, uint8_t id, uint16_t idx)
+        : slave_(slave), idx_(idx), id_(id) {}
 
     BasicSlave* slave_;
     uint16_t idx_;
+    uint8_t id_;
   };
 
   /**
@@ -395,13 +432,16 @@ class BasicSlave : public Node {
    * object dictionary.
    */
   class ConstObject {
+    class RpdoMapped;
+    class TpdoMapped;
     friend class BasicSlave;
 
    public:
     /**
      * Returns an accessor object that provides read-only access to the
-     * specified CANopen sub-object in the local object dictionary. Note that
-     * this function succeeds even if the object does not exist.
+     * specified CANopen sub-object in the local object dictionary (or the
+     * PDO-mapped sub-object in the remote object dictionary). Note that this
+     * function succeeds even if the object does not exist.
      *
      * @param subidx the object sub-index.
      *
@@ -409,15 +449,91 @@ class BasicSlave : public Node {
      * dictionary.
      */
     ConstSubObject operator[](uint8_t subidx) const {
-      return ConstSubObject(slave_, idx_, subidx);
+      return ConstSubObject(slave_, id_, idx_, subidx, is_rpdo_);
     }
 
    private:
     ConstObject(const BasicSlave* slave, uint16_t idx)
-        : slave_(slave), idx_(idx) {}
+        : ConstObject(slave, 0, idx, false) {}
+
+    ConstObject(const BasicSlave* slave, uint8_t id, uint16_t idx, bool is_rpdo)
+        : slave_(slave), idx_(idx), id_(id), is_rpdo_(is_rpdo) {}
 
     const BasicSlave* slave_;
     uint16_t idx_;
+    uint8_t id_ : 7;
+    uint8_t is_rpdo_ : 1;
+  };
+
+  /**
+   * An accessor providing read-only access to RPDO-mapped objects in a remote
+   * object dictionary.
+   */
+  class RpdoMapped {
+    friend class BasicSlave;
+
+   public:
+    /**
+     * Returns an accessor object that provides read-only access to the
+     * specified RPDO-mapped object in the remote object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns an accessor object for a CANopen object in the remote object
+     * dictionary.
+     */
+    ConstObject operator[](uint16_t idx) const {
+      return ConstObject(slave_, id_, idx, true);
+    }
+
+   private:
+    RpdoMapped(const BasicSlave* slave, uint8_t id)
+        : slave_(slave), id_(id) {}
+
+    const BasicSlave* slave_;
+    uint8_t id_;
+  };
+
+  /**
+   * A mutator providing read/write access to TPDO-mapped objects in a remote
+   * object dictionary.
+   */
+  class TpdoMapped {
+    friend class BasicSlave;
+
+   public:
+    /**
+     * Returns a mutator object that provides read/write access to the specified
+     * TPDO-mapped object in the remote object dictionary. Note that this
+     * function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns a mutator object for a CANopen object in the remote object
+     * dictionary.
+     */
+    Object operator[](uint16_t idx) { return Object(slave_, id_, idx); }
+
+    /**
+     * Returns an accessor object that provides read-only access to the
+     * specified TPDO-mapped object in the remote object dictionary. Note that
+     * this function succeeds even if the object does not exist.
+     *
+     * @param idx the object index.
+     *
+     * @returns an accessor object for a CANopen object in the remote object
+     * dictionary.
+     */
+    ConstObject operator[](uint16_t idx) const {
+      return ConstObject(slave_, id_, idx, false);
+    }
+
+   private:
+    TpdoMapped(BasicSlave* slave, uint8_t id) : slave_(slave), id_(id) {}
+
+    BasicSlave* slave_;
+    uint8_t id_;
   };
 
   /**
@@ -485,6 +601,30 @@ class BasicSlave : public Node {
    * dictionary.
    */
   ConstObject operator[](uint16_t idx) const { return ConstObject(this, idx); }
+
+  /**
+   * Returns an accessor object that provides read-only access to RPDO-mapped
+   * objects in the remote object dictionary of the specified node. Note that
+   * this function succeeds even if no RPDO-mapped objects exist.
+   *
+   * @param id the node-ID.
+   *
+   * @returns an accessor object for RPDO-mapped objects in a remote object
+   * dictionary.
+   */
+  RpdoMapped RpdoMapped(uint8_t id) const { return {this, id}; }
+
+  /**
+   * Returns a mutator object that provides read/write access to TPDO-mapped
+   * objects in the remote object dictionary of the specified node. Note that
+   * this function succeeds even if no TPDO-mapped objects exist.
+   *
+   * @param id the node-ID.
+   *
+   * @returns a mutator object for TPDO-mapped objects in a remote object
+   * dictionary.
+   */
+  TpdoMapped TpdoMapped(uint8_t id) { return {this, id}; }
 
   /**
    * Registers a callback function to be invoked on read (SDO upload) access to
