@@ -53,9 +53,13 @@ SupportedObjects=11
 11=0x1F81
 
 [ManufacturerObjects]
-SupportedObjects=2
+SupportedObjects=6
 1=0x2001
 2=0x2002
+3=0x5800
+4=0x5A00
+5=0x5C00
+6=0x5E00
 
 [1000]
 ParameterName=Device type
@@ -77,7 +81,6 @@ DefaultValue=0x40000080
 ParameterName=Communication cycle period
 DataType=0x0007
 AccessType=rw
-DefaultValue=1000000
 
 [1014]
 ParameterName=COB-ID EMCY
@@ -230,3 +233,37 @@ ParameterName=RPDO test
 DataType=0x0007
 AccessType=rw
 PDOMapping=1
+
+[5800]
+ParameterName=Remote TPDO number and node-ID
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x0000017f
+
+[5A00]
+ParameterName=Remote TPDO mapping
+ObjectType=0x09
+DataType=0x0007
+AccessType=rw
+CompactSubObj=1
+
+[5A00Value]
+NrOfEntries=1
+1=0x20020020
+
+[5C00]
+ParameterName=Remote RPDO number and node-ID
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x0000017f
+
+[5E00]
+ParameterName=Remote RPDO mapping
+ObjectType=0x09
+DataType=0x0007
+AccessType=rw
+CompactSubObj=1
+
+[5E00Value]
+NrOfEntries=1
+1=0x20010020
