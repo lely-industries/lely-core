@@ -205,6 +205,15 @@ BasicMaster::OnCanState(io::CanState new_state,
 }
 
 void
+BasicMaster::OnRpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    it->second->OnRpdoWrite(idx, subidx);
+  }
+}
+
+void
 BasicMaster::OnCommand(NmtCommand cs) noexcept {
   // Abort all ongoing and pending SDO requests unless the master is in the
   // pre-operational or operational state.
@@ -379,6 +388,15 @@ AsyncMaster::OnCanState(io::CanState new_state,
     DriverBase* driver = it.second;
     driver->GetExecutor().post(
         [=]() { driver->OnCanState(new_state, old_state); });
+  }
+}
+
+void
+AsyncMaster::OnRpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    driver->GetExecutor().post([=]() { driver->OnRpdoWrite(idx, subidx); });
   }
 }
 

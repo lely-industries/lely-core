@@ -464,9 +464,9 @@ class COSub : public incomplete_c_type<__co_sub> {
              static_cast<void*>(obj));
   }
 
-  co_unsigned32_t
-  onDn(co_sdo_req& req) noexcept {
-    return co_sub_on_dn(this, &req);
+  int
+  onDn(co_sdo_req& req, co_unsigned32_t* pac) noexcept {
+    return co_sub_on_dn(this, &req, pac);
   }
 
   co_unsigned32_t
@@ -519,9 +519,9 @@ class COSub : public incomplete_c_type<__co_sub> {
              static_cast<void*>(obj));
   }
 
-  co_unsigned32_t
-  onUp(co_sdo_req& req) const noexcept {
-    return co_sub_on_up(this, &req);
+  int
+  onUp(co_sdo_req& req, co_unsigned32_t* pac) const noexcept {
+    return co_sub_on_up(this, &req, pac);
   }
 
   co_unsigned32_t

@@ -26,9 +26,7 @@ class MySlave : public BasicSlave {
 
  private:
   void
-  OnSync(uint8_t cnt, const time_point&) noexcept override {
-    tap_pass("slave: received SYNC #%d", cnt);
-
+  OnSync(uint8_t, const time_point&) noexcept override {
     uint32_t val = (*this)[0x2002][0];
     tap_diag("slave: sent PDO with value %d", val);
 
@@ -45,8 +43,17 @@ class MyDriver : public FiberDriver {
 
  private:
   void
+  OnRpdoWrite(uint16_t idx, uint8_t subidx) noexcept override {
+    tap_test(idx == 0x2002 && subidx == 0, "master: received object 2002:00");
+    uint32_t val = rpdo_mapped[idx][subidx];
+    tap_test(val == (n_ > 3 ? n_ - 3 : 0));
+  }
+
+  void
   OnBoot(NmtState, char es, const ::std::string&) noexcept override {
     tap_test(!es, "master: slave #%d successfully booted", id());
+    // Start SYNC production.
+    master[0x1006][0] = UINT32_C(1000000);
   }
 
   void
@@ -75,16 +82,11 @@ class MyDriver : public FiberDriver {
   OnSync(uint8_t cnt, const time_point&) noexcept override {
     tap_pass("master: sent SYNC #%d", cnt);
 
-    uint32_t val;
-    val = master[0x2001][0];
+    // Object 2001:00 on the slave was updated by a PDO from the master.
+    uint32_t val = tpdo_mapped[0x2001][0];
     tap_diag("master: sent PDO with value %d", val);
     // Increment the value for the next SYNC.
-    master[0x2001][0] = ++val;
-
-    // Object 2001 was just updated by a PDO from the slave.
-    val = master[0x2002][0];
-    tap_diag("master: received PDO with value %d", val);
-    tap_test(val == (n_ > 3 ? n_ - 3 : 0));
+    tpdo_mapped[0x2001][0] = ++val;
 
     // Initiate a clean shutdown.
     if (++n_ >= NUM_OP)
@@ -97,7 +99,7 @@ class MyDriver : public FiberDriver {
 
 int
 main() {
-  tap_plan(6 + 3 * NUM_OP);
+  tap_plan(2 + 3 + NUM_OP + 2 * (NUM_OP - 1) + 1);
 
   IoGuard io_guard;
   Context ctx;
@@ -109,12 +111,12 @@ main() {
 
   VirtualCanChannel schan(ctx, exec);
   schan.open(ctrl);
-  tap_test(schan.is_open());
+  tap_test(schan.is_open(), "slave: opened virtual CAN channel");
   MySlave slave(timer, schan, TEST_SRCDIR "/coapp-fiber-slave.dcf", "", 127);
 
   VirtualCanChannel mchan(ctx, exec);
   mchan.open(ctrl);
-  tap_test(mchan.is_open());
+  tap_test(mchan.is_open(), "master: opened virtual CAN channel");
   AsyncMaster master(timer, mchan, TEST_SRCDIR "/coapp-fiber-master.dcf", "",
                      1);
   MyDriver driver(exec, master, 127);

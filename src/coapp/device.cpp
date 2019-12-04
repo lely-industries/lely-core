@@ -42,8 +42,8 @@ namespace canopen {
 
 /// The internal implementation of the CANopen device description.
 struct Device::Impl_ : util::BasicLockable {
-  Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin, uint8_t id,
-        util::BasicLockable* mutex);
+  Impl_(Device* self, const ::std::string& dcf_txt,
+        const ::std::string& dcf_bin, uint8_t id, util::BasicLockable* mutex);
   virtual ~Impl_() = default;
 
   void
@@ -79,6 +79,8 @@ struct Device::Impl_ : util::BasicLockable {
   void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
            ::std::error_code& ec);
 
+  void OnWrite(uint16_t idx, uint8_t subidx);
+
   ::std::tuple<uint16_t, uint8_t>
   RpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
@@ -93,6 +95,23 @@ struct Device::Impl_ : util::BasicLockable {
       subidx = 0;
     }
     return ::std::make_tuple(idx, subidx);
+  }
+
+  ::std::tuple<uint8_t, uint16_t, uint8_t>
+  RpdoMapping(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+      noexcept {
+    uint8_t id = 0;
+    auto it = rpdo_mapping.find((static_cast<uint32_t>(idx) << 8) | subidx);
+    if (it != rpdo_mapping.end()) {
+      id = (it->second >> 24) & 0xff;
+      idx = (it->second >> 8) & 0xffff;
+      subidx = it->second & 0xff;
+    } else {
+      ec = SdoErrc::NO_PDO;
+      idx = 0;
+      subidx = 0;
+    }
+    return ::std::make_tuple(id, idx, subidx);
   }
 
   ::std::tuple<uint16_t, uint8_t>
@@ -111,19 +130,22 @@ struct Device::Impl_ : util::BasicLockable {
     return ::std::make_tuple(idx, subidx);
   }
 
+  Device* self;
+
   BasicLockable* mutex{nullptr};
 
   unique_c_ptr<CODev> dev;
 
   ::std::map<uint32_t, uint32_t> rpdo_mapping;
   ::std::map<uint32_t, uint32_t> tpdo_mapping;
+
+  ::std::function<void(uint16_t, uint8_t)> on_write;
+  ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write;
 };
 
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
                uint8_t id, util::BasicLockable* mutex)
-    : impl_(new Impl_(dcf_txt, dcf_bin, id, mutex)) {}
-
-Device& Device::operator=(Device&&) = default;
+    : impl_(new Impl_(this, dcf_txt, dcf_bin, id, mutex)) {}
 
 Device::~Device() = default;
 
@@ -632,6 +654,19 @@ template void Device::TpdoWrite<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
                                           ::std::error_code&);
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
+
+void
+Device::OnWrite(::std::function<void(uint16_t, uint8_t)> on_write) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_write = on_write;
+}
+
+void
+Device::OnRpdoWrite(
+    ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write) {
+  ::std::lock_guard<Impl_> lock(*impl_);
+  impl_->on_rpdo_write = on_rpdo_write;
+}
 
 CODev*
 Device::dev() const noexcept {
@@ -1197,6 +1232,8 @@ Device::UpdateRpdoMapping() {
       if (co_type_is_basic((rmap >> 8) & 0xffff) && !(rmap & 0xff)) continue;
       tmap |= static_cast<uint32_t>(id) << 24;
       impl_->rpdo_mapping[tmap] = rmap;
+      // Store the reverse mapping for OnRpdoWrite().
+      impl_->rpdo_mapping[rmap] = tmap;
     }
   }
 }
@@ -1254,13 +1291,34 @@ Device::UpdateTpdoMapping() {
   }
 }
 
-Device::Impl_::Impl_(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
-                     uint8_t id, util::BasicLockable* mutex_)
-    : mutex(mutex_), dev(make_unique_c<CODev>(dcf_txt.c_str())) {
+Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
+                     const ::std::string& dcf_bin, uint8_t id,
+                     util::BasicLockable* mutex_)
+    : self(self_), mutex(mutex_), dev(make_unique_c<CODev>(dcf_txt.c_str())) {
   if (!dcf_bin.empty() && dev->readDCF(nullptr, nullptr, dcf_bin.c_str()) == -1)
     util::throw_errc("Device");
 
   if (id != 0xff && dev->setId(id) == -1) util::throw_errc("Device");
+
+  // Register a notification function for all objects in the object dictionary
+  // in case of write (SDO upload) access.
+  for (auto obj = co_dev_first_obj(dev.get()); obj; obj = co_obj_next(obj)) {
+    // Skip data types and the communication profile area.
+    if (obj->getIdx() < 0x2000) continue;
+    // Skip reserved objects.
+    if (obj->getIdx() >= 0xC000) break;
+    obj->setDnInd(
+        [](COSub* sub, co_sdo_req* req, void* data) -> uint32_t {
+          // Implement the default behavior, but do not issue a notification for
+          // incomplete or failed writes.
+          uint32_t ac = 0;
+          if (sub->onDn(*req, &ac) == -1 || ac) return ac;
+          auto impl_ = static_cast<Impl_*>(data);
+          impl_->OnWrite(sub->getObj()->getIdx(), sub->getSubidx());
+          return 0;
+        },
+        static_cast<void*>(this));
+  }
 }
 
 void
@@ -1305,6 +1363,30 @@ Device::Impl_::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
 
   ec.clear();
   sub->setVal(p, n);
+}
+
+void
+Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
+  self->OnWrite(idx, subidx);
+
+  if (on_write) {
+    auto f = on_write;
+    util::UnlockGuard<Impl_> unlock(*this);
+    f(idx, subidx);
+  }
+
+  uint8_t id = 0;
+  ::std::error_code ec;
+  ::std::tie(id, idx, subidx) = RpdoMapping(idx, subidx, ec);
+  if (!ec) {
+    self->OnRpdoWrite(id, idx, subidx);
+
+    if (on_rpdo_write) {
+      auto f = on_rpdo_write;
+      util::UnlockGuard<Impl_> unlock(*this);
+      f(id, idx, subidx);
+    }
+  }
 }
 
 }  // namespace canopen
