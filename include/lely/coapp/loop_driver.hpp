@@ -199,7 +199,7 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
  protected:
   template <class T>
   T
-  Wait(ev::Future<T, ::std::exception_ptr> f) {
+  Wait(SdoFuture<T> f) {
     GetLoop().wait(f);
     if (!f.is_ready())
       throw ::std::system_error(
@@ -209,7 +209,7 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
 
   template <class T>
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
-  Wait(ev::Future<T, ::std::exception_ptr> f, ::std::error_code& ec) {
+  Wait(SdoFuture<T> f, ::std::error_code& ec) {
     GetLoop().wait(f, ec);
     if (!f.is_ready()) {
       ec = ::std::make_error_code(::std::errc::operation_canceled);
@@ -229,7 +229,7 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
     }
   }
 
-  void Wait(ev::Future<void, ::std::exception_ptr> f, ::std::error_code& ec);
+  void Wait(SdoFuture<void> f, ::std::error_code& ec);
 
  private:
   struct Impl_;

@@ -478,7 +478,7 @@ class BasicDriver : DriverBase {
    * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
-  ev::Future<T, ::std::exception_ptr>
+  SdoFuture<T>
   AsyncRead(uint16_t idx, uint8_t subidx) {
     return master.AsyncRead<T>(GetExecutor(), id(), idx, subidx);
   }
@@ -498,7 +498,7 @@ class BasicDriver : DriverBase {
    * error on failure.
    */
   template <class T>
-  ev::Future<T, ::std::exception_ptr>
+  SdoFuture<T>
   AsyncRead(uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
     return master.AsyncRead<T>(GetExecutor(), id(), idx, subidx, timeout);
@@ -511,7 +511,7 @@ class BasicDriver : DriverBase {
    * #lely::canopen::BasicMaster::GetTimeout().
    */
   template <class T>
-  ev::Future<void, ::std::exception_ptr>
+  SdoFuture<void>
   AsyncWrite(uint16_t idx, uint8_t subidx, T&& value) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,
                              ::std::forward<T>(value));
@@ -532,7 +532,7 @@ class BasicDriver : DriverBase {
    * @returns a future which holds the SDO error on failure.
    */
   template <class T>
-  ev::Future<void, ::std::exception_ptr>
+  SdoFuture<void>
   AsyncWrite(uint16_t idx, uint8_t subidx, T&& value,
              const ::std::chrono::milliseconds& timeout) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,

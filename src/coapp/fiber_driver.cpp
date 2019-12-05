@@ -50,8 +50,7 @@ FiberDriver::FiberDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id)
     : FiberDriverBase(exec), BasicDriver(FiberDriverBase::exec, master, id) {}
 
 void
-FiberDriver::Wait(ev::Future<void, ::std::exception_ptr> f,
-                  ::std::error_code& ec) {
+FiberDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
   fiber_await(f);
   if (!f.is_ready()) {
     ec = ::std::make_error_code(::std::errc::operation_canceled);

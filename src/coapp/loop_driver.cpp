@@ -80,8 +80,7 @@ LoopDriver::AsyncStoppped() noexcept {
 }
 
 void
-LoopDriver::Wait(ev::Future<void, ::std::exception_ptr> f,
-                 ::std::error_code& ec) {
+LoopDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
   GetLoop().wait(f, ec);
   if (!f.is_ready()) {
     ec = ::std::make_error_code(::std::errc::operation_canceled);

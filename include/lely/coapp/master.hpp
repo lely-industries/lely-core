@@ -873,7 +873,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  ev::Future<T, ::std::exception_ptr>
+  SdoFuture<T>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx) {
     return AsyncRead<T>(exec, id, idx, subidx, GetTimeout());
   }
@@ -895,7 +895,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * error on failure.
    */
   template <class T>
-  ev::Future<T, ::std::exception_ptr>
+  SdoFuture<T>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -905,8 +905,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
       SetTime();
       return sdo->AsyncUpload<T>(exec, idx, subidx, timeout);
     } else {
-      return ev::make_error_future<T>(make_sdo_exception_ptr(
-          id, idx, subidx, SdoErrc::NO_SDO, "AsyncRead"));
+      return make_error_sdo_future<T>(id, idx, subidx, SdoErrc::NO_SDO,
+                                      "AsyncRead");
     }
   }
 
@@ -916,7 +916,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * except that it uses the SDO timeout given by #GetTimeout().
    */
   template <class T>
-  ev::Future<void, ::std::exception_ptr>
+  SdoFuture<void>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value) {
     return AsyncWrite(exec, id, idx, subidx, ::std::forward<T>(value),
@@ -940,7 +940,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a future which holds the SDO error on failure.
    */
   template <class T>
-  ev::Future<void, ::std::exception_ptr>
+  SdoFuture<void>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value, const ::std::chrono::milliseconds& timeout) {
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -951,8 +951,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
       return sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
                                    timeout);
     } else {
-      return ev::make_error_future<void>(make_sdo_exception_ptr(
-          id, idx, subidx, SdoErrc::NO_SDO, "AsyncWrite"));
+      return make_error_sdo_future<void>(id, idx, subidx, SdoErrc::NO_SDO,
+                                         "AsyncWrite");
     }
   }
 

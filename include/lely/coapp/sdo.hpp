@@ -44,6 +44,92 @@ class COCSDO;
 
 namespace canopen {
 
+/**
+ * A helper alias template for the type of promise used to store the result of
+ * an asynchronous SDO request.
+ *
+ * @see SdoFuture<T>
+ */
+template <class T>
+using SdoPromise = ev::Promise<T, ::std::exception_ptr>;
+
+/**
+ * A helper alias template for the type of future used to retrieve the result of
+ * an asynchronous SDO request.
+ *
+ * @see SdoPromise<T>
+ */
+template <class T>
+using SdoFuture = ev::Future<T, ::std::exception_ptr>;
+
+/**
+ * Returns an SDO future with a shared state that is immediately ready,
+ * containing a successful result of type `void`.
+ *
+ * @see make_ready_sdo_future(), make_error_sdo_future()
+ */
+inline SdoFuture<void>
+make_empty_sdo_future() {
+  return ev::make_empty_future<::std::exception_ptr>();
+}
+
+/**
+ * Returns an SDO future with a shared state that is immediately ready,
+ * containing a successful result constructed from `std::forward<T>(value)`.
+ *
+ * @see make_empty_sdo_future(), make_error_sdo_future()
+ */
+template <class T, class V = typename ::std::decay<T>::type>
+inline SdoFuture<V>
+make_ready_sdo_future(T&& value) {
+  return ev::make_ready_future<::std::exception_ptr, V>(
+      ::std::forward<T>(value));
+}
+
+/**
+ * Returns an SDO future with a shared state that is immediately ready,
+ * containing a failure result constructed with
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code).
+ *
+ * @see make_empty_sdo_future(), make_ready_sdo_future()
+ */
+template <class T>
+inline SdoFuture<T>
+make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
+                      ::std::error_code ec) {
+  return ev::make_error_future<T>(make_sdo_exception_ptr(id, idx, subidx, ec));
+}
+
+/**
+ * Returns an SDO future with a shared state that is immediately ready,
+ * containing a failure result constructed with
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const ::std::string&).
+ *
+ * @see make_empty_sdo_future(), make_ready_sdo_future()
+ */
+template <class T>
+inline SdoFuture<T>
+make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
+                      ::std::error_code ec, const ::std::string& what_arg) {
+  return ev::make_error_future<T>(
+      make_sdo_exception_ptr(id, idx, subidx, ec, what_arg));
+}
+
+/**
+ * Returns an SDO future with a shared state that is immediately ready,
+ * containing a failure result constructed with
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const char*).
+ *
+ * @see make_empty_sdo_future(), make_ready_sdo_future()
+ */
+template <class T>
+inline SdoFuture<T>
+make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
+                      ::std::error_code ec, const char* what_arg) {
+  return ev::make_error_future<T>(
+      make_sdo_exception_ptr(id, idx, subidx, ec, what_arg));
+}
+
 class Sdo;
 
 namespace detail {
@@ -492,18 +578,15 @@ class Sdo {
    */
   template <class T, class U = typename ::std::decay<T>::type>
   typename ::std::enable_if<detail::is_canopen_type<U>::value,
-                            ev::Future<void, ::std::exception_ptr>>::type
+                            SdoFuture<void>>::type
   AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
                 const ::std::chrono::milliseconds& timeout = {}) {
-    ev::Promise<void, ::std::exception_ptr> p;
+    SdoPromise<void> p;
     SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
                    [p](uint8_t id, uint16_t idx, uint8_t subidx,
                        ::std::error_code ec) mutable {
-                     if (ec)
-                       p.set(util::failure(make_sdo_exception_ptr(
-                           id, idx, subidx, ec, "AsyncDownload")));
-                     else
-                       p.set(util::success());
+                     p.set(util::failure(make_sdo_exception_ptr(
+                         id, idx, subidx, ec, "AsyncDownload")));
                    },
                    timeout);
     return p.get_future();
@@ -526,10 +609,10 @@ class Sdo {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_type<T>::value,
-                            ev::Future<T, ::std::exception_ptr>>::type
+                            SdoFuture<T>>::type
   AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
               const ::std::chrono::milliseconds& timeout = {}) {
-    ev::Promise<T, ::std::exception_ptr> p;
+    SdoPromise<T> p;
     SubmitUpload<T>(exec, idx, subidx,
                     [p](uint8_t id, uint16_t idx, uint8_t subidx,
                         ::std::error_code ec, T value) mutable {
