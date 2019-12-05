@@ -29,6 +29,7 @@
 #include <chrono>
 #include <limits>
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace lely {
@@ -585,8 +586,11 @@ class Sdo {
     SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
                    [p](uint8_t id, uint16_t idx, uint8_t subidx,
                        ::std::error_code ec) mutable {
-                     p.set(util::failure(make_sdo_exception_ptr(
-                         id, idx, subidx, ec, "AsyncDownload")));
+                     if (ec)
+                       p.set(util::failure(make_sdo_exception_ptr(
+                           id, idx, subidx, ec, "AsyncDownload")));
+                     else
+                       p.set(util::success());
                    },
                    timeout);
     return p.get_future();
