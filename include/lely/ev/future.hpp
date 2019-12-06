@@ -545,7 +545,7 @@ class Future {
     // avoid a potential race condition.
     auto future = task->get_future();
     submit(*task);
-    return ::std::move(future);
+    return future;
   }
 
  private:
@@ -654,7 +654,7 @@ async(ev_exec_t* exec, F&& f, Args&&... args) {
   // potential race condition.
   auto future = task->get_future();
   task->get_executor().submit(*task);
-  return ::std::move(future);
+  return future;
 }
 
 }  // namespace ev
