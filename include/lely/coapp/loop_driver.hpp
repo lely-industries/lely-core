@@ -72,6 +72,87 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   ev::Future<void, void> AsyncStoppped() noexcept;
 
   /**
+   * Schedules the specified Callable object for execution by the event loop for
+   * this driver.
+   *
+   * @see GetStrand().
+   */
+  template <class F, class... Args>
+  void
+  Defer(F&& f, Args&&... args) {
+    GetStrand().post(::std::forward<F>(f), ::std::forward<Args>(args)...);
+  }
+
+  /**
+   * Waits for the specified future to become ready by running pending tasks on
+   * the dedicated event loop of the driver.
+   *
+   * This function MUST only be called from tasks running on that event loop.
+   *
+   * @returns the value stored in the future on success.
+   *
+   * @throws the exception stored in the future on failure.
+   *
+   * @see GetLoop().
+   */
+  template <class T>
+  T
+  Wait(SdoFuture<T> f) {
+    GetLoop().wait(f);
+    if (!f.is_ready())
+      throw ::std::system_error(
+          ::std::make_error_code(::std::errc::operation_canceled), "Wait");
+    return f.get().value();
+  }
+
+  /**
+   * Waits for the specified future to become ready by running pending tasks on
+   * the dedicated event loop of the driver. The error code (0 on success) is
+   * stored in <b>ec</b>.
+   *
+   * This function MUST only be called from tasks running on that event loop.
+   *
+   * @returns the value stored in the future on success, or an empty value on
+   * error.
+   *
+   * @see GetLoop().
+   */
+  template <class T>
+  typename ::std::enable_if<!::std::is_void<T>::value, T>::type
+  Wait(SdoFuture<T> f, ::std::error_code& ec) {
+    ec.clear();
+    GetLoop().wait(f, ec);
+    if (!f.is_ready()) {
+      ec = ::std::make_error_code(::std::errc::operation_canceled);
+      return T{};
+    }
+    auto& result = f.get();
+    if (result.has_value()) {
+      return result.value();
+    } else {
+      try {
+        ::std::rethrow_exception(result.error());
+      } catch (const ::std::system_error& e) {
+        ec = e.code();
+      }
+      return T{};
+    }
+  }
+
+  /**
+   * Waits for the specified future to become ready by running pending tasks on
+   * the dedicated event loop of the driver. The error code (0 on success) is
+   * stored in <b>ec</b>.
+   *
+   * This function MUST only be called from tasks running on that event loop.
+   *
+   * @throws the exception stored in the future on failure.
+   *
+   * @see GetLoop().
+   */
+  void Wait(SdoFuture<void> f, ::std::error_code& ec);
+
+  /**
    * Equivalent to
    * #RunRead(uint16_t idx, uint8_t subidx, ::std::error_code& ec),
    * except that it throws #lely::canopen::SdoError on error.
@@ -183,53 +264,6 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
            const ::std::chrono::milliseconds& timeout, ::std::error_code& ec) {
     Wait(AsyncWrite(idx, subidx, ::std::forward<T>(value), timeout), ec);
   }
-
-  /**
-   * Schedules the specified Callable object for execution by the event loop for
-   * this driver.
-   *
-   * @see GetStrand().
-   */
-  template <class F, class... Args>
-  void
-  Defer(F&& f, Args&&... args) {
-    GetStrand().post(::std::forward<F>(f), ::std::forward<Args>(args)...);
-  }
-
- protected:
-  template <class T>
-  T
-  Wait(SdoFuture<T> f) {
-    GetLoop().wait(f);
-    if (!f.is_ready())
-      throw ::std::system_error(
-          ::std::make_error_code(::std::errc::operation_canceled), "Wait");
-    return f.get().value();
-  }
-
-  template <class T>
-  typename ::std::enable_if<!::std::is_void<T>::value, T>::type
-  Wait(SdoFuture<T> f, ::std::error_code& ec) {
-    GetLoop().wait(f, ec);
-    if (!f.is_ready()) {
-      ec = ::std::make_error_code(::std::errc::operation_canceled);
-      return T{};
-    }
-    auto& result = f.get();
-    if (result.has_value()) {
-      ec.clear();
-      return result.value();
-    } else {
-      try {
-        ::std::rethrow_exception(result.error());
-      } catch (const ::std::system_error& e) {
-        ec = e.code();
-      }
-      return T{};
-    }
-  }
-
-  void Wait(SdoFuture<void> f, ::std::error_code& ec);
 
  private:
   struct Impl_;

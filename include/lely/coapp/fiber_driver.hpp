@@ -73,7 +73,19 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
     GetStrand().post(::std::forward<F>(f), ::std::forward<Args>(args)...);
   }
 
- protected:
+  /**
+   * Waits for the specified future to become ready by suspending the calling
+   * fiber.
+   *
+   * This function MUST only be called from tasks submitted to the executor
+   * associated with this driver.
+   *
+   * @returns the value stored in the future on success.
+   *
+   * @throws the exception stored in the future on failure.
+   *
+   * @see DriverBase::GetExecutor()
+   */
   template <class T>
   T
   Wait(SdoFuture<T> f) {
@@ -84,6 +96,18 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
     return f.get().value();
   }
 
+  /**
+   * Waits for the specified future to become ready by suspending the calling
+   * fiber. The error code (0 on success) is stored in <b>ec</b>.
+   *
+   * This function MUST only be called from tasks submitted to the executor
+   * associated with this driver.
+   *
+   * @returns the value stored in the future on success, or an empty value on
+   * error.
+   *
+   * @see DriverBase::GetExecutor()
+   */
   template <class T>
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
   Wait(SdoFuture<T> f, ::std::error_code& ec) {
@@ -106,6 +130,15 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
     }
   }
 
+  /**
+   * Waits for the specified future to become ready by suspending the calling
+   * fiber. The error code (0 on success) is stored in <b>ec</b>.
+   *
+   * This function MUST only be called from tasks submitted to the executor
+   * associated with this driver.
+   *
+   * @see DriverBase::GetExecutor()
+   */
   void Wait(SdoFuture<void> f, ::std::error_code& ec);
 };
 
