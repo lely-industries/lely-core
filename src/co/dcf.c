@@ -420,7 +420,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	co_unsigned16_t idx = co_obj_get_idx(obj);
 
 	const char *name = config_get(cfg, section, "ParameterName");
-	if (!name || !*name) {
+	if (!name) {
 		diag(DIAG_ERROR, 0,
 				"ParameterName not specified for object 0x%04X",
 				idx);
@@ -484,7 +484,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 			// presence of the mandatory ParameterName keyword.
 			const char *name = config_get(
 					cfg, section, "ParameterName");
-			if (!name || !*name)
+			if (!name)
 				continue;
 			subnum--;
 
