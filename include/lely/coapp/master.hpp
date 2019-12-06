@@ -618,8 +618,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   bool IsReady(uint8_t id) const;
 
   /**
-   * Invokes the DriverBase::OnDeconfig() method for the driver with the
-   * specified node-ID and creates a future which becomes ready once
+   * Queues the DriverBase::OnDeconfig() method for the driver with the
+   * specified node-ID and creates a future which becomes ready once the
    * deconfiguration process completes.
    *
    * @returns a future which holds an error code on failure.
@@ -1237,12 +1237,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 class AsyncMaster : public BasicMaster {
  public:
   using BasicMaster::BasicMaster;
-
-  /**
-   * Equivalent to BasicMaster::AsyncDeconfig(), except that it queues the call
-   * to DriverBase::OnDeconfig() instead of invoking it directly.
-   */
-  ev::Future<void> AsyncDeconfig(uint8_t id) override;
 
  protected:
   /**

@@ -93,8 +93,9 @@ BasicMaster::AsyncDeconfig(uint8_t id) {
   auto it = find(id);
   if (it != end()) {
     DriverBase* driver = it->second;
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
+    driver->GetExecutor().post([=]() mutable {
+      driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
+    });
   } else {
     p.set(::std::error_code{});
   }
@@ -367,23 +368,6 @@ BasicMaster::CancelSdo(uint8_t id) {
     impl_->sdos.erase(id);
   else
     impl_->sdos.clear();
-}
-
-ev::Future<void>
-AsyncMaster::AsyncDeconfig(uint8_t id) {
-  ev::Promise<void> p;
-  ::std::lock_guard<util::BasicLockable> lock(*this);
-  IsReady(id, false);
-  auto it = find(id);
-  if (it != end()) {
-    DriverBase* driver = it->second;
-    driver->GetExecutor().post([=]() mutable {
-      driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
-    });
-  } else {
-    p.set(::std::error_code{});
-  }
-  return p.get_future();
 }
 
 void
