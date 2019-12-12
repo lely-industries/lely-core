@@ -24,6 +24,7 @@
 #include "coapp.hpp"
 #include <lely/co/sdo.h>
 #include <lely/coapp/sdo_error.hpp>
+#include <lely/util/error.hpp>
 
 #include <iomanip>
 #include <sstream>
@@ -173,6 +174,35 @@ make_error_code(SdoErrc e) noexcept {
 ::std::error_condition
 make_error_condition(SdoErrc e) noexcept {
   return {static_cast<int>(e), SdoCategory()};
+}
+
+SdoErrc
+sdo_errc(::std::error_code ec) {
+  if (ec) {
+    if (ec.category() == SdoCategory()) {
+      return static_cast<SdoErrc>(ec.value());
+    } else if (ec.category() == ::std::generic_category()) {
+      switch (static_cast<::std::errc>(ec.value())) {
+        case ::std::errc::timed_out:
+          return SdoErrc::TIMEOUT;
+        case ::std::errc::not_enough_memory:
+          return SdoErrc::NO_MEM;
+        default:
+          return SdoErrc::ERROR;
+      }
+    } else if (ec.category() == ::std::system_category()) {
+      switch (errc2num(ec.value())) {
+        case ERRNUM_TIMEDOUT:
+          return SdoErrc::TIMEOUT;
+        case ERRNUM_NOMEM:
+          return SdoErrc::NO_MEM;
+        default:
+          return SdoErrc::ERROR;
+      }
+    }
+    return SdoErrc::ERROR;
+  }
+  return static_cast<SdoErrc>(0);
 }
 
 ::std::exception_ptr

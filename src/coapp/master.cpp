@@ -304,7 +304,7 @@ BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
   // Destroy the Client-SDO, since it will be taken over by the master.
   impl_->sdos.erase(id);
   // Ignore any errors, since we cannot handle them here.
-  nmt()->cfgRes(id, ec.value());
+  nmt()->cfgRes(id, static_cast<uint32_t>(sdo_errc(ec)));
 }
 
 void

@@ -164,6 +164,9 @@ const ::std::error_category& SdoCategory() noexcept;
 /// Creates an error condition corresponding to an SDO abort code.
 ::std::error_condition make_error_condition(SdoErrc e) noexcept;
 
+/// Returns the SDO abort code corresponding to an error code.
+SdoErrc sdo_errc(::std::error_code ec);
+
 /**
  * Creates an `std::exception_ptr` that holds a reference to a
  * #lely::canopen::SdoError with the specified attributes if <b>ec</b> is an SDO
