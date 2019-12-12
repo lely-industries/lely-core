@@ -99,9 +99,6 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   T
   Wait(SdoFuture<T> f) {
     GetLoop().wait(f);
-    if (!f.is_ready())
-      throw ::std::system_error(
-          ::std::make_error_code(::std::errc::operation_canceled), "Wait");
     return f.get().value();
   }
 
@@ -120,23 +117,15 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   template <class T>
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
   Wait(SdoFuture<T> f, ::std::error_code& ec) {
-    ec.clear();
     GetLoop().wait(f, ec);
-    if (!f.is_ready()) {
+    try {
+      return f.get().value();
+    } catch (const ::std::system_error& e) {
+      ec = e.code();
+    } catch (const ev::future_not_ready& e) {
       ec = ::std::make_error_code(::std::errc::operation_canceled);
-      return T{};
     }
-    auto& result = f.get();
-    if (result.has_value()) {
-      return result.value();
-    } else {
-      try {
-        ::std::rethrow_exception(result.error());
-      } catch (const ::std::system_error& e) {
-        ec = e.code();
-      }
-      return T{};
-    }
+    return T{};
   }
 
   /**

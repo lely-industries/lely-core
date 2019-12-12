@@ -35,6 +35,16 @@
 namespace lely {
 namespace ev {
 
+/**
+ * The exception thrown when retrieving the result of a future which is not
+ * ready or does not contain a reference to a shared state.
+ *
+ * @see Future<T, E>::get()
+ */
+class future_not_ready : public ::std::runtime_error {
+  using ::std::runtime_error::runtime_error;
+};
+
 template <class, class = ::std::error_code>
 class Future;
 
@@ -467,28 +477,32 @@ class Future {
   /**
    * Returns the result of a ready future.
    *
-   * @pre #is_ready() returns true.
-   *
    * @returns a reference to the result stored in the shared state.
+   *
+   * @throws #lely::ev::future_not_ready if #operator bool() or #is_ready()
+   * returns false.
    *
    * @see ev_future_get()
    */
   result_type&
-  get() noexcept {
+  get() {
+    if (!*this || !is_ready()) throw future_not_ready("get");
     return *reinterpret_cast<result_type*>(ev_future_get(*this));
   }
 
   /**
    * Returns the result of a ready future.
    *
-   * @pre #is_ready() returns true.
-   *
    * @returns a reference to the result stored in the shared state.
+   *
+   * @throws #lely::ev::future_not_ready if #operator bool() or #is_ready()
+   * returns false.
    *
    * @see ev_future_get()
    */
   const result_type&
-  get() const noexcept {
+  get() const {
+    if (!*this || !is_ready()) throw future_not_ready("get");
     return *reinterpret_cast<result_type*>(ev_future_get(*this));
   }
 

@@ -90,9 +90,6 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
   T
   Wait(SdoFuture<T> f) {
     fiber_await(f);
-    if (!f.is_ready())
-      throw ::std::system_error(
-          ::std::make_error_code(::std::errc::operation_canceled), "Wait");
     return f.get().value();
   }
 
@@ -112,21 +109,12 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
   typename ::std::enable_if<!::std::is_void<T>::value, T>::type
   Wait(SdoFuture<T> f, ::std::error_code& ec) {
     fiber_await(f);
-    if (!f.is_ready()) {
+    try {
+      return f.get().value();
+    } catch (const ::std::system_error& e) {
+      ec = e.code();
+    } catch (const ev::future_not_ready& e) {
       ec = ::std::make_error_code(::std::errc::operation_canceled);
-      return T{};
-    }
-    auto& result = f.get();
-    if (result.has_value()) {
-      ec.clear();
-      return result.value();
-    } else {
-      try {
-        ::std::rethrow_exception(result.error());
-      } catch (const ::std::system_error& e) {
-        ec = e.code();
-      }
-      return T{};
     }
   }
 

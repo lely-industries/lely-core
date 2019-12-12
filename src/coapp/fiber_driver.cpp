@@ -52,19 +52,12 @@ FiberDriver::FiberDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id)
 void
 FiberDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
   fiber_await(f);
-  if (!f.is_ready()) {
+  try {
+    f.get().value();
+  } catch (const ::std::system_error& e) {
+    ec = e.code();
+  } catch (const ev::future_not_ready& e) {
     ec = ::std::make_error_code(::std::errc::operation_canceled);
-    return;
-  }
-  auto& result = f.get();
-  if (result.has_value()) {
-    ec.clear();
-  } else {
-    try {
-      ::std::rethrow_exception(result.error());
-    } catch (const ::std::system_error& e) {
-      ec = e.code();
-    }
   }
 }
 
