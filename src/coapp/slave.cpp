@@ -50,6 +50,7 @@ struct BasicSlave::Impl_ {
   netid() const noexcept {
     return self->dev()->getNetid();
   }
+
   uint8_t
   id() const noexcept {
     return self->dev()->getId();
@@ -156,7 +157,7 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
 
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->up_ind[key] = [=](const COSub* sub, void* p) {
+    impl_->up_ind[key] = [this, ind](const COSub* sub, void* p) {
       auto ec = OnUpInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
       return static_cast<uint32_t>(ec.value());
     };
@@ -164,6 +165,21 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
   } else {
     if (impl_->up_ind.erase(key)) sub->setUpInd(nullptr, nullptr);
   }
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+BasicSlave::OnRead(uint16_t idx, ::std::function<OnReadSignature<T>> ind) {
+  uint8_t n = (*this)[idx][0];
+  for (uint8_t i = 1; i <= n; i++) OnRead<T>(idx, i, ind);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+BasicSlave::OnRead(uint16_t idx, ::std::function<OnReadSignature<T>> ind,
+                   ::std::error_code& ec) {
+  uint8_t n = (*this)[idx][0].Get<uint8_t>(ec);
+  for (uint8_t i = 1; i <= n && !ec; i++) OnRead<T>(idx, i, ind, ec);
 }
 
 template <class T>
@@ -235,7 +251,7 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
 
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->dn_ind[key] = [=](COSub* sub, void* p) {
+    impl_->dn_ind[key] = [this, ind](COSub* sub, void* p) {
       auto ec = OnDnInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
       return static_cast<uint32_t>(ec.value());
     };
@@ -243,6 +259,21 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
   } else {
     if (impl_->dn_ind.erase(key)) sub->setDnInd(nullptr, nullptr);
   }
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+BasicSlave::OnWrite(uint16_t idx, ::std::function<OnWriteSignature<T>> ind) {
+  uint8_t n = (*this)[idx][0];
+  for (uint8_t i = 1; i <= n; i++) OnWrite<T>(idx, i, ind);
+}
+
+template <class T>
+typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+BasicSlave::OnWrite(uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
+                    ::std::error_code& ec) {
+  uint8_t n = (*this)[idx][0].Get<uint8_t>(ec);
+  for (uint8_t i = 1; i <= n && !ec; i++) OnWrite<T>(idx, i, ind, ec);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -253,9 +284,19 @@ template void BasicSlave::OnRead<bool>(uint16_t, uint8_t,
 template void BasicSlave::OnRead<bool>(uint16_t, uint8_t,
                                        ::std::function<OnReadSignature<bool>>,
                                        ::std::error_code&);
+template void BasicSlave::OnRead<bool>(uint16_t,
+                                       ::std::function<OnReadSignature<bool>>);
+template void BasicSlave::OnRead<bool>(uint16_t,
+                                       ::std::function<OnReadSignature<bool>>,
+                                       ::std::error_code&);
 template void BasicSlave::OnWrite<bool>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<bool>>);
 template void BasicSlave::OnWrite<bool>(uint16_t, uint8_t,
+                                        ::std::function<OnWriteSignature<bool>>,
+                                        ::std::error_code&);
+template void BasicSlave::OnWrite<bool>(
+    uint16_t, ::std::function<OnWriteSignature<bool>>);
+template void BasicSlave::OnWrite<bool>(uint16_t,
                                         ::std::function<OnWriteSignature<bool>>,
                                         ::std::error_code&);
 
@@ -265,11 +306,19 @@ template void BasicSlave::OnRead<int8_t>(
 template void BasicSlave::OnRead<int8_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<int8_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<int8_t>(
+    uint16_t, ::std::function<OnReadSignature<int8_t>>);
+template void BasicSlave::OnRead<int8_t>(
+    uint16_t, ::std::function<OnReadSignature<int8_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<int8_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int8_t>>);
 template void BasicSlave::OnWrite<int8_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int8_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<int8_t>(
+    uint16_t, ::std::function<OnWriteSignature<int8_t>>);
+template void BasicSlave::OnWrite<int8_t>(
+    uint16_t, ::std::function<OnWriteSignature<int8_t>>, ::std::error_code&);
 
 // INTEGER16
 template void BasicSlave::OnRead<int16_t>(
@@ -277,11 +326,19 @@ template void BasicSlave::OnRead<int16_t>(
 template void BasicSlave::OnRead<int16_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<int16_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<int16_t>(
+    uint16_t, ::std::function<OnReadSignature<int16_t>>);
+template void BasicSlave::OnRead<int16_t>(
+    uint16_t, ::std::function<OnReadSignature<int16_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<int16_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int16_t>>);
 template void BasicSlave::OnWrite<int16_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int16_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<int16_t>(
+    uint16_t, ::std::function<OnWriteSignature<int16_t>>);
+template void BasicSlave::OnWrite<int16_t>(
+    uint16_t, ::std::function<OnWriteSignature<int16_t>>, ::std::error_code&);
 
 // INTEGER32
 template void BasicSlave::OnRead<int32_t>(
@@ -289,11 +346,19 @@ template void BasicSlave::OnRead<int32_t>(
 template void BasicSlave::OnRead<int32_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<int32_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<int32_t>(
+    uint16_t, ::std::function<OnReadSignature<int32_t>>);
+template void BasicSlave::OnRead<int32_t>(
+    uint16_t, ::std::function<OnReadSignature<int32_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<int32_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int32_t>>);
 template void BasicSlave::OnWrite<int32_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int32_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<int32_t>(
+    uint16_t, ::std::function<OnWriteSignature<int32_t>>);
+template void BasicSlave::OnWrite<int32_t>(
+    uint16_t, ::std::function<OnWriteSignature<int32_t>>, ::std::error_code&);
 
 // UNSIGNED8
 template void BasicSlave::OnRead<uint8_t>(
@@ -301,11 +366,19 @@ template void BasicSlave::OnRead<uint8_t>(
 template void BasicSlave::OnRead<uint8_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<uint8_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<uint8_t>(
+    uint16_t, ::std::function<OnReadSignature<uint8_t>>);
+template void BasicSlave::OnRead<uint8_t>(
+    uint16_t, ::std::function<OnReadSignature<uint8_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<uint8_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint8_t>>);
 template void BasicSlave::OnWrite<uint8_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint8_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<uint8_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint8_t>>);
+template void BasicSlave::OnWrite<uint8_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint8_t>>, ::std::error_code&);
 
 // UNSIGNED16
 template void BasicSlave::OnRead<uint16_t>(
@@ -313,11 +386,19 @@ template void BasicSlave::OnRead<uint16_t>(
 template void BasicSlave::OnRead<uint16_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<uint16_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<uint16_t>(
+    uint16_t, ::std::function<OnReadSignature<uint16_t>>);
+template void BasicSlave::OnRead<uint16_t>(
+    uint16_t, ::std::function<OnReadSignature<uint16_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<uint16_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint16_t>>);
 template void BasicSlave::OnWrite<uint16_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint16_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<uint16_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint16_t>>);
+template void BasicSlave::OnWrite<uint16_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint16_t>>, ::std::error_code&);
 
 // UNSIGNED32
 template void BasicSlave::OnRead<uint32_t>(
@@ -325,11 +406,19 @@ template void BasicSlave::OnRead<uint32_t>(
 template void BasicSlave::OnRead<uint32_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<uint32_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<uint32_t>(
+    uint16_t, ::std::function<OnReadSignature<uint32_t>>);
+template void BasicSlave::OnRead<uint32_t>(
+    uint16_t, ::std::function<OnReadSignature<uint32_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<uint32_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint32_t>>);
 template void BasicSlave::OnWrite<uint32_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint32_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<uint32_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint32_t>>);
+template void BasicSlave::OnWrite<uint32_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint32_t>>, ::std::error_code&);
 
 // REAL32
 template void BasicSlave::OnRead<float>(
@@ -337,11 +426,20 @@ template void BasicSlave::OnRead<float>(
 template void BasicSlave::OnRead<float>(uint16_t, uint8_t,
                                         ::std::function<OnReadSignature<float>>,
                                         ::std::error_code&);
+template void BasicSlave::OnRead<float>(
+    uint16_t, ::std::function<OnReadSignature<float>>);
+template void BasicSlave::OnRead<float>(uint16_t,
+                                        ::std::function<OnReadSignature<float>>,
+                                        ::std::error_code&);
 template void BasicSlave::OnWrite<float>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<float>>);
 template void BasicSlave::OnWrite<float>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<float>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<float>(
+    uint16_t, ::std::function<OnWriteSignature<float>>);
+template void BasicSlave::OnWrite<float>(
+    uint16_t, ::std::function<OnWriteSignature<float>>, ::std::error_code&);
 
 // VISIBLE_STRING
 template void BasicSlave::OnRead<::std::string>(
@@ -349,10 +447,20 @@ template void BasicSlave::OnRead<::std::string>(
 template void BasicSlave::OnRead<::std::string>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<::std::string>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<::std::string>(
+    uint16_t, ::std::function<OnReadSignature<::std::string>>);
+template void BasicSlave::OnRead<::std::string>(
+    uint16_t, ::std::function<OnReadSignature<::std::string>>,
+    ::std::error_code&);
 template void BasicSlave::OnWrite<::std::string>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<::std::string>>);
 template void BasicSlave::OnWrite<::std::string>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<::std::string>>,
+    ::std::error_code&);
+template void BasicSlave::OnWrite<::std::string>(
+    uint16_t, ::std::function<OnWriteSignature<::std::string>>);
+template void BasicSlave::OnWrite<::std::string>(
+    uint16_t, ::std::function<OnWriteSignature<::std::string>>,
     ::std::error_code&);
 
 // OCTET_STRING
@@ -362,12 +470,22 @@ template void BasicSlave::OnRead<::std::vector<uint8_t>>(
 template void BasicSlave::OnRead<::std::vector<uint8_t>>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<::std::vector<uint8_t>>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<::std::vector<uint8_t>>(
+    uint16_t, ::std::function<OnReadSignature<::std::vector<uint8_t>>>);
+template void BasicSlave::OnRead<::std::vector<uint8_t>>(
+    uint16_t, ::std::function<OnReadSignature<::std::vector<uint8_t>>>,
+    ::std::error_code&);
 template void BasicSlave::OnWrite<::std::vector<uint8_t>>(
     uint16_t, uint8_t,
     ::std::function<OnWriteSignature<::std::vector<uint8_t>>>);
 template void BasicSlave::OnWrite<::std::vector<uint8_t>>(
     uint16_t, uint8_t,
     ::std::function<OnWriteSignature<::std::vector<uint8_t>>>,
+    ::std::error_code&);
+template void BasicSlave::OnWrite<::std::vector<uint8_t>>(
+    uint16_t, ::std::function<OnWriteSignature<::std::vector<uint8_t>>>);
+template void BasicSlave::OnWrite<::std::vector<uint8_t>>(
+    uint16_t, ::std::function<OnWriteSignature<::std::vector<uint8_t>>>,
     ::std::error_code&);
 
 // UNICODE_STRING
@@ -378,12 +496,22 @@ template void BasicSlave::OnRead<::std::basic_string<char16_t>>(
     uint16_t, uint8_t,
     ::std::function<OnReadSignature<::std::basic_string<char16_t>>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<::std::basic_string<char16_t>>(
+    uint16_t, ::std::function<OnReadSignature<::std::basic_string<char16_t>>>);
+template void BasicSlave::OnRead<::std::basic_string<char16_t>>(
+    uint16_t, ::std::function<OnReadSignature<::std::basic_string<char16_t>>>,
+    ::std::error_code&);
 template void BasicSlave::OnWrite<::std::basic_string<char16_t>>(
     uint16_t, uint8_t,
     ::std::function<OnWriteSignature<::std::basic_string<char16_t>>>);
 template void BasicSlave::OnWrite<::std::basic_string<char16_t>>(
     uint16_t, uint8_t,
     ::std::function<OnWriteSignature<::std::basic_string<char16_t>>>,
+    ::std::error_code&);
+template void BasicSlave::OnWrite<::std::basic_string<char16_t>>(
+    uint16_t, ::std::function<OnWriteSignature<::std::basic_string<char16_t>>>);
+template void BasicSlave::OnWrite<::std::basic_string<char16_t>>(
+    uint16_t, ::std::function<OnWriteSignature<::std::basic_string<char16_t>>>,
     ::std::error_code&);
 
 // TIME_OF_DAY
@@ -397,11 +525,19 @@ template void BasicSlave::OnRead<double>(
 template void BasicSlave::OnRead<double>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<double>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<double>(
+    uint16_t, ::std::function<OnReadSignature<double>>);
+template void BasicSlave::OnRead<double>(
+    uint16_t, ::std::function<OnReadSignature<double>>, ::std::error_code&);
 template void BasicSlave::OnWrite<double>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<double>>);
 template void BasicSlave::OnWrite<double>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<double>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<double>(
+    uint16_t, ::std::function<OnWriteSignature<double>>);
+template void BasicSlave::OnWrite<double>(
+    uint16_t, ::std::function<OnWriteSignature<double>>, ::std::error_code&);
 
 // INTEGER40
 // INTEGER48
@@ -413,11 +549,19 @@ template void BasicSlave::OnRead<int64_t>(
 template void BasicSlave::OnRead<int64_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<int64_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<int64_t>(
+    uint16_t, ::std::function<OnReadSignature<int64_t>>);
+template void BasicSlave::OnRead<int64_t>(
+    uint16_t, ::std::function<OnReadSignature<int64_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<int64_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int64_t>>);
 template void BasicSlave::OnWrite<int64_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<int64_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<int64_t>(
+    uint16_t, ::std::function<OnWriteSignature<int64_t>>);
+template void BasicSlave::OnWrite<int64_t>(
+    uint16_t, ::std::function<OnWriteSignature<int64_t>>, ::std::error_code&);
 
 // UNSIGNED24
 // UNSIGNED40
@@ -430,11 +574,19 @@ template void BasicSlave::OnRead<uint64_t>(
 template void BasicSlave::OnRead<uint64_t>(
     uint16_t, uint8_t, ::std::function<OnReadSignature<uint64_t>>,
     ::std::error_code&);
+template void BasicSlave::OnRead<uint64_t>(
+    uint16_t, ::std::function<OnReadSignature<uint64_t>>);
+template void BasicSlave::OnRead<uint64_t>(
+    uint16_t, ::std::function<OnReadSignature<uint64_t>>, ::std::error_code&);
 template void BasicSlave::OnWrite<uint64_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint64_t>>);
 template void BasicSlave::OnWrite<uint64_t>(
     uint16_t, uint8_t, ::std::function<OnWriteSignature<uint64_t>>,
     ::std::error_code&);
+template void BasicSlave::OnWrite<uint64_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint64_t>>);
+template void BasicSlave::OnWrite<uint64_t>(
+    uint16_t, ::std::function<OnWriteSignature<uint64_t>>, ::std::error_code&);
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
 

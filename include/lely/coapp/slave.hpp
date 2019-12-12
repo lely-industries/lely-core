@@ -648,7 +648,10 @@ class BasicSlave : public Node {
    * @returns an accessor object for RPDO-mapped objects in a remote object
    * dictionary.
    */
-  RpdoMapped RpdoMapped(uint8_t id) const { return {this, id}; }
+  RpdoMapped
+  RpdoMapped(uint8_t id) const {
+    return {this, id};
+  }
 
   /**
    * Returns a mutator object that provides read/write access to TPDO-mapped
@@ -660,7 +663,10 @@ class BasicSlave : public Node {
    * @returns a mutator object for TPDO-mapped objects in a remote object
    * dictionary.
    */
-  TpdoMapped TpdoMapped(uint8_t id) { return {this, id}; }
+  TpdoMapped
+  TpdoMapped(uint8_t id) {
+    return {this, id};
+  }
 
   /**
    * Registers a callback function to be invoked on read (SDO upload) access to
@@ -669,7 +675,7 @@ class BasicSlave : public Node {
    *
    * @param idx    the object index.
    * @param subidx the object sub-index.
-   * @param ind    the indication function to be called on read access to the
+   * @param ind    the indication function to be called on write access to the
    *               specified sub-object.
    *
    * @throws #lely::canopen::SdoError on error.
@@ -685,13 +691,45 @@ class BasicSlave : public Node {
    *
    * @param idx    the object index.
    * @param subidx the object sub-index.
-   * @param ind    the indication function to be called on read access to the
+   * @param ind    the indication function to be called on write access to the
    *               specified sub-object.
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
       uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind,
+      ::std::error_code& ec);
+
+  /**
+   * Registers a callback function to be invoked on read (SDO upload) access to
+   * each member of the specified CANopen record or array object in the local
+   * object dictionary. Note that the callback function is not invoked if the
+   * access checks fail.
+   *
+   * @param idx the object index.
+   * @param ind the indication function to be called on read access to each
+   *            member of the specified object.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+      uint16_t idx, ::std::function<OnReadSignature<T>> ind);
+
+  /**
+   * Registers a callback function to be invoked on read (SDO upload) access to
+   * each member of the specified CANopen record or array object in the local
+   * object dictionary. Note that the callback function is not invoked if the
+   * access checks fail.
+   *
+   * @param idx the object index.
+   * @param ind the indication function to be called on read access to each
+   *            member of the specified object.
+   * @param ec  on error, the SDO abort code is stored in <b>ec</b>.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+      uint16_t idx, ::std::function<OnReadSignature<T>> ind,
       ::std::error_code& ec);
 
   /**
@@ -726,6 +764,38 @@ class BasicSlave : public Node {
   template <class T>
   typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
       uint16_t idx, uint8_t subidx, ::std::function<OnWriteSignature<T>> ind,
+      ::std::error_code& ec);
+
+  /**
+   * Registers a callback function to be invoked on write (SDO download) access
+   * to each member of the specified CANopen record or array object in the local
+   * object dictionary. Note that the callback function is not invoked if the
+   * access or range checks fail.
+   *
+   * @param idx the object index.
+   * @param ind the indication function to be called on write access to each
+   *            member of the specified object.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+      uint16_t idx, ::std::function<OnWriteSignature<T>> ind);
+
+  /**
+   * Registers a callback function to be invoked on write (SDO download) access
+   * to each member of the specified CANopen record or array object in the local
+   * object dictionary. Note that the callback function is not invoked if the
+   * access or range checks fail.
+   *
+   * @param idx the object index.
+   * @param ind the indication function to be called on write access to each
+   *            member of the specified object.
+   * @param ec  on error, the SDO abort code is stored in <b>ec</b>.
+   */
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+      uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
