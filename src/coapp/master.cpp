@@ -96,7 +96,7 @@ BasicMaster::Error(uint8_t id) {
 }
 
 void
-BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
+BasicMaster::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) noexcept {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::Error(eec, er, msef);
@@ -111,10 +111,24 @@ BasicMaster::Command(NmtCommand cs, uint8_t id) {
 }
 
 void
+BasicMaster::RpdoRtr(int num, ::std::error_code& ec) noexcept {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+
+  Node::RpdoRtr(num, ec);
+}
+
+void
 BasicMaster::RpdoRtr(int num) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::RpdoRtr(num);
+}
+
+void
+BasicMaster::TpdoEvent(int num, ::std::error_code& ec) noexcept {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+
+  Node::TpdoEvent(num, ec);
 }
 
 void
