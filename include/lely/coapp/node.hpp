@@ -196,13 +196,27 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    * @param er   the error register.
    * @param msef the manufacturer-specific error code.
    */
-  void Error(uint16_t eec, uint8_t er, const uint8_t msef[5] = nullptr);
+  void Error(uint16_t eec, uint8_t er,
+             const uint8_t msef[5] = nullptr) noexcept;
 
   /**
-   * Requests the transmission of a PDO.
+   * Requests the transmission of a PDO by sending a CAN frame with the RTR
+   * (Remote Transmission Request) bit set.
    *
    * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
    *            transmission of all PDOs is requested.
+   * @param ec  the error code (0 on success).
+   */
+  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
+
+  /**
+   * Requests the transmission of a PDO by sending a CAN frame with the RTR
+   * (Remote Transmission Request) bit set.
+   *
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is requested.
+   *
+   * @throws std::system_error if an error occurred while sending the CAN frame.
    */
   void RpdoRtr(int num = 0);
 
@@ -211,8 +225,20 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    *
    * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
    *            transmission of all PDOs is triggered.
+   * @param ec  the error code (0 on success).
+   *            `ec == std::errc::resource_unavailable_try_again` if the inhibit
+   *            time has not yet elapsed.
+   */
+  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
+
+  /**
+   * Triggers the transmission of an event-driven (asynchronous) PDO.
    *
-   * @throws std::system_error(std::errc::resource_unavailable_try_again) if the
+   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
+   *            transmission of all PDOs is triggered.
+   *
+   * @throws std::system_error if an error occurred while sending the CAN frame,
+   * or std::system_error(std::errc::resource_unavailable_try_again) if the
    * inhibit time has not yet elapsed.
    */
   void TpdoEvent(int num = 0);

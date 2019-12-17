@@ -453,7 +453,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @param er   the error register.
    * @param msef the manufacturer-specific error code.
    */
-  void Error(uint16_t eec, uint8_t er, const uint8_t msef[5] = nullptr);
+  void Error(uint16_t eec, uint8_t er,
+             const uint8_t msef[5] = nullptr) noexcept;
 
   /**
    * Issues an NMT command to a slave.
@@ -463,23 +464,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void Command(NmtCommand cs, uint8_t id = 0);
 
-  /**
-   * Requests the transmission of a PDO.
-   *
-   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
-   *            transmission of all PDOs is requested.
-   */
+  /// @see Node::RpdoRtr(int num, ::std::error_code& ec)
+  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
+
+  /// @see Node::RpdoRtr(int num)
   void RpdoRtr(int num = 0);
 
-  /**
-   * Triggers the transmission of an event-driven (asynchronous) PDO.
-   *
-   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
-   *            transmission of all PDOs is triggered.
-   *
-   * @throws std::system_error(std::errc::resource_unavailable_try_again) if the
-   * inhibit time has not yet elapsed.
-   */
+  /// @see Node::TpdoEvent(int num, ::std::error_code& ec)
+  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
+
+  /// @see Node::TpdoEvent(int num)
   void TpdoEvent(int num = 0);
 
   /**

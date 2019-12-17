@@ -72,8 +72,8 @@ struct Node::Impl_ : public util::BasicLockable {
   void OnEmcyInd(COEmcy* emcy, uint8_t id, uint16_t ec, uint8_t er,
                  uint8_t msef[5]) noexcept;
 
-  void RpdoRtr(int num);
-  void TpdoEvent(int num);
+  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
+  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
 
   Node* self{nullptr};
 
@@ -158,26 +158,48 @@ Node::nmt() const noexcept {
 }
 
 void
-Node::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) {
+Node::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) noexcept {
   impl_->nmt->onErr(eec, er, msef);
 }
 
 void
-Node::RpdoRtr(int num) {
+Node::RpdoRtr(int num, ::std::error_code& ec) noexcept {
+  int errsv = get_errc();
+  set_errc(0);
+  ec.clear();
   if (num) {
-    impl_->RpdoRtr(num);
+    impl_->RpdoRtr(num, ec);
   } else {
-    for (num = 1; num <= 512; num++) impl_->RpdoRtr(num);
+    for (num = 1; num <= 512; num++) impl_->RpdoRtr(num, ec);
   }
+  set_errc(errsv);
+}
+
+void
+Node::RpdoRtr(int num) {
+  ::std::error_code ec;
+  RpdoRtr(num);
+  if (ec) throw ::std::system_error(ec, "RpdoRtr");
+}
+
+void
+Node::TpdoEvent(int num, ::std::error_code& ec) noexcept {
+  int errsv = get_errc();
+  set_errc(0);
+  ec.clear();
+  if (num) {
+    impl_->TpdoEvent(num, ec);
+  } else {
+    for (num = 1; num <= 512; num++) impl_->TpdoEvent(num, ec);
+  }
+  set_errc(errsv);
 }
 
 void
 Node::TpdoEvent(int num) {
-  if (num) {
-    impl_->TpdoEvent(num);
-  } else {
-    for (num = 1; num <= 512; num++) impl_->TpdoEvent(num);
-  }
+  ::std::error_code ec;
+  TpdoEvent(num, ec);
+  if (ec) throw ::std::system_error(ec, "TpdoEvent");
 }
 
 Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
@@ -317,15 +339,15 @@ Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
 }
 
 void
-Node::Impl_::RpdoRtr(int num) {
+Node::Impl_::RpdoRtr(int num, ::std::error_code& ec) noexcept {
   auto pdo = nmt->getRPDO(num);
-  if (pdo && pdo->rtr() == -1) util::throw_errc("RpdoRtr");
+  if (pdo && pdo->rtr() == -1 && ec) ec = util::make_error_code();
 }
 
 void
-Node::Impl_::TpdoEvent(int num) {
+Node::Impl_::TpdoEvent(int num, ::std::error_code& ec) noexcept {
   auto pdo = nmt->getTPDO(num);
-  if (pdo && pdo->event() == -1) util::throw_errc("TpdoEvent");
+  if (pdo && pdo->event() == -1 && !ec) ec = util::make_error_code();
 }
 
 }  // namespace canopen
