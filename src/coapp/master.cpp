@@ -56,10 +56,23 @@ struct BasicMaster::Impl_ {
   ::std::map<uint8_t, Sdo> sdos;
 };
 
+void
+BasicMaster::TpdoEventMutex::lock() {
+  ::std::lock_guard<util::BasicLockable> lock(*node);
+  Node::TpdoEventMutex::lock();
+}
+
+void
+BasicMaster::TpdoEventMutex::unlock() {
+  ::std::lock_guard<util::BasicLockable> lock(*node);
+  Node::TpdoEventMutex::unlock();
+}
+
 BasicMaster::BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
                          const ::std::string& dcf_txt,
                          const ::std::string& dcf_bin, uint8_t id)
     : Node(timer, chan, dcf_txt, dcf_bin, id),
+      tpdo_event_mutex(*this),
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicMaster::~BasicMaster() = default;
@@ -111,28 +124,14 @@ BasicMaster::Command(NmtCommand cs, uint8_t id) {
 }
 
 void
-BasicMaster::RpdoRtr(int num, ::std::error_code& ec) noexcept {
-  ::std::lock_guard<util::BasicLockable> lock(*this);
-
-  Node::RpdoRtr(num, ec);
-}
-
-void
-BasicMaster::RpdoRtr(int num) {
+BasicMaster::RpdoRtr(int num) noexcept {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::RpdoRtr(num);
 }
 
 void
-BasicMaster::TpdoEvent(int num, ::std::error_code& ec) noexcept {
-  ::std::lock_guard<util::BasicLockable> lock(*this);
-
-  Node::TpdoEvent(num, ec);
-}
-
-void
-BasicMaster::TpdoEvent(int num) {
+BasicMaster::TpdoEvent(int num) noexcept {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   Node::TpdoEvent(num);

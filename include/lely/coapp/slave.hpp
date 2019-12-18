@@ -235,7 +235,7 @@ class BasicSlave : public Node {
      */
     void
     Set(const void* p, ::std::size_t n) {
-      slave_->Set(idx_, subidx_, p, n);
+      if (!id_) slave_->Set(idx_, subidx_, p, n);
     }
 
     /**
@@ -250,7 +250,43 @@ class BasicSlave : public Node {
      */
     void
     Set(const void* p, ::std::size_t n, ::std::error_code& ec) {
-      slave_->Set(idx_, subidx_, p, n, ec);
+      if (!id_) slave_->Set(idx_, subidx_, p, n, ec);
+    }
+
+    /**
+     * Checks if the sub-object can be mapped into a PDO and, if so, triggers
+     * the transmission of every event-driven, asynchronous Transmit-PDO into
+     * which the sub-object is mapped.
+     *
+     * @throws #lely::canopen::SdoError on error.
+     *
+     * @see Device::SetEvent(uint16_t idx, uint8_t subidx)
+     * @see Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx)
+     */
+    void
+    SetEvent() {
+      if (id_)
+        slave_->TpdoSetEvent(id_, idx_, subidx_);
+      else
+        slave_->SetEvent(idx_, subidx_);
+    }
+
+    /**
+     * Checks if the sub-object can be mapped into a PDO and, if so, triggers
+     * the transmission of every event-driven, asynchronous Transmit-PDO into
+     * which the sub-object is mapped.
+     *
+     * @param ec on error, the SDO abort code is stored in <b>ec</b>.
+     *
+     * @see Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
+     * @see Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec)
+     */
+    void
+    SetEvent(::std::error_code& ec) noexcept {
+      if (id_)
+        slave_->TpdoSetEvent(id_, idx_, subidx_, ec);
+      else
+        slave_->SetEvent(idx_, subidx_, ec);
     }
 
    private:

@@ -262,6 +262,23 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
       ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy);
 
  protected:
+  /**
+   * A mutex-like object that can be used to postpone the transmission of
+   * event-driven, asynchronous Transmit-PDOs while the lock is held.
+   */
+  class TpdoEventMutex : public util::BasicLockable {
+    friend class Node;
+
+   public:
+    void lock() override;
+    void unlock() override;
+
+   protected:
+    TpdoEventMutex(Node& node_) noexcept : node(&node_) {}
+
+    Node* node;
+  };
+
   void lock() final;
   void unlock() final;
 
@@ -297,43 +314,24 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    *
    * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
    *            transmission of all PDOs is requested.
-   * @param ec  the error code (0 on success).
    */
-  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
-
-  /**
-   * Requests the transmission of a PDO by sending a CAN frame with the RTR
-   * (Remote Transmission Request) bit set.
-   *
-   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
-   *            transmission of all PDOs is requested.
-   *
-   * @throws std::system_error if an error occurred while sending the CAN frame.
-   */
-  void RpdoRtr(int num = 0);
+  void RpdoRtr(int num = 0) noexcept;
 
   /**
    * Triggers the transmission of an event-driven (asynchronous) PDO.
    *
+   * The transmission of PDOs can be postponed by locking #tpdo_event_mutex.
+   *
    * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
    *            transmission of all PDOs is triggered.
-   * @param ec  the error code (0 on success).
-   *            `ec == std::errc::resource_unavailable_try_again` if the inhibit
-   *            time has not yet elapsed.
    */
-  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
+  void TpdoEvent(int num = 0) noexcept;
 
   /**
-   * Triggers the transmission of an event-driven (asynchronous) PDO.
-   *
-   * @param num the PDO number (in the range [1..512]). If <b>num</b> is 0, the
-   *            transmission of all PDOs is triggered.
-   *
-   * @throws std::system_error if an error occurred while sending the CAN frame,
-   * or std::system_error(std::errc::resource_unavailable_try_again) if the
-   * inhibit time has not yet elapsed.
+   * The mutex used to postpone the transmission of event-driven (asynchronous)
+   * PDOs.
    */
-  void TpdoEvent(int num = 0);
+  TpdoEventMutex tpdo_event_mutex;
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
  private:

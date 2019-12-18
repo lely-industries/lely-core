@@ -217,6 +217,19 @@ struct __co_nmt {
 	co_nmt_sync_ind_t *sync_ind;
 	/// A pointer to user-specified data for #sync_ind.
 	void *sync_data;
+#ifndef LELY_NO_CO_TPDO
+	/**
+	 * The number of calls to co_nmt_on_tpdo_event_lock() minus the number
+	 * of calls to co_nmt_on_tpdo_event_unlock().
+	 */
+	size_t tpdo_event_wait;
+	/**
+	 * A bit mask tracking all Transmit-PDO events indicated by
+	 * co_nmt_on_tpdo_event() that have been postponed because
+	 * #tpdo_event_wait > 0.
+	 */
+	unsigned long tpdo_event_mask[512 / LONG_BIT];
+#endif
 };
 
 /**
@@ -353,6 +366,11 @@ static void co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 
+#endif
+
+#ifndef LELY_CO_CO_TPDO
+/// The Transmit-PDO event indication function. @see co_dev_tpdo_event_ind_t
+static void co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data);
 #endif
 
 /**
@@ -857,6 +875,15 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->sync_ind = NULL;
 	nmt->sync_data = NULL;
 
+#ifndef LELY_NO_CO_TPDO
+	nmt->tpdo_event_wait = 0;
+	for (int i = 0; i < 512 / LONG_BIT; i++)
+		nmt->tpdo_event_mask[i] = 0;
+
+	// Set the Transmit-PDO event indication function.
+	co_dev_set_tpdo_event_ind(nmt->dev, &co_nmt_tpdo_event_ind, nmt);
+#endif
+
 	// Set the download indication function for the guard time.
 	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
 	if (obj_100c)
@@ -918,6 +945,9 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 // 		co_obj_set_dn_ind(obj_100d, NULL, NULL);
 // 	if (obj_100c)
 // 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+// #ifndef LELY_NO_CO_TPDO
+// 	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
+// #endif
 // 	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
@@ -977,6 +1007,11 @@ __co_nmt_fini(struct __co_nmt *nmt)
 	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
 	if (obj_100c)
 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+
+#ifndef LELY_NO_CO_TPDO
+	// Remove the Transmit-PDO event indication function.
+	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
+#endif
 
 #ifndef LELY_NO_CO_MASTER
 	co_nmt_slaves_fini(nmt);
@@ -1393,6 +1428,79 @@ co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 			co_nmt_comm_err_ind(nmt);
 	}
 }
+
+#ifndef LELY_NO_CO_TPDO
+
+void
+co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
+{
+	assert(nmt);
+	assert(nmt->srv.ntpdo <= 512);
+
+	int errsv = get_errc();
+	if (n) {
+		co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
+		if (pdo) {
+			if (nmt->tpdo_event_wait)
+				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1ul
+						<< ((n - 1) % LONG_BIT);
+			else
+				co_tpdo_event(pdo);
+		}
+	} else {
+		for (n = 1; n <= nmt->srv.ntpdo; n++) {
+			co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
+			if (!pdo)
+				continue;
+			if (nmt->tpdo_event_wait)
+				nmt->tpdo_event_mask[(n - 1) / LONG_BIT] |= 1ul
+						<< ((n - 1) % LONG_BIT);
+			else
+				co_tpdo_event(pdo);
+		}
+	}
+	set_errc(errsv);
+}
+
+void
+co_nmt_on_tpdo_event_lock(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	nmt->tpdo_event_wait++;
+}
+
+void
+co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
+{
+	assert(nmt);
+	assert(nmt->tpdo_event_wait);
+
+	if (--nmt->tpdo_event_wait)
+		return;
+
+	// Issue an indication for every postponed Transmit-PDO event.
+	int errsv = get_errc();
+	for (int i = 0; i < 512 / LONG_BIT; i++) {
+		if (nmt->tpdo_event_mask[i]) {
+			co_unsigned16_t n = i * LONG_BIT + 1;
+			for (int j = 0; j < LONG_BIT && n <= nmt->srv.ntpdo
+					&& nmt->tpdo_event_mask[i];
+					j++, n++) {
+				if (!(nmt->tpdo_event_mask[i] & (1ul << j)))
+					continue;
+				nmt->tpdo_event_mask[i] &= ~(1ul << j);
+				co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
+				if (pdo)
+					co_tpdo_event(pdo);
+			}
+			nmt->tpdo_event_mask[i] = 0;
+		}
+	}
+	set_errc(errsv);
+}
+
+#endif // !LELY_NO_CO_TPDO
 
 co_unsigned8_t
 co_nmt_get_id(const co_nmt_t *nmt)
@@ -2716,6 +2824,17 @@ co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 #endif
 
+#ifndef LELY_CO_CO_TPDO
+static void
+co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data)
+{
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_nmt_on_tpdo_event(nmt, n);
+}
+#endif
+
 static void
 co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)
 {
@@ -3015,6 +3134,12 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 	assert(nmt);
 
 	diag(DIAG_INFO, 0, "NMT: entering operational state");
+
+#ifndef LELY_NO_CO_TPDO
+	// Reset all Transmit-PDO events.
+	for (int i = 0; i < 512 / LONG_BIT; i++)
+		nmt->tpdo_event_mask[i] = 0;
+#endif
 
 	// Enable all services.
 	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_START_SRV);
