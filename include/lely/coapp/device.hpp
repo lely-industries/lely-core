@@ -242,6 +242,32 @@ class Device {
              ::std::error_code& ec);
 
   /**
+   * Checks if the specified sub-object in the local object dictionary can be
+   * mapped into a PDO and, if so, triggers the transmission of every
+   * event-driven, asynchronous Transmit-PDO into which the sub-object is
+   * mapped.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist.
+   */
+  void WriteEvent(uint16_t idx, uint8_t subidx);
+
+  /**
+   * Checks if the specified sub-object in the local object dictionary can be
+   * mapped into a PDO and, if so, triggers the transmission of every
+   * event-driven, asynchronous Transmit-PDO into which the sub-object is
+   * mapped.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   * @param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in <b>ec</b>.
+   */
+  void WriteEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept;
+
+  /**
    * Reads the value of a sub-object in a remote object dictionary by submitting
    * an SDO upload request to the corresponding PDO-mapped sub-object in the
    * local object dictionary. This function honors all access checks of the
@@ -365,6 +391,39 @@ class Device {
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
       uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /**
+   * Triggers the transmission of every event-driven, asynchronous Transmit-PDO
+   * which is mapped into the specified sub-object in a remote object
+   * dictionary.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  void TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx);
+
+  /**
+   * Triggers the transmission of every event-driven, asynchronous Transmit-PDO
+   * which is mapped into the specified sub-object in a remote object
+   * dictionary.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in <b>ec</b>.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  void TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx,
+                      ::std::error_code& ec) noexcept;
 
   /*
    * Registers the function to be invoked when a value is successfully written
@@ -603,6 +662,34 @@ class Device {
            ::std::error_code& ec);
 
   /**
+   * Checks if the specified sub-object in the local object dictionary can be
+   * mapped into a PDO and, if so, triggers the transmission of every
+   * event-driven, asynchronous Transmit-PDO into which the sub-object is
+   * mapped.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist.
+   */
+  void SetEvent(uint16_t idx, uint8_t subidx);
+
+  /**
+   * Checks if the specified sub-object in the local object dictionary can be
+   * mapped into a PDO and, if so, triggers the transmission of every
+   * event-driven, asynchronous Transmit-PDO into which the sub-object is
+   * mapped.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   * @param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in <b>ec</b>.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   */
+  void SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept;
+
+  /**
    * Reads the value of a sub-object in a remote object dictionary by reading
    * the corresponding PDO-mapped sub-object in the local object dictionary.
    * This function reads the value directly from the local object dictionary and
@@ -734,6 +821,40 @@ class Device {
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
       uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+
+  /**
+   * Triggers the transmission of every event-driven, asynchronous Transmit-PDO
+   * which is mapped into the specified sub-object in a remote object
+   * dictionary.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   *
+   * @throws #lely::canopen::SdoError if the PDO-mapped sub-object does not
+   * exist.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  void TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx);
+
+  /**
+   * Triggers the transmission of every event-driven, asynchronous Transmit-PDO
+   * which is mapped into the specified sub-object in a remote object
+   * dictionary.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param ec     if the PDO-mapped sub-object does not exist, the SDO abort
+   *               code is stored in <b>ec</b>.
+   *
+   * @pre a valid mapping from remote RPDO-mapped sub-objects to local
+   * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
+   */
+  void TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx,
+                    ::std::error_code& ec) noexcept;
 
   /**
    * Updates the mapping from remote TPDO-mapped sub-objects to local

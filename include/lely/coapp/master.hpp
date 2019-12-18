@@ -185,7 +185,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      */
     void
     Write(const void* p, ::std::size_t n) {
-      master_->Write(idx_, subidx_, p, n);
+      if (!id_) master_->Write(idx_, subidx_, p, n);
     }
 
     /**
@@ -200,7 +200,43 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      */
     void
     Write(const void* p, ::std::size_t n, ::std::error_code& ec) {
-      master_->Write(idx_, subidx_, p, n, ec);
+      if (!id_) master_->Write(idx_, subidx_, p, n, ec);
+    }
+
+    /**
+     * Checks if the sub-object can be mapped into a PDO and, if so, triggers
+     * the transmission of every event-driven, asynchronous Transmit-PDO into
+     * which the sub-object is mapped.
+     *
+     * @throws #lely::canopen::SdoError on error.
+     *
+     * @see Device::WriteEvent(uint16_t idx, uint8_t subidx)
+     * @see Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx)
+     */
+    void
+    WriteEvent() {
+      if (id_)
+        master_->TpdoWriteEvent(id_, idx_, subidx_);
+      else
+        master_->WriteEvent(idx_, subidx_);
+    }
+
+    /**
+     * Checks if the sub-object can be mapped into a PDO and, if so, triggers
+     * the transmission of every event-driven, asynchronous Transmit-PDO into
+     * which the sub-object is mapped.
+     *
+     * @param ec on error, the SDO abort code is stored in <b>ec</b>.
+     *
+     * @see Device::WriteEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec)
+     * @see Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec)
+     */
+    void
+    WriteEvent(::std::error_code& ec) noexcept {
+      if (id_)
+        master_->TpdoWriteEvent(id_, idx_, subidx_, ec);
+      else
+        master_->WriteEvent(idx_, subidx_, ec);
     }
 
    private:

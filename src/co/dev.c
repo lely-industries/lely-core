@@ -30,6 +30,9 @@
 #endif
 #include "obj.h"
 #include <lely/co/dev.h>
+#ifndef LELY_NO_CO_TPDO
+#include <lely/co/pdo.h>
+#endif
 
 #include <assert.h>
 #include <stdlib.h>
@@ -64,6 +67,12 @@ struct __co_dev {
 	int lss;
 	/// The data types supported for mapping dummy entries in PDOs.
 	co_unsigned32_t dummy;
+#ifndef LELY_NO_CO_TPDO
+	/// A pointer to the Transmit-PDO event indication function.
+	co_dev_tpdo_event_ind_t *tpdo_event_ind;
+	/// A pointer to user-specified data for #tpdo_event_ind.
+	void *tpdo_event_data;
+#endif
 };
 
 static void co_obj_set_id(
@@ -869,6 +878,78 @@ error_write_dcf:
 	return -1;
 }
 #endif
+
+#ifndef LELY_NO_CO_TPDO
+
+void
+co_dev_get_tpdo_event_ind(const co_dev_t *dev, co_dev_tpdo_event_ind_t **pind,
+		void **pdata)
+{
+	assert(dev);
+
+	if (pind)
+		*pind = dev->tpdo_event_ind;
+	if (pdata)
+		*pdata = dev->tpdo_event_data;
+}
+
+void
+co_dev_set_tpdo_event_ind(
+		co_dev_t *dev, co_dev_tpdo_event_ind_t *ind, void *data)
+{
+	assert(dev);
+
+	dev->tpdo_event_ind = ind;
+	dev->tpdo_event_data = data;
+}
+
+void
+co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
+{
+	assert(dev);
+
+	// Check if the specified sub-object can be mapped into a PDO.
+	const co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
+	if (!sub || !co_sub_get_pdo_mapping(sub))
+		return;
+
+	const co_obj_t *obj_1800 = NULL;
+	// Find the first TPDO.
+	for (co_unsigned16_t i = 0; i < 512 && !obj_1800; i++)
+		obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
+	for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
+		co_unsigned16_t i = co_obj_get_idx(obj_1800) - 0x1800;
+		if (i >= 512)
+			break;
+		// Check if this is a valid event-driven PDO.
+		const struct co_pdo_comm_par *comm =
+				co_obj_addressof_val(obj_1800);
+		assert(comm);
+		if (comm->n < 2 || (comm->cobid & CO_PDO_COBID_VALID)
+				|| comm->trans < 0xfe)
+			continue;
+		// Check if the sub-object is mapped into this PDO.
+		const co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
+		if (!obj_1a00)
+			continue;
+		const struct co_pdo_map_par *map =
+				co_obj_addressof_val(obj_1a00);
+		assert(map);
+		for (size_t j = 0; j < map->n; j++) {
+			if (((map->map[j] >> 16) & 0xffff) != idx)
+				continue;
+			if (((map->map[j] >> 8) & 0xff) != subidx)
+				continue;
+			// Issue a single indication for this PDO.
+			if (dev->tpdo_event_ind)
+				dev->tpdo_event_ind(
+						i + 1, dev->tpdo_event_data);
+			break;
+		}
+	}
+}
+
+#endif // !LELY_NO_CO_TPDO
 
 static void
 co_obj_set_id(co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id)

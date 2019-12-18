@@ -449,6 +449,21 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
     ec.clear();
 }
 
+void
+Device::WriteEvent(uint16_t idx, uint8_t subidx) {
+  ::std::error_code ec;
+  WriteEvent(idx, subidx, ec);
+  if (ec) throw SdoError(id(), idx, subidx, ec, "WriteEvent");
+}
+
+void
+Device::WriteEvent(uint16_t idx, uint8_t subidx,
+                   ::std::error_code& ec) noexcept {
+  ::std::lock_guard<Impl_> lock(*impl_);
+
+  SetEvent(idx, subidx, ec);
+}
+
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
@@ -654,6 +669,21 @@ template void Device::TpdoWrite<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
                                           ::std::error_code&);
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
+
+void
+Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx) {
+  ::std::error_code ec;
+  TpdoWriteEvent(id, idx, subidx, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoWriteEvent");
+}
+
+void
+Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx,
+                       ::std::error_code& ec) noexcept {
+  ::std::lock_guard<Impl_> lock(*impl_);
+
+  TpdoSetEvent(id, idx, subidx, ec);
+}
 
 void
 Device::OnWrite(::std::function<void(uint16_t, uint8_t)> on_write) {
@@ -984,6 +1014,30 @@ Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   impl_->Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, p, n, ec);
 }
 
+void
+Device::SetEvent(uint16_t idx, uint8_t subidx) {
+  ::std::error_code ec;
+  SetEvent(idx, subidx, ec);
+  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "SetEvent");
+}
+
+void
+Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept {
+  auto obj = impl_->dev->find(idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = obj->find(subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  impl_->dev->TPDOEvent(idx, subidx);
+}
+
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
@@ -1180,6 +1234,21 @@ template void Device::TpdoSet<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
                                         ::std::error_code&);
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
+
+void
+Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx) {
+  ::std::error_code ec;
+  TpdoSetEvent(id, idx, subidx, ec);
+  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoSetEvent");
+}
+
+void
+Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx,
+                     ::std::error_code& ec) noexcept {
+  ec.clear();
+  ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
+  if (!ec) SetEvent(idx, subidx);
+}
 
 void
 Device::UpdateRpdoMapping() {

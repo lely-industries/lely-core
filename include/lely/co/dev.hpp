@@ -26,6 +26,7 @@
 #error "include <lely/co/dev.h> for the C interface"
 #endif
 
+#include <lely/util/c_call.hpp>
 #include <lely/util/c_type.hpp>
 #include <lely/co/dev.h>
 #include <lely/co/val.hpp>
@@ -50,6 +51,7 @@ struct c_type_traits<__co_dev> {
   alloc() noexcept {
     return __co_dev_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_dev_free(ptr);
@@ -63,7 +65,6 @@ struct c_type_traits<__co_dev> {
   static pointer init(pointer p, const char* filename) noexcept;
   static pointer init(pointer p, const char* begin, const char* end,
                       floc* at) noexcept;
-
   static pointer init(pointer p, const co_sdev* sdev) noexcept;
 
   static void
@@ -122,6 +123,7 @@ class CODev : public incomplete_c_type<__co_dev> {
   insert(COObj* obj) noexcept {
     return co_dev_insert_obj(this, obj);
   }
+
   int
   remove(COObj* obj) noexcept {
     return co_dev_remove_obj(this, obj);
@@ -308,6 +310,35 @@ class CODev : public incomplete_c_type<__co_dev> {
   writeDCF(co_unsigned16_t min, co_unsigned16_t max, const char* filename) const
       noexcept {
     return co_dev_write_dcf_file(this, min, max, filename);
+  }
+
+  void
+  getTPDOEventInd(co_dev_tpdo_event_ind_t** pind, void** pdata) const noexcept {
+    co_dev_get_tpdo_event_ind(this, pind, pdata);
+  }
+
+  void
+  setTPDOEventInd(co_dev_tpdo_event_ind_t* ind, void* data) noexcept {
+    co_dev_set_tpdo_event_ind(this, ind, data);
+  }
+
+  template <class F>
+  void
+  setTPDOEventInd(F* f) noexcept {
+    setTPDOEventInd(&c_obj_call<co_dev_tpdo_event_ind_t*, F>::function,
+                    static_cast<void*>(f));
+  }
+
+  template <class C, typename c_mem_fn<co_dev_tpdo_event_ind_t*, C>::type M>
+  void
+  setTPDOEventInd(C* obj) noexcept {
+    setTPDOEventInd(&c_mem_call<co_dev_tpdo_event_ind_t*, C, M>::function,
+                    static_cast<void*>(obj));
+  }
+
+  void
+  TPDOEvent(co_unsigned16_t idx, co_unsigned8_t subidx) noexcept {
+    co_dev_tpdo_event(this, idx, subidx);
   }
 
  protected:
