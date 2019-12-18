@@ -50,6 +50,7 @@ struct c_type_traits<__co_nmt> {
   alloc() noexcept {
     return __co_nmt_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_nmt_free(ptr);
@@ -77,6 +78,7 @@ class CONMT : public incomplete_c_type<__co_nmt> {
   getNet() const noexcept {
     return co_nmt_get_net(this);
   }
+
   CODev*
   getDev() const noexcept {
     return co_nmt_get_dev(this);
@@ -370,6 +372,21 @@ class CONMT : public incomplete_c_type<__co_nmt> {
   onErr(co_unsigned16_t eec, co_unsigned8_t er,
         const co_unsigned8_t msef[5] = 0) noexcept {
     co_nmt_on_err(this, eec, er, msef);
+  }
+
+  void
+  onTPDOEvent(co_unsigned16_t n = 0) noexcept {
+    co_nmt_on_tpdo_event(this, n);
+  }
+
+  void
+  onTPDOEventLock() noexcept {
+    co_nmt_on_tpdo_event_lock(this);
+  }
+
+  void
+  onTPDOEventUnlock() noexcept {
+    co_nmt_on_tpdo_event_unlock(this);
   }
 
   co_unsigned8_t

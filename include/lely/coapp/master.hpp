@@ -496,6 +496,18 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     uint8_t id_;
   };
 
+  /// @see Node::TpdoEventMutex
+  class TpdoEventMutex : public Node::TpdoEventMutex {
+    friend class BasicMaster;
+
+   public:
+    void lock() override;
+    void unlock() override;
+
+   protected:
+    using Node::TpdoEventMutex::TpdoEventMutex;
+  };
+
   /**
    * The signature of the callback function invoked on completion of an
    * asynchronous read (SDO upload) operation from a remote object dictionary.
@@ -647,17 +659,11 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void Command(NmtCommand cs, uint8_t id = 0);
 
-  /// @see Node::RpdoRtr(int num, ::std::error_code& ec)
-  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
+  /// @see Node::RpdoRtr()
+  void RpdoRtr(int num = 0) noexcept;
 
-  /// @see Node::RpdoRtr(int num)
-  void RpdoRtr(int num = 0);
-
-  /// @see Node::TpdoEvent(int num, ::std::error_code& ec)
-  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
-
-  /// @see Node::TpdoEvent(int num)
-  void TpdoEvent(int num = 0);
+  /// @see Node::TpdoEvent()
+  void TpdoEvent(int num = 0) noexcept;
 
   /**
    * Returns the SDO timeout used during the NMT 'boot slave' and 'check
@@ -1021,6 +1027,9 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void OnBoot(
       ::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
           on_boot);
+
+  /// @see Node::tpdo_event_mutex
+  TpdoEventMutex tpdo_event_mutex;
 
  protected:
   using MapType = ::std::map<uint8_t, DriverBase*>;

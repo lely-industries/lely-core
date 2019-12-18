@@ -671,6 +671,35 @@ void co_nmt_on_sync(co_nmt_t *nmt, co_unsigned8_t cnt);
 void co_nmt_on_err(co_nmt_t *nmt, co_unsigned16_t eec, co_unsigned8_t er,
 		const co_unsigned8_t msef[5]);
 
+/**
+ * Implements the default behavior when an event is indicated for an
+ * event-driven (asynchronous) Transmit-PDO by triggering the transmission of
+ * the PDO with co_tpdo_event().
+ *
+ * The transmission of PDOs can be postponed with co_nmt_on_tpdo_event_lock().
+ *
+ * @param nmt a pointer to an NMT master/slave service.
+ * @param n   the PDO number (in the range [1..512]). If <b>n</b> is 0, the
+ *            transmission of all PDOs is triggered.
+ *
+ * @see co_dev_tpdo_event_ind_t
+ */
+void co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n);
+
+/**
+ * Postpones the transmission of PDOs triggered by co_nmt_on_tpdo_event() until
+ * a matching call to co_nmt_on_tpdo_event_unlock(). This function can be
+ * invoked multiple times. PDO transmission will resume after an equal number of
+ * calls to co_nmt_on_tpdo_event_unlock().
+ */
+void co_nmt_on_tpdo_event_lock(co_nmt_t *nmt);
+
+/**
+ * Undoes the effect of a single call to co_nmt_on_tpdo_event_lock() and
+ * possibly triggers the transmission of postponed PDOs.
+ */
+void co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt);
+
 /// Returns the pending node-ID. @see co_nmt_set_id()
 co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
 

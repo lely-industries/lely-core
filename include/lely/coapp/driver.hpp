@@ -261,6 +261,7 @@ class BasicDriver : DriverBase {
 
  public:
   using DriverBase::time_point;
+  using TpdoEventMutex = BasicMaster::TpdoEventMutex;
 
   /**
    * Creates a new driver for a remote CANopen node and registers it with the
@@ -569,6 +570,9 @@ class BasicDriver : DriverBase {
    * @see BasicMaster::TpdoMapped()
    */
   class BasicMaster::TpdoMapped tpdo_mapped;
+
+  /// @see BasicMaster::tpdo_event_mutex
+  TpdoEventMutex& tpdo_event_mutex;
 
  private:
   void

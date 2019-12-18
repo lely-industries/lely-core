@@ -72,8 +72,7 @@ struct Node::Impl_ : util::BasicLockable {
   void OnEmcyInd(COEmcy* emcy, uint8_t id, uint16_t ec, uint8_t er,
                  uint8_t msef[5]) noexcept;
 
-  void RpdoRtr(int num, ::std::error_code& ec) noexcept;
-  void TpdoEvent(int num, ::std::error_code& ec) noexcept;
+  void RpdoRtr(int num) noexcept;
 
   Node* self{nullptr};
 
@@ -106,6 +105,7 @@ Node::Node(io::TimerBase& timer, io::CanChannelBase& chan,
            uint8_t id)
     : IoContext(timer, chan, this),
       Device(dcf_txt, dcf_bin, id, this),
+      tpdo_event_mutex(*this),
       impl_(new Impl_(this, IoContext::net(), Device::dev())) {}
 
 Node::~Node() = default;
@@ -209,6 +209,16 @@ Node::OnEmcy(
 }
 
 void
+Node::TpdoEventMutex::lock() {
+  node->impl_->nmt->onTPDOEventLock();
+}
+
+void
+Node::TpdoEventMutex::unlock() {
+  node->impl_->nmt->onTPDOEventUnlock();
+}
+
+void
 Node::lock() {
   impl_->lock();
 }
@@ -242,43 +252,17 @@ Node::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) noexcept {
 }
 
 void
-Node::RpdoRtr(int num, ::std::error_code& ec) noexcept {
-  int errsv = get_errc();
-  set_errc(0);
-  ec.clear();
+Node::RpdoRtr(int num) noexcept {
   if (num) {
-    impl_->RpdoRtr(num, ec);
+    impl_->RpdoRtr(num);
   } else {
-    for (num = 1; num <= 512; num++) impl_->RpdoRtr(num, ec);
+    for (num = 1; num <= 512; num++) impl_->RpdoRtr(num);
   }
-  set_errc(errsv);
 }
 
 void
-Node::RpdoRtr(int num) {
-  ::std::error_code ec;
-  RpdoRtr(num);
-  if (ec) throw ::std::system_error(ec, "RpdoRtr");
-}
-
-void
-Node::TpdoEvent(int num, ::std::error_code& ec) noexcept {
-  int errsv = get_errc();
-  set_errc(0);
-  ec.clear();
-  if (num) {
-    impl_->TpdoEvent(num, ec);
-  } else {
-    for (num = 1; num <= 512; num++) impl_->TpdoEvent(num, ec);
-  }
-  set_errc(errsv);
-}
-
-void
-Node::TpdoEvent(int num) {
-  ::std::error_code ec;
-  TpdoEvent(num, ec);
-  if (ec) throw ::std::system_error(ec, "TpdoEvent");
+Node::TpdoEvent(int num) noexcept {
+  impl_->nmt->onTPDOEvent(num);
 }
 
 Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
@@ -487,15 +471,13 @@ Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
 }
 
 void
-Node::Impl_::RpdoRtr(int num, ::std::error_code& ec) noexcept {
+Node::Impl_::RpdoRtr(int num) noexcept {
   auto pdo = nmt->getRPDO(num);
-  if (pdo && pdo->rtr() == -1 && ec) ec = util::make_error_code();
-}
-
-void
-Node::Impl_::TpdoEvent(int num, ::std::error_code& ec) noexcept {
-  auto pdo = nmt->getTPDO(num);
-  if (pdo && pdo->event() == -1 && !ec) ec = util::make_error_code();
+  if (pdo) {
+    int errsv = get_errc();
+    pdo->rtr();
+    set_errc(errsv);
+  }
 }
 
 }  // namespace canopen
