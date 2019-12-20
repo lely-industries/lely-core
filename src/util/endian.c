@@ -7,6 +7,7 @@
  * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
+ * @author M. W. Hessel <mhessel@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +60,7 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 	}
 
 	uint_least8_t first = 0xff >> dstbit;
-	uint_least8_t last = ~(0xff >> ((dstbit + n) % 8));
+	uint_least8_t last = ~(0xff >> ((dstbit + n) % 8)) & 0xff;
 
 	int shift = dstbit - srcbit;
 	if (shift) {
@@ -88,20 +89,14 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 			dst++;
 			n -= 8 - dstbit;
 
-			int m = n % 8;
 			n /= 8;
 			while (n--) {
 				*dst++ = (b << left | *src >> right) & 0xff;
 				b = *src++ & 0xff;
 			}
 
-			if (last) {
-				if (m <= right)
-					bitcpy(dst, b << left, last);
-				else
-					bitcpy(dst, b << left | *src >> right,
-							last);
-			}
+			if (last)
+				bitcpy(dst, b << left | *src >> right, last);
 		}
 	} else {
 		if (dstbit + n <= 8) {
@@ -116,7 +111,7 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 
 			n /= 8;
 			while (n--)
-				*dst++ = *src++;
+				*dst++ = *src++ & 0xff;
 
 			if (last)
 				bitcpy(dst, *src, last);
@@ -148,8 +143,8 @@ bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 		srcbit += 8;
 	}
 
-	uint_least8_t first = 0xff << dstbit;
-	uint_least8_t last = ~(0xff << ((dstbit + n) % 8));
+	uint_least8_t first = (0xff << dstbit) & 0xff;
+	uint_least8_t last = ~(0xff << ((dstbit + n) % 8)) & 0xff;
 
 	int shift = dstbit - srcbit;
 	if (shift) {
@@ -178,20 +173,14 @@ bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 			dst++;
 			n -= 8 - dstbit;
 
-			int m = n % 8;
 			n /= 8;
 			while (n--) {
 				*dst++ = (b >> right | *src << left) & 0xff;
 				b = *src++ & 0xff;
 			}
 
-			if (last) {
-				if (m <= right)
-					bitcpy(dst, b >> right, last);
-				else
-					bitcpy(dst, b >> right | *src << left,
-							last);
-			}
+			if (last)
+				bitcpy(dst, b >> right | *src << left, last);
 		}
 	} else {
 		if (dstbit + n <= 8) {
@@ -206,7 +195,7 @@ bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 
 			n /= 8;
 			while (n--)
-				*dst++ = *src++;
+				*dst++ = *src++ & 0xff;
 
 			if (last)
 				bitcpy(dst, *src, last);
