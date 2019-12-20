@@ -886,8 +886,8 @@ co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		return co_nmt_cfg_abort_state;
 	}
 
-	req->nbyte = end - begin;
-	req->offset = begin - (const uint_least8_t *)req->buf;
+	req->nbyte = end - begin - size;
+	req->offset = begin + size - (const uint_least8_t *)req->buf;
 
 	// Write the value to the slave.
 	// clang-format off
