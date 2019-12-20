@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Transmit-PDO
  * declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -114,8 +114,8 @@ void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
 void co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data);
 
 /**
- * Triggers the transmission of an event-driven (asynchronous) PDO. This
- * function returns an error if the inhibit time has not yet elapsed.
+ * Triggers the transmission of an acyclic or event-driven PDO. This function
+ * returns an error if the inhibit time has not yet elapsed.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().

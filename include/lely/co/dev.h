@@ -89,7 +89,7 @@ extern "C" {
 /**
  * The type of a CANopen Transmit-PDO event indication function, invoked by
  * co_dev_tpdo_event() when an event is indicated for (a sub-object mapped into)
- * an event-driven (asynchronous) PDO.
+ * an acyclic or event-driven PDO.
  *
  * @param num  the PDO number (in the range [1..512]).
  * @param data a pointer to user-specified data.
@@ -536,8 +536,8 @@ int co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 
 /**
  * Retrieves the indication function invoked by co_dev_tpdo_event() when an
- * event is indicated for (a sub-object mapped into) an event-driven
- * (asynchronous) Transmit-PDO.
+ * event is indicated for (a sub-object mapped into) an acyclic or event-driven
+ * Transmit-PDO.
  *
  * @param dev   a pointer to a CANopen device.
  * @param pind  the address at which to store a pointer to the indication
@@ -552,7 +552,7 @@ void co_dev_get_tpdo_event_ind(const co_dev_t *dev,
 
 /**
  * Sets the indication function invoked by co_dev_tpdo_event() when an event is
- * indicated for (a sub-object mapped into) an event-driven (asynchronous)
+ * indicated for (a sub-object mapped into) an acyclic or event-driven
  * Transmit-PDO.
  *
  * @param dev  a pointer to a CANopen device.
@@ -568,7 +568,7 @@ void co_dev_set_tpdo_event_ind(
 /**
  * Checks if the specified sub-object in the object dictionary of a CANopen
  * device can be mapped into a PDO and, if so, issues an indication for every
- * valid, event-driven (asynchronous) Transmit-PDO into which the sub-object is
+ * valid, acylic or event-driven Transmit-PDO into which the sub-object is
  * mapped by invoking the user-defined callback function set with
  * co_dev_set_tpdo_event_ind(). At most one event is indicated for every
  * matching TPDO.

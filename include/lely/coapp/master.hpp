@@ -205,8 +205,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
     /**
      * Checks if the sub-object can be mapped into a PDO and, if so, triggers
-     * the transmission of every event-driven, asynchronous Transmit-PDO into
-     * which the sub-object is mapped.
+     * the transmission of every acyclic or event-driven Transmit-PDO into which
+     * the sub-object is mapped.
      *
      * @throws #lely::canopen::SdoError on error.
      *
@@ -223,8 +223,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
     /**
      * Checks if the sub-object can be mapped into a PDO and, if so, triggers
-     * the transmission of every event-driven, asynchronous Transmit-PDO into
-     * which the sub-object is mapped.
+     * the transmission of every acyclic or event-driven Transmit-PDO into which
+     * the sub-object is mapped.
      *
      * @param ec on error, the SDO abort code is stored in <b>ec</b>.
      *

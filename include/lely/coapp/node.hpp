@@ -264,7 +264,7 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
  protected:
   /**
    * A mutex-like object that can be used to postpone the transmission of
-   * event-driven, asynchronous Transmit-PDOs while the lock is held.
+   * acyclic and event-driven Transmit-PDOs while the lock is held.
    */
   class TpdoEventMutex : public util::BasicLockable {
     friend class Node;
@@ -318,7 +318,7 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
   void RpdoRtr(int num = 0) noexcept;
 
   /**
-   * Triggers the transmission of an event-driven (asynchronous) PDO.
+   * Triggers the transmission of an acyclic or event-driven PDO.
    *
    * The transmission of PDOs can be postponed by locking #tpdo_event_mutex.
    *
@@ -328,7 +328,7 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
   void TpdoEvent(int num = 0) noexcept;
 
   /**
-   * The mutex used to postpone the transmission of event-driven (asynchronous)
+   * The mutex used to postpone the transmission of acyclic and event-driven
    * PDOs.
    */
   TpdoEventMutex tpdo_event_mutex;

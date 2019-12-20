@@ -921,12 +921,12 @@ co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 		co_unsigned16_t i = co_obj_get_idx(obj_1800) - 0x1800;
 		if (i >= 512)
 			break;
-		// Check if this is a valid event-driven PDO.
+		// Check if this is a valid acyclic or event-driven PDO.
 		const struct co_pdo_comm_par *comm =
 				co_obj_addressof_val(obj_1800);
 		assert(comm);
 		if (comm->n < 2 || (comm->cobid & CO_PDO_COBID_VALID)
-				|| comm->trans < 0xfe)
+				|| !(!comm->trans || comm->trans >= 0xfe))
 			continue;
 		// Check if the sub-object is mapped into this PDO.
 		const co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
