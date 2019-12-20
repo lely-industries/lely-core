@@ -699,6 +699,10 @@ co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
 		return co_nmt_cfg_store_1f22_state;
 	}
 
+	// Ignore an empty DCF.
+	if (!req->nbyte)
+		return co_nmt_cfg_store_1f22_state;
+
 	// Parse the DCF.
 	assert(!cfg->dev_1f20);
 	cfg->dev_1f20 = co_dev_create_from_dcf_text(
@@ -818,6 +822,10 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 		return co_nmt_cfg_user_state;
 	}
 
+	// Ignore an empty concise DCF.
+	if (!req->nbyte)
+		return co_nmt_cfg_user_state;
+
 	const uint_least8_t *begin = req->buf;
 	const uint_least8_t *end = begin + req->nbyte;
 
@@ -826,6 +834,7 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
 		return co_nmt_cfg_abort_state;
 	}
+	begin += 4;
 
 	req->nbyte = end - begin;
 	req->offset = begin - (const uint_least8_t *)req->buf;
