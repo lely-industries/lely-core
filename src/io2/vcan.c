@@ -4,7 +4,7 @@
  *
  * @see lely/io2/vcan.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -855,8 +855,10 @@ io_vcan_ctrl_write(io_can_ctrl_t *ctrl, io_can_chan_t *chan,
 		int timeout)
 {
 	struct io_vcan_ctrl *vcan_ctrl = io_vcan_ctrl_from_ctrl(ctrl);
-	assert(msg || err);
 	assert(!msg || !err);
+
+	if (!msg && !err)
+		return 0;
 
 	struct timespec ts = { 0, 0 };
 	// Compute the absolute timeout for cnd_timedwait().
