@@ -2329,6 +2329,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		goto error;
 	}
 
+	// cppcheck-suppress knownConditionTrueFalse
 	if (id) {
 		// Check if the entry for this node is present in object 1F20
 		// (Store DCF) or 1F22 (Concise DCF).
