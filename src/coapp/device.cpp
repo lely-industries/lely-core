@@ -1293,6 +1293,8 @@ Device::UpdateRpdoMapping() {
     for (int i = 1; i <= n; i++) {
       auto rmap = obj_1600->getVal<CO_DEFTYPE_UNSIGNED32>(i);
       auto tmap = obj_5a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      // Ignore empty mapping entries.
+      if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
       if ((rmap & 0xff) != (tmap & 0xff)) break;
       rmap >>= 8;
@@ -1350,6 +1352,8 @@ Device::UpdateTpdoMapping() {
     for (int i = 1; i <= n; i++) {
       auto tmap = obj_1a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
       auto rmap = obj_5e00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      // Ignore empty mapping entries.
+      if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
       if ((tmap & 0xff) != (rmap & 0xff)) break;
       tmap >>= 8;
