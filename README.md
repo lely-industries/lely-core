@@ -87,7 +87,7 @@ lely-core is hosted on [GitLab]. You can clone the repository with
     $ git clone https://gitlab.com/lely_industries/lely-core.git
 
 or download the latest release
-([v2.0.2](https://gitlab.com/lely_industries/lely-core/tags/v2.0.1)).
+([v2.0.3](https://gitlab.com/lely_industries/lely-core/tags/v2.0.3)).
 
 Build and install
 -----------------
@@ -285,7 +285,7 @@ http://lely_industries.gitlab.io/lely-core/doxygen/.
 Licensing
 ---------
 
-Copyright 2013-2019 [Lely Industries N.V.]
+Copyright 2013-2020 [Lely Industries N.V.]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
