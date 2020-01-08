@@ -4,7 +4,7 @@
  *
  * @see lely/co/tpdo.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -791,6 +791,9 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		size_t bits = 0;
 		for (size_t i = 1; i <= n; i++) {
 			co_unsigned32_t map = pdo->map.map[i - 1];
+			if (!map)
+				continue;
+
 			co_unsigned16_t idx = (map >> 16) & 0xffff;
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			co_unsigned8_t len = map & 0xff;
@@ -823,13 +826,15 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			goto error;
 		}
 
-		co_unsigned16_t idx = (map >> 16) & 0xffff;
-		co_unsigned8_t subidx = (map >> 8) & 0xff;
-		// Check whether the sub-object exists and can be mapped into a
-		// PDO.
-		ac = co_dev_chk_tpdo(pdo->dev, idx, subidx);
-		if (ac)
-			goto error;
+		if (map) {
+			co_unsigned16_t idx = (map >> 16) & 0xffff;
+			co_unsigned8_t subidx = (map >> 8) & 0xff;
+			// Check whether the sub-object exists and can be mapped
+			// into a PDO.
+			ac = co_dev_chk_tpdo(pdo->dev, idx, subidx);
+			if (ac)
+				goto error;
+		}
 
 		pdo->map.map[co_sub_get_subidx(sub) - 1] = map;
 	}

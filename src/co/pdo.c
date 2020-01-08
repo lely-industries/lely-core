@@ -4,7 +4,7 @@
  *
  * @see lely/co/pdo.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -194,8 +194,11 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 
 	size_t offset = 0;
 	for (size_t i = 0; i < par->n; i++) {
-		co_unsigned8_t len = par->map[i] & 0xff;
+		co_unsigned32_t map = par->map[i];
+		if (!map)
+			continue;
 
+		co_unsigned8_t len = map & 0xff;
 		if (offset + len > CAN_MAX_LEN * 8)
 			return CO_SDO_AC_PDO_LEN;
 
@@ -225,8 +228,11 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint_least8_t *buf,
 
 	size_t offset = 0;
 	for (size_t i = 0; i < par->n; i++) {
-		co_unsigned8_t len = par->map[i] & 0xff;
+		co_unsigned32_t map = par->map[i];
+		if (!map)
+			continue;
 
+		co_unsigned8_t len = map & 0xff;
 		if (offset + len > n * 8)
 			return CO_SDO_AC_PDO_LEN;
 
@@ -261,6 +267,9 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 	size_t offset = 0;
 	for (size_t i = 0; i < MIN(par->n, 0x40u); i++) {
 		co_unsigned32_t map = par->map[i];
+		if (!map)
+			continue;
+
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
@@ -308,6 +317,9 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	size_t offset = 0;
 	for (size_t i = 0; i < MIN(par->n, 0x40u); i++) {
 		co_unsigned32_t map = par->map[i];
+		if (!map)
+			continue;
+
 		co_unsigned16_t idx = (map >> 16) & 0xffff;
 		co_unsigned8_t subidx = (map >> 8) & 0xff;
 		co_unsigned8_t len = map & 0xff;
