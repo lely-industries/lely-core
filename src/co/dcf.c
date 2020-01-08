@@ -5,7 +5,7 @@
  *
  * @see lely/co/dcf.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -60,6 +60,8 @@ static co_sub_t *co_sub_build(co_obj_t *obj, co_unsigned8_t subidx,
 static int co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
 static int co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
 
+static size_t co_val_lex_id(
+		const char *begin, const char *end, struct floc *at);
 static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
 
 static co_unsigned16_t config_get_idx(const config_t *cfg, const char *section,
@@ -679,8 +681,9 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 					obj, (co_unsigned8_t)subidx);
 			co_unsigned16_t type = co_sub_get_type(sub);
 			co_val_fini(type, sub->val);
-			if (!strncmp(val, "$NODEID", 7)) {
-				val += 7;
+			size_t chars = co_val_lex_id(val, NULL, &at);
+			if (chars) {
+				val += chars;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
 			if (!co_val_lex(type, sub->val, val, NULL, &at)) {
@@ -743,8 +746,9 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 #ifndef LELY_NO_CO_OBJ_LIMITS
 	val = config_get(cfg, section, "LowLimit");
 	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
+		size_t chars = co_val_lex_id(val, NULL, &at);
+		if (chars) {
+			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_MIN_NODEID;
 		}
 		if (!co_val_lex(type, &sub->min, val, NULL, &at)) {
@@ -758,8 +762,9 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	val = config_get(cfg, section, "HighLimit");
 	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
+		size_t chars = co_val_lex_id(val, NULL, &at);
+		if (chars) {
+			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_MAX_NODEID;
 		}
 		if (!co_val_lex(type, &sub->max, val, NULL, &at)) {
@@ -799,8 +804,9 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	val = config_get(cfg, section, "DefaultValue");
 	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
+		size_t chars = co_val_lex_id(val, NULL, &at);
+		if (chars) {
+			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
 #ifdef LELY_NO_CO_OBJ_DEFAULT
@@ -830,8 +836,9 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	val = config_get(cfg, section, "ParameterValue");
 	if (val && *val) {
-		if (!strncmp(val, "$NODEID", 7)) {
-			val += 7;
+		size_t chars = co_val_lex_id(val, NULL, &at);
+		if (chars) {
+			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 		}
 		if (!co_val_lex(type, sub->val, val, NULL, &at)) {
@@ -1232,6 +1239,26 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	}
 
 	return 0;
+}
+
+static size_t
+co_val_lex_id(const char *begin, const char *end, struct floc *at)
+{
+	assert(begin);
+
+	const char *cp = begin;
+
+	if ((end && cp - end < 7) || strncasecmp(begin, "$NODEID", 7))
+		return 0;
+	cp += 7;
+	if (at)
+		at->column += 7;
+
+	cp += lex_ctype(isspace, cp, end, at);
+	cp += lex_char('+', cp, end, at);
+	cp += lex_ctype(isspace, cp, end, at);
+
+	return cp - begin;
 }
 
 static void
