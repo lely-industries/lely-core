@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -3558,9 +3558,9 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 		// Wait for all mandatory slaves to finish booting.
 		if (!res && mandatory)
 			res = 1;
-		// Nodes with the keep-alive bit _not_ set are booted when we
-		// receive their boot-up signal.
-		if (!(slave->assignment & 0x10))
+		// Optional slaves with the keep-alive bit _not_ set are booted
+		// when we receive their boot-up signal.
+		if (!mandatory && !(slave->assignment & 0x10))
 			continue;
 		// Halt the network boot-up procedure if the 'boot slave'
 		// process failed for a mandatory slave with the keep-alive bit
