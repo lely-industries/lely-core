@@ -207,7 +207,6 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 	assert(hb);
 	assert(hb->id && hb->id <= CO_NUM_NODES);
 	assert(msg->id == (uint_least32_t)CO_NMT_EC_CANID(hb->id));
-	assert(hb->ms);
 
 	// Obtain the node status from the CAN frame. Ignore if the toggle bit
 	// is set, since then it is not a heartbeat message.
@@ -215,6 +214,12 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 		return 0;
 	co_unsigned8_t st = msg->data[0];
 	if (st & CO_NMT_ST_TOGGLE)
+		return 0;
+
+	// This might happen upon receipt of a boot-up message. The 'boot slave'
+	// process has disabled the heartbeat consumer, but the event has
+	// already been scheduled.
+	if (!hb->ms)
 		return 0;
 
 	// Update the state.
