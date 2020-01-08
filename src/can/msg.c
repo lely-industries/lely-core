@@ -4,7 +4,7 @@
  *
  * @see lely/can/msg.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -295,7 +295,7 @@ can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 		off += 8;
 	}
 
-	if (off) {
+	if (off && bits) {
 		int n = MIN((size_t)(8 - off), bits);
 		crc = can_crc_bits(crc, *bp++, off, n);
 		bits -= n;

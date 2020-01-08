@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/master.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -177,7 +177,7 @@ BasicMaster::Erase(DriverBase& driver) {
   auto it = find(id);
   if (it != end() && it->second == &driver) {
     CancelSdo(id);
-    erase(id);
+    erase(it);
   }
 }
 

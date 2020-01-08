@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/device.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1247,7 +1247,7 @@ Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx,
                      ::std::error_code& ec) noexcept {
   ec.clear();
   ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
-  if (!ec) SetEvent(idx, subidx);
+  if (!ec) SetEvent(idx, subidx, ec);
 }
 
 void
