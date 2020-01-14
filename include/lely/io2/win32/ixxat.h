@@ -116,7 +116,7 @@ void io_ixxat_chan_fini(io_can_chan_t *chan);
  * @param ctx     a pointer to the I/O context with which the channel should be
  *                registered.
  * @param exec    a pointer to the executor used to execute asynchronous tasks.
- *                These task including blocking read and write functions, the
+ *                These tasks including blocking read and write functions, the
  *                timeout of which can be specified with  <b>rxtimeo</b> and
  *                <b>txtimeo</b>, respectively.
  * @param rxtimeo the timeout (in milliseconds) when waiting asynchronously for
