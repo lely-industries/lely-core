@@ -17,7 +17,7 @@ BEGIN
       VALUE "FileDescription",  "Lely CAN library"
       VALUE "FileVersion",      "1.9.2"
       VALUE "InternalName",     "liblely-can"
-      VALUE "LegalCopyright",   "2019 Lely Industries N.V."
+      VALUE "LegalCopyright",   "2020 Lely Industries N.V."
       VALUE "OriginalFilename", "liblely-can-1.dll"
       VALUE "ProductName",      "Lely CAN library"
       VALUE "ProductVersion",   "1.9.2"

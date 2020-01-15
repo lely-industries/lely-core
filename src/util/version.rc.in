@@ -17,7 +17,7 @@ BEGIN
       VALUE "FileDescription",  "Lely Utilities library"
       VALUE "FileVersion",      "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
       VALUE "InternalName",     "liblely-util"
-      VALUE "LegalCopyright",   "2018 Lely Industries N.V."
+      VALUE "LegalCopyright",   "2020 Lely Industries N.V."
       VALUE "OriginalFilename", "liblely-util-@VERSION_MAJOR@.dll"
       VALUE "ProductName",      "Lely Utilities library"
       VALUE "ProductVersion",   "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"

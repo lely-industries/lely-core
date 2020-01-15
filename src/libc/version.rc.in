@@ -17,7 +17,7 @@ BEGIN
       VALUE "FileDescription",  "Lely C11 and POSIX compatibility library"
       VALUE "FileVersion",      "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
       VALUE "InternalName",     "liblely-libc"
-      VALUE "LegalCopyright",   "2013-2018 Lely Industries N.V."
+      VALUE "LegalCopyright",   "2013-2020 Lely Industries N.V."
       VALUE "OriginalFilename", "liblely-libc-@VERSION_MAJOR@.dll"
       VALUE "ProductName",      "Lely C11 and POSIX compatibility library"
       VALUE "ProductVersion",   "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
