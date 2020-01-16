@@ -4,7 +4,7 @@
  *
  * @see lely/io/pipe.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -59,7 +59,7 @@ io_open_pipe(io_handle_t handle_vector[2])
 #else
 	int fd[2];
 #endif
-#if defined(__CYGWIN__) || defined(__linux__)
+#if (defined(__CYGWIN__) || defined(__linux__)) && defined(_GNU_SOURCE)
 	if (pipe2(fd, O_CLOEXEC) == -1) {
 #else
 	if (pipe(fd) == -1) {
