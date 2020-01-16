@@ -1266,6 +1266,41 @@ co_val_lex_dcf(co_unsigned16_t type, void *val, const char *begin,
 		}
 		return floc_lex(at, begin, begin + chars);
 	}
+	case CO_DEFTYPE_UNICODE_STRING: {
+		const char *cp;
+		// Count the number of 16-bit code units.
+		size_t n = 0;
+		for (cp = begin; (!end || cp < end) && *cp;) {
+			char32_t c32 = 0;
+			cp += lex_utf8(cp, end, NULL, &c32);
+			assert(c32 < 0xd800 || c32 > 0xdfff);
+			n += c32 <= 0xffff ? 1 : 2;
+		}
+		if (val) {
+			if (co_val_init_us_n(val, NULL, n) == -1) {
+				diag_if(DIAG_ERROR, get_errc(), at,
+						"unable to create value of type UNICODE_STRING");
+				return 0;
+			}
+			// Parse the UTF-8 characters.
+			char16_t *us = *(void **)val;
+			assert(us);
+			for (cp = begin; (!end || cp < end) && *cp;) {
+				char32_t c32 = 0;
+				cp += lex_utf8(cp, end, NULL, &c32);
+				assert(c32 < 0xd800 || c32 > 0xdfff);
+				// Store the character as UTF-16LE.
+				if (c32 <= 0xffff) {
+					*us++ = c32;
+				} else {
+					c32 -= 0x10000ul;
+					*us++ = 0xd800 + ((c32 >> 10) & 0x3ff);
+					*us++ = 0xdc00 + (c32 & 0x3ff);
+				}
+			}
+		}
+		return floc_lex(at, begin, cp);
+	}
 	case CO_DEFTYPE_DOMAIN: {
 		size_t n = 0;
 		size_t chars = lex_hex(begin, end, NULL, NULL, &n);
