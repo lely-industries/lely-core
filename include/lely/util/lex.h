@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the lexer
  * function declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -343,7 +343,30 @@ size_t lex_line_comment(const char *delim, const char *begin, const char *end,
 		struct floc *at);
 
 /**
- * Lexwes and decodes the Base64 representation of binary data from a memory
+ * Lexes and decodes the hexadecimal representation of binary data from a memory
+ * buffer.
+ *
+ * @param begin a pointer to the start of the buffer.
+ * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
+ *              null-terminated).
+ * @param at    an optional pointer to the file location of <b>begin</b> (used
+ *              for diagnostic purposes). On success, if `at != NULL`,
+ *              *<b>at</b> points to one past the last character lexed. On
+ *              error, *<b>at</b> is left untouched.
+ * @param ptr   the address at which to store the decoded binary data (can be
+ *              NULL).
+ * @param pn    the address of a value containing the size of the buffer at
+ *              *<b>ptr</b>. On exit, if <b>pn</b> is not NULL, *<b>pn</b>
+ *              contains the number of bytes that would have been written had
+ *              the buffer at <b>ptr</b> been sufficiently large.
+ *
+ * @returns the number of characters read.
+ */
+size_t lex_hex(const char *begin, const char *end, struct floc *at, void *ptr,
+		size_t *pn);
+
+/**
+ * Lexes and decodes the Base64 representation of binary data from a memory
  * buffer. This function implements the MIME variant of Base64 as specified in
  * <a href="https://tools.ietf.org/html/rfc2045">RFC 2045</a>. Since this
  * variant instructs implementations to ignore invalid characters, this function
