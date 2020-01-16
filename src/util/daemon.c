@@ -4,7 +4,7 @@
  *
  * @see lely/util/daemon.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -262,7 +262,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	}
 
 	// Create a non-blocking self-pipe.
-#if defined(__CYGWIN__) || defined(__linux__)
+#if (defined(__CYGWIN__) || defined(__linux__)) && defined(_GNU_SOURCE)
 	result = pipe2(daemon_pipe, O_NONBLOCK | O_CLOEXEC);
 	if (result == -1) {
 		result = -1;
