@@ -4,7 +4,7 @@
  *
  * @see lely/util/lex.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -648,6 +648,36 @@ lex_line_comment(const char *delim, const char *begin, const char *end,
 	// Skip until end-of-line.
 	while ((!end || cp < end) && *cp && !isbreak((unsigned char)*cp))
 		cp++;
+
+	return floc_lex(at, begin, cp);
+}
+
+size_t
+lex_hex(const char *begin, const char *end, struct floc *at, void *ptr,
+		size_t *pn)
+{
+	assert(begin);
+
+	const char *cp = begin;
+
+	unsigned char *bp = ptr;
+	unsigned char *endb = bp + (ptr && pn ? *pn : 0);
+
+	size_t n = 0, i = 0;
+	for (; (!end || cp < end) && isxdigit((unsigned char)*cp); cp++, i++) {
+		if (bp && bp < endb) {
+			if (i % 2) {
+				*bp <<= 4;
+				*bp++ |= ctox(*cp) & 0xf;
+			} else {
+				*bp = ctox(*cp) & 0xf;
+				n++;
+			}
+		}
+	}
+
+	if (pn)
+		*pn = n;
 
 	return floc_lex(at, begin, cp);
 }

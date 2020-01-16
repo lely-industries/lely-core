@@ -154,7 +154,7 @@ ParameterValue=0123456789abcdef
 ParameterName=UNICODE_STRING
 DataType=0x000B
 AccessType=rw
-ParameterValue=SABlAGwAbABvACwAIABXAG8AcgBsAGQAIQA=
+ParameterValue="Hello, world!"
 
 [200C]
 ParameterName=TIME_OF_DAY

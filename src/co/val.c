@@ -4,7 +4,7 @@
  *
  * @see lely/co/val.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1008,27 +1008,18 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		break;
 	}
 	case CO_DEFTYPE_OCTET_STRING: {
-		// Count the number of hexadecimal digits.
-		while ((!end || cp + chars < end)
-				&& isxdigit((unsigned char)cp[chars]))
-			chars++;
+		size_t n = 0;
+		chars = lex_base64(cp, end, NULL, NULL, &n);
 		if (val) {
-			if (co_val_init_os(val, NULL, (chars + 1) / 2) == -1) {
+			if (co_val_init_os(val, NULL, n) == -1) {
 				diag_if(DIAG_ERROR, get_errc(), at,
 						"unable to create value of type OCTET_STRING");
 				return 0;
 			}
 			// Parse the octets.
 			uint_least8_t *os = *(void **)val;
-			assert(os);
-			for (size_t i = 0; i < chars; i++) {
-				if (i % 2) {
-					*os <<= 4;
-					*os++ |= ctox(cp[i]) & 0xf;
-				} else {
-					*os = ctox(cp[i]) & 0xf;
-				}
-			}
+			assert(!n || os);
+			lex_base64(cp, end, NULL, os, &n);
 		}
 		cp += chars;
 		break;
@@ -1278,13 +1269,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		case CO_DEFTYPE_VISIBLE_STRING:
 			return print_c99_str(pbegin, end, ptr, n);
 		case CO_DEFTYPE_OCTET_STRING: {
-			size_t chars = 0;
-			for (const uint_least8_t *os = ptr; n; n--, os++) {
-				chars += print_char(
-						pbegin, end, xtoc(*os >> 4));
-				chars += print_char(pbegin, end, xtoc(*os));
-			}
-			return chars;
+			return print_base64(pbegin, end, ptr, n);
 		}
 		case CO_DEFTYPE_UNICODE_STRING: {
 			char16_t *us = NULL;

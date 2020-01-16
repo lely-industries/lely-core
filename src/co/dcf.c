@@ -60,6 +60,8 @@ static co_sub_t *co_sub_build(co_obj_t *obj, co_unsigned8_t subidx,
 static int co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
 static int co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask);
 
+size_t co_val_lex_dcf(co_unsigned16_t type, void *val, const char *begin,
+		const char *end, struct floc *at);
 static size_t co_val_lex_id(
 		const char *begin, const char *end, struct floc *at);
 static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
@@ -686,7 +688,7 @@ co_obj_parse_values(co_obj_t *obj, const config_t *cfg)
 				val += chars;
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
-			if (!co_val_lex(type, sub->val, val, NULL, &at)) {
+			if (!co_val_lex_dcf(type, sub->val, val, NULL, &at)) {
 				diag(DIAG_ERROR, get_errc(),
 						"unable to set value of sub-object %Xsub%X",
 						(co_unsigned16_t)idx,
@@ -751,7 +753,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_MIN_NODEID;
 		}
-		if (!co_val_lex(type, &sub->min, val, NULL, &at)) {
+		if (!co_val_lex_dcf(type, &sub->min, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse LowLimit");
 			goto error;
@@ -767,7 +769,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_MAX_NODEID;
 		}
-		if (!co_val_lex(type, &sub->max, val, NULL, &at)) {
+		if (!co_val_lex_dcf(type, &sub->max, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse HighLimit");
 			goto error;
@@ -810,9 +812,9 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
 #ifdef LELY_NO_CO_OBJ_DEFAULT
-		if (!co_val_lex(type, &def, val, NULL, &at)) {
+		if (!co_val_lex_dcf(type, &def, val, NULL, &at)) {
 #else
-		if (!co_val_lex(type, &sub->def, val, NULL, &at)) {
+		if (!co_val_lex_dcf(type, &sub->def, val, NULL, &at)) {
 #endif
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse DefaultValue");
@@ -841,7 +843,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 		}
-		if (!co_val_lex(type, sub->val, val, NULL, &at)) {
+		if (!co_val_lex_dcf(type, sub->val, val, NULL, &at)) {
 			diag_at(DIAG_ERROR, get_errc(), &at,
 					"unable to parse ParameterValue");
 			goto error;
@@ -1239,6 +1241,83 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 	}
 
 	return 0;
+}
+
+size_t
+co_val_lex_dcf(co_unsigned16_t type, void *val, const char *begin,
+		const char *end, struct floc *at)
+{
+	assert(begin);
+	assert(!end || end >= begin);
+
+	switch (type) {
+	case CO_DEFTYPE_OCTET_STRING: {
+		size_t n = 0;
+		size_t chars = lex_hex(begin, end, NULL, NULL, &n);
+		if (val) {
+			if (co_val_init_os(val, NULL, n) == -1) {
+				diag_if(DIAG_ERROR, get_errc(), at,
+						"unable to create value of type OCTET_STRING");
+				return 0;
+			}
+			uint_least8_t *os = *(void **)val;
+			assert(!n || os);
+			lex_hex(begin, end, NULL, os, &n);
+		}
+		return floc_lex(at, begin, begin + chars);
+	}
+	case CO_DEFTYPE_UNICODE_STRING: {
+		const char *cp;
+		// Count the number of 16-bit code units.
+		size_t n = 0;
+		for (cp = begin; (!end || cp < end) && *cp;) {
+			char32_t c32 = 0;
+			cp += lex_utf8(cp, end, NULL, &c32);
+			assert(c32 < 0xd800 || c32 > 0xdfff);
+			n += c32 <= 0xffff ? 1 : 2;
+		}
+		if (val) {
+			if (co_val_init_us_n(val, NULL, n) == -1) {
+				diag_if(DIAG_ERROR, get_errc(), at,
+						"unable to create value of type UNICODE_STRING");
+				return 0;
+			}
+			// Parse the UTF-8 characters.
+			char16_t *us = *(void **)val;
+			assert(us);
+			for (cp = begin; (!end || cp < end) && *cp;) {
+				char32_t c32 = 0;
+				cp += lex_utf8(cp, end, NULL, &c32);
+				assert(c32 < 0xd800 || c32 > 0xdfff);
+				// Store the character as UTF-16LE.
+				if (c32 <= 0xffff) {
+					*us++ = c32;
+				} else {
+					c32 -= 0x10000ul;
+					*us++ = 0xd800 + ((c32 >> 10) & 0x3ff);
+					*us++ = 0xdc00 + (c32 & 0x3ff);
+				}
+			}
+		}
+		return floc_lex(at, begin, cp);
+	}
+	case CO_DEFTYPE_DOMAIN: {
+		size_t n = 0;
+		size_t chars = lex_hex(begin, end, NULL, NULL, &n);
+		if (val) {
+			if (co_val_init_dom(val, NULL, n) == -1) {
+				diag_if(DIAG_ERROR, get_errc(), at,
+						"unable to create value of type DOMAIN");
+				return 0;
+			}
+			void *dom = *(void **)val;
+			assert(!n || dom);
+			lex_hex(begin, end, NULL, dom, &n);
+		}
+		return floc_lex(at, begin, begin + chars);
+	}
+	default: return co_val_lex(type, val, begin, end, at);
+	}
 }
 
 static size_t
