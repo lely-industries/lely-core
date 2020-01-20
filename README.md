@@ -16,7 +16,7 @@ The Lely core libraries consist of:
 - CANopen library (liblely-co)
 - C++ CANopen application library (liblely-coapp)
 
-Click [here](http://opensource.lely.com/canopen/docs/overview/) for more
+Click [here](https://opensource.lely.com/canopen/docs/overview/) for more
 details.
 
 ## Getting started
@@ -57,7 +57,7 @@ The full list can be shown with
     $ ./configure --help
 
 and is documented
-[here](http://opensource.lely.com/canopen/docs/configuration/).
+[here](https://opensource.lely.com/canopen/docs/configuration/).
 
 Once the build system is configured, the libraries and tools can be built with
 
@@ -79,7 +79,7 @@ Finally, install the binaries, headers and documentation by running
 
 as root.
 
-Click [here](http://opensource.lely.com/canopen/docs/installation/) for more
+Click [here](https://opensource.lely.com/canopen/docs/installation/) for more
 information about building the Lely-core libraries from source, as well as
 instructions for cross-compilation.
 
