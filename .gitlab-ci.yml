@@ -135,6 +135,8 @@ test:gcc:9:
         mingw-w64
     - curl -L https://dl.winehq.org/wine-builds/winehq.key | apt-key add -
     - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ buster main'
+    - curl -L https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/Release.key | apt-key add -
+    - apt-add-repository 'deb https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/ ./'
     - dpkg --add-architecture i386
     - apt-get update -q
     - apt-get install -qy
