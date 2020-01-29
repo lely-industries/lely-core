@@ -4,7 +4,7 @@
  *
  * @see lely/ev/fiber_exec.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -128,7 +128,7 @@ static int ev_fiber_exec_post_ctx(struct ev_fiber_exec *exec);
 struct ev_fiber_ctx {
 	/// A pointer to the fiber containing this context.
 	fiber_t *fiber;
-	/// A pointer to the next fiber in the list of unused fiber.
+	/// A pointer to the next fiber in the list of unused fibers.
 	struct ev_fiber_ctx *next;
 	/// The executor using this fiber.
 	struct ev_fiber_exec *exec;
@@ -485,7 +485,7 @@ ev_fiber_exec_post_ctx(struct ev_fiber_exec *exec)
 	int errsv = get_errc();
 	struct ev_fiber_ctx *ctx = ev_fiber_ctx_create(exec);
 	if (!ctx) {
-		// Ignore the error; one of the existing fiber can pick up the
+		// Ignore the error; one of the existing fibers can pick up the
 		// submitted task.
 		set_errc(errsv);
 		return -1;
@@ -563,7 +563,7 @@ ev_fiber_ctx_fiber_func(fiber_t *fiber, void *arg)
 	struct ev_task *task = NULL;
 	for (;;) {
 		if (!task) {
-			// check if there are any task waiting on the queue of
+			// Check if there are any tasks waiting on the queue of
 			// the executor.
 			assert(ctx->exec->pending);
 			ctx->exec->pending--;
@@ -590,7 +590,7 @@ ev_fiber_ctx_fiber_func(fiber_t *fiber, void *arg)
 			task->func(task);
 		ev_fiber_exec_on_task_fini(exec);
 
-		// Check if there are any deffered tasks remaining.
+		// Check if there are any deferred tasks remaining.
 		task = ev_task_from_node(sllist_pop_front(&ctx->queue));
 		if (!task)
 			ctx->exec->pending++;
@@ -624,8 +624,8 @@ ev_fiber_await_func(fiber_t *fiber, void *arg)
 	thr->curr = NULL;
 	ctx->fiber = fiber;
 
-	// If there tasks on the queue, but no pending fibers to execute them,
-	// try to post a new fiber.
+	// If there are tasks on the queue, but no pending fibers to execute
+	// them, try to post a new fiber.
 	struct ev_fiber_exec *exec = ctx->exec;
 	if (!exec->pending) {
 #if !LELY_NO_THREADS
