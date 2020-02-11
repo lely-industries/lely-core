@@ -333,15 +333,27 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 	// Parse compact PDO definitions after the explicit object definitions
 	// to prevent overwriting PDOs.
 	val = config_get(cfg, "DeviceInfo", "CompactPDO");
-	if (val && *val) {
-		unsigned int mask = strtoul(val, NULL, 0);
-
+	unsigned int mask = val && *val ? strtoul(val, NULL, 0) : 0;
+	if (mask) {
 		co_unsigned16_t nrpdo = 0;
 		val = config_get(cfg, "DeviceInfo", "NrOfRxPDO");
 		if (val && *val)
 			nrpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
-		for (co_unsigned16_t num = 1; num <= nrpdo; num++) {
-			if (co_rpdo_build(dev, num, mask) == -1)
+		// Count the number of implicit RPDOs.
+		for (co_unsigned16_t i = 0; i < 512 && nrpdo; i++) {
+			if (co_dev_find_obj(dev, 0x1400 + i)
+					|| co_dev_find_obj(dev, 0x1600 + i))
+				nrpdo--;
+		}
+		for (co_unsigned16_t i = 0; i < 512; i++) {
+			if (!co_dev_find_obj(dev, 0x1400 + i)
+					&& !co_dev_find_obj(dev, 0x1600 + i)) {
+				if (!nrpdo)
+					continue;
+				nrpdo--;
+			}
+			// Add missing communication and/or mapping objects.
+			if (co_rpdo_build(dev, i + 1, mask) == -1)
 				goto error_parse_pdo;
 		}
 
@@ -349,8 +361,21 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		val = config_get(cfg, "DeviceInfo", "NrOfTxPDO");
 		if (val && *val)
 			ntpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
-		for (co_unsigned16_t num = 1; num <= ntpdo; num++) {
-			if (co_tpdo_build(dev, num, mask) == -1)
+		// Count the number of implicit TPDOs.
+		for (co_unsigned16_t i = 0; i < 512 && ntpdo; i++) {
+			if (co_dev_find_obj(dev, 0x1800 + i)
+					|| co_dev_find_obj(dev, 0x1a00 + i))
+				ntpdo--;
+		}
+		for (co_unsigned16_t i = 0; i < 512; i++) {
+			if (!co_dev_find_obj(dev, 0x1800 + i)
+					&& !co_dev_find_obj(dev, 0x1a00 + i)) {
+				if (!ntpdo)
+					continue;
+				ntpdo--;
+			}
+			// Add missing communication and/or mapping objects.
+			if (co_tpdo_build(dev, i + 1, mask) == -1)
 				goto error_parse_pdo;
 		}
 	}
