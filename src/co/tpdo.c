@@ -396,6 +396,10 @@ co_tpdo_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	// Check whether the PDO exists and is valid.
+	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
+		return 0;
+
 	// Ignore events if the transmission type is synchronous.
 	if (pdo->comm.trans && pdo->comm.trans < 0xfd)
 		return 0;
