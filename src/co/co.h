@@ -25,8 +25,6 @@
 #include <config.h>
 #endif
 
-#define LELY_NO_CO_UP_IND
-
 #include <lely/co/co.h>
 
 #ifdef NDEBUG
