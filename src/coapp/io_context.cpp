@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/io_context.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,11 +24,25 @@
 #include "coapp.hpp"
 #include <lely/can/net.hpp>
 #include <lely/coapp/io_context.hpp>
+#include <lely/libc/stdlib.h>
+#include <lely/util/diag.h>
+#include <lely/util/spscring.h>
 
 #if !LELY_NO_THREADS
 #include <atomic>
 #endif
+#include <vector>
 #include <utility>
+
+#include <cassert>
+
+#ifndef LELY_COAPP_IO_CONTEXT_TXLEN
+/**
+ * The default transmit queue length (in number of CAN frames) of the I/O
+ * context.
+ */
+#define LELY_COAPP_IO_CONTEXT_TXLEN 1000
+#endif
 
 namespace lely {
 
@@ -39,6 +53,17 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   Impl_(IoContext* self, io::TimerBase& timer, io::CanChannelBase& chan,
         util::BasicLockable* mutex);
   virtual ~Impl_();
+
+  void*
+  operator new(::std::size_t size) {
+    // This is necessary because of the alignment requirements of spscring.
+    return aligned_alloc(alignof(Impl_), size);
+  }
+
+  void
+  operator delete(void* p) {
+    aligned_free(p);
+  }
 
   void
   lock() override {
@@ -55,6 +80,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   void OnWait(int overrun, ::std::error_code ec) noexcept;
 
   void OnRead(int result, ::std::error_code ec) noexcept;
+  void OnWrite(::std::error_code ec) noexcept;
 
   int OnNext(const timespec* tp) noexcept;
   int OnSend(const can_msg* msg) noexcept;
@@ -78,12 +104,17 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
 
   io::CanChannelBase& chan;
   io::CanChannelRead read;
-  can_msg msg CAN_MSG_INIT;
+  can_msg rxmsg CAN_MSG_INIT;
   can_err err CAN_ERR_INIT;
   int state{0};
   int error{0};
+  io::CanChannelWrite write;
+  can_msg txmsg CAN_MSG_INIT;
 
   util::BasicLockable* mutex{nullptr};
+
+  spscring txring;
+  ::std::vector<can_msg> txbuf;
 
   unique_c_ptr<CANNet> net;
 
@@ -146,10 +177,14 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
       timer(timer_),
       wait([this](int overrun, ::std::error_code ec) { OnWait(overrun, ec); }),
       chan(chan_),
-      read(&msg, &err, nullptr,
+      read(&rxmsg, &err, nullptr,
            [this](int result, ::std::error_code ec) { OnRead(result, ec); }),
+      write(txmsg, nullptr, [this](::std::error_code ec) { OnWrite(ec); }),
       mutex(mutex_),
+      txbuf(LELY_COAPP_IO_CONTEXT_TXLEN, CAN_MSG_INIT),
       net(make_unique_c<CANNet>()) {
+  spscring_init(&txring, LELY_COAPP_IO_CONTEXT_TXLEN);
+
   // Initialize the CAN network clock with the current time.
   net->setTime(util::to_timespec(timer.get_clock().gettime()));
 
@@ -165,6 +200,8 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
 
   // Start receiving CAN frames.
   chan.submit_read(read);
+  // Start sending CAN frames.
+  OnWrite({});
 
   ctx.insert(*this);
 }
@@ -197,14 +234,16 @@ IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
 }
 
 void
-IoContext::Impl_::OnRead(int result, ::std::error_code) noexcept {
+IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
+  if (ec) diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
+
   {
     ::std::lock_guard<Impl_> lock(*this);
     // Update the internal clock before processing the incoming CAN (error)
     // frame.
     self->SetTime();
     if (result == 1) {
-      net->recv(msg);
+      net->recv(rxmsg);
     } else if (!result) {
       if (err.state != state) {
         ::std::swap(err.state, state);
@@ -225,6 +264,35 @@ IoContext::Impl_::OnRead(int result, ::std::error_code) noexcept {
     chan.submit_read(read);
 }
 
+void
+IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
+  if (ec) diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
+
+#if LELY_NO_THREADS
+  if (!shutdown) {
+#else
+  if (!shutdown.load(::std::memory_order_acquire)) {
+#endif
+    // Wait for next frame to become available.
+    if (!spscring_c_submit_wait(&txring, 1,
+                                [](spscring*, void* arg) noexcept {
+                                  // A frame was just added to the ring buffer.
+                                  // Try to send it.
+                                  static_cast<Impl_*>(arg)->OnWrite({});
+                                },
+                                this)) {
+      // Extract the frame from the ring buffer.
+      ::std::size_t n = 1;
+      auto i = spscring_c_alloc(&txring, &n);
+      assert(n == 1);
+      txmsg = txbuf[i];
+      spscring_c_commit(&txring, n);
+      // Send the frame.
+      chan.submit_write(write);
+    }
+  }
+}
+
 int
 IoContext::Impl_::OnNext(const timespec* tp) noexcept {
   timer.settime(io::TimerBase::time_point(util::from_timespec(*tp)));
@@ -233,14 +301,17 @@ IoContext::Impl_::OnNext(const timespec* tp) noexcept {
 
 int
 IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
-  // The CAN network interface does not support asynchronous writes, so we try a
-  // non-blocking synchronous write.
-  ::std::error_code ec;
-  chan.write(*msg, 0, ec);
-  if (ec) {
-    set_errc(ec.value());
+  assert(msg);
+
+  ::std::size_t n = 1;
+  auto i = spscring_p_alloc(&txring, &n);
+  if (!n) {
+    set_errnum(ERRNUM_AGAIN);
+    diag(DIAG_WARNING, get_errc(), "CAN transmit queue full; dropping frame");
     return -1;
   }
+  txbuf[i] = *msg;
+  spscring_p_commit(&txring, n);
   return 0;
 }
 
