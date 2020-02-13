@@ -235,10 +235,9 @@ IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
-  if (ec) diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
-
   {
     ::std::lock_guard<Impl_> lock(*this);
+
     // Update the internal clock before processing the incoming CAN (error)
     // frame.
     self->SetTime();
@@ -246,16 +245,55 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
       net->recv(rxmsg);
     } else if (!result) {
       if (err.state != state) {
+        switch (static_cast<io::CanState>(err.state)) {
+          case io::CanState::ACTIVE:
+            diag(DIAG_INFO, 0, "CAN bus is in the error active state");
+            break;
+          case io::CanState::PASSIVE:
+            diag(DIAG_INFO, 0, "CAN bus is in the error passive state");
+            break;
+          case io::CanState::BUSOFF:
+            diag(DIAG_WARNING, 0, "CAN bus is in the bus off state");
+            break;
+          case io::CanState::SLEEPING:
+            diag(DIAG_INFO, 0, "CAN interface is in sleep mode");
+            break;
+          case io::CanState::STOPPED:
+            diag(DIAG_WARNING, 0, "CAN interface is stopped");
+            break;
+        }
+
         ::std::swap(err.state, state);
         OnCanState(static_cast<io::CanState>(state),
                    static_cast<io::CanState>(err.state));
       }
+
       if (err.error != error) {
+        if (err.error & CAN_ERROR_BIT)
+          diag(DIAG_WARNING, 0, "single bit error detected on CAN bus");
+        if (err.error & CAN_ERROR_STUFF)
+          diag(DIAG_WARNING, 0, "bit stuffing error detected on CAN bus");
+        if (err.error & CAN_ERROR_CRC)
+          diag(DIAG_WARNING, 0, "CRC sequence error detected on CAN bus");
+        if (err.error & CAN_ERROR_FORM)
+          diag(DIAG_WARNING, 0, "form error detected on CAN bus");
+        if (err.error & CAN_ERROR_ACK)
+          diag(DIAG_WARNING, 0, "acknowledgment error detected on CAN bus");
+        if (err.error & CAN_ERROR_OTHER)
+          diag(DIAG_WARNING, 0,
+               "one or more unknown errors detected on CAN bus");
+
         error = err.error;
         OnCanError(static_cast<io::CanError>(error));
       }
+    } else if (result == -1) {
+      if (state == CAN_STATE_ACTIVE || state == CAN_STATE_PASSIVE)
+        // Only print a diagnostic if the CAN interface is up and not in bus
+        // off.
+        diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
     }
   }
+
 #if LELY_NO_THREADS
   if (!shutdown)
 #else
@@ -266,7 +304,12 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
-  if (ec) diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
+  if (ec) {
+    ::std::lock_guard<Impl_> lock(*this);
+    if (state == CAN_STATE_ACTIVE || state == CAN_STATE_PASSIVE)
+      // Only print a diagnostic if the CAN interface is up and not in bus off.
+      diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
+  }
 
 #if LELY_NO_THREADS
   if (!shutdown) {
