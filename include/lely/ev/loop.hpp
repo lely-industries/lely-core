@@ -4,7 +4,7 @@
  *
  * @see lely/ev/loop.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -33,8 +33,6 @@
 #include <cstddef>
 #include <type_traits>
 #include <utility>
-
-struct ev_loop;
 
 namespace lely {
 namespace ev {

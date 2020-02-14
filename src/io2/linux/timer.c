@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/timer.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -610,10 +610,8 @@ io_timer_impl_open(struct io_timer_impl *impl)
 		goto error_timerfd_create;
 	}
 
-	// clang-format off
 	if (io_poll_watch(impl->poll, impl->tfd, IO_EVENT_IN, &impl->watch)
 			== -1) {
-		// clang-format on
 		errsv = errno;
 		goto error_poll_watch;
 	}

@@ -7,7 +7,7 @@
  * event loops to implement a reduced version of the abstract executor
  * interface and still provide a full executor.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,6 +28,8 @@
 #define LELY_EV_STD_EXEC_H_
 
 #include <lely/ev/ev.h>
+
+#include <stddef.h>
 
 typedef const struct ev_std_exec_impl_vtbl *const ev_std_exec_impl_t;
 
