@@ -4,7 +4,7 @@
  *
  * @see lely/co/dev.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "co.h"
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #ifndef LELY_NO_CO_DCF
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
@@ -773,6 +773,7 @@ error_init_dom:
 error_get_size:
 	frbuf_destroy(buf);
 error_create_buf:
+	diag(DIAG_ERROR, errc, "%s", filename);
 	set_errc(errc);
 	return -1;
 }
@@ -874,6 +875,7 @@ error_write:
 error_create_buf:
 	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
 error_write_dcf:
+	diag(DIAG_ERROR, errc, "%s", filename);
 	set_errc(errc);
 	return -1;
 }
