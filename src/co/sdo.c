@@ -4,7 +4,7 @@
  *
  * @see lely/co/sdo.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "co.h"
 #define LELY_CO_SDO_INLINE extern inline
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #ifndef LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
@@ -217,20 +217,20 @@ co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 
 	fwbuf_t *fbuf = fwbuf_create(filename);
 	if (!fbuf) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
-		set_errc(errc);
 		goto error_create_fbuf;
 	}
 
 	if (fwbuf_write(fbuf, ptr, nbyte) != (ssize_t)nbyte) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
-		set_errc(errc);
 		goto error_write;
 	}
 
 	if (fwbuf_commit(fbuf) == -1) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
-		set_errc(errc);
 		goto error_commit;
 	}
 
@@ -244,6 +244,7 @@ error_write:
 error_create_fbuf:
 	if (pac)
 		*pac = ac;
+	set_errc(errc);
 	return -1;
 }
 #endif // !LELY_NO_CO_OBJ_FILE
@@ -316,16 +317,19 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 	assert(req);
 	struct membuf *buf = &req->membuf;
 
+	int errc = get_errc();
 	co_unsigned32_t ac = 0;
 
 	frbuf_t *fbuf = frbuf_create(filename);
 	if (!fbuf) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
 		goto error_create_fbuf;
 	}
 
 	intmax_t size = frbuf_get_size(fbuf);
 	if (size == -1) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
 		goto error_get_size;
 	}
@@ -339,6 +343,7 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 
 	void *ptr = membuf_alloc(buf, &nbyte);
 	if (frbuf_read(fbuf, ptr, nbyte) != (ssize_t)nbyte) {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
 		ac = CO_SDO_AC_DATA;
 		goto error_read;
 	}
@@ -355,6 +360,7 @@ error_get_size:
 error_create_fbuf:
 	if (pac)
 		*pac = ac;
+	set_errc(errc);
 	return -1;
 }
 #endif // !LELY_NO_CO_OBJ_FILE
