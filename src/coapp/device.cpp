@@ -67,17 +67,18 @@ struct Device::Impl_ : util::BasicLockable {
   }
 
   void Set(uint16_t idx, uint8_t subidx, const ::std::string& value,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   void Set(uint16_t idx, uint8_t subidx, const ::std::vector<uint8_t>& value,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   void Set(uint16_t idx, uint8_t subidx,
-           const ::std::basic_string<char16_t>& value, ::std::error_code& ec);
+           const ::std::basic_string<char16_t>& value,
+           ::std::error_code& ec) noexcept;
 
   template <uint16_t N>
   void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   void OnWrite(uint16_t idx, uint8_t subidx);
 
@@ -184,7 +185,7 @@ typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(Read<T>(idx, subidx, ec));
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Read");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Read");
   return value;
 }
 
@@ -196,13 +197,17 @@ Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
   auto t = ::std::tie(ac, value);
 
   ::std::lock_guard<Impl_> lock(*impl_);
-  if (upReq<T, &OnUpCon<T>>(*impl_->dev, idx, subidx, &t) == -1)
-    util::throw_errc("Read");
-
-  if (ac)
-    ec = static_cast<SdoErrc>(ac);
-  else
-    ec.clear();
+  int errsv = get_errc();
+  set_errc(0);
+  if (!upReq<T, &OnUpCon<T>>(*impl_->dev, idx, subidx, &t)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
   return value;
 }
 
@@ -211,7 +216,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
 }
 
 template <class T>
@@ -221,13 +226,17 @@ Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
-  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    util::throw_errc("Write");
-
-  if (ac)
-    ec = static_cast<SdoErrc>(ac);
-  else
-    ec.clear();
+  int errsv = get_errc();
+  set_errc(0);
+  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
 }
 
 template <class T>
@@ -235,7 +244,7 @@ typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
 }
 
 template <class T>
@@ -246,13 +255,17 @@ Device::Write(uint16_t idx, uint8_t subidx, const T& value,
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
-  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    util::throw_errc("Write");
-
-  if (ac)
-    ec = static_cast<SdoErrc>(ac);
-  else
-    ec.clear();
+  int errsv = get_errc();
+  set_errc(0);
+  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -394,7 +407,7 @@ void
 Device::Write(uint16_t idx, uint8_t subidx, const char* value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -407,7 +420,7 @@ void
 Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -417,21 +430,25 @@ Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value,
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
+  int errsv = get_errc();
+  set_errc(0);
   // TODO(jseldenthuis@lely.com): Prevent unnecessary copy.
-  if (dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac) == -1)
-    util::throw_errc("Write");
-
-  if (ac)
-    ec = static_cast<SdoErrc>(ac);
-  else
-    ec.clear();
+  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
 }
 
 void
 Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
   ::std::error_code ec;
   Write(idx, subidx, p, n, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "Write");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
 }
 
 void
@@ -440,20 +457,24 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   uint32_t ac = 0;
 
   ::std::lock_guard<Impl_> lock(*impl_);
-  if (dnReq(*impl_->dev, idx, subidx, p, n, &OnDnCon, &ac) == -1)
-    util::throw_errc("Write");
-
-  if (ac)
-    ec = static_cast<SdoErrc>(ac);
-  else
-    ec.clear();
+  int errsv = get_errc();
+  set_errc(0);
+  if (!dnReq(*impl_->dev, idx, subidx, p, n, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
 }
 
 void
 Device::WriteEvent(uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
   WriteEvent(idx, subidx, ec);
-  if (ec) throw SdoError(id(), idx, subidx, ec, "WriteEvent");
+  if (ec) throw_sdo_error(id(), idx, subidx, ec, "WriteEvent");
 }
 
 void
@@ -469,7 +490,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(RpdoRead<T>(id, idx, subidx, ec));
-  if (ec) throw SdoError(id, idx, subidx, ec, "RpdoRead");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "RpdoRead");
   return value;
 }
 
@@ -491,7 +512,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(TpdoRead<T>(id, idx, subidx, ec));
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoRead");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoRead");
   return value;
 }
 
@@ -513,7 +534,7 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   TpdoWrite(id, idx, subidx, value, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoWrite");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoWrite");
 }
 
 template <class T>
@@ -674,7 +695,7 @@ void
 Device::TpdoWriteEvent(uint8_t id, uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
   TpdoWriteEvent(id, idx, subidx, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoWriteEvent");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoWriteEvent");
 }
 
 void
@@ -707,12 +728,13 @@ const ::std::type_info&
 Device::Type(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto& ti = Type(idx, subidx, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Type");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Type");
   return ti;
 }
 
 const ::std::type_info&
-Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
+Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+    noexcept {
   auto obj = impl_->dev->find(idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
@@ -777,13 +799,14 @@ typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = Get<T>(idx, subidx, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Get");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Get");
   return value;
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
-Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
+Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+    noexcept {
   constexpr auto N = co_type_traits_T<T>::index;
 
   auto obj = impl_->dev->find(idx);
@@ -814,12 +837,13 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
-Device::Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
+Device::Set(uint16_t idx, uint8_t subidx, T value,
+            ::std::error_code& ec) noexcept {
   constexpr auto N = co_type_traits_T<T>::index;
 
   impl_->Set<N>(idx, subidx, &value, sizeof(value), ec);
@@ -830,13 +854,13 @@ typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value,
-            ::std::error_code& ec) {
+            ::std::error_code& ec) noexcept {
   impl_->Set(idx, subidx, value, ec);
 }
 
@@ -844,96 +868,101 @@ Device::Set(uint16_t idx, uint8_t subidx, const T& value,
 
 // BOOLEAN
 template bool Device::Get<bool>(uint16_t, uint8_t) const;
-template bool Device::Get<bool>(uint16_t, uint8_t, ::std::error_code&) const;
+template bool Device::Get<bool>(uint16_t, uint8_t, ::std::error_code&) const
+    noexcept;
 template void Device::Set<bool>(uint16_t, uint8_t, bool);
-template void Device::Set<bool>(uint16_t, uint8_t, bool, ::std::error_code&);
+template void Device::Set<bool>(uint16_t, uint8_t, bool,
+                                ::std::error_code&) noexcept;
 
 // INTEGER8
 template int8_t Device::Get<int8_t>(uint16_t, uint8_t) const;
-template int8_t Device::Get<int8_t>(uint16_t, uint8_t,
-                                    ::std::error_code&) const;
+template int8_t Device::Get<int8_t>(uint16_t, uint8_t, ::std::error_code&) const
+    noexcept;
 template void Device::Set<int8_t>(uint16_t, uint8_t, int8_t);
 template void Device::Set<int8_t>(uint16_t, uint8_t, int8_t,
-                                  ::std::error_code&);
+                                  ::std::error_code&) noexcept;
 
 // INTEGER16
 template int16_t Device::Get<int16_t>(uint16_t, uint8_t) const;
 template int16_t Device::Get<int16_t>(uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template void Device::Set<int16_t>(uint16_t, uint8_t, int16_t);
 template void Device::Set<int16_t>(uint16_t, uint8_t, int16_t,
-                                   ::std::error_code&);
+                                   ::std::error_code&) noexcept;
 
 // INTEGER32
 template int32_t Device::Get<int32_t>(uint16_t, uint8_t) const;
 template int32_t Device::Get<int32_t>(uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template void Device::Set<int32_t>(uint16_t, uint8_t, int32_t);
 template void Device::Set<int32_t>(uint16_t, uint8_t, int32_t,
-                                   ::std::error_code&);
+                                   ::std::error_code&) noexcept;
 
 // UNSIGNED8
 template uint8_t Device::Get<uint8_t>(uint16_t, uint8_t) const;
 template uint8_t Device::Get<uint8_t>(uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template void Device::Set<uint8_t>(uint16_t, uint8_t, uint8_t);
 template void Device::Set<uint8_t>(uint16_t, uint8_t, uint8_t,
-                                   ::std::error_code&);
+                                   ::std::error_code&) noexcept;
 
 // UNSIGNED16
 template uint16_t Device::Get<uint16_t>(uint16_t, uint8_t) const;
 template uint16_t Device::Get<uint16_t>(uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template void Device::Set<uint16_t>(uint16_t, uint8_t, uint16_t);
 template void Device::Set<uint16_t>(uint16_t, uint8_t, uint16_t,
-                                    ::std::error_code&);
+                                    ::std::error_code&) noexcept;
 
 // UNSIGNED32
 template uint32_t Device::Get<uint32_t>(uint16_t, uint8_t) const;
 template uint32_t Device::Get<uint32_t>(uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template void Device::Set<uint32_t>(uint16_t, uint8_t, uint32_t);
 template void Device::Set<uint32_t>(uint16_t, uint8_t, uint32_t,
-                                    ::std::error_code&);
+                                    ::std::error_code&) noexcept;
 
 // REAL32
 template float Device::Get<float>(uint16_t, uint8_t) const;
-template float Device::Get<float>(uint16_t, uint8_t, ::std::error_code&) const;
+template float Device::Get<float>(uint16_t, uint8_t, ::std::error_code&) const
+    noexcept;
 template void Device::Set<float>(uint16_t, uint8_t, float);
-template void Device::Set<float>(uint16_t, uint8_t, float, ::std::error_code&);
+template void Device::Set<float>(uint16_t, uint8_t, float,
+                                 ::std::error_code&) noexcept;
 
 // VISIBLE_STRING
 template ::std::string Device::Get<::std::string>(uint16_t, uint8_t) const;
 template ::std::string Device::Get<::std::string>(uint16_t, uint8_t,
-                                                  ::std::error_code&) const;
+                                                  ::std::error_code&) const
+    noexcept;
 template void Device::Set<::std::string>(uint16_t, uint8_t,
                                          const ::std::string&);
 template void Device::Set<::std::string>(uint16_t, uint8_t,
                                          const ::std::string&,
-                                         ::std::error_code&);
+                                         ::std::error_code&) noexcept;
 
 // OCTET_STRING
 template ::std::vector<uint8_t> Device::Get<::std::vector<uint8_t>>(
     uint16_t, uint8_t) const;
 template ::std::vector<uint8_t> Device::Get<::std::vector<uint8_t>>(
-    uint16_t, uint8_t, ::std::error_code&) const;
+    uint16_t, uint8_t, ::std::error_code&) const noexcept;
 template void Device::Set<::std::vector<uint8_t>>(
     uint16_t, uint8_t, const ::std::vector<uint8_t>&);
 template void Device::Set<::std::vector<uint8_t>>(uint16_t, uint8_t,
                                                   const ::std::vector<uint8_t>&,
-                                                  ::std::error_code&);
+                                                  ::std::error_code&) noexcept;
 
 // UNICODE_STRING
 template ::std::basic_string<char16_t>
     Device::Get<::std::basic_string<char16_t>>(uint16_t, uint8_t) const;
 template ::std::basic_string<char16_t>
 Device::Get<::std::basic_string<char16_t>>(uint16_t, uint8_t,
-                                           ::std::error_code&) const;
+                                           ::std::error_code&) const noexcept;
 template void Device::Set<::std::basic_string<char16_t>>(
     uint16_t, uint8_t, const ::std::basic_string<char16_t>&);
 template void Device::Set<::std::basic_string<char16_t>>(
     uint16_t, uint8_t, const ::std::basic_string<char16_t>&,
-    ::std::error_code&);
+    ::std::error_code&) noexcept;
 
 // TIME_OF_DAY
 // TIME_DIFFERENCE
@@ -942,11 +971,11 @@ template void Device::Set<::std::basic_string<char16_t>>(
 
 // REAL64
 template double Device::Get<double>(uint16_t, uint8_t) const;
-template double Device::Get<double>(uint16_t, uint8_t,
-                                    ::std::error_code&) const;
+template double Device::Get<double>(uint16_t, uint8_t, ::std::error_code&) const
+    noexcept;
 template void Device::Set<double>(uint16_t, uint8_t, double);
 template void Device::Set<double>(uint16_t, uint8_t, double,
-                                  ::std::error_code&);
+                                  ::std::error_code&) noexcept;
 
 // INTEGER40
 // INTEGER48
@@ -955,10 +984,10 @@ template void Device::Set<double>(uint16_t, uint8_t, double,
 // INTEGER64
 template int64_t Device::Get<int64_t>(uint16_t, uint8_t) const;
 template int64_t Device::Get<int64_t>(uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t);
 template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t,
-                                   ::std::error_code&);
+                                   ::std::error_code&) noexcept;
 
 // UNSIGNED24
 // UNSIGNED40
@@ -968,10 +997,10 @@ template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t,
 // UNSIGNED64
 template uint64_t Device::Get<uint64_t>(uint16_t, uint8_t) const;
 template uint64_t Device::Get<uint64_t>(uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template void Device::Set<uint64_t>(uint16_t, uint8_t, uint64_t);
 template void Device::Set<uint64_t>(uint16_t, uint8_t, uint64_t,
-                                    ::std::error_code&);
+                                    ::std::error_code&) noexcept;
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
@@ -979,12 +1008,12 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const char* value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void
 Device::Set(uint16_t idx, uint8_t subidx, const char* value,
-            ::std::error_code& ec) {
+            ::std::error_code& ec) noexcept {
   impl_->Set<CO_DEFTYPE_VISIBLE_STRING>(idx, subidx, value, 0, ec);
 }
 
@@ -992,12 +1021,12 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void
 Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value,
-            ::std::error_code& ec) {
+            ::std::error_code& ec) noexcept {
   impl_->Set<CO_DEFTYPE_UNICODE_STRING>(idx, subidx, value, 0, ec);
 }
 
@@ -1005,12 +1034,12 @@ void
 Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
   ::std::error_code ec;
   Set(idx, subidx, p, n, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "Set");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
 }
 
 void
 Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-            ::std::error_code& ec) {
+            ::std::error_code& ec) noexcept {
   impl_->Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, p, n, ec);
 }
 
@@ -1018,7 +1047,7 @@ void
 Device::SetEvent(uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
   SetEvent(idx, subidx, ec);
-  if (ec) throw SdoError(impl_->id(), idx, subidx, ec, "SetEvent");
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "SetEvent");
 }
 
 void
@@ -1043,14 +1072,14 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = RpdoGet<T>(id, idx, subidx, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "RpdoGet");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "RpdoGet");
   return value;
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
-                ::std::error_code& ec) const {
+                ::std::error_code& ec) const noexcept {
   ec.clear();
   ::std::tie(idx, subidx) = impl_->RpdoMapping(id, idx, subidx, ec);
   if (ec) return T();
@@ -1062,14 +1091,14 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = TpdoGet<T>(id, idx, subidx, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoGet");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoGet");
   return value;
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
 Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
-                ::std::error_code& ec) const {
+                ::std::error_code& ec) const noexcept {
   ec.clear();
   ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
   if (ec) return T();
@@ -1081,13 +1110,13 @@ typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   TpdoSet(id, idx, subidx, value, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoSet");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoSet");
 }
 
 template <class T>
 typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
 Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value,
-                ::std::error_code& ec) {
+                ::std::error_code& ec) noexcept {
   ec.clear();
   ::std::tie(idx, subidx) = impl_->TpdoMapping(id, idx, subidx, ec);
   if (!ec) Set<T>(idx, subidx, value, ec);
@@ -1098,90 +1127,90 @@ Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value,
 // BOOLEAN
 template bool Device::RpdoGet<bool>(uint8_t, uint16_t, uint8_t) const;
 template bool Device::RpdoGet<bool>(uint8_t, uint16_t, uint8_t,
-                                    ::std::error_code&) const;
+                                    ::std::error_code&) const noexcept;
 template bool Device::TpdoGet<bool>(uint8_t, uint16_t, uint8_t) const;
 template bool Device::TpdoGet<bool>(uint8_t, uint16_t, uint8_t,
-                                    ::std::error_code&) const;
+                                    ::std::error_code&) const noexcept;
 template void Device::TpdoSet<bool>(uint8_t, uint16_t, uint8_t, bool);
 template void Device::TpdoSet<bool>(uint8_t, uint16_t, uint8_t, bool,
-                                    ::std::error_code&);
+                                    ::std::error_code&) noexcept;
 
 // INTEGER8
 template int8_t Device::RpdoGet<int8_t>(uint8_t, uint16_t, uint8_t) const;
 template int8_t Device::RpdoGet<int8_t>(uint8_t, uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template int8_t Device::TpdoGet<int8_t>(uint8_t, uint16_t, uint8_t) const;
 template int8_t Device::TpdoGet<int8_t>(uint8_t, uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template void Device::TpdoSet<int8_t>(uint8_t, uint16_t, uint8_t, int8_t);
 template void Device::TpdoSet<int8_t>(uint8_t, uint16_t, uint8_t, int8_t,
-                                      ::std::error_code&);
+                                      ::std::error_code&) noexcept;
 
 // INTEGER16
 template int16_t Device::RpdoGet<int16_t>(uint8_t, uint16_t, uint8_t) const;
 template int16_t Device::RpdoGet<int16_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template int16_t Device::TpdoGet<int16_t>(uint8_t, uint16_t, uint8_t) const;
 template int16_t Device::TpdoGet<int16_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template void Device::TpdoSet<int16_t>(uint8_t, uint16_t, uint8_t, int16_t);
 template void Device::TpdoSet<int16_t>(uint8_t, uint16_t, uint8_t, int16_t,
-                                       ::std::error_code&);
+                                       ::std::error_code&) noexcept;
 
 // INTEGER32
 template int32_t Device::RpdoGet<int32_t>(uint8_t, uint16_t, uint8_t) const;
 template int32_t Device::RpdoGet<int32_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template int32_t Device::TpdoGet<int32_t>(uint8_t, uint16_t, uint8_t) const;
 template int32_t Device::TpdoGet<int32_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template void Device::TpdoSet<int32_t>(uint8_t, uint16_t, uint8_t, int32_t);
 template void Device::TpdoSet<int32_t>(uint8_t, uint16_t, uint8_t, int32_t,
-                                       ::std::error_code&);
+                                       ::std::error_code&) noexcept;
 
 // UNSIGNED8
 template uint8_t Device::RpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t) const;
 template uint8_t Device::RpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template uint8_t Device::TpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t) const;
 template uint8_t Device::TpdoGet<uint8_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template void Device::TpdoSet<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t);
 template void Device::TpdoSet<uint8_t>(uint8_t, uint16_t, uint8_t, uint8_t,
-                                       ::std::error_code&);
+                                       ::std::error_code&) noexcept;
 
 // UNSIGNED16
 template uint16_t Device::RpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t) const;
 template uint16_t Device::RpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template uint16_t Device::TpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t) const;
 template uint16_t Device::TpdoGet<uint16_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template void Device::TpdoSet<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t);
 template void Device::TpdoSet<uint16_t>(uint8_t, uint16_t, uint8_t, uint16_t,
-                                        ::std::error_code&);
+                                        ::std::error_code&) noexcept;
 
 // UNSIGNED32
 template uint32_t Device::RpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t) const;
 template uint32_t Device::RpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template uint32_t Device::TpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t) const;
 template uint32_t Device::TpdoGet<uint32_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template void Device::TpdoSet<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t);
 template void Device::TpdoSet<uint32_t>(uint8_t, uint16_t, uint8_t, uint32_t,
-                                        ::std::error_code&);
+                                        ::std::error_code&) noexcept;
 
 // REAL32
 template float Device::RpdoGet<float>(uint8_t, uint16_t, uint8_t) const;
 template float Device::RpdoGet<float>(uint8_t, uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template float Device::TpdoGet<float>(uint8_t, uint16_t, uint8_t) const;
 template float Device::TpdoGet<float>(uint8_t, uint16_t, uint8_t,
-                                      ::std::error_code&) const;
+                                      ::std::error_code&) const noexcept;
 template void Device::TpdoSet<float>(uint8_t, uint16_t, uint8_t, float);
 template void Device::TpdoSet<float>(uint8_t, uint16_t, uint8_t, float,
-                                     ::std::error_code&);
+                                     ::std::error_code&) noexcept;
 
 // VISIBLE_STRING
 // OCTET_STRING
@@ -1194,13 +1223,13 @@ template void Device::TpdoSet<float>(uint8_t, uint16_t, uint8_t, float,
 // REAL64
 template double Device::RpdoGet<double>(uint8_t, uint16_t, uint8_t) const;
 template double Device::RpdoGet<double>(uint8_t, uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template double Device::TpdoGet<double>(uint8_t, uint16_t, uint8_t) const;
 template double Device::TpdoGet<double>(uint8_t, uint16_t, uint8_t,
-                                        ::std::error_code&) const;
+                                        ::std::error_code&) const noexcept;
 template void Device::TpdoSet<double>(uint8_t, uint16_t, uint8_t, double);
 template void Device::TpdoSet<double>(uint8_t, uint16_t, uint8_t, double,
-                                      ::std::error_code&);
+                                      ::std::error_code&) noexcept;
 
 // INTEGER40
 // INTEGER48
@@ -1209,13 +1238,13 @@ template void Device::TpdoSet<double>(uint8_t, uint16_t, uint8_t, double,
 // INTEGER64
 template int64_t Device::RpdoGet<int64_t>(uint8_t, uint16_t, uint8_t) const;
 template int64_t Device::RpdoGet<int64_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template int64_t Device::TpdoGet<int64_t>(uint8_t, uint16_t, uint8_t) const;
 template int64_t Device::TpdoGet<int64_t>(uint8_t, uint16_t, uint8_t,
-                                          ::std::error_code&) const;
+                                          ::std::error_code&) const noexcept;
 template void Device::TpdoSet<int64_t>(uint8_t, uint16_t, uint8_t, int64_t);
 template void Device::TpdoSet<int64_t>(uint8_t, uint16_t, uint8_t, int64_t,
-                                       ::std::error_code&);
+                                       ::std::error_code&) noexcept;
 
 // UNSIGNED24
 // UNSIGNED40
@@ -1225,13 +1254,13 @@ template void Device::TpdoSet<int64_t>(uint8_t, uint16_t, uint8_t, int64_t,
 // UNSIGNED64
 template uint64_t Device::RpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t) const;
 template uint64_t Device::RpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template uint64_t Device::TpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t) const;
 template uint64_t Device::TpdoGet<uint64_t>(uint8_t, uint16_t, uint8_t,
-                                            ::std::error_code&) const;
+                                            ::std::error_code&) const noexcept;
 template void Device::TpdoSet<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t);
 template void Device::TpdoSet<uint64_t>(uint8_t, uint16_t, uint8_t, uint64_t,
-                                        ::std::error_code&);
+                                        ::std::error_code&) noexcept;
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
@@ -1239,7 +1268,7 @@ void
 Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
   TpdoSetEvent(id, idx, subidx, ec);
-  if (ec) throw SdoError(id, idx, subidx, ec, "TpdoSetEvent");
+  if (ec) throw_sdo_error(id, idx, subidx, ec, "TpdoSetEvent");
 }
 
 void
@@ -1396,27 +1425,28 @@ Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
 
 void
 Device::Impl_::Set(uint16_t idx, uint8_t subidx, const ::std::string& value,
-                   ::std::error_code& ec) {
+                   ::std::error_code& ec) noexcept {
   Set<CO_DEFTYPE_VISIBLE_STRING>(idx, subidx, value.c_str(), 0, ec);
 }
 
 void
 Device::Impl_::Set(uint16_t idx, uint8_t subidx,
-                   const ::std::vector<uint8_t>& value, ::std::error_code& ec) {
+                   const ::std::vector<uint8_t>& value,
+                   ::std::error_code& ec) noexcept {
   Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, value.data(), value.size(), ec);
 }
 
 void
 Device::Impl_::Set(uint16_t idx, uint8_t subidx,
                    const ::std::basic_string<char16_t>& value,
-                   ::std::error_code& ec) {
+                   ::std::error_code& ec) noexcept {
   Set<CO_DEFTYPE_UNICODE_STRING>(idx, subidx, value.c_str(), 0, ec);
 }
 
 template <uint16_t N>
 void
 Device::Impl_::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-                   ::std::error_code& ec) {
+                   ::std::error_code& ec) noexcept {
   auto obj = dev->find(idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
@@ -1434,8 +1464,13 @@ Device::Impl_::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
     return;
   }
 
-  ec.clear();
-  sub->setVal(p, n);
+  int errsv = get_errc();
+  set_errc(0);
+  if (sub->setVal(p, n) == n)
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
 }
 
 void

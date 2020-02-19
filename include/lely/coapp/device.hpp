@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen device description declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -476,7 +476,7 @@ class Device {
    * or `typeid(void)` if unknown.
    */
   const ::std::type_info& Type(uint16_t idx, uint8_t subidx,
-                               ::std::error_code& ec) const;
+                               ::std::error_code& ec) const noexcept;
 
   /**
    * Reads the value of a sub-object. This function reads the value directly
@@ -509,7 +509,7 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Get(
-      uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
+      uint16_t idx, uint8_t subidx, ::std::error_code& ec) const noexcept;
 
   /**
    * Writes a CANopen basic value to a sub-object. This function writes the
@@ -540,7 +540,7 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Set(
-      uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+      uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) noexcept;
 
   /**
    * Writes a CANopen array value to a sub-object. This function writes the
@@ -571,7 +571,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Set(
-      uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
+      uint16_t idx, uint8_t subidx, const T& value,
+      ::std::error_code& ec) noexcept;
 
   /**
    * Writes a VISIBLE_STRING to a sub-object. This function writes the string
@@ -599,7 +600,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   void Set(uint16_t idx, uint8_t subidx, const char* value,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   /**
    * Writes a UNICODE_STRING to a sub-object. This function writes the string
@@ -629,7 +630,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   void Set(uint16_t idx, uint8_t subidx, const char16_t* value,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   /**
    * Writes an OCTET_STRING or DOMAIN value to a sub-object. This function
@@ -659,7 +660,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-           ::std::error_code& ec);
+           ::std::error_code& ec) noexcept;
 
   /**
    * Checks if the specified sub-object in the local object dictionary can be
@@ -731,8 +732,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
-          ::std::error_code& ec) const;
+  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+      noexcept;
 
   /**
    * Reads the value of a TPDO-mapped sub-object in the local object dictionary
@@ -778,8 +779,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
-          ::std::error_code& ec) const;
+  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+      noexcept;
 
   /**
    * Writes a value to a sub-object in a remote object dictionary by writing to
@@ -820,7 +821,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
-      uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
+      uint8_t id, uint16_t idx, uint8_t subidx, T value,
+      ::std::error_code& ec) noexcept;
 
   /**
    * Triggers the transmission of every event-driven, asynchronous Transmit-PDO

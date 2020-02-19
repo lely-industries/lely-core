@@ -139,7 +139,7 @@ class BasicSlave : public Node {
      * @see Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     const ::std::type_info&
-    Type(::std::error_code& ec) const {
+    Type(::std::error_code& ec) const noexcept{
       return slave_->Type(idx_, subidx_, ec);
     }
 
@@ -175,7 +175,7 @@ class BasicSlave : public Node {
      */
     template <class T>
     T
-    Get(::std::error_code& ec) const {
+    Get(::std::error_code& ec) const noexcept {
       return id_ ? slave_->TpdoGet<T>(id_, idx_, subidx_, ec)
                  : slave_->Get<T>(idx_, subidx_, ec);
     }
@@ -215,7 +215,7 @@ class BasicSlave : public Node {
      */
     template <class T>
     void
-    Set(T&& value, ::std::error_code& ec) {
+    Set(T&& value, ::std::error_code& ec) noexcept {
       if (id_)
         slave_->TpdoSet(id_, idx_, subidx_, ::std::forward<T>(value), ec);
       else
@@ -249,7 +249,7 @@ class BasicSlave : public Node {
      * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
      */
     void
-    Set(const void* p, ::std::size_t n, ::std::error_code& ec) {
+    Set(const void* p, ::std::size_t n, ::std::error_code& ec) noexcept {
       if (!id_) slave_->Set(idx_, subidx_, p, n, ec);
     }
 
@@ -388,7 +388,7 @@ class BasicSlave : public Node {
      */
     template <class T>
     T
-    Get(::std::error_code& ec) const {
+    Get(::std::error_code& ec) const noexcept {
       return id_ ? (is_rpdo_ ? slave_->RpdoGet<T>(id_, idx_, subidx_, ec)
                              : slave_->TpdoGet<T>(id_, idx_, subidx_, ec))
                  : slave_->Get<T>(idx_, subidx_, ec);
