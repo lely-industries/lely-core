@@ -1,6 +1,6 @@
 /**@file
- * This header file is part of the event library; it contains the fiber executor
- * declarations.
+ * This header file is part of the event library; it contains the fiber
+ * executor, mutex and condition variable declarations.
  *
  * The fiber executor ensures that each task runs in a fiber, or stackful
  * coroutine. Since it is platform-dependent whether fibers can be migrated
@@ -11,9 +11,13 @@
  * a task. The implementation maintains a list of unused fibers, up to a
  * user-defined limit.
  *
+ * The fiber mutex and condition variable are similar to the standard C11 mutex
+ * and condition variable, except that they suspend the currently running fiber
+ * instead of the thread.
+ *
  * @see lely/util/fiber.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,6 +39,59 @@
 
 #include <lely/ev/future.h>
 #include <lely/util/fiber.h>
+
+enum {
+	/// Indicates that the requested operation succeeded.
+	ev_fiber_success,
+	/// Indicates that the requested operation failed.
+	ev_fiber_error,
+	/**
+	 * Indicates that the time specified in the call was reached without
+	 * acquiring the requested resource.
+	 */
+	ev_fiber_timedout,
+	/**
+	 * Indicates that the requested operation failed because a resource
+	 * requested by a test and return function is already in use.
+	 */
+	ev_fiber_busy,
+	/**
+	 * Indicates that the requested operation failed because it was unable
+	 * to allocate memory.
+	 */
+	ev_fiber_nomem
+};
+
+enum {
+	/**
+	 * A fiber mutex type that supports neither timeout nor recursive
+	 * locking.
+	 */
+	ev_fiber_mtx_plain,
+	/// A fiber mutex type that supports timeout (currently not supported).
+	ev_fiber_mtx_timed,
+	/// A fiber mutex type that supports recursive locking.
+	ev_fiber_mtx_recursive
+};
+
+/**
+ * A synchronization primitive (similar to the standard C11 mutex) that can be
+ * used to protect shared data from being simultaneously accessed by multiple
+ * fibers. This mutex offers exclusive, non-recursive ownership semantics.
+ */
+typedef struct {
+	void *_impl;
+} ev_fiber_mtx_t;
+
+/**
+ * A synchronization primitive (similar to the standard C11 condition variable)
+ * that can be used to block one or more fibers until another fiber or thread
+ * both modifies the shared variable (the _condition_), and notifies the
+ * condition variable.
+ */
+typedef struct {
+	void *_impl;
+} ev_fiber_cnd_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,6 +166,123 @@ ev_exec_t *ev_fiber_exec_get_inner_exec(const ev_exec_t *exec);
  * This function MUST only be invoked from tasks submitted to a fiber executor.
  */
 void ev_fiber_await(ev_future_t *future);
+
+/**
+ * Creates a fiber mutex object with properties indicated by <b>type</b>, which
+ * must have one of the four values:
+ * - `#ev_fiber_mtx_plain` for a simple non-recursive mutex,
+ * - `#ev_fiber_mtx_timed` for a non-recursive mutex that supports timeout,
+ * - `#ev_fiber_mtx_plain | #ev_fiber_mtx_recursive` for a simple recursive
+ *    mutex, or
+ * - `#ev_fiber_mtx_timed | #ev_fiber_mtx_recursive` for a recursive mutex that
+ *    supports timeout.
+ * Note that `#ev_fiber_mtx_timed` is currently not supported.
+ *
+ * If this function succeeds, it sets the mutex at <b>mtx</b> to a value that
+ * uniquely identifies the newly created mutex.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_nomem if no memory could
+ * be allocated for the newly created mutex, or #ev_fiber_error if the request
+ * could not be honored.
+ */
+int ev_fiber_mtx_init(ev_fiber_mtx_t *mtx, int type);
+
+/**
+ * Releases any resources used by the fiber mutex at <b>mtx</b>. No fibers can
+ * be blocked waiting for the mutex at <b>mtx</b>.
+ */
+void ev_fiber_mtx_destroy(ev_fiber_mtx_t *mtx);
+
+/**
+ * Suspends the currently running fiber until it locks the fiber mutex at
+ * <b>mtx</b>. If the mutex is non-recursive, it SHALL not be locked by the
+ * calling fiber. Prior calls to ev_fiber_mtx_unlock() on the same mutex shall
+ * synchronize with this operation.
+ *
+ * This function MUST be called from a task running on a fiber executor.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_error if the request
+ * could not be honored.
+ */
+int ev_fiber_mtx_lock(ev_fiber_mtx_t *mtx);
+
+/**
+ * Endeavors to lock the fiber mutex at <b>mtx</b>. If the mutex is already
+ * locked, the function returns without blocking. If the operation succeeds,
+ * prior calls to ev_fiber_mtx_unlock() on the same mutex shall synchronize with
+ * this operation.
+ *
+ * This function MUST be called from a task running on a fiber executor.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_busy if the resource
+ * requested is already in use, or #ev_fiber_error if the request could not be
+ * honored.
+ */
+int ev_fiber_mtx_trylock(ev_fiber_mtx_t *mtx);
+
+/**
+ * Unlocks the fiber mutex at <b>mtx</b>. The mutex at <b>mtx</b> SHALL be
+ * locked by the calling fiber.
+ *
+ * This function MUST be called from a task running on a fiber executor.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_error if the request
+ * could not be honored.
+ */
+int ev_fiber_mtx_unlock(ev_fiber_mtx_t *mtx);
+
+/**
+ * Creates a fiber condition variable. If it succeeds it sets the variable at
+ * <b>cond</b> to a value that uniquely identifies the newly created condition
+ * variable. A fiber that calls ev_fiber_cnd_wait() on a newly created condition
+ * variable will block.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_nomem if no memory could
+ * be allocated for the newly created condition, or #ev_fiber_error if the
+ * request could not be honored.
+ */
+int ev_fiber_cnd_init(ev_fiber_cnd_t *cond);
+
+/**
+ * Releases all resources used by the fiber condition variable at <b>cond</b>.
+ * This function requires that no fibers be blocked waiting for the condition
+ * variable at <b>cond</b>.
+ */
+void ev_fiber_cnd_destroy(ev_fiber_cnd_t *cond);
+
+/**
+ * Unblocks one of the fibers that are blocked on the fiber condition variable
+ * at <b>cond</b> at the time of the call. If no fibers are blocked on the
+ * condition variable at the time of the call, the function does nothing.
+ *
+ * @returns #ev_fiber_success.
+ */
+int ev_fiber_cnd_signal(ev_fiber_cnd_t *cond);
+
+/**
+ * Unblocks all of the fibers that are blocked on the fiber condition variable
+ * at <b>cond</b> at the time of the call. If no fibers are blocked on the
+ * condition variable at <b>cond</b> at the time of the call, the function does
+ * nothing.
+ *
+ * @returns #ev_fiber_success.
+ */
+int ev_fiber_cnd_broadcast(ev_fiber_cnd_t *cond);
+
+/**
+ * Atomically unlocks the fiber mutex at <b>mtx</b> and endeavors to block until
+ * the fiber condition variable at <b>cond</b> is signaled by a call to
+ * ev_fiber_cnd_signal() or to ev_fiber_cnd_broadcast(). When the calling fiber
+ * becomes unblocked it locks the mutex at <b>mtx</b> before it returns. This
+ * function requires that the mutex at <b>mtx</b> be locked by the calling
+ * fiber.
+ *
+ * This function MUST be called from a task running on a fiber executor.
+ *
+ * @returns #ev_fiber_success on success, or #ev_fiber_error if the request
+ * could not be honored.
+ */
+int ev_fiber_cnd_wait(ev_fiber_cnd_t *cond, ev_fiber_mtx_t *mtx);
 
 #ifdef __cplusplus
 }
