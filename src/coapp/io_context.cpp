@@ -106,10 +106,14 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   io::CanChannelRead read;
   can_msg rxmsg CAN_MSG_INIT;
   can_err err CAN_ERR_INIT;
+  ::std::error_code read_ec;
+  ::std::size_t read_nec{0};
   int state{0};
   int error{0};
   io::CanChannelWrite write;
   can_msg txmsg CAN_MSG_INIT;
+  ::std::error_code write_ec;
+  ::std::size_t write_nec{0};
 
   util::BasicLockable* mutex{nullptr};
 
@@ -215,8 +219,9 @@ IoContext::Impl_::OnShutdown() noexcept {
 #else
   shutdown.store(true, ::std::memory_order_release);
 #endif
-  timer.cancel(wait);
+  chan.cancel_write(write);
   chan.cancel_read(read);
+  timer.cancel(wait);
 }
 
 void
@@ -235,6 +240,19 @@ IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
+  if (ec && ec != ::std::errc::operation_canceled) {
+    if (ec != read_ec)
+      // Only print a diagnostic for unique read errors.
+      diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
+    read_ec = ec;
+    read_nec++;
+  } else if (!ec && read_ec) {
+    diag(DIAG_INFO, 0, "CAN frame successfully read after %zd read error(s)",
+         read_nec);
+    read_ec = {};
+    read_nec = 0;
+  }
+
   {
     ::std::lock_guard<Impl_> lock(*this);
 
@@ -286,11 +304,6 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
         error = err.error;
         OnCanError(static_cast<io::CanError>(error));
       }
-    } else if (result == -1) {
-      if (state == CAN_STATE_ACTIVE || state == CAN_STATE_PASSIVE)
-        // Only print a diagnostic if the CAN interface is up and not in bus
-        // off.
-        diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
     }
   }
 
@@ -304,11 +317,17 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
-  if (ec) {
-    ::std::lock_guard<Impl_> lock(*this);
-    if (state == CAN_STATE_ACTIVE || state == CAN_STATE_PASSIVE)
-      // Only print a diagnostic if the CAN interface is up and not in bus off.
+  if (ec && ec != ::std::errc::operation_canceled) {
+    if (ec != write_ec)
+      // Only print a diagnostic for unique write errors.
       diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
+    write_ec = ec;
+    write_nec++;
+  } else if (!ec && write_ec) {
+    diag(DIAG_INFO, 0,
+         "CAN frame successfully written after %zd write error(s)", write_nec);
+    write_ec = {};
+    write_nec = 0;
   }
 
 #if LELY_NO_THREADS
