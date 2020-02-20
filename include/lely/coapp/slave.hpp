@@ -139,7 +139,7 @@ class BasicSlave : public Node {
      * @see Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
      */
     const ::std::type_info&
-    Type(::std::error_code& ec) const noexcept{
+    Type(::std::error_code& ec) const noexcept {
       return slave_->Type(idx_, subidx_, ec);
     }
 
