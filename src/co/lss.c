@@ -4,7 +4,7 @@
  *
  * @see lely/co/lss.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1335,9 +1335,11 @@ co_lss_emit_time(co_lss_t *lss, const struct timespec *tp)
 static co_lss_state_t *
 co_lss_wait_on_enter(co_lss_t *lss)
 {
+#ifdef LELY_NO_CO_MASTER
+	(void)lss;
+#else
 	assert(lss);
 
-#ifndef LELY_NO_CO_MASTER
 	// Only an NMT master can be an LSS master.
 	lss->master = co_nmt_is_master(lss->nmt);
 	if (lss->master)
