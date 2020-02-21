@@ -301,7 +301,7 @@ int mtx_trylock(mtx_t *mtx);
  * Unlocks the mutex at <b>mtx</b>. The mutex at <b>mtx</b> SHALL be locked by
  * the calling thread.
  *
- * @returns #thrd_success on success or #thrd_error if the request could not be
+ * @returns #thrd_success on success, or #thrd_error if the request could not be
  * honored.
  */
 int mtx_unlock(mtx_t *mtx);

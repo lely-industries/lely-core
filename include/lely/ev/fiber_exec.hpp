@@ -1,10 +1,10 @@
 /**@file
  * This header file is part of the event library; it contains the C++ interface
- * for the fiber executor.
+ * for the fiber executor, mutex and condition variable.
  *
  * @see lely/ev/fiber_exec.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,6 +29,7 @@
 #include <lely/ev/future.hpp>
 #include <lely/util/fiber.hpp>
 
+#include <mutex>
 #include <utility>
 
 namespace lely {
@@ -161,6 +162,145 @@ inline void
 fiber_yield() noexcept {
   ev_fiber_await(nullptr);
 }
+
+namespace detail {
+
+inline void
+throw_fiber_error(const char* what_arg, int ev) {
+  switch (ev) {
+    case ev_fiber_success:
+      break;
+    case ev_fiber_error:
+      util::throw_errc(what_arg);
+    case ev_fiber_timedout:
+      throw ::std::system_error(static_cast<int>(::std::errc::timed_out),
+                                ::std::system_category(), what_arg);
+    case ev_fiber_busy:
+      throw ::std::system_error(
+          static_cast<int>(::std::errc::resource_unavailable_try_again),
+          ::std::system_category(), what_arg);
+    case ev_fiber_nomem:
+      throw ::std::system_error(
+          static_cast<int>(::std::errc::not_enough_memory),
+          ::std::system_category(), what_arg);
+  }
+}
+
+/// The base class for mutexes suitable for use in fibers.
+class FiberMutexBase {
+ public:
+  FiberMutexBase() = default;
+
+  FiberMutexBase(const FiberMutexBase&) = delete;
+  FiberMutexBase(FiberMutexBase&& other) = delete;
+
+  FiberMutexBase& operator=(const FiberMutexBase&) = delete;
+  FiberMutexBase& operator=(FiberMutexBase&& other) = delete;
+
+  ~FiberMutexBase() { ev_fiber_mtx_destroy(*this); }
+
+  operator ev_fiber_mtx_t*() noexcept { return &mtx_; }
+
+  /// @see ev_fiber_mtx_lock()
+  void
+  lock() {
+    int ev = ev_fiber_mtx_lock(*this);
+    if (ev != ev_fiber_success) detail::throw_fiber_error("lock", ev);
+  }
+
+  /// @see ev_fiber_mtx_trylock()
+  bool
+  try_lock() {
+    int ev = ev_fiber_mtx_trylock(*this);
+    switch (ev) {
+      case ev_fiber_success:
+        return true;
+      case ev_fiber_busy:
+        return false;
+      default:
+        detail::throw_fiber_error("try_lock", ev);
+    }
+  }
+
+  /// @see ev_fiber_mtx_unlock()
+  void
+  unlock() {
+    int ev = ev_fiber_mtx_unlock(*this);
+    if (ev != ev_fiber_success) detail::throw_fiber_error("unlock", ev);
+  }
+
+ private:
+  ev_fiber_mtx_t mtx_{nullptr};
+};
+
+}  // namespace detail
+
+/// A plain mutex suitable for use in fibers.
+class FiberMutex : public detail::FiberMutexBase {
+ public:
+  FiberMutex() {
+    int ev = ev_fiber_mtx_init(*this, ev_fiber_mtx_plain);
+    if (ev != ev_fiber_success) detail::throw_fiber_error("FiberMutex", ev);
+  }
+};
+
+/// A recursive mutex suitable for use in fibers.
+class FiberRecursiveMutex : public detail::FiberMutexBase {
+ public:
+  FiberRecursiveMutex() {
+    int ev = ev_fiber_mtx_init(*this, ev_fiber_mtx_recursive);
+    if (ev != ev_fiber_success)
+      detail::throw_fiber_error("FiberRecursiveMutex", ev);
+  }
+};
+
+/// A condition variable suitable for use in fibers.
+class FiberConditionVariable {
+ public:
+  FiberConditionVariable() {
+    if (ev_fiber_cnd_init(*this) != ev_fiber_success)
+      ::lely::util::throw_errc("FiberConditionVariable");
+  }
+
+  FiberConditionVariable(const FiberConditionVariable&) = delete;
+  FiberConditionVariable(FiberConditionVariable&& other) = delete;
+
+  FiberConditionVariable& operator=(const FiberConditionVariable&) = delete;
+  FiberConditionVariable& operator=(FiberConditionVariable&& other) = delete;
+
+  ~FiberConditionVariable() { ev_fiber_cnd_destroy(*this); }
+
+  operator ev_fiber_cnd_t*() noexcept { return &cond_; }
+
+  /// @see ev_fiber_cnd_signal()
+  void
+  notify_one() noexcept {
+    ev_fiber_cnd_signal(*this);
+  }
+
+  /// @see ev_fiber_cnd_broadcast()
+  void
+  notify_all() noexcept {
+    ev_fiber_cnd_broadcast(*this);
+  }
+
+  /// @see ev_fiber_cnd_wait()
+  void
+  wait(std::unique_lock<FiberMutex>& lock) {
+    int ev = ev_fiber_cnd_wait(*this, *lock.mutex());
+    if (ev != ev_fiber_success) detail::throw_fiber_error("wait", ev);
+  }
+
+  /// @see ev_fiber_cnd_wait()
+  template <class Predicate>
+  void
+  wait(std::unique_lock<FiberMutex>& lock, Predicate pred) {
+    while (!pred()) wait(lock);
+  }
+
+ private:
+  ev_fiber_cnd_t cond_{nullptr};
+};
 
 }  // namespace ev
 }  // namespace lely

@@ -33,7 +33,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #ifndef LELY_EV_FIBER_MAX_UNUSED
@@ -144,10 +143,61 @@ static void ev_fiber_ctx_destroy(struct ev_fiber_ctx *ctx);
 static fiber_t *ev_fiber_ctx_fiber_func(fiber_t *fiber, void *arg);
 static void ev_fiber_ctx_task_func(struct ev_task *task);
 
+static struct ev_fiber_ctx *ev_fiber_resume(fiber_t *fiber);
 static fiber_t *ev_fiber_await_func(fiber_t *fiber, void *arg);
 
 static void ev_fiber_return(void);
 static fiber_t *ev_fiber_return_func(fiber_t *fiber, void *arg);
+
+/// The implementation of a fiber mutex.
+struct ev_fiber_mtx_impl {
+	/// The type of mutex: #ev_fiber_mtx_plain or #ev_fiber_mtx_recursive.
+	int type;
+#if !LELY_NO_THREADS
+	/// The mutex protecting #locked and #queue.
+	mtx_t mtx;
+#endif
+	/// A pointer to the fiber holding the lock.
+	struct ev_fiber_ctx *ctx;
+	/// The number of times the mutex has been recursively locked.
+	size_t locked;
+	/// The queue of fibers waiting to acquire the lock.
+	struct sllist queue;
+};
+
+static fiber_t *ev_fiber_mtx_lock_func(fiber_t *fiber, void *arg);
+
+/**
+ * The context of a wait operation on a fiber condition variable. This struct is
+ * allocated on the stack of a fiber in ev_fiber_cnd_wait().
+ */
+struct ev_fiber_cnd_wait {
+	/// The node in the queue of fibers waiting on #cond.
+	struct slnode node;
+	/// A pointer to the condition variable passed to ev_fiber_cnd_wait().
+	ev_fiber_cnd_t *cond;
+	/// A pointer to the mutex passed to ev_fiber_cnd_wait().
+	ev_fiber_mtx_t *mtx;
+	/// A pointer to the task (in #ev_fiber_ctx) used to wake up the fiber.
+	struct ev_task *task;
+};
+
+static fiber_t *ev_fiber_cnd_wait_func(fiber_t *fiber, void *arg);
+
+/// The implementation of a fiber condition variable.
+struct ev_fiber_cnd_impl {
+#if !LELY_NO_THREADS
+	/// The mutex protecting #queue.
+	mtx_t mtx;
+#endif
+	/**
+	 * The queue of fibers waiting for the condition variable to be
+	 * signaled.
+	 */
+	struct sllist queue;
+};
+
+static void ev_fiber_cnd_wake(struct slnode *node);
 
 int
 ev_fiber_thrd_init(int flags, size_t stack_size, size_t max_unused)
@@ -313,6 +363,323 @@ ev_fiber_await(ev_future_t *future)
 	assert(thr->curr);
 
 	thr->prev = fiber_resume_with(thr->prev, ev_fiber_await_func, future);
+}
+
+int
+ev_fiber_mtx_init(ev_fiber_mtx_t *mtx, int type)
+{
+	assert(mtx);
+
+	if (type & ~ev_fiber_mtx_recursive) {
+		set_errnum(ERRNUM_INVAL);
+		return ev_fiber_error;
+	}
+
+	struct ev_fiber_mtx_impl *impl = malloc(sizeof(*impl));
+	if (!impl)
+		return ev_fiber_nomem;
+
+	impl->type = type;
+
+#if !LELY_NO_THREADS
+	switch (mtx_init(&impl->mtx, mtx_plain)) {
+	case thrd_error: free(impl); return ev_fiber_error;
+	case thrd_nomem: free(impl); return ev_fiber_nomem;
+	default: break;
+	}
+#endif
+
+	impl->ctx = NULL;
+	impl->locked = 0;
+	sllist_init(&impl->queue);
+
+	mtx->_impl = impl;
+
+	return ev_fiber_success;
+}
+
+void
+ev_fiber_mtx_destroy(ev_fiber_mtx_t *mtx)
+{
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+
+	assert(!impl->locked);
+	assert(sllist_empty(&impl->queue));
+#if !LELY_NO_THREADS
+	mtx_destroy(&impl->mtx);
+#endif
+	free(impl);
+
+	mtx->_impl = NULL;
+}
+
+int
+ev_fiber_mtx_lock(ev_fiber_mtx_t *mtx)
+{
+	struct ev_fiber_thrd *thr = &ev_fiber_thrd;
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+
+	if (!thr->curr) {
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	if (impl->locked) {
+		if (impl->ctx == thr->curr) {
+			if (!(impl->type & ev_fiber_mtx_recursive)) {
+#if !LELY_NO_THREADS
+				mtx_unlock(&impl->mtx);
+#endif
+				set_errnum(ERRNUM_PERM);
+				return ev_fiber_error;
+			}
+			assert(impl->locked < SIZE_MAX);
+			impl->locked++;
+		} else {
+			// The inner mutex will be unlocked in
+			// ev_fiber_mtx_lock_func().
+			thr->prev = fiber_resume_with(thr->prev,
+					ev_fiber_mtx_lock_func, impl);
+			impl->ctx = thr->curr;
+			assert(impl->locked == 1);
+		}
+	} else {
+		assert(impl->ctx == NULL);
+		assert(sllist_empty(&impl->queue));
+		impl->ctx = thr->curr;
+		impl->locked = 1;
+#if !LELY_NO_THREADS
+		mtx_unlock(&impl->mtx);
+#endif
+	}
+
+	return ev_fiber_success;
+}
+
+int
+ev_fiber_mtx_trylock(ev_fiber_mtx_t *mtx)
+{
+	struct ev_fiber_thrd *thr = &ev_fiber_thrd;
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+
+	if (!thr->curr) {
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	if (impl->locked) {
+		if (impl->ctx == thr->curr) {
+			if (!(impl->type & ev_fiber_mtx_recursive)) {
+#if !LELY_NO_THREADS
+				mtx_unlock(&impl->mtx);
+#endif
+				set_errnum(ERRNUM_PERM);
+				return ev_fiber_error;
+			}
+			assert(impl->locked < SIZE_MAX);
+			impl->locked++;
+#if !LELY_NO_THREADS
+			mtx_unlock(&impl->mtx);
+#endif
+			return ev_fiber_success;
+		} else {
+#if !LELY_NO_THREADS
+			mtx_unlock(&impl->mtx);
+#endif
+			return ev_fiber_busy;
+		}
+	} else {
+		assert(impl->ctx == NULL);
+		assert(sllist_empty(&impl->queue));
+		impl->ctx = thr->curr;
+		impl->locked = 1;
+#if !LELY_NO_THREADS
+		mtx_unlock(&impl->mtx);
+#endif
+		return ev_fiber_success;
+	}
+}
+
+int
+ev_fiber_mtx_unlock(ev_fiber_mtx_t *mtx)
+{
+	struct ev_fiber_thrd *thr = &ev_fiber_thrd;
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+
+	if (!thr->curr) {
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+
+	struct ev_task *task = NULL;
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	if (impl->ctx != thr->curr || !impl->locked) {
+#if !LELY_NO_THREADS
+		mtx_unlock(&impl->mtx);
+#endif
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+	assert((impl->type & ev_fiber_mtx_recursive) || impl->locked == 1);
+	if (!--impl->locked) {
+		impl->ctx = NULL;
+		if ((task = ev_task_from_node(sllist_pop_front(&impl->queue))))
+			impl->locked++;
+	}
+#if !LELY_NO_THREADS
+	mtx_unlock(&impl->mtx);
+#endif
+
+	if (task)
+		ev_exec_post(task->exec, task);
+
+	return ev_fiber_success;
+}
+
+int
+ev_fiber_cnd_init(ev_fiber_cnd_t *cond)
+{
+	assert(cond);
+
+	struct ev_fiber_cnd_impl *impl = malloc(sizeof(*impl));
+	if (!impl)
+		return ev_fiber_nomem;
+
+#if !LELY_NO_THREADS
+	switch (mtx_init(&impl->mtx, mtx_plain)) {
+	case thrd_error: free(impl); return ev_fiber_error;
+	case thrd_nomem: free(impl); return ev_fiber_nomem;
+	default: break;
+	}
+#endif
+
+	sllist_init(&impl->queue);
+
+	cond->_impl = impl;
+
+	return ev_fiber_success;
+}
+
+void
+ev_fiber_cnd_destroy(ev_fiber_cnd_t *cond)
+{
+	assert(cond);
+	struct ev_fiber_cnd_impl *impl = cond->_impl;
+	assert(impl);
+
+	assert(sllist_empty(&impl->queue));
+#if !LELY_NO_THREADS
+	mtx_destroy(&impl->mtx);
+#endif
+	free(impl);
+
+	cond->_impl = NULL;
+}
+
+int
+ev_fiber_cnd_signal(ev_fiber_cnd_t *cond)
+{
+	assert(cond);
+	struct ev_fiber_cnd_impl *impl = cond->_impl;
+	assert(impl);
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	struct slnode *node = sllist_pop_front(&impl->queue);
+#if !LELY_NO_THREADS
+	mtx_unlock(&impl->mtx);
+#endif
+
+	if (node)
+		ev_fiber_cnd_wake(node);
+
+	return ev_fiber_success;
+}
+
+int
+ev_fiber_cnd_broadcast(ev_fiber_cnd_t *cond)
+{
+	assert(cond);
+	struct ev_fiber_cnd_impl *impl = cond->_impl;
+	assert(impl);
+
+	struct sllist queue;
+	sllist_init(&queue);
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	sllist_append(&queue, &impl->queue);
+#if !LELY_NO_THREADS
+	mtx_unlock(&impl->mtx);
+#endif
+
+	struct slnode *node;
+	while ((node = sllist_pop_front(&queue)))
+		ev_fiber_cnd_wake(node);
+
+	return ev_fiber_success;
+}
+
+int
+ev_fiber_cnd_wait(ev_fiber_cnd_t *cond, ev_fiber_mtx_t *mtx)
+{
+	struct ev_fiber_thrd *thr = &ev_fiber_thrd;
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+
+	if (!thr->curr) {
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+
+	struct ev_fiber_cnd_wait wait = { .cond = cond, .mtx = mtx };
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	if (impl->ctx != thr->curr || impl->locked != 1) {
+#if !LELY_NO_THREADS
+		mtx_unlock(&impl->mtx);
+#endif
+		set_errnum(ERRNUM_PERM);
+		return ev_fiber_error;
+	}
+	assert(impl->locked);
+
+	// The inner mutex will be unlocked in ev_fiber_cnd_wait_func().
+	thr->prev = fiber_resume_with(thr->prev, ev_fiber_cnd_wait_func, &wait);
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	assert(!impl->ctx);
+	impl->ctx = thr->curr;
+	assert(impl->locked == 1);
+#if !LELY_NO_THREADS
+	mtx_unlock(&impl->mtx);
+#endif
+
+	return ev_fiber_success;
 }
 
 static void
@@ -614,11 +981,10 @@ ev_fiber_ctx_task_func(struct ev_task *task)
 	(void)fiber;
 }
 
-static fiber_t *
-ev_fiber_await_func(fiber_t *fiber, void *arg)
+static struct ev_fiber_ctx *
+ev_fiber_resume(fiber_t *fiber)
 {
 	struct ev_fiber_thrd *thr = &ev_fiber_thrd;
-	ev_future_t *future = arg;
 
 	struct ev_fiber_ctx *ctx = thr->curr;
 	thr->curr = NULL;
@@ -638,6 +1004,16 @@ ev_fiber_await_func(fiber_t *fiber, void *arg)
 		if (!empty)
 			ev_fiber_exec_post_ctx(exec);
 	}
+
+	return ctx;
+}
+
+static fiber_t *
+ev_fiber_await_func(fiber_t *fiber, void *arg)
+{
+	ev_future_t *future = arg;
+
+	struct ev_fiber_ctx *ctx = ev_fiber_resume(fiber);
 
 	if (future)
 		ev_future_submit(future, &ctx->task);
@@ -670,4 +1046,95 @@ ev_fiber_return_func(fiber_t *fiber, void *arg)
 	ev_fiber_ctx_destroy(ctx);
 
 	return NULL;
+}
+
+static fiber_t *
+ev_fiber_mtx_lock_func(fiber_t *fiber, void *arg)
+{
+	struct ev_fiber_mtx_impl *impl = arg;
+	assert(impl);
+
+	struct ev_fiber_ctx *ctx = ev_fiber_resume(fiber);
+
+	// Append the fiber to the queue of waiting fibers.
+	sllist_push_back(&impl->queue, &ctx->task._node);
+#if !LELY_NO_THREADS
+	// Unlock the inner mutex locked in ev_fiber_mtx_lock().
+	mtx_unlock(&impl->mtx);
+#endif
+
+	return NULL;
+}
+
+static fiber_t *
+ev_fiber_cnd_wait_func(fiber_t *fiber, void *arg)
+{
+	struct ev_fiber_cnd_wait *wait = arg;
+	assert(wait);
+	ev_fiber_cnd_t *cond = wait->cond;
+	assert(cond);
+	struct ev_fiber_cnd_impl *cond_impl = cond->_impl;
+	assert(cond_impl);
+	ev_fiber_mtx_t *mtx = wait->mtx;
+	struct ev_fiber_mtx_impl *mtx_impl = mtx->_impl;
+	assert(mtx_impl);
+
+	struct ev_fiber_ctx *ctx = ev_fiber_resume(fiber);
+
+	wait->task = &ctx->task;
+#if !LELY_NO_THREADS
+	mtx_lock(&cond_impl->mtx);
+#endif
+	sllist_push_back(&cond_impl->queue, &wait->node);
+#if !LELY_NO_THREADS
+	mtx_unlock(&cond_impl->mtx);
+#endif
+
+	// Unlock the mutex for the duration of the wait.
+	mtx_impl->ctx = NULL;
+	assert(mtx_impl->locked == 1);
+	mtx_impl->locked = 0;
+	struct ev_task *task =
+			ev_task_from_node(sllist_pop_front(&mtx_impl->queue));
+	if (task)
+		mtx_impl->locked++;
+#if !LELY_NO_THREADS
+	mtx_unlock(&mtx_impl->mtx);
+#endif
+	// cppcheck-suppress duplicateCondition
+	if (task)
+		ev_exec_post(task->exec, task);
+
+	return NULL;
+}
+
+static void
+ev_fiber_cnd_wake(struct slnode *node)
+{
+	assert(node);
+	struct ev_fiber_cnd_wait *wait =
+			structof(node, struct ev_fiber_cnd_wait, node);
+	ev_fiber_mtx_t *mtx = wait->mtx;
+	assert(mtx);
+	struct ev_fiber_mtx_impl *impl = mtx->_impl;
+	assert(impl);
+	struct ev_task *task = wait->task;
+	assert(task);
+
+#if !LELY_NO_THREADS
+	mtx_lock(&impl->mtx);
+#endif
+	if (impl->locked) {
+		sllist_push_back(&impl->queue, &task->_node);
+		task = NULL;
+	} else {
+		assert(sllist_empty(&impl->queue));
+		impl->locked = 1;
+	}
+#if !LELY_NO_THREADS
+	mtx_unlock(&impl->mtx);
+#endif
+
+	if (task)
+		ev_exec_post(task->exec, task);
 }
