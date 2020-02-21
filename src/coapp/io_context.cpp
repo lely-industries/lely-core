@@ -121,6 +121,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   ::std::vector<can_msg> txbuf;
 
   unique_c_ptr<CANNet> net;
+  ::std::size_t tx_nerr{0};
 
   ::std::function<void(io::CanState, io::CanState)> on_can_state;
   ::std::function<void(io::CanError)> on_can_error;
@@ -247,7 +248,7 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
     read_ec = ec;
     read_nec++;
   } else if (!ec && read_ec) {
-    diag(DIAG_INFO, 0, "CAN frame successfully read after %zd read error(s)",
+    diag(DIAG_INFO, 0, "CAN frame successfully read after %zu read error(s)",
          read_nec);
     read_ec = {};
     read_nec = 0;
@@ -325,7 +326,7 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
     write_nec++;
   } else if (!ec && write_ec) {
     diag(DIAG_INFO, 0,
-         "CAN frame successfully written after %zd write error(s)", write_nec);
+         "CAN frame successfully written after %zu write error(s)", write_nec);
     write_ec = {};
     write_nec = 0;
   }
@@ -369,8 +370,14 @@ IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   auto i = spscring_p_alloc(&txring, &n);
   if (!n) {
     set_errnum(ERRNUM_AGAIN);
-    diag(DIAG_WARNING, get_errc(), "CAN transmit queue full; dropping frame");
+    if (!tx_nerr)
+      diag(DIAG_WARNING, get_errc(), "CAN transmit queue full; dropping frame");
+    tx_nerr++;
     return -1;
+  } else if (tx_nerr) {
+    diag(DIAG_INFO, 0,
+         "CAN frame successfully queued, after dropping %zu frame(s)", tx_nerr);
+    tx_nerr = 0;
   }
   txbuf[i] = *msg;
   spscring_p_commit(&txring, n);
