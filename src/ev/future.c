@@ -4,7 +4,7 @@
  *
  * @see lely/ev/future.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -556,6 +556,10 @@ ev_future_fini(ev_future_t *future)
 	assert(future);
 
 	ev_task_queue_post(&future->queue);
+
+#if !LELY_NO_THREADS
+	mtx_destroy(&future->mtx);
+#endif
 }
 
 static void
