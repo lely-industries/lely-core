@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the object
  * dictionary declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -669,6 +669,54 @@ unsigned int co_sub_get_flags(const co_sub_t *sub);
 
 /// Sets the object flags of a CANopen sub-object. @see co_sub_get_flags()
 void co_sub_set_flags(co_sub_t *sub, unsigned int flags);
+
+/**
+ * Returns a pointer to the value of the UploadFile attribute of a CANopen
+ * sub-object, or NULL if the attribute does not exist.
+ *
+ * @see co_sub_set_upload_file()
+ */
+const char *co_sub_get_upload_file(const co_sub_t *sub);
+
+/**
+ * Sets the value of the UploadFile attribute of a CANopen sub-object.
+ *
+ * @param sub      a pointer to a CANopen sub-object.
+ * @param filename a pointer to the null-terminated string to be copied to the
+ *                 UploadFile attribute.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @pre the result of co_sub_get_flags() contains #CO_OBJ_FLAGS_UPLOAD_FILE.
+ *
+ * @see co_sub_get_upload_file()
+ */
+int co_sub_set_upload_file(co_sub_t *sub, const char *filename);
+
+/**
+ * Returns a pointer to the value of the DownloadFile attribute of a CANopen
+ * sub-object, or NULL if the attribute does not exist.
+ *
+ * @see co_sub_set_download_file()
+ */
+const char *co_sub_get_download_file(const co_sub_t *sub);
+
+/**
+ * Sets the value of the DownloadFile attribute of a CANopen sub-object.
+ *
+ * @param sub      a pointer to a CANopen sub-object.
+ * @param filename a pointer to the null-terminated string to be copied to the
+ *                 DownloadFile attribute.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @pre the result of co_sub_get_flags() contains #CO_OBJ_FLAGS_DOWNLOAD_FILE.
+ *
+ * @see co_sub_get_download_file()
+ */
+int co_sub_set_download_file(co_sub_t *sub, const char *filename);
 
 /**
  * Retrieves the download indication function for a CANopen sub-object.
