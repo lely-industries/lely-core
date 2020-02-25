@@ -4,7 +4,7 @@
  *
  * @see lely/io2/posix/poll.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -304,8 +304,7 @@ io_poll_watch(io_poll_t *poll, int fd, int events, struct io_poll_watch *watch)
 	int result = -1;
 	int errsv = errno;
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&poll->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&poll->mtx);
 #endif
 
 	struct rbnode *node = rbtree_find(&poll->tree, &fd);
@@ -436,8 +435,7 @@ io_poll_poll_wait(ev_poll_t *poll_, int timeout)
 	struct epoll_event events[LELY_IO_EPOLL_MAXEVENTS];
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&poll->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&poll->mtx);
 #endif
 	if (!timeout)
 		thr->stopped = 1;
@@ -465,8 +463,7 @@ io_poll_poll_wait(ev_poll_t *poll_, int timeout)
 			// blocked (and timeout 0).
 			sigaddset(&set, poll->signo);
 #if !LELY_NO_THREADS
-			while (pthread_mutex_lock(&poll->mtx) == EINTR)
-				;
+			pthread_mutex_lock(&poll->mtx);
 #endif
 			thr->stopped = 1;
 			continue;
@@ -477,8 +474,7 @@ io_poll_poll_wait(ev_poll_t *poll_, int timeout)
 				n = -1;
 			}
 #if !LELY_NO_THREADS
-			while (pthread_mutex_lock(&poll->mtx) == EINTR)
-				;
+			pthread_mutex_lock(&poll->mtx);
 #endif
 			break;
 		}
@@ -497,8 +493,7 @@ io_poll_poll_wait(ev_poll_t *poll_, int timeout)
 				revents |= IO_EVENT_HUP;
 			int fd = events[i].data.fd;
 #if !LELY_NO_THREADS
-			while (pthread_mutex_lock(&poll->mtx) == EINTR)
-				;
+			pthread_mutex_lock(&poll->mtx);
 #endif
 			struct rbnode *node = rbtree_find(&poll->tree, &fd);
 			if (node) {
@@ -513,8 +508,7 @@ io_poll_poll_wait(ev_poll_t *poll_, int timeout)
 		}
 
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&poll->mtx) == EINTR)
-			;
+		pthread_mutex_lock(&poll->mtx);
 #endif
 		thr->stopped = 1;
 		stopped = nevents != LELY_IO_EPOLL_MAXEVENTS;
@@ -541,8 +535,7 @@ io_poll_poll_kill(ev_poll_t *poll_, void *thr_)
 		return 0;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&poll->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&poll->mtx);
 #endif
 	int stopped = thr->stopped;
 	if (!stopped)
@@ -615,8 +608,7 @@ io_poll_process(io_poll_t *poll, int revents, struct io_poll_watch *watch)
 #endif
 		watch->func(watch, revents);
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&poll->mtx) == EINTR)
-			;
+		pthread_mutex_lock(&poll->mtx);
 #endif
 	}
 }

@@ -213,8 +213,7 @@ io_timer_fini(io_timer_t *timer)
 	io_timer_impl_svc_shutdown(&impl->svc);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 	// If necessary, busy-wait until io_timer_impl_wait_task_func()
 	// completes.
 	while (impl->wait_posted) {
@@ -222,9 +221,8 @@ io_timer_fini(io_timer_t *timer)
 		if (ev_exec_abort(impl->wait_task.exec, &impl->wait_task))
 			break;
 		pthread_mutex_unlock(&impl->mtx);
-		do
-			sched_yield();
-		while (pthread_mutex_lock(&impl->mtx) == EINTR);
+		sched_yield();
+		pthread_mutex_lock(&impl->mtx);
 	}
 	pthread_mutex_unlock(&impl->mtx);
 #endif
@@ -343,8 +341,7 @@ io_timer_impl_getoverrun(const io_timer_t *timer)
 	const struct io_timer_impl *impl = io_timer_impl_from_timer(timer);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock((pthread_mutex_t *)&impl->mtx);
 #endif
 	int overrun = impl->overrun;
 #if !LELY_NO_THREADS
@@ -387,8 +384,7 @@ io_timer_impl_submit_wait(io_timer_t *timer, struct io_timer_wait *wait)
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
@@ -446,8 +442,7 @@ io_timer_impl_svc_shutdown(struct io_svc *svc)
 	io_dev_t *dev = &impl->dev_vptr;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int shutdown = !impl->shutdown;
 	impl->shutdown = 1;
@@ -479,8 +474,7 @@ io_timer_impl_watch_func(struct io_poll_watch *watch, int events)
 	(void)events;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int post_wait = !impl->wait_posted && !impl->shutdown;
 	if (post_wait)
@@ -529,8 +523,7 @@ io_timer_impl_wait_task_func(struct ev_task *task)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (overrun >= 0)
 		impl->overrun = overrun;
@@ -580,8 +573,7 @@ io_timer_impl_pop(struct io_timer_impl *impl, struct sllist *queue,
 	assert(queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (!task)
 		sllist_append(queue, &impl->wait_queue);

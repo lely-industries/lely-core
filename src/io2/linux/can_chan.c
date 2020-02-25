@@ -337,13 +337,11 @@ io_can_chan_fini(io_can_chan_t *chan)
 
 #if !LELY_NO_THREADS
 	// Abort any consumer wait operation running in a task.
-	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->c_mtx);
 	spscring_c_abort_wait(&impl->rxring);
 	pthread_mutex_unlock(&impl->c_mtx);
 
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 	// If necessary, busy-wait until io_can_chan_impl_rxbuf_task_func(),
 	// io_can_chan_impl_read_task_func() and
 	// io_can_chan_impl_write_task_func() complete.
@@ -351,9 +349,8 @@ io_can_chan_fini(io_can_chan_t *chan)
 		if (io_can_chan_impl_do_abort_tasks(impl))
 			continue;
 		pthread_mutex_unlock(&impl->mtx);
-		do
-			sched_yield();
-		while (pthread_mutex_lock(&impl->mtx) == EINTR);
+		sched_yield();
+		pthread_mutex_lock(&impl->mtx);
 	}
 	pthread_mutex_unlock(&impl->mtx);
 #endif
@@ -419,8 +416,7 @@ io_can_chan_get_handle(const io_can_chan_t *chan)
 	const struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock((pthread_mutex_t *)&impl->mtx);
 #endif
 	int fd = impl->fd;
 #if !LELY_NO_THREADS
@@ -736,8 +732,7 @@ io_can_chan_impl_dev_cancel(io_dev_t *dev, struct ev_task *task)
 	sllist_init(&confirm_queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	io_can_chan_impl_do_pop(
 			impl, &read_queue, &write_queue, &confirm_queue, task);
@@ -770,8 +765,7 @@ io_can_chan_impl_dev_abort(io_dev_t *dev, struct ev_task *task)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	io_can_chan_impl_do_pop(impl, &queue, &queue, &queue, task);
 #if !LELY_NO_THREADS
@@ -794,8 +788,7 @@ io_can_chan_impl_get_flags(const io_can_chan_t *chan)
 	const struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock((pthread_mutex_t *)&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock((pthread_mutex_t *)&impl->mtx);
 #endif
 	int flags = impl->flags;
 #if !LELY_NO_THREADS
@@ -821,8 +814,7 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 #endif
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->c_mtx);
 #endif
 	size_t i = 0;
 	for (;;) {
@@ -896,8 +888,7 @@ io_can_chan_impl_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
@@ -933,8 +924,7 @@ io_can_chan_impl_write(
 #endif
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 #if !LELY_NO_CANFD
 	if ((flags & impl->flags) != flags) {
@@ -975,8 +965,7 @@ io_can_chan_impl_submit_write(
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
@@ -1011,8 +1000,7 @@ io_can_chan_impl_svc_shutdown(struct io_svc *svc)
 	io_dev_t *dev = &impl->dev_vptr;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int shutdown = !impl->shutdown;
 	impl->shutdown = 1;
@@ -1045,8 +1033,7 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 			structof(watch, struct io_can_chan_impl, watch);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	impl->events &= ~events;
 	if (impl->events && impl->fd != -1 && !impl->shutdown) {
@@ -1103,8 +1090,7 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 	int wouldblock = 0;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	// Only try to fill the receive queue if there are pending read
 	// operations and there is an empty slot in the queue, ir of there are
@@ -1153,8 +1139,7 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 			spscring_p_commit(&impl->rxring, n);
 
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->mtx) == EINTR)
-			;
+		pthread_mutex_lock(&impl->mtx);
 #endif
 		// Process the write confirmation, if any.
 		if (!result && flags & MSG_CONFIRM)
@@ -1220,8 +1205,7 @@ io_can_chan_impl_read_task_func(struct ev_task *task)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	// Process any pending read operations that can be satisfied.
 	int wouldblock = 0;
@@ -1232,8 +1216,7 @@ io_can_chan_impl_read_task_func(struct ev_task *task)
 	// Register a wait operation if the receive queue is empty.
 	if (post_read && wouldblock) {
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-			;
+		pthread_mutex_lock(&impl->c_mtx);
 #endif
 		// Do not repost this task unless the wait condition can be
 		// satisfied immediately.
@@ -1275,8 +1258,7 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 	int wouldblock = 0;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	// Try to process all pending write operations at once, unless we're in
 	// blocking mode.
@@ -1296,8 +1278,7 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 			// The operation failed immediately.
 			io_can_chan_write_post(write, errc);
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->mtx) == EINTR)
-			;
+		pthread_mutex_lock(&impl->mtx);
 #endif
 		if (!errc)
 			// Wait for the write confirmation.
@@ -1394,15 +1375,13 @@ io_can_chan_impl_c_signal(struct spscring *ring, void *arg)
 	assert(impl);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->c_mtx);
 	pthread_cond_broadcast(&impl->c_cond);
 	pthread_mutex_unlock(&impl->c_mtx);
 #endif
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int post_read = !impl->read_posted && !sllist_empty(&impl->read_queue)
 			&& !impl->shutdown;
@@ -1560,8 +1539,7 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 	sllist_init(&confirm_queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 
 	if (impl->events) {
@@ -1571,8 +1549,7 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 	}
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->c_mtx);
 #endif
 	spscring_c_abort_wait(&impl->rxring);
 	// Clear the receive queue.

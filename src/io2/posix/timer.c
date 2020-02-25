@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/timer.h
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -342,8 +342,7 @@ io_timer_impl_submit_wait(io_timer_t *timer, struct io_timer_wait *wait)
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
@@ -365,8 +364,7 @@ io_timer_impl_svc_shutdown(struct io_svc *svc)
 	io_dev_t *dev = &impl->dev_vptr;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int shutdown = !impl->shutdown;
 	impl->shutdown = 1;
@@ -393,8 +391,7 @@ io_timer_impl_notify_function(union sigval val)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	sllist_append(&queue, &impl->wait_queue);
 #if !LELY_NO_THREADS
@@ -437,8 +434,7 @@ io_timer_impl_pop(struct io_timer_impl *impl, struct sllist *queue,
 	assert(queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (!task)
 		sllist_append(queue, &impl->wait_queue);

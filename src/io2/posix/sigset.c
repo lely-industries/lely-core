@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/sigset.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -267,17 +267,15 @@ io_sigset_fini(io_sigset_t *sigset)
 	io_sigset_impl_clear(sigset);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 	// If necessary, busy-wait until io_sigset_impl_read_task_func() and
 	// io_sigset_impl_wait_task_func() complete.
 	while (impl->read_posted || impl->wait_posted) {
 		if (io_sigset_impl_do_abort_tasks(impl))
 			continue;
 		pthread_mutex_unlock(&impl->mtx);
-		do
-			sched_yield();
-		while (pthread_mutex_lock(&impl->mtx) == EINTR);
+		sched_yield();
+		pthread_mutex_lock(&impl->mtx);
 	}
 	pthread_mutex_unlock(&impl->mtx);
 #endif
@@ -354,8 +352,7 @@ io_sigset_process_all(void)
 	sllist_init(&queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&io_sigset_shared.mtx) == EINTR)
-		;
+	pthread_mutex_lock(&io_sigset_shared.mtx);
 #endif
 	while (io_sigset_shared.pending) {
 		io_sigset_shared.pending = 0;
@@ -385,8 +382,7 @@ io_sigset_process_sig(int signo, struct sllist *queue)
 		struct io_sigset_impl *impl = structof(
 				node, struct io_sigset_impl, nodes[signo - 1]);
 #if !LELY_NO_THREADS
-		while (pthread_mutex_lock(&impl->mtx) == EINTR)
-			;
+		pthread_mutex_lock(&impl->mtx);
 #endif
 		assert(node->watched);
 		if (!node->pending) {
@@ -460,9 +456,7 @@ io_sigset_impl_clear(io_sigset_t *sigset)
 
 #if !LELY_NO_THREADS
 	// Locking this mutex may fail since it is statically initialized.
-	int errsv;
-	while ((errsv = pthread_mutex_lock(&io_sigset_shared.mtx)) == EINTR)
-		;
+	int errsv = pthread_mutex_lock(&io_sigset_shared.mtx);
 	if (errsv) {
 		errno = errsv;
 		return -1;
@@ -494,9 +488,7 @@ io_sigset_impl_insert(io_sigset_t *sigset, int signo)
 
 #if !LELY_NO_THREADS
 	// Locking this mutex may fail since it is statically initialized.
-	int errsv;
-	while ((errsv = pthread_mutex_lock(&io_sigset_shared.mtx)) == EINTR)
-		;
+	int errsv = pthread_mutex_lock(&io_sigset_shared.mtx);
 	if (errsv) {
 		errno = errsv;
 		return -1;
@@ -524,9 +516,7 @@ io_sigset_impl_remove(io_sigset_t *sigset, int signo)
 
 #if !LELY_NO_THREADS
 	// Locking this mutex may fail since it is statically initialized.
-	int errsv;
-	while ((errsv = pthread_mutex_lock(&io_sigset_shared.mtx)) == EINTR)
-		;
+	int errsv = pthread_mutex_lock(&io_sigset_shared.mtx);
 	if (errsv) {
 		errno = errsv;
 		return -1;
@@ -554,8 +544,7 @@ io_sigset_impl_submit_wait(io_sigset_t *sigset, struct io_sigset_wait *wait)
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (impl->shutdown) {
 #if !LELY_NO_THREADS
@@ -607,8 +596,7 @@ io_sigset_impl_svc_shutdown(struct io_svc *svc)
 	io_dev_t *dev = &impl->dev_vptr;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int shutdown = !impl->shutdown;
 	impl->shutdown = 1;
@@ -637,8 +625,7 @@ io_sigset_impl_watch_func(struct io_poll_watch *watch, int events)
 	(void)events;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	int post_read = !impl->read_posted;
 	impl->read_posted = 1;
@@ -676,8 +663,7 @@ io_sigset_impl_read_task_func(struct ev_task *task)
 		io_sigset_process_all();
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (events && !impl->shutdown)
 		io_poll_watch(impl->poll, impl->fds[0], events, &impl->watch);
@@ -700,8 +686,7 @@ io_sigset_impl_wait_task_func(struct ev_task *task)
 	int signo = LELY_NSIG;
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (!sllist_empty(&impl->queue)) {
 		for (signo = 1; signo < LELY_NSIG; signo++) {
@@ -762,8 +747,7 @@ io_sigset_impl_pop(struct io_sigset_impl *impl, struct sllist *queue,
 	assert(queue);
 
 #if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->mtx) == EINTR)
-		;
+	pthread_mutex_lock(&impl->mtx);
 #endif
 	if (!task)
 		sllist_append(queue, &impl->queue);
