@@ -3,7 +3,7 @@
  *
  * @see lely/libc/threads.h
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -86,9 +86,7 @@ cnd_signal(cnd_t *cond)
 int
 cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 {
-	int errsv;
-	while ((errsv = pthread_cond_timedwait(cond, mtx, ts)) == EINTR)
-		;
+	int errsv = pthread_cond_timedwait(cond, mtx, ts);
 	if (errsv) {
 		errno = errsv;
 		return errsv == ETIMEDOUT ? thrd_timedout : thrd_error;
@@ -99,9 +97,7 @@ cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
 int
 cnd_wait(cnd_t *cond, mtx_t *mtx)
 {
-	int errsv;
-	while ((errsv = pthread_cond_wait(cond, mtx)) == EINTR)
-		;
+	int errsv = pthread_cond_wait(cond, mtx);
 	if (errsv) {
 		errno = errsv;
 		return thrd_error;
@@ -149,9 +145,7 @@ error_mutexattr_init:
 int
 mtx_lock(mtx_t *mtx)
 {
-	int errsv;
-	while ((errsv = pthread_mutex_lock(mtx)) == EINTR)
-		;
+	int errsv = pthread_mutex_lock(mtx);
 	if (errsv) {
 		errno = errsv;
 		return thrd_error;
@@ -162,9 +156,7 @@ mtx_lock(mtx_t *mtx)
 int
 mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 {
-	int errsv;
-	while ((errsv = pthread_mutex_timedlock(mtx, ts)) == EINTR)
-		;
+	int errsv = pthread_mutex_timedlock(mtx, ts);
 	if (errsv) {
 		errno = errsv;
 		return errsv == ETIMEDOUT ? thrd_timedout : thrd_error;
@@ -175,9 +167,7 @@ mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 int
 mtx_trylock(mtx_t *mtx)
 {
-	int errsv;
-	while ((errsv = pthread_mutex_trylock(mtx)) == EINTR)
-		;
+	int errsv = pthread_mutex_trylock(mtx);
 	if (errsv) {
 		errno = errsv;
 		return errsv == EBUSY ? thrd_busy : thrd_error;
