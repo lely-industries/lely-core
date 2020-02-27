@@ -1107,7 +1107,7 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 		;
 #endif
 	// Only try to fill the receive queue if there are pending read
-	// operations and there is an empty slot in the queue, ir of there are
+	// operations and there is an empty slot in the queue, or if there are
 	// pending write confirmations.
 	// clang-format off
 	while ((!sllist_empty(&impl->read_queue)

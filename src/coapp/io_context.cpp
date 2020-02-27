@@ -44,6 +44,14 @@
 #define LELY_COAPP_IO_CONTEXT_TXLEN 1000
 #endif
 
+#ifndef LELY_COAPP_IO_CONTEXT_TXTIMEO
+/**
+ * The default timeout (in milliseconds) when waiting for a CAN frame write
+ * confirmation.
+ */
+#define LELY_COAPP_IO_CONTEXT_TXTIMEO 100
+#endif
+
 namespace lely {
 
 namespace canopen {
@@ -85,6 +93,8 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   int OnNext(const timespec* tp) noexcept;
   int OnSend(const can_msg* msg) noexcept;
 
+  int OnTime(const timespec* tp) noexcept;
+
   void OnCanState(io::CanState new_state, io::CanState old_state) noexcept;
   void OnCanError(io::CanError error) noexcept;
 
@@ -121,6 +131,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   ::std::vector<can_msg> txbuf;
 
   unique_c_ptr<CANNet> net;
+  unique_c_ptr<CANTimer> tx_timer;
   ::std::size_t tx_nerr{0};
 
   ::std::function<void(io::CanState, io::CanState)> on_can_state;
@@ -187,7 +198,8 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
       write(txmsg, nullptr, [this](::std::error_code ec) { OnWrite(ec); }),
       mutex(mutex_),
       txbuf(LELY_COAPP_IO_CONTEXT_TXLEN, CAN_MSG_INIT),
-      net(make_unique_c<CANNet>()) {
+      net(make_unique_c<CANNet>()),
+      tx_timer(make_unique_c<CANTimer>()) {
   spscring_init(&txring, LELY_COAPP_IO_CONTEXT_TXLEN);
 
   // Initialize the CAN network clock with the current time.
@@ -200,15 +212,21 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
   // CAN frame needs to be sent.
   net->setSendFunc<Impl_, &Impl_::OnSend>(this);
 
+  // Register the OnTime() member function as the function to be invoked when a
+  // write confirmation is not received in time.
+  tx_timer->setFunc<Impl_, &Impl_::OnTime>(this);
+
+  ctx.insert(*this);
+
   // Start waiting for timeouts.
   timer.submit_wait(wait);
 
   // Start receiving CAN frames.
   chan.submit_read(read);
-  // Start sending CAN frames.
-  OnWrite({});
-
-  ctx.insert(*this);
+  // Post a task to start sending CAN frames. We cannot invoke OnWrite()
+  // directly, because it acquires a lock on this instance and the BasicLockable
+  // base class is not yet accessible.
+  chan.get_executor().post([this]() { OnWrite({}); });
 }
 
 IoContext::Impl_::~Impl_() { ctx.remove(*this); }
@@ -220,6 +238,10 @@ IoContext::Impl_::OnShutdown() noexcept {
 #else
   shutdown.store(true, ::std::memory_order_release);
 #endif
+  {
+    ::std::lock_guard<Impl_> lock(*this);
+    tx_timer->stop();
+  }
   chan.cancel_write(write);
   chan.cancel_read(read);
   timer.cancel(wait);
@@ -331,6 +353,12 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
     write_nec = 0;
   }
 
+  {
+    ::std::lock_guard<Impl_> lock(*this);
+    // Stop the timeout after receiving a write confirmation (or write error).
+    tx_timer->stop();
+  }
+
 #if LELY_NO_THREADS
   if (!shutdown) {
 #else
@@ -352,6 +380,11 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
       spscring_c_commit(&txring, n);
       // Send the frame.
       chan.submit_write(write);
+      // Register a timeout for the write confirmation.
+      {
+        ::std::lock_guard<Impl_> lock(*this);
+        tx_timer->timeout(*net, LELY_COAPP_IO_CONTEXT_TXTIMEO);
+      }
     }
   }
 }
@@ -365,6 +398,7 @@ IoContext::Impl_::OnNext(const timespec* tp) noexcept {
 int
 IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   assert(msg);
+  util::UnlockGuard<Impl_> unlock(*this);
 
   ::std::size_t n = 1;
   auto i = spscring_p_alloc(&txring, &n);
@@ -384,9 +418,21 @@ IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   return 0;
 }
 
+int
+IoContext::Impl_::OnTime(const timespec*) noexcept {
+  if (chan.cancel_write(write))
+    diag(DIAG_WARNING, 0, "no confirmation received after writing CAN frame");
+  return 0;
+}
+
 void
 IoContext::Impl_::OnCanState(io::CanState new_state,
                              io::CanState old_state) noexcept {
+  if (old_state == io::CanState::BUSOFF) {
+    util::UnlockGuard<Impl_> unlock(*this);
+    // Cancel the ongoing write operation if we just recovered from bus off.
+    chan.cancel_write(write);
+  }
   self->OnCanState(new_state, old_state);
   if (on_can_state) {
     auto f = on_can_state;
