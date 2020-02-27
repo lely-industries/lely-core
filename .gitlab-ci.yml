@@ -200,7 +200,7 @@ build:arm-linux-gnueabihf:
   variables:
     ARCH: armhf
     CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python
-  allow_failure: true
+  when: manual
 
 test:arm-linux-gnueabihf:
   dependencies:
@@ -209,7 +209,7 @@ test:arm-linux-gnueabihf:
   <<: *test
   variables:
     ARCH: armhf
-  allow_failure: true
+  when: manual
 
 build:aarch64-linux-gnu:
   <<: *cross-deps
@@ -217,7 +217,7 @@ build:aarch64-linux-gnu:
   variables:
     ARCH: arm64
     CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python
-  allow_failure: true
+  when: manual
 
 test:aarch64-linux-gnu:
   dependencies:
@@ -226,7 +226,7 @@ test:aarch64-linux-gnu:
   <<: *test
   variables:
     ARCH: arm64
-  allow_failure: true
+  when: manual
 
 build:arm-none-eabi:
   <<: *build
