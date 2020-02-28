@@ -28,9 +28,6 @@
 #include <lely/util/diag.h>
 #include <lely/util/spscring.h>
 
-#if !LELY_NO_THREADS
-#include <atomic>
-#endif
 #include <vector>
 #include <utility>
 
@@ -95,52 +92,53 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
 
   int OnTime(const timespec* tp) noexcept;
 
-  void OnCanState(io::CanState new_state, io::CanState old_state) noexcept;
-  void OnCanError(io::CanError error) noexcept;
+  bool Wait();
+  void Write();
 
   static const io_svc_vtbl svc_vtbl;
 
   IoContext* self{nullptr};
 
+  util::BasicLockable* mutex{nullptr};
+
   io::ContextBase ctx{nullptr};
-#if LELY_NO_THREADS
   bool shutdown{false};
-#else
-  ::std::atomic_bool shutdown{false};
-#endif
 
   io::TimerBase& timer;
   io::TimerWait wait;
 
   io::CanChannelBase& chan;
+
+  can_msg read_msg CAN_MSG_INIT;
+  can_err read_err CAN_ERR_INIT;
   io::CanChannelRead read;
-  can_msg rxmsg CAN_MSG_INIT;
-  can_err err CAN_ERR_INIT;
   ::std::error_code read_ec;
-  ::std::size_t read_nec{0};
-  int state{0};
+  ::std::size_t read_errcnt{0};
+
+  int state{CAN_STATE_ACTIVE};
+  ::std::function<void(io::CanState, io::CanState)> on_can_state;
+
   int error{0};
+  ::std::function<void(io::CanError)> on_can_error;
+
+  can_msg write_msg CAN_MSG_INIT;
   io::CanChannelWrite write;
-  can_msg txmsg CAN_MSG_INIT;
   ::std::error_code write_ec;
-  ::std::size_t write_nec{0};
+  ::std::size_t write_errcnt{0};
 
-  util::BasicLockable* mutex{nullptr};
-
-  spscring txring;
-  ::std::vector<can_msg> txbuf;
+  spscring tx_ring;
+  ::std::vector<can_msg> tx_buf;
+  ::std::size_t tx_errcnt{0};
 
   unique_c_ptr<CANNet> net;
-  unique_c_ptr<CANTimer> tx_timer;
-  ::std::size_t tx_nerr{0};
 
-  ::std::function<void(io::CanState, io::CanState)> on_can_state;
-  ::std::function<void(io::CanError)> on_can_error;
+  unique_c_ptr<CANTimer> tx_timer;
 };
 
 // clang-format off
 const io_svc_vtbl IoContext::Impl_::svc_vtbl = {
-    nullptr, [](io_svc* svc) noexcept {
+    nullptr,
+    [](io_svc* svc) noexcept {
       static_cast<IoContext::Impl_*>(svc)->OnShutdown();
     }
 };
@@ -189,18 +187,18 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
                         io::CanChannelBase& chan_, util::BasicLockable* mutex_)
     : io_svc IO_SVC_INIT(&svc_vtbl),
       self(self_),
+      mutex(mutex_),
       ctx(timer_.get_ctx()),
       timer(timer_),
       wait([this](int overrun, ::std::error_code ec) { OnWait(overrun, ec); }),
       chan(chan_),
-      read(&rxmsg, &err, nullptr,
+      read(&read_msg, &read_err, nullptr,
            [this](int result, ::std::error_code ec) { OnRead(result, ec); }),
-      write(txmsg, nullptr, [this](::std::error_code ec) { OnWrite(ec); }),
-      mutex(mutex_),
-      txbuf(LELY_COAPP_IO_CONTEXT_TXLEN, CAN_MSG_INIT),
+      write(write_msg, nullptr, [this](::std::error_code ec) { OnWrite(ec); }),
+      tx_buf(LELY_COAPP_IO_CONTEXT_TXLEN, CAN_MSG_INIT),
       net(make_unique_c<CANNet>()),
       tx_timer(make_unique_c<CANTimer>()) {
-  spscring_init(&txring, LELY_COAPP_IO_CONTEXT_TXLEN);
+  spscring_init(&tx_ring, LELY_COAPP_IO_CONTEXT_TXLEN);
 
   // Initialize the CAN network clock with the current time.
   net->setTime(util::to_timespec(timer.get_clock().gettime()));
@@ -218,139 +216,148 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
 
   ctx.insert(*this);
 
+  // Start waiting for CAN frames to be put into the transmit queue.
+  Wait();
+
   // Start waiting for timeouts.
   timer.submit_wait(wait);
 
   // Start receiving CAN frames.
   chan.submit_read(read);
-  // Post a task to start sending CAN frames. We cannot invoke OnWrite()
-  // directly, because it acquires a lock on this instance and the BasicLockable
-  // base class is not yet accessible.
-  chan.get_executor().post([this]() { OnWrite({}); });
 }
 
 IoContext::Impl_::~Impl_() { ctx.remove(*this); }
 
 void
 IoContext::Impl_::OnShutdown() noexcept {
-#if LELY_NO_THREADS
-  shutdown = true;
-#else
-  shutdown.store(true, ::std::memory_order_release);
-#endif
   {
     ::std::lock_guard<Impl_> lock(*this);
+    if (shutdown) return;
+    shutdown = true;
     tx_timer->stop();
   }
   chan.cancel_write(write);
   chan.cancel_read(read);
-  timer.cancel(wait);
+  timer.cancel_wait(wait);
 }
 
 void
 IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
-  if (!ec) {
+  {
     ::std::lock_guard<Impl_> lock(*this);
-    self->SetTime();
+    if (!ec) self->SetTime();
+    if (shutdown) return;
   }
-#if LELY_NO_THREADS
-  if (!shutdown)
-#else
-  if (!shutdown.load(::std::memory_order_acquire))
-#endif
-    timer.submit_wait(wait);
+  timer.submit_wait(wait);
 }
 
 void
 IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
-  if (ec && ec != ::std::errc::operation_canceled) {
+  auto canceled = ec == ::std::errc::operation_canceled;
+
+  if (ec && !canceled) {
     if (ec != read_ec)
       // Only print a diagnostic for unique read errors.
       diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
     read_ec = ec;
-    read_nec++;
+    read_errcnt++;
   } else if (!ec && read_ec) {
     diag(DIAG_INFO, 0, "CAN frame successfully read after %zu read error(s)",
-         read_nec);
+         read_errcnt);
     read_ec = {};
-    read_nec = 0;
+    read_errcnt = 0;
+  }
+
+  if (result == 1) {
+    ::std::lock_guard<Impl_> lock(*this);
+    // Update the internal clock before processing the incoming CAN frame.
+    self->SetTime();
+    net->recv(read_msg);
+  } else if (result == 0) {
+    if (read_err.state != state) {
+      if (static_cast<io::CanState>(state) == io::CanState::BUSOFF)
+        // Cancel the ongoing write operation if we just recovered from bus off.
+        chan.cancel_write(write);
+
+      ::std::swap(read_err.state, state);
+      switch (static_cast<io::CanState>(state)) {
+        case io::CanState::ACTIVE:
+          diag(DIAG_INFO, 0, "CAN bus is in the error active state");
+          break;
+        case io::CanState::PASSIVE:
+          diag(DIAG_INFO, 0, "CAN bus is in the error passive state");
+          break;
+        case io::CanState::BUSOFF:
+          diag(DIAG_WARNING, 0, "CAN bus is in the bus off state");
+          break;
+        case io::CanState::SLEEPING:
+          diag(DIAG_INFO, 0, "CAN interface is in sleep mode");
+          break;
+        case io::CanState::STOPPED:
+          diag(DIAG_WARNING, 0, "CAN interface is stopped");
+          break;
+      }
+
+      // Invoke the registered callback, if any.
+      ::std::function<void(io::CanState, io::CanState)> f;
+      {
+        ::std::lock_guard<Impl_> lock(*this);
+        f = on_can_state;
+      }
+      if (f)
+        f(static_cast<io::CanState>(state),
+          static_cast<io::CanState>(read_err.state));
+    }
+
+    if (read_err.error != error) {
+      error = read_err.error;
+      if (error & CAN_ERROR_BIT)
+        diag(DIAG_WARNING, 0, "single bit error detected on CAN bus");
+      if (error & CAN_ERROR_STUFF)
+        diag(DIAG_WARNING, 0, "bit stuffing error detected on CAN bus");
+      if (error & CAN_ERROR_CRC)
+        diag(DIAG_WARNING, 0, "CRC sequence error detected on CAN bus");
+      if (error & CAN_ERROR_FORM)
+        diag(DIAG_WARNING, 0, "form error detected on CAN bus");
+      if (error & CAN_ERROR_ACK)
+        diag(DIAG_WARNING, 0, "acknowledgment error detected on CAN bus");
+      if (error & CAN_ERROR_OTHER)
+        diag(DIAG_WARNING, 0, "one or more unknown errors detected on CAN bus");
+
+      // Invoke the registered callback, if any.
+      ::std::function<void(io::CanError)> f;
+      {
+        ::std::lock_guard<Impl_> lock(*this);
+        f = on_can_error;
+      }
+      if (f) f(static_cast<io::CanError>(error));
+    }
   }
 
   {
     ::std::lock_guard<Impl_> lock(*this);
-
-    // Update the internal clock before processing the incoming CAN (error)
-    // frame.
-    self->SetTime();
-    if (result == 1) {
-      net->recv(rxmsg);
-    } else if (!result) {
-      if (err.state != state) {
-        switch (static_cast<io::CanState>(err.state)) {
-          case io::CanState::ACTIVE:
-            diag(DIAG_INFO, 0, "CAN bus is in the error active state");
-            break;
-          case io::CanState::PASSIVE:
-            diag(DIAG_INFO, 0, "CAN bus is in the error passive state");
-            break;
-          case io::CanState::BUSOFF:
-            diag(DIAG_WARNING, 0, "CAN bus is in the bus off state");
-            break;
-          case io::CanState::SLEEPING:
-            diag(DIAG_INFO, 0, "CAN interface is in sleep mode");
-            break;
-          case io::CanState::STOPPED:
-            diag(DIAG_WARNING, 0, "CAN interface is stopped");
-            break;
-        }
-
-        ::std::swap(err.state, state);
-        OnCanState(static_cast<io::CanState>(state),
-                   static_cast<io::CanState>(err.state));
-      }
-
-      if (err.error != error) {
-        if (err.error & CAN_ERROR_BIT)
-          diag(DIAG_WARNING, 0, "single bit error detected on CAN bus");
-        if (err.error & CAN_ERROR_STUFF)
-          diag(DIAG_WARNING, 0, "bit stuffing error detected on CAN bus");
-        if (err.error & CAN_ERROR_CRC)
-          diag(DIAG_WARNING, 0, "CRC sequence error detected on CAN bus");
-        if (err.error & CAN_ERROR_FORM)
-          diag(DIAG_WARNING, 0, "form error detected on CAN bus");
-        if (err.error & CAN_ERROR_ACK)
-          diag(DIAG_WARNING, 0, "acknowledgment error detected on CAN bus");
-        if (err.error & CAN_ERROR_OTHER)
-          diag(DIAG_WARNING, 0,
-               "one or more unknown errors detected on CAN bus");
-
-        error = err.error;
-        OnCanError(static_cast<io::CanError>(error));
-      }
-    }
+    if (shutdown) return;
   }
 
-#if LELY_NO_THREADS
-  if (!shutdown)
-#else
-  if (!shutdown.load(::std::memory_order_acquire))
-#endif
-    chan.submit_read(read);
+  chan.submit_read(read);
 }
 
 void
 IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
-  if (ec && ec != ::std::errc::operation_canceled) {
+  auto canceled = ec == ::std::errc::operation_canceled;
+
+  if (ec && !canceled) {
     if (ec != write_ec)
       // Only print a diagnostic for unique write errors.
       diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
     write_ec = ec;
-    write_nec++;
+    write_errcnt++;
   } else if (!ec && write_ec) {
     diag(DIAG_INFO, 0,
-         "CAN frame successfully written after %zu write error(s)", write_nec);
+         "CAN frame successfully written after %zu write error(s)",
+         write_errcnt);
     write_ec = {};
-    write_nec = 0;
+    write_errcnt = 0;
   }
 
   {
@@ -359,38 +366,27 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
     tx_timer->stop();
   }
 
-#if LELY_NO_THREADS
-  if (!shutdown) {
-#else
-  if (!shutdown.load(::std::memory_order_acquire)) {
-#endif
-    // Wait for next frame to become available.
-    if (!spscring_c_submit_wait(&txring, 1,
-                                [](spscring*, void* arg) noexcept {
-                                  // A frame was just added to the ring buffer.
-                                  // Try to send it.
-                                  static_cast<Impl_*>(arg)->OnWrite({});
-                                },
-                                this)) {
-      // Extract the frame from the ring buffer.
-      ::std::size_t n = 1;
-      auto i = spscring_c_alloc(&txring, &n);
-      assert(n == 1);
-      txmsg = txbuf[i];
-      spscring_c_commit(&txring, n);
-      // Send the frame.
-      chan.submit_write(write);
-      // Register a timeout for the write confirmation.
-      {
-        ::std::lock_guard<Impl_> lock(*this);
-        tx_timer->timeout(*net, LELY_COAPP_IO_CONTEXT_TXTIMEO);
-      }
-    }
+  // Remove the frame from the transmit queue, unless the write operation was
+  // canceled, in which case we try again.
+  if (!canceled) {
+    assert(spscring_c_capacity(&tx_ring) >= 1);
+    spscring_c_commit(&tx_ring, 1);
   }
+
+  {
+    ::std::lock_guard<Impl_> lock(*this);
+    if (shutdown) return;
+  }
+
+  if (canceled || !Wait()) Write();
 }
 
 int
 IoContext::Impl_::OnNext(const timespec* tp) noexcept {
+  assert(tp);
+
+  util::UnlockGuard<Impl_> unlock(*this);
+
   timer.settime(io::TimerBase::time_point(util::from_timespec(*tp)));
   return 0;
 }
@@ -398,57 +394,71 @@ IoContext::Impl_::OnNext(const timespec* tp) noexcept {
 int
 IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   assert(msg);
+
   util::UnlockGuard<Impl_> unlock(*this);
 
   ::std::size_t n = 1;
-  auto i = spscring_p_alloc(&txring, &n);
-  if (!n) {
+  auto i = spscring_p_alloc(&tx_ring, &n);
+  if (n) {
+    tx_buf[i] = *msg;
+    spscring_p_commit(&tx_ring, n);
+    if (tx_errcnt) {
+      diag(DIAG_INFO, 0,
+           "CAN frame successfully queued, after dropping %zu frame(s)",
+           tx_errcnt);
+      tx_errcnt = 0;
+    }
+    return 0;
+  } else {
     set_errnum(ERRNUM_AGAIN);
-    if (!tx_nerr)
+    if (!tx_errcnt)
       diag(DIAG_WARNING, get_errc(), "CAN transmit queue full; dropping frame");
-    tx_nerr++;
+    tx_errcnt++;
     return -1;
-  } else if (tx_nerr) {
-    diag(DIAG_INFO, 0,
-         "CAN frame successfully queued, after dropping %zu frame(s)", tx_nerr);
-    tx_nerr = 0;
   }
-  txbuf[i] = *msg;
-  spscring_p_commit(&txring, n);
-  return 0;
 }
 
 int
 IoContext::Impl_::OnTime(const timespec*) noexcept {
-  if (chan.cancel_write(write))
-    diag(DIAG_WARNING, 0, "no confirmation received after writing CAN frame");
+  util::UnlockGuard<Impl_> unlock(*this);
+
+  // No confirmation message was received; cancel the ongoing write operation.
+  chan.cancel_write(write);
   return 0;
 }
 
-void
-IoContext::Impl_::OnCanState(io::CanState new_state,
-                             io::CanState old_state) noexcept {
-  if (old_state == io::CanState::BUSOFF) {
-    util::UnlockGuard<Impl_> unlock(*this);
-    // Cancel the ongoing write operation if we just recovered from bus off.
-    chan.cancel_write(write);
-  }
-  self->OnCanState(new_state, old_state);
-  if (on_can_state) {
-    auto f = on_can_state;
-    util::UnlockGuard<Impl_> unlock(*this);
-    f(new_state, old_state);
-  }
+bool
+IoContext::Impl_::Wait() {
+  // Wait for next frame to become available.
+  if (spscring_c_submit_wait(&tx_ring, 1,
+                             [](spscring*, void* arg) noexcept {
+                               auto self = static_cast<Impl_*>(arg);
+                               // A frame was just added to the transmit queue;
+                               // try to send it.
+                               if (!self->Wait()) self->Write();
+                             },
+                             this))
+    return true;
+
+  // Extract the frame from the transmit queue.
+  ::std::size_t n = 1;
+  auto i = spscring_c_alloc(&tx_ring, &n);
+  assert(n == 1);
+  write_msg = tx_buf[i];
+
+  return false;
 }
 
 void
-IoContext::Impl_::OnCanError(io::CanError error) noexcept {
-  self->OnCanError(error);
-  if (on_can_error) {
-    auto f = on_can_error;
-    util::UnlockGuard<Impl_> unlock(*this);
-    f(error);
-  }
+IoContext::Impl_::Write() {
+  assert(spscring_c_capacity(&tx_ring) >= 1);
+
+  // Send the frame.
+  chan.submit_write(write);
+
+  ::std::lock_guard<Impl_> lock(*this);
+  // Register a timeout for the write confirmation.
+  tx_timer->timeout(*net, LELY_COAPP_IO_CONTEXT_TXTIMEO);
 }
 
 }  // namespace canopen
