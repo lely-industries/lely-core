@@ -122,7 +122,7 @@ test:gcc:9:
   tags:
     - docker
     - linux
-  image: debian:buster
+  image: debian:bullseye
   before_script:
     - apt-get update -q
     - apt-get install -qy --no-install-recommends
@@ -134,7 +134,7 @@ test:gcc:9:
     - apt-get install -qy --no-install-recommends
         mingw-w64
     - curl -L https://dl.winehq.org/wine-builds/winehq.key | apt-key add -
-    - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ buster main'
+    - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main'
     - curl -L https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/Release.key | apt-key add -
     - apt-add-repository 'deb https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/ ./'
     - dpkg --add-architecture i386
@@ -180,7 +180,7 @@ test:x86_64-w64-mingw32:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   before_script:
     - dpkg --add-architecture $ARCH
     - apt-get update -q
@@ -233,7 +233,7 @@ build:arm-none-eabi:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   before_script:
     - apt-get update -q
     - apt-get install -qy --no-install-recommends
@@ -254,7 +254,7 @@ doc:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -282,7 +282,7 @@ cpplint:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   before_script:
     - apt-get update -q
     - apt-get install -qy --no-install-recommends
@@ -302,7 +302,7 @@ valgrind:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -329,7 +329,7 @@ lcov:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -360,7 +360,7 @@ scan-build:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -386,7 +386,7 @@ cppcheck:linux:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -419,7 +419,7 @@ cppcheck:mingw32:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
@@ -453,7 +453,7 @@ coverity:
   tags:
     - docker
     - linux
-  image: debian:sid
+  image: debian:testing
   dependencies: []
   before_script:
     - apt-get update -q
