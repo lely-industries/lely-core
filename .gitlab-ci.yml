@@ -186,6 +186,7 @@ test:x86_64-w64-mingw32:
     - apt-get update -q
     - apt-get install -qy --no-install-recommends
         crossbuild-essential-$ARCH
+    - apt-get install -qy --no-install-recommends
         libstdc++-9-dev:$ARCH
         qemu-user-static
     - apt-get install -qy --no-install-recommends
