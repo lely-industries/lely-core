@@ -1576,13 +1576,10 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 #endif
 	spscring_c_abort_wait(&impl->rxring);
 	// Clear the receive queue.
-	for (;;) {
-		size_t n = SIZE_MAX;
-		spscring_c_alloc(&impl->rxring, &n);
-		if (!n)
-			break;
+	size_t n = SIZE_MAX;
+	spscring_c_alloc(&impl->rxring, &n);
+	if (n)
 		spscring_c_commit(&impl->rxring, n);
-	}
 #if !LELY_NO_THREADS
 	pthread_mutex_unlock(&impl->c_mtx);
 #endif

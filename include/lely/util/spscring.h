@@ -15,7 +15,7 @@
  * functions are lock-free. If no signal functions are registered, the
  * operations are also wait-free.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -39,12 +39,19 @@
 
 #ifdef __cplusplus
 #include <atomic>
-using ::std::atomic_size_t;
 #else
 #include <lely/libc/stdatomic.h>
 #endif
 
 #include <stddef.h>
+
+#if defined(__cplusplus)
+typedef ::std::atomic_size_t spscring_atomic_t;
+#elif __STDC_NO_ATOMICS__
+typedef size_t spscring_atomic_t;
+#else // C11
+typedef atomic_size_t spscring_atomic_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,19 +68,10 @@ struct spscring {
 		} ctx;
 		char _pad1[LEVEL1_DCACHE_LINESIZE
 				- sizeof(struct spscring_ctx)];
-#if !defined(__cplusplus) && __STDC_NO_ATOMICS__
-		_Alignas(LEVEL1_DCACHE_LINESIZE) volatile size_t pos;
-		char _pad2[LEVEL1_DCACHE_LINESIZE - sizeof(size_t)];
-#else
-		_Alignas(LEVEL1_DCACHE_LINESIZE) atomic_size_t pos;
-		char _pad2[LEVEL1_DCACHE_LINESIZE - sizeof(atomic_size_t)];
-#endif
+		_Alignas(LEVEL1_DCACHE_LINESIZE) spscring_atomic_t pos;
+		char _pad2[LEVEL1_DCACHE_LINESIZE - sizeof(spscring_atomic_t)];
 		_Alignas(LEVEL1_DCACHE_LINESIZE) struct spscring_sig {
-#if !defined(__cplusplus) && __STDC_NO_ATOMICS__
-			volatile size_t size;
-#else
-			atomic_size_t size;
-#endif
+			spscring_atomic_t size;
 			void (*func)(struct spscring *ring, void *arg);
 			void *arg;
 		} sig;
@@ -123,9 +121,9 @@ size_t spscring_size(const struct spscring *ring);
 
 /**
  * Returns the total capacity available for a producer in a single-producer
- * single-consumer ring buffer. Note that, because of wrapping, the reported
- * capacity MAY be larger than the consecutive capacity reported by
- * spscring_p_alloc().
+ * single-consumer ring buffer, including wrapping. A subsequent call to
+ * spscring_p_alloc() with a size smaller than or equal to the reported capacity
+ * is guaranteed to succeed.
  *
  * This function is wait-free. It MUST NOT be invoked by a consumer or by more
  * than one concurrent producer.
@@ -135,10 +133,23 @@ size_t spscring_size(const struct spscring *ring);
 size_t spscring_p_capacity(const struct spscring *ring);
 
 /**
- * Allocates a consecutive range of indices (no wrapping) in a single-producer,
- * single-consumer ring buffer for writing. The indices are not made available
- * to the consumer until a call to spscring_p_commit(). Without an intervening
- * call to spscring_p_commit(), this function is idempotent.
+ * Returns the total capacity available for a producer in a single-producer
+ * single-consumer ring buffer, without wrapping. A subsequent call to
+ * spscring_p_alloc_no_wrap() with a size smaller than or equal to the reported
+ * capacity is guaranteed to succeed.
+ *
+ * This function is wait-free. It MUST NOT be invoked by a consumer or by more
+ * than one concurrent producer.
+ *
+ * @returns the total number of indices available for writing.
+ */
+size_t spscring_p_capacity_no_wrap(const struct spscring *ring);
+
+/**
+ * Allocates a consecutive range of indices, including wrapping, in a
+ * single-producer, single-consumer ring buffer for writing. The indices are not
+ * made available to the consumer until a call to spscring_p_commit(). Without
+ * an intervening call to spscring_p_commit(), this function is idempotent.
  *
  * This function is wait-free. It MUST NOT be invoked by a consumer or by more
  * than one concurrent producer.
@@ -154,12 +165,31 @@ size_t spscring_p_capacity(const struct spscring *ring);
 size_t spscring_p_alloc(struct spscring *ring, size_t *psize);
 
 /**
+ * Allocates a consecutive range of indices, without wrapping, in a
+ * single-producer, single-consumer ring buffer for writing. The indices are not
+ * made available to the consumer until a call to spscring_p_commit(). Without
+ * an intervening call to spscring_p_commit(), this function is idempotent.
+ *
+ * This function is wait-free. It MUST NOT be invoked by a consumer or by more
+ * than one concurrent producer.
+ *
+ * @param ring  a pointer to a ring buffer.
+ * @param psize a pointer to a value which, on input, contains the requested
+ *              number of indices. If fewer indices are available, *<b>psize</b>
+ *              is updated on output to contain the actual number of indices
+ *              available fo writing.
+ *
+ * @returns the first index available for writing.
+ */
+size_t spscring_p_alloc_no_wrap(struct spscring *ring, size_t *psize);
+
+/**
  * Makes the specified number of indices available to a consumer and, if this
  * satisfies a wait operation registered by the consumer, invokes the consumer
  * signal function . <b>size</b> MUST not exceed the range obtained from a
- * preceding call to spscring_p_alloc(). However, it is possible to
- * incrementally commit a range of indices without invoking spscring_p_alloc()
- * again.
+ * preceding call to spscring_p_alloc() or spscring_p_alloc_no_wrap(). However,
+ * it is possible to incrementally commit a range of indices without invoking
+ * spscring_p_alloc() or spscring_p_alloc_no_wrap() again.
  *
  * This function is wait-free, unless the consumer has registered a wait, in
  * which case it is lock-free if, and only if, the consumer signal function is
@@ -171,7 +201,7 @@ size_t spscring_p_alloc(struct spscring *ring, size_t *psize);
 size_t spscring_p_commit(struct spscring *ring, size_t size);
 
 /**
- * Checks if the requested range of indices (including wrapping) in a
+ * Checks if the requested range of indices, including wrapping, in a
  * single-producer, single-consumer ring buffer is available for writing and, if
  * not, registers a signal function to be invoked once the requested range
  * becomes available.
@@ -209,9 +239,9 @@ int spscring_p_abort_wait(struct spscring *ring);
 
 /**
  * Returns the total capacity available for a consumer in a single-producer
- * single-consumer ring buffer. Note that, because of wrapping, the reported
- * capacity MAY be larger than the consecutive capacity reported by
- * spscring_c_alloc().
+ * single-consumer ring buffer, including wrapping. A subsequent call to
+ * spscring_c_alloc() with a size smaller than or equal to the reported capacity
+ * is guaranteed to succeed.
  *
  * This function is wait-free. It MUST NOT be invoked by a producer or by more
  * than one concurrent consumer.
@@ -221,10 +251,23 @@ int spscring_p_abort_wait(struct spscring *ring);
 size_t spscring_c_capacity(const struct spscring *ring);
 
 /**
- * Allocates a consecutive range of indices (no wrapping) in a single-producer,
- * single-consumer ring buffer for reading. The indices are not made available
- * to the producer until a call to spscring_c_commit(). Without an intervening
- * call to spscring_c_commit(), this function is idempotent.
+ * Returns the total capacity available for a consumer in a single-producer
+ * single-consumer ring buffer, without wrapping. A subsequent call to
+ * spscring_c_alloc_no_wrap() with a size smaller than or equal to the reported
+ * capacity is guaranteed to succeed.
+ *
+ * This function is wait-free. It MUST NOT be invoked by a producer or by more
+ * than one concurrent consumer.
+ *
+ * @returns the total number of indices available for writing.
+ */
+size_t spscring_c_capacity_no_wrap(const struct spscring *ring);
+
+/**
+ * Allocates a consecutive range of indices, including wrapping, in a
+ * single-producer, single-consumer ring buffer for reading. The indices are not
+ * made available to the producer until a call to spscring_c_commit(). Without
+ * an intervening call to spscring_c_commit(), this function is idempotent.
  *
  * This function is wait-free. It MUST NOT be invoked by a producer or by more
  * than one concurrent consumer.
@@ -240,12 +283,31 @@ size_t spscring_c_capacity(const struct spscring *ring);
 size_t spscring_c_alloc(struct spscring *ring, size_t *psize);
 
 /**
+ * Allocates a consecutive range of indices, without wrapping, in a
+ * single-producer, single-consumer ring buffer for reading. The indices are not
+ * made available to the producer until a call to spscring_c_commit(). Without
+ * an intervening call to spscring_c_commit(), this function is idempotent.
+ *
+ * This function is wait-free. It MUST NOT be invoked by a producer or by more
+ * than one concurrent consumer.
+ *
+ * @param ring  a pointer to a ring buffer.
+ * @param psize a pointer to a value which, on input, contains the requested
+ *              number of indices. If fewer indices are available, *<b>psize</b>
+ *              is updated on output to contain the actual number of indices
+ *              available fo reading.
+ *
+ * @returns the first index available for reading.
+ */
+size_t spscring_c_alloc_no_wrap(struct spscring *ring, size_t *psize);
+
+/**
  * Makes the specified number of indices available to a producer and, if this
  * satisfies a wait operation registered by the producer, invokes the producer
  * signal function . <b>size</b> MUST not exceed the range obtained from a
- * preceding call to spscring_c_alloc(). However, it is possible to
- * incrementally commit a range of indices without invoking spscring_c_alloc()
- * again.
+ * preceding call to spscring_c_alloc() or spscring_c_alloc_no_wrap(). However,
+ * it is possible to incrementally commit a range of indices without invoking
+ * spscring_c_alloc() or spscring_c_alloc_no_wrap() again.
  *
  * This function is wait-free, unless the producer has registered a wait, in
  * which case it is lock-free if, and only if, the producer signal function is
@@ -257,7 +319,7 @@ size_t spscring_c_alloc(struct spscring *ring, size_t *psize);
 size_t spscring_c_commit(struct spscring *ring, size_t size);
 
 /**
- * Checks if the requested range of indices (including wrapping) in a
+ * Checks if the requested range of indices, including wrapping, in a
  * single-producer, single-consumer ring buffer is available for reading and, if
  * not, registers a signal function to be invoked once the requested range
  * becomes available.
