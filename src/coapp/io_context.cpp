@@ -367,7 +367,12 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
   // canceled, in which we discard the entire queue.
   assert(spscring_c_capacity(&tx_ring) >= 1);
   size_t n = 1;
-  if (ec == ::std::errc::operation_canceled) n = spscring_c_capacity(&tx_ring);
+  if (ec == ::std::errc::operation_canceled) {
+    n = spscring_c_capacity(&tx_ring);
+    // Track the number of dropped frames. The first frame has already been
+    // accounted for.
+    write_errcnt += n - 1;
+  }
   spscring_c_commit(&tx_ring, n);
 
   {
