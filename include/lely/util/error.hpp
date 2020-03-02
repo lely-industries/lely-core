@@ -3,7 +3,7 @@
  * convenience functions for creating std::error_code instances and throwing
  * std::system_error exceptions corresponding to native error numbers.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -37,7 +37,7 @@ namespace util {
  */
 inline ::std::error_code
 make_error_code(int errc = get_errc()) noexcept {
-  return {errc, ::std::system_category()};
+  return {errc, ::std::generic_category()};
 }
 
 /**
@@ -71,7 +71,7 @@ throw_error_code(const char* what_arg, ::std::errc e) {
  */
 [[noreturn]] inline void
 throw_errc(int errc = get_errc()) {
-  throw ::std::system_error(errc, ::std::system_category());
+  throw ::std::system_error(make_error_code(errc));
 }
 
 /**
@@ -82,13 +82,13 @@ throw_errc(int errc = get_errc()) {
  */
 [[noreturn]] inline void
 throw_errc(const ::std::string& what_arg, int errc = get_errc()) {
-  throw ::std::system_error(errc, ::std::system_category(), what_arg);
+  throw ::std::system_error(make_error_code(errc), what_arg);
 }
 
 /// @see throw_errc(const ::std::string& what_arg, int errc)
 [[noreturn]] inline void
 throw_errc(const char* what_arg, int errc = get_errc()) {
-  throw ::std::system_error(errc, ::std::system_category(), what_arg);
+  throw ::std::system_error(make_error_code(errc), what_arg);
 }
 
 /**

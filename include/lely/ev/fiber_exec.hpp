@@ -173,16 +173,15 @@ throw_fiber_error(const char* what_arg, int ev) {
     case ev_fiber_error:
       util::throw_errc(what_arg);
     case ev_fiber_timedout:
-      throw ::std::system_error(static_cast<int>(::std::errc::timed_out),
-                                ::std::system_category(), what_arg);
+      throw ::std::system_error(::std::make_error_code(::std::errc::timed_out),
+                                what_arg);
     case ev_fiber_busy:
       throw ::std::system_error(
-          static_cast<int>(::std::errc::resource_unavailable_try_again),
-          ::std::system_category(), what_arg);
+          ::std::make_error_code(::std::errc::resource_unavailable_try_again),
+          what_arg);
     case ev_fiber_nomem:
       throw ::std::system_error(
-          static_cast<int>(::std::errc::not_enough_memory),
-          ::std::system_category(), what_arg);
+          ::std::make_error_code(::std::errc::not_enough_memory), what_arg);
   }
 }
 
