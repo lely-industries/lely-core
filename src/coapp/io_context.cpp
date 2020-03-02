@@ -236,6 +236,7 @@ IoContext::Impl_::OnShutdown() noexcept {
     shutdown = true;
     tx_timer->stop();
   }
+  spscring_c_abort_wait(&tx_ring);
   chan.cancel_write(write);
   chan.cancel_read(read);
   timer.cancel_wait(wait);
@@ -253,9 +254,7 @@ IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
-  auto canceled = ec == ::std::errc::operation_canceled;
-
-  if (ec && !canceled) {
+  if (ec && ec != ::std::errc::operation_canceled) {
     if (ec != read_ec)
       // Only print a diagnostic for unique read errors.
       diag(DIAG_WARNING, ec.value(), "error reading CAN frame");
@@ -344,15 +343,13 @@ IoContext::Impl_::OnRead(int result, ::std::error_code ec) noexcept {
 
 void
 IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
-  auto canceled = ec == ::std::errc::operation_canceled;
-
-  if (ec && !canceled) {
+  if (ec) {
     if (ec != write_ec)
       // Only print a diagnostic for unique write errors.
       diag(DIAG_WARNING, ec.value(), "error writing CAN frame");
     write_ec = ec;
     write_errcnt++;
-  } else if (!ec && write_ec) {
+  } else if (write_ec) {
     diag(DIAG_INFO, 0,
          "CAN frame successfully written after %zu write error(s)",
          write_errcnt);
@@ -367,18 +364,18 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
   }
 
   // Remove the frame from the transmit queue, unless the write operation was
-  // canceled, in which case we try again.
-  if (!canceled) {
-    assert(spscring_c_capacity(&tx_ring) >= 1);
-    spscring_c_commit(&tx_ring, 1);
-  }
+  // canceled, in which we discard the entire queue.
+  assert(spscring_c_capacity(&tx_ring) >= 1);
+  size_t n = 1;
+  if (ec == ::std::errc::operation_canceled) n = spscring_c_capacity(&tx_ring);
+  spscring_c_commit(&tx_ring, n);
 
   {
     ::std::lock_guard<Impl_> lock(*this);
     if (shutdown) return;
   }
 
-  if (canceled || !Wait()) Write();
+  if (!Wait()) Write();
 }
 
 int
