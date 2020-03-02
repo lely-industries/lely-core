@@ -200,7 +200,7 @@ vfd_read(struct vfd *fd, void *buf, size_t len, int dontwait)
 
 	for (;;) {
 		size_t n = len;
-		size_t pos = spscring_c_alloc(&fd->ring, &n);
+		size_t pos = spscring_c_alloc_no_wrap(&fd->ring, &n);
 		// If any bytes are available for reading, copy them and return.
 		if (n) {
 			memcpy(buf, fd->buf + pos, n);
@@ -234,7 +234,7 @@ vfd_write(struct vfd *fd, const void *buf, size_t len, int dontwait)
 
 	for (;;) {
 		size_t n = len;
-		size_t pos = spscring_p_alloc(&fd->ring, &n);
+		size_t pos = spscring_p_alloc_no_wrap(&fd->ring, &n);
 		// If any bytes are available for writing, copy them and return.
 		if (n) {
 			memcpy(fd->buf + pos, buf, n);

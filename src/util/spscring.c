@@ -4,7 +4,7 @@
  *
  * @see lely/util/spscring.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,18 +27,19 @@
 #include <assert.h>
 #include <stdint.h>
 
-static size_t spscring_p_alloc_slow(struct spscring *ring, size_t *psize);
-static size_t spscring_c_alloc_slow(struct spscring *ring, size_t *psize);
-
 static void spscring_pc_signal(struct spscring *ring);
 static void spscring_cp_signal(struct spscring *ring);
 
-static inline size_t spscring_atomic_load(const volatile void *object);
-static inline void spscring_atomic_store(volatile void *object, size_t desired);
+static inline size_t spscring_atomic_load(
+		const volatile spscring_atomic_t *object);
+static inline void spscring_atomic_store(
+		volatile spscring_atomic_t *object, size_t desired);
 static inline _Bool spscring_atomic_compare_exchange_strong(
-		volatile void *object, size_t *expected, size_t desired);
+		volatile spscring_atomic_t *object, size_t *expected,
+		size_t desired);
 static inline _Bool spscring_atomic_compare_exchange_weak(
-		volatile void *object, size_t *expected, size_t desired);
+		volatile spscring_atomic_t *object, size_t *expected,
+		size_t desired);
 
 static inline void spscring_yield(void);
 
@@ -64,16 +65,33 @@ size_t
 spscring_p_capacity(const struct spscring *ring)
 {
 	assert(ring);
-	const struct spscring_ctx *ctx = &ring->p.ctx;
+	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->p.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
-	assert(ctx->end <= ctx->size);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
 
-	size_t cpos = spscring_atomic_load(&ring->c.pos);
-	cpos -= ctx->base - ctx->size;
-	assert(ctx->pos <= cpos);
-	assert(cpos - ctx->pos <= ctx->size);
-	return cpos - ctx->pos;
+	size_t cpos = spscring_atomic_load(&ring->c.pos) + ctx->size;
+	cpos -= ctx->base;
+	ctx->end = cpos;
+	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+	return ctx->end - ctx->pos;
+}
+
+size_t
+spscring_p_capacity_no_wrap(const struct spscring *ring)
+{
+	assert(ring);
+	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->p.ctx;
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
+	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+
+	if (ctx->end < ctx->size)
+		spscring_p_capacity(ring);
+	return MIN(ctx->end, ctx->size) - ctx->pos;
 }
 
 size_t
@@ -81,16 +99,37 @@ spscring_p_alloc(struct spscring *ring, size_t *psize)
 {
 	assert(ring);
 	struct spscring_ctx *ctx = &ring->p.ctx;
-	assert(ctx->end <= ctx->size);
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
 	assert(psize);
 
 	size_t capacity = ctx->end - ctx->pos;
 	if (*psize > capacity) {
-		if (ctx->end == ctx->size && capacity > 0)
+		capacity = spscring_p_capacity(ring);
+		if (*psize > capacity)
 			*psize = capacity;
-		else
-			return spscring_p_alloc_slow(ring, psize);
+	}
+	return ctx->pos;
+}
+
+size_t
+spscring_p_alloc_no_wrap(struct spscring *ring, size_t *psize)
+{
+	assert(ring);
+	struct spscring_ctx *ctx = &ring->p.ctx;
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
+	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+	assert(psize);
+
+	size_t capacity = MIN(ctx->end, ctx->size) - ctx->pos;
+	if (*psize > capacity) {
+		capacity = spscring_p_capacity_no_wrap(ring);
+		if (*psize > capacity)
+			*psize = capacity;
 	}
 	return ctx->pos;
 }
@@ -100,16 +139,24 @@ spscring_p_commit(struct spscring *ring, size_t size)
 {
 	assert(ring);
 	struct spscring_ctx *ctx = &ring->p.ctx;
-	assert(ctx->end <= ctx->size);
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
-	assert(size <= ctx->pos - ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+	assert(size <= ctx->end - ctx->pos);
 
-	size_t ppos = ctx->pos += size;
-	spscring_atomic_store(&ring->p.pos, ctx->base + ppos);
+	if ((ctx->pos += size) >= ctx->size) {
+		ctx->base += ctx->size;
+		ctx->pos -= ctx->size;
+		assert(ctx->end >= ctx->size);
+		ctx->end -= ctx->size;
+	}
+
+	spscring_atomic_store(&ring->p.pos, ctx->base + ctx->pos);
 
 	spscring_pc_signal(ring);
 
-	return ppos;
+	return ctx->pos;
 }
 
 int
@@ -182,16 +229,33 @@ size_t
 spscring_c_capacity(const struct spscring *ring)
 {
 	assert(ring);
-	const struct spscring_ctx *ctx = &ring->c.ctx;
+	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->c.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
-	assert(ctx->end <= ctx->size);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
 
 	size_t ppos = spscring_atomic_load(&ring->p.pos);
 	ppos -= ctx->base;
+	ctx->end = ppos;
 	assert(ctx->pos <= ppos);
-	assert(ppos - ctx->pos <= ctx->size);
-	return ppos - ctx->pos;
+	assert(ctx->end - ctx->pos <= ctx->size);
+	return ctx->end - ctx->pos;
+}
+
+size_t
+spscring_c_capacity_no_wrap(const struct spscring *ring)
+{
+	assert(ring);
+	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->c.ctx;
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
+	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+
+	if (ctx->end < ctx->size)
+		spscring_c_capacity(ring);
+	return MIN(ctx->end, ctx->size) - ctx->pos;
 }
 
 size_t
@@ -199,16 +263,37 @@ spscring_c_alloc(struct spscring *ring, size_t *psize)
 {
 	assert(ring);
 	struct spscring_ctx *ctx = &ring->c.ctx;
-	assert(ctx->end <= ctx->size);
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
 	assert(psize);
 
 	size_t capacity = ctx->end - ctx->pos;
 	if (*psize > capacity) {
-		if (ctx->end == ctx->size && capacity > 0)
+		capacity = spscring_c_capacity(ring);
+		if (*psize > capacity)
 			*psize = capacity;
-		else
-			return spscring_c_alloc_slow(ring, psize);
+	}
+	return ctx->pos;
+}
+
+size_t
+spscring_c_alloc_no_wrap(struct spscring *ring, size_t *psize)
+{
+	assert(ring);
+	struct spscring_ctx *ctx = &ring->c.ctx;
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
+	assert(ctx->pos <= ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+	assert(psize);
+
+	size_t capacity = MIN(ctx->end, ctx->size) - ctx->pos;
+	if (*psize > capacity) {
+		capacity = spscring_c_capacity_no_wrap(ring);
+		if (*psize > capacity)
+			*psize = capacity;
 	}
 	return ctx->pos;
 }
@@ -218,16 +303,24 @@ spscring_c_commit(struct spscring *ring, size_t size)
 {
 	assert(ring);
 	struct spscring_ctx *ctx = &ring->c.ctx;
-	assert(ctx->end <= ctx->size);
+	assert(ctx->size <= SIZE_MAX / 2 + 1);
+	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
-	assert(size <= ctx->pos - ctx->end);
+	assert(ctx->end - ctx->pos <= ctx->size);
+	assert(size <= ctx->end - ctx->pos);
 
-	size_t cpos = ctx->pos += size;
-	spscring_atomic_store(&ring->c.pos, ctx->base + cpos);
+	if ((ctx->pos += size) >= ctx->size) {
+		ctx->base += ctx->size;
+		ctx->pos -= ctx->size;
+		assert(ctx->end >= ctx->size);
+		ctx->end -= ctx->size;
+	}
+
+	spscring_atomic_store(&ring->c.pos, ctx->base + ctx->pos);
 
 	spscring_cp_signal(ring);
 
-	return cpos;
+	return ctx->pos;
 }
 
 int
@@ -294,62 +387,6 @@ spscring_c_abort_wait(struct spscring *ring)
 		}
 	}
 	return 0;
-}
-
-static size_t
-spscring_p_alloc_slow(struct spscring *ring, size_t *psize)
-{
-	assert(ring);
-	struct spscring_ctx *ctx = &ring->p.ctx;
-	assert(ctx->size <= SIZE_MAX / 2 + 1);
-	assert(ctx->end <= ctx->size);
-	assert(ctx->pos <= ctx->end);
-	assert(psize);
-
-	if (ctx->pos == ctx->size) {
-		ctx->base += ctx->size;
-		ctx->pos = 0;
-	}
-
-	size_t cpos = spscring_atomic_load(&ring->c.pos);
-	cpos -= ctx->base - ctx->size;
-	assert(ctx->pos <= cpos);
-
-	ctx->end = cpos < ctx->size ? cpos : ctx->size;
-
-	size_t capacity = ctx->end - ctx->pos;
-	if (*psize > capacity)
-		*psize = capacity;
-
-	return ctx->pos;
-}
-
-static size_t
-spscring_c_alloc_slow(struct spscring *ring, size_t *psize)
-{
-	assert(ring);
-	struct spscring_ctx *ctx = &ring->c.ctx;
-	assert(ctx->size <= SIZE_MAX / 2 + 1);
-	assert(ctx->end <= ctx->size);
-	assert(ctx->pos <= ctx->end);
-	assert(psize);
-
-	if (ctx->pos == ctx->size) {
-		ctx->base += ctx->size;
-		ctx->pos = 0;
-	}
-
-	size_t ppos = spscring_atomic_load(&ring->p.pos);
-	ppos -= ctx->base;
-	assert(ctx->pos <= ppos);
-
-	ctx->end = ppos < ctx->size ? ppos : ctx->size;
-
-	size_t capacity = ctx->end - ctx->pos;
-	if (*psize > capacity)
-		*psize = capacity;
-
-	return ctx->pos;
 }
 
 static void
@@ -438,30 +475,28 @@ spscring_cp_signal(struct spscring *ring)
 }
 
 static inline size_t
-spscring_atomic_load(const volatile void *object)
+spscring_atomic_load(const volatile spscring_atomic_t *object)
 {
 #if __STDC_NO_ATOMICS__
-	return *(const volatile size_t *)object;
+	return *object;
 #else
-	return atomic_load_explicit(
-			(atomic_size_t *)object, memory_order_acquire);
+	return atomic_load_explicit(object, memory_order_acquire);
 #endif
 }
 
 static inline void
-spscring_atomic_store(volatile void *object, size_t desired)
+spscring_atomic_store(volatile spscring_atomic_t *object, size_t desired)
 {
 #if __STDC_NO_ATOMICS__
-	*(volatile size_t *)object = desired;
+	*object = desired;
 #else
-	atomic_store_explicit(
-			(atomic_size_t *)object, desired, memory_order_release);
+	atomic_store_explicit(object, desired, memory_order_release);
 #endif
 }
 
 static inline _Bool
-spscring_atomic_compare_exchange_strong(
-		volatile void *object, size_t *expected, size_t desired)
+spscring_atomic_compare_exchange_strong(volatile spscring_atomic_t *object,
+		size_t *expected, size_t desired)
 {
 #if __STDC_NO_ATOMICS__
 #if _WIN32
@@ -477,29 +512,27 @@ spscring_atomic_compare_exchange_strong(
 		*expected = tmp;
 	return result;
 #else
-	assert(*(volatile size_t *)object == *expected);
+	assert(*object == *expected);
 	(void)expected;
-	*(volatile size_t *)object = desired;
+	*object = desired;
 	return 1;
 #endif
 #else
-	return atomic_compare_exchange_strong_explicit((atomic_size_t *)object,
-			expected, desired, memory_order_release,
-			memory_order_relaxed);
+	return atomic_compare_exchange_strong_explicit(object, expected,
+			desired, memory_order_acq_rel, memory_order_acquire);
 #endif
 }
 
 static inline _Bool
-spscring_atomic_compare_exchange_weak(
-		volatile void *object, size_t *expected, size_t desired)
+spscring_atomic_compare_exchange_weak(volatile spscring_atomic_t *object,
+		size_t *expected, size_t desired)
 {
 #if __STDC_NO_ATOMICS__
 	return spscring_atomic_compare_exchange_strong(
 			object, expected, desired);
 #else
-	return atomic_compare_exchange_weak_explicit((atomic_size_t *)object,
-			expected, desired, memory_order_release,
-			memory_order_relaxed);
+	return atomic_compare_exchange_weak_explicit(object, expected, desired,
+			memory_order_acq_rel, memory_order_acquire);
 #endif
 }
 
