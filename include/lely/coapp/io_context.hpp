@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the I/O context declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #define LELY_COAPP_IO_CONTEXT_HPP_
 
 #include <lely/io2/can.hpp>
-#include <lely/io2/timer.hpp>
+#include <lely/io2/tqueue.hpp>
 #include <lely/util/mutex.hpp>
 
 #include <functional>
@@ -42,6 +42,8 @@ namespace canopen {
  */
 class IoContext {
  public:
+  using time_point = io::TimerBase::time_point;
+
   /**
    * Creates a new I/O context.
    *

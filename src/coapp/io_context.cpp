@@ -26,6 +26,7 @@
 #include <lely/coapp/io_context.hpp>
 #include <lely/libc/stdlib.h>
 #include <lely/util/diag.h>
+#include <lely/util/time.h>
 #include <lely/util/spscring.h>
 
 #include <vector>
@@ -82,7 +83,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
 
   void OnShutdown() noexcept;
 
-  void OnWait(int overrun, ::std::error_code ec) noexcept;
+  void OnWaitNext(::std::error_code ec) noexcept;
 
   void OnRead(int result, ::std::error_code ec) noexcept;
   void OnWrite(::std::error_code ec) noexcept;
@@ -105,7 +106,8 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   bool shutdown{false};
 
   io::TimerBase& timer;
-  io::TimerWait wait;
+  io::TimerQueue tq;
+  io::TimerQueueWait wait_next;
 
   io::CanChannelBase& chan;
 
@@ -131,6 +133,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   ::std::size_t tx_errcnt{0};
 
   unique_c_ptr<CANNet> net;
+  timespec next{0, 0};
 
   unique_c_ptr<CANTimer> tx_timer;
 };
@@ -190,7 +193,8 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
       mutex(mutex_),
       ctx(timer_.get_ctx()),
       timer(timer_),
-      wait([this](int overrun, ::std::error_code ec) { OnWait(overrun, ec); }),
+      tq(timer),
+      wait_next([this](::std::error_code ec) { OnWaitNext(ec); }),
       chan(chan_),
       read(&read_msg, &read_err, nullptr,
            [this](int result, ::std::error_code ec) { OnRead(result, ec); }),
@@ -219,8 +223,10 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
   // Start waiting for CAN frames to be put into the transmit queue.
   Wait();
 
-  // Start waiting for timeouts.
-  timer.submit_wait(wait);
+  // Submit a wait operation with a near-infinite timeout. Knowing that a wait
+  // operation is always submitted simplifies the interaction between
+  // OnWaitNext() and OnNext().
+  tq.submit_wait(time_point::max(), wait_next);
 
   // Start receiving CAN frames.
   chan.submit_read(read);
@@ -240,13 +246,21 @@ IoContext::Impl_::OnShutdown() noexcept {
 }
 
 void
-IoContext::Impl_::OnWait(int, ::std::error_code ec) noexcept {
+IoContext::Impl_::OnWaitNext(::std::error_code) noexcept {
+  time_point t = time_point::max();
   {
     ::std::lock_guard<Impl_> lock(*this);
-    if (!ec) self->SetTime();
+    // Update the time of the CAN network interface.
+    self->SetTime();
     if (shutdown) return;
+    // If the next timeout is in the past, use a near-infinite timeout instead.
+    // This prevents busy-waiting when there is no timer active.
+    timespec now{0, 0};
+    net->getTime(&now);
+    if (timespec_cmp(&now, &next) < 0)
+      t = time_point(util::from_timespec(next));
   }
-  timer.submit_wait(wait);
+  tq.submit_wait(t, wait_next);
 }
 
 void
@@ -378,7 +392,17 @@ int
 IoContext::Impl_::OnNext(const timespec* tp) noexcept {
   assert(tp);
 
-  timer.settime(io::TimerBase::time_point(util::from_timespec(*tp)));
+  // In case OnWaitNext() is currently running, store the time for the next
+  // earliest timeout so OnWaitNext() can re-submit the wait operation.
+  next = *tp;
+
+  if (!shutdown) {
+    // Re-submit the wait operation with the new timeout, but only if we can be
+    // sure OnWaitNext() is not currently running.
+    if (tq.abort_wait(wait_next))
+      tq.submit_wait(time_point(util::from_timespec(*tp)), wait_next);
+  }
+
   return 0;
 }
 
