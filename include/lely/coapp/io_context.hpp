@@ -28,6 +28,7 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
 
 namespace lely {
 
@@ -42,6 +43,7 @@ namespace canopen {
  */
 class IoContext {
  public:
+  using duration = io::TimerBase::duration;
   using time_point = io::TimerBase::time_point;
 
   /**
@@ -66,6 +68,128 @@ class IoContext {
 
   /// Returns the underlying I/O context with which this context is registered.
   io::ContextBase GetContext() const noexcept;
+
+  /// Returns the clock used by the timer.
+  io::Clock GetClock() const noexcept;
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified absolute timeout expires.
+   */
+  void SubmitWait(const time_point& t, io_tqueue_wait& wait);
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified relative timeout expires.
+   */
+  void SubmitWait(const duration& d, io_tqueue_wait& wait);
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified absolute timeout expires.
+   *
+   * @param t    the absolute expiration time of the wait operation.
+   * @param exec the executor used to execute the completion task.
+   * @param f    the function to be called on completion of the wait operation.
+   */
+  template <class F>
+  void
+  SubmitWait(const time_point& t, ev_exec_t* exec, F&& f) {
+    SubmitWait(t,
+               *io::make_timer_queue_wait_wrapper(exec, ::std::forward<F>(f)));
+  }
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified relative timeout expires.
+   *
+   * @param d    the relative expiration time of the wait operation.
+   * @param exec the executor used to execute the completion task.
+   * @param f    the function to be called on completion of the wait operation.
+   */
+  template <class F>
+  void
+  SubmitWait(const duration& d, ev_exec_t* exec, F&& f) {
+    SubmitWait(d,
+               *io::make_timer_queue_wait_wrapper(exec, ::std::forward<F>(f)));
+  }
+
+  /// Equivalent to `SubmitWait(t, nullptr, f)`.
+  template <class F>
+  typename ::std::enable_if<!::std::is_base_of<
+      io_tqueue_wait, typename ::std::decay<F>::type>::value>::type
+  SubmitWait(const time_point& t, F&& f) {
+    SubmitWait(t, nullptr, ::std::forward<F>(f));
+  }
+
+  /// Equivalent to `SubmitWait(d, nullptr, f)`.
+  template <class F>
+  typename ::std::enable_if<!::std::is_base_of<
+      io_tqueue_wait, typename ::std::decay<F>::type>::value>::type
+  SubmitWait(const duration& d, F&& f) {
+    SubmitWait(d, nullptr, ::std::forward<F>(f));
+  }
+
+  /**
+   * Submits an asynchronous wait operation and creates a future which becomes
+   * ready once the wait operation completes (or is canceled).
+   *
+   * @param exec  the executor used to execute the completion task.
+   * @param t     the absolute expiration time of the wait operation.
+   * @param pwait an optional address at which to store a pointer to the wait
+   *              operation. This can be used to cancel the wait operation with
+   *              CancelWait().
+   *
+   * @returns a future which holds an exception pointer on error.
+   */
+  ev::Future<void, ::std::exception_ptr> AsyncWait(
+      ev_exec_t* exec, const time_point& t, io_tqueue_wait** pwait = nullptr);
+
+  /**
+   * Submits an asynchronous wait operation and creates a future which becomes
+   * ready once the wait operation completes (or is canceled).
+   *
+   * @param exec  the executor used to execute the completion task.
+   * @param d     the relative expiration time of the wait operation.
+   * @param pwait an optional address at which to store a pointer to the wait
+   *              operation. This can be used to cancel the wait operation with
+   *              CancelWait().
+   *
+   * @returns a future which holds an exception pointer on error.
+   */
+  ev::Future<void, ::std::exception_ptr> AsyncWait(
+      ev_exec_t* exec, const duration& d, io_tqueue_wait** pwait = nullptr);
+
+  /// Equivalent to `AsyncWait(nullptr, t, pwait)`.
+  ev::Future<void, ::std::exception_ptr>
+  AsyncWait(const time_point& t, io_tqueue_wait** pwait = nullptr) {
+    return AsyncWait(nullptr, t, pwait);
+  }
+
+  /// Equivalent to `AsyncWait(nullptr, d, pwait)`.
+  ev::Future<void, ::std::exception_ptr>
+  AsyncWait(const duration& d, io_tqueue_wait** pwait = nullptr) {
+    return AsyncWait(nullptr, d, pwait);
+  }
+
+  /**
+   * Cancels the specified wait operation if it is pending. If canceled, the
+   * completion task is submitted for exection with <b>ec</b> =
+   * `::std::errc::operation_canceled`.
+   *
+   * @returns true if the operation was canceled, and false if it was not
+   * pending.
+   */
+  bool CancelWait(io_tqueue_wait& wait) noexcept;
+
+  /**
+   * Aborts the specified wait operation if it is pending. If aborted, the
+   * completion task is _not_ submitted for execution.
+   *
+   * @returns true if the operation was aborted, and false if it was not
+   * pending.
+   */
+  bool AbortWait(io_tqueue_wait& wait) noexcept;
 
   /**
    * Registers the function to be invoked when a CAN bus state change is

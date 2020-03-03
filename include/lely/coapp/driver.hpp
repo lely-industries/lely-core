@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the remote node driver interface declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -219,7 +219,7 @@ class DriverBase {
    *
    * @see BasicMaster::OnSync()
    */
-  virtual void OnSync(uint8_t cnt, const Node::time_point& t) noexcept = 0;
+  virtual void OnSync(uint8_t cnt, const time_point& t) noexcept = 0;
 
   /**
    * The function invoked when the data length of a received SYNC message does

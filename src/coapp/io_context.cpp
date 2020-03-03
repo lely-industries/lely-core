@@ -161,6 +161,53 @@ IoContext::GetContext() const noexcept {
   return impl_->ctx;
 }
 
+io::Clock
+IoContext::GetClock() const noexcept {
+  return impl_->timer.get_clock();
+}
+
+void
+IoContext::SubmitWait(const time_point& t, io_tqueue_wait& wait) {
+  impl_->tq.submit_wait(t, wait);
+}
+
+void
+IoContext::SubmitWait(const duration& d, io_tqueue_wait& wait) {
+  impl_->tq.submit_wait(d, wait);
+}
+
+ev::Future<void, ::std::exception_ptr>
+IoContext::AsyncWait(ev_exec_t* exec, const time_point& t,
+                     io_tqueue_wait** pwait) {
+  return impl_->tq.async_wait(exec, t, pwait)
+      .then(exec, [](ev::Future<void, int> f) {
+        // Convert the error code into an exception pointer.
+        int errc = f.get().error();
+        if (errc) util::throw_errc("AsyncWait", errc);
+      });
+}
+
+ev::Future<void, ::std::exception_ptr>
+IoContext::AsyncWait(ev_exec_t* exec, const duration& d,
+                     io_tqueue_wait** pwait) {
+  return impl_->tq.async_wait(exec, d, pwait)
+      .then(exec, [](ev::Future<void, int> f) {
+        // Convert the error code into an exception pointer.
+        int errc = f.get().error();
+        if (errc) util::throw_errc("AsyncWait", errc);
+      });
+}
+
+bool
+IoContext::CancelWait(io_tqueue_wait& wait) noexcept {
+  return impl_->tq.cancel_wait(wait);
+}
+
+bool
+IoContext::AbortWait(io_tqueue_wait& wait) noexcept {
+  return impl_->tq.abort_wait(wait);
+}
+
 void
 IoContext::OnCanState(
     ::std::function<void(io::CanState, io::CanState)> on_can_state) {
