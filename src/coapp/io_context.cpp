@@ -237,9 +237,6 @@ IoContext::Impl_::OnShutdown() noexcept {
     tx_timer->stop();
   }
   spscring_c_abort_wait(&tx_ring);
-  chan.cancel_write(write);
-  chan.cancel_read(read);
-  timer.cancel_wait(wait);
 }
 
 void
