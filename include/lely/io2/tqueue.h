@@ -6,7 +6,7 @@
  * expiration times to use the same I/O timer. This is much more efficient than
  * creating a separate I/O timer for each concurrent wait.
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -71,7 +71,8 @@ void io_tqueue_fini(io_tqueue_t *tq);
  * @param timer a pointer to the I/O timer to be used for the queue. During the
  *              lifetime of the timer queue, io_timer_settime() MUST NOT be
  *              invoked.
- * @param exec  a pointer to the executor used to execute asynchronous tasks.
+ * @param exec  a pointer to the executor used to execute asynchronous tasks. If
+ *              <b>exec</b> is NULL, the executor of the I/O timer is used.
  *
  * @returns a pointer to a new timer queue, or NULL on error. In the latter
  * case, the error number can be obtained with get_errc().

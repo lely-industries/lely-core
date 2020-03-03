@@ -4,7 +4,7 @@
  *
  * @see lely/io2/tqueue.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -128,7 +128,7 @@ class TimerQueue : public Device {
   using Device::operator io_dev_t*;
 
   /// @see io_tqueue_create()
-  TimerQueue(io_timer_t* timer, ev_exec_t* exec)
+  explicit TimerQueue(io_timer_t* timer, ev_exec_t* exec = nullptr)
       : Device(nullptr), tq_(io_tqueue_create(timer, exec)) {
     if (tq_)
       dev = io_tqueue_get_dev(*this);
