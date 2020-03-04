@@ -14,7 +14,7 @@
  * descriptors referring to the same network interface, see section 3.4 in
  * https://rtime.felk.cvut.cz/can/socketcan-qdisc-final.pdf).
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -50,6 +50,9 @@ void io_can_ctrl_fini(io_can_ctrl_t *ctrl);
 /**
  * Creates a new CAN controller from an interface name.
  *
+ * This function MAY need the CAP_NET_ADMIN capability to set the transmit queue
+ * length of the specified SocketCAN interface to at least <b>txlen</b>.
+ *
  * @param name  the name of a SocketCAN network interface.
  * @param txlen the transmission queue length (in number of frames) of the
  *              network interface. If <b>txlen</b> is 0, the default value
@@ -64,6 +67,9 @@ io_can_ctrl_t *io_can_ctrl_create_from_name(const char *name, size_t txlen);
 
 /**
  * Creates a new CAN controller from an interface index.
+ *
+ * This function MAY need the CAP_NET_ADMIN capability to set the transmit queue
+ * length of the specified SocketCAN interface to at least <b>txlen</b>.
  *
  * @param index the index of a SocketCAN network interface.
  * @param txlen the transmission queue length (in number of frames) of the
