@@ -4,7 +4,7 @@
  *
  * @see lely/io2/timer.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -144,6 +144,7 @@ class TimerBase : public Device {
   get_clock() const noexcept {
     return Clock(io_timer_get_clock(*this));
   }
+
   /// @see io_timer_getoverrun()
   int
   getoverrun(::std::error_code& ec) const noexcept {
