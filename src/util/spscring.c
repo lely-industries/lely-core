@@ -62,10 +62,10 @@ spscring_size(const struct spscring *ring)
 }
 
 size_t
-spscring_p_capacity(const struct spscring *ring)
+spscring_p_capacity(struct spscring *ring)
 {
 	assert(ring);
-	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->p.ctx;
+	struct spscring_ctx *ctx = &ring->p.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
 	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
@@ -80,10 +80,10 @@ spscring_p_capacity(const struct spscring *ring)
 }
 
 size_t
-spscring_p_capacity_no_wrap(const struct spscring *ring)
+spscring_p_capacity_no_wrap(struct spscring *ring)
 {
 	assert(ring);
-	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->p.ctx;
+	struct spscring_ctx *ctx = &ring->p.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
 	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
@@ -226,10 +226,10 @@ spscring_p_abort_wait(struct spscring *ring)
 }
 
 size_t
-spscring_c_capacity(const struct spscring *ring)
+spscring_c_capacity(struct spscring *ring)
 {
 	assert(ring);
-	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->c.ctx;
+	struct spscring_ctx *ctx = &ring->c.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
 	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);
@@ -244,10 +244,10 @@ spscring_c_capacity(const struct spscring *ring)
 }
 
 size_t
-spscring_c_capacity_no_wrap(const struct spscring *ring)
+spscring_c_capacity_no_wrap(struct spscring *ring)
 {
 	assert(ring);
-	struct spscring_ctx *ctx = (struct spscring_ctx *)&ring->c.ctx;
+	struct spscring_ctx *ctx = &ring->c.ctx;
 	assert(ctx->size <= SIZE_MAX / 2 + 1);
 	assert(ctx->pos < ctx->size);
 	assert(ctx->pos <= ctx->end);

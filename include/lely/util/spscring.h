@@ -130,7 +130,7 @@ size_t spscring_size(const struct spscring *ring);
  *
  * @returns the total number of indices available for writing.
  */
-size_t spscring_p_capacity(const struct spscring *ring);
+size_t spscring_p_capacity(struct spscring *ring);
 
 /**
  * Returns the total capacity available for a producer in a single-producer
@@ -143,7 +143,7 @@ size_t spscring_p_capacity(const struct spscring *ring);
  *
  * @returns the total number of indices available for writing.
  */
-size_t spscring_p_capacity_no_wrap(const struct spscring *ring);
+size_t spscring_p_capacity_no_wrap(struct spscring *ring);
 
 /**
  * Allocates a consecutive range of indices, including wrapping, in a
@@ -248,7 +248,7 @@ int spscring_p_abort_wait(struct spscring *ring);
  *
  * @returns the total number of indices available for writing.
  */
-size_t spscring_c_capacity(const struct spscring *ring);
+size_t spscring_c_capacity(struct spscring *ring);
 
 /**
  * Returns the total capacity available for a consumer in a single-producer
@@ -261,7 +261,7 @@ size_t spscring_c_capacity(const struct spscring *ring);
  *
  * @returns the total number of indices available for writing.
  */
-size_t spscring_c_capacity_no_wrap(const struct spscring *ring);
+size_t spscring_c_capacity_no_wrap(struct spscring *ring);
 
 /**
  * Allocates a consecutive range of indices, including wrapping, in a
