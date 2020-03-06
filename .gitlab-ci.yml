@@ -140,6 +140,8 @@ test:gcc:9:
     - dpkg --add-architecture i386
     - apt-get update -q
     - apt-get install -qy
+        libc6:i386
+    - apt-get install -qy
         winehq-stable
     - wineboot -i
     - apt-get install -qy --no-install-recommends
