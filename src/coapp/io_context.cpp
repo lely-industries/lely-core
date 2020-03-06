@@ -84,14 +84,13 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   void OnShutdown() noexcept;
 
   void OnWaitNext(::std::error_code ec) noexcept;
+  void OnWaitConfirm(::std::error_code ec) noexcept;
 
   void OnRead(int result, ::std::error_code ec) noexcept;
   void OnWrite(::std::error_code ec) noexcept;
 
   int OnNext(const timespec* tp) noexcept;
   int OnSend(const can_msg* msg) noexcept;
-
-  int OnTime(const timespec* tp) noexcept;
 
   bool Wait();
   void Write();
@@ -108,6 +107,7 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
   io::TimerBase& timer;
   io::TimerQueue tq;
   io::TimerQueueWait wait_next;
+  io::TimerQueueWait wait_confirm;
 
   io::CanChannelBase& chan;
 
@@ -134,8 +134,6 @@ struct IoContext::Impl_ : util::BasicLockable, io_svc {
 
   unique_c_ptr<CANNet> net;
   timespec next{0, 0};
-
-  unique_c_ptr<CANTimer> tx_timer;
 };
 
 // clang-format off
@@ -195,13 +193,13 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
       timer(timer_),
       tq(timer),
       wait_next([this](::std::error_code ec) { OnWaitNext(ec); }),
+      wait_confirm([this](::std::error_code ec) { OnWaitConfirm(ec); }),
       chan(chan_),
       read(&read_msg, &read_err, nullptr,
            [this](int result, ::std::error_code ec) { OnRead(result, ec); }),
       write(write_msg, nullptr, [this](::std::error_code ec) { OnWrite(ec); }),
       tx_buf(LELY_COAPP_IO_CONTEXT_TXLEN, CAN_MSG_INIT),
-      net(make_unique_c<CANNet>()),
-      tx_timer(make_unique_c<CANTimer>()) {
+      net(make_unique_c<CANNet>()) {
   spscring_init(&tx_ring, LELY_COAPP_IO_CONTEXT_TXLEN);
 
   // Initialize the CAN network clock with the current time.
@@ -214,10 +212,6 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
   // CAN frame needs to be sent.
   net->setSendFunc<Impl_, &Impl_::OnSend>(this);
 
-  // Register the OnTime() member function as the function to be invoked when a
-  // write confirmation is not received in time.
-  tx_timer->setFunc<Impl_, &Impl_::OnTime>(this);
-
   ctx.insert(*this);
 
   // Start waiting for CAN frames to be put into the transmit queue.
@@ -227,6 +221,9 @@ IoContext::Impl_::Impl_(IoContext* self_, io::TimerBase& timer_,
   // operation is always submitted simplifies the interaction between
   // OnWaitNext() and OnNext().
   tq.submit_wait(time_point::max(), wait_next);
+  // Subit a similarly near-infinite write confirmation timeout wait operation
+  // to simplify the interaction between Write() and OnWrite().
+  tq.submit_wait(time_point::max(), wait_confirm);
 
   // Start receiving CAN frames.
   chan.submit_read(read);
@@ -240,7 +237,6 @@ IoContext::Impl_::OnShutdown() noexcept {
     ::std::lock_guard<Impl_> lock(*this);
     if (shutdown) return;
     shutdown = true;
-    tx_timer->stop();
   }
   spscring_c_abort_wait(&tx_ring);
 }
@@ -261,6 +257,12 @@ IoContext::Impl_::OnWaitNext(::std::error_code) noexcept {
       t = time_point(util::from_timespec(next));
   }
   tq.submit_wait(t, wait_next);
+}
+
+void
+IoContext::Impl_::OnWaitConfirm(::std::error_code) noexcept {
+  // No confirmation message was received; cancel the ongoing write operation.
+  chan.cancel_write(write);
 }
 
 void
@@ -368,6 +370,12 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
     write_errcnt = 0;
   }
 
+  // Stop the timeout after receiving a write confirmation (or write error).
+  if (tq.abort_wait(wait_confirm))
+    // Register a near-infinite timeout to simplify the interaction with
+    // Write().
+    tq.submit_wait(time_point::max(), wait_confirm);
+
   // Remove the frame from the transmit queue, unless the write operation was
   // canceled, in which we discard the entire queue.
   assert(spscring_c_capacity(&tx_ring) >= 1);
@@ -381,8 +389,6 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
   spscring_c_commit(&tx_ring, n);
 
   ::std::lock_guard<Impl_> lock(*this);
-  // Stop the timeout after receiving a write confirmation (or write error).
-  tx_timer->stop();
   if (shutdown) return;
   // Write the next frame, if available.
   if (!Wait()) Write();
@@ -431,13 +437,6 @@ IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   }
 }
 
-int
-IoContext::Impl_::OnTime(const timespec*) noexcept {
-  // No confirmation message was received; cancel the ongoing write operation.
-  chan.cancel_write(write);
-  return 0;
-}
-
 bool
 IoContext::Impl_::Wait() {
   // Wait for next frame to become available.
@@ -468,7 +467,9 @@ IoContext::Impl_::Write() {
   chan.submit_write(write);
 
   // Register a timeout for the write confirmation.
-  tx_timer->timeout(*net, LELY_COAPP_IO_CONTEXT_TXTIMEO);
+  if (tq.abort_wait(wait_confirm))
+    tq.submit_wait(::std::chrono::milliseconds(LELY_COAPP_IO_CONTEXT_TXTIMEO),
+                   wait_confirm);
 }
 
 }  // namespace canopen
