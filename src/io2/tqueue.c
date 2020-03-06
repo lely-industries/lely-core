@@ -4,7 +4,7 @@
  *
  * @see lely/io2/tqueue.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -253,6 +253,7 @@ io_tqueue_submit_wait(io_tqueue_t *tq, struct io_tqueue_wait *wait)
 
 		task->_data = &tq->queue;
 		int first = pheap_empty(&tq->queue);
+		pnode_init(&wait->_node, &wait->value);
 		pheap_insert(&tq->queue, &wait->_node);
 
 		if (first || timespec_cmp(&wait->value, &tq->next) < 0) {
