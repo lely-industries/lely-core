@@ -3,7 +3,7 @@
  * the declarations for the remote node driver which runs its tasks and
  * callbacks in fibers.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -128,6 +128,18 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
    * @see DriverBase::GetExecutor()
    */
   void Wait(SdoFuture<void> f, ::std::error_code& ec);
+
+  /**
+   * Suspends the calling fiber for <b>usec</b> microseconds. This function is
+   * equivalent to `Wait(AsyncWait(::std::chrono::microseconds(usec)))`.
+   */
+  void USleep(uint_least64_t usec);
+
+  /**
+   * Suspends the calling fiber for <b>usec</b> microseconds. This function is
+   * equivalent to `Wait(AsyncWait(::std::chrono::microseconds(usec)), ec)`.
+   */
+  void USleep(uint_least64_t usec, ::std::error_code& ec);
 };
 
 }  // namespace canopen
