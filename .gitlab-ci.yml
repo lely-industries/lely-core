@@ -139,8 +139,7 @@ test:gcc:9:
     - apt-add-repository 'deb https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/ ./'
     - dpkg --add-architecture i386
     - apt-get update -q
-    - apt-get install -qy
-        libc6:i386
+    - apt-get upgrade -qy
     - apt-get install -qy
         winehq-stable
     - wineboot -i
@@ -232,7 +231,7 @@ build:arm-none-eabi:
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: debian:stable
   before_script:
     - apt-get update -q
     - apt-get install -qy --no-install-recommends
