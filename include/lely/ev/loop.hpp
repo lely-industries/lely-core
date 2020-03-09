@@ -110,7 +110,7 @@ class Loop {
 
   /// @see ev_loop_wait()
   ::std::size_t
-  wait(ev_future_t* future, ::std::error_code& ec) {
+  wait(ev_future_t* future, ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_wait(*this, future);
@@ -130,7 +130,7 @@ class Loop {
   template <class Rep, class Period>
   ::std::size_t
   wait_for(ev_future_t* future, const ::std::chrono::duration<Rep, Period>& d,
-           ::std::error_code& ec) {
+           ::std::error_code& ec) noexcept {
     return wait_until(future, ::std::chrono::system_clock::now() + d, ec);
   }
 
@@ -149,7 +149,7 @@ class Loop {
   ::std::size_t
   wait_until(ev_future_t* future,
              const ::std::chrono::time_point<Clock, Duration>& t,
-             ::std::error_code& ec) {
+             ::std::error_code& ec) noexcept {
     auto abs_time =
         util::to_timespec(compat::clock_cast<::std::chrono::system_clock>(t));
     return wait_until(future, &abs_time, ec);
@@ -166,7 +166,7 @@ class Loop {
 
   /// @see ev_loop_wait_one()
   ::std::size_t
-  wait_one(ev_future_t* future, ::std::error_code& ec) {
+  wait_one(ev_future_t* future, ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_wait_one(*this, future);
@@ -188,7 +188,7 @@ class Loop {
   ::std::size_t
   wait_one_for(ev_future_t* future,
                const ::std::chrono::duration<Rep, Period>& d,
-               ::std::error_code& ec) {
+               ::std::error_code& ec) noexcept {
     return wait_one_until(future, ::std::chrono::system_clock::now() + d, ec);
   }
 
@@ -207,7 +207,7 @@ class Loop {
   ::std::size_t
   wait_one_until(ev_future_t* future,
                  const ::std::chrono::time_point<Clock, Duration>& t,
-                 ::std::error_code& ec) {
+                 ::std::error_code& ec) noexcept {
     auto abs_time =
         util::to_timespec(compat::clock_cast<::std::chrono::system_clock>(t));
     return wait_one_until(future, &abs_time, ec);
@@ -224,7 +224,7 @@ class Loop {
 
   /// @see ev_loop_run()
   ::std::size_t
-  run(::std::error_code& ec) {
+  run(::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_run(*this);
@@ -244,7 +244,7 @@ class Loop {
   template <class Rep, class Period>
   ::std::size_t
   run_for(const ::std::chrono::duration<Rep, Period>& d,
-          ::std::error_code& ec) {
+          ::std::error_code& ec) noexcept {
     return run_until(::std::chrono::system_clock::now() + d, ec);
   }
 
@@ -261,7 +261,7 @@ class Loop {
   template <class Clock, class Duration>
   ::std::size_t
   run_until(const ::std::chrono::time_point<Clock, Duration>& t,
-            ::std::error_code& ec) {
+            ::std::error_code& ec) noexcept {
     auto abs_time =
         util::to_timespec(compat::clock_cast<::std::chrono::system_clock>(t));
     return run_until(&abs_time, ec);
@@ -278,7 +278,7 @@ class Loop {
 
   /// @see ev_loop_run_one()
   ::std::size_t
-  run_one(::std::error_code& ec) {
+  run_one(::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_run_one(*this);
@@ -298,7 +298,7 @@ class Loop {
   template <class Rep, class Period>
   ::std::size_t
   run_one_for(const ::std::chrono::duration<Rep, Period>& d,
-              ::std::error_code& ec) {
+              ::std::error_code& ec) noexcept {
     return run_one_until(::std::chrono::system_clock::now() + d, ec);
   }
 
@@ -315,7 +315,7 @@ class Loop {
   template <class Clock, class Duration>
   ::std::size_t
   run_one_until(const ::std::chrono::time_point<Clock, Duration>& t,
-                ::std::error_code& ec) {
+                ::std::error_code& ec) noexcept {
     auto abs_time =
         util::to_timespec(compat::clock_cast<::std::chrono::system_clock>(t));
     return run_one_until(&abs_time, ec);
@@ -332,7 +332,7 @@ class Loop {
 
   /// @see ev_loop_run_until()
   ::std::size_t
-  poll(::std::error_code& ec) {
+  poll(::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_poll(*this);
@@ -352,7 +352,7 @@ class Loop {
 
   /// @see ev_loop_run_one_until()
   ::std::size_t
-  poll_one(::std::error_code& ec) {
+  poll_one(::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_poll_one(*this);
@@ -385,7 +385,7 @@ class Loop {
 
   ::std::size_t
   wait_until(ev_future_t* future, const timespec* abs_time,
-             ::std::error_code& ec) {
+             ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_wait_until(*this, future, abs_time);
@@ -405,7 +405,7 @@ class Loop {
 
   ::std::size_t
   wait_one_until(ev_future_t* future, const timespec* abs_time,
-                 ::std::error_code& ec) {
+                 ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_wait_one_until(*this, future, abs_time);
@@ -424,7 +424,7 @@ class Loop {
   }
 
   ::std::size_t
-  run_until(const timespec* abs_time, ::std::error_code& ec) {
+  run_until(const timespec* abs_time, ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_run_until(*this, abs_time);
@@ -443,7 +443,7 @@ class Loop {
   }
 
   ::std::size_t
-  run_one_until(const timespec* abs_time, ::std::error_code& ec) {
+  run_one_until(const timespec* abs_time, ::std::error_code& ec) noexcept {
     int errsv = get_errc();
     set_errc(0);
     auto result = ev_loop_run_one_until(*this, abs_time);
