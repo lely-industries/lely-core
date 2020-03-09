@@ -5,7 +5,7 @@
  *
  * @see lely/coapp/fiber_driver.hpp
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,9 +36,9 @@ namespace detail {
 
 FiberDriverBase::FiberDriverBase(ev_exec_t* exec_)
 #if !_WIN32 && _POSIX_MAPPED_FILES
-    : thrd(ev::FiberFlag::GUARD_STACK),
+    : thrd(ev::FiberFlag::SAVE_ERROR | ev::FiberFlag::GUARD_STACK),
 #else
-    : thrd(),
+    : thrd(ev::FiberFlag::SAVE_ERROR),
 #endif
       exec(exec_),
       strand(exec) {
