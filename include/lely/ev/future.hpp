@@ -4,7 +4,7 @@
  *
  * @see lely/ev/future.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,6 +26,7 @@
 
 #include <lely/ev/exec.hpp>
 #include <lely/ev/future.h>
+#include <lely/libc/type_traits.hpp>
 #include <lely/util/invoker.hpp>
 #include <lely/util/result.hpp>
 
@@ -567,18 +568,33 @@ class Future {
 };
 
 /// @see ev_future_when_all_n()
-template <class InputIt>
 inline Future<::std::size_t, void>
-when_all(ev_exec_t* exec, InputIt first, InputIt last) {
-  ::std::vector<ev_future_t*> futures(first, last);
-  auto f = ev_future_when_all_n(exec, futures.size(), futures.data());
+when_all(ev_exec_t* exec, ::std::size_t n, ev_future_t* const* futures) {
+  auto f = ev_future_when_all_n(exec, n, futures);
   if (!f) util::throw_errc("when_all");
   return Future<::std::size_t, void>(f);
 }
 
 /// @see ev_future_when_all_n()
-template <class... Futures>
+template <class Allocator>
 inline Future<::std::size_t, void>
+when_all(ev_exec_t* exec,
+         const ::std::vector<ev_future_t*, Allocator>& futures) {
+  return when_all(exec, futures.size(), futures.data());
+}
+
+/// @see ev_future_when_all_n()
+template <class InputIt>
+inline Future<::std::size_t, void>
+when_all(ev_exec_t* exec, InputIt first, InputIt last) {
+  return when_all(exec, ::std::vector<ev_future_t*>(first, last));
+}
+
+/// @see ev_future_when_all_n()
+template <class... Futures>
+inline typename ::std::enable_if<
+    compat::conjunction<::std::is_convertible<Futures, ev_future_t*>...>::value,
+    Future<::std::size_t, void>>::type
 when_all(ev_exec_t* exec, Futures&&... futures) {
   auto f =
       ev_future_when_all(exec, static_cast<ev_future_t*>(futures)..., nullptr);
@@ -587,18 +603,33 @@ when_all(ev_exec_t* exec, Futures&&... futures) {
 }
 
 /// @see ev_future_when_any_n()
-template <class InputIt>
 inline Future<::std::size_t, void>
-when_any(ev_exec_t* exec, InputIt first, InputIt last) {
-  ::std::vector<ev_future_t*> futures(first, last);
-  auto f = ev_future_when_any_n(exec, futures.size(), futures.data());
+when_any(ev_exec_t* exec, ::std::size_t n, ev_future_t* const* futures) {
+  auto f = ev_future_when_any_n(exec, n, futures);
   if (!f) util::throw_errc("when_any");
   return Future<::std::size_t, void>(f);
 }
 
 /// @see ev_future_when_any_n()
-template <class... Futures>
+template <class Allocator>
 inline Future<::std::size_t, void>
+when_any(ev_exec_t* exec,
+         const ::std::vector<ev_future_t*, Allocator>& futures) {
+  return when_any(exec, futures.size(), futures.data());
+}
+
+/// @see ev_future_when_any_n()
+template <class InputIt>
+inline Future<::std::size_t, void>
+when_any(ev_exec_t* exec, InputIt first, InputIt last) {
+  return when_any(exec, ::std::vector<ev_future_t*>(first, last));
+}
+
+/// @see ev_future_when_any_n()
+template <class... Futures>
+inline typename ::std::enable_if<
+    compat::conjunction<::std::is_convertible<Futures, ev_future_t*>...>::value,
+    Future<::std::size_t, void>>::type
 when_any(ev_exec_t* exec, Futures&&... futures) {
   auto f =
       ev_future_when_any(exec, static_cast<ev_future_t*>(futures)..., nullptr);
