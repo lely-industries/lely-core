@@ -626,7 +626,18 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *
    * @post IsReady(id) returns false.
    */
-  virtual ev::Future<void> AsyncDeconfig(uint8_t id);
+  ev::Future<void> AsyncDeconfig(uint8_t id);
+
+  /**
+   * Queues the DriverBase::OnDeconfig() method for all registered drivers and
+   * creates a future which becomes ready once all deconfiguration processes
+   * complete.
+   *
+   * @returns a future which holds the number of deconfigured drivers.
+   *
+   * @post IsReady() returns false for all remote nodes.
+   */
+  ev::Future<::std::size_t, void> AsyncDeconfig();
 
   /**
    * Indicates the occurrence of an error event on a remote node and triggers

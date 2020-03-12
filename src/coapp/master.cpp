@@ -45,6 +45,8 @@ namespace canopen {
 struct BasicMaster::Impl_ {
   Impl_(BasicMaster* self, CONMT* nmt);
 
+  ev::Future<void> AsyncDeconfig(DriverBase* driver);
+
   void OnNgInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept;
   void OnBootInd(CONMT* nmt, uint8_t id, uint8_t st, char es) noexcept;
   void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
@@ -87,19 +89,29 @@ BasicMaster::IsReady(uint8_t id) const {
 
 ev::Future<void>
 BasicMaster::AsyncDeconfig(uint8_t id) {
-  ev::Promise<void> p;
-  ::std::lock_guard<util::BasicLockable> lock(*this);
-  IsReady(id, false);
-  auto it = find(id);
-  if (it != end()) {
-    DriverBase* driver = it->second;
-    driver->GetExecutor().post([=]() mutable {
-      driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
-    });
-  } else {
-    p.set(::std::error_code{});
+  {
+    ::std::lock_guard<util::BasicLockable> lock(*this);
+    auto it = find(id);
+    if (it != end())
+      return impl_->AsyncDeconfig(it->second);
   }
-  return p.get_future();
+  return ev::make_empty_future();
+}
+
+ev::Future<::std::size_t, void>
+BasicMaster::AsyncDeconfig() {
+  ::std::array<ev::Future<void>, CO_NUM_NODES> futures;
+  ::std::size_t n = 0;
+  {
+    ::std::lock_guard<util::BasicLockable> lock(*this);
+    for (const auto& it : *this)
+      futures[n++] = impl_->AsyncDeconfig(it.second);
+  }
+  // Create a temporary array of pointers, since ev::Future is not guaranteed to
+  // be the same size as ev_future_t*.
+  ::std::array<ev_future_t*, CO_NUM_NODES> tmp;
+  ::std::copy_n(futures.begin(), n, tmp.begin());
+  return ev::when_all(GetExecutor(), n, tmp.data());
 }
 
 void
@@ -513,6 +525,16 @@ BasicMaster::Impl_::Impl_(BasicMaster* self_, CONMT* nmt) : self(self_) {
   nmt->setNgInd<Impl_, &Impl_::OnNgInd>(this);
   nmt->setBootInd<Impl_, &Impl_::OnBootInd>(this);
   nmt->setCfgInd<Impl_, &Impl_::OnCfgInd>(this);
+}
+
+ev::Future<void>
+BasicMaster::Impl_::AsyncDeconfig(DriverBase* driver) {
+  self->IsReady(driver->id(), false);
+  ev::Promise<void> p;
+  driver->GetExecutor().post([=]() mutable {
+    driver->OnDeconfig([p](::std::error_code ec) mutable { p.set(ec); });
+  });
+  return p.get_future();
 }
 
 void
