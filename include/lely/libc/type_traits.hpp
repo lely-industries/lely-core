@@ -209,7 +209,8 @@ struct conjunction<B1> : B1 {};
 
 template <class B1, class... Bn>
 struct conjunction<B1, Bn...>
-    : ::std::conditional<bool(B1::value), conjunction<Bn...>, B1>::type {};
+    : ::std::conditional<static_cast<bool>(B1::value), conjunction<Bn...>,
+                         B1>::type {};
 
 /**
  * Forms the logical disjunction of the type traits <b>B...</b>, effectively
@@ -223,11 +224,12 @@ struct disjunction<B1> : B1 {};
 
 template <class B1, class... Bn>
 struct disjunction<B1, Bn...>
-    : ::std::conditional<bool(B1::value), B1, disjunction<Bn...>>::type {};
+    : ::std::conditional<static_cast<bool>(B1::value), B1,
+                         disjunction<Bn...>>::type {};
 
 /// Forms the logical negation of the type trait <b>B</b>.
 template <class B>
-struct negation : bool_constant<!bool(B::value)> {};
+struct negation : bool_constant<!static_cast<bool>(B::value)> {};
 
 #endif  // __cplusplus < 201703L
 
