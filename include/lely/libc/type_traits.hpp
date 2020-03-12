@@ -2,7 +2,7 @@
  * This header file is part of the compatibility library; it includes
  * `<type_traits>` and defines any missing functionality.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -196,6 +196,38 @@ struct is_invocable : detail::is_invocable<invoke_result<F, Args...>, void> {};
  */
 template <class R, class F, class... Args>
 struct is_invocable_r : detail::is_invocable<invoke_result<F, Args...>, R> {};
+
+/**
+ * Forms the logical conjunction of the type traits <b>B...</b>, effectively
+ * performing a logical AND on the sequence of traits.
+ */
+template <class... B>
+struct conjunction : ::std::true_type {};
+
+template <class B1>
+struct conjunction<B1> : B1 {};
+
+template <class B1, class... Bn>
+struct conjunction<B1, Bn...>
+    : ::std::conditional<bool(B1::value), conjunction<Bn...>, B1>::type {};
+
+/**
+ * Forms the logical disjunction of the type traits <b>B...</b>, effectively
+ * performing a logical OR on the sequence of traits.
+ */
+template <class... B>
+struct disjunction : ::std::false_type {};
+
+template <class B1>
+struct disjunction<B1> : B1 {};
+
+template <class B1, class... Bn>
+struct disjunction<B1, Bn...>
+    : ::std::conditional<bool(B1::value), B1, disjunction<Bn...>>::type {};
+
+/// Forms the logical negation of the type trait <b>B</b>.
+template <class B>
+struct negation : bool_constant<!bool(B::value)> {};
 
 #endif  // __cplusplus < 201703L
 
