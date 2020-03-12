@@ -65,6 +65,8 @@ class MyDriver : public FiberDriver {
       auto value = Wait(AsyncRead<::std::string>(0x2000, 0));
       tap_test(value == "Hello, world!");
 
+      // Sleep for 100 ms before reporting success.
+      USleep(100000);
       res({});
     } catch (SdoError& e) {
       res(e.code());
@@ -75,6 +77,9 @@ class MyDriver : public FiberDriver {
   OnDeconfig(
       ::std::function<void(::std::error_code ec)> res) noexcept override {
     tap_pass("master: deconfiguring slave #%d", id());
+
+    // Sleep for 100 ms before reporting success.
+    USleep(100000);
     res({});
   }
 
