@@ -354,12 +354,6 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
     write_errcnt = 0;
   }
 
-  {
-    ::std::lock_guard<Impl_> lock(*this);
-    // Stop the timeout after receiving a write confirmation (or write error).
-    tx_timer->stop();
-  }
-
   // Remove the frame from the transmit queue, unless the write operation was
   // canceled, in which we discard the entire queue.
   assert(spscring_c_capacity(&tx_ring) >= 1);
@@ -372,19 +366,17 @@ IoContext::Impl_::OnWrite(::std::error_code ec) noexcept {
   }
   spscring_c_commit(&tx_ring, n);
 
-  {
-    ::std::lock_guard<Impl_> lock(*this);
-    if (shutdown) return;
-  }
-
+  ::std::lock_guard<Impl_> lock(*this);
+  // Stop the timeout after receiving a write confirmation (or write error).
+  tx_timer->stop();
+  if (shutdown) return;
+  // Write the next frame, if available.
   if (!Wait()) Write();
 }
 
 int
 IoContext::Impl_::OnNext(const timespec* tp) noexcept {
   assert(tp);
-
-  util::UnlockGuard<Impl_> unlock(*this);
 
   timer.settime(io::TimerBase::time_point(util::from_timespec(*tp)));
   return 0;
@@ -393,8 +385,6 @@ IoContext::Impl_::OnNext(const timespec* tp) noexcept {
 int
 IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
   assert(msg);
-
-  util::UnlockGuard<Impl_> unlock(*this);
 
   ::std::size_t n = 1;
   auto i = spscring_p_alloc(&tx_ring, &n);
@@ -419,8 +409,6 @@ IoContext::Impl_::OnSend(const can_msg* msg) noexcept {
 
 int
 IoContext::Impl_::OnTime(const timespec*) noexcept {
-  util::UnlockGuard<Impl_> unlock(*this);
-
   // No confirmation message was received; cancel the ongoing write operation.
   chan.cancel_write(write);
   return 0;
@@ -455,7 +443,6 @@ IoContext::Impl_::Write() {
   // Send the frame.
   chan.submit_write(write);
 
-  ::std::lock_guard<Impl_> lock(*this);
   // Register a timeout for the write confirmation.
   tx_timer->timeout(*net, LELY_COAPP_IO_CONTEXT_TXTIMEO);
 }
