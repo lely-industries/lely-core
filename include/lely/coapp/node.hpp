@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen node declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -111,7 +111,7 @@ operator^=(NmtState& lhs, NmtState rhs) noexcept {
  */
 class Node : protected util::BasicLockable, public IoContext, public Device {
  public:
-  using time_point = ::std::chrono::steady_clock::time_point;
+  using time_point = IoContext::time_point;
 
   /**
    * Creates a new CANopen node. After creation, the node is in the NMT

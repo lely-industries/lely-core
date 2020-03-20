@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/node.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -424,7 +424,7 @@ Node::Impl_::OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr,
 
 void
 Node::Impl_::OnSyncInd(CONMT*, uint8_t cnt) noexcept {
-  auto t = Node::time_point::clock::now();
+  auto t = self->GetClock().gettime();
   self->OnSync(cnt, t);
 
   if (on_sync) {

@@ -61,6 +61,16 @@ FiberDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
   }
 }
 
+void
+FiberDriver::USleep(uint_least64_t usec) {
+  Wait(AsyncWait(::std::chrono::microseconds(usec)));
+}
+
+void
+FiberDriver::USleep(uint_least64_t usec, ::std::error_code& ec) {
+  Wait(AsyncWait(::std::chrono::microseconds(usec)), ec);
+}
+
 }  // namespace canopen
 
 }  // namespace lely

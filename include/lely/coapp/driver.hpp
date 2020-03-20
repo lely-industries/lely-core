@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the remote node driver interface declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -219,7 +219,7 @@ class DriverBase {
    *
    * @see BasicMaster::OnSync()
    */
-  virtual void OnSync(uint8_t cnt, const Node::time_point& t) noexcept = 0;
+  virtual void OnSync(uint8_t cnt, const time_point& t) noexcept = 0;
 
   /**
    * The function invoked when the data length of a received SYNC message does
@@ -261,6 +261,7 @@ class BasicDriver : DriverBase {
 
  public:
   using DriverBase::time_point;
+  using duration = BasicMaster::duration;
   using TpdoEventMutex = BasicMaster::TpdoEventMutex;
 
   /**
@@ -340,6 +341,58 @@ class BasicDriver : DriverBase {
   void
   Error() {
     master.Error(id());
+  }
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified absolute timeout expires.
+   *
+   * @param t the absolute expiration time of the wait operation.
+   * @param f the function to be called on completion of the wait operation.
+   */
+  template <class F>
+  void
+  SubmitWait(const time_point& t, F&& f) {
+    return master.SubmitWait(t, GetExecutor(), ::std::forward<F>(f));
+  }
+
+  /**
+   * Submits a wait operation. The completion task is submitted for execution
+   * once the specified relative timeout expires.
+   *
+   * @param d the relative expiration time of the wait operation.
+   * @param f the function to be called on completion of the wait operation.
+   */
+  template <class F>
+  void
+  SubmitWait(const duration& d, F&& f) {
+    return master.SubmitWait(d, GetExecutor(), ::std::forward<F>(f));
+  }
+
+  /**
+   * Submits an asynchronous wait operation and creates a future which becomes
+   * ready once the wait operation completes (or is canceled).
+   *
+   * @param t the absolute expiration time of the wait operation.
+   *
+   * @returns a future which holds an exception pointer on error.
+   */
+  SdoFuture<void>
+  AsyncWait(const time_point& t) {
+    return master.AsyncWait(GetExecutor(), t);
+  }
+
+  /**
+   * Submits an asynchronous wait operation and creates a future which becomes
+   * ready once the wait operation completes (or is canceled).
+   *
+   * @param d the relative expiration time of the wait operation.
+   *
+   * @returns a future which holds an exception pointer on error.
+   */
+  SdoFuture<void>
+  AsyncWait(const duration& d) {
+    return master.AsyncWait(GetExecutor(), d);
   }
 
   /**
