@@ -3,7 +3,7 @@
  * interface of the Layer Setting Services (LSS) and protocols declarations. See
  * lely/co/lss.h for the C interface.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,6 +45,7 @@ struct c_type_traits<__co_lss> {
   alloc() noexcept {
     return __co_lss_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_lss_free(ptr);
@@ -119,6 +120,16 @@ class COLSS : public incomplete_c_type<__co_lss> {
   setStoreInd(C* obj) noexcept {
     setStoreInd(&c_mem_call<co_lss_store_ind_t*, C, M>::function,
                 static_cast<void*>(obj));
+  }
+
+  co_unsigned16_t
+  getInhibit() const noexcept {
+    return co_lss_get_inhibit(this);
+  }
+
+  void
+  setInhibit(co_unsigned16_t inhibit) noexcept {
+    co_lss_set_inhibit(this, inhibit);
   }
 
   int
