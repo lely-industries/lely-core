@@ -230,6 +230,10 @@ inc += lely/io2/can.h
 if !NO_CXX
 inc += lely/io2/can.hpp
 endif
+inc += lely/io2/can_net.h
+if !NO_CXX
+inc += lely/io2/can_net.hpp
+endif
 inc += lely/io2/can_rt.h
 if !NO_CXX
 inc += lely/io2/can_rt.hpp
