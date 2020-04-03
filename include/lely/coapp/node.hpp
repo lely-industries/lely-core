@@ -118,8 +118,10 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
    * 'Initialisation' state and does not yet create any services or perform any
    * communication. Call #Reset() to start the boot-up process.
    *
-   * @param timer   the timer used for CANopen events.
-   * @param chan    a CAN channel.
+   * @param timer   the timer used for CANopen events. This timer MUST NOT be
+   *                used for any other purpose.
+   * @param chan    a CAN channel. This channel MUST NOT be used for any other
+   *                purpose.
    * @param dcf_txt the path of the text EDS or DCF containing the device
    *                description.
    * @param dcf_bin the path of the (binary) concise DCF containing the values

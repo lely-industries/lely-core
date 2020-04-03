@@ -45,8 +45,10 @@ class IoContext {
   /**
    * Creates a new I/O context.
    *
-   * @param timer  the timer used for CANopen events.
-   * @param chan   a CAN channel.
+   * @param timer  the timer used for CANopen events. This timer MUST NOT be
+   *               used for any other purpose.
+   * @param chan   a CAN channel. This channel MUST NOT be used for any other
+   *               purpose.
    * @param mutex  an (optional) pointer to the mutex to be locked while timer
    *               and I/O events are processed. The mutex MUST be unlocked when
    *               any public member function is invoked; it will be locked for
