@@ -1071,7 +1071,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /**
    * The default implementation notifies all registered drivers.
    *
-   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   * @see Node::OnCanError(), DriverBase::OnCanError()
    */
   void OnCanError(io::CanError error) noexcept override;
 
@@ -1079,7 +1079,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * notifies each registered driver.
    *
-   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   * @see Node::OnCanState(), DriverBase::OnCanState()
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
@@ -1270,7 +1270,7 @@ class AsyncMaster : public BasicMaster {
    * The default implementation queues a notification for all registered
    * drivers.
    *
-   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   * @see Node::OnCanError(), DriverBase::OnCanError()
    */
   void OnCanError(io::CanError error) noexcept override;
 
@@ -1278,7 +1278,7 @@ class AsyncMaster : public BasicMaster {
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * queues a notification for each registered driver.
    *
-   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   * @see Node::OnCanState(), DriverBase::OnCanState()
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;

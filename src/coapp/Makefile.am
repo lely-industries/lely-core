@@ -4,9 +4,6 @@ src += device.cpp
 if !NO_COAPP_MASTER
 src += driver.cpp
 src += fiber_driver.cpp
-endif
-src += io_context.cpp
-if !NO_COAPP_MASTER
 src += logical_driver.cpp
 src += loop_driver.cpp
 src += master.cpp

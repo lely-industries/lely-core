@@ -65,6 +65,9 @@ struct Node::Impl_ {
 
   Node* self{nullptr};
 
+  ::std::function<void(io::CanState, io::CanState)> on_can_state;
+  ::std::function<void(io::CanError)> on_can_error;
+
   unique_c_ptr<CONMT> nmt;
 
   ::std::function<void(NmtCommand)> on_command;
@@ -84,15 +87,82 @@ struct Node::Impl_ {
 Node::Node(io::TimerBase& timer, io::CanChannelBase& chan,
            const ::std::string& dcf_txt, const ::std::string& dcf_bin,
            uint8_t id)
-    : IoContext(timer, chan),
+    : io::CanNet(timer, chan, 0, 0),
       Device(dcf_txt, dcf_bin, id, this),
       tpdo_event_mutex(*this),
-      impl_(new Impl_(this, IoContext::net(), Device::dev())) {
+      impl_(new Impl_(this, net(), Device::dev())) {
   // Start processing CAN frames.
   start();
 }
 
 Node::~Node() = default;
+
+ev::Executor
+Node::GetExecutor() const noexcept {
+  return get_executor();
+}
+
+io::ContextBase
+Node::GetContext() const noexcept {
+  return get_ctx();
+}
+
+io::Clock
+Node::GetClock() const noexcept {
+  return get_clock();
+}
+
+void
+Node::SubmitWait(const time_point& t, io_tqueue_wait& wait) {
+  wait.value = util::to_timespec(t);
+  io_tqueue_submit_wait(*this, &wait);
+}
+
+void
+Node::SubmitWait(const duration& d, io_tqueue_wait& wait) {
+  SubmitWait(GetClock().gettime() + d, wait);
+}
+
+ev::Future<void, ::std::exception_ptr>
+Node::AsyncWait(ev_exec_t* exec, const time_point& t, io_tqueue_wait** pwait) {
+  if (!exec) exec = GetExecutor();
+  auto value = util::to_timespec(t);
+  ev::Future<void, int> f{io_tqueue_async_wait(*this, exec, &value, pwait)};
+  if (!f) util::throw_errc("AsyncWait");
+  return f.then(exec, [](ev::Future<void, int> f) {
+    // Convert the error code into an exception pointer.
+    int errc = f.get().error();
+    if (errc) util::throw_errc("AsyncWait", errc);
+  });
+}
+
+ev::Future<void, ::std::exception_ptr>
+Node::AsyncWait(ev_exec_t* exec, const duration& d, io_tqueue_wait** pwait) {
+  return AsyncWait(exec, GetClock().gettime() + d, pwait);
+}
+
+bool
+Node::CancelWait(io_tqueue_wait& wait) noexcept {
+  return io_tqueue_cancel_wait(*this, &wait) != 0;
+}
+
+bool
+Node::AbortWait(io_tqueue_wait& wait) noexcept {
+  return io_tqueue_abort_wait(*this, &wait) != 0;
+}
+
+void
+Node::OnCanState(
+    ::std::function<void(io::CanState, io::CanState)> on_can_state) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_can_state = on_can_state;
+}
+
+void
+Node::OnCanError(::std::function<void(io::CanError)> on_can_error) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_can_error = on_can_error;
+}
 
 void
 Node::Reset() {
@@ -202,6 +272,16 @@ Node::TpdoEventMutex::unlock() {
   node->impl_->nmt->onTPDOEventUnlock();
 }
 
+CANNet*
+Node::net() const noexcept {
+  return *this;
+}
+
+void
+Node::SetTime() {
+  set_time();
+}
+
 void
 Node::OnCanState(io::CanState new_state, io::CanState old_state) noexcept {
   assert(new_state != old_state);
@@ -238,6 +318,26 @@ Node::RpdoRtr(int num) noexcept {
 void
 Node::TpdoEvent(int num) noexcept {
   impl_->nmt->onTPDOEvent(num);
+}
+
+void
+Node::on_can_state(io::CanState new_state, io::CanState old_state) noexcept {
+  OnCanState(new_state, old_state);
+  if (impl_->on_can_state) {
+    auto f = impl_->on_can_state;
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    f(new_state, old_state);
+  }
+}
+
+void
+Node::on_can_error(io::CanError error) noexcept {
+  OnCanError(error);
+  if (impl_->on_can_error) {
+    auto f = impl_->on_can_error;
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    f(error);
+  }
 }
 
 Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)

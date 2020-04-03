@@ -675,7 +675,7 @@ class BasicDriver : DriverBase,
   /**
    * The default implementation notifies all registered logical device drivers.
    *
-   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   * @see Node::OnCanState(), DriverBase::OnCanState()
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
@@ -683,7 +683,7 @@ class BasicDriver : DriverBase,
   /**
    * The default implementation notifies all registered logical device drivers.
    *
-   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   * @see Node::OnCanError(), DriverBase::OnCanError()
    */
   void OnCanError(io::CanError error) noexcept override;
 

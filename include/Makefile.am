@@ -389,9 +389,6 @@ inc += lely/coapp/device.hpp
 if !NO_COAPP_MASTER
 inc += lely/coapp/driver.hpp
 inc += lely/coapp/fiber_driver.hpp
-endif
-inc += lely/coapp/io_context.hpp
-if !NO_COAPP_MASTER
 inc += lely/coapp/logical_driver.hpp
 inc += lely/coapp/loop_driver.hpp
 inc += lely/coapp/master.hpp
