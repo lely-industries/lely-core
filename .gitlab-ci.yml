@@ -135,8 +135,6 @@ test:gcc:9:
         mingw-w64
     - curl -L https://dl.winehq.org/wine-builds/winehq.key | apt-key add -
     - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main'
-    - curl -L https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/Release.key | apt-key add -
-    - apt-add-repository 'deb https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/Debian_10/ ./'
     - dpkg --add-architecture i386
     - apt-get update -q
     - apt-get upgrade -qy
@@ -152,7 +150,7 @@ build:i686-w64-mingw32:
   <<: *build
   variables:
     CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
-    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\8.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
+    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\9.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
 
 test:i686-w64-mingw32:
   dependencies:
@@ -160,14 +158,14 @@ test:i686-w64-mingw32:
   <<: *mingw-deps
   <<: *test
   variables:
-    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\8.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
+    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\9.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
 
 build:x86_64-w64-mingw32:
   <<: *mingw-deps
   <<: *build
   variables:
     CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
-    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
+    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\9.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
 
 test:x86_64-w64-mingw32:
   dependencies:
@@ -175,7 +173,7 @@ test:x86_64-w64-mingw32:
   <<: *mingw-deps
   <<: *test
   variables:
-    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\8.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
+    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\9.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
 
 .cross-deps: &cross-deps
   tags:
