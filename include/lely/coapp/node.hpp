@@ -104,12 +104,12 @@ operator^=(NmtState& lhs, NmtState rhs) noexcept {
 /**
  * The base class for CANopen nodes.
  *
- * This class implements the #lely::util::BasicLockable mutex used by
- * #lely::canopen::IoContext and #lely::canopen::Device. The mutex MUST be
- * unlocked when any public member function is invoked (#Reset()); it will be
- * locked for the duration of any call to a virtual member function.
+ * This class inherits the #lely::util::BasicLockable mutex used by
+ * #lely::canopen::Device. The mutex MUST be unlocked when any public member
+ * function is invoked (#Reset()); it will be locked for the duration of any
+ * call to a virtual member function.
  */
-class Node : protected util::BasicLockable, public IoContext, public Device {
+class Node : public IoContext, public Device {
  public:
   using time_point = IoContext::time_point;
 
@@ -280,9 +280,6 @@ class Node : protected util::BasicLockable, public IoContext, public Device {
 
     Node* node;
   };
-
-  void lock() final;
-  void unlock() final;
 
   /**
    * Implements the default behavior for a CAN bus state change. If the CAN bus

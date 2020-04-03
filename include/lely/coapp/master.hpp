@@ -30,6 +30,8 @@
 #include <string>
 #include <utility>
 
+#include <cstddef>
+
 namespace lely {
 
 namespace canopen {
@@ -579,7 +581,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](uint16_t idx) noexcept { return Object(this, idx); }
+  Object operator[](::std::ptrdiff_t idx) noexcept { return Object(this, idx); }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -591,7 +593,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](uint16_t idx) const noexcept {
+  ConstObject operator[](::std::ptrdiff_t idx) const noexcept {
     return ConstObject(this, idx);
   }
 

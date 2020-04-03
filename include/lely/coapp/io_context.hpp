@@ -22,9 +22,8 @@
 #ifndef LELY_COAPP_IO_CONTEXT_HPP_
 #define LELY_COAPP_IO_CONTEXT_HPP_
 
-#include <lely/io2/can.hpp>
+#include <lely/io2/can_net.hpp>
 #include <lely/io2/tqueue.hpp>
-#include <lely/util/mutex.hpp>
 
 #include <functional>
 #include <memory>
@@ -32,16 +31,13 @@
 
 namespace lely {
 
-// The CAN network interface from <lely/can/net.hpp>.
-class CANNet;
-
 namespace canopen {
 
 /**
  * The I/O context. This context manages all timer and I/O events on the CAN
  * bus.
  */
-class IoContext {
+class IoContext : public io::CanNet {
  public:
   using duration = io::TimerBase::duration;
   using time_point = io::TimerBase::time_point;
@@ -49,18 +45,12 @@ class IoContext {
   /**
    * Creates a new I/O context.
    *
-   * @param timer  the timer used for CANopen events. This timer MUST NOT be
-   *               used for any other purpose.
-   * @param chan   a CAN channel. This channel MUST NOT be used for any other
-   *               purpose.
-   * @param mutex  an (optional) pointer to the mutex to be locked while timer
-   *               and I/O events are processed. The mutex MUST be unlocked when
-   *               any public member function is invoked; it will be locked for
-   *               the duration of any call to a virtual member function
-   *               (#OnCanState() or #OnCanError()).
+   * @param timer the timer used for CANopen events. This timer MUST NOT be
+   *              used for any other purpose.
+   * @param chan  a CAN channel. This channel MUST NOT be used for any other
+   *              purpose.
    */
-  IoContext(io::TimerBase& timer, io::CanChannelBase& chan,
-            util::BasicLockable* mutex = nullptr);
+  IoContext(io::TimerBase& timer, io::CanChannelBase& chan);
 
   IoContext(const IoContext&) = delete;
   IoContext& operator=(const IoContext&) = delete;
@@ -230,8 +220,8 @@ class IoContext {
 #endif
   /**
    * The function invoked when a CAN bus state change is detected. The state is
-   * represented by one the `CanState::ACTIVE`, `CanState::PASSIVE` or
-   * `CanState::BUSOFF` values.
+   * represented by one the `CanState::ACTIVE`, `CanState::PASSIVE`,
+   * `CanState::BUSOFF`, `CanState::SLEEPING` or `CanState::STOPPED` values.
    *
    * @param new_state the current state of the CAN bus.
    * @param old_state the previous state of the CAN bus.
@@ -245,9 +235,9 @@ class IoContext {
   /**
    * The function invoked when an error is detected on the CAN bus.
    *
-   * @param error a bitwise combination of `CanError::BIT`, `CanError::STUFF`,
-                  `CanError::CRC`, `CanError::FORM`, `CanError::ACK` and
-   *              `CanError::OTHER`.
+   * @param error the detected errors (any combination of `CanError::BIT`,
+   *              `CanError::STUFF`, `CanError::CRC`, `CanError::FORM`,
+   *              `CanError::ACK` and `CanError::OTHER`).
    */
   virtual void
   OnCanError(io::CanError error) noexcept {
@@ -257,8 +247,12 @@ class IoContext {
 
  private:
 #endif
-  struct Impl_;
-  ::std::unique_ptr<Impl_> impl_;
+  void on_can_state(io::CanState new_state,
+                    io::CanState old_state) noexcept final;
+  void on_can_error(io::CanError error) noexcept final;
+
+  ::std::function<void(io::CanState, io::CanState)> on_can_state_;
+  ::std::function<void(io::CanError)> on_can_error_;
 };
 
 }  // namespace canopen
