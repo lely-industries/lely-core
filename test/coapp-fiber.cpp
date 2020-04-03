@@ -111,18 +111,19 @@ main() {
   lely::io::Poll poll(ctx);
   Loop loop(poll.get_poll());
   auto exec = loop.get_executor();
-  Timer timer(poll, exec, CLOCK_MONOTONIC);
   VirtualCanController ctrl(clock_monotonic);
 
+  Timer stimer(poll, exec, CLOCK_MONOTONIC);
   VirtualCanChannel schan(ctx, exec);
   schan.open(ctrl);
   tap_test(schan.is_open(), "slave: opened virtual CAN channel");
-  MySlave slave(timer, schan, TEST_SRCDIR "/coapp-fiber-slave.dcf", "", 127);
+  MySlave slave(stimer, schan, TEST_SRCDIR "/coapp-fiber-slave.dcf", "", 127);
 
+  Timer mtimer(poll, exec, CLOCK_MONOTONIC);
   VirtualCanChannel mchan(ctx, exec);
   mchan.open(ctrl);
   tap_test(mchan.is_open(), "master: opened virtual CAN channel");
-  AsyncMaster master(timer, mchan, TEST_SRCDIR "/coapp-fiber-master.dcf", "",
+  AsyncMaster master(mtimer, mchan, TEST_SRCDIR "/coapp-fiber-master.dcf", "",
                      1);
   MyDriver driver(exec, master, 127);
 
