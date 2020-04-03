@@ -247,39 +247,40 @@ io_tqueue_submit_wait(io_tqueue_t *tq, struct io_tqueue_wait *wait)
 #endif
 		io_tqueue_wait_post(wait, errnum2c(ERRNUM_CANCELED));
 	} else {
+		int errsv = get_errc();
 		int errc = 0;
 		struct sllist queue;
 		sllist_init(&queue);
 
 		task->_data = &tq->queue;
-		int first = pheap_empty(&tq->queue);
 		pnode_init(&wait->_node, &wait->value);
 		pheap_insert(&tq->queue, &wait->_node);
 
-		if (first || timespec_cmp(&wait->value, &tq->next) < 0) {
+		if ((!tq->next.tv_sec && !tq->next.tv_nsec)
+				|| timespec_cmp(&wait->value, &tq->next) < 0) {
 			tq->next = wait->value;
 			struct itimerspec value = { { 0, 0 }, tq->next };
 			// clang-format off
 			if (io_timer_settime(tq->timer, TIMER_ABSTIME, &value,
 					NULL) == -1) {
 				// clang-format on
+				tq->next = (struct timespec){ 0, 0 };
 				errc = get_errc();
 				io_tqueue_do_pop_wait(tq, &queue, NULL);
 			}
 		}
 
-		int submit = 0;
-		if (!pheap_empty(&tq->queue)) {
-			submit = !tq->submitted;
+		int submit = !tq->submitted && !pheap_empty(&tq->queue);
+		if (submit)
 			tq->submitted = 1;
-		}
 #if !LELY_NO_THREADS
 		mtx_unlock(&tq->mtx);
 #endif
 		if (submit)
 			io_timer_submit_wait(tq->timer, &tq->wait);
-		else
-			io_tqueue_wait_queue_post(&queue, errc);
+
+		io_tqueue_wait_queue_post(&queue, errc);
+		set_errc(errsv);
 	}
 }
 
@@ -425,6 +426,7 @@ io_tqueue_wait_func(struct ev_task *task)
 	assert(wait);
 	io_tqueue_t *tq = structof(wait, io_tqueue_t, wait);
 
+	int errsv = get_errc();
 	int errc = 0;
 	struct sllist queue;
 	sllist_init(&queue);
@@ -437,6 +439,7 @@ io_tqueue_wait_func(struct ev_task *task)
 #endif
 		assert(tq->submitted);
 		tq->submitted = 0;
+		tq->next = (struct timespec){ 0, 0 };
 
 		io_tqueue_do_pop_wait(tq, &queue, NULL);
 #if !LELY_NO_THREADS
@@ -448,6 +451,7 @@ io_tqueue_wait_func(struct ev_task *task)
 #endif
 		assert(tq->submitted);
 		tq->submitted = 0;
+		tq->next = (struct timespec){ 0, 0 };
 
 		struct pnode *node;
 		while ((node = pheap_first(&tq->queue))) {
@@ -469,6 +473,7 @@ io_tqueue_wait_func(struct ev_task *task)
 			if (io_timer_settime(tq->timer, TIMER_ABSTIME, &value,
 					NULL) == -1) {
 				// clang-format on
+				tq->next = (struct timespec){ 0, 0 };
 				errc = get_errc();
 				io_tqueue_do_pop_wait(tq, &queue, NULL);
 			}
@@ -484,6 +489,8 @@ io_tqueue_wait_func(struct ev_task *task)
 	}
 
 	io_tqueue_wait_queue_post(&queue, errc);
+
+	set_errc(errsv);
 }
 
 static inline io_tqueue_t *
@@ -511,11 +518,7 @@ io_tqueue_pop(io_tqueue_t *tq, struct sllist *queue, struct ev_task *task)
 #if !LELY_NO_THREADS
 	mtx_lock(&tq->mtx);
 #endif
-	if (!task)
-		io_tqueue_do_pop_wait(tq, queue, NULL);
-	else if (task->_data == &tq->queue)
-		io_tqueue_do_pop_wait(
-				tq, queue, io_tqueue_wait_from_task(task));
+	io_tqueue_do_pop_wait(tq, queue, io_tqueue_wait_from_task(task));
 #if !LELY_NO_THREADS
 	mtx_unlock(&tq->mtx);
 #endif
