@@ -68,7 +68,7 @@ const io_svc_vtbl LoopDriver::Impl_::svc_vtbl = {
 };
 // clang-format on
 
-LoopDriver::LoopDriver(BasicMaster& master, uint8_t id)
+LoopDriver::LoopDriver(AsyncMaster& master, uint8_t id)
     : BasicDriver(strand.get_inner_executor(), master, id),
       impl_(new Impl_(this, master.GetContext())) {}
 

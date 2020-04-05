@@ -46,7 +46,7 @@ FiberDriverBase::FiberDriverBase(ev_exec_t* exec_)
 
 }  // namespace detail
 
-FiberDriver::FiberDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id)
+FiberDriver::FiberDriver(ev_exec_t* exec, AsyncMaster& master, uint8_t id)
     : FiberDriverBase(exec), BasicDriver(FiberDriverBase::exec, master, id) {}
 
 void

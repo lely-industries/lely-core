@@ -50,7 +50,7 @@ class LoopDriverBase {
 /// A CANopen driver running its own dedicated event loop in a separate thread.
 class LoopDriver : detail::LoopDriverBase, public BasicDriver {
  public:
-  LoopDriver(BasicMaster& master, uint8_t id);
+  LoopDriver(AsyncMaster& master, uint8_t id);
   ~LoopDriver();
 
   /// Returns a reference to the dedicated event loop of the driver.

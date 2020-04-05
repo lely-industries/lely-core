@@ -53,7 +53,7 @@ class FiberDriverBase {
  */
 class FiberDriver : detail::FiberDriverBase, public BasicDriver {
  public:
-  FiberDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id);
+  FiberDriver(ev_exec_t* exec, AsyncMaster& master, uint8_t id);
 
   /// Returns the strand executor associated with the driver.
   ev::Executor
