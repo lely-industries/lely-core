@@ -240,10 +240,11 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     }
 
    private:
-    SubObject(BasicMaster* master, uint16_t idx, uint8_t subidx)
+    SubObject(BasicMaster* master, uint16_t idx, uint8_t subidx) noexcept
         : SubObject(master, 0, idx, subidx) {}
 
-    SubObject(BasicMaster* master, uint8_t id, uint16_t idx, uint8_t subidx)
+    SubObject(BasicMaster* master, uint8_t id, uint16_t idx,
+              uint8_t subidx) noexcept
         : master_(master), idx_(idx), subidx_(subidx), id_(id) {}
 
     BasicMaster* master_;
@@ -315,11 +316,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     }
 
    private:
-    ConstSubObject(const BasicMaster* master, uint16_t idx, uint8_t subidx)
+    ConstSubObject(const BasicMaster* master, uint16_t idx,
+                   uint8_t subidx) noexcept
         : ConstSubObject(master, 0, idx, subidx, false) {}
 
     ConstSubObject(const BasicMaster* master, uint8_t id, uint16_t idx,
-                   uint8_t subidx, bool is_rpdo)
+                   uint8_t subidx, bool is_rpdo) noexcept
         : master_(master),
           idx_(idx),
           subidx_(subidx),
@@ -356,7 +358,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen sub-object in the local object
      * dictionary.
      */
-    SubObject operator[](uint8_t subidx) {
+    SubObject operator[](uint8_t subidx) noexcept {
       return SubObject(master_, id_, idx_, subidx);
     }
 
@@ -371,14 +373,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const {
+    ConstSubObject operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, false);
     }
 
    private:
-    Object(BasicMaster* master, uint16_t idx) : Object(master, 0, idx) {}
+    Object(BasicMaster* master, uint16_t idx) noexcept
+        : Object(master, 0, idx) {}
 
-    Object(BasicMaster* master, uint8_t id, uint16_t idx)
+    Object(BasicMaster* master, uint8_t id, uint16_t idx) noexcept
         : master_(master), idx_(idx), id_(id) {}
 
     BasicMaster* master_;
@@ -407,16 +410,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const {
+    ConstSubObject operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, is_rpdo_);
     }
 
    private:
-    ConstObject(const BasicMaster* master, uint16_t idx)
+    ConstObject(const BasicMaster* master, uint16_t idx) noexcept
         : ConstObject(master, 0, idx, false) {}
 
     ConstObject(const BasicMaster* master, uint8_t id, uint16_t idx,
-                bool is_rpdo)
+                bool is_rpdo) noexcept
         : master_(master), idx_(idx), id_(id), is_rpdo_(is_rpdo) {}
 
     const BasicMaster* master_;
@@ -443,12 +446,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const {
+    ConstObject operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, true);
     }
 
    private:
-    RpdoMapped(const BasicMaster* master, uint8_t id)
+    RpdoMapped(const BasicMaster* master, uint8_t id) noexcept
         : master_(master), id_(id) {}
 
     const BasicMaster* master_;
@@ -473,7 +476,9 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen object in the remote object
      * dictionary.
      */
-    Object operator[](uint16_t idx) { return Object(master_, id_, idx); }
+    Object operator[](uint16_t idx) noexcept {
+      return Object(master_, id_, idx);
+    }
 
     /**
      * Returns an accessor object that provides read-only access to the
@@ -485,12 +490,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const {
+    ConstObject operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, false);
     }
 
    private:
-    TpdoMapped(BasicMaster* master, uint8_t id) : master_(master), id_(id) {}
+    TpdoMapped(BasicMaster* master, uint8_t id) noexcept
+        : master_(master), id_(id) {}
 
     BasicMaster* master_;
     uint8_t id_;
@@ -573,7 +579,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](uint16_t idx) { return Object(this, idx); }
+  Object operator[](uint16_t idx) noexcept { return Object(this, idx); }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -585,7 +591,9 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](uint16_t idx) const { return ConstObject(this, idx); }
+  ConstObject operator[](uint16_t idx) const noexcept {
+    return ConstObject(this, idx);
+  }
 
   /**
    * Returns an accessor object that provides read-only access to RPDO-mapped
@@ -597,7 +605,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for RPDO-mapped objects in a remote object
    * dictionary.
    */
-  RpdoMapped RpdoMapped(uint8_t id) const { return {this, id}; }
+  RpdoMapped RpdoMapped(uint8_t id) const noexcept { return {this, id}; }
 
   /**
    * Returns a mutator object that provides read/write access to TPDO-mapped
@@ -609,7 +617,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for TPDO-mapped objects in a remote object
    * dictionary.
    */
-  TpdoMapped TpdoMapped(uint8_t id) { return {this, id}; }
+  TpdoMapped TpdoMapped(uint8_t id) noexcept { return {this, id}; }
 
   /**
    * Returns true if the remote node is ready (i.e., the NMT `boot slave`

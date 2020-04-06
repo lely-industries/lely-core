@@ -292,7 +292,8 @@ class BasicSlave : public Node {
     }
 
    private:
-    SubObject(BasicSlave* slave, uint8_t id, uint16_t idx, uint8_t subidx)
+    SubObject(BasicSlave* slave, uint8_t id, uint16_t idx,
+              uint8_t subidx) noexcept
         : slave_(slave), idx_(idx), subidx_(subidx), id_(id) {}
 
     BasicSlave* slave_;
@@ -398,7 +399,7 @@ class BasicSlave : public Node {
 
    private:
     ConstSubObject(const BasicSlave* slave, uint8_t id, uint16_t idx,
-                   uint8_t subidx, bool is_rpdo)
+                   uint8_t subidx, bool is_rpdo) noexcept
         : slave_(slave),
           idx_(idx),
           subidx_(subidx),
@@ -435,7 +436,7 @@ class BasicSlave : public Node {
      * @returns a mutator object for a CANopen sub-object in the local object
      * dictionary.
      */
-    SubObject operator[](uint8_t subidx) {
+    SubObject operator[](uint8_t subidx) noexcept {
       return SubObject(slave_, id_, idx_, subidx);
     }
 
@@ -450,14 +451,14 @@ class BasicSlave : public Node {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const {
+    ConstSubObject operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(slave_, id_, idx_, subidx, false);
     }
 
    private:
-    Object(BasicSlave* slave, uint16_t idx) : Object(slave, 0, idx) {}
+    Object(BasicSlave* slave, uint16_t idx) noexcept : Object(slave, 0, idx) {}
 
-    Object(BasicSlave* slave, uint8_t id, uint16_t idx)
+    Object(BasicSlave* slave, uint8_t id, uint16_t idx) noexcept
         : slave_(slave), idx_(idx), id_(id) {}
 
     BasicSlave* slave_;
@@ -486,15 +487,16 @@ class BasicSlave : public Node {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const {
+    ConstSubObject operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(slave_, id_, idx_, subidx, is_rpdo_);
     }
 
    private:
-    ConstObject(const BasicSlave* slave, uint16_t idx)
+    ConstObject(const BasicSlave* slave, uint16_t idx) noexcept
         : ConstObject(slave, 0, idx, false) {}
 
-    ConstObject(const BasicSlave* slave, uint8_t id, uint16_t idx, bool is_rpdo)
+    ConstObject(const BasicSlave* slave, uint8_t id, uint16_t idx,
+                bool is_rpdo) noexcept
         : slave_(slave), idx_(idx), id_(id), is_rpdo_(is_rpdo) {}
 
     const BasicSlave* slave_;
@@ -521,12 +523,12 @@ class BasicSlave : public Node {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const {
+    ConstObject operator[](uint16_t idx) const noexcept {
       return ConstObject(slave_, id_, idx, true);
     }
 
    private:
-    RpdoMapped(const BasicSlave* slave, uint8_t id)
+    RpdoMapped(const BasicSlave* slave, uint8_t id) noexcept
         : slave_(slave), id_(id) {}
 
     const BasicSlave* slave_;
@@ -551,7 +553,9 @@ class BasicSlave : public Node {
      * @returns a mutator object for a CANopen object in the remote object
      * dictionary.
      */
-    Object operator[](uint16_t idx) { return Object(slave_, id_, idx); }
+    Object operator[](uint16_t idx) noexcept {
+      return Object(slave_, id_, idx);
+    }
 
     /**
      * Returns an accessor object that provides read-only access to the
@@ -563,12 +567,13 @@ class BasicSlave : public Node {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const {
+    ConstObject operator[](uint16_t idx) const noexcept {
       return ConstObject(slave_, id_, idx, false);
     }
 
    private:
-    TpdoMapped(BasicSlave* slave, uint8_t id) : slave_(slave), id_(id) {}
+    TpdoMapped(BasicSlave* slave, uint8_t id) noexcept
+        : slave_(slave), id_(id) {}
 
     BasicSlave* slave_;
     uint8_t id_;
@@ -626,7 +631,7 @@ class BasicSlave : public Node {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](uint16_t idx) { return Object(this, idx); }
+  Object operator[](uint16_t idx) noexcept { return Object(this, idx); }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -638,7 +643,9 @@ class BasicSlave : public Node {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](uint16_t idx) const { return ConstObject(this, idx); }
+  ConstObject operator[](uint16_t idx) const noexcept {
+    return ConstObject(this, idx);
+  }
 
   /**
    * Returns an accessor object that provides read-only access to RPDO-mapped
@@ -651,7 +658,7 @@ class BasicSlave : public Node {
    * dictionary.
    */
   RpdoMapped
-  RpdoMapped(uint8_t id) const {
+  RpdoMapped(uint8_t id) const noexcept {
     return {this, id};
   }
 
@@ -666,7 +673,7 @@ class BasicSlave : public Node {
    * dictionary.
    */
   TpdoMapped
-  TpdoMapped(uint8_t id) {
+  TpdoMapped(uint8_t id) noexcept {
     return {this, id};
   }
 
