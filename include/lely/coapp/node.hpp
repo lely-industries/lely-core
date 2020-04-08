@@ -113,6 +113,8 @@ operator^=(NmtState& lhs, NmtState rhs) noexcept {
  * call to a virtual member function.
  */
 class Node : public io::CanNet, public Device {
+  friend class LssMaster;
+
  public:
   using duration = io::TimerBase::duration;
   using time_point = io::TimerBase::time_point;
