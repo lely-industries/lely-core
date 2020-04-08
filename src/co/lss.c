@@ -31,6 +31,7 @@
 #include <lely/co/val.h>
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -52,6 +53,10 @@ struct __co_lss {
 #ifndef LELY_NO_CO_MASTER
 	/// A flag specifying whether the LSS service is a master or a slave.
 	int master;
+	/// The inhibit time (in multiples of 100 microseconds).
+	co_unsigned16_t inhibit;
+	/// The index of the next frame to be sent.
+	int next;
 #endif
 	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
@@ -240,15 +245,40 @@ static co_lss_state_t *co_lss_cs_on_recv(
 static co_lss_state_t *co_lss_cs_on_time(
 		co_lss_t *lss, const struct timespec *tp);
 
-/// The exit function of the command received state.
-static void co_lss_cs_on_leave(co_lss_t *lss);
-
 /// The command received state.
 // clang-format off
 LELY_CO_DEFINE_STATE(co_lss_cs_state,
 	.on_recv = &co_lss_cs_on_recv,
-	.on_time = &co_lss_cs_on_time,
-	.on_leave = &co_lss_cs_on_leave
+	.on_time = &co_lss_cs_on_time
+)
+// clang-format on
+
+/// The entry function of the command received finalization state.
+static co_lss_state_t *co_lss_cs_fini_on_enter(co_lss_t *lss);
+
+/// The exit function of the command received finalization state.
+static void co_lss_cs_fini_on_leave(co_lss_t *lss);
+
+/// The command received finalization state.
+// clang-format off
+LELY_CO_DEFINE_STATE(co_lss_cs_fini_state,
+	.on_enter = &co_lss_cs_fini_on_enter,
+	.on_leave = &co_lss_cs_fini_on_leave
+)
+// clang-format on
+
+/// The entry function of the 'switch state selective' state.
+static co_lss_state_t *co_lss_switch_sel_on_enter(co_lss_t *lss);
+
+/// The 'timeout' transition function of the 'switch state selective' state.
+static co_lss_state_t *co_lss_switch_sel_on_time(
+		co_lss_t *lss, const struct timespec *tp);
+
+/// The 'switch state selective' state.
+// clang-format off
+LELY_CO_DEFINE_STATE(co_lss_switch_sel_state,
+	.on_enter = &co_lss_switch_sel_on_enter,
+	.on_time = &co_lss_switch_sel_on_time
 )
 // clang-format on
 
@@ -312,6 +342,24 @@ LELY_CO_DEFINE_STATE(co_lss_nid_state,
 )
 // clang-format on
 
+/// The entry function of the 'identify remote slave' state.
+static co_lss_state_t *co_lss_id_slave_on_enter(co_lss_t *lss);
+
+/// The 'timeout' transition function of the 'identify remote slave' state.
+static co_lss_state_t *co_lss_id_slave_on_time(
+		co_lss_t *lss, const struct timespec *tp);
+
+/// The 'identify remote slave' state.
+// clang-format off
+LELY_CO_DEFINE_STATE(co_lss_id_slave_state,
+	.on_enter = &co_lss_id_slave_on_enter,
+	.on_time = &co_lss_id_slave_on_time
+)
+// clang-format on
+
+/// The entry function of the Slowscan initialization state.
+static co_lss_state_t *co_lss_slowscan_init_on_enter(co_lss_t *lss);
+
 /**
  * The 'CAN frame received' transition function of the Slowscan initialization
  * state.
@@ -326,6 +374,7 @@ static co_lss_state_t *co_lss_slowscan_init_on_time(
 /// The Slowscan initialization state.
 // clang-format off
 LELY_CO_DEFINE_STATE(co_lss_slowscan_init_state,
+	.on_enter = &co_lss_slowscan_init_on_enter,
 	.on_recv = &co_lss_slowscan_init_on_recv,
 	.on_time = &co_lss_slowscan_init_on_time
 )
@@ -545,20 +594,23 @@ static void co_lss_init_req(
 #ifndef LELY_NO_CO_MASTER
 
 /**
- * Sends a switch state selective request (see Fig. 32 in CiA 305 version
- * 3.0.0).
+ * Sends a single frame of a switch state selective request (see Fig. 32 in CiA
+ * 305 version 3.0.0). After the last frame has been sent, this function invokes
+ * `co_lss_init_ind(lss, 0x44)` to prepare the master for the response from the
+ * slave.
  *
  * @param lss a pointer to an LSS master service.
  * @param id  a pointer to the LSS address of the slave to be configured.
  *
  * @returns 0 on success, or -1 on error.
  */
-static int co_lss_send_switch_sel_req(
-		const co_lss_t *lss, const struct co_id *id);
+static int co_lss_send_switch_sel_req(co_lss_t *lss, const struct co_id *id);
 
 /**
- * Sends an LSS identify remote slave request (see Fig. 42 in CiA 305 version
- * 3.0.0).
+ * Sends a single frame of an LSS identify remote slave request (see Fig. 42 in
+ * CiA 305 version 3.0.0). After the last frame has been sent, this function
+ * invokes `co_lss_init_ind(lss, 0x4f)` to prepare the master for the response
+ * from the slave.
  *
  * @param lss a pointer to an LSS master service.
  * @param lo  a pointer to the lower bound of the LSS address.
@@ -567,8 +619,8 @@ static int co_lss_send_switch_sel_req(
  *
  * @returns 0 on success, or -1 on error.
  */
-static int co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
-		const struct co_id *hi);
+static int co_lss_send_id_slave_req(
+		co_lss_t *lss, const struct co_id *lo, const struct co_id *hi);
 
 /**
  * Sends an LSS Fastscan request (see Fig. 46 in CiA 305 version 3.0.0).
@@ -626,6 +678,8 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 #ifndef LELY_NO_CO_MASTER
 	lss->master = 0;
+	lss->inhibit = LELY_CO_LSS_INHIBIT;
+	lss->next = 0;
 #endif
 
 	lss->recv = can_recv_create();
@@ -790,6 +844,22 @@ co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind, void *data)
 
 #ifndef LELY_NO_CO_MASTER
 
+co_unsigned16_t
+co_lss_get_inhibit(const co_lss_t *lss)
+{
+	assert(lss);
+
+	return lss->inhibit;
+}
+
+void
+co_lss_set_inhibit(co_lss_t *lss, co_unsigned16_t inhibit)
+{
+	assert(lss);
+
+	lss->inhibit = inhibit;
+}
+
 int
 co_lss_get_timeout(const co_lss_t *lss)
 {
@@ -809,7 +879,7 @@ co_lss_set_timeout(co_lss_t *lss, int timeout)
 	lss->timeout = MAX(0, timeout);
 }
 
-#endif
+#endif // !LELY_NO_CO_MASTER
 
 int
 co_lss_is_master(const co_lss_t *lss)
@@ -869,6 +939,8 @@ int
 co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 		co_lss_cs_ind_t *ind, void *data)
 {
+	assert(id);
+
 	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
@@ -876,15 +948,11 @@ co_lss_switch_sel_req(co_lss_t *lss, const struct co_id *id,
 
 	trace("LSS: switch state selective");
 
-	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
-	if (co_lss_send_switch_sel_req(lss, id) == -1)
-		return -1;
+	lss->id = *id;
 
-	// Wait for response.
-	co_lss_init_ind(lss, 0x44);
 	lss->cs_ind = ind;
 	lss->cs_data = data;
-	co_lss_enter(lss, co_lss_cs_state);
+	co_lss_enter(lss, co_lss_switch_sel_state);
 
 	return 0;
 }
@@ -1141,22 +1209,32 @@ int
 co_lss_id_slave_req(co_lss_t *lss, const struct co_id *lo,
 		const struct co_id *hi, co_lss_cs_ind_t *ind, void *data)
 {
+	assert(lo);
+	assert(hi);
+
 	if (!co_lss_is_master(lss) || !co_lss_is_idle(lss)) {
 		set_errnum(ERRNUM_PERM);
 		return -1;
 	}
 
+	if (lo->vendor_id != hi->vendor_id
+			|| lo->product_code != hi->product_code
+			|| lo->revision > hi->revision
+			|| lo->serial_nr > hi->serial_nr) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
 	trace("LSS: identify remote slave");
 
-	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (co_lss_send_id_slave_req(lss, lo, hi) == -1)
-		return -1;
+	lss->lo = *lo;
+	lss->lo.n = 4;
+	lss->hi = *hi;
+	lss->hi.n = 4;
 
-	// Wait for response (see Fig. 43 in CiA 305 version 3.0.0).
-	co_lss_init_ind(lss, 0x4f);
 	lss->cs_ind = ind;
 	lss->cs_data = data;
-	co_lss_enter(lss, co_lss_cs_state);
+	co_lss_enter(lss, co_lss_id_slave_state);
 
 	return 0;
 }
@@ -1199,6 +1277,14 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 		return -1;
 	}
 
+	if (lo->vendor_id != hi->vendor_id
+			|| lo->product_code != hi->product_code
+			|| lo->revision > hi->revision
+			|| lo->serial_nr > hi->serial_nr) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
 	trace("LSS: Slowscan");
 
 	lss->lo = *lo;
@@ -1206,14 +1292,8 @@ co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
 	lss->hi = *hi;
 	lss->hi.n = 4;
 
-	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (co_lss_send_id_slave_req(lss, &lss->lo, &lss->hi) == -1)
-		return -1;
-
 	lss->id = (struct co_id)CO_ID_INIT;
 
-	// Wait for response (see Fig. 43 in CiA 305 version 3.0.0).
-	co_lss_init_ind(lss, 0x4f);
 	lss->scan_ind = ind;
 	lss->scan_data = data;
 	co_lss_enter(lss, co_lss_slowscan_init_state);
@@ -1623,7 +1703,7 @@ co_lss_cs_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	if (msg->len < 1 || msg->data[0] != lss->cs)
 		return NULL;
 
-	return co_lss_wait_state;
+	return co_lss_cs_fini_state;
 }
 
 static co_lss_state_t *
@@ -1633,11 +1713,19 @@ co_lss_cs_on_time(co_lss_t *lss, const struct timespec *tp)
 	(void)tp;
 
 	lss->cs = 0;
+	return co_lss_cs_fini_state;
+}
+
+static co_lss_state_t *
+co_lss_cs_fini_on_enter(co_lss_t *lss)
+{
+	(void)lss;
+
 	return co_lss_wait_state;
 }
 
 static void
-co_lss_cs_on_leave(co_lss_t *lss)
+co_lss_cs_fini_on_leave(co_lss_t *lss)
 {
 	assert(lss);
 
@@ -1646,6 +1734,37 @@ co_lss_cs_on_leave(co_lss_t *lss)
 
 	if (lss->cs_ind)
 		lss->cs_ind(lss, lss->cs, lss->cs_data);
+}
+
+static co_lss_state_t *
+co_lss_switch_sel_on_enter(co_lss_t *lss)
+{
+	assert(lss);
+
+	lss->next = 0;
+	lss->cs = 0;
+	return co_lss_switch_sel_on_time(lss, NULL);
+}
+
+static co_lss_state_t *
+co_lss_switch_sel_on_time(co_lss_t *lss, const struct timespec *tp)
+{
+	assert(lss);
+	(void)tp;
+
+	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
+	if (co_lss_send_switch_sel_req(lss, &lss->id) == -1) {
+		// Abort if sending the CAN frame failed.
+		lss->cs = 0;
+		return co_lss_cs_fini_state;
+	}
+
+	// If the last frame was sent, wait for the response.
+	if (lss->cs == 0x44)
+		return co_lss_cs_state;
+
+	// Wait for the inhibit time to pass.
+	return NULL;
 }
 
 static co_lss_state_t *
@@ -1755,6 +1874,47 @@ co_lss_nid_on_leave(co_lss_t *lss)
 }
 
 static co_lss_state_t *
+co_lss_id_slave_on_enter(co_lss_t *lss)
+{
+	assert(lss);
+
+	lss->next = 0;
+	lss->cs = 0;
+	return co_lss_id_slave_on_time(lss, NULL);
+}
+
+static co_lss_state_t *
+co_lss_id_slave_on_time(co_lss_t *lss, const struct timespec *tp)
+{
+	assert(lss);
+	(void)tp;
+
+	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
+	if (co_lss_send_id_slave_req(lss, &lss->lo, &lss->hi) == -1) {
+		// Abort if sending the CAN frame failed.
+		lss->cs = 0;
+		return co_lss_cs_fini_state;
+	}
+
+	// If the last frame was sent, wait for the response.
+	if (lss->cs == 0x4f)
+		return co_lss_cs_state;
+
+	// Wait for the inhibit time to pass.
+	return NULL;
+}
+
+static co_lss_state_t *
+co_lss_slowscan_init_on_enter(co_lss_t *lss)
+{
+	assert(lss);
+
+	lss->next = 0;
+	lss->cs = 0;
+	return co_lss_slowscan_init_on_time(lss, NULL);
+}
+
+static co_lss_state_t *
 co_lss_slowscan_init_on_recv(co_lss_t *lss, const struct can_msg *msg)
 {
 	assert(lss);
@@ -1773,8 +1933,20 @@ co_lss_slowscan_init_on_time(co_lss_t *lss, const struct timespec *tp)
 	(void)tp;
 
 	// Abort if we did not receive a response on the first request.
-	lss->cs = 0;
-	return co_lss_slowscan_fini_state;
+	if (lss->cs == 0x4f) {
+		lss->cs = 0;
+		return co_lss_slowscan_fini_state;
+	}
+
+	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
+	if (co_lss_send_id_slave_req(lss, &lss->lo, &lss->hi) == -1) {
+		// Abort if sending the CAN frame failed.
+		lss->cs = 0;
+		return co_lss_slowscan_fini_state;
+	}
+
+	// Wait for the inhibit time to pass.
+	return NULL;
 }
 
 static co_lss_state_t *
@@ -1782,9 +1954,8 @@ co_lss_slowscan_scan_on_enter(co_lss_t *lss)
 {
 	assert(lss);
 
-	struct co_id *id = &lss->id;
-
 	// Calculate the midpoint while avoiding integer overflow.
+	struct co_id *id = &lss->id;
 	*id = lss->lo;
 	if (id->revision < lss->hi.revision) {
 		id->revision += (lss->hi.revision - id->revision) / 2;
@@ -1793,16 +1964,9 @@ co_lss_slowscan_scan_on_enter(co_lss_t *lss)
 		id->serial_nr += (lss->hi.serial_nr - id->serial_nr) / 2;
 	}
 
-	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
-	if (co_lss_send_id_slave_req(lss, &lss->lo, id) == -1) {
-		// Abort if sending the CAN frame failed.
-		lss->cs = 0;
-		return co_lss_slowscan_fini_state;
-	}
-
-	// Restart the timeout for the next response.
-	can_timer_timeout(lss->timer, lss->net, lss->timeout);
-	return NULL;
+	lss->next = 0;
+	lss->cs = 0;
+	return co_lss_slowscan_scan_on_time(lss, NULL);
 }
 
 static co_lss_state_t *
@@ -1824,7 +1988,18 @@ co_lss_slowscan_scan_on_time(co_lss_t *lss, const struct timespec *tp)
 	assert(lss);
 	(void)tp;
 
-	return co_lss_slowscan_scan_on_res(lss, 1);
+	if (lss->cs == 0x4f)
+		return co_lss_slowscan_scan_on_res(lss, 1);
+
+	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
+	if (co_lss_send_id_slave_req(lss, &lss->lo, &lss->id) == -1) {
+		// Abort if sending the CAN frame failed.
+		lss->cs = 0;
+		return co_lss_slowscan_fini_state;
+	}
+
+	// Wait for the inhibit time to pass.
+	return NULL;
 }
 
 static co_lss_state_t *
@@ -1883,16 +2058,9 @@ co_lss_slowscan_switch_on_enter(co_lss_t *lss)
 {
 	assert(lss);
 
-	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
-	if (co_lss_send_switch_sel_req(lss, &lss->id) == -1) {
-		// Abort if sending the CAN frame failed.
-		lss->cs = 0;
-		return co_lss_slowscan_fini_state;
-	}
-
-	// Restart the timeout for the response.
-	can_timer_timeout(lss->timer, lss->net, lss->timeout);
-	return NULL;
+	lss->next = 0;
+	lss->cs = 0;
+	return co_lss_slowscan_switch_on_time(lss, NULL);
 }
 
 static co_lss_state_t *
@@ -1913,9 +2081,21 @@ co_lss_slowscan_switch_on_time(co_lss_t *lss, const struct timespec *tp)
 	assert(lss);
 	(void)tp;
 
-	// Abort if no response was received.
-	lss->cs = 0;
-	return co_lss_slowscan_fini_state;
+	// Abort if we did not receive a response.
+	if (lss->cs == 0x44) {
+		lss->cs = 0;
+		return co_lss_slowscan_fini_state;
+	}
+
+	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
+	if (co_lss_send_switch_sel_req(lss, &lss->id) == -1) {
+		// Abort if sending the CAN frame failed.
+		lss->cs = 0;
+		return co_lss_slowscan_fini_state;
+	}
+
+	// Wait for the inhibit time to pass.
+	return NULL;
 }
 
 static co_lss_state_t *
@@ -2283,73 +2463,103 @@ co_lss_init_req(const co_lss_t *lss, struct can_msg *msg, co_unsigned8_t cs)
 #ifndef LELY_NO_CO_MASTER
 
 static int
-co_lss_send_switch_sel_req(const co_lss_t *lss, const struct co_id *id)
+co_lss_send_switch_sel_req(co_lss_t *lss, const struct co_id *id)
 {
 	assert(id);
 
 	// Switch state selective (see Fig. 32 in CiA 305 version 3.0.0).
 	struct can_msg req;
-	co_lss_init_req(lss, &req, 0x40);
-	stle_u32(req.data + 1, id->vendor_id);
+	switch (lss->next) {
+	case 0:
+		co_lss_init_req(lss, &req, 0x40);
+		stle_u32(req.data + 1, id->vendor_id);
+		break;
+	case 1:
+		co_lss_init_req(lss, &req, 0x41);
+		stle_u32(req.data + 1, id->product_code);
+		break;
+	case 2:
+		co_lss_init_req(lss, &req, 0x42);
+		stle_u32(req.data + 1, id->revision);
+		break;
+	case 3:
+		co_lss_init_req(lss, &req, 0x43);
+		stle_u32(req.data + 1, id->serial_nr);
+		break;
+	default: return -1;
+	}
 	if (can_net_send(lss->net, &req) == -1)
 		return -1;
-	co_lss_init_req(lss, &req, 0x41);
-	stle_u32(req.data + 1, id->product_code);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x42);
-	stle_u32(req.data + 1, id->revision);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x43);
-	stle_u32(req.data + 1, id->serial_nr);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
+
+	if (++lss->next < 4) {
+		can_recv_stop(lss->recv);
+		// Wait until the inhibit time has elapsed.
+		struct timespec start = { 0, 0 };
+		can_net_get_time(lss->net, &start);
+		timespec_add_usec(&start, 100 * lss->inhibit);
+		can_timer_start(lss->timer, lss->net, &start, NULL);
+	} else {
+		// Wait for response (see Fig. 32 in CiA 305 version 3.0.0).
+		co_lss_init_ind(lss, 0x44);
+	}
 
 	return 0;
 }
 
 static int
-co_lss_send_id_slave_req(const co_lss_t *lss, const struct co_id *lo,
-		const struct co_id *hi)
+co_lss_send_id_slave_req(
+		co_lss_t *lss, const struct co_id *lo, const struct co_id *hi)
 {
 	assert(lo);
 	assert(hi);
-
-	if (lo->vendor_id != hi->vendor_id
-			|| lo->product_code != hi->product_code
-			|| lo->revision > hi->revision
-			|| lo->serial_nr > hi->serial_nr) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
+	assert(lo->vendor_id == hi->vendor_id);
+	assert(lo->product_code == hi->product_code);
+	assert(lo->revision <= hi->revision);
+	assert(lo->serial_nr <= hi->serial_nr);
 
 	// LSS identify remote slave (see Fig. 42 in CiA 305 version 3.0.0).
 	struct can_msg req;
-	co_lss_init_req(lss, &req, 0x46);
-	stle_u32(req.data + 1, lo->vendor_id);
+	switch (lss->next) {
+	case 0:
+		co_lss_init_req(lss, &req, 0x46);
+		stle_u32(req.data + 1, lo->vendor_id);
+		break;
+	case 1:
+		co_lss_init_req(lss, &req, 0x47);
+		stle_u32(req.data + 1, lo->product_code);
+		break;
+	case 2:
+		co_lss_init_req(lss, &req, 0x48);
+		stle_u32(req.data + 1, lo->revision);
+		break;
+	case 3:
+		co_lss_init_req(lss, &req, 0x49);
+		stle_u32(req.data + 1, hi->revision);
+		break;
+	case 4:
+		co_lss_init_req(lss, &req, 0x4a);
+		stle_u32(req.data + 1, lo->serial_nr);
+		break;
+	case 5:
+		co_lss_init_req(lss, &req, 0x4b);
+		stle_u32(req.data + 1, hi->serial_nr);
+		break;
+	default: return -1;
+	}
 	if (can_net_send(lss->net, &req) == -1)
 		return -1;
-	co_lss_init_req(lss, &req, 0x47);
-	stle_u32(req.data + 1, lo->product_code);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x48);
-	stle_u32(req.data + 1, lo->revision);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x49);
-	stle_u32(req.data + 1, hi->revision);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x4a);
-	stle_u32(req.data + 1, lo->serial_nr);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
-	co_lss_init_req(lss, &req, 0x4b);
-	stle_u32(req.data + 1, hi->serial_nr);
-	if (can_net_send(lss->net, &req) == -1)
-		return -1;
+
+	if (++lss->next < 6) {
+		can_recv_stop(lss->recv);
+		// Wait until the inhibit time has elapsed.
+		struct timespec start = { 0, 0 };
+		can_net_get_time(lss->net, &start);
+		timespec_add_usec(&start, 100 * lss->inhibit);
+		can_timer_start(lss->timer, lss->net, &start, NULL);
+	} else {
+		// Wait for response (see Fig. 43 in CiA 305 version 3.0.0).
+		co_lss_init_ind(lss, 0x4f);
+	}
 
 	return 0;
 }

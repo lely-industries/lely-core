@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Layer
  * Setting Services (LSS) and protocols declarations.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,6 +24,11 @@
 
 #include <lely/can/net.h>
 #include <lely/co/dev.h>
+
+#ifndef LELY_CO_LSS_INHIBIT
+/// The default LSS inhibit time (in multiples of 100 microseconds).
+#define LELY_CO_LSS_INHIBIT 10
+#endif
 
 #ifndef LELY_CO_LSS_TIMEOUT
 /// The default LSS timeout (in milliseconds).
@@ -213,6 +218,26 @@ void co_lss_get_store_ind(
  * @see co_lss_get_store_ind()
  */
 void co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind, void *data);
+
+/**
+ * Returns the inhibit time (in multiples of 100 microseconds) of an LSS master
+ * service. A return value of 0 means the inhibit time is disabled.
+ *
+ * @see co_lss_set_inhibit()
+ */
+co_unsigned16_t co_lss_get_inhibit(const co_lss_t *lss);
+
+/**
+ * Sets the inhibit time between successive LSS messages of an LSS master
+ * service.
+ *
+ * @param lss     a pointer to an LSS master service.
+ * @param inhibit the inhibit time (in multiples of 100 microseconds. A value of
+ *                0 disables the inhibit time.
+ *
+ * @see co_lss_get_inhibit()
+ */
+void co_lss_set_inhibit(co_lss_t *lss, co_unsigned16_t inhibit);
 
 /**
  * Returns the timeout (in milliseconds) of an LSS master service. A return
