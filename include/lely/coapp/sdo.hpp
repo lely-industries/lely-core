@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen master library; it contains the
  * Client-SDO queue declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -179,6 +179,12 @@ class SdoRequestBase : public ev_task {
 
   virtual ~SdoRequestBase() = default;
 
+  /// Returns the executor to which the completion task is (to be) submitted.
+  ev::Executor
+  GetExecutor() const noexcept {
+    return ev::Executor(ev_task::exec);
+  }
+
   /// The node-ID.
   uint8_t id{0};
   /// The object index.
@@ -296,12 +302,6 @@ class SdoDownloadRequest : public detail::SdoDownloadRequestBase<T> {
   SdoDownloadRequest(ev_exec_t* exec, F&& con)
       : detail::SdoDownloadRequestBase<T>(exec), con_(::std::forward<F>(con)) {}
 
-  /// Returns the executor to which the completion task is (to be) submitted.
-  ev::Executor
-  GetExecutor() const noexcept {
-    return ev::Executor(ev_task::exec);
-  }
-
  private:
   void operator()() noexcept final;
 
@@ -337,12 +337,6 @@ class SdoUploadRequest : public detail::SdoUploadRequestBase<T> {
   template <class F>
   SdoUploadRequest(ev_exec_t* exec, F&& con)
       : detail::SdoUploadRequestBase<T>(exec), con_(::std::forward<F>(con)) {}
-
-  /// Returns the executor to which the completion task is (to be) submitted.
-  ev::Executor
-  GetExecutor() const noexcept {
-    return ev::Executor(ev_task::exec);
-  }
 
  private:
   void operator()() noexcept final;

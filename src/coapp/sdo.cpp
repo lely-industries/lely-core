@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/sdo.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -355,9 +355,9 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
       sllist_push_front(&this->queue, node);
       req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
     }
-  } else if (&req->_node != sllist_first(&this->queue) &&
-             sllist_remove(&queue, &req->_node)) {
-    sllist_push_back(&this->queue, &req->_node);
+  } else if (&req->_node != sllist_first(&this->queue)) {
+    if (sllist_remove(&queue, &req->_node))
+      sllist_push_back(&this->queue, &req->_node);
     req = nullptr;
   }
 
@@ -367,19 +367,17 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
   }
 
   ::std::size_t n = 0;
-
   slnode* node;
   while ((node = sllist_pop_front(&queue))) {
     req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
     req->ec = ac;
 
-    ev::Executor exec(req->exec);
+    auto exec = req->GetExecutor();
     exec.post(*req);
     exec.on_task_fini();
 
     n += n < ::std::numeric_limits<::std::size_t>::max();
   }
-
   return n;
 }
 
