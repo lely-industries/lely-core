@@ -24,6 +24,7 @@
 
 #include <lely/coapp/master.hpp>
 
+#include <map>
 #include <string>
 #include <utility>
 
@@ -39,7 +40,6 @@ class DriverBase {
   DriverBase() = default;
 
   DriverBase(const DriverBase&) = delete;
-
   DriverBase& operator=(const DriverBase&) = delete;
 
   virtual ~DriverBase() = default;
@@ -254,9 +254,29 @@ class DriverBase {
   virtual void OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept = 0;
 };
 
+/// The abstract driver interface for a logical device on a remote CANopen node.
+class LogicalDriverBase : public DriverBase {
+ public:
+  /// Returns the number of the logical device on the remote node.
+  virtual int Number() const noexcept = 0;
+
+  /**
+   * Asynchronously updates the logical device type and, on success, queues
+   * the DriverBase::OnConfig() method and creates a future which becomes ready
+   * once the configuration process completes.
+   */
+  virtual SdoFuture<void> AsyncConfig() = 0;
+
+  /**
+   * Queues the DriverBase::OnDeconfig() method and creates a future which
+   * becomes ready once the deconfiguration process completes.
+   */
+  virtual SdoFuture<void> AsyncDeconfig() = 0;
+};
+
 /// The base class for drivers for remote CANopen nodes.
-class BasicDriver : DriverBase {
-  friend class BasicMaster;
+class BasicDriver : DriverBase,
+                    protected ::std::map<uint8_t, LogicalDriverBase*> {
   friend class LoopDriver;
 
  public:
@@ -285,7 +305,10 @@ class BasicDriver : DriverBase {
     return ev::Executor(exec_);
   }
 
-  uint8_t netid() const noexcept final;
+  uint8_t
+  netid() const noexcept final {
+    return master.netid();
+  }
 
   uint8_t
   id() const noexcept final {
@@ -594,6 +617,25 @@ class BasicDriver : DriverBase {
   }
 
   /**
+   * Registers a logical device driver for the remote node. If an event occurs
+   * for the node, or for the entire CANopen network, the corresponding method
+   * of the logical driver will be invoked.
+   *
+   * @throws std::out_of_range if the logical device number is invalid or
+   * already registered.
+   *
+   * @see Erase()
+   */
+  void Insert(LogicalDriverBase& driver);
+
+  /**
+   * Unregisters a logical device driver for the remote node.
+   *
+   * @see Insert()
+   */
+  void Erase(LogicalDriverBase& driver);
+
+  /**
    * Schedules the specified Callable object for execution by the executor for
    * this driver.
    *
@@ -627,60 +669,135 @@ class BasicDriver : DriverBase {
   /// @see BasicMaster::tpdo_event_mutex
   TpdoEventMutex& tpdo_event_mutex;
 
+ protected:
+  using MapType = ::std::map<uint8_t, LogicalDriverBase*>;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   */
+  void OnCanState(io::CanState new_state,
+                  io::CanState old_state) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   */
+  void OnCanError(io::CanError error) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers,
+   * unless the object index is part of the standardized profile area of a
+   * logical device (6000..9FFF). In that case, the driver registered for the
+   * corresponding logical device is notified and the object index is adjusted
+   * to the standardized profile area of the first logical device (6000..67FF).
+   *
+   * @see DriverBase::OnRpdoWrite()
+   */
+  void OnRpdoWrite(uint16_t idx, uint8_t subidx) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see Node::OnCommand(), DriverBase::OnCommand()
+   */
+  void OnCommand(NmtCommand cs) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnNodeGuarding()
+   */
+  void OnNodeGuarding(bool occurred) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnHeartbeat()
+   */
+  void OnHeartbeat(bool occurred) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnState()
+   */
+  void OnState(NmtState st) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnBoot()
+   */
+  void OnBoot(NmtState st, char es,
+              const ::std::string& what) noexcept override;
+
+  /**
+   * The default implementation invokes AsyncConfig() to start the configuration
+   * process for all registered logical device drivers.
+   *
+   * @see DriverBase::OnConfig()
+   */
+  void OnConfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override;
+
+  /**
+   * The default implementation invokes AsyncDeconfig() to start the
+   * deconfiguration process for all registered logical device drivers.
+   *
+   * @see DriverBase::OnDeconfig()
+   */
+  void OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see Node::OnSync(), DriverBase::OnSync()
+   */
+  void OnSync(uint8_t cnt, const time_point& t) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see Node::OnSyncError(), DriverBase::OnSyncError()
+   */
+  void OnSyncError(uint16_t eec, uint8_t er) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see Node::OnTime(), DriverBase::OnTime()
+   */
+  void OnTime(const ::std::chrono::system_clock::time_point&
+                  abs_time) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnEmcy()
+   */
+  void OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept override;
+
+  /**
+   * Invokes LogicalDriverBase::AsyncConfig() for the specified logical device
+   * driver. If <b>num</b> is 0, invokes LogicalDriverBase::AsyncConfig() for
+   * all registered logical device drivers and returns a future which becomes
+   * ready once all configuration processes complete.
+   */
+  SdoFuture<void> AsyncConfig(int num = 0);
+
+  /**
+   * Invokes LogicalDriverBase::AsyncDeconfig() for the specified logical device
+   * driver. If <b>num</b> is 0, invokes LogicalDriverBase::AsyncDeconfig() for
+   * all registered logical device drivers and returns a future which becomes
+   * ready once all deconfiguration processes complete.
+   */
+  SdoFuture<void> AsyncDeconfig(int num = 0);
+
  private:
-  void
-  OnCanState(io::CanState /*new_state*/,
-             io::CanState /*old_state*/) noexcept override {}
-
-  void
-  OnCanError(io::CanError /*error*/) noexcept override {}
-
-  void
-  OnRpdoWrite(uint16_t /*idx*/, uint8_t /*subidx*/) noexcept override {}
-
-  void
-  OnCommand(NmtCommand /*cs*/) noexcept override {}
-
-  void
-  // NOLINTNEXTLINE(readability/casting)
-  OnNodeGuarding(bool /*occurred*/) noexcept override {}
-
-  void
-  // NOLINTNEXTLINE(readability/casting)
-  OnHeartbeat(bool /*occurred*/) noexcept override {}
-
-  void
-  OnState(NmtState /*st*/) noexcept override {}
-
-  void
-  OnBoot(NmtState /*st*/, char /*es*/,
-         const ::std::string& /*what*/) noexcept override {}
-
-  void
-  OnConfig(::std::function<void(::std::error_code ec)> res) noexcept override {
-    res(::std::error_code());
-  }
-
-  void
-  OnDeconfig(
-      ::std::function<void(::std::error_code ec)> res) noexcept override {
-    res(::std::error_code());
-  }
-
-  void
-  OnSync(uint8_t /*cnt*/, const time_point& /*t*/) noexcept override {}
-
-  void
-  OnSyncError(uint16_t /*eec*/, uint8_t /*er*/) noexcept override {}
-
-  void
-  OnTime(const ::std::chrono::system_clock::
-             time_point& /*abs_time*/) noexcept override {}
-
-  void
-  OnEmcy(uint16_t /*eec*/, uint8_t /*er*/,
-         uint8_t /*msef*/[5]) noexcept override {}
-
   ev_exec_t* exec_{nullptr};
   const uint8_t id_{0xff};
 };
