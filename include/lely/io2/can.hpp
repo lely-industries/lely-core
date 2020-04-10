@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -93,7 +93,7 @@ class CanChannelReadWrapper : public io_can_chan_read {
                         ::std::chrono::nanoseconds* dp, ev_exec_t* exec, F&& f)
       : io_can_chan_read IO_CAN_CHAN_READ_INIT(
             msg, err, dp ? &ts_ : nullptr, exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto read = io_can_chan_read_from_task(task);
               auto result = read->r.result;
               ::std::error_code ec;
@@ -151,7 +151,7 @@ class CanChannelRead : public io_can_chan_read {
                  ev_exec_t* exec, F&& f)
       : io_can_chan_read
         IO_CAN_CHAN_READ_INIT(msg, err, dp ? &ts_ : nullptr, exec,
-                              [](ev_task * task) noexcept {
+                              [](ev_task* task) noexcept {
                                 auto read = io_can_chan_read_from_task(task);
                                 auto self = static_cast<CanChannelRead*>(read);
                                 if (self->dp_)
@@ -199,7 +199,7 @@ class CanChannelWriteWrapper : public io_can_chan_write {
   CanChannelWriteWrapper(const can_msg& msg, ev_exec_t* exec, F&& f)
       : io_can_chan_write IO_CAN_CHAN_WRITE_INIT(
             &msg, exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto write = io_can_chan_write_from_task(task);
               ::std::error_code ec = util::make_error_code(write->errc);
               auto self = static_cast<CanChannelWriteWrapper*>(write);
@@ -247,7 +247,7 @@ class CanChannelWrite : public io_can_chan_write {
   CanChannelWrite(const can_msg& msg, ev_exec_t* exec, F&& f)
       : io_can_chan_write IO_CAN_CHAN_WRITE_INIT(
             &msg, exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto write = io_can_chan_write_from_task(task);
               auto self = static_cast<CanChannelWrite*>(write);
               if (self->func_) {
@@ -290,44 +290,132 @@ class CanControllerBase {
 
   /// @see io_can_ctrl_stop()
   void
+  stop(::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_ctrl_stop(*this))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
+  }
+
+  /// @see io_can_ctrl_stop()
+  void
   stop() {
-    if (io_can_ctrl_stop(*this) == -1) util::throw_errc("stop");
+    ::std::error_code ec;
+    stop(ec);
+    if (ec) throw ::std::system_error(ec, "stop");
+  }
+
+  /// @see io_can_ctrl_stopped()
+  bool
+  stopped(::std::error_code& ec) const noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    int stopped = io_can_ctrl_stopped(*this);
+    if (stopped >= 0) {
+      ec.clear();
+    } else {
+      ec = util::make_error_code();
+      stopped = 0;
+    }
+    set_errc(errsv);
+    return stopped != 0;
   }
 
   /// @see io_can_ctrl_stopped()
   bool
   stopped() const {
-    int stopped = io_can_ctrl_stopped(*this);
-    if (stopped == -1) util::throw_errc("stopped");
-    return stopped != 0;
+    ::std::error_code ec;
+    auto result = stopped(ec);
+    if (ec) throw ::std::system_error(ec, "stopped");
+    return result;
+  }
+
+  /// @see io_can_ctrl_restart()
+  void
+  restart(::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_ctrl_restart(*this))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
   }
 
   /// @see io_can_ctrl_restart()
   void
   restart() {
-    if (io_can_ctrl_restart(*this) == -1) util::throw_errc("restart");
+    ::std::error_code ec;
+    restart(ec);
+    if (ec) throw ::std::system_error(ec, "restart");
+  }
+
+  /// @see io_can_ctrl_get_bitrate()
+  void
+  get_bitrate(int* pnominal, int* pdata, ::std::error_code& ec) const noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_ctrl_get_bitrate(*this, pnominal, pdata))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
   }
 
   /// @see io_can_ctrl_get_bitrate()
   void
   get_bitrate(int* pnominal, int* pdata = nullptr) const {
-    if (io_can_ctrl_get_bitrate(*this, pnominal, pdata) == -1)
-      util::throw_errc("get_bitrate");
+    ::std::error_code ec;
+    get_bitrate(pnominal, pdata, ec);
+    if (ec) throw ::std::system_error(ec, "get_bitrate");
+  }
+
+  /// @see io_can_ctrl_get_bitrate()
+  void
+  set_bitrate(int nominal, int data, ::std::error_code& ec) noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    if (!io_can_ctrl_set_bitrate(*this, nominal, data))
+      ec.clear();
+    else
+      ec = util::make_error_code();
+    set_errc(errsv);
   }
 
   /// @see io_can_ctrl_get_bitrate()
   void
   set_bitrate(int nominal, int data = 0) {
-    if (io_can_ctrl_set_bitrate(*this, nominal, data) == -1)
-      util::throw_errc("set_bitrate");
+    ::std::error_code ec;
+    set_bitrate(nominal, data, ec);
+    if (ec) throw ::std::system_error(ec, "set_bitrate");
+  }
+
+  /// @see io_can_ctrl_get_state()
+  CanState
+  get_state(::std::error_code& ec) const noexcept {
+    int errsv = get_errc();
+    set_errc(0);
+    int state = io_can_ctrl_get_state(*this);
+    if (state >= 0) {
+      ec.clear();
+    } else {
+      ec = util::make_error_code();
+      state = 0;
+    }
+    set_errc(errsv);
+    return static_cast<CanState>(state);
   }
 
   /// @see io_can_ctrl_get_state()
   CanState
   get_state() const {
-    int state = io_can_ctrl_get_state(*this);
-    if (state == -1) util::throw_errc("get_state");
-    return static_cast<CanState>(state);
+    ::std::error_code ec;
+    auto result = get_state(ec);
+    if (ec) throw ::std::system_error(ec, "get_state");
+    return result;
   }
 
  protected:
