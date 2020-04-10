@@ -164,10 +164,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_cs_ind_t*, C>::type M>
-  void
+  int
   switchSelReq(const co_id& id, C* obj) noexcept {
-    switchSelReq(id, &c_mem_call<co_lss_cs_ind_t*, C, M>::function,
-                 static_cast<void*>(obj));
+    return switchSelReq(id, &c_mem_call<co_lss_cs_ind_t*, C, M>::function,
+                        static_cast<void*>(obj));
   }
 
   int
@@ -183,10 +183,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_err_ind_t*, C>::type M>
-  void
+  int
   setIdReq(co_unsigned8_t id, C* obj) noexcept {
-    setIdReq(id, &c_mem_call<co_lss_err_ind_t*, C, M>::function,
-             static_cast<void*>(obj));
+    return setIdReq(id, &c_mem_call<co_lss_err_ind_t*, C, M>::function,
+                    static_cast<void*>(obj));
   }
 
   int
@@ -202,10 +202,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_err_ind_t*, C>::type M>
-  void
+  int
   setRateReq(co_unsigned16_t rate, C* obj) noexcept {
-    setRateReq(rate, &c_mem_call<co_lss_err_ind_t*, C, M>::function,
-               static_cast<void*>(obj));
+    return setRateReq(rate, &c_mem_call<co_lss_err_ind_t*, C, M>::function,
+                      static_cast<void*>(obj));
   }
 
   int
@@ -226,10 +226,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_err_ind_t*, C>::type M>
-  void
+  int
   storeReq(C* obj) noexcept {
-    storeReq(&c_mem_call<co_lss_err_ind_t*, C, M>::function,
-             static_cast<void*>(obj));
+    return storeReq(&c_mem_call<co_lss_err_ind_t*, C, M>::function,
+                    static_cast<void*>(obj));
   }
 
   int
@@ -245,10 +245,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_lssid_ind_t*, C>::type M>
-  void
+  int
   getVendorIdReq(C* obj) noexcept {
-    getVendorIdReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
-                   static_cast<void*>(obj));
+    return getVendorIdReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
+                          static_cast<void*>(obj));
   }
 
   int
@@ -264,10 +264,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_lssid_ind_t*, C>::type M>
-  void
+  int
   getProductCodeReq(C* obj) noexcept {
-    getProductCodeReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
-                      static_cast<void*>(obj));
+    return getProductCodeReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
+                             static_cast<void*>(obj));
   }
 
   int
@@ -283,10 +283,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_lssid_ind_t*, C>::type M>
-  void
+  int
   getRevisionReq(C* obj) noexcept {
-    getRevisionReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
-                   static_cast<void*>(obj));
+    return getRevisionReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
+                          static_cast<void*>(obj));
   }
 
   int
@@ -302,10 +302,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_lssid_ind_t*, C>::type M>
-  void
+  int
   getSerialNrReq(C* obj) noexcept {
-    getSerialNrReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
-                   static_cast<void*>(obj));
+    return getSerialNrReq(&c_mem_call<co_lss_lssid_ind_t*, C, M>::function,
+                          static_cast<void*>(obj));
   }
 
   int
@@ -321,10 +321,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_nid_ind_t*, C>::type M>
-  void
+  int
   getIdReq(C* obj) noexcept {
-    getIdReq(&c_mem_call<co_lss_nid_ind_t*, C, M>::function,
-             static_cast<void*>(obj));
+    return getIdReq(&c_mem_call<co_lss_nid_ind_t*, C, M>::function,
+                    static_cast<void*>(obj));
   }
 
   int
@@ -341,10 +341,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_cs_ind_t*, C>::type M>
-  void
+  int
   idSlaveReq(const co_id& lo, const co_id& hi, C* obj) noexcept {
-    idSlaveReq(lo, hi, &c_mem_call<co_lss_cs_ind_t*, C, M>::function,
-               static_cast<void*>(obj));
+    return idSlaveReq(lo, hi, &c_mem_call<co_lss_cs_ind_t*, C, M>::function,
+                      static_cast<void*>(obj));
   }
 
   int
@@ -360,10 +360,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_cs_ind_t*, C>::type M>
-  void
+  int
   idNonCfgSlaveReq(C* obj) noexcept {
-    idNonCfgSlaveReq(&c_mem_call<co_lss_cs_ind_t*, C, M>::function,
-                     static_cast<void*>(obj));
+    return idNonCfgSlaveReq(&c_mem_call<co_lss_cs_ind_t*, C, M>::function,
+                            static_cast<void*>(obj));
   }
 
   int
@@ -380,10 +380,10 @@ class COLSS : public incomplete_c_type<__co_lss> {
   }
 
   template <class C, typename c_mem_fn<co_lss_scan_ind_t*, C>::type M>
-  void
+  int
   slowscanReq(const co_id& lo, const co_id& hi, C* obj) noexcept {
-    slowscanReq(lo, hi, &c_mem_call<co_lss_scan_ind_t*, C, M>::function,
-                static_cast<void*>(obj));
+    return slowscanReq(lo, hi, &c_mem_call<co_lss_scan_ind_t*, C, M>::function,
+                       static_cast<void*>(obj));
   }
 
   int
