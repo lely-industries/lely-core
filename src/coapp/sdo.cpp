@@ -48,15 +48,16 @@ struct Sdo::Impl_ {
 
   void Submit(detail::SdoRequestBase& req);
   ::std::size_t Cancel(detail::SdoRequestBase* req, SdoErrc ac);
+  ::std::size_t Abort(detail::SdoRequestBase* req);
+
+  bool Pop(detail::SdoRequestBase* req, sllist& queue);
 
   template <class T>
-  void OnDownload(detail::SdoDownloadRequestBase<T>* req) noexcept;
-
+  void OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept;
   template <class T>
-  void OnUpload(detail::SdoUploadRequestBase<T>* req) noexcept;
+  void OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept;
 
   void OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
-
   template <class T>
   void OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
                T value) noexcept;
@@ -64,6 +65,7 @@ struct Sdo::Impl_ {
   void OnCompletion(detail::SdoRequestBase& req) noexcept;
 
   ::std::shared_ptr<COCSDO> sdo;
+
   sllist queue;
 };
 
@@ -85,7 +87,7 @@ SdoDownloadRequestWrapper<T>::operator()() noexcept {
 template <class T>
 void
 SdoDownloadRequestWrapper<T>::OnRequest(void* data) noexcept {
-  static_cast<Sdo::Impl_*>(data)->OnDownload(this);
+  static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
 }
 
 template <class T>
@@ -105,7 +107,7 @@ SdoUploadRequestWrapper<T>::operator()() noexcept {
 template <class T>
 void
 SdoUploadRequestWrapper<T>::OnRequest(void* data) noexcept {
-  static_cast<Sdo::Impl_*>(data)->OnUpload(this);
+  static_cast<Sdo::Impl_*>(data)->OnUpload(*this);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -193,7 +195,7 @@ SdoDownloadRequest<T>::operator()() noexcept {
 template <class T>
 void
 SdoDownloadRequest<T>::OnRequest(void* data) noexcept {
-  static_cast<Sdo::Impl_*>(data)->OnDownload(this);
+  static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
 }
 
 template <class T>
@@ -206,7 +208,7 @@ SdoUploadRequest<T>::operator()() noexcept {
 template <class T>
 void
 SdoUploadRequest<T>::OnRequest(void* data) noexcept {
-  static_cast<Sdo::Impl_*>(data)->OnUpload(this);
+  static_cast<Sdo::Impl_*>(data)->OnUpload(*this);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -301,14 +303,24 @@ Sdo::Submit(detail::SdoRequestBase& req) {
   impl_->Submit(req);
 }
 
-void
+bool
 Sdo::Cancel(detail::SdoRequestBase& req, SdoErrc ac) {
-  impl_->Cancel(&req, ac);
+  return impl_->Cancel(&req, ac) != 0;
 }
 
 ::std::size_t
-Sdo::Cancel(SdoErrc ac) {
+Sdo::CancelAll(SdoErrc ac) {
   return impl_->Cancel(nullptr, ac);
+}
+
+bool
+Sdo::Abort(detail::SdoRequestBase& req) {
+  return impl_->Abort(&req) != 0;
+}
+
+::std::size_t
+Sdo::AbortAll() {
+  return impl_->Abort(nullptr);
 }
 
 Sdo::Impl_::Impl_(CANNet* net, CODev* dev, uint8_t num)
@@ -347,24 +359,10 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
   sllist queue;
   sllist_init(&queue);
 
-  if (!req) {
-    // Cancel all pending requests except for the first (ongoing) request.
-    auto node = sllist_pop_front(&this->queue);
-    sllist_append(&queue, &this->queue);
-    if (node) {
-      sllist_push_front(&this->queue, node);
-      req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
-    }
-  } else if (&req->_node != sllist_first(&this->queue)) {
-    if (sllist_remove(&queue, &req->_node))
-      sllist_push_back(&this->queue, &req->_node);
-    req = nullptr;
-  }
-
-  if (req) {
-    assert(sdo);
+  // Cancel all matching requests, except for the first (ongoing) request.
+  if (Pop(req, queue))
+    // Stop the ongoing request, if any.
     sdo->abortReq(static_cast<uint32_t>(ac));
-  }
 
   ::std::size_t n = 0;
   slnode* node;
@@ -381,21 +379,50 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
   return n;
 }
 
+::std::size_t
+Sdo::Impl_::Abort(detail::SdoRequestBase* req) {
+  sllist queue;
+  sllist_init(&queue);
+
+  // Abort all matching requests, except for the first (ongoing) request.
+  Pop(req, queue);
+
+  return ev_task_queue_abort(&queue);
+}
+
+bool
+Sdo::Impl_::Pop(detail::SdoRequestBase* req, sllist& queue) {
+  if (!req) {
+    // Cancel all pending requests except for the first (ongoing) request.
+    auto node = sllist_pop_front(&this->queue);
+    sllist_append(&queue, &this->queue);
+    if (node) {
+      sllist_push_front(&this->queue, node);
+      req = static_cast<detail::SdoRequestBase*>(ev_task_from_node(node));
+    }
+  } else if (&req->_node != sllist_first(&this->queue)) {
+    if (sllist_remove(&queue, &req->_node))
+      sllist_push_back(&this->queue, &req->_node);
+    req = nullptr;
+  }
+  // Return true if the first request matched (but was not removed).
+  return req != nullptr;
+}
+
 template <class T>
 void
-Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>* req) noexcept {
+Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept {
   constexpr auto N = co_type_traits_T<T>::index;
-  assert(req);
-  assert(&req->_node == sllist_first(&queue));
+  assert(&req._node == sllist_first(&queue));
 
   int errsv = get_errc();
   set_errc(0);
 
-  sdo->setTimeout(detail::to_sdo_timeout(req->timeout));
-  if (sdo->dnReq<N, Impl_, &Impl_::OnDnCon>(req->idx, req->subidx, req->value,
+  sdo->setTimeout(detail::to_sdo_timeout(req.timeout));
+  if (sdo->dnReq<N, Impl_, &Impl_::OnDnCon>(req.idx, req.subidx, req.value,
                                             this) == -1) {
-    req->ec = util::make_error_code();
-    OnCompletion(*req);
+    req.ec = util::make_error_code();
+    OnCompletion(req);
   }
 
   set_errc(errsv);
@@ -403,18 +430,17 @@ Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>* req) noexcept {
 
 template <class T>
 void
-Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>* req) noexcept {
-  assert(req);
-  assert(&req->_node == sllist_first(&queue));
+Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
+  assert(&req._node == sllist_first(&queue));
 
   int errsv = get_errc();
   set_errc(0);
 
-  sdo->setTimeout(detail::to_sdo_timeout(req->timeout));
-  if (sdo->upReq<T, Impl_, &Impl_::OnUpCon<T>>(req->idx, req->subidx, this) ==
+  sdo->setTimeout(detail::to_sdo_timeout(req.timeout));
+  if (sdo->upReq<T, Impl_, &Impl_::OnUpCon<T>>(req.idx, req.subidx, this) ==
       -1) {
-    req->ec = util::make_error_code();
-    OnCompletion(*req);
+    req.ec = util::make_error_code();
+    OnCompletion(req);
   }
 
   set_errc(errsv);
@@ -423,7 +449,7 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>* req) noexcept {
 void
 Sdo::Impl_::OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx,
                     uint32_t ac) noexcept {
-  auto task = ev_task_from_node(sllist_pop_front(&queue));
+  auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::SdoRequestBase*>(task);
 
@@ -438,7 +464,7 @@ template <class T>
 void
 Sdo::Impl_::OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
                     T value) noexcept {
-  auto task = ev_task_from_node(sllist_pop_front(&queue));
+  auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::SdoUploadRequestBase<T>*>(task);
 
@@ -452,6 +478,9 @@ Sdo::Impl_::OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
 
 void
 Sdo::Impl_::OnCompletion(detail::SdoRequestBase& req) noexcept {
+  assert(&req._node == sllist_first(&queue));
+  sllist_pop_front(&queue);
+
   ev::Executor exec(req.exec);
   exec.post(req);
   exec.on_task_fini();

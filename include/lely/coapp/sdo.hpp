@@ -166,7 +166,7 @@ class SdoRequestBase : public ev_task {
   SdoRequestBase(ev_exec_t* exec, uint16_t idx_ = 0, uint8_t subidx_ = 0,
                  const ::std::chrono::milliseconds& timeout_ = {})
       : ev_task EV_TASK_INIT(exec,
-                             [](ev_task * task) noexcept {
+                             [](ev_task* task) noexcept {
                                (*static_cast<SdoRequestBase*>(task))();
                              }),
         idx(idx_),
@@ -229,48 +229,6 @@ class SdoUploadRequestBase : public SdoRequestBase {
 
   /// The value received from the SDO server.
   T value{};
-};
-
-template <class T>
-class SdoDownloadRequestWrapper : public SdoDownloadRequestBase<T> {
- public:
-  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
-                         ::std::error_code ec);
-
-  template <class U, class F>
-  SdoDownloadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                            U&& value, F&& con,
-                            const ::std::chrono::milliseconds& timeout)
-      : SdoDownloadRequestBase<T>(exec, idx, subidx, ::std::forward<U>(value),
-                                  timeout),
-        con_(::std::forward<F>(con)) {}
-
- private:
-  void operator()() noexcept final;
-
-  void OnRequest(void* data) noexcept final;
-
-  ::std::function<Signature> con_;
-};
-
-template <class T>
-class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
- public:
-  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
-                         ::std::error_code ec, T value);
-
-  template <class F>
-  SdoUploadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                          F&& con, const ::std::chrono::milliseconds& timeout)
-      : SdoUploadRequestBase<T>(exec, idx, subidx, timeout),
-        con_(::std::forward<F>(con)) {}
-
- private:
-  void operator()() noexcept final;
-
-  void OnRequest(void* data) noexcept final;
-
-  ::std::function<Signature> con_;
 };
 
 }  // namespace detail
@@ -345,6 +303,52 @@ class SdoUploadRequest : public detail::SdoUploadRequestBase<T> {
 
   ::std::function<Signature> con_;
 };
+
+namespace detail {
+
+template <class T>
+class SdoDownloadRequestWrapper : public SdoDownloadRequestBase<T> {
+ public:
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec);
+
+  template <class U, class F>
+  SdoDownloadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                            U&& value, F&& con,
+                            const ::std::chrono::milliseconds& timeout)
+      : SdoDownloadRequestBase<T>(exec, idx, subidx, ::std::forward<U>(value),
+                                  timeout),
+        con_(::std::forward<F>(con)) {}
+
+ private:
+  void operator()() noexcept final;
+
+  void OnRequest(void* data) noexcept final;
+
+  ::std::function<Signature> con_;
+};
+
+template <class T>
+class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
+ public:
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec, T value);
+
+  template <class F>
+  SdoUploadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+                          F&& con, const ::std::chrono::milliseconds& timeout)
+      : SdoUploadRequestBase<T>(exec, idx, subidx, timeout),
+        con_(::std::forward<F>(con)) {}
+
+ private:
+  void operator()() noexcept final;
+
+  void OnRequest(void* data) noexcept final;
+
+  ::std::function<Signature> con_;
+};
+
+}  // namespace detail
 
 /**
  * Creates an SDO download request with a completion task. The request deletes
@@ -494,16 +498,18 @@ class Sdo {
                                          ::std::forward<F>(con), timeout));
   }
 
-  /**
-   * Aborts an SDO download request.
-   *
-   * @param req the request to be aborted.
-   * @param ac  the SDO abort code in case of an ongoing request.
-   */
+  /// Cancels an SDO download request. @see Cancel()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
   CancelDownload(SdoDownloadRequest<T>& req, SdoErrc ac) {
-    Cancel(req, ac);
+    return Cancel(req, ac);
+  }
+
+  /// Aborts an SDO download request. @see Abort()
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  AbortDownload(SdoDownloadRequest<T>& req) {
+    return Abort(req);
   }
 
   /// Queues an SDO upload request.
@@ -535,26 +541,19 @@ class Sdo {
                                        ::std::forward<F>(con), timeout));
   }
 
-  /**
-   * Aborts an SDO upload request.
-   *
-   * @param req the request to be aborted.
-   * @param ac  the SDO abort code in case of an ongoing request.
-   */
+  /// Cancels an SDO upload request. @see Cancel()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
   CancelUpload(SdoUploadRequest<T>& req, SdoErrc ac) {
-    Cancel(req, ac);
+    return Cancel(req, ac);
   }
 
-  /**
-   * Aborts the ongoing and all pending SDO requests.
-   *
-   * @param ac the SDO abort code.
-   *
-   * @returns the number of canceled requests.
-   */
-  ::std::size_t Cancel(SdoErrc ac);
+  /// Aborts an SDO upload request. @see Abort()
+  template <class T>
+  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  AbortUpload(SdoUploadRequest<T>& req) {
+    return Abort(req);
+  }
 
   /**
    * Queues an asynchronous SDO download request and creates a future which
@@ -577,16 +576,17 @@ class Sdo {
   AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
                 const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<void> p;
-    SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
-                   [p](uint8_t id, uint16_t idx, uint8_t subidx,
-                       ::std::error_code ec) mutable {
-                     if (ec)
-                       p.set(util::failure(make_sdo_exception_ptr(
-                           id, idx, subidx, ec, "AsyncDownload")));
-                     else
-                       p.set(util::success());
-                   },
-                   timeout);
+    SubmitDownload(
+        exec, idx, subidx, ::std::forward<T>(value),
+        [p](uint8_t id, uint16_t idx, uint8_t subidx,
+            ::std::error_code ec) mutable {
+          if (ec)
+            p.set(util::failure(
+                make_sdo_exception_ptr(id, idx, subidx, ec, "AsyncDownload")));
+          else
+            p.set(util::success());
+        },
+        timeout);
     return p.get_future();
   }
 
@@ -611,23 +611,61 @@ class Sdo {
   AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
               const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<T> p;
-    SubmitUpload<T>(exec, idx, subidx,
-                    [p](uint8_t id, uint16_t idx, uint8_t subidx,
-                        ::std::error_code ec, T value) mutable {
-                      if (ec)
-                        p.set(util::failure(make_sdo_exception_ptr(
-                            id, idx, subidx, ec, "AsyncUpload")));
-                      else
-                        p.set(util::success(::std::move(value)));
-                    },
-                    timeout);
+    SubmitUpload<T>(
+        exec, idx, subidx,
+        [p](uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code ec,
+            T value) mutable {
+          if (ec)
+            p.set(util::failure(
+                make_sdo_exception_ptr(id, idx, subidx, ec, "AsyncUpload")));
+          else
+            p.set(util::success(::std::move(value)));
+        },
+        timeout);
     return p.get_future();
   }
 
- private:
+  /// Queues an LSS request.
   void Submit(detail::SdoRequestBase& req);
-  void Cancel(detail::SdoRequestBase& req, SdoErrc ac);
 
+  /**
+   * Cancels a pending SDO request.
+   *
+   * @param req the request to be aborted.
+   * @param ac  the SDO abort code.
+   *
+   * @returns true if the request was canceled, and false if it is ongoing or
+   * already completed.
+   */
+  bool Cancel(detail::SdoRequestBase& req, SdoErrc ac);
+
+  /**
+   * Cancels all pending SDO requests and stops the ongoing request, if any.
+   *
+   * @param ac the SDO abort code.
+   *
+   * @returns the number of canceled requests.
+   */
+  ::std::size_t CancelAll(SdoErrc ac);
+
+  /**
+   * Aborts a pending SDO request. The completion task is _not_ submitted for
+   * execution.
+   *
+   * @returns true if the request was aborted, and false if it is ongoing or
+   * already completed.
+   */
+  bool Abort(detail::SdoRequestBase& req);
+
+  /**
+   * Aborts all pending SDO requests. The completion tasks of aborted requests
+   * are _not_ submitted for execution.
+   *
+   * @returns the number of aborted requests.
+   */
+  ::std::size_t AbortAll();
+
+ private:
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };
