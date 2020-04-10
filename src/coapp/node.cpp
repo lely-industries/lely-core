@@ -30,6 +30,7 @@
 
 #include <lely/co/dev.hpp>
 #include <lely/co/emcy.hpp>
+#include <lely/co/lss.hpp>
 #include <lely/co/nmt.hpp>
 #include <lely/co/rpdo.hpp>
 #include <lely/co/sync.hpp>
@@ -61,6 +62,9 @@ struct Node::Impl_ {
   void OnEmcyInd(COEmcy* emcy, uint8_t id, uint16_t ec, uint8_t er,
                  uint8_t msef[5]) noexcept;
 
+  void OnRateInd(COLSS*, uint16_t rate, int delay) noexcept;
+  int OnStoreInd(COLSS*, uint8_t id, uint16_t rate) noexcept;
+
   void RpdoRtr(int num) noexcept;
 
   Node* self{nullptr};
@@ -82,6 +86,7 @@ struct Node::Impl_ {
   ::std::function<void(uint16_t, uint8_t)> on_sync_error;
   ::std::function<void(const ::std::chrono::system_clock::time_point&)> on_time;
   ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy;
+  ::std::function<void(int, ::std::chrono::milliseconds)> on_switch_bitrate;
 };
 
 Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
@@ -149,6 +154,39 @@ Node::CancelWait(io_tqueue_wait& wait) noexcept {
 bool
 Node::AbortWait(io_tqueue_wait& wait) noexcept {
   return io_tqueue_abort_wait(*this, &wait) != 0;
+}
+
+ev::Future<void, ::std::exception_ptr>
+Node::AsyncSwitchBitrate(io::CanControllerBase& ctrl, int bitrate,
+                         ::std::chrono::milliseconds delay) {
+  // Stop transmitting CAN frames.
+  ctrl.stop();
+  return AsyncWait(GetExecutor(), delay)
+      .then(GetExecutor(),
+            [this, delay](ev::Future<void, ::std::exception_ptr> f) {
+              // Propagate the exception, if any.
+              f.get().value();
+              // Wait for the delay period before switching the bitrate.
+              return AsyncWait(GetExecutor(), delay);
+            })
+      .then(GetExecutor(),
+            [this, &ctrl, bitrate,
+             delay](ev::Future<void, ::std::exception_ptr> f) {
+              // Propagate the exception, if any.
+              f.get().value();
+              // Activate the new bitrate.
+              ctrl.set_bitrate(bitrate);
+              // Wait for the delay period before resuming CAN frame
+              // transmission.
+              return AsyncWait(GetExecutor(), delay);
+            })
+      .then(GetExecutor(),
+            [this, &ctrl](ev::Future<void, ::std::exception_ptr> f) {
+              // Propagate the exception, if any.
+              f.get().value();
+              // Resume CAN frame transmission.
+              ctrl.restart();
+            });
 }
 
 void
@@ -263,6 +301,13 @@ Node::OnEmcy(
 }
 
 void
+Node::OnSwitchBitrate(
+    ::std::function<void(int, ::std::chrono::milliseconds)> on_switch_bitrate) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_switch_bitrate = on_switch_bitrate;
+}
+
+void
 Node::TpdoEventMutex::lock() {
   node->impl_->nmt->onTPDOEventLock();
 }
@@ -340,6 +385,11 @@ Node::on_can_error(io::CanError error) noexcept {
   }
 }
 
+void
+Node::OnStore(uint8_t, int) {
+  util::throw_error_code("OnStore", ::std::errc::operation_not_supported);
+}
+
 Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
     : self(self_), nmt(make_unique_c<CONMT>(net, dev)) {
   nmt->setCsInd<Impl_, &Impl_::OnCsInd>(this);
@@ -351,6 +401,14 @@ Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
 
 void
 Node::Impl_::OnCsInd(CONMT* nmt, uint8_t cs) noexcept {
+  if (cs == CO_NMT_CS_RESET_COMM) {
+    auto lss = nmt->getLSS();
+    if (lss) {
+      lss->setRateInd<Impl_, &Impl_::OnRateInd>(this);
+      lss->setStoreInd<Impl_, &Impl_::OnStoreInd>(this);
+    }
+  }
+
   if (cs == CO_NMT_CS_START || cs == CO_NMT_CS_ENTER_PREOP) {
     auto sync = nmt->getSync();
     if (sync) sync->setErr<Impl_, &Impl_::OnSyncErr>(this);
@@ -504,6 +562,27 @@ Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
     auto f = on_emcy;
     util::UnlockGuard<util::BasicLockable> unlock(*self);
     f(id, ec, er, msef);
+  }
+}
+
+void
+Node::Impl_::OnRateInd(COLSS*, uint16_t rate, int delay) noexcept {
+  self->OnSwitchBitrate(rate * 1000, ::std::chrono::milliseconds(delay));
+
+  if (on_switch_bitrate) {
+    auto f = on_switch_bitrate;
+    util::UnlockGuard<util::BasicLockable> unlock(*self);
+    f(rate * 1000, ::std::chrono::milliseconds(delay));
+  }
+}
+
+int
+Node::Impl_::OnStoreInd(COLSS*, uint8_t id, uint16_t rate) noexcept {
+  try {
+    self->OnStore(id, rate * 1000);
+    return 0;
+  } catch (...) {
+    return -1;
   }
 }
 

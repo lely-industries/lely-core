@@ -281,6 +281,27 @@ class Node : public io::CanNet, public Device {
   bool AbortWait(io_tqueue_wait& wait) noexcept;
 
   /**
+   * Stops the specified CAN controller and submits asynchronous operations to
+   * wait for the delay period, set the new bit rate, wait for the delay period
+   * again, and restart the CAN controller.
+   *
+   * This function can be used to implement the
+   * OnSwitchBitrate(int, ::std::chrono::milliseconds) callback in accordance
+   * with CiA 305.
+   *
+   * @param ctrl    a CAN controller.
+   * @param bitrate the new bit rate (in bit/s).
+   * @param delay   the delay before and after the switch, during which the CAN
+   *                controller is stopped.
+   *
+   * @returns a future which becomes ready once the CAN controller is restarted
+   * or an error occurs.
+   */
+  ev::Future<void, ::std::exception_ptr> AsyncSwitchBitrate(
+      io::CanControllerBase& ctrl, int bitrate,
+      ::std::chrono::milliseconds delay);
+
+  /**
    * Registers the function to be invoked when a CAN bus state change is
    * detected. Only a single function can be registered at any one time. If
    * <b>on_can_state</b> contains a callable function target, a copy of the
@@ -420,6 +441,16 @@ class Node : public io::CanNet, public Device {
    */
   void OnEmcy(
       ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy);
+
+  /**
+   * Registers the function to be invoked when the LSS master activates the bit
+   * rate of all CANopen devices in the network. Only a single function can be
+   * registered at any one time. If <b>on_switch_bitrate</b> contains a callable
+   * function target, a copy of the target is invoked _after_
+   * OnSwitchBitrate(int, ::std::chrono::milliseconds) completes.
+   */
+  void OnSwitchBitrate(::std::function<void(int, ::std::chrono::milliseconds)>
+                           on_switch_bitrate);
 
  protected:
   /**
@@ -698,6 +729,34 @@ class Node : public io::CanNet, public Device {
     (void)er;
     (void)msef;
   }
+
+  /**
+   * The function invoked when the LSS master activates the bit rate of all
+   * CANopen devices in the network.
+   *
+   * @param bitrate the new bit rate (in bit/s).
+   * @param delay   the delay before and after the switch, during which CAN
+   *                frames MUST NOT be sent.
+   */
+  virtual void
+  OnSwitchBitrate(int bitrate, ::std::chrono::milliseconds delay) noexcept {
+    (void)bitrate;
+    (void)delay;
+  }
+
+  /**
+   * The function invoked then a request is received from the LSS master to
+   * store the pending node-ID and bit rate to non-volatile memory. If this
+   * function throws an exception, an error is reported to the master.
+   *
+   * The default implementation throws std::system_error (containing the
+   * std::errc::operation_not_supported error code).
+   *
+   * @param id      the pending node-ID to be stored.
+   * @param bitrate the pending bit rate (in bit/s) to be stored.
+   */
+  virtual void OnStore(uint8_t id, int bitrate);
+
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
