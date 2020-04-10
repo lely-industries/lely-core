@@ -501,11 +501,12 @@ int co_lss_slowscan_req(co_lss_t *lss, const struct co_id *lo,
  *
  * @param lss  a pointer to an LSS master service.
  * @param id   a pointer a struct containing the bits of the LSS address that
- *             already known and can be skipped during scanning (can be NULL).
+ *             are already known and can be skipped during scanning (can be
+ *             NULL).
  * @param mask a pointer to a struct containing the mask specifying which bits
  *             in *<b>id</b> are already known (can be NULL). If a bit in
- *            *<b>mask</b> is 1, the corresponding bit in *<b>id</b> is _not_
- *            checked.
+ *             *<b>mask</b> is 1, the corresponding bit in *<b>id</b> is _not_
+ *             checked.
  * @param ind  a pointer to the indication function (can be NULL).
  * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
  *             passed as the last parameter to <b>ind</b>.
