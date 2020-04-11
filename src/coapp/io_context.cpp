@@ -179,6 +179,7 @@ IoContext::SubmitWait(const duration& d, io_tqueue_wait& wait) {
 ev::Future<void, ::std::exception_ptr>
 IoContext::AsyncWait(ev_exec_t* exec, const time_point& t,
                      io_tqueue_wait** pwait) {
+  if (!exec) exec = GetExecutor();
   return impl_->tq.async_wait(exec, t, pwait)
       .then(exec, [](ev::Future<void, int> f) {
         // Convert the error code into an exception pointer.
@@ -190,6 +191,7 @@ IoContext::AsyncWait(ev_exec_t* exec, const time_point& t,
 ev::Future<void, ::std::exception_ptr>
 IoContext::AsyncWait(ev_exec_t* exec, const duration& d,
                      io_tqueue_wait** pwait) {
+  if (!exec) exec = GetExecutor();
   return impl_->tq.async_wait(exec, d, pwait)
       .then(exec, [](ev::Future<void, int> f) {
         // Convert the error code into an exception pointer.

@@ -955,6 +955,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SdoFuture<T>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
+    if (!exec) exec = GetExecutor();
+
     ::std::lock_guard<BasicLockable> lock(*this);
 
     auto sdo = GetSdo(id);
@@ -1000,6 +1002,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SdoFuture<void>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value, const ::std::chrono::milliseconds& timeout) {
+    if (!exec) exec = GetExecutor();
+
     ::std::lock_guard<BasicLockable> lock(*this);
 
     auto sdo = GetSdo(id);
