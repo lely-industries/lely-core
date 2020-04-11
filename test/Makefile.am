@@ -213,6 +213,12 @@ test_coapp_fiber_SOURCES = test.h coapp-fiber.cpp
 test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
 endif
 
+if !NO_CXX
+bin += test-coapp-lss
+test_coapp_lss_SOURCES = test.h coapp-lss.cpp
+test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
+endif
+
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini
 EXTRA_DIST += co-emcy.dcf
@@ -229,6 +235,8 @@ EXTRA_DIST += co-sync.dcf
 EXTRA_DIST += co-time.dcf
 EXTRA_DIST += coapp-fiber-master.dcf
 EXTRA_DIST += coapp-fiber-slave.dcf
+EXTRA_DIST += coapp-lss-master.dcf
+EXTRA_DIST += coapp-lss-slave.dcf
 
 BUILT_SOURCES =
 if !NO_TOOLS
