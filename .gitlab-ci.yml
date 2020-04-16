@@ -327,6 +327,7 @@ valgrind:
     - make
     - make check-valgrind-memcheck
   artifacts:
+    when: on_failure
     paths:
       - test/test-*.log
     expire_in: 1 week
