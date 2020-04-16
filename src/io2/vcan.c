@@ -725,6 +725,8 @@ io_vcan_ctrl_set_bitrate(io_can_ctrl_t *ctrl, int nominal, int data)
 #if !LELY_NO_CANFD
 	if (vcan->flags & IO_CAN_BUS_FLAG_BRS)
 		vcan->data = data;
+#else
+	(void)data;
 #endif
 #if !LELY_NO_THREADS
 	mtx_unlock(&vcan->mtx);
