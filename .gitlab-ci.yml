@@ -1,37 +1,40 @@
 variables:
   GIT_STRATEGY: clone
+  REGISTRY: $CI_REGISTRY_IMAGE
 
 cache:
   key: none
   paths: []
   policy: pull
 
-.gcc-deps: &gcc-deps
+stages:
+  - docker
+  - build
+  - test
+  - deploy
+
+.docker: &docker
+  stage: docker
   tags:
     - docker
     - linux
+  image: docker:stable
+  services:
+    - docker:dind
   before_script:
-    - apt-get update -q || true
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
-    - apt-get install -qy --no-install-recommends
-        cython
-        libpython-dev
-        python
-        python-setuptools
-        python-wheel
-    - apt-get install -qy --no-install-recommends
-        cython3
-        libpython3-dev
-        python3
-        python3-setuptools
-        python3-wheel
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker build
+        --build-arg REGISTRY=$REGISTRY
+        -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/$NAME/$TAG
+    - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
+  when: manual
 
 .build: &build
   stage: build
+  tags:
+    - docker
+    - linux
   script:
     - autoreconf -i
     - ./configure $CONFIGURE_OPTIONS
@@ -41,233 +44,242 @@ cache:
 
 .test: &test
   stage: test
+  tags:
+    - docker
+    - linux
   script:
     - touch aclocal.m4 configure config.status Makefile.in
     - make -t
     - make check
 
+.docker-gcc: &docker-gcc
+  <<: *docker
+  script:
+    - docker build
+        --build-arg __GNUC__=$__GNUC__
+        -t $CI_REGISTRY_IMAGE/gcc:$__GNUC__ docker/gcc
+    - docker push $CI_REGISTRY_IMAGE/gcc:$__GNUC__
+
+docker-gcc:4:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 4
+
 build:gcc:4:
-  image: gcc:4
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:4
   <<: *build
 
 test:gcc:4:
-  image: gcc:4
+  image: $REGISTRY/gcc:4
   dependencies:
     - build:gcc:4
-  <<: *gcc-deps
   <<: *test
 
+docker-gcc:5:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 5
+
 build:gcc:5:
-  image: gcc:5
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:5
   <<: *build
 
 test:gcc:5:
-  image: gcc:5
+  image: $REGISTRY/gcc:5
   dependencies:
     - build:gcc:5
-  <<: *gcc-deps
   <<: *test
 
+docker-gcc:6:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 6
+
 build:gcc:6:
-  image: gcc:6
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:6
   <<: *build
 
 test:gcc:6:
-  image: gcc:6
+  image: $REGISTRY/gcc:6
   dependencies:
     - build:gcc:6
-  <<: *gcc-deps
   <<: *test
 
+docker-gcc:7:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 7
+
 build:gcc:7:
-  image: gcc:7
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:7
   <<: *build
 
 test:gcc:7:
-  image: gcc:7
+  image: $REGISTRY/gcc:7
   dependencies:
     - build:gcc:7
-  <<: *gcc-deps
   <<: *test
 
+docker-gcc:8:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 8
+
 build:gcc:8:
-  image: gcc:8
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:8
   <<: *build
 
 test:gcc:8:
-  image: gcc:8
+  image: $REGISTRY/gcc:8
   dependencies:
     - build:gcc:8
-  <<: *gcc-deps
   <<: *test
 
+docker-gcc:9:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 9
+
 build:gcc:9:
-  image: gcc:9
-  <<: *gcc-deps
+  image: $REGISTRY/gcc:9
   <<: *build
 
 test:gcc:9:
-  image: gcc:9
+  image: $REGISTRY/gcc:9
   dependencies:
     - build:gcc:9
-  <<: *gcc-deps
   <<: *test
 
-.mingw-deps: &mingw-deps
-  tags:
-    - docker
-    - linux
-  image: debian:bullseye
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        apt-transport-https
-        build-essential
-        curl
-        gnupg
-        software-properties-common
-    - apt-get install -qy --no-install-recommends
-        mingw-w64
-    - curl -L https://dl.winehq.org/wine-builds/winehq.key | apt-key add -
-    - apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main'
-    - dpkg --add-architecture i386
-    - apt-get update -q
-    - apt-get upgrade -qy
-    - apt-get install -qy
-        winehq-stable
-    - wineboot -i
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
+.docker-mingw-w64: &docker-mingw-w64
+  <<: *docker
+  script:
+    - docker build
+        --build-arg ARCH=$ARCH
+        -t $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG docker/mingw-w64/$TAG
+    - docker push $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG
+
+docker:i686-w64-mingw32:
+  <<: *docker-mingw-w64
+  variables:
+    ARCH: i686
+    TAG: bullseye
 
 build:i686-w64-mingw32:
-  <<: *mingw-deps
+  image: $REGISTRY/i686-w64-mingw32:bullseye
   <<: *build
   variables:
     CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
-    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\9.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
 
 test:i686-w64-mingw32:
+  image: $REGISTRY/i686-w64-mingw32:bullseye
   dependencies:
     - build:i686-w64-mingw32
-  <<: *mingw-deps
   <<: *test
+
+docker:x86_64-w64-mingw32:
+  <<: *docker-mingw-w64
   variables:
-    WINEPATH: Z:\\usr\\lib\\gcc\\i686-w64-mingw32\\9.3-posix\;Z:\\usr\\i686-w64-mingw32\\lib
+    ARCH: x86_64
+    TAG: bullseye
 
 build:x86_64-w64-mingw32:
-  <<: *mingw-deps
+  image: $REGISTRY/x86_64-w64-mingw32:bullseye
   <<: *build
   variables:
     CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
-    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\9.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
 
 test:x86_64-w64-mingw32:
+  image: $REGISTRY/x86_64-w64-mingw32:bullseye
   dependencies:
     - build:x86_64-w64-mingw32
-  <<: *mingw-deps
   <<: *test
-  variables:
-    WINEPATH: Z:\\usr\\lib\\gcc\\x86_64-w64-mingw32\\9.3-posix\;Z:\\usr\\x86_64-w64-mingw32\\lib
 
-.cross-deps: &cross-deps
-  tags:
-    - docker
-    - linux
-  image: debian:testing
-  before_script:
-    - dpkg --add-architecture $ARCH
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        crossbuild-essential-$ARCH
-    - apt-get install -qy --no-install-recommends
-        libstdc++-9-dev:$ARCH
-        qemu-user-static
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev:$ARCH
+.docker-crossbuild: &docker-crossbuild
+  <<: *docker
+  script:
+    - docker build
+        --build-arg ARCH=$ARCH
+        -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/crossbuild/$TAG
+    - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
+
+docker:arm-linux-gnueabihf:
+  <<: *docker-crossbuild
+  variables:
+    ARCH: armhf
+    NAME: arm-linux-gnueabihf
+    TAG: bullseye
 
 build:arm-linux-gnueabihf:
-  <<: *cross-deps
+  image: $REGISTRY/arm-linux-gnueabihf:bullseye
   <<: *build
   variables:
     ARCH: armhf
     CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python
-  allow_failure: true
 
 test:arm-linux-gnueabihf:
+  image: $REGISTRY/arm-linux-gnueabihf:bullseye
   dependencies:
     - build:arm-linux-gnueabihf
-  <<: *cross-deps
   <<: *test
   variables:
     ARCH: armhf
-  allow_failure: true
+
+docker:aarch64-linux-gnu:
+  <<: *docker-crossbuild
+  variables:
+    ARCH: arm64
+    NAME: aarch64-linux-gnu
+    TAG: bullseye
 
 build:aarch64-linux-gnu:
-  <<: *cross-deps
+  image: $REGISTRY/aarch64-linux-gnu:bullseye
   <<: *build
   variables:
     ARCH: arm64
     CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python
-  allow_failure: true
 
 test:aarch64-linux-gnu:
+  image: $REGISTRY/aarch64-linux-gnu:bullseye
   dependencies:
     - build:aarch64-linux-gnu
-  <<: *cross-deps
   <<: *test
   variables:
     ARCH: arm64
-  allow_failure: true
+
+docker:arm-none-eabi:
+  <<: *docker
+  variables:
+    NAME: arm-none-eabi
+    TAG: bullseye
 
 build:arm-none-eabi:
+  image: $REGISTRY/arm-none-eabi:bullseye
   <<: *build
-  tags:
-    - docker
-    - linux
-  image: debian:stable
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        gcc-arm-none-eabi
-        libstdc++-arm-none-eabi-newlib
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
   variables:
     CFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-python --disable-threads --disable-daemon
     CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
+docker:build:
+  <<: *docker
+  variables:
+    NAME: build
+    TAG: bullseye
+
+docker:doc:
+  <<: *docker
+  variables:
+    NAME: doc
+    TAG: bullseye
+
 doc:
   stage: build
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/doc:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
-    - apt-get install -qy --no-install-recommends
-        doxygen
-        graphviz
   script:
     - autoreconf -i
     - ./configure
@@ -277,43 +289,38 @@ doc:
       - doc/
     expire_in: 1 week
 
+docker:cpplint:
+  <<: *docker
+  variables:
+    NAME: cpplint
+    TAG: bullseye
+
 cpplint:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        ca-certificates
-        git
-        python
-    - git clone https://github.com/google/styleguide.git
+  image: $REGISTRY/cpplint:bullseye
   script:
-    - styleguide/cpplint/cpplint.py
+    - cpplint.py
         --quiet
         --extensions=cpp
         $(find include -name *.hpp)
         $(find src -name *.cpp)
+
+docker:valgrind:
+  <<: *docker
+  variables:
+    NAME: valgrind
+    TAG: bullseye
 
 valgrind:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/valgrind:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        valgrind
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
   script:
     - autoreconf -i
     - ./configure --disable-python
@@ -324,26 +331,19 @@ valgrind:
       - test/test-*.log
     expire_in: 1 week
 
+docker:lcov:
+  <<: *docker
+  variables:
+    NAME: lcov
+    TAG: bullseye
+
 lcov:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/lcov:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
-    - apt-get install -qy --no-install-recommends
-        doxygen
-        graphviz
-        lcov
   script:
     - autoreconf -i
     - ./configure --enable-code-coverage --disable-shared
@@ -355,23 +355,19 @@ lcov:
       - coverage/
     expire_in: 1 week
 
+docker:scan-build:
+  <<: *docker
+  variables:
+    NAME: scan-build
+    TAG: bullseye
+
 scan-build:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/scan-build:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        clang-tools
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
   script:
     - autoreconf -i
     - scan-build ./configure --disable-python
@@ -381,23 +377,19 @@ scan-build:
       - scan-build/
     expire_in: 1 week
 
-cppcheck:linux:
+docker:cppcheck-unix64:
+  <<: *docker
+  variables:
+    NAME: cppcheck-unix64
+    TAG: bullseye
+
+cppcheck-unix64:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/cppcheck-unix64:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        cppcheck
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
   script:
     - autoreconf -i
     - ./configure --disable-python
@@ -414,22 +406,19 @@ cppcheck:linux:
         --suppressions-list=suppressions.txt
         include src
 
-cppcheck:mingw32:
+docker:cppcheck-win64:
+  <<: *docker
+  variables:
+    NAME: cppcheck-win64
+    TAG: bullseye
+
+cppcheck-win64:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/cppcheck-unix64:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        cppcheck
-        mingw-w64
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
@@ -448,40 +437,27 @@ cppcheck:mingw32:
         include src
   when: manual
 
+docker:coverity:
+  <<: *docker
+  script:
+    - docker build
+        --build-arg REGISTRY=$REGISTRY
+        --build-arg COVERITY_PROJECT=$COVERITY_PROJECT
+        --build-arg COVERITY_TOKEN=$COVERITY_TOKEN
+        -t $CI_REGISTRY_IMAGE/coverity:bullseye docker/coverity/bullseye
+    - docker push $CI_REGISTRY_IMAGE/coverity:bullseye
+
 coverity:
   stage: test
   tags:
     - docker
     - linux
-  image: debian:testing
+  image: $REGISTRY/coverity:bullseye
   dependencies: []
-  before_script:
-    - apt-get update -q
-    - apt-get install -qy --no-install-recommends
-        build-essential
-        ca-certificates
-        curl
-        git
-        wget
-    - apt-get install -qy --no-install-recommends
-        automake
-        libtool
-    - apt-get install -qy --no-install-recommends
-        libbluetooth-dev
-    - wget https://scan.coverity.com/download/linux64
-        --post-data "token=$COVERITY_TOKEN&project=$COVERITY_PROJECT"
-        -O coverity_tool.tgz
-    - wget https://scan.coverity.com/download/linux64
-        --post-data "token=$COVERITY_TOKEN&project=$COVERITY_PROJECT&md5=1"
-        -O coverity_tool.md5
-    - echo " coverity_tool.tgz" >> coverity_tool.md5
-    - md5sum -c coverity_tool.md5
-    - mkdir coverity_tool
-    - tar xf coverity_tool.tgz -C coverity_tool --strip-components 1
   script:
     - autoreconf -i
     - ./configure --disable-python
-    - coverity_tool/bin/cov-build --dir cov-int make check
+    - cov-build --dir cov-int make check
   after_script:
     - tar caf $CI_PROJECT_NAME.xz cov-int
     - curl --form token=$COVERITY_TOKEN
