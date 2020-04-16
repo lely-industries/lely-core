@@ -46,13 +46,13 @@ enum {
 	 * format frames). If this flag is set, the frame has no payload.
 	 */
 	CAN_FLAG_RTR = 1u << 1,
-#if !LELY_NO_CANFD
 	/**
 	 * The FD Format (FDF) flag, formerly known as Extended Data Length
 	 * (EDL). This flag is set for CAN FD format frames.
 	 */
 	CAN_FLAG_FDF = 1u << 2,
 	CAN_FLAG_EDL = CAN_FLAG_FDF,
+#if !LELY_NO_CANFD
 	/**
 	 * The Bit Rate Switch (BRS) flag (only available in CAN FD format
 	 * frames). If this flag is set, the bit rate is switched from the
