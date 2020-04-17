@@ -63,7 +63,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 {
 	assert(msg);
 
-#if LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	if (msg->flags & CAN_FLAG_FDF) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;

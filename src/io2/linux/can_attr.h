@@ -124,17 +124,17 @@ io_can_attr_parse(struct nlmsghdr *nlh, size_t len, void *arg)
 		return -1;
 	}
 
+#if !LELY_NO_CANFD
 	struct rtattr *mtu =
 			rta_find(IFLA_RTA(ifi), IFLA_PAYLOAD(nlh), IFLA_MTU);
 	if (mtu && RTA_PAYLOAD(mtu) >= sizeof(unsigned int)) {
-#if !LELY_NO_CANFD
 		unsigned int *data = RTA_DATA(mtu);
 		if (*data == CANFD_MTU)
 			attr->flags |= IO_CAN_BUS_FLAG_FDF;
 		else
 			attr->flags &= ~IO_CAN_BUS_FLAG_FDF;
-#endif
 	}
+#endif
 
 	struct rtattr *linkinfo = rta_find(
 			IFLA_RTA(ifi), IFLA_PAYLOAD(nlh), IFLA_LINKINFO);
