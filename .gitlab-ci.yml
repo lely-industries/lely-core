@@ -374,6 +374,7 @@ scan-build:
     - scan-build ./configure --disable-python
     - scan-build --keep-cc -o ./scan-build make check
   artifacts:
+    when: on_failure
     paths:
       - scan-build/
     expire_in: 1 week
