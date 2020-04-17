@@ -25,6 +25,8 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 #include <lely/libc/string.h>
+// This include is required for <inttypes.h> when using Newlib.
+#include <lely/libc/sys/types.h>
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
