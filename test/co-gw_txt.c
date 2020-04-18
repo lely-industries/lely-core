@@ -1,12 +1,7 @@
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include "co-test.h"
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
-
-#include "co-test.h"
 
 #define TEST_WAIT 1
 #define TEST_STEP 20

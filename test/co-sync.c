@@ -1,8 +1,7 @@
+#include "co-test.h"
 #include <lely/co/dcf.h>
 #include <lely/co/obj.h>
 #include <lely/co/sync.h>
-
-#include "co-test.h"
 
 #define NUM_TEST 8
 
