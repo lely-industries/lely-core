@@ -1,9 +1,8 @@
+#include "co-test.h"
 #include <lely/co/csdo.h>
 #include <lely/co/dcf.h>
 #include <lely/co/ssdo.h>
 #include <lely/co/val.h>
-
-#include "co-test.h"
 
 // A value small enough for a single CAN frame.
 #define EXP_VALUE "42"

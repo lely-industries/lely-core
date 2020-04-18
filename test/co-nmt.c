@@ -1,7 +1,4 @@
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include "co-test.h"
 #include <lely/co/dcf.h>
 #ifndef LELY_NO_CO_LSS
 #include <lely/co/lss.h>
@@ -10,8 +7,6 @@
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
-
-#include "co-test.h"
 
 #define NMT_TIMEOUT 1000
 
