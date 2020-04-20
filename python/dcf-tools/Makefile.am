@@ -1,6 +1,7 @@
 src =
 
 src += dcf/__init__.py
+src += dcf/cli.py
 src += dcf/device.py
 src += dcf/lint.py
 src += dcf/parse.py
