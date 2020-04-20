@@ -7,6 +7,10 @@ src += dcf/lint.py
 src += dcf/parse.py
 src += dcf/print.py
 
+src += dcfgen/data/master.dcf.em
+src += dcfgen/__init__.py
+src += dcfgen/cli.py
+
 EXTRA_DIST = $(src)
 EXTRA_DIST += setup.py
 
