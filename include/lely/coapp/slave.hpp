@@ -28,6 +28,8 @@
 #include <string>
 #include <utility>
 
+#include <cstddef>
+
 namespace lely {
 
 namespace canopen {
@@ -631,7 +633,7 @@ class BasicSlave : public Node {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](uint16_t idx) noexcept { return Object(this, idx); }
+  Object operator[](::std::ptrdiff_t idx) noexcept { return Object(this, idx); }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -643,7 +645,7 @@ class BasicSlave : public Node {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](uint16_t idx) const noexcept {
+  ConstObject operator[](::std::ptrdiff_t idx) const noexcept {
     return ConstObject(this, idx);
   }
 

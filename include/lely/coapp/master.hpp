@@ -30,6 +30,8 @@
 #include <string>
 #include <utility>
 
+#include <cstddef>
+
 namespace lely {
 
 namespace canopen {
@@ -579,7 +581,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](uint16_t idx) noexcept { return Object(this, idx); }
+  Object operator[](::std::ptrdiff_t idx) noexcept { return Object(this, idx); }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -591,7 +593,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](uint16_t idx) const noexcept {
+  ConstObject operator[](::std::ptrdiff_t idx) const noexcept {
     return ConstObject(this, idx);
   }
 
@@ -1069,7 +1071,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /**
    * The default implementation notifies all registered drivers.
    *
-   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   * @see Node::OnCanError(), DriverBase::OnCanError()
    */
   void OnCanError(io::CanError error) noexcept override;
 
@@ -1077,7 +1079,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * notifies each registered driver.
    *
-   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   * @see Node::OnCanState(), DriverBase::OnCanState()
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
@@ -1268,7 +1270,7 @@ class AsyncMaster : public BasicMaster {
    * The default implementation queues a notification for all registered
    * drivers.
    *
-   * @see IoContext::OnCanError(), DriverBase::OnCanError()
+   * @see Node::OnCanError(), DriverBase::OnCanError()
    */
   void OnCanError(io::CanError error) noexcept override;
 
@@ -1276,7 +1278,7 @@ class AsyncMaster : public BasicMaster {
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * queues a notification for each registered driver.
    *
-   * @see IoContext::OnCanState(), DriverBase::OnCanState()
+   * @see Node::OnCanState(), DriverBase::OnCanState()
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;

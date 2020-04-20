@@ -42,6 +42,7 @@ src += win32/timer.c
 endif
 src += can.c
 src += can.h
+src += can_net.c
 src += can_rt.c
 src += clock.c
 src += ctx.c
@@ -75,6 +76,7 @@ liblely_io2_la_LDFLAGS += -Wl,--as-needed
 liblely_io2_la_LIBADD =
 liblely_io2_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
+liblely_io2_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/ev/liblely-ev.la
 liblely_io2_la_LIBADD += $(RT_LIBS)
 if CODE_COVERAGE_ENABLED
