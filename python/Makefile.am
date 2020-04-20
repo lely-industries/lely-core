@@ -1,1 +1,1 @@
-SUBDIRS = can io
+SUBDIRS = can io dcf-tools

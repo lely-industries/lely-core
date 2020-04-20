@@ -504,6 +504,7 @@ AC_CONFIG_FILES([
 	pkgconfig/liblely-util.pc
 	pkgconfig/Makefile
 	python/can/Makefile
+	python/dcf-tools/Makefile
 	python/io/Makefile
 	python/Makefile
 	src/can/Makefile
