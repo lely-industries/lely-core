@@ -70,10 +70,10 @@ BasicMaster::TpdoEventMutex::unlock() {
   Node::TpdoEventMutex::unlock();
 }
 
-BasicMaster::BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
-                         const ::std::string& dcf_txt,
+BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
+                         io::CanChannelBase& chan, const ::std::string& dcf_txt,
                          const ::std::string& dcf_bin, uint8_t id)
-    : Node(timer, chan, dcf_txt, dcf_bin, id),
+    : Node(exec, timer, chan, dcf_txt, dcf_bin, id),
       tpdo_event_mutex(*this),
       impl_(new Impl_(this, Node::nmt())) {}
 
@@ -92,8 +92,7 @@ BasicMaster::AsyncDeconfig(uint8_t id) {
   {
     ::std::lock_guard<util::BasicLockable> lock(*this);
     auto it = find(id);
-    if (it != end())
-      return impl_->AsyncDeconfig(it->second);
+    if (it != end()) return impl_->AsyncDeconfig(it->second);
   }
   return ev::make_empty_future();
 }
@@ -104,8 +103,7 @@ BasicMaster::AsyncDeconfig() {
   ::std::size_t n = 0;
   {
     ::std::lock_guard<util::BasicLockable> lock(*this);
-    for (const auto& it : *this)
-      futures[n++] = impl_->AsyncDeconfig(it.second);
+    for (const auto& it : *this) futures[n++] = impl_->AsyncDeconfig(it.second);
   }
   // Create a temporary array of pointers, since ev::Future is not guaranteed to
   // be the same size as ev_future_t*.

@@ -75,10 +75,10 @@ struct BasicSlave::Impl_ {
   ::std::function<void(bool)> on_life_guarding;
 };
 
-BasicSlave::BasicSlave(io::TimerBase& timer, io::CanChannelBase& chan,
-                       const ::std::string& dcf_txt,
+BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
+                       io::CanChannelBase& chan, const ::std::string& dcf_txt,
                        const ::std::string& dcf_bin, uint8_t id)
-    : Node(timer, chan, dcf_txt, dcf_bin, id),
+    : Node(exec, timer, chan, dcf_txt, dcf_bin, id),
       impl_(new Impl_(this, Node::nmt())) {}
 
 BasicSlave::~BasicSlave() = default;

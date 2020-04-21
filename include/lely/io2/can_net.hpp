@@ -38,9 +38,9 @@ namespace io {
 class CanNet : protected util::BasicLockable {
  public:
   /// @see io_can_net_create()
-  explicit CanNet(io_timer_t* timer, io_can_chan_t* chan,
+  explicit CanNet(ev_exec_t* exec, io_timer_t* timer, io_can_chan_t* chan,
                   ::std::size_t txlen = 0, int txtimeo = 0)
-      : net_(io_can_net_create(timer, chan, txlen, txtimeo)) {
+      : net_(io_can_net_create(exec, timer, chan, txlen, txtimeo)) {
     io_can_net_get_on_read_error_func(*this, &on_read_error_func_,
                                       &on_read_error_arg_);
     io_can_net_set_on_read_error_func(*this, &CanNet::on_read_error_, this);
@@ -57,6 +57,11 @@ class CanNet : protected util::BasicLockable {
                                      &on_can_error_arg_);
     io_can_net_set_on_can_error_func(*this, &CanNet::on_can_error_, this);
   }
+
+  /// @see io_can_net_create()
+  explicit CanNet(io_timer_t* timer, io_can_chan_t* chan,
+                  ::std::size_t txlen = 0, int txtimeo = 0)
+      : CanNet(nullptr, timer, chan, txlen, txtimeo) {}
 
   CanNet(const CanNet&) = delete;
   CanNet& operator=(const CanNet&) = delete;

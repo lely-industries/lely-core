@@ -553,6 +553,9 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * 'Initialisation' state and does not yet create any services or perform any
    * communication. Call #Reset() to start the boot-up process.
    *
+   * @param exec    the executor used to process I/O and CANopen events. If
+   *                <b>exec</b> is a null pointer, the CAN channel executor is
+   *                used.
    * @param timer   the timer used for CANopen events. This timer MUST NOT be
    *                used for any other purpose.
    * @param chan    a CAN channel. This channel MUST NOT be used for any other
@@ -565,9 +568,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @param id      the node-ID (in the range [1..127, 255]). If <b>id</b> is
    *                255 (unconfigured), the node-ID is obtained from the DCF.
    */
-  BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
-              const ::std::string& dcf_txt, const ::std::string& dcf_bin = "",
-              uint8_t id = 0xff);
+  explicit BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
+                       io::CanChannelBase& chan, const ::std::string& dcf_txt,
+                       const ::std::string& dcf_bin = "", uint8_t id = 0xff);
+
+  /// Creates a new CANopen master.
+  explicit BasicMaster(io::TimerBase& timer, io::CanChannelBase& chan,
+                       const ::std::string& dcf_txt,
+                       const ::std::string& dcf_bin = "", uint8_t id = 0xff)
+      : BasicMaster(nullptr, timer, chan, dcf_txt, dcf_bin, id) {}
 
   virtual ~BasicMaster();
 

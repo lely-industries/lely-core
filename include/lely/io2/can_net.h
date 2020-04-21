@@ -96,15 +96,18 @@ typedef void io_can_net_on_can_error_func_t(int error, void *arg);
 
 void *io_can_net_alloc(void);
 void io_can_net_free(void *ptr);
-io_can_net_t *io_can_net_init(io_can_net_t *net, io_timer_t *timer,
-		io_can_chan_t *chan, size_t txlen, int txtimeo);
+io_can_net_t *io_can_net_init(io_can_net_t *net, ev_exec_t *exec,
+		io_timer_t *timer, io_can_chan_t *chan, size_t txlen,
+		int txtimeo);
 void io_can_net_fini(io_can_net_t *net);
 
 /**
  * Creates a new CAN network interface.
  *
- * @param timer   a pointer a timer. This timer MUST NOT be used for any other
- *                purpose.
+ * @param exec    a pointer to the executor used to execute asynchronous tasks.
+ *                If <b>exec</b> is NULL, the CAN channel executor is used.
+ * @param timer   a pointer to a timer. This timer MUST NOT be used for any
+ *                other purpose.
  * @param chan    a pointer to a CAN channel. This channel MUST NOT be used for
  *                any other purpose.
  * @param txlen   the length (in number of frames) of the user-space transmit
@@ -118,8 +121,8 @@ void io_can_net_fini(io_can_net_t *net);
  * @returns a pointer to a new CAN network interface, or NULL on error. In the
  * latter case, the error number can be obtained with get_errc().
  */
-io_can_net_t *io_can_net_create(io_timer_t *timer, io_can_chan_t *chan,
-		size_t txlen, int txtimeo);
+io_can_net_t *io_can_net_create(ev_exec_t *exec, io_timer_t *timer,
+		io_can_chan_t *chan, size_t txlen, int txtimeo);
 
 /// Destroys a CAN network interface.
 void io_can_net_destroy(io_can_net_t *net);

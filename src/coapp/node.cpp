@@ -84,10 +84,10 @@ struct Node::Impl_ {
   ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy;
 };
 
-Node::Node(io::TimerBase& timer, io::CanChannelBase& chan,
+Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
            const ::std::string& dcf_txt, const ::std::string& dcf_bin,
            uint8_t id)
-    : io::CanNet(timer, chan, 0, 0),
+    : io::CanNet(exec, timer, chan, 0, 0),
       Device(dcf_txt, dcf_bin, id, this),
       tpdo_event_mutex(*this),
       impl_(new Impl_(this, net(), Device::dev())) {

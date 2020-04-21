@@ -67,6 +67,8 @@ struct io_can_net {
 	struct io_svc svc;
 	/// A pointer to the I/O context with which the channel is registered.
 	io_ctx_t *ctx;
+	/// A pointer to the executor ...
+	ev_exec_t *exec;
 	/// A pointer to the timer used for CAN network events.
 	io_timer_t *timer;
 	/// A pointer to the timer queue used to schedule wait operations.
@@ -210,14 +212,17 @@ io_can_net_free(void *ptr)
 }
 
 io_can_net_t *
-io_can_net_init(io_can_net_t *net, io_timer_t *timer, io_can_chan_t *chan,
-		size_t txlen, int txtimeo)
+io_can_net_init(io_can_net_t *net, ev_exec_t *exec, io_timer_t *timer,
+		io_can_chan_t *chan, size_t txlen, int txtimeo)
 {
 	assert(net);
 	assert(timer);
 	assert(chan);
 
 	int errc = 0;
+
+	if (!exec)
+		exec = io_can_chan_get_exec(net->chan);
 
 	if (!txlen)
 		txlen = LELY_IO_CAN_NET_TXLEN;
@@ -228,6 +233,8 @@ io_can_net_init(io_can_net_t *net, io_timer_t *timer, io_can_chan_t *chan,
 	net->svc = (struct io_svc)IO_SVC_INIT(&io_can_net_svc_vtbl);
 	net->ctx = io_can_chan_get_ctx(chan);
 	assert(net->ctx);
+
+	net->exec = exec;
 
 	net->timer = timer;
 	if (!(net->tq = io_tqueue_create(net->timer, NULL))) {
@@ -361,8 +368,8 @@ io_can_net_fini(io_can_net_t *net)
 }
 
 io_can_net_t *
-io_can_net_create(io_timer_t *timer, io_can_chan_t *chan, size_t txlen,
-		int txtimeo)
+io_can_net_create(ev_exec_t *exec, io_timer_t *timer, io_can_chan_t *chan,
+		size_t txlen, int txtimeo)
 {
 	int errc = 0;
 
@@ -372,7 +379,8 @@ io_can_net_create(io_timer_t *timer, io_can_chan_t *chan, size_t txlen,
 		goto error_alloc;
 	}
 
-	io_can_net_t *tmp = io_can_net_init(net, timer, chan, txlen, txtimeo);
+	io_can_net_t *tmp =
+			io_can_net_init(net, exec, timer, chan, txlen, txtimeo);
 	if (!tmp) {
 		errc = get_errc();
 		goto error_init;
@@ -435,7 +443,7 @@ io_can_net_get_exec(const io_can_net_t *net)
 {
 	assert(net);
 
-	return io_can_chan_get_exec(net->chan);
+	return net->exec;
 }
 
 io_clock_t *
