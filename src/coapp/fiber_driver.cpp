@@ -47,7 +47,9 @@ FiberDriverBase::FiberDriverBase(ev_exec_t* exec_)
 }  // namespace detail
 
 FiberDriver::FiberDriver(ev_exec_t* exec, AsyncMaster& master, uint8_t id)
-    : FiberDriverBase(exec), BasicDriver(FiberDriverBase::exec, master, id) {}
+    : FiberDriverBase(exec ? exec
+                           : static_cast<ev_exec_t*>(master.GetExecutor())),
+      BasicDriver(FiberDriverBase::exec, master, id) {}
 
 void
 FiberDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {

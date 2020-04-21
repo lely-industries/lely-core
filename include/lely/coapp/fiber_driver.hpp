@@ -53,7 +53,22 @@ class FiberDriverBase {
  */
 class FiberDriver : detail::FiberDriverBase, public BasicDriver {
  public:
-  FiberDriver(ev_exec_t* exec, AsyncMaster& master, uint8_t id);
+  /**
+   * Creates a new CANopen driver and its associated fiber executor.
+   *
+   * @param exec   the inner executor used to create the fiber executor. If
+   *               <b>exec</b> is a null pointer, the CANopen master executor is
+   *               used.
+   * @param master a reference to a CANopen master.
+   * @param id     the node-ID of the remote node (in the range [1..127]).
+   *
+   * @throws std::out_of_range if the node-ID is invalid or already registered.
+   */
+  explicit FiberDriver(ev_exec_t* exec, AsyncMaster& master, uint8_t id);
+
+  /// Creates a new CANopen driver and its associated fiber executor.
+  explicit FiberDriver(AsyncMaster& master, uint8_t id)
+      : FiberDriver(nullptr, master, id) {}
 
   /// Returns the strand executor associated with the driver.
   ev::Executor

@@ -50,7 +50,23 @@ class LoopDriverBase {
 /// A CANopen driver running its own dedicated event loop in a separate thread.
 class LoopDriver : detail::LoopDriverBase, public BasicDriver {
  public:
-  LoopDriver(AsyncMaster& master, uint8_t id);
+  /**
+   * Creates a new CANopen driver and starts a new event loop in a separate
+   * thread to execute event handlers (and SDO confirmation functions).
+   *
+   * @param master a reference to a CANopen master.
+   * @param id     the node-ID of the remote node (in the range [1..127]).
+   *
+   * @throws std::out_of_range if the node-ID is invalid or already registered.
+   */
+  explicit LoopDriver(AsyncMaster& master, uint8_t id);
+
+  /**
+   * Stops the event loop and terminates the thread in which it was running
+   * before destroying the driver.
+   *
+   * @see AsyncStopped()
+   */
   ~LoopDriver();
 
   /// Returns a reference to the dedicated event loop of the driver.

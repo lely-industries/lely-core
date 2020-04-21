@@ -289,14 +289,21 @@ class BasicDriver : DriverBase,
    * master.
    *
    * @param exec   the executor used to execute event handlers for this driver,
-   *               including SDO confirmation functions. The executor SHOULD be
-   *               based on <b>loop</b>.
+   *               including SDO confirmation functions. If <b>exec</b> is a
+   *               null pointer, the CANopen master executor is used.
    * @param master a reference to a CANopen master.
    * @param id     the node-ID of the remote node (in the range [1..127]).
    *
    * @throws std::out_of_range if the node-ID is invalid or already registered.
    */
-  BasicDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id);
+  explicit BasicDriver(ev_exec_t* exec, BasicMaster& master, uint8_t id);
+
+  /**
+   * Creates a new driver for a remote CANopen node and registers it with the
+   * master.
+   */
+  explicit BasicDriver(BasicMaster& master, uint8_t id)
+      : BasicDriver(nullptr, master, id) {}
 
   virtual ~BasicDriver();
 

@@ -42,7 +42,7 @@ BasicDriver::BasicDriver(ev_exec_t* exec, BasicMaster& master_, uint8_t id)
       rpdo_mapped(master.RpdoMapped(id)),
       tpdo_mapped(master.TpdoMapped(id)),
       tpdo_event_mutex(master.tpdo_event_mutex),
-      exec_(exec),
+      exec_(exec ? exec : static_cast<ev_exec_t*>(master.GetExecutor())),
       id_(id) {
   master.Insert(*this);
 }
