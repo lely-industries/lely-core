@@ -222,7 +222,7 @@ io_can_net_init(io_can_net_t *net, ev_exec_t *exec, io_timer_t *timer,
 	int errc = 0;
 
 	if (!exec)
-		exec = io_can_chan_get_exec(net->chan);
+		exec = io_can_chan_get_exec(chan);
 
 	if (!txlen)
 		txlen = LELY_IO_CAN_NET_TXLEN;
