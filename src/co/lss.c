@@ -1576,7 +1576,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 				break;
 			case 4:
 				if (!(req.data[1] = !(baud & CO_BAUD_125)))
-					co_dev_set_rate(lss->dev, 135);
+					co_dev_set_rate(lss->dev, 125);
 				break;
 			case 6:
 				if (!(req.data[1] = !(baud & CO_BAUD_50)))
