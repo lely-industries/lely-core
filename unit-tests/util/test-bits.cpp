@@ -397,3 +397,507 @@ TEST(UtilBitsGroup, CtsCtz64) {
     CHECK_EQUAL(i % max_z, ctz64(~test64[i]));
   }
 }
+
+TEST(UtilBitsGroup, Ffs8) {
+  LONGS_EQUAL(0, ffs8(0x00));
+
+  LONGS_EQUAL(1, ffs8(0x01));
+  LONGS_EQUAL(2, ffs8(0xF2));
+  LONGS_EQUAL(8, ffs8(0x80));
+}
+
+TEST(UtilBitsGroup, Ffz8) {
+  LONGS_EQUAL(0, ffz8(0xFF));
+
+  LONGS_EQUAL(1, ffz8(0x00));
+  LONGS_EQUAL(2, ffz8(0xE1));
+  LONGS_EQUAL(8, ffz8(0x7F));
+}
+
+TEST(UtilBitsGroup, Ffs16) {
+  LONGS_EQUAL(0, ffs16(0x0000));
+
+  LONGS_EQUAL(1, ffs16(0x0001));
+  LONGS_EQUAL(2, ffs16(0x0002));
+  LONGS_EQUAL(8, ffs16(0x0080));
+
+  LONGS_EQUAL(9, ffs16(0x0100));
+  LONGS_EQUAL(16, ffs16(0x8000));
+}
+
+TEST(UtilBitsGroup, Ffz16) {
+  LONGS_EQUAL(0, ffz16(0xFFFF));
+
+  LONGS_EQUAL(1, ffz16(0x0000));
+  LONGS_EQUAL(2, ffz16(0x0001));
+  LONGS_EQUAL(8, ffz16(0x007F));
+
+  LONGS_EQUAL(9, ffz16(0x00FF));
+  LONGS_EQUAL(16, ffz16(0x7FFF));
+}
+
+TEST(UtilBitsGroup, Ffs32) {
+  LONGS_EQUAL(0, ffs32(0x00000000));
+
+  LONGS_EQUAL(1, ffs32(0x00000001));
+  LONGS_EQUAL(2, ffs32(0x00000002));
+  LONGS_EQUAL(8, ffs32(0x00000080));
+
+  LONGS_EQUAL(9, ffs32(0x00000100));
+  LONGS_EQUAL(16, ffs32(0x00008000));
+
+  LONGS_EQUAL(17, ffs32(0x00010000));
+  LONGS_EQUAL(24, ffs32(0x00800000));
+
+  LONGS_EQUAL(25, ffs32(0x01000000));
+  LONGS_EQUAL(32, ffs32(0x80000000));
+}
+
+TEST(UtilBitsGroup, Ffz32) {
+  LONGS_EQUAL(0, ffz32(0xFFFFFFFF));
+
+  LONGS_EQUAL(1, ffz32(0x00000002));
+  LONGS_EQUAL(2, ffz32(0x00000001));
+  LONGS_EQUAL(8, ffz32(0x0000007F));
+
+  LONGS_EQUAL(9, ffz32(0x000000FF));
+  LONGS_EQUAL(16, ffz32(0x00007FFF));
+
+  LONGS_EQUAL(17, ffz32(0x0000FFFF));
+  LONGS_EQUAL(24, ffz32(0x007FFFFF));
+
+  LONGS_EQUAL(25, ffz32(0x00FFFFFF));
+  LONGS_EQUAL(32, ffz32(0x7FFFFFFF));
+}
+
+TEST(UtilBitsGroup, Ffs64) {
+  LONGS_EQUAL(0, ffs64(0x0000000000000000));
+
+  LONGS_EQUAL(1, ffs64(0x0000000000000001));
+  LONGS_EQUAL(2, ffs64(0x0000000000000002));
+  LONGS_EQUAL(8, ffs64(0x0000000000000080));
+
+  LONGS_EQUAL(9, ffs64(0x0000000000000100));
+  LONGS_EQUAL(16, ffs64(0x0000000000008000));
+
+  LONGS_EQUAL(17, ffs64(0x0000000000010000));
+  LONGS_EQUAL(24, ffs64(0x0000000000800000));
+
+  LONGS_EQUAL(25, ffs64(0x0000000001000000));
+  LONGS_EQUAL(32, ffs64(0x0000000080000000));
+
+  LONGS_EQUAL(33, ffs64(0x0000000100000000));
+  LONGS_EQUAL(40, ffs64(0x0000008000000000));
+
+  LONGS_EQUAL(41, ffs64(0x0000010000000000));
+  LONGS_EQUAL(48, ffs64(0x0000800000000000));
+
+  LONGS_EQUAL(49, ffs64(0x0001000000000000));
+  LONGS_EQUAL(56, ffs64(0x0080000000000000));
+
+  LONGS_EQUAL(57, ffs64(0x0100000000000000));
+  LONGS_EQUAL(64, ffs64(0x8000000000000000));
+}
+
+TEST(UtilBitsGroup, Ffz64) {
+  LONGS_EQUAL(0, ffz64(0xFFFFFFFFFFFFFFFF));
+
+  LONGS_EQUAL(1, ffz64(0xFFFFFFFF00000002));
+  LONGS_EQUAL(2, ffz64(0xFFFFFFFF00000001));
+  LONGS_EQUAL(8, ffz64(0xFFFFFFFF0000007F));
+
+  LONGS_EQUAL(9, ffz64(0xFFFFFFFF000000FF));
+  LONGS_EQUAL(16, ffz64(0xFFFFFFFF00007FFF));
+
+  LONGS_EQUAL(17, ffz64(0xFFFFFFFF0000FFFF));
+  LONGS_EQUAL(24, ffz64(0xFFFFFFF0FF7FFFFF));
+
+  LONGS_EQUAL(25, ffz64(0xFFFFFFFF70FFFFFF));
+  LONGS_EQUAL(32, ffz64(0xFFFFFFFF7FFFFFFF));
+
+  LONGS_EQUAL(33, ffz64(0xFFFFFFF0FFFFFFFF));
+  LONGS_EQUAL(40, ffz64(0xFFFFFF7FFFFFFFFF));
+
+  LONGS_EQUAL(41, ffz64(0xFFFFF0FFFFFFFFFF));
+  LONGS_EQUAL(48, ffz64(0xFFFF7FFFFFFFFFFF));
+
+  LONGS_EQUAL(49, ffz64(0xFFF0FFFFFFFFFFFF));
+  LONGS_EQUAL(56, ffz64(0xFF7FFFFFFFFFFFFF));
+
+  LONGS_EQUAL(57, ffz64(0xF0FFFFFFFFFFFFFF));
+  LONGS_EQUAL(64, ffz64(0x7FFFFFFFFFFFFFFF));
+}
+
+TEST(UtilBitsGroup, Parity8) {
+  LONGS_EQUAL(0, parity8(0x00));
+  LONGS_EQUAL(1, parity8(0x01));
+
+  LONGS_EQUAL(0, parity8(0xF0));
+  LONGS_EQUAL(1, parity8(0xF1));
+}
+
+TEST(UtilBitsGroup, Parity16) {
+  LONGS_EQUAL(0, parity16(0x0000));
+  LONGS_EQUAL(1, parity16(0x0001));
+
+  LONGS_EQUAL(0, parity16(0x00F0));
+  LONGS_EQUAL(1, parity16(0x00F1));
+
+  LONGS_EQUAL(0, parity16(0xF000));
+  LONGS_EQUAL(1, parity16(0x0FF1));
+}
+
+TEST(UtilBitsGroup, Parity32) {
+  LONGS_EQUAL(0, parity32(0x00000000));
+  LONGS_EQUAL(1, parity32(0x00000001));
+
+  LONGS_EQUAL(0, parity32(0x000000F0));
+  LONGS_EQUAL(1, parity32(0x000000F1));
+
+  LONGS_EQUAL(0, parity32(0x0000F000));
+  LONGS_EQUAL(1, parity32(0x00000FF1));
+
+  LONGS_EQUAL(0, parity32(0xFFFFFFF0));
+  LONGS_EQUAL(1, parity32(0xF0FFCFF1));
+}
+
+TEST(UtilBitsGroup, Parity64) {
+  LONGS_EQUAL(0, parity64(0x0000000000000000));
+  LONGS_EQUAL(1, parity64(0x0000000000000001));
+
+  LONGS_EQUAL(0, parity64(0x00000000000000F0));
+  LONGS_EQUAL(1, parity64(0x00000000000000F1));
+
+  LONGS_EQUAL(0, parity64(0x000000000000F000));
+  LONGS_EQUAL(1, parity64(0x0000000000000FF1));
+
+  LONGS_EQUAL(0, parity64(0x00000000FFFFFFF0));
+  LONGS_EQUAL(1, parity64(0x00000000F0FFCFF1));
+
+  LONGS_EQUAL(0, parity64(0xFFFFFFFFFFFFFFF0));
+  LONGS_EQUAL(1, parity64(0x0FFFFFFFFFFFFFF1));
+}
+
+TEST(UtilBitsGroup, Popcount8) {
+  LONGS_EQUAL(0, popcount8(0x00));
+  LONGS_EQUAL(1, popcount8(0x01));
+  LONGS_EQUAL(4, popcount8(0xE1));
+  LONGS_EQUAL(8, popcount8(0xFF));
+}
+
+TEST(UtilBitsGroup, Popcount16) {
+  LONGS_EQUAL(0, popcount16(0x0000));
+  LONGS_EQUAL(1, popcount16(0x0001));
+  LONGS_EQUAL(9, popcount16(0x01FF));
+  LONGS_EQUAL(8, popcount16(0xF00F));
+}
+
+TEST(UtilBitsGroup, Popcount32) {
+  LONGS_EQUAL(0, popcount32(0x00000000));
+  LONGS_EQUAL(1, popcount32(0x00000001));
+  LONGS_EQUAL(9, popcount32(0x000001FF));
+  LONGS_EQUAL(8, popcount32(0x0000F00F));
+  LONGS_EQUAL(11, popcount32(0x00E0F00F));
+  LONGS_EQUAL(15, popcount32(0x33E0F00F));
+}
+
+TEST(UtilBitsGroup, Popcount64) {
+  LONGS_EQUAL(0, popcount64(0x0000000000000000));
+  LONGS_EQUAL(1, popcount64(0x0000000000000001));
+  LONGS_EQUAL(8, popcount64(0x00000000000000FF));
+  LONGS_EQUAL(9, popcount64(0x00000000000001FF));
+  LONGS_EQUAL(8, popcount64(0x000000000000F00F));
+  LONGS_EQUAL(8, popcount64(0x000000000000F00F));
+  LONGS_EQUAL(10, popcount64(0x000000000044F00F));
+  LONGS_EQUAL(12, popcount64(0x000000002211F00F));
+  LONGS_EQUAL(12, popcount64(0x000000560000F00F));
+  LONGS_EQUAL(13, popcount64(0x000010560000F00F));
+  LONGS_EQUAL(16, popcount64(0x007010560000F00F));
+  LONGS_EQUAL(16, popcount64(0x550000560000F00F));
+}
+
+static uint_least8_t
+rotate_left8(uint_least8_t x, unsigned int n) {
+  return x << n | x >> (8 - n);
+}
+
+TEST(UtilBitsGroup, Rol8) {
+  LONGS_EQUAL(0x00, rol8(0x00, 0));
+  LONGS_EQUAL(0x00, rol8(0x00, 1));
+  LONGS_EQUAL(0x00, rol8(0x00, 8));
+  LONGS_EQUAL(0x00, rol8(0x00, 42));
+
+  LONGS_EQUAL(rotate_left8(0x30, 2), rol8(0x30, 2));
+  LONGS_EQUAL(rotate_left8(0x89, 2), rol8(0x89, 2));
+  LONGS_EQUAL(rotate_left8(0x89, 3), rol8(0x89, 3));
+  LONGS_EQUAL(rotate_left8(0x89, 4), rol8(0x89, 4));
+
+  LONGS_EQUAL(0x89, rol8(0x89, 8));
+
+  LONGS_EQUAL(rotate_left8(0x89, 66), rol8(0x89, 66));
+  LONGS_EQUAL(rotate_left8(0x89, 68), rol8(0x89, 68));
+}
+
+static uint_least8_t
+rotate_right8(uint_least8_t x, unsigned int n) {
+  return x >> n | x << (8 - n);
+}
+
+TEST(UtilBitsGroup, Ror8) {
+  LONGS_EQUAL(0x00, ror8(0x00, 0));
+  LONGS_EQUAL(0x00, ror8(0x00, 1));
+  LONGS_EQUAL(0x00, ror8(0x00, 8));
+  LONGS_EQUAL(0x00, ror8(0x00, 42));
+
+  LONGS_EQUAL(rotate_right8(0x30, 2), ror8(0x30, 2));
+  LONGS_EQUAL(rotate_right8(0x89, 2), ror8(0x89, 2));
+  LONGS_EQUAL(rotate_right8(0x89, 3), ror8(0x89, 3));
+  LONGS_EQUAL(rotate_right8(0x89, 4), ror8(0x89, 4));
+
+  LONGS_EQUAL(0x89, ror8(0x89, 8));
+
+  LONGS_EQUAL(rotate_right8(0x89, 66), ror8(0x89, 66));
+  LONGS_EQUAL(rotate_right8(0x89, 68), ror8(0x89, 68));
+}
+
+static uint_least16_t
+rotate_left16(uint_least16_t x, unsigned int n) {
+  return x << n | x >> (16 - n);
+}
+
+TEST(UtilBitsGroup, Rol16) {
+  LONGS_EQUAL(0x0000, rol16(0x0000, 0));
+  LONGS_EQUAL(0x0000, rol16(0x0000, 1));
+  LONGS_EQUAL(0x0000, rol16(0x0000, 16));
+  LONGS_EQUAL(0x0000, rol16(0x0000, 42));
+
+  LONGS_EQUAL(rotate_left16(0x0130, 2), rol16(0x0130, 2));
+  LONGS_EQUAL(rotate_left16(0x6789, 2), rol16(0x6789, 2));
+  LONGS_EQUAL(rotate_left16(0x6789, 3), rol16(0x6789, 3));
+  LONGS_EQUAL(rotate_left16(0x6789, 4), rol16(0x6789, 4));
+
+  LONGS_EQUAL(rotate_left16(0x6789, 8), rol16(0x6789, 8));
+  LONGS_EQUAL(rotate_left16(0x6789, 9), rol16(0x6789, 9));
+
+  LONGS_EQUAL(rotate_left16(0x6789, 15), rol16(0x6789, 15));
+
+  LONGS_EQUAL(0x6789, rol16(0x6789, 16));
+
+  LONGS_EQUAL(rotate_left16(0x6789, 66), rol16(0x6789, 66));
+  LONGS_EQUAL(rotate_left16(0x6789, 68), rol16(0x6789, 68));
+}
+
+static uint_least16_t
+rotate_right16(uint_least16_t x, unsigned int n) {
+  return x >> n | x << (16 - n);
+}
+
+TEST(UtilBitsGroup, Ror16) {
+  LONGS_EQUAL(0x0000, ror16(0x0000, 0));
+  LONGS_EQUAL(0x0000, ror16(0x0000, 1));
+  LONGS_EQUAL(0x0000, ror16(0x0000, 16));
+  LONGS_EQUAL(0x0000, ror16(0x0000, 42));
+
+  LONGS_EQUAL(rotate_right16(0x0130, 2), ror16(0x0130, 2));
+  LONGS_EQUAL(rotate_right16(0x6789, 2), ror16(0x6789, 2));
+  LONGS_EQUAL(rotate_right16(0x6789, 3), ror16(0x6789, 3));
+  LONGS_EQUAL(rotate_right16(0x6789, 4), ror16(0x6789, 4));
+
+  LONGS_EQUAL(rotate_right16(0x6789, 8), ror16(0x6789, 8));
+  LONGS_EQUAL(rotate_right16(0x6789, 9), ror16(0x6789, 9));
+
+  LONGS_EQUAL(rotate_right16(0x6789, 15), ror16(0x6789, 15));
+
+  LONGS_EQUAL(0x6789, ror16(0x6789, 16));
+
+  LONGS_EQUAL(rotate_right16(0x6789, 66), ror16(0x6789, 66));
+  LONGS_EQUAL(rotate_right16(0x6789, 68), ror16(0x6789, 68));
+}
+
+static uint_least32_t
+rotate_left32(uint_least32_t x, unsigned int n) {
+  return x << n | x >> (32 - n);
+}
+
+TEST(UtilBitsGroup, Rol32) {
+  LONGS_EQUAL(0x00000000, rol32(0x00000000, 0));
+  LONGS_EQUAL(0x00000000, rol32(0x00000000, 1));
+  LONGS_EQUAL(0x00000000, rol32(0x00000000, 16));
+  LONGS_EQUAL(0x00000000, rol32(0x00000000, 42));
+
+  LONGS_EQUAL(rotate_left32(0x01300000, 2), rol32(0x01300000, 2));
+  LONGS_EQUAL(rotate_left32(0x23456789, 2), rol32(0x23456789, 2));
+  LONGS_EQUAL(rotate_left32(0x23456789, 3), rol32(0x23456789, 3));
+  LONGS_EQUAL(rotate_left32(0x23456789, 4), rol32(0x23456789, 4));
+
+  LONGS_EQUAL(rotate_left32(0x23456789, 8), rol32(0x23456789, 8));
+  LONGS_EQUAL(rotate_left32(0x23456789, 9), rol32(0x23456789, 9));
+
+  LONGS_EQUAL(rotate_left32(0x23456789, 15), rol32(0x23456789, 15));
+  LONGS_EQUAL(rotate_left32(0x23456789, 16), rol32(0x23456789, 16));
+
+  LONGS_EQUAL(rotate_left32(0x23456789, 24), rol32(0x23456789, 24));
+  LONGS_EQUAL(rotate_left32(0x23456789, 25), rol32(0x23456789, 25));
+
+  LONGS_EQUAL(0x23456789, rol32(0x23456789, 32));
+
+  LONGS_EQUAL(rotate_left32(0x23456789, 66), rol32(0x23456789, 66));
+  LONGS_EQUAL(rotate_left32(0x23456789, 68), rol32(0x23456789, 68));
+}
+
+static uint_least32_t
+rotate_right32(uint_least32_t x, unsigned int n) {
+  return x >> n | x << (32 - n);
+}
+
+TEST(UtilBitsGroup, Ror32) {
+  LONGS_EQUAL(0x00000000, ror32(0x00000000, 0));
+  LONGS_EQUAL(0x00000000, ror32(0x00000000, 1));
+  LONGS_EQUAL(0x00000000, ror32(0x00000000, 16));
+  LONGS_EQUAL(0x00000000, ror32(0x00000000, 42));
+
+  LONGS_EQUAL(rotate_right32(0x01300000, 2), ror32(0x01300000, 2));
+  LONGS_EQUAL(rotate_right32(0x23456789, 2), ror32(0x23456789, 2));
+  LONGS_EQUAL(rotate_right32(0x23456789, 3), ror32(0x23456789, 3));
+  LONGS_EQUAL(rotate_right32(0x23456789, 4), ror32(0x23456789, 4));
+
+  LONGS_EQUAL(rotate_right32(0x23456789, 8), ror32(0x23456789, 8));
+  LONGS_EQUAL(rotate_right32(0x23456789, 9), ror32(0x23456789, 9));
+
+  LONGS_EQUAL(rotate_right32(0x23456789, 15), ror32(0x23456789, 15));
+  LONGS_EQUAL(rotate_right32(0x23456789, 16), ror32(0x23456789, 16));
+
+  LONGS_EQUAL(rotate_right32(0x23456789, 24), ror32(0x23456789, 24));
+  LONGS_EQUAL(rotate_right32(0x23456789, 25), ror32(0x23456789, 25));
+
+  LONGS_EQUAL(0x23456789, ror32(0x23456789, 32));
+
+  LONGS_EQUAL(rotate_right32(0x23456789, 66), ror32(0x23456789, 66));
+  LONGS_EQUAL(rotate_right32(0x23456789, 68), ror32(0x23456789, 68));
+}
+
+static uint_least64_t
+rotate_left64(uint_least64_t x, unsigned int n) {
+  return x << n | x >> (64 - n);
+}
+
+TEST(UtilBitsGroup, Rol64) {
+  LONGS_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 0));
+  LONGS_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 1));
+  LONGS_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 16));
+  LONGS_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 42));
+
+  LONGS_EQUAL(rotate_left64(0x0000FF0001300000, 2),
+              rol64(0x0000FF0001300000, 2));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 2),
+              rol64(0xFFFFF0F123456789, 2));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 3),
+              rol64(0xFFFFF0F123456789, 3));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 4),
+              rol64(0xFFFFF0F123456789, 4));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 8),
+              rol64(0xFFFFF0F123456789, 8));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 9),
+              rol64(0xFFFFF0F123456789, 9));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 15),
+              rol64(0xFFFFF0F123456789, 15));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 16),
+              rol64(0xFFFFF0F123456789, 16));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 24),
+              rol64(0xFFFFF0F123456789, 24));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 25),
+              rol64(0xFFFFF0F123456789, 25));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 32),
+              rol64(0xFFFFF0F123456789, 32));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 33),
+              rol64(0xFFFFF0F123456789, 33));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 40),
+              rol64(0xFFFFF0F123456789, 40));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 41),
+              rol64(0xFFFFF0F123456789, 41));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 48),
+              rol64(0xFFFFF0F123456789, 48));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 49),
+              rol64(0xFFFFF0F123456789, 49));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 54),
+              rol64(0xFFFFF0F123456789, 54));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 55),
+              rol64(0xFFFFF0F123456789, 55));
+
+  LONGS_EQUAL(0xFFFFF0F123456789, rol64(0xFFFFF0F123456789, 64));
+
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 66),
+              rol64(0xFFFFF0F123456789, 66));
+  LONGS_EQUAL(rotate_left64(0xFFFFF0F123456789, 68),
+              rol64(0xFFFFF0F123456789, 68));
+}
+
+static uint_least64_t
+rotate_right64(uint_least64_t x, unsigned int n) {
+  return x >> n | x << (64 - n);
+}
+
+TEST(UtilBitsGroup, Ror64) {
+  LONGS_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 0));
+  LONGS_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 1));
+  LONGS_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 16));
+  LONGS_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 42));
+
+  LONGS_EQUAL(rotate_right64(0x0000FF0001300000, 2),
+              ror64(0x0000FF0001300000, 2));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 2),
+              ror64(0xFFFFF0F123456789, 2));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 3),
+              ror64(0xFFFFF0F123456789, 3));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 4),
+              ror64(0xFFFFF0F123456789, 4));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 8),
+              ror64(0xFFFFF0F123456789, 8));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 9),
+              ror64(0xFFFFF0F123456789, 9));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 15),
+              ror64(0xFFFFF0F123456789, 15));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 16),
+              ror64(0xFFFFF0F123456789, 16));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 24),
+              ror64(0xFFFFF0F123456789, 24));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 25),
+              ror64(0xFFFFF0F123456789, 25));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 32),
+              ror64(0xFFFFF0F123456789, 32));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 33),
+              ror64(0xFFFFF0F123456789, 33));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 40),
+              ror64(0xFFFFF0F123456789, 40));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 41),
+              ror64(0xFFFFF0F123456789, 41));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 48),
+              ror64(0xFFFFF0F123456789, 48));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 49),
+              ror64(0xFFFFF0F123456789, 49));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 54),
+              ror64(0xFFFFF0F123456789, 54));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 55),
+              ror64(0xFFFFF0F123456789, 55));
+
+  LONGS_EQUAL(0xFFFFF0F123456789, ror64(0xFFFFF0F123456789, 64));
+
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 66),
+              ror64(0xFFFFF0F123456789, 66));
+  LONGS_EQUAL(rotate_right64(0xFFFFF0F123456789, 68),
+              ror64(0xFFFFF0F123456789, 68));
+}

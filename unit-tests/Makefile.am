@@ -23,7 +23,11 @@ cpputest_test_LDADD = $(CPPUTEST_LIBS)
 LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
 src_util_tests = \
-	util/test-bits.cpp
+	util/test-bits.cpp \
+	util/test-bitset.cpp \
+	util/test-mutex.cpp \
+	util/test-pheap.cpp \
+	util/test-sllist.cpp
 
 bin += util-test
 util_test_SOURCES = tests-shared-main.cpp $(src_util_tests)
