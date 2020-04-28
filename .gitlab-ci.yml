@@ -472,10 +472,8 @@ coverity:
 
 pages:
   stage: deploy
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-      when: always
-    - when: never
+  only:
+    - master
   tags:
     - docker
     - linux
