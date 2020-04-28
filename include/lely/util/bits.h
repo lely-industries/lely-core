@@ -394,7 +394,7 @@ clz64(uint_least64_t x)
 #if defined(_MSC_VER) && _WIN64
 	unsigned long Index;
 	return _BitScanReverse64(&Index, x) ? 63 - Index : 64;
-#elif (defined(__GNUC__) || __has_builtin(__builtin_clzl)) && __WORDSIZE == 64
+#elif (defined(__GNUC__) || __has_builtin(__builtin_clzl)) && LONG_BIT == 64
 	return x ? __builtin_clzl(x) : 64;
 #elif defined(__GNUC__) || __has_builtin(__builtin_clzll)
 	return x ? __builtin_clzll(x) : 64;
@@ -478,7 +478,7 @@ inline int
 ctz64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
-#if (defined(__GNUC__) || __has_builtin(__builtin_ctzl)) && __WORDSIZE == 64
+#if (defined(__GNUC__) || __has_builtin(__builtin_ctzl)) && LONG_BIT == 64
 	return x ? __builtin_ctzl(x) : 64;
 #elif defined(__GNUC__) || __has_builtin(__builtin_ctzll)
 	return x ? __builtin_ctzll(x) : 64;
@@ -565,7 +565,7 @@ ffs64(uint_least64_t x)
 #if defined(_MSC_VER) && _WIN64
 	unsigned long Index;
 	return _BitScanForward64(&Index, x) ? Index + 1 : 0;
-#elif (defined(__GNUC__) || __has_builtin(__builtin_ffsl)) && __WORDSIZE == 64
+#elif (defined(__GNUC__) || __has_builtin(__builtin_ffsl)) && LONG_BIT == 64
 	return __builtin_ffsl(x);
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffsll)
 	return __builtin_ffsll(x);
@@ -620,7 +620,7 @@ inline int
 parity64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
-#if (defined(__GNUC__) || __has_builtin(__builtin_parityl)) && __WORDSIZE == 64
+#if (defined(__GNUC__) || __has_builtin(__builtin_parityl)) && LONG_BIT == 64
 	return __builtin_parityl(x);
 #elif defined(__GNUC__) || __has_builtin(__builtin_parityll)
 	return __builtin_parityll(x);
@@ -666,8 +666,7 @@ inline int
 popcount64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
-#if (defined(__GNUC__) || __has_builtin(__builtin_popcountl)) \
-		&& __WORDSIZE == 64
+#if (defined(__GNUC__) || __has_builtin(__builtin_popcountl)) && LONG_BIT == 64
 	return __builtin_popcountl(x);
 #elif defined(__GNUC__) || __has_builtin(__builtin_popcountll)
 	return __builtin_popcountll(x);
