@@ -76,6 +76,24 @@ AS_IF([test "$enable_tests" == "no"], [
 	AM_CONDITIONAL([NO_TESTS], [true])
 ])
 
+PKG_CHECK_MODULES([CPPUTEST], [cpputest], [with_cpputest=yes], [with_cpputest=no])
+
+AM_CONDITIONAL([NO_UNIT_TESTS], [false])
+AC_ARG_ENABLE([unit-tests],
+	AS_HELP_STRING([--disable-unit-tests], [disable unit tests]))
+AS_IF([test "$with_cpputest" == "no"], [enable_unit_tests=no])
+AS_IF([test "$enable_unit_tests" == "no"], [
+	AM_CONDITIONAL([NO_UNIT_TESTS], [true])
+])
+
+AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [false])
+AC_ARG_ENABLE([unit-tests-memleak],
+	AS_HELP_STRING([--disable-unit-tests-memleak], [disable unit tests memory leak detection]))
+AS_IF([test "$enable_unit_tests" == "no"], [enable_unit_tests_memleak=no])
+AS_IF([test "$enable_unit_tests_memleak" == "no"], [
+	AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [true])
+])
+
 RT_LIBS=
 AM_CONDITIONAL([NO_RT], [false])
 AC_ARG_ENABLE([rt],
@@ -509,6 +527,7 @@ AC_CONFIG_FILES([
 	tools/version.dcf2c.rc
 	test/co-nmt-master.dcf
 	test/Makefile
+	unit-tests/Makefile
 	exec-wrapper.sh
 	Makefile
 ])

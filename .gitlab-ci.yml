@@ -51,6 +51,12 @@ stages:
     - touch aclocal.m4 configure config.status Makefile.in
     - make -t
     - make check
+  artifacts:
+    when: on_failure
+    paths:
+      - test/test-*.log
+      - unit-tests/test-*.log
+    expire_in: 1 week
 
 .docker-gcc: &docker-gcc
   <<: *docker
@@ -199,6 +205,7 @@ test:x86_64-w64-mingw32:
   script:
     - docker build
         --build-arg ARCH=$ARCH
+        --build-arg NAME=$NAME
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/crossbuild/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
 
@@ -257,7 +264,7 @@ build:arm-none-eabi:
   <<: *build
   variables:
     CFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
-    CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-python --disable-threads --disable-daemon
+    CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-unit-tests --disable-python --disable-threads --disable-daemon
     CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
@@ -330,6 +337,7 @@ valgrind:
     when: on_failure
     paths:
       - test/test-*.log
+      - unit-tests/test-*.log
     expire_in: 1 week
 
 docker:lcov:
