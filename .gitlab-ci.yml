@@ -478,6 +478,45 @@ coverity:
         https://scan.coverity.com/builds?project=$COVERITY_PROJECT
   when: manual
 
+docker:sonarcloud:
+  <<: *docker
+  script:
+    - docker build
+        --build-arg REGISTRY=$REGISTRY
+        --build-arg SONAR_HOST_URL=$SONAR_HOST_URL
+        --build-arg SONAR_TOKEN=SONAR_TOKEN
+        -t $CI_REGISTRY_IMAGE/sonarcloud:bullseye docker/sonarcloud/bullseye
+    - docker push $CI_REGISTRY_IMAGE/sonarcloud:bullseye
+
+sonarcloud:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/sonarcloud:bullseye
+  dependencies: []
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  script:
+    - autoreconf -i
+    - ./configure --disable-python
+    - /opt/sonar-build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output make check
+    - /opt/sonar-scanner/bin/sonar-scanner
+           -Dsonar.host.url="${SONAR_HOST_URL}"
+           -Dsonar.token="${SONAR_TOKEN}"
+           -Dsonar.projectKey="${SONAR_PROJECT_KEY}"
+           -Dsonar.organization="${SONAR_ORGANIZATION}"
+           -Dsonar.projectName="Lely CANopen"
+           -Dsonar.links.homepage="${CI_PROJECT_URL}"
+           -Dsonar.links.ci="${CI_PROJECT_URL}/pipelines"
+           -Dsonar.links.scm="${CI_PROJECT_URL}"
+           -Dsonar.links.issue="${CI_PROJECT_URL}/issues"
+           -Dsonar.sources=include,src,tools
+           -Dsonar.tests=test,unit-tests
+           -Dsonar.cfamily.build-wrapper-output=bw-output
+  when: manual
+
 pages:
   stage: deploy
   only:
