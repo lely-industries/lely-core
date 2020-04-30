@@ -9,6 +9,8 @@ RUN apt-get update -q \
         curl \
         gnupg \
         software-properties-common \
+        ca-certificates \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -q \
@@ -29,4 +31,14 @@ RUN apt-get update -q \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         automake \
         libtool \
+        pkg-config \
     && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
+    && cd cpputest/cpputest_build \
+    && autoreconf .. -i \
+    && ../configure --host=$ARCH-w64-mingw32 \
+    && make \
+    && make install \
+    && cd - \
+    && rm -rf cpputest
