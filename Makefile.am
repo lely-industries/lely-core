@@ -7,6 +7,9 @@ endif
 if !NO_TESTS
 SUBDIRS += test
 endif
+if !NO_UNIT_TESTS
+SUBDIRS += unit-tests
+endif
 
 EXTRA_DIST =
 EXTRA_DIST += CPPLINT.cfg
@@ -26,5 +29,6 @@ CODE_COVERAGE_OUTPUT_DIRECTORY = coverage
 CODE_COVERAGE_BRANCH_COVERAGE = 1
 CODE_COVERAGE_GENHTML_OPTIONS = $(CODE_COVERAGE_GENHTML_OPTIONS_DEFAULT)
 CODE_COVERAGE_GENHTML_OPTIONS += -p $(realpath $(abs_top_srcdir))
-CODE_COVERAGE_IGNORE_PATTERN = "/usr/*" "$(realpath $(abs_top_srcdir))/test/*"
+CODE_COVERAGE_IGNORE_PATTERN = "/usr/*" "$(realpath $(abs_top_srcdir))/test/*" "$(realpath $(abs_top_srcdir))/unit_tests/*"
+
 endif

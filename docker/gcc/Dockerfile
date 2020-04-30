@@ -26,4 +26,14 @@ RUN apt-get update -q \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         automake \
         libtool \
+        pkg-config \
     && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
+    && cd cpputest/cpputest_build \
+    && autoreconf .. -i \
+    && ../configure \
+    && make \
+    && make install \
+    && cd - \
+    && rm -rf cpputest
