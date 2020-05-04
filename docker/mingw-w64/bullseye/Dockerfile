@@ -19,6 +19,8 @@ RUN apt-get update -q \
     && dpkg --add-architecture i386 \
     && apt-get update -q \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
+        libc6:i386 \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         mingw-w64 \
         winehq-stable \
     && rm -rf /var/lib/apt/lists/*
