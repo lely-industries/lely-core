@@ -4,7 +4,7 @@
  *
  * @see lely/co/obj.h, src/obj.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -796,6 +796,64 @@ co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 
 	sub->flags = flags;
 }
+
+#ifndef LELY_NO_CO_OBJ_FILE
+
+const char *
+co_sub_get_upload_file(const co_sub_t *sub)
+{
+	assert(sub);
+
+	if (!(sub->flags & CO_OBJ_FLAGS_UPLOAD_FILE))
+		return NULL;
+
+	assert(sub->type == CO_DEFTYPE_DOMAIN);
+	return co_sub_addressof_val(sub);
+}
+
+int
+co_sub_set_upload_file(co_sub_t *sub, const char *filename)
+{
+	assert(sub);
+	assert(filename);
+
+	if (!(co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	assert(sub->type == CO_DEFTYPE_DOMAIN);
+	return co_sub_set_val(sub, filename, strlen(filename) + 1) ? 0 : -1;
+}
+
+const char *
+co_sub_get_download_file(const co_sub_t *sub)
+{
+	assert(sub);
+
+	if (!(sub->flags & CO_OBJ_FLAGS_DOWNLOAD_FILE))
+		return NULL;
+
+	assert(sub->type == CO_DEFTYPE_DOMAIN);
+	return co_sub_addressof_val(sub);
+}
+
+int
+co_sub_set_download_file(co_sub_t *sub, const char *filename)
+{
+	assert(sub);
+	assert(filename);
+
+	if (!(co_sub_get_flags(sub) & CO_OBJ_FLAGS_DOWNLOAD_FILE)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	assert(sub->type == CO_DEFTYPE_DOMAIN);
+	return co_sub_set_val(sub, filename, strlen(filename) + 1) ? 0 : -1;
+}
+
+#endif // !LELY_NO_CO_OBJ_FILE
 
 void
 co_sub_get_dn_ind(const co_sub_t *sub, co_sub_dn_ind_t **pind, void **pdata)

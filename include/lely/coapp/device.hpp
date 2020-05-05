@@ -663,6 +663,129 @@ class Device {
            ::std::error_code& ec) noexcept;
 
   /**
+   * Returns the value of the UploadFile attribute of a sub-object, if present.
+   * The returned value is valid until the next call to SetUploadFile() for the
+   * same sub-object.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   *
+   * @returns a pointer to the UploadFile string, or `nullptr` if the
+   * UploadFile attribute does not exist.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist.
+   */
+  const char* GetUploadFile(uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Returns the value of the UploadFile attribute of a sub-object, if present.
+   * The returned value is valid until the next call to SetUploadFile() for the
+   * same sub-object.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   * @param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in <b>ec</b>.
+   *
+   * @returns a pointer to the UploadFile string, or `nullptr` on error or if
+   * the UploadFile attribute does not exist.
+   */
+  const char* GetUploadFile(uint16_t idx, uint8_t subidx,
+                            ::std::error_code& ec) const noexcept;
+
+  /**
+   * Sets the value of the UploadFile attribute of a sub-object, if present.
+   * This operation invalidates any value returned by a previous call to
+   * GetUploadFile() for the same sub-object.
+   *
+   * @param idx      the object index.
+   * @param subidx   the object sub-index.
+   * @param filename a pointer to the string to be copied to the UploadFile
+   *                 attribute.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist or does
+   * not have the UploadFile attribute.
+   */
+  void SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename);
+
+  /**
+   * Sets the value of the UploadFile attribute of a sub-object, if present.
+   * This operation invalidates any value returned by a previous call to
+   * GetUploadFile() for the same sub-object.
+   *
+   * @param idx      the object index.
+   * @param subidx   the object sub-index.
+   * @param filename a pointer to the string to be copied to the UploadFile
+   *                 attribute.
+   * @param ec       if the sub-object does not exist or does not have the
+   *                 UploadFile attribute, the SDO abort code is stored in
+   *                 <b>ec</b>.
+   */
+  void SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename,
+                     ::std::error_code& ec) noexcept;
+
+  /**
+   * Returns the value of the DownloadFile attribute of a sub-object, if
+   * present. The returned value is valid until the next call to
+   * SetDownloadFile() for the same sub-object.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   *
+   * @returns a pointer to the DownloadFile string, or `nullptr` if the
+   * DownloadFile attribute does not exist.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist.
+   */
+  const char* GetDownloadFile(uint16_t idx, uint8_t subidx) const;
+
+  /**
+   * Returns the value of the DownloadFile attribute of a sub-object, if
+   * present. The returned value is valid until the next call to
+   * SetDownloadFile() for the same sub-object.
+   *
+   * @param idx    the object index.
+   * @param subidx the object sub-index.
+   * @param ec     if the sub-object does not exist, the SDO abort code is
+   *               stored in <b>ec</b>.
+   *
+   * @returns a pointer to the DownloadFile string, or `nullptr` on error or if
+   * the DownloadFile attribute does not exist.
+   */
+  const char* GetDownloadFile(uint16_t idx, uint8_t subidx,
+                              ::std::error_code& ec) const noexcept;
+
+  /**
+   * Sets the value of the DownloadFile attribute of a sub-object, if present.
+   * This operation invalidates any value returned by a previous call to
+   * GetDownloadFile() for the same sub-object.
+   *
+   * @param idx      the object index.
+   * @param subidx   the object sub-index.
+   * @param filename a pointer to the string to be copied to the DownloadFile
+   *                 attribute.
+   *
+   * @throws #lely::canopen::SdoError if the sub-object does not exist or does
+   * not have the DownloadFile attribute.
+   */
+  void SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename);
+
+  /**
+   * Sets the value of the DownloadFile attribute of a sub-object, if present.
+   * This operation invalidates any value returned by a previous call to
+   * GetDownloadFile() for the same sub-object.
+   *
+   * @param idx      the object index.
+   * @param subidx   the object sub-index.
+   * @param filename a pointer to the string to be copied to the DownloadFile
+   *                 attribute.
+   * @param ec       if the sub-object does not exist or does not have the
+   *                 DownloadFile attribute, the SDO abort code is stored in
+   *                 <b>ec</b>.
+   */
+  void SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename,
+                       ::std::error_code& ec) noexcept;
+  /**
    * Checks if the specified sub-object in the local object dictionary can be
    * mapped into a PDO and, if so, triggers the transmission of every
    * event-driven, asynchronous Transmit-PDO into which the sub-object is

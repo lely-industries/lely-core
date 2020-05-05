@@ -1043,6 +1043,122 @@ Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   impl_->Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, p, n, ec);
 }
 
+const char*
+Device::GetUploadFile(uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  auto filename = GetUploadFile(idx, subidx, ec);
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "GetUploadFile");
+  return filename;
+}
+
+const char*
+Device::GetUploadFile(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+    noexcept {
+  auto obj = impl_->dev->find(idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return nullptr;
+  }
+
+  auto sub = obj->find(subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return nullptr;
+  }
+
+  ec.clear();
+  return sub->getUploadFile();
+}
+
+void
+Device::SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename) {
+  ::std::error_code ec;
+  SetUploadFile(idx, subidx, filename, ec);
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "SetUploadFile");
+}
+
+void
+Device::SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename,
+                      ::std::error_code& ec) noexcept {
+  auto obj = impl_->dev->find(idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = obj->find(subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  int errsv = get_errc();
+  set_errc(0);
+  if (!sub->setUploadFile(filename))
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
+}
+
+const char*
+Device::GetDownloadFile(uint16_t idx, uint8_t subidx) const {
+  ::std::error_code ec;
+  auto filename = GetDownloadFile(idx, subidx, ec);
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "GetDownloadFile");
+  return filename;
+}
+
+const char*
+Device::GetDownloadFile(uint16_t idx, uint8_t subidx,
+                        ::std::error_code& ec) const noexcept {
+  auto obj = impl_->dev->find(idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return nullptr;
+  }
+
+  auto sub = obj->find(subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return nullptr;
+  }
+
+  ec.clear();
+  return sub->getDownloadFile();
+}
+
+void
+Device::SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename) {
+  ::std::error_code ec;
+  SetDownloadFile(idx, subidx, filename, ec);
+  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "SetDownloadFile");
+}
+
+void
+Device::SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename,
+                        ::std::error_code& ec) noexcept {
+  auto obj = impl_->dev->find(idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = obj->find(subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  int errsv = get_errc();
+  set_errc(0);
+  if (!sub->setDownloadFile(filename))
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
+}
+
 void
 Device::SetEvent(uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
