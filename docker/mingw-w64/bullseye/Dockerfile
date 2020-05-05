@@ -39,7 +39,7 @@ RUN apt-get update -q \
 RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
     && cd cpputest/cpputest_build \
     && autoreconf .. -i \
-    && ../configure --host=$ARCH-w64-mingw32 \
+    && ../configure --host=$ARCH-w64-mingw32 --disable-memory-leak-detection \
     && make \
     && make install \
     && cd - \
