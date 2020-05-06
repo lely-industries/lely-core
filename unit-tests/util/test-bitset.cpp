@@ -1,270 +1,268 @@
 
 #include <CppUTest/TestHarness.h>
 #include <lely/util/bitset.h>
+#include <limits.h>
 
-#undef INT_BIT
-#undef CHAR_BIT
-#define CHAR_BIT __CHAR_BIT__
 #define INT_BIT (sizeof(int) * CHAR_BIT)
 
-typedef enum {
-	Bitset_state_ZERO = 0,
-	Bitset_state_SET = 1,
-} Bitset_state;
+TEST_GROUP(UtilBitset) {
+  bitset set;
+  const unsigned int set_size = 287;
 
-TEST_GROUP(UtilBitsetGroup){
-	static const unsigned int bitsize = 287;
-	static const unsigned int bytes = MAX(0, (bitsize + INT_BIT - 1) / INT_BIT)  * sizeof(unsigned int);
-	unsigned int bits[bytes];
-	struct bitset Bitset = {MAX(0, (bitsize + INT_BIT - 1) / INT_BIT), bits};
+  TEST_SETUP() {
+    bitset_init(&set, set_size);
+    bitset_clr_all(&set);
+  }
+  TEST_TEARDOWN() { bitset_fini(&set); }
 };
 
-IGNORE_TEST(UtilBitsetGroup, Bitset_init) {
-	// TODO
+IGNORE_TEST(UtilBitset, BitsetInit) {
+  // TODO
 }
 
-IGNORE_TEST(UtilBitsetGroup, Bitset_fini) {
-	// TODO
+IGNORE_TEST(UtilBitset, BitsetFini) {
+  // TODO
 }
 
-TEST(UtilBitsetGroup, Bitset_size_inBits) {
-	LONGS_EQUAL(Bitset.size * INT_BIT, bitset_size(&Bitset));
+TEST(UtilBitset, BitsetSize) {
+  int size_in_bits = set.size * INT_BIT;
+
+  CHECK_EQUAL(size_in_bits, bitset_size(&set));
 }
 
-IGNORE_TEST(UtilBitsetGroup, Bitset_resize) {
-	// TODO
+IGNORE_TEST(UtilBitset, BitsetResize) {
+  // TODO
 }
 
-static void add_set_bit(unsigned int* byte, unsigned int idx) {
-	*byte = (*byte) | (0x1 << idx);
+TEST(UtilBitset, BitsetTest) {
+  set.bits[0] |= (0x1 << 1);
+  set.bits[0] |= (0x1 << 5);
+
+  CHECK_EQUAL(1, bitset_test(&set, 1));
+  CHECK_EQUAL(1, bitset_test(&set, 5));
 }
 
-TEST(UtilBitsetGroup, Bitset_test_nonemptyReturnsState) {
-	add_set_bit(&(Bitset.bits[0]), 1);
-	add_set_bit(&(Bitset.bits[0]), 5);
+TEST(UtilBitset, BitsetTest_OutOfBoundsReturnsZero) {
+  bitset_set_all(&set);
 
-	LONGS_EQUAL(Bitset_state_SET ,bitset_test(&Bitset, 1));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, 5));
+  CHECK_EQUAL(0, bitset_test(&set, -1));
+  CHECK_EQUAL(0, bitset_test(&set, bitset_size(&set)));
+  CHECK_EQUAL(0, bitset_test(&set, bitset_size(&set) + 1));
 }
 
-static void helper_set_bitset(unsigned int* const bitset, const unsigned int size) {
-	for(unsigned int i = 0; i < size; i++) {
-		bitset[i] = Bitset_state_SET;
-	}
+TEST(UtilBitset, BitsetSet_CorrectIndex) {
+  bitset_set(&set, 0);
+  const int mid_idx = 42;
+  bitset_set(&set, mid_idx);
+
+  CHECK_EQUAL(1, bitset_test(&set, 0));
+  CHECK_EQUAL(1, bitset_test(&set, mid_idx));
 }
 
-TEST(UtilBitsetGroup, Bitset_test_outOfBoundsReturnsZero) {
-	helper_set_bitset(Bitset.bits, Bitset.size);
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, 0));
-
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, -1));
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, bitset_size(&Bitset)));
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, bitset_size(&Bitset) + 1));
+static void
+check_all_states(const bitset* const set, const int expected_state) {
+  for (int i = 0; i < bitset_size(set); i++) {
+    CHECK_EQUAL(expected_state, bitset_test(set, i));
+  }
 }
 
-TEST(UtilBitsetGroup, Bitset_set_correctIndex) {
-	bitset_set(&Bitset, 0);
-	int idx_in_mid = bitset_size(&Bitset)/2;
-	bitset_set(&Bitset, idx_in_mid);
+TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
+  bitset_set(&set, -1);
+  bitset_set(&set, bitset_size(&set));
+  bitset_set(&set, bitset_size(&set) + 1);
 
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, 0));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, idx_in_mid));
+  check_all_states(&set, 0);
 }
 
-static void check_all_states(struct bitset* set, Bitset_state expected_state) {
-	LONGS_EQUAL(expected_state, bitset_test(set, 0));
-	int last_idx = bitset_size(set) - 1;
-	for(int i = 1; i < last_idx; i++) {
-		LONGS_EQUAL(expected_state, bitset_test(set, i));
-	}
-	LONGS_EQUAL(expected_state, bitset_test(set, last_idx));
+TEST(UtilBitset, BitsetSetAll) {
+  bitset_set_all(&set);
+
+  check_all_states(&set, 1);
 }
 
-TEST(UtilBitsetGroup, Bitset_set_outOfBoundsIndex) {
-	bitset_set(&Bitset, -1);
-	bitset_set(&Bitset, bitset_size(&Bitset));
-	bitset_set(&Bitset, bitset_size(&Bitset) + 1);
+TEST(UtilBitset, BitsetClr_CorrectIndex) {
+  const int last_idx = bitset_size(&set) - 1;
 
-	check_all_states(&Bitset, Bitset_state_ZERO);
+  bitset_set_all(&set);
+  bitset_clr(&set, 0);
+  bitset_clr(&set, 1);
+  bitset_clr(&set, last_idx);
+
+  CHECK_EQUAL(0, bitset_test(&set, 0));
+  CHECK_EQUAL(0, bitset_test(&set, 1));
+  CHECK_EQUAL(0, bitset_test(&set, last_idx));
 }
 
-TEST(UtilBitsetGroup, Bitset_set_all) {
-	bitset_set_all(&Bitset);
+TEST(UtilBitset, BitsetClr_OutOfBoundsIndex) {
+  bitset_set_all(&set);
+  bitset_clr(&set, -1);
+  bitset_clr(&set, bitset_size(&set));
+  bitset_clr(&set, bitset_size(&set) + 1);
 
-	check_all_states(&Bitset, Bitset_state_SET);
+  check_all_states(&set, 1);
 }
 
-TEST(UtilBitsetGroup, Bitset_clr_correctIndex) {
-	int last_idx = bitset_size(&Bitset) - 1;
+TEST(UtilBitset, BitsetClrAll) {
+  bitset_clr_all(&set);
 
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, 0);
-	bitset_clr(&Bitset, 1);
-	bitset_clr(&Bitset, last_idx);
-
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, 0));
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, 1));
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, last_idx));
+  check_all_states(&set, 0);
 }
 
-TEST(UtilBitsetGroup, Bitset_clr_outOfBoundsIndex) {
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, -1);
-	bitset_clr(&Bitset, bitset_size(&Bitset));
-	bitset_clr(&Bitset, bitset_size(&Bitset) + 1);
+TEST(UtilBitset, BitsetCompl) {
+  bitset_clr_all(&set);
+  bitset_set(&set, 0);
+  bitset_set(&set, 1);
 
-	check_all_states(&Bitset, Bitset_state_SET);
+  bitset_compl(&set);
+
+  CHECK_EQUAL(0, bitset_test(&set, 0));
+  CHECK_EQUAL(0, bitset_test(&set, 1));
+  CHECK_EQUAL(1, bitset_test(&set, 2));
+  CHECK_EQUAL(1, bitset_test(&set, bitset_size(&set) - 3));
+  CHECK_EQUAL(1, bitset_test(&set, bitset_size(&set) - 2));
+  CHECK_EQUAL(1, bitset_test(&set, bitset_size(&set) - 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_clr_all) {
-	bitset_clr_all(&Bitset);
+TEST(UtilBitset, BitsetFfs_AllZero) {
+  bitset_clr_all(&set);
 
-	check_all_states(&Bitset, Bitset_state_ZERO);
+  CHECK_EQUAL(0, bitset_ffs(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_compl) {
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, 0);
-	bitset_set(&Bitset, 1);
-	
-	bitset_compl(&Bitset);
+TEST(UtilBitset, BitsetFfs_FirstSet) {
+  bitset_clr_all(&set);
 
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, 0));
-	LONGS_EQUAL(Bitset_state_ZERO, bitset_test(&Bitset, 1));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, 2));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, bitset_size(&Bitset) - 3));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, bitset_size(&Bitset) - 2));
-	LONGS_EQUAL(Bitset_state_SET, bitset_test(&Bitset, bitset_size(&Bitset) - 1));
+  bitset_set(&set, 0);
+
+  CHECK_EQUAL(1, bitset_ffs(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffs_allZero) {
-	bitset_clr_all(&Bitset);
-	LONGS_EQUAL(0, bitset_ffs(&Bitset));
+TEST(UtilBitset, BitsetFfs_LastSet) {
+  const int last_idx = bitset_size(&set) - 1;
+  bitset_clr_all(&set);
+
+  bitset_set(&set, last_idx);
+
+  CHECK_EQUAL(last_idx + 1, bitset_ffs(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffs_firstSet) {
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, 0);
+TEST(UtilBitset, BitsetFfs_MiddleSet) {
+  const int middle_idx = 42;
+  bitset_clr_all(&set);
 
-	LONGS_EQUAL(1, bitset_ffs(&Bitset));
+  bitset_set(&set, middle_idx);
+  if (middle_idx + 4 < bitset_size(&set)) bitset_set(&set, middle_idx + 4);
+
+  CHECK_EQUAL(middle_idx + 1, bitset_ffs(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffs_lastSet) {
-	int last_idx = bitset_size(&Bitset) - 1;
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, last_idx);
+TEST(UtilBitset, BitsetFfz_AllSet) {
+  bitset_set_all(&set);
 
-	LONGS_EQUAL(last_idx + 1, bitset_ffs(&Bitset));
+  CHECK_EQUAL(0, bitset_ffz(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffs_middleSet) {
-	int middle_idx = bitset_size(&Bitset)/2;
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, middle_idx);
-	if(middle_idx + 4 < bitset_size(&Bitset))
-		bitset_set(&Bitset, middle_idx + 4);
+TEST(UtilBitset, BitsetFfz_FirstZero) {
+  bitset_set_all(&set);
+  bitset_clr(&set, 0);
 
-	LONGS_EQUAL(middle_idx + 1, bitset_ffs(&Bitset));
+  CHECK_EQUAL(1, bitset_ffz(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffz_allSet) {
-	bitset_set_all(&Bitset);
-	LONGS_EQUAL(0, bitset_ffz(&Bitset));
+TEST(UtilBitset, BitsetFfz_LastZero) {
+  const int last_idx = bitset_size(&set) - 1;
+  bitset_set_all(&set);
+
+  bitset_clr(&set, last_idx);
+
+  CHECK_EQUAL(last_idx + 1, bitset_ffz(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffz_firstZero) {
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, 0);
+TEST(UtilBitset, BitsetFfz_MiddleZero) {
+  const int middle_idx = 42;
+  bitset_set_all(&set);
 
-	LONGS_EQUAL(1, bitset_ffz(&Bitset));
+  bitset_clr(&set, middle_idx);
+  if (middle_idx + 4 < bitset_size(&set)) bitset_clr(&set, middle_idx + 4);
+
+  CHECK_EQUAL(middle_idx + 1, bitset_ffz(&set));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffz_lastZero) {
-	int last_idx = bitset_size(&Bitset) - 1;
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, last_idx);
+TEST(UtilBitset, BitsetFns_AllZeros) {
+  const int set_idx = 10;
 
-	LONGS_EQUAL(last_idx + 1, bitset_ffz(&Bitset));
+  bitset_clr_all(&set);
+  bitset_set(&set, set_idx);
+
+  CHECK_EQUAL(0, bitset_fns(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_ffz_middleZero) {
-	int middle_idx = bitset_size(&Bitset)/2;
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, middle_idx);
-	if(middle_idx + 4 < bitset_size(&Bitset))
-		bitset_clr(&Bitset, middle_idx + 4);
+TEST(UtilBitset, BitsetFns_NextIsSet) {
+  const int set_idx = 10;
+  bitset_clr_all(&set);
 
-	LONGS_EQUAL(middle_idx + 1, bitset_ffz(&Bitset));
+  bitset_set(&set, set_idx);
+  bitset_set(&set, set_idx + 1);
+
+  CHECK_EQUAL(set_idx + 2, bitset_fns(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fns_allZeros) {
-	int set_idx = 10;
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, set_idx);
+TEST(UtilBitset, BitsetFns_LastIsSet) {
+  const int set_idx = 10;
+  const int last_idx = bitset_size(&set) - 1;
+  bitset_clr_all(&set);
 
-	LONGS_EQUAL(0, bitset_fns(&Bitset, set_idx + 1));
+  bitset_set(&set, set_idx);
+  bitset_set(&set, last_idx);
+
+  CHECK_EQUAL(last_idx + 1, bitset_fns(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fns_nextIsSet) {
-	int set_idx = 10;
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, set_idx);
-	bitset_set(&Bitset, set_idx + 1);
+TEST(UtilBitset, BitsetFns_OutOfBoundsIdx) {
+  const int last_idx = bitset_size(&set) - 1;
+  const int idx_to_set = 0;
+  bitset_set(&set, idx_to_set);
 
-	LONGS_EQUAL(set_idx + 2, bitset_fns(&Bitset, set_idx + 1));
+  CHECK_EQUAL(0, bitset_fns(&set, last_idx + 1));
+  CHECK_EQUAL(idx_to_set + 1, bitset_fns(&set, -1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fns_lastIsSet) {
-	int set_idx = 10;
-	int last_idx = bitset_size(&Bitset) - 1;
-	bitset_clr_all(&Bitset);
-	bitset_set(&Bitset, set_idx);
-	bitset_set(&Bitset, last_idx);
+TEST(UtilBitset, BitsetFnz_AllSet) {
+  const int set_idx = 10;
+  bitset_set_all(&set);
+  bitset_clr(&set, set_idx);
 
-	LONGS_EQUAL(last_idx + 1, bitset_fns(&Bitset, set_idx + 1));
+  CHECK_EQUAL(0, bitset_fnz(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fns_outOfBoundsIdx) {
-	int last_idx = bitset_size(&Bitset) - 1;
-	int idx_to_set = 0;
-	bitset_set(&Bitset, idx_to_set);
+TEST(UtilBitset, BitsetFnz_NextIsZero) {
+  const int set_idx = 10;
+  bitset_set_all(&set);
 
-	LONGS_EQUAL(0, bitset_fns(&Bitset, last_idx + 1));
-	LONGS_EQUAL(idx_to_set + 1, bitset_fns(&Bitset, -1));
+  bitset_clr(&set, set_idx);
+  bitset_clr(&set, set_idx + 1);
+
+  CHECK_EQUAL(set_idx + 2, bitset_fnz(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fnz_allSet) {
-	int set_idx = 10;
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, set_idx);
+TEST(UtilBitset, BitsetFnz_LastIsZero) {
+  const int set_idx = 10;
+  const int last_idx = bitset_size(&set) - 1;
+  bitset_set_all(&set);
 
-	LONGS_EQUAL(0, bitset_fnz(&Bitset, set_idx + 1));
+  bitset_clr(&set, set_idx);
+  bitset_clr(&set, last_idx);
+
+  CHECK_EQUAL(last_idx + 1, bitset_fnz(&set, set_idx + 1));
 }
 
-TEST(UtilBitsetGroup, Bitset_fnz_nextIsZero) {
-	int set_idx = 10;
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, set_idx);
-	bitset_clr(&Bitset, set_idx + 1);
+TEST(UtilBitset, BitsetFnz_OutOfBoundsIdx) {
+  const int last_idx = bitset_size(&set) - 1;
+  const int idx_to_clr = 0;
 
-	LONGS_EQUAL(set_idx + 2, bitset_fnz(&Bitset, set_idx + 1));
-}
+  bitset_set_all(&set);
+  bitset_clr(&set, idx_to_clr);
 
-TEST(UtilBitsetGroup, Bitset_fnz_lastIsZero) {
-	int set_idx = 10;
-	int last_idx = bitset_size(&Bitset) - 1;
-	bitset_set_all(&Bitset);
-	bitset_clr(&Bitset, set_idx);
-	bitset_clr(&Bitset, last_idx);
-
-	LONGS_EQUAL(last_idx + 1, bitset_fnz(&Bitset, set_idx + 1));
-}
-
-TEST(UtilBitsetGroup, Bitset_fnz_outOfBoundsIdx) {
-	int last_idx = bitset_size(&Bitset) - 1;
-	int idx_to_clr = 0;
-	bitset_clr(&Bitset, idx_to_clr);
-
-	LONGS_EQUAL(0, bitset_fnz(&Bitset, last_idx + 1));
-	LONGS_EQUAL(idx_to_clr + 1, bitset_fnz(&Bitset, -1));
+  CHECK_EQUAL(0, bitset_fnz(&set, last_idx + 1));
+  CHECK_EQUAL(idx_to_clr + 1, bitset_fnz(&set, -1));
 }

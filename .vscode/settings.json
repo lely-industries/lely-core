@@ -2,11 +2,6 @@
     "editor.tabSize": 8,
     "editor.insertSpaces": false,
     "files.associations": {
-        "*.h": "c",
-        "array": "cpp",
-        "string_view": "cpp",
-        "initializer_list": "cpp",
-        "utility": "cpp",
-        "mutex": "cpp"
+        "*.h": "c"
     }
 }

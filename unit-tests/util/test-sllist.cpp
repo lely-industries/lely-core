@@ -2,287 +2,268 @@
 #include <CppUTest/TestHarness.h>
 #include <lely/util/sllist.h>
 
-TEST_GROUP(UtilSllistInitGroup) {};
+TEST_GROUP(UtilSllistInit){};
 
-TEST(UtilSllistInitGroup, init) {
-	struct sllist List;
+TEST(UtilSllistInit, SllistInit) {
+  sllist list;
 
-	sllist_init(&List);
+  sllist_init(&list);
 
-	CHECK(List.first == nullptr);
+  CHECK(list.first == nullptr);
 }
 
-static void slnode_init_many(const int how_many, struct slnode* nodes) {
-	for(int i = 0; i < how_many; i++) {
-		slnode_init(nodes + i);
-	}
+TEST(UtilSllistInit, SlnodeInit) {
+  slnode node;
+
+  slnode_init(&node);
+
+  POINTERS_EQUAL(nullptr, node.next);
 }
 
-#define NUM_OF_NODES 10
-TEST_GROUP(UtilSllistGroup) {
-	struct sllist List;
-	struct slnode nodes[NUM_OF_NODES];
+TEST_GROUP(UtilSllist) {
+  static const size_t nodes_number = 10;
+  sllist list;
+  slnode nodes[nodes_number];
 
-	void setup() {
-		sllist_init(&List);
-		slnode_init_many(NUM_OF_NODES, nodes);
-	}
+  TEST_SETUP() {
+    sllist_init(&list);
+
+    for (size_t i = 0; i < nodes_number; i++) {
+      slnode_init(&nodes[i]);
+    }
+  }
 };
 
-static struct slnode* get_node(const int i, const struct slnode* nodes) {
-	return (struct slnode*)(nodes + i);
+TEST(UtilSllist, SllistEmpty_AfterCreation) {
+  CHECK_EQUAL(1, sllist_empty(&list));
 }
 
-static void fill_list(struct sllist* list, struct slnode* nodes, const int how_many) {
-	for(int i = 0; i < how_many; i++) {
-		struct slnode* node_ptr = get_node(i, nodes);
-		slnode_init(node_ptr);
-		sllist_push_back(list, node_ptr);
-	}
+TEST(UtilSllist, SllistEmpty_NotEmptyWhenElementAdded) {
+  sllist_push_front(&list, &nodes[0]);
+
+  CHECK_EQUAL(0, sllist_empty(&list));
 }
 
-TEST(UtilSllistGroup, Slnode_init) {
-	struct slnode node;
-	slnode_init(&node);
-	POINTERS_EQUAL(nullptr, node.next);
+static void
+fill_list(sllist* list, slnode* nodes, const int how_many) {
+  for (int i = 0; i < how_many; i++) {
+    slnode* node_ptr = &nodes[i];
+    slnode_init(node_ptr);
+    sllist_push_back(list, node_ptr);
+  }
 }
 
-TEST(UtilSllistGroup, Sllist_empty_afterCreation) {
-	LONGS_EQUAL(1, sllist_empty(&List));
+TEST(UtilSllist, SllistEmpty_NotEmptyWhenManyElementsAdded) {
+  fill_list(&list, nodes, 3);
+
+  CHECK_EQUAL(0, sllist_empty(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_empty_notEmptyWhenElementAdded) {
-	struct slnode* node_ptr = get_node(0, nodes);
-	sllist_push_front(&List, node_ptr);
-
-	LONGS_EQUAL(0, sllist_empty(&List));
+TEST(UtilSllist, SllistSize_ZeroWhenCreated) {
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_empty_notEmptyWhenManyElementsAdded) {
-	fill_list(&List, nodes, 3);
+TEST(UtilSllist, SllistSize_OneElementAdded) {
+  slnode* node_ptr = &nodes[0];
+  sllist_push_front(&list, node_ptr);
 
-	LONGS_EQUAL(0, sllist_empty(&List));
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_size_zeroWhenCreated) {
-	LONGS_EQUAL(0, sllist_size(&List));
+TEST(UtilSllist, SllistSize_ManyAdded) {
+  fill_list(&list, nodes, 4);
+
+  CHECK_EQUAL(4, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_size_oneElementAdded) {
-	struct slnode* node_ptr = get_node(0, nodes);
-	sllist_push_front(&List, node_ptr);
+TEST(UtilSllist, SllistPushFront_WhenEmpty) {
+  slnode* node_ptr = &nodes[0];
 
-	LONGS_EQUAL(1, sllist_size(&List));
+  sllist_push_front(&list, node_ptr);
+
+  POINTERS_EQUAL(node_ptr, list.first);
 }
 
-TEST(UtilSllistGroup, Sllist_size_manyAdded) {
-	fill_list(&List, nodes, 4);
+TEST(UtilSllist, SllistPushFront_AddMany) {
+  slnode* node_ptrs[] = {&nodes[0], &nodes[1]};
 
-	LONGS_EQUAL(4, sllist_size(&List));
+  sllist_push_front(&list, node_ptrs[0]);
+  sllist_push_front(&list, node_ptrs[1]);
+
+  POINTERS_EQUAL(node_ptrs[1], list.first);
 }
 
-TEST(UtilSllistGroup, Sllist_push_front_whenEmpty) {
-	struct slnode* node_ptr = get_node(0, nodes);
+TEST(UtilSllist, SllistPushFront_SameAddedFewTimes) {
+  slnode* node_ptr = &nodes[0];
 
-	sllist_push_front(&List, node_ptr);
+  sllist_push_front(&list, node_ptr);
+  sllist_push_front(&list, node_ptr);
+  sllist_push_front(&list, node_ptr);
 
-	POINTERS_EQUAL(node_ptr, List.first);
+  POINTERS_EQUAL(node_ptr, list.first);
 }
 
-TEST(UtilSllistGroup, Sllist_push_front_addMany) {
-	struct slnode* node_ptrs[] = {
-		get_node(0, nodes),
-		get_node(1, nodes)
-	};
+TEST(UtilSllist, SllistPushBack_WhenEmpty) {
+  sllist_push_back(&list, &nodes[0]);
 
-	sllist_push_front(&List, node_ptrs[0]);
-	sllist_push_front(&List, node_ptrs[1]);
-
-	POINTERS_EQUAL(node_ptrs[1], List.first);
+  POINTERS_EQUAL(&nodes[0], list.first);
 }
 
-TEST(UtilSllistGroup, Sllist_push_front_sameAddedFewTimes) {
-	struct slnode* node_ptr = get_node(0, nodes);
+TEST(UtilSllist, SllistPushBack_AddMany) {
+  sllist_push_back(&list, &nodes[0]);
+  sllist_push_back(&list, &nodes[1]);
 
-	sllist_push_front(&List, node_ptr);
-	sllist_push_front(&List, node_ptr);
-	sllist_push_front(&List, node_ptr);
-
-	POINTERS_EQUAL(node_ptr, List.first);
+  POINTERS_EQUAL(&nodes[0], list.first);
+  POINTERS_EQUAL(&nodes[1], list.first->next);
 }
 
-TEST(UtilSllistGroup, Sllist_push_back_whenEmpty) {
-	struct slnode node;
-	slnode_init(&node);
-
-	sllist_push_back(&List, &node);
-
-	POINTERS_EQUAL(&node, List.first);
+TEST(UtilSllist, SllistPopFront_WhenEmpty) {
+  POINTERS_EQUAL(nullptr, sllist_pop_front(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_push_back_addMany) {
-	struct slnode* node_ptrs[] = {
-		get_node(0, nodes),
-		get_node(1, nodes),
-	};
+TEST(UtilSllist, SllistPopFront_OneAdded) {
+  fill_list(&list, nodes, 1);
 
-	sllist_push_back(&List, node_ptrs[0]);
-	sllist_push_back(&List, node_ptrs[1]);
-
-	POINTERS_EQUAL(node_ptrs[0], List.first);
-	POINTERS_EQUAL(node_ptrs[1], List.first->next);
+  POINTERS_EQUAL(&nodes[0], sllist_pop_front(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_front_whenEmpty) {
-	POINTERS_EQUAL(nullptr, sllist_pop_front(&List));
+TEST(UtilSllist, SllistPopFront_ManyAdded) {
+  fill_list(&list, nodes, 8);
+
+  POINTERS_EQUAL(&nodes[0], sllist_pop_front(&list));
+  POINTERS_EQUAL(&nodes[1], sllist_pop_front(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_front_oneAdded) {
-	fill_list(&List, nodes, 1);
-
-	POINTERS_EQUAL(get_node(0, nodes), sllist_pop_front(&List));
+TEST(UtilSllist, SllistPopBack_WhenEmpty) {
+  POINTERS_EQUAL(nullptr, sllist_pop_back(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_front_manyAdded) {
-	fill_list(&List, nodes, 8);
+TEST(UtilSllist, SllistPopBack_OneAdded) {
+  fill_list(&list, nodes, 1);
 
-	POINTERS_EQUAL(get_node(0, nodes), sllist_pop_front(&List));
-	POINTERS_EQUAL(get_node(1, nodes), sllist_pop_front(&List));
+  POINTERS_EQUAL(&nodes[0], sllist_pop_back(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_back_whenEmpty) {
-	POINTERS_EQUAL(nullptr, sllist_pop_back(&List));
+TEST(UtilSllist, SllistPopBack_ManyAdded) {
+  fill_list(&list, nodes, 8);
+
+  POINTERS_EQUAL(&nodes[7], sllist_pop_back(&list));
+  POINTERS_EQUAL(&nodes[6], sllist_pop_back(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_back_oneAdded) {
-	fill_list(&List, nodes, 1);
-
-	POINTERS_EQUAL(get_node(0, nodes), sllist_pop_back(&List));
+TEST(UtilSllist, SllistRemove_Nullptr) {
+  POINTERS_EQUAL(nullptr, sllist_remove(&list, nullptr));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_back_manyAdded) {
-	fill_list(&List, nodes, 8);
-
-	POINTERS_EQUAL(get_node(7, nodes), sllist_pop_back(&List));
-	POINTERS_EQUAL(get_node(6, nodes), sllist_pop_back(&List));
+TEST(UtilSllist, SllistRemove_Empty) {
+  POINTERS_EQUAL(nullptr, sllist_remove(&list, &nodes[0]));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_remove_nullptr) {
-	POINTERS_EQUAL(nullptr, sllist_remove(&List, nullptr));
+TEST(UtilSllist, SllistRemove_OneAdded) {
+  fill_list(&list, nodes, 1);
+
+  POINTERS_EQUAL(&nodes[0], sllist_remove(&list, &nodes[0]));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_remove_empty) {
-	struct slnode* node_ptr = get_node(0, nodes);
+TEST(UtilSllist, SllistRemove_ManyAdded) {
+  fill_list(&list, nodes, 2);
 
-	POINTERS_EQUAL(nullptr, sllist_remove(&List, node_ptr));
+  POINTERS_EQUAL(&nodes[0], sllist_remove(&list, &nodes[0]));
+  POINTERS_EQUAL(&nodes[1], sllist_remove(&list, &nodes[1]));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_remove_oneAdded) {
-	fill_list(&List, nodes, 1);
+TEST(UtilSllist, SllistAppend_BothEmpty) {
+  sllist source_list;
+  sllist_init(&source_list);
 
-	POINTERS_EQUAL(get_node(0, nodes), sllist_remove(&List, get_node(0, nodes)));
+  POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
+  CHECK_EQUAL(0, sllist_size(&source_list));
 }
 
-TEST(UtilSllistGroup, Sllist_pop_remove_manyAdded) {
-	fill_list(&List, nodes, 2);
+TEST(UtilSllist, SllistAppend_DstEmpty) {
+  sllist source_list;
+  sllist_init(&source_list);
+  fill_list(&source_list, nodes, 1);
 
-	POINTERS_EQUAL(get_node(0, nodes), sllist_remove(&List, get_node(0, nodes)));
-	POINTERS_EQUAL(get_node(1, nodes), sllist_remove(&List, get_node(1, nodes)));
+  POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
+  CHECK_EQUAL(0, sllist_size(&source_list));
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_append_bothEmpty) {
-	struct sllist List2;
-	sllist_init(&List2);
-	
-	POINTERS_EQUAL(&List, sllist_append(&List, &List2));
-	LONGS_EQUAL(0, sllist_size(&List2));
+TEST(UtilSllist, SllistAppend_SrcEmpty) {
+  sllist source_list;
+  sllist_init(&source_list);
+  fill_list(&list, nodes, 1);
+
+  POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
+  CHECK_EQUAL(0, sllist_size(&source_list));
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_append_dstEmpty) {
-	struct sllist List2;
-	sllist_init(&List2);
-	fill_list(&List2, nodes, 1);
-	
-	POINTERS_EQUAL(&List, sllist_append(&List, &List2));
-	LONGS_EQUAL(0, sllist_size(&List2));
-	LONGS_EQUAL(1, sllist_size(&List));
+TEST(UtilSllist, SllistAppend_SrcMany) {
+  sllist source_list;
+  sllist_init(&source_list);
+  fill_list(&source_list, nodes, 2);
+
+  POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
+  CHECK_EQUAL(0, sllist_size(&source_list));
+  CHECK_EQUAL(2, sllist_size(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_append_srcEmpty) {
-	struct sllist List2;
-	sllist_init(&List2);
-	fill_list(&List, nodes, 1);
-	
-	POINTERS_EQUAL(&List, sllist_append(&List, &List2));
-	LONGS_EQUAL(0, sllist_size(&List2));
-	LONGS_EQUAL(1, sllist_size(&List));
+TEST(UtilSllist, SllistFirst_Empty) {
+  POINTERS_EQUAL(nullptr, sllist_first(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_append_srcMany) {
-	struct sllist List2;
-	sllist_init(&List2);
-	fill_list(&List2, nodes, 2);
-	
-	POINTERS_EQUAL(&List, sllist_append(&List, &List2));
-	LONGS_EQUAL(0, sllist_size(&List2));
-	LONGS_EQUAL(2, sllist_size(&List));
+TEST(UtilSllist, SllistFirst_OneAdded) {
+  fill_list(&list, nodes, 1);
+
+  POINTERS_EQUAL(&nodes[0], sllist_first(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_first_empty) {
-	POINTERS_EQUAL(nullptr, sllist_first(&List));
+TEST(UtilSllist, SllistFirst_ManyAdded) {
+  fill_list(&list, nodes, 2);
+
+  POINTERS_EQUAL(&nodes[0], sllist_first(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_first_oneAdded) {
-	fill_list(&List, nodes, 1);
-
-	POINTERS_EQUAL(get_node(0, nodes), sllist_first(&List));
+TEST(UtilSllist, SllistLast_Empty) {
+  POINTERS_EQUAL(nullptr, sllist_last(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_first_manyAdded) {
-	fill_list(&List, nodes, 2);
+TEST(UtilSllist, SllistLast_OneAdded) {
+  fill_list(&list, nodes, 1);
 
-	POINTERS_EQUAL(get_node(0, nodes), sllist_first(&List));
+  POINTERS_EQUAL(&nodes[0], sllist_last(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_last_empty) {
-	POINTERS_EQUAL(nullptr, sllist_last(&List));
+TEST(UtilSllist, SllistLast_ManyAdded) {
+  fill_list(&list, nodes, 2);
+
+  POINTERS_EQUAL(&nodes[1], sllist_last(&list));
 }
 
-TEST(UtilSllistGroup, Sllist_last_oneAdded) {
-	fill_list(&List, nodes, 1);
+TEST(UtilSllist, SllistForeach_Empty) {
+  slnode* node_ptr = &nodes[0];
 
-	POINTERS_EQUAL(get_node(0, nodes), sllist_last(&List));
+  sllist_foreach(&list, node) node_ptr = node;
+  
+  POINTERS_EQUAL(&nodes[0], node_ptr);
 }
 
-TEST(UtilSllistGroup, Sllist_last_manyAdded) {
-	fill_list(&List, nodes, 2);
+TEST(UtilSllist, SllistForeach_OnlyHead) {
+  fill_list(&list, nodes, 1);
 
-	POINTERS_EQUAL(get_node(1, nodes), sllist_last(&List));
+  slnode* node_ptr = nullptr;
+  sllist_foreach(&list, node) node_ptr = node;
+
+  POINTERS_EQUAL(&nodes[0], node_ptr);
 }
 
-TEST(UtilSllistGroup, Sllist_foreach_empty) {
-	struct slnode* node_ptr = get_node(0, nodes);
-	sllist_foreach(&List, node)
-		node_ptr = node;
-	POINTERS_EQUAL(get_node(0, nodes), node_ptr);
-}
+TEST(UtilSllist, SllistForeach_MultipleElements) {
+  fill_list(&list, nodes, 2);
 
-TEST(UtilSllistGroup, Sllist_foreach_onlyHead) {
-	fill_list(&List, nodes, 1);
+  slnode* node_ptr = nullptr;
+  sllist_foreach(&list, node) node_ptr = node;
 
-	struct slnode* node_ptr = nullptr;
-	sllist_foreach(&List, node)
-		node_ptr = node;
-
-	POINTERS_EQUAL(get_node(0, nodes), node_ptr);
-}
-
-TEST(UtilSllistGroup, Sllist_foreach_multipleElements) {
-	fill_list(&List, nodes, 2);
-
-	struct slnode* node_ptr = nullptr;
-	sllist_foreach(&List, node)
-		node_ptr = node;
-
-	POINTERS_EQUAL(get_node(1, nodes), node_ptr);
+  POINTERS_EQUAL(&nodes[1], node_ptr);
 }
