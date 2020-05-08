@@ -571,7 +571,7 @@ io_can_net_get_on_can_state_func(const io_can_net_t *net,
 	assert(net);
 
 #if !LELY_NO_THREADS
-	mtx_unlock((mtx_t *)&net->mtx);
+	mtx_lock((mtx_t *)&net->mtx);
 #endif
 	if (pfunc)
 		*pfunc = net->on_can_state_func;
