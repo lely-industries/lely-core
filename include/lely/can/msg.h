@@ -182,6 +182,22 @@ int snprintf_can_msg(char *s, size_t n, const struct can_msg *msg);
  */
 int asprintf_can_msg(char **ps, const struct can_msg *msg);
 
+/**
+ * Computes a bitwise CRC-15-CAN checksum, based on the 0x4599 generator
+ * polynomial. The implementation uses a table with precomputed values for
+ * efficiency.
+ *
+ * @param crc  the initial value.
+ * @param ptr  a pointer to the bits to be hashed.
+ * @param off  the offset (in bits) with respect to <b>ptr</b> of the first bit
+ *             to be hashed.
+ * @param bits the number of bits to hash.
+ *
+ * @returns the updated CRC.
+ */
+uint_least16_t can_crc(
+		uint_least16_t crc, const void *ptr, int off, size_t bits);
+
 #ifdef __cplusplus
 }
 #endif
