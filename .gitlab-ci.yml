@@ -156,6 +156,30 @@ test:gcc:9:
     - build:gcc:9
   <<: *test
 
+build:gcc:no-canfd:
+  image: $REGISTRY/gcc:9
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-canfd
+
+test:gcc:no-canfd:
+  image: $REGISTRY/gcc:9
+  dependencies:
+    - build:gcc:no-canfd
+  <<: *test
+
+build:gcc:no-master:
+  image: $REGISTRY/gcc:9
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-master
+
+test:gcc:no-master:
+  image: $REGISTRY/gcc:9
+  dependencies:
+    - build:gcc:no-master
+  <<: *test
+
 .docker-mingw-w64: &docker-mingw-w64
   <<: *docker
   script:
