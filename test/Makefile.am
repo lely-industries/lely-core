@@ -208,15 +208,19 @@ LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
 LELY_COAPP_LIBS += $(top_builddir)/src/coapp/liblely-coapp.la
 
 if !NO_CXX
+if !NO_COAPP_MASTER
 bin += test-coapp-fiber
 test_coapp_fiber_SOURCES = test.h coapp-fiber.cpp
 test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
 endif
+endif
 
 if !NO_CXX
+if !NO_COAPP_MASTER
 bin += test-coapp-lss
 test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
+endif
 endif
 
 EXTRA_DIST =
