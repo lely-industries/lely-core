@@ -515,6 +515,8 @@ sonarcloud:
            -Dsonar.sources=include,src,tools
            -Dsonar.tests=test,unit-tests
            -Dsonar.cfamily.build-wrapper-output=bw-output
+           -Dsonar.cfamily.threads=1
+           -Dsonar.cfamily.cache.enabled=false
   when: manual
 
 pages:
