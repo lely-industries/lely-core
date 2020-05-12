@@ -419,6 +419,7 @@ cppcheck-unix64:
   artifacts:
     paths:
       - cppcheck-rules.md
+    expire_in: 1 week
 
 docker:cppcheck-win64:
   <<: *docker
@@ -453,6 +454,7 @@ cppcheck-win64:
   artifacts:
     paths:
       - cppcheck-rules.md
+    expire_in: 1 week
   when: manual
 
 docker:coverity:
@@ -529,6 +531,7 @@ sonarcloud:
   artifacts:
     paths:
       - sonar-rules.html
+    expire_in: 1 week
   when: manual
 
 pages:
