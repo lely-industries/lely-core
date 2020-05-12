@@ -403,6 +403,7 @@ cppcheck-unix64:
   script:
     - autoreconf -i
     - ./configure --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
         -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
         --enable=warning,style,performance,portability
@@ -415,6 +416,9 @@ cppcheck-unix64:
         --std=c11 --std=c++11
         --suppressions-list=suppressions.txt
         include src
+  artifacts:
+    paths:
+      - cppcheck-rules.md
 
 docker:cppcheck-win64:
   <<: *docker
@@ -432,6 +436,7 @@ cppcheck-win64:
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
         -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
         --enable=warning,style,performance,portability
@@ -445,6 +450,9 @@ cppcheck-win64:
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
         include src
+  artifacts:
+    paths:
+      - cppcheck-rules.md
   when: manual
 
 docker:coverity:
