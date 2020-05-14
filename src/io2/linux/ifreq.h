@@ -2,7 +2,7 @@
  * This is the internal header file of the ioctl network device configuration
  * functions.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -71,8 +71,8 @@ ifr_open(struct ifr_handle *ifh, const char *name)
 		return -1;
 
 	memset(&ifh->ifr, 0, sizeof(ifh->ifr));
-	strncpy(ifh->ifr.ifr_name, name, IFNAMSIZ);
-	ifh->ifr.ifr_name[IFNAMSIZ - 1] = '\0';
+	if (!memccpy(ifh->ifr.ifr_name, name, '\0', IFNAMSIZ))
+		ifh->ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 
 	return 0;
 }
