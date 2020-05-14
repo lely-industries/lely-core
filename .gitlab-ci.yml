@@ -172,13 +172,13 @@ test:gcc:10:
   <<: *test
 
 build:gcc:no-canfd:
-  image: $REGISTRY/gcc:9
+  image: $REGISTRY/gcc:10
   <<: *build
   variables:
     CONFIGURE_OPTIONS: --disable-canfd
 
 test:gcc:no-canfd:
-  image: $REGISTRY/gcc:9
+  image: $REGISTRY/gcc:10
   dependencies:
     - build:gcc:no-canfd
   <<: *test
