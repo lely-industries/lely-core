@@ -168,6 +168,21 @@ test:gcc:9:
     - build:gcc:9
   <<: *test
 
+docker-gcc:10:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 10
+
+build:gcc:10:
+  image: $REGISTRY/gcc:10
+  <<: *build
+
+test:gcc:10:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:10
+  <<: *test
+
 build:gcc:no-canfd:
   image: $REGISTRY/gcc:9
   <<: *build
