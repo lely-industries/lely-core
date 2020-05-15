@@ -25,6 +25,14 @@ TEST_GROUP(UtilSllist) {
   sllist list;
   slnode nodes[nodes_number];
 
+  void FillList(sllist * list, const int how_many) {
+    for (int i = 0; i < how_many; i++) {
+      slnode* node_ptr = &nodes[i];
+      slnode_init(node_ptr);
+      sllist_push_back(list, node_ptr);
+    }
+  }
+
   TEST_SETUP() {
     sllist_init(&list);
 
@@ -44,17 +52,8 @@ TEST(UtilSllist, SllistEmpty_NotEmptyWhenElementAdded) {
   CHECK_EQUAL(0, sllist_empty(&list));
 }
 
-static void
-fill_list(sllist* list, slnode* nodes, const int how_many) {
-  for (int i = 0; i < how_many; i++) {
-    slnode* node_ptr = &nodes[i];
-    slnode_init(node_ptr);
-    sllist_push_back(list, node_ptr);
-  }
-}
-
 TEST(UtilSllist, SllistEmpty_NotEmptyWhenManyElementsAdded) {
-  fill_list(&list, nodes, 3);
+  FillList(&list, 3);
 
   CHECK_EQUAL(0, sllist_empty(&list));
 }
@@ -64,14 +63,13 @@ TEST(UtilSllist, SllistSize_ZeroWhenCreated) {
 }
 
 TEST(UtilSllist, SllistSize_OneElementAdded) {
-  slnode* node_ptr = &nodes[0];
-  sllist_push_front(&list, node_ptr);
+  sllist_push_front(&list, &nodes[0]);
 
   CHECK_EQUAL(1, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistSize_ManyAdded) {
-  fill_list(&list, nodes, 4);
+  FillList(&list, 4);
 
   CHECK_EQUAL(4, sllist_size(&list));
 }
@@ -85,28 +83,17 @@ TEST(UtilSllist, SllistPushFront_WhenEmpty) {
 }
 
 TEST(UtilSllist, SllistPushFront_AddMany) {
-  slnode* node_ptrs[] = {&nodes[0], &nodes[1]};
+  sllist_push_front(&list, &nodes[0]);
+  sllist_push_front(&list, &nodes[1]);
 
-  sllist_push_front(&list, node_ptrs[0]);
-  sllist_push_front(&list, node_ptrs[1]);
-
-  POINTERS_EQUAL(node_ptrs[1], list.first);
-}
-
-TEST(UtilSllist, SllistPushFront_SameAddedFewTimes) {
-  slnode* node_ptr = &nodes[0];
-
-  sllist_push_front(&list, node_ptr);
-  sllist_push_front(&list, node_ptr);
-  sllist_push_front(&list, node_ptr);
-
-  POINTERS_EQUAL(node_ptr, list.first);
+  POINTERS_EQUAL(&nodes[1], list.first);
 }
 
 TEST(UtilSllist, SllistPushBack_WhenEmpty) {
   sllist_push_back(&list, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], list.first);
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPushBack_AddMany) {
@@ -115,61 +102,88 @@ TEST(UtilSllist, SllistPushBack_AddMany) {
 
   POINTERS_EQUAL(&nodes[0], list.first);
   POINTERS_EQUAL(&nodes[1], list.first->next);
+  CHECK_EQUAL(2, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopFront_WhenEmpty) {
   POINTERS_EQUAL(nullptr, sllist_pop_front(&list));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopFront_OneAdded) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&nodes[0], sllist_pop_front(&list));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopFront_ManyAdded) {
-  fill_list(&list, nodes, 8);
+  FillList(&list, 8);
 
   POINTERS_EQUAL(&nodes[0], sllist_pop_front(&list));
   POINTERS_EQUAL(&nodes[1], sllist_pop_front(&list));
+  CHECK_EQUAL(6, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopBack_WhenEmpty) {
   POINTERS_EQUAL(nullptr, sllist_pop_back(&list));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopBack_OneAdded) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&nodes[0], sllist_pop_back(&list));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopBack_ManyAdded) {
-  fill_list(&list, nodes, 8);
+  FillList(&list, 8);
 
   POINTERS_EQUAL(&nodes[7], sllist_pop_back(&list));
   POINTERS_EQUAL(&nodes[6], sllist_pop_back(&list));
+  CHECK_EQUAL(6, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistRemove_Nullptr) {
   POINTERS_EQUAL(nullptr, sllist_remove(&list, nullptr));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistRemove_Empty) {
   POINTERS_EQUAL(nullptr, sllist_remove(&list, &nodes[0]));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistRemove_OneAdded) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&nodes[0], sllist_remove(&list, &nodes[0]));
+  CHECK_EQUAL(0, sllist_size(&list));
+}
+
+TEST(UtilSllist, SllistRemove_OneAddedRemovedTwice) {
+  FillList(&list, 1);
+
+  sllist_remove(&list, &nodes[0]);
+
+  POINTERS_EQUAL(nullptr, sllist_remove(&list, &nodes[0]));
+  CHECK_EQUAL(0, sllist_size(&list));
+}
+
+TEST(UtilSllist, SllistRemove_OneAddedRemovedNullptr) {
+  FillList(&list, 1);
+
+  POINTERS_EQUAL(nullptr, sllist_remove(&list, nullptr));
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistRemove_ManyAdded) {
-  fill_list(&list, nodes, 2);
+  FillList(&list, 2);
 
   POINTERS_EQUAL(&nodes[0], sllist_remove(&list, &nodes[0]));
   POINTERS_EQUAL(&nodes[1], sllist_remove(&list, &nodes[1]));
+  CHECK_EQUAL(0, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistAppend_BothEmpty) {
@@ -183,7 +197,7 @@ TEST(UtilSllist, SllistAppend_BothEmpty) {
 TEST(UtilSllist, SllistAppend_DstEmpty) {
   sllist source_list;
   sllist_init(&source_list);
-  fill_list(&source_list, nodes, 1);
+  FillList(&source_list, 1);
 
   POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
   CHECK_EQUAL(0, sllist_size(&source_list));
@@ -193,7 +207,7 @@ TEST(UtilSllist, SllistAppend_DstEmpty) {
 TEST(UtilSllist, SllistAppend_SrcEmpty) {
   sllist source_list;
   sllist_init(&source_list);
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
   CHECK_EQUAL(0, sllist_size(&source_list));
@@ -203,7 +217,7 @@ TEST(UtilSllist, SllistAppend_SrcEmpty) {
 TEST(UtilSllist, SllistAppend_SrcMany) {
   sllist source_list;
   sllist_init(&source_list);
-  fill_list(&source_list, nodes, 2);
+  FillList(&source_list, 2);
 
   POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
   CHECK_EQUAL(0, sllist_size(&source_list));
@@ -215,13 +229,13 @@ TEST(UtilSllist, SllistFirst_Empty) {
 }
 
 TEST(UtilSllist, SllistFirst_OneAdded) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&nodes[0], sllist_first(&list));
 }
 
 TEST(UtilSllist, SllistFirst_ManyAdded) {
-  fill_list(&list, nodes, 2);
+  FillList(&list, 2);
 
   POINTERS_EQUAL(&nodes[0], sllist_first(&list));
 }
@@ -231,13 +245,13 @@ TEST(UtilSllist, SllistLast_Empty) {
 }
 
 TEST(UtilSllist, SllistLast_OneAdded) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   POINTERS_EQUAL(&nodes[0], sllist_last(&list));
 }
 
 TEST(UtilSllist, SllistLast_ManyAdded) {
-  fill_list(&list, nodes, 2);
+  FillList(&list, 2);
 
   POINTERS_EQUAL(&nodes[1], sllist_last(&list));
 }
@@ -246,12 +260,12 @@ TEST(UtilSllist, SllistForeach_Empty) {
   slnode* node_ptr = &nodes[0];
 
   sllist_foreach(&list, node) node_ptr = node;
-  
+
   POINTERS_EQUAL(&nodes[0], node_ptr);
 }
 
 TEST(UtilSllist, SllistForeach_OnlyHead) {
-  fill_list(&list, nodes, 1);
+  FillList(&list, 1);
 
   slnode* node_ptr = nullptr;
   sllist_foreach(&list, node) node_ptr = node;
@@ -260,7 +274,7 @@ TEST(UtilSllist, SllistForeach_OnlyHead) {
 }
 
 TEST(UtilSllist, SllistForeach_MultipleElements) {
-  fill_list(&list, nodes, 2);
+  FillList(&list, 2);
 
   slnode* node_ptr = nullptr;
   sllist_foreach(&list, node) node_ptr = node;

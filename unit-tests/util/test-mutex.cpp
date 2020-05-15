@@ -2,22 +2,24 @@
 #include <CppUTest/TestHarness.h>
 #include <lely/util/mutex.hpp>
 
-class Mutex : lely::util::BasicLockable {
- public:
-  bool lock_was_called = false;
-  bool unlock_was_called = false;
+TEST_GROUP(UtilMutex) {
+  class Mutex : lely::util::BasicLockable {
+   public:
+    bool lock_was_called = false;
+    bool unlock_was_called = false;
 
-  void
-  lock() override {
-    lock_was_called = true;
-  }
-  void
-  unlock() override {
-    unlock_was_called = true;
-  }
+    void
+    lock() override {
+      lock_was_called = true;
+    }
+    void
+    unlock() override {
+      unlock_was_called = true;
+    }
+  };
+
+  Mutex m;
 };
-
-TEST_GROUP(UtilMutex) { Mutex m; };
 
 TEST(UtilMutex, UnlockGuard_LocksAndUnlocksMutex) {
   { lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m); }

@@ -3,11 +3,17 @@
 #include <lely/util/bitset.h>
 #include <limits.h>
 
-#define INT_BIT (sizeof(int) * CHAR_BIT)
-
 TEST_GROUP(UtilBitset) {
   bitset set;
-  const unsigned int set_size = 287;
+  const unsigned int set_size = 43;
+
+  static void CheckAllStates(const bitset* const set,
+                             const int expected_state) {
+    for (int i = 0; i < bitset_size(set); i++) {
+      const std::string msg_str = "testing bitset_test(set, " + std::to_string(i) + ")";
+      CHECK_EQUAL_TEXT(expected_state, bitset_test(set, i), msg_str.c_str());
+    }
+  }
 
   TEST_SETUP() {
     bitset_init(&set, set_size);
@@ -24,14 +30,14 @@ IGNORE_TEST(UtilBitset, BitsetFini) {
   // TODO
 }
 
-TEST(UtilBitset, BitsetSize) {
-  int size_in_bits = set.size * INT_BIT;
-
-  CHECK_EQUAL(size_in_bits, bitset_size(&set));
-}
-
 IGNORE_TEST(UtilBitset, BitsetResize) {
   // TODO
+}
+
+TEST(UtilBitset, BitsetSize) {
+  int size_in_bits = set.size * sizeof(int) * CHAR_BIT;
+
+  CHECK_EQUAL(size_in_bits, bitset_size(&set));
 }
 
 TEST(UtilBitset, BitsetTest) {
@@ -51,29 +57,13 @@ TEST(UtilBitset, BitsetTest_OutOfBoundsReturnsZero) {
 }
 
 TEST(UtilBitset, BitsetSet_CorrectIndex) {
-  bitset_set(&set, 0);
+  const int first_idx = 0;
   const int mid_idx = 42;
+  bitset_set(&set, first_idx);
   bitset_set(&set, mid_idx);
 
-  CHECK_EQUAL(1, bitset_test(&set, 0));
+  CHECK_EQUAL(1, bitset_test(&set, first_idx));
   CHECK_EQUAL(1, bitset_test(&set, mid_idx));
-}
-
-static void
-verbose_check_equal(const int expected, const int actual, const int idx) {
-  char message[70];
-  sprintf(message, "testing bitset_test(set, %d); expected: %d but was %d", 
-  idx, expected, actual);
-
-  CHECK_TEXT(expected == actual, message);
-  CHECK_EQUAL(expected, actual);
-}
-
-static void
-check_all_states(const bitset* const set, const int expected_state) {
-  for (int i = 0; i < bitset_size(set); i++) {
-    verbose_check_equal(expected_state, bitset_test(set, i), i);
-  }
 }
 
 TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
@@ -81,13 +71,13 @@ TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
   bitset_set(&set, bitset_size(&set));
   bitset_set(&set, bitset_size(&set) + 1);
 
-  check_all_states(&set, 1);
+  CheckAllStates(&set, 0);
 }
 
 TEST(UtilBitset, BitsetSetAll) {
   bitset_set_all(&set);
 
-  check_all_states(&set, 1);
+  CheckAllStates(&set, 1);
 }
 
 TEST(UtilBitset, BitsetClr_CorrectIndex) {
@@ -109,13 +99,13 @@ TEST(UtilBitset, BitsetClr_OutOfBoundsIndex) {
   bitset_clr(&set, bitset_size(&set));
   bitset_clr(&set, bitset_size(&set) + 1);
 
-  check_all_states(&set, 1);
+  CheckAllStates(&set, 1);
 }
 
 TEST(UtilBitset, BitsetClrAll) {
   bitset_clr_all(&set);
 
-  check_all_states(&set, 0);
+  CheckAllStates(&set, 0);
 }
 
 TEST(UtilBitset, BitsetCompl) {
