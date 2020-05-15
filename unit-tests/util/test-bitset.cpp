@@ -60,9 +60,19 @@ TEST(UtilBitset, BitsetSet_CorrectIndex) {
 }
 
 static void
+verbose_check_equal(const int expected, const int actual, const int idx) {
+  char message[70];
+  sprintf(message, "testing bitset_test(set, %d); expected: %d but was %d", 
+  idx, expected, actual);
+
+  CHECK_TEXT(expected == actual, message);
+  CHECK_EQUAL(expected, actual);
+}
+
+static void
 check_all_states(const bitset* const set, const int expected_state) {
   for (int i = 0; i < bitset_size(set); i++) {
-    CHECK_EQUAL(expected_state, bitset_test(set, i));
+    verbose_check_equal(expected_state, bitset_test(set, i), i);
   }
 }
 
@@ -71,7 +81,7 @@ TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
   bitset_set(&set, bitset_size(&set));
   bitset_set(&set, bitset_size(&set) + 1);
 
-  check_all_states(&set, 0);
+  check_all_states(&set, 1);
 }
 
 TEST(UtilBitset, BitsetSetAll) {
