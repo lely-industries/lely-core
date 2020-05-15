@@ -314,6 +314,7 @@ cpplint:
         --extensions=cpp
         $(find include -name *.hpp)
         $(find src -name *.cpp)
+        $(find unit-tests -name *.cpp -o -name *.hpp)
 
 docker:valgrind:
   <<: *docker
