@@ -1,3 +1,24 @@
+/**@file
+ * This file is part of the CANopen Library Unit Test Suite.
+ *
+ * @copyright 2020 N7 Space Sp. z o.o.
+ *
+ * Unit Test Suite was developed under a programme of,
+ * and funded by, the European Space Agency.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <CppUTest/TestHarness.h>
 #include <lely/util/bits.h>
@@ -187,40 +208,40 @@ TEST(UtilBitsGroup, ClsClz64) {
   // clang-format off
   static uint_least64_t test64[] = {
     0x0000000000000000,
-    0x8000000000000000, 0xc000000000000000, 0xe000000000000000, 0xf000000000000000,
-    0xf800000000000000, 0xfc00000000000000, 0xfe00000000000000, 0xff00000000000000,
-    0xff80000000000000, 0xffc0000000000000, 0xffe0000000000000, 0xfff0000000000000,
-    0xfff8000000000000, 0xfffc000000000000, 0xfffe000000000000, 0xffff000000000000,
-    0xffff800000000000, 0xffffc00000000000, 0xffffe00000000000, 0xfffff00000000000,
-    0xfffff80000000000, 0xfffffc0000000000, 0xfffffe0000000000, 0xffffff0000000000,
-    0xffffff8000000000, 0xffffffc000000000, 0xffffffe000000000, 0xfffffff000000000,
-    0xfffffff800000000, 0xfffffffc00000000, 0xfffffffe00000000, 0xffffffff00000000,
-    0xffffffff80000000, 0xffffffffc0000000, 0xffffffffe0000000, 0xfffffffff0000000,
-    0xfffffffff8000000, 0xfffffffffc000000, 0xfffffffffe000000, 0xffffffffff000000,
-    0xffffffffff800000, 0xffffffffffc00000, 0xffffffffffe00000, 0xfffffffffff00000,
-    0xfffffffffff80000, 0xfffffffffffc0000, 0xfffffffffffe0000, 0xffffffffffff0000,
-    0xffffffffffff8000, 0xffffffffffffc000, 0xffffffffffffe000, 0xfffffffffffff000,
-    0xfffffffffffff800, 0xfffffffffffffc00, 0xfffffffffffffe00, 0xffffffffffffff00,
-    0xffffffffffffff80, 0xffffffffffffffc0, 0xffffffffffffffe0, 0xfffffffffffffff0,
-    0xfffffffffffffff8, 0xfffffffffffffffc, 0xfffffffffffffffe, 0xffffffffffffffff,
+    0x8000000000000000, 0xc000000000000000, 0xe000000000000000, 0xf000000000000000,  // NOLINT
+    0xf800000000000000, 0xfc00000000000000, 0xfe00000000000000, 0xff00000000000000,  // NOLINT
+    0xff80000000000000, 0xffc0000000000000, 0xffe0000000000000, 0xfff0000000000000,  // NOLINT
+    0xfff8000000000000, 0xfffc000000000000, 0xfffe000000000000, 0xffff000000000000,  // NOLINT
+    0xffff800000000000, 0xffffc00000000000, 0xffffe00000000000, 0xfffff00000000000,  // NOLINT
+    0xfffff80000000000, 0xfffffc0000000000, 0xfffffe0000000000, 0xffffff0000000000,  // NOLINT
+    0xffffff8000000000, 0xffffffc000000000, 0xffffffe000000000, 0xfffffff000000000,  // NOLINT
+    0xfffffff800000000, 0xfffffffc00000000, 0xfffffffe00000000, 0xffffffff00000000,  // NOLINT
+    0xffffffff80000000, 0xffffffffc0000000, 0xffffffffe0000000, 0xfffffffff0000000,  // NOLINT
+    0xfffffffff8000000, 0xfffffffffc000000, 0xfffffffffe000000, 0xffffffffff000000,  // NOLINT
+    0xffffffffff800000, 0xffffffffffc00000, 0xffffffffffe00000, 0xfffffffffff00000,  // NOLINT
+    0xfffffffffff80000, 0xfffffffffffc0000, 0xfffffffffffe0000, 0xffffffffffff0000,  // NOLINT
+    0xffffffffffff8000, 0xffffffffffffc000, 0xffffffffffffe000, 0xfffffffffffff000,  // NOLINT
+    0xfffffffffffff800, 0xfffffffffffffc00, 0xfffffffffffffe00, 0xffffffffffffff00,  // NOLINT
+    0xffffffffffffff80, 0xffffffffffffffc0, 0xffffffffffffffe0, 0xfffffffffffffff0,  // NOLINT
+    0xfffffffffffffff8, 0xfffffffffffffffc, 0xfffffffffffffffe, 0xffffffffffffffff,  // NOLINT
 
     0x42b139630a0b0596,
-    0xacaa634ea2d357ab, 0xcab7e5abf85f3afc, 0xe4f7d1195acad6bf, 0xf019bcd064df1b62,
-    0xfbb88dd93589318b, 0xfccd0e9dbca29c56, 0xfe31bdeb1878a15d, 0xff71e71ae41c7cb6,
-    0xff819f2bfedaf46f, 0xffd53d744135992c, 0xffe18474b591b9c4, 0xfff3354a561b1bda,
-    0xfffbc68b13c69247, 0xfffd2f3db32cf9d0, 0xfffe94cd581a9bcb, 0xffff63a0e7c8cf46,
-    0xffff8d451a297fc2, 0xffffdf2affe13dde, 0xffffe0e9f450868b, 0xfffff33a9cb37a47,
-    0xfffffbef74ad5c91, 0xfffffd652a8b5c36, 0xfffffe5dc90b792c, 0xffffff0cdbfac333,
-    0xffffff9b23749aab, 0xffffffc8f3973014, 0xffffffe73617d2c9, 0xfffffff03d3ef0fb,
-    0xfffffff9a6888689, 0xfffffffc1c0e9717, 0xfffffffef1d8acbc, 0xffffffff7e391679,
-    0xffffffff8788908b, 0xffffffffd73e1ec9, 0xffffffffe35953e8, 0xfffffffff411752b,
-    0xfffffffff846f930, 0xfffffffffd89d7cc, 0xfffffffffe45ebcf, 0xffffffffff2e00ea,
-    0xffffffffffa5943b, 0xffffffffffc0774c, 0xffffffffffe7f965, 0xfffffffffff3474a,
-    0xfffffffffff8fe93, 0xfffffffffffc50cf, 0xfffffffffffea621, 0xffffffffffff08f0,
-    0xffffffffffff9d14, 0xffffffffffffd2cd, 0xffffffffffffed4b, 0xfffffffffffff555,
-    0xfffffffffffffa18, 0xfffffffffffffd22, 0xfffffffffffffe07, 0xffffffffffffff61,
-    0xffffffffffffffba, 0xffffffffffffffd9, 0xffffffffffffffeb, 0xfffffffffffffff5,
-    0xfffffffffffffffb, 0xfffffffffffffffd, 0xfffffffffffffffe, 0xffffffffffffffff,
+    0xacaa634ea2d357ab, 0xcab7e5abf85f3afc, 0xe4f7d1195acad6bf, 0xf019bcd064df1b62,  // NOLINT
+    0xfbb88dd93589318b, 0xfccd0e9dbca29c56, 0xfe31bdeb1878a15d, 0xff71e71ae41c7cb6,  // NOLINT
+    0xff819f2bfedaf46f, 0xffd53d744135992c, 0xffe18474b591b9c4, 0xfff3354a561b1bda,  // NOLINT
+    0xfffbc68b13c69247, 0xfffd2f3db32cf9d0, 0xfffe94cd581a9bcb, 0xffff63a0e7c8cf46,  // NOLINT
+    0xffff8d451a297fc2, 0xffffdf2affe13dde, 0xffffe0e9f450868b, 0xfffff33a9cb37a47,  // NOLINT
+    0xfffffbef74ad5c91, 0xfffffd652a8b5c36, 0xfffffe5dc90b792c, 0xffffff0cdbfac333,  // NOLINT
+    0xffffff9b23749aab, 0xffffffc8f3973014, 0xffffffe73617d2c9, 0xfffffff03d3ef0fb,  // NOLINT
+    0xfffffff9a6888689, 0xfffffffc1c0e9717, 0xfffffffef1d8acbc, 0xffffffff7e391679,  // NOLINT
+    0xffffffff8788908b, 0xffffffffd73e1ec9, 0xffffffffe35953e8, 0xfffffffff411752b,  // NOLINT
+    0xfffffffff846f930, 0xfffffffffd89d7cc, 0xfffffffffe45ebcf, 0xffffffffff2e00ea,  // NOLINT
+    0xffffffffffa5943b, 0xffffffffffc0774c, 0xffffffffffe7f965, 0xfffffffffff3474a,  // NOLINT
+    0xfffffffffff8fe93, 0xfffffffffffc50cf, 0xfffffffffffea621, 0xffffffffffff08f0,  // NOLINT
+    0xffffffffffff9d14, 0xffffffffffffd2cd, 0xffffffffffffed4b, 0xfffffffffffff555,  // NOLINT
+    0xfffffffffffffa18, 0xfffffffffffffd22, 0xfffffffffffffe07, 0xffffffffffffff61,  // NOLINT
+    0xffffffffffffffba, 0xffffffffffffffd9, 0xffffffffffffffeb, 0xfffffffffffffff5,  // NOLINT
+    0xfffffffffffffffb, 0xfffffffffffffffd, 0xfffffffffffffffe, 0xffffffffffffffff,  // NOLINT
   };
   // clang-format on
 
@@ -328,40 +349,40 @@ TEST(UtilBitsGroup, CtsCtz64) {
   // clang-format off
   static uint_least64_t test64[] = {
     0x0000000000000000,
-    0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,
-    0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,
-    0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,
-    0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,
-    0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,
-    0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,
-    0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,
-    0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,
-    0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,
-    0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,
-    0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,
-    0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,
-    0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,
-    0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,
-    0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,
-    0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
+    0x0000000000000001, 0x0000000000000003, 0x0000000000000007, 0x000000000000000f,  // NOLINT
+    0x000000000000001f, 0x000000000000003f, 0x000000000000007f, 0x00000000000000ff,  // NOLINT
+    0x00000000000001ff, 0x00000000000003ff, 0x00000000000007ff, 0x0000000000000fff,  // NOLINT
+    0x0000000000001fff, 0x0000000000003fff, 0x0000000000007fff, 0x000000000000ffff,  // NOLINT
+    0x000000000001ffff, 0x000000000003ffff, 0x000000000007ffff, 0x00000000000fffff,  // NOLINT
+    0x00000000001fffff, 0x00000000003fffff, 0x00000000007fffff, 0x0000000000ffffff,  // NOLINT
+    0x0000000001ffffff, 0x0000000003ffffff, 0x0000000007ffffff, 0x000000000fffffff,  // NOLINT
+    0x000000001fffffff, 0x000000003fffffff, 0x000000007fffffff, 0x00000000ffffffff,  // NOLINT
+    0x00000001ffffffff, 0x00000003ffffffff, 0x00000007ffffffff, 0x0000000fffffffff,  // NOLINT
+    0x0000001fffffffff, 0x0000003fffffffff, 0x0000007fffffffff, 0x000000ffffffffff,  // NOLINT
+    0x000001ffffffffff, 0x000003ffffffffff, 0x000007ffffffffff, 0x00000fffffffffff,  // NOLINT
+    0x00001fffffffffff, 0x00003fffffffffff, 0x00007fffffffffff, 0x0000ffffffffffff,  // NOLINT
+    0x0001ffffffffffff, 0x0003ffffffffffff, 0x0007ffffffffffff, 0x000fffffffffffff,  // NOLINT
+    0x001fffffffffffff, 0x003fffffffffffff, 0x007fffffffffffff, 0x00ffffffffffffff,  // NOLINT
+    0x01ffffffffffffff, 0x03ffffffffffffff, 0x07ffffffffffffff, 0x0fffffffffffffff,  // NOLINT
+    0x1fffffffffffffff, 0x3fffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,  // NOLINT
 
     0xd082b0c953361364,
-    0xdeab2ecd7f0fc25d, 0x699974bc5f7a7edb, 0x03208b5b39ff70f7, 0x9872283a5cc6394f,
-    0xba15af046d8a40df, 0x307b97335e8b113f, 0xacdc6b17044e917f, 0xd809c2f04835feff,
-    0xe02d29f55c904dff, 0x9dc69947208e03ff, 0xf537f67b3ca327ff, 0xbca9ff91f1f00fff,
-    0x9be3307ef517dfff, 0xde78d15b2f6ebfff, 0x808d2641990f7fff, 0xf93652c29832ffff,
-    0x80a6c80a142dffff, 0xab7a9d938f5bffff, 0xb15167d0d567ffff, 0xbd55891a80efffff,
-    0xce54e9cd35dfffff, 0x585249a6053fffff, 0x98d0a95d4f7fffff, 0x78095b96aeffffff,
-    0x54290dc925ffffff, 0x00dc5f72dbffffff, 0x535ee84597ffffff, 0xbaa4490eefffffff,
-    0x5e52603c5fffffff, 0x13d7e585bfffffff, 0x999b13257fffffff, 0x70335fc0ffffffff,
-    0x9cde0951ffffffff, 0x2fa4d78bffffffff, 0x1d19db47ffffffff, 0xb672a4efffffffff,
-    0x1ff5d8dfffffffff, 0x9bdff23fffffffff, 0xb90eec7fffffffff, 0xc0de8cffffffffff,
-    0x735265ffffffffff, 0x23018bffffffffff, 0xa0e1e7ffffffffff, 0x096a8fffffffffff,
-    0x82e61fffffffffff, 0x60a0bfffffffffff, 0x67e97fffffffffff, 0x0bd8ffffffffffff,
-    0xbf11ffffffffffff, 0x13e3ffffffffffff, 0x7377ffffffffffff, 0x0eafffffffffffff,
-    0x631fffffffffffff, 0xa73fffffffffffff, 0xfb7fffffffffffff, 0x92ffffffffffffff,
-    0x65ffffffffffffff, 0xabffffffffffffff, 0x47ffffffffffffff, 0x8fffffffffffffff,
-    0xdfffffffffffffff, 0xbfffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,
+    0xdeab2ecd7f0fc25d, 0x699974bc5f7a7edb, 0x03208b5b39ff70f7, 0x9872283a5cc6394f,  // NOLINT
+    0xba15af046d8a40df, 0x307b97335e8b113f, 0xacdc6b17044e917f, 0xd809c2f04835feff,  // NOLINT
+    0xe02d29f55c904dff, 0x9dc69947208e03ff, 0xf537f67b3ca327ff, 0xbca9ff91f1f00fff,  // NOLINT
+    0x9be3307ef517dfff, 0xde78d15b2f6ebfff, 0x808d2641990f7fff, 0xf93652c29832ffff,  // NOLINT
+    0x80a6c80a142dffff, 0xab7a9d938f5bffff, 0xb15167d0d567ffff, 0xbd55891a80efffff,  // NOLINT
+    0xce54e9cd35dfffff, 0x585249a6053fffff, 0x98d0a95d4f7fffff, 0x78095b96aeffffff,  // NOLINT
+    0x54290dc925ffffff, 0x00dc5f72dbffffff, 0x535ee84597ffffff, 0xbaa4490eefffffff,  // NOLINT
+    0x5e52603c5fffffff, 0x13d7e585bfffffff, 0x999b13257fffffff, 0x70335fc0ffffffff,  // NOLINT
+    0x9cde0951ffffffff, 0x2fa4d78bffffffff, 0x1d19db47ffffffff, 0xb672a4efffffffff,  // NOLINT
+    0x1ff5d8dfffffffff, 0x9bdff23fffffffff, 0xb90eec7fffffffff, 0xc0de8cffffffffff,  // NOLINT
+    0x735265ffffffffff, 0x23018bffffffffff, 0xa0e1e7ffffffffff, 0x096a8fffffffffff,  // NOLINT
+    0x82e61fffffffffff, 0x60a0bfffffffffff, 0x67e97fffffffffff, 0x0bd8ffffffffffff,  // NOLINT
+    0xbf11ffffffffffff, 0x13e3ffffffffffff, 0x7377ffffffffffff, 0x0eafffffffffffff,  // NOLINT
+    0x631fffffffffffff, 0xa73fffffffffffff, 0xfb7fffffffffffff, 0x92ffffffffffffff,  // NOLINT
+    0x65ffffffffffffff, 0xabffffffffffffff, 0x47ffffffffffffff, 0x8fffffffffffffff,  // NOLINT
+    0xdfffffffffffffff, 0xbfffffffffffffff, 0x7fffffffffffffff, 0xffffffffffffffff,  // NOLINT
   };
   // clang-format on
 
