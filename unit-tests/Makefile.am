@@ -36,7 +36,8 @@ LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 bin += can-test
 
 src_can_tests = \
-	can/test-msg.cpp
+	can/test-msg.cpp \
+	can/test-buf.cpp
 
 can_test_SOURCES = tests-shared-main.cpp $(src_can_tests)
 can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
