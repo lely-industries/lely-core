@@ -7,6 +7,6 @@ Name: liblely-io2
 Description: Lely I/O library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-util >= @PACKAGE_VERSION@ liblely-can >= @PACKAGE_VERSION@ liblely-ev >= @PACKAGE_VERSION@
+Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-util >= @PACKAGE_VERSION@ liblely-can >= 1.9.2 liblely-ev >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llely-io2
