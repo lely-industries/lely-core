@@ -1,7 +1,29 @@
+/**
+ * This file is part of the CANopen Library Unit Test Suite.
+ *
+ * @copyright 2020 N7 Space Sp. z o.o.
+ *
+ * Unit Test Suite was developed under a programme of,
+ * and funded by, the European Space Agency.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <CppUTest/TestHarness.h>
 #include <lely/util/bitset.h>
 #include <limits.h>
+#include <string>
 
 TEST_GROUP(UtilBitset) {
   bitset set;
@@ -10,7 +32,8 @@ TEST_GROUP(UtilBitset) {
   static void CheckAllStates(const bitset* const set,
                              const int expected_state) {
     for (int i = 0; i < bitset_size(set); i++) {
-      const std::string msg_str = "testing bitset_test(set, " + std::to_string(i) + ")";
+      const std::string msg_str =
+          "testing bitset_test(set, " + std::to_string(i) + ")";
       CHECK_EQUAL_TEXT(expected_state, bitset_test(set, i), msg_str.c_str());
     }
   }
@@ -23,15 +46,15 @@ TEST_GROUP(UtilBitset) {
 };
 
 IGNORE_TEST(UtilBitset, BitsetInit) {
-  // TODO
+  // TODO(N7S)
 }
 
 IGNORE_TEST(UtilBitset, BitsetFini) {
-  // TODO
+  // TODO(N7S)
 }
 
 IGNORE_TEST(UtilBitset, BitsetResize) {
-  // TODO
+  // TODO(N7S)
 }
 
 TEST(UtilBitset, BitsetSize) {

@@ -1,3 +1,24 @@
+/**
+ * This file is part of the CANopen Library Unit Test Suite.
+ *
+ * @copyright 2020 N7 Space Sp. z o.o.
+ *
+ * Unit Test Suite was developed under a programme of,
+ * and funded by, the European Space Agency.
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <CppUTest/TestHarness.h>
 #include <lely/util/pheap.h>
@@ -29,19 +50,19 @@ TEST(UtilPheapInit, Pheap_EmptyWhenInitialized) {
 
 TEST_GROUP(UtilPheap) {
   pheap heap;
-  const static size_t nodes_number = 10;
+  static const size_t kNodesNumber = 10;
 
-  pnode nodes[nodes_number];
+  pnode nodes[kNodesNumber];
   // clang-format off
-  int keys[nodes_number] = {0x0000001, 
-                            0x0000011, 
-                            0x0001111, 
+  int keys[kNodesNumber] = {0x0000001,
+                            0x0000011,
+                            0x0001111,
                             0x0000111,
-                            0x0011111, 
+                            0x0011111,
                             0x0111111,
-                            0x1111111, 
+                            0x1111111,
                             0x111111F,
-                            0x11111FF, 
+                            0x11111FF,
                             0x1111FFF};
   // clang-format on
 
@@ -54,7 +75,7 @@ TEST_GROUP(UtilPheap) {
   TEST_SETUP() {
     pheap_init(&heap, pheap_cmp_ints);
 
-    for (size_t i = 0; i < nodes_number; i++) {
+    for (size_t i = 0; i < kNodesNumber; i++) {
       pnode* node_ptr = &nodes[i];
       int* key_ptr = &keys[i];
       pnode_init(node_ptr, key_ptr);
