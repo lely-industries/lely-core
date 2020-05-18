@@ -64,8 +64,8 @@ TEST(UtilBitset, BitsetSize) {
 }
 
 TEST(UtilBitset, BitsetTest) {
-  set.bits[0] |= (0x1 << 1);
-  set.bits[0] |= (0x1 << 5);
+  bitset_set(&set, 1);
+  bitset_set(&set, 5);
 
   CHECK_EQUAL(1, bitset_test(&set, 1));
   CHECK_EQUAL(1, bitset_test(&set, 5));

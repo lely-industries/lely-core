@@ -30,7 +30,8 @@ TEST(UtilSllistInit, SllistInit) {
 
   sllist_init(&list);
 
-  CHECK(list.first == nullptr);
+  CHECK(sllist_first(&list) == nullptr);
+  CHECK(sllist_last(&list) == nullptr);
 }
 
 TEST(UtilSllistInit, SlnodeInit) {
@@ -100,14 +101,14 @@ TEST(UtilSllist, SllistPushFront_WhenEmpty) {
 
   sllist_push_front(&list, node_ptr);
 
-  POINTERS_EQUAL(node_ptr, list.first);
+  POINTERS_EQUAL(node_ptr, sllist_first(&list));
 }
 
 TEST(UtilSllist, SllistPushFront_AddMany) {
   sllist_push_front(&list, &nodes[0]);
   sllist_push_front(&list, &nodes[1]);
 
-  POINTERS_EQUAL(&nodes[1], list.first);
+  POINTERS_EQUAL(&nodes[1], sllist_first(&list));
 }
 
 TEST(UtilSllist, SllistPushBack_WhenEmpty) {
@@ -121,9 +122,9 @@ TEST(UtilSllist, SllistPushBack_AddMany) {
   sllist_push_back(&list, &nodes[0]);
   sllist_push_back(&list, &nodes[1]);
 
-  POINTERS_EQUAL(&nodes[0], list.first);
-  POINTERS_EQUAL(&nodes[1], list.first->next);
-  CHECK_EQUAL(2, sllist_size(&list));
+  POINTERS_EQUAL(&nodes[0], sllist_first(&list));
+  POINTERS_EQUAL(&nodes[1], sllist_pop_back(&list));
+  CHECK_EQUAL(1, sllist_size(&list));
 }
 
 TEST(UtilSllist, SllistPopFront_WhenEmpty) {
