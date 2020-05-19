@@ -43,6 +43,7 @@
 #include <unistd.h>
 
 #include <linux/can/raw.h>
+#include <linux/sockios.h>
 #include <sys/ioctl.h>
 
 #include "../posix/fd.h"
