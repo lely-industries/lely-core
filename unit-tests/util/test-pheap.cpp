@@ -50,11 +50,11 @@ TEST(UtilPheapInit, Pheap_EmptyWhenInitialized) {
 
 TEST_GROUP(UtilPheap) {
   pheap heap;
-  static const size_t kNodesNumber = 10;
+  static const size_t NODES_NUMBER = 10;
 
-  pnode nodes[kNodesNumber];
+  pnode nodes[NODES_NUMBER];
   // clang-format off
-  int keys[kNodesNumber] = {0x0000001,
+  int keys[NODES_NUMBER] = {0x0000001,
                             0x0000011,
                             0x0001111,
                             0x0000111,
@@ -75,7 +75,7 @@ TEST_GROUP(UtilPheap) {
   TEST_SETUP() {
     pheap_init(&heap, pheap_cmp_ints);
 
-    for (size_t i = 0; i < kNodesNumber; i++) {
+    for (size_t i = 0; i < NODES_NUMBER; i++) {
       pnode* node_ptr = &nodes[i];
       int* key_ptr = &keys[i];
       pnode_init(node_ptr, key_ptr);

@@ -43,9 +43,9 @@ TEST(UtilSllistInit, SlnodeInit) {
 }
 
 TEST_GROUP(UtilSllist) {
-  static const size_t kNodesNumber = 10;
+  static const size_t NODES_NUMBER = 10;
   sllist list;
-  slnode nodes[kNodesNumber];
+  slnode nodes[NODES_NUMBER];
 
   void FillList(sllist * list, const int how_many) {
     for (int i = 0; i < how_many; i++) {
@@ -58,7 +58,7 @@ TEST_GROUP(UtilSllist) {
   TEST_SETUP() {
     sllist_init(&list);
 
-    for (size_t i = 0; i < kNodesNumber; i++) {
+    for (size_t i = 0; i < NODES_NUMBER; i++) {
       slnode_init(&nodes[i]);
     }
   }
