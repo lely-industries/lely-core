@@ -66,9 +66,9 @@ TEST_GROUP(UtilPheap) {
                             0x1111FFF};
   // clang-format on
 
-  static void FillHeap(pheap * heap, const int how_many, pnode* nodes) {
+  void FillHeap(const int how_many) {
     for (int i = 0; i < how_many; i++) {
-      pheap_insert(heap, &nodes[i]);
+      pheap_insert(&heap, &nodes[i]);
     }
   }
 
@@ -181,14 +181,14 @@ TEST(UtilPheap, PheapFind_WhenEmpty) {
 }
 
 TEST(UtilPheap, PheapFind_WhenNotEmpty) {
-  FillHeap(&heap, 2, nodes);
+  FillHeap(2);
 
   POINTERS_EQUAL(&nodes[0], pheap_find(&heap, &keys[0]));
   POINTERS_EQUAL(&nodes[1], pheap_find(&heap, &keys[1]));
 }
 
 TEST(UtilPheap, PheapFind_FindNotPresentWhenMultipleElements) {
-  FillHeap(&heap, 3, nodes);
+  FillHeap(3);
 
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[3]));
 }
@@ -205,7 +205,7 @@ TEST(UtilPheap, PnodeForeach_EmptyHeap) {
 
 TEST(UtilPheap, PnodeForeach_OnlyHead) {
   int node_counter = 0;
-  FillHeap(&heap, 1, nodes);
+  FillHeap(1);
 
   pnode_foreach(heap.root, node) node_counter++;
 
@@ -214,7 +214,7 @@ TEST(UtilPheap, PnodeForeach_OnlyHead) {
 
 TEST(UtilPheap, PnodeForeach_MultipleElements) {
   int node_counter = 0;
-  FillHeap(&heap, 2, nodes);
+  FillHeap(2);
 
   pnode_foreach(heap.root, node) node_counter++;
 
@@ -231,7 +231,7 @@ TEST(UtilPheap, PheapForeach_EmptyHeap) {
 
 TEST(UtilPheap, PheapForeach_OnlyHead) {
   int node_counter = 0;
-  FillHeap(&heap, 1, nodes);
+  FillHeap(1);
 
   pheap_foreach(&heap, node) node_counter++;
 
@@ -240,7 +240,7 @@ TEST(UtilPheap, PheapForeach_OnlyHead) {
 
 TEST(UtilPheap, PheapForeach_MultipleElements) {
   int node_counter = 0;
-  FillHeap(&heap, 2, nodes);
+  FillHeap(2);
 
   pheap_foreach(&heap, node) node_counter++;
 
