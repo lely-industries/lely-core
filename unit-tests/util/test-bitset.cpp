@@ -31,14 +31,15 @@
 
 // clang-format off
 TEST_GROUP(UtilBitsetInit){
-  void TestSize(const unsigned int requested_size){
-    bitset set;
-    bitset_init(&set, requested_size);
-    int size_in_bits = set.size * sizeof(int) * CHAR_BIT;
+  bitset set;
 
-    std::string msg = "testing bitset_size(&set) with requested size " +
+  void TestSize(const unsigned int requested_size){
+    bitset_init(&set, requested_size);
+    const int set_size_bits = set.size * sizeof(int) * CHAR_BIT;
+
+    const std::string msg = "testing bitset_size(&set) with requested size " +
                   std::to_string(requested_size);
-    CHECK_EQUAL_TEXT(size_in_bits, bitset_size(&set), msg.c_str());
+    CHECK_EQUAL_TEXT(set_size_bits, bitset_size(&set), msg.c_str());
     bitset_fini(&set);
   }
 };
@@ -59,13 +60,18 @@ IGNORE_TEST(UtilBitsetInit, BitsetResize) {
 TEST(UtilBitsetInit, BitsetSize) {
   TestSize(0);
   TestSize(1);
+  TestSize(16);
+  TestSize(17);
+  TestSize(33);
+  TestSize(32);
   TestSize(42);
+  TestSize(64);
+  TestSize(65);
 }
 
 TEST_GROUP(UtilBitset) {
   bitset set;
-  const unsigned int requested_size = 43;
-  int SET_SIZE;
+  const int SET_SIZE = 64;
 
   void CheckAllStates(const int expected_state,
                       const std::set<int>& negated_indexes = std::set<int>()) {
@@ -79,8 +85,8 @@ TEST_GROUP(UtilBitset) {
   }
 
   TEST_SETUP() {
-    bitset_init(&set, requested_size);
-    SET_SIZE = bitset_size(&set);
+    bitset_init(&set, SET_SIZE);
+    CHECK_EQUAL(SET_SIZE, bitset_size(&set));
     bitset_clr_all(&set);
   }
   TEST_TEARDOWN() { bitset_fini(&set); }
