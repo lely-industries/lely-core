@@ -20,6 +20,8 @@
  * limitations under the License.
  */
 
+#include <set>
+
 #include <CppUTest/TestHarness.h>
 #include <lely/util/bitset.h>
 
@@ -64,26 +66,14 @@ TEST_GROUP(UtilBitset) {
   const unsigned int requested_size = 43;
   int SET_SIZE;
 
-  void VerboseCheck(int index, const int expected_state) {
-    const std::string msg_str =
-        "testing bitset_test(set, " + std::to_string(index) + ")";
-    CHECK_EQUAL_TEXT(expected_state, bitset_test(&set, static_cast<int>(index)),
-                     msg_str.c_str());
-  }
-
-  void CheckAllStates(
-      const int expected_state,
-      const std::vector<int> negated_indices = std::vector<int>()) {
+  void CheckAllStates(const int expected_state,
+                      const std::set<int>& negated_indexes = std::set<int>()) {
     for (int i = 0; i < SET_SIZE; i++) {
-      int negated = 0;
-      for (auto j = negated_indices.begin(); j != negated_indices.end(); j++) {
-        if (i == *j) {
-          VerboseCheck(i, expected_state ? 0 : 1);
-          negated = 1;
-          break;
-        }
-      }
-      if (negated == 0) VerboseCheck(i, expected_state);
+      const int check_state =
+          (negated_indexes.count(i) == 0) ? expected_state : !expected_state;
+      const std::string msg_str =
+          "testing bitset_test(set, " + std::to_string(i) + ")";
+      CHECK_EQUAL_TEXT(check_state, bitset_test(&set, i), msg_str.c_str());
     }
   }
 
