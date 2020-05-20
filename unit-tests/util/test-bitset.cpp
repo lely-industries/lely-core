@@ -39,6 +39,7 @@ TEST_GROUP(UtilBitsetInit){
     std::string msg = "testing bitset_size(&set) with requested size " +
                   std::to_string(requested_size);
     CHECK_EQUAL_TEXT(size_in_bits, bitset_size(&set), msg.c_str());
+    bitset_fini(&set);
   }
 };
 // clang-format on
