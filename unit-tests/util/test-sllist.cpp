@@ -30,8 +30,8 @@ TEST(UtilSllistInit, SllistInit) {
 
   sllist_init(&list);
 
-  CHECK(sllist_first(&list) == nullptr);
-  CHECK(sllist_last(&list) == nullptr);
+  POINTERS_EQUAL(nullptr, sllist_first(&list));
+  POINTERS_EQUAL(nullptr, sllist_last(&list));
 }
 
 TEST(UtilSllistInit, SlnodeInit) {
@@ -49,15 +49,12 @@ TEST_GROUP(UtilSllist) {
 
   void FillList(sllist * list, const int how_many) {
     for (int i = 0; i < how_many; i++) {
-      slnode* node_ptr = &nodes[i];
-      slnode_init(node_ptr);
-      sllist_push_back(list, node_ptr);
+      sllist_push_back(list, &nodes[i]);
     }
   }
 
   TEST_SETUP() {
     sllist_init(&list);
-
     for (size_t i = 0; i < NODES_NUMBER; i++) {
       slnode_init(&nodes[i]);
     }
@@ -97,11 +94,9 @@ TEST(UtilSllist, SllistSize_ManyAdded) {
 }
 
 TEST(UtilSllist, SllistPushFront_WhenEmpty) {
-  slnode* node_ptr = &nodes[0];
+  sllist_push_front(&list, &nodes[0]);
 
-  sllist_push_front(&list, node_ptr);
-
-  POINTERS_EQUAL(node_ptr, sllist_first(&list));
+  POINTERS_EQUAL(&nodes[0], sllist_first(&list));
 }
 
 TEST(UtilSllist, SllistPushFront_AddMany) {
@@ -114,7 +109,7 @@ TEST(UtilSllist, SllistPushFront_AddMany) {
 TEST(UtilSllist, SllistPushBack_WhenEmpty) {
   sllist_push_back(&list, &nodes[0]);
 
-  POINTERS_EQUAL(&nodes[0], list.first);
+  POINTERS_EQUAL(&nodes[0], sllist_first(&list));
   CHECK_EQUAL(1, sllist_size(&list));
 }
 
@@ -288,8 +283,8 @@ TEST(UtilSllist, SllistForeach_Empty) {
 
 TEST(UtilSllist, SllistForeach_OnlyHead) {
   FillList(&list, 1);
-
   slnode* node_ptr = nullptr;
+
   sllist_foreach(&list, node) node_ptr = node;
 
   POINTERS_EQUAL(&nodes[0], node_ptr);
@@ -297,8 +292,8 @@ TEST(UtilSllist, SllistForeach_OnlyHead) {
 
 TEST(UtilSllist, SllistForeach_MultipleElements) {
   FillList(&list, 2);
-
   slnode* node_ptr = nullptr;
+
   sllist_foreach(&list, node) node_ptr = node;
 
   POINTERS_EQUAL(&nodes[1], node_ptr);

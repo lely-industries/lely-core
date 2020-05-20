@@ -43,9 +43,9 @@ TEST(UtilPheapInit, Pheap_EmptyWhenInitialized) {
   pheap heap;
   pheap_init(&heap, pheap_cmp_ints);
 
-  CHECK_EQUAL(0, heap.num_nodes);
+  CHECK_EQUAL(0, pheap_size(&heap));
+  POINTERS_EQUAL(nullptr, pheap_first(&heap));
   FUNCTIONPOINTERS_EQUAL(pheap_cmp_ints, heap.cmp);
-  POINTERS_EQUAL(nullptr, heap.root);
 }
 
 TEST_GROUP(UtilPheap) {
@@ -76,9 +76,7 @@ TEST_GROUP(UtilPheap) {
     pheap_init(&heap, pheap_cmp_ints);
 
     for (size_t i = 0; i < NODES_NUMBER; i++) {
-      pnode* node_ptr = &nodes[i];
-      int* key_ptr = &keys[i];
-      pnode_init(node_ptr, key_ptr);
+      pnode_init(&nodes[i], &keys[i]);
     }
   }
 };
@@ -94,22 +92,15 @@ TEST(UtilPheap, PheapCmpInts) {
 }
 
 TEST(UtilPheap, PnodeInit) {
-  pnode* node_ptr = &nodes[0];
-  void* key_ptr = &keys[0];
+  pnode_init(&nodes[0], &keys[0]);
 
-  pnode_init(node_ptr, key_ptr);
-
-  const int value_of_node = *(static_cast<const int*>(node_ptr->key));
-  CHECK_EQUAL(keys[0], value_of_node);
+  CHECK_EQUAL(keys[0], *(static_cast<const int*>(nodes[0].key)));
 }
 
 TEST(UtilPheap, PnodeNext) {
-  pnode* node_ptr = &nodes[0];
-  pnode* next_node_ptr = &nodes[1];
+  nodes[0].next = &nodes[1];
 
-  node_ptr->next = next_node_ptr;
-
-  POINTERS_EQUAL(next_node_ptr, pnode_next(node_ptr));
+  POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[0]));
 }
 
 TEST(UtilPheap, PheapEmpty_IsEmpty) { CHECK_EQUAL(1, pheap_empty(&heap)); }
@@ -136,48 +127,36 @@ TEST(UtilPheap, PheapSize_HasMultipleElements) {
 }
 
 TEST(UtilPheap, PheapInsert_WhenEmpty) {
-  pnode* node_ptr = &nodes[0];
+  pheap_insert(&heap, &nodes[0]);
 
-  pheap_insert(&heap, node_ptr);
-
-  CHECK_EQUAL(node_ptr, heap.root);
+  CHECK_EQUAL(&nodes[0], pheap_first(&heap));
 }
 
 TEST(UtilPheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
-  pnode* node_ptr = &nodes[0];
-
-  pheap_insert(&heap, node_ptr);
-  pheap_remove(&heap, node_ptr);
+  pheap_insert(&heap, &nodes[0]);
+  pheap_remove(&heap, &nodes[0]);
 
   CHECK_EQUAL(0UL, pheap_size(&heap));
 }
 
 TEST(UtilPheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
-  pnode* node_ptr = &nodes[0];
-  pnode* next_node_ptr = &nodes[1];
-
-  pheap_insert(&heap, node_ptr);
-  pheap_insert(&heap, next_node_ptr);
-  pheap_remove(&heap, node_ptr);
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[1]);
+  pheap_remove(&heap, &nodes[0]);
 
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
 TEST(UtilPheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
-  pnode* node_ptr = &nodes[0];
-  pnode* next_node_ptr = &nodes[1];
-
-  pheap_insert(&heap, node_ptr);
-  pheap_insert(&heap, next_node_ptr);
-  pheap_remove(&heap, next_node_ptr);
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[1]);
+  pheap_remove(&heap, &nodes[1]);
 
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
 TEST(UtilPheap, PheapFind_WhenEmpty) {
-  void* key_ptr = &keys[0];
-
-  POINTERS_EQUAL(nullptr, pheap_find(&heap, key_ptr));
+  POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[0]));
 }
 
 TEST(UtilPheap, PheapFind_WhenNotEmpty) {
@@ -193,7 +172,11 @@ TEST(UtilPheap, PheapFind_FindNotPresentWhenMultipleElements) {
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[3]));
 }
 
-TEST(UtilPheap, PheapFirst) { POINTERS_EQUAL(heap.root, pheap_first(&heap)); }
+TEST(UtilPheap, PheapFirst) { 
+  pheap_insert(&heap, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[0], pheap_first(&heap)); 
+}
 
 TEST(UtilPheap, PnodeForeach_EmptyHeap) {
   int node_counter = 0;

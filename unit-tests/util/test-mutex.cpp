@@ -44,6 +44,7 @@ TEST_GROUP(UtilMutex) {
 
 TEST(UtilMutex, UnlockGuard_LocksAndUnlocksMutex) {
   { lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m); }
+  
   CHECK_EQUAL(true, m.lock_was_called);
   CHECK_EQUAL(true, m.unlock_was_called);
 }
