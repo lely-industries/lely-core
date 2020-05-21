@@ -30,21 +30,25 @@
 
 TEST_GROUP(UtilBitsetInit) {
   bitset set;
-
-  void TestSize(const int requested_size) {
+  int GetSizeForBits(const int requested_size) {
     bitset_init(&set, requested_size);
-    const int INT_BIT = sizeof(int) * CHAR_BIT;
-    const int SET_SIZE_BIT = requested_size % INT_BIT == 0
-                                 ? requested_size
-                                 : (requested_size / INT_BIT + 1) * INT_BIT;
-
-    const std::string msg = "testing bitset_size(&set) with requested size " +
-                            std::to_string(requested_size);
-
-    CHECK_EQUAL_TEXT(SET_SIZE_BIT, bitset_size(&set), msg.c_str());
+    int result = bitset_size(&set);
     bitset_fini(&set);
+    return result;
   }
 };
+
+TEST(UtilBitsetInit, BitsetSize) {
+  const int INT_BIT = sizeof(int) * CHAR_BIT;
+
+  CHECK_EQUAL(0, GetSizeForBits(0));
+  CHECK_EQUAL(INT_BIT, GetSizeForBits(1));
+  CHECK_EQUAL(INT_BIT, GetSizeForBits(INT_BIT - 1));
+  CHECK_EQUAL(INT_BIT, GetSizeForBits(INT_BIT));
+  CHECK_EQUAL(2 * INT_BIT, GetSizeForBits(INT_BIT + 1));
+  CHECK_EQUAL(2 * INT_BIT, GetSizeForBits(2 * INT_BIT));
+  CHECK_EQUAL(3 * INT_BIT, GetSizeForBits(2 * INT_BIT + 1));
+}
 
 IGNORE_TEST(UtilBitsetInit, BitsetInit) {
   // TODO(N7S)
@@ -56,18 +60,6 @@ IGNORE_TEST(UtilBitsetInit, BitsetFini) {
 
 IGNORE_TEST(UtilBitsetInit, BitsetResize) {
   // TODO(N7S)
-}
-
-TEST(UtilBitsetInit, BitsetSize) {
-  TestSize(0);
-  TestSize(1);
-  TestSize(16);
-  TestSize(17);
-  TestSize(33);
-  TestSize(32);
-  TestSize(42);
-  TestSize(64);
-  TestSize(65);
 }
 
 TEST_GROUP(UtilBitset) {

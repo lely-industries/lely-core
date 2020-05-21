@@ -96,7 +96,7 @@ TEST(UtilPheap, PheapCmpInts) {
 TEST(UtilPheap, PnodeInit) {
   pnode_init(&nodes[0], &keys[0]);
 
-  CHECK_EQUAL(keys[0], *(static_cast<const int*>(nodes[0].key)));
+  CHECK_EQUAL(keys[0], *static_cast<const int*>(nodes[0].key));
 }
 
 TEST(UtilPheap, PnodeNext) {
@@ -136,6 +136,7 @@ TEST(UtilPheap, PheapInsert_WhenEmpty) {
 
 TEST(UtilPheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
+
   pheap_remove(&heap, &nodes[0]);
 
   CHECK_EQUAL(0UL, pheap_size(&heap));
@@ -144,6 +145,7 @@ TEST(UtilPheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
 TEST(UtilPheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
+
   pheap_remove(&heap, &nodes[0]);
 
   CHECK_EQUAL(1UL, pheap_size(&heap));
@@ -152,6 +154,7 @@ TEST(UtilPheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
 TEST(UtilPheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
+
   pheap_remove(&heap, &nodes[1]);
 
   CHECK_EQUAL(1UL, pheap_size(&heap));
