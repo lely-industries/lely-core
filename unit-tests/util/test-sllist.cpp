@@ -21,6 +21,7 @@
  */
 
 #include <CppUTest/TestHarness.h>
+
 #include <lely/util/sllist.h>
 
 TEST_GROUP(UtilSllistInit){};

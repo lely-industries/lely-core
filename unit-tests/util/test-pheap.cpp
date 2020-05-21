@@ -20,9 +20,11 @@
  * limitations under the License.
  */
 
+#include <cassert>
+
 #include <CppUTest/TestHarness.h>
+
 #include <lely/util/pheap.h>
-#include <assert.h>
 
 static int
 pheap_cmp_ints(const void* p1, const void* p2) {
@@ -172,10 +174,10 @@ TEST(UtilPheap, PheapFind_FindNotPresentWhenMultipleElements) {
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[3]));
 }
 
-TEST(UtilPheap, PheapFirst) { 
+TEST(UtilPheap, PheapFirst) {
   pheap_insert(&heap, &nodes[0]);
 
-  POINTERS_EQUAL(&nodes[0], pheap_first(&heap)); 
+  POINTERS_EQUAL(&nodes[0], pheap_first(&heap));
 }
 
 TEST(UtilPheap, PnodeForeach_EmptyHeap) {

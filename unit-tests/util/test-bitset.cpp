@@ -20,30 +20,31 @@
  * limitations under the License.
  */
 
+#include <climits>
 #include <set>
+#include <string>
 
 #include <CppUTest/TestHarness.h>
+
 #include <lely/util/bitset.h>
 
-#include <limits.h>
-#include <string>
-#include <vector>
-
-// clang-format off
-TEST_GROUP(UtilBitsetInit){
+TEST_GROUP(UtilBitsetInit) {
   bitset set;
 
-  void TestSize(const unsigned int requested_size){
+  void TestSize(const int requested_size) {
     bitset_init(&set, requested_size);
-    const int set_size_bits = set.size * sizeof(int) * CHAR_BIT;
+    const int INT_BIT = sizeof(int) * CHAR_BIT;
+    const int SET_SIZE_BIT = requested_size % INT_BIT == 0
+                                 ? requested_size
+                                 : (requested_size / INT_BIT + 1) * INT_BIT;
 
     const std::string msg = "testing bitset_size(&set) with requested size " +
-                  std::to_string(requested_size);
-    CHECK_EQUAL_TEXT(set_size_bits, bitset_size(&set), msg.c_str());
+                            std::to_string(requested_size);
+
+    CHECK_EQUAL_TEXT(SET_SIZE_BIT, bitset_size(&set), msg.c_str());
     bitset_fini(&set);
   }
 };
-// clang-format on
 
 IGNORE_TEST(UtilBitsetInit, BitsetInit) {
   // TODO(N7S)

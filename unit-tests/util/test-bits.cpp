@@ -21,6 +21,7 @@
  */
 
 #include <CppUTest/TestHarness.h>
+
 #include <lely/util/bits.h>
 
 TEST_GROUP(UtilBits){};
