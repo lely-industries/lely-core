@@ -24,9 +24,9 @@
 
 #include <lely/util/bits.h>
 
-TEST_GROUP(UtilBits){};
+TEST_GROUP(Util_Bits){};
 
-TEST(UtilBits, BSwap16) {
+TEST(Util_Bits, BSwap16) {
   // clang-format off
   static uint_least16_t test16[] = {
     0x0000, 0x0000,
@@ -56,7 +56,7 @@ TEST(UtilBits, BSwap16) {
   }
 }
 
-TEST(UtilBits, BSwap32) {
+TEST(Util_Bits, BSwap32) {
   // clang-format off
   static uint_least32_t test32[] = {
     0x00000000, 0x00000000,
@@ -86,7 +86,7 @@ TEST(UtilBits, BSwap32) {
   }
 }
 
-TEST(UtilBits, BSwap64) {
+TEST(Util_Bits, BSwap64) {
   // clang-format off
   static uint_least64_t test64[] = {
     0x0000000000000000, 0x0000000000000000,
@@ -116,7 +116,7 @@ TEST(UtilBits, BSwap64) {
   }
 }
 
-TEST(UtilBits, ClsClz8) {
+TEST(Util_Bits, ClsClz8) {
   // clang-format off
   static uint_least8_t test8[] = {
     0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff,
@@ -138,7 +138,7 @@ TEST(UtilBits, ClsClz8) {
   }
 }
 
-TEST(UtilBits, ClsClz16) {
+TEST(Util_Bits, ClsClz16) {
   // clang-format off
   static uint_least16_t test16[] = {
     0x0000,
@@ -167,7 +167,7 @@ TEST(UtilBits, ClsClz16) {
   }
 }
 
-TEST(UtilBits, ClsClz32) {
+TEST(Util_Bits, ClsClz32) {
   // clang-format off
   static uint_least32_t test32[] = {
     0x00000000,
@@ -205,7 +205,7 @@ TEST(UtilBits, ClsClz32) {
   }
 }
 
-TEST(UtilBits, ClsClz64) {
+TEST(Util_Bits, ClsClz64) {
   // clang-format off
   static uint_least64_t test64[] = {
     0x0000000000000000,
@@ -258,7 +258,7 @@ TEST(UtilBits, ClsClz64) {
   }
 }
 
-TEST(UtilBits, CtsCtz8) {
+TEST(Util_Bits, CtsCtz8) {
   // clang-format off
   static uint_least8_t test8[] = {
     0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff,
@@ -280,7 +280,7 @@ TEST(UtilBits, CtsCtz8) {
   }
 }
 
-TEST(UtilBits, CtsCtz16) {
+TEST(Util_Bits, CtsCtz16) {
   // clang-format off
   static uint_least16_t test16[] = {
     0x0000,
@@ -309,7 +309,7 @@ TEST(UtilBits, CtsCtz16) {
   }
 }
 
-TEST(UtilBits, CtsCtz32) {
+TEST(Util_Bits, CtsCtz32) {
   // clang-format off
   static uint_least32_t test32[] = {
     0x00000000,
@@ -346,7 +346,7 @@ TEST(UtilBits, CtsCtz32) {
   }
 }
 
-TEST(UtilBits, CtsCtz64) {
+TEST(Util_Bits, CtsCtz64) {
   // clang-format off
   static uint_least64_t test64[] = {
     0x0000000000000000,
@@ -399,7 +399,7 @@ TEST(UtilBits, CtsCtz64) {
   }
 }
 
-TEST(UtilBits, Ffs8) {
+TEST(Util_Bits, Ffs8) {
   CHECK_EQUAL(0, ffs8(0x00));
 
   CHECK_EQUAL(1, ffs8(0x01));
@@ -407,7 +407,7 @@ TEST(UtilBits, Ffs8) {
   CHECK_EQUAL(8, ffs8(0x80));
 }
 
-TEST(UtilBits, Ffz8) {
+TEST(Util_Bits, Ffz8) {
   CHECK_EQUAL(0, ffz8(0xFF));
 
   CHECK_EQUAL(1, ffz8(0x00));
@@ -415,7 +415,7 @@ TEST(UtilBits, Ffz8) {
   CHECK_EQUAL(8, ffz8(0x7F));
 }
 
-TEST(UtilBits, Ffs16) {
+TEST(Util_Bits, Ffs16) {
   CHECK_EQUAL(0, ffs16(0x0000));
 
   CHECK_EQUAL(1, ffs16(0x0001));
@@ -426,7 +426,7 @@ TEST(UtilBits, Ffs16) {
   CHECK_EQUAL(16, ffs16(0x8000));
 }
 
-TEST(UtilBits, Ffz16) {
+TEST(Util_Bits, Ffz16) {
   CHECK_EQUAL(0, ffz16(0xFFFF));
 
   CHECK_EQUAL(1, ffz16(0x0000));
@@ -437,7 +437,7 @@ TEST(UtilBits, Ffz16) {
   CHECK_EQUAL(16, ffz16(0x7FFF));
 }
 
-TEST(UtilBits, Ffs32) {
+TEST(Util_Bits, Ffs32) {
   CHECK_EQUAL(0, ffs32(0x00000000));
 
   CHECK_EQUAL(1, ffs32(0x00000001));
@@ -454,7 +454,7 @@ TEST(UtilBits, Ffs32) {
   CHECK_EQUAL(32, ffs32(0x80000000));
 }
 
-TEST(UtilBits, Ffz32) {
+TEST(Util_Bits, Ffz32) {
   CHECK_EQUAL(0, ffz32(0xFFFFFFFF));
 
   CHECK_EQUAL(1, ffz32(0x00000002));
@@ -471,7 +471,7 @@ TEST(UtilBits, Ffz32) {
   CHECK_EQUAL(32, ffz32(0x7FFFFFFF));
 }
 
-TEST(UtilBits, Ffs64) {
+TEST(Util_Bits, Ffs64) {
   CHECK_EQUAL(0, ffs64(0x0000000000000000));
 
   CHECK_EQUAL(1, ffs64(0x0000000000000001));
@@ -500,7 +500,7 @@ TEST(UtilBits, Ffs64) {
   CHECK_EQUAL(64, ffs64(0x8000000000000000));
 }
 
-TEST(UtilBits, Ffz64) {
+TEST(Util_Bits, Ffz64) {
   CHECK_EQUAL(0, ffz64(0xFFFFFFFFFFFFFFFF));
 
   CHECK_EQUAL(1, ffz64(0xFFFFFFFF00000002));
@@ -529,7 +529,7 @@ TEST(UtilBits, Ffz64) {
   CHECK_EQUAL(64, ffz64(0x7FFFFFFFFFFFFFFF));
 }
 
-TEST(UtilBits, Parity8) {
+TEST(Util_Bits, Parity8) {
   CHECK_EQUAL(0, parity8(0x00));
   CHECK_EQUAL(1, parity8(0x01));
 
@@ -537,7 +537,7 @@ TEST(UtilBits, Parity8) {
   CHECK_EQUAL(1, parity8(0xF1));
 }
 
-TEST(UtilBits, Parity16) {
+TEST(Util_Bits, Parity16) {
   CHECK_EQUAL(0, parity16(0x0000));
   CHECK_EQUAL(1, parity16(0x0001));
 
@@ -548,7 +548,7 @@ TEST(UtilBits, Parity16) {
   CHECK_EQUAL(1, parity16(0x0FF1));
 }
 
-TEST(UtilBits, Parity32) {
+TEST(Util_Bits, Parity32) {
   CHECK_EQUAL(0, parity32(0x00000000));
   CHECK_EQUAL(1, parity32(0x00000001));
 
@@ -562,7 +562,7 @@ TEST(UtilBits, Parity32) {
   CHECK_EQUAL(1, parity32(0xF0FFCFF1));
 }
 
-TEST(UtilBits, Parity64) {
+TEST(Util_Bits, Parity64) {
   CHECK_EQUAL(0, parity64(0x0000000000000000));
   CHECK_EQUAL(1, parity64(0x0000000000000001));
 
@@ -579,21 +579,21 @@ TEST(UtilBits, Parity64) {
   CHECK_EQUAL(1, parity64(0x0FFFFFFFFFFFFFF1));
 }
 
-TEST(UtilBits, Popcount8) {
+TEST(Util_Bits, Popcount8) {
   CHECK_EQUAL(0, popcount8(0x00));
   CHECK_EQUAL(1, popcount8(0x01));
   CHECK_EQUAL(4, popcount8(0xE1));
   CHECK_EQUAL(8, popcount8(0xFF));
 }
 
-TEST(UtilBits, Popcount16) {
+TEST(Util_Bits, Popcount16) {
   CHECK_EQUAL(0, popcount16(0x0000));
   CHECK_EQUAL(1, popcount16(0x0001));
   CHECK_EQUAL(9, popcount16(0x01FF));
   CHECK_EQUAL(8, popcount16(0xF00F));
 }
 
-TEST(UtilBits, Popcount32) {
+TEST(Util_Bits, Popcount32) {
   CHECK_EQUAL(0, popcount32(0x00000000));
   CHECK_EQUAL(1, popcount32(0x00000001));
   CHECK_EQUAL(9, popcount32(0x000001FF));
@@ -602,7 +602,7 @@ TEST(UtilBits, Popcount32) {
   CHECK_EQUAL(15, popcount32(0x33E0F00F));
 }
 
-TEST(UtilBits, Popcount64) {
+TEST(Util_Bits, Popcount64) {
   CHECK_EQUAL(0, popcount64(0x0000000000000000));
   CHECK_EQUAL(1, popcount64(0x0000000000000001));
   CHECK_EQUAL(8, popcount64(0x00000000000000FF));
@@ -617,7 +617,7 @@ TEST(UtilBits, Popcount64) {
   CHECK_EQUAL(16, popcount64(0x550000560000F00F));
 }
 
-TEST(UtilBits, Rol8) {
+TEST(Util_Bits, Rol8) {
   CHECK_EQUAL(0x00, rol8(0x00, 0));
   CHECK_EQUAL(0x00, rol8(0x00, 1));
   CHECK_EQUAL(0x00, rol8(0x00, 8));
@@ -634,7 +634,7 @@ TEST(UtilBits, Rol8) {
   CHECK_EQUAL(0x98, rol8(0x89, 68));
 }
 
-TEST(UtilBits, Ror8) {
+TEST(Util_Bits, Ror8) {
   CHECK_EQUAL(0x00, ror8(0x00, 0));
   CHECK_EQUAL(0x00, ror8(0x00, 1));
   CHECK_EQUAL(0x00, ror8(0x00, 8));
@@ -651,7 +651,7 @@ TEST(UtilBits, Ror8) {
   CHECK_EQUAL(0x98, ror8(0x89, 68));
 }
 
-TEST(UtilBits, Rol16) {
+TEST(Util_Bits, Rol16) {
   CHECK_EQUAL(0x0000, rol16(0x0000, 0));
   CHECK_EQUAL(0x0000, rol16(0x0000, 1));
   CHECK_EQUAL(0x0000, rol16(0x0000, 16));
@@ -673,7 +673,7 @@ TEST(UtilBits, Rol16) {
   CHECK_EQUAL(0x7896, rol16(0x6789, 68));
 }
 
-TEST(UtilBits, Ror16) {
+TEST(Util_Bits, Ror16) {
   CHECK_EQUAL(0x0000, ror16(0x0000, 0));
   CHECK_EQUAL(0x0000, ror16(0x0000, 1));
   CHECK_EQUAL(0x0000, ror16(0x0000, 16));
@@ -695,7 +695,7 @@ TEST(UtilBits, Ror16) {
   CHECK_EQUAL(0x9678, ror16(0x6789, 68));
 }
 
-TEST(UtilBits, Rol32) {
+TEST(Util_Bits, Rol32) {
   CHECK_EQUAL(0x00000000, rol32(0x00000000, 0));
   CHECK_EQUAL(0x00000000, rol32(0x00000000, 1));
   CHECK_EQUAL(0x00000000, rol32(0x00000000, 16));
@@ -721,7 +721,7 @@ TEST(UtilBits, Rol32) {
   CHECK_EQUAL(0x34567892, rol32(0x23456789, 68));
 }
 
-TEST(UtilBits, Ror32) {
+TEST(Util_Bits, Ror32) {
   CHECK_EQUAL(0x00000000, ror32(0x00000000, 0));
   CHECK_EQUAL(0x00000000, ror32(0x00000000, 1));
   CHECK_EQUAL(0x00000000, ror32(0x00000000, 16));
@@ -747,7 +747,7 @@ TEST(UtilBits, Ror32) {
   CHECK_EQUAL(0x92345678, ror32(0x23456789, 68));
 }
 
-TEST(UtilBits, Rol64) {
+TEST(Util_Bits, Rol64) {
   CHECK_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 0));
   CHECK_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 1));
   CHECK_EQUAL(0x0000000000000000, rol64(0x0000000000000000, 16));
@@ -785,7 +785,7 @@ TEST(UtilBits, Rol64) {
   CHECK_EQUAL(0xFFFF0F123456789F, rol64(0xFFFFF0F123456789, 68));
 }
 
-TEST(UtilBits, Ror64) {
+TEST(Util_Bits, Ror64) {
   CHECK_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 0));
   CHECK_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 1));
   CHECK_EQUAL(0x0000000000000000, ror64(0x0000000000000000, 16));

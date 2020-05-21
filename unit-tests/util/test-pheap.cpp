@@ -39,9 +39,9 @@ pheap_cmp_ints(const void* p1, const void* p2) {
     return -1;
 }
 
-TEST_GROUP(UtilPheapInit){};
+TEST_GROUP(Util_PheapInit){};
 
-TEST(UtilPheapInit, Pheap_EmptyWhenInitialized) {
+TEST(Util_PheapInit, Pheap_EmptyWhenInitialized) {
   pheap heap;
   pheap_init(&heap, pheap_cmp_ints);
 
@@ -50,7 +50,7 @@ TEST(UtilPheapInit, Pheap_EmptyWhenInitialized) {
   FUNCTIONPOINTERS_EQUAL(pheap_cmp_ints, heap.cmp);
 }
 
-TEST_GROUP(UtilPheap) {
+TEST_GROUP(Util_Pheap) {
   pheap heap;
   static const size_t NODES_NUMBER = 10;
 
@@ -83,7 +83,7 @@ TEST_GROUP(UtilPheap) {
   }
 };
 
-TEST(UtilPheap, PheapCmpInts) {
+TEST(Util_Pheap, PheapCmpInts) {
   int a = 2;
   int b = 3;
   int c = 2;
@@ -93,48 +93,48 @@ TEST(UtilPheap, PheapCmpInts) {
   CHECK_COMPARE(0, <, pheap_cmp_ints(&b, &a));
 }
 
-TEST(UtilPheap, PnodeInit) {
+TEST(Util_Pheap, PnodeInit) {
   pnode_init(&nodes[0], &keys[0]);
 
   CHECK_EQUAL(keys[0], *static_cast<const int*>(nodes[0].key));
 }
 
-TEST(UtilPheap, PnodeNext) {
+TEST(Util_Pheap, PnodeNext) {
   nodes[0].next = &nodes[1];
 
   POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[0]));
 }
 
-TEST(UtilPheap, PheapEmpty_IsEmpty) { CHECK_EQUAL(1, pheap_empty(&heap)); }
+TEST(Util_Pheap, PheapEmpty_IsEmpty) { CHECK_EQUAL(1, pheap_empty(&heap)); }
 
-TEST(UtilPheap, PheapEmpty_IsNotEmpty) {
+TEST(Util_Pheap, PheapEmpty_IsNotEmpty) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(0, pheap_empty(&heap));
 }
 
-TEST(UtilPheap, PheapSize_IsEmpty) { CHECK_EQUAL(0, pheap_size(&heap)); }
+TEST(Util_Pheap, PheapSize_IsEmpty) { CHECK_EQUAL(0, pheap_size(&heap)); }
 
-TEST(UtilPheap, PheapSize_HasOneElement) {
+TEST(Util_Pheap, PheapSize_HasOneElement) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
-TEST(UtilPheap, PheapSize_HasMultipleElements) {
+TEST(Util_Pheap, PheapSize_HasMultipleElements) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
   CHECK_EQUAL(2UL, pheap_size(&heap));
 }
 
-TEST(UtilPheap, PheapInsert_WhenEmpty) {
+TEST(Util_Pheap, PheapInsert_WhenEmpty) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(&nodes[0], pheap_first(&heap));
 }
 
-TEST(UtilPheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
+TEST(Util_Pheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
 
   pheap_remove(&heap, &nodes[0]);
@@ -142,7 +142,7 @@ TEST(UtilPheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
   CHECK_EQUAL(0UL, pheap_size(&heap));
 }
 
-TEST(UtilPheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
+TEST(Util_Pheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
@@ -151,7 +151,7 @@ TEST(UtilPheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
-TEST(UtilPheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
+TEST(Util_Pheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
@@ -160,30 +160,30 @@ TEST(UtilPheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
-TEST(UtilPheap, PheapFind_WhenEmpty) {
+TEST(Util_Pheap, PheapFind_WhenEmpty) {
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[0]));
 }
 
-TEST(UtilPheap, PheapFind_WhenNotEmpty) {
+TEST(Util_Pheap, PheapFind_WhenNotEmpty) {
   FillHeap(2);
 
   POINTERS_EQUAL(&nodes[0], pheap_find(&heap, &keys[0]));
   POINTERS_EQUAL(&nodes[1], pheap_find(&heap, &keys[1]));
 }
 
-TEST(UtilPheap, PheapFind_FindNotPresentWhenMultipleElements) {
+TEST(Util_Pheap, PheapFind_FindNotPresentWhenMultipleElements) {
   FillHeap(3);
 
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[3]));
 }
 
-TEST(UtilPheap, PheapFirst) {
+TEST(Util_Pheap, PheapFirst) {
   pheap_insert(&heap, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], pheap_first(&heap));
 }
 
-TEST(UtilPheap, PnodeForeach_EmptyHeap) {
+TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
   int node_counter = 0;
 
   pnode_foreach(heap.root, node) node_counter++;
@@ -191,7 +191,7 @@ TEST(UtilPheap, PnodeForeach_EmptyHeap) {
   CHECK_EQUAL(0, node_counter);
 }
 
-TEST(UtilPheap, PnodeForeach_OnlyHead) {
+TEST(Util_Pheap, PnodeForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
 
@@ -200,7 +200,7 @@ TEST(UtilPheap, PnodeForeach_OnlyHead) {
   CHECK_EQUAL(1, node_counter);
 }
 
-TEST(UtilPheap, PnodeForeach_MultipleElements) {
+TEST(Util_Pheap, PnodeForeach_MultipleElements) {
   int node_counter = 0;
   FillHeap(2);
 
@@ -209,7 +209,7 @@ TEST(UtilPheap, PnodeForeach_MultipleElements) {
   CHECK_EQUAL(2, node_counter);
 }
 
-TEST(UtilPheap, PheapForeach_EmptyHeap) {
+TEST(Util_Pheap, PheapForeach_EmptyHeap) {
   int node_counter = 0;
 
   pheap_foreach(&heap, node) node_counter++;
@@ -217,7 +217,7 @@ TEST(UtilPheap, PheapForeach_EmptyHeap) {
   CHECK_EQUAL(0, node_counter);
 }
 
-TEST(UtilPheap, PheapForeach_OnlyHead) {
+TEST(Util_Pheap, PheapForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
 
@@ -226,7 +226,7 @@ TEST(UtilPheap, PheapForeach_OnlyHead) {
   CHECK_EQUAL(1, node_counter);
 }
 
-TEST(UtilPheap, PheapForeach_MultipleElements) {
+TEST(Util_Pheap, PheapForeach_MultipleElements) {
   int node_counter = 0;
   FillHeap(2);
 

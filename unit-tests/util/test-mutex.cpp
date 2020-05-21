@@ -24,7 +24,7 @@
 
 #include <lely/util/mutex.hpp>
 
-TEST_GROUP(UtilMutex) {
+TEST_GROUP(Util_Mutex) {
   class Mutex : lely::util::BasicLockable {
    public:
     bool lock_was_called = false;
@@ -43,7 +43,7 @@ TEST_GROUP(UtilMutex) {
   Mutex m;
 };
 
-TEST(UtilMutex, UnlockGuard_LocksAndUnlocksMutex) {
+TEST(Util_Mutex, UnlockGuard_LocksAndUnlocksMutex) {
   { lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m); }
 
   CHECK_EQUAL(true, m.lock_was_called);

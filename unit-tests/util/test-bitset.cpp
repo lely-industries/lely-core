@@ -28,7 +28,7 @@
 
 #include <lely/util/bitset.h>
 
-TEST_GROUP(UtilBitsetInit) {
+TEST_GROUP(Util_BitsetInit) {
   bitset set;
   int GetSizeForBits(const int requested_size) {
     bitset_init(&set, requested_size);
@@ -38,7 +38,7 @@ TEST_GROUP(UtilBitsetInit) {
   }
 };
 
-TEST(UtilBitsetInit, BitsetSize) {
+TEST(Util_BitsetInit, BitsetSize) {
   const int INT_BIT = sizeof(int) * CHAR_BIT;
 
   CHECK_EQUAL(0, GetSizeForBits(0));
@@ -50,19 +50,19 @@ TEST(UtilBitsetInit, BitsetSize) {
   CHECK_EQUAL(3 * INT_BIT, GetSizeForBits(2 * INT_BIT + 1));
 }
 
-IGNORE_TEST(UtilBitsetInit, BitsetInit) {
+IGNORE_TEST(Util_BitsetInit, BitsetInit) {
   // TODO(N7S)
 }
 
-IGNORE_TEST(UtilBitsetInit, BitsetFini) {
+IGNORE_TEST(Util_BitsetInit, BitsetFini) {
   // TODO(N7S)
 }
 
-IGNORE_TEST(UtilBitsetInit, BitsetResize) {
+IGNORE_TEST(Util_BitsetInit, BitsetResize) {
   // TODO(N7S)
 }
 
-TEST_GROUP(UtilBitset) {
+TEST_GROUP(Util_Bitset) {
   bitset set;
   const int SET_SIZE = 64;
 
@@ -85,7 +85,7 @@ TEST_GROUP(UtilBitset) {
   TEST_TEARDOWN() { bitset_fini(&set); }
 };
 
-TEST(UtilBitset, BitsetTest) {
+TEST(Util_Bitset, BitsetTest) {
   bitset_set(&set, 0);
   bitset_set(&set, 1);
   bitset_set(&set, 5);
@@ -97,7 +97,7 @@ TEST(UtilBitset, BitsetTest) {
   CHECK_EQUAL(1, bitset_test(&set, SET_SIZE - 1));
 }
 
-TEST(UtilBitset, BitsetTest_OutOfBoundsReturnsZero) {
+TEST(Util_Bitset, BitsetTest_OutOfBoundsReturnsZero) {
   bitset_set_all(&set);
 
   CHECK_EQUAL(0, bitset_test(&set, -1));
@@ -105,7 +105,7 @@ TEST(UtilBitset, BitsetTest_OutOfBoundsReturnsZero) {
   CHECK_EQUAL(0, bitset_test(&set, SET_SIZE + 1));
 }
 
-TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
+TEST(Util_Bitset, BitsetSet_OutOfBoundsIndex) {
   bitset_set(&set, -1);
   bitset_set(&set, SET_SIZE);
   bitset_set(&set, SET_SIZE + 1);
@@ -113,13 +113,13 @@ TEST(UtilBitset, BitsetSet_OutOfBoundsIndex) {
   CheckAllStates(0);
 }
 
-TEST(UtilBitset, BitsetSetAll) {
+TEST(Util_Bitset, BitsetSetAll) {
   bitset_set_all(&set);
 
   CheckAllStates(1);
 }
 
-TEST(UtilBitset, BitsetClr_CorrectIndex) {
+TEST(Util_Bitset, BitsetClr_CorrectIndex) {
   bitset_set_all(&set);
   bitset_clr(&set, 0);
   bitset_clr(&set, 1);
@@ -128,7 +128,7 @@ TEST(UtilBitset, BitsetClr_CorrectIndex) {
   CheckAllStates(1, {0, 1, SET_SIZE - 1});
 }
 
-TEST(UtilBitset, BitsetClr_OutOfBoundsIndex) {
+TEST(Util_Bitset, BitsetClr_OutOfBoundsIndex) {
   bitset_set_all(&set);
   bitset_clr(&set, -1);
   bitset_clr(&set, SET_SIZE);
@@ -137,14 +137,14 @@ TEST(UtilBitset, BitsetClr_OutOfBoundsIndex) {
   CheckAllStates(1);
 }
 
-TEST(UtilBitset, BitsetClrAll) {
+TEST(Util_Bitset, BitsetClrAll) {
   bitset_set_all(&set);
   bitset_clr_all(&set);
 
   CheckAllStates(0);
 }
 
-TEST(UtilBitset, BitsetCompl) {
+TEST(Util_Bitset, BitsetCompl) {
   bitset_set(&set, 0);
   bitset_set(&set, 1);
 
@@ -153,41 +153,41 @@ TEST(UtilBitset, BitsetCompl) {
   CheckAllStates(1, {0, 1});
 }
 
-TEST(UtilBitset, BitsetFfs_AllZero) { CHECK_EQUAL(0, bitset_ffs(&set)); }
+TEST(Util_Bitset, BitsetFfs_AllZero) { CHECK_EQUAL(0, bitset_ffs(&set)); }
 
-TEST(UtilBitset, BitsetFfs_FirstSet) {
+TEST(Util_Bitset, BitsetFfs_FirstSet) {
   bitset_set(&set, 0);
 
   CHECK_EQUAL(1, bitset_ffs(&set));
 }
 
-TEST(UtilBitset, BitsetFfs_LastSet) {
+TEST(Util_Bitset, BitsetFfs_LastSet) {
   bitset_set(&set, SET_SIZE - 1);
 
   CHECK_EQUAL(SET_SIZE, bitset_ffs(&set));
 }
 
-TEST(UtilBitset, BitsetFfs_MiddleSet) {
+TEST(Util_Bitset, BitsetFfs_MiddleSet) {
   bitset_set(&set, 23);
   bitset_set(&set, 25);
 
   CHECK_EQUAL(24, bitset_ffs(&set));
 }
 
-TEST(UtilBitset, BitsetFfz_AllSet) {
+TEST(Util_Bitset, BitsetFfz_AllSet) {
   bitset_set_all(&set);
 
   CHECK_EQUAL(0, bitset_ffz(&set));
 }
 
-TEST(UtilBitset, BitsetFfz_FirstZero) {
+TEST(Util_Bitset, BitsetFfz_FirstZero) {
   bitset_set_all(&set);
   bitset_clr(&set, 0);
 
   CHECK_EQUAL(1, bitset_ffz(&set));
 }
 
-TEST(UtilBitset, BitsetFfz_LastZero) {
+TEST(Util_Bitset, BitsetFfz_LastZero) {
   bitset_set_all(&set);
 
   bitset_clr(&set, SET_SIZE - 1);
@@ -195,7 +195,7 @@ TEST(UtilBitset, BitsetFfz_LastZero) {
   CHECK_EQUAL(SET_SIZE, bitset_ffz(&set));
 }
 
-TEST(UtilBitset, BitsetFfz_MiddleZero) {
+TEST(Util_Bitset, BitsetFfz_MiddleZero) {
   bitset_set_all(&set);
 
   bitset_clr(&set, 10);
@@ -204,41 +204,41 @@ TEST(UtilBitset, BitsetFfz_MiddleZero) {
   CHECK_EQUAL(11, bitset_ffz(&set));
 }
 
-TEST(UtilBitset, BitsetFns_AllZeros) {
+TEST(Util_Bitset, BitsetFns_AllZeros) {
   bitset_set(&set, 10);
 
   CHECK_EQUAL(0, bitset_fns(&set, 11));
 }
 
-TEST(UtilBitset, BitsetFns_NextIsSet) {
+TEST(Util_Bitset, BitsetFns_NextIsSet) {
   bitset_set(&set, 10);
   bitset_set(&set, 11);
 
   CHECK_EQUAL(11, bitset_fns(&set, 10));
 }
 
-TEST(UtilBitset, BitsetFns_LastIsSet) {
+TEST(Util_Bitset, BitsetFns_LastIsSet) {
   bitset_set(&set, 10);
   bitset_set(&set, SET_SIZE - 1);
 
   CHECK_EQUAL(SET_SIZE, bitset_fns(&set, 11));
 }
 
-TEST(UtilBitset, BitsetFns_OutOfBoundsIdx) {
+TEST(Util_Bitset, BitsetFns_OutOfBoundsIdx) {
   bitset_set(&set, 0);
 
   CHECK_EQUAL(0, bitset_fns(&set, SET_SIZE));
   CHECK_EQUAL(1, bitset_fns(&set, -1));
 }
 
-TEST(UtilBitset, BitsetFnz_AllSet) {
+TEST(Util_Bitset, BitsetFnz_AllSet) {
   bitset_set_all(&set);
   bitset_clr(&set, 10);
 
   CHECK_EQUAL(0, bitset_fnz(&set, 11));
 }
 
-TEST(UtilBitset, BitsetFnz_NextIsZero) {
+TEST(Util_Bitset, BitsetFnz_NextIsZero) {
   bitset_set_all(&set);
 
   bitset_clr(&set, 10);
@@ -247,7 +247,7 @@ TEST(UtilBitset, BitsetFnz_NextIsZero) {
   CHECK_EQUAL(11, bitset_fnz(&set, 10));
 }
 
-TEST(UtilBitset, BitsetFnz_LastIsZero) {
+TEST(Util_Bitset, BitsetFnz_LastIsZero) {
   bitset_set_all(&set);
 
   bitset_clr(&set, 10);
@@ -256,7 +256,7 @@ TEST(UtilBitset, BitsetFnz_LastIsZero) {
   CHECK_EQUAL(SET_SIZE, bitset_fnz(&set, 11));
 }
 
-TEST(UtilBitset, BitsetFnz_OutOfBoundsIdx) {
+TEST(Util_Bitset, BitsetFnz_OutOfBoundsIdx) {
   bitset_set_all(&set);
   bitset_clr(&set, 0);
 
