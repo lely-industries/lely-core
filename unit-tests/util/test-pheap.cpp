@@ -21,52 +21,47 @@
  */
 
 #include <cassert>
+#include <set>
 
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/pheap.h>
 
 static int
-pheap_cmp_ints(const void* p1, const void* p2) {
+pheap_cmp_ints(const void* p1, const void* p2) noexcept {
   assert(p1);
   assert(p2);
 
-  if (*static_cast<const int*>(p1) > *static_cast<const int*>(p2))
+  auto val1 = *static_cast<const int*>(p1);
+  auto val2 = *static_cast<const int*>(p2);
+
+  if (val1 > val2)
     return 1;
-  else if (*static_cast<const int*>(p1) == *static_cast<const int*>(p2))
+  else if (val1 == val2)
     return 0;
   else
     return -1;
 }
 
-TEST_GROUP(Util_PheapInit){};
+TEST_GROUP(Util_PheapCmpInts){};
 
-TEST(Util_PheapInit, Pheap_EmptyWhenInitialized) {
-  pheap heap;
-  pheap_init(&heap, pheap_cmp_ints);
+TEST(Util_PheapCmpInts, PheapCmpInts) {
+  int a = 2;
+  int b = 3;
+  int c = 2;
 
-  CHECK_EQUAL(0, pheap_size(&heap));
-  POINTERS_EQUAL(nullptr, pheap_first(&heap));
-  FUNCTIONPOINTERS_EQUAL(pheap_cmp_ints, heap.cmp);
+  CHECK_EQUAL(0, pheap_cmp_ints(&a, &c));
+  CHECK_COMPARE(0, >, pheap_cmp_ints(&a, &b));
+  CHECK_COMPARE(0, <, pheap_cmp_ints(&b, &a));
 }
 
 TEST_GROUP(Util_Pheap) {
   pheap heap;
-  static const size_t NODES_NUMBER = 10;
+  static const size_t NODES_NUM = 10;
 
-  pnode nodes[NODES_NUMBER];
-  // clang-format off
-  int keys[NODES_NUMBER] = {0x0000001,
-                            0x0000011,
-                            0x0001111,
-                            0x0000111,
-                            0x0011111,
-                            0x0111111,
-                            0x1111111,
-                            0x111111F,
-                            0x11111FF,
-                            0x1111FFF};
-  // clang-format on
+  pnode nodes[NODES_NUM];
+  int keys[NODES_NUM] = {-32454, -2431,  0,        273,      69905,
+                         8481,   895697, 17895711, 17895935, 21899519};
 
   void FillHeap(const int how_many) {
     for (int i = 0; i < how_many; i++) {
@@ -77,32 +72,48 @@ TEST_GROUP(Util_Pheap) {
   TEST_SETUP() {
     pheap_init(&heap, pheap_cmp_ints);
 
-    for (size_t i = 0; i < NODES_NUMBER; i++) {
+    for (size_t i = 0; i < NODES_NUM; i++) {
       pnode_init(&nodes[i], &keys[i]);
     }
   }
 };
 
-TEST(Util_Pheap, PheapCmpInts) {
-  int a = 2;
-  int b = 3;
-  int c = 2;
-
-  CHECK_EQUAL(0, pheap_cmp_ints(&a, &c));
-  CHECK_COMPARE(0, >, pheap_cmp_ints(&a, &b));
-  CHECK_COMPARE(0, <, pheap_cmp_ints(&b, &a));
+TEST(Util_Pheap, PheapInit_EmptyWhenInitialized) {
+  CHECK_EQUAL(0, pheap_size(&heap));
+  POINTERS_EQUAL(nullptr, pheap_first(&heap));
 }
 
 TEST(Util_Pheap, PnodeInit) {
-  pnode_init(&nodes[0], &keys[0]);
-
   CHECK_EQUAL(keys[0], *static_cast<const int*>(nodes[0].key));
+  CHECK_EQUAL(keys[1], *static_cast<const int*>(nodes[1].key));
+  CHECK_EQUAL(keys[NODES_NUM - 1],
+              *static_cast<const int*>(nodes[NODES_NUM - 1].key));
 }
 
-TEST(Util_Pheap, PnodeNext) {
-  nodes[0].next = &nodes[1];
+TEST(Util_Pheap, PnodeNext_Null) {
+  pheap_insert(&heap, &nodes[1]);
+
+  POINTERS_EQUAL(nullptr, pnode_next(&nodes[1]));
+}
+
+TEST(Util_Pheap, PnodeNext_Child) {
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[2]);
+  pheap_insert(&heap, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[0]));
+  POINTERS_EQUAL(&nodes[2], pnode_next(&nodes[1]));
+  POINTERS_EQUAL(nullptr, pnode_next(&nodes[2]));
+}
+
+TEST(Util_Pheap, PnodeNext_ReplaceRoot) {
+  pheap_insert(&heap, &nodes[1]);
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[2]);
+
+  POINTERS_EQUAL(&nodes[2], pnode_next(&nodes[0]));
+  POINTERS_EQUAL(nullptr, pnode_next(&nodes[1]));
+  POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[2]));
 }
 
 TEST(Util_Pheap, PheapEmpty_IsEmpty) { CHECK_EQUAL(1, pheap_empty(&heap)); }
@@ -186,7 +197,7 @@ TEST(Util_Pheap, PheapFirst) {
 TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
   int node_counter = 0;
 
-  pnode_foreach(heap.root, node) node_counter++;
+  pnode_foreach(pheap_first(&heap), node) node_counter++;
 
   CHECK_EQUAL(0, node_counter);
 }
@@ -195,18 +206,26 @@ TEST(Util_Pheap, PnodeForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
 
-  pnode_foreach(heap.root, node) node_counter++;
+  pnode_foreach(pheap_first(&heap), node) {
+    POINTERS_EQUAL(pheap_first(&heap), node);
+    node_counter++;
+  }
 
   CHECK_EQUAL(1, node_counter);
 }
 
 TEST(Util_Pheap, PnodeForeach_MultipleElements) {
   int node_counter = 0;
-  FillHeap(2);
+  FillHeap(10);
+  std::set<int> visited_keys;
 
-  pnode_foreach(heap.root, node) node_counter++;
+  pnode_foreach(pheap_first(&heap), node) {
+    visited_keys.insert(*static_cast<const int*>(node->key));
+    node_counter++;
+  }
 
-  CHECK_EQUAL(2, node_counter);
+  CHECK_EQUAL(10, node_counter);
+  CHECK_EQUAL(10, visited_keys.size());
 }
 
 TEST(Util_Pheap, PheapForeach_EmptyHeap) {
@@ -221,16 +240,42 @@ TEST(Util_Pheap, PheapForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
 
-  pheap_foreach(&heap, node) node_counter++;
+  pheap_foreach(&heap, node) {
+    POINTERS_EQUAL(pheap_first(&heap), node);
+    node_counter++;
+  }
 
   CHECK_EQUAL(1, node_counter);
 }
 
 TEST(Util_Pheap, PheapForeach_MultipleElements) {
   int node_counter = 0;
-  FillHeap(2);
+  FillHeap(NODES_NUM);
+  std::set<int> visited_keys;
 
-  pheap_foreach(&heap, node) node_counter++;
+  pheap_foreach(&heap, node) {
+    visited_keys.insert(*static_cast<const int*>(node->key));
+    node_counter++;
+  }
 
-  CHECK_EQUAL(2, node_counter);
+  CHECK_EQUAL(NODES_NUM, node_counter);
+  CHECK_EQUAL(NODES_NUM, visited_keys.size());
+}
+
+TEST(Util_Pheap, PheapForeach_MultiElementsRemoveCurrent) {
+  int node_counter = 0;
+  FillHeap(NODES_NUM);
+  std::set<int> visited_keys;
+
+  pheap_foreach(&heap, node) {
+    if (node_counter != 2) {
+      visited_keys.insert(*static_cast<const int*>(node->key));
+    } else {
+      pheap_remove(&heap, node);
+    }
+    node_counter++;
+  }
+
+  CHECK_EQUAL(NODES_NUM, node_counter);
+  CHECK_EQUAL(NODES_NUM - 1, visited_keys.size());
 }

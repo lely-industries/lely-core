@@ -19,34 +19,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/sllist.h>
 
-TEST_GROUP(Util_SllistInit){};
-
-TEST(Util_SllistInit, SllistInit) {
-  sllist list;
-
-  sllist_init(&list);
-
-  POINTERS_EQUAL(nullptr, sllist_first(&list));
-  POINTERS_EQUAL(nullptr, sllist_last(&list));
-}
-
-TEST(Util_SllistInit, SlnodeInit) {
-  slnode node;
-
-  slnode_init(&node);
-
-  POINTERS_EQUAL(nullptr, node.next);
-}
-
 TEST_GROUP(Util_Sllist) {
-  static const size_t NODES_NUMBER = 10;
+  static const size_t NODES_NUM = 10;
   sllist list;
-  slnode nodes[NODES_NUMBER];
+  slnode nodes[NODES_NUM];
 
   void FillList(sllist * list, const int how_many) {
     for (int i = 0; i < how_many; i++) {
@@ -56,11 +38,22 @@ TEST_GROUP(Util_Sllist) {
 
   TEST_SETUP() {
     sllist_init(&list);
-    for (size_t i = 0; i < NODES_NUMBER; i++) {
+    for (size_t i = 0; i < NODES_NUM; i++) {
       slnode_init(&nodes[i]);
     }
   }
 };
+
+TEST(Util_Sllist, SllistInit) {
+  POINTERS_EQUAL(nullptr, sllist_first(&list));
+  POINTERS_EQUAL(nullptr, sllist_last(&list));
+}
+
+TEST(Util_Sllist, SlnodeInit) {
+  POINTERS_EQUAL(nullptr, nodes[0].next);
+  POINTERS_EQUAL(nullptr, nodes[1].next);
+  POINTERS_EQUAL(nullptr, nodes[NODES_NUM - 1].next);
+}
 
 TEST(Util_Sllist, SllistEmpty_AfterCreation) {
   CHECK_EQUAL(1, sllist_empty(&list));
@@ -136,11 +129,11 @@ TEST(Util_Sllist, SllistPopFront_OneAdded) {
 }
 
 TEST(Util_Sllist, SllistPopFront_ManyAdded) {
-  FillList(&list, 8);
+  FillList(&list, NODES_NUM);
 
   POINTERS_EQUAL(&nodes[0], sllist_pop_front(&list));
   POINTERS_EQUAL(&nodes[1], sllist_pop_front(&list));
-  CHECK_EQUAL(6, sllist_size(&list));
+  CHECK_EQUAL(NODES_NUM - 2, sllist_size(&list));
 }
 
 TEST(Util_Sllist, SllistPopBack_WhenEmpty) {
@@ -212,7 +205,7 @@ TEST(Util_Sllist, SllistAppend_BothEmpty) {
   CHECK_EQUAL(0, sllist_size(&source_list));
 }
 
-TEST(Util_Sllist, SllistAppend_DstEmpty) {
+TEST(Util_Sllist, SllistAppend_SrcOneDstEmpty) {
   sllist source_list;
   sllist_init(&source_list);
   FillList(&source_list, 1);
@@ -222,7 +215,7 @@ TEST(Util_Sllist, SllistAppend_DstEmpty) {
   CHECK_EQUAL(1, sllist_size(&list));
 }
 
-TEST(Util_Sllist, SllistAppend_SrcEmpty) {
+TEST(Util_Sllist, SllistAppend_SrcEmptyDstOne) {
   sllist source_list;
   sllist_init(&source_list);
   FillList(&list, 1);
@@ -232,7 +225,7 @@ TEST(Util_Sllist, SllistAppend_SrcEmpty) {
   CHECK_EQUAL(1, sllist_size(&list));
 }
 
-TEST(Util_Sllist, SllistAppend_SrcMany) {
+TEST(Util_Sllist, SllistAppend_SrcManyDstEmpty) {
   sllist source_list;
   sllist_init(&source_list);
   FillList(&source_list, 2);
@@ -240,6 +233,18 @@ TEST(Util_Sllist, SllistAppend_SrcMany) {
   POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
   CHECK_EQUAL(0, sllist_size(&source_list));
   CHECK_EQUAL(2, sllist_size(&list));
+}
+
+TEST(Util_Sllist, SllistAppend_SrcManyDstMany) {
+  sllist source_list;
+  sllist_init(&source_list);
+  FillList(&source_list, 2);
+  sllist_push_front(&list, &nodes[NODES_NUM - 1]);
+  sllist_push_front(&list, &nodes[NODES_NUM - 2]);
+
+  POINTERS_EQUAL(&list, sllist_append(&list, &source_list));
+  CHECK_EQUAL(0, sllist_size(&source_list));
+  CHECK_EQUAL(4, sllist_size(&list));
 }
 
 TEST(Util_Sllist, SllistFirst_Empty) {
@@ -275,27 +280,55 @@ TEST(Util_Sllist, SllistLast_ManyAdded) {
 }
 
 TEST(Util_Sllist, SllistForeach_Empty) {
-  slnode* node_ptr = &nodes[0];
+  bool visited = false;
 
-  sllist_foreach(&list, node) node_ptr = node;
+  sllist_foreach(&list, node) visited = true;
 
-  POINTERS_EQUAL(&nodes[0], node_ptr);
+  CHECK_EQUAL(false, visited);
 }
 
 TEST(Util_Sllist, SllistForeach_OnlyHead) {
   FillList(&list, 1);
   slnode* node_ptr = nullptr;
+  int visited_nodes_counter = 0;
 
-  sllist_foreach(&list, node) node_ptr = node;
+  sllist_foreach(&list, node) {
+    node_ptr = node;
+    visited_nodes_counter++;
+  }
 
   POINTERS_EQUAL(&nodes[0], node_ptr);
+  CHECK_EQUAL(1, visited_nodes_counter);
 }
 
 TEST(Util_Sllist, SllistForeach_MultipleElements) {
-  FillList(&list, 2);
-  slnode* node_ptr = nullptr;
+  FillList(&list, NODES_NUM);
+  int visited_nodes_counter = 0;
+  std::vector<void*> visited_nodes;
 
-  sllist_foreach(&list, node) node_ptr = node;
+  sllist_foreach(&list, node) {
+    visited_nodes.push_back(node);
+    visited_nodes_counter++;
+  }
 
-  POINTERS_EQUAL(&nodes[1], node_ptr);
+  CHECK_EQUAL(NODES_NUM, visited_nodes_counter);
+  CHECK_EQUAL(NODES_NUM, visited_nodes.size());
+}
+
+TEST(Util_Sllist, SllistForeach_MultiElementsRemoveCurrent) {
+  FillList(&list, NODES_NUM);
+  int visited_nodes_counter = 0;
+  std::vector<void*> visited_nodes;
+
+  sllist_foreach(&list, node) {
+    if (visited_nodes_counter != 3) {
+      visited_nodes.push_back(node);
+    } else {
+      sllist_remove(&list, node);
+    }
+    visited_nodes_counter++;
+  }
+
+  CHECK_EQUAL(NODES_NUM, visited_nodes_counter);
+  CHECK_EQUAL(NODES_NUM - 1, visited_nodes.size());
 }
