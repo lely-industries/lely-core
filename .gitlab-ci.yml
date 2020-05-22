@@ -13,6 +13,11 @@ stages:
   - test
   - deploy
 
+# do not create "detached" pipelines
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID == null
+
 .docker: &docker
   stage: docker
   tags:
@@ -487,7 +492,11 @@ coverity:
         --form version="$(git describe --abbrev=0 --tags | sed s/^v//)"
         --form description="$CI_COMMIT_REF_NAME"
         https://scan.coverity.com/builds?project=$COVERITY_PROJECT
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: manual
+      allow_failure: true
 
 docker:sonarcloud:
   <<: *docker
@@ -533,12 +542,14 @@ sonarcloud:
     paths:
       - sonar-rules.html
     expire_in: 1 week
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: manual
+      allow_failure: true
 
 pages:
   stage: deploy
-  only:
-    - master
   tags:
     - docker
     - linux
@@ -554,3 +565,7 @@ pages:
     paths:
       - public
     expire_in: 1 weeks
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: never
