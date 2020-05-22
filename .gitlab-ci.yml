@@ -34,7 +34,13 @@ workflow:
         --build-arg REGISTRY=$REGISTRY
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/$NAME/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - docker/*
+      when: always
+    - when: manual
+      allow_failure: true
 
 .build: &build
   stage: build
