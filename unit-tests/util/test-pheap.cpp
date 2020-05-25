@@ -32,8 +32,8 @@ pheap_cmp_ints(const void* p1, const void* p2) noexcept {
   assert(p1);
   assert(p2);
 
-  auto val1 = *static_cast<const int*>(p1);
-  auto val2 = *static_cast<const int*>(p2);
+  const auto val1 = *static_cast<const int*>(p1);
+  const auto val2 = *static_cast<const int*>(p2);
 
   if (val1 > val2)
     return 1;
@@ -216,7 +216,7 @@ TEST(Util_Pheap, PnodeForeach_OnlyHead) {
 
 TEST(Util_Pheap, PnodeForeach_MultipleElements) {
   int node_counter = 0;
-  FillHeap(10);
+  FillHeap(NODES_NUM);
   std::set<int> visited_keys;
 
   pnode_foreach(pheap_first(&heap), node) {
@@ -224,8 +224,8 @@ TEST(Util_Pheap, PnodeForeach_MultipleElements) {
     node_counter++;
   }
 
-  CHECK_EQUAL(10, node_counter);
-  CHECK_EQUAL(10, visited_keys.size());
+  CHECK_EQUAL(NODES_NUM, node_counter);
+  CHECK_EQUAL(NODES_NUM, visited_keys.size());
 }
 
 TEST(Util_Pheap, PheapForeach_EmptyHeap) {
