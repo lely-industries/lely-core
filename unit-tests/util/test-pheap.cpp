@@ -60,8 +60,8 @@ TEST_GROUP(Util_Pheap) {
   static const size_t NODES_NUM = 10;
 
   pnode nodes[NODES_NUM];
-  int keys[NODES_NUM] = {-32454, -2431,  0,        273,      69905,
-                         8481,   895697, 17895711, 17895935, 21899519};
+  int keys[NODES_NUM] = {-32454, -2431, 0,     273,   332,
+                         3244,   4444,  13444, 17895, 21995};
 
   void FillHeap(const int how_many) {
     for (int i = 0; i < how_many; i++) {
