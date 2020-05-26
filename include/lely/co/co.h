@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the CANopen library.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,7 +24,7 @@
 #include <lely/util/util.h>
 
 struct __co_dev;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class CODev; }
 // clang-format on
@@ -35,7 +35,7 @@ typedef struct __co_dev co_dev_t;
 #endif
 
 struct __co_obj;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COObj; }
 // clang-format on
@@ -46,7 +46,7 @@ typedef struct __co_obj co_obj_t;
 #endif
 
 struct __co_sub;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COSub; }
 // clang-format on
@@ -57,7 +57,7 @@ typedef struct __co_sub co_sub_t;
 #endif
 
 struct __co_ssdo;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COSSDO; }
 // clang-format on
@@ -68,7 +68,7 @@ typedef struct __co_ssdo co_ssdo_t;
 #endif
 
 struct __co_csdo;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COCSDO; }
 // clang-format on
@@ -79,7 +79,7 @@ typedef struct __co_csdo co_csdo_t;
 #endif
 
 struct __co_rpdo;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class CORPDO; }
 // clang-format on
@@ -90,7 +90,7 @@ typedef struct __co_rpdo co_rpdo_t;
 #endif
 
 struct __co_tpdo;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COTPDO; }
 // clang-format on
@@ -101,7 +101,7 @@ typedef struct __co_tpdo co_tpdo_t;
 #endif
 
 struct __co_sync;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COSync; }
 // clang-format on
@@ -112,7 +112,7 @@ typedef struct __co_sync co_sync_t;
 #endif
 
 struct __co_time;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COTime; }
 // clang-format on
@@ -123,7 +123,7 @@ typedef struct __co_time co_time_t;
 #endif
 
 struct __co_emcy;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COEmcy; }
 // clang-format on
@@ -134,7 +134,7 @@ typedef struct __co_emcy co_emcy_t;
 #endif
 
 struct __co_nmt;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class CONMT; }
 // clang-format on
@@ -145,7 +145,7 @@ typedef struct __co_nmt co_nmt_t;
 #endif
 
 struct __co_lss;
-#ifdef __cplusplus
+#if defined(__cplusplus) && !LELY_NO_CXX
 // clang-format off
 namespace lely { class COLSS; }
 // clang-format on

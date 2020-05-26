@@ -23,7 +23,7 @@
 #ifndef LELY_CO_SDEV_HPP_
 #define LELY_CO_SDEV_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/sdev.h> for the C interface"
 #endif
 

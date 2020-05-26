@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the gateway
  * declarations (see CiA 309-1 version 2.0).
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -254,7 +254,7 @@
 #define CO_GW_IEC_NO_MEM 600
 
 struct __co_gw;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen gateway type.
 typedef struct __co_gw co_gw_t;
 #endif

@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the ASCII
  * gateway declarations (see CiA 309-3 version 2.1).
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,7 +31,7 @@
 #define CO_GW_TXT_IMPL_LO 1
 
 struct __co_gw_txt;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen ASCII gateway type.
 typedef struct __co_gw_txt co_gw_txt_t;
 #endif

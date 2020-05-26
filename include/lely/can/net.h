@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN network
  * interface declarations.
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,19 +26,19 @@
 #include <lely/libc/time.h>
 
 struct __can_net;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN network interface type.
 typedef struct __can_net can_net_t;
 #endif
 
 struct __can_timer;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN timer type.
 typedef struct __can_timer can_timer_t;
 #endif
 
 struct __can_recv;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN frame receiver type.
 typedef struct __can_recv can_recv_t;
 #endif
