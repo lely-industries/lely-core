@@ -183,6 +183,18 @@ test:gcc:no-canfd:
     - build:gcc:no-canfd
   <<: *test
 
+build:gcc:no-cxx:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-cxx
+
+test:gcc:no-cxx:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:no-cxx
+  <<: *test
+
 build:gcc:no-master:
   image: $REGISTRY/gcc:9
   <<: *build
