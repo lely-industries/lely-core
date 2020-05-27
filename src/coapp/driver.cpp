@@ -106,12 +106,12 @@ BasicDriver::AsyncDeconfig(int num) {
     if (it != end()) return it->second->AsyncDeconfig();
   } else if (size() == 1) {
     // Shortcut in case of a single logical device.
-    return begin()->second->AsyncConfig();
+    return begin()->second->AsyncDeconfig();
   } else if (!empty()) {
     ::std::array<SdoFuture<void>, 8> futures;
     ::std::size_t n = 0;
     // Post an OnConfig() task for each logical device driver.
-    for (const auto& it : *this) futures[n++] = it.second->AsyncConfig();
+    for (const auto& it : *this) futures[n++] = it.second->AsyncDeconfig();
     assert(n <= 8);
     // Create a temporary array of pointers, since SdoFuture is not guaranteed
     // to be the same size as ev_future_t*.

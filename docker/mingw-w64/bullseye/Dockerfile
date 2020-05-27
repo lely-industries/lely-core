@@ -19,6 +19,8 @@ RUN apt-get update -q \
     && dpkg --add-architecture i386 \
     && apt-get update -q \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
+        libc6:i386 \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         mingw-w64 \
         winehq-stable \
     && rm -rf /var/lib/apt/lists/*
@@ -37,7 +39,7 @@ RUN apt-get update -q \
 RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
     && cd cpputest/cpputest_build \
     && autoreconf .. -i \
-    && ../configure --host=$ARCH-w64-mingw32 \
+    && ../configure --host=$ARCH-w64-mingw32 --disable-memory-leak-detection \
     && make \
     && make install \
     && cd - \

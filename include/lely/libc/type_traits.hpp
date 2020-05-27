@@ -55,6 +55,10 @@ using ::std::is_invocable_r;
 
 using ::std::void_t;
 
+using ::std::conjunction;
+using ::std::disjunction;
+using ::std::negation;
+
 #else  // __cplusplus < 201703L
 
 template <bool B>
