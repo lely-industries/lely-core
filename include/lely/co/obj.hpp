@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the object dictionary. See lely/co/obj.h for the C interface.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -429,6 +429,26 @@ class COSub : public incomplete_c_type<__co_sub> {
   void
   setFlags(unsigned int flags) noexcept {
     co_sub_set_flags(this, flags);
+  }
+
+  const char*
+  getUploadFile() const noexcept {
+    return co_sub_get_upload_file(this);
+  }
+
+  int
+  setUploadFile(const char* filename) noexcept {
+    return co_sub_set_upload_file(this, filename);
+  }
+
+  const char*
+  getDownloadFile() const noexcept {
+    return co_sub_get_download_file(this);
+  }
+
+  int
+  setDownloadFile(const char* filename) noexcept {
+    return co_sub_set_download_file(this, filename);
   }
 
   void
