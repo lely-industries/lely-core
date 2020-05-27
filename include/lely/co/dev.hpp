@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the C++
  * interface of the device description. See lely/co/dev.h for the C interface.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_CO_DEV_HPP_
 #define LELY_CO_DEV_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/dev.h> for the C interface"
 #endif
 

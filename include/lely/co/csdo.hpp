@@ -3,7 +3,7 @@
  * interface of the Client-SDO declarations. See lely/co/csdo.h for the C
  * interface.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #ifndef LELY_CO_CSDO_HPP_
 #define LELY_CO_CSDO_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/csdo.h> for the C interface"
 #endif
 
