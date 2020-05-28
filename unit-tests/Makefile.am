@@ -24,6 +24,7 @@ LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
 src_util_tests = \
 	util/test-bits.cpp \
+	util/test-dllist.cpp \
 	util/test-bitset.cpp \
 	util/test-cmp.cpp \
 	util/test-mutex.cpp \
