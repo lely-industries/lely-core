@@ -24,13 +24,14 @@ LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
 src_util_tests = \
 	util/test-bits.cpp \
+	util/test-endian.cpp \
 	util/test-dllist.cpp \
 	util/test-bitset.cpp \
 	util/test-cmp.cpp \
 	util/test-mutex.cpp \
 	util/test-pheap.cpp \
 	util/test-rbtree.cpp \
-	util/test-sllist.cpp 
+	util/test-sllist.cpp
 
 bin += util-test
 util_test_SOURCES = tests-shared-main.cpp $(src_util_tests)
