@@ -2,6 +2,7 @@ AM_CPPFLAGS =
 
 bin =
 etc =
+if !ECSS_COMPLIANCE
 if !NO_CO_WTM
 if PLATFORM_LINUX
 bin += can2udp
@@ -33,6 +34,7 @@ AM_CPPFLAGS += -DCOCATD_DCF="\"$(sysconfdir)/cocatd.dcf\""
 endif
 endif
 endif
+endif
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
@@ -61,7 +63,9 @@ LDADD += $(top_builddir)/src/libc/liblely-libc.la
 LDADD += $(top_builddir)/src/tap/liblely-tap.la
 LDADD += $(top_builddir)/src/util/liblely-util.la
 LDADD += $(top_builddir)/src/can/liblely-can.la
+if !ECSS_COMPLIANCE
 LDADD += $(top_builddir)/src/io/liblely-io.la
+endif
 LDADD += $(top_builddir)/src/co/liblely-co.la
 if CODE_COVERAGE_ENABLED
 LDADD += $(CODE_COVERAGE_LIBS)

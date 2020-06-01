@@ -207,6 +207,18 @@ test:gcc:no-master:
     - build:gcc:no-master
   <<: *test
 
+build:gcc:ecss:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --enable-ecss-compliance
+
+test:gcc:ecss:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:ecss
+  <<: *test
+
 .docker-mingw-w64: &docker-mingw-w64
   <<: *docker
   script:

@@ -22,16 +22,18 @@ cpputest_test_LDADD = $(CPPUTEST_LIBS)
 
 LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
-src_util_tests = \
-	util/test-bits.cpp \
-	util/test-endian.cpp \
-	util/test-dllist.cpp \
-	util/test-bitset.cpp \
-	util/test-cmp.cpp \
-	util/test-mutex.cpp \
-	util/test-pheap.cpp \
-	util/test-rbtree.cpp \
-	util/test-sllist.cpp
+src_util_tests =
+src_util_tests += util/test-cmp.cpp
+src_util_tests += util/test-endian.cpp
+src_util_tests += util/test-dllist.cpp
+src_util_tests += util/test-pheap.cpp
+src_util_tests += util/test-rbtree.cpp
+if !ECSS_COMPLIANCE
+src_util_tests += util/test-bits.cpp
+src_util_tests += util/test-bitset.cpp
+src_util_tests += util/test-mutex.cpp
+src_util_tests += util/test-sllist.cpp
+endif
 
 bin += util-test
 util_test_SOURCES = tests-shared-main.cpp $(src_util_tests)
@@ -43,9 +45,9 @@ LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 
 bin += can-test
 
-src_can_tests = \
-	can/test-msg.cpp \
-	can/test-buf.cpp
+src_can_tests =
+src_can_tests += can/test-msg.cpp
+src_can_tests += can/test-buf.cpp
 
 can_test_SOURCES = tests-shared-main.cpp $(src_can_tests)
 can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)

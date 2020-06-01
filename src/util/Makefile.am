@@ -1,19 +1,10 @@
 src =
+if !ECSS_COMPLIANCE
 src += bimap.c
 src += bits.c
 src += bitset.c
-src += cmp.c
-src += config.c
-src += config_ini.c
 if !NO_DAEMON
 src += daemon.c
-endif
-src += diag.c
-src += dllist.c
-src += endian.c
-src += errnum.c
-if !NO_CXX
-src += exception.cpp
 endif
 if PLATFORM_WIN32
 src += fiber-win32.c
@@ -21,16 +12,28 @@ else
 src += fiber-sjlj.c
 endif
 src += fiber.h
+src += mkjmp.c
+src += sllist.c
+src += spscring.c
+endif
+if !NO_CXX
+src += exception.cpp
+endif
+
+src += cmp.c
+src += config.c
+src += config_ini.c
+src += diag.c
+src += dllist.c
+src += endian.c
+src += errnum.c
 src += frbuf.c
 src += fwbuf.c
 src += lex.c
 src += membuf.c
-src += mkjmp.c
 src += pheap.c
 src += print.c
 src += rbtree.c
-src += sllist.c
-src += spscring.c
 src += time.c
 src += util.h
 
