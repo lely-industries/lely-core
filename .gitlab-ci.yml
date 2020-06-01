@@ -419,7 +419,7 @@ lcov:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --enable-code-coverage --disable-shared
+    - ./configure --enable-code-coverage --disable-shared $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - make
     - make check-code-coverage
     - lcov --summary coverage.info --rc lcov_branch_coverage=1
@@ -443,7 +443,7 @@ scan-build:
   dependencies: []
   script:
     - autoreconf -i
-    - scan-build ./configure --disable-python
+    - scan-build ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - scan-build --keep-cc -o ./scan-build make check
   artifacts:
     when: on_failure
@@ -540,7 +540,7 @@ coverity:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --disable-python
+    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - cov-build --dir cov-int make check
   after_script:
     - tar caf $CI_PROJECT_NAME.xz cov-int
@@ -579,7 +579,7 @@ sonarcloud:
   script:
     - python3 .sonar/sonarcloud-rules-htmlreport.py ${SONAR_TOKEN} ${SONAR_ORGANIZATION} ${SONAR_PROJECT_KEY}
     - autoreconf -i
-    - ./configure --disable-python
+    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - /opt/sonar-build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output make check
     - /opt/sonar-scanner/bin/sonar-scanner
            -Dsonar.host.url="${SONAR_HOST_URL}"
