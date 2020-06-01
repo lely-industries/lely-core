@@ -30,9 +30,11 @@ bin += test-util-endian
 test_util_endian_SOURCES = test.h util-endian.c
 test_util_endian_LDADD = $(LELY_UTIL_LIBS)
 
+if !ECSS_COMPLIANCE
 bin += test-util-fbuf
 test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
+endif
 
 if !NO_CXX
 bin += test-util-fiber
@@ -40,10 +42,12 @@ test_util_fiber_SOURCES = test.h util-fiber.cpp
 test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
 endif
 
+if !ECSS_COMPLIANCE
 if !NO_THREADS
 bin += test-util-spscring
 test_util_spscring_SOURCES = test.h util-spscring.c
 test_util_spscring_LDADD = $(LELY_UTIL_LIBS)
+endif
 endif
 
 # CAN library tests
@@ -57,6 +61,7 @@ test_can_net_LDADD = $(LELY_CAN_LIBS)
 
 # I/O library tests
 
+if !ECSS_COMPLIANCE
 LELY_IO_LIBS = $(LELY_CAN_LIBS)
 LELY_IO_LIBS += $(top_builddir)/src/io/liblely-io.la
 
@@ -69,9 +74,11 @@ endif
 bin += test-io-poll
 test_io_poll_SOURCES = test.h io-poll.c
 test_io_poll_LDADD = $(LELY_IO_LIBS)
+endif
 
 # Event library tests
 
+if !ECSS_COMPLIANCE
 LELY_EV_LIBS = $(LELY_UTIL_LIBS)
 LELY_EV_LIBS += $(top_builddir)/src/ev/liblely-ev.la
 
@@ -92,9 +99,11 @@ bin += test-ev-loop
 test_ev_loop_SOURCES = test.h ev-loop.cpp
 test_ev_loop_LDADD = $(LELY_EV_LIBS)
 endif
+endif
 
 # I/O library tests
 
+if !ECSS_COMPLIANCE
 LELY_IO2_LIBS = $(LELY_EV_LIBS)
 LELY_IO2_LIBS += $(top_builddir)/src/io2/liblely-io2.la
 
@@ -128,6 +137,7 @@ if !NO_CXX
 bin += test-io2-vcan
 test_io2_vcan_SOURCES = test.h io2-vcan.cpp
 test_io2_vcan_LDADD = $(LELY_IO2_LIBS)
+endif
 endif
 
 # CANopen library tests
@@ -204,6 +214,7 @@ endif
 
 # C++ CANopen application library tests
 
+if !ECSS_COMPLIANCE
 LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
 LELY_COAPP_LIBS += $(top_builddir)/src/coapp/liblely-coapp.la
 
@@ -222,12 +233,15 @@ test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
 endif
 endif
+endif
 
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini
 EXTRA_DIST += co-emcy.dcf
+if !NO_CO_GW_TXT
 EXTRA_DIST += co-gw_txt-master.dcf
 EXTRA_DIST += co-gw_txt-slave.dcf
+endif
 EXTRA_DIST += co-nmt-master.dat
 EXTRA_DIST += co-nmt-slave.dcf
 EXTRA_DIST += co-pdo-receive.dcf
@@ -237,10 +251,14 @@ EXTRA_DIST += co-sdo-client.dcf
 EXTRA_DIST += co-sdo-server.dcf
 EXTRA_DIST += co-sync.dcf
 EXTRA_DIST += co-time.dcf
+if !NO_CXX
+if !NO_COAPP_MASTER
 EXTRA_DIST += coapp-fiber-master.dcf
 EXTRA_DIST += coapp-fiber-slave.dcf
 EXTRA_DIST += coapp-lss-master.dcf
 EXTRA_DIST += coapp-lss-slave.dcf
+endif
+endif
 
 BUILT_SOURCES =
 if !NO_TOOLS

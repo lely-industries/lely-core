@@ -62,6 +62,13 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
+AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
+AC_ARG_ENABLE([ecss-compliance],
+	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [
+	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
+])
+
 AM_CONDITIONAL([NO_TOOLS], [false])
 AC_ARG_ENABLE([tools],
 	AS_HELP_STRING([--disable-tools], [disable tools]))
@@ -141,6 +148,7 @@ CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_cxx" != "yes"], [enable_cxx=no])
 AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
@@ -157,6 +165,7 @@ AS_IF([test "$enable_daemon" == "no"], [
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_canfd" != "yes"], [enable_canfd=no])
 AS_IF([test "$enable_canfd" == "no"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
@@ -285,6 +294,7 @@ AS_IF([test "$enable_lss" == "no"], [
 AM_CONDITIONAL([NO_CO_WTM], [false])
 AC_ARG_ENABLE([wtm],
 	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_wtm" != "yes"], [enable_wtm=no])
 AS_IF([test "$enable_wtm" == "no"], [
 	AM_CONDITIONAL([NO_CO_WTM], [true])
 	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
@@ -302,6 +312,7 @@ AS_IF([test "$enable_master" == "no"], [
 AM_CONDITIONAL([NO_CO_GW], [false])
 AC_ARG_ENABLE([gw],
 	AS_HELP_STRING([--disable-gw], [disable gateway support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_gw" != "yes"], [enable_gw=no])
 AS_IF([test "$enable_gw" == "no"], [
 	AM_CONDITIONAL([NO_CO_GW], [true])
 	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])
@@ -483,6 +494,7 @@ AM_CONDITIONAL([WITH_PYTHON], [false])
 AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes"], [
 	enable_python=no
 ])
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_python" != "yes"], [enable_python=no])
 AS_IF([test "$enable_python" != "no"], [
 	AX_CHECK_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
 	AX_CHECK_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])

@@ -28,6 +28,7 @@ endif
 
 inc += lely/tap/tap.h
 
+if !ECSS_COMPLIANCE
 inc += lely/util/def/type.def
 inc += lely/util/bimap.h
 inc += lely/util/bits.h
@@ -37,22 +38,16 @@ inc += lely/util/c_call.hpp
 inc += lely/util/c_type.hpp
 inc += lely/util/chrono.hpp
 endif
-inc += lely/util/config.h
 inc += lely/util/coroutine.h
 if !NO_CXX
 inc += lely/util/coroutine.hpp
 endif
-inc += lely/util/cmp.h
 if !NO_DAEMON
 inc += lely/util/daemon.h
 endif
-inc += lely/util/diag.h
-inc += lely/util/dllist.h
-inc += lely/util/endian.h
 if !NO_CXX
 inc += lely/util/error.hpp
 endif
-inc += lely/util/errnum.h
 if !NO_CXX
 inc += lely/util/exception.hpp
 endif
@@ -66,20 +61,28 @@ inc += lely/util/fwbuf.h
 if !NO_CXX
 inc += lely/util/invoker.hpp
 endif
-inc += lely/util/lex.h
-inc += lely/util/membuf.h
 inc += lely/util/mkjmp.h
 if !NO_CXX
 inc += lely/util/mutex.hpp
 endif
-inc += lely/util/pheap.h
-inc += lely/util/print.h
-inc += lely/util/rbtree.h
 if !NO_CXX
 inc += lely/util/result.hpp
 endif
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
+endif
+
+inc += lely/util/cmp.h
+inc += lely/util/config.h
+inc += lely/util/diag.h
+inc += lely/util/dllist.h
+inc += lely/util/endian.h
+inc += lely/util/errnum.h
+inc += lely/util/lex.h
+inc += lely/util/membuf.h
+inc += lely/util/pheap.h
+inc += lely/util/print.h
+inc += lely/util/rbtree.h
 inc += lely/util/time.h
 inc += lely/util/util.h
 
@@ -93,13 +96,16 @@ inc += lely/can/net.h
 if !NO_CXX
 inc += lely/can/net.hpp
 endif
+if !ECSS_COMPLIANCE
 if HAVE_SOCKET_CAN
 inc += lely/can/socket.h
 endif
 if HAVE_VCI
 inc += lely/can/vci.h
 endif
+endif
 
+if !ECSS_COMPLIANCE
 inc += lely/io/addr.h
 inc += lely/io/attr.h
 inc += lely/io/can.h
@@ -276,6 +282,7 @@ inc += lely/io2/vcan.h
 if !NO_CXX
 inc += lely/io2/vcan.hpp
 endif
+endif
 
 inc += lely/co/def/basic.def
 if !NO_CXX
@@ -383,6 +390,7 @@ inc += lely/co/wtm.hpp
 endif
 endif
 
+if !ECSS_COMPLIANCE
 if !NO_CXX
 inc += lely/coapp/detail/type_traits.hpp
 inc += lely/coapp/device.hpp
@@ -399,6 +407,7 @@ inc += lely/coapp/sdo.hpp
 inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
+endif
 endif
 endif
 
