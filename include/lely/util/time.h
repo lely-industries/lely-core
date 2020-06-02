@@ -74,20 +74,25 @@ LELY_UTIL_TIME_INLINE void timespec_sub_usec(
 LELY_UTIL_TIME_INLINE void timespec_sub_nsec(
 		struct timespec *tp, uint_least64_t nsec);
 
-/// Returns the time difference (in seconds) between *<b>t1</b> and *<b>t2</b>.
+/**
+ * Returns the time difference (in seconds) between *<b>t1</b> and *<b>t2</b>.
+ * Difference is rounded to full seconds towards zero (with decimals truncated).
+ */
 LELY_UTIL_TIME_INLINE int_least64_t timespec_diff_sec(
 		const struct timespec *t1, const struct timespec *t2);
 
 /**
  * Returns the time difference (in milliseconds) between *<b>t1</b> and
- * *<b>t2</b>.
+ * *<b>t2</b>. Difference is rounded to full miliseconds towards zero
+ * (with decimals truncated).
  */
 LELY_UTIL_TIME_INLINE int_least64_t timespec_diff_msec(
 		const struct timespec *t1, const struct timespec *t2);
 
 /**
  * Returns the time difference (in microseconds) between *<b>t1</b> and
- * *<b>t2</b>.
+ * *<b>t2</b>. Difference is rounded to full microseconds towards zero
+ * (with decimals truncated).
  */
 LELY_UTIL_TIME_INLINE int_least64_t timespec_diff_usec(
 		const struct timespec *t1, const struct timespec *t2);
@@ -165,7 +170,7 @@ timespec_sub(struct timespec *tp, const struct timespec *dec)
 inline void
 timespec_sub_sec(struct timespec *tp, uint_least64_t sec)
 {
-	tp->tv_sec += sec;
+	tp->tv_sec -= sec;
 }
 
 inline void
@@ -195,8 +200,7 @@ timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 inline int_least64_t
 timespec_diff_sec(const struct timespec *t1, const struct timespec *t2)
 {
-	return (t1->tv_sec - t2->tv_sec)
-			+ (t1->tv_nsec - t2->tv_nsec) / 1000000000l;
+	return t1->tv_sec - t2->tv_sec;
 }
 
 inline int_least64_t
