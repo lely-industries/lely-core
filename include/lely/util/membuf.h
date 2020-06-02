@@ -24,6 +24,7 @@
 
 #include <lely/util/util.h>
 
+#include <assert.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -137,36 +138,48 @@ void membuf_flush(struct membuf *buf, size_t size);
 inline void
 membuf_init(struct membuf *buf)
 {
+	assert(buf);
+
 	buf->begin = buf->end = buf->cur = NULL;
 }
 
 inline void *
 membuf_begin(const struct membuf *buf)
 {
+	assert(buf);
+
 	return buf->begin;
 }
 
 inline void
 membuf_clear(struct membuf *buf)
 {
+	assert(buf);
+
 	buf->cur = buf->begin;
 }
 
 inline size_t
 membuf_size(const struct membuf *buf)
 {
+	assert(buf);
+
 	return buf->cur - buf->begin;
 }
 
 inline size_t
 membuf_capacity(const struct membuf *buf)
 {
+	assert(buf);
+
 	return buf->end - buf->cur;
 }
 
 inline ptrdiff_t
 membuf_seek(struct membuf *buf, ptrdiff_t offset)
 {
+	assert(buf);
+
 	char *cur = buf->cur + offset;
 	if (cur - buf->begin < 0) {
 		cur = buf->begin;
@@ -183,6 +196,9 @@ membuf_seek(struct membuf *buf, ptrdiff_t offset)
 inline void *
 membuf_alloc(struct membuf *buf, size_t *size)
 {
+	assert(buf);
+	assert(size);
+
 	void *cur = buf->cur;
 	*size = membuf_seek(buf, *size);
 	return cur;
@@ -191,6 +207,9 @@ membuf_alloc(struct membuf *buf, size_t *size)
 inline size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
+	assert(buf);
+	assert(ptr);
+
 	void *cur = membuf_alloc(buf, &size);
 	if (size)
 		memcpy(cur, ptr, size);
