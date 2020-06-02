@@ -493,6 +493,7 @@ cppcheck-unix64:
     paths:
       - cppcheck-rules.md
     expire_in: 1 week
+  when: manual
 
 docker:cppcheck-win64:
   <<: *docker
