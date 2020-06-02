@@ -3,7 +3,7 @@
  * interface of the emergency (EMCY) object. See lely/co/emcy.h for the C
  * interface.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #ifndef LELY_CO_EMCY_HPP_
 #define LELY_CO_EMCY_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/emcy.h> for the C interface"
 #endif
 

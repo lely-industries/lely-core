@@ -3,7 +3,7 @@
  * interface of the CANopen type definitions. See lely/co/type.h for the C
  * interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #ifndef LELY_CO_TYPE_HPP_
 #define LELY_CO_TYPE_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/type.h> for the C interface"
 #endif
 

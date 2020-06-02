@@ -3,7 +3,7 @@
  * interface of the Wireless Transmission Media (WTM) declarations. See
  * lely/co/wtm.h for the C interface.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 #ifndef LELY_CO_WTM_HPP_
 #define LELY_CO_WTM_HPP_
 
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 #error "include <lely/co/wtm.h> for the C interface"
 #endif
 

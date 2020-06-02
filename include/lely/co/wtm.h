@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Wireless
  * Transmission Media (WTM) declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -108,7 +108,7 @@
 #define CO_WTM_AC_CAN UINT32_C(0x02000006)
 
 struct __co_wtm;
-#ifndef __cplusplus
+#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen Wireless Transmission Media (WTM) interface type.
 typedef struct __co_wtm co_wtm_t;
 #endif
