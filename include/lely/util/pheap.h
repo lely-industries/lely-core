@@ -35,6 +35,7 @@
 
 #include <lely/features.h>
 
+#include <assert.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
@@ -195,12 +196,16 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
 inline void
 pnode_init(struct pnode *node, const void *key)
 {
+	assert(node);
+
 	node->key = key;
 }
 
 inline struct pnode *
 pnode_next(const struct pnode *node)
 {
+	assert(node);
+
 	if (node->child)
 		return node->child;
 	do {
@@ -213,6 +218,9 @@ pnode_next(const struct pnode *node)
 inline void
 pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 {
+	assert(heap);
+	assert(cmp);
+
 	heap->cmp = cmp;
 	heap->root = NULL;
 	heap->num_nodes = 0;
@@ -227,12 +235,16 @@ pheap_empty(const struct pheap *heap)
 inline size_t
 pheap_size(const struct pheap *heap)
 {
+	assert(heap);
+
 	return heap->num_nodes;
 }
 
 inline struct pnode *
 pheap_first(const struct pheap *heap)
 {
+	assert(heap);
+
 	return heap->root;
 }
 
