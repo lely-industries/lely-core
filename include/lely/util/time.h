@@ -24,6 +24,7 @@
 
 #include <lely/libc/time.h>
 
+#include <assert.h>
 #include <stdint.h>
 
 #ifndef LELY_UTIL_TIME_INLINE
@@ -111,6 +112,9 @@ LELY_UTIL_TIME_INLINE int timespec_cmp(const void *p1, const void *p2);
 inline void
 timespec_add(struct timespec *tp, const struct timespec *inc)
 {
+	assert(tp);
+	assert(inc);
+
 	tp->tv_sec += inc->tv_sec;
 	tp->tv_nsec += inc->tv_nsec;
 
@@ -123,12 +127,16 @@ timespec_add(struct timespec *tp, const struct timespec *inc)
 inline void
 timespec_add_sec(struct timespec *tp, uint_least64_t sec)
 {
+	assert(tp);
+
 	tp->tv_sec += sec;
 }
 
 inline void
 timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 {
+	assert(tp);
+
 	struct timespec inc = { (time_t)(msec / 1000),
 		(long)((msec % 1000) * 1000000l) };
 	timespec_add(tp, &inc);
@@ -137,6 +145,8 @@ timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 inline void
 timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 {
+	assert(tp);
+
 	struct timespec inc = { (time_t)(usec / 1000000l),
 		(long)((usec % 1000000l) * 1000) };
 	timespec_add(tp, &inc);
@@ -145,6 +155,8 @@ timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 inline void
 timespec_add_nsec(struct timespec *tp, uint_least64_t nsec)
 {
+	assert(tp);
+
 	struct timespec inc = { (time_t)(nsec / 1000000000l),
 		(long)(nsec % 1000000000l) };
 	timespec_add(tp, &inc);
@@ -153,6 +165,9 @@ timespec_add_nsec(struct timespec *tp, uint_least64_t nsec)
 inline void
 timespec_sub(struct timespec *tp, const struct timespec *dec)
 {
+	assert(tp);
+	assert(dec);
+
 	tp->tv_sec -= dec->tv_sec;
 	tp->tv_nsec -= dec->tv_nsec;
 
@@ -165,12 +180,16 @@ timespec_sub(struct timespec *tp, const struct timespec *dec)
 inline void
 timespec_sub_sec(struct timespec *tp, uint_least64_t sec)
 {
+	assert(tp);
+
 	tp->tv_sec += sec;
 }
 
 inline void
 timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 {
+	assert(tp);
+
 	struct timespec dec = { (time_t)(msec / 1000),
 		(long)((msec % 1000) * 1000000l) };
 	timespec_sub(tp, &dec);
@@ -179,6 +198,8 @@ timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 inline void
 timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 {
+	assert(tp);
+
 	struct timespec dec = { (time_t)(usec / 1000000l),
 		(long)((usec % 1000000l) * 1000) };
 	timespec_sub(tp, &dec);
@@ -187,6 +208,8 @@ timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 inline void
 timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 {
+	assert(tp);
+
 	struct timespec dec = { (time_t)(nsec / 1000000000l),
 		(long)(nsec % 1000000000l) };
 	timespec_sub(tp, &dec);
@@ -195,6 +218,9 @@ timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 inline int_least64_t
 timespec_diff_sec(const struct timespec *t1, const struct timespec *t2)
 {
+	assert(t1);
+	assert(t2);
+
 	return (t1->tv_sec - t2->tv_sec)
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000000000l;
 }
@@ -202,6 +228,9 @@ timespec_diff_sec(const struct timespec *t1, const struct timespec *t2)
 inline int_least64_t
 timespec_diff_msec(const struct timespec *t1, const struct timespec *t2)
 {
+	assert(t1);
+	assert(t2);
+
 	return (int_least64_t)(t1->tv_sec - t2->tv_sec) * 1000
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000000l;
 }
@@ -209,6 +238,9 @@ timespec_diff_msec(const struct timespec *t1, const struct timespec *t2)
 inline int_least64_t
 timespec_diff_usec(const struct timespec *t1, const struct timespec *t2)
 {
+	assert(t1);
+	assert(t2);
+
 	return (int_least64_t)(t1->tv_sec - t2->tv_sec) * 1000000l
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000;
 }
@@ -216,6 +248,9 @@ timespec_diff_usec(const struct timespec *t1, const struct timespec *t2)
 inline int_least64_t
 timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 {
+	assert(t1);
+	assert(t2);
+
 	return (int_least64_t)(t1->tv_sec - t2->tv_sec) * 1000000000l
 			+ t1->tv_nsec - t2->tv_nsec;
 }
@@ -223,6 +258,9 @@ timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 inline int
 timespec_cmp(const void *p1, const void *p2)
 {
+	assert(p1);
+	assert(p2);
+
 	if (p1 == p2)
 		return 0;
 
