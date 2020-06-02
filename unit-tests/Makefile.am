@@ -47,8 +47,9 @@ LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 bin += can-test
 
 src_can_tests =
-src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-buf.cpp
+src_can_tests += can/test-msg.cpp
+src_can_tests += can/test-net.cpp
 
 can_test_SOURCES = tests-shared-main.cpp $(src_can_tests)
 can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
@@ -57,7 +58,7 @@ can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST
 # Compilation flags
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
-AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\" -DLELY_NO_CXX=1
 AM_CPPFLAGS += $(CPPUTEST_CFLAGS)
 
 if NO_UNIT_TESTS_MEMLEAK
