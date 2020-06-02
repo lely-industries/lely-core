@@ -20,7 +20,125 @@
  * limitations under the License.
  */
 
+/*** Unit Tests Structure Description ***/
+
+/* Test structure described below is to be considered as a strong suggestion,
+ * hence frequent usage of the word SHOULD. It can be altered or adapted
+ * if that is necessary to improve the test readability or to reduce the amount
+ * of negligible code. This usually applies to a very complicated or trivial
+ * test cases.
+ */
+
+/* Headers SHOULD be included in the following order with each group separated
+ * by a blank line. This rule can be bent if project setup entails it.
+ */
+
+/* Related header */
+// #include "test-cpputest.h"
+
+/* C system headers */
+#include <sys/types.h>
+#include <unistd.h>
+
+/* C/C++ standard library headers */
+#include <cstring>
+#include <vector>
+
+/* Other libraries' headers starting with CppUTest (if possible) */
 #include <CppUTest/TestHarness.h>
+
+/* Project's headers */
+#include <lely/util/errnum.h>
+
+/* --------------- sample test code --------------- */
+struct param_struct {
+  int param1;
+  const char* param2;
+};
+
+int
+sample_func(const struct param_struct* pc, const bool flag) {
+  if (!pc || !pc->param2) return -1;
+
+  if (flag)
+    return strlen(pc->param2) * pc->param1;
+  else
+    return strlen(pc->param2) / pc->param1;
+}
+/* ------------ end of sample test code ----------- */
+
+/* Test groups SHOULD pertain to a single function or data structure in a given
+ * module. Group name format is defined as:
+ *
+ *      ModuleName_FunctionName
+ *      ModuleName_StructureName
+ *
+ * Both phrases SHOULD be written in PascalCase (convert names if necessary).
+ * If function/structure name is prefixed with a module name it SHOULDN'T be
+ * repeated, e.g. 'can_msg_bits()' function in CAN module will become
+ * 'CAN_MsgBits'.
+ *
+ * Arguments that are non-trivially constructed SHOULD be declared in group
+ * body and initialized with default values in TEST_SETUP(). When needed,
+ * TEST_TEARDOWN() SHOULD be used to free resources.
+ */
+TEST_GROUP(Module_SampleFunc) {
+  /* constants */
+  static const size_t STR_LEN = 13;
+
+  /* member variables */
+  param_struct param;
+  char test_str[STR_LEN] = "testtesttest";
+
+  /* helper functions */
+  void SampleHelperFunction(const int idx, const char c) { test_str[idx] = c; }
+
+  /* test setup/teardown */
+  TEST_SETUP() {
+    param.param1 = 0;
+    param.param2 = NULL;
+  }
+
+  TEST_TEARDOWN(){};
+};
+
+/* Tests SHOULD examine one aspect of a function. Each test will call
+ * a function once and analyse its output. Test name SHOULD describe what
+ * is being tested and SHOULD be written with PascalCase, optionally with
+ * underscores to improve readability.
+ *
+ *      TestAspectOne
+ *      TestAspectTwo_TestMode
+ *      TestAspectTwo_TestOtherMode
+ *
+ * Test code structure must follow AAA/GWT (Arrange-Act-Assert/Given-When-Then)
+ * pattern with each section separated by an empty line.
+ */
+TEST(Module_SampleFunc, InvalidArgs) {
+  /* arrange */
+  param.param2 = NULL;
+
+  /* act */
+  int ret = sample_func(&param, true);
+
+  /* assert */
+  CHECK_EQUAL(-1, ret);
+}
+
+TEST(Module_SampleFunc, Test_FlagTrue_1) {
+  /* given */
+  param.param1 = 5;
+  param.param2 = test_str;
+  SampleHelperFunction(10, '\0');
+
+  /* when */
+  int ret = sample_func(&param, true);
+
+  /* then */
+  CHECK_EQUAL(50, ret);
+}
+
+/*** CppUTest self-check ***/
 
 class ClassName {};
 

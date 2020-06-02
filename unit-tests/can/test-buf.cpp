@@ -20,9 +20,10 @@
  * limitations under the License.
  */
 
-#include <CppUTest/TestHarness.h>
 #include <algorithm>
 #include <string>
+
+#include <CppUTest/TestHarness.h>
 
 #include <config.h>
 #include <lely/can/buf.h>
@@ -108,7 +109,7 @@ TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
 
   CHECK_EQUAL(0, frames_written);
   CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(15, can_buf_capacity(&buf));  // (BUF_SIZE)
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
 TEST(CAN_Buf, CanBufWrite_OneFrame) {
@@ -119,7 +120,7 @@ TEST(CAN_Buf, CanBufWrite_OneFrame) {
 
   CHECK_EQUAL(1, frames_written);
   CHECK_EQUAL(1, can_buf_size(&buf));
-  CHECK_EQUAL(14, can_buf_capacity(&buf));  // (BUF_SIZE - 1)
+  CHECK_EQUAL(BUF_SIZE - 1, can_buf_capacity(&buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
@@ -138,13 +139,13 @@ TEST(CAN_Buf, CanBufWrite_ManyFrames) {
 
   const auto frames_written = can_buf_write(&buf, msg_tab, MSG_SIZE);
 
-  CHECK_EQUAL(3, frames_written);           // (MSG_SIZE)
-  CHECK_EQUAL(3, can_buf_size(&buf));       // (MSG_SIZE)
-  CHECK_EQUAL(12, can_buf_capacity(&buf));  // (BUF_SIZE - MSG_SIZE)
+  CHECK_EQUAL(MSG_SIZE, frames_written);
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(3, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));  // (MSG_SIZE)
+  CHECK_EQUAL(MSG_SIZE, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
 }
 
@@ -159,13 +160,13 @@ TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
 
   const auto frames_written = can_buf_write(&buf, msg_tab, MSG_SIZE);
 
-  CHECK_EQUAL(15, frames_written);      // (BUF_SIZE)
-  CHECK_EQUAL(15, can_buf_size(&buf));  // (BUF_SIZE)
+  CHECK_EQUAL(BUF_SIZE, frames_written);
+  CHECK_EQUAL(BUF_SIZE, can_buf_size(&buf));
   CHECK_EQUAL(0, can_buf_capacity(&buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(15, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));  // (MSG_SIZE - 1)
+  CHECK_EQUAL(BUF_SIZE, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_tab, out_tab, 15);
 }
 
@@ -179,7 +180,7 @@ TEST(CAN_Buf, CanBufClear) {
   can_buf_clear(&buf);
 
   CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(15, can_buf_capacity(&buf));  // (BUF_SIZE)
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
 TEST(CAN_Buf, CanBufPeek_NullPtr) {
@@ -192,7 +193,7 @@ TEST(CAN_Buf, CanBufPeek_NullPtr) {
   const auto frames_read = can_buf_peek(&buf, nullptr, 3);
 
   CHECK_EQUAL(3, frames_read);
-  CHECK_EQUAL(4, can_buf_size(&buf));  // (MSG_SIZE)
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
 TEST(CAN_Buf, CanBufReserve_Enlarge) {
@@ -204,9 +205,9 @@ TEST(CAN_Buf, CanBufReserve_Enlarge) {
 
   const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_SIZE + 1);
 
-  CHECK_EQUAL(23, capacity);                // (31 - MSG_SIZE)
-  CHECK_EQUAL(23, can_buf_capacity(&buf));  // (31 - MSG_SIZE)
-  CHECK_EQUAL(8, can_buf_size(&buf));       // (MSG_SIZE)
+  CHECK_EQUAL(31 - MSG_SIZE, capacity);  // (new_buffer_size - MSG_SIZE)
+  CHECK_EQUAL(31 - MSG_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
 TEST(CAN_Buf, CanBufReserve_BigEnough) {
@@ -218,9 +219,9 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
 
   const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_SIZE);
 
-  CHECK_EQUAL(7, capacity);                // (BUF_SIZE - MSG_SIZE)
-  CHECK_EQUAL(7, can_buf_capacity(&buf));  // (BUF_SIZE - MSG_SIZE)
-  CHECK_EQUAL(8, can_buf_size(&buf));      // (MSG_SIZE)
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, capacity);
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
 TEST(CAN_Buf, CanBufReserve_Wrapping) {
@@ -235,17 +236,17 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
   can_buf_write(&buf, msg_tab, MSG_SIZE);
   can_buf_read(&buf, nullptr, 10);
   can_buf_write(&buf, msg_tab, 6);
-  const size_t BUF_MSG_SIZE = MSG_SIZE - 10 + 6;
+  const size_t NEW_MSG_SIZE = MSG_SIZE - 10 + 6;
 
-  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - BUF_MSG_SIZE + 1);
+  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - NEW_MSG_SIZE + 1);
 
-  CHECK_EQUAL(20, capacity);                // (31 - NEW_MSG_SIZE)
-  CHECK_EQUAL(20, can_buf_capacity(&buf));  // (31 - NEW_MSG_SIZE)
-  CHECK_EQUAL(11, can_buf_size(&buf));      // (BUF_MSG_SIZE)
+  CHECK_EQUAL(31 - NEW_MSG_SIZE, capacity);  // (new_buffer_size - NEW_MSG_SIZE)
+  CHECK_EQUAL(31 - NEW_MSG_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(NEW_MSG_SIZE, can_buf_size(&buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(11, can_buf_read(&buf, out_tab, BUF_SIZE + 1));  // (BUF_MSG_SIZE)
+  CHECK_EQUAL(NEW_MSG_SIZE, can_buf_read(&buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_tab + 10, out_tab, 5);
   CheckCanMsgTabs(msg_tab, out_tab + 5, 6);
 }
