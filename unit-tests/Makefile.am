@@ -10,6 +10,9 @@ LELY_LIBC_LIBS += $(top_builddir)/src/libc/liblely-libc.la
 
 if PLATFORM_WIN32
 CPPUTEST_LIBS += -lpthread
+if !ECSS_COMPLIANCE
+util_test_CXXFLAGS = -faligned-new
+endif
 endif
 
 # CppUTest library self-test
@@ -34,6 +37,7 @@ src_util_tests += util/test-bits.cpp
 src_util_tests += util/test-bitset.cpp
 src_util_tests += util/test-mutex.cpp
 src_util_tests += util/test-sllist.cpp
+src_util_tests += util/test-spscring.cpp
 endif
 
 bin += util-test
