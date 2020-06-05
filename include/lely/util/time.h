@@ -262,9 +262,6 @@ timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 inline int
 timespec_cmp(const void *p1, const void *p2)
 {
-	assert(p1);
-	assert(p2);
-
 	if (p1 == p2)
 		return 0;
 
