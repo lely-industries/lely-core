@@ -67,6 +67,7 @@ bin += co-test
 
 src_co_tests =
 src_co_tests += co/test-crc.cpp
+src_co_tests += co/test-type.cpp
 
 co_test_SOURCES = tests-shared-main.cpp $(src_co_tests)
 co_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
