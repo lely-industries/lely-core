@@ -2318,6 +2318,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
 	if (id > CO_NUM_NODES
+			// cppcheck-suppress knownConditionTrueFalse
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;
@@ -2441,6 +2442,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
 	if (id > CO_NUM_NODES
+			// cppcheck-suppress knownConditionTrueFalse
 			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
 		ac = CO_SDO_AC_PARAM_VAL;
 		goto error;

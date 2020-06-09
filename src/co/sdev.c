@@ -118,7 +118,7 @@ snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
 	int r, t = 0;
 	const char *name;
 
-	// cppcheck-suppress nullPointerRedundantCheck symbolName=s
+	// cppcheck-suppress nullPointer symbolName=s
 	r = snprintf(s, n, "{\n\t.id = 0x%02x,\n", co_dev_get_id(dev));
 	if (r < 0) {
 		errsv = errno;

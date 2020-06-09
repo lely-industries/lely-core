@@ -129,7 +129,7 @@ __fwbuf_init(struct __fwbuf *buf, const char *filename)
 #ifdef _WIN32
 	DWORD dwErrCode = 0;
 
-	buf->filename = strdup(filename);
+	buf->filename = _strdup(filename);
 	if (!buf->filename) {
 		dwErrCode = errno2c(errno);
 		goto error_strdup;

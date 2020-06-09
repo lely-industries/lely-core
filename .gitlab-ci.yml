@@ -483,21 +483,20 @@ cppcheck-unix64:
     - cppcheck --doc > cppcheck-rules.md
     - cppcheck
         -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/include -I. -I./include
+        -I. -I./include
         --inline-suppr
         --platform=unix64
-        --quiet
         --std=c11 --std=c++11
         --suppressions-list=suppressions.txt
+        -isrc/io2/win32
         include src
   artifacts:
     paths:
       - cppcheck-rules.md
     expire_in: 1 week
-  when: manual
 
 docker:cppcheck-win64:
   <<: *docker
@@ -510,30 +509,31 @@ cppcheck-win64:
   tags:
     - docker
     - linux
-  image: $REGISTRY/cppcheck-unix64:bullseye
+  image: $REGISTRY/cppcheck-win64:bullseye
   dependencies: []
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
     - cppcheck --doc > cppcheck-rules.md
     - cppcheck
-        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -D__MINGW64__=1 -DHAVE_CONFIG_H
+        -U__linux__
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/x86_64-w64-mingw32/include -I. -I./include
+        -I. -I./include
         --inline-suppr
         --platform=win64
-        --quiet
         --std=c11 --std=c++11
+        --library=std --library=windows
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
+        -isrc/io2/linux
         include src
   artifacts:
     paths:
       - cppcheck-rules.md
     expire_in: 1 week
-  when: manual
 
 docker:coverity:
   <<: *docker
