@@ -1951,9 +1951,10 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 
 	// If the program control differs from 'Program started', try again.
 	co_unsigned8_t val = 0;
+	const uint_least8_t *const begin = ptr;
+	const uint_least8_t *const end = begin != NULL ? begin + n : NULL;
 	// clang-format off
-	if (!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, ptr,
-			(const uint_least8_t *)ptr + n) || val != 1)
+	if (!co_val_read(CO_DEFTYPE_UNSIGNED8, &val, begin, end) || val != 1)
 		// clang-format on
 		return co_nmt_boot_wait_prog_state;
 
