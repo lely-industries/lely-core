@@ -411,7 +411,7 @@ io_timer_impl_svc_notify_fork(struct io_svc *svc, enum io_fork_event e)
 	int errsv = errno;
 
 	struct itimerspec value = { { 0, 0 }, { 0, 0 } };
-	if (timerfd_gettime(impl->tfd, &value) == -1 && !result) {
+	if (timerfd_gettime(impl->tfd, &value) == -1) {
 		errsv = errno;
 		result = -1;
 	}
@@ -633,8 +633,7 @@ io_timer_impl_close(struct io_timer_impl *impl)
 	int errsv = errno;
 
 	if (!impl->shutdown
-			&& io_poll_watch(impl->poll, tfd, 0, &impl->watch) == -1
-			&& !result) {
+			&& io_poll_watch(impl->poll, tfd, 0, &impl->watch) == -1) {
 		errsv = errno;
 		result = -1;
 	}
