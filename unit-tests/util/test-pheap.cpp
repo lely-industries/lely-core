@@ -279,3 +279,38 @@ TEST(Util_Pheap, PheapForeach_MultiElementsRemoveCurrent) {
   CHECK_EQUAL(NODES_NUM, node_counter);
   CHECK_EQUAL(NODES_NUM - 1, visited_keys.size());
 }
+
+TEST(Util_Pheap, PheapContains_HeapEmpty) {
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
+}
+
+TEST(Util_Pheap, PheapContains_ContainsAsRoot) {
+  pheap_insert(&heap, &nodes[0]);
+
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[0]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
+}
+
+TEST(Util_Pheap, PheapContains_ContainsAsParentsChild) {
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[1]);
+
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[0]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[1]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
+}
+
+TEST(Util_Pheap, PheapContains_ContainsMany) {
+  pheap_insert(&heap, &nodes[3]);
+  pheap_insert(&heap, &nodes[2]);
+  pheap_insert(&heap, &nodes[1]);
+
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[1]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[2]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[3]));
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[4]));
+}
