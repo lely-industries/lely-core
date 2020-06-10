@@ -1,4 +1,3 @@
-
 bin =
 
 LELY_LIBC_LIBS =
@@ -101,12 +100,15 @@ endif
 check_PROGRAMS = $(bin)
 
 TESTS = $(check_PROGRAMS)
-
 EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh
-LOG_COMPILER = $(EXEC)
 
 if CODE_COVERAGE_ENABLED
+LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
+AM_TESTS_ENVIRONMENT = EXEC_WRAPPER="$(EXEC)"
+AM_TESTS_ENVIRONMENT += ;
 @CODE_COVERAGE_RULES@
+else
+LOG_COMPILER = $(EXEC)
 endif
 
 @VALGRIND_CHECK_RULES@

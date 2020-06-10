@@ -30,6 +30,7 @@
 /coverage.info
 /depcomp
 /exec-wrapper.sh
+/lcov-wrapper.sh
 /install-sh
 /libtool
 /ltmain.sh

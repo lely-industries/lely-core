@@ -187,7 +187,11 @@ test_co_sdev_SOURCES = co-test.h co-sdev.c
 nodist_test_co_sdev_SOURCES = test-co-sdev.h
 test_co_sdev_LDADD = $(LELY_CO_LIBS)
 test-co-sdev.h: co-sdev.dcf $(top_builddir)/tools/dcf2c$(EXEEXT)
+if CODE_COVERAGE_ENABLED
+	EXEC_WRAPPER="$(EXEC)" TEST_NAME="test-co-sdev-dcf2c" $(LOG_COMPILER) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
+else
 	$(EXEC) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
+endif
 endif
 endif
 endif
@@ -291,12 +295,16 @@ endif
 TESTS = $(check_PROGRAMS)
 
 EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh
-LOG_COMPILER = $(EXEC)
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
 TEST_LOG_DRIVER = $(LOG_DRIVER)
 
 if CODE_COVERAGE_ENABLED
+LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
+AM_TESTS_ENVIRONMENT = EXEC_WRAPPER="$(EXEC)"
+AM_TESTS_ENVIRONMENT += ;
 @CODE_COVERAGE_RULES@
+else
+LOG_COMPILER = $(EXEC)
 endif
 
 @VALGRIND_CHECK_RULES@
