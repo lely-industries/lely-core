@@ -171,15 +171,30 @@ TEST(Util_Pheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
   CHECK_EQUAL(1UL, pheap_size(&heap));
 }
 
+TEST(Util_Pheap, PheapRemove_NodeFromTheMiddleThatHasNext) {
+  pheap_insert(&heap, &nodes[3]);
+  pheap_insert(&heap, &nodes[2]);
+  pheap_insert(&heap, &nodes[4]);
+  pheap_insert(&heap, &nodes[1]);
+
+  pheap_remove(&heap, &nodes[2]);
+  CHECK_EQUAL(3UL, pheap_size(&heap));
+}
+
 TEST(Util_Pheap, PheapFind_WhenEmpty) {
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[0]));
 }
 
 TEST(Util_Pheap, PheapFind_WhenNotEmpty) {
-  FillHeap(2);
+  pheap_insert(&heap, &nodes[1]);
+  pheap_insert(&heap, &nodes[2]);
+  pheap_insert(&heap, &nodes[3]);
+  pheap_insert(&heap, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], pheap_find(&heap, &keys[0]));
   POINTERS_EQUAL(&nodes[1], pheap_find(&heap, &keys[1]));
+  POINTERS_EQUAL(&nodes[2], pheap_find(&heap, &keys[2]));
+  POINTERS_EQUAL(&nodes[3], pheap_find(&heap, &keys[3]));
 }
 
 TEST(Util_Pheap, PheapFind_FindNotPresentWhenMultipleElements) {
