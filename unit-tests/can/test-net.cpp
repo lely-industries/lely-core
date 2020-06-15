@@ -22,7 +22,6 @@
 
 #include <CppUTest/TestHarness.h>
 
-#include <config.h>
 #include <lely/can/net.h>
 
 TEST_GROUP(CAN_NetInit){};

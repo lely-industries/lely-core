@@ -25,7 +25,10 @@
 
 #include <CppUTest/TestHarness.h>
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <lely/can/buf.h>
 
 TEST_GROUP(CAN_BufAlloc) { can_buf* buf = nullptr; };

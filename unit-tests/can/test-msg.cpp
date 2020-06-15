@@ -24,7 +24,10 @@
 
 #include <CppUTest/TestHarness.h>
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <lely/can/msg.h>
 #include <lely/util/errnum.h>
 

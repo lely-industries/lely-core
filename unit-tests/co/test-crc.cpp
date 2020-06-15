@@ -22,7 +22,6 @@
 
 #include <CppUTest/TestHarness.h>
 
-#include <config.h>
 #include <lely/co/crc.h>
 
 TEST_GROUP(CO_Crc){};
