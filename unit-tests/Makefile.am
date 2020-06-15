@@ -10,22 +10,20 @@ LELY_LIBC_LIBS += $(top_builddir)/src/libc/liblely-libc.la
 
 if PLATFORM_WIN32
 CPPUTEST_LIBS += -lpthread
-if !ECSS_COMPLIANCE
-util_test_CXXFLAGS = -faligned-new
-endif
 endif
 
 # CppUTest library self-test
 
-bin += cpputest-test
-cpputest_test_SOURCES = tests-shared-main.cpp test-cpputest.cpp
-cpputest_test_LDADD = $(CPPUTEST_LIBS)
+bin += test-cpputest
+test_cpputest_SOURCES = tests-shared-main.cpp test-cpputest.cpp
+test_cpputest_LDADD = $(CPPUTEST_LIBS)
 
 # Utilities library tests
 
 LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
 src_util_tests =
+src_util_tests += util/test-bits.cpp
 src_util_tests += util/test-cmp.cpp
 src_util_tests += util/test-endian.cpp
 src_util_tests += util/test-dllist.cpp
@@ -34,43 +32,42 @@ src_util_tests += util/test-rbtree.cpp
 src_util_tests += util/test-util.cpp
 src_util_tests += util/test-time.cpp
 if !ECSS_COMPLIANCE
-src_util_tests += util/test-bits.cpp
 src_util_tests += util/test-bitset.cpp
 src_util_tests += util/test-mutex.cpp
 src_util_tests += util/test-sllist.cpp
 src_util_tests += util/test-spscring.cpp
 endif
 
-bin += util-test
-util_test_SOURCES = tests-shared-main.cpp $(src_util_tests)
-util_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
+bin += test-util
+test_util_SOURCES = tests-shared-main.cpp $(src_util_tests)
+test_util_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
 
 # CAN library tests
 
 LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 
-bin += can-test
+bin += test-can
 
 src_can_tests =
 src_can_tests += can/test-buf.cpp
 src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-net.cpp
 
-can_test_SOURCES = tests-shared-main.cpp $(src_can_tests)
-can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
+test_can_SOURCES = tests-shared-main.cpp $(src_can_tests)
+test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
 
 # CANopen library tests
 
 LELY_CO_LIBS = $(top_builddir)/src/co/liblely-co.la
 
-bin += co-test
+bin += test-co
 
 src_co_tests =
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-type.cpp
 
-co_test_SOURCES = tests-shared-main.cpp $(src_co_tests)
-co_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
+test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
+test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 
 # Compilation flags
 

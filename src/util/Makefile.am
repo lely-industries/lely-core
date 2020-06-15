@@ -1,7 +1,6 @@
 src =
 if !ECSS_COMPLIANCE
 src += bimap.c
-src += bits.c
 src += bitset.c
 if !NO_DAEMON
 src += daemon.c
@@ -20,6 +19,7 @@ if !NO_CXX
 src += exception.cpp
 endif
 
+src += bits.c
 src += cmp.c
 src += config.c
 src += config_ini.c

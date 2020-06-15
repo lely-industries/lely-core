@@ -24,18 +24,17 @@
 
 #include <lely/util/spscring.h>
 
-TEST_GROUP(Util_Spscring) {
-  spscring ring;
-  size_t ring_size = 15UL;
-
-  TEST_SETUP() { spscring_init(&ring, ring_size); }
-};
+TEST_GROUP(Util_Spscring) { size_t ring_size = 15UL; };
 
 TEST(Util_Spscring, Spscring_Size) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(ring_size, spscring_size(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacity_Empty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(ring_size, spscring_p_capacity(&ring));
 }
 
@@ -56,98 +55,132 @@ spscring_c_fill(spscring* const ring, const size_t how_many) {
 }
 
 TEST(Util_Spscring, SpscringPCapacity_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(ring_size - 1UL, spscring_p_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacity_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
 
   CHECK_EQUAL(ring_size - 2UL, spscring_p_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacity_MaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size);
 
   CHECK_EQUAL(0UL, spscring_p_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacity_MoreThanMaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size + 1UL);
 
   CHECK_EQUAL(0UL, spscring_p_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacityNoWrap_Empty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(ring_size, spscring_p_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacityNoWrap_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(ring_size - 1UL, spscring_p_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacityNoWrap_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
 
   CHECK_EQUAL(ring_size - 2UL, spscring_p_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacityNoWrap_MaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size);
 
   CHECK_EQUAL(0UL, spscring_p_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringPCapacityNoWrap_MoreThanMaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size + 1UL);
 
   CHECK_EQUAL(0UL, spscring_p_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringPAlloc_InEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(0UL, spscring_p_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringPAlloc_AllocateGreaterThanCapacity) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t great_size = ring_size + 1UL;
 
   CHECK_EQUAL(0UL, spscring_p_alloc(&ring, &great_size));
 }
 
 TEST(Util_Spscring, SpscringPAlloc_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(1UL, spscring_p_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringPAlloc_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
 
   CHECK_EQUAL(2UL, spscring_p_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateZeroWhenEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t alloc_size = 0UL;
 
   CHECK_EQUAL(0UL, spscring_p_alloc_no_wrap(&ring, &alloc_size));
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateOneWhenEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t alloc_size = 1UL;
 
   CHECK_EQUAL(0UL, spscring_p_alloc_no_wrap(&ring, &alloc_size));
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateManyWhenEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t alloc_size = 2UL;
 
   CHECK_EQUAL(0UL, spscring_p_alloc_no_wrap(&ring, &alloc_size));
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateZeroWhenOneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
   size_t alloc_size = 0UL;
 
@@ -155,6 +188,8 @@ TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateZeroWhenOneAdded) {
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateOneWhenOneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
   size_t alloc_size = 1UL;
 
@@ -162,6 +197,8 @@ TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateOneWhenOneAdded) {
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateManyWhenOneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
   size_t alloc_size = 2UL;
 
@@ -169,6 +206,8 @@ TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateManyWhenOneAdded) {
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateZeroWhenManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   size_t alloc_size = 0UL;
 
@@ -176,6 +215,8 @@ TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateZeroWhenManyAdded) {
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateOneWhenManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   size_t alloc_size = 1UL;
 
@@ -183,6 +224,8 @@ TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateOneWhenManyAdded) {
 }
 
 TEST(Util_Spscring, SpscringPAllocNoWrap_AllocateManyWhenManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   size_t alloc_size = 2UL;
 
@@ -216,6 +259,8 @@ bool ProducerConsumerSignaller::consumer_signal_called = false;
 bool ProducerConsumerSignaller::producer_signal_called = false;
 
 TEST(Util_Spscring, SpscringPCommit_InvokesConsumerSignal) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
   spscring_c_submit_wait(&ring, ring_size, pcs.consumer_signal, &argument);
@@ -228,6 +273,8 @@ TEST(Util_Spscring, SpscringPCommit_InvokesConsumerSignal) {
 
 TEST(Util_Spscring,
      SpscringPSubmitWait_SigSubmittedIndsNotAvailDemandLessThanSize) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
 
@@ -239,6 +286,8 @@ TEST(Util_Spscring,
 
 TEST(Util_Spscring,
      SpscringPSubmitWait_SigSubmittedIndsNotAvailDemandMoreThanSize) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
 
@@ -249,6 +298,8 @@ TEST(Util_Spscring,
 }
 
 TEST(Util_Spscring, SpscringPSubmitWait_SigSubmittedIndicesAvailable) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
 
@@ -257,6 +308,8 @@ TEST(Util_Spscring, SpscringPSubmitWait_SigSubmittedIndicesAvailable) {
 }
 
 TEST(Util_Spscring, SpscringPAbortWait_AbortsWait) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
 
@@ -272,114 +325,154 @@ TEST(Util_Spscring, SpscringPAbortWait_AbortsWait) {
 }
 
 TEST(Util_Spscring, SpscringCCapacity_Empty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 0UL);
 
   CHECK_EQUAL(0UL, spscring_c_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacity_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(1UL, spscring_c_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacity_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
 
   CHECK_EQUAL(2UL, spscring_c_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacity_MaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size);
 
   CHECK_EQUAL(ring_size, spscring_c_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacity_MoreThanMaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size + 1UL);
 
   CHECK_EQUAL(ring_size, spscring_c_capacity(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacityNoWrap_Empty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 0UL);
 
   CHECK_EQUAL(0UL, spscring_c_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacityNoWrap_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(1UL, spscring_c_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacityNoWrap_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
 
   CHECK_EQUAL(2UL, spscring_c_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacityNoWrap_MaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size);
 
   CHECK_EQUAL(ring_size, spscring_c_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringCCapacityNoWrap_MoreThanMaxAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size + 1UL);
 
   CHECK_EQUAL(ring_size, spscring_c_capacity_no_wrap(&ring));
 }
 
 TEST(Util_Spscring, SpscringCAlloc_InEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(0UL, spscring_c_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCAlloc_AllocateGreaterThanCapacity) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t great_size = ring_size + 1UL;
 
   CHECK_EQUAL(0UL, spscring_c_alloc(&ring, &great_size));
 }
 
 TEST(Util_Spscring, SpscringCAlloc_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_c_fill(&ring, 1UL);
 
   CHECK_EQUAL(0UL, spscring_c_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCAlloc_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_c_fill(&ring, 2UL);
 
   CHECK_EQUAL(0UL, spscring_c_alloc(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCAllocNoWrap_InEmpty) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(0UL, spscring_c_alloc_no_wrap(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCAllocNoWrap_AllocateGreaterThanCapacity) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t great_size = ring_size + 1UL;
 
   CHECK_EQUAL(0UL, spscring_c_alloc_no_wrap(&ring, &great_size));
 }
 
 TEST(Util_Spscring, SpscringCAllocNoWrap_OneAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_c_fill(&ring, 1UL);
 
   CHECK_EQUAL(0UL, spscring_c_alloc_no_wrap(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCAllocNoWrap_ManyAdded) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_c_fill(&ring, 2UL);
 
   CHECK_EQUAL(0UL, spscring_c_alloc_no_wrap(&ring, &ring_size));
 }
 
 TEST(Util_Spscring, SpscringCCommit_EmptyZeroCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   CHECK_EQUAL(0UL, spscring_c_commit(&ring, 0UL));
 }
 
 TEST(Util_Spscring, SpscringCCommit_EmptyOneCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t size_to_alloc = 1UL;
 
   spscring_c_alloc(&ring, &size_to_alloc);
@@ -388,6 +481,8 @@ TEST(Util_Spscring, SpscringCCommit_EmptyOneCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_EmptyManyCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   size_t size_to_alloc = 2UL;
 
   spscring_c_alloc(&ring, &size_to_alloc);
@@ -396,12 +491,16 @@ TEST(Util_Spscring, SpscringCCommit_EmptyManyCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_OneAddedZeroCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
 
   CHECK_EQUAL(0UL, spscring_c_commit(&ring, 0UL));
 }
 
 TEST(Util_Spscring, SpscringCCommit_OneAddedOneCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 1UL);
   spscring_c_fill(&ring, 1UL);
   size_t size_to_alloc = 1UL;
@@ -412,6 +511,8 @@ TEST(Util_Spscring, SpscringCCommit_OneAddedOneCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_ManyAddedZeroCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   spscring_c_fill(&ring, 1UL);
   size_t size_to_alloc = 0UL;
@@ -422,6 +523,8 @@ TEST(Util_Spscring, SpscringCCommit_ManyAddedZeroCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_ManyAddedOneCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   spscring_c_fill(&ring, 2UL);
   size_t size_to_alloc = 1UL;
@@ -432,6 +535,8 @@ TEST(Util_Spscring, SpscringCCommit_ManyAddedOneCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_ManyAddedManyCommited) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, 2UL);
   spscring_c_fill(&ring, 2UL);
   size_t size_to_alloc = 2UL;
@@ -442,6 +547,8 @@ TEST(Util_Spscring, SpscringCCommit_ManyAddedManyCommited) {
 }
 
 TEST(Util_Spscring, SpscringCCommit_InvokesProducerSignal) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   spscring_p_fill(&ring, 1UL);
 
@@ -455,6 +562,8 @@ TEST(Util_Spscring, SpscringCCommit_InvokesProducerSignal) {
 }
 
 TEST(Util_Spscring, SubmitWait_AvailableForReading) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   spscring_p_fill(&ring, ring_size);
   int argument = 0;
 
@@ -464,6 +573,8 @@ TEST(Util_Spscring, SubmitWait_AvailableForReading) {
 }
 
 TEST(Util_Spscring, SpscringCSubmitWait_NotAvailableForReading) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
 
   ProducerConsumerSignaller pcs;
@@ -472,6 +583,8 @@ TEST(Util_Spscring, SpscringCSubmitWait_NotAvailableForReading) {
 }
 
 TEST(Util_Spscring, SpscringCSubmitWait_ConsumerSignalCalledWhenDataAvailable) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
   spscring_c_submit_wait(&ring, ring_size, pcs.consumer_signal, &argument);
@@ -484,6 +597,8 @@ TEST(Util_Spscring, SpscringCSubmitWait_ConsumerSignalCalledWhenDataAvailable) {
 
 TEST(Util_Spscring,
      SpscringCSubmitWait_ConsumerSigCalledWhenDataAvailMoreThanMaxRequested) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
   spscring_c_submit_wait(&ring, ring_size + 1, pcs.consumer_signal, &argument);
@@ -495,6 +610,8 @@ TEST(Util_Spscring,
 }
 
 TEST(Util_Spscring, SpscringCAbortWait_ConsumerSigNotCalledWhenDataAvail) {
+  spscring ring;
+  spscring_init(&ring, ring_size);
   int argument = 0;
   ProducerConsumerSignaller pcs;
   spscring_c_submit_wait(&ring, ring_size, pcs.consumer_signal, &argument);

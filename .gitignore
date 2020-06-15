@@ -56,5 +56,3 @@ Makefile.in
 *.pc
 *.rc
 test-*
-*-test
-*-test.*

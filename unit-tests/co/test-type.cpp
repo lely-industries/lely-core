@@ -22,7 +22,6 @@
 
 #include <CppUTest/TestHarness.h>
 
-#include <config.h>
 #include <lely/co/type.h>
 
 TEST_GROUP(CO_Type) { static const co_unsigned16_t INVALID_TYPE = 0xffff; };
