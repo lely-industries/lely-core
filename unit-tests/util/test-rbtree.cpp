@@ -74,6 +74,21 @@ TEST(Util_Rbtree, RbtreeInit) {
   POINTERS_EQUAL(nullptr, rbtree_root(&tree));
 }
 
+TEST(Util_Rbtree, RbtreeEmpty_IsEmpty) { CHECK_EQUAL(1, rbtree_empty(&tree)); }
+
+TEST(Util_Rbtree, RbtreeEmpty_RootAdded) {
+  rbtree_insert(&tree, &nodes[0]);
+
+  CHECK_EQUAL(0, rbtree_empty(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeEmpty_LeaveAdded) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  CHECK_EQUAL(0, rbtree_empty(&tree));
+}
+
 TEST(Util_Rbtree, RbtreeInsert_Empty) {
   rbtree_insert(&tree, &nodes[0]);
 

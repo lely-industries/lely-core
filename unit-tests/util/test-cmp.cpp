@@ -21,11 +21,22 @@
  */
 
 #include <CppUTest/TestHarness.h>
+
 #include <lely/util/cmp.h>
 
-TEST_GROUP(UtilCmp){};
+TEST_GROUP(Util_Cmp){};
 
-TEST(UtilCmp, StrCmp_NullsAndEqual) {
+TEST(Util_Cmp, PtrCmp) {
+  const int tab[2] = {0};
+  const int* const p1 = &tab[0];
+  const int* const p2 = &tab[1];
+
+  CHECK_EQUAL(-1, ptr_cmp(p1, p2));
+  CHECK_EQUAL(0, ptr_cmp(p1, p1));
+  CHECK_EQUAL(1, ptr_cmp(p2, p1));
+}
+
+TEST(Util_Cmp, StrCmp_NullsAndEqual) {
   const char p1[] = "arhgesv";
   const char* const p2 = p1;
 
@@ -34,42 +45,42 @@ TEST(UtilCmp, StrCmp_NullsAndEqual) {
   CHECK_EQUAL(0, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCmp_StringsEqual) {
+TEST(Util_Cmp, StrCmp_StringsEqual) {
   const char p1[] = "%arhgesvdfg45-";
   const char p2[] = "%arhgesvdfg45-";
 
   CHECK_EQUAL(0, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCmp_StrMoreChar) {
+TEST(Util_Cmp, StrCmp_StrMoreChar) {
   const char p1[] = "brhgesv";
   const char p2[] = "arhgesv";
 
   CHECK_COMPARE(0, <, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCmp_StrMoreNull) {
+TEST(Util_Cmp, StrCmp_StrMoreNull) {
   const char p1[] = "arhgesvv";
   const char p2[] = "arhgesv";
 
   CHECK_COMPARE(0, <, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCmp_StrLessChar) {
+TEST(Util_Cmp, StrCmp_StrLessChar) {
   const char p1[] = "brhgesv";
   const char p2[] = "hrhgesv";
 
   CHECK_COMPARE(0, >, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCmp_StrLessNull) {
+TEST(Util_Cmp, StrCmp_StrLessNull) {
   const char p1[] = "arhgesv";
   const char p2[] = "arhgesvddd";
 
   CHECK_COMPARE(0, >, str_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_NullsAndEqual) {
+TEST(Util_Cmp, StrCaseCmp_NullsAndEqual) {
   const char p1[] = "arhgesv";
   const char* const p2 = p1;
 
@@ -78,35 +89,35 @@ TEST(UtilCmp, StrCaseCmp_NullsAndEqual) {
   CHECK_EQUAL(0, str_case_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_Equal) {
+TEST(Util_Cmp, StrCaseCmp_Equal) {
   const char p1[] = "arhgesv";
   const char p2[] = "ArhGesv";
 
   CHECK_EQUAL(0, str_case_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_StrMoreChar) {
+TEST(Util_Cmp, StrCaseCmp_StrMoreChar) {
   const char p1[] = "arhgesverh";
   const char p2[] = "ArhGesvaaa";
 
   CHECK_COMPARE(0, <, str_case_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_StrMoreNull) {
+TEST(Util_Cmp, StrCaseCmp_StrMoreNull) {
   const char p1[] = "arhgesverh";
   const char p2[] = "ArhGesv";
 
   CHECK_COMPARE(0, <, str_case_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_StrLessChar) {
+TEST(Util_Cmp, StrCaseCmp_StrLessChar) {
   const char p1[] = "arhgesvaaa";
   const char p2[] = "ArhGesvegr";
 
   CHECK_COMPARE(0, >, str_case_cmp(p1, p2));
 }
 
-TEST(UtilCmp, StrCaseCmp_StrLessNull) {
+TEST(Util_Cmp, StrCaseCmp_StrLessNull) {
   const char p1[] = "arhgesv";
   const char p2[] = "ArhGesvegr";
 
