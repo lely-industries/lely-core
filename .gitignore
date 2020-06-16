@@ -56,3 +56,4 @@ Makefile.in
 *.pc
 *.rc
 test-*
+unit-test-*

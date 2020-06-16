@@ -38,36 +38,36 @@ src_util_tests += util/test-sllist.cpp
 src_util_tests += util/test-spscring.cpp
 endif
 
-bin += test-util
-test_util_SOURCES = tests-shared-main.cpp $(src_util_tests)
-test_util_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
+bin += unit-test-util
+unit_test_util_SOURCES = tests-shared-main.cpp $(src_util_tests)
+unit_test_util_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
 
 # CAN library tests
 
 LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 
-bin += test-can
+bin += unit-test-can
 
 src_can_tests =
 src_can_tests += can/test-buf.cpp
 src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-net.cpp
 
-test_can_SOURCES = tests-shared-main.cpp $(src_can_tests)
-test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
+unit_test_can_SOURCES = tests-shared-main.cpp $(src_can_tests)
+unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
 
 # CANopen library tests
 
 LELY_CO_LIBS = $(top_builddir)/src/co/liblely-co.la
 
-bin += test-co
+bin += unit-test-co
 
 src_co_tests =
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-type.cpp
 
-test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
-test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
+unit_test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
+unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 
 # Compilation flags
 
