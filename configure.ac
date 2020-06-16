@@ -549,6 +549,7 @@ AC_CONFIG_FILES([
 	test/Makefile
 	unit-tests/Makefile
 	exec-wrapper.sh
+	lcov-wrapper.sh
 	Makefile
 ])
 AC_OUTPUT
