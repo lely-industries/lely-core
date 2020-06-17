@@ -143,7 +143,7 @@ AC_DEFUN([AX_CODE_COVERAGE],[
 		[CODE_COVERAGE_RULES_CAPTURE='
 	$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --zerocounters
 	$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --capture --initial --output-file "$(CODE_COVERAGE_OUTPUT_DIRECTORY)/lcov-initial.info" --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
-	find $(CODE_COVERAGE_OUTPUT_DIRECTORY) -type f -name *.info -exec echo -a {} \; | xargs $(LCOV) -o $(CODE_COVERAGE_OUTPUT_DIRECTORY)/lcov-total.info  --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
+	find $(CODE_COVERAGE_OUTPUT_DIRECTORY) -type f -name \*.info -exec echo -a {} \; | xargs $(LCOV) -o $(CODE_COVERAGE_OUTPUT_DIRECTORY)/lcov-total.info --no-checksum --compat-libtool $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_OPTIONS)
 	$(code_coverage_v_lcov_ign)$(LCOV) $(code_coverage_quiet) $(addprefix --directory ,$(CODE_COVERAGE_DIRECTORY)) --remove "$(CODE_COVERAGE_OUTPUT_DIRECTORY)/lcov-total.info" "/tmp/*" $(CODE_COVERAGE_IGNORE_PATTERN) --output-file "$(CODE_COVERAGE_OUTPUT_FILE)" $(CODE_COVERAGE_LCOV_SHOPTS) $(CODE_COVERAGE_LCOV_RMOPTS)
 	$(code_coverage_v_genhtml)LANG=C $(GENHTML) $(code_coverage_quiet) $(addprefix --prefix ,$(CODE_COVERAGE_DIRECTORY)) --output-directory "$(CODE_COVERAGE_OUTPUT_DIRECTORY)" --title "$(PACKAGE_NAME)-$(PACKAGE_VERSION) Code Coverage" --legend --show-details "$(CODE_COVERAGE_OUTPUT_FILE)" $(CODE_COVERAGE_GENHTML_OPTIONS)
 	find $(CODE_COVERAGE_OUTPUT_DIRECTORY) -type f -name *.info -delete
