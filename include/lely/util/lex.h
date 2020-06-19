@@ -60,8 +60,8 @@ LELY_UTIL_LEX_INLINE int ctox(int c);
  *
  * @param c     the character to match.
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -78,8 +78,8 @@ size_t lex_char(int c, const char *begin, const char *end, struct floc *at);
  * @param ctype a pointer to a function returning a non-zero value if its
  *              argument is part of the character class.
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -94,8 +94,8 @@ size_t lex_ctype(int (*ctype)(int), const char *begin, const char *end,
  * Lexes a single line break from a memory buffer.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -110,8 +110,8 @@ size_t lex_break(const char *begin, const char *end, struct floc *at);
  * Unicode code points are replaced with the replacement character (U+FFFD).
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -131,8 +131,8 @@ size_t lex_utf8(const char *begin, const char *end, struct floc *at,
  * Lexes a C99 identifier from a memory buffer.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -154,8 +154,8 @@ size_t lex_c99_id(const char *begin, const char *end, struct floc *at, char *s,
  * sequence is invalid, the initial '\' is returned as is.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -178,8 +178,8 @@ size_t lex_c99_esc(const char *begin, const char *end, struct floc *at,
  * byte, an unescaped double-quote or a newline character.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -202,8 +202,8 @@ size_t lex_c99_str(const char *begin, const char *end, struct floc *at, char *s,
  * not necessarily correspond to a valid integer or floating-point constant.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -218,8 +218,8 @@ size_t lex_c99_pp_num(const char *begin, const char *end, struct floc *at);
 	/** Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
 	@param begin a pointer to the start of the buffer.
-	@param end   a pointer to the end of the buffer (can be NULL if the
-	             buffer is null-terminated).
+	@param end   a pointer to one past the last character in the buffer
+	             (can be NULL if the buffer is null-terminated).
 	@param at    an optional pointer to the file location of <b>begin</b>
 	             (used for diagnostic purposes). On success, if
 	             `at != NULL`, *<b>at</b> points to one past the last
@@ -240,8 +240,8 @@ size_t lex_c99_pp_num(const char *begin, const char *end, struct floc *at);
 	/** Lexes a C99 `type` from a memory buffer. The actual conversion is
 	performed by `strtov()`.
 	@param begin a pointer to the start of the buffer.
-	@param end   a pointer to the end of the buffer (can be NULL if the
-	             buffer is null-terminated).
+	@param end   a pointer to one past the last character in the buffer
+	             (can be NULL if the buffer is null-terminated).
 	@param at    an optional pointer to the file location of <b>begin</b>
 	             (used for diagnostic purposes). On success, if
 	             `at != NULL`, *<b>at</b> points to one past the last
@@ -272,8 +272,8 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 #define LELY_UTIL_DEFINE_LEX_SIGNED(type, suffix, pname) \
 	/** Lexes a C99 `type` from a memory buffer.
 	@param begin a pointer to the start of the buffer.
-	@param end   a pointer to the end of the buffer (can be NULL if the
-	             buffer is null-terminated).
+	@param end   a pointer to one past the last character in the buffer
+	             (can be NULL if the buffer is null-terminated).
 	@param at    an optional pointer to the file location of <b>begin</b>
 	             (used for diagnostic purposes). On success, if
 	             `at != NULL`, *<b>at</b> points to one past the last
@@ -293,8 +293,8 @@ LELY_UTIL_DEFINE_LEX_SIGNED(long double, ldbl, strtold, pld)
 #define LELY_UTIL_DEFINE_LEX_UNSIGNED(type, suffix, pname) \
 	/** Lexes a C99 `type` from a memory buffer.
 	@param begin a pointer to the start of the buffer.
-	@param end   a pointer to the end of the buffer (can be NULL if the
-	             buffer is null-terminated).
+	@param end   a pointer to one past the last character in the buffer
+	             (can be NULL if the buffer is null-terminated).
 	@param at    an optional pointer to the file location of <b>begin</b>
 	             (used for diagnostic purposes). On success, if
 	             `at != NULL`, *<b>at</b> points to one past the last
@@ -330,8 +330,8 @@ LELY_UTIL_DEFINE_LEX_UNSIGNED(uint_least64_t, u64, pu64)
  *              (can be NULL or pointing to the empty string to lex a line
  *              unconditionally).
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -347,8 +347,8 @@ size_t lex_line_comment(const char *delim, const char *begin, const char *end,
  * buffer.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -373,8 +373,8 @@ size_t lex_hex(const char *begin, const char *end, struct floc *at, void *ptr,
  * will lex the entire input.
  *
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
