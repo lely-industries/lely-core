@@ -89,8 +89,8 @@ typedef void diag_at_handler_t(void *handle, enum diag_severity severity,
  *
  * @param at    a pointer to a file location (can be NULL).
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  *
  * @returns the number of characters read (excluding the termination character).
  */

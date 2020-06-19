@@ -103,8 +103,9 @@ LELY_UTIL_PRINT_INLINE int xtoc(int i);
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin`
+ *               characters are written.
  * @param format a printf-style format string.
  * @param ...    an optional list of arguments to be printed according to
  *               <b>format</b>.
@@ -132,8 +133,9 @@ size_t vprint_fmt(char **pbegin, char *end, const char *format, va_list ap)
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin`
+ *               characters are written.
  * @param c      the character to be written.
  *
  * @returns 1.
@@ -149,9 +151,9 @@ LELY_UTIL_PRINT_INLINE size_t print_char(char **pbegin, char *end, int c);
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  * @param c32    the Unicode character to be written.
  *
  * @returns the number of characters that would have been written had the buffer
@@ -171,9 +173,9 @@ size_t print_utf8(char **pbegin, char *end, char32_t c32);
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  * @param c32    the Unicode character to be written.
  *
  * @returns the number of characters that would have been written had the buffer
@@ -193,9 +195,9 @@ size_t print_c99_esc(char **pbegin, char *end, char32_t c32);
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  * @param s      a pointer to the string to be written.
  * @param n      the number of characters at <b>s</b>.
  *
@@ -214,9 +216,9 @@ size_t print_c99_str(char **pbegin, char *end, const char *s, size_t n);
 	              <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is
 	              written; Otherwise, on exit, *<b>pbegin</b> points to one
 	              past the last character written.
-	@param end    a pointer to the end of the buffer. If <b>end</b> is not
-	              NULL, at most `end - *pbegin` characters are written, and
-	              the output may be truncated.
+	@param end    a pointer to one past the last character in the buffer. If
+	              <b>end</b> is not NULL, at most `end - *pbegin` characters
+	              are written, and the output may be truncated.
 	@param name   the value to be written.
 	@returns the number of characters that would have been written had the
 	buffer been sufficiently large, or 0 on error. In the latter case, the
@@ -254,9 +256,9 @@ LELY_UTIL_DEFINE_PRINT(uint_least64_t, u64, u64)
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  * @param ptr    a pointer to the binary data to be encoded and written.
  * @param n      the number of bytes at <b>ptr</b>.
  *
