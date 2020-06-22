@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-/// The type the function invoked by an executor when a task is run.
+/// The type of function invoked by an executor when a task is run.
 typedef void ev_task_func_t(struct ev_task *task);
 
 /**

@@ -158,7 +158,7 @@ size_t spscring_p_capacity_no_wrap(struct spscring *ring);
  * @param psize a pointer to a value which, on input, contains the requested
  *              number of indices. If fewer indices are available, *<b>psize</b>
  *              is updated on output to contain the actual number of indices
- *              available fo writing.
+ *              available for writing.
  *
  * @returns the first index available for writing.
  */
@@ -177,7 +177,7 @@ size_t spscring_p_alloc(struct spscring *ring, size_t *psize);
  * @param psize a pointer to a value which, on input, contains the requested
  *              number of indices. If fewer indices are available, *<b>psize</b>
  *              is updated on output to contain the actual number of indices
- *              available fo writing.
+ *              available for writing.
  *
  * @returns the first index available for writing.
  */
@@ -276,7 +276,7 @@ size_t spscring_c_capacity_no_wrap(struct spscring *ring);
  * @param psize a pointer to a value which, on input, contains the requested
  *              number of indices. If fewer indices are available, *<b>psize</b>
  *              is updated on output to contain the actual number of indices
- *              available fo reading.
+ *              available for reading.
  *
  * @returns the first index available for reading.
  */
@@ -295,7 +295,7 @@ size_t spscring_c_alloc(struct spscring *ring, size_t *psize);
  * @param psize a pointer to a value which, on input, contains the requested
  *              number of indices. If fewer indices are available, *<b>psize</b>
  *              is updated on output to contain the actual number of indices
- *              available fo reading.
+ *              available for reading.
  *
  * @returns the first index available for reading.
  */
