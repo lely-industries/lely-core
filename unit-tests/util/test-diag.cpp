@@ -302,15 +302,21 @@ TEST_BASE(Util_Diag_Stderrhandler) {
     std::string line;
 
     if (stderr_stream.good() && std::getline(stderr_stream, line)) {
-      remove(stderr_filename.data());
-      freopen(stderr_filename.data(), "w", stderr);
+      const auto ignored = remove(stderr_filename.data());
+      (void)ignored;
+      CHECK_EQUAL(stderr, freopen(stderr_filename.data(), "w", stderr));
       return line;
     }
     return std::string("");
   }
 
-  void setup() { freopen(stderr_filename.data(), "w", stderr); }
-  void teardown() { remove(stderr_filename.data()); }
+  void setup() {
+    CHECK_EQUAL(stderr, freopen(stderr_filename.data(), "w", stderr));
+  }
+  void teardown() {
+    const auto ignored = remove(stderr_filename.data());
+    (void)ignored;
+  }
 };
 
 TEST_GROUP_BASE(Util_Diag_Diag, Util_Diag_Stderrhandler) {
@@ -470,19 +476,21 @@ TEST_GROUP_BASE(Util_Diag_VsnprintfDiagAtWrapper, Util_Diag_Stderrhandler) {
   const std::string message = "some msg";
   floc location = {"file.txt", 4, 2};
 
-  void vsnprintf_diag_at_wrapper(char* buf, size_t n, diag_severity ds,
-                                 int errc, const floc* location,
-                                 const char* format, ...) {
+  int vsnprintf_diag_at_wrapper(char* buf, size_t n, diag_severity ds, int errc,
+                                const floc* location, const char* format, ...) {
     va_list va;
     va_start(va, format);
-    vsnprintf_diag_at(buf, n, ds, errc, location, format, va);
+    const int chars_written =
+        vsnprintf_diag_at(buf, n, ds, errc, location, format, va);
     va_end(va);
+    return chars_written;
   }
 
   TEST_SETUP() { Util_Diag_Stderrhandler::setup(); }
   TEST_TEARDOWN() {
     Util_Diag_Stderrhandler::teardown();
-    snprintf(buffer, 1UL, "%s", "");
+    const int chars_written = snprintf(buffer, 1UL, "%s", "");
+    CHECK(chars_written == 0 || chars_written == -1);
 #if HAVE_SNPRINTF_OVERRIDE
     valid_calls_snprintf = -1;
 #endif
@@ -490,96 +498,110 @@ TEST_GROUP_BASE(Util_Diag_VsnprintfDiagAtWrapper, Util_Diag_Stderrhandler) {
 };
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, NormalExecution) {
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: debug: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, Errc0) {
   errc = 0;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: debug: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.length());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 #if HAVE_SNPRINTF_OVERRIDE
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFail) {
   valid_calls_snprintf = 0;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   STRCMP_EQUAL("", buffer);
+  CHECK_EQUAL(-1, chars_written);
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter1) {
   valid_calls_snprintf = 1;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
-  STRCMP_EQUAL("file.txt:", buffer);
+  const std::string expected = "file.txt:";
+  STRCMP_EQUAL(expected.data(), buffer);
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter2) {
   valid_calls_snprintf = 2;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
-  STRCMP_EQUAL("file.txt:4:", buffer);
+  const std::string expected = "file.txt:4:";
+  STRCMP_EQUAL(expected.data(), buffer);
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter3) {
   valid_calls_snprintf = 3;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
-  STRCMP_EQUAL("file.txt:4:2:", buffer);
+  const std::string expected = "file.txt:4:2:";
+  STRCMP_EQUAL(expected.data(), buffer);
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter4) {
   valid_calls_snprintf = 4;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
-  STRCMP_EQUAL("file.txt:4:2: ", buffer);
+  const std::string expected = "file.txt:4:2: ";
+  STRCMP_EQUAL(expected.data(), buffer);
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter5) {
   valid_calls_snprintf = 5;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: debug: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, SnprintfFailAfter6) {
   valid_calls_snprintf = 6;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: debug: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.length());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, FilenameInLocationIsNull) {
   location = {nullptr, 4, 2};
 
-  vsnprintf_diag_at_wrapper(buffer, 0, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, 0, ds, errc, &location, format.data(), message.data(), errc);
 
   STRCMP_EQUAL("", buffer);
+  CHECK_COMPARE(0, <, chars_written);
 }
 #endif  // HAVE_SNPRINTF_OVERRIDE
 
@@ -587,21 +609,23 @@ TEST(Util_Diag_VsnprintfDiagAtWrapper, DiagFatal) {
   location = {"file.txt", 4, 2};
   ds = DIAG_FATAL;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: fatal: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, UnknownDS) {
   ds = static_cast<diag_severity>(342345);
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format.data(),
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:4:2: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST(Util_Diag_VsnprintfDiagAtWrapper, DiagIsFatalFormatIsEmpty) {
@@ -609,11 +633,12 @@ TEST(Util_Diag_VsnprintfDiagAtWrapper, DiagIsFatalFormatIsEmpty) {
   const char format_char = '\0';
   const char* const format_ptr = &format_char;
 
-  vsnprintf_diag_at_wrapper(buffer, BUFSIZ, ds, errc, &location, format_ptr,
-                            message.data(), errc);
+  const int chars_written = vsnprintf_diag_at_wrapper(
+      buffer, BUFSIZ, ds, errc, &location, format_ptr, message.data(), errc);
 
   const std::string expected = "file.txt:4:2: fatal:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST_GROUP_BASE(Util_Diag_DefaultDiagHandler, Util_Diag_Stderrhandler) {
@@ -759,12 +784,13 @@ TEST(Util_Diag_DaemonDiagAtHandler, DaemonDiagAtHandler) {
 TEST_GROUP_BASE(Util_Diag_VsnprintfDiag, Util_Diag_Stderrhandler) {
   char buffer[BUFSIZ];
 
-  void vsnprintf_diag_wrapper(char* s, size_t n, diag_severity ds, int errc,
-                              const char* format, ...) {
+  int vsnprintf_diag_wrapper(char* s, size_t n, diag_severity ds, int errc,
+                             const char* format, ...) {
     va_list va;
     va_start(va, format);
-    vsnprintf_diag(s, n, ds, errc, format, va);
+    const int chars_written = vsnprintf_diag(s, n, ds, errc, format, va);
     va_end(va);
+    return chars_written;
   }
 
   TEST_SETUP() { Util_Diag_Stderrhandler::setup(); }
@@ -777,22 +803,24 @@ TEST(Util_Diag_VsnprintfDiag, VsnprintfDiag) {
   const std::string format = "%s (errc: %i)";
   const std::string message = "some msg";
 
-  vsnprintf_diag_wrapper(buffer, BUFSIZ, ds, errc, format.data(),
-                         message.data(), errc);
+  const int chars_written = vsnprintf_diag_wrapper(
+      buffer, BUFSIZ, ds, errc, format.data(), message.data(), errc);
 
   const std::string expected = "debug: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buffer, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
 }
 
 TEST_GROUP_BASE(Util_Diag_VasprintfDiag, Util_Diag_Stderrhandler) {
   char buffer[BUFSIZ];
 
-  void vasprintf_diag_wrapper(char** ps, diag_severity ds, int errc,
-                              const char* format, ...) {
+  int vasprintf_diag_wrapper(char** ps, diag_severity ds, int errc,
+                             const char* format, ...) {
     va_list va;
     va_start(va, format);
-    vasprintf_diag(ps, ds, errc, format, va);
+    const int chars_written = vasprintf_diag(ps, ds, errc, format, va);
     va_end(va);
+    return chars_written;
   }
 
   TEST_SETUP() { Util_Diag_Stderrhandler::setup(); }
@@ -806,10 +834,12 @@ TEST(Util_Diag_VasprintfDiag, VasprintfDiag) {
   const std::string message = "some msg";
   char* buf_ptr = nullptr;
 
-  vasprintf_diag_wrapper(&buf_ptr, ds, errc, format.data(), message.data(),
-                         errc);
+  const int chars_written = vasprintf_diag_wrapper(
+      &buf_ptr, ds, errc, format.data(), message.data(), errc);
+
   const std::string expected = "some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buf_ptr, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
   free(buf_ptr);
 }
 
@@ -825,7 +855,8 @@ TEST_GROUP_BASE(Util_Diag_VasprintfDiagAt, Util_Diag_Stderrhandler) {
                                 floc* location, const char* format, ...) {
     va_list va;
     va_start(va, format);
-    int chars_written = vasprintf_diag_at(ps, ds, errc, location, format, va);
+    const int chars_written =
+        vasprintf_diag_at(ps, ds, errc, location, format, va);
     va_end(va);
     return chars_written;
   }
@@ -840,14 +871,14 @@ TEST_GROUP_BASE(Util_Diag_VasprintfDiagAt, Util_Diag_Stderrhandler) {
 };
 
 TEST(Util_Diag_VasprintfDiagAt, VasprintfDiagAt) {
-  int chars_written = 0;
   char* buf_ptr = nullptr;
 
-  chars_written = vasprintf_diag_at_wrapper(
+  const int chars_written = vasprintf_diag_at_wrapper(
       &buf_ptr, ds, errc, &location, format.data(), message.data(), errc);
 
   const std::string expected = "file.txt:7:10: some msg (errc:";
   STRNCMP_EQUAL(expected.data(), buf_ptr, expected.size());
+  CHECK_COMPARE(expected.size(), <, static_cast<size_t>(chars_written));
   if (chars_written >= 0) free(buf_ptr);
 }
 
@@ -856,7 +887,7 @@ TEST(Util_Diag_VasprintfDiagAt, SnprintfFailAfter1) {
   char* buf_ptr = nullptr;
   valid_calls_snprintf = 1;
 
-  int chars_written = vasprintf_diag_at_wrapper(
+  const int chars_written = vasprintf_diag_at_wrapper(
       &buf_ptr, ds, errc, &location, format.data(), message.data(), errc);
 
   POINTERS_EQUAL(nullptr, buf_ptr);
@@ -867,7 +898,7 @@ TEST(Util_Diag_VasprintfDiagAt, SnprintfFailAfter6) {
   char* buf_ptr = buffer;
   valid_calls_snprintf = 6;
 
-  int chars_written = vasprintf_diag_at_wrapper(
+  const int chars_written = vasprintf_diag_at_wrapper(
       &buf_ptr, ds, errc, &location, format.data(), message.data(), errc);
 
   CHECK_EQUAL(-1, chars_written);
