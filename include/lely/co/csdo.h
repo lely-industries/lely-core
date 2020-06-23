@@ -372,8 +372,8 @@ int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * can be obtained with get_errc().
  */
 int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned8_t pst, co_csdo_up_con_t *con,
-		void *data);
+		co_unsigned8_t subidx, co_unsigned8_t pst,
+		co_csdo_up_con_t *con, void *data);
 
 #ifdef __cplusplus
 }
