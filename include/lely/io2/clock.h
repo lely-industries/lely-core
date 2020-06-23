@@ -25,8 +25,8 @@
 #ifndef LELY_IO2_CLOCK_H_
 #define LELY_IO2_CLOCK_H_
 
-#include <lely/libc/time.h>
 #include <lely/io2/io2.h>
+#include <lely/libc/time.h>
 
 #ifndef LELY_IO_CLOCK_INLINE
 #define LELY_IO_CLOCK_INLINE static inline
