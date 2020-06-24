@@ -687,6 +687,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 
 #ifdef _WIN32
 	SYSTEM_INFO SystemInfo;
+	// cppcheck-suppress uninitvar
 	GetSystemInfo(&SystemInfo);
 	DWORD off = pos % SystemInfo.dwAllocationGranularity;
 	if ((uintmax_t)size > (uintmax_t)(SIZE_MAX - off)) {
