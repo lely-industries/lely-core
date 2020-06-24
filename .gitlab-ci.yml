@@ -490,6 +490,7 @@ cppcheck-unix64:
         --inline-suppr
         --platform=unix64
         --std=c11 --std=c++11
+        --library=std --library=gnu
         --suppressions-list=suppressions.txt
         -isrc/io2/win32
         include src
@@ -525,7 +526,7 @@ cppcheck-win64:
         --inline-suppr
         --platform=win64
         --std=c11 --std=c++11
-        --library=std --library=windows
+        --library=std --library=gnu --library=windows
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
         -isrc/io2/linux
