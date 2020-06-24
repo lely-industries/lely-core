@@ -645,7 +645,17 @@ static int co_lss_send_fastscan_req(const co_lss_t *lss, co_unsigned32_t id,
  */
 static void co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs);
 
-#endif
+/**
+ * Returns a pointer to the specified number in an LSS address.
+ *
+ * @param id  a pointer to an LSS address.
+ * @param sub the index of the number (in the range [0..3]).
+ *
+ * @returns the address of the LSS number, or NULL on error.
+ */
+static inline co_unsigned32_t *co_id_sub(struct co_id *id, co_unsigned8_t sub);
+
+#endif // !LELY_NO_CO_MASTER
 
 void *
 __co_lss_alloc(void)
@@ -2148,19 +2158,20 @@ co_lss_fastscan_scan_on_enter(co_lss_t *lss)
 {
 	assert(lss);
 
-	const co_unsigned32_t *pid = &lss->id.vendor_id;
-	const co_unsigned32_t *pmask = &lss->mask.vendor_id;
+	const co_unsigned32_t *pid = co_id_sub(&lss->id, lss->lsssub);
+	assert(pid);
+	const co_unsigned32_t *pmask = co_id_sub(&lss->mask, lss->lsssub);
+	assert(pmask);
 
 	// Find the next unknown bit.
-	for (; lss->bitchk
-			&& (pmask[lss->lsssub] & (UINT32_C(1) << lss->bitchk));
+	for (; lss->bitchk && (*pmask & (UINT32_C(1) << lss->bitchk));
 			lss->bitchk--)
 		;
 
 	co_unsigned8_t lssnext = lss->lsssub;
 	// If we obtained the complete LSS number, send it again and prepare for
 	// the next number.
-	if (!lss->bitchk && (pmask[lss->lsssub] & 1)) {
+	if (!lss->bitchk && (*pmask & 1)) {
 		if (lssnext < 3) {
 			lssnext++;
 		} else {
@@ -2170,8 +2181,8 @@ co_lss_fastscan_scan_on_enter(co_lss_t *lss)
 
 	// LSS Fastscan (see Fig. 46 in CiA 305 version 3.0.0).
 	// clang-format off
-	if (co_lss_send_fastscan_req(lss, pid[lss->lsssub], lss->bitchk,
-			lss->lsssub, lssnext) == -1) {
+	if (co_lss_send_fastscan_req(lss, *pid, lss->bitchk, lss->lsssub,
+			lssnext) == -1) {
 		// Abort if sending the CAN frame failed.
 		// clang-format on
 		lss->cs = 0;
@@ -2212,10 +2223,12 @@ co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout)
 	assert(lss->bitchk <= 31);
 	assert(lss->lsssub < 4);
 
-	co_unsigned32_t *pid = &lss->id.vendor_id;
-	co_unsigned32_t *pmask = &lss->mask.vendor_id;
+	co_unsigned32_t *pid = co_id_sub(&lss->id, lss->lsssub);
+	assert(pid);
+	co_unsigned32_t *pmask = co_id_sub(&lss->mask, lss->lsssub);
+	assert(pmask);
 
-	if (!lss->bitchk && (pmask[lss->lsssub] & 1)) {
+	if (!lss->bitchk && (*pmask & 1)) {
 		// Abort if we timeout after sending the complete LSS number.
 		if (timeout) {
 			lss->cs = 0;
@@ -2228,8 +2241,8 @@ co_lss_fastscan_scan_on_res(co_lss_t *lss, int timeout)
 	} else {
 		// Update the LSS address. A timeout indicates the bit is 1.
 		if (timeout)
-			pid[lss->lsssub] |= UINT32_C(1) << lss->bitchk;
-		pmask[lss->lsssub] |= UINT32_C(1) << lss->bitchk;
+			*pid |= UINT32_C(1) << lss->bitchk;
+		*pmask |= UINT32_C(1) << lss->bitchk;
 	}
 
 	// Start the next cycle.
@@ -2592,6 +2605,21 @@ co_lss_init_ind(co_lss_t *lss, co_unsigned8_t cs)
 
 	can_recv_start(lss->recv, lss->net, CO_LSS_CANID(0), 0);
 	can_timer_timeout(lss->timer, lss->net, lss->timeout);
+}
+
+static inline co_unsigned32_t *
+co_id_sub(struct co_id *id, co_unsigned8_t sub)
+{
+	assert(id);
+	assert(sub < 4);
+
+	switch (sub) {
+	case 0: return &id->vendor_id;
+	case 1: return &id->product_code;
+	case 2: return &id->revision;
+	case 3: return &id->serial_nr;
+	default: return NULL;
+	}
 }
 
 #endif // !LELY_NO_CO_MASTER
