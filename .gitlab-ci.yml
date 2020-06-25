@@ -514,6 +514,7 @@ cppcheck-unix64:
         --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
+        --quiet
         -I. -I./include
         --inline-suppr
         --platform=unix64
@@ -550,6 +551,7 @@ cppcheck-win64:
         --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
+        --quiet
         -I. -I./include
         --inline-suppr
         --platform=win64
