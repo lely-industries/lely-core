@@ -372,7 +372,7 @@ io_poll_svc_notify_fork(struct io_svc *svc, enum io_fork_event e)
 		result = -1;
 	}
 
-	if (io_poll_close(poll) == -1 && !result) {
+	if (io_poll_open(poll) == -1 && !result) {
 		errsv = errno;
 		result = -1;
 	}

@@ -426,7 +426,7 @@ io_timer_impl_svc_notify_fork(struct io_svc *svc, enum io_fork_event e)
 		result = -1;
 	}
 
-	if (timerfd_settime(impl->tfd, 0, &value, NULL) == -1) {
+	if (timerfd_settime(impl->tfd, 0, &value, NULL) == -1 && !result) {
 		errsv = errno;
 		result = -1;
 	}
