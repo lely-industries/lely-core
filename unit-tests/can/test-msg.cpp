@@ -31,7 +31,7 @@
 #include <lely/can/msg.h>
 #include <lely/util/errnum.h>
 
-#include "unit-tests/libc-overrides.hpp"
+#include "override/libc-stdio.hpp"
 
 /* lely/can/can_msg_bits() */
 
@@ -328,7 +328,7 @@ TEST_GROUP(CAN_SNPrintfCanMsg) {
 
   TEST_SETUP() {
 #if HAVE_SNPRINTF_OVERRIDE
-    valid_calls_snprintf = -1;
+    LibCOverride::snprintf_vc = LibCOverride::AllCallsValid;
 #endif
     memset(output_str, 0, STRLEN);
   }
@@ -447,7 +447,7 @@ TEST(CAN_SNPrintfCanMsg, CANFDExtendedMsg) {
 
 #if HAVE_SNPRINTF_OVERRIDE
 TEST(CAN_SNPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
-  valid_calls_snprintf = 0;
+  LibCOverride::snprintf_vc = LibCOverride::NoneCallsValid;
 
   const auto slen = snprintf_can_msg(output_str, STRLEN, &msg);
 
@@ -455,7 +455,7 @@ TEST(CAN_SNPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
 }
 
 TEST(CAN_SNPrintfCanMsg, CANZeroMsg_SNPrintfErr_2) {
-  valid_calls_snprintf = 1;
+  LibCOverride::snprintf_vc = 1;
 
   const auto slen = snprintf_can_msg(output_str, STRLEN, &msg);
 
@@ -463,7 +463,7 @@ TEST(CAN_SNPrintfCanMsg, CANZeroMsg_SNPrintfErr_2) {
 }
 
 TEST(CAN_SNPrintfCanMsg, CANBasicRTRMsg_SNPrintfErr) {
-  valid_calls_snprintf = 2;
+  LibCOverride::snprintf_vc = 2;
   msg.flags |= CAN_FLAG_RTR;
 
   const auto slen = snprintf_can_msg(output_str, STRLEN, &msg);
@@ -472,7 +472,7 @@ TEST(CAN_SNPrintfCanMsg, CANBasicRTRMsg_SNPrintfErr) {
 }
 
 TEST(CAN_SNPrintfCanMsg, CANBasicMsg_SNPrintfErr) {
-  valid_calls_snprintf = 2;
+  LibCOverride::snprintf_vc = 2;
   msg.len = 5;
   for (int i = 0; i < msg.len; ++i) msg.data[i] = 0xdd;
 
@@ -489,7 +489,7 @@ TEST_GROUP(CAN_ASPrintfCanMsg) {
   can_msg msg = CAN_MSG_INIT;
 
 #if HAVE_SNPRINTF_OVERRIDE
-  TEST_SETUP() { valid_calls_snprintf = -1; }
+  TEST_SETUP() { LibCOverride::snprintf_vc = LibCOverride::AllCallsValid; }
 #endif
 };
 
@@ -522,7 +522,7 @@ TEST(CAN_ASPrintfCanMsg, CANExtendedMsg) {
 
 #if HAVE_SNPRINTF_OVERRIDE
 TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
-  valid_calls_snprintf = 0;
+  LibCOverride::snprintf_vc = LibCOverride::NoneCallsValid;
 
   const auto slen = asprintf_can_msg(&output_ps, &msg);
 
@@ -530,7 +530,7 @@ TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
 }
 
 TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_2) {
-  valid_calls_snprintf = 3;
+  LibCOverride::snprintf_vc = 3;
 
   const auto slen = asprintf_can_msg(&output_ps, &msg);
 
