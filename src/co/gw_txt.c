@@ -2380,7 +2380,8 @@ co_gw_txt_lex_srv(
 		if (chars && !strncasecmp("command_size", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_CMD_SIZE;
-		} else if (chars && !strncasecmp("command_timeout", cp, chars)) {
+		} else if (chars
+				&& !strncasecmp("command_timeout", cp, chars)) {
 			cp += chars;
 			srv = CO_GW_SRV_SET_CMD_TIMEOUT;
 		} else if (chars && !strncasecmp("heartbeat", cp, chars)) {

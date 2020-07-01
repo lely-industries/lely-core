@@ -179,7 +179,10 @@ typedef enum {
 
 #ifndef LELY_HAVE_CLANG_ATOMIC
 #undef _Atomic
-#define _Atomic(T) struct { T volatile _value_; }
+#define _Atomic(T) \
+	struct { \
+		T volatile _value_; \
+	}
 #endif
 
 #ifndef ATOMIC_BOOL_TYPE

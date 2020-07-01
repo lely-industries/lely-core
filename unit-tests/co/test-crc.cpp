@@ -73,9 +73,9 @@ TEST(CO_Crc, VerifyCRCComplianceECSS_4) {
   CHECK_EQUAL(0x7fd5, crc);
 }
 
- /* "VerifyCRC_CiA301" test case is based on section 7.2.4.3.16 in CiA 301
-  * (version 4.2.0) document.
-  */
+/* "VerifyCRC_CiA301" test case is based on section 7.2.4.3.16 in CiA 301
+ * (version 4.2.0) document.
+ */
 TEST(CO_Crc, VerifyCRC_CiA301) {
   const size_t BUF_SIZE = 9;
   const uint_least8_t buf[BUF_SIZE] = {'1', '2', '3', '4', '5',

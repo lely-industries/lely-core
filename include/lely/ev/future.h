@@ -277,8 +277,8 @@ ev_future_t *ev_future_when_any_v(
 /**
  * Creates a future that becomes ready when at least one of the input futures
  * becomes ready or is abandoned. The result of the created future, once it
- * becomes ready, is a `size_t` value containing the index of the first ready (or
- * abandoned) future. If no input futures are specified, a ready future is
+ * becomes ready, is a `size_t` value containing the index of the first ready
+ * (or abandoned) future. If no input futures are specified, a ready future is
  * returned with an empty result (ev_future_get() returns NULL).
  *
  * This function acquires references to each of the input futures and submits
