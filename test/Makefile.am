@@ -266,7 +266,11 @@ endif
 
 BUILT_SOURCES =
 if !NO_TOOLS
+if !NO_CO_DCF
+if !NO_CO_SDEV
 BUILT_SOURCES += test-co-sdev.h
+endif
+endif
 endif
 
 CLEANFILES =

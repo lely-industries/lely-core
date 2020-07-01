@@ -174,6 +174,7 @@ AS_IF([test "$enable_canfd" == "no"], [
 AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_dcf" != "yes"], [enable_dcf=no])
 AS_IF([test "$enable_dcf" == "no"], [
 	AM_CONDITIONAL([NO_CO_DCF], [true])
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
