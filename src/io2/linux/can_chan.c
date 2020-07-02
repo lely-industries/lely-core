@@ -1036,8 +1036,10 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 #if !LELY_NO_THREADS
 	pthread_mutex_lock(&impl->mtx);
 #endif
-	impl->events &= ~events;
-	if (impl->events && impl->fd != -1 && !impl->shutdown) {
+	// Continue monitoring events that are not otherwise handled.
+	if ((events & IO_EVENT_ERR) || impl->fd == -1 || impl->shutdown) {
+		impl->events = 0;
+	} else if (impl->events &= ~events) {
 		int errsv = errno;
 		// clang-format off
 		if (io_poll_watch(impl->poll, impl->fd, impl->events,
@@ -1321,7 +1323,7 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 				&impl->watch)) {
 			// clang-format on
 			impl->events = events;
-			// Do not repost this thask unless registering the file
+			// Do not repost this task unless registering the file
 			// descriptor fails.
 			post_write = 0;
 		}
