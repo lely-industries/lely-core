@@ -164,6 +164,15 @@ AS_IF([test "$enable_cxx" == "no"], [
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_MALLOC], [false])
+AC_ARG_ENABLE([malloc],
+	AS_HELP_STRING([--disable-malloc], [disable dynamic memory allocation]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_malloc=no])
+AS_IF([test "$enable_malloc" == "no"], [
+	AM_CONDITIONAL([NO_MALLOC], [true])
+	AC_DEFINE([LELY_NO_MALLOC], [1], [Define to 1 if dynamic memory allocation is disabled.])
+])
+
 AM_CONDITIONAL([NO_DAEMON], [false])
 AC_ARG_ENABLE([daemon],
 	AS_HELP_STRING([--disable-daemon], [disable daemon support]))
@@ -184,7 +193,7 @@ AS_IF([test "$enable_diag" == "no"], [
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_canfd" != "yes"], [enable_canfd=no])
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_canfd" != "yes"], [enable_canfd=no])
 AS_IF([test "$enable_canfd" == "no"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
@@ -193,7 +202,7 @@ AS_IF([test "$enable_canfd" == "no"], [
 AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_dcf" != "yes"], [enable_dcf=no])
+AS_IF([test "$enable_malloc" == "no"], [enable_dcf=no])
 AS_IF([test "$enable_dcf" == "no"], [
 	AM_CONDITIONAL([NO_CO_DCF], [true])
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
@@ -234,6 +243,7 @@ AS_IF([test "$enable_obj_limits" == "no"], [
 AM_CONDITIONAL([NO_CO_OBJ_NAME], [false])
 AC_ARG_ENABLE([obj-name],
 	AS_HELP_STRING([--disable-obj-name], [disable names in the object dictionary]))
+AS_IF([test "$enable_malloc" == "no"], [enable_obj_name=no])
 AS_IF([test "$enable_obj_name" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_NAME], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_NAME], [1], [Define to 1 if names are disabled in the object dictionary.])
@@ -250,7 +260,7 @@ AS_IF([test "$enable_obj_upload" == "no"], [
 AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_sdev" != "yes"], [enable_sdev=no])
+AS_IF([test "$enable_malloc" == "no"], [enable_sdev=no])
 AS_IF([test "$enable_sdev" == "no"], [
 	AM_CONDITIONAL([NO_CO_SDEV], [true])
 	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])
@@ -333,7 +343,7 @@ AS_IF([test "$enable_master" == "no"], [
 AM_CONDITIONAL([NO_CO_GW], [false])
 AC_ARG_ENABLE([gw],
 	AS_HELP_STRING([--disable-gw], [disable gateway support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_gw" != "yes"], [enable_gw=no])
+AS_IF([test "$enable_malloc" == "no"], [enable_gw=no])
 AS_IF([test "$enable_gw" == "no"], [
 	AM_CONDITIONAL([NO_CO_GW], [true])
 	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])

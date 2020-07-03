@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the CANopen library.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,6 +26,21 @@
 #endif
 
 #include <lely/co/co.h>
+
+#if LELY_NO_MALLOC
+// Disable EDS/DCF support.
+#undef LELY_NO_CO_DCF
+#define LELY_NO_CO_DCF 1
+// Disable static device description support.
+#undef LELY_NO_CO_SDEV
+#define LELY_NO_CO_SDEV 1
+// Disable gateway support.
+#undef LELY_NO_CO_GW
+#define LELY_NO_CO_GW 1
+// Disable ASCII gateway support.
+#undef LELY_NO_CO_GW_TXT
+#define LELY_NO_CO_GW_TXT 1
+#endif // LELY_NO_MALLOC
 
 #ifdef NDEBUG
 #define trace(...)
