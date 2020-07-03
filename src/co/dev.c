@@ -45,20 +45,26 @@ struct __co_dev {
 	co_unsigned8_t id;
 	/// The tree containing the object dictionary.
 	struct rbtree tree;
+#if !LELY_NO_CO_OBJ_NAME
 	/// A pointer to the name of the device.
 	char *name;
 	/// A pointer to the vendor name.
 	char *vendor_name;
+#endif
 	/// The vendor ID.
 	co_unsigned32_t vendor_id;
+#if !LELY_NO_CO_OBJ_NAME
 	/// A pointer to the product name.
 	char *product_name;
+#endif
 	/// The product code.
 	co_unsigned32_t product_code;
 	/// The revision number.
 	co_unsigned32_t revision;
+#if !LELY_NO_CO_OBJ_NAME
 	/// A pointer to the order code.
 	char *order_code;
+#endif
 	/// The supported bit rates.
 	unsigned baud : 10;
 	/// The (pending) baudrate (in kbit/s).
@@ -112,14 +118,20 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 
 	rbtree_init(&dev->tree, &uint16_cmp);
 
+#if !LELY_NO_CO_OBJ_NAME
 	dev->name = NULL;
 
 	dev->vendor_name = NULL;
+#endif
 	dev->vendor_id = 0;
+#if !LELY_NO_CO_OBJ_NAME
 	dev->product_name = NULL;
+#endif
 	dev->product_code = 0;
 	dev->revision = 0;
+#if !LELY_NO_CO_OBJ_NAME
 	dev->order_code = NULL;
+#endif
 
 	dev->baud = 0;
 	dev->rate = 0;
@@ -139,11 +151,13 @@ __co_dev_fini(struct __co_dev *dev)
 	rbtree_foreach (&dev->tree, node)
 		co_obj_destroy(structof(node, co_obj_t, node));
 
+#if !LELY_NO_CO_OBJ_NAME
 	free(dev->vendor_name);
 	free(dev->product_name);
 	free(dev->order_code);
 
 	free(dev->name);
+#endif
 }
 
 co_dev_t *
@@ -321,6 +335,8 @@ co_dev_last_obj(const co_dev_t *dev)
 	return node ? structof(node, co_obj_t, node) : NULL;
 }
 
+#if !LELY_NO_CO_OBJ_NAME
+
 const char *
 co_dev_get_name(const co_dev_t *dev)
 {
@@ -381,6 +397,8 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 	return 0;
 }
 
+#endif // !LELY_NO_CO_OBJ_NAME
+
 co_unsigned32_t
 co_dev_get_vendor_id(const co_dev_t *dev)
 {
@@ -396,6 +414,8 @@ co_dev_set_vendor_id(co_dev_t *dev, co_unsigned32_t vendor_id)
 
 	dev->vendor_id = vendor_id;
 }
+
+#if !LELY_NO_CO_OBJ_NAME
 
 const char *
 co_dev_get_product_name(const co_dev_t *dev)
@@ -426,6 +446,8 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 
 	return 0;
 }
+
+#endif // !LELY_NO_CO_OBJ_NAME
 
 co_unsigned32_t
 co_dev_get_product_code(const co_dev_t *dev)
@@ -459,6 +481,8 @@ co_dev_set_revision(co_dev_t *dev, co_unsigned32_t revision)
 	dev->revision = revision;
 }
 
+#if !LELY_NO_CO_OBJ_NAME
+
 const char *
 co_dev_get_order_code(const co_dev_t *dev)
 {
@@ -488,6 +512,8 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 
 	return 0;
 }
+
+#endif // !LELY_NO_CO_OBJ_NAME
 
 unsigned int
 co_dev_get_baud(const co_dev_t *dev)
