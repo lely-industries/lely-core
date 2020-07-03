@@ -29,8 +29,12 @@
 #include <lely/util/errnum.h>
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
+#endif
 #include <string.h>
+
+#if !LELY_NO_MALLOC
 
 /**
  * Updates an object by allocating a new memory region containing the members
@@ -116,6 +120,8 @@ co_obj_destroy(co_obj_t *obj)
 	}
 }
 
+#endif // !LELY_NO_MALLOC
+
 co_obj_t *
 co_obj_prev(const co_obj_t *obj)
 {
@@ -188,7 +194,9 @@ co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 	sub->obj = obj;
 	rbtree_insert(&sub->obj->tree, &sub->node);
 
+#if !LELY_NO_MALLOC
 	co_obj_update(obj);
+#endif
 
 	return 0;
 }
@@ -206,10 +214,12 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
 
+#if !LELY_NO_MALLOC
 	co_val_fini(co_sub_get_type(sub), sub->val);
 	sub->val = NULL;
 
 	co_obj_update(obj);
+#endif
 
 	return 0;
 }
@@ -381,6 +391,8 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 }
 #endif
 
+#if !LELY_NO_MALLOC
+
 void *
 __co_sub_alloc(void)
 {
@@ -490,6 +502,8 @@ co_sub_destroy(co_sub_t *sub)
 		__co_sub_free(sub);
 	}
 }
+
+#endif // !LELY_NO_MALLOC
 
 co_sub_t *
 co_sub_prev(const co_sub_t *sub)
@@ -1043,6 +1057,8 @@ co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 	return ac;
 }
 
+#if !LELY_NO_MALLOC
+
 static void
 co_obj_update(co_obj_t *obj)
 {
@@ -1097,3 +1113,5 @@ co_obj_clear(co_obj_t *obj)
 	free(obj->val);
 	obj->val = NULL;
 }
+
+#endif // !LELY_NO_MALLOC

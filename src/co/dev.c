@@ -35,7 +35,9 @@
 #endif
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
+#endif
 
 static void co_obj_set_id(
 		co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id);
@@ -43,6 +45,8 @@ static void co_sub_set_id(
 		co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id);
 static void co_val_set_id(co_unsigned16_t type, void *val,
 		co_unsigned8_t new_id, co_unsigned8_t old_id);
+
+#if !LELY_NO_MALLOC
 
 void *
 __co_dev_alloc(void)
@@ -149,6 +153,8 @@ co_dev_destroy(co_dev_t *dev)
 		__co_dev_free(dev);
 	}
 }
+
+#endif // !LELY_NO_MALLOC
 
 co_unsigned8_t
 co_dev_get_netid(const co_dev_t *dev)
