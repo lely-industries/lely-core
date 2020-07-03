@@ -28,58 +28,14 @@
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
 #endif
-#include "obj.h"
-#include <lely/co/dev.h>
+#include <lely/co/detail/dev.h>
+#include <lely/co/detail/obj.h>
 #ifndef LELY_NO_CO_TPDO
 #include <lely/co/pdo.h>
 #endif
 
 #include <assert.h>
 #include <stdlib.h>
-
-/// A CANopen device.
-struct __co_dev {
-	/// The network-ID.
-	co_unsigned8_t netid;
-	/// The node-ID.
-	co_unsigned8_t id;
-	/// The tree containing the object dictionary.
-	struct rbtree tree;
-#if !LELY_NO_CO_OBJ_NAME
-	/// A pointer to the name of the device.
-	char *name;
-	/// A pointer to the vendor name.
-	char *vendor_name;
-#endif
-	/// The vendor ID.
-	co_unsigned32_t vendor_id;
-#if !LELY_NO_CO_OBJ_NAME
-	/// A pointer to the product name.
-	char *product_name;
-#endif
-	/// The product code.
-	co_unsigned32_t product_code;
-	/// The revision number.
-	co_unsigned32_t revision;
-#if !LELY_NO_CO_OBJ_NAME
-	/// A pointer to the order code.
-	char *order_code;
-#endif
-	/// The supported bit rates.
-	unsigned baud : 10;
-	/// The (pending) baudrate (in kbit/s).
-	co_unsigned16_t rate;
-	/// A flag specifying whether LSS is supported (1) or not (0).
-	int lss;
-	/// The data types supported for mapping dummy entries in PDOs.
-	co_unsigned32_t dummy;
-#ifndef LELY_NO_CO_TPDO
-	/// A pointer to the Transmit-PDO event indication function.
-	co_dev_tpdo_event_ind_t *tpdo_event_ind;
-	/// A pointer to user-specified data for #tpdo_event_ind.
-	void *tpdo_event_data;
-#endif
-};
 
 static void co_obj_set_id(
 		co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id);

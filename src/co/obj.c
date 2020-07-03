@@ -21,8 +21,8 @@
  * limitations under the License.
  */
 
-#include "obj.h"
 #include "co.h"
+#include <lely/co/detail/obj.h>
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>
 #include <lely/util/cmp.h>
@@ -40,14 +40,6 @@ static void co_obj_update(co_obj_t *obj);
 
 /// Destroys all sub-objects.
 static void co_obj_clear(co_obj_t *obj);
-
-/// The default download indication function. @see co_sub_dn_ind_t
-static co_unsigned32_t default_sub_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
-
-/// The default upload indication function. @see co_sub_up_ind_t
-static co_unsigned32_t default_sub_up_ind(
-		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 void *
 __co_obj_alloc(void)
@@ -434,10 +426,10 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	sub->pdo_mapping = 0;
 	sub->flags = 0;
 
-	sub->dn_ind = &default_sub_dn_ind;
+	sub->dn_ind = &co_sub_default_dn_ind;
 	sub->dn_data = NULL;
 #ifndef LELY_NO_CO_OBJ_UPLOAD
-	sub->up_ind = &default_sub_up_ind;
+	sub->up_ind = &co_sub_default_up_ind;
 	sub->up_data = NULL;
 #endif
 
@@ -872,7 +864,7 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 {
 	assert(sub);
 
-	sub->dn_ind = ind ? ind : &default_sub_dn_ind;
+	sub->dn_ind = ind ? ind : &co_sub_default_dn_ind;
 	sub->dn_data = ind ? data : NULL;
 }
 
@@ -983,7 +975,7 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 {
 	assert(sub);
 
-	sub->up_ind = ind ? ind : &default_sub_up_ind;
+	sub->up_ind = ind ? ind : &co_sub_default_up_ind;
 	sub->up_data = ind ? data : NULL;
 }
 
@@ -1024,11 +1016,31 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 		return CO_SDO_AC_ERROR;
 
 #ifdef LELY_NO_CO_OBJ_UPLOAD
-	return default_sub_up_ind(sub, req, NULL);
+	return co_sub_default_up_ind(sub, req, NULL);
 #else
 	assert(sub->up_ind);
 	return sub->up_ind(sub, req, sub->up_data);
 #endif
+}
+
+co_unsigned32_t
+co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	(void)data;
+
+	co_unsigned32_t ac = 0;
+	co_sub_on_dn(sub, req, &ac);
+	return ac;
+}
+
+co_unsigned32_t
+co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	(void)data;
+
+	co_unsigned32_t ac = 0;
+	co_sub_on_up(sub, req, &ac);
+	return ac;
 }
 
 static void
@@ -1084,24 +1096,4 @@ co_obj_clear(co_obj_t *obj)
 
 	free(obj->val);
 	obj->val = NULL;
-}
-
-static co_unsigned32_t
-default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	(void)data;
-
-	co_unsigned32_t ac = 0;
-	co_sub_on_dn(sub, req, &ac);
-	return ac;
-}
-
-static co_unsigned32_t
-default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	(void)data;
-
-	co_unsigned32_t ac = 0;
-	co_sub_on_up(sub, req, &ac);
-	return ac;
 }

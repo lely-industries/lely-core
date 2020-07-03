@@ -26,7 +26,7 @@
 
 #ifndef LELY_NO_CO_DCF
 
-#include "obj.h"
+#include <lely/co/detail/obj.h>
 #include <lely/co/dcf.h>
 #include <lely/co/pdo.h>
 #include <lely/libc/stdio.h>
