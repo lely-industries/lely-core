@@ -152,10 +152,46 @@ TEST(Util_Rbtree, RbnodeInsert_RightRotateAtGrandparent) {
   CHECK_EQUAL(7U, rbtree_size(&tree));
 }
 
+TEST(Util_Rbtree, RbnodeInsert_ManyAddedRedAndBlackNodes) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[4]);
+
+  rbtree_insert(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(&nodes[1], rbtree_root(&tree));
+  CHECK_EQUAL(6U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbnodeInsert_NodeHasRedUncle) {
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[2], rbtree_root(&tree));
+  CHECK_EQUAL(4U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbnodeInsert_RightRotateAtGrandparent) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(&nodes[1], rbtree_root(&tree));
+  CHECK_EQUAL(7U, rbtree_size(&tree));
+}
+
 TEST(Util_Rbtree, RbnodePrev_NodeIsRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
-  POINTERS_EQUAL(nullptr, rbnode_prev(tree.root));
+  POINTERS_EQUAL(nullptr, rbnode_prev(rbtree_root(&tree)));
 }
 
 TEST(Util_Rbtree, RbnodePrev_NodeHasLeftSubtree) {
@@ -250,6 +286,20 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolations) {
 
   POINTERS_EQUAL(&nodes[3], rbtree_root(&tree));
   CHECK_EQUAL(9U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {
+  rbtree_insert(&tree, &nodes[7]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[4], rbtree_root(&tree));
+  CHECK_EQUAL(8U, rbtree_size(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeLast_EmptyTree) {
