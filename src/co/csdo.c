@@ -1046,11 +1046,19 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int res = 0;
 		int errc = get_errc();
 
+#if LELY_NO_MALLOC
+		uint_least8_t buf[CO_ARRAY_CAPACITY];
+		if (n > CO_ARRAY_CAPACITY) {
+			errc = errnum2c(ERRNUM_NOMEM);
+			goto error_malloc_buf;
+		}
+#else
 		uint_least8_t *buf = n ? malloc(n) : NULL;
 		if (n && !buf) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;
 		}
+#endif
 
 		// cppcheck-suppress nullPointerArithmetic
 		if (co_val_write(type, val, buf, buf + n) != n) {
@@ -1061,7 +1069,9 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		res = co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
 
 	error_write_val:
+#if !LELY_NO_MALLOC
 		free(buf);
+#endif
 	error_malloc_buf:
 		set_errc(errc);
 		return res;
