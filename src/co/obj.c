@@ -899,6 +899,11 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	// Read the value.
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
+#if LELY_NO_MALLOC
+	struct co_array array = CO_ARRAY_INIT;
+	if (co_type_is_array(type))
+		co_val_init_array(&val, &array);
+#endif
 	if (co_sdo_req_dn_val(req, type, &val, pac) == -1)
 		return -1;
 
@@ -906,7 +911,9 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	// Accept the value if it is within bounds.
 	co_unsigned32_t ac = co_sub_chk_val(sub, type, &val);
 	if (ac) {
+#if !LELY_NO_MALLOC
 		co_val_fini(type, &val);
+#endif
 		if (pac)
 			*pac = ac;
 		return -1;
@@ -914,7 +921,9 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 #endif
 
 	co_sub_dn(sub, &val);
+#if !LELY_NO_MALLOC
 	co_val_fini(type, &val);
+#endif
 
 	return 0;
 }
@@ -963,9 +972,14 @@ co_sub_dn(co_sub_t *sub, void *val)
 	assert(sub);
 
 	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
+#if LELY_NO_MALLOC
+		if (!co_val_copy(sub->type, sub->val, val))
+			return -1;
+#else
 		co_val_fini(sub->type, sub->val);
 		if (!co_val_move(sub->type, sub->val, val))
 			return -1;
+#endif
 	}
 
 	return 0;

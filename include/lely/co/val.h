@@ -277,7 +277,51 @@ struct co_array_hdr {
 	size_t size;
 };
 
+#ifndef CO_ARRAY_CAPACITY
+/// The default capacity (in bytes) of a statically allocated CANopen array.
+#if LELY_NO_MALLOC
+#define CO_ARRAY_CAPACITY 256
+#else
+#define CO_ARRAY_CAPACITY 0
+#endif
+#endif
+
+#if LELY_NO_MALLOC
+
+/// A CANopen array.
+struct co_array {
+	/// The header containing the capacity and current size.
+	struct co_array_hdr hdr;
+	union {
+		/// The bytes in the array.
+		char data[CO_ARRAY_CAPACITY];
+		// Ensure the correct alignment.
+		union co_val _val;
+	} u;
+};
+
+/// The static initializer for #co_array.
+#define CO_ARRAY_INIT \
+	{ \
+		{ CO_ARRAY_CAPACITY, 0 }, \
+		{ \
+			{ \
+				0 \
+			} \
+		} \
+	}
+
+#endif // LELY_NO_MALLOC
+
 #if __STDC_VERSION__ >= 199901L
+
+#if LELY_NO_MALLOC
+/**
+ * An empty, statically allocated CANopen array literal with the default
+ * capacity.
+ */
+#define CO_ARRAY_C ((void *)((struct co_array)CO_ARRAY_INIT).u.data)
+#endif
 
 #define _CO_ARRAY(...) __VA_ARGS__
 
@@ -303,7 +347,7 @@ struct co_array_hdr {
 // clang-format on
 
 /// Converts a visible string literal to a CANopen array.
-#define CO_VISIBLE_STRING_C(c) CO_VISIBLE_STRING_NC(0, c)
+#define CO_VISIBLE_STRING_C(c) CO_VISIBLE_STRING_NC(CO_ARRAY_CAPACITY, c)
 
 /**
  * Converts an octet string literal to a CANopen array with a capacity of at
@@ -327,7 +371,7 @@ struct co_array_hdr {
 // clang-format on
 
 /// Converts an octet string literal to a CANopen array.
-#define CO_OCTET_STRING_C(c) CO_OCTET_STRING_NC(0, c)
+#define CO_OCTET_STRING_C(c) CO_OCTET_STRING_NC(CO_ARRAY_CAPACITY, c)
 
 /**
  * Converts a (16-bit) Unicode string literal to a CANopen array with a capacity
@@ -358,7 +402,7 @@ struct co_array_hdr {
 
 /// Converts a (16-bit) Unicode string literal to a CANopen array.
 #define CO_UNICODE_STRING_C(...) \
-	_CO_UNICODE_STRING_NC(0, _CO_ARRAY(__VA_ARGS__))
+	_CO_UNICODE_STRING_NC(CO_ARRAY_CAPACITY, _CO_ARRAY(__VA_ARGS__))
 
 /**
  * Converts an array literal with elements of type <b>type</b> to a CANopen
@@ -390,7 +434,8 @@ struct co_array_hdr {
  * Converts an array literal with elements of type <b>type</b> to a CANopen
  * array.
  */
-#define CO_DOMAIN_C(type, ...) _CO_DOMAIN_NC(type, 0, _CO_ARRAY(__VA_ARGS__))
+#define CO_DOMAIN_C(type, ...) \
+	_CO_DOMAIN_NC(type, CO_ARRAY_CAPACITY, _CO_ARRAY(__VA_ARGS__))
 
 #endif // __STDC_VERSION__ >= 199901L
 
@@ -550,6 +595,11 @@ int co_val_init_us_n(char16_t **val, const char16_t *us, size_t n);
  * @see co_val_fini()
  */
 int co_val_init_dom(void **val, const void *dom, size_t n);
+
+#if LELY_NO_MALLOC
+/// Initializes a value to point to the specified CANopen array.
+static inline void co_val_init_array(void *val, struct co_array *array);
+#endif
 
 /**
  * Finalizes a value of the specified data type. It is safe to invoke this
@@ -777,6 +827,15 @@ size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
  */
 size_t co_val_print(co_unsigned16_t type, const void *val, char **pbegin,
 		char *end);
+#endif
+
+#if LELY_NO_MALLOC
+static inline void
+co_val_init_array(void *val, struct co_array *array)
+{
+	if (val)
+		*(char **)val = array ? array->u.data : NULL;
+}
 #endif
 
 #ifdef __cplusplus
