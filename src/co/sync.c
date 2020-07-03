@@ -388,23 +388,22 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_sync_t *sync = data;
 	assert(sync);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	co_unsigned32_t cobid = val.u32;
 	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 	if (cobid == cobid_old)
-		goto error;
+		return 0;
 
 	// The CAN-ID cannot be changed while the producer is and remains
 	// active.
@@ -412,29 +411,20 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	int active_old = cobid_old & CO_SYNC_COBID_PRODUCER;
 	uint_least32_t canid = cobid & CAN_MASK_EID;
 	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (active && active_old && canid != canid_old) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+	if (active && active_old && canid != canid_old)
+		return CO_SDO_AC_PARAM_VAL;
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
 	if (!(cobid & CO_SYNC_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		return CO_SDO_AC_PARAM_VAL;
 
 	sync->cobid = cobid;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_sync_update(sync);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static co_unsigned32_t
@@ -446,35 +436,29 @@ co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_sync_t *sync = data;
 	assert(sync);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	co_unsigned32_t us = val.u32;
 	co_unsigned32_t us_old = co_sub_get_val_u32(sub);
 	if (us == us_old)
-		goto error;
+		return 0;
 
 	sync->us = us;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_sync_update(sync);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static co_unsigned32_t
@@ -486,47 +470,37 @@ co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_sync_t *sync = data;
 	assert(sync);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED8);
 	co_unsigned8_t max_cnt = val.u8;
 	co_unsigned8_t max_cnt_old = co_sub_get_val_u8(sub);
 	if (max_cnt == max_cnt_old)
-		goto error;
+		return 0;
 
 	// The synchronous counter overflow value cannot be changed while the
 	// communication cycle period is non-zero.
-	if (sync->us) {
-		ac = CO_SDO_AC_DATA_DEV;
-		goto error;
-	}
+	if (sync->us)
+		return CO_SDO_AC_DATA_DEV;
 
-	if (max_cnt == 1 || max_cnt > 240) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+	if (max_cnt == 1 || max_cnt > 240)
+		return CO_SDO_AC_PARAM_VAL;
 
 	sync->max_cnt = max_cnt;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_sync_update(sync);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int

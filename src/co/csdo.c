@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, src/sdo.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1171,21 +1171,22 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(sdo);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1280 + sdo->num - 1);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
+	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -1193,17 +1194,13 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_req = cobid;
 		break;
@@ -1213,7 +1210,7 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -1221,17 +1218,13 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_res = cobid;
 		break;
@@ -1241,23 +1234,18 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t id = val.u8;
 		co_unsigned8_t id_old = co_sub_get_val_u8(sub);
 		if (id == id_old)
-			goto error;
+			return 0;
 
 		sdo->par.id = id;
 		break;
 	}
-	default: ac = CO_SDO_AC_NO_SUB; goto error;
+	default: return CO_SDO_AC_NO_SUB;
 	}
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_csdo_update(sdo);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int
