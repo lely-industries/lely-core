@@ -23,6 +23,7 @@
 #define LELY_CO_VAL_H_
 
 #include <lely/co/type.h>
+#include <lely/util/util.h>
 
 #include <float.h>
 #include <stddef.h>
@@ -166,63 +167,128 @@ union co_val {
 #undef LELY_CO_DEFINE_TYPE
 };
 
+/// The header directly preceding the bytes in a CANopen array.
+struct co_array_hdr {
+	/// The total capacity (in bytes).
+	size_t capacity;
+	/// The current size (in bytes).
+	size_t size;
+};
+
 #if __STDC_VERSION__ >= 199901L
 
 #define _CO_ARRAY(...) __VA_ARGS__
 
-/// Converts a visible string literal to a CANopen array.
-#define CO_VISIBLE_STRING_C(c) \
+/**
+ * Converts a visible string literal to a CANopen array with a capacity of at
+ * least <b>n</b> bytes.
+ */
+// clang-format off
+#define CO_VISIBLE_STRING_NC(n, c) \
 	(((struct { \
-		size_t size; \
+		struct co_array_hdr hdr; \
 		union { \
+			char vs[MAX(n, sizeof(c))]; \
 			union co_val val; \
-			char vs[sizeof(c)]; \
 		} u; \
-	}){ .size = sizeof(c) - 1, .u = { .vs = c } }) \
-					.u.vs)
+	}){ \
+		.hdr = { \
+			.capacity = MAX(n, sizeof(c)), \
+			.size = sizeof(c) - 1 \
+		}, \
+		.u = { .vs = c } \
+	}).u.vs)
+// clang-format on
+
+/// Converts a visible string literal to a CANopen array.
+#define CO_VISIBLE_STRING_C(c) CO_VISIBLE_STRING_NC(0, c)
+
+/**
+ * Converts an octet string literal to a CANopen array with a capacity of at
+ * least <b>n</b> bytes.
+ */
+// clang-format off
+#define CO_OCTET_STRING_NC(n, c) \
+	(((struct { \
+		struct co_array_hdr hdr; \
+		union { \
+			uint_least8_t os[MAX(n, sizeof(c))]; \
+			union co_val val; \
+		} u; \
+	}){ \
+		.hdr = { \
+			.capacity = MAX(n, sizeof(c)), \
+			.size = sizeof(c) - 1 \
+		}, \
+		.u = { .os = c } \
+	}).u.os)
+// clang-format on
 
 /// Converts an octet string literal to a CANopen array.
-#define CO_OCTET_STRING_C(c) \
-	(((struct { \
-		size_t size; \
-		union { \
-			union co_val val; \
-			uint_least8_t os[sizeof(c)]; \
-		} u; \
-	}){ .size = sizeof(c) - 1, .u = { .os = c } }) \
-					.u.os)
+#define CO_OCTET_STRING_C(c) CO_OCTET_STRING_NC(0, c)
 
-/// Converts a (16-bit) Unicode string literal to a CANopen array.
-#define CO_UNICODE_STRING_C(...) _CO_UNICODE_STRING_C(_CO_ARRAY(__VA_ARGS__))
+/**
+ * Converts a (16-bit) Unicode string literal to a CANopen array with a capacity
+ * of at least <b>n</b> bytes
+ */
+#define CO_UNICODE_STRING_NC(n, ...) \
+	_CO_UNICODE_STRING_NC(n, _CO_ARRAY(__VA_ARGS__))
 
 // clang-format off
-#define _CO_UNICODE_STRING_C(c) \
+#define _CO_UNICODE_STRING_NC(n, c) \
 	(((struct { \
-		size_t size; \
+		struct co_array_hdr hdr; \
 		union { \
+			char16_t us[MAX(ALIGN(n, sizeof(char16_t)), \
+							sizeof((char16_t[])c)) \
+					/ sizeof(char16_t)]; \
 			union co_val val; \
-			char16_t us[sizeof((char16_t[])c) / sizeof(char16_t)]; \
 		} u; \
-	}){ .size = sizeof((char16_t[])c) - sizeof(char16_t), \
-			.u = { .us = c } }) \
-					.u.us)
+	}){ \
+		.hdr = { \
+			.capacity = MAX(ALIGN(n, sizeof(char16_t)), \
+					sizeof((char16_t[])c)), \
+			.size = sizeof((char16_t[])c) - sizeof(char16_t) \
+		}, \
+		.u = { .us = c } \
+	}).u.us)
+// clang-format on
+
+/// Converts a (16-bit) Unicode string literal to a CANopen array.
+#define CO_UNICODE_STRING_C(...) \
+	_CO_UNICODE_STRING_NC(0, _CO_ARRAY(__VA_ARGS__))
+
+/**
+ * Converts an array literal with elements of type <b>type</b> to a CANopen
+ * array with a capacity of at least <b>n</b> bytes.
+ */
+#define CO_DOMAIN_NC(type, n, ...) \
+	_CO_DOMAIN_NC(type, n, _CO_ARRAY(__VA_ARGS__))
+
+// clang-format off
+#define _CO_DOMAIN_NC(type, n, c) \
+	(((struct { \
+		struct co_array_hdr hdr; \
+		union { \
+			type dom[MAX(ALIGN(n, sizeof(type)), sizeof((type[])c)) \
+					/ sizeof(type)]; \
+			union co_val val; \
+		} u; \
+	}){ \
+		.hdr = { \
+			.capacity = MAX(ALIGN(n, sizeof(type)), \
+					sizeof((type[])c)), \
+			.size = sizeof((type[])c) \
+		}, \
+		.u = { .dom = c } \
+	}).u.dom)
 // clang-format on
 
 /**
  * Converts an array literal with elements of type <b>type</b> to a CANopen
  * array.
  */
-#define CO_DOMAIN_C(type, ...) _CO_DOMAIN_C(type, _CO_ARRAY(__VA_ARGS__))
-
-#define _CO_DOMAIN_C(type, c) \
-	(((struct { \
-		size_t size; \
-		union { \
-			union co_val val; \
-			type dom[sizeof((type[])c) / sizeof(type)]; \
-		} u; \
-	}){ .size = sizeof((type[])c), .u = { .dom = c } }) \
-					.u.dom)
+#define CO_DOMAIN_C(type, ...) _CO_DOMAIN_NC(type, 0, _CO_ARRAY(__VA_ARGS__))
 
 #endif // __STDC_VERSION__ >= 199901L
 

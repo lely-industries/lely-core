@@ -79,7 +79,10 @@
 #define CO_DOMAIN_MIN NULL
 #define CO_DOMAIN_MAX NULL
 
-#define CO_ARRAY_OFFSET ALIGN(sizeof(size_t), _Alignof(union co_val))
+#define CO_ARRAY_HDR_OFFSET \
+	ALIGN(sizeof(struct co_array_hdr), _Alignof(union co_val))
+
+static inline struct co_array_hdr *co_array_get_hdr(const void *val);
 
 static int co_array_alloc(void *val, size_t size);
 static void co_array_free(void *val);
@@ -1317,6 +1320,15 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 }
 #endif // !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 
+static inline struct co_array_hdr *
+co_array_get_hdr(const void *val)
+{
+	assert(val);
+
+	char *ptr = *(char **)val;
+	return ptr ? (void *)(ptr - CO_ARRAY_HDR_OFFSET) : NULL;
+}
+
 static int
 co_array_alloc(void *val, size_t size)
 {
@@ -1324,12 +1336,13 @@ co_array_alloc(void *val, size_t size)
 
 	if (size) {
 		// cppcheck-suppress AssignmentAddressToInteger
-		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
-		if (!ptr) {
+		struct co_array_hdr *hdr = malloc(CO_ARRAY_HDR_OFFSET + size);
+		if (!hdr) {
 			set_errc(errno2c(errno));
 			return -1;
 		}
-		*(char **)val = ptr + CO_ARRAY_OFFSET;
+		*hdr = (struct co_array_hdr){ size, 0 };
+		*(char **)val = (char *)hdr + CO_ARRAY_HDR_OFFSET;
 	} else {
 		*(char **)val = NULL;
 	}
@@ -1340,22 +1353,22 @@ co_array_alloc(void *val, size_t size)
 static void
 co_array_free(void *val)
 {
-	assert(val);
-
-	char *ptr = *(char **)val;
-	if (ptr)
-		free(ptr - CO_ARRAY_OFFSET);
+	struct co_array_hdr *hdr = co_array_get_hdr(val);
+	if (hdr)
+		free(hdr);
 }
 
 static void
 co_array_init(void *val, size_t size)
 {
-	assert(val);
+	struct co_array_hdr *hdr = co_array_get_hdr(val);
+	assert(val || !size);
 
-	char *ptr = *(char **)val;
-	assert(!size || ptr);
-	if (ptr)
-		*(size_t *)(ptr - CO_ARRAY_OFFSET) = size;
+	if (hdr) {
+		memset(*(char **)val, 0, hdr->capacity);
+		assert(size <= hdr->capacity);
+		hdr->size = size;
+	}
 }
 
 static void
@@ -1369,8 +1382,7 @@ co_array_fini(void *val)
 static size_t
 co_array_sizeof(const void *val)
 {
-	assert(val);
+	const struct co_array_hdr *hdr = co_array_get_hdr(val);
 
-	const char *ptr = *(const char **)val;
-	return ptr ? *(const size_t *)(ptr - CO_ARRAY_OFFSET) : 0;
+	return hdr ? hdr->size : 0;
 }
