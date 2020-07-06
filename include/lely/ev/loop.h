@@ -21,7 +21,7 @@
  * If, at any time, the outstanding work falls to 0, the event loop is stopped
  * as if by ev_loop_stop().
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -107,6 +107,11 @@ ev_exec_t *ev_loop_get_exec(const ev_loop_t *loop);
  * Stops the event loop. Ongoing calls to ev_loop_run(), ev_loop_run_until(),
  * ev_loop_run_one() and ev_loop_run_one_until() will terminate and future calls
  * will return 0 immediately.
+ *
+ * If this function is invoked explicitly, the loop MAY still contain
+ * outstanding work and it MAY NOT be safe to destroy submitted, but not
+ * completed, tasks. Invoke ev_loop_poll(), preceded by ev_loop_restart() if
+ * necessary, to ensure no outstanding work remains.
  *
  * @post ev_loop_stopped() returns 1.
  */
