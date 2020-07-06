@@ -1,3 +1,4 @@
+import ast
 import re
 import struct
 import warnings
@@ -119,6 +120,7 @@ class Object(dict):
         section = self.cfg[name]
 
         self.name = section.get("Denotation", section["ParameterName"])
+        self.object_type = int(section.get("ObjectType", "0x07"), 0)
 
         sub_number = int(section.get("SubNumber", "0"), 0)
         compact_sub_obj = int(section.get("CompactSubObj", "0"), 0)
@@ -130,6 +132,10 @@ class Object(dict):
                         self.cfg, self.cfg[sub_name], self.index, sub_index, self.env
                     )
         elif compact_sub_obj != 0:
+            # Add a sub-object containing the size of the array.
+            self[0] = SubObject.from_number(
+                self.cfg, self.index, compact_sub_obj, self.env
+            )
             for sub_index in range(1, compact_sub_obj + 1):
                 self[sub_index] = SubObject.from_compact_sub_obj(
                     self.cfg, self.index, sub_index, self.env
@@ -163,7 +169,7 @@ class SubObject:
         self.env = env
 
     def parse_value(self):
-        return self.data_type.parse_value(self.value, self.env)
+        return self.value.parse(self.env)
 
     @classmethod
     def from_section(
@@ -174,8 +180,41 @@ class SubObject:
         subobj.name = section.get("Denotation", section["ParameterName"])
         subobj.access_type = AccessType(section["AccessType"])
         subobj.data_type = DataType(int(section["DataType"], 0))
-        subobj.value = section.get("ParameterValue", section.get("DefaultValue", "0"))
+
+        if subobj.data_type.is_basic():
+            if "LowLimit" in section:
+                subobj.low_limit = Value(subobj.data_type, section["LowLimit"])
+            if "HighLimit" in section:
+                subobj.high_limit = Value(subobj.data_type, section["HighLimit"])
+
+        default_value = section.get("DefaultValue", subobj.data_type.default_value())
+        value = section.get("ParameterValue", default_value)
+        subobj.default_value = Value(subobj.data_type, default_value)
+        subobj.value = Value(subobj.data_type, value)
+
         subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
+
+        if subobj.data_type.index == 0x000F:
+            if "UploadFile" in section:
+                subobj.upload_file = section["UploadFile"]
+            if "DownloadFile" in section:
+                subobj.download_file = section["DownloadFile"]
+
+        return subobj
+
+    @classmethod
+    def from_number(cls, cfg: dict, index: int, number: int, env: dict) -> "SubObject":
+        subobj = cls(cfg, index, 0, env)
+
+        subobj.name = "NrOfObjects"
+
+        subobj.access_type = AccessType("ro")
+        subobj.data_type = DataType(0x0005)  # UNSIGNED8
+
+        subobj.default_value = Value(subobj.data_type, str(number))
+        subobj.value = subobj.default_value
+
+        subobj.pdo_mapping = 0
 
         return subobj
 
@@ -198,12 +237,13 @@ class SubObject:
         subobj.access_type = AccessType(section["AccessType"])
         subobj.data_type = DataType(int(section["DataType"], 0))
 
+        default_value = section.get("DefaultValue", subobj.data_type.default_value())
         if name + "Value" in cfg and str(sub_index) in cfg[name + "Value"]:
-            subobj.value = cfg[name + "Value"][str(sub_index)]
+            value = cfg[name + "Value"][str(sub_index)]
         else:
-            subobj.value = section.get(
-                "ParameterValue", section.get("DefaultValue", "0")
-            )
+            value = section.get("ParameterValue", default_value)
+        subobj.default_value = Value(subobj.data_type, default_value)
+        subobj.value = Value(subobj.data_type, value)
 
         subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
 
@@ -212,20 +252,28 @@ class SubObject:
 
 class AccessType:
     def __init__(self, access_type: str):
+        self.name = access_type.lower()
+
         self.read = False
         self.write = False
+        self.tpdo = False
+        self.rpdo = False
 
-        if access_type.lower() == "ro" or access_type.lower() == "const":
+        if self.name == "ro" or self.name == "const":
             self.read = True
-        elif access_type.lower() == "wo":
+        elif self.name == "wo":
             self.write = True
-        elif (
-            access_type.lower() == "rw"
-            or access_type.lower() == "rwr"
-            or access_type.lower() == "rww"
-        ):
+        elif self.name == "rw":
             self.read = True
             self.write = True
+        elif self.name == "rwr":
+            self.read = True
+            self.write = True
+            self.tpdo = True
+        elif self.name == "rww":
+            self.read = True
+            self.write = True
+            self.rpdo = True
         else:
             raise ValueError("invalid AccessType: " + access_type)
 
@@ -240,6 +288,12 @@ class DataType:
         0x0006: "UNSIGNED16",
         0x0007: "UNSIGNED32",
         0x0008: "REAL32",
+        0x0009: "VISIBLE_STRING",
+        0x000A: "OCTET_STRING",
+        0x000B: "UNICODE_STRING",
+        0x000C: "TIME_OF_DAY",
+        0x000D: "TIME_DIFF",
+        0x000F: "DOMAIN",
         0x0010: "INTEGER24",
         0x0011: "REAL64",
         0x0012: "INTEGER40",
@@ -275,6 +329,50 @@ class DataType:
         0x001B: 64,  # UNSIGNED64
     }
 
+    __min = {
+        0x0001: 0,  # BOOLEAN
+        0x0002: -0x80,  # INTEGER8
+        0x0003: -0x8000,  # INTEGER16
+        0x0004: -0x80000000,  # INTEGER32
+        0x0005: 0,  # UNSIGNED8
+        0x0006: 0,  # UNSIGNED16
+        0x0007: 0,  # UNSIGNED32
+        0x0008: -3.40282346638528859811704183484516925e38,  # REAL32
+        0x0010: -0x800000,  # INTEGER24
+        0x0011: -1.79769313486231570814527423731704357e308,  # REAL64
+        0x0012: -0x8000000000,  # INTEGER40
+        0x0013: -0x800000000000,  # INTEGER48
+        0x0014: -0x80000000000000,  # INTEGER56
+        0x0015: -0x8000000000000000,  # INTEGER64
+        0x0016: 0,  # UNSIGNED24
+        0x0018: 0,  # UNSIGNED40
+        0x0019: 0,  # UNSIGNED48
+        0x001A: 0,  # UNSIGNED56
+        0x001B: 0,  # UNSIGNED64
+    }
+
+    __max = {
+        0x0001: 1,  # BOOLEAN
+        0x0002: 0x7F,  # INTEGER8
+        0x0003: 0x7FFF,  # INTEGER16
+        0x0004: 0x7FFFFFFF,  # INTEGER32
+        0x0005: 0xFF,  # UNSIGNED8
+        0x0006: 0xFFFF,  # UNSIGNED16
+        0x0007: 0xFFFFFFFF,  # UNSIGNED32
+        0x0008: 3.40282346638528859811704183484516925e38,  # REAL32
+        0x0010: 0x7FFFFF,  # INTEGER24
+        0x0011: 1.79769313486231570814527423731704357e308,  # REAL64
+        0x0012: 0x7FFFFFFFFF,  # INTEGER40
+        0x0013: 0x7FFFFFFFFFFF,  # INTEGER48
+        0x0014: 0x7FFFFFFFFFFFFF,  # INTEGER56
+        0x0015: 0x7FFFFFFFFFFFFFFF,  # INTEGER64
+        0x0016: 0xFFFFFF,  # UNSIGNED24
+        0x0018: 0xFFFFFFFFFF,  # UNSIGNED40
+        0x0019: 0xFFFFFFFFFFFF,  # UNSIGNED48
+        0x001A: 0xFFFFFFFFFFFFFF,  # UNSIGNED56
+        0x001B: 0xFFFFFFFFFFFFFFFF,  # UNSIGNED64
+    }
+
     __fmt = {
         0x0001: "<HBLB",  # BOOLEAN
         0x0002: "<HBLB",  # INTEGER8
@@ -297,19 +395,42 @@ class DataType:
         0x001B: "<HBLQ",  # UNSIGNED64
     }
 
-    __p_value = re.compile(
-        r"\s*(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
-        re.IGNORECASE,
-    )
-
     def __init__(self, index: int):
         self.index = index
 
     def name(self):
         return DataType.__name[self.index]
 
+    def is_basic(self):
+        return self.index in DataType.__bits.keys()
+
+    def is_array(self):
+        if (
+            self.index == 0x0009
+            or self.index == 0x000A
+            or self.index == 0x000B
+            or self.index == 0x000F
+        ):
+            return True
+        else:
+            return False
+
     def bits(self):
         return DataType.__bits[self.index]
+
+    def min(self):
+        return DataType.__min[self.index]
+
+    def max(self):
+        return DataType.__max[self.index]
+
+    def default_value(self):
+        if self.is_basic():
+            return "0"
+        elif self.index == 0x0009 or self.index == 0x000B:
+            return '""'
+        else:
+            return ""
 
     def concise_value(self, index: int, sub_index: int, value):
         fmt = DataType.__fmt[self.index]
@@ -319,19 +440,55 @@ class DataType:
         else:
             return struct.pack(fmt, index, sub_index, n, int(value))
 
-    def parse_value(self, value: str, env: dict = {}):
-        m = DataType.__p_value.match(value)
-        if m:
+
+class Value:
+    __p_value = re.compile(
+        r"\s*(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
+        re.IGNORECASE,
+    )
+
+    def __init__(self, data_type: DataType, value: str = ""):
+        self.data_type = data_type
+        self.value = value if value else self.data_type.default_value()
+        self.variable = None
+
+        if self.data_type.is_basic():
+            m = Value.__p_value.match(self.value)
+            if m:
+                self.value = m.group("value")
+                self.variable = m.group("variable")
+            else:
+                raise ValueError("invalid value: " + self.value)
+
+    def parse(self, env: dict = {}):
+        if self.data_type.is_basic():
             offset = 0
-            variable = m.group("variable")
-            if variable is not None:
-                if variable.upper() in env:
-                    offset = env[variable.upper()]
+            value = 0
+            if self.variable is not None:
+                if self.variable.upper() in env:
+                    offset = env[self.variable.upper()]
                 else:
-                    raise KeyError("$" + variable + " not defined")
-            return offset + int(m.group("value"), 0)
+                    raise KeyError("$" + self.variable + " not defined")
+            if self.data_type.index == 0x0008 or self.data_type.index == 0x0011:
+                value = float(self.value)
+            else:
+                value = int(self.value, 0)
+            return offset + value
+        elif self.data_type.index == 0x0009 or self.data_type.index == 0x000B:
+            # VISIBLE_STRING and UNICODE_STRING values are interpreted as Python string literals.
+            return ast.literal_eval(self.value)
+        elif self.data_type.index == 0x000A or self.data_type.index == 0x000F:
+            # OCTET_STRING and DOMAIN values are specified as hexadecimal strings.
+            return bytes.fromhex(self.value)
+        elif self.data_type.index == 0x000C or self.data_type.index == 0x000D:
+            # TIME_OF_DAY and TIME_DIFFERENCE values are tuples of days and milliseconds.
+            days, ms = self.value.split()
+            return (int(days, 0), int(ms, 0))
         else:
-            raise ValueError("invalid value: " + value)
+            raise ValueError("invalid DataType: 0x{04X}".format(self.data_type.index))
+
+    def has_nodeid(self):
+        return self.variable is not None and self.variable.upper() == "NODEID"
 
 
 class PDO:
