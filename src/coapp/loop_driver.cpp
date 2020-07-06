@@ -27,6 +27,7 @@
 
 #include <lely/coapp/loop_driver.hpp>
 
+#include <atomic>
 #ifdef __MINGW32__
 #include <lely/libc/threads.h>
 #else
@@ -45,25 +46,28 @@ struct LoopDriver::Impl_ : io_svc {
   ~Impl_();
 
   void Start();
-  void Stop() noexcept;
+  void Shutdown();
+  void Join();
 
   static const io_svc_vtbl svc_vtbl;
 
   LoopDriver* self{nullptr};
   io::ContextBase ctx{nullptr};
+  ::std::atomic_flag shutdown;
   ev::Promise<void, void> stopped;
 #ifdef __MINGW32__
   thrd_t thr;
 #else
   ::std::thread thread;
 #endif
+  ::std::atomic_flag joined;
 };
 
 // clang-format off
 const io_svc_vtbl LoopDriver::Impl_::svc_vtbl = {
     nullptr,
     [](io_svc* svc) noexcept {
-      static_cast<LoopDriver::Impl_*>(svc)->Stop();
+      static_cast<LoopDriver::Impl_*>(svc)->Shutdown();
     }
 };
 // clang-format on
@@ -108,6 +112,11 @@ LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) noexcept {
   }
 }
 
+void
+LoopDriver::Join() {
+  impl_->Join();
+}
+
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
     : io_svc IO_SVC_INIT(&svc_vtbl),
       self(self_),
@@ -118,24 +127,20 @@ LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
 #endif
 {
 #ifdef __MINGW32__
-  if (thrd_create(&thr,
-                  [](void* arg) noexcept {
-                    static_cast<LoopDriver::Impl_*>(arg)->Start();
-                    return 0;
-                  },
-                  this) != thrd_success)
+  if (thrd_create(
+          &thr,
+          [](void* arg) noexcept {
+            static_cast<LoopDriver::Impl_*>(arg)->Start();
+            return 0;
+          },
+          this) != thrd_success)
     util::throw_errc("thrd_create");
 #endif
   ctx.insert(*this);
 }
 
 LoopDriver::Impl_::~Impl_() {
-  Stop();
-#ifdef __MINGW32__
-  thrd_join(thr, nullptr);
-#else
-  thread.join();
-#endif
+  Join();
   ctx.remove(*this);
 }
 
@@ -164,8 +169,25 @@ LoopDriver::Impl_::Start() {
 }
 
 void
-LoopDriver::Impl_::Stop() noexcept {
-  self->GetLoop().stop();
+LoopDriver::Impl_::Shutdown() {
+  if (!shutdown.test_and_set()) {
+    // Stop receiving CANopen events.
+    self->master.Erase(*self);
+    // Stop the blocking run of the event loop.
+    self->GetLoop().stop();
+  }
+}
+
+void
+LoopDriver::Impl_::Join() {
+  if (!joined.test_and_set()) {
+    Shutdown();
+#ifdef __MINGW32__
+    thrd_join(thr, nullptr);
+#else
+    thread.join();
+#endif
+  }
 }
 
 }  // namespace canopen
