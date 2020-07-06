@@ -115,7 +115,11 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   T
   Wait(SdoFuture<T> f) {
     GetLoop().wait(f);
-    return f.get().value();
+    try {
+      return f.get().value();
+    } catch (const ev::future_not_ready& e) {
+      util::throw_error_code("Wait", ::std::errc::operation_canceled);
+    }
   }
 
   /**
