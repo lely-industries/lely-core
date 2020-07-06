@@ -101,8 +101,11 @@ LoopDriver::USleep(uint_least64_t usec) {
 void
 LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) noexcept {
   GetLoop().run_for(::std::chrono::microseconds(usec), ec);
-  if (!ec && GetLoop().stopped())
+  if (ec == ::std::errc::timed_out) {
+    ec = {};
+  } else if (!ec && GetLoop().stopped()) {
     ec = ::std::make_error_code(::std::errc::operation_canceled);
+  }
 }
 
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
