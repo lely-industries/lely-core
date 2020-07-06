@@ -4,7 +4,7 @@
  *
  * @see lely/io2/win32/ixxat.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,8 +36,8 @@
 #include "../can.h"
 #include <lely/io2/ctx.h>
 #include <lely/io2/win32/ixxat.h>
+#include <lely/util/diag.h>
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
 #include <lely/util/util.h>
 
 #undef CAN_ERROR_OTHER
@@ -587,6 +587,7 @@ io_ixxat_chan_fini(io_can_chan_t *chan)
 		p_canChannelActivate(ixxat->hCanChn, FALSE);
 
 #if !LELY_NO_THREADS
+	int warning = 0;
 	EnterCriticalSection(&ixxat->CriticalSection);
 	// If necessary, busy-wait until io_ixxat_chan_read_task_func() and
 	// io_ixxat_chan_write_task_func() complete.
@@ -594,6 +595,11 @@ io_ixxat_chan_fini(io_can_chan_t *chan)
 		if (io_ixxat_chan_do_abort_tasks(ixxat))
 			continue;
 		LeaveCriticalSection(&ixxat->CriticalSection);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_ixxat_chan_fini() invoked with pending operations");
+		}
 		SwitchToThread();
 		EnterCriticalSection(&ixxat->CriticalSection);
 	}

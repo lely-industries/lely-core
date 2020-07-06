@@ -30,6 +30,7 @@
 #include <lely/util/errnum.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>
+#include <lely/util/diag.h>
 #include <lely/util/util.h>
 
 #include <assert.h>
@@ -331,6 +332,7 @@ io_user_can_chan_fini(io_can_chan_t *chan)
 	spscring_c_abort_wait(&user->rxring);
 
 #if !LELY_NO_THREADS
+	int warning = 0;
 	mtx_lock(&user->mtx);
 	// If necessary, busy-wait until io_user_can_chan_read_task_func() and
 	// io_user_can_chan_write_task_func() complete.
@@ -338,6 +340,11 @@ io_user_can_chan_fini(io_can_chan_t *chan)
 		if (io_user_can_chan_do_abort_tasks(user))
 			continue;
 		mtx_unlock(&user->mtx);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_user_can_chan_fini() invoked with pending operations");
+		}
 		thrd_yield();
 		mtx_lock(&user->mtx);
 	}
