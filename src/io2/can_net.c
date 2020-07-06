@@ -346,6 +346,7 @@ io_can_net_fini(io_can_net_t *net)
 	io_can_net_svc_shutdown(&net->svc);
 
 #if !LELY_NO_THREADS
+	int warning = 0;
 	mtx_lock(&net->mtx);
 	// If necessary, busy-wait until all submitted operations complete.
 	while (net->wait_next_submitted || net->wait_confirm_submitted
@@ -353,6 +354,11 @@ io_can_net_fini(io_can_net_t *net)
 		if (io_can_net_do_abort_tasks(net))
 			continue;
 		mtx_unlock(&net->mtx);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_can_net_fini() invoked with pending operations");
+		}
 		thrd_yield();
 		mtx_lock(&net->mtx);
 	}

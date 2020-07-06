@@ -27,7 +27,7 @@
 #endif
 #include <lely/io2/ctx.h>
 #include <lely/io2/vcan.h>
-#include <lely/util/errnum.h>
+#include <lely/util/diag.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>
 #include <lely/util/util.h>
@@ -527,6 +527,7 @@ io_vcan_chan_fini(io_can_chan_t *chan)
 	spscring_c_abort_wait(&vcan->rxring);
 
 #if !LELY_NO_THREADS
+	int warning = 0;
 	mtx_lock(&vcan->mtx);
 	// If necessary, busy-wait until io_vcan_chan_read_task_func() and
 	// io_vcan_chan_write_task_func() complete.
@@ -534,6 +535,11 @@ io_vcan_chan_fini(io_can_chan_t *chan)
 		if (io_vcan_chan_do_abort_tasks(vcan))
 			continue;
 		mtx_unlock(&vcan->mtx);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_vcan_chan_fini() invoked with pending operations");
+		}
 		thrd_yield();
 		mtx_lock(&vcan->mtx);
 	}

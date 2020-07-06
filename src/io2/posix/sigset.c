@@ -30,6 +30,7 @@
 #include <lely/io2/ctx.h>
 #include <lely/io2/posix/poll.h>
 #include <lely/io2/sys/sigset.h>
+#include <lely/util/diag.h>
 #include <lely/util/util.h>
 
 #include <assert.h>
@@ -267,6 +268,7 @@ io_sigset_fini(io_sigset_t *sigset)
 	io_sigset_impl_clear(sigset);
 
 #if !LELY_NO_THREADS
+	int warning = 0;
 	pthread_mutex_lock(&impl->mtx);
 	// If necessary, busy-wait until io_sigset_impl_read_task_func() and
 	// io_sigset_impl_wait_task_func() complete.
@@ -274,6 +276,11 @@ io_sigset_fini(io_sigset_t *sigset)
 		if (io_sigset_impl_do_abort_tasks(impl))
 			continue;
 		pthread_mutex_unlock(&impl->mtx);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_sigset_fini() invoked with pending operations");
+		}
 		sched_yield();
 		pthread_mutex_lock(&impl->mtx);
 	}
