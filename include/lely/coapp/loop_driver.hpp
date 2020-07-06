@@ -284,6 +284,19 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
     Wait(AsyncWrite(idx, subidx, ::std::forward<T>(value), timeout), ec);
   }
 
+ protected:
+  /**
+   * Stops the dedicated event loop of the driver and waits until the thread
+   * running the event loop finishes its execution. If logical drivers have been
+   * registered, this function SHOULD be invoked before those drivers are
+   * destroyed. Otherwise pending tasks for those drivers may remain on the
+   * event loop.
+   *
+   * This function can be called more than once and from multiple threads, but
+   * only the first invocation waits for the thread to finish.
+   */
+  void Join();
+
  private:
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
