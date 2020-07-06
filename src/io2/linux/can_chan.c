@@ -1046,7 +1046,7 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 	// Continue monitoring events that are not otherwise handled.
 	if ((events & IO_EVENT_ERR) || impl->fd == -1 || impl->shutdown) {
 		impl->events = 0;
-	} else if (impl->events &= ~events) {
+	} else if ((impl->events &= ~events) != 0) {
 		int errsv = errno;
 		// clang-format off
 		if (io_poll_watch(impl->poll, impl->fd, impl->events,
