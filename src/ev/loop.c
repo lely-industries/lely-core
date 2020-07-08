@@ -1098,6 +1098,7 @@ ev_loop_do_stop(ev_loop_t *loop)
 		}
 	}
 }
+
 static int
 ev_loop_kill_any(ev_loop_t *loop, int polling)
 {

@@ -82,6 +82,18 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   }
 
   /**
+   * Stops the dedicated event loop of the driver and waits until the thread
+   * running the event loop finishes its execution. If logical drivers have been
+   * registered, this function SHOULD be invoked before those drivers are
+   * destroyed. Otherwise pending tasks for those drivers may remain on the
+   * event loop.
+   *
+   * This function can be called more than once and from multiple threads, but
+   * only the first invocation waits for the thread to finish.
+   */
+  void Join();
+
+  /**
    * Returns a future which becomes ready once the dedicated event loop of the
    * driver is stopped and the thread is (about to be) terminated.
    */
@@ -115,7 +127,11 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   T
   Wait(SdoFuture<T> f) {
     GetLoop().wait(f);
-    return f.get().value();
+    try {
+      return f.get().value();
+    } catch (const ev::future_not_ready& e) {
+      util::throw_error_code("Wait", ::std::errc::operation_canceled);
+    }
   }
 
   /**

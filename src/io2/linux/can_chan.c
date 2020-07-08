@@ -29,6 +29,7 @@
 #include <lely/io2/ctx.h>
 #include <lely/io2/linux/can.h>
 #include <lely/io2/posix/poll.h>
+#include <lely/util/diag.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>
 #include <lely/util/util.h>
@@ -342,6 +343,7 @@ io_can_chan_fini(io_can_chan_t *chan)
 	spscring_c_abort_wait(&impl->rxring);
 	pthread_mutex_unlock(&impl->c_mtx);
 
+	int warning = 0;
 	pthread_mutex_lock(&impl->mtx);
 	// If necessary, busy-wait until io_can_chan_impl_rxbuf_task_func(),
 	// io_can_chan_impl_read_task_func() and
@@ -350,6 +352,11 @@ io_can_chan_fini(io_can_chan_t *chan)
 		if (io_can_chan_impl_do_abort_tasks(impl))
 			continue;
 		pthread_mutex_unlock(&impl->mtx);
+		if (!warning) {
+			warning = 1;
+			diag(DIAG_WARNING, 0,
+					"io_can_chan_fini() invoked with pending operations");
+		}
 		sched_yield();
 		pthread_mutex_lock(&impl->mtx);
 	}
@@ -1036,8 +1043,10 @@ io_can_chan_impl_watch_func(struct io_poll_watch *watch, int events)
 #if !LELY_NO_THREADS
 	pthread_mutex_lock(&impl->mtx);
 #endif
-	impl->events &= ~events;
-	if (impl->events && impl->fd != -1 && !impl->shutdown) {
+	// Continue monitoring events that are not otherwise handled.
+	if ((events & IO_EVENT_ERR) || impl->fd == -1 || impl->shutdown) {
+		impl->events = 0;
+	} else if ((impl->events &= ~events) != 0) {
 		int errsv = errno;
 		// clang-format off
 		if (io_poll_watch(impl->poll, impl->fd, impl->events,
@@ -1323,7 +1332,7 @@ io_can_chan_impl_write_task_func(struct ev_task *task)
 				&impl->watch)) {
 			// clang-format on
 			impl->events = events;
-			// Do not repost this thask unless registering the file
+			// Do not repost this task unless registering the file
 			// descriptor fails.
 			post_write = 0;
 		}

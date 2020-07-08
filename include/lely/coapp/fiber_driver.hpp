@@ -105,7 +105,11 @@ class FiberDriver : detail::FiberDriverBase, public BasicDriver {
   T
   Wait(SdoFuture<T> f) {
     fiber_await(f);
-    return f.get().value();
+    try {
+      return f.get().value();
+    } catch (const ev::future_not_ready& e) {
+      util::throw_error_code("Wait", ::std::errc::operation_canceled);
+    }
   }
 
   /**
