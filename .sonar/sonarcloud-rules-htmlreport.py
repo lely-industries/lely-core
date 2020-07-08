@@ -67,6 +67,7 @@ class HtmlDumper:
     def dump_rule(self, idx, rule):
         self.output.writelines([
             f"<h1>{idx}. {rule['name']}</h1>",
+            f"<br/>Severity: {rule['severity']}<br/><br/>\n",
             rule['htmlDesc'],
             "<br/><br/><br/>\n",
         ])
