@@ -78,6 +78,11 @@ LoopDriver::LoopDriver(AsyncMaster& master, uint8_t id)
 
 LoopDriver::~LoopDriver() = default;
 
+void
+LoopDriver::Join() {
+  impl_->Join();
+}
+
 ev::Future<void, void>
 LoopDriver::AsyncStoppped() noexcept {
   return impl_->stopped.get_future();
@@ -110,11 +115,6 @@ LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) noexcept {
   } else if (!ec && GetLoop().stopped()) {
     ec = ::std::make_error_code(::std::errc::operation_canceled);
   }
-}
-
-void
-LoopDriver::Join() {
-  impl_->Join();
 }
 
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
