@@ -28,11 +28,17 @@
 #include <float.h>
 #include <stddef.h>
 
+/// The default value of a boolean truth value (false).
+#define CO_BOOLEAN_INIT 0
+
 /// The minimum value of a boolean truth value (false).
 #define CO_BOOLEAN_MIN 0
 
 /// The maximum value of a boolean truth value (true).
 #define CO_BOOLEAN_MAX 1
+
+/// The default value of an 8-bit signed integer.
+#define CO_INTEGER8_INIT 0
 
 /// The minimum value of an 8-bit signed integer.
 #define CO_INTEGER8_MIN INT8_MIN
@@ -40,11 +46,17 @@
 /// The maximum value of an 8-bit signed integer.
 #define CO_INTEGER8_MAX INT8_MAX
 
+/// The default value of a 16-bit signed integer.
+#define CO_INTEGER16_INIT 0
+
 /// The minimum value of a 16-bit signed integer.
 #define CO_INTEGER16_MIN INT16_MIN
 
 /// The maximum value of a 16-bit signed integer.
 #define CO_INTEGER16_MAX INT16_MAX
+
+/// The default value of a 32-bit signed integer.
+#define CO_INTEGER32_INIT 0
 
 /// The minimum value of a 32-bit signed integer.
 #define CO_INTEGER32_MIN INT32_MIN
@@ -52,11 +64,17 @@
 /// The maximum value of a 32-bit signed integer.
 #define CO_INTEGER32_MAX INT32_MAX
 
+/// The default value of an 8-bit unsigned integer.
+#define CO_UNSIGNED8_INIT 0
+
 /// The minimum value of an 8-bit unsigned integer.
 #define CO_UNSIGNED8_MIN 0
 
 /// The maximum value of an 8-bit unsigned integer.
 #define CO_UNSIGNED8_MAX UINT8_MAX
+
+/// The default value of a 16-bit unsigned integer.
+#define CO_UNSIGNED16_INIT 0
 
 /// The minimum value of a 16-bit unsigned integer.
 #define CO_UNSIGNED16_MIN 0
@@ -64,17 +82,56 @@
 /// The maximum value of a 16-bit unsigned integer.
 #define CO_UNSIGNED16_MAX UINT16_MAX
 
+/// The default value of a 32-bit unsigned integer.
+#define CO_UNSIGNED32_INIT 0
+
 /// The minimum value of a 32-bit unsigned integer.
 #define CO_UNSIGNED32_MIN 0
 
 /// The maximum value of a 32-bit unsigned integer.
 #define CO_UNSIGNED32_MAX UINT32_MAX
 
+/// The default value of a 32-bit IEEE-754 floating-point number.
+#define CO_REAL32_INIT 0
+
 /// The minimum value of a 32-bit IEEE-754 floating-point number.
 #define CO_REAL32_MIN (-FLT_MAX)
 
 /// The maximum value of a 32-bit IEEE-754 floating-point number.
 #define CO_REAL32_MAX FLT_MAX
+
+/// The default value of an array of visible characters.
+#define CO_VISIBLE_STRING_INIT NULL
+
+// The "minimum value" of an array of visible characters.
+#define CO_VISIBLE_STRING_MIN CO_VISIBLE_STRING_INIT
+
+// The "maximum value" of an array of visible characters.
+#define CO_VISIBLE_STRING_MAX CO_VISIBLE_STRING_INIT
+
+/// The default value of an array of octets.
+#define CO_OCTET_STRING_INIT NULL
+
+// The "minimum value" of an array of octets.
+#define CO_OCTET_STRING_MIN CO_OCTET_STRING_INIT
+
+// The "maximum value" of an array of octets.
+#define CO_OCTET_STRING_MAX CO_OCTET_STRING_INIT
+
+/// The default value of an array of (16-bit) Unicode characters.
+#define CO_UNICODE_STRING_INIT NULL
+
+// The "minimum value" of an array of (16-bit) Unicode characters.
+#define CO_UNICODE_STRING_MIN CO_UNICODE_STRING_INIT
+
+// The "maximum value" of an array of (16-bit) Unicode characters.
+#define CO_UNICODE_STRING_MAX CO_UNICODE_STRING_INIT
+
+/// The default value of a 48-bit structure representing the absolute time.
+#define CO_TIME_OF_DAY_INIT \
+	{ \
+		0, 0 \
+	}
 
 /// The minimum value of a 48-bit structure representing the absolute time.
 #define CO_TIME_OF_DAY_MIN \
@@ -88,11 +145,26 @@
 		UINT32_C(0x0fffffff), UINT16_MAX \
 	}
 
+/// The default value of a 48-bit structure representing a time difference.
+#define CO_TIME_DIFF_INIT CO_TIME_OF_DAY_INIT
+
 /// The minimum value of a 48-bit structure representing a time difference.
 #define CO_TIME_DIFF_MIN CO_TIME_OF_DAY_MIN
 
 /// The maximum value of a 48-bit structure representing a time difference.
 #define CO_TIME_DIFF_MAX CO_TIME_OF_DAY_MAX
+
+/// The default value of an arbitrary large block of data..
+#define CO_DOMAIN_INIT NULL
+
+// The "minimum value" of an arbitrary large block of data..
+#define CO_DOMAIN_MIN CO_DOMAIN_INIT
+
+// The "maximum value" of an arbitrary large block of data..
+#define CO_DOMAIN_MAX CO_DOMAIN_INIT
+
+/// The default value of a 24-bit signed integer (encoded as an int32_t).
+#define CO_INTEGER24_INIT 0
 
 /// The minimum value of a 24-bit signed integer (encoded as an int32_t).
 #define CO_INTEGER24_MIN (-INT32_C(0x00800000))
@@ -100,11 +172,17 @@
 /// The maximum value of a 24-bit signed integer (encoded as an int32_t).
 #define CO_INTEGER24_MAX INT32_C(0x007fffff)
 
+/// The default value of a 64-bit IEEE-754 floating-point number.
+#define CO_REAL64_INIT 0
+
 /// The minimum value of a 64-bit IEEE-754 floating-point number.
 #define CO_REAL64_MIN (-DBL_MAX)
 
 /// The maximum value of a 64-bit IEEE-754 floating-point number.
 #define CO_REAL64_MAX DBL_MAX
+
+/// The default value of a 40-bit signed integer (encoded as an int64_t).
+#define CO_INTEGER40_INIT 0
 
 /// The minimum value of a 40-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER40_MIN (-INT64_C(0x0000008000000000))
@@ -112,11 +190,17 @@
 /// The maximum value of a 40-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER40_MAX INT64_C(0x0000007fffffffff)
 
+/// The default value of a 48-bit signed integer (encoded as an int64_t).
+#define CO_INTEGER48_INIT 0
+
 /// The minimum value of a 48-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER48_MIN (-INT64_C(0x0000800000000000))
 
 /// The maximum value of a 48-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER48_MAX INT64_C(0x00007fffffffffff)
+
+/// The default value of a 56-bit signed integer (encoded as an int64_t).
+#define CO_INTEGER56_INIT 0
 
 /// The minimum value of a 56-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER56_MIN (-INT64_C(0x0080000000000000))
@@ -124,11 +208,17 @@
 /// The maximum value of a 56-bit signed integer (encoded as an int64_t).
 #define CO_INTEGER56_MAX INT64_C(0x007fffffffffffff)
 
+/// The default value of a 64-bit signed integer.
+#define CO_INTEGER64_INIT 0
+
 /// The minimum value of a 64-bit signed integer.
 #define CO_INTEGER64_MIN INT64_MIN
 
 /// The maximum value of a 64-bit signed integer.
 #define CO_INTEGER64_MAX INT64_MAX
+
+/// The default value of a 24-bit unsigned integer (encoded as a uint32_t).
+#define CO_UNSIGNED24_INIT 0
 
 /// The minimum value of a 24-bit unsigned integer (encoded as a uint32_t).
 #define CO_UNSIGNED24_MIN 0
@@ -136,11 +226,17 @@
 /// The maximum value of a 24-bit unsigned integer (encoded as a uint32_t).
 #define CO_UNSIGNED24_MAX UINT32_C(0x00ffffff)
 
+/// The default value of a 40-bit unsigned integer (encoded as a uint64_t).
+#define CO_UNSIGNED40_INIT 0
+
 /// The minimum value of a 40-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED40_MIN 0
 
 /// The maximum value of a 40-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED40_MAX UINT64_C(0x000000ffffffffff)
+
+/// The default value of a 48-bit unsigned integer (encoded as a uint64_t).
+#define CO_UNSIGNED48_INIT 0
 
 /// The minimum value of a 48-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED48_MIN 0
@@ -148,11 +244,17 @@
 /// The maximum value of a 48-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED48_MAX UINT64_C(0x0000ffffffffffff)
 
+/// The default value of a 56-bit unsigned integer (encoded as a uint64_t).
+#define CO_UNSIGNED56_INIT 0
+
 /// The minimum value of a 56-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED56_MIN 0
 
 /// The maximum value of a 56-bit unsigned integer (encoded as a uint64_t).
 #define CO_UNSIGNED56_MAX UINT64_C(0x00ffffffffffffff)
+
+/// The default value of a 64-bit unsigned integer.
+#define CO_UNSIGNED64_INIT 0
 
 /// The minimum value of a 64-bit unsigned integer.
 #define CO_UNSIGNED64_MIN 0
