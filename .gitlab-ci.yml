@@ -13,6 +13,13 @@ stages:
   - test
   - deploy
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "web"
+
 .docker: &docker
   stage: docker
   tags:
@@ -28,7 +35,13 @@ stages:
         --build-arg REGISTRY=$REGISTRY
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/$NAME/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+      - docker/**/*
+      when: always
+    - when: manual
+      allow_failure: true
 
 .build: &build
   stage: build
@@ -207,6 +220,18 @@ test:gcc:no-master:
     - build:gcc:no-master
   <<: *test
 
+build:gcc:ecss:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --enable-ecss-compliance
+
+test:gcc:ecss:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:ecss
+  <<: *test
+
 .docker-mingw-w64: &docker-mingw-w64
   <<: *docker
   script:
@@ -365,6 +390,35 @@ cpplint:
         --extensions=cpp
         $(find include -name *.hpp)
         $(find src -name *.cpp)
+        $(find unit-tests -name *.cpp -o -name *.hpp)
+
+docker:clang-format:
+  <<: *docker
+  variables:
+    NAME: clang-format
+    TAG: bullseye
+
+clang-format:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/clang-format:bullseye
+  script:
+    - clang-format-10
+        -n
+        --Werror
+        $(find include -name *.h)
+        $(find src -name *.c)
+        $(find unit-tests -name *.cpp -o -name *.hpp)
+# TODO - a lot of C++ code changes after clang-format run
+#    - rm .clang-format
+#    - ln -s .clang-format.cpp .clang-format
+#    - clang-format-10
+#        -n
+#        --Werror
+#        $(find include -name *.hpp)
+#        $(find src -name *.cpp)
 
 docker:valgrind:
   <<: *docker
@@ -406,7 +460,7 @@ lcov:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --enable-code-coverage --disable-shared
+    - ./configure --enable-code-coverage --disable-shared $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - make
     - make check-code-coverage
     - lcov --summary coverage.info --rc lcov_branch_coverage=1
@@ -430,7 +484,7 @@ scan-build:
   dependencies: []
   script:
     - autoreconf -i
-    - scan-build ./configure --disable-python
+    - scan-build ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - scan-build --keep-cc -o ./scan-build make check
   artifacts:
     when: on_failure
@@ -454,18 +508,25 @@ cppcheck-unix64:
   script:
     - autoreconf -i
     - ./configure --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
         -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/include -I. -I./include
+        --quiet
+        -I. -I./include
         --inline-suppr
         --platform=unix64
-        --quiet
         --std=c11 --std=c++11
+        --library=std --library=gnu
         --suppressions-list=suppressions.txt
+        -isrc/io2/win32
         include src
+  artifacts:
+    paths:
+      - cppcheck-rules.md
+    expire_in: 1 week
 
 docker:cppcheck-win64:
   <<: *docker
@@ -478,25 +539,32 @@ cppcheck-win64:
   tags:
     - docker
     - linux
-  image: $REGISTRY/cppcheck-unix64:bullseye
+  image: $REGISTRY/cppcheck-win64:bullseye
   dependencies: []
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
-        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -D__MINGW64__=1 -DHAVE_CONFIG_H
+        -U__linux__
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/x86_64-w64-mingw32/include -I. -I./include
+        --quiet
+        -I. -I./include
         --inline-suppr
         --platform=win64
-        --quiet
         --std=c11 --std=c++11
+        --library=std --library=gnu --library=windows
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
+        -isrc/io2/linux
         include src
-  when: manual
+  artifacts:
+    paths:
+      - cppcheck-rules.md
+    expire_in: 1 week
 
 docker:coverity:
   <<: *docker
@@ -517,7 +585,7 @@ coverity:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --disable-python
+    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - cov-build --dir cov-int make check
   after_script:
     - tar caf $CI_PROJECT_NAME.xz cov-int
@@ -527,7 +595,11 @@ coverity:
         --form version="$(git describe --abbrev=0 --tags | sed s/^v//)"
         --form description="$CI_COMMIT_REF_NAME"
         https://scan.coverity.com/builds?project=$COVERITY_PROJECT
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: manual
+      allow_failure: true
 
 docker:sonarcloud:
   <<: *docker
@@ -550,8 +622,9 @@ sonarcloud:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
     GIT_DEPTH: "0"
   script:
+    - python3 .sonar/sonarcloud-rules-htmlreport.py ${SONAR_TOKEN} ${SONAR_ORGANIZATION} ${SONAR_PROJECT_KEY}
     - autoreconf -i
-    - ./configure --disable-python
+    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - /opt/sonar-build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output make check
     - /opt/sonar-scanner/bin/sonar-scanner
            -Dsonar.host.url="${SONAR_HOST_URL}"
@@ -566,12 +639,20 @@ sonarcloud:
            -Dsonar.sources=include,src,tools
            -Dsonar.tests=test,unit-tests
            -Dsonar.cfamily.build-wrapper-output=bw-output
-  when: manual
+           -Dsonar.cfamily.threads=1
+           -Dsonar.cfamily.cache.enabled=false
+  artifacts:
+    paths:
+      - sonar-rules.html
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: manual
+      allow_failure: true
 
 pages:
   stage: deploy
-  only:
-    - master
   tags:
     - docker
     - linux
@@ -587,3 +668,7 @@ pages:
     paths:
       - public
     expire_in: 1 weeks
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: never

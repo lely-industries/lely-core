@@ -321,6 +321,7 @@ io_sigset_handler(int signo)
 	EnterCriticalSection(&io_sigset_shared.CriticalSection);
 	struct io_sigset_node *list = io_sigset_shared.list[signo - 1];
 	for (struct io_sigset_node *node = list; node; node = node->next) {
+		// cppcheck-suppress nullPointer
 		struct io_sigset_impl *impl = structof(
 				node, struct io_sigset_impl, nodes[signo - 1]);
 		assert(node->watched);

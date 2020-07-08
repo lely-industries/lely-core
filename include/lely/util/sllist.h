@@ -25,6 +25,7 @@
 
 #include <lely/features.h>
 
+#include <assert.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_SLLIST_INLINE
@@ -177,24 +178,32 @@ struct slnode *sllist_last(const struct sllist *list);
 inline void
 slnode_init(struct slnode *node)
 {
+	assert(node);
+
 	node->next = NULL;
 }
 
 inline void
 sllist_init(struct sllist *list)
 {
+	assert(list);
+
 	*(list->plast = &list->first) = NULL;
 }
 
 inline int
 sllist_empty(const struct sllist *list)
 {
+	assert(list);
+
 	return !list->first;
 }
 
 inline size_t
 sllist_size(const struct sllist *list)
 {
+	assert(list);
+
 	size_t size = 0;
 	sllist_foreach (list, node)
 		size++;
@@ -204,6 +213,9 @@ sllist_size(const struct sllist *list)
 inline void
 sllist_push_front(struct sllist *list, struct slnode *node)
 {
+	assert(list);
+	assert(node);
+
 	if (!(node->next = list->first))
 		list->plast = &node->next;
 	list->first = node;
@@ -212,6 +224,9 @@ sllist_push_front(struct sllist *list, struct slnode *node)
 inline void
 sllist_push_back(struct sllist *list, struct slnode *node)
 {
+	assert(list);
+	assert(node);
+
 	*list->plast = node;
 	list->plast = &(*list->plast)->next;
 	*list->plast = NULL;
@@ -220,6 +235,8 @@ sllist_push_back(struct sllist *list, struct slnode *node)
 inline struct slnode *
 sllist_pop_front(struct sllist *list)
 {
+	assert(list);
+
 	struct slnode *node = list->first;
 	if (node) {
 		if (!(list->first = node->next))
@@ -232,6 +249,9 @@ sllist_pop_front(struct sllist *list)
 inline struct sllist *
 sllist_append(struct sllist *dst, struct sllist *src)
 {
+	assert(dst);
+	assert(src);
+
 	if (src->first) {
 		*dst->plast = src->first;
 		dst->plast = src->plast;
@@ -243,6 +263,8 @@ sllist_append(struct sllist *dst, struct sllist *src)
 inline struct slnode *
 sllist_first(const struct sllist *list)
 {
+	assert(list);
+
 	return list->first;
 }
 

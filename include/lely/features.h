@@ -198,7 +198,13 @@
 #define _Alignof(x) __alignof(x)
 #else
 #include <stddef.h>
-#define _Alignof(type)(offsetof(struct { char c; type x; }, x))
+#define _Alignof(type) \
+	(offsetof( \
+			struct { \
+				char c; \
+				type x; \
+			}, \
+			x))
 #endif
 #endif
 

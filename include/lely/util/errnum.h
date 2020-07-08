@@ -36,7 +36,7 @@
  * and platform-independent error numbers can be  done with errc2num() and
  * errnum2c().
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -108,7 +108,7 @@ enum errnum {
 	ERRNUM_DESTADDRREQ,
 	/// Mathematics argument out of domain of function.
 	ERRNUM_DOM,
-	// ERRNUM_DQUOT,
+	// Reserved by POSIX: EDQUOT
 	/// File exists.
 	ERRNUM_EXIST,
 	/// Bad address.
@@ -141,7 +141,7 @@ enum errnum {
 	ERRNUM_MLINK,
 	/// Message too large.
 	ERRNUM_MSGSIZE,
-	// ERRNUM_MULTIHOP,
+	// Reserved by POSIX: EMULTIHOP
 	/// Filename too long.
 	ERRNUM_NAMETOOLONG,
 	/// Network is down.
@@ -164,7 +164,7 @@ enum errnum {
 	ERRNUM_NOEXEC,
 	/// No locks available.
 	ERRNUM_NOLCK,
-	// ERRNUM_NOLINK,
+	// Reserved by POSIX: ENOLINK
 	/// Not enough space.
 	ERRNUM_NOMEM,
 	/// No message of the desired type.
@@ -219,7 +219,7 @@ enum errnum {
 	ERRNUM_SPIPE,
 	/// No such process.
 	ERRNUM_SRCH,
-	// ERRNUM_STALE,
+	// Reserved by POSIX: ESTALE
 	/// Stream ioctl() timeout.
 	ERRNUM_TIME,
 	/// Connection timed out.

@@ -25,7 +25,7 @@ RUN apt-get update -q \
         winehq-stable \
     && rm -rf /var/lib/apt/lists/*
 
-ENV WINEPATH Z:\\usr\\lib\\gcc\\${ARCH}-w64-mingw32\\9.3-posix\;Z:\\usr\\${ARCH}-w64-mingw32\\lib
+ENV WINEPATH Z:\\usr\\lib\\gcc\\${ARCH}-w64-mingw32\\10-posix\;Z:\\usr\\${ARCH}-w64-mingw32\\lib
 
 RUN wineboot -i
 
@@ -36,7 +36,7 @@ RUN apt-get update -q \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
+RUN git clone --branch v4.0 --depth 1 https://github.com/cpputest/cpputest.git \
     && cd cpputest/cpputest_build \
     && autoreconf .. -i \
     && ../configure --host=$ARCH-w64-mingw32 --disable-memory-leak-detection \

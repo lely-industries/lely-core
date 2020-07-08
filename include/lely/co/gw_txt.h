@@ -131,8 +131,8 @@ void co_gw_txt_set_recv_func(
  *
  * @param gw    a pointer to a CANopen ASCII gateway.
  * @param begin a pointer to the start of the buffer containing the request.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character parsed. On

@@ -1,5 +1,6 @@
 #include <lely/co/def/basic.def>
 
+// LCOV_EXCL_START
 // An array of visible characters.
 LELY_CO_DEFINE_TYPE(VISIBLE_STRING, visible_string, vs, char *)
 // An array of octets.
@@ -12,3 +13,4 @@ LELY_CO_DEFINE_TYPE(TIME_OF_DAY, time_of_day, t, struct __co_time_of_day)
 LELY_CO_DEFINE_TYPE(TIME_DIFF, time_diff, td, struct __co_time_diff)
 // An arbitrary large block of data.
 LELY_CO_DEFINE_TYPE(DOMAIN, domain, dom, void *)
+// LCOV_EXCL_STOP
