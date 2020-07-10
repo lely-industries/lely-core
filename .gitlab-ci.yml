@@ -522,7 +522,7 @@ cppcheck-unix64:
         --library=std --library=gnu
         --suppressions-list=suppressions.txt
         -isrc/io2/win32
-        include src
+        include src unit-tests
   artifacts:
     paths:
       - cppcheck-rules.md
@@ -560,7 +560,7 @@ cppcheck-win64:
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
         -isrc/io2/linux
-        include src
+        include src unit-tests
   artifacts:
     paths:
       - cppcheck-rules.md
