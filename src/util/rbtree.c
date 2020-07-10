@@ -4,7 +4,7 @@
  *
  * @see lely/util/rbtree.h
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -128,6 +128,7 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 		parent->left = node;
 	else
 		parent->right = node;
+	tree->num_nodes++;
 	// Initialize the node.
 	rbnode_set_parent(node, parent);
 	rbnode_set_color(node, 1);
@@ -180,8 +181,6 @@ rbtree_insert(struct rbtree *tree, struct rbnode *node)
 		parent = rbnode_get_parent(node);
 	}
 	rbnode_set_color(tree->root, 0);
-
-	tree->num_nodes++;
 }
 
 void
@@ -231,6 +230,7 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 		rbnode_set_parent(next->left, next);
 		node = tmp;
 	}
+	tree->num_nodes--;
 	// Fix violations of the red-black properties. This can only occur if
 	// the removed node (or its successor) was black.
 	if (color)
@@ -300,8 +300,6 @@ rbtree_remove(struct rbtree *tree, struct rbnode *node)
 		}
 	}
 	rbnode_set_color(node, 0);
-
-	tree->num_nodes--;
 }
 
 struct rbnode *
