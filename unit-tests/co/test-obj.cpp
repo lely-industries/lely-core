@@ -366,8 +366,7 @@ TEST(CO_Obj, CoObjAddressofVal_NoVal) {
 
 TEST(CO_ObjSub, CoObjAddressofVal) {
   const co_unsigned16_t val = 0x4242;
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE),
-              co_obj_set_val(obj, SUB_IDX, &val, co_type_sizeof(SUB_DEFTYPE)));
+  CHECK_EQUAL(sizeof(val), co_obj_set_val(obj, SUB_IDX, &val, sizeof(val)));
 
   CHECK(co_obj_addressof_val(obj) != nullptr);
 }
@@ -393,7 +392,7 @@ TEST(CO_Obj, CoObjGetVal_SubNotFound) {
 TEST(CO_Obj, CoObjSetVal_SubNotFound) {
   const co_unsigned16_t val = 0x4242;
 
-  const auto ret = co_obj_set_val(obj, 0x00, &val, co_type_sizeof(SUB_DEFTYPE));
+  const auto ret = co_obj_set_val(obj, 0x00, &val, sizeof(val));
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -402,10 +401,9 @@ TEST(CO_Obj, CoObjSetVal_SubNotFound) {
 TEST(CO_ObjSub, CoObjSetVal) {
   const co_unsigned16_t val = 0x4242;
 
-  const auto bytes_written =
-      co_obj_set_val(obj, SUB_IDX, &val, co_type_sizeof(SUB_DEFTYPE));
+  const auto bytes_written = co_obj_set_val(obj, SUB_IDX, &val, sizeof(val));
 
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), bytes_written);
+  CHECK_EQUAL(sizeof(val), bytes_written);
   CHECK_EQUAL(val, co_obj_get_val_i16(obj, SUB_IDX));
 }
 
@@ -430,7 +428,7 @@ TEST(CO_ObjSub, CoObjSetVal) {
 \
     const auto ret = co_obj_set_val_##c(obj, SUB_IDX, val); \
 \
-    CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), ret); \
+    CHECK_EQUAL(sizeof(val), ret); \
     CHECK_EQUAL(val, co_obj_get_val_##c(obj, SUB_IDX)); \
   }
 #include <lely/co/def/basic.def>
@@ -709,9 +707,9 @@ TEST(CO_Sub, CoSubGetMin_Null) {
 TEST(CO_Sub, CoSubSetMin) {
   const CO_ObjBase::sub_type min_val = 0x42;
 
-  const auto ret = co_sub_set_min(sub, &min_val, co_type_sizeof(SUB_DEFTYPE));
+  const auto ret = co_sub_set_min(sub, &min_val, sizeof(min_val));
 
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), ret);
+  CHECK_EQUAL(sizeof(min_val), ret);
   CHECK_EQUAL(min_val,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_min(sub)));
 }
@@ -742,9 +740,9 @@ TEST(CO_Sub, CoSubGetMax_Null) {
 TEST(CO_Sub, CoSubSetMax) {
   const CO_ObjBase::sub_type max_val = 0x42;
 
-  const auto ret = co_sub_set_max(sub, &max_val, co_type_sizeof(SUB_DEFTYPE));
+  const auto ret = co_sub_set_max(sub, &max_val, sizeof(max_val));
 
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), ret);
+  CHECK_EQUAL(sizeof(max_val), ret);
   CHECK_EQUAL(max_val,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_max(sub)));
 }
@@ -779,9 +777,9 @@ TEST(CO_Sub, CoSubGetDef_Null) {
 TEST(CO_Sub, CoSubSetDef) {
   const CO_ObjBase::sub_type def_val = 0x42;
 
-  const auto ret = co_sub_set_def(sub, &def_val, co_type_sizeof(SUB_DEFTYPE));
+  const auto ret = co_sub_set_def(sub, &def_val, sizeof(def_val));
 
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), ret);
+  CHECK_EQUAL(sizeof(def_val), ret);
   CHECK_EQUAL(def_val,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_def(sub)));
 }
@@ -814,9 +812,9 @@ TEST(CO_Sub, CoSubGetVal_Null) {
 TEST(CO_ObjSub, CoSubSetVal) {
   const CO_ObjBase::sub_type val = 0x42;
 
-  const auto ret = co_sub_set_val(sub, &val, co_type_sizeof(SUB_DEFTYPE));
+  const auto ret = co_sub_set_val(sub, &val, sizeof(val));
 
-  CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), ret);
+  CHECK_EQUAL(sizeof(val), ret);
   CHECK_EQUAL(val,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_val(sub)));
 }
@@ -865,7 +863,7 @@ TEST(CO_ObjSub, CoSubSetVal) {
 \
     const auto ret = co_sub_set_val_##c(sub, val); \
 \
-    CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), ret); \
+    CHECK_EQUAL(sizeof(val), ret); \
     CHECK_EQUAL(val, co_sub_get_val_##c(sub)); \
   }
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
@@ -889,8 +887,8 @@ TEST(CO_Sub, CoSubChkVal_BadRange) {
   const CO_ObjBase::sub_type val = 0x0000;
   const CO_ObjBase::sub_type min_val = 0x4242;
   const CO_ObjBase::sub_type max_val = min_val - 1;
-  co_sub_set_min(sub, &min_val, co_type_sizeof(SUB_DEFTYPE));
-  co_sub_set_max(sub, &max_val, co_type_sizeof(SUB_DEFTYPE));
+  co_sub_set_min(sub, &min_val, sizeof(min_val));
+  co_sub_set_max(sub, &max_val, sizeof(max_val));
 
   CHECK_EQUAL(CO_SDO_AC_PARAM_RANGE, co_sub_chk_val(sub, SUB_DEFTYPE, &val));
 }
@@ -898,7 +896,7 @@ TEST(CO_Sub, CoSubChkVal_BadRange) {
 TEST(CO_Sub, CoSubChkVal_OverMax) {
   const CO_ObjBase::sub_type max_val = 0x0042;
   const CO_ObjBase::sub_type val = max_val + 1;
-  co_sub_set_max(sub, &max_val, co_type_sizeof(SUB_DEFTYPE));
+  co_sub_set_max(sub, &max_val, sizeof(max_val));
 
   CHECK_EQUAL(CO_SDO_AC_PARAM_HI, co_sub_chk_val(sub, SUB_DEFTYPE, &val));
 }
@@ -906,7 +904,7 @@ TEST(CO_Sub, CoSubChkVal_OverMax) {
 TEST(CO_Sub, CoSubChkVal_UnderMin) {
   const CO_ObjBase::sub_type min_val = 0x0042;
   const CO_ObjBase::sub_type val = min_val - 1;
-  co_sub_set_min(sub, &min_val, co_type_sizeof(SUB_DEFTYPE));
+  co_sub_set_min(sub, &min_val, sizeof(min_val));
 
   CHECK_EQUAL(CO_SDO_AC_PARAM_LO, co_sub_chk_val(sub, SUB_DEFTYPE, &val));
 }
@@ -915,8 +913,8 @@ TEST(CO_Sub, CoSubChkVal) {
   const CO_ObjBase::sub_type val = 0x0042;
   const CO_ObjBase::sub_type min_val = 0x0000;
   const CO_ObjBase::sub_type max_val = 0x4242;
-  co_sub_set_min(sub, &min_val, co_type_sizeof(SUB_DEFTYPE));
-  co_sub_set_max(sub, &max_val, co_type_sizeof(SUB_DEFTYPE));
+  co_sub_set_min(sub, &min_val, sizeof(min_val));
+  co_sub_set_max(sub, &max_val, sizeof(max_val));
 
   CHECK_EQUAL(0, co_sub_chk_val(sub, SUB_DEFTYPE, &val));
 }
