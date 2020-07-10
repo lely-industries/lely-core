@@ -22,28 +22,38 @@
 
 #include "lelyco-val.hpp"
 
-/* co_val_read() and co_val_write() overrides */
 #ifdef HAVE_LELY_OVERRIDE
 
 #include <dlfcn.h>
 
+#include <lely/co/type.h>
+
+/* 1. Initialize valid calls global variable for each function. */
 int LelyOverride::co_val_read_vc = LelyOverride::AllCallsValid;
 int LelyOverride::co_val_write_vc = LelyOverride::AllCallsValid;
+int LelyOverride::co_val_make_vc = LelyOverride::AllCallsValid;
 
 extern "C" {
 
 #if LELY_ENABLE_SHARED
+/* 2a. Define function type */
 typedef size_t co_val_read_t(co_unsigned16_t, void*, const uint_least8_t*,
                              const uint_least8_t*);
 typedef size_t co_val_write_t(co_unsigned16_t, const void*, uint_least8_t*,
                               uint_least8_t*);
+typedef size_t co_val_make_t(co_unsigned16_t, void*, const void*, size_t);
 #else
+/* 2b. Extern "real" function signature. */
 extern size_t __real_co_val_read(co_unsigned16_t type, void* val,
                                  const uint_least8_t* begin,
                                  const uint_least8_t* end);
 extern size_t __real_co_val_write(co_unsigned16_t type, const void* val,
                                   uint_least8_t* begin, uint_least8_t* end);
+extern size_t __real_co_val_make(co_unsigned16_t type, void* val,
+                                 const void* ptr, size_t n);
 #endif
+
+/* 3. Override function definition with both exact and "wrap" version. */
 
 #if LELY_ENABLE_SHARED
 size_t
@@ -93,8 +103,28 @@ __wrap_co_val_write(co_unsigned16_t type, const void* val, uint_least8_t* begin,
 #endif
 }
 
-}  // extern "C"
+#if LELY_ENABLE_SHARED
+size_t
+co_val_make(co_unsigned16_t type, void* val, const void* ptr, size_t n)
+#else
+size_t
+__wrap_co_val_make(co_unsigned16_t type, void* val, const void* ptr, size_t n)
+#endif
+{
+  if (LelyOverride::co_val_make_vc == LelyOverride::NoneCallsValid) return 0;
 
-/* end of co_val_read() and co_val_write() overrides */
+  if (LelyOverride::co_val_make_vc > LelyOverride::NoneCallsValid)
+    --LelyOverride::co_val_make_vc;
+
+#if LELY_ENABLE_SHARED
+  co_val_make_t* const orig_co_val_make =
+      reinterpret_cast<co_val_make_t*>(dlsym(RTLD_NEXT, "co_val_make"));
+  return orig_co_val_make(type, val, ptr, n);
+#else
+  return __real_co_val_make(type, val, ptr, n);
+#endif
+}
+
+}  // extern "C"
 
 #endif  // HAVE_LELY_OVERRIDE

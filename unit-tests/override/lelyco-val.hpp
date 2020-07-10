@@ -27,8 +27,7 @@
 
 #ifdef HAVE_LELY_OVERRIDE
 
-#include <lely/co/type.h>
-
+/* 0. Declare valid calls counter for the overridden function. */
 namespace LelyOverride {
 /**
  * Number of valid calls to co_val_read().
@@ -39,6 +38,11 @@ extern int co_val_read_vc;
  * Number of valid calls to co_val_write().
  */
 extern int co_val_write_vc;
+
+/**
+ * Number of valid calls to co_val_make().
+ */
+extern int co_val_make_vc;
 
 }  // namespace LelyOverride
 

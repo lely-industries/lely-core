@@ -88,6 +88,7 @@ bin += unit-test-co
 src_co_tests =
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-dev.cpp
+src_co_tests += co/test-obj.cpp
 src_co_tests += co/test-type.cpp
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
@@ -99,7 +100,7 @@ unit_test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
 unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
-unit_test_co_LDFLAGS = -Wl,--wrap=co_val_read -Wl,--wrap=co_val_write
+unit_test_co_LDFLAGS = -Wl,--wrap=co_val_read -Wl,--wrap=co_val_write -Wl,--wrap=co_val_make
 endif
 else
 unit_test_co_LDFLAGS = -all-static
