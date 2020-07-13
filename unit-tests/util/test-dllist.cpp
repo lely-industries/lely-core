@@ -25,7 +25,7 @@
 #include <lely/util/dllist.h>
 
 TEST_GROUP(Util_Dllist) {
-  static const size_t NODES_NUM = 10;
+  static const size_t NODES_NUM = 10U;
   dlnode nodes[NODES_NUM];
   dllist list;
 
@@ -37,7 +37,7 @@ TEST_GROUP(Util_Dllist) {
 
   TEST_SETUP() {
     dllist_init(&list);
-    for (size_t i = 0; i < NODES_NUM; i++) {
+    for (size_t i = 0U; i < NODES_NUM; i++) {
       dlnode_init(&nodes[i]);
     }
   }
@@ -62,34 +62,34 @@ TEST(Util_Dllist, DllistEmpty_IsEmpty) { CHECK_EQUAL(1, dllist_empty(&list)); }
 TEST(Util_Dllist, DllistEmpty_NotEmpty) {
   dllist_push_front(&list, &nodes[0]);
 
-  CHECK_EQUAL(0, dllist_empty(&list));
+  CHECK_EQUAL(0U, dllist_empty(&list));
 }
 
-TEST(Util_Dllist, DllistSize_IsEmpty) { CHECK_EQUAL(0, dllist_size(&list)); }
+TEST(Util_Dllist, DllistSize_IsEmpty) { CHECK_EQUAL(0U, dllist_size(&list)); }
 
 TEST(Util_Dllist, DllistSize_OneAdded) {
   dllist_push_front(&list, &nodes[0]);
 
-  CHECK_EQUAL(1, dllist_size(&list));
+  CHECK_EQUAL(1U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistSize_ManyAdded) {
   dllist_push_front(&list, &nodes[0]);
   dllist_push_front(&list, &nodes[1]);
 
-  CHECK_EQUAL(2, dllist_size(&list));
+  CHECK_EQUAL(2U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopFront_Empty) {
   POINTERS_EQUAL(nullptr, dllist_pop_front(&list));
-  CHECK_EQUAL(0, dllist_size(&list));
+  CHECK_EQUAL(0U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopFront_OneAdded) {
   dllist_push_front(&list, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], dllist_pop_front(&list));
-  CHECK_EQUAL(0, dllist_size(&list));
+  CHECK_EQUAL(0U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopFront_ManyAdded) {
@@ -97,19 +97,19 @@ TEST(Util_Dllist, DllistPopFront_ManyAdded) {
   dllist_push_front(&list, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[1], dllist_pop_front(&list));
-  CHECK_EQUAL(1, dllist_size(&list));
+  CHECK_EQUAL(1U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopBack_Empty) {
   POINTERS_EQUAL(nullptr, dllist_pop_back(&list));
-  CHECK_EQUAL(0, dllist_size(&list));
+  CHECK_EQUAL(0U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopBack_OneAdded) {
   dllist_push_front(&list, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], dllist_pop_back(&list));
-  CHECK_EQUAL(0, dllist_size(&list));
+  CHECK_EQUAL(0U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistPopBack_ManyAdded) {
@@ -117,7 +117,7 @@ TEST(Util_Dllist, DllistPopBack_ManyAdded) {
   dllist_push_front(&list, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[0], dllist_pop_back(&list));
-  CHECK_EQUAL(1, dllist_size(&list));
+  CHECK_EQUAL(1U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistInsertAfter_Middle) {
@@ -128,7 +128,7 @@ TEST(Util_Dllist, DllistInsertAfter_Middle) {
 
   AreNodesConnected(&nodes[0], &nodes[1]);
   AreNodesConnected(&nodes[1], &nodes[2]);
-  CHECK_EQUAL(3, dllist_size(&list));
+  CHECK_EQUAL(3U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistInsertAfter_Last) {
@@ -138,7 +138,7 @@ TEST(Util_Dllist, DllistInsertAfter_Last) {
   dllist_insert_after(&list, &nodes[1], &nodes[2]);
 
   AreNodesConnected(&nodes[1], &nodes[2]);
-  CHECK_EQUAL(3, dllist_size(&list));
+  CHECK_EQUAL(3U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistInsertBefore_Middle) {
@@ -149,7 +149,7 @@ TEST(Util_Dllist, DllistInsertBefore_Middle) {
 
   AreNodesConnected(&nodes[0], &nodes[1]);
   AreNodesConnected(&nodes[1], &nodes[2]);
-  CHECK_EQUAL(3, dllist_size(&list));
+  CHECK_EQUAL(3U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistInsertBefore_FirstNode) {
@@ -159,7 +159,7 @@ TEST(Util_Dllist, DllistInsertBefore_FirstNode) {
   dllist_insert_before(&list, &nodes[1], &nodes[0]);
 
   AreNodesConnected(&nodes[0], &nodes[1]);
-  CHECK_EQUAL(3, dllist_size(&list));
+  CHECK_EQUAL(3U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistRemove) {
@@ -169,7 +169,17 @@ TEST(Util_Dllist, DllistRemove) {
   dllist_remove(&list, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[1], dllist_first(&list));
-  CHECK_EQUAL(1, dllist_size(&list));
+  CHECK_EQUAL(1U, dllist_size(&list));
+}
+
+TEST(Util_Dllist, DllistRemove_NoPrevious) {
+  dllist_push_back(&list, &nodes[0]);
+  dllist_push_back(&list, &nodes[1]);
+
+  dllist_remove(&list, &nodes[1]);
+
+  POINTERS_EQUAL(&nodes[0], dllist_first(&list));
+  CHECK_EQUAL(1U, dllist_size(&list));
 }
 
 TEST(Util_Dllist, DllistAppend_SrcEmptyDstEmpty) {
@@ -215,6 +225,6 @@ TEST(Util_Dllist, DllistAppend_SrcManyDstMany) {
 
   POINTERS_EQUAL(&list, dllist_append(&list, &src));
 
-  CHECK_EQUAL(4, dllist_size(&list));
+  CHECK_EQUAL(4U, dllist_size(&list));
   POINTERS_EQUAL(&nodes[2], dllist_first(&list));
 }
