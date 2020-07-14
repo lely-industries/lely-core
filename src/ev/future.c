@@ -591,6 +591,7 @@ ev_promise_from_future(const ev_future_t *future)
 static void *
 ev_promise_alloc(size_t size)
 {
+	// cppcheck-suppress AssignmentAddressToInteger
 	void *ptr = calloc(1, EV_PROMISE_SIZE + size);
 	if (!ptr)
 		set_errc(errno2c(errno));

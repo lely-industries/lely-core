@@ -25,7 +25,7 @@ RUN apt-get update -q \
         winehq-stable \
     && rm -rf /var/lib/apt/lists/*
 
-ENV WINEPATH Z:\\usr\\lib\\gcc\\${ARCH}-w64-mingw32\\9.3-posix\;Z:\\usr\\${ARCH}-w64-mingw32\\lib
+ENV WINEPATH Z:\\usr\\lib\\gcc\\${ARCH}-w64-mingw32\\10-posix\;Z:\\usr\\${ARCH}-w64-mingw32\\lib
 
 RUN wineboot -i
 
