@@ -27,7 +27,7 @@
 
 #include <assert.h>
 
-/// Returns the parent of <b>node</b>, or NULL if <b>node</b> is NULL.
+/// Returns the parent of <b>node</b>. <b>node</b> MUST NOT be NULL.
 static inline struct rbnode *rbnode_get_parent(const struct rbnode *node);
 
 /**
