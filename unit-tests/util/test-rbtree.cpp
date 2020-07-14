@@ -110,14 +110,52 @@ TEST(Util_Rbtree, RbnodeInsert_ManyAdded) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
+  rbtree_insert(&tree, &nodes[2]);
+
   rbnode* root_ptr = rbtree_root(&tree);
-  POINTERS_EQUAL(&nodes[1], rbnode_next(root_ptr));
+  POINTERS_EQUAL(&nodes[2], rbnode_next(root_ptr));
+}
+
+TEST(Util_Rbtree, RbnodeInsert_ManyAddedRedAndBlackNodes) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[4]);
+
+  rbtree_insert(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(&nodes[1], rbtree_root(&tree));
+  CHECK_EQUAL(6U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbnodeInsert_NodeHasRedUncle) {
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[2], rbtree_root(&tree));
+  CHECK_EQUAL(4U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbnodeInsert_RightRotateAtGrandparent) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(&nodes[1], rbtree_root(&tree));
+  CHECK_EQUAL(7U, rbtree_size(&tree));
 }
 
 TEST(Util_Rbtree, RbnodePrev_NodeIsRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
-  POINTERS_EQUAL(nullptr, rbnode_prev(tree.root));
+  POINTERS_EQUAL(nullptr, rbnode_prev(rbtree_root(&tree)));
 }
 
 TEST(Util_Rbtree, RbnodePrev_NodeHasLeftSubtree) {
@@ -126,6 +164,7 @@ TEST(Util_Rbtree, RbnodePrev_NodeHasLeftSubtree) {
   rbtree_insert(&tree, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[1], rbnode_prev(&nodes[2]));
+  POINTERS_EQUAL(&nodes[2], rbnode_prev(&nodes[3]));
 }
 
 TEST(Util_Rbtree, RbnodePrev_NodeHasRightSubtree) {
@@ -161,6 +200,70 @@ TEST(Util_Rbtree, RbtreeRemove_ElementOneAdded) {
   rbtree_remove(&tree, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[0], rbtree_first(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRemove_BothLeftAndRightSubtree) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[5]);
+
+  rbtree_remove(&tree, &nodes[3]);
+  rbtree_remove(&tree, &nodes[5]);
+  rbtree_remove(&tree, &nodes[0]);
+  rbtree_remove(&tree, &nodes[6]);
+  rbtree_remove(&tree, &nodes[4]);
+  rbtree_remove(&tree, &nodes[2]);
+  rbtree_remove(&tree, &nodes[1]);
+
+  POINTERS_EQUAL(nullptr, rbtree_root(&tree));
+  CHECK_EQUAL(0U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRemove_NextIsNode) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+
+  rbtree_remove(&tree, &nodes[1]);
+
+  POINTERS_EQUAL(&nodes[2], rbtree_root(&tree));
+  CHECK_EQUAL(2U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRemove_FixViolations) {
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[9]);
+  rbtree_insert(&tree, &nodes[8]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[7]);
+  rbtree_insert(&tree, &nodes[6]);
+
+  rbtree_remove(&tree, &nodes[9]);
+
+  POINTERS_EQUAL(&nodes[3], rbtree_root(&tree));
+  CHECK_EQUAL(9U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {
+  rbtree_insert(&tree, &nodes[7]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[4], rbtree_root(&tree));
+  CHECK_EQUAL(8U, rbtree_size(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeLast_EmptyTree) {
