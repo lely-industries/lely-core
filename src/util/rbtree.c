@@ -338,7 +338,7 @@ static inline struct rbnode *
 rbnode_get_parent(const struct rbnode *node)
 {
 	return node ? (struct rbnode *)(node->parent & ~(uintptr_t)1)
-		    : NULL; // LCOV_EXCL_LINE
+		    : NULL; // LCOV_EXCL_BR_LINE
 }
 
 static void
