@@ -1,3 +1,4 @@
+// LCOV_EXCL_START
 // A boolean truth value.
 LELY_CO_DEFINE_TYPE(BOOLEAN, boolean, b, bool)
 // An 8-bit signed integer.
@@ -37,3 +38,4 @@ LELY_CO_DEFINE_TYPE(REAL64, real64, r64, double)
 LELY_CO_DEFINE_TYPE(INTEGER64, integer64, i64, int_least64_t)
 // A 64-bit unsigned integer.
 LELY_CO_DEFINE_TYPE(UNSIGNED64, unsigned64, u64, uint_least64_t)
+// LCOV_EXCL_STOP

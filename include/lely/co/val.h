@@ -508,9 +508,9 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
  *              domains, <b>val</b> MUST be the address of pointer. Note that
  *              this value is _not_ finalized before the read value is stored.
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer. For strings and domains, all
- *              bytes between <b>begin</b> and <b>end</b> are considered to be
- *              part of the value.
+ * @param end   a pointer to one past the last byte in the buffer. At most
+ *              `end - begin` bytes are read. For strings and domains, all
+ *              bytes are considered to be part of the value.
  *
  * @returns the number of bytes read, or 0 on error. In the latter case, the
  * error number can be obtained with get_errc().
@@ -549,9 +549,10 @@ co_unsigned32_t co_val_read_sdo(
  *              domains, this MUST be the address of pointer.
  * @param begin a pointer to the start of the buffer. If <b>begin</b> is NULL,
  *              nothing is written.
- * @param end   a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *              and the buffer is too small (i.e., `end - begin` is less than
- *              the return value), nothing is written.
+ * @param end   a pointer to one past the last byte in the buffer. If
+ *              <b>end</b> is not NULL, and the buffer is too small
+ *              (i.e., `end - begin` is less than the return value), nothing is
+ *              written.
  *
  * @returns the number of bytes that would have been written had the buffer been
  * sufficiently large, or 0 on error. In the latter case, the error number can
@@ -573,8 +574,8 @@ size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
  *              domains, <b>val</b> MUST be the address of pointer. Note that
  *              this value is _not_ finalized before the parsed value is stored.
  * @param begin a pointer to the start of the buffer.
- * @param end   a pointer to the end of the buffer (can be NULL if the buffer is
- *              null-terminated).
+ * @param end   a pointer to one past the last character in the buffer (can be
+ *              NULL if the buffer is null-terminated).
  * @param at    an optional pointer to the file location of <b>begin</b> (used
  *              for diagnostic purposes). On success, if `at != NULL`,
  *              *<b>at</b> points to one past the last character lexed. On
@@ -596,9 +597,9 @@ size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  *
  * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.

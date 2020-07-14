@@ -35,6 +35,7 @@
 
 #include <lely/features.h>
 
+#include <assert.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_PHEAP_INLINE
@@ -156,7 +157,9 @@ LELY_UTIL_PHEAP_INLINE size_t pheap_size(const struct pheap *heap);
 /**
  * Inserts a node into a pairing heap. This is an O(1) operation. This function
  * does not check whether a node with the same key already exists, or whether
- * the node is already part of another heap.
+ * the node is already part of another heap. It is the responsibility of the
+ * user to ensure that the node is not part of the heap before calling this
+ * function.
  *
  * @see pheap_remove(), pheap_find()
  */
@@ -164,9 +167,10 @@ void pheap_insert(struct pheap *heap, struct pnode *node);
 
 /**
  * Removes a node from a pairing heap. This is an (amortized) O(log(n))
- * operation.
+ * operation. It is the responsibility of the user to ensure
+ * that the node is part of the heap before calling this function.
  *
- * @see pheap_insert()
+ * @see pheap_insert(), pheap_contains()
  */
 void pheap_remove(struct pheap *heap, struct pnode *node);
 
@@ -178,6 +182,13 @@ void pheap_remove(struct pheap *heap, struct pnode *node);
  * @see pheap_insert()
  */
 struct pnode *pheap_find(const struct pheap *heap, const void *key);
+
+/**
+ * Checks if the node is present in the pairing heap.
+ *
+ * @returns 1 if found node in a heap, or 0 if not.
+ */
+int pheap_contains(const struct pheap *heap, const struct pnode *node);
 
 /**
  * Returns a pointer to the first (minimum) node in a pairing heap. This is an
@@ -195,12 +206,17 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
 inline void
 pnode_init(struct pnode *node, const void *key)
 {
+	assert(node);
+	assert(key);
+
 	node->key = key;
 }
 
 inline struct pnode *
 pnode_next(const struct pnode *node)
 {
+	assert(node);
+
 	if (node->child)
 		return node->child;
 	do {
@@ -213,6 +229,9 @@ pnode_next(const struct pnode *node)
 inline void
 pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 {
+	assert(heap);
+	assert(cmp);
+
 	heap->cmp = cmp;
 	heap->root = NULL;
 	heap->num_nodes = 0;
@@ -221,18 +240,24 @@ pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 inline int
 pheap_empty(const struct pheap *heap)
 {
+	assert(heap);
+
 	return !pheap_size(heap);
 }
 
 inline size_t
 pheap_size(const struct pheap *heap)
 {
+	assert(heap);
+
 	return heap->num_nodes;
 }
 
 inline struct pnode *
 pheap_first(const struct pheap *heap)
 {
+	assert(heap);
+
 	return heap->root;
 }
 

@@ -3,11 +3,13 @@ src += buf.c
 src += can.h
 src += msg.c
 src += net.c
+if !ECSS_COMPLIANCE
 if HAVE_SOCKET_CAN
 src += socket.c
 endif
 if HAVE_VCI
 src += vci.c
+endif
 endif
 if PLATFORM_WIN32
 src += version.rc

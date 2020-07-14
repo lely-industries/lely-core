@@ -13,7 +13,7 @@
  * 7.13.2.1), fibers can only be resumed by the thread on which they were
  * created.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

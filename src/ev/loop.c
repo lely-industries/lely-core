@@ -645,6 +645,12 @@ ev_loop_ctx_destroy(struct ev_loop_ctx *ctx)
 	}
 }
 
+static inline int
+ev_loop_can_poll(ev_loop_t *loop)
+{
+	return loop->poll && (!loop->npoll || loop->npolling < loop->npoll);
+}
+
 static size_t
 ev_loop_ctx_wait_one(
 		struct ev_loop_ctx **pctx, ev_loop_t *loop, ev_future_t *future)
@@ -709,7 +715,7 @@ ev_loop_ctx_wait_one(
 			// We released the lock, so a task may have been queued.
 			continue;
 		}
-		if (loop->poll && (!loop->npoll || loop->npolling < loop->npoll)) {
+		if (ev_loop_can_poll(loop)) {
 			ctx->polling = 1;
 			// Wake polling threads in LIFO order.
 			dllist_push_front(&loop->polling, &ctx->node);
@@ -834,7 +840,7 @@ ev_loop_ctx_wait_one_until(struct ev_loop_ctx **pctx, ev_loop_t *loop,
 			// We released the lock, so a task may have been queued.
 			continue;
 		}
-		if (loop->poll && (!loop->npoll || loop->npolling < loop->npoll)) {
+		if (ev_loop_can_poll(loop)) {
 			ctx->polling = 1;
 			// Wake polling threads in LIFO order.
 			dllist_push_front(&loop->polling, &ctx->node);
