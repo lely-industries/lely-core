@@ -64,8 +64,7 @@ LELY_EV_EXEC_INLINE void ev_exec_on_task_fini(ev_exec_t *exec);
  *
  * @see ev_exec_post(), ev_exec_defer()
  */
-LELY_EV_EXEC_INLINE int ev_exec_dispatch(
-		ev_exec_t *exec, struct ev_task *task);
+LELY_EV_EXEC_INLINE int ev_exec_dispatch(ev_exec_t *exec, struct ev_task *task);
 
 /**
  * Submits <b>*task</b> to <b>*exec</b> for execution. The task function is
@@ -93,8 +92,7 @@ LELY_EV_EXEC_INLINE void ev_exec_defer(ev_exec_t *exec, struct ev_task *task);
  *
  * @returns the number of aborted tasks.
  */
-LELY_EV_EXEC_INLINE size_t ev_exec_abort(
-		ev_exec_t *exec, struct ev_task *task);
+LELY_EV_EXEC_INLINE size_t ev_exec_abort(ev_exec_t *exec, struct ev_task *task);
 
 /**
  * Invokes the task function in <b>*task</b> as if the task is being executed by
