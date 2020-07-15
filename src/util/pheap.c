@@ -152,3 +152,20 @@ pnode_find(struct pnode *node, const void *key, pheap_cmp_t *cmp)
 
 	return NULL;
 }
+
+int
+pheap_contains(const struct pheap *heap, const struct pnode *node)
+{
+	assert(heap);
+	assert(node);
+
+	if (node == heap->root)
+		return 1;
+
+	while (node->parent) {
+		if (node->parent == heap->root)
+			return 1;
+		node = node->parent;
+	}
+	return 0;
+}

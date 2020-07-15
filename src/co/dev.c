@@ -279,6 +279,7 @@ co_dev_remove_obj(co_dev_t *dev, co_obj_t *obj)
 		return -1;
 
 	rbtree_remove(&obj->dev->tree, &obj->node);
+	rbnode_init(&obj->node, &obj->idx);
 	obj->dev = NULL;
 
 	return 0;
