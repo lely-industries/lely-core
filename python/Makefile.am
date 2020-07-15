@@ -1,1 +1,4 @@
-SUBDIRS = can io dcf-tools
+SUBDIRS = dcf-tools
+if !NO_CYTHON
+SUBDIRS += can io
+endif
