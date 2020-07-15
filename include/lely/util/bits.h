@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the bit
  * function definitions.
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -279,7 +279,7 @@ LELY_UTIL_BITS_INLINE uint_least64_t rol64(uint_least64_t x, unsigned int n);
 /// Rotates the 64-bit unsigned integer <b>x</b> right by <b>n</b> bits.
 LELY_UTIL_BITS_INLINE uint_least64_t ror64(uint_least64_t x, unsigned int n);
 
-inline uint_least16_t
+LELY_UTIL_BITS_INLINE uint_least16_t
 bswap16(uint_least16_t x)
 {
 #ifdef _MSC_VER
@@ -291,7 +291,7 @@ bswap16(uint_least16_t x)
 #endif
 }
 
-inline uint_least32_t
+LELY_UTIL_BITS_INLINE uint_least32_t
 bswap32(uint_least32_t x)
 {
 #ifdef _MSC_VER
@@ -304,7 +304,7 @@ bswap32(uint_least32_t x)
 #endif
 }
 
-inline uint_least64_t
+LELY_UTIL_BITS_INLINE uint_least64_t
 bswap64(uint_least64_t x)
 {
 #ifdef _MSC_VER
@@ -319,14 +319,14 @@ bswap64(uint_least64_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cls8(uint_least8_t x)
 {
 	return clz8(~x);
 }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_clz)
-inline int
+LELY_UTIL_BITS_INLINE int
 clz8(uint_least8_t x)
 {
 	x &= UINT8_C(0xff);
@@ -339,13 +339,13 @@ clz8(uint_least8_t x)
 }
 #endif // _MSC_VER || __GNUC__ || __has_builtin(__builtin_clz)
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cls16(uint_least16_t x)
 {
 	return clz16(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 clz16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -359,13 +359,13 @@ clz16(uint_least16_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cls32(uint_least32_t x)
 {
 	return clz32(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 clz32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -381,13 +381,13 @@ clz32(uint_least32_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cls64(uint_least64_t x)
 {
 	return clz64(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 clz64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -403,14 +403,14 @@ clz64(uint_least64_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cts8(uint_least8_t x)
 {
 	return ctz8(~x);
 }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ctz)
-inline int
+LELY_UTIL_BITS_INLINE int
 ctz8(uint_least8_t x)
 {
 	x &= UINT8_C(0xff);
@@ -423,13 +423,13 @@ ctz8(uint_least8_t x)
 }
 #endif // _MSC_VER || __GNUC__ || __has_builtin(__builtin_ctz)
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cts16(uint_least16_t x)
 {
 	return ctz16(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ctz16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -443,13 +443,13 @@ ctz16(uint_least16_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cts32(uint_least32_t x)
 {
 	return ctz32(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ctz32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -468,13 +468,13 @@ ctz32(uint_least32_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 cts64(uint_least64_t x)
 {
 	return ctz64(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ctz64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -491,7 +491,7 @@ ctz64(uint_least64_t x)
 }
 
 #if defined(_MSC_VER) || defined(__GNUC__) || __has_builtin(__builtin_ffs)
-inline int
+LELY_UTIL_BITS_INLINE int
 ffs8(uint_least8_t x)
 {
 	x &= UINT8_C(0xff);
@@ -504,13 +504,13 @@ ffs8(uint_least8_t x)
 }
 #endif // _MSC_VER || __GNUC__ || __has_builtin(__builtin_ffs)
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffz8(uint_least8_t x)
 {
 	return ffs8(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffs16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -527,13 +527,13 @@ ffs16(uint_least16_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffz16(uint_least16_t x)
 {
 	return ffs16(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffs32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -552,13 +552,13 @@ ffs32(uint_least32_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffz32(uint_least32_t x)
 {
 	return ffs32(~x);
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffs64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -577,14 +577,14 @@ ffs64(uint_least64_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 ffz64(uint_least64_t x)
 {
 	return ffs64(~x);
 }
 
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
-inline int
+LELY_UTIL_BITS_INLINE int
 parity8(uint_least8_t x)
 {
 	x &= UINT8_C(0xff);
@@ -592,7 +592,7 @@ parity8(uint_least8_t x)
 }
 #endif // __GNUC__ || __has_builtin(__builtin_parity)
 
-inline int
+LELY_UTIL_BITS_INLINE int
 parity16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -603,7 +603,7 @@ parity16(uint_least16_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 parity32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -616,7 +616,7 @@ parity32(uint_least32_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 parity64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -630,7 +630,7 @@ parity64(uint_least64_t x)
 }
 
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
-inline int
+LELY_UTIL_BITS_INLINE int
 popcount8(uint_least8_t x)
 {
 	x &= UINT8_C(0xff);
@@ -638,7 +638,7 @@ popcount8(uint_least8_t x)
 }
 #endif // __GNUC__ || __has_builtin(__builtin_popcount)
 
-inline int
+LELY_UTIL_BITS_INLINE int
 popcount16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -649,7 +649,7 @@ popcount16(uint_least16_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 popcount32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -662,7 +662,7 @@ popcount32(uint_least32_t x)
 #endif
 }
 
-inline int
+LELY_UTIL_BITS_INLINE int
 popcount64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -675,7 +675,7 @@ popcount64(uint_least64_t x)
 #endif
 }
 
-inline uint_least8_t
+LELY_UTIL_BITS_INLINE uint_least8_t
 rol8(uint_least8_t x, unsigned int n)
 {
 	x &= UINT8_C(0xff);
@@ -687,7 +687,7 @@ rol8(uint_least8_t x, unsigned int n)
 #endif
 }
 
-inline uint_least8_t
+LELY_UTIL_BITS_INLINE uint_least8_t
 ror8(uint_least8_t x, unsigned int n)
 {
 	x &= UINT8_C(0xff);
@@ -699,7 +699,7 @@ ror8(uint_least8_t x, unsigned int n)
 #endif
 }
 
-inline uint_least16_t
+LELY_UTIL_BITS_INLINE uint_least16_t
 rol16(uint_least16_t x, unsigned int n)
 {
 	x &= UINT16_C(0xffff);
@@ -711,7 +711,7 @@ rol16(uint_least16_t x, unsigned int n)
 #endif
 }
 
-inline uint_least16_t
+LELY_UTIL_BITS_INLINE uint_least16_t
 ror16(uint_least16_t x, unsigned int n)
 {
 	x &= UINT16_C(0xffff);
@@ -723,7 +723,7 @@ ror16(uint_least16_t x, unsigned int n)
 #endif
 }
 
-inline uint_least32_t
+LELY_UTIL_BITS_INLINE uint_least32_t
 rol32(uint_least32_t x, unsigned int n)
 {
 	x &= UINT32_C(0xffffffff);
@@ -735,7 +735,7 @@ rol32(uint_least32_t x, unsigned int n)
 #endif
 }
 
-inline uint_least32_t
+LELY_UTIL_BITS_INLINE uint_least32_t
 ror32(uint_least32_t x, unsigned int n)
 {
 	x &= UINT32_C(0xffffffff);
@@ -747,7 +747,7 @@ ror32(uint_least32_t x, unsigned int n)
 #endif
 }
 
-inline uint_least64_t
+LELY_UTIL_BITS_INLINE uint_least64_t
 rol64(uint_least64_t x, unsigned int n)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -759,7 +759,7 @@ rol64(uint_least64_t x, unsigned int n)
 #endif
 }
 
-inline uint_least64_t
+LELY_UTIL_BITS_INLINE uint_least64_t
 ror64(uint_least64_t x, unsigned int n)
 {
 	x &= UINT64_C(0xffffffffffffffff);

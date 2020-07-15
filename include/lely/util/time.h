@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the time
  * function declarations.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -109,7 +109,7 @@ LELY_UTIL_TIME_INLINE int_least64_t timespec_diff_nsec(
  */
 LELY_UTIL_TIME_INLINE int timespec_cmp(const void *p1, const void *p2);
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_add(struct timespec *tp, const struct timespec *inc)
 {
 	assert(tp);
@@ -124,7 +124,7 @@ timespec_add(struct timespec *tp, const struct timespec *inc)
 	}
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_add_sec(struct timespec *tp, uint_least64_t sec)
 {
 	assert(tp);
@@ -132,7 +132,7 @@ timespec_add_sec(struct timespec *tp, uint_least64_t sec)
 	tp->tv_sec += sec;
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 {
 	struct timespec inc = { (time_t)(msec / 1000),
@@ -140,7 +140,7 @@ timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 	timespec_add(tp, &inc);
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 {
 	struct timespec inc = { (time_t)(usec / 1000000l),
@@ -148,7 +148,7 @@ timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 	timespec_add(tp, &inc);
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_add_nsec(struct timespec *tp, uint_least64_t nsec)
 {
 	struct timespec inc = { (time_t)(nsec / 1000000000l),
@@ -156,7 +156,7 @@ timespec_add_nsec(struct timespec *tp, uint_least64_t nsec)
 	timespec_add(tp, &inc);
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_sub(struct timespec *tp, const struct timespec *dec)
 {
 	assert(tp);
@@ -171,7 +171,7 @@ timespec_sub(struct timespec *tp, const struct timespec *dec)
 	}
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_sub_sec(struct timespec *tp, uint_least64_t sec)
 {
 	assert(tp);
@@ -179,7 +179,7 @@ timespec_sub_sec(struct timespec *tp, uint_least64_t sec)
 	tp->tv_sec += sec;
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 {
 	struct timespec dec = { (time_t)(msec / 1000),
@@ -187,7 +187,7 @@ timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 	timespec_sub(tp, &dec);
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 {
 	struct timespec dec = { (time_t)(usec / 1000000l),
@@ -195,7 +195,7 @@ timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 	timespec_sub(tp, &dec);
 }
 
-inline void
+LELY_UTIL_TIME_INLINE void
 timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 {
 	struct timespec dec = { (time_t)(nsec / 1000000000l),
@@ -203,7 +203,7 @@ timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 	timespec_sub(tp, &dec);
 }
 
-inline int_least64_t
+LELY_UTIL_TIME_INLINE int_least64_t
 timespec_diff_sec(const struct timespec *t1, const struct timespec *t2)
 {
 	assert(t1);
@@ -213,7 +213,7 @@ timespec_diff_sec(const struct timespec *t1, const struct timespec *t2)
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000000000l;
 }
 
-inline int_least64_t
+LELY_UTIL_TIME_INLINE int_least64_t
 timespec_diff_msec(const struct timespec *t1, const struct timespec *t2)
 {
 	assert(t1);
@@ -223,7 +223,7 @@ timespec_diff_msec(const struct timespec *t1, const struct timespec *t2)
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000000l;
 }
 
-inline int_least64_t
+LELY_UTIL_TIME_INLINE int_least64_t
 timespec_diff_usec(const struct timespec *t1, const struct timespec *t2)
 {
 	assert(t1);
@@ -233,7 +233,7 @@ timespec_diff_usec(const struct timespec *t1, const struct timespec *t2)
 			+ (t1->tv_nsec - t2->tv_nsec) / 1000;
 }
 
-inline int_least64_t
+LELY_UTIL_TIME_INLINE int_least64_t
 timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 {
 	assert(t1);
@@ -243,7 +243,7 @@ timespec_diff_nsec(const struct timespec *t1, const struct timespec *t2)
 			+ t1->tv_nsec - t2->tv_nsec;
 }
 
-inline int
+LELY_UTIL_TIME_INLINE int
 timespec_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)

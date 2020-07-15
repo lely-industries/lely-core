@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the memory
  * buffer declarations.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -135,7 +135,7 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
 void membuf_flush(struct membuf *buf, size_t size);
 
-inline void
+LELY_UTIL_MEMBUF_INLINE void
 membuf_init(struct membuf *buf)
 {
 	assert(buf);
@@ -143,7 +143,7 @@ membuf_init(struct membuf *buf)
 	buf->begin = buf->end = buf->cur = NULL;
 }
 
-inline void *
+LELY_UTIL_MEMBUF_INLINE void *
 membuf_begin(const struct membuf *buf)
 {
 	assert(buf);
@@ -151,7 +151,7 @@ membuf_begin(const struct membuf *buf)
 	return buf->begin;
 }
 
-inline void
+LELY_UTIL_MEMBUF_INLINE void
 membuf_clear(struct membuf *buf)
 {
 	assert(buf);
@@ -159,7 +159,7 @@ membuf_clear(struct membuf *buf)
 	buf->cur = buf->begin;
 }
 
-inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_size(const struct membuf *buf)
 {
 	assert(buf);
@@ -167,7 +167,7 @@ membuf_size(const struct membuf *buf)
 	return buf->cur - buf->begin;
 }
 
-inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_capacity(const struct membuf *buf)
 {
 	assert(buf);
@@ -175,7 +175,7 @@ membuf_capacity(const struct membuf *buf)
 	return buf->end - buf->cur;
 }
 
-inline ptrdiff_t
+LELY_UTIL_MEMBUF_INLINE ptrdiff_t
 membuf_seek(struct membuf *buf, ptrdiff_t offset)
 {
 	assert(buf);
@@ -193,7 +193,7 @@ membuf_seek(struct membuf *buf, ptrdiff_t offset)
 	return offset;
 }
 
-inline void *
+LELY_UTIL_MEMBUF_INLINE void *
 membuf_alloc(struct membuf *buf, size_t *size)
 {
 	assert(buf);
@@ -204,7 +204,7 @@ membuf_alloc(struct membuf *buf, size_t *size)
 	return cur;
 }
 
-inline size_t
+LELY_UTIL_MEMBUF_INLINE size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
 	assert(buf);

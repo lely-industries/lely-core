@@ -4,7 +4,7 @@
  *
  * @see lely/co/emcy.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -499,7 +499,7 @@ co_emcy_set_ind(co_emcy_t *emcy, co_emcy_ind_t *ind, void *data)
 	emcy->data = data;
 }
 
-struct co_emcy_node *
+static struct co_emcy_node *
 co_emcy_node_create(co_emcy_t *emcy, co_unsigned8_t id)
 {
 	assert(emcy);
@@ -534,7 +534,7 @@ error_alloc_node:
 	return NULL;
 }
 
-void
+static void
 co_emcy_node_destroy(struct co_emcy_node *node)
 {
 	if (node) {
