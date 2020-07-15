@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -316,7 +316,7 @@ void bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src,
 		int srcbit, size_t n);
 
 #ifndef htobe16
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 htobe16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -329,7 +329,7 @@ htobe16(uint_least16_t x)
 #endif
 
 #ifndef betoh16
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 betoh16(uint_least16_t x)
 {
 	return htobe16(x);
@@ -337,7 +337,7 @@ betoh16(uint_least16_t x)
 #endif
 
 #ifndef htole16
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 htole16(uint_least16_t x)
 {
 	x &= UINT16_C(0xffff);
@@ -350,7 +350,7 @@ htole16(uint_least16_t x)
 #endif
 
 #ifndef letoh16
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 letoh16(uint_least16_t x)
 {
 	return htole16(x);
@@ -358,7 +358,7 @@ letoh16(uint_least16_t x)
 #endif
 
 #ifndef htobe32
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 htobe32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -371,7 +371,7 @@ htobe32(uint_least32_t x)
 #endif
 
 #ifndef betoh32
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 betoh32(uint_least32_t x)
 {
 	return htobe32(x);
@@ -379,7 +379,7 @@ betoh32(uint_least32_t x)
 #endif
 
 #ifndef htole32
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 htole32(uint_least32_t x)
 {
 	x &= UINT32_C(0xffffffff);
@@ -392,7 +392,7 @@ htole32(uint_least32_t x)
 #endif
 
 #ifndef letoh32
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 letoh32(uint_least32_t x)
 {
 	return htole32(x);
@@ -400,7 +400,7 @@ letoh32(uint_least32_t x)
 #endif
 
 #ifndef htobe64
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 htobe64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -413,7 +413,7 @@ htobe64(uint_least64_t x)
 #endif
 
 #ifndef betoh64
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 betoh64(uint_least64_t x)
 {
 	return htobe64(x);
@@ -421,7 +421,7 @@ betoh64(uint_least64_t x)
 #endif
 
 #ifndef htole64
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 htole64(uint_least64_t x)
 {
 	x &= UINT64_C(0xffffffffffffffff);
@@ -434,26 +434,26 @@ htole64(uint_least64_t x)
 #endif
 
 #ifndef letoh64
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 letoh64(uint_least64_t x)
 {
 	return htole64(x);
 }
 #endif
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_i16(uint_least8_t dst[2], int_least16_t x)
 {
 	stbe_u16(dst, x);
 }
 
-inline int_least16_t
+LELY_UTIL_ENDIAN_INLINE int_least16_t
 ldbe_i16(const uint_least8_t src[2])
 {
 	return ldbe_u16(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_u16(uint_least8_t dst[2], uint_least16_t x)
 {
 #if CHAR_BIT == 8
@@ -465,7 +465,7 @@ stbe_u16(uint_least8_t dst[2], uint_least16_t x)
 #endif
 }
 
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 ldbe_u16(const uint_least8_t src[2])
 {
 #if CHAR_BIT == 8
@@ -478,19 +478,19 @@ ldbe_u16(const uint_least8_t src[2])
 #endif
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_i16(uint_least8_t dst[2], int_least16_t x)
 {
 	stle_u16(dst, x);
 }
 
-inline int_least16_t
+LELY_UTIL_ENDIAN_INLINE int_least16_t
 ldle_i16(const uint_least8_t src[2])
 {
 	return ldle_u16(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_u16(uint_least8_t dst[2], uint_least16_t x)
 {
 #if CHAR_BIT == 8
@@ -502,7 +502,7 @@ stle_u16(uint_least8_t dst[2], uint_least16_t x)
 #endif
 }
 
-inline uint_least16_t
+LELY_UTIL_ENDIAN_INLINE uint_least16_t
 ldle_u16(const uint_least8_t src[2])
 {
 #if CHAR_BIT == 8
@@ -515,19 +515,19 @@ ldle_u16(const uint_least8_t src[2])
 #endif
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_i32(uint_least8_t dst[4], int_least32_t x)
 {
 	stbe_u32(dst, x);
 }
 
-inline int_least32_t
+LELY_UTIL_ENDIAN_INLINE int_least32_t
 ldbe_i32(const uint_least8_t src[4])
 {
 	return ldbe_u32(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_u32(uint_least8_t dst[4], uint_least32_t x)
 {
 #if CHAR_BIT == 8
@@ -541,7 +541,7 @@ stbe_u32(uint_least8_t dst[4], uint_least32_t x)
 #endif
 }
 
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 ldbe_u32(const uint_least8_t src[4])
 {
 #if CHAR_BIT == 8
@@ -556,19 +556,19 @@ ldbe_u32(const uint_least8_t src[4])
 #endif
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_i32(uint_least8_t dst[4], int_least32_t x)
 {
 	stle_u32(dst, x);
 }
 
-inline int_least32_t
+LELY_UTIL_ENDIAN_INLINE int_least32_t
 ldle_i32(const uint_least8_t src[4])
 {
 	return ldle_u32(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_u32(uint_least8_t dst[4], uint_least32_t x)
 {
 #if CHAR_BIT == 8
@@ -582,7 +582,7 @@ stle_u32(uint_least8_t dst[4], uint_least32_t x)
 #endif
 }
 
-inline uint_least32_t
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
 ldle_u32(const uint_least8_t src[4])
 {
 #if CHAR_BIT == 8
@@ -597,19 +597,19 @@ ldle_u32(const uint_least8_t src[4])
 #endif
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_i64(uint_least8_t dst[8], int_least64_t x)
 {
 	stbe_u64(dst, x);
 }
 
-inline int_least64_t
+LELY_UTIL_ENDIAN_INLINE int_least64_t
 ldbe_i64(const uint_least8_t src[8])
 {
 	return ldbe_u64(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_u64(uint_least8_t dst[8], uint_least64_t x)
 {
 #if CHAR_BIT == 8
@@ -627,7 +627,7 @@ stbe_u64(uint_least8_t dst[8], uint_least64_t x)
 #endif
 }
 
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 ldbe_u64(const uint_least8_t src[8])
 {
 #if CHAR_BIT == 8
@@ -646,19 +646,19 @@ ldbe_u64(const uint_least8_t src[8])
 #endif
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_i64(uint_least8_t dst[8], int_least64_t x)
 {
 	stle_u64(dst, x);
 }
 
-inline int_least64_t
+LELY_UTIL_ENDIAN_INLINE int_least64_t
 ldle_i64(const uint_least8_t src[8])
 {
 	return ldle_u64(src);
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_u64(uint_least8_t dst[8], uint_least64_t x)
 {
 #if CHAR_BIT == 8
@@ -676,7 +676,7 @@ stle_u64(uint_least8_t dst[8], uint_least64_t x)
 #endif
 }
 
-inline uint_least64_t
+LELY_UTIL_ENDIAN_INLINE uint_least64_t
 ldle_u64(const uint_least8_t src[8])
 {
 #if CHAR_BIT == 8
@@ -697,7 +697,7 @@ ldle_u64(const uint_least8_t src[8])
 
 #ifdef LELY_FLT16_TYPE
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_flt16(uint_least8_t dst[2], flt16_t x)
 {
 	uint_least16_t tmp = 0;
@@ -705,7 +705,7 @@ stbe_flt16(uint_least8_t dst[2], flt16_t x)
 	stbe_u16(dst, tmp);
 }
 
-inline flt16_t
+LELY_UTIL_ENDIAN_INLINE flt16_t
 ldbe_flt16(const uint_least8_t src[2])
 {
 	flt16_t x = 0;
@@ -714,7 +714,7 @@ ldbe_flt16(const uint_least8_t src[2])
 	return x;
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_flt16(uint_least8_t dst[2], flt16_t x)
 {
 	uint_least16_t tmp = 0;
@@ -722,7 +722,7 @@ stle_flt16(uint_least8_t dst[2], flt16_t x)
 	stle_u16(dst, tmp);
 }
 
-inline flt16_t
+LELY_UTIL_ENDIAN_INLINE flt16_t
 ldle_flt16(const uint_least8_t src[2])
 {
 	flt16_t x = 0;
@@ -735,7 +735,7 @@ ldle_flt16(const uint_least8_t src[2])
 
 #ifdef LELY_FLT32_TYPE
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_flt32(uint_least8_t dst[4], flt32_t x)
 {
 	uint_least32_t tmp = 0;
@@ -743,7 +743,7 @@ stbe_flt32(uint_least8_t dst[4], flt32_t x)
 	stbe_u32(dst, tmp);
 }
 
-inline flt32_t
+LELY_UTIL_ENDIAN_INLINE flt32_t
 ldbe_flt32(const uint_least8_t src[4])
 {
 	flt32_t x = 0;
@@ -752,7 +752,7 @@ ldbe_flt32(const uint_least8_t src[4])
 	return x;
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_flt32(uint_least8_t dst[4], flt32_t x)
 {
 	uint_least32_t tmp = 0;
@@ -760,7 +760,7 @@ stle_flt32(uint_least8_t dst[4], flt32_t x)
 	stle_u32(dst, tmp);
 }
 
-inline flt32_t
+LELY_UTIL_ENDIAN_INLINE flt32_t
 ldle_flt32(const uint_least8_t src[4])
 {
 	flt32_t x = 0;
@@ -773,7 +773,7 @@ ldle_flt32(const uint_least8_t src[4])
 
 #ifdef LELY_FLT64_TYPE
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stbe_flt64(uint_least8_t dst[8], flt64_t x)
 {
 	uint_least64_t tmp = 0;
@@ -781,7 +781,7 @@ stbe_flt64(uint_least8_t dst[8], flt64_t x)
 	stbe_u64(dst, tmp);
 }
 
-inline flt64_t
+LELY_UTIL_ENDIAN_INLINE flt64_t
 ldbe_flt64(const uint_least8_t src[8])
 {
 	flt64_t x = 0;
@@ -790,7 +790,7 @@ ldbe_flt64(const uint_least8_t src[8])
 	return x;
 }
 
-inline void
+LELY_UTIL_ENDIAN_INLINE void
 stle_flt64(uint_least8_t dst[8], flt64_t x)
 {
 	uint_least64_t tmp = 0;
@@ -798,7 +798,7 @@ stle_flt64(uint_least8_t dst[8], flt64_t x)
 	stle_u64(dst, tmp);
 }
 
-inline flt64_t
+LELY_UTIL_ENDIAN_INLINE flt64_t
 ldle_flt64(const uint_least8_t src[8])
 {
 	flt64_t x = 0;

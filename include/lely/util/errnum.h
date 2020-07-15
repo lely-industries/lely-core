@@ -36,7 +36,7 @@
  * and platform-independent error numbers can be  done with errc2num() and
  * errnum2c().
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -365,19 +365,19 @@ const char *errc2str(int errc);
  */
 LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
 
-inline errnum_t
+LELY_UTIL_ERRNUM_INLINE errnum_t
 get_errnum(void)
 {
 	return errc2num(get_errc());
 }
 
-inline void
+LELY_UTIL_ERRNUM_INLINE void
 set_errnum(errnum_t errnum)
 {
 	set_errc(errnum2c(errnum));
 }
 
-inline const char *
+LELY_UTIL_ERRNUM_INLINE const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));
