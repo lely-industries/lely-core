@@ -361,8 +361,6 @@ dllist_insert_after(
 		struct dllist *list, struct dlnode *prev, struct dlnode *node)
 {
 	assert(list);
-	assert(prev);
-	assert(node);
 
 	if (dlnode_insert_after(prev, node))
 		list->last = node;
@@ -373,8 +371,6 @@ dllist_insert_before(
 		struct dllist *list, struct dlnode *next, struct dlnode *node)
 {
 	assert(list);
-	assert(next);
-	assert(node);
 
 	if (dlnode_insert_before(next, node))
 		list->first = node;

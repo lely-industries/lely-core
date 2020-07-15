@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the comparison
  * function definitions.
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,6 @@
 #include <lely/libc/uchar.h>
 #include <lely/util/util.h>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -79,9 +78,6 @@ LELY_UTIL_DEFINE_TYPE(str_case, )
 inline int
 ptr_cmp(const void *p1, const void *p2)
 {
-	assert(p1);
-	assert(p2);
-
 	uintptr_t v1 = (uintptr_t)p1;
 	uintptr_t v2 = (uintptr_t)p2;
 	return (v2 < v1) - (v1 < v2);

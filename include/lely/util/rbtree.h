@@ -230,7 +230,6 @@ inline void
 rbnode_init(struct rbnode *node, const void *key)
 {
 	assert(node);
-	assert(key);
 
 	node->key = key;
 	node->parent = 0;
@@ -252,8 +251,6 @@ rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 inline int
 rbtree_empty(const struct rbtree *tree)
 {
-	assert(tree);
-
 	return !rbtree_size(tree);
 }
 

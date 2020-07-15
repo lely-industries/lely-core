@@ -207,7 +207,6 @@ inline void
 pnode_init(struct pnode *node, const void *key)
 {
 	assert(node);
-	assert(key);
 
 	node->key = key;
 }
@@ -240,8 +239,6 @@ pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 inline int
 pheap_empty(const struct pheap *heap)
 {
-	assert(heap);
-
 	return !pheap_size(heap);
 }
 
