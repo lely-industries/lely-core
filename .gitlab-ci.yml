@@ -465,6 +465,13 @@ valgrind:
       - test/test-*.log
       - unit-tests/test-*.log
     expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - if: '$CI_MERGE_REQUEST_EVENT_TYPE == "merge_train"'
+      when: always
+    - when: manual
+      allow_failure: true
 
 docker:lcov:
   <<: *docker
