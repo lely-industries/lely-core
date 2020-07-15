@@ -9,7 +9,7 @@
  * and values are stored. Upon initialization of the map, the user is
  * responsible for providing suitable comparison functions (#cmp_t).
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,6 +31,8 @@
 
 #include <lely/util/cmp.h>
 #include <lely/util/rbtree.h>
+
+#include <assert.h>
 
 #ifndef LELY_UTIL_BIMAP_INLINE
 #define LELY_UTIL_BIMAP_INLINE static inline
@@ -284,6 +286,8 @@ LELY_UTIL_BIMAP_INLINE struct binode *bimap_last_by_value(
 inline void
 binode_init(struct binode *node, const void *key, const void *value)
 {
+	assert(node);
+
 	rbnode_init(&node->key, key);
 	rbnode_init(&node->value, value);
 }
@@ -291,6 +295,8 @@ binode_init(struct binode *node, const void *key, const void *value)
 inline struct binode *
 binode_prev_by_key(const struct binode *node)
 {
+	assert(node);
+
 	struct rbnode *prev = rbnode_prev(&node->key);
 	return prev ? structof(prev, struct binode, key) : NULL;
 }
@@ -298,6 +304,8 @@ binode_prev_by_key(const struct binode *node)
 inline struct binode *
 binode_next_by_key(const struct binode *node)
 {
+	assert(node);
+
 	struct rbnode *next = rbnode_next(&node->key);
 	return next ? structof(next, struct binode, key) : NULL;
 }
@@ -305,6 +313,8 @@ binode_next_by_key(const struct binode *node)
 inline struct binode *
 binode_prev_by_value(const struct binode *node)
 {
+	assert(node);
+
 	struct rbnode *prev = rbnode_prev(&node->value);
 	return prev ? structof(prev, struct binode, value) : NULL;
 }
@@ -312,6 +322,8 @@ binode_prev_by_value(const struct binode *node)
 inline struct binode *
 binode_next_by_value(const struct binode *node)
 {
+	assert(node);
+
 	struct rbnode *next = rbnode_next(&node->value);
 	return next ? structof(next, struct binode, value) : NULL;
 }
@@ -319,6 +331,10 @@ binode_next_by_value(const struct binode *node)
 inline void
 bimap_init(struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp)
 {
+	assert(map);
+	assert(key_cmp);
+	assert(value_cmp);
+
 	rbtree_init(&map->keys, key_cmp);
 	rbtree_init(&map->values, value_cmp);
 }
@@ -332,12 +348,17 @@ bimap_empty(const struct bimap *map)
 inline size_t
 bimap_size(const struct bimap *map)
 {
+	assert(map);
+
 	return rbtree_size(&map->keys);
 }
 
 inline void
 bimap_insert(struct bimap *map, struct binode *node)
 {
+	assert(map);
+	assert(node);
+
 	rbtree_insert(&map->keys, &node->key);
 	rbtree_insert(&map->values, &node->value);
 }
@@ -345,6 +366,9 @@ bimap_insert(struct bimap *map, struct binode *node)
 inline void
 bimap_remove(struct bimap *map, struct binode *node)
 {
+	assert(map);
+	assert(node);
+
 	rbtree_remove(&map->keys, &node->key);
 	rbtree_remove(&map->values, &node->value);
 }
@@ -352,6 +376,9 @@ bimap_remove(struct bimap *map, struct binode *node)
 inline struct binode *
 bimap_find_by_key(const struct bimap *map, const void *key)
 {
+	assert(map);
+	assert(key);
+
 	struct rbnode *node = rbtree_find(&map->keys, key);
 	return node ? structof(node, struct binode, key) : NULL;
 }
@@ -359,6 +386,9 @@ bimap_find_by_key(const struct bimap *map, const void *key)
 inline struct binode *
 bimap_find_by_value(const struct bimap *map, const void *value)
 {
+	assert(map);
+	assert(value);
+
 	struct rbnode *node = rbtree_find(&map->values, value);
 	return node ? structof(node, struct binode, value) : NULL;
 }
@@ -366,6 +396,8 @@ bimap_find_by_value(const struct bimap *map, const void *value)
 inline struct binode *
 bimap_first_by_key(const struct bimap *map)
 {
+	assert(map);
+
 	struct rbnode *node = rbtree_first(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
@@ -373,6 +405,8 @@ bimap_first_by_key(const struct bimap *map)
 inline struct binode *
 bimap_last_by_key(const struct bimap *map)
 {
+	assert(map);
+
 	struct rbnode *node = rbtree_last(&map->keys);
 	return node ? structof(node, struct binode, key) : NULL;
 }
@@ -380,6 +414,8 @@ bimap_last_by_key(const struct bimap *map)
 inline struct binode *
 bimap_first_by_value(const struct bimap *map)
 {
+	assert(map);
+
 	struct rbnode *node = rbtree_first(&map->values);
 	return node ? structof(node, struct binode, value) : NULL;
 }
@@ -387,6 +423,8 @@ bimap_first_by_value(const struct bimap *map)
 inline struct binode *
 bimap_last_by_value(const struct bimap *map)
 {
+	assert(map);
+
 	struct rbnode *node = rbtree_last(&map->values);
 	return node ? structof(node, struct binode, value) : NULL;
 }

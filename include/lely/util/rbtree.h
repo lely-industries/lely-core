@@ -13,7 +13,7 @@
  * initialization of the tree, the user is responsible for providing a suitable
  * comparison function (#rbtree_cmp_t).
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,6 +35,7 @@
 
 #include <lely/features.h>
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -228,6 +229,8 @@ LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
 inline void
 rbnode_init(struct rbnode *node, const void *key)
 {
+	assert(node);
+
 	node->key = key;
 	node->parent = 0;
 	node->left = NULL;
@@ -237,6 +240,9 @@ rbnode_init(struct rbnode *node, const void *key)
 inline void
 rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 {
+	assert(tree);
+	assert(cmp);
+
 	tree->cmp = cmp;
 	tree->root = NULL;
 	tree->num_nodes = 0;
@@ -251,12 +257,16 @@ rbtree_empty(const struct rbtree *tree)
 inline size_t
 rbtree_size(const struct rbtree *tree)
 {
+	assert(tree);
+
 	return tree->num_nodes;
 }
 
 inline struct rbnode *
 rbtree_root(const struct rbtree *tree)
 {
+	assert(tree);
+
 	return tree->root;
 }
 

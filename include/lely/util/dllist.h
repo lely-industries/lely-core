@@ -25,6 +25,7 @@
 
 #include <lely/features.h>
 
+#include <assert.h>
 #include <stddef.h>
 
 #ifndef LELY_UTIL_DLLIST_INLINE
@@ -226,6 +227,8 @@ LELY_UTIL_DLLIST_INLINE struct dlnode *dllist_last(const struct dllist *list);
 inline void
 dlnode_init(struct dlnode *node)
 {
+	assert(node);
+
 	node->prev = NULL;
 	node->next = NULL;
 }
@@ -233,6 +236,9 @@ dlnode_init(struct dlnode *node)
 inline int
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
+	assert(prev);
+	assert(node);
+
 	node->prev = prev;
 	if ((node->next = prev->next) != NULL)
 		node->next->prev = node;
@@ -243,6 +249,9 @@ dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 inline int
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
+	assert(next);
+	assert(node);
+
 	node->next = next;
 	if ((node->prev = next->prev) != NULL)
 		node->prev->next = node;
@@ -253,6 +262,8 @@ dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 inline void
 dlnode_remove(struct dlnode *node)
 {
+	assert(node);
+
 	if (node->prev)
 		node->prev->next = node->next;
 	if (node->next)
@@ -262,6 +273,8 @@ dlnode_remove(struct dlnode *node)
 inline void
 dllist_init(struct dllist *list)
 {
+	assert(list);
+
 	list->first = NULL;
 	list->last = NULL;
 }
@@ -269,12 +282,16 @@ dllist_init(struct dllist *list)
 inline int
 dllist_empty(const struct dllist *list)
 {
+	assert(list);
+
 	return !list->first;
 }
 
 inline size_t
 dllist_size(const struct dllist *list)
 {
+	assert(list);
+
 	size_t size = 0;
 	dllist_foreach (list, node)
 		size++;
@@ -284,6 +301,9 @@ dllist_size(const struct dllist *list)
 inline void
 dllist_push_front(struct dllist *list, struct dlnode *node)
 {
+	assert(list);
+	assert(node);
+
 	node->prev = NULL;
 	if ((node->next = list->first))
 		node->next->prev = node;
@@ -295,6 +315,9 @@ dllist_push_front(struct dllist *list, struct dlnode *node)
 inline void
 dllist_push_back(struct dllist *list, struct dlnode *node)
 {
+	assert(list);
+	assert(node);
+
 	node->next = NULL;
 	if ((node->prev = list->last))
 		node->prev->next = node;
@@ -306,6 +329,8 @@ dllist_push_back(struct dllist *list, struct dlnode *node)
 inline struct dlnode *
 dllist_pop_front(struct dllist *list)
 {
+	assert(list);
+
 	struct dlnode *node = list->first;
 	if (list->first) {
 		if ((list->first = list->first->next))
@@ -319,6 +344,8 @@ dllist_pop_front(struct dllist *list)
 inline struct dlnode *
 dllist_pop_back(struct dllist *list)
 {
+	assert(list);
+
 	struct dlnode *node = list->last;
 	if (list->last) {
 		if ((list->last = list->last->prev))
@@ -333,6 +360,8 @@ inline void
 dllist_insert_after(
 		struct dllist *list, struct dlnode *prev, struct dlnode *node)
 {
+	assert(list);
+
 	if (dlnode_insert_after(prev, node))
 		list->last = node;
 }
@@ -341,6 +370,8 @@ inline void
 dllist_insert_before(
 		struct dllist *list, struct dlnode *next, struct dlnode *node)
 {
+	assert(list);
+
 	if (dlnode_insert_before(next, node))
 		list->first = node;
 }
@@ -348,6 +379,9 @@ dllist_insert_before(
 inline void
 dllist_remove(struct dllist *list, struct dlnode *node)
 {
+	assert(list);
+	assert(node);
+
 	if (!node->prev)
 		list->first = node->next;
 	if (!node->next)
@@ -358,6 +392,9 @@ dllist_remove(struct dllist *list, struct dlnode *node)
 inline struct dllist *
 dllist_append(struct dllist *dst, struct dllist *src)
 {
+	assert(dst);
+	assert(src);
+
 	if (src->first) {
 		if (dst->first) {
 			src->first->prev = dst->last;
@@ -375,12 +412,16 @@ dllist_append(struct dllist *dst, struct dllist *src)
 inline struct dlnode *
 dllist_first(const struct dllist *list)
 {
+	assert(list);
+
 	return list->first;
 }
 
 inline struct dlnode *
 dllist_last(const struct dllist *list)
 {
+	assert(list);
+
 	return list->last;
 }
 
