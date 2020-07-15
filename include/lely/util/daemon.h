@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the daemon
  * declarations.
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2018 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
