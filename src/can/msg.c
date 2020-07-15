@@ -34,22 +34,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-/**
- * Computes a bitwise CRC-15-CAN checksum, based on the 0x4599 generator
- * polynomial. The implementation uses a table with precomputed values for
- * efficiency.
- *
- * @param crc  the initial value.
- * @param ptr  a pointer to the bits to be hashed.
- * @param off  the offset (in bits) with respect to <b>ptr</b> of the first bit
- *             to be hashed.
- * @param bits the number of bits to hash.
- *
- * @returns the updated CRC.
- */
-static uint_least16_t can_crc(
-		uint_least16_t crc, const void *ptr, int off, size_t bits);
-
 /// Computes a bitwise CRC-15-CAN checksum of a single byte. @see can_crc()
 static uint_least16_t can_crc_bits(
 		uint_least16_t crc, uint_least8_t byte, int off, int bits);
@@ -282,7 +266,7 @@ asprintf_can_msg(char **ps, const struct can_msg *msg)
 	return n;
 }
 
-static uint_least16_t
+uint_least16_t
 can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 {
 	assert(ptr || !bits);

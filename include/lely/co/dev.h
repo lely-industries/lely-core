@@ -104,7 +104,8 @@ void __co_dev_fini(struct __co_dev *dev);
 /**
  * Creates a new CANopen device.
  *
- * @param id the node-ID of the device (in the range [1..127, 255]).
+ * @param id the node-ID of the device (in the range [1..127, 255]). If
+ * <b>id</b> value equals 255, it means that the device is unconfigured.
  *
  * @returns a pointer to a new CANopen device, or NULL on error. In the latter
  * case, the error number can be obtained with get_errc().
@@ -427,7 +428,7 @@ size_t co_dev_set_val(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
  * @param psubidx the address at which to store the object sub-index (can be
  *                NULL).
  * @param begin   a pointer to the start of the buffer.
- * @param end     a pointer to the end of the buffer.
+ * @param end     a pointer to one past the last byte in the buffer.
  *
  * @returns the number of bytes read on success (at least 7), or 0 on error.
  *
@@ -446,9 +447,10 @@ size_t co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx,
  * @param subidx the object sub-index.
  * @param begin  a pointer to the start of the buffer. If <b>begin</b> is NULL,
  *               nothing is written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               and the buffer is too small (i.e., `end - begin` is less than
- *               the return value), nothing is written.
+ * @param end    a pointer to one past the last byte in the buffer. If
+ *               <b>end</b> is not NULL, and the buffer is too small
+ *               (i.e., `end - begin` is less than the return value), nothing is
+ *               written.
  *
  * @returns the number of bytes that would have been written had the buffer been
  * sufficiently large, or 0 on error.

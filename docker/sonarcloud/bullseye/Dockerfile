@@ -13,6 +13,8 @@ RUN apt-get update -q \
         git \
         wget \
         unzip \
+        python3 \
+        python3-requests \
         && rm -rf /var/lib/apt/lists/*
 
 # Download sonar-scanner

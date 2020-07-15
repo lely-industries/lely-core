@@ -31,7 +31,7 @@ RUN apt-get update -q \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --depth 1 https://github.com/cpputest/cpputest.git \
+RUN git clone --branch v4.0 --depth 1 https://github.com/cpputest/cpputest.git \
     && cd cpputest/cpputest_build \
     && autoreconf .. -i \
     && ../configure --prefix=/usr/local/$NAME --host=$NAME \
