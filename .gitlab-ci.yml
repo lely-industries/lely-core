@@ -473,6 +473,25 @@ valgrind:
     - when: manual
       allow_failure: true
 
+valgrind:ecss:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/valgrind:bullseye
+  dependencies: []
+  script:
+    - autoreconf -i
+    - ./configure --enable-ecss-compliance
+    - make
+    - make check-valgrind-memcheck
+  artifacts:
+    when: on_failure
+    paths:
+      - test/test-*.log
+      - unit-tests/test-*.log
+    expire_in: 1 week
+
 docker:lcov:
   <<: *docker
   variables:
