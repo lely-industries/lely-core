@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Service Data
  * Object (SDO) declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -336,13 +336,13 @@ int co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type,
 int co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac);
 
-inline int
+LELY_CO_SDO_INLINE int
 co_sdo_req_first(const struct co_sdo_req *req)
 {
 	return !req->offset;
 }
 
-inline int
+LELY_CO_SDO_INLINE int
 co_sdo_req_last(const struct co_sdo_req *req)
 {
 	return req->offset + req->nbyte >= req->size;

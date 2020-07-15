@@ -75,7 +75,7 @@ LELY_UTIL_DEFINE_TYPE(str_case, )
 #include <lely/util/def/type.def>
 #undef LELY_UTIL_DEFINE_TYPE
 
-inline int
+LELY_UTIL_CMP_INLINE int
 ptr_cmp(const void *p1, const void *p2)
 {
 	uintptr_t v1 = (uintptr_t)p1;
@@ -83,7 +83,7 @@ ptr_cmp(const void *p1, const void *p2)
 	return (v2 < v1) - (v1 < v2);
 }
 
-inline int
+LELY_UTIL_CMP_INLINE int
 str_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)
@@ -97,7 +97,7 @@ str_cmp(const void *p1, const void *p2)
 	return strcmp((const char *)p1, (const char *)p2);
 }
 
-inline int
+LELY_UTIL_CMP_INLINE int
 str_case_cmp(const void *p1, const void *p2)
 {
 	if (p1 == p2)

@@ -226,7 +226,7 @@ LELY_UTIL_RBTREE_INLINE struct rbnode *rbtree_root(const struct rbtree *tree);
  */
 #define rbtree_foreach(tree, node) rbnode_foreach (rbtree_first(tree), node)
 
-inline void
+LELY_UTIL_RBTREE_INLINE void
 rbnode_init(struct rbnode *node, const void *key)
 {
 	assert(node);
@@ -237,7 +237,7 @@ rbnode_init(struct rbnode *node, const void *key)
 	node->right = NULL;
 }
 
-inline void
+LELY_UTIL_RBTREE_INLINE void
 rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 {
 	assert(tree);
@@ -248,13 +248,13 @@ rbtree_init(struct rbtree *tree, rbtree_cmp_t *cmp)
 	tree->num_nodes = 0;
 }
 
-inline int
+LELY_UTIL_RBTREE_INLINE int
 rbtree_empty(const struct rbtree *tree)
 {
 	return !rbtree_size(tree);
 }
 
-inline size_t
+LELY_UTIL_RBTREE_INLINE size_t
 rbtree_size(const struct rbtree *tree)
 {
 	assert(tree);
@@ -262,7 +262,7 @@ rbtree_size(const struct rbtree *tree)
 	return tree->num_nodes;
 }
 
-inline struct rbnode *
+LELY_UTIL_RBTREE_INLINE struct rbnode *
 rbtree_root(const struct rbtree *tree)
 {
 	assert(tree);

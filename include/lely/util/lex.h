@@ -391,25 +391,25 @@ size_t lex_hex(const char *begin, const char *end, struct floc *at, void *ptr,
 size_t lex_base64(const char *begin, const char *end, struct floc *at,
 		void *ptr, size_t *pn);
 
-inline int
+LELY_UTIL_LEX_INLINE int
 isbreak(int c)
 {
 	return c == '\n' || c == '\r';
 }
 
-inline int
+LELY_UTIL_LEX_INLINE int
 isodigit(int c)
 {
 	return c >= '0' && c <= '7';
 }
 
-inline int
+LELY_UTIL_LEX_INLINE int
 ctoo(int c)
 {
 	return c - '0';
 }
 
-inline int
+LELY_UTIL_LEX_INLINE int
 ctox(int c)
 {
 	if (isdigit(c))

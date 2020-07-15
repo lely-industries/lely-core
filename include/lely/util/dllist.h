@@ -3,7 +3,7 @@
  * <a href="https://en.wikipedia.org/wiki/Doubly_linked_list">doubly-linked
  * list</a> declarations.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -224,7 +224,7 @@ LELY_UTIL_DLLIST_INLINE struct dlnode *dllist_last(const struct dllist *list);
  */
 #define dllist_foreach(list, node) dlnode_foreach (dllist_first(list), node)
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dlnode_init(struct dlnode *node)
 {
 	assert(node);
@@ -233,7 +233,7 @@ dlnode_init(struct dlnode *node)
 	node->next = NULL;
 }
 
-inline int
+LELY_UTIL_DLLIST_INLINE int
 dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 {
 	assert(prev);
@@ -246,7 +246,7 @@ dlnode_insert_after(struct dlnode *prev, struct dlnode *node)
 	return !node->next;
 }
 
-inline int
+LELY_UTIL_DLLIST_INLINE int
 dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 {
 	assert(next);
@@ -259,7 +259,7 @@ dlnode_insert_before(struct dlnode *next, struct dlnode *node)
 	return !node->prev;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dlnode_remove(struct dlnode *node)
 {
 	assert(node);
@@ -270,7 +270,7 @@ dlnode_remove(struct dlnode *node)
 		node->next->prev = node->prev;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_init(struct dllist *list)
 {
 	assert(list);
@@ -279,7 +279,7 @@ dllist_init(struct dllist *list)
 	list->last = NULL;
 }
 
-inline int
+LELY_UTIL_DLLIST_INLINE int
 dllist_empty(const struct dllist *list)
 {
 	assert(list);
@@ -287,7 +287,7 @@ dllist_empty(const struct dllist *list)
 	return !list->first;
 }
 
-inline size_t
+LELY_UTIL_DLLIST_INLINE size_t
 dllist_size(const struct dllist *list)
 {
 	assert(list);
@@ -298,7 +298,7 @@ dllist_size(const struct dllist *list)
 	return size;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_push_front(struct dllist *list, struct dlnode *node)
 {
 	assert(list);
@@ -312,7 +312,7 @@ dllist_push_front(struct dllist *list, struct dlnode *node)
 	list->first = node;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_push_back(struct dllist *list, struct dlnode *node)
 {
 	assert(list);
@@ -326,7 +326,7 @@ dllist_push_back(struct dllist *list, struct dlnode *node)
 	list->last = node;
 }
 
-inline struct dlnode *
+LELY_UTIL_DLLIST_INLINE struct dlnode *
 dllist_pop_front(struct dllist *list)
 {
 	assert(list);
@@ -341,7 +341,7 @@ dllist_pop_front(struct dllist *list)
 	return node;
 }
 
-inline struct dlnode *
+LELY_UTIL_DLLIST_INLINE struct dlnode *
 dllist_pop_back(struct dllist *list)
 {
 	assert(list);
@@ -356,7 +356,7 @@ dllist_pop_back(struct dllist *list)
 	return node;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_insert_after(
 		struct dllist *list, struct dlnode *prev, struct dlnode *node)
 {
@@ -366,7 +366,7 @@ dllist_insert_after(
 		list->last = node;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_insert_before(
 		struct dllist *list, struct dlnode *next, struct dlnode *node)
 {
@@ -376,7 +376,7 @@ dllist_insert_before(
 		list->first = node;
 }
 
-inline void
+LELY_UTIL_DLLIST_INLINE void
 dllist_remove(struct dllist *list, struct dlnode *node)
 {
 	assert(list);
@@ -389,7 +389,7 @@ dllist_remove(struct dllist *list, struct dlnode *node)
 	dlnode_remove(node);
 }
 
-inline struct dllist *
+LELY_UTIL_DLLIST_INLINE struct dllist *
 dllist_append(struct dllist *dst, struct dllist *src)
 {
 	assert(dst);
@@ -409,7 +409,7 @@ dllist_append(struct dllist *dst, struct dllist *src)
 	return dst;
 }
 
-inline struct dlnode *
+LELY_UTIL_DLLIST_INLINE struct dlnode *
 dllist_first(const struct dllist *list)
 {
 	assert(list);
@@ -417,7 +417,7 @@ dllist_first(const struct dllist *list)
 	return list->first;
 }
 
-inline struct dlnode *
+LELY_UTIL_DLLIST_INLINE struct dlnode *
 dllist_last(const struct dllist *list)
 {
 	assert(list);
