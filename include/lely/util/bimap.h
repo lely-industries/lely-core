@@ -287,8 +287,6 @@ inline void
 binode_init(struct binode *node, const void *key, const void *value)
 {
 	assert(node);
-	assert(key);
-	assert(value);
 
 	rbnode_init(&node->key, key);
 	rbnode_init(&node->value, value);
@@ -344,8 +342,6 @@ bimap_init(struct bimap *map, cmp_t *key_cmp, cmp_t *value_cmp)
 inline int
 bimap_empty(const struct bimap *map)
 {
-	assert(map);
-
 	return !bimap_size(map);
 }
 

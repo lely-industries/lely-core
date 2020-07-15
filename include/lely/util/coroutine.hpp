@@ -4,7 +4,7 @@
  *
  * @see lely/util/coroutine.h
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

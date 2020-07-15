@@ -208,7 +208,7 @@ inline size_t
 membuf_write(struct membuf *buf, const void *ptr, size_t size)
 {
 	assert(buf);
-	assert(ptr);
+	assert(ptr || !size);
 
 	void *cur = membuf_alloc(buf, &size);
 	if (size)

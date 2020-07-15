@@ -12,8 +12,7 @@
  *
  * Although context switches using these functions are slower than dedicated
  * assembly implementations (like fcontext_t from
- * <a
- * href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>),
+ * <a href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>),
  * they are the most portable solution (and, in case of sigsetjmp() and
  * siglongjmp(), significantly faster than those based on the deprecated
  * swapcontext() function).

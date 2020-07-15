@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the byte order
  * (endianness) function definitions.
  *
- * @copyright 2013-2020 Lely Industries N.V.
+ * @copyright 2013-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

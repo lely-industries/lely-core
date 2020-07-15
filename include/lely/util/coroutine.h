@@ -3,13 +3,11 @@
  * coroutine implementation. The implementation is pure and compliant C99 and
  * does not require any part of the standard library. It is an adaptation of the
  * C++ stackless coroutine from
- * <a
- * href="https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/coroutine.html">Boost.Asio</a>
+ * <a href="https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/coroutine.html">Boost.Asio</a>
  * by Christopher M. Kohlhoff. This is itself a variant of Simon Tatham's
- * <a
- * href="https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">Coroutines
- * in C</a>, which was inspired by <a
- * href="http://www.lysator.liu.se/c/duffs-device.html">Duff's device</a>.
+ * <a href="https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">Coroutines in C</a>,
+ * which was inspired by
+ * <a href="http://www.lysator.liu.se/c/duffs-device.html">Duff's device</a>.
  *
  * The implementation (ab)uses the switch statement. It is therefore not
  * possible to yield from a coroutine from within a nested switch statement.
@@ -19,7 +17,7 @@
  * mitigated by implementing the coroutine as a function object and making all
  * local variables (private) data members.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2019 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

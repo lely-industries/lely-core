@@ -140,8 +140,6 @@ timespec_add_sec(struct timespec *tp, uint_least64_t sec)
 inline void
 timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 {
-	assert(tp);
-
 	struct timespec inc = { (time_t)(msec / 1000),
 		(long)((msec % 1000) * 1000000l) };
 	timespec_add(tp, &inc);
@@ -150,8 +148,6 @@ timespec_add_msec(struct timespec *tp, uint_least64_t msec)
 inline void
 timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 {
-	assert(tp);
-
 	struct timespec inc = { (time_t)(usec / 1000000l),
 		(long)((usec % 1000000l) * 1000) };
 	timespec_add(tp, &inc);
@@ -160,8 +156,6 @@ timespec_add_usec(struct timespec *tp, uint_least64_t usec)
 inline void
 timespec_add_nsec(struct timespec *tp, uint_least64_t nsec)
 {
-	assert(tp);
-
 	struct timespec inc = { (time_t)(nsec / 1000000000l),
 		(long)(nsec % 1000000000l) };
 	timespec_add(tp, &inc);
@@ -193,8 +187,6 @@ timespec_sub_sec(struct timespec *tp, uint_least64_t sec)
 inline void
 timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 {
-	assert(tp);
-
 	struct timespec dec = { (time_t)(msec / 1000),
 		(long)((msec % 1000) * 1000000l) };
 	timespec_sub(tp, &dec);
@@ -203,8 +195,6 @@ timespec_sub_msec(struct timespec *tp, uint_least64_t msec)
 inline void
 timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 {
-	assert(tp);
-
 	struct timespec dec = { (time_t)(usec / 1000000l),
 		(long)((usec % 1000000l) * 1000) };
 	timespec_sub(tp, &dec);
@@ -213,8 +203,6 @@ timespec_sub_usec(struct timespec *tp, uint_least64_t usec)
 inline void
 timespec_sub_nsec(struct timespec *tp, uint_least64_t nsec)
 {
-	assert(tp);
-
 	struct timespec dec = { (time_t)(nsec / 1000000000l),
 		(long)(nsec % 1000000000l) };
 	timespec_sub(tp, &dec);
