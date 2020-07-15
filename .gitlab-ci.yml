@@ -420,6 +420,27 @@ clang-format:
 #        $(find include -name *.hpp)
 #        $(find src -name *.cpp)
 
+docker:clang-format:
+  <<: *docker
+  variables:
+    NAME: clang-format
+    TAG: bullseye
+
+clang-format:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/clang-format:bullseye
+  script:
+    - clang-format-10
+        -n
+        --Werror
+        $(find include -name *.h)
+        $(find src -name *.c)
+        $(find unit-tests -name *.cpp -o -name *.hpp)
+# TODO - enable C++ clang-format check
+
 docker:valgrind:
   <<: *docker
   variables:
