@@ -8,7 +8,7 @@
  * there are at most two threads accessing the buffer at the same time
  * (single-reader single-writer).
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -195,7 +195,7 @@ LELY_CAN_BUF_INLINE size_t can_buf_read(
 LELY_CAN_BUF_INLINE size_t can_buf_write(
 		struct can_buf *buf, const struct can_msg *ptr, size_t n);
 
-inline void
+LELY_CAN_BUF_INLINE void
 can_buf_clear(struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -206,7 +206,7 @@ can_buf_clear(struct can_buf *buf)
 #endif
 }
 
-inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_size(const struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -222,7 +222,7 @@ can_buf_size(const struct can_buf *buf)
 	return (end - begin) & buf->size;
 }
 
-inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_capacity(const struct can_buf *buf)
 {
 #ifdef LELY_NO_ATOMICS
@@ -238,7 +238,7 @@ can_buf_capacity(const struct can_buf *buf)
 	return (begin - end - 1) & buf->size;
 }
 
-inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS
@@ -264,7 +264,7 @@ can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
 	return n;
 }
 
-inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS
@@ -296,7 +296,7 @@ can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
 	return n;
 }
 
-inline size_t
+LELY_CAN_BUF_INLINE size_t
 can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 {
 #ifdef LELY_NO_ATOMICS

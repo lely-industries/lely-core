@@ -13,7 +13,7 @@
  * of the heap, the user is responsible for providing a suitable comparison
  * function (#pheap_cmp_t).
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -203,7 +203,7 @@ LELY_UTIL_PHEAP_INLINE struct pnode *pheap_first(const struct pheap *heap);
  */
 #define pheap_foreach(heap, node) pnode_foreach (pheap_first(heap), node)
 
-inline void
+LELY_UTIL_PHEAP_INLINE void
 pnode_init(struct pnode *node, const void *key)
 {
 	assert(node);
@@ -211,7 +211,7 @@ pnode_init(struct pnode *node, const void *key)
 	node->key = key;
 }
 
-inline struct pnode *
+LELY_UTIL_PHEAP_INLINE struct pnode *
 pnode_next(const struct pnode *node)
 {
 	assert(node);
@@ -225,7 +225,7 @@ pnode_next(const struct pnode *node)
 	return NULL;
 }
 
-inline void
+LELY_UTIL_PHEAP_INLINE void
 pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 {
 	assert(heap);
@@ -236,13 +236,13 @@ pheap_init(struct pheap *heap, pheap_cmp_t *cmp)
 	heap->num_nodes = 0;
 }
 
-inline int
+LELY_UTIL_PHEAP_INLINE int
 pheap_empty(const struct pheap *heap)
 {
 	return !pheap_size(heap);
 }
 
-inline size_t
+LELY_UTIL_PHEAP_INLINE size_t
 pheap_size(const struct pheap *heap)
 {
 	assert(heap);
@@ -250,7 +250,7 @@ pheap_size(const struct pheap *heap)
 	return heap->num_nodes;
 }
 
-inline struct pnode *
+LELY_UTIL_PHEAP_INLINE struct pnode *
 pheap_first(const struct pheap *heap)
 {
 	assert(heap);

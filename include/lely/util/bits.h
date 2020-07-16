@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the bit
  * function definitions.
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

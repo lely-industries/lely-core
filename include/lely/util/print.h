@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the printing
  * function declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -267,13 +267,13 @@ LELY_UTIL_DEFINE_PRINT(uint_least64_t, u64, u64)
  */
 size_t print_base64(char **pbegin, char *end, const void *ptr, size_t n);
 
-inline int
+LELY_UTIL_PRINT_INLINE int
 otoc(int i)
 {
 	return '0' + (i & 7);
 }
 
-inline int
+LELY_UTIL_PRINT_INLINE int
 xtoc(int i)
 {
 	i &= 0xf;
@@ -294,7 +294,7 @@ xtoc(int i)
 #endif
 }
 
-inline size_t
+LELY_UTIL_PRINT_INLINE size_t
 print_char(char **pbegin, char *end, int c)
 {
 	if (pbegin && *pbegin && (!end || *pbegin < end))

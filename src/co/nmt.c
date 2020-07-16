@@ -2670,7 +2670,7 @@ co_nmt_ec_timer(const struct timespec *tp, void *data)
 }
 
 #ifndef LELY_NO_CO_MASTER
-int
+static int
 co_nmt_cs_timer(const struct timespec *tp, void *data)
 {
 	(void)tp;
