@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the CAN frame
  * declarations.
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

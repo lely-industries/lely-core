@@ -4,7 +4,7 @@
  *
  * @see lely/util/pheap.h
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

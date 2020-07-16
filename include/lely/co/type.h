@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the CANopen type
  * definitions.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
