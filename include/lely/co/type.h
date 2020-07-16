@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the CANopen type
  * definitions.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -150,7 +150,7 @@ size_t co_type_sizeof(co_unsigned16_t type);
 
 /**
  * Returns the alignment requirements (in bytes) of a value of the specified
- * data type, or 0 if it is not a static data type. In case of strings or
+ * data type, or 1 if it is not a static data type. In case of strings or
  * domains, this function returns the alignment requirements of a pointer.
  *
  * @see co_type_sizeof()

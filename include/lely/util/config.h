@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the
  * configuration functions.
  *
- * @copyright 2014-2018 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -203,9 +203,9 @@ size_t config_print_ini_file(const config_t *config, const char *filename);
  *               <b>pbegin</b> or *<b>pbegin</b> is NULL, nothing is written;
  *               Otherwise, on exit, *<b>pbegin</b> points to one past the last
  *               character written.
- * @param end    a pointer to the end of the buffer. If <b>end</b> is not NULL,
- *               at most `end - *pbegin` characters are written, and the output
- *               may be truncated.
+ * @param end    a pointer to one past the last character in the buffer. If
+ *               <b>end</b> is not NULL, at most `end - *pbegin` characters are
+ *               written, and the output may be truncated.
  *
  * @returns the number of characters that would have been written had the buffer
  * been sufficiently large.
