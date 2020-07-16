@@ -439,7 +439,7 @@ ctz16(uint_least16_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ctz)
 	return (x != 0) ? __builtin_ctz(x) : 16;
 #else
-	return ((x & 0xFFU) != 0) ? ctz8((uint_least8_t)x) : ctz8(x >> 8) + 8;
+	return ((x & UINT8_C(0xff)) != 0) ? ctz8((uint_least8_t)x) : ctz8(x >> 8) + 8;
 #endif
 }
 
