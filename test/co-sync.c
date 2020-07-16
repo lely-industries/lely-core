@@ -44,8 +44,12 @@ sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 {
 	(void)sync;
 	struct co_test *test = data;
+	static uint32_t call = 0;
 
-	tap_pass("received SYNC [%d]", cnt);
+	if (call++ < NUM_TEST)
+		tap_pass("received SYNC [%d]", cnt);
+	else
+		tap_diag("received extra SYNC [%d]", cnt);
 
 	co_test_done(test);
 }
