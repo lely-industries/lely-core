@@ -20,9 +20,25 @@
  * limitations under the License.
  */
 
-#include <CppUTest/CommandLineTestRunner.h>
+#ifndef LELY_OVERRIDE_LELY_DEFS_HPP_
+#define LELY_OVERRIDE_LELY_DEFS_HPP_
 
-int
-main(int ac, char** av) {
-  return RUN_ALL_TESTS(ac, av);
-}
+#if defined(__GNUC__) && !defined(__MINGW32__)
+/* Override library uses GCC-only features. At the same time MinGW-w64 tests
+ * won't link properly - neither overriding with "strong" symbol nor using
+ * --wrap linker option works.
+ */
+#define HAVE_LELY_OVERRIDE 1
+#endif
+
+#ifdef HAVE_LELY_OVERRIDE
+namespace LelyOverride {
+/**
+ * Enumeration of lely-core function override parameters.
+ */
+enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
+
+}  // namespace LelyOverride
+#endif
+
+#endif  // !LELY_OVERRIDE_LELY_DEFS_HPP_

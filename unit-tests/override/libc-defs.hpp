@@ -20,9 +20,22 @@
  * limitations under the License.
  */
 
-#include <CppUTest/CommandLineTestRunner.h>
+#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
+#define LELY_OVERRIDE_LIBC_DEFS_HPP_
 
-int
-main(int ac, char** av) {
-  return RUN_ALL_TESTS(ac, av);
-}
+#if defined(__GNUC__) && !defined(__MINGW32__)
+/* libc overrides won't link properly on MinGW-W64 */
+#define HAVE_LIBC_OVERRIDE 1
+#endif
+
+#if HAVE_LIBC_OVERRIDE
+namespace LibCOverride {
+/**
+ * Enumeration of libc function override parameters.
+ */
+enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
+
+}  // namespace LibCOverride
+#endif
+
+#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_

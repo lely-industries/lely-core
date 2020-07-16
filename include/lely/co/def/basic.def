@@ -1,3 +1,4 @@
+// LCOV_EXCL_START
 // A boolean truth value.
 #ifdef __cplusplus
 LELY_CO_DEFINE_TYPE(BOOLEAN, boolean, b, bool)
@@ -40,3 +41,4 @@ LELY_CO_DEFINE_TYPE(UNSIGNED48, unsigned48, u48, uint_least64_t)
 LELY_CO_DEFINE_TYPE(UNSIGNED56, unsigned56, u56, uint_least64_t)
 // A 64-bit unsigned integer.
 LELY_CO_DEFINE_TYPE(UNSIGNED64, unsigned64, u64, uint_least64_t)
+// LCOV_EXCL_STOP
