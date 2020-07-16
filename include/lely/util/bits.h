@@ -355,7 +355,7 @@ clz16(uint_least16_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_clz)
 	return (x != 0U) ? (__builtin_clz(x) - 16) : 16;
 #else
-	return ((x >> 8U) != 0U) ? clz8(x >> 8U) : (clz8((uint_least8_t)x) + 8);
+	return ((x >> 8) != 0U) ? clz8(x >> 8) : (clz8((uint_least8_t)x) + 8);
 #endif
 }
 
@@ -377,7 +377,7 @@ clz32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_clzl)
 	return (x != 0U) ? __builtin_clzl(x) : 32;
 #else
-	return ((x >> 16U) != 0U) ? clz16(x >> 16U) : (clz16((uint_least16_t)x) + 16);
+	return ((x >> 16) != 0U) ? clz16(x >> 16) : (clz16((uint_least16_t)x) + 16);
 #endif
 }
 
@@ -399,7 +399,7 @@ clz64(uint_least64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_clzll)
 	return (x != 0U) ? __builtin_clzll(x) : 64;
 #else
-	return ((x >> 32U) != 0U) ? clz32(x >> 32U) : (clz32((uint_least32_t)x) + 32);
+	return ((x >> 32) != 0U) ? clz32(x >> 32) : (clz32((uint_least32_t)x) + 32);
 #endif
 }
 
@@ -572,7 +572,7 @@ ffs64(uint_least64_t x)
 #else
 	// clang-format off
 	return (x != 0U) ? ((x & UINT32_C(0xffffffff))
-			? ffs32((uint_least32_t)x) : ffs32(x >> 32U) + 32) : 0;
+			? ffs32((uint_least32_t)x) : ffs32(x >> 32) + 32) : 0;
 	// clang-format on
 #endif
 }
@@ -599,7 +599,7 @@ parity16(uint_least16_t x)
 #if defined(__GNUC__) || __has_builtin(__builtin_parity)
 	return __builtin_parity(x);
 #else
-	return parity8((uint_least8_t)x) ^ parity8(x >> 8U);
+	return parity8((uint_least8_t)x) ^ parity8(x >> 8);
 #endif
 }
 
@@ -612,7 +612,7 @@ parity32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_parityl)
 	return __builtin_parityl(x);
 #else
-	return parity16((uint_least16_t)x) ^ parity16(x >> 16U);
+	return parity16((uint_least16_t)x) ^ parity16(x >> 16);
 #endif
 }
 
@@ -625,7 +625,7 @@ parity64(uint_least64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_parityll)
 	return __builtin_parityll(x);
 #else
-	return parity32((uint_least32_t)x) ^ parity32(x >> 32U);
+	return parity32((uint_least32_t)x) ^ parity32(x >> 32);
 #endif
 }
 
@@ -645,7 +645,7 @@ popcount16(uint_least16_t x)
 #if defined(__GNUC__) || __has_builtin(__builtin_popcount)
 	return __builtin_popcount(x);
 #else
-	return popcount8((uint_least8_t)x) + popcount8(x >> 8U);
+	return popcount8((uint_least8_t)x) + popcount8(x >> 8);
 #endif
 }
 
@@ -658,7 +658,7 @@ popcount32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_popcountl)
 	return __builtin_popcountl(x);
 #else
-	return popcount16((uint_least16_t)x) + popcount16(x >> 16U);
+	return popcount16((uint_least16_t)x) + popcount16(x >> 16);
 #endif
 }
 
