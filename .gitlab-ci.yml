@@ -415,6 +415,7 @@ cppcheck-unix64:
         --std=c11 --std=c++11
         --suppressions-list=suppressions.txt
         include src
+  when: manual
 
 docker:cppcheck-win64:
   <<: *docker
