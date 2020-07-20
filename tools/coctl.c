@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/can/err.h>
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>

@@ -29,11 +29,13 @@ struct co_test {
 extern "C" {
 #endif
 
+#if !LELY_NO_DIAG
 static void co_test_diag_handler(void *handle, enum diag_severity severity,
 		int errc, const char *format, va_list ap);
 static void co_test_diag_at_handler(void *handle, enum diag_severity severity,
 		int errc, const struct floc *at, const char *format,
 		va_list ap);
+#endif // !LELY_NO_DIAG
 
 static void co_test_init(struct co_test *test, can_net_t *net, int wait);
 static void co_test_fini(struct co_test *test);
@@ -53,6 +55,7 @@ static int co_test_wtm_send(
 		co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 #endif
 
+#if !LELY_NO_DIAG
 static void
 co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
@@ -76,6 +79,30 @@ co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	if (severity == DIAG_FATAL)
 		abort();
 }
+#else
+
+static void
+co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
+		const char *format, va_list ap) {
+	(void)handle;
+	(void)severity;
+	(void)errc;
+	(void)format;
+	(void)ap;
+}
+
+static void
+co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap) {
+	(void)handle;
+	(void)severity;
+	(void)errc;
+	(void)at;
+	(void)format;
+	(void)ap;
+}
+
+#endif // !LELY_NO_DIAG
 
 static void
 co_test_init(struct co_test *test, can_net_t *net, int wait)

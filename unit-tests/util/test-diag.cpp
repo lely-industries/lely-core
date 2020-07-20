@@ -20,6 +20,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <cerrno>
 #include <cstdarg>
 #include <cstdio>
@@ -33,28 +37,6 @@
 #include <lely/util/diag.h>
 
 #include "override/libc-stdio.hpp"
-
-TEST_GROUP(Util_Diag_Cmdname){};
-
-TEST(Util_Diag_Cmdname, OnlyCmd) {
-  const std::string path = "fourtytwo";
-
-  const std::string cmd = cmdname(path.data());
-
-  STRCMP_EQUAL("fourtytwo", cmd.data());
-}
-
-TEST(Util_Diag_Cmdname, Delimeters) {
-#ifdef _WIN32
-  const std::string path = "test\\string\\testing\\fourtytwo";
-#else
-  const std::string path = "test/string/testing/fourtytwo";
-#endif  // _WIN32
-
-  const std::string cmd = cmdname(path.data());
-
-  STRCMP_EQUAL("fourtytwo", cmd.data());
-}
 
 TEST_GROUP(Util_Diag_FlocLex) {
   floc location;
@@ -136,9 +118,7 @@ TEST(Util_Diag_FlocLex, FlocLex_CpBiggerThanTheEnd) {
   CHECK_EQUAL(1, location.column);
 }
 
-#if !LELY_NO_DIAG
-
-TEST_GROUP(Util_Diag) {
+TEST_GROUP(Util_Diag_SnprintfFloc) {
   static const size_t BUF_SIZE = 30;
   char buffer[BUF_SIZE] = {};
 
@@ -149,7 +129,7 @@ TEST_GROUP(Util_Diag) {
   }
 };
 
-TEST(Util_Diag, SnprintfFloc_NoFilename) {
+TEST(Util_Diag_SnprintfFloc, NoFilename) {
   const floc at = {"", 0, 0};
 
   const auto ret = snprintf_floc(buffer, BUF_SIZE, &at);
@@ -158,7 +138,7 @@ TEST(Util_Diag, SnprintfFloc_NoFilename) {
   STRCMP_EQUAL(":", buffer);
 }
 
-TEST(Util_Diag, SnprintfFloc_NonemptyFilename) {
+TEST(Util_Diag_SnprintfFloc, NonemptyFilename) {
   const floc at = {"nonempty.txt", 3, 0};
 
   const auto ret = snprintf_floc(buffer, BUF_SIZE, &at);
@@ -168,7 +148,7 @@ TEST(Util_Diag, SnprintfFloc_NonemptyFilename) {
 }
 
 #if HAVE_SNPRINTF_OVERRIDE
-TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInFilenameEncoding) {
+TEST(Util_Diag_SnprintfFloc, NonemptyFilenameErrorInFilenameEncoding) {
   const floc at = {"nonempty.txt", 3, 14};
 
   LibCOverride::snprintf_vc = LibCOverride::NoneCallsValid;
@@ -178,7 +158,7 @@ TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInFilenameEncoding) {
   STRCMP_EQUAL("", buffer);
 }
 
-TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInLineEncoding) {
+TEST(Util_Diag_SnprintfFloc, NonemptyFilenameErrorInLineEncoding) {
   const floc at = {"nonempty.txt", 3, 14};
 
   LibCOverride::snprintf_vc = 1;
@@ -188,7 +168,7 @@ TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInLineEncoding) {
   STRCMP_EQUAL("nonempty.txt:", buffer);
 }
 
-TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInColumnEncoding) {
+TEST(Util_Diag_SnprintfFloc, NonemptyFilenameErrorInColumnEncoding) {
   const floc at = {"nonempty.txt", 3, 14};
 
   LibCOverride::snprintf_vc = 2;
@@ -199,7 +179,7 @@ TEST(Util_Diag, SnprintfFloc_NonemptyFilenameErrorInColumnEncoding) {
 }
 #endif  // HAVE_SNPRINTF_OVERRIDE
 
-TEST(Util_Diag, SnprintfFloc_FilenameNull) {
+TEST(Util_Diag_SnprintfFloc, FilenameNull) {
   const floc at = {nullptr, 3, 14};
 
   const auto ret = snprintf_floc(buffer, BUF_SIZE, &at);
@@ -207,6 +187,30 @@ TEST(Util_Diag, SnprintfFloc_FilenameNull) {
   CHECK_EQUAL(0, ret);
   STRCMP_EQUAL("", buffer);
 }
+
+TEST_GROUP(Util_Diag_Cmdname){};
+
+TEST(Util_Diag_Cmdname, OnlyCmd) {
+  const std::string path = "fourtytwo";
+
+  const std::string cmd = cmdname(path.data());
+
+  STRCMP_EQUAL("fourtytwo", cmd.data());
+}
+
+TEST(Util_Diag_Cmdname, Delimeters) {
+#ifdef _WIN32
+  const std::string path = "test\\string\\testing\\fourtytwo";
+#else
+  const std::string path = "test/string/testing/fourtytwo";
+#endif  // _WIN32
+
+  const std::string cmd = cmdname(path.data());
+
+  STRCMP_EQUAL("fourtytwo", cmd.data());
+}
+
+#if !LELY_NO_DIAG
 
 TEST_GROUP(Util_Diag_Handler){
     static void ref_phandler(void*, diag_severity, int, const char*,

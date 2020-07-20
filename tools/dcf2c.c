@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/co/dcf.h>
 #include <lely/co/sdev.h>
 #include <lely/libc/stdio.h>
