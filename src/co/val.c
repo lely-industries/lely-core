@@ -32,6 +32,7 @@
 #include <lely/util/endian.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
+#include <lely/util/ustring.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -1401,34 +1402,4 @@ co_array_sizeof(const void *val)
 
 	const char *ptr = *(const char **)val;
 	return ptr ? *(const size_t *)(ptr - CO_ARRAY_OFFSET) : 0;
-}
-
-static size_t
-str16len(const char16_t *s)
-{
-	const char16_t *cp = s;
-	for (; *cp; cp++)
-		;
-	return cp - s;
-}
-
-static char16_t *
-str16ncpy(char16_t *dst, const char16_t *src, size_t n)
-{
-	char16_t *cp = dst;
-	for (; n && *src; n--)
-		*cp++ = *src++;
-	while (n--)
-		*cp++ = 0;
-
-	return dst;
-}
-
-static int
-str16ncmp(const char16_t *s1, const char16_t *s2, size_t n)
-{
-	int result = 0;
-	while (n-- && !(result = *s1 - *s2++) && *s1++)
-		;
-	return result;
 }
