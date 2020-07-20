@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/can/net.h>
 #include <lely/co/pdo.h>
 #include <lely/io/can.h>

@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/co/wtm.h>
 #include <lely/io/addr.h>
 #include <lely/io/can.h>

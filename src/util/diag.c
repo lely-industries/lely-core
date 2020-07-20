@@ -4,7 +4,7 @@
  *
  * @see lely/util/diag.h
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,10 +45,14 @@
 #endif
 #endif
 
+#if !LELY_NO_DIAG
+
 static diag_handler_t *diag_handler = &default_diag_handler;
 static void *diag_handle;
 static diag_at_handler_t *diag_at_handler = &default_diag_at_handler;
 static void *diag_at_handle;
+
+#endif // !LELY_NO_DIAG
 
 size_t
 floc_lex(struct floc *at, const char *begin, const char *end)
@@ -119,6 +123,25 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 
 	return t;
 }
+
+const char *
+cmdname(const char *path)
+{
+	assert(path);
+
+	const char *cmd = path;
+	while (*cmd)
+		cmd++;
+#ifdef _WIN32
+	while (cmd >= path && *cmd != '\\')
+#else
+	while (cmd >= path && *cmd != '/')
+#endif
+		cmd--;
+	return ++cmd;
+}
+
+#if !LELY_NO_DIAG
 
 void
 diag_get_handler(diag_handler_t **phandler, void **phandle)
@@ -503,19 +526,4 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 	return n;
 }
 
-const char *
-cmdname(const char *path)
-{
-	assert(path);
-
-	const char *cmd = path;
-	while (*cmd)
-		cmd++;
-#ifdef _WIN32
-	while (cmd >= path && *cmd != '\\')
-#else
-	while (cmd >= path && *cmd != '/')
-#endif
-		cmd--;
-	return ++cmd;
-}
+#endif // !LELY_NO_DIAG

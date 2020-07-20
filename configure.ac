@@ -58,6 +58,15 @@ AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
 AM_CONDITIONAL([PLATFORM_POSIX], [test "$platform_posix" == "yes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
+AS_IF([test "$enable_diag" == "no" -a "$enable_tools" == "yes"],[
+	AC_MSG_WARN(m4_normalize[
+
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Tools will not print diagnostic messages with --disable-diag
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	])
+])
+
 AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
@@ -72,6 +81,7 @@ AS_IF([test "$enable_ecss_compliance" == "yes"], [
 AM_CONDITIONAL([NO_TOOLS], [false])
 AC_ARG_ENABLE([tools],
 	AS_HELP_STRING([--disable-tools], [disable tools]))
+AS_IF([test "$enable_diag" == "no" -a  "$enable_tools" != "yes"], [enable_tools=no])
 AS_IF([test "$enable_tools" == "no"], [
 	AM_CONDITIONAL([NO_TOOLS], [true])
 ])
@@ -160,6 +170,15 @@ AC_ARG_ENABLE([daemon],
 AS_IF([test "$enable_daemon" == "no"], [
 	AM_CONDITIONAL([NO_DAEMON], [true])
 	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
+])
+
+AM_CONDITIONAL([NO_DIAG], [false])
+AC_ARG_ENABLE([diag],
+	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_diag" != "yes"], [enable_diag=no])
+AS_IF([test "$enable_diag" == "no"], [
+	AM_CONDITIONAL([NO_DIAG], [true])
+	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
 ])
 
 AM_CONDITIONAL([NO_CANFD], [false])
