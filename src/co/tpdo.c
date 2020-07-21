@@ -79,27 +79,21 @@ struct __co_tpdo {
  * Initializes the CAN frame receiver of a Transmit-PDO service. This function
  * is invoked when one of the TPDO communication parameters (objects 1800..19FF)
  * is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_tpdo_init_recv(co_tpdo_t *pdo);
+static void co_tpdo_init_recv(co_tpdo_t *pdo);
 
 /**
  * Initializes the CAN timer for events of a Transmit-PDO service. This function
  * is invoked when one of the TPDO communication parameters (objects 1800..19FF)
  * is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_tpdo_init_timer_event(co_tpdo_t *pdo);
+static void co_tpdo_init_timer_event(co_tpdo_t *pdo);
 
 /**
  * Initializes the CAN timer for the synchronous time window of a Transmit-PDO
  * service.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
+static void co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
 
 /**
  * Initializes the CAN frame buffer of a Transmit-PDO service. This function is
@@ -212,10 +206,26 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	memcpy(&pdo->map, co_obj_addressof_val(obj_1a00),
 			MIN(co_obj_sizeof_val(obj_1a00), sizeof(pdo->map)));
 
-	pdo->recv = NULL;
+	pdo->recv = can_recv_create();
+	if (!pdo->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(pdo->recv, &co_tpdo_recv, pdo);
 
-	pdo->timer_event = NULL;
-	pdo->timer_swnd = NULL;
+	pdo->timer_event = can_timer_create();
+	if (!pdo->timer_event) {
+		errc = get_errc();
+		goto error_create_timer_event;
+	}
+	can_timer_set_func(pdo->timer_event, &co_tpdo_timer_event, pdo);
+
+	pdo->timer_swnd = can_timer_create();
+	if (!pdo->timer_swnd) {
+		errc = get_errc();
+		goto error_create_timer_swnd;
+	}
+	can_timer_set_func(pdo->timer_swnd, &co_tpdo_timer_swnd, pdo);
 
 	pdo->buf = NULL;
 
@@ -237,15 +247,8 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	// Set the download indication functions PDO mapping parameter record.
 	co_obj_set_dn_ind(obj_1a00, &co_1a00_dn_ind, pdo);
 
-	if (co_tpdo_init_recv(pdo) == -1) {
-		errc = get_errc();
-		goto error_init_recv;
-	}
-
-	if (co_tpdo_init_timer_event(pdo) == -1) {
-		errc = get_errc();
-		goto error_init_timer_event;
-	}
+	co_tpdo_init_recv(pdo);
+	co_tpdo_init_timer_event(pdo);
 
 	if (co_tpdo_init_buf(pdo) == -1) {
 		errc = get_errc();
@@ -254,11 +257,14 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 
 	return pdo;
 
+	// can_buf_destroy(pdo->buf);
 error_init_buf:
+	can_timer_destroy(pdo->timer_swnd);
+error_create_timer_swnd:
 	can_timer_destroy(pdo->timer_event);
-error_init_timer_event:
+error_create_timer_event:
 	can_recv_destroy(pdo->recv);
-error_init_recv:
+error_create_recv:
 	co_obj_set_dn_ind(obj_1a00, NULL, NULL);
 	co_obj_set_dn_ind(obj_1800, NULL, NULL);
 error_param:
@@ -433,7 +439,9 @@ co_tpdo_event(co_tpdo_t *pdo)
 					&pdo->inhibit, pdo->comm.inhibit * 100);
 	}
 
-	return co_tpdo_init_timer_event(pdo);
+	co_tpdo_init_timer_event(pdo);
+
+	return 0;
 }
 
 int
@@ -513,7 +521,7 @@ co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp)
 		*tp = pdo->inhibit;
 }
 
-static int
+static void
 co_tpdo_init_recv(co_tpdo_t *pdo)
 {
 	assert(pdo);
@@ -522,12 +530,6 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (pdo->comm.trans == 0xfc
 			|| pdo->comm.trans == 0xfd)) {
 		// clang-format on
-		if (!pdo->recv) {
-			pdo->recv = can_recv_create();
-			if (!pdo->recv)
-				return -1;
-			can_recv_set_func(pdo->recv, &co_tpdo_recv, pdo);
-		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = pdo->comm.cobid;
 		uint_least8_t flags = 0;
@@ -538,64 +540,38 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 			id &= CAN_MASK_BID;
 		}
 		can_recv_start(pdo->recv, pdo->net, id, flags);
-	} else if (pdo->recv) {
-		can_recv_destroy(pdo->recv);
-		pdo->recv = NULL;
+	} else {
+		// Stop the receiver unless the TPDO is valid and not RTR-only.
+		can_recv_stop(pdo->recv);
 	}
-
-	return 0;
 }
 
-static int
+static void
 co_tpdo_init_timer_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	can_timer_stop(pdo->timer_event);
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
 			&& (!pdo->comm.trans || pdo->comm.trans >= 0xfe)
-			&& pdo->comm.event) {
-		if (!pdo->timer_event) {
-			pdo->timer_event = can_timer_create();
-			if (!pdo->timer_event)
-				return -1;
-			can_timer_set_func(pdo->timer_event,
-					&co_tpdo_timer_event, pdo);
-		}
+			&& pdo->comm.event)
 		// Reset the event timer.
 		can_timer_timeout(pdo->timer_event, pdo->net, pdo->comm.event);
-	} else if (pdo->timer_event) {
-		can_timer_destroy(pdo->timer_event);
-		pdo->timer_event = NULL;
-	}
-
-	return 0;
 }
 
-static int
+static void
 co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	can_timer_stop(pdo->timer_swnd);
 	// Ignore the synchronous window length unless the TPDO is valid and
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
 			&& (pdo->comm.trans <= 0xf0 || pdo->comm.trans == 0xfc)
-			&& swnd) {
-		if (!pdo->timer_swnd) {
-			pdo->timer_swnd = can_timer_create();
-			if (!pdo->timer_swnd)
-				return -1;
-			can_timer_set_func(pdo->timer_swnd, co_tpdo_timer_swnd,
-					pdo);
-		}
+			&& swnd)
 		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
-	} else if (pdo->timer_swnd) {
-		can_timer_destroy(pdo->timer_swnd);
-		pdo->timer_swnd = NULL;
-	}
-
-	return 0;
 }
 
 static int

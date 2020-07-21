@@ -68,10 +68,8 @@ struct __co_sync {
  * Updates and (de)activates a SYNC producer/consumer service. This function is
  * invoked by the download indication functions when one of the SYNC
  * configuration objects (1005, 1006 or 1019) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_sync_update(co_sync_t *sync);
+static void co_sync_update(co_sync_t *sync);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1005
@@ -158,8 +156,19 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
 	sync->max_cnt = co_obj_get_val_u8(obj_1019, 0x00);
 
-	sync->recv = NULL;
-	sync->timer = NULL;
+	sync->recv = can_recv_create();
+	if (!sync->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(sync->recv, &co_sync_recv, sync);
+
+	sync->timer = can_timer_create();
+	if (!sync->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(sync->timer, &co_sync_timer, sync);
 
 	sync->cnt = 1;
 
@@ -181,18 +190,18 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	if (obj_1019)
 		co_obj_set_dn_ind(obj_1019, &co_1019_dn_ind, sync);
 
-	if (co_sync_update(sync) == -1) {
-		errc = get_errc();
-		goto error_update;
-	}
+	co_sync_update(sync);
 
 	return sync;
 
-error_update:
-	if (obj_1019)
-		co_obj_set_dn_ind(obj_1019, NULL, NULL);
-	if (obj_1006)
-		co_obj_set_dn_ind(obj_1006, NULL, NULL);
+	// if (obj_1019)
+	// 	co_obj_set_dn_ind(obj_1019, NULL, NULL);
+	// if (obj_1006)
+	// 	co_obj_set_dn_ind(obj_1006, NULL, NULL);
+	// can_timer_destroy(sync->timer);
+error_create_timer:
+	can_recv_destroy(sync->recv);
+error_create_recv:
 	co_obj_set_dn_ind(obj_1005, NULL, NULL);
 error_obj_1005:
 	set_errc(errc);
@@ -319,18 +328,12 @@ co_sync_set_err(co_sync_t *sync, co_sync_err_t *err, void *data)
 	sync->err_data = data;
 }
 
-static int
+static void
 co_sync_update(co_sync_t *sync)
 {
 	assert(sync);
 
 	if (!(sync->cobid & CO_SYNC_COBID_PRODUCER)) {
-		if (!sync->recv) {
-			sync->recv = can_recv_create();
-			if (!sync->recv)
-				return -1;
-			can_recv_set_func(sync->recv, &co_sync_recv, sync);
-		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = sync->cobid;
 		uint_least8_t flags = 0;
@@ -341,20 +344,13 @@ co_sync_update(co_sync_t *sync)
 			id &= CAN_MASK_BID;
 		}
 		can_recv_start(sync->recv, sync->net, id, flags);
-	} else if (sync->recv) {
-		// Destroy the receiver if we are a producer, to prevent
-		// receiving our own SYNC messages.
-		can_recv_destroy(sync->recv);
-		sync->recv = NULL;
+	} else {
+		// Stop the receiver if we are a producer, to prevent receiving
+		// our own SYNC messages.
+		can_recv_stop(sync->recv);
 	}
 
 	if ((sync->cobid & CO_SYNC_COBID_PRODUCER) && sync->us) {
-		if (!sync->timer) {
-			sync->timer = can_timer_create();
-			if (!sync->timer)
-				return -1;
-			can_timer_set_func(sync->timer, co_sync_timer, sync);
-		}
 		// Start SYNC transmission at the next multiple of the SYNC
 		// period.
 		struct timespec start = { 0, 0 };
@@ -367,16 +363,13 @@ co_sync_update(co_sync_t *sync)
 		struct timespec interval = { 0, 0 };
 		timespec_add_usec(&interval, sync->us);
 		can_timer_start(sync->timer, sync->net, &start, &interval);
-	} else if (sync->timer) {
-		// Destroy the SYNC timer unless we are an active SYNC producer
+	} else {
+		// Stop the SYNC timer unless we are an active SYNC producer
 		// (with a non-zero communication cycle period).
-		can_timer_destroy(sync->timer);
-		sync->timer = NULL;
+		can_timer_stop(sync->timer);
 	}
 
 	sync->cnt = 1;
-
-	return 0;
 }
 
 static co_unsigned32_t

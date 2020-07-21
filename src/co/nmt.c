@@ -603,10 +603,8 @@ static void co_nmt_ec_fini(co_nmt_t *nmt);
  * This function is invoked by the download indication functions when object
  * 100C (Guard time), 100D (Life time factor) or 1017 (Producer heartbeat time)
  * is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_nmt_ec_update(co_nmt_t *nmt);
+static void co_nmt_ec_update(co_nmt_t *nmt);
 
 /**
  * Sends an NMT error control response message.
@@ -797,14 +795,26 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->cs_ind = NULL;
 	nmt->cs_data = NULL;
 
-	nmt->recv_700 = NULL;
+	// Create the CAN frame receiver for node guarding RTR and boot-up
+	// messages.
+	nmt->recv_700 = can_recv_create();
+	if (!nmt->recv_700) {
+		errc = get_errc();
+		goto error_create_recv_700;
+	}
+	can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
 
 #ifndef LELY_NO_CO_MASTER
 	nmt->ng_ind = &default_ng_ind;
 	nmt->ng_data = NULL;
 #endif
 
-	nmt->ec_timer = NULL;
+	nmt->ec_timer = can_timer_create();
+	if (!nmt->ec_timer) {
+		errc = get_errc();
+		goto error_create_ec_timer;
+	}
+	can_timer_set_func(nmt->ec_timer, &co_nmt_ec_timer, nmt);
 
 	nmt->st = CO_NMT_ST_BOOTUP;
 	nmt->gt = 0;
@@ -827,7 +837,12 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #ifndef LELY_NO_CO_MASTER
 	nmt->buf = (struct can_buf)CAN_BUF_INIT;
 	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = NULL;
+	nmt->cs_timer = can_timer_create();
+	if (!nmt->cs_timer) {
+		errc = get_errc();
+		goto error_create_cs_timer;
+	}
+	can_timer_set_func(nmt->cs_timer, &co_nmt_cs_timer, nmt);
 
 #ifndef LELY_NO_CO_LSS
 	nmt->lss_req = NULL;
@@ -859,6 +874,24 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->ltf = 0;
 		slave->rtr = 0;
 		slave->ng_state = CO_NMT_EC_RESOLVED;
+	}
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		slave->recv = can_recv_create();
+		if (!slave->recv) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+
+		slave->timer = can_timer_create();
+		if (!slave->timer) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
 	}
 
 	nmt->timeout = LELY_CO_NMT_TIMEOUT;
@@ -948,7 +981,22 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 // #ifndef LELY_NO_CO_TPDO
 // 	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
 // #endif
-// 	can_recv_destroy(nmt->recv_000);
+#ifndef LELY_NO_CO_MASTER
+error_init_slave:
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+	can_timer_destroy(nmt->cs_timer);
+error_create_cs_timer:
+#endif
+	can_timer_destroy(nmt->ec_timer);
+error_create_ec_timer:
+	can_recv_destroy(nmt->recv_700);
+error_create_recv_700:
+	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
@@ -1015,6 +1063,18 @@ __co_nmt_fini(struct __co_nmt *nmt)
 
 #ifndef LELY_NO_CO_MASTER
 	co_nmt_slaves_fini(nmt);
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+#endif
+
+#ifndef LELY_NO_CO_MASTER
+	can_timer_destroy(nmt->cs_timer);
+	can_buf_fini(&nmt->buf);
 #endif
 
 	co_nmt_hb_fini(nmt);
@@ -1023,11 +1083,6 @@ __co_nmt_fini(struct __co_nmt *nmt)
 
 	can_timer_destroy(nmt->ec_timer);
 	can_recv_destroy(nmt->recv_700);
-
-#ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(nmt->cs_timer);
-	can_buf_fini(&nmt->buf);
-#endif
 
 	can_recv_destroy(nmt->recv_000);
 
@@ -1791,21 +1846,12 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
 	if (!gt || !ltf) {
-		can_timer_destroy(slave->timer);
-		slave->timer = 0;
+		can_timer_stop(slave->timer);
 
 		slave->gt = 0;
 		slave->ltf = 0;
 		slave->rtr = 0;
 	} else {
-		if (!slave->timer) {
-			slave->timer = can_timer_create();
-			if (!slave->timer)
-				return -1;
-			can_timer_set_func(
-					slave->timer, &co_nmt_ng_timer, slave);
-		}
-
 		slave->gt = gt;
 		slave->ltf = ltf;
 		slave->rtr = 0;
@@ -2628,20 +2674,7 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 
 	co_unsigned16_t inhibit = co_dev_get_val_u16(nmt->dev, 0x102a, 0x00);
 
-	if (inhibit) {
-		if (nmt->cs_timer) {
-			can_timer_stop(nmt->cs_timer);
-		} else {
-			nmt->cs_timer = can_timer_create();
-			if (!nmt->cs_timer)
-				return -1;
-			can_timer_set_func(
-					nmt->cs_timer, &co_nmt_cs_timer, nmt);
-		}
-	} else if (nmt->cs_timer) {
-		can_timer_destroy(nmt->cs_timer);
-		nmt->cs_timer = NULL;
-	}
+	can_timer_stop(nmt->cs_timer);
 
 	struct timespec now = { 0, 0 };
 	can_net_get_time(nmt->net, &now);
@@ -3272,10 +3305,7 @@ co_nmt_ec_init(co_nmt_t *nmt)
 
 	nmt->lg_state = CO_NMT_EC_RESOLVED;
 
-	if (co_nmt_ec_update(nmt) == -1)
-		diag(DIAG_ERROR, get_errc(), "unable to start %s",
-				nmt->ms ? "heartbeat production"
-					: "life guarding");
+	co_nmt_ec_update(nmt);
 }
 
 static void
@@ -3293,7 +3323,7 @@ co_nmt_ec_fini(co_nmt_t *nmt)
 	co_nmt_ec_update(nmt);
 }
 
-static int
+static void
 co_nmt_ec_update(co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -3307,40 +3337,23 @@ co_nmt_ec_update(co_nmt_t *nmt)
 #endif
 
 	if (lt) {
-		if (!nmt->recv_700) {
-			nmt->recv_700 = can_recv_create();
-			if (!nmt->recv_700)
-				return -1;
-			can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
-		}
 		// Start the CAN frame receiver for node guarding RTRs.
 		can_recv_start(nmt->recv_700, nmt->net,
 				CO_NMT_EC_CANID(co_dev_get_id(nmt->dev)),
 				CAN_FLAG_RTR);
-	} else if (nmt->recv_700) {
-		can_recv_destroy(nmt->recv_700);
-		nmt->recv_700 = NULL;
+	} else {
+		can_recv_stop(nmt->recv_700);
 	}
 
 	if (nmt->ms || lt) {
-		if (!nmt->ec_timer) {
-			nmt->ec_timer = can_timer_create();
-			if (!nmt->ec_timer)
-				return -1;
-			can_timer_set_func(
-					nmt->ec_timer, &co_nmt_ec_timer, nmt);
-		}
 		// Start the CAN timer for heartbeat production or life
 		// guarding.
 		int ms = nmt->ms ? nmt->ms : lt;
 		struct timespec interval = { ms / 1000, (ms % 1000) * 1000000 };
 		can_timer_start(nmt->ec_timer, nmt->net, NULL, &interval);
-	} else if (nmt->ec_timer) {
-		can_timer_destroy(nmt->ec_timer);
-		nmt->ec_timer = NULL;
+	} else {
+		can_timer_stop(nmt->ec_timer);
 	}
-
-	return 0;
 }
 
 static int
@@ -3436,18 +3449,10 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 
 	co_nmt_slaves_fini(nmt);
 
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-		slave->recv = can_recv_create();
-		if (!slave->recv) {
-			diag(DIAG_ERROR, get_errc(),
-					"unable to create CAN frame receiver");
-			continue;
-		}
-		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		// Start listening for boot-up notifications.
-		can_recv_start(slave->recv, nmt->net, CO_NMT_EC_CANID(id), 0);
-	}
+		can_recv_start(nmt->slaves[id - 1].recv, nmt->net,
+				CO_NMT_EC_CANID(id), 0);
 
 	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
 	if (!obj_1f81)
@@ -3466,10 +3471,8 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		can_recv_destroy(slave->recv);
-		slave->recv = NULL;
-		can_timer_destroy(slave->timer);
-		slave->timer = NULL;
+		can_recv_stop(slave->recv);
+		can_timer_stop(slave->timer);
 
 		slave->assignment = 0;
 		slave->est = 0;
