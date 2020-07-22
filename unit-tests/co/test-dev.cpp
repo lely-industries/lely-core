@@ -68,14 +68,16 @@ TEST(CO_DevInit, CODevInit) {
 
   CHECK_EQUAL(0, co_dev_get_idx(dev, 0, nullptr));
 
-  POINTERS_EQUAL(nullptr, co_dev_get_name(dev));
-
-  POINTERS_EQUAL(nullptr, co_dev_get_vendor_name(dev));
   CHECK_EQUAL(0, co_dev_get_vendor_id(dev));
-  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
   CHECK_EQUAL(0, co_dev_get_product_code(dev));
   CHECK_EQUAL(0, co_dev_get_revision(dev));
+
+#if !LELY_NO_CO_OBJ_NAME
+  POINTERS_EQUAL(nullptr, co_dev_get_name(dev));
+  POINTERS_EQUAL(nullptr, co_dev_get_vendor_name(dev));
+  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
   POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
+#endif // !LELY_NO_CO_OBJ_NAME
 
   CHECK_EQUAL(0, co_dev_get_baud(dev));
   CHECK_EQUAL(0, co_dev_get_rate(dev));
@@ -104,10 +106,12 @@ TEST(CO_DevInit, CODevInit_UnconfiguredId) {
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3));
 
+#if !LELY_NO_CO_OBJ_NAME
   CHECK_EQUAL(0, co_dev_set_name(dev, "name"));
   CHECK_EQUAL(0, co_dev_set_vendor_name(dev, "vendor"));
   CHECK_EQUAL(0, co_dev_set_product_name(dev, "product name"));
   CHECK_EQUAL(0, co_dev_set_order_code(dev, "order code"));
+#endif // !LELY_NO_CO_OBJ_NAME
 
   __co_dev_fini(dev);
   __co_dev_free(dev);
@@ -557,6 +561,8 @@ TEST(CO_Dev, CoDevLastObj_Empty) {
   POINTERS_EQUAL(nullptr, ret);
 }
 
+#if !LELY_NO_CO_OBJ_NAME
+
 TEST(CO_Dev, CoDevSetName) {
   const char* name = "DeviceName";
   const auto ret = co_dev_set_name(dev, name);
@@ -613,38 +619,68 @@ TEST(CO_Dev, CoDevSetVendorName_Empty) {
   POINTERS_EQUAL(nullptr, co_dev_get_vendor_name(dev));
 }
 
+TEST(CO_Dev, CoDevSetProductName) {
+    const char* product_name = "ProductName";
+    const auto ret = co_dev_set_product_name(dev, product_name);
+
+    CHECK_EQUAL(0, ret);
+    STRCMP_EQUAL(product_name, co_dev_get_product_name(dev));
+}
+
+TEST(CO_Dev, CoDevSetProductName_Null) {
+    const char* product_name = "ProductName";
+    CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
+
+    const auto ret = co_dev_set_product_name(dev, nullptr);
+
+    CHECK_EQUAL(0, ret);
+    POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
+}
+
+TEST(CO_Dev, CoDevSetProductName_Empty) {
+    const char* product_name = "ProductName";
+    CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
+
+    const auto ret = co_dev_set_product_name(dev, "");
+
+    CHECK_EQUAL(0, ret);
+    POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
+}
+
+TEST(CO_Dev, CoDevSetOrderCode) {
+    const char* order_code = "OrderCode";
+    const auto ret = co_dev_set_order_code(dev, order_code);
+
+    CHECK_EQUAL(0, ret);
+    STRCMP_EQUAL(order_code, co_dev_get_order_code(dev));
+}
+
+TEST(CO_Dev, CoDevSetOrderCode_Null) {
+    const char* order_code = "OrderCode";
+    CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
+
+    const auto ret = co_dev_set_order_code(dev, nullptr);
+
+    CHECK_EQUAL(0, ret);
+    POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
+}
+
+TEST(CO_Dev, CoDevSetOrderCode_Empty) {
+    const char* order_code = "OrderCode";
+    CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
+
+    const auto ret = co_dev_set_order_code(dev, "");
+
+    CHECK_EQUAL(0, ret);
+    POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
+}
+
+#endif // !LELY_NO_CO_OBJ_NAME
+
 TEST(CO_Dev, CoDevSetVendorId) {
   co_dev_set_vendor_id(dev, 0x12345678);
 
   CHECK_EQUAL(0x12345678, co_dev_get_vendor_id(dev));
-}
-
-TEST(CO_Dev, CoDevSetProductName) {
-  const char* product_name = "ProductName";
-  const auto ret = co_dev_set_product_name(dev, product_name);
-
-  CHECK_EQUAL(0, ret);
-  STRCMP_EQUAL(product_name, co_dev_get_product_name(dev));
-}
-
-TEST(CO_Dev, CoDevSetProductName_Null) {
-  const char* product_name = "ProductName";
-  CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
-
-  const auto ret = co_dev_set_product_name(dev, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
-}
-
-TEST(CO_Dev, CoDevSetProductName_Empty) {
-  const char* product_name = "ProductName";
-  CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
-
-  const auto ret = co_dev_set_product_name(dev, "");
-
-  CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
 }
 
 TEST(CO_Dev, CoDevSetProductCode) {
@@ -657,34 +693,6 @@ TEST(CO_Dev, CoDevSetRevision) {
   co_dev_set_revision(dev, 0x12345678);
 
   CHECK_EQUAL(0x12345678, co_dev_get_revision(dev));
-}
-
-TEST(CO_Dev, CoDevSetOrderCode) {
-  const char* order_code = "OrderCode";
-  const auto ret = co_dev_set_order_code(dev, order_code);
-
-  CHECK_EQUAL(0, ret);
-  STRCMP_EQUAL(order_code, co_dev_get_order_code(dev));
-}
-
-TEST(CO_Dev, CoDevSetOrderCode_Null) {
-  const char* order_code = "OrderCode";
-  CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
-
-  const auto ret = co_dev_set_order_code(dev, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
-}
-
-TEST(CO_Dev, CoDevSetOrderCode_Empty) {
-  const char* order_code = "OrderCode";
-  CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
-
-  const auto ret = co_dev_set_order_code(dev, "");
-
-  CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
 }
 
 TEST(CO_Dev, CoDevSetBaud) {
