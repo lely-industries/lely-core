@@ -242,6 +242,8 @@ co_obj_t *co_dev_first_obj(const co_dev_t *dev);
  */
 co_obj_t *co_dev_last_obj(const co_dev_t *dev);
 
+#if !LELY_NO_CO_OBJ_NAME
+
 /// Returns the name of a CANopen device. @see co_dev_set_name()
 const char *co_dev_get_name(const co_dev_t *dev);
 
@@ -272,11 +274,15 @@ const char *co_dev_get_vendor_name(const co_dev_t *dev);
  */
 int co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name);
 
+#endif // !LELY_NO_CO_OBJ_NAME
+
 /// Returns the vendor ID of a CANopen device. @see co_dev_set_vendor_id()
 co_unsigned32_t co_dev_get_vendor_id(const co_dev_t *dev);
 
 /// Sets the vendor ID of a CANopen device. @see co_dev_get_vendor_id()
 void co_dev_set_vendor_id(co_dev_t *dev, co_unsigned32_t vendor_id);
+
+#if !LELY_NO_CO_OBJ_NAME
 
 /**
  * Returns a pointer to the product name of a CANopen device.
@@ -295,6 +301,8 @@ const char *co_dev_get_product_name(const co_dev_t *dev);
  */
 int co_dev_set_product_name(co_dev_t *dev, const char *product_name);
 
+#endif // !LELY_NO_CO_OBJ_NAME
+
 /// Returns the product code of a CANopen device. @see co_dev_set_product_code()
 co_unsigned32_t co_dev_get_product_code(const co_dev_t *dev);
 
@@ -306,6 +314,8 @@ co_unsigned32_t co_dev_get_revision(const co_dev_t *dev);
 
 /// Sets the revision number of a CANopen device. @see co_dev_get_revision()
 void co_dev_set_revision(co_dev_t *dev, co_unsigned32_t revision);
+
+#if !LELY_NO_CO_OBJ_NAME
 
 /**
  * Returns a pointer to the order code of a CANopen device.
@@ -323,6 +333,8 @@ const char *co_dev_get_order_code(const co_dev_t *dev);
  * @see co_dev_get_order_code()
  */
 int co_dev_set_order_code(co_dev_t *dev, const char *order_code);
+
+#endif // !LELY_NO_CO_OBJ_NAME
 
 /**
  * Returns the supported bit rates of a CANopen device (any combination of
