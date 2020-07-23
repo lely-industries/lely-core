@@ -613,6 +613,22 @@ cppcheck-win64:
       - cppcheck-rules.md
     expire_in: 1 week
 
+docker:python-checks:
+  <<: *docker
+  variables:
+    NAME: python-checks
+    TAG: 3.8-slim
+
+python-checks:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/python-checks:3.8-slim
+  dependencies: []
+  script:
+    - pycodestyle --max-line-length=119 python
+
 docker:coverity:
   <<: *docker
   script:
