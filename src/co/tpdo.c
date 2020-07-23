@@ -829,7 +829,7 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	msg->id = pdo->comm.cobid;
 	if (pdo->comm.cobid & CO_PDO_COBID_FRAME) {
 		msg->id &= CAN_MASK_EID;
-		msg->id |= CAN_FLAG_IDE;
+		msg->flags |= CAN_FLAG_IDE;
 	} else {
 		msg->id &= CAN_MASK_BID;
 	}
