@@ -8,9 +8,9 @@ from .parse import parse_file
 
 
 class Device(dict):
-    def __init__(self, cfg: dict, env: dict = {}):
+    def __init__(self, cfg: dict, env: dict = None):
         self.cfg = cfg
-        self.env = env
+        self.env = env if env is not None else {}
 
         if (
             "NODEID" not in self.env
@@ -111,10 +111,10 @@ class Device(dict):
 
 
 class Object(dict):
-    def __init__(self, cfg: dict, index: int, env: dict = {}):
+    def __init__(self, cfg: dict, index: int, env: dict = None):
         self.cfg = cfg
         self.index = index
-        self.env = env
+        self.env = env if env is not None else {}
 
         name = "{:04X}".format(index)
         section = self.cfg[name]
@@ -144,7 +144,7 @@ class Object(dict):
             self[0] = SubObject.from_section(self.cfg, section, self.index, 0, self.env)
 
     @classmethod
-    def from_dummy(cls, index: int, env: dict = {}) -> "Object":
+    def from_dummy(cls, index: int, env: dict = None) -> "Object":
         cfg = {
             "{:04X}".format(index): {
                 "ParameterName": DataType(index).name(),
