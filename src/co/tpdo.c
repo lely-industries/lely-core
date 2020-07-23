@@ -25,7 +25,6 @@
 
 #ifndef LELY_NO_CO_TPDO
 
-#include <lely/can/buf.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
@@ -55,8 +54,8 @@ struct __co_tpdo {
 	can_timer_t *timer_event;
 	/// A pointer to the CAN timer for the synchronous time window.
 	can_timer_t *timer_swnd;
-	/// A CAN frame buffer.
-	struct can_buf *buf;
+	/// A buffered CAN frame, used for RTR-only or event-driven TPDOs.
+	struct can_msg msg;
 	/// The time at which the next event-driven TPDO may be sent.
 	struct timespec inhibit;
 	/// A flag indicating the occurrence of an event.
@@ -100,15 +99,6 @@ static int co_tpdo_init_timer_event(co_tpdo_t *pdo);
  * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
-
-/**
- * Initializes the CAN frame buffer of a Transmit-PDO service. This function is
- * invoked when one of the TPDO communication parameters (objects 1800..19FF) is
- * updated.
- *
- * @returns 0 on success, or -1 on error.
- */
-static int co_tpdo_init_buf(co_tpdo_t *pdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -217,7 +207,7 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->timer_event = NULL;
 	pdo->timer_swnd = NULL;
 
-	pdo->buf = NULL;
+	pdo->msg = (struct can_msg)CAN_MSG_INIT;
 
 	can_net_get_time(pdo->net, &pdo->inhibit);
 	pdo->event = 0;
@@ -247,15 +237,9 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 		goto error_init_timer_event;
 	}
 
-	if (co_tpdo_init_buf(pdo) == -1) {
-		errc = get_errc();
-		goto error_init_buf;
-	}
-
 	return pdo;
 
-error_init_buf:
-	can_timer_destroy(pdo->timer_event);
+	// can_timer_destroy(pdo->timer_event);
 error_init_timer_event:
 	can_recv_destroy(pdo->recv);
 error_init_recv:
@@ -285,8 +269,6 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 	co_obj_set_dn_ind(obj_1800, NULL, NULL);
 
 	co_sdo_req_fini(&pdo->req);
-
-	can_buf_destroy(pdo->buf);
 
 	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
@@ -409,6 +391,9 @@ co_tpdo_event(co_tpdo_t *pdo)
 		// expired.
 		if (!pdo->event)
 			pdo->event = !pdo->swnd;
+	} else if (pdo->comm.trans == 0xfd) {
+		if (co_tpdo_init_frame(pdo, &pdo->msg))
+			return -1;
 	} else if (pdo->comm.trans >= 0xfe) {
 		if (pdo->comm.inhibit) {
 			// Check whether the inhibit time has passed.
@@ -422,10 +407,9 @@ co_tpdo_event(co_tpdo_t *pdo)
 		}
 
 		// In case of an event-driven TPDO, send the frame right away.
-		struct can_msg msg;
-		if (co_tpdo_init_frame(pdo, &msg))
+		if (co_tpdo_init_frame(pdo, &pdo->msg))
 			return -1;
-		if (can_net_send(pdo->net, &msg) == -1)
+		if (can_net_send(pdo->net, &pdo->msg) == -1)
 			return -1;
 
 		if (pdo->comm.inhibit)
@@ -480,26 +464,12 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 		pdo->cnt = 0;
 	}
 
-	struct can_msg msg;
-	if (co_tpdo_init_frame(pdo, &msg))
+	if (co_tpdo_init_frame(pdo, &pdo->msg))
 		return -1;
 
-	if (pdo->comm.trans <= 0xf0) {
-		if (can_net_send(pdo->net, &msg) == -1)
-			return -1;
-	} else if (pdo->comm.trans == 0xfc) {
-		if (!pdo->buf) {
-			set_errnum(ERRNUM_INVAL);
-			return -1;
-		}
-		// In case of an RTR-only (synchronous) TPDO, buffer the frame
-		// instead of sending it right away.
-		if (!can_buf_write(pdo->buf, &msg, 1)) {
-			if (!can_buf_reserve(pdo->buf, 1))
-				return -1;
-			can_buf_write(pdo->buf, &msg, 1);
-		}
-	}
+	// Send a synchronous TPDO right away.
+	if (pdo->comm.trans <= 0xf0 && can_net_send(pdo->net, &pdo->msg) == -1)
+		return -1;
 
 	return 0;
 }
@@ -598,26 +568,6 @@ co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
 	return 0;
 }
 
-static int
-co_tpdo_init_buf(co_tpdo_t *pdo)
-{
-	assert(pdo);
-
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
-			&& (pdo->comm.trans == 0xfd)) {
-		if (!pdo->buf) {
-			pdo->buf = can_buf_create(0);
-			if (!pdo->buf)
-				return -1;
-		}
-	} else if (pdo->buf) {
-		can_buf_destroy(pdo->buf);
-		pdo->buf = NULL;
-	}
-
-	return 0;
-}
-
 static co_unsigned32_t
 co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -673,7 +623,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_tpdo_init_recv(pdo);
 		co_tpdo_init_timer_event(pdo);
 		co_tpdo_init_timer_swnd(pdo);
-		co_tpdo_init_buf(pdo);
+		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		break;
 	}
 	case 2: {
@@ -703,7 +653,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_tpdo_init_recv(pdo);
 		co_tpdo_init_timer_event(pdo);
 		co_tpdo_init_timer_swnd(pdo);
-		co_tpdo_init_buf(pdo);
+		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		break;
 	}
 	case 3: {
@@ -845,32 +795,35 @@ error:
 }
 
 static int
-co_tpdo_recv(const struct can_msg *_msg, void *data)
+co_tpdo_recv(const struct can_msg *msg, void *data)
 {
-	assert(_msg);
+	assert(msg);
 	co_tpdo_t *pdo = data;
 	assert(pdo);
 
-	if (!(_msg->flags & CAN_FLAG_RTR))
+	if (!(msg->flags & CAN_FLAG_RTR))
 		return 0;
 
-	struct can_msg msg;
 	switch (pdo->comm.trans) {
-	case 0xfc:
-		// Send a CAN frame from the buffer if available, otherwise
-		// fall through to the event-driven case.
-		if (pdo->buf && can_buf_read(pdo->buf, &msg, 1)) {
-			can_net_send(pdo->net, &msg);
+	case 0xfc: {
+		uint32_t mask = (pdo->comm.cobid & CO_PDO_COBID_FRAME)
+				? CAN_MASK_EID
+				: CAN_MASK_BID;
+		// Send a buffered CAN frame if available, otherwise fall
+		// through to the event-driven case.
+		if (pdo->msg.id == (pdo->comm.cobid & mask)) {
+			can_net_send(pdo->net, &pdo->msg);
 			break;
 		}
+	}
 	// ... falls through ...
 	case 0xfd: {
-		co_unsigned32_t ac = co_tpdo_init_frame(pdo, &msg);
+		co_unsigned32_t ac = co_tpdo_init_frame(pdo, &pdo->msg);
 		if (!ac)
-			can_net_send(pdo->net, &msg);
+			can_net_send(pdo->net, &pdo->msg);
 		if (pdo->ind)
-			pdo->ind(pdo, ac, ac ? NULL : msg.data,
-					ac ? 0 : msg.len, pdo->data);
+			pdo->ind(pdo, ac, ac ? NULL : pdo->msg.data,
+					ac ? 0 : pdo->msg.len, pdo->data);
 	}
 	default: break;
 	}
