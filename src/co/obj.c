@@ -97,7 +97,9 @@ __co_obj_fini(struct __co_obj *obj)
 	if (obj->dev)
 		co_dev_remove_obj(obj->dev, obj);
 
+#if !LELY_NO_MALLOC
 	co_obj_clear(obj);
+#endif
 
 #ifndef LELY_NO_CO_OBJ_NAME
 	free(obj->name);
