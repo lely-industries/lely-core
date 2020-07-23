@@ -63,6 +63,8 @@ __co_dev_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_dev *
 __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 {
@@ -102,6 +104,8 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 
 	return dev;
 }
+
+#if !LELY_NO_MALLOC
 
 void
 __co_dev_fini(struct __co_dev *dev)

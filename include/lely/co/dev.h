@@ -96,10 +96,15 @@ extern "C" {
  */
 typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
 
+#if !LELY_NO_MALLOC
 void *__co_dev_alloc(void);
 void __co_dev_free(void *ptr);
+#endif
+
 struct __co_dev *__co_dev_init(struct __co_dev *dev, co_unsigned8_t id);
 void __co_dev_fini(struct __co_dev *dev);
+
+#if !LELY_NO_MALLOC
 
 /**
  * Creates a new CANopen device.
@@ -120,6 +125,8 @@ co_dev_t *co_dev_create(co_unsigned8_t id);
  * @see co_dev_create()
  */
 void co_dev_destroy(co_dev_t *dev);
+
+#endif // !LELY_NO_MALLOC
 
 /// Returns the network-ID of a CANopen device. @see co_dev_set_netid()
 co_unsigned8_t co_dev_get_netid(const co_dev_t *dev);

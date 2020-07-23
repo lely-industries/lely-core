@@ -60,10 +60,16 @@ __co_obj_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_obj *
-__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
+__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
 {
 	assert(obj);
+#if !LELY_NO_MALLOC
+	assert(!val);
+	assert(!size);
+#endif
 
 	rbnode_init(&obj->node, &obj->idx);
 	obj->dev = NULL;
@@ -77,8 +83,8 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 
 	obj->code = CO_OBJECT_VAR;
 
-	obj->val = NULL;
-	obj->size = 0;
+	obj->val = val;
+	obj->size = size;
 
 	return obj;
 }
@@ -98,6 +104,8 @@ __co_obj_fini(struct __co_obj *obj)
 #endif
 }
 
+#if !LELY_NO_MALLOC
+
 co_obj_t *
 co_obj_create(co_unsigned16_t idx)
 {
@@ -107,7 +115,7 @@ co_obj_create(co_unsigned16_t idx)
 	if (!obj)
 		return NULL;
 
-	return __co_obj_init(obj, idx);
+	return __co_obj_init(obj, idx, NULL, 0);
 }
 
 void
@@ -408,10 +416,16 @@ __co_sub_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_sub *
-__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
+__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
+		void *val)
 {
 	assert(sub);
+#if !LELY_NO_MALLOC
+	assert(!val);
+#endif
 
 	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
@@ -432,7 +446,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	if (co_val_init(sub->type, &sub->def) == -1)
 		return NULL;
 #endif
-	sub->val = NULL;
+	sub->val = val;
 
 	sub->access = CO_ACCESS_RW;
 	sub->pdo_mapping = 0;
@@ -469,6 +483,8 @@ __co_sub_fini(struct __co_sub *sub)
 #endif
 }
 
+#if !LELY_NO_MALLOC
+
 co_sub_t *
 co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 {
@@ -480,7 +496,7 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 		goto error_alloc_sub;
 	}
 
-	if (!__co_sub_init(sub, subidx, type)) {
+	if (!__co_sub_init(sub, subidx, type, NULL)) {
 		errc = get_errc();
 		goto error_init_sub;
 	}

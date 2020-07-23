@@ -54,6 +54,7 @@ struct c_type_traits<__co_obj> {
   alloc() noexcept {
     return __co_obj_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_obj_free(ptr);
@@ -61,7 +62,7 @@ struct c_type_traits<__co_obj> {
 
   static pointer
   init(pointer p, co_unsigned16_t idx) noexcept {
-    return __co_obj_init(p, idx);
+    return __co_obj_init(p, idx, 0, 0);
   }
 
   static void
@@ -209,6 +210,7 @@ struct c_type_traits<__co_sub> {
   alloc() noexcept {
     return __co_sub_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_sub_free(ptr);
@@ -216,7 +218,7 @@ struct c_type_traits<__co_sub> {
 
   static pointer
   init(pointer p, co_unsigned8_t subidx, co_unsigned16_t type) noexcept {
-    return __co_sub_init(p, subidx, type);
+    return __co_sub_init(p, subidx, type, 0);
   }
 
   static void
