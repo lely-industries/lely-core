@@ -225,6 +225,8 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->nmsg = 0;
 	emcy->msgs = NULL;
 
+	// Create a CAN frame buffer (with the default size) for pending EMCY
+	// messages that will be send once the inhibit time has elapsed.
 	if (can_buf_init(&emcy->buf, 0) == -1) {
 		errc = get_errc();
 		goto error_init_buf;
@@ -807,11 +809,16 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 		memcpy(msg.data + 3, msef, 5);
 
 	// Add the frame to the buffer.
+#if LELY_NO_MALLOC
+	if (!can_buf_write(&emcy->buf, &msg, 1))
+		return -1;
+#else
 	if (!can_buf_write(&emcy->buf, &msg, 1)) {
 		if (!can_buf_reserve(&emcy->buf, 1))
 			return -1;
 		can_buf_write(&emcy->buf, &msg, 1);
 	}
+#endif
 
 	co_emcy_flush(emcy);
 	return 0;

@@ -835,7 +835,13 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->st_data = NULL;
 
 #ifndef LELY_NO_CO_MASTER
-	nmt->buf = (struct can_buf)CAN_BUF_INIT;
+	// Create a CAN fame buffer (with the default size) for pending NMT
+	// messages that will be sent once the inhibit time has elapsed.
+	if (can_buf_init(&nmt->buf, 0) == -1) {
+		errc = get_errc();
+		goto error_init_buf;
+	}
+
 	can_net_get_time(nmt->net, &nmt->inhibit);
 	nmt->cs_timer = can_timer_create();
 	if (!nmt->cs_timer) {
@@ -991,6 +997,8 @@ error_init_slave:
 	}
 	can_timer_destroy(nmt->cs_timer);
 error_create_cs_timer:
+	can_buf_fini(&nmt->buf);
+error_init_buf:
 #endif
 	can_timer_destroy(nmt->ec_timer);
 error_create_ec_timer:
@@ -1656,11 +1664,16 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	msg.data[1] = id;
 
 	// Add the frame to the buffer.
+#if LELY_NO_MALLOC
+	if (!can_buf_write(&nmt->buf, &msg, 1))
+		return -1;
+#else
 	if (!can_buf_write(&nmt->buf, &msg, 1)) {
 		if (!can_buf_reserve(&nmt->buf, 1))
 			return -1;
 		can_buf_write(&nmt->buf, &msg, 1);
 	}
+#endif
 
 	// Send the frame by triggering the inhibit timer.
 	return co_nmt_cs_timer(NULL, nmt);
