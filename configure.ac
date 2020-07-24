@@ -94,9 +94,9 @@ AS_IF([test "$enable_tests" == "no"], [
 ])
 
 m4_ifdef([PKG_CHECK_MODULES], [
-	PKG_CHECK_MODULES([CPPUTEST], [cpputest], [with_cpputest=yes], [with_cpputest=no])
+	PKG_CHECK_MODULES([CPPUTEST], [cpputest >= 4], [with_cpputest=yes], [with_cpputest=no])
 ], [
-	AC_MSG_WARN(pkg-config not installed - unit-test will not be available!)
+	AC_MSG_WARN(pkg-config not installed - unit tests will not be available!)
 	with_cpputest=no
 ])
 AC_SUBST([CPPUTEST_CFLAGS])
