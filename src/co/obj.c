@@ -67,8 +67,8 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
 {
 	assert(obj);
 #if !LELY_NO_MALLOC
-	assert(!val);
-	assert(!size);
+	assert(val == NULL);
+	assert(size == 0);
 #endif
 
 	rbnode_init(&obj->node, &obj->idx);
@@ -426,7 +426,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
 {
 	assert(sub);
 #if !LELY_NO_MALLOC
-	assert(!val);
+	assert(val == NULL);
 #endif
 
 	rbnode_init(&sub->node, &sub->subidx);

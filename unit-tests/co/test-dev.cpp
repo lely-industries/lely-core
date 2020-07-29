@@ -20,14 +20,15 @@
  * limitations under the License.
  */
 
-#include <cstring>
-#include <string>
-
-#include <CppUTest/TestHarness.h>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <cstring>
+#include <string>
+#include <memory>
+
+#include <CppUTest/TestHarness.h>
 
 #include <lely/can/net.h>
 #include <lely/co/dev.h>
@@ -38,6 +39,11 @@
 
 #include "override/lelyco-val.hpp"
 
+#include "dev-holder.hpp"
+#include "obj-holder.hpp"
+#include "sub-holder.hpp"
+#include "array-init.hpp"
+
 static void
 CheckBuffers(const uint_least8_t* buf1, const uint_least8_t* buf2,
              const size_t n) {
@@ -47,8 +53,36 @@ CheckBuffers(const uint_least8_t* buf1, const uint_least8_t* buf2,
   }
 }
 
-TEST_GROUP(CO_DevInit){};
+TEST_GROUP(CO_DevInit) {
+  co_dev_t* AcquireCoDevT() {
+#if LELY_NO_MALLOC
+    return &device;
+#else
+    return static_cast<co_dev_t*>(__co_dev_alloc());
+#endif
+  }
 
+  void ReleaseCoDevT(co_dev_t* const dev) {
+#if LELY_NO_MALLOC
+    POINTERS_EQUAL(&device, dev);
+#else
+    __co_dev_free(dev);
+#endif
+  }
+
+  void DestroyCoDevT(co_dev_t* const dev) {
+#if !LELY_NO_MALLOC
+    __co_dev_fini(dev);
+#endif
+    ReleaseCoDevT(dev);
+  }
+
+#if LELY_NO_MALLOC
+  co_dev_t device;
+#endif
+};
+
+#if !LELY_NO_MALLOC
 TEST(CO_DevInit, CODevAllocFree) {
   void* const ptr = __co_dev_alloc();
 
@@ -56,9 +90,10 @@ TEST(CO_DevInit, CODevAllocFree) {
 
   __co_dev_free(ptr);
 }
+#endif  // !LELY_NO_MALLOC
 
 TEST(CO_DevInit, CODevInit) {
-  auto* const dev = static_cast<co_dev_t*>(__co_dev_alloc());
+  auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
   POINTERS_EQUAL(dev, __co_dev_init(dev, 0x01));
@@ -77,7 +112,7 @@ TEST(CO_DevInit, CODevInit) {
   POINTERS_EQUAL(nullptr, co_dev_get_vendor_name(dev));
   POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
   POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
-#endif // !LELY_NO_CO_OBJ_NAME
+#endif  // !LELY_NO_CO_OBJ_NAME
 
   CHECK_EQUAL(0, co_dev_get_baud(dev));
   CHECK_EQUAL(0, co_dev_get_rate(dev));
@@ -86,19 +121,21 @@ TEST(CO_DevInit, CODevInit) {
 
   CHECK_EQUAL(0, co_dev_get_dummy(dev));
 
-  __co_dev_fini(dev);
-  __co_dev_free(dev);
+  DestroyCoDevT(dev);
 }
 
 TEST(CO_DevInit, CODevInit_UnconfiguredId) {
-  auto* const dev = static_cast<co_dev_t*>(__co_dev_alloc());
+  auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
   POINTERS_EQUAL(dev, __co_dev_init(dev, 0xff));
 
-  co_obj_t* const obj1 = co_obj_create(0x0000);
-  co_obj_t* const obj2 = co_obj_create(0x0001);
-  co_obj_t* const obj3 = co_obj_create(0xffff);
+  CoObjTHolder obj1_holder(0x0000);
+  CoObjTHolder obj2_holder(0x0001);
+  CoObjTHolder obj3_holder(0xffff);
+  co_obj_t* const obj1 = obj1_holder.Take();
+  co_obj_t* const obj2 = obj2_holder.Take();
+  co_obj_t* const obj3 = obj3_holder.Take();
   CHECK(obj1 != nullptr);
   CHECK(obj2 != nullptr);
   CHECK(obj3 != nullptr);
@@ -111,23 +148,22 @@ TEST(CO_DevInit, CODevInit_UnconfiguredId) {
   CHECK_EQUAL(0, co_dev_set_vendor_name(dev, "vendor"));
   CHECK_EQUAL(0, co_dev_set_product_name(dev, "product name"));
   CHECK_EQUAL(0, co_dev_set_order_code(dev, "order code"));
-#endif // !LELY_NO_CO_OBJ_NAME
+#endif  // !LELY_NO_CO_OBJ_NAME
 
-  __co_dev_fini(dev);
-  __co_dev_free(dev);
+  DestroyCoDevT(dev);
 }
 
 TEST(CO_DevInit, CODevInit_ZeroId) {
-  auto* const dev = static_cast<co_dev_t*>(__co_dev_alloc());
+  auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
   POINTERS_EQUAL(nullptr, __co_dev_init(dev, 0x00));
 
-  __co_dev_free(dev);
+  ReleaseCoDevT(dev);
 }
 
 TEST(CO_DevInit, CODevInit_InvalidId) {
-  auto* const dev = static_cast<co_dev_t*>(__co_dev_alloc());
+  auto* const dev = AcquireCoDevT();
   CHECK(dev != nullptr);
 
   POINTERS_EQUAL(nullptr, __co_dev_init(dev, CO_NUM_NODES + 1));
@@ -136,30 +172,35 @@ TEST(CO_DevInit, CODevInit_InvalidId) {
   POINTERS_EQUAL(nullptr, __co_dev_init(dev, 0xff - 1));
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 
-  __co_dev_free(dev);
+  ReleaseCoDevT(dev);
 }
 
 TEST(CO_DevInit, CODevFini) {
-  auto* const dev = static_cast<co_dev_t*>(__co_dev_alloc());
+  auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
   POINTERS_EQUAL(dev, __co_dev_init(dev, 0x01));
 
-  __co_dev_fini(dev);
-  __co_dev_free(dev);
+  ReleaseCoDevT(dev);
 }
 
+#if !LELY_NO_MALLOC
 TEST(CO_DevInit, CODevDestroy_Null) { co_dev_destroy(nullptr); }
+#endif
 
 TEST_GROUP(CO_Dev) {
   co_dev_t* dev = nullptr;
+  std::unique_ptr<CoDevTHolder> dev_holder;
 
   TEST_SETUP() {
 #ifdef HAVE_LELY_OVERRIDE
     LelyOverride::co_val_read_vc = LelyOverride::AllCallsValid;
     LelyOverride::co_val_write_vc = LelyOverride::AllCallsValid;
 #endif
-    dev = co_dev_create(0x01);
+
+    dev_holder.reset(new CoDevTHolder(0x01));
+    dev = dev_holder->Get();
+
     CHECK(dev != nullptr);
   }
 
@@ -168,7 +209,8 @@ TEST_GROUP(CO_Dev) {
     LelyOverride::co_val_read_vc = LelyOverride::AllCallsValid;
     LelyOverride::co_val_write_vc = LelyOverride::AllCallsValid;
 #endif
-    co_dev_destroy(dev);
+
+    dev_holder.reset();
   }
 };
 
@@ -206,23 +248,33 @@ TEST(CO_Dev, CoDevSetId) {
 }
 
 TEST(CO_Dev, CoDevSetId_CheckObj) {
-  co_obj_t* const obj = co_obj_create(0x0000);
+  CoObjTHolder obj_holder(0x0000);
+  co_obj_t* const obj = obj_holder.Take();
 #ifndef LELY_NO_CO_OBJ_LIMITS
-  co_obj_t* const obj1 = co_obj_create(0x0001);
-  co_obj_t* const obj2 = co_obj_create(0x1234);
+  CoObjTHolder obj_holder1(0x0001);
+  CoObjTHolder obj_holder2(0x1234);
+  co_obj_t* const obj1 = obj_holder1.Take();
+  co_obj_t* const obj2 = obj_holder2.Take();
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
-  co_obj_t* const obj3 = co_obj_create(0xffff);
+  CoObjTHolder obj_holder3(0xffff);
+  co_obj_t* const obj3 = obj_holder3.Take();
 #endif
 #ifndef LELY_NO_CO_OBJ_LIMITS
-  co_sub_t* const sub_min1 = co_sub_create(0x00, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_min2 = co_sub_create(0x01, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_max1 = co_sub_create(0x00, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_max2 = co_sub_create(0x01, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_min1_holder(0x00, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_min2_holder(0x01, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_max1_holder(0x00, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_max2_holder(0x01, CO_DEFTYPE_INTEGER16);
+  co_sub_t* const sub_min1 = sub_min1_holder.Take();
+  co_sub_t* const sub_min2 = sub_min2_holder.Take();
+  co_sub_t* const sub_max1 = sub_max1_holder.Take();
+  co_sub_t* const sub_max2 = sub_max2_holder.Take();
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
-  co_sub_t* const sub_def1 = co_sub_create(0x00, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_def2 = co_sub_create(0x01, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_def1_holder(0x00, CO_DEFTYPE_INTEGER16);
+  CoSubTHolder sub_def2_holder(0x01, CO_DEFTYPE_INTEGER16);
+  co_sub_t* const sub_def1 = sub_def1_holder.Take();
+  co_sub_t* const sub_def2 = sub_def2_holder.Take();
 #endif
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
@@ -301,8 +353,10 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Dev, CoDevSetId_CoType_##a) { \
-    co_obj_t* const obj = co_obj_create(0x1234); \
-    co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_##a); \
+    CoObjTHolder obj_holder(0x1234); \
+    CoSubTHolder sub_holder(0xab, CO_DEFTYPE_##a); \
+    co_obj_t* const obj = obj_holder.Take(); \
+    co_sub_t* const sub = sub_holder.Take(); \
     CHECK_EQUAL(0, co_obj_insert_sub(obj, sub)); \
     CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), \
                 co_sub_set_val_##c(sub, 0x42 + co_dev_get_id(dev))); \
@@ -361,8 +415,8 @@ TEST(CO_Dev, CoDevGetIdx_EmptyNull) {
 }
 
 TEST(CO_Dev, CoDevGetIdx_OneObjCheckNumber) {
-  co_obj_t* const obj = co_obj_create(0x0000);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x0000);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto ret = co_dev_get_idx(dev, 0xffff, nullptr);
 
@@ -370,8 +424,8 @@ TEST(CO_Dev, CoDevGetIdx_OneObjCheckNumber) {
 }
 
 TEST(CO_Dev, CoDevGetIdx_OneObjCheckIdx) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   co_unsigned16_t out_idx = 0x0000;
   const auto ret = co_dev_get_idx(dev, 1, &out_idx);
@@ -381,12 +435,12 @@ TEST(CO_Dev, CoDevGetIdx_OneObjCheckIdx) {
 }
 
 TEST(CO_Dev, CoDevGetIdx_ManyObj1) {
-  co_obj_t* const obj1 = co_obj_create(0x0000);
-  co_obj_t* const obj2 = co_obj_create(0x1234);
-  co_obj_t* const obj3 = co_obj_create(0xffff);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3));
+  CoObjTHolder obj1(0x0000);
+  CoObjTHolder obj2(0x1234);
+  CoObjTHolder obj3(0xffff);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3.Take()));
 
   co_unsigned16_t out_idx[5] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
   const auto ret = co_dev_get_idx(dev, 5, out_idx);
@@ -400,16 +454,16 @@ TEST(CO_Dev, CoDevGetIdx_ManyObj1) {
 }
 
 TEST(CO_Dev, CoDevGetIdx_ManyObj2) {
-  co_obj_t* const obj1 = co_obj_create(0x0000);
-  co_obj_t* const obj2 = co_obj_create(0x1234);
-  co_obj_t* const obj3 = co_obj_create(0xffff);
-  co_obj_t* const obj4 = co_obj_create(0xabcd);
-  co_obj_t* const obj5 = co_obj_create(0x1010);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj4));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj5));
+  CoObjTHolder obj1(0x0000);
+  CoObjTHolder obj2(0x1234);
+  CoObjTHolder obj3(0xffff);
+  CoObjTHolder obj4(0xabcd);
+  CoObjTHolder obj5(0x1010);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj4.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj5.Take()));
 
   co_unsigned16_t out_idx[5] = {0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
   const auto ret = co_dev_get_idx(dev, 3, out_idx);
@@ -423,7 +477,8 @@ TEST(CO_Dev, CoDevGetIdx_ManyObj2) {
 }
 
 TEST(CO_Dev, CoDevInsertObj) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj_holder(0x1234);
+  co_obj_t* const obj = obj_holder.Take();
 
   const auto ret = co_dev_insert_obj(dev, obj);
 
@@ -436,19 +491,20 @@ TEST(CO_Dev, CoDevInsertObj) {
 }
 
 TEST(CO_Dev, CoDevInsertObj_AddedToOtherDev) {
-  co_dev_t* const other_dev = co_dev_create(0x02);
-  co_obj_t* const obj = co_obj_create(0x0001);
+  CoDevTHolder other_dev_holder(0x02);
+  CoObjTHolder obj_holder(0x0001);
+  co_dev_t* const other_dev = other_dev_holder.Get();
+  co_obj_t* const obj = obj_holder.Take();
   CHECK_EQUAL(0, co_dev_insert_obj(other_dev, obj));
 
   const auto ret = co_dev_insert_obj(dev, obj);
 
   CHECK_EQUAL(-1, ret);
-
-  co_dev_destroy(other_dev);
 }
 
 TEST(CO_Dev, CoDevInsertObj_AlreadyAdded) {
-  co_obj_t* const obj = co_obj_create(0x0001);
+  CoObjTHolder obj_holder(0x00001);
+  co_obj_t* const obj = obj_holder.Take();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
   const auto ret = co_dev_insert_obj(dev, obj);
@@ -457,18 +513,18 @@ TEST(CO_Dev, CoDevInsertObj_AlreadyAdded) {
 }
 
 TEST(CO_Dev, CoDevInsertObj_AlreadyAddedAtIdx) {
-  co_obj_t* const obj1 = co_obj_create(0x0001);
-  co_obj_t* const obj2 = co_obj_create(0x0001);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1));
+  CoObjTHolder obj1(0x0001);
+  CoObjTHolder obj2(0x0001);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1.Take()));
 
-  const auto ret = co_dev_insert_obj(dev, obj2);
+  const auto ret = co_dev_insert_obj(dev, obj2.Get());
 
   CHECK_EQUAL(-1, ret);
-  co_obj_destroy(obj2);
 }
 
 TEST(CO_Dev, CoDevRemoveObj) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj_holder(0x1234);
+  co_obj_t* const obj = obj_holder.Get();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
   const auto ret = co_dev_remove_obj(dev, obj);
@@ -476,22 +532,19 @@ TEST(CO_Dev, CoDevRemoveObj) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, co_dev_get_idx(dev, 0, nullptr));
   POINTERS_EQUAL(nullptr, co_obj_get_dev(obj));
-
-  co_obj_destroy(obj);
 }
 
 TEST(CO_Dev, CoDevRemoveObj_NotAdded) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj(0x1234);
 
-  const auto ret = co_dev_remove_obj(dev, obj);
+  const auto ret = co_dev_remove_obj(dev, obj.Get());
 
   CHECK_EQUAL(-1, ret);
-
-  co_obj_destroy(obj);
 }
 
 TEST(CO_Dev, CoDevFindObj) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj_holder(0x1234);
+  co_obj_t* const obj = obj_holder.Take();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
   const auto* const ret = co_dev_find_obj(dev, 0x1234);
@@ -506,8 +559,10 @@ TEST(CO_Dev, CoDevFindObj_NotFound) {
 }
 
 TEST(CO_Dev, CoDevFindSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
+  CoObjTHolder obj_holder(0x1234);
+  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
+  co_obj_t* const obj = obj_holder.Take();
+  co_sub_t* const sub = sub_holder.Take();
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
@@ -523,8 +578,8 @@ TEST(CO_Dev, CoDevFindObj_NoObj) {
 }
 
 TEST(CO_Dev, CoDevFindObj_NoSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto* const ret = co_dev_find_sub(dev, 0x1234, 0x00);
 
@@ -532,7 +587,8 @@ TEST(CO_Dev, CoDevFindObj_NoSub) {
 }
 
 TEST(CO_Dev, CoDevFirstObj) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj_holder(0x1234);
+  const auto obj = obj_holder.Take();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
   const auto* const ret = co_dev_first_obj(dev);
@@ -547,7 +603,8 @@ TEST(CO_Dev, CoDevFirstObj_Empty) {
 }
 
 TEST(CO_Dev, CoDevLastObj) {
-  co_obj_t* const obj = co_obj_create(0x1234);
+  CoObjTHolder obj_holder(0x1234);
+  const auto obj = obj_holder.Take();
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
 
   const auto* const ret = co_dev_last_obj(dev);
@@ -620,62 +677,62 @@ TEST(CO_Dev, CoDevSetVendorName_Empty) {
 }
 
 TEST(CO_Dev, CoDevSetProductName) {
-    const char* product_name = "ProductName";
-    const auto ret = co_dev_set_product_name(dev, product_name);
+  const char* product_name = "ProductName";
+  const auto ret = co_dev_set_product_name(dev, product_name);
 
-    CHECK_EQUAL(0, ret);
-    STRCMP_EQUAL(product_name, co_dev_get_product_name(dev));
+  CHECK_EQUAL(0, ret);
+  STRCMP_EQUAL(product_name, co_dev_get_product_name(dev));
 }
 
 TEST(CO_Dev, CoDevSetProductName_Null) {
-    const char* product_name = "ProductName";
-    CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
+  const char* product_name = "ProductName";
+  CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
 
-    const auto ret = co_dev_set_product_name(dev, nullptr);
+  const auto ret = co_dev_set_product_name(dev, nullptr);
 
-    CHECK_EQUAL(0, ret);
-    POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
+  CHECK_EQUAL(0, ret);
+  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
 }
 
 TEST(CO_Dev, CoDevSetProductName_Empty) {
-    const char* product_name = "ProductName";
-    CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
+  const char* product_name = "ProductName";
+  CHECK_EQUAL(0, co_dev_set_product_name(dev, product_name));
 
-    const auto ret = co_dev_set_product_name(dev, "");
+  const auto ret = co_dev_set_product_name(dev, "");
 
-    CHECK_EQUAL(0, ret);
-    POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
+  CHECK_EQUAL(0, ret);
+  POINTERS_EQUAL(nullptr, co_dev_get_product_name(dev));
 }
 
 TEST(CO_Dev, CoDevSetOrderCode) {
-    const char* order_code = "OrderCode";
-    const auto ret = co_dev_set_order_code(dev, order_code);
+  const char* order_code = "OrderCode";
+  const auto ret = co_dev_set_order_code(dev, order_code);
 
-    CHECK_EQUAL(0, ret);
-    STRCMP_EQUAL(order_code, co_dev_get_order_code(dev));
+  CHECK_EQUAL(0, ret);
+  STRCMP_EQUAL(order_code, co_dev_get_order_code(dev));
 }
 
 TEST(CO_Dev, CoDevSetOrderCode_Null) {
-    const char* order_code = "OrderCode";
-    CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
+  const char* order_code = "OrderCode";
+  CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
 
-    const auto ret = co_dev_set_order_code(dev, nullptr);
+  const auto ret = co_dev_set_order_code(dev, nullptr);
 
-    CHECK_EQUAL(0, ret);
-    POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
+  CHECK_EQUAL(0, ret);
+  POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
 }
 
 TEST(CO_Dev, CoDevSetOrderCode_Empty) {
-    const char* order_code = "OrderCode";
-    CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
+  const char* order_code = "OrderCode";
+  CHECK_EQUAL(0, co_dev_set_order_code(dev, order_code));
 
-    const auto ret = co_dev_set_order_code(dev, "");
+  const auto ret = co_dev_set_order_code(dev, "");
 
-    CHECK_EQUAL(0, ret);
-    POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
+  CHECK_EQUAL(0, ret);
+  POINTERS_EQUAL(nullptr, co_dev_get_order_code(dev));
 }
 
-#endif // !LELY_NO_CO_OBJ_NAME
+#endif  // !LELY_NO_CO_OBJ_NAME
 
 TEST(CO_Dev, CoDevSetVendorId) {
   co_dev_set_vendor_id(dev, 0x12345678);
@@ -720,8 +777,10 @@ TEST(CO_Dev, CoDevSetDommy) {
 }
 
 TEST(CO_Dev, CoDevGetVal) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
+  CoObjTHolder obj_holder(0x1234);
+  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
+  co_obj_t* const obj = obj_holder.Take();
+  co_sub_t* const sub = sub_holder.Take();
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
   CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_INTEGER16),
               co_sub_set_val_i16(sub, 0x0987));
@@ -748,10 +807,10 @@ TEST(CO_Dev, CoDevGetVal_NotFound) {
 
 TEST(CO_Dev, CoDevSetVal) {
   co_unsigned16_t val = 0x0987;
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto ret = co_dev_set_val(dev, 0x1234, 0xab, &val, 2);
 
@@ -768,10 +827,10 @@ TEST(CO_Dev, CoDevSetVal_NotFound) {
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Dev, CoDevSetGetVal_CoType_##a) { \
-    co_obj_t* const obj = co_obj_create(0x1234); \
-    co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_##a); \
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub)); \
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj)); \
+    CoObjTHolder obj(0x1234); \
+    CoSubTHolder sub(0xab, CO_DEFTYPE_##a); \
+    CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take())); \
+    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take())); \
     const auto set_ret = co_dev_set_val_##c(dev, 0x1234, 0xab, 0x42); \
     CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), set_ret); \
     const co_##b##_t get_ret = co_dev_get_val_##c(dev, 0x1234, 0xab); \
@@ -781,10 +840,10 @@ TEST(CO_Dev, CoDevSetVal_NotFound) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Dev, CoDevReadSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -801,10 +860,10 @@ TEST(CO_Dev, CoDevReadSub) {
 }
 
 TEST(CO_Dev, CoDevReadSub_NoIdx) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -817,8 +876,8 @@ TEST(CO_Dev, CoDevReadSub_NoIdx) {
 }
 
 TEST(CO_Dev, CoDevReadSub_NoSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -830,8 +889,8 @@ TEST(CO_Dev, CoDevReadSub_NoSub) {
 }
 
 TEST(CO_Dev, CoDevReadSub_NoBegin) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -844,8 +903,8 @@ TEST(CO_Dev, CoDevReadSub_NoBegin) {
 }
 
 TEST(CO_Dev, CoDevReadSub_NoEnd) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -857,8 +916,8 @@ TEST(CO_Dev, CoDevReadSub_NoEnd) {
 }
 
 TEST(CO_Dev, CoDevReadSub_TooSmallBuffer) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 6;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x01, 0x00, 0x00};
@@ -869,8 +928,8 @@ TEST(CO_Dev, CoDevReadSub_TooSmallBuffer) {
 }
 
 TEST(CO_Dev, CoDevReadSub_TooSmallForType) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 8;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02,
@@ -883,8 +942,8 @@ TEST(CO_Dev, CoDevReadSub_TooSmallForType) {
 
 #ifdef HAVE_LELY_OVERRIDE
 TEST(CO_Dev, CoDevReadSub_ReadIdxFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -897,8 +956,8 @@ TEST(CO_Dev, CoDevReadSub_ReadIdxFailed) {
 }
 
 TEST(CO_Dev, CoDevReadSub_ReadSubidxFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -911,8 +970,8 @@ TEST(CO_Dev, CoDevReadSub_ReadSubidxFailed) {
 }
 
 TEST(CO_Dev, CoDevReadSub_ReadSizeFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0x34, 0x12, 0xab, 0x02, 0x00,
@@ -926,10 +985,10 @@ TEST(CO_Dev, CoDevReadSub_ReadSizeFailed) {
 #endif
 
 TEST(CO_Dev, CoDevReadSub_ValSizeTooBig) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x1a1a));
 
   const size_t BUF_SIZE = 10;
@@ -943,10 +1002,10 @@ TEST(CO_Dev, CoDevReadSub_ValSizeTooBig) {
 }
 
 TEST(CO_Dev, CoDevWriteSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -961,8 +1020,8 @@ TEST(CO_Dev, CoDevWriteSub) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_NoSub) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0};
@@ -974,10 +1033,10 @@ TEST(CO_Dev, CoDevWriteSub_NoSub) {
 
 #ifdef HAVE_LELY_OVERRIDE
 TEST(CO_Dev, CoDevWriteSub_InitWriteFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
   uint_least8_t buf[BUF_SIZE] = {0};
@@ -990,10 +1049,10 @@ TEST(CO_Dev, CoDevWriteSub_InitWriteFailed) {
 #endif
 
 TEST(CO_Dev, CoDevWriteSub_EmptyDomain) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_DOMAIN);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_DOMAIN);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 7;
   uint_least8_t buf[BUF_SIZE] = {0};
@@ -1006,10 +1065,10 @@ TEST(CO_Dev, CoDevWriteSub_EmptyDomain) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_NoBegin) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto ret = co_dev_write_sub(dev, 0x1234, 0xab, nullptr, nullptr);
 
@@ -1017,10 +1076,10 @@ TEST(CO_Dev, CoDevWriteSub_NoBegin) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_NoEnd) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -1035,10 +1094,10 @@ TEST(CO_Dev, CoDevWriteSub_NoEnd) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_TooSmallBuffer) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 8;
   uint_least8_t buf[BUF_SIZE] = {0};
@@ -1052,10 +1111,10 @@ TEST(CO_Dev, CoDevWriteSub_TooSmallBuffer) {
 
 #ifdef HAVE_LELY_OVERRIDE
 TEST(CO_Dev, CoDevWriteSub_IdxWriteFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -1070,10 +1129,10 @@ TEST(CO_Dev, CoDevWriteSub_IdxWriteFailed) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_SubidxWriteFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -1089,10 +1148,10 @@ TEST(CO_Dev, CoDevWriteSub_SubidxWriteFailed) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_SizeWriteFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -1108,10 +1167,10 @@ TEST(CO_Dev, CoDevWriteSub_SizeWriteFailed) {
 }
 
 TEST(CO_Dev, CoDevWriteSub_ValWriteFailed) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
   const size_t BUF_SIZE = 9;
@@ -1129,6 +1188,10 @@ TEST(CO_Dev, CoDevWriteSub_ValWriteFailed) {
 
 TEST_GROUP(CO_DevDCF) {
   co_dev_t* dev = nullptr;
+  std::unique_ptr<CoDevTHolder> dev_holder;
+  std::unique_ptr<CoObjTHolder> obj_holder;
+  std::unique_ptr<CoSubTHolder> sub_holder;
+  CoArrays arrays;
 
   static const size_t BUF_SIZE = 13;
   const uint_least8_t buf[BUF_SIZE] = {
@@ -1141,22 +1204,29 @@ TEST_GROUP(CO_DevDCF) {
   };
 
   TEST_SETUP() {
-    dev = co_dev_create(0x01);
+    dev_holder.reset(new CoDevTHolder(0x01));
+    dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    co_obj_t* const obj = co_obj_create(0x1234);
-    co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+    obj_holder.reset(new CoObjTHolder(0x1234));
+    sub_holder.reset(new CoSubTHolder(0xab, CO_DEFTYPE_INTEGER16));
+
+    CHECK_EQUAL(0, co_obj_insert_sub(obj_holder->Get(), sub_holder->Take()));
+    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
   }
 
-  TEST_TEARDOWN() { co_dev_destroy(dev); }
+  TEST_TEARDOWN() {
+    dev_holder.reset();
+    obj_holder.reset();
+    sub_holder.reset();
+    arrays.Clear();
+  }
 };
 
 TEST(CO_DevDCF, CoDevReadDef) {
   co_unsigned16_t pmin = 0x0000;
   co_unsigned16_t pmax = 0x0000;
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, BUF_SIZE);
   memcpy(ptr, buf, BUF_SIZE);
 
@@ -1171,7 +1241,7 @@ TEST(CO_DevDCF, CoDevReadDef) {
 }
 
 TEST(CO_DevDCF, CoDevReadDef_NullMinMax) {
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, BUF_SIZE);
   memcpy(ptr, buf, BUF_SIZE);
 
@@ -1184,7 +1254,7 @@ TEST(CO_DevDCF, CoDevReadDef_NullMinMax) {
 }
 
 TEST(CO_DevDCF, CoDevReadDef_InvalidNumberOfSubIndexes) {
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, 2);
 
   const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
@@ -1196,7 +1266,7 @@ TEST(CO_DevDCF, CoDevReadDef_InvalidNumberOfSubIndexes) {
 }
 
 TEST(CO_DevDCF, CoDevReadDef_InvaildSubIdx) {
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, 7);
   memcpy(ptr, buf, 7);
 
@@ -1210,7 +1280,7 @@ TEST(CO_DevDCF, CoDevReadDef_InvaildSubIdx) {
 
 TEST(CO_DevDCF, CoDevWriteDef) {
   co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
 
   const auto ret =
       co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX, &ptr);
@@ -1222,7 +1292,7 @@ TEST(CO_DevDCF, CoDevWriteDef) {
 }
 
 TEST(CO_DevDCF, CoDevWriteDef_BeforeMin) {
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
 
   const auto ret = co_dev_write_dcf(dev, 0x1235, CO_UNSIGNED16_MAX, &ptr);
 
@@ -1232,7 +1302,7 @@ TEST(CO_DevDCF, CoDevWriteDef_BeforeMin) {
 }
 
 TEST(CO_DevDCF, CoDevWriteDef_AfterMax) {
-  void* ptr = nullptr;
+  auto ptr = arrays.Init<co_domain_t>();
 
   const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
 
@@ -1247,6 +1317,7 @@ static unsigned int tpdo_event_ind_counter = 0;
 }  // namespace CO_DevTPDO_Static
 
 TEST_GROUP(CO_DevTPDO) {
+  std::unique_ptr<CoDevTHolder> dev_holder;
   co_dev_t* dev = nullptr;
 
   static void tpdo_event_ind(co_unsigned16_t, void*) {
@@ -1254,13 +1325,14 @@ TEST_GROUP(CO_DevTPDO) {
   }
 
   TEST_SETUP() {
-    dev = co_dev_create(0x01);
+    dev_holder.reset(new CoDevTHolder(0x01));
+    dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
     CO_DevTPDO_Static::tpdo_event_ind_counter = 0;
   }
 
-  TEST_TEARDOWN() { co_dev_destroy(dev); }
+  TEST_TEARDOWN() { dev_holder.reset(); }
 };
 
 TEST(CO_DevTPDO, CoDevGetTpdoEventInd_Null) {
@@ -1281,10 +1353,10 @@ TEST(CO_DevTPDO, CoDevSetTpdoEventInd) {
 TEST(CO_DevTPDO, CoDevTpdoEvent_Empty) { co_dev_tpdo_event(dev, 0x0000, 0x00); }
 
 TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
 
   co_dev_tpdo_event(dev, 0x1234, 0xab);
@@ -1292,10 +1364,11 @@ TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
 }
 
 TEST(CO_DevTPDO, CoDevTpdoEvent_MappingPossibleButNoMapping) {
-  co_obj_t* const obj = co_obj_create(0x1234);
-  co_sub_t* const sub = co_sub_create(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
+  const auto sub = sub_holder.Take();
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   co_sub_set_pdo_mapping(sub, 1);
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
 

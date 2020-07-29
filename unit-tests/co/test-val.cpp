@@ -20,7 +20,12 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <cstring>
+#include <list>
 
 #include <CppUTest/TestHarness.h>
 
@@ -30,11 +35,17 @@
 #include <lely/util/errnum.h>
 #include <lely/util/ustring.h>
 
+#include "array-init.hpp"
+
 TEST_GROUP(CO_Val) {
   static const co_unsigned16_t INVALID_TYPE = 0xffffu;
   const char* const TEST_STR = "testtesttest";
   const char16_t* const TEST_STR16 = u"testtesttest";
   static constexpr size_t MAX_VAL_SIZE = 8u;
+
+  CoArrays arrays;
+
+  TEST_TEARDOWN() { arrays.Clear(); }
 
   /**
    * Returns the read/write size (in bytes) of the value of the specified type.
@@ -169,8 +180,25 @@ TEST_GROUP(CO_Val) {
     CHECK_EQUAL(0, memcmp(testbuf, &val, sizeof(val))); \
   }
 #include <lely/co/def/basic.def>
+#if !LELY_NO_MALLOC
 #include <lely/co/def/array.def>
+#endif
 #undef LELY_CO_DEFINE_TYPE
+
+#if LELY_NO_MALLOC
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
+  TEST(CO_Val, CoValInit_##a) { \
+    co_##b##_t val = arrays.Init<co_##b##_t>(); \
+\
+    const auto ret = co_val_init(CO_DEFTYPE_##a, &val); \
+\
+    CHECK_EQUAL(0, ret); \
+    const char testbuf[CO_ARRAY_CAPACITY] = {0}; \
+    CHECK_EQUAL(0, memcmp(testbuf, val, CO_ARRAY_CAPACITY)); \
+  }
+#include <lely/co/def/array.def>  // NOLINT(build/include)
+#undef LELY_CO_DEFINE_TYPE
+#endif  // LELY_NO_MALLOC
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValInit_##a) { \
@@ -239,75 +267,75 @@ TEST(CO_Val, CoValInit_Invalid) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValInitMin_VISIBLE_STRING) {
-  co_visible_string_t val;
+  co_visible_string_t val = arrays.DeadBeef<co_visible_string_t>();
 
   const auto ret = co_val_init_min(CO_DEFTYPE_VISIBLE_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMax_VISIBLE_STRING) {
-  co_visible_string_t val;
+  co_visible_string_t val = arrays.DeadBeef<co_visible_string_t>();
 
   const auto ret = co_val_init_max(CO_DEFTYPE_VISIBLE_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMin_OCTET_STRING) {
-  co_octet_string_t val;
+  co_octet_string_t val = arrays.DeadBeef<co_octet_string_t>();
 
   const auto ret = co_val_init_min(CO_DEFTYPE_OCTET_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMax_OCTET_STRING) {
-  co_octet_string_t val;
+  co_octet_string_t val = arrays.DeadBeef<co_octet_string_t>();
 
   const auto ret = co_val_init_max(CO_DEFTYPE_OCTET_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMin_UNICODE_STRING) {
-  co_unicode_string_t val;
+  co_unicode_string_t val = arrays.DeadBeef<co_unicode_string_t>();
 
   const auto ret = co_val_init_min(CO_DEFTYPE_UNICODE_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMax_UNICODE_STRING) {
-  co_unicode_string_t val;
+  co_unicode_string_t val = arrays.DeadBeef<co_unicode_string_t>();
 
   const auto ret = co_val_init_max(CO_DEFTYPE_UNICODE_STRING, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMin_DOMAIN) {
-  co_domain_t val;
+  co_domain_t val = arrays.DeadBeef<co_domain_t>();
 
   const auto ret = co_val_init_min(CO_DEFTYPE_DOMAIN, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMax_DOMAIN) {
-  co_domain_t val;
+  co_domain_t val = arrays.DeadBeef<co_domain_t>();
 
   const auto ret = co_val_init_max(CO_DEFTYPE_DOMAIN, &val);
 
   CHECK_EQUAL(0, ret);
-  POINTERS_EQUAL(nullptr, val);
+  CHECK(arrays.IsEmptyInitialized(val));
 }
 
 TEST(CO_Val, CoValInitMin_Invalid) {
@@ -326,7 +354,7 @@ TEST(CO_Val, CoValInitMax_Invalid) {
 }
 
 TEST(CO_Val, CoValInitVs) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_init_vs(&val, TEST_STR);
 
@@ -350,7 +378,7 @@ TEST(CO_Val, CoValInitVs_Null) {
 
 TEST(CO_Val, CoValInitVsN) {
   const size_t n = 4u;
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_init_vs_n(&val, TEST_STR, n);
 
@@ -365,7 +393,7 @@ TEST(CO_Val, CoValInitVsN) {
 
 TEST(CO_Val, CoValInitVsN_Null) {
   const size_t n = 7u;
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_init_vs_n(&val, nullptr, n);
 
@@ -389,7 +417,7 @@ TEST(CO_Val, CoValInitVsN_Zero) {
 TEST(CO_Val, CoValInitOs) {
   const size_t n = 5u;
   const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
 
   const auto ret = co_val_init_os(&val, os, n);
 
@@ -402,7 +430,7 @@ TEST(CO_Val, CoValInitOs) {
 
 TEST(CO_Val, CoValInitOs_Null) {
   const size_t n = 9u;
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
 
   const auto ret = co_val_init_os(&val, nullptr, n);
 
@@ -424,7 +452,7 @@ TEST(CO_Val, CoValInitOs_Zero) {
 }
 
 TEST(CO_Val, CoValInitUs) {
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
 
   const auto ret = co_val_init_us(&val, TEST_STR16);
@@ -450,7 +478,7 @@ TEST(CO_Val, CoValInitUs_Null) {
 TEST(CO_Val, CoValInitUsN) {
   const size_t n = 6u;
   const size_t us_val_len = n * sizeof(char16_t);
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
 
   const auto ret = co_val_init_us_n(&val, TEST_STR16, n);
 
@@ -466,7 +494,7 @@ TEST(CO_Val, CoValInitUsN) {
 TEST(CO_Val, CoValInitUsN_Null) {
   const size_t n = 8u;
   const size_t us_val_len = n * sizeof(char16_t);
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
 
   const auto ret = co_val_init_us_n(&val, nullptr, n);
 
@@ -490,7 +518,7 @@ TEST(CO_Val, CoValInitUsN_Zero) {
 TEST(CO_Val, CoValInitDom) {
   const size_t n = 4u;
   const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
 
   const auto ret = co_val_init_dom(&val, dom, n);
 
@@ -503,7 +531,7 @@ TEST(CO_Val, CoValInitDom) {
 
 TEST(CO_Val, CoValInitDom_Null) {
   const size_t n = 7u;
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
 
   const auto ret = co_val_init_dom(&val, nullptr, n);
 
@@ -532,7 +560,7 @@ TEST(CO_Val, CoValFini_BasicType) {
 }
 
 TEST(CO_Val, CoValFini_ArrayType) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(0, co_val_init_vs(&val, TEST_STR));
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
@@ -543,7 +571,7 @@ TEST(CO_Val, CoValAddressof_Null) {
 }
 
 TEST(CO_Val, CoValAddressof_ArrayType) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   co_val_init_vs(&val, TEST_STR);
 
   const auto* ptr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, val);
@@ -569,7 +597,7 @@ TEST(CO_Val, CoValSizeof_Null) {
 }
 
 TEST(CO_Val, CoValSizeof_ArrayType) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   co_val_init_vs(&val, TEST_STR);
 
   const auto ret = co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val);
@@ -591,7 +619,7 @@ TEST(CO_Val, CoValSizeof_BasicType) {
 }
 
 TEST(CO_Val, CoValMake_VISIBLE_STRING) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, TEST_STR, 0);
 
@@ -616,7 +644,7 @@ TEST(CO_Val, CoValMake_VISIBLE_STRING_Null) {
 TEST(CO_Val, CoValMake_OCTET_STRING) {
   const size_t n = 5u;
   const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
 
   const auto ret = co_val_make(CO_DEFTYPE_OCTET_STRING, &val, os, n);
 
@@ -639,7 +667,7 @@ TEST(CO_Val, CoValMake_OCTET_STRING_Null) {
 }
 
 TEST(CO_Val, CoValMake_UNICODE_STRING) {
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
 
   const auto ret = co_val_make(CO_DEFTYPE_UNICODE_STRING, &val, TEST_STR16, 0);
@@ -665,7 +693,7 @@ TEST(CO_Val, CoValMake_UNICODE_STRING_Null) {
 TEST(CO_Val, CoValMake_DOMAIN) {
   const size_t n = 4u;
   const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
 
   const auto ret = co_val_make(CO_DEFTYPE_DOMAIN, &val, dom, n);
 
@@ -718,10 +746,10 @@ TEST(CO_Val, CoValMake_BasicType_WrongSize) {
 }
 
 TEST(CO_Val, CoValCopy_VISIBLE_STRING) {
-  co_visible_string_t src = nullptr;
+  co_visible_string_t src = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
-  co_visible_string_t dst = nullptr;
+  co_visible_string_t dst = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
 
@@ -738,9 +766,9 @@ TEST(CO_Val, CoValCopy_VISIBLE_STRING) {
 TEST(CO_Val, CoValCopy_OCTET_STRING) {
   const size_t n = 5u;
   const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
-  co_octet_string_t src = nullptr;
+  co_octet_string_t src = arrays.Init<co_octet_string_t>();
   CHECK_EQUAL(n, co_val_make(CO_DEFTYPE_OCTET_STRING, &src, os, n));
-  co_octet_string_t dst = nullptr;
+  co_octet_string_t dst = arrays.Init<co_octet_string_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_OCTET_STRING, &dst, &src);
 
@@ -756,11 +784,11 @@ TEST(CO_Val, CoValCopy_OCTET_STRING) {
 }
 
 TEST(CO_Val, CoValCopy_UNICODE_STRING) {
-  co_unicode_string_t src = nullptr;
+  co_unicode_string_t src = arrays.Init<co_unicode_string_t>();
   const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
   CHECK_EQUAL(str16len(TEST_STR16),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &src, TEST_STR16, 0));
-  co_unicode_string_t dst = nullptr;
+  co_unicode_string_t dst = arrays.Init<co_unicode_string_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_UNICODE_STRING, &dst, &src);
 
@@ -778,9 +806,9 @@ TEST(CO_Val, CoValCopy_UNICODE_STRING) {
 TEST(CO_Val, CoValCopy_DOMAIN) {
   const size_t n = 4u;
   const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
-  co_domain_t src = nullptr;
+  co_domain_t src = arrays.Init<co_domain_t>();
   CHECK_EQUAL(n, co_val_make(CO_DEFTYPE_DOMAIN, &src, dom, n));
-  co_domain_t dst = nullptr;
+  co_domain_t dst = arrays.Init<co_domain_t>();
 
   const auto ret = co_val_copy(CO_DEFTYPE_DOMAIN, &dst, &src);
 
@@ -822,11 +850,11 @@ TEST(CO_Val, CoValMove_BasicType) {
 }
 
 TEST(CO_Val, CoValMove_ArrayType) {
-  co_visible_string_t src = nullptr;
+  co_visible_string_t src = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
   const void* src_addr = co_val_addressof(CO_DEFTYPE_VISIBLE_STRING, &src);
-  co_visible_string_t dst = nullptr;
+  co_visible_string_t dst = arrays.Init<co_visible_string_t>();
 
   const auto ret = co_val_move(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
 
@@ -860,7 +888,7 @@ TEST(CO_Val, CoValCmp_SecondValNull) {
 }
 
 TEST(CO_Val, CoValCmp_ArrayType_PointersEqual) {
-  co_visible_string_t val1 = nullptr;
+  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
   co_visible_string_t val2 = val1;
@@ -871,9 +899,9 @@ TEST(CO_Val, CoValCmp_ArrayType_PointersEqual) {
 }
 
 TEST(CO_Val, CoValCmp_ArrayType_FirstValNull) {
-  co_visible_string_t val1;
+  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val1));
-  co_visible_string_t val2 = nullptr;
+  co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val2, TEST_STR, 0));
 
@@ -884,10 +912,10 @@ TEST(CO_Val, CoValCmp_ArrayType_FirstValNull) {
 }
 
 TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
-  co_visible_string_t val1 = nullptr;
+  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
-  co_visible_string_t val2;
+  co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val2));
 
   CHECK_EQUAL(1, co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2));
@@ -939,8 +967,8 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
 TEST(CO_Val, CoValCmp_VISIBLE_STRING) {
   const char TEST_STR2[] = "abcdefg";
 
-  co_visible_string_t val1 = nullptr;
-  co_visible_string_t val2 = nullptr;
+  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
+  co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
   CHECK_EQUAL(strlen(TEST_STR2),
@@ -955,8 +983,8 @@ TEST(CO_Val, CoValCmp_VISIBLE_STRING) {
 }
 
 TEST(CO_Val, CoValCmp_VISIBLE_STRING_Substr) {
-  co_visible_string_t val1 = nullptr;
-  co_visible_string_t val2 = nullptr;
+  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
+  co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
   CHECK_EQUAL(0, co_val_init_vs_n(&val2, TEST_STR, strlen(TEST_STR) - 5u));
@@ -974,8 +1002,8 @@ TEST(CO_Val, CoValCmp_OCTET_STRING) {
   const size_t n2 = 3u;
   const uint_least8_t os1[n1] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
   const uint_least8_t os2[n2] = {0x56u, 0x02u, 0x2cu};
-  co_octet_string_t val1 = nullptr;
-  co_octet_string_t val2 = nullptr;
+  co_octet_string_t val1 = arrays.Init<co_octet_string_t>();
+  co_octet_string_t val2 = arrays.Init<co_octet_string_t>();
   CHECK_EQUAL(n1, co_val_make(CO_DEFTYPE_OCTET_STRING, &val1, os1, n1));
   CHECK_EQUAL(n2, co_val_make(CO_DEFTYPE_OCTET_STRING, &val2, os2, n2));
 
@@ -990,8 +1018,8 @@ TEST(CO_Val, CoValCmp_OCTET_STRING) {
 TEST(CO_Val, CoValCmp_UNICODE_STRING) {
   const char16_t TEST_STR16_2[] = u"abcdefg";
 
-  co_unicode_string_t val1 = nullptr;
-  co_unicode_string_t val2 = nullptr;
+  co_unicode_string_t val1 = arrays.Init<co_unicode_string_t>();
+  co_unicode_string_t val2 = arrays.Init<co_unicode_string_t>();
   CHECK_EQUAL(str16len(TEST_STR16),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &val1, TEST_STR16, 0));
   CHECK_EQUAL(str16len(TEST_STR16_2),
@@ -1010,8 +1038,8 @@ TEST(CO_Val, CoValCmp_DOMAIN) {
   const size_t n2 = 2u;
   const unsigned char dom1[n1] = {0xd3u, 0xe5u, 0x98u, 0xbau};
   const unsigned char dom2[n2] = {0x24u, 0x30u};
-  co_domain_t val1 = nullptr;
-  co_domain_t val2 = nullptr;
+  co_domain_t val1 = arrays.Init<co_domain_t>();
+  co_domain_t val2 = arrays.Init<co_domain_t>();
   CHECK_EQUAL(n1, co_val_make(CO_DEFTYPE_DOMAIN, &val1, dom1, n1));
   CHECK_EQUAL(n2, co_val_make(CO_DEFTYPE_DOMAIN, &val2, dom2, n2));
 
@@ -1146,7 +1174,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValRead_VISIBLE_STRING) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   const size_t ARRAY_SIZE = 6u;
   const uint_least8_t buffer[ARRAY_SIZE] = {0x74u, 0x64u, 0x73u,
                                             0x74u, 0x31u, 0x21u};
@@ -1161,7 +1189,7 @@ TEST(CO_Val, CoValRead_VISIBLE_STRING) {
 }
 
 TEST(CO_Val, CoValRead_OCTET_STRING) {
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
   const size_t ARRAY_SIZE = 5u;
   const uint_least8_t buffer[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
 
@@ -1176,7 +1204,7 @@ TEST(CO_Val, CoValRead_OCTET_STRING) {
 }
 
 TEST(CO_Val, CoValRead_UNICODE_STRING) {
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t ARRAY_SIZE = 6u;
   const uint_least8_t buffer[ARRAY_SIZE] = {0x74u, 0x64u, 0x73u,
                                             0x74u, 0x31u, 0x21u};
@@ -1193,7 +1221,7 @@ TEST(CO_Val, CoValRead_UNICODE_STRING) {
 }
 
 TEST(CO_Val, CoValRead_DOMAIN) {
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
   const size_t ARRAY_SIZE = 4u;
   const uint_least8_t buffer[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau};
 
@@ -1338,7 +1366,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValWrite_VISIBLE_STRING) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   const size_t ARRAY_SIZE = 5u;
   const char test_str[ARRAY_SIZE + 1] = "abcde";
   CHECK_EQUAL(0, co_val_init_vs(&val, test_str));
@@ -1354,7 +1382,7 @@ TEST(CO_Val, CoValWrite_VISIBLE_STRING) {
 }
 
 TEST(CO_Val, CoValWrite_OCTET_STRING) {
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
   const size_t ARRAY_SIZE = 5u;
   const uint_least8_t test_str[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau,
                                               0x96u};
@@ -1371,7 +1399,7 @@ TEST(CO_Val, CoValWrite_OCTET_STRING) {
 }
 
 TEST(CO_Val, CoValWrite_UNICODE_STRING) {
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t ARRAY_SIZE = 6u;
   const char16_t test_str[ARRAY_SIZE / 2 + 1] = u"xyz";
   CHECK_EQUAL(0, co_val_init_us(&val, test_str));
@@ -1388,7 +1416,7 @@ TEST(CO_Val, CoValWrite_UNICODE_STRING) {
 }
 
 TEST(CO_Val, CoValWrite_DOMAIN) {
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
   const size_t ARRAY_SIZE = 4u;
   const uint_least8_t test_buf[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau};
   CHECK_EQUAL(0, co_val_init_dom(&val, test_buf, ARRAY_SIZE));
@@ -1404,7 +1432,7 @@ TEST(CO_Val, CoValWrite_DOMAIN) {
 }
 
 TEST(CO_Val, CoValWrite_VISIBLE_STRING_NoEnd) {
-  co_visible_string_t val = nullptr;
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
   const size_t ARRAY_SIZE = 7u;
   const char test_str[ARRAY_SIZE + 1] = "qwerty7";
   CHECK_EQUAL(0, co_val_init_vs(&val, test_str));
@@ -1420,7 +1448,7 @@ TEST(CO_Val, CoValWrite_VISIBLE_STRING_NoEnd) {
 }
 
 TEST(CO_Val, CoValWrite_OCTET_STRING_NullBuffer) {
-  co_octet_string_t val = nullptr;
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
   const size_t ARRAY_SIZE = 5u;
   const uint_least8_t test_str[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau,
                                               0x96u};
@@ -1435,7 +1463,7 @@ TEST(CO_Val, CoValWrite_OCTET_STRING_NullBuffer) {
 }
 
 TEST(CO_Val, CoValWrite_UNICODE_STRING_TooSmallBuffer) {
-  co_unicode_string_t val = nullptr;
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t ARRAY_SIZE = 6u;
   const char16_t test_str[ARRAY_SIZE / 2 + 1] = u"xyz";
   CHECK_EQUAL(0, co_val_init_us(&val, test_str));
@@ -1450,14 +1478,16 @@ TEST(CO_Val, CoValWrite_UNICODE_STRING_TooSmallBuffer) {
 }
 
 TEST(CO_Val, CoValWrite_DOMAIN_SizeZero) {
-  co_domain_t val = nullptr;
+  co_domain_t val = arrays.Init<co_domain_t>();
   const size_t ARRAY_SIZE = 4u;
   const uint_least8_t test_buf[ARRAY_SIZE] = {0xd3u, 0xe5u, 0x98u, 0xbau};
   CHECK_EQUAL(0, co_val_init_dom(&val, test_buf, ARRAY_SIZE));
 
-  const size_t co_array_offset = ALIGN(sizeof(size_t), _Alignof(union co_val));
-  char* ptr = *reinterpret_cast<char**>(&val);
-  *reinterpret_cast<size_t*>(ptr - co_array_offset) = 0;
+  const size_t co_array_offset =
+      ALIGN(sizeof(co_array_hdr), _Alignof(union co_val));
+  const auto hdr = reinterpret_cast<co_array_hdr*>(
+      reinterpret_cast<char*>(val) - co_array_offset);
+  hdr->size = 0;
 
   const auto ret = co_val_write(CO_DEFTYPE_DOMAIN, &val, nullptr, nullptr);
 
