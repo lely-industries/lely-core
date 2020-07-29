@@ -35,6 +35,7 @@ src += pheap.c
 src += print.c
 src += rbtree.c
 src += time.c
+src += ustring.c
 src += util.h
 
 lib_LTLIBRARIES = liblely-util.la
