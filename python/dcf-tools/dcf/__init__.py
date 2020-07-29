@@ -1,7 +1,7 @@
-from .device import Device, DataType, PDO
-from .lint import lint
-from .parse import parse_file
-from .print import print_rpdo, print_tpdo
+from .device import Device, DataType, PDO  # noqa: F401
+from .lint import lint  # noqa: F401
+from .parse import parse_file  # noqa: F401
+from .print import print_rpdo, print_tpdo  # noqa: F401
 
 BOOLEAN = DataType(0x0001)
 INTEGER8 = DataType(0x0002)
