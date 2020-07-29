@@ -290,17 +290,18 @@ docker:arm-linux-gnueabihf:
   variables:
     ARCH: armhf
     NAME: arm-linux-gnueabihf
-    TAG: bullseye
+    TAG: buster
 
 build:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
+  image: $REGISTRY/arm-linux-gnueabihf:buster
   <<: *build
   variables:
     ARCH: armhf
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python
+    # TODO enable unit tests (switch to bullseye)
+    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python --disable-unit-tests
 
 test:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
+  image: $REGISTRY/arm-linux-gnueabihf:buster
   dependencies:
     - build:arm-linux-gnueabihf
   <<: *test
@@ -312,17 +313,18 @@ docker:aarch64-linux-gnu:
   variables:
     ARCH: arm64
     NAME: aarch64-linux-gnu
-    TAG: bullseye
+    TAG: buster
 
 build:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
+  image: $REGISTRY/aarch64-linux-gnu:buster
   <<: *build
   variables:
     ARCH: arm64
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python
+    # TODO enable unit tests (switch to bullseye)
+    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python --disable-unit-tests
 
 test:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
+  image: $REGISTRY/aarch64-linux-gnu:buster
   dependencies:
     - build:aarch64-linux-gnu
   <<: *test
