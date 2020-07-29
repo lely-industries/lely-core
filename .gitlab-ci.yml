@@ -613,6 +613,22 @@ cppcheck-win64:
       - cppcheck-rules.md
     expire_in: 1 week
 
+docker:python-checks:
+  <<: *docker
+  variables:
+    NAME: python-checks
+    TAG: 3.8-slim
+
+python-checks:
+  stage: test
+  tags:
+    - docker
+    - linux
+  image: $REGISTRY/python-checks:3.8-slim
+  dependencies: []
+  script:
+    - pycodestyle --max-line-length=119 python
+
 docker:coverity:
   <<: *docker
   script:
@@ -683,7 +699,7 @@ sonarcloud:
            -Dsonar.links.ci="${CI_PROJECT_URL}/pipelines"
            -Dsonar.links.scm="${CI_PROJECT_URL}"
            -Dsonar.links.issue="${CI_PROJECT_URL}/issues"
-           -Dsonar.sources=include,src,tools
+           -Dsonar.sources=include,src,tools,python
            -Dsonar.tests=test,unit-tests
            -Dsonar.cfamily.build-wrapper-output=bw-output
            -Dsonar.cfamily.threads=1
