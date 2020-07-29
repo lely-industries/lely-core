@@ -629,7 +629,8 @@ python-checks:
   image: $REGISTRY/python-checks:3.8-slim
   dependencies: []
   script:
-    - pycodestyle --max-line-length=119 python
+    - black --diff --check python/dcf-tools/
+    - flake8 python/dcf-tools
 
 docker:coverity:
   <<: *docker
