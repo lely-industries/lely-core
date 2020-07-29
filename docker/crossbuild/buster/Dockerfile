@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:buster
 
 ARG ARCH
 ARG NAME
@@ -15,7 +15,7 @@ RUN dpkg --add-architecture ${ARCH} \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         crossbuild-essential-${ARCH} \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
-        libstdc++-9-dev:${ARCH} \
+        libstdc++-8-dev:${ARCH} \
         qemu-user-static \
     && rm -rf /var/lib/apt/lists/*
 
