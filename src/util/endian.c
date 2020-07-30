@@ -104,7 +104,7 @@ bcpybe(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 				first &= last;
 			bitcpy(dst, *src, first);
 		} else {
-			if (first) {
+			if (dstbit > 0) {
 				bitcpy(dst++, *src++, first);
 				n -= 8 - dstbit;
 			}
@@ -188,7 +188,7 @@ bcpyle(uint_least8_t *dst, int dstbit, const uint_least8_t *src, int srcbit,
 				first &= last;
 			bitcpy(dst, *src, first);
 		} else {
-			if (first) {
+			if (dstbit > 0) {
 				bitcpy(dst++, *src++, first);
 				n -= 8 - dstbit;
 			}
