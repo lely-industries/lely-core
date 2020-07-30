@@ -77,7 +77,7 @@ class CObject:
         elif obj.object_type == 0x09:
             self.code = "CO_OBJECT_RECORD"
         else:
-            self.code = "0x{02X}".format(obj.object_type)
+            self.code = "0x{:02X}".format(obj.object_type)
 
         for subobj in obj.values():
             subobj.c = CSubObject(subobj)

@@ -485,7 +485,7 @@ class Value:
             days, ms = self.value.split()
             return (int(days, 0), int(ms, 0))
         else:
-            raise ValueError("invalid DataType: 0x{04X}".format(self.data_type.index))
+            raise ValueError("invalid DataType: 0x{:04X}".format(self.data_type.index))
 
     def has_nodeid(self):
         return self.variable is not None and self.variable.upper() == "NODEID"
