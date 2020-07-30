@@ -250,6 +250,7 @@ AS_IF([test "$enable_obj_upload" == "no"], [
 AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_sdev" != "yes"], [enable_sdev=no])
 AS_IF([test "$enable_sdev" == "no"], [
 	AM_CONDITIONAL([NO_CO_SDEV], [true])
 	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])

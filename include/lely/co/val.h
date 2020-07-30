@@ -563,6 +563,7 @@ co_unsigned32_t co_val_read_sdo(
 size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		uint_least8_t *end);
 
+#if !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 /**
  * Lexes a value of the specified data type from a memory buffer.
  *
@@ -585,7 +586,9 @@ size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
  */
 size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		const char *end, struct floc *at);
+#endif
 
+#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 /**
  * Prints a value of the specified data type to a memory buffer.
  *
@@ -606,6 +609,7 @@ size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
  */
 size_t co_val_print(co_unsigned16_t type, const void *val, char **pbegin,
 		char *end);
+#endif
 
 #ifdef __cplusplus
 }

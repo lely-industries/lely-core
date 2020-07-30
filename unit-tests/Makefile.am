@@ -52,9 +52,9 @@ src_util_tests += util/test-dllist.cpp
 src_util_tests += util/test-endian.cpp
 src_util_tests += util/test-pheap.cpp
 src_util_tests += util/test-rbtree.cpp
+src_util_tests += util/test-time.cpp
 src_util_tests += util/test-ustring.cpp
 src_util_tests += util/test-util.cpp
-src_util_tests += util/test-time.cpp
 if !ECSS_COMPLIANCE
 src_util_tests += util/test-bitset.cpp
 src_util_tests += util/test-mutex.cpp
@@ -91,6 +91,7 @@ src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
 src_co_tests += co/test-type.cpp
+src_co_tests += co/test-val.cpp
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
 src_co_tests += override/lelyco-val.cpp
