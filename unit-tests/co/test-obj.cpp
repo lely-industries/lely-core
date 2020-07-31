@@ -20,21 +20,32 @@
  * limitations under the License.
  */
 
-#include <CppUTest/TestHarness.h>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <CppUTest/TestHarness.h>
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#include <lely/util/diag.h>
 #include <lely/util/errnum.h>
 
 #include "override/lelyco-val.hpp"
 
-TEST_GROUP(CO_ObjInit){};
+static void
+DisableDiagnosticMessages() {
+  diag_set_handler(nullptr, nullptr);
+  diag_at_set_handler(nullptr, nullptr);
+}
+
+// clang-format off
+TEST_GROUP(CO_ObjInit) {
+  TEST_SETUP() { DisableDiagnosticMessages(); }
+};
+// clang-format on
 
 TEST(CO_ObjInit, CoObjInit) {
   auto* const obj = static_cast<co_obj_t*>(__co_obj_alloc());
@@ -59,8 +70,8 @@ TEST(CO_ObjInit, CoObjInit) {
 }
 
 TEST_BASE(CO_ObjBase) {
-  const co_unsigned16_t OBJ_IDX = 0x1234;
-  const co_unsigned8_t SUB_IDX = 0xab;
+  const co_unsigned16_t OBJ_IDX = 0x1234u;
+  const co_unsigned8_t SUB_IDX = 0xabu;
   const co_unsigned16_t SUB_DEFTYPE = CO_DEFTYPE_INTEGER16;
   using sub_type = co_integer16_t;
 
@@ -71,6 +82,8 @@ TEST_GROUP_BASE(CO_Obj, CO_ObjBase) {
   co_obj_t* obj = nullptr;
 
   TEST_SETUP() {
+    DisableDiagnosticMessages();
+
     obj = co_obj_create(OBJ_IDX);
     CHECK(obj != nullptr);
 
@@ -96,6 +109,8 @@ TEST_GROUP_BASE(CO_Sub, CO_ObjBase) {
   co_sub_t* sub = nullptr;
 
   TEST_SETUP() {
+    DisableDiagnosticMessages();
+
     sub = co_sub_create(SUB_IDX, SUB_DEFTYPE);
     CHECK(sub != nullptr);
   }
@@ -123,6 +138,8 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
   }
 
   TEST_SETUP() {
+    DisableDiagnosticMessages();
+
     obj = co_obj_create(OBJ_IDX);
     CHECK(obj != nullptr);
 
@@ -139,13 +156,15 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
 };
 
 TEST_GROUP_BASE(CO_ObjDev, CO_ObjBase) {
-  const co_unsigned8_t DEV_ID = 0x01;
+  const co_unsigned8_t DEV_ID = 0x01u;
 
   co_dev_t* dev = nullptr;
   co_obj_t* obj = nullptr;
   co_sub_t* sub = nullptr;
 
   TEST_SETUP() {
+    DisableDiagnosticMessages();
+
     dev = co_dev_create(DEV_ID);
     CHECK(dev != nullptr);
 
@@ -177,7 +196,7 @@ TEST(CO_ObjDev, CoObjPrev_Removed) {
 }
 
 TEST(CO_ObjDev, CoObjPrev) {
-  co_obj_t* obj2 = co_obj_create(0x0001);
+  co_obj_t* obj2 = co_obj_create(0x0001u);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
 
   POINTERS_EQUAL(obj2, co_obj_prev(obj));
@@ -198,7 +217,7 @@ TEST(CO_ObjDev, CoObjNext_Removed) {
 }
 
 TEST(CO_ObjDev, CoObjNext) {
-  co_obj_t* obj2 = co_obj_create(0x2222);
+  co_obj_t* obj2 = co_obj_create(0x2222u);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
 
   POINTERS_EQUAL(obj2, co_obj_next(obj));
@@ -229,14 +248,14 @@ TEST(CO_ObjDev, CoObjGetSubidx) {
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
 
   co_unsigned8_t sub_list[1] = {0};
-  const auto sub_count = co_obj_get_subidx(obj, 1, sub_list);
+  const auto sub_count = co_obj_get_subidx(obj, 1u, sub_list);
 
-  CHECK_EQUAL(2, sub_count);
-  CHECK_EQUAL(0x42, sub_list[0]);
+  CHECK_EQUAL(2u, sub_count);
+  CHECK_EQUAL(0x42u, sub_list[0]);
 }
 
 TEST(CO_ObjSub, CoObjInsertSub_AlreadyAddedToOtherDev) {
-  co_obj_t* const obj2 = co_obj_create(0x0001);
+  co_obj_t* const obj2 = co_obj_create(0x0001u);
   CHECK(obj2 != nullptr);
 
   CHECK_EQUAL(-1, co_obj_insert_sub(obj2, sub));
@@ -268,7 +287,7 @@ TEST(CO_Obj, CoObjInsertSub) {
 }
 
 TEST(CO_ObjSub, CoObjRemoveSub_SubInAnotherObj) {
-  co_obj_t* const obj2 = co_obj_create(0x0001);
+  co_obj_t* const obj2 = co_obj_create(0x0001u);
   CHECK(obj2 != nullptr);
 
   CHECK_EQUAL(-1, co_obj_remove_sub(obj2, sub));
@@ -349,7 +368,7 @@ TEST(CO_Obj, CoObjSetCode) {
 }
 
 TEST(CO_Obj, CoObjSetCode_Invalid) {
-  auto const ret = co_obj_set_code(obj, 0xff);
+  auto const ret = co_obj_set_code(obj, 0xffu);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_OBJECT_VAR, co_obj_get_code(obj));
@@ -365,7 +384,7 @@ TEST(CO_Obj, CoObjAddressofVal_NoVal) {
 }
 
 TEST(CO_ObjSub, CoObjAddressofVal) {
-  const co_unsigned16_t val = 0x4242;
+  const co_unsigned16_t val = 0x4242u;
   CHECK_EQUAL(sizeof(val), co_obj_set_val(obj, SUB_IDX, &val, sizeof(val)));
 
   CHECK(co_obj_addressof_val(obj) != nullptr);
@@ -390,7 +409,7 @@ TEST(CO_Obj, CoObjGetVal_SubNotFound) {
 }
 
 TEST(CO_Obj, CoObjSetVal_SubNotFound) {
-  const co_unsigned16_t val = 0x4242;
+  const co_unsigned16_t val = 0x4242u;
 
   const auto ret = co_obj_set_val(obj, 0x00, &val, sizeof(val));
 
@@ -399,7 +418,7 @@ TEST(CO_Obj, CoObjSetVal_SubNotFound) {
 }
 
 TEST(CO_ObjSub, CoObjSetVal) {
-  const co_unsigned16_t val = 0x4242;
+  const co_unsigned16_t val = 0x4242u;
 
   const auto bytes_written = co_obj_set_val(obj, SUB_IDX, &val, sizeof(val));
 
@@ -447,7 +466,7 @@ TEST(CO_ObjSub, CoObjSetDnInd) {
 }
 
 TEST(CO_ObjSub, CoObjSetDnInd_MultipleSubs) {
-  co_sub_t* const sub2 = co_sub_create(0x42, CO_DEFTYPE_INTEGER16);
+  co_sub_t* const sub2 = co_sub_create(0x42u, CO_DEFTYPE_INTEGER16);
   CHECK(sub != nullptr);
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
   int data = 0;
@@ -482,7 +501,7 @@ TEST(CO_ObjSub, CoObjSetUpInd) {
 }
 
 TEST(CO_ObjSub, CoObjSetUpInd_MultipleSubs) {
-  co_sub_t* const sub2 = co_sub_create(0x42, CO_DEFTYPE_INTEGER16);
+  co_sub_t* const sub2 = co_sub_create(0x42u, CO_DEFTYPE_INTEGER16);
   CHECK(sub != nullptr);
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
   int data = 0;
@@ -504,16 +523,20 @@ TEST(CO_ObjSub, CoObjSetUpInd_MultipleSubs) {
 
 TEST(CO_Obj, CoObjSetUpInd_NoSub) { co_obj_set_up_ind(obj, nullptr, nullptr); }
 
-TEST_GROUP(CO_SubInit){};
+TEST_GROUP(CO_SubInit) {
+  const co_unsigned8_t SUB_IDX = 0xabu;
+
+  TEST_SETUP() { DisableDiagnosticMessages(); }
+};
 
 TEST(CO_SubInit, CoSubInit) {
   auto* const sub = static_cast<co_sub_t*>(__co_sub_alloc());
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, 0xab, CO_DEFTYPE_INTEGER16));
+  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16));
 
   POINTERS_EQUAL(nullptr, co_sub_get_obj(sub));
-  CHECK_EQUAL(0xab, co_sub_get_subidx(sub));
+  CHECK_EQUAL(SUB_IDX, co_sub_get_subidx(sub));
 
   CHECK_EQUAL(CO_DEFTYPE_INTEGER16, co_sub_get_type(sub));
 
@@ -545,7 +568,7 @@ TEST(CO_SubInit, CoSubInit_Name) {
   auto* const sub = static_cast<co_sub_t*>(__co_sub_alloc());
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, 0xab, CO_DEFTYPE_INTEGER16));
+  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16));
 
   POINTERS_EQUAL(nullptr, co_sub_get_name(sub));
 
@@ -559,7 +582,7 @@ TEST(CO_SubInit, CoSubInit_Limits) {
   auto* const sub = static_cast<co_sub_t*>(__co_sub_alloc());
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, 0xab, CO_DEFTYPE_INTEGER16));
+  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16));
 
   CHECK_EQUAL(CO_INTEGER16_MIN,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_min(sub)));
@@ -576,7 +599,7 @@ TEST(CO_SubInit, CoSubInit_Default) {
   auto* const sub = static_cast<co_sub_t*>(__co_sub_alloc());
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, 0xab, CO_DEFTYPE_INTEGER16));
+  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16));
 
   CHECK_EQUAL(0x0000,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_def(sub)));
@@ -590,7 +613,7 @@ TEST(CO_SubInit, CoSubInit_Upload) {
   auto* const sub = static_cast<co_sub_t*>(__co_sub_alloc());
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, 0xab, CO_DEFTYPE_INTEGER16));
+  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16));
 
   co_sub_up_ind_t* pind_up = nullptr;
   void* pdata_up = nullptr;
