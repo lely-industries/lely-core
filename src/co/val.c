@@ -70,7 +70,11 @@ co_val_init(co_unsigned16_t type, void *val)
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_INIT; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -94,7 +98,11 @@ co_val_init_min(co_unsigned16_t type, void *val)
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_MIN; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -118,7 +126,11 @@ co_val_init_max(co_unsigned16_t type, void *val)
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_MAX; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}

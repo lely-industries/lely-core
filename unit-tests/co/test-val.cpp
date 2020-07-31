@@ -31,6 +31,7 @@
 
 #include <lely/co/val.h>
 #include <lely/co/type.h>
+#include <lely/co/sdo.h>
 #include <lely/util/endian.h>
 #include <lely/util/errnum.h>
 #include <lely/util/ustring.h>
@@ -414,6 +415,17 @@ TEST(CO_Val, CoValInitVsN_Zero) {
   POINTERS_EQUAL(nullptr, val);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValInitVsN_TooBigValue) {
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
+  const char buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_init_vs_n(&val, buf, sizeof(buf));
+
+  CHECK_EQUAL(-1, ret);
+}
+#endif
+
 TEST(CO_Val, CoValInitOs) {
   const size_t n = 5u;
   const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
@@ -450,6 +462,17 @@ TEST(CO_Val, CoValInitOs_Zero) {
   CHECK_EQUAL(0, ret);
   POINTERS_EQUAL(nullptr, val);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValInitOs_TooBigValue) {
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
+  const uint_least8_t buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_init_os(&val, buf, sizeof(buf));
+
+  CHECK_EQUAL(-1, ret);
+}
+#endif
 
 TEST(CO_Val, CoValInitUs) {
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
@@ -515,6 +538,17 @@ TEST(CO_Val, CoValInitUsN_Zero) {
   POINTERS_EQUAL(nullptr, val);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValInitUsN_TooBigValue) {
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
+  const char16_t buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_init_us_n(&val, buf, CO_ARRAY_CAPACITY + 1);
+
+  CHECK_EQUAL(-1, ret);
+}
+#endif
+
 TEST(CO_Val, CoValInitDom) {
   const size_t n = 4u;
   const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
@@ -551,6 +585,17 @@ TEST(CO_Val, CoValInitDom_Zero) {
   CHECK_EQUAL(0, ret);
   POINTERS_EQUAL(nullptr, val);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValInitDom_TooBigValue) {
+  co_domain_t val = arrays.Init<co_domain_t>();
+  const char buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_init_dom(&val, buf, sizeof(buf));
+
+  CHECK_EQUAL(-1, ret);
+}
+#endif
 
 TEST(CO_Val, CoValFini_BasicType) {
   co_unsigned16_t val;
@@ -618,6 +663,19 @@ TEST(CO_Val, CoValSizeof_BasicType) {
   co_val_fini(CO_DEFTYPE_INTEGER16, &val);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValMake_ArrayType_NullValue) {
+  co_visible_string_t val = nullptr;
+  char buf[CO_ARRAY_CAPACITY + 1] = {0};
+  memset(buf, 'a', CO_ARRAY_CAPACITY);
+
+  const auto ret = co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, buf, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+}
+#endif
+
 TEST(CO_Val, CoValMake_VISIBLE_STRING) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
 
@@ -640,6 +698,19 @@ TEST(CO_Val, CoValMake_VISIBLE_STRING_Null) {
 
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &val);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValMake_VISIBLE_STRING_TooBigValue) {
+  co_visible_string_t val = arrays.Init<co_visible_string_t>();
+  char buf[CO_ARRAY_CAPACITY + 1] = {0};
+  memset(buf, 'a', CO_ARRAY_CAPACITY);
+
+  const auto ret = co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, buf, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_val_sizeof(CO_DEFTYPE_VISIBLE_STRING, &val));
+}
+#endif
 
 TEST(CO_Val, CoValMake_OCTET_STRING) {
   const size_t n = 5u;
@@ -666,6 +737,18 @@ TEST(CO_Val, CoValMake_OCTET_STRING_Null) {
   co_val_fini(CO_DEFTYPE_OCTET_STRING, &val);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValMake_OCTET_STRING_TooBigValue) {
+  co_octet_string_t val = arrays.Init<co_octet_string_t>();
+  const uint_least8_t buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_make(CO_DEFTYPE_OCTET_STRING, &val, buf, sizeof(buf));
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_val_sizeof(CO_DEFTYPE_OCTET_STRING, &val));
+}
+#endif
+
 TEST(CO_Val, CoValMake_UNICODE_STRING) {
   co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
   const size_t us_val_len = str16len(TEST_STR16) * sizeof(char16_t);
@@ -689,6 +772,20 @@ TEST(CO_Val, CoValMake_UNICODE_STRING_Null) {
 
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &val);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValMake_UNICODE_STRING_TooBigValue) {
+  co_unicode_string_t val = arrays.Init<co_unicode_string_t>();
+  char16_t buf[CO_ARRAY_CAPACITY + 1] = {0};
+  // incorrect unicode, but good enough for test
+  memset(buf, 'a', sizeof(buf) - sizeof(char16_t));
+
+  const auto ret = co_val_make(CO_DEFTYPE_UNICODE_STRING, &val, buf, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_val_sizeof(CO_DEFTYPE_UNICODE_STRING, &val));
+}
+#endif
 
 TEST(CO_Val, CoValMake_DOMAIN) {
   const size_t n = 4u;
@@ -715,6 +812,18 @@ TEST(CO_Val, CoValMake_DOMAIN_Null) {
 
   co_val_fini(CO_DEFTYPE_DOMAIN, &val);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValMake_DOMAIN_TooBigValue) {
+  co_domain_t val = arrays.Init<co_domain_t>();
+  const char buf[CO_ARRAY_CAPACITY + 1] = {0};
+
+  const auto ret = co_val_make(CO_DEFTYPE_DOMAIN, &val, buf, sizeof(buf));
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_val_sizeof(CO_DEFTYPE_DOMAIN, &val));
+}
+#endif
 
 TEST(CO_Val, CoValMake_BasicType) {
   co_integer16_t val;
@@ -763,6 +872,23 @@ TEST(CO_Val, CoValCopy_VISIBLE_STRING) {
   co_val_fini(CO_DEFTYPE_VISIBLE_STRING, &dst);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValCopy_VISIBLE_STRING_TooSmallDestination) {
+  co_visible_string_t src = arrays.Init<co_visible_string_t>();
+  CHECK_EQUAL(strlen(TEST_STR),
+              co_val_make(CO_DEFTYPE_VISIBLE_STRING, &src, TEST_STR, 0));
+  co_array dst_array = CO_ARRAY_INIT;
+  dst_array.hdr.capacity = strlen(TEST_STR) - 1;
+  co_visible_string_t dst;
+  co_val_init_array(&dst, &dst_array);
+
+  const auto ret = co_val_copy(CO_DEFTYPE_VISIBLE_STRING, &dst, &src);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, dst_array.hdr.size);
+}
+#endif
+
 TEST(CO_Val, CoValCopy_OCTET_STRING) {
   const size_t n = 5u;
   const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
@@ -782,6 +908,24 @@ TEST(CO_Val, CoValCopy_OCTET_STRING) {
   co_val_fini(CO_DEFTYPE_OCTET_STRING, &src);
   co_val_fini(CO_DEFTYPE_OCTET_STRING, &dst);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValCopy_OCTET_STRING_TooSmallDestination) {
+  const size_t n = 5u;
+  co_octet_string_t src = arrays.Init<co_octet_string_t>();
+  const uint_least8_t os[n] = {0xd3u, 0xe5u, 0x98u, 0xbau, 0x96u};
+  CHECK_EQUAL(n, co_val_make(CO_DEFTYPE_OCTET_STRING, &src, os, n));
+  co_array dst_array = CO_ARRAY_INIT;
+  dst_array.hdr.capacity = n - 1;
+  co_octet_string_t dst;
+  co_val_init_array(&dst, &dst_array);
+
+  const auto ret = co_val_copy(CO_DEFTYPE_OCTET_STRING, &dst, &src);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, dst_array.hdr.size);
+}
+#endif
 
 TEST(CO_Val, CoValCopy_UNICODE_STRING) {
   co_unicode_string_t src = arrays.Init<co_unicode_string_t>();
@@ -803,6 +947,23 @@ TEST(CO_Val, CoValCopy_UNICODE_STRING) {
   co_val_fini(CO_DEFTYPE_UNICODE_STRING, &dst);
 }
 
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValCopy_UNICODE_STRING_TooSmallDestination) {
+  co_unicode_string_t src = arrays.Init<co_unicode_string_t>();
+  CHECK_EQUAL(str16len(TEST_STR16),
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &src, TEST_STR16, 0));
+  co_array dst_array = CO_ARRAY_INIT;
+  dst_array.hdr.capacity = str16len(TEST_STR16) - 1;
+  co_unicode_string_t dst;
+  co_val_init_array(&dst, &dst_array);
+
+  const auto ret = co_val_copy(CO_DEFTYPE_UNICODE_STRING, &dst, &src);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, dst_array.hdr.size);
+}
+#endif
+
 TEST(CO_Val, CoValCopy_DOMAIN) {
   const size_t n = 4u;
   const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
@@ -822,6 +983,24 @@ TEST(CO_Val, CoValCopy_DOMAIN) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &src);
   co_val_fini(CO_DEFTYPE_DOMAIN, &dst);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValCopy_DOMAIN_TooSmallDestination) {
+  const size_t n = 4u;
+  const unsigned char dom[n] = {0xd3u, 0xe5u, 0x98u, 0xbau};
+  co_domain_t src = arrays.Init<co_domain_t>();
+  CHECK_EQUAL(n, co_val_make(CO_DEFTYPE_DOMAIN, &src, dom, n));
+  co_array dst_array = CO_ARRAY_INIT;
+  dst_array.hdr.capacity = n - 1;
+  co_domain_t dst;
+  co_val_init_array(&dst, &dst_array);
+
+  const auto ret = co_val_copy(CO_DEFTYPE_DOMAIN, &dst, &src);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, dst_array.hdr.size);
+}
+#endif
 
 TEST(CO_Val, CoValCopy_BasicType) {
   co_integer16_t src;
@@ -899,7 +1078,7 @@ TEST(CO_Val, CoValCmp_ArrayType_PointersEqual) {
 }
 
 TEST(CO_Val, CoValCmp_ArrayType_FirstValNull) {
-  co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
+  co_visible_string_t val1 = nullptr;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val1));
   co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
@@ -915,7 +1094,7 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
   co_visible_string_t val1 = arrays.Init<co_visible_string_t>();
   CHECK_EQUAL(strlen(TEST_STR),
               co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val1, TEST_STR, 0));
-  co_visible_string_t val2 = arrays.Init<co_visible_string_t>();
+  co_visible_string_t val2 = nullptr;
   CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_VISIBLE_STRING, &val2));
 
   CHECK_EQUAL(1, co_val_cmp(CO_DEFTYPE_VISIBLE_STRING, &val1, &val2));
@@ -1173,6 +1352,21 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
 #include <lely/co/def/array.def>  // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
 
+#if LELY_NO_MALLOC
+#define LELY_CO_DEFINE_TYPE(a, b, c, d) \
+  TEST(CO_Val, CoValRead_##a##_Overflow) { \
+    co_##b##_t val = arrays.Init<co_##b##_t>(); \
+    const uint_least8_t buffer[CO_ARRAY_CAPACITY + 1] = {0}; \
+\
+    const auto ret = \
+        co_val_read(CO_DEFTYPE_##a, &val, buffer, buffer + sizeof(buffer)); \
+\
+    CHECK_EQUAL(0, ret); \
+  }
+#include <lely/co/def/array.def>  // NOLINT(build/include)
+#undef LELY_CO_DEFINE_TYPE
+#endif  // LELY_NO_MALLOC
+
 TEST(CO_Val, CoValRead_VISIBLE_STRING) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
   const size_t ARRAY_SIZE = 6u;
@@ -1244,7 +1438,59 @@ TEST(CO_Val, CoValRead_INVALID_TYPE) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-// TODO(sdo): co_val_read_sdo()
+TEST(CO_Val, CoValReadSdo) {
+  co_unsigned16_t val = 0xbeefu;
+  const uint8_t buffer[] = {0xaau, 0xbbu};
+  set_errnum(0);
+
+  const auto ret =
+      co_val_read_sdo(CO_DEFTYPE_UNSIGNED16, &val, buffer, sizeof(buffer));
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, get_errnum());
+  CHECK_EQUAL(0xbbaau, val);
+}
+
+TEST(CO_Val, CoValReadSdo_FromNull) {
+  co_unsigned16_t val = 0xbeefu;
+  set_errnum(0);
+
+  const auto ret = co_val_read_sdo(CO_DEFTYPE_UNSIGNED16, &val, nullptr, 0);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, get_errnum());
+  CHECK_EQUAL(0xbeefu, val);
+}
+
+TEST(CO_Val, CoValReadSdo_FromTooSmall) {
+  const uint8_t buffer[] = {0xaau};
+  co_unsigned16_t val = 0xbeefu;
+  set_errnum(0);
+
+  const auto ret =
+      co_val_read_sdo(CO_DEFTYPE_UNSIGNED16, &val, buffer, sizeof(buffer));
+
+  CHECK_EQUAL(CO_SDO_AC_ERROR, ret);
+  CHECK_EQUAL(0, get_errnum());
+  CHECK_EQUAL(0xbeefu, val);
+}
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValReadSdo_ToTooSmall) {
+  const char buffer[] = "too long string";
+  co_array array = CO_ARRAY_INIT;
+  array.hdr.capacity = 1;
+  co_visible_string_t val;
+  co_val_init_array(&val, &array);
+  set_errnum(42);
+
+  const auto ret =
+      co_val_read_sdo(CO_DEFTYPE_VISIBLE_STRING, &val, buffer, sizeof(buffer));
+
+  CHECK_EQUAL(CO_SDO_AC_NO_MEM, ret);
+  CHECK_EQUAL(42, get_errnum());
+}
+#endif
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValWrite_##a) { \
@@ -1364,6 +1610,17 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
 #include <lely/co/def/time.def>   // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
+
+TEST(CO_Val, CoValWrite_NullArray) {
+  const size_t ARRAY_SIZE = 5u;
+  co_visible_string_t val = nullptr;
+  uint_least8_t buffer[ARRAY_SIZE] = {0x00};
+
+  const auto ret = co_val_write(CO_DEFTYPE_VISIBLE_STRING, &val, buffer,
+                                buffer + ARRAY_SIZE);
+
+  CHECK_EQUAL(0, ret);
+}
 
 TEST(CO_Val, CoValWrite_VISIBLE_STRING) {
   co_visible_string_t val = arrays.Init<co_visible_string_t>();
@@ -1505,3 +1762,31 @@ TEST(CO_Val, CoValWrite_INVALID_TYPE) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_Val, CoValInitArray) {
+  co_array array = CO_ARRAY_INIT;
+  co_visible_string_t val;
+
+  co_val_init_array(&val, &array);
+
+  POINTERS_EQUAL(array.u.data, val);
+}
+
+TEST(CO_Val, CoValInitArray_NullValue) {
+  co_array array = CO_ARRAY_INIT;
+  co_visible_string_t val = nullptr;
+
+  co_val_init_array(nullptr, &array);
+
+  POINTERS_EQUAL(nullptr, val);
+}
+
+TEST(CO_Val, CoValInitArray_NullArray) {
+  co_visible_string_t val;
+
+  co_val_init_array(&val, nullptr);
+
+  POINTERS_EQUAL(nullptr, val);
+}
+#endif  // LELY_NO_MALLOC
