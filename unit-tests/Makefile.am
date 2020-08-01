@@ -106,7 +106,13 @@ unit_test_co_SOURCES = $(src_common) $(src_co_tests)
 unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
-unit_test_co_LDFLAGS = -Wl,--wrap=co_val_read -Wl,--wrap=co_val_write -Wl,--wrap=co_val_make
+unit_test_co_LDFLAGS =
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_read
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_write
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_make
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init_min
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init_max
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init
 endif
 else
 unit_test_co_LDFLAGS = -all-static

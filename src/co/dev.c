@@ -105,13 +105,13 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 	return dev;
 }
 
-#if !LELY_NO_MALLOC
-
 void
 __co_dev_fini(struct __co_dev *dev)
 {
 	assert(dev);
-
+#if LELY_NO_MALLOC
+	(void)dev;
+#else
 	rbtree_foreach (&dev->tree, node)
 		co_obj_destroy(structof(node, co_obj_t, node));
 
@@ -122,7 +122,10 @@ __co_dev_fini(struct __co_dev *dev)
 
 	free(dev->name);
 #endif
+#endif // LELY_NO_MALLOC
 }
+
+#if !LELY_NO_MALLOC
 
 co_dev_t *
 co_dev_create(co_unsigned8_t id)

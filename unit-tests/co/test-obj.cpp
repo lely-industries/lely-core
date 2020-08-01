@@ -67,9 +67,7 @@ TEST_GROUP(CO_ObjInit) {
   }
 
   void DestroyCoObjT(co_obj_t * obj) {
-#if !LELY_NO_MALLOC
     __co_obj_fini(obj);
-#endif
     ReleaseCoObjT(obj);
   }
 
@@ -95,6 +93,16 @@ TEST(CO_ObjInit, CoObjInit) {
 
   POINTERS_EQUAL(nullptr, co_obj_get_val(obj, 0x00));
   CHECK_EQUAL(0, co_obj_sizeof_val(obj));
+
+  DestroyCoObjT(obj);
+}
+
+TEST(CO_ObjInit, CoObjFini) {
+  auto* const obj = AcquireCoObjT();
+  __co_obj_init(obj, 0x1234, NULL, 0);
+  CoDevTHolder dev(0x01);
+
+  co_dev_insert_obj(dev.Get(), obj);
 
   DestroyCoObjT(obj);
 }
@@ -603,9 +611,7 @@ TEST_GROUP(CO_SubInit) {
   }
 
   void DestroyCoSubT(co_sub_t * sub) {
-#if !LELY_NO_MALLOC
     __co_sub_fini(sub);
-#endif
     ReleaseCoSubT(sub);
   }
 
@@ -674,7 +680,29 @@ TEST(CO_SubInit, CoSubInit_Limits) {
 
   DestroyCoSubT(sub);
 }
-#endif
+
+#if HAVE_LELY_OVERRIDE
+TEST(CO_SubInit, CoSubInit_InitValMinFails) {
+  auto* const sub = AcquireCoSubT();
+  LelyOverride::co_val_init_min(Override::NoneCallsValid);
+
+  POINTERS_EQUAL(nullptr,
+                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+
+  ReleaseCoSubT(sub);
+}
+
+TEST(CO_SubInit, CoSubInit_InitValMaxFails) {
+  auto* const sub = AcquireCoSubT();
+  LelyOverride::co_val_init_max(Override::NoneCallsValid);
+
+  POINTERS_EQUAL(nullptr,
+                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+
+  ReleaseCoSubT(sub);
+}
+#endif  // HAVE_LELY_OVERRIDE
+#endif  // LELY_NO_CO_OBJ_LIMITS
 
 #ifndef LELY_NO_CO_OBJ_DEFAULT
 TEST(CO_SubInit, CoSubInit_Default) {
@@ -687,7 +715,19 @@ TEST(CO_SubInit, CoSubInit_Default) {
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_def(sub)));
   DestroyCoSubT(sub);
 }
-#endif
+
+#if HAVE_LELY_OVERRIDE
+TEST(CO_SubInit, CoSubInit_InitValFails) {
+  auto* const sub = AcquireCoSubT();
+  LelyOverride::co_val_init(Override::NoneCallsValid);
+
+  POINTERS_EQUAL(nullptr,
+                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+
+  ReleaseCoSubT(sub);
+}
+#endif  // HAVE_LELY_OVERRIDE
+#endif  // LELY_NO_CO_OBJ_DEFAULT
 
 #ifndef LELY_NO_CO_OBJ_UPLOAD
 TEST(CO_SubInit, CoSubInit_Upload) {
@@ -705,6 +745,15 @@ TEST(CO_SubInit, CoSubInit_Upload) {
   DestroyCoSubT(sub);
 }
 #endif
+
+TEST(CO_SubInit, CoObjFini) {
+  auto* const sub = AcquireCoSubT();
+  __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL);
+  CoObjTHolder obj(0x1234u);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub));
+
+  DestroyCoSubT(sub);
+}
 
 TEST(CO_ObjSub, CoSubPrev) {
   CoSubTHolder sub2_holder(0x42, CO_DEFTYPE_INTEGER16);

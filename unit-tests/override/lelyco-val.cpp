@@ -40,6 +40,9 @@ using Override::OverridePlugin;
 static int co_val_read_vc = Override::AllCallsValid;
 static int co_val_write_vc = Override::AllCallsValid;
 static int co_val_make_vc = Override::AllCallsValid;
+static int co_val_init_min_vc = Override::AllCallsValid;
+static int co_val_init_max_vc = Override::AllCallsValid;
+static int co_val_init_vc = Override::AllCallsValid;
 
 void
 LelyOverride::co_val_read(int valid_calls) {
@@ -56,6 +59,21 @@ LelyOverride::co_val_make(int valid_calls) {
   OverridePlugin::getCurrent()->setForNextTest(co_val_make_vc, valid_calls);
 }
 
+void
+LelyOverride::co_val_init_min(int valid_calls) {
+  OverridePlugin::getCurrent()->setForNextTest(co_val_init_min_vc, valid_calls);
+}
+
+void
+LelyOverride::co_val_init_max(int valid_calls) {
+  OverridePlugin::getCurrent()->setForNextTest(co_val_init_max_vc, valid_calls);
+}
+
+void
+LelyOverride::co_val_init(int valid_calls) {
+  OverridePlugin::getCurrent()->setForNextTest(co_val_init_vc, valid_calls);
+}
+
 extern "C" {
 
 #if !LELY_ENABLE_SHARED
@@ -63,6 +81,9 @@ extern "C" {
 extern decltype(co_val_read) __real_co_val_read;
 extern decltype(co_val_write) __real_co_val_write;
 extern decltype(co_val_make) __real_co_val_make;
+extern decltype(co_val_init_min) __real_co_val_init_min;
+extern decltype(co_val_init_max) __real_co_val_init_max;
+extern decltype(co_val_init) __real_co_val_init;
 #endif
 
 /* 3. Override function definition with both exact and "wrap" version. */
@@ -90,6 +111,27 @@ LELY_OVERRIDE(co_val_make)(co_unsigned16_t type, void* val, const void* ptr,
   auto fun = LELY_WRAP_CALL_TO(co_val_make);
   if (!fun.IsCallValid(co_val_make_vc)) return 0;
   return fun.call(type, val, ptr, n);
+}
+
+int
+LELY_OVERRIDE(co_val_init_min)(co_unsigned16_t type, void* val) {
+  auto fun = LELY_WRAP_CALL_TO(co_val_init_min);
+  if (!fun.IsCallValid(co_val_init_min_vc)) return -1;
+  return fun.call(type, val);
+}
+
+int
+LELY_OVERRIDE(co_val_init_max)(co_unsigned16_t type, void* val) {
+  auto fun = LELY_WRAP_CALL_TO(co_val_init_max);
+  if (!fun.IsCallValid(co_val_init_max_vc)) return -1;
+  return fun.call(type, val);
+}
+
+int
+LELY_OVERRIDE(co_val_init)(co_unsigned16_t type, void* val) {
+  auto fun = LELY_WRAP_CALL_TO(co_val_init);
+  if (!fun.IsCallValid(co_val_init_vc)) return -1;
+  return fun.call(type, val);
 }
 
 }  // extern "C"
