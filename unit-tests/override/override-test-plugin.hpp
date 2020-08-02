@@ -20,14 +20,36 @@
  * limitations under the License.
  */
 
-#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
-#define LELY_OVERRIDE_LIBC_DEFS_HPP_
+#ifndef LELY_OVERRIDE_TEST_PLUGIN_HPP_
+#define LELY_OVERRIDE_TEST_PLUGIN_HPP_
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
-/* libc overrides won't link properly on MinGW-W64 */
-#define HAVE_LIBC_OVERRIDE 1
+#include <list>
 
-#include "defs.hpp"
-#endif
+#include <CppUTest/TestHarness.h>
+#include <CppUTest/TestPlugin.h>
 
-#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_
+namespace Override {
+
+/**
+ * CppUTest plugin for override methods.
+ * Maintains proper 'valid calls' values across tests.
+ */
+class OverridePlugin : public TestPlugin {
+ public:
+  OverridePlugin();
+  ~OverridePlugin();
+
+  static OverridePlugin* getCurrent();
+
+  void postTestAction(UtestShell&, TestResult&) override;
+
+  void setForNextTest(int& vc, int target_value);
+
+ private:
+  class CleanUp;
+  std::list<CleanUp> cleanups;
+};
+
+}  // namespace Override
+
+#endif  // !LELY_OVERRIDE_TEST_PLUGIN_HPP_

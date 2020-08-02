@@ -23,7 +23,7 @@
 #ifndef LELY_OVERRIDE_LIBC_STDIO_H_
 #define LELY_OVERRIDE_LIBC_STDIO_H_
 
-#include "override/libc-defs.hpp"
+#include "libc-defs.hpp"
 
 #if HAVE_LIBC_OVERRIDE
 
@@ -44,7 +44,7 @@ namespace LibCOverride {
 /**
  * Number of valid calls to snprintf().
  */
-static int snprintf_vc = AllCallsValid;
+static int snprintf_vc = Override::AllCallsValid;
 #endif
 }  // namespace LibCOverride
 
@@ -58,9 +58,9 @@ int snprintf(char* __restrict __s, size_t __maxlen,
 
 int
 snprintf(char* s, size_t maxlen, const char* format, ...) __THROWNL {
-  if (LibCOverride::snprintf_vc == LibCOverride::NoneCallsValid) return -1;
+  if (LibCOverride::snprintf_vc == Override::NoneCallsValid) return -1;
 
-  if (LibCOverride::snprintf_vc > LibCOverride::NoneCallsValid)
+  if (LibCOverride::snprintf_vc > Override::NoneCallsValid)
     --LibCOverride::snprintf_vc;
 
   va_list arg;

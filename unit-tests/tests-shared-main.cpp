@@ -21,8 +21,13 @@
  */
 
 #include <CppUTest/CommandLineTestRunner.h>
+#include <CppUTest/TestRegistry.h>
+
+#include "override/override-test-plugin.hpp"
 
 int
 main(int ac, char** av) {
+  Override::OverridePlugin plugin;
+  TestRegistry::getCurrentRegistry()->installPlugin(&plugin);
   return RUN_ALL_TESTS(ac, av);
 }

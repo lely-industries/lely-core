@@ -119,19 +119,9 @@ TEST_GROUP_BASE(CO_Obj, CO_ObjBase) {
     obj = obj_holder->Get();
 
     CHECK(obj != nullptr);
-
-#ifdef HAVE_LELY_OVERRIDE
-    LelyOverride::co_val_make_vc = LelyOverride::AllCallsValid;
-#endif
   }
 
-  TEST_TEARDOWN() {
-    obj_holder.reset();
-
-#ifdef HAVE_LELY_OVERRIDE
-    LelyOverride::co_val_make_vc = LelyOverride::AllCallsValid;
-#endif
-  }
+  TEST_TEARDOWN() { obj_holder.reset(); }
 };
 
 TEST_GROUP_BASE(CO_Sub, CO_ObjBase) {
@@ -1097,7 +1087,7 @@ TEST(CO_Obj, CoSubSetUploadFile_SetValFailed) {
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_UPLOAD_FILE);
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  LelyOverride::co_val_make_vc = LelyOverride::NoneCallsValid;
+  LelyOverride::co_val_make(Override::NoneCallsValid);
 
   const auto ret = co_sub_set_upload_file(sub, TEST_STR);
 
@@ -1147,7 +1137,7 @@ TEST(CO_Obj, CoSubSetDownloadFile_SetValFailed) {
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_DOWNLOAD_FILE);
   CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  LelyOverride::co_val_make_vc = LelyOverride::NoneCallsValid;
+  LelyOverride::co_val_make(Override::NoneCallsValid);
 
   const auto ret = co_sub_set_download_file(sub, TEST_STR);
 
