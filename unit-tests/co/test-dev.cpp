@@ -71,9 +71,7 @@ TEST_GROUP(CO_DevInit) {
   }
 
   void DestroyCoDevT(co_dev_t* const dev) {
-#if !LELY_NO_MALLOC
     __co_dev_fini(dev);
-#endif
     ReleaseCoDevT(dev);
   }
 
@@ -970,7 +968,30 @@ TEST(CO_Dev, CoDevReadSub_ReadSizeFailed) {
 
   CHECK_EQUAL(0, ret);
 }
-#endif
+
+#if LELY_NO_MALLOC
+TEST(CO_Dev, CoDevReadSub_ArrayType) {
+  CoObjTHolder obj(0x1234);
+  CoSubTHolder sub(0xab, CO_DEFTYPE_OCTET_STRING);
+  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
+
+  uint_least8_t buf[] = {0x34, 0x12, 0xab, 0x04, 0x00, 0x00,
+                         0x00, 'a',  'b',  'c',  'd'};
+  co_unsigned16_t idx = 0x0000;
+  co_unsigned8_t subidx = 0x00;
+
+  const auto ret = co_dev_read_sub(dev, &idx, &subidx, buf, buf + sizeof(buf));
+
+  CHECK_EQUAL(sizeof(buf), ret);
+  CHECK_EQUAL(0x1234, idx);
+  CHECK_EQUAL(0xab, subidx);
+  STRCMP_EQUAL("abcd", *reinterpret_cast<char* const*>(
+                           co_dev_get_val(dev, idx, subidx)));
+}
+#endif  // LELY_NO_MALLOC
+
+#endif  // HAVE_LELY_OVERRIDE
 
 TEST(CO_Dev, CoDevReadSub_ValSizeTooBig) {
   CoObjTHolder obj(0x1234);
@@ -1298,6 +1319,16 @@ TEST(CO_DevDCF, CoDevWriteDef_AfterMax) {
 
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
+
+#if LELY_NO_MALLOC
+TEST(CO_DevDCF, CoDevWriteDef_Null) {
+  co_domain_t ptr = nullptr;
+
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
+
+  CHECK_EQUAL(-1, ret);
+}
+#endif
 
 #ifndef LELY_NO_CO_TPDO
 namespace CO_DevTPDO_Static {
