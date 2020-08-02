@@ -187,7 +187,10 @@ TEST_GROUP(CO_Val) {
 
 TEST(CO_Val, CoValInit_Invalid) {
   char val;
-  CHECK_EQUAL(-1, co_val_init(INVALID_TYPE, &val));
+
+  const auto ret = co_val_init(INVALID_TYPE, &val);
+
+  CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
@@ -315,7 +318,10 @@ TEST(CO_Val, CoValInitMin_Invalid) {
 
 TEST(CO_Val, CoValInitMax_Invalid) {
   char val;
-  CHECK_EQUAL(-1, co_val_init_max(INVALID_TYPE, &val));
+
+  const auto ret = co_val_init_max(INVALID_TYPE, &val);
+
+  CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
@@ -780,7 +786,7 @@ TEST(CO_Val, CoValCopy_DOMAIN) {
 
   CHECK(dst != nullptr);
   CHECK_EQUAL(n, ret);
-  CHECK_EQUAL(n, co_val_sizeof(CO_DEFTYPE_OCTET_STRING, &dst));
+  CHECK_EQUAL(n, co_val_sizeof(CO_DEFTYPE_DOMAIN, &dst));
   CHECK_EQUAL(0, memcmp(dom, dst, n));
   CHECK(co_val_addressof(CO_DEFTYPE_DOMAIN, &src) !=
         co_val_addressof(CO_DEFTYPE_DOMAIN, &dst));
@@ -1098,14 +1104,19 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
     co_##b##_t val; \
     const uint_least8_t buffer = 0x00; \
 \
-    CHECK_EQUAL(0, co_val_read(CO_DEFTYPE_##a, &val, &buffer, &buffer)); \
+    const auto ret = co_val_read(CO_DEFTYPE_##a, &val, &buffer, &buffer); \
+\
+    CHECK_EQUAL(0, ret); \
   } \
 \
   TEST(CO_Val, CoValRead_##a##_NullVal) { \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
     const uint_least8_t buffer[MAX_VAL_SIZE] = {0x00}; \
-    CHECK_EQUAL(val_size, co_val_read(CO_DEFTYPE_##a, nullptr, buffer, \
-                                      buffer + MAX_VAL_SIZE)); \
+\
+    const auto ret = \
+        co_val_read(CO_DEFTYPE_##a, nullptr, buffer, buffer + MAX_VAL_SIZE); \
+\
+    CHECK_EQUAL(val_size, ret); \
   }
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
 #include <lely/co/def/time.def>   // NOLINT(build/include)
@@ -1115,14 +1126,19 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
   TEST(CO_Val, CoValRead_##a##_NullVal) { \
     const size_t buf_size = 2u; \
     const uint_least8_t buffer[buf_size] = {0x00}; \
-    CHECK_EQUAL(buf_size, co_val_read(CO_DEFTYPE_##a, nullptr, buffer, \
-                                      buffer + buf_size)); \
+\
+    const auto ret = \
+        co_val_read(CO_DEFTYPE_##a, nullptr, buffer, buffer + buf_size); \
+\
+    CHECK_EQUAL(buf_size, ret); \
   } \
 \
   TEST(CO_Val, CoValRead_##a##_ZeroBuffer) { \
     co_##b##_t val = nullptr; \
 \
-    CHECK_EQUAL(0, co_val_read(CO_DEFTYPE_##a, &val, nullptr, nullptr)); \
+    const auto ret = co_val_read(CO_DEFTYPE_##a, &val, nullptr, nullptr); \
+\
+    CHECK_EQUAL(0, ret); \
 \
     co_val_fini(CO_DEFTYPE_##a, &val); \
   }
@@ -1193,7 +1209,10 @@ TEST(CO_Val, CoValRead_DOMAIN) {
 
 TEST(CO_Val, CoValRead_INVALID_TYPE) {
   const uint_least8_t buffer = 0x00;
-  CHECK_EQUAL(0, co_val_read(INVALID_TYPE, nullptr, &buffer, &buffer));
+
+  const auto ret = co_val_read(INVALID_TYPE, nullptr, &buffer, &buffer);
+
+  CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
@@ -1300,17 +1319,19 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
     co_##b##_t val; \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
 \
-    CHECK_EQUAL(val_size, \
-                co_val_write(CO_DEFTYPE_##a, &val, nullptr, nullptr)); \
+    const auto ret = co_val_write(CO_DEFTYPE_##a, &val, nullptr, nullptr); \
+\
+    CHECK_EQUAL(val_size, ret); \
   } \
 \
   TEST(CO_Val, CoValWrite_##a##_InvalidSize) { \
     co_##b##_t val; \
     const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_##a); \
-    uint_least8_t buffer = 0x00; \
+    uint_least8_t buffer[MAX_VAL_SIZE] = {0x00}; \
 \
-    CHECK_EQUAL(val_size, \
-                co_val_write(CO_DEFTYPE_##a, &val, &buffer, &buffer)); \
+    const auto ret = co_val_write(CO_DEFTYPE_##a, &val, buffer, buffer); \
+\
+    CHECK_EQUAL(val_size, ret); \
   }
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
 #include <lely/co/def/time.def>   // NOLINT(build/include)
@@ -1447,7 +1468,10 @@ TEST(CO_Val, CoValWrite_DOMAIN_SizeZero) {
 
 TEST(CO_Val, CoValWrite_INVALID_TYPE) {
   co_integer16_t val;
-  uint_least8_t buffer = 0x00;
-  CHECK_EQUAL(0, co_val_write(INVALID_TYPE, &val, &buffer, &buffer));
+  uint_least8_t buffer[MAX_VAL_SIZE] = {0x00};
+
+  const auto ret = co_val_write(INVALID_TYPE, &val, buffer, buffer);
+
+  CHECK_EQUAL(0, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
