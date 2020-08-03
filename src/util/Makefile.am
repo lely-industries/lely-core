@@ -23,14 +23,17 @@ if !NO_CXX
 src += exception.cpp
 endif
 
+if !NO_CO_OBJ_FILE
+src += frbuf.c
+src += fwbuf.c
+endif
+
 src += bits.c
 src += cmp.c
 src += diag.c
 src += dllist.c
 src += endian.c
 src += errnum.c
-src += frbuf.c
-src += fwbuf.c
 src += membuf.c
 src += pheap.c
 src += rbtree.c

@@ -32,7 +32,7 @@ bin += test-util-endian
 test_util_endian_SOURCES = test.h util-endian.c
 test_util_endian_LDADD = $(LELY_UTIL_LIBS)
 
-if !ECSS_COMPLIANCE
+if !NO_CO_OBJ_FILE
 bin += test-util-fbuf
 test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
