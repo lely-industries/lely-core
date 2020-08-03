@@ -30,9 +30,14 @@
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
-#include <lely/util/lex.h>
-#include <lely/util/print.h>
 #include <lely/util/ustring.h>
+
+#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
+#if !LELY_NO_CO_DCF
+#include <lely/util/lex.h>
+#endif
+#include <lely/util/print.h>
+#endif
 
 #include <assert.h>
 #include <inttypes.h>
