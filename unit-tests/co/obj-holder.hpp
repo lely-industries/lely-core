@@ -20,14 +20,35 @@
  * limitations under the License.
  */
 
-#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
-#define LELY_OVERRIDE_LIBC_DEFS_HPP_
+#ifndef LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
+#define LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
-/* libc overrides won't link properly on MinGW-W64 */
-#define HAVE_LIBC_OVERRIDE 1
+#include <lely/co/obj.h>
 
-#include "defs.hpp"
+#if LELY_NO_MALLOC
+#include <lely/co/detail/obj.h>
 #endif
 
-#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_
+#include "holder.hpp"
+
+class CoObjTHolder : public Holder<co_obj_t> {
+#if LELY_NO_MALLOC
+ public:
+  explicit CoObjTHolder(co_unsigned16_t idx) {
+    __co_obj_init(Get(), idx, array.u.data, PREALOCATED_OBJ_SIZE);
+  }
+
+  static const size_t PREALOCATED_OBJ_SIZE = CO_ARRAY_CAPACITY;
+
+ private:
+  co_array array = CO_ARRAY_INIT;
+#else   // !LELY_NO_MALLOC
+ public:
+  explicit CoObjTHolder(co_unsigned16_t idx)
+      : Holder<co_obj_t>(co_obj_create(idx)) {}
+
+  ~CoObjTHolder() { co_obj_destroy(Get()); }
+#endif  // LELY_NO_MALLOC
+};      // class CoObjTHolder
+
+#endif  // LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_

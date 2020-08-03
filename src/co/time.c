@@ -4,7 +4,7 @@
  *
  * @see lely/co/time.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -362,23 +362,22 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_time_t *time = data;
 	assert(time);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	co_unsigned32_t cobid = val.u32;
 	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 	if (cobid == cobid_old)
-		goto error;
+		return 0;
 
 	// The CAN-ID cannot be changed while the producer or consumer is and
 	// remains active.
@@ -388,29 +387,20 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			|| (cobid_old & CO_TIME_COBID_CONSUMER);
 	uint_least32_t canid = cobid & CAN_MASK_EID;
 	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (active && active_old && canid != canid_old) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+	if (active && active_old && canid != canid_old)
+		return CO_SDO_AC_PARAM_VAL;
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
 	if (!(cobid & CO_TIME_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		return CO_SDO_AC_PARAM_VAL;
 
 	time->cobid = cobid;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_time_update(time);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int

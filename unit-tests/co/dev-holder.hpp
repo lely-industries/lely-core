@@ -20,14 +20,28 @@
  * limitations under the License.
  */
 
-#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
-#define LELY_OVERRIDE_LIBC_DEFS_HPP_
+#ifndef LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
+#define LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
-/* libc overrides won't link properly on MinGW-W64 */
-#define HAVE_LIBC_OVERRIDE 1
+#include <lely/co/obj.h>
 
-#include "defs.hpp"
+#if LELY_NO_MALLOC
+#include <lely/co/detail/dev.h>
 #endif
 
-#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_
+#include "holder.hpp"
+
+class CoDevTHolder : public Holder<co_dev_t> {
+#if LELY_NO_MALLOC
+ public:
+  explicit CoDevTHolder(co_unsigned8_t id) { __co_dev_init(Get(), id); }
+#else   // !LELY_NO_MALLOC
+ public:
+  explicit CoDevTHolder(co_unsigned8_t id)
+      : Holder<co_dev_t>(co_dev_create(id)) {}
+
+  ~CoDevTHolder() { co_dev_destroy(Get()); }
+#endif  // LELY_NO_MALLOC
+};      // class CoDevTHolder
+
+#endif  // LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_

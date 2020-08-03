@@ -5,7 +5,11 @@ setup(
     version="2.3.0",
     packages=find_packages(),
     entry_points={
-        "console_scripts": ["dcfchk = dcf.cli:main", "dcfgen = dcfgen.cli:main"]
+        "console_scripts": [
+            "dcf2dev = dcf2dev.cli:main",
+            "dcfchk = dcf.cli:main",
+            "dcfgen = dcfgen.cli:main",
+        ]
     },
     install_requires=["PyYAML>=3.08", "empy>=3.3.2"],
     package_data={"": ["data/*"]},

@@ -20,14 +20,15 @@
  * limitations under the License.
  */
 
-#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
-#define LELY_OVERRIDE_LIBC_DEFS_HPP_
+#ifndef LELY_OVERRIDE_DEFS_HPP_
+#define LELY_OVERRIDE_DEFS_HPP_
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
-/* libc overrides won't link properly on MinGW-W64 */
-#define HAVE_LIBC_OVERRIDE 1
+namespace Override {
+/**
+ * Enumeration of function override parameters.
+ */
+enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
 
-#include "defs.hpp"
-#endif
+}  // namespace Override
 
-#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_
+#endif  // !LELY_OVERRIDE_DEFS_HPP_

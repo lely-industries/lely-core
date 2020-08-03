@@ -525,21 +525,22 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(pdo);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1400 + pdo->num - 1);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
+	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the PDO is and remains
 		// valid.
@@ -547,17 +548,13 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_PDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_PDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.cobid = cobid;
 
@@ -573,13 +570,11 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t trans = val.u8;
 		co_unsigned8_t trans_old = co_sub_get_val_u8(sub);
 		if (trans == trans_old)
-			goto error;
+			return 0;
 
 		// Transmission types 0xF1..0xFD are reserved.
-		if (trans > 0xf0 && trans < 0xfe) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (trans > 0xf0 && trans < 0xfe)
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.trans = trans;
 
@@ -593,14 +588,12 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned16_t inhibit = val.u16;
 		co_unsigned16_t inhibit_old = co_sub_get_val_u16(sub);
 		if (inhibit == inhibit_old)
-			goto error;
+			return 0;
 
 		// The inhibit time cannot be changed while the PDO exists and
 		// is valid.
-		if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (!(pdo->comm.cobid & CO_PDO_COBID_VALID))
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.inhibit = inhibit;
 		break;
@@ -610,18 +603,17 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned16_t event = val.u16;
 		co_unsigned16_t event_old = co_sub_get_val_u16(sub);
 		if (event == event_old)
-			goto error;
+			return 0;
 
 		pdo->comm.event = event;
 		break;
 	}
-	default: ac = CO_SDO_AC_NO_SUB; goto error;
+	default: return CO_SDO_AC_NO_SUB;
 	}
 
 	co_sub_dn(sub, &val);
-error:
-	co_val_fini(type, &val);
-	return ac;
+
+	return 0;
 }
 
 static co_unsigned32_t
@@ -636,6 +628,8 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned32_t ac = 0;
 
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
@@ -647,13 +641,11 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t n = val.u8;
 		co_unsigned8_t n_old = co_sub_get_val_u8(sub);
 		if (n == n_old)
-			goto error;
+			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > 0x40) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid || n > 0x40)
+			return CO_SDO_AC_PARAM_VAL;
 
 		size_t bits = 0;
 		for (size_t i = 1; i <= n; i++) {
@@ -666,16 +658,13 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned8_t len = map & 0xff;
 
 			// Check the PDO length.
-			if ((bits += len) > CAN_MAX_LEN * 8) {
-				ac = CO_SDO_AC_PDO_LEN;
-				goto error;
-			}
+			if ((bits += len) > CAN_MAX_LEN * 8)
+				return CO_SDO_AC_PDO_LEN;
 
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO (or is a valid dummy entry).
-			ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-			if (ac)
-				goto error;
+			if ((ac = co_dev_chk_rpdo(pdo->dev, idx, subidx)))
+				return ac;
 		}
 
 		pdo->map.n = n;
@@ -684,32 +673,28 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned32_t map = val.u32;
 		co_unsigned32_t map_old = co_sub_get_val_u32(sub);
 		if (map == map_old)
-			goto error;
+			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid or
 		// sub-index 0x00 is non-zero.
-		if (valid || pdo->map.n) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid || pdo->map.n)
+			return CO_SDO_AC_PARAM_VAL;
 
 		if (map) {
 			co_unsigned16_t idx = (map >> 16) & 0xffff;
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO (or is a valid dummy entry).
-			ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-			if (ac)
-				goto error;
+			if ((ac = co_dev_chk_rpdo(pdo->dev, idx, subidx)))
+				return ac;
 		}
 
 		pdo->map.map[co_sub_get_subidx(sub) - 1] = map;
 	}
 
 	co_sub_dn(sub, &val);
-error:
-	co_val_fini(type, &val);
-	return ac;
+
+	return 0;
 }
 
 static int

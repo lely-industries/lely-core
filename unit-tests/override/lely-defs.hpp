@@ -29,16 +29,8 @@
  * --wrap linker option works.
  */
 #define HAVE_LELY_OVERRIDE 1
-#endif
 
-#ifdef HAVE_LELY_OVERRIDE
-namespace LelyOverride {
-/**
- * Enumeration of lely-core function override parameters.
- */
-enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
-
-}  // namespace LelyOverride
+#include "defs.hpp"
 #endif
 
 #endif  // !LELY_OVERRIDE_LELY_DEFS_HPP_

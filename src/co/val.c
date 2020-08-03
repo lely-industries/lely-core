@@ -36,50 +36,14 @@
 
 #include <assert.h>
 #include <inttypes.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
+#endif
 
-#define CO_BOOLEAN_INIT 0
-#define CO_INTEGER8_INIT 0
-#define CO_INTEGER16_INIT 0
-#define CO_INTEGER32_INIT 0
-#define CO_UNSIGNED8_INIT 0
-#define CO_UNSIGNED16_INIT 0
-#define CO_UNSIGNED32_INIT 0
-#define CO_REAL32_INIT 0
-#define CO_VISIBLE_STRING_INIT NULL
-#define CO_OCTET_STRING_INIT NULL
-#define CO_UNICODE_STRING_INIT NULL
-#define CO_TIME_OF_DAY_INIT \
-	{ \
-		0, 0 \
-	}
-#define CO_TIME_DIFF_INIT CO_TIME_OF_DAY_INIT
-#define CO_DOMAIN_INIT NULL
-#define CO_INTEGER24_INIT 0
-#define CO_REAL64_INIT 0
-#define CO_INTEGER40_INIT 0
-#define CO_INTEGER48_INIT 0
-#define CO_INTEGER56_INIT 0
-#define CO_INTEGER64_INIT 0
-#define CO_UNSIGNED24_INIT 0
-#define CO_UNSIGNED40_INIT 0
-#define CO_UNSIGNED48_INIT 0
-#define CO_UNSIGNED56_INIT 0
-#define CO_UNSIGNED64_INIT 0
+#define CO_ARRAY_HDR_OFFSET \
+	ALIGN(sizeof(struct co_array_hdr), _Alignof(union co_val))
 
-#define CO_VISIBLE_STRING_MIN NULL
-#define CO_VISIBLE_STRING_MAX NULL
-
-#define CO_OCTET_STRING_MIN NULL
-#define CO_OCTET_STRING_MAX NULL
-
-#define CO_UNICODE_STRING_MIN NULL
-#define CO_UNICODE_STRING_MAX NULL
-
-#define CO_DOMAIN_MIN NULL
-#define CO_DOMAIN_MAX NULL
-
-#define CO_ARRAY_OFFSET ALIGN(sizeof(size_t), _Alignof(union co_val))
+static inline struct co_array_hdr *co_array_get_hdr(const void *val);
 
 static int co_array_alloc(void *val, size_t size);
 static void co_array_free(void *val);
@@ -94,12 +58,23 @@ co_val_init(co_unsigned16_t type, void *val)
 	union co_val *u = val;
 	assert(u);
 
+#if LELY_NO_MALLOC
+	if (co_type_is_array(type)) {
+		co_array_init(val, 0);
+		return 0;
+	}
+#endif
+
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_INIT; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -111,12 +86,23 @@ co_val_init_min(co_unsigned16_t type, void *val)
 	union co_val *u = val;
 	assert(u);
 
+#if LELY_NO_MALLOC
+	if (co_type_is_array(type)) {
+		co_array_init(val, 0);
+		return 0;
+	}
+#endif
+
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_MIN; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -128,12 +114,23 @@ co_val_init_max(co_unsigned16_t type, void *val)
 	union co_val *u = val;
 	assert(u);
 
+#if LELY_NO_MALLOC
+	if (co_type_is_array(type)) {
+		co_array_init(val, 0);
+		return 0;
+	}
+#endif
+
 	switch (type) {
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
 	case CO_DEFTYPE_##a: \
 		u->c = (co_##b##_t)CO_##a##_MAX; \
 		return 0;
-#include <lely/co/def/type.def>
+#include <lely/co/def/basic.def>
+#include <lely/co/def/time.def>
+#if !LELY_NO_MALLOC
+#include <lely/co/def/array.def>
+#endif // !LELY_NO_MALLOC
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -142,12 +139,10 @@ co_val_init_max(co_unsigned16_t type, void *val)
 int
 co_val_init_vs(char **val, const char *vs)
 {
-	assert(val);
-
 	if (vs)
 		return co_val_init_vs_n(val, vs, strlen(vs));
 
-	*val = NULL;
+	co_array_fini(val);
 
 	return 0;
 }
@@ -165,7 +160,7 @@ co_val_init_vs_n(char **val, const char *vs, size_t n)
 		if (vs)
 			strncpy(*val, vs, n);
 	} else {
-		*val = NULL;
+		co_array_fini(val);
 	}
 
 	return 0;
@@ -184,7 +179,7 @@ co_val_init_os(uint_least8_t **val, const uint_least8_t *os, size_t n)
 		if (os)
 			memcpy(*val, os, n);
 	} else {
-		*val = NULL;
+		co_array_fini(val);
 	}
 
 	return 0;
@@ -198,7 +193,7 @@ co_val_init_us(char16_t **val, const char16_t *us)
 	if (us)
 		return co_val_init_us_n(val, us, str16len(us));
 
-	*val = NULL;
+	co_array_fini(val);
 
 	return 0;
 }
@@ -216,7 +211,7 @@ co_val_init_us_n(char16_t **val, const char16_t *us, size_t n)
 		if (us)
 			str16ncpy(*val, us, n);
 	} else {
-		*val = NULL;
+		co_array_fini(val);
 	}
 
 	return 0;
@@ -235,7 +230,7 @@ co_val_init_dom(void **val, const void *dom, size_t n)
 		if (dom)
 			memcpy(*val, dom, n);
 	} else {
-		*val = NULL;
+		co_array_fini(val);
 	}
 
 	return 0;
@@ -356,7 +351,7 @@ co_val_move(co_unsigned16_t type, void *dst, void *src)
 	memcpy(dst, src, n);
 
 	if (co_type_is_array(type))
-		co_array_fini(src);
+		*(char **)src = NULL;
 
 	return n;
 }
@@ -1245,14 +1240,24 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 			return print_base64(pbegin, end, ptr, n);
 		}
 		case CO_DEFTYPE_UNICODE_STRING: {
-			char16_t *us = NULL;
-			if (!co_val_copy(type, &us, val) && !us)
+#if LELY_NO_MALLOC
+			if (n > CO_ARRAY_CAPACITY) {
+				set_errnum(ERRNUM_NOMEM);
+				return -1;
+			}
+			char16_t us[CO_ARRAY_CAPACITY / 2];
+#else
+			char16_t *us = malloc(n);
+			if (!us)
 				return 0;
-			assert(us);
+#endif
+			memcpy(us, ptr, n);
 			for (size_t i = 0; i + 1 < n; i += 2)
 				us[i / 2] = htole16(us[i / 2]);
 			size_t chars = print_base64(pbegin, end, us, n);
-			co_array_free(&us);
+#if !LELY_NO_MALLOC
+			free(us);
+#endif
 			return chars;
 		}
 		case CO_DEFTYPE_DOMAIN:
@@ -1317,22 +1322,41 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 }
 #endif // !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 
+static inline struct co_array_hdr *
+co_array_get_hdr(const void *val)
+{
+	assert(val);
+
+	char *ptr = *(char **)val;
+	return ptr ? (void *)(ptr - CO_ARRAY_HDR_OFFSET) : NULL;
+}
+
 static int
 co_array_alloc(void *val, size_t size)
 {
 	assert(val);
 
+#if LELY_NO_MALLOC
+	struct co_array_hdr *hdr = co_array_get_hdr(val);
+	if (!hdr || hdr->capacity < size) {
+		set_errnum(ERRNUM_NOMEM);
+		return -1;
+	}
+	hdr->size = 0;
+#else
 	if (size) {
 		// cppcheck-suppress AssignmentAddressToInteger
-		char *ptr = calloc(1, CO_ARRAY_OFFSET + size);
-		if (!ptr) {
+		struct co_array_hdr *hdr = malloc(CO_ARRAY_HDR_OFFSET + size);
+		if (!hdr) {
 			set_errc(errno2c(errno));
 			return -1;
 		}
-		*(char **)val = ptr + CO_ARRAY_OFFSET;
+		*hdr = (struct co_array_hdr){ size, 0 };
+		*(char **)val = (char *)hdr + CO_ARRAY_HDR_OFFSET;
 	} else {
 		*(char **)val = NULL;
 	}
+#endif
 
 	return 0;
 }
@@ -1340,37 +1364,44 @@ co_array_alloc(void *val, size_t size)
 static void
 co_array_free(void *val)
 {
-	assert(val);
-
-	char *ptr = *(char **)val;
-	if (ptr)
-		free(ptr - CO_ARRAY_OFFSET);
+#if LELY_NO_MALLOC
+	(void)val;
+#else
+	struct co_array_hdr *hdr = co_array_get_hdr(val);
+	if (hdr)
+		free(hdr);
+#endif
 }
 
 static void
 co_array_init(void *val, size_t size)
 {
-	assert(val);
+	struct co_array_hdr *hdr = co_array_get_hdr(val);
+	assert(val || !size);
 
-	char *ptr = *(char **)val;
-	assert(!size || ptr);
-	if (ptr)
-		*(size_t *)(ptr - CO_ARRAY_OFFSET) = size;
+	if (hdr) {
+		memset(*(char **)val, 0, hdr->capacity);
+		assert(size <= hdr->capacity);
+		hdr->size = size;
+	}
 }
 
 static void
 co_array_fini(void *val)
 {
+#if LELY_NO_MALLOC
+	co_array_init(val, 0);
+#else
 	assert(val);
 
 	*(char **)val = NULL;
+#endif
 }
 
 static size_t
 co_array_sizeof(const void *val)
 {
-	assert(val);
+	const struct co_array_hdr *hdr = co_array_get_hdr(val);
 
-	const char *ptr = *(const char **)val;
-	return ptr ? *(const size_t *)(ptr - CO_ARRAY_OFFSET) : 0;
+	return hdr ? hdr->size : 0;
 }

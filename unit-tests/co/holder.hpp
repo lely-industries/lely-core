@@ -20,14 +20,53 @@
  * limitations under the License.
  */
 
-#ifndef LELY_OVERRIDE_LIBC_DEFS_HPP_
-#define LELY_OVERRIDE_LIBC_DEFS_HPP_
+#ifndef LELY_UNIT_TESTS_CO_HOLDER_HPP_
+#define LELY_UNIT_TESTS_CO_HOLDER_HPP_
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
-/* libc overrides won't link properly on MinGW-W64 */
-#define HAVE_LIBC_OVERRIDE 1
+#include <cassert>
 
-#include "defs.hpp"
-#endif
+template <typename Item>
+class Holder {
+#if LELY_NO_MALLOC
 
-#endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_
+ protected:
+  Holder() : item({}) {}
+
+ public:
+  Item*
+  Get() {
+    return &item;
+  }
+
+  Item*
+  Take() {
+    return Get();
+  }
+
+ private:
+  Item item;
+#else   // !LELY_NO_MALLOC
+
+ protected:
+  explicit Holder(Item* item_) : item(item_) {}
+
+ public:
+  Item*
+  Get() {
+    return item;
+  }
+
+  Item*
+  Take() {
+    assert(item != nullptr);
+    const auto r = item;
+    item = nullptr;
+    return r;
+  }
+
+ private:
+  Item* item = nullptr;
+#endif  // LELY_NO_MALLOC
+};      // class Holder
+
+#endif  // LELY_UNIT_TESTS_CO_HOLDER_HPP_

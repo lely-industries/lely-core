@@ -21,16 +21,20 @@
  * limitations under the License.
  */
 
-#include "obj.h"
 #include "co.h"
+#include <lely/co/detail/obj.h>
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
+#endif
 #include <string.h>
+
+#if !LELY_NO_MALLOC
 
 /**
  * Updates an object by allocating a new memory region containing the members
@@ -40,14 +44,6 @@ static void co_obj_update(co_obj_t *obj);
 
 /// Destroys all sub-objects.
 static void co_obj_clear(co_obj_t *obj);
-
-/// The default download indication function. @see co_sub_dn_ind_t
-static co_unsigned32_t default_sub_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
-
-/// The default upload indication function. @see co_sub_up_ind_t
-static co_unsigned32_t default_sub_up_ind(
-		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 void *
 __co_obj_alloc(void)
@@ -64,10 +60,16 @@ __co_obj_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_obj *
-__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
+__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
 {
 	assert(obj);
+#if !LELY_NO_MALLOC
+	assert(val == NULL);
+	assert(size == 0);
+#endif
 
 	rbnode_init(&obj->node, &obj->idx);
 	obj->dev = NULL;
@@ -81,8 +83,8 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 
 	obj->code = CO_OBJECT_VAR;
 
-	obj->val = NULL;
-	obj->size = 0;
+	obj->val = val;
+	obj->size = size;
 
 	return obj;
 }
@@ -95,12 +97,16 @@ __co_obj_fini(struct __co_obj *obj)
 	if (obj->dev)
 		co_dev_remove_obj(obj->dev, obj);
 
+#if !LELY_NO_MALLOC
 	co_obj_clear(obj);
+#endif
 
 #ifndef LELY_NO_CO_OBJ_NAME
 	free(obj->name);
 #endif
 }
+
+#if !LELY_NO_MALLOC
 
 co_obj_t *
 co_obj_create(co_unsigned16_t idx)
@@ -111,7 +117,7 @@ co_obj_create(co_unsigned16_t idx)
 	if (!obj)
 		return NULL;
 
-	return __co_obj_init(obj, idx);
+	return __co_obj_init(obj, idx, NULL, 0);
 }
 
 void
@@ -123,6 +129,8 @@ co_obj_destroy(co_obj_t *obj)
 		__co_obj_free(obj);
 	}
 }
+
+#endif // !LELY_NO_MALLOC
 
 co_obj_t *
 co_obj_prev(const co_obj_t *obj)
@@ -196,7 +204,9 @@ co_obj_insert_sub(co_obj_t *obj, co_sub_t *sub)
 	sub->obj = obj;
 	rbtree_insert(&sub->obj->tree, &sub->node);
 
+#if !LELY_NO_MALLOC
 	co_obj_update(obj);
+#endif
 
 	return 0;
 }
@@ -214,10 +224,12 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
 
+#if !LELY_NO_MALLOC
 	co_val_fini(co_sub_get_type(sub), sub->val);
 	sub->val = NULL;
 
 	co_obj_update(obj);
+#endif
 
 	return 0;
 }
@@ -389,6 +401,8 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 }
 #endif
 
+#if !LELY_NO_MALLOC
+
 void *
 __co_sub_alloc(void)
 {
@@ -404,10 +418,16 @@ __co_sub_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_sub *
-__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
+__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
+		void *val)
 {
 	assert(sub);
+#if !LELY_NO_MALLOC
+	assert(val == NULL);
+#endif
 
 	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
@@ -428,16 +448,16 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 	if (co_val_init(sub->type, &sub->def) == -1)
 		return NULL;
 #endif
-	sub->val = NULL;
+	sub->val = val;
 
 	sub->access = CO_ACCESS_RW;
 	sub->pdo_mapping = 0;
 	sub->flags = 0;
 
-	sub->dn_ind = &default_sub_dn_ind;
+	sub->dn_ind = &co_sub_default_dn_ind;
 	sub->dn_data = NULL;
 #ifndef LELY_NO_CO_OBJ_UPLOAD
-	sub->up_ind = &default_sub_up_ind;
+	sub->up_ind = &co_sub_default_up_ind;
 	sub->up_data = NULL;
 #endif
 
@@ -465,6 +485,8 @@ __co_sub_fini(struct __co_sub *sub)
 #endif
 }
 
+#if !LELY_NO_MALLOC
+
 co_sub_t *
 co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 {
@@ -476,7 +498,7 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 		goto error_alloc_sub;
 	}
 
-	if (!__co_sub_init(sub, subidx, type)) {
+	if (!__co_sub_init(sub, subidx, type, NULL)) {
 		errc = get_errc();
 		goto error_init_sub;
 	}
@@ -498,6 +520,8 @@ co_sub_destroy(co_sub_t *sub)
 		__co_sub_free(sub);
 	}
 }
+
+#endif // !LELY_NO_MALLOC
 
 co_sub_t *
 co_sub_prev(const co_sub_t *sub)
@@ -872,7 +896,7 @@ co_sub_set_dn_ind(co_sub_t *sub, co_sub_dn_ind_t *ind, void *data)
 {
 	assert(sub);
 
-	sub->dn_ind = ind ? ind : &default_sub_dn_ind;
+	sub->dn_ind = ind ? ind : &co_sub_default_dn_ind;
 	sub->dn_data = ind ? data : NULL;
 }
 
@@ -893,6 +917,11 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	// Read the value.
 	co_unsigned16_t type = co_sub_get_type(sub);
 	union co_val val;
+#if LELY_NO_MALLOC
+	struct co_array array = CO_ARRAY_INIT;
+	if (co_type_is_array(type))
+		co_val_init_array(&val, &array);
+#endif
 	if (co_sdo_req_dn_val(req, type, &val, pac) == -1)
 		return -1;
 
@@ -900,7 +929,9 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	// Accept the value if it is within bounds.
 	co_unsigned32_t ac = co_sub_chk_val(sub, type, &val);
 	if (ac) {
+#if !LELY_NO_MALLOC
 		co_val_fini(type, &val);
+#endif
 		if (pac)
 			*pac = ac;
 		return -1;
@@ -908,7 +939,9 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 #endif
 
 	co_sub_dn(sub, &val);
+#if !LELY_NO_MALLOC
 	co_val_fini(type, &val);
+#endif
 
 	return 0;
 }
@@ -957,9 +990,14 @@ co_sub_dn(co_sub_t *sub, void *val)
 	assert(sub);
 
 	if (!(sub->flags & CO_OBJ_FLAGS_WRITE)) {
+#if LELY_NO_MALLOC
+		if (!co_val_copy(sub->type, sub->val, val))
+			return -1;
+#else
 		co_val_fini(sub->type, sub->val);
 		if (!co_val_move(sub->type, sub->val, val))
 			return -1;
+#endif
 	}
 
 	return 0;
@@ -983,7 +1021,7 @@ co_sub_set_up_ind(co_sub_t *sub, co_sub_up_ind_t *ind, void *data)
 {
 	assert(sub);
 
-	sub->up_ind = ind ? ind : &default_sub_up_ind;
+	sub->up_ind = ind ? ind : &co_sub_default_up_ind;
 	sub->up_data = ind ? data : NULL;
 }
 
@@ -1024,12 +1062,34 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 		return CO_SDO_AC_ERROR;
 
 #ifdef LELY_NO_CO_OBJ_UPLOAD
-	return default_sub_up_ind(sub, req, NULL);
+	return co_sub_default_up_ind(sub, req, NULL);
 #else
 	assert(sub->up_ind);
 	return sub->up_ind(sub, req, sub->up_data);
 #endif
 }
+
+co_unsigned32_t
+co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	(void)data;
+
+	co_unsigned32_t ac = 0;
+	co_sub_on_dn(sub, req, &ac);
+	return ac;
+}
+
+co_unsigned32_t
+co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	(void)data;
+
+	co_unsigned32_t ac = 0;
+	co_sub_on_up(sub, req, &ac);
+	return ac;
+}
+
+#if !LELY_NO_MALLOC
 
 static void
 co_obj_update(co_obj_t *obj)
@@ -1086,22 +1146,4 @@ co_obj_clear(co_obj_t *obj)
 	obj->val = NULL;
 }
 
-static co_unsigned32_t
-default_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	(void)data;
-
-	co_unsigned32_t ac = 0;
-	co_sub_on_dn(sub, req, &ac);
-	return ac;
-}
-
-static co_unsigned32_t
-default_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
-{
-	(void)data;
-
-	co_unsigned32_t ac = 0;
-	co_sub_on_up(sub, req, &ac);
-	return ac;
-}
+#endif // !LELY_NO_MALLOC
