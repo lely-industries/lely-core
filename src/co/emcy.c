@@ -805,8 +805,9 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	msg.len = CAN_MAX_LEN;
 	stle_u32(msg.data, eec);
 	msg.data[2] = er;
-	if (msef)
+	if (msef) {
 		memcpy(msg.data + 3, msef, 5);
+	}
 
 	// Add the frame to the buffer.
 #if LELY_NO_MALLOC
