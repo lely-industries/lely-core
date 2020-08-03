@@ -2,10 +2,8 @@ src =
 if !ECSS_COMPLIANCE
 src += bimap.c
 src += bitset.c
-src += print.c
 src += config.c
 src += config_ini.c
-src += lex.c
 if !NO_DAEMON
 src += daemon.c
 endif
@@ -27,6 +25,16 @@ if !NO_CO_OBJ_FILE
 src += frbuf.c
 src += fwbuf.c
 endif
+
+if !NO_CO_GW_TXT
+if !NO_CO_SDEV
+if !NO_CO_DCF
+src += lex.c
+endif
+src += print.c
+endif
+endif
+
 
 src += bits.c
 src += cmp.c
