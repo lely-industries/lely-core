@@ -2,6 +2,8 @@ src =
 if !ECSS_COMPLIANCE
 src += bimap.c
 src += bitset.c
+src += config.c
+src += config_ini.c
 if !NO_DAEMON
 src += daemon.c
 endif
@@ -21,8 +23,6 @@ endif
 
 src += bits.c
 src += cmp.c
-src += config.c
-src += config_ini.c
 src += diag.c
 src += dllist.c
 src += endian.c
