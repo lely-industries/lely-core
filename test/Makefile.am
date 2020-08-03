@@ -22,9 +22,11 @@ test_tap_LDADD = $(LELY_TAP_LIBS)
 LELY_UTIL_LIBS = $(LELY_TAP_LIBS)
 LELY_UTIL_LIBS += $(top_builddir)/src/util/liblely-util.la
 
+if !ECSS_COMPLIANCE
 bin += test-util-config
 test_util_config_SOURCES = test.h util-config.c
 test_util_config_LDADD = $(LELY_UTIL_LIBS)
+endif
 
 bin += test-util-endian
 test_util_endian_SOURCES = test.h util-endian.c

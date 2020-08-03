@@ -4,7 +4,7 @@
  *
  * @see lely/co/ssdo.h, src/sdo.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -34,6 +34,15 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#endif
+
+#if LELY_NO_MALLOC
+#define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SDO_MEMBUF_SIZE / 7))
+#else
+#define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
+#endif
 
 struct __co_ssdo_state;
 /// An opaque CANopen Server-SDO state type.
@@ -77,6 +86,13 @@ struct __co_ssdo {
 	struct membuf buf;
 	/// The number of bytes in #req already copied to #buf.
 	size_t nbyte;
+#if LELY_NO_MALLOC
+	/**
+	 * The static memory buffer used by #buf in the absence of dynamic
+	 * memory allocation.
+	 */
+	char begin[CO_SDO_MEMBUF_SIZE];
+#endif
 };
 
 /**
@@ -577,8 +593,16 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->crc = 0;
 
 	co_sdo_req_init(&sdo->req);
+#if LELY_NO_MALLOC
+	sdo->buf.begin = sdo->buf.cur = sdo->begin;
+	sdo->buf.end = sdo->buf.begin + CO_SDO_MEMBUF_SIZE;
+#else
 	membuf_init(&sdo->buf);
+#endif
 	sdo->nbyte = 0;
+#if LELY_NO_MALLOC
+	memset(sdo->begin, 0, CO_SDO_MEMBUF_SIZE);
+#endif
 
 	// Set the download indication function for the SDO parameter record.
 	if (obj_1200)
@@ -1170,7 +1194,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Use the maximum block size by default.
-	sdo->blksize = CO_SDO_MAX_SEQNO;
+	sdo->blksize = CO_SSDO_MAX_SEQNO;
 	sdo->ackseq = 0;
 
 	co_ssdo_send_blk_dn_ini_res(sdo);
@@ -1332,7 +1356,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (msg->len < 5)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[4];
-	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
+	if (!sdo->blksize || sdo->blksize > CO_SSDO_MAX_SEQNO)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	// Load the protocol switch threshold (PST).
@@ -1414,7 +1438,7 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 		// Read the number of segments in the next block.
 		sdo->blksize = msg->data[2];
-		if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
+		if (!sdo->blksize || sdo->blksize > CO_SSDO_MAX_SEQNO)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 		break;

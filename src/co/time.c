@@ -63,10 +63,8 @@ struct __co_time {
  * Updates and (de)activates a TIME producer/consumer service. This function is
  * invoked by the download indication functions when the TIME COB-ID (object
  * 1012) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_time_update(co_time_t *time);
+static void co_time_update(co_time_t *time);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1012
@@ -179,8 +177,19 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	time->cobid = co_obj_get_val_u32(obj_1012, 0x00);
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
 
-	time->recv = NULL;
-	time->timer = NULL;
+	time->recv = can_recv_create();
+	if (!time->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(time->recv, &co_time_recv, time);
+
+	time->timer = can_timer_create();
+	if (!time->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(time->timer, &co_time_timer, time);
 
 	can_net_get_time(time->net, &time->start);
 
@@ -190,14 +199,14 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	// Set the download indication function for the TIME COB-ID object.
 	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
 
-	if (co_time_update(time) == -1) {
-		errc = get_errc();
-		goto error_update;
-	}
+	co_time_update(time);
 
 	return time;
 
-error_update:
+	// can_timer_destroy(time->timer);
+error_create_timer:
+	can_recv_destroy(time->recv);
+error_create_recv:
 	co_obj_set_dn_ind(obj_1012, NULL, NULL);
 error_obj_1012:
 	set_errc(errc);
@@ -298,7 +307,7 @@ co_time_start(co_time_t *time, const struct timespec *start,
 {
 	assert(time);
 
-	if (time->timer)
+	if (time->cobid & CO_TIME_COBID_PRODUCER)
 		can_timer_start(time->timer, time->net, start, interval);
 }
 
@@ -307,22 +316,16 @@ co_time_stop(co_time_t *time)
 {
 	assert(time);
 
-	if (time->timer)
+	if (time->cobid & CO_TIME_COBID_PRODUCER)
 		can_timer_stop(time->timer);
 }
 
-static int
+static void
 co_time_update(co_time_t *time)
 {
 	assert(time);
 
 	if (time->cobid & CO_TIME_COBID_CONSUMER) {
-		if (!time->recv) {
-			time->recv = can_recv_create();
-			if (!time->recv)
-				return -1;
-			can_recv_set_func(time->recv, &co_time_recv, time);
-		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = time->cobid;
 		uint_least8_t flags = 0;
@@ -333,24 +336,14 @@ co_time_update(co_time_t *time)
 			id &= CAN_MASK_BID;
 		}
 		can_recv_start(time->recv, time->net, id, flags);
-	} else if (time->recv) {
-		can_recv_destroy(time->recv);
-		time->recv = NULL;
+	} else {
+		// Stop the receiver unless we are a consumer.
+		can_recv_stop(time->recv);
 	}
 
-	if (time->cobid & CO_TIME_COBID_PRODUCER) {
-		if (!time->timer) {
-			time->timer = can_timer_create();
-			if (!time->timer)
-				return -1;
-			can_timer_set_func(time->timer, &co_time_timer, time);
-		}
-	} else if (time->timer) {
-		can_timer_destroy(time->timer);
-		time->timer = NULL;
-	}
-
-	return 0;
+	if (!(time->cobid & CO_TIME_COBID_PRODUCER))
+		// Stop the timer unless we are a producer.
+		can_timer_stop(time->timer);
 }
 
 static co_unsigned32_t
