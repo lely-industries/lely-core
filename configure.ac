@@ -227,6 +227,7 @@ AS_IF([test "$enable_obj_default" == "no"], [
 AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
 AC_ARG_ENABLE([obj-file],
 	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_obj_file" != "yes"], [enable_obj_file=no])
 AS_IF([test "$enable_obj_file" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
