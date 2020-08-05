@@ -51,7 +51,6 @@ LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 src_util_tests =
 src_util_tests += util/test-bits.cpp
 src_util_tests += util/test-cmp.cpp
-src_util_tests += util/test-diag.cpp
 src_util_tests += util/test-dllist.cpp
 src_util_tests += util/test-endian.cpp
 src_util_tests += util/test-pheap.cpp
@@ -65,6 +64,18 @@ src_util_tests += util/test-mutex.cpp
 src_util_tests += util/test-sllist.cpp
 src_util_tests += util/test-spscring.cpp
 endif
+
+if !NO_DIAG
+src_util_tests += util/test-diag.cpp
+else # !NO_DIAG
+if !NO_CO_DCF
+src_util_tests += util/test-diag.cpp
+else # !NO_CO_DCF
+if !NO_CO_GW_TXT
+src_util_tests += util/test-diag.cpp
+endif # !NO_CO_GW_TXT
+endif # !NO_CO_DCF
+endif # !NO_DIAG
 
 bin += unit-test-util
 unit_test_util_SOURCES = $(src_common) $(src_util_tests)

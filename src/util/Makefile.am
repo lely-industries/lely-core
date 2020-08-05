@@ -35,10 +35,20 @@ src += print.c
 endif
 endif
 
+if !NO_DIAG
+src += diag.c
+else # !NO_DIAG
+if !NO_CO_DCF
+src += diag.c
+else # !NO_CO_DCF
+if !NO_CO_GW_TXT
+src += diag.c
+endif # !NO_CO_GW_TXT
+endif # !NO_CO_DCF
+endif # !NO_DIAG
 
 src += bits.c
 src += cmp.c
-src += diag.c
 src += dllist.c
 src += endian.c
 src += errnum.c
