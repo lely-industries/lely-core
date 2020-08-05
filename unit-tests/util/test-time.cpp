@@ -48,6 +48,34 @@ TEST(Util_Time, TimespecAddSec) {
   CHECK_EQUAL(0L, ts.tv_nsec);
 }
 
+TEST(Util_Time, TimespecAddMSec) {
+  timespec_add_msec(&ts, 0L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(0L, ts.tv_nsec);
+
+  timespec_add_msec(&ts, 1L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(1000000L, ts.tv_nsec);
+
+  timespec_add_msec(&ts, 2L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(3000000L, ts.tv_nsec);
+}
+
+TEST(Util_Time, TimespecAddUSec) {
+  timespec_add_usec(&ts, 0L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(0L, ts.tv_nsec);
+
+  timespec_add_usec(&ts, 1L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(1000L, ts.tv_nsec);
+
+  timespec_add_usec(&ts, 2L);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(3000L, ts.tv_nsec);
+}
+
 TEST(Util_Time, TimespecAddNsec) {
   timespec_add_nsec(&ts, 0L);
   CHECK_EQUAL(0L, ts.tv_sec);
@@ -136,6 +164,22 @@ TEST(Util_Time, TimespecSubUsec) {
   CHECK_EQUAL(0L, ts.tv_nsec);
 }
 
+TEST(Util_Time, TimespecSubNsec) {
+  timespec_add_sec(&ts, 2L);
+
+  timespec_sub_nsec(&ts, 0L);
+  CHECK_EQUAL(2L, ts.tv_sec);
+  CHECK_EQUAL(0L, ts.tv_nsec);
+
+  timespec_sub_nsec(&ts, 100000L);
+  CHECK_EQUAL(1L, ts.tv_sec);
+  CHECK_EQUAL(999900000L, ts.tv_nsec);
+
+  timespec_sub_nsec(&ts, 1999900000LL);
+  CHECK_EQUAL(0L, ts.tv_sec);
+  CHECK_EQUAL(0L, ts.tv_nsec);
+}
+
 TEST(Util_Time, TimespecDiffSec_Seconds) {
   CHECK_EQUAL(0L, timespec_diff_sec(&ts, &ts2));
 
@@ -182,6 +226,62 @@ TEST(Util_Time, TimespecDiffMsec_Nanoseconds) {
   ts = {4L, 200000000L};
   ts2 = {2L, 100000000L};
   CHECK_EQUAL(2100L, timespec_diff_msec(&ts, &ts2));
+}
+
+TEST(Util_Time, TimespecDiffUsec_Seconds) {
+  ts2 = {0L, 0L};
+  CHECK_EQUAL(0L, timespec_diff_usec(&ts, &ts2));
+
+  ts2 = {1L, 0L};
+  CHECK_EQUAL(-1000000L, timespec_diff_usec(&ts, &ts2));
+
+  ts = {1L, 0L};
+  CHECK_EQUAL(0L, timespec_diff_usec(&ts, &ts2));
+
+  ts = {3L, 0L};
+  CHECK_EQUAL(2000000L, timespec_diff_usec(&ts, &ts2));
+}
+
+TEST(Util_Time, TimespecDiffUsec_Nanoseconds) {
+  ts = {0L, 2000000L};
+  ts2 = {0L, 1000000L};
+  CHECK_EQUAL(1000L, timespec_diff_usec(&ts, &ts2));
+
+  ts = {0, 1000000L};
+  ts2 = {0L, 1000L};
+  CHECK_EQUAL(999L, timespec_diff_usec(&ts, &ts2));
+
+  ts = {4L, 200000000L};
+  ts2 = {2L, 1000000L};
+  CHECK_EQUAL(2199000L, timespec_diff_usec(&ts, &ts2));
+}
+
+TEST(Util_Time, TimespecDiffNsec_Seconds) {
+  ts2 = {0L, 0L};
+  CHECK_EQUAL(0L, timespec_diff_nsec(&ts, &ts2));
+
+  ts2 = {1L, 0L};
+  CHECK_EQUAL(-1000000000L, timespec_diff_nsec(&ts, &ts2));
+
+  ts = {1L, 0L};
+  CHECK_EQUAL(0L, timespec_diff_nsec(&ts, &ts2));
+
+  ts = {3L, 0L};
+  CHECK_EQUAL(2000000000L, timespec_diff_nsec(&ts, &ts2));
+}
+
+TEST(Util_Time, TimespecDiffNsec_Nanoseconds) {
+  ts = {0L, 2000000L};
+  ts2 = {0L, 1000000L};
+  CHECK_EQUAL(1000000L, timespec_diff_nsec(&ts, &ts2));
+
+  ts = {0, 1000000L};
+  ts2 = {0L, 1L};
+  CHECK_EQUAL(999999L, timespec_diff_nsec(&ts, &ts2));
+
+  ts = {4L, 200L};
+  ts2 = {2L, 10L};
+  CHECK_EQUAL(2000000190L, timespec_diff_nsec(&ts, &ts2));
 }
 
 TEST(Util_Time, TimespecCmp) {
