@@ -35,20 +35,15 @@
 #include <lely/util/diag.h>
 #include <lely/util/errnum.h>
 
+#include "lely-unit-test.hpp"
 #include "override/lelyco-val.hpp"
 
 #include "dev-holder.hpp"
 #include "obj-holder.hpp"
 #include "sub-holder.hpp"
 
-static void
-DisableDiagnosticMessages() {
-  diag_set_handler(nullptr, nullptr);
-  diag_at_set_handler(nullptr, nullptr);
-}
-
 TEST_GROUP(CO_ObjInit) {
-  TEST_SETUP() { DisableDiagnosticMessages(); }
+  TEST_SETUP() { LelyUnitTest::DisableDiagnosticMessages(); }
 
   co_obj_t* AcquireCoObjT() {
 #if LELY_NO_MALLOC
@@ -121,7 +116,7 @@ TEST_GROUP_BASE(CO_Obj, CO_ObjBase) {
   co_obj_t* obj = nullptr;
 
   TEST_SETUP() {
-    DisableDiagnosticMessages();
+    LelyUnitTest::DisableDiagnosticMessages();
 
     obj_holder.reset(new CoObjTHolder(OBJ_IDX));
     obj = obj_holder->Get();
@@ -141,7 +136,7 @@ TEST_GROUP_BASE(CO_Sub, CO_ObjBase) {
   co_sub_t* sub = nullptr;
 
   TEST_SETUP() {
-    DisableDiagnosticMessages();
+    LelyUnitTest::DisableDiagnosticMessages();
 
     sub_holder.reset(new CoSubTHolder(SUB_IDX, SUB_DEFTYPE));
     sub = sub_holder->Get();
@@ -173,7 +168,7 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
   }
 
   TEST_SETUP() {
-    DisableDiagnosticMessages();
+    LelyUnitTest::DisableDiagnosticMessages();
 
     obj_holder.reset(new CoObjTHolder(OBJ_IDX));
     obj = obj_holder->Get();
@@ -206,7 +201,7 @@ TEST_GROUP_BASE(CO_ObjDev, CO_ObjBase) {
   co_sub_t* sub = nullptr;
 
   TEST_SETUP() {
-    DisableDiagnosticMessages();
+    LelyUnitTest::DisableDiagnosticMessages();
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));
     dev = dev_holder->Get();
@@ -592,7 +587,7 @@ TEST(CO_Obj, CoObjSetUpInd_NoSub) { co_obj_set_up_ind(obj, nullptr, nullptr); }
 TEST_GROUP(CO_SubInit) {
   const co_unsigned8_t SUB_IDX = 0xabu;
 
-  TEST_SETUP() { DisableDiagnosticMessages(); }
+  TEST_SETUP() { LelyUnitTest::DisableDiagnosticMessages(); }
 
   co_sub_t* AcquireCoSubT() {
 #if LELY_NO_MALLOC
