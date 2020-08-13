@@ -38,9 +38,9 @@
 #include "lely-unit-test.hpp"
 #include "override/lelyco-val.hpp"
 
-#include "dev-holder.hpp"
-#include "obj-holder.hpp"
-#include "sub-holder.hpp"
+#include "holder/dev.hpp"
+#include "holder/obj.hpp"
+#include "holder/sub.hpp"
 
 TEST_GROUP(CO_ObjInit) {
   TEST_SETUP() { LelyUnitTest::DisableDiagnosticMessages(); }
@@ -178,7 +178,7 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
     sub = sub_holder->Get();
     CHECK(sub != nullptr);
 
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub_holder->Take()));
+    CHECK(obj_holder->InsertSub(*sub_holder) != nullptr);
 
     CO_ObjSub_Static::dn_ind_func_counter = 0;
     CO_ObjSub_Static::up_ind_func_counter = 0;
@@ -215,7 +215,7 @@ TEST_GROUP_BASE(CO_ObjDev, CO_ObjBase) {
     sub = sub_holder->Get();
     CHECK(sub != nullptr);
 
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub_holder->Take()));
+    CHECK(obj_holder->InsertSub(*sub_holder) != nullptr);
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
   }
 
@@ -296,7 +296,7 @@ TEST(CO_Obj, CoObjGetSubidx_Empty) {
 TEST(CO_ObjDev, CoObjGetSubidx) {
   CoSubTHolder sub2(0x42, CO_DEFTYPE_INTEGER16);
   CHECK(sub != nullptr);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2.Take()));
+  CHECK(obj_holder->InsertSub(sub2) != nullptr);
 
   co_unsigned8_t sub_list[1] = {0};
   const auto sub_count = co_obj_get_subidx(obj, 1u, sub_list);
@@ -446,7 +446,7 @@ TEST(CO_Obj, CoObjSizeofVal_Null) {
 
 TEST(CO_Obj, CoObjSizeofVal_NoVal) {
 #if LELY_NO_MALLOC
-  CHECK_EQUAL(CoObjTHolder::PREALOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
+  CHECK_EQUAL(CoObjTHolder::PREALLOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
 #else
   CHECK_EQUAL(0, co_obj_sizeof_val(obj));
 #endif
@@ -454,7 +454,7 @@ TEST(CO_Obj, CoObjSizeofVal_NoVal) {
 
 TEST(CO_ObjSub, CoObjSizeofVal) {
 #if LELY_NO_MALLOC
-  CHECK_EQUAL(CoObjTHolder::PREALOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
+  CHECK_EQUAL(CoObjTHolder::PREALLOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
 #else
   CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), co_obj_sizeof_val(obj));
 #endif
@@ -502,7 +502,7 @@ TEST(CO_ObjSub, CoObjSetVal) {
   TEST(CO_Obj, CoObjSetVal_##a) { \
     const co_##b##_t val = 0x42; \
     CoSubTHolder sub(SUB_IDX, CO_DEFTYPE_##a); \
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub.Take())); \
+    CHECK(obj_holder->InsertSub(sub) != nullptr); \
 \
     const auto ret = co_obj_set_val_##c(obj, SUB_IDX, val); \
 \
@@ -526,9 +526,9 @@ TEST(CO_ObjSub, CoObjSetDnInd) {
 
 TEST(CO_ObjSub, CoObjSetDnInd_MultipleSubs) {
   CoSubTHolder sub2_holder(0x42u, CO_DEFTYPE_INTEGER16);
-  const auto sub2 = sub2_holder.Take();
-  CHECK(sub != nullptr);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
+  CHECK(sub2_holder.Get() != nullptr);
+  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  CHECK(sub2 != nullptr);
   int data = 0;
 
   co_obj_set_dn_ind(obj, dn_ind_func, &data);
@@ -562,9 +562,9 @@ TEST(CO_ObjSub, CoObjSetUpInd) {
 
 TEST(CO_ObjSub, CoObjSetUpInd_MultipleSubs) {
   CoSubTHolder sub2_holder(0x42u, CO_DEFTYPE_INTEGER16);
-  const auto sub2 = sub2_holder.Take();
-  CHECK(sub != nullptr);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
+  CHECK(sub2_holder.Get() != nullptr);
+  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  CHECK(sub2 != nullptr);
   int data = 0;
 
   co_obj_set_up_ind(obj, up_ind_func, &data);
@@ -777,9 +777,9 @@ TEST(CO_ObjSub, CoSubPrev_Removed) {
 
 TEST(CO_ObjSub, CoSubNext) {
   CoSubTHolder sub2_holder(0xcd, CO_DEFTYPE_INTEGER16);
-  const auto sub2 = sub2_holder.Take();
-  CHECK(sub != nullptr);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub2));
+  CHECK(sub2_holder.Get() != nullptr);
+  const auto* sub2 = obj_holder->InsertSub(sub2_holder);
+  CHECK(sub2 != nullptr);
 
   POINTERS_EQUAL(sub2, co_sub_next(sub));
 }
@@ -1005,9 +1005,8 @@ TEST(CO_ObjSub, CoSubSetVal) {
   TEST(CO_Obj, CoSubSetVal_##a) { \
     const co_##b##_t val = 0x42; \
     CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_##a); \
-    const auto sub = sub_holder.Take(); \
+    auto* const sub = obj_holder->InsertSub(sub_holder); \
     CHECK(sub != nullptr); \
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub)); \
 \
     const auto ret = co_sub_set_val_##c(sub, val); \
 \
@@ -1108,10 +1107,10 @@ TEST(CO_Sub, CoSubGetUploadFile_NoFlag) {
 
 TEST(CO_Obj, CoSubGetUploadFile) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_UPLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
 
 #if LELY_NO_MALLOC
   STRCMP_EQUAL("", co_sub_get_upload_file(sub));
@@ -1127,10 +1126,10 @@ TEST(CO_Sub, CoSubSetUploadFile_NoFlag) {
 #if HAVE_LELY_OVERRIDE
 TEST(CO_Obj, CoSubSetUploadFile_SetValFailed) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_UPLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
   LelyOverride::co_val_make(Override::NoneCallsValid);
 
   const auto ret = co_sub_set_upload_file(sub, TEST_STR);
@@ -1141,10 +1140,10 @@ TEST(CO_Obj, CoSubSetUploadFile_SetValFailed) {
 
 TEST(CO_Obj, CoSubSetUploadFile) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_UPLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
 
   const auto ret = co_sub_set_upload_file(sub, TEST_STR);
 
@@ -1158,10 +1157,10 @@ TEST(CO_Sub, CoSubGetDownloadFile_NoFlag) {
 
 TEST(CO_Obj, CoSubGetDownloadFile) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_DOWNLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
 
 #if LELY_NO_MALLOC
   STRCMP_EQUAL("", co_sub_get_download_file(sub));
@@ -1177,10 +1176,10 @@ TEST(CO_Sub, CoSubSetDownloadFile_NoFlag) {
 #if HAVE_LELY_OVERRIDE
 TEST(CO_Obj, CoSubSetDownloadFile_SetValFailed) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_DOWNLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
   LelyOverride::co_val_make(Override::NoneCallsValid);
 
   const auto ret = co_sub_set_download_file(sub, TEST_STR);
@@ -1191,10 +1190,10 @@ TEST(CO_Obj, CoSubSetDownloadFile_SetValFailed) {
 
 TEST(CO_Obj, CoSubSetDownloadFile) {
   CoSubTHolder sub_holder(SUB_IDX, CO_DEFTYPE_DOMAIN);
-  const auto sub = sub_holder.Take();
+  auto* const sub = sub_holder.Get();
   CHECK(sub != nullptr);
   co_sub_set_flags(sub, CO_OBJ_FLAGS_DOWNLOAD_FILE);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  CHECK(obj_holder->InsertSub(sub_holder) != nullptr);
 
   const auto ret = co_sub_set_download_file(sub, TEST_STR);
 

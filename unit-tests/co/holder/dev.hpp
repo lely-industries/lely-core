@@ -23,7 +23,7 @@
 #ifndef LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
 #define LELY_UNIT_TESTS_CO_DEV_HOLDER_HPP_
 
-#include <lely/co/obj.h>
+#include <lely/co/dev.h>
 
 #if LELY_NO_MALLOC
 #include <lely/co/detail/dev.h>
@@ -40,7 +40,9 @@ class CoDevTHolder : public Holder<co_dev_t> {
   explicit CoDevTHolder(co_unsigned8_t id)
       : Holder<co_dev_t>(co_dev_create(id)) {}
 
-  ~CoDevTHolder() { co_dev_destroy(Get()); }
+  ~CoDevTHolder() {
+    if (!taken) co_dev_destroy(Get());
+  }
 #endif  // LELY_NO_MALLOC
 };      // class CoDevTHolder
 

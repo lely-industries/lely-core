@@ -39,10 +39,10 @@
 
 #include "override/lelyco-val.hpp"
 
-#include "dev-holder.hpp"
-#include "obj-holder.hpp"
-#include "sub-holder.hpp"
-#include "array-init.hpp"
+#include "holder/dev.hpp"
+#include "holder/obj.hpp"
+#include "holder/sub.hpp"
+#include "holder/array-init.hpp"
 
 static void
 CheckBuffers(const uint_least8_t* buf1, const uint_least8_t* buf2,
@@ -128,18 +128,15 @@ TEST(CO_DevInit, CODevInit_UnconfiguredId) {
   CHECK(dev != nullptr);
   POINTERS_EQUAL(dev, __co_dev_init(dev, 0xff));
 
-  CoObjTHolder obj1_holder(0x0000);
-  CoObjTHolder obj2_holder(0x0001);
-  CoObjTHolder obj3_holder(0xffff);
-  co_obj_t* const obj1 = obj1_holder.Take();
-  co_obj_t* const obj2 = obj2_holder.Take();
-  co_obj_t* const obj3 = obj3_holder.Take();
-  CHECK(obj1 != nullptr);
-  CHECK(obj2 != nullptr);
-  CHECK(obj3 != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3));
+  CoObjTHolder obj1(0x0000);
+  CoObjTHolder obj2(0x0001);
+  CoObjTHolder obj3(0xffff);
+  CHECK(obj1.Get() != nullptr);
+  CHECK(obj2.Get() != nullptr);
+  CHECK(obj3.Get() != nullptr);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3.Take()));
 
 #if !LELY_NO_CO_OBJ_NAME
   CHECK_EQUAL(0, co_dev_set_name(dev, "name"));
@@ -235,73 +232,63 @@ TEST(CO_Dev, CoDevSetId) {
 
 TEST(CO_Dev, CoDevSetId_CheckObj) {
   CoObjTHolder obj_holder(0x0000);
-  co_obj_t* const obj = obj_holder.Take();
 #ifndef LELY_NO_CO_OBJ_LIMITS
-  CoObjTHolder obj_holder1(0x0001);
-  CoObjTHolder obj_holder2(0x1234);
-  co_obj_t* const obj1 = obj_holder1.Take();
-  co_obj_t* const obj2 = obj_holder2.Take();
+  CoObjTHolder obj1_holder(0x0001);
+  CoObjTHolder obj2_holder(0x1234);
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
-  CoObjTHolder obj_holder3(0xffff);
-  co_obj_t* const obj3 = obj_holder3.Take();
+  CoObjTHolder obj3_holder(0xffff);
 #endif
 #ifndef LELY_NO_CO_OBJ_LIMITS
   CoSubTHolder sub_min1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_min2_holder(0x01, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_max1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_max2_holder(0x01, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_min1 = sub_min1_holder.Take();
-  co_sub_t* const sub_min2 = sub_min2_holder.Take();
-  co_sub_t* const sub_max1 = sub_max1_holder.Take();
-  co_sub_t* const sub_max2 = sub_max2_holder.Take();
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
   CoSubTHolder sub_def1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_def2_holder(0x01, CO_DEFTYPE_INTEGER16);
-  co_sub_t* const sub_def1 = sub_def1_holder.Take();
-  co_sub_t* const sub_def2 = sub_def2_holder.Take();
 #endif
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
   const co_integer16_t min_val1 = 0x0;
   const co_integer16_t min_val2 = 0x0 + co_dev_get_id(dev);
-  CHECK_EQUAL(2, co_sub_set_min(sub_min1, &min_val1, 2));
-  CHECK_EQUAL(2, co_sub_set_min(sub_min2, &min_val2, 2));
-  co_sub_set_flags(sub_min2, CO_OBJ_FLAGS_MIN_NODEID);
+  CHECK_EQUAL(2, co_sub_set_min(sub_min1_holder.Get(), &min_val1, 2));
+  CHECK_EQUAL(2, co_sub_set_min(sub_min2_holder.Get(), &min_val2, 2));
+  co_sub_set_flags(sub_min2_holder.Get(), CO_OBJ_FLAGS_MIN_NODEID);
 
   const co_integer16_t max_val1 = 0x3f00;
   const co_integer16_t max_val2 = 0x3f00 + co_dev_get_id(dev);
-  CHECK_EQUAL(2, co_sub_set_max(sub_max1, &max_val1, 2));
-  CHECK_EQUAL(2, co_sub_set_max(sub_max2, &max_val2, 2));
-  co_sub_set_flags(sub_max2, CO_OBJ_FLAGS_MAX_NODEID);
+  CHECK_EQUAL(2, co_sub_set_max(sub_max1_holder.Get(), &max_val1, 2));
+  CHECK_EQUAL(2, co_sub_set_max(sub_max2_holder.Get(), &max_val2, 2));
+  co_sub_set_flags(sub_max2_holder.Get(), CO_OBJ_FLAGS_MAX_NODEID);
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
   const co_integer16_t def_val1 = 0x1234;
   const co_integer16_t def_val2 = 0x1234 + co_dev_get_id(dev);
-  CHECK_EQUAL(2, co_sub_set_def(sub_def1, &def_val1, 2));
-  CHECK_EQUAL(2, co_sub_set_def(sub_def2, &def_val2, 2));
-  co_sub_set_flags(sub_def2, CO_OBJ_FLAGS_DEF_NODEID);
+  CHECK_EQUAL(2, co_sub_set_def(sub_def1_holder.Get(), &def_val1, 2));
+  CHECK_EQUAL(2, co_sub_set_def(sub_def2_holder.Get(), &def_val2, 2));
+  co_sub_set_flags(sub_def2_holder.Get(), CO_OBJ_FLAGS_DEF_NODEID);
 #endif
 
 #ifndef LELY_NO_CO_OBJ_LIMITS
-  CHECK_EQUAL(0, co_obj_insert_sub(obj1, sub_min1));
-  CHECK_EQUAL(0, co_obj_insert_sub(obj1, sub_min2));
-  CHECK_EQUAL(0, co_obj_insert_sub(obj2, sub_max1));
-  CHECK_EQUAL(0, co_obj_insert_sub(obj2, sub_max2));
+  CHECK(obj1_holder.InsertSub(sub_min1_holder) != nullptr);
+  CHECK(obj1_holder.InsertSub(sub_min2_holder) != nullptr);
+  CHECK(obj2_holder.InsertSub(sub_max1_holder) != nullptr);
+  CHECK(obj2_holder.InsertSub(sub_max2_holder) != nullptr);
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
-  CHECK_EQUAL(0, co_obj_insert_sub(obj3, sub_def1));
-  CHECK_EQUAL(0, co_obj_insert_sub(obj3, sub_def2));
+  CHECK(obj3_holder.InsertSub(sub_def1_holder) != nullptr);
+  CHECK(obj3_holder.InsertSub(sub_def2_holder) != nullptr);
 #endif
 
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
 #ifndef LELY_NO_CO_OBJ_LIMITS
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1_holder.Take()));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2_holder.Take()));
 #endif
 #ifndef LELY_NO_CO_OBJ_DEFAULT
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3_holder.Take()));
 #endif
 
   const co_unsigned8_t new_id = 0x3d;
@@ -341,9 +328,9 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
   TEST(CO_Dev, CoDevSetId_CoType_##a) { \
     CoObjTHolder obj_holder(0x1234); \
     CoSubTHolder sub_holder(0xab, CO_DEFTYPE_##a); \
+    co_sub_t* const sub = obj_holder.InsertSub(sub_holder); \
+    CHECK(sub != nullptr); \
     co_obj_t* const obj = obj_holder.Take(); \
-    co_sub_t* const sub = sub_holder.Take(); \
-    CHECK_EQUAL(0, co_obj_insert_sub(obj, sub)); \
     CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), \
                 co_sub_set_val_##c(sub, 0x42 + co_dev_get_id(dev))); \
     co_sub_set_flags(sub, CO_OBJ_FLAGS_VAL_NODEID); \
@@ -547,10 +534,9 @@ TEST(CO_Dev, CoDevFindObj_NotFound) {
 TEST(CO_Dev, CoDevFindSub) {
   CoObjTHolder obj_holder(0x1234);
   CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
-  co_obj_t* const obj = obj_holder.Take();
-  co_sub_t* const sub = sub_holder.Take();
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
+  CHECK(sub != nullptr);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
 
   const auto* const ret = co_dev_find_sub(dev, 0x1234, 0xab);
 
@@ -765,12 +751,11 @@ TEST(CO_Dev, CoDevSetDommy) {
 TEST(CO_Dev, CoDevGetVal) {
   CoObjTHolder obj_holder(0x1234);
   CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
-  co_obj_t* const obj = obj_holder.Take();
-  co_sub_t* const sub = sub_holder.Take();
-  CHECK_EQUAL(0, co_obj_insert_sub(obj, sub));
+  co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
+  CHECK(sub != nullptr);
   CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_INTEGER16),
               co_sub_set_val_i16(sub, 0x0987));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
 
   const auto* ret =
       static_cast<const co_integer16_t*>(co_dev_get_val(dev, 0x1234, 0xab));
@@ -793,10 +778,11 @@ TEST(CO_Dev, CoDevGetVal_NotFound) {
 
 TEST(CO_Dev, CoDevSetVal) {
   co_unsigned16_t val = 0x0987;
-  CoObjTHolder obj(0x1234);
-  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
+
+  CoObjTHolder obj_holder(0x1234);
+  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
+  CHECK(obj_holder.InsertSub(sub_holder) != nullptr);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
 
   const auto ret = co_dev_set_val(dev, 0x1234, 0xab, &val, 2);
 
@@ -815,7 +801,7 @@ TEST(CO_Dev, CoDevSetVal_NotFound) {
   TEST(CO_Dev, CoDevSetGetVal_CoType_##a) { \
     CoObjTHolder obj(0x1234); \
     CoSubTHolder sub(0xab, CO_DEFTYPE_##a); \
-    CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take())); \
+    CHECK(obj.InsertSub(sub) != nullptr); \
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take())); \
     const auto set_ret = co_dev_set_val_##c(dev, 0x1234, 0xab, 0x42); \
     CHECK_EQUAL(co_type_sizeof(CO_DEFTYPE_##a), set_ret); \
@@ -828,7 +814,7 @@ TEST(CO_Dev, CoDevSetVal_NotFound) {
 TEST(CO_Dev, CoDevReadSub) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
@@ -848,7 +834,7 @@ TEST(CO_Dev, CoDevReadSub) {
 TEST(CO_Dev, CoDevReadSub_NoIdx) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
@@ -973,7 +959,7 @@ TEST(CO_Dev, CoDevReadSub_ReadSizeFailed) {
 TEST(CO_Dev, CoDevReadSub_ArrayType) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_OCTET_STRING);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   uint_least8_t buf[] = {0x34, 0x12, 0xab, 0x04, 0x00, 0x00,
@@ -996,7 +982,7 @@ TEST(CO_Dev, CoDevReadSub_ArrayType) {
 TEST(CO_Dev, CoDevReadSub_ValSizeTooBig) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x1a1a));
 
@@ -1013,7 +999,7 @@ TEST(CO_Dev, CoDevReadSub_ValSizeTooBig) {
 TEST(CO_Dev, CoDevWriteSub) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1044,7 +1030,7 @@ TEST(CO_Dev, CoDevWriteSub_NoSub) {
 TEST(CO_Dev, CoDevWriteSub_InitWriteFailed) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 9;
@@ -1060,7 +1046,7 @@ TEST(CO_Dev, CoDevWriteSub_InitWriteFailed) {
 TEST(CO_Dev, CoDevWriteSub_EmptyDomain) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_DOMAIN);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 7;
@@ -1076,7 +1062,7 @@ TEST(CO_Dev, CoDevWriteSub_EmptyDomain) {
 TEST(CO_Dev, CoDevWriteSub_NoBegin) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const auto ret = co_dev_write_sub(dev, 0x1234, 0xab, nullptr, nullptr);
@@ -1087,7 +1073,7 @@ TEST(CO_Dev, CoDevWriteSub_NoBegin) {
 TEST(CO_Dev, CoDevWriteSub_NoEnd) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1105,7 +1091,7 @@ TEST(CO_Dev, CoDevWriteSub_NoEnd) {
 TEST(CO_Dev, CoDevWriteSub_TooSmallBuffer) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
   const size_t BUF_SIZE = 8;
@@ -1122,7 +1108,7 @@ TEST(CO_Dev, CoDevWriteSub_TooSmallBuffer) {
 TEST(CO_Dev, CoDevWriteSub_IdxWriteFailed) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1140,7 +1126,7 @@ TEST(CO_Dev, CoDevWriteSub_IdxWriteFailed) {
 TEST(CO_Dev, CoDevWriteSub_SubidxWriteFailed) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1159,7 +1145,7 @@ TEST(CO_Dev, CoDevWriteSub_SubidxWriteFailed) {
 TEST(CO_Dev, CoDevWriteSub_SizeWriteFailed) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1178,7 +1164,7 @@ TEST(CO_Dev, CoDevWriteSub_SizeWriteFailed) {
 TEST(CO_Dev, CoDevWriteSub_ValWriteFailed) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   CHECK_EQUAL(2, co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987));
 
@@ -1220,7 +1206,7 @@ TEST_GROUP(CO_DevDCF) {
     obj_holder.reset(new CoObjTHolder(0x1234));
     sub_holder.reset(new CoSubTHolder(0xab, CO_DEFTYPE_INTEGER16));
 
-    CHECK_EQUAL(0, co_obj_insert_sub(obj_holder->Get(), sub_holder->Take()));
+    obj_holder->InsertSub(*sub_holder);
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
   }
 
@@ -1287,7 +1273,7 @@ TEST(CO_DevDCF, CoDevReadDef_InvaildSubIdx) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevWriteDef) {
+TEST(CO_DevDCF, CoDevWriteDcf) {
   co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
   auto ptr = arrays.Init<co_domain_t>();
 
@@ -1300,7 +1286,7 @@ TEST(CO_DevDCF, CoDevWriteDef) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevWriteDef_BeforeMin) {
+TEST(CO_DevDCF, CoDevWriteDcf_BeforeMin) {
   auto ptr = arrays.Init<co_domain_t>();
 
   const auto ret = co_dev_write_dcf(dev, 0x1235, CO_UNSIGNED16_MAX, &ptr);
@@ -1310,7 +1296,7 @@ TEST(CO_DevDCF, CoDevWriteDef_BeforeMin) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevWriteDef_AfterMax) {
+TEST(CO_DevDCF, CoDevWriteDcf_AfterMax) {
   auto ptr = arrays.Init<co_domain_t>();
 
   const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
@@ -1321,7 +1307,7 @@ TEST(CO_DevDCF, CoDevWriteDef_AfterMax) {
 }
 
 #if LELY_NO_MALLOC
-TEST(CO_DevDCF, CoDevWriteDef_Null) {
+TEST(CO_DevDCF, CoDevWriteDcf_Null) {
   co_domain_t ptr = nullptr;
 
   const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
@@ -1374,7 +1360,7 @@ TEST(CO_DevTPDO, CoDevTpdoEvent_Empty) { co_dev_tpdo_event(dev, 0x0000, 0x00); }
 TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub.Take()));
+  CHECK(obj.InsertSub(sub) != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
 
@@ -1385,8 +1371,8 @@ TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
 TEST(CO_DevTPDO, CoDevTpdoEvent_MappingPossibleButNoMapping) {
   CoObjTHolder obj(0x1234);
   CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
-  const auto sub = sub_holder.Take();
-  CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub));
+  auto* const sub = obj.InsertSub(sub_holder);
+  CHECK(sub != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   co_sub_set_pdo_mapping(sub, 1);
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);

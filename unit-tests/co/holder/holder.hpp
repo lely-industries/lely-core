@@ -20,36 +20,55 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_
-#define LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_
+#ifndef LELY_UNIT_TESTS_CO_HOLDER_HPP_
+#define LELY_UNIT_TESTS_CO_HOLDER_HPP_
 
-#include <lely/co/obj.h>
+#include <cassert>
 
+template <typename Item>
+class Holder {
 #if LELY_NO_MALLOC
-#include <lely/co/detail/obj.h>
-#endif
 
-#include "holder.hpp"
+ protected:
+  Holder() : item({}) {}
 
-class CoSubTHolder : public Holder<co_sub_t> {
-#if LELY_NO_MALLOC
  public:
-  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
-      : value({}) {
-    if (co_type_is_array(type)) co_val_init_array(&value, &array);
-    __co_sub_init(Get(), subidx, type, &value);
+  Item*
+  Get() {
+    return &item;
+  }
+
+  Item*
+  Take() {
+    return Get();
   }
 
  private:
-  co_val value;
-  co_array array = CO_ARRAY_INIT;
+  Item item;
 #else   // !LELY_NO_MALLOC
+
+ protected:
+  explicit Holder(Item* item_) : item(item_) {}
+
  public:
-  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
-      : Holder<co_sub_t>(co_sub_create(subidx, type)) {}
+  Item*
+  Get() {
+    return item;
+  }
 
-  ~CoSubTHolder() { co_sub_destroy(Get()); }
+  Item*
+  Take() {
+    assert(taken == false);
+    taken = true;
+    return item;
+  }
+
+ protected:
+  bool taken = false;
+
+ private:
+  Item* item = nullptr;
 #endif  // LELY_NO_MALLOC
-};      // class CoSubTHolder
+};      // class Holder
 
-#endif  // LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_
+#endif  // LELY_UNIT_TESTS_CO_HOLDER_HPP_
