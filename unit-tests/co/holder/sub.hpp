@@ -20,8 +20,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
-#define LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
+#ifndef LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_
+#define LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_
 
 #include <lely/co/obj.h>
 
@@ -31,24 +31,33 @@
 
 #include "holder.hpp"
 
-class CoObjTHolder : public Holder<co_obj_t> {
+class CoSubTHolder : public Holder<co_sub_t> {
 #if LELY_NO_MALLOC
+
  public:
-  explicit CoObjTHolder(co_unsigned16_t idx) {
-    __co_obj_init(Get(), idx, array.u.data, PREALOCATED_OBJ_SIZE);
+  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
+      : value({}) {
+    if (co_type_is_array(type)) {
+      co_val_init_array(&value, &array);
+      __co_sub_init(Get(), subidx, type, &value);
+    } else {
+      __co_sub_init(Get(), subidx, type, nullptr);
+    }
   }
 
-  static const size_t PREALOCATED_OBJ_SIZE = CO_ARRAY_CAPACITY;
-
  private:
+  co_val value;
   co_array array = CO_ARRAY_INIT;
 #else   // !LELY_NO_MALLOC
+
  public:
-  explicit CoObjTHolder(co_unsigned16_t idx)
-      : Holder<co_obj_t>(co_obj_create(idx)) {}
+  explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
+      : Holder<co_sub_t>(co_sub_create(subidx, type)) {}
 
-  ~CoObjTHolder() { co_obj_destroy(Get()); }
+  ~CoSubTHolder() {
+    if (!taken) co_sub_destroy(Get());
+  }
 #endif  // LELY_NO_MALLOC
-};      // class CoObjTHolder
+};      // class CoSubTHolder
 
-#endif  // LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
+#endif  // LELY_UNIT_TESTS_CO_SUB_HOLDER_HPP_

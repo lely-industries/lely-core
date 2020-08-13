@@ -36,7 +36,7 @@
 #include <lely/util/errnum.h>
 #include <lely/util/ustring.h>
 
-#include "array-init.hpp"
+#include "holder/array-init.hpp"
 
 TEST_GROUP(CO_Val) {
   static const co_unsigned16_t INVALID_TYPE = 0xffffu;
