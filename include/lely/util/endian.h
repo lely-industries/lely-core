@@ -27,6 +27,16 @@
 
 #include <string.h>
 
+#ifdef __linux__
+#include <endian.h>
+#define betoh16 be16toh
+#define letoh16 le16toh
+#define betoh32 be32toh
+#define letoh32 le32toh
+#define betoh64 be64toh
+#define letoh64 le64toh
+#endif
+
 #ifndef LELY_UTIL_ENDIAN_INLINE
 #define LELY_UTIL_ENDIAN_INLINE static inline
 #endif
