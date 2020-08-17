@@ -444,20 +444,10 @@ TEST(CO_Obj, CoObjSizeofVal_Null) {
   CHECK_EQUAL(0, co_obj_sizeof_val(nullptr));
 }
 
-TEST(CO_Obj, CoObjSizeofVal_NoVal) {
-#if LELY_NO_MALLOC
-  CHECK_EQUAL(CoObjTHolder::PREALLOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
-#else
-  CHECK_EQUAL(0, co_obj_sizeof_val(obj));
-#endif
-}
+TEST(CO_Obj, CoObjSizeofVal_NoVal) { CHECK_EQUAL(0, co_obj_sizeof_val(obj)); }
 
 TEST(CO_ObjSub, CoObjSizeofVal) {
-#if LELY_NO_MALLOC
-  CHECK_EQUAL(CoObjTHolder::PREALLOCATED_OBJ_SIZE, co_obj_sizeof_val(obj));
-#else
   CHECK_EQUAL(co_type_sizeof(SUB_DEFTYPE), co_obj_sizeof_val(obj));
-#endif
 }
 
 TEST(CO_Obj, CoObjGetVal_Null) {
