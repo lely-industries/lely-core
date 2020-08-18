@@ -25,6 +25,9 @@
 
 #include <cassert>
 #include <cstring>
+#include <memory>
+
+#include <CppUTest/TestHarness.h>
 
 #include <lely/co/obj.h>
 
@@ -40,10 +43,10 @@ class CoObjTHolder : public Holder<co_obj_t> {
 
  public:
   explicit CoObjTHolder(co_unsigned16_t idx) {
-    __co_obj_init(Get(), idx, val_data, PREALLOCATED_OBJ_SIZE);
+    __co_obj_init(Get(), idx, val_data, 0);
   }
 
-  static const size_t PREALLOCATED_OBJ_SIZE = 256;
+  static const size_t PREALLOCATED_OBJ_SIZE = 320;
 
  private:
   char val_data[PREALLOCATED_OBJ_SIZE] = {0};
@@ -114,8 +117,33 @@ class CoObjTHolder : public Holder<co_obj_t> {
       }
       size += co_type_sizeof(type);
     }
+    Get()->size = size;
 #endif
     return taken_sub;
+  }
+
+  /**
+   * Construct a sub-object, insert it into a CANopen object and set its value.
+   *
+   * @param subidx the object sub-index.
+   * @param type   the data type of the sub-object value (in the range [1..27]).
+   *               This MUST be the object index of one of the static data
+   *               types.
+   * @param val    the sub-object's value.
+   */
+  template <class T>
+  std::unique_ptr<CoSubTHolder>
+  InsertAndSetSub(co_unsigned8_t subidx, co_unsigned16_t type, const T val) {
+    assert(sizeof(T) == co_type_sizeof(type));
+
+    std::unique_ptr<CoSubTHolder> sub_holder(new CoSubTHolder(subidx, type));
+
+    auto* const sub = InsertSub(*sub_holder);
+    CHECK(sub != nullptr);
+
+    CHECK_EQUAL(co_type_sizeof(type), co_sub_set_val(sub, &val, sizeof(val)));
+
+    return sub_holder;
   }
 };  // class CoObjTHolder
 
