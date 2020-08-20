@@ -61,6 +61,10 @@ bin += test-can-net
 test_can_net_SOURCES = test.h can-net.c
 test_can_net_LDADD = $(LELY_CAN_LIBS)
 
+bin += test-can-buf
+test_can_buf_SOURCES = test.h can-buf.c
+test_can_buf_LDADD = $(LELY_CAN_LIBS)
+
 # I/O library tests
 
 if !ECSS_COMPLIANCE
