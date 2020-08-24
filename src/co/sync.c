@@ -146,15 +146,9 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 		goto error_obj_1005;
 	}
 
-	sync->cobid = co_obj_get_val_u32(obj_1005, 0x00);
-
-	// Retrieve the communication cycle period (in microseconds).
-	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
-	sync->us = co_obj_get_val_u32(obj_1006, 0x00);
-
-	// Retrieve the synchronous counter overflow value.
-	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
-	sync->max_cnt = co_obj_get_val_u8(obj_1019, 0x00);
+	sync->cobid = 0;
+	sync->us = 0;
+	sync->max_cnt = 0;
 
 	sync->recv = can_recv_create();
 	if (!sync->recv) {
@@ -177,28 +171,16 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	sync->err = NULL;
 	sync->err_data = NULL;
 
-	// Set the download indication function for the SYNC COB-ID object.
-	co_obj_set_dn_ind(obj_1005, &co_1005_dn_ind, sync);
-
-	// Set the download indication function for the communication cycle
-	// period object.
-	if (obj_1006)
-		co_obj_set_dn_ind(obj_1006, &co_1006_dn_ind, sync);
-
-	// Set the download indication function for the synchronous counter
-	// overflow value object.
-	if (obj_1019)
-		co_obj_set_dn_ind(obj_1019, &co_1019_dn_ind, sync);
-
-	co_sync_update(sync);
+	if (co_sync_start(sync) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
 
 	return sync;
 
-	// if (obj_1019)
-	// 	co_obj_set_dn_ind(obj_1019, NULL, NULL);
-	// if (obj_1006)
-	// 	co_obj_set_dn_ind(obj_1006, NULL, NULL);
-	// can_timer_destroy(sync->timer);
+	// co_sync_stop(sync);
+error_start:
+	can_timer_destroy(sync->timer);
 error_create_timer:
 	can_recv_destroy(sync->recv);
 error_create_recv:
@@ -213,25 +195,9 @@ __co_sync_fini(struct __co_sync *sync)
 {
 	assert(sync);
 
-	// Remove the download indication function for the synchronous counter
-	// overflow value object.
-	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
-	if (obj_1019)
-		co_obj_set_dn_ind(obj_1019, NULL, NULL);
-
-	// Remove the download indication function for the communication cycle
-	// period object.
-	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
-	if (obj_1006)
-		co_obj_set_dn_ind(obj_1006, NULL, NULL);
-
-	// Remove the download indication function for the SYNC COB-ID object.
-	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
-	assert(obj_1005);
-	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+	co_sync_stop(sync);
 
 	can_timer_destroy(sync->timer);
-
 	can_recv_destroy(sync->recv);
 }
 
@@ -270,6 +236,63 @@ co_sync_destroy(co_sync_t *sync)
 		__co_sync_fini(sync);
 		__co_sync_free(sync);
 	}
+}
+
+int
+co_sync_start(co_sync_t *sync)
+{
+	assert(sync);
+
+	co_sync_stop(sync);
+
+	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
+	// Retrieve the COB-ID.
+	sync->cobid = co_obj_get_val_u32(obj_1005, 0x00);
+	// Set the download indication function for the SYNC COB-ID object.
+	co_obj_set_dn_ind(obj_1005, &co_1005_dn_ind, sync);
+
+	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
+	// Retrieve the communication cycle period (in microseconds).
+	sync->us = co_obj_get_val_u32(obj_1006, 0x00);
+	// Set the download indication function for the communication cycle
+	// period object.
+	if (obj_1006)
+		co_obj_set_dn_ind(obj_1006, &co_1006_dn_ind, sync);
+
+	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
+	// Retrieve the synchronous counter overflow value.
+	sync->max_cnt = co_obj_get_val_u8(obj_1019, 0x00);
+	// Set the download indication function for the synchronous counter
+	// overflow value object.
+	if (obj_1019)
+		co_obj_set_dn_ind(obj_1019, &co_1019_dn_ind, sync);
+
+	co_sync_update(sync);
+
+	return 0;
+}
+
+void
+co_sync_stop(co_sync_t *sync)
+{
+	assert(sync);
+
+	// Remove the download indication function for the synchronous counter
+	// overflow value object.
+	co_obj_t *obj_1019 = co_dev_find_obj(sync->dev, 0x1019);
+	if (obj_1019)
+		co_obj_set_dn_ind(obj_1019, NULL, NULL);
+
+	// Remove the download indication function for the communication cycle
+	// period object.
+	co_obj_t *obj_1006 = co_dev_find_obj(sync->dev, 0x1006);
+	if (obj_1006)
+		co_obj_set_dn_ind(obj_1006, NULL, NULL);
+
+	// Remove the download indication function for the SYNC COB-ID object.
+	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
+	assert(obj_1005);
+	co_obj_set_dn_ind(obj_1005, NULL, NULL);
 }
 
 can_net_t *
