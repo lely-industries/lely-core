@@ -199,6 +199,17 @@ struct __co_csdo_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_csdo_state_t *const name = &(co_csdo_state_t){ __VA_ARGS__ };
 
+/// The 'abort' transition function of the 'stopped' state.
+static co_csdo_state_t *co_csdo_stopped_on_abort(
+		co_csdo_t *sdo, co_unsigned32_t ac);
+
+/// The 'stopped' state.
+// clang-format off
+LELY_CO_DEFINE_STATE(co_csdo_stopped_state,
+	.on_abort = &co_csdo_stopped_on_abort
+)
+// clang-format on
+
 /// The 'abort' transition function of the 'waiting' state.
 static co_csdo_state_t *co_csdo_wait_on_abort(
 		co_csdo_t *sdo, co_unsigned32_t ac);
@@ -772,13 +783,6 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	if (obj_1280) {
-		// Copy the SDO parameter record.
-		size_t size = co_obj_sizeof_val(obj_1280);
-		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
-				MIN(size, sizeof(sdo->par)));
-	}
-
 	sdo->recv = can_recv_create();
 	if (!sdo->recv) {
 		errc = get_errc();
@@ -795,7 +799,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(sdo->timer, &co_csdo_timer, sdo);
 
-	sdo->state = co_csdo_wait_state;
+	sdo->state = co_csdo_stopped_state;
 
 	sdo->ac = 0;
 	sdo->idx = 0;
@@ -821,20 +825,15 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->up_ind = NULL;
 	sdo->up_ind_data = NULL;
 
-	// Set the download indication function for the SDO parameter record.
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
-
-	if (co_csdo_update(sdo) == -1) {
+	if (co_csdo_start(sdo) == -1) {
 		errc = get_errc();
-		goto error_update;
+		goto error_start;
 	}
 
 	return sdo;
 
-error_update:
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	// co_csdo_stop(sdo);
+error_start:
 	can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
@@ -850,13 +849,7 @@ __co_csdo_fini(struct __co_csdo *sdo)
 	assert(sdo);
 	assert(sdo->num >= 1 && sdo->num <= 128);
 
-	// Remove the download indication functions for the SDO parameter
-	// record.
-	co_obj_t *obj_1280 = sdo->dev
-			? co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1)
-			: NULL;
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	co_csdo_stop(sdo);
 
 	membuf_fini(&sdo->buf);
 
@@ -898,6 +891,60 @@ co_csdo_destroy(co_csdo_t *csdo)
 		trace("destroying Client-SDO %d", csdo->num);
 		__co_csdo_fini(csdo);
 		__co_csdo_free(csdo);
+	}
+}
+
+int
+co_csdo_start(co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	co_csdo_stop(sdo);
+
+	co_obj_t *obj_1280 = NULL;
+	if (sdo->dev) {
+		obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+		// Copy the SDO parameter record.
+		size_t size = co_obj_sizeof_val(obj_1280);
+		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
+				MIN(size, sizeof(sdo->par)));
+		// Set the download indication function for the SDO parameter
+		// record.
+		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
+	}
+
+	if (co_csdo_update(sdo) == -1)
+		goto error_update;
+
+	co_csdo_enter(sdo, co_csdo_wait_state);
+
+	return 0;
+
+error_update:
+	if (obj_1280)
+		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	return -1;
+}
+
+void
+co_csdo_stop(co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	// Abort any ongoing transfer.
+	co_csdo_abort_req(sdo, CO_SDO_AC_NO_SDO);
+
+	co_csdo_enter(sdo, co_csdo_stopped_state);
+
+	can_timer_stop(sdo->timer);
+	can_recv_stop(sdo->recv);
+
+	co_obj_t *obj_1280 = NULL;
+	if (sdo->dev) {
+		obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+		// Remove the download indication functions for the SDO
+		// parameter record.
+		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 	}
 }
 
@@ -1337,6 +1384,15 @@ co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo->state->on_recv);
 
 	co_csdo_enter(sdo, sdo->state->on_recv(sdo, msg));
+}
+
+static co_csdo_state_t *
+co_csdo_stopped_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
+{
+	(void)sdo;
+	(void)ac;
+
+	return NULL;
 }
 
 static co_csdo_state_t *
