@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Transmit-PDO
  * declarations.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -52,7 +52,8 @@ struct __co_tpdo *__co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net,
 void __co_tpdo_fini(struct __co_tpdo *pdo);
 
 /**
- * Creates a new CANopen Transmit-PDO service.
+ * Creates a new CANopen Transmit-PDO service. The service is started as if by
+ * co_tpdo_start().
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device describing the server.
@@ -69,6 +70,19 @@ co_tpdo_t *co_tpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Transmit-PDO service. @see co_tpdo_create()
 void co_tpdo_destroy(co_tpdo_t *pdo);
+
+/**
+ * Starts a Transmit-PDO service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_tpdo_stop()
+ */
+int co_tpdo_start(co_tpdo_t *pdo);
+
+/// Stops a Transmit-PDO service. @see co_tpdo_start()
+void co_tpdo_stop(co_tpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Transmit-PDO.
 can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);
