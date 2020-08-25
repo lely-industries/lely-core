@@ -60,6 +60,7 @@ inc += lely/util/fwbuf.h
 if !NO_CXX
 inc += lely/util/invoker.hpp
 endif
+inc += lely/util/memory.h
 inc += lely/util/mkjmp.h
 if !NO_CXX
 inc += lely/util/mutex.hpp
