@@ -167,14 +167,14 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	time->net = net;
 	time->dev = dev;
 
-	// Retrieve the TIME COB-ID.
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	if (!obj_1012) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_obj_1012;
 	}
 
-	time->cobid = co_obj_get_val_u32(obj_1012, 0x00);
+	time->cobid = 0;
+
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
 
 	time->recv = can_recv_create();
@@ -191,19 +191,21 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	}
 	can_timer_set_func(time->timer, &co_time_timer, time);
 
-	can_net_get_time(time->net, &time->start);
+	time->start = (struct timespec){ 0, 0 };
 
 	time->ind = NULL;
 	time->data = NULL;
 
-	// Set the download indication function for the TIME COB-ID object.
-	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
-
-	co_time_update(time);
+	if (co_time_start(time) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
 
 	return time;
 
-	// can_timer_destroy(time->timer);
+	// co_time_stop(time);
+error_start:
+	can_timer_destroy(time->timer);
 error_create_timer:
 	can_recv_destroy(time->recv);
 error_create_recv:
@@ -218,13 +220,9 @@ __co_time_fini(struct __co_time *time)
 {
 	assert(time);
 
-	// Remove the download indication function for the TIME COB-ID object.
-	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
-	assert(obj_1012);
-	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+	co_time_stop(time);
 
 	can_timer_destroy(time->timer);
-
 	can_recv_destroy(time->recv);
 }
 
@@ -265,6 +263,41 @@ co_time_destroy(co_time_t *time)
 	}
 }
 
+int
+co_time_start(co_time_t *time)
+{
+	assert(time);
+
+	co_time_stop(time);
+
+	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
+	// Retrieve the TIME COB-ID.
+	time->cobid = co_obj_get_val_u32(obj_1012, 0x00);
+	// Set the download indication function for the TIME COB-ID object.
+	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
+
+	can_net_get_time(time->net, &time->start);
+
+	co_time_update(time);
+
+	return 0;
+}
+
+void
+co_time_stop(co_time_t *time)
+{
+	assert(time);
+
+	co_time_stop_prod(time);
+
+	can_timer_stop(time->timer);
+	can_recv_stop(time->recv);
+
+	// Remove the download indication function for the TIME COB-ID object.
+	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
+	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+}
+
 can_net_t *
 co_time_get_net(const co_time_t *time)
 {
@@ -302,7 +335,7 @@ co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data)
 }
 
 void
-co_time_start(co_time_t *time, const struct timespec *start,
+co_time_start_prod(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval)
 {
 	assert(time);
@@ -312,7 +345,7 @@ co_time_start(co_time_t *time, const struct timespec *start,
 }
 
 void
-co_time_stop(co_time_t *time)
+co_time_stop_prod(co_time_t *time)
 {
 	assert(time);
 

@@ -558,13 +558,6 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	if (obj_1200) {
-		// Copy the SDO parameter record.
-		size_t size = co_obj_sizeof_val(obj_1200);
-		memcpy(&sdo->par, co_obj_addressof_val(obj_1200),
-				MIN(size, sizeof(sdo->par)));
-	}
-
 	sdo->recv = can_recv_create();
 	if (!sdo->recv) {
 		errc = get_errc();
@@ -604,20 +597,15 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	memset(sdo->begin, 0, CO_SDO_MEMBUF_SIZE);
 #endif
 
-	// Set the download indication function for the SDO parameter record.
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
-
-	if (co_ssdo_update(sdo) == -1) {
+	if (co_ssdo_start(sdo) == -1) {
 		errc = get_errc();
-		goto error_update;
+		goto error_start;
 	}
 
 	return sdo;
 
-error_update:
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+	// co_ssdo_stop(sdo);
+error_start:
 	can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
@@ -633,14 +621,7 @@ __co_ssdo_fini(struct __co_ssdo *sdo)
 	assert(sdo);
 	assert(sdo->num >= 1 && sdo->num <= 128);
 
-	// Remove the download indication functions for the SDO parameter
-	// record.
-	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, NULL, NULL);
-
-	// Abort any ongoing transfer.
-	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
+	co_ssdo_stop(sdo);
 
 	membuf_fini(&sdo->buf);
 	co_sdo_req_fini(&sdo->req);
@@ -685,6 +666,53 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 		__co_ssdo_fini(ssdo);
 		__co_ssdo_free(ssdo);
 	}
+}
+
+int
+co_ssdo_start(co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	co_ssdo_stop(sdo);
+
+	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
+	if (obj_1200) {
+		// Copy the SDO parameter record.
+		size_t size = co_obj_sizeof_val(obj_1200);
+		memcpy(&sdo->par, co_obj_addressof_val(obj_1200),
+				MIN(size, sizeof(sdo->par)));
+		// Set the download indication function for the SDO parameter
+		// record.
+		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
+	}
+
+	if (co_ssdo_update(sdo) == -1)
+		goto error_update;
+
+	return 0;
+
+error_update:
+	if (obj_1200)
+		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+	return -1;
+}
+
+void
+co_ssdo_stop(co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	// Abort any ongoing transfer.
+	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
+
+	can_timer_stop(sdo->timer);
+	can_recv_stop(sdo->recv);
+
+	// Remove the download indication functions for the SDO parameter
+	// record.
+	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
+	if (obj_1200)
+		co_obj_set_dn_ind(obj_1200, NULL, NULL);
 }
 
 can_net_t *

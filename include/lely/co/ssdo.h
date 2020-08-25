@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Server-SDO
  * declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,7 +36,8 @@ struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net,
 void __co_ssdo_fini(struct __co_ssdo *sdo);
 
 /**
- * Creates a new CANopen Server-SDO service.
+ * Creates a new CANopen Server-SDO service. The service is started as if by
+ * co_ssdo_start().
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device describing the server.
@@ -53,6 +54,23 @@ co_ssdo_t *co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num);
 
 /// Destroys a CANopen Server-SDO service. @see co_ssdo_create()
 void co_ssdo_destroy(co_ssdo_t *sdo);
+
+/**
+ * Starts a Server-SDO service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_ssdo_stop()
+ */
+int co_ssdo_start(co_ssdo_t *sdo);
+
+/**
+ * Stops a Server-SDO service. Any ongoing request is aborted.
+ *
+ * @see co_ssdo_start()
+ */
+void co_ssdo_stop(co_ssdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Server-SDO.
 can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);

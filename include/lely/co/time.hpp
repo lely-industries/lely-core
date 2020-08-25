@@ -45,6 +45,7 @@ struct c_type_traits<__co_time> {
   alloc() noexcept {
     return __co_time_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_time_free(ptr);
@@ -68,10 +69,21 @@ class COTime : public incomplete_c_type<__co_time> {
  public:
   COTime(CANNet* net, CODev* dev) : c_base(net, dev) {}
 
+  int
+  start() noexcept {
+    return co_time_start(this);
+  }
+
+  void
+  stop() noexcept {
+    co_time_stop(this);
+  }
+
   CANNet*
   getNet() const noexcept {
     return co_time_get_net(this);
   }
+
   CODev*
   getDev() const noexcept {
     return co_time_get_dev(this);
@@ -101,13 +113,13 @@ class COTime : public incomplete_c_type<__co_time> {
   }
 
   void
-  start(const timespec* start = 0, const timespec* interval = 0) noexcept {
-    co_time_start(this, start, interval);
+  startProd(const timespec* start = 0, const timespec* interval = 0) noexcept {
+    co_time_start_prod(this, start, interval);
   }
 
   void
-  stop() noexcept {
-    co_time_stop(this);
+  stopProd() noexcept {
+    co_time_stop_prod(this);
   }
 
  protected:

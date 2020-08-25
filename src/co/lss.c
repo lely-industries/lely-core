@@ -193,6 +193,9 @@ struct __co_lss_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_lss_state_t *const name = &(co_lss_state_t){ __VA_ARGS__ };
 
+/// The 'stopped' state of an LSS master or slave.
+LELY_CO_DEFINE_STATE(co_lss_stopped_state, NULL)
+
 /// The entry function of the 'waiting' state an LSS master or slave.
 static co_lss_state_t *co_lss_wait_on_enter(co_lss_t *lss);
 
@@ -684,7 +687,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->net = co_nmt_get_net(lss->nmt);
 	lss->dev = co_nmt_get_dev(lss->nmt);
 
-	lss->state = NULL;
+	lss->state = co_lss_stopped_state;
 
 #ifndef LELY_NO_CO_MASTER
 	lss->master = 0;
@@ -742,11 +745,17 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->scan_data = NULL;
 #endif
 
-	co_lss_enter(lss, co_lss_wait_state);
+	if (co_lss_start(lss) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
 	return lss;
 
+	// co_lss_stop(lss);
+error_start:
 #ifndef LELY_NO_CO_MASTER
-	// can_timer_destroy(lss->timer);
+	can_timer_destroy(lss->timer);
 error_create_timer:
 #endif
 	can_recv_destroy(lss->recv);
@@ -759,6 +768,8 @@ void
 __co_lss_fini(struct __co_lss *lss)
 {
 	assert(lss);
+
+	co_lss_stop(lss);
 
 #ifndef LELY_NO_CO_MASTER
 	can_timer_destroy(lss->timer);
@@ -801,6 +812,31 @@ co_lss_destroy(co_lss_t *lss)
 		__co_lss_fini(lss);
 		__co_lss_free(lss);
 	}
+}
+
+int
+co_lss_start(co_lss_t *lss)
+{
+	assert(lss);
+
+	co_lss_stop(lss);
+
+	co_lss_enter(lss, co_lss_wait_state);
+
+	return 0;
+}
+
+void
+co_lss_stop(co_lss_t *lss)
+{
+	assert(lss);
+
+	co_lss_enter(lss, co_lss_stopped_state);
+
+#ifndef LELY_NO_CO_MASTER
+	can_timer_stop(lss->timer);
+#endif
+	can_recv_stop(lss->recv);
 }
 
 co_nmt_t *

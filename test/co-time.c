@@ -29,7 +29,7 @@ main(void)
 	co_time_set_ind(time, &time_ind, &test);
 
 	struct timespec interval = { 0, 1000000 * MSEC };
-	co_time_start(time, NULL, &interval);
+	co_time_start_prod(time, NULL, &interval);
 
 	for (int i = 0; i < NUM_TEST; i++)
 		co_test_wait(&test);

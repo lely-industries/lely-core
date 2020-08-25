@@ -187,15 +187,8 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->dev = dev;
 	pdo->num = num;
 
-	// Copy the PDO communication parameter record.
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
-	memcpy(&pdo->comm, co_obj_addressof_val(obj_1400),
-			MIN(co_obj_sizeof_val(obj_1400), sizeof(pdo->comm)));
-
-	// Copy the PDO mapping parameter record.
 	memset(&pdo->map, 0, sizeof(pdo->map));
-	memcpy(&pdo->map, co_obj_addressof_val(obj_1600),
-			MIN(co_obj_sizeof_val(obj_1600), sizeof(pdo->map)));
 
 	pdo->recv = can_recv_create();
 	if (!pdo->recv) {
@@ -229,26 +222,21 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->err = NULL;
 	pdo->err_data = NULL;
 
-	// Set the download indication functions PDO communication parameter
-	// record.
-	co_obj_set_dn_ind(obj_1400, &co_1400_dn_ind, pdo);
-
-	// Set the download indication functions PDO mapping parameter record.
-	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
-
-	co_rpdo_init_recv(pdo);
-	co_rpdo_init_timer_swnd(pdo);
+	if (co_rpdo_start(pdo) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
 
 	return pdo;
 
-	// can_timer_destroy(pdo->timer_swnd);
+	// co_rpdo_stop(pdo);
+error_start:
+	can_timer_destroy(pdo->timer_swnd);
 error_create_timer_swnd:
 	can_timer_destroy(pdo->timer_event);
 error_create_timer_event:
 	can_recv_destroy(pdo->recv);
 error_create_recv:
-	co_obj_set_dn_ind(obj_1600, NULL, NULL);
-	co_obj_set_dn_ind(obj_1400, NULL, NULL);
 error_param:
 	set_errc(errc);
 	return NULL;
@@ -260,23 +248,12 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 	assert(pdo);
 	assert(pdo->num >= 1 && pdo->num <= 512);
 
-	// Remove the download indication functions PDO mapping parameter
-	// record.
-	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
-	assert(obj_1600);
-	co_obj_set_dn_ind(obj_1600, NULL, NULL);
-
-	// Remove the download indication functions PDO communication parameter
-	// record.
-	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
-	assert(obj_1400);
-	co_obj_set_dn_ind(obj_1400, NULL, NULL);
+	co_rpdo_stop(pdo);
 
 	co_sdo_req_fini(&pdo->req);
 
 	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
-
 	can_recv_destroy(pdo->recv);
 }
 
@@ -315,6 +292,54 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 		__co_rpdo_fini(rpdo);
 		__co_rpdo_free(rpdo);
 	}
+}
+
+int
+co_rpdo_start(co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	co_rpdo_stop(pdo);
+
+	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
+	assert(obj_1400);
+	// Copy the PDO communication parameter record.
+	memcpy(&pdo->comm, co_obj_addressof_val(obj_1400),
+			MIN(co_obj_sizeof_val(obj_1400), sizeof(pdo->comm)));
+	// Set the download indication functions PDO communication parameter
+	// record.
+	co_obj_set_dn_ind(obj_1400, &co_1400_dn_ind, pdo);
+
+	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
+	assert(obj_1600);
+	// Copy the PDO mapping parameter record.
+	memcpy(&pdo->map, co_obj_addressof_val(obj_1600),
+			MIN(co_obj_sizeof_val(obj_1600), sizeof(pdo->map)));
+	// Set the download indication functions PDO mapping parameter record.
+	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
+
+	co_rpdo_init_recv(pdo);
+	co_rpdo_init_timer_swnd(pdo);
+
+	return 0;
+}
+
+void
+co_rpdo_stop(co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	// Remove the download indication functions PDO mapping parameter
+	// record.
+	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
+	assert(obj_1600);
+	co_obj_set_dn_ind(obj_1600, NULL, NULL);
+
+	// Remove the download indication functions PDO communication parameter
+	// record.
+	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
+	assert(obj_1400);
+	co_obj_set_dn_ind(obj_1400, NULL, NULL);
 }
 
 can_net_t *

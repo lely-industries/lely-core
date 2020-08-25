@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the time stamp
  * (TIME) object declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -87,7 +87,8 @@ struct __co_time *__co_time_init(
 void __co_time_fini(struct __co_time *time);
 
 /**
- * Creates a new CANopen TIME producer/consumer service.
+ * Creates a new CANopen TIME producer/consumer service. The service is started
+ * as if by co_time_start().
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device.
@@ -101,6 +102,24 @@ co_time_t *co_time_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen TIME producer/consumer service. @see co_time_create()
 void co_time_destroy(co_time_t *time);
+
+/**
+ * Starts a TIME service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_time_stop()
+ */
+int co_time_start(co_time_t *time);
+
+/**
+ * Stops a TIME service. This function invokes co_time_stop_prod() to stop the
+ * TIME producer, if necessary.
+ *
+ * @see co_time_start()
+ */
+void co_time_stop(co_time_t *time);
 
 /// Returns a pointer to the CAN network of a TIME producer/consumer service.
 can_net_t *co_time_get_net(const co_time_t *time);
@@ -148,13 +167,13 @@ void co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data);
  *                 <b>interval</b> is NULL, only a single time stamp is sent, at
  *                 the time given by <b>start</b>.
  *
- * @see co_time_stop()
+ * @see co_time_stop_prod()
  */
-void co_time_start(co_time_t *time, const struct timespec *start,
+void co_time_start_prod(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval);
 
-/// Stops a CANopen TIME producer. @see co_time_start()
-void co_time_stop(co_time_t *time);
+/// Stops a CANopen TIME producer. @see co_time_start_prod()
+void co_time_stop_prod(co_time_t *time);
 
 #ifdef __cplusplus
 }
