@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstring>
 #include <memory>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
@@ -124,6 +125,8 @@ class CoObjTHolder : public Holder<co_obj_t> {
 
   /**
    * Construct a sub-object, insert it into a CANopen object and set its value.
+   * Sub-object's holder is stored inside object's holder and can be accessed
+   * with GetSubs() method.
    *
    * @param subidx the object sub-index.
    * @param type   the data type of the sub-object value (in the range [1..27]).
@@ -132,19 +135,38 @@ class CoObjTHolder : public Holder<co_obj_t> {
    * @param val    the sub-object's value.
    */
   template <class T>
-  std::unique_ptr<CoSubTHolder>
-  InsertAndSetSub(co_unsigned8_t subidx, co_unsigned16_t type, const T val) {
+  void
+  InsertAndSetSub(const co_unsigned8_t subidx, const co_unsigned16_t type,
+                  const T val) {
     assert(sizeof(T) == co_type_sizeof(type));
 
-    std::unique_ptr<CoSubTHolder> sub_holder(new CoSubTHolder(subidx, type));
+    sub_holders.push_back(
+        std::unique_ptr<CoSubTHolder>(new CoSubTHolder(subidx, type)));
 
-    auto* const sub = InsertSub(*sub_holder);
+    auto* const sub = InsertSub(*sub_holders.back().get());
     CHECK(sub != nullptr);
 
     CHECK_EQUAL(co_type_sizeof(type), co_sub_set_val(sub, &val, sizeof(val)));
-
-    return sub_holder;
   }
+
+  /**
+   * Get the reference on sub-objects container.
+   */
+  std::vector<std::unique_ptr<CoSubTHolder>>&
+  GetSubs() {
+    return sub_holders;
+  }
+
+  /**
+   * Get the pointer to the last added sub-object.
+   */
+  co_sub_t*
+  GetLastSub() {
+    return sub_holders.back()->Get();
+  }
+
+ private:
+  std::vector<std::unique_ptr<CoSubTHolder>> sub_holders;
 };  // class CoObjTHolder
 
 #endif  // LELY_UNIT_TESTS_CO_OBJ_HOLDER_HPP_
