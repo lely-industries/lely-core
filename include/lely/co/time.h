@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the time stamp
  * (TIME) object declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -148,13 +148,13 @@ void co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data);
  *                 <b>interval</b> is NULL, only a single time stamp is sent, at
  *                 the time given by <b>start</b>.
  *
- * @see co_time_stop()
+ * @see co_time_stop_prod()
  */
-void co_time_start(co_time_t *time, const struct timespec *start,
+void co_time_start_prod(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval);
 
-/// Stops a CANopen TIME producer. @see co_time_start()
-void co_time_stop(co_time_t *time);
+/// Stops a CANopen TIME producer. @see co_time_start_prod()
+void co_time_stop_prod(co_time_t *time);
 
 #ifdef __cplusplus
 }

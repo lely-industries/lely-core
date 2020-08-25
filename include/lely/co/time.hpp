@@ -101,13 +101,13 @@ class COTime : public incomplete_c_type<__co_time> {
   }
 
   void
-  start(const timespec* start = 0, const timespec* interval = 0) noexcept {
-    co_time_start(this, start, interval);
+  startProd(const timespec* start = 0, const timespec* interval = 0) noexcept {
+    co_time_start_prod(this, start, interval);
   }
 
   void
-  stop() noexcept {
-    co_time_stop(this);
+  stopProd() noexcept {
+    co_time_stop_prod(this);
   }
 
  protected:

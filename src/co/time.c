@@ -302,7 +302,7 @@ co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data)
 }
 
 void
-co_time_start(co_time_t *time, const struct timespec *start,
+co_time_start_prod(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval)
 {
 	assert(time);
@@ -312,7 +312,7 @@ co_time_start(co_time_t *time, const struct timespec *start,
 }
 
 void
-co_time_stop(co_time_t *time)
+co_time_stop_prod(co_time_t *time)
 {
 	assert(time);
 
