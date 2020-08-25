@@ -675,18 +675,13 @@ static int
 co_rpdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(!(msg->flags & CAN_FLAG_RTR));
+#ifndef LELY_NO_CANFD
+	assert(!(msg->flags & CAN_FLAG_EDL));
+#endif
+
 	co_rpdo_t *pdo = data;
 	assert(pdo);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
-
-#ifndef LELY_NO_CANFD
-	// Ignore CAN FD format frames.
-	if (msg->flags & CAN_FLAG_EDL)
-		return 0;
-#endif
 
 	// Reset the event timer.
 	co_rpdo_init_timer_event(pdo);
