@@ -69,6 +69,16 @@ class COLSS : public incomplete_c_type<__co_lss> {
  public:
   explicit COLSS(CONMT* nmt) : c_base(nmt) {}
 
+  int
+  start() noexcept {
+    return co_lss_start(this);
+  }
+
+  void
+  stop() noexcept {
+    co_lss_stop(this);
+  }
+
   CONMT*
   getNMT() const noexcept {
     return co_lss_get_nmt(this);
