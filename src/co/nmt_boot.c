@@ -818,7 +818,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 
 	boot->state = NULL;
 
-	boot->recv = can_recv_create();
+	boot->recv = can_recv_create(can_net_get_alloc(boot->net));
 	if (!boot->recv) {
 		errc = get_errc();
 		goto error_create_recv;

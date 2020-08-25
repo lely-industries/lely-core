@@ -13,11 +13,11 @@ main(void)
 	can_net_t *net = can_net_create(NULL);
 	tap_assert(net);
 
-	can_recv_t *r1 = can_recv_create();
+	can_recv_t *r1 = can_recv_create(can_net_get_alloc(net));
 	tap_assert(r1);
 	can_recv_set_func(r1, &can_recv, (void *)(uintptr_t)1);
 
-	can_recv_t *r2 = can_recv_create();
+	can_recv_t *r2 = can_recv_create(can_net_get_alloc(net));
 	tap_assert(r2);
 	can_recv_set_func(r2, &can_recv, (void *)(uintptr_t)2);
 

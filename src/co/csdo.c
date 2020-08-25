@@ -827,7 +827,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	sdo->recv = can_recv_create();
+	sdo->recv = can_recv_create(can_net_get_alloc(sdo->net));
 	if (!sdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;

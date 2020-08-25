@@ -189,7 +189,7 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
 	memset(&pdo->map, 0, sizeof(pdo->map));
 
-	pdo->recv = can_recv_create();
+	pdo->recv = can_recv_create(can_net_get_alloc(pdo->net));
 	if (!pdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;

@@ -695,7 +695,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->next = 0;
 #endif
 
-	lss->recv = can_recv_create();
+	lss->recv = can_recv_create(can_net_get_alloc(lss->net));
 	if (!lss->recv) {
 		errc = get_errc();
 		goto error_create_recv;

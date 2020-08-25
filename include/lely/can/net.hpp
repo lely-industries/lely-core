@@ -251,8 +251,9 @@ struct c_type_traits<__can_recv> {
 
   static void*
   alloc() noexcept {
-    return __can_recv_alloc();
+    return __can_recv_alloc(nullptr);
   }
+
   static void
   free(void* ptr) noexcept {
     __can_recv_free(ptr);
@@ -262,6 +263,7 @@ struct c_type_traits<__can_recv> {
   init(pointer p) noexcept {
     return __can_recv_init(p);
   }
+
   static void
   fini(pointer p) noexcept {
     __can_recv_fini(p);

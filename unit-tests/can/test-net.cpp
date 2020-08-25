@@ -70,9 +70,9 @@ TEST(CAN_NetInit, CanNetFini) {
   can_timer_t* const timer1 = can_timer_create(nullptr);
   const timespec time1 = {0, 0L};
   can_timer_start(timer1, net, &time1, nullptr);
-  can_recv_t* const recv1 = can_recv_create();
-  can_recv_t* const recv2 = can_recv_create();
-  can_recv_t* const recv3 = can_recv_create();
+  can_recv_t* const recv1 = can_recv_create(nullptr);
+  can_recv_t* const recv2 = can_recv_create(nullptr);
+  can_recv_t* const recv3 = can_recv_create(nullptr);
   can_recv_start(recv1, net, 0x0, CAN_FLAG_IDE);
   can_recv_start(recv2, net, 0x01, 0);
   can_recv_start(recv3, net, 0x01, 0);
@@ -115,7 +115,7 @@ TEST(CAN_NetInit, CanTimerInitFinit) {
 TEST(CAN_NetInit, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
 
 TEST(CAN_NetInit, CanRecvAllocFree) {
-  void* const ptr = __can_recv_alloc();
+  void* const ptr = __can_recv_alloc(nullptr);
 
   CHECK(ptr != nullptr);
 
@@ -123,7 +123,7 @@ TEST(CAN_NetInit, CanRecvAllocFree) {
 }
 
 TEST(CAN_NetInit, CanRecvInitFinit) {
-  auto* const recv = static_cast<can_recv_t*>(__can_recv_alloc());
+  auto* const recv = static_cast<can_recv_t*>(__can_recv_alloc(nullptr));
 
   CHECK(recv != nullptr);
   POINTERS_EQUAL(recv, __can_recv_init(recv));
@@ -423,9 +423,9 @@ TEST(CAN_Net, CanNetRecv) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = 0x01;
 
-  can_recv_t* const recv1 = can_recv_create();
-  can_recv_t* const recv2 = can_recv_create();
-  can_recv_t* const recv3 = can_recv_create();
+  can_recv_t* const recv1 = can_recv_create(nullptr);
+  can_recv_t* const recv2 = can_recv_create(nullptr);
+  can_recv_t* const recv3 = can_recv_create(nullptr);
   can_recv_set_func(recv1, recv_func_err, nullptr);
   can_recv_set_func(recv2, recv_func_err, nullptr);
   can_recv_start(recv1, net, 0x01, 0);
@@ -538,7 +538,7 @@ TEST_GROUP(CAN_NetRecv) {
   static int recv_func(const can_msg*, void*) { return 0; }
 
   TEST_SETUP() {
-    recv = can_recv_create();
+    recv = can_recv_create(nullptr);
     CHECK(recv != nullptr);
   }
 

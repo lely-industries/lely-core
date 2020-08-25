@@ -93,7 +93,7 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 	hb->net = net;
 	hb->nmt = nmt;
 
-	hb->recv = can_recv_create();
+	hb->recv = can_recv_create(can_net_get_alloc(hb->net));
 	if (!hb->recv) {
 		errc = get_errc();
 		goto error_create_recv;

@@ -31,7 +31,6 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 /// A CAN network interface.
 struct __can_net {
@@ -101,6 +100,8 @@ static int can_recv_key_cmp(const void *p1, const void *p2);
 
 /// A CAN frame receiver.
 struct __can_recv {
+	/// A pointer to the memory allocator used to allocate this struct.
+	alloc_t *alloc;
 	/// The node of this receiver in the tree of receivers.
 	struct rbnode node;
 	/// The list of CAN frame receivers with the same key.
@@ -552,19 +553,38 @@ can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout)
 	}
 }
 
-void *
-__can_recv_alloc(void)
+size_t
+can_recv_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __can_recv));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(can_recv_t);
+}
+
+size_t
+can_recv_sizeof(void)
+{
+	return sizeof(can_recv_t);
+}
+
+void *
+__can_recv_alloc(alloc_t *alloc)
+{
+	struct __can_recv *recv =
+			mem_alloc(alloc, can_recv_alignof(), can_recv_sizeof());
+	if (!recv)
+		return NULL;
+
+	recv->alloc = alloc;
+
+	return recv;
 }
 
 void
 __can_recv_free(void *ptr)
 {
-	free(ptr);
+	struct __can_recv *recv = ptr;
+
+	if (recv)
+		mem_free(recv->alloc, recv);
 }
 
 struct __can_recv *
@@ -592,11 +612,11 @@ __can_recv_fini(struct __can_recv *recv)
 }
 
 can_recv_t *
-can_recv_create(void)
+can_recv_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_recv_t *recv = __can_recv_alloc();
+	can_recv_t *recv = __can_recv_alloc(alloc);
 	if (!recv) {
 		errc = get_errc();
 		goto error_alloc_recv;
@@ -623,6 +643,14 @@ can_recv_destroy(can_recv_t *recv)
 		__can_recv_fini(recv);
 		__can_recv_free(recv);
 	}
+}
+
+alloc_t *
+can_recv_get_alloc(const can_recv_t *recv)
+{
+	assert(recv);
+
+	return recv->alloc;
 }
 
 void
