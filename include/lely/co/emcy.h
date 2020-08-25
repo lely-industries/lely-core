@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the emergency
  * (EMCY) object declarations.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -60,7 +60,8 @@ struct __co_emcy *__co_emcy_init(
 void __co_emcy_fini(struct __co_emcy *emcy);
 
 /**
- * Creates a new CANopen EMCY producer/consumer service.
+ * Creates a new CANopen EMCY producer/consumer service. The service is started
+ * as if by co_emcy_start().
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device.
@@ -74,6 +75,19 @@ co_emcy_t *co_emcy_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen EMCY producer/consumer service. @see co_emcy_create()
 void co_emcy_destroy(co_emcy_t *emcy);
+
+/**
+ * Starts an EMCY service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_emcy_stop()
+ */
+int co_emcy_start(co_emcy_t *emcy);
+
+/// Stops an EMCY service. @see co_emcy_start()
+void co_emcy_stop(co_emcy_t *emcy);
 
 /// Returns a pointer to the CAN network of an EMCY producer/consumer service.
 can_net_t *co_emcy_get_net(const co_emcy_t *emcy);

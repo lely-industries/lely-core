@@ -219,19 +219,10 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	}
 	can_timer_set_func(emcy->timer, &co_emcy_timer, emcy);
 
-	can_net_get_time(emcy->net, &emcy->inhibit);
+	emcy->inhibit = (struct timespec){ 0, 0 };
 
 	emcy->ind = NULL;
 	emcy->data = NULL;
-
-	// Set the download indication function for the pre-defined error field.
-	if (emcy->obj_1003)
-		co_obj_set_dn_ind(emcy->obj_1003, &co_1003_dn_ind, emcy);
-
-	// Set the download indication function for the EMCY COB-ID object.
-	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
-	if (obj_1014)
-		co_obj_set_dn_ind(obj_1014, &co_1014_dn_ind, emcy);
 
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_emcy_node *node = &emcy->nodes[id - 1];
@@ -254,28 +245,17 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 			}
 			can_recv_set_func(node->recv, &co_emcy_node_recv, node);
 		}
-		// Set the download indication function for the emergency
-		// consumer object.
-		co_obj_set_dn_ind(obj_1028, &co_1028_dn_ind, emcy);
-		// Start the CAN frame receivers for the nodes.
-		co_unsigned8_t maxid = MIN(co_obj_get_val_u8(obj_1028, 0x00),
-				CO_NUM_NODES);
-		for (co_unsigned8_t id = 1; id <= maxid; id++) {
-			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
-			if (sub)
-				co_emcy_set_1028(emcy, id,
-						co_sub_get_val_u32(sub));
-		}
+	}
+
+	if (co_emcy_start(emcy) == -1) {
+		errc = get_errc();
+		goto error_start;
 	}
 
 	return emcy;
 
-	// if (obj_1028)
-	// 	co_obj_set_dn_ind(obj_1028, NULL, NULL);
-	// if (obj_1014)
-	// 	co_obj_set_dn_ind(obj_1014, NULL, NULL);
-	// if (emcy->obj_1003)
-	// 	co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
+	// co_emcy_stop(emcy);
+error_start:
 error_create_recv:
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		can_recv_destroy(emcy->nodes[id - 1].recv);
@@ -293,21 +273,7 @@ __co_emcy_fini(struct __co_emcy *emcy)
 {
 	assert(emcy);
 
-	// Remove the download indication function for the emergency consumer
-	// object.
-	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
-	if (obj_1028)
-		co_obj_set_dn_ind(obj_1028, NULL, NULL);
-
-	// Remove the download indication function for the EMCY COB-ID object.
-	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
-	if (obj_1014)
-		co_obj_set_dn_ind(obj_1014, NULL, NULL);
-
-	// Remove the download indication function for the pre-defined error
-	// field.
-	if (emcy->obj_1003)
-		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
+	co_emcy_stop(emcy);
 
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		can_recv_destroy(emcy->nodes[id - 1].recv);
@@ -354,6 +320,74 @@ co_emcy_destroy(co_emcy_t *emcy)
 		__co_emcy_fini(emcy);
 		__co_emcy_free(emcy);
 	}
+}
+
+int
+co_emcy_start(co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	co_emcy_stop(emcy);
+
+	can_net_get_time(emcy->net, &emcy->inhibit);
+
+	// Set the download indication function for the pre-defined error field.
+	if (emcy->obj_1003)
+		co_obj_set_dn_ind(emcy->obj_1003, &co_1003_dn_ind, emcy);
+
+	// Set the download indication function for the EMCY COB-ID object.
+	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
+	if (obj_1014)
+		co_obj_set_dn_ind(obj_1014, &co_1014_dn_ind, emcy);
+
+	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
+	if (obj_1028) {
+		// Set the download indication function for the emergency
+		// consumer object.
+		co_obj_set_dn_ind(obj_1028, &co_1028_dn_ind, emcy);
+		// Start the CAN frame receivers for the nodes.
+		co_unsigned8_t maxid = MIN(co_obj_get_val_u8(obj_1028, 0x00),
+				CO_NUM_NODES);
+		for (co_unsigned8_t id = 1; id <= maxid; id++) {
+			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			if (sub)
+				co_emcy_set_1028(emcy, id,
+						co_sub_get_val_u32(sub));
+		}
+	}
+
+	return 0;
+}
+
+void
+co_emcy_stop(co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	can_timer_stop(emcy->timer);
+
+	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
+	if (obj_1028) {
+		// Stop all CAN frame receivers.
+		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			if (sub)
+				can_recv_stop(emcy->nodes[id - 1].recv);
+		}
+		// Remove the download indication function for the emergency consumer
+		// object.
+		co_obj_set_dn_ind(obj_1028, NULL, NULL);
+	}
+
+	// Remove the download indication function for the EMCY COB-ID object.
+	co_obj_t *obj_1014 = co_dev_find_obj(emcy->dev, 0x1014);
+	if (obj_1014)
+		co_obj_set_dn_ind(obj_1014, NULL, NULL);
+
+	// Remove the download indication function for the pre-defined error
+	// field.
+	if (emcy->obj_1003)
+		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
 }
 
 can_net_t *
