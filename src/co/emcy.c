@@ -374,8 +374,8 @@ co_emcy_stop(co_emcy_t *emcy)
 			if (sub)
 				can_recv_stop(emcy->nodes[id - 1].recv);
 		}
-		// Remove the download indication function for the emergency consumer
-		// object.
+		// Remove the download indication function for the emergency
+		// consumer object.
 		co_obj_set_dn_ind(obj_1028, NULL, NULL);
 	}
 
