@@ -62,7 +62,7 @@ struct c_type_traits<__can_net> {
 
   static void*
   alloc() noexcept {
-    return __can_net_alloc();
+    return __can_net_alloc(nullptr);
   }
 
   static void

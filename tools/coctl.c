@@ -234,7 +234,7 @@ main(int argc, char *argv[])
 		}
 		net[id - 1].st = io_can_get_state(net[id - 1].handle);
 		// Create a CAN network object.
-		net[id - 1].net = can_net_create();
+		net[id - 1].net = can_net_create(NULL);
 		if (!net[id - 1].net) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN network interface");

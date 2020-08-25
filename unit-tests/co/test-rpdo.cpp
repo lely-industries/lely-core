@@ -64,7 +64,7 @@ TEST_BASE(CO_RpdoBase) {
   }
 
   TEST_SETUP() {
-    net = can_net_create();
+    net = can_net_create(nullptr);
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));

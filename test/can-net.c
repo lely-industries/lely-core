@@ -10,7 +10,7 @@ main(void)
 {
 	tap_plan(8);
 
-	can_net_t *net = can_net_create();
+	can_net_t *net = can_net_create(NULL);
 	tap_assert(net);
 
 	can_recv_t *r1 = can_recv_create();

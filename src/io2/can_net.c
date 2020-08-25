@@ -298,7 +298,7 @@ io_can_net_init(io_can_net_t *net, ev_exec_t *exec, io_timer_t *timer,
 	net->read_submitted = 0;
 	net->write_submitted = 0;
 
-	if (!(net->net = can_net_create())) {
+	if (!(net->net = can_net_create(NULL))) {
 		errc = get_errc();
 		goto error_create_net;
 	}

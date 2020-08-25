@@ -27,7 +27,7 @@
 TEST_GROUP(CAN_NetInit){};
 
 TEST(CAN_NetInit, CanNetAllocFree) {
-  void* const ptr = __can_net_alloc();
+  void* const ptr = __can_net_alloc(nullptr);
 
   CHECK(ptr != nullptr);
 
@@ -35,7 +35,7 @@ TEST(CAN_NetInit, CanNetAllocFree) {
 }
 
 TEST(CAN_NetInit, CanNetInit) {
-  auto* const net = static_cast<can_net_t*>(__can_net_alloc());
+  auto* const net = static_cast<can_net_t*>(__can_net_alloc(nullptr));
 
   CHECK(net != nullptr);
   POINTERS_EQUAL(net, __can_net_init(net));
@@ -62,7 +62,7 @@ TEST(CAN_NetInit, CanNetInit) {
 }
 
 TEST(CAN_NetInit, CanNetFini) {
-  auto* const net = static_cast<can_net_t*>(__can_net_alloc());
+  auto* const net = static_cast<can_net_t*>(__can_net_alloc(nullptr));
 
   CHECK(net != nullptr);
   POINTERS_EQUAL(net, __can_net_init(net));
@@ -164,7 +164,7 @@ TEST_GROUP(CAN_Net) {
   static int send_func_err(const can_msg*, void*) { return -1; }
 
   TEST_SETUP() {
-    net = can_net_create();
+    net = can_net_create(nullptr);
     CHECK(net != nullptr);
 
     CAN_Net_Static::tfunc_empty_counter = 0;
@@ -497,7 +497,7 @@ TEST(CAN_NetTimer, CanTimerSetFunc) {
 }
 
 TEST(CAN_NetTimer, CanTimerStart_Null) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(nullptr);
 
   can_timer_start(timer, net, nullptr, nullptr);
 
@@ -505,7 +505,7 @@ TEST(CAN_NetTimer, CanTimerStart_Null) {
 }
 
 TEST(CAN_NetTimer, CanTimerTimeout) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(nullptr);
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, 500);
@@ -519,7 +519,7 @@ TEST(CAN_NetTimer, CanTimerTimeout) {
 }
 
 TEST(CAN_NetTimer, CanTimerTimeout_Negative) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(nullptr);
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, -1);

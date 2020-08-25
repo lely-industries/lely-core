@@ -252,7 +252,7 @@ daemon_init(int argc, char *argv[])
 		goto error_watch_can;
 	}
 
-	net = can_net_create();
+	net = can_net_create(NULL);
 	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;

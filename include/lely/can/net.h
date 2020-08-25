@@ -24,6 +24,7 @@
 
 #include <lely/can/msg.h>
 #include <lely/libc/time.h>
+#include <lely/util/memory.h>
 
 struct __can_net;
 #if !defined(__cplusplus) || LELY_NO_CXX
@@ -84,16 +85,25 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
-void *__can_net_alloc(void);
+size_t can_net_alignof(void);
+size_t can_net_sizeof(void);
+
+void *__can_net_alloc(alloc_t *alloc);
 void __can_net_free(void *ptr);
 struct __can_net *__can_net_init(struct __can_net *net);
 void __can_net_fini(struct __can_net *net);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
-can_net_t *can_net_create(void);
+can_net_t *can_net_create(alloc_t *alloc);
 
 /// Destroys a CAN network interface. @see can_net_create()
 void can_net_destroy(can_net_t *net);
+
+/**
+ * Returns a pointer to the allocator used to allocate the CAN network
+ * interface.
+ */
+alloc_t *can_net_get_alloc(const can_net_t *net);
 
 /**
  * Retrieves the current time of a CAN network interface.
