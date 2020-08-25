@@ -35,7 +35,6 @@
 #include <lely/util/errnum.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 #if LELY_NO_MALLOC
 #ifndef CO_CSDO_MEMBUF_SIZE
@@ -780,19 +779,39 @@ done:
 	return 0;
 }
 
-void *
-__co_csdo_alloc(void)
+size_t
+co_csdo_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_csdo));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_csdo_t);
+}
+
+size_t
+co_csdo_sizeof(void)
+{
+	return sizeof(co_csdo_t);
+}
+
+void *
+__co_csdo_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_csdo *sdo =
+			mem_alloc(alloc, co_csdo_alignof(), co_csdo_sizeof());
+	if (!sdo)
+		return NULL;
+
+	sdo->net = net;
+
+	return sdo;
 }
 
 void
 __co_csdo_free(void *ptr)
 {
-	free(ptr);
+	struct __co_csdo *sdo = ptr;
+
+	if (sdo)
+		mem_free(co_csdo_get_alloc(sdo), sdo);
 }
 
 struct __co_csdo *
@@ -827,7 +846,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	sdo->recv = can_recv_create(can_net_get_alloc(sdo->net));
+	sdo->recv = can_recv_create(co_csdo_get_alloc(sdo));
 	if (!sdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;
@@ -836,7 +855,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	sdo->timeout = 0;
 
-	sdo->timer = can_timer_create(can_net_get_alloc(sdo->net));
+	sdo->timer = can_timer_create(co_csdo_get_alloc(sdo));
 	if (!sdo->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -915,7 +934,7 @@ co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	int errc = 0;
 
-	co_csdo_t *sdo = __co_csdo_alloc();
+	co_csdo_t *sdo = __co_csdo_alloc(net);
 	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
@@ -997,6 +1016,14 @@ co_csdo_stop(co_csdo_t *sdo)
 		// parameter record.
 		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 	}
+}
+
+alloc_t *
+co_csdo_get_alloc(const co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->net ? can_net_get_alloc(sdo->net) : NULL;
 }
 
 can_net_t *

@@ -142,7 +142,10 @@ int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, struct membuf *buf,
 		co_csdo_up_con_t *con, void *data);
 
-void *__co_csdo_alloc(void);
+size_t co_csdo_alignof(void);
+size_t co_csdo_sizeof(void);
+
+void *__co_csdo_alloc(can_net_t *net);
 void __co_csdo_free(void *ptr);
 struct __co_csdo *__co_csdo_init(struct __co_csdo *sdo, can_net_t *net,
 		co_dev_t *dev, co_unsigned8_t num);
@@ -185,6 +188,13 @@ int co_csdo_start(co_csdo_t *sdo);
  * @see co_csdo_start()
  */
 void co_csdo_stop(co_csdo_t *sdo);
+
+/*
+ * Returns a pointer to the allocator used to allocate a Client-SDO.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_csdo_get_alloc(const co_csdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Client-SDO.
 can_net_t *co_csdo_get_net(const co_csdo_t *sdo);

@@ -134,7 +134,7 @@ struct c_type_traits<__co_csdo> {
 
   static void*
   alloc() noexcept {
-    return __co_csdo_alloc();
+    return __co_csdo_alloc(nullptr);
   }
 
   static void
