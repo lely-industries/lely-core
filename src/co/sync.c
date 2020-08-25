@@ -157,7 +157,7 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	}
 	can_recv_set_func(sync->recv, &co_sync_recv, sync);
 
-	sync->timer = can_timer_create();
+	sync->timer = can_timer_create(can_net_get_alloc(sync->net));
 	if (!sync->timer) {
 		errc = get_errc();
 		goto error_create_timer;

@@ -196,14 +196,14 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	}
 	can_recv_set_func(pdo->recv, &co_tpdo_recv, pdo);
 
-	pdo->timer_event = can_timer_create();
+	pdo->timer_event = can_timer_create(can_net_get_alloc(pdo->net));
 	if (!pdo->timer_event) {
 		errc = get_errc();
 		goto error_create_timer_event;
 	}
 	can_timer_set_func(pdo->timer_event, &co_tpdo_timer_event, pdo);
 
-	pdo->timer_swnd = can_timer_create();
+	pdo->timer_swnd = can_timer_create(can_net_get_alloc(pdo->net));
 	if (!pdo->timer_swnd) {
 		errc = get_errc();
 		goto error_create_timer_swnd;

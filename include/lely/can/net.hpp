@@ -171,8 +171,9 @@ struct c_type_traits<__can_timer> {
 
   static void*
   alloc() noexcept {
-    return __can_timer_alloc();
+    return __can_timer_alloc(nullptr);
   }
+
   static void
   free(void* ptr) noexcept {
     __can_timer_free(ptr);
@@ -182,6 +183,7 @@ struct c_type_traits<__can_timer> {
   init(pointer p) noexcept {
     return __can_timer_init(p);
   }
+
   static void
   fini(pointer p) noexcept {
     __can_timer_fini(p);

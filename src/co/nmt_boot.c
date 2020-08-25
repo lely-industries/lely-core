@@ -825,7 +825,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	}
 	can_recv_set_func(boot->recv, &co_nmt_boot_recv, boot);
 
-	boot->timer = can_timer_create();
+	boot->timer = can_timer_create(can_net_get_alloc(boot->net));
 	if (!boot->timer) {
 		errc = get_errc();
 		goto error_create_timer;

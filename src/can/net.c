@@ -63,6 +63,8 @@ static void can_net_set_next(can_net_t *net);
 
 /// A CAN timer.
 struct __can_timer {
+	/// A pointer to the memory allocator used to allocate this struct.
+	alloc_t *alloc;
 	/// The node of this timer in the tree of timers.
 	struct pnode node;
 	/**
@@ -368,19 +370,38 @@ can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data)
 	net->send_data = data;
 }
 
-void *
-__can_timer_alloc(void)
+size_t
+can_timer_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __can_timer));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(can_timer_t);
+}
+
+size_t
+can_timer_sizeof(void)
+{
+	return sizeof(can_timer_t);
+}
+
+void *
+__can_timer_alloc(alloc_t *alloc)
+{
+	struct __can_timer *timer = mem_alloc(
+			alloc, can_timer_alignof(), can_timer_sizeof());
+	if (!timer)
+		return NULL;
+
+	timer->alloc = alloc;
+
+	return timer;
 }
 
 void
 __can_timer_free(void *ptr)
 {
-	free(ptr);
+	struct __can_timer *timer = ptr;
+
+	if (timer)
+		mem_free(timer->alloc, timer);
 }
 
 struct __can_timer *
@@ -408,11 +429,11 @@ __can_timer_fini(struct __can_timer *timer)
 }
 
 can_timer_t *
-can_timer_create(void)
+can_timer_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_timer_t *timer = __can_timer_alloc();
+	can_timer_t *timer = __can_timer_alloc(alloc);
 	if (!timer) {
 		errc = get_errc();
 		goto error_alloc_timer;
@@ -439,6 +460,14 @@ can_timer_destroy(can_timer_t *timer)
 		__can_timer_fini(timer);
 		__can_timer_free(timer);
 	}
+}
+
+alloc_t *
+can_timer_get_alloc(const can_timer_t *timer)
+{
+	assert(timer);
+
+	return timer->alloc;
 }
 
 void

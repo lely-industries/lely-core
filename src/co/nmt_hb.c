@@ -4,7 +4,7 @@
  *
  * @see src/nmt_ec.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -100,7 +100,7 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 	}
 	can_recv_set_func(hb->recv, &co_nmt_hb_recv, hb);
 
-	hb->timer = can_timer_create();
+	hb->timer = can_timer_create(can_net_get_alloc(hb->net));
 	if (!hb->timer) {
 		errc = get_errc();
 		goto error_create_timer;

@@ -459,7 +459,7 @@ daemon_main()
 	can_net_set_next_func(net, &can_next, &next);
 
 	int watch_out = 1;
-	can_timer_t *timer_out = can_timer_create();
+	can_timer_t *timer_out = can_timer_create(can_net_get_alloc(net));
 	if (!timer_out) {
 		diag(DIAG_ERROR, get_errc(), "unable to create timer");
 		goto error_create_timer_out;
@@ -467,7 +467,7 @@ daemon_main()
 	can_timer_set_func(timer_out, &can_timer, &watch_out);
 
 	int watch_err = 1;
-	can_timer_t *timer_err = can_timer_create();
+	can_timer_t *timer_err = can_timer_create(can_net_get_alloc(net));
 	if (!timer_err) {
 		diag(DIAG_ERROR, get_errc(), "unable to create timer");
 		goto error_create_timer_err;

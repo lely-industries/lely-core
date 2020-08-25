@@ -212,7 +212,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		goto error_init_buf;
 	}
 
-	emcy->timer = can_timer_create();
+	emcy->timer = can_timer_create(can_net_get_alloc(emcy->net));
 	if (!emcy->timer) {
 		errc = get_errc();
 		goto error_create_timer;

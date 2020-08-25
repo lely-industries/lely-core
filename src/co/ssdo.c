@@ -578,7 +578,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	sdo->timeout = 0;
 
-	sdo->timer = can_timer_create();
+	sdo->timer = can_timer_create(can_net_get_alloc(sdo->net));
 	if (!sdo->timer) {
 		errc = get_errc();
 		goto error_create_timer;
