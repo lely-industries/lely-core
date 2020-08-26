@@ -37,6 +37,17 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#if LELY_NO_MALLOC
+#ifndef CO_CSDO_MEMBUF_SIZE
+/**
+ * The default size (in bytes) of a Client-SDO memory buffer in the absence of
+ * dynamic memory allocation. The default size is large enough to accomodate all
+ * basic data types.
+ */
+#define CO_CSDO_MEMBUF_SIZE 8
+#endif
+#endif
+
 struct __co_csdo_state;
 /// An opaque CANopen Client-SDO state type.
 typedef const struct __co_csdo_state co_csdo_state_t;
@@ -75,8 +86,22 @@ struct __co_csdo {
 	co_unsigned8_t ackseq;
 	/// A flag indicating whether a CRC should be generated.
 	unsigned crc : 1;
-	/// The buffer.
+	/// The memory buffer used for download requests.
+	struct membuf dn_buf;
+	/// A pointer to the memory buffer used for upload requests.
+	struct membuf *up_buf;
+	/**
+	 * The memory buffer used for storing serialized values in the absence
+	 * of a user-specified buffer.
+	 */
 	struct membuf buf;
+#if LELY_NO_MALLOC
+	/**
+	 * The static memory buffer used by #buf in the absence of dynamic
+	 * memory allocation.
+	 */
+	char begin[CO_CSDO_MEMBUF_SIZE];
+#endif
 	/// A pointer to the download confirmation function.
 	co_csdo_dn_con_t *dn_con;
 	/// A pointer to user-specified data for #dn_con.
@@ -524,7 +549,8 @@ static int co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx,
  * @see co_csdo_up_req(), co_csdo_blk_up_req()
  */
 static int co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_csdo_up_con_t *con, void *data);
+		co_unsigned8_t subidx, struct membuf *buf,
+		co_csdo_up_con_t *con, void *data);
 
 /**
  * Sends an abort transfer request.
@@ -811,7 +837,14 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
+	membuf_init(&sdo->dn_buf, NULL, 0);
+	sdo->up_buf = NULL;
+#if LELY_NO_MALLOC
+	membuf_init(&sdo->buf, sdo->begin, CO_CSDO_MEMBUF_SIZE);
+	memset(sdo->begin, 0, CO_CSDO_MEMBUF_SIZE);
+#else
 	membuf_init(&sdo->buf, NULL, 0);
+#endif
 
 	sdo->dn_con = NULL;
 	sdo->dn_con_data = NULL;
@@ -1083,53 +1116,22 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		void *data)
 {
 	assert(sdo);
+	struct membuf *buf = &sdo->buf;
 
 	// Obtain the size of the serialized value (which may be 0 for arrays).
 	size_t n = co_val_write(type, val, NULL, NULL);
 	if (!n && co_val_sizeof(type, val))
 		return -1;
 
-	if (co_type_is_array(type) || n > 8) {
-		int res = 0;
-		int errc = get_errc();
+	membuf_clear(buf);
+	if (!membuf_reserve(buf, n))
+		return -1;
+	void *ptr = membuf_alloc(buf, &n);
 
-#if LELY_NO_MALLOC
-		uint_least8_t buf[CO_ARRAY_CAPACITY];
-		if (n > CO_ARRAY_CAPACITY) {
-			errc = errnum2c(ERRNUM_NOMEM);
-			goto error_malloc_buf;
-		}
-#else
-		uint_least8_t *buf = n ? malloc(n) : NULL;
-		if (n && !buf) {
-			errc = errno2c(errno);
-			goto error_malloc_buf;
-		}
-#endif
+	if (co_val_write(type, val, ptr, (uint_least8_t *)ptr + n) != n)
+		return -1;
 
-		// cppcheck-suppress nullPointerArithmetic
-		if (co_val_write(type, val, buf, buf + n) != n) {
-			errc = get_errc();
-			goto error_write_val;
-		}
-
-		res = co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
-
-	error_write_val:
-#if !LELY_NO_MALLOC
-		free(buf);
-#endif
-	error_malloc_buf:
-		set_errc(errc);
-		return res;
-	} else {
-		// Fast path for values small enough to be allocated on the
-		// heap.
-		uint_least8_t buf[8];
-		if (co_val_write(type, val, buf, buf + n) != n)
-			return -1;
-		return co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
-	}
+	return co_csdo_dn_req(sdo, idx, subidx, ptr, n, con, data);
 }
 
 int
@@ -1138,7 +1140,7 @@ co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	if (co_csdo_up_ind(sdo, idx, subidx, con, data) == -1)
+	if (co_csdo_up_ind(sdo, idx, subidx, NULL, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate upload", idx, subidx);
@@ -1176,7 +1178,7 @@ co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	if (co_csdo_up_ind(sdo, idx, subidx, con, data) == -1)
+	if (co_csdo_up_ind(sdo, idx, subidx, NULL, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate block upload", idx, subidx);
@@ -1451,10 +1453,12 @@ co_csdo_abort_on_leave(co_csdo_t *sdo)
 	if (dn_con) {
 		dn_con(sdo, sdo->idx, sdo->subidx, sdo->ac, dn_con_data);
 	} else if (up_con) {
+		struct membuf *buf = sdo->up_buf;
+		assert(buf);
+
 		up_con(sdo, sdo->idx, sdo->subidx, sdo->ac,
-				sdo->ac ? NULL : sdo->buf.begin,
-				sdo->ac ? 0 : membuf_size(&sdo->buf),
-				up_con_data);
+				sdo->ac ? NULL : buf->begin,
+				sdo->ac ? 0 : membuf_size(buf), up_con_data);
 	}
 }
 
@@ -1507,8 +1511,9 @@ static co_csdo_state_t *
 co_csdo_dn_seg_on_enter(co_csdo_t *sdo)
 {
 	assert(sdo);
+	struct membuf *buf = &sdo->dn_buf;
 
-	size_t n = sdo->size - membuf_size(&sdo->buf);
+	size_t n = sdo->size - membuf_size(buf);
 	// 0-byte values cannot be sent using expedited transfer, so we need to
 	// send one empty segment. We use the toggle bit to check if it was
 	// sent.
@@ -1582,6 +1587,8 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1620,13 +1627,12 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Allocate the buffer.
-	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
+	if (sdo->size && !membuf_reserve(buf, sdo->size))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	if (exp) {
 		// Perform an expedited transfer.
-		memcpy(sdo->buf.cur, msg->data + 4, sdo->size);
-		sdo->buf.cur += sdo->size;
+		membuf_write(buf, msg->data + 4, sdo->size);
 
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
@@ -1659,6 +1665,8 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1685,19 +1693,18 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
 	// Reserve room in the buffer, if necessary.
-	if (n && !membuf_reserve(&sdo->buf, n))
+	if (n && !membuf_reserve(buf, n))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	// Copy the data to the buffer.
-	memcpy(sdo->buf.cur, msg->data + 1, n);
-	sdo->buf.cur += n;
+	membuf_write(buf, msg->data + 1, n);
 
-	if ((last || !(membuf_size(&sdo->buf) % (CO_SDO_MAX_SEQNO * 7)))
-			&& sdo->size && sdo->up_ind)
+	if ((last || !(membuf_size(buf) % (CO_SDO_MAX_SEQNO * 7))) && sdo->size
+			&& sdo->up_ind)
 		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
-				membuf_size(&sdo->buf), sdo->up_ind_data);
+				membuf_size(buf), sdo->up_ind_data);
 	if (last) {
-		if (sdo->size && membuf_size(&sdo->buf) != sdo->size)
+		if (sdo->size && membuf_size(buf) != sdo->size)
 			return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
@@ -1771,13 +1778,14 @@ static co_csdo_state_t *
 co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 {
 	assert(sdo);
+	struct membuf *buf = &sdo->dn_buf;
 
-	size_t n = sdo->size - membuf_size(&sdo->buf);
+	size_t n = sdo->size - membuf_size(buf);
 	sdo->blksize = (co_unsigned8_t)MIN((n + 6) / 7, sdo->blksize);
 
 	if (sdo->size && sdo->dn_ind)
 		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
-				membuf_size(&sdo->buf), sdo->dn_ind_data);
+				membuf_size(buf), sdo->dn_ind_data);
 	if (sdo->timeout)
 		can_timer_timeout(sdo->timer, sdo->net, sdo->timeout);
 	if (n) {
@@ -1810,6 +1818,7 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = &sdo->dn_buf;
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1836,10 +1845,10 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		// If the sequence number of the last segment that was
 		// successfully received is smaller than the number of segments
 		// in the block, resend the missing segments.
-		size_t n = (membuf_size(&sdo->buf) + 6) / 7;
+		size_t n = (membuf_size(buf) + 6) / 7;
 		assert(n >= sdo->blksize);
 		n -= sdo->blksize - ackseq;
-		sdo->buf.cur = sdo->buf.begin + n * 7;
+		buf->cur = buf->begin + n * 7;
 	}
 
 	// Read the number of segments in the next block.
@@ -1912,6 +1921,8 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1955,7 +1966,7 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Allocate the buffer.
-	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
+	if (sdo->size && !membuf_reserve(buf, sdo->size))
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 	sdo->ackseq = 0;
@@ -1985,6 +1996,8 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -2004,12 +2017,11 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		sdo->ackseq++;
 
 		// Reserve room in the buffer, if necessary.
-		if (!membuf_reserve(&sdo->buf, 7))
+		if (!membuf_reserve(buf, 7))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
 
 		// Copy the data to the buffer.
-		memcpy(sdo->buf.cur, msg->data + 1, 7);
-		sdo->buf.cur += 7;
+		membuf_write(buf, msg->data + 1, 7);
 	}
 
 	// If this is the last segment in the block, send a confirmation.
@@ -2042,6 +2054,8 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 {
 	assert(sdo);
 	assert(msg);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	if (msg->len < 1)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -2062,17 +2076,16 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Discard the bytes in the last segment that did not contain data.
-	sdo->buf.cur -= 7 - CO_SDO_BLK_SIZE_GET(cs);
+	buf->cur -= 7 - CO_SDO_BLK_SIZE_GET(cs);
 
 	// Check the total length.
-	if (sdo->size && membuf_size(&sdo->buf) != sdo->size)
+	if (sdo->size && membuf_size(buf) != sdo->size)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
 
 	// Check the CRC.
 	if (sdo->crc) {
 		co_unsigned16_t crc = ldle_u16(msg->data + 1);
-		uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
-		if (crc != co_crc(0, buf, sdo->size))
+		if (crc != co_crc(0, (uint_least8_t *)buf->begin, sdo->size))
 			return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
@@ -2126,14 +2139,9 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
-	// Allocate the buffer.
-	membuf_clear(&sdo->buf);
-	if (sdo->size && !membuf_reserve(&sdo->buf, sdo->size))
-		return -1;
-
-	// Copy the bytes to the buffer.
-	if (ptr)
-		memcpy(sdo->buf.cur, ptr, sdo->size);
+	// Casting away const is safe here since a download (write) request only
+	// reads from the provided buffer.
+	membuf_init(&sdo->dn_buf, (void *)ptr, n);
 
 	sdo->dn_con = con;
 	sdo->dn_con_data = data;
@@ -2146,7 +2154,7 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 static int
 co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_csdo_up_con_t *con, void *data)
+		struct membuf *buf, co_csdo_up_con_t *con, void *data)
 {
 	assert(sdo);
 
@@ -2174,7 +2182,8 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
-	membuf_clear(&sdo->buf);
+	sdo->up_buf = buf ? buf : &sdo->buf;
+	membuf_clear(sdo->up_buf);
 
 	sdo->dn_con = NULL;
 	sdo->dn_con_data = NULL;
@@ -2201,14 +2210,15 @@ co_csdo_send_dn_exp_req(co_csdo_t *sdo)
 {
 	assert(sdo);
 	assert(sdo->size && sdo->size <= 4);
+	struct membuf *buf = &sdo->dn_buf;
 
 	co_unsigned8_t cs = CO_SDO_CCS_DN_INI_REQ
 			| CO_SDO_INI_SIZE_EXP_SET(sdo->size);
 
 	struct can_msg msg;
 	co_csdo_init_ini_req(sdo, &msg, cs);
-	memcpy(msg.data + 4, sdo->buf.cur, sdo->size);
-	sdo->buf.cur += sdo->size;
+	memcpy(msg.data + 4, buf->cur, sdo->size);
+	buf->cur += sdo->size;
 	can_net_send(sdo->net, &msg);
 }
 
@@ -2235,6 +2245,7 @@ co_csdo_send_dn_seg_req(co_csdo_t *sdo, co_unsigned32_t n, int last)
 {
 	assert(sdo);
 	assert(n <= 7);
+	struct membuf *buf = &sdo->dn_buf;
 
 	co_unsigned8_t cs = CO_SDO_CCS_DN_SEG_REQ | sdo->toggle
 			| CO_SDO_SEG_SIZE_SET(n);
@@ -2244,14 +2255,14 @@ co_csdo_send_dn_seg_req(co_csdo_t *sdo, co_unsigned32_t n, int last)
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
-	memcpy(msg.data + 1, sdo->buf.cur, n);
-	sdo->buf.cur += n;
+	memcpy(msg.data + 1, buf->cur, n);
+	buf->cur += n;
 	can_net_send(sdo->net, &msg);
 
-	if ((last || !(membuf_size(&sdo->buf) % (CO_SDO_MAX_SEQNO * 7)))
-			&& sdo->size && sdo->dn_ind)
+	if ((last || !(membuf_size(buf) % (CO_SDO_MAX_SEQNO * 7))) && sdo->size
+			&& sdo->dn_ind)
 		sdo->dn_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
-				membuf_size(&sdo->buf), sdo->dn_ind_data);
+				membuf_size(buf), sdo->dn_ind_data);
 }
 
 static void
@@ -2298,8 +2309,9 @@ co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno)
 {
 	assert(sdo);
 	assert(seqno && seqno <= CO_SDO_MAX_SEQNO);
+	struct membuf *buf = &sdo->dn_buf;
 
-	size_t n = sdo->size - membuf_size(&sdo->buf);
+	size_t n = sdo->size - membuf_size(buf);
 	int last = n <= 7;
 	n = MIN(n, 7);
 
@@ -2309,8 +2321,8 @@ co_csdo_send_blk_dn_sub_req(co_csdo_t *sdo, co_unsigned8_t seqno)
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
-	memcpy(msg.data + 1, sdo->buf.cur, n);
-	sdo->buf.cur += n;
+	memcpy(msg.data + 1, buf->cur, n);
+	buf->cur += n;
 	can_net_send(sdo->net, &msg);
 }
 
@@ -2318,6 +2330,7 @@ static void
 co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 {
 	assert(sdo);
+	struct membuf *buf = &sdo->dn_buf;
 
 	// Compute the number of bytes in the last segment containing data.
 	co_unsigned8_t n = sdo->size ? (sdo->size - 1) % 7 + 1 : 0;
@@ -2325,8 +2338,9 @@ co_csdo_send_blk_dn_end_req(co_csdo_t *sdo)
 	co_unsigned8_t cs = CO_SDO_CCS_BLK_DN_REQ | CO_SDO_SC_END_BLK
 			| CO_SDO_BLK_SIZE_SET(n);
 
-	uint_least8_t *buf = (uint_least8_t *)sdo->buf.begin;
-	co_unsigned16_t crc = sdo->crc ? co_crc(0, buf, sdo->size) : 0;
+	co_unsigned16_t crc = sdo->crc
+			? co_crc(0, (uint_least8_t *)buf->begin, sdo->size)
+			: 0;
 
 	struct can_msg msg;
 	co_csdo_init_seg_req(sdo, &msg, cs);
@@ -2369,6 +2383,8 @@ static void
 co_csdo_send_blk_up_sub_res(co_csdo_t *sdo)
 {
 	assert(sdo);
+	struct membuf *buf = sdo->up_buf;
+	assert(buf);
 
 	co_unsigned8_t cs = CO_SDO_CCS_BLK_UP_REQ | CO_SDO_SC_BLK_RES;
 
@@ -2380,7 +2396,7 @@ co_csdo_send_blk_up_sub_res(co_csdo_t *sdo)
 
 	if (sdo->size && sdo->up_ind)
 		sdo->up_ind(sdo, sdo->idx, sdo->subidx, sdo->size,
-				membuf_size(&sdo->buf), sdo->up_ind_data);
+				membuf_size(buf), sdo->up_ind_data);
 }
 
 static void

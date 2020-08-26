@@ -293,7 +293,9 @@ void co_csdo_abort_req(co_csdo_t *sdo, co_unsigned32_t ac);
  * @param sdo    a pointer to a Client-SDO service.
  * @param idx    the remote object index.
  * @param subidx the remote object sub-index.
- * @param ptr    a pointer to the bytes to be downloaded.
+ * @param ptr    a pointer to the bytes to be downloaded. It is the
+ *               responsibility of the user to ensure that the buffer remains
+ *               valid until the operation completes.
  * @param n      the number of bytes at <b>ptr</b>.
  * @param con    a pointer to the confirmation function (can be NULL).
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is

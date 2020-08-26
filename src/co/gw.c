@@ -1778,8 +1778,6 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
-	const struct co_gw_req_sdo_up *par =
-			(const struct co_gw_req_sdo_up *)req;
 
 	int iec = 0;
 	int errc = get_errc();
@@ -1792,6 +1790,8 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		const struct co_gw_req_sdo_up *par =
+				(const struct co_gw_req_sdo_up *)&job->req;
 
 		// clang-format off
 		if (co_dev_up_req(dev, par->idx, par->subidx,
@@ -1814,6 +1814,8 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		const struct co_gw_req_sdo_up *par =
+				(const struct co_gw_req_sdo_up *)&job->req;
 
 		co_csdo_set_up_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
@@ -1869,6 +1871,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		par = (const struct co_gw_req_sdo_dn *)&job->req;
 
 		// clang-format off
 		if (co_dev_dn_req(dev, par->idx, par->subidx, par->val,
@@ -1891,6 +1894,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		par = (const struct co_gw_req_sdo_dn *)&job->req;
 
 		co_csdo_set_dn_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
