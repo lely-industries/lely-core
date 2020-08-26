@@ -2130,7 +2130,7 @@ co_nmt_boot_dn(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(boot);
 
-	return co_csdo_dn_val_req(boot->sdo, idx, subidx, type, val,
+	return co_csdo_dn_val_req(boot->sdo, idx, subidx, type, val, NULL,
 			&co_nmt_boot_dn_con, boot);
 }
 
@@ -2139,8 +2139,8 @@ co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(boot);
 
-	return co_csdo_up_req(
-			boot->sdo, idx, subidx, &co_nmt_boot_up_con, boot);
+	return co_csdo_up_req(boot->sdo, idx, subidx, NULL, &co_nmt_boot_up_con,
+			boot);
 }
 
 static int

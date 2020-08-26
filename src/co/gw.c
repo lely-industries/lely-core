@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1819,7 +1819,7 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 		co_csdo_set_up_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
-		if (co_csdo_up_req(job->data, par->idx, par->subidx,
+		if (co_csdo_up_req(job->data, par->idx, par->subidx, NULL,
 				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());

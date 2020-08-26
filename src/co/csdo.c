@@ -1112,11 +1112,12 @@ co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 int
 co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
-		void *data)
+		co_unsigned16_t type, const void *val, struct membuf *buf,
+		co_csdo_dn_con_t *con, void *data)
 {
 	assert(sdo);
-	struct membuf *buf = &sdo->buf;
+	if (!buf)
+		buf = &sdo->buf;
 
 	// Obtain the size of the serialized value (which may be 0 for arrays).
 	size_t n = co_val_write(type, val, NULL, NULL);
@@ -1136,11 +1137,11 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 int
 co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_csdo_up_con_t *con, void *data)
+		struct membuf *buf, co_csdo_up_con_t *con, void *data)
 {
 	assert(sdo);
 
-	if (co_csdo_up_ind(sdo, idx, subidx, NULL, con, data) == -1)
+	if (co_csdo_up_ind(sdo, idx, subidx, buf, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate upload", idx, subidx);
@@ -1174,11 +1175,12 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 int
 co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_unsigned8_t pst, co_csdo_up_con_t *con, void *data)
+		co_unsigned8_t pst, struct membuf *buf, co_csdo_up_con_t *con,
+		void *data)
 {
 	assert(sdo);
 
-	if (co_csdo_up_ind(sdo, idx, subidx, NULL, con, data) == -1)
+	if (co_csdo_up_ind(sdo, idx, subidx, buf, con, data) == -1)
 		return -1;
 
 	trace("CSDO: %04X:%02X: initiate block upload", idx, subidx);

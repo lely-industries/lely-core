@@ -614,7 +614,7 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 	// Write the value 'load' to sub-index of object 1011 on the slave.
 	// clang-format off
 	if (co_csdo_dn_val_req(cfg->sdo, 0x1011, subidx, CO_DEFTYPE_UNSIGNED32,
-			&(co_unsigned32_t){ UINT32_C(0x64616f6c) },
+			&(co_unsigned32_t){ UINT32_C(0x64616f6c) }, NULL,
 			&co_nmt_cfg_dn_con, cfg) == -1) {
 		// clang-format on
 		cfg->ac = CO_SDO_AC_ERROR;
@@ -801,7 +801,7 @@ co_nmt_cfg_store_1f20_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 	idx = co_obj_get_idx(obj);
 	subidx = co_sub_get_subidx(sub);
 	// clang-format off
-	if (co_csdo_dn_val_req(cfg->sdo, idx, subidx, type, val,
+	if (co_csdo_dn_val_req(cfg->sdo, idx, subidx, type, val, NULL,
 			&co_nmt_cfg_dn_con, cfg) == -1) {
 		// clang-format on
 		cfg->ac = CO_SDO_AC_ERROR;

@@ -320,6 +320,8 @@ int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
  *               index of one of the static data types.
  * @param val    the address of the value to be written. In case of string or
  *               domains, this MUST be the address of pointer.
+ * @param buf    a pointer to the memory buffer used to store the serialized
+ *               value. If NULL, an internal buffer is used.
  * @param con    a pointer to the confirmation function (can be NULL).
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
@@ -329,7 +331,7 @@ int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
  */
 int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
-		co_csdo_dn_con_t *con, void *data);
+		struct membuf *buf, co_csdo_dn_con_t *con, void *data);
 
 /**
  * Submits an upload request to a remote Server-SDO. This requests the server
@@ -340,6 +342,8 @@ int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @param sdo    a pointer to a Client-SDO service.
  * @param idx    the remote object index.
  * @param subidx the remote object sub-index.
+ * @param buf    a pointer to the memory buffer used to store the received
+ *               value. If NULL, an internal buffer is used.
  * @param con    a pointer to the confirmation function (can be NULL).
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
@@ -348,7 +352,7 @@ int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * can be obtained with get_errc().
  */
 int co_csdo_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_csdo_up_con_t *con, void *data);
+		struct membuf *buf, co_csdo_up_con_t *con, void *data);
 
 /**
  * Submits a block download request to a remote Server-SDO. This requests the
@@ -384,6 +388,8 @@ int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * @param pst    the protocol switch threshold. If <b>pst</b> is non-zero, and
  *               the number of bytes to be uploaded is less than or equal to
  *               <b>pst</b>, the server may switch to the SDO upload protocol.
+ * @param buf    a pointer to the memory buffer used to store the received
+ *               value. If NULL, an internal buffer is used.
  * @param con    a pointer to the confirmation function (can be NULL).
  * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
  *               passed as the last parameter to <b>con</b>.
@@ -392,7 +398,7 @@ int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
  * can be obtained with get_errc().
  */
 int co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx,
-		co_unsigned8_t subidx, co_unsigned8_t pst,
+		co_unsigned8_t subidx, co_unsigned8_t pst, struct membuf *buf,
 		co_csdo_up_con_t *con, void *data);
 
 #ifdef __cplusplus
