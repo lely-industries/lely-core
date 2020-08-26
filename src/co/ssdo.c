@@ -587,10 +587,9 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	co_sdo_req_init(&sdo->req);
 #if LELY_NO_MALLOC
-	sdo->buf.begin = sdo->buf.cur = sdo->begin;
-	sdo->buf.end = sdo->buf.begin + CO_SDO_MEMBUF_SIZE;
+	membuf_init(&sdo->buf, sdo->begin, CO_SDO_MEMBUF_SIZE);
 #else
-	membuf_init(&sdo->buf);
+	membuf_init(&sdo->buf, NULL, 0);
 #endif
 	sdo->nbyte = 0;
 #if LELY_NO_MALLOC
