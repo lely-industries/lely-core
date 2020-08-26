@@ -29,7 +29,7 @@
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
 #define LELY_HAVE_STDATOMIC_H 1
 #endif
-#endif
+#endif // !LELY_HAVE_STDATOMIC_H
 
 #if LELY_HAVE_STDATOMIC_H
 #include <stdatomic.h>
@@ -41,8 +41,6 @@
 #define LELY_HAVE_GNUC_ATOMIC 1
 #elif GNUC_PREREQ(4, 1)
 #define LELY_HAVE_SYNC_ATOMIC 1
-#else
-#define __STDC_NO_ATOMICS__ 1
 #endif
 
 #if !__STDC_NO_ATOMICS__

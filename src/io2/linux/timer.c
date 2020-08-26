@@ -459,7 +459,7 @@ io_timer_impl_svc_shutdown(struct io_svc *svc)
 #if !LELY_NO_THREADS
 	pthread_mutex_unlock(&impl->mtx);
 #endif
-
+	// cppcheck-suppress duplicateCondition
 	if (shutdown)
 		// Cancel all pending operations.
 		io_timer_impl_dev_cancel(dev, NULL);
@@ -482,6 +482,7 @@ io_timer_impl_watch_func(struct io_poll_watch *watch, int events)
 #if !LELY_NO_THREADS
 	pthread_mutex_unlock(&impl->mtx);
 #endif
+	// cppcheck-suppress duplicateCondition
 	if (post_wait)
 		ev_exec_post(impl->wait_task.exec, &impl->wait_task);
 }

@@ -461,6 +461,7 @@ io_sigset_impl_submit_wait(io_sigset_t *sigset, struct io_sigset_wait *wait)
 #if !LELY_NO_THREADS
 		LeaveCriticalSection(&impl->CriticalSection);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (post_wait)
 			ev_exec_post(impl->wait_task.exec, &impl->wait_task);
 	}

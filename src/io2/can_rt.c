@@ -305,6 +305,7 @@ io_can_rt_submit_read_msg(io_can_rt_t *rt, struct io_can_rt_read_msg *read_msg)
 #if !LELY_NO_THREADS
 		mtx_unlock(&rt->mtx);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (submit)
 			io_can_chan_submit_read(rt->chan, &rt->read);
 	}
@@ -408,6 +409,7 @@ io_can_rt_submit_read_err(io_can_rt_t *rt, struct io_can_rt_read_err *read_err)
 #if !LELY_NO_THREADS
 		mtx_unlock(&rt->mtx);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (submit)
 			io_can_chan_submit_read(rt->chan, &rt->read);
 	}

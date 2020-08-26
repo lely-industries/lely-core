@@ -20,14 +20,14 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <algorithm>
 #include <string>
 
 #include <CppUTest/TestHarness.h>
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 #include <lely/can/buf.h>
 

@@ -22,15 +22,7 @@
 #define LELY_IO_INTERN_HANDLE_H_
 
 #include "io.h"
-#ifndef LELY_NO_ATOMICS
-#define LELY_NO_ATOMICS 1
-#ifndef LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
-#ifndef __STDC_NO_ATOMICS__
-#undef LELY_NO_ATOMICS
-#endif
-#endif
-#endif
 #ifndef LELY_NO_THREADS
 #include <lely/libc/threads.h>
 #endif
