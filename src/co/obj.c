@@ -968,7 +968,7 @@ co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val)
 	if (co_sub_get_type(sub) != type)
 		return CO_SDO_AC_TYPE_LEN;
 
-	struct co_sdo_req req = CO_SDO_REQ_INIT;
+	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
 	co_unsigned32_t ac = 0;
 
 	int errc = get_errc();

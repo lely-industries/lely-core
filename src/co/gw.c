@@ -2077,7 +2077,7 @@ co_gw_recv_pdo_read(
 	const struct co_pdo_map_par *map = co_rpdo_get_map_par(pdo);
 
 	// Read the mapped values from the object dictionary.
-	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT(sdo_req);
 	uint_least8_t buf[CAN_MAX_LEN];
 	size_t n = sizeof(buf);
 	ac = co_pdo_up(map, dev, &sdo_req, buf, &n);
@@ -2149,7 +2149,7 @@ co_gw_recv_pdo_write(
 		goto error;
 
 	// Write the mapped values to the object dictionary.
-	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT(sdo_req);
 	ac = co_pdo_dn(map, dev, &sdo_req, buf, n);
 	co_sdo_req_fini(&sdo_req);
 	if (ac)

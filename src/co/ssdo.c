@@ -596,7 +596,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->gencrc = 0;
 	sdo->crc = 0;
 
-	co_sdo_req_init(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
 #if LELY_NO_MALLOC
 	membuf_init(&sdo->buf, sdo->begin, CO_SSDO_MEMBUF_SIZE);
 #else
@@ -1011,8 +1011,10 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	trace("SSDO: %04X:%02X: received download request", sdo->idx,
 			sdo->subidx);
 
+	co_sdo_req_fini(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
+
 	// Obtain the size from the command specifier.
-	co_sdo_req_clear(&sdo->req);
 	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
 	if (exp) {
 		if (cs & CO_SDO_INI_SIZE_IND)
@@ -1123,8 +1125,10 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	trace("SSDO: %04X:%02X: received upload request", sdo->idx,
 			sdo->subidx);
 
+	co_sdo_req_fini(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
+
 	// Perform access checks and start serializing the value.
-	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
@@ -1223,8 +1227,10 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	trace("SSDO: %04X:%02X: received block download request", sdo->idx,
 			sdo->subidx);
 
+	co_sdo_req_fini(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
+
 	// Obtain the data set size.
-	co_sdo_req_clear(&sdo->req);
 	if (cs & CO_SDO_BLK_SIZE_IND) {
 		if (msg->len < 8)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
@@ -1400,8 +1406,10 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Load the protocol switch threshold (PST).
 	co_unsigned8_t pst = msg->len > 5 ? msg->data[5] : 0;
 
+	co_sdo_req_fini(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
+
 	// Perform access checks and start serializing the value.
-	co_sdo_req_clear(&sdo->req);
 	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
@@ -1567,7 +1575,8 @@ co_ssdo_abort_ind(co_ssdo_t *sdo)
 	sdo->gencrc = 0;
 	sdo->crc = 0;
 
-	co_sdo_req_clear(&sdo->req);
+	co_sdo_req_fini(&sdo->req);
+	co_sdo_req_init(&sdo->req, NULL);
 	membuf_clear(&sdo->buf);
 	sdo->nbyte = 0;
 

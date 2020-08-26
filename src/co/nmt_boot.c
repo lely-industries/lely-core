@@ -846,7 +846,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->st = 0;
 	boot->es = 0;
 
-	co_sdo_req_init(&boot->req);
+	co_sdo_req_init(&boot->req, NULL);
 	boot->retry = 0;
 
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);

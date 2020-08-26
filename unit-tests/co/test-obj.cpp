@@ -1245,7 +1245,7 @@ TEST(CO_Sub, CoSubDnInd_NoReq) {
 }
 
 TEST(CO_ObjSub, CoSubDnInd) {
-  co_sdo_req req = CO_SDO_REQ_INIT;
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_dn_ind(sub, dn_ind_func, nullptr);
 
   const auto ret = co_sub_dn_ind(sub, &req);
@@ -1314,7 +1314,7 @@ TEST(CO_Sub, CoSubUpInd_NoReq) {
 }
 
 TEST(CO_ObjSub, CoSubUpInd) {
-  co_sdo_req req = CO_SDO_REQ_INIT;
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_up_ind(sub, up_ind_func, nullptr);
 
   const auto ret = co_sub_up_ind(sub, &req);

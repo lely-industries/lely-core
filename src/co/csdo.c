@@ -641,7 +641,7 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	assert(dev);
 
 	int errc = get_errc();
-	struct co_sdo_req req = CO_SDO_REQ_INIT;
+	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
 
 	co_unsigned32_t ac = 0;
 
@@ -657,9 +657,7 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		goto done;
 	}
 
-	if (co_sdo_req_up(&req, ptr, n, &ac) == -1)
-		goto done;
-
+	co_sdo_req_up(&req, ptr, n);
 	ac = co_sub_dn_ind(sub, &req);
 
 done:
@@ -679,7 +677,7 @@ co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	assert(dev);
 
 	int errc = get_errc();
-	struct co_sdo_req req = CO_SDO_REQ_INIT;
+	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
 
 	co_unsigned32_t ac = 0;
 
@@ -738,7 +736,7 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		goto done;
 	}
 
-	struct co_sdo_req req = CO_SDO_REQ_INIT;
+	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
 
 	ac = co_sub_up_ind(sub, &req);
 	if (!ac && req.size && !membuf_reserve(&buf, req.size))

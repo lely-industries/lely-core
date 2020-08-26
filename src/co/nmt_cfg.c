@@ -364,7 +364,7 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 
 	cfg->ac = 0;
 
-	co_sdo_req_init(&cfg->req);
+	co_sdo_req_init(&cfg->req, NULL);
 #if !LELY_NO_MALLOC
 	cfg->dev_1f20 = NULL;
 	cfg->n_1f22 = 0;
