@@ -114,7 +114,7 @@ co_sdo_req_init(struct co_sdo_req *req)
 	req->buf = NULL;
 	req->nbyte = 0;
 	req->offset = 0;
-	membuf_init(&req->membuf);
+	membuf_init(&req->membuf, NULL, 0);
 }
 
 void

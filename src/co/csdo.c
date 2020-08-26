@@ -811,7 +811,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->ackseq = 0;
 	sdo->crc = 0;
 
-	membuf_init(&sdo->buf);
+	membuf_init(&sdo->buf, NULL, 0);
 
 	sdo->dn_con = NULL;
 	sdo->dn_con_data = NULL;

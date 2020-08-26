@@ -41,7 +41,7 @@ TEST_GROUP(Util_MemBuf_Init) {
 };
 
 TEST(Util_MemBuf_Init, MemBuf_Init) {
-  membuf_init(buf);
+  membuf_init(buf, nullptr, 0);
 
   CHECK_EQUAL(0u, membuf_size(buf));
   CHECK_EQUAL(0u, membuf_capacity(buf));
@@ -56,20 +56,24 @@ TEST(Util_MemBuf_Init, MemBuf_Init_Macro) {
   POINTERS_EQUAL(nullptr, membuf_begin(buf));
 }
 
-#if LELY_NO_MALLOC
-TEST(Util_MemBuf_Init, MemBuf_Attach) {
+TEST(Util_MemBuf_Init, MemBuf_Init_ExistingMemory) {
   const size_t CAPACITY = 5u;
   uint8_t memory[CAPACITY] = {0};
 
-  membuf_attach(buf, &memory, CAPACITY);
+  membuf_init(buf, &memory, CAPACITY);
 
   CHECK_EQUAL(0u, membuf_size(buf));
   CHECK_EQUAL(CAPACITY, membuf_capacity(buf));
   POINTERS_EQUAL(memory, membuf_begin(buf));
+
+  // membuf_fini() will try to free the memory. Re-initialize the buffer to
+  // prevent a segfault.
+  membuf_init(buf, nullptr, 0);
 }
-#else
+
+#if !LELY_NO_MALLOC
 TEST(Util_MemBuf_Init, MemBuf_Reserve_InitialReserve) {
-  membuf_init(buf);
+  membuf_init(buf, nullptr, 0);
 
   const auto ret = membuf_reserve(buf, 1);
 
@@ -91,9 +95,9 @@ TEST_GROUP(Util_MemBuf) {
   TEST_SETUP() {
     buf = &buf_;
 #if LELY_NO_MALLOC
-    membuf_attach(buf, &memory, CAPACITY);
+    membuf_init(buf, &memory, CAPACITY);
 #else
-    membuf_init(buf);
+    membuf_init(buf, nullptr, 0);
     membuf_reserve(buf, CAPACITY);
 #endif
     memset(membuf_begin(buf), 0xddu, CAPACITY);
