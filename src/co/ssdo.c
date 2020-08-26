@@ -39,7 +39,18 @@
 #endif
 
 #if LELY_NO_MALLOC
-#define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SDO_MEMBUF_SIZE / 7))
+#ifndef CO_SSDO_MEMBUF_SIZE
+/**
+ * The default size (in bytes) of a Server-SDO memory buffer in the absence of
+ * dynamic memory allocation. The default size is large enough to accomodate the
+ * maximum block size used by SDO block transfer.
+ */
+#define CO_SSDO_MEMBUF_SIZE (CO_SDO_MAX_SEQNO * 7)
+#endif
+#endif
+
+#if LELY_NO_MALLOC
+#define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SSDO_MEMBUF_SIZE / 7))
 #else
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
 #endif
@@ -91,7 +102,7 @@ struct __co_ssdo {
 	 * The static memory buffer used by #buf in the absence of dynamic
 	 * memory allocation.
 	 */
-	char begin[CO_SDO_MEMBUF_SIZE];
+	char begin[CO_SSDO_MEMBUF_SIZE];
 #endif
 };
 
@@ -587,13 +598,13 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	co_sdo_req_init(&sdo->req);
 #if LELY_NO_MALLOC
-	membuf_init(&sdo->buf, sdo->begin, CO_SDO_MEMBUF_SIZE);
+	membuf_init(&sdo->buf, sdo->begin, CO_SSDO_MEMBUF_SIZE);
 #else
 	membuf_init(&sdo->buf, NULL, 0);
 #endif
 	sdo->nbyte = 0;
 #if LELY_NO_MALLOC
-	memset(sdo->begin, 0, CO_SDO_MEMBUF_SIZE);
+	memset(sdo->begin, 0, CO_SSDO_MEMBUF_SIZE);
 #endif
 
 	if (co_ssdo_start(sdo) == -1) {
