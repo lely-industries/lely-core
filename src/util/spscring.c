@@ -477,7 +477,7 @@ spscring_cp_signal(struct spscring *ring)
 static inline size_t
 spscring_atomic_load(const volatile spscring_atomic_t *object)
 {
-#if __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 	return *object;
 #else
 	return atomic_load_explicit(object, memory_order_acquire);
@@ -487,7 +487,7 @@ spscring_atomic_load(const volatile spscring_atomic_t *object)
 static inline void
 spscring_atomic_store(volatile spscring_atomic_t *object, size_t desired)
 {
-#if __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 	*object = desired;
 #else
 	atomic_store_explicit(object, desired, memory_order_release);
@@ -498,7 +498,7 @@ static inline _Bool
 spscring_atomic_compare_exchange_strong(volatile spscring_atomic_t *object,
 		size_t *expected, size_t desired)
 {
-#if __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 #if _WIN32
 #if _WIN64
 	size_t tmp = InterlockedCompareExchange64(
@@ -527,7 +527,7 @@ static inline _Bool
 spscring_atomic_compare_exchange_weak(volatile spscring_atomic_t *object,
 		size_t *expected, size_t desired)
 {
-#if __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 	return spscring_atomic_compare_exchange_strong(
 			object, expected, desired);
 #else

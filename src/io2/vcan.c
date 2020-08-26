@@ -274,8 +274,12 @@ io_vcan_ctrl_init(io_can_ctrl_t *ctrl, io_clock_t *clock, int flags,
 
 	if (!nominal)
 		nominal = LELY_IO_VCAN_BITRATE;
+#if !LELY_NO_CANFD
 	if (!data)
 		data = nominal;
+#else
+	(void)data;
+#endif
 
 #if !LELY_NO_THREADS
 	int errc = 0;
