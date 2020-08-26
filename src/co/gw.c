@@ -1794,7 +1794,7 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 				(const struct co_gw_req_sdo_up *)&job->req;
 
 		// clang-format off
-		if (co_dev_up_req(dev, par->idx, par->subidx,
+		if (co_dev_up_req(dev, par->idx, par->subidx, NULL,
 				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
@@ -2385,7 +2385,7 @@ co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
-	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->ms);
+	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->ms, NULL);
 
 error:
 	return co_gw_send_con(gw, req, 0, ac);
@@ -2456,7 +2456,7 @@ co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
-	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &cobid);
+	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &cobid, NULL);
 
 error:
 	return co_gw_send_con(gw, req, 0, ac);

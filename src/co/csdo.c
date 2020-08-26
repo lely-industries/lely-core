@@ -671,13 +671,14 @@ done:
 
 int
 co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_unsigned16_t type, const void *val, co_csdo_dn_con_t *con,
-		void *data)
+		co_unsigned16_t type, const void *val, struct membuf *buf,
+		co_csdo_dn_con_t *con, void *data)
 {
 	assert(dev);
 
 	int errc = get_errc();
-	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
+	struct co_sdo_req req;
+	co_sdo_req_init(&req, buf);
 
 	co_unsigned32_t ac = 0;
 
@@ -709,12 +710,25 @@ done:
 
 int
 co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
-		co_csdo_up_con_t *con, void *data)
+		struct membuf *buf, co_csdo_up_con_t *con, void *data)
 {
 	assert(dev);
 
 	int errc = get_errc();
-	struct membuf buf = MEMBUF_INIT;
+
+#if LELY_NO_MALLOC
+	char _begin[CO_CSDO_MEMBUF_SIZE] = { 0 };
+	struct membuf _buf;
+	membuf_init(&_buf, _begin, CO_CSDO_MEMBUF_SIZE);
+#else
+	struct membuf _buf = MEMBUF_INIT;
+#endif
+	if (!buf)
+		buf = &_buf;
+
+	struct co_sdo_req req;
+	co_sdo_req_init(&req, buf);
+
 	co_unsigned32_t ac = 0;
 
 	const co_obj_t *obj = co_dev_find_obj(dev, idx);
@@ -736,26 +750,32 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		goto done;
 	}
 
-	struct co_sdo_req req = CO_SDO_REQ_INIT(req);
+	if ((ac = co_sub_up_ind(sub, &req)))
+		goto done;
 
-	ac = co_sub_up_ind(sub, &req);
-	if (!ac && req.size && !membuf_reserve(&buf, req.size))
+	if (req.buf != buf) {
+		// If the upload indication function is using a different memory
+		// buffer we need to copy the bytes.
+		if (!ac && req.size && !membuf_reserve(buf, req.size))
+			ac = CO_SDO_AC_NO_MEM;
+		while (!ac && membuf_size(buf) < req.size) {
+			membuf_write(buf, req.buf, req.nbyte);
+			if (!co_sdo_req_last(&req))
+				ac = co_sub_up_ind(sub, &req);
+		}
+	} else if (!co_sdo_req_last(&req)) {
+		// The upload indication function was not able to complete the
+		// request with the supplied buffer.
 		ac = CO_SDO_AC_NO_MEM;
-
-	while (!ac && membuf_size(&buf) < req.size) {
-		membuf_write(&buf, req.buf, req.nbyte);
-		if (!co_sdo_req_last(&req))
-			ac = co_sub_up_ind(sub, &req);
 	}
-
-	co_sdo_req_fini(&req);
 
 done:
 	if (con)
-		con(NULL, idx, subidx, ac, ac ? NULL : buf.begin,
-				ac ? 0 : membuf_size(&buf), data);
+		con(NULL, idx, subidx, ac, ac ? NULL : buf->begin,
+				ac ? 0 : membuf_size(buf), data);
 
-	membuf_fini(&buf);
+	co_sdo_req_fini(&req);
+	membuf_fini(&_buf);
 	set_errc(errc);
 	return 0;
 }
