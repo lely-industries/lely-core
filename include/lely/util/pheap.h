@@ -184,9 +184,9 @@ void pheap_remove(struct pheap *heap, struct pnode *node);
 struct pnode *pheap_find(const struct pheap *heap, const void *key);
 
 /**
- * Checks if the node is present in the pairing heap.
+ * Checks if a node is part of a pairing heap.
  *
- * @returns 1 if found node in a heap, or 0 if not.
+ * @returns 1 if the node was found in the heap, and 0 if not.
  */
 int pheap_contains(const struct pheap *heap, const struct pnode *node);
 
