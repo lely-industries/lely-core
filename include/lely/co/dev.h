@@ -105,7 +105,7 @@ void __co_dev_fini(struct __co_dev *dev);
  * Creates a new CANopen device.
  *
  * @param id the node-ID of the device (in the range [1..127, 255]). If
- * <b>id</b> value equals 255, it means that the device is unconfigured.
+ *           <b>id</b> is 255, the device is unconfigured.
  *
  * @returns a pointer to a new CANopen device, or NULL on error. In the latter
  * case, the error number can be obtained with get_errc().
