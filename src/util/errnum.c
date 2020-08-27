@@ -35,9 +35,12 @@
 #ifndef ERRSTR_SIZE
 #define ERRSTR_SIZE 256
 #endif
-static _Thread_local char errstr[ERRSTR_SIZE];
 
 #endif // _WIN32
+
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+static const char *gai_strerror_r(int ecode, char *strerrbuf, size_t buflen);
+#endif
 
 int
 errno2c(int errnum)
@@ -942,41 +945,101 @@ set_errc(int errc)
 }
 
 const char *
-errno2str(int errnum)
+errno2str_r(int errnum, char *strerrbuf, size_t buflen)
 {
+#if _WIN32
+	if (strerrbuf) {
+		strerror_s(strerrbuf, buflen, errnum);
+		return strerrbuf;
+	}
+#elif _POSIX_C_SOURCE >= 200112L
+	if (strerrbuf) {
+#ifdef _GNU_SOURCE
+		return strerror_r(errnum, strerrbuf, buflen);
+#else
+		int errc = strerror_r(errnum, strerrbuf, buflen);
+		// Return strerrbuf even in case of an error.
+		(void)errc;
+		return strerrbuf;
+#endif
+	}
+#else
+	if (strerrbuf) {
+		// clang-format off
+		if (buflen && !memccpy(strerrbuf, strerror(errnum), '\0',
+				buflen))
+			// clang-format on
+			strerrbuf[buflen - 1] = '\0';
+		return strerrbuf;
+	}
+#endif
 	return strerror(errnum);
 }
 
 const char *
-errc2str(int errc)
+errc2str_r(int errc, char *strerrbuf, size_t buflen)
 {
 #if _WIN32
+#if LELY_NO_THREADS
+	static char errstr[ERRSTR_SIZE];
+#else
+	static _Thread_local char errstr[ERRSTR_SIZE];
+#endif
+	if (!strerrbuf) {
+		strerrbuf = errstr;
+		buflen = sizeof(errstr);
+	}
+
 	// clang-format off
 	if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
 					| FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL, errc, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			errstr, sizeof(errstr), NULL))
+			strerrbuf, buflen, NULL))
 		return NULL;
 	// clang-format on
 	// Remove terminating line-break ("\r\n") from error message.
-	size_t n = strlen(errstr);
+	size_t n = strlen(strerrbuf);
 	if (n >= 2)
-		errstr[n - 2] = '\0';
-	return errstr;
+		strerrbuf[n - 2] = '\0';
+	return strerrbuf;
 #else
 #if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errc) {
-	case -ABS(EAI_AGAIN): return gai_strerror(EAI_AGAIN);
-	case -ABS(EAI_BADFLAGS): return gai_strerror(EAI_BADFLAGS);
-	case -ABS(EAI_FAIL): return gai_strerror(EAI_FAIL);
-	case -ABS(EAI_FAMILY): return gai_strerror(EAI_FAMILY);
-	case -ABS(EAI_MEMORY): return gai_strerror(EAI_MEMORY);
-	case -ABS(EAI_NONAME): return gai_strerror(EAI_NONAME);
-	case -ABS(EAI_OVERFLOW): return gai_strerror(EAI_OVERFLOW);
-	case -ABS(EAI_SERVICE): return gai_strerror(EAI_SERVICE);
-	case -ABS(EAI_SOCKTYPE): return gai_strerror(EAI_SOCKTYPE);
+	case -ABS(EAI_AGAIN):
+		return gai_strerror_r(EAI_AGAIN, strerrbuf, buflen);
+	case -ABS(EAI_BADFLAGS):
+		return gai_strerror_r(EAI_BADFLAGS, strerrbuf, buflen);
+	case -ABS(EAI_FAIL): return gai_strerror_r(EAI_FAIL, strerrbuf, buflen);
+	case -ABS(EAI_FAMILY):
+		return gai_strerror_r(EAI_FAMILY, strerrbuf, buflen);
+	case -ABS(EAI_MEMORY):
+		return gai_strerror_r(EAI_MEMORY, strerrbuf, buflen);
+	case -ABS(EAI_NONAME):
+		return gai_strerror_r(EAI_NONAME, strerrbuf, buflen);
+	case -ABS(EAI_OVERFLOW):
+		return gai_strerror_r(EAI_OVERFLOW, strerrbuf, buflen);
+	case -ABS(EAI_SERVICE):
+		return gai_strerror_r(EAI_SERVICE, strerrbuf, buflen);
+	case -ABS(EAI_SOCKTYPE):
+		return gai_strerror_r(EAI_SOCKTYPE, strerrbuf, buflen);
 	}
 #endif
-	return errno2str(errc);
+	return errno2str_r(errc, strerrbuf, buflen);
 #endif
 }
+
+#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+static const char *
+gai_strerror_r(int ecode, char *strerrbuf, size_t buflen)
+{
+	if (strerrbuf) {
+		// clang-format off
+		if (buflen && !memccpy(strerrbuf, gai_strerror(ecode), '\0',
+				buflen))
+			// clang-format on
+			strerrbuf[buflen - 1] = '\0';
+		return strerrbuf;
+	}
+	return gai_strerror(ecode);
+}
+#endif
