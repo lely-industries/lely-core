@@ -141,6 +141,13 @@ struct slnode *sllist_pop_back(struct sllist *list);
 struct slnode *sllist_remove(struct sllist *list, struct slnode *node);
 
 /**
+ * Checks if a node is part of a singly-linked list.
+ *
+ * @returns 1 if the node was found in the list, and 0 if not.
+ */
+int sllist_contains(const struct sllist *list, const struct slnode *node);
+
+/**
  * Appends the singly-linked list at <b>src</b> to the one at <b>dst</b>. After
  * the operation, the list at <b>src</b> is empty.
  *

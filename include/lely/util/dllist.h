@@ -190,6 +190,13 @@ LELY_UTIL_DLLIST_INLINE void dllist_remove(
 		struct dllist *list, struct dlnode *node);
 
 /**
+ * Checks if a node is part of a doubly-linked list.
+ *
+ * @returns 1 if the node was found in the list, and 0 if not.
+ */
+int dllist_contains(const struct dllist *list, const struct dlnode *node);
+
+/**
  * Appends the doubly-linked list at <b>src</b> to the one at <b>dst</b>. After
  * the operation, the list at <b>src</b> is empty.
  *

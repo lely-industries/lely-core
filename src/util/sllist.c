@@ -4,7 +4,7 @@
  *
  * @see lely/util/sllist.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -58,6 +58,22 @@ sllist_remove(struct sllist *list, struct slnode *node)
 		}
 	}
 	return node;
+}
+
+int
+sllist_contains(const struct sllist *list, const struct slnode *node)
+{
+	assert(list);
+
+	if (!node)
+		return 0;
+
+	sllist_foreach (list, node_) {
+		if (node_ == node)
+			return 1;
+	}
+
+	return 0;
 }
 
 struct slnode *
