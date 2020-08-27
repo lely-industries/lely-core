@@ -175,7 +175,7 @@ class SubObject:
         subobj.access_type = AccessType(section["AccessType"])
         subobj.data_type = DataType(int(section["DataType"], 0))
         subobj.value = section.get("ParameterValue", section.get("DefaultValue", "0"))
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
+        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
 
         return subobj
 
@@ -205,7 +205,7 @@ class SubObject:
                 "ParameterValue", section.get("DefaultValue", "0")
             )
 
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
+        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
 
         return subobj
 
