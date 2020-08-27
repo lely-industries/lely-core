@@ -4,7 +4,7 @@
  *
  * @see lely/util/dllist.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,3 +24,21 @@
 #include "util.h"
 #define LELY_UTIL_DLLIST_INLINE extern inline
 #include <lely/util/dllist.h>
+
+#include <assert.h>
+
+int
+dllist_contains(const struct dllist *list, const struct dlnode *node)
+{
+	assert(list);
+
+	if (!node)
+		return 0;
+
+	dllist_foreach (list, node_) {
+		if (node_ == node)
+			return 1;
+	}
+
+	return 0;
+}

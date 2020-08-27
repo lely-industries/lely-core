@@ -27,7 +27,7 @@
 
 #include <assert.h>
 
-/// Returns the parent of <b>node</b>, or NULL if <b>node</b> is NULL.
+/// Returns the parent of <b>node</b>. <b>node</b> MUST NOT be NULL.
 static inline struct rbnode *rbnode_get_parent(const struct rbnode *node);
 
 /**
@@ -318,6 +318,19 @@ rbtree_find(const struct rbtree *tree, const void *key)
 	return node;
 }
 
+int
+rbtree_contains(const struct rbtree *tree, const struct rbnode *node)
+{
+	assert(tree);
+
+	while (node) {
+		if (node == tree->root)
+			return 1;
+		node = rbnode_get_parent(node);
+	}
+	return 0;
+}
+
 struct rbnode *
 rbtree_first(const struct rbtree *tree)
 {
@@ -337,7 +350,9 @@ rbtree_last(const struct rbtree *tree)
 static inline struct rbnode *
 rbnode_get_parent(const struct rbnode *node)
 {
-	return node ? (struct rbnode *)(node->parent & ~(uintptr_t)1) : NULL;
+	assert(node);
+
+	return (struct rbnode *)(node->parent & ~(uintptr_t)1);
 }
 
 static void
