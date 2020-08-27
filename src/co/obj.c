@@ -69,7 +69,7 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx)
 {
 	assert(obj);
 
-	obj->node.key = &obj->idx;
+	rbnode_init(&obj->node, &obj->idx);
 	obj->dev = NULL;
 	obj->idx = idx;
 
@@ -211,6 +211,7 @@ co_obj_remove_sub(co_obj_t *obj, co_sub_t *sub)
 		return -1;
 
 	rbtree_remove(&sub->obj->tree, &sub->node);
+	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
 
 	co_val_fini(co_sub_get_type(sub), sub->val);
@@ -408,7 +409,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type)
 {
 	assert(sub);
 
-	sub->node.key = &sub->subidx;
+	rbnode_init(&sub->node, &sub->subidx);
 	sub->obj = NULL;
 	sub->subidx = subidx;
 
