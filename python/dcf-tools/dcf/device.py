@@ -192,7 +192,7 @@ class SubObject:
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
+        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
 
         if subobj.data_type.index == 0x000F:
             if "UploadFile" in section:
@@ -245,7 +245,7 @@ class SubObject:
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 2))
+        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
 
         return subobj
 
