@@ -250,7 +250,7 @@ build:i686-w64-mingw32:
   image: $REGISTRY/i686-w64-mingw32:bullseye
   <<: *build
   variables:
-    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
+    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-ython
 
 test:i686-w64-mingw32:
   image: $REGISTRY/i686-w64-mingw32:bullseye
@@ -298,7 +298,7 @@ build:arm-linux-gnueabihf:
   variables:
     ARCH: armhf
     # TODO enable unit tests (switch to bullseye)
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python --disable-unit-tests
+    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-unit-tests
 
 test:arm-linux-gnueabihf:
   image: $REGISTRY/arm-linux-gnueabihf:buster
@@ -321,7 +321,7 @@ build:aarch64-linux-gnu:
   variables:
     ARCH: arm64
     # TODO enable unit tests (switch to bullseye)
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python --disable-unit-tests
+    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-unit-tests
 
 test:aarch64-linux-gnu:
   image: $REGISTRY/aarch64-linux-gnu:buster
@@ -458,7 +458,7 @@ valgrind:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --disable-python
+    - ./configure --disable-cython
     - make
     - make check-valgrind-memcheck
   artifacts:
@@ -533,7 +533,7 @@ scan-build:
   dependencies: []
   script:
     - autoreconf -i
-    - scan-build ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
+    - scan-build ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - scan-build --keep-cc -o ./scan-build make check
   artifacts:
     when: on_failure
@@ -651,7 +651,7 @@ coverity:
   dependencies: []
   script:
     - autoreconf -i
-    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
+    - ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - cov-build --dir cov-int make check
   after_script:
     - tar caf $CI_PROJECT_NAME.xz cov-int
@@ -689,7 +689,7 @@ sonarcloud:
     GIT_DEPTH: "0"
   script:
     - autoreconf -i
-    - ./configure --disable-python $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
+    - ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
     - /opt/sonar-build-wrapper/build-wrapper-linux-x86-64 --out-dir bw-output make check
     - /opt/sonar-scanner/bin/sonar-scanner
            -Dsonar.host.url="${SONAR_HOST_URL}"
