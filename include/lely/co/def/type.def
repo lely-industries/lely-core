@@ -1,16 +1,3 @@
 #include <lely/co/def/basic.def>
-
-// LCOV_EXCL_START
-// An array of visible characters.
-LELY_CO_DEFINE_TYPE(VISIBLE_STRING, visible_string, vs, char *)
-// An array of octets.
-LELY_CO_DEFINE_TYPE(OCTET_STRING, octet_string, os, uint_least8_t *)
-// An array of (16-bit) Unicode characters.
-LELY_CO_DEFINE_TYPE(UNICODE_STRING, unicode_string, us, char16_t *)
-// An absolute time (with respect to January 1, 1984).
-LELY_CO_DEFINE_TYPE(TIME_OF_DAY, time_of_day, t, struct __co_time_of_day)
-// A time difference.
-LELY_CO_DEFINE_TYPE(TIME_DIFF, time_diff, td, struct __co_time_diff)
-// An arbitrary large block of data.
-LELY_CO_DEFINE_TYPE(DOMAIN, domain, dom, void *)
-// LCOV_EXCL_STOP
+#include <lely/co/def/array.def>
+#include <lely/co/def/time.def>

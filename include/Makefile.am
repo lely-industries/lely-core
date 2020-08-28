@@ -278,10 +278,12 @@ if !NO_CXX
 inc += lely/io2/vcan.hpp
 endif
 
+inc += lely/co/def/array.def
 inc += lely/co/def/basic.def
 if !NO_CXX
 inc += lely/co/def/cxx.def
 endif
+inc += lely/co/def/time.def
 inc += lely/co/def/type.def
 inc += lely/co/co.h
 inc += lely/co/crc.h
