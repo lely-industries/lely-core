@@ -9,6 +9,15 @@ RUN apt-get update -q \
 
 RUN apt-get update -q \
     && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
+        python3 \
+        python3-empy \
+        python3-setuptools \
+        python3-wheel \
+        python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update -q \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
         libbluetooth-dev \
     && rm -rf /var/lib/apt/lists/*
 
