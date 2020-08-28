@@ -76,27 +76,21 @@ struct __co_rpdo {
  * Initializes the CAN frame receiver of a Receive-PDO service. This function
  * is invoked when one of the RPDO communication parameters (objects 1400..15FF)
  * is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_rpdo_init_recv(co_rpdo_t *pdo);
+static void co_rpdo_init_recv(co_rpdo_t *pdo);
 
 /**
  * Initializes the CAN timer for deadline monitoring of a Receive-PDO service.
  * This function is invoked by co_rpdo_recv() after receiving an RPDO.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_rpdo_init_timer_event(co_rpdo_t *pdo);
+static void co_rpdo_init_timer_event(co_rpdo_t *pdo);
 
 /**
  * Initializes the CAN timer for the synchronous time window of a Receive-PDO
  * service. This function is invoked by co_rpdo_sync() or when one of the RPDO
  * communication parameters (objects 1400..15FF) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_rpdo_init_timer_swnd(co_rpdo_t *pdo);
+static void co_rpdo_init_timer_swnd(co_rpdo_t *pdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -193,20 +187,29 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->dev = dev;
 	pdo->num = num;
 
-	// Copy the PDO communication parameter record.
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
-	memcpy(&pdo->comm, co_obj_addressof_val(obj_1400),
-			MIN(co_obj_sizeof_val(obj_1400), sizeof(pdo->comm)));
-
-	// Copy the PDO mapping parameter record.
 	memset(&pdo->map, 0, sizeof(pdo->map));
-	memcpy(&pdo->map, co_obj_addressof_val(obj_1600),
-			MIN(co_obj_sizeof_val(obj_1600), sizeof(pdo->map)));
 
-	pdo->recv = NULL;
+	pdo->recv = can_recv_create();
+	if (!pdo->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(pdo->recv, &co_rpdo_recv, pdo);
 
-	pdo->timer_event = NULL;
-	pdo->timer_swnd = NULL;
+	pdo->timer_event = can_timer_create();
+	if (!pdo->timer_event) {
+		errc = get_errc();
+		goto error_create_timer_event;
+	}
+	can_timer_set_func(pdo->timer_event, &co_rpdo_timer_event, pdo);
+
+	pdo->timer_swnd = can_timer_create();
+	if (!pdo->timer_swnd) {
+		errc = get_errc();
+		goto error_create_timer_swnd;
+	}
+	can_timer_set_func(pdo->timer_swnd, &co_rpdo_timer_swnd, pdo);
 
 	pdo->sync = 0;
 	pdo->swnd = 0;
@@ -219,30 +222,21 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->err = NULL;
 	pdo->err_data = NULL;
 
-	// Set the download indication functions PDO communication parameter
-	// record.
-	co_obj_set_dn_ind(obj_1400, &co_1400_dn_ind, pdo);
-
-	// Set the download indication functions PDO mapping parameter record.
-	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
-
-	if (co_rpdo_init_recv(pdo) == -1) {
+	if (co_rpdo_start(pdo) == -1) {
 		errc = get_errc();
-		goto error_init_recv;
-	}
-
-	if (co_rpdo_init_timer_swnd(pdo) == -1) {
-		errc = get_errc();
-		goto error_init_timer_swnd;
+		goto error_start;
 	}
 
 	return pdo;
 
-error_init_timer_swnd:
+	// co_rpdo_stop(pdo);
+error_start:
+	can_timer_destroy(pdo->timer_swnd);
+error_create_timer_swnd:
+	can_timer_destroy(pdo->timer_event);
+error_create_timer_event:
 	can_recv_destroy(pdo->recv);
-error_init_recv:
-	co_obj_set_dn_ind(obj_1600, NULL, NULL);
-	co_obj_set_dn_ind(obj_1400, NULL, NULL);
+error_create_recv:
 error_param:
 	set_errc(errc);
 	return NULL;
@@ -254,23 +248,12 @@ __co_rpdo_fini(struct __co_rpdo *pdo)
 	assert(pdo);
 	assert(pdo->num >= 1 && pdo->num <= 512);
 
-	// Remove the download indication functions PDO mapping parameter
-	// record.
-	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
-	assert(obj_1600);
-	co_obj_set_dn_ind(obj_1600, NULL, NULL);
-
-	// Remove the download indication functions PDO communication parameter
-	// record.
-	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
-	assert(obj_1400);
-	co_obj_set_dn_ind(obj_1400, NULL, NULL);
+	co_rpdo_stop(pdo);
 
 	co_sdo_req_fini(&pdo->req);
 
 	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
-
 	can_recv_destroy(pdo->recv);
 }
 
@@ -309,6 +292,54 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 		__co_rpdo_fini(rpdo);
 		__co_rpdo_free(rpdo);
 	}
+}
+
+int
+co_rpdo_start(co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	co_rpdo_stop(pdo);
+
+	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
+	assert(obj_1400);
+	// Copy the PDO communication parameter record.
+	memcpy(&pdo->comm, co_obj_addressof_val(obj_1400),
+			MIN(co_obj_sizeof_val(obj_1400), sizeof(pdo->comm)));
+	// Set the download indication functions PDO communication parameter
+	// record.
+	co_obj_set_dn_ind(obj_1400, &co_1400_dn_ind, pdo);
+
+	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
+	assert(obj_1600);
+	// Copy the PDO mapping parameter record.
+	memcpy(&pdo->map, co_obj_addressof_val(obj_1600),
+			MIN(co_obj_sizeof_val(obj_1600), sizeof(pdo->map)));
+	// Set the download indication functions PDO mapping parameter record.
+	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
+
+	co_rpdo_init_recv(pdo);
+	co_rpdo_init_timer_swnd(pdo);
+
+	return 0;
+}
+
+void
+co_rpdo_stop(co_rpdo_t *pdo)
+{
+	assert(pdo);
+
+	// Remove the download indication functions PDO mapping parameter
+	// record.
+	co_obj_t *obj_1600 = co_dev_find_obj(pdo->dev, 0x1600 + pdo->num - 1);
+	assert(obj_1600);
+	co_obj_set_dn_ind(obj_1600, NULL, NULL);
+
+	// Remove the download indication functions PDO communication parameter
+	// record.
+	co_obj_t *obj_1400 = co_dev_find_obj(pdo->dev, 0x1400 + pdo->num - 1);
+	assert(obj_1400);
+	co_obj_set_dn_ind(obj_1400, NULL, NULL);
 }
 
 can_net_t *
@@ -438,18 +469,12 @@ co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt)
 	return co_rpdo_read_frame(pdo, &pdo->msg) ? -1 : 0;
 }
 
-static int
+static void
 co_rpdo_init_recv(co_rpdo_t *pdo)
 {
 	assert(pdo);
 
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)) {
-		if (!pdo->recv) {
-			pdo->recv = can_recv_create();
-			if (!pdo->recv)
-				return -1;
-			can_recv_set_func(pdo->recv, co_rpdo_recv, pdo);
-		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = pdo->comm.cobid;
 		uint_least8_t flags = 0;
@@ -460,60 +485,34 @@ co_rpdo_init_recv(co_rpdo_t *pdo)
 			id &= CAN_MASK_BID;
 		}
 		can_recv_start(pdo->recv, pdo->net, id, flags);
-	} else if (pdo->recv) {
-		can_recv_destroy(pdo->recv);
-		pdo->recv = NULL;
+	} else {
+		// Stop the receiver unless the RPDO is valid.
+		can_recv_stop(pdo->recv);
 	}
-
-	return 0;
 }
 
-static int
+static void
 co_rpdo_init_timer_event(co_rpdo_t *pdo)
 {
 	assert(pdo);
 
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.event) {
-		if (!pdo->timer_event) {
-			pdo->timer_event = can_timer_create();
-			if (!pdo->timer_event)
-				return -1;
-			can_timer_set_func(pdo->timer_event,
-					co_rpdo_timer_event, pdo);
-		}
+	can_timer_stop(pdo->timer_event);
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.event)
 		can_timer_timeout(pdo->timer_event, pdo->net, pdo->comm.event);
-	} else if (pdo->timer_event) {
-		can_timer_destroy(pdo->timer_event);
-		pdo->timer_event = NULL;
-	}
-
-	return 0;
 }
 
-static int
+static void
 co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 {
 	assert(pdo);
 
+	can_timer_stop(pdo->timer_swnd);
 	// Ignore the synchronous window length unless the RPDO is valid and
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.trans <= 0xf0
-			&& swnd) {
-		if (!pdo->timer_swnd) {
-			pdo->timer_swnd = can_timer_create();
-			if (!pdo->timer_swnd)
-				return -1;
-			can_timer_set_func(pdo->timer_swnd, co_rpdo_timer_swnd,
-					pdo);
-		}
+			&& swnd)
 		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
-	} else if (pdo->timer_swnd) {
-		can_timer_destroy(pdo->timer_swnd);
-		pdo->timer_swnd = NULL;
-	}
-
-	return 0;
 }
 
 static co_unsigned32_t
@@ -525,21 +524,22 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(pdo);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1400 + pdo->num - 1);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
+	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the PDO is and remains
 		// valid.
@@ -547,17 +547,13 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_PDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_PDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.cobid = cobid;
 
@@ -573,13 +569,11 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t trans = val.u8;
 		co_unsigned8_t trans_old = co_sub_get_val_u8(sub);
 		if (trans == trans_old)
-			goto error;
+			return 0;
 
 		// Transmission types 0xF1..0xFD are reserved.
-		if (trans > 0xf0 && trans < 0xfe) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (trans > 0xf0 && trans < 0xfe)
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.trans = trans;
 
@@ -593,14 +587,12 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned16_t inhibit = val.u16;
 		co_unsigned16_t inhibit_old = co_sub_get_val_u16(sub);
 		if (inhibit == inhibit_old)
-			goto error;
+			return 0;
 
 		// The inhibit time cannot be changed while the PDO exists and
 		// is valid.
-		if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (!(pdo->comm.cobid & CO_PDO_COBID_VALID))
+			return CO_SDO_AC_PARAM_VAL;
 
 		pdo->comm.inhibit = inhibit;
 		break;
@@ -610,18 +602,17 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned16_t event = val.u16;
 		co_unsigned16_t event_old = co_sub_get_val_u16(sub);
 		if (event == event_old)
-			goto error;
+			return 0;
 
 		pdo->comm.event = event;
 		break;
 	}
-	default: ac = CO_SDO_AC_NO_SUB; goto error;
+	default: return CO_SDO_AC_NO_SUB;
 	}
 
 	co_sub_dn(sub, &val);
-error:
-	co_val_fini(type, &val);
-	return ac;
+
+	return 0;
 }
 
 static co_unsigned32_t
@@ -636,6 +627,8 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned32_t ac = 0;
 
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
@@ -647,13 +640,11 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t n = val.u8;
 		co_unsigned8_t n_old = co_sub_get_val_u8(sub);
 		if (n == n_old)
-			goto error;
+			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > 0x40) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid || n > 0x40)
+			return CO_SDO_AC_PARAM_VAL;
 
 		size_t bits = 0;
 		for (size_t i = 1; i <= n; i++) {
@@ -666,16 +657,13 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned8_t len = map & 0xff;
 
 			// Check the PDO length.
-			if ((bits += len) > CAN_MAX_LEN * 8) {
-				ac = CO_SDO_AC_PDO_LEN;
-				goto error;
-			}
+			if ((bits += len) > CAN_MAX_LEN * 8)
+				return CO_SDO_AC_PDO_LEN;
 
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO (or is a valid dummy entry).
-			ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-			if (ac)
-				goto error;
+			if ((ac = co_dev_chk_rpdo(pdo->dev, idx, subidx)))
+				return ac;
 		}
 
 		pdo->map.n = n;
@@ -684,50 +672,41 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned32_t map = val.u32;
 		co_unsigned32_t map_old = co_sub_get_val_u32(sub);
 		if (map == map_old)
-			goto error;
+			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid or
 		// sub-index 0x00 is non-zero.
-		if (valid || pdo->map.n) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid || pdo->map.n)
+			return CO_SDO_AC_PARAM_VAL;
 
 		if (map) {
 			co_unsigned16_t idx = (map >> 16) & 0xffff;
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			// Check whether the sub-object exists and can be mapped
 			// into a PDO (or is a valid dummy entry).
-			ac = co_dev_chk_rpdo(pdo->dev, idx, subidx);
-			if (ac)
-				goto error;
+			if ((ac = co_dev_chk_rpdo(pdo->dev, idx, subidx)))
+				return ac;
 		}
 
 		pdo->map.map[co_sub_get_subidx(sub) - 1] = map;
 	}
 
 	co_sub_dn(sub, &val);
-error:
-	co_val_fini(type, &val);
-	return ac;
+
+	return 0;
 }
 
 static int
 co_rpdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(!(msg->flags & CAN_FLAG_RTR));
+#ifndef LELY_NO_CANFD
+	assert(!(msg->flags & CAN_FLAG_EDL));
+#endif
+
 	co_rpdo_t *pdo = data;
 	assert(pdo);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
-
-#ifndef LELY_NO_CANFD
-	// Ignore CAN FD format frames.
-	if (msg->flags & CAN_FLAG_EDL)
-		return 0;
-#endif
 
 	// Reset the event timer.
 	co_rpdo_init_timer_event(pdo);

@@ -26,16 +26,8 @@
 #if defined(__GNUC__) && !defined(__MINGW32__)
 /* libc overrides won't link properly on MinGW-W64 */
 #define HAVE_LIBC_OVERRIDE 1
-#endif
 
-#if HAVE_LIBC_OVERRIDE
-namespace LibCOverride {
-/**
- * Enumeration of libc function override parameters.
- */
-enum : int { AllCallsValid = -1, NoneCallsValid = 0 };
-
-}  // namespace LibCOverride
+#include "defs.hpp"
 #endif
 
 #endif  // !LELY_OVERRIDE_LIBC_DEFS_HPP_

@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, src/sdo.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -198,6 +198,17 @@ struct __co_csdo_state {
 
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_csdo_state_t *const name = &(co_csdo_state_t){ __VA_ARGS__ };
+
+/// The 'abort' transition function of the 'stopped' state.
+static co_csdo_state_t *co_csdo_stopped_on_abort(
+		co_csdo_t *sdo, co_unsigned32_t ac);
+
+/// The 'stopped' state.
+// clang-format off
+LELY_CO_DEFINE_STATE(co_csdo_stopped_state,
+	.on_abort = &co_csdo_stopped_on_abort
+)
+// clang-format on
 
 /// The 'abort' transition function of the 'waiting' state.
 static co_csdo_state_t *co_csdo_wait_on_abort(
@@ -772,13 +783,6 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	if (obj_1280) {
-		// Copy the SDO parameter record.
-		size_t size = co_obj_sizeof_val(obj_1280);
-		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
-				MIN(size, sizeof(sdo->par)));
-	}
-
 	sdo->recv = can_recv_create();
 	if (!sdo->recv) {
 		errc = get_errc();
@@ -795,7 +799,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(sdo->timer, &co_csdo_timer, sdo);
 
-	sdo->state = co_csdo_wait_state;
+	sdo->state = co_csdo_stopped_state;
 
 	sdo->ac = 0;
 	sdo->idx = 0;
@@ -821,20 +825,15 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->up_ind = NULL;
 	sdo->up_ind_data = NULL;
 
-	// Set the download indication function for the SDO parameter record.
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
-
-	if (co_csdo_update(sdo) == -1) {
+	if (co_csdo_start(sdo) == -1) {
 		errc = get_errc();
-		goto error_update;
+		goto error_start;
 	}
 
 	return sdo;
 
-error_update:
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	// co_csdo_stop(sdo);
+error_start:
 	can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
@@ -850,13 +849,7 @@ __co_csdo_fini(struct __co_csdo *sdo)
 	assert(sdo);
 	assert(sdo->num >= 1 && sdo->num <= 128);
 
-	// Remove the download indication functions for the SDO parameter
-	// record.
-	co_obj_t *obj_1280 = sdo->dev
-			? co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1)
-			: NULL;
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	co_csdo_stop(sdo);
 
 	membuf_fini(&sdo->buf);
 
@@ -898,6 +891,60 @@ co_csdo_destroy(co_csdo_t *csdo)
 		trace("destroying Client-SDO %d", csdo->num);
 		__co_csdo_fini(csdo);
 		__co_csdo_free(csdo);
+	}
+}
+
+int
+co_csdo_start(co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	co_csdo_stop(sdo);
+
+	co_obj_t *obj_1280 = NULL;
+	if (sdo->dev) {
+		obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+		// Copy the SDO parameter record.
+		size_t size = co_obj_sizeof_val(obj_1280);
+		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
+				MIN(size, sizeof(sdo->par)));
+		// Set the download indication function for the SDO parameter
+		// record.
+		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
+	}
+
+	if (co_csdo_update(sdo) == -1)
+		goto error_update;
+
+	co_csdo_enter(sdo, co_csdo_wait_state);
+
+	return 0;
+
+error_update:
+	if (obj_1280)
+		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	return -1;
+}
+
+void
+co_csdo_stop(co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	// Abort any ongoing transfer.
+	co_csdo_abort_req(sdo, CO_SDO_AC_NO_SDO);
+
+	co_csdo_enter(sdo, co_csdo_stopped_state);
+
+	can_timer_stop(sdo->timer);
+	can_recv_stop(sdo->recv);
+
+	co_obj_t *obj_1280 = NULL;
+	if (sdo->dev) {
+		obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+		// Remove the download indication functions for the SDO
+		// parameter record.
+		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 	}
 }
 
@@ -1046,11 +1093,19 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		int res = 0;
 		int errc = get_errc();
 
+#if LELY_NO_MALLOC
+		uint_least8_t buf[CO_ARRAY_CAPACITY];
+		if (n > CO_ARRAY_CAPACITY) {
+			errc = errnum2c(ERRNUM_NOMEM);
+			goto error_malloc_buf;
+		}
+#else
 		uint_least8_t *buf = n ? malloc(n) : NULL;
 		if (n && !buf) {
 			errc = errno2c(errno);
 			goto error_malloc_buf;
 		}
+#endif
 
 		// cppcheck-suppress nullPointerArithmetic
 		if (co_val_write(type, val, buf, buf + n) != n) {
@@ -1061,7 +1116,9 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		res = co_csdo_dn_req(sdo, idx, subidx, buf, n, con, data);
 
 	error_write_val:
+#if !LELY_NO_MALLOC
 		free(buf);
+#endif
 	error_malloc_buf:
 		set_errc(errc);
 		return res;
@@ -1171,21 +1228,22 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(sdo);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1280 + sdo->num - 1);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
+	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -1193,17 +1251,13 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_req = cobid;
 		break;
@@ -1213,7 +1267,7 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -1221,17 +1275,13 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_res = cobid;
 		break;
@@ -1241,23 +1291,18 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t id = val.u8;
 		co_unsigned8_t id_old = co_sub_get_val_u8(sub);
 		if (id == id_old)
-			goto error;
+			return 0;
 
 		sdo->par.id = id;
 		break;
 	}
-	default: ac = CO_SDO_AC_NO_SUB; goto error;
+	default: return CO_SDO_AC_NO_SUB;
 	}
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_csdo_update(sdo);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int
@@ -1339,6 +1384,15 @@ co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	assert(sdo->state->on_recv);
 
 	co_csdo_enter(sdo, sdo->state->on_recv(sdo, msg));
+}
+
+static co_csdo_state_t *
+co_csdo_stopped_on_abort(co_csdo_t *sdo, co_unsigned32_t ac)
+{
+	(void)sdo;
+	(void)ac;
+
+	return NULL;
 }
 
 static co_csdo_state_t *

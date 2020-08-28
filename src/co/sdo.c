@@ -259,8 +259,10 @@ co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
 	co_unsigned32_t ac = 0;
 
 	membuf_clear(buf);
+	int errc = get_errc();
 	if (n && !membuf_reserve(buf, n)) {
 		ac = CO_SDO_AC_NO_MEM;
+		set_errc(errc);
 		goto error_reserve;
 	}
 
@@ -288,8 +290,10 @@ co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 	size_t size = co_val_write(type, val, NULL, NULL);
 
 	membuf_clear(buf);
+	int errc = get_errc();
 	if (size && !membuf_reserve(buf, size)) {
 		ac = CO_SDO_AC_NO_MEM;
+		set_errc(errc);
 		goto error_reserve;
 	}
 

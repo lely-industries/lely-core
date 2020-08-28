@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Receive-PDO
  * declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -63,7 +63,8 @@ struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net,
 void __co_rpdo_fini(struct __co_rpdo *pdo);
 
 /**
- * Creates a new CANopen Receive-PDO service.
+ * Creates a new CANopen Receive-PDO service. The service is started as if by
+ * co_rpdo_start().
  *
  * @param net  a pointer to a CAN network.
  * @param dev  a pointer to a CANopen device describing the server.
@@ -80,6 +81,19 @@ co_rpdo_t *co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num);
 
 /// Destroys a CANopen Receive-PDO service. @see co_rpdo_create()
 void co_rpdo_destroy(co_rpdo_t *pdo);
+
+/**
+ * Starts a Receive-PDO service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_rpdo_stop()
+ */
+int co_rpdo_start(co_rpdo_t *pdo);
+
+/// Stops a Receive-PDO service. @see co_rpdo_start()
+void co_rpdo_stop(co_rpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Receive-PDO.
 can_net_t *co_rpdo_get_net(const co_rpdo_t *pdo);

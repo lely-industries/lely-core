@@ -4,7 +4,7 @@
  *
  * @see lely/co/time.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -63,10 +63,8 @@ struct __co_time {
  * Updates and (de)activates a TIME producer/consumer service. This function is
  * invoked by the download indication functions when the TIME COB-ID (object
  * 1012) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_time_update(co_time_t *time);
+static void co_time_update(co_time_t *time);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1012
@@ -169,35 +167,48 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	time->net = net;
 	time->dev = dev;
 
-	// Retrieve the TIME COB-ID.
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	if (!obj_1012) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_obj_1012;
 	}
 
-	time->cobid = co_obj_get_val_u32(obj_1012, 0x00);
+	time->cobid = 0;
+
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
 
-	time->recv = NULL;
-	time->timer = NULL;
+	time->recv = can_recv_create();
+	if (!time->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(time->recv, &co_time_recv, time);
 
-	can_net_get_time(time->net, &time->start);
+	time->timer = can_timer_create();
+	if (!time->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(time->timer, &co_time_timer, time);
+
+	time->start = (struct timespec){ 0, 0 };
 
 	time->ind = NULL;
 	time->data = NULL;
 
-	// Set the download indication function for the TIME COB-ID object.
-	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
-
-	if (co_time_update(time) == -1) {
+	if (co_time_start(time) == -1) {
 		errc = get_errc();
-		goto error_update;
+		goto error_start;
 	}
 
 	return time;
 
-error_update:
+	// co_time_stop(time);
+error_start:
+	can_timer_destroy(time->timer);
+error_create_timer:
+	can_recv_destroy(time->recv);
+error_create_recv:
 	co_obj_set_dn_ind(obj_1012, NULL, NULL);
 error_obj_1012:
 	set_errc(errc);
@@ -209,13 +220,9 @@ __co_time_fini(struct __co_time *time)
 {
 	assert(time);
 
-	// Remove the download indication function for the TIME COB-ID object.
-	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
-	assert(obj_1012);
-	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+	co_time_stop(time);
 
 	can_timer_destroy(time->timer);
-
 	can_recv_destroy(time->recv);
 }
 
@@ -256,6 +263,41 @@ co_time_destroy(co_time_t *time)
 	}
 }
 
+int
+co_time_start(co_time_t *time)
+{
+	assert(time);
+
+	co_time_stop(time);
+
+	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
+	// Retrieve the TIME COB-ID.
+	time->cobid = co_obj_get_val_u32(obj_1012, 0x00);
+	// Set the download indication function for the TIME COB-ID object.
+	co_obj_set_dn_ind(obj_1012, &co_1012_dn_ind, time);
+
+	can_net_get_time(time->net, &time->start);
+
+	co_time_update(time);
+
+	return 0;
+}
+
+void
+co_time_stop(co_time_t *time)
+{
+	assert(time);
+
+	co_time_stop_prod(time);
+
+	can_timer_stop(time->timer);
+	can_recv_stop(time->recv);
+
+	// Remove the download indication function for the TIME COB-ID object.
+	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
+	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+}
+
 can_net_t *
 co_time_get_net(const co_time_t *time)
 {
@@ -293,36 +335,30 @@ co_time_set_ind(co_time_t *time, co_time_ind_t *ind, void *data)
 }
 
 void
-co_time_start(co_time_t *time, const struct timespec *start,
+co_time_start_prod(co_time_t *time, const struct timespec *start,
 		const struct timespec *interval)
 {
 	assert(time);
 
-	if (time->timer)
+	if (time->cobid & CO_TIME_COBID_PRODUCER)
 		can_timer_start(time->timer, time->net, start, interval);
 }
 
 void
-co_time_stop(co_time_t *time)
+co_time_stop_prod(co_time_t *time)
 {
 	assert(time);
 
-	if (time->timer)
+	if (time->cobid & CO_TIME_COBID_PRODUCER)
 		can_timer_stop(time->timer);
 }
 
-static int
+static void
 co_time_update(co_time_t *time)
 {
 	assert(time);
 
 	if (time->cobid & CO_TIME_COBID_CONSUMER) {
-		if (!time->recv) {
-			time->recv = can_recv_create();
-			if (!time->recv)
-				return -1;
-			can_recv_set_func(time->recv, &co_time_recv, time);
-		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = time->cobid;
 		uint_least8_t flags = 0;
@@ -333,24 +369,14 @@ co_time_update(co_time_t *time)
 			id &= CAN_MASK_BID;
 		}
 		can_recv_start(time->recv, time->net, id, flags);
-	} else if (time->recv) {
-		can_recv_destroy(time->recv);
-		time->recv = NULL;
+	} else {
+		// Stop the receiver unless we are a consumer.
+		can_recv_stop(time->recv);
 	}
 
-	if (time->cobid & CO_TIME_COBID_PRODUCER) {
-		if (!time->timer) {
-			time->timer = can_timer_create();
-			if (!time->timer)
-				return -1;
-			can_timer_set_func(time->timer, &co_time_timer, time);
-		}
-	} else if (time->timer) {
-		can_timer_destroy(time->timer);
-		time->timer = NULL;
-	}
-
-	return 0;
+	if (!(time->cobid & CO_TIME_COBID_PRODUCER))
+		// Stop the timer unless we are a producer.
+		can_timer_stop(time->timer);
 }
 
 static co_unsigned32_t
@@ -362,23 +388,22 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_time_t *time = data;
 	assert(time);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	co_unsigned32_t cobid = val.u32;
 	co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 	if (cobid == cobid_old)
-		goto error;
+		return 0;
 
 	// The CAN-ID cannot be changed while the producer or consumer is and
 	// remains active.
@@ -388,29 +413,20 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			|| (cobid_old & CO_TIME_COBID_CONSUMER);
 	uint_least32_t canid = cobid & CAN_MASK_EID;
 	uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-	if (active && active_old && canid != canid_old) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+	if (active && active_old && canid != canid_old)
+		return CO_SDO_AC_PARAM_VAL;
 
 	// A 29-bit CAN-ID is only valid if the frame bit is set.
 	if (!(cobid & CO_TIME_COBID_FRAME)
-			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+			&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+		return CO_SDO_AC_PARAM_VAL;
 
 	time->cobid = cobid;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_time_update(time);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int

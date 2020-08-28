@@ -292,6 +292,8 @@ inc += lely/co/def/cxx.def
 endif
 inc += lely/co/def/time.def
 inc += lely/co/def/type.def
+inc += lely/co/detail/dev.h
+inc += lely/co/detail/obj.h
 inc += lely/co/co.h
 inc += lely/co/crc.h
 if !NO_CO_CSDO

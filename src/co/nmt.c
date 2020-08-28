@@ -603,10 +603,8 @@ static void co_nmt_ec_fini(co_nmt_t *nmt);
  * This function is invoked by the download indication functions when object
  * 100C (Guard time), 100D (Life time factor) or 1017 (Producer heartbeat time)
  * is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_nmt_ec_update(co_nmt_t *nmt);
+static void co_nmt_ec_update(co_nmt_t *nmt);
 
 /**
  * Sends an NMT error control response message.
@@ -797,14 +795,26 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->cs_ind = NULL;
 	nmt->cs_data = NULL;
 
-	nmt->recv_700 = NULL;
+	// Create the CAN frame receiver for node guarding RTR and boot-up
+	// messages.
+	nmt->recv_700 = can_recv_create();
+	if (!nmt->recv_700) {
+		errc = get_errc();
+		goto error_create_recv_700;
+	}
+	can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
 
 #ifndef LELY_NO_CO_MASTER
 	nmt->ng_ind = &default_ng_ind;
 	nmt->ng_data = NULL;
 #endif
 
-	nmt->ec_timer = NULL;
+	nmt->ec_timer = can_timer_create();
+	if (!nmt->ec_timer) {
+		errc = get_errc();
+		goto error_create_ec_timer;
+	}
+	can_timer_set_func(nmt->ec_timer, &co_nmt_ec_timer, nmt);
 
 	nmt->st = CO_NMT_ST_BOOTUP;
 	nmt->gt = 0;
@@ -825,9 +835,20 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->st_data = NULL;
 
 #ifndef LELY_NO_CO_MASTER
-	nmt->buf = (struct can_buf)CAN_BUF_INIT;
+	// Create a CAN fame buffer (with the default size) for pending NMT
+	// messages that will be sent once the inhibit time has elapsed.
+	if (can_buf_init(&nmt->buf, 0) == -1) {
+		errc = get_errc();
+		goto error_init_buf;
+	}
+
 	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = NULL;
+	nmt->cs_timer = can_timer_create();
+	if (!nmt->cs_timer) {
+		errc = get_errc();
+		goto error_create_cs_timer;
+	}
+	can_timer_set_func(nmt->cs_timer, &co_nmt_cs_timer, nmt);
 
 #ifndef LELY_NO_CO_LSS
 	nmt->lss_req = NULL;
@@ -859,6 +880,24 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->ltf = 0;
 		slave->rtr = 0;
 		slave->ng_state = CO_NMT_EC_RESOLVED;
+	}
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		slave->recv = can_recv_create();
+		if (!slave->recv) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+
+		slave->timer = can_timer_create();
+		if (!slave->timer) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
 	}
 
 	nmt->timeout = LELY_CO_NMT_TIMEOUT;
@@ -948,7 +987,24 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 // #ifndef LELY_NO_CO_TPDO
 // 	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
 // #endif
-// 	can_recv_destroy(nmt->recv_000);
+#ifndef LELY_NO_CO_MASTER
+error_init_slave:
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+	can_timer_destroy(nmt->cs_timer);
+error_create_cs_timer:
+	can_buf_fini(&nmt->buf);
+error_init_buf:
+#endif
+	can_timer_destroy(nmt->ec_timer);
+error_create_ec_timer:
+	can_recv_destroy(nmt->recv_700);
+error_create_recv_700:
+	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
@@ -1015,6 +1071,18 @@ __co_nmt_fini(struct __co_nmt *nmt)
 
 #ifndef LELY_NO_CO_MASTER
 	co_nmt_slaves_fini(nmt);
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+#endif
+
+#ifndef LELY_NO_CO_MASTER
+	can_timer_destroy(nmt->cs_timer);
+	can_buf_fini(&nmt->buf);
 #endif
 
 	co_nmt_hb_fini(nmt);
@@ -1023,11 +1091,6 @@ __co_nmt_fini(struct __co_nmt *nmt)
 
 	can_timer_destroy(nmt->ec_timer);
 	can_recv_destroy(nmt->recv_700);
-
-#ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(nmt->cs_timer);
-	can_buf_fini(&nmt->buf);
-#endif
 
 	can_recv_destroy(nmt->recv_000);
 
@@ -1601,11 +1664,16 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	msg.data[1] = id;
 
 	// Add the frame to the buffer.
+#if LELY_NO_MALLOC
+	if (!can_buf_write(&nmt->buf, &msg, 1))
+		return -1;
+#else
 	if (!can_buf_write(&nmt->buf, &msg, 1)) {
 		if (!can_buf_reserve(&nmt->buf, 1))
 			return -1;
 		can_buf_write(&nmt->buf, &msg, 1);
 	}
+#endif
 
 	// Send the frame by triggering the inhibit timer.
 	return co_nmt_cs_timer(NULL, nmt);
@@ -1791,21 +1859,12 @@ co_nmt_ng_req(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t gt,
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
 	if (!gt || !ltf) {
-		can_timer_destroy(slave->timer);
-		slave->timer = 0;
+		can_timer_stop(slave->timer);
 
 		slave->gt = 0;
 		slave->ltf = 0;
 		slave->rtr = 0;
 	} else {
-		if (!slave->timer) {
-			slave->timer = can_timer_create();
-			if (!slave->timer)
-				return -1;
-			can_timer_set_func(
-					slave->timer, &co_nmt_ng_timer, slave);
-		}
-
 		slave->gt = gt;
 		slave->ltf = ltf;
 		slave->rtr = 0;
@@ -2110,35 +2169,29 @@ co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED16);
 	co_unsigned16_t gt = val.u16;
 	co_unsigned16_t gt_old = co_sub_get_val_u16(sub);
 	if (gt == gt_old)
-		goto error;
+		return 0;
 
 	nmt->gt = gt;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_nmt_ec_update(nmt);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static co_unsigned32_t
@@ -2150,17 +2203,16 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED8);
 	co_unsigned8_t ltf = val.u8;
@@ -2171,14 +2223,9 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	nmt->ltf = ltf;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_nmt_ec_update(nmt);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static co_unsigned32_t
@@ -2190,26 +2237,23 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (!subidx) {
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
-	}
-	if (subidx > nmt->nhb) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (!subidx)
+		return CO_SDO_AC_NO_WRITE;
+	if (subidx > nmt->nhb)
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	if (val.u32 == co_sub_get_val_u32(sub))
-		goto error;
+		return 0;
 
 	co_unsigned8_t id = (val.u32 >> 16) & 0xff;
 	co_unsigned16_t ms = val.u32 & 0xffff;
@@ -2227,10 +2271,8 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			co_unsigned16_t ms_i = val_i & 0xffff;
 			// It's not allowed to have two active heartbeat
 			// consumers with the same node-ID.
-			if (id_i == id && ms_i) {
-				ac = CO_SDO_AC_PARAM;
-				goto error;
-			}
+			if (id_i == id && ms_i)
+				return CO_SDO_AC_PARAM;
 		}
 #ifndef LELY_NO_CO_MASTER
 		// Disable heartbeat consumption for booting slaves or slaves
@@ -2241,14 +2283,9 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	}
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_nmt_hb_set_1016(nmt->hbs[subidx - 1], id, ms);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static co_unsigned32_t
@@ -2260,35 +2297,29 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED16);
 	co_unsigned16_t ms = val.u16;
 	co_unsigned16_t ms_old = co_sub_get_val_u16(sub);
 	if (ms == ms_old)
-		goto error;
+		return 0;
 
 	nmt->ms = ms;
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_nmt_ec_update(nmt);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2301,66 +2332,55 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (!subidx) {
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
-	}
+	if (!subidx)
+		return CO_SDO_AC_NO_WRITE;
 
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
 	if (id > CO_NUM_NODES
 			// cppcheck-suppress knownConditionTrueFalse
-			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))
+		return CO_SDO_AC_PARAM_VAL;
 
 	// Check if the value 'conf' was downloaded.
-	if (!nmt->master || val.u32 != UINT32_C(0x666e6f63)) {
-		ac = CO_SDO_AC_DATA_CTL;
-		goto error;
-	}
+	if (!nmt->master || val.u32 != UINT32_C(0x666e6f63))
+		return CO_SDO_AC_DATA_CTL;
 
 	// cppcheck-suppress knownConditionTrueFalse
 	if (id) {
 		// Check if the entry for this node is present in object 1F20
 		// (Store DCF) or 1F22 (Concise DCF).
 #if LELY_NO_CO_DCF
-		if (!co_dev_get_val(nmt->dev, 0x1f22, id)) {
+		if (!co_dev_get_val(nmt->dev, 0x1f22, id))
 #else
 		if (!co_dev_get_val(nmt->dev, 0x1f20, id)
-				&& !co_dev_get_val(nmt->dev, 0x1f22, id)) {
+				&& !co_dev_get_val(nmt->dev, 0x1f22, id))
 #endif
-			ac = CO_SDO_AC_NO_DATA;
-			goto error;
-		}
+			return CO_SDO_AC_NO_DATA;
 		// Abort if the slave is already being configured.
-		if (nmt->slaves[id - 1].cfg) {
-			ac = CO_SDO_AC_DATA_DEV;
-			goto error;
-		}
+		if (nmt->slaves[id - 1].cfg)
+			return CO_SDO_AC_DATA_DEV;
 		co_nmt_cfg_req(nmt, id, nmt->timeout, NULL, NULL);
 	} else {
 		// Check if object 1F20 (Store DCF) or 1F22 (Concise DCF)
 		// exists.
 #if LELY_NO_CO_DCF
-		if (!co_dev_find_obj(nmt->dev, 0x1f22)) {
+		if (!co_dev_find_obj(nmt->dev, 0x1f22))
 #else
 		if (!co_dev_find_obj(nmt->dev, 0x1f20)
-				&& !co_dev_find_obj(nmt->dev, 0x1f22)) {
+				&& !co_dev_find_obj(nmt->dev, 0x1f22))
 #endif
-			ac = CO_SDO_AC_NO_DATA;
-			goto error;
-		}
+			return CO_SDO_AC_NO_DATA;
 		for (id = 1; id <= CO_NUM_NODES; id++) {
 			struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 			// Skip slaves that are not in the network list or are
@@ -2371,9 +2391,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 	}
 
-error:
-	co_val_fini(type, &val);
-	return ac;
+	return 0;
 }
 #endif // !LELY_NO_CO_MASTER
 
@@ -2385,34 +2403,30 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(req);
 	(void)data;
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
-	if (co_sub_get_subidx(sub)) {
-		ac = CO_SDO_AC_NO_SUB;
-		goto error;
-	}
+	if (co_sub_get_subidx(sub))
+		return CO_SDO_AC_NO_SUB;
 
 	assert(type == CO_DEFTYPE_UNSIGNED32);
 	co_unsigned32_t startup = val.u32;
 	co_unsigned32_t startup_old = co_sub_get_val_u32(sub);
 	if (startup == startup_old)
-		goto error;
+		return 0;
 
 	// Only bits 0..4 and 6 are supported.
-	if ((startup ^ startup_old) != 0x5f) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+	if ((startup ^ startup_old) != 0x5f)
+		return CO_SDO_AC_PARAM_VAL;
 
 	co_sub_dn(sub, &val);
-error:
-	co_val_fini(type, &val);
-	return ac;
+
+	return 0;
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2425,33 +2439,28 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
 	union co_val val;
+	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	co_unsigned8_t subidx = co_sub_get_subidx(sub);
-	if (!subidx) {
-		ac = CO_SDO_AC_NO_WRITE;
-		goto error;
-	}
+	if (!subidx)
+		return CO_SDO_AC_NO_WRITE;
 
 	// Sub-index 80 indicates all nodes.
 	co_unsigned8_t id = subidx == 0x80 ? 0 : subidx;
 	// Abort with an error if the node-ID is unknown.
 	if (id > CO_NUM_NODES
 			// cppcheck-suppress knownConditionTrueFalse
-			|| (id && !(nmt->slaves[id - 1].assignment & 0x01))) {
-		ac = CO_SDO_AC_PARAM_VAL;
-		goto error;
-	}
+			|| (id && !(nmt->slaves[id - 1].assignment & 0x01)))
+		return CO_SDO_AC_PARAM_VAL;
 
-	if (!nmt->master) {
-		ac = CO_SDO_AC_DATA_CTL;
-		goto error;
-	}
+	if (!nmt->master)
+		return CO_SDO_AC_DATA_CTL;
 
 	assert(type == CO_DEFTYPE_UNSIGNED8);
 	switch (val.u8) {
@@ -2469,9 +2478,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	default: ac = CO_SDO_AC_PARAM_VAL; break;
 	}
 
-error:
-	co_val_fini(type, &val);
-	return ac;
+	return 0;
 }
 #endif // !LELY_NO_CO_MASTER
 
@@ -2680,20 +2687,7 @@ co_nmt_cs_timer(const struct timespec *tp, void *data)
 
 	co_unsigned16_t inhibit = co_dev_get_val_u16(nmt->dev, 0x102a, 0x00);
 
-	if (inhibit) {
-		if (nmt->cs_timer) {
-			can_timer_stop(nmt->cs_timer);
-		} else {
-			nmt->cs_timer = can_timer_create();
-			if (!nmt->cs_timer)
-				return -1;
-			can_timer_set_func(
-					nmt->cs_timer, &co_nmt_cs_timer, nmt);
-		}
-	} else if (nmt->cs_timer) {
-		can_timer_destroy(nmt->cs_timer);
-		nmt->cs_timer = NULL;
-	}
+	can_timer_stop(nmt->cs_timer);
 
 	struct timespec now = { 0, 0 };
 	can_net_get_time(nmt->net, &now);
@@ -3324,10 +3318,7 @@ co_nmt_ec_init(co_nmt_t *nmt)
 
 	nmt->lg_state = CO_NMT_EC_RESOLVED;
 
-	if (co_nmt_ec_update(nmt) == -1)
-		diag(DIAG_ERROR, get_errc(), "unable to start %s",
-				nmt->ms ? "heartbeat production"
-					: "life guarding");
+	co_nmt_ec_update(nmt);
 }
 
 static void
@@ -3345,7 +3336,7 @@ co_nmt_ec_fini(co_nmt_t *nmt)
 	co_nmt_ec_update(nmt);
 }
 
-static int
+static void
 co_nmt_ec_update(co_nmt_t *nmt)
 {
 	assert(nmt);
@@ -3359,40 +3350,23 @@ co_nmt_ec_update(co_nmt_t *nmt)
 #endif
 
 	if (lt) {
-		if (!nmt->recv_700) {
-			nmt->recv_700 = can_recv_create();
-			if (!nmt->recv_700)
-				return -1;
-			can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
-		}
 		// Start the CAN frame receiver for node guarding RTRs.
 		can_recv_start(nmt->recv_700, nmt->net,
 				CO_NMT_EC_CANID(co_dev_get_id(nmt->dev)),
 				CAN_FLAG_RTR);
-	} else if (nmt->recv_700) {
-		can_recv_destroy(nmt->recv_700);
-		nmt->recv_700 = NULL;
+	} else {
+		can_recv_stop(nmt->recv_700);
 	}
 
 	if (nmt->ms || lt) {
-		if (!nmt->ec_timer) {
-			nmt->ec_timer = can_timer_create();
-			if (!nmt->ec_timer)
-				return -1;
-			can_timer_set_func(
-					nmt->ec_timer, &co_nmt_ec_timer, nmt);
-		}
 		// Start the CAN timer for heartbeat production or life
 		// guarding.
 		int ms = nmt->ms ? nmt->ms : lt;
 		struct timespec interval = { ms / 1000, (ms % 1000) * 1000000 };
 		can_timer_start(nmt->ec_timer, nmt->net, NULL, &interval);
-	} else if (nmt->ec_timer) {
-		can_timer_destroy(nmt->ec_timer);
-		nmt->ec_timer = NULL;
+	} else {
+		can_timer_stop(nmt->ec_timer);
 	}
-
-	return 0;
 }
 
 static int
@@ -3488,18 +3462,10 @@ co_nmt_slaves_init(co_nmt_t *nmt)
 
 	co_nmt_slaves_fini(nmt);
 
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-		slave->recv = can_recv_create();
-		if (!slave->recv) {
-			diag(DIAG_ERROR, get_errc(),
-					"unable to create CAN frame receiver");
-			continue;
-		}
-		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		// Start listening for boot-up notifications.
-		can_recv_start(slave->recv, nmt->net, CO_NMT_EC_CANID(id), 0);
-	}
+		can_recv_start(nmt->slaves[id - 1].recv, nmt->net,
+				CO_NMT_EC_CANID(id), 0);
 
 	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
 	if (!obj_1f81)
@@ -3518,10 +3484,8 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		can_recv_destroy(slave->recv);
-		slave->recv = NULL;
-		can_timer_destroy(slave->timer);
-		slave->timer = NULL;
+		can_recv_stop(slave->recv);
+		can_timer_stop(slave->timer);
 
 		slave->assignment = 0;
 		slave->est = 0;

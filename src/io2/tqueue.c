@@ -276,6 +276,7 @@ io_tqueue_submit_wait(io_tqueue_t *tq, struct io_tqueue_wait *wait)
 #if !LELY_NO_THREADS
 		mtx_unlock(&tq->mtx);
 #endif
+		// cppcheck-suppress duplicateCondition
 		if (submit)
 			io_timer_submit_wait(tq->timer, &tq->wait);
 

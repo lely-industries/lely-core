@@ -28,52 +28,16 @@
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
 #endif
-#include "obj.h"
-#include <lely/co/dev.h>
+#include <lely/co/detail/dev.h>
+#include <lely/co/detail/obj.h>
 #ifndef LELY_NO_CO_TPDO
 #include <lely/co/pdo.h>
 #endif
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
-
-/// A CANopen device.
-struct __co_dev {
-	/// The network-ID.
-	co_unsigned8_t netid;
-	/// The node-ID.
-	co_unsigned8_t id;
-	/// The tree containing the object dictionary.
-	struct rbtree tree;
-	/// A pointer to the name of the device.
-	char *name;
-	/// A pointer to the vendor name.
-	char *vendor_name;
-	/// The vendor ID.
-	co_unsigned32_t vendor_id;
-	/// A pointer to the product name.
-	char *product_name;
-	/// The product code.
-	co_unsigned32_t product_code;
-	/// The revision number.
-	co_unsigned32_t revision;
-	/// A pointer to the order code.
-	char *order_code;
-	/// The supported bit rates.
-	unsigned baud : 10;
-	/// The (pending) baudrate (in kbit/s).
-	co_unsigned16_t rate;
-	/// A flag specifying whether LSS is supported (1) or not (0).
-	int lss;
-	/// The data types supported for mapping dummy entries in PDOs.
-	co_unsigned32_t dummy;
-#ifndef LELY_NO_CO_TPDO
-	/// A pointer to the Transmit-PDO event indication function.
-	co_dev_tpdo_event_ind_t *tpdo_event_ind;
-	/// A pointer to user-specified data for #tpdo_event_ind.
-	void *tpdo_event_data;
 #endif
-};
 
 static void co_obj_set_id(
 		co_obj_t *obj, co_unsigned8_t new_id, co_unsigned8_t old_id);
@@ -81,6 +45,8 @@ static void co_sub_set_id(
 		co_sub_t *sub, co_unsigned8_t new_id, co_unsigned8_t old_id);
 static void co_val_set_id(co_unsigned16_t type, void *val,
 		co_unsigned8_t new_id, co_unsigned8_t old_id);
+
+#if !LELY_NO_MALLOC
 
 void *
 __co_dev_alloc(void)
@@ -97,6 +63,8 @@ __co_dev_free(void *ptr)
 	free(ptr);
 }
 
+#endif // !LELY_NO_MALLOC
+
 struct __co_dev *
 __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 {
@@ -112,14 +80,20 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 
 	rbtree_init(&dev->tree, &uint16_cmp);
 
+#if !LELY_NO_CO_OBJ_NAME
 	dev->name = NULL;
 
 	dev->vendor_name = NULL;
+#endif
 	dev->vendor_id = 0;
+#if !LELY_NO_CO_OBJ_NAME
 	dev->product_name = NULL;
+#endif
 	dev->product_code = 0;
 	dev->revision = 0;
+#if !LELY_NO_CO_OBJ_NAME
 	dev->order_code = NULL;
+#endif
 
 	dev->baud = 0;
 	dev->rate = 0;
@@ -135,16 +109,23 @@ void
 __co_dev_fini(struct __co_dev *dev)
 {
 	assert(dev);
-
+#if LELY_NO_MALLOC
+	(void)dev;
+#else
 	rbtree_foreach (&dev->tree, node)
 		co_obj_destroy(structof(node, co_obj_t, node));
 
+#if !LELY_NO_CO_OBJ_NAME
 	free(dev->vendor_name);
 	free(dev->product_name);
 	free(dev->order_code);
 
 	free(dev->name);
+#endif
+#endif // LELY_NO_MALLOC
 }
+
+#if !LELY_NO_MALLOC
 
 co_dev_t *
 co_dev_create(co_unsigned8_t id)
@@ -179,6 +160,8 @@ co_dev_destroy(co_dev_t *dev)
 		__co_dev_free(dev);
 	}
 }
+
+#endif // !LELY_NO_MALLOC
 
 co_unsigned8_t
 co_dev_get_netid(const co_dev_t *dev)
@@ -321,6 +304,8 @@ co_dev_last_obj(const co_dev_t *dev)
 	return node ? structof(node, co_obj_t, node) : NULL;
 }
 
+#if !LELY_NO_CO_OBJ_NAME
+
 const char *
 co_dev_get_name(const co_dev_t *dev)
 {
@@ -381,6 +366,8 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 	return 0;
 }
 
+#endif // !LELY_NO_CO_OBJ_NAME
+
 co_unsigned32_t
 co_dev_get_vendor_id(const co_dev_t *dev)
 {
@@ -396,6 +383,8 @@ co_dev_set_vendor_id(co_dev_t *dev, co_unsigned32_t vendor_id)
 
 	dev->vendor_id = vendor_id;
 }
+
+#if !LELY_NO_CO_OBJ_NAME
 
 const char *
 co_dev_get_product_name(const co_dev_t *dev)
@@ -426,6 +415,8 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 
 	return 0;
 }
+
+#endif // !LELY_NO_CO_OBJ_NAME
 
 co_unsigned32_t
 co_dev_get_product_code(const co_dev_t *dev)
@@ -459,6 +450,8 @@ co_dev_set_revision(co_dev_t *dev, co_unsigned32_t revision)
 	dev->revision = revision;
 }
 
+#if !LELY_NO_CO_OBJ_NAME
+
 const char *
 co_dev_get_order_code(const co_dev_t *dev)
 {
@@ -488,6 +481,8 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 
 	return 0;
 }
+
+#endif // !LELY_NO_CO_OBJ_NAME
 
 unsigned int
 co_dev_get_baud(const co_dev_t *dev)
@@ -634,11 +629,19 @@ co_dev_read_sub(co_dev_t *dev, co_unsigned16_t *pidx, co_unsigned8_t *psubidx,
 	if (sub) {
 		co_unsigned16_t type = co_sub_get_type(sub);
 		union co_val val;
-		co_val_init(type, &val);
+#if LELY_NO_MALLOC
+		struct co_array array = CO_ARRAY_INIT;
+		if (co_type_is_array(type))
+			co_val_init_array(&val, &array);
+		else
+#endif
+			co_val_init(type, &val);
 		if (co_val_read(type, &val, begin, begin + size) == size)
 			co_sub_set_val(sub, co_val_addressof(type, &val),
 					co_val_sizeof(type, &val));
+#if !LELY_NO_MALLOC
 		co_val_fini(type, &val);
+#endif
 	}
 
 	if (pidx)

@@ -328,7 +328,7 @@ TEST_GROUP(CAN_SNPrintfCanMsg) {
 
   TEST_SETUP() {
 #if HAVE_SNPRINTF_OVERRIDE
-    LibCOverride::snprintf_vc = LibCOverride::AllCallsValid;
+    LibCOverride::snprintf_vc = Override::AllCallsValid;
 #endif
     memset(output_str, 0, STRLEN);
   }
@@ -447,7 +447,7 @@ TEST(CAN_SNPrintfCanMsg, CANFDExtendedMsg) {
 
 #if HAVE_SNPRINTF_OVERRIDE
 TEST(CAN_SNPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
-  LibCOverride::snprintf_vc = LibCOverride::NoneCallsValid;
+  LibCOverride::snprintf_vc = Override::NoneCallsValid;
 
   const auto slen = snprintf_can_msg(output_str, STRLEN, &msg);
 
@@ -489,7 +489,7 @@ TEST_GROUP(CAN_ASPrintfCanMsg) {
   can_msg msg = CAN_MSG_INIT;
 
 #if HAVE_SNPRINTF_OVERRIDE
-  TEST_SETUP() { LibCOverride::snprintf_vc = LibCOverride::AllCallsValid; }
+  TEST_SETUP() { LibCOverride::snprintf_vc = Override::AllCallsValid; }
 #endif
 };
 
@@ -522,7 +522,7 @@ TEST(CAN_ASPrintfCanMsg, CANExtendedMsg) {
 
 #if HAVE_SNPRINTF_OVERRIDE
 TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_1) {
-  LibCOverride::snprintf_vc = LibCOverride::NoneCallsValid;
+  LibCOverride::snprintf_vc = Override::NoneCallsValid;
 
   const auto slen = asprintf_can_msg(&output_ps, &msg);
 

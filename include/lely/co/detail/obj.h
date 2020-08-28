@@ -3,7 +3,7 @@
  *
  * @see lely/co/obj.h
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -20,10 +20,9 @@
  * limitations under the License.
  */
 
-#ifndef LELY_CO_INTERN_OBJ_H_
-#define LELY_CO_INTERN_OBJ_H_
+#ifndef LELY_CO_DETAIL_OBJ_H_
+#define LELY_CO_DETAIL_OBJ_H_
 
-#include "co.h"
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
 #include <lely/util/rbtree.h>
@@ -94,4 +93,20 @@ struct __co_sub {
 #endif
 };
 
-#endif // !LELY_CO_INTERN_OBJ_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// The default download indication function. @see co_sub_dn_ind_t
+co_unsigned32_t co_sub_default_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
+
+/// The default upload indication function. @see co_sub_up_ind_t
+co_unsigned32_t co_sub_default_up_ind(
+		const co_sub_t *sub, struct co_sdo_req *req, void *data);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // !LELY_CO_DETAIL_OBJ_H_

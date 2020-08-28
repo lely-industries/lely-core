@@ -7,6 +7,11 @@ src += dcf/lint.py
 src += dcf/parse.py
 src += dcf/print.py
 
+src += dcf2dev/data/dev.c.em
+src += dcf2dev/__init__.py
+src += dcf2dev/cdevice.py
+src += dcf2dev/cli.py
+
 src += dcfgen/data/master.dcf.em
 src += dcfgen/__init__.py
 src += dcfgen/cli.py

@@ -2,6 +2,8 @@ src =
 if !ECSS_COMPLIANCE
 src += bimap.c
 src += bitset.c
+src += config.c
+src += config_ini.c
 if !NO_DAEMON
 src += daemon.c
 endif
@@ -19,20 +21,39 @@ if !NO_CXX
 src += exception.cpp
 endif
 
+if !NO_CO_OBJ_FILE
+src += frbuf.c
+src += fwbuf.c
+endif
+
+if !NO_CO_GW_TXT
+if !NO_CO_SDEV
+if !NO_CO_DCF
+src += lex.c
+endif
+src += print.c
+endif
+endif
+
+if !NO_DIAG
+src += diag.c
+else # !NO_DIAG
+if !NO_CO_DCF
+src += diag.c
+else # !NO_CO_DCF
+if !NO_CO_GW_TXT
+src += diag.c
+endif # !NO_CO_GW_TXT
+endif # !NO_CO_DCF
+endif # !NO_DIAG
+
 src += bits.c
 src += cmp.c
-src += config.c
-src += config_ini.c
-src += diag.c
 src += dllist.c
 src += endian.c
 src += errnum.c
-src += frbuf.c
-src += fwbuf.c
-src += lex.c
 src += membuf.c
 src += pheap.c
-src += print.c
 src += rbtree.c
 src += time.c
 src += ustring.c

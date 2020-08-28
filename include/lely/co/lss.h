@@ -146,7 +146,8 @@ struct __co_lss *__co_lss_init(struct __co_lss *lss, co_nmt_t *nmt);
 void __co_lss_fini(struct __co_lss *lss);
 
 /**
- * Creates a new CANopen LSS master/slave service.
+ * Creates a new CANopen LSS master/slave service. The service is started as if
+ * by co_lss_start().
  *
  * @param nmt a pointer to an NMT master/slave service.
  *
@@ -159,6 +160,19 @@ co_lss_t *co_lss_create(co_nmt_t *nmt);
 
 /// Destroys a CANopen LSS master/slave service. @see co_lss_create()
 void co_lss_destroy(co_lss_t *lss);
+
+/**
+ * Starts an LSS service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_lss_stop()
+ */
+int co_lss_start(co_lss_t *lss);
+
+/// Stops an LSS service. @see co_lss_start()
+void co_lss_stop(co_lss_t *lss);
 
 /// Returns a pointer to the NMT service of an LSS master/slave service.
 co_nmt_t *co_lss_get_nmt(const co_lss_t *lss);

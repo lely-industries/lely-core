@@ -4,7 +4,7 @@
  *
  * @see src/nmt_cfg.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,9 @@
 #ifndef LELY_NO_CO_MASTER
 
 #include "nmt_cfg.h"
+#if !LELY_NO_MALLOC
 #include <lely/co/dcf.h>
+#endif
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
@@ -72,10 +74,12 @@ struct __co_nmt_cfg {
 	co_unsigned32_t ac;
 	/// The CANopen SDO upload request used for reading sub-objects.
 	struct co_sdo_req req;
+#if !LELY_NO_MALLOC
 	/// The object dictionary stored in object 1F20 (Store DCF).
 	co_dev_t *dev_1f20;
 	/// The number of entries in the concise DCF in object 1F22.
 	co_unsigned32_t n_1f22;
+#endif
 };
 
 /**
@@ -249,6 +253,8 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_reset_state,
 )
 // clang-format on
 
+#if !LELY_NO_MALLOC
+
 /// The entry function of the 'store object 1F20' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg);
 
@@ -286,6 +292,8 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_store_1f22_state,
 	.on_dn_con = &co_nmt_cfg_store_1f22_on_dn_con
 )
 // clang-format on
+
+#endif // !LELY_NO_MALLOC
 
 /// The entry function of the 'user-defined configuration' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_user_on_enter(co_nmt_cfg_t *cfg);
@@ -357,8 +365,10 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 	cfg->ac = 0;
 
 	co_sdo_req_init(&cfg->req);
+#if !LELY_NO_MALLOC
 	cfg->dev_1f20 = NULL;
 	cfg->n_1f22 = 0;
+#endif
 
 	return cfg;
 
@@ -375,7 +385,9 @@ __co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
 {
 	assert(cfg);
 
+#if !LELY_NO_MALLOC
 	assert(!cfg->dev_1f20);
+#endif
 	co_sdo_req_fini(&cfg->req);
 
 	co_csdo_destroy(cfg->sdo);
@@ -581,7 +593,11 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// Check if the slave can be used without prior resetting (bit 7).
 	if (!(cfg->assignment & 0x80))
+#if LELY_NO_MALLOC
+		return co_nmt_cfg_user_state;
+#else
 		return co_nmt_cfg_store_1f20_state;
+#endif
 
 	// Retrieve the sub-index of object 1011 of the slave that is used to
 	// initiate the restore operation.
@@ -589,7 +605,11 @@ co_nmt_cfg_restore_on_enter(co_nmt_cfg_t *cfg)
 
 	// If the sub-index is 0, no restore is sent to the slave.
 	if (!subidx)
+#if LELY_NO_MALLOC
+		return co_nmt_cfg_user_state;
+#else
 		return co_nmt_cfg_store_1f20_state;
+#endif
 
 	// Write the value 'load' to sub-index of object 1011 on the slave.
 	// clang-format off
@@ -652,7 +672,11 @@ co_nmt_cfg_reset_on_recv(co_nmt_cfg_t *cfg, const struct can_msg *msg)
 	(void)msg;
 
 	can_recv_stop(cfg->recv);
+#if LELY_NO_MALLOC
+	return co_nmt_cfg_user_state;
+#else
 	return co_nmt_cfg_store_1f20_state;
+#endif
 }
 
 static co_nmt_cfg_state_t *
@@ -664,6 +688,8 @@ co_nmt_cfg_reset_on_time(co_nmt_cfg_t *cfg, const struct timespec *tp)
 	cfg->ac = CO_SDO_AC_TIMEOUT;
 	return co_nmt_cfg_abort_state;
 }
+
+#if !LELY_NO_MALLOC
 
 static co_nmt_cfg_state_t *
 co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
@@ -900,6 +926,8 @@ co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 
 	return NULL;
 }
+
+#endif // !LELY_NO_MALLOC
 
 static co_nmt_cfg_state_t *
 co_nmt_cfg_user_on_enter(co_nmt_cfg_t *cfg)

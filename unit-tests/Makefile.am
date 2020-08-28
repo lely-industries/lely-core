@@ -11,10 +11,14 @@ if PLATFORM_WIN32
 CPPUTEST_LIBS += -lpthread
 endif
 
+src_common =
+src_common += tests-shared-main.cpp
+src_common += override/override-test-plugin.cpp
+
 # CppUTest library self-test
 
 bin += test-cpputest
-test_cpputest_SOURCES = tests-shared-main.cpp test-cpputest.cpp
+test_cpputest_SOURCES = $(src_common) test-cpputest.cpp
 test_cpputest_LDADD = $(CPPUTEST_LIBS)
 
 # Override library (lely-core)
@@ -47,9 +51,9 @@ LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 src_util_tests =
 src_util_tests += util/test-bits.cpp
 src_util_tests += util/test-cmp.cpp
-src_util_tests += util/test-diag.cpp
 src_util_tests += util/test-dllist.cpp
 src_util_tests += util/test-endian.cpp
+src_util_tests += util/test-membuf.cpp
 src_util_tests += util/test-pheap.cpp
 src_util_tests += util/test-rbtree.cpp
 src_util_tests += util/test-time.cpp
@@ -62,8 +66,20 @@ src_util_tests += util/test-sllist.cpp
 src_util_tests += util/test-spscring.cpp
 endif
 
+if !NO_DIAG
+src_util_tests += util/test-diag.cpp
+else # !NO_DIAG
+if !NO_CO_DCF
+src_util_tests += util/test-diag.cpp
+else # !NO_CO_DCF
+if !NO_CO_GW_TXT
+src_util_tests += util/test-diag.cpp
+endif # !NO_CO_GW_TXT
+endif # !NO_CO_DCF
+endif # !NO_DIAG
+
 bin += unit-test-util
-unit_test_util_SOURCES = tests-shared-main.cpp $(src_util_tests)
+unit_test_util_SOURCES = $(src_common) $(src_util_tests)
 unit_test_util_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
 
 # CAN library tests
@@ -77,7 +93,7 @@ src_can_tests += can/test-buf.cpp
 src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-net.cpp
 
-unit_test_can_SOURCES = tests-shared-main.cpp $(src_can_tests)
+unit_test_can_SOURCES = $(src_common) $(src_can_tests)
 unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
 
 # CANopen library tests
@@ -90,6 +106,7 @@ src_co_tests =
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
+src_co_tests += co/test-rpdo.cpp
 src_co_tests += co/test-type.cpp
 src_co_tests += co/test-val.cpp
 if !PLATFORM_WIN32
@@ -98,11 +115,17 @@ src_co_tests += override/lelyco-val.cpp
 endif
 endif
 
-unit_test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
+unit_test_co_SOURCES = $(src_common) $(src_co_tests)
 unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
-unit_test_co_LDFLAGS = -Wl,--wrap=co_val_read -Wl,--wrap=co_val_write -Wl,--wrap=co_val_make
+unit_test_co_LDFLAGS =
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_read
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_write
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_make
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init_min
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init_max
+unit_test_co_LDFLAGS += -Wl,--wrap=co_val_init
 endif
 else
 unit_test_co_LDFLAGS = -all-static

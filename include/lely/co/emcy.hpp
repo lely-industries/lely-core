@@ -45,6 +45,7 @@ struct c_type_traits<__co_emcy> {
   alloc() noexcept {
     return __co_emcy_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_emcy_free(ptr);
@@ -68,10 +69,21 @@ class COEmcy : public incomplete_c_type<__co_emcy> {
  public:
   COEmcy(CANNet* net, CODev* dev) : c_base(net, dev) {}
 
+  int
+  start() noexcept {
+    return co_emcy_start(this);
+  }
+
+  void
+  stop() noexcept {
+    co_emcy_stop(this);
+  }
+
   CANNet*
   getNet() const noexcept {
     return co_emcy_get_net(this);
   }
+
   CODev*
   getDev() const noexcept {
     return co_emcy_get_dev(this);

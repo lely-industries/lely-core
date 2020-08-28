@@ -45,6 +45,7 @@ struct c_type_traits<__co_tpdo> {
   alloc() noexcept {
     return __co_tpdo_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_tpdo_free(ptr);
@@ -69,10 +70,21 @@ class COTPDO : public incomplete_c_type<__co_tpdo> {
   COTPDO(CANNet* net, CODev* dev, co_unsigned16_t num)
       : c_base(net, dev, num) {}
 
+  int
+  start() noexcept {
+    return co_tpdo_start(this);
+  }
+
+  void
+  stop() noexcept {
+    co_tpdo_stop(this);
+  }
+
   CANNet*
   getNet() const noexcept {
     return co_tpdo_get_net(this);
   }
+
   CODev*
   getDev() const noexcept {
     return co_tpdo_get_dev(this);

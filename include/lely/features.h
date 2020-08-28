@@ -121,32 +121,34 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 
+#ifndef __cplusplus
+
 #ifndef __STDC_NO_ATOMICS__
 // GCC versions older than 4.9 do not properly advertise the absence of
 // <stdatomic.h>.
-// clang-format off
-#if defined(__cplusplus) || defined(_MSC_VER) \
+#if defined(_MSC_VER) \
 		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9) \
-				&& !defined(__clang__)) \
+				   && !defined(__clang__)) \
 		|| (defined(__clang__) && !__has_extension(c_atomic))
-// clang-format on
 #define __STDC_NO_ATOMICS__ 1
 #endif
-#endif
+#endif // !__STDC_NO_ATOMICS__
 
 #ifndef __STDC_NO_THREADS__
 // Although recent versions of Cygwin do provide <threads.h>, it requires
 // <machine/_threads.h>, which is missing.
-#if defined(__cplusplus) || defined(_MSC_VER) || defined(__CYGWIN__)
+#if defined(_MSC_VER) || defined(__CYGWIN__)
 #define __STDC_NO_THREADS__ 1
 #endif
-#endif
+#endif // !__STDC_NO_THREADS__
 
 #ifndef __STDC_NO_VLA__
-#if defined(__cplusplus) || defined(_MSC_VER)
+#if defined(_MSC_VER)
 #define __STDC_NO_VLA__ 1
 #endif
-#endif
+#endif // !__STDC_NO_VLA__
+
+#endif // !__cplusplus
 
 #ifdef __cplusplus
 
@@ -297,6 +299,35 @@
  */
 #define LEVEL1_DCACHE_LINESIZE 64
 #endif
+
+#ifndef LELY_NO_THREADS
+#if defined(__cplusplus)
+// <thread> (C++11 thread support library) is available.
+#elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+// <threads.h> (C11 thread support library) is available.
+#elif _POSIX_THREADS >= 200112L || defined(__MINGW32__)
+// <pthread.h> (POSIX threads) is available.
+#elif _WIN32
+// Windows threads are available.
+#else
+#define LELY_NO_THREADS 1
+#endif
+#endif // !LELY_NO_THREADS
+
+#ifndef LELY_NO_ATOMICS
+#if LELY_NO_THREADS
+// Disable atomic operations if threads are disabled.
+#define LELY_NO_ATOMICS 1
+#elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
+// <stdatomic.h> (C11 atomic operations library) is available.
+#elif defined(__clang__) && __has_extension(c_atomic)
+// Clang C11 atomic operations are available.
+#elif GNUC_PREREQ(4, 1)
+// GCC __sync or __atomic builtins are available.
+#else
+#define LELY_NO_ATOMICS 1
+#endif
+#endif // !LELY_NO_ATOMICS
 
 #define LELY_INGORE_EMPTY_TRANSLATION_UNIT \
 	typedef int lely_ignore_empty_translation_unit__;

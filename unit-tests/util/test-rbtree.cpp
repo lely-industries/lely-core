@@ -58,8 +58,7 @@ TEST_GROUP(Util_Rbtree) {
   rbtree tree;
   static const size_t NODES_NUMBER = 10;
   rbnode nodes[NODES_NUMBER];
-  const int keys[NODES_NUMBER] = {-123, 233,  342,  343,  500,
-                                  543,  1000, 3255, 4352, 5142};
+  const int keys[NODES_NUMBER] = {-10, 10, 20, 30, 40, 50, 60, 70, 80, 90};
 
   TEST_SETUP() {
     rbtree_init(&tree, rbtree_cmp_ints);
@@ -250,6 +249,45 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolations) {
 
   POINTERS_EQUAL(&nodes[3], rbtree_root(&tree));
   CHECK_EQUAL(9U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase2ConditionFalseOnLeftSubtree) {
+  rbtree_insert(&tree, &nodes[8]);
+  rbtree_insert(&tree, &nodes[9]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[7]);
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+
+  rbtree_remove(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[6], rbtree_root(&tree));
+  CHECK_EQUAL(9U, rbtree_size(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[2]);
+
+  rbtree_remove(&tree, &nodes[3]);
+  rbtree_remove(&tree, &nodes[1]);
+  rbtree_remove(&tree, &nodes[6]);
+  rbtree_remove(&tree, &nodes[0]);
+  rbtree_remove(&tree, &nodes[2]);
+  rbtree_remove(&tree, &nodes[4]);
+  rbtree_remove(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(nullptr, rbtree_root(&tree));
+  CHECK_EQUAL(0U, rbtree_size(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {

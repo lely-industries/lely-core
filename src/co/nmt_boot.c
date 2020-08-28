@@ -4,7 +4,7 @@
  *
  * @see src/nmt_boot.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -2153,14 +2153,13 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (!sub)
 		return 0;
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
 
 	union co_val val;
 	if (!co_val_read(type, &val, ptr, (const uint_least8_t *)ptr + n))
 		return 0;
 
-	int eq = !co_val_cmp(type, &val, co_sub_get_val(sub));
-	co_val_fini(type, &val);
-	return eq;
+	return !co_val_cmp(type, &val, co_sub_get_val(sub));
 }
 
 static int

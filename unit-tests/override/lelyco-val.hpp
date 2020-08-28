@@ -30,19 +30,34 @@
 /* 0. Declare valid calls counter for the overridden function. */
 namespace LelyOverride {
 /**
- * Number of valid calls to co_val_read().
+ * Setups number of valid calls to co_val_read().
  */
-extern int co_val_read_vc;
+void co_val_read(int valid_calls);
 
 /**
- * Number of valid calls to co_val_write().
+ * Setups number of valid calls to co_val_write().
  */
-extern int co_val_write_vc;
+void co_val_write(int valid_calls);
 
 /**
- * Number of valid calls to co_val_make().
+ * Setups number of valid calls to co_val_make().
  */
-extern int co_val_make_vc;
+void co_val_make(int valid_calls);
+
+/**
+ * Setups number of valid calls to co_val_init_min().
+ */
+void co_val_init_min(int valid_calls);
+
+/**
+ * Setups number of valid calls to co_val_init_max().
+ */
+void co_val_init_max(int valid_calls);
+
+/**
+ * Setups number of valid calls to co_val_init().
+ */
+void co_val_init(int valid_calls);
 
 }  // namespace LelyOverride
 

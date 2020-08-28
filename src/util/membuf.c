@@ -4,7 +4,7 @@
  *
  * @see lely/util/membuf.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,12 +22,14 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_MEMBUF_INLINE extern inline
 #include <lely/util/errnum.h>
+#define LELY_UTIL_MEMBUF_INLINE extern inline
 #include <lely/util/membuf.h>
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
+#endif
 
 #ifndef LELY_MEMBUF_SIZE
 /// The initial size (in bytes) of a memory buffer.
@@ -37,9 +39,13 @@
 void
 membuf_fini(struct membuf *buf)
 {
+#if LELY_NO_MALLOC
+	(void)buf;
+#else
 	assert(buf);
 
 	free(buf->begin);
+#endif
 }
 
 size_t
@@ -51,6 +57,10 @@ membuf_reserve(struct membuf *buf, size_t size)
 	if (size <= capacity)
 		return capacity;
 
+#if LELY_NO_MALLOC
+	set_errnum(ERRNUM_NOMEM);
+	return 0;
+#else
 	// The required size equals the size of the data already in the buffer,
 	// plus the data to be added. To limit the number of allocations, we
 	// keep doubling the size of the buffer until it is large enough.
@@ -69,6 +79,7 @@ membuf_reserve(struct membuf *buf, size_t size)
 	buf->end = buf->begin + buf_size;
 
 	return membuf_capacity(buf);
+#endif // LELY_NO_MALLOC
 }
 
 void

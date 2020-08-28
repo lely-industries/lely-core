@@ -4,7 +4,7 @@
  *
  * @see lely/co/ssdo.h, src/sdo.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -34,6 +34,15 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#endif
+
+#if LELY_NO_MALLOC
+#define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SDO_MEMBUF_SIZE / 7))
+#else
+#define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
+#endif
 
 struct __co_ssdo_state;
 /// An opaque CANopen Server-SDO state type.
@@ -77,6 +86,13 @@ struct __co_ssdo {
 	struct membuf buf;
 	/// The number of bytes in #req already copied to #buf.
 	size_t nbyte;
+#if LELY_NO_MALLOC
+	/**
+	 * The static memory buffer used by #buf in the absence of dynamic
+	 * memory allocation.
+	 */
+	char begin[CO_SDO_MEMBUF_SIZE];
+#endif
 };
 
 /**
@@ -542,13 +558,6 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	if (obj_1200) {
-		// Copy the SDO parameter record.
-		size_t size = co_obj_sizeof_val(obj_1200);
-		memcpy(&sdo->par, co_obj_addressof_val(obj_1200),
-				MIN(size, sizeof(sdo->par)));
-	}
-
 	sdo->recv = can_recv_create();
 	if (!sdo->recv) {
 		errc = get_errc();
@@ -577,23 +586,26 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->crc = 0;
 
 	co_sdo_req_init(&sdo->req);
+#if LELY_NO_MALLOC
+	sdo->buf.begin = sdo->buf.cur = sdo->begin;
+	sdo->buf.end = sdo->buf.begin + CO_SDO_MEMBUF_SIZE;
+#else
 	membuf_init(&sdo->buf);
+#endif
 	sdo->nbyte = 0;
+#if LELY_NO_MALLOC
+	memset(sdo->begin, 0, CO_SDO_MEMBUF_SIZE);
+#endif
 
-	// Set the download indication function for the SDO parameter record.
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
-
-	if (co_ssdo_update(sdo) == -1) {
+	if (co_ssdo_start(sdo) == -1) {
 		errc = get_errc();
-		goto error_update;
+		goto error_start;
 	}
 
 	return sdo;
 
-error_update:
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+	// co_ssdo_stop(sdo);
+error_start:
 	can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
@@ -609,14 +621,7 @@ __co_ssdo_fini(struct __co_ssdo *sdo)
 	assert(sdo);
 	assert(sdo->num >= 1 && sdo->num <= 128);
 
-	// Remove the download indication functions for the SDO parameter
-	// record.
-	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, NULL, NULL);
-
-	// Abort any ongoing transfer.
-	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
+	co_ssdo_stop(sdo);
 
 	membuf_fini(&sdo->buf);
 	co_sdo_req_fini(&sdo->req);
@@ -661,6 +666,53 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 		__co_ssdo_fini(ssdo);
 		__co_ssdo_free(ssdo);
 	}
+}
+
+int
+co_ssdo_start(co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	co_ssdo_stop(sdo);
+
+	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
+	if (obj_1200) {
+		// Copy the SDO parameter record.
+		size_t size = co_obj_sizeof_val(obj_1200);
+		memcpy(&sdo->par, co_obj_addressof_val(obj_1200),
+				MIN(size, sizeof(sdo->par)));
+		// Set the download indication function for the SDO parameter
+		// record.
+		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
+	}
+
+	if (co_ssdo_update(sdo) == -1)
+		goto error_update;
+
+	return 0;
+
+error_update:
+	if (obj_1200)
+		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+	return -1;
+}
+
+void
+co_ssdo_stop(co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	// Abort any ongoing transfer.
+	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
+
+	can_timer_stop(sdo->timer);
+	can_recv_stop(sdo->recv);
+
+	// Remove the download indication functions for the SDO parameter
+	// record.
+	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
+	if (obj_1200)
+		co_obj_set_dn_ind(obj_1200, NULL, NULL);
 }
 
 can_net_t *
@@ -750,21 +802,22 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(sdo);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1200 + sdo->num - 1);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
+	co_unsigned32_t ac = 0;
 	union co_val val;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
 	switch (co_sub_get_subidx(sub)) {
-	case 0: ac = CO_SDO_AC_NO_WRITE; goto error;
+	case 0: return CO_SDO_AC_NO_WRITE;
 	case 1: {
 		assert(type == CO_DEFTYPE_UNSIGNED32);
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -772,17 +825,13 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_req = cobid;
 		break;
@@ -792,7 +841,7 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned32_t cobid = val.u32;
 		co_unsigned32_t cobid_old = co_sub_get_val_u32(sub);
 		if (cobid == cobid_old)
-			goto error;
+			return 0;
 
 		// The CAN-ID cannot be changed when the SDO is and remains
 		// valid.
@@ -800,17 +849,13 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		int valid_old = !(cobid_old & CO_SDO_COBID_VALID);
 		uint_least32_t canid = cobid & CAN_MASK_EID;
 		uint_least32_t canid_old = cobid_old & CAN_MASK_EID;
-		if (valid && valid_old && canid != canid_old) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+		if (valid && valid_old && canid != canid_old)
+			return CO_SDO_AC_PARAM_VAL;
 
 		// A 29-bit CAN-ID is only valid if the frame bit is set.
 		if (!(cobid & CO_SDO_COBID_FRAME)
-				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID))) {
-			ac = CO_SDO_AC_PARAM_VAL;
-			goto error;
-		}
+				&& (cobid & (CAN_MASK_EID ^ CAN_MASK_BID)))
+			return CO_SDO_AC_PARAM_VAL;
 
 		sdo->par.cobid_res = cobid;
 		break;
@@ -820,23 +865,18 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		co_unsigned8_t id = val.u8;
 		co_unsigned8_t id_old = co_sub_get_val_u8(sub);
 		if (id == id_old)
-			goto error;
+			return 0;
 
 		sdo->par.id = id;
 		break;
 	}
-	default: ac = CO_SDO_AC_NO_SUB; goto error;
+	default: return CO_SDO_AC_NO_SUB;
 	}
 
 	co_sub_dn(sub, &val);
-	co_val_fini(type, &val);
 
 	co_ssdo_update(sdo);
 	return 0;
-
-error:
-	co_val_fini(type, &val);
-	return ac;
 }
 
 static int
@@ -1182,7 +1222,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	}
 
 	// Use the maximum block size by default.
-	sdo->blksize = CO_SDO_MAX_SEQNO;
+	sdo->blksize = CO_SSDO_MAX_SEQNO;
 	sdo->ackseq = 0;
 
 	co_ssdo_send_blk_dn_ini_res(sdo);
@@ -1344,7 +1384,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (msg->len < 5)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[4];
-	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
+	if (!sdo->blksize || sdo->blksize > CO_SSDO_MAX_SEQNO)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	// Load the protocol switch threshold (PST).
@@ -1426,7 +1466,7 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 		// Read the number of segments in the next block.
 		sdo->blksize = msg->data[2];
-		if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
+		if (!sdo->blksize || sdo->blksize > CO_SSDO_MAX_SEQNO)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 		break;

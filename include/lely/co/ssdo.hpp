@@ -45,6 +45,7 @@ struct c_type_traits<__co_ssdo> {
   alloc() noexcept {
     return __co_ssdo_alloc();
   }
+
   static void
   free(void* ptr) noexcept {
     __co_ssdo_free(ptr);
@@ -68,14 +69,26 @@ class COSSDO : public incomplete_c_type<__co_ssdo> {
  public:
   COSSDO(CANNet* net, CODev* dev, co_unsigned8_t num) : c_base(net, dev, num) {}
 
+  int
+  start() noexcept {
+    return co_ssdo_start(this);
+  }
+
+  void
+  stop() noexcept {
+    co_ssdo_stop(this);
+  }
+
   CANNet*
   getNet() const noexcept {
     return co_ssdo_get_net(this);
   }
+
   CODev*
   getDev() const noexcept {
     return co_ssdo_get_dev(this);
   }
+
   co_unsigned8_t
   getNum() const noexcept {
     return co_ssdo_get_num(this);

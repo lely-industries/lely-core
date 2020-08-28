@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the
  * synchronization (SYNC) object declarations.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -67,7 +67,8 @@ struct __co_sync *__co_sync_init(
 void __co_sync_fini(struct __co_sync *sync);
 
 /**
- * Creates a new CANopen SYNC producer/consumer service.
+ * Creates a new CANopen SYNC producer/consumer service. The service is started
+ * as if by co_sync_start().
  *
  * @param net  a pointer to a CAN network.
  * @param dev  a pointer to a CANopen device.
@@ -81,6 +82,19 @@ co_sync_t *co_sync_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen SYNC producer/consumer service. @see co_sync_create()
 void co_sync_destroy(co_sync_t *sync);
+
+/**
+ * Starts a SYNC service.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_sync_stop()
+ */
+int co_sync_start(co_sync_t *sync);
+
+/// Stops a SYNC service. @see co_sync_start()
+void co_sync_stop(co_sync_t *sync);
 
 /// Returns a pointer to the CAN network of a SYNC producer/consumer service.
 can_net_t *co_sync_get_net(const co_sync_t *sync);

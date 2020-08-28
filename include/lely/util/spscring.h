@@ -37,18 +37,20 @@
 
 #include <lely/features.h>
 
+#if !LELY_NO_ATOMICS
 #ifdef __cplusplus
 #include <atomic>
 #else
 #include <lely/libc/stdatomic.h>
 #endif
+#endif // !LELY_NO_ATOMICS
 
 #include <stddef.h>
 
-#if defined(__cplusplus)
-typedef ::std::atomic_size_t spscring_atomic_t;
-#elif __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 typedef size_t spscring_atomic_t;
+#elif defined(__cplusplus)
+using spscring_atomic_t = ::std::atomic_size_t;
 #else // C11
 typedef atomic_size_t spscring_atomic_t;
 #endif
@@ -81,7 +83,7 @@ struct spscring {
 };
 
 /// The static initializer for #spscring.
-#if !defined(__cplusplus) && __STDC_NO_ATOMICS__
+#if LELY_NO_ATOMICS
 #define SPSCRING_INIT(size) \
 	{ \
 		{ { (size), 0, 0, 0 }, { 0 }, 0, { 0 }, { 0, NULL, NULL }, \

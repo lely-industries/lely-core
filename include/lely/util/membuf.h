@@ -70,6 +70,18 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_size(const struct membuf *buf);
 /// Returns the number of unused bytes remaining in a memory buffer.
 LELY_UTIL_MEMBUF_INLINE size_t membuf_capacity(const struct membuf *buf);
 
+#if LELY_NO_MALLOC
+/**
+ * Attaches a fixed-size memory area to a memory buffer.
+ *
+ * @param buf a pointer to a memory buffer.
+ * @param memory a pointer to a fixed-size memory area.
+ * @param size the size of the memory area.
+ */
+LELY_UTIL_MEMBUF_INLINE void membuf_attach(
+		struct membuf *buf, void *memory, size_t size);
+#endif
+
 /**
  * Resizes a memory buffer, if necessary, to make room for at least an
  * additional <b>size</b> bytes. This function may also shrink the buffer if it
@@ -134,6 +146,18 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
 
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
 void membuf_flush(struct membuf *buf, size_t size);
+
+#if LELY_NO_MALLOC
+LELY_UTIL_MEMBUF_INLINE void
+membuf_attach(struct membuf *buf, void *memory, size_t size)
+{
+	assert(buf);
+
+	buf->begin = (char *)memory;
+	buf->cur = buf->begin;
+	buf->end = buf->begin + size;
+}
+#endif
 
 LELY_UTIL_MEMBUF_INLINE void
 membuf_init(struct membuf *buf)

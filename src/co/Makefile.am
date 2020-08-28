@@ -32,7 +32,6 @@ src += nmt_hb.h
 src += nmt_srv.c
 src += nmt_srv.h
 src += obj.c
-src += obj.h
 src += pdo.c
 if !NO_CO_RPDO
 src += rpdo.c

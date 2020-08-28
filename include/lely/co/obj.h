@@ -151,10 +151,16 @@ typedef co_unsigned32_t co_sub_dn_ind_t(
 typedef co_unsigned32_t co_sub_up_ind_t(
 		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
+#if !LELY_NO_MALLOC
 void *__co_obj_alloc(void);
 void __co_obj_free(void *ptr);
-struct __co_obj *__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx);
+#endif
+
+struct __co_obj *__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx,
+		void *val, size_t size);
 void __co_obj_fini(struct __co_obj *obj);
+
+#if !LELY_NO_MALLOC
 
 /**
  * Creates a CANopen object.
@@ -170,6 +176,8 @@ co_obj_t *co_obj_create(co_unsigned16_t idx);
 
 /// Destroys a CANopen object, including its sub-objects. @see co_obj_create()
 void co_obj_destroy(co_obj_t *obj);
+
+#endif // !LELY_NO_MALLOC
 
 /**
  * Finds the previous object in the object dictionary of a CANopen device.
@@ -374,11 +382,16 @@ void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
  */
 void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
 
+#if !LELY_NO_MALLOC
 void *__co_sub_alloc(void);
 void __co_sub_free(void *ptr);
+#endif
+
 struct __co_sub *__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx,
-		co_unsigned16_t type);
+		co_unsigned16_t type, void *val);
 void __co_sub_fini(struct __co_sub *sub);
+
+#if !LELY_NO_MALLOC
 
 /**
  * Creates a CANopen sub-object.
@@ -396,6 +409,8 @@ co_sub_t *co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type);
 
 /// Destroys a CANopen sub-object. @see co_sub_create()
 void co_sub_destroy(co_sub_t *sub);
+
+#endif // !LELY_NO_MALLOC
 
 /**
  * Finds the previous sub-object in a CANopen object.
