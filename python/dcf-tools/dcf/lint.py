@@ -187,7 +187,8 @@ def __parse_objects(cfg: dict, section: str) -> bool:
                     and index != 0x1018
                 ):
                     warnings.warn(
-                        "object 0x{:04X} is not mandatory".format(index), stacklevel=3,
+                        "object 0x{:04X} is not mandatory".format(index),
+                        stacklevel=3,
                     )
                     ok = False
                 elif (
@@ -355,7 +356,10 @@ def __parse_sub_object_0(cfg: dict, section: str) -> bool:
                 ok = False
         if "ParameterValue" in cfg[section]:
             if not __parse_value(
-                cfg[section], section, "ParameterValue", cfg[section]["ParameterValue"],
+                cfg[section],
+                section,
+                "ParameterValue",
+                cfg[section]["ParameterValue"],
             ):
                 ok = False
     else:
@@ -561,7 +565,8 @@ def __parse_data_type(cfg: dict, section: str) -> bool:
             ok = False
     else:
         warnings.warn(
-            "unsupported DataType in [{}]: {}".format(section, data_type), stacklevel=4,
+            "unsupported DataType in [{}]: {}".format(section, data_type),
+            stacklevel=4,
         )
         ok = False
 
