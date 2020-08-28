@@ -7,4 +7,3 @@ __license__ = 'Apache-2.0'
 
 from lely_can.err import *
 from lely_can.msg import *
-

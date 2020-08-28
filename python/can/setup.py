@@ -42,4 +42,3 @@ setup(
     package_dir=package_dir,
     ext_modules=ext_modules
 )
-

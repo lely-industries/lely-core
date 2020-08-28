@@ -100,7 +100,7 @@ class Device(dict):
                 self.tpdo[i + 1] = PDO.from_device(self, 0x1800 + i)
 
     @classmethod
-    def from_dcf(cls, filename: str, env: dict = {}) -> "Master":
+    def from_dcf(cls, filename: str, env: dict = {}) -> "Device":
         cfg = parse_file(filename)
 
         if not lint(cfg):
