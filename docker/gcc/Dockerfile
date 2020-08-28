@@ -13,8 +13,10 @@ RUN apt-get update -q \
         cython3 \
         libpython3-dev \
         python3 \
+        python3-empy \
         python3-setuptools \
         python3-wheel \
+        python3-yaml \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -q \
