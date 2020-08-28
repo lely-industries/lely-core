@@ -32,6 +32,7 @@
 #include <lely/util/endian.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
+#include <lely/util/ustring.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -86,37 +87,6 @@ static void co_array_init(void *val, size_t size);
 static void co_array_fini(void *val);
 
 static size_t co_array_sizeof(const void *val);
-
-/**
- * Returns the number of (16-bit) Unicode characters, excluding the terminating
- * null bytes, in the string at <b>s</b>.
- */
-static size_t str16len(const char16_t *s);
-
-/**
- * Copies at most <b>n</b> (16-bit) Unicode characters from the string at
- * <b>src</b> to <b>dst</b>.
- *
- * @param dst the destination address, which MUST be large enough to hold the
- *            string.
- * @param src a pointer to the string to be copied.
- * @param n   the maximum number of (16-bit) Unicode characters to copy.
- *
- * @returns <b>dst</b>.
- */
-static char16_t *str16ncpy(char16_t *dst, const char16_t *src, size_t n);
-
-/**
- * Compares two (16-bit) Unicode strings.
- *
- * @param s1 a pointer to the first string.
- * @param s2 a pointer to the second string.
- * @param n  the maximum number of characters to compare.
- *
- * @returns an integer greater than, equal to, or less than 0 if the string at
- * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
- */
-static int str16ncmp(const char16_t *s1, const char16_t *s2, size_t n);
 
 int
 co_val_init(co_unsigned16_t type, void *val)
@@ -1401,34 +1371,4 @@ co_array_sizeof(const void *val)
 
 	const char *ptr = *(const char **)val;
 	return ptr ? *(const size_t *)(ptr - CO_ARRAY_OFFSET) : 0;
-}
-
-static size_t
-str16len(const char16_t *s)
-{
-	const char16_t *cp = s;
-	for (; *cp; cp++)
-		;
-	return cp - s;
-}
-
-static char16_t *
-str16ncpy(char16_t *dst, const char16_t *src, size_t n)
-{
-	char16_t *cp = dst;
-	for (; n && *src; n--)
-		*cp++ = *src++;
-	while (n--)
-		*cp++ = 0;
-
-	return dst;
-}
-
-static int
-str16ncmp(const char16_t *s1, const char16_t *s2, size_t n)
-{
-	int result = 0;
-	while (n-- && !(result = *s1 - *s2++) && *s1++)
-		;
-	return result;
 }

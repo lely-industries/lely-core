@@ -81,6 +81,7 @@ endif
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
 inc += lely/util/time.h
+inc += lely/util/ustring.h
 inc += lely/util/util.h
 
 inc += lely/can/buf.h
