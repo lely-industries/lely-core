@@ -43,7 +43,7 @@
 #define LELY_HAVE_SYNC_ATOMIC 1
 #endif
 
-#if !__STDC_NO_ATOMICS__
+#if LELY_HAVE_CLANG_ATOMIC | LELY_HAVE_GNUC_ATOMIC | LELY_HAVE_SYNC_ATOMIC
 
 #include <lely/libc/uchar.h>
 
@@ -668,7 +668,7 @@ atomic_flag_clear(volatile atomic_flag *object)
 }
 #endif
 
-#endif // !__STDC_NO_ATOMICS__
+#endif // LELY_HAVE_CLANG_ATOMIC | LELY_HAVE_GNUC_ATOMIC | LELY_HAVE_SYNC_ATOMIC
 
 #endif // !LELY_HAVE_STDATOMIC_H
 
