@@ -4,7 +4,7 @@
  *
  * @see lely/util/endian.h
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  * @author M. W. Hessel <mhessel@lely.com>
