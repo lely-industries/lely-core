@@ -58,6 +58,7 @@ src += rbtree.c
 src += time.c
 src += ustring.c
 src += util.h
+src += ustring.h
 
 lib_LTLIBRARIES = liblely-util.la
 liblely_util_la_CPPFLAGS = -I$(top_srcdir)/include
