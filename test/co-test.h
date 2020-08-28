@@ -5,7 +5,7 @@
 #include <lely/can/buf.h>
 #include <lely/can/net.h>
 #include <lely/util/diag.h>
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 #include <lely/co/wtm.h>
 #endif
 
@@ -17,7 +17,7 @@
 
 struct co_test {
 	can_net_t *net;
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 	co_wtm_t *wtm;
 #endif
 	struct can_buf buf;
@@ -29,11 +29,13 @@ struct co_test {
 extern "C" {
 #endif
 
+#if !LELY_NO_DIAG
 static void co_test_diag_handler(void *handle, enum diag_severity severity,
 		int errc, const char *format, va_list ap);
 static void co_test_diag_at_handler(void *handle, enum diag_severity severity,
 		int errc, const struct floc *at, const char *format,
 		va_list ap);
+#endif // !LELY_NO_DIAG
 
 static void co_test_init(struct co_test *test, can_net_t *net, int wait);
 static void co_test_fini(struct co_test *test);
@@ -45,7 +47,7 @@ static inline void co_test_done(struct co_test *test);
 
 static int co_test_recv(struct co_test *test, const struct can_msg *msg);
 static int co_test_send(const struct can_msg *msg, void *data);
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 static int co_test_wtm_recv(co_wtm_t *wtm, uint_least8_t nif,
 		const struct timespec *tp, const struct can_msg *msg,
 		void *data);
@@ -53,6 +55,7 @@ static int co_test_wtm_send(
 		co_wtm_t *wtm, const void *buf, size_t nbytes, void *data);
 #endif
 
+#if !LELY_NO_DIAG
 static void
 co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
 		const char *format, va_list ap)
@@ -76,6 +79,30 @@ co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	if (severity == DIAG_FATAL)
 		abort();
 }
+#else
+
+static void
+co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
+		const char *format, va_list ap) {
+	(void)handle;
+	(void)severity;
+	(void)errc;
+	(void)format;
+	(void)ap;
+}
+
+static void
+co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
+		const struct floc *at, const char *format, va_list ap) {
+	(void)handle;
+	(void)severity;
+	(void)errc;
+	(void)at;
+	(void)format;
+	(void)ap;
+}
+
+#endif // !LELY_NO_DIAG
 
 static void
 co_test_init(struct co_test *test, can_net_t *net, int wait)
@@ -88,7 +115,7 @@ co_test_init(struct co_test *test, can_net_t *net, int wait)
 
 	tap_assert(!can_buf_init(&test->buf, CO_TEST_BUFSIZE));
 
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 	test->wtm = co_wtm_create();
 	tap_assert(test->wtm);
 	co_wtm_set_send_func(test->wtm, &co_test_wtm_send, NULL);
@@ -106,7 +133,7 @@ co_test_fini(struct co_test *test)
 {
 	tap_assert(test);
 
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 	co_wtm_destroy(test->wtm);
 #endif
 
@@ -118,7 +145,7 @@ co_test_step(struct co_test *test)
 {
 	tap_assert(test);
 
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 	co_wtm_flush(test->wtm);
 #endif
 
@@ -126,7 +153,7 @@ co_test_step(struct co_test *test)
 	timespec_get(&now, TIME_UTC);
 	can_net_set_time(test->net, &now);
 
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 	co_wtm_flush(test->wtm);
 #endif
 
@@ -179,7 +206,7 @@ co_test_send(const struct can_msg *msg, void *data)
 	struct co_test *test = data;
 	tap_assert(test);
 
-#ifdef LELY_CO_NO_WTM
+#ifdef LELY_NO_CO_WTM
 	return co_test_recv(test, msg);
 #else
 	struct timespec now = { 0, 0 };
@@ -189,7 +216,7 @@ co_test_send(const struct can_msg *msg, void *data)
 #endif
 }
 
-#ifndef LELY_CO_NO_WTM
+#ifndef LELY_NO_CO_WTM
 
 static int
 co_test_wtm_recv(co_wtm_t *wtm, uint_least8_t nif, const struct timespec *tp,

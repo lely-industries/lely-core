@@ -3,7 +3,7 @@
  * object 1026 (OS prompt) by connecting the StdIn, StdOut and StdErr
  * sub-objects to `stdin`, `stdout` and `stderr` of a user-specified process.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -19,6 +19,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <lely/can/err.h>
 #include <lely/co/dcf.h>
