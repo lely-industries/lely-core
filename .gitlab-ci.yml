@@ -250,7 +250,7 @@ build:i686-w64-mingw32:
   image: $REGISTRY/i686-w64-mingw32:bullseye
   <<: *build
   variables:
-    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-ython
+    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
 
 test:i686-w64-mingw32:
   image: $REGISTRY/i686-w64-mingw32:bullseye
