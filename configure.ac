@@ -58,15 +58,6 @@ AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
 AM_CONDITIONAL([PLATFORM_POSIX], [test "$platform_posix" == "yes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
-AS_IF([test "$enable_diag" == "no" -a "$enable_tools" == "yes"],[
-	AC_MSG_WARN(m4_normalize[
-
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	Tools will not print diagnostic messages with --disable-diag
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	])
-])
-
 AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
@@ -78,10 +69,19 @@ AS_IF([test "$enable_ecss_compliance" == "yes"], [
 	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
 ])
 
+AM_CONDITIONAL([NO_DIAG], [false])
+AC_ARG_ENABLE([diag],
+	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_diag=no])
+AS_IF([test "$enable_diag" == "no"], [
+	AM_CONDITIONAL([NO_DIAG], [true])
+	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
+])
+
 AM_CONDITIONAL([NO_TOOLS], [false])
 AC_ARG_ENABLE([tools],
 	AS_HELP_STRING([--disable-tools], [disable tools]))
-AS_IF([test "$enable_diag" == "no" -a  "$enable_tools" != "yes"], [enable_tools=no])
+AS_IF([test "$enable_diag" == "no"], [enable_tools=no])
 AS_IF([test "$enable_tools" == "no"], [
 	AM_CONDITIONAL([NO_TOOLS], [true])
 ])
@@ -158,7 +158,7 @@ CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_cxx" != "yes"], [enable_cxx=no])
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_cxx=no])
 AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
@@ -181,19 +181,10 @@ AS_IF([test "$enable_daemon" == "no"], [
 	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
 ])
 
-AM_CONDITIONAL([NO_DIAG], [false])
-AC_ARG_ENABLE([diag],
-	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_diag" != "yes"], [enable_diag=no])
-AS_IF([test "$enable_diag" == "no"], [
-	AM_CONDITIONAL([NO_DIAG], [true])
-	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
-])
-
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_canfd" != "yes"], [enable_canfd=no])
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_canfd=no])
 AS_IF([test "$enable_canfd" == "no"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
@@ -227,7 +218,7 @@ AS_IF([test "$enable_obj_default" == "no"], [
 AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
 AC_ARG_ENABLE([obj-file],
 	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_obj_file" != "yes"], [enable_obj_file=no])
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_obj_file=no])
 AS_IF([test "$enable_obj_file" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
@@ -326,7 +317,7 @@ AS_IF([test "$enable_lss" == "no"], [
 AM_CONDITIONAL([NO_CO_WTM], [false])
 AC_ARG_ENABLE([wtm],
 	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
-AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_wtm" != "yes"], [enable_wtm=no])
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_wtm=no])
 AS_IF([test "$enable_wtm" == "no"], [
 	AM_CONDITIONAL([NO_CO_WTM], [true])
 	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
