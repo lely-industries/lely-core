@@ -58,13 +58,30 @@ AM_CONDITIONAL([PLATFORM_LINUX], [test "$platform_linux" == "yes"])
 AM_CONDITIONAL([PLATFORM_POSIX], [test "$platform_posix" == "yes"])
 AM_CONDITIONAL([PLATFORM_WIN32], [test "$platform_win32" == "yes"])
 
+AS_IF([test "$enable_diag" == "no" -a "$enable_tools" == "yes"],[
+	AC_MSG_WARN(m4_normalize[
+
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Tools will not print diagnostic messages with --disable-diag
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	])
+])
+
 AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
+])
+
+AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
+AC_ARG_ENABLE([ecss-compliance],
+	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [
+	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
 ])
 
 AM_CONDITIONAL([NO_TOOLS], [false])
 AC_ARG_ENABLE([tools],
 	AS_HELP_STRING([--disable-tools], [disable tools]))
+AS_IF([test "$enable_diag" == "no" -a  "$enable_tools" != "yes"], [enable_tools=no])
 AS_IF([test "$enable_tools" == "no"], [
 	AM_CONDITIONAL([NO_TOOLS], [true])
 ])
@@ -77,9 +94,9 @@ AS_IF([test "$enable_tests" == "no"], [
 ])
 
 m4_ifdef([PKG_CHECK_MODULES], [
-	PKG_CHECK_MODULES([CPPUTEST], [cpputest], [with_cpputest=yes], [with_cpputest=no])
+	PKG_CHECK_MODULES([CPPUTEST], [cpputest >= 4], [with_cpputest=yes], [with_cpputest=no])
 ], [
-	AC_MSG_WARN(pkg-config not installed - unit-test will not be available!)
+	AC_MSG_WARN(pkg-config not installed - unit tests will not be available!)
 	with_cpputest=no
 ])
 AC_SUBST([CPPUTEST_CFLAGS])
@@ -141,6 +158,7 @@ CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_cxx" != "yes"], [enable_cxx=no])
 AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
@@ -154,9 +172,19 @@ AS_IF([test "$enable_daemon" == "no"], [
 	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_DIAG], [false])
+AC_ARG_ENABLE([diag],
+	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_diag" != "yes"], [enable_diag=no])
+AS_IF([test "$enable_diag" == "no"], [
+	AM_CONDITIONAL([NO_DIAG], [true])
+	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
+])
+
 AM_CONDITIONAL([NO_CANFD], [false])
 AC_ARG_ENABLE([canfd],
 	AS_HELP_STRING([--disable-canfd], [disable CAN FD support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_canfd" != "yes"], [enable_canfd=no])
 AS_IF([test "$enable_canfd" == "no"], [
 	AM_CONDITIONAL([NO_CANFD], [true])
 	AC_DEFINE([LELY_NO_CANFD], [1], [Define to 1 if CAN FD support is disabled.])
@@ -165,6 +193,7 @@ AS_IF([test "$enable_canfd" == "no"], [
 AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a  "$enable_dcf" != "yes"], [enable_dcf=no])
 AS_IF([test "$enable_dcf" == "no"], [
 	AM_CONDITIONAL([NO_CO_DCF], [true])
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
@@ -221,6 +250,7 @@ AS_IF([test "$enable_obj_upload" == "no"], [
 AM_CONDITIONAL([NO_CO_SDEV], [false])
 AC_ARG_ENABLE([sdev],
 	AS_HELP_STRING([--disable-sdev], [disable static device description support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_sdev" != "yes"], [enable_sdev=no])
 AS_IF([test "$enable_sdev" == "no"], [
 	AM_CONDITIONAL([NO_CO_SDEV], [true])
 	AC_DEFINE([LELY_NO_CO_SDEV], [1], [Define to 1 if static device description support is disabled.])
@@ -285,6 +315,7 @@ AS_IF([test "$enable_lss" == "no"], [
 AM_CONDITIONAL([NO_CO_WTM], [false])
 AC_ARG_ENABLE([wtm],
 	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_wtm" != "yes"], [enable_wtm=no])
 AS_IF([test "$enable_wtm" == "no"], [
 	AM_CONDITIONAL([NO_CO_WTM], [true])
 	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
@@ -302,6 +333,7 @@ AS_IF([test "$enable_master" == "no"], [
 AM_CONDITIONAL([NO_CO_GW], [false])
 AC_ARG_ENABLE([gw],
 	AS_HELP_STRING([--disable-gw], [disable gateway support]))
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_gw" != "yes"], [enable_gw=no])
 AS_IF([test "$enable_gw" == "no"], [
 	AM_CONDITIONAL([NO_CO_GW], [true])
 	AC_DEFINE([LELY_NO_CO_GW], [1], [Define to 1 if gateway support is disabled.])
@@ -483,6 +515,7 @@ AM_CONDITIONAL([WITH_PYTHON], [false])
 AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes"], [
 	enable_python=no
 ])
+AS_IF([test "$enable_ecss_compliance" == "yes" -a "$enable_python" != "yes"], [enable_python=no])
 AS_IF([test "$enable_python" != "no"], [
 	AX_CHECK_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
 	AX_CHECK_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
@@ -537,6 +570,7 @@ AC_CONFIG_FILES([
 	test/Makefile
 	unit-tests/Makefile
 	exec-wrapper.sh
+	lcov-wrapper.sh
 	Makefile
 ])
 AC_OUTPUT

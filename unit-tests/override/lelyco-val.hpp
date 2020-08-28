@@ -20,9 +20,32 @@
  * limitations under the License.
  */
 
-#include <CppUTest/CommandLineTestRunner.h>
+#ifndef LELY_OVERRIDE_LELY_CO_VAL_H_
+#define LELY_OVERRIDE_LELY_CO_VAL_H_
 
-int
-main(int ac, char** av) {
-  return RUN_ALL_TESTS(ac, av);
-}
+#include "override/lely-defs.hpp"
+
+#ifdef HAVE_LELY_OVERRIDE
+
+/* 0. Declare valid calls counter for the overridden function. */
+namespace LelyOverride {
+/**
+ * Number of valid calls to co_val_read().
+ */
+extern int co_val_read_vc;
+
+/**
+ * Number of valid calls to co_val_write().
+ */
+extern int co_val_write_vc;
+
+/**
+ * Number of valid calls to co_val_make().
+ */
+extern int co_val_make_vc;
+
+}  // namespace LelyOverride
+
+#endif  // HAVE_LELY_OVERRIDE
+
+#endif  // !LELY_OVERRIDE_LELY_CO_VAL_H_

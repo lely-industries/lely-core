@@ -320,7 +320,7 @@ co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 	if (co_type_is_array(type)) {
 		const void *ptr = co_val_addressof(type, src);
 		n = co_val_sizeof(type, src);
-		switch (type) {
+		switch (type) { // LCOV_EXCL_BR_LINE
 		case CO_DEFTYPE_VISIBLE_STRING:
 			if (co_val_init_vs(dst, ptr) == -1)
 				return 0;
@@ -337,9 +337,7 @@ co_val_copy(co_unsigned16_t type, void *dst, const void *src)
 			if (co_val_init_dom(dst, ptr, n) == -1)
 				return 0;
 			break;
-		default:
-			// We can never get here.
-			return 0;
+		default: return 0; // We can never get here. [LCOV_EXCL_LINE]
 		}
 	} else {
 		n = co_type_sizeof(type);
@@ -389,7 +387,7 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 
 		size_t n1 = co_val_sizeof(type, v1);
 		size_t n2 = co_val_sizeof(type, v2);
-		switch (type) {
+		switch (type) { // LCOV_EXCL_BR_LINE
 		case CO_DEFTYPE_VISIBLE_STRING:
 			cmp = strncmp(p1, p2, MIN(n1, n2));
 			break;
@@ -402,9 +400,7 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 		case CO_DEFTYPE_DOMAIN:
 			cmp = memcmp(p1, p2, MIN(n1, n2));
 			break;
-		default:
-			// We can never get here.
-			return 0;
+		default: return 0; // We can never get here. [LCOV_EXCL_LINE]
 		}
 		if (!cmp)
 			cmp = (n1 > n2) - (n1 < n2);
@@ -458,7 +454,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 
 	if (co_type_is_array(type)) {
 		if (val) {
-			switch (type) {
+			switch (type) { // LCOV_EXCL_BR_LINE
 			case CO_DEFTYPE_VISIBLE_STRING:
 				// clang-format off
 				if (co_val_init_vs_n(val, (const char *)begin,
@@ -484,9 +480,8 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 				if (co_val_init_dom(val, begin, n) == -1)
 					return 0;
 				break;
-			default:
-				// We can never get here.
-				return 0;
+			// We can never get here
+			default: return 0; // LCOV_EXCL_LINE
 			}
 		}
 		return n;
@@ -497,7 +492,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 			if (n < 1)
 				return 0;
 			if (u)
-				u->b = !!*(const co_boolean_t *)begin;
+				u->b = (*begin != 0);
 			return 1;
 		case CO_DEFTYPE_INTEGER8:
 			if (n < 1)
@@ -698,7 +693,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		if (!ptr || !n)
 			return 0;
 		if (begin && (!end || end - begin >= (ptrdiff_t)n)) {
-			switch (type) {
+			switch (type) { // LCOV_EXCL_BR_LINE
 			case CO_DEFTYPE_VISIBLE_STRING:
 				memcpy(begin, ptr, n);
 				break;
@@ -712,9 +707,8 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 				break;
 			}
 			case CO_DEFTYPE_DOMAIN: memcpy(begin, ptr, n); break;
-			default:
-				// We can never get here.
-				return 0;
+			// We can never get here.
+			default: return 0; // LCOV_EXCL_LINE
 			}
 		}
 		return n;
@@ -722,8 +716,12 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		const union co_val *u = val;
 		switch (type) {
 		case CO_DEFTYPE_BOOLEAN:
-			if (begin && (!end || end - begin >= 1))
-				*(co_boolean_t *)begin = !!u->b;
+			if (begin && (!end || end - begin >= 1)) {
+				if (u->b != 0)
+					*(co_boolean_t *)begin = 1;
+				else
+					*(co_boolean_t *)begin = 0;
+			}
 			return 1;
 		case CO_DEFTYPE_INTEGER8:
 			if (begin && (!end || end - begin >= 1))
@@ -837,6 +835,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 	}
 }
 
+#if !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 size_t
 co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		struct floc *at)
@@ -1228,7 +1227,9 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 
 	return floc_lex(at, begin, cp);
 }
+#endif // !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 
+#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 size_t
 co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 {
@@ -1314,6 +1315,7 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		}
 	}
 }
+#endif // !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 
 static int
 co_array_alloc(void *val, size_t size)

@@ -1,4 +1,3 @@
-
 bin =
 
 LELY_LIBC_LIBS =
@@ -14,38 +13,108 @@ endif
 
 # CppUTest library self-test
 
-bin += cpputest-test
-cpputest_test_SOURCES = tests-shared-main.cpp test-cpputest.cpp
-cpputest_test_LDADD = $(CPPUTEST_LIBS)
+bin += test-cpputest
+test_cpputest_SOURCES = tests-shared-main.cpp test-cpputest.cpp
+test_cpputest_LDADD = $(CPPUTEST_LIBS)
+
+# Override library (lely-core)
+
+LELY_OVERRIDE_CO_VAL_LIB =
+
+if !PLATFORM_WIN32
+if ENABLE_SHARED
+liblelyco_val_override_src =
+liblelyco_val_override_src += override/lelyco-val.cpp
+
+lib_LTLIBRARIES = liblelyco_val_override.la
+
+liblelyco_val_override_la_LDFLAGS =
+liblelyco_val_override_la_LDFLAGS += -Wl,--as-needed
+liblelyco_val_override_la_LIBADD =
+liblelyco_val_override_la_LIBADD += -ldl
+
+liblelyco_val_override_la_CPPFLAGS = -I$(top_srcdir)/include -DLELY_ENABLE_SHARED=1
+liblelyco_val_override_la_SOURCES = $(liblelyco_val_override_src)
+
+LELY_OVERRIDE_CO_VAL_LIB += liblelyco_val_override.la
+endif
+endif
 
 # Utilities library tests
 
 LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
 
-src_util_tests = \
-	util/test-bits.cpp
+src_util_tests =
+src_util_tests += util/test-bits.cpp
+src_util_tests += util/test-cmp.cpp
+src_util_tests += util/test-diag.cpp
+src_util_tests += util/test-dllist.cpp
+src_util_tests += util/test-endian.cpp
+src_util_tests += util/test-pheap.cpp
+src_util_tests += util/test-rbtree.cpp
+src_util_tests += util/test-time.cpp
+src_util_tests += util/test-ustring.cpp
+src_util_tests += util/test-util.cpp
+if !ECSS_COMPLIANCE
+src_util_tests += util/test-bitset.cpp
+src_util_tests += util/test-mutex.cpp
+src_util_tests += util/test-sllist.cpp
+src_util_tests += util/test-spscring.cpp
+endif
 
-bin += util-test
-util_test_SOURCES = tests-shared-main.cpp $(src_util_tests)
-util_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
+bin += unit-test-util
+unit_test_util_SOURCES = tests-shared-main.cpp $(src_util_tests)
+unit_test_util_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
 
 # CAN library tests
 
 LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
 
-bin += can-test
+bin += unit-test-can
 
-src_can_tests = \
-	can/test-msg.cpp
+src_can_tests =
+src_can_tests += can/test-buf.cpp
+src_can_tests += can/test-msg.cpp
+src_can_tests += can/test-net.cpp
 
-can_test_SOURCES = tests-shared-main.cpp $(src_can_tests)
-can_test_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
+unit_test_can_SOURCES = tests-shared-main.cpp $(src_can_tests)
+unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
 
+# CANopen library tests
+
+LELY_CO_LIBS = $(top_builddir)/src/co/liblely-co.la
+
+bin += unit-test-co
+
+src_co_tests =
+src_co_tests += co/test-crc.cpp
+src_co_tests += co/test-dev.cpp
+src_co_tests += co/test-obj.cpp
+src_co_tests += co/test-type.cpp
+src_co_tests += co/test-val.cpp
+if !PLATFORM_WIN32
+if !ENABLE_SHARED
+src_co_tests += override/lelyco-val.cpp
+endif
+endif
+
+unit_test_co_SOURCES = tests-shared-main.cpp $(src_co_tests)
+unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
+if !PLATFORM_WIN32
+if !ENABLE_SHARED
+unit_test_co_LDFLAGS = -Wl,--wrap=co_val_read -Wl,--wrap=co_val_write -Wl,--wrap=co_val_make
+endif
+else
+unit_test_co_LDFLAGS = -all-static
+endif
 
 # Compilation flags
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
-AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\" -DLELY_NO_CXX=1
+if ENABLE_SHARED
+AM_CPPFLAGS += -DLELY_ENABLE_SHARED=1
+endif
 AM_CPPFLAGS += $(CPPUTEST_CFLAGS)
 
 if NO_UNIT_TESTS_MEMLEAK
@@ -74,12 +143,15 @@ endif
 check_PROGRAMS = $(bin)
 
 TESTS = $(check_PROGRAMS)
-
 EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh
-LOG_COMPILER = $(EXEC)
 
 if CODE_COVERAGE_ENABLED
+LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
+AM_TESTS_ENVIRONMENT = EXEC_WRAPPER="$(EXEC)"
+AM_TESTS_ENVIRONMENT += ;
 @CODE_COVERAGE_RULES@
+else
+LOG_COMPILER = $(EXEC)
 endif
 
 @VALGRIND_CHECK_RULES@
