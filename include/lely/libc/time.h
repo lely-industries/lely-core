@@ -50,8 +50,10 @@
 #if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
 		&& !defined(__MINGW32__)
 
+#ifndef CLOCK_REALTIME
 /// The identifier of the system-wide clock measuring real time.
 #define CLOCK_REALTIME 0
+#endif
 
 /**
  * The identifier for the system-wide monotonic clock, which is defined as a
@@ -72,8 +74,10 @@
  */
 #define CLOCK_THREAD_CPUTIME_ID 3
 
+#ifndef TIMER_ABSTIME
 /// Flag indicating time is absolute.
 #define TIMER_ABSTIME 1
+#endif
 
 #endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
