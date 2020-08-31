@@ -173,21 +173,22 @@ class Slave(dcf.Device):
         return sdo
 
     @classmethod
-    def from_dcf(cls, filename: str, env: dict = {}) -> "Slave":
+    def from_dcf(cls, filename: str, env: dict = {}, args=None) -> "Slave":
         cfg = dcf.parse_file(filename)
 
-        if not dcf.lint(cfg):
+        no_strict = getattr(args, "no_strict", False)
+        if not dcf.lint(cfg) and not no_strict:
             raise ValueError("invalid DCF: " + filename)
 
         return cls(cfg, env)
 
     @classmethod
-    def from_config(cls, name: str, cfg, options: dict) -> "Slave":
+    def from_config(cls, name: str, cfg, options: dict, args=None) -> "Slave":
         env = {}
         if "node_id" in cfg:
             env["NODEID"] = int(cfg["node_id"])
 
-        slave = cls.from_dcf(str(cfg["dcf"]), env)
+        slave = cls.from_dcf(str(cfg["dcf"]), env, args)
 
         slave.name = name
 
@@ -507,6 +508,12 @@ def main():
         "-r", "--remote-pdo", action="store_true", help="generate remote PDO mappings",
     )
     parser.add_argument(
+        "-S",
+        "--no-strict",
+        action="store_true",
+        help="do not abort in case of an invalid slave EDS/DCF",
+    )
+    parser.add_argument(
         "-v", "--verbose", action="store_true", help="print the generated SDO requests",
     )
     parser.add_argument(
@@ -530,7 +537,7 @@ def main():
     for name in cfg:
         if name == "master" or name == "options" or name.startswith("."):
             continue
-        slave = Slave.from_config(name, cfg[name], options)
+        slave = Slave.from_config(name, cfg[name], options, args)
         if slave.node_id != 255:
             slaves[name] = slave
         else:

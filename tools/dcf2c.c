@@ -1,7 +1,7 @@
 /**@file
  * This file contains the CANopen EDS/DCF to C conversion tool.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *

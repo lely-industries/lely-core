@@ -3,7 +3,7 @@
  * object 1026 (OS prompt) by connecting the StdIn, StdOut and StdErr
  * sub-objects to `stdin`, `stdout` and `stderr` of a user-specified process.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
