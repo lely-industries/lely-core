@@ -487,10 +487,7 @@ def print_sdo(name: str, sdo: bytes):
     print(
         name
         + ": writing {} bytes to 0x{:04X}/{}: {}".format(
-            n,
-            index,
-            sub_index,
-            "".join("{:02X}".format(b) for b in sdo[7:]),
+            n, index, sub_index, "".join("{:02X}".format(b) for b in sdo[7:]),
         )
     )
 
@@ -508,10 +505,7 @@ def main():
         help="the directory in which to store the generated file(s)",
     )
     parser.add_argument(
-        "-r",
-        "--remote-pdo",
-        action="store_true",
-        help="generate remote PDO mappings",
+        "-r", "--remote-pdo", action="store_true", help="generate remote PDO mappings",
     )
     parser.add_argument(
         "-S",
@@ -520,10 +514,7 @@ def main():
         help="do not abort in case of an invalid slave EDS/DCF",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="print the generated SDO requests",
+        "-v", "--verbose", action="store_true", help="print the generated SDO requests",
     )
     parser.add_argument(
         "filename", nargs=1, help="the name of the YAML configuration file"
