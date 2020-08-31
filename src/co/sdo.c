@@ -106,15 +106,13 @@ co_sdo_ac2str(co_unsigned32_t ac)
 }
 
 void
-co_sdo_req_init(struct co_sdo_req *req)
+co_sdo_req_init(struct co_sdo_req *req, struct membuf *buf)
 {
 	assert(req);
 
-	req->size = 0;
-	req->buf = NULL;
-	req->nbyte = 0;
-	req->offset = 0;
-	membuf_init(&req->membuf);
+	*req = (struct co_sdo_req)CO_SDO_REQ_INIT(*req);
+	if (buf)
+		req->membuf = buf;
 }
 
 void
@@ -122,7 +120,7 @@ co_sdo_req_fini(struct co_sdo_req *req)
 {
 	assert(req);
 
-	membuf_fini(&req->membuf);
+	membuf_fini(&req->_membuf);
 }
 
 void
@@ -132,7 +130,7 @@ co_sdo_req_clear(struct co_sdo_req *req)
 	req->buf = NULL;
 	req->nbyte = 0;
 	req->offset = 0;
-	membuf_clear(&req->membuf);
+	membuf_clear(req->membuf);
 }
 
 int
@@ -249,33 +247,16 @@ error_create_fbuf:
 }
 #endif // !LELY_NO_CO_OBJ_FILE
 
-int
-co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
-		co_unsigned32_t *pac)
+void
+co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n)
 {
 	assert(req);
-	struct membuf *buf = &req->membuf;
+	assert(ptr || !n);
 
-	co_unsigned32_t ac = 0;
-
-	membuf_clear(buf);
-	int errc = get_errc();
-	if (n && !membuf_reserve(buf, n)) {
-		ac = CO_SDO_AC_NO_MEM;
-		set_errc(errc);
-		goto error_reserve;
-	}
-
-	if (ptr)
-		membuf_write(buf, ptr, n);
-
-	co_sdo_req_up_buf(req);
-	return 0;
-
-error_reserve:
-	if (pac)
-		*pac = ac;
-	return -1;
+	req->size = n;
+	req->buf = ptr;
+	req->nbyte = req->size;
+	req->offset = 0;
 }
 
 int
@@ -283,7 +264,7 @@ co_sdo_req_up_val(struct co_sdo_req *req, co_unsigned16_t type, const void *val,
 		co_unsigned32_t *pac)
 {
 	assert(req);
-	struct membuf *buf = &req->membuf;
+	struct membuf *buf = req->membuf;
 
 	co_unsigned32_t ac = 0;
 
@@ -319,7 +300,7 @@ co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)
 {
 	assert(req);
-	struct membuf *buf = &req->membuf;
+	struct membuf *buf = req->membuf;
 
 	int errc = get_errc();
 	co_unsigned32_t ac = 0;
@@ -373,7 +354,7 @@ static int
 co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)
 {
 	assert(req);
-	struct membuf *buf = &req->membuf;
+	struct membuf *buf = req->membuf;
 
 	// In case of an error, keep track of the offset with respect to the
 	// position indicator of the buffer.
@@ -435,7 +416,7 @@ static void
 co_sdo_req_up_buf(struct co_sdo_req *req)
 {
 	assert(req);
-	struct membuf *buf = &req->membuf;
+	struct membuf *buf = req->membuf;
 
 	req->size = membuf_size(buf);
 	req->buf = membuf_begin(buf);

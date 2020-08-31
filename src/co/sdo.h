@@ -175,15 +175,4 @@
 /// The maximum sequence number (or segments per block).
 #define CO_SDO_MAX_SEQNO 127
 
-#if LELY_NO_MALLOC
-#ifndef CO_SDO_MEMBUF_SIZE
-/**
- * The default size (in bytes) of an SDO memory buffer in the absence of dynamic
- * memory allocation. The default size is large enough to accomodate the maximum
- * block size used by SDO block transfer.
- */
-#define CO_SDO_MEMBUF_SIZE (CO_SDO_MAX_SEQNO * 7)
-#endif
-#endif
-
 #endif // !LELY_CO_INTERN_SDO_H_

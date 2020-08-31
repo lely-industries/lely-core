@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1778,8 +1778,6 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
-	const struct co_gw_req_sdo_up *par =
-			(const struct co_gw_req_sdo_up *)req;
 
 	int iec = 0;
 	int errc = get_errc();
@@ -1792,9 +1790,11 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		const struct co_gw_req_sdo_up *par =
+				(const struct co_gw_req_sdo_up *)&job->req;
 
 		// clang-format off
-		if (co_dev_up_req(dev, par->idx, par->subidx,
+		if (co_dev_up_req(dev, par->idx, par->subidx, NULL,
 				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
@@ -1814,10 +1814,12 @@ co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		const struct co_gw_req_sdo_up *par =
+				(const struct co_gw_req_sdo_up *)&job->req;
 
 		co_csdo_set_up_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
-		if (co_csdo_up_req(job->data, par->idx, par->subidx,
+		if (co_csdo_up_req(job->data, par->idx, par->subidx, NULL,
 				&co_gw_job_sdo_up_con, job) == -1) {
 			// clang-format on
 			iec = errnum2iec(get_errnum());
@@ -1869,6 +1871,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		par = (const struct co_gw_req_sdo_dn *)&job->req;
 
 		// clang-format off
 		if (co_dev_dn_req(dev, par->idx, par->subidx, par->val,
@@ -1891,6 +1894,7 @@ co_gw_recv_sdo_dn(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 			iec = errnum2iec(get_errnum());
 			goto error_create_job;
 		}
+		par = (const struct co_gw_req_sdo_dn *)&job->req;
 
 		co_csdo_set_dn_ind(job->data, &co_gw_job_sdo_ind, job);
 		// clang-format off
@@ -2073,7 +2077,7 @@ co_gw_recv_pdo_read(
 	const struct co_pdo_map_par *map = co_rpdo_get_map_par(pdo);
 
 	// Read the mapped values from the object dictionary.
-	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT(sdo_req);
 	uint_least8_t buf[CAN_MAX_LEN];
 	size_t n = sizeof(buf);
 	ac = co_pdo_up(map, dev, &sdo_req, buf, &n);
@@ -2145,7 +2149,7 @@ co_gw_recv_pdo_write(
 		goto error;
 
 	// Write the mapped values to the object dictionary.
-	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT;
+	struct co_sdo_req sdo_req = CO_SDO_REQ_INIT(sdo_req);
 	ac = co_pdo_dn(map, dev, &sdo_req, buf, n);
 	co_sdo_req_fini(&sdo_req);
 	if (ac)
@@ -2381,7 +2385,7 @@ co_gw_recv_set_hb(co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
-	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->ms);
+	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->ms, NULL);
 
 error:
 	return co_gw_send_con(gw, req, 0, ac);
@@ -2452,7 +2456,7 @@ co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		ac = CO_SDO_AC_NO_SUB;
 		goto error;
 	}
-	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &cobid);
+	ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &cobid, NULL);
 
 error:
 	return co_gw_send_con(gw, req, 0, ac);

@@ -113,7 +113,10 @@
 /// The current object value is of the form `$NODEID { "+" number }`.
 #define CO_OBJ_FLAGS_VAL_NODEID 0x80
 
-/// The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
+// The memory buffer struct from <lely/util/membuf.h>.
+struct membuf;
+
+// The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
 struct co_sdo_req;
 
 #ifdef __cplusplus
@@ -808,19 +811,21 @@ co_unsigned32_t co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req);
  * refuse-write-on-download flag (#CO_OBJ_FLAGS_WRITE) is set, the value of the
  * sub-object is left untouched.
  *
- * @param sub   a pointer to a CANopen sub-object.
- * @param type  the data type (in the range [1..27]). This MUST be the object
- *              index of one of the static data types and SHOULD be the same as
- *              the return value of co_sub_get_type().
- * @param val   the address of the value to be written. In case of string or
- *              domains, this MUST be the address of pointer.
+ * @param sub  a pointer to a CANopen sub-object.
+ * @param type the data type (in the range [1..27]). This MUST be the object
+ *             index of one of the static data types and SHOULD be the same as
+ *             the return value of co_sub_get_type().
+ * @param val  the address of the value to be written. In case of string or
+ *             domains, this MUST be the address of pointer.
+ * @param buf  a pointer to the memory buffer used to store the serialized
+ *             value. If NULL, an internal buffer is used.
  *
  * @returns 0 on success, or an SDO abort code on error.
  *
  * @see co_sub_dn_ind()
  */
-co_unsigned32_t co_sub_dn_ind_val(
-		co_sub_t *sub, co_unsigned16_t type, const void *val);
+co_unsigned32_t co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type,
+		const void *val, struct membuf *buf);
 
 /**
  * Downloads (moves) a value into a CANopen sub-object if the

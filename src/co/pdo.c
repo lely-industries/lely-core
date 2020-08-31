@@ -376,7 +376,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x01);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32, &par->cobid);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED32, &par->cobid, NULL);
 	}
 
 	// Configure the transmission type.
@@ -384,7 +385,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x02);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->trans);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED8, &par->trans, NULL);
 	}
 
 	// Configure the inhibit time.
@@ -392,8 +394,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x03);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(
-				sub, CO_DEFTYPE_UNSIGNED16, &par->inhibit);
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16,
+				&par->inhibit, NULL);
 	}
 
 	// Configure the event timer.
@@ -401,7 +403,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x05);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED16, &par->event);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED16, &par->event, NULL);
 	}
 
 	// Configure the SYNC start value.
@@ -409,7 +412,8 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, 0x06);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED8, &par->sync);
+		ac = co_sub_dn_ind_val(
+				sub, CO_DEFTYPE_UNSIGNED8, &par->sync, NULL);
 	}
 
 	return ac;
@@ -432,8 +436,8 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	if (!sub_00)
 		return CO_SDO_AC_NO_SUB;
 	// Disable mapping by setting subindex 0x00 to zero.
-	ac = co_sub_dn_ind_val(
-			sub_00, CO_DEFTYPE_UNSIGNED8, &(co_unsigned8_t){ 0 });
+	ac = co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8,
+			&(co_unsigned8_t){ 0 }, NULL);
 	if (ac)
 		return ac;
 
@@ -442,12 +446,12 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 		co_sub_t *sub = co_obj_find_sub(obj, i);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(
-				sub, CO_DEFTYPE_UNSIGNED32, &par->map[i - 1]);
+		ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32,
+				&par->map[i - 1], NULL);
 		if (ac)
 			return ac;
 	}
 
 	// Enable mapping.
-	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n);
+	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n, NULL);
 }

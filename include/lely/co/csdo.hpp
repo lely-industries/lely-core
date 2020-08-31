@@ -67,7 +67,7 @@ template <co_unsigned16_t N>
 inline int
 dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
       const COVal<N>& val, co_csdo_dn_con_t* con, void* data) noexcept {
-  return co_dev_dn_val_req(&dev, idx, subidx, N, &val, con, data);
+  return co_dev_dn_val_req(&dev, idx, subidx, N, &val, nullptr, con, data);
 }
 
 template <co_unsigned16_t N, class F>
@@ -92,7 +92,7 @@ dnReq(CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 inline int
 upReq(const CODev& dev, co_unsigned16_t idx, co_unsigned8_t subidx,
       co_csdo_up_con_t* con, void* data) noexcept {
-  return co_dev_up_req(&dev, idx, subidx, con, data);
+  return co_dev_up_req(&dev, idx, subidx, nullptr, con, data);
 }
 
 template <class T, typename COCSDOUpCon<T>::type M>
@@ -284,7 +284,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   int
   dnReq(co_unsigned16_t idx, co_unsigned8_t subidx, const COVal<N>& val,
         co_csdo_dn_con_t* con, void* data) noexcept {
-    return co_csdo_dn_val_req(this, idx, subidx, N, &val, con, data);
+    return co_csdo_dn_val_req(this, idx, subidx, N, &val, nullptr, con, data);
   }
 
   template <co_unsigned16_t N, class F>
@@ -309,7 +309,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   int
   upReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_csdo_up_con_t* con,
         void* data) noexcept {
-    return co_csdo_up_req(this, idx, subidx, con, data);
+    return co_csdo_up_req(this, idx, subidx, nullptr, con, data);
   }
 
   template <class T, typename COCSDOUpCon<T>::type M>
@@ -365,7 +365,7 @@ class COCSDO : public incomplete_c_type<__co_csdo> {
   int
   blkUpReq(co_unsigned16_t idx, co_unsigned8_t subidx, co_unsigned8_t pst,
            co_csdo_up_con_t* con, void* data) noexcept {
-    return co_csdo_blk_up_req(this, idx, subidx, pst, con, data);
+    return co_csdo_blk_up_req(this, idx, subidx, pst, nullptr, con, data);
   }
 
   template <class T, typename COCSDOUpCon<T>::type M>

@@ -215,7 +215,7 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->swnd = 0;
 	pdo->msg = (struct can_msg)CAN_MSG_INIT;
 
-	co_sdo_req_init(&pdo->req);
+	co_sdo_req_init(&pdo->req, NULL);
 
 	pdo->ind = NULL;
 	pdo->ind_data = NULL;

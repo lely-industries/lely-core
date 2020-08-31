@@ -846,7 +846,7 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 	boot->st = 0;
 	boot->es = 0;
 
-	co_sdo_req_init(&boot->req);
+	co_sdo_req_init(&boot->req, NULL);
 	boot->retry = 0;
 
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
@@ -2130,7 +2130,7 @@ co_nmt_boot_dn(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(boot);
 
-	return co_csdo_dn_val_req(boot->sdo, idx, subidx, type, val,
+	return co_csdo_dn_val_req(boot->sdo, idx, subidx, type, val, NULL,
 			&co_nmt_boot_dn_con, boot);
 }
 
@@ -2139,8 +2139,8 @@ co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(boot);
 
-	return co_csdo_up_req(
-			boot->sdo, idx, subidx, &co_nmt_boot_up_con, boot);
+	return co_csdo_up_req(boot->sdo, idx, subidx, NULL, &co_nmt_boot_up_con,
+			boot);
 }
 
 static int

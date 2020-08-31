@@ -174,6 +174,17 @@ struct co_sdo_par {
 /// SDO abort code: No data available.
 #define CO_SDO_AC_NO_DATA UINT32_C(0x08000024)
 
+#if LELY_NO_MALLOC
+#ifndef CO_SDO_REQ_MEMBUF_SIZE
+/**
+ * The default size (in bytes) of an SDO upload/download request memory buffer
+ * in the absence of dynamic memory allocation. The default size is large enough
+ * to accomodate all basic data types.
+ */
+#define CO_SDO_REQ_MEMBUF_SIZE 8
+#endif
+#endif
+
 /// A CANopen SDO upload/download request.
 struct co_sdo_req {
 	/**
@@ -192,18 +203,42 @@ struct co_sdo_req {
 	 */
 	size_t offset;
 	/**
-	 * A memory buffer for use by the upload/download indication function.
-	 * The memory buffer will be cleared at the beginning of every new
-	 * request, but otherwise left untouched.
+	 * A pointer to the memory buffer used by the upload/download indication
+	 * function. The memory buffer will be cleared at the beginning of every
+	 * new request, but otherwise left untouched.
 	 */
-	struct membuf membuf;
+	struct membuf *membuf;
+	/*
+	 * The memory buffer used for storing serialized values in the absence
+	 * of a user-specified buffer.
+	 */
+	struct membuf _membuf;
+#if LELY_NO_MALLOC
+	/*
+	 * The static memory buffer used by #_membuf in the absence of dynamic
+	 * memory allocation.
+	 */
+	char _begin[CO_SDO_REQ_MEMBUF_SIZE];
+#endif
 };
 
 /// The static initializer for struct #co_sdo_req.
-#define CO_SDO_REQ_INIT \
+#if LELY_NO_MALLOC
+#define CO_SDO_REQ_INIT(req) \
 	{ \
-		0, NULL, 0, 0, MEMBUF_INIT \
+		0, NULL, 0, 0, &(req)._membuf, \
+				{ (req)._begin, (req)._begin, \
+					(req)._begin + CO_SDO_REQ_MEMBUF_SIZE }, \
+		{ \
+			0 \
+		} \
 	}
+#else
+#define CO_SDO_REQ_INIT(req) \
+	{ \
+		0, NULL, 0, 0, &(req)._membuf, MEMBUF_INIT \
+	}
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -212,8 +247,16 @@ extern "C" {
 /// Returns a string describing an SDO abort code.
 const char *co_sdo_ac2str(co_unsigned32_t ac);
 
-/// Initializes a CANopen SDO upload/download request. @see co_sdo_req_fini()
-void co_sdo_req_init(struct co_sdo_req *req);
+/**
+ * Initializes a CANopen SDO upload/download request.
+ *
+ * @param req a pointer to a CANopen SDO download request.
+ * @param buf a pointer to the memory buffer used to store the serialized value.
+ *            If NULL, an internal buffer is used.
+ *
+ * @see co_sdo_req_fini()
+ */
+void co_sdo_req_init(struct co_sdo_req *req, struct membuf *buf);
 
 /// Finalizes a CANopen SDO upload/download request. @see co_sdo_req_init()
 void co_sdo_req_fini(struct co_sdo_req *req);
@@ -293,16 +336,12 @@ int co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
  * request.
  *
  * @param req  a pointer to a CANopen SDO upload request.
- * @param ptr  a pointer to the bytes to be uploaded.
+ * @param ptr  a pointer to the bytes to be uploaded. It is the responsibility
+ *             of the user to ensure that the buffer remains valid until the
+ *             request completes.
  * @param n    the number of bytes at <b>ptr</b>.
- * @param pac  the address of a value which, on error, contains the SDO abort
- *             code (can be NULL).
- *
- * @returns 0 on success, or -1 on error. In the latter case, *<b>pac</b>
- * contains the SDO abort code.
  */
-int co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n,
-		co_unsigned32_t *pac);
+void co_sdo_req_up(struct co_sdo_req *req, const void *ptr, size_t n);
 
 /**
  * Writes the specified value to a buffer and constructs a CANopen SDO upload

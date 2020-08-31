@@ -66,7 +66,7 @@ main(void)
 	// clang-format on
 	co_test_wait(&test);
 
-	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, &up_con, &test),
+	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, NULL, &up_con, &test),
 			"expedited SDO upload");
 	co_test_wait(&test);
 
@@ -77,7 +77,7 @@ main(void)
 	// clang-format on
 	co_test_wait(&test);
 
-	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, &up_con, &test),
+	tap_test(!co_csdo_up_req(csdo, 0x2000, 0x00, NULL, &up_con, &test),
 			"segmented SDO upload");
 	co_test_wait(&test);
 
@@ -88,8 +88,10 @@ main(void)
 	// clang-format on
 	co_test_wait(&test);
 
-	tap_test(!co_csdo_blk_up_req(csdo, 0x2000, 0x00, 0, &up_con, &test),
-			"SDO block upload");
+	// clang-format off
+	tap_test(!co_csdo_blk_up_req(csdo, 0x2000, 0x00, 0, NULL, &up_con,
+			&test), "SDO block upload");
+	// clang-format on
 	co_test_wait(&test);
 
 	co_csdo_destroy(csdo);
