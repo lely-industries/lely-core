@@ -29,7 +29,10 @@
 extern "C" {
 #endif
 
-void *__co_ssdo_alloc(void);
+size_t co_ssdo_alignof(void);
+size_t co_ssdo_sizeof(void);
+
+void *__co_ssdo_alloc(can_net_t *net);
 void __co_ssdo_free(void *ptr);
 struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net,
 		co_dev_t *dev, co_unsigned8_t num);
@@ -71,6 +74,13 @@ int co_ssdo_start(co_ssdo_t *sdo);
  * @see co_ssdo_start()
  */
 void co_ssdo_stop(co_ssdo_t *sdo);
+
+/*
+ * Returns a pointer to the allocator used to allocate a Server-SDO.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_ssdo_get_alloc(const co_ssdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Server-SDO.
 can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);

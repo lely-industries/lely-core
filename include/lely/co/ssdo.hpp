@@ -43,7 +43,7 @@ struct c_type_traits<__co_ssdo> {
 
   static void*
   alloc() noexcept {
-    return __co_ssdo_alloc();
+    return __co_ssdo_alloc(nullptr);
   }
 
   static void
