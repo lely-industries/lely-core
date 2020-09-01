@@ -56,7 +56,10 @@ typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 typedef void co_rpdo_err_t(co_rpdo_t *pdo, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
-void *__co_rpdo_alloc(void);
+size_t co_rpdo_alignof(void);
+size_t co_rpdo_sizeof(void);
+
+void *__co_rpdo_alloc(can_net_t *net);
 void __co_rpdo_free(void *ptr);
 struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net,
 		co_dev_t *dev, co_unsigned16_t num);
@@ -94,6 +97,12 @@ int co_rpdo_start(co_rpdo_t *pdo);
 
 /// Stops a Receive-PDO service. @see co_rpdo_start()
 void co_rpdo_stop(co_rpdo_t *pdo);
+/*
+ * Returns a pointer to the allocator used to allocate a Receive-PDO.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_rpdo_get_alloc(const co_rpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Receive-PDO.
 can_net_t *co_rpdo_get_net(const co_rpdo_t *pdo);

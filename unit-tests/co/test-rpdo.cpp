@@ -89,7 +89,7 @@ TEST_GROUP_BASE(CO_RpdoInit, CO_RpdoBase) {
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
-    rpdo = static_cast<co_rpdo_t*>(__co_rpdo_alloc());
+    rpdo = static_cast<co_rpdo_t*>(__co_rpdo_alloc(net));
     CHECK(rpdo != nullptr);
   }
 
