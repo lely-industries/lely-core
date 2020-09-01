@@ -43,7 +43,7 @@ struct c_type_traits<__co_lss> {
 
   static void*
   alloc() noexcept {
-    return __co_lss_alloc();
+    return __co_lss_alloc(nullptr);
   }
 
   static void
