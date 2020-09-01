@@ -45,7 +45,10 @@ extern "C" {
 typedef void co_tpdo_ind_t(co_tpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
-void *__co_tpdo_alloc(void);
+size_t co_tpdo_alignof(void);
+size_t co_tpdo_sizeof(void);
+
+void *__co_tpdo_alloc(can_net_t *net);
 void __co_tpdo_free(void *ptr);
 struct __co_tpdo *__co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net,
 		co_dev_t *dev, co_unsigned16_t num);
@@ -83,6 +86,13 @@ int co_tpdo_start(co_tpdo_t *pdo);
 
 /// Stops a Transmit-PDO service. @see co_tpdo_start()
 void co_tpdo_stop(co_tpdo_t *pdo);
+
+/*
+ * Returns a pointer to the allocator used to allocate a Transmit-PDO.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_tpdo_get_alloc(const co_tpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Transmit-PDO.
 can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);
