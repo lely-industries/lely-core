@@ -24,10 +24,12 @@
 
 #include <lely/can/net.h>
 
-TEST_GROUP(CAN_NetInit){};
+#include "allocators/heap.hpp"
+
+TEST_GROUP(CAN_NetInit) { Allocators::HeapAllocator allocator; };
 
 TEST(CAN_NetInit, CanNetAllocFree) {
-  void* const ptr = __can_net_alloc();
+  void* const ptr = __can_net_alloc(allocator.ToAllocT());
 
   CHECK(ptr != nullptr);
 
@@ -35,7 +37,8 @@ TEST(CAN_NetInit, CanNetAllocFree) {
 }
 
 TEST(CAN_NetInit, CanNetInit) {
-  auto* const net = static_cast<can_net_t*>(__can_net_alloc());
+  auto* const net =
+      static_cast<can_net_t*>(__can_net_alloc(allocator.ToAllocT()));
 
   CHECK(net != nullptr);
   POINTERS_EQUAL(net, __can_net_init(net));
@@ -62,17 +65,18 @@ TEST(CAN_NetInit, CanNetInit) {
 }
 
 TEST(CAN_NetInit, CanNetFini) {
-  auto* const net = static_cast<can_net_t*>(__can_net_alloc());
+  auto* const net =
+      static_cast<can_net_t*>(__can_net_alloc(allocator.ToAllocT()));
 
   CHECK(net != nullptr);
   POINTERS_EQUAL(net, __can_net_init(net));
 
-  can_timer_t* const timer1 = can_timer_create();
+  can_timer_t* const timer1 = can_timer_create(allocator.ToAllocT());
   const timespec time1 = {0, 0L};
   can_timer_start(timer1, net, &time1, nullptr);
-  can_recv_t* const recv1 = can_recv_create();
-  can_recv_t* const recv2 = can_recv_create();
-  can_recv_t* const recv3 = can_recv_create();
+  can_recv_t* const recv1 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv2 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv3 = can_recv_create(allocator.ToAllocT());
   can_recv_start(recv1, net, 0x0, CAN_FLAG_IDE);
   can_recv_start(recv2, net, 0x01, 0);
   can_recv_start(recv3, net, 0x01, 0);
@@ -89,7 +93,7 @@ TEST(CAN_NetInit, CanNetFini) {
 TEST(CAN_NetInit, CanNetDestroy_Null) { can_net_destroy(nullptr); }
 
 TEST(CAN_NetInit, CanTimerAllocFree) {
-  void* const ptr = __can_timer_alloc();
+  void* const ptr = __can_timer_alloc(allocator.ToAllocT());
 
   CHECK(ptr != nullptr);
 
@@ -97,7 +101,8 @@ TEST(CAN_NetInit, CanTimerAllocFree) {
 }
 
 TEST(CAN_NetInit, CanTimerInitFinit) {
-  auto* const timer = static_cast<can_timer_t*>(__can_timer_alloc());
+  auto* const timer =
+      static_cast<can_timer_t*>(__can_timer_alloc(allocator.ToAllocT()));
 
   CHECK(timer != nullptr);
   POINTERS_EQUAL(timer, __can_timer_init(timer));
@@ -115,7 +120,7 @@ TEST(CAN_NetInit, CanTimerInitFinit) {
 TEST(CAN_NetInit, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
 
 TEST(CAN_NetInit, CanRecvAllocFree) {
-  void* const ptr = __can_recv_alloc();
+  void* const ptr = __can_recv_alloc(allocator.ToAllocT());
 
   CHECK(ptr != nullptr);
 
@@ -123,7 +128,8 @@ TEST(CAN_NetInit, CanRecvAllocFree) {
 }
 
 TEST(CAN_NetInit, CanRecvInitFinit) {
-  auto* const recv = static_cast<can_recv_t*>(__can_recv_alloc());
+  auto* const recv =
+      static_cast<can_recv_t*>(__can_recv_alloc(allocator.ToAllocT()));
 
   CHECK(recv != nullptr);
   POINTERS_EQUAL(recv, __can_recv_init(recv));
@@ -146,6 +152,7 @@ static unsigned int tfunc_err_counter = 0;
 }  // namespace CAN_Net_Static
 
 TEST_GROUP(CAN_Net) {
+  Allocators::HeapAllocator allocator;
   can_net_t* net = nullptr;
 
   static int timer_func_empty(const timespec*, void*) {
@@ -164,7 +171,7 @@ TEST_GROUP(CAN_Net) {
   static int send_func_err(const can_msg*, void*) { return -1; }
 
   TEST_SETUP() {
-    net = can_net_create();
+    net = can_net_create(allocator.ToAllocT());
     CHECK(net != nullptr);
 
     CAN_Net_Static::tfunc_empty_counter = 0;
@@ -191,7 +198,7 @@ TEST(CAN_Net, CanNetSetTime_NoTimers) {
 TEST(CAN_Net, CanNetSetTime_NoCalls) {
   const timespec tp = {4, 0L};
   const timespec tstart = {5, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, &tstart, nullptr);
 
@@ -210,7 +217,7 @@ TEST(CAN_Net, CanNetSetTime_NoCalls) {
 TEST(CAN_Net, CanNetSetTime_OneCall) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, &tstart, nullptr);
 
@@ -229,7 +236,7 @@ TEST(CAN_Net, CanNetSetTime_OneCall) {
 TEST(CAN_Net, CanNetSetTime_OneCallErr) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_err, nullptr);
   can_timer_start(timer, net, &tstart, nullptr);
 
@@ -248,7 +255,7 @@ TEST(CAN_Net, CanNetSetTime_OneCallErr) {
 TEST(CAN_Net, CanNetSetTime_OneCallNoFunc) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_start(timer, net, &tstart, nullptr);
 
   const auto ret = can_net_set_time(net, &tp);
@@ -266,7 +273,7 @@ TEST(CAN_Net, CanNetSetTime_IntervalSec) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
   const timespec interval = {1, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, &tstart, &interval);
 
@@ -286,7 +293,7 @@ TEST(CAN_Net, CanNetSetTime_IntervalNSec) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
   const timespec interval = {0, 40L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, &tstart, &interval);
 
@@ -305,7 +312,7 @@ TEST(CAN_Net, CanNetSetTime_IntervalNSec) {
 TEST(CAN_Net, CanNetSetTime_OnlyInterval) {
   const timespec tp = {5, 30L};
   const timespec interval = {1, 0L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, nullptr, &interval);
 
@@ -325,7 +332,7 @@ TEST(CAN_Net, CanNetSetTime_IntervalMultipleCalls) {
   const timespec tp = {30, 0L};
   const timespec tstart = {5, 0L};
   const timespec interval = {1, 300000L};
-  can_timer_t* const timer = can_timer_create();
+  can_timer_t* const timer = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func_empty, nullptr);
   can_timer_start(timer, net, &tstart, &interval);
 
@@ -344,8 +351,8 @@ TEST(CAN_Net, CanNetSetTime_IntervalMultipleCalls) {
 TEST(CAN_Net, CanNetSetTime_MultipleCallsErr) {
   const timespec tp = {5, 30L};
   const timespec tstart = {5, 0L};
-  can_timer_t* const timer1 = can_timer_create();
-  can_timer_t* const timer2 = can_timer_create();
+  can_timer_t* const timer1 = can_timer_create(allocator.ToAllocT());
+  can_timer_t* const timer2 = can_timer_create(allocator.ToAllocT());
   can_timer_set_func(timer1, timer_func_err, nullptr);
   can_timer_set_func(timer2, timer_func_err, nullptr);
   can_timer_start(timer1, net, &tstart, nullptr);
@@ -386,8 +393,8 @@ TEST(CAN_Net, CanNetSetNextFunc_TimerCall) {
   const timespec tp = {5, 30L};
   const timespec tstart1 = {5, 0L};
   const timespec tstart2 = {6, 0L};
-  can_timer_t* const timer1 = can_timer_create();
-  can_timer_t* const timer2 = can_timer_create();
+  can_timer_t* const timer1 = can_timer_create(allocator.ToAllocT());
+  can_timer_t* const timer2 = can_timer_create(allocator.ToAllocT());
   can_timer_start(timer1, net, &tstart1, nullptr);
   can_timer_start(timer2, net, &tstart2, nullptr);
 
@@ -423,9 +430,9 @@ TEST(CAN_Net, CanNetRecv) {
   can_msg msg = CAN_MSG_INIT;
   msg.id = 0x01;
 
-  can_recv_t* const recv1 = can_recv_create();
-  can_recv_t* const recv2 = can_recv_create();
-  can_recv_t* const recv3 = can_recv_create();
+  can_recv_t* const recv1 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv2 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv3 = can_recv_create(allocator.ToAllocT());
   can_recv_set_func(recv1, recv_func_err, nullptr);
   can_recv_set_func(recv2, recv_func_err, nullptr);
   can_recv_start(recv1, net, 0x01, 0);
@@ -464,6 +471,7 @@ static unsigned int timer_func_counter = 0;
 
 TEST_GROUP(CAN_NetTimer) {
   can_timer_t* timer = nullptr;
+  Allocators::HeapAllocator allocator;
 
   static int timer_func(const timespec*, void*) {
     ++CAN_NetTimer_Static::timer_func_counter;
@@ -471,7 +479,7 @@ TEST_GROUP(CAN_NetTimer) {
   }
 
   TEST_SETUP() {
-    timer = can_timer_create();
+    timer = can_timer_create(allocator.ToAllocT());
     CHECK(timer != nullptr);
     ++CAN_NetTimer_Static::timer_func_counter = 0;
   }
@@ -497,7 +505,7 @@ TEST(CAN_NetTimer, CanTimerSetFunc) {
 }
 
 TEST(CAN_NetTimer, CanTimerStart_Null) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(allocator.ToAllocT());
 
   can_timer_start(timer, net, nullptr, nullptr);
 
@@ -505,7 +513,7 @@ TEST(CAN_NetTimer, CanTimerStart_Null) {
 }
 
 TEST(CAN_NetTimer, CanTimerTimeout) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, 500);
@@ -519,7 +527,7 @@ TEST(CAN_NetTimer, CanTimerTimeout) {
 }
 
 TEST(CAN_NetTimer, CanTimerTimeout_Negative) {
-  can_net_t* const net = can_net_create();
+  can_net_t* const net = can_net_create(allocator.ToAllocT());
   can_timer_set_func(timer, timer_func, nullptr);
 
   can_timer_timeout(timer, net, -1);
@@ -534,11 +542,12 @@ TEST(CAN_NetTimer, CanTimerTimeout_Negative) {
 
 TEST_GROUP(CAN_NetRecv) {
   can_recv_t* recv = nullptr;
+  Allocators::HeapAllocator allocator;
 
   static int recv_func(const can_msg*, void*) { return 0; }
 
   TEST_SETUP() {
-    recv = can_recv_create();
+    recv = can_recv_create(allocator.ToAllocT());
     CHECK(recv != nullptr);
   }
 

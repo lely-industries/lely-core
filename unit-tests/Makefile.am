@@ -24,13 +24,14 @@ test_cpputest_LDADD = $(CPPUTEST_LIBS)
 # Override library (lely-core)
 
 LELY_OVERRIDE_CO_VAL_LIB =
+lib_LTLIBRARIES =
 
 if !PLATFORM_WIN32
 if ENABLE_SHARED
 liblelyco_val_override_src =
 liblelyco_val_override_src += override/lelyco-val.cpp
 
-lib_LTLIBRARIES = liblelyco_val_override.la
+lib_LTLIBRARIES += liblelyco_val_override.la
 
 liblelyco_val_override_la_LDFLAGS =
 liblelyco_val_override_la_LDFLAGS += -Wl,--as-needed
@@ -43,6 +44,13 @@ liblelyco_val_override_la_SOURCES = $(liblelyco_val_override_src)
 LELY_OVERRIDE_CO_VAL_LIB += liblelyco_val_override.la
 endif
 endif
+
+# Allocators library
+
+lib_LTLIBRARIES += liblely_unit_tests_allocators.la
+liblely_unit_tests_allocators_la_SOURCES = allocators/heap.cpp
+
+ALLOCATORS_LIBS = liblely_unit_tests_allocators.la
 
 # Utilities library tests
 
@@ -94,7 +102,7 @@ src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-net.cpp
 
 unit_test_can_SOURCES = $(src_common) $(src_can_tests)
-unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
+unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS) $(ALLOCATORS_LIBS)
 
 # CANopen library tests
 
@@ -116,7 +124,7 @@ endif
 endif
 
 unit_test_co_SOURCES = $(src_common) $(src_co_tests)
-unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
+unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS) $(ALLOCATORS_LIBS)
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
 unit_test_co_LDFLAGS =

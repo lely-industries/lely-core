@@ -177,14 +177,14 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
 
-	time->recv = can_recv_create();
+	time->recv = can_recv_create(can_net_get_alloc(time->net));
 	if (!time->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(time->recv, &co_time_recv, time);
 
-	time->timer = can_timer_create();
+	time->timer = can_timer_create(can_net_get_alloc(time->net));
 	if (!time->timer) {
 		errc = get_errc();
 		goto error_create_timer;

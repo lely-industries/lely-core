@@ -343,14 +343,14 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 
 	cfg->state = NULL;
 
-	cfg->recv = can_recv_create();
+	cfg->recv = can_recv_create(can_net_get_alloc(cfg->net));
 	if (!cfg->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(cfg->recv, &co_nmt_cfg_recv, cfg);
 
-	cfg->timer = can_timer_create();
+	cfg->timer = can_timer_create(can_net_get_alloc(cfg->net));
 	if (!cfg->timer) {
 		errc = get_errc();
 		goto error_create_timer;

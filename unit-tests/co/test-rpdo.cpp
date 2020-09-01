@@ -39,6 +39,8 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 
+#include "allocators/heap.hpp"
+
 #include "lely-cpputest-ext.hpp"
 
 TEST_BASE(CO_RpdoBase) {
@@ -56,6 +58,8 @@ TEST_BASE(CO_RpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1600;
   std::unique_ptr<CoObjTHolder> obj2000;
 
+  Allocators::HeapAllocator allocator;
+
   void CreateObj(std::unique_ptr<CoObjTHolder> & obj_holder,
                  co_unsigned16_t idx) {
     obj_holder.reset(new CoObjTHolder(idx));
@@ -64,7 +68,7 @@ TEST_BASE(CO_RpdoBase) {
   }
 
   TEST_SETUP() {
-    net = can_net_create();
+    net = can_net_create(allocator.ToAllocT());
     CHECK(net != nullptr);
 
     dev_holder.reset(new CoDevTHolder(DEV_ID));

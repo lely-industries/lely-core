@@ -24,6 +24,7 @@
 
 #include <lely/can/msg.h>
 #include <lely/libc/time.h>
+#include <lely/util/memory.h>
 
 struct __can_net;
 #if !defined(__cplusplus) || LELY_NO_CXX
@@ -84,16 +85,25 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
-void *__can_net_alloc(void);
+size_t can_net_alignof(void);
+size_t can_net_sizeof(void);
+
+void *__can_net_alloc(alloc_t *alloc);
 void __can_net_free(void *ptr);
 struct __can_net *__can_net_init(struct __can_net *net);
 void __can_net_fini(struct __can_net *net);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
-can_net_t *can_net_create(void);
+can_net_t *can_net_create(alloc_t *alloc);
 
 /// Destroys a CAN network interface. @see can_net_create()
 void can_net_destroy(can_net_t *net);
+
+/**
+ * Returns a pointer to the allocator used to allocate the CAN network
+ * interface.
+ */
+alloc_t *can_net_get_alloc(const can_net_t *net);
 
 /**
  * Retrieves the current time of a CAN network interface.
@@ -201,16 +211,22 @@ void can_net_get_send_func(
  */
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
-void *__can_timer_alloc(void);
+size_t can_timer_alignof(void);
+size_t can_timer_sizeof(void);
+
+void *__can_timer_alloc(alloc_t *alloc);
 void __can_timer_free(void *ptr);
 struct __can_timer *__can_timer_init(struct __can_timer *timer);
 void __can_timer_fini(struct __can_timer *timer);
 
 /// Creates a new CAN timer. @see can_timer_destroy()
-can_timer_t *can_timer_create(void);
+can_timer_t *can_timer_create(alloc_t *alloc);
 
 /// Destroys a CAN timer. @see can_timer_create()
 void can_timer_destroy(can_timer_t *timer);
+
+/// Returns a pointer to the allocator used to allocate the CAN timer.
+alloc_t *can_timer_get_alloc(const can_timer_t *timer);
 
 /**
  * Retrieves the callback function invoked when a CAN timer is triggered.
@@ -278,16 +294,22 @@ void can_timer_stop(can_timer_t *timer);
  */
 void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
 
-void *__can_recv_alloc(void);
+size_t can_recv_alignof(void);
+size_t can_recv_sizeof(void);
+
+void *__can_recv_alloc(alloc_t *alloc);
 void __can_recv_free(void *ptr);
 struct __can_recv *__can_recv_init(struct __can_recv *recv);
 void __can_recv_fini(struct __can_recv *recv);
 
 /// Creates a new CAN frame receiver. @see can_recv_destroy()
-can_recv_t *can_recv_create(void);
+can_recv_t *can_recv_create(alloc_t *alloc);
 
 /// Destroys a CAN frame receiver. @see can_recv_create()
 void can_recv_destroy(can_recv_t *recv);
+
+/// Returns a pointer to the allocator used to allocate the CAN frame receiver.
+alloc_t *can_recv_get_alloc(const can_recv_t *recv);
 
 /**
  * Retrieves the callback function used to process CAN frames with a receiver.

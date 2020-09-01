@@ -181,7 +181,7 @@ main(int argc, char *argv[])
 		goto error_watch_can;
 	}
 
-	net = can_net_create();
+	net = can_net_create(NULL);
 	if (!net) {
 		diag(DIAG_ERROR, get_errc(), "unable to create CAN network");
 		goto error_create_net;
@@ -194,7 +194,7 @@ main(int argc, char *argv[])
 
 	can_recv_t *recv_out = NULL;
 	if (!(cobid_out & CO_PDO_COBID_VALID)) {
-		recv_out = can_recv_create();
+		recv_out = can_recv_create(can_net_get_alloc(net));
 		if (!recv_out) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN frame receiver");
@@ -215,7 +215,7 @@ main(int argc, char *argv[])
 
 	can_recv_t *recv_err = NULL;
 	if (!(cobid_err & CO_PDO_COBID_VALID)) {
-		recv_err = can_recv_create();
+		recv_err = can_recv_create(can_net_get_alloc(net));
 		if (!recv_err) {
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create CAN frame receiver");

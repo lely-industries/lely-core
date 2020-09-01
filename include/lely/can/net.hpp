@@ -62,7 +62,7 @@ struct c_type_traits<__can_net> {
 
   static void*
   alloc() noexcept {
-    return __can_net_alloc();
+    return __can_net_alloc(nullptr);
   }
 
   static void
@@ -171,8 +171,9 @@ struct c_type_traits<__can_timer> {
 
   static void*
   alloc() noexcept {
-    return __can_timer_alloc();
+    return __can_timer_alloc(nullptr);
   }
+
   static void
   free(void* ptr) noexcept {
     __can_timer_free(ptr);
@@ -182,6 +183,7 @@ struct c_type_traits<__can_timer> {
   init(pointer p) noexcept {
     return __can_timer_init(p);
   }
+
   static void
   fini(pointer p) noexcept {
     __can_timer_fini(p);
@@ -249,8 +251,9 @@ struct c_type_traits<__can_recv> {
 
   static void*
   alloc() noexcept {
-    return __can_recv_alloc();
+    return __can_recv_alloc(nullptr);
   }
+
   static void
   free(void* ptr) noexcept {
     __can_recv_free(ptr);
@@ -260,6 +263,7 @@ struct c_type_traits<__can_recv> {
   init(pointer p) noexcept {
     return __can_recv_init(p);
   }
+
   static void
   fini(pointer p) noexcept {
     __can_recv_fini(p);

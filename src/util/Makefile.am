@@ -52,6 +52,7 @@ src += cmp.c
 src += dllist.c
 src += endian.c
 src += errnum.c
+src += memory.c
 src += membuf.c
 src += pheap.c
 src += rbtree.c
