@@ -43,7 +43,7 @@ struct c_type_traits<__co_emcy> {
 
   static void*
   alloc() noexcept {
-    return __co_emcy_alloc();
+    return __co_emcy_alloc(nullptr);
   }
 
   static void

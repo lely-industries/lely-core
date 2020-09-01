@@ -186,19 +186,39 @@ static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
  */
 static void co_emcy_flush(co_emcy_t *emcy);
 
-void *
-__co_emcy_alloc(void)
+size_t
+co_emcy_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_emcy));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_emcy_t);
+}
+
+size_t
+co_emcy_sizeof(void)
+{
+	return sizeof(co_emcy_t);
+}
+
+void *
+__co_emcy_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_emcy *emcy =
+			mem_alloc(alloc, co_emcy_alignof(), co_emcy_sizeof());
+	if (!emcy)
+		return NULL;
+
+	emcy->net = net;
+
+	return emcy;
 }
 
 void
 __co_emcy_free(void *ptr)
 {
-	free(ptr);
+	struct __co_emcy *emcy = ptr;
+
+	if (emcy)
+		mem_free(co_emcy_get_alloc(emcy), emcy);
 }
 
 struct __co_emcy *
@@ -234,7 +254,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		goto error_init_buf;
 	}
 
-	emcy->timer = can_timer_create(can_net_get_alloc(emcy->net));
+	emcy->timer = can_timer_create(co_emcy_get_alloc(emcy));
 	if (!emcy->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -260,8 +280,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 			if (!sub)
 				continue;
 			struct co_emcy_node *node = &emcy->nodes[id - 1];
-			node->recv = can_recv_create(
-					can_net_get_alloc(emcy->net));
+			node->recv = can_recv_create(co_emcy_get_alloc(emcy));
 			if (!node->recv) {
 				errc = get_errc();
 				goto error_create_recv;
@@ -317,7 +336,7 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_emcy_t *emcy = __co_emcy_alloc();
+	co_emcy_t *emcy = __co_emcy_alloc(net);
 	if (!emcy) {
 		errc = get_errc();
 		goto error_alloc_emcy;
@@ -413,6 +432,14 @@ co_emcy_stop(co_emcy_t *emcy)
 	// field.
 	if (emcy->obj_1003)
 		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
+}
+
+alloc_t *
+co_emcy_get_alloc(const co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	return emcy->net ? can_net_get_alloc(emcy->net) : NULL;
 }
 
 can_net_t *
