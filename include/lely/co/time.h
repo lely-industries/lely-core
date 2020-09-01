@@ -80,7 +80,10 @@ void co_time_diff_get(const co_time_diff_t *td, struct timespec *tp);
  */
 void co_time_diff_set(co_time_diff_t *td, const struct timespec *tp);
 
-void *__co_time_alloc(void);
+size_t co_time_alignof(void);
+size_t co_time_sizeof(void);
+
+void *__co_time_alloc(can_net_t *net);
 void __co_time_free(void *ptr);
 struct __co_time *__co_time_init(
 		struct __co_time *time, can_net_t *net, co_dev_t *dev);
@@ -120,6 +123,14 @@ int co_time_start(co_time_t *time);
  * @see co_time_start()
  */
 void co_time_stop(co_time_t *time);
+
+/*
+ * Returns a pointer to the allocator used to allocate a TIME producer/consumer
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_time_get_alloc(const co_time_t *time);
 
 /// Returns a pointer to the CAN network of a TIME producer/consumer service.
 can_net_t *co_time_get_net(const co_time_t *time);

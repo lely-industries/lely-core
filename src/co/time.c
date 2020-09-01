@@ -35,7 +35,6 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 /// A CANopen TIME producer/consumer service.
 struct __co_time {
@@ -140,19 +139,39 @@ co_time_diff_set(co_time_diff_t *td, const struct timespec *tp)
 	td->days = (co_unsigned16_t)(tp->tv_sec / (24 * 60 * 60));
 }
 
-void *
-__co_time_alloc(void)
+size_t
+co_time_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_time));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_time_t);
+}
+
+size_t
+co_time_sizeof(void)
+{
+	return sizeof(co_time_t);
+}
+
+void *
+__co_time_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_time *time =
+			mem_alloc(alloc, co_time_alignof(), co_time_sizeof());
+	if (!time)
+		return NULL;
+
+	time->net = net;
+
+	return time;
 }
 
 void
 __co_time_free(void *ptr)
 {
-	free(ptr);
+	struct __co_time *time = ptr;
+
+	if (time)
+		mem_free(co_time_get_alloc(time), time);
 }
 
 struct __co_time *
@@ -177,14 +196,14 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
 
-	time->recv = can_recv_create(can_net_get_alloc(time->net));
+	time->recv = can_recv_create(co_time_get_alloc(time));
 	if (!time->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(time->recv, &co_time_recv, time);
 
-	time->timer = can_timer_create(can_net_get_alloc(time->net));
+	time->timer = can_timer_create(co_time_get_alloc(time));
 	if (!time->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -233,7 +252,7 @@ co_time_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_time_t *time = __co_time_alloc();
+	co_time_t *time = __co_time_alloc(net);
 	if (!time) {
 		errc = get_errc();
 		goto error_alloc_time;
@@ -296,6 +315,14 @@ co_time_stop(co_time_t *time)
 	// Remove the download indication function for the TIME COB-ID object.
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+}
+
+alloc_t *
+co_time_get_alloc(const co_time_t *time)
+{
+	assert(time);
+
+	return time->net ? can_net_get_alloc(time->net) : NULL;
 }
 
 can_net_t *
