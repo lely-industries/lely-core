@@ -60,7 +60,10 @@ typedef void co_sync_ind_t(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
-void *__co_sync_alloc(void);
+size_t co_sync_alignof(void);
+size_t co_sync_sizeof(void);
+
+void *__co_sync_alloc(can_net_t *net);
 void __co_sync_free(void *ptr);
 struct __co_sync *__co_sync_init(
 		struct __co_sync *sync, can_net_t *net, co_dev_t *dev);
@@ -95,6 +98,14 @@ int co_sync_start(co_sync_t *sync);
 
 /// Stops a SYNC service. @see co_sync_start()
 void co_sync_stop(co_sync_t *sync);
+
+/*
+ * Returns a pointer to the allocator used to allocate a SYNC producer/consumer
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_sync_get_alloc(const co_sync_t *sync);
 
 /// Returns a pointer to the CAN network of a SYNC producer/consumer service.
 can_net_t *co_sync_get_net(const co_sync_t *sync);
