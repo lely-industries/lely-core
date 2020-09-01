@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the network
  * management (NMT) declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -276,7 +276,10 @@ co_unsigned32_t co_dev_cfg_hb(
 /// Returns a pointer to a string describing an NMT boot error status.
 const char *co_nmt_es2str(char es);
 
-void *__co_nmt_alloc(void);
+size_t co_nmt_alignof(void);
+size_t co_nmt_sizeof(void);
+
+void *__co_nmt_alloc(can_net_t *net);
 void __co_nmt_free(void *ptr);
 struct __co_nmt *__co_nmt_init(
 		struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev);
@@ -297,6 +300,14 @@ co_nmt_t *co_nmt_create(can_net_t *net, co_dev_t *dev);
 
 /// Destroys a CANopen NMT master/slave service. @see co_nmt_create()
 void co_nmt_destroy(co_nmt_t *nmt);
+
+/*
+ * Returns a pointer to the allocator used to allocate the NMT master/slave
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_nmt_get_alloc(const co_nmt_t *nmt);
 
 /// Returns a pointer to the CAN network of an NMT master/slave service.
 can_net_t *co_nmt_get_net(const co_nmt_t *nmt);

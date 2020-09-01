@@ -751,19 +751,39 @@ co_nmt_es2str(char es)
 	}
 }
 
-void *
-__co_nmt_alloc(void)
+size_t
+co_nmt_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_nmt));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_nmt_t);
+}
+
+size_t
+co_nmt_sizeof(void)
+{
+	return sizeof(co_nmt_t);
+}
+
+void *
+__co_nmt_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_nmt *nmt =
+			mem_alloc(alloc, co_nmt_alignof(), co_nmt_sizeof());
+	if (!nmt)
+		return NULL;
+
+	nmt->net = net;
+
+	return nmt;
 }
 
 void
 __co_nmt_free(void *ptr)
 {
-	free(ptr);
+	struct __co_nmt *nmt = ptr;
+
+	if (nmt)
+		mem_free(co_nmt_get_alloc(nmt), nmt);
 }
 
 struct __co_nmt *
@@ -804,7 +824,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 	// Create the CAN frame receiver for NMT messages.
-	nmt->recv_000 = can_recv_create(can_net_get_alloc(nmt->net));
+	nmt->recv_000 = can_recv_create(co_nmt_get_alloc(nmt));
 	if (!nmt->recv_000) {
 		errc = get_errc();
 		goto error_create_recv_000;
@@ -816,7 +836,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	// Create the CAN frame receiver for node guarding RTR and boot-up
 	// messages.
-	nmt->recv_700 = can_recv_create(can_net_get_alloc(nmt->net));
+	nmt->recv_700 = can_recv_create(co_nmt_get_alloc(nmt));
 	if (!nmt->recv_700) {
 		errc = get_errc();
 		goto error_create_recv_700;
@@ -828,7 +848,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->ng_data = NULL;
 #endif
 
-	nmt->ec_timer = can_timer_create(can_net_get_alloc(nmt->net));
+	nmt->ec_timer = can_timer_create(co_nmt_get_alloc(nmt));
 	if (!nmt->ec_timer) {
 		errc = get_errc();
 		goto error_create_ec_timer;
@@ -866,7 +886,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	}
 
 	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = can_timer_create(can_net_get_alloc(nmt->net));
+	nmt->cs_timer = can_timer_create(co_nmt_get_alloc(nmt));
 	if (!nmt->cs_timer) {
 		errc = get_errc();
 		goto error_create_cs_timer;
@@ -908,14 +928,14 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		slave->recv = can_recv_create(can_net_get_alloc(nmt->net));
+		slave->recv = can_recv_create(co_nmt_get_alloc(nmt));
 		if (!slave->recv) {
 			errc = get_errc();
 			goto error_init_slave;
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
 
-		slave->timer = can_timer_create(can_net_get_alloc(nmt->net));
+		slave->timer = can_timer_create(co_nmt_get_alloc(nmt));
 		if (!slave->timer) {
 			errc = get_errc();
 			goto error_init_slave;
@@ -1130,7 +1150,7 @@ co_nmt_create(can_net_t *net, co_dev_t *dev)
 {
 	int errc = 0;
 
-	co_nmt_t *nmt = __co_nmt_alloc();
+	co_nmt_t *nmt = __co_nmt_alloc(net);
 	if (!nmt) {
 		errc = get_errc();
 		goto error_alloc_nmt;
@@ -1157,6 +1177,14 @@ co_nmt_destroy(co_nmt_t *nmt)
 		__co_nmt_fini(nmt);
 		__co_nmt_free(nmt);
 	}
+}
+
+alloc_t *
+co_nmt_get_alloc(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->net ? can_net_get_alloc(nmt->net) : NULL;
 }
 
 can_net_t *

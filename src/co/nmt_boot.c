@@ -34,7 +34,6 @@
 
 #include <assert.h>
 #include <inttypes.h>
-#include <stdlib.h>
 
 #ifndef LELY_CO_NMT_BOOT_WAIT_TIMEOUT
 /// The timeout (in milliseconds) before trying to boot the slave again.
@@ -786,19 +785,39 @@ static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
  */
 static int co_nmt_boot_send_rtr(co_nmt_boot_t *boot);
 
-void *
-__co_nmt_boot_alloc(void)
+size_t
+co_nmt_boot_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_nmt_boot));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_nmt_boot_t);
+}
+
+size_t
+co_nmt_boot_sizeof(void)
+{
+	return sizeof(co_nmt_boot_t);
+}
+
+void *
+__co_nmt_boot_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_nmt_boot *boot = mem_alloc(
+			alloc, co_nmt_boot_alignof(), co_nmt_boot_sizeof());
+	if (!boot)
+		return NULL;
+
+	boot->net = net;
+
+	return boot;
 }
 
 void
 __co_nmt_boot_free(void *ptr)
 {
-	free(ptr);
+	struct __co_nmt_boot *boot = ptr;
+
+	if (boot)
+		mem_free(co_nmt_boot_get_alloc(boot), boot);
 }
 
 struct __co_nmt_boot *
@@ -818,14 +837,14 @@ __co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
 
 	boot->state = NULL;
 
-	boot->recv = can_recv_create(can_net_get_alloc(boot->net));
+	boot->recv = can_recv_create(co_nmt_boot_get_alloc(boot));
 	if (!boot->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(boot->recv, &co_nmt_boot_recv, boot);
 
-	boot->timer = can_timer_create(can_net_get_alloc(boot->net));
+	boot->timer = can_timer_create(co_nmt_boot_get_alloc(boot));
 	if (!boot->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -878,7 +897,7 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_boot_t *boot = __co_nmt_boot_alloc();
+	co_nmt_boot_t *boot = __co_nmt_boot_alloc(net);
 	if (!boot) {
 		errc = get_errc();
 		goto error_alloc_boot;
@@ -905,6 +924,14 @@ co_nmt_boot_destroy(co_nmt_boot_t *boot)
 		__co_nmt_boot_fini(boot);
 		__co_nmt_boot_free(boot);
 	}
+}
+
+alloc_t *
+co_nmt_boot_get_alloc(const co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	return boot->net ? can_net_get_alloc(boot->net) : NULL;
 }
 
 int

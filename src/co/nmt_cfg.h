@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -58,7 +58,10 @@ void co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo);
  */
 void co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 
-void *__co_nmt_cfg_alloc(void);
+size_t co_nmt_cfg_alignof(void);
+size_t co_nmt_cfg_sizeof(void);
+
+void *__co_nmt_cfg_alloc(can_net_t *net);
 void __co_nmt_cfg_free(void *ptr);
 struct __co_nmt_cfg *__co_nmt_cfg_init(struct __co_nmt_cfg *boot,
 		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
@@ -80,6 +83,14 @@ co_nmt_cfg_t *co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 
 /// Destroys a CANopen NMT 'configuration request'. @see co_nmt_cfg_create()
 void co_nmt_cfg_destroy(co_nmt_cfg_t *boot);
+
+/*
+ * Returns a pointer to the allocator used to allocate the NMT 'configuration
+ * request'.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg);
 
 /**
  * Starts a CANopen NMT 'configuration request'.

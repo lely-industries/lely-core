@@ -3,7 +3,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -49,7 +49,10 @@ extern "C" {
 void co_nmt_boot_con(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 
-void *__co_nmt_boot_alloc(void);
+size_t co_nmt_boot_alignof(void);
+size_t co_nmt_boot_sizeof(void);
+
+void *__co_nmt_boot_alloc(can_net_t *net);
 void __co_nmt_boot_free(void *ptr);
 struct __co_nmt_boot *__co_nmt_boot_init(struct __co_nmt_boot *boot,
 		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
@@ -70,6 +73,14 @@ co_nmt_boot_t *co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
 
 /// Destroys a CANopen NMT 'boot slave' service. @see co_nmt_boot_create()
 void co_nmt_boot_destroy(co_nmt_boot_t *boot);
+
+/*
+ * Returns a pointer to the allocator used to allocate the NMT 'boot slave'
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_nmt_boot_get_alloc(const co_nmt_boot_t *boot);
 
 /**
  * Starts a CANopen NMT 'boot slave' service.

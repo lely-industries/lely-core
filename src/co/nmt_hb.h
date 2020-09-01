@@ -3,7 +3,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -52,7 +52,10 @@ extern "C" {
 void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		co_unsigned8_t st);
 
-void *__co_nmt_hb_alloc(void);
+size_t co_nmt_hb_alignof(void);
+size_t co_nmt_hb_sizeof(void);
+
+void *__co_nmt_hb_alloc(can_net_t *net);
 void __co_nmt_hb_free(void *ptr);
 struct __co_nmt_hb *__co_nmt_hb_init(
 		struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt);
@@ -73,6 +76,14 @@ co_nmt_hb_t *co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt);
 
 /// Destroys a CANopen NMT heartbeat consumer service. @see co_nmt_hb_create()
 void co_nmt_hb_destroy(co_nmt_hb_t *hb);
+
+/*
+ * Returns a pointer to the allocator used to allocate the NMT heartbeat
+ * consumer service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_nmt_hb_get_alloc(const co_nmt_hb_t *hb);
 
 /**
  * Processes the value of CANopen object 1016 (Consumer heartbeat time) for the
