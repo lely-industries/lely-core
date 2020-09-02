@@ -51,6 +51,20 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#endif
+
+#if LELY_NO_MALLOC
+#ifndef CO_NMT_MAX_NHB
+/**
+ * The default maximum number of heartbeat consumers in the absence of dynamic
+ * memory allocation. The default value equals the maximum number of CANopen
+ * nodes.
+ */
+#define CO_NMT_MAX_NHB CO_NUM_NODES
+#endif
+#endif
 
 struct __co_nmt_state;
 /// An opaque CANopen NMT state type.
@@ -160,7 +174,11 @@ struct __co_nmt {
 	/// The producer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
 	/// An array of pointers to the heartbeat consumers.
+#if LELY_NO_MALLOC
+	co_nmt_hb_t *hbs[CO_NMT_MAX_NHB];
+#else
 	co_nmt_hb_t **hbs;
+#endif
 	/// The number of heartbeat consumers.
 	co_unsigned8_t nhb;
 	/// A pointer to the heartbeat event indication function.
@@ -826,7 +844,11 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->ms = 0;
 
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 	nmt->hb_ind = &default_hb_ind;
 	nmt->hb_data = NULL;
@@ -3388,17 +3410,26 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Create and initialize the heartbeat consumers.
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	assert(!nmt->hbs);
+#endif
 	assert(!nmt->nhb);
 	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (obj_1016) {
 		nmt->nhb = co_obj_get_val_u8(obj_1016, 0x00);
+#if LELY_NO_MALLOC
+		if (nmt->nhb > CO_NMT_MAX_NHB) {
+			set_errnum(ERRNUM_NOMEM);
+#else
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
 		if (!nmt->hbs && nmt->nhb) {
-			nmt->nhb = 0;
 			set_errc(errno2c(errno));
+#endif
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumers");
+			nmt->nhb = 0;
 		}
 	}
 
@@ -3426,8 +3457,10 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 	// Destroy all heartbeat consumers.
 	for (size_t i = 0; i < nmt->nhb; i++)
 		co_nmt_hb_destroy(nmt->hbs[i]);
+#if !LELY_NO_MALLOC
 	free(nmt->hbs);
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 }
 
