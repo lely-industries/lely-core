@@ -12,7 +12,7 @@
 #include <stdlib.h>
 
 #ifndef CO_TEST_BUFSIZE
-#define CO_TEST_BUFSIZE 256
+#define CO_TEST_BUFSIZE 255
 #endif
 
 struct co_test {
@@ -113,7 +113,9 @@ co_test_init(struct co_test *test, can_net_t *net, int wait)
 	test->net = net;
 	can_net_set_send_func(test->net, &co_test_send, test);
 
-	tap_assert(!can_buf_init(&test->buf, CO_TEST_BUFSIZE));
+	can_buf_init(&test->buf, NULL, 0);
+	tap_assert(can_buf_reserve(&test->buf, CO_TEST_BUFSIZE)
+			== CO_TEST_BUFSIZE);
 
 #ifndef LELY_NO_CO_WTM
 	test->wtm = co_wtm_create();

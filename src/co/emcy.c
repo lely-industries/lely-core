@@ -43,6 +43,13 @@
 #endif
 
 #if LELY_NO_MALLOC
+#ifndef CO_EMCY_CAN_BUF_SIZE
+/**
+ * The default size of an EMCY CAN frame buffer in the absence of dynamic memory
+ * allocation.
+ */
+#define CO_EMCY_CAN_BUF_SIZE 16
+#endif
 #ifndef CO_EMCY_MAX_NMSG
 /**
  * The default maximum number of active EMCY messages in the absence of dynamic
@@ -50,7 +57,7 @@
  */
 #define CO_EMCY_MAX_NMSG 8
 #endif
-#endif
+#endif // LELY_NO_MALLOC
 
 /// An EMCY message.
 struct co_emcy_msg {
@@ -95,6 +102,13 @@ struct __co_emcy {
 #endif
 	/// The CAN frame buffer.
 	struct can_buf buf;
+#if LELY_NO_MALLOC
+	/**
+	 * The static memory buffer used by #buf in the absence of dynamic
+	 * memory allocation.
+	 */
+	struct can_msg begin[CO_EMCY_CAN_BUF_SIZE];
+#endif
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
 	/// The time at which the next EMCY message may be sent.
@@ -247,12 +261,14 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->msgs = NULL;
 #endif
 
-	// Create a CAN frame buffer (with the default size) for pending EMCY
-	// messages that will be send once the inhibit time has elapsed.
-	if (can_buf_init(&emcy->buf, 0) == -1) {
-		errc = get_errc();
-		goto error_init_buf;
-	}
+	// Create a CAN frame buffer for pending EMCY messages that will be send
+	// once the inhibit time has elapsed.
+#if LELY_NO_MALLOC
+	can_buf_init(&emcy->buf, emcy->begin, CO_EMCY_CAN_BUF_SIZE);
+	memset(emcy->begin, 0, CO_EMCY_CAN_BUF_SIZE * sizeof(*emcy->begin));
+#else
+	can_buf_init(&emcy->buf, NULL, 0);
+#endif
 
 	emcy->timer = can_timer_create(co_emcy_get_alloc(emcy));
 	if (!emcy->timer) {
@@ -304,7 +320,6 @@ error_create_recv:
 	can_timer_destroy(emcy->timer);
 error_create_timer:
 	can_buf_fini(&emcy->buf);
-error_init_buf:
 error_sub_1001_00:
 	set_errc(errc);
 	return NULL;
@@ -848,16 +863,11 @@ co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	}
 
 	// Add the frame to the buffer.
-#if LELY_NO_MALLOC
-	if (!can_buf_write(&emcy->buf, &msg, 1))
-		return -1;
-#else
 	if (!can_buf_write(&emcy->buf, &msg, 1)) {
 		if (!can_buf_reserve(&emcy->buf, 1))
 			return -1;
 		can_buf_write(&emcy->buf, &msg, 1);
 	}
-#endif
 
 	co_emcy_flush(emcy);
 	return 0;
