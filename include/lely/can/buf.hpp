@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the C++ interface of
  * the CAN frame buffer. @see lely/can/buf.h for the C interface.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,8 +41,9 @@ struct c_type_traits<can_buf> {
   typedef const value_type* const_pointer;
 
   static pointer
-  init(pointer p, ::std::size_t size) noexcept {
-    return can_buf_init(p, size) ? 0 : p;
+  init(pointer p) noexcept {
+    can_buf_init(p, nullptr, 0);
+    return p;
   }
 
   static void
@@ -56,7 +57,7 @@ class CANBuf : public standard_c_type<can_buf> {
   typedef standard_c_type<can_buf> c_base;
 
  public:
-  explicit CANBuf(::std::size_t size = 0) : c_base(size) {}
+  CANBuf() : c_base() {}
 
   CANBuf& operator=(const CANBuf&) = delete;
 
@@ -113,16 +114,8 @@ class CANBuf : public standard_c_type<can_buf> {
  private:
   can_msg* m_ptr;
   ::std::size_t m_size;
-#ifdef LELY_NO_ATOMICS
   ::std::size_t m_begin;
-#else
-  atomic_size_t m_begin;
-#endif
-#ifdef LELY_NO_ATOMICS
   ::std::size_t m_end;
-#else
-  atomic_size_t m_end;
-#endif
 };
 
 }  // namespace lely
