@@ -36,7 +36,21 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#else
 #include <stdlib.h>
+#endif
+
+#if LELY_NO_MALLOC
+#ifndef CO_EMCY_MAX_NMSG
+/**
+ * The default maximum number of active EMCY messages in the absence of dynamic
+ * memory allocation.
+ */
+#define CO_EMCY_MAX_NMSG 8
+#endif
+#endif
 
 /// An EMCY message.
 struct co_emcy_msg {
@@ -74,7 +88,11 @@ struct __co_emcy {
 	/// The number of messages in #msgs.
 	size_t nmsg;
 	/// An array of EMCY messages. The first element is the most recent.
+#if LELY_NO_MALLOC
+	struct co_emcy_msg msgs[CO_EMCY_MAX_NMSG];
+#else
 	struct co_emcy_msg *msgs;
+#endif
 	/// The CAN frame buffer.
 	struct can_buf buf;
 	/// A pointer to the CAN timer.
@@ -203,7 +221,11 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->obj_1003 = co_dev_find_obj(emcy->dev, 0x1003);
 
 	emcy->nmsg = 0;
+#if LELY_NO_MALLOC
+	memset(emcy->msgs, 0, CO_EMCY_MAX_NMSG * sizeof(*emcy->msgs));
+#else
 	emcy->msgs = NULL;
+#endif
 
 	// Create a CAN frame buffer (with the default size) for pending EMCY
 	// messages that will be send once the inhibit time has elapsed.
@@ -283,7 +305,9 @@ __co_emcy_fini(struct __co_emcy *emcy)
 
 	can_buf_fini(&emcy->buf);
 
+#if !LELY_NO_MALLOC
 	free(emcy->msgs);
+#endif
 }
 
 co_emcy_t *
@@ -426,6 +450,12 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	else
 		diag(DIAG_INFO, 0, "EMCY: %04X %02X", eec, er);
 
+#if LELY_NO_MALLOC
+	if (emcy->nmsg > CO_EMCY_MAX_NMSG - 1) {
+		set_errnum(ERRNUM_NOMEM);
+		return -1;
+	}
+#else
 	// Make room on the stack.
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
@@ -434,6 +464,8 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 		return -1;
 	}
 	emcy->msgs = msgs;
+#endif
+
 	if (emcy->nmsg) {
 		// Copy the current error register.
 		er |= emcy->msgs[0].er;
