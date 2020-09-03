@@ -42,6 +42,7 @@
 #include "allocators/heap.hpp"
 
 #include "lely-cpputest-ext.hpp"
+#include "lely-unit-test.hpp"
 
 TEST_BASE(CO_RpdoBase) {
   TEST_BASE_SUPER(CO_RpdoBase);
@@ -68,6 +69,7 @@ TEST_BASE(CO_RpdoBase) {
   }
 
   TEST_SETUP() {
+    LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(allocator.ToAllocT());
     CHECK(net != nullptr);
 
