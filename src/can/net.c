@@ -36,7 +36,7 @@
 struct __can_net {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
-	/// The tree containing all timers.
+	/// The heap containing all timers.
 	struct pheap timer_heap;
 	/// The current time.
 	struct timespec time;
