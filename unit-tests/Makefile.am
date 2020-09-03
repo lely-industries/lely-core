@@ -114,6 +114,7 @@ src_co_tests =
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
+src_co_tests += co/test-pdo.cpp
 src_co_tests += co/test-rpdo.cpp
 src_co_tests += co/test-sync.cpp
 src_co_tests += co/test-type.cpp
