@@ -43,7 +43,7 @@ struct c_type_traits<__co_time> {
 
   static void*
   alloc() noexcept {
-    return __co_time_alloc();
+    return __co_time_alloc(nullptr);
   }
 
   static void

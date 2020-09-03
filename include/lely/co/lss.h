@@ -140,7 +140,10 @@ typedef void co_lss_nid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 		const struct co_id *id, void *data);
 
-void *__co_lss_alloc(void);
+size_t co_lss_alignof(void);
+size_t co_lss_sizeof(void);
+
+void *__co_lss_alloc(can_net_t *net);
 void __co_lss_free(void *ptr);
 struct __co_lss *__co_lss_init(struct __co_lss *lss, co_nmt_t *nmt);
 void __co_lss_fini(struct __co_lss *lss);
@@ -173,6 +176,14 @@ int co_lss_start(co_lss_t *lss);
 
 /// Stops an LSS service. @see co_lss_start()
 void co_lss_stop(co_lss_t *lss);
+
+/*
+ * Returns a pointer to the allocator used to allocate an LSS master/slave
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_lss_get_alloc(const co_lss_t *lss);
 
 /// Returns a pointer to the NMT service of an LSS master/slave service.
 co_nmt_t *co_lss_get_nmt(const co_lss_t *lss);

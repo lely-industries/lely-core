@@ -48,7 +48,7 @@ struct c_type_traits<__co_nmt> {
 
   static void*
   alloc() noexcept {
-    return __co_nmt_alloc();
+    return __co_nmt_alloc(nullptr);
   }
 
   static void

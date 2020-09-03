@@ -53,7 +53,10 @@ typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t eec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 
-void *__co_emcy_alloc(void);
+size_t co_emcy_alignof(void);
+size_t co_emcy_sizeof(void);
+
+void *__co_emcy_alloc(can_net_t *net);
 void __co_emcy_free(void *ptr);
 struct __co_emcy *__co_emcy_init(
 		struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev);
@@ -88,6 +91,14 @@ int co_emcy_start(co_emcy_t *emcy);
 
 /// Stops an EMCY service. @see co_emcy_start()
 void co_emcy_stop(co_emcy_t *emcy);
+
+/*
+ * Returns a pointer to the allocator used to allocate an EMCY producer/consumer
+ * service.
+ *
+ * @see can_net_get_alloc()
+ */
+alloc_t *co_emcy_get_alloc(const co_emcy_t *emcy);
 
 /// Returns a pointer to the CAN network of an EMCY producer/consumer service.
 can_net_t *co_emcy_get_net(const co_emcy_t *emcy);

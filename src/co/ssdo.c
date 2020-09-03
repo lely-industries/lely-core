@@ -33,7 +33,6 @@
 
 #include <assert.h>
 #include <inttypes.h>
-#include <stdlib.h>
 #if LELY_NO_MALLOC
 #include <string.h>
 #endif
@@ -521,19 +520,39 @@ static void co_ssdo_init_ini_res(
 static void co_ssdo_init_seg_res(
 		co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
-void *
-__co_ssdo_alloc(void)
+size_t
+co_ssdo_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_ssdo));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_ssdo_t);
+}
+
+size_t
+co_ssdo_sizeof(void)
+{
+	return sizeof(co_ssdo_t);
+}
+
+void *
+__co_ssdo_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_ssdo *sdo =
+			mem_alloc(alloc, co_ssdo_alignof(), co_ssdo_sizeof());
+	if (!sdo)
+		return NULL;
+
+	sdo->net = net;
+
+	return sdo;
 }
 
 void
 __co_ssdo_free(void *ptr)
 {
-	free(ptr);
+	struct __co_ssdo *sdo = ptr;
+
+	if (sdo)
+		mem_free(co_ssdo_get_alloc(sdo), sdo);
 }
 
 struct __co_ssdo *
@@ -569,7 +588,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->par.cobid_req = 0x600 + sdo->par.id;
 	sdo->par.cobid_res = 0x580 + sdo->par.id;
 
-	sdo->recv = can_recv_create(can_net_get_alloc(sdo->net));
+	sdo->recv = can_recv_create(co_ssdo_get_alloc(sdo));
 	if (!sdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;
@@ -578,7 +597,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	sdo->timeout = 0;
 
-	sdo->timer = can_timer_create(can_net_get_alloc(sdo->net));
+	sdo->timer = can_timer_create(co_ssdo_get_alloc(sdo));
 	if (!sdo->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -648,7 +667,7 @@ co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	int errc = 0;
 
-	co_ssdo_t *sdo = __co_ssdo_alloc();
+	co_ssdo_t *sdo = __co_ssdo_alloc(net);
 	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
@@ -723,6 +742,14 @@ co_ssdo_stop(co_ssdo_t *sdo)
 	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
 	if (obj_1200)
 		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+}
+
+alloc_t *
+co_ssdo_get_alloc(const co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->net ? can_net_get_alloc(sdo->net) : NULL;
 }
 
 can_net_t *

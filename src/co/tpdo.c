@@ -34,7 +34,6 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 /// A CANopen Transmit-PDO.
 struct __co_tpdo {
@@ -144,19 +143,39 @@ static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
  */
 static co_unsigned32_t co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
 
-void *
-__co_tpdo_alloc(void)
+size_t
+co_tpdo_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_tpdo));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_tpdo_t);
+}
+
+size_t
+co_tpdo_sizeof(void)
+{
+	return sizeof(co_tpdo_t);
+}
+
+void *
+__co_tpdo_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_tpdo *pdo =
+			mem_alloc(alloc, co_tpdo_alignof(), co_tpdo_sizeof());
+	if (!pdo)
+		return NULL;
+
+	pdo->net = net;
+
+	return pdo;
 }
 
 void
 __co_tpdo_free(void *ptr)
 {
-	free(ptr);
+	struct __co_tpdo *pdo = ptr;
+
+	if (pdo)
+		mem_free(co_tpdo_get_alloc(pdo), pdo);
 }
 
 struct __co_tpdo *
@@ -189,21 +208,21 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
 	memset(&pdo->map, 0, sizeof(pdo->map));
 
-	pdo->recv = can_recv_create(can_net_get_alloc(pdo->net));
+	pdo->recv = can_recv_create(co_tpdo_get_alloc(pdo));
 	if (!pdo->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(pdo->recv, &co_tpdo_recv, pdo);
 
-	pdo->timer_event = can_timer_create(can_net_get_alloc(pdo->net));
+	pdo->timer_event = can_timer_create(co_tpdo_get_alloc(pdo));
 	if (!pdo->timer_event) {
 		errc = get_errc();
 		goto error_create_timer_event;
 	}
 	can_timer_set_func(pdo->timer_event, &co_tpdo_timer_event, pdo);
 
-	pdo->timer_swnd = can_timer_create(can_net_get_alloc(pdo->net));
+	pdo->timer_swnd = can_timer_create(co_tpdo_get_alloc(pdo));
 	if (!pdo->timer_swnd) {
 		errc = get_errc();
 		goto error_create_timer_swnd;
@@ -265,7 +284,7 @@ co_tpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 
 	int errc = 0;
 
-	co_tpdo_t *pdo = __co_tpdo_alloc();
+	co_tpdo_t *pdo = __co_tpdo_alloc(net);
 	if (!pdo) {
 		errc = get_errc();
 		goto error_alloc_pdo;
@@ -353,6 +372,14 @@ co_tpdo_stop(co_tpdo_t *pdo)
 	co_obj_t *obj_1800 = co_dev_find_obj(pdo->dev, 0x1800 + pdo->num - 1);
 	assert(obj_1800);
 	co_obj_set_dn_ind(obj_1800, NULL, NULL);
+}
+
+alloc_t *
+co_tpdo_get_alloc(const co_tpdo_t *pdo)
+{
+	assert(pdo);
+
+	return pdo->net ? can_net_get_alloc(pdo->net) : NULL;
 }
 
 can_net_t *

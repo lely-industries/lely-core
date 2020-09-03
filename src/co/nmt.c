@@ -50,7 +50,22 @@
 #include "nmt_srv.h"
 
 #include <assert.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#else
 #include <stdlib.h>
+#endif
+
+#if LELY_NO_MALLOC
+#ifndef CO_NMT_MAX_NHB
+/**
+ * The default maximum number of heartbeat consumers in the absence of dynamic
+ * memory allocation. The default value equals the maximum number of CANopen
+ * nodes.
+ */
+#define CO_NMT_MAX_NHB CO_NUM_NODES
+#endif
+#endif
 
 struct __co_nmt_state;
 /// An opaque CANopen NMT state type.
@@ -160,7 +175,11 @@ struct __co_nmt {
 	/// The producer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
 	/// An array of pointers to the heartbeat consumers.
+#if LELY_NO_MALLOC
+	co_nmt_hb_t *hbs[CO_NMT_MAX_NHB];
+#else
 	co_nmt_hb_t **hbs;
+#endif
 	/// The number of heartbeat consumers.
 	co_unsigned8_t nhb;
 	/// A pointer to the heartbeat event indication function.
@@ -732,19 +751,39 @@ co_nmt_es2str(char es)
 	}
 }
 
-void *
-__co_nmt_alloc(void)
+size_t
+co_nmt_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_nmt));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_nmt_t);
+}
+
+size_t
+co_nmt_sizeof(void)
+{
+	return sizeof(co_nmt_t);
+}
+
+void *
+__co_nmt_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_nmt *nmt =
+			mem_alloc(alloc, co_nmt_alignof(), co_nmt_sizeof());
+	if (!nmt)
+		return NULL;
+
+	nmt->net = net;
+
+	return nmt;
 }
 
 void
 __co_nmt_free(void *ptr)
 {
-	free(ptr);
+	struct __co_nmt *nmt = ptr;
+
+	if (nmt)
+		mem_free(co_nmt_get_alloc(nmt), nmt);
 }
 
 struct __co_nmt *
@@ -785,7 +824,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 	// Create the CAN frame receiver for NMT messages.
-	nmt->recv_000 = can_recv_create(can_net_get_alloc(nmt->net));
+	nmt->recv_000 = can_recv_create(co_nmt_get_alloc(nmt));
 	if (!nmt->recv_000) {
 		errc = get_errc();
 		goto error_create_recv_000;
@@ -797,7 +836,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	// Create the CAN frame receiver for node guarding RTR and boot-up
 	// messages.
-	nmt->recv_700 = can_recv_create(can_net_get_alloc(nmt->net));
+	nmt->recv_700 = can_recv_create(co_nmt_get_alloc(nmt));
 	if (!nmt->recv_700) {
 		errc = get_errc();
 		goto error_create_recv_700;
@@ -809,7 +848,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->ng_data = NULL;
 #endif
 
-	nmt->ec_timer = can_timer_create(can_net_get_alloc(nmt->net));
+	nmt->ec_timer = can_timer_create(co_nmt_get_alloc(nmt));
 	if (!nmt->ec_timer) {
 		errc = get_errc();
 		goto error_create_ec_timer;
@@ -826,7 +865,11 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->ms = 0;
 
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 	nmt->hb_ind = &default_hb_ind;
 	nmt->hb_data = NULL;
@@ -843,7 +886,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	}
 
 	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = can_timer_create(can_net_get_alloc(nmt->net));
+	nmt->cs_timer = can_timer_create(co_nmt_get_alloc(nmt));
 	if (!nmt->cs_timer) {
 		errc = get_errc();
 		goto error_create_cs_timer;
@@ -885,14 +928,14 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		slave->recv = can_recv_create(can_net_get_alloc(nmt->net));
+		slave->recv = can_recv_create(co_nmt_get_alloc(nmt));
 		if (!slave->recv) {
 			errc = get_errc();
 			goto error_init_slave;
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
 
-		slave->timer = can_timer_create(can_net_get_alloc(nmt->net));
+		slave->timer = can_timer_create(co_nmt_get_alloc(nmt));
 		if (!slave->timer) {
 			errc = get_errc();
 			goto error_init_slave;
@@ -1107,7 +1150,7 @@ co_nmt_create(can_net_t *net, co_dev_t *dev)
 {
 	int errc = 0;
 
-	co_nmt_t *nmt = __co_nmt_alloc();
+	co_nmt_t *nmt = __co_nmt_alloc(net);
 	if (!nmt) {
 		errc = get_errc();
 		goto error_alloc_nmt;
@@ -1134,6 +1177,14 @@ co_nmt_destroy(co_nmt_t *nmt)
 		__co_nmt_fini(nmt);
 		__co_nmt_free(nmt);
 	}
+}
+
+alloc_t *
+co_nmt_get_alloc(const co_nmt_t *nmt)
+{
+	assert(nmt);
+
+	return nmt->net ? can_net_get_alloc(nmt->net) : NULL;
 }
 
 can_net_t *
@@ -3388,17 +3439,26 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Create and initialize the heartbeat consumers.
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	assert(!nmt->hbs);
+#endif
 	assert(!nmt->nhb);
 	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (obj_1016) {
 		nmt->nhb = co_obj_get_val_u8(obj_1016, 0x00);
+#if LELY_NO_MALLOC
+		if (nmt->nhb > CO_NMT_MAX_NHB) {
+			set_errnum(ERRNUM_NOMEM);
+#else
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
 		if (!nmt->hbs && nmt->nhb) {
-			nmt->nhb = 0;
 			set_errc(errno2c(errno));
+#endif
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumers");
+			nmt->nhb = 0;
 		}
 	}
 
@@ -3426,8 +3486,10 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 	// Destroy all heartbeat consumers.
 	for (size_t i = 0; i < nmt->nhb; i++)
 		co_nmt_hb_destroy(nmt->hbs[i]);
+#if !LELY_NO_MALLOC
 	free(nmt->hbs);
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 }
 

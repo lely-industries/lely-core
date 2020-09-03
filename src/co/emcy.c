@@ -36,7 +36,21 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#else
 #include <stdlib.h>
+#endif
+
+#if LELY_NO_MALLOC
+#ifndef CO_EMCY_MAX_NMSG
+/**
+ * The default maximum number of active EMCY messages in the absence of dynamic
+ * memory allocation.
+ */
+#define CO_EMCY_MAX_NMSG 8
+#endif
+#endif
 
 /// An EMCY message.
 struct co_emcy_msg {
@@ -74,7 +88,11 @@ struct __co_emcy {
 	/// The number of messages in #msgs.
 	size_t nmsg;
 	/// An array of EMCY messages. The first element is the most recent.
+#if LELY_NO_MALLOC
+	struct co_emcy_msg msgs[CO_EMCY_MAX_NMSG];
+#else
 	struct co_emcy_msg *msgs;
+#endif
 	/// The CAN frame buffer.
 	struct can_buf buf;
 	/// A pointer to the CAN timer.
@@ -168,19 +186,39 @@ static int co_emcy_send(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
  */
 static void co_emcy_flush(co_emcy_t *emcy);
 
-void *
-__co_emcy_alloc(void)
+size_t
+co_emcy_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_emcy));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_emcy_t);
+}
+
+size_t
+co_emcy_sizeof(void)
+{
+	return sizeof(co_emcy_t);
+}
+
+void *
+__co_emcy_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_emcy *emcy =
+			mem_alloc(alloc, co_emcy_alignof(), co_emcy_sizeof());
+	if (!emcy)
+		return NULL;
+
+	emcy->net = net;
+
+	return emcy;
 }
 
 void
 __co_emcy_free(void *ptr)
 {
-	free(ptr);
+	struct __co_emcy *emcy = ptr;
+
+	if (emcy)
+		mem_free(co_emcy_get_alloc(emcy), emcy);
 }
 
 struct __co_emcy *
@@ -203,7 +241,11 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 	emcy->obj_1003 = co_dev_find_obj(emcy->dev, 0x1003);
 
 	emcy->nmsg = 0;
+#if LELY_NO_MALLOC
+	memset(emcy->msgs, 0, CO_EMCY_MAX_NMSG * sizeof(*emcy->msgs));
+#else
 	emcy->msgs = NULL;
+#endif
 
 	// Create a CAN frame buffer (with the default size) for pending EMCY
 	// messages that will be send once the inhibit time has elapsed.
@@ -212,7 +254,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 		goto error_init_buf;
 	}
 
-	emcy->timer = can_timer_create(can_net_get_alloc(emcy->net));
+	emcy->timer = can_timer_create(co_emcy_get_alloc(emcy));
 	if (!emcy->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -238,8 +280,7 @@ __co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
 			if (!sub)
 				continue;
 			struct co_emcy_node *node = &emcy->nodes[id - 1];
-			node->recv = can_recv_create(
-					can_net_get_alloc(emcy->net));
+			node->recv = can_recv_create(co_emcy_get_alloc(emcy));
 			if (!node->recv) {
 				errc = get_errc();
 				goto error_create_recv;
@@ -283,7 +324,9 @@ __co_emcy_fini(struct __co_emcy *emcy)
 
 	can_buf_fini(&emcy->buf);
 
+#if !LELY_NO_MALLOC
 	free(emcy->msgs);
+#endif
 }
 
 co_emcy_t *
@@ -293,7 +336,7 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_emcy_t *emcy = __co_emcy_alloc();
+	co_emcy_t *emcy = __co_emcy_alloc(net);
 	if (!emcy) {
 		errc = get_errc();
 		goto error_alloc_emcy;
@@ -391,6 +434,14 @@ co_emcy_stop(co_emcy_t *emcy)
 		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
 }
 
+alloc_t *
+co_emcy_get_alloc(const co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	return emcy->net ? can_net_get_alloc(emcy->net) : NULL;
+}
+
 can_net_t *
 co_emcy_get_net(const co_emcy_t *emcy)
 {
@@ -426,6 +477,12 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	else
 		diag(DIAG_INFO, 0, "EMCY: %04X %02X", eec, er);
 
+#if LELY_NO_MALLOC
+	if (emcy->nmsg > CO_EMCY_MAX_NMSG - 1) {
+		set_errnum(ERRNUM_NOMEM);
+		return -1;
+	}
+#else
 	// Make room on the stack.
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
@@ -434,6 +491,8 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 		return -1;
 	}
 	emcy->msgs = msgs;
+#endif
+
 	if (emcy->nmsg) {
 		// Copy the current error register.
 		er |= emcy->msgs[0].er;

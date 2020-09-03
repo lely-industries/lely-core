@@ -34,7 +34,6 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 struct __co_lss_state;
 /// An opaque CANopen LSS state type.
@@ -660,19 +659,39 @@ static inline co_unsigned32_t *co_id_sub(struct co_id *id, co_unsigned8_t sub);
 
 #endif // !LELY_NO_CO_MASTER
 
-void *
-__co_lss_alloc(void)
+size_t
+co_lss_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_lss));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_lss_t);
+}
+
+size_t
+co_lss_sizeof(void)
+{
+	return sizeof(co_lss_t);
+}
+
+void *
+__co_lss_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_lss *lss =
+			mem_alloc(alloc, co_lss_alignof(), co_lss_sizeof());
+	if (!lss)
+		return NULL;
+
+	lss->net = net;
+
+	return lss;
 }
 
 void
 __co_lss_free(void *ptr)
 {
-	free(ptr);
+	struct __co_lss *lss = ptr;
+
+	if (lss)
+		mem_free(co_lss_get_alloc(lss), lss);
 }
 
 struct __co_lss *
@@ -695,7 +714,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->next = 0;
 #endif
 
-	lss->recv = can_recv_create(can_net_get_alloc(lss->net));
+	lss->recv = can_recv_create(co_lss_get_alloc(lss));
 	if (!lss->recv) {
 		errc = get_errc();
 		goto error_create_recv;
@@ -705,7 +724,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 #ifndef LELY_NO_CO_MASTER
 	lss->timeout = LELY_CO_LSS_TIMEOUT;
 
-	lss->timer = can_timer_create(can_net_get_alloc(lss->net));
+	lss->timer = can_timer_create(co_lss_get_alloc(lss));
 	if (!lss->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -784,7 +803,7 @@ co_lss_create(co_nmt_t *nmt)
 
 	int errc = 0;
 
-	co_lss_t *lss = __co_lss_alloc();
+	co_lss_t *lss = __co_lss_alloc(co_nmt_get_net(nmt));
 	if (!lss) {
 		errc = get_errc();
 		goto error_alloc_lss;
@@ -837,6 +856,14 @@ co_lss_stop(co_lss_t *lss)
 	can_timer_stop(lss->timer);
 #endif
 	can_recv_stop(lss->recv);
+}
+
+alloc_t *
+co_lss_get_alloc(const co_lss_t *lss)
+{
+	assert(lss);
+
+	return lss->net ? can_net_get_alloc(lss->net) : NULL;
 }
 
 co_nmt_t *

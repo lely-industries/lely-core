@@ -36,7 +36,6 @@
 
 #include <assert.h>
 #include <inttypes.h>
-#include <stdlib.h>
 
 #ifndef LELY_CO_NMT_CFG_RESET_TIMEOUT
 /**
@@ -311,19 +310,39 @@ LELY_CO_DEFINE_STATE(co_nmt_cfg_user_state,
 
 #undef LELY_CO_DEFINE_STATE
 
-void *
-__co_nmt_cfg_alloc(void)
+size_t
+co_nmt_cfg_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_nmt_cfg));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_nmt_cfg_t);
+}
+
+size_t
+co_nmt_cfg_sizeof(void)
+{
+	return sizeof(co_nmt_cfg_t);
+}
+
+void *
+__co_nmt_cfg_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_nmt_cfg *cfg = mem_alloc(
+			alloc, co_nmt_cfg_alignof(), co_nmt_cfg_sizeof());
+	if (!cfg)
+		return NULL;
+
+	cfg->net = net;
+
+	return cfg;
 }
 
 void
 __co_nmt_cfg_free(void *ptr)
 {
-	free(ptr);
+	struct __co_nmt_cfg *cfg = ptr;
+
+	if (cfg)
+		mem_free(co_nmt_cfg_get_alloc(cfg), cfg);
 }
 
 struct __co_nmt_cfg *
@@ -343,14 +362,14 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 
 	cfg->state = NULL;
 
-	cfg->recv = can_recv_create(can_net_get_alloc(cfg->net));
+	cfg->recv = can_recv_create(co_nmt_cfg_get_alloc(cfg));
 	if (!cfg->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(cfg->recv, &co_nmt_cfg_recv, cfg);
 
-	cfg->timer = can_timer_create(can_net_get_alloc(cfg->net));
+	cfg->timer = can_timer_create(co_nmt_cfg_get_alloc(cfg));
 	if (!cfg->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -401,7 +420,7 @@ co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_cfg_t *cfg = __co_nmt_cfg_alloc();
+	co_nmt_cfg_t *cfg = __co_nmt_cfg_alloc(net);
 	if (!cfg) {
 		errc = get_errc();
 		goto error_alloc_cfg;
@@ -428,6 +447,14 @@ co_nmt_cfg_destroy(co_nmt_cfg_t *cfg)
 		__co_nmt_cfg_fini(cfg);
 		__co_nmt_cfg_free(cfg);
 	}
+}
+
+alloc_t *
+co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	return cfg->net ? can_net_get_alloc(cfg->net) : NULL;
 }
 
 int

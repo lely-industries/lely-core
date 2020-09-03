@@ -43,7 +43,7 @@ struct c_type_traits<__co_sync> {
 
   static void*
   alloc() noexcept {
-    return __co_sync_alloc();
+    return __co_sync_alloc(nullptr);
   }
 
   static void

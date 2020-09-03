@@ -34,7 +34,6 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 /// A CANopen SYNC producer/consumer service.
 struct __co_sync {
@@ -112,19 +111,39 @@ static int co_sync_recv(const struct can_msg *msg, void *data);
  */
 static int co_sync_timer(const struct timespec *tp, void *data);
 
-void *
-__co_sync_alloc(void)
+size_t
+co_sync_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_sync));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_sync_t);
+}
+
+size_t
+co_sync_sizeof(void)
+{
+	return sizeof(co_sync_t);
+}
+
+void *
+__co_sync_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_sync *sync =
+			mem_alloc(alloc, co_sync_alignof(), co_sync_sizeof());
+	if (!sync)
+		return NULL;
+
+	sync->net = net;
+
+	return sync;
 }
 
 void
 __co_sync_free(void *ptr)
 {
-	free(ptr);
+	struct __co_sync *sync = ptr;
+
+	if (sync)
+		mem_free(co_sync_get_alloc(sync), sync);
 }
 
 struct __co_sync *
@@ -150,14 +169,14 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 	sync->us = 0;
 	sync->max_cnt = 0;
 
-	sync->recv = can_recv_create(can_net_get_alloc(sync->net));
+	sync->recv = can_recv_create(co_sync_get_alloc(sync));
 	if (!sync->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(sync->recv, &co_sync_recv, sync);
 
-	sync->timer = can_timer_create(can_net_get_alloc(sync->net));
+	sync->timer = can_timer_create(co_sync_get_alloc(sync));
 	if (!sync->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -208,7 +227,7 @@ co_sync_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_sync_t *sync = __co_sync_alloc();
+	co_sync_t *sync = __co_sync_alloc(net);
 	if (!sync) {
 		errc = get_errc();
 		goto error_alloc_sync;
@@ -293,6 +312,14 @@ co_sync_stop(co_sync_t *sync)
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
 	assert(obj_1005);
 	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+}
+
+alloc_t *
+co_sync_get_alloc(const co_sync_t *sync)
+{
+	assert(sync);
+
+	return sync->net ? can_net_get_alloc(sync->net) : NULL;
 }
 
 can_net_t *

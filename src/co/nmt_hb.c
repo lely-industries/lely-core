@@ -27,7 +27,6 @@
 #include <lely/util/diag.h>
 
 #include <assert.h>
-#include <stdlib.h>
 
 /// A CANopen NMT heartbeat consumer.
 struct __co_nmt_hb {
@@ -66,19 +65,39 @@ static int co_nmt_hb_recv(const struct can_msg *msg, void *data);
  */
 static int co_nmt_hb_timer(const struct timespec *tp, void *data);
 
-void *
-__co_nmt_hb_alloc(void)
+size_t
+co_nmt_hb_alignof(void)
 {
-	void *ptr = malloc(sizeof(struct __co_nmt_hb));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
+	return _Alignof(co_nmt_hb_t);
+}
+
+size_t
+co_nmt_hb_sizeof(void)
+{
+	return sizeof(co_nmt_hb_t);
+}
+
+void *
+__co_nmt_hb_alloc(can_net_t *net)
+{
+	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
+	struct __co_nmt_hb *hb = mem_alloc(
+			alloc, co_nmt_hb_alignof(), co_nmt_hb_sizeof());
+	if (!hb)
+		return NULL;
+
+	hb->net = net;
+
+	return hb;
 }
 
 void
 __co_nmt_hb_free(void *ptr)
 {
-	free(ptr);
+	struct __co_nmt_hb *hb = ptr;
+
+	if (hb)
+		mem_free(co_nmt_hb_get_alloc(hb), hb);
 }
 
 struct __co_nmt_hb *
@@ -93,14 +112,14 @@ __co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
 	hb->net = net;
 	hb->nmt = nmt;
 
-	hb->recv = can_recv_create(can_net_get_alloc(hb->net));
+	hb->recv = can_recv_create(co_nmt_hb_get_alloc(hb));
 	if (!hb->recv) {
 		errc = get_errc();
 		goto error_create_recv;
 	}
 	can_recv_set_func(hb->recv, &co_nmt_hb_recv, hb);
 
-	hb->timer = can_timer_create(can_net_get_alloc(hb->net));
+	hb->timer = can_timer_create(co_nmt_hb_get_alloc(hb));
 	if (!hb->timer) {
 		errc = get_errc();
 		goto error_create_timer;
@@ -136,7 +155,7 @@ co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_hb_t *hb = __co_nmt_hb_alloc();
+	co_nmt_hb_t *hb = __co_nmt_hb_alloc(net);
 	if (!hb) {
 		errc = get_errc();
 		goto error_alloc_hb;
@@ -163,6 +182,14 @@ co_nmt_hb_destroy(co_nmt_hb_t *hb)
 		__co_nmt_hb_fini(hb);
 		__co_nmt_hb_free(hb);
 	}
+}
+
+alloc_t *
+co_nmt_hb_get_alloc(const co_nmt_hb_t *hb)
+{
+	assert(hb);
+
+	return hb->net ? can_net_get_alloc(hb->net) : NULL;
 }
 
 void
