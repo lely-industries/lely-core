@@ -141,7 +141,7 @@ int co_type_is_array(co_unsigned16_t type);
 
 /**
  * Returns the native size (in bytes) of a value of the specified data type, or
- * 0 if it is not a static data type. In case of strings or domains, this
+ * 1 if it is not a static data type. In case of strings or domains, this
  * function returns the size of a pointer.
  *
  * @see co_type_alignof()

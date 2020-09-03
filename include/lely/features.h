@@ -126,10 +126,12 @@
 #ifndef __STDC_NO_ATOMICS__
 // GCC versions older than 4.9 do not properly advertise the absence of
 // <stdatomic.h>.
+// clang-format off
 #if defined(_MSC_VER) \
 		|| (defined(__GNUC__) && !GNUC_PREREQ(4, 9) \
-				   && !defined(__clang__)) \
+				&& !defined(__clang__)) \
 		|| (defined(__clang__) && !__has_extension(c_atomic))
+// clang-format on
 #define __STDC_NO_ATOMICS__ 1
 #endif
 #endif // !__STDC_NO_ATOMICS__

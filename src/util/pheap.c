@@ -95,6 +95,19 @@ pheap_find(const struct pheap *heap, const void *key)
 	return pnode_find(heap->root, key, heap->cmp);
 }
 
+int
+pheap_contains(const struct pheap *heap, const struct pnode *node)
+{
+	assert(heap);
+
+	while (node) {
+		if (node == heap->root)
+			return 1;
+		node = node->parent;
+	}
+	return 0;
+}
+
 static struct pnode *
 pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 {
@@ -151,21 +164,4 @@ pnode_find(struct pnode *node, const void *key, pheap_cmp_t *cmp)
 	}
 
 	return NULL;
-}
-
-int
-pheap_contains(const struct pheap *heap, const struct pnode *node)
-{
-	assert(heap);
-	assert(node);
-
-	if (node == heap->root)
-		return 1;
-
-	while (node->parent) {
-		if (node->parent == heap->root)
-			return 1;
-		node = node->parent;
-	}
-	return 0;
 }

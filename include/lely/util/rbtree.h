@@ -189,6 +189,13 @@ void rbtree_insert(struct rbtree *tree, struct rbnode *node);
 void rbtree_remove(struct rbtree *tree, struct rbnode *node);
 
 /**
+ * Checks if a node is part of a red-black tree.
+ *
+ * @returns 1 if the node was found in the tree, and 0 if not.
+ */
+int rbtree_contains(const struct rbtree *tree, const struct rbnode *node);
+
+/**
  * Finds a node in a red-black tree. This is an O(log(n)) operation.
  *
  * @returns a pointer to the node if found, or NULL if not.

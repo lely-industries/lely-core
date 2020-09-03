@@ -59,6 +59,7 @@
 #include <lely/features.h>
 
 #include <errno.h>
+#include <stddef.h>
 
 #if _WIN32
 #include <winerror.h>
@@ -352,18 +353,64 @@ LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
 
 /**
  * Returns a string describing a standard C error number. This is equivalent to
- * `strerror(errnum)`.
+ * `strerror(errnum)`. The returned string MAY be invalidated by a subsequent
+ * call to errno2str(), errc2str() or errnum2str().
+ *
+ * @see errno2str_r()
  */
-const char *errno2str(int errnum);
+LELY_UTIL_ERRNUM_INLINE const char *errno2str(int errnum);
 
-/// Returns a string describing a native error code.
-const char *errc2str(int errc);
+/**
+ * Returns a string describing a standard C error number. The string is copied
+ * to a buffer, if specified, as if by POSIX strerror_r().
+ *
+ * @param errnum    the standard C error number.
+ * @param strerrbuf a pointer to the string buffer. If not NULL, at most
+ *                  <b>buflen</b> bytes are copied to the buffer. The string is
+ *                  guaranteed to be null-terminated.
+ * @param buflen    the number of bytes available at <b>strerrbuf</b>.
+ *
+ * @returns <b>strerrbuf</b> if not NULL, and `errno2str(errnum)` otherwise.
+ *
+ * @see errno2str()
+ */
+const char *errno2str_r(int errnum, char *strerrbuf, size_t buflen);
+
+/// Returns a string describing a native error code. @see errc2str_r()
+LELY_UTIL_ERRNUM_INLINE const char *errc2str(int errc);
+
+/**
+ * Returns a string describing a native error code. The string is copied to a
+ * buffer, if specified..
+ *
+ * @param errc      the native error code.
+ * @param strerrbuf a pointer to the string buffer. If not NULL, at most
+ *                  <b>buflen</b> bytes are copied to the buffer. The string is
+ *                  guaranteed to be null-terminated.
+ * @param buflen    the number of bytes available at <b>strerrbuf</b>.
+ *
+ * @returns <b>strerrbuf</b> if not NULL, and `errno2str(errnum)` otherwise.
+ *
+ * @see errc2str()
+ */
+const char *errc2str_r(int errc, char *strerrbuf, size_t buflen);
 
 /**
  * Returns a string describing a platform-independent error number. This is
  * equivalent to `errc2str(errnum2c(errnum))`.
+ *
+ * @see errnum2str_r()
  */
 LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
+
+/**
+ * Returns a string describing a platform-independent error number. This is
+ * equivalent to `errc2str_r(errnum2c(errnum))`.
+ *
+ * @see errnum2str()
+ */
+LELY_UTIL_ERRNUM_INLINE const char *errnum2str_r(
+		errnum_t errnum, char *strerrbuf, size_t buflen);
 
 LELY_UTIL_ERRNUM_INLINE errnum_t
 get_errnum(void)
@@ -378,9 +425,27 @@ set_errnum(errnum_t errnum)
 }
 
 LELY_UTIL_ERRNUM_INLINE const char *
+errno2str(int errnum)
+{
+	return errno2str_r(errnum, NULL, 0);
+}
+
+LELY_UTIL_ERRNUM_INLINE const char *
+errc2str(int errc)
+{
+	return errc2str_r(errc, NULL, 0);
+}
+
+LELY_UTIL_ERRNUM_INLINE const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));
+}
+
+LELY_UTIL_ERRNUM_INLINE const char *
+errnum2str_r(errnum_t errnum, char *strerrbuf, size_t buflen)
+{
+	return errc2str_r(errnum2c(errnum), strerrbuf, buflen);
 }
 
 #ifdef __cplusplus

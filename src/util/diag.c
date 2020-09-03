@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+#if LELY_NO_DIAG
+#define LELY_UTIL_DIAG_INLINE extern inline
+#endif
 #include <lely/libc/stdio.h>
 #include <lely/util/diag.h>
 
@@ -122,23 +125,6 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 	}
 
 	return t;
-}
-
-const char *
-cmdname(const char *path)
-{
-	assert(path);
-
-	const char *cmd = path;
-	while (*cmd)
-		cmd++;
-#ifdef _WIN32
-	while (cmd >= path && *cmd != '\\')
-#else
-	while (cmd >= path && *cmd != '/')
-#endif
-		cmd--;
-	return ++cmd;
 }
 
 #if !LELY_NO_DIAG
@@ -527,3 +513,20 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 }
 
 #endif // !LELY_NO_DIAG
+
+const char *
+cmdname(const char *path)
+{
+	assert(path);
+
+	const char *cmd = path;
+	while (*cmd)
+		cmd++;
+#ifdef _WIN32
+	while (cmd >= path && *cmd != '\\')
+#else
+	while (cmd >= path && *cmd != '/')
+#endif
+		cmd--;
+	return ++cmd;
+}

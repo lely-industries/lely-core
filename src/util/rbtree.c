@@ -318,6 +318,19 @@ rbtree_find(const struct rbtree *tree, const void *key)
 	return node;
 }
 
+int
+rbtree_contains(const struct rbtree *tree, const struct rbnode *node)
+{
+	assert(tree);
+
+	while (node) {
+		if (node == tree->root)
+			return 1;
+		node = rbnode_get_parent(node);
+	}
+	return 0;
+}
+
 struct rbnode *
 rbtree_first(const struct rbtree *tree)
 {

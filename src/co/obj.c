@@ -1098,14 +1098,17 @@ co_obj_update(co_obj_t *obj)
 {
 	assert(obj);
 
-	// Compute the total size (in bytes) of the object.
+	// Compute the total size and alignment (in bytes) of the object.
+	size_t align = 1;
 	size_t size = 0;
 	rbtree_foreach (&obj->tree, node) {
 		co_sub_t *sub = structof(node, co_sub_t, node);
 		co_unsigned16_t type = co_sub_get_type(sub);
+		align = MAX(align, co_type_alignof(type));
 		size = ALIGN(size, co_type_alignof(type));
 		size += co_type_sizeof(type);
 	}
+	size = ALIGN(size, align);
 
 	void *val = NULL;
 	if (size) {
@@ -1117,18 +1120,18 @@ co_obj_update(co_obj_t *obj)
 	}
 
 	// Initialize the values of the sub-objects.
-	size = 0;
+	size_t offset = 0;
 	rbtree_foreach (&obj->tree, node) {
 		co_sub_t *sub = structof(node, co_sub_t, node);
 		co_unsigned16_t type = co_sub_get_type(sub);
 		// Compute the offset of the sub-object.
-		size = ALIGN(size, co_type_alignof(type));
+		offset = ALIGN(offset, co_type_alignof(type));
 		// Move the old value, if it exists.
 		void *src = sub->val;
-		sub->val = (char *)val + size;
+		sub->val = (char *)val + offset;
 		if (src)
 			co_val_move(type, sub->val, src);
-		size += co_type_sizeof(type);
+		offset += co_type_sizeof(type);
 	}
 
 	free(obj->val);
