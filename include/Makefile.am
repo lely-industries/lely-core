@@ -70,8 +70,7 @@ inc += lely/util/result.hpp
 endif
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
-endif
-
+endif #!ECSS_COMPLIANCE
 inc += lely/util/bits.h
 inc += lely/util/cmp.h
 inc += lely/util/config.h
@@ -105,7 +104,7 @@ endif
 if HAVE_VCI
 inc += lely/can/vci.h
 endif
-endif
+endif # !ECSS_COMPLIANCE
 
 if !ECSS_COMPLIANCE
 inc += lely/io/addr.h
@@ -139,7 +138,9 @@ inc += lely/io/sock.h
 if !NO_CXX
 inc += lely/io/sock.hpp
 endif
+endif # !ECSS_COMPLIANCE
 
+if !ECSS_COMPLIANCE
 if !NO_CXX
 inc += lely/ev/co_task.hpp
 endif
@@ -177,7 +178,9 @@ inc += lely/ev/thrd_loop.h
 if !NO_CXX
 inc += lely/ev/thrd_loop.hpp
 endif
+endif # !ECSS_COMPLIANCE
 
+if !ECSS_COMPLIANCE
 inc += lely/io2/can/err.h
 if !NO_CXX
 inc += lely/io2/can/err.hpp
@@ -284,7 +287,7 @@ inc += lely/io2/vcan.h
 if !NO_CXX
 inc += lely/io2/vcan.hpp
 endif
-endif
+endif # !ECSS_COMPLIANCE
 
 inc += lely/co/def/array.def
 inc += lely/co/def/basic.def
@@ -414,7 +417,7 @@ inc += lely/coapp/sdo_error.hpp
 if !NO_COAPP_SLAVE
 inc += lely/coapp/slave.hpp
 endif
-endif
-endif
+endif # !NO_CXX
+endif # !ECSS_COMPLIANCE
 
 nobase_include_HEADERS = $(inc)
