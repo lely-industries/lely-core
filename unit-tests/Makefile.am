@@ -144,7 +144,7 @@ endif
 # Compilation flags
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
-AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\" -DLELY_NO_CXX=1
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
 if ENABLE_SHARED
 AM_CPPFLAGS += -DLELY_ENABLE_SHARED=1
 endif

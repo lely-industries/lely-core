@@ -38,10 +38,12 @@ test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
 endif
 
+if !ECSS_COMPLIANCE
 if !NO_CXX
 bin += test-util-fiber
 test_util_fiber_SOURCES = test.h util-fiber.cpp
 test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
+endif
 endif
 
 if !ECSS_COMPLIANCE
