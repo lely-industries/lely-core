@@ -628,7 +628,7 @@ class BasicSlave : public Node {
    */
   template <class T>
   using OnWriteSignature = typename ::std::conditional<
-      detail::is_canopen_basic<T>::value,
+      is_canopen_basic<T>::value,
       ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val, T old_val),
       ::std::error_code(uint16_t idx, uint8_t subidx, T& new_val)>::type;
 
@@ -701,7 +701,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnRead(
       uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind);
 
   /**
@@ -716,7 +716,7 @@ class BasicSlave : public Node {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnRead(
       uint16_t idx, uint8_t subidx, ::std::function<OnReadSignature<T>> ind,
       ::std::error_code& ec);
 
@@ -733,7 +733,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnRead(
       uint16_t idx, ::std::function<OnReadSignature<T>> ind);
 
   /**
@@ -748,7 +748,7 @@ class BasicSlave : public Node {
    * @param ec  on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnRead(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnRead(
       uint16_t idx, ::std::function<OnReadSignature<T>> ind,
       ::std::error_code& ec);
 
@@ -766,7 +766,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnWrite(
       uint16_t idx, uint8_t subidx, ::std::function<OnWriteSignature<T>> ind);
 
   /**
@@ -782,7 +782,7 @@ class BasicSlave : public Node {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnWrite(
       uint16_t idx, uint8_t subidx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
 
@@ -799,7 +799,7 @@ class BasicSlave : public Node {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnWrite(
       uint16_t idx, ::std::function<OnWriteSignature<T>> ind);
 
   /**
@@ -814,7 +814,7 @@ class BasicSlave : public Node {
    * @param ec  on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type OnWrite(
+  typename ::std::enable_if<is_canopen<T>::value>::type OnWrite(
       uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

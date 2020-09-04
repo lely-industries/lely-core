@@ -22,20 +22,20 @@
  */
 
 #include "coapp.hpp"
+#include <lely/co/dev.h>
+#include <lely/co/emcy.h>
+#include <lely/co/lss.h>
+#include <lely/co/nmt.h>
+#include <lely/co/rpdo.h>
+#include <lely/co/sync.h>
+#include <lely/co/time.h>
+#include <lely/co/tpdo.h>
 #include <lely/coapp/node.hpp>
 
+#include <memory>
 #include <string>
 
 #include <cassert>
-
-#include <lely/co/dev.hpp>
-#include <lely/co/emcy.hpp>
-#include <lely/co/lss.hpp>
-#include <lely/co/nmt.hpp>
-#include <lely/co/rpdo.hpp>
-#include <lely/co/sync.hpp>
-#include <lely/co/time.hpp>
-#include <lely/co/tpdo.hpp>
 
 namespace lely {
 
@@ -43,27 +43,36 @@ namespace canopen {
 
 /// The internal implementation of the CANopen node.
 struct Node::Impl_ {
-  Impl_(Node* self, CANNet* net, CODev* dev);
+  struct NmtDeleter {
+    void
+    operator()(co_nmt_t* nmt) const noexcept {
+      co_nmt_destroy(nmt);
+    }
+  };
 
-  void OnCsInd(CONMT* nmt, uint8_t cs) noexcept;
-  void OnHbInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept;
-  void OnStInd(CONMT* nmt, uint8_t id, uint8_t st) noexcept;
+  Impl_(Node* self, can_net_t* net, co_dev_t* dev);
 
-  void OnRpdoInd(CORPDO* pdo, uint32_t ac, const void* ptr, size_t n) noexcept;
-  void OnRpdoErr(CORPDO* pdo, uint16_t eec, uint8_t er) noexcept;
+  void OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept;
+  void OnHbInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+  void OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept;
 
-  void OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr, size_t n) noexcept;
+  void OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
+                 size_t n) noexcept;
+  void OnRpdoErr(co_rpdo_t* pdo, uint16_t eec, uint8_t er) noexcept;
 
-  void OnSyncInd(CONMT* nmt, uint8_t cnt) noexcept;
-  void OnSyncErr(COSync* sync, uint16_t eec, uint8_t er) noexcept;
+  void OnTpdoInd(co_tpdo_t* pdo, uint32_t ac, const void* ptr,
+                 size_t n) noexcept;
 
-  void OnTimeInd(COTime* time, const timespec* tp) noexcept;
+  void OnSyncInd(co_nmt_t* nmt, uint8_t cnt) noexcept;
+  void OnSyncErr(co_sync_t* sync, uint16_t eec, uint8_t er) noexcept;
 
-  void OnEmcyInd(COEmcy* emcy, uint8_t id, uint16_t ec, uint8_t er,
+  void OnTimeInd(co_time_t* time, const timespec* tp) noexcept;
+
+  void OnEmcyInd(co_emcy_t* emcy, uint8_t id, uint16_t ec, uint8_t er,
                  uint8_t msef[5]) noexcept;
 
-  void OnRateInd(COLSS*, uint16_t rate, int delay) noexcept;
-  int OnStoreInd(COLSS*, uint8_t id, uint16_t rate) noexcept;
+  void OnRateInd(co_lss_t*, uint16_t rate, int delay) noexcept;
+  int OnStoreInd(co_lss_t*, uint8_t id, uint16_t rate) noexcept;
 
   void RpdoRtr(int num) noexcept;
 
@@ -72,7 +81,7 @@ struct Node::Impl_ {
   ::std::function<void(io::CanState, io::CanState)> on_can_state;
   ::std::function<void(io::CanError)> on_can_error;
 
-  unique_c_ptr<CONMT> nmt;
+  ::std::unique_ptr<co_nmt_t, NmtDeleter> nmt;
 
   ::std::function<void(NmtCommand)> on_command;
   ::std::function<void(uint8_t, bool)> on_heartbeat;
@@ -210,7 +219,8 @@ Node::Reset() {
   // master, this ensures that SDO timeouts do not occur too soon.
   SetTime();
 
-  if (impl_->nmt->csInd(CO_NMT_CS_RESET_NODE) == -1) util::throw_errc("Reset");
+  if (co_nmt_cs_ind(nmt(), CO_NMT_CS_RESET_NODE) == -1)
+    util::throw_errc("Reset");
 }
 
 void
@@ -309,15 +319,15 @@ Node::OnSwitchBitrate(
 
 void
 Node::TpdoEventMutex::lock() {
-  node->impl_->nmt->onTPDOEventLock();
+  co_nmt_on_tpdo_event_lock(node->nmt());
 }
 
 void
 Node::TpdoEventMutex::unlock() {
-  node->impl_->nmt->onTPDOEventUnlock();
+  co_nmt_on_tpdo_event_unlock(node->nmt());
 }
 
-CANNet*
+can_net_t*
 Node::net() const noexcept {
   return *this;
 }
@@ -341,14 +351,14 @@ Node::OnCanState(io::CanState new_state, io::CanState old_state) noexcept {
   }
 }
 
-CONMT*
+co_nmt_t*
 Node::nmt() const noexcept {
   return impl_->nmt.get();
 }
 
 void
 Node::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) noexcept {
-  impl_->nmt->onErr(eec, er, msef);
+  co_nmt_on_err(nmt(), eec, er, msef);
 }
 
 void
@@ -362,7 +372,7 @@ Node::RpdoRtr(int num) noexcept {
 
 void
 Node::TpdoEvent(int num) noexcept {
-  impl_->nmt->onTPDOEvent(num);
+  co_nmt_on_tpdo_event(nmt(), num);
 }
 
 void
@@ -390,45 +400,123 @@ Node::OnStore(uint8_t, int) {
   util::throw_error_code("OnStore", ::std::errc::operation_not_supported);
 }
 
-Node::Impl_::Impl_(Node* self_, CANNet* net, CODev* dev)
-    : self(self_), nmt(make_unique_c<CONMT>(net, dev)) {
-  nmt->setCsInd<Impl_, &Impl_::OnCsInd>(this);
-  nmt->setHbInd<Impl_, &Impl_::OnHbInd>(this);
-  nmt->setStInd<Impl_, &Impl_::OnStInd>(this);
+Node::Impl_::Impl_(Node* self_, can_net_t* net, co_dev_t* dev)
+    : self(self_), nmt(co_nmt_create(net, dev)) {
+  co_nmt_set_cs_ind(
+      nmt.get(),
+      [](co_nmt_t* nmt, uint8_t cs, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnCsInd(nmt, cs);
+      },
+      this);
 
-  nmt->setSyncInd<Impl_, &Impl_::OnSyncInd>(this);
+  co_nmt_set_hb_ind(
+      nmt.get(),
+      [](co_nmt_t* nmt, uint8_t id, int state, int reason,
+         void* data) noexcept {
+        static_cast<Impl_*>(data)->OnHbInd(nmt, id, state, reason);
+      },
+      this);
+
+  co_nmt_set_st_ind(
+      nmt.get(),
+      [](co_nmt_t* nmt, uint8_t id, uint8_t st, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnStInd(nmt, id, st);
+      },
+      this);
+
+  co_nmt_set_sync_ind(
+      nmt.get(),
+      [](co_nmt_t* nmt, uint8_t cnt, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnSyncInd(nmt, cnt);
+      },
+      this);
 }
 
 void
-Node::Impl_::OnCsInd(CONMT* nmt, uint8_t cs) noexcept {
+Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
   if (cs == CO_NMT_CS_RESET_COMM) {
-    auto lss = nmt->getLSS();
+    auto lss = co_nmt_get_lss(nmt);
     if (lss) {
-      lss->setRateInd<Impl_, &Impl_::OnRateInd>(this);
-      lss->setStoreInd<Impl_, &Impl_::OnStoreInd>(this);
+      co_lss_set_rate_ind(
+          lss,
+          [](co_lss_t* lss, uint16_t rate, int delay, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnRateInd(lss, rate, delay);
+          },
+          this);
+
+      co_lss_set_store_ind(
+          lss,
+          [](co_lss_t* lss, uint8_t id, uint16_t rate, void* data) noexcept {
+            return static_cast<Impl_*>(data)->OnStoreInd(lss, id, rate);
+          },
+          this);
     }
   }
 
   if (cs == CO_NMT_CS_START || cs == CO_NMT_CS_ENTER_PREOP) {
-    auto sync = nmt->getSync();
-    if (sync) sync->setErr<Impl_, &Impl_::OnSyncErr>(this);
-    auto time = nmt->getTime();
-    if (time) time->setInd<Impl_, &Impl_::OnTimeInd>(this);
-    auto emcy = nmt->getEmcy();
-    if (emcy) emcy->setInd<Impl_, &Impl_::OnEmcyInd>(this);
+    auto sync = co_nmt_get_sync(nmt);
+    if (sync) {
+      co_sync_set_err(
+          sync,
+          [](co_sync_t* sync, uint16_t eec, uint8_t er, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnSyncErr(sync, eec, er);
+          },
+          this);
+    }
+
+    auto time = co_nmt_get_time(nmt);
+    if (time) {
+      co_time_set_ind(
+          time,
+          [](co_time_t* time, const timespec* tp, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnTimeInd(time, tp);
+          },
+          this);
+    }
+
+    auto emcy = co_nmt_get_emcy(nmt);
+    if (emcy) {
+      co_emcy_set_ind(
+          emcy,
+          [](co_emcy_t* emcy, uint8_t id, uint16_t eec, uint8_t er,
+             uint8_t msef[5], void* data) noexcept {
+            static_cast<Impl_*>(data)->OnEmcyInd(emcy, id, eec, er, msef);
+          },
+          this);
+    }
   }
 
   if (cs == CO_NMT_CS_START) {
     for (int i = 1; i <= 512; i++) {
-      auto pdo = nmt->getRPDO(i);
+      auto pdo = co_nmt_get_rpdo(nmt, i);
       if (pdo) {
-        pdo->setInd<Impl_, &Impl_::OnRpdoInd>(this);
-        pdo->setErr<Impl_, &Impl_::OnRpdoErr>(this);
+        co_rpdo_set_ind(
+            pdo,
+            [](co_rpdo_t* pdo, uint32_t ac, const void* ptr, size_t n,
+               void* data) noexcept {
+              static_cast<Impl_*>(data)->OnRpdoInd(pdo, ac, ptr, n);
+            },
+            this);
+
+        co_rpdo_set_err(
+            pdo,
+            [](co_rpdo_t* pdo, uint16_t eec, uint8_t er, void* data) noexcept {
+              static_cast<Impl_*>(data)->OnRpdoErr(pdo, eec, er);
+            },
+            this);
       }
     }
     for (int i = 1; i <= 512; i++) {
-      auto pdo = nmt->getTPDO(i);
-      if (pdo) pdo->setInd<Impl_, &Impl_::OnTpdoInd>(this);
+      auto pdo = co_nmt_get_tpdo(nmt, i);
+      if (pdo) {
+        co_tpdo_set_ind(
+            pdo,
+            [](co_tpdo_t* pdo, uint32_t ac, const void* ptr, size_t n,
+               void* data) noexcept {
+              static_cast<Impl_*>(data)->OnTpdoInd(pdo, ac, ptr, n);
+            },
+            this);
+      }
     }
   }
 
@@ -447,9 +535,10 @@ Node::Impl_::OnCsInd(CONMT* nmt, uint8_t cs) noexcept {
 }
 
 void
-Node::Impl_::OnHbInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept {
+Node::Impl_::OnHbInd(co_nmt_t* nmt, uint8_t id, int state,
+                     int reason) noexcept {
   // Invoke the default behavior before notifying the implementation.
-  nmt->onHb(id, state, reason);
+  co_nmt_on_hb(nmt, id, state, reason);
   // Only handle heartbeat timeout events. State changes are handled by OnSt().
   if (reason != CO_NMT_EC_TIMEOUT) return;
   // Notify the implementation.
@@ -464,11 +553,11 @@ Node::Impl_::OnHbInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept {
 }
 
 void
-Node::Impl_::OnStInd(CONMT* nmt, uint8_t id, uint8_t st) noexcept {
+Node::Impl_::OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept {
   // Invoke the default behavior before notifying the implementation.
-  nmt->onSt(id, st);
+  co_nmt_on_st(nmt, id, st);
   // Ignore local state changes.
-  if (id == nmt->getDev()->getId()) return;
+  if (id == co_dev_get_id(co_nmt_get_dev(nmt))) return;
   // Notify the implementation.
   self->OnState(id, static_cast<NmtState>(st));
 
@@ -480,9 +569,9 @@ Node::Impl_::OnStInd(CONMT* nmt, uint8_t id, uint8_t st) noexcept {
 }
 
 void
-Node::Impl_::OnRpdoInd(CORPDO* pdo, uint32_t ac, const void* ptr,
+Node::Impl_::OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
-  int num = pdo->getNum();
+  int num = co_rpdo_get_num(pdo);
   self->OnRpdo(num, static_cast<SdoErrc>(ac), ptr, n);
 
   if (on_rpdo) {
@@ -493,8 +582,8 @@ Node::Impl_::OnRpdoInd(CORPDO* pdo, uint32_t ac, const void* ptr,
 }
 
 void
-Node::Impl_::OnRpdoErr(CORPDO* pdo, uint16_t eec, uint8_t er) noexcept {
-  int num = pdo->getNum();
+Node::Impl_::OnRpdoErr(co_rpdo_t* pdo, uint16_t eec, uint8_t er) noexcept {
+  int num = co_rpdo_get_num(pdo);
   self->OnRpdoError(num, eec, er);
 
   if (on_rpdo_error) {
@@ -505,9 +594,9 @@ Node::Impl_::OnRpdoErr(CORPDO* pdo, uint16_t eec, uint8_t er) noexcept {
 }
 
 void
-Node::Impl_::OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr,
+Node::Impl_::OnTpdoInd(co_tpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
-  int num = pdo->getNum();
+  int num = co_tpdo_get_num(pdo);
   self->OnTpdo(num, static_cast<SdoErrc>(ac), ptr, n);
 
   if (on_tpdo) {
@@ -518,7 +607,7 @@ Node::Impl_::OnTpdoInd(COTPDO* pdo, uint32_t ac, const void* ptr,
 }
 
 void
-Node::Impl_::OnSyncInd(CONMT*, uint8_t cnt) noexcept {
+Node::Impl_::OnSyncInd(co_nmt_t*, uint8_t cnt) noexcept {
   auto t = self->GetClock().gettime();
   self->OnSync(cnt, t);
 
@@ -530,7 +619,7 @@ Node::Impl_::OnSyncInd(CONMT*, uint8_t cnt) noexcept {
 }
 
 void
-Node::Impl_::OnSyncErr(COSync*, uint16_t eec, uint8_t er) noexcept {
+Node::Impl_::OnSyncErr(co_sync_t*, uint16_t eec, uint8_t er) noexcept {
   self->OnSyncError(eec, er);
 
   if (on_sync_error) {
@@ -541,7 +630,7 @@ Node::Impl_::OnSyncErr(COSync*, uint16_t eec, uint8_t er) noexcept {
 }
 
 void
-Node::Impl_::OnTimeInd(COTime*, const timespec* tp) noexcept {
+Node::Impl_::OnTimeInd(co_time_t*, const timespec* tp) noexcept {
   assert(tp);
   ::std::chrono::system_clock::time_point abs_time(util::from_timespec(*tp));
   self->OnTime(abs_time);
@@ -554,7 +643,7 @@ Node::Impl_::OnTimeInd(COTime*, const timespec* tp) noexcept {
 }
 
 void
-Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
+Node::Impl_::OnEmcyInd(co_emcy_t*, uint8_t id, uint16_t ec, uint8_t er,
                        uint8_t msef[5]) noexcept {
   self->OnEmcy(id, ec, er, msef);
 
@@ -566,7 +655,7 @@ Node::Impl_::OnEmcyInd(COEmcy*, uint8_t id, uint16_t ec, uint8_t er,
 }
 
 void
-Node::Impl_::OnRateInd(COLSS*, uint16_t rate, int delay) noexcept {
+Node::Impl_::OnRateInd(co_lss_t*, uint16_t rate, int delay) noexcept {
   self->OnSwitchBitrate(rate * 1000, ::std::chrono::milliseconds(delay));
 
   if (on_switch_bitrate) {
@@ -577,7 +666,7 @@ Node::Impl_::OnRateInd(COLSS*, uint16_t rate, int delay) noexcept {
 }
 
 int
-Node::Impl_::OnStoreInd(COLSS*, uint8_t id, uint16_t rate) noexcept {
+Node::Impl_::OnStoreInd(co_lss_t*, uint8_t id, uint16_t rate) noexcept {
   try {
     self->OnStore(id, rate * 1000);
     return 0;
@@ -588,10 +677,10 @@ Node::Impl_::OnStoreInd(COLSS*, uint8_t id, uint16_t rate) noexcept {
 
 void
 Node::Impl_::RpdoRtr(int num) noexcept {
-  auto pdo = nmt->getRPDO(num);
+  auto pdo = co_nmt_get_rpdo(nmt.get(), num);
   if (pdo) {
     int errsv = get_errc();
-    pdo->rtr();
+    co_rpdo_rtr(pdo);
     set_errc(errsv);
   }
 }

@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/slave.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,6 +25,10 @@
 
 #if !LELY_NO_COAPP_SLAVE
 
+#include <lely/co/dev.h>
+#include <lely/co/nmt.h>
+#include <lely/co/obj.h>
+#include <lely/co/sdo.h>
 #include <lely/coapp/slave.hpp>
 
 #include <map>
@@ -34,43 +38,35 @@
 
 #include <cassert>
 
-#include <lely/co/dev.hpp>
-#include <lely/co/nmt.hpp>
-#include <lely/co/obj.hpp>
-
 namespace lely {
 
 namespace canopen {
 
 /// The internal implementation of the CANopen slave.
 struct BasicSlave::Impl_ {
-  Impl_(BasicSlave* self, CONMT* nmt);
+  Impl_(BasicSlave* self, co_nmt_t* nmt);
 
   uint8_t
   netid() const noexcept {
-    return self->dev()->getNetid();
+    return co_dev_get_netid(self->dev());
   }
 
   uint8_t
   id() const noexcept {
-    return self->dev()->getId();
+    return co_dev_get_id(self->dev());
   }
 
-  void OnLgInd(CONMT* nmt, int state) noexcept;
-
-  template <uint16_t N>
-  uint32_t OnDnInd(COSub* sub, COVal<N>& val) noexcept;
-
-  template <uint16_t N>
-  uint32_t OnUpInd(const COSub* sub, COVal<N>& val) noexcept;
+  void OnLgInd(co_nmt_t* nmt, int state) noexcept;
 
   static constexpr uint32_t Key(uint16_t idx, uint8_t subidx) noexcept;
-  static uint32_t Key(const COSub* sub) noexcept;
+  static uint32_t Key(const co_sub_t* sub) noexcept;
 
   BasicSlave* self;
 
-  ::std::map<uint32_t, ::std::function<uint32_t(COSub*, void*)>> dn_ind;
-  ::std::map<uint32_t, ::std::function<uint32_t(const COSub*, void*)>> up_ind;
+  ::std::map<uint32_t, ::std::function<uint32_t(co_sub_t*, co_sdo_req*)>>
+      dn_ind;
+  ::std::map<uint32_t, ::std::function<uint32_t(const co_sub_t*, co_sdo_req*)>>
+      up_ind;
 
   ::std::function<void(bool)> on_life_guarding;
 };
@@ -83,14 +79,8 @@ BasicSlave::BasicSlave(ev_exec_t* exec, io::TimerBase& timer,
 
 BasicSlave::~BasicSlave() = default;
 
-void
-BasicSlave::OnLifeGuarding(::std::function<void(bool)> on_life_guarding) {
-  ::std::lock_guard<util::BasicLockable> lock(*this);
-  impl_->on_life_guarding = on_life_guarding;
-}
-
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
                    ::std::function<OnReadSignature<T>> ind) {
   ::std::error_code ec;
@@ -100,82 +90,88 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
 
 namespace {
 
-template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value,
-                          ::std::error_code>::type
-OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
-  assert(sub);
+template <class T, class F>
+uint32_t
+OnUpInd(const co_sub_t* sub, co_sdo_req* req, const F& ind) noexcept {
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
 
-  try {
-    return ind(sub->getObj()->getIdx(), sub->getSubidx(), val);
-  } catch (...) {
-    return SdoErrc::ERROR;
+  assert(co_sub_get_type(sub) == traits::index);
+
+  auto pval = static_cast<const c_type*>(co_sub_get_val(sub));
+  if (!pval) return CO_SDO_AC_NO_DATA;
+
+  uint32_t ac = 0;
+
+  auto value = traits::from_c_type(*pval);
+  auto ec =
+      ind(co_obj_get_idx(co_sub_get_obj(sub)), co_sub_get_subidx(sub), value);
+  ac = static_cast<uint32_t>(ec.value());
+
+  if (!ac) {
+    auto val = traits::to_c_type(value, ec);
+    ac = static_cast<uint32_t>(ec.value());
+    if (!ac) co_sdo_req_up_val(req, traits::index, &val, &ac);
+    traits::destroy(val);
   }
-}
 
-template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::is_canopen_array<T>::value,
-                          ::std::error_code>::type
-OnUpInd(const COSub* sub, COVal<N>& val, const F& ind) {
-  assert(sub);
-
-  try {
-    T value = val;
-    auto ec = ind(sub->getObj()->getIdx(), sub->getSubidx(), value);
-    if (!ec) val = ::std::move(value);
-    return ec;
-  } catch (...) {
-    return SdoErrc::ERROR;
-  }
+  return ac;
 }
 
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
                    ::std::function<OnReadSignature<T>> ind,
                    ::std::error_code& ec) {
-  constexpr auto N = co_type_traits_T<T>::index;
+  using traits = canopen_traits<T>;
 
-  auto obj = dev()->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return;
   }
 
-  if (!detail::is_canopen_same(N, sub->getType())) {
+  if (!is_canopen_same(traits::index, co_sub_get_type(sub))) {
     ec = SdoErrc::TYPE_LEN;
     return;
   }
-
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->up_ind[key] = [this, ind](const COSub* sub, void* p) {
-      auto ec = OnUpInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
-      return static_cast<uint32_t>(ec.value());
+    impl_->up_ind[key] = [ind](const co_sub_t* sub, co_sdo_req* req) noexcept {
+      return OnUpInd<T>(sub, req, ind);
     };
-    sub->setUpInd<N, Impl_, &Impl_::OnUpInd>(impl_.get());
+    co_sub_set_up_ind(
+        sub,
+        [](const co_sub_t* sub, co_sdo_req* req,
+           void* data) noexcept -> uint32_t {
+          auto self = static_cast<Impl_*>(data);
+          auto it = self->up_ind.find(self->Key(sub));
+          if (it == self->up_ind.end()) return 0;
+          return it->second(sub, req);
+        },
+        impl_.get());
   } else {
-    if (impl_->up_ind.erase(key)) sub->setUpInd(nullptr, nullptr);
+    if (impl_->up_ind.erase(key)) co_sub_set_up_ind(sub, nullptr, nullptr);
   }
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, ::std::function<OnReadSignature<T>> ind) {
   uint8_t n = (*this)[idx][0];
   for (uint8_t i = 1; i <= n; i++) OnRead<T>(idx, i, ind);
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnRead(uint16_t idx, ::std::function<OnReadSignature<T>> ind,
                    ::std::error_code& ec) {
   uint8_t n = (*this)[idx][0].Get<uint8_t>(ec);
@@ -183,7 +179,7 @@ BasicSlave::OnRead(uint16_t idx, ::std::function<OnReadSignature<T>> ind,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
                     ::std::function<OnWriteSignature<T>> ind) {
   ::std::error_code ec;
@@ -193,83 +189,115 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
 
 namespace {
 
-template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value,
-                          ::std::error_code>::type
-OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
-  assert(sub);
+template <class T, class F>
+typename ::std::enable_if<is_canopen_basic<T>::value, uint32_t>::type
+OnDnInd(co_sub_t* sub, co_sdo_req* req, const F& ind) noexcept {
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
 
-  try {
-    return ind(sub->getObj()->getIdx(), sub->getSubidx(), val,
-               sub->getVal<N>());
-  } catch (...) {
-    return SdoErrc::ERROR;
+  assert(co_sub_get_type(sub) == traits::index);
+
+  uint32_t ac = 0;
+  auto val = c_type();
+
+  if (co_sdo_req_dn_val(req, traits::index, &val, &ac) == -1) return ac;
+
+  if (!(ac = co_sub_chk_val(sub, traits::index, &val))) {
+    auto pval = static_cast<const c_type*>(co_sub_get_val(sub));
+    auto ec = ind(co_obj_get_idx(co_sub_get_obj(sub)), co_sub_get_subidx(sub),
+                  val, *pval);
+    ac = static_cast<uint32_t>(ec.value());
   }
+
+  if (!ac) co_sub_dn(sub, &val);
+
+  traits::destroy(val);
+  return ac;
 }
 
-template <class T, class F, uint16_t N = co_type_traits_T<T>::index>
-typename ::std::enable_if<detail::is_canopen_array<T>::value,
-                          ::std::error_code>::type
-OnDnInd(COSub* sub, COVal<N>& val, const F& ind) {
-  assert(sub);
+template <class T, class F>
+typename ::std::enable_if<!is_canopen_basic<T>::value, uint32_t>::type
+OnDnInd(co_sub_t* sub, co_sdo_req* req, const F& ind) noexcept {
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
 
-  try {
-    T value = val;
-    auto ec = ind(sub->getObj()->getIdx(), sub->getSubidx(), value);
-    if (!ec) val = ::std::move(value);
-    return ec;
-  } catch (...) {
-    return SdoErrc::ERROR;
+  assert(co_sub_get_type(sub) == traits::index);
+
+  uint32_t ac = 0;
+  auto val = c_type();
+
+  if (co_sdo_req_dn_val(req, traits::index, &val, &ac) == -1) return ac;
+
+  if (!(ac = co_sub_chk_val(sub, traits::index, &val))) {
+    auto value = traits::from_c_type(val);
+    auto ec =
+        ind(co_obj_get_idx(co_sub_get_obj(sub)), co_sub_get_subidx(sub), value);
+    if (!ec) {
+      traits::destroy(val);
+      val = traits::to_c_type(value, ec);
+    }
+    ac = static_cast<uint32_t>(ec.value());
   }
+
+  if (!ac) co_sub_dn(sub, &val);
+
+  traits::destroy(val);
+  return ac;
 }
 
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
                     ::std::function<OnWriteSignature<T>> ind,
                     ::std::error_code& ec) {
-  constexpr auto N = co_type_traits_T<T>::index;
+  using traits = canopen_traits<T>;
 
-  auto obj = dev()->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return;
   }
 
-  if (!detail::is_canopen_same(N, sub->getType())) {
+  if (!is_canopen_same(traits::index, co_sub_get_type(sub))) {
     ec = SdoErrc::TYPE_LEN;
     return;
   }
-
   auto key = Impl_::Key(sub);
   if (ind) {
-    impl_->dn_ind[key] = [this, ind](COSub* sub, void* p) {
-      auto ec = OnDnInd<T>(sub, *static_cast<COVal<N>*>(p), ind);
-      return static_cast<uint32_t>(ec.value());
+    impl_->dn_ind[key] = [ind](co_sub_t* sub, co_sdo_req* req) noexcept {
+      return OnDnInd<T>(sub, req, ind);
     };
-    sub->setDnInd<N, Impl_, &Impl_::OnDnInd>(impl_.get());
+    co_sub_set_dn_ind(
+        sub,
+        [](co_sub_t* sub, co_sdo_req* req, void* data) noexcept -> uint32_t {
+          auto self = static_cast<Impl_*>(data);
+          auto it = self->dn_ind.find(self->Key(sub));
+          if (it == self->dn_ind.end()) return 0;
+          return it->second(sub, req);
+        },
+        impl_.get());
   } else {
-    if (impl_->dn_ind.erase(key)) sub->setDnInd(nullptr, nullptr);
+    if (impl_->dn_ind.erase(key)) co_sub_set_dn_ind(sub, nullptr, nullptr);
   }
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, ::std::function<OnWriteSignature<T>> ind) {
   uint8_t n = (*this)[idx][0];
   for (uint8_t i = 1; i <= n; i++) OnWrite<T>(idx, i, ind);
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 BasicSlave::OnWrite(uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
                     ::std::error_code& ec) {
   uint8_t n = (*this)[idx][0].Get<uint8_t>(ec);
@@ -590,14 +618,25 @@ template void BasicSlave::OnWrite<uint64_t>(
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
-BasicSlave::Impl_::Impl_(BasicSlave* self_, CONMT* nmt) : self(self_) {
-  nmt->setLgInd<Impl_, &Impl_::OnLgInd>(this);
+void
+BasicSlave::OnLifeGuarding(::std::function<void(bool)> on_life_guarding) {
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+  impl_->on_life_guarding = on_life_guarding;
+}
+
+BasicSlave::Impl_::Impl_(BasicSlave* self_, co_nmt_t* nmt) : self(self_) {
+  co_nmt_set_lg_ind(
+      nmt,
+      [](co_nmt_t* nmt, int state, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnLgInd(nmt, state);
+      },
+      this);
 }
 
 void
-BasicSlave::Impl_::OnLgInd(CONMT* nmt, int state) noexcept {
+BasicSlave::Impl_::OnLgInd(co_nmt_t* nmt, int state) noexcept {
   // Invoke the default behavior before notifying the implementation.
-  nmt->onLg(state);
+  co_nmt_on_lg(nmt, state);
   // Notify the implementation.
   bool occurred = state == CO_NMT_EC_OCCURRED;
   self->OnLifeGuarding(occurred);
@@ -608,32 +647,16 @@ BasicSlave::Impl_::OnLgInd(CONMT* nmt, int state) noexcept {
   }
 }
 
-template <uint16_t N>
-uint32_t
-BasicSlave::Impl_::OnDnInd(COSub* sub, COVal<N>& val) noexcept {
-  auto it = dn_ind.find(Key(sub));
-  if (it == dn_ind.end()) return 0;
-  return it->second(sub, static_cast<void*>(&val));
-}
-
-template <uint16_t N>
-uint32_t
-BasicSlave::Impl_::OnUpInd(const COSub* sub, COVal<N>& val) noexcept {
-  auto it = up_ind.find(Key(sub));
-  if (it == up_ind.end()) return 0;
-  return it->second(sub, static_cast<void*>(&val));
-}
-
 constexpr uint32_t
 BasicSlave::Impl_::Key(uint16_t idx, uint8_t subidx) noexcept {
   return (uint32_t(idx) << 8) | subidx;
 }
 
 uint32_t
-BasicSlave::Impl_::Key(const COSub* sub) noexcept {
+BasicSlave::Impl_::Key(const co_sub_t* sub) noexcept {
   assert(sub);
 
-  return Key(sub->getObj()->getIdx(), sub->getSubidx());
+  return Key(co_obj_get_idx(co_sub_get_obj(sub)), co_sub_get_subidx(sub));
 }
 
 }  // namespace canopen

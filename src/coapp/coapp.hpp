@@ -27,6 +27,10 @@
 
 #include <lely/features.h>
 
+// Force the use of the C interface of the CANopen library.
+#undef LELY_NO_CXX
+#define LELY_NO_CXX 1
+
 namespace lely {
 /// The namespace for the C++ CANopen application library.
 namespace canopen {

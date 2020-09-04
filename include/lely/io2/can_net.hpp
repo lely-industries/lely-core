@@ -110,9 +110,7 @@ class CanNet : protected util::BasicLockable {
     if (io_can_net_unlock(*this) == -1) util::throw_errc("unlock");
   }
 
-  operator ::lely::CANNet*() const noexcept {
-    return io_can_net_get_net(*this);
-  }
+  operator __can_net*() const noexcept { return io_can_net_get_net(*this); }
 
   /**
    * Updates the CAN network time.

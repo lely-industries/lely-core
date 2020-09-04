@@ -35,15 +35,7 @@
 typedef struct io_can_net io_can_net_t;
 
 // Avoid including <lely/can/net.h>.
-#ifdef __cplusplus
-// clang-format off
-namespace lely {
-class CANNet;
-}  // namespace lely
-// clang-format on
-#else
 struct __can_net;
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -328,11 +320,7 @@ int io_can_net_unlock(io_can_net_t *net);
  *
  * @see io_can_net_lock(), io_can_net_unlock()
  */
-#ifdef __cplusplus
-::lely::CANNet *io_can_net_get_net(const io_can_net_t *net);
-#else
 struct __can_net *io_can_net_get_net(const io_can_net_t *net);
-#endif
 
 /**
  * Updates the CAN network time.
