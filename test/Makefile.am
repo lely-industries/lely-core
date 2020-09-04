@@ -70,12 +70,6 @@ LELY_IO_LIBS += $(top_builddir)/src/io/liblely-io.la
 
 if !ECSS_COMPLIANCE
 
-if !NO_CXX
-bin += test-io-cxx
-test_io_cxx_SOURCES = test.h io-cxx.cpp
-test_io_cxx_LDADD = $(LELY_IO_LIBS)
-endif
-
 bin += test-io-poll
 test_io_poll_SOURCES = test.h io-poll.c
 test_io_poll_LDADD = $(LELY_IO_LIBS)
@@ -156,12 +150,6 @@ LELY_CO_LIBS = $(LELY_CAN_LIBS)
 LELY_CO_LIBS += $(top_builddir)/src/co/liblely-co.la
 
 if !NO_MALLOC
-
-if !NO_CXX
-bin += test-co-cxx
-test_co_cxx_SOURCES = test.h co-cxx.cpp
-test_co_cxx_LDADD = $(LELY_CO_LIBS)
-endif
 
 if !NO_CO_DCF
 
