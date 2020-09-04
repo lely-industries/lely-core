@@ -39,11 +39,11 @@
 void
 membuf_fini(struct membuf *buf)
 {
+	assert(buf);
+
 #if LELY_NO_MALLOC
 	(void)buf;
 #else
-	assert(buf);
-
 	free(buf->begin);
 #endif
 }

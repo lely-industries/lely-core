@@ -28,26 +28,14 @@
 #ifndef LELY_CAN_BUF_H_
 #define LELY_CAN_BUF_H_
 
-#include <lely/features.h>
+#include <lely/can/msg.h>
+#include <lely/util/util.h>
 
-#if !LELY_NO_ATOMICS
-#ifdef __cplusplus
-#include <atomic>
-#else
-#include <lely/libc/stdatomic.h>
-#endif
-#endif // !LELY_NO_ATOMICS
-
+#include <assert.h>
 #include <stddef.h>
 
-#include <lely/can/msg.h>
-
-#if LELY_NO_ATOMICS
-typedef size_t can_buf_atomic_size_t;
-#elif defined(__cplusplus)
-using can_buf_atomic_size_t = ::std::atomic_size_t;
-#else // C11
-typedef atomic_size_t can_buf_atomic_size_t;
+#ifndef LELY_CAN_BUF_INLINE
+#define LELY_CAN_BUF_INLINE static inline
 #endif
 
 /// A CAN frame buffer.
@@ -66,27 +54,20 @@ struct can_buf {
 	 * reading (and two past the last available for writing, modulo
 	 * #size + 1).
 	 */
-	can_buf_atomic_size_t begin;
+	size_t begin;
 	/**
 	 * The offset (with respect to #ptr) of one past the last value
 	 * available for reading (and the first available for writing, modulo
 	 * #size + 1).
 	 */
-	can_buf_atomic_size_t end;
+	size_t end;
 };
 
 /// The static initializer for struct #can_buf.
-#if LELY_NO_ATOMICS
 #define CAN_BUF_INIT \
 	{ \
 		NULL, 0, 0, 0 \
 	}
-#else
-#define CAN_BUF_INIT \
-	{ \
-		NULL, 0, ATOMIC_VAR_INIT(0), ATOMIC_VAR_INIT(0) \
-	}
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,51 +77,37 @@ extern "C" {
  * Initializes a CAN frame buffer.
  *
  * @param buf  a pointer to a CAN frame buffer.
- * @param size the initial size (in number of frames). The size will be rounded
- *             up to the nearest power of two minus one.
- *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @param ptr  a pointer to the memory region to be used by the buffer. If not
+ *             NULL, the buffer takes ownership of the region at <b>ptr</b> and
+ *             MAY reallocate or free the region during subsequent calls to
+ *             can_buf_reserve() and canbuf_fini().
+ * @param size the number of frames available at <b>ptr</b>. If not 0,
+ *             <b>size</b> MUST be a power of two.
  *
  * @see can_buf_fini()
  */
-int can_buf_init(struct can_buf *buf, size_t size);
+LELY_CAN_BUF_INLINE void can_buf_init(
+		struct can_buf *buf, struct can_msg *ptr, size_t size);
 
 /// Finalizes a CAN frame buffer. @see can_buf_init()
 void can_buf_fini(struct can_buf *buf);
 
-/**
- * Allocates and initializes a CAN frame buffer.
- *
- * @param size the initial size (in number of frames). The size will be rounded
- *             up to the nearest power of two minus one.
- *
- * @returns a pointer to a new frame buffer, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
- *
- * @see can_buf_destroy(), can_buf_init()
- */
-struct can_buf *can_buf_create(size_t size);
-
-// Finalizes and frees a CAN frame buffer. @see can_buf_create(), can_buf_fini()
-void can_buf_destroy(struct can_buf *buf);
-
 /// Clears a CAN frame buffer.
-void can_buf_clear(struct can_buf *buf);
+LELY_CAN_BUF_INLINE void can_buf_clear(struct can_buf *buf);
 
 /**
  * Returns the number of frames available for reading in a CAN buffer.
  *
  * @see can_buf_capacity()
  */
-size_t can_buf_size(const struct can_buf *buf);
+LELY_CAN_BUF_INLINE size_t can_buf_size(const struct can_buf *buf);
 
 /**
  * Returns the number of frames available for writing in a CAN buffer.
  *
  * @see can_buf_size()
  */
-size_t can_buf_capacity(const struct can_buf *buf);
+LELY_CAN_BUF_INLINE size_t can_buf_capacity(const struct can_buf *buf);
 
 /**
  * Resizes a CAN frame buffer, if necessary, to make room for at least <b>n</b>
@@ -163,7 +130,8 @@ size_t can_buf_reserve(struct can_buf *buf, size_t n);
  *
  * @see can_buf_read(), can_buf_write()
  */
-size_t can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_peek(
+		struct can_buf *buf, struct can_msg *ptr, size_t n);
 
 /**
  * Reads, and removes, frames from a CAN frame buffer.
@@ -176,7 +144,8 @@ size_t can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n);
  *
  * @see can_buf_peek(), can_buf_write()
  */
-size_t can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_read(
+		struct can_buf *buf, struct can_msg *ptr, size_t n);
 
 /**
  * Writes frames to a CAN frame buffer.
@@ -189,7 +158,109 @@ size_t can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n);
  *
  * @see can_buf_peek(), can_buf_read()
  */
-size_t can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n);
+LELY_CAN_BUF_INLINE size_t can_buf_write(
+		struct can_buf *buf, const struct can_msg *ptr, size_t n);
+
+LELY_CAN_BUF_INLINE void
+can_buf_init(struct can_buf *buf, struct can_msg *ptr, size_t size)
+{
+	assert(buf);
+	assert(ptr || !size);
+	assert(!size || powerof2(size));
+
+	buf->ptr = ptr;
+	buf->size = size ? size - 1 : 0;
+	buf->begin = 0;
+	buf->end = 0;
+}
+
+LELY_CAN_BUF_INLINE void
+can_buf_clear(struct can_buf *buf)
+{
+	assert(buf);
+
+	buf->end = buf->begin;
+}
+
+LELY_CAN_BUF_INLINE size_t
+can_buf_size(const struct can_buf *buf)
+{
+	assert(buf);
+	assert(powerof2(buf->size + 1));
+
+	return (buf->end - buf->begin) & buf->size;
+}
+
+LELY_CAN_BUF_INLINE size_t
+can_buf_capacity(const struct can_buf *buf)
+{
+	assert(buf);
+	assert(powerof2(buf->size + 1));
+
+	return (buf->begin - buf->end - 1) & buf->size;
+}
+
+LELY_CAN_BUF_INLINE size_t
+can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
+{
+	assert(buf);
+	assert(powerof2(buf->size + 1));
+
+	size_t begin = buf->begin;
+	for (size_t i = 0; i < n; i++) {
+		size_t end = buf->end;
+		if (!((end - begin) & buf->size))
+			return i;
+
+		if (ptr)
+			ptr[i] = buf->ptr[begin & buf->size];
+		begin++;
+	}
+
+	return n;
+}
+
+LELY_CAN_BUF_INLINE size_t
+can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
+{
+	assert(buf);
+	assert(powerof2(buf->size + 1));
+
+	size_t begin = buf->begin;
+	for (size_t i = 0; i < n; i++) {
+		size_t end = buf->end;
+		if (!((end - begin) & buf->size))
+			return i;
+
+		if (ptr)
+			ptr[i] = buf->ptr[begin & buf->size];
+		begin++;
+
+		buf->begin = begin;
+	}
+
+	return n;
+}
+
+LELY_CAN_BUF_INLINE size_t
+can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
+{
+	assert(buf);
+	assert(powerof2(buf->size + 1));
+
+	size_t end = buf->end;
+	for (size_t i = 0; i < n; i++) {
+		size_t begin = buf->begin;
+		if (!((begin - end - 1) & buf->size))
+			return i;
+
+		buf->ptr[end++ & buf->size] = ptr[i];
+
+		buf->end = end;
+	}
+
+	return n;
+}
 
 #ifdef __cplusplus
 }

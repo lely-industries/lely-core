@@ -4,7 +4,7 @@
  *
  * @see lely/can/buf.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,88 +22,31 @@
  */
 
 #include "can.h"
+#define LELY_CAN_BUF_INLINE extern inline
 #include <lely/can/buf.h>
 #include <lely/util/errnum.h>
 
 #include <assert.h>
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
 #include <string.h>
+#endif
 
 #ifndef LELY_CAN_BUF_SIZE
 /// The minimum size (in number of frames) of a CAN frame buffer.
 #define LELY_CAN_BUF_SIZE 16
 #endif
 
-int
-can_buf_init(struct can_buf *buf, size_t size)
-{
-	assert(buf);
-
-	// Computer the nearest power of two minus one.
-	buf->size = LELY_CAN_BUF_SIZE;
-	while (buf->size - 1 < size)
-		buf->size *= 2;
-	buf->size--;
-
-	buf->ptr = malloc((buf->size + 1) * sizeof(struct can_msg));
-	if (!buf->ptr) {
-		set_errc(errno2c(errno));
-		return -1;
-	}
-
-#if LELY_NO_ATOMICS
-	buf->begin = 0;
-	buf->end = 0;
-#else
-	atomic_init(&buf->begin, 0);
-	atomic_init(&buf->end, 0);
-#endif
-
-	return 0;
-}
-
 void
 can_buf_fini(struct can_buf *buf)
 {
 	assert(buf);
 
+#if LELY_NO_MALLOC
+	(void)buf;
+#else
 	free(buf->ptr);
-}
-
-struct can_buf *
-can_buf_create(size_t size)
-{
-	int errc = 0;
-
-	struct can_buf *buf = malloc(sizeof(*buf));
-	if (!buf) {
-		errc = errno2c(errno);
-		goto error_alloc_buf;
-	}
-
-	if (can_buf_init(buf, size) == -1) {
-		errc = get_errc();
-		goto error_init_buf;
-	}
-
-	return buf;
-
-error_init_buf:
-	free(buf);
-error_alloc_buf:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-can_buf_destroy(struct can_buf *buf)
-{
-	if (!buf)
-		return;
-
-	can_buf_fini(buf);
-
-	free(buf);
+#endif
 }
 
 size_t
@@ -111,21 +54,16 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 {
 	assert(buf);
 
-#if LELY_NO_ATOMICS
-	size_t begin = buf->begin & buf->size;
-	size_t end = buf->end & buf->size;
-#else
-	size_t begin = atomic_load(&buf->begin) & buf->size;
-	size_t end = atomic_load(&buf->end) & buf->size;
-#endif
-
-	// Do not resize the buffer if it is not necessary.
-	size_t capacity = (begin - end - 1) & buf->size;
-	if (capacity >= n)
+	const size_t capacity = can_buf_capacity(buf);
+	if (n <= capacity)
 		return capacity;
 
+#if LELY_NO_MALLOC
+	set_errnum(ERRNUM_NOMEM);
+	return 0;
+#else
 	size_t size = LELY_CAN_BUF_SIZE;
-	while (size - 1 < buf->size - capacity + n)
+	while (size - 1 < can_buf_size(buf) + n)
 		size *= 2;
 	size--;
 
@@ -140,153 +78,21 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 
 	// If the buffer consists of two regions (because of wrapping), move the
 	// second region to the end of the buffer.
+	size_t begin = buf->begin & buf->size;
+	size_t end = buf->end & buf->size;
 	if (begin > end) {
-		struct can_msg *end = buf->ptr + buf->size + 1;
-		struct can_msg *src = buf->ptr + begin;
+		struct can_msg *endptr = buf->ptr + buf->size + 1;
+		struct can_msg *srcptr = buf->ptr + begin;
 		begin += size - buf->size;
-		struct can_msg *dst = buf->ptr + begin;
-		memmove(dst, src, (end - src) * sizeof(struct can_msg));
+		struct can_msg *dstptr = buf->ptr + begin;
+		memmove(dstptr, srcptr,
+				(endptr - srcptr) * sizeof(struct can_msg));
+		buf->begin = begin;
+		buf->end = end;
 	}
 
 	buf->size = size;
-#if LELY_NO_ATOMICS
-	buf->begin = begin;
-	buf->end = end;
-#else
-	atomic_store(&buf->begin, begin);
-	atomic_store(&buf->end, end);
+
+	return can_buf_capacity(buf);
 #endif
-
-	return (begin - end - 1) & buf->size;
-}
-
-void
-can_buf_clear(struct can_buf *buf)
-{
-#if LELY_NO_ATOMICS
-	buf->end = buf->begin;
-#else
-	size_t begin = atomic_load_explicit(&buf->begin, memory_order_acquire);
-	atomic_store_explicit(&buf->end, begin, memory_order_release);
-#endif
-}
-
-size_t
-can_buf_size(const struct can_buf *buf)
-{
-#if LELY_NO_ATOMICS
-	size_t begin = buf->begin;
-	size_t end = buf->end;
-#else
-	size_t begin = atomic_load_explicit(
-			&((struct can_buf *)buf)->begin, memory_order_acquire);
-	size_t end = atomic_load_explicit(
-			&((struct can_buf *)buf)->end, memory_order_acquire);
-#endif
-
-	return (end - begin) & buf->size;
-}
-
-size_t
-can_buf_capacity(const struct can_buf *buf)
-{
-#if LELY_NO_ATOMICS
-	size_t begin = buf->begin;
-	size_t end = buf->end;
-#else
-	size_t begin = atomic_load_explicit(
-			&((struct can_buf *)buf)->begin, memory_order_acquire);
-	size_t end = atomic_load_explicit(
-			&((struct can_buf *)buf)->end, memory_order_acquire);
-#endif
-
-	return (begin - end - 1) & buf->size;
-}
-
-size_t
-can_buf_peek(struct can_buf *buf, struct can_msg *ptr, size_t n)
-{
-#if LELY_NO_ATOMICS
-	size_t begin = buf->begin;
-#else
-	size_t begin = atomic_load_explicit(&buf->begin, memory_order_acquire);
-#endif
-	for (size_t i = 0; i < n; i++) {
-#if LELY_NO_ATOMICS
-		size_t end = buf->end;
-#else
-		size_t end = atomic_load_explicit(
-				&buf->end, memory_order_acquire);
-#endif
-		if (!((end - begin) & buf->size))
-			return i;
-
-		if (ptr)
-			ptr[i] = buf->ptr[begin & buf->size];
-		begin++;
-	}
-
-	return n;
-}
-
-size_t
-can_buf_read(struct can_buf *buf, struct can_msg *ptr, size_t n)
-{
-#if LELY_NO_ATOMICS
-	size_t begin = buf->begin;
-#else
-	size_t begin = atomic_load_explicit(&buf->begin, memory_order_acquire);
-#endif
-	for (size_t i = 0; i < n; i++) {
-#if LELY_NO_ATOMICS
-		size_t end = buf->end;
-#else
-		size_t end = atomic_load_explicit(
-				&buf->end, memory_order_acquire);
-#endif
-		if (!((end - begin) & buf->size))
-			return i;
-
-		if (ptr)
-			ptr[i] = buf->ptr[begin & buf->size];
-		begin++;
-
-#if LELY_NO_ATOMICS
-		buf->begin = begin;
-#else
-		atomic_store_explicit(&buf->begin, begin, memory_order_release);
-#endif
-	}
-
-	return n;
-}
-
-size_t
-can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
-{
-#if LELY_NO_ATOMICS
-	size_t end = buf->end;
-#else
-	size_t end = atomic_load_explicit(&buf->end, memory_order_acquire);
-#endif
-	for (size_t i = 0; i < n; i++) {
-#if LELY_NO_ATOMICS
-		size_t begin = buf->begin;
-#else
-		size_t begin = atomic_load_explicit(
-				&buf->begin, memory_order_acquire);
-#endif
-		if (!((begin - end - 1) & buf->size))
-			return i;
-
-		buf->ptr[end++ & buf->size] = ptr[i];
-
-#if LELY_NO_ATOMICS
-		buf->end = end;
-#else
-		atomic_store_explicit(&buf->end, end, memory_order_release);
-#endif
-	}
-
-	return n;
 }
