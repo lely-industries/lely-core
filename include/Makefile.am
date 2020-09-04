@@ -401,7 +401,7 @@ endif
 
 if !ECSS_COMPLIANCE
 if !NO_CXX
-inc += lely/coapp/detail/type_traits.hpp
+inc += lely/coapp/type_traits.hpp
 inc += lely/coapp/device.hpp
 if !NO_COAPP_MASTER
 inc += lely/coapp/driver.hpp

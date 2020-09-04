@@ -22,15 +22,16 @@
  */
 
 #include "coapp.hpp"
+#include <lely/co/csdo.h>
+#include <lely/co/dcf.h>
+#include <lely/co/obj.h>
+#include <lely/co/pdo.h>
+#include <lely/co/type.h>
 #include <lely/coapp/device.hpp>
 #include <lely/util/error.hpp>
 
-#include <lely/co/csdo.hpp>
-#include <lely/co/dcf.hpp>
-#include <lely/co/obj.hpp>
-#include <lely/co/pdo.h>
-
 #include <map>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -42,6 +43,13 @@ namespace canopen {
 
 /// The internal implementation of the CANopen device description.
 struct Device::Impl_ : util::BasicLockable {
+  struct DeviceDeleter {
+    void
+    operator()(co_dev_t* dev) const noexcept {
+      co_dev_destroy(dev);
+    }
+  };
+
   Impl_(Device* self, const ::std::string& dcf_txt,
         const ::std::string& dcf_bin, uint8_t id, util::BasicLockable* mutex);
   virtual ~Impl_() = default;
@@ -58,27 +66,13 @@ struct Device::Impl_ : util::BasicLockable {
 
   uint8_t
   netid() const noexcept {
-    return dev->getNetid();
+    return co_dev_get_netid(dev.get());
   }
 
   uint8_t
   id() const noexcept {
-    return dev->getId();
+    return co_dev_get_id(dev.get());
   }
-
-  void Set(uint16_t idx, uint8_t subidx, const ::std::string& value,
-           ::std::error_code& ec) noexcept;
-
-  void Set(uint16_t idx, uint8_t subidx, const ::std::vector<uint8_t>& value,
-           ::std::error_code& ec) noexcept;
-
-  void Set(uint16_t idx, uint8_t subidx,
-           const ::std::basic_string<char16_t>& value,
-           ::std::error_code& ec) noexcept;
-
-  template <uint16_t N>
-  void Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-           ::std::error_code& ec) noexcept;
 
   void OnWrite(uint16_t idx, uint8_t subidx);
 
@@ -135,7 +129,7 @@ struct Device::Impl_ : util::BasicLockable {
 
   BasicLockable* mutex{nullptr};
 
-  unique_c_ptr<CODev> dev;
+  ::std::unique_ptr<co_dev_t, DeviceDeleter> dev;
 
   ::std::map<uint32_t, uint32_t> rpdo_mapping;
   ::std::map<uint32_t, uint32_t> tpdo_mapping;
@@ -167,21 +161,35 @@ Device::id() const noexcept {
 namespace {
 
 void
-OnDnCon(COCSDO*, uint16_t, uint8_t, uint32_t ac, void* data) noexcept {
+OnDnCon(co_csdo_t*, uint16_t, uint8_t, uint32_t ac, void* data) noexcept {
   *static_cast<uint32_t*>(data) = ac;
 }
 
 template <class T>
 void
-OnUpCon(COCSDO*, uint16_t, uint8_t, uint32_t ac, T value, void* data) noexcept {
-  auto* t = static_cast<decltype(::std::tie(ac, value))*>(data);
-  *t = ::std::forward_as_tuple(ac, ::std::move(value));
+OnUpCon(co_csdo_t*, uint16_t, uint8_t, uint32_t ac, const void* ptr, size_t n,
+        void* data) noexcept {
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
+
+  auto t = static_cast<::std::tuple<uint32_t&, T&>*>(data);
+
+  auto val = c_type();
+  if (!ac) {
+    ::std::error_code ec;
+    val = traits::construct(ptr, n, ec);
+    if (ec) ac = static_cast<uint32_t>(sdo_errc(ec));
+  }
+
+  *t = ::std::forward_as_tuple(ac, traits::from_c_type(val));
+
+  traits::destroy(val);
 }
 
 }  // namespace
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
+typename ::std::enable_if<is_canopen<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(Read<T>(idx, subidx, ec));
@@ -190,7 +198,7 @@ Device::Read(uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
+typename ::std::enable_if<is_canopen<T>::value, T>::type
 Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
   uint32_t ac = 0;
   T value = T();
@@ -199,7 +207,7 @@ Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
   ::std::lock_guard<Impl_> lock(*impl_);
   int errsv = get_errc();
   set_errc(0);
-  if (!upReq<T, &OnUpCon<T>>(*impl_->dev, idx, subidx, &t)) {
+  if (!co_dev_up_req(dev(), idx, subidx, nullptr, &OnUpCon<T>, &t)) {
     if (ac)
       ec = static_cast<SdoErrc>(ac);
     else
@@ -212,35 +220,7 @@ Device::Read(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
-Device::Write(uint16_t idx, uint8_t subidx, T value) {
-  ::std::error_code ec;
-  Write(idx, subidx, value, ec);
-  if (ec) throw_sdo_error(id(), idx, subidx, ec, "Write");
-}
-
-template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
-Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) {
-  constexpr auto N = co_type_traits_T<T>::index;
-  uint32_t ac = 0;
-
-  ::std::lock_guard<Impl_> lock(*impl_);
-  int errsv = get_errc();
-  set_errc(0);
-  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
-    if (ac)
-      ec = static_cast<SdoErrc>(ac);
-    else
-      ec.clear();
-  } else {
-    ec = util::make_error_code();
-  }
-  set_errc(errsv);
-}
-
-template <class T>
-typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Write(idx, subidx, value, ec);
@@ -248,24 +228,46 @@ Device::Write(uint16_t idx, uint8_t subidx, const T& value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 Device::Write(uint16_t idx, uint8_t subidx, const T& value,
               ::std::error_code& ec) {
-  constexpr auto N = co_type_traits_T<T>::index;
+  using traits = canopen_traits<T>;
+
+  auto val = traits::to_c_type(value, ec);
+  if (ec) return;
   uint32_t ac = 0;
 
-  ::std::lock_guard<Impl_> lock(*impl_);
-  int errsv = get_errc();
-  set_errc(0);
-  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
-    if (ac)
-      ec = static_cast<SdoErrc>(ac);
-    else
-      ec.clear();
-  } else {
-    ec = util::make_error_code();
+  {
+    ::std::lock_guard<Impl_> lock(*impl_);
+    int errsv = get_errc();
+    set_errc(0);
+    if (!co_dev_dn_val_req(dev(), idx, subidx, traits::index, &val, nullptr,
+                           &OnDnCon, &ac)) {
+      if (ac)
+        ec = static_cast<SdoErrc>(ac);
+      else
+        ec.clear();
+    } else {
+      ec = util::make_error_code();
+    }
+    set_errc(errsv);
   }
-  set_errc(errsv);
+
+  traits::destroy(val);
+}
+
+template <>
+void
+Device::Write(uint16_t idx, uint8_t subidx, const ::std::string& value,
+              ::std::error_code& ec) {
+  Write(idx, subidx, value.c_str(), ec);
+}
+
+template <>
+void
+Device::Write(uint16_t idx, uint8_t subidx, const ::std::vector<uint8_t>& value,
+              ::std::error_code& ec) {
+  Write(idx, subidx, value.data(), value.size(), ec);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -273,62 +275,63 @@ Device::Write(uint16_t idx, uint8_t subidx, const T& value,
 // BOOLEAN
 template bool Device::Read<bool>(uint16_t, uint8_t) const;
 template bool Device::Read<bool>(uint16_t, uint8_t, ::std::error_code&) const;
-template void Device::Write<bool>(uint16_t, uint8_t, bool);
-template void Device::Write<bool>(uint16_t, uint8_t, bool, ::std::error_code&);
+template void Device::Write<bool>(uint16_t, uint8_t, const bool&);
+template void Device::Write<bool>(uint16_t, uint8_t, const bool&,
+                                  ::std::error_code&);
 
 // INTEGER8
 template int8_t Device::Read<int8_t>(uint16_t, uint8_t) const;
 template int8_t Device::Read<int8_t>(uint16_t, uint8_t,
                                      ::std::error_code&) const;
-template void Device::Write<int8_t>(uint16_t, uint8_t, int8_t);
-template void Device::Write<int8_t>(uint16_t, uint8_t, int8_t,
+template void Device::Write<int8_t>(uint16_t, uint8_t, const int8_t&);
+template void Device::Write<int8_t>(uint16_t, uint8_t, const int8_t&,
                                     ::std::error_code&);
 
 // INTEGER16
 template int16_t Device::Read<int16_t>(uint16_t, uint8_t) const;
 template int16_t Device::Read<int16_t>(uint16_t, uint8_t,
                                        ::std::error_code&) const;
-template void Device::Write<int16_t>(uint16_t, uint8_t, int16_t);
-template void Device::Write<int16_t>(uint16_t, uint8_t, int16_t,
+template void Device::Write<int16_t>(uint16_t, uint8_t, const int16_t&);
+template void Device::Write<int16_t>(uint16_t, uint8_t, const int16_t&,
                                      ::std::error_code&);
 
 // INTEGER32
 template int32_t Device::Read<int32_t>(uint16_t, uint8_t) const;
 template int32_t Device::Read<int32_t>(uint16_t, uint8_t,
                                        ::std::error_code&) const;
-template void Device::Write<int32_t>(uint16_t, uint8_t, int32_t);
-template void Device::Write<int32_t>(uint16_t, uint8_t, int32_t,
+template void Device::Write<int32_t>(uint16_t, uint8_t, const int32_t&);
+template void Device::Write<int32_t>(uint16_t, uint8_t, const int32_t&,
                                      ::std::error_code&);
 
 // UNSIGNED8
 template uint8_t Device::Read<uint8_t>(uint16_t, uint8_t) const;
 template uint8_t Device::Read<uint8_t>(uint16_t, uint8_t,
                                        ::std::error_code&) const;
-template void Device::Write<uint8_t>(uint16_t, uint8_t, uint8_t);
-template void Device::Write<uint8_t>(uint16_t, uint8_t, uint8_t,
+template void Device::Write<uint8_t>(uint16_t, uint8_t, const uint8_t&);
+template void Device::Write<uint8_t>(uint16_t, uint8_t, const uint8_t&,
                                      ::std::error_code&);
 
 // UNSIGNED16
 template uint16_t Device::Read<uint16_t>(uint16_t, uint8_t) const;
 template uint16_t Device::Read<uint16_t>(uint16_t, uint8_t,
                                          ::std::error_code&) const;
-template void Device::Write<uint16_t>(uint16_t, uint8_t, uint16_t);
-template void Device::Write<uint16_t>(uint16_t, uint8_t, uint16_t,
+template void Device::Write<uint16_t>(uint16_t, uint8_t, const uint16_t&);
+template void Device::Write<uint16_t>(uint16_t, uint8_t, const uint16_t&,
                                       ::std::error_code&);
 
 // UNSIGNED32
 template uint32_t Device::Read<uint32_t>(uint16_t, uint8_t) const;
 template uint32_t Device::Read<uint32_t>(uint16_t, uint8_t,
                                          ::std::error_code&) const;
-template void Device::Write<uint32_t>(uint16_t, uint8_t, uint32_t);
-template void Device::Write<uint32_t>(uint16_t, uint8_t, uint32_t,
+template void Device::Write<uint32_t>(uint16_t, uint8_t, const uint32_t&);
+template void Device::Write<uint32_t>(uint16_t, uint8_t, const uint32_t&,
                                       ::std::error_code&);
 
 // REAL32
 template float Device::Read<float>(uint16_t, uint8_t) const;
 template float Device::Read<float>(uint16_t, uint8_t, ::std::error_code&) const;
-template void Device::Write<float>(uint16_t, uint8_t, float);
-template void Device::Write<float>(uint16_t, uint8_t, float,
+template void Device::Write<float>(uint16_t, uint8_t, const float&);
+template void Device::Write<float>(uint16_t, uint8_t, const float&,
                                    ::std::error_code&);
 
 // VISIBLE_STRING
@@ -372,8 +375,8 @@ template void Device::Write<::std::basic_string<char16_t>>(
 template double Device::Read<double>(uint16_t, uint8_t) const;
 template double Device::Read<double>(uint16_t, uint8_t,
                                      ::std::error_code&) const;
-template void Device::Write<double>(uint16_t, uint8_t, double);
-template void Device::Write<double>(uint16_t, uint8_t, double,
+template void Device::Write<double>(uint16_t, uint8_t, const double&);
+template void Device::Write<double>(uint16_t, uint8_t, const double&,
                                     ::std::error_code&);
 
 // INTEGER40
@@ -384,8 +387,8 @@ template void Device::Write<double>(uint16_t, uint8_t, double,
 template int64_t Device::Read<int64_t>(uint16_t, uint8_t) const;
 template int64_t Device::Read<int64_t>(uint16_t, uint8_t,
                                        ::std::error_code&) const;
-template void Device::Write<int64_t>(uint16_t, uint8_t, int64_t);
-template void Device::Write<int64_t>(uint16_t, uint8_t, int64_t,
+template void Device::Write<int64_t>(uint16_t, uint8_t, const int64_t&);
+template void Device::Write<int64_t>(uint16_t, uint8_t, const int64_t&,
                                      ::std::error_code&);
 
 // UNSIGNED24
@@ -397,8 +400,8 @@ template void Device::Write<int64_t>(uint16_t, uint8_t, int64_t,
 template uint64_t Device::Read<uint64_t>(uint16_t, uint8_t) const;
 template uint64_t Device::Read<uint64_t>(uint16_t, uint8_t,
                                          ::std::error_code&) const;
-template void Device::Write<uint64_t>(uint16_t, uint8_t, uint64_t);
-template void Device::Write<uint64_t>(uint16_t, uint8_t, uint64_t,
+template void Device::Write<uint64_t>(uint16_t, uint8_t, const uint64_t&);
+template void Device::Write<uint64_t>(uint16_t, uint8_t, const uint64_t&,
                                       ::std::error_code&);
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
@@ -426,22 +429,29 @@ Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value) {
 void
 Device::Write(uint16_t idx, uint8_t subidx, const char16_t* value,
               ::std::error_code& ec) {
-  constexpr auto N = CO_DEFTYPE_UNICODE_STRING;
+  using traits = canopen_traits<::std::basic_string<char16_t>>;
+
+  auto val = traits::to_c_type(value, ec);
+  if (ec) return;
   uint32_t ac = 0;
 
-  ::std::lock_guard<Impl_> lock(*impl_);
-  int errsv = get_errc();
-  set_errc(0);
-  // TODO(jseldenthuis@lely.com): Prevent unnecessary copy.
-  if (!dnReq<N>(*impl_->dev, idx, subidx, value, &OnDnCon, &ac)) {
-    if (ac)
-      ec = static_cast<SdoErrc>(ac);
-    else
-      ec.clear();
-  } else {
-    ec = util::make_error_code();
+  {
+    ::std::lock_guard<Impl_> lock(*impl_);
+    int errsv = get_errc();
+    set_errc(0);
+    if (!co_dev_dn_val_req(dev(), idx, subidx, traits::index, &val, nullptr,
+                           &OnDnCon, &ac)) {
+      if (ac)
+        ec = static_cast<SdoErrc>(ac);
+      else
+        ec.clear();
+    } else {
+      ec = util::make_error_code();
+    }
+    set_errc(errsv);
   }
-  set_errc(errsv);
+
+  traits::destroy(val);
 }
 
 void
@@ -459,7 +469,7 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   ::std::lock_guard<Impl_> lock(*impl_);
   int errsv = get_errc();
   set_errc(0);
-  if (!dnReq(*impl_->dev, idx, subidx, p, n, &OnDnCon, &ac)) {
+  if (!co_dev_dn_req(dev(), idx, subidx, p, n, &OnDnCon, &ac)) {
     if (ac)
       ec = static_cast<SdoErrc>(ac);
     else
@@ -486,7 +496,7 @@ Device::WriteEvent(uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(RpdoRead<T>(id, idx, subidx, ec));
@@ -495,7 +505,7 @@ Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
                  ::std::error_code& ec) const {
   ec.clear();
@@ -508,7 +518,7 @@ Device::RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   T value(TpdoRead<T>(id, idx, subidx, ec));
@@ -517,7 +527,7 @@ Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
                  ::std::error_code& ec) const {
   ec.clear();
@@ -530,7 +540,7 @@ Device::TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+typename ::std::enable_if<is_canopen_basic<T>::value>::type
 Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   TpdoWrite(id, idx, subidx, value, ec);
@@ -538,7 +548,7 @@ Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+typename ::std::enable_if<is_canopen_basic<T>::value>::type
 Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T value,
                   ::std::error_code& ec) {
   ec.clear();
@@ -719,7 +729,7 @@ Device::OnRpdoWrite(
   impl_->on_rpdo_write = on_rpdo_write;
 }
 
-CODev*
+co_dev_t*
 Device::dev() const noexcept {
   return impl_->dev.get();
 }
@@ -735,20 +745,20 @@ Device::Type(uint16_t idx, uint8_t subidx) const {
 const ::std::type_info&
 Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
     noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return typeid(void);
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return typeid(void);
   }
 
   ec.clear();
-  switch (sub->getType()) {
+  switch (co_sub_get_type(sub)) {
     case CO_DEFTYPE_BOOLEAN:
       return typeid(bool);
     case CO_DEFTYPE_INTEGER8:
@@ -772,7 +782,7 @@ Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
     case CO_DEFTYPE_UNICODE_STRING:
       return typeid(::std::basic_string<char16_t>);
     // case CO_DEFTYPE_TIME_OF_DAY: ...
-    // case CO_DEFTYPE_TIME_DIFFERENCE: ...
+    // case CO_DEFTYPE_TIME_DIFF: ...
     case CO_DEFTYPE_DOMAIN:
       return typeid(::std::vector<uint8_t>);
     // case CO_DEFTYPE_INTEGER24: ...
@@ -795,7 +805,7 @@ Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
+typename ::std::enable_if<is_canopen<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = Get<T>(idx, subidx, ec);
@@ -804,53 +814,37 @@ Device::Get(uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type
+typename ::std::enable_if<is_canopen<T>::value, T>::type
 Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
     noexcept {
-  constexpr auto N = co_type_traits_T<T>::index;
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
 
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return T();
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return T();
   }
 
-  if (!detail::is_canopen_same(N, sub->getType())) {
+  if (!is_canopen_same(traits::index, co_sub_get_type(sub))) {
     ec = SdoErrc::TYPE_LEN;
     return T();
   }
 
   ec.clear();
-  // This is efficient, even for CANopen array values, since getVal<N>() returns
-  // a reference.
-  return sub->getVal<N>();
+
+  auto pval = static_cast<const c_type*>(co_sub_get_val(sub));
+  return traits::from_c_type(*pval);
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
-Device::Set(uint16_t idx, uint8_t subidx, T value) {
-  ::std::error_code ec;
-  Set(idx, subidx, value, ec);
-  if (ec) throw_sdo_error(impl_->id(), idx, subidx, ec, "Set");
-}
-
-template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
-Device::Set(uint16_t idx, uint8_t subidx, T value,
-            ::std::error_code& ec) noexcept {
-  constexpr auto N = co_type_traits_T<T>::index;
-
-  impl_->Set<N>(idx, subidx, &value, sizeof(value), ec);
-}
-
-template <class T>
-typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
   ::std::error_code ec;
   Set(idx, subidx, value, ec);
@@ -858,10 +852,56 @@ Device::Set(uint16_t idx, uint8_t subidx, const T& value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_array<T>::value>::type
+typename ::std::enable_if<is_canopen<T>::value>::type
 Device::Set(uint16_t idx, uint8_t subidx, const T& value,
             ::std::error_code& ec) noexcept {
-  impl_->Set(idx, subidx, value, ec);
+  using traits = canopen_traits<T>;
+
+  auto obj = co_dev_find_obj(dev(), idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = co_obj_find_sub(obj, subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  if (!is_canopen_same(traits::index, co_sub_get_type(sub))) {
+    ec = SdoErrc::TYPE_LEN;
+    return;
+  }
+
+  auto val = traits::to_c_type(value, ec);
+  if (ec) return;
+  auto p = traits::address(val);
+  auto n = traits::size(val);
+
+  int errsv = get_errc();
+  set_errc(0);
+  if (co_sub_set_val(sub, p, n) == n)
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
+
+  traits::destroy(val);
+}
+
+template <>
+void
+Device::Set(uint16_t idx, uint8_t subidx, const ::std::string& value,
+            ::std::error_code& ec) noexcept {
+  Set(idx, subidx, value.c_str(), ec);
+}
+
+template <>
+void
+Device::Set(uint16_t idx, uint8_t subidx, const ::std::vector<uint8_t>& value,
+            ::std::error_code& ec) noexcept {
+  Set(idx, subidx, value.data(), value.size(), ec);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -870,64 +910,64 @@ Device::Set(uint16_t idx, uint8_t subidx, const T& value,
 template bool Device::Get<bool>(uint16_t, uint8_t) const;
 template bool Device::Get<bool>(uint16_t, uint8_t, ::std::error_code&) const
     noexcept;
-template void Device::Set<bool>(uint16_t, uint8_t, bool);
-template void Device::Set<bool>(uint16_t, uint8_t, bool,
+template void Device::Set<bool>(uint16_t, uint8_t, const bool&);
+template void Device::Set<bool>(uint16_t, uint8_t, const bool&,
                                 ::std::error_code&) noexcept;
 
 // INTEGER8
 template int8_t Device::Get<int8_t>(uint16_t, uint8_t) const;
 template int8_t Device::Get<int8_t>(uint16_t, uint8_t, ::std::error_code&) const
     noexcept;
-template void Device::Set<int8_t>(uint16_t, uint8_t, int8_t);
-template void Device::Set<int8_t>(uint16_t, uint8_t, int8_t,
+template void Device::Set<int8_t>(uint16_t, uint8_t, const int8_t&);
+template void Device::Set<int8_t>(uint16_t, uint8_t, const int8_t&,
                                   ::std::error_code&) noexcept;
 
 // INTEGER16
 template int16_t Device::Get<int16_t>(uint16_t, uint8_t) const;
 template int16_t Device::Get<int16_t>(uint16_t, uint8_t,
                                       ::std::error_code&) const noexcept;
-template void Device::Set<int16_t>(uint16_t, uint8_t, int16_t);
-template void Device::Set<int16_t>(uint16_t, uint8_t, int16_t,
+template void Device::Set<int16_t>(uint16_t, uint8_t, const int16_t&);
+template void Device::Set<int16_t>(uint16_t, uint8_t, const int16_t&,
                                    ::std::error_code&) noexcept;
 
 // INTEGER32
 template int32_t Device::Get<int32_t>(uint16_t, uint8_t) const;
 template int32_t Device::Get<int32_t>(uint16_t, uint8_t,
                                       ::std::error_code&) const noexcept;
-template void Device::Set<int32_t>(uint16_t, uint8_t, int32_t);
-template void Device::Set<int32_t>(uint16_t, uint8_t, int32_t,
+template void Device::Set<int32_t>(uint16_t, uint8_t, const int32_t&);
+template void Device::Set<int32_t>(uint16_t, uint8_t, const int32_t&,
                                    ::std::error_code&) noexcept;
 
 // UNSIGNED8
 template uint8_t Device::Get<uint8_t>(uint16_t, uint8_t) const;
 template uint8_t Device::Get<uint8_t>(uint16_t, uint8_t,
                                       ::std::error_code&) const noexcept;
-template void Device::Set<uint8_t>(uint16_t, uint8_t, uint8_t);
-template void Device::Set<uint8_t>(uint16_t, uint8_t, uint8_t,
+template void Device::Set<uint8_t>(uint16_t, uint8_t, const uint8_t&);
+template void Device::Set<uint8_t>(uint16_t, uint8_t, const uint8_t&,
                                    ::std::error_code&) noexcept;
 
 // UNSIGNED16
 template uint16_t Device::Get<uint16_t>(uint16_t, uint8_t) const;
 template uint16_t Device::Get<uint16_t>(uint16_t, uint8_t,
                                         ::std::error_code&) const noexcept;
-template void Device::Set<uint16_t>(uint16_t, uint8_t, uint16_t);
-template void Device::Set<uint16_t>(uint16_t, uint8_t, uint16_t,
+template void Device::Set<uint16_t>(uint16_t, uint8_t, const uint16_t&);
+template void Device::Set<uint16_t>(uint16_t, uint8_t, const uint16_t&,
                                     ::std::error_code&) noexcept;
 
 // UNSIGNED32
 template uint32_t Device::Get<uint32_t>(uint16_t, uint8_t) const;
 template uint32_t Device::Get<uint32_t>(uint16_t, uint8_t,
                                         ::std::error_code&) const noexcept;
-template void Device::Set<uint32_t>(uint16_t, uint8_t, uint32_t);
-template void Device::Set<uint32_t>(uint16_t, uint8_t, uint32_t,
+template void Device::Set<uint32_t>(uint16_t, uint8_t, const uint32_t&);
+template void Device::Set<uint32_t>(uint16_t, uint8_t, const uint32_t&,
                                     ::std::error_code&) noexcept;
 
 // REAL32
 template float Device::Get<float>(uint16_t, uint8_t) const;
 template float Device::Get<float>(uint16_t, uint8_t, ::std::error_code&) const
     noexcept;
-template void Device::Set<float>(uint16_t, uint8_t, float);
-template void Device::Set<float>(uint16_t, uint8_t, float,
+template void Device::Set<float>(uint16_t, uint8_t, const float&);
+template void Device::Set<float>(uint16_t, uint8_t, const float&,
                                  ::std::error_code&) noexcept;
 
 // VISIBLE_STRING
@@ -973,8 +1013,8 @@ template void Device::Set<::std::basic_string<char16_t>>(
 template double Device::Get<double>(uint16_t, uint8_t) const;
 template double Device::Get<double>(uint16_t, uint8_t, ::std::error_code&) const
     noexcept;
-template void Device::Set<double>(uint16_t, uint8_t, double);
-template void Device::Set<double>(uint16_t, uint8_t, double,
+template void Device::Set<double>(uint16_t, uint8_t, const double&);
+template void Device::Set<double>(uint16_t, uint8_t, const double&,
                                   ::std::error_code&) noexcept;
 
 // INTEGER40
@@ -985,8 +1025,8 @@ template void Device::Set<double>(uint16_t, uint8_t, double,
 template int64_t Device::Get<int64_t>(uint16_t, uint8_t) const;
 template int64_t Device::Get<int64_t>(uint16_t, uint8_t,
                                       ::std::error_code&) const noexcept;
-template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t);
-template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t,
+template void Device::Set<int64_t>(uint16_t, uint8_t, const int64_t&);
+template void Device::Set<int64_t>(uint16_t, uint8_t, const int64_t&,
                                    ::std::error_code&) noexcept;
 
 // UNSIGNED24
@@ -998,8 +1038,8 @@ template void Device::Set<int64_t>(uint16_t, uint8_t, int64_t,
 template uint64_t Device::Get<uint64_t>(uint16_t, uint8_t) const;
 template uint64_t Device::Get<uint64_t>(uint16_t, uint8_t,
                                         ::std::error_code&) const noexcept;
-template void Device::Set<uint64_t>(uint16_t, uint8_t, uint64_t);
-template void Device::Set<uint64_t>(uint16_t, uint8_t, uint64_t,
+template void Device::Set<uint64_t>(uint16_t, uint8_t, const uint64_t&);
+template void Device::Set<uint64_t>(uint16_t, uint8_t, const uint64_t&,
                                     ::std::error_code&) noexcept;
 
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
@@ -1014,7 +1054,7 @@ Device::Set(uint16_t idx, uint8_t subidx, const char* value) {
 void
 Device::Set(uint16_t idx, uint8_t subidx, const char* value,
             ::std::error_code& ec) noexcept {
-  impl_->Set<CO_DEFTYPE_VISIBLE_STRING>(idx, subidx, value, 0, ec);
+  Set(idx, subidx, value, ::std::char_traits<char>::length(value), ec);
 }
 
 void
@@ -1027,7 +1067,39 @@ Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value) {
 void
 Device::Set(uint16_t idx, uint8_t subidx, const char16_t* value,
             ::std::error_code& ec) noexcept {
-  impl_->Set<CO_DEFTYPE_UNICODE_STRING>(idx, subidx, value, 0, ec);
+  using traits = canopen_traits<::std::basic_string<char16_t>>;
+
+  auto obj = co_dev_find_obj(dev(), idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = co_obj_find_sub(obj, subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  if (!is_canopen_same(traits::index, co_sub_get_type(sub))) {
+    ec = SdoErrc::TYPE_LEN;
+    return;
+  }
+
+  auto val = traits::to_c_type(value, ec);
+  if (ec) return;
+  auto p = traits::address(val);
+  auto n = traits::size(val);
+
+  int errsv = get_errc();
+  set_errc(0);
+  if (co_sub_set_val(sub, p, n) == n)
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
+
+  traits::destroy(val);
 }
 
 void
@@ -1040,7 +1112,25 @@ Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n) {
 void
 Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
             ::std::error_code& ec) noexcept {
-  impl_->Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, p, n, ec);
+  auto obj = co_dev_find_obj(dev(), idx);
+  if (!obj) {
+    ec = SdoErrc::NO_OBJ;
+    return;
+  }
+
+  auto sub = co_obj_find_sub(obj, subidx);
+  if (!sub) {
+    ec = SdoErrc::NO_SUB;
+    return;
+  }
+
+  int errsv = get_errc();
+  set_errc(0);
+  if (co_sub_set_val(sub, p, n) == n)
+    ec.clear();
+  else
+    ec = util::make_error_code();
+  set_errc(errsv);
 }
 
 const char*
@@ -1054,20 +1144,20 @@ Device::GetUploadFile(uint16_t idx, uint8_t subidx) const {
 const char*
 Device::GetUploadFile(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
     noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return nullptr;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return nullptr;
   }
 
   ec.clear();
-  return sub->getUploadFile();
+  return co_sub_get_upload_file(sub);
 }
 
 void
@@ -1080,13 +1170,13 @@ Device::SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename) {
 void
 Device::SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename,
                       ::std::error_code& ec) noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return;
@@ -1094,7 +1184,7 @@ Device::SetUploadFile(uint16_t idx, uint8_t subidx, const char* filename,
 
   int errsv = get_errc();
   set_errc(0);
-  if (!sub->setUploadFile(filename))
+  if (!co_sub_set_upload_file(sub, filename))
     ec.clear();
   else
     ec = util::make_error_code();
@@ -1112,20 +1202,20 @@ Device::GetDownloadFile(uint16_t idx, uint8_t subidx) const {
 const char*
 Device::GetDownloadFile(uint16_t idx, uint8_t subidx,
                         ::std::error_code& ec) const noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return nullptr;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return nullptr;
   }
 
   ec.clear();
-  return sub->getDownloadFile();
+  return co_sub_get_download_file(sub);
 }
 
 void
@@ -1138,13 +1228,13 @@ Device::SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename) {
 void
 Device::SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename,
                         ::std::error_code& ec) noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return;
@@ -1152,7 +1242,7 @@ Device::SetDownloadFile(uint16_t idx, uint8_t subidx, const char* filename,
 
   int errsv = get_errc();
   set_errc(0);
-  if (!sub->setDownloadFile(filename))
+  if (!co_sub_set_download_file(sub, filename))
     ec.clear();
   else
     ec = util::make_error_code();
@@ -1168,23 +1258,23 @@ Device::SetEvent(uint16_t idx, uint8_t subidx) {
 
 void
 Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept {
-  auto obj = impl_->dev->find(idx);
+  auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
     return;
   }
 
-  auto sub = obj->find(subidx);
+  auto sub = co_obj_find_sub(obj, subidx);
   if (!sub) {
     ec = SdoErrc::NO_SUB;
     return;
   }
 
-  impl_->dev->TPDOEvent(idx, subidx);
+  co_dev_tpdo_event(dev(), idx, subidx);
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = RpdoGet<T>(id, idx, subidx, ec);
@@ -1193,7 +1283,7 @@ Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
                 ::std::error_code& ec) const noexcept {
   ec.clear();
@@ -1203,7 +1293,7 @@ Device::RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
   ::std::error_code ec;
   auto value = TpdoGet<T>(id, idx, subidx, ec);
@@ -1212,7 +1302,7 @@ Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
+typename ::std::enable_if<is_canopen_basic<T>::value, T>::type
 Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
                 ::std::error_code& ec) const noexcept {
   ec.clear();
@@ -1222,7 +1312,7 @@ Device::TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx,
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+typename ::std::enable_if<is_canopen_basic<T>::value>::type
 Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
   ::std::error_code ec;
   TpdoSet(id, idx, subidx, value, ec);
@@ -1230,7 +1320,7 @@ Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value) {
 }
 
 template <class T>
-typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type
+typename ::std::enable_if<is_canopen_basic<T>::value>::type
 Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value,
                 ::std::error_code& ec) noexcept {
   ec.clear();
@@ -1400,16 +1490,16 @@ Device::UpdateRpdoMapping() {
   impl_->rpdo_mapping.clear();
 
   for (int i = 0; i < 512; i++) {
-    auto obj_1400 = impl_->dev->find(0x1400 + i);
+    auto obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
     if (!obj_1400) continue;
     // Skip invalid PDOs.
-    auto cobid = obj_1400->getVal<CO_DEFTYPE_UNSIGNED32>(1);
+    auto cobid = co_obj_get_val_u32(obj_1400, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
     // Obtain the remote node-ID.
     uint8_t id = 0;
-    auto obj_5800 = impl_->dev->find(0x5800 + i);
+    auto obj_5800 = co_dev_find_obj(dev(), 0x5800 + i);
     if (obj_5800) {
-      id = obj_5800->getVal<CO_DEFTYPE_UNSIGNED32>(0) & 0xff;
+      id = co_obj_get_val_u32(obj_5800, 0) & 0xff;
     } else {
       // Obtain the node-ID from the predefined connection, if possible.
       if (cobid & CO_PDO_COBID_FRAME) continue;
@@ -1427,17 +1517,17 @@ Device::UpdateRpdoMapping() {
     // Skip invalid node-IDs.
     if (!id || id > CO_NUM_NODES) continue;
     // Obtain the local RPDO mapping.
-    auto obj_1600 = impl_->dev->find(0x1600 + i);
+    auto obj_1600 = co_dev_find_obj(dev(), 0x1600 + i);
     if (!obj_1600) continue;
     // Obtain the remote TPDO mapping.
-    auto obj_5a00 = impl_->dev->find(0x5a00 + i);
+    auto obj_5a00 = co_dev_find_obj(dev(), 0x5a00 + i);
     if (!obj_5a00) continue;
     // Check if the number of mapped objects is the same.
-    auto n = obj_1600->getVal<CO_DEFTYPE_UNSIGNED8>(0);
-    if (n != obj_5a00->getVal<CO_DEFTYPE_UNSIGNED8>(0)) continue;
+    auto n = co_obj_get_val_u8(obj_1600, 0);
+    if (n != co_obj_get_val_u8(obj_5a00, 0)) continue;
     for (int i = 1; i <= n; i++) {
-      auto rmap = obj_1600->getVal<CO_DEFTYPE_UNSIGNED32>(i);
-      auto tmap = obj_5a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      auto rmap = co_obj_get_val_u32(obj_1600, i);
+      auto tmap = co_obj_get_val_u32(obj_5a00, i);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
@@ -1459,16 +1549,16 @@ Device::UpdateTpdoMapping() {
   impl_->tpdo_mapping.clear();
 
   for (int i = 0; i < 512; i++) {
-    auto obj_1800 = impl_->dev->find(0x1800 + i);
+    auto obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
     if (!obj_1800) continue;
     // Skip invalid PDOs.
-    auto cobid = obj_1800->getVal<CO_DEFTYPE_UNSIGNED32>(1);
+    auto cobid = co_obj_get_val_u32(obj_1800, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
     // Obtain the remote node-ID.
     uint8_t id = 0;
-    auto obj_5c00 = impl_->dev->find(0x5c00 + i);
+    auto obj_5c00 = co_dev_find_obj(dev(), 0x5c00 + i);
     if (obj_5c00) {
-      id = obj_5c00->getVal<CO_DEFTYPE_UNSIGNED32>(0) & 0xff;
+      id = co_obj_get_val_u32(obj_5c00, 0) & 0xff;
     } else {
       // Obtain the node-ID from the predefined connection, if possible.
       if (cobid & CO_PDO_COBID_FRAME) continue;
@@ -1486,17 +1576,17 @@ Device::UpdateTpdoMapping() {
     // Skip invalid node-IDs.
     if (!id || id > CO_NUM_NODES) continue;
     // Obtain the local TPDO mapping.
-    auto obj_1a00 = impl_->dev->find(0x1a00 + i);
+    auto obj_1a00 = co_dev_find_obj(dev(), 0x1a00 + i);
     if (!obj_1a00) continue;
     // Obtain the remote RPDO mapping.
-    auto obj_5e00 = impl_->dev->find(0x5e00 + i);
+    auto obj_5e00 = co_dev_find_obj(dev(), 0x5e00 + i);
     if (!obj_5e00) continue;
     // Check if the number of mapped objects is the same.
-    auto n = obj_1a00->getVal<CO_DEFTYPE_UNSIGNED8>(0);
-    if (n != obj_5e00->getVal<CO_DEFTYPE_UNSIGNED8>(0)) continue;
+    auto n = co_obj_get_val_u8(obj_1a00, 0);
+    if (n != co_obj_get_val_u8(obj_5e00, 0)) continue;
     for (int i = 1; i <= n; i++) {
-      auto tmap = obj_1a00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
-      auto rmap = obj_5e00->getVal<CO_DEFTYPE_UNSIGNED32>(i);
+      auto tmap = co_obj_get_val_u32(obj_1a00, i);
+      auto rmap = co_obj_get_val_u32(obj_5e00, i);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
@@ -1512,81 +1602,37 @@ Device::UpdateTpdoMapping() {
 Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
                      const ::std::string& dcf_bin, uint8_t id,
                      util::BasicLockable* mutex_)
-    : self(self_), mutex(mutex_), dev(make_unique_c<CODev>(dcf_txt.c_str())) {
-  if (!dcf_bin.empty() && dev->readDCF(nullptr, nullptr, dcf_bin.c_str()) == -1)
+    : self(self_),
+      mutex(mutex_),
+      dev(co_dev_create_from_dcf_file(dcf_txt.c_str())) {
+  if (!dcf_bin.empty() &&
+      co_dev_read_dcf_file(dev.get(), nullptr, nullptr, dcf_bin.c_str()) == -1)
     util::throw_errc("Device");
 
-  if (id != 0xff && dev->setId(id) == -1) util::throw_errc("Device");
+  if (id != 0xff && co_dev_set_id(dev.get(), id) == -1)
+    util::throw_errc("Device");
 
   // Register a notification function for all objects in the object dictionary
   // in case of write (SDO upload) access.
   for (auto obj = co_dev_first_obj(dev.get()); obj; obj = co_obj_next(obj)) {
     // Skip data types and the communication profile area.
-    if (obj->getIdx() < 0x2000) continue;
+    if (co_obj_get_idx(obj) < 0x2000) continue;
     // Skip reserved objects.
-    if (obj->getIdx() >= 0xC000) break;
-    obj->setDnInd(
-        [](COSub* sub, co_sdo_req* req, void* data) -> uint32_t {
+    if (co_obj_get_idx(obj) >= 0xC000) break;
+    co_obj_set_dn_ind(
+        obj,
+        [](co_sub_t* sub, co_sdo_req* req, void* data) -> uint32_t {
           // Implement the default behavior, but do not issue a notification for
           // incomplete or failed writes.
           uint32_t ac = 0;
-          if (sub->onDn(*req, &ac) == -1 || ac) return ac;
+          if (co_sub_on_dn(sub, req, &ac) == -1 || ac) return ac;
           auto impl_ = static_cast<Impl_*>(data);
-          impl_->OnWrite(sub->getObj()->getIdx(), sub->getSubidx());
+          impl_->OnWrite(co_obj_get_idx(co_sub_get_obj(sub)),
+                         co_sub_get_subidx(sub));
           return 0;
         },
         static_cast<void*>(this));
   }
-}
-
-void
-Device::Impl_::Set(uint16_t idx, uint8_t subidx, const ::std::string& value,
-                   ::std::error_code& ec) noexcept {
-  Set<CO_DEFTYPE_VISIBLE_STRING>(idx, subidx, value.c_str(), 0, ec);
-}
-
-void
-Device::Impl_::Set(uint16_t idx, uint8_t subidx,
-                   const ::std::vector<uint8_t>& value,
-                   ::std::error_code& ec) noexcept {
-  Set<CO_DEFTYPE_OCTET_STRING>(idx, subidx, value.data(), value.size(), ec);
-}
-
-void
-Device::Impl_::Set(uint16_t idx, uint8_t subidx,
-                   const ::std::basic_string<char16_t>& value,
-                   ::std::error_code& ec) noexcept {
-  Set<CO_DEFTYPE_UNICODE_STRING>(idx, subidx, value.c_str(), 0, ec);
-}
-
-template <uint16_t N>
-void
-Device::Impl_::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
-                   ::std::error_code& ec) noexcept {
-  auto obj = dev->find(idx);
-  if (!obj) {
-    ec = SdoErrc::NO_OBJ;
-    return;
-  }
-
-  auto sub = obj->find(subidx);
-  if (!sub) {
-    ec = SdoErrc::NO_SUB;
-    return;
-  }
-
-  if (!detail::is_canopen_same(N, sub->getType())) {
-    ec = SdoErrc::TYPE_LEN;
-    return;
-  }
-
-  int errsv = get_errc();
-  set_errc(0);
-  if (sub->setVal(p, n) == n)
-    ec.clear();
-  else
-    ec = util::make_error_code();
-  set_errc(errsv);
 }
 
 void

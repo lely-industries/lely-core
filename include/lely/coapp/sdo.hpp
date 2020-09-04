@@ -22,8 +22,8 @@
 #ifndef LELY_COAPP_SDO_HPP_
 #define LELY_COAPP_SDO_HPP_
 
-#include <lely/coapp/detail/type_traits.hpp>
 #include <lely/coapp/sdo_error.hpp>
+#include <lely/coapp/type_traits.hpp>
 #include <lely/ev/future.hpp>
 
 #include <chrono>
@@ -32,16 +32,16 @@
 #include <string>
 #include <utility>
 
+// The CAN network interface from <lely/can/net.h>.
+struct __can_net;
+
+// The CANopen device from <lely/co/dev.h>.
+struct __co_dev;
+
+// The CANopen Client-SDO service from <lely/co/csdo.h>.
+struct __co_csdo;
+
 namespace lely {
-
-// The CAN network interface from <lely/can/net.hpp>.
-class CANNet;
-
-// The CANopen device from <lely/co/dev.hpp>.
-class CODev;
-
-// The CANopen Client-SDO service from <lely/co/csdo.hpp>.
-class COCSDO;
 
 namespace canopen {
 
@@ -104,7 +104,8 @@ make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
 /**
  * Returns an SDO future with a shared state that is immediately ready,
  * containing a failure result constructed with
- * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const ::std::string&).
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const
+ * ::std::string&).
  *
  * @see make_empty_sdo_future(), make_ready_sdo_future()
  */
@@ -119,7 +120,8 @@ make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
 /**
  * Returns an SDO future with a shared state that is immediately ready,
  * containing a failure result constructed with
- * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const char*).
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const
+ * char*).
  *
  * @see make_empty_sdo_future(), make_ready_sdo_future()
  */
@@ -429,18 +431,18 @@ class Sdo {
    * @param net a pointer to a CAN network interface (from <lely/can/net.hpp>).
    * @param id  the node-ID of the SDO server (in the range [1..127]).
    */
-  Sdo(CANNet* net, uint8_t id);
+  Sdo(__can_net* net, uint8_t id);
 
   /**
    * Constructs a Client-SDO queue for a pre-configured Client-SDO. The SDO
    * client parameter record MUST exist in the object dictionary (object 1280 to
    * 12FF).
    *
-   * @param net a pointer to a CAN network interface (from <lely/can/net.hpp>).
-   * @param dev a pointer to a CANopen device (from <lely/co/dev.hpp>).
+   * @param net a pointer to a CAN network interface (from <lely/can/net.h>).
+   * @param dev a pointer to a CANopen device (from <lely/co/dev.h>).
    * @param num the SDO number (in the range [1..128]).
    */
-  Sdo(CANNet* net, CODev* dev, uint8_t num);
+  Sdo(__can_net* net, __co_dev* dev, uint8_t num);
 
   /**
    * Constructs a Client-SDO queue from an existing Client-SDO service. It is
@@ -448,9 +450,9 @@ class Sdo {
    * available during the lifetime of the queue.
    *
    * @param sdo a pointer to a CANopen Client-SDO service (from
-   *            <lely/co/csdo.hpp>).
+   *            <lely/co/csdo.h>).
    */
-  Sdo(COCSDO* sdo);
+  Sdo(__co_csdo* sdo);
 
   Sdo(const Sdo&) = delete;
   Sdo(Sdo&&) = default;
@@ -469,7 +471,7 @@ class Sdo {
 
   /// Queues an SDO download request.
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  typename ::std::enable_if<is_canopen<T>::value>::type
   SubmitDownload(SdoDownloadRequest<T>& req) {
     Submit(req);
   }
@@ -490,7 +492,7 @@ class Sdo {
    *                #SdoErrc::TIMEOUT.
    */
   template <class T, class F, class U = typename ::std::decay<T>::type>
-  typename ::std::enable_if<detail::is_canopen_type<U>::value>::type
+  typename ::std::enable_if<is_canopen<U>::value>::type
   SubmitDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
                  F&& con, const ::std::chrono::milliseconds& timeout = {}) {
     Submit(*make_sdo_download_request<U>(exec, idx, subidx,
@@ -500,21 +502,21 @@ class Sdo {
 
   /// Cancels an SDO download request. @see Cancel()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  typename ::std::enable_if<is_canopen<T>::value, bool>::type
   CancelDownload(SdoDownloadRequest<T>& req, SdoErrc ac) {
     return Cancel(req, ac);
   }
 
   /// Aborts an SDO download request. @see Abort()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  typename ::std::enable_if<is_canopen<T>::value, bool>::type
   AbortDownload(SdoDownloadRequest<T>& req) {
     return Abort(req);
   }
 
   /// Queues an SDO upload request.
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  typename ::std::enable_if<is_canopen<T>::value>::type
   SubmitUpload(SdoUploadRequest<T>& req) {
     Submit(req);
   }
@@ -534,7 +536,7 @@ class Sdo {
    *                #SdoErrc::TIMEOUT.
    */
   template <class T, class F>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value>::type
+  typename ::std::enable_if<is_canopen<T>::value>::type
   SubmitUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, F&& con,
                const ::std::chrono::milliseconds& timeout = {}) {
     Submit(*make_sdo_upload_request<T>(exec, idx, subidx,
@@ -543,14 +545,14 @@ class Sdo {
 
   /// Cancels an SDO upload request. @see Cancel()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  typename ::std::enable_if<is_canopen<T>::value, bool>::type
   CancelUpload(SdoUploadRequest<T>& req, SdoErrc ac) {
     return Cancel(req, ac);
   }
 
   /// Aborts an SDO upload request. @see Abort()
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, bool>::type
+  typename ::std::enable_if<is_canopen<T>::value, bool>::type
   AbortUpload(SdoUploadRequest<T>& req) {
     return Abort(req);
   }
@@ -571,8 +573,7 @@ class Sdo {
    * @returns a future which holds the SDO abort code on failure.
    */
   template <class T, class U = typename ::std::decay<T>::type>
-  typename ::std::enable_if<detail::is_canopen_type<U>::value,
-                            SdoFuture<void>>::type
+  typename ::std::enable_if<is_canopen<U>::value, SdoFuture<void>>::type
   AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
                 const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<void> p;
@@ -606,8 +607,7 @@ class Sdo {
    * abort code on failure.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value,
-                            SdoFuture<T>>::type
+  typename ::std::enable_if<is_canopen<T>::value, SdoFuture<T>>::type
   AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
               const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<T> p;

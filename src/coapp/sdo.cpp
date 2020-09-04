@@ -23,8 +23,8 @@
 
 #include "coapp.hpp"
 
+#include <lely/co/csdo.h>
 #include <lely/coapp/sdo.hpp>
-#include <lely/co/csdo.hpp>
 
 #include <limits>
 #include <memory>
@@ -40,8 +40,8 @@ namespace canopen {
 
 /// The internal implementation of the Client-SDO queue.
 struct Sdo::Impl_ {
-  Impl_(CANNet* net, CODev* dev, uint8_t num);
-  Impl_(COCSDO* sdo, int timeout);
+  Impl_(can_net_t* net, co_dev_t* dev, uint8_t num);
+  Impl_(co_csdo_t* sdo, int timeout);
   Impl_(const Impl_&) = delete;
   Impl_& operator=(const Impl_&) = delete;
   ~Impl_();
@@ -57,14 +57,14 @@ struct Sdo::Impl_ {
   template <class T>
   void OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept;
 
-  void OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
+  void OnDnCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
   template <class T>
-  void OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
-               T value) noexcept;
+  void OnUpCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac,
+               const void* ptr, size_t n) noexcept;
 
   void OnCompletion(detail::SdoRequestBase& req) noexcept;
 
-  ::std::shared_ptr<COCSDO> sdo;
+  ::std::shared_ptr<co_csdo_t> sdo;
 
   sllist queue;
 };
@@ -287,12 +287,12 @@ template class SdoUploadRequest<uint64_t>;
 
 Sdo::Sdo() = default;
 
-Sdo::Sdo(CANNet* net, uint8_t id) : Sdo(net, nullptr, id) {}
+Sdo::Sdo(can_net_t* net, uint8_t id) : Sdo(net, nullptr, id) {}
 
-Sdo::Sdo(CANNet* net, CODev* dev, uint8_t num)
+Sdo::Sdo(can_net_t* net, co_dev_t* dev, uint8_t num)
     : impl_(new Impl_(net, dev, num)) {}
 
-Sdo::Sdo(COCSDO* sdo) : impl_(new Impl_(sdo, sdo->getTimeout())) {}
+Sdo::Sdo(co_csdo_t* sdo) : impl_(new Impl_(sdo, co_csdo_get_timeout(sdo))) {}
 
 Sdo& Sdo::operator=(Sdo&&) = default;
 
@@ -323,13 +323,15 @@ Sdo::AbortAll() {
   return impl_->Abort(nullptr);
 }
 
-Sdo::Impl_::Impl_(CANNet* net, CODev* dev, uint8_t num)
-    : sdo(make_shared_c<COCSDO>(net, dev, num)) {
+Sdo::Impl_::Impl_(can_net_t* net, co_dev_t* dev, uint8_t num)
+    : sdo(co_csdo_create(net, dev, num),
+          [=](co_csdo_t* sdo) noexcept { co_csdo_destroy(sdo); }) {
   sllist_init(&queue);
 }
 
-Sdo::Impl_::Impl_(COCSDO* sdo_, int timeout)
-    : sdo(sdo_, [=](COCSDO* sdo) { sdo->setTimeout(timeout); }) {
+Sdo::Impl_::Impl_(co_csdo_t* sdo_, int timeout)
+    : sdo(sdo_,
+          [=](co_csdo_t* sdo) noexcept { co_csdo_set_timeout(sdo, timeout); }) {
   sllist_init(&queue);
 }
 
@@ -347,7 +349,7 @@ Sdo::Impl_::Submit(detail::SdoRequestBase& req) {
     exec.post(req);
     exec.on_task_fini();
   } else {
-    req.id = sdo->getPar().id;
+    req.id = co_csdo_get_par(sdo.get())->id;
     bool first = sllist_empty(&queue);
     sllist_push_back(&queue, &req._node);
     if (first) req.OnRequest(this);
@@ -362,7 +364,7 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
   // Cancel all matching requests, except for the first (ongoing) request.
   if (Pop(req, queue))
     // Stop the ongoing request, if any.
-    sdo->abortReq(static_cast<uint32_t>(ac));
+    co_csdo_abort_req(sdo.get(), static_cast<uint32_t>(ac));
 
   ::std::size_t n = 0;
   slnode* node;
@@ -412,20 +414,32 @@ Sdo::Impl_::Pop(detail::SdoRequestBase* req, sllist& queue) {
 template <class T>
 void
 Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept {
-  constexpr auto N = co_type_traits_T<T>::index;
   assert(&req._node == sllist_first(&queue));
 
-  int errsv = get_errc();
-  set_errc(0);
+  using traits = canopen_traits<T>;
 
-  sdo->setTimeout(detail::to_sdo_timeout(req.timeout));
-  if (sdo->dnReq<N, Impl_, &Impl_::OnDnCon>(req.idx, req.subidx, req.value,
-                                            this) == -1) {
-    req.ec = util::make_error_code();
+  auto val = traits::to_c_type(req.value, req.ec);
+  if (req.ec) {
     OnCompletion(req);
-  }
+  } else {
+    int errsv = get_errc();
+    set_errc(0);
 
-  set_errc(errsv);
+    co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
+    if (co_csdo_dn_val_req(
+            sdo.get(), req.idx, req.subidx, traits::index, &val, nullptr,
+            [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+               void* data) noexcept {
+              static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
+            },
+            this) == -1) {
+      req.ec = util::make_error_code();
+      OnCompletion(req);
+    }
+
+    set_errc(errsv);
+    traits::destroy(val);
+  }
 }
 
 template <class T>
@@ -436,9 +450,14 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
   int errsv = get_errc();
   set_errc(0);
 
-  sdo->setTimeout(detail::to_sdo_timeout(req.timeout));
-  if (sdo->upReq<T, Impl_, &Impl_::OnUpCon<T>>(req.idx, req.subidx, this) ==
-      -1) {
+  co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
+  if (co_csdo_up_req(
+          sdo.get(), req.idx, req.subidx, nullptr,
+          [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+             const void* ptr, size_t n, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnUpCon<T>(sdo, idx, subidx, ac, ptr, n);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -447,7 +466,7 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
 }
 
 void
-Sdo::Impl_::OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx,
+Sdo::Impl_::OnDnCon(co_csdo_t*, uint16_t idx, uint8_t subidx,
                     uint32_t ac) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
@@ -462,16 +481,28 @@ Sdo::Impl_::OnDnCon(COCSDO*, uint16_t idx, uint8_t subidx,
 
 template <class T>
 void
-Sdo::Impl_::OnUpCon(COCSDO*, uint16_t idx, uint8_t subidx, uint32_t ac,
-                    T value) noexcept {
+Sdo::Impl_::OnUpCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac,
+                    const void* ptr, size_t n) noexcept {
+  using traits = canopen_traits<T>;
+  using c_type = typename traits::c_type;
+
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::SdoUploadRequestBase<T>*>(task);
 
+  auto val = c_type();
+  if (!ac) {
+    ::std::error_code ec;
+    val = traits::construct(ptr, n, ec);
+    if (ec) ac = static_cast<uint32_t>(sdo_errc(ec));
+  }
+
   req->idx = idx;
   req->subidx = subidx;
   req->ec = SdoErrc(ac);
-  req->value = ::std::move(value);
+  req->value = ac ? T() : traits::from_c_type(val);
+
+  traits::destroy(val);
 
   OnCompletion(*req);
 }
