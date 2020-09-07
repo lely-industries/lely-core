@@ -15,6 +15,7 @@ src += sdo_error.cpp
 if !NO_COAPP_SLAVE
 src += slave.cpp
 endif
+src += type_traits.cpp
 
 lib_LTLIBRARIES = liblely-coapp.la
 liblely_coapp_la_CPPFLAGS = -I$(top_srcdir)/include

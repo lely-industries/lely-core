@@ -27,22 +27,16 @@
 #include <lely/util/memory.h>
 
 struct __can_net;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN network interface type.
 typedef struct __can_net can_net_t;
-#endif
 
 struct __can_timer;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN timer type.
 typedef struct __can_timer can_timer_t;
-#endif
 
 struct __can_recv;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CAN frame receiver type.
 typedef struct __can_recv can_recv_t;
-#endif
 
 #ifdef __cplusplus
 extern "C" {

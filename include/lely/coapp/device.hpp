@@ -22,8 +22,8 @@
 #ifndef LELY_COAPP_DEVICE_HPP_
 #define LELY_COAPP_DEVICE_HPP_
 
-#include <lely/coapp/detail/type_traits.hpp>
 #include <lely/coapp/sdo_error.hpp>
+#include <lely/coapp/type_traits.hpp>
 #include <lely/util/mutex.hpp>
 
 #include <functional>
@@ -31,10 +31,10 @@
 #include <string>
 #include <typeinfo>
 
-namespace lely {
+// The CANopen device from <lely/co/dev.h>.
+struct __co_dev;
 
-// The CANopen device from <lely/co/dev.hpp>.
-class CODev;
+namespace lely {
 
 namespace canopen {
 
@@ -83,7 +83,7 @@ class Device {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Read(
+  typename ::std::enable_if<is_canopen<T>::value, T>::type Read(
       uint16_t idx, uint8_t subidx) const;
 
   /**
@@ -98,13 +98,13 @@ class Device {
    * @returns the result of the SDO request, or an empty value on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Read(
+  typename ::std::enable_if<is_canopen<T>::value, T>::type Read(
       uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
 
   /**
    * Submits an SDO download request to the local object dictionary. This
-   * function writes a CANopen basic value to a sub-object while honoring all
-   * access and range checks and executing any registered callback function.
+   * function writes a CANopen value to a sub-object while honoring all access
+   * and range checks and executing any registered callback function.
    *
    * @param idx    the object index.
    * @param subidx the object sub-index.
@@ -113,13 +113,14 @@ class Device {
    * @throws #lely::canopen::SdoError on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Write(
-      uint16_t idx, uint8_t subidx, T value);
+  typename ::std::enable_if<is_canopen<T>::value>::type Write(uint16_t idx,
+                                                              uint8_t subidx,
+                                                              const T& value);
 
   /**
    * Submits an SDO download request to the local object dictionary. This
-   * function writes a CANopen basic value to a sub-object while honoring all
-   * access and range checks and executing any registered callback function.
+   * function writes a CANopen value to a sub-object while honoring all access
+   * and range checks and executing any registered callback function.
    *
    * @param idx    the object index.
    * @param subidx the object sub-index.
@@ -127,36 +128,7 @@ class Device {
    * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Write(
-      uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
-
-  /**
-   * Submits an SDO download request to the local object dictionary. This
-   * function writes a CANopen array value to a sub-object while honoring all
-   * access checks and executing any registered callback function.
-   *
-   * @param idx    the object index.
-   * @param subidx the object sub-index.
-   * @param value  the value to be written.
-   *
-   * @throws #lely::canopen::SdoError on error.
-   */
-  template <class T>
-  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Write(
-      uint16_t idx, uint8_t subidx, const T& value);
-
-  /**
-   * Submits an SDO download request to the local object dictionary. This
-   * function writes a CANopen array value to a sub-object while honoring all
-   * access checks and executing any registered callback function.
-   *
-   * @param idx    the object index.
-   * @param subidx the object sub-index.
-   * @param value  the value to be written.
-   * @param ec     on error, the SDO abort code is stored in <b>ec</b>.
-   */
-  template <class T>
-  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Write(
+  typename ::std::enable_if<is_canopen<T>::value>::type Write(
       uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec);
 
   /**
@@ -285,8 +257,8 @@ class Device {
    * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoRead(
+      uint8_t id, uint16_t idx, uint8_t subidx) const;
 
   /**
    * Reads the value of a sub-object in a remote object dictionary by submitting
@@ -305,9 +277,8 @@ class Device {
    * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  RpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
-           ::std::error_code& ec) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoRead(
+      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
 
   /**
    * Submits an SDO upload request to a TPDO-mapped sub-object in the local
@@ -328,8 +299,8 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoRead(
+      uint8_t id, uint16_t idx, uint8_t subidx) const;
 
   /**
    * Submits an SDO upload request to a TPDO-mapped sub-object in the local
@@ -349,9 +320,8 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  TpdoRead(uint8_t id, uint16_t idx, uint8_t subidx,
-           ::std::error_code& ec) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoRead(
+      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const;
 
   /**
    * Writes a value to a sub-object in a remote object dictionary by submitting
@@ -370,7 +340,7 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
+  typename ::std::enable_if<is_canopen_basic<T>::value>::type TpdoWrite(
       uint8_t id, uint16_t idx, uint8_t subidx, T value);
 
   /**
@@ -389,7 +359,7 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoWrite(
+  typename ::std::enable_if<is_canopen_basic<T>::value>::type TpdoWrite(
       uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec);
 
   /**
@@ -449,7 +419,7 @@ class Device {
   ~Device();
 
   /// Returns a pointer to the internal CANopen device from <lely/co/dev.hpp>.
-  CODev* dev() const noexcept;
+  __co_dev* dev() const noexcept;
 
   /**
    * Returns the type of a sub-object.
@@ -492,7 +462,7 @@ class Device {
    * type does not match.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Get(
+  typename ::std::enable_if<is_canopen<T>::value, T>::type Get(
       uint16_t idx, uint8_t subidx) const;
 
   /**
@@ -508,43 +478,12 @@ class Device {
    * @returns a copy of the value of the sub-object, or an empty value on error.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_type<T>::value, T>::type Get(
+  typename ::std::enable_if<is_canopen<T>::value, T>::type Get(
       uint16_t idx, uint8_t subidx, ::std::error_code& ec) const noexcept;
 
   /**
-   * Writes a CANopen basic value to a sub-object. This function writes the
-   * value directly to the object dictionary and bypasses any access and range
-   * checks or registered callback functions.
-   *
-   * @param idx    the object index.
-   * @param subidx the object sub-index.
-   * @param value  the value to be written.
-   *
-   * @throws #lely::canopen::SdoError if the sub-object does not exist or the
-   * type does not match.
-   */
-  template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Set(
-      uint16_t idx, uint8_t subidx, T value);
-
-  /**
-   * Writes a CANopen basic value to a sub-object. This function writes the
-   * value directly to the object dictionary and bypasses any access and range
-   * checks or registered callback functions.
-   *
-   * @param idx    the object index.
-   * @param subidx the object sub-index.
-   * @param value  the value to be written.
-   * @param ec     if the sub-object does not exist or the type does not match,
-   *               the SDO abort code is stored in <b>ec</b>.
-   */
-  template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type Set(
-      uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec) noexcept;
-
-  /**
-   * Writes a CANopen array value to a sub-object. This function writes the
-   * array directly to the object dictionary and bypasses any access checks or
+   * Writes a CANopen value to a sub-object. This function writes the value
+   * directly to the object dictionary and bypasses any access checks or
    * registered callback functions.
    *
    * @param idx    the object index.
@@ -555,12 +494,13 @@ class Device {
    * type does not match.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Set(
-      uint16_t idx, uint8_t subidx, const T& value);
+  typename ::std::enable_if<is_canopen<T>::value>::type Set(uint16_t idx,
+                                                            uint8_t subidx,
+                                                            const T& value);
 
   /**
-   * Writes a CANopen array value to a sub-object. This function writes the
-   * array directly to the object dictionary and bypasses any access checks or
+   * Writes a CANopen value to a sub-object. This function writes the value
+   * directly to the object dictionary and bypasses any access checks or
    * registered callback functions.
    *
    * @param idx    the object index.
@@ -570,7 +510,7 @@ class Device {
    *               the SDO abort code is stored in <b>ec</b>.
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_array<T>::value>::type Set(
+  typename ::std::enable_if<is_canopen<T>::value>::type Set(
       uint16_t idx, uint8_t subidx, const T& value,
       ::std::error_code& ec) noexcept;
 
@@ -832,8 +772,8 @@ class Device {
    * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoGet(
+      uint8_t id, uint16_t idx, uint8_t subidx) const;
 
   /**
    * Reads the value of a sub-object in a remote object dictionary by reading
@@ -854,8 +794,8 @@ class Device {
    * RPDO-mapped sub-objects has been generated with UpdateRpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  RpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoGet(
+      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
       noexcept;
 
   /**
@@ -878,8 +818,8 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx) const;
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoGet(
+      uint8_t id, uint16_t idx, uint8_t subidx) const;
 
   /**
    * Reads the value of a TPDO-mapped sub-object in the local object dictionary
@@ -901,8 +841,8 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value, T>::type
-  TpdoGet(uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
+  typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoGet(
+      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
       noexcept;
 
   /**
@@ -923,7 +863,7 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
+  typename ::std::enable_if<is_canopen_basic<T>::value>::type TpdoSet(
       uint8_t id, uint16_t idx, uint8_t subidx, T value);
 
   /**
@@ -943,7 +883,7 @@ class Device {
    * TPDO-mapped sub-objects has been generated with UpdateTpdoMapping().
    */
   template <class T>
-  typename ::std::enable_if<detail::is_canopen_basic<T>::value>::type TpdoSet(
+  typename ::std::enable_if<is_canopen_basic<T>::value>::type TpdoSet(
       uint8_t id, uint16_t idx, uint8_t subidx, T value,
       ::std::error_code& ec) noexcept;
 
