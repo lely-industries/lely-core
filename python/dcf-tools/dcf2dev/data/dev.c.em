@@ -92,6 +92,8 @@ static co_sub_t @subobj_name = {
 
 @[end for]@
 @[end for]@
+// suppress missing-prototype warning
+co_dev_t * @(name)_init(void);
 co_dev_t *
 @(name)_init(void) {
 	static co_dev_t *dev = NULL;
