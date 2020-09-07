@@ -35,7 +35,7 @@
 
 /// A CAN network interface.
 struct __can_net {
-	/// The tree containing all timers.
+	/// The heap containing all timers.
 	struct pheap timer_heap;
 	/// The current time.
 	struct timespec time;
