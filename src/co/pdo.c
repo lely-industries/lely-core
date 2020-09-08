@@ -372,7 +372,7 @@ co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
 		return CO_SDO_AC_NO_SUB;
 
 	// Configure the COB-ID.
-	if (par->n >= 1 && !ac) {
+	if (par->n >= 1) {
 		co_sub_t *sub = co_obj_find_sub(obj, 0x01);
 		if (!sub)
 			return CO_SDO_AC_NO_SUB;

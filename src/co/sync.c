@@ -523,18 +523,12 @@ static int
 co_sync_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(!(msg->flags & CAN_FLAG_RTR));
+#ifndef LELY_NO_CANFD
+	assert(!(msg->flags & CAN_FLAG_EDL));
+#endif
 	co_sync_t *sync = data;
 	assert(sync);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
-
-#ifndef LELY_NO_CANFD
-	// Ignore CAN FD format frames.
-	if (msg->flags & CAN_FLAG_EDL)
-		return 0;
-#endif
 
 	co_unsigned8_t len = sync->max_cnt ? 1 : 0;
 	if (msg->len != len && sync->err)

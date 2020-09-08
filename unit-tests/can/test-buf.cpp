@@ -30,20 +30,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/can/buf.h>
-
-TEST_GROUP(CAN_BufAlloc) { can_buf* buf = nullptr; };
-
-TEST(CAN_BufAlloc, CanBufCreateDestroy) {
-  buf = can_buf_create(30);
-
-  CHECK(buf != nullptr);
-  CHECK(buf->ptr != nullptr);
-  CHECK_EQUAL(31, buf->size);  // rounded up to the nearest ((2 ^ N) - 1)
-
-  can_buf_destroy(buf);
-}
-
-TEST(CAN_BufAlloc, CanBufDestroyNull) { can_buf_destroy(buf); }
+#include <lely/util/errnum.h>
 
 TEST_GROUP(CAN_BufInit) {
   can_buf buf = CAN_BUF_INIT;
@@ -58,32 +45,38 @@ TEST(CAN_BufInit, StaticInitializer) {
   CHECK_EQUAL(0, buf.end);
 }
 
-TEST(CAN_BufInit, CanBufInit_BufferSizeCheck) {
-  const auto ret = can_buf_init(&buf, 64);
+#if LELY_NO_MALLOC
+TEST(CAN_BufInit, CanBufInit) {
+  const size_t BUFFER_SIZE = 32;
+  can_msg memory[BUFFER_SIZE];
 
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(127, buf.size);  // rounded up to the nearest ((2 ^ N) - 1)
+  can_buf_init(&buf, memory, BUFFER_SIZE);
+
+  CHECK_EQUAL(BUFFER_SIZE - 1, buf.size);
 }
+#else
+TEST(CAN_BufInit, CanBufInit) {
+  can_buf_init(&buf, nullptr, 0);
 
-TEST(CAN_BufInit, CanBufInit_ExactBufferSizeCheck) {
-  const auto ret = can_buf_init(&buf, 31);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(31, buf.size);
+  CHECK_EQUAL(0, buf.size);
 }
-
-TEST(CAN_BufInit, CanBufInit_MinBufferSizeCheck) {
-  const auto ret = can_buf_init(&buf, 0);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(15, buf.size);  // minimal buffer size
-}
+#endif  // !LELY_NO_MALLOC
 
 TEST_GROUP(CAN_Buf) {
   static const size_t BUF_SIZE = 15;
+#if LELY_NO_MALLOC
+  can_msg memory[BUF_SIZE + 1];
+#endif
   can_buf buf = CAN_BUF_INIT;
 
-  TEST_SETUP() { CHECK_EQUAL(0, can_buf_init(&buf, BUF_SIZE)); }
+  TEST_SETUP() {
+#if LELY_NO_MALLOC
+    can_buf_init(&buf, memory, BUF_SIZE + 1);  // +1 to make it power of 2
+#else
+    can_buf_init(&buf, nullptr, 0);
+    CHECK_EQUAL(BUF_SIZE, can_buf_reserve(&buf, BUF_SIZE));
+#endif
+  }
 
   TEST_TEARDOWN() { can_buf_fini(&buf); }
 
@@ -208,9 +201,15 @@ TEST(CAN_Buf, CanBufReserve_Enlarge) {
 
   const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_SIZE + 1);
 
+#if LELY_NO_MALLOC
+  CHECK_EQUAL(0, capacity);
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+#else
   CHECK_EQUAL(31 - MSG_SIZE, capacity);  // (new_buffer_size - MSG_SIZE)
   CHECK_EQUAL(31 - MSG_SIZE, can_buf_capacity(&buf));
   CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+#endif
 }
 
 TEST(CAN_Buf, CanBufReserve_BigEnough) {
@@ -227,6 +226,16 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
   CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
+#if LELY_NO_MALLOC
+TEST(CAN_Buf, CanBufReserve_NoMemory) {
+  const auto capacity = can_buf_reserve(&buf, 2 * BUF_SIZE);
+
+  CHECK_EQUAL(0, capacity);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(0, can_buf_size(&buf));
+}
+#else
 TEST(CAN_Buf, CanBufReserve_Wrapping) {
   const size_t MSG_SIZE = 15;
   can_msg msg_tab[MSG_SIZE];
@@ -253,3 +262,4 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
   CheckCanMsgTabs(msg_tab + 10, out_tab, 5);
   CheckCanMsgTabs(msg_tab, out_tab + 5, 6);
 }
+#endif  // !LELY_NO_MALLOC

@@ -24,8 +24,8 @@
 #include "coapp.hpp"
 #include <lely/coapp/lss_master.hpp>
 
-#include <lely/co/lss.hpp>
-#include <lely/co/nmt.hpp>
+#include <lely/co/lss.h>
+#include <lely/co/nmt.h>
 
 #include <algorithm>
 #include <limits>
@@ -38,7 +38,7 @@ namespace canopen {
 
 struct LssMaster::Impl_ : public util::BasicLockable {
   Impl_(LssMaster* self, ev_exec_t* exec, Node& node,
-        io::CanControllerBase* ctrl, CONMT* nmt);
+        io::CanControllerBase* ctrl, co_nmt_t* nmt);
   ~Impl_();
 
   void
@@ -51,7 +51,7 @@ struct LssMaster::Impl_ : public util::BasicLockable {
     self->unlock();
   }
 
-  void OnLssReq(CONMT*, COLSS* lss) noexcept;
+  void OnLssReq(co_nmt_t*, co_lss_t* lss) noexcept;
 
   void Submit(detail::LssRequestBase& req);
   ::std::size_t Cancel(detail::LssRequestBase* req, ::std::error_code ec);
@@ -78,11 +78,11 @@ struct LssMaster::Impl_ : public util::BasicLockable {
   // The indication functions called by the LSS master service when an LSS
   // request completes. See the function type definitions in <lely/co/lss.h> for
   // more information.
-  void OnCsInd(COLSS*, uint8_t cs) noexcept;
-  void OnErrInd(COLSS*, uint8_t cs, uint8_t err, uint8_t spec) noexcept;
-  void OnLssIdInd(COLSS*, uint8_t cs, co_unsigned32_t id) noexcept;
-  void OnNidInd(COLSS*, uint8_t cs, uint8_t id) noexcept;
-  void OnScanInd(COLSS*, uint8_t cs, const co_id* id) noexcept;
+  void OnCsInd(co_lss_t*, uint8_t cs) noexcept;
+  void OnErrInd(co_lss_t*, uint8_t cs, uint8_t err, uint8_t spec) noexcept;
+  void OnLssIdInd(co_lss_t*, uint8_t cs, co_unsigned32_t id) noexcept;
+  void OnNidInd(co_lss_t*, uint8_t cs, uint8_t id) noexcept;
+  void OnScanInd(co_lss_t*, uint8_t cs, const co_id* id) noexcept;
 
   void OnWait(::std::error_code) noexcept;
 
@@ -94,8 +94,8 @@ struct LssMaster::Impl_ : public util::BasicLockable {
   ev_exec_t* exec{nullptr};
   Node& node;
   io::CanControllerBase* ctrl{nullptr};
-  CONMT* nmt{nullptr};
-  COLSS* lss{nullptr};
+  co_nmt_t* nmt{nullptr};
+  co_lss_t* lss{nullptr};
   uint16_t inhibit{LELY_CO_LSS_INHIBIT};
   int timeout{LELY_CO_LSS_TIMEOUT};
 
@@ -221,7 +221,7 @@ LssMaster::SetInhibit(const ::std::chrono::microseconds& inhibit) {
     ::std::lock_guard<Impl_> lock(*impl_);
     // Round the value up to the nearest multiple of 100 us.
     impl_->inhibit = (value + 99) / 100;
-    if (impl_->lss) impl_->lss->setInhibit(impl_->inhibit);
+    if (impl_->lss) co_lss_set_inhibit(impl_->lss, impl_->inhibit);
   }
 }
 
@@ -240,7 +240,7 @@ LssMaster::SetTimeout(const ::std::chrono::milliseconds& timeout) {
 
     ::std::lock_guard<Impl_> lock(*impl_);
     impl_->timeout = value;
-    if (impl_->lss) impl_->lss->setTimeout(impl_->timeout);
+    if (impl_->lss) co_lss_set_timeout(impl_->lss, impl_->timeout);
   }
 }
 
@@ -551,19 +551,24 @@ LssMaster::SetTime() {
 }
 
 LssMaster::Impl_::Impl_(LssMaster* self_, ev_exec_t* exec_, Node& node_,
-                        io::CanControllerBase* ctrl_, CONMT* nmt_)
+                        io::CanControllerBase* ctrl_, co_nmt_t* nmt_)
     : self(self_),
       exec(exec_ ? exec_ : static_cast<ev_exec_t*>(node.GetExecutor())),
       node(node_),
       ctrl(ctrl_),
       nmt(nmt_),
-      lss(nmt->getLSS()) {
-  nmt->getLSSReq(&lss_func, &lss_data);
-  nmt->setLSSReq<Impl_, &Impl_::OnLssReq>(this);
+      lss(co_nmt_get_lss(nmt)) {
+  co_nmt_get_lss_req(nmt, &lss_func, &lss_data);
+  co_nmt_set_lss_req(
+      nmt,
+      [](co_nmt_t* nmt, co_lss_t* lss, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnLssReq(nmt, lss);
+      },
+      this);
 
   if (lss) {
-    inhibit = lss->getInhibit();
-    timeout = lss->getTimeout();
+    inhibit = co_lss_get_inhibit(lss);
+    timeout = co_lss_get_timeout(lss);
   }
 
   sllist_init(&queue);
@@ -575,14 +580,14 @@ LssMaster::Impl_::Impl_(LssMaster* self_, ev_exec_t* exec_, Node& node_,
   }
 }
 
-LssMaster::Impl_::~Impl_() { nmt->setLSSReq(lss_func, lss_data); }
+LssMaster::Impl_::~Impl_() { co_nmt_set_lss_req(nmt, lss_func, lss_data); }
 
 void
-LssMaster::Impl_::OnLssReq(CONMT*, COLSS* lss) noexcept {
+LssMaster::Impl_::OnLssReq(co_nmt_t*, co_lss_t* lss) noexcept {
   assert(lss);
 
-  lss->setInhibit(inhibit);
-  lss->setTimeout(timeout);
+  co_lss_set_inhibit(lss, inhibit);
+  co_lss_set_timeout(lss, timeout);
   this->lss = lss;
 
   // Post a task to execute the LSS requests.
@@ -590,7 +595,7 @@ LssMaster::Impl_::OnLssReq(CONMT*, COLSS* lss) noexcept {
     self->OnStart([this](::std::error_code) noexcept {
       ::std::lock_guard<Impl_> lock(*this);
       // Ignore any errors, since we cannot handle them here.
-      nmt->LSSCon();
+      co_nmt_lss_con(nmt);
     });
   });
 }
@@ -614,7 +619,7 @@ LssMaster::Impl_::Cancel(detail::LssRequestBase* req, ::std::error_code ec) {
   // Cancel all matching requests, except for the first (ongoing) request.
   if (Pop(req, queue))
     // Stop the ongoing request, if any.
-    lss->abortReq();
+    co_lss_abort_req(lss);
 
   ::std::size_t n = 0;
   slnode* node;
@@ -646,8 +651,9 @@ bool
 LssMaster::Impl_::Pop(detail::LssRequestBase* req, sllist& queue) {
   if (!req) {
     // Cancel all pending requests, except for the first (ongoing) request.
-    slnode* node =
-        (!lss || lss->isIdle()) ? nullptr : sllist_pop_front(&this->queue);
+    slnode* node = (!lss || co_lss_is_idle(lss))
+                       ? nullptr
+                       : sllist_pop_front(&this->queue);
     sllist_append(&queue, &this->queue);
     if (node) {
       sllist_push_front(&this->queue, node);
@@ -670,7 +676,7 @@ LssMaster::Impl_::OnSwitch(detail::LssSwitchRequestBase& req) noexcept {
   int errsv = get_errc();
   set_errc(0);
   ::std::error_code ec;
-  if (!lss->switchReq(static_cast<int>(req.state)))
+  if (!co_lss_switch_req(lss, static_cast<int>(req.state)))
     req.ec.clear();
   else
     req.ec = util::make_error_code();
@@ -693,7 +699,12 @@ LssMaster::Impl_::OnSwitchSelective(
 
   self->SetTime();
 
-  if (lss->switchSelReq<Impl_, &Impl_::OnCsInd>(id1, this) == -1) {
+  if (co_lss_switch_sel_req(
+          lss, &id1,
+          [](co_lss_t* lss, uint8_t cs, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnCsInd(lss, cs);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -711,7 +722,13 @@ LssMaster::Impl_::OnSetId(detail::LssSetIdRequestBase& req) noexcept {
 
   self->SetTime();
 
-  if (lss->setIdReq<Impl_, &Impl_::OnErrInd>(req.id, this) == -1) {
+  if (co_lss_set_id_req(
+          lss, req.id,
+          [](co_lss_t* lss, uint8_t cs, uint8_t err, uint8_t spec,
+             void* data) noexcept {
+            static_cast<Impl_*>(data)->OnErrInd(lss, cs, err, spec);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -738,8 +755,13 @@ LssMaster::Impl_::OnSetBitrate(detail::LssSetBitrateRequestBase& req) noexcept {
     case 50000:
     case 20000:
     case 10000:
-      if (lss->setRateReq<Impl_, &Impl_::OnErrInd>(req.bitrate / 1000, this) ==
-          -1) {
+      if (co_lss_set_rate_req(
+              lss, req.bitrate / 1000,
+              [](co_lss_t* lss, uint8_t cs, uint8_t err, uint8_t spec,
+                 void* data) noexcept {
+                static_cast<Impl_*>(data)->OnErrInd(lss, cs, err, spec);
+              },
+              this) == -1) {
         req.ec = util::make_error_code();
         OnCompletion(req);
       }
@@ -769,7 +791,7 @@ LssMaster::Impl_::OnSwitchBitrate(
       req.delay > ::std::numeric_limits<uint16_t>::max()) {
     req.ec = ::std::make_error_code(::std::errc::invalid_argument);
     OnCompletion(req);
-  } else if (lss->switchRateReq(req.delay) == -1) {
+  } else if (co_lss_switch_rate_req(lss, req.delay) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   } else if (!ctrl) {
@@ -804,7 +826,13 @@ LssMaster::Impl_::OnStore(detail::LssStoreRequestBase& req) noexcept {
 
   self->SetTime();
 
-  if (lss->storeReq<Impl_, &Impl_::OnErrInd>(this) == -1) {
+  if (co_lss_store_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint8_t err, uint8_t spec,
+             void* data) noexcept {
+            static_cast<Impl_*>(data)->OnErrInd(lss, cs, err, spec);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -824,7 +852,12 @@ LssMaster::Impl_::OnGetVendorId(
   self->SetTime();
 
   req.number = 0;
-  if (lss->getVendorIdReq<Impl_, &Impl_::OnLssIdInd>(this) == -1) {
+  if (co_lss_get_vendor_id_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint32_t id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnLssIdInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -844,7 +877,12 @@ LssMaster::Impl_::OnGetProductCode(
   self->SetTime();
 
   req.number = 0;
-  if (lss->getProductCodeReq<Impl_, &Impl_::OnLssIdInd>(this) == -1) {
+  if (co_lss_get_product_code_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint32_t id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnLssIdInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -864,7 +902,12 @@ LssMaster::Impl_::OnGetRevision(
   self->SetTime();
 
   req.number = 0;
-  if (lss->getRevisionReq<Impl_, &Impl_::OnLssIdInd>(this) == -1) {
+  if (co_lss_get_revision_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint32_t id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnLssIdInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -884,7 +927,12 @@ LssMaster::Impl_::OnGetSerialNr(
   self->SetTime();
 
   req.number = 0;
-  if (lss->getSerialNrReq<Impl_, &Impl_::OnLssIdInd>(this) == -1) {
+  if (co_lss_get_serial_nr_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint32_t id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnLssIdInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -903,7 +951,12 @@ LssMaster::Impl_::OnGetId(detail::LssGetIdRequestBase& req) noexcept {
   self->SetTime();
 
   req.id = 0;
-  if (lss->getIdReq<Impl_, &Impl_::OnNidInd>(this) == -1) {
+  if (co_lss_get_id_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, uint8_t id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnNidInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -922,7 +975,12 @@ LssMaster::Impl_::OnIdNonConfig(
 
   self->SetTime();
 
-  if (lss->idNonCfgSlaveReq<Impl_, &Impl_::OnCsInd>(this) == -1) {
+  if (co_lss_id_non_cfg_slave_req(
+          lss,
+          [](co_lss_t* lss, uint8_t cs, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnCsInd(lss, cs);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -946,7 +1004,12 @@ LssMaster::Impl_::OnSlowscan(detail::LssSlowscanRequestBase& req) noexcept {
   self->SetTime();
 
   req.address = {0, 0, 0, 0};
-  if (lss->slowscanReq<Impl_, &Impl_::OnScanInd>(id1, id2, this) == -1) {
+  if (co_lss_slowscan_req(
+          lss, &id1, &id2,
+          [](co_lss_t* lss, uint8_t cs, const co_id* id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnScanInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -969,7 +1032,12 @@ LssMaster::Impl_::OnFastscan(detail::LssFastscanRequestBase& req) noexcept {
 
   self->SetTime();
 
-  if (lss->fastscanReq<Impl_, &Impl_::OnScanInd>(&id1, &id2, this) == -1) {
+  if (co_lss_fastscan_req(
+          lss, &id1, &id2,
+          [](co_lss_t* lss, uint8_t cs, const co_id* id, void* data) noexcept {
+            static_cast<Impl_*>(data)->OnScanInd(lss, cs, id);
+          },
+          this) == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
@@ -978,7 +1046,7 @@ LssMaster::Impl_::OnFastscan(detail::LssFastscanRequestBase& req) noexcept {
 }
 
 void
-LssMaster::Impl_::OnCsInd(COLSS*, uint8_t cs) noexcept {
+LssMaster::Impl_::OnCsInd(co_lss_t*, uint8_t cs) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::LssSwitchRequestBase*>(task);
@@ -992,7 +1060,8 @@ LssMaster::Impl_::OnCsInd(COLSS*, uint8_t cs) noexcept {
 }
 
 void
-LssMaster::Impl_::OnErrInd(COLSS*, uint8_t cs, uint8_t err, uint8_t) noexcept {
+LssMaster::Impl_::OnErrInd(co_lss_t*, uint8_t cs, uint8_t err,
+                           uint8_t) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::LssRequestBase*>(task);
@@ -1042,7 +1111,8 @@ LssMaster::Impl_::OnErrInd(COLSS*, uint8_t cs, uint8_t err, uint8_t) noexcept {
 }
 
 void
-LssMaster::Impl_::OnLssIdInd(COLSS*, uint8_t cs, co_unsigned32_t id) noexcept {
+LssMaster::Impl_::OnLssIdInd(co_lss_t*, uint8_t cs,
+                             co_unsigned32_t id) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::LssGetNumberRequestBase*>(task);
@@ -1058,7 +1128,7 @@ LssMaster::Impl_::OnLssIdInd(COLSS*, uint8_t cs, co_unsigned32_t id) noexcept {
 }
 
 void
-LssMaster::Impl_::OnNidInd(COLSS*, uint8_t cs, uint8_t id) noexcept {
+LssMaster::Impl_::OnNidInd(co_lss_t*, uint8_t cs, uint8_t id) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
   auto req = static_cast<detail::LssGetIdRequestBase*>(task);
@@ -1074,7 +1144,7 @@ LssMaster::Impl_::OnNidInd(COLSS*, uint8_t cs, uint8_t id) noexcept {
 }
 
 void
-LssMaster::Impl_::OnScanInd(COLSS*, uint8_t cs, const co_id* id) noexcept {
+LssMaster::Impl_::OnScanInd(co_lss_t*, uint8_t cs, const co_id* id) noexcept {
   assert(!cs || id);
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);

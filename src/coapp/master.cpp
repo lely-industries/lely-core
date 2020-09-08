@@ -25,6 +25,8 @@
 
 #if !LELY_NO_COAPP_MASTER
 
+#include <lely/co/dev.h>
+#include <lely/co/nmt.h>
 #include <lely/coapp/driver.hpp>
 
 #include <algorithm>
@@ -34,22 +36,19 @@
 
 #include <cassert>
 
-#include <lely/co/dev.hpp>
-#include <lely/co/nmt.hpp>
-
 namespace lely {
 
 namespace canopen {
 
 /// The internal implementation of the CANopen master.
 struct BasicMaster::Impl_ {
-  Impl_(BasicMaster* self, CONMT* nmt);
+  Impl_(BasicMaster* self, co_nmt_t* nmt);
 
   ev::Future<void> AsyncDeconfig(DriverBase* driver);
 
-  void OnNgInd(CONMT* nmt, uint8_t id, int state, int reason) noexcept;
-  void OnBootInd(CONMT* nmt, uint8_t id, uint8_t st, char es) noexcept;
-  void OnCfgInd(CONMT* nmt, uint8_t id, COCSDO* sdo) noexcept;
+  void OnNgInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+  void OnBootInd(co_nmt_t* nmt, uint8_t id, uint8_t st, char es) noexcept;
+  void OnCfgInd(co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo) noexcept;
 
   BasicMaster* self;
   ::std::function<void(uint8_t, bool)> on_node_guarding;
@@ -116,7 +115,7 @@ void
 BasicMaster::Error(uint8_t id) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  if (nmt()->nodeErrInd(id) == -1) util::throw_errc("Error");
+  if (co_nmt_node_err_ind(nmt(), id) == -1) util::throw_errc("Error");
 }
 
 void
@@ -130,7 +129,7 @@ void
 BasicMaster::Command(NmtCommand cs, uint8_t id) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  if (nmt()->csReq(static_cast<uint8_t>(cs), id) == -1)
+  if (co_nmt_cs_req(nmt(), static_cast<uint8_t>(cs), id) == -1)
     util::throw_errc("Command");
 }
 
@@ -152,14 +151,14 @@ BasicMaster::TpdoEvent(int num) noexcept {
 BasicMaster::GetTimeout() const {
   ::std::lock_guard<util::BasicLockable> lock(const_cast<BasicMaster&>(*this));
 
-  return detail::from_sdo_timeout(nmt()->getTimeout());
+  return detail::from_sdo_timeout(co_nmt_get_timeout(nmt()));
 }
 
 void
 BasicMaster::SetTimeout(const ::std::chrono::milliseconds& timeout) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
-  nmt()->setTimeout(detail::to_sdo_timeout(timeout));
+  co_nmt_set_timeout(nmt(), detail::to_sdo_timeout(timeout));
 }
 
 void
@@ -169,7 +168,7 @@ BasicMaster::Insert(DriverBase& driver) {
   if (!driver.id() || driver.id() > 0x7f)
     throw ::std::out_of_range("invalid node-ID: " +
                               ::std::to_string(driver.id()));
-  if (driver.id() == nmt()->getDev()->getId())
+  if (driver.id() == co_dev_get_id(co_nmt_get_dev(nmt())))
     throw ::std::out_of_range("cannot register node-ID of master: " +
                               ::std::to_string(driver.id()));
   if (find(driver.id()) != end())
@@ -311,11 +310,11 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
 
 void
 BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
-  assert(nmt()->isBooting(id));
+  assert(co_nmt_is_booting(nmt(), id));
   // Destroy the Client-SDO, since it will be taken over by the master.
   impl_->sdos.erase(id);
   // Ignore any errors, since we cannot handle them here.
-  nmt()->cfgRes(id, static_cast<uint32_t>(sdo_errc(ec)));
+  co_nmt_cfg_res(nmt(), id, static_cast<uint32_t>(sdo_errc(ec)));
 }
 
 void
@@ -359,7 +358,7 @@ BasicMaster::GetSdo(uint8_t id) {
     throw ::std::out_of_range("invalid node-ID: " + ::std::to_string(id));
   // The Client-SDO service only exists in the pre-operational and operational
   // state.
-  auto st = nmt()->getSt();
+  auto st = co_nmt_get_st(nmt());
   if (st != CO_NMT_ST_PREOP && st != CO_NMT_ST_START) return nullptr;
   // During the 'update configuration' step of the NMT 'boot slave' process, a
   // Client-SDO queue may be available.
@@ -367,9 +366,9 @@ BasicMaster::GetSdo(uint8_t id) {
   if (it != impl_->sdos.end()) return &it->second;
   // The master needs the Client-SDO service during the NMT 'boot slave'
   // process.
-  if (nmt()->isBooting(id)) return nullptr;
+  if (co_nmt_is_booting(nmt(), id)) return nullptr;
   // Return a Client-SDO queue for the default SDO.
-  return &(impl_->sdos[id] = Sdo(nmt()->getNet(), id));
+  return &(impl_->sdos[id] = Sdo(co_nmt_get_net(nmt()), id));
 }
 
 void
@@ -519,10 +518,28 @@ AsyncMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
   }
 }
 
-BasicMaster::Impl_::Impl_(BasicMaster* self_, CONMT* nmt) : self(self_) {
-  nmt->setNgInd<Impl_, &Impl_::OnNgInd>(this);
-  nmt->setBootInd<Impl_, &Impl_::OnBootInd>(this);
-  nmt->setCfgInd<Impl_, &Impl_::OnCfgInd>(this);
+BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
+  co_nmt_set_ng_ind(
+      nmt,
+      [](co_nmt_t* nmt, uint8_t id, int state, int reason,
+         void* data) noexcept {
+        static_cast<Impl_*>(data)->OnNgInd(nmt, id, state, reason);
+      },
+      this);
+
+  co_nmt_set_boot_ind(
+      nmt,
+      [](co_nmt_t* nmt, uint8_t id, uint8_t st, char es, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnBootInd(nmt, id, st, es);
+      },
+      this);
+
+  co_nmt_set_cfg_ind(
+      nmt,
+      [](co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo, void* data) noexcept {
+        static_cast<Impl_*>(data)->OnCfgInd(nmt, id, sdo);
+      },
+      this);
 }
 
 ev::Future<void>
@@ -536,10 +553,10 @@ BasicMaster::Impl_::AsyncDeconfig(DriverBase* driver) {
 }
 
 void
-BasicMaster::Impl_::OnNgInd(CONMT* nmt, uint8_t id, int state,
+BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
                             int reason) noexcept {
   // Invoke the default behavior before notifying the implementation.
-  nmt->onNg(id, state, reason);
+  co_nmt_on_ng(nmt, id, state, reason);
   // Only handle node guarding timeout events. State changes are handled by
   // OnSt().
   if (reason != CO_NMT_EC_TIMEOUT) return;
@@ -554,7 +571,7 @@ BasicMaster::Impl_::OnNgInd(CONMT* nmt, uint8_t id, int state,
 }
 
 void
-BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st,
+BasicMaster::Impl_::OnBootInd(co_nmt_t*, uint8_t id, uint8_t st,
                               char es) noexcept {
   if (id && id <= CO_NUM_NODES && (!es || es == 'L')) ready[id - 1] = true;
   ::std::string what = es ? co_nmt_es2str(es) : "";
@@ -567,7 +584,7 @@ BasicMaster::Impl_::OnBootInd(CONMT*, uint8_t id, uint8_t st,
 }
 
 void
-BasicMaster::Impl_::OnCfgInd(CONMT*, uint8_t id, COCSDO* sdo) noexcept {
+BasicMaster::Impl_::OnCfgInd(co_nmt_t*, uint8_t id, co_csdo_t* sdo) noexcept {
   // Create a Client-SDO for the 'update configuration' process.
   try {
     sdos[id] = Sdo(sdo);

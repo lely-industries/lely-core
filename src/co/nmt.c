@@ -51,6 +51,27 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#if LELY_NO_MALLOC
+#include <string.h>
+#endif
+
+#if LELY_NO_MALLOC
+#ifndef CO_NMT_CAN_BUF_SIZE
+/**
+ * The default size of an NMT CAN frame buffer in the absence of dynamic memory
+ * allocation.
+ */
+#define CO_NMT_CAN_BUF_SIZE 16
+#endif
+#ifndef CO_NMT_MAX_NHB
+/**
+ * The default maximum number of heartbeat consumers in the absence of dynamic
+ * memory allocation. The default value equals the maximum number of CANopen
+ * nodes.
+ */
+#define CO_NMT_MAX_NHB CO_NUM_NODES
+#endif
+#endif // LELY_NO_MALLOC
 
 struct __co_nmt_state;
 /// An opaque CANopen NMT state type.
@@ -160,7 +181,11 @@ struct __co_nmt {
 	/// The producer heartbeat time (in milliseconds).
 	co_unsigned16_t ms;
 	/// An array of pointers to the heartbeat consumers.
+#if LELY_NO_MALLOC
+	co_nmt_hb_t *hbs[CO_NMT_MAX_NHB];
+#else
 	co_nmt_hb_t **hbs;
+#endif
 	/// The number of heartbeat consumers.
 	co_unsigned8_t nhb;
 	/// A pointer to the heartbeat event indication function.
@@ -174,6 +199,13 @@ struct __co_nmt {
 #ifndef LELY_NO_CO_MASTER
 	/// A pointer to the CAN frame buffer for NMT messages.
 	struct can_buf buf;
+#if LELY_NO_MALLOC
+	/**
+	 * The static memory buffer used by #buf in the absence of dynamic
+	 * memory allocation.
+	 */
+	struct can_msg begin[CO_NMT_CAN_BUF_SIZE];
+#endif
 	/// The time at which the next NMT message may be sent.
 	struct timespec inhibit;
 	/// A pointer to the CAN timer for sending buffered NMT messages.
@@ -826,7 +858,11 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->ms = 0;
 
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 	nmt->hb_ind = &default_hb_ind;
 	nmt->hb_data = NULL;
@@ -835,12 +871,14 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->st_data = NULL;
 
 #ifndef LELY_NO_CO_MASTER
-	// Create a CAN fame buffer (with the default size) for pending NMT
-	// messages that will be sent once the inhibit time has elapsed.
-	if (can_buf_init(&nmt->buf, 0) == -1) {
-		errc = get_errc();
-		goto error_init_buf;
-	}
+	// Create a CAN fame buffer for pending NMT messages that will be sent
+	// once the inhibit time has elapsed.
+#if LELY_NO_MALLOC
+	can_buf_init(&nmt->buf, nmt->begin, CO_NMT_CAN_BUF_SIZE);
+	memset(nmt->begin, 0, CO_NMT_CAN_BUF_SIZE * sizeof(*nmt->begin));
+#else
+	can_buf_init(&nmt->buf, NULL, 0);
+#endif
 
 	can_net_get_time(nmt->net, &nmt->inhibit);
 	nmt->cs_timer = can_timer_create();
@@ -998,7 +1036,6 @@ error_init_slave:
 	can_timer_destroy(nmt->cs_timer);
 error_create_cs_timer:
 	can_buf_fini(&nmt->buf);
-error_init_buf:
 #endif
 	can_timer_destroy(nmt->ec_timer);
 error_create_ec_timer:
@@ -1664,16 +1701,11 @@ co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
 	msg.data[1] = id;
 
 	// Add the frame to the buffer.
-#if LELY_NO_MALLOC
-	if (!can_buf_write(&nmt->buf, &msg, 1))
-		return -1;
-#else
 	if (!can_buf_write(&nmt->buf, &msg, 1)) {
 		if (!can_buf_reserve(&nmt->buf, 1))
 			return -1;
 		can_buf_write(&nmt->buf, &msg, 1);
 	}
-#endif
 
 	// Send the frame by triggering the inhibit timer.
 	return co_nmt_cs_timer(NULL, nmt);
@@ -3388,17 +3420,26 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Create and initialize the heartbeat consumers.
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
 	assert(!nmt->hbs);
+#endif
 	assert(!nmt->nhb);
 	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (obj_1016) {
 		nmt->nhb = co_obj_get_val_u8(obj_1016, 0x00);
+#if LELY_NO_MALLOC
+		if (nmt->nhb > CO_NMT_MAX_NHB) {
+			set_errnum(ERRNUM_NOMEM);
+#else
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
 		if (!nmt->hbs && nmt->nhb) {
-			nmt->nhb = 0;
 			set_errc(errno2c(errno));
+#endif
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumers");
+			nmt->nhb = 0;
 		}
 	}
 
@@ -3426,8 +3467,10 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 	// Destroy all heartbeat consumers.
 	for (size_t i = 0; i < nmt->nhb; i++)
 		co_nmt_hb_destroy(nmt->hbs[i]);
+#if !LELY_NO_MALLOC
 	free(nmt->hbs);
 	nmt->hbs = NULL;
+#endif
 	nmt->nhb = 0;
 }
 

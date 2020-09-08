@@ -52,8 +52,20 @@ struct membuf {
 extern "C" {
 #endif
 
-/// Initializes a memory buffer. @see membuf_fini()
-LELY_UTIL_MEMBUF_INLINE void membuf_init(struct membuf *buf);
+/**
+ * Initializes a memory buffer.
+ *
+ * @param buf  a pointer to a memory buffer.
+ * @param ptr  a pointer to the memory region to be used by the buffer. If not
+ *             NULL, the buffer takes ownership of the region at <b>ptr</b> and
+ *             MAY reallocate or free the region during subsequent calls to
+ *             membuf_reserve() and membuf_fini().
+ * @param size the number of bytes available at <b>ptr</b>.
+ *
+ * @see membuf_fini()
+ */
+LELY_UTIL_MEMBUF_INLINE void membuf_init(
+		struct membuf *buf, void *ptr, size_t size);
 
 /// Finalizes a memory buffer. @see membuf_init()
 void membuf_fini(struct membuf *buf);
@@ -69,18 +81,6 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_size(const struct membuf *buf);
 
 /// Returns the number of unused bytes remaining in a memory buffer.
 LELY_UTIL_MEMBUF_INLINE size_t membuf_capacity(const struct membuf *buf);
-
-#if LELY_NO_MALLOC
-/**
- * Attaches a fixed-size memory area to a memory buffer.
- *
- * @param buf a pointer to a memory buffer.
- * @param memory a pointer to a fixed-size memory area.
- * @param size the size of the memory area.
- */
-LELY_UTIL_MEMBUF_INLINE void membuf_attach(
-		struct membuf *buf, void *memory, size_t size);
-#endif
 
 /**
  * Resizes a memory buffer, if necessary, to make room for at least an
@@ -147,24 +147,14 @@ LELY_UTIL_MEMBUF_INLINE size_t membuf_write(
 /// Flushes <b>size</b> bytes from the beginning of a memory buffer.
 void membuf_flush(struct membuf *buf, size_t size);
 
-#if LELY_NO_MALLOC
 LELY_UTIL_MEMBUF_INLINE void
-membuf_attach(struct membuf *buf, void *memory, size_t size)
+membuf_init(struct membuf *buf, void *ptr, size_t size)
 {
 	assert(buf);
+	assert(ptr || !size);
 
-	buf->begin = (char *)memory;
-	buf->cur = buf->begin;
+	buf->begin = buf->cur = (char *)ptr;
 	buf->end = buf->begin + size;
-}
-#endif
-
-LELY_UTIL_MEMBUF_INLINE void
-membuf_init(struct membuf *buf)
-{
-	assert(buf);
-
-	buf->begin = buf->end = buf->cur = NULL;
 }
 
 LELY_UTIL_MEMBUF_INLINE void *

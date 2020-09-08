@@ -31,10 +31,10 @@
 #include <string>
 #include <utility>
 
-namespace lely {
+// The CANopen NMT master/slave service from <lely/co/nmt.h>.
+struct __co_nmt;
 
-// The CANopen NMT node service from <lely/co/nmt.hpp>.
-class CONMT;
+namespace lely {
 
 namespace canopen {
 
@@ -473,10 +473,10 @@ class Node : public io::CanNet, public Device {
   };
 
   /**
-   * Returns a pointer to the internal CAN network interface from
-   * <lely/can/net.hpp>.
+   * Returns a pointer to the internal CAN network interface
+   * from <lely/can/net.h>.
    */
-  CANNet* net() const noexcept;
+  __can_net* net() const noexcept;
 
   /// Updates the CAN network time.
   void SetTime();
@@ -512,7 +512,7 @@ class Node : public io::CanNet, public Device {
    * Returns a pointer to the internal CANopen NMT master/slave service from
    * <lely/co/nmt.hpp>.
    */
-  CONMT* nmt() const noexcept;
+  __co_nmt* nmt() const noexcept;
 
   /*
    * Generates an EMCY error and triggers the error handling behavior according
