@@ -1346,6 +1346,7 @@ TEST(CO_DevTPDO, CoDevGetTpdoEventInd_Null) {
 
 TEST(CO_DevTPDO, CoDevSetTpdoEventInd) {
   int data = 42;
+
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, &data);
 
   co_dev_tpdo_event_ind_t* ind_ptr = nullptr;
@@ -1365,20 +1366,37 @@ TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
 
   co_dev_tpdo_event(dev, 0x1234, 0xab);
+
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
 TEST(CO_DevTPDO, CoDevTpdoEvent_MappingPossibleButNoMapping) {
-  CoObjTHolder obj(0x1234);
-  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
+  CoObjTHolder obj(0x1234u);
+  CoSubTHolder sub_holder(0xabu, CO_DEFTYPE_INTEGER16);
   auto* const sub = obj.InsertSub(sub_holder);
   CHECK(sub != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
   co_sub_set_pdo_mapping(sub, 1);
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
 
-  co_dev_tpdo_event(dev, 0x1234, 0xab);
-  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+  co_dev_tpdo_event(dev, 0x1234u, 0xabu);
+
+  CHECK_EQUAL(0u, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTPDO, CoDevTpdoEvent_MappingPossible) {
+  CoObjTHolder obj1800(0x1800u);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
+  obj1800.InsertAndSetSub(0x00, CO_DEFTYPE_INTEGER16, co_unsigned16_t(31u));
+  co_sub_t* sub = obj1800.GetLastSub();
+  co_sub_set_pdo_mapping(sub, 1);
+  co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
+  CoObjTHolder obj1a00(0x1a00u);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00.Take()));
+
+  co_dev_tpdo_event(dev, 0x1800u, 0x00u);
+
+  CHECK_EQUAL(0u, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
 // TODO(tph): missing co_dev_tpdo_event() tests
