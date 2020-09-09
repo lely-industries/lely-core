@@ -535,8 +535,8 @@ co_ssdo_sizeof(void)
 void *
 __co_ssdo_alloc(can_net_t *net)
 {
-	struct __co_ssdo *sdo =
-			mem_alloc(can_net_get_alloc(net), co_ssdo_alignof(), co_ssdo_sizeof());
+	struct __co_ssdo *sdo = mem_alloc(can_net_get_alloc(net),
+			co_ssdo_alignof(), co_ssdo_sizeof());
 	if (!sdo)
 		return NULL;
 

@@ -159,8 +159,8 @@ co_rpdo_sizeof(void)
 void *
 __co_rpdo_alloc(can_net_t *net)
 {
-	struct __co_rpdo *pdo =
-			mem_alloc(can_net_get_alloc(net), co_rpdo_alignof(), co_rpdo_sizeof());
+	struct __co_rpdo *pdo = mem_alloc(can_net_get_alloc(net),
+			co_rpdo_alignof(), co_rpdo_sizeof());
 	if (!pdo)
 		return NULL;
 

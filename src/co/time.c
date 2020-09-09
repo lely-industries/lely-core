@@ -154,8 +154,8 @@ co_time_sizeof(void)
 void *
 __co_time_alloc(can_net_t *net)
 {
-	struct __co_time *time =
-			mem_alloc(can_net_get_alloc(net), co_time_alignof(), co_time_sizeof());
+	struct __co_time *time = mem_alloc(can_net_get_alloc(net),
+			co_time_alignof(), co_time_sizeof());
 	if (!time)
 		return NULL;
 

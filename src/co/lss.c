@@ -674,8 +674,8 @@ co_lss_sizeof(void)
 void *
 __co_lss_alloc(can_net_t *net)
 {
-	struct __co_lss *lss =
-			mem_alloc(can_net_get_alloc(net), co_lss_alignof(), co_lss_sizeof());
+	struct __co_lss *lss = mem_alloc(can_net_get_alloc(net),
+			co_lss_alignof(), co_lss_sizeof());
 	if (!lss)
 		return NULL;
 

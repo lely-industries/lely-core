@@ -126,8 +126,8 @@ co_sync_sizeof(void)
 void *
 __co_sync_alloc(can_net_t *net)
 {
-	struct __co_sync *sync =
-			mem_alloc(can_net_get_alloc(net), co_sync_alignof(), co_sync_sizeof());
+	struct __co_sync *sync = mem_alloc(can_net_get_alloc(net),
+			co_sync_alignof(), co_sync_sizeof());
 	if (!sync)
 		return NULL;
 

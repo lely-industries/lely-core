@@ -794,8 +794,8 @@ co_csdo_sizeof(void)
 void *
 __co_csdo_alloc(can_net_t *net)
 {
-	struct __co_csdo *sdo =
-			mem_alloc(can_net_get_alloc(net), co_csdo_alignof(), co_csdo_sizeof());
+	struct __co_csdo *sdo = mem_alloc(can_net_get_alloc(net),
+			co_csdo_alignof(), co_csdo_sizeof());
 	if (!sdo)
 		return NULL;
 
