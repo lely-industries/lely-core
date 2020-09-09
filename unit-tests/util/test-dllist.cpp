@@ -228,3 +228,37 @@ TEST(Util_Dllist, DllistAppend_SrcManyDstMany) {
   CHECK_EQUAL(4U, dllist_size(&list));
   POINTERS_EQUAL(&nodes[2], dllist_first(&list));
 }
+
+TEST(Util_Dllist, DllistContains_EmptyListContainsNull) {
+  CHECK_EQUAL(0, dllist_contains(&list, nullptr));
+}
+
+TEST(Util_Dllist, DllistContains_EmptyListContainsNotNull) {
+  CHECK_EQUAL(0, dllist_contains(&list, &nodes[0]));
+}
+
+TEST(Util_Dllist, DllistContains_ListWithOneContains) {
+  dllist_push_back(&list, &nodes[0]);
+
+  CHECK_EQUAL(1, dllist_contains(&list, &nodes[0]));
+}
+
+TEST(Util_Dllist, DllistContains_ListWithOneDoesNotContain) {
+  dllist_push_back(&list, &nodes[0]);
+
+  CHECK_EQUAL(0, dllist_contains(&list, &nodes[1]));
+}
+
+TEST(Util_Dllist, DllistContains_ListWithManyContains) {
+  dllist_push_back(&list, &nodes[0]);
+  dllist_push_back(&list, &nodes[1]);
+
+  CHECK_EQUAL(1, dllist_contains(&list, &nodes[1]));
+}
+
+TEST(Util_Dllist, RbtreeContains_ListWithManyDoesNotContain) {
+  dllist_push_back(&list, &nodes[0]);
+  dllist_push_back(&list, &nodes[1]);
+
+  CHECK_EQUAL(0, dllist_contains(&list, &nodes[3]));
+}
