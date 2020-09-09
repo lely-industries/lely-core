@@ -215,9 +215,8 @@ co_emcy_sizeof(void)
 void *
 __co_emcy_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
 	struct __co_emcy *emcy =
-			mem_alloc(alloc, co_emcy_alignof(), co_emcy_sizeof());
+			mem_alloc(can_net_get_alloc(net), co_emcy_alignof(), co_emcy_sizeof());
 	if (!emcy)
 		return NULL;
 
@@ -454,7 +453,7 @@ co_emcy_get_alloc(const co_emcy_t *emcy)
 {
 	assert(emcy);
 
-	return emcy->net ? can_net_get_alloc(emcy->net) : NULL;
+	return can_net_get_alloc(emcy->net);
 }
 
 can_net_t *
