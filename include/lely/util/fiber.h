@@ -62,9 +62,17 @@ typedef struct fiber fiber_t;
  * #FIBER_SAVE_ERROR that are supported on the platform.
  */
 #if _POSIX_C_SOURCE >= 200112L
+#if !_WIN32 && defined(__NEWLIB__)
+#define FIBER_SAVE_ALL (FIBER_SAVE_MASK | FIBER_SAVE_ERROR)
+#else
 #define FIBER_SAVE_ALL (FIBER_SAVE_MASK | FIBER_SAVE_FENV | FIBER_SAVE_ERROR)
+#endif
+#else
+#if !_WIN32 && defined(__NEWLIB__)
+#define FIBER_SAVE_ALL FIBER_SAVE_ERROR
 #else
 #define FIBER_SAVE_ALL (FIBER_SAVE_FENV | FIBER_SAVE_ERROR)
+#endif
 #endif
 
 /**
@@ -84,11 +92,13 @@ extern "C" {
  * The type of the function executed by a fiber. This function can switch to
  * other fibers by calling fiber_resume() or fiber_resume_with(). The function
  * is not required to ever terminate, but if it does, it MUST return a pointer
- * to the fiber to be resumed, or NULL. In the latter case, (the fiber
- * associated with) the current thread resumes execution.
+ * to the fiber to be resumed, or NULL. In the latter case, the (fiber
+ * associated with the) current thread resumes execution.
  *
  * @param fiber a pointer to the suspended fiber, i.e., the fiber that invoked
- *              fiber_resume() or fiber_resume_with() to start this fiber.
+ *              fiber_resume() or fiber_resume_with() to start this fiber. If
+ *              <b>fiber</b> is NULL, this fiber was resumed by the (fiber
+ *              associated with the) current thread.
  * @param arg   the argument supplied to fiber_create().
  *
  * @returns a pointer to the fiber to be resumed, or NULL.
@@ -109,7 +119,7 @@ typedef fiber_t *fiber_func_t(fiber_t *fiber, void *arg);
  * has been successfully initialized, or -1 on error. In the latter case, the
  * error number can be obtained with get_errc().
  *
- * @see fiber_thrd_fini().
+ * @see fiber_thrd_fini()
  */
 int fiber_thrd_init(int flags);
 
@@ -117,6 +127,8 @@ int fiber_thrd_init(int flags);
  * Finalizes the fiber associated with the calling thread. This function MUST be
  * called once for each successful call to fiber_thrd_init(). Only the last
  * invocation finalizes the fiber.
+ *
+ * @see fiber_thrd_init()
  */
 void fiber_thrd_fini(void);
 
