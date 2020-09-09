@@ -36,8 +36,6 @@ TEST(CAN_NetInit, CanNetAllocFree) {
   __can_net_free(ptr);
 }
 
-TEST(CAN_NetInit, CanNetFree_Nullptr) { __can_net_free(nullptr); }
-
 TEST(CAN_NetInit, CanNetInit) {
   auto* const net =
       static_cast<can_net_t*>(__can_net_alloc(allocator.ToAllocT()));
