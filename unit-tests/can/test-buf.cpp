@@ -45,6 +45,12 @@ TEST(CAN_BufInit, StaticInitializer) {
   CHECK_EQUAL(0, buf.end);
 }
 
+TEST(CAN_BufInit, SizeZero) {
+  can_buf_init(&buf, nullptr, 0);
+
+  CHECK_EQUAL(0, buf.size);
+}
+
 #if LELY_NO_MALLOC
 TEST(CAN_BufInit, CanBufInit) {
   const size_t BUFFER_SIZE = 32;
@@ -54,13 +60,7 @@ TEST(CAN_BufInit, CanBufInit) {
 
   CHECK_EQUAL(BUFFER_SIZE - 1, buf.size);
 }
-#else
-TEST(CAN_BufInit, CanBufInit) {
-  can_buf_init(&buf, nullptr, 0);
-
-  CHECK_EQUAL(0, buf.size);
-}
-#endif  // !LELY_NO_MALLOC
+#endif  // LELY_NO_MALLOC
 
 TEST_GROUP(CAN_Buf) {
   static const size_t BUF_SIZE = 15;
