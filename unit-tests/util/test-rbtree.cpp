@@ -290,6 +290,40 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
   CHECK_EQUAL(0U, rbtree_size(&tree));
 }
 
+TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNull) {
+  CHECK_EQUAL(0, rbtree_contains(&tree, nullptr));
+}
+
+TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNotNull) {
+  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[0]));
+}
+
+TEST(Util_Rbtree, RbtreeContains_TreeWithOneContains) {
+  rbtree_insert(&tree, &nodes[0]);
+
+  CHECK_EQUAL(1, rbtree_contains(&tree, &nodes[0]));
+}
+
+TEST(Util_Rbtree, RbtreeContains_TreeWithOneDoesNotContain) {
+  rbtree_insert(&tree, &nodes[0]);
+
+  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[1]));
+}
+
+TEST(Util_Rbtree, RbtreeContains_TreeWithManyContains) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  CHECK_EQUAL(1, rbtree_contains(&tree, &nodes[1]));
+}
+
+TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[3]));
+}
+
 TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {
   rbtree_insert(&tree, &nodes[7]);
   rbtree_insert(&tree, &nodes[6]);
