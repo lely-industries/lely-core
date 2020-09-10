@@ -356,7 +356,7 @@ DefaultValue=@pdo.event_deadline
 
 [@name]
 ParameterName=RPDO mapping parameter
-ObjectType=0x08
+ObjectType=0x09
 DataType=0x0007
 AccessType=rw
 CompactSubObj=@len(pdo.mapping)
@@ -433,7 +433,7 @@ DefaultValue=@pdo.sync_start_value
 
 [@name]
 ParameterName=TPDO mapping parameter
-ObjectType=0x08
+ObjectType=0x09
 DataType=0x0007
 AccessType=rw
 CompactSubObj=@len(pdo.mapping)
