@@ -328,9 +328,12 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
             ok = False
     elif compact_sub_obj != 0:
         object_type = int(cfg[section].get("ObjectType", "0"), 0)
-        if object_type != 0x08:
+        if object_type != 0x08 and object_type != 0x09:
             warnings.warn(
-                "ObjectType should be 0x08 in [{}]".format(section), stacklevel=3
+                "ObjectType should be 0x08 (ARRAY) or 0x09 (RECORD) in [{}]".format(
+                    section
+                ),
+                stacklevel=3,
             )
             ok = False
 
