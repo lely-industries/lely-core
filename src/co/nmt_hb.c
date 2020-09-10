@@ -80,9 +80,8 @@ co_nmt_hb_sizeof(void)
 void *
 __co_nmt_hb_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
-	struct __co_nmt_hb *hb = mem_alloc(
-			alloc, co_nmt_hb_alignof(), co_nmt_hb_sizeof());
+	struct __co_nmt_hb *hb = mem_alloc(can_net_get_alloc(net),
+			co_nmt_hb_alignof(), co_nmt_hb_sizeof());
 	if (!hb)
 		return NULL;
 
@@ -189,7 +188,7 @@ co_nmt_hb_get_alloc(const co_nmt_hb_t *hb)
 {
 	assert(hb);
 
-	return hb->net ? can_net_get_alloc(hb->net) : NULL;
+	return can_net_get_alloc(hb->net);
 }
 
 void

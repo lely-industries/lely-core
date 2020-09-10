@@ -325,9 +325,8 @@ co_nmt_cfg_sizeof(void)
 void *
 __co_nmt_cfg_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
-	struct __co_nmt_cfg *cfg = mem_alloc(
-			alloc, co_nmt_cfg_alignof(), co_nmt_cfg_sizeof());
+	struct __co_nmt_cfg *cfg = mem_alloc(can_net_get_alloc(net),
+			co_nmt_cfg_alignof(), co_nmt_cfg_sizeof());
 	if (!cfg)
 		return NULL;
 
@@ -454,7 +453,7 @@ co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg)
 {
 	assert(cfg);
 
-	return cfg->net ? can_net_get_alloc(cfg->net) : NULL;
+	return can_net_get_alloc(cfg->net);
 }
 
 int

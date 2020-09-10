@@ -794,9 +794,8 @@ co_csdo_sizeof(void)
 void *
 __co_csdo_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
-	struct __co_csdo *sdo =
-			mem_alloc(alloc, co_csdo_alignof(), co_csdo_sizeof());
+	struct __co_csdo *sdo = mem_alloc(can_net_get_alloc(net),
+			co_csdo_alignof(), co_csdo_sizeof());
 	if (!sdo)
 		return NULL;
 
@@ -1023,7 +1022,7 @@ co_csdo_get_alloc(const co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	return sdo->net ? can_net_get_alloc(sdo->net) : NULL;
+	return can_net_get_alloc(sdo->net);
 }
 
 can_net_t *

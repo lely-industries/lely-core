@@ -800,9 +800,8 @@ co_nmt_boot_sizeof(void)
 void *
 __co_nmt_boot_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
-	struct __co_nmt_boot *boot = mem_alloc(
-			alloc, co_nmt_boot_alignof(), co_nmt_boot_sizeof());
+	struct __co_nmt_boot *boot = mem_alloc(can_net_get_alloc(net),
+			co_nmt_boot_alignof(), co_nmt_boot_sizeof());
 	if (!boot)
 		return NULL;
 
@@ -931,7 +930,7 @@ co_nmt_boot_get_alloc(const co_nmt_boot_t *boot)
 {
 	assert(boot);
 
-	return boot->net ? can_net_get_alloc(boot->net) : NULL;
+	return can_net_get_alloc(boot->net);
 }
 
 int
