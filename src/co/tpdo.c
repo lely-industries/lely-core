@@ -382,19 +382,19 @@ co_tpdo_event(co_tpdo_t *pdo)
 	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
 		return 0;
 
-	// Ignore events if the transmission type is synchronous.
-	if (pdo->comm.trans && pdo->comm.trans < 0xfd)
-		return 0;
-
-	if (!pdo->comm.trans) {
+	switch (pdo->comm.trans) {
+	case 0x00:
 		// Ignore events occurring after the synchronous time window has
 		// expired.
 		if (!pdo->event)
 			pdo->event = !pdo->swnd;
-	} else if (pdo->comm.trans == 0xfd) {
+		break;
+	case 0xfd:
 		if (co_tpdo_init_frame(pdo, &pdo->msg))
 			return -1;
-	} else if (pdo->comm.trans >= 0xfe) {
+		break;
+	case 0xfe:
+	case 0xff:
 		if (pdo->comm.inhibit) {
 			// Check whether the inhibit time has passed.
 			struct timespec now;
@@ -415,6 +415,10 @@ co_tpdo_event(co_tpdo_t *pdo)
 		if (pdo->comm.inhibit)
 			timespec_add_usec(
 					&pdo->inhibit, pdo->comm.inhibit * 100);
+		break;
+	default:
+		// Ignore events if the transmission type is synchronous.
+		return 0;
 	}
 
 	return co_tpdo_init_timer_event(pdo);
@@ -488,10 +492,8 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	// clang-format off
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (pdo->comm.trans == 0xfc
-			|| pdo->comm.trans == 0xfd)) {
-		// clang-format on
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
+			&& !(pdo->comm.cobid & CO_PDO_COBID_RTR)) {
 		if (!pdo->recv) {
 			pdo->recv = can_recv_create();
 			if (!pdo->recv)
@@ -500,7 +502,7 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 		}
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = pdo->comm.cobid;
-		uint_least8_t flags = 0;
+		uint_least8_t flags = CAN_FLAG_RTR;
 		if (id & CO_PDO_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -509,6 +511,7 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 		}
 		can_recv_start(pdo->recv, pdo->net, id, flags);
 	} else if (pdo->recv) {
+		// Stop the receiver unless the TPDO is valid and allows RTR.
 		can_recv_destroy(pdo->recv);
 		pdo->recv = NULL;
 	}
@@ -803,11 +806,10 @@ static int
 co_tpdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(msg->flags & CAN_FLAG_RTR);
+	(void)msg;
 	co_tpdo_t *pdo = data;
 	assert(pdo);
-
-	if (!(msg->flags & CAN_FLAG_RTR))
-		return 0;
 
 	switch (pdo->comm.trans) {
 	case 0xfc: {
