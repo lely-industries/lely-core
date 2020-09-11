@@ -536,10 +536,8 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	// clang-format off
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
 			&& !(pdo->comm.cobid & CO_PDO_COBID_RTR)) {
-		// clang-format on
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = pdo->comm.cobid;
 		uint_least8_t flags = CAN_FLAG_RTR;
