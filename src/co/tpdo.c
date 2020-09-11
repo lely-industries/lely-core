@@ -158,9 +158,8 @@ co_tpdo_sizeof(void)
 void *
 __co_tpdo_alloc(can_net_t *net)
 {
-	alloc_t *alloc = net ? can_net_get_alloc(net) : NULL;
-	struct __co_tpdo *pdo =
-			mem_alloc(alloc, co_tpdo_alignof(), co_tpdo_sizeof());
+	struct __co_tpdo *pdo = mem_alloc(can_net_get_alloc(net),
+			co_tpdo_alignof(), co_tpdo_sizeof());
 	if (!pdo)
 		return NULL;
 
@@ -379,7 +378,7 @@ co_tpdo_get_alloc(const co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	return pdo->net ? can_net_get_alloc(pdo->net) : NULL;
+	return can_net_get_alloc(pdo->net);
 }
 
 can_net_t *
@@ -451,19 +450,19 @@ co_tpdo_event(co_tpdo_t *pdo)
 	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
 		return 0;
 
-	// Ignore events if the transmission type is synchronous.
-	if (pdo->comm.trans && pdo->comm.trans < 0xfd)
-		return 0;
-
-	if (!pdo->comm.trans) {
+	switch (pdo->comm.trans) {
+	case 0x00:
 		// Ignore events occurring after the synchronous time window has
 		// expired.
 		if (!pdo->event)
 			pdo->event = !pdo->swnd;
-	} else if (pdo->comm.trans == 0xfd) {
+		break;
+	case 0xfd:
 		if (co_tpdo_init_frame(pdo, &pdo->msg))
 			return -1;
-	} else if (pdo->comm.trans >= 0xfe) {
+		break;
+	case 0xfe:
+	case 0xff:
 		if (pdo->comm.inhibit) {
 			// Check whether the inhibit time has passed.
 			struct timespec now;
@@ -484,6 +483,10 @@ co_tpdo_event(co_tpdo_t *pdo)
 		if (pdo->comm.inhibit)
 			timespec_add_usec(
 					&pdo->inhibit, pdo->comm.inhibit * 100);
+		break;
+	default:
+		// Ignore events if the transmission type is synchronous.
+		return 0;
 	}
 
 	co_tpdo_init_timer_event(pdo);
@@ -560,12 +563,12 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 	assert(pdo);
 
 	// clang-format off
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && (pdo->comm.trans == 0xfc
-			|| pdo->comm.trans == 0xfd)) {
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
+			&& !(pdo->comm.cobid & CO_PDO_COBID_RTR)) {
 		// clang-format on
 		// Register the receiver under the specified CAN-ID.
 		uint_least32_t id = pdo->comm.cobid;
-		uint_least8_t flags = 0;
+		uint_least8_t flags = CAN_FLAG_RTR;
 		if (id & CO_PDO_COBID_FRAME) {
 			id &= CAN_MASK_EID;
 			flags |= CAN_FLAG_IDE;
@@ -574,7 +577,7 @@ co_tpdo_init_recv(co_tpdo_t *pdo)
 		}
 		can_recv_start(pdo->recv, pdo->net, id, flags);
 	} else {
-		// Stop the receiver unless the TPDO is valid and not RTR-only.
+		// Stop the receiver unless the TPDO is valid and allows RTR.
 		can_recv_stop(pdo->recv);
 	}
 }
@@ -825,9 +828,9 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 	assert(msg);
 	co_tpdo_t *pdo = data;
 	assert(pdo);
+	assert(msg->flags & CAN_FLAG_RTR);
 
-	if (!(msg->flags & CAN_FLAG_RTR))
-		return 0;
+	(void)msg;
 
 	switch (pdo->comm.trans) {
 	case 0xfc: {
