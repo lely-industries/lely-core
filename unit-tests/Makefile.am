@@ -117,6 +117,7 @@ src_co_tests += co/test-obj.cpp
 src_co_tests += co/test-pdo.cpp
 src_co_tests += co/test-rpdo.cpp
 src_co_tests += co/test-sync.cpp
+src_co_tests += co/test-tpdo.cpp
 src_co_tests += co/test-type.cpp
 src_co_tests += co/test-val.cpp
 if !PLATFORM_WIN32
