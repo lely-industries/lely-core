@@ -54,6 +54,14 @@ test_util_spscring_LDADD = $(LELY_UTIL_LIBS)
 endif
 endif
 
+if !ECSS_COMPLIANCE
+if !NO_THREADS
+bin += test-util-stop
+test_util_stop_SOURCES = test.h util-stop.cpp
+test_util_stop_LDADD = $(LELY_UTIL_LIBS)
+endif
+endif
+
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
