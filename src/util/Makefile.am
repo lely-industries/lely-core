@@ -16,6 +16,7 @@ src += fiber.h
 src += mkjmp.c
 src += sllist.c
 src += spscring.c
+src += stop.c
 endif
 if !NO_CXX
 src += exception.cpp
