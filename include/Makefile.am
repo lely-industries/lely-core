@@ -69,6 +69,10 @@ inc += lely/util/result.hpp
 endif
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
+inc += lely/util/stop.h
+if !NO_CXX
+inc += lely/util/stop.hpp
+endif
 endif #!ECSS_COMPLIANCE
 inc += lely/util/bits.h
 inc += lely/util/cmp.h
