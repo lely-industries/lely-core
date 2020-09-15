@@ -105,6 +105,8 @@ static void guard_munmap(void *addr, size_t len);
 
 #endif // !_WIN32 && _POSIX_MAPPED_FILES && defined(MAP_ANONYMOUS)
 
+struct fiber_thrd;
+
 /// A fiber.
 struct fiber {
 	/// A pointer to the function to be executed in the fiber.
@@ -115,6 +117,8 @@ struct fiber {
 	int flags;
 	/// A pointer to the data region.
 	void *data;
+	/// A pointer to the thread that resumed this fiber.
+	struct fiber_thrd *thr;
 	/// A pointer to the now suspended fiber that resumed this fiber.
 	fiber_t *from;
 #if _WIN32
@@ -163,10 +167,9 @@ static _Thread_local struct fiber_thrd {
 	size_t refcnt;
 	/**
 	 * The fiber representing this thread. Pointers to this fiber are
-	 * converted to and from NULL with fiber_to_user() and fiber_from_user()
-	 * to prevent the address from being exposed to the user. If it was, the
-	 * user could try to resume this fiber from another thread, which is
-	 * impossible.
+	 * converted to and from NULL to prevent the address from being exposed
+	 * to the user. If it was, the user could try to resume this fiber from
+	 * another thread, which is impossible.
 	 */
 	fiber_t main;
 	/// A pointer to the fiber currently running on this thread.
@@ -183,22 +186,6 @@ static _Noreturn void CALLBACK fiber_start(void *arg);
 #else
 static _Noreturn void fiber_start(void *arg);
 #endif
-
-/**
- * Returns <b>fiber</b>, or a pointer to the fiber associated with the calling
- * thread if <b>fiber</b> is NULL.
- *
- * @see fiber_to_user()
- */
-static inline fiber_t *fiber_from_user(fiber_t *fiber);
-
-/**
- * Returns <b>fiber</b>, or NULL of <b>fiber</b> points to the fiber associated
- * with the calling thread.
- *
- * @see fiber_from_user()
- */
-static inline fiber_t *fiber_to_user(fiber_t *fiber);
 
 int
 fiber_thrd_init(int flags)
@@ -223,6 +210,7 @@ fiber_thrd_init(int flags)
 	if (!thr->main.lpFiber)
 		return -1;
 #endif
+	thr->main.thr = thr;
 	thr->main.flags = flags;
 
 	assert(!thr->curr);
@@ -299,6 +287,7 @@ fiber_create(fiber_func_t *func, void *arg, int flags, size_t data_size,
 	// The data region immediately follows the fiber struct.
 	fiber->data = (char *)fiber + FIBER_SIZEOF;
 
+	fiber->thr = thr;
 	fiber->from = NULL;
 
 #if !_WIN32
@@ -419,25 +408,25 @@ fiber_resume(fiber_t *fiber)
 fiber_t *
 fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 {
-	fiber = fiber_from_user(fiber);
-	assert(fiber);
-	assert(!fiber->func);
-	assert(!fiber->arg);
-	fiber_t *curr = fiber_thrd.curr;
+	struct fiber_thrd *thr = &fiber_thrd;
+	fiber_t *curr = thr->curr;
 	assert(curr);
+	fiber_t *to = fiber ? fiber : &thr->main;
+	assert(to);
+	assert(!to->func);
+	assert(!to->arg);
 
 	// If a fiber is resuming itself, execute the function and return.
-	if (fiber == curr) {
-		fiber->from = fiber;
+	if (to == curr) {
 		if (func)
-			fiber->from = func(fiber_to_user(fiber->from), arg);
-		return fiber_to_user(fiber->from);
+			fiber = func(fiber, arg);
+		return fiber;
 	}
 
 	// Save the function to be executed.
 	if (func) {
-		fiber->func = func;
-		fiber->arg = arg;
+		to->func = func;
+		to->arg = arg;
 	}
 
 	// Save the error code(s). On Windows, the thread's last-error code
@@ -465,23 +454,25 @@ fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 		fegetenv(&fenv);
 #endif
 
-	fiber->from = curr;
-	fiber_thrd.curr = fiber;
+	to->thr = thr;
+	to->from = curr;
+	thr->curr = to;
 	// Perform the actual context switch.
 #if _WIN32
-	assert(fiber->lpFiber);
-	SwitchToFiber(fiber->lpFiber);
+	assert(to->lpFiber);
+	SwitchToFiber(to->lpFiber);
 #elif _POSIX_C_SOURCE >= 200112L \
 		&& (!defined(__NEWLIB__) || defined(__CYGWIN__))
 	if (!sigsetjmp(curr->env, curr->flags & FIBER_SAVE_MASK))
-		siglongjmp(fiber->env, 1);
+		siglongjmp(to->env, 1);
 #else
 	if (!setjmp(curr->env))
-		longjmp(fiber->env, 1);
+		longjmp(to->env, 1);
 #endif
-	assert(curr == fiber_thrd.curr);
-	fiber = curr->from;
-	curr->from = NULL;
+	thr = curr->thr;
+	assert(thr);
+	assert(curr->from);
+	fiber = curr->from != &thr->main ? curr->from : NULL;
 
 	// Restore the floating-point environment.
 #if !_WIN32 && !defined(__NEWLIB__)
@@ -506,10 +497,10 @@ fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 		curr->func = NULL;
 		arg = curr->arg;
 		curr->arg = NULL;
-		fiber = func(fiber_to_user(fiber), arg);
+		fiber = func(fiber, arg);
 	}
 
-	return fiber_to_user(fiber);
+	return fiber;
 }
 
 #if !_WIN32 && _POSIX_MAPPED_FILES && defined(MAP_ANONYMOUS)
@@ -599,21 +590,9 @@ fiber_start(void *arg)
 
 	// Execute the original function, if specified.
 	if (func)
-		fiber = func(fiber_to_user(fiber), arg);
+		fiber = func(fiber, arg);
 
 	// The function has terminated, so resume the caller fiber immediately.
 	for (;;)
 		fiber = fiber_resume(fiber);
-}
-
-static inline fiber_t *
-fiber_from_user(fiber_t *fiber)
-{
-	return fiber ? fiber : &fiber_thrd.main;
-}
-
-static inline fiber_t *
-fiber_to_user(fiber_t *fiber)
-{
-	return fiber != &fiber_thrd.main ? fiber : NULL;
 }
