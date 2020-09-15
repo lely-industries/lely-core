@@ -10,10 +10,10 @@
  * and allows fibers to be migrated between threads. All other platforms use
  * mkjmp()/setjmp()/longjmp(). Since using longjmp() to restore an environment
  * saved by setjmp() in a different thread is undefined behavior (according to
- * 7.13.2.1), fibers can only be resumed by the thread on which they were
- * created.
+ * 7.13.2.1), fibers can only be reliably resumed by the thread on which they
+ * were created.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
