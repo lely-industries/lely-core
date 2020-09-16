@@ -731,7 +731,8 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOInitFrameFailed) {
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOCANSendError) {
-  can_net_set_send_func(net, can_send_func_err, nullptr);
+  int data = 0;
+  can_net_set_send_func(net, can_send_func_err, &data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfeu);
@@ -745,6 +746,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOCANSendError) {
 
   CHECK_EQUAL(-1, ret);
   CHECK(can_send_func_err_called);
+  POINTERS_EQUAL(&data, can_send_func_err_data);
   CHECK(tpdo_ind_func_called);
   POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
   CHECK_EQUAL(CO_SDO_AC_ERROR, tpdo_ind_args.ac);
@@ -1217,8 +1219,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
   InsertInto1a00SubidxMapVal(0x01u, 0x202000f0u);
 
   CreateTpdo();
-  int data = 0;
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, &data);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1228,6 +1228,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
 
   CHECK_EQUAL(0, ret);
   CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
   POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, tpdo_ind_args.ac);
   POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
