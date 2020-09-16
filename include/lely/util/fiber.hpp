@@ -4,8 +4,7 @@
  * interface for the fiber implementation.
  *
  * The design of the C++ interface is based on the <b>fiber</b> class in
- * <a
- * href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>.
+ * <a href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>.
  * It is a wrapper around `#fiber_t*` which tries to prevent accidentally
  * resuming a running or terminated fiber. The API is designed to be a building
  * block for higher level constructs. For example, a call/cc operator similar to
