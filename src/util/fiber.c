@@ -142,10 +142,6 @@ struct fiber {
 #if _WIN32
 	/// A address of the native Windows fiber.
 	LPVOID lpFiber;
-	/// The saved value of `errno`.
-	int errsv;
-	/// The saved value of GetLastError().
-	DWORD dwErrCode;
 #else
 #if _POSIX_MAPPED_FILES && defined(MAP_ANONYMOUS)
 	/// The size of the mapping at #stack_addr, excluding the guard pages.
@@ -167,12 +163,6 @@ struct fiber {
 	/// The saved registers.
 	jmp_buf env;
 #endif
-#ifndef __NEWLIB__
-	/// The saved floating-point environment.
-	fenv_t fenv;
-#endif
-	/// The saved value of get_errc().
-	int errc;
 #endif
 };
 
@@ -460,21 +450,26 @@ fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 	// Save the error code(s). On Windows, the thread's last-error code
 	// reported by GetLastError() is distinct from errno, but it is equal to
 	// the error status reported by WSAGetLastError().
-	if (curr->flags & FIBER_SAVE_ERROR) {
 #if _WIN32
-		curr->dwErrCode = GetLastError();
-		curr->errsv = errno;
-#else
-		curr->errc = get_errc();
-#endif
+	DWORD dwErrCode = 0;
+	int errsv = 0;
+	if (curr->flags & FIBER_SAVE_ERROR) {
+		dwErrCode = GetLastError();
+		errsv = errno;
 	}
+#else
+	int errc = 0;
+	if (curr->flags & FIBER_SAVE_ERROR)
+		errc = get_errc();
+#endif
 
 	// Save the floating-point environment. Windows fibers can do this
 	// automatically, depending on the flags provided to CreateFiberEx() or
 	// ConvertThreadToFiberEx().
 #if !_WIN32 && !defined(__NEWLIB__)
+	fenv_t fenv;
 	if (curr->flags & FIBER_SAVE_FENV)
-		fegetenv(&curr->fenv);
+		fegetenv(&fenv);
 #endif
 
 	to->thr = thr;
@@ -498,16 +493,16 @@ fiber_resume_with(fiber_t *fiber, fiber_func_t *func, void *arg)
 	// Restore the floating-point environment.
 #if !_WIN32 && !defined(__NEWLIB__)
 	if (curr->flags & FIBER_SAVE_FENV)
-		fesetenv(&curr->fenv);
+		fesetenv(&fenv);
 #endif
 
 	// Restore the error code(s).
 	if (curr->flags & FIBER_SAVE_ERROR) {
 #if _WIN32
-		errno = curr->errsv;
-		SetLastError(curr->dwErrCode);
+		errno = errsv;
+		SetLastError(dwErrCode);
 #else
-		set_errc(curr->errc);
+		set_errc(errc);
 #endif
 	}
 
