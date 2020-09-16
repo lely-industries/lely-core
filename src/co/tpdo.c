@@ -140,9 +140,21 @@ static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
  * @param pdo a pointer to a Transmit-PDO service.
  * @param msg a pointer to the CAN frame to be initialized.
  *
- * @returns 0 on success, or an SDO abort code on error.
+ * @returns 0 on success, or -1 on error. In the latter case, the indication
+ * function is invoked.
  */
-static co_unsigned32_t co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
+static int co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg);
+
+/**
+ * Sends a CAN frame from a Transmit-PDO service and invokes the indication
+ * function.
+ *
+ * @param pdo a pointer to a Transmit-PDO service.
+ * @param msg a pointer to the CAN frame to be sent.
+
+ * @return 0 on success, or -1 on error.
+ */
+static int co_tpdo_send_frame(co_tpdo_t *pdo, const struct can_msg *msg);
 
 void *
 __co_tpdo_alloc(void)
@@ -432,7 +444,7 @@ co_tpdo_event(co_tpdo_t *pdo)
 			pdo->event = !pdo->swnd;
 		break;
 	case 0xfd:
-		if (co_tpdo_init_frame(pdo, &pdo->msg))
+		if (co_tpdo_init_frame(pdo, &pdo->msg) == -1)
 			return -1;
 		break;
 	case 0xfe:
@@ -449,9 +461,9 @@ co_tpdo_event(co_tpdo_t *pdo)
 		}
 
 		// In case of an event-driven TPDO, send the frame right away.
-		if (co_tpdo_init_frame(pdo, &pdo->msg))
+		if (co_tpdo_init_frame(pdo, &pdo->msg) == -1)
 			return -1;
-		if (can_net_send(pdo->net, &pdo->msg) == -1)
+		if (co_tpdo_send_frame(pdo, &pdo->msg) == -1)
 			return -1;
 
 		if (pdo->comm.inhibit)
@@ -512,11 +524,11 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 		pdo->cnt = 0;
 	}
 
-	if (co_tpdo_init_frame(pdo, &pdo->msg))
+	if (co_tpdo_init_frame(pdo, &pdo->msg) == -1)
 		return -1;
 
 	// Send a synchronous TPDO right away.
-	if (pdo->comm.trans <= 0xf0 && can_net_send(pdo->net, &pdo->msg) == -1)
+	if (pdo->comm.trans <= 0xf0 && co_tpdo_send_frame(pdo, &pdo->msg) == -1)
 		return -1;
 
 	return 0;
@@ -811,18 +823,15 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 		// Send a buffered CAN frame if available, otherwise fall
 		// through to the event-driven case.
 		if (pdo->msg.id == (pdo->comm.cobid & mask)) {
-			can_net_send(pdo->net, &pdo->msg);
+			co_tpdo_send_frame(pdo, &pdo->msg);
 			break;
 		}
 	}
 	// ... falls through ...
 	case 0xfd: {
-		co_unsigned32_t ac = co_tpdo_init_frame(pdo, &pdo->msg);
-		if (!ac)
-			can_net_send(pdo->net, &pdo->msg);
-		if (pdo->ind)
-			pdo->ind(pdo, ac, ac ? NULL : pdo->msg.data,
-					ac ? 0 : pdo->msg.len, pdo->data);
+		if (!co_tpdo_init_frame(pdo, &pdo->msg))
+			co_tpdo_send_frame(pdo, &pdo->msg);
+		break;
 	}
 	default: break;
 	}
@@ -857,7 +866,7 @@ co_tpdo_timer_swnd(const struct timespec *tp, void *data)
 	return 0;
 }
 
-static co_unsigned32_t
+static int
 co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 {
 	assert(pdo);
@@ -875,11 +884,29 @@ co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 	size_t n = CAN_MAX_LEN;
 	co_unsigned32_t ac = co_pdo_up(
 			&pdo->map, pdo->dev, &pdo->req, msg->data, &n);
-	if (ac)
-		return ac;
+	if (ac) {
+		if (pdo->ind)
+			pdo->ind(pdo, ac, NULL, 0, pdo->data);
+		return -1;
+	}
 	msg->len = n;
 
 	return 0;
+}
+
+static int
+co_tpdo_send_frame(co_tpdo_t *pdo, const struct can_msg *msg)
+{
+	int result = can_net_send(pdo->net, msg);
+	if (pdo->ind) {
+		if (!result) {
+			pdo->ind(pdo, 0, pdo->msg.data, pdo->msg.len,
+					pdo->data);
+		} else {
+			pdo->ind(pdo, CO_SDO_AC_ERROR, NULL, 0, pdo->data);
+		}
+	}
+	return result;
 }
 
 #endif // !LELY_NO_CO_TPDO

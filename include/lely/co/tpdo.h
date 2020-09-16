@@ -36,8 +36,9 @@ extern "C" {
  * @param pdo  a pointer to a Transmit-PDO service.
  * @param ac   the SDO abort code: 0 on success, #CO_SDO_AC_NO_OBJ,
  *             #CO_SDO_AC_NO_PDO, CO_SDO_AC_NO_READ or #CO_SDO_AC_PDO_LEN in
- *             case of a mapping error, or #CO_SDO_AC_TIMEOUT in case the
- *             synchronous time window expires.
+ *             case of a mapping error, #CO_SDO_AC_TIMEOUT in case the
+ *             synchronous time window expires, or #CO_SDO_AC_ERROR if an I/O
+ *             error occurs.
  * @param ptr  a pointer to the bytes sent.
  * @param n    the number of bytes at <b>ptr</b>.
  * @param data a pointer to user-specified data.
