@@ -163,7 +163,10 @@ co_val_init_vs_n(char **val, const char *vs, size_t n)
 		assert(*val);
 		co_array_init(val, n);
 		if (vs)
-			strncpy(*val, vs, n);
+			// Using strncpy() here might cause a compiler warning
+			// because we omit the terminating nul byte, which is
+			// already set by co_array_init().
+			memcpy(*val, vs, n);
 	} else {
 		co_array_fini(val);
 	}
