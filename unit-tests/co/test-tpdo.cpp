@@ -1074,7 +1074,7 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailable) {
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK(!tpdo_ind_func_called);
+  CHECK(tpdo_ind_func_called);
   CHECK(can_send_func_called);
   POINTERS_EQUAL(&data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
