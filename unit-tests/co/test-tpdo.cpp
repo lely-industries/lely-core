@@ -1127,12 +1127,13 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameUnavailable) {
   CHECK_EQUAL(0u, sent_msg.len);
 }
 
-TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailable) {
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailableTpdoIndIsNull) {
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
 
   CreateTpdo();
+  co_tpdo_set_ind(tpdo, nullptr, nullptr);
 
   co_tpdo_sync(tpdo, 0x00u);
 
@@ -1143,12 +1144,6 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailable) {
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK(tpdo_ind_func_called);
-  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
-  CHECK_EQUAL(0, tpdo_ind_args.ac);
-  CHECK_EQUAL(0, tpdo_ind_args.n);
-  CHECK(tpdo_ind_args.ptr != nullptr);
-  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
   CHECK(can_send_func_called);
   POINTERS_EQUAL(&can_data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
