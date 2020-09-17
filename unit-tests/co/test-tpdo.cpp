@@ -476,6 +476,9 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
     void* data;
   } tpdo_ind_args;
 
+  int ind_data = 0;
+  int can_data = 0;
+
   static void tpdo_ind_func(co_tpdo_t * pdo, co_unsigned32_t ac,
                             const void* ptr, size_t n, void* data) {
     tpdo_ind_func_called = true;
@@ -505,6 +508,7 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   void CreateTpdo() {
     tpdo = co_tpdo_create(net, dev, TPDO_NUM);
     CHECK(tpdo != nullptr);
+    co_tpdo_set_ind(tpdo, tpdo_ind_func, &ind_data);
   }
 
   TEST_SETUP() {
@@ -525,6 +529,8 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
     sent_msg = CAN_MSG_INIT;
     can_send_func_err_called = false;
     can_send_func_err_data = nullptr;
+
+    can_net_set_send_func(net, can_send_func, &can_data);
   }
 
   TEST_TEARDOWN() {
@@ -549,7 +555,8 @@ TEST(CO_Tpdo, CoTpdoGetInd_Null) {
 }
 
 TEST(CO_Tpdo, CoTpdoSetInd) {
-  CreateTpdo();
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
+  CHECK(tpdo != nullptr);
 
   int data = 0;
   co_tpdo_set_ind(tpdo, tpdo_ind_func, &data);
@@ -570,6 +577,8 @@ TEST(CO_Tpdo, CoTpdoEvent_CobidIsValid) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
+  CHECK(!tpdo_ind_func_called);
+  CHECK(!can_send_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_TransmissionIsSynchronous) {
@@ -582,6 +591,8 @@ TEST(CO_Tpdo, CoTpdoEvent_TransmissionIsSynchronous) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
+  CHECK(!tpdo_ind_func_called);
+  CHECK(!can_send_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_IsSynchronousButWindowExpired) {
@@ -595,9 +606,11 @@ TEST(CO_Tpdo, CoTpdoEvent_IsSynchronousButWindowExpired) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
+  CHECK(!tpdo_ind_func_called);
+  CHECK(!can_send_func_called);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInitFrameSuccess) {
+TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInitFrameSuccessNoRTR) {
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfdu);
@@ -608,6 +621,8 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInitFrameSuccess) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(0, ret);
+  CHECK(!tpdo_ind_func_called);
+  CHECK(!can_send_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInitFrameFail) {
@@ -629,6 +644,13 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInitFrameFail) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
+  CHECK(!can_send_func_called);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_NO_OBJ, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeNotPassed) {
@@ -651,9 +673,12 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeNotPassed) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_AGAIN, get_errnum());
+  CHECK(!tpdo_ind_func_called);
+  CHECK(!can_send_func_called);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassedCANError) {
+TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassedNoSendFunc) {
+  can_net_set_send_func(net, nullptr, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfeu);
@@ -667,6 +692,12 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassedCANError) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_NOSYS, get_errnum());
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOInitFrameFailed) {
@@ -690,10 +721,18 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOInitFrameFailed) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
+  CHECK(!can_send_func_called);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_NO_OBJ, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOCANSendError) {
-  can_net_set_send_func(net, can_send_func_err, nullptr);
+  int data = 0;
+  can_net_set_send_func(net, can_send_func_err, &data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfeu);
@@ -707,6 +746,13 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDrivenTPDOCANSendError) {
 
   CHECK_EQUAL(-1, ret);
   CHECK(can_send_func_err_called);
+  POINTERS_EQUAL(&data, can_send_func_err_data);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeZero) {
@@ -718,8 +764,6 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeZero) {
   SetCommEventTimer(0x0000u);
 
   CreateTpdo();
-  int data = 0;
-  can_net_set_send_func(net, can_send_func, &data);
 
   const auto ret = co_tpdo_event(tpdo);
 
@@ -727,12 +771,18 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeZero) {
   timespec ts = {0u, 0u};
   co_tpdo_get_next(tpdo, &ts);
   CHECK(can_send_func_called);
-  CHECK_EQUAL(&data, can_send_func_data);
+  CHECK_EQUAL(&can_data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
   CHECK_EQUAL(0u, ts.tv_nsec);
   CHECK_EQUAL(0u, ts.tv_sec);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(0, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  CHECK(tpdo_ind_args.ptr != nullptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassed) {
@@ -744,8 +794,6 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassed) {
   SetCommEventTimer(0x0000u);
 
   CreateTpdo();
-  int data = 0;
-  can_net_set_send_func(net, can_send_func, &data);
 
   const auto ret = co_tpdo_event(tpdo);
 
@@ -753,16 +801,27 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimePassed) {
   timespec ts = {0u, 0u};
   co_tpdo_get_next(tpdo, &ts);
   CHECK(can_send_func_called);
-  CHECK_EQUAL(&data, can_send_func_data);
+  CHECK_EQUAL(&can_data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
   CHECK_EQUAL(1600000, ts.tv_nsec);
   CHECK_EQUAL(0, ts.tv_sec);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(0, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  CHECK(tpdo_ind_args.ptr != nullptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
+}
+
+TEST(CO_Tpdo, CoTpdoGetNext_TpIsNull) {
+  CreateTpdo();
+
+  co_tpdo_get_next(tpdo, nullptr);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_CounterOverLimit) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   CreateTpdo();
 
   const auto ret = co_tpdo_sync(tpdo, 0xffu);
@@ -770,10 +829,10 @@ TEST(CO_Tpdo, CoTpdoSync_CounterOverLimit) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_CobidFlagInvalid) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID | CO_PDO_COBID_VALID);
   SetCommTransmissionType(0xf1u);
@@ -784,10 +843,10 @@ TEST(CO_Tpdo, CoTpdoSync_CobidFlagInvalid) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_TransmissionNotSynchronous) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xf1u);
@@ -798,10 +857,10 @@ TEST(CO_Tpdo, CoTpdoSync_TransmissionNotSynchronous) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_CounterIsZero) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
@@ -816,6 +875,7 @@ TEST(CO_Tpdo, CoTpdoSync_CounterIsZero) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_AcyclicTPDOEventOccuredCANSendErr) {
@@ -840,10 +900,15 @@ TEST(CO_Tpdo, CoTpdoSync_AcyclicTPDOEventOccuredCANSendErr) {
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_AcyclicTPDOEventNotOccured) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0x00u);
@@ -858,11 +923,10 @@ TEST(CO_Tpdo, CoTpdoSync_AcyclicTPDOEventNotOccured) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_CyclicTPDO) {
-  int data = 0;
-  can_net_set_send_func(net, can_send_func, &data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0x02u);
@@ -877,19 +941,25 @@ TEST(CO_Tpdo, CoTpdoSync_CyclicTPDO) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 
   const auto ret2 = co_tpdo_sync(tpdo, 0x00u);
 
   CHECK_EQUAL(0, ret2);
   CHECK(can_send_func_called);
-  POINTERS_EQUAL(&data, can_send_func_data);
+  POINTERS_EQUAL(&can_data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(0, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  CHECK(tpdo_ind_args.ptr != nullptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_PDOSyncNotEqualToCounter) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
@@ -904,10 +974,10 @@ TEST(CO_Tpdo, CoTpdoSync_PDOSyncNotEqualToCounter) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_NoPDOSync) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
@@ -922,10 +992,10 @@ TEST(CO_Tpdo, CoTpdoSync_NoPDOSync) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_SynchronousTPDODontSend) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
@@ -940,10 +1010,10 @@ TEST(CO_Tpdo, CoTpdoSync_SynchronousTPDODontSend) {
 
   CHECK_EQUAL(0, ret);
   CHECK(!can_send_func_called);
+  CHECK(!tpdo_ind_func_called);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_SynchronousTPDOInitFrameFail) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
@@ -966,12 +1036,12 @@ TEST(CO_Tpdo, CoTpdoSync_SynchronousTPDOInitFrameFail) {
 
   CHECK_EQUAL(-1, ret);
   CHECK(!can_send_func_called);
-}
-
-TEST(CO_Tpdo, CoTpdoGetNext_TpIsNull) {
-  CreateTpdo();
-
-  co_tpdo_get_next(tpdo, nullptr);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_NO_OBJ, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoSync_PDOSyncEqualToCounterCANSendFail) {
@@ -995,18 +1065,20 @@ TEST(CO_Tpdo, CoTpdoSync_PDOSyncEqualToCounterCANSendFail) {
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
+  CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOExtendedFrame) {
-  int can_data = 0;
-  can_net_set_send_func(net, can_send_func, &can_data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID | CO_PDO_COBID_FRAME);
   SetCommTransmissionType(0xfcu);
 
   CreateTpdo();
-  int ind_data = 0;
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, &ind_data);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1018,6 +1090,10 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOExtendedFrame) {
   CHECK_EQUAL(0, ret);
   CHECK(tpdo_ind_func_called);
   POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
+  CHECK_EQUAL(0, tpdo_ind_args.ac);
+  CHECK_EQUAL(0, tpdo_ind_args.n);
+  CHECK(tpdo_ind_args.ptr != nullptr);
+  POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
   CHECK(can_send_func_called);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u | CAN_FLAG_IDE, sent_msg.flags);
@@ -1025,15 +1101,11 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOExtendedFrame) {
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameUnavailable) {
-  int can_data = 0;
-  can_net_set_send_func(net, can_send_func, &can_data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
 
   CreateTpdo();
-  int ind_data = 0;
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, &ind_data);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1055,15 +1127,13 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameUnavailable) {
   CHECK_EQUAL(0u, sent_msg.len);
 }
 
-TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailable) {
-  int data = 0;
-  can_net_set_send_func(net, can_send_func, &data);
+TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailableTpdoIndIsNull) {
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfcu);
 
   CreateTpdo();
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, nullptr);
+  co_tpdo_set_ind(tpdo, nullptr, nullptr);
 
   co_tpdo_sync(tpdo, 0x00u);
 
@@ -1074,17 +1144,14 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailable) {
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK(!tpdo_ind_func_called);
   CHECK(can_send_func_called);
-  POINTERS_EQUAL(&data, can_send_func_data);
+  POINTERS_EQUAL(&can_data, can_send_func_data);
   CHECK_EQUAL(CAN_ID, sent_msg.id);
   CHECK_EQUAL(0u, sent_msg.flags);
   CHECK_EQUAL(0u, sent_msg.len);
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDO) {
-  int can_data = 0;
-  can_net_set_send_func(net, can_send_func, &can_data);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfdu);
@@ -1093,8 +1160,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDO) {
   InsertInto1a00SubidxMapVal(0x01u, 0u);
 
   CreateTpdo();
-  int ind_data = 0;
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, &ind_data);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1104,6 +1169,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDO) {
 
   CHECK_EQUAL(0, ret);
   CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
   POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
   CHECK_EQUAL(0u, tpdo_ind_args.ac);
   CHECK(tpdo_ind_args.ptr != nullptr);
@@ -1118,7 +1184,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDO) {
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailNoInd) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfdu);
@@ -1141,7 +1206,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailNoInd) {
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x02u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0xfdu);
@@ -1150,8 +1214,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
   InsertInto1a00SubidxMapVal(0x01u, 0x202000f0u);
 
   CreateTpdo();
-  int data = 0;
-  co_tpdo_set_ind(tpdo, tpdo_ind_func, &data);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1161,6 +1223,7 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
 
   CHECK_EQUAL(0, ret);
   CHECK(tpdo_ind_func_called);
+  POINTERS_EQUAL(&ind_data, tpdo_ind_args.data);
   POINTERS_EQUAL(tpdo, tpdo_ind_args.tpdo);
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, tpdo_ind_args.ac);
   POINTERS_EQUAL(nullptr, tpdo_ind_args.ptr);
@@ -1168,7 +1231,6 @@ TEST(CO_Tpdo, CoTpdoRecv_EventDrivenTPDOFrameInitFailInd) {
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_NoPDOInSyncWindow_NoIndFunc) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x05u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0x00u);
@@ -1204,7 +1266,6 @@ TEST(CO_Tpdo, CoTpdoRecv_NoPDOInSyncWindow_NoIndFunc) {
 }
 
 TEST(CO_Tpdo, CoTpdoRecv_NoPDOInSyncWindow) {
-  can_net_set_send_func(net, can_send_func, nullptr);
   SetCommHighestSubidxSupported(0x05u);
   SetCommCobid(CAN_ID);
   SetCommTransmissionType(0x00u);
