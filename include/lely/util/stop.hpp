@@ -307,7 +307,7 @@ class StopSource {
    * any, and a default-constructed (empty) stop token otherwise.
    */
   StopToken
-  get_token() noexcept {
+  get_token() const noexcept {
     return StopToken(stop_source_get_token(*this));
   }
 
