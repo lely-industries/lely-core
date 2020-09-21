@@ -164,9 +164,22 @@ struct invoke_result : detail::invoke_result<void, F, Args...> {};
 template <class F, class... Args>
 using invoke_result_t = typename invoke_result<F, Args...>::type;
 
-/// Utility metafunction that maps a sequence of any types to the type `void`.
-template <class...>
-using void_t = void;
+namespace detail {
+
+template <class>
+struct make_void {
+  using type = void;
+};
+
+}  // namespace detail
+
+/**
+ * Utility metafunction that maps a sequence of any types to the type `void`.
+ * The standard definition, `template <class...> using void_t = void;`, does not
+ * work on GCC 4.9.
+ */
+template <class... T>
+using void_t = typename detail::make_void<T...>::type;
 
 namespace detail {
 
@@ -174,7 +187,7 @@ template <class, class, class = void>
 struct is_invocable : ::std::false_type {};
 
 template <class Result, class R>
-struct is_invocable<Result, R, void_t<typename Result::type>>
+struct is_invocable<Result, R, typename make_void<typename Result::type>::type>
     : bool_constant<::std::is_void<R>::value ||
                     ::std::is_convertible<typename Result::type, R>::value> {};
 
