@@ -42,19 +42,19 @@ pheap_insert(struct pheap *heap, struct pnode *node)
 
 	if (!heap->root) {
 		node->parent = NULL;
-		node->child = NULL;
 		node->next = NULL;
+		node->child = NULL;
 		heap->root = node;
 	} else if (heap->cmp(node->key, heap->root->key) < 0) {
 		node->parent = NULL;
-		node->child = heap->root;
 		node->next = NULL;
+		node->child = heap->root;
 		heap->root->parent = node;
 		heap->root = node;
 	} else {
 		node->parent = heap->root;
-		node->child = NULL;
 		node->next = heap->root->child;
+		node->child = NULL;
 		heap->root->child = node;
 	}
 
@@ -69,20 +69,27 @@ pheap_remove(struct pheap *heap, struct pnode *node)
 	assert(node);
 
 	if (node->parent) {
-		struct pnode **pchild = &node->parent->child;
-		while (*pchild != node)
-			pchild = &(*pchild)->next;
-		*pchild = node->next;
-		node->next = NULL;
+		// Obtain the address of the pointer to this node in the parent
+		// or previous sibling.
+		struct pnode **pnode = &node->parent->child;
+		while (*pnode != node)
+			pnode = &(*pnode)->next;
+		// Remove the node from the list.
+		*pnode = node->next;
 	} else {
 		heap->root = NULL;
 	}
 
-	node->child = pnode_merge_pairs(node->child, heap->cmp);
+	node->parent = NULL;
+	node->next = NULL;
+	struct pnode *child = node->child;
+	node->child = NULL;
 
-	heap->root = pnode_merge(heap->root, node->child, heap->cmp);
-	if (heap->root)
+	if (child) {
+		child = pnode_merge_pairs(child, heap->cmp);
+		heap->root = pnode_merge(heap->root, child, heap->cmp);
 		heap->root->parent = NULL;
+	}
 
 	heap->num_nodes--;
 }
@@ -117,17 +124,17 @@ pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 		return n1;
 
 	assert(cmp);
-	if (cmp(n1->key, n2->key) < 0) {
-		n2->parent = n1;
-		n2->next = n1->child;
-		n1->child = n2;
-		return n1;
-	} else {
-		n1->parent = n2;
-		n1->next = n2->child;
-		n2->child = n1;
-		return n2;
+	if (cmp(n1->key, n2->key) >= 0) {
+		struct pnode *tmp = n1;
+		n1 = n2;
+		n2 = tmp;
 	}
+
+	n2->parent = n1;
+	n2->next = n1->child;
+	n1->child = n2;
+
+	return n1;
 }
 
 static struct pnode *
