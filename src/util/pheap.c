@@ -140,17 +140,12 @@ pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 static struct pnode *
 pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp)
 {
-	if (!node)
-		return NULL;
-
-	if (!node->next)
-		return node;
-
-	struct pnode *next = pnode_merge_pairs(node->next->next, cmp);
-	node = pnode_merge(node, node->next, cmp);
-	node = pnode_merge(node, next, cmp);
-	node->next = NULL;
-
+	while (node && node->next) {
+		struct pnode *next = node->next->next;
+		node->next->next = NULL;
+		node = pnode_merge(node, node->next, cmp);
+		node->next = next;
+	}
 	return node;
 }
 
