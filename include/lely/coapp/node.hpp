@@ -550,10 +550,8 @@ class Node : public io::CanNet, public Device {
    * event-driven PDOs triggered by TpdoWriteEvent() or WriteEvent().
    */
   TpdoEventMutex tpdo_event_mutex;
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
-#endif
   void on_can_state(io::CanState new_state,
                     io::CanState old_state) noexcept final;
   void on_can_error(io::CanError error) noexcept final;
@@ -759,10 +757,6 @@ class Node : public io::CanNet, public Device {
    */
   virtual void OnStore(uint8_t id, int bitrate);
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-
- private:
-#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };

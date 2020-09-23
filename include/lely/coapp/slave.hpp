@@ -817,10 +817,8 @@ class BasicSlave : public Node {
   typename ::std::enable_if<is_canopen<T>::value>::type OnWrite(
       uint16_t idx, ::std::function<OnWriteSignature<T>> ind,
       ::std::error_code& ec);
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
-#endif
   /**
    * The function invoked when a life guarding event occurs or is resolved. Note
    * that depending on the value of object 1029:01 (Error behavior object), the
@@ -834,10 +832,7 @@ class BasicSlave : public Node {
   OnLifeGuarding(bool occurred) noexcept {
     (void)occurred;
   };
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
 
- private:
-#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };
