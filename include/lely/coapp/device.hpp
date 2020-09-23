@@ -952,7 +952,8 @@ class Device {
   /*
    * The function invoked when a value is successfully written to an RPDO-mapped
    * object in the local object dictionary by a Receive-PDO (or SDO download)
-   * request.
+   * request. In the case of a PDO, this function is invoked for each sub-object
+   * in the order of the RPDO mapping.
    *
    * @param id     the node-ID.
    * @param idx    the remote object index.
