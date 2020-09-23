@@ -108,8 +108,7 @@ class BasicSlave : public Node {
     template <class T>
     SubObject&
     operator=(T&& value) {
-      Set(::std::forward<T>(value));
-      return *this;
+      return Set(::std::forward<T>(value));
     }
 
     /**
@@ -198,6 +197,8 @@ class BasicSlave : public Node {
      *
      * @param value the value to be written.
      *
+     * @returns `*this`.
+     *
      * @throws #lely::canopen::SdoError if the sub-object does not exist or the
      * type does not match.
      *
@@ -205,12 +206,13 @@ class BasicSlave : public Node {
      * @see Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T&& value)
      */
     template <class T>
-    void
+    SubObject&
     Set(T&& value) {
       if (id_)
         slave_->TpdoSet(id_, idx_, subidx_, ::std::forward<T>(value));
       else
         slave_->Set(idx_, subidx_, ::std::forward<T>(value));
+      return *this;
     }
 
     /**
@@ -220,6 +222,8 @@ class BasicSlave : public Node {
      * @param ec    if the sub-object does not exist or the type does not match,
      *              the SDO abort code is stored in <b>ec</b>.
      *
+     * @returns `*this`.
+     *
      * @see Device::Set(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
      * @see Device::Set(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
      * @see Device::Set(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
@@ -227,12 +231,13 @@ class BasicSlave : public Node {
      * @see Device::TpdoSet(uint8_t id, uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
      */
     template <class T>
-    void
+    SubObject&
     Set(T&& value, ::std::error_code& ec) noexcept {
       if (id_)
         slave_->TpdoSet(id_, idx_, subidx_, ::std::forward<T>(value), ec);
       else
         slave_->Set(idx_, subidx_, ::std::forward<T>(value), ec);
+      return *this;
     }
 
     /**
@@ -241,14 +246,17 @@ class BasicSlave : public Node {
      * @param p a pointer to the bytes to be written.
      * @param n the number of bytes to write.
      *
+     * @returns `*this`.
+     *
      * @throws #lely::canopen::SdoError if the sub-object does not exist or the
      * type does not match.
      *
      * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n)
      */
-    void
+    SubObject&
     Set(const void* p, ::std::size_t n) {
       if (!id_) slave_->Set(idx_, subidx_, p, n);
+      return *this;
     }
 
     /**
@@ -259,11 +267,14 @@ class BasicSlave : public Node {
      * @param ec if the sub-object does not exist or the type does not match,
      *           the SDO abort code is stored in <b>ac</b>.
      *
+     * @returns `*this`.
+     *
      * @see Device::Set(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
      */
-    void
+    SubObject&
     Set(const void* p, ::std::size_t n, ::std::error_code& ec) noexcept {
       if (!id_) slave_->Set(idx_, subidx_, p, n, ec);
+      return *this;
     }
 
     /**
