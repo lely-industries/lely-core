@@ -30,8 +30,6 @@
 static struct pnode *pnode_merge(
 		struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp);
 static struct pnode *pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp);
-static struct pnode *pnode_find(
-		struct pnode *node, const void *key, pheap_cmp_t *cmp);
 
 void
 pheap_insert(struct pheap *heap, struct pnode *node)
@@ -98,8 +96,26 @@ struct pnode *
 pheap_find(const struct pheap *heap, const void *key)
 {
 	assert(heap);
+	assert(heap->cmp);
 
-	return pnode_find(heap->root, key, heap->cmp);
+	struct pnode *node = heap->root;
+	struct pnode *parent = NULL;
+	while (node) {
+		int c = heap->cmp(key, node->key);
+		if (!c) {
+			return node;
+		} else if (c > 0 && node->child) {
+			parent = node;
+			node = node->child;
+		} else {
+			node = node->next;
+			while (!node && parent) {
+				node = parent->next;
+				parent = parent->parent;
+			}
+		}
+	}
+	return node;
 }
 
 int
@@ -147,23 +163,4 @@ pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp)
 		node->next = next;
 	}
 	return node;
-}
-
-static struct pnode *
-pnode_find(struct pnode *node, const void *key, pheap_cmp_t *cmp)
-{
-	assert(cmp);
-
-	for (; node; node = node->next) {
-		int c = cmp(key, node->key);
-		if (!c) {
-			return node;
-		} else if (c > 0) {
-			struct pnode *child = pnode_find(node->child, key, cmp);
-			if (child)
-				return child;
-		}
-	}
-
-	return NULL;
 }
