@@ -481,8 +481,13 @@ AS_IF([test "$enable_python" != "no"], [
 	AX_CHECK_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
 ])
 
-AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
-AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+AM_CONDITIONAL([HAVE_DOXYGEN], [false])
+AC_ARG_ENABLE([doc],
+	AS_HELP_STRING([--disable-doc], [disable Doxygen documentation]))
+AS_IF([test "$enable_doc" != "no"], [
+	AC_CHECK_PROG([DOXYGEN], [doxygen], [doxygen])
+	AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
+])
 
 AC_PROG_AWK
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
