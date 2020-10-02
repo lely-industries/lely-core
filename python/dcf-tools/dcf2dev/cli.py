@@ -21,7 +21,7 @@ def open_or_stdout(filename):
 
 
 def read_device_from_dcf(filename):
-    env = {"NODEID": 10}
+    env = {}
     dev = dcf.Device.from_dcf(filename, env)
     dev.c = CDevice(dev)
     return dev
