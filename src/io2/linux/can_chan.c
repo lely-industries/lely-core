@@ -811,59 +811,64 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 {
 	struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
 
-#if !LELY_NO_THREADS
-	// Compute the absolute timeout for pthread_cond_timedwait().
-	struct timespec ts = { 0, 0 };
-	if (timeout > 0) {
-		if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-			return -1;
-		timespec_add_msec(&ts, timeout);
-	}
-#endif
-
+	struct io_can_frame frame_;
+	struct io_can_frame *frame = &frame_;
 #if !LELY_NO_THREADS
 	pthread_mutex_lock(&impl->c_mtx);
 #endif
-	size_t i = 0;
+	size_t n = 0;
 	for (;;) {
 		// Check if a frame is available in the receive queue.
-		size_t n = 1;
-		i = spscring_c_alloc(&impl->rxring, &n);
-		if (n)
+		n = 1;
+		size_t i = spscring_c_alloc(&impl->rxring, &n);
+		if (n) {
+			frame = &impl->rxbuf[i];
 			break;
-		if (!timeout) {
+		}
+		// If not, read a frame directly.
+		int fd = impl->fd;
 #if !LELY_NO_THREADS
-			pthread_mutex_unlock(&impl->c_mtx);
+		pthread_mutex_unlock(&impl->c_mtx);
 #endif
+		int flags = 0;
+		// clang-format off
+		if (io_can_fd_read(fd, &frame->frame, &frame->nbytes, &flags,
+				&frame->ts, timeout) < 0)
+			// clang-format on
+			return -1;
+		// Process the frame unless it is a write confirmation.
+		if (!(flags & MSG_CONFIRM))
+			break;
+		// Convert the frame from the SocketCAN format.
+		void *src = &frame->frame;
+		struct can_msg msg;
+#if !LELY_NO_CANFD
+		if (frame->nbytes == CANFD_MTU)
+			canfd_frame2can_msg(src, &msg);
+		else
+#endif
+			can_frame2can_msg(src, &msg);
+		// Process the write confirmation.
+		struct sllist queue;
+		sllist_init(&queue);
+#if !LELY_NO_THREADS
+		pthread_mutex_lock(&impl->c_mtx);
+#endif
+		io_can_chan_impl_do_confirm(impl, &queue, &msg);
+#if !LELY_NO_THREADS
+		pthread_mutex_unlock(&impl->c_mtx);
+#endif
+		ev_task_queue_post(&queue);
+		// Only block once if the timeout is relative (i.e., positive).
+		if (timeout >= 0) {
 			errno = EAGAIN;
 			return -1;
 		}
-		// Submit a wait operation for a single frame.
-		// clang-format off
-		if (!spscring_c_submit_wait(&impl->rxring, 1,
-				&io_can_chan_impl_c_signal, impl))
-			// clang-format on
-			// If the wait condition was already satisfied, try
-			// again.
-			continue;
 #if !LELY_NO_THREADS
-		// Wait for the buffer to signal that a frame is available, or
-		// time out if that takes too long.
-		int errc;
-		if (timeout > 0)
-			errc = pthread_cond_timedwait(
-					&impl->c_cond, &impl->c_mtx, &ts);
-		else
-			errc = pthread_cond_wait(&impl->c_cond, &impl->c_mtx);
-		if (errc) {
-			pthread_mutex_unlock(&impl->c_mtx);
-			errno = errc == ETIMEDOUT ? EAGAIN : errc;
-			return -1;
-		}
+		pthread_mutex_lock(&impl->c_mtx);
 #endif
 	}
-	// Copy the frame from the buffer.
-	struct io_can_frame *frame = &impl->rxbuf[i];
+	// Parse the frame.
 	void *data = &frame->frame;
 	int is_err = can_frame2can_err(data, err);
 	if (!is_err && msg) {
@@ -876,10 +881,13 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 	}
 	if (tp)
 		*tp = frame->ts;
-	spscring_c_commit(&impl->rxring, 1);
+	// Remove the frame from the receive queue, if necessary.
+	if (n) {
+		spscring_c_commit(&impl->rxring, n);
 #if !LELY_NO_THREADS
-	pthread_mutex_unlock(&impl->c_mtx);
+		pthread_mutex_unlock(&impl->c_mtx);
 #endif
+	}
 
 	return is_err == -1 ? -1 : !is_err;
 }
@@ -1131,7 +1139,7 @@ io_can_chan_impl_rxbuf_task_func(struct ev_task *task)
 		errc = !result ? 0 : errno;
 		wouldblock = errc == EAGAIN || errc == EWOULDBLOCK;
 
-		// Convert the frame from the SocktetCAN format if it is a write
+		// Convert the frame from the SocketCAN format if it is a write
 		// confirmation.
 		struct can_msg msg;
 		if (!result && (flags & MSG_CONFIRM)) {
@@ -1240,7 +1248,7 @@ io_can_chan_impl_read_task_func(struct ev_task *task)
 			// frames, unless we're already waiting for one.
 			post_rxbuf = !impl->rxbuf_posted
 					&& !(impl->events & IO_EVENT_IN)
-					&& impl->fd != -1;
+					&& impl->fd != -1 && !impl->shutdown;
 	}
 	if (post_rxbuf)
 		impl->rxbuf_posted = 1;
