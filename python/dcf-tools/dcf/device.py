@@ -469,8 +469,12 @@ class Value:
                     offset = env[self.variable.upper()]
                 else:
                     raise KeyError("$" + self.variable + " not defined")
-            if self.data_type.index == 0x0008 or self.data_type.index == 0x0011:
-                value = float(self.value)
+            if self.data_type.index == 0x0008:
+                value = "{:08X}".format(int(self.value, 0))
+                value = float(struct.unpack("!f", bytes.fromhex(value))[0])
+            elif self.data_type.index == 0x0011:
+                value = "{:016X}".format(int(self.value, 0))
+                value = float(struct.unpack("!d", bytes.fromhex(value))[0])
             else:
                 value = int(self.value, 0)
             return offset + value
@@ -482,7 +486,8 @@ class Value:
             return bytes.fromhex(self.value)
         elif self.data_type.index == 0x000C or self.data_type.index == 0x000D:
             # TIME_OF_DAY and TIME_DIFFERENCE values are tuples of days and milliseconds.
-            days, ms = self.value.split()
+            value = self.value if self.value else "0 0"
+            days, ms = value.split()
             return (int(days, 0), int(ms, 0))
         else:
             raise ValueError("invalid DataType: 0x{:04X}".format(self.data_type.index))
