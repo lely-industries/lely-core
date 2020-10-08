@@ -486,7 +486,8 @@ class Value:
             return bytes.fromhex(self.value)
         elif self.data_type.index == 0x000C or self.data_type.index == 0x000D:
             # TIME_OF_DAY and TIME_DIFFERENCE values are tuples of days and milliseconds.
-            days, ms = self.value.split()
+            value = self.value if self.value else "0 0"
+            days, ms = value.split()
             return (int(days, 0), int(ms, 0))
         else:
             raise ValueError("invalid DataType: 0x{:04X}".format(self.data_type.index))
