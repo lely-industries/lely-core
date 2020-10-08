@@ -1,4 +1,5 @@
 import re
+import struct
 import warnings
 
 
@@ -571,6 +572,16 @@ def __parse_data_type(cfg: dict, section: str) -> bool:
     return ok
 
 
+def __parse_float(value: str, data_type: int):
+    if data_type == 0x0008:
+        value = "{:08X}".format(int(value, 0))
+        return float(struct.unpack("!f", bytes.fromhex(value))[0])
+    elif data_type == 0x0011:
+        value = "{:016X}".format(int(value, 0))
+        return float(struct.unpack("!d", bytes.fromhex(value))[0])
+    return 0
+
+
 __p_value = re.compile(
     r"\s*(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
     re.IGNORECASE,
@@ -583,7 +594,7 @@ def __parse_limit(cfg: dict, section: str, entry: str, data_type: int) -> bool:
         value_has_nodeid = False
         try:
             if data_type == 0x0008 or data_type == 0x0011:
-                value = float(cfg[section][entry])
+                value = __parse_float(cfg[section][entry], data_type)
             else:
                 m = __p_value.match(cfg[section][entry])
                 if m:
@@ -629,9 +640,9 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
         high_limit_has_nodeid = False
         if data_type == 0x0008 or data_type == 0x0011:
             if "LowLimit" in cfg:
-                low_limit = float(cfg["LowLimit"])
+                low_limit = __parse_float(cfg["LowLimit"], data_type)
             if "HighLimit" in cfg:
-                high_limit = float(cfg["HighLimit"])
+                high_limit = __parse_float(cfg["HighLimit"], data_type)
         else:
             if "LowLimit" in cfg:
                 m = __p_value.match(cfg["LowLimit"])
@@ -661,7 +672,7 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
         value_has_nodeid = False
         if data_type == 0x0008 or data_type == 0x0011:
             try:
-                value = float(value)
+                value = __parse_float(value, data_type)
             except ValueError:
                 warnings.warn(
                     "invalid {} in [{}]: {}".format(entry, section, value), stacklevel=5
