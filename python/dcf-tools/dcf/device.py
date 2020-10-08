@@ -469,8 +469,12 @@ class Value:
                     offset = env[self.variable.upper()]
                 else:
                     raise KeyError("$" + self.variable + " not defined")
-            if self.data_type.index == 0x0008 or self.data_type.index == 0x0011:
-                value = float(self.value)
+            if self.data_type.index == 0x0008:
+                value = "{:08X}".format(int(self.value, 0))
+                value = float(struct.unpack("!f", bytes.fromhex(value))[0])
+            elif self.data_type.index == 0x0011:
+                value = "{:016X}".format(int(self.value, 0))
+                value = float(struct.unpack("!d", bytes.fromhex(value))[0])
             else:
                 value = int(self.value, 0)
             return offset + value
