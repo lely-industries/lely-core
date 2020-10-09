@@ -851,11 +851,10 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 		pthread_mutex_unlock(&impl->mtx);
 #endif
 		ev_task_queue_post(&queue);
-		// Only block once if the timeout is relative (i.e., positive).
-		if (timeout >= 0) {
-			errno = EAGAIN;
-			return -1;
-		}
+		// Since the timeout is relative, we can only use a positive
+		// value once.
+		if (timeout > 0)
+			timeout = 0;
 #if !LELY_NO_THREADS
 		pthread_mutex_lock(&impl->c_mtx);
 #endif
