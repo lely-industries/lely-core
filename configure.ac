@@ -509,18 +509,28 @@ AS_IF([test "$platform_linux" == "yes"], [
 	AC_CHECK_HEADERS([sys/ioctl.h])
 ])
 
-AM_CONDITIONAL([HAVE_PYTHON2], [false])
-AM_CONDITIONAL([HAVE_PYTHON3], [false])
 AC_ARG_ENABLE([python],
-	AS_HELP_STRING([--disable-python], [disable Python tools]))
-AS_IF([test "$enable_python" != "no"], [
+	AS_HELP_STRING([--disable-python], [disable Python tools and bindings]))
+
+AM_CONDITIONAL([HAVE_PYTHON2], [false])
+AC_ARG_ENABLE([python2],
+	AS_HELP_STRING([--disable-python2], [disable Python 2 tools and bindings]))
+AS_IF([test "$enable_python" == "no"], [enable_python2=no])
+AS_IF([test "$enable_python2" != "no"], [
 	AX_CHECK_PYTHON([2], [AM_CONDITIONAL([HAVE_PYTHON2], [true])])
+])
+
+AM_CONDITIONAL([HAVE_PYTHON3], [false])
+AC_ARG_ENABLE([python3],
+	AS_HELP_STRING([--disable-python3], [disable Python 3 tools and bindings]))
+AS_IF([test "$enable_python" == "no"], [enable_python3=no])
+AS_IF([test "$enable_python3" != "no"], [
 	AX_CHECK_PYTHON([3], [AM_CONDITIONAL([HAVE_PYTHON3], [true])])
 ])
 
 AM_CONDITIONAL([NO_CYTHON], [false])
 AC_ARG_ENABLE([cython],
-	AS_HELP_STRING([--disable-cython], [do not generate Python bindins with Cython]))
+	AS_HELP_STRING([--disable-cython], [do not generate Python bindings with Cython]))
 AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes" -o "$enable_ecss_compliance" == "yes" -o "enable_python" == "no"], [
 	enable_cython=no
 ])
