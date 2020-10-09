@@ -31,7 +31,7 @@ if USE_CYTHON:
 
 setup(
     name='lely_io',
-    version='2.0.6',
+    version='2.0.7',
     description='Python bindings for the Lely I/O library.',
     url='https://gitlab.com/lely_industries/lely-core',
     author='J. S. Seldenthuis',
