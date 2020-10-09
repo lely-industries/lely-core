@@ -156,8 +156,6 @@ struct io_can_chan_impl {
 #if !LELY_NO_THREADS
 	/// The mutex protecting the receive queue consumer.
 	pthread_mutex_t c_mtx;
-	/// The condition variable used to wake up the receive queue consumer.
-	pthread_cond_t c_cond;
 #endif
 	/// The ring buffer used to control the receive queue.
 	struct spscring rxring;
@@ -274,8 +272,6 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 #if !LELY_NO_THREADS
 	if ((errsv = pthread_mutex_init(&impl->c_mtx, NULL)))
 		goto error_init_c_mtx;
-	if ((errsv = pthread_cond_init(&impl->c_cond, NULL)))
-		goto error_init_c_cond;
 #endif
 
 	spscring_init(&impl->rxring, rxlen);
@@ -316,8 +312,6 @@ error_init_mtx:
 	free(impl->rxbuf);
 error_alloc_rxbuf:
 #if !LELY_NO_THREADS
-	pthread_cond_destroy(&impl->c_cond);
-error_init_c_cond:
 	pthread_mutex_destroy(&impl->c_mtx);
 error_init_c_mtx:
 #endif
@@ -372,7 +366,6 @@ io_can_chan_fini(io_can_chan_t *chan)
 	free(impl->rxbuf);
 
 #if !LELY_NO_THREADS
-	pthread_cond_destroy(&impl->c_cond);
 	pthread_mutex_destroy(&impl->c_mtx);
 #endif
 }
@@ -852,11 +845,11 @@ io_can_chan_impl_read(io_can_chan_t *chan, struct can_msg *msg,
 		struct sllist queue;
 		sllist_init(&queue);
 #if !LELY_NO_THREADS
-		pthread_mutex_lock(&impl->c_mtx);
+		pthread_mutex_lock(&impl->mtx);
 #endif
 		io_can_chan_impl_do_confirm(impl, &queue, &msg);
 #if !LELY_NO_THREADS
-		pthread_mutex_unlock(&impl->c_mtx);
+		pthread_mutex_unlock(&impl->mtx);
 #endif
 		ev_task_queue_post(&queue);
 		// Only block once if the timeout is relative (i.e., positive).
@@ -1402,13 +1395,6 @@ io_can_chan_impl_c_signal(struct spscring *ring, void *arg)
 	(void)ring;
 	struct io_can_chan_impl *impl = arg;
 	assert(impl);
-
-#if !LELY_NO_THREADS
-	while (pthread_mutex_lock(&impl->c_mtx) == EINTR)
-		;
-	pthread_cond_broadcast(&impl->c_cond);
-	pthread_mutex_unlock(&impl->c_mtx);
-#endif
 
 #if !LELY_NO_THREADS
 	while (pthread_mutex_lock(&impl->mtx) == EINTR)
