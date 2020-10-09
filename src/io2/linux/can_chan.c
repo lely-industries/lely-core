@@ -241,7 +241,6 @@ io_can_chan_init(io_can_chan_t *chan, io_poll_t *poll, ev_exec_t *exec,
 		size_t rxlen)
 {
 	struct io_can_chan_impl *impl = io_can_chan_impl_from_chan(chan);
-	assert(exec);
 	io_ctx_t *ctx = poll ? io_poll_get_ctx(poll) : NULL;
 
 	if (!rxlen)
@@ -894,6 +893,7 @@ io_can_chan_impl_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 
 	if (!task->exec)
 		task->exec = impl->exec;
+	assert(task->exec);
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
@@ -914,6 +914,7 @@ io_can_chan_impl_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 #if !LELY_NO_THREADS
 		pthread_mutex_unlock(&impl->mtx);
 #endif
+		assert(impl->read_task.exec);
 		if (post_read)
 			ev_exec_post(impl->read_task.exec, &impl->read_task);
 	}
@@ -973,6 +974,7 @@ io_can_chan_impl_submit_write(
 
 	if (!task->exec)
 		task->exec = impl->exec;
+	assert(task->exec);
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
@@ -1000,6 +1002,7 @@ io_can_chan_impl_submit_write(
 #if !LELY_NO_THREADS
 		pthread_mutex_unlock(&impl->mtx);
 #endif
+		assert(impl->write_task.exec);
 		if (post_write)
 			ev_exec_post(impl->write_task.exec, &impl->write_task);
 	}

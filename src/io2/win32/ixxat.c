@@ -524,7 +524,6 @@ io_ixxat_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 {
 	struct io_ixxat_chan *ixxat = io_ixxat_chan_from_chan(chan);
 	assert(ctx);
-	assert(exec);
 
 	if (!rxtimeo)
 		rxtimeo = LELY_IO_RX_TIMEOUT;
@@ -1433,6 +1432,7 @@ io_ixxat_chan_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 
 	if (!task->exec)
 		task->exec = ixxat->exec;
+	assert(task->exec);
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
@@ -1452,6 +1452,7 @@ io_ixxat_chan_submit_read(io_can_chan_t *chan, struct io_can_chan_read *read)
 #if !LELY_NO_THREADS
 		LeaveCriticalSection(&ixxat->CriticalSection);
 #endif
+		assert(ixxat->read_task.exec);
 		if (post_read)
 			ev_exec_post(ixxat->read_task.exec, &ixxat->read_task);
 	}
@@ -1483,6 +1484,7 @@ io_ixxat_chan_submit_write(io_can_chan_t *chan, struct io_can_chan_write *write)
 
 	if (!task->exec)
 		task->exec = ixxat->exec;
+	assert(task->exec);
 	ev_exec_on_task_init(task->exec);
 
 #if !LELY_NO_THREADS
@@ -1509,6 +1511,7 @@ io_ixxat_chan_submit_write(io_can_chan_t *chan, struct io_can_chan_write *write)
 #if !LELY_NO_THREADS
 		LeaveCriticalSection(&ixxat->CriticalSection);
 #endif
+		assert(ixxat->write_task.exec);
 		if (post_write)
 			ev_exec_post(ixxat->write_task.exec,
 					&ixxat->write_task);
