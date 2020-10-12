@@ -30,8 +30,6 @@
 static struct pnode *pnode_merge(
 		struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp);
 static struct pnode *pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp);
-static struct pnode *pnode_find(
-		struct pnode *node, const void *key, pheap_cmp_t *cmp);
 
 void
 pheap_insert(struct pheap *heap, struct pnode *node)
@@ -42,19 +40,19 @@ pheap_insert(struct pheap *heap, struct pnode *node)
 
 	if (!heap->root) {
 		node->parent = NULL;
-		node->child = NULL;
 		node->next = NULL;
+		node->child = NULL;
 		heap->root = node;
 	} else if (heap->cmp(node->key, heap->root->key) < 0) {
 		node->parent = NULL;
-		node->child = heap->root;
 		node->next = NULL;
+		node->child = heap->root;
 		heap->root->parent = node;
 		heap->root = node;
 	} else {
 		node->parent = heap->root;
-		node->child = NULL;
 		node->next = heap->root->child;
+		node->child = NULL;
 		heap->root->child = node;
 	}
 
@@ -69,20 +67,27 @@ pheap_remove(struct pheap *heap, struct pnode *node)
 	assert(node);
 
 	if (node->parent) {
-		struct pnode **pchild = &node->parent->child;
-		while (*pchild != node)
-			pchild = &(*pchild)->next;
-		*pchild = node->next;
-		node->next = NULL;
+		// Obtain the address of the pointer to this node in the parent
+		// or previous sibling.
+		struct pnode **pnode = &node->parent->child;
+		while (*pnode != node)
+			pnode = &(*pnode)->next;
+		// Remove the node from the list.
+		*pnode = node->next;
 	} else {
 		heap->root = NULL;
 	}
 
-	node->child = pnode_merge_pairs(node->child, heap->cmp);
+	node->parent = NULL;
+	node->next = NULL;
+	struct pnode *child = node->child;
+	node->child = NULL;
 
-	heap->root = pnode_merge(heap->root, node->child, heap->cmp);
-	if (heap->root)
+	if (child) {
+		child = pnode_merge_pairs(child, heap->cmp);
+		heap->root = pnode_merge(heap->root, child, heap->cmp);
 		heap->root->parent = NULL;
+	}
 
 	heap->num_nodes--;
 }
@@ -91,8 +96,26 @@ struct pnode *
 pheap_find(const struct pheap *heap, const void *key)
 {
 	assert(heap);
+	assert(heap->cmp);
 
-	return pnode_find(heap->root, key, heap->cmp);
+	struct pnode *node = heap->root;
+	struct pnode *parent = NULL;
+	while (node) {
+		int c = heap->cmp(key, node->key);
+		if (!c) {
+			return node;
+		} else if (c > 0 && node->child) {
+			parent = node;
+			node = node->child;
+		} else {
+			node = node->next;
+			while (!node && parent) {
+				node = parent->next;
+				parent = parent->parent;
+			}
+		}
+	}
+	return node;
 }
 
 int
@@ -117,51 +140,27 @@ pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 		return n1;
 
 	assert(cmp);
-	if (cmp(n1->key, n2->key) < 0) {
-		n2->parent = n1;
-		n2->next = n1->child;
-		n1->child = n2;
-		return n1;
-	} else {
-		n1->parent = n2;
-		n1->next = n2->child;
-		n2->child = n1;
-		return n2;
+	if (cmp(n1->key, n2->key) >= 0) {
+		struct pnode *tmp = n1;
+		n1 = n2;
+		n2 = tmp;
 	}
+
+	n2->parent = n1;
+	n2->next = n1->child;
+	n1->child = n2;
+
+	return n1;
 }
 
 static struct pnode *
 pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp)
 {
-	if (!node)
-		return NULL;
-
-	if (!node->next)
-		return node;
-
-	struct pnode *next = pnode_merge_pairs(node->next->next, cmp);
-	node = pnode_merge(node, node->next, cmp);
-	node = pnode_merge(node, next, cmp);
-	node->next = NULL;
-
-	return node;
-}
-
-static struct pnode *
-pnode_find(struct pnode *node, const void *key, pheap_cmp_t *cmp)
-{
-	assert(cmp);
-
-	for (; node; node = node->next) {
-		int c = cmp(key, node->key);
-		if (!c) {
-			return node;
-		} else if (c > 0) {
-			struct pnode *child = pnode_find(node->child, key, cmp);
-			if (child)
-				return child;
-		}
+	while (node && node->next) {
+		struct pnode *next = node->next->next;
+		node->next->next = NULL;
+		node = pnode_merge(node, node->next, cmp);
+		node->next = next;
 	}
-
-	return NULL;
+	return node;
 }
