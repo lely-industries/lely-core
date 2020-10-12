@@ -46,12 +46,12 @@ class OverridePlugin::CleanUp {
 
 void
 OverridePlugin::postTestAction(UtestShell&, TestResult&) {
-  cleanups.clear();
+  while (!cleanups.empty()) cleanups.pop();
 }
 
 void
 OverridePlugin::setForNextTest(int& vc, int target_value) {
-  cleanups.emplace_back(vc);
+  cleanups.emplace(vc);
   vc = target_value;
 }
 
