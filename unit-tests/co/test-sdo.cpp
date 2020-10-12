@@ -38,6 +38,8 @@
 #include <lely/util/diag.h>
 
 #include "lely-unit-test.hpp"
+#include "override/lelyco-val.hpp"
+#include "holder/array-init.hpp"
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -159,16 +161,120 @@ TEST(CO_Sdo, CoSdoReqDnVal_WithoutOffsetLenLo) {
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, ac);
 }
 
-// TODO(N7S)
-TEST(CO_Sdo, CoSdoReqDnVal_WithoutOffsetLenHi) {
+TEST(CO_Sdo, CoSdoReqDnVal_Unsigned8) {
+  co_unsigned8_t buf[1] = {0xCEu};
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   req.size = 1u;
+  req.buf = buf;
+  req.nbyte = 1u;
+  co_unsigned8_t value = 0x00u;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
-  co_unsigned8_t value = 0xFFu;
   co_unsigned32_t ac = 0x00000000u;
 
   const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
 
-  CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(0x00u, ac);
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0xCEu, value);
+  CHECK_EQUAL(0x00000000u, ac);
 }
+
+TEST(CO_Sdo, CoSdoReqDnVal_Unsigned16) {
+  co_unsigned8_t buf[2] = {0xCEu, 0x7Bu};
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  req.size = 2u;
+  req.buf = buf;
+  req.nbyte = 2u;
+  co_unsigned16_t value = 0x0000u;
+  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
+  co_unsigned32_t ac = 0x00000000u;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0x7BCEu, value);
+  CHECK_EQUAL(0x00000000u, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_INTEGER32) {
+  co_unsigned8_t buf[4] = {0xCEu, 0x7Bu, 0x34u, 0xFDu};
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  req.size = 4u;
+  req.buf = buf;
+  req.nbyte = 4u;
+  co_integer32_t value = 0x00000000u;
+  co_unsigned16_t type = CO_DEFTYPE_INTEGER32;
+  co_unsigned32_t ac = 0x00000000u;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(-46892082, value);
+  CHECK_EQUAL(0x00000000u, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
+  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
+                           0x8Au, 0xC1u, 0x03u, 0x56u};
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  req.size = 8u;
+  req.buf = buf;
+  req.nbyte = 8u;
+  co_unsigned64_t value = 0x0000000000000000u;
+  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
+  co_unsigned32_t ac = 0x00000000u;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0x5603C18ADB347BCEu, value);
+  CHECK_EQUAL(0x00000000u, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButSizeNotMatching) {
+  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
+
+  CoArrays arrays;
+
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  req.size = 4u;
+  req.buf = buf;
+  req.nbyte = 4u;
+  co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
+  // char16_t value[8] = {0xFFFF, 0xFFFF, 0x0000, 0x0000,
+  //                      0x0000, 0x0000, 0x0000, 0x0000};
+  co_unsigned32_t ac = 0x00000000u;
+
+  // char16_t src_arr[] = {0x0000, 0x0000, 0x0000, 0x0000,
+  //                     0x0000, 0x0000, 0x0000, 0x0000};
+  // co_val_init_array(src_arr, &arr);
+
+  co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
+  const char16_t * const STR_SRC = u"\000\000";
+  CHECK_EQUAL(str16len(STR_SRC),
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4);
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &str, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+  // const char16_t * const expected = u"ā+";
+  // CHECK(memcmp(expected, value, 4u));
+
+  CHECK_EQUAL(4u, req.size);
+  CHECK_EQUAL(req.offset + req.nbyte, req.size);
+}
+
+// TEST(CO_Sdo, CoSdoReqDnVal_WithoutOffsetLenHi) {
+
+// TEST(CO_Sdo, CoSdoReqUp) {
+//   co_sdo_req req = CO_SDO_REQ_INIT(req);
+//   const size_t n = 2u;
+//   char* buf[4] = {0x00u};
+
+//   co_sdo_req_up(&req, buf, n);
+
+//   CHECK_EQUAL(n, req.size);
+//   POINTERS_EQUAL(buf, req.buf);
+//   CHECK_EQUAL(req.nbyte, req.size);
+//   CHECK_EQUAL(0u, req.offset);
+// }
