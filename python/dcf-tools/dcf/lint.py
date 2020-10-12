@@ -421,7 +421,7 @@ def __parse_sub_object(cfg: dict, section: str, index: int, sub_index: int) -> b
                 ok = False
         if "ParameterValue" in cfg[section]:
             if not __parse_value(
-                cfg[section], section, "ParameterValue", cfg[section]["DefaultValue"]
+                cfg[section], section, "ParameterValue", cfg[section]["ParameterValue"]
             ):
                 ok = False
     else:
