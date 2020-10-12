@@ -249,7 +249,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButSizeNotMatching) {
   // co_val_init_array(src_arr, &arr);
 
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t * const STR_SRC = u"\000\000";
+  const char16_t* const STR_SRC = u"\000\000";
   CHECK_EQUAL(str16len(STR_SRC),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4);
 
