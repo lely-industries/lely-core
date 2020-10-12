@@ -23,7 +23,7 @@
 #ifndef LELY_OVERRIDE_TEST_PLUGIN_HPP_
 #define LELY_OVERRIDE_TEST_PLUGIN_HPP_
 
-#include <list>
+#include <stack>
 
 #include <CppUTest/TestHarness.h>
 #include <CppUTest/TestPlugin.h>
@@ -47,7 +47,7 @@ class OverridePlugin : public TestPlugin {
 
  private:
   class CleanUp;
-  std::list<CleanUp> cleanups;
+  std::stack<CleanUp> cleanups;
 };
 
 }  // namespace Override
