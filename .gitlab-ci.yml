@@ -455,15 +455,15 @@ docker:coverity:
         --build-arg REGISTRY=$REGISTRY
         --build-arg COVERITY_PROJECT=$COVERITY_PROJECT
         --build-arg COVERITY_TOKEN=$COVERITY_TOKEN
-        -t $CI_REGISTRY_IMAGE/coverity:bullseye docker/coverity/bullseye
-    - docker push $CI_REGISTRY_IMAGE/coverity:bullseye
+        -t $CI_REGISTRY_IMAGE/coverity:gcc9 docker/coverity/gcc9
+    - docker push $CI_REGISTRY_IMAGE/coverity:gcc9
 
 coverity:
   stage: test
   tags:
     - docker
     - linux
-  image: $REGISTRY/coverity:bullseye
+  image: $REGISTRY/coverity:gcc9
   dependencies: []
   script:
     - autoreconf -i
