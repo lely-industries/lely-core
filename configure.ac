@@ -292,6 +292,7 @@ AS_IF([test "$enable_sync" == "no"], [
 AM_CONDITIONAL([NO_CO_TIME], [false])
 AC_ARG_ENABLE([time],
 	AS_HELP_STRING([--disable-time], [disable time stamp (TIME) object support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_time=no])
 AS_IF([test "$enable_time" == "no"], [
 	AM_CONDITIONAL([NO_CO_TIME], [true])
 	AC_DEFINE([LELY_NO_CO_TIME], [1], [Define to 1 if time stamp (TIME) object support is disabled.])
@@ -308,6 +309,7 @@ AS_IF([test "$enable_emcy" == "no"], [
 AM_CONDITIONAL([NO_CO_LSS], [false])
 AC_ARG_ENABLE([lss],
 	AS_HELP_STRING([--disable-lss], [disable Layer Setting Services (LSS) and protocols support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_lss=no])
 AS_IF([test "$enable_lss" == "no"], [
 	AM_CONDITIONAL([NO_CO_LSS], [true])
 	AC_DEFINE([LELY_NO_CO_LSS], [1], [Define to 1 if Layer Setting Services (LSS) and protocols support is disabled.])
