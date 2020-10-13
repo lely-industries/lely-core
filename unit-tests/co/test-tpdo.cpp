@@ -662,12 +662,12 @@ TEST(CO_Tpdo, CoTpdoEvent_NotSynchronousInhibitTimeNotPassed) {
   SetCommEventTimer(0x0000u);
 
   timespec ts = {0, 2000};
-  can_net_set_time(net, &ts);
+  CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
   CreateTpdo();
 
   ts = {0, 1000};
-  can_net_set_time(net, &ts);
+  CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
   const auto ret = co_tpdo_event(tpdo);
 
@@ -1135,7 +1135,7 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailableTpdoIndIsNull) {
   CreateTpdo();
   co_tpdo_set_ind(tpdo, nullptr, nullptr);
 
-  co_tpdo_sync(tpdo, 0x00u);
+  const int sync_ret = co_tpdo_sync(tpdo, 0x00u);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = CAN_ID;
@@ -1143,6 +1143,7 @@ TEST(CO_Tpdo, CoTpdoRecv_SynchronousTPDOFrameAvailableTpdoIndIsNull) {
 
   const auto ret = can_net_recv(net, &msg);
 
+  CHECK_EQUAL(0, sync_ret);
   CHECK_EQUAL(0, ret);
   CHECK(can_send_func_called);
   POINTERS_EQUAL(&can_data, can_send_func_data);
