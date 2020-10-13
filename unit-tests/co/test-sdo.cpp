@@ -36,6 +36,7 @@
 #include <lely/co/sdo.h>
 #include <lely/co/type.h>
 #include <lely/util/diag.h>
+#include <lely/util/ustring.h>
 
 #include "lely-unit-test.hpp"
 #include "override/lelyco-val.hpp"
@@ -48,27 +49,70 @@
 TEST_GROUP(CO_Sdo){};
 
 TEST(CO_Sdo, CoSdoAc2Str) {
-  STRCMP_EQUAL("Unsupported access to an object",
-               co_sdo_ac2str(CO_SDO_AC_NO_ACCESS));
+  STRCMP_EQUAL("Success", co_sdo_ac2str(0));
+  STRCMP_EQUAL("Toggle bit not altered", co_sdo_ac2str(CO_SDO_AC_TOGGLE));
+  STRCMP_EQUAL("SDO protocol timed out", co_sdo_ac2str(CO_SDO_AC_TIMEOUT));
   STRCMP_EQUAL("Client/server command specifier not valid or unknown",
                co_sdo_ac2str(CO_SDO_AC_NO_CS));
-  STRCMP_EQUAL("No data available", co_sdo_ac2str(CO_SDO_AC_NO_DATA));
+  STRCMP_EQUAL("Invalid block size", co_sdo_ac2str(CO_SDO_AC_BLK_SIZE));
+  STRCMP_EQUAL("Invalid sequence number", co_sdo_ac2str(CO_SDO_AC_BLK_SEQ));
+  STRCMP_EQUAL("CRC error", co_sdo_ac2str(CO_SDO_AC_BLK_CRC));
   STRCMP_EQUAL("Out of memory", co_sdo_ac2str(CO_SDO_AC_NO_MEM));
+  STRCMP_EQUAL("Unsupported access to an object",
+               co_sdo_ac2str(CO_SDO_AC_NO_ACCESS));
+  STRCMP_EQUAL("Attempt to read a write only object",
+               co_sdo_ac2str(CO_SDO_AC_NO_READ));
+  STRCMP_EQUAL("Attempt to write a read only object",
+               co_sdo_ac2str(CO_SDO_AC_NO_WRITE));
   STRCMP_EQUAL("Object does not exist in the object dictionary",
                co_sdo_ac2str(CO_SDO_AC_NO_OBJ));
+  STRCMP_EQUAL("Object cannot be mapped to the PDO",
+               co_sdo_ac2str(CO_SDO_AC_NO_PDO));
+  STRCMP_EQUAL(
+      "The number and length of the objects to be mapped would exceed the PDO "
+      "length",
+      co_sdo_ac2str(CO_SDO_AC_PDO_LEN));
+  STRCMP_EQUAL("General parameter incompatibility reason",
+               co_sdo_ac2str(CO_SDO_AC_PARAM));
+  STRCMP_EQUAL("General internal incompatibility in the device",
+               co_sdo_ac2str(CO_SDO_AC_COMPAT));
+  STRCMP_EQUAL("Access failed due to a hardware error",
+               co_sdo_ac2str(CO_SDO_AC_HARDWARE));
+  STRCMP_EQUAL(
+      "Data type does not match, length of service parameter does not match",
+      co_sdo_ac2str(CO_SDO_AC_TYPE_LEN));
+  STRCMP_EQUAL("Data type does not match, length of service parameter too high",
+               co_sdo_ac2str(CO_SDO_AC_TYPE_LEN_HI));
+  STRCMP_EQUAL("Data type does not match, length of service parameter too low",
+               co_sdo_ac2str(CO_SDO_AC_TYPE_LEN_LO));
+  STRCMP_EQUAL("Sub-index does not exist", co_sdo_ac2str(CO_SDO_AC_NO_SUB));
+  STRCMP_EQUAL("Invalid value for parameter",
+               co_sdo_ac2str(CO_SDO_AC_PARAM_VAL));
+  STRCMP_EQUAL("Value of parameter written too high",
+               co_sdo_ac2str(CO_SDO_AC_PARAM_HI));
+  STRCMP_EQUAL("Value of parameter written too low",
+               co_sdo_ac2str(CO_SDO_AC_PARAM_LO));
+  STRCMP_EQUAL("Maximum value is less than minimum value",
+               co_sdo_ac2str(CO_SDO_AC_PARAM_RANGE));
+  STRCMP_EQUAL("Resource not available: SDO connection",
+               co_sdo_ac2str(CO_SDO_AC_NO_SDO));
+  STRCMP_EQUAL("General error", co_sdo_ac2str(CO_SDO_AC_ERROR));
+  STRCMP_EQUAL("Data cannot be transferred or stored to the application",
+               co_sdo_ac2str(CO_SDO_AC_DATA));
+  STRCMP_EQUAL(
+      "Data cannot be transferred or stored to the application because of "
+      "local control",
+      co_sdo_ac2str(CO_SDO_AC_DATA_CTL));
+  STRCMP_EQUAL(
+      "Data cannot be transferred or stored to the application because of the "
+      "present device state",
+      co_sdo_ac2str(CO_SDO_AC_DATA_DEV));
   STRCMP_EQUAL(
       "Object dictionary dynamic generation fails or no object dictionary is "
       "present",
       co_sdo_ac2str(CO_SDO_AC_NO_OD));
-  STRCMP_EQUAL("Object cannot be mapped to the PDO",
-               co_sdo_ac2str(CO_SDO_AC_NO_PDO));
-  STRCMP_EQUAL("Attempt to read a write only object",
-               co_sdo_ac2str(CO_SDO_AC_NO_READ));
-  STRCMP_EQUAL("Resource not available: SDO connection",
-               co_sdo_ac2str(CO_SDO_AC_NO_SDO));
-  STRCMP_EQUAL("Sub-index does not exist", co_sdo_ac2str(CO_SDO_AC_NO_SUB));
-  STRCMP_EQUAL("Attempt to write a read only object",
-               co_sdo_ac2str(CO_SDO_AC_NO_WRITE));
+  STRCMP_EQUAL("No data available", co_sdo_ac2str(CO_SDO_AC_NO_DATA));
+  STRCMP_EQUAL("Unknown abort code", co_sdo_ac2str(0x00000042u));
 }
 
 TEST(CO_Sdo, CoSdoReqInit) {
@@ -123,6 +167,16 @@ TEST(CO_Sdo, CoSdoReqDn_Error) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqDn_ErrorNoAcVariable) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  size_t nbyte = 0;
+  req.offset = 1u;
+
+  const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, nullptr);
+
+  CHECK_EQUAL(-1, ret);
 }
 
 TEST(CO_Sdo, CoSdoReqDn) {
@@ -195,7 +249,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned16) {
   CHECK_EQUAL(0x00000000u, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_INTEGER32) {
+TEST(CO_Sdo, CoSdoReqDnVal_Integer32) {
   co_unsigned8_t buf[4] = {0xCEu, 0x7Bu, 0x34u, 0xFDu};
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   req.size = 4u;
@@ -230,51 +284,145 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
   CHECK_EQUAL(0x00000000u, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButSizeNotMatching) {
+TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
 
   CoArrays arrays;
-
   co_sdo_req req = CO_SDO_REQ_INIT(req);
-  req.size = 4u;
+  req.size = 2u;
   req.buf = buf;
   req.nbyte = 4u;
   co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
-  // char16_t value[8] = {0xFFFF, 0xFFFF, 0x0000, 0x0000,
-  //                      0x0000, 0x0000, 0x0000, 0x0000};
   co_unsigned32_t ac = 0x00000000u;
 
-  // char16_t src_arr[] = {0x0000, 0x0000, 0x0000, 0x0000,
-  //                     0x0000, 0x0000, 0x0000, 0x0000};
-  // co_val_init_array(src_arr, &arr);
-
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t* const STR_SRC = u"\000\000";
+  const char16_t* const STR_SRC = u"FF";
   CHECK_EQUAL(str16len(STR_SRC),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4);
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4));
 
+  LelyOverride::co_val_read(0);
   const auto ret = co_sdo_req_dn_val(&req, type, &str, &ac);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-  // const char16_t * const expected = u"ā+";
-  // CHECK(memcmp(expected, value, 4u));
+  const char16_t* const expected = u"ā+";
+  CHECK(memcmp(expected, str, 4u));
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailedNoAcVariable) {
+  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
+
+  CoArrays arrays;
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  // co_unsigned32_t req_ac = 0x00000000u;
+  // size_t nbyte = 4u;
+  // co_sdo_req_dn(&req, buf, &nbyte, &req_ac);
+  co_sdo_req_up(&req, buf, 2u);
+  co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
+
+  co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
+  const char16_t* const STR_SRC = u"FF";
+  CHECK_EQUAL(str16len(STR_SRC),
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4));
+
+  LelyOverride::co_val_read(0);
+  const auto ret = co_sdo_req_dn_val(&req, type, &str, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  const char16_t* const expected = u"ā+";
+  CHECK(memcmp(expected, str, 4u));
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
+  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0xC9u, 0x24u};
+
+  CoArrays arrays;
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  co_sdo_req_up(&req, buf, 4u);
+  req.nbyte = 2u;
+  co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
+  co_unsigned32_t ac = 0x00000000u;
+
+  co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
+  const char16_t* const STR_SRC = u"FF";
+  CHECK_EQUAL(str16len(STR_SRC),
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4u));
+  CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &str, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0x00000000u, ac);
+  CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
+  const char16_t* const expected = u"ā\000";
+  // characters are copied to the temporary memory buffer
+  CHECK(memcmp(expected, req.membuf->begin, 4u) == 0);
+
+  req.buf = buf + 2u;
+  req.offset = 2u;
+  req.nbyte = 2u;
+
+  co_sdo_req_dn_val(&req, type, &str, &ac);
+
+  const char16_t* const expected2 = u"āⓉ";
+  CHECK_EQUAL(0, str16ncmp(expected2, str, 2u));
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_IsArray) {
+  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x2Bu, 0x00u};
+
+  CoArrays arrays;
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  co_sdo_req_up(&req, buf, 4u);
+  co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
+  co_unsigned32_t ac = 0x00000000u;
+
+  co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
+  const char16_t* const STR_SRC = u"FF";
+  CHECK_EQUAL(str16len(STR_SRC),
+              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4u));
+  CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &str, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0x00000000u, ac);
+  const char16_t* const expected = u"ā+";
+  CHECK_EQUAL(0, str16ncmp(expected, str, 2u));
 
   CHECK_EQUAL(4u, req.size);
   CHECK_EQUAL(req.offset + req.nbyte, req.size);
 }
 
-// TEST(CO_Sdo, CoSdoReqDnVal_WithoutOffsetLenHi) {
+TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  char buf[6] = {0x00u};
+  req.buf = buf;
+  const co_unsigned16_t val = 0xABCDu;
+  co_unsigned32_t ac = 0x00000000u;
+  LelyOverride::co_val_write(0);
 
-// TEST(CO_Sdo, CoSdoReqUp) {
-//   co_sdo_req req = CO_SDO_REQ_INIT(req);
-//   const size_t n = 2u;
-//   char* buf[4] = {0x00u};
+  const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
 
-//   co_sdo_req_up(&req, buf, n);
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, ac);
+  CHECK_EQUAL(0x00u, buf[0]);
+  CHECK_EQUAL(0x00u, buf[1]);
+}
 
-//   CHECK_EQUAL(n, req.size);
-//   POINTERS_EQUAL(buf, req.buf);
-//   CHECK_EQUAL(req.nbyte, req.size);
-//   CHECK_EQUAL(0u, req.offset);
-// }
+TEST(CO_Sdo, CoSdoReqUpVal) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  char buf[6] = {0x00u};
+  req.buf = buf;
+  const co_unsigned16_t val = 0x797Au;
+  co_unsigned32_t ac = 0x00000000u;
+
+  const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, ac);
+  char expected[2] = {0x79u, 0x7Au};
+  CHECK(memcmp(expected, req.membuf->begin, 2u));
+}
+
+// co_sdo_req_dn_buf
