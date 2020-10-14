@@ -97,7 +97,7 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #endif // !(_POSIX_C_SOURCE >= 200809L)
 
-#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
+#if !defined(_GNU_SOURCE)
 
 int
 asprintf(char **strp, const char *fmt, ...)
@@ -138,4 +138,4 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 	return n;
 }
 
-#endif // !_GNU_SOURCE || __MINGW32__
+#endif // !_GNU_SOURCE
