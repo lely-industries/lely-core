@@ -57,7 +57,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
 #endif // !(_POSIX_C_SOURCE >= 200809L)
 
-#if !defined(_GNU_SOURCE) || defined(__MINGW32__)
+#if !defined(_GNU_SOURCE)
 
 /**
  * Equivalent to `sprintf()`, except that it allocates a string large enough to
@@ -94,7 +94,7 @@ int asprintf(char **strp, const char *fmt, ...);
  */
 int vasprintf(char **strp, const char *fmt, va_list ap);
 
-#endif // !_GNU_SOURCE || __MINGW32__
+#endif // !_GNU_SOURCE
 
 #ifdef __cplusplus
 }
