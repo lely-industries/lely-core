@@ -1658,6 +1658,11 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if (idx != sdo->idx || subidx != sdo->subidx)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_ERROR);
 
+	// 0-pad the data bytes to handle servers which send CAN frames less
+	// than 8 bytes.
+	uint_least8_t data[4] = { 0 };
+	memcpy(data, msg->data + 4, msg->len - 4);
+
 	// Obtain the size from the command specifier.
 	int exp = !!(cs & CO_SDO_INI_SIZE_EXP);
 	sdo->size = 0;
@@ -1667,9 +1672,7 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		else
 			sdo->size = msg->len - 4;
 	} else if (cs & CO_SDO_INI_SIZE_IND) {
-		if (msg->len < 8)
-			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-		sdo->size = ldle_u32(msg->data + 4);
+		sdo->size = ldle_u32(data);
 	}
 
 	// Allocate the buffer.
@@ -1678,7 +1681,7 @@ co_csdo_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 
 	if (exp) {
 		// Perform an expedited transfer.
-		membuf_write(buf, msg->data + 4, sdo->size);
+		membuf_write(buf, data, sdo->size);
 
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
@@ -2006,9 +2009,11 @@ co_csdo_blk_up_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	// Obtain the data set size.
 	sdo->size = 0;
 	if (cs & CO_SDO_BLK_SIZE_IND) {
-		if (msg->len < 8)
-			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-		sdo->size = ldle_u32(msg->data + 4);
+		// 0-pad the data bytes to handle servers which send CAN frames
+		// less than 8 bytes.
+		uint_least8_t data[4] = { 0 };
+		memcpy(data, msg->data + 4, msg->len - 4);
+		sdo->size = ldle_u32(data);
 	}
 
 	// Allocate the buffer.
