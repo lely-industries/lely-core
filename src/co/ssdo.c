@@ -1020,9 +1020,11 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		else
 			sdo->req.size = msg->len - 4;
 	} else if (cs & CO_SDO_INI_SIZE_IND) {
-		if (msg->len < 8)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-		sdo->req.size = ldle_u32(msg->data + 4);
+		// 0-pad the data bytes to handle clients which send CAN frames
+		// less than 8 bytes.
+		uint_least8_t data[4] = { 0 };
+		memcpy(data, msg->data + 4, msg->len - 4);
+		sdo->req.size = ldle_u32(data);
 	}
 
 	if (exp) {
@@ -1226,9 +1228,11 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Obtain the data set size.
 	co_sdo_req_clear(&sdo->req);
 	if (cs & CO_SDO_BLK_SIZE_IND) {
-		if (msg->len < 8)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
-		sdo->req.size = ldle_u32(msg->data + 4);
+		// 0-pad the data bytes to handle clients which send CAN frames
+		// less than 8 bytes.
+		uint_least8_t data[4] = { 0 };
+		memcpy(data, msg->data + 4, msg->len - 4);
+		sdo->req.size = ldle_u32(data);
 	}
 
 	// Use the maximum block size by default.
