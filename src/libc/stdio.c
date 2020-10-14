@@ -99,7 +99,6 @@ getline(char **lineptr, size_t *n, FILE *stream)
 
 #if !defined(_GNU_SOURCE)
 
-#if !HAVE_DECL_ASPRINFT
 int
 asprintf(char **strp, const char *fmt, ...)
 {
@@ -109,9 +108,7 @@ asprintf(char **strp, const char *fmt, ...)
 	va_end(ap);
 	return result;
 }
-#endif // !HAVE_DECL_ASPRINFT
 
-#if !HAVE_DECL_VASPRINFT
 int
 vasprintf(char **strp, const char *fmt, va_list ap)
 {
@@ -140,6 +137,5 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 	*strp = s;
 	return n;
 }
-#endif // !HAVE_DECL_VASPRINFT
 
 #endif // !_GNU_SOURCE
