@@ -1,500 +1,111 @@
 variables:
+  DEBIAN_FRONTEND: noninteractive
   GIT_STRATEGY: clone
-  REGISTRY: $CI_REGISTRY_IMAGE
+  REVISION: "1"
 
 cache:
   key: none
   paths: []
   policy: pull
 
-stages:
-  - docker
-  - build
-  - test
-  - deploy
-
-.docker: &docker
-  stage: docker
-  tags:
-    - docker
-    - linux
-  image: docker:stable
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-  script:
-    - docker build
-        --build-arg REGISTRY=$REGISTRY
-        -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/$NAME/$TAG
-    - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
-  when: manual
-
 .build: &build
   stage: build
   tags:
     - docker
     - linux
+  before_script:
+    - apt-get update -q
+    - apt-get install -qy --no-install-recommends
+        build-essential
+        cdbs
+        devscripts
+        dh-autoreconf
+        dh-python
+        fakeroot
+        git
+        lintian
+        pkg-config
+    - if [ "$ARCH" != "$(dpkg-architecture -qDEB_BUILD_ARCH)" ]; then
+        dpkg --add-architecture $ARCH;
+        apt-get update -q;
+        apt-get install -qy --no-install-recommends
+          crossbuild-essential-$ARCH
+          libstdc++6:$ARCH
+          qemu-user-static;
+      fi
+    - apt-get install -qy --no-install-recommends
+        libbluetooth-dev:$ARCH
+    - apt-get install -qy --no-install-recommends
+        cython
+        libpython-dev:$ARCH
+        python
+        python-setuptools
+        python-wheel
+    - apt-get install -qy --no-install-recommends
+        cython3
+        libpython3-dev:$ARCH
+        python3
+        python3-setuptools
+        python3-wheel
+    - apt-get install -qy --no-install-recommends
+        cpputest
+        libcpputest-dev:$ARCH
+    - apt-get install -qy --no-install-recommends
+        doxygen
+        graphviz
   script:
-    - autoreconf -i
-    - ./configure $CONFIGURE_OPTIONS
-    - make
-  artifacts:
-    untracked: true
-
-.test: &test
-  stage: test
-  tags:
-    - docker
-    - linux
-  script:
-    - touch aclocal.m4 configure config.status Makefile.in
-    - make -t
-    - make check
-  artifacts:
-    when: on_failure
-    paths:
-      - test/test-*.log
-      - unit-tests/test-*.log
-    expire_in: 1 week
-
-.docker-gcc: &docker-gcc
-  <<: *docker
-  script:
-    - docker build
-        --build-arg __GNUC__=$__GNUC__
-        -t $CI_REGISTRY_IMAGE/gcc:$__GNUC__ docker/gcc
-    - docker push $CI_REGISTRY_IMAGE/gcc:$__GNUC__
-
-docker-gcc:4:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 4
-
-build:gcc:4:
-  image: $REGISTRY/gcc:4
-  <<: *build
-
-test:gcc:4:
-  image: $REGISTRY/gcc:4
-  dependencies:
-    - build:gcc:4
-  <<: *test
-
-docker-gcc:5:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 5
-
-build:gcc:5:
-  image: $REGISTRY/gcc:5
-  <<: *build
-
-test:gcc:5:
-  image: $REGISTRY/gcc:5
-  dependencies:
-    - build:gcc:5
-  <<: *test
-
-docker-gcc:6:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 6
-
-build:gcc:6:
-  image: $REGISTRY/gcc:6
-  <<: *build
-
-test:gcc:6:
-  image: $REGISTRY/gcc:6
-  dependencies:
-    - build:gcc:6
-  <<: *test
-
-docker-gcc:7:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 7
-
-build:gcc:7:
-  image: $REGISTRY/gcc:7
-  <<: *build
-
-test:gcc:7:
-  image: $REGISTRY/gcc:7
-  dependencies:
-    - build:gcc:7
-  <<: *test
-
-docker-gcc:8:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 8
-
-build:gcc:8:
-  image: $REGISTRY/gcc:8
-  <<: *build
-
-test:gcc:8:
-  image: $REGISTRY/gcc:8
-  dependencies:
-    - build:gcc:8
-  <<: *test
-
-docker-gcc:9:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 9
-
-build:gcc:9:
-  image: $REGISTRY/gcc:9
-  <<: *build
-
-test:gcc:9:
-  image: $REGISTRY/gcc:9
-  dependencies:
-    - build:gcc:9
-  <<: *test
-
-.docker-mingw-w64: &docker-mingw-w64
-  <<: *docker
-  script:
-    - docker build
-        --build-arg ARCH=$ARCH
-        -t $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG docker/mingw-w64/$TAG
-    - docker push $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG
-
-docker:i686-w64-mingw32:
-  <<: *docker-mingw-w64
-  variables:
-    ARCH: i686
-    TAG: bullseye
-
-build:i686-w64-mingw32:
-  image: $REGISTRY/i686-w64-mingw32:bullseye
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
-
-test:i686-w64-mingw32:
-  image: $REGISTRY/i686-w64-mingw32:bullseye
-  dependencies:
-    - build:i686-w64-mingw32
-  <<: *test
-
-docker:x86_64-w64-mingw32:
-  <<: *docker-mingw-w64
-  variables:
-    ARCH: x86_64
-    TAG: bullseye
-
-build:x86_64-w64-mingw32:
-  image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
-
-test:x86_64-w64-mingw32:
-  image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  dependencies:
-    - build:x86_64-w64-mingw32
-  <<: *test
-
-.docker-crossbuild: &docker-crossbuild
-  <<: *docker
-  script:
-    - docker build
-        --build-arg ARCH=$ARCH
-        --build-arg NAME=$NAME
-        -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/crossbuild/$TAG
-    - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
-
-docker:arm-linux-gnueabihf:
-  <<: *docker-crossbuild
-  variables:
-    ARCH: armhf
-    NAME: arm-linux-gnueabihf
-    TAG: bullseye
-
-build:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
-  <<: *build
-  variables:
-    ARCH: armhf
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python
-
-test:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
-  dependencies:
-    - build:arm-linux-gnueabihf
-  <<: *test
-  variables:
-    ARCH: armhf
-
-docker:aarch64-linux-gnu:
-  <<: *docker-crossbuild
-  variables:
-    ARCH: arm64
-    NAME: aarch64-linux-gnu
-    TAG: bullseye
-
-build:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
-  <<: *build
-  variables:
-    ARCH: arm64
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python
-
-test:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
-  dependencies:
-    - build:aarch64-linux-gnu
-  <<: *test
-  variables:
-    ARCH: arm64
-
-docker:arm-none-eabi:
-  <<: *docker
-  variables:
-    NAME: arm-none-eabi
-    TAG: bullseye
-
-build:arm-none-eabi:
-  image: $REGISTRY/arm-none-eabi:bullseye
-  <<: *build
-  variables:
-    CFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
-    CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-unit-tests --disable-python --disable-threads --disable-daemon
-    CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
-    LDFLAGS: --specs=nosys.specs
-
-docker:build:
-  <<: *docker
-  variables:
-    NAME: build
-    TAG: bullseye
-
-docker:doc:
-  <<: *docker
-  variables:
-    NAME: doc
-    TAG: bullseye
-
-doc:
-  stage: build
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/doc:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure
-    - make html
-  artifacts:
-    paths:
-      - doc/
-    expire_in: 1 week
-
-docker:cpplint:
-  <<: *docker
-  variables:
-    NAME: cpplint
-    TAG: bullseye
-
-cpplint:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/cpplint:bullseye
-  script:
-    - cpplint.py
-        --quiet
-        --extensions=cpp
-        $(find include -name *.hpp)
-        $(find src -name *.cpp)
-
-docker:valgrind:
-  <<: *docker
-  variables:
-    NAME: valgrind
-    TAG: bullseye
-
-valgrind:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/valgrind:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure --disable-python
-    - make
-    - make check-valgrind-memcheck
-  artifacts:
-    when: on_failure
-    paths:
-      - test/test-*.log
-      - unit-tests/test-*.log
-    expire_in: 1 week
-
-docker:lcov:
-  <<: *docker
-  variables:
-    NAME: lcov
-    TAG: bullseye
-
-lcov:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/lcov:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure --enable-code-coverage --disable-shared
-    - make
-    - make check-code-coverage
-    - lcov --summary coverage.info --rc lcov_branch_coverage=1
-  artifacts:
-    paths:
-      - coverage/
-    expire_in: 1 week
-
-docker:scan-build:
-  <<: *docker
-  variables:
-    NAME: scan-build
-    TAG: bullseye
-
-scan-build:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/scan-build:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - scan-build ./configure --disable-python
-    - scan-build --keep-cc -o ./scan-build make check
-  artifacts:
-    when: on_failure
-    paths:
-      - scan-build/
-    expire_in: 1 week
-
-docker:cppcheck-unix64:
-  <<: *docker
-  variables:
-    NAME: cppcheck-unix64
-    TAG: bullseye
-
-cppcheck-unix64:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/cppcheck-unix64:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure --disable-python
-    - cppcheck
-        -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
-        --error-exitcode=1
-        --force
-        -I/usr/include -I. -I./include
-        --inline-suppr
-        --platform=unix64
-        --quiet
-        --std=c11 --std=c++11
-        --suppressions-list=suppressions.txt
-        include src
-  when: manual
-
-docker:cppcheck-win64:
-  <<: *docker
-  variables:
-    NAME: cppcheck-win64
-    TAG: bullseye
-
-cppcheck-win64:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/cppcheck-unix64:bullseye
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure --host=x86_64-w64-mingw32 --disable-python
-    - cppcheck
-        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
-        --error-exitcode=1
-        --force
-        -I/usr/x86_64-w64-mingw32/include -I. -I./include
-        --inline-suppr
-        --platform=win64
-        --quiet
-        --std=c11 --std=c++11
-        --suppress=va_list_usedBeforeStarted
-        --suppressions-list=suppressions.txt
-        include src
-  when: manual
-
-docker:coverity:
-  <<: *docker
-  script:
-    - docker build
-        --build-arg REGISTRY=$REGISTRY
-        --build-arg COVERITY_PROJECT=$COVERITY_PROJECT
-        --build-arg COVERITY_TOKEN=$COVERITY_TOKEN
-        -t $CI_REGISTRY_IMAGE/coverity:gcc9 docker/coverity/gcc9
-    - docker push $CI_REGISTRY_IMAGE/coverity:gcc9
-
-coverity:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/coverity:gcc9
-  dependencies: []
-  script:
-    - autoreconf -i
-    - ./configure --disable-python
-    - cov-build --dir cov-int make check
+    - SOURCE=$(dpkg-parsechangelog -S Source)
+    - VERSION=$(dpkg-parsechangelog -S Version | sed 's/\-.*$//')
+    - sed -i "s/[)] UNRELEASED/-0$DIST$REVISION) $SUITE/" debian/changelog
+    - if [ "$ARCH" = "$(dpkg-architecture -qDEB_BUILD_ARCH)" ]; then
+        git archive -o ../${SOURCE}_${VERSION}.orig.tar HEAD;
+        xz ../${SOURCE}_${VERSION}.orig.tar;
+      else
+        export CONFIG_SITE=/etc/dpkg-cross/cross-config.$ARCH;
+      fi
+    - debuild $DEBUILD_OPTS
   after_script:
-    - tar caf $CI_PROJECT_NAME.xz cov-int
-    - curl --form token=$COVERITY_TOKEN
-        --form email=$COVERITY_EMAIL
-        --form file=@$CI_PROJECT_NAME.xz
-        --form version="$(git describe --abbrev=0 --tags | sed s/^v//)"
-        --form description="$CI_COMMIT_REF_NAME"
-        https://scan.coverity.com/builds?project=$COVERITY_PROJECT
-  when: manual
-
-pages:
-  stage: deploy
-  only:
-    - master
-  tags:
-    - docker
-    - linux
-  image: alpine:latest
-  dependencies:
-    - doc
-    - lcov
-  script:
-    - mkdir -p public
-    - mv coverage public/lcov
-    - mv doc/html public/doxygen
+    - SOURCE=$(dpkg-parsechangelog -S Source)
+    - VERSION=$(dpkg-parsechangelog -S Version | sed 's/\-.*$//')
+    - mkdir -p build
+    - mv ../${SOURCE}_${VERSION}* ../*.deb ../*.ddeb build/
   artifacts:
     paths:
-      - public
-    expire_in: 1 weeks
+      - build/
+    expire_in: 1 week
+
+build:bionic-amd64:
+  <<: *build
+  image: ubuntu:bionic
+  variables:
+    ARCH: amd64
+    DEBUILD_OPTS: -uc -us
+    DIST: bionic
+    SUITE: $DIST
+
+build:buster-amd64:
+  <<: *build
+  image: debian:buster
+  variables:
+    ARCH: amd64
+    DEBUILD_OPTS: -uc -us
+    DIST: buster
+    SUITE: $DIST
+
+build:buster-armhf:
+  <<: *build
+  image: debian:buster
+  variables:
+    ARCH: armhf
+    DEBUILD_OPTS: -a$ARCH -B -uc -us
+    DIST: buster
+    SUITE: $DIST
+
+build:buster-arm64:
+  <<: *build
+  image: debian:buster
+  variables:
+    ARCH: arm64
+    DEBUILD_OPTS: -a$ARCH -B -uc -us
+    DIST: buster
+    SUITE: $DIST
