@@ -1,4 +1,5 @@
 /autom4te.cache/
+/cov-int/
 /coverage/
 /doc/html/
 /doc/Doxyfile
@@ -37,7 +38,6 @@
 /stamp-h1
 /tap-driver.sh
 /.vscode/
-/cov-int
 !/.vscode/c_cpp_properties.json
 !/.vscode/settings.json
 .deps
