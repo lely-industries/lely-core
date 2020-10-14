@@ -203,18 +203,6 @@ TEST(CO_Sdo, CoSdoReqDnVal_WithOffset) {
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_WithoutOffsetLenLo) {
-  co_sdo_req req = CO_SDO_REQ_INIT(req);
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
-  co_unsigned8_t value = 0xFFu;
-  co_unsigned32_t ac = 0x00000000u;
-
-  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
-
-  CHECK_EQUAL(-1, ret);
-  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, ac);
-}
-
 TEST(CO_Sdo, CoSdoReqDnVal_Unsigned8) {
   co_unsigned8_t buf[1] = {0xCEu};
   co_sdo_req req = CO_SDO_REQ_INIT(req);
@@ -284,6 +272,46 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
   CHECK_EQUAL(0x00000000u, ac);
 }
 
+TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailed) {
+  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
+                           0x8Au, 0xC1u, 0x03u, 0x56u};
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+
+  LelyOverride::co_val_read(0);
+
+  req.size = 8u;
+  req.buf = buf;
+  req.nbyte = 8u;
+  co_unsigned64_t value = 0x0000000000000000u;
+  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
+  co_unsigned32_t ac = 0x00000000u;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, ac);
+  CHECK_EQUAL(0x0000000000000000u, value);
+}
+
+TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailedNoAcVariable) {
+  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
+                           0x8Au, 0xC1u, 0x03u, 0x56u};
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+
+  LelyOverride::co_val_read(0);
+
+  req.size = 8u;
+  req.buf = buf;
+  req.nbyte = 8u;
+  co_unsigned64_t value = 0x0000000000000000u;
+  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &value, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0x0000000000000000u, value);
+}
+
 TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
 
@@ -296,7 +324,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
   co_unsigned32_t ac = 0x00000000u;
 
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t* const STR_SRC = u"FF";
+  const char16_t* const STR_SRC = u"\u0046\u0046";
   CHECK_EQUAL(str16len(STR_SRC),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4));
 
@@ -305,31 +333,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-  const char16_t* const expected = u"ā+";
-  CHECK(memcmp(expected, str, 4u));
-}
-
-TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailedNoAcVariable) {
-  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
-
-  CoArrays arrays;
-  co_sdo_req req = CO_SDO_REQ_INIT(req);
-  // co_unsigned32_t req_ac = 0x00000000u;
-  // size_t nbyte = 4u;
-  // co_sdo_req_dn(&req, buf, &nbyte, &req_ac);
-  co_sdo_req_up(&req, buf, 2u);
-  co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
-
-  co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t* const STR_SRC = u"FF";
-  CHECK_EQUAL(str16len(STR_SRC),
-              co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4));
-
-  LelyOverride::co_val_read(0);
-  const auto ret = co_sdo_req_dn_val(&req, type, &str, nullptr);
-
-  CHECK_EQUAL(-1, ret);
-  const char16_t* const expected = u"ā+";
+  const char16_t* const expected = u"\u0101\u2B00";
   CHECK(memcmp(expected, str, 4u));
 }
 
@@ -344,7 +348,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   co_unsigned32_t ac = 0x00000000u;
 
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t* const STR_SRC = u"FF";
+  const char16_t* const STR_SRC = u"\u0046\u0046";
   CHECK_EQUAL(str16len(STR_SRC),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4u));
   CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
@@ -354,7 +358,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0x00000000u, ac);
   CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
-  const char16_t* const expected = u"ā\000";
+  const char16_t* const expected = u"\u0101\u0000";
   // characters are copied to the temporary memory buffer
   CHECK(memcmp(expected, req.membuf->begin, 4u) == 0);
 
@@ -378,7 +382,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArray) {
   co_unsigned32_t ac = 0x00000000u;
 
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
-  const char16_t* const STR_SRC = u"FF";
+  const char16_t* const STR_SRC = u"\u0046\u0046";
   CHECK_EQUAL(str16len(STR_SRC),
               co_val_make(CO_DEFTYPE_UNICODE_STRING, &str, STR_SRC, 4u));
   CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
@@ -387,7 +391,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArray) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0x00000000u, ac);
-  const char16_t* const expected = u"ā+";
+  const char16_t* const expected = u"\u0101\u002B";
   CHECK_EQUAL(0, str16ncmp(expected, str, 2u));
 
   CHECK_EQUAL(4u, req.size);
@@ -410,6 +414,51 @@ TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
   CHECK_EQUAL(0x00u, buf[1]);
 }
 
+TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  char buf[6] = {0x00u};
+  req.buf = buf;
+  const co_unsigned16_t val = 0x797Au;
+  co_unsigned32_t ac = 0x00000000u;
+
+  req.membuf->begin = nullptr;
+  req.membuf->end = nullptr;
+
+  const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcVariable) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  char buf[6] = {0x00u};
+  req.buf = buf;
+  const co_unsigned16_t val = 0x797Au;
+
+  req.membuf->begin = nullptr;
+  req.membuf->end = nullptr;
+
+  const auto ret =
+      co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, nullptr);
+
+  CHECK_EQUAL(-1, ret);
+}
+
+TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  char buf[6] = {0x00u};
+  req.buf = buf;
+  const co_unsigned16_t val = 0x797Au;
+  co_unsigned32_t ac = 0x00000000u;
+  LelyOverride::co_val_write(1);
+
+  const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
+}
+
 TEST(CO_Sdo, CoSdoReqUpVal) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   char buf[6] = {0x00u};
@@ -425,4 +474,52 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
   CHECK(memcmp(expected, req.membuf->begin, 2u));
 }
 
-// co_sdo_req_dn_buf
+TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  size_t nbyte = 0;
+  co_unsigned32_t ac = 0x00000000u;
+  req.offset = 0u;
+
+  req.size = 5u;
+  req.nbyte = 4u;
+  req.membuf->begin = nullptr;
+  req.membuf->end = nullptr;
+  req.membuf->cur = nullptr;
+
+  const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+}
+
+TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  size_t nbyte = 0;
+  co_unsigned32_t ac = 0x00000000u;
+
+  req.offset = 12u;
+  req.size = 6u;
+  req.nbyte = 4u;
+  req.membuf->cur = req.membuf->begin + 13u;
+
+  char buffer[10] = {0};
+  const void** buf_ptr = reinterpret_cast<const void**>(&buffer);
+
+  const auto ret = co_sdo_req_dn(&req, buf_ptr, &nbyte, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
+}
+
+// TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEndNoNbyte) {
+//   co_sdo_req req = CO_SDO_REQ_INIT(req);
+
+//   req.offset = 0u;
+//   req.size = 6u;
+//   req.nbyte = 4u;
+//   req.membuf->cur = req.membuf->begin;
+
+//   const auto ret = co_sdo_req_dn(&req, nullptr, nullptr, nullptr);
+
+//   CHECK_EQUAL(-1, ret);
+// }
