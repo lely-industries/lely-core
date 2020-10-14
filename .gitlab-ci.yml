@@ -309,7 +309,7 @@ cpplint:
     - linux
   image: $REGISTRY/cpplint:bullseye
   script:
-    - cpplint.py
+    - python2 $(which cpplint.py)
         --quiet
         --extensions=cpp
         $(find include -name *.hpp)
