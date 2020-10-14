@@ -374,6 +374,11 @@ AC_CHECK_HEADER([valgrind/valgrind.h], [
 	AC_DEFINE([LELY_HAVE_VALGRIND], [1], [Define to 1 if you have the <valgrind/valgrind.h> header file.])
 ])
 
+save_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -w"
+AC_CHECK_DECLS([asprintf,vasprintf], [], [], [[#include <stdio.h>]])
+CXXFLAGS="$save_CXXFLAGS"
+
 AM_CONDITIONAL([HAVE_IXXAT], [false])
 AM_CONDITIONAL([HAVE_VCI], [false])
 AS_IF([test "$platform_win32" == "yes"], [

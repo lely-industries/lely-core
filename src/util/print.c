@@ -21,6 +21,10 @@
  * limitations under the License.
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "util.h"
 #define LELY_UTIL_PRINT_INLINE extern inline
 #include <lely/libc/stdio.h>
