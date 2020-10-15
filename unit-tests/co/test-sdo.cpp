@@ -29,22 +29,14 @@
 
 #include <CppUTest/TestHarness.h>
 
-#include <lely/can/msg.h>
-#include <lely/co/dev.h>
-#include <lely/co/obj.h>
 #include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/type.h>
-#include <lely/util/diag.h>
 #include <lely/util/ustring.h>
 
 #include "lely-unit-test.hpp"
 #include "override/lelyco-val.hpp"
 #include "holder/array-init.hpp"
-
-#include "holder/dev.hpp"
-#include "holder/obj.hpp"
-#include "holder/sub.hpp"
 
 TEST_GROUP(CO_Sdo){};
 
@@ -254,6 +246,25 @@ TEST(CO_Sdo, CoSdoReqDnVal_Integer32) {
   CHECK_EQUAL(0x00000000u, ac);
 }
 
+TEST(CO_Sdo, CoSdoReqDnVal_Download32bitTo16bit) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
+  co_unsigned16_t val = 0x0000u;
+  co_unsigned32_t ac = 0u;
+  char buffer[] = {0x12u, 0x34u, 0x56, 0x78u};
+  req.membuf->begin = buffer;
+  req.membuf->cur = buffer;
+  req.membuf->end = buffer + 4u;
+  req.nbyte = 4u;
+  req.size = 4u;
+  req.buf = buffer;
+
+  const auto ret = co_sdo_req_dn_val(&req, type, &val, &ac);
+
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, ac);
+}
+
 TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
   co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
                            0x8Au, 0xC1u, 0x03u, 0x56u};
@@ -420,7 +431,6 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
   req.buf = buf;
   const co_unsigned16_t val = 0x797Au;
   co_unsigned32_t ac = 0x00000000u;
-
   req.membuf->begin = nullptr;
   req.membuf->end = nullptr;
 
@@ -435,7 +445,6 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcVariable) {
   char buf[6] = {0x00u};
   req.buf = buf;
   const co_unsigned16_t val = 0x797Au;
-
   req.membuf->begin = nullptr;
   req.membuf->end = nullptr;
 
@@ -479,7 +488,6 @@ TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
   size_t nbyte = 0;
   co_unsigned32_t ac = 0x00000000u;
   req.offset = 0u;
-
   req.size = 5u;
   req.nbyte = 4u;
   req.membuf->begin = nullptr;
