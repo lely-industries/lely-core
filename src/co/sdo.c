@@ -185,6 +185,9 @@ co_sdo_req_dn_val(struct co_sdo_req *req, co_unsigned16_t type, void *val,
 		if (!size) {
 			ac = CO_SDO_AC_TYPE_LEN_LO;
 			goto error_read;
+		} else if (size < nbyte) {
+			ac = CO_SDO_AC_TYPE_LEN_HI;
+			goto error_read;
 		}
 	}
 
