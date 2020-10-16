@@ -387,7 +387,8 @@ co_sdo_req_dn_buf(struct co_sdo_req *req, const void **pptr, size_t *pnbyte)
 	} else {
 		if (co_sdo_req_first(req)) {
 			membuf_clear(buf);
-			if (req->size && !membuf_reserve(buf, req->size))
+			assert(req->size);
+			if (!membuf_reserve(buf, req->size))
 				goto error_reserve;
 		} else {
 			// Adjust the offset if necessary. Only backtracking is
