@@ -1086,12 +1086,15 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
+	if (sdo->req.offset + sdo->req.nbyte + n > sdo->req.size)
+		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
+
 	sdo->req.buf = msg->data + 1;
 	sdo->req.offset += sdo->req.nbyte;
 	sdo->req.nbyte = n;
 
 	if (last && !co_sdo_req_last(&sdo->req))
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
+		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 
 	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
 	if (ac)
@@ -1291,11 +1294,17 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
+		// Determine the number of bytes to copy.
+		assert(sdo->req.size >= sdo->req.offset + sdo->req.nbyte);
+		size_t n = MIN(sdo->req.size - sdo->req.offset - sdo->req.nbyte,
+				7);
+		if (!last && n < 7)
+			return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 		// Copy the new frame to the SDO request.
 		membuf_clear(&sdo->buf);
-		if (!membuf_reserve(&sdo->buf, 7))
+		if (!membuf_reserve(&sdo->buf, n))
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
-		membuf_write(&sdo->buf, msg->data + 1, 7);
+		membuf_write(&sdo->buf, msg->data + 1, n);
 		sdo->req.buf = membuf_begin(&sdo->buf);
 		sdo->req.offset += sdo->req.nbyte;
 		sdo->req.nbyte = membuf_size(&sdo->buf);
@@ -1347,8 +1356,13 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
-	// Discard the bytes in the last segment that did not contain data.
-	sdo->req.nbyte -= 7 - CO_SDO_BLK_SIZE_GET(cs);
+	// Check the total length.
+	if (sdo->req.size != sdo->req.offset + sdo->req.nbyte)
+		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
+
+	// Check the number of bytes in the last segment.
+	if ((size_t)CO_SDO_BLK_SIZE_GET(cs) != sdo->req.size % 7)
+		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check the CRC.
 	if (sdo->gencrc) {
