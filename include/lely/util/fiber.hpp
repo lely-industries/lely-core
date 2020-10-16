@@ -4,8 +4,7 @@
  * interface for the fiber implementation.
  *
  * The design of the C++ interface is based on the <b>fiber</b> class in
- * <a
- * href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>.
+ * <a href="https://www.boost.org/doc/libs/release/libs/context/doc/html/index.html">Boost.Context</a>.
  * It is a wrapper around `#fiber_t*` which tries to prevent accidentally
  * resuming a running or terminated fiber. The API is designed to be a building
  * block for higher level constructs. For example, a call/cc operator similar to
@@ -20,7 +19,7 @@
  *
  * @see lely/util/fiber.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -112,6 +111,8 @@ inline FiberFlag&
 operator|=(FiberFlag& lhs, FiberFlag rhs) {
   return lhs = lhs | rhs;
 }
+
+#if __cpp_exceptions
 
 class Fiber;
 
@@ -344,7 +345,7 @@ class Fiber {
   template <class F>
   Fiber
   resume_with(F&& f) && {
-    auto func = [](fiber_t * fiber, void* arg) noexcept {
+    auto func = [](fiber_t* fiber, void* arg) noexcept {
       Fiber f(fiber);
       try {
         f = (*static_cast<F*>(arg))(::std::move(f));
@@ -447,6 +448,8 @@ Fiber::resume_(Fiber&& f) {
   }
   return ::std::move(f);
 }
+
+#endif  // __cpp_exceptions
 
 }  // namespace util
 }  // namespace lely

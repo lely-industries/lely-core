@@ -369,7 +369,7 @@ class Node : public io::CanNet, public Device {
   void OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat);
 
   /**
-   * Registers the function to be invoked whenan NMT state change or boot-up
+   * Registers the function to be invoked when an NMT state change or boot-up
    * event is detected for a remote node by the heartbeat protocol. Only a
    * single function can be registered at any one time. If <b>on_state</b>
    * contains a callable function target, a copy of the target is invoked
@@ -456,8 +456,8 @@ class Node : public io::CanNet, public Device {
 
  protected:
   /**
-   * A mutex-like object that can be used to postpone the transmission of
-   * acyclic and event-driven Transmit-PDOs while the lock is held.
+   * A recursive mutex-like object that can be used to postpone the transmission
+   * of acyclic and event-driven Transmit-PDOs while the lock is held.
    */
   class TpdoEventMutex : public util::BasicLockable {
     friend class Node;
@@ -546,14 +546,12 @@ class Node : public io::CanNet, public Device {
   void TpdoEvent(int num = 0) noexcept;
 
   /**
-   * The mutex used to postpone the transmission of acyclic and event-driven
-   * PDOs.
+   * The recursive mutex used to postpone the transmission of acyclic and
+   * event-driven PDOs triggered by TpdoWriteEvent() or WriteEvent().
    */
   TpdoEventMutex tpdo_event_mutex;
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
  private:
-#endif
   void on_can_state(io::CanState new_state,
                     io::CanState old_state) noexcept final;
   void on_can_error(io::CanError error) noexcept final;
@@ -759,10 +757,6 @@ class Node : public io::CanNet, public Device {
    */
   virtual void OnStore(uint8_t id, int bitrate);
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-
- private:
-#endif
   struct Impl_;
   ::std::unique_ptr<Impl_> impl_;
 };

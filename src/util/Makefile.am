@@ -7,15 +7,11 @@ src += config_ini.c
 if !NO_DAEMON
 src += daemon.c
 endif
-if PLATFORM_WIN32
-src += fiber-win32.c
-else
-src += fiber-sjlj.c
-endif
-src += fiber.h
+src += fiber.c
 src += mkjmp.c
 src += sllist.c
 src += spscring.c
+src += stop.c
 endif
 if !NO_CXX
 src += exception.cpp

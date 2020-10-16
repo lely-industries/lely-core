@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can_rt.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -40,7 +40,7 @@ class CanRouterReadFrameWrapper : public io_can_rt_read_msg {
   CanRouterReadFrameWrapper(uint_least32_t id, CanFlag flags, F&& f)
       : io_can_rt_read_msg IO_CAN_RT_READ_MSG_INIT(
             id, static_cast<uint_least8_t>(flags),
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto read = io_can_rt_read_msg_from_task(task);
               auto msg = read->r.msg;
               ::std::error_code ec;
@@ -93,7 +93,7 @@ class CanRouterReadFrame : public io_can_rt_read_msg {
   CanRouterReadFrame(uint_least32_t id, CanFlag flags, F&& f)
       : io_can_rt_read_msg IO_CAN_RT_READ_MSG_INIT(
             id, static_cast<uint_least8_t>(flags),
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto read = io_can_rt_read_msg_from_task(task);
               auto self = static_cast<CanRouterReadFrame*>(read);
               if (self->func_) {
@@ -127,7 +127,7 @@ template <class F>
 class CanRouterReadErrorWrapper : public io_can_rt_read_err {
  public:
   CanRouterReadErrorWrapper(F&& f)
-      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task * task) noexcept {
+      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task* task) noexcept {
           auto read = io_can_rt_read_err_from_task(task);
           auto err = read->r.err;
           ::std::error_code ec;
@@ -177,7 +177,7 @@ class CanRouterReadError : public io_can_rt_read_err {
   /// Constructs a CAN error frame read operation with a completion task.
   template <class F>
   CanRouterReadError(F&& f)
-      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task * task) noexcept {
+      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task* task) noexcept {
           auto read = io_can_rt_read_err_from_task(task);
           auto self = static_cast<CanRouterReadError*>(read);
           if (self->func_) {
@@ -291,7 +291,8 @@ class CanRouter : public Device {
 
   /// @see io_can_rt_submit_read_err()
   template <class F>
-  void
+  typename ::std::enable_if<!::std::is_base_of<
+      io_can_rt_read_err, typename ::std::decay<F>::type>::value>::type
   submit_read_error(F&& f) {
     submit_read_error(
         *make_can_router_read_error_wrapper(::std::forward<F>(f)));

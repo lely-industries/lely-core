@@ -79,8 +79,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     template <class T>
     SubObject&
     operator=(T&& value) {
-      Write(::std::forward<T>(value));
-      return *this;
+      return Write(::std::forward<T>(value));
     }
 
     /**
@@ -138,18 +137,21 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      *
      * @param value the value to be written.
      *
+     * @returns `*this`.
+     *
      * @throws #lely::canopen::SdoError on error.
      *
      * @see Device::Write(uint16_t idx, uint8_t subidx, T&& value)
      * @see Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value)
      */
     template <class T>
-    void
+    SubObject&
     Write(T&& value) {
       if (id_)
         master_->TpdoWrite(id_, idx_, subidx_, ::std::forward<T>(value));
       else
         master_->Write(idx_, subidx_, ::std::forward<T>(value));
+      return *this;
     }
 
     /**
@@ -159,6 +161,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @param value the value to be written.
      * @param ec    on error, the SDO abort code is stored in <b>ec</b>.
      *
+     * @returns `*this`.
+     *
      * @see Device::Write(uint16_t idx, uint8_t subidx, T value, ::std::error_code& ec)
      * @see Device::Write(uint16_t idx, uint8_t subidx, const T& value, ::std::error_code& ec)
      * @see Device::Write(uint16_t idx, uint8_t subidx, const char* value, ::std::error_code& ec)
@@ -166,12 +170,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @see Device::TpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx, T&& value, ::std::error_code& ec)
      */
     template <class T>
-    void
+    SubObject&
     Write(T&& value, ::std::error_code& ec) {
       if (id_)
         master_->TpdoWrite(id_, idx_, subidx_, ::std::forward<T>(value), ec);
       else
         master_->Write(idx_, subidx_, ::std::forward<T>(value), ec);
+      return *this;
     }
 
     /**
@@ -181,13 +186,16 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @param p a pointer to the bytes to be written.
      * @param n the number of bytes to write.
      *
+     * @returns `*this`.
+     *
      * @throws #lely::canopen::SdoError on error.
      *
      * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n)
      */
-    void
+    SubObject&
     Write(const void* p, ::std::size_t n) {
       if (!id_) master_->Write(idx_, subidx_, p, n);
+      return *this;
     }
 
     /**
@@ -198,11 +206,14 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @param n  the number of bytes to write.
      * @param ec on error, the SDO abort code is stored in <b>ec</b>.
      *
+     * @returns `*this`.
+     *
      * @see Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n, ::std::error_code& ec)
      */
-    void
+    SubObject&
     Write(const void* p, ::std::size_t n, ::std::error_code& ec) {
       if (!id_) master_->Write(idx_, subidx_, p, n, ec);
+      return *this;
     }
 
     /**
