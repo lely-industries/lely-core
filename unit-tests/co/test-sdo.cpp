@@ -107,6 +107,7 @@ TEST(CO_Sdo, CoSdoAc2Str) {
   STRCMP_EQUAL("Unknown abort code", co_sdo_ac2str(42u));
 }
 
+#if LELY_NO_MALLOC
 TEST(CO_Sdo, CoSdoReqInit) {
   POINTERS_EQUAL(nullptr, req.buf);
   POINTERS_EQUAL(&req._membuf, req.membuf);
@@ -127,6 +128,7 @@ TEST(CO_Sdo, CoSdoReqInit) {
   CHECK(req._membuf.end != nullptr);
   CHECK(req._begin != nullptr);
 }
+#endif
 
 TEST(CO_Sdo, CoSdoReqFini) {
   co_sdo_req_init(&req, nullptr);
@@ -269,6 +271,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
   CHECK_EQUAL(0x5603C18ADB347BCEu, value);
 }
 
+#if HAVE_LELY_OVERRIDE
 TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailed) {
   co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
                            0x8Au, 0xC1u, 0x03u, 0x56u};
@@ -302,7 +305,10 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailedNoAcVariable) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, value);
 }
+#endif
 
+#if LELY_NO_MALLOC
+#if HAVE_LELY_OVERIDE
 TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
   co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
@@ -322,9 +328,10 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-  const char16_t* const expected = u"\u0101\u2B00";
-  CHECK(memcmp(expected, str, 4u));
+  const char16_t* const expected = u"\u0000\u0000";
+  CHECK_EQUAL(0, memcmp(expected, str, 4u));
 }
+#endif
 
 TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0xC9u, 0x24u};
@@ -347,7 +354,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
   const char16_t* const expected = u"\u0101\u0000";
   // characters are copied to the temporary memory buffer
-  CHECK(memcmp(expected, req.membuf->begin, 4u) == 0);
+  CHECK_EQUAL(0u, memcmp(expected, req.membuf->begin, 4u));
 
   req.buf = buf + 2u;
   req.offset = 2u;
@@ -383,6 +390,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArray) {
   CHECK_EQUAL(req.offset + req.nbyte, req.size);
 }
 
+#if HAVE_LELY_OVERRIDE
 TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
   char buf[6] = {0x00u};
   const co_unsigned16_t val = 0xABCDu;
@@ -397,6 +405,7 @@ TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
   CHECK_EQUAL(0x00u, buf[0]);
   CHECK_EQUAL(0x00u, buf[1]);
 }
+#endif
 
 TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
   char buf[6] = {0x00u};
@@ -424,7 +433,9 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcVariable) {
 
   CHECK_EQUAL(-1, ret);
 }
+#endif
 
+#if HAVE_LELY_OVERRIDE
 TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
   char buf[6] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
@@ -437,6 +448,7 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
+#endif
 
 TEST(CO_Sdo, CoSdoReqUpVal) {
   char buf[6] = {0x00u};
@@ -448,10 +460,11 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  char expected[2] = {0x79u, 0x7Au};
-  CHECK(memcmp(expected, req.membuf->begin, 2u));
+  char expected[2] = {0x7Au, 0x79u};
+  CHECK_EQUAL(0, memcmp(expected, req.membuf->begin, 2u));
 }
 
+#if LELY_NO_MALLOC
 TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
   size_t nbyte = 0;
   co_unsigned32_t ac = 0u;
@@ -467,6 +480,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
 }
+#endif
 
 TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
   size_t nbyte = 0;
@@ -493,23 +507,6 @@ TEST(CO_Sdo, CoSdoReqDnBuf_NoNbyte) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
 }
-
-// TEST(CO_Sdo, CoSdoReqDnBuf_RequestedSizeZeroValNotAvailable) {
-//   size_t nbyte = 0;
-//   co_unsigned32_t ac = 0u;
-//   req.offset = 0u;
-//   req.size = 0u;
-//   req.nbyte = 4u;
-//   char buf[4u] = {0};
-//   req.membuf->begin = buf;
-//   req.membuf->end = buf + 4u;
-//   req.membuf->cur = buf + 1u;
-
-//   const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
-
-//   CHECK_EQUAL(0, ret);
-//   CHECK_EQUAL(0u, ac);
-// }
 
 TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEndButBufferEmpty) {
   size_t nbyte = 0;
