@@ -1738,11 +1738,11 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
-	// Reserve room in the buffer, if necessary.
-	if (n && !membuf_reserve(buf, n))
-		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
+	if (membuf_size(buf) + n > sdo->size)
+		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 
 	// Copy the data to the buffer.
+	assert(membuf_capacity(buf) >= n);
 	membuf_write(buf, msg->data + 1, n);
 
 	if ((last || !(membuf_size(buf) % (CO_SDO_MAX_SEQNO * 7))) && sdo->size
@@ -1751,7 +1751,7 @@ co_csdo_up_seg_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 				membuf_size(buf), sdo->up_ind_data);
 	if (last) {
 		if (sdo->size && membuf_size(buf) != sdo->size)
-			return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
+			return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 		return co_csdo_abort_ind(sdo, 0);
 	} else {
 		if (sdo->timeout)
@@ -2062,12 +2062,15 @@ co_csdo_blk_up_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if (seqno == sdo->ackseq + 1) {
 		sdo->ackseq++;
 
-		// Reserve room in the buffer, if necessary.
-		if (!membuf_reserve(buf, 7))
-			return co_csdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
+		// Determine the number of bytes to copy.
+		assert(sdo->size >= membuf_size(buf));
+		size_t n = MIN(sdo->size - membuf_size(buf), 7);
+		if (!last && n < 7)
+			return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 
 		// Copy the data to the buffer.
-		membuf_write(buf, msg->data + 1, 7);
+		assert(membuf_capacity(buf) >= n);
+		membuf_write(buf, msg->data + 1, n);
 	}
 
 	// If this is the last segment in the block, send a confirmation.
@@ -2121,12 +2124,13 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
-	// Discard the bytes in the last segment that did not contain data.
-	buf->cur -= 7 - CO_SDO_BLK_SIZE_GET(cs);
-
 	// Check the total length.
 	if (sdo->size && membuf_size(buf) != sdo->size)
-		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN);
+		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
+
+	// Check the number of bytes in the last segment.
+	if ((size_t)CO_SDO_BLK_SIZE_GET(cs) != sdo->size % 7)
+		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check the CRC.
 	if (sdo->crc) {
