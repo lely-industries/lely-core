@@ -604,12 +604,10 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 		}
 
 		co_sub_t *sub = co_obj_find_sub(obj, 0x00);
-		if (!sub || co_sub_get_type(sub) != CO_DEFTYPE_UNSIGNED8) {
-			diag(DIAG_ERROR, 0,
+		if (!sub || co_sub_get_type(sub) != CO_DEFTYPE_UNSIGNED8)
+			diag(DIAG_WARNING, 0,
 					"object 0x%04X does not provide the highest sub-index implemented",
 					idx);
-			return -1;
-		}
 	} else {
 		// Obtain the data type of the object (optional for DOMAIN
 		// objects).
