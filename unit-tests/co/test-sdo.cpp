@@ -151,9 +151,7 @@ TEST(CO_Sdo, CoSdoReqInit_BufNull) {
 #endif
 }
 
-TEST(CO_Sdo, CoSdoReqFini) {
-  co_sdo_req_fini(&req);
-}
+TEST(CO_Sdo, CoSdoReqFini) { co_sdo_req_fini(&req); }
 
 TEST(CO_Sdo, CoSdoReqClear) {
   co_sdo_req_clear(&req);
