@@ -130,9 +130,28 @@ TEST(CO_Sdo, CoSdoReqInit) {
 }
 #endif
 
-TEST(CO_Sdo, CoSdoReqFini) {
+TEST(CO_Sdo, CoSdoReqInit_BufNull) {
   co_sdo_req_init(&req, nullptr);
 
+  CHECK_EQUAL(0u, req.size);
+  POINTERS_EQUAL(nullptr, req.buf);
+  CHECK_EQUAL(0u, req.nbyte);
+  CHECK_EQUAL(0u, req.offset);
+#if LELY_NO_MALLOC
+  POINTERS_EQUAL(nullptr, req.membuf->begin);
+  POINTERS_EQUAL(nullptr, req.membuf->cur);
+  POINTERS_EQUAL(nullptr, req.membuf->end);
+  CHECK(req._membuf != nullptr);
+  CHECK(req._begin != nullptr);
+#else
+  POINTERS_EQUAL(&req._membuf, req.membuf);
+  POINTERS_EQUAL(nullptr, req._membuf->begin);
+  POINTERS_EQUAL(nullptr, req._membuf->cur);
+  POINTERS_EQUAL(nullptr, req._membuf->end);
+#endif
+}
+
+TEST(CO_Sdo, CoSdoReqFini) {
   co_sdo_req_fini(&req);
 }
 
