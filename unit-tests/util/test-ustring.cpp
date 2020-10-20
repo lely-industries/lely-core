@@ -20,8 +20,6 @@
  * limitations under the License.
  */
 
-#include <cstring>
-
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/ustring.h>
