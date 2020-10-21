@@ -24,9 +24,6 @@
 #include <config.h>
 #endif
 
-#include <memory>
-#include <vector>
-
 #include <CppUTest/TestHarness.h>
 
 #include <lely/co/pdo.h>
@@ -107,28 +104,28 @@ TEST(CO_Sdo, CoSdoAc2Str) {
   STRCMP_EQUAL("Unknown abort code", co_sdo_ac2str(42u));
 }
 
-#if LELY_NO_MALLOC
 TEST(CO_Sdo, CoSdoReqInit) {
+  co_sdo_req req;
+  membuf buf = MEMBUF_INIT;
+
+  co_sdo_req_init(&req, &buf);
+
+  CHECK_EQUAL(0u, req.size);
   POINTERS_EQUAL(nullptr, req.buf);
-  POINTERS_EQUAL(&req._membuf, req.membuf);
-  POINTERS_EQUAL(req._membuf.begin, req._membuf.cur);
-  CHECK(req._membuf.begin != nullptr);
-  CHECK(req._membuf.cur != nullptr);
-  CHECK(req._membuf.end != nullptr);
+  CHECK_EQUAL(0u, req.nbyte);
+  CHECK_EQUAL(0u, req.offset);
+  POINTERS_EQUAL(&buf, req.membuf);
+#if LELY_NO_MALLOC
+  POINTERS_EQUAL(req._begin, req._membuf.begin);
+  POINTERS_EQUAL(req._begin, req._membuf.cur);
+  POINTERS_EQUAL(req._begin + CO_SDO_REQ_MEMBUF_SIZE, req._membuf.end);
   CHECK(req._begin != nullptr);
-  CHECK_EQUAL(0, req.size);
-  membuf mbuf = MEMBUF_INIT;
-
-  co_sdo_req_init(&req, &mbuf);
-
-  POINTERS_EQUAL(&mbuf, req.membuf);
-  CHECK_EQUAL(0, req.size);
-  CHECK(req._membuf.begin != nullptr);
-  CHECK(req._membuf.cur != nullptr);
-  CHECK(req._membuf.end != nullptr);
-  CHECK(req._begin != nullptr);
-}
+#else
+  POINTERS_EQUAL(nullptr, req.membuf->begin);
+  POINTERS_EQUAL(nullptr, req.membuf->cur);
+  POINTERS_EQUAL(nullptr, req.membuf->end);
 #endif
+}
 
 TEST(CO_Sdo, CoSdoReqInit_BufNull) {
   co_sdo_req_init(&req, nullptr);
@@ -137,17 +134,36 @@ TEST(CO_Sdo, CoSdoReqInit_BufNull) {
   POINTERS_EQUAL(nullptr, req.buf);
   CHECK_EQUAL(0u, req.nbyte);
   CHECK_EQUAL(0u, req.offset);
+  POINTERS_EQUAL(&req._membuf, req.membuf);
 #if LELY_NO_MALLOC
+  POINTERS_EQUAL(req._begin, req._membuf.begin);
+  POINTERS_EQUAL(req._begin, req._membuf.cur);
+  POINTERS_EQUAL(req._begin + CO_SDO_REQ_MEMBUF_SIZE, req._membuf.end);
+  CHECK(req._begin != nullptr);
+#else
   POINTERS_EQUAL(nullptr, req.membuf->begin);
   POINTERS_EQUAL(nullptr, req.membuf->cur);
   POINTERS_EQUAL(nullptr, req.membuf->end);
-  CHECK(req._membuf != nullptr);
+#endif
+}
+
+TEST(CO_Sdo, CoSdoReqInit_Macro) {
+  co_sdo_req req = CO_SDO_REQ_INIT(req);
+
+  CHECK_EQUAL(0u, req.size);
+  POINTERS_EQUAL(nullptr, req.buf);
+  CHECK_EQUAL(0u, req.nbyte);
+  CHECK_EQUAL(0u, req.offset);
+  POINTERS_EQUAL(&req._membuf, req.membuf);
+#if LELY_NO_MALLOC
+  POINTERS_EQUAL(req._begin, req._membuf.begin);
+  POINTERS_EQUAL(req._begin, req._membuf.cur);
+  POINTERS_EQUAL(req._begin + CO_SDO_REQ_MEMBUF_SIZE, req._membuf.end);
   CHECK(req._begin != nullptr);
 #else
-  POINTERS_EQUAL(&req._membuf, req.membuf);
-  POINTERS_EQUAL(nullptr, req._membuf->begin);
-  POINTERS_EQUAL(nullptr, req._membuf->cur);
-  POINTERS_EQUAL(nullptr, req._membuf->end);
+  POINTERS_EQUAL(nullptr, req.membuf->begin);
+  POINTERS_EQUAL(nullptr, req.membuf->cur);
+  POINTERS_EQUAL(nullptr, req.membuf->end);
 #endif
 }
 
@@ -205,22 +221,6 @@ TEST(CO_Sdo, CoSdoReqDnVal_WithOffset) {
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_Unsigned8) {
-  co_unsigned8_t buf[1] = {0xCEu};
-  co_unsigned8_t value = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
-  co_unsigned32_t ac = 0u;
-  req.size = 1u;
-  req.buf = buf;
-  req.nbyte = 1u;
-
-  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0xCEu, value);
-  CHECK_EQUAL(0, ac);
-}
-
 TEST(CO_Sdo, CoSdoReqDnVal_Unsigned16) {
   co_unsigned8_t buf[2] = {0xCEu, 0x7Bu};
   co_unsigned16_t value = 0u;
@@ -237,33 +237,15 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned16) {
   CHECK_EQUAL(0, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_Integer32) {
-  co_unsigned8_t buf[4] = {0xCEu, 0x7Bu, 0x34u, 0xFDu};
-  co_integer32_t value = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_INTEGER32;
-  co_unsigned32_t ac = 0u;
-  req.size = 4u;
-  req.buf = buf;
-  req.nbyte = 4u;
-
-  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(-46892082, value);
-  CHECK_EQUAL(0, ac);
-}
-
-TEST(CO_Sdo, CoSdoReqDnVal_Download32bitTo16bit) {
-  char buf[] = {0x12u, 0x34u, 0x56, 0x78u};
+TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
+  char buf[] = {0x12u, 0x34u, 0x56u, 0x78u};
   co_unsigned16_t val = 0u;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
   co_unsigned32_t ac = 0u;
-  req.membuf->begin = buf;
-  req.membuf->cur = buf;
-  req.membuf->end = buf + 4u;
   req.size = 4u;
   req.buf = buf;
   req.nbyte = 4u;
+  *req.membuf = {buf, buf, buf + 4u};
 
   const auto ret = co_sdo_req_dn_val(&req, type, &val, &ac);
 
@@ -271,34 +253,15 @@ TEST(CO_Sdo, CoSdoReqDnVal_Download32bitTo16bit) {
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, ac);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64) {
-  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
-                           0x8Au, 0xC1u, 0x03u, 0x56u};
+TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooLittleBytes) {
+  char buf[4] = {0x7Eu, 0x7Bu, 0x34u, 0x7Bu};
   co_unsigned64_t value = 0u;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
   co_unsigned32_t ac = 0u;
-  req.size = 8u;
+  req.size = 4u;
   req.buf = buf;
-  req.nbyte = 8u;
-
-  const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, ac);
-  CHECK_EQUAL(0x5603C18ADB347BCEu, value);
-}
-
-#if HAVE_LELY_OVERRIDE
-TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailed) {
-  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
-                           0x8Au, 0xC1u, 0x03u, 0x56u};
-  co_unsigned64_t value = 0u;
-  co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
-  co_unsigned32_t ac = 0u;
-  req.size = 8u;
-  req.buf = buf;
-  req.nbyte = 8u;
-  LelyOverride::co_val_read(0);
+  req.nbyte = 4u;
+  *req.membuf = {buf, buf, buf + 4u};
 
   const auto ret = co_sdo_req_dn_val(&req, type, &value, &ac);
 
@@ -307,25 +270,21 @@ TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailed) {
   CHECK_EQUAL(0u, value);
 }
 
-TEST(CO_Sdo, CoSdoReqDnVal_Unsigned64CoValReadFailedNoAcVariable) {
-  co_unsigned8_t buf[8] = {0xCEu, 0x7Bu, 0x34u, 0xDBu,
-                           0x8Au, 0xC1u, 0x03u, 0x56u};
+TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooLittleBytesNoAcPointer) {
+  co_unsigned8_t buf[4] = {0xCEu, 0x7Bu, 0x34u, 0xDBu};
   co_unsigned64_t value = 0u;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
-  req.size = 8u;
+  req.size = 4u;
   req.buf = buf;
-  req.nbyte = 8u;
-  LelyOverride::co_val_read(0);
+  req.nbyte = 4u;
 
   const auto ret = co_sdo_req_dn_val(&req, type, &value, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, value);
 }
-#endif
 
-#if LELY_NO_MALLOC
-#if HAVE_LELY_OVERIDE
+#if HAVE_LELY_OVERRIDE
 TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
   co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
@@ -345,10 +304,14 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButCoValReadFailed) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+#if LELY_NO_MALLOC
   const char16_t* const expected = u"\u0000\u0000";
   CHECK_EQUAL(0, memcmp(expected, str, 4u));
-}
+#else
+  POINTERS_EQUAL(nullptr, str);
 #endif
+}
+#endif  // HAVE_LELY_OVERRIDE
 
 TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   co_unsigned8_t buf[4] = {0x01u, 0x01u, 0xC9u, 0x24u};
@@ -408,11 +371,15 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArray) {
 }
 
 #if HAVE_LELY_OVERRIDE
-TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
-  char buf[6] = {0x00u};
-  const co_unsigned16_t val = 0xABCDu;
+TEST(CO_Sdo, CoSdoReqUpVal_NoValWrite) {
+  char buf[2] = {0x00u};
+  const co_unsigned16_t val = 0x4B7Du;
   co_unsigned32_t ac = 0u;
   req.buf = buf;
+  req.size = 2u;
+  req.offset = 0u;
+  req.nbyte = 2u;
+  *req.membuf = {buf, buf, buf + 2u};
   LelyOverride::co_val_write(0);
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
@@ -422,10 +389,10 @@ TEST(CO_Sdo, CoSdoReqUpVal_CoValWriteFail) {
   CHECK_EQUAL(0x00u, buf[0]);
   CHECK_EQUAL(0x00u, buf[1]);
 }
-#endif
+#endif  // HAVE_LELY_OVERRIDE
 
 TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
-  char buf[6] = {0x00u};
+  char buf[2] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
   co_unsigned32_t ac = 0u;
   req.buf = buf;
@@ -433,13 +400,17 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
   req.membuf->end = nullptr;
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
-
+#if LELY_NO_MALLOC
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+#else
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, ac);
+#endif
 }
 
-TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcVariable) {
-  char buf[6] = {0x00u};
+TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
+  char buf[2] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
   req.buf = buf;
   req.membuf->begin = nullptr;
@@ -448,13 +419,16 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcVariable) {
   const auto ret =
       co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, nullptr);
 
+#if LELY_NO_MALLOC
   CHECK_EQUAL(-1, ret);
-}
+#else
+  CHECK_EQUAL(0, ret);
 #endif
+}
 
 #if HAVE_LELY_OVERRIDE
 TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
-  char buf[6] = {0x00u};
+  char buf[2] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
   co_unsigned32_t ac = 0u;
   req.buf = buf;
@@ -465,10 +439,10 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
 }
-#endif
+#endif  // HAVE_LELY_OVERRIDE
 
 TEST(CO_Sdo, CoSdoReqUpVal) {
-  char buf[6] = {0x00u};
+  char buf[2] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
   co_unsigned32_t ac = 0u;
   req.buf = buf;
@@ -477,27 +451,32 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  char expected[2] = {0x7Au, 0x79u};
-  CHECK_EQUAL(0, memcmp(expected, req.membuf->begin, 2u));
+  CHECK_EQUAL(0x7Au, req.membuf->begin[0]);
+  CHECK_EQUAL(0x79u, req.membuf->begin[1]);
+  CHECK_EQUAL(2u, req.size);
+  POINTERS_EQUAL(req.membuf->begin, req.buf);
+  CHECK_EQUAL(2u, req.nbyte);
+  CHECK_EQUAL(0u, req.offset);
 }
 
-#if LELY_NO_MALLOC
 TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
   size_t nbyte = 0;
   co_unsigned32_t ac = 0u;
   req.offset = 0u;
   req.size = 5u;
-  req.nbyte = 4u;
-  req.membuf->begin = nullptr;
-  req.membuf->end = nullptr;
-  req.membuf->cur = nullptr;
+  req.nbyte = 0u;
+  *req.membuf = MEMBUF_INIT;
 
   const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
 
+#if LELY_NO_MALLOC
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-}
+#else
+  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(0u, ac);
 #endif
+}
 
 TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
   size_t nbyte = 0;
@@ -507,22 +486,26 @@ TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
   req.nbyte = 4u;
   req.membuf->cur = req.membuf->begin + 13u;
 
-  char buf[10] = {0};
-  const void** buf_ptr = reinterpret_cast<const void**>(&buf);
+  const void* buf_ptr = nullptr;
 
-  const auto ret = co_sdo_req_dn(&req, buf_ptr, &nbyte, &ac);
+  const auto ret = co_sdo_req_dn(&req, &buf_ptr, &nbyte, &ac);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
+  POINTERS_EQUAL(nullptr, buf_ptr);
 }
 
-TEST(CO_Sdo, CoSdoReqDnBuf_NoNbyte) {
+TEST(CO_Sdo, CoSdoReqDnBuf_NoBufferPointerNoNbytePointer) {
   co_unsigned32_t ac = 0u;
+  for (co_unsigned8_t i = 0u; i < membuf_size(req.membuf); i++)
+    req.membuf->begin[i] = i + 1u;
 
   const auto ret = co_sdo_req_dn(&req, nullptr, nullptr, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
+  for (co_unsigned8_t i = 0u; i < membuf_size(req.membuf); i++)
+    CHECK_EQUAL(i + 1u, req.membuf->begin[i]);
 }
 
 TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEndButBufferEmpty) {
@@ -533,11 +516,15 @@ TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEndButBufferEmpty) {
   req.nbyte = 0u;
   req.membuf->cur = req.membuf->begin + 13u;
 
-  char buf[10] = {0};
-  const void** buf_ptr = reinterpret_cast<const void**>(&buf);
+  const void* buf_ptr = nullptr;
 
-  const auto ret = co_sdo_req_dn(&req, buf_ptr, &nbyte, &ac);
+  const auto ret = co_sdo_req_dn(&req, &buf_ptr, &nbyte, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
+#if LELY_NO_MALLOC
+  CHECK(buf_ptr != nullptr);
+#else
+  POINTERS_EQUAL(nullptr, buf_ptr);
+#endif
 }
