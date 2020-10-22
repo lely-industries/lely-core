@@ -332,9 +332,10 @@ TEST(CO_Sdo, CoSdoReqDnVal_IsArrayButTransmittedInParts) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0, ac);
   CHECK_EQUAL(0, str16ncmp(STR_SRC, str, 2u));
+#if LELY_NO_MALLOC
   const char16_t* const expected = u"\u0101\u0000";
-  // characters are copied to the temporary memory buffer
   CHECK_EQUAL(0u, memcmp(expected, req.membuf->begin, 4u));
+#endif
 
   req.buf = buf + 2u;
   req.offset = 2u;
