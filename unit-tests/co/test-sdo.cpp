@@ -506,7 +506,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_NoBufferPointerNoNbytePointer) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
   for (co_unsigned8_t i = 0u; i < membuf_size(req.membuf); i++)
-    CHECK_EQUAL(i + 1u, reinterpret_cast<co_unsigned8_t>(req.membuf->begin[i]));
+    CHECK_EQUAL(static_cast<char>(i + 1), req.membuf->begin[i]);
 }
 
 TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEndButBufferEmpty) {
