@@ -120,6 +120,7 @@ src_co_tests += co/test-rpdo-sdo.cpp
 src_co_tests += co/test-sync.cpp
 src_co_tests += co/test-sdo.cpp
 src_co_tests += co/test-tpdo.cpp
+src_co_tests += co/test-sdo-tpdo.cpp
 src_co_tests += co/test-type.cpp
 src_co_tests += co/test-val.cpp
 src_co_tests += lely-unit-test.cpp
