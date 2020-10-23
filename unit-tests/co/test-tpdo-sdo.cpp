@@ -221,7 +221,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_CobidOldValidNotSetNewValidNotSetSameCANID) {
 }
 
 TEST(CO_SdoTpdo1800, Co1800DnInd_CobidOldValidSetNewNotSetNewCANID) {
-  // CO_PDO_COBID frame not set
+  // CO_PDO_COBID_VALID flag not set
   SetPdoCommCobid(0x00000004u | CO_PDO_COBID_VALID);
   buffer.cobid = 0x00000004u;
   buffer.cobid |= CO_PDO_COBID_FRAME;
