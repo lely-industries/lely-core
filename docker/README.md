@@ -2,7 +2,7 @@
 
 This folder contains docker images configurations used by Continous Integration
 system to build and validate lely-core libraries. The same contaniners can be
-used by developers to quickly check set-up local development environment.
+used by developers to quickly set up local development environment.
 
 
 ## Folder structure
@@ -18,7 +18,11 @@ Dockerfiles are organized in following folder structure:
                                         built from scratch image of
                                         selected distribution
 
-All images that needs to be built from scratch have a common base stored in
+The `<tool>` name corresponds to the CI task defined in `.gitlab-ci.yml`,
+usually name of the tasks include the name of the used container.
+The CI setup can be treated as instruction on images usage.
+
+Some of the images that needs to be built from scratch have a common base stored in
 `build/<distribution>` which allows to simply share layers between images.
 
 
@@ -38,6 +42,9 @@ For example:
 `docker run -ti registry.gitlab.com/n7space/canopen/lely-core/lcov:bullseye bash`
 
 will download `lcov` tool's image and run interactive bash in it.
+
+NOTE: Depending on user's settings, the image might need to be manually pulled from
+the registry (using `docker pull`) before executing `docker run`.
 
 
 ## Using tools from images
@@ -75,6 +82,8 @@ docker run \
 
 will execute autotools autoreconf inside GCC 10 image
 using current directory as working directory.
+For this command to succeed, the current directory should be
+the root folder of the repository checkout.
 
 
 ## Building image locally
