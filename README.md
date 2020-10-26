@@ -36,7 +36,7 @@ clone this repository with
 
 This project uses the GNU Build System (`configure`, `make`, `make install`),
 available on Linux and Windows (through [Cygwin](https://www.cygwin.com/)). To
-build the libraries and tools, you need to install  the autotools (autoconf,
+build the libraries and tools, you need to install the autotools (autoconf,
 automake and libtool). After the initial clone or download of the source,
 generate the `configure` script by running
 
@@ -82,6 +82,11 @@ as root.
 Click [here](https://opensource.lely.com/canopen/docs/installation/) for more
 information about building the Lely-core libraries from source, as well as
 instructions for cross-compilation.
+
+For more details on setup and tools used for the development of the library,
+you can check the `docker/` folder for all images used by the Continuous
+Integration system [configuration](./.gitlab-ci.yml).
+See [docker/README.md](./docker/README.md) more for details.
 
 ## Documentation
 
