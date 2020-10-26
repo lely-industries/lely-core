@@ -250,15 +250,15 @@ co_nmt_hb_recv(const struct can_msg *msg, void *data)
 
 	// Update the state.
 	co_unsigned8_t old_st = hb->st;
+	int old_state = hb->state;
 	co_nmt_hb_set_st(hb, st);
 
-	if (hb->state == CO_NMT_EC_OCCURRED) {
+	if (old_state == CO_NMT_EC_OCCURRED) {
 		diag(DIAG_INFO, 0,
 				"NMT: heartbeat time out resolved for node %d",
 				hb->id);
 		// If a heartbeat timeout event occurred, notify the user that
 		// it has been resolved.
-		hb->state = CO_NMT_EC_RESOLVED;
 		co_nmt_hb_ind(hb->nmt, hb->id, hb->state, CO_NMT_EC_TIMEOUT, 0);
 	}
 
