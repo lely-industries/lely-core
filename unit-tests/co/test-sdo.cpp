@@ -718,7 +718,7 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
 // when: upload request is issued
 // then: 0 is returned, buffer contains suitable bytes
 TEST(CO_Sdo, CoSdoReqUpVal) {
-  char buf[2] = {0x00u};
+  char buf[8] = {0x00u};
   const co_unsigned16_t val = 0x797Au;
   co_unsigned32_t ac = 0u;
   req.buf = buf;
