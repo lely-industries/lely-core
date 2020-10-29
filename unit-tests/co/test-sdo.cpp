@@ -40,9 +40,7 @@ TEST_GROUP(CO_Sdo) { co_sdo_req req = CO_SDO_REQ_INIT(req); };
 // given: SDO request with offset 0
 // when: co_sdo_req_first()
 // then: returns true
-TEST(CO_Sdo, CoSdoReqFirst_IsFirst) {
-  CHECK(co_sdo_req_first(&req));
-}
+TEST(CO_Sdo, CoSdoReqFirst_IsFirst) { CHECK(co_sdo_req_first(&req)); }
 
 // given: SDO request with offset 1
 // when: co_sdo_req_first()
@@ -56,9 +54,7 @@ TEST(CO_Sdo, CoSdoReqFirst_IsNotFirst) {
 // given: SDO request with offset + nbyte == size
 // when: co_sdo_req_first()
 // then: returns false
-TEST(CO_Sdo, CoSdoReqLast_IsLast) {
-  CHECK(co_sdo_req_last(&req));
-}
+TEST(CO_Sdo, CoSdoReqLast_IsLast) { CHECK(co_sdo_req_last(&req)); }
 
 // given: SDO request with offset + nbyte < size
 // when: co_sdo_req_first()
@@ -156,7 +152,8 @@ TEST(CO_Sdo, CoSdoReqInit) {
 #if LELY_NO_MALLOC
   POINTERS_EQUAL(req_init._begin, req_init._membuf.begin);
   POINTERS_EQUAL(req_init._begin, req_init._membuf.cur);
-  POINTERS_EQUAL(req_init._begin + CO_SDO_REQ_MEMBUF_SIZE, req_init._membuf.end);
+  POINTERS_EQUAL(req_init._begin + CO_SDO_REQ_MEMBUF_SIZE,
+                 req_init._membuf.end);
   CHECK(req_init._begin != nullptr);
 #else
   POINTERS_EQUAL(nullptr, req_init.membuf->begin);
@@ -202,7 +199,8 @@ TEST(CO_Sdo, CoSdoReqInit_Macro) {
 #if LELY_NO_MALLOC
   POINTERS_EQUAL(req_init._begin, req_init._membuf.begin);
   POINTERS_EQUAL(req_init._begin, req_init._membuf.cur);
-  POINTERS_EQUAL(req_init._begin + CO_SDO_REQ_MEMBUF_SIZE, req_init._membuf.end);
+  POINTERS_EQUAL(req_init._begin + CO_SDO_REQ_MEMBUF_SIZE,
+                 req_init._membuf.end);
   CHECK(req_init._begin != nullptr);
 #else
   POINTERS_EQUAL(nullptr, req_init.membuf->begin);
@@ -279,7 +277,8 @@ TEST(CO_Sdo, CoSdoReqDn_Empty) {
 
 // // given: example download request, lack of internal buffer address variable
 // // when: copy of the next segment to the internal buffer is requested
-// // then: download request returns a success and number of bytes in the internal
+// // then: download request returns a success and number of bytes in the
+// internal
 // //       buffer
 // TEST(CO_Sdo, CoSdoReqDn_ExpeditedTransferNoInternalBuffer) {
 //   size_t nbyte = 0;
