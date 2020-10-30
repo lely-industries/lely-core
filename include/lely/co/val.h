@@ -28,6 +28,11 @@
 #include <float.h>
 #include <stddef.h>
 
+#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+// The read file buffer from <lely/util/frbuf.h>
+struct __frbuf;
+#endif
+
 /// The default value of a boolean truth value (false).
 #define CO_BOOLEAN_INIT 0
 
@@ -723,7 +728,7 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
  * @param val   the address at which to store the value. On success, if
  *              <b>val</b> is not NULL, *<b>val</b> contains the read value. On
  *              error, *<b>val</b> is left untouched. In the case of strings or
- *              domains, <b>val</b> MUST be the address of pointer. Note that
+ *              domains, <b>val</b> MUST be the address of a pointer. Note that
  *              this value is _not_ finalized before the read value is stored.
  * @param begin a pointer to the start of the buffer.
  * @param end   a pointer to one past the last byte in the buffer. At most
@@ -737,6 +742,49 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
  */
 size_t co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 		const uint_least8_t *end);
+
+#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+
+/**
+ * Reads a value of the specified data type from a file.
+ *
+ * @param type     the data type (in the range [1..27]). This MUST be the object
+ *                 index of one of the static data types.
+ * @param val      the address at which to store the value. On success, if
+ *                 <b>val</b> is not NULL, *<b>val</b> contains the read value.
+ *                 In the case of strings or domains, <b>val</b> MUST be the
+ *                 address of a pointer. Note that this value is _not_ finalized
+ *                 before the read value is stored.
+ * @param filename a pointer to the name of the file.
+ *
+ * @returns the number of bytes read, or 0 on error. In the latter case, the
+ * error number can be obtained with get_errc().
+ *
+ * @see co_val_read_frbuf()
+ */
+size_t co_val_read_file(co_unsigned16_t type, void *val, const char *filename);
+
+/**
+ * Reads a value of the specified data type from the current position in a read
+ * file buffer.
+ *
+ * @param type the data type (in the range [1..27]). This MUST be the object
+ *             index of one of the static data types.
+ * @param val  the address at which to store the value. On success, if
+ *             <b>val</b> is not NULL, *<b>val</b> contains the read value. In
+ *             the case of strings or domains, <b>val</b> MUST be the address of
+ *             a pointer. Note that this value is _not_ finalized before the
+ *             read value is stored.
+ * @param buf  a pointer to a read file buffer.
+ *
+ * @returns the number of bytes read, or 0 on error. In the latter case, the
+ * error number can be obtained with get_errc().
+ *
+ * @see co_val_read_file(), frbuf_read()
+ */
+size_t co_val_read_frbuf(co_unsigned16_t type, void *val, struct __frbuf *buf);
+
+#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
 
 /**
  * Reads a value of the specified data type from an SDO buffer.
