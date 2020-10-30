@@ -40,6 +40,7 @@ TEST_GROUP(CO_Sdo) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
 
   void CheckArrayIsZeroed(const char* const array, const size_t size) {
+    CHECK(array != nullptr);
     for (size_t i = 0u; i < size; i++) CHECK_EQUAL(0, array[i]);
   }
 };
@@ -684,6 +685,10 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
   co_unsigned32_t ac = 0u;
   req.buf = buf;
   LelyOverride::co_val_write(1);
+#if !LELY_NO_MALLOC
+  char membuf[8] = {0};
+  *req.membuf = {membuf, membuf, membuf + 8u};
+#endif
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
 
