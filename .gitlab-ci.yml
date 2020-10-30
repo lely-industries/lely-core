@@ -8,7 +8,8 @@ cache:
   policy: pull
 
 stages:
-  - docker
+  - docker1
+  - docker2
   - build
   - test
   - deploy
@@ -21,7 +22,6 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "web"
 
 .docker:
-  stage: docker
   tags:
     - docker
     - linux
@@ -38,10 +38,16 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
-      - docker/**/*
+        - docker/**/*
       when: always
-    - when: manual
-      allow_failure: true
+
+.docker1:
+  extends: .docker
+  stage: docker1
+
+.docker2:
+  extends: .docker
+  stage: docker2
 
 .build:
   stage: build
@@ -73,7 +79,7 @@ workflow:
     expire_in: 1 week
 
 .docker-gcc:
-  extends: .docker
+  extends: .docker1
   script:
     - docker build
         --build-arg __GNUC__=$__GNUC__
@@ -223,7 +229,7 @@ test:gcc:ecss:
   needs: ["build:gcc:ecss"]
 
 .docker-mingw-w64:
-  extends: .docker
+  extends: .docker1
   script:
     - docker build
         --build-arg ARCH=$ARCH
@@ -265,7 +271,7 @@ test:x86_64-w64-mingw32:
   needs: ["build:x86_64-w64-mingw32"]
 
 .docker-crossbuild:
-  extends: .docker
+  extends: .docker1
   script:
     - docker build
         --build-arg ARCH=$ARCH
@@ -317,8 +323,15 @@ test:aarch64-linux-gnu:
   variables:
     ARCH: arm64
 
+docker:build:
+  extends: .docker1
+  variables:
+    NAME: build
+    TAG: bullseye
+
 docker:arm-none-eabi:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: arm-none-eabi
     TAG: bullseye
@@ -332,14 +345,9 @@ build:arm-none-eabi:
     CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
-docker:build:
-  extends: .docker
-  variables:
-    NAME: build
-    TAG: bullseye
-
 docker:doc:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: doc
     TAG: bullseye
@@ -361,7 +369,7 @@ doc:
     expire_in: 1 week
 
 docker:cpplint:
-  extends: .docker
+  extends: .docker1
   variables:
     NAME: cpplint
     TAG: bullseye
@@ -381,7 +389,8 @@ cpplint:
         $(find unit-tests -name *.cpp -o -name *.hpp)
 
 docker:clang-format:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: clang-format
     TAG: bullseye
@@ -402,7 +411,8 @@ clang-format:
 # TODO - enable C++ clang-format check
 
 docker:valgrind:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: valgrind
     TAG: bullseye
@@ -453,7 +463,8 @@ valgrind:ecss:
     expire_in: 1 week
 
 docker:lcov:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: lcov
     TAG: bullseye
@@ -477,7 +488,8 @@ lcov:
     expire_in: 1 week
 
 docker:scan-build:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: scan-build
     TAG: bullseye
@@ -500,7 +512,8 @@ scan-build:
     expire_in: 1 week
 
 docker:cppcheck-unix64:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: cppcheck-unix64
     TAG: bullseye
@@ -536,7 +549,8 @@ cppcheck-unix64:
     expire_in: 1 week
 
 docker:cppcheck-win64:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:x86_64-w64-mingw32"]
   variables:
     NAME: cppcheck-win64
     TAG: bullseye
@@ -574,7 +588,7 @@ cppcheck-win64:
     expire_in: 1 week
 
 docker:python-checks:
-  extends: .docker
+  extends: .docker1
   variables:
     NAME: python-checks
     TAG: 3.8-slim
@@ -591,7 +605,7 @@ python-checks:
     - flake8 python/dcf-tools
 
 docker:coverity:
-  extends: .docker
+  extends: .docker1
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
@@ -626,7 +640,8 @@ coverity:
       allow_failure: true
 
 docker:sonarcloud:
-  extends: .docker
+  extends: .docker2
+  needs: ["docker:build"]
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
