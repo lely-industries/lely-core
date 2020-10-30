@@ -30,6 +30,9 @@
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
+#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#include <lely/util/frbuf.h>
+#endif
 #include <lely/util/ustring.h>
 
 #if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
@@ -663,6 +666,104 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 		}
 	}
 }
+
+#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+
+size_t
+co_val_read_file(co_unsigned16_t type, void *val, const char *filename)
+{
+	frbuf_t *buf = frbuf_create(filename);
+	if (buf) {
+		int errc = get_errc();
+		set_errc(0);
+		size_t size = co_val_read_frbuf(type, val, buf);
+		if (!size && get_errc()) {
+			errc = get_errc();
+			diag(DIAG_ERROR, get_errc(), "%s", filename);
+		}
+		frbuf_destroy(buf);
+		set_errc(errc);
+		return size;
+	} else {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
+		return 0;
+	}
+}
+
+size_t
+co_val_read_frbuf(co_unsigned16_t type, void *val, frbuf_t *buf)
+{
+	intmax_t size = frbuf_get_size(buf);
+	if (size == -1)
+		return 0;
+	assert(size >= 0);
+
+	intmax_t pos = frbuf_get_pos(buf);
+	if (pos == -1)
+		return 0;
+	assert(pos >= 0);
+
+	if (pos > size)
+		pos = size;
+	size -= pos;
+
+	if (co_type_is_array(type)) {
+		size_t n = (size_t)size;
+		if (val) {
+			switch (type) {
+			case CO_DEFTYPE_VISIBLE_STRING:
+				if (co_val_init_vs_n(val, NULL, n) == -1)
+					return 0;
+				char *vs = *(char **)val;
+				if (frbuf_read(buf, vs, n) != (ssize_t)n)
+					return 0;
+				break;
+			case CO_DEFTYPE_OCTET_STRING:
+				if (co_val_init_os(val, NULL, n) == -1)
+					return 0;
+				uint_least8_t *os = *(uint_least8_t **)val;
+				if (frbuf_read(buf, os, n) != (ssize_t)n)
+					return 0;
+				break;
+			case CO_DEFTYPE_UNICODE_STRING:
+				if (co_val_init_us_n(val, NULL, n / 2) == -1)
+					return 0;
+				char16_t *us = *(char16_t **)val;
+				if (frbuf_read(buf, us, n) != (ssize_t)n)
+					return 0;
+				// Update the byte order in-place.
+				const uint_least8_t *begin =
+						(const uint_least8_t *)us;
+				assert(us);
+				for (size_t i = 0; i + 1 < n; i += 2)
+					us[i / 2] = ldle_u16(begin + i);
+				break;
+			case CO_DEFTYPE_DOMAIN:
+				if (co_val_init_dom(val, NULL, n) == -1)
+					return 0;
+				void *dom = *(void **)val;
+				if (frbuf_read(buf, dom, n) != (ssize_t)n)
+					return 0;
+				break;
+			// We can never get here
+			default: return 0;
+			}
+		}
+		return n;
+	} else {
+		size_t n = co_type_sizeof(type);
+		n = MIN(n, (size_t)size);
+		union co_val tmp;
+		assert(n <= sizeof(tmp));
+		if (frbuf_read(buf, &tmp, n) != (ssize_t)n)
+			return 0;
+		const uint_least8_t *begin = (const uint_least8_t *)&tmp;
+		const uint_least8_t *end = begin + n;
+		return co_val_read(type, val, begin, end);
+	}
+}
+
+#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
 
 co_unsigned32_t
 co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
