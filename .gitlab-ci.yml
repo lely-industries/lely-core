@@ -79,180 +79,112 @@ stages:
         -t $CI_REGISTRY_IMAGE/gcc:$__GNUC__ docker/gcc
     - docker push $CI_REGISTRY_IMAGE/gcc:$__GNUC__
 
-docker-gcc:4:
+docker-gcc:
   extends: .docker-gcc
-  variables:
-    __GNUC__: 4
+  parallel:
+    matrix:
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
-build:gcc:4:
+build:gcc:
   extends: .build
-  image: $REGISTRY/gcc:4
+  image: $REGISTRY/gcc:$__GNUC__
+  parallel:
+    matrix:
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
 test:gcc:4:
   extends: .test
   image: $REGISTRY/gcc:4
-  needs: ["build:gcc:4"]
-
-docker-gcc:5:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 5
-
-build:gcc:5:
-  extends: .build
-  image: $REGISTRY/gcc:5
+  needs: ["build:gcc: [4]"]
 
 test:gcc:5:
   extends: .test
   image: $REGISTRY/gcc:5
-  needs: ["build:gcc:5"]
-
-docker-gcc:6:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 6
-
-build:gcc:6:
-  extends: .build
-  image: $REGISTRY/gcc:6
+  needs: ["build:gcc: [5]"]
 
 test:gcc:6:
   extends: .test
   image: $REGISTRY/gcc:6
-  needs: ["build:gcc:6"]
-
-docker-gcc:7:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 7
-
-build:gcc:7:
-  extends: .build
-  image: $REGISTRY/gcc:7
+  needs: ["build:gcc: [6]"]
 
 test:gcc:7:
   extends: .test
   image: $REGISTRY/gcc:7
-  needs: ["build:gcc:7"]
-
-docker-gcc:8:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 8
-
-build:gcc:8:
-  extends: .build
-  image: $REGISTRY/gcc:8
+  needs: ["build:gcc: [7]"]
 
 test:gcc:8:
   extends: .test
   image: $REGISTRY/gcc:8
-  needs: ["build:gcc:8"]
-
-docker-gcc:9:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 9
-
-build:gcc:9:
-  extends: .build
-  image: $REGISTRY/gcc:9
+  needs: ["build:gcc: [8]"]
 
 test:gcc:9:
   extends: .test
   image: $REGISTRY/gcc:9
-  needs: ["build:gcc:9"]
-
-docker-gcc:10:
-  extends: .docker-gcc
-  variables:
-    __GNUC__: 10
-
-build:gcc:10:
-  extends: .build
-  image: $REGISTRY/gcc:10
+  needs: ["build:gcc: [9]"]
 
 test:gcc:10:
   extends: .test
   image: $REGISTRY/gcc:10
-  needs: ["build:gcc:10"]
+  needs: ["build:gcc: [10]"]
 
-build:gcc:no-canfd:
+build:configure:
   extends: .build
   image: $REGISTRY/gcc:10
-  variables:
-    CONFIGURE_OPTIONS: --disable-canfd
+  parallel:
+    matrix:
+      - CONFIGURE_OPTIONS:
+        - --disable-canfd
+        - --disable-cxx
+        - --disable-master
 
-test:gcc:no-canfd:
+test:configure:disable-canfd:
   extends: .test
   image: $REGISTRY/gcc:10
-  needs: ["build:gcc:no-canfd"]
+  needs: ["build:configure: [--disable-canfd]"]
 
-build:gcc:no-cxx:
-  extends: .build
-  image: $REGISTRY/gcc:10
-  variables:
-    CONFIGURE_OPTIONS: --disable-cxx
-
-test:gcc:no-cxx:
+test:configure:disable-cxx:
   extends: .test
   image: $REGISTRY/gcc:10
-  needs: ["build:gcc:no-cxx"]
+  needs: ["build:configure: [--disable-cxx]"]
 
-build:gcc:no-master:
-  extends: .build
-  image: $REGISTRY/gcc:10
-  variables:
-    CONFIGURE_OPTIONS: --disable-master
-
-test:gcc:no-master:
+test:configure:disable-master:
   extends: .test
   image: $REGISTRY/gcc:10
-  needs: ["build:gcc:no-master"]
+  needs: ["build:configure: [--disable-master]"]
 
-.docker-mingw-w64:
+docker:mingw-w64:
   extends: .docker1
   script:
     - docker build
         --build-arg ARCH=$ARCH
         -t $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG docker/mingw-w64/$TAG
     - docker push $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG
-
-docker:i686-w64-mingw32:
-  extends: .docker-mingw-w64
   variables:
-    ARCH: i686
     TAG: bullseye
+  parallel:
+    matrix:
+      - ARCH: [i686, x86_64]
 
-build:i686-w64-mingw32:
+build:mingw-w64:
   extends: .build
-  image: $REGISTRY/i686-w64-mingw32:bullseye
+  image: $REGISTRY/$HOST:bullseye
   variables:
-    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
+    CONFIGURE_OPTIONS: --host=$HOST --disable-python
+  parallel:
+    matrix:
+      - HOST: [i686-w64-mingw32, x86_64-w64-mingw32]
 
 test:i686-w64-mingw32:
   extends: .test
   image: $REGISTRY/i686-w64-mingw32:bullseye
-  needs: ["build:i686-w64-mingw32"]
-
-docker:x86_64-w64-mingw32:
-  extends: .docker-mingw-w64
-  variables:
-    ARCH: x86_64
-    TAG: bullseye
-
-build:x86_64-w64-mingw32:
-  extends: .build
-  image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  variables:
-    CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
+  needs: ["build:mingw-w64: [i686-w64-mingw32]"]
 
 test:x86_64-w64-mingw32:
   extends: .test
   image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  needs: ["build:x86_64-w64-mingw32"]
+  needs: ["build:mingw-w64: [x86_64-w64-mingw32]"]
 
-.docker-crossbuild:
+docker:crossbuild:
   extends: .docker1
   script:
     - docker build
@@ -260,48 +192,34 @@ test:x86_64-w64-mingw32:
         --build-arg NAME=$NAME
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/crossbuild/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
+  parallel:
+    matrix:
+      - ARCH: armhf
+        NAME: arm-linux-gnueabihf
+        TAG: buster
+      - ARCH: arm64
+        NAME: aarch64-linux-gnu
+        TAG: buster
 
-docker:arm-linux-gnueabihf:
-  extends: .docker-crossbuild
-  variables:
-    ARCH: armhf
-    NAME: arm-linux-gnueabihf
-    TAG: buster
-
-build:arm-linux-gnueabihf:
+build:crossbuild:
   extends: .build
-  image: $REGISTRY/arm-linux-gnueabihf:buster
+  image: $REGISTRY/$HOST:buster
   variables:
     ARCH: armhf
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf
+    CONFIGURE_OPTIONS: --host=$HOST
+  parallel:
+    matrix:
+      - HOST: [arm-linux-gnueabihf, aarch64-linux-gnu]
 
 test:arm-linux-gnueabihf:
   extends: .test
   image: $REGISTRY/arm-linux-gnueabihf:buster
-  needs: ["build:arm-linux-gnueabihf"]
-  variables:
-    ARCH: armhf
-
-docker:aarch64-linux-gnu:
-  extends: .docker-crossbuild
-  variables:
-    ARCH: arm64
-    NAME: aarch64-linux-gnu
-    TAG: buster
-
-build:aarch64-linux-gnu:
-  extends: .build
-  image: $REGISTRY/aarch64-linux-gnu:buster
-  variables:
-    ARCH: arm64
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu
+  needs: ["build:crossbuild: [arm-linux-gnueabihf]"]
 
 test:aarch64-linux-gnu:
   extends: .test
   image: $REGISTRY/aarch64-linux-gnu:buster
-  needs: ["build:aarch64-linux-gnu"]
-  variables:
-    ARCH: arm64
+  needs: ["build:crossbuild: [aarch64-linux-gnu]"]
 
 docker:build:
   extends: .docker1
@@ -485,7 +403,7 @@ cppcheck-unix64:
 
 docker:cppcheck-win64:
   extends: .docker2
-  needs: ["docker:x86_64-w64-mingw32"]
+  needs: ["docker:mingw-w64: [x86_64]"]
   variables:
     NAME: cppcheck-win64
     TAG: bullseye
