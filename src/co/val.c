@@ -451,7 +451,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 		const uint_least8_t *end)
 {
 	assert(begin || begin == end);
-	assert(!end || end >= begin);
+	assert(end >= begin);
 
 	size_t n = end - begin;
 
