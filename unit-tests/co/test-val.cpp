@@ -1270,7 +1270,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_True) {
   co_boolean_t val;
   const uint_least8_t buffer[] = {0xffu};
 
-  const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, nullptr);
+  const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, buffer + 1);
 
   CHECK_EQUAL(ValGetReadWriteSize(CO_DEFTYPE_BOOLEAN), ret);
   CHECK_EQUAL(0x01, val);
@@ -1280,7 +1280,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
   co_boolean_t val;
   const uint_least8_t buffer[] = {0x00};
 
-  const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, nullptr);
+  const auto ret = co_val_read(CO_DEFTYPE_BOOLEAN, &val, buffer, buffer + 1);
 
   CHECK_EQUAL(ValGetReadWriteSize(CO_DEFTYPE_BOOLEAN), ret);
   CHECK_EQUAL(0x00, val);
