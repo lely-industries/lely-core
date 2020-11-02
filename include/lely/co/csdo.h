@@ -304,6 +304,12 @@ void co_csdo_get_up_ind(
 void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
+ * Returns 1 of the COB-IDs of the specified Client-SDO service are valid, and 0
+ * if not.
+ */
+int co_csdo_is_valid(const co_csdo_t *sdo);
+
+/**
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
  * ongoing.
  */
