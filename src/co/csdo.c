@@ -710,6 +710,79 @@ done:
 }
 
 int
+co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data)
+{
+	assert(dev);
+	assert(begin);
+	assert(end >= begin);
+
+	int errc = get_errc();
+	struct co_sdo_req req = CO_SDO_REQ_INIT;
+
+	co_unsigned16_t idx = 0;
+	co_unsigned8_t subidx = 0;
+	co_unsigned32_t ac = 0;
+
+	// Read the total number of sub-indices.
+	co_unsigned32_t n;
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end) != 4) {
+		ac = CO_SDO_AC_TYPE_LEN_LO;
+		goto done;
+	}
+	begin += 4;
+
+	for (size_t i = 0; i < n && !ac; i++) {
+		idx = 0;
+		subidx = 0;
+		ac = CO_SDO_AC_TYPE_LEN_LO;
+		// Read the object index.
+		if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2)
+			break;
+		begin += 2;
+		// Read the object sub-index.
+		if (co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end) != 1)
+			break;
+		begin += 1;
+		// Read the value size (in bytes).
+		co_unsigned32_t size;
+		if (co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end) != 4)
+			break;
+		begin += 4;
+		if (end - begin < (ptrdiff_t)size)
+			break;
+		co_obj_t *obj = co_dev_find_obj(dev, idx);
+
+		if (!obj) {
+			ac = CO_SDO_AC_NO_OBJ;
+			break;
+		}
+		co_sub_t *sub = co_obj_find_sub(obj, subidx);
+		if (!sub) {
+			ac = CO_SDO_AC_NO_SUB;
+			break;
+		}
+
+		// Write the value to the object dictionary.
+		co_sdo_req_clear(&req);
+		// cppcheck-suppress redundantAssignment
+		ac = 0;
+		if (!co_sdo_req_up(&req, begin, size, &ac))
+			ac = co_sub_dn_ind(sub, &req);
+
+		begin += size;
+	}
+
+done:
+	if (con)
+		con(NULL, idx, subidx, ac, data);
+
+	co_sdo_req_fini(&req);
+	set_errc(errc);
+	return 0;
+}
+
+int
 co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_csdo_up_con_t *con, void *data)
 {
