@@ -1146,6 +1146,16 @@ co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data)
 }
 
 int
+co_csdo_is_valid(const co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
+	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
+	return valid_req && valid_res;
+}
+
+int
 co_csdo_is_idle(const co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -1275,9 +1285,7 @@ co_csdo_update(co_csdo_t *sdo)
 	// Abort any ongoing transfer.
 	co_csdo_abort_req(sdo, CO_SDO_AC_NO_SDO);
 
-	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
-	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
-	if (valid_req && valid_res) {
+	if (co_csdo_is_valid(sdo)) {
 		uint_least32_t id = sdo->par.cobid_res;
 		uint_least8_t flags = 0;
 		if (id & CO_SDO_COBID_FRAME) {
@@ -2197,16 +2205,8 @@ co_csdo_dn_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	// Check whether the SDO exists and is valid.
-	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
-	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
-	if (!valid_req || !valid_res) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-
-	// Check whether we are in the waiting state.
-	if (!co_csdo_is_idle(sdo)) {
+	// Check whether the SDO exists, is valid and is in the waiting state.
+	if (!co_csdo_is_valid(sdo) || !co_csdo_is_idle(sdo)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
@@ -2240,16 +2240,8 @@ co_csdo_up_ind(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 {
 	assert(sdo);
 
-	// Check whether the SDO exists and is valid.
-	int valid_req = !(sdo->par.cobid_req & CO_SDO_COBID_VALID);
-	int valid_res = !(sdo->par.cobid_res & CO_SDO_COBID_VALID);
-	if (!valid_req || !valid_res) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-
-	// Check whether we are in the waiting state.
-	if (!co_csdo_is_idle(sdo)) {
+	// Check whether the SDO exists, is valid and is in the waiting state.
+	if (!co_csdo_is_valid(sdo) || !co_csdo_is_idle(sdo)) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
 	}
