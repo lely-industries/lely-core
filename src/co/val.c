@@ -32,6 +32,7 @@
 #include <lely/util/endian.h>
 #if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>
+#include <lely/util/fwbuf.h>
 #endif
 #include <lely/util/ustring.h>
 
@@ -799,18 +800,14 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		if (begin && (!end || end - begin >= (ptrdiff_t)n)) {
 			switch (type) { // LCOV_EXCL_BR_LINE
 			case CO_DEFTYPE_VISIBLE_STRING:
-				memcpy(begin, ptr, n);
-				break;
 			case CO_DEFTYPE_OCTET_STRING:
-				memcpy(begin, ptr, n);
-				break;
+			case CO_DEFTYPE_DOMAIN: memcpy(begin, ptr, n); break;
 			case CO_DEFTYPE_UNICODE_STRING: {
 				const char16_t *us = ptr;
 				for (size_t i = 0; i + 1 < n; i += 2)
 					stle_u16(begin + i, us[i / 2]);
 				break;
 			}
-			case CO_DEFTYPE_DOMAIN: memcpy(begin, ptr, n); break;
 			// We can never get here.
 			default: return 0; // LCOV_EXCL_LINE
 			}
@@ -938,6 +935,77 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		}
 	}
 }
+
+#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+
+size_t
+co_val_write_file(co_unsigned16_t type, const void *val, const char *filename)
+{
+	fwbuf_t *buf = fwbuf_create(filename);
+	if (buf) {
+		int errc = get_errc();
+		set_errc(0);
+		size_t size = co_val_write_fwbuf(type, val, buf);
+		if (!size && get_errc()) {
+			errc = get_errc();
+			diag(DIAG_ERROR, get_errc(), "%s", filename);
+		}
+		fwbuf_destroy(buf);
+		set_errc(errc);
+		return size;
+	} else {
+		diag(DIAG_ERROR, get_errc(), "%s", filename);
+		return 0;
+	}
+}
+
+size_t
+co_val_write_fwbuf(co_unsigned16_t type, const void *val, fwbuf_t *buf)
+{
+	if (co_type_is_array(type)) {
+		const void *ptr = co_val_addressof(type, val);
+		size_t n = co_val_sizeof(type, val);
+		if (!ptr || !n)
+			return 0;
+		switch (type) {
+		case CO_DEFTYPE_VISIBLE_STRING:
+		case CO_DEFTYPE_OCTET_STRING:
+		case CO_DEFTYPE_DOMAIN:
+			if (fwbuf_write(buf, ptr, n) != (ssize_t)n)
+				return 0;
+			break;
+		case CO_DEFTYPE_UNICODE_STRING: {
+			const char16_t *us = ptr;
+			for (size_t i = 0; i + 1 < n; i += 2) {
+				uint_least8_t tmp[2];
+				stle_u16(tmp, us[i / 2]);
+				if (fwbuf_write(buf, tmp, 2) != 2)
+					return 0;
+			}
+			break;
+		}
+		// We can never get here.
+		default: return 0;
+		}
+		if (fwbuf_commit(buf) == -1)
+			return 0;
+		return n;
+	} else {
+		union co_val tmp;
+		uint_least8_t *begin = (uint_least8_t *)&tmp;
+		uint_least8_t *end = begin + sizeof(tmp);
+		size_t n = co_val_write(type, val, begin, end);
+		if (!n)
+			return 0;
+		if (fwbuf_write(buf, &tmp, n) != (ssize_t)n)
+			return 0;
+		if (fwbuf_commit(buf) == -1)
+			return 0;
+		return n;
+	}
+}
+
+#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
 
 #if !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 size_t

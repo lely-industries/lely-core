@@ -22,13 +22,10 @@
  */
 
 #include "co.h"
-#include <lely/util/cmp.h>
-#include <lely/util/diag.h>
-#ifndef LELY_NO_CO_DCF
-#include <lely/util/fwbuf.h>
-#endif
 #include <lely/co/detail/dev.h>
 #include <lely/co/detail/obj.h>
+#include <lely/util/cmp.h>
+#include <lely/util/diag.h>
 #ifndef LELY_NO_CO_TPDO
 #include <lely/co/pdo.h>
 #endif
@@ -803,50 +800,23 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	return 0;
 }
 
-#ifndef LELY_NO_CO_DCF
+#if !LELY_NO_CO_DCF
 int
 co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, const char *filename)
 {
-	int errc = 0;
-
 	void *dom = NULL;
-	if (co_dev_write_dcf(dev, min, max, &dom) == -1) {
-		errc = get_errc();
-		goto error_write_dcf;
-	}
-
-	fwbuf_t *buf = fwbuf_create(filename);
-	if (!buf) {
-		errc = get_errc();
-		goto error_create_buf;
-	}
+	if (co_dev_write_dcf(dev, min, max, &dom) == -1)
+		return -1;
 
 	size_t nbyte = co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
-	if (fwbuf_write(buf, dom, nbyte) != (ssize_t)nbyte) {
-		errc = get_errc();
-		goto error_write;
+	if (co_val_write_file(CO_DEFTYPE_DOMAIN, &dom, filename) != nbyte) {
+		co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+		return -1;
 	}
 
-	if (fwbuf_commit(buf) == -1) {
-		errc = get_errc();
-		goto error_commit;
-	}
-
-	fwbuf_destroy(buf);
 	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
-
 	return 0;
-
-error_commit:
-error_write:
-	fwbuf_destroy(buf);
-error_create_buf:
-	co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
-error_write_dcf:
-	diag(DIAG_ERROR, errc, "%s", filename);
-	set_errc(errc);
-	return -1;
 }
 #endif
 
