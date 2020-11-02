@@ -123,6 +123,25 @@ int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_csdo_dn_con_t *con, void *data);
 
 /**
+ * Submits a series of download requests to a local device. This function calls
+ * co_dev_dn_req() for each entry in the specified concise DCF.
+ *
+ * @param dev   a pointer to CANopen device.
+ * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+ *              in CiA 302-3 version 4.1.0).
+ * @param end   a pointer to one past the last byte in the concise DCF. At most
+ *              `end - begin` bytes are read.
+ * @param con   a pointer to the confirmation function (can be NULL).
+ * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
+ *              passed as the last parameter to <b>con</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
+
+/**
  * Submits an upload request to a local device. This is equivalent to a read
  * operation from an object dictionary.
  *
