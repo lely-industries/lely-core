@@ -374,6 +374,25 @@ int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		struct membuf *buf, co_csdo_dn_con_t *con, void *data);
 
 /**
+ * Submits a series of download requests to a remote Server-SDO. This function
+ * calls co_csdo_dn_req() for each entry in the specified concise DCF.
+ *
+ * @param sdo   a pointer to a Client-SDO service.
+ * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+ *              in CiA 302-3 version 4.1.0).
+ * @param end   a pointer to one past the last byte in the concise DCF. At most
+ *              `end - begin` bytes are read.
+ * @param con   a pointer to the confirmation function (can be NULL).
+ * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
+ *              passed as the last parameter to <b>con</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_csdo_dn_dcf_req(co_csdo_t *sdo, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
+
+/**
  * Submits an upload request to a remote Server-SDO. This requests the server
  * to upload the value and is equivalent to a read operation from a remote
  * object dictionary. Note that the request will fail if another transfer is in

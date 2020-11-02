@@ -51,6 +51,20 @@ struct __co_csdo_state;
 /// An opaque CANopen Client-SDO state type.
 typedef const struct __co_csdo_state co_csdo_state_t;
 
+/// The state of a concise DCF download request.
+struct co_csdo_dn_dcf {
+	/// The number of remaining entries in the concise DCF.
+	co_unsigned32_t n;
+	/// A pointer to the next byte in the concise DCF.
+	const uint_least8_t *begin;
+	/// A pointer to one past the last byte in the concise DCF.
+	const uint_least8_t *end;
+	/// A pointer to the download confirmation function.
+	co_csdo_dn_con_t *con;
+	/// A pointer to user-specified data for #con.
+	void *data;
+};
+
 /// A CANopen Client-SDO.
 struct __co_csdo {
 	/// A pointer to a CAN network interface.
@@ -117,6 +131,8 @@ struct __co_csdo {
 	co_csdo_ind_t *up_ind;
 	/// A pointer to user-specified data for #up_ind.
 	void *up_ind_data;
+	/// The state of the concise DCF download request.
+	struct co_csdo_dn_dcf dn_dcf;
 };
 
 /**
@@ -633,6 +649,15 @@ static void co_csdo_init_ini_req(
 static void co_csdo_init_seg_req(
 		co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs);
 
+/**
+ * The confirmation function of a single SDO download request during a concise
+ * DCF download.
+ *
+ * @see co_csdo_dn_dcf_req()
+ */
+static void co_csdo_dn_dcf_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, void *data);
+
 int
 co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		const void *ptr, size_t n, co_csdo_dn_con_t *con, void *data)
@@ -966,6 +991,8 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 	sdo->up_ind = NULL;
 	sdo->up_ind_data = NULL;
 
+	sdo->dn_dcf = (struct co_csdo_dn_dcf){ 0 };
+
 	if (co_csdo_start(sdo) == -1) {
 		errc = get_errc();
 		goto error_start;
@@ -1259,6 +1286,35 @@ co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		return -1;
 
 	return co_csdo_dn_req(sdo, idx, subidx, ptr, n, con, data);
+}
+
+int
+co_csdo_dn_dcf_req(co_csdo_t *sdo, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data)
+{
+	assert(sdo);
+	assert(begin);
+	assert(end >= begin);
+
+	// Check whether the SDO exists, is valid and is in the waiting state.
+	if (!co_csdo_is_valid(sdo) || !co_csdo_is_idle(sdo)) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	co_unsigned32_t ac = 0;
+
+	// Read the total number of sub-indices.
+	co_unsigned32_t n;
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end) != 4)
+		ac = CO_SDO_AC_TYPE_LEN_LO;
+	begin += 4;
+
+	// Start the first SDO request.
+	sdo->dn_dcf = (struct co_csdo_dn_dcf){ n, begin, end, con, data };
+	co_csdo_dn_dcf_dn_con(sdo, 0, 0, ac, NULL);
+
+	return 0;
 }
 
 int
@@ -2566,6 +2622,62 @@ co_csdo_init_seg_req(co_csdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 	}
 	msg->len = CAN_MAX_LEN;
 	msg->data[0] = cs;
+}
+
+static void
+co_csdo_dn_dcf_dn_con(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned32_t ac, void *data)
+{
+	assert(sdo);
+	assert(co_csdo_is_valid(sdo));
+	assert(co_csdo_is_idle(sdo));
+	struct co_csdo_dn_dcf *dcf = &sdo->dn_dcf;
+
+	if (!ac && dcf->n--) {
+		idx = 0;
+		subidx = 0;
+		ac = CO_SDO_AC_TYPE_LEN_LO;
+		// Read the object index.
+		// clang-format off
+		if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, dcf->begin,
+				dcf->end) != 2)
+			// clang-format on
+			goto done;
+		dcf->begin += 2;
+		// Read the object sub-index.
+		// clang-format off
+		if (co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, dcf->begin,
+				dcf->end) != 1)
+			// clang-format on
+			goto done;
+		dcf->begin += 1;
+		// Read the value size (in bytes).
+		co_unsigned32_t size;
+		// clang-format off
+		if (co_val_read(CO_DEFTYPE_UNSIGNED32, &size, dcf->begin,
+				dcf->end) != 4)
+			// clang-format on
+			goto done;
+		dcf->begin += 4;
+		if (dcf->end - dcf->begin < (ptrdiff_t)size)
+			goto done;
+		const void *ptr = dcf->begin;
+		dcf->begin += size;
+		// Submit the SDO download request. This cannot fail since we
+		// already checked that the SDO exists, is valid and is idle.
+		co_csdo_dn_req(sdo, idx, subidx, ptr, size,
+				&co_csdo_dn_dcf_dn_con, NULL);
+		return;
+	}
+
+done:;
+	co_csdo_dn_con_t *con = dcf->con;
+	data = dcf->data;
+
+	*dcf = (struct co_csdo_dn_dcf){ 0 };
+
+	if (con)
+		con(sdo, idx, subidx, ac, data);
 }
 
 #endif // !LELY_NO_CO_CSDO
