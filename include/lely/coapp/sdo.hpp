@@ -104,8 +104,7 @@ make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
 /**
  * Returns an SDO future with a shared state that is immediately ready,
  * containing a failure result constructed with
- * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const
- * ::std::string&).
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const ::std::string&).
  *
  * @see make_empty_sdo_future(), make_ready_sdo_future()
  */
@@ -120,8 +119,7 @@ make_error_sdo_future(uint8_t id, uint16_t idx, uint8_t subidx,
 /**
  * Returns an SDO future with a shared state that is immediately ready,
  * containing a failure result constructed with
- * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const
- * char*).
+ * make_sdo_exception_ptr(uint8_t, uint16_t, uint8_t, ::std::error_code, const char*).
  *
  * @see make_empty_sdo_future(), make_ready_sdo_future()
  */
@@ -224,6 +222,42 @@ class SdoDownloadRequestBase : public SdoRequestBase {
   T value{};
 };
 
+class SdoDownloadDcfRequestBase : public SdoRequestBase {
+ public:
+  using SdoRequestBase::SdoRequestBase;
+
+  SdoDownloadDcfRequestBase(ev_exec_t* exec, const uint8_t* begin_,
+                            const uint8_t* end_,
+                            const ::std::chrono::milliseconds& timeout = {})
+      : SdoRequestBase(exec, 0, 0, timeout), begin(begin_), end(end_) {}
+
+  SdoDownloadDcfRequestBase(ev_exec_t* exec, const char* path,
+                            const ::std::chrono::milliseconds& timeout = {})
+      : SdoRequestBase(exec, 0, 0, timeout) {
+    Read(path);
+  }
+
+  virtual ~SdoDownloadDcfRequestBase();
+
+  /// Reads a concise DCF from the specified <b>path</b>.
+  void Read(const char* path);
+
+  /**
+   * A pointer the the first byte in a concise DCF (see object 1F22 in CiA 302-3
+   * version 4.1.0).
+   */
+  const uint8_t* begin{nullptr};
+
+  /**
+   * A pointer to one past the last byte in the concise DCF. At most
+   * `end - begin` bytes are read.
+   */
+  const uint8_t* end{nullptr};
+
+ private:
+  void* dom_{nullptr};
+};
+
 template <class T>
 class SdoUploadRequestBase : public SdoRequestBase {
  public:
@@ -261,6 +295,51 @@ class SdoDownloadRequest : public detail::SdoDownloadRequestBase<T> {
   template <class F>
   SdoDownloadRequest(ev_exec_t* exec, F&& con)
       : detail::SdoDownloadRequestBase<T>(exec), con_(::std::forward<F>(con)) {}
+
+ private:
+  void operator()() noexcept final;
+
+  void OnRequest(void* data) noexcept final;
+
+  ::std::function<Signature> con_;
+};
+
+/**
+ * A series of SDO download (i.e., write) requests corresponding to the entries
+ * in a concise DCF.
+ */
+class SdoDownloadDcfRequest : public detail::SdoDownloadDcfRequestBase {
+ public:
+  /**
+   * The signature of the callback function invoked when all SDO download
+   * requests are successfully completed, or when an error occurs. Note that the
+   * callback function SHOULD NOT throw exceptions. Since it is invoked from C,
+   * any exception that is thrown cannot be caught and will result in a call to
+   * `std::terminate()`.
+   *
+   * @param id     the node-ID.
+   * @param idx    the object index of the last SDO download request, whether it
+   *               completed successfully (`ec == 0`) or not (`ec != 0`).
+   *               <b>idx</b> may be 0 in case of an error in the DCF.
+   * @param subidx the object sub-index of the last SDO download request.
+   *               <b>subidx</b> may be 0 in case of an error in the DCF.
+   * @param ec     the SDO abort code (0 on success). If the concise DCF is
+   *               incomplete, the client aborts the transfer with abort code
+   *               #SdoErrc::TYPE_LEN_LO.
+   */
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec);
+
+  /**
+   * Constructs an empty SDO download DCF request. The concise DCF and,
+   * optionally, the SDO timeout have to be set before the request can be
+   * submitted.
+   *
+   * @see SdoDownloadDcfRequestBase::Read()
+   */
+  template <class F>
+  SdoDownloadDcfRequest(ev_exec_t* exec, F&& con)
+      : detail::SdoDownloadDcfRequestBase(exec), con_(::std::forward<F>(con)) {}
 
  private:
   void operator()() noexcept final;
@@ -330,6 +409,39 @@ class SdoDownloadRequestWrapper : public SdoDownloadRequestBase<T> {
   ::std::function<Signature> con_;
 };
 
+class SdoDownloadDcfRequestWrapper : public SdoDownloadDcfRequestBase {
+ public:
+  using Signature = void(uint8_t id, uint16_t idx, uint8_t subidx,
+                         ::std::error_code ec);
+
+  template <class F>
+  SdoDownloadDcfRequestWrapper(ev_exec_t* exec, const uint8_t* begin,
+                               const uint8_t* end, F&& con,
+                               const ::std::chrono::milliseconds& timeout)
+      : SdoDownloadDcfRequestBase(exec, begin, end, timeout),
+        con_(::std::forward<F>(con)) {}
+
+  template <class F>
+  SdoDownloadDcfRequestWrapper(ev_exec_t* exec, const char* path, F&& con,
+                               const ::std::chrono::milliseconds& timeout)
+      : SdoDownloadDcfRequestBase(exec, path, timeout),
+        con_(::std::forward<F>(con)) {}
+
+  template <class F>
+  SdoDownloadDcfRequestWrapper(ev_exec_t* exec, const ::std::string& path,
+                               F&& con,
+                               const ::std::chrono::milliseconds& timeout)
+      : SdoDownloadDcfRequestBase(exec, path, timeout),
+        con_(::std::forward<F>(con)) {}
+
+ private:
+  void operator()() noexcept final;
+
+  void OnRequest(void* data) noexcept final;
+
+  ::std::function<Signature> con_;
+};
+
 template <class T>
 class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
  public:
@@ -381,6 +493,60 @@ make_sdo_download_request(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
 }
 
 /**
+ * Creates a series of SDO download requests, corresponding to the entries in a
+ * concise DCF, with a completion task. The request deletes itself after it is
+ * completed, so it MUST NOT be deleted once it is submitted to a Client-SDO
+ * queue.
+ *
+ * @param exec    the executor used to execute the completion task.
+ * @param begin   a pointer the the first byte in a concise DCF (see object 1F22
+ *                in CiA 302-3 version 4.1.0).
+ * @param end     a pointer to one past the last byte in the concise DCF. At
+ *                most `end - begin` bytes are read.
+ * @param con     the confirmation function to be called when all SDO download
+ *                requests are successfully completed, or when an error occurs.
+ * @param timeout the SDO timeout. If, after a single request is initiated, the
+ *                timeout expires before receiving a response from the server,
+ *                the client aborts the transfer with abort code
+ *                #SdoErrc::TIMEOUT.
+ *
+ * @returns a pointer to a new SDO download DCF request.
+ */
+template <class F>
+inline detail::SdoDownloadDcfRequestWrapper*
+make_sdo_download_dcf_request(ev_exec_t* exec, const uint8_t* begin,
+                              const uint8_t* end, F&& con,
+                              const ::std::chrono::milliseconds& timeout = {}) {
+  return new detail::SdoDownloadDcfRequestWrapper(
+      exec, begin, end, ::std::forward<F>(con), timeout);
+}
+
+/**
+ * Creates a series of SDO download requests, corresponding to the entries in a
+ * concise DCF, with a completion task. The request deletes itself after it is
+ * completed, so it MUST NOT be deleted once it is submitted to a Client-SDO
+ * queue.
+ *
+ * @param exec    the executor used to execute the completion task.
+ * @param path    the path of the concise DCF.
+ * @param con     the confirmation function to be called when all SDO download
+ *                requests are successfully completed, or when an error occurs.
+ * @param timeout the SDO timeout. If, after a single request is initiated, the
+ *                timeout expires before receiving a response from the server,
+ *                the client aborts the transfer with abort code
+ *                #SdoErrc::TIMEOUT.
+ *
+ * @returns a pointer to a new SDO download DCF request.
+ */
+template <class F>
+inline detail::SdoDownloadDcfRequestWrapper*
+make_sdo_download_dcf_request(ev_exec_t* exec, const char* path, F&& con,
+                              const ::std::chrono::milliseconds& timeout = {}) {
+  return new detail::SdoDownloadDcfRequestWrapper(
+      exec, path, ::std::forward<F>(con), timeout);
+}
+
+/**
  * Creates an SDO upload request with a completion task. The request deletes
  * itself after it is completed, so it MUST NOT be deleted once it is submitted
  * to a Client-SDO queue.
@@ -410,11 +576,15 @@ class Sdo {
   template <class>
   friend class SdoDownloadRequest;
 
+  friend class SdoDownloadDcfRequest;
+
   template <class>
   friend class SdoUploadRequest;
 
   template <class>
   friend class detail::SdoDownloadRequestWrapper;
+
+  friend class detail::SdoDownloadDcfRequestWrapper;
 
   template <class>
   friend class detail::SdoUploadRequestWrapper;
@@ -514,6 +684,71 @@ class Sdo {
     return Abort(req);
   }
 
+  /// Queues an SDO download DCF request.
+  void
+  SubmitDownloadDcf(SdoDownloadDcfRequest& req) {
+    Submit(req);
+  }
+
+  /**
+   * Queues an SDO download DCF request. This function writes each entry in the
+   * specified concise DCF to a sub-object in a remote object dictionary.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   */
+  template <class F>
+  void
+  SubmitDownloadDcf(ev_exec_t* exec, const uint8_t* begin, const uint8_t* end,
+                    F&& con, const ::std::chrono::milliseconds& timeout = {}) {
+    Submit(*make_sdo_download_dcf_request(exec, begin, end,
+                                          ::std::forward<F>(con), timeout));
+  }
+
+  /**
+   * Queues an SDO download DCF request. This function writes each entry in the
+   * specified concise DCF to a sub-object in a remote object dictionary.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param path    the path of the concise DCF.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   */
+  template <class F>
+  void
+  SubmitDownloadDcf(ev_exec_t* exec, const char* path, F&& con,
+                    const ::std::chrono::milliseconds& timeout = {}) {
+    Submit(*make_sdo_download_dcf_request(exec, path, ::std::forward<F>(con),
+                                          timeout));
+  }
+
+  /// Cancels an SDO download request. @see Cancel()
+  bool
+  CancelDownloadDcf(SdoDownloadDcfRequest& req, SdoErrc ac) {
+    return Cancel(req, ac);
+  }
+
+  /// Aborts an SDO download DCF request. @see Abort()
+  bool
+  AbortDownloadDcf(SdoDownloadDcfRequest& req) {
+    return Abort(req);
+  }
+
   /// Queues an SDO upload request.
   template <class T>
   typename ::std::enable_if<is_canopen<T>::value>::type
@@ -590,6 +825,45 @@ class Sdo {
         timeout);
     return p.get_future();
   }
+
+  /**
+   * Queues a series asynchronous SDO download requests, corresponding to the
+   * entries in the specified concise DCF, and creates a future which
+   * becomes ready once all requests complete (or an error occurs).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO abort code on failure.
+   */
+  SdoFuture<void> AsyncDownloadDcf(
+      ev_exec_t* exec, const uint8_t* begin, const uint8_t* end,
+      const ::std::chrono::milliseconds& timeout = {});
+
+  /**
+   * Queues a series asynchronous SDO download requests, corresponding to the
+   * entries in the specified concise DCF, and creates a future which
+   * becomes ready once all requests complete (or an error occurs).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param path    the path of the concise DCF.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO abort code on failure.
+   */
+  SdoFuture<void> AsyncDownloadDcf(
+      ev_exec_t* exec, const char* path,
+      const ::std::chrono::milliseconds& timeout = {});
 
   /**
    * Queues an asynchronous SDO upload request and creates a future which
