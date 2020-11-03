@@ -24,6 +24,7 @@ class Slave(dcf.Device):
         self.reset_communication = True
         self.software_file = ""
         self.software_version = 0
+        self.configuration_file = ""
         self.restore_configuration = 0
         self.sdo = []
 
@@ -312,6 +313,11 @@ class Slave(dcf.Device):
                 sub_index = int(sdo.get("sub_index", 0))
                 value = int(sdo.get("value", 0))
                 slave.sdo.append(slave.concise_value(index, sub_index, value))
+
+        if slave.sdo:
+            slave.configuration_file = os.path.join(slave.dcf_path, slave.name + ".bin")
+        if "configuration_file" in cfg:
+            slave.dcf_path = str(cfg["configuration_file"])
 
         return slave
 
