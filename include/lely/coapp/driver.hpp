@@ -570,6 +570,137 @@ class BasicDriver : DriverBase,
 
   /**
    * Equivalent to
+   * #SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con) {
+    master.SubmitWriteDcf(GetExecutor(), id(), begin, end,
+                          ::std::forward<F>(con));
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con,
+                 ::std::error_code& ec) {
+    master.SubmitWriteDcf(GetExecutor(), id(), begin, end,
+                          ::std::forward<F>(con), ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con,
+                 const ::std::chrono::milliseconds& timeout) {
+    master.SubmitWriteDcf(GetExecutor(), id(), begin, end,
+                          ::std::forward<F>(con), timeout);
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations. This
+   * function writes each entry in the specified concise DCF to a sub-object in
+   * a remote object dictionary.
+   *
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const uint8_t* begin, const uint8_t* end, F&& con,
+                 const ::std::chrono::milliseconds& timeout,
+                 ::std::error_code& ec) {
+    master.SubmitWriteDcf(GetExecutor(), id(), begin, end,
+                          ::std::forward<F>(con), timeout, ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(const char* path, F&& con, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const char* path, F&& con) {
+    master.SubmitWriteDcf(GetExecutor(), id(), path, ::std::forward<F>(con));
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(const char* path, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const char* path, F&& con, ::std::error_code& ec) {
+    master.SubmitWriteDcf(GetExecutor(), id(), path, ::std::forward<F>(con),
+                          ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(const char* path, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const char* path, F&& con,
+                 const ::std::chrono::milliseconds& timeout) {
+    master.SubmitWriteDcf(GetExecutor(), id(), path, ::std::forward<F>(con),
+                          timeout);
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations. This
+   * function writes each entry in the specified concise DCF to a sub-object in
+   * a remote object dictionary.
+   *
+   * @param path    the path to a concise DCF.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(const char* path, F&& con,
+                 const ::std::chrono::milliseconds& timeout,
+                 ::std::error_code& ec) {
+    master.SubmitWriteDcf(GetExecutor(), id(), path, ::std::forward<F>(con),
+                          timeout, ec);
+  }
+
+  /**
+   * Equivalent to
    * #AsyncRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout),
    * except that it uses the SDO timeout given by
    * #lely::canopen::BasicMaster::GetTimeout().
@@ -634,6 +765,68 @@ class BasicDriver : DriverBase,
              const ::std::chrono::milliseconds& timeout) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,
                              ::std::forward<T>(value), timeout);
+  }
+
+  /**
+   * Equivalent to
+   * #AsyncWriteDcf(const uint8_t* begin, const uint8_t* end, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(const uint8_t* begin, const uint8_t* end) {
+    return master.AsyncWriteDcf(GetExecutor(), id(), begin, end);
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations,
+   * corresponding to the entries in the specified concise DCF, and creates a
+   * future which becomes ready once all requests complete (or an error occurs).
+   *
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(const uint8_t* begin, const uint8_t* end,
+                const ::std::chrono::milliseconds& timeout) {
+    return master.AsyncWriteDcf(GetExecutor(), id(), begin, end, timeout);
+  }
+
+  /**
+   * Equivalent to
+   * #AsyncWriteDcf(const char* path, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(const char* path) {
+    return master.AsyncWriteDcf(GetExecutor(), id(), path);
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations,
+   * corresponding to the entries in the specified concise DCF, and creates a
+   * future which becomes ready once all requests complete (or an error occurs).
+   *
+   * @param path    the path to a concise DCF.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(const char* path, const ::std::chrono::milliseconds& timeout) {
+    return master.AsyncWriteDcf(GetExecutor(), id(), path, timeout);
   }
 
   /**

@@ -24,6 +24,7 @@
 #include "coapp.hpp"
 
 #include <lely/co/csdo.h>
+#include <lely/co/val.h>
 #include <lely/coapp/sdo.hpp>
 
 #include <limits>
@@ -54,6 +55,7 @@ struct Sdo::Impl_ {
 
   template <class T>
   void OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept;
+  void OnDownloadDcf(detail::SdoDownloadDcfRequestBase& req) noexcept;
   template <class T>
   void OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept;
 
@@ -70,6 +72,27 @@ struct Sdo::Impl_ {
 };
 
 namespace detail {
+
+void
+SdoDownloadDcfRequestBase::Read(const char* path) {
+  begin = nullptr;
+  end = nullptr;
+  if (dom_) {
+    co_val_fini(CO_DEFTYPE_DOMAIN, &dom_);
+    dom_ = nullptr;
+  }
+
+  if (!co_val_read_file(CO_DEFTYPE_DOMAIN, &dom_, path))
+    util::throw_errc("ReadFile");
+
+  begin =
+      static_cast<const uint8_t*>(co_val_addressof(CO_DEFTYPE_DOMAIN, &dom_));
+  end = begin + co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom_);
+}
+
+SdoDownloadDcfRequestBase::~SdoDownloadDcfRequestBase() {
+  if (dom_) co_val_fini(CO_DEFTYPE_DOMAIN, &dom_);
+}
 
 template <class T>
 void
@@ -88,6 +111,23 @@ template <class T>
 void
 SdoDownloadRequestWrapper<T>::OnRequest(void* data) noexcept {
   static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
+}
+
+void
+SdoDownloadDcfRequestWrapper::operator()() noexcept {
+  auto id = this->id;
+  auto idx = this->idx;
+  auto subidx = this->subidx;
+  auto ec = this->ec;
+  ::std::function<Signature> con;
+  con.swap(this->con_);
+  delete this;
+  if (con) con(id, idx, subidx, ec);
+}
+
+void
+SdoDownloadDcfRequestWrapper::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnDownloadDcf(*this);
 }
 
 template <class T>
@@ -198,6 +238,16 @@ SdoDownloadRequest<T>::OnRequest(void* data) noexcept {
   static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
 }
 
+void
+SdoDownloadDcfRequest::operator()() noexcept {
+  if (con_) con_(this->id, this->idx, this->subidx, this->ec);
+}
+
+void
+SdoDownloadDcfRequest::OnRequest(void* data) noexcept {
+  static_cast<Sdo::Impl_*>(data)->OnDownloadDcf(*this);
+}
+
 template <class T>
 void
 SdoUploadRequest<T>::operator()() noexcept {
@@ -297,6 +347,42 @@ Sdo::Sdo(co_csdo_t* sdo) : impl_(new Impl_(sdo, co_csdo_get_timeout(sdo))) {}
 Sdo& Sdo::operator=(Sdo&&) = default;
 
 Sdo::~Sdo() = default;
+
+SdoFuture<void>
+Sdo::AsyncDownloadDcf(ev_exec_t* exec, const uint8_t* begin, const uint8_t* end,
+                      const ::std::chrono::milliseconds& timeout) {
+  SdoPromise<void> p;
+  SubmitDownloadDcf(
+      exec, begin, end,
+      [p](uint8_t id, uint16_t idx, uint8_t subidx,
+          ::std::error_code ec) mutable {
+        if (ec)
+          p.set(util::failure(
+              make_sdo_exception_ptr(id, idx, subidx, ec, "AsyncDownloadDcf")));
+        else
+          p.set(util::success());
+      },
+      timeout);
+  return p.get_future();
+}
+
+SdoFuture<void>
+Sdo::AsyncDownloadDcf(ev_exec_t* exec, const char* path,
+                      const ::std::chrono::milliseconds& timeout) {
+  SdoPromise<void> p;
+  SubmitDownloadDcf(
+      exec, path,
+      [p](uint8_t id, uint16_t idx, uint8_t subidx,
+          ::std::error_code ec) mutable {
+        if (ec)
+          p.set(util::failure(
+              make_sdo_exception_ptr(id, idx, subidx, ec, "AsyncDownloadDcf")));
+        else
+          p.set(util::success());
+      },
+      timeout);
+  return p.get_future();
+}
 
 void
 Sdo::Submit(detail::SdoRequestBase& req) {
@@ -440,6 +526,28 @@ Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept {
     set_errc(errsv);
     traits::destroy(val);
   }
+}
+
+void
+Sdo::Impl_::OnDownloadDcf(detail::SdoDownloadDcfRequestBase& req) noexcept {
+  assert(&req._node == sllist_first(&queue));
+
+  int errsv = get_errc();
+  set_errc(0);
+
+  co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
+  if (co_csdo_dn_dcf_req(
+          sdo.get(), req.begin, req.end,
+          [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+             void* data) noexcept {
+            static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
+          },
+          this) == -1) {
+    req.ec = util::make_error_code();
+    OnCompletion(req);
+  }
+
+  set_errc(errsv);
 }
 
 template <class T>
