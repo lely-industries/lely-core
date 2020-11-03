@@ -631,10 +631,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   TpdoMapped TpdoMapped(uint8_t id) noexcept { return {this, id}; }
 
   /**
-   * Returns true if the remote node is ready (i.e., the NMT `boot slave`
+   * Returns true if the remote node is ready (i.e., the NMT 'boot slave'
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not. Invoking AsyncDeconfig() will also mark a node
    * as not ready.
+   *
+   * If this function returns true, the default client-SDO service is available
+   * for the given node.
+   *
+   * @see IsConfig()
    */
   bool IsReady(uint8_t id) const;
 
@@ -1203,7 +1208,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * driver, if one is registered for node <b>id</b>. If not, a successful
    * result is communicated to the NMT service.
    *
-   * @see DriverBase::OnConfig()
+   * @see IsConfig(), DriverBase::OnConfig()
    */
   virtual void OnConfig(uint8_t id) noexcept;
 
@@ -1245,6 +1250,18 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
               uint8_t msef[5]) noexcept override;
+
+  /**
+   * Returns true if the remote node is configuring (i.e., the 'update
+   * configuration' step of the NMT 'boot slave' is reached but not yet
+   * completed) and false if not.
+   *
+   * If this function returns true, the default client-SDO service is available
+   * for the given node.
+   *
+   * @see IsReady(), OnConfig()
+   */
+  bool IsConfig(uint8_t id) const;
 
   /**
    * Returns a pointer to the default client-SDO service for the given node. If
