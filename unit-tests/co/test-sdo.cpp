@@ -37,10 +37,14 @@
 #include "holder/array-init.hpp"
 
 TEST_GROUP(CO_Sdo) {
+#ifndef CO_SDO_REQ_MEMBUF_SIZE
+#define CO_SDO_REQ_MEMBUF_SIZE 8u
+#endif
+
   co_sdo_req req = CO_SDO_REQ_INIT(req);
 
   void CheckArrayIsZeroed(const char* const array, const size_t size) {
-    CHECK(array != nullptr);
+    assert(array);
     for (size_t i = 0u; i < size; i++) CHECK_EQUAL(0, array[i]);
   }
 };
@@ -60,12 +64,12 @@ TEST(CO_Sdo, CoSdoReqFirst_IsNotFirst) {
 }
 
 // given: SDO request with offset + nbyte == size
-// when: co_sdo_req_first()
+// when: co_sdo_req_last()
 // then: returns false
 TEST(CO_Sdo, CoSdoReqLast_IsLast) { CHECK(co_sdo_req_last(&req)); }
 
 // given: SDO request with offset + nbyte < size
-// when: co_sdo_req_first()
+// when: co_sdo_req_last()
 // then: returns false
 TEST(CO_Sdo, CoSdoReqLast_IsNotLast) {
   req.size = 1u;
@@ -231,7 +235,8 @@ TEST(CO_Sdo, CoSdoReqClear) {
   req.size = 1u;
   req.nbyte = 1u;
   req.offset = 1u;
-  *req.membuf = {&buf + 1u, &buf, &buf + 1u};
+  membuf_init(req.membuf, &buf, 1u);
+  membuf_seek(req.membuf, 1u);
 
   co_sdo_req_clear(&req);
 
@@ -290,13 +295,14 @@ TEST(CO_Sdo, CoSdoReqDn_NotAllDataAvailable) {
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
 
-  char buffer[] = {0x03, 0x04, 0x05};
+  const size_t BUF_SIZE = 3u;
+  char buffer[BUF_SIZE] = {0x03, 0x04, 0x7F};
   req.buf = buffer;
-  req.size = 3u;
+  req.size = BUF_SIZE;
   req.nbyte = 2u;
   req.offset = 0u;
-  char internal_buffer[3u] = {0};
-  *req.membuf = {internal_buffer, internal_buffer, internal_buffer + 3u};
+  char internal_buffer[BUF_SIZE] = {0};
+  membuf_init(req.membuf, &internal_buffer, BUF_SIZE);
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
@@ -306,28 +312,28 @@ TEST(CO_Sdo, CoSdoReqDn_NotAllDataAvailable) {
   CHECK_EQUAL(0u, nbyte);
   CHECK_EQUAL(0x03, buffer[0]);
   CHECK_EQUAL(0x04, buffer[1]);
-  CHECK_EQUAL(0x05, buffer[2]);
+  CHECK_EQUAL(0x7F, buffer[2]);
   CHECK_EQUAL(0x03, internal_buffer[0]);
   CHECK_EQUAL(0x04, internal_buffer[1]);
   CHECK_EQUAL(0x00, internal_buffer[2]);
 }
 
-// given: SDO download request
+// given: SDO download request with the whole value available right away
 // when: co_sdo_req_dn()
-// then: download request returns a success and no data was copied to the
-//       memory buffer (because data is available right away).
+// then: 0 is returned and no data was copied to the internal memory buffer
 TEST(CO_Sdo, CoSdoReqDn) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
 
-  char buffer[] = {0x03, 0x04, 0x05};
+  const size_t BUF_SIZE = 3u;
+  char buffer[BUF_SIZE] = {0x03, 0x04, 0x05};
   req.buf = buffer;
-  req.size = 3u;
+  req.size = BUF_SIZE;
   req.nbyte = 3u;
   req.offset = 0u;
-  char internal_buffer[3u] = {0};
-  *req.membuf = {internal_buffer, internal_buffer, internal_buffer + 3u};
+  char internal_buffer[BUF_SIZE] = {0};
+  membuf_init(req.membuf, &internal_buffer, BUF_SIZE);
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
@@ -338,13 +344,14 @@ TEST(CO_Sdo, CoSdoReqDn) {
   CHECK_EQUAL(0x03, buffer[0]);
   CHECK_EQUAL(0x04, buffer[1]);
   CHECK_EQUAL(0x05, buffer[2]);
-  CheckArrayIsZeroed(internal_buffer, 3u);
+  CheckArrayIsZeroed(internal_buffer, BUF_SIZE);
 }
 
+#if LELY_NO_MALLOC
 // given: request to download value which is unavailable
 // when: co_sdo_req_dn_buf()
 // then: -1 is returned with NO_MEM in LELY_NO_MALLOC and 0 in !LELY_NO_MALLOC
-TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
+TEST(CO_Sdo, CoSdoReqDnBuf_NoMem) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   req.offset = 0u;
@@ -355,26 +362,64 @@ TEST(CO_Sdo, CoSdoReqDnBuf_ValNotAvailable) {
   const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
 
   CHECK_EQUAL(-1, ret);
-#if LELY_NO_MALLOC
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
+}
 #else
+// given: request to download value which is unavailable
+// when: co_sdo_req_dn_buf()
+// then: -1 is returned with NO_MEM in LELY_NO_MALLOC and 0 in !LELY_NO_MALLOC
+TEST(CO_Sdo, CoSdoReqDnBuf_FirstSegmentNoData) {
+  size_t nbyte = 0u;
+  co_unsigned32_t ac = 0u;
+  req.offset = 0u;
+  req.size = 5u;
+  req.nbyte = 0u;
+  *req.membuf = MEMBUF_INIT;
+
+  const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
+
+  CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, ac);
+}
 #endif
+
+// given: request to download bytes
+// when: co_sdo_req_dn_buf()
+// then: success is returned and ibuf is equal begin of the membuf
+TEST(CO_Sdo, CoSdoReqDnBuf_DataExceedsBufferSize_BufferEmpty) {
+  size_t nbyte = 0u;
+  co_unsigned32_t ac = 0u;
+  const void* ibuf = nullptr;
+
+  req.offset = 7u;
+  req.size = 5u;
+  req.nbyte = 0u;
+#if !LELY_NO_MALLOC
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
+#endif
+  membuf_seek(req.membuf, CO_SDO_REQ_MEMBUF_SIZE);
+
+  const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0u, ac);
+  POINTERS_EQUAL(req.membuf->begin, ibuf);
 }
 
 // given: request to download bytes with current buffer position
 //        after the end of the buffer
 // when: co_sdo_req_dn_buf()
 // then: error is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
+TEST(CO_Sdo, CoSdoReqDnBuf_DataExceedsBufferSize) {
   size_t nbyte = 0u;
   co_unsigned32_t ac = 0u;
   const void* ibuf = nullptr;
 
-  req.offset = 12u;
+  req.offset = 5u;
   req.size = 6u;
   req.nbyte = 4u;
-  req.membuf->cur = req.membuf->begin + 13u;
+  membuf_seek(req.membuf, req.offset);
 
   const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
 
@@ -386,37 +431,18 @@ TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd) {
 // given: request to download bytes but source buffer is not specified
 // when: co_sdo_req_dn_buf()
 // then: success is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_NoBufferPointerNoNbytePointer) {
+TEST(CO_Sdo, CoSdoReqDnBuf_EmptyRequest_NoBufferPointerNoNbytePointer) {
   co_unsigned32_t ac = 0u;
-  for (co_unsigned8_t i = 0u; i < membuf_size(req.membuf); i++)
-    req.membuf->begin[i] = i + 1u;
+  for (size_t i = 0u; i < membuf_size(req.membuf); i++)
+    req.membuf->begin[i] = 0u;
 
   const auto ret = co_sdo_req_dn(&req, nullptr, nullptr, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  for (co_unsigned8_t i = 0u; i < membuf_size(req.membuf); i++)
-    CHECK_EQUAL(static_cast<char>(i + 1), req.membuf->begin[i]);
-}
-
-// given: request to download bytes
-// when: co_sdo_req_dn_buf()
-// then: success is returned and ibuf is equal begin of the membuf
-TEST(CO_Sdo, CoSdoReqDnBuf_BufCurrentPositionAfterTheEnd_BufferEmpty) {
-  size_t nbyte = 0u;
-  co_unsigned32_t ac = 0u;
-  const void* ibuf = nullptr;
-
-  req.offset = 12u;
-  req.size = 6u;
-  req.nbyte = 0u;
-  req.membuf->cur = req.membuf->begin + 13u;
-
-  const auto ret = co_sdo_req_dn(&req, &ibuf, &nbyte, &ac);
-
-  CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(0u, ac);
-  POINTERS_EQUAL(req.membuf->begin, ibuf);
+#if LELY_NO_MALLOC
+  CheckArrayIsZeroed(req.membuf->begin, membuf_size(req.membuf));
+#endif
 }
 
 // given: SDO request and an example value
@@ -430,10 +456,10 @@ TEST(CO_Sdo, CoSdoReqDnBuf_WithOffsetZero) {
   req.nbyte = 0u;
   req.size = 1u;
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
-  req.membuf->cur = req.membuf->begin + 1u;
+  membuf_seek(req.membuf, 1u);
 
   const auto ret = co_sdo_req_dn_val(&req, type, &val, &ac);
 
@@ -485,21 +511,22 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooManyBytes) {
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED16;
   co_unsigned32_t ac = 0u;
 
-  char buf[] = {0x12, 0x34, 0x56, 0x78};
+  const size_t BUF_SIZE = 4u;
+  char buf[BUF_SIZE] = {0x12, 0x34, 0x56, 0x78};
   req.buf = buf;
-  req.size = 4u;
-  req.nbyte = 4u;
+  req.size = BUF_SIZE;
+  req.nbyte = BUF_SIZE;
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
 
   const auto ret = co_sdo_req_dn_val(&req, type, &val, &ac);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, ac);
-  CHECK_EQUAL(0x3412u, val);
-  CheckArrayIsZeroed(req.membuf->begin, 8u);
+  CHECK_EQUAL(ldle_u16(reinterpret_cast<uint_least8_t*>(buf)), val);
+  CheckArrayIsZeroed(req.membuf->begin, CO_SDO_REQ_MEMBUF_SIZE);
 }
 
 // given: request to download 4-bytes long buffer to 8-byte variable
@@ -510,13 +537,14 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooLittleBytes) {
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
   co_unsigned32_t ac = 0u;
 
-  char buf[4] = {0x7Eu, 0x7Bu, 0x34u, 0x7Bu};
+  const size_t BUF_SIZE = 4u;
+  char buf[BUF_SIZE] = {0x7Eu, 0x7Bu, 0x34u, 0x7Bu};
   req.buf = buf;
-  req.size = 4u;
-  req.nbyte = 4u;
+  req.size = BUF_SIZE;
+  req.nbyte = BUF_SIZE;
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
 
   const auto ret = co_sdo_req_dn_val(&req, type, &val, &ac);
@@ -524,7 +552,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooLittleBytes) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, ac);
   CHECK_EQUAL(0u, val);
-  CheckArrayIsZeroed(req.membuf->begin, 8u);
+  CheckArrayIsZeroed(req.membuf->begin, CO_SDO_REQ_MEMBUF_SIZE);
 }
 
 // given: request to download 4-bytes long buffer to 8-byte variable
@@ -534,20 +562,21 @@ TEST(CO_Sdo, CoSdoReqDnVal_DownloadTooLittleBytesNoAcPointer) {
   co_unsigned64_t val = 0u;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED64;
 
-  co_unsigned8_t buf[4] = {0xCEu, 0x7Bu, 0x34u, 0xDBu};
+  const size_t BUF_SIZE = 4u;
+  co_unsigned8_t buf[BUF_SIZE] = {0xCEu, 0x7Bu, 0x34u, 0xDBu};
   req.buf = buf;
-  req.size = 4u;
-  req.nbyte = 4u;
+  req.size = BUF_SIZE;
+  req.nbyte = BUF_SIZE;
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
 
   const auto ret = co_sdo_req_dn_val(&req, type, &val, nullptr);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0u, val);
-  CheckArrayIsZeroed(req.membuf->begin, 8u);
+  CheckArrayIsZeroed(req.membuf->begin, CO_SDO_REQ_MEMBUF_SIZE);
 }
 
 #if HAVE_LELY_OVERRIDE
@@ -558,14 +587,15 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
   co_unsigned32_t ac = 0u;
 
-  char buf[4] = {0x01u, 0x01u, 0x00u, 0x2Bu};
+  const size_t BUF_SIZE = 4u;
+  char buf[BUF_SIZE] = {0x01u, 0x01u, 0x00u, 0x2Bu};
   req.buf = buf;
   req.size = 2u;
-  req.nbyte = 4u;
+  req.nbyte = BUF_SIZE;
   LelyOverride::co_val_read(0);
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
 
   CoArrays arrays;
@@ -579,7 +609,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
 
-  CheckArrayIsZeroed(req.membuf->begin, 8u);
+  CheckArrayIsZeroed(req.membuf->begin, CO_SDO_REQ_MEMBUF_SIZE);
 #if LELY_NO_MALLOC
   const char16_t EXPECTED[2] = {0x0000, 0x0000};
   CHECK_EQUAL(0, memcmp(EXPECTED, str, 4u));
@@ -595,9 +625,10 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType_ReadValueFailed) {
 TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
   co_unsigned16_t type = CO_DEFTYPE_UNICODE_STRING;
   co_unsigned32_t ac = 0u;
-  co_unsigned8_t buf[4] = {0x01u, 0x01u, 0x2Bu, 0x00u};
+  const size_t BUF_SIZE = 4u;
+  co_unsigned8_t buf[BUF_SIZE] = {0x01u, 0x01u, 0x2Bu, 0x00u};
 
-  co_sdo_req_up(&req, buf, 4u);
+  co_sdo_req_up(&req, buf, BUF_SIZE);
   CoArrays arrays;
   co_unicode_string_t str = arrays.Init<co_unicode_string_t>();
   const char16_t* const STR_SRC = u"\u0046\u0046";
@@ -609,8 +640,8 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  CHECK_EQUAL(4u, req.size);
-  CHECK_EQUAL(4u, req.offset + req.nbyte);
+  CHECK_EQUAL(BUF_SIZE, req.size);
+  CHECK_EQUAL(BUF_SIZE, req.offset + req.nbyte);
 
   const char16_t EXPECTED[3] = {ldle_u16(buf), ldle_u16(buf + 2u), 0x0000};
   CHECK_EQUAL(0, str16ncmp(EXPECTED, str, 3u));
@@ -624,18 +655,19 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoValueWrite) {
   const co_unsigned16_t val = 0x4B7Du;
   co_unsigned32_t ac = 0u;
 
-  char buf[2] = {0u};
+  const size_t BUF_SIZE = 2u;
+  char buf[BUF_SIZE] = {0u};
   req.buf = buf;
-  req.size = 2u;
+  req.size = BUF_SIZE;
   req.offset = 0u;
-  req.nbyte = 2u;
+  req.nbyte = BUF_SIZE;
   LelyOverride::co_val_write(0);
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  CheckArrayIsZeroed(buf, 2u);
+  CheckArrayIsZeroed(buf, BUF_SIZE);
 }
 #endif  // HAVE_LELY_OVERRIDE
 
@@ -648,14 +680,15 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
   const co_unsigned16_t val = ldle_u16(val_buffer);
   co_unsigned32_t ac = 0u;
 
-  char buf[2] = {0u};
+  const size_t BUF_SIZE = 2u;
+  char buf[BUF_SIZE] = {0u};
   req.buf = buf;
   *req.membuf = MEMBUF_INIT;
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-  CheckArrayIsZeroed(buf, 2u);
+  CheckArrayIsZeroed(buf, BUF_SIZE);
 }
 #endif  // LELY_NO_MALLOC
 
@@ -666,7 +699,8 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemory) {
 TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
   const co_unsigned16_t val = 0x797Au;
 
-  char buf[2] = {0u};
+  const size_t BUF_SIZE = 2u;
+  char buf[BUF_SIZE] = {0u};
   req.buf = buf;
   req.membuf->begin = nullptr;
   req.membuf->end = nullptr;
@@ -675,7 +709,7 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
       co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, nullptr);
 
   CHECK_EQUAL(-1, ret);
-  CheckArrayIsZeroed(buf, 2u);
+  CheckArrayIsZeroed(buf, BUF_SIZE);
 }
 #endif  // LELY_NO_MALLOC
 
@@ -684,23 +718,25 @@ TEST(CO_Sdo, CoSdoReqUpVal_NoMemoryNoAcPointer) {
 // when: co_sdo_req_up_val()
 // then: an error is returned
 TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
-  uint_least8_t val_buffer[] = {0x7Au, 0x79u};
+  const size_t VAL_SIZE = 2u;
+  uint_least8_t val_buffer[VAL_SIZE] = {0x7Au, 0x79u};
   const co_unsigned16_t val = ldle_u16(val_buffer);
   co_unsigned32_t ac = 0u;
 
-  char buf[2] = {0u};
+  const size_t BUF_SIZE = VAL_SIZE;
+  char buf[BUF_SIZE] = {0u};
   req.buf = buf;
   LelyOverride::co_val_write(1);
 #if !LELY_NO_MALLOC
-  char membuf[8] = {0};
-  *req.membuf = {membuf, membuf, membuf + 8u};
+  char membuf[CO_SDO_REQ_MEMBUF_SIZE] = {0};
+  membuf_init(req.membuf, membuf, CO_SDO_REQ_MEMBUF_SIZE);
 #endif
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
-  CheckArrayIsZeroed(req.membuf->begin, 2u);
+  CheckArrayIsZeroed(req.membuf->begin, BUF_SIZE);
 }
 #endif  // HAVE_LELY_OVERRIDE
 
@@ -708,24 +744,26 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
 // when: co_sdo_req_up_val()
 // then: 0 is returned, buffer contains suitable bytes
 TEST(CO_Sdo, CoSdoReqUpVal) {
-  uint_least8_t val_buffer[] = {0x7Au, 0x79u};
+  const size_t VAL_SIZE = 2u;
+  uint_least8_t val_buffer[VAL_SIZE] = {0x7Au, 0x79u};
   const co_unsigned16_t val = ldle_u16(val_buffer);
   co_unsigned32_t ac = 0u;
 
-  char buf[8] = {0u};
+  const size_t BUF_SIZE = CO_SDO_REQ_MEMBUF_SIZE;
+  char buf[BUF_SIZE] = {0u};
   req.buf = buf;
-  *req.membuf = {buf, buf, buf + 8u};
-  for (unsigned int i = 0; i < 8u; i++) req.membuf->begin[i] = 0u;
+  membuf_init(req.membuf, buf, BUF_SIZE);
+  for (unsigned int i = 0; i < BUF_SIZE; i++) req.membuf->begin[i] = 0u;
 
   const auto ret = co_sdo_req_up_val(&req, CO_DEFTYPE_UNSIGNED16, &val, &ac);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
-  CHECK_EQUAL(0x7Au, req.membuf->begin[0]);
-  CHECK_EQUAL(0x79u, req.membuf->begin[1]);
-  CheckArrayIsZeroed(req.membuf->begin + 2u, 6u);
-  CHECK_EQUAL(2u, req.size);
+  CHECK_EQUAL(val_buffer[0], req.membuf->begin[0]);
+  CHECK_EQUAL(val_buffer[1], req.membuf->begin[1]);
+  CheckArrayIsZeroed(req.membuf->begin + VAL_SIZE, BUF_SIZE - VAL_SIZE);
+  CHECK_EQUAL(VAL_SIZE, req.size);
   POINTERS_EQUAL(req.membuf->begin, req.buf);
-  CHECK_EQUAL(2u, req.nbyte);
+  CHECK_EQUAL(VAL_SIZE, req.nbyte);
   CHECK_EQUAL(0u, req.offset);
 }
