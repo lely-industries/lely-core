@@ -1,6 +1,4 @@
 @{
-import os
-
 software_update = False
 for slave in slaves.values():
     if slave.software_file:
@@ -468,8 +466,8 @@ ParameterName=Node-ID @(i + 1)
 DataType=0x000F
 AccessType=ro
 @[for name, slave in slaves.items()]@
-@[if slave.node_id == i + 1 and slave.sdo]@
-UploadFile=@(os.path.join(slave.dcf_path, name + ".bin"))
+@[if slave.node_id == i + 1 and slave.configuration_file]@
+UploadFile=@slave.configuration_file
 @[end if]@
 @[end for]@
 @[end for]@
