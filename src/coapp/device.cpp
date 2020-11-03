@@ -26,7 +26,7 @@
 #include <lely/co/dcf.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
-#include <lely/co/type.h>
+#include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
 #include <lely/util/error.hpp>
 
@@ -477,6 +477,57 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
   } else {
     ec = util::make_error_code();
   }
+  set_errc(errsv);
+}
+
+void
+Device::WriteDcf(const uint8_t* begin, const uint8_t* end) {
+  ::std::error_code ec;
+  WriteDcf(begin, end, ec);
+  if (ec) throw_sdo_error(id(), 0, 0, ec, "WriteDcf");
+}
+
+void
+Device::WriteDcf(const uint8_t* begin, const uint8_t* end,
+                 ::std::error_code& ec) {
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  int errsv = get_errc();
+  set_errc(0);
+  if (!co_dev_dn_dcf_req(dev(), begin, end, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
+}
+
+void
+Device::WriteDcf(const char* path) {
+  ::std::error_code ec;
+  WriteDcf(path, ec);
+  if (ec) throw_sdo_error(id(), 0, 0, ec, "WriteDcf");
+}
+
+void
+Device::WriteDcf(const char* path, ::std::error_code& ec) {
+  int errsv = get_errc();
+  set_errc(0);
+
+  void* dom = nullptr;
+  if (co_val_read_file(CO_DEFTYPE_DOMAIN, &dom, path)) {
+    auto begin =
+        static_cast<const uint8_t*>(co_val_addressof(CO_DEFTYPE_DOMAIN, &dom));
+    auto end = begin + co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
+    WriteDcf(begin, end, ec);
+  } else {
+    ec = util::make_error_code();
+  }
+  if (dom) co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
   set_errc(errsv);
 }
 
