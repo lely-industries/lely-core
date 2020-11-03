@@ -1037,8 +1037,13 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 
 #ifndef LELY_NO_CO_OBJ_FILE
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
-			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE))
-		return co_sdo_req_up_file(req, co_sub_addressof_val(sub), pac);
+			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)) {
+		const char *filename = co_sub_addressof_val(sub);
+		// Ignore an empty UploadFile attribute.
+		if (!filename || !*filename)
+			return 0;
+		return co_sdo_req_up_file(req, filename, pac);
+	}
 #endif
 
 	const void *val = co_sub_get_val(sub);
