@@ -54,6 +54,7 @@ struct BasicMaster::Impl_ {
   ::std::function<void(uint8_t, bool)> on_node_guarding;
   ::std::function<void(uint8_t, NmtState, char, const ::std::string&)> on_boot;
   ::std::array<bool, CO_NUM_NODES> ready{{false}};
+  ::std::array<bool, CO_NUM_NODES> config{{false}};
   ::std::map<uint8_t, Sdo> sdos;
 };
 
@@ -267,7 +268,7 @@ BasicMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
 
 void
 BasicMaster::OnState(uint8_t id, NmtState st) noexcept {
-  if (st == NmtState::BOOTUP) {
+  if (st == NmtState::BOOTUP && !IsConfig(id)) {
     IsReady(id, false);
     // Abort any ongoing or pending SDO requests for the slave, since the master
     // MAY need the Client-SDO service for the NMT 'boot slave' process.
@@ -310,9 +311,11 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
 
 void
 BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
-  assert(co_nmt_is_booting(nmt(), id));
-  // Destroy the Client-SDO, since it will be taken over by the master.
-  impl_->sdos.erase(id);
+  assert(id && id <= CO_NUM_NODES);
+  impl_->config[id - 1] = false;
+  if (co_nmt_is_booting(nmt(), id))
+    // Destroy the Client-SDO, since it will be taken over by the master.
+    impl_->sdos.erase(id);
   // Ignore any errors, since we cannot handle them here.
   co_nmt_cfg_res(nmt(), id, static_cast<uint32_t>(sdo_errc(ec)));
 }
@@ -350,6 +353,13 @@ BasicMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
     util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnEmcy(eec, er, msef);
   }
+}
+
+bool
+BasicMaster::IsConfig(uint8_t id) const {
+  if (!id || id > CO_NUM_NODES) return false;
+
+  return impl_->config[id - 1];
 }
 
 Sdo*
@@ -437,7 +447,7 @@ AsyncMaster::OnHeartbeat(uint8_t id, bool occurred) noexcept {
 
 void
 AsyncMaster::OnState(uint8_t id, NmtState st) noexcept {
-  if (st == NmtState::BOOTUP) {
+  if (st == NmtState::BOOTUP && !IsConfig(id)) {
     IsReady(id, false);
     // Abort any ongoing or pending SDO requests for the slave, since the master
     // MAY need the Client-SDO service for the NMT 'boot slave' process.
@@ -592,6 +602,7 @@ BasicMaster::Impl_::OnCfgInd(co_nmt_t*, uint8_t id, co_csdo_t* sdo) noexcept {
     self->ConfigResult(id, SdoErrc::ERROR);
     return;
   }
+  config[id - 1] = true;
   self->OnConfig(id);
 }
 

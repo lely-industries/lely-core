@@ -355,6 +355,8 @@ class BasicDriver : DriverBase,
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not.
    *
+   * If this function returns true, the default client-SDO service is available.
+   *
    * @see BasicMaster::IsReady()
    */
   bool
