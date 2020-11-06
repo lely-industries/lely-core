@@ -436,7 +436,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_EmptyRequest_NoBufferPointerNoNbytePointer) {
 // given: SDO request
 // when: co_sdo_req_dn_buf()
 // then: success is returned
-TEST(CO_Sdo, CoSdoReqDnBuf_WithOffsetZero) {
+TEST(CO_Sdo, CoSdoReqDnBuf_OffsetEqualToMembufSize) {
   co_unsigned8_t val = 0xFFu;
   co_unsigned16_t type = CO_DEFTYPE_UNSIGNED8;
   co_unsigned32_t ac = 0u;
@@ -718,9 +718,8 @@ TEST(CO_Sdo, CoSdoReqUpVal_SecondCoValWriteFail) {
 // when: co_sdo_req_up_val()
 // then: 0 is returned, buffer contains suitable bytes
 TEST(CO_Sdo, CoSdoReqUpVal) {
-  const size_t VAL_SIZE = 2u;
-  const uint_least8_t val_buffer[VAL_SIZE] = {0x7Au, 0x79u};
-  const co_unsigned16_t val = ldle_u16(val_buffer);
+  const co_unsigned16_t val = 0x797Au;
+  const size_t VAL_SIZE = sizeof(val);
   co_unsigned32_t ac = 0u;
 
   const size_t BUF_SIZE = CO_SDO_REQ_MEMBUF_SIZE;
@@ -732,6 +731,8 @@ TEST(CO_Sdo, CoSdoReqUpVal) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0u, ac);
   char* const mbuf = static_cast<char*>(membuf_begin(req.membuf));
+  uint_least8_t val_buffer[VAL_SIZE] = {0};
+  stle_u16(val_buffer, val);
   CHECK_EQUAL(val_buffer[0], mbuf[0]);
   CHECK_EQUAL(val_buffer[1], mbuf[1]);
   CheckArrayIsZeroed(mbuf + VAL_SIZE, BUF_SIZE - VAL_SIZE);
