@@ -631,6 +631,12 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   TpdoMapped TpdoMapped(uint8_t id) noexcept { return {this, id}; }
 
   /**
+   * Requests the NMT 'boot slave' process for the specified node. OnBoot() is
+   * invoked once the boot-up process completes.
+   */
+  bool Boot(uint8_t id);
+
+  /**
    * Returns true if the remote node is ready (i.e., the NMT 'boot slave'
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not. Invoking AsyncDeconfig() will also mark a node
