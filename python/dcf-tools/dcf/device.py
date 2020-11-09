@@ -443,7 +443,7 @@ class DataType:
 
 class Value:
     __p_value = re.compile(
-        r"\s*(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
+        r"(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
         re.IGNORECASE,
     )
 
@@ -453,12 +453,16 @@ class Value:
         self.variable = None
 
         if self.data_type.is_basic():
-            m = Value.__p_value.match(self.value)
-            if m:
-                self.value = m.group("value")
-                self.variable = m.group("variable")
+            if self.value.upper() == "$NODEID":
+                self.variable = self.value[1:]
+                self.value = "0"
             else:
-                raise ValueError("invalid value: " + self.value)
+                m = Value.__p_value.match(self.value)
+                if m:
+                    self.value = m.group("value")
+                    self.variable = m.group("variable")
+                else:
+                    raise ValueError("invalid value: " + self.value)
 
     def parse(self, env: dict = {}):
         if self.data_type.is_basic():
