@@ -629,7 +629,7 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
   req.nbyte = VAL_SIZE;
   req.offset = 0;
   CoArrays arrays;
-  co_octet_string_t str;
+  co_octet_string_t str = arrays.Init<co_octet_string_t>();
 
   const auto ret = co_sdo_req_dn_val(&req, type, &str, &ac);
 
