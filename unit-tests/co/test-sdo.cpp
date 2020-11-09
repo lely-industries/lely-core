@@ -639,6 +639,8 @@ TEST(CO_Sdo, CoSdoReqDnVal_ArrayDataType) {
   CHECK_EQUAL(VAL_SIZE, req.offset + req.nbyte);
   const uint_least8_t EXPECTED[VAL_SIZE] = {0x01u, 0x01u, 0x2Bu, 0x00u};
   CHECK_EQUAL(0, memcmp(EXPECTED, str, VAL_SIZE));
+
+  arrays.Clear();
 }
 
 // given: empty SDO request and a buffer with value to be uploaded
