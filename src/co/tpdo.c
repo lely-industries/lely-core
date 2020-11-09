@@ -574,7 +574,10 @@ co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
 			can_timer_set_func(pdo->timer_swnd, co_tpdo_timer_swnd,
 					pdo);
 		}
-		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
+		struct timespec start = { 0, 0 };
+		can_net_get_time(pdo->net, &start);
+		timespec_add_usec(&start, swnd);
+		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
 	} else if (pdo->timer_swnd) {
 		can_timer_destroy(pdo->timer_swnd);
 		pdo->timer_swnd = NULL;
