@@ -80,6 +80,28 @@ BasicMaster::BasicMaster(ev_exec_t* exec, io::TimerBase& timer,
 BasicMaster::~BasicMaster() = default;
 
 bool
+BasicMaster::Boot(uint8_t id) {
+  if (!id || id > CO_NUM_NODES) return false;
+
+  ::std::lock_guard<util::BasicLockable> lock(*this);
+
+  if (co_nmt_is_booting(nmt(), id)) return false;
+
+  // Abort any ongoing or pending SDO requests for the slave, since the master
+  // MAY need the Client-SDO service for the NMT 'boot slave' process.
+  CancelSdo(id);
+
+  auto ready = impl_->ready[id - 1];
+  impl_->ready[id - 1] = false;
+  if (co_nmt_boot_req(nmt(), id, co_nmt_get_timeout(nmt())) == -1) {
+    impl_->ready[id - 1] = ready;
+    util::throw_errc("Boot");
+  }
+
+  return true;
+}
+
+bool
 BasicMaster::IsReady(uint8_t id) const {
   if (!id || id > CO_NUM_NODES) return false;
 
