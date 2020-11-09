@@ -590,8 +590,12 @@ co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
 			&& (pdo->comm.trans <= 0xf0 || pdo->comm.trans == 0xfc)
-			&& swnd)
-		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
+			&& swnd) {
+		struct timespec start = { 0, 0 };
+		can_net_get_time(pdo->net, &start);
+		timespec_add_usec(&start, swnd);
+		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
+	}
 }
 
 static co_unsigned32_t
