@@ -121,19 +121,43 @@ SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3
 @(n + 10)=0x1F8A
 
 [ManufacturerObjects]
+@{
+# Determine the indices of the RPDO-mapped objects.
+ridx = set()
+n = 0
+for slave in slaves.values():
+    mapped = set()
+    for pdo in slave.tpdo.values():
+        n += 1
+        for subobj in pdo.mapping.values():
+            if (subobj.index, subobj.sub_index) not in mapped:
+                mapped.add((subobj.index, subobj.sub_index))
+                ridx.add(0x2000 + n - 1)
+# Determine the indices of the TPDO-mapped objects.
+tidx = set()
+n = 0
+for slave in slaves.values():
+    mapped = set()
+    for pdo in slave.rpdo.values():
+        n += 1
+        for subobj in pdo.mapping.values():
+            if (subobj.index, subobj.sub_index) not in mapped:
+                mapped.add((subobj.index, subobj.sub_index))
+                tidx.add(0x2200 + n - 1)
+}@
 @[if remote_pdo]@
-SupportedObjects=@(3 * nrpdo + 3 * ntpdo)
+SupportedObjects=@(len(ridx) + len(tidx) + 2 * nrpdo + 2 * ntpdo)
 @[else]@
-SupportedObjects=@(nrpdo + ntpdo)
+SupportedObjects=@(len(ridx) + len(tidx))
 @[end if]@
 @{n = 0}@
-@[for i in range(nrpdo)]@
+@[for idx in sorted(ridx)]@
 @{n += 1}@
-@n=@("0x{:04X}".format(0x2000 + i))
+@n=@("0x{:04X}".format(idx))
 @[end for]@
-@[for i in range(ntpdo)]@
+@[for idx in sorted(tidx)]@
 @{n += 1}@
-@n=@("0x{:04X}".format(0x2200 + i))
+@n=@("0x{:04X}".format(idx))
 @[end for]@
 @[if remote_pdo]@
 @[for i in range(nrpdo)]@
@@ -362,10 +386,13 @@ CompactSubObj=@len(pdo.mapping)
 [@(name)Value]
 NrOfEntries=@len(pdo.mapping)
 @[for subobj in pdo.mapping.values()]@
-@[if (subobj.index, subobj.sub_index) not in mapping]@
-@{i += 1}@
-@{mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(0x2000 + n - 1, i, subobj.data_type.bits())}@
-@[end if]@
+@{
+if (subobj.index, subobj.sub_index) not in mapping:
+    i += 1
+    mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(
+        0x2000 + n - 1, i, subobj.data_type.bits()
+    )
+}@
 @{j += 1}@
 @j=@mapping[(subobj.index, subobj.sub_index)]
 @[end for]@
@@ -439,10 +466,13 @@ CompactSubObj=@len(pdo.mapping)
 [@(name)Value]
 NrOfEntries=@len(pdo.mapping)
 @[for subobj in pdo.mapping.values()]@
-@[if (subobj.index, subobj.sub_index) not in mapping]@
-@{i += 1}@
-@{mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(0x2200 + n - 1, i, subobj.data_type.bits())}@
-@[end if]@
+@{
+if (subobj.index, subobj.sub_index) not in mapping:
+    i += 1
+    mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(
+        0x2200 + n - 1, i, subobj.data_type.bits()
+    )
+}@
 @{j += 1}@
 @j=@mapping[(subobj.index, subobj.sub_index)]
 @[end for]@
@@ -648,14 +678,16 @@ NrOfEntries=@(sum(slave.restore_configuration != 0 for slave in slaves.values())
 @[for slave in slaves.values()]@
 @{mapped = set()}@
 @[for pdo in slave.tpdo.values()]@
-@{mapping = {}}@
-@[for i, subobj in pdo.mapping.items()]@
-@[if (subobj.index, subobj.sub_index) not in mapped]@
-@{mapped.add((subobj.index, subobj.sub_index)); mapping[i] = subobj}@
-@[end if]@
-@[end for]@
+@{
+n += 1
+mapping = {}
+for i, subobj in pdo.mapping.items():
+    if (subobj.index, subobj.sub_index) not in mapped:
+        mapped.add((subobj.index, subobj.sub_index))
+        mapping[i] = subobj
+}@
 @[if mapping]@
-@{name = "{:04X}".format(0x2000 + n); n += 1; i = 0}@
+@{name = "{:04X}".format(0x2000 + n - 1); i = 0}@
 
 [@name]
 SubNumber=@(len(mapping) + 1)
@@ -683,14 +715,16 @@ PDOMapping=1
 @[for slave in slaves.values()]@
 @{mapped = set()}@
 @[for pdo in slave.rpdo.values()]@
-@{mapping = {}}@
-@[for i, subobj in pdo.mapping.items()]@
-@[if (subobj.index, subobj.sub_index) not in mapped]@
-@{mapped.add((subobj.index, subobj.sub_index)); mapping[i] = subobj}@
-@[end if]@
-@[end for]@
+@{
+n += 1
+mapping = {}
+for i, subobj in pdo.mapping.items():
+    if (subobj.index, subobj.sub_index) not in mapped:
+        mapped.add((subobj.index, subobj.sub_index))
+        mapping[i] = subobj
+}@
 @[if mapping]@
-@{name = "{:04X}".format(0x2200 + n); n += 1; i = 0}@
+@{name = "{:04X}".format(0x2200 + n - 1); i = 0}@
 
 [@name]
 SubNumber=@(len(mapping) + 1)
