@@ -3,6 +3,10 @@ software_update = False
 for slave in slaves.values():
     if slave.software_file:
         software_update = True
+configuration_update = False
+for slave in slaves.values():
+    if slave.configuration_file:
+        configuration_update = True
 }@
 [DeviceComissioning]
 NodeID=@master.node_id
@@ -67,7 +71,7 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3 + software_update + 10)
+SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + configuration_update + 2 + software_update + 10)
 1=0x1003
 2=0x1005
 3=0x1006
@@ -101,10 +105,13 @@ SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3
 @{n += 1}@
 @n=@("0x{:04X}".format(0x1A00 + i))
 @[end for]@
-@(n + 1)=0x1F22
-@(n + 2)=0x1F25
-@(n + 3)=0x1F55
-@{n += 3}@
+@[if configuration_update]@
+@{n += 1}@
+@n=0x1F22
+@[end if]@
+@(n + 1)=0x1F25
+@(n + 2)=0x1F55
+@{n += 2}@
 @[if software_update]@
 @{n += 1}@
 @n=0x1F58
@@ -478,6 +485,7 @@ if (subobj.index, subobj.sub_index) not in mapping:
 @[end for]@
 @[end for]@
 @[end for]@
+@[if configuration_update]@
 
 [1F22]
 SubNumber=128
@@ -501,6 +509,7 @@ UploadFile=@slave.configuration_file
 @[end if]@
 @[end for]@
 @[end for]@
+@[end if]@
 
 [1F25]
 ParameterName=Configuration request
