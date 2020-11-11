@@ -604,10 +604,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		pdo->comm.trans = trans;
 
-		pdo->event = 0;
-
 		co_tpdo_init_recv(pdo);
-		co_tpdo_init_timer_event(pdo);
 		break;
 	}
 	case 3: {
