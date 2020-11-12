@@ -504,8 +504,7 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
-			&& (!pdo->comm.trans || pdo->comm.trans >= 0xfe)
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.trans >= 0xfe
 			&& pdo->comm.event) {
 		if (!pdo->timer_event) {
 			pdo->timer_event = can_timer_create();
