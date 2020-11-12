@@ -52,16 +52,12 @@ struct __co_tpdo {
 	can_recv_t *recv;
 	/// A pointer to the CAN timer for events.
 	can_timer_t *timer_event;
-	/// A pointer to the CAN timer for the synchronous time window.
-	can_timer_t *timer_swnd;
 	/// A buffered CAN frame, used for RTR-only or event-driven TPDOs.
 	struct can_msg msg;
 	/// The time at which the next event-driven TPDO may be sent.
 	struct timespec inhibit;
 	/// A flag indicating the occurrence of an event.
 	unsigned int event : 1;
-	/// A flag indicating the synchronous time window has expired.
-	unsigned int swnd : 1;
 	/// The SYNC start value.
 	co_unsigned8_t sync;
 	/// The SYNC counter value.
@@ -91,14 +87,6 @@ static int co_tpdo_init_recv(co_tpdo_t *pdo);
  * @returns 0 on success, or -1 on error.
  */
 static int co_tpdo_init_timer_event(co_tpdo_t *pdo);
-
-/**
- * Initializes the CAN timer for the synchronous time window of a Transmit-PDO
- * service.
- *
- * @returns 0 on success, or -1 on error.
- */
-static int co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -131,14 +119,6 @@ static int co_tpdo_recv(const struct can_msg *msg, void *data);
  * @see can_timer_func_t
  */
 static int co_tpdo_timer_event(const struct timespec *tp, void *data);
-
-/**
- * The CAN timer callback function for the synchronous time window of a
- * Transmit-PDO service.
- *
- * @see can_timer_func_t
- */
-static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
 
 /**
  * Initializes a CAN frame to be sent by a Transmit-PDO service.
@@ -217,13 +197,11 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->recv = NULL;
 
 	pdo->timer_event = NULL;
-	pdo->timer_swnd = NULL;
 
 	pdo->msg = (struct can_msg)CAN_MSG_INIT;
 
 	can_net_get_time(pdo->net, &pdo->inhibit);
 	pdo->event = 0;
-	pdo->swnd = 0;
 	pdo->sync = pdo->comm.sync;
 	pdo->cnt = 0;
 
@@ -282,7 +260,6 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 
 	co_sdo_req_fini(&pdo->req);
 
-	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
 
 	can_recv_destroy(pdo->recv);
@@ -395,12 +372,7 @@ co_tpdo_event(co_tpdo_t *pdo)
 		return 0;
 
 	switch (pdo->comm.trans) {
-	case 0x00:
-		// Ignore events occurring after the synchronous time window has
-		// expired.
-		if (!pdo->event)
-			pdo->event = !pdo->swnd;
-		break;
+	case 0x00: pdo->event = 1; break;
 	case 0xfd:
 		if (co_tpdo_init_frame(pdo, &pdo->msg) == -1)
 			return -1;
@@ -453,10 +425,6 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 	// Ignore SYNC objects if the transmission type is not synchronous.
 	if (pdo->comm.trans > 0xf0 && pdo->comm.trans != 0xfc)
 		return 0;
-
-	// Reset the time window for synchronous PDOs.
-	pdo->swnd = 0;
-	co_tpdo_init_timer_swnd(pdo);
 
 	// Wait for the SYNC counter to equal the SYNC start value.
 	if (pdo->sync && cnt) {
@@ -556,36 +524,6 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 	return 0;
 }
 
-static int
-co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
-{
-	assert(pdo);
-
-	// Ignore the synchronous window length unless the TPDO is valid and
-	// synchronous.
-	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
-			&& (pdo->comm.trans <= 0xf0 || pdo->comm.trans == 0xfc)
-			&& swnd) {
-		if (!pdo->timer_swnd) {
-			pdo->timer_swnd = can_timer_create();
-			if (!pdo->timer_swnd)
-				return -1;
-			can_timer_set_func(pdo->timer_swnd, co_tpdo_timer_swnd,
-					pdo);
-		}
-		struct timespec start = { 0, 0 };
-		can_net_get_time(pdo->net, &start);
-		timespec_add_usec(&start, swnd);
-		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
-	} else if (pdo->timer_swnd) {
-		can_timer_destroy(pdo->timer_swnd);
-		pdo->timer_swnd = NULL;
-	}
-
-	return 0;
-}
-
 static co_unsigned32_t
 co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -638,10 +576,10 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			pdo->cnt = 0;
 		}
 
+		pdo->event = 0;
+
 		co_tpdo_init_recv(pdo);
 		co_tpdo_init_timer_event(pdo);
-		co_tpdo_init_timer_swnd(pdo);
-		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		break;
 	}
 	case 2: {
@@ -670,8 +608,6 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		co_tpdo_init_recv(pdo);
 		co_tpdo_init_timer_event(pdo);
-		co_tpdo_init_timer_swnd(pdo);
-		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		break;
 	}
 	case 3: {
@@ -853,21 +789,6 @@ co_tpdo_timer_event(const struct timespec *tp, void *data)
 	assert(pdo);
 
 	co_tpdo_event(pdo);
-
-	return 0;
-}
-
-static int
-co_tpdo_timer_swnd(const struct timespec *tp, void *data)
-{
-	(void)tp;
-	co_tpdo_t *pdo = data;
-	assert(pdo);
-
-	trace("TPDO %d: no event occurred in synchronous window", pdo->num);
-
-	if (pdo->ind)
-		pdo->ind(pdo, CO_SDO_AC_TIMEOUT, NULL, 0, pdo->data);
 
 	return 0;
 }
