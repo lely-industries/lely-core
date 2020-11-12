@@ -31,6 +31,7 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 #include <lely/util/errnum.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -231,15 +232,9 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 		goto error_init_recv;
 	}
 
-	if (co_rpdo_init_timer_swnd(pdo) == -1) {
-		errc = get_errc();
-		goto error_init_timer_swnd;
-	}
-
 	return pdo;
 
-error_init_timer_swnd:
-	can_recv_destroy(pdo->recv);
+	// can_recv_destroy(pdo->recv);
 error_init_recv:
 	co_obj_set_dn_ind(obj_1600, NULL, NULL);
 	co_obj_set_dn_ind(obj_1400, NULL, NULL);
@@ -507,7 +502,10 @@ co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 			can_timer_set_func(pdo->timer_swnd, co_rpdo_timer_swnd,
 					pdo);
 		}
-		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
+		struct timespec start = { 0, 0 };
+		can_net_get_time(pdo->net, &start);
+		timespec_add_usec(&start, swnd);
+		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
 	} else if (pdo->timer_swnd) {
 		can_timer_destroy(pdo->timer_swnd);
 		pdo->timer_swnd = NULL;
@@ -565,7 +563,10 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		pdo->swnd = 0;
 
 		co_rpdo_init_recv(pdo);
-		co_rpdo_init_timer_swnd(pdo);
+		if (pdo->timer_swnd) {
+			can_timer_destroy(pdo->timer_swnd);
+			pdo->timer_swnd = NULL;
+		}
 		break;
 	}
 	case 2: {
@@ -582,10 +583,6 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		}
 
 		pdo->comm.trans = trans;
-
-		pdo->swnd = 0;
-
-		co_rpdo_init_timer_swnd(pdo);
 		break;
 	}
 	case 3: {
