@@ -531,8 +531,7 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 	assert(pdo);
 
 	can_timer_stop(pdo->timer_event);
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID)
-			&& (!pdo->comm.trans || pdo->comm.trans >= 0xfe)
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.trans >= 0xfe
 			&& pdo->comm.event)
 		// Reset the event timer.
 		can_timer_timeout(pdo->timer_event, pdo->net, pdo->comm.event);
