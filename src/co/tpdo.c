@@ -586,6 +586,7 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			pdo->cnt = 0;
 		}
 
+		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		pdo->event = 0;
 
 		co_tpdo_init_recv(pdo);
@@ -758,19 +759,16 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 		uint_least32_t mask = (pdo->comm.cobid & CO_PDO_COBID_FRAME)
 				? CAN_MASK_EID
 				: CAN_MASK_BID;
-		// Send a buffered CAN frame if available, otherwise fall
-		// through to the event-driven case.
-		if (pdo->msg.id == (pdo->comm.cobid & mask)) {
-			co_tpdo_send_frame(pdo, &pdo->msg);
+		// Ignore the RTR if no buffered CAN frame is available.
+		if (pdo->msg.id != (pdo->comm.cobid & mask))
 			break;
-		}
+		co_tpdo_send_frame(pdo, &pdo->msg);
+		break;
 	}
-	// ... falls through ...
-	case 0xfd: {
+	case 0xfd:
 		if (!co_tpdo_init_frame(pdo, &pdo->msg))
 			co_tpdo_send_frame(pdo, &pdo->msg);
 		break;
-	}
 	default: break;
 	}
 
