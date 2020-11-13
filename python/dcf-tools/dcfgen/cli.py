@@ -493,7 +493,7 @@ def print_sdo(name: str, sdo: bytes):
     print(
         name
         + ": writing {} bytes to 0x{:04X}/{}: {}".format(
-            n, index, sub_index, "".join("{:02X}".format(b) for b in sdo[7:])
+            n, index, sub_index, " ".join("{:02X}".format(b) for b in sdo[7:])
         )
     )
 
