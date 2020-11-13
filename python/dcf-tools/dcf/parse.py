@@ -63,14 +63,16 @@ def __add_compact_rpdo(cfg: dict):
     for i in range(512):
         if nr_of_rx_pdo <= npdo:
             break
+
+        # Check if the communication parameters already exist.
         name = "{:04X}".format(0x1400 + i)
         if name in cfg:
             continue
+        npdo += 1
 
         n = int(cfg["OptionalObjects"]["SupportedObjects"], 0)
         cfg["OptionalObjects"]["SupportedObjects"] = str(n + 1)
         cfg["OptionalObjects"][str(n + 1)] = "0x" + name
-        npdo += 1
 
         cfg[name] = {}
         obj = cfg[name]
@@ -144,6 +146,20 @@ def __add_compact_rpdo(cfg: dict):
         cfg[name]["SubNumber"] = str(sub_number)
         cfg[name + "sub0"]["DefaultValue"] = str(sub_index)
 
+        # Add the mapping parameters, if necessary.
+        name = "{:04X}".format(0x1600 + i)
+        if name not in cfg:
+            cfg["OptionalObjects"]["SupportedObjects"] = str(n + 2)
+            cfg["OptionalObjects"][str(n + 2)] = "0x" + name
+
+            cfg[name] = {}
+            obj = cfg[name]
+            obj["ParameterName"] = "RPDO mapping parameter"
+            obj["ObjectType"] = "0x09"
+            obj["DataType"] = "0x0007"
+            obj["AccessType"] = "rw"
+            obj["CompactSubObj"] = "0x40"
+
 
 def __add_compact_tpdo(cfg: dict):
     if "DeviceInfo" not in cfg:
@@ -162,14 +178,16 @@ def __add_compact_tpdo(cfg: dict):
     for i in range(512):
         if nr_of_tx_pdo <= npdo:
             break
+
+        # Check if the communication parameters already exist.
         name = "{:04X}".format(0x1800 + i)
         if name in cfg:
             continue
+        npdo += 1
 
         n = int(cfg["OptionalObjects"]["SupportedObjects"], 0)
         cfg["OptionalObjects"]["SupportedObjects"] = str(n + 1)
         cfg["OptionalObjects"][str(n + 1)] = "0x" + name
-        npdo += 1
 
         cfg[name] = {}
         obj = cfg[name]
@@ -240,3 +258,17 @@ def __add_compact_tpdo(cfg: dict):
 
         cfg[name]["SubNumber"] = str(sub_number)
         cfg[name + "sub0"]["DefaultValue"] = str(sub_index)
+
+        # Add the mapping parameters, if necessary.
+        name = "{:04X}".format(0x1A00 + i)
+        if name not in cfg:
+            cfg["OptionalObjects"]["SupportedObjects"] = str(n + 2)
+            cfg["OptionalObjects"][str(n + 2)] = "0x" + name
+
+            cfg[name] = {}
+            obj = cfg[name]
+            obj["ParameterName"] = "TPDO mapping parameter"
+            obj["ObjectType"] = "0x09"
+            obj["DataType"] = "0x0007"
+            obj["AccessType"] = "rw"
+            obj["CompactSubObj"] = "0x40"
