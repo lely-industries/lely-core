@@ -75,8 +75,9 @@ class Promise {
     // Since we already registered the destructor for result_type(), we cannot
     // handle an exception from the default constructor. Wrapping the placement
     // new in a noexcept lambda prevents undefined behavior.
-    [](void* ptr) noexcept { new (ptr) result_type(); }
-    (ev_promise_data(promise_));
+    [](void* ptr) noexcept {
+      new (ptr) result_type();
+    }(ev_promise_data(promise_));
   }
 
   explicit Promise(ev_promise_t* promise) noexcept : promise_(promise) {}
@@ -240,7 +241,7 @@ class AsyncTask<Invoker, typename ::std::enable_if<!is_future<
   AsyncTask(ev_promise_t* promise, ev_exec_t* exec, F&& f,
             Args&&... args) noexcept
       : ev_task EV_TASK_INIT(exec,
-                             [](ev_task * task) noexcept {
+                             [](ev_task* task) noexcept {
                                auto self = static_cast<AsyncTask*>(task);
                                auto promise = ::std::move(self->promise_);
                                if (ev_promise_set_acquire(promise)) {
@@ -288,10 +289,10 @@ class AsyncTask<Invoker, typename ::std::enable_if<is_future<
             Args&&... args) noexcept
       : ev_task
         EV_TASK_INIT(exec,
-                     [](ev_task * task) noexcept {
+                     [](ev_task* task) noexcept {
                        auto self = static_cast<AsyncTask*>(task);
                        // Prepare the task for the next future.
-                       task->func = [](ev_task * task) noexcept {
+                       task->func = [](ev_task* task) noexcept {
                          auto self = static_cast<AsyncTask*>(task);
                          auto promise = ::std::move(self->promise_);
                          // Satisfy the promise with the result of the future
@@ -585,7 +586,9 @@ when_all(ev_exec_t* exec,
 
 /// @see ev_future_when_all_n()
 template <class InputIt>
-inline Future<::std::size_t, void>
+inline typename ::std::enable_if<
+    !::std::is_convertible<InputIt, ev_future_t*>::value,
+    Future<::std::size_t, void>>::type
 when_all(ev_exec_t* exec, InputIt first, InputIt last) {
   return when_all(exec, ::std::vector<ev_future_t*>(first, last));
 }
@@ -620,7 +623,9 @@ when_any(ev_exec_t* exec,
 
 /// @see ev_future_when_any_n()
 template <class InputIt>
-inline Future<::std::size_t, void>
+inline typename ::std::enable_if<
+    !::std::is_convertible<InputIt, ev_future_t*>::value,
+    Future<::std::size_t, void>>::type
 when_any(ev_exec_t* exec, InputIt first, InputIt last) {
   return when_any(exec, ::std::vector<ev_future_t*>(first, last));
 }
