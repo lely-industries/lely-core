@@ -351,6 +351,17 @@ class BasicDriver : DriverBase,
   }
 
   /**
+   * Requests the NMT 'boot slave' process for the remote node. OnBoot() is
+   * invoked once the boot-up process completes.
+   *
+   * @see BasicMaster::Boot()
+   */
+  bool
+  Boot() {
+    return master.Boot(id());
+  }
+
+  /**
    * Returns true if the remote node is ready (i.e., the NMT `boot slave`
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not.
