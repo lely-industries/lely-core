@@ -483,6 +483,7 @@ TEST(CAN_SNPrintfCanMsg, CANBasicMsg_SNPrintfErr) {
 #endif
 
 /* util/bits/asprintf_can_msg() */
+#if !LELY_NO_MALLOC
 
 TEST_GROUP(CAN_ASPrintfCanMsg) {
   char* output_ps = nullptr;
@@ -536,7 +537,9 @@ TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_2) {
 
   CHECK_EQUAL(-1, slen);
 }
-#endif
+#endif  // HAVE_SNPRINTF_OVERRIDE
+
+#endif  // LELY_NO_MALLOC
 
 /* util/bits/can_crc() */
 
