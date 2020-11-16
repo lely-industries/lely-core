@@ -167,6 +167,7 @@ int can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode);
  */
 int snprintf_can_msg(char *s, size_t n, const struct can_msg *msg);
 
+#if !LELY_NO_MALLOC
 /**
  * Equivalent to snprintf_can_msg(), except that it allocates a string large
  * enough to hold the output, including the terminating null byte.
@@ -181,6 +182,7 @@ int snprintf_can_msg(char *s, size_t n, const struct can_msg *msg);
  * stored in `errno`.
  */
 int asprintf_can_msg(char **ps, const struct can_msg *msg);
+#endif // !LELY_NO_MALLOC
 
 /**
  * Computes a bitwise CRC-15-CAN checksum, based on the 0x4599 generator
