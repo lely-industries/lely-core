@@ -97,7 +97,7 @@ co_unsigned32_t
 co_dev_cfg_rpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_comm_par *par)
 {
-	if (!num || num > 512)
+	if (!num || num > CO_NUM_PDOS)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_comm(dev, 0x1400 + num - 1, par);
@@ -107,7 +107,7 @@ co_unsigned32_t
 co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_map_par *par)
 {
-	if (!num || num > 512)
+	if (!num || num > CO_NUM_PDOS)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_map(dev, 0x1600 + num - 1, par);
@@ -166,7 +166,7 @@ co_unsigned32_t
 co_dev_cfg_tpdo_comm(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_comm_par *par)
 {
-	if (!num || num > 512)
+	if (!num || num > CO_NUM_PDOS)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_comm(dev, 0x1800 + num - 1, par);
@@ -176,7 +176,7 @@ co_unsigned32_t
 co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_map_par *par)
 {
-	if (!num || num > 512)
+	if (!num || num > CO_NUM_PDOS)
 		return CO_SDO_AC_NO_OBJ;
 
 	return co_dev_cfg_pdo_map(dev, 0x1a00 + num - 1, par);
@@ -189,7 +189,7 @@ co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 	assert(par);
 	assert(val);
 
-	if (par->n > 0x40 || n != par->n)
+	if (par->n > CO_PDO_NUM_MAPS || n != par->n)
 		return CO_SDO_AC_PDO_LEN;
 
 	size_t offset = 0;
@@ -223,7 +223,7 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint_least8_t *buf,
 	assert(par);
 	assert(buf);
 
-	if (par->n > 0x40)
+	if (par->n > CO_PDO_NUM_MAPS)
 		return CO_SDO_AC_PDO_LEN;
 
 	size_t offset = 0;
@@ -265,7 +265,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 	co_unsigned32_t ac = 0;
 
 	size_t offset = 0;
-	for (size_t i = 0; i < MIN(par->n, 0x40u); i++) {
+	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
 		co_unsigned32_t map = par->map[i];
 		if (!map)
 			continue;
@@ -315,7 +315,7 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	co_unsigned32_t ac = 0;
 
 	size_t offset = 0;
-	for (size_t i = 0; i < MIN(par->n, 0x40u); i++) {
+	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
 		co_unsigned32_t map = par->map[i];
 		if (!map)
 			continue;

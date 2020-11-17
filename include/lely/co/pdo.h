@@ -24,6 +24,15 @@
 
 #include <lely/co/type.h>
 
+/// The maximum number of Receive/Transmit-PDOs.
+#define CO_NUM_PDOS 512
+
+/**
+ * The maximum number of mapped application objects in a single PDO. This value
+ * is also the highest sub-index in the PDO mapping parameter object.
+ */
+#define CO_PDO_NUM_MAPS 0x40u
+
 /// The bit in the PDO COB-ID specifying whether the PDO exists and is valid.
 #define CO_PDO_COBID_VALID UINT32_C(0x80000000)
 
@@ -70,7 +79,7 @@ struct co_pdo_map_par {
 	/// Number of mapped objects in PDO.
 	co_unsigned8_t n;
 	/// An array of objects to be mapped.
-	co_unsigned32_t map[0x40];
+	co_unsigned32_t map[CO_PDO_NUM_MAPS];
 };
 
 /// The static initializer from struct #co_pdo_map_par.
