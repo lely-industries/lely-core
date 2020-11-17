@@ -20,11 +20,11 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=1
-1=0x2000
+SupportedObjects=0
 
 [ManufacturerObjects]
-SupportedObjects=0
+SupportedObjects=1
+1=0x2000
 
 [1000]
 ParameterName=Device type
@@ -46,12 +46,12 @@ ParameterName=Highest sub-index supported
 DataType=0x0005
 AccessType=const
 DefaultValue=0x4
-DefaultValue=0x00000360
 
 [1018sub1]
 ParameterName=Vendor-ID
 DataType=0x0007
 AccessType=ro
+DefaultValue=0x00000360
 
 [1018sub2]
 ParameterName=Product code
