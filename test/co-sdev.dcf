@@ -17,6 +17,9 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
+SupportedObjects=0
+
+[ManufacturerObjects]
 SupportedObjects=25
 1=0x2001
 2=0x2002
@@ -43,9 +46,6 @@ SupportedObjects=25
 23=0x2019
 24=0x201A
 25=0x201B
-
-[ManufacturerObjects]
-SupportedObjects=0
 
 [1000]
 ParameterName=Device type
