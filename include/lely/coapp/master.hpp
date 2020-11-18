@@ -371,7 +371,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen sub-object in the local object
      * dictionary.
      */
-    SubObject operator[](uint8_t subidx) noexcept {
+    SubObject
+    operator[](uint8_t subidx) noexcept {
       return SubObject(master_, id_, idx_, subidx);
     }
 
@@ -386,7 +387,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const noexcept {
+    ConstSubObject
+    operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, false);
     }
 
@@ -423,7 +425,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const noexcept {
+    ConstSubObject
+    operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, is_rpdo_);
     }
 
@@ -459,7 +462,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const noexcept {
+    ConstObject
+    operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, true);
     }
 
@@ -489,7 +493,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen object in the remote object
      * dictionary.
      */
-    Object operator[](uint16_t idx) noexcept {
+    Object
+    operator[](uint16_t idx) noexcept {
       return Object(master_, id_, idx);
     }
 
@@ -503,7 +508,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const noexcept {
+    ConstObject
+    operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, false);
     }
 
@@ -601,7 +607,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](::std::ptrdiff_t idx) noexcept { return Object(this, idx); }
+  Object
+  operator[](::std::ptrdiff_t idx) noexcept {
+    return Object(this, idx);
+  }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -613,7 +622,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](::std::ptrdiff_t idx) const noexcept {
+  ConstObject
+  operator[](::std::ptrdiff_t idx) const noexcept {
     return ConstObject(this, idx);
   }
 
@@ -627,7 +637,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for RPDO-mapped objects in a remote object
    * dictionary.
    */
-  RpdoMapped RpdoMapped(uint8_t id) const noexcept { return {this, id}; }
+  RpdoMapped
+  RpdoMapped(uint8_t id) const noexcept {
+    return {this, id};
+  }
 
   /**
    * Returns a mutator object that provides read/write access to TPDO-mapped
@@ -639,7 +652,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for TPDO-mapped objects in a remote object
    * dictionary.
    */
-  TpdoMapped TpdoMapped(uint8_t id) noexcept { return {this, id}; }
+  TpdoMapped
+  TpdoMapped(uint8_t id) noexcept {
+    return {this, id};
+  }
 
   /**
    * Requests the NMT 'boot slave' process for the specified node. OnBoot() is
@@ -1256,8 +1272,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *
    * @see Node::OnTime(), DriverBase::OnTime()
    */
-  void OnTime(const ::std::chrono::system_clock::time_point&
-                  abs_time) noexcept override;
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
 
   /**
    * The default implementation notifies the driver registered for node
@@ -1407,8 +1423,8 @@ class AsyncMaster : public BasicMaster {
    *
    * @see Node::OnTime(), DriverBase::OnTime()
    */
-  void OnTime(const ::std::chrono::system_clock::time_point&
-                  abs_time) noexcept override;
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
 
   /**
    * The default implementation queues a notification for the driver registered
