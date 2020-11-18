@@ -43,8 +43,8 @@ class SdoErrcCategory : public ::std::error_category {
     return "SDO";
   }
 
-  ::std::error_condition default_error_condition(int ev) const
-      noexcept override;
+  ::std::error_condition default_error_condition(
+      int ev) const noexcept override;
 
   ::std::string
   message(int ev) const override {

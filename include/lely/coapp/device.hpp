@@ -795,8 +795,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoGet(
-      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-      noexcept;
+      uint8_t id, uint16_t idx, uint8_t subidx,
+      ::std::error_code& ec) const noexcept;
 
   /**
    * Reads the value of a TPDO-mapped sub-object in the local object dictionary
@@ -842,8 +842,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoGet(
-      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-      noexcept;
+      uint8_t id, uint16_t idx, uint8_t subidx,
+      ::std::error_code& ec) const noexcept;
 
   /**
    * Writes a value to a sub-object in a remote object dictionary by writing to

@@ -70,7 +70,8 @@ enum class NmtState {
   TOGGLE = 0x80
 };
 
-constexpr NmtState operator&(NmtState lhs, NmtState rhs) {
+constexpr NmtState
+operator&(NmtState lhs, NmtState rhs) {
   return static_cast<NmtState>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
