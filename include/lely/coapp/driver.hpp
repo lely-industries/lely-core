@@ -791,8 +791,8 @@ class BasicDriver : DriverBase,
    *
    * @see Node::OnTime(), DriverBase::OnTime()
    */
-  void OnTime(const ::std::chrono::system_clock::time_point&
-                  abs_time) noexcept override;
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
 
   /**
    * The default implementation notifies all registered logical device drivers.
