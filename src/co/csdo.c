@@ -1312,6 +1312,30 @@ co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 }
 
 int
+co_csdo_blk_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
+		co_csdo_dn_con_t *con, void *data)
+{
+	assert(sdo);
+	struct membuf *buf = &sdo->buf;
+
+	// Obtain the size of the serialized value (which may be 0 for arrays).
+	size_t n = co_val_write(type, val, NULL, NULL);
+	if (!n && co_val_sizeof(type, val))
+		return -1;
+
+	membuf_clear(buf);
+	if (!membuf_reserve(buf, n))
+		return -1;
+	void *ptr = membuf_alloc(buf, &n);
+
+	if (co_val_write(type, val, ptr, (uint_least8_t *)ptr + n) != n)
+		return -1;
+
+	return co_csdo_blk_dn_req(sdo, idx, subidx, ptr, n, con, data);
+}
+
+int
 co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 		co_unsigned8_t pst, co_csdo_up_con_t *con, void *data)
 {
