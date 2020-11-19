@@ -114,7 +114,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
     // adjust highest subindex supported
     co_sub_t* const sub = co_dev_find_sub(dev, 0x1800u, 0x00u);
     CHECK(sub != nullptr);
-    co_sub_set_val_u8(sub, 0x05u);
+    co_sub_set_val_u8(sub, 0x06u);
 
     // 0x03 - inhibit time
     obj1800->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
