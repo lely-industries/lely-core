@@ -723,7 +723,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNonexisting) {
 
   const co_unsigned32_t mapping = 0xffff0000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
