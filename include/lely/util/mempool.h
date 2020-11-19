@@ -23,14 +23,7 @@
 #ifndef LELY_UTIL_MEMPOOL_H_
 #define LELY_UTIL_MEMPOOL_H_
 
-#include <assert.h>
-#include <stdint.h>
-
 #include <lely/util/memory.h>
-
-#ifndef LELY_UTIL_MEMPOOL_INLINE
-#define LELY_UTIL_MEMPOOL_INLINE static inline
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,38 +34,25 @@ struct mempool {
 	/// Pointer to 'virtual table' of the allocator. Must be first field.
 	const struct alloc_vtbl *vtbl;
 	/// A pointer to the first byte in the pool.
-	uint8_t *beg;
+	char *beg;
 	/// A pointer one past the last byte in the pool.
-	uint8_t *end;
+	char *end;
 	/// A pointer to next free byte in the pool.
-	uint8_t *cur;
+	char *cur;
 };
 
 /**
  * Initialized a memory pool allocator.
  *
- * NOTE: This allocator newer really frees a memory - this allocation scheme
- * should be used in systems, that initialize once at a start and can work with
- * fixed memory buffer.
+ * NOTE: This allocator never really frees memory - this allocation scheme
+ * should be used in systems that initialize once at the start and can work with
+ * fixed memory buffers.
  *
  * @param pool    a pointer to the memory pool.
  * @param memory  a pointer to the memory region to be used by the pool.
  *                MUST NOT be NULL.
  * @param size    the number of bytes availabe at <b>memory</b>.
  *                MUST NOT be zero.
- *
- * @see mem_alloc()
- * @see mem_free()
- * @see mem_size()
- * @see mem_capacity()
- */
-void mempool_init(struct mempool *pool, uint8_t *memory, size_t size);
-
-/**
- * Converts pointer to memory pool to pointer to base allocator interface.
- *
- * @param pool a pointer to the memory pool.
- *
  * @return pointer to the allocator interface.
  *
  * @see mem_alloc()
@@ -80,15 +60,7 @@ void mempool_init(struct mempool *pool, uint8_t *memory, size_t size);
  * @see mem_size()
  * @see mem_capacity()
  */
-LELY_UTIL_MEMPOOL_INLINE alloc_t *mempool_to_alloc_t(
-		const struct mempool *const pool);
-
-LELY_UTIL_MEMPOOL_INLINE alloc_t *
-mempool_to_alloc_t(const struct mempool *const pool)
-{
-	assert(pool != NULL);
-	return &pool->vtbl;
-}
+alloc_t *mempool_init(struct mempool *pool, void *memory, size_t size);
 
 #ifdef __cplusplus
 }

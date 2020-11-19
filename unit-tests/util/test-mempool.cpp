@@ -32,16 +32,12 @@
 #include <lely/util/errnum.h>
 
 TEST_GROUP(Util_MemPool) {
-  static const size_t POOL_SIZE = 1024;
+  static const size_t POOL_SIZE = 1024u;
   mempool pool;
-  alloc_t* alloc;
-  uint8_t memory[POOL_SIZE];
+  alloc_t* alloc = nullptr;
+  char memory[POOL_SIZE] = {0};
 
-  TEST_SETUP() {
-    mempool_init(&pool, memory, POOL_SIZE);
-
-    alloc = mempool_to_alloc_t(&pool);
-  }
+  TEST_SETUP() { alloc = mempool_init(&pool, memory, POOL_SIZE); }
 };
 
 TEST(Util_MemPool, MemPool_Size) { CHECK_EQUAL(0, mem_size(alloc)); }
@@ -51,9 +47,9 @@ TEST(Util_MemPool, MemPool_Capacity) {
 }
 
 TEST(Util_MemPool, MemPool_Alloc) {
-  const size_t allocationSize = 10;
+  const size_t allocationSize = 10u;
 
-  auto result = mem_alloc(alloc, 0, allocationSize);
+  const auto result = mem_alloc(alloc, 0, allocationSize);
 
   POINTERS_EQUAL(memory, result);
   CHECK_EQUAL(allocationSize, mem_size(alloc));
@@ -61,22 +57,22 @@ TEST(Util_MemPool, MemPool_Alloc) {
 }
 
 TEST(Util_MemPool, MemPool_Alloc_RespectsAlignment) {
-  const size_t allocationSize = 11;
-  const size_t alignment = 2;
+  const size_t allocationSize = 11u;
+  const size_t alignment = 2u;
 
-  auto result1 = mem_alloc(alloc, alignment, allocationSize);
-  auto result2 = mem_alloc(alloc, alignment, allocationSize);
+  const auto result1 = mem_alloc(alloc, alignment, allocationSize);
+  const auto result2 = mem_alloc(alloc, alignment, allocationSize);
 
   POINTERS_EQUAL(memory, result1);
-  POINTERS_EQUAL(memory + allocationSize + 1, result2);
-  CHECK_EQUAL(2 * allocationSize + 1, mem_size(alloc));
+  POINTERS_EQUAL(memory + allocationSize + 1u, result2);
+  CHECK_EQUAL(2u * allocationSize + 1u, mem_size(alloc));
   CHECK_EQUAL(POOL_SIZE - mem_size(alloc), mem_capacity(alloc));
 }
 
 TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
-  const size_t allocationSize = 10;
+  const size_t allocationSize = 10u;
 
-  auto result = mem_alloc(alloc, 3, allocationSize);
+  const auto result = mem_alloc(alloc, 3u, allocationSize);
 
   POINTERS_EQUAL(NULL, result);
   CHECK_EQUAL(0, mem_size(alloc));
@@ -85,9 +81,9 @@ TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
 }
 
 TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
-  const size_t allocationSize = POOL_SIZE + 1;
+  const size_t allocationSize = POOL_SIZE + 1u;
 
-  auto result = mem_alloc(alloc, 0, allocationSize);
+  const auto result = mem_alloc(alloc, 0, allocationSize);
 
   POINTERS_EQUAL(NULL, result);
   CHECK_EQUAL(0, mem_size(alloc));
@@ -98,7 +94,7 @@ TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
 TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
   set_errnum(0);
 
-  auto result = mem_alloc(alloc, 0, 0);
+  const auto result = mem_alloc(alloc, 0, 0);
 
   POINTERS_EQUAL(NULL, result);
   CHECK_EQUAL(0, mem_size(alloc));
@@ -107,8 +103,8 @@ TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
 }
 
 TEST(Util_MemPool, MemPool_Free_DoeaNothing) {
-  const size_t allocationSize = 10;
-  auto result = mem_alloc(alloc, 0, allocationSize);
+  const size_t allocationSize = 10u;
+  const auto result = mem_alloc(alloc, 0, allocationSize);
 
   mem_free(alloc, result);
 

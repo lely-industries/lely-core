@@ -20,13 +20,15 @@
  * limitations under the License.
  */
 
-#define LELY_UTIL_MEMPOOL_INLINE extern inline
 #include <lely/util/mempool.h>
 
-#include <lely/libc/stddef.h>
+#include <assert.h>
+#include <stdint.h>
 
 #include <lely/util/errnum.h>
 #include <lely/util/util.h>
+
+#include <lely/libc/stddef.h>
 
 static inline struct mempool *
 mempool_from_alloc(alloc_t *const alloc)
@@ -91,17 +93,18 @@ static struct alloc_vtbl mempool_vtbl = {
 	.capacity = mempool_capacity,
 };
 
-void
-mempool_init(struct mempool *const pool, uint8_t *const memory,
-		const size_t size)
+alloc_t *
+mempool_init(struct mempool *const pool, void *const memory, const size_t size)
 {
 	assert(pool != NULL);
 	assert(memory != NULL && size > 0);
 
 	pool->vtbl = &mempool_vtbl;
 
-	pool->beg = memory;
-	pool->end = memory + size;
+	pool->beg = (char *)memory;
+	pool->end = pool->beg + size;
 
 	pool->cur = pool->beg;
+
+	return &pool->vtbl;
 }
