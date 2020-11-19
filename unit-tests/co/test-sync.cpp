@@ -32,7 +32,7 @@
 #include <lely/co/sync.h>
 #include <lely/co/detail/obj.h>
 
-#include "allocators/heap.hpp"
+#include "allocators/default.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -54,7 +54,7 @@ TEST_BASE(CO_SyncBase) {
 
   static co_unsigned8_t DUMMY_VAR;
 
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
                       co_unsigned16_t idx) {

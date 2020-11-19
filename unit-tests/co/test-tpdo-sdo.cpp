@@ -35,14 +35,14 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 
-#include "allocators/heap.hpp"
+#include "allocators/default.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
 
 TEST_BASE(CO_SdoTpdoBase) {
   TEST_BASE_SUPER(CO_SdoTpdoBase);
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   const co_unsigned8_t DEV_ID = 0x01u;
   const co_unsigned16_t TPDO_NUM = 0x0001u;

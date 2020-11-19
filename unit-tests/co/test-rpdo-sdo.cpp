@@ -35,7 +35,7 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 
-#include "allocators/heap.hpp"
+#include "allocators/default.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -43,7 +43,7 @@
 
 TEST_BASE(CO_SdoRpdoBase) {
   TEST_BASE_SUPER(CO_SdoRpdoBase);
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   const co_unsigned8_t DEV_ID = 0x01u;
   const co_unsigned16_t RPDO_NUM = 0x0001u;

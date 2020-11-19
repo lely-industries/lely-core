@@ -39,7 +39,7 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 
-#include "allocators/heap.hpp"
+#include "allocators/default.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -59,7 +59,7 @@ TEST_BASE(CO_RpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1600;
   std::unique_ptr<CoObjTHolder> obj2000;
 
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   void CreateObj(std::unique_ptr<CoObjTHolder> & obj_holder,
                  co_unsigned16_t idx) {
