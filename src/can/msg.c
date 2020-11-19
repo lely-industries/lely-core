@@ -243,6 +243,7 @@ snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 	return t;
 }
 
+#if !LELY_NO_MALLOC
 int
 asprintf_can_msg(char **ps, const struct can_msg *msg)
 {
@@ -265,6 +266,7 @@ asprintf_can_msg(char **ps, const struct can_msg *msg)
 	*ps = s;
 	return n;
 }
+#endif // !LELY_NO_MALLOC
 
 uint_least16_t
 can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
