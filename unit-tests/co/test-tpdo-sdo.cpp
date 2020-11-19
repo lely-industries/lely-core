@@ -568,11 +568,11 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsLenGreaterThanMax) {
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
-  const auto ret2 =
+  const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
-  CHECK_EQUAL(0, ret2);
+  CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::called);
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, CoCsdoDnCon::ac);
 }
@@ -615,12 +615,12 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsRequestFailed) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: CO_SDO_AC_NO_OBJ abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoObjToMap) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNonExistingObjMapping) {
   Set1a00Sub1Mapping(0xffff0000u);
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   RestartTPDO();
 
-  const co_unsigned8_t num_of_mappings = 2u;
+  const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
@@ -633,11 +633,11 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoObjToMap) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsDownloadSameAsPrevious) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   RestartTPDO();
 
-  const co_unsigned8_t num_of_mappings = 64u;
+  const co_unsigned8_t num_of_mappings = CO_PDO_MAP_MAX_SUBIDX;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
@@ -681,7 +681,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsTooManyObjsToMap) {
 // given: valid TPDO
 // when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoObjsToMap) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoMappings) {
   const co_unsigned8_t num_of_mappings = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -695,7 +695,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoObjsToMap) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_CorrectMapping) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappings) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   Set1a00Sub1Mapping(0x20210020u);
   RestartTPDO();
@@ -715,36 +715,15 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_CorrectMapping) {
 
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
-// then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingEmpty) {
-  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  SetNumOfMappings(0x00u);
-  RestartTPDO();
-  // object which could be mapped
-  CreateObjInDev(obj2021, 0x2021u);
-  Insert2021Values();
-
-  const co_unsigned32_t mapping = 0x00000000u;
-  const auto ret =
-      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
-                        nullptr, CoCsdoDnCon::func, nullptr);
-
-  CHECK_EQUAL(0, ret);
-  CHECK(CoCsdoDnCon::called);
-  CHECK_EQUAL(0, CoCsdoDnCon::ac);
-}
-
-// given: invalid TPDO
-// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_NO_OBJ abort code is returned
 TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNonexisting) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x00);
   RestartTPDO();
 
-  const co_unsigned32_t mapping = 0xdeadbeefu;
+  const co_unsigned32_t mapping = 0xffff0000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1a00u, 0x3eu, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -755,7 +734,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNonexisting) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingDoubles) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   Set1a00Sub1Mapping(0x20210020u);
   RestartTPDO();
@@ -776,7 +755,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingDoubles) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_DownloadMappingNumOfMappingsNonzero) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNumOfMappingsNonzero) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x01u);
   RestartTPDO();
@@ -784,7 +763,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_DownloadMappingNumOfMappingsNonzero) {
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
-  const co_unsigned32_t mapping = 0x20210110u;
+  const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
@@ -805,7 +784,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingValidBitNotSet) {
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
-  const co_unsigned32_t mapping = 0x20210110u;
+  const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
