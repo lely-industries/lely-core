@@ -101,6 +101,8 @@ TEST_GROUP_BASE(CO_RpdoInit, CO_RpdoBase) {
   }
 };
 
+TEST(CO_RpdoInit, CoRpdoFree) { __co_rpdo_free(nullptr); }
+
 TEST(CO_RpdoInit, CoRpdoInit_ZeroNum) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, 0);
 

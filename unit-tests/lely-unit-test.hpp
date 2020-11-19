@@ -22,6 +22,7 @@
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
+#include <lely/co/type.h>
 #include <lely/util/diag.h>
 
 namespace LelyUnitTest {
@@ -36,5 +37,35 @@ DisableDiagnosticMessages() {
   diag_at_set_handler(nullptr, nullptr);
 }
 }  // namespace LelyUnitTest
+
+struct CoCsdoDnCon {
+  static co_csdo_t* sdo;
+  static co_unsigned16_t idx;
+  static co_unsigned8_t subidx;
+  static co_unsigned32_t ac;
+  static void* data;
+  static bool called;
+
+  static inline void
+  func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
+       co_unsigned32_t ac_, void* data_) {
+    sdo = sdo_;
+    idx = idx_;
+    subidx = subidx_;
+    ac = ac_;
+    data = data_;
+    called = true;
+  }
+
+  static void inline Clear() {
+    sdo = nullptr;
+    idx = 0;
+    subidx = 0;
+    ac = 0;
+    data = nullptr;
+
+    called = false;
+  }
+};
 
 #endif  // LELY_UNIT_TEST_HPP_
