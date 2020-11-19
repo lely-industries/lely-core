@@ -148,7 +148,7 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
 // given: valid TPDO
 // when: co_1800_dn_ind(), co_val_read() fails
 // then: CO_SDO_AC_TYPE_LEN_LO abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_CoValReadZero) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CoValReadFail) {
   LelyOverride::co_val_read(0);
 
   const int data = 0;
@@ -165,7 +165,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_CoValReadZero) {
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_NO_WRITE abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_DownloadNumOfElements) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_HighestSubIdxSupported) {
   const co_unsigned8_t num_of_elems = 0x7fu;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1800u, 0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -300,7 +300,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionTypeReserved) {
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL  abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_SynchronousRTRSet) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_SynchronousRTR_RTRBitSet) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_RTR);
   RestartTPDO();
 
@@ -317,7 +317,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_SynchronousRTRSet) {
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL  abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_EventDriven_RTRSet) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_EventDrivenRTR_RTRBitSet) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_RTR);
   RestartTPDO();
 
@@ -334,7 +334,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_EventDriven_RTRSet) {
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL  abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_RTROnly_RTRNotSet) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_RTROnly_RTRBitNotSet) {
   const co_unsigned8_t transmission_type = 0xfdu;
   const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
@@ -480,7 +480,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_SyncSameAsPrevious) {
 // given: valid TPDO
 // when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_CobidValid) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_TPDOValid) {
   const co_unsigned8_t sync = 0x01u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1800u, 0x06u, CO_DEFTYPE_UNSIGNED8, &sync,
@@ -494,7 +494,7 @@ TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_CobidValid) {
 // given: invalid TPDO
 // when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_CobidInvalid) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_TPDOInvalid) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   RestartTPDO();
 
