@@ -116,10 +116,12 @@ src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
 src_co_tests += co/test-pdo.cpp
 src_co_tests += co/test-rpdo.cpp
+src_co_tests += co/test-rpdo-sdo.cpp
 src_co_tests += co/test-sync.cpp
 src_co_tests += co/test-tpdo.cpp
 src_co_tests += co/test-type.cpp
 src_co_tests += co/test-val.cpp
+src_co_tests += lely-unit-test.cpp
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
 src_co_tests += override/lelyco-val.cpp
