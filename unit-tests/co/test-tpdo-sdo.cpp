@@ -650,7 +650,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsSameAsPrevious) {
 // given: valid TPDO
 // when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsButValidBitNotSet) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsValidTPDO) {
   const co_unsigned8_t num_of_mappings = 2u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -776,7 +776,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNumOfMappingsNonzero) {
 // given: valid TPDO
 // when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingValidBitNotSet) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingValidTPDO) {
   SetPdoCommCobid(DEV_ID);
   SetNumOfMappings(0x01u);
   RestartTPDO();
@@ -818,7 +818,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_Mapping) {
 // given: invalid TPDO
 // when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingZeroes) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingZeros) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x00);
   Set1a00Sub1Mapping(0x20210020u);
