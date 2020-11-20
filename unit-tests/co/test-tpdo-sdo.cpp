@@ -144,23 +144,19 @@ TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
   }
 };
 
-#if HAVE_LELY_OVERRIDE
 // given: valid TPDO
-// when: co_1800_dn_ind(), co_val_read() fails
-// then: CO_SDO_AC_TYPE_LEN_LO abort code is returned
-TEST(CO_SdoTpdo1800, Co1800DnInd_CoValReadFail) {
-  LelyOverride::co_val_read(0);
-
-  const int data = 0;
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_TooLongData) {
+  const co_unsigned16_t data = 0;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1800u, 0x00u, CO_DEFTYPE_UNSIGNED8, &data,
+      co_dev_dn_val_req(dev, 0x1800u, 0x00u, CO_DEFTYPE_UNSIGNED16, &data,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::called);
-  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, CoCsdoDnCon::ac);
+  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
-#endif  // HAVE_LELY_OVERRIDE
 
 // given: valid TPDO
 // when: co_1800_dn_ind()
