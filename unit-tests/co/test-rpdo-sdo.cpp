@@ -555,7 +555,7 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsSameAsPrevious) {
 // given: valid RPDO
 // when: co_1600_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsInvalidRPDO) {
+TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsValidRPDO) {
   const co_unsigned8_t num_of_mappings = 2u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
