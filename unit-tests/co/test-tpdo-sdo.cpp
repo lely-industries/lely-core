@@ -39,7 +39,6 @@
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
-#include "override/lelyco-val.hpp"
 
 TEST_BASE(CO_SdoTpdoBase) {
   TEST_BASE_SUPER(CO_SdoTpdoBase);
