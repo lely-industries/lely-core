@@ -543,13 +543,13 @@ TEST(CO_Dev, CoDevFindSub) {
   POINTERS_EQUAL(sub, ret);
 }
 
-TEST(CO_Dev, CoDevFindObj_NoObj) {
+TEST(CO_Dev, CoDevFindSub_NoObj) {
   const auto* const ret = co_dev_find_sub(dev, 0x1234, 0x00);
 
   POINTERS_EQUAL(nullptr, ret);
 }
 
-TEST(CO_Dev, CoDevFindObj_NoSub) {
+TEST(CO_Dev, CoDevFindSub_NoSub) {
   CoObjTHolder obj(0x1234);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
 
@@ -1218,7 +1218,7 @@ TEST_GROUP(CO_DevDCF) {
   }
 };
 
-TEST(CO_DevDCF, CoDevReadDef) {
+TEST(CO_DevDCF, CoDevReadDcf) {
   co_unsigned16_t pmin = 0x0000;
   co_unsigned16_t pmax = 0x0000;
   auto ptr = arrays.Init<co_domain_t>();
@@ -1235,7 +1235,7 @@ TEST(CO_DevDCF, CoDevReadDef) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevReadDef_NullMinMax) {
+TEST(CO_DevDCF, CoDevReadDcf_NullMinMax) {
   auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, BUF_SIZE);
   memcpy(ptr, buf, BUF_SIZE);
@@ -1248,7 +1248,7 @@ TEST(CO_DevDCF, CoDevReadDef_NullMinMax) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevReadDef_InvalidNumberOfSubIndexes) {
+TEST(CO_DevDCF, CoDevReadDcf_InvalidNumberOfSubIndexes) {
   auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, 2);
 
@@ -1260,7 +1260,7 @@ TEST(CO_DevDCF, CoDevReadDef_InvalidNumberOfSubIndexes) {
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
-TEST(CO_DevDCF, CoDevReadDef_InvaildSubIdx) {
+TEST(CO_DevDCF, CoDevReadDcf_InvaildSubIdx) {
   auto ptr = arrays.Init<co_domain_t>();
   co_val_init_dom(&ptr, NULL, 7);
   memcpy(ptr, buf, 7);
