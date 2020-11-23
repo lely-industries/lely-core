@@ -36,7 +36,7 @@
 namespace Allocators {
 
 #if LELY_NO_MALLOC
-const size_t POOL_SIZE = 10 * 1024;
+const size_t POOL_SIZE = 10u * 1024u;
 using Default = PoolAllocator<POOL_SIZE>;
 #else
 class Default {

@@ -32,16 +32,17 @@ namespace Allocators {
 template <size_t PoolSize>
 class PoolAllocator {
  public:
-  explicit PoolAllocator() { mempool_init(&pool, memory, PoolSize); }
+  explicit PoolAllocator() : alloc(mempool_init(&pool, memory, PoolSize)) {}
 
   alloc_t*
   ToAllocT() const {
-    return mempool_to_alloc_t(&pool);
+    return alloc;
   }
 
  private:
   uint8_t memory[PoolSize];
   mempool pool;
+  alloc_t* const alloc;
 };
 
 }  // namespace Allocators
