@@ -31,6 +31,7 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 #include <lely/util/errnum.h>
+#include <lely/util/time.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -336,8 +337,10 @@ co_rpdo_start(co_rpdo_t *pdo)
 	// Set the download indication functions PDO mapping parameter record.
 	co_obj_set_dn_ind(obj_1600, &co_1600_dn_ind, pdo);
 
+	pdo->sync = 0;
+	pdo->swnd = 0;
+
 	co_rpdo_init_recv(pdo);
-	co_rpdo_init_timer_swnd(pdo);
 
 	return 0;
 }
@@ -346,6 +349,11 @@ void
 co_rpdo_stop(co_rpdo_t *pdo)
 {
 	assert(pdo);
+
+	can_timer_stop(pdo->timer_swnd);
+	can_timer_stop(pdo->timer_event);
+
+	can_recv_stop(pdo->recv);
 
 	// Remove the download indication functions PDO mapping parameter
 	// record.
@@ -537,8 +545,12 @@ co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
 	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.trans <= 0xf0
-			&& swnd)
-		can_timer_timeout(pdo->timer_swnd, pdo->net, swnd);
+			&& swnd) {
+		struct timespec start = { 0, 0 };
+		can_net_get_time(pdo->net, &start);
+		timespec_add_usec(&start, swnd);
+		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
+	}
 }
 
 static co_unsigned32_t
@@ -587,7 +599,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		pdo->swnd = 0;
 
 		co_rpdo_init_recv(pdo);
-		co_rpdo_init_timer_swnd(pdo);
+		can_timer_stop(pdo->timer_swnd);
 		break;
 	}
 	case 2: {
@@ -603,9 +615,6 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		pdo->comm.trans = trans;
 
-		pdo->swnd = 0;
-
-		co_rpdo_init_timer_swnd(pdo);
 		break;
 	}
 	case 3: {
@@ -759,7 +768,7 @@ co_rpdo_timer_event(const struct timespec *tp, void *data)
 	co_rpdo_t *pdo = data;
 	assert(pdo);
 
-	trace("RPDO %d: no PDO received in synchronous window", pdo->num);
+	trace("RPDO %d: event-timer timeout", pdo->num);
 
 	// Generate an error if an RPDO timeout occurred.
 	if (pdo->err)

@@ -46,6 +46,19 @@ extern "C" {
 typedef void co_tpdo_ind_t(co_tpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data);
 
+/**
+ * The type of a CANopen Transmit-PDO sampling indication function, invoked when
+ * the device starts sampling after the reception of a SYNC event. This function
+ * MUST cause co_tpdo_sample_res() to be invoked once the sampling completes.
+ *
+ * @param pdo  a pointer to a Transmit-PDO service.
+ * @param data a pointer to user-specified data.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, implementations
+ * SHOULD set the error number with `set_errnum()`.
+ */
+typedef int co_tpdo_sample_ind_t(co_tpdo_t *pdo, void *data);
+
 size_t co_tpdo_alignof(void);
 size_t co_tpdo_sizeof(void);
 
@@ -114,7 +127,8 @@ const struct co_pdo_comm_par *co_tpdo_get_comm_par(const co_tpdo_t *pdo);
 const struct co_pdo_map_par *co_tpdo_get_map_par(const co_tpdo_t *pdo);
 
 /**
- * Retrieves the indication function invoked when a Transmit-PDO error occurs.
+ * Retrieves the indication function invoked when a Transmit-PDO is sent or an
+ * error occurs.
  *
  * @param pdo   a pointer to a Transmit-PDO service.
  * @param pind  the address at which to store a pointer to the indication
@@ -127,7 +141,8 @@ const struct co_pdo_map_par *co_tpdo_get_map_par(const co_tpdo_t *pdo);
 void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
 
 /**
- * Sets the indication function invoked when a Transmit-PDO error occurs.
+ * Sets the indication function invoked when a Transmit-PDO is sent or an error
+ * occurs.
  *
  * @param pdo  a pointer to a Transmit-PDO service.
  * @param ind  a pointer to the function to be invoked.
@@ -137,6 +152,35 @@ void co_tpdo_get_ind(const co_tpdo_t *pdo, co_tpdo_ind_t **pind, void **pdata);
  * @see co_tpdo_get_ind()
  */
 void co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data);
+
+/**
+ * Retrieves the indication function invoked when a Transmit-PDO starts sampling
+ * after the reception of a SYNC event.
+ *
+ * @param pdo   a pointer to a Transmit-PDO service.
+ * @param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * @param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * @see co_tpdo_set_sample_ind()
+ */
+void co_tpdo_get_sample_ind(const co_tpdo_t *pdo, co_tpdo_sample_ind_t **pind,
+		void **pdata);
+
+/**
+ * Sets the indication function invoked when a Transmit-PDO starts sampling
+ * after the reception of a SYNC event.
+ *
+ * @param pdo  a pointer to a Transmit-PDO service.
+ * @param ind  a pointer to the function to be invoked.
+ * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
+ *             passed as the last parameter to <b>ind</b>.
+ *
+ * @see co_tpdo_get_sample_ind()
+ */
+void co_tpdo_set_sample_ind(
+		co_tpdo_t *pdo, co_tpdo_sample_ind_t *ind, void *data);
 
 /**
  * Triggers the transmission of an acyclic or event-driven PDO. This function
@@ -161,6 +205,21 @@ int co_tpdo_event(co_tpdo_t *pdo);
  * @see co_tpdo_event()
  */
 int co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt);
+
+/**
+ * Indicates the result of the sampling step after the reception of a SYNC
+ * event. This function MUST be called upon completion.
+ *
+ * @param pdo a pointer to a Transmit-PDO service.
+ * @param ac  the SDO abort code (0 on success). The PDO is not sent if
+ *            `ac != 0`.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_tpdo_sample_ind_t
+ */
+int co_tpdo_sample_res(co_tpdo_t *pdo, co_unsigned32_t ac);
 
 /// Retrieves the time at which the next event-driven TPDO may be sent.
 void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
