@@ -29,7 +29,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/co/csdo.h>
-#include <lely/co/rpdo.h>
+#include <lely/co/tpdo.h>
 #include <lely/co/sdo.h>
 
 #include "holder/dev.hpp"
@@ -39,21 +39,20 @@
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
-#include "override/lelyco-val.hpp"
 
-TEST_BASE(CO_SdoRpdoBase) {
-  TEST_BASE_SUPER(CO_SdoRpdoBase);
+TEST_BASE(CO_SdoTpdoBase) {
+  TEST_BASE_SUPER(CO_SdoTpdoBase);
   Allocators::HeapAllocator allocator;
 
   const co_unsigned8_t DEV_ID = 0x01u;
-  const co_unsigned16_t RPDO_NUM = 0x0001u;
+  const co_unsigned16_t TPDO_NUM = 0x0001u;
 
   co_dev_t* dev = nullptr;
   can_net_t* net = nullptr;
-  co_rpdo_t* rpdo = nullptr;
+  co_tpdo_t* tpdo = nullptr;
   std::unique_ptr<CoDevTHolder> dev_holder;
-  std::unique_ptr<CoObjTHolder> obj1400;
-  std::unique_ptr<CoObjTHolder> obj1600;
+  std::unique_ptr<CoObjTHolder> obj1800;
+  std::unique_ptr<CoObjTHolder> obj1a00;
 
   void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
                       co_unsigned16_t idx) {
@@ -63,12 +62,12 @@ TEST_BASE(CO_SdoRpdoBase) {
   }
 
   void SetPdoCommCobid(const co_unsigned32_t cobid) {
-    co_sub_t* const sub_comm_cobid = co_dev_find_sub(dev, 0x1400u, 0x01u);
+    co_sub_t* const sub_comm_cobid = co_dev_find_sub(dev, 0x1800u, 0x01u);
     CHECK(sub_comm_cobid != nullptr);
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartRPDO() { co_rpdo_start(rpdo); }
+  void RestartTPDO() { co_tpdo_start(tpdo); }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -79,92 +78,91 @@ TEST_BASE(CO_SdoRpdoBase) {
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
-    CreateObjInDev(obj1400, 0x1400u);
-    CreateObjInDev(obj1600, 0x1600u);
+    CreateObjInDev(obj1800, 0x1800u);
+    CreateObjInDev(obj1a00, 0x1a00u);
 
     // 0x00 - highest sub-index supported
-    obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
+    obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x02u));
-    // 0x01 - COB-ID used by RPDO
-    obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
+    // 0x01 - COB-ID used by TPDO
+    obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
                              co_unsigned32_t(DEV_ID));
     // 0x02 - transmission type
-    obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
+    obj1800->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0xfeu));  // event-driven
 
-    rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-    CHECK(rpdo != nullptr);
+    tpdo = co_tpdo_create(net, dev, TPDO_NUM);
+    CHECK(tpdo != nullptr);
 
     CoCsdoDnCon::Clear();
   }
 
   TEST_TEARDOWN() {
-    co_rpdo_destroy(rpdo);
+    co_tpdo_destroy(tpdo);
 
     dev_holder.reset();
     can_net_destroy(net);
   }
 };
 
-TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
+TEST_GROUP_BASE(CO_SdoTpdo1800, CO_SdoTpdoBase) {
   int clang_format_fix = 0;  // unused
 
-  void Insert1400Values() {
+  void Insert1800Values() {
     // adjust highest subindex supported
-    co_sub_t* const sub = co_dev_find_sub(dev, 0x1400u, 0x00u);
+    co_sub_t* const sub = co_dev_find_sub(dev, 0x1800u, 0x00u);
     CHECK(sub != nullptr);
-    co_sub_set_val_u8(sub, 0x05u);
+    co_sub_set_val_u8(sub, 0x06u);
 
     // 0x03 - inhibit time
-    obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
+    obj1800->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
                              co_unsigned16_t(0x0000u));  // n*100 us
     // 0x04 - reserved (compatibility entry)
-    obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8,
+    obj1800->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x00u));
     // 0x05 - event-timer
-    obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
+    obj1800->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
                              co_unsigned16_t(0x0000u));  // ms
+    // 0x06 - sync value
+    obj1800->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8,
+                             co_unsigned8_t(0x00u));
   }
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    Insert1400Values();
-    co_rpdo_start(rpdo);
+    Insert1800Values();
+    co_tpdo_start(tpdo);
   }
 
   TEST_TEARDOWN() {
-    co_rpdo_stop(rpdo);
+    co_tpdo_stop(tpdo);
 
     TEST_BASE_TEARDOWN();
   }
 };
 
-#if HAVE_LELY_OVERRIDE
-// given: valid RPDO
-// when: co_1400_dn_ind(), co_val_read() fails
-// then: CO_SDO_AC_TYPE_LEN_LO abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CoValReadZero) {
-  LelyOverride::co_val_read(0);
-
-  const int data = 0;
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_TooLongData) {
+  const co_unsigned16_t data = 0;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8, &data,
+      co_dev_dn_val_req(dev, 0x1800u, 0x00u, CO_DEFTYPE_UNSIGNED16, &data,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::called);
-  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_LO, CoCsdoDnCon::ac);
+  CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
-#endif  // HAVE_LELY_OVERRIDE
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: CO_SDO_AC_NO_WRITE abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_HighestSubIdxSupported) {
   const co_unsigned8_t num_of_elems = 0x7fu;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1800u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_elems, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -172,13 +170,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_DownloadNumOfElements) {
   CHECK_EQUAL(CO_SDO_AC_NO_WRITE, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidSameAsPrevious) {
   const co_unsigned32_t cobid = DEV_ID;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -186,16 +184,16 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL  abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_NewCanId) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToValid_NewCanId) {
   SetPdoCommCobid(DEV_ID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned32_t cobid = DEV_ID + 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -203,16 +201,16 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_NewCanId) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1400_dn_ind()
+// given: invalid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_NewCanId) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidInvalidToValid_NewCanId) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned32_t cobid = DEV_ID + 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -220,13 +218,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_NewCanId) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_FrameBit) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToValid_FrameBit) {
   const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_FRAME;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -234,13 +232,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToValid_FrameBit) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
+// given: valid TPDO
 // when: COB-ID with frame bit and CO_PDO_COBID_VALID set is downloaded
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
   co_unsigned32_t cobid = DEV_ID | (1u << 28u) | CO_PDO_COBID_VALID;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -248,13 +246,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_ExtendedId_NoFrameBit) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
+// given: valid TPDO
 // when: COB-ID with CO_PDO_COBID_VALID set is downloaded
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CobidValidToInvalid) {
   const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_VALID;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+      co_dev_dn_val_req(dev, 0x1800u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -262,12 +260,12 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeSameAsPrevious) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionTypeSameAsPrevious) {
   const co_unsigned8_t transmission_type = 0xfeu;
-  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
                                      CoCsdoDnCon::func, nullptr);
 
@@ -276,30 +274,77 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL  abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeReserved) {
-  for (co_unsigned8_t i = 0xf1u; i < 0xfeu; i++) {
-    CoCsdoDnCon::Clear();
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionTypeReserved) {
+  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_RTR);
+  RestartTPDO();
 
-    const co_unsigned8_t transmission_type = i;
-    const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u,
-                                       CO_DEFTYPE_UNSIGNED8, &transmission_type,
-                                       nullptr, CoCsdoDnCon::func, nullptr);
+  const co_unsigned8_t transmission_type = 0xf1u;
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+                                     &transmission_type, nullptr,
+                                     CoCsdoDnCon::func, nullptr);
 
-    CHECK_EQUAL(0, ret);
-    CHECK(CoCsdoDnCon::called);
-    CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
-  }
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_PARAM_VAL  abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_SynchronousRTR_RTRBitSet) {
+  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_RTR);
+  RestartTPDO();
+
+  const co_unsigned8_t transmission_type = 0xfcu;
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+                                     &transmission_type, nullptr,
+                                     CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
+}
+
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_PARAM_VAL  abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_EventDrivenRTR_RTRBitSet) {
+  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_RTR);
+  RestartTPDO();
+
+  const co_unsigned8_t transmission_type = 0xfdu;
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+                                     &transmission_type, nullptr,
+                                     CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
+}
+
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_PARAM_VAL  abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType_RTROnly_RTRBitNotSet) {
+  const co_unsigned8_t transmission_type = 0xfdu;
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+                                     &transmission_type, nullptr,
+                                     CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(0, CoCsdoDnCon::ac);
+}
+
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeMax) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionTypeMax) {
   const co_unsigned8_t transmission_type = 0xffu;
-  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
                                      CoCsdoDnCon::func, nullptr);
 
@@ -308,12 +353,12 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionTypeMax) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionType) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_TransmissionType) {
   const co_unsigned8_t transmission_type = 0x35u;
-  const auto ret = co_dev_dn_val_req(dev, 0x1400u, 0x02u, CO_DEFTYPE_UNSIGNED8,
+  const auto ret = co_dev_dn_val_req(dev, 0x1800u, 0x02u, CO_DEFTYPE_UNSIGNED8,
                                      &transmission_type, nullptr,
                                      CoCsdoDnCon::func, nullptr);
 
@@ -322,16 +367,16 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_TransmissionType) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1400_dn_ind()
+// given: invalid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeSameAsPrevious) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_InhibitTimeSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned16_t inhibit_time = 0x0000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
+      co_dev_dn_val_req(dev, 0x1800u, 0x03u, CO_DEFTYPE_UNSIGNED16,
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -339,13 +384,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeValidRPDO) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_InhibitTimeValidTPDO) {
   const co_unsigned16_t inhibit_time = 0x0001u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
+      co_dev_dn_val_req(dev, 0x1800u, 0x03u, CO_DEFTYPE_UNSIGNED16,
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -353,16 +398,16 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTimeValidRPDO) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1400_dn_ind()
+// given: invalid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTime) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_InhibitTime) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned16_t inhibit_time = 0x0003u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x03u, CO_DEFTYPE_UNSIGNED16,
+      co_dev_dn_val_req(dev, 0x1800u, 0x03u, CO_DEFTYPE_UNSIGNED16,
                         &inhibit_time, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -370,13 +415,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_InhibitTime) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: CO_SDO_AC_NO_SUB abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_CompatibilityEntry) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_CompatibilityEntry) {
   const co_unsigned8_t compat = 0x44u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x04u, CO_DEFTYPE_UNSIGNED8, &compat,
+      co_dev_dn_val_req(dev, 0x1800u, 0x04u, CO_DEFTYPE_UNSIGNED8, &compat,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -384,13 +429,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CompatibilityEntry) {
   CHECK_EQUAL(CO_SDO_AC_NO_SUB, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSameAsPrevious) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_EventTimerSameAsPrevious) {
   const co_unsigned16_t event_timer = 0x0000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+      co_dev_dn_val_req(dev, 0x1800u, 0x05u, CO_DEFTYPE_UNSIGNED16,
                         &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -398,13 +443,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1400_dn_ind()
+// given: valid TPDO
+// when: co_1800_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
+TEST(CO_SdoTpdo1800, Co1800DnInd_EventTimer) {
   const co_unsigned16_t event_timer = 0x3456u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+      co_dev_dn_val_req(dev, 0x1800u, 0x05u, CO_DEFTYPE_UNSIGNED16,
                         &event_timer, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -412,21 +457,66 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: 0 abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_SyncSameAsPrevious) {
+  const co_unsigned8_t sync = 0x00u;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1800u, 0x06u, CO_DEFTYPE_UNSIGNED8, &sync,
+                        nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(0, CoCsdoDnCon::ac);
+}
+
+// given: valid TPDO
+// when: co_1800_dn_ind()
+// then: CO_SDO_AC_PARAM_VAL abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_TPDOValid) {
+  const co_unsigned8_t sync = 0x01u;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1800u, 0x06u, CO_DEFTYPE_UNSIGNED8, &sync,
+                        nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
+}
+
+// given: invalid TPDO
+// when: co_1800_dn_ind()
+// then: 0 abort code is returned
+TEST(CO_SdoTpdo1800, Co1800DnInd_SyncNewValue_TPDOInvalid) {
+  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
+  RestartTPDO();
+
+  const co_unsigned8_t sync = 0x01u;
+  const auto ret =
+      co_dev_dn_val_req(dev, 0x1800u, 0x06u, CO_DEFTYPE_UNSIGNED8, &sync,
+                        nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK(CoCsdoDnCon::called);
+  CHECK_EQUAL(0, CoCsdoDnCon::ac);
+}
+
+TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
   std::unique_ptr<CoObjTHolder> obj2021;
 
-  void Insert1600Values() {
+  void Insert1a00Values() {
     // 0x00 - number of mapped application objects in PDO
-    obj1600->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
+    obj1a00->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(CO_PDO_NUM_MAPS));
     // 0x01-0x40 - application objects
     for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
-      obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
+      obj1a00->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
     }
   }
 
-  void Set1600Sub1Mapping(co_unsigned32_t mapping) {
-    co_sub_t* const sub = co_dev_find_sub(dev, 0x1600u, 0x01u);
+  void Set1a00Sub1Mapping(co_unsigned32_t mapping) {
+    co_sub_t* const sub = co_dev_find_sub(dev, 0x1a00u, 0x01u);
     co_sub_set_val_u32(sub, mapping);
   }
 
@@ -441,40 +531,40 @@ TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
   }
 
   void SetNumOfMappings(co_unsigned8_t mappings_num) {
-    co_sub_t* const sub_map_n = co_dev_find_sub(dev, 0x1600u, 0x00u);
+    co_sub_t* const sub_map_n = co_dev_find_sub(dev, 0x1a00u, 0x00u);
     co_sub_set_val_u8(sub_map_n, mappings_num);
   }
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
-    Insert1600Values();
-    co_rpdo_start(rpdo);
+    Insert1a00Values();
+    co_tpdo_start(tpdo);
 
     CoCsdoDnCon::Clear();
   }
 
   TEST_TEARDOWN() {
-    co_rpdo_stop(rpdo);
+    co_tpdo_stop(tpdo);
 
     TEST_BASE_TEARDOWN();
   }
 };
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PDO_LEN  abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsLenGreaterThanMax) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsLenGreaterThanMax) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  Set1600Sub1Mapping(0x202100ffu);
-  RestartRPDO();
+  Set1a00Sub1Mapping(0x202100ffu);
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -482,20 +572,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsLenGreaterThanMax) {
   CHECK_EQUAL(CO_SDO_AC_PDO_LEN, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_EmptyMapping) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_EmptyMapping) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  Set1600Sub1Mapping(0x00000000u);
-  RestartRPDO();
+  Set1a00Sub1Mapping(0x00000000u);
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -503,13 +593,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_EmptyMapping) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
+// given: valid TPDO
 // when: too long value is downloaded
 // then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsRequestFailed) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsRequestFailed) {
   const co_unsigned32_t data = 0;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED32, &data,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED32, &data,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -517,17 +607,17 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsRequestFailed) {
   CHECK_EQUAL(CO_SDO_AC_TYPE_LEN_HI, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_NO_OBJ abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNonExistingObjMapping) {
-  Set1600Sub1Mapping(0xffff0000u);
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNonExistingObjMapping) {
+  Set1a00Sub1Mapping(0xffff0000u);
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -535,16 +625,16 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNonExistingObjMapping) {
   CHECK_EQUAL(CO_SDO_AC_NO_OBJ, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsSameAsPrevious) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -552,13 +642,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1600_dn_ind()
+// given: valid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsValidRPDO) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsValidTPDO) {
   const co_unsigned8_t num_of_mappings = 2u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -566,16 +656,16 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsValidRPDO) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsTooManyObjsToMap) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsTooManyObjsToMap) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS + 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -583,13 +673,13 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsTooManyObjsToMap) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1600_dn_ind()
+// given: valid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNoMappings) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsNoMappings) {
   const co_unsigned8_t num_of_mappings = 0;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -597,20 +687,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappingsNoMappings) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappings) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappings) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  Set1600Sub1Mapping(0x20210020u);
-  RestartRPDO();
+  Set1a00Sub1Mapping(0x20210020u);
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x00u, CO_DEFTYPE_UNSIGNED8,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -618,17 +708,17 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_NumOfMappings) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_NO_OBJ abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNonexisting) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNonexisting) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x00);
-  RestartRPDO();
+  RestartTPDO();
 
   const co_unsigned32_t mapping = 0xffff0000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -636,20 +726,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNonexisting) {
   CHECK_EQUAL(CO_SDO_AC_NO_OBJ, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_MappingSameAsPrevious) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
-  Set1600Sub1Mapping(0x20210020u);
-  RestartRPDO();
+  Set1a00Sub1Mapping(0x20210020u);
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -657,20 +747,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingSameAsPrevious) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNumOfMappingsNonzero) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingNumOfMappingsNonzero) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x01u);
-  RestartRPDO();
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
-  const co_unsigned32_t mapping = 0x20210110u;
+  const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -678,20 +768,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingNumOfMappingsNonzero) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: valid RPDO
-// when: co_1600_dn_ind()
+// given: valid TPDO
+// when: co_1a00_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_MappingValidRPDO) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingValidTPDO) {
   SetPdoCommCobid(DEV_ID);
   SetNumOfMappings(0x01u);
-  RestartRPDO();
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -699,20 +789,20 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_MappingValidRPDO) {
   CHECK_EQUAL(CO_SDO_AC_PARAM_VAL, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_Mapping) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_Mapping) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x00);
-  RestartRPDO();
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x20210020u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01u, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
@@ -720,21 +810,21 @@ TEST(CO_SdoRpdo1600, Co1600DnInd_Mapping) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-// given: invalid RPDO
-// when: co_1600_dn_ind()
+// given: invalid TPDO
+// when: co_1a00_dn_ind()
 // then: 0 abort code is returned
-TEST(CO_SdoRpdo1600, Co1600DnInd_MappingZeros) {
+TEST(CO_SdoTpdo1a00, Co1a00DnInd_MappingZeros) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetNumOfMappings(0x00);
-  Set1600Sub1Mapping(0x20210020u);
-  RestartRPDO();
+  Set1a00Sub1Mapping(0x20210020u);
+  RestartTPDO();
   // object which could be mapped
   CreateObjInDev(obj2021, 0x2021u);
   Insert2021Values();
 
   const co_unsigned32_t mapping = 0x00000000u;
   const auto ret =
-      co_dev_dn_val_req(dev, 0x1600, 0x01, CO_DEFTYPE_UNSIGNED32, &mapping,
+      co_dev_dn_val_req(dev, 0x1a00u, 0x01, CO_DEFTYPE_UNSIGNED32, &mapping,
                         nullptr, CoCsdoDnCon::func, nullptr);
 
   CHECK_EQUAL(0, ret);
