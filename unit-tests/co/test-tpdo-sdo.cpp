@@ -44,7 +44,6 @@ TEST_BASE(CO_SdoTpdoBase) {
   TEST_BASE_SUPER(CO_SdoTpdoBase);
   Allocators::HeapAllocator allocator;
 
-  const co_unsigned8_t CO_PDO_MAP_MAX_SUBIDX = 0x40u;
   const co_unsigned8_t DEV_ID = 0x01u;
   const co_unsigned16_t TPDO_NUM = 0x0001u;
 
@@ -508,9 +507,10 @@ TEST_GROUP_BASE(CO_SdoTpdo1a00, CO_SdoTpdoBase) {
 
   void Insert1a00Values() {
     // 0x00 - number of mapped application objects in PDO
-    obj1a00->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8, CO_PDO_MAP_MAX_SUBIDX);
+    obj1a00->InsertAndSetSub(0x00, CO_DEFTYPE_UNSIGNED8,
+                             co_unsigned8_t(CO_PDO_NUM_MAPS));
     // 0x01-0x40 - application objects
-    for (co_unsigned8_t i = 0x01u; i <= CO_PDO_MAP_MAX_SUBIDX; ++i) {
+    for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
       obj1a00->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
     }
   }
@@ -632,7 +632,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsSameAsPrevious) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   RestartTPDO();
 
-  const co_unsigned8_t num_of_mappings = CO_PDO_MAP_MAX_SUBIDX;
+  const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
@@ -663,7 +663,7 @@ TEST(CO_SdoTpdo1a00, Co1a00DnInd_NumOfMappingsTooManyObjsToMap) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   RestartTPDO();
 
-  const co_unsigned8_t num_of_mappings = CO_PDO_MAP_MAX_SUBIDX + 1u;
+  const co_unsigned8_t num_of_mappings = CO_PDO_NUM_MAPS + 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1a00u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                         &num_of_mappings, nullptr, CoCsdoDnCon::func, nullptr);
