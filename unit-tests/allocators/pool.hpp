@@ -20,24 +20,30 @@
  * limitations under the License.
  */
 
-#ifndef LELY_ALLOCATORS_HEAP_H
-#define LELY_ALLOCATORS_HEAP_H
+#ifndef LELY_ALLOCATORS_POOL_H
+#define LELY_ALLOCATORS_POOL_H
 
-#include <lely/util/memory.h>
+#include <stdint.h>
+
+#include <lely/util/mempool.h>
 
 namespace Allocators {
 
-class HeapAllocator {
+template <size_t PoolSize>
+class PoolAllocator {
  public:
-  explicit HeapAllocator();
+  explicit PoolAllocator() { mempool_init(&pool, memory, PoolSize); }
 
-  alloc_t* ToAllocT() const;
+  alloc_t*
+  ToAllocT() const {
+    return mempool_to_alloc_t(&pool);
+  }
 
  private:
-  alloc_t alloc;
-  alloc_vtbl alloc_f;
+  uint8_t memory[PoolSize];
+  mempool pool;
 };
 
 }  // namespace Allocators
 
-#endif  // LELY_ALLOCATORS_HEAP_H
+#endif  // LELY_ALLOCATORS_POOL_H

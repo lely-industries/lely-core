@@ -24,9 +24,9 @@
 
 #include <lely/can/net.h>
 
-#include "allocators/heap.hpp"
+#include "allocators/default.hpp"
 
-TEST_GROUP(CAN_NetInit) { Allocators::HeapAllocator allocator; };
+TEST_GROUP(CAN_NetInit) { Allocators::Default allocator; };
 
 TEST(CAN_NetInit, CanNetAllocFree) {
   void* const ptr = __can_net_alloc(allocator.ToAllocT());
@@ -154,7 +154,7 @@ static unsigned int tfunc_err_counter = 0;
 }  // namespace CAN_Net_Static
 
 TEST_GROUP(CAN_Net) {
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
   can_net_t* net = nullptr;
 
   static int timer_func_empty(const timespec*, void*) {
@@ -473,7 +473,7 @@ static unsigned int timer_func_counter = 0;
 
 TEST_GROUP(CAN_NetTimer) {
   can_timer_t* timer = nullptr;
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   static int timer_func(const timespec*, void*) {
     ++CAN_NetTimer_Static::timer_func_counter;
@@ -544,7 +544,7 @@ TEST(CAN_NetTimer, CanTimerTimeout_Negative) {
 
 TEST_GROUP(CAN_NetRecv) {
   can_recv_t* recv = nullptr;
-  Allocators::HeapAllocator allocator;
+  Allocators::Default allocator;
 
   static int recv_func(const can_msg*, void*) { return 0; }
 

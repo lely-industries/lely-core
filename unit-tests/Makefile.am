@@ -45,13 +45,6 @@ LELY_OVERRIDE_CO_VAL_LIB += liblelyco_val_override.la
 endif
 endif
 
-# Allocators library
-
-lib_LTLIBRARIES += liblely_unit_tests_allocators.la
-liblely_unit_tests_allocators_la_SOURCES = allocators/heap.cpp
-
-ALLOCATORS_LIBS = liblely_unit_tests_allocators.la
-
 # Utilities library tests
 
 LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
@@ -62,6 +55,7 @@ src_util_tests += util/test-cmp.cpp
 src_util_tests += util/test-dllist.cpp
 src_util_tests += util/test-endian.cpp
 src_util_tests += util/test-membuf.cpp
+src_util_tests += util/test-mempool.cpp
 src_util_tests += util/test-pheap.cpp
 src_util_tests += util/test-rbtree.cpp
 src_util_tests += util/test-time.cpp
@@ -102,7 +96,7 @@ src_can_tests += can/test-msg.cpp
 src_can_tests += can/test-net.cpp
 
 unit_test_can_SOURCES = $(src_common) $(src_can_tests)
-unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS) $(ALLOCATORS_LIBS)
+unit_test_can_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(CPPUTEST_LIBS)
 
 # CANopen library tests
 
@@ -131,7 +125,7 @@ endif
 endif
 
 unit_test_co_SOURCES = $(src_common) $(src_co_tests)
-unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS) $(ALLOCATORS_LIBS)
+unit_test_co_LDADD = $(LELY_LIBC_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_CO_LIBS) $(CPPUTEST_LIBS)
 if !PLATFORM_WIN32
 if !ENABLE_SHARED
 unit_test_co_LDFLAGS =
