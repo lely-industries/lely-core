@@ -921,11 +921,11 @@ co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 
 	const co_obj_t *obj_1800 = NULL;
 	// Find the first TPDO.
-	for (co_unsigned16_t i = 0; i < 512 && !obj_1800; i++)
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS && !obj_1800; i++)
 		obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
 	for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
 		co_unsigned16_t i = co_obj_get_idx(obj_1800) - 0x1800;
-		if (i >= 512)
+		if (i >= CO_NUM_PDOS)
 			break;
 		// Check if this is a valid acyclic or event-driven PDO.
 		const struct co_pdo_comm_par *comm =

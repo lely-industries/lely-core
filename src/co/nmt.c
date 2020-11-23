@@ -261,7 +261,7 @@ struct __co_nmt {
 	 * co_nmt_on_tpdo_event() that have been postponed because
 	 * #tpdo_event_wait > 0.
 	 */
-	unsigned long tpdo_event_mask[512 / LONG_BIT];
+	unsigned long tpdo_event_mask[CO_NUM_PDOS / LONG_BIT];
 #endif
 };
 
@@ -974,7 +974,7 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_TPDO
 	nmt->tpdo_event_wait = 0;
-	for (int i = 0; i < 512 / LONG_BIT; i++)
+	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
 		nmt->tpdo_event_mask[i] = 0;
 
 	// Set the Transmit-PDO event indication function.
@@ -1563,7 +1563,7 @@ void
 co_nmt_on_tpdo_event(co_nmt_t *nmt, co_unsigned16_t n)
 {
 	assert(nmt);
-	assert(nmt->srv.ntpdo <= 512);
+	assert(nmt->srv.ntpdo <= CO_NUM_PDOS);
 
 	int errsv = get_errc();
 	if (n) {
@@ -1609,7 +1609,7 @@ co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
 
 	// Issue an indication for every postponed Transmit-PDO event.
 	int errsv = get_errc();
-	for (int i = 0; i < 512 / LONG_BIT; i++) {
+	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++) {
 		if (nmt->tpdo_event_mask[i]) {
 			co_unsigned16_t n = i * LONG_BIT + 1;
 			for (int j = 0; j < LONG_BIT && n <= nmt->srv.ntpdo
@@ -3194,7 +3194,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 
 #ifndef LELY_NO_CO_TPDO
 	// Reset all Transmit-PDO events.
-	for (int i = 0; i < 512 / LONG_BIT; i++)
+	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
 		nmt->tpdo_event_mask[i] = 0;
 #endif
 

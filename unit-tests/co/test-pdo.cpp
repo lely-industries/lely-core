@@ -66,10 +66,7 @@ TEST_BASE(CO_PdoBase) {
   TEST_TEARDOWN() { dev_holder.reset(); }
 };
 
-TEST_GROUP_BASE(CO_Pdo, CO_PdoBase) {
-  const co_unsigned8_t CO_PDO_MAP_MAX_SUBIDX = 0x40u;
-  const co_unsigned16_t DEFAULT_NUM = 1u;
-};
+TEST_GROUP_BASE(CO_Pdo, CO_PdoBase) { const co_unsigned16_t DEFAULT_NUM = 1u; };
 
 TEST(CO_Pdo, CoDevChkRpdo_NoObj) {
   const auto ret = co_dev_chk_rpdo(dev, DEFAULT_OBJ_IDX, 0x19u);
@@ -172,7 +169,7 @@ TEST(CO_Pdo, CoDevChkRpdo) {
 }
 
 TEST(CO_Pdo, CoDevCfgRpdo_InvalidPdoNum) {
-  const co_unsigned16_t num = 21444u;
+  const co_unsigned16_t num = CO_NUM_PDOS + 1u;
   const co_pdo_comm_par comm = CO_PDO_COMM_PAR_INIT;
   const co_pdo_map_par map = CO_PDO_MAP_PAR_INIT;
 
@@ -250,7 +247,7 @@ TEST(CO_Pdo, CoDevCfgRpdoComm_NumZero) {
 
 TEST(CO_Pdo, CoDevCfgRpdoComm_NumTooBig) {
   const co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
-  const co_unsigned16_t num = 513u;
+  const co_unsigned16_t num = CO_NUM_PDOS + 1u;
 
   const auto ret = co_dev_cfg_rpdo_comm(dev, num, &par);
 
@@ -289,7 +286,7 @@ TEST(CO_Pdo, CoDevCfgRpdoMap_NumZero) {
 
 TEST(CO_Pdo, CoDevCfgRpdoMap_NumTooBig) {
   const co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
-  const co_unsigned16_t num = 513u;
+  const co_unsigned16_t num = CO_NUM_PDOS + 1u;
 
   const auto ret = co_dev_cfg_rpdo_map(dev, num, &par);
 
@@ -799,13 +796,13 @@ TEST(CO_Pdo, CoDevCfgPdoMap_ErrorWhenCopyingMappingParameters) {
 
 TEST(CO_Pdo, CoDevCfgPdoMap_MaxMapped) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
-  par.n = CO_PDO_MAP_MAX_SUBIDX;
+  par.n = CO_PDO_NUM_MAPS;
   CoObjTHolder obj(0x1600u);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Get()));
   obj.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                      co_unsigned8_t(CO_PDO_MAP_MAX_SUBIDX));
+                      co_unsigned8_t(CO_PDO_NUM_MAPS));
 
-  for (size_t i = 1; i <= CO_PDO_MAP_MAX_SUBIDX; i++) {
+  for (size_t i = 1; i <= CO_PDO_NUM_MAPS; i++) {
     par.map[i - 1] = 0x20000000u;  // idx: 0x2000 subidx: 0x00 len: 0x00
     obj.InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0x00000000u));
   }
@@ -814,7 +811,7 @@ TEST(CO_Pdo, CoDevCfgPdoMap_MaxMapped) {
 
   CHECK_EQUAL(0u, ret);
   CHECK_EQUAL(par.n, co_obj_get_val_u8(obj.Get(), 0x00u));
-  for (size_t i = 1; i < CO_PDO_MAP_MAX_SUBIDX; i++)
+  for (size_t i = 1; i < CO_PDO_NUM_MAPS; i++)
     CHECK_EQUAL(par.map[i - 1], co_obj_get_val_u32(obj.Get(), i));
 }
 
@@ -991,7 +988,7 @@ TEST(CO_Pdo, CoDevCfgTpdoComm_NumZero) {
 
 TEST(CO_Pdo, CoDevCfgTpdoComm_NumTooBig) {
   const co_pdo_comm_par par = CO_PDO_COMM_PAR_INIT;
-  const co_unsigned16_t num = 513u;
+  const co_unsigned16_t num = CO_NUM_PDOS + 1u;
 
   const auto ret = co_dev_cfg_tpdo_comm(dev, num, &par);
 
@@ -1032,7 +1029,7 @@ TEST(CO_Pdo, CoDevCfgTpdoMap_NumZero) {
 
 TEST(CO_Pdo, CoDevCfgTpdoMap_NumTooBig) {
   const co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
-  const co_unsigned16_t num = 513u;
+  const co_unsigned16_t num = CO_NUM_PDOS + 1u;
 
   const auto ret = co_dev_cfg_tpdo_map(dev, num, &par);
 
@@ -1060,7 +1057,7 @@ TEST(CO_Pdo, CoDevCfgTpdoMap) {
 
 TEST(CO_Pdo, CoPdoMap_OversizedPdoMap) {
   co_pdo_map_par par = CO_PDO_COMM_PAR_INIT;
-  par.n = CO_PDO_MAP_MAX_SUBIDX + 1u;
+  par.n = CO_PDO_NUM_MAPS + 1u;
   const co_unsigned8_t n_vals = 1u;
   const co_unsigned64_t vals[1] = {0u};
 
@@ -1071,7 +1068,7 @@ TEST(CO_Pdo, CoPdoMap_OversizedPdoMap) {
 
 TEST(CO_Pdo, CoPdoMap_RequestedNumNotEqualToGiven) {
   co_pdo_map_par par = CO_PDO_COMM_PAR_INIT;
-  par.n = CO_PDO_MAP_MAX_SUBIDX - 1u;
+  par.n = CO_PDO_NUM_MAPS - 1u;
   const co_unsigned8_t n_vals = 1u;
   const co_unsigned64_t vals[1] = {0u};
 
@@ -1189,7 +1186,7 @@ TEST(CO_Pdo, CoPdoMap) {
 
 TEST(CO_Pdo, CoPdoUnmap_OversizedPdoMap) {
   co_pdo_map_par par = CO_PDO_MAP_PAR_INIT;
-  par.n = CO_PDO_MAP_MAX_SUBIDX + 1u;
+  par.n = CO_PDO_NUM_MAPS + 1u;
   const size_t n_buf = 0u;
   const uint_least8_t buf[1] = {0x00u};
 

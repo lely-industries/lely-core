@@ -85,8 +85,6 @@ TEST_BASE(CO_RpdoBase) {
 };
 
 TEST_GROUP_BASE(CO_RpdoInit, CO_RpdoBase) {
-  const co_unsigned8_t CO_PDO_MAP_MAX_SUBIDX = 0x40u;
-
   co_rpdo_t* rpdo = nullptr;
 
   TEST_SETUP() {
@@ -111,7 +109,7 @@ TEST(CO_RpdoInit, CoRpdoInit_ZeroNum) {
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_InvalidNum) {
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, 513u);
+  const auto* ret = __co_rpdo_init(rpdo, net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -164,8 +162,7 @@ TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDO) {
 
   const auto* map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(0, map->n);
-  for (size_t i = 0; i < CO_PDO_MAP_MAX_SUBIDX; ++i)
-    CHECK_EQUAL(0, map->map[i]);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0, map->map[i]);
 
   co_rpdo_ind_t* pind = nullptr;
   void* pdata = nullptr;
@@ -313,9 +310,9 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOMappingParamRecord) {
   CreateObj(obj1600, 0x1600u);
   // 0x00 - number of mapped application objects in PDO
   obj1600->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(CO_PDO_MAP_MAX_SUBIDX));
+                           co_unsigned8_t(CO_PDO_NUM_MAPS));
   // 0x01-0x40 - application objects
-  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_MAP_MAX_SUBIDX; ++i) {
+  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
     obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(i - 1));
   }
 
@@ -325,9 +322,8 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOMappingParamRecord) {
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* map = co_rpdo_get_map_par(rpdo);
-  CHECK_EQUAL(CO_PDO_MAP_MAX_SUBIDX, map->n);
-  for (size_t i = 0; i < CO_PDO_MAP_MAX_SUBIDX; ++i)
-    CHECK_EQUAL(i, map->map[i]);
+  CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 
   __co_rpdo_fini(rpdo);
 }

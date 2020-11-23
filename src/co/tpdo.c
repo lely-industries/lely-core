@@ -199,7 +199,7 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (!num || num > 512) {
+	if (!num || num > CO_NUM_PDOS) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -277,7 +277,7 @@ void
 __co_tpdo_fini(struct __co_tpdo *pdo)
 {
 	assert(pdo);
-	assert(pdo->num >= 1 && pdo->num <= 512);
+	assert(pdo->num >= 1 && pdo->num <= CO_NUM_PDOS);
 
 	co_tpdo_stop(pdo);
 
@@ -779,7 +779,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > 0x40)
+		if (valid || n > CO_PDO_NUM_MAPS)
 			return CO_SDO_AC_PARAM_VAL;
 
 		size_t bits = 0;

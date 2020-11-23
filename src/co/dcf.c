@@ -342,12 +342,12 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (val && *val)
 			nrpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
 		// Count the number of implicit RPDOs.
-		for (co_unsigned16_t i = 0; i < 512 && nrpdo; i++) {
+		for (co_unsigned16_t i = 0; i < CO_NUM_PDOS && nrpdo; i++) {
 			if (co_dev_find_obj(dev, 0x1400 + i)
 					|| co_dev_find_obj(dev, 0x1600 + i))
 				nrpdo--;
 		}
-		for (co_unsigned16_t i = 0; i < 512; i++) {
+		for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 			if (!co_dev_find_obj(dev, 0x1400 + i)
 					&& !co_dev_find_obj(dev, 0x1600 + i)) {
 				if (!nrpdo)
@@ -364,12 +364,12 @@ co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg)
 		if (val && *val)
 			ntpdo = (co_unsigned16_t)strtoul(val, NULL, 0);
 		// Count the number of implicit TPDOs.
-		for (co_unsigned16_t i = 0; i < 512 && ntpdo; i++) {
+		for (co_unsigned16_t i = 0; i < CO_NUM_PDOS && ntpdo; i++) {
 			if (co_dev_find_obj(dev, 0x1800 + i)
 					|| co_dev_find_obj(dev, 0x1a00 + i))
 				ntpdo--;
 		}
-		for (co_unsigned16_t i = 0; i < 512; i++) {
+		for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 			if (!co_dev_find_obj(dev, 0x1800 + i)
 					&& !co_dev_find_obj(dev, 0x1a00 + i)) {
 				if (!ntpdo)
@@ -1004,7 +1004,7 @@ static int
 co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 {
 	assert(dev);
-	assert(num && num <= 512);
+	assert(num && num <= CO_NUM_PDOS);
 
 	// Find the highest sub-index supported.
 	mask &= 0x3f;
@@ -1138,7 +1138,7 @@ static int
 co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 {
 	assert(dev);
-	assert(num && num <= 512);
+	assert(num && num <= CO_NUM_PDOS);
 
 	// Find the highest sub-index supported.
 	mask &= 0x3f;

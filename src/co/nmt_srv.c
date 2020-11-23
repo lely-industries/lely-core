@@ -107,9 +107,6 @@ static void co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt);
 static void co_nmt_srv_fini_lss(struct co_nmt_srv *srv);
 #endif
 
-/// The maximum number of Receive/Transmit-PDOs.
-#define CO_NUM_PDO 512
-
 /// The maximum number of Client/Server-SDOs.
 #define CO_NUM_SDO 128
 
@@ -220,7 +217,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_RPDO
 	// Create the Receive-PDOs.
-	for (co_unsigned16_t i = 0; i < CO_NUM_PDO; i++) {
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 		co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
 		co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + i);
 		if (!obj_1400 || !obj_1600)
@@ -247,7 +244,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 #ifndef LELY_NO_CO_TPDO
 	// Create the Transmit-PDOs.
-	for (co_unsigned16_t i = 0; i < CO_NUM_PDO; i++) {
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 		co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
 		co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
 		if (!obj_1800 || !obj_1a00)
