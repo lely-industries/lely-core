@@ -188,7 +188,7 @@ __co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (!num || num > 512) {
+	if (!num || num > CO_NUM_PDOS) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -264,7 +264,7 @@ void
 __co_rpdo_fini(struct __co_rpdo *pdo)
 {
 	assert(pdo);
-	assert(pdo->num >= 1 && pdo->num <= 512);
+	assert(pdo->num >= 1 && pdo->num <= CO_NUM_PDOS);
 
 	co_rpdo_stop(pdo);
 
@@ -669,7 +669,7 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > 0x40)
+		if (valid || n > CO_PDO_NUM_MAPS)
 			return CO_SDO_AC_PARAM_VAL;
 
 		size_t bits = 0;
@@ -808,7 +808,8 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 			pdo->err(pdo, 0x8210, 0x10, pdo->err_data);
 		} else if (!ac) {
 			size_t offset = 0;
-			for (size_t i = 0; i < MIN(pdo->map.n, 0x40u); i++)
+			for (size_t i = 0; i < MIN(pdo->map.n, CO_PDO_NUM_MAPS);
+					i++)
 				offset += (pdo->map.map[i]) & 0xff;
 			if ((offset + 7) / 8 < n)
 				// Generate an error message if the PDO length

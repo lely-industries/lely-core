@@ -136,8 +136,6 @@ TEST_BASE(CO_TpdoBase) {
 };
 
 TEST_GROUP_BASE(CO_TpdoInit, CO_TpdoBase) {
-  const co_unsigned8_t CO_PDO_MAP_MAX_SUBIDX = 0x40u;
-
   co_tpdo_t* tpdo = nullptr;
 
   TEST_SETUP() {
@@ -162,7 +160,7 @@ TEST(CO_TpdoInit, CoTpdoInit_ZeroNum) {
 }
 
 TEST(CO_TpdoInit, CoTpdoInit_InvalidNum) {
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, 513u);
+  const auto* ret = __co_tpdo_init(tpdo, net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, ret);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
@@ -215,8 +213,7 @@ TEST(CO_TpdoInit, CoTpdoInit_MinimalTPDO) {
 
   const auto* map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(0u, map->n);
-  for (size_t i = 0; i < CO_PDO_MAP_MAX_SUBIDX; ++i)
-    CHECK_EQUAL(0u, map->map[i]);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(0u, map->map[i]);
 
   co_tpdo_ind_t* pind = nullptr;
   void* pdata = nullptr;
@@ -331,9 +328,9 @@ TEST(CO_TpdoInit, CoTpdoInit_FullTPDOMappingParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
 
   CreateObjInDev(obj1a00, 0x1a00u);
-  SetNumOfMappedAppObjs(CO_PDO_MAP_MAX_SUBIDX);
+  SetNumOfMappedAppObjs(CO_PDO_NUM_MAPS);
   // 0x01-0x40 - application objects
-  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_MAP_MAX_SUBIDX; ++i) {
+  for (co_unsigned8_t i = 0x01u; i <= CO_PDO_NUM_MAPS; ++i) {
     InsertInto1a00SubidxMapVal(i, i - 1u);
   }
 
@@ -343,9 +340,8 @@ TEST(CO_TpdoInit, CoTpdoInit_FullTPDOMappingParamRecord) {
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* map = co_tpdo_get_map_par(tpdo);
-  CHECK_EQUAL(CO_PDO_MAP_MAX_SUBIDX, map->n);
-  for (size_t i = 0; i < CO_PDO_MAP_MAX_SUBIDX; ++i)
-    CHECK_EQUAL(i, map->map[i]);
+  CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
+  for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 
   __co_tpdo_fini(tpdo);
 }
