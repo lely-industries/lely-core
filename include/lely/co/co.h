@@ -27,9 +27,9 @@ struct co_dev;
 /// An opaque CANopen device type.
 typedef struct co_dev co_dev_t;
 
-struct __co_obj;
+struct co_obj;
 /// An opaque CANopen object type.
-typedef struct __co_obj co_obj_t;
+typedef struct co_obj co_obj_t;
 
 struct __co_sub;
 /// An opaque CANopen sub-object type.

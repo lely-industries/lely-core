@@ -48,7 +48,7 @@ static void co_obj_clear(co_obj_t *obj);
 void *
 co_obj_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_obj));
+	void *ptr = malloc(sizeof(struct co_obj));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;

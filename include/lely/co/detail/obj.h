@@ -28,7 +28,7 @@
 #include <lely/util/rbtree.h>
 
 /// A CANopen object.
-struct __co_obj {
+struct co_obj {
 	/// The node of this object in the tree of objects.
 	struct rbnode node;
 	/// A pointer to the CANopen device containing this object.
