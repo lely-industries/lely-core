@@ -50,7 +50,7 @@ struct co_obj {
 };
 
 /// A CANopen sub-object.
-struct __co_sub {
+struct co_sub {
 	/// The node of this sub-object in the tree of sub-objects.
 	struct rbnode node;
 	/// A pointer to the CANopen object containing this sub-object.

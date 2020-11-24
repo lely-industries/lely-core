@@ -406,7 +406,7 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 void *
 co_sub_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_sub));
+	void *ptr = malloc(sizeof(struct co_sub));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;

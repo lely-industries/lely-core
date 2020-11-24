@@ -31,9 +31,9 @@ struct co_obj;
 /// An opaque CANopen object type.
 typedef struct co_obj co_obj_t;
 
-struct __co_sub;
+struct co_sub;
 /// An opaque CANopen sub-object type.
-typedef struct __co_sub co_sub_t;
+typedef struct co_sub co_sub_t;
 
 struct __co_ssdo;
 /// An opaque CANopen Server-SDO service type.
