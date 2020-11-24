@@ -61,7 +61,7 @@ struct can_net {
 static void can_net_set_next(can_net_t *net);
 
 /// A CAN timer.
-struct __can_timer {
+struct can_timer {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The node of this timer in the tree of timers.
@@ -131,7 +131,7 @@ can_net_sizeof(void)
 	return sizeof(can_net_t);
 }
 
-static void *
+static can_net_t *
 can_net_alloc(alloc_t *alloc)
 {
 	can_net_t *net = mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
@@ -380,10 +380,10 @@ can_timer_sizeof(void)
 	return sizeof(can_timer_t);
 }
 
-static void *
+static can_timer_t *
 can_timer_alloc(alloc_t *alloc)
 {
-	struct __can_timer *timer = mem_alloc(
+	can_timer_t *timer = mem_alloc(
 			alloc, can_timer_alignof(), can_timer_sizeof());
 	if (!timer)
 		return NULL;
@@ -399,8 +399,8 @@ can_timer_free(can_timer_t *timer)
 	mem_free(timer->alloc, timer);
 }
 
-static struct __can_timer *
-can_timer_init(struct __can_timer *timer)
+static can_timer_t *
+can_timer_init(can_timer_t *timer)
 {
 	assert(timer);
 
@@ -418,7 +418,7 @@ can_timer_init(struct __can_timer *timer)
 }
 
 static void
-can_timer_fini(struct __can_timer *timer)
+can_timer_fini(can_timer_t *timer)
 {
 	can_timer_stop(timer);
 }

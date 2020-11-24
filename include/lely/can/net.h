@@ -30,9 +30,9 @@ struct can_net;
 /// An opaque CAN network interface type.
 typedef struct can_net can_net_t;
 
-struct __can_timer;
+struct can_timer;
 /// An opaque CAN timer type.
-typedef struct __can_timer can_timer_t;
+typedef struct can_timer can_timer_t;
 
 struct __can_recv;
 /// An opaque CAN frame receiver type.
