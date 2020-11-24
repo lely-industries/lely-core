@@ -203,13 +203,11 @@ void can_net_get_send_func(
  */
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
+/// Returns alignment of the can_timer_t structure.
 size_t can_timer_alignof(void);
-size_t can_timer_sizeof(void);
 
-void *__can_timer_alloc(alloc_t *alloc);
-void __can_timer_free(void *ptr);
-struct __can_timer *__can_timer_init(struct __can_timer *timer);
-void __can_timer_fini(struct __can_timer *timer);
+/// Returns size of the can_timer_t structure.
+size_t can_timer_sizeof(void);
 
 /// Creates a new CAN timer. @see can_timer_destroy()
 can_timer_t *can_timer_create(alloc_t *alloc);

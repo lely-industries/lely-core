@@ -28,33 +28,6 @@
 
 TEST_GROUP(CAN_NetInit) { Allocators::Default allocator; };
 
-TEST(CAN_NetInit, CanTimerAllocFree) {
-  void* const ptr = __can_timer_alloc(allocator.ToAllocT());
-
-  CHECK(ptr != nullptr);
-
-  __can_timer_free(ptr);
-}
-
-TEST(CAN_NetInit, CanTimerInitFinit) {
-  auto* const timer =
-      static_cast<can_timer_t*>(__can_timer_alloc(allocator.ToAllocT()));
-
-  CHECK(timer != nullptr);
-  POINTERS_EQUAL(timer, __can_timer_init(timer));
-
-  can_timer_func_t* tfunc = nullptr;
-  void* tdata = nullptr;
-  can_timer_get_func(timer, &tfunc, &tdata);
-  POINTERS_EQUAL(nullptr, tfunc);
-  POINTERS_EQUAL(nullptr, tdata);
-
-  __can_timer_fini(timer);
-  __can_timer_free(timer);
-}
-
-TEST(CAN_NetInit, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
-
 TEST(CAN_NetInit, CanRecvAllocFree) {
   void* const ptr = __can_recv_alloc(allocator.ToAllocT());
 
@@ -463,6 +436,16 @@ TEST_GROUP(CAN_NetTimer) {
 
   TEST_TEARDOWN() { can_timer_destroy(timer); }
 };
+
+TEST(CAN_NetTimer, CanTimerCreate) {
+  can_timer_func_t* tfunc = nullptr;
+  void* tdata = nullptr;
+  can_timer_get_func(timer, &tfunc, &tdata);
+  POINTERS_EQUAL(nullptr, tfunc);
+  POINTERS_EQUAL(nullptr, tdata);
+}
+
+TEST(CAN_NetTimer, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
 
 TEST(CAN_NetTimer, CanTimerGetFunc_Null) {
   can_timer_get_func(timer, nullptr, nullptr);
