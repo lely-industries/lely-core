@@ -84,69 +84,68 @@ TEST_BASE(CO_RpdoBase) {
   }
 };
 
-TEST_GROUP_BASE(CO_RpdoInit, CO_RpdoBase) {
+TEST_GROUP_BASE(CO_RpdoCreate, CO_RpdoBase) {
   co_rpdo_t* rpdo = nullptr;
 
-  TEST_SETUP() {
-    TEST_BASE_SETUP();
-    rpdo = static_cast<co_rpdo_t*>(__co_rpdo_alloc(net));
-    CHECK(rpdo != nullptr);
-  }
-
   TEST_TEARDOWN() {
-    __co_rpdo_free(rpdo);
+    co_rpdo_destroy(rpdo);
     TEST_BASE_TEARDOWN();
   }
 };
 
-TEST(CO_RpdoInit, CoRpdoFree) { __co_rpdo_free(nullptr); }
+TEST(CO_RpdoCreate, CoRpdoDestroy_Null) { co_rpdo_destroy(nullptr); }
 
-TEST(CO_RpdoInit, CoRpdoInit_ZeroNum) {
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, 0);
+TEST(CO_RpdoCreate, CoRpdoCreate_MissingObject) {
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
+  POINTERS_EQUAL(nullptr, rpdo);
+}
 
-  POINTERS_EQUAL(nullptr, ret);
+TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
+  rpdo = co_rpdo_create(net, dev, 0);
+
+  POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_InvalidNum) {
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, CO_NUM_PDOS + 1u);
+TEST(CO_RpdoCreate, CoRpdoCreate_InvalidNum) {
+  rpdo = co_rpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_NoRPDOParameters) {
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOParameters) {
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_NoRPDOMappingParamRecord) {
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
   CreateObj(obj1400, 0x1400u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_NoRPDOCommParamRecord) {
+TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, rpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDO) {
+TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {
   CreateObj(obj1400, 0x1400u);
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
@@ -175,11 +174,9 @@ TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDO) {
   co_rpdo_get_err(rpdo, &perr, &perrdata);
   FUNCTIONPOINTERS_EQUAL(nullptr, perr);
   FUNCTIONPOINTERS_EQUAL(nullptr, perrdata);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDOMaxNum) {
+TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDOMaxNum) {
   const co_unsigned16_t MAX_RPDO_NUM = 0x0200u;
 
   CoObjTHolder obj15ff_holder(0x15ffu);
@@ -190,17 +187,18 @@ TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDOMaxNum) {
   CHECK(obj17ff_holder.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj17ff_holder.Take()));
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, MAX_RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, MAX_RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   POINTERS_EQUAL(net, co_rpdo_get_net(rpdo));
   POINTERS_EQUAL(dev, co_rpdo_get_dev(rpdo));
   CHECK_EQUAL(MAX_RPDO_NUM, co_rpdo_get_num(rpdo));
 
-  __co_rpdo_fini(rpdo);
+  co_rpdo_destroy(rpdo);  // explicit destroyed before object holders
+  rpdo = nullptr;
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_ExtendedFrame) {
+TEST(CO_RpdoCreate, CoRpdoCreate_ExtendedFrame) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -214,9 +212,9 @@ TEST(CO_RpdoInit, CoRpdoInit_ExtendedFrame) {
 
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -227,11 +225,9 @@ TEST(CO_RpdoInit, CoRpdoInit_ExtendedFrame) {
   CHECK_EQUAL(0, comm->reserved);
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_InvalidBit) {
+TEST(CO_RpdoCreate, CoRpdoCreate_InvalidBit) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -245,9 +241,9 @@ TEST(CO_RpdoInit, CoRpdoInit_InvalidBit) {
 
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -258,11 +254,9 @@ TEST(CO_RpdoInit, CoRpdoInit_InvalidBit) {
   CHECK_EQUAL(0, comm->reserved);
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_FullRPDOCommParamRecord) {
+TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x06u));
@@ -287,9 +281,9 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOCommParamRecord) {
 
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -300,11 +294,9 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOCommParamRecord) {
   CHECK_EQUAL(0x03u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_FullRPDOMappingParamRecord) {
+TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
   CreateObj(obj1400, 0x1400u);
 
   CreateObj(obj1600, 0x1600u);
@@ -316,19 +308,17 @@ TEST(CO_RpdoInit, CoRpdoInit_FullRPDOMappingParamRecord) {
     obj1600->InsertAndSetSub(i, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(i - 1));
   }
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_OversizedRPDOCommParamRecord) {
+TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x07u));
@@ -356,9 +346,9 @@ TEST(CO_RpdoInit, CoRpdoInit_OversizedRPDOCommParamRecord) {
 
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -369,11 +359,9 @@ TEST(CO_RpdoInit, CoRpdoInit_OversizedRPDOCommParamRecord) {
   CHECK_EQUAL(0x03u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_EventDrivenTransmission) {
+TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -387,9 +375,9 @@ TEST(CO_RpdoInit, CoRpdoInit_EventDrivenTransmission) {
 
   CreateObj(obj1600, 0x1600u);
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, 1u);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -400,11 +388,9 @@ TEST(CO_RpdoInit, CoRpdoInit_EventDrivenTransmission) {
   CHECK_EQUAL(0, comm->reserved);
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
-
-  __co_rpdo_fini(rpdo);
 }
 
-TEST(CO_RpdoInit, CoRpdoInit_TimerSet) {
+TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -423,9 +409,9 @@ TEST(CO_RpdoInit, CoRpdoInit_TimerSet) {
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));
 
-  const auto* ret = __co_rpdo_init(rpdo, net, dev, 1u);
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
-  POINTERS_EQUAL(rpdo, ret);
+  CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
@@ -436,27 +422,6 @@ TEST(CO_RpdoInit, CoRpdoInit_TimerSet) {
   CHECK_EQUAL(0, comm->reserved);
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
-
-  __co_rpdo_fini(rpdo);
-}
-
-TEST_GROUP_BASE(CO_RpdoCreate, CO_RpdoBase){};
-
-TEST(CO_RpdoCreate, CoRpdoDestroy_Null) { co_rpdo_destroy(nullptr); }
-
-TEST(CO_RpdoCreate, CoRpdoCreate) {
-  CreateObj(obj1400, 0x1400u);
-  CreateObj(obj1600, 0x1600u);
-
-  auto* const rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  CHECK(rpdo != nullptr);
-
-  co_rpdo_destroy(rpdo);
-}
-
-TEST(CO_RpdoCreate, CoRpdoCreate_Error) {
-  const auto* const rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-  POINTERS_EQUAL(nullptr, rpdo);
 }
 
 namespace CO_RpdoStatic {

@@ -56,14 +56,11 @@ typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 typedef void co_rpdo_err_t(co_rpdo_t *pdo, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
+/// Returns alignment of the #co_rpdo_t structure.
 size_t co_rpdo_alignof(void);
-size_t co_rpdo_sizeof(void);
 
-void *__co_rpdo_alloc(can_net_t *net);
-void __co_rpdo_free(void *ptr);
-struct __co_rpdo *__co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net,
-		co_dev_t *dev, co_unsigned16_t num);
-void __co_rpdo_fini(struct __co_rpdo *pdo);
+/// Returns size of the #co_rpdo_t structure.
+size_t co_rpdo_sizeof(void);
 
 /**
  * Creates a new CANopen Receive-PDO service. The service is started as if by

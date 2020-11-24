@@ -138,7 +138,7 @@ struct co_csdo {
 /// Allocates memory for #co_csdo_t object using allocator from #can_net_t.
 static void *co_csdo_alloc(can_net_t *net);
 
-/// Frees memory allocated for #co_csdo_t object
+/// Frees memory allocated for #co_csdo_t object.
 static void co_csdo_free(co_csdo_t *sdo);
 
 /// Initializes #co_csdo_t object.
