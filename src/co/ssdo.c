@@ -54,12 +54,12 @@
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
 #endif
 
-struct __co_ssdo_state;
+struct co_ssdo_state;
 /// An opaque CANopen Server-SDO state type.
-typedef const struct __co_ssdo_state co_ssdo_state_t;
+typedef const struct co_ssdo_state co_ssdo_state_t;
 
 /// A CANopen Server-SDO.
-struct __co_ssdo {
+struct co_ssdo {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -180,7 +180,7 @@ static inline void co_ssdo_emit_time(co_ssdo_t *sdo, const struct timespec *tp);
 static inline void co_ssdo_emit_recv(co_ssdo_t *sdo, const struct can_msg *msg);
 
 /// A CANopen Server-SDO state.
-struct __co_ssdo_state {
+struct co_ssdo_state {
 	/**
 	 * A pointer to the transition function invoked when an abort code has
 	 * been received.
@@ -1815,7 +1815,7 @@ co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 	msg->data[0] = cs;
 }
 
-void *
+static void *
 co_ssdo_alloc(can_net_t *net)
 {
 	co_ssdo_t *sdo = mem_alloc(can_net_get_alloc(net), co_ssdo_alignof(),
