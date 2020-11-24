@@ -37,7 +37,7 @@
 #include <inttypes.h>
 
 /// A CANopen Receive-PDO.
-struct __co_rpdo {
+struct co_rpdo {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.

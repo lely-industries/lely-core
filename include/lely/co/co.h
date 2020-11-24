@@ -43,9 +43,9 @@ struct co_csdo;
 /// An opaque CANopen Client-SDO service type.
 typedef struct co_csdo co_csdo_t;
 
-struct __co_rpdo;
+struct co_rpdo;
 /// An opaque CANopen Receive-PDO service type.
-typedef struct __co_rpdo co_rpdo_t;
+typedef struct co_rpdo co_rpdo_t;
 
 struct __co_tpdo;
 /// An opaque CANopen Transmit-PDO service type.
