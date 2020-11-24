@@ -36,7 +36,7 @@
 struct can_net;
 
 // The CANopen device from <lely/co/dev.h>.
-struct __co_dev;
+struct co_dev;
 
 // The CANopen Client-SDO service from <lely/co/csdo.h>.
 struct __co_csdo;
@@ -612,7 +612,7 @@ class Sdo {
    * @param dev a pointer to a CANopen device (from <lely/co/dev.h>).
    * @param num the SDO number (in the range [1..128]).
    */
-  Sdo(can_net* net, __co_dev* dev, uint8_t num);
+  Sdo(can_net* net, co_dev* dev, uint8_t num);
 
   /**
    * Constructs a Client-SDO queue from an existing Client-SDO service. It is

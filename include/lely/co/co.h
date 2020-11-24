@@ -23,9 +23,9 @@
 
 #include <lely/util/util.h>
 
-struct __co_dev;
+struct co_dev;
 /// An opaque CANopen device type.
-typedef struct __co_dev co_dev_t;
+typedef struct co_dev co_dev_t;
 
 struct __co_obj;
 /// An opaque CANopen object type.

@@ -47,8 +47,8 @@ static int snprintf_c99_sval(
 		char *s, size_t n, co_unsigned16_t type, const void *val);
 static int snprintf_c99_esc(char *s, size_t n, const char *esc);
 
-struct __co_dev *
-__co_dev_init_from_sdev(struct __co_dev *dev, const struct co_sdev *sdev)
+co_dev_t *
+__co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev)
 {
 	assert(dev);
 
