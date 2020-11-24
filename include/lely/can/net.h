@@ -79,10 +79,10 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
-/// Returns alignment of the can_net_t structure.
+/// Returns alignment of the #can_net_t structure.
 size_t can_net_alignof(void);
 
-/// Returns size of the can_net_t structure.
+/// Returns size of the #can_net_t structure.
 size_t can_net_sizeof(void);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
@@ -203,10 +203,10 @@ void can_net_get_send_func(
  */
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
-/// Returns alignment of the can_timer_t structure.
+/// Returns alignment of the #can_timer_t structure.
 size_t can_timer_alignof(void);
 
-/// Returns size of the can_timer_t structure.
+/// Returns size of the #can_timer_t structure.
 size_t can_timer_sizeof(void);
 
 /// Creates a new CAN timer. @see can_timer_destroy()
@@ -284,9 +284,9 @@ void can_timer_stop(can_timer_t *timer);
  */
 void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
 
-/// Returns alignment of can_recv_t structure.
+/// Returns alignment of #can_recv_t structure.
 size_t can_recv_alignof(void);
-/// Returns size of can_recv_t structure.
+/// Returns size of #can_recv_t structure.
 size_t can_recv_sizeof(void);
 
 /// Creates a new CAN frame receiver. @see can_recv_destroy()

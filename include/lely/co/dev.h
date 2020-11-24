@@ -99,20 +99,20 @@ typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
 #if !LELY_NO_MALLOC
 
 /**
- * Allocates memory for co_dev_t structure.
+ * Allocates memory for #co_dev_t structure.
  *
- * @returns memory for the co_dev_t structrure, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * @returns a pointer to an uninitialized #co_dev_t instance, or NULL on error.
+ * In the latter case, the error number can be obtained with get_errc().
  *
  * @see co_dev_free()
  */
 void *co_dev_alloc(void);
 
 /**
- * Releases memory allocated for co_dev_t structure.
+ * Releases memory allocated for a #co_dev_t instance.
  *
- * @param ptr memory to be freed.
- *
+ * @param ptr a pointer to an uninitialized #co_dev_t instance.
+
  * @see co_dev_alloc()
  */
 void co_dev_free(void *ptr);
@@ -120,22 +120,23 @@ void co_dev_free(void *ptr);
 #endif // !LELY_NO_MALLOC
 
 /**
- * Initializes existing co_dev_t object.
+ * Initializes a #co_dev_t instance.
  *
- * @param id the node-ID of the device (in the range [1..127, 255]). If
- *           <b>id</b> is 255, the device is unconfigured.
+ * @param dev a pointer ot an uninitialized #co_dev_t instance.
+ * @param id  the node-ID of the device (in the range [1..127, 255]). If
+ *            <b>id</b> is 255, the device is unconfigured.
  *
- * @returns a pointer to a new CANopen device, or NULL on error. In the latter
- * case, the error number can be obtained with get_errc().
+ * @returns <b>dev</b>, or NULL on error. In the latter case, the error number
+ * can be obtained with get_errc().
  *
  * @see co_dev_fini()
  */
 co_dev_t *co_dev_init(co_dev_t *dev, co_unsigned8_t id);
 
 /**
- * Prepares co_dev_t object for destruction.
+ * Finalizes a #co_dev_t instance.
  *
- * @param dev object to be destroyed.
+ * @param dev a pointer to a valid #co_dev_t instance.
  *
  * @see co_dev_init()
  */
