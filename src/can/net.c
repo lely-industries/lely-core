@@ -99,7 +99,7 @@ static inline can_recv_key_t can_recv_key(
 static int can_recv_key_cmp(const void *p1, const void *p2);
 
 /// A CAN frame receiver.
-struct __can_recv {
+struct can_recv {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The node of this receiver in the tree of receivers.
@@ -597,7 +597,7 @@ can_recv_init(can_recv_t *recv)
 }
 
 static void
-can_recv_fini(struct __can_recv *recv)
+can_recv_fini(can_recv_t *recv)
 {
 	can_recv_stop(recv);
 }

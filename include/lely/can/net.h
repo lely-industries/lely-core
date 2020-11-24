@@ -34,9 +34,9 @@ struct can_timer;
 /// An opaque CAN timer type.
 typedef struct can_timer can_timer_t;
 
-struct __can_recv;
+struct can_recv;
 /// An opaque CAN frame receiver type.
-typedef struct __can_recv can_recv_t;
+typedef struct can_recv can_recv_t;
 
 #ifdef __cplusplus
 extern "C" {
