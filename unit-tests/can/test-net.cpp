@@ -26,35 +26,6 @@
 
 #include "allocators/default.hpp"
 
-TEST_GROUP(CAN_NetInit) { Allocators::Default allocator; };
-
-TEST(CAN_NetInit, CanRecvAllocFree) {
-  void* const ptr = __can_recv_alloc(allocator.ToAllocT());
-
-  CHECK(ptr != nullptr);
-
-  __can_recv_free(ptr);
-}
-
-TEST(CAN_NetInit, CanRecvInitFinit) {
-  auto* const recv =
-      static_cast<can_recv_t*>(__can_recv_alloc(allocator.ToAllocT()));
-
-  CHECK(recv != nullptr);
-  POINTERS_EQUAL(recv, __can_recv_init(recv));
-
-  can_recv_func_t* tfunc = nullptr;
-  void* tdata = nullptr;
-  can_recv_get_func(recv, &tfunc, &tdata);
-  POINTERS_EQUAL(nullptr, tfunc);
-  POINTERS_EQUAL(nullptr, tdata);
-
-  __can_recv_fini(recv);
-  __can_recv_free(recv);
-}
-
-TEST(CAN_NetInit, CanRecvDestroy_Null) { can_recv_destroy(nullptr); }
-
 namespace CAN_Net_Static {
 static unsigned int tfunc_empty_counter = 0;
 static unsigned int tfunc_err_counter = 0;
@@ -513,6 +484,8 @@ TEST_GROUP(CAN_NetRecv) {
 
   TEST_TEARDOWN() { can_recv_destroy(recv); }
 };
+
+TEST(CAN_NetRecv, CanRecvDestroy_Null) { can_recv_destroy(nullptr); }
 
 TEST(CAN_NetRecv, CanRecvGetFunc_Null) {
   can_recv_get_func(recv, nullptr, nullptr);

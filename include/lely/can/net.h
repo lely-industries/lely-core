@@ -284,13 +284,10 @@ void can_timer_stop(can_timer_t *timer);
  */
 void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
 
+/// Returns alignment of can_recv_t structure.
 size_t can_recv_alignof(void);
+/// Returns size of can_recv_t structure.
 size_t can_recv_sizeof(void);
-
-void *__can_recv_alloc(alloc_t *alloc);
-void __can_recv_free(void *ptr);
-struct __can_recv *__can_recv_init(struct __can_recv *recv);
-void __can_recv_fini(struct __can_recv *recv);
 
 /// Creates a new CAN frame receiver. @see can_recv_destroy()
 can_recv_t *can_recv_create(alloc_t *alloc);

@@ -559,10 +559,10 @@ can_recv_sizeof(void)
 	return sizeof(can_recv_t);
 }
 
-void *
-__can_recv_alloc(alloc_t *alloc)
+static can_recv_t *
+can_recv_alloc(alloc_t *alloc)
 {
-	struct __can_recv *recv =
+	can_recv_t *recv =
 			mem_alloc(alloc, can_recv_alignof(), can_recv_sizeof());
 	if (!recv)
 		return NULL;
@@ -572,17 +572,14 @@ __can_recv_alloc(alloc_t *alloc)
 	return recv;
 }
 
-void
-__can_recv_free(void *ptr)
+static void
+can_recv_free(can_recv_t *recv)
 {
-	struct __can_recv *recv = ptr;
-
-	if (recv)
-		mem_free(recv->alloc, recv);
+	mem_free(recv->alloc, recv);
 }
 
-struct __can_recv *
-__can_recv_init(struct __can_recv *recv)
+static can_recv_t *
+can_recv_init(can_recv_t *recv)
 {
 	assert(recv);
 
@@ -599,8 +596,8 @@ __can_recv_init(struct __can_recv *recv)
 	return recv;
 }
 
-void
-__can_recv_fini(struct __can_recv *recv)
+static void
+can_recv_fini(struct __can_recv *recv)
 {
 	can_recv_stop(recv);
 }
@@ -610,13 +607,13 @@ can_recv_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_recv_t *recv = __can_recv_alloc(alloc);
+	can_recv_t *recv = can_recv_alloc(alloc);
 	if (!recv) {
 		errc = get_errc();
 		goto error_alloc_recv;
 	}
 
-	if (!__can_recv_init(recv)) {
+	if (!can_recv_init(recv)) {
 		errc = get_errc();
 		goto error_init_recv;
 	}
@@ -624,7 +621,7 @@ can_recv_create(alloc_t *alloc)
 	return recv;
 
 error_init_recv:
-	__can_recv_free(recv);
+	can_recv_free(recv);
 error_alloc_recv:
 	set_errc(errc);
 	return NULL;
@@ -634,8 +631,8 @@ void
 can_recv_destroy(can_recv_t *recv)
 {
 	if (recv) {
-		__can_recv_fini(recv);
-		__can_recv_free(recv);
+		can_recv_fini(recv);
+		can_recv_free(recv);
 	}
 }
 
