@@ -29,14 +29,11 @@
 extern "C" {
 #endif
 
+/// Returns alignment of the #co_ssdo_t structure.
 size_t co_ssdo_alignof(void);
-size_t co_ssdo_sizeof(void);
 
-void *__co_ssdo_alloc(can_net_t *net);
-void __co_ssdo_free(void *ptr);
-struct __co_ssdo *__co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net,
-		co_dev_t *dev, co_unsigned8_t num);
-void __co_ssdo_fini(struct __co_ssdo *sdo);
+/// Returns size of the #co_ssdo_t structure.
+size_t co_ssdo_sizeof(void);
 
 /**
  * Creates a new CANopen Server-SDO service. The service is started as if by

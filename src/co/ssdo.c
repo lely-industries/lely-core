@@ -105,6 +105,19 @@ struct __co_ssdo {
 #endif
 };
 
+/// Allocates memory for #co_ssdo_t object using allocator from #can_net_t.
+static void *co_ssdo_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_ssdo_t object
+static void co_ssdo_free(co_ssdo_t *sdo);
+
+/// Initializes #co_ssdo_t object.
+static co_ssdo_t *co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev,
+		co_unsigned8_t num);
+
+/// Finalizes #co_ssdo_t object.
+static void co_ssdo_fini(co_ssdo_t *sdo);
+
 /**
  * Updates and (de)activates a Server-SDO service. This function is invoked when
  * one of the SDO server parameters (objects 1200..127F) is updated.
@@ -532,133 +545,6 @@ co_ssdo_sizeof(void)
 	return sizeof(co_ssdo_t);
 }
 
-void *
-__co_ssdo_alloc(can_net_t *net)
-{
-	struct __co_ssdo *sdo = mem_alloc(can_net_get_alloc(net),
-			co_ssdo_alignof(), co_ssdo_sizeof());
-	if (!sdo)
-		return NULL;
-
-	sdo->net = net;
-
-	return sdo;
-}
-
-void
-__co_ssdo_free(void *ptr)
-{
-	struct __co_ssdo *sdo = ptr;
-
-	if (sdo)
-		mem_free(co_ssdo_get_alloc(sdo), sdo);
-}
-
-struct __co_ssdo *
-__co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
-		co_unsigned8_t num)
-{
-	assert(sdo);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	if (!num || num > 128) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	// Find the SDO server parameter in the object dictionary. The default
-	// SDO (1200) is optional.
-	co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + num - 1);
-	if (num != 1 && !obj_1200) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	sdo->net = net;
-	sdo->dev = dev;
-	sdo->num = num;
-
-	// Initialize the SDO parameter record with the default values.
-	sdo->par.n = 3;
-	sdo->par.id = co_dev_get_id(dev);
-	sdo->par.cobid_req = 0x600 + sdo->par.id;
-	sdo->par.cobid_res = 0x580 + sdo->par.id;
-
-	sdo->recv = can_recv_create(co_ssdo_get_alloc(sdo));
-	if (!sdo->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(sdo->recv, &co_ssdo_recv, sdo);
-
-	sdo->timeout = 0;
-
-	sdo->timer = can_timer_create(co_ssdo_get_alloc(sdo));
-	if (!sdo->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(sdo->timer, &co_ssdo_timer, sdo);
-
-	sdo->state = co_ssdo_wait_state;
-
-	sdo->idx = 0;
-	sdo->subidx = 0;
-
-	sdo->toggle = 0;
-	sdo->blksize = 0;
-	sdo->ackseq = 0;
-	sdo->gencrc = 0;
-	sdo->crc = 0;
-
-	co_sdo_req_init(&sdo->req, NULL);
-#if LELY_NO_MALLOC
-	membuf_init(&sdo->buf, sdo->begin, CO_SSDO_MEMBUF_SIZE);
-#else
-	membuf_init(&sdo->buf, NULL, 0);
-#endif
-	sdo->nbyte = 0;
-#if LELY_NO_MALLOC
-	memset(sdo->begin, 0, CO_SSDO_MEMBUF_SIZE);
-#endif
-
-	if (co_ssdo_start(sdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return sdo;
-
-	// co_ssdo_stop(sdo);
-error_start:
-	can_timer_destroy(sdo->timer);
-error_create_timer:
-	can_recv_destroy(sdo->recv);
-error_create_recv:
-error_param:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_ssdo_fini(struct __co_ssdo *sdo)
-{
-	assert(sdo);
-	assert(sdo->num >= 1 && sdo->num <= 128);
-
-	co_ssdo_stop(sdo);
-
-	membuf_fini(&sdo->buf);
-	co_sdo_req_fini(&sdo->req);
-
-	can_timer_destroy(sdo->timer);
-
-	can_recv_destroy(sdo->recv);
-}
-
 co_ssdo_t *
 co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
@@ -666,13 +552,13 @@ co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	int errc = 0;
 
-	co_ssdo_t *sdo = __co_ssdo_alloc(net);
+	co_ssdo_t *sdo = co_ssdo_alloc(net);
 	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
 	}
 
-	if (!__co_ssdo_init(sdo, net, dev, num)) {
+	if (!co_ssdo_init(sdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_sdo;
 	}
@@ -680,7 +566,7 @@ co_ssdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	return sdo;
 
 error_init_sdo:
-	__co_ssdo_free(sdo);
+	co_ssdo_free(sdo);
 error_alloc_sdo:
 	set_errc(errc);
 	return NULL;
@@ -691,8 +577,8 @@ co_ssdo_destroy(co_ssdo_t *ssdo)
 {
 	if (ssdo) {
 		trace("destroying Server-SDO %d", ssdo->num);
-		__co_ssdo_fini(ssdo);
-		__co_ssdo_free(ssdo);
+		co_ssdo_fini(ssdo);
+		co_ssdo_free(ssdo);
 	}
 }
 
@@ -1927,4 +1813,127 @@ co_ssdo_init_seg_res(co_ssdo_t *sdo, struct can_msg *msg, co_unsigned8_t cs)
 	}
 	msg->len = CAN_MAX_LEN;
 	msg->data[0] = cs;
+}
+
+void *
+co_ssdo_alloc(can_net_t *net)
+{
+	co_ssdo_t *sdo = mem_alloc(can_net_get_alloc(net), co_ssdo_alignof(),
+			co_ssdo_sizeof());
+	if (!sdo)
+		return NULL;
+
+	sdo->net = net;
+
+	return sdo;
+}
+
+static void
+co_ssdo_free(co_ssdo_t *sdo)
+{
+	mem_free(co_ssdo_get_alloc(sdo), sdo);
+}
+
+static co_ssdo_t *
+co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
+{
+	assert(sdo);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	if (!num || num > 128) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	// Find the SDO server parameter in the object dictionary. The default
+	// SDO (1200) is optional.
+	co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + num - 1);
+	if (num != 1 && !obj_1200) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	sdo->net = net;
+	sdo->dev = dev;
+	sdo->num = num;
+
+	// Initialize the SDO parameter record with the default values.
+	sdo->par.n = 3;
+	sdo->par.id = co_dev_get_id(dev);
+	sdo->par.cobid_req = 0x600 + sdo->par.id;
+	sdo->par.cobid_res = 0x580 + sdo->par.id;
+
+	sdo->recv = can_recv_create(co_ssdo_get_alloc(sdo));
+	if (!sdo->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(sdo->recv, &co_ssdo_recv, sdo);
+
+	sdo->timeout = 0;
+
+	sdo->timer = can_timer_create(co_ssdo_get_alloc(sdo));
+	if (!sdo->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(sdo->timer, &co_ssdo_timer, sdo);
+
+	sdo->state = co_ssdo_wait_state;
+
+	sdo->idx = 0;
+	sdo->subidx = 0;
+
+	sdo->toggle = 0;
+	sdo->blksize = 0;
+	sdo->ackseq = 0;
+	sdo->gencrc = 0;
+	sdo->crc = 0;
+
+	co_sdo_req_init(&sdo->req, NULL);
+#if LELY_NO_MALLOC
+	membuf_init(&sdo->buf, sdo->begin, CO_SSDO_MEMBUF_SIZE);
+#else
+	membuf_init(&sdo->buf, NULL, 0);
+#endif
+	sdo->nbyte = 0;
+#if LELY_NO_MALLOC
+	memset(sdo->begin, 0, CO_SSDO_MEMBUF_SIZE);
+#endif
+
+	if (co_ssdo_start(sdo) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return sdo;
+
+	// co_ssdo_stop(sdo);
+error_start:
+	can_timer_destroy(sdo->timer);
+error_create_timer:
+	can_recv_destroy(sdo->recv);
+error_create_recv:
+error_param:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_ssdo_fini(co_ssdo_t *sdo)
+{
+	assert(sdo);
+	assert(sdo->num >= 1 && sdo->num <= 128);
+
+	co_ssdo_stop(sdo);
+
+	membuf_fini(&sdo->buf);
+	co_sdo_req_fini(&sdo->req);
+
+	can_timer_destroy(sdo->timer);
+
+	can_recv_destroy(sdo->recv);
 }
