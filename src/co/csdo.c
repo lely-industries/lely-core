@@ -47,9 +47,9 @@
 #endif
 #endif
 
-struct __co_csdo_state;
+struct co_csdo_state;
 /// An opaque CANopen Client-SDO state type.
-typedef const struct __co_csdo_state co_csdo_state_t;
+typedef const struct co_csdo_state co_csdo_state_t;
 
 /// The state of a concise DCF download request.
 struct co_csdo_dn_dcf {
@@ -66,7 +66,7 @@ struct co_csdo_dn_dcf {
 };
 
 /// A CANopen Client-SDO.
-struct __co_csdo {
+struct co_csdo {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -213,7 +213,7 @@ static inline void co_csdo_emit_time(co_csdo_t *sdo, const struct timespec *tp);
 static inline void co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg);
 
 /// A CANopen Client-SDO state.
-struct __co_csdo_state {
+struct co_csdo_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_csdo_state_t *(*on_enter)(co_csdo_t *sdo);
 	/**

@@ -39,7 +39,7 @@ struct can_net;
 struct co_dev;
 
 // The CANopen Client-SDO service from <lely/co/csdo.h>.
-struct __co_csdo;
+struct co_csdo;
 
 namespace lely {
 
@@ -622,7 +622,7 @@ class Sdo {
    * @param sdo a pointer to a CANopen Client-SDO service (from
    *            <lely/co/csdo.h>).
    */
-  Sdo(__co_csdo* sdo);
+  Sdo(co_csdo* sdo);
 
   Sdo(const Sdo&) = delete;
   Sdo(Sdo&&) = default;
