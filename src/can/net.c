@@ -131,8 +131,8 @@ can_net_sizeof(void)
 	return sizeof(can_net_t);
 }
 
-void *
-__can_net_alloc(alloc_t *alloc)
+static void *
+can_net_alloc(alloc_t *alloc)
 {
 	struct __can_net *net =
 			mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
@@ -144,17 +144,15 @@ __can_net_alloc(alloc_t *alloc)
 	return net;
 }
 
-void
-__can_net_free(void *ptr)
+static void
+can_net_free(struct __can_net *net)
 {
-	struct __can_net *net = ptr;
-
-	if (net)
-		mem_free(net->alloc, net);
+	assert(net);
+	mem_free(net->alloc, net);
 }
 
-struct __can_net *
-__can_net_init(struct __can_net *net)
+static struct __can_net *
+can_net_init(struct __can_net *net)
 {
 	assert(net);
 
@@ -174,8 +172,8 @@ __can_net_init(struct __can_net *net)
 	return net;
 }
 
-void
-__can_net_fini(struct __can_net *net)
+static void
+can_net_fini(struct __can_net *net)
 {
 	assert(net);
 
@@ -195,13 +193,13 @@ can_net_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_net_t *net = __can_net_alloc(alloc);
+	can_net_t *net = can_net_alloc(alloc);
 	if (!net) {
 		errc = get_errc();
 		goto error_alloc_net;
 	}
 
-	if (!__can_net_init(net)) {
+	if (!can_net_init(net)) {
 		errc = get_errc();
 		goto error_init_net;
 	}
@@ -209,7 +207,7 @@ can_net_create(alloc_t *alloc)
 	return net;
 
 error_init_net:
-	__can_net_free(net);
+	can_net_free(net);
 error_alloc_net:
 	set_errc(errc);
 	return NULL;
@@ -219,8 +217,8 @@ void
 can_net_destroy(can_net_t *net)
 {
 	if (net) {
-		__can_net_fini(net);
-		__can_net_free(net);
+		can_net_fini(net);
+		can_net_free(net);
 	}
 }
 

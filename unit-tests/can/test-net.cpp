@@ -28,72 +28,6 @@
 
 TEST_GROUP(CAN_NetInit) { Allocators::Default allocator; };
 
-TEST(CAN_NetInit, CanNetAllocFree) {
-  void* const ptr = __can_net_alloc(allocator.ToAllocT());
-
-  CHECK(ptr != nullptr);
-
-  __can_net_free(ptr);
-}
-
-TEST(CAN_NetInit, CanNetFree_Nullptr) { __can_net_free(nullptr); }
-
-TEST(CAN_NetInit, CanNetInit) {
-  auto* const net =
-      static_cast<can_net_t*>(__can_net_alloc(allocator.ToAllocT()));
-
-  CHECK(net != nullptr);
-  POINTERS_EQUAL(net, __can_net_init(net));
-
-  timespec tp;
-  can_net_get_time(net, &tp);
-  CHECK_EQUAL(0, tp.tv_sec);
-  CHECK_EQUAL(0L, tp.tv_nsec);
-
-  can_timer_func_t* tfunc = nullptr;
-  void* tdata = nullptr;
-  can_net_get_next_func(net, &tfunc, &tdata);
-  POINTERS_EQUAL(nullptr, tfunc);
-  POINTERS_EQUAL(nullptr, tdata);
-
-  can_send_func_t* sfunc = nullptr;
-  void* sdata = nullptr;
-  can_net_get_send_func(net, &sfunc, &sdata);
-  POINTERS_EQUAL(nullptr, sfunc);
-  POINTERS_EQUAL(nullptr, sdata);
-
-  __can_net_fini(net);
-  __can_net_free(net);
-}
-
-TEST(CAN_NetInit, CanNetFini) {
-  auto* const net =
-      static_cast<can_net_t*>(__can_net_alloc(allocator.ToAllocT()));
-
-  CHECK(net != nullptr);
-  POINTERS_EQUAL(net, __can_net_init(net));
-
-  can_timer_t* const timer1 = can_timer_create(allocator.ToAllocT());
-  const timespec time1 = {0, 0L};
-  can_timer_start(timer1, net, &time1, nullptr);
-  can_recv_t* const recv1 = can_recv_create(allocator.ToAllocT());
-  can_recv_t* const recv2 = can_recv_create(allocator.ToAllocT());
-  can_recv_t* const recv3 = can_recv_create(allocator.ToAllocT());
-  can_recv_start(recv1, net, 0x0, CAN_FLAG_IDE);
-  can_recv_start(recv2, net, 0x01, 0);
-  can_recv_start(recv3, net, 0x01, 0);
-
-  __can_net_fini(net);
-  __can_net_free(net);
-
-  can_timer_destroy(timer1);
-  can_recv_destroy(recv1);
-  can_recv_destroy(recv2);
-  can_recv_destroy(recv3);
-}
-
-TEST(CAN_NetInit, CanNetDestroy_Null) { can_net_destroy(nullptr); }
-
 TEST(CAN_NetInit, CanTimerAllocFree) {
   void* const ptr = __can_timer_alloc(allocator.ToAllocT());
 
@@ -182,6 +116,47 @@ TEST_GROUP(CAN_Net) {
 
   TEST_TEARDOWN() { can_net_destroy(net); }
 };
+
+TEST(CAN_Net, CanNetCreate) {
+  timespec tp;
+  can_net_get_time(net, &tp);
+  CHECK_EQUAL(0, tp.tv_sec);
+  CHECK_EQUAL(0L, tp.tv_nsec);
+
+  can_timer_func_t* tfunc = nullptr;
+  void* tdata = nullptr;
+  can_net_get_next_func(net, &tfunc, &tdata);
+  POINTERS_EQUAL(nullptr, tfunc);
+  POINTERS_EQUAL(nullptr, tdata);
+
+  can_send_func_t* sfunc = nullptr;
+  void* sdata = nullptr;
+  can_net_get_send_func(net, &sfunc, &sdata);
+  POINTERS_EQUAL(nullptr, sfunc);
+  POINTERS_EQUAL(nullptr, sdata);
+}
+
+TEST(CAN_Net, CanNetDestroy) {
+  can_timer_t* const timer1 = can_timer_create(allocator.ToAllocT());
+  const timespec time1 = {0, 0L};
+  can_timer_start(timer1, net, &time1, nullptr);
+  can_recv_t* const recv1 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv2 = can_recv_create(allocator.ToAllocT());
+  can_recv_t* const recv3 = can_recv_create(allocator.ToAllocT());
+  can_recv_start(recv1, net, 0x0, CAN_FLAG_IDE);
+  can_recv_start(recv2, net, 0x01, 0);
+  can_recv_start(recv3, net, 0x01, 0);
+
+  can_net_destroy(net);
+  net = nullptr;
+
+  can_timer_destroy(timer1);
+  can_recv_destroy(recv1);
+  can_recv_destroy(recv2);
+  can_recv_destroy(recv3);
+}
+
+TEST(CAN_Net, CanNetDestroy_Null) { can_net_destroy(nullptr); }
 
 TEST(CAN_Net, CanNetGetTime_Null) { can_net_get_time(net, nullptr); }
 

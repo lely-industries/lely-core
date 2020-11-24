@@ -79,13 +79,11 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
+/// Returns alignment of the can_net_t structure.
 size_t can_net_alignof(void);
-size_t can_net_sizeof(void);
 
-void *__can_net_alloc(alloc_t *alloc);
-void __can_net_free(void *ptr);
-struct __can_net *__can_net_init(struct __can_net *net);
-void __can_net_fini(struct __can_net *net);
+/// Returns size of the can_net_t structure.
+size_t can_net_sizeof(void);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
 can_net_t *can_net_create(alloc_t *alloc);
