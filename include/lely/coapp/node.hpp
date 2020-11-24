@@ -477,7 +477,7 @@ class Node : public io::CanNet, public Device {
    * Returns a pointer to the internal CAN network interface
    * from <lely/can/net.h>.
    */
-  __can_net* net() const noexcept;
+  can_net* net() const noexcept;
 
   /// Updates the CAN network time.
   void SetTime();

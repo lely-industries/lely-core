@@ -26,9 +26,9 @@
 #include <lely/libc/time.h>
 #include <lely/util/memory.h>
 
-struct __can_net;
+struct can_net;
 /// An opaque CAN network interface type.
-typedef struct __can_net can_net_t;
+typedef struct can_net can_net_t;
 
 struct __can_timer;
 /// An opaque CAN timer type.

@@ -33,7 +33,7 @@
 #include <assert.h>
 
 /// A CAN network interface.
-struct __can_net {
+struct can_net {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The heap containing all timers.
@@ -134,8 +134,7 @@ can_net_sizeof(void)
 static void *
 can_net_alloc(alloc_t *alloc)
 {
-	struct __can_net *net =
-			mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
+	can_net_t *net = mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
 	if (!net)
 		return NULL;
 
@@ -145,14 +144,14 @@ can_net_alloc(alloc_t *alloc)
 }
 
 static void
-can_net_free(struct __can_net *net)
+can_net_free(can_net_t *net)
 {
 	assert(net);
 	mem_free(net->alloc, net);
 }
 
-static struct __can_net *
-can_net_init(struct __can_net *net)
+static can_net_t *
+can_net_init(can_net_t *net)
 {
 	assert(net);
 
@@ -173,7 +172,7 @@ can_net_init(struct __can_net *net)
 }
 
 static void
-can_net_fini(struct __can_net *net)
+can_net_fini(can_net_t *net)
 {
 	assert(net);
 
