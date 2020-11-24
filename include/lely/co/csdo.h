@@ -161,14 +161,11 @@ int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, struct membuf *buf,
 		co_csdo_up_con_t *con, void *data);
 
+/// Returns alignment of the #co_csdo_t structure.
 size_t co_csdo_alignof(void);
-size_t co_csdo_sizeof(void);
 
-void *__co_csdo_alloc(can_net_t *net);
-void __co_csdo_free(void *ptr);
-struct __co_csdo *__co_csdo_init(struct __co_csdo *sdo, can_net_t *net,
-		co_dev_t *dev, co_unsigned8_t num);
-void __co_csdo_fini(struct __co_csdo *sdo);
+/// Returns size of the #co_csdo_t structure.
+size_t co_csdo_sizeof(void);
 
 /**
  * Creates a new CANopen Client-SDO service. The service is started as if by
