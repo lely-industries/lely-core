@@ -59,7 +59,7 @@ __co_dev_init_from_sdev(struct __co_dev *dev, const struct co_sdev *sdev)
 		goto error_param;
 	}
 
-	if (!__co_dev_init(dev, sdev->id)) {
+	if (!co_dev_init(dev, sdev->id)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -72,7 +72,7 @@ __co_dev_init_from_sdev(struct __co_dev *dev, const struct co_sdev *sdev)
 	return dev;
 
 error_load_sdev:
-	__co_dev_fini(dev);
+	co_dev_fini(dev);
 error_init_dev:
 error_param:
 	set_errc(errc);
@@ -84,7 +84,7 @@ co_dev_create_from_sdev(const struct co_sdev *sdev)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
@@ -98,7 +98,7 @@ co_dev_create_from_sdev(const struct co_sdev *sdev)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;

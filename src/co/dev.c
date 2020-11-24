@@ -45,24 +45,24 @@ static void co_val_set_id(co_unsigned16_t type, void *val,
 #if !LELY_NO_MALLOC
 
 void *
-__co_dev_alloc(void)
+co_dev_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_dev));
+	void *ptr = malloc(sizeof(struct co_dev));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
 }
 
 void
-__co_dev_free(void *ptr)
+co_dev_free(void *ptr)
 {
 	free(ptr);
 }
 
 #endif // !LELY_NO_MALLOC
 
-struct __co_dev *
-__co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
+co_dev_t *
+co_dev_init(co_dev_t *dev, co_unsigned8_t id)
 {
 	assert(dev);
 
@@ -102,7 +102,7 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 }
 
 void
-__co_dev_fini(struct __co_dev *dev)
+co_dev_fini(co_dev_t *dev)
 {
 	assert(dev);
 #if LELY_NO_MALLOC
@@ -128,13 +128,13 @@ co_dev_create(co_unsigned8_t id)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (!__co_dev_init(dev, id)) {
+	if (!co_dev_init(dev, id)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -142,7 +142,7 @@ co_dev_create(co_unsigned8_t id)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;
@@ -152,8 +152,8 @@ void
 co_dev_destroy(co_dev_t *dev)
 {
 	if (dev) {
-		__co_dev_fini(dev);
-		__co_dev_free(dev);
+		co_dev_fini(dev);
+		co_dev_free(dev);
 	}
 }
 

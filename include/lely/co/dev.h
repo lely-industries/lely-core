@@ -97,12 +97,49 @@ extern "C" {
 typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
 
 #if !LELY_NO_MALLOC
-void *__co_dev_alloc(void);
-void __co_dev_free(void *ptr);
-#endif
 
-struct __co_dev *__co_dev_init(struct __co_dev *dev, co_unsigned8_t id);
-void __co_dev_fini(struct __co_dev *dev);
+/**
+ * Allocates memory for co_dev_t structure.
+ *
+ * @returns memory for the co_dev_t structrure, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
+ *
+ * @see co_dev_free()
+ */
+void *co_dev_alloc(void);
+
+/**
+ * Releases memory allocated for co_dev_t structure.
+ *
+ * @param ptr memory to be freed.
+ *
+ * @see co_dev_alloc()
+ */
+void co_dev_free(void *ptr);
+
+#endif // !LELY_NO_MALLOC
+
+/**
+ * Initializes existing co_dev_t object.
+ *
+ * @param id the node-ID of the device (in the range [1..127, 255]). If
+ *           <b>id</b> is 255, the device is unconfigured.
+ *
+ * @returns a pointer to a new CANopen device, or NULL on error. In the latter
+ * case, the error number can be obtained with get_errc().
+ *
+ * @see co_dev_fini()
+ */
+co_dev_t *co_dev_init(co_dev_t *dev, co_unsigned8_t id);
+
+/**
+ * Prepares co_dev_t object for destruction.
+ *
+ * @param dev object to be destroyed.
+ *
+ * @see co_dev_init()
+ */
+void co_dev_fini(co_dev_t *dev);
 
 #if !LELY_NO_MALLOC
 

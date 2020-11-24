@@ -101,7 +101,7 @@ co_dev_create_from_dcf_file(const char *filename)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
@@ -115,7 +115,7 @@ co_dev_create_from_dcf_file(const char *filename)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;
@@ -154,7 +154,7 @@ co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
@@ -168,7 +168,7 @@ co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;
@@ -180,7 +180,7 @@ __co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 	assert(dev);
 	assert(cfg);
 
-	if (!__co_dev_init(dev, 0xff)) {
+	if (!co_dev_init(dev, 0xff)) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize device description");
 		goto error_init_dev;
@@ -192,7 +192,7 @@ __co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 	return dev;
 
 error_parse_cfg:
-	__co_dev_fini(dev);
+	co_dev_fini(dev);
 error_init_dev:
 	return NULL;
 }

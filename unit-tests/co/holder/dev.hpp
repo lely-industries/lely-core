@@ -34,7 +34,7 @@
 class CoDevTHolder : public Holder<co_dev_t> {
 #if LELY_NO_MALLOC
  public:
-  explicit CoDevTHolder(co_unsigned8_t id) { __co_dev_init(Get(), id); }
+  explicit CoDevTHolder(co_unsigned8_t id) { co_dev_init(Get(), id); }
 #else   // !LELY_NO_MALLOC
  public:
   explicit CoDevTHolder(co_unsigned8_t id)

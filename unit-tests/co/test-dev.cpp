@@ -58,7 +58,7 @@ TEST_GROUP(CO_DevInit) {
 #if LELY_NO_MALLOC
     return &device;
 #else
-    return static_cast<co_dev_t*>(__co_dev_alloc());
+    return static_cast<co_dev_t*>(co_dev_alloc());
 #endif
   }
 
@@ -66,12 +66,12 @@ TEST_GROUP(CO_DevInit) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&device, dev);
 #else
-    __co_dev_free(dev);
+    co_dev_free(dev);
 #endif
   }
 
   void DestroyCoDevT(co_dev_t* const dev) {
-    __co_dev_fini(dev);
+    co_dev_fini(dev);
     ReleaseCoDevT(dev);
   }
 
@@ -82,11 +82,11 @@ TEST_GROUP(CO_DevInit) {
 
 #if !LELY_NO_MALLOC
 TEST(CO_DevInit, CODevAllocFree) {
-  void* const ptr = __co_dev_alloc();
+  void* const ptr = co_dev_alloc();
 
   CHECK(ptr != nullptr);
 
-  __co_dev_free(ptr);
+  co_dev_free(ptr);
 }
 #endif  // !LELY_NO_MALLOC
 
@@ -94,7 +94,7 @@ TEST(CO_DevInit, CODevInit) {
   auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
-  POINTERS_EQUAL(dev, __co_dev_init(dev, 0x01));
+  POINTERS_EQUAL(dev, co_dev_init(dev, 0x01));
 
   CHECK_EQUAL(0, co_dev_get_netid(dev));
   CHECK_EQUAL(0x01, co_dev_get_id(dev));
@@ -126,7 +126,7 @@ TEST(CO_DevInit, CODevInit_UnconfiguredId) {
   auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
-  POINTERS_EQUAL(dev, __co_dev_init(dev, 0xff));
+  POINTERS_EQUAL(dev, co_dev_init(dev, 0xff));
 
   CoObjTHolder obj1(0x0000);
   CoObjTHolder obj2(0x0001);
@@ -152,7 +152,7 @@ TEST(CO_DevInit, CODevInit_ZeroId) {
   auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
-  POINTERS_EQUAL(nullptr, __co_dev_init(dev, 0x00));
+  POINTERS_EQUAL(nullptr, co_dev_init(dev, 0x00));
 
   ReleaseCoDevT(dev);
 }
@@ -161,10 +161,10 @@ TEST(CO_DevInit, CODevInit_InvalidId) {
   auto* const dev = AcquireCoDevT();
   CHECK(dev != nullptr);
 
-  POINTERS_EQUAL(nullptr, __co_dev_init(dev, CO_NUM_NODES + 1));
+  POINTERS_EQUAL(nullptr, co_dev_init(dev, CO_NUM_NODES + 1));
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 
-  POINTERS_EQUAL(nullptr, __co_dev_init(dev, 0xff - 1));
+  POINTERS_EQUAL(nullptr, co_dev_init(dev, 0xff - 1));
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 
   ReleaseCoDevT(dev);
@@ -174,7 +174,7 @@ TEST(CO_DevInit, CODevFini) {
   auto* const dev = AcquireCoDevT();
 
   CHECK(dev != nullptr);
-  POINTERS_EQUAL(dev, __co_dev_init(dev, 0x01));
+  POINTERS_EQUAL(dev, co_dev_init(dev, 0x01));
 
   ReleaseCoDevT(dev);
 }
