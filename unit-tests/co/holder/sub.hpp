@@ -39,9 +39,9 @@ class CoSubTHolder : public Holder<co_sub_t> {
       : value({}) {
     if (co_type_is_array(type)) {
       co_val_init_array(&value, &array);
-      __co_sub_init(Get(), subidx, type, &value);
+      co_sub_init(Get(), subidx, type, &value);
     } else {
-      __co_sub_init(Get(), subidx, type, nullptr);
+      co_sub_init(Get(), subidx, type, nullptr);
     }
   }
 

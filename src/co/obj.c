@@ -404,7 +404,7 @@ co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 #if !LELY_NO_MALLOC
 
 void *
-__co_sub_alloc(void)
+co_sub_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_sub));
 	if (!ptr)
@@ -413,15 +413,15 @@ __co_sub_alloc(void)
 }
 
 void
-__co_sub_free(void *ptr)
+co_sub_free(void *ptr)
 {
 	free(ptr);
 }
 
 #endif // !LELY_NO_MALLOC
 
-struct __co_sub *
-__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
+co_sub_t *
+co_sub_init(co_sub_t *sub, co_unsigned8_t subidx, co_unsigned16_t type,
 		void *val)
 {
 	assert(sub);
@@ -465,7 +465,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
 }
 
 void
-__co_sub_fini(struct __co_sub *sub)
+co_sub_fini(co_sub_t *sub)
 {
 	assert(sub);
 
@@ -492,13 +492,13 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 {
 	int errc = 0;
 
-	co_sub_t *sub = __co_sub_alloc();
+	co_sub_t *sub = co_sub_alloc();
 	if (!sub) {
 		errc = get_errc();
 		goto error_alloc_sub;
 	}
 
-	if (!__co_sub_init(sub, subidx, type, NULL)) {
+	if (!co_sub_init(sub, subidx, type, NULL)) {
 		errc = get_errc();
 		goto error_init_sub;
 	}
@@ -506,7 +506,7 @@ co_sub_create(co_unsigned8_t subidx, co_unsigned16_t type)
 	return sub;
 
 error_init_sub:
-	__co_sub_free(sub);
+	co_sub_free(sub);
 error_alloc_sub:
 	set_errc(errc);
 	return NULL;
@@ -516,8 +516,8 @@ void
 co_sub_destroy(co_sub_t *sub)
 {
 	if (sub) {
-		__co_sub_fini(sub);
-		__co_sub_free(sub);
+		co_sub_fini(sub);
+		co_sub_free(sub);
 	}
 }
 

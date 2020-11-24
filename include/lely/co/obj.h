@@ -174,14 +174,16 @@ void *co_obj_alloc(void);
  * @see co_obj_alloc()
  */
 void co_obj_free(void *ptr);
+
 #endif // !LELY_NO_MALLOC
 
 /**
  * Initializes a #co_obj_t instance.
  *
- * @param obj a pointer ot an uninitialized #co_obj_t instance.
+ * @param obj a pointer to an uninitialized #co_obj_t instance.
  * @param idx the object index.
- * @param val pointer to the memory to be used by object to store its value.
+ * @param val pointer to the memory to be used by object and its sub-objects to
+ * store values.
  * @param size size of the memory.
  *
  * @returns <b>obj</b>, or NULL on error. In the latter case, the error number
@@ -195,7 +197,7 @@ co_obj_t *co_obj_init(
 /**
  * Finalizes a #co_obj_t instance.
  *
- * @param dev a pointer to a valid #co_obj_t instance.
+ * @param obj a pointer to a valid #co_obj_t instance.
  *
  * @see co_obj_init()
  */
@@ -424,13 +426,53 @@ void co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data);
 void co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data);
 
 #if !LELY_NO_MALLOC
-void *__co_sub_alloc(void);
-void __co_sub_free(void *ptr);
-#endif
 
-struct __co_sub *__co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx,
+/**
+ * Allocates memory for #co_sub_t structure.
+ *
+ * @returns a pointer to an uninitialized #co_sub_t instance, or NULL on error.
+ * In the latter case, the error number can be obtained with get_errc().
+ *
+ * @see co_sub_free()
+ */
+void *co_sub_alloc(void);
+
+/**
+ * Releases memory allocated for a #co_sub_t instance.
+ *
+ * @param ptr a pointer to an uninitialized #co_sub_t instance.
+
+ * @see co_sub_alloc()
+ */
+void co_sub_free(void *ptr);
+
+#endif // !LELY_NO_MALLOC
+
+/**
+ * Initializes a #co_sub_t instance.
+ *
+ * @param sub a pointer to an uninitialized #co_sub_t instance.
+ * @param subidx the object sub-index.
+ * @param type   the data type of the sub-object value (in the range [1..27]).
+ *               This MUST be the object index of one of the static data types.
+ * @param val pointer to the memory to be used by sub-object to store its value.
+ *
+ * @returns <b>sub</b>, or NULL on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_sub_fini()
+ */
+co_sub_t *co_sub_init(co_sub_t *sub, co_unsigned8_t subidx,
 		co_unsigned16_t type, void *val);
-void __co_sub_fini(struct __co_sub *sub);
+
+/**
+ * Finalizes a #co_sub_t instance.
+ *
+ * @param sub a pointer to a valid #co_sub_t instance.
+ *
+ * @see co_sub_init()
+ */
+void co_sub_fini(co_sub_t *sub);
 
 #if !LELY_NO_MALLOC
 
