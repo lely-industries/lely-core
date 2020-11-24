@@ -46,7 +46,7 @@ static void co_obj_update(co_obj_t *obj);
 static void co_obj_clear(co_obj_t *obj);
 
 void *
-__co_obj_alloc(void)
+co_obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_obj));
 	if (!ptr)
@@ -55,15 +55,15 @@ __co_obj_alloc(void)
 }
 
 void
-__co_obj_free(void *ptr)
+co_obj_free(void *ptr)
 {
 	free(ptr);
 }
 
 #endif // !LELY_NO_MALLOC
 
-struct __co_obj *
-__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
+co_obj_t *
+co_obj_init(co_obj_t *obj, co_unsigned16_t idx, void *val, size_t size)
 {
 	assert(obj);
 #if !LELY_NO_MALLOC
@@ -90,7 +90,7 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
 }
 
 void
-__co_obj_fini(struct __co_obj *obj)
+co_obj_fini(co_obj_t *obj)
 {
 	assert(obj);
 
@@ -113,11 +113,11 @@ co_obj_create(co_unsigned16_t idx)
 {
 	trace("creating object %04X", idx);
 
-	co_obj_t *obj = __co_obj_alloc();
+	co_obj_t *obj = co_obj_alloc();
 	if (!obj)
 		return NULL;
 
-	return __co_obj_init(obj, idx, NULL, 0);
+	return co_obj_init(obj, idx, NULL, 0);
 }
 
 void
@@ -125,8 +125,8 @@ co_obj_destroy(co_obj_t *obj)
 {
 	if (obj) {
 		trace("destroying object %04X", obj->idx);
-		__co_obj_fini(obj);
-		__co_obj_free(obj);
+		co_obj_fini(obj);
+		co_obj_free(obj);
 	}
 }
 

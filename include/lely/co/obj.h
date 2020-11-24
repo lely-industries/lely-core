@@ -155,13 +155,51 @@ typedef co_unsigned32_t co_sub_up_ind_t(
 		const co_sub_t *sub, struct co_sdo_req *req, void *data);
 
 #if !LELY_NO_MALLOC
-void *__co_obj_alloc(void);
-void __co_obj_free(void *ptr);
-#endif
 
-struct __co_obj *__co_obj_init(struct __co_obj *obj, co_unsigned16_t idx,
-		void *val, size_t size);
-void __co_obj_fini(struct __co_obj *obj);
+/**
+ * Allocates memory for #co_obj_t structure.
+ *
+ * @returns a pointer to an uninitialized #co_obj_t instance, or NULL on error.
+ * In the latter case, the error number can be obtained with get_errc().
+ *
+ * @see co_obj_free()
+ */
+void *co_obj_alloc(void);
+
+/**
+ * Releases memory allocated for a #co_obj_t instance.
+ *
+ * @param ptr a pointer to an uninitialized #co_obj_t instance.
+
+ * @see co_obj_alloc()
+ */
+void co_obj_free(void *ptr);
+#endif // !LELY_NO_MALLOC
+
+/**
+ * Initializes a #co_obj_t instance.
+ *
+ * @param obj a pointer ot an uninitialized #co_obj_t instance.
+ * @param idx the object index.
+ * @param val pointer to the memory to be used by object to store its value.
+ * @param size size of the memory.
+ *
+ * @returns <b>obj</b>, or NULL on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ *
+ * @see co_obj_fini()
+ */
+co_obj_t *co_obj_init(
+		co_obj_t *obj, co_unsigned16_t idx, void *val, size_t size);
+
+/**
+ * Finalizes a #co_obj_t instance.
+ *
+ * @param dev a pointer to a valid #co_obj_t instance.
+ *
+ * @see co_obj_init()
+ */
+void co_obj_fini(co_obj_t *obj);
 
 #if !LELY_NO_MALLOC
 

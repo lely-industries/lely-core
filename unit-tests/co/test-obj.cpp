@@ -49,7 +49,7 @@ TEST_GROUP(CO_ObjInit) {
 #if LELY_NO_MALLOC
     return &object;
 #else
-    return static_cast<co_obj_t*>(__co_obj_alloc());
+    return static_cast<co_obj_t*>(co_obj_alloc());
 #endif
   }
 
@@ -57,12 +57,12 @@ TEST_GROUP(CO_ObjInit) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&object, obj);
 #else
-    __co_obj_free(obj);
+    co_obj_free(obj);
 #endif
   }
 
   void DestroyCoObjT(co_obj_t * obj) {
-    __co_obj_fini(obj);
+    co_obj_fini(obj);
     ReleaseCoObjT(obj);
   }
 
@@ -75,7 +75,7 @@ TEST(CO_ObjInit, CoObjInit) {
   auto* const obj = AcquireCoObjT();
 
   CHECK(obj != nullptr);
-  POINTERS_EQUAL(obj, __co_obj_init(obj, 0x1234, NULL, 0));
+  POINTERS_EQUAL(obj, co_obj_init(obj, 0x1234, NULL, 0));
 
   POINTERS_EQUAL(nullptr, co_obj_get_dev(obj));
   CHECK_EQUAL(0x1234, co_obj_get_idx(obj));
@@ -94,7 +94,7 @@ TEST(CO_ObjInit, CoObjInit) {
 
 TEST(CO_ObjInit, CoObjFini) {
   auto* const obj = AcquireCoObjT();
-  __co_obj_init(obj, 0x1234, NULL, 0);
+  co_obj_init(obj, 0x1234, NULL, 0);
   CoDevTHolder dev(0x01);
 
   co_dev_insert_obj(dev.Get(), obj);
@@ -428,7 +428,7 @@ TEST(CO_Obj, CoObjAddressofVal_Null) {
 
 TEST(CO_Obj, CoObjAddressofVal_NoVal) {
 #if LELY_NO_MALLOC
-  __co_obj_init(obj, OBJ_IDX, nullptr, 0);
+  co_obj_init(obj, OBJ_IDX, nullptr, 0);
 #endif
   POINTERS_EQUAL(nullptr, co_obj_addressof_val(obj));
 }
@@ -591,7 +591,7 @@ TEST_GROUP(CO_SubInit) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&sub, sub_);
 #else
-    __co_obj_free(sub_);
+    co_obj_free(sub_);
 #endif
   }
 
