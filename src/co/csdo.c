@@ -2270,7 +2270,8 @@ co_csdo_blk_up_end_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 
 	// Check the number of bytes in the last segment.
-	if ((size_t)CO_SDO_BLK_SIZE_GET(cs) != sdo->size % 7)
+	co_unsigned8_t n = sdo->size ? (sdo->size - 1) % 7 + 1 : 0;
+	if (CO_SDO_BLK_SIZE_GET(cs) != n)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check the CRC.
