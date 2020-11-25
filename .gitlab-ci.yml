@@ -28,7 +28,13 @@ stages:
         --build-arg REGISTRY=$REGISTRY
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/$NAME/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
-  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+      - docker/**/*
+      when: always
+    - when: manual
+      allow_failure: true
 
 .build: &build
   stage: build
@@ -156,6 +162,57 @@ test:gcc:9:
     - build:gcc:9
   <<: *test
 
+docker-gcc:10:
+  <<: *docker-gcc
+  variables:
+    __GNUC__: 10
+
+build:gcc:10:
+  image: $REGISTRY/gcc:10
+  <<: *build
+
+test:gcc:10:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:10
+  <<: *test
+
+build:gcc:no-canfd:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-canfd
+
+test:gcc:no-canfd:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:no-canfd
+  <<: *test
+
+build:gcc:no-cxx:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-cxx
+
+test:gcc:no-cxx:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:no-cxx
+  <<: *test
+
+build:gcc:no-master:
+  image: $REGISTRY/gcc:10
+  <<: *build
+  variables:
+    CONFIGURE_OPTIONS: --disable-master
+
+test:gcc:no-master:
+  image: $REGISTRY/gcc:10
+  dependencies:
+    - build:gcc:no-master
+  <<: *test
+
 .docker-mingw-w64: &docker-mingw-w64
   <<: *docker
   script:
@@ -214,17 +271,17 @@ docker:arm-linux-gnueabihf:
   variables:
     ARCH: armhf
     NAME: arm-linux-gnueabihf
-    TAG: bullseye
+    TAG: buster
 
 build:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
+  image: $REGISTRY/arm-linux-gnueabihf:buster
   <<: *build
   variables:
     ARCH: armhf
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-python
+    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf
 
 test:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:bullseye
+  image: $REGISTRY/arm-linux-gnueabihf:buster
   dependencies:
     - build:arm-linux-gnueabihf
   <<: *test
@@ -236,17 +293,17 @@ docker:aarch64-linux-gnu:
   variables:
     ARCH: arm64
     NAME: aarch64-linux-gnu
-    TAG: bullseye
+    TAG: buster
 
 build:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
+  image: $REGISTRY/aarch64-linux-gnu:buster
   <<: *build
   variables:
     ARCH: arm64
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-python
+    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu
 
 test:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:bullseye
+  image: $REGISTRY/aarch64-linux-gnu:buster
   dependencies:
     - build:aarch64-linux-gnu
   <<: *test
@@ -339,6 +396,13 @@ valgrind:
       - test/test-*.log
       - unit-tests/test-*.log
     expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - if: '$CI_MERGE_REQUEST_EVENT_TYPE == "merge_train"'
+      when: always
+    - when: manual
+      allow_failure: true
 
 docker:lcov:
   <<: *docker
@@ -403,17 +467,20 @@ cppcheck-unix64:
   script:
     - autoreconf -i
     - ./configure --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
         -D_GNU_SOURCE -D__linux__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/include -I. -I./include
+        --quiet
+        -I. -I./include
         --inline-suppr
         --platform=unix64
-        --quiet
         --std=c11 --std=c++11
+        --library=std --library=gnu
         --suppressions-list=suppressions.txt
+        -isrc/io2/win32
         include src
   when: manual
 
@@ -428,23 +495,27 @@ cppcheck-win64:
   tags:
     - docker
     - linux
-  image: $REGISTRY/cppcheck-unix64:bullseye
+  image: $REGISTRY/cppcheck-win64:bullseye
   dependencies: []
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
+    - cppcheck --doc > cppcheck-rules.md
     - cppcheck
-        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -DHAVE_CONFIG_H
-        --enable=warning,style,performance,portability
+        -D_WIN32=1 -D_WIN64=1 -D__MINGW32__=1 -D__MINGW64__=1 -DHAVE_CONFIG_H
+        -U__linux__
+        --enable=warning,style,performance,portability,missingInclude
         --error-exitcode=1
         --force
-        -I/usr/x86_64-w64-mingw32/include -I. -I./include
+        --quiet
+        -I. -I./include
         --inline-suppr
         --platform=win64
-        --quiet
         --std=c11 --std=c++11
+        --library=std --library=gnu --library=windows
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
+        -isrc/io2/linux
         include src
   when: manual
 
@@ -481,8 +552,6 @@ coverity:
 
 pages:
   stage: deploy
-  only:
-    - master
   tags:
     - docker
     - linux
@@ -498,3 +567,7 @@ pages:
     paths:
       - public
     expire_in: 1 weeks
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: never
