@@ -8,7 +8,8 @@ cache:
   policy: pull
 
 stages:
-  - docker
+  - docker1
+  - docker2
   - build
   - test
   - deploy
@@ -20,8 +21,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "web"
 
-.docker: &docker
-  stage: docker
+.docker:
   tags:
     - docker
     - linux
@@ -38,16 +38,23 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       changes:
-      - docker/**/*
+        - docker/**/*
       when: always
-    - when: manual
-      allow_failure: true
 
-.build: &build
+.docker1:
+  extends: .docker
+  stage: docker1
+
+.docker2:
+  extends: .docker
+  stage: docker2
+
+.build:
   stage: build
   tags:
     - docker
     - linux
+  needs: []
   script:
     - autoreconf -i
     - ./configure $CONFIGURE_OPTIONS
@@ -55,7 +62,7 @@ workflow:
   artifacts:
     untracked: true
 
-.test: &test
+.test:
   stage: test
   tags:
     - docker
@@ -71,289 +78,188 @@ workflow:
       - unit-tests/test-*.log
     expire_in: 1 week
 
-.docker-gcc: &docker-gcc
-  <<: *docker
+.docker-gcc:
+  extends: .docker1
   script:
     - docker build
         --build-arg __GNUC__=$__GNUC__
         -t $CI_REGISTRY_IMAGE/gcc:$__GNUC__ docker/gcc
     - docker push $CI_REGISTRY_IMAGE/gcc:$__GNUC__
 
-docker-gcc:4:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 4
+docker-gcc:
+  extends: .docker-gcc
+  parallel:
+    matrix:
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
-build:gcc:4:
-  image: $REGISTRY/gcc:4
-  <<: *build
+build:gcc:
+  extends: .build
+  image: $REGISTRY/gcc:$__GNUC__
+  parallel:
+    matrix:
+      - __GNUC__: [4, 5, 6, 7, 8, 9, 10]
 
 test:gcc:4:
+  extends: .test
   image: $REGISTRY/gcc:4
-  dependencies:
-    - build:gcc:4
-  <<: *test
-
-docker-gcc:5:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 5
-
-build:gcc:5:
-  image: $REGISTRY/gcc:5
-  <<: *build
+  needs: ["build:gcc: [4]"]
 
 test:gcc:5:
+  extends: .test
   image: $REGISTRY/gcc:5
-  dependencies:
-    - build:gcc:5
-  <<: *test
-
-docker-gcc:6:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 6
-
-build:gcc:6:
-  image: $REGISTRY/gcc:6
-  <<: *build
+  needs: ["build:gcc: [5]"]
 
 test:gcc:6:
+  extends: .test
   image: $REGISTRY/gcc:6
-  dependencies:
-    - build:gcc:6
-  <<: *test
-
-docker-gcc:7:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 7
-
-build:gcc:7:
-  image: $REGISTRY/gcc:7
-  <<: *build
+  needs: ["build:gcc: [6]"]
 
 test:gcc:7:
+  extends: .test
   image: $REGISTRY/gcc:7
-  dependencies:
-    - build:gcc:7
-  <<: *test
-
-docker-gcc:8:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 8
-
-build:gcc:8:
-  image: $REGISTRY/gcc:8
-  <<: *build
+  needs: ["build:gcc: [7]"]
 
 test:gcc:8:
+  extends: .test
   image: $REGISTRY/gcc:8
-  dependencies:
-    - build:gcc:8
-  <<: *test
-
-docker-gcc:9:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 9
-
-build:gcc:9:
-  image: $REGISTRY/gcc:9
-  <<: *build
+  needs: ["build:gcc: [8]"]
 
 test:gcc:9:
+  extends: .test
   image: $REGISTRY/gcc:9
-  dependencies:
-    - build:gcc:9
-  <<: *test
-
-docker-gcc:10:
-  <<: *docker-gcc
-  variables:
-    __GNUC__: 10
-
-build:gcc:10:
-  image: $REGISTRY/gcc:10
-  <<: *build
+  needs: ["build:gcc: [9]"]
 
 test:gcc:10:
+  extends: .test
   image: $REGISTRY/gcc:10
-  dependencies:
-    - build:gcc:10
-  <<: *test
+  needs: ["build:gcc: [10]"]
 
-build:gcc:no-canfd:
+build:configure:
+  extends: .build
   image: $REGISTRY/gcc:10
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --disable-canfd
+  parallel:
+    matrix:
+      - CONFIGURE_OPTIONS:
+        - --disable-canfd
+        - --disable-cxx
+        - --disable-master
+        - --enable-ecss-compliance
 
-test:gcc:no-canfd:
+test:configure:disable-canfd:
+  extends: .test
   image: $REGISTRY/gcc:10
-  dependencies:
-    - build:gcc:no-canfd
-  <<: *test
+  needs: ["build:configure: [--disable-canfd]"]
 
-build:gcc:no-cxx:
+test:configure:disable-cxx:
+  extends: .test
   image: $REGISTRY/gcc:10
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --disable-cxx
+  needs: ["build:configure: [--disable-cxx]"]
 
-test:gcc:no-cxx:
+test:configure:disable-master:
+  extends: .test
   image: $REGISTRY/gcc:10
-  dependencies:
-    - build:gcc:no-cxx
-  <<: *test
+  needs: ["build:configure: [--disable-master]"]
 
-build:gcc:no-master:
+test:configure:enable-ecss-compliance:
+  extends: .test
   image: $REGISTRY/gcc:10
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --disable-master
+  needs: ["build:configure: [--enable-ecss-compliance]"]
 
-test:gcc:no-master:
-  image: $REGISTRY/gcc:10
-  dependencies:
-    - build:gcc:no-master
-  <<: *test
-
-build:gcc:ecss:
-  image: $REGISTRY/gcc:10
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --enable-ecss-compliance
-
-test:gcc:ecss:
-  image: $REGISTRY/gcc:10
-  dependencies:
-    - build:gcc:ecss
-  <<: *test
-
-.docker-mingw-w64: &docker-mingw-w64
-  <<: *docker
+docker:mingw-w64:
+  extends: .docker1
   script:
     - docker build
         --build-arg ARCH=$ARCH
         -t $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG docker/mingw-w64/$TAG
     - docker push $CI_REGISTRY_IMAGE/$ARCH-w64-mingw32:$TAG
-
-docker:i686-w64-mingw32:
-  <<: *docker-mingw-w64
   variables:
-    ARCH: i686
     TAG: bullseye
+  parallel:
+    matrix:
+      - ARCH: [i686, x86_64]
 
-build:i686-w64-mingw32:
-  image: $REGISTRY/i686-w64-mingw32:bullseye
-  <<: *build
+build:mingw-w64:
+  extends: .build
+  image: $REGISTRY/$HOST:bullseye
   variables:
-    CONFIGURE_OPTIONS: --host=i686-w64-mingw32 --disable-python
+    CONFIGURE_OPTIONS: --host=$HOST --disable-python
+  parallel:
+    matrix:
+      - HOST: [i686-w64-mingw32, x86_64-w64-mingw32]
 
 test:i686-w64-mingw32:
+  extends: .test
   image: $REGISTRY/i686-w64-mingw32:bullseye
-  dependencies:
-    - build:i686-w64-mingw32
-  <<: *test
-
-docker:x86_64-w64-mingw32:
-  <<: *docker-mingw-w64
-  variables:
-    ARCH: x86_64
-    TAG: bullseye
-
-build:x86_64-w64-mingw32:
-  image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  <<: *build
-  variables:
-    CONFIGURE_OPTIONS: --host=x86_64-w64-mingw32 --disable-python
+  needs: ["build:mingw-w64: [i686-w64-mingw32]"]
 
 test:x86_64-w64-mingw32:
+  extends: .test
   image: $REGISTRY/x86_64-w64-mingw32:bullseye
-  dependencies:
-    - build:x86_64-w64-mingw32
-  <<: *test
+  needs: ["build:mingw-w64: [x86_64-w64-mingw32]"]
 
-.docker-crossbuild: &docker-crossbuild
-  <<: *docker
+docker:crossbuild:
+  extends: .docker1
   script:
     - docker build
         --build-arg ARCH=$ARCH
         --build-arg NAME=$NAME
         -t $CI_REGISTRY_IMAGE/$NAME:$TAG docker/crossbuild/$TAG
     - docker push $CI_REGISTRY_IMAGE/$NAME:$TAG
+  parallel:
+    matrix:
+      - ARCH: armhf
+        NAME: arm-linux-gnueabihf
+        TAG: buster
+      - ARCH: arm64
+        NAME: aarch64-linux-gnu
+        TAG: buster
 
-docker:arm-linux-gnueabihf:
-  <<: *docker-crossbuild
-  variables:
-    ARCH: armhf
-    NAME: arm-linux-gnueabihf
-    TAG: buster
-
-build:arm-linux-gnueabihf:
-  image: $REGISTRY/arm-linux-gnueabihf:buster
-  <<: *build
+build:crossbuild:
+  extends: .build
+  image: $REGISTRY/$HOST:buster
   variables:
     ARCH: armhf
     # TODO enable unit tests (switch to bullseye)
-    CONFIGURE_OPTIONS: --host=arm-linux-gnueabihf --disable-unit-tests
+    CONFIGURE_OPTIONS: --host=$HOST --disable-unit-tests
+  parallel:
+    matrix:
+      - HOST: [arm-linux-gnueabihf, aarch64-linux-gnu]
 
 test:arm-linux-gnueabihf:
+  extends: .test
   image: $REGISTRY/arm-linux-gnueabihf:buster
-  dependencies:
-    - build:arm-linux-gnueabihf
-  <<: *test
-  variables:
-    ARCH: armhf
-
-docker:aarch64-linux-gnu:
-  <<: *docker-crossbuild
-  variables:
-    ARCH: arm64
-    NAME: aarch64-linux-gnu
-    TAG: buster
-
-build:aarch64-linux-gnu:
-  image: $REGISTRY/aarch64-linux-gnu:buster
-  <<: *build
-  variables:
-    ARCH: arm64
-    # TODO enable unit tests (switch to bullseye)
-    CONFIGURE_OPTIONS: --host=aarch64-linux-gnu --disable-unit-tests
+  needs: ["build:crossbuild: [arm-linux-gnueabihf]"]
 
 test:aarch64-linux-gnu:
+  extends: .test
   image: $REGISTRY/aarch64-linux-gnu:buster
-  dependencies:
-    - build:aarch64-linux-gnu
-  <<: *test
+  needs: ["build:crossbuild: [aarch64-linux-gnu]"]
+
+docker:build:
+  extends: .docker1
   variables:
-    ARCH: arm64
+    NAME: build
+    TAG: bullseye
 
 docker:arm-none-eabi:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: arm-none-eabi
     TAG: bullseye
 
 build:arm-none-eabi:
+  extends: .build
   image: $REGISTRY/arm-none-eabi:bullseye
-  <<: *build
   variables:
     CFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     CONFIGURE_OPTIONS: --host=arm-none-eabi --disable-tools --disable-tests --disable-unit-tests --disable-python --disable-threads --disable-daemon
     CXXFLAGS: -g -O2 -mcpu=cortex-m3 -D__NEWLIB__
     LDFLAGS: --specs=nosys.specs
 
-docker:build:
-  <<: *docker
-  variables:
-    NAME: build
-    TAG: bullseye
-
 docker:doc:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: doc
     TAG: bullseye
@@ -364,7 +270,7 @@ doc:
     - docker
     - linux
   image: $REGISTRY/doc:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure
@@ -375,7 +281,7 @@ doc:
     expire_in: 1 week
 
 docker:cpplint:
-  <<: *docker
+  extends: .docker1
   variables:
     NAME: cpplint
     TAG: bullseye
@@ -395,35 +301,8 @@ cpplint:
         $(find unit-tests -name *.cpp -o -name *.hpp)
 
 docker:clang-format:
-  <<: *docker
-  variables:
-    NAME: clang-format
-    TAG: bullseye
-
-clang-format:
-  stage: test
-  tags:
-    - docker
-    - linux
-  image: $REGISTRY/clang-format:bullseye
-  script:
-    - clang-format-10
-        -n
-        --Werror
-        $(find include -name *.h)
-        $(find src -name *.c)
-        $(find unit-tests -name *.cpp -o -name *.hpp)
-# TODO - a lot of C++ code changes after clang-format run
-#    - rm .clang-format
-#    - ln -s .clang-format.cpp .clang-format
-#    - clang-format-10
-#        -n
-#        --Werror
-#        $(find include -name *.hpp)
-#        $(find src -name *.cpp)
-
-docker:clang-format:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: clang-format
     TAG: bullseye
@@ -444,7 +323,8 @@ clang-format:
 # TODO - enable C++ clang-format check
 
 docker:valgrind:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: valgrind
     TAG: bullseye
@@ -455,7 +335,7 @@ valgrind:
     - docker
     - linux
   image: $REGISTRY/valgrind:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --disable-cython
@@ -481,7 +361,7 @@ valgrind:ecss:
     - docker
     - linux
   image: $REGISTRY/valgrind:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --enable-ecss-compliance
@@ -495,7 +375,8 @@ valgrind:ecss:
     expire_in: 1 week
 
 docker:lcov:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: lcov
     TAG: bullseye
@@ -506,7 +387,7 @@ lcov:
     - docker
     - linux
   image: $REGISTRY/lcov:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --enable-code-coverage --disable-shared $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
@@ -519,7 +400,8 @@ lcov:
     expire_in: 1 week
 
 docker:scan-build:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: scan-build
     TAG: bullseye
@@ -530,7 +412,7 @@ scan-build:
     - docker
     - linux
   image: $REGISTRY/scan-build:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - scan-build ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
@@ -542,7 +424,8 @@ scan-build:
     expire_in: 1 week
 
 docker:cppcheck-unix64:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   variables:
     NAME: cppcheck-unix64
     TAG: bullseye
@@ -553,7 +436,7 @@ cppcheck-unix64:
     - docker
     - linux
   image: $REGISTRY/cppcheck-unix64:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --disable-python
@@ -578,7 +461,8 @@ cppcheck-unix64:
     expire_in: 1 week
 
 docker:cppcheck-win64:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:mingw-w64: [x86_64]"]
   variables:
     NAME: cppcheck-win64
     TAG: bullseye
@@ -589,7 +473,7 @@ cppcheck-win64:
     - docker
     - linux
   image: $REGISTRY/cppcheck-win64:bullseye
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --host=x86_64-w64-mingw32 --disable-python
@@ -616,7 +500,7 @@ cppcheck-win64:
     expire_in: 1 week
 
 docker:python-checks:
-  <<: *docker
+  extends: .docker1
   variables:
     NAME: python-checks
     TAG: 3.8-slim
@@ -627,13 +511,13 @@ python-checks:
     - docker
     - linux
   image: $REGISTRY/python-checks:3.8-slim
-  dependencies: []
+  needs: []
   script:
     - black --diff --check python/dcf-tools/
     - flake8 python/dcf-tools
 
 docker:coverity:
-  <<: *docker
+  extends: .docker1
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
@@ -648,7 +532,7 @@ coverity:
     - docker
     - linux
   image: $REGISTRY/coverity:gcc9
-  dependencies: []
+  needs: []
   script:
     - autoreconf -i
     - ./configure --disable-cython $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
@@ -668,7 +552,8 @@ coverity:
       allow_failure: true
 
 docker:sonarcloud:
-  <<: *docker
+  extends: .docker2
+  needs: ["docker:build"]
   script:
     - docker build
         --build-arg REGISTRY=$REGISTRY
@@ -683,7 +568,7 @@ sonarcloud:
     - docker
     - linux
   image: $REGISTRY/sonarcloud:bullseye
-  dependencies: []
+  needs: []
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
     GIT_DEPTH: "0"
@@ -717,9 +602,7 @@ pages:
     - docker
     - linux
   image: alpine:latest
-  dependencies:
-    - doc
-    - lcov
+  needs: ["doc", "lcov"]
   script:
     - mkdir -p public
     - mv coverage public/lcov
