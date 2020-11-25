@@ -51,9 +51,9 @@ struct co_tpdo;
 /// An opaque CANopen Transmit-PDO service type.
 typedef struct co_tpdo co_tpdo_t;
 
-struct __co_sync;
+struct co_sync;
 /// An opaque CANopen SYNC producer/consumer service type.
-typedef struct __co_sync co_sync_t;
+typedef struct co_sync co_sync_t;
 
 struct __co_time;
 /// An opaque CANopen TIME producer/consumer service type.

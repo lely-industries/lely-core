@@ -36,7 +36,7 @@
 #include <assert.h>
 
 /// A CANopen SYNC producer/consumer service.
-struct __co_sync {
+struct co_sync {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
