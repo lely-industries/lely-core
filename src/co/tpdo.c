@@ -92,7 +92,7 @@ static void *co_tpdo_alloc(can_net_t *net);
 /// Frees memory allocated for #co_tpdo_t object.
 static void co_tpdo_free(co_tpdo_t *pdo);
 
-/// Initializes #co_rpdo_t object.
+/// Initializes #co_tpdo_t object.
 static co_tpdo_t *co_tpdo_init(co_tpdo_t *pdo, can_net_t *net, co_dev_t *dev,
 		co_unsigned16_t num);
 

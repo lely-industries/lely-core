@@ -197,8 +197,6 @@ TEST(CO_SyncInit, CoSyncCreate) {
 
 TEST(CO_SyncInit, CoSyncDestroy_DestroyNull) { co_sync_destroy(nullptr); }
 
-TEST(CO_SyncInit, CoSyncFree_Null) { __co_sync_free(nullptr); }
-
 TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   static co_sync_t* sync;
   std::unique_ptr<CoObjTHolder> obj1006;
