@@ -30,7 +30,11 @@
 namespace lely {
 namespace compat {
 
-#if __cplusplus <= 201703L
+#if __cpp_lib_chrono >= 201907L
+
+using ::std::chrono::clock_cast;
+
+#else  // __cpp_lib_chrono < 201907L
 
 template <class Dest, class Source, class Duration>
 // clang-format off
@@ -60,7 +64,7 @@ clock_cast(const ::std::chrono::time_point<Source, Duration>& t) {
   return time_point{t.time_since_epoch() + ((d1 - s) + (d2 - s)) / 2};
 }
 
-#endif  // __cplusplus <= 201703L
+#endif  // __cpp_lib_chrono < 201907L
 
 }  // namespace compat
 }  // namespace lely
