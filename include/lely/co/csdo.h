@@ -121,6 +121,25 @@ int co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		void *data);
 
 /**
+ * Submits a series of download requests to a local device. This function calls
+ * co_dev_dn_req() for each entry in the specified concise DCF.
+ *
+ * @param dev   a pointer to CANopen device.
+ * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+ *              in CiA 302-3 version 4.1.0).
+ * @param end   a pointer to one past the last byte in the concise DCF. At most
+ *              `end - begin` bytes are read.
+ * @param con   a pointer to the confirmation function (can be NULL).
+ * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
+ *              passed as the last parameter to <b>con</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
+
+/**
  * Submits an upload request to a local device. This is equivalent to a read
  * operation from an object dictionary.
  *
@@ -270,6 +289,12 @@ void co_csdo_get_up_ind(
 void co_csdo_set_up_ind(co_csdo_t *sdo, co_csdo_ind_t *ind, void *data);
 
 /**
+ * Returns 1 of the COB-IDs of the specified Client-SDO service are valid, and 0
+ * if not.
+ */
+int co_csdo_is_valid(const co_csdo_t *sdo);
+
+/**
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
  * ongoing.
  */
@@ -330,6 +355,25 @@ int co_csdo_dn_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 int co_csdo_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
 		co_csdo_dn_con_t *con, void *data);
+
+/**
+ * Submits a series of download requests to a remote Server-SDO. This function
+ * calls co_csdo_dn_req() for each entry in the specified concise DCF.
+ *
+ * @param sdo   a pointer to a Client-SDO service.
+ * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+ *              in CiA 302-3 version 4.1.0).
+ * @param end   a pointer to one past the last byte in the concise DCF. At most
+ *              `end - begin` bytes are read.
+ * @param con   a pointer to the confirmation function (can be NULL).
+ * @param data  a pointer to user-specified data (can be NULL). <b>data</b> is
+ *              passed as the last parameter to <b>con</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_csdo_dn_dcf_req(co_csdo_t *sdo, const uint_least8_t *begin,
+		const uint_least8_t *end, co_csdo_dn_con_t *con, void *data);
 
 /**
  * Submits an upload request to a remote Server-SDO. This requests the server

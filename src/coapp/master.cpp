@@ -185,6 +185,63 @@ BasicMaster::SetTimeout(const ::std::chrono::milliseconds& timeout) {
 }
 
 void
+BasicMaster::SubmitWriteDcf(uint8_t id, SdoDownloadDcfRequest& req) {
+  ::std::error_code ec;
+  SubmitWriteDcf(id, req, ec);
+  if (ec) throw SdoError(id, req.idx, req.subidx, ec, "SubmitWriteDcf");
+}
+
+void
+BasicMaster::SubmitWriteDcf(uint8_t id, SdoDownloadDcfRequest& req,
+                            ::std::error_code& ec) {
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  ec.clear();
+  auto sdo = GetSdo(id);
+  if (sdo) {
+    SetTime();
+    sdo->SubmitDownloadDcf(req);
+  } else {
+    ec = SdoErrc::NO_SDO;
+  }
+}
+
+SdoFuture<void>
+BasicMaster::AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                           const uint8_t* end,
+                           const ::std::chrono::milliseconds& timeout) {
+  if (!exec) exec = GetExecutor();
+
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  auto sdo = GetSdo(id);
+  if (sdo) {
+    SetTime();
+    return sdo->AsyncDownloadDcf(exec, begin, end, timeout);
+  } else {
+    return make_error_sdo_future<void>(id, 0, 0, SdoErrc::NO_SDO,
+                                       "AsyncWriteDcf");
+  }
+}
+
+SdoFuture<void>
+BasicMaster::AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const char* path,
+                           const ::std::chrono::milliseconds& timeout) {
+  if (!exec) exec = GetExecutor();
+
+  ::std::lock_guard<BasicLockable> lock(*this);
+
+  auto sdo = GetSdo(id);
+  if (sdo) {
+    SetTime();
+    return sdo->AsyncDownloadDcf(exec, path, timeout);
+  } else {
+    return make_error_sdo_future<void>(id, 0, 0, SdoErrc::NO_SDO,
+                                       "AsyncWriteDcf");
+  }
+}
+
+void
 BasicMaster::Insert(DriverBase& driver) {
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
