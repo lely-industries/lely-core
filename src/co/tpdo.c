@@ -2,6 +2,15 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the Transmit-PDO functions.
  *
+ * The implementation follows CiA 301 version 4.2.0. See section 7.2.2 for the
+ * definition of the PDO services and protocols. The following objects determine
+ * the behavior of TPDOs:
+ * - 1007: Synchronous window length
+ * - 1800..19FF: TPDO communication parameter
+ * - 1A00..1BFF: TPDO mapping parameter
+ * See table 72 for a description of the transmission type in the communication
+ * parameters and table 73 for a description of the mapping parameters.
+ *
  * @see lely/co/tpdo.h
  *
  * @copyright 2016-2020 Lely Industries N.V.
@@ -52,12 +61,16 @@ struct __co_tpdo {
 	can_recv_t *recv;
 	/// A pointer to the CAN timer for events.
 	can_timer_t *timer_event;
+	/// A pointer to the CAN timer for the synchronous time window.
+	can_timer_t *timer_swnd;
 	/// A buffered CAN frame, used for RTR-only or event-driven TPDOs.
 	struct can_msg msg;
 	/// The time at which the next event-driven TPDO may be sent.
 	struct timespec inhibit;
 	/// A flag indicating the occurrence of an event.
 	unsigned int event : 1;
+	/// A flag indicating the synchronous time window has expired.
+	unsigned int swnd : 1;
 	/// The SYNC start value.
 	co_unsigned8_t sync;
 	/// The SYNC counter value.
@@ -68,6 +81,10 @@ struct __co_tpdo {
 	co_tpdo_ind_t *ind;
 	/// A pointer to user-specified data for #ind.
 	void *data;
+	/// A pointer to the sampling indication function.
+	co_tpdo_sample_ind_t *sample_ind;
+	/// A pointer to user-specified data for #sample_ind.
+	void *sample_data;
 };
 
 /**
@@ -83,6 +100,12 @@ static void co_tpdo_init_recv(co_tpdo_t *pdo);
  * is updated.
  */
 static void co_tpdo_init_timer_event(co_tpdo_t *pdo);
+
+/**
+ * Initializes the CAN timer for the synchronous time window of a Transmit-PDO
+ * service.
+ */
+static void co_tpdo_init_timer_swnd(co_tpdo_t *pdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -115,6 +138,17 @@ static int co_tpdo_recv(const struct can_msg *msg, void *data);
  * @see can_timer_func_t
  */
 static int co_tpdo_timer_event(const struct timespec *tp, void *data);
+
+/**
+ * The CAN timer callback function for the synchronous time window of a
+ * Transmit-PDO service.
+ *
+ * @see can_timer_func_t
+ */
+static int co_tpdo_timer_swnd(const struct timespec *tp, void *data);
+
+/// The default sampling indication function. @see co_tpdo_sample_ind_t
+static int default_sample_ind(co_tpdo_t *pdo, void *data);
 
 /**
  * Initializes a CAN frame to be sent by a Transmit-PDO service.
@@ -197,17 +231,28 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(pdo->timer_event, &co_tpdo_timer_event, pdo);
 
+	pdo->timer_swnd = can_timer_create();
+	if (!pdo->timer_swnd) {
+		errc = get_errc();
+		goto error_create_timer_swnd;
+	}
+	can_timer_set_func(pdo->timer_swnd, &co_tpdo_timer_swnd, pdo);
+
 	pdo->msg = (struct can_msg)CAN_MSG_INIT;
 
 	pdo->inhibit = (struct timespec){ 0, 0 };
 	pdo->event = 0;
+	pdo->swnd = 1;
 	pdo->sync = 0;
 	pdo->cnt = 0;
 
-	co_sdo_req_init(&pdo->req);
+	co_sdo_req_init(&pdo->req, NULL);
 
 	pdo->ind = NULL;
 	pdo->data = NULL;
+
+	pdo->sample_ind = &default_sample_ind;
+	pdo->sample_data = NULL;
 
 	if (co_tpdo_start(pdo) == -1) {
 		errc = get_errc();
@@ -218,6 +263,8 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 
 	// co_tpdo_stop(pdo);
 error_start:
+	can_timer_destroy(pdo->timer_swnd);
+error_create_timer_swnd:
 	can_timer_destroy(pdo->timer_event);
 error_create_timer_event:
 	can_recv_destroy(pdo->recv);
@@ -237,6 +284,7 @@ __co_tpdo_fini(struct __co_tpdo *pdo)
 
 	co_sdo_req_fini(&pdo->req);
 
+	can_timer_destroy(pdo->timer_swnd);
 	can_timer_destroy(pdo->timer_event);
 	can_recv_destroy(pdo->recv);
 }
@@ -304,6 +352,7 @@ co_tpdo_start(co_tpdo_t *pdo)
 
 	can_net_get_time(pdo->net, &pdo->inhibit);
 	pdo->event = 0;
+	pdo->swnd = 1;
 	pdo->sync = pdo->comm.sync;
 	pdo->cnt = 0;
 
@@ -318,6 +367,7 @@ co_tpdo_stop(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
+	can_timer_stop(pdo->timer_swnd);
 	can_timer_stop(pdo->timer_event);
 
 	can_recv_stop(pdo->recv);
@@ -395,6 +445,27 @@ co_tpdo_set_ind(co_tpdo_t *pdo, co_tpdo_ind_t *ind, void *data)
 	pdo->data = data;
 }
 
+void
+co_tpdo_get_sample_ind(
+		const co_tpdo_t *pdo, co_tpdo_sample_ind_t **pind, void **pdata)
+{
+	assert(pdo);
+
+	if (pind)
+		*pind = pdo->sample_ind;
+	if (pdata)
+		*pdata = pdo->sample_data;
+}
+
+void
+co_tpdo_set_sample_ind(co_tpdo_t *pdo, co_tpdo_sample_ind_t *ind, void *data)
+{
+	assert(pdo);
+
+	pdo->sample_ind = ind ? ind : &default_sample_ind;
+	pdo->sample_data = ind ? data : NULL;
+}
+
 int
 co_tpdo_event(co_tpdo_t *pdo)
 {
@@ -404,6 +475,7 @@ co_tpdo_event(co_tpdo_t *pdo)
 	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
 		return 0;
 
+	// See table 72 (Description of TPDO transmission type) in CiA 301.
 	switch (pdo->comm.trans) {
 	case 0x00: pdo->event = 1; break;
 	case 0xfd:
@@ -429,9 +501,12 @@ co_tpdo_event(co_tpdo_t *pdo)
 		if (co_tpdo_send_frame(pdo, &pdo->msg) == -1)
 			return -1;
 
-		if (pdo->comm.inhibit)
+		if (pdo->comm.inhibit) {
+			// The inhibit time value is defined as a multiple of
+			// 100 microseconds.
 			timespec_add_usec(
 					&pdo->inhibit, pdo->comm.inhibit * 100);
+		}
 		break;
 	default:
 		// Ignore events if the transmission type is synchronous.
@@ -458,6 +533,7 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 		return 0;
 
 	// Ignore SYNC objects if the transmission type is not synchronous.
+	// See table 72 (Description of TPDO transmission type) in CiA 301.
 	if (pdo->comm.trans > 0xf0 && pdo->comm.trans != 0xfc)
 		return 0;
 
@@ -468,6 +544,10 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 		pdo->sync = 0;
 		pdo->cnt = 0;
 	}
+
+	// Reset the time window for synchronous PDOs.
+	pdo->swnd = 0;
+	co_tpdo_init_timer_swnd(pdo);
 
 	if (!pdo->comm.trans) {
 		// In case of a synchronous (acyclic) TPDO, do nothing unless an
@@ -483,14 +563,45 @@ co_tpdo_sync(co_tpdo_t *pdo, co_unsigned8_t cnt)
 		pdo->cnt = 0;
 	}
 
+	assert(pdo->sample_ind);
+	return pdo->sample_ind(pdo, pdo->sample_data);
+}
+
+int
+co_tpdo_sample_res(co_tpdo_t *pdo, co_unsigned32_t ac)
+{
+	assert(pdo);
+
+	// Check whether the PDO exists and is valid.
+	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
+		return 0;
+
+	// Ignore the sampling result if the transmission type is not
+	// synchronous or RTR-only. See table 72 (Description of TPDO
+	// transmission type) in CiA 301.
+	if (pdo->comm.trans > 0xf0 && pdo->comm.trans != 0xfc
+			&& pdo->comm.trans != 0xfd)
+		return 0;
+
+	// Check if the synchronous window expired.
+	if (!ac && pdo->comm.trans != 0xfd && pdo->swnd)
+		ac = CO_SDO_AC_TIMEOUT;
+
+	// Do not send a PDO in case of an error.
+	if (ac) {
+		if (pdo->ind)
+			pdo->ind(pdo, ac, NULL, 0, pdo->data);
+		return 0;
+	}
+
 	if (co_tpdo_init_frame(pdo, &pdo->msg) == -1)
 		return -1;
 
-	// Send a synchronous TPDO right away.
-	if (pdo->comm.trans <= 0xf0 && co_tpdo_send_frame(pdo, &pdo->msg) == -1)
-		return -1;
+	// In case of an RTR-only (synchronous) PDO, wait for the RTR.
+	if (pdo->comm.trans == 0xfc)
+		return 0;
 
-	return 0;
+	return co_tpdo_send_frame(pdo, &pdo->msg);
 }
 
 void
@@ -535,6 +646,25 @@ co_tpdo_init_timer_event(co_tpdo_t *pdo)
 			&& pdo->comm.event)
 		// Reset the event timer.
 		can_timer_timeout(pdo->timer_event, pdo->net, pdo->comm.event);
+}
+
+static void
+co_tpdo_init_timer_swnd(co_tpdo_t *pdo)
+{
+	assert(pdo);
+	assert(!(pdo->comm.cobid & CO_PDO_COBID_VALID));
+	assert(pdo->comm.trans <= 0xf0 || pdo->comm.trans == 0xfc);
+
+	can_timer_stop(pdo->timer_swnd);
+	// Ignore the synchronous window length unless the TPDO is valid and
+	// synchronous.
+	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
+	if (swnd) {
+		struct timespec start = { 0, 0 };
+		can_net_get_time(pdo->net, &start);
+		timespec_add_usec(&start, swnd);
+		can_timer_start(pdo->timer_swnd, pdo->net, &start, NULL);
+	}
 }
 
 static co_unsigned32_t
@@ -588,12 +718,16 @@ co_1800_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 		pdo->msg = (struct can_msg)CAN_MSG_INIT;
 		pdo->event = 0;
+		pdo->swnd = 1;
 
 		co_tpdo_init_recv(pdo);
 		co_tpdo_init_timer_event(pdo);
+		can_timer_stop(pdo->timer_swnd);
 		break;
 	}
 	case 2: {
+		// See table 72 (Description of TPDO transmission type) in CiA
+		// 301.
 		assert(type == CO_DEFTYPE_UNSIGNED8);
 		co_unsigned8_t trans = val.u8;
 		co_unsigned8_t trans_old = co_sub_get_val_u8(sub);
@@ -701,11 +835,12 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			if (!map)
 				continue;
 
+			// See figure 73 (Structure of TPDO mapping) in CiA 301.
 			co_unsigned16_t idx = (map >> 16) & 0xffff;
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			co_unsigned8_t len = map & 0xff;
 
-			// Check the PDO length.
+			// Check the PDO length (in bits).
 			if ((bits += len) > CAN_MAX_LEN * 8)
 				return CO_SDO_AC_PDO_LEN;
 
@@ -729,6 +864,7 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return CO_SDO_AC_PARAM_VAL;
 
 		if (map) {
+			// See figure 73 (Structure of TPDO mapping) in CiA 301.
 			co_unsigned16_t idx = (map >> 16) & 0xffff;
 			co_unsigned8_t subidx = (map >> 8) & 0xff;
 			// Check whether the sub-object exists and can be mapped
@@ -754,6 +890,7 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 	co_tpdo_t *pdo = data;
 	assert(pdo);
 
+	// See table 72 (Description of TPDO transmission type) in CiA 301.
 	switch (pdo->comm.trans) {
 	case 0xfc: {
 		uint_least32_t mask = (pdo->comm.cobid & CO_PDO_COBID_FRAME)
@@ -766,8 +903,9 @@ co_tpdo_recv(const struct can_msg *msg, void *data)
 		break;
 	}
 	case 0xfd:
-		if (!co_tpdo_init_frame(pdo, &pdo->msg))
-			co_tpdo_send_frame(pdo, &pdo->msg);
+		// Start sampling.
+		assert(pdo->sample_ind);
+		pdo->sample_ind(pdo, pdo->sample_data);
 		break;
 	default: break;
 	}
@@ -785,6 +923,26 @@ co_tpdo_timer_event(const struct timespec *tp, void *data)
 	co_tpdo_event(pdo);
 
 	return 0;
+}
+
+static int
+co_tpdo_timer_swnd(const struct timespec *tp, void *data)
+{
+	(void)tp;
+	co_tpdo_t *pdo = data;
+	assert(pdo);
+
+	pdo->swnd = 1;
+
+	return 0;
+}
+
+static int
+default_sample_ind(co_tpdo_t *pdo, void *data)
+{
+	(void)data;
+
+	return co_tpdo_sample_res(pdo, 0);
 }
 
 static int
