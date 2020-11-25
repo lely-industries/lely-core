@@ -246,7 +246,7 @@ __co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net, co_dev_t *dev,
 	pdo->sync = 0;
 	pdo->cnt = 0;
 
-	co_sdo_req_init(&pdo->req, NULL);
+	co_sdo_req_init(&pdo->req);
 
 	pdo->ind = NULL;
 	pdo->data = NULL;
