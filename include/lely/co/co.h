@@ -47,9 +47,9 @@ struct co_rpdo;
 /// An opaque CANopen Receive-PDO service type.
 typedef struct co_rpdo co_rpdo_t;
 
-struct __co_tpdo;
+struct co_tpdo;
 /// An opaque CANopen Transmit-PDO service type.
-typedef struct __co_tpdo co_tpdo_t;
+typedef struct co_tpdo co_tpdo_t;
 
 struct __co_sync;
 /// An opaque CANopen SYNC producer/consumer service type.
