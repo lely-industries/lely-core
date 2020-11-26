@@ -58,6 +58,18 @@ struct __co_time {
 	void *data;
 };
 
+/// Allocates memory for #co_time_t object using allocator from #can_net_t.
+static void *co_time_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_time_t object.
+static void co_time_free(co_time_t *time);
+
+/// Initializes #co_time_t object.
+static co_time_t *co_time_init(co_time_t *time, can_net_t *net, co_dev_t *dev);
+
+/// Finalizes #co_tpdo_t object.
+static void co_time_fini(co_time_t *time);
+
 /**
  * Updates and (de)activates a TIME producer/consumer service. This function is
  * invoked by the download indication functions when the TIME COB-ID (object
@@ -151,99 +163,6 @@ co_time_sizeof(void)
 	return sizeof(co_time_t);
 }
 
-void *
-__co_time_alloc(can_net_t *net)
-{
-	struct __co_time *time = mem_alloc(can_net_get_alloc(net),
-			co_time_alignof(), co_time_sizeof());
-	if (!time)
-		return NULL;
-
-	time->net = net;
-
-	return time;
-}
-
-void
-__co_time_free(void *ptr)
-{
-	struct __co_time *time = ptr;
-
-	if (time)
-		mem_free(co_time_get_alloc(time), time);
-}
-
-struct __co_time *
-__co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
-{
-	assert(time);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	time->net = net;
-	time->dev = dev;
-
-	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
-	if (!obj_1012) {
-		errc = errnum2c(ERRNUM_NOSYS);
-		goto error_obj_1012;
-	}
-
-	time->cobid = 0;
-
-	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
-
-	time->recv = can_recv_create(co_time_get_alloc(time));
-	if (!time->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(time->recv, &co_time_recv, time);
-
-	time->timer = can_timer_create(co_time_get_alloc(time));
-	if (!time->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(time->timer, &co_time_timer, time);
-
-	time->start = (struct timespec){ 0, 0 };
-
-	time->ind = NULL;
-	time->data = NULL;
-
-	if (co_time_start(time) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return time;
-
-	// co_time_stop(time);
-error_start:
-	can_timer_destroy(time->timer);
-error_create_timer:
-	can_recv_destroy(time->recv);
-error_create_recv:
-	co_obj_set_dn_ind(obj_1012, NULL, NULL);
-error_obj_1012:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_time_fini(struct __co_time *time)
-{
-	assert(time);
-
-	co_time_stop(time);
-
-	can_timer_destroy(time->timer);
-	can_recv_destroy(time->recv);
-}
-
 co_time_t *
 co_time_create(can_net_t *net, co_dev_t *dev)
 {
@@ -251,13 +170,13 @@ co_time_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_time_t *time = __co_time_alloc(net);
+	co_time_t *time = co_time_alloc(net);
 	if (!time) {
 		errc = get_errc();
 		goto error_alloc_time;
 	}
 
-	if (!__co_time_init(time, net, dev)) {
+	if (!co_time_init(time, net, dev)) {
 		errc = get_errc();
 		goto error_init_time;
 	}
@@ -265,7 +184,7 @@ co_time_create(can_net_t *net, co_dev_t *dev)
 	return time;
 
 error_init_time:
-	__co_time_free(time);
+	co_time_free(time);
 error_alloc_time:
 	set_errc(errc);
 	return NULL;
@@ -276,8 +195,8 @@ co_time_destroy(co_time_t *time)
 {
 	if (time) {
 		trace("destroying TIME service");
-		__co_time_fini(time);
-		__co_time_free(time);
+		co_time_fini(time);
+		co_time_free(time);
 	}
 }
 
@@ -522,3 +441,93 @@ co_time_timer(const struct timespec *tp, void *data)
 }
 
 #endif // !LELY_NO_CO_TIME
+
+static void *
+co_time_alloc(can_net_t *net)
+{
+	co_time_t *time = mem_alloc(can_net_get_alloc(net), co_time_alignof(),
+			co_time_sizeof());
+	if (!time)
+		return NULL;
+
+	time->net = net;
+
+	return time;
+}
+
+static void
+co_time_free(co_time_t *time)
+{
+	mem_free(co_time_get_alloc(time), time);
+}
+
+static co_time_t *
+co_time_init(co_time_t *time, can_net_t *net, co_dev_t *dev)
+{
+	assert(time);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	time->net = net;
+	time->dev = dev;
+
+	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
+	if (!obj_1012) {
+		errc = errnum2c(ERRNUM_NOSYS);
+		goto error_obj_1012;
+	}
+
+	time->cobid = 0;
+
+	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
+
+	time->recv = can_recv_create(co_time_get_alloc(time));
+	if (!time->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(time->recv, &co_time_recv, time);
+
+	time->timer = can_timer_create(co_time_get_alloc(time));
+	if (!time->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(time->timer, &co_time_timer, time);
+
+	time->start = (struct timespec){ 0, 0 };
+
+	time->ind = NULL;
+	time->data = NULL;
+
+	if (co_time_start(time) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return time;
+
+	// co_time_stop(time);
+error_start:
+	can_timer_destroy(time->timer);
+error_create_timer:
+	can_recv_destroy(time->recv);
+error_create_recv:
+	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+error_obj_1012:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_time_fini(co_time_t *time)
+{
+	assert(time);
+
+	co_time_stop(time);
+
+	can_timer_destroy(time->timer);
+	can_recv_destroy(time->recv);
+}
