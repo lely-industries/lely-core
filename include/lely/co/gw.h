@@ -254,10 +254,8 @@
 #define CO_GW_IEC_NO_MEM 600
 
 struct co_gw;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen gateway type.
 typedef struct co_gw co_gw_t;
-#endif
 
 /// The common parameters of a CANopen gateway service.
 struct co_gw_srv {

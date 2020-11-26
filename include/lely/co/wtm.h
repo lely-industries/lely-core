@@ -108,10 +108,8 @@
 #define CO_WTM_AC_CAN UINT32_C(0x02000006)
 
 struct co_wtm;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen Wireless Transmission Media (WTM) interface type.
 typedef struct co_wtm co_wtm_t;
-#endif
 
 #ifdef __cplusplus
 extern "C" {

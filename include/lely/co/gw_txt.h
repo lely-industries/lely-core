@@ -31,10 +31,8 @@
 #define CO_GW_TXT_IMPL_LO 1
 
 struct co_gw_txt;
-#if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen ASCII gateway type.
 typedef struct co_gw_txt co_gw_txt_t;
-#endif
 
 // The file location struct from <lely/util/diag.h>.
 struct floc;
