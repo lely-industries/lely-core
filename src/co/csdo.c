@@ -1908,8 +1908,6 @@ co_csdo_blk_dn_ini_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if (msg->len < 5)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[4];
-	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
-		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	return co_csdo_blk_dn_sub_state;
 }
@@ -1921,6 +1919,8 @@ co_csdo_blk_dn_sub_on_enter(co_csdo_t *sdo)
 	struct membuf *buf = &sdo->dn_buf;
 
 	size_t n = sdo->size - membuf_size(buf);
+	if ((n > 0 && !sdo->blksize) || sdo->blksize > CO_SDO_MAX_SEQNO)
+		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = (co_unsigned8_t)MIN((n + 6) / 7, sdo->blksize);
 
 	if (sdo->size && sdo->dn_ind)
@@ -1995,8 +1995,6 @@ co_csdo_blk_dn_sub_on_recv(co_csdo_t *sdo, const struct can_msg *msg)
 	if (msg->len < 3)
 		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 	sdo->blksize = msg->data[2];
-	if (!sdo->blksize || sdo->blksize > CO_SDO_MAX_SEQNO)
-		return co_csdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 	return co_csdo_blk_dn_sub_state;
 }
