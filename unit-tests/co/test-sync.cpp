@@ -40,21 +40,81 @@
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 
+struct SyncInd {
+  static bool called;
+  static co_sync_t* sync;
+  static co_unsigned8_t cnt;
+  static void* data;
+
+  static void
+  func(co_sync_t* sync_, co_unsigned8_t cnt_, void* data_) {
+    sync = sync_;
+    cnt = cnt_;
+    data = data_;
+
+    called = true;
+  }
+
+  static inline void
+  Clear() {
+    sync = nullptr;
+    cnt = 0;
+    data = nullptr;
+
+    called = false;
+  }
+};
+
+bool SyncInd::called = false;
+co_sync_t* SyncInd::sync = nullptr;
+co_unsigned8_t SyncInd::cnt = 0;
+void* SyncInd::data = nullptr;
+
+struct SyncErr {
+  static co_sync_t* sync;
+  static co_unsigned16_t eec;
+  static co_unsigned8_t er;
+  static void* data;
+  static bool called;
+
+  static inline void
+  func(co_sync_t* sync_, co_unsigned16_t eec_, co_unsigned8_t er_,
+       void* data_) {
+    sync = sync_;
+    eec = eec_;
+    er = er_;
+    data = data_;
+
+    called = true;
+  }
+
+  static inline void
+  Clear() {
+    sync = nullptr;
+    eec = 0;
+    er = 0;
+    data = nullptr;
+
+    called = false;
+  }
+};
+
+bool SyncErr::called = false;
+co_sync_t* SyncErr::sync = nullptr;
+co_unsigned16_t SyncErr::eec = 0;
+co_unsigned8_t SyncErr::er = 0;
+void* SyncErr::data = nullptr;
+
 TEST_BASE(CO_SyncBase) {
   TEST_BASE_SUPER(CO_SyncBase);
+  Allocators::Default allocator;
 
-  can_net_t* net = nullptr;
-  const co_unsigned32_t CAN_ID = 0x000000ffu;
+  const co_unsigned8_t DEV_ID = 0x01u;
 
   static co_dev_t* dev;
+  can_net_t* net = nullptr;
   std::unique_ptr<CoDevTHolder> dev_holder;
-  const co_unsigned8_t DEV_ID = 0x1fu;
-
   std::unique_ptr<CoObjTHolder> obj1005;
-
-  static co_unsigned8_t DUMMY_VAR;
-
-  Allocators::Default allocator;
 
   void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
                       co_unsigned16_t idx) {
@@ -67,10 +127,6 @@ TEST_BASE(CO_SyncBase) {
   void SetCobid(co_unsigned32_t cobid) {
     obj1005->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
-
-  static void sync_ind_func_empty(co_sync_t*, co_unsigned8_t, void*) {}
-  static void sync_err_func_empty(co_sync_t*, co_unsigned16_t, co_unsigned8_t,
-                                  void*) {}
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -88,7 +144,6 @@ TEST_BASE(CO_SyncBase) {
     dev_holder.reset();
   }
 };
-co_unsigned8_t CO_SyncBase::DUMMY_VAR = 0x00u;
 co_dev_t* CO_SyncBase::dev = nullptr;
 
 TEST_GROUP_BASE(CO_SyncInit, CO_SyncBase){};
@@ -101,15 +156,15 @@ TEST(CO_SyncInit, CoSyncInit_NoObj1005) {
 
 TEST(CO_SyncInit, CoSyncInit) {
   CreateObjInDev(obj1005, 0x1005u);
-  SetCobid(CAN_ID);
+  SetCobid(DEV_ID);
 
   const auto sync = co_sync_create(net, dev);
 
   CHECK(sync != nullptr);
   POINTERS_EQUAL(net, co_sync_get_net(sync));
   POINTERS_EQUAL(dev, co_sync_get_dev(sync));
-  co_sync_ind_t* ind = &sync_ind_func_empty;
-  void* data = &DUMMY_VAR;
+  co_sync_ind_t* ind = SyncInd::func;
+  void* data = nullptr;
   co_sync_get_ind(sync, &ind, &data);
   POINTERS_EQUAL(nullptr, ind);
   POINTERS_EQUAL(nullptr, data);
@@ -131,8 +186,8 @@ TEST(CO_SyncInit, CoSyncCreate) {
   CHECK(sync != nullptr);
   POINTERS_EQUAL(net, co_sync_get_net(sync));
   POINTERS_EQUAL(dev, co_sync_get_dev(sync));
-  co_sync_ind_t* ind = &sync_ind_func_empty;
-  void* data = &DUMMY_VAR;
+  co_sync_ind_t* ind = SyncInd::func;
+  void* data = nullptr;
   co_sync_get_ind(sync, &ind, &data);
   POINTERS_EQUAL(nullptr, ind);
   POINTERS_EQUAL(nullptr, data);
@@ -149,19 +204,14 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   std::unique_ptr<CoObjTHolder> obj1006;
   std::unique_ptr<CoObjTHolder> obj1019;
 
-  static bool sync_err_func_dummy_called;
-  static bool sync_ind_func_dummy_called;
-  static bool can_send_called;
-  static can_msg sent_msg;
-
   // obj 0x1006, sub 0x00 contains communication cycle period in us
-  void CreateObjAndSetPeriod(co_unsigned32_t period) {
+  void CreateObj1006AndSetPeriod(co_unsigned32_t period) {
     CreateObjInDev(obj1006, 0x1006u);
     obj1006->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32, period);
   }
 
   // obj 0x1019u, sub 0x00 contains synchronous counter overflow value
-  void CreateObjAndSetCntOverflow(co_unsigned8_t overflow) {
+  void CreateObj1019AndSetCntOverflow(co_unsigned8_t overflow) {
     CreateObjInDev(obj1019, 0x1019u);
     obj1019->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, overflow);
   }
@@ -170,7 +220,7 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
-    void* data = &DUMMY_VAR;
+    void* data = nullptr;
 
     co_sub_get_dn_ind(sub, &ind, &data);
 
@@ -178,58 +228,31 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     POINTERS_EQUAL(nullptr, data);
   }
 
-  static void CheckSubDnIndNotNull(co_unsigned16_t idx) {
+  static void CheckSubDnIndIsSet(co_unsigned16_t idx) {
     co_sub_t* const sub = co_dev_find_sub(dev, idx, 0x00u);
     CHECK(sub != nullptr);
     co_sub_dn_ind_t* ind = nullptr;
-    void* data = &DUMMY_VAR;
+    void* data = nullptr;
 
     co_sub_get_dn_ind(sub, &ind, &data);
 
-    CHECK(ind != nullptr);
+    CHECK(ind != &co_sub_default_dn_ind);
     POINTERS_EQUAL(sync, data);
   }
 
-  void PrepareSyncToRecv(co_sync_err_t * err, co_sync_ind_t * ind) {
-    SetCobid(CAN_ID);
+  void SyncSetErrSetInd(co_sync_err_t * err, co_sync_ind_t * ind) {
     co_sync_set_err(sync, err, nullptr);
     co_sync_set_ind(sync, ind, nullptr);
-    co_sync_start(sync);
   }
 
-  void PrepareSyncTimer(can_send_func_t * send, co_sync_ind_t * ind,
-                        co_unsigned32_t cobid) {
-    SetCobid(cobid);
+  void SyncSetSendSetInd(can_send_func_t * send, co_sync_ind_t * ind) {
     can_net_set_send_func(net, send, nullptr);
     co_sync_set_ind(sync, ind, nullptr);
-    co_sync_start(sync);
   }
 
-  static void sync_err_func_dummy(co_sync_t * psync, co_unsigned16_t eec,
-                                  co_unsigned8_t er, void* data) {
-    POINTERS_EQUAL(sync, psync);
-    CHECK_EQUAL(0x8240u, eec);
-    CHECK_EQUAL(0x10u, er);
-    POINTERS_EQUAL(nullptr, data);
-
-    sync_err_func_dummy_called = true;
-  }
-
-  static void sync_ind_func_dummy(co_sync_t * psync, co_unsigned8_t cnt,
-                                  void* data) {
-    (void)cnt;
-
-    POINTERS_EQUAL(sync, psync);
-    POINTERS_EQUAL(nullptr, data);
-
-    sync_ind_func_dummy_called = true;
-  }
-
-  static int can_send_func_dummy(const can_msg* msg, void*) {
-    can_send_called = true;
-    sent_msg = *msg;
-
-    return 0;
+  void CreateSYNC() {
+    sync = co_sync_create(net, dev);
+    CHECK(sync != nullptr);
   }
 
   TEST_SETUP() {
@@ -237,34 +260,30 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
 
     CreateObjInDev(obj1005, 0x1005u);
 
-    sync = co_sync_create(net, dev);
-    CHECK(sync != nullptr);
-
-    sync_err_func_dummy_called = false;
-    sync_ind_func_dummy_called = false;
-    can_send_called = false;
-    sent_msg = CAN_MSG_INIT;
+    SyncErr::Clear();
+    SyncInd::Clear();
+    CanSend::Clear();
   }
 
   TEST_TEARDOWN() {
     co_sync_destroy(sync);
+    sync = nullptr;
 
     TEST_BASE_TEARDOWN();
   }
 };
 co_sync_t* TEST_GROUP_CppUTestGroupCO_Sync::sync = nullptr;
-bool TEST_GROUP_CppUTestGroupCO_Sync::sync_err_func_dummy_called = false;
-bool TEST_GROUP_CppUTestGroupCO_Sync::sync_ind_func_dummy_called = false;
-bool TEST_GROUP_CppUTestGroupCO_Sync::can_send_called = false;
-can_msg TEST_GROUP_CppUTestGroupCO_Sync::sent_msg = CAN_MSG_INIT;
 
 TEST(CO_Sync, CoSyncGetInd_PointersNull) {
+  CreateSYNC();
+
   co_sync_get_ind(sync, nullptr, nullptr);
 }
 
 TEST(CO_Sync, CoSyncGetInd) {
-  co_sync_ind_t* ind = &sync_ind_func_empty;
-  void* data = &DUMMY_VAR;
+  CreateSYNC();
+  co_sync_ind_t* ind = SyncInd::func;
+  void* data = nullptr;
 
   co_sync_get_ind(sync, &ind, &data);
 
@@ -273,22 +292,28 @@ TEST(CO_Sync, CoSyncGetInd) {
 }
 
 TEST(CO_Sync, CoSyncSetInd) {
-  co_sync_set_ind(sync, &sync_ind_func_empty, &DUMMY_VAR);
+  CreateSYNC();
+  void* data = nullptr;
+
+  co_sync_set_ind(sync, SyncInd::func, &data);
 
   co_sync_ind_t* ind = nullptr;
-  void* data = nullptr;
-  co_sync_get_ind(sync, &ind, &data);
-  POINTERS_EQUAL(&sync_ind_func_empty, ind);
-  POINTERS_EQUAL(&DUMMY_VAR, data);
+  void* ret_pdata = nullptr;
+  co_sync_get_ind(sync, &ind, &ret_pdata);
+  POINTERS_EQUAL(SyncInd::func, ind);
+  POINTERS_EQUAL(&data, ret_pdata);
 }
 
 TEST(CO_Sync, CoSyncGetErr_PointersNull) {
+  CreateSYNC();
+
   co_sync_get_err(sync, nullptr, nullptr);
 }
 
 TEST(CO_Sync, CoSyncGetErr) {
-  co_sync_err_t* err = &sync_err_func_empty;
-  void* data = &DUMMY_VAR;
+  CreateSYNC();
+  co_sync_err_t* err = SyncErr::func;
+  void* data = nullptr;
 
   co_sync_get_err(sync, &err, &data);
 
@@ -297,72 +322,81 @@ TEST(CO_Sync, CoSyncGetErr) {
 }
 
 TEST(CO_Sync, CoSyncSetErr) {
-  co_sync_set_err(sync, &sync_err_func_empty, &DUMMY_VAR);
+  CreateSYNC();
+  void* data = nullptr;
+
+  co_sync_set_err(sync, SyncErr::func, &data);
 
   co_sync_err_t* err = nullptr;
-  void* data = nullptr;
-  co_sync_get_err(sync, &err, &data);
-  POINTERS_EQUAL(&sync_err_func_empty, err);
-  POINTERS_EQUAL(&DUMMY_VAR, data);
+  void* ret_pdata = nullptr;
+  co_sync_get_err(sync, &err, &ret_pdata);
+  POINTERS_EQUAL(SyncErr::func, err);
+  POINTERS_EQUAL(&data, ret_pdata);
 }
 
 TEST(CO_Sync, CoSyncStart_NoObj1006NoObj1019) {
-  SetCobid(CAN_ID);
+  SetCobid(DEV_ID);
+  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CheckSubDnIndNotNull(0x1005u);
+  CheckSubDnIndIsSet(0x1005u);
 }
 
 TEST(CO_Sync, CoSyncStart) {
-  SetCobid(CAN_ID);
-  CreateObjAndSetPeriod(0x01u);
-  CreateObjAndSetCntOverflow(0x01u);
+  SetCobid(DEV_ID);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CheckSubDnIndNotNull(0x1005u);
-  CheckSubDnIndNotNull(0x1006u);
-  CheckSubDnIndNotNull(0x1019u);
+  CheckSubDnIndIsSet(0x1005u);
+  CheckSubDnIndIsSet(0x1006u);
+  CheckSubDnIndIsSet(0x1019u);
 }
 
 TEST(CO_Sync, CoSyncUpdate_IsProducer) {
-  SetCobid(CAN_ID | CO_SYNC_COBID_PRODUCER);
-  CreateObjAndSetPeriod(0x01u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CheckSubDnIndNotNull(0x1005u);
-  CheckSubDnIndNotNull(0x1006u);
+  CheckSubDnIndIsSet(0x1005u);
+  CheckSubDnIndIsSet(0x1006u);
 }
 
-TEST(CO_Sync, CoSyncUpdate_CobidFrame) {
-  SetCobid(CAN_ID | CO_SYNC_COBID_FRAME);
-  CreateObjAndSetPeriod(0x01u);
+TEST(CO_Sync, CoSyncUpdate_FrameBitSet) {
+  SetCobid(DEV_ID | CO_SYNC_COBID_FRAME);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CheckSubDnIndNotNull(0x1005u);
-  CheckSubDnIndNotNull(0x1006u);
+  CheckSubDnIndIsSet(0x1005u);
+  CheckSubDnIndIsSet(0x1006u);
 }
 
 TEST(CO_Sync, CoSyncUpdate_PeriodValueZero) {
-  SetCobid(CAN_ID | CO_SYNC_COBID_PRODUCER);
-  CreateObjAndSetPeriod(0x00u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
+  CreateObj1006AndSetPeriod(0x00u);
+  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
-  CheckSubDnIndNotNull(0x1005u);
-  CheckSubDnIndNotNull(0x1006u);
+  CheckSubDnIndIsSet(0x1005u);
+  CheckSubDnIndIsSet(0x1006u);
 }
 
 TEST(CO_Sync, CoSyncStop_NoObj1019NoObj1006) {
-  SetCobid(CAN_ID);
+  SetCobid(DEV_ID);
+  CreateSYNC();
 
   co_sync_stop(sync);
 
@@ -370,9 +404,10 @@ TEST(CO_Sync, CoSyncStop_NoObj1019NoObj1006) {
 }
 
 TEST(CO_Sync, CoSyncStop) {
-  SetCobid(CAN_ID);
-  CreateObjAndSetCntOverflow(0x01u);
-  CreateObjAndSetPeriod(0x00000001u);
+  SetCobid(DEV_ID);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateObj1006AndSetPeriod(0x00000001u);
+  CreateSYNC();
 
   co_sync_stop(sync);
 
@@ -382,10 +417,11 @@ TEST(CO_Sync, CoSyncStop) {
 }
 
 TEST(CO_Sync, CoSyncRecv_NoErrFuncNoIndFunc) {
-  PrepareSyncToRecv(nullptr, nullptr);
+  SetCobid(DEV_ID);
+  CreateSYNC();
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 0u;
 
@@ -395,158 +431,205 @@ TEST(CO_Sync, CoSyncRecv_NoErrFuncNoIndFunc) {
 }
 
 TEST(CO_Sync, CoSyncRecv_Err) {
-  PrepareSyncToRecv(sync_err_func_dummy, nullptr);
+  SetCobid(DEV_ID);
+  CreateSYNC();
+  SyncSetErrSetInd(SyncErr::func, nullptr);
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 1u;
 
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_err_func_dummy_called);
+  CHECK(SyncErr::called);
+  POINTERS_EQUAL(nullptr, SyncErr::data);
+  CHECK_EQUAL(0x8240u, SyncErr::eec);
+  CHECK_EQUAL(0x10u, SyncErr::er);
+  CHECK_EQUAL(sync, SyncErr::sync);
 }
 
 TEST(CO_Sync, CoSyncRecv_NoErrHandlerWhenNeeded) {
-  PrepareSyncToRecv(nullptr, sync_ind_func_dummy);
+  SetCobid(DEV_ID);
+  CreateSYNC();
+  SyncSetErrSetInd(nullptr, SyncInd::func);
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 1u;
 
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
 TEST(CO_Sync, CoSyncRecv_OverflowSetToOne) {
-  CreateObjAndSetCntOverflow(0x01u);
-  PrepareSyncToRecv(sync_err_func_dummy, sync_ind_func_dummy);
+  SetCobid(DEV_ID);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateSYNC();
+  SyncSetErrSetInd(SyncErr::func, SyncInd::func);
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 0u;
 
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_err_func_dummy_called);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
+  CHECK(SyncErr::called);
+  POINTERS_EQUAL(nullptr, SyncErr::data);
+  CHECK_EQUAL(0x8240u, SyncErr::eec);
+  CHECK_EQUAL(0x10u, SyncErr::er);
+  CHECK_EQUAL(sync, SyncErr::sync);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
 TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
-  CreateObjAndSetCntOverflow(0x01u);
-  PrepareSyncToRecv(sync_err_func_dummy, sync_ind_func_dummy);
+  SetCobid(DEV_ID);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateSYNC();
+  SyncSetErrSetInd(SyncErr::func, SyncInd::func);
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 1u;
 
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(false, sync_err_func_dummy_called);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
+  CHECK(!SyncErr::called);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
 TEST(CO_Sync, CoSyncRecv) {
-  PrepareSyncToRecv(sync_err_func_dummy, sync_ind_func_dummy);
+  SetCobid(DEV_ID);
+  CreateSYNC();
+  SyncSetErrSetInd(SyncErr::func, SyncInd::func);
 
   can_msg msg = CAN_MSG_INIT;
-  msg.id = CAN_ID;
+  msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 0u;
 
   const auto ret = can_net_recv(net, &msg);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(false, sync_err_func_dummy_called);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
+  CHECK(!SyncErr::called);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
 TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
-  CreateObjAndSetPeriod(500u);
-  PrepareSyncTimer(can_send_func_dummy, sync_ind_func_dummy,
-                   CAN_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME);
+  CreateObj1006AndSetPeriod(500u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME);
+  CreateSYNC();
+  SyncSetSendSetInd(CanSend::func, SyncInd::func);
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
-  CHECK_EQUAL(true, can_send_called);
-  CHECK_EQUAL(CAN_ID, sent_msg.id);
-  CHECK_EQUAL(CAN_FLAG_IDE, sent_msg.flags);
-  CHECK_EQUAL(0u, sent_msg.len);
-  CHECK_EQUAL(0u, sent_msg.data[0]);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
+  CHECK(CanSend::called);
+  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
+  CHECK_EQUAL(CAN_FLAG_IDE, CanSend::msg.flags);
+  CHECK_EQUAL(0u, CanSend::msg.len);
+  CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }
 
 TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
-  CreateObjAndSetPeriod(500u);
-  PrepareSyncTimer(&can_send_func_dummy, nullptr,
-                   CAN_ID | CO_SYNC_COBID_PRODUCER);
+  CreateObj1006AndSetPeriod(500u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
+  CreateSYNC();
+  SyncSetSendSetInd(CanSend::func, nullptr);
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, can_send_called);
-  CHECK_EQUAL(CAN_ID, sent_msg.id);
-  CHECK_EQUAL(0u, sent_msg.flags);
-  CHECK_EQUAL(0u, sent_msg.len);
-  CHECK_EQUAL(0u, sent_msg.data[0]);
+  CHECK(CanSend::called);
+  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
+  CHECK_EQUAL(0u, CanSend::msg.flags);
+  CHECK_EQUAL(0u, CanSend::msg.len);
+  CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }
 
 TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
-  CreateObjAndSetPeriod(500u);
-  CreateObjAndSetCntOverflow(0x02u);
-  PrepareSyncTimer(&can_send_func_dummy, sync_ind_func_dummy,
-                   CAN_ID | CO_SYNC_COBID_PRODUCER);
+  CreateObj1006AndSetPeriod(500u);
+  CreateObj1019AndSetCntOverflow(0x02u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
+  CreateSYNC();
+  SyncSetSendSetInd(CanSend::func, SyncInd::func);
   const timespec tp[2] = {{0L, 600000L}, {0L, 1200000L}};
+
+  SyncInd::cnt = 2u;
 
   const auto ret = can_net_set_time(net, &tp[0]);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
-  CHECK_EQUAL(true, can_send_called);
-  CHECK_EQUAL(CAN_ID, sent_msg.id);
-  CHECK_EQUAL(0u, sent_msg.flags);
-  CHECK_EQUAL(1u, sent_msg.len);
-  CHECK_EQUAL(1u, sent_msg.data[0]);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(1, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
+  CHECK(CanSend::called);
+  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
+  CHECK_EQUAL(0u, CanSend::msg.flags);
+  CHECK_EQUAL(1u, CanSend::msg.len);
+  CHECK_EQUAL(1u, CanSend::msg.data[0]);
 
-  sync_ind_func_dummy_called = false;
-  can_send_called = false;
-  sent_msg = CAN_MSG_INIT;
+  SyncInd::Clear();
+  CanSend::Clear();
 
   const auto ret2 = can_net_set_time(net, &tp[1]);
 
   CHECK_EQUAL(0, ret2);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
-  CHECK_EQUAL(true, can_send_called);
-  CHECK_EQUAL(CAN_ID, sent_msg.id);
-  CHECK_EQUAL(0u, sent_msg.flags);
-  CHECK_EQUAL(1u, sent_msg.len);
-  CHECK_EQUAL(2u, sent_msg.data[0]);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(2, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
+  CHECK(CanSend::called);
+  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
+  CHECK_EQUAL(0u, CanSend::msg.flags);
+  CHECK_EQUAL(1u, CanSend::msg.len);
+  CHECK_EQUAL(2u, CanSend::msg.data[0]);
 }
 
 TEST(CO_Sync, CoSyncTimer) {
-  CreateObjAndSetPeriod(500u);
-  PrepareSyncTimer(&can_send_func_dummy, sync_ind_func_dummy,
-                   CAN_ID | CO_SYNC_COBID_PRODUCER);
+  CreateObj1006AndSetPeriod(500u);
+  SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
+  CreateSYNC();
+  SyncSetSendSetInd(CanSend::func, SyncInd::func);
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);
 
   CHECK_EQUAL(0, ret);
-  CHECK_EQUAL(true, sync_ind_func_dummy_called);
-  CHECK_EQUAL(true, can_send_called);
-  CHECK_EQUAL(CAN_ID, sent_msg.id);
-  CHECK_EQUAL(0u, sent_msg.flags);
-  CHECK_EQUAL(0u, sent_msg.len);
-  CHECK_EQUAL(0u, sent_msg.data[0]);
+  CHECK(SyncInd::called);
+  POINTERS_EQUAL(nullptr, SyncInd::data);
+  CHECK_EQUAL(0, SyncInd::cnt);
+  POINTERS_EQUAL(sync, SyncInd::sync);
+  CHECK(CanSend::called);
+  CHECK_EQUAL(DEV_ID, CanSend::msg.id);
+  CHECK_EQUAL(0u, CanSend::msg.flags);
+  CHECK_EQUAL(0u, CanSend::msg.len);
+  CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }

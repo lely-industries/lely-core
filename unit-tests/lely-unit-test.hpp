@@ -22,8 +22,11 @@
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
+#include <lely/can/msg.h>
 #include <lely/co/type.h>
 #include <lely/util/diag.h>
+
+#include <cassert>
 
 namespace LelyUnitTest {
 /**
@@ -64,6 +67,33 @@ struct CoCsdoDnCon {
     ac = 0;
     data = nullptr;
 
+    called = false;
+  }
+};
+
+struct CanSend {
+  static int ret;
+  static void* data;
+  static can_msg msg;
+  static bool called;
+
+  static inline int
+  func(const can_msg* msg_, void* data_) {
+    assert(msg_);
+
+    called = true;
+
+    msg = *msg_;
+    data = data_;
+
+    return ret;
+  }
+
+  static void inline Clear() {
+    msg = CAN_MSG_INIT;
+    data = nullptr;
+
+    ret = 0;
     called = false;
   }
 };

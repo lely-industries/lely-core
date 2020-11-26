@@ -45,39 +45,6 @@
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
 
-// CAN send function
-struct CanSend {
-  static bool called;
-  static int ret;
-
-  static can_msg msg;
-  static void* data;
-
-  static int
-  func(const struct can_msg* msg_, void* data_) {
-    called = true;
-
-    msg = *msg_;
-    data = data_;
-
-    return ret;
-  }
-
-  static void
-  Clear() {
-    called = false;
-    ret = 0;
-
-    msg = CAN_MSG_INIT;
-    data = nullptr;
-  }
-};
-
-bool CanSend::called = false;
-int CanSend::ret = 0;
-struct can_msg CanSend::msg = CAN_MSG_INIT;
-void* CanSend::data = nullptr;
-
 // TPDO indication function
 struct CoTpdoInd {
   static bool called;
@@ -154,6 +121,7 @@ void* CoTpdoSampleInd::data = nullptr;
 
 TEST_BASE(CO_TpdoBase) {
   TEST_BASE_SUPER(CO_TpdoBase);
+  Allocators::Default allocator;
 
   const co_unsigned8_t DEV_ID = 0x01u;
   const co_unsigned16_t TPDO_NUM = 0x0001u;
@@ -166,8 +134,6 @@ TEST_BASE(CO_TpdoBase) {
   std::unique_ptr<CoObjTHolder> obj1800;
   std::unique_ptr<CoObjTHolder> obj1a00;
   std::unique_ptr<CoObjTHolder> obj2000;
-
-  Allocators::Default allocator;
 
   void CreateObjInDev(std::unique_ptr<CoObjTHolder> & obj_holder,
                       co_unsigned16_t idx) {
@@ -843,7 +809,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven) {
   CHECK_EQUAL(0u, ts.tv_sec);
 
   CHECK(CanSend::called);
-  CHECK_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::data);
   CHECK_EQUAL(DEV_ID, CanSend::msg.id);
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
@@ -878,9 +844,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_TriggerEventTimer) {
   CHECK_EQUAL(0, can_net_set_time(net, &ts));
 
   CHECK(CanSend::called);
-
-  CHECK(CanSend::called);
-  CHECK_EQUAL(&can_data, CanSend::data);
+  POINTERS_EQUAL(&can_data, CanSend::data);
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -1138,7 +1102,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_SyncWindowTimeout) {
 
   // 0x00 - synchronous window length
   obj1007.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                          co_unsigned32_t(1000));  // us
+                          co_unsigned32_t(1000u));  // us
 
   CreateTpdo();
   co_tpdo_set_sample_ind(tpdo, CoTpdoSampleInd::func, &sind_data);
@@ -1206,7 +1170,7 @@ TEST(CO_Tpdo, CoTpdoSampleRes_CanSendError) {
   CHECK_EQUAL(-1, ret);
 
   CHECK(CanSend::called);
-  POINTERS_EQUAL(&can_data, &can_data);
+  POINTERS_EQUAL(&can_data, CanSend::data);
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);

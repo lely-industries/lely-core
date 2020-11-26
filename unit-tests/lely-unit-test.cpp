@@ -28,3 +28,8 @@ co_unsigned8_t CoCsdoDnCon::subidx = 0;
 co_unsigned32_t CoCsdoDnCon::ac = 0;
 void* CoCsdoDnCon::data = nullptr;
 bool CoCsdoDnCon::called = false;
+
+int CanSend::ret = 0;
+void* CanSend::data = nullptr;
+can_msg CanSend::msg = CAN_MSG_INIT;
+bool CanSend::called = false;
