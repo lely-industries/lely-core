@@ -371,7 +371,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen sub-object in the local object
      * dictionary.
      */
-    SubObject operator[](uint8_t subidx) noexcept {
+    SubObject
+    operator[](uint8_t subidx) noexcept {
       return SubObject(master_, id_, idx_, subidx);
     }
 
@@ -386,7 +387,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const noexcept {
+    ConstSubObject
+    operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, false);
     }
 
@@ -423,7 +425,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen sub-object in the local object
      * dictionary.
      */
-    ConstSubObject operator[](uint8_t subidx) const noexcept {
+    ConstSubObject
+    operator[](uint8_t subidx) const noexcept {
       return ConstSubObject(master_, id_, idx_, subidx, is_rpdo_);
     }
 
@@ -459,7 +462,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const noexcept {
+    ConstObject
+    operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, true);
     }
 
@@ -489,7 +493,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns a mutator object for a CANopen object in the remote object
      * dictionary.
      */
-    Object operator[](uint16_t idx) noexcept {
+    Object
+    operator[](uint16_t idx) noexcept {
       return Object(master_, id_, idx);
     }
 
@@ -503,7 +508,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
      * @returns an accessor object for a CANopen object in the remote object
      * dictionary.
      */
-    ConstObject operator[](uint16_t idx) const noexcept {
+    ConstObject
+    operator[](uint16_t idx) const noexcept {
       return ConstObject(master_, id_, idx, false);
     }
 
@@ -601,7 +607,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for a CANopen object in the local object
    * dictionary.
    */
-  Object operator[](::std::ptrdiff_t idx) noexcept { return Object(this, idx); }
+  Object
+  operator[](::std::ptrdiff_t idx) noexcept {
+    return Object(this, idx);
+  }
 
   /**
    * Returns an accessor object that provides read-only access to the specified
@@ -613,7 +622,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for a CANopen object in the local object
    * dictionary.
    */
-  ConstObject operator[](::std::ptrdiff_t idx) const noexcept {
+  ConstObject
+  operator[](::std::ptrdiff_t idx) const noexcept {
     return ConstObject(this, idx);
   }
 
@@ -627,7 +637,10 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns an accessor object for RPDO-mapped objects in a remote object
    * dictionary.
    */
-  RpdoMapped RpdoMapped(uint8_t id) const noexcept { return {this, id}; }
+  RpdoMapped
+  RpdoMapped(uint8_t id) const noexcept {
+    return {this, id};
+  }
 
   /**
    * Returns a mutator object that provides read/write access to TPDO-mapped
@@ -639,13 +652,27 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @returns a mutator object for TPDO-mapped objects in a remote object
    * dictionary.
    */
-  TpdoMapped TpdoMapped(uint8_t id) noexcept { return {this, id}; }
+  TpdoMapped
+  TpdoMapped(uint8_t id) noexcept {
+    return {this, id};
+  }
 
   /**
-   * Returns true if the remote node is ready (i.e., the NMT `boot slave`
+   * Requests the NMT 'boot slave' process for the specified node. OnBoot() is
+   * invoked once the boot-up process completes.
+   */
+  bool Boot(uint8_t id);
+
+  /**
+   * Returns true if the remote node is ready (i.e., the NMT 'boot slave'
    * process has successfully completed and no subsequent boot-up event has been
    * received) and false if not. Invoking AsyncDeconfig() will also mark a node
    * as not ready.
+   *
+   * If this function returns true, the default client-SDO service is available
+   * for the given node.
+   *
+   * @see IsConfig()
    */
   bool IsReady(uint8_t id) const;
 
@@ -948,6 +975,175 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
 
   /**
    * Equivalent to
+   * #SubmitWriteDcf(uint8_t id, SdoDownloadDcfRequest& req, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  void SubmitWriteDcf(uint8_t id, SdoDownloadDcfRequest& req);
+
+  /**
+   * Queues an asynchronous write (SDO download) operation.
+   *
+   * @param id  the node-ID (in the range[1..127]).
+   * @param req the SDO download request.
+   * @param ec  the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *            client-SDO is available.
+   */
+  void SubmitWriteDcf(uint8_t id, SdoDownloadDcfRequest& req,
+                      ::std::error_code& ec);
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin, const uint8_t *end, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
+                 const uint8_t *end, F&& con) {
+    SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), GetTimeout());
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin, const uint8_t *end, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
+                 const uint8_t *end, F&& con, ::std::error_code& ec) {
+    SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), GetTimeout(),
+                   ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin, const uint8_t *end, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
+                 const uint8_t *end, F&& con,
+                 const ::std::chrono::milliseconds& timeout) {
+    ::std::error_code ec;
+    SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), timeout, ec);
+    if (ec) throw SdoError(id, 0, 0, ec, "SubmitWriteDcf");
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations. This
+   * function writes each entry in the specified concise DCF to a sub-object in
+   * a remote object dictionary.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
+                 const uint8_t *end, F&& con,
+                 const ::std::chrono::milliseconds& timeout,
+                 ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      sdo->SubmitDownloadDcf(exec, begin, end, ::std::forward<F>(con), timeout);
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con) {
+    SubmitWriteDcf(exec, id, path, ::std::forward<F>(con), GetTimeout());
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con,
+                 ::std::error_code& ec) {
+    SubmitWriteDcf(exec, id, path, ::std::forward<F>(con), GetTimeout(), ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con,
+                 const ::std::chrono::milliseconds& timeout) {
+    ::std::error_code ec;
+    SubmitWriteDcf(exec, id, path, ::std::forward<F>(con), timeout, ec);
+    if (ec) throw SdoError(id, 0, 0, ec, "SubmitWriteDcf");
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations. This
+   * function writes each entry in the specified concise DCF to a sub-object in
+   * a remote object dictionary.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param path    the path of the concise DCF.
+   * @param con     the confirmation function to be called when all SDO download
+   *                requests are successfully completed, or when an error
+   *                occurs.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class F>
+  void
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char *path, F&& con,
+                 const ::std::chrono::milliseconds& timeout,
+                 ::std::error_code& ec) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    ec.clear();
+    auto sdo = GetSdo(id);
+    if (sdo) {
+      SetTime();
+      sdo->SubmitDownloadDcf(exec, path, ::std::forward<F>(con), timeout);
+    } else {
+      ec = SdoErrc::NO_SDO;
+    }
+  }
+
+  /**
+   * Equivalent to
    * #AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout),
    * except that it uses the SDO timeout given by #GetTimeout().
    */
@@ -1038,6 +1234,67 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
                                          "AsyncWrite");
     }
   }
+
+  /**
+   * Equivalent to
+   * #AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin, const uint8_t* end, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                const uint8_t* end) {
+    return AsyncWriteDcf(exec, id, begin, end, GetTimeout());
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations,
+   * corresponding to the entries in the specified concise DCF, and creates a
+   * future which becomes ready once all requests complete (or an error occurs).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param begin   a pointer the the first byte in a concise DCF (see object
+   *                1F22 in CiA 302-3 version 4.1.0).
+   * @param end     a pointer to one past the last byte in the concise DCF. At
+   *                most `end - begin` bytes are read.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  SdoFuture<void> AsyncWriteDcf(ev_exec_t* exec, uint8_t id,
+                                const uint8_t* begin, const uint8_t* end,
+                                const ::std::chrono::milliseconds& timeout);
+
+  /**
+   * Equivalent to
+   * #AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  SdoFuture<void>
+  AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const char* path) {
+    return AsyncWriteDcf(exec, id, path, GetTimeout());
+  }
+
+  /**
+   * Queues a series of asynchronous write (SDO download) operations,
+   * corresponding to the entries in the specified concise DCF, and creates a
+   * future which becomes ready once all requests complete (or an error occurs).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param path    the path to a concise DCF.
+   * @param timeout the SDO timeout. If, after a single request is initiated,
+   *                the timeout expires before receiving a response from the
+   *                server, the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  SdoFuture<void> AsyncWriteDcf(ev_exec_t* exec, uint8_t id, const char* path,
+                                const ::std::chrono::milliseconds& timeout);
 
   /**
    * Registers a driver for a remote CANopen node. If an event occurs for that
@@ -1214,7 +1471,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * driver, if one is registered for node <b>id</b>. If not, a successful
    * result is communicated to the NMT service.
    *
-   * @see DriverBase::OnConfig()
+   * @see IsConfig(), DriverBase::OnConfig()
    */
   virtual void OnConfig(uint8_t id) noexcept;
 
@@ -1245,8 +1502,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    *
    * @see Node::OnTime(), DriverBase::OnTime()
    */
-  void OnTime(const ::std::chrono::system_clock::time_point&
-                  abs_time) noexcept override;
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
 
   /**
    * The default implementation notifies the driver registered for node
@@ -1256,6 +1513,18 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
               uint8_t msef[5]) noexcept override;
+
+  /**
+   * Returns true if the remote node is configuring (i.e., the 'update
+   * configuration' step of the NMT 'boot slave' is reached but not yet
+   * completed) and false if not.
+   *
+   * If this function returns true, the default client-SDO service is available
+   * for the given node.
+   *
+   * @see IsReady(), OnConfig()
+   */
+  bool IsConfig(uint8_t id) const;
 
   /**
    * Returns a pointer to the default client-SDO service for the given node. If
@@ -1384,8 +1653,8 @@ class AsyncMaster : public BasicMaster {
    *
    * @see Node::OnTime(), DriverBase::OnTime()
    */
-  void OnTime(const ::std::chrono::system_clock::time_point&
-                  abs_time) noexcept override;
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
 
   /**
    * The default implementation queues a notification for the driver registered

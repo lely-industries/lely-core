@@ -214,6 +214,59 @@ class Device {
              ::std::error_code& ec);
 
   /**
+   * Submits a series of SDO download requests to the local object dictionary.
+   * This functions writes each entry in the specified concise DCF to a
+   * sub-object while honoring all access checks and executing any registered
+   * callback function.
+   *
+   * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+   *              in CiA 302-3 version 4.1.0).
+   * @param end   a pointer to one past the last byte in the concise DCF. At
+   *              most `end - begin` bytes are read.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   */
+  void WriteDcf(const uint8_t* begin, const uint8_t* end);
+
+  /**
+   * Submits a series of SDO download requests to the local object dictionary.
+   * This functions writes each entry in the specified concise DCF to a
+   * sub-object while honoring all access checks and executing any registered
+   * callback function.
+   *
+   * @param begin a pointer the the first byte in a concise DCF (see object 1F22
+   *              in CiA 302-3 version 4.1.0).
+   * @param end   a pointer to one past the last byte in the concise DCF. At
+   *              most `end - begin` bytes are read.
+   * @param ec    on error, the SDO abort code is stored in <b>ec</b>.
+   */
+  void WriteDcf(const uint8_t* begin, const uint8_t* end,
+                ::std::error_code& ec);
+
+  /**
+   * Submits a series of SDO download requests to the local object dictionary.
+   * This functions writes each entry in the specified concise DCF to a
+   * sub-object while honoring all access checks and executing any registered
+   * callback function.
+   *
+   * @param path the path of the concise DCF.
+   *
+   * @throws #lely::canopen::SdoError on error.
+   */
+  void WriteDcf(const char* path);
+
+  /**
+   * Submits a series of SDO download requests to the local object dictionary.
+   * This functions writes each entry in the specified concise DCF to a
+   * sub-object while honoring all access checks and executing any registered
+   * callback function.
+   *
+   * @param path the path of the concise DCF.
+   * @param ec   on error, the SDO abort code is stored in <b>ec</b>.
+   */
+  void WriteDcf(const char* path, ::std::error_code& ec);
+
+  /**
    * Checks if the specified sub-object in the local object dictionary can be
    * mapped into a PDO and, if so, triggers the transmission of every
    * event-driven, asynchronous Transmit-PDO into which the sub-object is
@@ -795,8 +848,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<is_canopen_basic<T>::value, T>::type RpdoGet(
-      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-      noexcept;
+      uint8_t id, uint16_t idx, uint8_t subidx,
+      ::std::error_code& ec) const noexcept;
 
   /**
    * Reads the value of a TPDO-mapped sub-object in the local object dictionary
@@ -842,8 +895,8 @@ class Device {
    */
   template <class T>
   typename ::std::enable_if<is_canopen_basic<T>::value, T>::type TpdoGet(
-      uint8_t id, uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-      noexcept;
+      uint8_t id, uint16_t idx, uint8_t subidx,
+      ::std::error_code& ec) const noexcept;
 
   /**
    * Writes a value to a sub-object in a remote object dictionary by writing to

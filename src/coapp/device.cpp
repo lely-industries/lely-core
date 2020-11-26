@@ -26,7 +26,7 @@
 #include <lely/co/dcf.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
-#include <lely/co/type.h>
+#include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
 #include <lely/util/error.hpp>
 
@@ -93,8 +93,8 @@ struct Device::Impl_ : util::BasicLockable {
   }
 
   ::std::tuple<uint8_t, uint16_t, uint8_t>
-  RpdoMapping(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-      noexcept {
+  RpdoMapping(uint16_t idx, uint8_t subidx,
+              ::std::error_code& ec) const noexcept {
     uint8_t id = 0;
     auto it = rpdo_mapping.find((static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != rpdo_mapping.end()) {
@@ -481,6 +481,57 @@ Device::Write(uint16_t idx, uint8_t subidx, const void* p, ::std::size_t n,
 }
 
 void
+Device::WriteDcf(const uint8_t* begin, const uint8_t* end) {
+  ::std::error_code ec;
+  WriteDcf(begin, end, ec);
+  if (ec) throw_sdo_error(id(), 0, 0, ec, "WriteDcf");
+}
+
+void
+Device::WriteDcf(const uint8_t* begin, const uint8_t* end,
+                 ::std::error_code& ec) {
+  uint32_t ac = 0;
+
+  ::std::lock_guard<Impl_> lock(*impl_);
+  int errsv = get_errc();
+  set_errc(0);
+  if (!co_dev_dn_dcf_req(dev(), begin, end, &OnDnCon, &ac)) {
+    if (ac)
+      ec = static_cast<SdoErrc>(ac);
+    else
+      ec.clear();
+  } else {
+    ec = util::make_error_code();
+  }
+  set_errc(errsv);
+}
+
+void
+Device::WriteDcf(const char* path) {
+  ::std::error_code ec;
+  WriteDcf(path, ec);
+  if (ec) throw_sdo_error(id(), 0, 0, ec, "WriteDcf");
+}
+
+void
+Device::WriteDcf(const char* path, ::std::error_code& ec) {
+  int errsv = get_errc();
+  set_errc(0);
+
+  void* dom = nullptr;
+  if (co_val_read_file(CO_DEFTYPE_DOMAIN, &dom, path)) {
+    auto begin =
+        static_cast<const uint8_t*>(co_val_addressof(CO_DEFTYPE_DOMAIN, &dom));
+    auto end = begin + co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
+    WriteDcf(begin, end, ec);
+  } else {
+    ec = util::make_error_code();
+  }
+  if (dom) co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
+  set_errc(errsv);
+}
+
+void
 Device::WriteEvent(uint16_t idx, uint8_t subidx) {
   ::std::error_code ec;
   WriteEvent(idx, subidx, ec);
@@ -743,8 +794,8 @@ Device::Type(uint16_t idx, uint8_t subidx) const {
 }
 
 const ::std::type_info&
-Device::Type(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-    noexcept {
+Device::Type(uint16_t idx, uint8_t subidx,
+             ::std::error_code& ec) const noexcept {
   auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;
@@ -815,8 +866,8 @@ Device::Get(uint16_t idx, uint8_t subidx) const {
 
 template <class T>
 typename ::std::enable_if<is_canopen<T>::value, T>::type
-Device::Get(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-    noexcept {
+Device::Get(uint16_t idx, uint8_t subidx,
+            ::std::error_code& ec) const noexcept {
   using traits = canopen_traits<T>;
   using c_type = typename traits::c_type;
 
@@ -908,16 +959,16 @@ Device::Set(uint16_t idx, uint8_t subidx, const ::std::vector<uint8_t>& value,
 
 // BOOLEAN
 template bool Device::Get<bool>(uint16_t, uint8_t) const;
-template bool Device::Get<bool>(uint16_t, uint8_t, ::std::error_code&) const
-    noexcept;
+template bool Device::Get<bool>(uint16_t, uint8_t,
+                                ::std::error_code&) const noexcept;
 template void Device::Set<bool>(uint16_t, uint8_t, const bool&);
 template void Device::Set<bool>(uint16_t, uint8_t, const bool&,
                                 ::std::error_code&) noexcept;
 
 // INTEGER8
 template int8_t Device::Get<int8_t>(uint16_t, uint8_t) const;
-template int8_t Device::Get<int8_t>(uint16_t, uint8_t, ::std::error_code&) const
-    noexcept;
+template int8_t Device::Get<int8_t>(uint16_t, uint8_t,
+                                    ::std::error_code&) const noexcept;
 template void Device::Set<int8_t>(uint16_t, uint8_t, const int8_t&);
 template void Device::Set<int8_t>(uint16_t, uint8_t, const int8_t&,
                                   ::std::error_code&) noexcept;
@@ -964,17 +1015,16 @@ template void Device::Set<uint32_t>(uint16_t, uint8_t, const uint32_t&,
 
 // REAL32
 template float Device::Get<float>(uint16_t, uint8_t) const;
-template float Device::Get<float>(uint16_t, uint8_t, ::std::error_code&) const
-    noexcept;
+template float Device::Get<float>(uint16_t, uint8_t,
+                                  ::std::error_code&) const noexcept;
 template void Device::Set<float>(uint16_t, uint8_t, const float&);
 template void Device::Set<float>(uint16_t, uint8_t, const float&,
                                  ::std::error_code&) noexcept;
 
 // VISIBLE_STRING
 template ::std::string Device::Get<::std::string>(uint16_t, uint8_t) const;
-template ::std::string Device::Get<::std::string>(uint16_t, uint8_t,
-                                                  ::std::error_code&) const
-    noexcept;
+template ::std::string Device::Get<::std::string>(
+    uint16_t, uint8_t, ::std::error_code&) const noexcept;
 template void Device::Set<::std::string>(uint16_t, uint8_t,
                                          const ::std::string&);
 template void Device::Set<::std::string>(uint16_t, uint8_t,
@@ -1011,8 +1061,8 @@ template void Device::Set<::std::basic_string<char16_t>>(
 
 // REAL64
 template double Device::Get<double>(uint16_t, uint8_t) const;
-template double Device::Get<double>(uint16_t, uint8_t, ::std::error_code&) const
-    noexcept;
+template double Device::Get<double>(uint16_t, uint8_t,
+                                    ::std::error_code&) const noexcept;
 template void Device::Set<double>(uint16_t, uint8_t, const double&);
 template void Device::Set<double>(uint16_t, uint8_t, const double&,
                                   ::std::error_code&) noexcept;
@@ -1142,8 +1192,8 @@ Device::GetUploadFile(uint16_t idx, uint8_t subidx) const {
 }
 
 const char*
-Device::GetUploadFile(uint16_t idx, uint8_t subidx, ::std::error_code& ec) const
-    noexcept {
+Device::GetUploadFile(uint16_t idx, uint8_t subidx,
+                      ::std::error_code& ec) const noexcept {
   auto obj = co_dev_find_obj(dev(), idx);
   if (!obj) {
     ec = SdoErrc::NO_OBJ;

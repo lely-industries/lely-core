@@ -1,10 +1,12 @@
 @{
-import os
-
 software_update = False
 for slave in slaves.values():
     if slave.software_file:
         software_update = True
+configuration_update = False
+for slave in slaves.values():
+    if slave.configuration_file:
+        configuration_update = True
 }@
 [DeviceComissioning]
 NodeID=@master.node_id
@@ -69,7 +71,7 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3 + software_update + 10)
+SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + configuration_update + 2 + software_update + 10)
 1=0x1003
 2=0x1005
 3=0x1006
@@ -103,10 +105,13 @@ SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3
 @{n += 1}@
 @n=@("0x{:04X}".format(0x1A00 + i))
 @[end for]@
-@(n + 1)=0x1F22
-@(n + 2)=0x1F25
-@(n + 3)=0x1F55
-@{n += 3}@
+@[if configuration_update]@
+@{n += 1}@
+@n=0x1F22
+@[end if]@
+@(n + 1)=0x1F25
+@(n + 2)=0x1F55
+@{n += 2}@
 @[if software_update]@
 @{n += 1}@
 @n=0x1F58
@@ -123,19 +128,43 @@ SupportedObjects=@(6 + master.heartbeat_consumer + 5 + 2 * nrpdo + 2 * ntpdo + 3
 @(n + 10)=0x1F8A
 
 [ManufacturerObjects]
+@{
+# Determine the indices of the RPDO-mapped objects.
+ridx = set()
+n = 0
+for slave in slaves.values():
+    mapped = set()
+    for pdo in slave.tpdo.values():
+        n += 1
+        for subobj in pdo.mapping.values():
+            if (subobj.index, subobj.sub_index) not in mapped:
+                mapped.add((subobj.index, subobj.sub_index))
+                ridx.add(0x2000 + n - 1)
+# Determine the indices of the TPDO-mapped objects.
+tidx = set()
+n = 0
+for slave in slaves.values():
+    mapped = set()
+    for pdo in slave.rpdo.values():
+        n += 1
+        for subobj in pdo.mapping.values():
+            if (subobj.index, subobj.sub_index) not in mapped:
+                mapped.add((subobj.index, subobj.sub_index))
+                tidx.add(0x2200 + n - 1)
+}@
 @[if remote_pdo]@
-SupportedObjects=@(3 * nrpdo + 3 * ntpdo)
+SupportedObjects=@(len(ridx) + len(tidx) + 2 * nrpdo + 2 * ntpdo)
 @[else]@
-SupportedObjects=@(nrpdo + ntpdo)
+SupportedObjects=@(len(ridx) + len(tidx))
 @[end if]@
 @{n = 0}@
-@[for i in range(nrpdo)]@
+@[for idx in sorted(ridx)]@
 @{n += 1}@
-@n=@("0x{:04X}".format(0x2000 + i))
+@n=@("0x{:04X}".format(idx))
 @[end for]@
-@[for i in range(ntpdo)]@
+@[for idx in sorted(tidx)]@
 @{n += 1}@
-@n=@("0x{:04X}".format(0x2200 + i))
+@n=@("0x{:04X}".format(idx))
 @[end for]@
 @[if remote_pdo]@
 @[for i in range(nrpdo)]@
@@ -364,10 +393,13 @@ CompactSubObj=@len(pdo.mapping)
 [@(name)Value]
 NrOfEntries=@len(pdo.mapping)
 @[for subobj in pdo.mapping.values()]@
-@[if (subobj.index, subobj.sub_index) not in mapping]@
-@{i += 1}@
-@{mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(0x2000 + n - 1, i, subobj.data_type.bits())}@
-@[end if]@
+@{
+if (subobj.index, subobj.sub_index) not in mapping:
+    i += 1
+    mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(
+        0x2000 + n - 1, i, subobj.data_type.bits()
+    )
+}@
 @{j += 1}@
 @j=@mapping[(subobj.index, subobj.sub_index)]
 @[end for]@
@@ -441,15 +473,19 @@ CompactSubObj=@len(pdo.mapping)
 [@(name)Value]
 NrOfEntries=@len(pdo.mapping)
 @[for subobj in pdo.mapping.values()]@
-@[if (subobj.index, subobj.sub_index) not in mapping]@
-@{i += 1}@
-@{mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(0x2200 + n - 1, i, subobj.data_type.bits())}@
-@[end if]@
+@{
+if (subobj.index, subobj.sub_index) not in mapping:
+    i += 1
+    mapping[(subobj.index, subobj.sub_index)] = "0x{:04X}{:02X}{:02X}".format(
+        0x2200 + n - 1, i, subobj.data_type.bits()
+    )
+}@
 @{j += 1}@
 @j=@mapping[(subobj.index, subobj.sub_index)]
 @[end for]@
 @[end for]@
 @[end for]@
+@[if configuration_update]@
 
 [1F22]
 SubNumber=128
@@ -468,11 +504,12 @@ ParameterName=Node-ID @(i + 1)
 DataType=0x000F
 AccessType=ro
 @[for name, slave in slaves.items()]@
-@[if slave.node_id == i + 1 and slave.sdo]@
-UploadFile=@(os.path.join(slave.dcf_path, name + ".bin"))
+@[if slave.node_id == i + 1 and slave.configuration_file]@
+UploadFile=@slave.configuration_file
 @[end if]@
 @[end for]@
 @[end for]@
+@[end if]@
 
 [1F25]
 ParameterName=Configuration request
@@ -650,14 +687,16 @@ NrOfEntries=@(sum(slave.restore_configuration != 0 for slave in slaves.values())
 @[for slave in slaves.values()]@
 @{mapped = set()}@
 @[for pdo in slave.tpdo.values()]@
-@{mapping = {}}@
-@[for i, subobj in pdo.mapping.items()]@
-@[if (subobj.index, subobj.sub_index) not in mapped]@
-@{mapped.add((subobj.index, subobj.sub_index)); mapping[i] = subobj}@
-@[end if]@
-@[end for]@
+@{
+n += 1
+mapping = {}
+for i, subobj in pdo.mapping.items():
+    if (subobj.index, subobj.sub_index) not in mapped:
+        mapped.add((subobj.index, subobj.sub_index))
+        mapping[i] = subobj
+}@
 @[if mapping]@
-@{name = "{:04X}".format(0x2000 + n); n += 1; i = 0}@
+@{name = "{:04X}".format(0x2000 + n - 1); i = 0}@
 
 [@name]
 SubNumber=@(len(mapping) + 1)
@@ -685,14 +724,16 @@ PDOMapping=1
 @[for slave in slaves.values()]@
 @{mapped = set()}@
 @[for pdo in slave.rpdo.values()]@
-@{mapping = {}}@
-@[for i, subobj in pdo.mapping.items()]@
-@[if (subobj.index, subobj.sub_index) not in mapped]@
-@{mapped.add((subobj.index, subobj.sub_index)); mapping[i] = subobj}@
-@[end if]@
-@[end for]@
+@{
+n += 1
+mapping = {}
+for i, subobj in pdo.mapping.items():
+    if (subobj.index, subobj.sub_index) not in mapped:
+        mapped.add((subobj.index, subobj.sub_index))
+        mapping[i] = subobj
+}@
 @[if mapping]@
-@{name = "{:04X}".format(0x2200 + n); n += 1; i = 0}@
+@{name = "{:04X}".format(0x2200 + n - 1); i = 0}@
 
 [@name]
 SubNumber=@(len(mapping) + 1)

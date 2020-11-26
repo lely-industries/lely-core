@@ -76,8 +76,6 @@ struct __co_nmt_cfg {
 #if !LELY_NO_MALLOC
 	/// The object dictionary stored in object 1F20 (Store DCF).
 	co_dev_t *dev_1f20;
-	/// The number of entries in the concise DCF in object 1F22.
-	co_unsigned32_t n_1f22;
 #endif
 };
 
@@ -385,7 +383,6 @@ __co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
 	co_sdo_req_init(&cfg->req, NULL);
 #if !LELY_NO_MALLOC
 	cfg->dev_1f20 = NULL;
-	cfg->n_1f22 = 0;
 #endif
 
 	return cfg;
@@ -878,20 +875,16 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 	if (!req->nbyte)
 		return co_nmt_cfg_user_state;
 
+	// Submit download requests for all entries in the concise DCF.
 	const uint_least8_t *begin = req->buf;
 	const uint_least8_t *end = begin + req->nbyte;
-
-	// Read the total number of entries.
-	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &cfg->n_1f22, begin, end) != 4) {
-		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
+	if (co_csdo_dn_dcf_req(cfg->sdo, begin, end, &co_nmt_cfg_dn_con, cfg)
+			== -1) {
+		cfg->ac = CO_SDO_AC_ERROR;
 		return co_nmt_cfg_abort_state;
 	}
-	begin += 4;
 
-	req->nbyte = end - begin;
-	req->offset = begin - (const uint_least8_t *)req->buf;
-
-	return co_nmt_cfg_store_1f22_on_dn_con(cfg, 0, 0, 0);
+	return NULL;
 }
 
 static co_nmt_cfg_state_t *
@@ -899,58 +892,15 @@ co_nmt_cfg_store_1f22_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		co_unsigned8_t subidx, co_unsigned32_t ac)
 {
 	assert(cfg);
-	struct co_sdo_req *req = &cfg->req;
+	(void)idx;
+	(void)subidx;
 
 	if (ac) {
 		cfg->ac = ac;
 		return co_nmt_cfg_abort_state;
 	}
 
-	if (!cfg->n_1f22--)
-		return co_nmt_cfg_user_state;
-
-	const uint_least8_t *begin =
-			(const uint_least8_t *)req->buf + req->offset;
-	const uint_least8_t *end = begin + req->nbyte;
-
-	// Read the object index.
-	if (co_val_read(CO_DEFTYPE_UNSIGNED16, &idx, begin, end) != 2) {
-		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
-		return co_nmt_cfg_abort_state;
-	}
-	begin += 2;
-	// Read the object sub-index.
-	if (co_val_read(CO_DEFTYPE_UNSIGNED8, &subidx, begin, end) != 1) {
-		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
-		return co_nmt_cfg_abort_state;
-	}
-	begin += 1;
-	// Read the value size (in bytes).
-	co_unsigned32_t size;
-	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &size, begin, end) != 4) {
-		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
-		return co_nmt_cfg_abort_state;
-	}
-	begin += 4;
-
-	if (end - begin < (ptrdiff_t)size) {
-		cfg->ac = CO_SDO_AC_TYPE_LEN_LO;
-		return co_nmt_cfg_abort_state;
-	}
-
-	req->nbyte = end - begin - size;
-	req->offset = begin + size - (const uint_least8_t *)req->buf;
-
-	// Write the value to the slave.
-	// clang-format off
-	if (co_csdo_dn_req(cfg->sdo, idx, subidx, begin, size,
-			&co_nmt_cfg_dn_con, cfg) == -1) {
-		// clang-format on
-		cfg->ac = CO_SDO_AC_ERROR;
-		return co_nmt_cfg_abort_state;
-	}
-
-	return NULL;
+	return co_nmt_cfg_user_state;
 }
 
 #endif // !LELY_NO_MALLOC

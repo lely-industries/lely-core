@@ -588,7 +588,7 @@ def __parse_float(value: str, data_type: int):
 
 
 __p_value = re.compile(
-    r"\s*(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
+    r"(\$(?P<variable>NODEID)\s*\+\s*)?(?P<value>(-?0x[0-9A-F]+)|(-?[0-9]+))$",
     re.IGNORECASE,
 )
 
@@ -600,6 +600,8 @@ def __parse_limit(cfg: dict, section: str, entry: str, data_type: int) -> bool:
         try:
             if data_type == 0x0008 or data_type == 0x0011:
                 value = __parse_float(cfg[section][entry], data_type)
+            elif cfg[section][entry].upper() == "$NODEID":
+                value_has_nodeid = True
             else:
                 m = __p_value.match(cfg[section][entry])
                 if m:
@@ -650,29 +652,39 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                 high_limit = __parse_float(cfg["HighLimit"], data_type)
         else:
             if "LowLimit" in cfg:
-                m = __p_value.match(cfg["LowLimit"])
-                if m:
-                    low_limit = int(m.group("value"), 0)
-                    low_limit_has_nodeid = m.group("variable") is not None
+                if cfg["LowLimit"].upper() == "$NODEID":
+                    low_limit = 0
+                    low_limit_has_nodeid = True
                 else:
-                    warnings.warn(
-                        "invalid LowLimit in [{}]: {}".format(section, cfg["LowLimit"]),
-                        stacklevel=5,
-                    )
-                    return False
+                    m = __p_value.match(cfg["LowLimit"])
+                    if m:
+                        low_limit = int(m.group("value"), 0)
+                        low_limit_has_nodeid = m.group("variable") is not None
+                    else:
+                        warnings.warn(
+                            "invalid LowLimit in [{}]: {}".format(
+                                section, cfg["LowLimit"]
+                            ),
+                            stacklevel=5,
+                        )
+                        return False
             if "HighLimit" in cfg:
-                m = __p_value.match(cfg["HighLimit"])
-                if m:
-                    high_limit = int(m.group("value"), 0)
-                    high_limit_has_nodeid = m.group("variable") is not None
+                if cfg["HighLimit"].upper() == "$NODEID":
+                    high_limit = 0
+                    high_limit_has_nodeid = True
                 else:
-                    warnings.warn(
-                        "invalid HighLimit in [{}]: {}".format(
-                            section, cfg["HighLimit"]
-                        ),
-                        stacklevel=5,
-                    )
-                    return False
+                    m = __p_value.match(cfg["HighLimit"])
+                    if m:
+                        high_limit = int(m.group("value"), 0)
+                        high_limit_has_nodeid = m.group("variable") is not None
+                    else:
+                        warnings.warn(
+                            "invalid HighLimit in [{}]: {}".format(
+                                section, cfg["HighLimit"]
+                            ),
+                            stacklevel=5,
+                        )
+                        return False
 
         value_has_nodeid = False
         if data_type == 0x0008 or data_type == 0x0011:
@@ -683,6 +695,9 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                     "invalid {} in [{}]: {}".format(entry, section, value), stacklevel=5
                 )
                 return False
+        elif value == "$NODEID":
+            value = 0
+            value_has_nodeid = True
         else:
             m = __p_value.match(value)
             if m:
