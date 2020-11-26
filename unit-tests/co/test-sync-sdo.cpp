@@ -68,7 +68,7 @@ TEST_GROUP(CO_SyncSdo) {
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartSYNC() { co_sync_start(sync); }
+  void RestartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
