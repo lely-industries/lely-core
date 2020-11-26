@@ -52,14 +52,11 @@ extern "C" {
 void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		co_unsigned8_t st);
 
+/// Returns alignment of the #co_nmt_hb_t structure.
 size_t co_nmt_hb_alignof(void);
-size_t co_nmt_hb_sizeof(void);
 
-void *__co_nmt_hb_alloc(can_net_t *net);
-void __co_nmt_hb_free(void *ptr);
-struct __co_nmt_hb *__co_nmt_hb_init(
-		struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt);
-void __co_nmt_hb_fini(struct __co_nmt_hb *hb);
+/// Returns size of the #co_nmt_hb_t structure.
+size_t co_nmt_hb_sizeof(void);
 
 /**
  * Creates a new CANopen NMT heartbeat consumer service.

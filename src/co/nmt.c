@@ -265,6 +265,18 @@ struct __co_nmt {
 #endif
 };
 
+/// Allocates memory for #co_nmt_t object using allocator from #can_net_t.
+static void *co_nmt_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_nmt_t object.
+static void co_nmt_free(co_nmt_t *nmt);
+
+/// Initializes #co_nmt_t object.
+static co_nmt_t *co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev);
+
+/// Finalizes #co_nmt_t object.
+static void co_nmt_fini(struct __co_nmt *nmt);
+
 /**
  * The download indication function for CANopen object 100C (Guard time).
  *
@@ -777,400 +789,18 @@ co_nmt_sizeof(void)
 	return sizeof(co_nmt_t);
 }
 
-void *
-__co_nmt_alloc(can_net_t *net)
-{
-	struct __co_nmt *nmt = mem_alloc(can_net_get_alloc(net),
-			co_nmt_alignof(), co_nmt_sizeof());
-	if (!nmt)
-		return NULL;
-
-	nmt->net = net;
-
-	return nmt;
-}
-
-void
-__co_nmt_free(void *ptr)
-{
-	struct __co_nmt *nmt = ptr;
-
-	if (nmt)
-		mem_free(co_nmt_get_alloc(nmt), nmt);
-}
-
-struct __co_nmt *
-__co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
-{
-	assert(nmt);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	nmt->net = net;
-	nmt->dev = dev;
-
-	nmt->id = co_dev_get_id(nmt->dev);
-
-#ifndef LELY_NO_CO_DCF_RESTORE
-	// Store a concise DCF containing the application parameters.
-	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, &nmt->dcf_node) == -1) {
-		errc = get_errc();
-		goto error_write_dcf_node;
-	}
-#endif
-
-	// Store a concise DCF containing the communication parameters.
-	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm) == -1) {
-		errc = get_errc();
-		goto error_write_dcf_comm;
-	}
-
-	nmt->state = NULL;
-
-	co_nmt_srv_init(&nmt->srv, nmt);
-
-	nmt->startup = 0;
-#ifndef LELY_NO_CO_MASTER
-	nmt->master = 0;
-#endif
-
-	// Create the CAN frame receiver for NMT messages.
-	nmt->recv_000 = can_recv_create(co_nmt_get_alloc(nmt));
-	if (!nmt->recv_000) {
-		errc = get_errc();
-		goto error_create_recv_000;
-	}
-	can_recv_set_func(nmt->recv_000, &co_nmt_recv_000, nmt);
-
-	nmt->cs_ind = NULL;
-	nmt->cs_data = NULL;
-
-	// Create the CAN frame receiver for node guarding RTR and boot-up
-	// messages.
-	nmt->recv_700 = can_recv_create(co_nmt_get_alloc(nmt));
-	if (!nmt->recv_700) {
-		errc = get_errc();
-		goto error_create_recv_700;
-	}
-	can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
-
-#ifndef LELY_NO_CO_MASTER
-	nmt->ng_ind = &default_ng_ind;
-	nmt->ng_data = NULL;
-#endif
-
-	nmt->ec_timer = can_timer_create(co_nmt_get_alloc(nmt));
-	if (!nmt->ec_timer) {
-		errc = get_errc();
-		goto error_create_ec_timer;
-	}
-	can_timer_set_func(nmt->ec_timer, &co_nmt_ec_timer, nmt);
-
-	nmt->st = CO_NMT_ST_BOOTUP;
-	nmt->gt = 0;
-	nmt->ltf = 0;
-
-	nmt->lg_state = CO_NMT_EC_RESOLVED;
-	nmt->lg_ind = &default_lg_ind;
-	nmt->lg_data = NULL;
-
-	nmt->ms = 0;
-
-#if LELY_NO_MALLOC
-	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
-#else
-	nmt->hbs = NULL;
-#endif
-	nmt->nhb = 0;
-	nmt->hb_ind = &default_hb_ind;
-	nmt->hb_data = NULL;
-
-	nmt->st_ind = &default_st_ind;
-	nmt->st_data = NULL;
-
-#ifndef LELY_NO_CO_MASTER
-	// Create a CAN fame buffer for pending NMT messages that will be sent
-	// once the inhibit time has elapsed.
-#if LELY_NO_MALLOC
-	can_buf_init(&nmt->buf, nmt->begin, CO_NMT_CAN_BUF_SIZE);
-	memset(nmt->begin, 0, CO_NMT_CAN_BUF_SIZE * sizeof(*nmt->begin));
-#else
-	can_buf_init(&nmt->buf, NULL, 0);
-#endif
-
-	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = can_timer_create(co_nmt_get_alloc(nmt));
-	if (!nmt->cs_timer) {
-		errc = get_errc();
-		goto error_create_cs_timer;
-	}
-	can_timer_set_func(nmt->cs_timer, &co_nmt_cs_timer, nmt);
-
-#ifndef LELY_NO_CO_LSS
-	nmt->lss_req = NULL;
-	nmt->lss_data = NULL;
-#endif
-
-	nmt->halt = 0;
-
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-		slave->nmt = nmt;
-
-		slave->recv = NULL;
-		slave->timer = NULL;
-
-		slave->assignment = 0;
-		slave->est = 0;
-		slave->rst = 0;
-		slave->es = 0;
-
-		slave->booted = 0;
-		slave->boot = NULL;
-
-		slave->cfg = NULL;
-		slave->cfg_con = NULL;
-		slave->cfg_data = NULL;
-
-		slave->gt = 0;
-		slave->ltf = 0;
-		slave->rtr = 0;
-		slave->ng_state = CO_NMT_EC_RESOLVED;
-	}
-
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-
-		slave->recv = can_recv_create(co_nmt_get_alloc(nmt));
-		if (!slave->recv) {
-			errc = get_errc();
-			goto error_init_slave;
-		}
-		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
-
-		slave->timer = can_timer_create(co_nmt_get_alloc(nmt));
-		if (!slave->timer) {
-			errc = get_errc();
-			goto error_init_slave;
-		}
-		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
-	}
-
-	nmt->timeout = LELY_CO_NMT_TIMEOUT;
-
-	nmt->boot_ind = NULL;
-	nmt->boot_data = NULL;
-	nmt->cfg_ind = NULL;
-	nmt->cfg_data = NULL;
-	nmt->dn_ind = NULL;
-	nmt->dn_data = NULL;
-	nmt->up_ind = NULL;
-	nmt->up_data = NULL;
-#endif
-	nmt->sync_ind = NULL;
-	nmt->sync_data = NULL;
-
-#ifndef LELY_NO_CO_TPDO
-	nmt->tpdo_event_wait = 0;
-	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
-		nmt->tpdo_event_mask[i] = 0;
-
-	// Set the Transmit-PDO event indication function.
-	co_dev_set_tpdo_event_ind(nmt->dev, &co_nmt_tpdo_event_ind, nmt);
-#endif
-
-	// Set the download indication function for the guard time.
-	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
-	if (obj_100c)
-		co_obj_set_dn_ind(obj_100c, &co_100c_dn_ind, nmt);
-
-	// Set the download indication function for the life time factor.
-	co_obj_t *obj_100d = co_dev_find_obj(nmt->dev, 0x100d);
-	if (obj_100d)
-		co_obj_set_dn_ind(obj_100d, &co_100d_dn_ind, nmt);
-
-	// Set the download indication function for the consumer heartbeat time.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-	if (obj_1016)
-		co_obj_set_dn_ind(obj_1016, &co_1016_dn_ind, nmt);
-
-	// Set the download indication function for the producer heartbeat time.
-	co_obj_t *obj_1017 = co_dev_find_obj(nmt->dev, 0x1017);
-	if (obj_1017)
-		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
-
-#ifndef LELY_NO_CO_MASTER
-	// Set the download indication function for the configuration request
-	// value.
-	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
-	if (obj_1f25)
-		co_obj_set_dn_ind(obj_1f25, &co_1f25_dn_ind, nmt);
-#endif
-
-	// Set the download indication function for the NMT startup value.
-	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
-	if (obj_1f80)
-		co_obj_set_dn_ind(obj_1f80, &co_1f80_dn_ind, nmt);
-
-#ifndef LELY_NO_CO_MASTER
-	// Set the download indication function for the request NMT value.
-	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
-	if (obj_1f82)
-		co_obj_set_dn_ind(obj_1f82, &co_1f82_dn_ind, nmt);
-#endif
-
-	co_nmt_enter(nmt, co_nmt_init_state);
-	return nmt;
-
-// #ifndef LELY_NO_CO_MASTER
-// 	if (obj_1f82)
-// 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
-// #endif
-// 	if (obj_1f80)
-// 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
-// #ifndef LELY_NO_CO_MASTER
-// 	if (obj_1f25)
-// 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
-// #endif
-// 	if (obj_1017)
-// 		co_obj_set_dn_ind(obj_1017, NULL, NULL);
-// 	if (obj_1016)
-// 		co_obj_set_dn_ind(obj_1016, NULL, NULL);
-// 	if (obj_100d)
-// 		co_obj_set_dn_ind(obj_100d, NULL, NULL);
-// 	if (obj_100c)
-// 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
-// #ifndef LELY_NO_CO_TPDO
-// 	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
-// #endif
-#ifndef LELY_NO_CO_MASTER
-error_init_slave:
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-
-		can_recv_destroy(slave->recv);
-		can_timer_destroy(slave->timer);
-	}
-	can_timer_destroy(nmt->cs_timer);
-error_create_cs_timer:
-	can_buf_fini(&nmt->buf);
-#endif
-	can_timer_destroy(nmt->ec_timer);
-error_create_ec_timer:
-	can_recv_destroy(nmt->recv_700);
-error_create_recv_700:
-	can_recv_destroy(nmt->recv_000);
-error_create_recv_000:
-	co_nmt_srv_fini(&nmt->srv);
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
-error_write_dcf_comm:
-#ifndef LELY_NO_CO_DCF_RESTORE
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
-error_write_dcf_node:
-#endif
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_nmt_fini(struct __co_nmt *nmt)
-{
-	assert(nmt);
-
-#ifndef LELY_NO_CO_MASTER
-	// Remove the download indication function for the request NMT value.
-	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
-	if (obj_1f82)
-		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
-#endif
-
-	// Remove the download indication function for the NMT startup value.
-	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
-	if (obj_1f80)
-		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
-
-#ifndef LELY_NO_CO_MASTER
-	// Remove the download indication function for the configuration request
-	// value.
-	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
-	if (obj_1f25)
-		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
-#endif
-
-	// Remove the download indication function for the producer heartbeat
-	// time.
-	co_obj_t *obj_1017 = co_dev_find_obj(nmt->dev, 0x1017);
-	if (obj_1017)
-		co_obj_set_dn_ind(obj_1017, NULL, NULL);
-
-	// Remove the download indication function for the consumer heartbeat
-	// time.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
-	if (obj_1016)
-		co_obj_set_dn_ind(obj_1016, NULL, NULL);
-
-	// Remove the download indication function for the life time factor.
-	co_obj_t *obj_100d = co_dev_find_obj(nmt->dev, 0x100d);
-	if (obj_100d)
-		co_obj_set_dn_ind(obj_100d, NULL, NULL);
-
-	// Remove the download indication function for the guard time.
-	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
-	if (obj_100c)
-		co_obj_set_dn_ind(obj_100c, NULL, NULL);
-
-#ifndef LELY_NO_CO_TPDO
-	// Remove the Transmit-PDO event indication function.
-	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
-#endif
-
-#ifndef LELY_NO_CO_MASTER
-	co_nmt_slaves_fini(nmt);
-
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
-
-		can_recv_destroy(slave->recv);
-		can_timer_destroy(slave->timer);
-	}
-#endif
-
-#ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(nmt->cs_timer);
-	can_buf_fini(&nmt->buf);
-#endif
-
-	co_nmt_hb_fini(nmt);
-
-	co_nmt_ec_fini(nmt);
-
-	can_timer_destroy(nmt->ec_timer);
-	can_recv_destroy(nmt->recv_700);
-
-	can_recv_destroy(nmt->recv_000);
-
-	co_nmt_srv_fini(&nmt->srv);
-
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
-#ifndef LELY_NO_CO_DCF_RESTORE
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
-#endif
-}
-
 co_nmt_t *
 co_nmt_create(can_net_t *net, co_dev_t *dev)
 {
 	int errc = 0;
 
-	co_nmt_t *nmt = __co_nmt_alloc(net);
+	co_nmt_t *nmt = co_nmt_alloc(net);
 	if (!nmt) {
 		errc = get_errc();
 		goto error_alloc_nmt;
 	}
 
-	if (!__co_nmt_init(nmt, net, dev)) {
+	if (!co_nmt_init(nmt, net, dev)) {
 		errc = get_errc();
 		goto error_init_nmt;
 	}
@@ -1178,7 +808,7 @@ co_nmt_create(can_net_t *net, co_dev_t *dev)
 	return nmt;
 
 error_init_nmt:
-	__co_nmt_free(nmt);
+	co_nmt_free(nmt);
 error_alloc_nmt:
 	set_errc(errc);
 	return NULL;
@@ -1188,8 +818,8 @@ void
 co_nmt_destroy(co_nmt_t *nmt)
 {
 	if (nmt) {
-		__co_nmt_fini(nmt);
-		__co_nmt_free(nmt);
+		co_nmt_fini(nmt);
+		co_nmt_free(nmt);
 	}
 }
 
@@ -3609,3 +3239,382 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 }
 
 #endif // !LELY_NO_CO_MASTER
+
+static void *
+co_nmt_alloc(can_net_t *net)
+{
+	co_nmt_t *nmt = mem_alloc(can_net_get_alloc(net), co_nmt_alignof(),
+			co_nmt_sizeof());
+	if (!nmt)
+		return NULL;
+
+	nmt->net = net;
+
+	return nmt;
+}
+
+static void
+co_nmt_free(co_nmt_t *nmt)
+{
+	mem_free(co_nmt_get_alloc(nmt), nmt);
+}
+
+static co_nmt_t *
+co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
+{
+	assert(nmt);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	nmt->net = net;
+	nmt->dev = dev;
+
+	nmt->id = co_dev_get_id(nmt->dev);
+
+#ifndef LELY_NO_CO_DCF_RESTORE
+	// Store a concise DCF containing the application parameters.
+	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, &nmt->dcf_node) == -1) {
+		errc = get_errc();
+		goto error_write_dcf_node;
+	}
+#endif
+
+	// Store a concise DCF containing the communication parameters.
+	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm) == -1) {
+		errc = get_errc();
+		goto error_write_dcf_comm;
+	}
+
+	nmt->state = NULL;
+
+	co_nmt_srv_init(&nmt->srv, nmt);
+
+	nmt->startup = 0;
+#ifndef LELY_NO_CO_MASTER
+	nmt->master = 0;
+#endif
+
+	// Create the CAN frame receiver for NMT messages.
+	nmt->recv_000 = can_recv_create(co_nmt_get_alloc(nmt));
+	if (!nmt->recv_000) {
+		errc = get_errc();
+		goto error_create_recv_000;
+	}
+	can_recv_set_func(nmt->recv_000, &co_nmt_recv_000, nmt);
+
+	nmt->cs_ind = NULL;
+	nmt->cs_data = NULL;
+
+	// Create the CAN frame receiver for node guarding RTR and boot-up
+	// messages.
+	nmt->recv_700 = can_recv_create(co_nmt_get_alloc(nmt));
+	if (!nmt->recv_700) {
+		errc = get_errc();
+		goto error_create_recv_700;
+	}
+	can_recv_set_func(nmt->recv_700, &co_nmt_recv_700, nmt);
+
+#ifndef LELY_NO_CO_MASTER
+	nmt->ng_ind = &default_ng_ind;
+	nmt->ng_data = NULL;
+#endif
+
+	nmt->ec_timer = can_timer_create(co_nmt_get_alloc(nmt));
+	if (!nmt->ec_timer) {
+		errc = get_errc();
+		goto error_create_ec_timer;
+	}
+	can_timer_set_func(nmt->ec_timer, &co_nmt_ec_timer, nmt);
+
+	nmt->st = CO_NMT_ST_BOOTUP;
+	nmt->gt = 0;
+	nmt->ltf = 0;
+
+	nmt->lg_state = CO_NMT_EC_RESOLVED;
+	nmt->lg_ind = &default_lg_ind;
+	nmt->lg_data = NULL;
+
+	nmt->ms = 0;
+
+#if LELY_NO_MALLOC
+	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+#else
+	nmt->hbs = NULL;
+#endif
+	nmt->nhb = 0;
+	nmt->hb_ind = &default_hb_ind;
+	nmt->hb_data = NULL;
+
+	nmt->st_ind = &default_st_ind;
+	nmt->st_data = NULL;
+
+#ifndef LELY_NO_CO_MASTER
+	// Create a CAN fame buffer for pending NMT messages that will be sent
+	// once the inhibit time has elapsed.
+#if LELY_NO_MALLOC
+	can_buf_init(&nmt->buf, nmt->begin, CO_NMT_CAN_BUF_SIZE);
+	memset(nmt->begin, 0, CO_NMT_CAN_BUF_SIZE * sizeof(*nmt->begin));
+#else
+	can_buf_init(&nmt->buf, NULL, 0);
+#endif
+
+	can_net_get_time(nmt->net, &nmt->inhibit);
+	nmt->cs_timer = can_timer_create(co_nmt_get_alloc(nmt));
+	if (!nmt->cs_timer) {
+		errc = get_errc();
+		goto error_create_cs_timer;
+	}
+	can_timer_set_func(nmt->cs_timer, &co_nmt_cs_timer, nmt);
+
+#ifndef LELY_NO_CO_LSS
+	nmt->lss_req = NULL;
+	nmt->lss_data = NULL;
+#endif
+
+	nmt->halt = 0;
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+		slave->nmt = nmt;
+
+		slave->recv = NULL;
+		slave->timer = NULL;
+
+		slave->assignment = 0;
+		slave->est = 0;
+		slave->rst = 0;
+		slave->es = 0;
+
+		slave->booted = 0;
+		slave->boot = NULL;
+
+		slave->cfg = NULL;
+		slave->cfg_con = NULL;
+		slave->cfg_data = NULL;
+
+		slave->gt = 0;
+		slave->ltf = 0;
+		slave->rtr = 0;
+		slave->ng_state = CO_NMT_EC_RESOLVED;
+	}
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		slave->recv = can_recv_create(co_nmt_get_alloc(nmt));
+		if (!slave->recv) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
+
+		slave->timer = can_timer_create(co_nmt_get_alloc(nmt));
+		if (!slave->timer) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
+	}
+
+	nmt->timeout = LELY_CO_NMT_TIMEOUT;
+
+	nmt->boot_ind = NULL;
+	nmt->boot_data = NULL;
+	nmt->cfg_ind = NULL;
+	nmt->cfg_data = NULL;
+	nmt->dn_ind = NULL;
+	nmt->dn_data = NULL;
+	nmt->up_ind = NULL;
+	nmt->up_data = NULL;
+#endif
+	nmt->sync_ind = NULL;
+	nmt->sync_data = NULL;
+
+#ifndef LELY_NO_CO_TPDO
+	nmt->tpdo_event_wait = 0;
+	for (int i = 0; i < CO_NUM_PDOS / LONG_BIT; i++)
+		nmt->tpdo_event_mask[i] = 0;
+
+	// Set the Transmit-PDO event indication function.
+	co_dev_set_tpdo_event_ind(nmt->dev, &co_nmt_tpdo_event_ind, nmt);
+#endif
+
+	// Set the download indication function for the guard time.
+	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
+	if (obj_100c)
+		co_obj_set_dn_ind(obj_100c, &co_100c_dn_ind, nmt);
+
+	// Set the download indication function for the life time factor.
+	co_obj_t *obj_100d = co_dev_find_obj(nmt->dev, 0x100d);
+	if (obj_100d)
+		co_obj_set_dn_ind(obj_100d, &co_100d_dn_ind, nmt);
+
+	// Set the download indication function for the consumer heartbeat time.
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	if (obj_1016)
+		co_obj_set_dn_ind(obj_1016, &co_1016_dn_ind, nmt);
+
+	// Set the download indication function for the producer heartbeat time.
+	co_obj_t *obj_1017 = co_dev_find_obj(nmt->dev, 0x1017);
+	if (obj_1017)
+		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
+
+#ifndef LELY_NO_CO_MASTER
+	// Set the download indication function for the configuration request
+	// value.
+	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
+	if (obj_1f25)
+		co_obj_set_dn_ind(obj_1f25, &co_1f25_dn_ind, nmt);
+#endif
+
+	// Set the download indication function for the NMT startup value.
+	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
+	if (obj_1f80)
+		co_obj_set_dn_ind(obj_1f80, &co_1f80_dn_ind, nmt);
+
+#ifndef LELY_NO_CO_MASTER
+	// Set the download indication function for the request NMT value.
+	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
+	if (obj_1f82)
+		co_obj_set_dn_ind(obj_1f82, &co_1f82_dn_ind, nmt);
+#endif
+
+	co_nmt_enter(nmt, co_nmt_init_state);
+	return nmt;
+
+// #ifndef LELY_NO_CO_MASTER
+// 	if (obj_1f82)
+// 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+// #endif
+// 	if (obj_1f80)
+// 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
+// #ifndef LELY_NO_CO_MASTER
+// 	if (obj_1f25)
+// 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+// #endif
+// 	if (obj_1017)
+// 		co_obj_set_dn_ind(obj_1017, NULL, NULL);
+// 	if (obj_1016)
+// 		co_obj_set_dn_ind(obj_1016, NULL, NULL);
+// 	if (obj_100d)
+// 		co_obj_set_dn_ind(obj_100d, NULL, NULL);
+// 	if (obj_100c)
+// 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+// #ifndef LELY_NO_CO_TPDO
+// 	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
+// #endif
+#ifndef LELY_NO_CO_MASTER
+error_init_slave:
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+	can_timer_destroy(nmt->cs_timer);
+error_create_cs_timer:
+	can_buf_fini(&nmt->buf);
+#endif
+	can_timer_destroy(nmt->ec_timer);
+error_create_ec_timer:
+	can_recv_destroy(nmt->recv_700);
+error_create_recv_700:
+	can_recv_destroy(nmt->recv_000);
+error_create_recv_000:
+	co_nmt_srv_fini(&nmt->srv);
+	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
+error_write_dcf_comm:
+#ifndef LELY_NO_CO_DCF_RESTORE
+	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
+error_write_dcf_node:
+#endif
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_nmt_fini(co_nmt_t *nmt)
+{
+	assert(nmt);
+
+#ifndef LELY_NO_CO_MASTER
+	// Remove the download indication function for the request NMT value.
+	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
+	if (obj_1f82)
+		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+#endif
+
+	// Remove the download indication function for the NMT startup value.
+	co_obj_t *obj_1f80 = co_dev_find_obj(nmt->dev, 0x1f80);
+	if (obj_1f80)
+		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
+
+#ifndef LELY_NO_CO_MASTER
+	// Remove the download indication function for the configuration request
+	// value.
+	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
+	if (obj_1f25)
+		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
+#endif
+
+	// Remove the download indication function for the producer heartbeat
+	// time.
+	co_obj_t *obj_1017 = co_dev_find_obj(nmt->dev, 0x1017);
+	if (obj_1017)
+		co_obj_set_dn_ind(obj_1017, NULL, NULL);
+
+	// Remove the download indication function for the consumer heartbeat
+	// time.
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
+	if (obj_1016)
+		co_obj_set_dn_ind(obj_1016, NULL, NULL);
+
+	// Remove the download indication function for the life time factor.
+	co_obj_t *obj_100d = co_dev_find_obj(nmt->dev, 0x100d);
+	if (obj_100d)
+		co_obj_set_dn_ind(obj_100d, NULL, NULL);
+
+	// Remove the download indication function for the guard time.
+	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
+	if (obj_100c)
+		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+
+#ifndef LELY_NO_CO_TPDO
+	// Remove the Transmit-PDO event indication function.
+	co_dev_set_tpdo_event_ind(nmt->dev, NULL, NULL);
+#endif
+
+#ifndef LELY_NO_CO_MASTER
+	co_nmt_slaves_fini(nmt);
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+
+		can_recv_destroy(slave->recv);
+		can_timer_destroy(slave->timer);
+	}
+#endif
+
+#ifndef LELY_NO_CO_MASTER
+	can_timer_destroy(nmt->cs_timer);
+	can_buf_fini(&nmt->buf);
+#endif
+
+	co_nmt_hb_fini(nmt);
+
+	co_nmt_ec_fini(nmt);
+
+	can_timer_destroy(nmt->ec_timer);
+	can_recv_destroy(nmt->recv_700);
+
+	can_recv_destroy(nmt->recv_000);
+
+	co_nmt_srv_fini(&nmt->srv);
+
+	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
+#ifndef LELY_NO_CO_DCF_RESTORE
+	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
+#endif
+}

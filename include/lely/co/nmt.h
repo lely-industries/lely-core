@@ -276,14 +276,13 @@ co_unsigned32_t co_dev_cfg_hb(
 /// Returns a pointer to a string describing an NMT boot error status.
 const char *co_nmt_es2str(char es);
 
-size_t co_nmt_alignof(void);
-size_t co_nmt_sizeof(void);
+size_t co_time_sizeof(void);
 
-void *__co_nmt_alloc(can_net_t *net);
-void __co_nmt_free(void *ptr);
-struct __co_nmt *__co_nmt_init(
-		struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev);
-void __co_nmt_fini(struct __co_nmt *nmt);
+/// Returns alignment of the #co_nmt_t structure.
+size_t co_nmt_alignof(void);
+
+/// Returns size of the #co_nmt_t structure.
+size_t co_nmt_sizeof(void);
 
 /**
  * Creates a new CANopen NMT master/slave service.

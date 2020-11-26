@@ -51,6 +51,19 @@ struct __co_nmt_hb {
 	int state;
 };
 
+/// Allocates memory for #co_nmt_hb_t object using allocator from #can_net_t.
+static void *co_nmt_hb_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_nmt_hb_t object.
+static void co_nmt_hb_free(co_nmt_hb_t *hb);
+
+/// Initializes #co_nmt_hb_t object.
+static co_nmt_hb_t *co_nmt_hb_init(
+		co_nmt_hb_t *hb, can_net_t *net, co_nmt_t *nmt);
+
+/// Finalizes #co_nmt_hb_t object.
+static void co_nmt_hb_fini(co_nmt_hb_t *hb);
+
 /**
  * The CAN receive callback function for a heartbeat consumer.
  *
@@ -77,90 +90,18 @@ co_nmt_hb_sizeof(void)
 	return sizeof(co_nmt_hb_t);
 }
 
-void *
-__co_nmt_hb_alloc(can_net_t *net)
-{
-	struct __co_nmt_hb *hb = mem_alloc(can_net_get_alloc(net),
-			co_nmt_hb_alignof(), co_nmt_hb_sizeof());
-	if (!hb)
-		return NULL;
-
-	hb->net = net;
-
-	return hb;
-}
-
-void
-__co_nmt_hb_free(void *ptr)
-{
-	struct __co_nmt_hb *hb = ptr;
-
-	if (hb)
-		mem_free(co_nmt_hb_get_alloc(hb), hb);
-}
-
-struct __co_nmt_hb *
-__co_nmt_hb_init(struct __co_nmt_hb *hb, can_net_t *net, co_nmt_t *nmt)
-{
-	assert(hb);
-	assert(net);
-	assert(nmt);
-
-	int errc = 0;
-
-	hb->net = net;
-	hb->nmt = nmt;
-
-	hb->recv = can_recv_create(co_nmt_hb_get_alloc(hb));
-	if (!hb->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(hb->recv, &co_nmt_hb_recv, hb);
-
-	hb->timer = can_timer_create(co_nmt_hb_get_alloc(hb));
-	if (!hb->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(hb->timer, &co_nmt_hb_timer, hb);
-
-	hb->id = 0;
-	hb->st = 0;
-	hb->ms = 0;
-	hb->state = CO_NMT_EC_RESOLVED;
-
-	return hb;
-
-	// can_timer_destroy(hb->timer);
-error_create_timer:
-	can_recv_destroy(hb->recv);
-error_create_recv:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_nmt_hb_fini(struct __co_nmt_hb *hb)
-{
-	assert(hb);
-
-	can_timer_destroy(hb->timer);
-	can_recv_destroy(hb->recv);
-}
-
 co_nmt_hb_t *
 co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_hb_t *hb = __co_nmt_hb_alloc(net);
+	co_nmt_hb_t *hb = co_nmt_hb_alloc(net);
 	if (!hb) {
 		errc = get_errc();
 		goto error_alloc_hb;
 	}
 
-	if (!__co_nmt_hb_init(hb, net, nmt)) {
+	if (!co_nmt_hb_init(hb, net, nmt)) {
 		errc = get_errc();
 		goto error_init_hb;
 	}
@@ -168,7 +109,7 @@ co_nmt_hb_create(can_net_t *net, co_nmt_t *nmt)
 	return hb;
 
 error_init_hb:
-	__co_nmt_hb_free(hb);
+	co_nmt_hb_free(hb);
 error_alloc_hb:
 	set_errc(errc);
 	return NULL;
@@ -178,8 +119,8 @@ void
 co_nmt_hb_destroy(co_nmt_hb_t *hb)
 {
 	if (hb) {
-		__co_nmt_hb_fini(hb);
-		__co_nmt_hb_free(hb);
+		co_nmt_hb_fini(hb);
+		co_nmt_hb_free(hb);
 	}
 }
 
@@ -289,4 +230,73 @@ co_nmt_hb_timer(const struct timespec *tp, void *data)
 	co_nmt_hb_ind(hb->nmt, hb->id, hb->state, CO_NMT_EC_TIMEOUT, 0);
 
 	return 0;
+}
+
+static void *
+co_nmt_hb_alloc(can_net_t *net)
+{
+	co_nmt_hb_t *hb = mem_alloc(can_net_get_alloc(net), co_nmt_hb_alignof(),
+			co_nmt_hb_sizeof());
+	if (!hb)
+		return NULL;
+
+	hb->net = net;
+
+	return hb;
+}
+
+static void
+co_nmt_hb_free(co_nmt_hb_t *hb)
+{
+	mem_free(co_nmt_hb_get_alloc(hb), hb);
+}
+
+static co_nmt_hb_t *
+co_nmt_hb_init(co_nmt_hb_t *hb, can_net_t *net, co_nmt_t *nmt)
+{
+	assert(hb);
+	assert(net);
+	assert(nmt);
+
+	int errc = 0;
+
+	hb->net = net;
+	hb->nmt = nmt;
+
+	hb->recv = can_recv_create(co_nmt_hb_get_alloc(hb));
+	if (!hb->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(hb->recv, &co_nmt_hb_recv, hb);
+
+	hb->timer = can_timer_create(co_nmt_hb_get_alloc(hb));
+	if (!hb->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(hb->timer, &co_nmt_hb_timer, hb);
+
+	hb->id = 0;
+	hb->st = 0;
+	hb->ms = 0;
+	hb->state = CO_NMT_EC_RESOLVED;
+
+	return hb;
+
+	// can_timer_destroy(hb->timer);
+error_create_timer:
+	can_recv_destroy(hb->recv);
+error_create_recv:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_nmt_hb_fini(co_nmt_hb_t *hb)
+{
+	assert(hb);
+
+	can_timer_destroy(hb->timer);
+	can_recv_destroy(hb->recv);
 }
