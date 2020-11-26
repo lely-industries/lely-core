@@ -35,12 +35,12 @@
 
 #include <assert.h>
 
-struct __co_lss_state;
+struct co_lss_state;
 /// An opaque CANopen LSS state type.
-typedef const struct __co_lss_state co_lss_state_t;
+typedef const struct co_lss_state co_lss_state_t;
 
 /// A CANopen LSS master/slave service.
-struct __co_lss {
+struct co_lss {
 	/// A pointer to an NMT master/slave service.
 	co_nmt_t *nmt;
 	/// A pointer to a CAN network interface.
@@ -173,7 +173,7 @@ static inline void co_lss_emit_time(co_lss_t *lss, const struct timespec *tp);
 #endif
 
 /// A CANopen LSS state.
-struct __co_lss_state {
+struct co_lss_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_lss_state_t *(*on_enter)(co_lss_t *lss);
 	/**
