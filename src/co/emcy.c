@@ -83,7 +83,7 @@ struct co_emcy_node {
 static int co_emcy_node_recv(const struct can_msg *msg, void *data);
 
 /// A CANopen EMCY producer/consumer service.
-struct __co_emcy {
+struct co_emcy {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.

@@ -59,9 +59,9 @@ struct co_time;
 /// An opaque CANopen TIME producer/consumer service type.
 typedef struct co_time co_time_t;
 
-struct __co_emcy;
+struct co_emcy;
 /// An opaque CANopen EMCY producer/consumer service type.
-typedef struct __co_emcy co_emcy_t;
+typedef struct co_emcy co_emcy_t;
 
 struct __co_nmt;
 /// An opaque CANopen NMT master/slave service type.
