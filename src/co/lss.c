@@ -126,6 +126,18 @@ struct __co_lss {
 #endif
 };
 
+/// Allocates memory for #co_lss_t object using allocator from #can_net_t.
+static void *co_lss_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_lss_t object.
+static void co_lss_free(co_lss_t *lss);
+
+/// Initializes #co_lss_t object.
+static co_lss_t *co_lss_init(co_lss_t *lss, co_nmt_t *nmt);
+
+/// Finalizes #co_lss_t object.
+static void co_lss_fini(co_lss_t *lss);
+
 /// The CAN receive callback function for an LSS service. @see can_recv_func_t
 static int co_lss_recv(const struct can_msg *msg, void *data);
 
@@ -671,130 +683,6 @@ co_lss_sizeof(void)
 	return sizeof(co_lss_t);
 }
 
-void *
-__co_lss_alloc(can_net_t *net)
-{
-	struct __co_lss *lss = mem_alloc(can_net_get_alloc(net),
-			co_lss_alignof(), co_lss_sizeof());
-	if (!lss)
-		return NULL;
-
-	lss->net = net;
-
-	return lss;
-}
-
-void
-__co_lss_free(void *ptr)
-{
-	struct __co_lss *lss = ptr;
-
-	if (lss)
-		mem_free(co_lss_get_alloc(lss), lss);
-}
-
-struct __co_lss *
-__co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
-{
-	assert(lss);
-	assert(nmt);
-
-	int errc = 0;
-
-	lss->nmt = nmt;
-	lss->net = co_nmt_get_net(lss->nmt);
-	lss->dev = co_nmt_get_dev(lss->nmt);
-
-	lss->state = co_lss_stopped_state;
-
-#ifndef LELY_NO_CO_MASTER
-	lss->master = 0;
-	lss->inhibit = LELY_CO_LSS_INHIBIT;
-	lss->next = 0;
-#endif
-
-	lss->recv = can_recv_create(co_lss_get_alloc(lss));
-	if (!lss->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(lss->recv, &co_lss_recv, lss);
-
-#ifndef LELY_NO_CO_MASTER
-	lss->timeout = LELY_CO_LSS_TIMEOUT;
-
-	lss->timer = can_timer_create(co_lss_get_alloc(lss));
-	if (!lss->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(lss->timer, &co_lss_timer, lss);
-#endif
-
-	lss->cs = 0;
-	lss->lsspos = 0;
-#ifndef LELY_NO_CO_MASTER
-	lss->lo = (struct co_id)CO_ID_INIT;
-	lss->hi = (struct co_id)CO_ID_INIT;
-	lss->mask = (struct co_id)CO_ID_INIT;
-	lss->bitchk = 0;
-	lss->lsssub = 0;
-	lss->err = 0;
-	lss->spec = 0;
-	lss->lssid = 0;
-	lss->nid = 0;
-	lss->id = (struct co_id)CO_ID_INIT;
-#endif
-
-	lss->rate_ind = NULL;
-	lss->rate_data = NULL;
-	lss->store_ind = NULL;
-	lss->store_data = NULL;
-#ifndef LELY_NO_CO_MASTER
-	lss->cs_ind = NULL;
-	lss->cs_data = NULL;
-	lss->err_ind = NULL;
-	lss->err_data = NULL;
-	lss->lssid_ind = NULL;
-	lss->lssid_data = NULL;
-	lss->nid_ind = NULL;
-	lss->nid_data = NULL;
-	lss->scan_ind = NULL;
-	lss->scan_data = NULL;
-#endif
-
-	if (co_lss_start(lss) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return lss;
-
-	// co_lss_stop(lss);
-error_start:
-#ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(lss->timer);
-error_create_timer:
-#endif
-	can_recv_destroy(lss->recv);
-error_create_recv:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_lss_fini(struct __co_lss *lss)
-{
-	assert(lss);
-
-	co_lss_stop(lss);
-
-#ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(lss->timer);
-#endif
-	can_recv_destroy(lss->recv);
-}
-
 co_lss_t *
 co_lss_create(co_nmt_t *nmt)
 {
@@ -802,13 +690,13 @@ co_lss_create(co_nmt_t *nmt)
 
 	int errc = 0;
 
-	co_lss_t *lss = __co_lss_alloc(co_nmt_get_net(nmt));
+	co_lss_t *lss = co_lss_alloc(co_nmt_get_net(nmt));
 	if (!lss) {
 		errc = get_errc();
 		goto error_alloc_lss;
 	}
 
-	if (!__co_lss_init(lss, nmt)) {
+	if (!co_lss_init(lss, nmt)) {
 		errc = get_errc();
 		goto error_init_lss;
 	}
@@ -816,7 +704,7 @@ co_lss_create(co_nmt_t *nmt)
 	return lss;
 
 error_init_lss:
-	__co_lss_free(lss);
+	co_lss_free(lss);
 error_alloc_lss:
 	set_errc(errc);
 	return NULL;
@@ -827,8 +715,8 @@ co_lss_destroy(co_lss_t *lss)
 {
 	if (lss) {
 		trace("destroying LSS");
-		__co_lss_fini(lss);
-		__co_lss_free(lss);
+		co_lss_fini(lss);
+		co_lss_free(lss);
 	}
 }
 
@@ -2685,5 +2573,126 @@ co_id_sub(struct co_id *id, co_unsigned8_t sub)
 }
 
 #endif // !LELY_NO_CO_MASTER
+
+static void *
+co_lss_alloc(can_net_t *net)
+{
+	co_lss_t *lss = mem_alloc(can_net_get_alloc(net), co_lss_alignof(),
+			co_lss_sizeof());
+	if (!lss)
+		return NULL;
+
+	lss->net = net;
+
+	return lss;
+}
+
+static void
+co_lss_free(co_lss_t *lss)
+{
+	mem_free(co_lss_get_alloc(lss), lss);
+}
+
+static co_lss_t *
+co_lss_init(co_lss_t *lss, co_nmt_t *nmt)
+{
+	assert(lss);
+	assert(nmt);
+
+	int errc = 0;
+
+	lss->nmt = nmt;
+	lss->net = co_nmt_get_net(lss->nmt);
+	lss->dev = co_nmt_get_dev(lss->nmt);
+
+	lss->state = co_lss_stopped_state;
+
+#ifndef LELY_NO_CO_MASTER
+	lss->master = 0;
+	lss->inhibit = LELY_CO_LSS_INHIBIT;
+	lss->next = 0;
+#endif
+
+	lss->recv = can_recv_create(co_lss_get_alloc(lss));
+	if (!lss->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(lss->recv, &co_lss_recv, lss);
+
+#ifndef LELY_NO_CO_MASTER
+	lss->timeout = LELY_CO_LSS_TIMEOUT;
+
+	lss->timer = can_timer_create(co_lss_get_alloc(lss));
+	if (!lss->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(lss->timer, &co_lss_timer, lss);
+#endif
+
+	lss->cs = 0;
+	lss->lsspos = 0;
+#ifndef LELY_NO_CO_MASTER
+	lss->lo = (struct co_id)CO_ID_INIT;
+	lss->hi = (struct co_id)CO_ID_INIT;
+	lss->mask = (struct co_id)CO_ID_INIT;
+	lss->bitchk = 0;
+	lss->lsssub = 0;
+	lss->err = 0;
+	lss->spec = 0;
+	lss->lssid = 0;
+	lss->nid = 0;
+	lss->id = (struct co_id)CO_ID_INIT;
+#endif
+
+	lss->rate_ind = NULL;
+	lss->rate_data = NULL;
+	lss->store_ind = NULL;
+	lss->store_data = NULL;
+#ifndef LELY_NO_CO_MASTER
+	lss->cs_ind = NULL;
+	lss->cs_data = NULL;
+	lss->err_ind = NULL;
+	lss->err_data = NULL;
+	lss->lssid_ind = NULL;
+	lss->lssid_data = NULL;
+	lss->nid_ind = NULL;
+	lss->nid_data = NULL;
+	lss->scan_ind = NULL;
+	lss->scan_data = NULL;
+#endif
+
+	if (co_lss_start(lss) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return lss;
+
+	// co_lss_stop(lss);
+error_start:
+#ifndef LELY_NO_CO_MASTER
+	can_timer_destroy(lss->timer);
+error_create_timer:
+#endif
+	can_recv_destroy(lss->recv);
+error_create_recv:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_lss_fini(co_lss_t *lss)
+{
+	assert(lss);
+
+	co_lss_stop(lss);
+
+#ifndef LELY_NO_CO_MASTER
+	can_timer_destroy(lss->timer);
+#endif
+	can_recv_destroy(lss->recv);
+}
 
 #endif // !LELY_NO_CO_LSS
