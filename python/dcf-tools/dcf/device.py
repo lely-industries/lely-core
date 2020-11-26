@@ -120,10 +120,16 @@ class Object(dict):
         section = self.cfg[name]
 
         self.name = section.get("Denotation", section["ParameterName"])
-        self.object_type = int(section.get("ObjectType", "0x07"), 0)
+        self.object_type = 0x07
+        if "ObjectType" in section and section["ObjectType"]:
+            self.object_type = int(section["ObjectType"], 0)
 
-        sub_number = int(section.get("SubNumber", "0"), 0)
-        compact_sub_obj = int(section.get("CompactSubObj", "0"), 0)
+        sub_number = 0
+        if "SubNumber" in section and section["SubNumber"]:
+            sub_number = int(section["SubNumber"], 0)
+        compact_sub_obj = 0
+        if "CompactSubObj" in section and section["CompactSubObj"]:
+            compact_sub_obj = int(section["CompactSubObj"], 0)
         if sub_number != 0:
             for sub_index in range(255):
                 sub_name = name + "sub{:X}".format(sub_index)
@@ -182,22 +188,28 @@ class SubObject:
         subobj.data_type = DataType(int(section["DataType"], 0))
 
         if subobj.data_type.is_basic():
-            if "LowLimit" in section:
+            if "LowLimit" in section and section["LowLimit"]:
                 subobj.low_limit = Value(subobj.data_type, section["LowLimit"])
-            if "HighLimit" in section:
+            if "HighLimit" in section and section["HighLimit"]:
                 subobj.high_limit = Value(subobj.data_type, section["HighLimit"])
 
-        default_value = section.get("DefaultValue", subobj.data_type.default_value())
-        value = section.get("ParameterValue", default_value)
+        default_value = subobj.data_type.default_value()
+        if "DefaultValue" in section and section["DefaultValue"]:
+            default_value = section["DefaultValue"]
+        value = default_value
+        if "ParameterValue" in section and section["ParameterValue"]:
+            value = section["ParameterValue"]
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
+        subobj.pdo_mapping = 0
+        if "PDOMapping" in section and section["PDOMapping"]:
+            subobj.pdo_mapping = bool(int(section["PDOMapping"], 0))
 
         if subobj.data_type.index == 0x000F:
-            if "UploadFile" in section:
+            if "UploadFile" in section and section["UploadFile"]:
                 subobj.upload_file = section["UploadFile"]
-            if "DownloadFile" in section:
+            if "DownloadFile" in section and section["DownloadFile"]:
                 subobj.download_file = section["DownloadFile"]
 
         return subobj
@@ -237,15 +249,24 @@ class SubObject:
         subobj.access_type = AccessType(section["AccessType"])
         subobj.data_type = DataType(int(section["DataType"], 0))
 
-        default_value = section.get("DefaultValue", subobj.data_type.default_value())
-        if name + "Value" in cfg and str(sub_index) in cfg[name + "Value"]:
-            value = cfg[name + "Value"][str(sub_index)]
-        else:
-            value = section.get("ParameterValue", default_value)
+        default_value = subobj.data_type.default_value()
+        if "DefaultValue" in section and section["DefaultValue"]:
+            default_value = section["DefaultValue"]
+        value = default_value
+        if name + "Value" in cfg:
+            if (
+                str(sub_index) in cfg[name + "Value"]
+                and cfg[name + "Value"][str(sub_index)]
+            ):
+                value = cfg[name + "Value"][str(sub_index)]
+        elif "ParameterValue" in section and section["ParameterValue"]:
+            value = section["ParameterValue"]
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = bool(int(section.get("PDOMapping", "0"), 0))
+        subobj.pdo_mapping = 0
+        if "PDOMapping" in section and section["PDOMapping"]:
+            subobj.pdo_mapping = bool(int(section["PDOMapping"], 0))
 
         return subobj
 
