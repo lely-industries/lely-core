@@ -129,6 +129,18 @@ struct co_1003 {
 	co_unsigned32_t ef[0xfe];
 };
 
+/// Allocates memory for #co_emcy_t object using allocator from #can_net_t.
+static void *co_emcy_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_emcy_t object.
+static void co_emcy_free(co_emcy_t *emcy);
+
+/// Initializes #co_emcy_t object.
+static co_emcy_t *co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev);
+
+/// Finalizes #co_emcy_t object.
+static void co_emcy_fini(co_emcy_t *emcy);
+
 /**
  * Sets the value of CANopen object 1003 (Pre-defined error field). This
  * function copies the list of active EMCY messages to the array at object 1003.
@@ -212,137 +224,6 @@ co_emcy_sizeof(void)
 	return sizeof(co_emcy_t);
 }
 
-void *
-__co_emcy_alloc(can_net_t *net)
-{
-	struct __co_emcy *emcy = mem_alloc(can_net_get_alloc(net),
-			co_emcy_alignof(), co_emcy_sizeof());
-	if (!emcy)
-		return NULL;
-
-	emcy->net = net;
-
-	return emcy;
-}
-
-void
-__co_emcy_free(void *ptr)
-{
-	struct __co_emcy *emcy = ptr;
-
-	if (emcy)
-		mem_free(co_emcy_get_alloc(emcy), emcy);
-}
-
-struct __co_emcy *
-__co_emcy_init(struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev)
-{
-	assert(emcy);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	emcy->net = net;
-	emcy->dev = dev;
-
-	emcy->sub_1001_00 = co_dev_find_sub(emcy->dev, 0x1001, 0x00);
-	if (!emcy->sub_1001_00) {
-		errc = errnum2c(ERRNUM_NOSYS);
-		goto error_sub_1001_00;
-	}
-	emcy->obj_1003 = co_dev_find_obj(emcy->dev, 0x1003);
-
-	emcy->nmsg = 0;
-#if LELY_NO_MALLOC
-	memset(emcy->msgs, 0, CO_EMCY_MAX_NMSG * sizeof(*emcy->msgs));
-#else
-	emcy->msgs = NULL;
-#endif
-
-	// Create a CAN frame buffer for pending EMCY messages that will be send
-	// once the inhibit time has elapsed.
-#if LELY_NO_MALLOC
-	can_buf_init(&emcy->buf, emcy->begin, CO_EMCY_CAN_BUF_SIZE);
-	memset(emcy->begin, 0, CO_EMCY_CAN_BUF_SIZE * sizeof(*emcy->begin));
-#else
-	can_buf_init(&emcy->buf, NULL, 0);
-#endif
-
-	emcy->timer = can_timer_create(co_emcy_get_alloc(emcy));
-	if (!emcy->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(emcy->timer, &co_emcy_timer, emcy);
-
-	emcy->inhibit = (struct timespec){ 0, 0 };
-
-	emcy->ind = NULL;
-	emcy->data = NULL;
-
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-		struct co_emcy_node *node = &emcy->nodes[id - 1];
-		node->id = id;
-		node->recv = NULL;
-	}
-
-	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
-	if (obj_1028) {
-		// Initialize the nodes.
-		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
-			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
-			if (!sub)
-				continue;
-			struct co_emcy_node *node = &emcy->nodes[id - 1];
-			node->recv = can_recv_create(co_emcy_get_alloc(emcy));
-			if (!node->recv) {
-				errc = get_errc();
-				goto error_create_recv;
-			}
-			can_recv_set_func(node->recv, &co_emcy_node_recv, node);
-		}
-	}
-
-	if (co_emcy_start(emcy) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return emcy;
-
-	// co_emcy_stop(emcy);
-error_start:
-error_create_recv:
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
-		can_recv_destroy(emcy->nodes[id - 1].recv);
-	can_timer_destroy(emcy->timer);
-error_create_timer:
-	can_buf_fini(&emcy->buf);
-error_sub_1001_00:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_emcy_fini(struct __co_emcy *emcy)
-{
-	assert(emcy);
-
-	co_emcy_stop(emcy);
-
-	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
-		can_recv_destroy(emcy->nodes[id - 1].recv);
-
-	can_timer_destroy(emcy->timer);
-
-	can_buf_fini(&emcy->buf);
-
-#if !LELY_NO_MALLOC
-	free(emcy->msgs);
-#endif
-}
-
 co_emcy_t *
 co_emcy_create(can_net_t *net, co_dev_t *dev)
 {
@@ -350,13 +231,13 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_emcy_t *emcy = __co_emcy_alloc(net);
+	co_emcy_t *emcy = co_emcy_alloc(net);
 	if (!emcy) {
 		errc = get_errc();
 		goto error_alloc_emcy;
 	}
 
-	if (!__co_emcy_init(emcy, net, dev)) {
+	if (!co_emcy_init(emcy, net, dev)) {
 		errc = get_errc();
 		goto error_init_emcy;
 	}
@@ -364,7 +245,7 @@ co_emcy_create(can_net_t *net, co_dev_t *dev)
 	return emcy;
 
 error_init_emcy:
-	__co_emcy_free(emcy);
+	co_emcy_free(emcy);
 error_alloc_emcy:
 	set_errc(errc);
 	return NULL;
@@ -375,8 +256,8 @@ co_emcy_destroy(co_emcy_t *emcy)
 {
 	if (emcy) {
 		trace("destroying EMCY producer service");
-		__co_emcy_fini(emcy);
-		__co_emcy_free(emcy);
+		co_emcy_fini(emcy);
+		co_emcy_free(emcy);
 	}
 }
 
@@ -899,3 +780,131 @@ co_emcy_flush(co_emcy_t *emcy)
 }
 
 #endif // !LELY_NO_CO_EMCY
+
+static void *
+co_emcy_alloc(can_net_t *net)
+{
+	co_emcy_t *emcy = mem_alloc(can_net_get_alloc(net), co_emcy_alignof(),
+			co_emcy_sizeof());
+	if (!emcy)
+		return NULL;
+
+	emcy->net = net;
+
+	return emcy;
+}
+
+static void
+co_emcy_free(co_emcy_t *emcy)
+{
+	mem_free(co_emcy_get_alloc(emcy), emcy);
+}
+
+static co_emcy_t *
+co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev)
+{
+	assert(emcy);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	emcy->net = net;
+	emcy->dev = dev;
+
+	emcy->sub_1001_00 = co_dev_find_sub(emcy->dev, 0x1001, 0x00);
+	if (!emcy->sub_1001_00) {
+		errc = errnum2c(ERRNUM_NOSYS);
+		goto error_sub_1001_00;
+	}
+	emcy->obj_1003 = co_dev_find_obj(emcy->dev, 0x1003);
+
+	emcy->nmsg = 0;
+#if LELY_NO_MALLOC
+	memset(emcy->msgs, 0, CO_EMCY_MAX_NMSG * sizeof(*emcy->msgs));
+#else
+	emcy->msgs = NULL;
+#endif
+
+	// Create a CAN frame buffer for pending EMCY messages that will be send
+	// once the inhibit time has elapsed.
+#if LELY_NO_MALLOC
+	can_buf_init(&emcy->buf, emcy->begin, CO_EMCY_CAN_BUF_SIZE);
+	memset(emcy->begin, 0, CO_EMCY_CAN_BUF_SIZE * sizeof(*emcy->begin));
+#else
+	can_buf_init(&emcy->buf, NULL, 0);
+#endif
+
+	emcy->timer = can_timer_create(co_emcy_get_alloc(emcy));
+	if (!emcy->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(emcy->timer, &co_emcy_timer, emcy);
+
+	emcy->inhibit = (struct timespec){ 0, 0 };
+
+	emcy->ind = NULL;
+	emcy->data = NULL;
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+		struct co_emcy_node *node = &emcy->nodes[id - 1];
+		node->id = id;
+		node->recv = NULL;
+	}
+
+	co_obj_t *obj_1028 = co_dev_find_obj(emcy->dev, 0x1028);
+	if (obj_1028) {
+		// Initialize the nodes.
+		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
+			co_sub_t *sub = co_obj_find_sub(obj_1028, id);
+			if (!sub)
+				continue;
+			struct co_emcy_node *node = &emcy->nodes[id - 1];
+			node->recv = can_recv_create(co_emcy_get_alloc(emcy));
+			if (!node->recv) {
+				errc = get_errc();
+				goto error_create_recv;
+			}
+			can_recv_set_func(node->recv, &co_emcy_node_recv, node);
+		}
+	}
+
+	if (co_emcy_start(emcy) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return emcy;
+
+	// co_emcy_stop(emcy);
+error_start:
+error_create_recv:
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
+		can_recv_destroy(emcy->nodes[id - 1].recv);
+	can_timer_destroy(emcy->timer);
+error_create_timer:
+	can_buf_fini(&emcy->buf);
+error_sub_1001_00:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_emcy_fini(co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	co_emcy_stop(emcy);
+
+	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
+		can_recv_destroy(emcy->nodes[id - 1].recv);
+
+	can_timer_destroy(emcy->timer);
+
+	can_buf_fini(&emcy->buf);
+
+#if !LELY_NO_MALLOC
+	free(emcy->msgs);
+#endif
+}
