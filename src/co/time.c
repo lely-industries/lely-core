@@ -37,7 +37,7 @@
 #include <assert.h>
 
 /// A CANopen TIME producer/consumer service.
-struct __co_time {
+struct co_time {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.

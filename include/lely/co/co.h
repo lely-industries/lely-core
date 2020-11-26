@@ -55,9 +55,9 @@ struct co_sync;
 /// An opaque CANopen SYNC producer/consumer service type.
 typedef struct co_sync co_sync_t;
 
-struct __co_time;
+struct co_time;
 /// An opaque CANopen TIME producer/consumer service type.
-typedef struct __co_time co_time_t;
+typedef struct co_time co_time_t;
 
 struct __co_emcy;
 /// An opaque CANopen EMCY producer/consumer service type.

@@ -114,7 +114,7 @@
 #undef LELY_CO_DEFINE_TYPE
 
 /// A 48-bit struct used to describe absolute and relative times.
-struct __co_time_of_day {
+struct co_time_of_day {
 	/// Milliseconds after midnight.
 	co_unsigned32_t ms;
 	/// The number of days since January 1, 1984.
@@ -122,7 +122,7 @@ struct __co_time_of_day {
 };
 
 /// A 48-bit struct used to describe absolute and relative times.
-struct __co_time_diff {
+struct co_time_diff {
 	/// Milliseconds after midnight.
 	co_unsigned32_t ms;
 	/// The number of days since January 1, 1984.
