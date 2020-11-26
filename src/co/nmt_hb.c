@@ -29,7 +29,7 @@
 #include <assert.h>
 
 /// A CANopen NMT heartbeat consumer.
-struct __co_nmt_hb {
+struct co_nmt_hb {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to an NMT master/slave service.

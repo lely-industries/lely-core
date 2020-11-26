@@ -28,10 +28,10 @@
 #include <lely/co/csdo.h>
 #include <lely/co/nmt.h>
 
-struct __co_nmt_cfg;
+struct co_nmt_cfg;
 #ifndef __cplusplus
 /// An opaque CANopen NMT 'configuration request' type.
-typedef struct __co_nmt_cfg co_nmt_cfg_t;
+typedef struct co_nmt_cfg co_nmt_cfg_t;
 #endif
 
 #ifdef __cplusplus

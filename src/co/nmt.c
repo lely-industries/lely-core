@@ -74,9 +74,9 @@
 #endif
 #endif // LELY_NO_MALLOC
 
-struct __co_nmt_state;
+struct co_nmt_state;
 /// An opaque CANopen NMT state type.
-typedef const struct __co_nmt_state co_nmt_state_t;
+typedef const struct co_nmt_state co_nmt_state_t;
 
 #ifndef LELY_NO_CO_MASTER
 /// A struct containing the state of an NMT slave.
@@ -123,7 +123,7 @@ struct co_nmt_slave {
 #endif
 
 /// A CANopen NMT master/slave service.
-struct __co_nmt {
+struct co_nmt {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -275,7 +275,7 @@ static void co_nmt_free(co_nmt_t *nmt);
 static co_nmt_t *co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev);
 
 /// Finalizes #co_nmt_t object.
-static void co_nmt_fini(struct __co_nmt *nmt);
+static void co_nmt_fini(co_nmt_t *nmt);
 
 /**
  * The download indication function for CANopen object 100C (Guard time).
@@ -450,7 +450,7 @@ static inline void co_nmt_emit_boot(
 #endif
 
 /// A CANopen NMT state.
-struct __co_nmt_state {
+struct co_nmt_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_state_t *(*on_enter)(co_nmt_t *nmt);
 	/**

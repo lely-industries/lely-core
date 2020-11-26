@@ -63,9 +63,9 @@ struct co_emcy;
 /// An opaque CANopen EMCY producer/consumer service type.
 typedef struct co_emcy co_emcy_t;
 
-struct __co_nmt;
+struct co_nmt;
 /// An opaque CANopen NMT master/slave service type.
-typedef struct __co_nmt co_nmt_t;
+typedef struct co_nmt co_nmt_t;
 
 struct __co_lss;
 /// An opaque CANopen LSS master/slave service type.

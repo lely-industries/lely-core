@@ -45,12 +45,12 @@
 #define LELY_CO_NMT_CFG_RESET_TIMEOUT 1000
 #endif
 
-struct __co_nmt_cfg_state;
+struct co_nmt_cfg_state;
 /// An opaque CANopen NMT 'configuration request' state type.
-typedef const struct __co_nmt_cfg_state co_nmt_cfg_state_t;
+typedef const struct co_nmt_cfg_state co_nmt_cfg_state_t;
 
 /// A CANopen NMT 'configuration request' service.
-struct __co_nmt_cfg {
+struct co_nmt_cfg {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -163,7 +163,7 @@ static inline void co_nmt_cfg_emit_dn_con(co_nmt_cfg_t *cfg,
 static inline void co_nmt_cfg_emit_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 
 /// A CANopen NMT 'configuration request' state.
-struct __co_nmt_cfg_state {
+struct co_nmt_cfg_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_cfg_state_t *(*on_enter)(co_nmt_cfg_t *cfg);
 	/**

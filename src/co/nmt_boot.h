@@ -27,10 +27,10 @@
 #include <lely/co/csdo.h>
 #include <lely/co/nmt.h>
 
-struct __co_nmt_boot;
+struct co_nmt_boot;
 #ifndef __cplusplus
 /// An opaque CANopen NMT 'boot slave' service type.
-typedef struct __co_nmt_boot co_nmt_boot_t;
+typedef struct co_nmt_boot co_nmt_boot_t;
 #endif
 
 #ifdef __cplusplus
