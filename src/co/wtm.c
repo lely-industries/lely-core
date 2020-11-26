@@ -152,6 +152,18 @@ struct __co_wtm {
 	uint_least8_t send_nseq;
 };
 
+/// Allocates memory for #co_wtm_t object.
+static void *co_wtm_alloc(void);
+
+/// Frees memory allocated for #co_gw_t object.
+static void co_wtm_free(void *ptr);
+
+/// Initializes #co_gw_t object.
+static co_wtm_t *co_wtm_init(co_wtm_t *wtm);
+
+/// Finalizes #co_gw_t object.
+static void co_wtm_fini(co_wtm_t *wtm);
+
 /// Sends a communication quality response for a CAN interface.
 static int co_wtm_send_diag_can_res(co_wtm_t *wtm, uint_least8_t nif);
 
@@ -211,93 +223,18 @@ co_wtm_ac_str(uint_least32_t ac)
 	}
 }
 
-void *
-__co_wtm_alloc(void)
-{
-	void *ptr = malloc(sizeof(struct __co_wtm));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
-}
-
-void
-__co_wtm_free(void *ptr)
-{
-	free(ptr);
-}
-
-struct __co_wtm *
-__co_wtm_init(struct __co_wtm *wtm)
-{
-	assert(wtm);
-
-	wtm->nif = 1;
-
-	wtm->quality = 0xff;
-
-	for (uint_least8_t nif = 1; nif <= CO_WTM_MAX_NIF; nif++) {
-		struct co_wtm_can *can = &wtm->can[nif - 1];
-
-		can->st = 0xf;
-		can->err = 0xf;
-		can->load = 0xff;
-		can->ec = 0xffff;
-		can->foc = 0xffff;
-		can->coc = 0xffff;
-
-		can->recv_time = (struct timespec){ 0, 0 };
-		can->send_time = (struct timespec){ 0, 0 };
-		can->send_next = (struct timespec){ 0, 0 };
-	}
-
-	wtm->diag_can_con = NULL;
-	wtm->diag_can_con_data = NULL;
-
-	wtm->diag_wtm_con = NULL;
-	wtm->diag_wtm_con_data = NULL;
-
-	wtm->diag_can_ind = NULL;
-	wtm->diag_can_ind_data = NULL;
-
-	wtm->diag_wtm_ind = NULL;
-	wtm->diag_wtm_ind_data = NULL;
-
-	wtm->diag_ac_ind = &default_wtm_diag_ac_ind;
-	wtm->diag_ac_data = NULL;
-
-	wtm->recv_func = NULL;
-	wtm->recv_data = NULL;
-
-	wtm->send_func = NULL;
-	wtm->send_data = NULL;
-
-	wtm->recv_nbytes = 0;
-	wtm->recv_nseq = 0;
-
-	wtm->send_nbytes = 0;
-	wtm->send_nseq = 0;
-
-	return wtm;
-}
-
-void
-__co_wtm_fini(struct __co_wtm *wtm)
-{
-	(void)wtm;
-}
-
 co_wtm_t *
 co_wtm_create(void)
 {
 	int errc = 0;
 
-	co_wtm_t *wtm = __co_wtm_alloc();
+	co_wtm_t *wtm = co_wtm_alloc();
 	if (!wtm) {
 		errc = get_errc();
 		goto error_alloc_wtm;
 	}
 
-	if (!__co_wtm_init(wtm)) {
+	if (!co_wtm_init(wtm)) {
 		errc = get_errc();
 		goto error_init_wtm;
 	}
@@ -305,7 +242,7 @@ co_wtm_create(void)
 	return wtm;
 
 error_init_wtm:
-	__co_wtm_free(wtm);
+	co_wtm_free(wtm);
 error_alloc_wtm:
 	set_errc(errc);
 	return NULL;
@@ -315,8 +252,8 @@ void
 co_wtm_destroy(co_wtm_t *wtm)
 {
 	if (wtm) {
-		__co_wtm_fini(wtm);
-		__co_wtm_free(wtm);
+		co_wtm_fini(wtm);
+		co_wtm_free(wtm);
 	}
 }
 
@@ -1222,6 +1159,81 @@ co_wtm_recv_can(co_wtm_t *wtm, const void *buf, size_t nbytes)
 
 error:
 	return ac;
+}
+
+static void *
+co_wtm_alloc(void)
+{
+	void *ptr = malloc(sizeof(struct __co_wtm));
+	if (!ptr)
+		set_errc(errno2c(errno));
+	return ptr;
+}
+
+static void
+co_wtm_free(void *ptr)
+{
+	free(ptr);
+}
+
+static co_wtm_t *
+co_wtm_init(co_wtm_t *wtm)
+{
+	assert(wtm);
+
+	wtm->nif = 1;
+
+	wtm->quality = 0xff;
+
+	for (uint_least8_t nif = 1; nif <= CO_WTM_MAX_NIF; nif++) {
+		struct co_wtm_can *can = &wtm->can[nif - 1];
+
+		can->st = 0xf;
+		can->err = 0xf;
+		can->load = 0xff;
+		can->ec = 0xffff;
+		can->foc = 0xffff;
+		can->coc = 0xffff;
+
+		can->recv_time = (struct timespec){ 0, 0 };
+		can->send_time = (struct timespec){ 0, 0 };
+		can->send_next = (struct timespec){ 0, 0 };
+	}
+
+	wtm->diag_can_con = NULL;
+	wtm->diag_can_con_data = NULL;
+
+	wtm->diag_wtm_con = NULL;
+	wtm->diag_wtm_con_data = NULL;
+
+	wtm->diag_can_ind = NULL;
+	wtm->diag_can_ind_data = NULL;
+
+	wtm->diag_wtm_ind = NULL;
+	wtm->diag_wtm_ind_data = NULL;
+
+	wtm->diag_ac_ind = &default_wtm_diag_ac_ind;
+	wtm->diag_ac_data = NULL;
+
+	wtm->recv_func = NULL;
+	wtm->recv_data = NULL;
+
+	wtm->send_func = NULL;
+	wtm->send_data = NULL;
+
+	wtm->recv_nbytes = 0;
+	wtm->recv_nseq = 0;
+
+	wtm->send_nbytes = 0;
+	wtm->send_nseq = 0;
+
+	return wtm;
+}
+
+static void
+co_wtm_fini(co_wtm_t *wtm)
+{
+	(void)wtm;
 }
 
 #endif // !LELY_NO_CO_WTM

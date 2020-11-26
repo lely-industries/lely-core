@@ -225,11 +225,6 @@ typedef int co_wtm_send_func_t(
 /// Returns a string describing a CANopen WTM abort code.
 const char *co_wtm_ac_str(uint_least32_t ac);
 
-void *__co_wtm_alloc(void);
-void __co_wtm_free(void *ptr);
-struct __co_wtm *__co_wtm_init(struct __co_wtm *wtm);
-void __co_wtm_fini(struct __co_wtm *wtm);
-
 /**
  * Creates a new CANopen Wireless Transmission Media (WTM) interface.
  *
