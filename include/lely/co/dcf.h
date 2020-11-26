@@ -31,7 +31,7 @@ struct floc;
 extern "C" {
 #endif
 
-co_dev_t *__co_dev_init_from_dcf_file(co_dev_t *dev, const char *filename);
+co_dev_t *co_dev_init_from_dcf_file(co_dev_t *dev, const char *filename);
 
 /**
  * Creates a CANopen device from an EDS or DCF file.
@@ -40,7 +40,7 @@ co_dev_t *__co_dev_init_from_dcf_file(co_dev_t *dev, const char *filename);
  */
 co_dev_t *co_dev_create_from_dcf_file(const char *filename);
 
-co_dev_t *__co_dev_init_from_dcf_text(co_dev_t *dev, const char *begin,
+co_dev_t *co_dev_init_from_dcf_text(co_dev_t *dev, const char *begin,
 		const char *end, struct floc *at);
 
 /**
