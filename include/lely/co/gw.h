@@ -989,11 +989,6 @@ typedef void co_gw_rate_func_t(
 /// Returns a string describing an internal error code.
 const char *co_gw_iec2str(int iec);
 
-void *__co_gw_alloc(void);
-void __co_gw_free(void *ptr);
-struct __co_gw *__co_gw_init(struct __co_gw *gw);
-void __co_gw_fini(struct __co_gw *gw);
-
 /// Creates a new CANopen gateway. @see co_gw_destroy()
 co_gw_t *co_gw_create(void);
 

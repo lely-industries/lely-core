@@ -69,11 +69,6 @@ typedef int co_gw_txt_recv_func_t(const char *txt, void *data);
  */
 typedef int co_gw_txt_send_func_t(const struct co_gw_req *req, void *data);
 
-void *__co_gw_txt_alloc(void);
-void __co_gw_txt_free(void *ptr);
-struct __co_gw_txt *__co_gw_txt_init(struct __co_gw_txt *gw);
-void __co_gw_txt_fini(struct __co_gw_txt *gw);
-
 /// Creates a new CANopen ASCII gateway. @see co_gw_txt_destroy()
 co_gw_txt_t *co_gw_txt_create(void);
 
