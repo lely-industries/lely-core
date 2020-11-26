@@ -85,7 +85,7 @@ struct co_wtm_can {
 };
 
 /// A CANopen Wireless Transmission Media (WTM) interface.
-struct __co_wtm {
+struct co_wtm {
 	/// The WTM interface indicator.
 	uint_least8_t nif;
 	/**
@@ -1164,7 +1164,7 @@ error:
 static void *
 co_wtm_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_wtm));
+	void *ptr = malloc(sizeof(struct co_wtm));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;
