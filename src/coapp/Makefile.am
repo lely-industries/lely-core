@@ -32,7 +32,7 @@ liblely_coapp_la_LDFLAGS += -Wl,--output-def,liblely-coapp-$(VERSION_MAJOR).def
 endif
 liblely_coapp_la_LDFLAGS += -Wl,--as-needed
 liblely_coapp_la_LIBADD =
-liblely_coapp_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
+liblely_coapp_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
 liblely_coapp_la_LIBADD += $(top_builddir)/src/ev/liblely-ev.la

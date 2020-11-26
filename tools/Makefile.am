@@ -59,7 +59,7 @@ AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
 
 LDADD =
-LDADD += $(top_builddir)/src/libc/liblely-libc.la
+LDADD += $(top_builddir)/src/compat/liblely-compat.la
 LDADD += $(top_builddir)/src/tap/liblely-tap.la
 LDADD += $(top_builddir)/src/util/liblely-util.la
 LDADD += $(top_builddir)/src/can/liblely-can.la

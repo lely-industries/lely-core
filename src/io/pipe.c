@@ -28,7 +28,7 @@
 #if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
 
 #ifdef _WIN32
-#include <lely/libc/stdio.h>
+#include <lely/compat/stdio.h>
 
 #ifdef __MINGW32__
 // Ignore complaints that "I64" is not a valid ISO C length modifier.

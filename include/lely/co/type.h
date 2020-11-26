@@ -23,7 +23,7 @@
 #define LELY_CO_TYPE_H_
 
 #include <lely/co/co.h>
-#include <lely/libc/uchar.h>
+#include <lely/compat/uchar.h>
 #include <lely/util/float.h>
 
 #include <stdint.h>

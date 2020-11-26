@@ -5,7 +5,7 @@
  * The clock interface is modeled after the POSIX clock_getres(),
  * clock_gettime() and clock_settime() functions.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,8 +25,8 @@
 #ifndef LELY_IO2_CLOCK_H_
 #define LELY_IO2_CLOCK_H_
 
+#include <lely/compat/time.h>
 #include <lely/io2/io2.h>
-#include <lely/libc/time.h>
 
 #ifndef LELY_IO_CLOCK_INLINE
 #define LELY_IO_CLOCK_INLINE static inline

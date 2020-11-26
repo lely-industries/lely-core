@@ -27,7 +27,7 @@
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
 #include <lely/io/sock.h>
-#include <lely/libc/unistd.h>
+#include <lely/compat/unistd.h>
 #include <lely/util/daemon.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>

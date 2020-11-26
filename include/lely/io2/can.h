@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the abstract CAN bus
  * interface.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,12 +22,12 @@
 #ifndef LELY_IO2_CAN_H_
 #define LELY_IO2_CAN_H_
 
+#include <lely/compat/time.h>
 #include <lely/ev/future.h>
 #include <lely/ev/task.h>
 #include <lely/io2/can/err.h>
 #include <lely/io2/can/msg.h>
 #include <lely/io2/dev.h>
-#include <lely/libc/time.h>
 
 #ifndef LELY_IO_CAN_INLINE
 #define LELY_IO_CAN_INLINE static inline

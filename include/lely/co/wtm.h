@@ -24,7 +24,7 @@
 
 #include <lely/can/msg.h>
 #include <lely/co/co.h>
-#include <lely/libc/time.h>
+#include <lely/compat/time.h>
 
 /**
  * The maximum size of a CANopen WTM generic frame (4 (header) + 255 (payload) +

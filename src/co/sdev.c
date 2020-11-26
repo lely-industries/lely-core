@@ -4,7 +4,7 @@
  *
  * @see lely/co/sdev.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,7 @@
 #ifndef LELY_NO_CO_SDEV
 
 #include <lely/co/sdev.h>
-#include <lely/libc/stdio.h>
+#include <lely/compat/stdio.h>
 #include <lely/util/errnum.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>

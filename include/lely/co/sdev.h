@@ -108,8 +108,7 @@ struct co_ssub {
 extern "C" {
 #endif
 
-co_dev_t *co_dev_init_from_sdev(
-		co_dev_t *dev, const struct co_sdev *sdev);
+co_dev_t *co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev);
 
 /**
  * Creates a CANopen device from a static device description.

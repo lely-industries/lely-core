@@ -8,7 +8,7 @@ can be even be used on bare-metal microcontrollers with as little as 32 kB RAM.
 ## Overview
 
 The Lely core libraries consist of:
-- C11 and POSIX compatibility library (liblely-libc)
+- C11 and POSIX compatibility library (liblely-compat)
 - Test Anything Protocol (TAP) library (liblely-tap)
 - Utilities library (liblely-util)
 - Event library (liblely-ev)

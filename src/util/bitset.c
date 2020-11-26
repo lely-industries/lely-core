@@ -4,7 +4,7 @@
  *
  * @see lely/util/bitset.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
  */
 
 #include "util.h"
-#include <lely/libc/strings.h>
+#include <lely/compat/strings.h>
 #include <lely/util/bitset.h>
 #include <lely/util/errnum.h>
 

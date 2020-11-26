@@ -4,7 +4,7 @@
  *
  * @see lely/tap/tap.h
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
  */
 
 #include "tap.h"
-#include <lely/libc/stdio.h>
+#include <lely/compat/stdio.h>
 #include <lely/tap/tap.h>
 
 #include <assert.h>

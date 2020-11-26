@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw_txt.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,8 +31,8 @@
 #include <lely/co/pdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
-#include <lely/libc/stdio.h>
-#include <lely/libc/strings.h>
+#include <lely/compat/stdio.h>
+#include <lely/compat/strings.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>

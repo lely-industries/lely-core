@@ -23,7 +23,7 @@
 #define LELY_CO_GW_H_
 
 #include <lely/co/dev.h>
-#include <lely/libc/time.h>
+#include <lely/compat/time.h>
 
 /// The maximum number of networks in a CANopen gateway.
 #define CO_GW_NUM_NET 127

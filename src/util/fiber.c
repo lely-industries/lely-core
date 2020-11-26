@@ -29,7 +29,7 @@
 #endif
 
 #include "util.h"
-#include <lely/libc/stddef.h>
+#include <lely/compat/stddef.h>
 #include <lely/util/errnum.h>
 #include <lely/util/fiber.h>
 #if !_WIN32

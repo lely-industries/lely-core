@@ -4,7 +4,7 @@
  *
  * @see lely/io2/user/can.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "../can.h"
 #if !LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/io2/ctx.h>
 #include <lely/io2/user/can.h>

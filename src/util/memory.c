@@ -23,9 +23,9 @@
 
 #include "util.h"
 #if !LELY_NO_THREADS && !LELY_NO_ATOMICS
-#include <lely/libc/stdatomic.h>
+#include <lely/compat/stdatomic.h>
 #endif
-#include <lely/libc/stddef.h>
+#include <lely/compat/stddef.h>
 #include <lely/util/errnum.h>
 #include <lely/util/memory.h>
 #include <lely/util/util.h>

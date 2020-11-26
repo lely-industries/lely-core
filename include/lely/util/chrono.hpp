@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the time
  * function declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,8 +22,8 @@
 #ifndef LELY_UTIL_CHRONO_HPP_
 #define LELY_UTIL_CHRONO_HPP_
 
-#include <lely/libc/chrono.hpp>
-#include <lely/libc/time.h>
+#include <lely/compat/chrono.hpp>
+#include <lely/compat/time.h>
 
 #include <limits>
 

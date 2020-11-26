@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the I/O library.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 #ifndef LELY_IO_IO_H_
 #define LELY_IO_IO_H_
 
-#include <lely/libc/sys/types.h>
+#include <lely/compat/sys/types.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>

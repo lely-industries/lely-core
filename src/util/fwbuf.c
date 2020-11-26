@@ -4,7 +4,7 @@
  *
  * @see lely/util/fwbuf.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,7 +28,7 @@
 #endif
 
 #include "util.h"
-#include <lely/libc/string.h>
+#include <lely/compat/string.h>
 #include <lely/util/errnum.h>
 #include <lely/util/fwbuf.h>
 

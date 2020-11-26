@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_USTRING_H_
 #define LELY_UTIL_USTRING_H_
 
-#include <lely/libc/uchar.h>
+#include <lely/compat/uchar.h>
 
 #include <assert.h>
 #include <stddef.h>

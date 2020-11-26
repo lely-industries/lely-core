@@ -29,7 +29,7 @@
 
 #include <atomic>
 #ifdef __MINGW32__
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #else
 #include <thread>
 #endif

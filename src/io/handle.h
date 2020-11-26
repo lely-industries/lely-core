@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the I/O handle declarations.
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,9 +22,9 @@
 #define LELY_IO_INTERN_HANDLE_H_
 
 #include "io.h"
-#include <lely/libc/stdatomic.h>
+#include <lely/compat/stdatomic.h>
 #ifndef LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 
 struct io_handle_vtab;

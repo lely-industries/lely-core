@@ -4,7 +4,7 @@
  *
  * @see lely/io2/user/timer.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,7 +24,7 @@
 #ifndef LELY_IO2_USER_TIMER_HPP_
 #define LELY_IO2_USER_TIMER_HPP_
 
-#include <lely/libc/type_traits.hpp>
+#include <lely/compat/type_traits.hpp>
 #include <lely/io2/user/timer.h>
 #include <lely/io2/timer.hpp>
 

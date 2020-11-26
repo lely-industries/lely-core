@@ -51,10 +51,13 @@
 #endif
 
 #ifdef __cplusplus
-namespace lely {
+namespace lely
+{
 /// The global namespace for the utilities library.
-namespace util {}
-}  // namespace lely
+namespace util
+{
+}
+} // namespace lely
 #endif
 
 #endif // !LELY_UTIL_INTERN_UTIL_H_

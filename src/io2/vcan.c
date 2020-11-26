@@ -23,7 +23,7 @@
 
 #include "can.h"
 #if !LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/io2/ctx.h>
 #include <lely/io2/vcan.h>

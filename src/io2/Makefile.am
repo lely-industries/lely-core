@@ -74,7 +74,7 @@ liblely_io2_la_LDFLAGS += -Wl,--output-def,liblely-io2-$(VERSION_MAJOR).def
 endif
 liblely_io2_la_LDFLAGS += -Wl,--as-needed
 liblely_io2_la_LIBADD =
-liblely_io2_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
+liblely_io2_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
 liblely_io2_la_LIBADD += $(top_builddir)/src/ev/liblely-ev.la

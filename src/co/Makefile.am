@@ -72,7 +72,7 @@ liblely_co_la_LDFLAGS += -Wl,--output-def,liblely-co-$(VERSION_MAJOR).def
 endif
 liblely_co_la_LDFLAGS += -Wl,--as-needed
 liblely_co_la_LIBADD =
-liblely_co_la_LIBADD += $(top_builddir)/src/libc/liblely-libc.la
+liblely_co_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
 liblely_co_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
 liblely_co_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
 if CODE_COVERAGE_ENABLED
