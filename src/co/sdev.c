@@ -48,7 +48,7 @@ static int snprintf_c99_sval(
 static int snprintf_c99_esc(char *s, size_t n, const char *esc);
 
 co_dev_t *
-__co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev)
+co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev)
 {
 	assert(dev);
 
@@ -90,7 +90,7 @@ co_dev_create_from_sdev(const struct co_sdev *sdev)
 		goto error_alloc_dev;
 	}
 
-	if (!__co_dev_init_from_sdev(dev, sdev)) {
+	if (!co_dev_init_from_sdev(dev, sdev)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}

@@ -108,7 +108,7 @@ struct co_ssub {
 extern "C" {
 #endif
 
-co_dev_t *__co_dev_init_from_sdev(
+co_dev_t *co_dev_init_from_sdev(
 		co_dev_t *dev, const struct co_sdev *sdev);
 
 /**
