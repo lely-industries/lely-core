@@ -42,7 +42,7 @@
 #include <stdlib.h>
 
 /// A CANopen ASCII gateway.
-struct __co_gw_txt {
+struct co_gw_txt {
 	/// The last internal error code.
 	int iec;
 	/// The number of pending requests.
@@ -2933,7 +2933,7 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 static void *
 co_gw_txt_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_gw_txt));
+	void *ptr = malloc(sizeof(struct co_gw_txt));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;

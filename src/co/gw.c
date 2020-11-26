@@ -316,7 +316,7 @@ static void co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs,
 #endif
 
 /// A CANopen gateway.
-struct __co_gw {
+struct co_gw {
 	/// An array of pointers to the CANopen networks.
 	struct co_gw_net *net[CO_GW_NUM_NET];
 	/// The command timeout (in milliseconds).
@@ -3165,7 +3165,7 @@ errnum2iec(errnum_t errnum)
 static void *
 co_gw_alloc(void)
 {
-	void *ptr = malloc(sizeof(struct __co_gw));
+	void *ptr = malloc(sizeof(struct co_gw));
 	if (!ptr)
 		set_errc(errno2c(errno));
 	return ptr;

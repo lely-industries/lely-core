@@ -253,10 +253,10 @@
 /// CANopen gateway internal error: Running out of memory.
 #define CO_GW_IEC_NO_MEM 600
 
-struct __co_gw;
+struct co_gw;
 #if !defined(__cplusplus) || LELY_NO_CXX
 /// An opaque CANopen gateway type.
-typedef struct __co_gw co_gw_t;
+typedef struct co_gw co_gw_t;
 #endif
 
 /// The common parameters of a CANopen gateway service.
