@@ -182,7 +182,7 @@ void co_obj_free(void *ptr);
  *
  * @param obj a pointer to an uninitialized #co_obj_t instance.
  * @param idx the object index.
- * @param val pointer to the memory to be used by object and its sub-objects to
+ * @param val pointer to the memory to be used by the object and its sub-objects to
  * store values.
  * @param size size of the memory.
  *

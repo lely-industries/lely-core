@@ -60,16 +60,17 @@ struct can_net {
  */
 static void can_net_set_next(can_net_t *net);
 
-/// Allocates can_net_t structure using provided allocator.
+/// Allocates the #can_net_t structure using the provided allocator.
 static can_net_t *can_net_alloc(alloc_t *alloc);
 
-/// Frees can_net_t structure using allocator from can_net_alloc().
+/// Frees the #can_net_t structure using the allocator provided to
+/// can_net_alloc().
 static void can_net_free(can_net_t *net);
 
-/// Initialized can_net_t structure
+/// Initializes the #can_net_t structure.
 static can_net_t *can_net_init(can_net_t *net);
 
-/// Prepares can_net_t for destruction,
+/// Finalizes the #can_net_t structure.
 static void can_net_fini(can_net_t *net);
 
 /// A CAN timer.
@@ -93,16 +94,17 @@ struct can_timer {
 	void *data;
 };
 
-/// Allocates can_timer_t using provided allocator.
+/// Allocates the #can_timer_t using the provided allocator.
 static can_timer_t *can_timer_alloc(alloc_t *alloc);
 
-/// Frees can_timer_t structure using allocator provided to can_timer_alloc().
+/// Frees the #can_timer_t structure using the allocator provided to
+/// can_timer_alloc().
 static void can_timer_free(can_timer_t *timer);
 
-/// Initializes can_timer_t structure.
+/// Initializes the #can_timer_t structure.
 static can_timer_t *can_timer_init(can_timer_t *timer);
 
-/// Prepares can_timer_t structure for destruction.
+/// Finalizes the #can_timer_t structure.
 static void can_timer_fini(can_timer_t *timer);
 
 /**
@@ -143,16 +145,17 @@ static inline can_recv_key_t can_recv_key(
 /// The function used to compare to CAN receiver keys.
 static int can_recv_key_cmp(const void *p1, const void *p2);
 
-/// Allocates can_recv_t using provided allocator.
+/// Allocates the #can_recv_t structure using the provided allocator.
 static can_recv_t *can_recv_alloc(alloc_t *alloc);
 
-/// Frees can_recv_t structure using allocator provided to can_recv_alloc().
+/// Frees the #can_recv_t structure using the allocator provided to
+/// can_recv_alloc().
 static void can_recv_free(can_recv_t *recv);
 
-/// Initializes can_recv_t structure.
+/// Initializes the #can_recv_t structure.
 static can_recv_t *can_recv_init(can_recv_t *recv);
 
-/// Prepares can_recv_t structure for destruction.
+/// Finalizes the #can_recv_t structure.
 static void can_recv_fini(can_recv_t *recv);
 
 size_t

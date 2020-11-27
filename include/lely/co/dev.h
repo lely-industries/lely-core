@@ -99,7 +99,7 @@ typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
 #if !LELY_NO_MALLOC
 
 /**
- * Allocates memory for #co_dev_t structure.
+ * Allocates memory for the #co_dev_t structure.
  *
  * @returns a pointer to an uninitialized #co_dev_t instance, or NULL on error.
  * In the latter case, the error number can be obtained with get_errc().
