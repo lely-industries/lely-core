@@ -60,10 +60,10 @@ typedef void co_sync_ind_t(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
-/// Returns alignment of the #co_sync_t structure.
+/// Returns the alignment (in bytes) of the #co_sync_t structure.
 size_t co_sync_alignof(void);
 
-/// Returns size of the #co_sync_t structure.
+/// Returns the size (in bytes) of the #co_sync_t structure.
 size_t co_sync_sizeof(void);
 
 /**

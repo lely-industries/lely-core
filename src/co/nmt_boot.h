@@ -49,10 +49,10 @@ extern "C" {
 void co_nmt_boot_con(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 
-/// Returns alignment of the #co_nmt_boot_t structure.
+/// Returns the alignment (in bytes) of the #co_nmt_boot_t structure.
 size_t co_nmt_boot_alignof(void);
 
-/// Returns size of the #co_nmt_boot_t structure.
+/// Returns the size (in bytes) of the #co_nmt_boot_t structure.
 size_t co_nmt_boot_sizeof(void);
 
 /**

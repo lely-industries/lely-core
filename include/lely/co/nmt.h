@@ -278,10 +278,10 @@ const char *co_nmt_es2str(char es);
 
 size_t co_time_sizeof(void);
 
-/// Returns alignment of the #co_nmt_t structure.
+/// Returns the alignment (in bytes) of the #co_nmt_t structure.
 size_t co_nmt_alignof(void);
 
-/// Returns size of the #co_nmt_t structure.
+/// Returns the size (in bytes) of the #co_nmt_t structure.
 size_t co_nmt_sizeof(void);
 
 /**

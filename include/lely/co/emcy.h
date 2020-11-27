@@ -53,10 +53,10 @@ typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t eec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 
-/// Returns alignment of the #co_emcy_t structure.
+/// Returns the alignment (in bytes) of the #co_emcy_t structure.
 size_t co_emcy_alignof(void);
 
-/// Returns size of the #co_emcy_t structure.
+/// Returns the size (in bytes) of the #co_emcy_t structure.
 size_t co_emcy_sizeof(void);
 
 /**

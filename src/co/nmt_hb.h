@@ -52,10 +52,10 @@ extern "C" {
 void co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		co_unsigned8_t st);
 
-/// Returns alignment of the #co_nmt_hb_t structure.
+/// Returns the alignment (in bytes) of the #co_nmt_hb_t structure.
 size_t co_nmt_hb_alignof(void);
 
-/// Returns size of the #co_nmt_hb_t structure.
+/// Returns the size (in bytes) of the #co_nmt_hb_t structure.
 size_t co_nmt_hb_sizeof(void);
 
 /**
