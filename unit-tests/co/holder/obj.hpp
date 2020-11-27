@@ -44,7 +44,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
 
  public:
   explicit CoObjTHolder(co_unsigned16_t idx) {
-    __co_obj_init(Get(), idx, val_data, 0);
+    co_obj_init(Get(), idx, val_data, 0);
   }
 
   static const size_t PREALLOCATED_OBJ_SIZE = 320;

@@ -60,14 +60,11 @@ typedef void co_sync_ind_t(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 typedef void co_sync_err_t(co_sync_t *sync, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
+/// Returns alignment of the #co_sync_t structure.
 size_t co_sync_alignof(void);
-size_t co_sync_sizeof(void);
 
-void *__co_sync_alloc(can_net_t *net);
-void __co_sync_free(void *ptr);
-struct __co_sync *__co_sync_init(
-		struct __co_sync *sync, can_net_t *net, co_dev_t *dev);
-void __co_sync_fini(struct __co_sync *sync);
+/// Returns size of the #co_sync_t structure.
+size_t co_sync_sizeof(void);
 
 /**
  * Creates a new CANopen SYNC producer/consumer service. The service is started

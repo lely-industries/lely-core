@@ -33,13 +33,13 @@
 #include <utility>
 
 // The CAN network interface from <lely/can/net.h>.
-struct __can_net;
+struct can_net;
 
 // The CANopen device from <lely/co/dev.h>.
-struct __co_dev;
+struct co_dev;
 
 // The CANopen Client-SDO service from <lely/co/csdo.h>.
-struct __co_csdo;
+struct co_csdo;
 
 namespace lely {
 
@@ -601,7 +601,7 @@ class Sdo {
    * @param net a pointer to a CAN network interface (from <lely/can/net.hpp>).
    * @param id  the node-ID of the SDO server (in the range [1..127]).
    */
-  Sdo(__can_net* net, uint8_t id);
+  Sdo(can_net* net, uint8_t id);
 
   /**
    * Constructs a Client-SDO queue for a pre-configured Client-SDO. The SDO
@@ -612,7 +612,7 @@ class Sdo {
    * @param dev a pointer to a CANopen device (from <lely/co/dev.h>).
    * @param num the SDO number (in the range [1..128]).
    */
-  Sdo(__can_net* net, __co_dev* dev, uint8_t num);
+  Sdo(can_net* net, co_dev* dev, uint8_t num);
 
   /**
    * Constructs a Client-SDO queue from an existing Client-SDO service. It is
@@ -622,7 +622,7 @@ class Sdo {
    * @param sdo a pointer to a CANopen Client-SDO service (from
    *            <lely/co/csdo.h>).
    */
-  Sdo(__co_csdo* sdo);
+  Sdo(co_csdo* sdo);
 
   Sdo(const Sdo&) = delete;
   Sdo(Sdo&&) = default;

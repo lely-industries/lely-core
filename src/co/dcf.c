@@ -39,8 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static struct __co_dev *__co_dev_init_from_dcf_cfg(
-		struct __co_dev *dev, const config_t *cfg);
+static co_dev_t *co_dev_init_from_dcf_cfg(co_dev_t *dev, const config_t *cfg);
 
 static int co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg);
 
@@ -69,8 +68,8 @@ static void co_val_set_id(co_unsigned16_t type, void *val, co_unsigned8_t id);
 static co_unsigned16_t config_get_idx(const config_t *cfg, const char *section,
 		co_unsigned16_t maxidx, co_unsigned16_t *idx);
 
-struct __co_dev *
-__co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
+co_dev_t *
+co_dev_init_from_dcf_file(co_dev_t *dev, const char *filename)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (!cfg) {
@@ -82,7 +81,7 @@ __co_dev_init_from_dcf_file(struct __co_dev *dev, const char *filename)
 	if (!config_parse_ini_file(cfg, filename))
 		goto error_parse_ini_file;
 
-	if (!__co_dev_init_from_dcf_cfg(dev, cfg))
+	if (!co_dev_init_from_dcf_cfg(dev, cfg))
 		goto error_init_dev;
 
 	config_destroy(cfg);
@@ -101,13 +100,13 @@ co_dev_create_from_dcf_file(const char *filename)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (!__co_dev_init_from_dcf_file(dev, filename)) {
+	if (!co_dev_init_from_dcf_file(dev, filename)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -115,15 +114,15 @@ co_dev_create_from_dcf_file(const char *filename)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;
 }
 
-struct __co_dev *
-__co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
-		const char *end, struct floc *at)
+co_dev_t *
+co_dev_init_from_dcf_text(co_dev_t *dev, const char *begin, const char *end,
+		struct floc *at)
 {
 	config_t *cfg = config_create(CONFIG_CASE);
 	if (!cfg) {
@@ -135,7 +134,7 @@ __co_dev_init_from_dcf_text(struct __co_dev *dev, const char *begin,
 	if (!config_parse_ini_text(cfg, begin, end, at))
 		goto error_parse_ini_text;
 
-	if (!__co_dev_init_from_dcf_cfg(dev, cfg))
+	if (!co_dev_init_from_dcf_cfg(dev, cfg))
 		goto error_init_dev;
 
 	config_destroy(cfg);
@@ -154,13 +153,13 @@ co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 {
 	int errc = 0;
 
-	co_dev_t *dev = __co_dev_alloc();
+	co_dev_t *dev = co_dev_alloc();
 	if (!dev) {
 		errc = get_errc();
 		goto error_alloc_dev;
 	}
 
-	if (!__co_dev_init_from_dcf_text(dev, begin, end, at)) {
+	if (!co_dev_init_from_dcf_text(dev, begin, end, at)) {
 		errc = get_errc();
 		goto error_init_dev;
 	}
@@ -168,19 +167,19 @@ co_dev_create_from_dcf_text(const char *begin, const char *end, struct floc *at)
 	return dev;
 
 error_init_dev:
-	__co_dev_free(dev);
+	co_dev_free(dev);
 error_alloc_dev:
 	set_errc(errc);
 	return NULL;
 }
 
-static struct __co_dev *
-__co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
+static co_dev_t *
+co_dev_init_from_dcf_cfg(co_dev_t *dev, const config_t *cfg)
 {
 	assert(dev);
 	assert(cfg);
 
-	if (!__co_dev_init(dev, 0xff)) {
+	if (!co_dev_init(dev, 0xff)) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize device description");
 		goto error_init_dev;
@@ -192,7 +191,7 @@ __co_dev_init_from_dcf_cfg(struct __co_dev *dev, const config_t *cfg)
 	return dev;
 
 error_parse_cfg:
-	__co_dev_fini(dev);
+	co_dev_fini(dev);
 error_init_dev:
 	return NULL;
 }

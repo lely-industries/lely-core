@@ -53,14 +53,11 @@ typedef void co_emcy_ind_t(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t eec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 
+/// Returns alignment of the #co_emcy_t structure.
 size_t co_emcy_alignof(void);
-size_t co_emcy_sizeof(void);
 
-void *__co_emcy_alloc(can_net_t *net);
-void __co_emcy_free(void *ptr);
-struct __co_emcy *__co_emcy_init(
-		struct __co_emcy *emcy, can_net_t *net, co_dev_t *dev);
-void __co_emcy_fini(struct __co_emcy *emcy);
+/// Returns size of the #co_emcy_t structure.
+size_t co_emcy_sizeof(void);
 
 /**
  * Creates a new CANopen EMCY producer/consumer service. The service is started

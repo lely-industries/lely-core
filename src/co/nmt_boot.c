@@ -66,12 +66,12 @@
 #define LELY_CO_NMT_BOOT_CHECK_TIMEOUT 100
 #endif
 
-struct __co_nmt_boot_state;
+struct co_nmt_boot_state;
 /// An opaque CANopen NMT 'boot slave' state type.
-typedef const struct __co_nmt_boot_state co_nmt_boot_state_t;
+typedef const struct co_nmt_boot_state co_nmt_boot_state_t;
 
 /// A CANopen NMT 'boot slave' service.
-struct __co_nmt_boot {
+struct co_nmt_boot {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -105,6 +105,19 @@ struct __co_nmt_boot {
 	/// The error status.
 	char es;
 };
+
+/// Allocates memory for #co_nmt_boot_t object using allocator from #can_net_t.
+static void *co_nmt_boot_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_nmt_boot_t object.
+static void co_nmt_boot_free(co_nmt_boot_t *boot);
+
+/// Initializes #co_nmt_boot_t object.
+static co_nmt_boot_t *co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net,
+		co_dev_t *dev, co_nmt_t *nmt);
+
+/// Finalizes #co_nmt_boot_t object.
+static void co_nmt_boot_fini(co_nmt_boot_t *boot);
 
 /**
  * The CAN receive callback function for a 'boot slave' service.
@@ -207,7 +220,7 @@ static inline void co_nmt_boot_emit_cfg_con(
 		co_nmt_boot_t *boot, co_unsigned32_t ac);
 
 /// A CANopen NMT 'boot slave' state.
-struct __co_nmt_boot_state {
+struct co_nmt_boot_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_boot_state_t *(*on_enter)(co_nmt_boot_t *boot);
 	/**
@@ -797,112 +810,18 @@ co_nmt_boot_sizeof(void)
 	return sizeof(co_nmt_boot_t);
 }
 
-void *
-__co_nmt_boot_alloc(can_net_t *net)
-{
-	struct __co_nmt_boot *boot = mem_alloc(can_net_get_alloc(net),
-			co_nmt_boot_alignof(), co_nmt_boot_sizeof());
-	if (!boot)
-		return NULL;
-
-	boot->net = net;
-
-	return boot;
-}
-
-void
-__co_nmt_boot_free(void *ptr)
-{
-	struct __co_nmt_boot *boot = ptr;
-
-	if (boot)
-		mem_free(co_nmt_boot_get_alloc(boot), boot);
-}
-
-struct __co_nmt_boot *
-__co_nmt_boot_init(struct __co_nmt_boot *boot, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
-{
-	assert(boot);
-	assert(net);
-	assert(dev);
-	assert(nmt);
-
-	int errc = 0;
-
-	boot->net = net;
-	boot->dev = dev;
-	boot->nmt = nmt;
-
-	boot->state = NULL;
-
-	boot->recv = can_recv_create(co_nmt_boot_get_alloc(boot));
-	if (!boot->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(boot->recv, &co_nmt_boot_recv, boot);
-
-	boot->timer = can_timer_create(co_nmt_boot_get_alloc(boot));
-	if (!boot->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
-
-	boot->id = 0;
-
-	boot->timeout = 0;
-	boot->sdo = NULL;
-
-	boot->start = (struct timespec){ 0, 0 };
-	can_net_get_time(boot->net, &boot->start);
-
-	boot->assignment = 0;
-	boot->ms = 0;
-
-	boot->st = 0;
-	boot->es = 0;
-
-	co_sdo_req_init(&boot->req, NULL);
-	boot->retry = 0;
-
-	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
-	return boot;
-
-	// can_timer_destroy(boot->timer);
-error_create_timer:
-	can_recv_destroy(boot->recv);
-error_create_recv:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_nmt_boot_fini(struct __co_nmt_boot *boot)
-{
-	assert(boot);
-
-	co_sdo_req_fini(&boot->req);
-
-	co_csdo_destroy(boot->sdo);
-
-	can_timer_destroy(boot->timer);
-	can_recv_destroy(boot->recv);
-}
-
 co_nmt_boot_t *
 co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_boot_t *boot = __co_nmt_boot_alloc(net);
+	co_nmt_boot_t *boot = co_nmt_boot_alloc(net);
 	if (!boot) {
 		errc = get_errc();
 		goto error_alloc_boot;
 	}
 
-	if (!__co_nmt_boot_init(boot, net, dev, nmt)) {
+	if (!co_nmt_boot_init(boot, net, dev, nmt)) {
 		errc = get_errc();
 		goto error_init_boot;
 	}
@@ -910,7 +829,7 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	return boot;
 
 error_init_boot:
-	__co_nmt_boot_free(boot);
+	co_nmt_boot_free(boot);
 error_alloc_boot:
 	set_errc(errc);
 	return NULL;
@@ -920,8 +839,8 @@ void
 co_nmt_boot_destroy(co_nmt_boot_t *boot)
 {
 	if (boot) {
-		__co_nmt_boot_fini(boot);
-		__co_nmt_boot_free(boot);
+		co_nmt_boot_fini(boot);
+		co_nmt_boot_free(boot);
 	}
 }
 
@@ -2201,3 +2120,94 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 }
 
 #endif // !LELY_NO_CO_MASTER
+
+static void *
+co_nmt_boot_alloc(can_net_t *net)
+{
+	co_nmt_boot_t *boot = mem_alloc(can_net_get_alloc(net),
+			co_nmt_boot_alignof(), co_nmt_boot_sizeof());
+	if (!boot)
+		return NULL;
+
+	boot->net = net;
+
+	return boot;
+}
+
+static void
+co_nmt_boot_free(co_nmt_boot_t *boot)
+{
+	mem_free(co_nmt_boot_get_alloc(boot), boot);
+}
+
+static co_nmt_boot_t *
+co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net, co_dev_t *dev,
+		co_nmt_t *nmt)
+{
+	assert(boot);
+	assert(net);
+	assert(dev);
+	assert(nmt);
+
+	int errc = 0;
+
+	boot->net = net;
+	boot->dev = dev;
+	boot->nmt = nmt;
+
+	boot->state = NULL;
+
+	boot->recv = can_recv_create(co_nmt_boot_get_alloc(boot));
+	if (!boot->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(boot->recv, &co_nmt_boot_recv, boot);
+
+	boot->timer = can_timer_create(co_nmt_boot_get_alloc(boot));
+	if (!boot->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
+
+	boot->id = 0;
+
+	boot->timeout = 0;
+	boot->sdo = NULL;
+
+	boot->start = (struct timespec){ 0, 0 };
+	can_net_get_time(boot->net, &boot->start);
+
+	boot->assignment = 0;
+	boot->ms = 0;
+
+	boot->st = 0;
+	boot->es = 0;
+
+	co_sdo_req_init(&boot->req, NULL);
+	boot->retry = 0;
+
+	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
+	return boot;
+
+	// can_timer_destroy(boot->timer);
+error_create_timer:
+	can_recv_destroy(boot->recv);
+error_create_recv:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_nmt_boot_fini(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	co_sdo_req_fini(&boot->req);
+
+	co_csdo_destroy(boot->sdo);
+
+	can_timer_destroy(boot->timer);
+	can_recv_destroy(boot->recv);
+}

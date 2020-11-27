@@ -32,7 +32,7 @@
 #include <typeinfo>
 
 // The CANopen device from <lely/co/dev.h>.
-struct __co_dev;
+struct co_dev;
 
 namespace lely {
 
@@ -472,7 +472,7 @@ class Device {
   ~Device();
 
   /// Returns a pointer to the internal CANopen device from <lely/co/dev.hpp>.
-  __co_dev* dev() const noexcept;
+  co_dev* dev() const noexcept;
 
   /**
    * Returns the type of a sub-object.

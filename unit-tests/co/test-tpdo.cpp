@@ -211,69 +211,69 @@ TEST_BASE(CO_TpdoBase) {
   }
 };
 
-TEST_GROUP_BASE(CO_TpdoInit, CO_TpdoBase) {
+TEST_GROUP_BASE(CO_TpdoCreate, CO_TpdoBase) {
   co_tpdo_t* tpdo = nullptr;
 
-  TEST_SETUP() {
-    TEST_BASE_SETUP();
-    tpdo = static_cast<co_tpdo_t*>(__co_tpdo_alloc(net));
-    CHECK(tpdo != nullptr);
-  }
-
   TEST_TEARDOWN() {
-    __co_tpdo_free(tpdo);
+    co_tpdo_destroy(tpdo);
     TEST_BASE_TEARDOWN();
   }
 };
 
-TEST(CO_TpdoInit, CoTpdoFree_Null) { __co_tpdo_free(nullptr); }
+TEST(CO_TpdoCreate, CoTpdoDestroy_Null) { co_tpdo_destroy(nullptr); }
 
-TEST(CO_TpdoInit, CoTpdoInit_ZeroNum) {
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, 0u);
+TEST(CO_TpdoCreate, CoTpdoCreate_Error) {
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoCreate, CoTpdoCreate_ZeroNum) {
+  tpdo = co_tpdo_create(net, dev, 0u);
+
+  POINTERS_EQUAL(nullptr, tpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_InvalidNum) {
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, CO_NUM_PDOS + 1u);
+TEST(CO_TpdoCreate, CoTpdoCreate_InvalidNum) {
+  tpdo = co_tpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, tpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_NoTPDOParameters) {
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOParameters) {
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, tpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_NoTPDOMappingParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOMappingParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, tpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_NoTPDOCommParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOCommParamRecord) {
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(nullptr, ret);
+  POINTERS_EQUAL(nullptr, tpdo);
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_MinimalTPDO) {
+TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
   CreateObjInDev(obj1800, 0x1800u);
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   POINTERS_EQUAL(net, co_tpdo_get_net(tpdo));
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
@@ -302,11 +302,9 @@ TEST(CO_TpdoInit, CoTpdoInit_MinimalTPDO) {
   co_tpdo_get_sample_ind(tpdo, &psind, &pdata);
   CHECK(psind != nullptr);
   FUNCTIONPOINTERS_EQUAL(nullptr, psdata);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_MinimalTPDOMaxNum) {
+TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDOMaxNum) {
   const co_unsigned16_t MAX_TPDO_NUM = 0x0200u;
 
   CoObjTHolder obj19ff_holder(0x19ffu);
@@ -317,17 +315,18 @@ TEST(CO_TpdoInit, CoTpdoInit_MinimalTPDOMaxNum) {
   CHECK(obj1bff_holder.Get() != nullptr);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1bff_holder.Take()));
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, MAX_TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, MAX_TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   POINTERS_EQUAL(net, co_tpdo_get_net(tpdo));
   POINTERS_EQUAL(dev, co_tpdo_get_dev(tpdo));
   CHECK_EQUAL(MAX_TPDO_NUM, co_tpdo_get_num(tpdo));
 
-  __co_tpdo_fini(tpdo);
+  co_tpdo_destroy(tpdo);
+  tpdo = nullptr;  // must be destroyed before objects
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_ExtendedFrame) {
+TEST(CO_TpdoCreate, CoTpdoCreate_ExtendedFrame) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_FRAME);
@@ -335,9 +334,9 @@ TEST(CO_TpdoInit, CoTpdoInit_ExtendedFrame) {
 
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -348,11 +347,9 @@ TEST(CO_TpdoInit, CoTpdoInit_ExtendedFrame) {
   CHECK_EQUAL(0u, comm->reserved);
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_InvalidBit) {
+TEST(CO_TpdoCreate, CoTpdoCreate_InvalidBit) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_VALID);
@@ -360,9 +357,9 @@ TEST(CO_TpdoInit, CoTpdoInit_InvalidBit) {
 
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -373,11 +370,9 @@ TEST(CO_TpdoInit, CoTpdoInit_InvalidBit) {
   CHECK_EQUAL(0u, comm->reserved);
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_FullTPDOCommParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOCommParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x06u);
   SetComm01CobId(DEV_ID);
@@ -389,9 +384,9 @@ TEST(CO_TpdoInit, CoTpdoInit_FullTPDOCommParamRecord) {
 
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -402,11 +397,9 @@ TEST(CO_TpdoInit, CoTpdoInit_FullTPDOCommParamRecord) {
   CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_FullTPDOMappingParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOMappingParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
 
   CreateObjInDev(obj1a00, 0x1a00u);
@@ -416,19 +409,17 @@ TEST(CO_TpdoInit, CoTpdoInit_FullTPDOMappingParamRecord) {
     SetMappNthAppObject(i, i - 1u);
   }
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_OversizedTPDOCommParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoCreate_OversizedTPDOCommParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x07u);
   SetComm01CobId(DEV_ID);
@@ -443,9 +434,9 @@ TEST(CO_TpdoInit, CoTpdoInit_OversizedTPDOCommParamRecord) {
 
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, TPDO_NUM);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -456,11 +447,9 @@ TEST(CO_TpdoInit, CoTpdoInit_OversizedTPDOCommParamRecord) {
   CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_EventDrivenTransmission) {
+TEST(CO_TpdoCreate, CoTpdoCreate_EventDrivenTransmission) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
@@ -468,9 +457,9 @@ TEST(CO_TpdoInit, CoTpdoInit_EventDrivenTransmission) {
 
   CreateObjInDev(obj1a00, 0x1a00u);
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, 1u);
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -481,11 +470,9 @@ TEST(CO_TpdoInit, CoTpdoInit_EventDrivenTransmission) {
   CHECK_EQUAL(0u, comm->reserved);
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
 }
 
-TEST(CO_TpdoInit, CoTpdoInit_TimerSet) {
+TEST(CO_TpdoCreate, CoTpdoCreate_TimerSet) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
@@ -498,9 +485,9 @@ TEST(CO_TpdoInit, CoTpdoInit_TimerSet) {
   obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
                            co_unsigned32_t(0x00000001u));
 
-  const auto* ret = __co_tpdo_init(tpdo, net, dev, 1u);
+  tpdo = co_tpdo_create(net, dev, 1u);
 
-  POINTERS_EQUAL(tpdo, ret);
+  CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
@@ -511,29 +498,6 @@ TEST(CO_TpdoInit, CoTpdoInit_TimerSet) {
   CHECK_EQUAL(0u, comm->reserved);
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
-
-  __co_tpdo_fini(tpdo);
-}
-
-TEST_GROUP_BASE(CO_TpdoCreate, CO_TpdoBase){};
-
-TEST(CO_TpdoCreate, CoTpdoDestroy_Null) { co_tpdo_destroy(nullptr); }
-
-TEST(CO_TpdoCreate, CoTpdoCreate) {
-  CreateObjInDev(obj1800, 0x1800u);
-
-  CreateObjInDev(obj1a00, 0x1a00u);
-
-  auto* const tpdo = co_tpdo_create(net, dev, TPDO_NUM);
-  CHECK(tpdo != nullptr);
-
-  co_tpdo_destroy(tpdo);
-}
-
-TEST(CO_TpdoCreate, CoTpdoCreate_Error) {
-  const auto* const tpdo = co_tpdo_create(net, dev, TPDO_NUM);
-
-  POINTERS_EQUAL(nullptr, tpdo);
 }
 
 TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {

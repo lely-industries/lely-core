@@ -59,14 +59,11 @@ typedef void co_tpdo_ind_t(co_tpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
  */
 typedef int co_tpdo_sample_ind_t(co_tpdo_t *pdo, void *data);
 
+/// Returns alignment of the #co_tpdo_t structure.
 size_t co_tpdo_alignof(void);
-size_t co_tpdo_sizeof(void);
 
-void *__co_tpdo_alloc(can_net_t *net);
-void __co_tpdo_free(void *ptr);
-struct __co_tpdo *__co_tpdo_init(struct __co_tpdo *pdo, can_net_t *net,
-		co_dev_t *dev, co_unsigned16_t num);
-void __co_tpdo_fini(struct __co_tpdo *pdo);
+/// Returns size of the #co_tpdo_t structure.
+size_t co_tpdo_sizeof(void);
 
 /**
  * Creates a new CANopen Transmit-PDO service. The service is started as if by

@@ -80,14 +80,11 @@ void co_time_diff_get(const co_time_diff_t *td, struct timespec *tp);
  */
 void co_time_diff_set(co_time_diff_t *td, const struct timespec *tp);
 
+/// Returns alignment of the #co_time_t structure.
 size_t co_time_alignof(void);
-size_t co_time_sizeof(void);
 
-void *__co_time_alloc(can_net_t *net);
-void __co_time_free(void *ptr);
-struct __co_time *__co_time_init(
-		struct __co_time *time, can_net_t *net, co_dev_t *dev);
-void __co_time_fini(struct __co_time *time);
+/// Returns size of the #co_time_t structure.
+size_t co_time_sizeof(void);
 
 /**
  * Creates a new CANopen TIME producer/consumer service. The service is started

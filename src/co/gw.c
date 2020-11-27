@@ -121,6 +121,18 @@ struct co_gw_net {
 #endif
 };
 
+/// Allocates memory for #co_gw_t object.
+static void *co_gw_alloc(void);
+
+/// Frees memory allocated for #co_gw_t object.
+static void co_gw_free(void *gw);
+
+/// Initializes #co_gw_t object.
+static co_gw_t *co_gw_init(co_gw_t *gw);
+
+/// Finalizes #co_gw_t object.
+static void co_gw_fini(co_gw_t *gw);
+
 /// Creates a new CANopen network. @see co_gw_net_destroy()
 static struct co_gw_net *co_gw_net_create(
 		co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt);
@@ -304,7 +316,7 @@ static void co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs,
 #endif
 
 /// A CANopen gateway.
-struct __co_gw {
+struct co_gw {
 	/// An array of pointers to the CANopen networks.
 	struct co_gw_net *net[CO_GW_NUM_NET];
 	/// The command timeout (in milliseconds).
@@ -491,62 +503,18 @@ co_gw_iec2str(int iec)
 	}
 }
 
-void *
-__co_gw_alloc(void)
-{
-	void *ptr = malloc(sizeof(struct __co_gw));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
-}
-
-void
-__co_gw_free(void *ptr)
-{
-	free(ptr);
-}
-
-struct __co_gw *
-__co_gw_init(struct __co_gw *gw)
-{
-	assert(gw);
-
-	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++)
-		gw->net[id - 1] = NULL;
-
-	gw->timeout = 0;
-	gw->def = 0;
-
-	gw->send_func = NULL;
-	gw->send_data = NULL;
-
-	gw->rate_func = NULL;
-	gw->rate_data = NULL;
-
-	return gw;
-}
-
-void
-__co_gw_fini(struct __co_gw *gw)
-{
-	assert(gw);
-
-	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++)
-		co_gw_net_destroy(gw->net[id - 1]);
-}
-
 co_gw_t *
 co_gw_create(void)
 {
 	int errc = 0;
 
-	co_gw_t *gw = __co_gw_alloc();
+	co_gw_t *gw = co_gw_alloc();
 	if (!gw) {
 		errc = get_errc();
 		goto error_alloc_gw;
 	}
 
-	if (!__co_gw_init(gw)) {
+	if (!co_gw_init(gw)) {
 		errc = get_errc();
 		goto error_init_gw;
 	}
@@ -554,7 +522,7 @@ co_gw_create(void)
 	return gw;
 
 error_init_gw:
-	__co_gw_free(gw);
+	co_gw_free(gw);
 error_alloc_gw:
 	set_errc(errc);
 	return NULL;
@@ -564,8 +532,8 @@ void
 co_gw_destroy(co_gw_t *gw)
 {
 	if (gw) {
-		__co_gw_fini(gw);
-		__co_gw_free(gw);
+		co_gw_fini(gw);
+		co_gw_free(gw);
 	}
 }
 
@@ -3192,6 +3160,50 @@ errnum2iec(errnum_t errnum)
 	case ERRNUM_PERM: return CO_GW_IEC_BAD_SRV;
 	default: return CO_GW_IEC_INTERN;
 	}
+}
+
+static void *
+co_gw_alloc(void)
+{
+	void *ptr = malloc(sizeof(struct co_gw));
+	if (!ptr)
+		set_errc(errno2c(errno));
+	return ptr;
+}
+
+static void
+co_gw_free(void *ptr)
+{
+	free(ptr);
+}
+
+static co_gw_t *
+co_gw_init(co_gw_t *gw)
+{
+	assert(gw);
+
+	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++)
+		gw->net[id - 1] = NULL;
+
+	gw->timeout = 0;
+	gw->def = 0;
+
+	gw->send_func = NULL;
+	gw->send_data = NULL;
+
+	gw->rate_func = NULL;
+	gw->rate_data = NULL;
+
+	return gw;
+}
+
+static void
+co_gw_fini(co_gw_t *gw)
+{
+	assert(gw);
+
+	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++)
+		co_gw_net_destroy(gw->net[id - 1]);
 }
 
 #endif // !LELY_NO_CO_GW

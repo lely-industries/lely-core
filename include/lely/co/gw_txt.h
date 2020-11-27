@@ -30,11 +30,9 @@
 /// The low number of the version of CiA 309-3 implemented by this gateway.
 #define CO_GW_TXT_IMPL_LO 1
 
-struct __co_gw_txt;
-#if !defined(__cplusplus) || LELY_NO_CXX
+struct co_gw_txt;
 /// An opaque CANopen ASCII gateway type.
-typedef struct __co_gw_txt co_gw_txt_t;
-#endif
+typedef struct co_gw_txt co_gw_txt_t;
 
 // The file location struct from <lely/util/diag.h>.
 struct floc;
@@ -68,11 +66,6 @@ typedef int co_gw_txt_recv_func_t(const char *txt, void *data);
  * SHOULD set the error number with `set_errnum()`.
  */
 typedef int co_gw_txt_send_func_t(const struct co_gw_req *req, void *data);
-
-void *__co_gw_txt_alloc(void);
-void __co_gw_txt_free(void *ptr);
-struct __co_gw_txt *__co_gw_txt_init(struct __co_gw_txt *gw);
-void __co_gw_txt_fini(struct __co_gw_txt *gw);
 
 /// Creates a new CANopen ASCII gateway. @see co_gw_txt_destroy()
 co_gw_txt_t *co_gw_txt_create(void);

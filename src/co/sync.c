@@ -36,7 +36,7 @@
 #include <assert.h>
 
 /// A CANopen SYNC producer/consumer service.
-struct __co_sync {
+struct co_sync {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -62,6 +62,18 @@ struct __co_sync {
 	/// A pointer to user-specified data for #err.
 	void *err_data;
 };
+
+/// Allocates memory for #co_sync_t object using allocator from #can_net_t.
+static void *co_sync_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_sync_t object.
+static void co_sync_free(co_sync_t *sync);
+
+/// Initializes #co_sync_t object.
+static co_sync_t *co_sync_init(co_sync_t *sync, can_net_t *net, co_dev_t *dev);
+
+/// Finalizes #co_tpdo_t object.
+static void co_sync_fini(co_sync_t *sync);
 
 /**
  * Updates and (de)activates a SYNC producer/consumer service. This function is
@@ -123,102 +135,6 @@ co_sync_sizeof(void)
 	return sizeof(co_sync_t);
 }
 
-void *
-__co_sync_alloc(can_net_t *net)
-{
-	struct __co_sync *sync = mem_alloc(can_net_get_alloc(net),
-			co_sync_alignof(), co_sync_sizeof());
-	if (!sync)
-		return NULL;
-
-	sync->net = net;
-
-	return sync;
-}
-
-void
-__co_sync_free(void *ptr)
-{
-	struct __co_sync *sync = ptr;
-
-	if (sync)
-		mem_free(co_sync_get_alloc(sync), sync);
-}
-
-struct __co_sync *
-__co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
-{
-	assert(sync);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	sync->net = net;
-	sync->dev = dev;
-
-	// Retrieve the SYNC COB-ID.
-	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
-	if (!obj_1005) {
-		errc = errnum2c(ERRNUM_NOSYS);
-		goto error_obj_1005;
-	}
-
-	sync->cobid = 0;
-	sync->us = 0;
-	sync->max_cnt = 0;
-
-	sync->recv = can_recv_create(co_sync_get_alloc(sync));
-	if (!sync->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(sync->recv, &co_sync_recv, sync);
-
-	sync->timer = can_timer_create(co_sync_get_alloc(sync));
-	if (!sync->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(sync->timer, &co_sync_timer, sync);
-
-	sync->cnt = 1;
-
-	sync->ind = NULL;
-	sync->ind_data = NULL;
-	sync->err = NULL;
-	sync->err_data = NULL;
-
-	if (co_sync_start(sync) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return sync;
-
-	// co_sync_stop(sync);
-error_start:
-	can_timer_destroy(sync->timer);
-error_create_timer:
-	can_recv_destroy(sync->recv);
-error_create_recv:
-	co_obj_set_dn_ind(obj_1005, NULL, NULL);
-error_obj_1005:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_sync_fini(struct __co_sync *sync)
-{
-	assert(sync);
-
-	co_sync_stop(sync);
-
-	can_timer_destroy(sync->timer);
-	can_recv_destroy(sync->recv);
-}
-
 co_sync_t *
 co_sync_create(can_net_t *net, co_dev_t *dev)
 {
@@ -226,13 +142,13 @@ co_sync_create(can_net_t *net, co_dev_t *dev)
 
 	int errc = 0;
 
-	co_sync_t *sync = __co_sync_alloc(net);
+	co_sync_t *sync = co_sync_alloc(net);
 	if (!sync) {
 		errc = get_errc();
 		goto error_alloc_sync;
 	}
 
-	if (!__co_sync_init(sync, net, dev)) {
+	if (!co_sync_init(sync, net, dev)) {
 		errc = get_errc();
 		goto error_init_sync;
 	}
@@ -240,7 +156,7 @@ co_sync_create(can_net_t *net, co_dev_t *dev)
 	return sync;
 
 error_init_sync:
-	__co_sync_free(sync);
+	co_sync_free(sync);
 error_alloc_sync:
 	set_errc(errc);
 	return NULL;
@@ -251,8 +167,8 @@ co_sync_destroy(co_sync_t *sync)
 {
 	if (sync) {
 		trace("destroying SYNC service");
-		__co_sync_fini(sync);
-		__co_sync_free(sync);
+		co_sync_fini(sync);
+		co_sync_free(sync);
 	}
 }
 
@@ -598,3 +514,96 @@ co_sync_timer(const struct timespec *tp, void *data)
 }
 
 #endif // !LELY_NO_CO_SYNC
+
+static void *
+co_sync_alloc(can_net_t *net)
+{
+	co_sync_t *sync = mem_alloc(can_net_get_alloc(net), co_sync_alignof(),
+			co_sync_sizeof());
+	if (!sync)
+		return NULL;
+
+	sync->net = net;
+
+	return sync;
+}
+
+static void
+co_sync_free(co_sync_t *sync)
+{
+	mem_free(co_sync_get_alloc(sync), sync);
+}
+
+static co_sync_t *
+co_sync_init(co_sync_t *sync, can_net_t *net, co_dev_t *dev)
+{
+	assert(sync);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	sync->net = net;
+	sync->dev = dev;
+
+	// Retrieve the SYNC COB-ID.
+	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
+	if (!obj_1005) {
+		errc = errnum2c(ERRNUM_NOSYS);
+		goto error_obj_1005;
+	}
+
+	sync->cobid = 0;
+	sync->us = 0;
+	sync->max_cnt = 0;
+
+	sync->recv = can_recv_create(co_sync_get_alloc(sync));
+	if (!sync->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(sync->recv, &co_sync_recv, sync);
+
+	sync->timer = can_timer_create(co_sync_get_alloc(sync));
+	if (!sync->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(sync->timer, &co_sync_timer, sync);
+
+	sync->cnt = 1;
+
+	sync->ind = NULL;
+	sync->ind_data = NULL;
+	sync->err = NULL;
+	sync->err_data = NULL;
+
+	if (co_sync_start(sync) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return sync;
+
+	// co_sync_stop(sync);
+error_start:
+	can_timer_destroy(sync->timer);
+error_create_timer:
+	can_recv_destroy(sync->recv);
+error_create_recv:
+	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+error_obj_1005:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_sync_fini(co_sync_t *sync)
+{
+	assert(sync);
+
+	co_sync_stop(sync);
+
+	can_timer_destroy(sync->timer);
+	can_recv_destroy(sync->recv);
+}

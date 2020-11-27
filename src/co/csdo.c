@@ -47,9 +47,9 @@
 #endif
 #endif
 
-struct __co_csdo_state;
+struct co_csdo_state;
 /// An opaque CANopen Client-SDO state type.
-typedef const struct __co_csdo_state co_csdo_state_t;
+typedef const struct co_csdo_state co_csdo_state_t;
 
 /// The state of a concise DCF download request.
 struct co_csdo_dn_dcf {
@@ -66,7 +66,7 @@ struct co_csdo_dn_dcf {
 };
 
 /// A CANopen Client-SDO.
-struct __co_csdo {
+struct co_csdo {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -135,6 +135,19 @@ struct __co_csdo {
 	struct co_csdo_dn_dcf dn_dcf;
 };
 
+/// Allocates memory for #co_csdo_t object using allocator from #can_net_t.
+static void *co_csdo_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_csdo_t object.
+static void co_csdo_free(co_csdo_t *sdo);
+
+/// Initializes #co_csdo_t object.
+static co_csdo_t *co_csdo_init(co_csdo_t *sdo, can_net_t *net, co_dev_t *dev,
+		co_unsigned8_t num);
+
+/// Finalizes #co_csdo_t object.
+static void co_csdo_fini(co_csdo_t *sdo);
+
 /**
  * Updates and (de)activates a Client-SDO service. This function is invoked when
  * one of the SDO client parameters (objects 1280..12FF) is updated.
@@ -200,7 +213,7 @@ static inline void co_csdo_emit_time(co_csdo_t *sdo, const struct timespec *tp);
 static inline void co_csdo_emit_recv(co_csdo_t *sdo, const struct can_msg *msg);
 
 /// A CANopen Client-SDO state.
-struct __co_csdo_state {
+struct co_csdo_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_csdo_state_t *(*on_enter)(co_csdo_t *sdo);
 	/**
@@ -888,143 +901,6 @@ co_csdo_sizeof(void)
 	return sizeof(co_csdo_t);
 }
 
-void *
-__co_csdo_alloc(can_net_t *net)
-{
-	struct __co_csdo *sdo = mem_alloc(can_net_get_alloc(net),
-			co_csdo_alignof(), co_csdo_sizeof());
-	if (!sdo)
-		return NULL;
-
-	sdo->net = net;
-
-	return sdo;
-}
-
-void
-__co_csdo_free(void *ptr)
-{
-	struct __co_csdo *sdo = ptr;
-
-	if (sdo)
-		mem_free(co_csdo_get_alloc(sdo), sdo);
-}
-
-struct __co_csdo *
-__co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
-		co_unsigned8_t num)
-{
-	assert(sdo);
-	assert(net);
-
-	int errc = 0;
-
-	if (!num || num > (dev ? 128 : CO_NUM_NODES)) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	// Find the SDO client parameter in the object dictionary.
-	co_obj_t *obj_1280 =
-			dev ? co_dev_find_obj(dev, 0x1280 + num - 1) : NULL;
-	if (dev && !obj_1280) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	sdo->net = net;
-	sdo->dev = dev;
-	sdo->num = num;
-
-	// Initialize the SDO parameter record with the default values.
-	sdo->par.n = 3;
-	sdo->par.id = num;
-	sdo->par.cobid_req = 0x600 + sdo->par.id;
-	sdo->par.cobid_res = 0x580 + sdo->par.id;
-
-	sdo->recv = can_recv_create(co_csdo_get_alloc(sdo));
-	if (!sdo->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(sdo->recv, &co_csdo_recv, sdo);
-
-	sdo->timeout = 0;
-
-	sdo->timer = can_timer_create(co_csdo_get_alloc(sdo));
-	if (!sdo->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(sdo->timer, &co_csdo_timer, sdo);
-
-	sdo->state = co_csdo_stopped_state;
-
-	sdo->ac = 0;
-	sdo->idx = 0;
-	sdo->subidx = 0;
-	sdo->size = 0;
-
-	sdo->toggle = 0;
-	sdo->blksize = 0;
-	sdo->ackseq = 0;
-	sdo->crc = 0;
-
-	membuf_init(&sdo->dn_buf, NULL, 0);
-	sdo->up_buf = NULL;
-#if LELY_NO_MALLOC
-	membuf_init(&sdo->buf, sdo->begin, CO_CSDO_MEMBUF_SIZE);
-	memset(sdo->begin, 0, CO_CSDO_MEMBUF_SIZE);
-#else
-	membuf_init(&sdo->buf, NULL, 0);
-#endif
-
-	sdo->dn_con = NULL;
-	sdo->dn_con_data = NULL;
-
-	sdo->dn_ind = NULL;
-	sdo->dn_ind_data = NULL;
-
-	sdo->up_con = NULL;
-	sdo->up_con_data = NULL;
-
-	sdo->up_ind = NULL;
-	sdo->up_ind_data = NULL;
-
-	sdo->dn_dcf = (struct co_csdo_dn_dcf){ 0 };
-
-	if (co_csdo_start(sdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return sdo;
-
-	// co_csdo_stop(sdo);
-error_start:
-	can_timer_destroy(sdo->timer);
-error_create_timer:
-	can_recv_destroy(sdo->recv);
-error_create_recv:
-error_param:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_csdo_fini(struct __co_csdo *sdo)
-{
-	assert(sdo);
-	assert(sdo->num >= 1 && sdo->num <= 128);
-
-	co_csdo_stop(sdo);
-
-	membuf_fini(&sdo->buf);
-
-	can_timer_destroy(sdo->timer);
-	can_recv_destroy(sdo->recv);
-}
-
 co_csdo_t *
 co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 {
@@ -1032,13 +908,13 @@ co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	int errc = 0;
 
-	co_csdo_t *sdo = __co_csdo_alloc(net);
+	co_csdo_t *sdo = co_csdo_alloc(net);
 	if (!sdo) {
 		errc = get_errc();
 		goto error_alloc_sdo;
 	}
 
-	if (!__co_csdo_init(sdo, net, dev, num)) {
+	if (!co_csdo_init(sdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_sdo;
 	}
@@ -1046,7 +922,7 @@ co_csdo_create(can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	return sdo;
 
 error_init_sdo:
-	__co_csdo_free(sdo);
+	co_csdo_free(sdo);
 error_alloc_sdo:
 	set_errc(errc);
 	return NULL;
@@ -1057,8 +933,8 @@ co_csdo_destroy(co_csdo_t *csdo)
 {
 	if (csdo) {
 		trace("destroying Client-SDO %d", csdo->num);
-		__co_csdo_fini(csdo);
-		__co_csdo_free(csdo);
+		co_csdo_fini(csdo);
+		co_csdo_free(csdo);
 	}
 }
 
@@ -2682,3 +2558,134 @@ done:;
 }
 
 #endif // !LELY_NO_CO_CSDO
+
+static void *
+co_csdo_alloc(can_net_t *net)
+{
+	co_csdo_t *sdo = mem_alloc(can_net_get_alloc(net), co_csdo_alignof(),
+			co_csdo_sizeof());
+	if (!sdo)
+		return NULL;
+
+	sdo->net = net;
+
+	return sdo;
+}
+
+static void
+co_csdo_free(co_csdo_t *sdo)
+{
+	mem_free(co_csdo_get_alloc(sdo), sdo);
+}
+
+static co_csdo_t *
+co_csdo_init(co_csdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
+{
+	assert(sdo);
+	assert(net);
+
+	int errc = 0;
+
+	if (!num || num > (dev ? 128 : CO_NUM_NODES)) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	// Find the SDO client parameter in the object dictionary.
+	co_obj_t *obj_1280 =
+			dev ? co_dev_find_obj(dev, 0x1280 + num - 1) : NULL;
+	if (dev && !obj_1280) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	sdo->net = net;
+	sdo->dev = dev;
+	sdo->num = num;
+
+	// Initialize the SDO parameter record with the default values.
+	sdo->par.n = 3;
+	sdo->par.id = num;
+	sdo->par.cobid_req = 0x600 + sdo->par.id;
+	sdo->par.cobid_res = 0x580 + sdo->par.id;
+
+	sdo->recv = can_recv_create(co_csdo_get_alloc(sdo));
+	if (!sdo->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(sdo->recv, &co_csdo_recv, sdo);
+
+	sdo->timeout = 0;
+
+	sdo->timer = can_timer_create(co_csdo_get_alloc(sdo));
+	if (!sdo->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(sdo->timer, &co_csdo_timer, sdo);
+
+	sdo->state = co_csdo_stopped_state;
+
+	sdo->ac = 0;
+	sdo->idx = 0;
+	sdo->subidx = 0;
+	sdo->size = 0;
+
+	sdo->toggle = 0;
+	sdo->blksize = 0;
+	sdo->ackseq = 0;
+	sdo->crc = 0;
+
+	membuf_init(&sdo->dn_buf, NULL, 0);
+	sdo->up_buf = NULL;
+#if LELY_NO_MALLOC
+	membuf_init(&sdo->buf, sdo->begin, CO_CSDO_MEMBUF_SIZE);
+	memset(sdo->begin, 0, CO_CSDO_MEMBUF_SIZE);
+#else
+	membuf_init(&sdo->buf, NULL, 0);
+#endif
+
+	sdo->dn_con = NULL;
+	sdo->dn_con_data = NULL;
+
+	sdo->dn_ind = NULL;
+	sdo->dn_ind_data = NULL;
+
+	sdo->up_con = NULL;
+	sdo->up_con_data = NULL;
+
+	sdo->up_ind = NULL;
+	sdo->up_ind_data = NULL;
+
+	if (co_csdo_start(sdo) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return sdo;
+
+	// co_csdo_stop(sdo);
+error_start:
+	can_timer_destroy(sdo->timer);
+error_create_timer:
+	can_recv_destroy(sdo->recv);
+error_create_recv:
+error_param:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_csdo_fini(co_csdo_t *sdo)
+{
+	assert(sdo);
+	assert(sdo->num >= 1 && sdo->num <= 128);
+
+	co_csdo_stop(sdo);
+
+	membuf_fini(&sdo->buf);
+
+	can_timer_destroy(sdo->timer);
+	can_recv_destroy(sdo->recv);
+}

@@ -140,13 +140,11 @@ typedef void co_lss_nid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 		const struct co_id *id, void *data);
 
+/// Returns alignment of the #co_lss_t structure.
 size_t co_lss_alignof(void);
-size_t co_lss_sizeof(void);
 
-void *__co_lss_alloc(can_net_t *net);
-void __co_lss_free(void *ptr);
-struct __co_lss *__co_lss_init(struct __co_lss *lss, co_nmt_t *nmt);
-void __co_lss_fini(struct __co_lss *lss);
+/// Returns size of the #co_lss_t structure.
+size_t co_lss_sizeof(void);
 
 /**
  * Creates a new CANopen LSS master/slave service. The service is started as if

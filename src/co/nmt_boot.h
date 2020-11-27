@@ -27,10 +27,10 @@
 #include <lely/co/csdo.h>
 #include <lely/co/nmt.h>
 
-struct __co_nmt_boot;
+struct co_nmt_boot;
 #ifndef __cplusplus
 /// An opaque CANopen NMT 'boot slave' service type.
-typedef struct __co_nmt_boot co_nmt_boot_t;
+typedef struct co_nmt_boot co_nmt_boot_t;
 #endif
 
 #ifdef __cplusplus
@@ -49,14 +49,11 @@ extern "C" {
 void co_nmt_boot_con(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
 
+/// Returns alignment of the #co_nmt_boot_t structure.
 size_t co_nmt_boot_alignof(void);
-size_t co_nmt_boot_sizeof(void);
 
-void *__co_nmt_boot_alloc(can_net_t *net);
-void __co_nmt_boot_free(void *ptr);
-struct __co_nmt_boot *__co_nmt_boot_init(struct __co_nmt_boot *boot,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
-void __co_nmt_boot_fini(struct __co_nmt_boot *boot);
+/// Returns size of the #co_nmt_boot_t structure.
+size_t co_nmt_boot_sizeof(void);
 
 /**
  * Creates a new CANopen NMT 'boot slave' service.

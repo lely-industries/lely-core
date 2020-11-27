@@ -42,7 +42,7 @@
 #include <stdlib.h>
 
 /// A CANopen ASCII gateway.
-struct __co_gw_txt {
+struct co_gw_txt {
 	/// The last internal error code.
 	int iec;
 	/// The number of pending requests.
@@ -56,6 +56,18 @@ struct __co_gw_txt {
 	/// A pointer to the user-specified data for #send_func.
 	void *send_data;
 };
+
+/// Allocates memory for #co_gw_txt_t object.
+static void *co_gw_txt_alloc(void);
+
+/// Frees memory allocated for #co_gw_txt_t object.
+static void co_gw_txt_free(void *gw);
+
+/// Initializes #co_gw_txt_t object.
+static co_gw_txt_t *co_gw_txt_init(co_gw_txt_t *gw);
+
+/// Finalizes #co_gw_txt_t object.
+static void co_gw_txt_fini(co_gw_txt_t *gw);
 
 /// Processes a confirmation.
 static int co_gw_txt_recv_con(co_gw_txt_t *gw, co_unsigned32_t seq,
@@ -293,56 +305,18 @@ static size_t co_gw_txt_lex_id(const char *begin, const char *end,
 static size_t co_gw_txt_lex_id_sel(const char *begin, const char *end,
 		struct floc *at, struct co_id *plo, struct co_id *phi);
 
-void *
-__co_gw_txt_alloc(void)
-{
-	void *ptr = malloc(sizeof(struct __co_gw_txt));
-	if (!ptr)
-		set_errc(errno2c(errno));
-	return ptr;
-}
-
-void
-__co_gw_txt_free(void *ptr)
-{
-	free(ptr);
-}
-
-struct __co_gw_txt *
-__co_gw_txt_init(struct __co_gw_txt *gw)
-{
-	assert(gw);
-
-	gw->iec = 0;
-	gw->pending = 0;
-
-	gw->recv_func = NULL;
-	gw->recv_data = NULL;
-
-	gw->send_func = NULL;
-	gw->send_data = NULL;
-
-	return gw;
-}
-
-void
-__co_gw_txt_fini(struct __co_gw_txt *gw)
-{
-	(void)gw;
-}
-
 co_gw_txt_t *
 co_gw_txt_create(void)
 {
 	int errc = 0;
 
-	co_gw_txt_t *gw = __co_gw_txt_alloc();
+	co_gw_txt_t *gw = co_gw_txt_alloc();
 	if (!gw) {
 		errc = get_errc();
 		goto error_alloc_gw;
 	}
 
-	if (!__co_gw_txt_init(gw)) {
+	if (!co_gw_txt_init(gw)) {
 		errc = get_errc();
 		goto error_init_gw;
 	}
@@ -350,7 +324,7 @@ co_gw_txt_create(void)
 	return gw;
 
 error_init_gw:
-	__co_gw_txt_free(gw);
+	co_gw_txt_free(gw);
 error_alloc_gw:
 	set_errc(errc);
 	return NULL;
@@ -360,8 +334,8 @@ void
 co_gw_txt_destroy(co_gw_txt_t *gw)
 {
 	if (gw) {
-		__co_gw_txt_fini(gw);
-		__co_gw_txt_free(gw);
+		co_gw_txt_fini(gw);
+		co_gw_txt_free(gw);
 	}
 }
 
@@ -2954,6 +2928,44 @@ co_gw_txt_lex_id_sel(const char *begin, const char *end, struct floc *at,
 		*phi = hi;
 
 	return cp - begin;
+}
+
+static void *
+co_gw_txt_alloc(void)
+{
+	void *ptr = malloc(sizeof(struct co_gw_txt));
+	if (!ptr)
+		set_errc(errno2c(errno));
+	return ptr;
+}
+
+static void
+co_gw_txt_free(void *ptr)
+{
+	free(ptr);
+}
+
+static co_gw_txt_t *
+co_gw_txt_init(co_gw_txt_t *gw)
+{
+	assert(gw);
+
+	gw->iec = 0;
+	gw->pending = 0;
+
+	gw->recv_func = NULL;
+	gw->recv_data = NULL;
+
+	gw->send_func = NULL;
+	gw->send_data = NULL;
+
+	return gw;
+}
+
+static void
+co_gw_txt_fini(co_gw_txt_t *gw)
+{
+	(void)gw;
 }
 
 #endif // !LELY_NO_CO_GW_TXT

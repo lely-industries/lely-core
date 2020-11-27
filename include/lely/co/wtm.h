@@ -107,11 +107,9 @@
 /// CANopen WTM abort code: CAN telegram essentials invalid.
 #define CO_WTM_AC_CAN UINT32_C(0x02000006)
 
-struct __co_wtm;
-#if !defined(__cplusplus) || LELY_NO_CXX
+struct co_wtm;
 /// An opaque CANopen Wireless Transmission Media (WTM) interface type.
-typedef struct __co_wtm co_wtm_t;
-#endif
+typedef struct co_wtm co_wtm_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -224,11 +222,6 @@ typedef int co_wtm_send_func_t(
 
 /// Returns a string describing a CANopen WTM abort code.
 const char *co_wtm_ac_str(uint_least32_t ac);
-
-void *__co_wtm_alloc(void);
-void __co_wtm_free(void *ptr);
-struct __co_wtm *__co_wtm_init(struct __co_wtm *wtm);
-void __co_wtm_fini(struct __co_wtm *wtm);
 
 /**
  * Creates a new CANopen Wireless Transmission Media (WTM) interface.

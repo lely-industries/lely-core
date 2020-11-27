@@ -37,7 +37,7 @@
 #include <inttypes.h>
 
 /// A CANopen Receive-PDO.
-struct __co_rpdo {
+struct co_rpdo {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -71,6 +71,19 @@ struct __co_rpdo {
 	/// A pointer to user-specified data for #err.
 	void *err_data;
 };
+
+/// Allocates memory for #co_rpdo_t object using allocator from #can_net_t.
+static void *co_rpdo_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_rpdo_t object.
+static void co_rpdo_free(co_rpdo_t *pdo);
+
+/// Initializes #co_rpdo_t object.
+static co_rpdo_t *co_rpdo_init(co_rpdo_t *pdo, can_net_t *net, co_dev_t *dev,
+		co_unsigned16_t num);
+
+/// Finalizes #co_rpdo_t object.
+static void co_rpdo_fini(co_rpdo_t *pdo);
 
 /**
  * Initializes the CAN frame receiver of a Receive-PDO service. This function
@@ -157,125 +170,6 @@ co_rpdo_sizeof(void)
 	return sizeof(co_rpdo_t);
 }
 
-void *
-__co_rpdo_alloc(can_net_t *net)
-{
-	struct __co_rpdo *pdo = mem_alloc(can_net_get_alloc(net),
-			co_rpdo_alignof(), co_rpdo_sizeof());
-	if (!pdo)
-		return NULL;
-
-	pdo->net = net;
-
-	return pdo;
-}
-
-void
-__co_rpdo_free(void *ptr)
-{
-	struct __co_rpdo *pdo = ptr;
-
-	if (pdo)
-		mem_free(co_rpdo_get_alloc(pdo), pdo);
-}
-
-struct __co_rpdo *
-__co_rpdo_init(struct __co_rpdo *pdo, can_net_t *net, co_dev_t *dev,
-		co_unsigned16_t num)
-{
-	assert(pdo);
-	assert(net);
-	assert(dev);
-
-	int errc = 0;
-
-	if (!num || num > CO_NUM_PDOS) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	// Find the PDO parameters in the object dictionary.
-	co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + num - 1);
-	co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + num - 1);
-	if (!obj_1400 || !obj_1600) {
-		errc = errnum2c(ERRNUM_INVAL);
-		goto error_param;
-	}
-
-	pdo->net = net;
-	pdo->dev = dev;
-	pdo->num = num;
-
-	memset(&pdo->comm, 0, sizeof(pdo->comm));
-	memset(&pdo->map, 0, sizeof(pdo->map));
-
-	pdo->recv = can_recv_create(co_rpdo_get_alloc(pdo));
-	if (!pdo->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(pdo->recv, &co_rpdo_recv, pdo);
-
-	pdo->timer_event = can_timer_create(co_rpdo_get_alloc(pdo));
-	if (!pdo->timer_event) {
-		errc = get_errc();
-		goto error_create_timer_event;
-	}
-	can_timer_set_func(pdo->timer_event, &co_rpdo_timer_event, pdo);
-
-	pdo->timer_swnd = can_timer_create(co_rpdo_get_alloc(pdo));
-	if (!pdo->timer_swnd) {
-		errc = get_errc();
-		goto error_create_timer_swnd;
-	}
-	can_timer_set_func(pdo->timer_swnd, &co_rpdo_timer_swnd, pdo);
-
-	pdo->sync = 0;
-	pdo->swnd = 0;
-	pdo->msg = (struct can_msg)CAN_MSG_INIT;
-
-	co_sdo_req_init(&pdo->req, NULL);
-
-	pdo->ind = NULL;
-	pdo->ind_data = NULL;
-	pdo->err = NULL;
-	pdo->err_data = NULL;
-
-	if (co_rpdo_start(pdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
-	return pdo;
-
-	// co_rpdo_stop(pdo);
-error_start:
-	can_timer_destroy(pdo->timer_swnd);
-error_create_timer_swnd:
-	can_timer_destroy(pdo->timer_event);
-error_create_timer_event:
-	can_recv_destroy(pdo->recv);
-error_create_recv:
-error_param:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_rpdo_fini(struct __co_rpdo *pdo)
-{
-	assert(pdo);
-	assert(pdo->num >= 1 && pdo->num <= CO_NUM_PDOS);
-
-	co_rpdo_stop(pdo);
-
-	co_sdo_req_fini(&pdo->req);
-
-	can_timer_destroy(pdo->timer_swnd);
-	can_timer_destroy(pdo->timer_event);
-	can_recv_destroy(pdo->recv);
-}
-
 co_rpdo_t *
 co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 {
@@ -283,13 +177,13 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 
 	int errc = 0;
 
-	co_rpdo_t *pdo = __co_rpdo_alloc(net);
+	co_rpdo_t *pdo = co_rpdo_alloc(net);
 	if (!pdo) {
 		errc = get_errc();
 		goto error_alloc_pdo;
 	}
 
-	if (!__co_rpdo_init(pdo, net, dev, num)) {
+	if (!co_rpdo_init(pdo, net, dev, num)) {
 		errc = get_errc();
 		goto error_init_pdo;
 	}
@@ -297,7 +191,7 @@ co_rpdo_create(can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	return pdo;
 
 error_init_pdo:
-	__co_rpdo_free(pdo);
+	co_rpdo_free(pdo);
 error_alloc_pdo:
 	set_errc(errc);
 	return NULL;
@@ -308,8 +202,8 @@ co_rpdo_destroy(co_rpdo_t *rpdo)
 {
 	if (rpdo) {
 		trace("destroying Receive-PDO %d", rpdo->num);
-		__co_rpdo_fini(rpdo);
-		__co_rpdo_free(rpdo);
+		co_rpdo_fini(rpdo);
+		co_rpdo_free(rpdo);
 	}
 }
 
@@ -831,3 +725,118 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 }
 
 #endif // !LELY_NO_CO_RPDO
+
+static void *
+co_rpdo_alloc(can_net_t *net)
+{
+	co_rpdo_t *pdo = mem_alloc(can_net_get_alloc(net), co_rpdo_alignof(),
+			co_rpdo_sizeof());
+	if (!pdo)
+		return NULL;
+
+	pdo->net = net;
+
+	return pdo;
+}
+
+static void
+co_rpdo_free(co_rpdo_t *pdo)
+{
+	mem_free(co_rpdo_get_alloc(pdo), pdo);
+}
+
+static co_rpdo_t *
+co_rpdo_init(co_rpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
+{
+	assert(pdo);
+	assert(net);
+	assert(dev);
+
+	int errc = 0;
+
+	if (!num || num > CO_NUM_PDOS) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	// Find the PDO parameters in the object dictionary.
+	co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + num - 1);
+	co_obj_t *obj_1600 = co_dev_find_obj(dev, 0x1600 + num - 1);
+	if (!obj_1400 || !obj_1600) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
+	pdo->net = net;
+	pdo->dev = dev;
+	pdo->num = num;
+
+	memset(&pdo->comm, 0, sizeof(pdo->comm));
+	memset(&pdo->map, 0, sizeof(pdo->map));
+
+	pdo->recv = can_recv_create(co_rpdo_get_alloc(pdo));
+	if (!pdo->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(pdo->recv, &co_rpdo_recv, pdo);
+
+	pdo->timer_event = can_timer_create(co_rpdo_get_alloc(pdo));
+	if (!pdo->timer_event) {
+		errc = get_errc();
+		goto error_create_timer_event;
+	}
+	can_timer_set_func(pdo->timer_event, &co_rpdo_timer_event, pdo);
+
+	pdo->timer_swnd = can_timer_create(co_rpdo_get_alloc(pdo));
+	if (!pdo->timer_swnd) {
+		errc = get_errc();
+		goto error_create_timer_swnd;
+	}
+	can_timer_set_func(pdo->timer_swnd, &co_rpdo_timer_swnd, pdo);
+
+	pdo->sync = 0;
+	pdo->swnd = 0;
+	pdo->msg = (struct can_msg)CAN_MSG_INIT;
+
+	co_sdo_req_init(&pdo->req, NULL);
+
+	pdo->ind = NULL;
+	pdo->ind_data = NULL;
+	pdo->err = NULL;
+	pdo->err_data = NULL;
+
+	if (co_rpdo_start(pdo) == -1) {
+		errc = get_errc();
+		goto error_start;
+	}
+
+	return pdo;
+
+	// co_rpdo_stop(pdo);
+error_start:
+	can_timer_destroy(pdo->timer_swnd);
+error_create_timer_swnd:
+	can_timer_destroy(pdo->timer_event);
+error_create_timer_event:
+	can_recv_destroy(pdo->recv);
+error_create_recv:
+error_param:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_rpdo_fini(co_rpdo_t *pdo)
+{
+	assert(pdo);
+	assert(pdo->num >= 1 && pdo->num <= CO_NUM_PDOS);
+
+	co_rpdo_stop(pdo);
+
+	co_sdo_req_fini(&pdo->req);
+
+	can_timer_destroy(pdo->timer_swnd);
+	can_timer_destroy(pdo->timer_event);
+	can_recv_destroy(pdo->recv);
+}

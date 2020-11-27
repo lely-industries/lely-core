@@ -45,12 +45,12 @@
 #define LELY_CO_NMT_CFG_RESET_TIMEOUT 1000
 #endif
 
-struct __co_nmt_cfg_state;
+struct co_nmt_cfg_state;
 /// An opaque CANopen NMT 'configuration request' state type.
-typedef const struct __co_nmt_cfg_state co_nmt_cfg_state_t;
+typedef const struct co_nmt_cfg_state co_nmt_cfg_state_t;
 
 /// A CANopen NMT 'configuration request' service.
-struct __co_nmt_cfg {
+struct co_nmt_cfg {
 	/// A pointer to a CAN network interface.
 	can_net_t *net;
 	/// A pointer to a CANopen device.
@@ -78,6 +78,19 @@ struct __co_nmt_cfg {
 	co_dev_t *dev_1f20;
 #endif
 };
+
+/// Allocates memory for #co_nmt_cfg_t object using allocator from #can_net_t.
+static void *co_nmt_cfg_alloc(can_net_t *net);
+
+/// Frees memory allocated for #co_nmt_cfg_t object.
+static void co_nmt_cfg_free(co_nmt_cfg_t *cfg);
+
+/// Initializes #co_nmt_cfg_t object.
+static co_nmt_cfg_t *co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net,
+		co_dev_t *dev, co_nmt_t *nmt);
+
+/// Finalizes #co_nmt_cfg_t object.
+static void co_nmt_cfg_fini(co_nmt_cfg_t *cfg);
 
 /**
  * The CAN receive callback function for a 'configuration request'.
@@ -150,7 +163,7 @@ static inline void co_nmt_cfg_emit_dn_con(co_nmt_cfg_t *cfg,
 static inline void co_nmt_cfg_emit_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
 
 /// A CANopen NMT 'configuration request' state.
-struct __co_nmt_cfg_state {
+struct co_nmt_cfg_state {
 	/// A pointer to the function invoked when a new state is entered.
 	co_nmt_cfg_state_t *(*on_enter)(co_nmt_cfg_t *cfg);
 	/**
@@ -320,109 +333,18 @@ co_nmt_cfg_sizeof(void)
 	return sizeof(co_nmt_cfg_t);
 }
 
-void *
-__co_nmt_cfg_alloc(can_net_t *net)
-{
-	struct __co_nmt_cfg *cfg = mem_alloc(can_net_get_alloc(net),
-			co_nmt_cfg_alignof(), co_nmt_cfg_sizeof());
-	if (!cfg)
-		return NULL;
-
-	cfg->net = net;
-
-	return cfg;
-}
-
-void
-__co_nmt_cfg_free(void *ptr)
-{
-	struct __co_nmt_cfg *cfg = ptr;
-
-	if (cfg)
-		mem_free(co_nmt_cfg_get_alloc(cfg), cfg);
-}
-
-struct __co_nmt_cfg *
-__co_nmt_cfg_init(struct __co_nmt_cfg *cfg, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
-{
-	assert(cfg);
-	assert(net);
-	assert(dev);
-	assert(nmt);
-
-	int errc = 0;
-
-	cfg->net = net;
-	cfg->dev = dev;
-	cfg->nmt = nmt;
-
-	cfg->state = NULL;
-
-	cfg->recv = can_recv_create(co_nmt_cfg_get_alloc(cfg));
-	if (!cfg->recv) {
-		errc = get_errc();
-		goto error_create_recv;
-	}
-	can_recv_set_func(cfg->recv, &co_nmt_cfg_recv, cfg);
-
-	cfg->timer = can_timer_create(co_nmt_cfg_get_alloc(cfg));
-	if (!cfg->timer) {
-		errc = get_errc();
-		goto error_create_timer;
-	}
-	can_timer_set_func(cfg->timer, &co_nmt_cfg_timer, cfg);
-
-	cfg->id = 0;
-	cfg->assignment = 0;
-
-	cfg->sdo = NULL;
-
-	cfg->ac = 0;
-
-	co_sdo_req_init(&cfg->req, NULL);
-#if !LELY_NO_MALLOC
-	cfg->dev_1f20 = NULL;
-#endif
-
-	return cfg;
-
-	// can_timer_destroy(cfg->timer);
-error_create_timer:
-	can_recv_destroy(cfg->recv);
-error_create_recv:
-	set_errc(errc);
-	return NULL;
-}
-
-void
-__co_nmt_cfg_fini(struct __co_nmt_cfg *cfg)
-{
-	assert(cfg);
-
-#if !LELY_NO_MALLOC
-	assert(!cfg->dev_1f20);
-#endif
-	co_sdo_req_fini(&cfg->req);
-
-	co_csdo_destroy(cfg->sdo);
-
-	can_timer_destroy(cfg->timer);
-	can_recv_destroy(cfg->recv);
-}
-
 co_nmt_cfg_t *
 co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 {
 	int errc = 0;
 
-	co_nmt_cfg_t *cfg = __co_nmt_cfg_alloc(net);
+	co_nmt_cfg_t *cfg = co_nmt_cfg_alloc(net);
 	if (!cfg) {
 		errc = get_errc();
 		goto error_alloc_cfg;
 	}
 
-	if (!__co_nmt_cfg_init(cfg, net, dev, nmt)) {
+	if (!co_nmt_cfg_init(cfg, net, dev, nmt)) {
 		errc = get_errc();
 		goto error_init_cfg;
 	}
@@ -430,7 +352,7 @@ co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	return cfg;
 
 error_init_cfg:
-	__co_nmt_cfg_free(cfg);
+	co_nmt_cfg_free(cfg);
 error_alloc_cfg:
 	set_errc(errc);
 	return NULL;
@@ -440,8 +362,8 @@ void
 co_nmt_cfg_destroy(co_nmt_cfg_t *cfg)
 {
 	if (cfg) {
-		__co_nmt_cfg_fini(cfg);
-		__co_nmt_cfg_free(cfg);
+		co_nmt_cfg_fini(cfg);
+		co_nmt_cfg_free(cfg);
 	}
 }
 
@@ -925,3 +847,90 @@ co_nmt_cfg_user_on_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 }
 
 #endif // !LELY_NO_CO_MASTER
+
+static void *
+co_nmt_cfg_alloc(can_net_t *net)
+{
+	co_nmt_cfg_t *cfg = mem_alloc(can_net_get_alloc(net),
+			co_nmt_cfg_alignof(), co_nmt_cfg_sizeof());
+	if (!cfg)
+		return NULL;
+
+	cfg->net = net;
+
+	return cfg;
+}
+
+static void
+co_nmt_cfg_free(co_nmt_cfg_t *cfg)
+{
+	mem_free(co_nmt_cfg_get_alloc(cfg), cfg);
+}
+
+static co_nmt_cfg_t *
+co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+{
+	assert(cfg);
+	assert(net);
+	assert(dev);
+	assert(nmt);
+
+	int errc = 0;
+
+	cfg->net = net;
+	cfg->dev = dev;
+	cfg->nmt = nmt;
+
+	cfg->state = NULL;
+
+	cfg->recv = can_recv_create(co_nmt_cfg_get_alloc(cfg));
+	if (!cfg->recv) {
+		errc = get_errc();
+		goto error_create_recv;
+	}
+	can_recv_set_func(cfg->recv, &co_nmt_cfg_recv, cfg);
+
+	cfg->timer = can_timer_create(co_nmt_cfg_get_alloc(cfg));
+	if (!cfg->timer) {
+		errc = get_errc();
+		goto error_create_timer;
+	}
+	can_timer_set_func(cfg->timer, &co_nmt_cfg_timer, cfg);
+
+	cfg->id = 0;
+	cfg->assignment = 0;
+
+	cfg->sdo = NULL;
+
+	cfg->ac = 0;
+
+	co_sdo_req_init(&cfg->req, NULL);
+#if !LELY_NO_MALLOC
+	cfg->dev_1f20 = NULL;
+#endif
+
+	return cfg;
+
+	// can_timer_destroy(cfg->timer);
+error_create_timer:
+	can_recv_destroy(cfg->recv);
+error_create_recv:
+	set_errc(errc);
+	return NULL;
+}
+
+static void
+co_nmt_cfg_fini(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+#if !LELY_NO_MALLOC
+	assert(!cfg->dev_1f20);
+#endif
+	co_sdo_req_fini(&cfg->req);
+
+	co_csdo_destroy(cfg->sdo);
+
+	can_timer_destroy(cfg->timer);
+	can_recv_destroy(cfg->recv);
+}

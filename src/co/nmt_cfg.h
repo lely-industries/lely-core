@@ -28,10 +28,10 @@
 #include <lely/co/csdo.h>
 #include <lely/co/nmt.h>
 
-struct __co_nmt_cfg;
+struct co_nmt_cfg;
 #ifndef __cplusplus
 /// An opaque CANopen NMT 'configuration request' type.
-typedef struct __co_nmt_cfg co_nmt_cfg_t;
+typedef struct co_nmt_cfg co_nmt_cfg_t;
 #endif
 
 #ifdef __cplusplus
@@ -58,14 +58,11 @@ void co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo);
  */
 void co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 
+/// Returns alignment of the #co_nmt_cfg_t structure.
 size_t co_nmt_cfg_alignof(void);
-size_t co_nmt_cfg_sizeof(void);
 
-void *__co_nmt_cfg_alloc(can_net_t *net);
-void __co_nmt_cfg_free(void *ptr);
-struct __co_nmt_cfg *__co_nmt_cfg_init(struct __co_nmt_cfg *boot,
-		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
-void __co_nmt_cfg_fini(struct __co_nmt_cfg *boot);
+/// Returns size of the #co_nmt_cfg_t structure.
+size_t co_nmt_cfg_sizeof(void);
 
 /**
  * Creates a new CANopen NMT 'configuration request'.

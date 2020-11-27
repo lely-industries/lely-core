@@ -26,17 +26,17 @@
 #include <lely/libc/time.h>
 #include <lely/util/memory.h>
 
-struct __can_net;
+struct can_net;
 /// An opaque CAN network interface type.
-typedef struct __can_net can_net_t;
+typedef struct can_net can_net_t;
 
-struct __can_timer;
+struct can_timer;
 /// An opaque CAN timer type.
-typedef struct __can_timer can_timer_t;
+typedef struct can_timer can_timer_t;
 
-struct __can_recv;
+struct can_recv;
 /// An opaque CAN frame receiver type.
-typedef struct __can_recv can_recv_t;
+typedef struct can_recv can_recv_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,13 +79,11 @@ typedef int can_recv_func_t(const struct can_msg *msg, void *data);
  */
 typedef int can_send_func_t(const struct can_msg *msg, void *data);
 
+/// Returns the alignment (in bytes) of the #can_net_t structure.
 size_t can_net_alignof(void);
-size_t can_net_sizeof(void);
 
-void *__can_net_alloc(alloc_t *alloc);
-void __can_net_free(void *ptr);
-struct __can_net *__can_net_init(struct __can_net *net);
-void __can_net_fini(struct __can_net *net);
+/// Returns the size (in bytes) of the #can_net_t structure.
+size_t can_net_sizeof(void);
 
 /// Creates a new CAN network interface. @see can_net_destroy()
 can_net_t *can_net_create(alloc_t *alloc);
@@ -205,13 +203,11 @@ void can_net_get_send_func(
  */
 void can_net_set_send_func(can_net_t *net, can_send_func_t *func, void *data);
 
+/// Returns the alignment (in bytes) of the #can_timer_t structure.
 size_t can_timer_alignof(void);
-size_t can_timer_sizeof(void);
 
-void *__can_timer_alloc(alloc_t *alloc);
-void __can_timer_free(void *ptr);
-struct __can_timer *__can_timer_init(struct __can_timer *timer);
-void __can_timer_fini(struct __can_timer *timer);
+/// Returns size of the #can_timer_t structure.
+size_t can_timer_sizeof(void);
 
 /// Creates a new CAN timer. @see can_timer_destroy()
 can_timer_t *can_timer_create(alloc_t *alloc);
@@ -288,13 +284,10 @@ void can_timer_stop(can_timer_t *timer);
  */
 void can_timer_timeout(can_timer_t *timer, can_net_t *net, int timeout);
 
+/// Returns alignment of #can_recv_t structure.
 size_t can_recv_alignof(void);
+/// Returns size of #can_recv_t structure.
 size_t can_recv_sizeof(void);
-
-void *__can_recv_alloc(alloc_t *alloc);
-void __can_recv_free(void *ptr);
-struct __can_recv *__can_recv_init(struct __can_recv *recv);
-void __can_recv_fini(struct __can_recv *recv);
 
 /// Creates a new CAN frame receiver. @see can_recv_destroy()
 can_recv_t *can_recv_create(alloc_t *alloc);

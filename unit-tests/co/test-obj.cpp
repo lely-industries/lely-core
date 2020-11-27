@@ -49,7 +49,7 @@ TEST_GROUP(CO_ObjInit) {
 #if LELY_NO_MALLOC
     return &object;
 #else
-    return static_cast<co_obj_t*>(__co_obj_alloc());
+    return static_cast<co_obj_t*>(co_obj_alloc());
 #endif
   }
 
@@ -57,12 +57,12 @@ TEST_GROUP(CO_ObjInit) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&object, obj);
 #else
-    __co_obj_free(obj);
+    co_obj_free(obj);
 #endif
   }
 
   void DestroyCoObjT(co_obj_t * obj) {
-    __co_obj_fini(obj);
+    co_obj_fini(obj);
     ReleaseCoObjT(obj);
   }
 
@@ -75,7 +75,7 @@ TEST(CO_ObjInit, CoObjInit) {
   auto* const obj = AcquireCoObjT();
 
   CHECK(obj != nullptr);
-  POINTERS_EQUAL(obj, __co_obj_init(obj, 0x1234, NULL, 0));
+  POINTERS_EQUAL(obj, co_obj_init(obj, 0x1234, NULL, 0));
 
   POINTERS_EQUAL(nullptr, co_obj_get_dev(obj));
   CHECK_EQUAL(0x1234, co_obj_get_idx(obj));
@@ -94,7 +94,7 @@ TEST(CO_ObjInit, CoObjInit) {
 
 TEST(CO_ObjInit, CoObjFini) {
   auto* const obj = AcquireCoObjT();
-  __co_obj_init(obj, 0x1234, NULL, 0);
+  co_obj_init(obj, 0x1234, NULL, 0);
   CoDevTHolder dev(0x01);
 
   co_dev_insert_obj(dev.Get(), obj);
@@ -428,7 +428,7 @@ TEST(CO_Obj, CoObjAddressofVal_Null) {
 
 TEST(CO_Obj, CoObjAddressofVal_NoVal) {
 #if LELY_NO_MALLOC
-  __co_obj_init(obj, OBJ_IDX, nullptr, 0);
+  co_obj_init(obj, OBJ_IDX, nullptr, 0);
 #endif
   POINTERS_EQUAL(nullptr, co_obj_addressof_val(obj));
 }
@@ -583,7 +583,7 @@ TEST_GROUP(CO_SubInit) {
 #if LELY_NO_MALLOC
     return &sub;
 #else
-    return static_cast<co_sub_t*>(__co_sub_alloc());
+    return static_cast<co_sub_t*>(co_sub_alloc());
 #endif
   }
 
@@ -591,12 +591,12 @@ TEST_GROUP(CO_SubInit) {
 #if LELY_NO_MALLOC
     POINTERS_EQUAL(&sub, sub_);
 #else
-    __co_obj_free(sub_);
+    co_obj_free(sub_);
 #endif
   }
 
   void DestroyCoSubT(co_sub_t * sub) {
-    __co_sub_fini(sub);
+    co_sub_fini(sub);
     ReleaseCoSubT(sub);
   }
 
@@ -609,7 +609,7 @@ TEST(CO_SubInit, CoSubInit) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   POINTERS_EQUAL(nullptr, co_sub_get_obj(sub));
   CHECK_EQUAL(SUB_IDX, co_sub_get_subidx(sub));
@@ -643,7 +643,7 @@ TEST(CO_SubInit, CoSubInit_Name) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   POINTERS_EQUAL(nullptr, co_sub_get_name(sub));
 
@@ -656,7 +656,7 @@ TEST(CO_SubInit, CoSubInit_Limits) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   CHECK_EQUAL(CO_INTEGER16_MIN,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_min(sub)));
@@ -672,7 +672,7 @@ TEST(CO_SubInit, CoSubInit_InitValMinFails) {
   LelyOverride::co_val_init_min(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   ReleaseCoSubT(sub);
 }
@@ -682,7 +682,7 @@ TEST(CO_SubInit, CoSubInit_InitValMaxFails) {
   LelyOverride::co_val_init_max(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   ReleaseCoSubT(sub);
 }
@@ -694,7 +694,7 @@ TEST(CO_SubInit, CoSubInit_Default) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   CHECK_EQUAL(0x0000,
               *static_cast<const CO_ObjBase::sub_type*>(co_sub_get_def(sub)));
@@ -707,7 +707,7 @@ TEST(CO_SubInit, CoSubInit_InitValFails) {
   LelyOverride::co_val_init(Override::NoneCallsValid);
 
   POINTERS_EQUAL(nullptr,
-                 __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+                 co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   ReleaseCoSubT(sub);
 }
@@ -719,7 +719,7 @@ TEST(CO_SubInit, CoSubInit_Upload) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
 
-  POINTERS_EQUAL(sub, __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
+  POINTERS_EQUAL(sub, co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL));
 
   co_sub_up_ind_t* pind_up = nullptr;
   void* pdata_up = nullptr;
@@ -733,7 +733,7 @@ TEST(CO_SubInit, CoSubInit_Upload) {
 
 TEST(CO_SubInit, CoObjFini) {
   auto* const sub = AcquireCoSubT();
-  __co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL);
+  co_sub_init(sub, SUB_IDX, CO_DEFTYPE_INTEGER16, NULL);
   CoObjTHolder obj(0x1234u);
   CHECK_EQUAL(0, co_obj_insert_sub(obj.Get(), sub));
 

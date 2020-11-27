@@ -27,7 +27,7 @@
 #include <lely/util/rbtree.h>
 
 /// A CANopen device.
-struct __co_dev {
+struct co_dev {
 	/// The network-ID.
 	co_unsigned8_t netid;
 	/// The node-ID.

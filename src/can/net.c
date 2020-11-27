@@ -33,7 +33,7 @@
 #include <assert.h>
 
 /// A CAN network interface.
-struct __can_net {
+struct can_net {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The heap containing all timers.
@@ -60,8 +60,21 @@ struct __can_net {
  */
 static void can_net_set_next(can_net_t *net);
 
+/// Allocates the #can_net_t structure using the provided allocator.
+static can_net_t *can_net_alloc(alloc_t *alloc);
+
+/// Frees the #can_net_t structure using the allocator provided to
+/// can_net_alloc().
+static void can_net_free(can_net_t *net);
+
+/// Initializes the #can_net_t structure.
+static can_net_t *can_net_init(can_net_t *net);
+
+/// Finalizes the #can_net_t structure.
+static void can_net_fini(can_net_t *net);
+
 /// A CAN timer.
-struct __can_timer {
+struct can_timer {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The node of this timer in the tree of timers.
@@ -81,6 +94,19 @@ struct __can_timer {
 	void *data;
 };
 
+/// Allocates the #can_timer_t using the provided allocator.
+static can_timer_t *can_timer_alloc(alloc_t *alloc);
+
+/// Frees the #can_timer_t structure using the allocator provided to
+/// can_timer_alloc().
+static void can_timer_free(can_timer_t *timer);
+
+/// Initializes the #can_timer_t structure.
+static can_timer_t *can_timer_init(can_timer_t *timer);
+
+/// Finalizes the #can_timer_t structure.
+static void can_timer_fini(can_timer_t *timer);
+
 /**
  * The type of the key used to match CAN frame receivers to CAN frames. The key
  * is a combination of the CAN identifier and the flags.
@@ -91,15 +117,8 @@ typedef uint_least32_t can_recv_key_t;
 typedef uint_least64_t can_recv_key_t;
 #endif
 
-/// Computes a CAN receiver key from a CAN identifier and flags.
-static inline can_recv_key_t can_recv_key(
-		uint_least32_t id, uint_least8_t flags);
-
-/// The function used to compare to CAN receiver keys.
-static int can_recv_key_cmp(const void *p1, const void *p2);
-
 /// A CAN frame receiver.
-struct __can_recv {
+struct can_recv {
 	/// A pointer to the memory allocator used to allocate this struct.
 	alloc_t *alloc;
 	/// The node of this receiver in the tree of receivers.
@@ -119,6 +138,26 @@ struct __can_recv {
 	void *data;
 };
 
+/// Computes a CAN receiver key from a CAN identifier and flags.
+static inline can_recv_key_t can_recv_key(
+		uint_least32_t id, uint_least8_t flags);
+
+/// The function used to compare to CAN receiver keys.
+static int can_recv_key_cmp(const void *p1, const void *p2);
+
+/// Allocates the #can_recv_t structure using the provided allocator.
+static can_recv_t *can_recv_alloc(alloc_t *alloc);
+
+/// Frees the #can_recv_t structure using the allocator provided to
+/// can_recv_alloc().
+static void can_recv_free(can_recv_t *recv);
+
+/// Initializes the #can_recv_t structure.
+static can_recv_t *can_recv_init(can_recv_t *recv);
+
+/// Finalizes the #can_recv_t structure.
+static void can_recv_fini(can_recv_t *recv);
+
 size_t
 can_net_alignof(void)
 {
@@ -131,77 +170,18 @@ can_net_sizeof(void)
 	return sizeof(can_net_t);
 }
 
-void *
-__can_net_alloc(alloc_t *alloc)
-{
-	struct __can_net *net =
-			mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
-	if (!net)
-		return NULL;
-
-	net->alloc = alloc;
-
-	return net;
-}
-
-void
-__can_net_free(void *ptr)
-{
-	struct __can_net *net = ptr;
-
-	if (net)
-		mem_free(net->alloc, net);
-}
-
-struct __can_net *
-__can_net_init(struct __can_net *net)
-{
-	assert(net);
-
-	pheap_init(&net->timer_heap, &timespec_cmp);
-
-	net->time = (struct timespec){ 0, 0 };
-	net->next = (struct timespec){ 0, 0 };
-
-	net->next_func = NULL;
-	net->next_data = NULL;
-
-	rbtree_init(&net->recv_tree, &can_recv_key_cmp);
-
-	net->send_func = NULL;
-	net->send_data = NULL;
-
-	return net;
-}
-
-void
-__can_net_fini(struct __can_net *net)
-{
-	assert(net);
-
-	rbtree_foreach (&net->recv_tree, node) {
-		can_recv_t *recv = structof(node, can_recv_t, node);
-		dlnode_foreach (&recv->list, node)
-			can_recv_stop(structof(node, can_recv_t, list));
-	}
-
-	struct pnode *node;
-	while ((node = pheap_first(&net->timer_heap)) != NULL)
-		can_timer_stop(structof(node, can_timer_t, node));
-}
-
 can_net_t *
 can_net_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_net_t *net = __can_net_alloc(alloc);
+	can_net_t *net = can_net_alloc(alloc);
 	if (!net) {
 		errc = get_errc();
 		goto error_alloc_net;
 	}
 
-	if (!__can_net_init(net)) {
+	if (!can_net_init(net)) {
 		errc = get_errc();
 		goto error_init_net;
 	}
@@ -209,7 +189,7 @@ can_net_create(alloc_t *alloc)
 	return net;
 
 error_init_net:
-	__can_net_free(net);
+	can_net_free(net);
 error_alloc_net:
 	set_errc(errc);
 	return NULL;
@@ -219,8 +199,8 @@ void
 can_net_destroy(can_net_t *net)
 {
 	if (net) {
-		__can_net_fini(net);
-		__can_net_free(net);
+		can_net_fini(net);
+		can_net_free(net);
 	}
 }
 
@@ -383,64 +363,18 @@ can_timer_sizeof(void)
 	return sizeof(can_timer_t);
 }
 
-void *
-__can_timer_alloc(alloc_t *alloc)
-{
-	struct __can_timer *timer = mem_alloc(
-			alloc, can_timer_alignof(), can_timer_sizeof());
-	if (!timer)
-		return NULL;
-
-	timer->alloc = alloc;
-
-	return timer;
-}
-
-void
-__can_timer_free(void *ptr)
-{
-	struct __can_timer *timer = ptr;
-
-	if (timer)
-		mem_free(timer->alloc, timer);
-}
-
-struct __can_timer *
-__can_timer_init(struct __can_timer *timer)
-{
-	assert(timer);
-
-	timer->node.key = &timer->start;
-
-	timer->net = NULL;
-
-	timer->start = (struct timespec){ 0, 0 };
-	timer->interval = (struct timespec){ 0, 0 };
-
-	timer->func = NULL;
-	timer->data = NULL;
-
-	return timer;
-}
-
-void
-__can_timer_fini(struct __can_timer *timer)
-{
-	can_timer_stop(timer);
-}
-
 can_timer_t *
 can_timer_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_timer_t *timer = __can_timer_alloc(alloc);
+	can_timer_t *timer = can_timer_alloc(alloc);
 	if (!timer) {
 		errc = get_errc();
 		goto error_alloc_timer;
 	}
 
-	if (!__can_timer_init(timer)) {
+	if (!can_timer_init(timer)) {
 		errc = get_errc();
 		goto error_init_timer;
 	}
@@ -448,7 +382,7 @@ can_timer_create(alloc_t *alloc)
 	return timer;
 
 error_init_timer:
-	__can_timer_free(timer);
+	can_timer_free(timer);
 error_alloc_timer:
 	set_errc(errc);
 	return NULL;
@@ -458,8 +392,8 @@ void
 can_timer_destroy(can_timer_t *timer)
 {
 	if (timer) {
-		__can_timer_fini(timer);
-		__can_timer_free(timer);
+		can_timer_fini(timer);
+		can_timer_free(timer);
 	}
 }
 
@@ -565,64 +499,18 @@ can_recv_sizeof(void)
 	return sizeof(can_recv_t);
 }
 
-void *
-__can_recv_alloc(alloc_t *alloc)
-{
-	struct __can_recv *recv =
-			mem_alloc(alloc, can_recv_alignof(), can_recv_sizeof());
-	if (!recv)
-		return NULL;
-
-	recv->alloc = alloc;
-
-	return recv;
-}
-
-void
-__can_recv_free(void *ptr)
-{
-	struct __can_recv *recv = ptr;
-
-	if (recv)
-		mem_free(recv->alloc, recv);
-}
-
-struct __can_recv *
-__can_recv_init(struct __can_recv *recv)
-{
-	assert(recv);
-
-	rbnode_init(&recv->node, &recv->key);
-	dlnode_init(&recv->list);
-
-	recv->net = NULL;
-
-	recv->key = 0;
-
-	recv->func = NULL;
-	recv->data = NULL;
-
-	return recv;
-}
-
-void
-__can_recv_fini(struct __can_recv *recv)
-{
-	can_recv_stop(recv);
-}
-
 can_recv_t *
 can_recv_create(alloc_t *alloc)
 {
 	int errc = 0;
 
-	can_recv_t *recv = __can_recv_alloc(alloc);
+	can_recv_t *recv = can_recv_alloc(alloc);
 	if (!recv) {
 		errc = get_errc();
 		goto error_alloc_recv;
 	}
 
-	if (!__can_recv_init(recv)) {
+	if (!can_recv_init(recv)) {
 		errc = get_errc();
 		goto error_init_recv;
 	}
@@ -630,7 +518,7 @@ can_recv_create(alloc_t *alloc)
 	return recv;
 
 error_init_recv:
-	__can_recv_free(recv);
+	can_recv_free(recv);
 error_alloc_recv:
 	set_errc(errc);
 	return NULL;
@@ -640,8 +528,8 @@ void
 can_recv_destroy(can_recv_t *recv)
 {
 	if (recv) {
-		__can_recv_fini(recv);
-		__can_recv_free(recv);
+		can_recv_fini(recv);
+		can_recv_free(recv);
 	}
 }
 
@@ -749,4 +637,146 @@ can_recv_key_cmp(const void *p1, const void *p2)
 #else
 	return uint64_cmp(p1, p2);
 #endif
+}
+
+static can_net_t *
+can_net_alloc(alloc_t *alloc)
+{
+	can_net_t *net = mem_alloc(alloc, can_net_alignof(), can_net_sizeof());
+	if (!net)
+		return NULL;
+
+	net->alloc = alloc;
+
+	return net;
+}
+
+static void
+can_net_free(can_net_t *net)
+{
+	assert(net);
+	mem_free(net->alloc, net);
+}
+
+static can_net_t *
+can_net_init(can_net_t *net)
+{
+	assert(net);
+
+	pheap_init(&net->timer_heap, &timespec_cmp);
+
+	net->time = (struct timespec){ 0, 0 };
+	net->next = (struct timespec){ 0, 0 };
+
+	net->next_func = NULL;
+	net->next_data = NULL;
+
+	rbtree_init(&net->recv_tree, &can_recv_key_cmp);
+
+	net->send_func = NULL;
+	net->send_data = NULL;
+
+	return net;
+}
+
+static void
+can_net_fini(can_net_t *net)
+{
+	assert(net);
+
+	rbtree_foreach (&net->recv_tree, node) {
+		can_recv_t *recv = structof(node, can_recv_t, node);
+		dlnode_foreach (&recv->list, node)
+			can_recv_stop(structof(node, can_recv_t, list));
+	}
+
+	struct pnode *node;
+	while ((node = pheap_first(&net->timer_heap)) != NULL)
+		can_timer_stop(structof(node, can_timer_t, node));
+}
+
+static can_timer_t *
+can_timer_alloc(alloc_t *alloc)
+{
+	can_timer_t *timer = mem_alloc(
+			alloc, can_timer_alignof(), can_timer_sizeof());
+	if (!timer)
+		return NULL;
+
+	timer->alloc = alloc;
+
+	return timer;
+}
+
+static void
+can_timer_free(can_timer_t *timer)
+{
+	mem_free(timer->alloc, timer);
+}
+
+static can_timer_t *
+can_timer_init(can_timer_t *timer)
+{
+	assert(timer);
+
+	timer->node.key = &timer->start;
+
+	timer->net = NULL;
+
+	timer->start = (struct timespec){ 0, 0 };
+	timer->interval = (struct timespec){ 0, 0 };
+
+	timer->func = NULL;
+	timer->data = NULL;
+
+	return timer;
+}
+
+static void
+can_timer_fini(can_timer_t *timer)
+{
+	can_timer_stop(timer);
+}
+
+static can_recv_t *
+can_recv_alloc(alloc_t *alloc)
+{
+	can_recv_t *recv =
+			mem_alloc(alloc, can_recv_alignof(), can_recv_sizeof());
+	if (!recv)
+		return NULL;
+
+	recv->alloc = alloc;
+
+	return recv;
+}
+
+static void
+can_recv_free(can_recv_t *recv)
+{
+	mem_free(recv->alloc, recv);
+}
+
+static can_recv_t *
+can_recv_init(can_recv_t *recv)
+{
+	assert(recv);
+
+	rbnode_init(&recv->node, &recv->key);
+	dlnode_init(&recv->list);
+
+	recv->net = NULL;
+
+	recv->key = 0;
+
+	recv->func = NULL;
+	recv->data = NULL;
+
+	return recv;
+}
+
+static void
+can_recv_fini(can_recv_t *recv)
+{
+	can_recv_stop(recv);
 }
