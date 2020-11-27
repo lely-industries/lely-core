@@ -188,8 +188,7 @@ def __parse_objects(cfg: dict, section: str) -> bool:
                     and index != 0x1018
                 ):
                     warnings.warn(
-                        "object 0x{:04X} is not mandatory".format(index),
-                        stacklevel=3,
+                        "object 0x{:04X} is not mandatory".format(index), stacklevel=3
                     )
                     ok = False
                 elif (
@@ -280,8 +279,31 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
         )
         ok = False
 
-    sub_number = int(cfg[section].get("SubNumber", "0"), 0)
-    compact_sub_obj = int(cfg[section].get("CompactSubObj", "0"), 0)
+    object_type = 0x07
+    if "ObjectType" in cfg[section] and cfg[section]["ObjectType"]:
+        object_type = int(cfg[section]["ObjectType"], 0)
+    if (object_type == 0x05 or object_type == 0x07) and (
+        "DataType" not in cfg[section] or not cfg[section]["DataType"]
+    ):
+        warnings.warn("DataType not specified in [{}]".format(section), stacklevel=3)
+        ok = False
+    sub_number = 0
+    if "SubNumber" in cfg[section] and cfg[section]["SubNumber"]:
+        sub_number = int(cfg[section]["SubNumber"], 0)
+    compact_sub_obj = 0
+    if "CompactSubObj" in cfg[section] and cfg[section]["CompactSubObj"]:
+        compact_sub_obj = int(cfg[section]["CompactSubObj"], 0)
+    if "AccessType" in cfg[section] and cfg[section]["AccessType"]:
+        if (
+            object_type == 0x06 or object_type == 0x08 or object_type == 0x09
+        ) and compact_sub_obj == 0:
+            warnings.warn(
+                "AccessType not supported in [{}]".format(section), stacklevel=3
+            )
+            ok = False
+    elif object_type != 0x02 and compact_sub_obj != 0:
+        warnings.warn("AccessType not specified in [{}]".format(section), stacklevel=3)
+        ok = False
     if sub_number != 0 and compact_sub_obj != 0:
         warnings.warn(
             "SubNumber and CompactSubObj specified in [{}]".format(section),
@@ -289,7 +311,6 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
         )
         ok = False
     elif sub_number != 0:
-        object_type = int(cfg[section].get("ObjectType", "0"), 0)
         if object_type != 0x08 and object_type != 0x09:
             warnings.warn(
                 "ObjectType should be 0x08 (ARRAY) or 0x09 (RECORD) in [{}]".format(
@@ -304,7 +325,9 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
             if sub_name in cfg:
                 n += 1
                 if sub_index == 0:
-                    data_type = int(cfg[sub_name].get("DataType", "0"), 0)
+                    data_type = 0
+                    if "DataType" in cfg[sub_name] and cfg[sub_name]["DataType"]:
+                        data_type = int(cfg[sub_name]["DataType"], 0)
                     if data_type != 0x0005:
                         warnings.warn(
                             "DataType should be UNSIGNED8 in [{}]".format(sub_name),
@@ -328,7 +351,6 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
             )
             ok = False
     elif compact_sub_obj != 0:
-        object_type = int(cfg[section].get("ObjectType", "0"), 0)
         if object_type != 0x08 and object_type != 0x09:
             warnings.warn(
                 "ObjectType should be 0x08 (ARRAY) or 0x09 (RECORD) in [{}]".format(
@@ -348,29 +370,18 @@ def __parse_object(cfg: dict, section: str, index: int) -> bool:
 def __parse_sub_object_0(cfg: dict, section: str) -> bool:
     ok = True
 
-    if "DataType" not in cfg[section]:
-        warnings.warn("DataType not specified in [{}]".format(section), stacklevel=3)
-        ok = False
-
     if __parse_data_type(cfg, section):
-        if "DefaultValue" in cfg[section]:
+        if "DefaultValue" in cfg[section] and cfg[section]["DefaultValue"]:
             if not __parse_value(
                 cfg[section], section, "DefaultValue", cfg[section]["DefaultValue"]
             ):
                 ok = False
-        if "ParameterValue" in cfg[section]:
+        if "ParameterValue" in cfg[section] and cfg[section]["ParameterValue"]:
             if not __parse_value(
-                cfg[section],
-                section,
-                "ParameterValue",
-                cfg[section]["ParameterValue"],
+                cfg[section], section, "ParameterValue", cfg[section]["ParameterValue"]
             ):
                 ok = False
     else:
-        ok = False
-
-    if "AccessType" not in cfg[section]:
-        warnings.warn("AccessType not specified in [{}]".format(section), stacklevel=3)
         ok = False
 
     return ok
@@ -414,12 +425,12 @@ def __parse_sub_object(cfg: dict, section: str, index: int, sub_index: int) -> b
         ok = False
 
     if __parse_data_type(cfg, section):
-        if "DefaultValue" in cfg[section]:
+        if "DefaultValue" in cfg[section] and cfg[section]["DefaultValue"]:
             if not __parse_value(
                 cfg[section], section, "DefaultValue", cfg[section]["DefaultValue"]
             ):
                 ok = False
-        if "ParameterValue" in cfg[section]:
+        if "ParameterValue" in cfg[section] and cfg[section]["ParameterValue"]:
             if not __parse_value(
                 cfg[section], section, "ParameterValue", cfg[section]["ParameterValue"]
             ):
@@ -427,7 +438,7 @@ def __parse_sub_object(cfg: dict, section: str, index: int, sub_index: int) -> b
     else:
         ok = False
 
-    if "AccessType" not in cfg[section]:
+    if "AccessType" not in cfg[section] or not cfg[section]["AccessType"]:
         warnings.warn("AccessType not specified in [{}]".format(section), stacklevel=3)
         ok = False
 
@@ -440,7 +451,7 @@ def __parse_compact_sub_object(cfg: dict, section: str, index: int) -> bool:
     compact_sub_obj = 0
     name = "{:04X}".format(index)
     if name in cfg:
-        if "CompactSubObj" in cfg[name]:
+        if "CompactSubObj" in cfg[name] and cfg[name]["CompactSubObj"]:
             compact_sub_obj = int(cfg[name]["CompactSubObj"], 0)
         else:
             warnings.warn(
@@ -532,20 +543,16 @@ __limits = {
 def __parse_data_type(cfg: dict, section: str) -> bool:
     ok = True
 
-    data_type = 0
-    if "DataType" in cfg[section]:
-        try:
-            data_type = int(cfg[section]["DataType"], 0)
-        except ValueError:
-            warnings.warn(
-                "invalid DataType in [{}]: {}".format(
-                    section, cfg[section]["DataType"]
-                ),
-                stacklevel=4,
-            )
-            ok = False
-    else:
-        warnings.warn("DataType not specified in [" + section + "]", stacklevel=4)
+    if "DataType" not in cfg[section] or not cfg[section]["DataType"]:
+        return ok
+
+    try:
+        data_type = int(cfg[section]["DataType"], 0)
+    except ValueError:
+        warnings.warn(
+            "invalid DataType in [{}]: {}".format(section, cfg[section]["DataType"]),
+            stacklevel=4,
+        )
         ok = False
 
     if data_type in __limits.keys():
@@ -561,16 +568,15 @@ def __parse_data_type(cfg: dict, section: str) -> bool:
         0x000D,  # TIME_DIFFERENCE
         0x000F,  # DOMAIN
     ]:
-        if cfg[section].get("LowLimit", ""):
+        if "LowLimit" in cfg[section] and cfg[section]["LowLimit"]:
             warnings.warn("LowLimit not supported in [" + section + "]", stacklevel=4)
             ok = False
-        if cfg[section].get("HighLimit", ""):
+        if "HighLimit" in cfg[section] and cfg[section]["HighLimit"]:
             warnings.warn("HighLimit not supported in [" + section + "]", stacklevel=4)
             ok = False
     else:
         warnings.warn(
-            "unsupported DataType in [{}]: {}".format(section, data_type),
-            stacklevel=4,
+            "unsupported DataType in [{}]: {}".format(section, data_type), stacklevel=4
         )
         ok = False
 
@@ -594,7 +600,7 @@ __p_value = re.compile(
 
 
 def __parse_limit(cfg: dict, section: str, entry: str, data_type: int) -> bool:
-    if entry in cfg[section]:
+    if entry in cfg[section] and cfg[section][entry]:
         value = 0
         value_has_nodeid = False
         try:
@@ -646,12 +652,12 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
         high_limit = __limits[data_type][1]
         high_limit_has_nodeid = False
         if data_type == 0x0008 or data_type == 0x0011:
-            if "LowLimit" in cfg:
+            if "LowLimit" in cfg and cfg["LowLimit"]:
                 low_limit = __parse_float(cfg["LowLimit"], data_type)
-            if "HighLimit" in cfg:
+            if "HighLimit" in cfg and cfg["HighLimit"]:
                 high_limit = __parse_float(cfg["HighLimit"], data_type)
         else:
-            if "LowLimit" in cfg:
+            if "LowLimit" in cfg and cfg["LowLimit"]:
                 if cfg["LowLimit"].upper() == "$NODEID":
                     low_limit = 0
                     low_limit_has_nodeid = True
@@ -668,7 +674,7 @@ def __parse_value(cfg: dict, section: str, entry: str, value: str) -> bool:
                             stacklevel=5,
                         )
                         return False
-            if "HighLimit" in cfg:
+            if "HighLimit" in cfg and cfg["HighLimit"]:
                 if cfg["HighLimit"].upper() == "$NODEID":
                     high_limit = 0
                     high_limit_has_nodeid = True
