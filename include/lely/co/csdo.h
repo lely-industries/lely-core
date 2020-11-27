@@ -161,10 +161,10 @@ int co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx,
 		co_unsigned8_t subidx, struct membuf *buf,
 		co_csdo_up_con_t *con, void *data);
 
-/// Returns alignment of the #co_csdo_t structure.
+/// Returns the alignment (in bytes) of the #co_csdo_t structure.
 size_t co_csdo_alignof(void);
 
-/// Returns size of the #co_csdo_t structure.
+/// Returns the size (in bytes) of the #co_csdo_t structure.
 size_t co_csdo_sizeof(void);
 
 /**

@@ -140,10 +140,10 @@ typedef void co_lss_nid_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 typedef void co_lss_scan_ind_t(co_lss_t *lss, co_unsigned8_t cs,
 		const struct co_id *id, void *data);
 
-/// Returns alignment of the #co_lss_t structure.
+/// Returns the alignment (in bytes) of the #co_lss_t structure.
 size_t co_lss_alignof(void);
 
-/// Returns size of the #co_lss_t structure.
+/// Returns the size (in bytes) of the #co_lss_t structure.
 size_t co_lss_sizeof(void);
 
 /**

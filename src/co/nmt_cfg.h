@@ -58,10 +58,10 @@ void co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo);
  */
 void co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac);
 
-/// Returns alignment of the #co_nmt_cfg_t structure.
+/// Returns the alignment (in bytes) of the #co_nmt_cfg_t structure.
 size_t co_nmt_cfg_alignof(void);
 
-/// Returns size of the #co_nmt_cfg_t structure.
+/// Returns the size (in bytes) of the #co_nmt_cfg_t structure.
 size_t co_nmt_cfg_sizeof(void);
 
 /**

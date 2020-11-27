@@ -80,10 +80,10 @@ void co_time_diff_get(const co_time_diff_t *td, struct timespec *tp);
  */
 void co_time_diff_set(co_time_diff_t *td, const struct timespec *tp);
 
-/// Returns alignment of the #co_time_t structure.
+/// Returns the alignment (in bytes) of the #co_time_t structure.
 size_t co_time_alignof(void);
 
-/// Returns size of the #co_time_t structure.
+/// Returns the size (in bytes) of the #co_time_t structure.
 size_t co_time_sizeof(void);
 
 /**

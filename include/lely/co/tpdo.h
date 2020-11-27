@@ -59,10 +59,10 @@ typedef void co_tpdo_ind_t(co_tpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
  */
 typedef int co_tpdo_sample_ind_t(co_tpdo_t *pdo, void *data);
 
-/// Returns alignment of the #co_tpdo_t structure.
+/// Returns the alignment (in bytes) of the #co_tpdo_t structure.
 size_t co_tpdo_alignof(void);
 
-/// Returns size of the #co_tpdo_t structure.
+/// Returns the size (in bytes) of the #co_tpdo_t structure.
 size_t co_tpdo_sizeof(void);
 
 /**

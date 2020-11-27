@@ -56,10 +56,10 @@ typedef void co_rpdo_ind_t(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 typedef void co_rpdo_err_t(co_rpdo_t *pdo, co_unsigned16_t eec,
 		co_unsigned8_t er, void *data);
 
-/// Returns alignment of the #co_rpdo_t structure.
+/// Returns the alignment (in bytes) of the #co_rpdo_t structure.
 size_t co_rpdo_alignof(void);
 
-/// Returns size of the #co_rpdo_t structure.
+/// Returns the size (in bytes) of the #co_rpdo_t structure.
 size_t co_rpdo_sizeof(void);
 
 /**

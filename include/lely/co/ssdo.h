@@ -29,10 +29,10 @@
 extern "C" {
 #endif
 
-/// Returns alignment of the #co_ssdo_t structure.
+/// Returns the alignment (in bytes) of the #co_ssdo_t structure.
 size_t co_ssdo_alignof(void);
 
-/// Returns size of the #co_ssdo_t structure.
+/// Returns the size (in bytes) of the #co_ssdo_t structure.
 size_t co_ssdo_sizeof(void);
 
 /**
