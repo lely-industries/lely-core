@@ -425,14 +425,14 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 		case CO_DEFTYPE_UNSIGNED32: return uint32_cmp(v1, v2);
 		case CO_DEFTYPE_REAL32: return flt_cmp(v1, v2);
 		case CO_DEFTYPE_TIME_OF_DAY:
-			cmp = uint32_cmp(&u1->t.ms, &u2->t.ms);
+			cmp = uint16_cmp(&u1->t.days, &u2->t.days);
 			if (!cmp)
-				cmp = uint16_cmp(&u1->t.days, &u2->t.days);
+				cmp = uint32_cmp(&u1->t.ms, &u2->t.ms);
 			return cmp;
 		case CO_DEFTYPE_TIME_DIFF:
-			cmp = uint32_cmp(&u1->td.ms, &u2->td.ms);
+			cmp = uint16_cmp(&u1->td.days, &u2->td.days);
 			if (!cmp)
-				cmp = uint16_cmp(&u1->td.days, &u2->td.days);
+				cmp = uint32_cmp(&u1->td.ms, &u2->td.ms);
 			return cmp;
 		case CO_DEFTYPE_INTEGER24: return int32_cmp(v1, v2);
 		case CO_DEFTYPE_REAL64: return dbl_cmp(v1, v2);
