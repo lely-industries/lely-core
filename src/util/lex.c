@@ -23,8 +23,8 @@
 
 #include "util.h"
 #define LELY_UTIL_LEX_INLINE extern inline
-#include <lely/libc/string.h>
-#include <lely/libc/uchar.h>
+#include <lely/compat/string.h>
+#include <lely/compat/uchar.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>

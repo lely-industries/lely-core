@@ -7,6 +7,6 @@ Name: liblely-tap
 Description: Lely Test Anything Protocol (TAP) library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc >= @PACKAGE_VERSION@
+Requires: liblely-compat >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llely-tap

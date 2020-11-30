@@ -39,7 +39,7 @@
 #ifndef LELY_UTIL_FIBER_HPP_
 #define LELY_UTIL_FIBER_HPP_
 
-#include <lely/libc/type_traits.hpp>
+#include <lely/compat/type_traits.hpp>
 #include <lely/util/error.hpp>
 #include <lely/util/fiber.h>
 

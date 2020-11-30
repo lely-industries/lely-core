@@ -41,7 +41,7 @@
 #ifdef __cplusplus
 #include <atomic>
 #else
-#include <lely/libc/stdatomic.h>
+#include <lely/compat/stdatomic.h>
 #endif
 #endif // !LELY_NO_ATOMICS
 

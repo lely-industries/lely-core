@@ -4,7 +4,7 @@
  *
  * @see lely/util/print.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,8 +23,8 @@
 
 #include "util.h"
 #define LELY_UTIL_PRINT_INLINE extern inline
-#include <lely/libc/stdio.h>
-#include <lely/libc/uchar.h>
+#include <lely/compat/stdio.h>
+#include <lely/compat/uchar.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
 

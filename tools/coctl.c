@@ -28,9 +28,9 @@
 #include <lely/co/nmt.h>
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
-#include <lely/libc/stdio.h>
-#include <lely/libc/threads.h>
-#include <lely/libc/unistd.h>
+#include <lely/compat/stdio.h>
+#include <lely/compat/threads.h>
+#include <lely/compat/unistd.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/time.h>

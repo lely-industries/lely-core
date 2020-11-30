@@ -24,8 +24,8 @@
 
 #include <lely/co/dcf.h>
 #include <lely/co/sdev.h>
-#include <lely/libc/stdio.h>
-#include <lely/libc/unistd.h>
+#include <lely/compat/stdio.h>
+#include <lely/compat/unistd.h>
 #include <lely/util/diag.h>
 
 #include <stdlib.h>

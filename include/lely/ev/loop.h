@@ -41,9 +41,9 @@
 #ifndef LELY_EV_LOOP_H_
 #define LELY_EV_LOOP_H_
 
+#include <lely/compat/time.h>
 #include <lely/ev/future.h>
 #include <lely/ev/poll.h>
-#include <lely/libc/time.h>
 
 #include <stddef.h>
 

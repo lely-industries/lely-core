@@ -26,7 +26,7 @@
 #ifndef LELY_NO_DAEMON
 
 #ifndef LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/util/daemon.h>
 #include <lely/util/diag.h>

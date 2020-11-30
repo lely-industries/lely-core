@@ -1,29 +1,29 @@
 inc =
 inc += lely/features.h
 
-inc += lely/libc/sys/types.h
+inc += lely/compat/sys/types.h
 if !NO_CXX
-inc += lely/libc/chrono.hpp
-inc += lely/libc/functional.hpp
+inc += lely/compat/chrono.hpp
+inc += lely/compat/functional.hpp
 endif
-inc += lely/libc/stdatomic.h
-inc += lely/libc/stddef.h
-inc += lely/libc/stdint.h
-inc += lely/libc/stdio.h
-inc += lely/libc/stdlib.h
-inc += lely/libc/string.h
-inc += lely/libc/strings.h
+inc += lely/compat/stdatomic.h
+inc += lely/compat/stddef.h
+inc += lely/compat/stdint.h
+inc += lely/compat/stdio.h
+inc += lely/compat/stdlib.h
+inc += lely/compat/string.h
+inc += lely/compat/strings.h
 if !NO_THREADS
-inc += lely/libc/threads.h
+inc += lely/compat/threads.h
 endif
-inc += lely/libc/time.h
+inc += lely/compat/time.h
 if !NO_CXX
-inc += lely/libc/type_traits.hpp
+inc += lely/compat/type_traits.hpp
 endif
-inc += lely/libc/uchar.h
-inc += lely/libc/unistd.h
+inc += lely/compat/uchar.h
+inc += lely/compat/unistd.h
 if !NO_CXX
-inc += lely/libc/utility.hpp
+inc += lely/compat/utility.hpp
 endif
 
 inc += lely/tap/tap.h

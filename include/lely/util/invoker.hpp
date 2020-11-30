@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains a function
  * object that can be used to store a Callable together with its arguments.
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,8 +22,8 @@
 #ifndef LELY_UTIL_INVOKER_HPP_
 #define LELY_UTIL_INVOKER_HPP_
 
-#include <lely/libc/functional.hpp>
-#include <lely/libc/utility.hpp>
+#include <lely/compat/functional.hpp>
+#include <lely/compat/utility.hpp>
 
 #include <tuple>
 #include <utility>

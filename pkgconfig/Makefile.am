@@ -10,9 +10,9 @@ pkgconfig_DATA += liblely-ev.pc
 pkgconfig_DATA += liblely-io.pc
 pkgconfig_DATA += liblely-io2.pc
 endif
-pkgconfig_DATA += liblely-libc.pc
+pkgconfig_DATA += liblely-compat.pc
 if !NO_RT
-pkgconfig_DATA += liblely-libc_rt.pc
+pkgconfig_DATA += liblely-compat_rt.pc
 endif
 pkgconfig_DATA += liblely-tap.pc
 pkgconfig_DATA += liblely-util.pc

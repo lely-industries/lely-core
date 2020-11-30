@@ -28,7 +28,7 @@
 #include <lely/util/errnum.h>
 #include <lely/util/util.h>
 
-#include <lely/libc/stddef.h>
+#include <lely/compat/stddef.h>
 
 static inline struct mempool *
 mempool_from_alloc(alloc_t *const alloc)

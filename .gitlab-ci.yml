@@ -318,7 +318,7 @@ clang-format:
         -n
         --Werror
         $(find include -name *.h)
-        $(find src -name *.c)
+        $(find src -name *.c -o -name *.h)
         $(find unit-tests -name *.cpp -o -name *.hpp)
 # TODO - enable C++ clang-format check
 

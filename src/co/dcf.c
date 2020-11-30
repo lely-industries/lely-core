@@ -29,8 +29,8 @@
 #include <lely/co/dcf.h>
 #include <lely/co/detail/obj.h>
 #include <lely/co/pdo.h>
-#include <lely/libc/stdio.h>
-#include <lely/libc/strings.h>
+#include <lely/compat/stdio.h>
+#include <lely/compat/strings.h>
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>

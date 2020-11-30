@@ -23,11 +23,11 @@
 
 #include "ev.h"
 #if !LELY_NO_THREADS
-#include <lely/libc/stdatomic.h>
+#include <lely/compat/stdatomic.h>
 #endif
-#include <lely/libc/stddef.h>
+#include <lely/compat/stddef.h>
 #if !LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/ev/exec.h>
 #include <lely/ev/future.h>

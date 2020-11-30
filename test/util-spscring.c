@@ -1,5 +1,5 @@
 #include "test.h"
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #include <lely/util/errnum.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>

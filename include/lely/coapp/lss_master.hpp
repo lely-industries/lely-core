@@ -25,8 +25,8 @@
 #define LELY_COAPP_LSS_MASTER_HPP_
 
 #include <lely/coapp/node.hpp>
-#include <lely/libc/functional.hpp>
-#include <lely/libc/type_traits.hpp>
+#include <lely/compat/functional.hpp>
+#include <lely/compat/type_traits.hpp>
 
 #include <chrono>
 #include <memory>

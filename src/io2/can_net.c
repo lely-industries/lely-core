@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can_net.h
  *
- * @copyright 2018-2029 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,11 +23,11 @@
 
 #include "io2.h"
 #include <lely/can/net.h>
+#include <lely/compat/stdlib.h>
 #include <lely/io2/can_net.h>
 #include <lely/io2/ctx.h>
-#include <lely/libc/stdlib.h>
 #if !LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/util/diag.h>
 #include <lely/util/spscring.h>

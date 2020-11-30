@@ -2,16 +2,16 @@ bin =
 
 # C11 and POSIX compatibility library tests
 
-LELY_LIBC_LIBS =
+LELY_COMPAT_LIBS =
 if CODE_COVERAGE_ENABLED
-LELY_LIBC_LIBS += $(CODE_COVERAGE_LIBS)
+LELY_COMPAT_LIBS += $(CODE_COVERAGE_LIBS)
 endif
-LELY_LIBC_LIBS += $(top_builddir)/src/libc/liblely-libc.la
-LELY_LIBC_LIBS += $(top_builddir)/src/tap/liblely-tap.la
+LELY_COMPAT_LIBS += $(top_builddir)/src/compat/liblely-compat.la
+LELY_COMPAT_LIBS += $(top_builddir)/src/tap/liblely-tap.la
 
 # Test Anything Protocol (TAP) library tests
 
-LELY_TAP_LIBS = $(LELY_LIBC_LIBS)
+LELY_TAP_LIBS = $(LELY_COMPAT_LIBS)
 
 bin += test-tap
 test_tap_SOURCES = test.h tap.c

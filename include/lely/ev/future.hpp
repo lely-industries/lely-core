@@ -26,7 +26,7 @@
 
 #include <lely/ev/exec.hpp>
 #include <lely/ev/future.h>
-#include <lely/libc/type_traits.hpp>
+#include <lely/compat/type_traits.hpp>
 #include <lely/util/invoker.hpp>
 #include <lely/util/result.hpp>
 

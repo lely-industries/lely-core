@@ -4,7 +4,7 @@
  *
  * @see lely/util/mkjmp.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,7 +28,7 @@
 
 #include "util.h"
 #if !LELY_NO_THREADS
-#include <lely/libc/threads.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/util/mkjmp.h>
 

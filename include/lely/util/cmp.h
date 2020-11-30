@@ -22,8 +22,8 @@
 #ifndef LELY_UTIL_CMP_H_
 #define LELY_UTIL_CMP_H_
 
-#include <lely/libc/strings.h>
-#include <lely/libc/uchar.h>
+#include <lely/compat/strings.h>
+#include <lely/compat/uchar.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>

@@ -23,7 +23,7 @@
 #define LELY_CAN_NET_H_
 
 #include <lely/can/msg.h>
-#include <lely/libc/time.h>
+#include <lely/compat/time.h>
 #include <lely/util/memory.h>
 
 struct can_net;

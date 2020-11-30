@@ -23,8 +23,8 @@
 
 #include "util.h"
 #if !LELY_NO_THREADS
-#include <lely/libc/stdatomic.h>
-#include <lely/libc/threads.h>
+#include <lely/compat/stdatomic.h>
+#include <lely/compat/threads.h>
 #endif
 #include <lely/util/errnum.h>
 #include <lely/util/stop.h>

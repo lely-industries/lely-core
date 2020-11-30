@@ -16,7 +16,7 @@
  * `memcpy()` instead of writing to the file explicitly. The implementation uses
  * `CreateFileMapping()`/`MapViewOfFile()` or `mmap()` if available.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -36,7 +36,7 @@
 #ifndef LELY_UTIL_FWBUF_H_
 #define LELY_UTIL_FWBUF_H_
 
-#include <lely/libc/sys/types.h>
+#include <lely/compat/sys/types.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>

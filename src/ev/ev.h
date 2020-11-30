@@ -28,10 +28,13 @@
 #include <lely/ev/ev.h>
 
 #ifdef __cplusplus
-namespace lely {
+namespace lely
+{
 /// The global namespace for the event library.
-namespace ev {}
-}  // namespace lely
+namespace ev
+{
+}
+} // namespace lely
 #endif
 
 LELY_INGORE_EMPTY_TRANSLATION_UNIT

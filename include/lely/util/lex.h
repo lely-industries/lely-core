@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_LEX_H_
 #define LELY_UTIL_LEX_H_
 
-#include <lely/libc/uchar.h>
+#include <lely/compat/uchar.h>
 #include <lely/util/util.h>
 
 #include <ctype.h>

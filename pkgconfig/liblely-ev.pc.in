@@ -7,6 +7,6 @@ Name: liblely-ev
 Description: Lely event library
 URL: https://gitlab.com/lely_industries/@PACKAGE@
 Version: @PACKAGE_VERSION@
-Requires: liblely-libc >= @PACKAGE_VERSION@ liblely-util >= @PACKAGE_VERSION@
+Requires: liblely-compat >= @PACKAGE_VERSION@ liblely-util >= @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llely-ev

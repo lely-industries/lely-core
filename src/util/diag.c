@@ -25,7 +25,7 @@
 #if LELY_NO_DIAG
 #define LELY_UTIL_DIAG_INLINE extern inline
 #endif
-#include <lely/libc/stdio.h>
+#include <lely/compat/stdio.h>
 #include <lely/util/diag.h>
 
 #include <assert.h>
