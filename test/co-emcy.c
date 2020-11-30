@@ -22,6 +22,7 @@ main(void)
 	tap_assert(dev);
 	co_emcy_t *emcy = co_emcy_create(net, dev);
 	tap_assert(emcy);
+	tap_assert(!co_emcy_start(emcy));
 
 	co_emcy_set_ind(emcy, &emcy_ind, &test);
 

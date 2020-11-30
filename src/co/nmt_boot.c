@@ -879,6 +879,12 @@ co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
 	co_csdo_set_dn_ind(boot->sdo, dn_ind, data);
 	co_csdo_set_up_ind(boot->sdo, up_ind, data);
 
+	if (co_csdo_start(boot->sdo) == -1) {
+		co_csdo_destroy(boot->sdo);
+		boot->sdo = NULL;
+		return -1;
+	}
+
 	co_nmt_boot_emit_time(boot, NULL);
 
 	return 0;

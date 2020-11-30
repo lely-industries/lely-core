@@ -502,16 +502,9 @@ co_time_init(co_time_t *time, can_net_t *net, co_dev_t *dev)
 	time->ind = NULL;
 	time->data = NULL;
 
-	if (co_time_start(time) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return time;
 
-	// co_time_stop(time);
-error_start:
-	can_timer_destroy(time->timer);
+	// can_timer_destroy(time->timer);
 error_create_timer:
 	can_recv_destroy(time->recv);
 error_create_recv:

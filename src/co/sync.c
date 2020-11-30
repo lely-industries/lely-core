@@ -578,16 +578,9 @@ co_sync_init(co_sync_t *sync, can_net_t *net, co_dev_t *dev)
 	sync->err = NULL;
 	sync->err_data = NULL;
 
-	if (co_sync_start(sync) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return sync;
 
-	// co_sync_stop(sync);
-error_start:
-	can_timer_destroy(sync->timer);
+	// can_timer_destroy(sync->timer);
 error_create_timer:
 	can_recv_destroy(sync->recv);
 error_create_recv:

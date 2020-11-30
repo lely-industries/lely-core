@@ -253,6 +253,8 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     CHECK(sync != nullptr);
   }
 
+  void StartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
+
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
@@ -432,6 +434,7 @@ TEST(CO_Sync, CoSyncRecv_Err) {
   SetCobid(DEV_ID);
   CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, nullptr);
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -452,6 +455,7 @@ TEST(CO_Sync, CoSyncRecv_NoErrHandlerWhenNeeded) {
   SetCobid(DEV_ID);
   CreateSYNC();
   SyncSetErrSetInd(nullptr, SyncInd::func);
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -472,6 +476,7 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOne) {
   CreateObj1019AndSetCntOverflow(0x01u);
   CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -497,6 +502,7 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
   CreateObj1019AndSetCntOverflow(0x01u);
   CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -517,6 +523,7 @@ TEST(CO_Sync, CoSyncRecv) {
   SetCobid(DEV_ID);
   CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -538,6 +545,7 @@ TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME);
   CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  StartSYNC();
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);
@@ -559,6 +567,7 @@ TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateSYNC();
   SyncSetSendSetInd(CanSend::func, nullptr);
+  StartSYNC();
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);
@@ -577,6 +586,7 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  StartSYNC();
   const timespec tp[2] = {{0L, 600000L}, {0L, 1200000L}};
 
   SyncInd::cnt = 2u;
@@ -616,6 +626,7 @@ TEST(CO_Sync, CoSyncTimer) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
+  StartSYNC();
   const timespec tp = {0L, 600000L};
 
   const auto ret = can_net_set_time(net, &tp);

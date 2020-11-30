@@ -326,7 +326,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDOMaxNum) {
   tpdo = nullptr;  // must be destroyed before objects
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_ExtendedFrame) {
+TEST(CO_TpdoCreate, CoTpdoStart_ExtendedFrame) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_FRAME);
@@ -339,6 +339,9 @@ TEST(CO_TpdoCreate, CoTpdoCreate_ExtendedFrame) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
+
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID | CO_PDO_COBID_FRAME, comm->cobid);
@@ -349,7 +352,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_ExtendedFrame) {
   CHECK_EQUAL(0u, comm->sync);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_InvalidBit) {
+TEST(CO_TpdoCreate, CoTpdoStart_InvalidBit) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID | CO_PDO_COBID_VALID);
@@ -362,6 +365,9 @@ TEST(CO_TpdoCreate, CoTpdoCreate_InvalidBit) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
+
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
   CHECK_EQUAL(DEV_ID | CO_PDO_COBID_VALID, comm->cobid);
@@ -372,7 +378,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_InvalidBit) {
   CHECK_EQUAL(0u, comm->sync);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOCommParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x06u);
   SetComm01CobId(DEV_ID);
@@ -389,6 +395,9 @@ TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOCommParamRecord) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
+
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x06u, comm->n);
   CHECK_EQUAL(DEV_ID, comm->cobid);
@@ -399,7 +408,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOCommParamRecord) {
   CHECK_EQUAL(0x05u, comm->sync);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOMappingParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
 
   CreateObjInDev(obj1a00, 0x1a00u);
@@ -410,16 +419,18 @@ TEST(CO_TpdoCreate, CoTpdoCreate_FullTPDOMappingParamRecord) {
   }
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
-
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
+
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* map = co_tpdo_get_map_par(tpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
   for (size_t i = 0; i < CO_PDO_NUM_MAPS; ++i) CHECK_EQUAL(i, map->map[i]);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_OversizedTPDOCommParamRecord) {
+TEST(CO_TpdoCreate, CoTpdoStart_OversizedTPDOCommParamRecord) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x07u);
   SetComm01CobId(DEV_ID);
@@ -435,9 +446,11 @@ TEST(CO_TpdoCreate, CoTpdoCreate_OversizedTPDOCommParamRecord) {
   CreateObjInDev(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
-
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
+
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x07u, comm->n);
@@ -449,7 +462,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_OversizedTPDOCommParamRecord) {
   CHECK_EQUAL(0x05u, comm->sync);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_EventDrivenTransmission) {
+TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
@@ -458,9 +471,11 @@ TEST(CO_TpdoCreate, CoTpdoCreate_EventDrivenTransmission) {
   CreateObjInDev(obj1a00, 0x1a00u);
 
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
-
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
+
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -472,7 +487,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_EventDrivenTransmission) {
   CHECK_EQUAL(0u, comm->sync);
 }
 
-TEST(CO_TpdoCreate, CoTpdoCreate_TimerSet) {
+TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
   CreateObjInDev(obj1800, 0x1800u);
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
@@ -486,9 +501,11 @@ TEST(CO_TpdoCreate, CoTpdoCreate_TimerSet) {
                            co_unsigned32_t(0x00000001u));
 
   tpdo = co_tpdo_create(net, dev, 1u);
-
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
+
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_tpdo_get_comm_par(tpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -510,6 +527,7 @@ TEST_GROUP_BASE(CO_Tpdo, CO_TpdoBase) {
   void CreateTpdo() {
     tpdo = co_tpdo_create(net, dev, TPDO_NUM);
     CHECK(tpdo != nullptr);
+    CHECK_EQUAL(0, co_tpdo_start(tpdo));
     co_tpdo_set_ind(tpdo, CoTpdoInd::func, &ind_data);
   }
 

@@ -870,15 +870,8 @@ co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev)
 		}
 	}
 
-	if (co_emcy_start(emcy) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return emcy;
 
-	// co_emcy_stop(emcy);
-error_start:
 error_create_recv:
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		can_recv_destroy(emcy->nodes[id - 1].recv);

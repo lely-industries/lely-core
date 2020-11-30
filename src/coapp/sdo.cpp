@@ -412,6 +412,7 @@ Sdo::AbortAll() {
 Sdo::Impl_::Impl_(can_net_t* net, co_dev_t* dev, uint8_t num)
     : sdo(co_csdo_create(net, dev, num),
           [=](co_csdo_t* sdo) noexcept { co_csdo_destroy(sdo); }) {
+  if (!sdo || co_csdo_start(sdo.get()) == -1) util::throw_errc("Sdo");
   sllist_init(&queue);
 }
 

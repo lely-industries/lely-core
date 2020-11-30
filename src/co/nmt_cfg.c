@@ -401,6 +401,12 @@ co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
 	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);
 	co_csdo_set_up_ind(cfg->sdo, up_ind, data);
 
+	if (co_csdo_start(cfg->sdo) == -1) {
+		co_csdo_destroy(cfg->sdo);
+		cfg->sdo = NULL;
+		return -1;
+	}
+
 	co_nmt_cfg_enter(cfg, co_nmt_cfg_restore_state);
 
 	return 0;

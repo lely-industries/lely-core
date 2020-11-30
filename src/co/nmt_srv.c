@@ -4,7 +4,7 @@
  *
  * @see src/nmt_srv.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -237,6 +237,8 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		if (!srv->rpdos[i])
 			goto error;
 		co_rpdo_set_err(srv->rpdos[i], &co_nmt_srv_rpdo_err, srv->nmt);
+		if (co_rpdo_start(srv->rpdos[i]) == -1)
+			goto error;
 
 		srv->nrpdo = i + 1;
 	}
@@ -262,6 +264,8 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 			srv->tpdos[j] = NULL;
 		srv->tpdos[i] = co_tpdo_create(net, dev, i + 1);
 		if (!srv->tpdos[i])
+			goto error;
+		if (co_tpdo_start(srv->tpdos[i]) == -1)
 			goto error;
 
 		srv->ntpdo = i + 1;
@@ -349,6 +353,8 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		srv->ssdos[i] = co_ssdo_create(net, dev, i + 1);
 		if (!srv->ssdos[i])
 			goto error;
+		if (co_ssdo_start(srv->ssdos[i]) == -1)
+			goto error;
 
 		srv->nssdo = i + 1;
 	}
@@ -372,6 +378,8 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 			srv->csdos[j] = NULL;
 		srv->csdos[i] = co_csdo_create(net, dev, i + 1);
 		if (!srv->csdos[i])
+			goto error;
+		if (co_csdo_start(srv->csdos[i]) == -1)
 			goto error;
 
 		srv->ncsdo = i + 1;
@@ -430,8 +438,12 @@ co_nmt_srv_init_sync(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 				"unable to initialize SYNC service");
 		return;
 	}
+
 	co_sync_set_ind(srv->sync, &co_nmt_srv_sync_ind, srv->nmt);
 	co_sync_set_err(srv->sync, &co_nmt_srv_sync_err, srv->nmt);
+
+	if (co_sync_start(srv->sync) == -1)
+		diag(DIAG_ERROR, get_errc(), "unable to start SYNC service");
 }
 
 static void
@@ -485,9 +497,14 @@ co_nmt_srv_init_time(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		return;
 
 	srv->time = co_time_create(net, dev);
-	if (!srv->time)
+	if (!srv->time) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize TIME service");
+		return;
+	}
+
+	if (co_time_start(srv->time) == -1)
+		diag(DIAG_ERROR, get_errc(), "unable to start TIME service");
 }
 
 static void
@@ -520,9 +537,14 @@ co_nmt_srv_init_emcy(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		return;
 
 	srv->emcy = co_emcy_create(net, dev);
-	if (!srv->emcy)
+	if (!srv->emcy) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize EMCY service");
+		return;
+	}
+
+	if (co_emcy_start(srv->emcy) == -1)
+		diag(DIAG_ERROR, get_errc(), "unable to start EMCY service");
 }
 
 static void
@@ -554,9 +576,14 @@ co_nmt_srv_init_lss(struct co_nmt_srv *srv, co_nmt_t *nmt)
 	srv->set |= CO_NMT_SRV_LSS;
 
 	srv->lss = co_lss_create(nmt);
-	if (!srv->lss)
+	if (!srv->lss) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to initialize LSS service");
+		return;
+	}
+
+	if (co_lss_start(srv->lss) == -1)
+		diag(DIAG_ERROR, get_errc(), "unable to start LSS service");
 }
 
 static void
