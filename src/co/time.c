@@ -43,6 +43,8 @@ struct __co_time {
 	can_net_t *net;
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
+	/// A flag specifying whether the TIME service is stopped.
+	int stopped;
 	/// The TIME COB-ID.
 	co_unsigned32_t cobid;
 	/// A pointer to the high-resolution time stamp sub-object.
@@ -173,6 +175,8 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 		goto error_obj_1012;
 	}
 
+	time->stopped = 1;
+
 	time->cobid = 0;
 
 	time->sub_1013_00 = co_dev_find_sub(time->dev, 0x1013, 0x00);
@@ -268,7 +272,8 @@ co_time_start(co_time_t *time)
 {
 	assert(time);
 
-	co_time_stop(time);
+	if (!time->stopped)
+		return 0;
 
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	// Retrieve the TIME COB-ID.
@@ -280,6 +285,8 @@ co_time_start(co_time_t *time)
 
 	co_time_update(time);
 
+	time->stopped = 1;
+
 	return 0;
 }
 
@@ -287,6 +294,9 @@ void
 co_time_stop(co_time_t *time)
 {
 	assert(time);
+
+	if (time->stopped)
+		return;
 
 	co_time_stop_prod(time);
 
@@ -296,6 +306,16 @@ co_time_stop(co_time_t *time)
 	// Remove the download indication function for the TIME COB-ID object.
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	co_obj_set_dn_ind(obj_1012, NULL, NULL);
+
+	time->stopped = 1;
+}
+
+int
+co_time_is_stopped(const co_time_t *time)
+{
+	assert(time);
+
+	return time->stopped;
 }
 
 can_net_t *

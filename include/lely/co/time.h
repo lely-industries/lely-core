@@ -109,7 +109,7 @@ void co_time_destroy(co_time_t *time);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_time_stop()
+ * @see co_time_stop(), co_time_is_stopped()
  */
 int co_time_start(co_time_t *time);
 
@@ -117,9 +117,16 @@ int co_time_start(co_time_t *time);
  * Stops a TIME service. This function invokes co_time_stop_prod() to stop the
  * TIME producer, if necessary.
  *
- * @see co_time_start()
+ * @see co_time_start(), co_time_is_stopped()
  */
 void co_time_stop(co_time_t *time);
+
+/**
+ * Retuns 1 if the specified TIME service is stopped, and 0 if not.
+ *
+ * @see co_time_start, co_time_stop()
+ */
+int co_time_is_stopped(const co_time_t *time);
 
 /// Returns a pointer to the CAN network of a TIME producer/consumer service.
 can_net_t *co_time_get_net(const co_time_t *time);

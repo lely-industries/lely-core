@@ -42,6 +42,8 @@ struct __co_sync {
 	can_net_t *net;
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
+	/// A flag specifying whether the SYNC service is stopped.
+	int stopped;
 	/// The SYNC COB-ID.
 	co_unsigned32_t cobid;
 	/// The communication cycle period (in microseconds).
@@ -138,6 +140,8 @@ __co_sync_init(struct __co_sync *sync, can_net_t *net, co_dev_t *dev)
 
 	sync->net = net;
 	sync->dev = dev;
+
+	sync->stopped = 1;
 
 	// Retrieve the SYNC COB-ID.
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
@@ -243,7 +247,8 @@ co_sync_start(co_sync_t *sync)
 {
 	assert(sync);
 
-	co_sync_stop(sync);
+	if (!sync->stopped)
+		return 0;
 
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
 	// Retrieve the COB-ID.
@@ -269,6 +274,8 @@ co_sync_start(co_sync_t *sync)
 
 	co_sync_update(sync);
 
+	sync->stopped = 0;
+
 	return 0;
 }
 
@@ -276,6 +283,9 @@ void
 co_sync_stop(co_sync_t *sync)
 {
 	assert(sync);
+
+	if (sync->stopped)
+		return;
 
 	// Remove the download indication function for the synchronous counter
 	// overflow value object.
@@ -293,6 +303,16 @@ co_sync_stop(co_sync_t *sync)
 	co_obj_t *obj_1005 = co_dev_find_obj(sync->dev, 0x1005);
 	assert(obj_1005);
 	co_obj_set_dn_ind(obj_1005, NULL, NULL);
+
+	sync->stopped = 1;
+}
+
+int
+co_sync_is_stopped(const co_sync_t *sync)
+{
+	assert(sync);
+
+	return sync->stopped;
 }
 
 can_net_t *

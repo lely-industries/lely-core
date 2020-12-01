@@ -82,12 +82,19 @@ void co_emcy_destroy(co_emcy_t *emcy);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_emcy_stop()
+ * @see co_emcy_stop(), co_emcy_is_stopped()
  */
 int co_emcy_start(co_emcy_t *emcy);
 
-/// Stops an EMCY service. @see co_emcy_start()
+/// Stops an EMCY service. @see co_emcy_start(), co_emcy_is_stopped()
 void co_emcy_stop(co_emcy_t *emcy);
+
+/**
+ * Retuns 1 if the specified EMCY service is stopped, and 0 if not.
+ *
+ * @see co_emcy_start, co_emcy_stop()
+ */
+int co_emcy_is_stopped(const co_emcy_t *emcy);
 
 /// Returns a pointer to the CAN network of an EMCY producer/consumer service.
 can_net_t *co_emcy_get_net(const co_emcy_t *emcy);

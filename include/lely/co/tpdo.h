@@ -91,12 +91,19 @@ void co_tpdo_destroy(co_tpdo_t *pdo);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_tpdo_stop()
+ * @see co_tpdo_stop(), co_tpdo_is_stopped()
  */
 int co_tpdo_start(co_tpdo_t *pdo);
 
-/// Stops a Transmit-PDO service. @see co_tpdo_start()
+/// Stops a Transmit-PDO service. @see co_tpdo_start(), co_tpdo_is_stopped()
 void co_tpdo_stop(co_tpdo_t *pdo);
+
+/**
+ * Retuns 1 if the specified Transmit-PDO service is stopped, and 0 if not.
+ *
+ * @see co_tpdo_start, co_tpdo_stop()
+ */
+int co_tpdo_is_stopped(const co_tpdo_t *pdo);
 
 /// Returns a pointer to the CAN network of a Transmit-PDO.
 can_net_t *co_tpdo_get_net(const co_tpdo_t *pdo);

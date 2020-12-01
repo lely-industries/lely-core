@@ -89,12 +89,19 @@ void co_sync_destroy(co_sync_t *sync);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_sync_stop()
+ * @see co_sync_stop(), co_sync_is_stopped()
  */
 int co_sync_start(co_sync_t *sync);
 
-/// Stops a SYNC service. @see co_sync_start()
+/// Stops a SYNC service. @see co_sync_start(), co_sync_is_stopped()
 void co_sync_stop(co_sync_t *sync);
+
+/**
+ * Retuns 1 if the specified SYNC service is stopped, and 0 if not.
+ *
+ * @see co_sync_start, co_sync_stop()
+ */
+int co_sync_is_stopped(const co_sync_t *sync);
 
 /// Returns a pointer to the CAN network of a SYNC producer/consumer service.
 can_net_t *co_sync_get_net(const co_sync_t *sync);

@@ -61,16 +61,23 @@ void co_ssdo_destroy(co_ssdo_t *sdo);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_ssdo_stop()
+ * @see co_ssdo_stop(), co_ssdo_is_stopped()
  */
 int co_ssdo_start(co_ssdo_t *sdo);
 
 /**
  * Stops a Server-SDO service. Any ongoing request is aborted.
  *
- * @see co_ssdo_start()
+ * @see co_ssdo_start(), co_ssdo_is_stopped()
  */
 void co_ssdo_stop(co_ssdo_t *sdo);
+
+/**
+ * Retuns 1 if the specified Server-SDO service is stopped, and 0 if not.
+ *
+ * @see co_ssdo_start, co_ssdo_stop()
+ */
+int co_ssdo_is_stopped(const co_ssdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Server-SDO.
 can_net_t *co_ssdo_get_net(const co_ssdo_t *sdo);

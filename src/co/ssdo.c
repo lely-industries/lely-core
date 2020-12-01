@@ -203,6 +203,9 @@ struct __co_ssdo_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_ssdo_state_t *const name = &(co_ssdo_state_t){ __VA_ARGS__ };
 
+/// The 'stopped' state.
+LELY_CO_DEFINE_STATE(co_ssdo_stopped_state, NULL)
+
 /// The 'abort' transition function of the 'waiting' state.
 static co_ssdo_state_t *co_ssdo_wait_on_abort(
 		co_ssdo_t *sdo, co_unsigned32_t ac);
@@ -585,7 +588,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(sdo->timer, &co_ssdo_timer, sdo);
 
-	sdo->state = co_ssdo_wait_state;
+	sdo->state = co_ssdo_stopped_state;
 
 	sdo->idx = 0;
 	sdo->subidx = 0;
@@ -683,7 +686,10 @@ co_ssdo_start(co_ssdo_t *sdo)
 {
 	assert(sdo);
 
-	co_ssdo_stop(sdo);
+	if (!co_ssdo_is_stopped(sdo))
+		return 0;
+
+	co_ssdo_enter(sdo, co_ssdo_wait_state);
 
 	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
 	if (obj_1200) {
@@ -702,8 +708,7 @@ co_ssdo_start(co_ssdo_t *sdo)
 	return 0;
 
 error_update:
-	if (obj_1200)
-		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+	co_ssdo_stop(sdo);
 	return -1;
 }
 
@@ -711,6 +716,9 @@ void
 co_ssdo_stop(co_ssdo_t *sdo)
 {
 	assert(sdo);
+
+	if (co_ssdo_is_stopped(sdo))
+		return;
 
 	// Abort any ongoing transfer.
 	co_ssdo_emit_abort(sdo, CO_SDO_AC_NO_SDO);
@@ -723,6 +731,16 @@ co_ssdo_stop(co_ssdo_t *sdo)
 	co_obj_t *obj_1200 = co_dev_find_obj(sdo->dev, 0x1200 + sdo->num - 1);
 	if (obj_1200)
 		co_obj_set_dn_ind(obj_1200, NULL, NULL);
+
+	co_ssdo_enter(sdo, co_ssdo_stopped_state);
+}
+
+int
+co_ssdo_is_stopped(const co_ssdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->state == co_ssdo_stopped_state;
 }
 
 can_net_t *

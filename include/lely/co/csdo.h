@@ -189,16 +189,23 @@ void co_csdo_destroy(co_csdo_t *sdo);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_csdo_stop()
+ * @see co_csdo_stop(), co_csdo_is_stopped()
  */
 int co_csdo_start(co_csdo_t *sdo);
 
 /**
  * Stops a Client-SDO service. Any ongoing request is aborted.
  *
- * @see co_csdo_start()
+ * @see co_csdo_start(), co_csdo_is_stopped()
  */
 void co_csdo_stop(co_csdo_t *sdo);
+
+/**
+ * Retuns 1 if the specified Client-SDO service is stopped, and 0 if not.
+ *
+ * @see co_csdo_start, co_csdo_stop()
+ */
+int co_csdo_is_stopped(const co_csdo_t *sdo);
 
 /// Returns a pointer to the CAN network of a Client-SDO.
 can_net_t *co_csdo_get_net(const co_csdo_t *sdo);

@@ -819,7 +819,8 @@ co_lss_start(co_lss_t *lss)
 {
 	assert(lss);
 
-	co_lss_stop(lss);
+	if (!co_lss_is_stopped(lss))
+		return 0;
 
 	co_lss_enter(lss, co_lss_wait_state);
 
@@ -831,12 +832,23 @@ co_lss_stop(co_lss_t *lss)
 {
 	assert(lss);
 
-	co_lss_enter(lss, co_lss_stopped_state);
+	if (co_lss_is_stopped(lss))
+		return;
 
 #if !LELY_NO_CO_MASTER
 	can_timer_stop(lss->timer);
 #endif
 	can_recv_stop(lss->recv);
+
+	co_lss_enter(lss, co_lss_stopped_state);
+}
+
+int
+co_lss_is_stopped(const co_lss_t *lss)
+{
+	assert(lss);
+
+	return lss->state == co_lss_stopped_state;
 }
 
 co_nmt_t *
