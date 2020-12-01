@@ -168,7 +168,60 @@ co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 	srv->lss = NULL;
 #endif
 
+#if LELY_NO_MALLOC
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
+	if (co_nmt_srv_init_pdo(srv) == -1)
+		goto error_init_pdo;
+#endif
+#if !LELY_NO_CO_SDO
+	if (co_nmt_srv_init_sdo(srv) == -1)
+		goto error_init_sdo;
+#endif
+#if !LELY_NO_CO_SYNC
+	if (co_nmt_srv_init_sync(srv) == -1)
+		goto error_init_sync;
+#endif
+#if !LELY_NO_CO_TIME
+	if (co_nmt_srv_init_time(srv) == -1)
+		goto error_init_time;
+#endif
+#if !LELY_NO_CO_EMCY
+	if (co_nmt_srv_init_emcy(srv) == -1)
+		goto error_init_emcy;
+#endif
+#if !LELY_NO_CO_LSS
+	if (co_nmt_srv_init_lss(srv) == -1)
+		goto error_init_lss;
+#endif
+#endif // LELY_NO_MALLOC
+
 	return srv;
+
+#if LELY_NO_MALLOC
+#if !LELY_NO_CO_LSS
+	// co_nmt_srv_fini_lss(srv);
+error_init_lss:
+#endif
+#if !LELY_NO_CO_EMCY
+	co_nmt_srv_fini_emcy(srv);
+error_init_emcy:
+#endif
+#if !LELY_NO_CO_TIME
+	co_nmt_srv_fini_time(srv);
+error_init_time:
+#endif
+#if !LELY_NO_CO_SYNC
+	co_nmt_srv_fini_sync(srv);
+error_init_sync:
+#endif
+	co_nmt_srv_fini_sdo(srv);
+error_init_sdo:
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
+	co_nmt_srv_fini_pdo(srv);
+error_init_pdo:
+#endif
+	return NULL;
+#endif // LELY_NO_MALLOC
 }
 
 void
@@ -177,6 +230,25 @@ co_nmt_srv_fini(struct co_nmt_srv *srv)
 	assert(srv);
 
 	co_nmt_srv_set(srv, 0);
+
+#if LELY_NO_MALLOC
+#if !LELY_NO_CO_LSS
+	co_nmt_srv_fini_lss(srv);
+#endif
+#if !LELY_NO_CO_EMCY
+	co_nmt_srv_fini_emcy(srv);
+#endif
+#if !LELY_NO_CO_TIME
+	co_nmt_srv_fini_time(srv);
+#endif
+#if !LELY_NO_CO_SYNC
+	co_nmt_srv_fini_sync(srv);
+#endif
+	co_nmt_srv_fini_sdo(srv);
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
+	co_nmt_srv_fini_pdo(srv);
+#endif
+#endif // LELY_NO_MALLOC
 }
 
 void
@@ -190,69 +262,93 @@ co_nmt_srv_set(struct co_nmt_srv *srv, int set)
 #if !LELY_NO_CO_LSS
 	if ((srv->set & ~set) & CO_NMT_SRV_LSS) {
 		co_nmt_srv_stop_lss(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_lss(srv);
+#endif
 	}
 #endif
 #if !LELY_NO_CO_EMCY
 	if ((srv->set & ~set) & CO_NMT_SRV_EMCY) {
 		co_nmt_srv_stop_emcy(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_emcy(srv);
+#endif
 	}
 #endif
 #if !LELY_NO_CO_TIME
 	if ((srv->set & ~set) & CO_NMT_SRV_TIME) {
 		co_nmt_srv_stop_time(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_time(srv);
+#endif
 	}
 #endif
 #if !LELY_NO_CO_SYNC
 	if ((srv->set & ~set) & CO_NMT_SRV_SYNC) {
 		co_nmt_srv_stop_sync(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_sync(srv);
+#endif
 	}
 #endif
 	if ((srv->set & ~set) & CO_NMT_SRV_SDO) {
 		co_nmt_srv_stop_sdo(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_sdo(srv);
+#endif
 	}
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 	if ((srv->set & ~set) & CO_NMT_SRV_PDO) {
 		co_nmt_srv_stop_pdo(srv);
+#if !LELY_NO_MALLOC
 		co_nmt_srv_fini_pdo(srv);
+#endif
 	}
 #endif
 
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 	if ((set & ~srv->set) & CO_NMT_SRV_PDO) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_pdo(srv))
+#endif
 			co_nmt_srv_start_pdo(srv);
 	}
 #endif
 	if ((set & ~srv->set) & CO_NMT_SRV_SDO) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_sdo(srv))
+#endif
 			co_nmt_srv_start_sdo(srv);
 	}
 #if !LELY_NO_CO_SYNC
 	if ((set & ~srv->set) & CO_NMT_SRV_SYNC) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_sync(srv))
+#endif
 			co_nmt_srv_start_sync(srv);
 	}
 #endif
 #if !LELY_NO_CO_TIME
 	if ((set & ~srv->set) & CO_NMT_SRV_TIME) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_time(srv))
+#endif
 			co_nmt_srv_start_time(srv);
 	}
 #endif
 #if !LELY_NO_CO_EMCY
 	if ((set & ~srv->set) & CO_NMT_SRV_EMCY) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_emcy(srv))
+#endif
 			co_nmt_srv_start_emcy(srv);
 	}
 #endif
 #if !LELY_NO_CO_LSS
 	if ((set & ~srv->set) & CO_NMT_SRV_LSS) {
+#if !LELY_NO_MALLOC
 		if (!co_nmt_srv_init_lss(srv))
+#endif
 			co_nmt_srv_start_lss(srv);
 	}
 #endif
