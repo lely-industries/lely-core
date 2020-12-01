@@ -55,6 +55,7 @@ src_util_tests += util/test-cmp.cpp
 src_util_tests += util/test-dllist.cpp
 src_util_tests += util/test-endian.cpp
 src_util_tests += util/test-membuf.cpp
+src_util_tests += util/test-memory.cpp
 src_util_tests += util/test-mempool.cpp
 src_util_tests += util/test-pheap.cpp
 src_util_tests += util/test-rbtree.cpp
