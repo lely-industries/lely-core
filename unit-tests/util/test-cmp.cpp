@@ -123,3 +123,63 @@ TEST(Util_Cmp, StrCaseCmp_StrLessNull) {
 
   CHECK_COMPARE(0, >, str_case_cmp(p1, p2));
 }
+
+#define LELY_UTIL_DEFINE_TYPE(name, type) \
+  TEST(Util_Cmp, name##Cmp_Equal) { \
+    const type a{}; \
+    const type b{}; \
+\
+    const auto cmp = name##_cmp(&a, &b); \
+\
+    CHECK_EQUAL(0, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_FirstGreater) { \
+    const type a = static_cast<type>(1); \
+    const type b = static_cast<type>(0); \
+\
+    const auto cmp = name##_cmp(&a, &b); \
+\
+    CHECK_EQUAL(1, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_SecondGreater) { \
+    const type a = static_cast<type>(0); \
+    const type b = static_cast<type>(1); \
+\
+    const auto cmp = name##_cmp(&a, &b); \
+\
+    CHECK_EQUAL(-1, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_PtrEqual) { \
+    const type a{}; \
+\
+    const auto cmp = name##_cmp(&a, &a); \
+\
+    CHECK_EQUAL(0, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_FirstPtrNull) { \
+    const type a{}; \
+\
+    const auto cmp = name##_cmp(nullptr, &a); \
+\
+    CHECK_EQUAL(-1, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_SecondPtrNull) { \
+    const type a{}; \
+\
+    const auto cmp = name##_cmp(&a, nullptr); \
+\
+    CHECK_EQUAL(1, cmp); \
+  } \
+\
+  TEST(Util_Cmp, name##Cmp_BothPtrNull) { \
+    const auto cmp = name##_cmp(nullptr, nullptr); \
+\
+    CHECK_EQUAL(0, cmp); \
+  }
+#include <lely/util/def/type.def>
+#undef LELY_UTIL_DEFINE_TYPE
