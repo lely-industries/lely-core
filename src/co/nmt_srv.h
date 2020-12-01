@@ -98,8 +98,15 @@ struct co_nmt_srv {
 extern "C" {
 #endif
 
-/// Initializes a CANopen NMT service manager. @see co_nmt_srv_fini()
-void co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt);
+/**
+ * Initializes a CANopen NMT service manager.
+ *
+ * @returns <b>srv</b> on success, or NULL on error. In the latter case, the
+ * error number can be obtained with get_errc().
+ *
+ * @see co_nmt_srv_fini()
+ */
+struct co_nmt_srv *co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt);
 
 /// Finalizes a CANopen NMT service manager. @see co_nmt_srv_init()
 void co_nmt_srv_fini(struct co_nmt_srv *srv);
@@ -108,13 +115,12 @@ void co_nmt_srv_fini(struct co_nmt_srv *srv);
  * Enables/disables the specified CANopen services.
  *
  * @param srv a pointer to a CANopen NMT service manager.
- * @param nmt a pointer to an NMT master/slave service.
  * @param set the services to be enabled (any combination of #CO_NMT_SRV_PDO,
  *            #CO_NMT_SRV_SDO, #CO_NMT_SRV_SYNC, #CO_NMT_SRV_TIME and
  *            #CO_NMT_SRV_EMCY). Services not part of <b>set</b> will be
  *            disabled.
  */
-void co_nmt_srv_set(struct co_nmt_srv *srv, co_nmt_t *nmt, int set);
+void co_nmt_srv_set(struct co_nmt_srv *srv, int set);
 
 #ifdef __cplusplus
 }

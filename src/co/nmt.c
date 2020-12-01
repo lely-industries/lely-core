@@ -2644,7 +2644,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2685,7 +2685,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2729,7 +2729,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 		can_recv_start(nmt->recv_000, nmt->net, CO_NMT_CS_CANID, 0);
 
 	// Enable LSS.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_SRV_LSS);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_SRV_LSS);
 
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_RESET_COMM, nmt->cs_data);
@@ -2807,7 +2807,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services except PDO.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_PREOP_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_PREOP_SRV);
 
 	nmt->st = CO_NMT_ST_PREOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2874,7 +2874,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_START_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_START_SRV);
 
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2948,7 +2948,7 @@ co_nmt_stop_on_enter(co_nmt_t *nmt)
 	diag(DIAG_INFO, 0, "NMT: entering stopped state");
 
 	// Disable all services (except LSS).
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_STOP_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_STOP_SRV);
 
 	nmt->st = CO_NMT_ST_STOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -3334,7 +3334,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->state = NULL;
 
-	co_nmt_srv_init(&nmt->srv, nmt);
+	if (!co_nmt_srv_init(&nmt->srv, nmt)) {
+		errc = get_errc();
+		goto error_init_srv;
+	}
 
 	nmt->startup = 0;
 #ifndef LELY_NO_CO_MASTER
@@ -3569,6 +3572,7 @@ error_create_recv_700:
 	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
+error_init_srv:
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
 error_write_dcf_comm:
 #ifndef LELY_NO_CO_DCF_RESTORE
