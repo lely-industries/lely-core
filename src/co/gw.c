@@ -1381,6 +1381,11 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 		timeout = timeout ? MIN(timeout, gw->timeout) : gw->timeout;
 	co_csdo_set_timeout(sdo, timeout);
 
+	if (co_csdo_start(sdo) == -1) {
+		errc = get_errc();
+		goto error_start_sdo;
+	}
+
 	struct co_gw_job *job = co_gw_job_create(
 			pself, net, sdo, &co_gw_job_sdo_dtor, req);
 	if (!job) {
@@ -1391,6 +1396,7 @@ co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
 	return job;
 
 error_create_job:
+error_start_sdo:
 	co_csdo_destroy(sdo);
 error_create_sdo:
 error_param:

@@ -990,16 +990,9 @@ co_tpdo_init(co_tpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	pdo->sample_ind = &default_sample_ind;
 	pdo->sample_data = NULL;
 
-	if (co_tpdo_start(pdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return pdo;
 
-	// co_tpdo_stop(pdo);
-error_start:
-	can_timer_destroy(pdo->timer_swnd);
+	// can_timer_destroy(pdo->timer_swnd);
 error_create_timer_swnd:
 	can_timer_destroy(pdo->timer_event);
 error_create_timer_event:

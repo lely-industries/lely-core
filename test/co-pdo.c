@@ -24,12 +24,14 @@ main(void)
 	tap_assert(rdev);
 	co_rpdo_t *rpdo = co_rpdo_create(net, rdev, 1);
 	tap_assert(rpdo);
+	tap_assert(!co_rpdo_start(rpdo));
 
 	co_dev_t *tdev = co_dev_create_from_dcf_file(
 			TEST_SRCDIR "/co-pdo-transmit.dcf");
 	tap_assert(tdev);
 	co_tpdo_t *tpdo = co_tpdo_create(net, tdev, 1);
 	tap_assert(tpdo);
+	tap_assert(!co_tpdo_start(tpdo));
 
 	tap_test(co_dev_set_val_u32(tdev, 0x2000, 0x00, VAL_2000),
 			"store object 2000");

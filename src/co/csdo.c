@@ -2658,16 +2658,9 @@ co_csdo_init(co_csdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	sdo->up_ind = NULL;
 	sdo->up_ind_data = NULL;
 
-	if (co_csdo_start(sdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return sdo;
 
-	// co_csdo_stop(sdo);
-error_start:
-	can_timer_destroy(sdo->timer);
+	// can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
 error_create_recv:

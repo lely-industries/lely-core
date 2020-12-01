@@ -2663,17 +2663,10 @@ co_lss_init(co_lss_t *lss, co_nmt_t *nmt)
 	lss->scan_data = NULL;
 #endif
 
-	if (co_lss_start(lss) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return lss;
 
-	// co_lss_stop(lss);
-error_start:
 #ifndef LELY_NO_CO_MASTER
-	can_timer_destroy(lss->timer);
+	// can_timer_destroy(lss->timer);
 error_create_timer:
 #endif
 	can_recv_destroy(lss->recv);

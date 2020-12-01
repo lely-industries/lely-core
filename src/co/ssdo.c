@@ -1904,16 +1904,9 @@ co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	memset(sdo->begin, 0, CO_SSDO_MEMBUF_SIZE);
 #endif
 
-	if (co_ssdo_start(sdo) == -1) {
-		errc = get_errc();
-		goto error_start;
-	}
-
 	return sdo;
 
-	// co_ssdo_stop(sdo);
-error_start:
-	can_timer_destroy(sdo->timer);
+	// can_timer_destroy(sdo->timer);
 error_create_timer:
 	can_recv_destroy(sdo->recv);
 error_create_recv:

@@ -198,7 +198,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDOMaxNum) {
   rpdo = nullptr;
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_ExtendedFrame) {
+TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -213,9 +213,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_ExtendedFrame) {
   CreateObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -227,7 +229,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_ExtendedFrame) {
   CHECK_EQUAL(0, comm->sync);
 }
 
-TEST(CO_RpdoCreate, CoRpdoCreate_InvalidBit) {
+TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
   CreateObj(obj1400, 0x1400u);
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -242,9 +244,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_InvalidBit) {
   CreateObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -282,9 +286,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   CreateObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x06u, comm->n);
@@ -309,9 +315,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
   }
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* map = co_rpdo_get_map_par(rpdo);
   CHECK_EQUAL(CO_PDO_NUM_MAPS, map->n);
@@ -347,9 +355,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   CreateObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x07u, comm->n);
@@ -376,9 +386,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
   CreateObj(obj1600, 0x1600u);
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -410,9 +422,11 @@ TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
                            co_unsigned32_t(0x00000001u));
 
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
-
   CHECK(rpdo != nullptr);
   CHECK_EQUAL(RPDO_NUM, co_rpdo_get_num(rpdo));
+
+  const auto ret = co_rpdo_start(rpdo);
+  CHECK_EQUAL(0, ret);
 
   const auto* comm = co_rpdo_get_comm_par(rpdo);
   CHECK_EQUAL(0x02u, comm->n);
@@ -479,6 +493,8 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     rpdo = co_rpdo_create(net, dev, RPDO_NUM);
     CHECK(rpdo != nullptr);
   }
+
+  void StartRpdo() { CHECK_EQUAL(0, co_rpdo_start(rpdo)); }
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
@@ -560,6 +576,7 @@ TEST(CO_Rpdo, CoRpdoRtr_RPDONotValid) {
                            co_unsigned8_t(0x00u));  // synchronous
 
   CreateRpdo();
+  StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
@@ -581,6 +598,7 @@ TEST(CO_Rpdo, CoRpdoRtr) {
                            co_unsigned8_t(0x00u));  // synchronous
 
   CreateRpdo();
+  StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
@@ -605,6 +623,7 @@ TEST(CO_Rpdo, CoRpdoRtr_ExtendedFrame) {
                            co_unsigned8_t(0x00u));  // synchronous
 
   CreateRpdo();
+  StartRpdo();
 
   const auto ret = co_rpdo_rtr(rpdo);
 
@@ -701,6 +720,7 @@ TEST(CO_Rpdo, CoRpdoSync_NoErrFunc) {
   int data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -745,6 +765,7 @@ TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
   int data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -796,6 +817,7 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
   int err_data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -851,6 +873,7 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &ind_data);
   int err_data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &err_data);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -919,6 +942,7 @@ TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
   int data = 0;
   co_rpdo_set_ind(rpdo, rpdo_ind_func, &data);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -1064,6 +1088,7 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   int data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &data);
   const timespec tp = {0, 1000000u};  // 1 ms
+  StartRpdo();
 
   const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
