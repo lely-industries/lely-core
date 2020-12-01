@@ -1,5 +1,5 @@
 if ECSS_COMPLIANCE
-SUBDIRS = compat tap util can co
+SUBDIRS = compat util can co
 else
 SUBDIRS = compat tap util can ev io2 co
 if PLATFORM_LINUX
