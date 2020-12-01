@@ -89,6 +89,7 @@ AS_IF([test "$enable_tools" == "no"], [
 AM_CONDITIONAL([NO_TESTS], [false])
 AC_ARG_ENABLE([tests],
 	AS_HELP_STRING([--disable-tests], [disable tests]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_tests=no])
 AS_IF([test "$enable_tests" == "no"], [
 	AM_CONDITIONAL([NO_TESTS], [true])
 ])
