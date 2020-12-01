@@ -49,7 +49,6 @@
 #include "nmt_srv.h"
 
 #include <assert.h>
-#include <stdlib.h>
 
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 /// Initializes all Receive/Transmit-PDO services. @see co_nmt_srv_fini_pdo()
@@ -268,6 +267,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_PDO));
+	alloc_t *alloc = co_nmt_get_alloc(srv->nmt);
 	can_net_t *net = co_nmt_get_net(srv->nmt);
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
@@ -286,11 +286,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 
 	// Create the Receive-PDOs.
 	if (nrpdo) {
-		srv->rpdos = malloc(nrpdo * sizeof(co_rpdo_t *));
-		if (!srv->rpdos) {
-			set_errc(errno2c(errno));
+		srv->rpdos = mem_alloc(alloc, _Alignof(co_rpdo_t *),
+				nrpdo * sizeof(co_rpdo_t *));
+		if (!srv->rpdos)
 			goto error;
-		}
 
 		for (co_unsigned16_t i = 0; i < nrpdo; i++) {
 			co_rpdo_t **ppdo = &srv->rpdos[srv->nrpdo++];
@@ -323,11 +322,10 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv)
 
 	// Create the Transmit-PDOs.
 	if (ntpdo) {
-		srv->tpdos = malloc(ntpdo * sizeof(co_tpdo_t *));
-		if (!srv->tpdos) {
-			set_errc(errno2c(errno));
+		srv->tpdos = mem_alloc(alloc, _Alignof(co_tpdo_t *),
+				ntpdo * sizeof(co_tpdo_t *));
+		if (!srv->tpdos)
 			goto error;
-		}
 
 		for (co_unsigned16_t i = 0; i < ntpdo; i++) {
 			co_tpdo_t **ppdo = &srv->tpdos[srv->ntpdo++];
@@ -357,12 +355,13 @@ co_nmt_srv_fini_pdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_PDO));
+	alloc_t *alloc = co_nmt_get_alloc(srv->nmt);
 
 #if !LELY_NO_CO_TPDO
 	// Destroy the Transmit-PDOs.
 	for (size_t i = 0; i < srv->ntpdo; i++)
 		co_tpdo_destroy(srv->tpdos[i]);
-	free(srv->tpdos);
+	mem_free(alloc, srv->tpdos);
 	srv->tpdos = NULL;
 	srv->ntpdo = 0;
 #endif
@@ -371,7 +370,7 @@ co_nmt_srv_fini_pdo(struct co_nmt_srv *srv)
 	// Destroy the Receive-PDOs.
 	for (size_t i = 0; i < srv->nrpdo; i++)
 		co_rpdo_destroy(srv->rpdos[i]);
-	free(srv->rpdos);
+	mem_free(alloc, srv->rpdos);
 	srv->rpdos = NULL;
 	srv->nrpdo = 0;
 #endif
@@ -454,6 +453,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 	assert(!(srv->set & CO_NMT_SRV_SDO));
 	assert(!srv->ssdos);
 	assert(!srv->nssdo);
+	alloc_t *alloc = co_nmt_get_alloc(srv->nmt);
 	can_net_t *net = co_nmt_get_net(srv->nmt);
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
@@ -469,11 +469,10 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 
 	// Create the Server-SDOs.
 	if (nssdo) {
-		srv->ssdos = malloc(nssdo * sizeof(co_ssdo_t *));
-		if (!srv->ssdos) {
-			set_errc(errno2c(errno));
+		srv->ssdos = mem_alloc(alloc, _Alignof(co_ssdo_t *),
+				nssdo * sizeof(co_ssdo_t *));
+		if (!srv->ssdos)
 			goto error;
-		}
 
 		for (co_unsigned8_t i = 0; i < nssdo; i++) {
 			co_ssdo_t **psdo = &srv->ssdos[srv->nssdo++];
@@ -502,11 +501,10 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 
 	// Create the Client-SDOs.
 	if (ncsdo) {
-		srv->csdos = malloc(ncsdo * sizeof(co_csdo_t *));
-		if (!srv->csdos) {
-			set_errc(errno2c(errno));
+		srv->csdos = mem_alloc(alloc, _Alignof(co_csdo_t *),
+				ncsdo * sizeof(co_csdo_t *));
+		if (!srv->csdos)
 			goto error;
-		}
 
 		for (co_unsigned8_t i = 0; i < ncsdo; i++) {
 			co_csdo_t **psdo = &srv->csdos[srv->ncsdo++];
@@ -535,12 +533,13 @@ co_nmt_srv_fini_sdo(struct co_nmt_srv *srv)
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_SDO));
+	alloc_t *alloc = co_nmt_get_alloc(srv->nmt);
 
 #if !LELY_NO_CO_CSDO
 	// Destroy the Client-SDOs.
 	for (size_t i = 0; i < srv->ncsdo; i++)
 		co_csdo_destroy(srv->csdos[i]);
-	free(srv->csdos);
+	mem_free(alloc, srv->csdos);
 	srv->csdos = NULL;
 	srv->ncsdo = 0;
 #endif
@@ -548,7 +547,7 @@ co_nmt_srv_fini_sdo(struct co_nmt_srv *srv)
 	// Destroy the Server-SDOs (skipping the default one).
 	for (size_t i = 0; i < srv->nssdo; i++)
 		co_ssdo_destroy(srv->ssdos[i]);
-	free(srv->ssdos);
+	mem_free(alloc, srv->ssdos);
 	srv->ssdos = NULL;
 	srv->nssdo = 0;
 }
