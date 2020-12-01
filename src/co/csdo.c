@@ -943,11 +943,12 @@ co_csdo_start(co_csdo_t *sdo)
 {
 	assert(sdo);
 
-	co_csdo_stop(sdo);
+	if (!co_csdo_is_stopped(sdo))
+		return 0;
 
-	co_obj_t *obj_1280 = NULL;
 	if (sdo->dev) {
-		obj_1280 = co_dev_find_obj(sdo->dev, 0x1280 + sdo->num - 1);
+		co_obj_t *obj_1280 = co_dev_find_obj(
+				sdo->dev, 0x1280 + sdo->num - 1);
 		// Copy the SDO parameter record.
 		size_t size = co_obj_sizeof_val(obj_1280);
 		memcpy(&sdo->par, co_obj_addressof_val(obj_1280),
@@ -957,16 +958,15 @@ co_csdo_start(co_csdo_t *sdo)
 		co_obj_set_dn_ind(obj_1280, &co_1280_dn_ind, sdo);
 	}
 
+	co_csdo_enter(sdo, co_csdo_wait_state);
+
 	if (co_csdo_update(sdo) == -1)
 		goto error_update;
-
-	co_csdo_enter(sdo, co_csdo_wait_state);
 
 	return 0;
 
 error_update:
-	if (obj_1280)
-		co_obj_set_dn_ind(obj_1280, NULL, NULL);
+	co_csdo_stop(sdo);
 	return -1;
 }
 
@@ -975,10 +975,11 @@ co_csdo_stop(co_csdo_t *sdo)
 {
 	assert(sdo);
 
+	if (co_csdo_is_stopped(sdo))
+		return;
+
 	// Abort any ongoing transfer.
 	co_csdo_abort_req(sdo, CO_SDO_AC_NO_SDO);
-
-	co_csdo_enter(sdo, co_csdo_stopped_state);
 
 	can_timer_stop(sdo->timer);
 	can_recv_stop(sdo->recv);
@@ -990,6 +991,16 @@ co_csdo_stop(co_csdo_t *sdo)
 		// parameter record.
 		co_obj_set_dn_ind(obj_1280, NULL, NULL);
 	}
+
+	co_csdo_enter(sdo, co_csdo_stopped_state);
+}
+
+int
+co_csdo_is_stopped(const co_csdo_t *sdo)
+{
+	assert(sdo);
+
+	return sdo->state == co_csdo_stopped_state;
 }
 
 alloc_t *

@@ -52,6 +52,8 @@ struct co_tpdo {
 	co_dev_t *dev;
 	/// The PDO number.
 	co_unsigned16_t num;
+	/// A flag specifying whether the Transmit-PDO service is stopped.
+	int stopped;
 	/// The PDO communication parameter.
 	struct co_pdo_comm_par comm;
 	/// The PDO mapping parameter.
@@ -238,7 +240,8 @@ co_tpdo_start(co_tpdo_t *pdo)
 {
 	assert(pdo);
 
-	co_tpdo_stop(pdo);
+	if (!pdo->stopped)
+		return 0;
 
 	co_obj_t *obj_1800 = co_dev_find_obj(pdo->dev, 0x1800 + pdo->num - 1);
 	assert(obj_1800);
@@ -266,6 +269,8 @@ co_tpdo_start(co_tpdo_t *pdo)
 	co_tpdo_init_recv(pdo);
 	co_tpdo_init_timer_event(pdo);
 
+	pdo->stopped = 0;
+
 	return 0;
 }
 
@@ -273,6 +278,9 @@ void
 co_tpdo_stop(co_tpdo_t *pdo)
 {
 	assert(pdo);
+
+	if (pdo->stopped)
+		return;
 
 	can_timer_stop(pdo->timer_swnd);
 	can_timer_stop(pdo->timer_event);
@@ -290,6 +298,16 @@ co_tpdo_stop(co_tpdo_t *pdo)
 	co_obj_t *obj_1800 = co_dev_find_obj(pdo->dev, 0x1800 + pdo->num - 1);
 	assert(obj_1800);
 	co_obj_set_dn_ind(obj_1800, NULL, NULL);
+
+	pdo->stopped = 1;
+}
+
+int
+co_tpdo_is_stopped(const co_tpdo_t *pdo)
+{
+	assert(pdo);
+
+	return pdo->stopped;
 }
 
 alloc_t *
@@ -949,6 +967,8 @@ co_tpdo_init(co_tpdo_t *pdo, can_net_t *net, co_dev_t *dev, co_unsigned16_t num)
 	pdo->net = net;
 	pdo->dev = dev;
 	pdo->num = num;
+
+	pdo->stopped = 1;
 
 	memset(&pdo->comm, 0, sizeof(pdo->comm));
 	memset(&pdo->map, 0, sizeof(pdo->map));

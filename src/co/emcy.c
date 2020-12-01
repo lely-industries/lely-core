@@ -88,6 +88,8 @@ struct co_emcy {
 	can_net_t *net;
 	/// A pointer to a CANopen device.
 	co_dev_t *dev;
+	/// A flag specifying whether the EMCY service is stopped.
+	int stopped;
 	/// A pointer to the error register object.
 	co_sub_t *sub_1001_00;
 	/// A pointer to the pre-defined error field object.
@@ -266,7 +268,8 @@ co_emcy_start(co_emcy_t *emcy)
 {
 	assert(emcy);
 
-	co_emcy_stop(emcy);
+	if (!emcy->stopped)
+		return 0;
 
 	can_net_get_time(emcy->net, &emcy->inhibit);
 
@@ -295,6 +298,8 @@ co_emcy_start(co_emcy_t *emcy)
 		}
 	}
 
+	emcy->stopped = 0;
+
 	return 0;
 }
 
@@ -302,6 +307,9 @@ void
 co_emcy_stop(co_emcy_t *emcy)
 {
 	assert(emcy);
+
+	if (emcy->stopped)
+		return;
 
 	can_timer_stop(emcy->timer);
 
@@ -327,6 +335,16 @@ co_emcy_stop(co_emcy_t *emcy)
 	// field.
 	if (emcy->obj_1003)
 		co_obj_set_dn_ind(emcy->obj_1003, NULL, NULL);
+
+	emcy->stopped = 1;
+}
+
+int
+co_emcy_is_stopped(const co_emcy_t *emcy)
+{
+	assert(emcy);
+
+	return emcy->stopped;
 }
 
 alloc_t *
@@ -811,6 +829,8 @@ co_emcy_init(co_emcy_t *emcy, can_net_t *net, co_dev_t *dev)
 
 	emcy->net = net;
 	emcy->dev = dev;
+
+	emcy->stopped = 1;
 
 	emcy->sub_1001_00 = co_dev_find_sub(emcy->dev, 0x1001, 0x00);
 	if (!emcy->sub_1001_00) {

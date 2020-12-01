@@ -88,12 +88,20 @@ void co_rpdo_destroy(co_rpdo_t *pdo);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_rpdo_stop()
+ * @see co_rpdo_stop(), co_rpdo_is_stopped()
  */
 int co_rpdo_start(co_rpdo_t *pdo);
 
-/// Stops a Receive-PDO service. @see co_rpdo_start()
+/// Stops a Receive-PDO service. @see co_rpdo_start(), co_rpdo_is_stopped()
 void co_rpdo_stop(co_rpdo_t *pdo);
+
+/**
+ * Retuns 1 if the specified Receive-PDO service is stopped, and 0 if not.
+ *
+ * @see co_rpdo_start, co_rpdo_stop()
+ */
+int co_rpdo_is_stopped(const co_rpdo_t *pdo);
+
 /*
  * Returns a pointer to the allocator used to allocate a Receive-PDO.
  *
