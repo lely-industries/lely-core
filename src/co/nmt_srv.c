@@ -120,21 +120,35 @@ co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 
 	srv->set = 0;
 
+#if !LELY_NO_CO_RPDO
 	srv->rpdos = NULL;
 	srv->nrpdo = 0;
+#endif
+#if !LELY_NO_CO_TPDO
 	srv->tpdos = NULL;
 	srv->ntpdo = 0;
+#endif
 
 	srv->ssdos = NULL;
 	srv->nssdo = 0;
+#if !LELY_NO_CO_CSDO
 	srv->csdos = NULL;
 	srv->ncsdo = 0;
+#endif
 
+#if !LELY_NO_CO_SYNC
 	srv->sync = NULL;
+#endif
+#if !LELY_NO_CO_TIME
 	srv->time = NULL;
+#endif
+#if !LELY_NO_CO_EMCY
 	srv->emcy = NULL;
+#endif
 
+#if !LELY_NO_CO_LSS
 	srv->lss = NULL;
+#endif
 }
 
 void
@@ -208,14 +222,13 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 {
 	assert(srv);
 	assert(!(srv->set & CO_NMT_SRV_PDO));
-	assert(!srv->rpdos);
-	assert(!srv->nrpdo);
-	assert(!srv->tpdos);
-	assert(!srv->ntpdo);
 
 	srv->set |= CO_NMT_SRV_PDO;
 
 #if !LELY_NO_CO_RPDO
+	assert(!srv->rpdos);
+	assert(!srv->nrpdo);
+
 	// Create the Receive-PDOs.
 	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 		co_obj_t *obj_1400 = co_dev_find_obj(dev, 0x1400 + i);
@@ -240,9 +253,12 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		srv->nrpdo = i + 1;
 	}
-#endif
+#endif // !LELY_NO_CO_RPDO
 
 #if !LELY_NO_CO_TPDO
+	assert(!srv->tpdos);
+	assert(!srv->ntpdo);
+
 	// Create the Transmit-PDOs.
 	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS; i++) {
 		co_obj_t *obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
@@ -266,7 +282,7 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		srv->ntpdo = i + 1;
 	}
-#endif
+#endif // !LELY_NO_CO_TPDO
 
 	return;
 
@@ -323,8 +339,6 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 	assert(!(srv->set & CO_NMT_SRV_SDO));
 	assert(!srv->ssdos);
 	assert(!srv->nssdo);
-	assert(!srv->csdos);
-	assert(!srv->ncsdo);
 
 	srv->set |= CO_NMT_SRV_SDO;
 
@@ -354,6 +368,9 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 	}
 
 #if !LELY_NO_CO_CSDO
+	assert(!srv->csdos);
+	assert(!srv->ncsdo);
+
 	// Create the Client-SDOs.
 	for (co_unsigned8_t i = 0; i < CO_NUM_SDO; i++) {
 		co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
@@ -376,7 +393,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 
 		srv->ncsdo = i + 1;
 	}
-#endif
+#endif // !LELY_NO_CO_CSDO
 
 	return;
 
@@ -502,7 +519,7 @@ co_nmt_srv_fini_time(struct co_nmt_srv *srv)
 	srv->time = NULL;
 }
 
-#endif
+#endif // !LELY_NO_CO_TIME
 
 #if !LELY_NO_CO_EMCY
 
@@ -537,7 +554,7 @@ co_nmt_srv_fini_emcy(struct co_nmt_srv *srv)
 	srv->emcy = NULL;
 }
 
-#endif
+#endif // !LELY_NO_CO_EMCY
 
 #if !LELY_NO_CO_LSS
 
@@ -571,4 +588,4 @@ co_nmt_srv_fini_lss(struct co_nmt_srv *srv)
 	srv->lss = NULL;
 }
 
-#endif
+#endif // !LELY_NO_CO_LSS

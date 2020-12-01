@@ -1989,23 +1989,37 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 co_rpdo_t *
 co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
+#if LELY_NO_CO_RPDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.nrpdo)
 		return NULL;
 
 	return nmt->srv.rpdos[n - 1];
+#endif
 }
 
 co_tpdo_t *
 co_nmt_get_tpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
+#if LELY_NO_CO_TPDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.ntpdo)
 		return NULL;
 
 	return nmt->srv.tpdos[n - 1];
+#endif
 }
 
 co_ssdo_t *
@@ -2022,44 +2036,75 @@ co_nmt_get_ssdo(const co_nmt_t *nmt, co_unsigned8_t n)
 co_csdo_t *
 co_nmt_get_csdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
+#if LELY_NO_CO_CSDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.ncsdo)
 		return NULL;
 
 	return nmt->srv.csdos[n - 1];
+#endif
 }
 
 co_sync_t *
 co_nmt_get_sync(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_SYNC
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.sync;
+#endif
 }
 
 co_time_t *
 co_nmt_get_time(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_TIME
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.time;
+#endif
 }
 
 co_emcy_t *
 co_nmt_get_emcy(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_EMCY
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.emcy;
+#endif
 }
 
 co_lss_t *
 co_nmt_get_lss(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_LSS
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.lss;
+#endif
 }
 
 #if !LELY_NO_CO_MASTER
