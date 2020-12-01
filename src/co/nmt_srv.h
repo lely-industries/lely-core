@@ -36,30 +36,44 @@ struct co_nmt_srv {
 	 * and #CO_NMT_SRV_EMCY).
 	 */
 	int set;
+#if !LELY_NO_CO_RPDO
 	/// An array of pointers to the Receive-PDO services.
 	co_rpdo_t **rpdos;
 	/// The number of Receive-PDO services.
 	co_unsigned16_t nrpdo;
+#endif
+#if !LELY_NO_CO_TPDO
 	/// An array of pointers to the Transmit-PDO services.
 	co_tpdo_t **tpdos;
 	/// The number of Transmit-PDO services.
 	co_unsigned16_t ntpdo;
+#endif
 	/// An array of pointers to the Server-SDO services.
 	co_ssdo_t **ssdos;
 	/// The number of Server-SDO services.
 	co_unsigned8_t nssdo;
+#if !LELY_NO_CO_CSDO
 	/// An array of pointers to the Client-SDO services.
 	co_csdo_t **csdos;
 	/// The number of Client-SDO services.
 	co_unsigned8_t ncsdo;
+#endif
+#if !LELY_NO_CO_SYNC
 	/// A pointer to the SYNC producer/consumer service.
 	co_sync_t *sync;
+#endif
+#if !LELY_NO_CO_TIME
 	/// A pointer to the TIME producer/consumer service.
 	co_time_t *time;
+#endif
+#if !LELY_NO_CO_EMCY
 	/// A pointer to the EMCY producer/consumer service.
 	co_emcy_t *emcy;
+#endif
+#if !LELY_NO_CO_LSS
 	/// A pointer to the LSS master/slave service.
 	co_lss_t *lss;
+#endif
 };
 
 /// The Receive/Transmit-PDO services.
