@@ -22,6 +22,10 @@
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
 #include <lely/util/diag.h>
@@ -38,6 +42,10 @@ inline void
 DisableDiagnosticMessages() {
   diag_set_handler(nullptr, nullptr);
   diag_at_set_handler(nullptr, nullptr);
+#if LELY_NO_DIAG
+  diag(DIAG_DEBUG, 0,
+       "Message suppressed");  // enforce coverage in NO_DIAG mode
+#endif
 }
 }  // namespace LelyUnitTest
 
