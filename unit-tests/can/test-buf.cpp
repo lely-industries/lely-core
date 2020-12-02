@@ -38,6 +38,9 @@ TEST_GROUP(CAN_BufInit) {
   TEST_TEARDOWN() { can_buf_fini(&buf); }
 };
 
+// given: statically initialized buffer
+// when: inspecting its contents
+// then: all fields are initialized properly
 TEST(CAN_BufInit, StaticInitializer) {
   POINTERS_EQUAL(nullptr, buf.ptr);
   CHECK_EQUAL(0, buf.size);
@@ -45,6 +48,9 @@ TEST(CAN_BufInit, StaticInitializer) {
   CHECK_EQUAL(0, buf.end);
 }
 
+// given: statically initialized buffer
+// when: checking it size
+// then: zero is returned
 TEST(CAN_BufInit, SizeZero) {
   can_buf_init(&buf, nullptr, 0);
 
@@ -52,6 +58,9 @@ TEST(CAN_BufInit, SizeZero) {
 }
 
 #if LELY_NO_MALLOC
+// given: buffer
+// when: initializing it with array
+// then: it size is reported as array size minus one
 TEST(CAN_BufInit, CanBufInit) {
   const size_t BUFFER_SIZE = 32;
   can_msg memory[BUFFER_SIZE];
@@ -100,6 +109,9 @@ TEST_GROUP(CAN_Buf) {
   }
 };
 
+// given: initialized buffer
+// when: writing zero frames to it
+// then: its size and capacity are not changed
 TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
   const auto frames_written = can_buf_write(&buf, nullptr, 0);
 
@@ -108,6 +120,9 @@ TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
+// given: initialized buffer
+// when: writing single frame to it
+// then: its size and capacity are changed and frame is stored in it.
 TEST(CAN_Buf, CanBufWrite_OneFrame) {
   can_msg msg = CAN_MSG_INIT;
   FillCanMsg(msg, 0x77, 5, 0xaa);
@@ -124,6 +139,9 @@ TEST(CAN_Buf, CanBufWrite_OneFrame) {
   CheckCanMsgTabs(&msg, out_tab, 1);
 }
 
+// given: initialized buffer
+// when: writing multiple frames to it
+// then: its size and capacity are changed and frames are stored in it.
 TEST(CAN_Buf, CanBufWrite_ManyFrames) {
   const size_t MSG_SIZE = 3;
   can_msg msg_tab[MSG_SIZE];
@@ -145,6 +163,9 @@ TEST(CAN_Buf, CanBufWrite_ManyFrames) {
   CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
 }
 
+// given: initialized buffer
+// when: writing more frames than buffer's capacity can hold
+// then: only capacity count of frames is stored in the buffer
 TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
   const size_t MSG_SIZE = BUF_SIZE + 1;
   can_msg msg_tab[MSG_SIZE];
@@ -166,6 +187,9 @@ TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
   CheckCanMsgTabs(msg_tab, out_tab, 15);
 }
 
+// given: buffer with some frames in it
+// when: clearing it
+// then: its size and capacity are restored to initial values
 TEST(CAN_Buf, CanBufClear) {
   const size_t MSG_SIZE = 5;
   can_msg msg_tab[MSG_SIZE];
@@ -179,6 +203,9 @@ TEST(CAN_Buf, CanBufClear) {
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
+// given: buffer with some frames in it
+// when: trying to peek messages from it using null target array
+// then: no frames are peeked
 TEST(CAN_Buf, CanBufPeek_NullPtr) {
   const size_t MSG_SIZE = 4;
   can_msg msg_tab[MSG_SIZE];
@@ -192,6 +219,10 @@ TEST(CAN_Buf, CanBufPeek_NullPtr) {
   CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
+// given: full buffer
+// when: reserving space for more frames
+// then: its size and capacity are not changed in 'no malloc' mode
+//       but is updated with dynamic allocation enabled
 TEST(CAN_Buf, CanBufReserve_Enlarge) {
   const size_t MSG_SIZE = 8;
   can_msg msg_tab[MSG_SIZE];
@@ -212,6 +243,9 @@ TEST(CAN_Buf, CanBufReserve_Enlarge) {
 #endif
 }
 
+// given: buffer with some frames
+// when: reserving space for frames count lesser than buffers capacity
+// then: its capacity is not changed
 TEST(CAN_Buf, CanBufReserve_BigEnough) {
   const size_t MSG_SIZE = 8;
   can_msg msg_tab[MSG_SIZE];
@@ -227,6 +261,9 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
 }
 
 #if LELY_NO_MALLOC
+// given: buffer
+// when: reserving space for more frames
+// then: its size and capacity are not changed in 'no malloc' mode
 TEST(CAN_Buf, CanBufReserve_NoMemory) {
   const auto capacity = can_buf_reserve(&buf, 2 * BUF_SIZE);
 
@@ -236,6 +273,9 @@ TEST(CAN_Buf, CanBufReserve_NoMemory) {
   CHECK_EQUAL(0, can_buf_size(&buf));
 }
 #else
+// given: buffer with some frames in it and some frames already read
+// when: reserving space for more frames
+// then: its size and capacity are properly changed and stored frames "wrapped"
 TEST(CAN_Buf, CanBufReserve_Wrapping) {
   const size_t MSG_SIZE = 15;
   can_msg msg_tab[MSG_SIZE];
@@ -262,4 +302,67 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
   CheckCanMsgTabs(msg_tab + 10, out_tab, 5);
   CheckCanMsgTabs(msg_tab, out_tab + 5, 6);
 }
-#endif  // !LELY_NO_MALLOC
+#endif  // LELY_NO_MALLOC
+
+// given: buffer
+// when: reading zero frames from it
+// then: zero frames are read
+TEST(CAN_Buf, CanBufRead_ZeroFrames) {
+  const auto frames_read = can_buf_read(&buf, nullptr, 0);
+
+  CHECK_EQUAL(0, frames_read);
+}
+
+// given: buffer with frame in it
+// when: reading single frame to it
+// then: frame is read and size is reduced
+TEST(CAN_Buf, CanBufRead_OneFrame) {
+  can_msg msg = CAN_MSG_INIT;
+  FillCanMsg(msg, 0x77, 5, 0xaa);
+  CHECK_EQUAL(1, can_buf_write(&buf, &msg, 1));
+
+  can_msg out_tab[BUF_SIZE + 1];
+  std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
+  const auto frames_read = can_buf_read(&buf, out_tab, BUF_SIZE + 1);
+
+  CHECK_EQUAL(1, frames_read);
+  CHECK_EQUAL(0, can_buf_size(&buf));
+  CheckCanMsgTabs(&msg, out_tab, 1);
+}
+
+// given: buffer with some frames in it
+// when: reading multiple frames from it
+// then: its size and capacity are changed and frames are read.
+TEST(CAN_Buf, CanBufRead_ManyFrames) {
+  const size_t MSG_SIZE = 3;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  FillCanMsg(msg_tab[0], 0x1d, 6, 0xa2);
+  FillCanMsg(msg_tab[1], 0x2c, 3, 0xb4);
+  FillCanMsg(msg_tab[2], 0x3b, 1, 0xc8);
+  CHECK_EQUAL(MSG_SIZE, can_buf_write(&buf, msg_tab, MSG_SIZE));
+
+  can_msg out_tab[BUF_SIZE + 1];
+  std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
+  const auto frames_read = can_buf_read(&buf, out_tab, BUF_SIZE + 1);
+
+  CHECK_EQUAL(MSG_SIZE, frames_read);
+  CHECK_EQUAL(0, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
+}
+
+// given: buffer with some frames in it
+// when: trying to read messages from it using null target array
+// then: frames are removed but not stored in target
+TEST(CAN_Buf, CanBufRead_NullPtr) {
+  const size_t MSG_SIZE = 4;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  const auto frames_read = can_buf_read(&buf, nullptr, 3);
+
+  CHECK_EQUAL(3, frames_read);
+  CHECK_EQUAL(MSG_SIZE - frames_read, can_buf_size(&buf));
+}
