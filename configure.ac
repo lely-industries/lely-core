@@ -159,6 +159,7 @@ CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_cxx=no])
 AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
