@@ -199,7 +199,7 @@ TEST(Util_Diag_Cmdname, OnlyCmd) {
 }
 
 TEST(Util_Diag_Cmdname, Delimeters) {
-#ifdef _WIN32
+#if _WIN32
   const std::string path = "test\\string\\testing\\fourtytwo";
 #else
   const std::string path = "test/string/testing/fourtytwo";

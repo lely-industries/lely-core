@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains the SocketCAN
  * interface declarations.
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,7 +28,7 @@
 // The SocketCAN CAN frame struct from <linux/can.h>
 struct can_frame;
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 // The SocketCAN CAN FD frame struct from <linux/can.h>
 struct canfd_frame;
 #endif
@@ -75,7 +75,7 @@ int can_frame2can_msg(const struct can_frame *src, struct can_msg *dst);
  */
 int can_msg2can_frame(const struct can_msg *src, struct can_frame *dst);
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 
 /**
  * Converts a SocketCAN CAN FD frame to a #can_msg frame.

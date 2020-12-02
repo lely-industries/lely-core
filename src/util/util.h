@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the utilities library.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,7 +27,7 @@
 
 #include <lely/util/util.h>
 
-#ifdef _WIN32
+#if _WIN32
 #include <windows.h>
 #elif defined(_POSIX_C_SOURCE)
 #include <unistd.h>

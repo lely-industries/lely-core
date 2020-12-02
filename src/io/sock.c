@@ -4,7 +4,7 @@
  *
  * @see lely/io/sock.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 /// A network socket.
 struct sock {
@@ -82,7 +82,7 @@ io_open_socket(int domain, int type)
 
 	SOCKET s;
 	switch (domain) {
-#ifdef _WIN32
+#if _WIN32
 	case IO_SOCK_BTH:
 		switch (type) {
 		case IO_SOCK_STREAM:
@@ -367,7 +367,7 @@ io_connect(io_handle_t handle, const io_addr_t *addr)
 	return handle->vtab->connect(handle, addr);
 }
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 int
 io_sock_get_domain(io_handle_t handle)
@@ -436,21 +436,21 @@ io_sock_shutdown(io_handle_t handle, int how)
 
 	switch (how) {
 	case IO_SHUT_RD:
-#ifdef _WIN32
+#if _WIN32
 		how = SD_RECEIVE;
 #else
 		how = SHUT_RD;
 #endif
 		break;
 	case IO_SHUT_WR:
-#ifdef _WIN32
+#if _WIN32
 		how = SD_SEND;
 #else
 		how = SHUT_WR;
 #endif
 		break;
 	case IO_SHUT_RDWR:
-#ifdef _WIN32
+#if _WIN32
 		how = SD_BOTH;
 #else
 		how = SHUT_RDWR;
@@ -473,7 +473,7 @@ io_sock_get_sockname(io_handle_t handle, io_addr_t *addr)
 	}
 
 	addr->addrlen = sizeof(addr->addr);
-#ifdef _WIN32
+#if _WIN32
 	// clang-format off
 	return getsockname((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
@@ -503,7 +503,7 @@ io_sock_get_peername(io_handle_t handle, io_addr_t *addr)
 	}
 
 	addr->addrlen = sizeof(addr->addr);
-#ifdef _WIN32
+#if _WIN32
 	// clang-format off
 	return getpeername((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 			(socklen_t *)&addr->addrlen) ? -1 : 0;
@@ -536,7 +536,7 @@ io_sock_get_acceptconn(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -557,7 +557,7 @@ io_sock_get_broadcast(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -578,7 +578,7 @@ io_sock_set_broadcast(io_handle_t handle, int broadcast)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!broadcast;
 #else
 	int optval = !!broadcast;
@@ -597,7 +597,7 @@ io_sock_get_debug(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -618,7 +618,7 @@ io_sock_set_debug(io_handle_t handle, int debug)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!debug;
 #else
 	int optval = !!debug;
@@ -637,7 +637,7 @@ io_sock_get_dontroute(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -658,7 +658,7 @@ io_sock_set_dontroute(io_handle_t handle, int dontroute)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!dontroute;
 #else
 	int optval = !!dontroute;
@@ -692,7 +692,7 @@ io_sock_get_keepalive(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -713,7 +713,7 @@ io_sock_set_keepalive(io_handle_t handle, int keepalive, int time, int interval)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	struct tcp_keepalive kaInBuffer = { .onoff = keepalive,
 		// The timeout is specified in milliseconds.
 		.keepalivetime = time * 1000,
@@ -797,7 +797,7 @@ io_sock_get_oobinline(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -818,7 +818,7 @@ io_sock_set_oobinline(io_handle_t handle, int oobinline)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!oobinline;
 #else
 	int optval = !!oobinline;
@@ -868,7 +868,7 @@ io_sock_set_rcvtimeo(io_handle_t handle, int timeout)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval = timeout;
 #else
 	struct timeval optval = { .tv_sec = timeout / 1000,
@@ -888,7 +888,7 @@ io_sock_get_reuseaddr(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -909,7 +909,7 @@ io_sock_set_reuseaddr(io_handle_t handle, int reuseaddr)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!reuseaddr;
 #else
 	int optval = !!reuseaddr;
@@ -959,7 +959,7 @@ io_sock_set_sndtimeo(io_handle_t handle, int timeout)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval = timeout;
 #else
 	struct timeval optval = { .tv_sec = timeout / 1000,
@@ -979,7 +979,7 @@ io_sock_get_tcp_nodelay(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval;
 #else
 	int optval;
@@ -1000,7 +1000,7 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	BOOL optval = !!nodelay;
 #else
 	int optval = !!nodelay;
@@ -1011,7 +1011,7 @@ io_sock_set_tcp_nodelay(io_handle_t handle, int nodelay)
 	// clang-format on
 }
 
-#if defined(_WIN32) || defined(HAVE_SYS_IOCTL_H)
+#if _WIN32 || defined(HAVE_SYS_IOCTL_H)
 ssize_t
 io_sock_get_nread(io_handle_t handle)
 {
@@ -1020,7 +1020,7 @@ io_sock_get_nread(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	u_long optval;
 	if (ioctlsocket((SOCKET)handle->fd, FIONREAD, &optval))
 		return -1;
@@ -1040,7 +1040,7 @@ io_sock_get_nread(io_handle_t handle)
 }
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__linux__)
+#if _WIN32 || defined(__CYGWIN__) || defined(__linux__)
 
 int
 io_sock_get_mcast_loop(io_handle_t handle)
@@ -1055,7 +1055,7 @@ io_sock_get_mcast_loop(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval;
 #else
 	int optval;
@@ -1095,7 +1095,7 @@ io_sock_set_mcast_loop(io_handle_t handle, int loop)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval = !!loop;
 #else
 	int optval = !!loop;
@@ -1130,7 +1130,7 @@ io_sock_get_mcast_ttl(io_handle_t handle)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval;
 #else
 	int optval;
@@ -1170,7 +1170,7 @@ io_sock_set_mcast_ttl(io_handle_t handle, int ttl)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD optval = ttl;
 #else
 	int optval = ttl;
@@ -1391,7 +1391,7 @@ sock_flags(struct io_handle *handle, int flags)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	u_long iMode = !!(flags & IO_FLAG_NONBLOCK);
 	return ioctlsocket((SOCKET)handle->fd, FIONBIO, &iMode) ? -1 : 0;
 #else
@@ -1436,7 +1436,7 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
 	ssize_t result;
 	if (addr) {
 		addr->addrlen = sizeof(addr->addr);
-#ifdef _WIN32
+#if _WIN32
 		result = recvfrom((SOCKET)handle->fd, buf, nbytes, _flags,
 				(struct sockaddr *)&addr->addr, &addr->addrlen);
 #else
@@ -1449,7 +1449,7 @@ sock_recv(struct io_handle *handle, void *buf, size_t nbytes, io_addr_t *addr,
 		} while (result == -1 && errno == EINTR);
 #endif
 	} else {
-#ifdef _WIN32
+#if _WIN32
 		result = recv((SOCKET)handle->fd, buf, nbytes, _flags);
 #else
 		int errsv = errno;
@@ -1471,12 +1471,12 @@ sock_send(struct io_handle *handle, const void *buf, size_t nbytes,
 	int _flags = 0;
 	if (flags & IO_MSG_OOB)
 		_flags |= MSG_OOB;
-#ifndef _WIN32
+#if !_WIN32
 	_flags |= MSG_NOSIGNAL;
 #endif
 
 	ssize_t result;
-#ifdef _WIN32
+#if _WIN32
 	// clang-format off
 	result = addr
 			? sendto((SOCKET)handle->fd, buf, nbytes, _flags,
@@ -1510,7 +1510,7 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 	SOCKET s;
 	if (addr) {
 		addr->addrlen = sizeof(addr->addr);
-#ifdef _WIN32
+#if _WIN32
 		s = accept((SOCKET)handle->fd, (struct sockaddr *)&addr->addr,
 				&addr->addrlen);
 #else
@@ -1528,7 +1528,7 @@ sock_accept(struct io_handle *handle, io_addr_t *addr)
 		} while (s == -1 && errno == EINTR);
 #endif
 	} else {
-#ifdef _WIN32
+#if _WIN32
 		s = accept((SOCKET)handle->fd, NULL, NULL);
 #else
 		int errsv = errno;
@@ -1571,7 +1571,7 @@ error_alloc_handle:
 #if _POSIX_C_SOURCE >= 200112L && !defined(_GNU_SOURCE)
 error_fcntl:
 #endif
-#ifdef _WIN32
+#if _WIN32
 	closesocket(s);
 #else
 	close(s);
@@ -1586,7 +1586,7 @@ sock_connect(struct io_handle *handle, const io_addr_t *addr)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	// clang-format off
 	return connect((SOCKET)handle->fd, (const struct sockaddr *)&addr->addr,
 			addr->addrlen) ? -1 : 0;

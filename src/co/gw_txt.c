@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_GW_TXT
+#if !LELY_NO_CO_GW_TXT
 
 #include <lely/co/dev.h>
 #include <lely/co/gw_txt.h>

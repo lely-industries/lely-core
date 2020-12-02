@@ -34,7 +34,7 @@
 
 #ifndef LENll
 /// A cross-platform "ll" length modifier macro for format specifiers.
-#ifdef _WIN32
+#if _WIN32
 #define LENll "I64"
 #ifdef __MINGW32__
 // Ignore complaints that "I64" is not a valid ISO C length modifier.
@@ -48,7 +48,7 @@
 
 #ifndef LENj
 /// A cross-platform "j" length modifier macro for format specifiers.
-#ifdef _WIN32
+#if _WIN32
 #define LENj LENll
 #else
 #define LENj "j"
@@ -57,7 +57,7 @@
 
 #ifndef LENz
 /// A cross-platform "z" length modifier macro for format specifiers.
-#ifdef _WIN32
+#if _WIN32
 #if __WORDSIZE == 64
 #define LENz LENll
 #else
@@ -70,7 +70,7 @@
 
 #ifndef LENt
 /// A cross-platform "t" length modifier macro for format specifiers.
-#ifdef _WIN32
+#if _WIN32
 #if __WORDSIZE == 64
 #define LENz LENll
 #else

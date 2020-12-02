@@ -4,7 +4,7 @@
  *
  * @see lely/io/attr.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,14 +27,14 @@
 
 #include <assert.h>
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 int
 io_attr_get_speed(const io_attr_t *attr)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	return io_attr_lpDCB(attr)->BaudRate;
 #else
 	switch (cfgetospeed((const struct termios *)attr)) {
@@ -109,7 +109,7 @@ io_attr_set_speed(io_attr_t *attr, int speed)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	io_attr_lpDCB(attr)->BaudRate = speed;
 
 	return 0;
@@ -194,7 +194,7 @@ io_attr_get_flow_control(const io_attr_t *attr)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	return lpDCB->fOutX || lpDCB->fInX;
 #else
@@ -207,7 +207,7 @@ io_attr_set_flow_control(io_attr_t *attr, int flow_control)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	lpDCB->fOutxCtsFlow = FALSE;
 	lpDCB->fOutxDsrFlow = FALSE;
@@ -238,7 +238,7 @@ io_attr_get_parity(const io_attr_t *attr)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	switch (io_attr_lpDCB(attr)->Parity) {
 	case EVENPARITY: return IO_PARITY_EVEN;
 	case ODDPARITY: return IO_PARITY_ODD;
@@ -257,7 +257,7 @@ io_attr_set_parity(io_attr_t *attr, int parity)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	switch (parity) {
 	case IO_PARITY_NONE:
@@ -302,7 +302,7 @@ io_attr_get_stop_bits(const io_attr_t *attr)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	return io_attr_lpDCB(attr)->StopBits == TWOSTOPBITS;
 #else
 	return !!(((const struct termios *)attr)->c_cflag & CSTOPB);
@@ -314,7 +314,7 @@ io_attr_set_stop_bits(io_attr_t *attr, int stop_bits)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	if (stop_bits)
 		lpDCB->StopBits = TWOSTOPBITS;
@@ -338,7 +338,7 @@ io_attr_get_char_size(const io_attr_t *attr)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	return io_attr_lpDCB(attr)->ByteSize;
 #else
 	switch (((const struct termios *)attr)->c_cflag & CSIZE) {
@@ -356,7 +356,7 @@ io_attr_set_char_size(io_attr_t *attr, int char_size)
 {
 	assert(attr);
 
-#ifdef _WIN32
+#if _WIN32
 	io_attr_lpDCB(attr)->ByteSize = char_size;
 
 	return 0;

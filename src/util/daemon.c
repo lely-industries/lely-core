@@ -23,9 +23,9 @@
 
 #include "util.h"
 
-#ifndef LELY_NO_DAEMON
+#if !LELY_NO_DAEMON
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
 #include <lely/util/daemon.h>
@@ -43,7 +43,7 @@
 static daemon_handler_t *daemon_handler = &default_daemon_handler;
 static void *daemon_handle;
 
-#ifdef _WIN32
+#if _WIN32
 
 #include <winerror.h>
 
@@ -232,7 +232,7 @@ ReportStatus(DWORD dwCurrentState)
 
 static int daemon_proc(void);
 static void daemon_signal_func(int sig);
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 static int daemon_thrd_start(void *arg);
 #endif
 
@@ -331,7 +331,7 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 		goto error_sigterm;
 	}
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	thrd_t thr;
 	if (thrd_create(&thr, &daemon_thrd_start, NULL) != thrd_success) {
 		result = -1;
@@ -352,14 +352,14 @@ daemon_start(const char *name, int (*init)(int, char **), void (*main)(void),
 	main();
 
 	daemon_stop();
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	thrd_join(thr, NULL);
 #endif
 
 	diag_at_set_handler(diag_at_handler, diag_at_handle);
 	diag_set_handler(diag_handler, diag_handle);
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 error_thrd_create:
 #endif
 	sigaction(SIGTERM, &old_term, NULL);
@@ -521,7 +521,7 @@ daemon_signal_func(int sig)
 	}
 }
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 static int
 daemon_thrd_start(void *arg)
 {

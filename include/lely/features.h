@@ -2,7 +2,7 @@
  * This header file is part of the Lely libraries; it contains the compiler
  * feature definitions.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,7 @@
 #pragma warning(disable : 4996)
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 // Windows 7 is the minimum supported version.
 #if !defined(NTDDI_VERSION) || (NTDDI_VERSION < NTDDI_WIN7)
 #undef NTDDI_VERSION
@@ -271,9 +271,9 @@
 #ifndef __WORDSIZE
 /// The native word size (in bits).
 // clang-format off
-#if !defined(__ILP32__) && (defined(__LP64__) || defined(_WIN64) \
-		|| defined(_M_AMD64) || defined(__amd64__) || defined(_M_IA64) \
-		|| defined(__ia64__) || defined(_M_X64) || defined(__x86_64__) \
+#if !defined(__ILP32__) && (defined(__LP64__) || _WIN64 || defined(_M_AMD64) \
+		|| defined(__amd64__) || defined(_M_IA64) || defined(__ia64__) \
+		|| defined(_M_X64) || defined(__x86_64__) \
 		|| defined(__aarch64__))
 // clang-format on
 #define __WORDSIZE 64
@@ -284,7 +284,7 @@
 
 #ifndef LONG_BIT
 /// The number of bits in a long.
-#ifdef _WIN32
+#if _WIN32
 // long remains 32-bits on 64-bit Windows.
 #define LONG_BIT 32
 #else
@@ -302,7 +302,7 @@
 #define LEVEL1_DCACHE_LINESIZE 64
 #endif
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 #if defined(__cplusplus)
 // <thread> (C++11 thread support library) is available.
 #elif __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
@@ -316,7 +316,7 @@
 #endif
 #endif // !LELY_NO_THREADS
 
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 #if LELY_NO_THREADS
 // Disable atomic operations if threads are disabled.
 #define LELY_NO_ATOMICS 1

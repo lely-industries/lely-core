@@ -36,7 +36,7 @@
 
 #if _WIN32
 #include <malloc.h>
-#elif defined(LELY_HAVE_POSIX_MEMALIGN)
+#elif LELY_HAVE_POSIX_MEMALIGN
 #include <errno.h>
 #else
 #include <stdint.h>

@@ -33,7 +33,7 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef _WIN32
+#if _WIN32
 #include <wtsapi32.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "wtsapi32.lib")
@@ -42,7 +42,7 @@
 #include <syslog.h>
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 #ifndef LELY_DIALOG_DIAG_TIMEOUT
 #define LELY_DIALOG_DIAG_TIMEOUT 10
 #endif
@@ -265,14 +265,14 @@ void
 daemon_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 		const struct floc *at, const char *format, va_list ap)
 {
-#ifdef _WIN32
+#if _WIN32
 	dialog_diag_at_handler(handle, severity, errc, at, format, ap);
 #else
 	syslog_diag_at_handler(handle, severity, errc, at, format, ap);
 #endif
 }
 
-#ifdef _WIN32
+#if _WIN32
 
 void
 dialog_diag_handler(void *handle, enum diag_severity severity, int errc,
@@ -330,7 +330,7 @@ log_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	int errsv = errno;
 	time_t timer;
 	if (time(&timer) != -1) {
-#ifdef _WIN32
+#if _WIN32
 		struct tm tm;
 		struct tm *timeptr = NULL;
 		if (localtime_s(&tm, &timer))
@@ -522,7 +522,7 @@ cmdname(const char *path)
 	const char *cmd = path;
 	while (*cmd)
 		cmd++;
-#ifdef _WIN32
+#if _WIN32
 	while (cmd >= path && *cmd != '\\')
 #else
 	while (cmd >= path && *cmd != '/')

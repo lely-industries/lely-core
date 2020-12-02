@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_WTM
+#if !LELY_NO_CO_WTM
 
 #include <lely/can/err.h>
 #include <lely/co/crc.h>
@@ -785,7 +785,7 @@ co_wtm_send(co_wtm_t *wtm, uint_least8_t nif, const struct can_msg *msg)
 	}
 	struct co_wtm_can *can = &wtm->can[nif - 1];
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	// CAN FD frames are not supported.
 	if (msg->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
