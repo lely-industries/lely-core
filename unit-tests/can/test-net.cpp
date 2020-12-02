@@ -25,11 +25,20 @@
 #include <lely/can/net.h>
 
 #include "allocators/default.hpp"
+#include "allocators/failing.hpp"
 
 namespace CAN_Net_Static {
 static unsigned int tfunc_empty_counter = 0;
 static unsigned int tfunc_err_counter = 0;
 }  // namespace CAN_Net_Static
+
+TEST_GROUP(CAN_NetAllocationFails) { Allocators::Failing allocator; };
+
+TEST(CAN_NetAllocationFails, CanNetCreate_AnyAllocationFails) {
+  const auto net = can_net_create(allocator.ToAllocT());
+
+  POINTERS_EQUAL(nullptr, net);
+}
 
 TEST_GROUP(CAN_Net) {
   Allocators::Default allocator;
