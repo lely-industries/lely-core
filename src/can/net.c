@@ -68,7 +68,7 @@ static can_net_t *can_net_alloc(alloc_t *alloc);
 static void can_net_free(can_net_t *net);
 
 /// Initializes the #can_net_t structure.
-static can_net_t *can_net_init(can_net_t *net);
+static void can_net_init(can_net_t *net);
 
 /// Finalizes the #can_net_t structure.
 static void can_net_fini(can_net_t *net);
@@ -173,26 +173,13 @@ can_net_sizeof(void)
 can_net_t *
 can_net_create(alloc_t *alloc)
 {
-	int errc = 0;
-
 	can_net_t *net = can_net_alloc(alloc);
-	if (!net) {
-		errc = get_errc();
-		goto error_alloc_net;
-	}
+	if (!net)
+		return NULL;
 
-	if (!can_net_init(net)) {
-		errc = get_errc();
-		goto error_init_net;
-	}
+	can_net_init(net);
 
 	return net;
-
-error_init_net:
-	can_net_free(net);
-error_alloc_net:
-	set_errc(errc);
-	return NULL;
 }
 
 void
@@ -658,7 +645,7 @@ can_net_free(can_net_t *net)
 	mem_free(net->alloc, net);
 }
 
-static can_net_t *
+static void
 can_net_init(can_net_t *net)
 {
 	assert(net);
@@ -675,8 +662,6 @@ can_net_init(can_net_t *net)
 
 	net->send_func = NULL;
 	net->send_data = NULL;
-
-	return net;
 }
 
 static void
