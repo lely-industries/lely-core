@@ -179,7 +179,7 @@ main(void)
 	co_nmt_t *slave = co_nmt_create(net, sdev);
 	tap_assert(slave);
 
-#ifdef LELY_NO_CO_LSS
+#if LELY_NO_CO_LSS
 	co_nmt_set_id(slave, 0x02);
 #endif
 

@@ -24,7 +24,7 @@
 #include "co.h"
 #define LELY_CO_SDO_INLINE extern inline
 #include <lely/util/diag.h>
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
 #endif
@@ -202,7 +202,7 @@ error_read:
 	return -1;
 }
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 int
 co_sdo_req_dn_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)
@@ -313,7 +313,7 @@ error_reserve:
 	return -1;
 }
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 int
 co_sdo_req_up_file(struct co_sdo_req *req, const char *filename,
 		co_unsigned32_t *pac)

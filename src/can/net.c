@@ -82,7 +82,7 @@ struct __can_timer {
  * The type of the key used to match CAN frame receivers to CAN frames. The key
  * is a combination of the CAN identifier and the flags.
  */
-#ifdef LELY_NO_CANFD
+#if LELY_NO_CANFD
 typedef uint_least32_t can_recv_key_t;
 #else
 typedef uint_least64_t can_recv_key_t;
@@ -658,7 +658,7 @@ can_recv_key(uint_least32_t id, uint_least8_t flags)
 static int
 can_recv_key_cmp(const void *p1, const void *p2)
 {
-#ifdef LELY_NO_CANFD
+#if LELY_NO_CANFD
 	return uint32_cmp(p1, p2);
 #else
 	return uint64_cmp(p1, p2);

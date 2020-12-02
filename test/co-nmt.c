@@ -1,6 +1,6 @@
 #include "co-test.h"
 #include <lely/co/dcf.h>
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 #include <lely/co/lss.h>
 #endif
 #include <lely/co/nmt.h>
@@ -14,13 +14,13 @@ void cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
 void hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data);
 void st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data);
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 void lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data);
 #endif
 void boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 		void *data);
 
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 void err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,
 		co_unsigned8_t spec, void *data);
 void lssid_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned32_t id,
@@ -39,7 +39,7 @@ co_nmt_t *master;
 int
 main(void)
 {
-#ifdef LELY_NO_CO_LSS
+#if LELY_NO_CO_LSS
 	tap_plan(3);
 #else
 	tap_plan(3 + 17);
@@ -62,7 +62,7 @@ main(void)
 	co_nmt_set_cs_ind(master, &cs_ind, mdev);
 	co_nmt_set_hb_ind(master, &hb_ind, NULL);
 	co_nmt_set_st_ind(master, &st_ind, NULL);
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 	co_nmt_set_lss_req(master, &lss_req, &test);
 #endif
 	co_nmt_set_boot_ind(master, &boot_ind, &test);
@@ -134,7 +134,7 @@ st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 		co_nmt_boot_req(nmt, id, 100);
 }
 
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 void
 lss_req(co_nmt_t *nmt, co_lss_t *lss, void *data)
 {
@@ -211,7 +211,7 @@ boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char ec,
 	co_test_done(test);
 }
 
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 
 void
 err_ind(co_lss_t *lss, co_unsigned8_t cs, co_unsigned8_t err,

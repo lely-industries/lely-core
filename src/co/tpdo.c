@@ -32,7 +32,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>

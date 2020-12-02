@@ -4,7 +4,7 @@
  *
  * @see lely/io/poll.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,7 @@
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
 #include <lely/util/rbtree.h>
-#ifdef _WIN32
+#if _WIN32
 #include <lely/io/sock.h>
 #else
 #include <lely/io/pipe.h>
@@ -46,13 +46,13 @@
 
 /// An I/O polling interface.
 struct __io_poll {
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	/// The mutex protecting #tree.
 	mtx_t mtx;
 #endif
 	/// The tree containing the I/O device handles being watched.
 	struct rbtree tree;
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	/// A self-pipe used to generate signal events.
 	io_handle_t pipe[2];
 #endif
@@ -77,7 +77,7 @@ struct io_watch {
 	int keep;
 };
 
-#ifdef LELY_NO_THREADS
+#if LELY_NO_THREADS
 #define io_poll_lock(poll)
 #define io_poll_unlock(poll)
 #else
@@ -116,7 +116,7 @@ __io_poll_init(struct __io_poll *poll)
 
 	int errc = 0;
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	mtx_init(&poll->mtx, mtx_plain);
 #endif
 
@@ -125,16 +125,16 @@ __io_poll_init(struct __io_poll *poll)
 	rbtree_init(&poll->tree, ptr_cmp);
 #else
 	// Track attributes with native file descriptor.
-#ifdef _WIN32
+#if _WIN32
 	rbtree_init(&poll->tree, ptr_cmp);
 #else
 	rbtree_init(&poll->tree, int_cmp);
 #endif
 #endif
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	// Create a self-pipe for signal events.
-#ifdef _WIN32
+#if _WIN32
 	if (io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, poll->pipe)
 			== -1) {
 #else
@@ -179,7 +179,7 @@ error_epoll_ctl:
 	close(poll->epfd);
 error_epoll_create1:
 #endif
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 error_set_flags:
 	io_close(poll->pipe[1]);
 	io_close(poll->pipe[0]);
@@ -201,12 +201,12 @@ __io_poll_fini(struct __io_poll *poll)
 	close(poll->epfd);
 #endif
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	io_close(poll->pipe[1]);
 	io_close(poll->pipe[0]);
 #endif
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	mtx_destroy(&poll->mtx);
 #endif
 }
@@ -266,7 +266,7 @@ io_poll_watch(io_poll_t *poll, io_handle_t handle, struct io_event *event,
 	case IO_TYPE_PIPE:
 	case IO_TYPE_SERIAL:
 #endif
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	case IO_TYPE_SOCK:
 #endif
 		break;
@@ -360,11 +360,11 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 		return 0;
 
 	int nevents = 0;
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	unsigned char sig = 0;
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 	fd_set readfds;
 	FD_ZERO(&readfds);
 
@@ -569,7 +569,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	(void)timeout;
 #endif // _WIN32
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 	if (sig) {
 		// If one or more signals were received, generate the
 		// corresponding events.
@@ -585,7 +585,7 @@ io_poll_wait(io_poll_t *poll, int maxevents, struct io_event *events,
 	return nevents;
 }
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 int
 io_poll_signal(io_poll_t *poll, unsigned char sig)
 {
@@ -595,7 +595,7 @@ io_poll_signal(io_poll_t *poll, unsigned char sig)
 }
 #endif
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 
 static void
 io_poll_lock(io_poll_t *poll)

@@ -4,7 +4,7 @@
  *
  * @see src/handle.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,10 +32,10 @@ io_handle_t
 io_handle_acquire(io_handle_t handle)
 {
 	if (handle != IO_HANDLE_ERROR)
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 		atomic_fetch_add_explicit(
 				&handle->ref, 1, memory_order_relaxed);
-#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
+#elif !LELY_NO_THREADS && _WIN32
 		InterlockedIncrementNoFence(&handle->ref);
 #else
 		handle->ref++;
@@ -49,11 +49,11 @@ io_handle_release(io_handle_t handle)
 	if (handle == IO_HANDLE_ERROR)
 		return;
 
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 	if (atomic_fetch_sub_explicit(&handle->ref, 1, memory_order_release)
 			== 1) {
 		atomic_thread_fence(memory_order_acquire);
-#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
+#elif !LELY_NO_THREADS && _WIN32
 	if (!InterlockedDecrementRelease(&handle->ref)) {
 		MemoryBarrier();
 #else
@@ -66,7 +66,7 @@ io_handle_release(io_handle_t handle)
 int
 io_handle_unique(io_handle_t handle)
 {
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 	return handle != IO_HANDLE_ERROR && atomic_load(&handle->ref) == 1;
 #else
 	return handle != IO_HANDLE_ERROR && handle->ref == 1;
@@ -86,14 +86,14 @@ io_handle_alloc(const struct io_handle_vtab *vtab)
 	}
 
 	handle->vtab = vtab;
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 	atomic_init(&handle->ref, 0);
 #else
 	handle->ref = 0;
 #endif
 	handle->fd = INVALID_HANDLE_VALUE;
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	mtx_init(&handle->mtx, mtx_plain);
 #endif
 
@@ -116,7 +116,7 @@ void
 io_handle_free(struct io_handle *handle)
 {
 	if (handle) {
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 		mtx_destroy(&handle->mtx);
 #endif
 
@@ -133,7 +133,7 @@ io_handle_destroy(struct io_handle *handle)
 	}
 }
 
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 
 void
 io_handle_lock(struct io_handle *handle)

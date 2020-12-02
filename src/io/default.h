@@ -2,7 +2,7 @@
  * This is the internal header file of the default implementation of the I/O
  * device handle methods.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 static inline void default_fini(struct io_handle *handle);
 static inline int default_flags(struct io_handle *handle, int flags);
@@ -47,7 +47,7 @@ default_fini(struct io_handle *handle)
 	assert(handle);
 
 	if (!(handle->flags & IO_FLAG_NO_CLOSE))
-#ifdef _WIN32
+#if _WIN32
 		CloseHandle(handle->fd);
 #else
 		close(handle->fd);
@@ -59,7 +59,7 @@ default_flags(struct io_handle *handle, int flags)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	(void)handle;
 	(void)flags;
 
@@ -82,7 +82,7 @@ default_read(struct io_handle *handle, void *buf, size_t nbytes)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = GetLastError();
 
 	OVERLAPPED overlapped = { 0 };
@@ -164,7 +164,7 @@ default_write(struct io_handle *handle, const void *buf, size_t nbytes)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = GetLastError();
 
 	OVERLAPPED overlapped = { 0 };

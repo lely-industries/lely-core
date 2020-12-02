@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
+#if _WIN32
 #include <io.h>
 #endif
 
@@ -305,7 +305,7 @@ main(int argc, char *argv[])
 
 	// Determine whether stdin is an interactive terminal.
 	int errsv = errno;
-#ifdef _WIN32
+#if _WIN32
 	int tty = _isatty(_fileno(stdin));
 #elif _POSIX_C_SOURCE >= 200112L
 	int tty = isatty(fileno(stdin));

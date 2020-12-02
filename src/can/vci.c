@@ -4,7 +4,7 @@
  *
  * @see lely/can/vci.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,7 @@
 #undef CAN_ERROR_STUFF
 #undef CAN_ERROR_BIT
 
-#ifdef LELY_HAVE_VCI
+#if LELY_HAVE_VCI
 
 #include <lely/can/vci.h>
 #include <lely/util/endian.h>
@@ -125,7 +125,7 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	CANMSG *msg = dst;
 	assert(msg);
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	if (src->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;

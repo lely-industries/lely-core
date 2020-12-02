@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
@@ -710,7 +710,7 @@ co_rpdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
 	assert(!(msg->flags & CAN_FLAG_RTR));
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	assert(!(msg->flags & CAN_FLAG_EDL));
 #endif
 

@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 
 #include <lely/can/buf.h>
 #include <lely/co/dev.h>
@@ -592,7 +592,7 @@ co_emcy_node_recv(const struct can_msg *msg, void *data)
 	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	// Ignore CAN FD format frames.
 	if (msg->flags & CAN_FLAG_EDL)
 		return 0;

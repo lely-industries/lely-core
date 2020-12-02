@@ -4,7 +4,7 @@
  *
  * @see lely/util/frbuf.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
  * limitations under the License.
  */
 
-#ifndef _WIN32
+#if !_WIN32
 // This needs to be defined before any files are included to make fstat64(),
 // lseek64(), mmap64() and pread64() available.
 #define _LARGEFILE64_SOURCE 1
@@ -34,7 +34,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifndef _WIN32
+#if !_WIN32
 #include <stdio.h>
 #if _POSIX_C_SOURCE >= 200112L
 #include <fcntl.h>
@@ -47,7 +47,7 @@
 
 /// An read file buffer struct.
 struct __frbuf {
-#ifdef _WIN32
+#if _WIN32
 	/// The file handle.
 	HANDLE hFile;
 	/// The handle of the file mapping.
@@ -90,7 +90,7 @@ __frbuf_init(struct __frbuf *buf, const char *filename)
 	assert(buf);
 	assert(filename);
 
-#ifdef _WIN32
+#if _WIN32
 	buf->hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL,
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_READONLY | FILE_FLAG_NO_BUFFERING, NULL);
@@ -120,7 +120,7 @@ __frbuf_fini(struct __frbuf *buf)
 {
 	frbuf_unmap(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	CloseHandle(buf->hFile);
 #elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	close(buf->fd);
@@ -168,7 +168,7 @@ frbuf_get_size(frbuf_t *buf)
 {
 	assert(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER FileSize;
 	if (!GetFileSizeEx(buf->hFile, &FileSize))
 		return -1;
@@ -213,7 +213,7 @@ frbuf_get_pos(frbuf_t *buf)
 {
 	assert(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER li = { .QuadPart = 0 };
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT))
 		return -1;
@@ -242,7 +242,7 @@ frbuf_set_pos(frbuf_t *buf, intmax_t pos)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER li = { .QuadPart = pos };
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN))
 		return -1;
@@ -275,7 +275,7 @@ frbuf_read(frbuf_t *buf, void *ptr, size_t size)
 	if (!size)
 		return 0;
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD nNumberOfBytesRead;
 	if (!ReadFile(buf->hFile, ptr, size, &nNumberOfBytesRead, NULL))
 		return -1;
@@ -311,7 +311,7 @@ frbuf_pread(frbuf_t *buf, void *ptr, size_t size, intmax_t pos)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	ssize_t result = 0;
 	DWORD dwErrCode = GetLastError();
 
@@ -406,7 +406,7 @@ frbuf_map(frbuf_t *buf, intmax_t pos, size_t *psize)
 	if (psize && *psize)
 		size = MIN((uintmax_t)size, *psize);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = 0;
 
 	SYSTEM_INFO SystemInfo;
@@ -511,7 +511,7 @@ frbuf_unmap(frbuf_t *buf)
 
 	int result = 0;
 
-#ifdef _WIN32
+#if _WIN32
 	if (buf->hFileMappingObject != INVALID_HANDLE_VALUE) {
 		DWORD dwErrCode = GetLastError();
 		if (!UnmapViewOfFile(buf->lpBaseAddress)) {

@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 
 #include "sdo.h"
 #include <lely/co/crc.h>
@@ -1455,7 +1455,7 @@ co_csdo_recv(const struct can_msg *msg, void *data)
 	if (msg->flags & CAN_FLAG_RTR)
 		return 0;
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	// Ignore CAN FD format frames.
 	if (msg->flags & CAN_FLAG_EDL)
 		return 0;

@@ -25,9 +25,9 @@
 #include "io.h"
 #include <lely/io/pipe.h>
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
-#ifdef _WIN32
+#if _WIN32
 #include <lely/libc/stdio.h>
 
 #ifdef __MINGW32__
@@ -54,7 +54,7 @@ io_open_pipe(io_handle_t handle_vector[2])
 
 	int errc = 0;
 
-#ifdef _WIN32
+#if _WIN32
 	HANDLE fd[2];
 #else
 	int fd[2];
@@ -106,7 +106,7 @@ error_alloc_handle_vector_0:
 #if _POSIX_C_SOURCE >= 200112L && !defined(__CYGINW__) && !defined(__linux__)
 error_fcntl:
 #endif
-#ifdef _WIN32
+#if _WIN32
 	CloseHandle(fd[1]);
 	CloseHandle(fd[0]);
 #else
@@ -118,7 +118,7 @@ error_pipe:
 	return -1;
 }
 
-#ifdef _WIN32
+#if _WIN32
 static int
 pipe(HANDLE fildes[2])
 {

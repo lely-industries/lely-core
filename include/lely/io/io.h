@@ -126,7 +126,7 @@ int io_close(io_handle_t handle);
 int io_get_type(io_handle_t handle);
 
 /// Returns the native file descriptor of an I/O device.
-#ifdef _WIN32
+#if _WIN32
 HANDLE io_get_fd(io_handle_t handle);
 #else
 int io_get_fd(io_handle_t handle);

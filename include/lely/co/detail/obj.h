@@ -37,7 +37,7 @@ struct __co_obj {
 	co_unsigned16_t idx;
 	/// The object code.
 	co_unsigned8_t code;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	/// A pointer to the name of the object.
 	char *name;
 #endif
@@ -59,17 +59,17 @@ struct __co_sub {
 	co_unsigned8_t subidx;
 	/// The data type.
 	co_unsigned16_t type;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	/// A pointer to the name of the sub-object.
 	char *name;
 #endif
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	/// The lower limit of the object value.
 	union co_val min;
 	/// The upper limit of the object value.
 	union co_val max;
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 	/// The default value.
 	union co_val def;
 #endif
@@ -85,7 +85,7 @@ struct __co_sub {
 	co_sub_dn_ind_t *dn_ind;
 	/// A pointer to user-specified data for #dn_ind.
 	void *dn_data;
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 	/// A pointer to the upload indication function.
 	co_sub_up_ind_t *up_ind;
 	/// A pointer to user-specified data for #up_ind.

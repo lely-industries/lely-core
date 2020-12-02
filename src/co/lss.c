@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_LSS
+#if !LELY_NO_CO_LSS
 
 #include <lely/co/lss.h>
 #include <lely/co/nmt.h>
@@ -50,7 +50,7 @@ struct __co_lss {
 	co_dev_t *dev;
 	/// A pointer to the current state.
 	co_lss_state_t *state;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// A flag specifying whether the LSS service is a master or a slave.
 	int master;
 	/// The inhibit time (in multiples of 100 microseconds).
@@ -60,7 +60,7 @@ struct __co_lss {
 #endif
 	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// The timeout (in milliseconds).
 	int timeout;
 	/// A pointer to the CAN timer.
@@ -70,7 +70,7 @@ struct __co_lss {
 	co_unsigned8_t cs;
 	/// The LSSPos value.
 	co_unsigned8_t lsspos;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// The lower bound of the LSS address used during the Slowscan service.
 	struct co_id lo;
 	/// The upper bound of the LSS address used during the Slowscan service.
@@ -103,7 +103,7 @@ struct __co_lss {
 	co_lss_store_ind_t *store_ind;
 	/// A pointer to user-specified data for #store_ind.
 	void *store_data;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// A pointer to the command indication function.
 	co_lss_cs_ind_t *cs_ind;
 	/// A pointer to user-specified data for #cs_ind.
@@ -130,7 +130,7 @@ struct __co_lss {
 /// The CAN receive callback function for an LSS service. @see can_recv_func_t
 static int co_lss_recv(const struct can_msg *msg, void *data);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 /// The CAN timer callback function for an LSS service. @see can_timer_func_t
 static int co_lss_timer(const struct timespec *tp, void *data);
 #endif
@@ -150,7 +150,7 @@ static void co_lss_enter(co_lss_t *lss, co_lss_state_t *next);
  */
 static inline void co_lss_emit_recv(co_lss_t *lss, const struct can_msg *msg);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 /**
  * Invokes the 'timeout' transition function of the current state of an LSS
  * service.
@@ -175,7 +175,7 @@ struct __co_lss_state {
 	 * @returns a pointer to the next state.
 	 */
 	co_lss_state_t *(*on_recv)(co_lss_t *lss, const struct can_msg *msg);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/**
 	 * A pointer to the transition function invoked when a timeout occurs.
 	 *
@@ -238,7 +238,7 @@ LELY_CO_DEFINE_STATE(co_lss_cfg_state,
 )
 // clang-format on
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 /// The 'CAN frame received' transition function of the command received state.
 static co_lss_state_t *co_lss_cs_on_recv(
@@ -594,7 +594,7 @@ static co_lss_state_t *co_lss_fastscan(co_lss_t *lss, co_unsigned32_t id,
 static void co_lss_init_req(
 		const co_lss_t *lss, struct can_msg *msg, co_unsigned8_t cs);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 /**
  * Sends a single frame of a switch state selective request (see Fig. 32 in CiA
@@ -689,7 +689,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	lss->state = co_lss_stopped_state;
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	lss->master = 0;
 	lss->inhibit = LELY_CO_LSS_INHIBIT;
 	lss->next = 0;
@@ -702,7 +702,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	}
 	can_recv_set_func(lss->recv, &co_lss_recv, lss);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	lss->timeout = LELY_CO_LSS_TIMEOUT;
 
 	lss->timer = can_timer_create();
@@ -715,7 +715,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	lss->cs = 0;
 	lss->lsspos = 0;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	lss->lo = (struct co_id)CO_ID_INIT;
 	lss->hi = (struct co_id)CO_ID_INIT;
 	lss->mask = (struct co_id)CO_ID_INIT;
@@ -732,7 +732,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->rate_data = NULL;
 	lss->store_ind = NULL;
 	lss->store_data = NULL;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	lss->cs_ind = NULL;
 	lss->cs_data = NULL;
 	lss->err_ind = NULL;
@@ -754,7 +754,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	// co_lss_stop(lss);
 error_start:
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	can_timer_destroy(lss->timer);
 error_create_timer:
 #endif
@@ -771,7 +771,7 @@ __co_lss_fini(struct __co_lss *lss)
 
 	co_lss_stop(lss);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_MASTER
 	can_timer_destroy(lss->timer);
 #endif
 	can_recv_destroy(lss->recv);
@@ -833,7 +833,7 @@ co_lss_stop(co_lss_t *lss)
 
 	co_lss_enter(lss, co_lss_stopped_state);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	can_timer_stop(lss->timer);
 #endif
 	can_recv_stop(lss->recv);
@@ -888,7 +888,7 @@ co_lss_set_store_ind(co_lss_t *lss, co_lss_store_ind_t *ind, void *data)
 	lss->store_data = data;
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 co_unsigned16_t
 co_lss_get_inhibit(const co_lss_t *lss)
@@ -930,7 +930,7 @@ co_lss_set_timeout(co_lss_t *lss, int timeout)
 int
 co_lss_is_master(const co_lss_t *lss)
 {
-#ifdef LELY_NO_CO_MASTER
+#if LELY_NO_CO_MASTER
 	(void)lss;
 
 	return 0;
@@ -941,7 +941,7 @@ co_lss_is_master(const co_lss_t *lss)
 #endif
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 int
 co_lss_is_idle(const co_lss_t *lss)
@@ -1406,7 +1406,7 @@ co_lss_recv(const struct can_msg *msg, void *data)
 	return 0;
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 static int
 co_lss_timer(const struct timespec *tp, void *data)
 {
@@ -1446,7 +1446,7 @@ co_lss_emit_recv(co_lss_t *lss, const struct can_msg *msg)
 	co_lss_enter(lss, lss->state->on_recv(lss, msg));
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 static inline void
 co_lss_emit_time(co_lss_t *lss, const struct timespec *tp)
 {
@@ -1461,7 +1461,7 @@ co_lss_emit_time(co_lss_t *lss, const struct timespec *tp)
 static co_lss_state_t *
 co_lss_wait_on_enter(co_lss_t *lss)
 {
-#ifdef LELY_NO_CO_MASTER
+#if LELY_NO_CO_MASTER
 	(void)lss;
 #else
 	assert(lss);
@@ -1738,7 +1738,7 @@ co_lss_cfg_on_recv(co_lss_t *lss, const struct can_msg *msg)
 	return NULL;
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 static co_lss_state_t *
 co_lss_cs_on_recv(co_lss_t *lss, const struct can_msg *msg)
@@ -2509,7 +2509,7 @@ co_lss_init_req(const co_lss_t *lss, struct can_msg *msg, co_unsigned8_t cs)
 	msg->data[0] = cs;
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 static int
 co_lss_send_switch_sel_req(co_lss_t *lss, const struct co_id *id)

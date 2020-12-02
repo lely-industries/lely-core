@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
@@ -524,7 +524,7 @@ co_sync_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
 	assert(!(msg->flags & CAN_FLAG_RTR));
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	assert(!(msg->flags & CAN_FLAG_EDL));
 #endif
 	co_sync_t *sync = data;

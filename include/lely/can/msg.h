@@ -71,7 +71,7 @@ enum {
 /// The maximum number of bytes in the payload of a CAN format frame.
 #define CAN_MAX_LEN 8
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 /// The maximum number of bytes in the payload of a CAN FD format frame.
 #define CANFD_MAX_LEN 64
 #endif

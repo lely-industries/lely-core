@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 #include "nmt_boot.h"
 #include <lely/co/dev.h>

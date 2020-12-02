@@ -21,7 +21,7 @@
  * limitations under the License.
  */
 
-#ifndef _WIN32
+#if !_WIN32
 // This needs to be defined before any files are included to make fstat64(),
 // lseek64(), mmap64() and pread64() available.
 #define _LARGEFILE64_SOURCE 1
@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
+#if _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "shlwapi.lib")
 #endif
@@ -56,7 +56,7 @@
 struct __fwbuf {
 	/// A pointer to the name of the file.
 	char *filename;
-#ifdef _WIN32
+#if _WIN32
 	/// The name of the temporary file.
 	char tmpname[MAX_PATH];
 	/// The file handle.
@@ -126,7 +126,7 @@ __fwbuf_init(struct __fwbuf *buf, const char *filename)
 	assert(buf);
 	assert(filename);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = 0;
 
 	buf->filename = _strdup(filename);
@@ -338,7 +338,7 @@ fwbuf_get_size(fwbuf_t *buf)
 	if (fwbuf_error(buf))
 		return -1;
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER FileSize;
 	if (!GetFileSizeEx(buf->hFile, &FileSize)) {
 		buf->dwErrCode = GetLastError();
@@ -368,7 +368,7 @@ fwbuf_set_size(fwbuf_t *buf, intmax_t size)
 	if (fwbuf_unmap(buf) == -1)
 		return -1;
 
-#ifdef _WIN32
+#if _WIN32
 	intmax_t pos = fwbuf_get_pos(buf);
 	if (pos == -1)
 		return -1;
@@ -414,7 +414,7 @@ fwbuf_get_pos(fwbuf_t *buf)
 	if (fwbuf_error(buf))
 		return -1;
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER li = { .QuadPart = 0 };
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_CURRENT)) {
 		buf->dwErrCode = GetLastError();
@@ -446,7 +446,7 @@ fwbuf_set_pos(fwbuf_t *buf, intmax_t pos)
 	if (fwbuf_error(buf))
 		return -1;
 
-#ifdef _WIN32
+#if _WIN32
 	LARGE_INTEGER li = { .QuadPart = pos };
 	if (!SetFilePointerEx(buf->hFile, li, &li, FILE_BEGIN)) {
 		buf->dwErrCode = GetLastError();
@@ -493,7 +493,7 @@ fwbuf_write(fwbuf_t *buf, const void *ptr, size_t size)
 	if (!size)
 		return 0;
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD nNumberOfBytesWritten;
 	if (!WriteFile(buf->hFile, ptr, size, &nNumberOfBytesWritten, NULL)) {
 		buf->dwErrCode = GetLastError();
@@ -547,7 +547,7 @@ fwbuf_pwrite(fwbuf_t *buf, const void *ptr, size_t size, intmax_t pos)
 	if (!size)
 		return 0;
 
-#ifdef _WIN32
+#if _WIN32
 	ssize_t result = 0;
 
 	if (pos < 0) {
@@ -661,7 +661,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 	if (size < 0)
 		return NULL;
 	if (pos < 0) {
-#ifdef _WIN32
+#if _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
 #elif _POSIX_MAPPED_FILES >= 200112L
 		errno = buf->errsv = EINVAL;
@@ -671,7 +671,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 		return NULL;
 	}
 	if (pos > (intmax_t)size) {
-#ifdef _WIN32
+#if _WIN32
 		SetLastError(buf->dwErrCode = ERROR_INVALID_PARAMETER);
 #elif _POSIX_MAPPED_FILES >= 200112L
 		errno = buf->errsv = EOVERFLOW;
@@ -685,7 +685,7 @@ fwbuf_map(fwbuf_t *buf, intmax_t pos, size_t *psize)
 	if (psize && *psize)
 		size = MIN((uintmax_t)size, *psize);
 
-#ifdef _WIN32
+#if _WIN32
 	SYSTEM_INFO SystemInfo;
 	// cppcheck-suppress uninitvar
 	GetSystemInfo(&SystemInfo);
@@ -826,7 +826,7 @@ fwbuf_unmap(fwbuf_t *buf)
 	assert(buf);
 
 	int result = 0;
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = 0;
 	if (buf->dwErrCode) {
 		result = -1;
@@ -926,7 +926,7 @@ fwbuf_clearerr(fwbuf_t *buf)
 {
 	assert(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	buf->dwErrCode = 0;
 #elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	buf->errsv = 0;
@@ -940,7 +940,7 @@ fwbuf_error(fwbuf_t *buf)
 {
 	assert(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	if (buf->dwErrCode)
 		SetLastError(buf->dwErrCode);
 	return !!buf->dwErrCode;
@@ -960,7 +960,7 @@ fwbuf_cancel(fwbuf_t *buf)
 {
 	assert(buf);
 
-#ifdef _WIN32
+#if _WIN32
 	if (!buf->dwErrCode)
 		buf->dwErrCode = ERROR_OPERATION_ABORTED;
 #elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
@@ -978,7 +978,7 @@ fwbuf_commit(fwbuf_t *buf)
 	fwbuf_unmap(buf);
 
 	int result = fwbuf_error(buf) ? -1 : 0;
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwErrCode = GetLastError();
 
 	if (buf->hFile == INVALID_HANDLE_VALUE)

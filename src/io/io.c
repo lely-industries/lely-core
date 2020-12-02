@@ -4,7 +4,7 @@
  *
  * @see lely/io/io.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,7 +35,7 @@ lely_io_init(void)
 	if (lely_io_ref++)
 		return 0;
 
-#ifdef _WIN32
+#if _WIN32
 	int errc = 0;
 
 	WORD wVersionRequested = MAKEWORD(2, 2);
@@ -46,7 +46,7 @@ lely_io_init(void)
 
 	return 0;
 
-#ifdef _WIN32
+#if _WIN32
 	// WSACleanup();
 error_WSAStartup:
 	lely_io_ref--;
@@ -65,7 +65,7 @@ lely_io_fini(void)
 	if (--lely_io_ref)
 		return;
 
-#ifdef _WIN32
+#if _WIN32
 	WSACleanup();
 #endif
 }

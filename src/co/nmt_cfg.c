@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 #include "nmt_cfg.h"
 #if !LELY_NO_MALLOC
@@ -786,7 +786,7 @@ co_nmt_cfg_store_1f20_on_dn_con(co_nmt_cfg_t *cfg, co_unsigned16_t idx,
 		// Skip sub-objects containing the default value.
 		type = co_sub_get_type(sub);
 		val = co_sub_get_val(sub);
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 		const void *def = co_sub_get_def(sub);
 		if (!co_val_cmp(type, def, val))
 			continue;

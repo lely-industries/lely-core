@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_SDEV
+#if !LELY_NO_CO_SDEV
 
 #include <lely/co/sdev.h>
 #include <lely/libc/stdio.h>
@@ -479,7 +479,7 @@ co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj)
 	assert(sobj);
 	assert(obj);
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_obj_set_name(obj, sobj->name) == -1)
 		return -1;
 #endif
@@ -511,7 +511,7 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 	assert(ssub);
 	assert(sub);
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_sub_set_name(sub, ssub->name) == -1)
 		return -1;
 #endif
@@ -522,7 +522,7 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 	const void *ptr;
 	size_t n;
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	ptr = co_val_addressof(ssub->type, &ssub->min);
 	n = co_val_sizeof(ssub->type, &ssub->min);
 	if (n && !co_sub_set_min(sub, ptr, n))
@@ -534,7 +534,7 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 		return -1;
 #endif
 
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 	ptr = co_val_addressof(ssub->type, &ssub->def);
 	n = co_val_sizeof(ssub->type, &ssub->def);
 	if (n && !co_sub_set_def(sub, ptr, n))
@@ -563,7 +563,7 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 
 	int r, t = 0;
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	const char *name = co_obj_get_name(obj);
 	if (name) {
 		r = snprintf(s, n,
@@ -586,7 +586,7 @@ snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
 #endif
 		r = snprintf(s, n,
 				"#if !LELY_NO_CO_OBJ_NAME\n\t\t.name = NULL,\n");
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	}
 #endif
 	if (r < 0)
@@ -683,7 +683,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 
 	int r, t = 0;
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	const char *name = co_sub_get_name(sub);
 	if (name) {
 		r = snprintf(s, n,
@@ -706,7 +706,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 #endif
 		r = snprintf(s, n,
 				"#if !LELY_NO_CO_OBJ_NAME\n\t\t\t.name = NULL,\n");
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	}
 #endif
 	if (r < 0)
@@ -749,7 +749,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	r = snprintf_c99_sval(s, n, type, co_sub_get_min(sub));
 #else
 	union co_val min;
@@ -771,7 +771,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	r = snprintf_c99_sval(s, n, type, co_sub_get_max(sub));
 #else
 	union co_val max;
@@ -794,7 +794,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 	r = snprintf_c99_sval(s, n, type, co_sub_get_def(sub));
 #else
 	union co_val def;
@@ -816,7 +816,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	r = MIN((size_t)r, n);
 	s += r;
 	n -= r;
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 	// clang-format off
 	if (type == CO_DEFTYPE_DOMAIN
 			&& ((co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)
@@ -889,7 +889,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 
 	LELY_CO_DEFINE_FLAGS(READ)
 	LELY_CO_DEFINE_FLAGS(WRITE)
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 	LELY_CO_DEFINE_FLAGS(UPLOAD_FILE)
 	LELY_CO_DEFINE_FLAGS(DOWNLOAD_FILE)
 #endif

@@ -77,7 +77,7 @@ __co_obj_init(struct __co_obj *obj, co_unsigned16_t idx, void *val, size_t size)
 
 	rbtree_init(&obj->tree, &uint8_cmp);
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	obj->name = NULL;
 #endif
 
@@ -101,7 +101,7 @@ __co_obj_fini(struct __co_obj *obj)
 	co_obj_clear(obj);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	free(obj->name);
 #endif
 }
@@ -261,7 +261,7 @@ co_obj_last_sub(const co_obj_t *obj)
 	return node ? structof(node, co_sub_t, node) : NULL;
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 
 const char *
 co_obj_get_name(const co_obj_t *obj)
@@ -390,7 +390,7 @@ co_obj_set_dn_ind(co_obj_t *obj, co_sub_dn_ind_t *ind, void *data)
 		co_sub_set_dn_ind(structof(node, co_sub_t, node), ind, data);
 }
 
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 void
 co_obj_set_up_ind(co_obj_t *obj, co_sub_up_ind_t *ind, void *data)
 {
@@ -433,18 +433,18 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
 	sub->obj = NULL;
 	sub->subidx = subidx;
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	sub->name = NULL;
 #endif
 
 	sub->type = type;
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	if (co_val_init_min(sub->type, &sub->min) == -1)
 		return NULL;
 	if (co_val_init_max(sub->type, &sub->max) == -1)
 		return NULL;
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 	if (co_val_init(sub->type, &sub->def) == -1)
 		return NULL;
 #endif
@@ -456,7 +456,7 @@ __co_sub_init(struct __co_sub *sub, co_unsigned8_t subidx, co_unsigned16_t type,
 
 	sub->dn_ind = &co_sub_default_dn_ind;
 	sub->dn_data = NULL;
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 	sub->up_ind = &co_sub_default_up_ind;
 	sub->up_data = NULL;
 #endif
@@ -472,15 +472,15 @@ __co_sub_fini(struct __co_sub *sub)
 	if (sub->obj)
 		co_obj_remove_sub(sub->obj, sub);
 
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 	co_val_fini(sub->type, &sub->def);
 #endif
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	co_val_fini(sub->type, &sub->max);
 	co_val_fini(sub->type, &sub->min);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	free(sub->name);
 #endif
 }
@@ -557,7 +557,7 @@ co_sub_get_subidx(const co_sub_t *sub)
 	return sub->subidx;
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 
 const char *
 co_sub_get_name(const co_sub_t *sub)
@@ -599,7 +599,7 @@ co_sub_get_type(const co_sub_t *sub)
 	return sub->type;
 }
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 
 const void *
 co_sub_addressof_min(const co_sub_t *sub)
@@ -657,7 +657,7 @@ co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n)
 
 #endif // !LELY_NO_CO_OBJ_LIMITS
 
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 
 const void *
 co_sub_addressof_def(const co_sub_t *sub)
@@ -739,7 +739,7 @@ co_sub_set_val(co_sub_t *sub, const void *ptr, size_t n)
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 co_unsigned32_t
 co_sub_chk_val(const co_sub_t *sub, co_unsigned16_t type, const void *val)
 {
@@ -822,7 +822,7 @@ co_sub_set_flags(co_sub_t *sub, unsigned int flags)
 	sub->flags = flags;
 }
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 
 const char *
 co_sub_get_upload_file(const co_sub_t *sub)
@@ -906,7 +906,7 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	assert(sub);
 	assert(req);
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 	// clang-format off
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN && (co_sub_get_flags(sub)
 			& CO_OBJ_FLAGS_DOWNLOAD_FILE))
@@ -925,7 +925,7 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	if (co_sdo_req_dn_val(req, type, &val, pac) == -1)
 		return -1;
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	// Accept the value if it is within bounds.
 	co_unsigned32_t ac = co_sub_chk_val(sub, type, &val);
 	if (ac) {
@@ -1003,7 +1003,7 @@ co_sub_dn(co_sub_t *sub, void *val)
 	return 0;
 }
 
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 
 void
 co_sub_get_up_ind(const co_sub_t *sub, co_sub_up_ind_t **pind, void **pdata)
@@ -1033,7 +1033,7 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 	assert(sub);
 	assert(req);
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 	if (co_sub_get_type(sub) == CO_DEFTYPE_DOMAIN
 			&& (co_sub_get_flags(sub) & CO_OBJ_FLAGS_UPLOAD_FILE)) {
 		const char *filename = co_sub_addressof_val(sub);
@@ -1066,7 +1066,7 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 	if (!req)
 		return CO_SDO_AC_ERROR;
 
-#ifdef LELY_NO_CO_OBJ_UPLOAD
+#if LELY_NO_CO_OBJ_UPLOAD
 	return co_sub_default_up_ind(sub, req, NULL);
 #else
 	assert(sub->up_ind);
