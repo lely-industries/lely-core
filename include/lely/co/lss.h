@@ -168,12 +168,19 @@ void co_lss_destroy(co_lss_t *lss);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_lss_stop()
+ * @see co_lss_stop(), co_lss_is_stopped()
  */
 int co_lss_start(co_lss_t *lss);
 
-/// Stops an LSS service. @see co_lss_start()
+/// Stops an LSS service. @see co_lss_start(), co_lss_is_stopped()
 void co_lss_stop(co_lss_t *lss);
+
+/**
+ * Retuns 1 if the specified LSS service is stopped, and 0 if not.
+ *
+ * @see co_lss_start, co_lss_stop()
+ */
+int co_lss_is_stopped(const co_lss_t *lss);
 
 /*
  * Returns a pointer to the allocator used to allocate an LSS master/slave

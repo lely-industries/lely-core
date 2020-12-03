@@ -67,7 +67,10 @@ TEST_BASE(CO_SdoTpdoBase) {
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartTPDO() { co_tpdo_start(tpdo); }
+  void RestartTPDO() {
+    co_tpdo_stop(tpdo);
+    co_tpdo_start(tpdo);
+  }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();

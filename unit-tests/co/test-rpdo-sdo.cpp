@@ -68,7 +68,10 @@ TEST_BASE(CO_SdoRpdoBase) {
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartRPDO() { co_rpdo_start(rpdo); }
+  void RestartRPDO() {
+    co_rpdo_stop(rpdo);
+    co_rpdo_start(rpdo);
+  }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();

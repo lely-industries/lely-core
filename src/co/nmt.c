@@ -1647,23 +1647,37 @@ co_nmt_node_err_ind(co_nmt_t *nmt, co_unsigned8_t id)
 co_rpdo_t *
 co_nmt_get_rpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
+#if LELY_NO_CO_RPDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.nrpdo)
 		return NULL;
 
 	return nmt->srv.rpdos[n - 1];
+#endif
 }
 
 co_tpdo_t *
 co_nmt_get_tpdo(const co_nmt_t *nmt, co_unsigned16_t n)
 {
+#if LELY_NO_CO_TPDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.ntpdo)
 		return NULL;
 
 	return nmt->srv.tpdos[n - 1];
+#endif
 }
 
 co_ssdo_t *
@@ -1680,44 +1694,75 @@ co_nmt_get_ssdo(const co_nmt_t *nmt, co_unsigned8_t n)
 co_csdo_t *
 co_nmt_get_csdo(const co_nmt_t *nmt, co_unsigned8_t n)
 {
+#if LELY_NO_CO_CSDO
+	(void)nmt;
+	(void)n;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	if (!n || n > nmt->srv.ncsdo)
 		return NULL;
 
 	return nmt->srv.csdos[n - 1];
+#endif
 }
 
 co_sync_t *
 co_nmt_get_sync(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_SYNC
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.sync;
+#endif
 }
 
 co_time_t *
 co_nmt_get_time(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_TIME
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.time;
+#endif
 }
 
 co_emcy_t *
 co_nmt_get_emcy(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_EMCY
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.emcy;
+#endif
 }
 
 co_lss_t *
 co_nmt_get_lss(const co_nmt_t *nmt)
 {
+#if LELY_NO_CO_LSS
+	(void)nmt;
+
+	return NULL;
+#else
 	assert(nmt);
 
 	return nmt->srv.lss;
+#endif
 }
 
 #ifndef LELY_NO_CO_MASTER
@@ -2599,7 +2644,7 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2640,7 +2685,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Disable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, 0);
+	co_nmt_srv_set(&nmt->srv, 0);
 
 	// Disable heartbeat consumption.
 	co_nmt_hb_fini(nmt);
@@ -2684,7 +2729,7 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 		can_recv_start(nmt->recv_000, nmt->net, CO_NMT_CS_CANID, 0);
 
 	// Enable LSS.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_SRV_LSS);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_SRV_LSS);
 
 	if (nmt->cs_ind)
 		nmt->cs_ind(nmt, CO_NMT_CS_RESET_COMM, nmt->cs_data);
@@ -2762,7 +2807,7 @@ co_nmt_preop_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services except PDO.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_PREOP_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_PREOP_SRV);
 
 	nmt->st = CO_NMT_ST_PREOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2829,7 +2874,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 #endif
 
 	// Enable all services.
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_START_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_START_SRV);
 
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -2903,7 +2948,7 @@ co_nmt_stop_on_enter(co_nmt_t *nmt)
 	diag(DIAG_INFO, 0, "NMT: entering stopped state");
 
 	// Disable all services (except LSS).
-	co_nmt_srv_set(&nmt->srv, nmt, CO_NMT_STOP_SRV);
+	co_nmt_srv_set(&nmt->srv, CO_NMT_STOP_SRV);
 
 	nmt->st = CO_NMT_ST_STOP | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
@@ -3289,7 +3334,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->state = NULL;
 
-	co_nmt_srv_init(&nmt->srv, nmt);
+	if (!co_nmt_srv_init(&nmt->srv, nmt)) {
+		errc = get_errc();
+		goto error_init_srv;
+	}
 
 	nmt->startup = 0;
 #ifndef LELY_NO_CO_MASTER
@@ -3524,6 +3572,7 @@ error_create_recv_700:
 	can_recv_destroy(nmt->recv_000);
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
+error_init_srv:
 	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
 error_write_dcf_comm:
 #ifndef LELY_NO_CO_DCF_RESTORE
