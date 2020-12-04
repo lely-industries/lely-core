@@ -198,11 +198,11 @@ class SubObject:
             default_value = section["DefaultValue"]
         value = default_value
         if "ParameterValue" in section and section["ParameterValue"]:
-            value = section["ParameterValue"]
+            value = subobj.parameter_value = section["ParameterValue"]
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = 0
+        subobj.pdo_mapping = False
         if "PDOMapping" in section and section["PDOMapping"]:
             subobj.pdo_mapping = bool(int(section["PDOMapping"], 0))
 
@@ -226,7 +226,7 @@ class SubObject:
         subobj.default_value = Value(subobj.data_type, str(number))
         subobj.value = subobj.default_value
 
-        subobj.pdo_mapping = 0
+        subobj.pdo_mapping = False
 
         return subobj
 
@@ -260,11 +260,11 @@ class SubObject:
             ):
                 value = cfg[name + "Value"][str(sub_index)]
         elif "ParameterValue" in section and section["ParameterValue"]:
-            value = section["ParameterValue"]
+            value = subobj.parameter_value = True
         subobj.default_value = Value(subobj.data_type, default_value)
         subobj.value = Value(subobj.data_type, value)
 
-        subobj.pdo_mapping = 0
+        subobj.pdo_mapping = False
         if "PDOMapping" in section and section["PDOMapping"]:
             subobj.pdo_mapping = bool(int(section["PDOMapping"], 0))
 

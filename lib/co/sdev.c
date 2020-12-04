@@ -911,6 +911,7 @@ snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub)
 	// cppcheck-suppress uselessAssignmentArg
 	// cppcheck-suppress uselessAssignmentPtrArg
 	LELY_CO_DEFINE_FLAGS(VAL_NODEID)
+	LELY_CO_DEFINE_FLAGS(PARAMETER_VALUE)
 
 #undef LELY_CO_DEFINE_FLAGS
 
