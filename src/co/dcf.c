@@ -861,6 +861,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 
 	val = config_get(cfg, section, "ParameterValue");
 	if (val && *val) {
+		sub->flags |= CO_OBJ_FLAGS_PARAMETER_VALUE;
 		size_t chars = co_val_lex_id(val, NULL, &at);
 		if (chars) {
 			val += chars;

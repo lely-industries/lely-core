@@ -113,6 +113,12 @@
 /// The current object value is of the form `$NODEID { "+" number }`.
 #define CO_OBJ_FLAGS_VAL_NODEID 0x80
 
+/**
+ * The current object value was explicitly set with the `ParamaterValue`
+ * attribute in the EDS/DCF file.
+ */
+#define CO_OBJ_FLAGS_PARAMETER_VALUE 0x100
+
 /// The CANopen SDO upload/download request struct from <lely/co/sdo.h>.
 struct co_sdo_req;
 

@@ -128,6 +128,9 @@ class CSubObject:
                 self.flags += " | CO_OBJ_FLAGS_VAL_NODEID"
             subobj.value.c = CValue(subobj.value, subobj.env)
 
+        if hasattr(subobj, "parameter_value"):
+            self.flags += " | CO_OBJ_FLAGS_PARAMETER_VALUE"
+
 
 class CValue:
     __format = {
