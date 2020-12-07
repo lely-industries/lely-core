@@ -1425,11 +1425,13 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 
 	slave->booting = 1;
 
+#if !LELY_NO_MALLOC
 	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->boot) {
 		errc = get_errc();
 		goto error_create_boot;
 	}
+#endif
 
 	// clang-format off
 	if (co_nmt_boot_boot_req(slave->boot, timeout, &co_nmt_dn_ind,
@@ -1442,9 +1444,11 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 	return 0;
 
 error_boot_req:
+#if !LELY_NO_MALLOC
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
 error_create_boot:
+#endif
 	slave->booting = 0;
 error_param:
 	set_errc(errc);
@@ -1498,11 +1502,13 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 
 	slave->configuring = 1;
 
+#if !LELY_NO_MALLOC
 	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->cfg) {
 		errc = get_errc();
 		goto error_create_cfg;
 	}
+#endif
 	slave->cfg_con = con;
 	slave->cfg_data = data;
 
@@ -1517,9 +1523,11 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	return 0;
 
 error_cfg_req:
+#if !LELY_NO_MALLOC
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
 error_create_cfg:
+#endif
 	slave->configuring = 0;
 error_param:
 	set_errc(errc);
@@ -1800,8 +1808,10 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 	slave->es = es;
 	slave->booting = 0;
 	slave->booted = 1;
+#if !LELY_NO_MALLOC
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
+#endif
 
 	// Re-enable the heartbeat consumer for the node, if necessary.
 	co_unsigned16_t ms = 0;
@@ -1876,8 +1886,10 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 	slave->configuring = 0;
+#if !LELY_NO_MALLOC
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
+#endif
 
 	// Re-enable the heartbeat consumer for the node, if necessary.
 	if (!slave->booting) {
@@ -3259,13 +3271,17 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 
 		if (slave->boot)
 			co_nmt_boot_abort_req(slave->boot);
+#if !LELY_NO_MALLOC
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
+#endif
 
 		if (slave->cfg)
 			co_nmt_cfg_abort_req(slave->cfg);
+#if !LELY_NO_MALLOC
 		co_nmt_cfg_destroy(slave->cfg);
 		slave->cfg = NULL;
+#endif
 		slave->cfg_con = NULL;
 		slave->cfg_data = NULL;
 
@@ -3489,6 +3505,20 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 			goto error_init_slave;
 		}
 		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
+
+#if LELY_NO_MALLOC
+		slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
+		if (!slave->boot) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+
+		slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
+		if (!slave->cfg) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+#endif
 	}
 
 	nmt->timeout = LELY_CO_NMT_TIMEOUT;
@@ -3583,6 +3613,10 @@ error_init_slave:
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
+#if LELY_NO_MALLOC
+		co_nmt_cfg_destroy(slave->cfg);
+		co_nmt_boot_destroy(slave->boot);
+#endif
 		can_recv_destroy(slave->recv);
 		can_timer_destroy(slave->timer);
 	}
