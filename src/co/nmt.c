@@ -97,8 +97,15 @@ struct co_nmt_slave {
 	co_unsigned8_t rst;
 	/// The error status of the 'boot slave' process.
 	char es;
+	/// A flag specifying whether the 'boot slave' process is in progress.
+	unsigned booting : 1;
+	/**
+	 * A flag specifying whether an NMT 'configuration request' is in
+	 * progress.
+	 */
+	unsigned configuring : 1;
 	/// A flag specifying whether the 'boot slave' process has ended.
-	int booted;
+	unsigned booted : 1;
 	/// A pointer to the NMT 'boot slave' service.
 	co_nmt_boot_t *boot;
 	/// A pointer to the NMT 'update configuration' service.
@@ -907,7 +914,10 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booting = 0;
+		slave->configuring = 0;
 		slave->booted = 0;
+
 		slave->boot = NULL;
 
 		slave->cfg = NULL;
@@ -1746,12 +1756,19 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (slave->boot) {
+	if (slave->booting) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
 
 	trace("NMT: booting slave %d", id);
+
+	// Disable the heartbeat consumer during the 'boot slave' process.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
+
+	slave->booting = 1;
 
 	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
 	if (!slave->boot) {
@@ -1767,17 +1784,13 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 		goto error_boot_req;
 	}
 
-	// Disable the heartbeat consumer during the 'boot slave' process.
-	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
-	if (hb)
-		co_nmt_hb_set_1016(hb, id, 0);
-
 	return 0;
 
 error_boot_req:
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
 error_create_boot:
+	slave->booting = 0;
 error_param:
 	set_errc(errc);
 	return -1;
@@ -1816,12 +1829,19 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (slave->cfg) {
+	if (slave->configuring) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
 
 	trace("NMT: starting update configuration process for node %d", id);
+
+	// Disable the heartbeat consumer during a configuration request.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
+
+	slave->configuring = 1;
 
 	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
 	if (!slave->cfg) {
@@ -1839,17 +1859,13 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 		goto error_cfg_req;
 	}
 
-	// Disable the heartbeat consumer during a configuration request.
-	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
-	if (hb)
-		co_nmt_hb_set_1016(hb, id, 0);
-
 	return 0;
 
 error_cfg_req:
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
 error_create_cfg:
+	slave->configuring = 0;
 error_param:
 	set_errc(errc);
 	return -1;
@@ -2127,6 +2143,7 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		slave->est = CO_NMT_ST_PREOP;
 	slave->rst = st;
 	slave->es = es;
+	slave->booting = 0;
 	slave->booted = 1;
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
@@ -2203,11 +2220,12 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	assert(id && id <= CO_NUM_NODES);
 
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+	slave->configuring = 0;
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
 
 	// Re-enable the heartbeat consumer for the node, if necessary.
-	if (!slave->boot) {
+	if (!slave->booting) {
 		co_unsigned16_t ms = 0;
 		co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, &ms);
 		if (hb)
@@ -2462,7 +2480,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 			// Skip slaves that are not in the network list or are
 			// already being configured.
-			if (!(slave->assignment & 0x01) || slave->cfg)
+			if (!(slave->assignment & 0x01) || slave->configuring)
 				continue;
 			co_nmt_cfg_req(nmt, id, nmt->timeout, NULL, NULL);
 		}
@@ -2637,7 +2655,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 		// Ignore messages from booting slaves or slaves that are being
 		// configured.
-		if (slave->boot || slave->cfg)
+		if (slave->booting || slave->configuring)
 			return 0;
 
 		// Ignore messages if node guarding is disabled.
@@ -3580,7 +3598,10 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booting = 0;
+		slave->configuring = 0;
 		slave->booted = 0;
+
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
 
