@@ -1411,14 +1411,14 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 
 	trace("NMT: booting slave %d", id);
 
-	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
+	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->boot) {
 		errc = get_errc();
 		goto error_create_boot;
 	}
 
 	// clang-format off
-	if (co_nmt_boot_boot_req(slave->boot, id, timeout, &co_nmt_dn_ind,
+	if (co_nmt_boot_boot_req(slave->boot, timeout, &co_nmt_dn_ind,
 			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
@@ -1481,7 +1481,7 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 
 	trace("NMT: starting update configuration process for node %d", id);
 
-	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
+	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->cfg) {
 		errc = get_errc();
 		goto error_create_cfg;
@@ -1490,7 +1490,7 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	slave->cfg_data = data;
 
 	// clang-format off
-	if (co_nmt_cfg_cfg_req(slave->cfg, id, timeout, &co_nmt_dn_ind,
+	if (co_nmt_cfg_cfg_req(slave->cfg, timeout, &co_nmt_dn_ind,
 			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
@@ -3239,9 +3239,14 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->es = 0;
 
 		slave->booted = 0;
+
+		if (slave->boot)
+			co_nmt_boot_abort_req(slave->boot);
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
 
+		if (slave->cfg)
+			co_nmt_cfg_abort_req(slave->cfg);
 		co_nmt_cfg_destroy(slave->cfg);
 		slave->cfg = NULL;
 		slave->cfg_con = NULL;
