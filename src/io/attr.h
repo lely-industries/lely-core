@@ -3,7 +3,7 @@
  *
  * @see lely/io/attr.h
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 
 static inline LPDCB io_attr_lpDCB(const io_attr_t *attr);
 static inline LPCOMMTIMEOUTS io_attr_lpCommTimeouts(const io_attr_t *attr);

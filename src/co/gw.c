@@ -23,31 +23,31 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_GW
+#if !LELY_NO_CO_GW
 
 #include <lely/co/csdo.h>
 #include <lely/co/dev.h>
 #include <lely/util/errnum.h>
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 #include <lely/co/emcy.h>
 #endif
 #include <lely/co/gw.h>
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 #include <lely/co/lss.h>
 #endif
 #include <lely/co/nmt.h>
 #include <lely/co/obj.h>
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 #include <lely/co/rpdo.h>
 #endif
 #include <lely/co/sdo.h>
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 #include <lely/co/sync.h>
 #endif
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 #include <lely/co/time.h>
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 #include <lely/co/tpdo.h>
 #endif
 
@@ -66,7 +66,7 @@ struct co_gw_net {
 	co_nmt_t *nmt;
 	/// The default node-ID.
 	co_unsigned8_t def;
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	/// The SDO timeout (in milliseconds).
 	int timeout;
 #endif
@@ -75,11 +75,11 @@ struct co_gw_net {
 	 * forwarded (1) or not (0).
 	 */
 	unsigned bootup_ind : 1;
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	/// An array of pointers to the SDO upload/download jobs.
 	struct co_gw_job *sdo[CO_NUM_NODES];
 #endif
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 	/// A pointer to the LSS job.
 	struct co_gw_job *lss;
 #endif
@@ -87,7 +87,7 @@ struct co_gw_net {
 	co_nmt_cs_ind_t *cs_ind;
 	/// A pointer to user-specified data for #cs_ind.
 	void *cs_data;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// A pointer to the original node guarding event indication function.
 	co_nmt_ng_ind_t *ng_ind;
 	/// A pointer to user-specified data for #ng_ind.
@@ -105,7 +105,7 @@ struct co_gw_net {
 	co_nmt_st_ind_t *st_ind;
 	/// A pointer to user-specified data for #st_ind.
 	void *st_data;
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	/// A pointer to the original 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
 	/// A pointer to user-specified data for #boot_ind.
@@ -147,7 +147,7 @@ static void co_gw_net_destroy(struct co_gw_net *net);
  * @see co_nmt_cs_ind_t
  */
 static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 /**
  * The callback function invoked when a node guarding event occurs for a node on
  * a CANopen network.
@@ -180,7 +180,7 @@ static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 /**
  * The callback function invoked when the 'boot slave' process completes for a
  * node on a CANopen network.
@@ -210,14 +210,14 @@ static void co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned16_t idx, co_unsigned8_t subidx, size_t size,
 		size_t nbyte, void *data);
 #endif
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 /**
  * The callback function invoked when a SYNC message is received from a node on
  * a CANopen network.
  */
 static void co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 #endif
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 /**
  * The callback function invoked when a TIME message is received from a node on
  * a CANopen network.
@@ -225,7 +225,7 @@ static void co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data);
 static void co_gw_net_time_ind(
 		co_time_t *time, const struct timespec *tp, void *data);
 #endif
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 /**
  * The callback function invoked when an EMCY message is received from a node on
  * a CANopen network.
@@ -234,7 +234,7 @@ static void co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id,
 		co_unsigned16_t ec, co_unsigned8_t er, co_unsigned8_t msef[5],
 		void *data);
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 /**
  * The callback function invoked when a PDO is received from a node on a CANopen
  * network.
@@ -270,7 +270,7 @@ static void co_gw_job_destroy(struct co_gw_job *job);
 /// Removes a CANopen gateway network job from its network.
 static void co_gw_job_remove(struct co_gw_job *job);
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 /// Creates a new SDO upload/download job.
 static struct co_gw_job *co_gw_job_create_sdo(struct co_gw_job **pself,
 		struct co_gw_net *net, co_unsigned8_t id,
@@ -289,7 +289,7 @@ static void co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 		co_unsigned8_t subidx, size_t size, size_t nbyte, void *data);
 #endif
 
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 /// Creates a new LSS job.
 static struct co_gw_job *co_gw_job_create_lss(struct co_gw_job **pself,
 		struct co_gw_net *net, const struct co_gw_req *req);
@@ -339,7 +339,7 @@ struct co_gw {
 	void *rate_data;
 };
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 /// Processes an 'SDO upload' request.
 static int co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
@@ -351,28 +351,28 @@ static int co_gw_recv_set_sdo_timeout(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 #endif
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 /// Processes a 'Configure RPDO' request.
 static int co_gw_recv_set_rpdo(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 /// Processes a 'Configure TPDO' request.
 static int co_gw_recv_set_tpdo(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 /// Processes a 'Read PDO data' request.
 static int co_gw_recv_pdo_read(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 /// Processes a 'Write PDO data' request.
 static int co_gw_recv_pdo_write(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 #endif
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 /// Processes an NMT request.
 static int co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, co_unsigned8_t cs,
@@ -394,7 +394,7 @@ static int co_gw_recv_set_hb(
 /// Processes a 'Set node-ID' request.
 static int co_gw_recv_set_id(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 /// Processes a 'Start/Stop emergency consumer' request.
 static int co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
@@ -414,7 +414,7 @@ static int co_gw_recv_set_node(
 static int co_gw_recv_get_version(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
 
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 /// Processes an 'LSS switch state global' request.
 static int co_gw_recv_lss_switch(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req);
@@ -585,24 +585,24 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// network-ID is 0, use the default ID.
 	co_unsigned16_t net = gw->def;
 	switch (req->srv) {
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
 	case CO_GW_SRV_SET_SDO_TIMEOUT:
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 	case CO_GW_SRV_SET_TPDO:
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 	case CO_GW_SRV_PDO_READ:
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 	case CO_GW_SRV_PDO_WRITE:
 #endif
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
 	case CO_GW_SRV_NMT_ENTER_PREOP:
@@ -616,14 +616,14 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_INIT:
 	case CO_GW_SRV_SET_HB:
 	case CO_GW_SRV_SET_ID:
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 #endif
 	case CO_GW_SRV_SET_BOOTUP_IND:
 	case CO_GW_SRV_SET_NODE:
 	case CO_GW_SRV_GET_VERSION:
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 	case CO_GW_SRV_LSS_SWITCH:
 	case CO_GW_SRV_LSS_SWITCH_SEL:
 	case CO_GW_SRV_LSS_SET_ID:
@@ -660,11 +660,11 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// use the default ID.
 	co_unsigned8_t node = net ? gw->net[net - 1]->def : 0;
 	switch (req->srv) {
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
 #endif
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 	case CO_GW_SRV_NMT_STOP:
 	case CO_GW_SRV_NMT_ENTER_PREOP:
@@ -675,7 +675,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 #endif
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 #endif
@@ -696,17 +696,17 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	// Except for the NMT commands, node-level request require a non-zero
 	// node-ID.
 	switch (req->srv) {
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 	case CO_GW_SRV_SDO_DN:
 #endif
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_NG_ENABLE:
 	case CO_GW_SRV_NMT_NG_DISABLE:
 #endif
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 #endif
@@ -717,7 +717,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	}
 
 	switch (req->srv) {
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	case CO_GW_SRV_SDO_UP:
 		trace("gateway: received 'SDO upload' request");
 		return co_gw_recv_sdo_up(gw, net, node, req);
@@ -728,27 +728,27 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		trace("gateway: received 'Configure SDO time-out' request");
 		return co_gw_recv_set_sdo_timeout(gw, net, req);
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 	case CO_GW_SRV_SET_RPDO:
 		trace("gateway: received 'Configure RPDO' request");
 		return co_gw_recv_set_rpdo(gw, net, req);
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 	case CO_GW_SRV_SET_TPDO:
 		trace("gateway: received 'Configure TPDO' request");
 		return co_gw_recv_set_tpdo(gw, net, req);
 #endif
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 	case CO_GW_SRV_PDO_READ:
 		trace("gateway: received 'Read PDO data' request");
 		return co_gw_recv_pdo_read(gw, net, req);
 #endif
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 	case CO_GW_SRV_PDO_WRITE:
 		trace("gateway: received 'Write PDO data' request");
 		return co_gw_recv_pdo_write(gw, net, req);
 #endif
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_START:
 		trace("gateway: received 'Start node' request");
 		return co_gw_recv_nmt_cs(gw, net, node, CO_NMT_CS_START, req);
@@ -791,7 +791,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 	case CO_GW_SRV_SET_ID:
 		trace("gateway: received 'Set node-ID' request");
 		return co_gw_recv_set_id(gw, net, req);
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 	case CO_GW_SRV_EMCY_START:
 	case CO_GW_SRV_EMCY_STOP:
 		trace("gateway: received '%s emergency consumer' request",
@@ -821,7 +821,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		// We cannot guarantee a lack of memory resources will never
 		// occur.
 		return co_gw_send_con(gw, req, CO_GW_IEC_NO_MEM, 0);
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 	case CO_GW_SRV_LSS_SWITCH:
 		trace("gateway: received 'LSS switch state global' request");
 		return co_gw_recv_lss_switch(gw, net, req);
@@ -923,22 +923,22 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	net->nmt = nmt;
 
 	net->def = 0;
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	net->timeout = 0;
 #endif
 	net->bootup_ind = 1;
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 		net->sdo[id - 1] = NULL;
 #endif
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 	net->lss = NULL;
 #endif
 
 	co_nmt_get_cs_ind(net->nmt, &net->cs_ind, &net->cs_data);
 	co_nmt_set_cs_ind(net->nmt, &co_gw_net_cs_ind, net);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	co_nmt_get_ng_ind(net->nmt, &net->ng_ind, &net->ng_data);
 	co_nmt_set_ng_ind(net->nmt, &co_gw_net_ng_ind, net);
 #endif
@@ -948,7 +948,7 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	co_nmt_set_hb_ind(net->nmt, &co_gw_net_hb_ind, net);
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
 	co_nmt_set_st_ind(net->nmt, &co_gw_net_st_ind, net);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	co_nmt_get_boot_ind(net->nmt, &net->boot_ind, &net->boot_data);
 	co_nmt_set_boot_ind(net->nmt, &co_gw_net_boot_ind, net);
 	co_nmt_get_dn_ind(net->nmt, &net->dn_ind, &net->dn_data);
@@ -957,25 +957,25 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	co_nmt_set_dn_ind(net->nmt, &co_gw_net_up_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 	co_sync_t *sync = co_nmt_get_sync(nmt);
 	if (sync)
 		co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 	co_time_t *time = co_nmt_get_time(nmt);
 	if (time)
 		co_time_set_ind(time, &co_gw_net_time_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 	co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 	if (emcy)
 		co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 	if (co_nmt_get_st(net->nmt) == CO_NMT_ST_START) {
 		for (co_unsigned16_t i = 1; i <= 512; i++) {
 			co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, i);
@@ -992,7 +992,7 @@ static void
 co_gw_net_destroy(struct co_gw_net *net)
 {
 	if (net) {
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 		for (co_unsigned16_t i = 1; i <= 512; i++) {
 			co_rpdo_t *pdo = co_nmt_get_rpdo(net->nmt, i);
 			if (pdo)
@@ -1000,40 +1000,40 @@ co_gw_net_destroy(struct co_gw_net *net)
 		}
 #endif
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(net->nmt);
 		if (emcy)
 			co_emcy_set_ind(emcy, NULL, NULL);
 #endif
 
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 		co_time_t *time = co_nmt_get_time(net->nmt);
 		if (time)
 			co_time_set_ind(time, NULL, NULL);
 #endif
 
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 		co_sync_t *sync = co_nmt_get_sync(net->nmt);
 		if (sync)
 			co_sync_set_ind(sync, NULL, NULL);
 #endif
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 		co_nmt_set_boot_ind(net->nmt, net->boot_ind, net->boot_data);
 #endif
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
 		co_nmt_set_hb_ind(net->nmt, net->hb_ind, net->hb_data);
 		co_nmt_set_lg_ind(net->nmt, net->lg_ind, net->lg_data);
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 		co_nmt_set_ng_ind(net->nmt, net->ng_ind, net->ng_data);
 #endif
 		co_nmt_set_cs_ind(net->nmt, net->cs_ind, net->cs_data);
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 		for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++)
 			co_gw_job_destroy(net->sdo[id - 1]);
 #endif
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 		co_gw_job_destroy(net->lss);
 #endif
 
@@ -1049,25 +1049,25 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 
 	switch (cs) {
 	case CO_NMT_CS_START: {
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 		co_sync_t *sync = co_nmt_get_sync(nmt);
 		if (sync)
 			co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 		co_time_t *time = co_nmt_get_time(nmt);
 		if (time)
 			co_time_set_ind(time, &co_gw_net_time_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 		if (emcy)
 			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 		for (co_unsigned16_t i = 1; i <= 512; i++) {
 			co_rpdo_t *pdo = co_nmt_get_rpdo(nmt, i);
 			if (pdo)
@@ -1078,19 +1078,19 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 		break;
 	}
 	case CO_NMT_CS_ENTER_PREOP: {
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 		co_sync_t *sync = co_nmt_get_sync(nmt);
 		if (sync)
 			co_sync_set_ind(sync, &co_gw_net_sync_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 		co_time_t *time = co_nmt_get_time(nmt);
 		if (time)
 			co_time_set_ind(time, &co_gw_net_time_ind, net);
 #endif
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 		co_emcy_t *emcy = co_nmt_get_emcy(nmt);
 		if (emcy)
 			co_emcy_set_ind(emcy, &co_gw_net_emcy_ind, net);
@@ -1104,7 +1104,7 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 		net->cs_ind(nmt, cs, net->cs_data);
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 static void
 co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 		void *data)
@@ -1184,7 +1184,7 @@ co_gw_net_st_ind(
 		net->st_ind(nmt, id, st, net->st_data);
 }
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 static void
 co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
@@ -1249,7 +1249,7 @@ co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
 
 #endif // !LELY_NO_CO_MASTER
 
-#ifndef LELY_NO_CO_SYNC
+#if !LELY_NO_CO_SYNC
 static void
 co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 {
@@ -1267,7 +1267,7 @@ co_gw_net_sync_ind(co_sync_t *sync, co_unsigned8_t cnt, void *data)
 }
 #endif
 
-#ifndef LELY_NO_CO_TIME
+#if !LELY_NO_CO_TIME
 static void
 co_gw_net_time_ind(co_time_t *time, const struct timespec *tp, void *data)
 {
@@ -1283,7 +1283,7 @@ co_gw_net_time_ind(co_time_t *time, const struct timespec *tp, void *data)
 }
 #endif
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 static void
 co_gw_net_emcy_ind(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned16_t ec,
 		co_unsigned8_t er, co_unsigned8_t msef[5], void *data)
@@ -1350,7 +1350,7 @@ co_gw_job_remove(struct co_gw_job *job)
 		*job->pself = NULL;
 }
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 
 static struct co_gw_job *
 co_gw_job_create_sdo(struct co_gw_job **pself, struct co_gw_net *net,
@@ -1500,7 +1500,7 @@ co_gw_job_sdo_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 
 #endif // !LELY_NO_CO_CSDO
 
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 
 static struct co_gw_job *
 co_gw_job_create_lss(struct co_gw_job **pself, struct co_gw_net *net,
@@ -1707,7 +1707,7 @@ co_gw_job_lss_scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
 
 #endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 static void
 co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 		size_t n, void *data)
@@ -1733,7 +1733,7 @@ co_gw_net_rpdo_ind(co_rpdo_t *pdo, co_unsigned32_t ac, const void *ptr,
 }
 #endif
 
-#ifndef LELY_NO_CO_CSDO
+#if !LELY_NO_CO_CSDO
 
 static int
 co_gw_recv_sdo_up(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
@@ -1899,7 +1899,7 @@ co_gw_recv_set_sdo_timeout(
 	assert(req);
 	assert(req->srv == CO_GW_SRV_SET_SDO_TIMEOUT);
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	co_nmt_t *nmt = gw->net[net - 1]->nmt;
 #endif
 
@@ -1912,7 +1912,7 @@ co_gw_recv_set_sdo_timeout(
 
 	gw->net[net - 1]->timeout = par->timeout;
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	// The actual NMT SDO timeout is limited by the global gateway command
 	// timeout.
 	int timeout = par->timeout;
@@ -1926,7 +1926,7 @@ co_gw_recv_set_sdo_timeout(
 
 #endif /// LELY_NO_CO_CSDO
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 static int
 co_gw_recv_set_rpdo(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
@@ -1968,7 +1968,7 @@ co_gw_recv_set_rpdo(
 }
 #endif
 
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 static int
 co_gw_recv_set_tpdo(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
@@ -2013,7 +2013,7 @@ co_gw_recv_set_tpdo(
 }
 #endif
 
-#ifndef LELY_NO_CO_RPDO
+#if !LELY_NO_CO_RPDO
 static int
 co_gw_recv_pdo_read(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
@@ -2078,7 +2078,7 @@ error:
 }
 #endif
 
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 static int
 co_gw_recv_pdo_write(
 		co_gw_t *gw, co_unsigned16_t net, const struct co_gw_req *req)
@@ -2141,7 +2141,7 @@ error:
 }
 #endif
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 
 static int
 co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
@@ -2394,7 +2394,7 @@ error:
 	return co_gw_send_con(gw, req, iec, 0);
 }
 
-#ifndef LELY_NO_CO_EMCY
+#if !LELY_NO_CO_EMCY
 static int
 co_gw_recv_set_emcy(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		const struct co_gw_req *req)
@@ -2453,7 +2453,7 @@ co_gw_recv_set_cmd_timeout(co_gw_t *gw, const struct co_gw_req *req)
 
 	gw->timeout = par->timeout;
 
-#ifndef LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER
 	for (co_unsigned16_t id = 1; id <= CO_GW_NUM_NET; id++) {
 		if (!gw->net[id - 1])
 			continue;
@@ -2573,7 +2573,7 @@ co_gw_recv_get_version(
 	return co_gw_send_srv(gw, (struct co_gw_srv *)&con);
 }
 
-#if !defined(LELY_NO_CO_MASTER) && !defined(LELY_NO_CO_LSS)
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_LSS
 
 static int
 co_gw_recv_lss_switch(

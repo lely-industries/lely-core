@@ -23,7 +23,7 @@
 
 #include "io.h"
 #include <lely/compat/stdatomic.h>
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
 
@@ -34,15 +34,15 @@ struct io_handle {
 	/// A pointer to the virtual table.
 	const struct io_handle_vtab *vtab;
 	/// The reference count.
-#ifndef LELY_NO_ATOMICS
+#if !LELY_NO_ATOMICS
 	atomic_size_t ref;
-#elif !defined(LELY_NO_THREADS) && defined(_WIN32)
+#elif !LELY_NO_THREADS && _WIN32
 	volatile LONG ref;
 #else
 	size_t ref;
 #endif
 	/// The native file descriptor.
-#ifdef _WIN32
+#if _WIN32
 	HANDLE fd;
 #else
 	int fd;
@@ -52,7 +52,7 @@ struct io_handle {
 	 * #IO_FLAG_NONBLOCK).
 	 */
 	int flags;
-#ifndef LELY_NO_THREADS
+#if !LELY_NO_THREADS
 	/// The mutex protecting #flags (and other device-specific fields).
 	mtx_t mtx;
 #endif
@@ -135,14 +135,14 @@ void io_handle_destroy(struct io_handle *handle);
  *
  * @see io_handle_unlock()
  */
-#ifdef LELY_NO_THREADS
+#if LELY_NO_THREADS
 #define io_handle_lock(handle)
 #else
 void io_handle_lock(struct io_handle *handle);
 #endif
 
 /// Unlocks a locked I/O device handle. @see io_handle_lock()
-#ifdef LELY_NO_THREADS
+#if LELY_NO_THREADS
 #define io_handle_unlock(handle)
 #else
 void io_handle_unlock(struct io_handle *handle);

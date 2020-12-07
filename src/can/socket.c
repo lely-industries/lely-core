@@ -4,7 +4,7 @@
  *
  * @see lely/can/socket.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "can.h"
 
-#ifdef LELY_HAVE_SOCKET_CAN
+#if LELY_HAVE_SOCKET_CAN
 
 #include <lely/can/socket.h>
 #include <lely/util/errnum.h>
@@ -147,7 +147,7 @@ can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 	assert(src);
 	assert(dst);
 
-#ifndef LELY_NO_CANFD
+#if !LELY_NO_CANFD
 	if (src->flags & CAN_FLAG_EDL) {
 		set_errnum(ERRNUM_INVAL);
 		return -1;
@@ -171,7 +171,7 @@ can_msg2can_frame(const struct can_msg *src, struct can_frame *dst)
 	return 0;
 }
 
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 
 int
 canfd_frame2can_msg(const struct canfd_frame *src, struct can_msg *dst)

@@ -4,7 +4,7 @@
  *
  * @see lely/io/serial.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 static int serial_flush(struct io_handle *handle);
 static int serial_purge(struct io_handle *handle, int flags);
@@ -50,7 +50,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 
 	int errc = 0;
 
-#ifdef _WIN32
+#if _WIN32
 	HANDLE fd = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 	if (fd == INVALID_HANDLE_VALUE) {
@@ -169,7 +169,7 @@ io_open_serial(const char *path, io_attr_t *attr)
 	return io_handle_acquire(handle);
 
 error_alloc_handle:
-#ifdef _WIN32
+#if _WIN32
 error_SetCommTimeouts:
 error_SetCommState:
 error_GetCommTimeouts:
@@ -206,7 +206,7 @@ io_purge(io_handle_t handle, int flags)
 	return handle->vtab->purge(handle, flags);
 }
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 int
 io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
@@ -218,7 +218,7 @@ io_serial_get_attr(io_handle_t handle, io_attr_t *attr)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	LPDCB lpDCB = io_attr_lpDCB(attr);
 	memset(lpDCB, 0, sizeof(*lpDCB));
 	lpDCB->DCBlength = sizeof(*lpDCB);
@@ -244,7 +244,7 @@ io_serial_set_attr(io_handle_t handle, const io_attr_t *attr)
 		return -1;
 	}
 
-#ifdef _WIN32
+#if _WIN32
 	if (!SetCommState(handle->fd, io_attr_lpDCB(attr)))
 		return -1;
 
@@ -269,7 +269,7 @@ serial_flush(struct io_handle *handle)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	return FlushFileBuffers(handle->fd) ? 0 : -1;
 #else
 	int result;
@@ -287,7 +287,7 @@ serial_purge(struct io_handle *handle, int flags)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwFlags = 0;
 	if (flags & IO_PURGE_RX)
 		dwFlags |= PURGE_RXABORT | PURGE_RXCLEAR;

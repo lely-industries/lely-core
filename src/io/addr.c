@@ -4,7 +4,7 @@
  *
  * @see lely/io/addr.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef _WIN32
+#if _WIN32
 
 #include <ctype.h>
 #include <stdio.h>
@@ -65,7 +65,7 @@ io_addr_cmp(const void *p1, const void *p2)
 }
 
 // clang-format off
-#if defined(_WIN32) || (defined(__linux__) \
+#if _WIN32 || (defined(__linux__) \
 		&& defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H))
 // clang-format on
@@ -75,7 +75,7 @@ io_addr_get_rfcomm_a(const io_addr_t *addr, char *ba, int *port)
 {
 	assert(addr);
 
-#ifdef _WIN32
+#if _WIN32
 	if (addr->addrlen < (int)sizeof(SOCKADDR_BTH)) {
 		WSASetLastError(WSAEINVAL);
 		return -1;
@@ -119,7 +119,7 @@ io_addr_set_rfcomm_a(io_addr_t *addr, const char *ba, int port)
 	assert(addr);
 
 	memset(addr, 0, sizeof(*addr));
-#ifdef _WIN32
+#if _WIN32
 	addr->addrlen = sizeof(SOCKADDR_BTH);
 	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
 
@@ -152,7 +152,7 @@ io_addr_get_rfcomm_n(const io_addr_t *addr, uint8_t ba[6], int *port)
 {
 	assert(addr);
 
-#ifdef _WIN32
+#if _WIN32
 	if (addr->addrlen < (int)sizeof(SOCKADDR_BTH)) {
 		WSASetLastError(WSAEINVAL);
 		return -1;
@@ -198,7 +198,7 @@ io_addr_set_rfcomm_n(io_addr_t *addr, const uint8_t ba[6], int port)
 	assert(addr);
 
 	memset(addr, 0, sizeof(*addr));
-#ifdef _WIN32
+#if _WIN32
 	addr->addrlen = sizeof(SOCKADDR_BTH);
 	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
 
@@ -228,7 +228,7 @@ io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 	assert(addr);
 
 	memset(addr, 0, sizeof(*addr));
-#ifdef _WIN32
+#if _WIN32
 	addr->addrlen = sizeof(SOCKADDR_BTH);
 	SOCKADDR_BTH *addr_bth = (SOCKADDR_BTH *)&addr->addr;
 
@@ -249,7 +249,7 @@ io_addr_set_rfcomm_local(io_addr_t *addr, int port)
 #endif // _WIN32 || (__linux__ && HAVE_BLUETOOTH_BLUETOOTH_H && HAVE_BLUETOOTH_RFCOMM_H)
 // clang-format on
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 int
 io_addr_get_ipv4_a(const io_addr_t *addr, char *ip, int *port)
@@ -521,7 +521,7 @@ io_addr_set_unix(io_addr_t *addr, const char *path)
 
 #endif // _POSIX_C_SOURCE >= 200112L
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 int
 io_addr_get_domain(const io_addr_t *addr)
@@ -529,7 +529,7 @@ io_addr_get_domain(const io_addr_t *addr)
 	assert(addr);
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
-#ifdef _WIN32
+#if _WIN32
 	case AF_BTH: return IO_SOCK_BTH;
 #elif defined(__linux__) && defined(HAVE_BLUETOOTH_BLUETOOTH_H) \
 		&& defined(HAVE_BLUETOOTH_RFCOMM_H)
@@ -555,7 +555,7 @@ io_addr_get_port(const io_addr_t *addr, int *port)
 	}
 
 	switch (((const struct sockaddr *)&addr->addr)->sa_family) {
-#ifdef _WIN32
+#if _WIN32
 	case AF_BTH: {
 		if (addr->addrlen < (int)sizeof(SOCKADDR_BTH)) {
 			WSASetLastError(WSAEINVAL);
@@ -621,7 +621,7 @@ io_addr_set_port(io_addr_t *addr, int port)
 	}
 
 	switch (((struct sockaddr *)&addr->addr)->sa_family) {
-#ifdef _WIN32
+#if _WIN32
 	case AF_BTH:
 		if (addr->addrlen < (int)sizeof(SOCKADDR_BTH)) {
 			WSASetLastError(WSAEINVAL);
@@ -814,7 +814,7 @@ io_get_addrinfo(int maxinfo, struct io_addrinfo *info, const char *nodename,
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
 
-#ifdef _WIN32
+#if _WIN32
 
 static int
 ba2str(const BTH_ADDR *ba, char *str)

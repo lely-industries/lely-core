@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains the serial I/O
  * attributes declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,7 +25,7 @@
 #include <lely/io/io.h>
 
 /// An opaque serial I/O device attributes type.
-#ifdef _WIN32
+#if _WIN32
 union __io_attr {
 	char __size[48];
 	int __align;

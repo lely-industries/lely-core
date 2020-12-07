@@ -4,7 +4,7 @@
  *
  * @see lely/io/if.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
+#if _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "iphlpapi.lib")
 #endif
@@ -42,16 +42,16 @@
 #include <ifaddrs.h>
 #endif
 
-#if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
+#if _WIN32 || (defined(__linux__) && defined(HAVE_IFADDRS_H))
 static void io_addr_set(io_addr_t *addr, const struct sockaddr *address);
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 static NETIO_STATUS WINAPI ConvertLengthToIpv6Mask(
 		ULONG MaskLength, u_char Mask[16]);
 #endif
 
-#if defined(_WIN32) || (defined(__linux__) && defined(HAVE_IFADDRS_H))
+#if _WIN32 || (defined(__linux__) && defined(HAVE_IFADDRS_H))
 
 int
 io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
@@ -59,7 +59,7 @@ io_get_ifinfo(int maxinfo, struct io_ifinfo *info)
 	if (!info)
 		maxinfo = 0;
 
-#ifdef _WIN32
+#if _WIN32
 	ULONG Flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST
 			| GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_INCLUDE_PREFIX
 			| GAA_FLAG_SKIP_FRIENDLY_NAME
@@ -267,7 +267,7 @@ io_addr_set(io_addr_t *addr, const struct sockaddr *address)
 
 #endif // _WIN32 || (__linux__ && HAVE_IFADDRS_H)
 
-#ifdef _WIN32
+#if _WIN32
 static NETIO_STATUS WINAPI
 ConvertLengthToIpv6Mask(ULONG MaskLength, u_char Mask[16])
 {

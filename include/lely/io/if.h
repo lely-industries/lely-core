@@ -2,7 +2,7 @@
  * This header file is part of the I/O library; it contains network interface
  * declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -28,7 +28,7 @@
  * The maximum number of bytes required to hold the name of a network interface,
  * including the terminating null byte.
  */
-#ifdef _WIN32
+#if _WIN32
 #define IO_IF_NAME_STRLEN 256
 #else
 #define IO_IF_NAME_STRLEN 16

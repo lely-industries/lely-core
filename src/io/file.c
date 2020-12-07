@@ -4,7 +4,7 @@
  *
  * @see lely/io/file.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -33,7 +33,7 @@
 
 #include <assert.h>
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 /// A regular file handle.
 struct file {
@@ -66,7 +66,7 @@ static const struct io_handle_vtab file_vtab = { .type = IO_TYPE_FILE,
 	.pread = &file_pread,
 	.pwrite = &file_pwrite };
 
-#ifdef _WIN32
+#if _WIN32
 static ssize_t _file_read(struct io_handle *handle, void *buf, size_t nbytes,
 		io_off_t offset);
 static ssize_t _file_write(struct io_handle *handle, const void *buf,
@@ -93,7 +93,7 @@ io_open_file(const char *path, int flags)
 	if (flags & IO_FILE_NO_EXIST)
 		flags &= ~IO_FILE_TRUNCATE;
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwDesiredAccess = 0;
 	if (flags & IO_FILE_READ)
 		dwDesiredAccess |= FILE_READ_DATA;
@@ -164,7 +164,7 @@ io_open_file(const char *path, int flags)
 	return io_handle_acquire(handle);
 
 error_alloc_handle:
-#ifdef _WIN32
+#if _WIN32
 	CloseHandle(fd);
 #else
 	close(fd);
@@ -228,14 +228,14 @@ io_pwrite(io_handle_t handle, const void *buf, size_t nbytes, io_off_t offset)
 	return handle->vtab->pwrite(handle, buf, nbytes, offset);
 }
 
-#if defined(_WIN32) || _POSIX_C_SOURCE >= 200112L
+#if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
 static ssize_t
 file_read(struct io_handle *handle, void *buf, size_t nbytes)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
 	if (current == -1)
 		return -1;
@@ -256,7 +256,7 @@ file_write(struct io_handle *handle, const void *buf, size_t nbytes)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	io_off_t current;
 	if (((struct file *)handle)->flags & IO_FILE_APPEND) {
 		// This value of the offset causes WriteFile() to write to the
@@ -284,7 +284,7 @@ file_flush(struct io_handle *handle)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	return FlushFileBuffers(handle->fd) ? 0 : -1;
 #else
 	int result;
@@ -302,7 +302,7 @@ file_seek(struct io_handle *handle, io_off_t offset, int whence)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	DWORD dwMoveMethod;
 	switch (whence) {
 	case IO_SEEK_BEGIN: dwMoveMethod = FILE_BEGIN; break;
@@ -339,7 +339,7 @@ file_pread(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
 	if (current == -1)
 		return -1;
@@ -367,7 +367,7 @@ file_pwrite(struct io_handle *handle, const void *buf, size_t nbytes,
 {
 	assert(handle);
 
-#ifdef _WIN32
+#if _WIN32
 	io_off_t current = file_seek(handle, 0, IO_SEEK_CURRENT);
 	if (current == -1)
 		return -1;
@@ -389,7 +389,7 @@ file_pwrite(struct io_handle *handle, const void *buf, size_t nbytes,
 #endif
 }
 
-#ifdef _WIN32
+#if _WIN32
 
 static ssize_t
 _file_read(struct io_handle *handle, void *buf, size_t nbytes, io_off_t offset)

@@ -4,7 +4,7 @@
  *
  * @see lely/io/can.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "io.h"
 #include <lely/util/errnum.h>
-#if !defined(LELY_NO_CAN) && defined(__linux__) && defined(HAVE_LINUX_CAN_H)
+#if !LELY_NO_CAN && defined(__linux__) && HAVE_LINUX_CAN_H
 #include <lely/can/socket.h>
 #endif
 #include "handle.h"
@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <string.h>
 
-#if defined(__linux__) && defined(HAVE_LINUX_CAN_H)
+#if defined(__linux__) && HAVE_LINUX_CAN_H
 
 #ifdef HAVE_LINUX_CAN_ERROR_H
 #include <linux/can/error.h>
@@ -57,7 +57,7 @@
 struct can {
 	/// The I/O device base handle.
 	struct io_handle base;
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	/// A flag indicating the device supports sending CAN FD frames.
 	int canfd;
 #endif
@@ -115,7 +115,7 @@ io_open_can(const char *path)
 		goto error_socket;
 	}
 
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	int canfd = 0;
 #ifdef HAVE_CAN_RAW_FD_FRAMES
 	errsv = errno;
@@ -155,7 +155,7 @@ io_open_can(const char *path)
 	}
 
 #ifdef HAVE_SYS_IOCTL_H
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	if (canfd) {
 		struct ifreq ifr;
 		if_indextoname(ifindex, ifr.ifr_name);
@@ -184,7 +184,7 @@ io_open_can(const char *path)
 	}
 
 	handle->fd = s;
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	((struct can *)handle)->canfd = canfd;
 #endif
 	((struct can *)handle)->ifindex = ifindex;
@@ -209,7 +209,7 @@ error_socket:
 	return IO_HANDLE_ERROR;
 }
 
-#ifndef LELY_NO_CAN
+#if !LELY_NO_CAN
 
 int
 io_can_read(io_handle_t handle, struct can_msg *msg)
@@ -227,7 +227,7 @@ io_can_read(io_handle_t handle, struct can_msg *msg)
 	}
 	struct can *can = (struct can *)handle;
 
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	if (((struct can *)handle)->canfd) {
 		struct canfd_frame frame = { .can_id = 0 };
 		ssize_t nbytes = can_read(handle, &frame, sizeof(frame));
@@ -284,7 +284,7 @@ io_can_write(io_handle_t handle, const struct can_msg *msg)
 		return -1;
 	}
 
-#if !defined(LELY_NO_CANFD) && defined(CANFD_MTU)
+#if !LELY_NO_CANFD && defined(CANFD_MTU)
 	if (msg->flags & CAN_FLAG_EDL) {
 		if (!((struct can *)handle)->canfd) {
 			errno = EINVAL;

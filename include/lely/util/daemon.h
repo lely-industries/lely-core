@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the daemon
  * declarations.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -45,7 +45,7 @@ enum {
 	DAEMON_USER_MIN,
 // clang-format off
 	/// The largest possible value of a user-defined signal.
-#ifdef _WIN32
+#if _WIN32
 	DAEMON_USER_MAX = DAEMON_USER_MIN + 128
 #else
 	DAEMON_USER_MAX = 255

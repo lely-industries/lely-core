@@ -1,5 +1,5 @@
 #include "test.h"
-#ifdef _WIN32
+#if _WIN32
 #include <lely/io/sock.h>
 #else
 #include <lely/io/pipe.h>
@@ -19,7 +19,7 @@ main(void)
 	tap_assert(poll);
 
 	io_handle_t pipe[2];
-#ifdef _WIN32
+#if _WIN32
 	tap_test(!io_open_socketpair(IO_SOCK_IPV4, IO_SOCK_STREAM, pipe));
 #else
 	tap_test(!io_open_pipe(pipe));

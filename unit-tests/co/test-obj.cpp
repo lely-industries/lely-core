@@ -80,7 +80,7 @@ TEST(CO_ObjInit, CoObjInit) {
   POINTERS_EQUAL(nullptr, co_obj_get_dev(obj));
   CHECK_EQUAL(0x1234, co_obj_get_idx(obj));
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
   POINTERS_EQUAL(nullptr, co_obj_get_name(obj));
 #endif
 
@@ -367,7 +367,7 @@ TEST(CO_Obj, CoObjLastSub_Empty) {
   POINTERS_EQUAL(nullptr, co_obj_last_sub(obj));
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 
 TEST(CO_Obj, CoObjSetName_Null) {
   CHECK_EQUAL(0, co_obj_set_name(obj, nullptr));
@@ -627,7 +627,7 @@ TEST(CO_SubInit, CoSubInit) {
   co_sub_get_dn_ind(sub, &pind_dn, &pdata_dn);
   CHECK(pind_dn != nullptr);
   POINTERS_EQUAL(nullptr, pdata_dn);
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
   co_sub_up_ind_t* pind_up = nullptr;
   void* pdata_up = nullptr;
   co_sub_get_up_ind(sub, &pind_up, &pdata_up);
@@ -638,7 +638,7 @@ TEST(CO_SubInit, CoSubInit) {
   DestroyCoSubT(sub);
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 TEST(CO_SubInit, CoSubInit_Name) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
@@ -651,7 +651,7 @@ TEST(CO_SubInit, CoSubInit_Name) {
 }
 #endif
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 TEST(CO_SubInit, CoSubInit_Limits) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
@@ -689,7 +689,7 @@ TEST(CO_SubInit, CoSubInit_InitValMaxFails) {
 #endif  // HAVE_LELY_OVERRIDE
 #endif  // LELY_NO_CO_OBJ_LIMITS
 
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 TEST(CO_SubInit, CoSubInit_Default) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
@@ -714,7 +714,7 @@ TEST(CO_SubInit, CoSubInit_InitValFails) {
 #endif  // HAVE_LELY_OVERRIDE
 #endif  // LELY_NO_CO_OBJ_DEFAULT
 
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 TEST(CO_SubInit, CoSubInit_Upload) {
   auto* const sub = AcquireCoSubT();
   CHECK(sub != nullptr);
@@ -796,7 +796,7 @@ TEST(CO_ObjSub, CoSubGetSubidx) {
   CHECK_EQUAL(SUB_IDX, co_sub_get_subidx(sub));
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 
 TEST(CO_Sub, CoSubSetName_Null) {
   CHECK_EQUAL(0, co_sub_set_name(sub, nullptr));
@@ -822,7 +822,7 @@ TEST(CO_Sub, CoSubSetName) {
 
 TEST(CO_Sub, CoSubGetType) { CHECK_EQUAL(SUB_DEFTYPE, co_sub_get_type(sub)); }
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 
 TEST(CO_Sub, CoSubAddressofMin_Null) {
   POINTERS_EQUAL(nullptr, co_sub_addressof_min(nullptr));
@@ -892,7 +892,7 @@ TEST(CO_Sub, CoSubSetMax) {
 
 #endif  // !LELY_NO_CO_OBJ_LIMITS
 
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 
 TEST(CO_Sub, CoSubAddressofDef_Null) {
   POINTERS_EQUAL(nullptr, co_sub_addressof_def(nullptr));
@@ -1089,7 +1089,7 @@ TEST(CO_Sub, CoSubSetFlags) {
               co_sub_get_flags(sub));
 }
 
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 
 TEST(CO_Sub, CoSubGetUploadFile_NoFlag) {
   POINTERS_EQUAL(nullptr, co_sub_get_upload_file(sub));
@@ -1257,7 +1257,7 @@ TEST(CO_ObjSub, CoSubDnInd) {
 
 // TODO(sdo): co_sub_dn() tests
 
-#ifndef LELY_NO_CO_OBJ_UPLOAD
+#if !LELY_NO_CO_OBJ_UPLOAD
 
 TEST(CO_Sub, CoSubGetUpInd_Null) { co_sub_get_up_ind(sub, nullptr, nullptr); }
 

@@ -24,7 +24,7 @@
 
 #include "co.h"
 
-#ifndef LELY_NO_CO_DCF
+#if !LELY_NO_CO_DCF
 
 #include <lely/co/dcf.h>
 #include <lely/co/detail/obj.h>
@@ -45,7 +45,7 @@ static int co_dev_parse_cfg(co_dev_t *dev, const config_t *cfg);
 
 static int co_obj_parse_cfg(
 		co_obj_t *obj, const config_t *cfg, const char *section);
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 static int co_obj_parse_names(co_obj_t *obj, const config_t *cfg);
 #endif
 static int co_obj_parse_values(co_obj_t *obj, const config_t *cfg);
@@ -454,7 +454,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				idx);
 		return -1;
 	}
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	val = config_get(cfg, section, "Denotation");
 	if (val && *val)
 		name = val;
@@ -551,7 +551,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 				return -1;
 			co_val_make(sub->type, sub->val, &subobj,
 					sizeof(subobj));
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 			co_val_copy(sub->type, &sub->def, sub->val);
 #endif
 			co_sub_set_access(sub, CO_ACCESS_RO);
@@ -591,7 +591,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 					return -1;
 			}
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 			// Parse the names of the sub-objects.
 			if (co_obj_parse_names(obj, cfg) == -1)
 				return -1;
@@ -636,7 +636,7 @@ co_obj_parse_cfg(co_obj_t *obj, const config_t *cfg, const char *section)
 	return 0;
 }
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 static int
 co_obj_parse_names(co_obj_t *obj, const config_t *cfg)
 {
@@ -764,12 +764,12 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	co_unsigned8_t id = co_dev_get_id(co_obj_get_dev(co_sub_get_obj(sub)));
 	co_unsigned16_t type = co_sub_get_type(sub);
 
-#ifdef LELY_NO_CO_OBJ_DEFAULT
+#if LELY_NO_CO_OBJ_DEFAULT
 	union co_val def;
 	co_val_init(type, &def);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	val = config_get(cfg, section, "LowLimit");
 	if (val && *val) {
 		size_t chars = co_val_lex_id(val, NULL, &at);
@@ -835,7 +835,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			val += chars;
 			sub->flags |= CO_OBJ_FLAGS_DEF_NODEID;
 		}
-#ifdef LELY_NO_CO_OBJ_DEFAULT
+#if LELY_NO_CO_OBJ_DEFAULT
 		if (!co_val_lex_dcf(type, &def, val, NULL, &at)) {
 #else
 		if (!co_val_lex_dcf(type, &sub->def, val, NULL, &at)) {
@@ -845,7 +845,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 			goto error;
 		}
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
-#ifdef LELY_NO_CO_OBJ_DEFAULT
+#if LELY_NO_CO_OBJ_DEFAULT
 			co_val_set_id(type, &def, id);
 #else
 			co_val_set_id(type, &sub->def, id);
@@ -874,7 +874,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 		}
 		if (sub->flags & CO_OBJ_FLAGS_VAL_NODEID)
 			co_val_set_id(type, sub->val, id);
-#ifndef LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_CO_OBJ_FILE
 	} else if (type == CO_DEFTYPE_DOMAIN
 			&& (val = config_get(cfg, section, "UploadFile"))
 					!= NULL) {
@@ -916,25 +916,25 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	} else {
 		if (sub->flags & CO_OBJ_FLAGS_DEF_NODEID)
 			sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
-#ifdef LELY_NO_CO_OBJ_DEFAULT
+#if LELY_NO_CO_OBJ_DEFAULT
 		co_val_copy(type, sub->val, &def);
 #else
 		co_val_copy(type, sub->val, &sub->def);
 #endif
 	}
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
 	if (co_type_is_basic(type)) {
 		const void *min = co_sub_addressof_min(sub);
 		const void *max = co_sub_addressof_max(sub);
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 		const void *def = co_sub_addressof_def(sub);
 #endif
 		const void *val = co_sub_addressof_val(sub);
 		if (co_val_cmp(type, min, max) > 0)
 			diag_at(DIAG_WARNING, 0, &at,
 					"LowLimit exceeds HighLimit");
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 		if (co_val_cmp(type, def, min) < 0)
 			diag_at(DIAG_WARNING, 0, &at, "DefaultValue underflow");
 		if (co_val_cmp(type, def, max) > 0)
@@ -952,7 +952,7 @@ co_sub_parse_cfg(co_sub_t *sub, const config_t *cfg, const char *section)
 	result = 0;
 
 error:
-#ifdef LELY_NO_CO_OBJ_DEFAULT
+#if LELY_NO_CO_OBJ_DEFAULT
 	co_val_fini(type, &def);
 #endif
 	return result;
@@ -981,7 +981,7 @@ co_sub_build(co_obj_t *obj, co_unsigned8_t subidx, co_unsigned16_t type,
 		goto error;
 	}
 
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_sub_set_name(sub, name) == -1) {
 		diag(DIAG_ERROR, get_errc(),
 				"unable to set name of sub-object %Xsub%X", idx,
@@ -1018,7 +1018,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1400 + num - 1);
 		if (!obj)
 			return -1;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 		if (co_obj_set_name(obj, "RPDO communication parameter")
 				== -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
@@ -1033,7 +1033,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (!sub)
 			return -1;
 		co_val_make(sub->type, sub->val, &n, sizeof(n));
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 		co_val_copy(sub->type, &sub->def, sub->val);
 #endif
 		co_sub_set_access(sub, CO_ACCESS_CONST);
@@ -1050,7 +1050,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
 			co_val_make(sub->type, sub->val, &cobid, sizeof(cobid));
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 			co_val_copy(sub->type, &sub->def, sub->val);
 #endif
 			co_sub_set_access(sub, CO_ACCESS_RW);
@@ -1102,7 +1102,7 @@ co_rpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1600 + num - 1);
 		if (!obj)
 			return -1;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 		if (co_obj_set_name(obj, "RPDO mapping parameter") == -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure RPDO %u",
 					num);
@@ -1152,7 +1152,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1800 + num - 1);
 		if (!obj)
 			return -1;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 		if (co_obj_set_name(obj, "TPDO communication parameter")
 				== -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
@@ -1167,7 +1167,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		if (!sub)
 			return -1;
 		co_val_make(sub->type, sub->val, &n, sizeof(n));
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 		co_val_copy(sub->type, &sub->def, sub->val);
 #endif
 		co_sub_set_access(sub, CO_ACCESS_CONST);
@@ -1184,7 +1184,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 				sub->flags |= CO_OBJ_FLAGS_VAL_NODEID;
 			}
 			co_val_make(sub->type, sub->val, &cobid, sizeof(cobid));
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
 			co_val_copy(sub->type, &sub->def, sub->val);
 #endif
 			co_sub_set_access(sub, CO_ACCESS_RW);
@@ -1236,7 +1236,7 @@ co_tpdo_build(co_dev_t *dev, co_unsigned16_t num, int mask)
 		co_obj_t *obj = co_obj_build(dev, 0x1a00 + num - 1);
 		if (!obj)
 			return -1;
-#ifndef LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_CO_OBJ_NAME
 		if (co_obj_set_name(obj, "TPDO mapping parameter") == -1) {
 			diag(DIAG_ERROR, get_errc(), "unable configure TPDO %u",
 					num);

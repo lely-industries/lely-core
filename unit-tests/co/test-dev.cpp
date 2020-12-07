@@ -232,25 +232,25 @@ TEST(CO_Dev, CoDevSetId) {
 
 TEST(CO_Dev, CoDevSetId_CheckObj) {
   CoObjTHolder obj_holder(0x0000);
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   CoObjTHolder obj1_holder(0x0001);
   CoObjTHolder obj2_holder(0x1234);
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   CoObjTHolder obj3_holder(0xffff);
 #endif
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   CoSubTHolder sub_min1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_min2_holder(0x01, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_max1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_max2_holder(0x01, CO_DEFTYPE_INTEGER16);
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   CoSubTHolder sub_def1_holder(0x00, CO_DEFTYPE_INTEGER16);
   CoSubTHolder sub_def2_holder(0x01, CO_DEFTYPE_INTEGER16);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   const co_integer16_t min_val1 = 0x0;
   const co_integer16_t min_val2 = 0x0 + co_dev_get_id(dev);
   CHECK_EQUAL(2, co_sub_set_min(sub_min1_holder.Get(), &min_val1, 2));
@@ -263,7 +263,7 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
   CHECK_EQUAL(2, co_sub_set_max(sub_max2_holder.Get(), &max_val2, 2));
   co_sub_set_flags(sub_max2_holder.Get(), CO_OBJ_FLAGS_MAX_NODEID);
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   const co_integer16_t def_val1 = 0x1234;
   const co_integer16_t def_val2 = 0x1234 + co_dev_get_id(dev);
   CHECK_EQUAL(2, co_sub_set_def(sub_def1_holder.Get(), &def_val1, 2));
@@ -271,23 +271,23 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
   co_sub_set_flags(sub_def2_holder.Get(), CO_OBJ_FLAGS_DEF_NODEID);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   CHECK(obj1_holder.InsertSub(sub_min1_holder) != nullptr);
   CHECK(obj1_holder.InsertSub(sub_min2_holder) != nullptr);
   CHECK(obj2_holder.InsertSub(sub_max1_holder) != nullptr);
   CHECK(obj2_holder.InsertSub(sub_max2_holder) != nullptr);
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   CHECK(obj3_holder.InsertSub(sub_def1_holder) != nullptr);
   CHECK(obj3_holder.InsertSub(sub_def2_holder) != nullptr);
 #endif
 
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder.Take()));
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1_holder.Take()));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj2_holder.Take()));
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj3_holder.Take()));
 #endif
 
@@ -298,11 +298,11 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(new_id, co_dev_get_id(dev));
 
-#if !defined(LELY_NO_CO_OBJ_LIMITS) || !defined(LELY_NO_CO_OBJ_DEFAULT)
+#if !LELY_NO_CO_OBJ_LIMITS || !LELY_NO_CO_OBJ_DEFAULT
   const co_obj_t* out_obj = co_dev_first_obj(dev);
 #endif
 
-#ifndef LELY_NO_CO_OBJ_LIMITS
+#if !LELY_NO_CO_OBJ_LIMITS
   out_obj = co_obj_next(out_obj);
   CHECK_EQUAL(0x0, *static_cast<const co_integer16_t*>(
                        co_sub_get_min(co_obj_first_sub(out_obj))));
@@ -315,7 +315,7 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
   CHECK_EQUAL(0x3f00 + new_id, *static_cast<const co_integer16_t*>(
                                    co_sub_get_max(co_obj_last_sub(out_obj))));
 #endif
-#ifndef LELY_NO_CO_OBJ_DEFAULT
+#if !LELY_NO_CO_OBJ_DEFAULT
   out_obj = co_obj_next(out_obj);
   CHECK_EQUAL(0x1234, *static_cast<const co_integer16_t*>(
                           co_sub_get_def(co_obj_first_sub(out_obj))));
@@ -1316,7 +1316,7 @@ TEST(CO_DevDCF, CoDevWriteDcf_Null) {
 }
 #endif
 
-#ifndef LELY_NO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 namespace CO_DevTPDO_Static {
 static unsigned int tpdo_event_ind_counter = 0;
 }  // namespace CO_DevTPDO_Static

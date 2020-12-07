@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the I/O library.
  *
- * @copyright 2016-2018 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -27,7 +27,7 @@
 
 #include <lely/io/io.h>
 
-#ifdef _WIN32
+#if _WIN32
 #ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
 #endif
@@ -70,7 +70,7 @@
 
 #endif
 
-#ifdef _WIN32
+#if _WIN32
 
 #ifndef MCAST_JOIN_GROUP
 #define MCAST_JOIN_GROUP 41
