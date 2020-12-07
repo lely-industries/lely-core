@@ -338,9 +338,20 @@ static co_unsigned32_t co_1f25_dn_ind(
 static co_unsigned32_t co_1f80_dn_ind(
 		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+/**
+ * The download indication function for (all sub-objects of) CANopen object 1F81
+ * (NMT slave assignment).
+ *
+ * @see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1f81_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
+#endif
+
 #if !LELY_NO_CO_MASTER
 /**
- * The download indication function for (all sub-objects of) CANopen object 1F80
+ * The download indication function for (all sub-objects of) CANopen object 1F82
  * (Request NMT).
  *
  * @see co_sub_dn_ind_t
@@ -1425,7 +1436,12 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 
 	slave->booting = 1;
 
-#if !LELY_NO_MALLOC
+#if LELY_NO_MALLOC
+	if (!slave->boot) {
+		co_nmt_boot_con(nmt, id, 0, 'A');
+		return 0;
+	}
+#else
 	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->boot) {
 		errc = get_errc();
@@ -1502,7 +1518,12 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 
 	slave->configuring = 1;
 
-#if !LELY_NO_MALLOC
+#if LELY_NO_MALLOC
+	if (!slave->cfg) {
+		co_nmt_cfg_con(nmt, id, 0);
+		return 0;
+	}
+#else
 	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->cfg) {
 		errc = get_errc();
@@ -2190,6 +2211,48 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	return 0;
 }
+
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+static co_unsigned32_t
+co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f81);
+	assert(req);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
+	union co_val val;
+	co_unsigned32_t ac = 0;
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
+		return ac;
+
+	co_unsigned8_t subidx = co_sub_get_subidx(sub);
+	if (!subidx)
+		return CO_SDO_AC_NO_WRITE;
+
+	assert(type == CO_DEFTYPE_UNSIGNED32);
+	co_unsigned32_t assignment = val.u32;
+	co_unsigned32_t assignment_old = co_sub_get_val_u32(sub);
+	if (assignment == assignment_old)
+		return 0;
+
+	if (subidx <= CO_NUM_NODES) {
+		struct co_nmt_slave *slave = &nmt->slaves[subidx - 1];
+		// Slaves cannot be inserted into the network list if they were
+		// not in it at initialization.
+		if ((assignment & 0x01) && (!slave->boot || !slave->cfg))
+			return CO_SDO_AC_PARAM_VAL;
+	}
+
+	co_sub_dn(sub, &val);
+
+	return 0;
+}
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
 
 #if !LELY_NO_CO_MASTER
 static co_unsigned32_t
@@ -3507,6 +3570,13 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
 
 #if LELY_NO_MALLOC
+		co_unsigned32_t assignment =
+				co_dev_get_val_u32(nmt->dev, 0x1f81, id);
+		// Do not create services for slaves that are not in the network
+		// list at initialization.
+		if (!(assignment & 0x01))
+			continue;
+
 		slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 		if (!slave->boot) {
 			errc = get_errc();
@@ -3577,6 +3647,14 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, &co_1f80_dn_ind, nmt);
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+	// Set the download indication function for the NMT slave assignment
+	// value.
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+	if (obj_1f81)
+		co_obj_set_dn_ind(obj_1f81, &co_1f81_dn_ind, nmt);
+#endif
+
 #if !LELY_NO_CO_MASTER
 	// Set the download indication function for the request NMT value.
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
@@ -3590,6 +3668,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 // #if !LELY_NO_CO_MASTER
 // 	if (obj_1f82)
 // 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+// #endif
+// #if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+// 	if (obj_1f81)
+// 		co_obj_set_dn_ind(obj_1f81, NULL, NULL);
 // #endif
 // 	if (obj_1f80)
 // 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
@@ -3652,6 +3734,14 @@ co_nmt_fini(co_nmt_t *nmt)
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
 	if (obj_1f82)
 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+#endif
+
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+	// Remove the download indication function for the NMT slave assignment
+	// value.
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+	if (obj_1f81)
+		co_obj_set_dn_ind(obj_1f81, NULL, NULL);
 #endif
 
 	// Remove the download indication function for the NMT startup value.
