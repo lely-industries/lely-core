@@ -893,6 +893,40 @@ TEST(Util_Endian, LdleU64_Nonzero) {
   CHECK_EQUAL(0xefcdab8967452301uL, ldle_u64(src));
 }
 
+TEST(Util_Endian, StleU24_Zero) {
+  uint_least8_t dst[] = {0x12u, 0x34u, 0x56u};
+  const uint_least32_t x = 0;
+
+  stle_u24(dst, x);
+
+  CHECK_EQUAL(0x00u, dst[0]);
+  CHECK_EQUAL(0x00u, dst[1]);
+  CHECK_EQUAL(0x00u, dst[2]);
+}
+
+TEST(Util_Endian, StleU24_Nonzero) {
+  uint_least8_t dst[] = {0x00u, 0x00u, 0x00u};
+  const uint_least32_t x = 0x123456u;
+
+  stle_u24(dst, x);
+
+  CHECK_EQUAL(0x56u, dst[0]);
+  CHECK_EQUAL(0x34u, dst[1]);
+  CHECK_EQUAL(0x12u, dst[2]);
+}
+
+TEST(Util_Endian, LdleU24_Zero) {
+  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u};
+
+  CHECK_EQUAL(0, ldle_u24(src));
+}
+
+TEST(Util_Endian, LdleU24_Nonzero) {
+  const uint_least8_t src[] = {0x12u, 0x34u, 0x56u};
+
+  CHECK_EQUAL(0x563412u, ldle_u24(src));
+}
+
 TEST(Util_Endian, StbeFlt32_Zero) {
   const flt32_t x = 0.0;
   uint_least8_t dst[] = {0xffu, 0xffu, 0xffu, 0xffu};

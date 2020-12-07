@@ -1,0 +1,10 @@
+// LCOV_EXCL_START
+#ifdef CO_DEFTYPE_TIME_SCET
+// Spacecraft Elapsed Time (SCET).
+LELY_CO_DEFINE_TYPE(TIME_SCET, time_scet, scet, struct co_time_scet)
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+// Spacecraft Universal Time Coordinated (SUTC).
+LELY_CO_DEFINE_TYPE(TIME_SUTC, time_sutc, sutc, struct co_time_sutc)
+#endif
+// LCOV_EXCL_STOP

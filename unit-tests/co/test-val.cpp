@@ -76,6 +76,14 @@ TEST_GROUP(CO_Val) {
       case CO_DEFTYPE_TIME_OF_DAY:
       case CO_DEFTYPE_TIME_DIFF:
         return 6u;
+#if CO_DEFTYPE_TIME_SCET
+      case CO_DEFTYPE_TIME_SCET:
+        return 7u;
+#endif
+#if CO_DEFTYPE_TIME_SUTC
+      case CO_DEFTYPE_TIME_SUTC:
+        return 8u;
+#endif
       default:
         return co_type_sizeof(type);
     }
@@ -214,6 +222,31 @@ TEST_GROUP(CO_Val) {
 #include <lely/co/def/time.def>
 #undef LELY_CO_DEFINE_TYPE
 
+#if CO_DEFTYPE_TIME_SCET
+TEST(CO_Val, CoValInit_TIME_SCET) {
+  co_time_scet_t val;
+
+  const auto ret = co_val_init(CO_DEFTYPE_TIME_SCET, &val);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, val.seconds);
+  CHECK_EQUAL(0, val.subseconds);
+}
+#endif
+
+#if CO_DEFTYPE_TIME_SUTC
+TEST(CO_Val, CoValInit_TIME_SUTC) {
+  co_time_sutc_t val;
+
+  const auto ret = co_val_init(CO_DEFTYPE_TIME_SUTC, &val);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, val.days);
+  CHECK_EQUAL(0, val.ms);
+  CHECK_EQUAL(0, val.usec);
+}
+#endif
+
 TEST(CO_Val, CoValInit_Invalid) {
   char val;
 
@@ -266,6 +299,31 @@ TEST(CO_Val, CoValInit_Invalid) {
   }
 #include <lely/co/def/time.def>  // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
+
+#if CO_DEFTYPE_TIME_SCET
+TEST(CO_Val, CoValInitMax_TIME_SCET) {
+  co_time_scet_t val;
+
+  const auto ret = co_val_init_max(CO_DEFTYPE_TIME_SCET, &val);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(UINT32_MAX, val.seconds);
+  CHECK_EQUAL(UINT32_C(0x00ffffff), val.subseconds);
+}
+#endif
+
+#if CO_DEFTYPE_TIME_SUTC
+TEST(CO_Val, CoValInitMax_TIME_SUTC) {
+  co_time_sutc_t val;
+
+  const auto ret = co_val_init_max(CO_DEFTYPE_TIME_SUTC, &val);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(UINT16_MAX, val.days);
+  CHECK_EQUAL(UINT32_MAX, val.ms);
+  CHECK_EQUAL(UINT16_MAX, val.usec);
+}
+#endif
 
 TEST(CO_Val, CoValInitMin_VISIBLE_STRING) {
   co_visible_string_t val = arrays.DeadBeef<co_visible_string_t>();
@@ -1129,12 +1187,12 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
     CHECK_COMPARE(ret, <, 0); \
   } \
 \
-  TEST(CO_Val, CoValCmp_##a##_EqualMs) { \
+  TEST(CO_Val, CoValCmp_##a##_EqualDays) { \
     co_##b##_t val1; \
     co_##b##_t val2; \
     CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_##a, &val1)); \
     CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_##a, &val2)); \
-    val1.ms = val2.ms; \
+    val1.days = val2.days; \
 \
     const auto ret = co_val_cmp(CO_DEFTYPE_##a, &val1, &val2); \
 \
@@ -1142,6 +1200,69 @@ TEST(CO_Val, CoValCmp_ArrayType_SecondValNull) {
   }
 #include <lely/co/def/time.def>  // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
+
+#if CO_DEFTYPE_TIME_SCET
+TEST(CO_Val, CoValCmp_TIME_SCET) {
+  co_time_scet_t val1;
+  co_time_scet_t val2;
+  CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_TIME_SCET, &val1));
+  CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_TIME_SCET, &val2));
+
+  const auto ret = co_val_cmp(CO_DEFTYPE_TIME_SCET, &val1, &val2);
+
+  CHECK_COMPARE(ret, <, 0);
+}
+
+TEST(CO_Val, CoValCmp_TIME_SCET_EqualSeconds) {
+  co_time_scet_t val1;
+  co_time_scet_t val2;
+  CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_TIME_SCET, &val1));
+  CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_TIME_SCET, &val2));
+  val1.seconds = val2.seconds;
+
+  const auto ret = co_val_cmp(CO_DEFTYPE_TIME_SCET, &val1, &val2);
+
+  CHECK_COMPARE(ret, <, 0);
+}
+#endif  // CO_DEFTYPE_TIME_SCET
+
+#if CO_DEFTYPE_TIME_SUTC
+TEST(CO_Val, CoValCmp_TIME_SUTC) {
+  co_time_sutc_t val1;
+  co_time_sutc_t val2;
+  CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_TIME_SUTC, &val1));
+  CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_TIME_SUTC, &val2));
+
+  const auto ret = co_val_cmp(CO_DEFTYPE_TIME_SUTC, &val1, &val2);
+
+  CHECK_COMPARE(ret, <, 0);
+}
+
+TEST(CO_Val, CoValCmp_TIME_SUTC_EqualDays) {
+  co_time_sutc_t val1;
+  co_time_sutc_t val2;
+  CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_TIME_SUTC, &val1));
+  CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_TIME_SUTC, &val2));
+  val1.days = val2.days;
+
+  const auto ret = co_val_cmp(CO_DEFTYPE_TIME_SUTC, &val1, &val2);
+
+  CHECK_COMPARE(ret, <, 0);
+}
+
+TEST(CO_Val, CoValCmp_TIME_SUTC_EqualDaysMs) {
+  co_time_sutc_t val1;
+  co_time_sutc_t val2;
+  CHECK_EQUAL(0, co_val_init_min(CO_DEFTYPE_TIME_SUTC, &val1));
+  CHECK_EQUAL(0, co_val_init_max(CO_DEFTYPE_TIME_SUTC, &val2));
+  val1.days = val2.days;
+  val1.ms = val2.ms;
+
+  const auto ret = co_val_cmp(CO_DEFTYPE_TIME_SUTC, &val1, &val2);
+
+  CHECK_COMPARE(ret, <, 0);
+}
+#endif  // CO_DEFTYPE_TIME_SUTC
 
 TEST(CO_Val, CoValCmp_VISIBLE_STRING) {
   const char TEST_STR2[] = "abcdefg";
@@ -1306,6 +1427,48 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
 #include <lely/co/def/time.def>  // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
 
+#if CO_DEFTYPE_TIME_SCET
+TEST(CO_Val, CoValRead_TIME_SCET) {
+  co_time_scet_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SCET);
+  const size_t type_size = co_type_sizeof(CO_DEFTYPE_TIME_SCET);
+  const uint_least8_t buffer[MAX_VAL_SIZE] = {0x3eu, 0x18u, 0x67u, 0x7bu,
+                                              0x34u, 0x15u, 0x25u, 0x00u};
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE);
+  CHECK_COMPARE(type_size, <=, MAX_VAL_SIZE);
+
+  const auto ret =
+      co_val_read(CO_DEFTYPE_TIME_SCET, &val, buffer, buffer + type_size);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(ldle_u32(buffer) & UINT32_C(0x00ffffff), val.subseconds);
+  CHECK_EQUAL(ldle_u32(buffer + 3), val.seconds);
+}
+#endif
+
+#if CO_DEFTYPE_TIME_SUTC
+TEST(CO_Val, CoValRead_TIME_SUTC) {
+#define MAX_VAL_SIZE_SUTC 12u
+  co_time_sutc_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SUTC);
+  const size_t type_size = co_type_sizeof(CO_DEFTYPE_TIME_SUTC);
+  const uint_least8_t buffer[MAX_VAL_SIZE_SUTC] = {
+      0x3eu, 0x18u, 0x67u, 0x7bu, 0x34u, 0x15u,
+      0x25u, 0xafu, 0x00u, 0x00u, 0x00u, 0x00u,
+  };
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
+  CHECK_COMPARE(type_size, <=, MAX_VAL_SIZE_SUTC);
+
+  const auto ret =
+      co_val_read(CO_DEFTYPE_TIME_SUTC, &val, buffer, buffer + type_size);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(ldle_u16(buffer), val.usec);
+  CHECK_EQUAL(ldle_u32(buffer + 2), val.ms);
+  CHECK_EQUAL(ldle_u16(buffer + 6), val.days);
+}
+#endif
+
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValRead_##a##_InvalidSize) { \
     co_##b##_t val; \
@@ -1327,6 +1490,7 @@ TEST(CO_Val, CoValRead_BOOLEAN_False) {
   }
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
 #include <lely/co/def/time.def>   // NOLINT(build/include)
+#include <lely/co/def/ecss.def>   // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
@@ -1588,6 +1752,85 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
 #include <lely/co/def/time.def>  // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
 
+#if CO_DEFTYPE_TIME_SCET
+TEST(CO_Val, CoValWrite_TIME_SCET) {
+  co_time_scet_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SCET);
+  uint_least8_t buffer[MAX_VAL_SIZE] = {0x00};
+  CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_TIME_SCET, &val));
+  val.subseconds = 0xaf1534u;
+  val.seconds = 0x1b67183eu;
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE);
+
+  const auto ret =
+      co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer, buffer + MAX_VAL_SIZE);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.subseconds, ldle_u32(buffer) & UINT32_C(0x00ffffff));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3));
+}
+
+TEST(CO_Val, CoValWrite_TIME_SCET_NoEnd) {
+  co_time_scet_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SCET);
+  uint_least8_t buffer[MAX_VAL_SIZE] = {0x00};
+  CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_TIME_SCET, &val));
+  val.subseconds = 0xaf1534u;
+  val.seconds = 0x1b67183eu;
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer, nullptr);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.subseconds, ldle_u32(buffer) & UINT32_C(0x00ffffff));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3));
+}
+#endif  // CO_DEFTYPE_TIME_SCET
+
+#if CO_DEFTYPE_TIME_SUTC
+TEST(CO_Val, CoValWrite_TIME_SUTC) {
+#define MAX_VAL_SIZE_SUTC 12u
+  co_time_sutc_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SUTC);
+  uint_least8_t buffer[MAX_VAL_SIZE_SUTC] = {0x00};
+  CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_TIME_SUTC, &val));
+  val.usec = 0x5819u;
+  val.ms = 0x1b67183eu;
+  val.days = 0x1534u;
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SUTC, &val, buffer,
+                                buffer + MAX_VAL_SIZE_SUTC);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.usec, ldle_u16(buffer));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6));
+}
+
+TEST(CO_Val, CoValWrite_TIME_SUTC_NoEnd) {
+  co_time_sutc_t val;
+  const size_t val_size = ValGetReadWriteSize(CO_DEFTYPE_TIME_SUTC);
+  uint_least8_t buffer[MAX_VAL_SIZE_SUTC] = {0x00};
+  CHECK_EQUAL(0, co_val_init(CO_DEFTYPE_TIME_SUTC, &val));
+  val.usec = 0x5819u;
+  val.ms = 0x1b67183eu;
+  val.days = 0x1534u;
+
+  CHECK_COMPARE(val_size, <=, MAX_VAL_SIZE_SUTC);
+
+  const auto ret = co_val_write(CO_DEFTYPE_TIME_SUTC, &val, buffer, nullptr);
+
+  CHECK_EQUAL(val_size, ret);
+  CHECK_EQUAL(val.usec, ldle_u16(buffer));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6));
+}
+#endif  // CO_DEFTYPE_TIME_SUTC
+
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
   TEST(CO_Val, CoValWrite_##a##_NullBuffer) { \
     co_##b##_t val; \
@@ -1609,6 +1852,7 @@ TEST(CO_Val, CoValWrite_BOOLEAN_False) {
   }
 #include <lely/co/def/basic.def>  // NOLINT(build/include)
 #include <lely/co/def/time.def>   // NOLINT(build/include)
+#include <lely/co/def/ecss.def>   // NOLINT(build/include)
 #undef LELY_CO_DEFINE_TYPE
 
 TEST(CO_Val, CoValWrite_NullArray) {
