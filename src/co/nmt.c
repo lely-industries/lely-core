@@ -3213,9 +3213,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Create and initialize the heartbeat consumers.
-#if LELY_NO_MALLOC
-	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
-#else
+#if !LELY_NO_MALLOC
 	assert(!nmt->hbs);
 #endif
 	assert(!nmt->nhb);
@@ -3237,6 +3235,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	}
 
 	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
+#if !LELY_NO_MALLOC
 		nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
 		if (!nmt->hbs[i]) {
 			diag(DIAG_ERROR, get_errc(),
@@ -3244,7 +3243,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 					(co_unsigned8_t)(i + 1));
 			continue;
 		}
-
+#endif
 		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
 		co_unsigned8_t id = (val >> 16) & 0xff;
 		co_unsigned16_t ms = val & 0xffff;
@@ -3257,10 +3256,12 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	// Destroy all heartbeat consumers.
+	// Destroy/stop all heartbeat consumers.
 	for (size_t i = 0; i < nmt->nhb; i++)
+#if LELY_NO_MALLOC
+		co_nmt_hb_set_1016(nmt->hbs[i], 0, 0);
+#else
 		co_nmt_hb_destroy(nmt->hbs[i]);
-#if !LELY_NO_MALLOC
 	free(nmt->hbs);
 	nmt->hbs = NULL;
 #endif
@@ -3487,8 +3488,20 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->ms = 0;
 
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 #if LELY_NO_MALLOC
 	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+	if (obj_1016) {
+		for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++) {
+			if (!co_obj_find_sub(obj_1016, i + 1))
+				continue;
+			nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
+			if (!nmt->hbs[i]) {
+				errc = get_errc();
+				goto error_create_hb;
+			}
+		}
+	}
 #else
 	nmt->hbs = NULL;
 #endif
@@ -3625,7 +3638,6 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		co_obj_set_dn_ind(obj_100d, &co_100d_dn_ind, nmt);
 
 	// Set the download indication function for the consumer heartbeat time.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (obj_1016)
 		co_obj_set_dn_ind(obj_1016, &co_1016_dn_ind, nmt);
 
@@ -3704,6 +3716,11 @@ error_init_slave:
 	}
 	can_timer_destroy(nmt->cs_timer);
 error_create_cs_timer:
+#if LELY_NO_MALLOC
+error_create_hb:
+	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
+		co_nmt_hb_destroy(nmt->hbs[i]);
+#endif
 	can_buf_fini(&nmt->buf);
 #endif
 	can_timer_destroy(nmt->ec_timer);
@@ -3801,6 +3818,10 @@ co_nmt_fini(co_nmt_t *nmt)
 #endif
 
 	co_nmt_hb_fini(nmt);
+#if LELY_NO_MALLOC
+	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
+		co_nmt_hb_destroy(nmt->hbs[i]);
+#endif
 
 	co_nmt_ec_fini(nmt);
 
