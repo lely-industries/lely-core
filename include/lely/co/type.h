@@ -73,6 +73,26 @@
  */
 #define CO_DEFTYPE_TIME_DIFF 0x000d
 
+/**
+ * The data type (and object index) of a 56-bit structure representing
+ * Spacecraft Elapsed Time (SCET).
+ */
+#ifdef CO_DEFTYPE_TIME_SCET
+#if CO_DEFTYPE_TIME_SCET < 0x0040 || CO_DEFTYPE_TIME_SCET >= 0x1000
+#error "CO_DEFTYPE_TIME_SCET is an invalid DEFTYPE object index."
+#endif
+#endif
+
+/**
+ * The data type (and object index) of a 64-bit structure representing
+ * Spacecraft Universal Time Coordinated (SUTC).
+ */
+#ifdef CO_DEFTYPE_TIME_SUTC
+#if CO_DEFTYPE_TIME_SUTC < 0x0040 || CO_DEFTYPE_TIME_SUTC >= 0x1000
+#error "CO_DEFTYPE_TIME_SUTC is an invalid DEFTYPE object index."
+#endif
+#endif
+
 /// The data type (and object index) of an arbitrary large block of data.
 #define CO_DEFTYPE_DOMAIN 0x000f
 
@@ -128,6 +148,34 @@ struct co_time_diff {
 	/// The number of days since January 1, 1984.
 	co_unsigned16_t days;
 };
+
+#ifdef CO_DEFTYPE_TIME_SCET
+/**
+ * A 56-bit structure used to describe Spacecraft Elapsed Time (SCET) as
+ * defined in section 7.1.2 of ECSS-E-ST-50-15C.
+ */
+struct co_time_scet {
+	/// The coarse time.
+	co_unsigned32_t seconds;
+	/// The fine time.
+	co_unsigned24_t subseconds;
+};
+#endif
+
+#ifdef CO_DEFTYPE_TIME_SUTC
+/**
+ * A 64-bit struct used to describe Spacecraft Universal Time Coordinated (SUTC)
+ * as defined in section 7.1.3 of ECSS-E-ST-50-15C.
+ */
+struct co_time_sutc {
+	/// Day.
+	co_unsigned16_t days;
+	/// ms of day.
+	co_unsigned32_t ms;
+	/// Submilliseconds of ms (optional).
+	co_unsigned16_t usec;
+};
+#endif
 
 #ifdef __cplusplus
 extern "C" {

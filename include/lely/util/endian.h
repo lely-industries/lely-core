@@ -211,6 +211,12 @@ LELY_UTIL_ENDIAN_INLINE void stle_u64(uint_least8_t dst[8], uint_least64_t x);
 /// Loads a 64-bit unsigned integer in little-endian byte order.
 LELY_UTIL_ENDIAN_INLINE uint_least64_t ldle_u64(const uint_least8_t src[8]);
 
+/// Stores a 24-bit unsigned integer in little-endian byte order.
+LELY_UTIL_ENDIAN_INLINE void stle_u24(uint_least8_t dst[3], uint_least32_t x);
+
+/// Loads a 24-bit unsigned integer in little-endian byte order.
+LELY_UTIL_ENDIAN_INLINE uint_least32_t ldle_u24(const uint_least8_t src[3]);
+
 #ifdef LELY_FLT16_TYPE
 
 /**
@@ -702,6 +708,33 @@ ldle_u64(const uint_least8_t src[8])
 			| ((uint_least64_t)(src[5] & 0xff) << 40)
 			| ((uint_least64_t)(src[6] & 0xff) << 48)
 			| ((uint_least64_t)(src[7] & 0xff) << 56);
+#endif
+}
+
+LELY_UTIL_ENDIAN_INLINE void
+stle_u24(uint_least8_t dst[3], uint_least32_t x)
+{
+#if CHAR_BIT == 8
+	x = htole32(x);
+	memcpy(dst, &x, 3);
+#else
+	dst[0] = x & 0xff;
+	dst[1] = (x >> 8) & 0xff;
+	dst[2] = (x >> 16) & 0xff;
+#endif
+}
+
+LELY_UTIL_ENDIAN_INLINE uint_least32_t
+ldle_u24(const uint_least8_t src[3])
+{
+#if CHAR_BIT == 8
+	uint_least32_t x = 0;
+	memcpy(&x, src, 3);
+	return letoh32(x);
+#else
+	return (uint_least32_t)(src[0] & 0xff)
+			| ((uint_least32_t)(src[1] & 0xff) << 8)
+			| ((uint_least32_t)(src[2] & 0xff) << 16);
 #endif
 }
 

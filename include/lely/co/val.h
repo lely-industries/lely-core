@@ -161,6 +161,56 @@ struct __fwbuf;
 /// The maximum value of a 48-bit structure representing a time difference.
 #define CO_TIME_DIFF_MAX CO_TIME_OF_DAY_MAX
 
+#ifdef CO_DEFTYPE_TIME_SCET
+
+/// The default value of a 56-bit structure representing Spacecraft Elapsed Time
+/// (SCET).
+#define CO_TIME_SCET_INIT \
+	{ \
+		0, 0 \
+	}
+
+/// The minimum value of a 56-bit structure representing Spacecraft Elapsed Time
+/// (SCET).
+#define CO_TIME_SCET_MIN \
+	{ \
+		0, 0 \
+	}
+
+/// The maximum value of a 56-bit structure representing Spacecraft Elapsed Time
+/// (SCET).
+#define CO_TIME_SCET_MAX \
+	{ \
+		UINT32_MAX, UINT32_C(0x00ffffff) \
+	}
+
+#endif // CO_DEFTYPE_TIME_SCET
+
+#ifdef CO_DEFTYPE_TIME_SUTC
+
+/// The default value of a 64-bit structure representing Spacecraft Universal
+/// Time Coordinated (SUTC).
+#define CO_TIME_SUTC_INIT \
+	{ \
+		0, 0, 0 \
+	}
+
+/// The minimum value of a 64-bit structure representing Spacecraft Universal
+/// Time Coordinated (SUTC).
+#define CO_TIME_SUTC_MIN \
+	{ \
+		0, 0, 0 \
+	}
+
+/// The maximum value of a 64-bit structure representing Spacecraft Universal
+/// Time Coordinated (SUTC).
+#define CO_TIME_SUTC_MAX \
+	{ \
+		UINT16_MAX, UINT32_MAX, UINT16_MAX \
+	}
+
+#endif // CO_DEFTYPE_TIME_SUTC
+
 /// The default value of an arbitrary large block of data..
 #define CO_DOMAIN_INIT NULL
 

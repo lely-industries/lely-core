@@ -52,6 +52,17 @@
 #define CO_ARRAY_HDR_OFFSET \
 	ALIGN(sizeof(struct co_array_hdr), _Alignof(union co_val))
 
+#ifdef CO_DEFTYPE_TIME_SCET
+/// The on-the-wire size of a 56-bit structure representing Spacecraft Elapsed
+/// Time (SCET).
+static const size_t CO_TIME_SCET_SIZE = 7u;
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+/// The on-the-wire size of a 64-bit structure representing Spacecraft Universal
+/// Time Coordinated (SUTC).
+static const size_t CO_TIME_SUTC_SIZE = 8u;
+#endif
+
 static inline struct co_array_hdr *co_array_get_hdr(const void *val);
 
 static int co_array_alloc(void *val, size_t size);
@@ -84,6 +95,7 @@ co_val_init(co_unsigned16_t type, void *val)
 #if !LELY_NO_MALLOC
 #include <lely/co/def/array.def>
 #endif // !LELY_NO_MALLOC
+#include <lely/co/def/ecss.def>
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -112,6 +124,7 @@ co_val_init_min(co_unsigned16_t type, void *val)
 #if !LELY_NO_MALLOC
 #include <lely/co/def/array.def>
 #endif // !LELY_NO_MALLOC
+#include <lely/co/def/ecss.def>
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -140,6 +153,7 @@ co_val_init_max(co_unsigned16_t type, void *val)
 #if !LELY_NO_MALLOC
 #include <lely/co/def/array.def>
 #endif // !LELY_NO_MALLOC
+#include <lely/co/def/ecss.def>
 #undef LELY_CO_DEFINE_TYPE
 	default: set_errnum(ERRNUM_INVAL); return -1;
 	}
@@ -425,14 +439,14 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 		case CO_DEFTYPE_UNSIGNED32: return uint32_cmp(v1, v2);
 		case CO_DEFTYPE_REAL32: return flt_cmp(v1, v2);
 		case CO_DEFTYPE_TIME_OF_DAY:
-			cmp = uint32_cmp(&u1->t.ms, &u2->t.ms);
+			cmp = uint16_cmp(&u1->t.days, &u2->t.days);
 			if (!cmp)
-				cmp = uint16_cmp(&u1->t.days, &u2->t.days);
+				cmp = uint32_cmp(&u1->t.ms, &u2->t.ms);
 			return cmp;
 		case CO_DEFTYPE_TIME_DIFF:
-			cmp = uint32_cmp(&u1->td.ms, &u2->td.ms);
+			cmp = uint16_cmp(&u1->td.days, &u2->td.days);
 			if (!cmp)
-				cmp = uint16_cmp(&u1->td.days, &u2->td.days);
+				cmp = uint32_cmp(&u1->td.ms, &u2->td.ms);
 			return cmp;
 		case CO_DEFTYPE_INTEGER24: return int32_cmp(v1, v2);
 		case CO_DEFTYPE_REAL64: return dbl_cmp(v1, v2);
@@ -445,6 +459,24 @@ co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2)
 		case CO_DEFTYPE_UNSIGNED48: return uint64_cmp(v1, v2);
 		case CO_DEFTYPE_UNSIGNED56: return uint64_cmp(v1, v2);
 		case CO_DEFTYPE_UNSIGNED64: return uint64_cmp(v1, v2);
+#ifdef CO_DEFTYPE_TIME_SCET
+		case CO_DEFTYPE_TIME_SCET:
+			cmp = uint32_cmp(&u1->scet.seconds, &u2->scet.seconds);
+			if (!cmp)
+				cmp = uint32_cmp(&u1->scet.subseconds,
+						&u2->scet.subseconds);
+			return cmp;
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+		case CO_DEFTYPE_TIME_SUTC:
+			cmp = uint16_cmp(&u1->sutc.days, &u2->sutc.days);
+			if (!cmp)
+				cmp = uint32_cmp(&u1->sutc.ms, &u2->sutc.ms);
+			if (!cmp)
+				cmp = uint16_cmp(
+						&u1->sutc.usec, &u2->sutc.usec);
+			return cmp;
+#endif
 		default: return 0;
 		}
 	}
@@ -620,12 +652,8 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 		case CO_DEFTYPE_UNSIGNED24:
 			if (n < 3)
 				return 0;
-			if (u) {
-				u->u24 = 0;
-				for (size_t i = 0; i < 3; i++)
-					u->u24 |= (co_unsigned24_t)*begin++
-							<< 8 * i;
-			}
+			if (u)
+				u->u24 = ldle_u24(begin);
 			return 3;
 		case CO_DEFTYPE_UNSIGNED40:
 			if (n < 5)
@@ -663,6 +691,27 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 			if (u)
 				u->u64 = ldle_u64(begin);
 			return 8;
+#ifdef CO_DEFTYPE_TIME_SCET
+		case CO_DEFTYPE_TIME_SCET:
+			if (n < CO_TIME_SCET_SIZE)
+				return 0;
+			if (u) {
+				u->scet.subseconds = ldle_u24(begin);
+				u->scet.seconds = ldle_u32(begin + 3u);
+			}
+			return CO_TIME_SCET_SIZE;
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+		case CO_DEFTYPE_TIME_SUTC:
+			if (n < CO_TIME_SUTC_SIZE)
+				return 0;
+			if (u) {
+				u->sutc.usec = ldle_u16(begin);
+				u->sutc.ms = ldle_u32(begin + 2u);
+				u->sutc.days = ldle_u16(begin + 6u);
+			}
+			return CO_TIME_SUTC_SIZE;
+#endif
 		default: set_errnum(ERRNUM_INVAL); return 0;
 		}
 	}
@@ -904,10 +953,8 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 				stle_i64(begin, u->i64);
 			return 8;
 		case CO_DEFTYPE_UNSIGNED24:
-			if (begin && (!end || end - begin >= 3)) {
-				for (size_t i = 0; i < 3; i++)
-					*begin++ = (u->u24 >> 8 * i) & 0xff;
-			}
+			if (begin && (!end || end - begin >= 3))
+				stle_u24(begin, u->u24);
 			return 3;
 		case CO_DEFTYPE_UNSIGNED40:
 			if (begin && (!end || end - begin >= 5)) {
@@ -931,6 +978,23 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 			if (begin && (!end || end - begin >= 8))
 				stle_u64(begin, u->u64);
 			return 8;
+#ifdef CO_DEFTYPE_TIME_SCET
+		case CO_DEFTYPE_TIME_SCET:
+			if (begin && (!end || end - begin >= (ptrdiff_t)CO_TIME_SCET_SIZE)) {
+				stle_u24(begin, u->scet.subseconds);
+				stle_u32(begin + 3u, u->scet.seconds);
+			}
+			return CO_TIME_SCET_SIZE;
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+		case CO_DEFTYPE_TIME_SUTC:
+			if (begin && (!end || end - begin >= (ptrdiff_t)CO_TIME_SUTC_SIZE)) {
+				stle_u16(begin, u->sutc.usec);
+				stle_u32(begin + 2u, u->sutc.ms);
+				stle_u16(begin + 6u, u->sutc.days);
+			}
+			return CO_TIME_SUTC_SIZE;
+#endif
 		default: set_errnum(ERRNUM_INVAL); return 0;
 		}
 	}
@@ -1391,6 +1455,50 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 				*(co_unsigned64_t *)val = u.u64;
 		}
 		break;
+#ifdef CO_DEFTYPE_TIME_SCET
+	case CO_DEFTYPE_TIME_SCET:
+		chars = lex_c99_u32(cp, end, NULL, &u.scet.seconds);
+		if (!chars)
+			return 0;
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, NULL);
+		co_unsigned32_t u32;
+		chars = lex_c99_u32(cp, end, NULL, &u32);
+		if (!chars)
+			return 0;
+		cp += chars;
+		if (u32 > CO_UNSIGNED24_MAX) {
+			u.scet.subseconds = CO_UNSIGNED24_MAX;
+			set_errnum(ERRNUM_RANGE);
+			diag_if(DIAG_WARNING, get_errc(), at,
+					"24-bit unsigned integer overflow in SCET subseconds");
+		} else {
+			u.scet.subseconds = u32;
+		}
+		if (val)
+			*(co_time_scet_t *)val = u.scet;
+		break;
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+	case CO_DEFTYPE_TIME_SUTC:
+		chars = lex_c99_u16(cp, end, NULL, &u.sutc.days);
+		if (!chars)
+			return 0;
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, NULL);
+		chars = lex_c99_u32(cp, end, NULL, &u.sutc.ms);
+		if (!chars)
+			return 0;
+		cp += chars;
+		cp += lex_ctype(&isblank, cp, end, NULL);
+		chars = lex_c99_u16(cp, end, NULL, &u.sutc.usec);
+		if (!chars)
+			return 0;
+		cp += chars;
+		if (val)
+			*(co_time_sutc_t *)val = u.sutc;
+		break;
+#endif
 	default:
 		diag_if(DIAG_ERROR, 0, at, "cannot parse value of type 0x%04X",
 				type);
@@ -1493,6 +1601,27 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 			return print_fmt(pbegin, end, "0x%014" PRIx64, u->u56);
 		case CO_DEFTYPE_UNSIGNED64:
 			return print_fmt(pbegin, end, "0x%016" PRIx64, u->u64);
+#ifdef CO_DEFTYPE_TIME_SCET
+		case CO_DEFTYPE_TIME_SCET: {
+			size_t chars = 0;
+			chars += print_c99_u32(pbegin, end, u->scet.seconds);
+			chars += print_char(pbegin, end, ' ');
+			chars += print_fmt(pbegin, end, "0x%06" PRIx32,
+					u->scet.subseconds);
+			return chars;
+		}
+#endif
+#ifdef CO_DEFTYPE_TIME_SUTC
+		case CO_DEFTYPE_TIME_SUTC: {
+			size_t chars = 0;
+			chars += print_c99_u16(pbegin, end, u->sutc.days);
+			chars += print_char(pbegin, end, ' ');
+			chars += print_c99_u32(pbegin, end, u->sutc.ms);
+			chars += print_char(pbegin, end, ' ');
+			chars += print_c99_u16(pbegin, end, u->sutc.usec);
+			return chars;
+		}
+#endif
 		default: set_errnum(ERRNUM_INVAL); return 0;
 		}
 	}

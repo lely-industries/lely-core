@@ -50,7 +50,12 @@ TEST(CO_Type, CoTypeIsBasic_True) {
 TEST(CO_Type, CoTypeIsBasic_False) {
   CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_OF_DAY));
   CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_DIFF));
-
+#if CO_DEFTYPE_TIME_SCET
+  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_SCET));
+#endif
+#if CO_DEFTYPE_TIME_SUTC
+  CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_TIME_SUTC));
+#endif
   CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_VISIBLE_STRING));
   CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_OCTET_STRING));
   CHECK_EQUAL(0, co_type_is_basic(CO_DEFTYPE_UNICODE_STRING));
@@ -88,7 +93,12 @@ TEST(CO_Type, CoTypeIsArray_False) {
 
   CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_OF_DAY));
   CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_DIFF));
-
+#if CO_DEFTYPE_TIME_SCET
+  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_SCET));
+#endif
+#if CO_DEFTYPE_TIME_SUTC
+  CHECK_EQUAL(0, co_type_is_array(CO_DEFTYPE_TIME_SUTC));
+#endif
   CHECK_EQUAL(0, co_type_is_array(INVALID_TYPE));
 }
 
