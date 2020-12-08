@@ -689,7 +689,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	lss->state = co_lss_stopped_state;
 
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	lss->master = 0;
 	lss->inhibit = LELY_CO_LSS_INHIBIT;
 	lss->next = 0;
@@ -702,7 +702,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	}
 	can_recv_set_func(lss->recv, &co_lss_recv, lss);
 
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	lss->timeout = LELY_CO_LSS_TIMEOUT;
 
 	lss->timer = can_timer_create();
@@ -715,7 +715,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	lss->cs = 0;
 	lss->lsspos = 0;
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	lss->lo = (struct co_id)CO_ID_INIT;
 	lss->hi = (struct co_id)CO_ID_INIT;
 	lss->mask = (struct co_id)CO_ID_INIT;
@@ -732,7 +732,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 	lss->rate_data = NULL;
 	lss->store_ind = NULL;
 	lss->store_data = NULL;
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	lss->cs_ind = NULL;
 	lss->cs_data = NULL;
 	lss->err_ind = NULL;
@@ -754,7 +754,7 @@ __co_lss_init(struct __co_lss *lss, co_nmt_t *nmt)
 
 	// co_lss_stop(lss);
 error_start:
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	can_timer_destroy(lss->timer);
 error_create_timer:
 #endif
@@ -771,7 +771,7 @@ __co_lss_fini(struct __co_lss *lss)
 
 	co_lss_stop(lss);
 
-#if !LELY_NO_MASTER
+#if !LELY_NO_CO_MASTER
 	can_timer_destroy(lss->timer);
 #endif
 	can_recv_destroy(lss->recv);
