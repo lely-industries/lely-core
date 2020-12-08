@@ -684,34 +684,30 @@ co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
 	return 2 + 1 + 4 + size;
 }
 
-int
+size_t
 co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
-		void *const *ptr)
+		const uint_least8_t *begin, const uint_least8_t *end)
 {
 	assert(dev);
-	assert(ptr);
+
+	const uint_least8_t *cp = begin;
+
+	// Read the total number of sub-indices.
+	co_unsigned32_t n;
+	if (co_val_read(CO_DEFTYPE_UNSIGNED32, &n, cp, end) != 4)
+		return 0;
+	cp += 4;
 
 	co_unsigned16_t min = CO_UNSIGNED16_MAX;
 	co_unsigned16_t max = CO_UNSIGNED16_MIN;
 
-	size_t size = co_val_sizeof(CO_DEFTYPE_DOMAIN, ptr);
-	const uint_least8_t *begin = *ptr;
-	const uint_least8_t *end = begin + size;
-
-	// Read the total number of sub-indices.
-	co_unsigned32_t n;
-	size = co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
-	if (size != 4)
-		return 0;
-	begin += size;
-
 	for (size_t i = 0; i < n; i++) {
 		// Read the value of the sub-object.
 		co_unsigned16_t idx;
-		size = co_dev_read_sub(dev, &idx, NULL, begin, end);
+		size_t size = co_dev_read_sub(dev, &idx, NULL, cp, end);
 		if (!size)
 			return 0;
-		begin += size;
+		cp += size;
 
 		// Keep track of the index range.
 		min = MIN(min, idx);
@@ -723,7 +719,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	if (pmax)
 		*pmax = max;
 
-	return 0;
+	return cp - begin;
 }
 
 #if !LELY_NO_CO_DCF
@@ -735,7 +731,10 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 	if (!co_val_read_file(CO_DEFTYPE_DOMAIN, &dom, filename))
 		return -1;
 
-	if (co_dev_read_dcf(dev, pmin, pmax, &dom) == -1) {
+	const uint_least8_t *begin = dom;
+	const uint_least8_t *end =
+			begin + co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
+	if (!co_dev_read_dcf(dev, pmin, pmax, begin, end)) {
 		co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
 		return -1;
 	}
@@ -745,42 +744,20 @@ co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 }
 #endif
 
-int
+size_t
 co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
-		void **ptr)
+		uint_least8_t *begin, uint_least8_t *end)
 {
 	assert(dev);
-	assert(ptr);
 
-	size_t size = 4;
+	uint_least8_t *cp = begin;
+
 	co_unsigned32_t n = 0;
-
-	// Count the number of matching sub-objects and compute the total size
-	// (in bytes).
-	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
-			obj = co_obj_next(obj)) {
-		co_unsigned16_t idx = co_obj_get_idx(obj);
-		if (idx < min)
-			continue;
-		if (idx > max)
-			break;
-		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
-				sub = co_sub_next(sub)) {
-			co_unsigned8_t subidx = co_sub_get_subidx(sub);
-			size += co_dev_write_sub(dev, idx, subidx, NULL, NULL);
-			n++;
-		}
-	}
-
-	// Create a DOMAIN for the concise DCF.
-	if (co_val_init_dom(ptr, NULL, size) == -1)
-		return -1;
-
-	uint_least8_t *begin = *ptr;
-	uint_least8_t *end = begin + size;
-
-	// Write the total number of sub-indices.
-	begin += co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
+	// Reserve space for the number of sub-indices.
+	if (co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin ? cp : NULL, end)
+			!= 4)
+		return 0;
+	cp += 4;
 
 	// Write the sub-objects.
 	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
@@ -791,13 +768,21 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 		if (idx > max)
 			break;
 		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
-				sub = co_sub_next(sub)) {
+				sub = co_sub_next(sub), n++) {
 			co_unsigned8_t subidx = co_sub_get_subidx(sub);
-			begin += co_dev_write_sub(dev, idx, subidx, begin, end);
+			size_t size = co_dev_write_sub(dev, idx, subidx,
+					begin ? cp : NULL, end);
+			if (!size)
+				return 0;
+			cp += size;
 		}
 	}
 
-	return 0;
+	// Write the total number of sub-indices.
+	if (co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end) != 4)
+		return 0;
+
+	return cp - begin;
 }
 
 #if !LELY_NO_CO_DCF
@@ -805,8 +790,14 @@ int
 co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, const char *filename)
 {
+	size_t size = co_dev_write_dcf(dev, min, max, NULL, NULL);
 	void *dom = NULL;
-	if (co_dev_write_dcf(dev, min, max, &dom) == -1)
+	if (co_val_init_dom(&dom, NULL, size) == -1)
+		return -1;
+
+	uint_least8_t *begin = dom;
+	uint_least8_t *end = begin + size;
+	if (co_dev_write_dcf(dev, min, max, begin, end) != size)
 		return -1;
 
 	size_t nbyte = co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom);
