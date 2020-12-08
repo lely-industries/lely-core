@@ -108,8 +108,13 @@ io_can_ctrl_init(io_can_ctrl_t *ctrl, unsigned int index, size_t txlen)
 		return NULL;
 
 	struct io_can_attr attr = IO_CAN_ATTR_INIT;
-	if (io_can_attr_get(&attr, impl->index) == -1)
+	// Some CAN network interfaces, such as the serial line CAN interface
+	// provided by the SLCAN driver, do not provide the CAN bus attributes.
+	// This is not an error.
+	int errsv = errno;
+	if (io_can_attr_get(&attr, impl->index) == -1 && errno != ENOTSUP)
 		return NULL;
+	errno = errsv;
 
 	impl->flags = attr.flags;
 
