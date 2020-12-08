@@ -848,13 +848,111 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SubmitRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con,
              const ::std::chrono::milliseconds& timeout,
              ::std::error_code& ec) {
+    SubmitUpload<T>(exec, id, idx, subidx, ::std::forward<F>(con), false,
+                    timeout, ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  F&& con) {
+    SubmitBlockRead<T>(exec, id, idx, subidx, ::std::forward<F>(con),
+                       GetTimeout());
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  F&& con, ::std::error_code& ec) {
+    SubmitBlockRead<T>(exec, id, idx, subidx, ::std::forward<F>(con),
+                       GetTimeout(), ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  F&& con, const ::std::chrono::milliseconds& timeout) {
+    ::std::error_code ec;
+    SubmitBlockRead<T>(exec, id, idx, subidx, ::std::forward<F>(con), timeout,
+                       ec);
+    if (ec) throw SdoError(id, idx, subidx, ec, "SubmitBlockRead");
+  }
+
+  /**
+   * Queues an asynchronous read (SDO block upload) operation. This function
+   * reads the value of a sub-object in a remote object dictionary using SDO
+   * block transfer. SDO block transfer is more effecient than segmented
+   * transfer for large values, but may not be supported by the remote server.
+   * If not, the operation will most likely fail with the #SdoErrc::NO_CS abort
+   * code.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  F&& con, const ::std::chrono::milliseconds& timeout,
+                  ::std::error_code& ec) {
+    SubmitUpload<T>(exec, id, idx, subidx, ::std::forward<F>(con), true,
+                    timeout, ec);
+  }
+
+  /**
+   * Queues an asynchronous SDO upload operation.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitUpload(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+               F&& con, bool block, const ::std::chrono::milliseconds& timeout,
+               ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
     ec.clear();
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      sdo->SubmitUpload<T>(exec, idx, subidx, ::std::forward<F>(con), false,
+      sdo->SubmitUpload<T>(exec, idx, subidx, ::std::forward<F>(con), block,
                            timeout);
     } else {
       ec = SdoErrc::NO_SDO;
@@ -961,6 +1059,109 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SubmitWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
               T&& value, F&& con, const ::std::chrono::milliseconds& timeout,
               ::std::error_code& ec) {
+    SubmitDownload(exec, id, idx, subidx, ::std::forward<T>(value),
+                   ::std::forward<F>(con), false, timeout, ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                   T&& value, F&& con) {
+    SubmitBlockWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                     ::std::forward<F>(con), GetTimeout());
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                   T&& value, F&& con, ::std::error_code& ec) {
+    SubmitBlockWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                     ::std::forward<F>(con), GetTimeout(), ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                   T&& value, F&& con,
+                   const ::std::chrono::milliseconds& timeout) {
+    ::std::error_code ec;
+    SubmitBlockWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                     ::std::forward<F>(con), timeout, ec);
+    if (ec) throw SdoError(id, idx, subidx, ec, "SubmitBlockWrite");
+  }
+
+  /**
+   * Queues an asynchronous write (SDO block download) operation. This function
+   * writes a value to a sub-object in a remote object dictionary using SDO
+   * block transfer. SDO block transfer is more effecient than segmented
+   * transfer for large values, but may not be supported by the remote server.
+   * If not, the operation will most likely fail with the #SdoErrc::NO_CS abort
+   * code.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                   T&& value, F&& con,
+                   const ::std::chrono::milliseconds& timeout,
+                   ::std::error_code& ec) {
+    SubmitDownload(exec, id, idx, subidx, ::std::forward<T>(value),
+                   ::std::forward<F>(con), true, timeout, ec);
+  }
+
+  /**
+   * Queues an asynchronous SDO download operation.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitDownload(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                 T&& value, F&& con, bool block,
+                 const ::std::chrono::milliseconds& timeout,
+                 ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
 
     ec.clear();
@@ -968,7 +1169,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     if (sdo) {
       SetTime();
       sdo->SubmitDownload(exec, idx, subidx, ::std::forward<T>(value),
-                          ::std::forward<F>(con), false, timeout);
+                          ::std::forward<F>(con), block, timeout);
     } else {
       ec = SdoErrc::NO_SDO;
     }
@@ -1174,6 +1375,69 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SdoFuture<T>
   AsyncRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
             const ::std::chrono::milliseconds& timeout) {
+    return AsyncUpload<T>(exec, id, idx, subidx, false, timeout);
+  }
+
+  /**
+   * Equivalent to
+   * #AsyncBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T>
+  SdoFuture<T>
+  AsyncBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx) {
+    return AsyncBlockRead<T>(exec, id, idx, subidx, GetTimeout());
+  }
+
+  /**
+   * Queues an asynchronous read (SDO block upload) operation and creates a
+   * future which becomes ready once the request completes (or is canceled).
+   * This function uses SDO block transfer, which is more effecient than
+   * segmented transfer for large values, but may not be supported by the remote
+   * server. If not, the operation will most likely fail with the
+   * #SdoErrc::NO_CS abort code.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the received value on success and the SDO
+   * error on failure.
+   */
+  template <class T>
+  SdoFuture<T>
+  AsyncBlockRead(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                 const ::std::chrono::milliseconds& timeout) {
+    return AsyncUpload<T>(exec, id, idx, subidx, true, timeout);
+  }
+
+  /**
+   * Queues an asynchronous SDO upload operation and creates a future which
+   * becomes ready once the request completes (or is canceled).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the received value on success and the SDO
+   * error on failure.
+   */
+  template <class T>
+  SdoFuture<T>
+  AsyncUpload(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+              bool block, const ::std::chrono::milliseconds& timeout) {
     if (!exec) exec = GetExecutor();
 
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -1181,7 +1445,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     auto sdo = GetSdo(id);
     if (sdo) {
       SetTime();
-      return sdo->AsyncUpload<T>(exec, idx, subidx, false, timeout);
+      return sdo->AsyncUpload<T>(exec, idx, subidx, block, timeout);
     } else {
       return make_error_sdo_future<T>(id, idx, subidx, SdoErrc::NO_SDO,
                                       "AsyncRead");
@@ -1221,6 +1485,74 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   SdoFuture<void>
   AsyncWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
              T&& value, const ::std::chrono::milliseconds& timeout) {
+    return AsyncDownload(exec, id, idx, subidx, ::std::forward<T>(value), false,
+                         timeout);
+  }
+
+  /**
+   * Equivalent to
+   * #AsyncBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by #GetTimeout().
+   */
+  template <class T>
+  SdoFuture<void>
+  AsyncBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  T&& value) {
+    return AsyncBlockWrite(exec, id, idx, subidx, ::std::forward<T>(value),
+                           GetTimeout());
+  }
+
+  /**
+   * Queues an asynchronous write (SDO block download) operation and creates a
+   * future which becomes ready once the request completes (or is canceled).
+   * This function uses SDO block transfer, which is more effecient than
+   * segmented transfer for large values, but may not be supported by the remote
+   * server. If not, the operation will most likely fail with the
+   * #SdoErrc::NO_CS abort code.
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  template <class T>
+  SdoFuture<void>
+  AsyncBlockWrite(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                  T&& value, const ::std::chrono::milliseconds& timeout) {
+    return AsyncDownload(exec, id, idx, subidx, ::std::forward<T>(value), true,
+                         timeout);
+  }
+
+  /**
+   * Queues an asynchronous SDO download operation and creates a future which
+   * becomes ready once the request completes (or is canceled).
+   *
+   * @param exec    the executor used to execute the completion task.
+   * @param id      the node-ID (in the range[1..127]).
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  template <class T>
+  SdoFuture<void>
+  AsyncDownload(ev_exec_t* exec, uint8_t id, uint16_t idx, uint8_t subidx,
+                T&& value, bool block,
+                const ::std::chrono::milliseconds& timeout) {
     if (!exec) exec = GetExecutor();
 
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -1229,7 +1561,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
     if (sdo) {
       SetTime();
       return sdo->AsyncDownload<T>(exec, idx, subidx, ::std::forward<T>(value),
-                                   false, timeout);
+                                   block, timeout);
     } else {
       return make_error_sdo_future<void>(id, idx, subidx, SdoErrc::NO_SDO,
                                          "AsyncWrite");
