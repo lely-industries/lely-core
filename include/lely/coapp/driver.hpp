@@ -503,6 +503,74 @@ class BasicDriver : DriverBase,
 
   /**
    * Equivalent to
+   * #SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con) {
+    master.SubmitBlockRead<T>(GetExecutor(), id(), idx, subidx,
+                              ::std::forward<F>(con));
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con,
+                  ::std::error_code& ec) {
+    master.SubmitBlockRead<T>(GetExecutor(), id(), idx, subidx,
+                              ::std::forward<F>(con), ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con,
+                  const ::std::chrono::milliseconds& timeout) {
+    master.SubmitBlockRead<T>(GetExecutor(), id(), idx, subidx,
+                              ::std::forward<F>(con), timeout);
+  }
+
+  /**
+   * Queues an asynchronous read (SDO block upload) operation. This function
+   * reads the value of a sub-object in a remote object dictionary using SDO
+   * block transfer. SDO block transfer is more effecient than segmented
+   * transfer for large values, but may not be supported by the remote server.
+   * If not, the operation will most likely fail with the #SdoErrc::NO_CS abort
+   * code.
+   *
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockRead(uint16_t idx, uint8_t subidx, F&& con,
+                  const ::std::chrono::milliseconds& timeout,
+                  ::std::error_code& ec) {
+    master.SubmitBlockRead<T>(GetExecutor(), id(), idx, subidx,
+                              ::std::forward<F>(con), timeout, ec);
+  }
+
+  /**
+   * Equivalent to
    * #SubmitWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout),
    * except that it uses the SDO timeout given by
    * #lely::canopen::BasicMaster::GetTimeout().
@@ -566,6 +634,78 @@ class BasicDriver : DriverBase,
     master.SubmitWrite(GetExecutor(), id(), idx, subidx,
                        ::std::forward<T>(value), ::std::forward<F>(con),
                        timeout, ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con) {
+    master.SubmitBlockWrite(GetExecutor(), id(), idx, subidx,
+                            ::std::forward<T>(value), ::std::forward<F>(con));
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+                   ::std::error_code& ec) {
+    master.SubmitBlockWrite(GetExecutor(), id(), idx, subidx,
+                            ::std::forward<T>(value), ::std::forward<F>(con),
+                            ec);
+  }
+
+  /**
+   * Equivalent to
+   * #SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con, const ::std::chrono::milliseconds& timeout, ::std::error_code& ec),
+   * except that it throws #lely::canopen::SdoError on error.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+                   const ::std::chrono::milliseconds& timeout) {
+    master.SubmitBlockWrite(GetExecutor(), id(), idx, subidx,
+                            ::std::forward<T>(value), ::std::forward<F>(con),
+                            timeout);
+  }
+
+  /**
+   * Queues an asynchronous write (SDO block download) operation. This function
+   * writes a value to a sub-object in a remote object dictionary using SDO
+   * block transfer. SDO block transfer is more effecient than segmented
+   * transfer for large values, but may not be supported by the remote server.
+   * If not, the operation will most likely fail with the #SdoErrc::NO_CS abort
+   * code.
+   *
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param con     the confirmation function to be called on completion of the
+   *                SDO request.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   * @param ec      the error code (0 on success). `ec == SdoErrc::NO_SDO` if no
+   *                client-SDO is available.
+   */
+  template <class T, class F>
+  void
+  SubmitBlockWrite(uint16_t idx, uint8_t subidx, T&& value, F&& con,
+                   const ::std::chrono::milliseconds& timeout,
+                   ::std::error_code& ec) {
+    master.SubmitBlockWrite(GetExecutor(), id(), idx, subidx,
+                            ::std::forward<T>(value), ::std::forward<F>(con),
+                            timeout, ec);
   }
 
   /**
@@ -734,6 +874,43 @@ class BasicDriver : DriverBase,
 
   /**
    * Equivalent to
+   * #AsyncBlockRead(uint16_t idx, uint8_t subidx, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  SdoFuture<T>
+  AsyncBlockRead(uint16_t idx, uint8_t subidx) {
+    return master.AsyncBlockRead<T>(GetExecutor(), id(), idx, subidx);
+  }
+
+  /**
+   * Queues an asynchronous read (SDO block upload) operation and creates a
+   * future which becomes ready once the request completes (or is canceled).
+   * This function uses SDO block transfer, which is more effecient than
+   * segmented transfer for large values, but may not be supported by the remote
+   * server. If not, the operation will most likely fail with the
+   * #SdoErrc::NO_CS abort code.
+   *
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the received value on success and the SDO
+   * error on failure.
+   */
+  template <class T>
+  SdoFuture<T>
+  AsyncBlockRead(uint16_t idx, uint8_t subidx,
+                 const ::std::chrono::milliseconds& timeout) {
+    return master.AsyncBlockRead<T>(GetExecutor(), id(), idx, subidx, timeout);
+  }
+
+  /**
+   * Equivalent to
    * #AsyncWrite(uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout),
    * except that it uses the SDO timeout given by
    * #lely::canopen::BasicMaster::GetTimeout().
@@ -765,6 +942,45 @@ class BasicDriver : DriverBase,
              const ::std::chrono::milliseconds& timeout) {
     return master.AsyncWrite(GetExecutor(), id(), idx, subidx,
                              ::std::forward<T>(value), timeout);
+  }
+
+  /**
+   * Equivalent to
+   * #AsyncBlockWrite(uint16_t idx, uint8_t subidx, T&& value, const ::std::chrono::milliseconds& timeout),
+   * except that it uses the SDO timeout given by
+   * #lely::canopen::BasicMaster::GetTimeout().
+   */
+  template <class T>
+  SdoFuture<void>
+  AsyncBlockWrite(uint16_t idx, uint8_t subidx, T&& value) {
+    return master.AsyncBlockWrite(GetExecutor(), id(), idx, subidx,
+                                  ::std::forward<T>(value));
+  }
+
+  /**
+   * Queues an asynchronous write (SDO block download) operation and creates a
+   * future which becomes ready once the request completes (or is canceled).
+   * This function uses SDO block transfer, which is more effecient than
+   * segmented transfer for large values, but may not be supported by the remote
+   * server. If not, the operation will most likely fail with the
+   * #SdoErrc::NO_CS abort code.
+   *
+   * @param idx     the object index.
+   * @param subidx  the object sub-index.
+   * @param value   the value to be written.
+   * @param timeout the SDO timeout. If, after the request is initiated, the
+   *                timeout expires before receiving a response from the server,
+   *                the client aborts the transfer with abort code
+   *                #SdoErrc::TIMEOUT.
+   *
+   * @returns a future which holds the SDO error on failure.
+   */
+  template <class T>
+  SdoFuture<void>
+  AsyncBlockWrite(uint16_t idx, uint8_t subidx, T&& value,
+                  const ::std::chrono::milliseconds& timeout) {
+    return master.AsyncBlockWrite(GetExecutor(), id(), idx, subidx,
+                                  ::std::forward<T>(value), timeout);
   }
 
   /**
