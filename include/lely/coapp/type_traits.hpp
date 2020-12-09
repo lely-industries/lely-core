@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen type traits.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_COAPP_TYPE_TRAITS_HPP_
 #define LELY_COAPP_TYPE_TRAITS_HPP_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <string>
 #include <system_error>

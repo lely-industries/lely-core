@@ -1,9 +1,11 @@
 inc =
-inc += lely/features.h
 
 inc += lely/compat/sys/types.h
 if !NO_CXX
 inc += lely/compat/chrono.hpp
+endif
+inc += lely/compat/features.h
+if !NO_CXX
 inc += lely/compat/functional.hpp
 endif
 inc += lely/compat/stdatomic.h

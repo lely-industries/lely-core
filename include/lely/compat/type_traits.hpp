@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_TYPE_TRAITS_HPP_
 #define LELY_COMPAT_TYPE_TRAITS_HPP_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <type_traits>
 #include <utility>

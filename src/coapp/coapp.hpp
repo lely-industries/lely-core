@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the C++ CANopen application library.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 namespace lely {
 /// The namespace for the C++ CANopen application library.

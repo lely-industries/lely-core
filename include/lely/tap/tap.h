@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the Test Anything Protocol (TAP) library.
  *
- * @copyright 2013-2019 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 #ifndef LELY_TAP_TAP_H_
 #define LELY_TAP_TAP_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-zero-length"

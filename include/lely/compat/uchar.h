@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_UCHAR_H_
 #define LELY_COMPAT_UCHAR_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_UCHAR_H
 #if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) \

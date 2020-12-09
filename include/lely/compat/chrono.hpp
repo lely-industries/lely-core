@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_CHRONO_HPP_
 #define LELY_COMPAT_CHRONO_HPP_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <chrono>
 #include <type_traits>

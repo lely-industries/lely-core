@@ -56,7 +56,7 @@
 #ifndef LELY_UTIL_ERRNUM_H_
 #define LELY_UTIL_ERRNUM_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <errno.h>
 #include <stddef.h>

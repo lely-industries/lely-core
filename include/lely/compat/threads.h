@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_THREADS_H_
 #define LELY_COMPAT_THREADS_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 // clang-format off
 #ifndef LELY_HAVE_THREADS_H

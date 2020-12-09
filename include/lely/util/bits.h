@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_BITS_H_
 #define LELY_UTIL_BITS_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stdint.h>
 

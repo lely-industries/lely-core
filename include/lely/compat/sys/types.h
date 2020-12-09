@@ -23,7 +23,7 @@
 #ifndef LELY_COMPAT_SYS_TYPES_H_
 #define LELY_COMPAT_SYS_TYPES_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
 #if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)

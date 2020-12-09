@@ -21,7 +21,7 @@
  * pointer. This cannot be done in standard C, but for most platforms it can be
  * implemented with a single assembly instruction.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,7 +41,7 @@
 #ifndef LELY_UTIL_MKJMP_H_
 #define LELY_UTIL_MKJMP_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <setjmp.h>
 #include <stddef.h>

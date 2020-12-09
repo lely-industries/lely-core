@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the IEEE 754
  * floating-point format type definitions.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_FLOAT_H_
 #define LELY_UTIL_FLOAT_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <float.h>
 
