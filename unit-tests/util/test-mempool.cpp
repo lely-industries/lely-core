@@ -29,7 +29,7 @@
 #include <cstring>
 
 #include <lely/util/mempool.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 TEST_GROUP(Util_MemPool) {
   static const size_t POOL_SIZE = 1024u;

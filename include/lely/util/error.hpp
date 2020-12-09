@@ -23,10 +23,29 @@
 #ifndef LELY_UTIL_ERROR_HPP_
 #define LELY_UTIL_ERROR_HPP_
 
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <string>
 #include <system_error>
+
+#ifndef throw_or_abort
+/**
+ * If exceptions are disabled, aborts the process instead of throwing an
+ * exception.
+ */
+#if __cpp_exceptions
+#define throw_or_abort(e) throw(e)
+#else
+#define throw_or_abort(e) throw_or_abort_impl((e).what())
+#endif
+#endif
+
+extern "C" {
+
+/// Aborts the process instead of throwing an exception.
+_Noreturn void throw_or_abort_impl(const char* what);
+
+}  // extern "C"
 
 namespace lely {
 namespace util {

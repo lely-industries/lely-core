@@ -26,7 +26,7 @@
 #include <lely/compat/stdatomic.h>
 #endif
 #include <lely/compat/stddef.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/memory.h>
 #include <lely/util/util.h>
 

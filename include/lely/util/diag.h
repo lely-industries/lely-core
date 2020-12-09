@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_DIAG_H_
 #define LELY_UTIL_DIAG_H_
 
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <stdarg.h>
 #include <stddef.h>

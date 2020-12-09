@@ -23,7 +23,7 @@
 
 #include "attr.h"
 #include "io.h"
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 

@@ -24,7 +24,7 @@
 #include "io.h"
 #include <lely/io/if.h>
 #include <lely/io/sock.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #include <stdlib.h>

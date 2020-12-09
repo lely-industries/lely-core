@@ -27,7 +27,7 @@
 
 #include <lely/co/csdo.h>
 #include <lely/co/dev.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #if !LELY_NO_CO_EMCY
 #include <lely/co/emcy.h>
 #endif

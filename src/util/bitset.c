@@ -24,7 +24,7 @@
 #include "util.h"
 #include <lely/compat/strings.h>
 #include <lely/util/bitset.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #include <stdlib.h>

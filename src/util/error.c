@@ -2,7 +2,7 @@
  * This file is part of the utilities library; it contains the implementation of
  * the error functions.
  *
- * @see lely/util/errnum.h
+ * @see lely/util/error.h
  *
  * @copyright 2013-2020 Lely Industries N.V.
  *
@@ -22,10 +22,13 @@
  */
 
 #include "util.h"
-#define LELY_UTIL_ERRNUM_INLINE extern inline
-#include <lely/util/errnum.h>
+#define LELY_UTIL_ERROR_INLINE extern inline
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
+#if !NO_CXX
+#include <stdlib.h>
+#endif
 #include <string.h>
 
 #if _WIN32
@@ -40,6 +43,16 @@
 
 #if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 static const char *gai_strerror_r(int ecode, char *strerrbuf, size_t buflen);
+#endif
+
+#if !NO_CXX
+_Noreturn void
+throw_or_abort_impl(const char *what)
+{
+	(void)what;
+
+	abort();
+}
 #endif
 
 int

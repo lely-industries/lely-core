@@ -34,7 +34,7 @@
 #include <lely/co/tpdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"

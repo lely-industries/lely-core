@@ -33,7 +33,7 @@
 #include <lely/co/type.h>
 #include <lely/co/sdo.h>
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/ustring.h>
 
 #include "holder/array-init.hpp"

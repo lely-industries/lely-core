@@ -32,7 +32,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 

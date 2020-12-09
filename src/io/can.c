@@ -22,7 +22,7 @@
  */
 
 #include "io.h"
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #if !LELY_NO_CAN && defined(__linux__) && HAVE_LINUX_CAN_H
 #include <lely/can/socket.h>
 #endif

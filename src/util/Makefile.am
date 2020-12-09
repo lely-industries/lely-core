@@ -13,9 +13,6 @@ src += sllist.c
 src += spscring.c
 src += stop.c
 endif
-if !NO_CXX
-src += exception.cpp
-endif
 
 if !NO_CO_OBJ_FILE
 src += frbuf.c
@@ -47,7 +44,7 @@ src += bits.c
 src += cmp.c
 src += dllist.c
 src += endian.c
-src += errnum.c
+src += error.c
 src += memory.c
 src += mempool.c
 src += membuf.c
@@ -67,10 +64,6 @@ liblely_util_la_CFLAGS =
 if CODE_COVERAGE_ENABLED
 liblely_util_la_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
-liblely_util_la_CXXFLAGS =
-if CODE_COVERAGE_ENABLED
-liblely_util_la_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
-endif
 liblely_util_la_LDFLAGS = -no-undefined -version-number $(VERSION_MAJOR):$(VERSION_MINOR):$(VERSION_PATCH)
 if PLATFORM_WIN32
 liblely_util_la_LDFLAGS += -Wl,--output-def,liblely-util-$(VERSION_MAJOR).def
@@ -78,6 +71,9 @@ endif
 liblely_util_la_LDFLAGS += -Wl,--as-needed
 liblely_util_la_LIBADD =
 liblely_util_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
+if !ECSS_COMPLIANCE
+liblely_util_la_LIBADD += -lm
+endif
 if CODE_COVERAGE_ENABLED
 liblely_util_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif

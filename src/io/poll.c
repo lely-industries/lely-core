@@ -24,7 +24,7 @@
 #include "io.h"
 #include <lely/io/poll.h>
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/rbtree.h>
 #if _WIN32
 #include <lely/io/sock.h>

@@ -32,7 +32,7 @@
 #include <lely/ev/std_exec.h>
 #include <lely/ev/task.h>
 #include <lely/util/dllist.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/time.h>
 #include <lely/util/util.h>
 

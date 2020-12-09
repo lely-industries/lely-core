@@ -28,7 +28,6 @@
 #include <lely/io2/ctx.h>
 #include <lely/io2/user/can.h>
 #include <lely/util/diag.h>
-#include <lely/util/errnum.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>
 #include <lely/util/util.h>

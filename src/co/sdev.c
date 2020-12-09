@@ -27,7 +27,7 @@
 
 #include <lely/co/sdev.h>
 #include <lely/compat/stdio.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
 

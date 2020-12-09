@@ -24,7 +24,7 @@
 #include "can.h"
 #include <lely/can/msg.h>
 #include <lely/util/bits.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

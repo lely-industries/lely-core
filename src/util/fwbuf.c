@@ -29,7 +29,7 @@
 
 #include "util.h"
 #include <lely/compat/string.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/fwbuf.h>
 
 #include <assert.h>

@@ -33,7 +33,6 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 #include <lely/util/diag.h>
-#include <lely/util/errnum.h>
 
 #include "lely-unit-test.hpp"
 #include "override/lelyco-val.hpp"

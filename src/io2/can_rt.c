@@ -29,7 +29,7 @@
 #include <lely/ev/strand.h>
 #include <lely/io2/can_rt.h>
 #include <lely/io2/ctx.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

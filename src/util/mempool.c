@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <lely/compat/stddef.h>
