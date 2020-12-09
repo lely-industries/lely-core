@@ -36,8 +36,8 @@ size_t co_ssdo_alignof(void);
 size_t co_ssdo_sizeof(void);
 
 /**
- * Creates a new CANopen Server-SDO service. The service is started as if by
- * co_ssdo_start().
+ * Creates a new CANopen Server-SDO service. The service is stopped after
+ * creation and SHOULD be started with co_ssdo_start() before use.
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device describing the server.
@@ -58,17 +58,21 @@ void co_ssdo_destroy(co_ssdo_t *sdo);
 /**
  * Starts a Server-SDO service.
  *
+ * @post on success, co_ssdo_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_ssdo_stop(), co_ssdo_is_stopped()
+ * @see co_ssdo_stop()
  */
 int co_ssdo_start(co_ssdo_t *sdo);
 
 /**
  * Stops a Server-SDO service. Any ongoing request is aborted.
  *
- * @see co_ssdo_start(), co_ssdo_is_stopped()
+ * @post co_ssdo_is_stopped() returns 1.
+ *
+ * @see co_ssdo_start()
  */
 void co_ssdo_stop(co_ssdo_t *sdo);
 

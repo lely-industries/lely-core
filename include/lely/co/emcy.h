@@ -60,8 +60,8 @@ size_t co_emcy_alignof(void);
 size_t co_emcy_sizeof(void);
 
 /**
- * Creates a new CANopen EMCY producer/consumer service. The service is started
- * as if by co_emcy_start().
+ * Creates a new CANopen EMCY producer/consumer service. The service is stopped
+ * after creation and SHOULD be started with co_emcy_start() before use.
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device.
@@ -79,14 +79,22 @@ void co_emcy_destroy(co_emcy_t *emcy);
 /**
  * Starts an EMCY service.
  *
+ * @post on success, co_emcy_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_emcy_stop(), co_emcy_is_stopped()
+ * @see co_emcy_stop()
  */
 int co_emcy_start(co_emcy_t *emcy);
 
-/// Stops an EMCY service. @see co_emcy_start(), co_emcy_is_stopped()
+/**
+ * Stops an EMCY service.
+ *
+ * @post co_emcy_is_stopped() returns 1.
+ *
+ * @see co_emcy_start()
+ */
 void co_emcy_stop(co_emcy_t *emcy);
 
 /**

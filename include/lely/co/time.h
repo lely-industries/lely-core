@@ -87,8 +87,8 @@ size_t co_time_alignof(void);
 size_t co_time_sizeof(void);
 
 /**
- * Creates a new CANopen TIME producer/consumer service. The service is started
- * as if by co_time_start().
+ * Creates a new CANopen TIME producer/consumer service. The service is stopped
+ * after creations and SHOULD be started with co_time_start() before use.
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device.
@@ -106,10 +106,12 @@ void co_time_destroy(co_time_t *time);
 /**
  * Starts a TIME service.
  *
+ * @post on success, co_time_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_time_stop(), co_time_is_stopped()
+ * @see co_time_stop()
  */
 int co_time_start(co_time_t *time);
 
@@ -117,7 +119,9 @@ int co_time_start(co_time_t *time);
  * Stops a TIME service. This function invokes co_time_stop_prod() to stop the
  * TIME producer, if necessary.
  *
- * @see co_time_start(), co_time_is_stopped()
+ * @post co_time_is_stopped() returns 1.
+ *
+ * @see co_time_start()
  */
 void co_time_stop(co_time_t *time);
 
