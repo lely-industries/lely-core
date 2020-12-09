@@ -557,6 +557,23 @@ AC_CONFIG_FILES([
 	doc/Doxyfile
 	doc/Makefile
 	include/Makefile
+	lib/can/Makefile
+	lib/co/Makefile
+	lib/co/version.rc
+	lib/coapp/Makefile
+	lib/coapp/version.rc
+	lib/ev/Makefile
+	lib/ev/version.rc
+	lib/io/Makefile
+	lib/io2/Makefile
+	lib/io2/version.rc
+	lib/compat/Makefile
+	lib/compat/version.rc
+	lib/tap/Makefile
+	lib/tap/version.rc
+	lib/util/Makefile
+	lib/util/version.rc
+	lib/Makefile
 	pkgconfig/liblely-can.pc
 	pkgconfig/liblely-co.pc
 	pkgconfig/liblely-coapp.pc
@@ -572,23 +589,6 @@ AC_CONFIG_FILES([
 	python/dcf-tools/Makefile
 	python/io/Makefile
 	python/Makefile
-	src/can/Makefile
-	src/co/Makefile
-	src/co/version.rc
-	src/coapp/Makefile
-	src/coapp/version.rc
-	src/ev/Makefile
-	src/ev/version.rc
-	src/io/Makefile
-	src/io2/Makefile
-	src/io2/version.rc
-	src/compat/Makefile
-	src/compat/version.rc
-	src/tap/Makefile
-	src/tap/version.rc
-	src/util/Makefile
-	src/util/version.rc
-	src/Makefile
 	tools/Makefile
 	tools/version.dcf2c.rc
 	test/co-nmt-master.dcf

@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = doc include src python pkgconfig
+SUBDIRS = doc include lib python pkgconfig
 if !NO_TOOLS
 SUBDIRS += tools
 endif

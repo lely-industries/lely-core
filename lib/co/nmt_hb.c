@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT heartbeat consumer functions.
  *
- * @see src/nmt_ec.h
+ * @see lib/co/nmt_hb.h
  *
  * @copyright 2016-2020 Lely Industries N.V.
  *

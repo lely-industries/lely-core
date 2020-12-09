@@ -59,14 +59,14 @@ AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
 endif
 
 LDADD =
-LDADD += $(top_builddir)/src/compat/liblely-compat.la
-LDADD += $(top_builddir)/src/tap/liblely-tap.la
-LDADD += $(top_builddir)/src/util/liblely-util.la
-LDADD += $(top_builddir)/src/can/liblely-can.la
+LDADD += $(top_builddir)/lib/compat/liblely-compat.la
+LDADD += $(top_builddir)/lib/tap/liblely-tap.la
+LDADD += $(top_builddir)/lib/util/liblely-util.la
+LDADD += $(top_builddir)/lib/can/liblely-can.la
 if !ECSS_COMPLIANCE
-LDADD += $(top_builddir)/src/io/liblely-io.la
+LDADD += $(top_builddir)/lib/io/liblely-io.la
 endif
-LDADD += $(top_builddir)/src/co/liblely-co.la
+LDADD += $(top_builddir)/lib/co/liblely-co.la
 if CODE_COVERAGE_ENABLED
 LDADD += $(CODE_COVERAGE_LIBS)
 endif

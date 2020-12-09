@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT service manager functions.
  *
- * @see src/nmt_srv.h
+ * @see lib/co/nmt_srv.h
  *
  * @copyright 2017-2020 Lely Industries N.V.
  *

@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT 'configuration request' functions.
  *
- * @see src/nmt_cfg.h
+ * @see lib/co/nmt_cfg.h
  *
  * @copyright 2017-2020 Lely Industries N.V.
  *

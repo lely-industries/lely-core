@@ -5,7 +5,7 @@ if CODE_COVERAGE_ENABLED
 LELY_COMPAT_LIBS += $(CODE_COVERAGE_LIBS)
 endif
 
-LELY_COMPAT_LIBS += $(top_builddir)/src/compat/liblely-compat.la
+LELY_COMPAT_LIBS += $(top_builddir)/lib/compat/liblely-compat.la
 
 if PLATFORM_WIN32
 CPPUTEST_LIBS += -lpthread
@@ -47,7 +47,7 @@ endif
 
 # Utilities library tests
 
-LELY_UTIL_LIBS = $(top_builddir)/src/util/liblely-util.la
+LELY_UTIL_LIBS = $(top_builddir)/lib/util/liblely-util.la
 
 src_util_tests =
 src_util_tests += util/test-bits.cpp
@@ -87,7 +87,7 @@ unit_test_util_LDADD = $(LELY_COMPAT_LIBS) $(LELY_UTIL_LIBS) $(CPPUTEST_LIBS)
 
 # CAN library tests
 
-LELY_CAN_LIBS = $(top_builddir)/src/can/liblely-can.la
+LELY_CAN_LIBS = $(top_builddir)/lib/can/liblely-can.la
 
 bin += unit-test-can
 
@@ -101,7 +101,7 @@ unit_test_can_LDADD = $(LELY_COMPAT_LIBS) $(LELY_UTIL_LIBS) $(LELY_CAN_LIBS) $(C
 
 # CANopen library tests
 
-LELY_CO_LIBS = $(top_builddir)/src/co/liblely-co.la
+LELY_CO_LIBS = $(top_builddir)/lib/co/liblely-co.la
 
 bin += unit-test-co
 

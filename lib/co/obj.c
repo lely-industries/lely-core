@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the object dictionary.
  *
- * @see lely/co/obj.h, src/obj.h
+ * @see lely/co/obj.h, lely/co/detail/obj.h
  *
  * @copyright 2020 Lely Industries N.V.
  *

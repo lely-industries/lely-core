@@ -37,9 +37,9 @@ liblely_io_la_LDFLAGS += -Wl,--output-def,liblely-io-1.def
 endif
 liblely_io_la_LDFLAGS += -Wl,--as-needed
 liblely_io_la_LIBADD =
-liblely_io_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
-liblely_io_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
-liblely_io_la_LIBADD += $(top_builddir)/src/can/liblely-can.la
+liblely_io_la_LIBADD += $(top_builddir)/lib/compat/liblely-compat.la
+liblely_io_la_LIBADD += $(top_builddir)/lib/util/liblely-util.la
+liblely_io_la_LIBADD += $(top_builddir)/lib/can/liblely-can.la
 if CODE_COVERAGE_ENABLED
 liblely_io_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif
