@@ -35,7 +35,7 @@ def parse_time_sutc(value: str):
 
 
 def read_device_from_dcf(filename):
-    env = {}
+    env = {"NODEID": 255}
     dev = dcf.Device.from_dcf(filename, env)
     dev.c = CDevice(dev)
     return dev
