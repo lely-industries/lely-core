@@ -1,6 +1,6 @@
 /**@file
- * This header file is part of the Lely libraries; it contains the compiler
- * feature definitions.
+ * This header file is part of the C11 and POSIX compatibility library; it
+ * contains the compiler feature definitions.
  *
  * @copyright 2013-2020 Lely Industries N.V.
  *
@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_FEATURES_H_
-#define LELY_FEATURES_H_
+#ifndef LELY_COMPAT_FEATURES_H_
+#define LELY_COMPAT_FEATURES_H_
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L
 #error This file requires compiler and library support for the ISO C99 standard.
@@ -339,4 +339,4 @@
 #define LELY_VLA_SIZE_MAX 256
 #endif
 
-#endif // LELY_FEATURES_H_
+#endif // LELY_COMPAT_FEATURES_H_

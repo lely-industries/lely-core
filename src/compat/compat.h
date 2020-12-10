@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifdef __cplusplus
 namespace lely

@@ -22,7 +22,7 @@
 #ifndef LELY_CAN_MSG_H_
 #define LELY_CAN_MSG_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stddef.h>
 #include <stdint.h>

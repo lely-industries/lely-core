@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_FUNCTIONAL_HPP_
 #define LELY_COMPAT_FUNCTIONAL_HPP_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 #if __cplusplus <= 201703L
 #include <lely/compat/type_traits.hpp>
 #endif

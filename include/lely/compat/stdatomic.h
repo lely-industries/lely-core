@@ -23,7 +23,7 @@
 #ifndef LELY_COMPAT_STDATOMIC_H_
 #define LELY_COMPAT_STDATOMIC_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_STDATOMIC_H
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)

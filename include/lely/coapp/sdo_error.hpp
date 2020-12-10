@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the SDO error declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_COAPP_SDO_ERROR_HPP_
 #define LELY_COAPP_SDO_ERROR_HPP_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stdexcept>
 #include <string>

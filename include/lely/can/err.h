@@ -2,7 +2,7 @@
  * This header file is part of the CAN library; it contains CAN bus error
  * definitions.
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_CAN_ERR_H_
 #define LELY_CAN_ERR_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 /// The states of a CAN node, depending on the TX/RX error count.
 enum can_state {

@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the utilities library.
  *
- * @copyright 2013-2018 Lely Industries N.V.
+ * @copyright 2013-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 #ifndef LELY_UTIL_UTIL_H_
 #define LELY_UTIL_UTIL_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stddef.h>
 

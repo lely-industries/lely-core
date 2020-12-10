@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_UNISTD_H_
 #define LELY_COMPAT_UNISTD_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_UNISTD_H
 #if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)

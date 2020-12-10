@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the CAN library.
  *
- * @copyright 2015-2018 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 LELY_INGORE_EMPTY_TRANSLATION_UNIT
 

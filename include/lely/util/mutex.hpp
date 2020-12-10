@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the C++ mutual
  * exclusion helper classes.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,7 +22,7 @@
 #ifndef LELY_UTIL_MUTEX_H_
 #define LELY_UTIL_MUTEX_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <mutex>
 

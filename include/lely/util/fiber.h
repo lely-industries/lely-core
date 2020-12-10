@@ -33,7 +33,7 @@
 #ifndef LELY_UTIL_FIBER_H_
 #define LELY_UTIL_FIBER_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stddef.h>
 

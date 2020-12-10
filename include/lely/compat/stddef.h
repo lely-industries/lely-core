@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_STDDEF_H_
 #define LELY_COMPAT_STDDEF_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <stddef.h>
 

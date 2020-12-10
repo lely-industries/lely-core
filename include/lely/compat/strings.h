@@ -22,7 +22,7 @@
 #ifndef LELY_COMPAT_STRINGS_H_
 #define LELY_COMPAT_STRINGS_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_STRINGS_H
 #if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))

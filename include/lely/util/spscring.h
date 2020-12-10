@@ -35,7 +35,7 @@
 #ifndef LELY_UTIL_SPSCRING_H_
 #define LELY_UTIL_SPSCRING_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #if !LELY_NO_ATOMICS
 #ifdef __cplusplus

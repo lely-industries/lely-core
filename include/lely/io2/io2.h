@@ -1,7 +1,7 @@
 /**@file
  * This is the public header file of the I/O library.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 #ifndef LELY_IO2_IO2_H_
 #define LELY_IO2_IO2_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 /// An I/O context.
 typedef struct io_ctx io_ctx_t;

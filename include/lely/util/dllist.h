@@ -23,7 +23,7 @@
 #ifndef LELY_UTIL_DLLIST_H_
 #define LELY_UTIL_DLLIST_H_
 
-#include <lely/features.h>
+#include <lely/compat/features.h>
 
 #include <assert.h>
 #include <stddef.h>
