@@ -473,13 +473,13 @@ class Master:
                 )
                 master.sdo.append(sdo)
 
-            if slave.revision_number != 0:
+            if slave.revision_number != 0 and 0x03 in slave[0x1018]:
                 sdo = dcf.UNSIGNED32.concise_value(
                     0x1F87, slave.node_id, slave.revision_number
                 )
                 master.sdo.append(sdo)
 
-            if slave.serial_number != 0:
+            if slave.serial_number != 0 and 0x04 in slave[0x1018]:
                 sdo = dcf.UNSIGNED32.concise_value(
                     0x1F88, slave.node_id, slave.serial_number
                 )
