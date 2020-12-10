@@ -19,30 +19,7 @@ class CDevice:
             self.vendor_name = section.get("VendorName", "")
             self.product_name = section.get("ProductName", "")
             self.order_code = section.get("OrderCode", "")
-            if bool(int(section.get("BaudRate_10", "0"), 2)):
-                self.baud += " | CO_BAUD_10"
-                self.rate = 10
-            if bool(int(section.get("BaudRate_20", "0"), 2)):
-                self.baud += " | CO_BAUD_20"
-                self.rate = 20
-            if bool(int(section.get("BaudRate_50", "0"), 2)):
-                self.baud += " | CO_BAUD_50"
-                self.rate = 50
-            if bool(int(section.get("BaudRate_125", "0"), 2)):
-                self.baud += " | CO_BAUD_125"
-                self.rate = 125
-            if bool(int(section.get("BaudRate_250", "0"), 2)):
-                self.baud += " | CO_BAUD_250"
-                self.rate = 250
-            if bool(int(section.get("BaudRate_500", "0"), 2)):
-                self.baud += " | CO_BAUD_500"
-                self.rate = 500
-            if bool(int(section.get("BaudRate_800", "0"), 2)):
-                self.baud += " | CO_BAUD_800"
-                self.rate = 800
-            if bool(int(section.get("BaudRate_1000", "0"), 2)):
-                self.baud += " | CO_BAUD_1000"
-                self.rate = 1000
+            self.__parse_baud_rate(section)
             if "LSS_Supported" in section:
                 self.lss = int(section["LSS_Supported"])
         if "DeviceComissioning" in dev.cfg:
@@ -56,6 +33,32 @@ class CDevice:
 
         for obj in dev.values():
             obj.c = CObject(obj)
+
+    def __parse_baud_rate(self, section: dict):
+        if bool(int(section.get("BaudRate_10", "0"), 2)):
+            self.baud += " | CO_BAUD_10"
+            self.rate = 10
+        if bool(int(section.get("BaudRate_20", "0"), 2)):
+            self.baud += " | CO_BAUD_20"
+            self.rate = 20
+        if bool(int(section.get("BaudRate_50", "0"), 2)):
+            self.baud += " | CO_BAUD_50"
+            self.rate = 50
+        if bool(int(section.get("BaudRate_125", "0"), 2)):
+            self.baud += " | CO_BAUD_125"
+            self.rate = 125
+        if bool(int(section.get("BaudRate_250", "0"), 2)):
+            self.baud += " | CO_BAUD_250"
+            self.rate = 250
+        if bool(int(section.get("BaudRate_500", "0"), 2)):
+            self.baud += " | CO_BAUD_500"
+            self.rate = 500
+        if bool(int(section.get("BaudRate_800", "0"), 2)):
+            self.baud += " | CO_BAUD_800"
+            self.rate = 800
+        if bool(int(section.get("BaudRate_1000", "0"), 2)):
+            self.baud += " | CO_BAUD_1000"
+            self.rate = 1000
 
 
 class CObject:
