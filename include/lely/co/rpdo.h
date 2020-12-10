@@ -63,14 +63,14 @@ size_t co_rpdo_alignof(void);
 size_t co_rpdo_sizeof(void);
 
 /**
- * Creates a new CANopen Receive-PDO service. The service is started as if by
- * co_rpdo_start().
+ * Creates a new CANopen Receive-PDO service. The service is stopped after
+ * creation and SHOULD be started with co_rpdo_start() before use.
  *
- * @param net  a pointer to a CAN network.
- * @param dev  a pointer to a CANopen device describing the server.
- * @param num  the PDO number (in the range [1..512]). The PDO communication and
- *             mapping parameter records MUST exist in the object dictionary of
- *             <b>dev</b>.
+ * @param net a pointer to a CAN network.
+ * @param dev a pointer to a CANopen device describing the server.
+ * @param num the PDO number (in the range [1..512]). The PDO communication and
+ *            mapping parameter records MUST exist in the object dictionary of
+ *            <b>dev</b>.
  *
  * @returns a pointer to a new Receive-PDO service, or NULL on error. In the
  * latter case, the error number can be obtained with get_errc().
@@ -85,14 +85,22 @@ void co_rpdo_destroy(co_rpdo_t *pdo);
 /**
  * Starts a Receive-PDO service.
  *
+ * @post on success, co_rpdo_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_rpdo_stop(), co_rpdo_is_stopped()
+ * @see co_rpdo_stop()
  */
 int co_rpdo_start(co_rpdo_t *pdo);
 
-/// Stops a Receive-PDO service. @see co_rpdo_start(), co_rpdo_is_stopped()
+/**
+ * Stops a Receive-PDO service.
+ *
+ * @post co_rpdo_is_stopped() returns 1.
+ *
+ * @see co_rpdo_start()
+ */
 void co_rpdo_stop(co_rpdo_t *pdo);
 
 /**

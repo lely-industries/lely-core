@@ -147,8 +147,8 @@ size_t co_lss_alignof(void);
 size_t co_lss_sizeof(void);
 
 /**
- * Creates a new CANopen LSS master/slave service. The service is started as if
- * by co_lss_start().
+ * Creates a new CANopen LSS master/slave service. The service is stopped afrer
+ * creation and SHOULD be started with co_lss_start() before use.
  *
  * @param nmt a pointer to an NMT master/slave service.
  *
@@ -165,14 +165,22 @@ void co_lss_destroy(co_lss_t *lss);
 /**
  * Starts an LSS service.
  *
+ * @post on success, co_lss_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_lss_stop(), co_lss_is_stopped()
+ * @see co_lss_stop()
  */
 int co_lss_start(co_lss_t *lss);
 
-/// Stops an LSS service. @see co_lss_start(), co_lss_is_stopped()
+/**
+ * Stops an LSS service.
+ *
+ * @post co_lss_is_stopped() returns 1.
+ *
+ * @see co_lss_start()
+ */
 void co_lss_stop(co_lss_t *lss);
 
 /**

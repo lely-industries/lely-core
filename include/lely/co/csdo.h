@@ -168,8 +168,8 @@ size_t co_csdo_alignof(void);
 size_t co_csdo_sizeof(void);
 
 /**
- * Creates a new CANopen Client-SDO service. The service is started as if by
- * co_csdo_start().
+ * Creates a new CANopen Client-SDO service. The service is stopped after
+ * creation and SHOULD be started with co_csdo_start() before use.
  *
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device describing the client (can be NULL).
@@ -191,17 +191,21 @@ void co_csdo_destroy(co_csdo_t *sdo);
 /**
  * Starts a Client-SDO service.
  *
+ * @post on success, co_csdo_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_csdo_stop(), co_csdo_is_stopped()
+ * @see co_csdo_stop()
  */
 int co_csdo_start(co_csdo_t *sdo);
 
 /**
  * Stops a Client-SDO service. Any ongoing request is aborted.
  *
- * @see co_csdo_start(), co_csdo_is_stopped()
+ * @post co_csdo_is_stopped() returns 1.
+ *
+ * @see co_csdo_start()
  */
 void co_csdo_stop(co_csdo_t *sdo);
 
