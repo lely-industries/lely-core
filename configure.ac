@@ -106,6 +106,13 @@ AS_IF([test "$enable_ecss_compliance" == "yes"], [
 	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
 ])
 
+AC_ARG_ENABLE([errno],
+	AS_HELP_STRING([--disable-errno], [disable errno]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_errno=no])
+AS_IF([test "$enable_errno" == "no"], [
+	AC_DEFINE([LELY_NO_ERRNO], [1], [Define to 1 if errno is disabled.])
+])
+
 AM_CONDITIONAL([NO_MALLOC], [false])
 AC_ARG_ENABLE([malloc],
 	AS_HELP_STRING([--disable-malloc], [disable dynamic memory allocation]))
@@ -118,7 +125,7 @@ AS_IF([test "$enable_malloc" == "no"], [
 AM_CONDITIONAL([NO_STDIO], [false])
 AC_ARG_ENABLE([stdio],
 	AS_HELP_STRING([--disable-stdio], [disable standard I/O]))
-AS_IF([test "$enable_malloc" == "no"], [enable_stdio=no])
+AS_IF([test "$enable_errno" == "no" -o "$enable_malloc" == "no"], [enable_stdio=no])
 AS_IF([test "$enable_stdio" == "no"], [
 	AM_CONDITIONAL([NO_STDIO], [true])
 	AC_DEFINE([LELY_NO_STDIO], [1], [Define to 1 if standard I/O is disabled.])
@@ -127,7 +134,7 @@ AS_IF([test "$enable_stdio" == "no"], [
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
-AS_IF([test "$enable_malloc" == "no"], [enable_cxx=no])
+AS_IF([test "$enable_errno" == "no" -o "$enable_malloc" == "no"], [enable_cxx=no])
 AS_IF([test "$enable_cxx" == "no"], [
 	AM_CONDITIONAL([NO_CXX], [true])
 	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
