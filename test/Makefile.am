@@ -181,8 +181,10 @@ endif
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini
 EXTRA_DIST += co-emcy.dcf
+if !NO_CO_GW_TXT
 EXTRA_DIST += co-gw_txt-master.dcf
 EXTRA_DIST += co-gw_txt-slave.dcf
+endif
 EXTRA_DIST += co-nmt-master.dat
 EXTRA_DIST += co-nmt-slave.dcf
 EXTRA_DIST += co-pdo-receive.dcf
@@ -195,7 +197,11 @@ EXTRA_DIST += co-time.dcf
 
 BUILT_SOURCES =
 if !NO_TOOLS
+if !NO_CO_DCF
+if !NO_CO_SDEV
 BUILT_SOURCES += test-co-sdev.h
+endif
+endif
 endif
 
 CLEANFILES =
