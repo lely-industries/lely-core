@@ -41,7 +41,7 @@ static co_dev_t @name = {
 static struct {
 @[for subidx in sorted(obj.keys())]@
 @{subobj = obj[subidx]}@
-	@subobj.value.c.typename sub@("{:X}".format(subidx));
+	@subobj.value.data_type.c.typename sub@("{:X}".format(subidx));
 @[end for]@
 } @(obj_name)_val = {
 @[for subidx in sorted(obj.keys())]@
@@ -74,11 +74,11 @@ static co_sub_t @subobj_name = {
 	.name = CO_DEV_STRING("@subobj.name"),
 #endif
 #if !LELY_NO_CO_OBJ_LIMITS
-	.min = { .@subobj.low_limit.c.member = @subobj.low_limit.c.value },
-	.max = { .@subobj.high_limit.c.member = @subobj.high_limit.c.value },
+	.min = { .@subobj.low_limit.data_type.c.member = @subobj.low_limit.c.value },
+	.max = { .@subobj.high_limit.data_type.c.member = @subobj.high_limit.c.value },
 #endif
 #if !LELY_NO_CO_OBJ_DEFAULT
-	.def = { .@subobj.default_value.c.member = @subobj.default_value.c.value },
+	.def = { .@subobj.default_value.data_type.c.member = @subobj.default_value.c.value },
 #endif
 	.val = &@(obj_name)_val.sub@("{:X}".format(subidx)),
 	.access = @subobj.c.access,

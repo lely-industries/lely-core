@@ -55,7 +55,6 @@ __sections = {
     ],
 }
 
-
 __p_object = re.compile(r"([0-9A-X]{4})(Name|Value|sub([0-9A-F]+))?$", re.IGNORECASE)
 
 
@@ -553,26 +552,13 @@ def __parse_data_type(cfg: dict, section: str) -> bool:
             cfg, section, "HighLimit", data_type
         ):
             ok = False
-    elif data_type in [
-        0x0009,  # VISIBLE_STRING
-        0x000A,  # OCTET_STRING
-        0x000B,  # UNICODE_STRING
-        0x000C,  # TIME_OF_DAY
-        0x000D,  # TIME_DIFFERENCE
-        0x000F,  # DOMAIN
-    ]:
+    else:
         if cfg[section].get("LowLimit", ""):
             warnings.warn("LowLimit not supported in [" + section + "]", stacklevel=4)
             ok = False
         if cfg[section].get("HighLimit", ""):
             warnings.warn("HighLimit not supported in [" + section + "]", stacklevel=4)
             ok = False
-    else:
-        warnings.warn(
-            "unsupported DataType in [{}]: {}".format(section, data_type),
-            stacklevel=4,
-        )
-        ok = False
 
     return ok
 
