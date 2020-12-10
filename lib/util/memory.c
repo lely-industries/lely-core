@@ -139,6 +139,10 @@ default_mem_alloc(size_t alignment, size_t size)
 
 	void *ptr = aligned_alloc(alignment, size);
 #elif _POSIX_C_SOURCE >= 200112L
+	// posix_memalign() requires the alignment to be a multiple of
+	// sizeof(void *).
+	alignment = ALIGN(alignment, sizeof(void *));
+
 	void *ptr = NULL;
 	int errc = posix_memalign(&ptr, alignment, size);
 	if (errc)
