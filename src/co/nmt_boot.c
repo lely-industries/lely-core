@@ -78,14 +78,14 @@ struct co_nmt_boot {
 	co_dev_t *dev;
 	/// A pointer to an NMT master service.
 	co_nmt_t *nmt;
+	/// The node-ID.
+	co_unsigned8_t id;
 	/// A pointer to the current state.
 	co_nmt_boot_state_t *state;
 	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	/// The node-ID.
-	co_unsigned8_t id;
 	/// The SDO timeout (in milliseconds).
 	int timeout;
 	/// A pointer to the Client-SDO used to access slave objects.
@@ -114,7 +114,7 @@ static void co_nmt_boot_free(co_nmt_boot_t *boot);
 
 /// Initializes #co_nmt_boot_t object.
 static co_nmt_boot_t *co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net,
-		co_dev_t *dev, co_nmt_t *nmt);
+		co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id);
 
 /// Finalizes #co_nmt_boot_t object.
 static void co_nmt_boot_fini(co_nmt_boot_t *boot);
@@ -811,7 +811,8 @@ co_nmt_boot_sizeof(void)
 }
 
 co_nmt_boot_t *
-co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_nmt_boot_create(
+		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id)
 {
 	int errc = 0;
 
@@ -821,7 +822,7 @@ co_nmt_boot_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 		goto error_alloc_boot;
 	}
 
-	if (!co_nmt_boot_init(boot, net, dev, nmt)) {
+	if (!co_nmt_boot_init(boot, net, dev, nmt, id)) {
 		errc = get_errc();
 		goto error_init_boot;
 	}
@@ -853,41 +854,39 @@ co_nmt_boot_get_alloc(const co_nmt_boot_t *boot)
 }
 
 int
-co_nmt_boot_boot_req(co_nmt_boot_t *boot, co_unsigned8_t id, int timeout,
-		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
+co_nmt_boot_boot_req(co_nmt_boot_t *boot, int timeout, co_csdo_ind_t *dn_ind,
+		co_csdo_ind_t *up_ind, void *data)
 {
 	assert(boot);
-
-	if (!id || id > CO_NUM_NODES) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
 
 	if (boot->state != co_nmt_boot_wait_state) {
 		set_errnum(ERRNUM_INPROGRESS);
 		return -1;
 	}
 
-	boot->id = id;
-
 	boot->timeout = timeout;
-	co_csdo_destroy(boot->sdo);
-	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
-	if (!boot->sdo)
-		return -1;
 	co_csdo_set_timeout(boot->sdo, boot->timeout);
 	co_csdo_set_dn_ind(boot->sdo, dn_ind, data);
 	co_csdo_set_up_ind(boot->sdo, up_ind, data);
 
-	if (co_csdo_start(boot->sdo) == -1) {
-		co_csdo_destroy(boot->sdo);
-		boot->sdo = NULL;
-		return -1;
-	}
-
 	co_nmt_boot_emit_time(boot, NULL);
 
 	return 0;
+}
+
+void
+co_nmt_boot_abort_req(co_nmt_boot_t *boot)
+{
+	assert(boot);
+
+	if (boot->state != co_nmt_boot_wait_state) {
+		can_recv_stop(boot->recv);
+		can_timer_stop(boot->timer);
+
+		co_csdo_stop(boot->sdo);
+
+		co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
+	}
 }
 
 static int
@@ -1055,6 +1054,8 @@ co_nmt_boot_wait_on_time(co_nmt_boot_t *boot, const struct timespec *tp)
 		// Skip booting and start the error control service.
 		return co_nmt_boot_ec_state;
 
+	co_csdo_start(boot->sdo);
+
 	return co_nmt_boot_chk_device_type_state;
 }
 
@@ -1065,6 +1066,8 @@ co_nmt_boot_abort_on_enter(co_nmt_boot_t *boot)
 
 	can_recv_stop(boot->recv);
 	can_timer_stop(boot->timer);
+
+	co_csdo_stop(boot->sdo);
 
 	// If the node is already operational, end the 'boot slave' process with
 	// error status L.
@@ -2027,6 +2030,9 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 {
 	assert(boot);
 
+	// The Client-SDO service is no longer needed after this point.
+	co_csdo_stop(boot->sdo);
+
 	if (boot->ms) {
 		boot->es = 'K';
 		// Start the CAN frame receiver for heartbeat messages.
@@ -2148,7 +2154,7 @@ co_nmt_boot_free(co_nmt_boot_t *boot)
 
 static co_nmt_boot_t *
 co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net, co_dev_t *dev,
-		co_nmt_t *nmt)
+		co_nmt_t *nmt, co_unsigned8_t id)
 {
 	assert(boot);
 	assert(net);
@@ -2157,9 +2163,16 @@ co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
+	if (!id || id > CO_NUM_NODES) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
 	boot->net = net;
 	boot->dev = dev;
 	boot->nmt = nmt;
+
+	boot->id = id;
 
 	boot->state = NULL;
 
@@ -2177,10 +2190,13 @@ co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net, co_dev_t *dev,
 	}
 	can_timer_set_func(boot->timer, &co_nmt_boot_timer, boot);
 
-	boot->id = 0;
-
 	boot->timeout = 0;
-	boot->sdo = NULL;
+
+	boot->sdo = co_csdo_create(boot->net, NULL, boot->id);
+	if (!boot->sdo) {
+		errc = get_errc();
+		goto error_create_sdo;
+	}
 
 	boot->start = (struct timespec){ 0, 0 };
 	can_net_get_time(boot->net, &boot->start);
@@ -2197,10 +2213,13 @@ co_nmt_boot_init(co_nmt_boot_t *boot, can_net_t *net, co_dev_t *dev,
 	co_nmt_boot_enter(boot, co_nmt_boot_wait_state);
 	return boot;
 
-	// can_timer_destroy(boot->timer);
+	// co_csdo_destroy(boot->sdo);
+error_create_sdo:
+	can_timer_destroy(boot->timer);
 error_create_timer:
 	can_recv_destroy(boot->recv);
 error_create_recv:
+error_param:
 	set_errc(errc);
 	return NULL;
 }
@@ -2208,7 +2227,7 @@ error_create_recv:
 static void
 co_nmt_boot_fini(co_nmt_boot_t *boot)
 {
-	assert(boot);
+	co_nmt_boot_abort_req(boot);
 
 	co_sdo_req_fini(&boot->req);
 

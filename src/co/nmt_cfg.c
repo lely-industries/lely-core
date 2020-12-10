@@ -57,14 +57,14 @@ struct co_nmt_cfg {
 	co_dev_t *dev;
 	/// A pointer to an NMT master service.
 	co_nmt_t *nmt;
+	/// The node-ID.
+	co_unsigned8_t id;
 	/// A pointer to the current state.
 	co_nmt_cfg_state_t *state;
 	/// A pointer to the CAN frame receiver.
 	can_recv_t *recv;
 	/// A pointer to the CAN timer.
 	can_timer_t *timer;
-	/// The node-ID.
-	co_unsigned8_t id;
 	/// The NMT slave assignment (object 1F81).
 	co_unsigned32_t assignment;
 	/// A pointer to the Client-SDO used to access slave objects.
@@ -87,7 +87,7 @@ static void co_nmt_cfg_free(co_nmt_cfg_t *cfg);
 
 /// Initializes #co_nmt_cfg_t object.
 static co_nmt_cfg_t *co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net,
-		co_dev_t *dev, co_nmt_t *nmt);
+		co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id);
 
 /// Finalizes #co_nmt_cfg_t object.
 static void co_nmt_cfg_fini(co_nmt_cfg_t *cfg);
@@ -218,12 +218,18 @@ struct co_nmt_cfg_state {
 	static co_nmt_cfg_state_t *const name = \
 			&(co_nmt_cfg_state_t){ __VA_ARGS__ };
 
+LELY_CO_DEFINE_STATE(co_nmt_cfg_wait_state, NULL)
+
 /// The entry function of the 'abort' state.
 static co_nmt_cfg_state_t *co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg);
 
+/// The exit function of the 'abort' state.
+static void co_nmt_cfg_abort_on_leave(co_nmt_cfg_t *cfg);
+
 // clang-format off
 LELY_CO_DEFINE_STATE(co_nmt_cfg_abort_state,
-	.on_enter = &co_nmt_cfg_abort_on_enter
+	.on_enter = &co_nmt_cfg_abort_on_enter,
+	.on_leave = &co_nmt_cfg_abort_on_leave
 )
 // clang-format on
 
@@ -334,7 +340,8 @@ co_nmt_cfg_sizeof(void)
 }
 
 co_nmt_cfg_t *
-co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_nmt_cfg_create(
+		can_net_t *net, co_dev_t *dev, co_nmt_t *nmt, co_unsigned8_t id)
 {
 	int errc = 0;
 
@@ -344,7 +351,7 @@ co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 		goto error_alloc_cfg;
 	}
 
-	if (!co_nmt_cfg_init(cfg, net, dev, nmt)) {
+	if (!co_nmt_cfg_init(cfg, net, dev, nmt, id)) {
 		errc = get_errc();
 		goto error_init_cfg;
 	}
@@ -376,36 +383,22 @@ co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg)
 }
 
 int
-co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
-		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data)
+co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int timeout, co_csdo_ind_t *dn_ind,
+		co_csdo_ind_t *up_ind, void *data)
 {
 	assert(cfg);
 
-	if (!id || id > CO_NUM_NODES) {
-		set_errnum(ERRNUM_INVAL);
-		return -1;
-	}
-
-	if (cfg->state) {
+	if (cfg->state != co_nmt_cfg_wait_state) {
 		set_errnum(ERRNUM_INPROGRESS);
 		return -1;
 	}
 
-	cfg->id = id;
-
-	co_csdo_destroy(cfg->sdo);
-	cfg->sdo = co_csdo_create(cfg->net, NULL, cfg->id);
-	if (!cfg->sdo)
+	if (co_csdo_start(cfg->sdo) == -1)
 		return -1;
+
 	co_csdo_set_timeout(cfg->sdo, timeout);
 	co_csdo_set_dn_ind(cfg->sdo, dn_ind, data);
 	co_csdo_set_up_ind(cfg->sdo, up_ind, data);
-
-	if (co_csdo_start(cfg->sdo) == -1) {
-		co_csdo_destroy(cfg->sdo);
-		cfg->sdo = NULL;
-		return -1;
-	}
 
 	co_nmt_cfg_enter(cfg, co_nmt_cfg_restore_state);
 
@@ -420,6 +413,21 @@ co_nmt_cfg_cfg_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 	co_nmt_cfg_emit_res(cfg, ac);
 
 	return 0;
+}
+
+void
+co_nmt_cfg_abort_req(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	if (cfg->state != co_nmt_cfg_wait_state) {
+		can_recv_stop(cfg->recv);
+		can_timer_stop(cfg->timer);
+
+		co_csdo_stop(cfg->sdo);
+
+		co_nmt_cfg_enter(cfg, co_nmt_cfg_wait_state);
+	}
 }
 
 static int
@@ -522,9 +530,17 @@ co_nmt_cfg_abort_on_enter(co_nmt_cfg_t *cfg)
 	can_recv_stop(cfg->recv);
 	can_timer_stop(cfg->timer);
 
-	co_nmt_cfg_con(cfg->nmt, cfg->id, cfg->ac);
+	co_csdo_stop(cfg->sdo);
 
-	return NULL;
+	return co_nmt_cfg_wait_state;
+}
+
+static void
+co_nmt_cfg_abort_on_leave(co_nmt_cfg_t *cfg)
+{
+	assert(cfg);
+
+	co_nmt_cfg_con(cfg->nmt, cfg->id, cfg->ac);
 }
 
 static co_nmt_cfg_state_t *
@@ -874,7 +890,8 @@ co_nmt_cfg_free(co_nmt_cfg_t *cfg)
 }
 
 static co_nmt_cfg_t *
-co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
+co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
+		co_unsigned8_t id)
 {
 	assert(cfg);
 	assert(net);
@@ -883,9 +900,16 @@ co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 
 	int errc = 0;
 
+	if (!id || id > CO_NUM_NODES) {
+		errc = errnum2c(ERRNUM_INVAL);
+		goto error_param;
+	}
+
 	cfg->net = net;
 	cfg->dev = dev;
 	cfg->nmt = nmt;
+
+	cfg->id = id;
 
 	cfg->state = NULL;
 
@@ -903,10 +927,13 @@ co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	}
 	can_timer_set_func(cfg->timer, &co_nmt_cfg_timer, cfg);
 
-	cfg->id = 0;
 	cfg->assignment = 0;
 
-	cfg->sdo = NULL;
+	cfg->sdo = co_csdo_create(cfg->net, NULL, cfg->id);
+	if (!cfg->sdo) {
+		errc = get_errc();
+		goto error_create_sdo;
+	}
 
 	cfg->ac = 0;
 
@@ -915,12 +942,16 @@ co_nmt_cfg_init(co_nmt_cfg_t *cfg, can_net_t *net, co_dev_t *dev, co_nmt_t *nmt)
 	cfg->dev_1f20 = NULL;
 #endif
 
+	co_nmt_cfg_enter(cfg, co_nmt_cfg_wait_state);
 	return cfg;
 
-	// can_timer_destroy(cfg->timer);
+	// co_csdo_destroy(cfg->sdo);
+error_create_sdo:
+	can_timer_destroy(cfg->timer);
 error_create_timer:
 	can_recv_destroy(cfg->recv);
 error_create_recv:
+error_param:
 	set_errc(errc);
 	return NULL;
 }
@@ -928,7 +959,7 @@ error_create_recv:
 static void
 co_nmt_cfg_fini(co_nmt_cfg_t *cfg)
 {
-	assert(cfg);
+	co_nmt_cfg_abort_req(cfg);
 
 #if !LELY_NO_MALLOC
 	assert(!cfg->dev_1f20);

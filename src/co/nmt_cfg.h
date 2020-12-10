@@ -70,13 +70,15 @@ size_t co_nmt_cfg_sizeof(void);
  * @param net a pointer to a CAN network.
  * @param dev a pointer to a CANopen device.
  * @param nmt a pointer to an NMT master service.
+ * @param id  the node-ID.
  *
  * @returns a pointer to a new NMT 'configuration request', or NULL on error. In
  * the latter case, the error number can be obtained with get_errc().
  *
  * @see co_nmt_cfg_destroy()
  */
-co_nmt_cfg_t *co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt);
+co_nmt_cfg_t *co_nmt_cfg_create(can_net_t *net, co_dev_t *dev, co_nmt_t *nmt,
+		co_unsigned8_t id);
 
 /// Destroys a CANopen NMT 'configuration request'. @see co_nmt_cfg_create()
 void co_nmt_cfg_destroy(co_nmt_cfg_t *boot);
@@ -93,7 +95,6 @@ alloc_t *co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg);
  * Starts a CANopen NMT 'configuration request'.
  *
  * @param cfg     a pointer to an NMT 'configuration request'.
- * @param id      the node-ID.
  * @param timeout the SDO timeout (in milliseconds). See co_csdo_set_timeout().
  * @param dn_ind  a pointer to the SDO download progress indication function
  *                (can be NULL).
@@ -106,8 +107,8 @@ alloc_t *co_nmt_cfg_get_alloc(const co_nmt_cfg_t *cfg);
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  */
-int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
-		co_csdo_ind_t *dn_ind, co_csdo_ind_t *up_ind, void *data);
+int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, int timeout, co_csdo_ind_t *dn_ind,
+		co_csdo_ind_t *up_ind, void *data);
 
 /**
  * Indicates the result of the 'update configuration' step of an NMT
@@ -120,6 +121,9 @@ int co_nmt_cfg_cfg_req(co_nmt_cfg_t *cfg, co_unsigned8_t id, int timeout,
  * can be obtained with get_errc().
  */
 int co_nmt_cfg_cfg_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac);
+
+/// Aborts a CANopen NMT 'configuration request'.
+void co_nmt_cfg_abort_req(co_nmt_cfg_t *cfg);
 
 #ifdef __cplusplus
 }

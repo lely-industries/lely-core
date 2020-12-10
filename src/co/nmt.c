@@ -98,8 +98,15 @@ struct co_nmt_slave {
 	co_unsigned8_t rst;
 	/// The error status of the 'boot slave' process.
 	char es;
+	/// A flag specifying whether the 'boot slave' process is in progress.
+	unsigned booting : 1;
+	/**
+	 * A flag specifying whether an NMT 'configuration request' is in
+	 * progress.
+	 */
+	unsigned configuring : 1;
 	/// A flag specifying whether the 'boot slave' process has ended.
-	int booted;
+	unsigned booted : 1;
 	/// A pointer to the NMT 'boot slave' service.
 	co_nmt_boot_t *boot;
 	/// A pointer to the NMT 'update configuration' service.
@@ -331,9 +338,20 @@ static co_unsigned32_t co_1f25_dn_ind(
 static co_unsigned32_t co_1f80_dn_ind(
 		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+/**
+ * The download indication function for (all sub-objects of) CANopen object 1F81
+ * (NMT slave assignment).
+ *
+ * @see co_sub_dn_ind_t
+ */
+static co_unsigned32_t co_1f81_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, void *data);
+#endif
+
 #if !LELY_NO_CO_MASTER
 /**
- * The download indication function for (all sub-objects of) CANopen object 1F80
+ * The download indication function for (all sub-objects of) CANopen object 1F82
  * (Request NMT).
  *
  * @see co_sub_dn_ind_t
@@ -1404,38 +1422,50 @@ co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (slave->boot) {
+	if (slave->booting) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
 
 	trace("NMT: booting slave %d", id);
 
-	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt);
+	// Disable the heartbeat consumer during the 'boot slave' process.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
+
+	slave->booting = 1;
+
+#if LELY_NO_MALLOC
+	if (!slave->boot) {
+		co_nmt_boot_con(nmt, id, 0, 'A');
+		return 0;
+	}
+#else
+	slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->boot) {
 		errc = get_errc();
 		goto error_create_boot;
 	}
+#endif
 
 	// clang-format off
-	if (co_nmt_boot_boot_req(slave->boot, id, timeout, &co_nmt_dn_ind,
+	if (co_nmt_boot_boot_req(slave->boot, timeout, &co_nmt_dn_ind,
 			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
 		goto error_boot_req;
 	}
 
-	// Disable the heartbeat consumer during the 'boot slave' process.
-	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
-	if (hb)
-		co_nmt_hb_set_1016(hb, id, 0);
-
 	return 0;
 
 error_boot_req:
+#if !LELY_NO_MALLOC
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
 error_create_boot:
+#endif
+	slave->booting = 0;
 error_param:
 	set_errc(errc);
 	return -1;
@@ -1474,40 +1504,52 @@ co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
 	}
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-	if (slave->cfg) {
+	if (slave->configuring) {
 		errc = errnum2c(ERRNUM_INPROGRESS);
 		goto error_param;
 	}
 
 	trace("NMT: starting update configuration process for node %d", id);
 
-	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt);
+	// Disable the heartbeat consumer during a configuration request.
+	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
+	if (hb)
+		co_nmt_hb_set_1016(hb, id, 0);
+
+	slave->configuring = 1;
+
+#if LELY_NO_MALLOC
+	if (!slave->cfg) {
+		co_nmt_cfg_con(nmt, id, 0);
+		return 0;
+	}
+#else
+	slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
 	if (!slave->cfg) {
 		errc = get_errc();
 		goto error_create_cfg;
 	}
+#endif
 	slave->cfg_con = con;
 	slave->cfg_data = data;
 
 	// clang-format off
-	if (co_nmt_cfg_cfg_req(slave->cfg, id, timeout, &co_nmt_dn_ind,
+	if (co_nmt_cfg_cfg_req(slave->cfg, timeout, &co_nmt_dn_ind,
 			&co_nmt_up_ind, nmt) == -1) {
 		// clang-format on
 		errc = get_errc();
 		goto error_cfg_req;
 	}
 
-	// Disable the heartbeat consumer during a configuration request.
-	co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, NULL);
-	if (hb)
-		co_nmt_hb_set_1016(hb, id, 0);
-
 	return 0;
 
 error_cfg_req:
+#if !LELY_NO_MALLOC
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
 error_create_cfg:
+#endif
+	slave->configuring = 0;
 error_param:
 	set_errc(errc);
 	return -1;
@@ -1785,9 +1827,12 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 		slave->est = CO_NMT_ST_PREOP;
 	slave->rst = st;
 	slave->es = es;
+	slave->booting = 0;
 	slave->booted = 1;
+#if !LELY_NO_MALLOC
 	co_nmt_boot_destroy(slave->boot);
 	slave->boot = NULL;
+#endif
 
 	// Re-enable the heartbeat consumer for the node, if necessary.
 	co_unsigned16_t ms = 0;
@@ -1861,11 +1906,14 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	assert(id && id <= CO_NUM_NODES);
 
 	struct co_nmt_slave *slave = &nmt->slaves[id - 1];
+	slave->configuring = 0;
+#if !LELY_NO_MALLOC
 	co_nmt_cfg_destroy(slave->cfg);
 	slave->cfg = NULL;
+#endif
 
 	// Re-enable the heartbeat consumer for the node, if necessary.
-	if (!slave->boot) {
+	if (!slave->booting) {
 		co_unsigned16_t ms = 0;
 		co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, &ms);
 		if (hb)
@@ -2120,7 +2168,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 			// Skip slaves that are not in the network list or are
 			// already being configured.
-			if (!(slave->assignment & 0x01) || slave->cfg)
+			if (!(slave->assignment & 0x01) || slave->configuring)
 				continue;
 			co_nmt_cfg_req(nmt, id, nmt->timeout, NULL, NULL);
 		}
@@ -2163,6 +2211,48 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	return 0;
 }
+
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+static co_unsigned32_t
+co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+{
+	assert(sub);
+	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f81);
+	assert(req);
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_unsigned16_t type = co_sub_get_type(sub);
+	assert(!co_type_is_array(type));
+
+	union co_val val;
+	co_unsigned32_t ac = 0;
+	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
+		return ac;
+
+	co_unsigned8_t subidx = co_sub_get_subidx(sub);
+	if (!subidx)
+		return CO_SDO_AC_NO_WRITE;
+
+	assert(type == CO_DEFTYPE_UNSIGNED32);
+	co_unsigned32_t assignment = val.u32;
+	co_unsigned32_t assignment_old = co_sub_get_val_u32(sub);
+	if (assignment == assignment_old)
+		return 0;
+
+	if (subidx <= CO_NUM_NODES) {
+		struct co_nmt_slave *slave = &nmt->slaves[subidx - 1];
+		// Slaves cannot be inserted into the network list if they were
+		// not in it at initialization.
+		if ((assignment & 0x01) && (!slave->boot || !slave->cfg))
+			return CO_SDO_AC_PARAM_VAL;
+	}
+
+	co_sub_dn(sub, &val);
+
+	return 0;
+}
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
 
 #if !LELY_NO_CO_MASTER
 static co_unsigned32_t
@@ -2295,7 +2385,7 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 		// Ignore messages from booting slaves or slaves that are being
 		// configured.
-		if (slave->boot || slave->cfg)
+		if (slave->booting || slave->configuring)
 			return 0;
 
 		// Ignore messages if node guarding is disabled.
@@ -3123,9 +3213,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	assert(nmt);
 
 	// Create and initialize the heartbeat consumers.
-#if LELY_NO_MALLOC
-	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
-#else
+#if !LELY_NO_MALLOC
 	assert(!nmt->hbs);
 #endif
 	assert(!nmt->nhb);
@@ -3147,6 +3235,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 	}
 
 	for (co_unsigned8_t i = 0; i < nmt->nhb; i++) {
+#if !LELY_NO_MALLOC
 		nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
 		if (!nmt->hbs[i]) {
 			diag(DIAG_ERROR, get_errc(),
@@ -3154,7 +3243,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 					(co_unsigned8_t)(i + 1));
 			continue;
 		}
-
+#endif
 		co_unsigned32_t val = co_obj_get_val_u32(obj_1016, i + 1);
 		co_unsigned8_t id = (val >> 16) & 0xff;
 		co_unsigned16_t ms = val & 0xffff;
@@ -3167,10 +3256,12 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 {
 	assert(nmt);
 
-	// Destroy all heartbeat consumers.
+	// Destroy/stop all heartbeat consumers.
 	for (size_t i = 0; i < nmt->nhb; i++)
+#if LELY_NO_MALLOC
+		co_nmt_hb_set_1016(nmt->hbs[i], 0, 0);
+#else
 		co_nmt_hb_destroy(nmt->hbs[i]);
-#if !LELY_NO_MALLOC
 	free(nmt->hbs);
 	nmt->hbs = NULL;
 #endif
@@ -3238,12 +3329,23 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booting = 0;
+		slave->configuring = 0;
 		slave->booted = 0;
+
+		if (slave->boot)
+			co_nmt_boot_abort_req(slave->boot);
+#if !LELY_NO_MALLOC
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
+#endif
 
+		if (slave->cfg)
+			co_nmt_cfg_abort_req(slave->cfg);
+#if !LELY_NO_MALLOC
 		co_nmt_cfg_destroy(slave->cfg);
 		slave->cfg = NULL;
+#endif
 		slave->cfg_con = NULL;
 		slave->cfg_data = NULL;
 
@@ -3386,8 +3488,20 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->ms = 0;
 
+	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 #if LELY_NO_MALLOC
 	memset(nmt->hbs, 0, CO_NMT_MAX_NHB * sizeof(*nmt->hbs));
+	if (obj_1016) {
+		for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++) {
+			if (!co_obj_find_sub(obj_1016, i + 1))
+				continue;
+			nmt->hbs[i] = co_nmt_hb_create(nmt->net, nmt);
+			if (!nmt->hbs[i]) {
+				errc = get_errc();
+				goto error_create_hb;
+			}
+		}
+	}
 #else
 	nmt->hbs = NULL;
 #endif
@@ -3435,7 +3549,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		slave->rst = 0;
 		slave->es = 0;
 
+		slave->booting = 0;
+		slave->configuring = 0;
 		slave->booted = 0;
+
 		slave->boot = NULL;
 
 		slave->cfg = NULL;
@@ -3464,6 +3581,27 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 			goto error_init_slave;
 		}
 		can_timer_set_func(slave->timer, &co_nmt_ng_timer, slave);
+
+#if LELY_NO_MALLOC
+		co_unsigned32_t assignment =
+				co_dev_get_val_u32(nmt->dev, 0x1f81, id);
+		// Do not create services for slaves that are not in the network
+		// list at initialization.
+		if (!(assignment & 0x01))
+			continue;
+
+		slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
+		if (!slave->boot) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+
+		slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
+		if (!slave->cfg) {
+			errc = get_errc();
+			goto error_init_slave;
+		}
+#endif
 	}
 
 	nmt->timeout = LELY_CO_NMT_TIMEOUT;
@@ -3500,7 +3638,6 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		co_obj_set_dn_ind(obj_100d, &co_100d_dn_ind, nmt);
 
 	// Set the download indication function for the consumer heartbeat time.
-	co_obj_t *obj_1016 = co_dev_find_obj(nmt->dev, 0x1016);
 	if (obj_1016)
 		co_obj_set_dn_ind(obj_1016, &co_1016_dn_ind, nmt);
 
@@ -3522,6 +3659,14 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, &co_1f80_dn_ind, nmt);
 
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+	// Set the download indication function for the NMT slave assignment
+	// value.
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+	if (obj_1f81)
+		co_obj_set_dn_ind(obj_1f81, &co_1f81_dn_ind, nmt);
+#endif
+
 #if !LELY_NO_CO_MASTER
 	// Set the download indication function for the request NMT value.
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
@@ -3535,6 +3680,10 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 // #if !LELY_NO_CO_MASTER
 // 	if (obj_1f82)
 // 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+// #endif
+// #if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+// 	if (obj_1f81)
+// 		co_obj_set_dn_ind(obj_1f81, NULL, NULL);
 // #endif
 // 	if (obj_1f80)
 // 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
@@ -3558,11 +3707,20 @@ error_init_slave:
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
+#if LELY_NO_MALLOC
+		co_nmt_cfg_destroy(slave->cfg);
+		co_nmt_boot_destroy(slave->boot);
+#endif
 		can_recv_destroy(slave->recv);
 		can_timer_destroy(slave->timer);
 	}
 	can_timer_destroy(nmt->cs_timer);
 error_create_cs_timer:
+#if LELY_NO_MALLOC
+error_create_hb:
+	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
+		co_nmt_hb_destroy(nmt->hbs[i]);
+#endif
 	can_buf_fini(&nmt->buf);
 #endif
 	can_timer_destroy(nmt->ec_timer);
@@ -3593,6 +3751,14 @@ co_nmt_fini(co_nmt_t *nmt)
 	co_obj_t *obj_1f82 = co_dev_find_obj(nmt->dev, 0x1f82);
 	if (obj_1f82)
 		co_obj_set_dn_ind(obj_1f82, NULL, NULL);
+#endif
+
+#if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
+	// Remove the download indication function for the NMT slave assignment
+	// value.
+	co_obj_t *obj_1f81 = co_dev_find_obj(nmt->dev, 0x1f81);
+	if (obj_1f81)
+		co_obj_set_dn_ind(obj_1f81, NULL, NULL);
 #endif
 
 	// Remove the download indication function for the NMT startup value.
@@ -3652,6 +3818,10 @@ co_nmt_fini(co_nmt_t *nmt)
 #endif
 
 	co_nmt_hb_fini(nmt);
+#if LELY_NO_MALLOC
+	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
+		co_nmt_hb_destroy(nmt->hbs[i]);
+#endif
 
 	co_nmt_ec_fini(nmt);
 
