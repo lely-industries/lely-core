@@ -186,17 +186,21 @@ void co_csdo_destroy(co_csdo_t *sdo);
 /**
  * Starts a Client-SDO service.
  *
+ * @post on success, co_csdo_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_csdo_stop(), co_csdo_is_stopped()
+ * @see co_csdo_stop()
  */
 int co_csdo_start(co_csdo_t *sdo);
 
 /**
  * Stops a Client-SDO service. Any ongoing request is aborted.
  *
- * @see co_csdo_start(), co_csdo_is_stopped()
+ * @post co_csdo_is_stopped() returns 1.
+ *
+ * @see co_csdo_start()
  */
 void co_csdo_stop(co_csdo_t *sdo);
 

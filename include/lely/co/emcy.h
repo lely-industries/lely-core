@@ -79,14 +79,22 @@ void co_emcy_destroy(co_emcy_t *emcy);
 /**
  * Starts an EMCY service.
  *
+ * @post on success, co_emcy_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_emcy_stop(), co_emcy_is_stopped()
+ * @see co_emcy_stop()
  */
 int co_emcy_start(co_emcy_t *emcy);
 
-/// Stops an EMCY service. @see co_emcy_start(), co_emcy_is_stopped()
+/**
+ * Stops an EMCY service.
+ *
+ * @post co_emcy_is_stopped() returns 1.
+ *
+ * @see co_emcy_start()
+ */
 void co_emcy_stop(co_emcy_t *emcy);
 
 /**

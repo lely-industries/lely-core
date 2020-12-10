@@ -88,14 +88,22 @@ void co_tpdo_destroy(co_tpdo_t *pdo);
 /**
  * Starts a Transmit-PDO service.
  *
+ * @post on success, co_tpdo_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_tpdo_stop(), co_tpdo_is_stopped()
+ * @see co_tpdo_stop()
  */
 int co_tpdo_start(co_tpdo_t *pdo);
 
-/// Stops a Transmit-PDO service. @see co_tpdo_start(), co_tpdo_is_stopped()
+/**
+ * Stops a Transmit-PDO service.
+ *
+ * @post co_tpdo_is_stopped() returns 1.
+ *
+ * @see co_tpdo_start()
+ */
 void co_tpdo_stop(co_tpdo_t *pdo);
 
 /**

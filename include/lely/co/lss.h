@@ -164,14 +164,22 @@ void co_lss_destroy(co_lss_t *lss);
 /**
  * Starts an LSS service.
  *
+ * @post on success, co_lss_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_lss_stop(), co_lss_is_stopped()
+ * @see co_lss_stop()
  */
 int co_lss_start(co_lss_t *lss);
 
-/// Stops an LSS service. @see co_lss_start(), co_lss_is_stopped()
+/**
+ * Stops an LSS service.
+ *
+ * @post co_lss_is_stopped() returns 1.
+ *
+ * @see co_lss_start()
+ */
 void co_lss_stop(co_lss_t *lss);
 
 /**

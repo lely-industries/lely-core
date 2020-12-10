@@ -70,8 +70,8 @@ void __co_sync_fini(struct __co_sync *sync);
  * Creates a new CANopen SYNC producer/consumer service. The service is started
  * as if by co_sync_start().
  *
- * @param net  a pointer to a CAN network.
- * @param dev  a pointer to a CANopen device.
+ * @param net a pointer to a CAN network.
+ * @param dev a pointer to a CANopen device.
  *
  * @returns a pointer to a new SYNC service, or NULL on error. In the latter
  * case, the error number can be obtained with get_errc().
@@ -86,14 +86,22 @@ void co_sync_destroy(co_sync_t *sync);
 /**
  * Starts a SYNC service.
  *
+ * @post on success, co_sync_is_stopped() returns 0.
+ *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
  *
- * @see co_sync_stop(), co_sync_is_stopped()
+ * @see co_sync_stop()
  */
 int co_sync_start(co_sync_t *sync);
 
-/// Stops a SYNC service. @see co_sync_start(), co_sync_is_stopped()
+/**
+ * Stops a SYNC service.
+ *
+ * @post co_sync_is_stopped() returns 1.
+ *
+ * @see co_sync_start()
+ */
 void co_sync_stop(co_sync_t *sync);
 
 /**
