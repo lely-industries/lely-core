@@ -208,22 +208,28 @@ LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
 LELY_COAPP_LIBS += $(top_builddir)/src/coapp/liblely-coapp.la
 
 if !NO_CXX
+if !NO_COAPP_MASTER
 bin += test-coapp-fiber
 test_coapp_fiber_SOURCES = test.h coapp-fiber.cpp
 test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
 endif
+endif
 
 if !NO_CXX
+if !NO_COAPP_MASTER
 bin += test-coapp-lss
 test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
+endif
 endif
 
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini
 EXTRA_DIST += co-emcy.dcf
+if !NO_CO_GW_TXT
 EXTRA_DIST += co-gw_txt-master.dcf
 EXTRA_DIST += co-gw_txt-slave.dcf
+endif
 EXTRA_DIST += co-nmt-master.dat
 EXTRA_DIST += co-nmt-slave.dcf
 EXTRA_DIST += co-pdo-receive.dcf
@@ -233,14 +239,22 @@ EXTRA_DIST += co-sdo-client.dcf
 EXTRA_DIST += co-sdo-server.dcf
 EXTRA_DIST += co-sync.dcf
 EXTRA_DIST += co-time.dcf
+if !NO_CXX
+if !NO_COAPP_MASTER
 EXTRA_DIST += coapp-fiber-master.dcf
 EXTRA_DIST += coapp-fiber-slave.dcf
 EXTRA_DIST += coapp-lss-master.dcf
 EXTRA_DIST += coapp-lss-slave.dcf
+endif
+endif
 
 BUILT_SOURCES =
 if !NO_TOOLS
+if !NO_CO_DCF
+if !NO_CO_SDEV
 BUILT_SOURCES += test-co-sdev.h
+endif
+endif
 endif
 
 CLEANFILES =
