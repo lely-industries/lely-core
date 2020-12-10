@@ -164,6 +164,7 @@ class SdoRequestBase : public ev_task {
 
  public:
   SdoRequestBase(ev_exec_t* exec, uint16_t idx_ = 0, uint8_t subidx_ = 0,
+                 bool block_ = false,
                  const ::std::chrono::milliseconds& timeout_ = {})
       : ev_task EV_TASK_INIT(exec,
                              [](ev_task* task) noexcept {
@@ -171,6 +172,7 @@ class SdoRequestBase : public ev_task {
                              }),
         idx(idx_),
         subidx(subidx_),
+        block(block_),
         timeout(timeout_) {}
 
   SdoRequestBase(const SdoRequestBase&) = delete;
@@ -191,6 +193,11 @@ class SdoRequestBase : public ev_task {
   uint16_t idx{0};
   /// The object sub-index.
   uint8_t subidx{0};
+  /**
+   * A flag specifying whether the request should use a block SDO instead of a
+   * segmented (or expedited) SDO.
+   */
+  bool block{false};
   /**
    * The SDO timeout. If, after the request is initiated, the timeout expires
    * before receiving a response from the server, the client aborts the transfer
@@ -213,9 +220,9 @@ class SdoDownloadRequestBase : public SdoRequestBase {
 
   template <class U>
   SdoDownloadRequestBase(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                         U&& value_,
+                         U&& value_, bool block = false,
                          const ::std::chrono::milliseconds& timeout = {})
-      : SdoRequestBase(exec, idx, subidx, timeout),
+      : SdoRequestBase(exec, idx, subidx, block, timeout),
         value(::std::forward<U>(value_)) {}
 
   /// The value to be written.
@@ -229,11 +236,11 @@ class SdoDownloadDcfRequestBase : public SdoRequestBase {
   SdoDownloadDcfRequestBase(ev_exec_t* exec, const uint8_t* begin_,
                             const uint8_t* end_,
                             const ::std::chrono::milliseconds& timeout = {})
-      : SdoRequestBase(exec, 0, 0, timeout), begin(begin_), end(end_) {}
+      : SdoRequestBase(exec, 0, 0, false, timeout), begin(begin_), end(end_) {}
 
   SdoDownloadDcfRequestBase(ev_exec_t* exec, const char* path,
                             const ::std::chrono::milliseconds& timeout = {})
-      : SdoRequestBase(exec, 0, 0, timeout) {
+      : SdoRequestBase(exec, 0, 0, false, timeout) {
     Read(path);
   }
 
@@ -289,8 +296,8 @@ class SdoDownloadRequest : public detail::SdoDownloadRequestBase<T> {
 
   /**
    * Constructs an empty SDO download request. The object index and sub-index,
-   * the value to be written and, optionally, the SDO timeout have to be set
-   * before the request can be submitted.
+   * the value to be written and, optionally, the SDO block flag and timeout
+   * have to be set before the request can be submitted.
    */
   template <class F>
   SdoDownloadRequest(ev_exec_t* exec, F&& con)
@@ -370,8 +377,8 @@ class SdoUploadRequest : public detail::SdoUploadRequestBase<T> {
 
   /**
    * Constructs an empty SDO upload request. The object index and sub-index and,
-   * optionally, the SDO timeout have to be set before the request can be
-   * submitted.
+   * optionally, the SDO block flag and timeout have to be set before the
+   * request can be submitted.
    */
   template <class F>
   SdoUploadRequest(ev_exec_t* exec, F&& con)
@@ -395,10 +402,10 @@ class SdoDownloadRequestWrapper : public SdoDownloadRequestBase<T> {
 
   template <class U, class F>
   SdoDownloadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                            U&& value, F&& con,
+                            U&& value, F&& con, bool block,
                             const ::std::chrono::milliseconds& timeout)
       : SdoDownloadRequestBase<T>(exec, idx, subidx, ::std::forward<U>(value),
-                                  timeout),
+                                  block, timeout),
         con_(::std::forward<F>(con)) {}
 
  private:
@@ -450,8 +457,9 @@ class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
 
   template <class F>
   SdoUploadRequestWrapper(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                          F&& con, const ::std::chrono::milliseconds& timeout)
-      : SdoUploadRequestBase<T>(exec, idx, subidx, timeout),
+                          F&& con, bool block,
+                          const ::std::chrono::milliseconds& timeout)
+      : SdoUploadRequestBase<T>(exec, idx, subidx, block, timeout),
         con_(::std::forward<F>(con)) {}
 
  private:
@@ -475,6 +483,8 @@ class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
  * @param value   the value to be written.
  * @param con     the confirmation function to be called on completion of the
  *                SDO request.
+ * @param block   a flag specifying whether the request should use a block SDO
+ *                instead of a segmented (or expedited) SDO.
  * @param timeout the SDO timeout. If, after the request is initiated, the
  *                timeout expires before receiving a response from the server,
  *                the client aborts the transfer with abort code
@@ -485,11 +495,11 @@ class SdoUploadRequestWrapper : public SdoUploadRequestBase<T> {
 template <class T, class U, class F>
 inline detail::SdoDownloadRequestWrapper<T>*
 make_sdo_download_request(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
-                          U&& value, F&& con,
+                          U&& value, F&& con, bool block = false,
                           const ::std::chrono::milliseconds& timeout = {}) {
   return new detail::SdoDownloadRequestWrapper<T>(
       exec, idx, subidx, ::std::forward<U>(value), ::std::forward<F>(con),
-      timeout);
+      block, timeout);
 }
 
 /**
@@ -556,6 +566,8 @@ make_sdo_download_dcf_request(ev_exec_t* exec, const char* path, F&& con,
  * @param subidx  the object sub-index.
  * @param con     the confirmation function to be called on completion of the
  *                SDO request.
+ * @param block   a flag specifying whether the request should use a block SDO
+ *                instead of a segmented (or expedited) SDO.
  * @param timeout the SDO timeout. If, after the request is initiated, the
  *                timeout expires before receiving a response from the server,
  *                the client aborts the transfer with abort code
@@ -566,9 +578,10 @@ make_sdo_download_dcf_request(ev_exec_t* exec, const char* path, F&& con,
 template <class T, class F>
 inline detail::SdoUploadRequestWrapper<T>*
 make_sdo_upload_request(ev_exec_t* exec, uint16_t idx, uint8_t subidx, F&& con,
+                        bool block = false,
                         const ::std::chrono::milliseconds& timeout = {}) {
   return new detail::SdoUploadRequestWrapper<T>(
-      exec, idx, subidx, ::std::forward<F>(con), timeout);
+      exec, idx, subidx, ::std::forward<F>(con), block, timeout);
 }
 
 /// A Client-SDO queue.
@@ -656,6 +669,8 @@ class Sdo {
    * @param value   the value to be written.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
    * @param timeout the SDO timeout. If, after the request is initiated, the
    *                timeout expires before receiving a response from the server,
    *                the client aborts the transfer with abort code
@@ -664,10 +679,11 @@ class Sdo {
   template <class T, class F, class U = typename ::std::decay<T>::type>
   typename ::std::enable_if<is_canopen<U>::value>::type
   SubmitDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
-                 F&& con, const ::std::chrono::milliseconds& timeout = {}) {
-    Submit(*make_sdo_download_request<U>(exec, idx, subidx,
-                                         ::std::forward<T>(value),
-                                         ::std::forward<F>(con), timeout));
+                 F&& con, bool block = false,
+                 const ::std::chrono::milliseconds& timeout = {}) {
+    Submit(*make_sdo_download_request<U>(
+        exec, idx, subidx, ::std::forward<T>(value), ::std::forward<F>(con),
+        block, timeout));
   }
 
   /// Cancels an SDO download request. @see Cancel()
@@ -765,6 +781,8 @@ class Sdo {
    * @param subidx  the object sub-index.
    * @param con     the confirmation function to be called on completion of the
    *                SDO request.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
    * @param timeout the SDO timeout. If, after the request is initiated, the
    *                timeout expires before receiving a response from the server,
    *                the client aborts the transfer with abort code
@@ -773,9 +791,10 @@ class Sdo {
   template <class T, class F>
   typename ::std::enable_if<is_canopen<T>::value>::type
   SubmitUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, F&& con,
+               bool block = false,
                const ::std::chrono::milliseconds& timeout = {}) {
     Submit(*make_sdo_upload_request<T>(exec, idx, subidx,
-                                       ::std::forward<F>(con), timeout));
+                                       ::std::forward<F>(con), block, timeout));
   }
 
   /// Cancels an SDO upload request. @see Cancel()
@@ -800,6 +819,8 @@ class Sdo {
    * @param idx     the object index.
    * @param subidx  the object sub-index.
    * @param value   the value to be written.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
    * @param timeout the SDO timeout. If, after the request is initiated, the
    *                timeout expires before receiving a response from the server,
    *                the client aborts the transfer with abort code
@@ -810,6 +831,7 @@ class Sdo {
   template <class T, class U = typename ::std::decay<T>::type>
   typename ::std::enable_if<is_canopen<U>::value, SdoFuture<void>>::type
   AsyncDownload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, T&& value,
+                bool block = false,
                 const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<void> p;
     SubmitDownload(
@@ -822,7 +844,7 @@ class Sdo {
           else
             p.set(util::success());
         },
-        timeout);
+        block, timeout);
     return p.get_future();
   }
 
@@ -872,6 +894,8 @@ class Sdo {
    * @param exec    the executor used to execute the completion task.
    * @param idx     the object index.
    * @param subidx  the object sub-index.
+   * @param block   a flag specifying whether the request should use a block SDO
+   *                instead of a segmented (or expedited) SDO.
    * @param timeout the SDO timeout. If, after the request is initiated, the
    *                timeout expires before receiving a response from the server,
    *                the client aborts the transfer with abort code
@@ -882,7 +906,7 @@ class Sdo {
    */
   template <class T>
   typename ::std::enable_if<is_canopen<T>::value, SdoFuture<T>>::type
-  AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx,
+  AsyncUpload(ev_exec_t* exec, uint16_t idx, uint8_t subidx, bool block = false,
               const ::std::chrono::milliseconds& timeout = {}) {
     SdoPromise<T> p;
     SubmitUpload<T>(
@@ -895,7 +919,7 @@ class Sdo {
           else
             p.set(util::success(::std::move(value)));
         },
-        timeout);
+        block, timeout);
     return p.get_future();
   }
 

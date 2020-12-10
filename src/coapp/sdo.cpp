@@ -512,13 +512,17 @@ Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept {
     set_errc(0);
 
     co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
-    if (co_csdo_dn_val_req(
-            sdo.get(), req.idx, req.subidx, traits::index, &val,
-            [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
-               void* data) noexcept {
-              static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
-            },
-            this) == -1) {
+
+    auto con = [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+                  void* data) noexcept {
+      static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
+    };
+    int result = req.block
+                     ? co_csdo_blk_dn_val_req(sdo.get(), req.idx, req.subidx,
+                                              traits::index, &val, con, this)
+                     : co_csdo_dn_val_req(sdo.get(), req.idx, req.subidx,
+                                          traits::index, &val, con, this);
+    if (result == -1) {
       req.ec = util::make_error_code();
       OnCompletion(req);
     }
@@ -559,13 +563,16 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
   set_errc(0);
 
   co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
-  if (co_csdo_up_req(
-          sdo.get(), req.idx, req.subidx,
-          [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
-             const void* ptr, size_t n, void* data) noexcept {
-            static_cast<Impl_*>(data)->OnUpCon<T>(sdo, idx, subidx, ac, ptr, n);
-          },
-          this) == -1) {
+
+  auto con = [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+                const void* ptr, size_t n, void* data) noexcept {
+    static_cast<Impl_*>(data)->OnUpCon<T>(sdo, idx, subidx, ac, ptr, n);
+  };
+  int result =
+      req.block
+          ? co_csdo_blk_up_req(sdo.get(), req.idx, req.subidx, 0, con, this)
+          : co_csdo_up_req(sdo.get(), req.idx, req.subidx, con, this);
+  if (result == -1) {
     req.ec = util::make_error_code();
     OnCompletion(req);
   }
