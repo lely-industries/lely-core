@@ -299,6 +299,38 @@ class AccessType:
             raise ValueError("invalid AccessType: " + access_type)
 
 
+def _parse_int(value: str):
+    return int(value, 0)
+
+
+def _parse_real32(value: str):
+    value = "{:08X}".format(int(value, 0))
+    return float(struct.unpack("!f", bytes.fromhex(value))[0])
+
+
+def _parse_real64(value: str):
+    value = "{:016X}".format(int(value, 0))
+    return float(struct.unpack("!d", bytes.fromhex(value))[0])
+
+
+def _parse_string(value: str):
+    # VISIBLE_STRING and UNICODE_STRING values are interpreted as Python string literals.
+    return ast.literal_eval(value)
+
+
+def _parse_hex(value: str):
+    # OCTET_STRING and DOMAIN values are specified as hexadecimal strings.
+    return bytes.fromhex(value)
+
+
+def _parse_time(value: str):
+    # TIME_OF_DAY and TIME_DIFFERENCE values are tuples of days and milliseconds.
+    if not value:
+        value = "0 0"
+    days, ms = value.split()
+    return (int(days, 0), int(ms, 0))
+
+
 class DataType:
     __name = {
         0x0001: "BOOLEAN",
@@ -326,6 +358,34 @@ class DataType:
         0x0019: "UNSIGNED48",
         0x001A: "UNSIGNED56",
         0x001B: "UNSIGNED64",
+    }
+
+    __parse = {
+        0x0001: _parse_int,  # BOOLEAN
+        0x0002: _parse_int,  # INTEGER8
+        0x0003: _parse_int,  # INTEGER16
+        0x0004: _parse_int,  # INTEGER32
+        0x0005: _parse_int,  # UNSIGNED8
+        0x0006: _parse_int,  # UNSIGNED16
+        0x0007: _parse_int,  # UNSIGNED32
+        0x0008: _parse_real32,  # REAL32
+        0x0009: _parse_string,  # VISIBLE_STRING
+        0x000A: _parse_hex,  # OCTET_STRING
+        0x000B: _parse_string,  # UNICODE_STRING
+        0x000C: _parse_time,  # TIME_OF_DAY
+        0x000D: _parse_time,  # TIME_DIFF
+        0x000F: _parse_hex,  # DOMAIN
+        0x0010: _parse_int,  # INTEGER24
+        0x0011: _parse_real64,  # REAL64
+        0x0012: _parse_int,  # INTEGER40
+        0x0013: _parse_int,  # INTEGER48
+        0x0014: _parse_int,  # INTEGER56
+        0x0015: _parse_int,  # INTEGER64
+        0x0016: _parse_int,  # UNSIGNED24
+        0x0018: _parse_int,  # UNSIGNED40
+        0x0019: _parse_int,  # UNSIGNED48
+        0x001A: _parse_int,  # UNSIGNED56
+        0x001B: _parse_int,  # UNSIGNED64
     }
 
     __bits = {
@@ -453,6 +513,9 @@ class DataType:
         else:
             return ""
 
+    def parse_value(self, value: str):
+        return DataType.__parse[self.index](value)
+
     def concise_value(self, index: int, sub_index: int, value):
         fmt = DataType.__fmt[self.index]
         n = int((DataType.__bits[self.index] + 7) / 8)
@@ -460,6 +523,11 @@ class DataType:
             return struct.pack(fmt, index, sub_index, n, float(value))
         else:
             return struct.pack(fmt, index, sub_index, n, int(value))
+
+    @staticmethod
+    def add_custom(index: int, name: str, parse):
+        DataType.__name[index] = name
+        DataType.__parse[index] = parse
 
 
 class Value:
@@ -486,36 +554,16 @@ class Value:
                     raise ValueError("invalid value: " + self.value)
 
     def parse(self, env: dict = {}):
+        value = self.data_type.parse_value(self.value)
         if self.data_type.is_basic():
             offset = 0
-            value = 0
             if self.variable is not None:
                 if self.variable.upper() in env:
                     offset = env[self.variable.upper()]
                 else:
                     raise KeyError("$" + self.variable + " not defined")
-            if self.data_type.index == 0x0008:
-                value = "{:08X}".format(int(self.value, 0))
-                value = float(struct.unpack("!f", bytes.fromhex(value))[0])
-            elif self.data_type.index == 0x0011:
-                value = "{:016X}".format(int(self.value, 0))
-                value = float(struct.unpack("!d", bytes.fromhex(value))[0])
-            else:
-                value = int(self.value, 0)
-            return offset + value
-        elif self.data_type.index == 0x0009 or self.data_type.index == 0x000B:
-            # VISIBLE_STRING and UNICODE_STRING values are interpreted as Python string literals.
-            return ast.literal_eval(self.value)
-        elif self.data_type.index == 0x000A or self.data_type.index == 0x000F:
-            # OCTET_STRING and DOMAIN values are specified as hexadecimal strings.
-            return bytes.fromhex(self.value)
-        elif self.data_type.index == 0x000C or self.data_type.index == 0x000D:
-            # TIME_OF_DAY and TIME_DIFFERENCE values are tuples of days and milliseconds.
-            value = self.value if self.value else "0 0"
-            days, ms = value.split()
-            return (int(days, 0), int(ms, 0))
-        else:
-            raise ValueError("invalid DataType: 0x{:04X}".format(self.data_type.index))
+            value += offset
+        return value
 
     def has_nodeid(self):
         return self.variable is not None and self.variable.upper() == "NODEID"

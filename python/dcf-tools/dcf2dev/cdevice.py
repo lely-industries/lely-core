@@ -132,7 +132,7 @@ class CSubObject:
             self.flags += " | CO_OBJ_FLAGS_PARAMETER_VALUE"
 
 
-class CValue:
+class CDataType:
     __format = {
         0x0001: "{:d}",  # BOOLEAN
         0x0002: "{:d}",  # INTEGER8
@@ -189,16 +189,17 @@ class CValue:
         0x001B: "u64",  # UNSIGNED64
     }
 
-    def __init__(self, val: dcf.Value, env: dict = {}, value=""):
-        self.typename = "co_" + val.data_type.name().lower() + "_t"
-        self.member = CValue.__member[val.data_type.index]
-
-        if not value:
-            value = CValue.print(val, env)
-        self.value = value
+    def __init__(self, data_type: dcf.DataType):
+        self.typename = "co_" + data_type.name().lower() + "_t"
+        self.member = CDataType.__member[data_type.index]
 
     @staticmethod
-    def print(val: dcf.Value, env: dict = {}):
+    def add_custom(index: int, member: str, format_spec: str):
+        CDataType.__member[index] = member
+        CDataType.__format[index] = format_spec
+
+    @staticmethod
+    def print_value(val: dcf.Value, env: dict = {}):
         value = val.parse(env)
         if val.data_type.is_basic():
             if value == val.data_type.min() and value != 0:
@@ -223,7 +224,19 @@ class CValue:
             elif val.data_type.index == 0x000F:  # DOMAIN
                 u8 = list(value)
                 value = ", ".join("0x{:02x}".format(x) for x in u8)
-        return CValue.__format[val.data_type.index].format(value)
+        return CDataType.__format[val.data_type.index].format(value)
+
+
+class CValue:
+    def __init__(self, val: dcf.Value, env: dict = None, value=""):
+        if env is None:
+            env = {}
+
+        val.data_type.c = CDataType(val.data_type)
+
+        if not value:
+            value = CDataType.print_value(val, env)
+        self.value = value
 
     @classmethod
     def from_visible_string(cls, filename: str) -> "CValue":
