@@ -169,13 +169,13 @@ __co_time_init(struct __co_time *time, can_net_t *net, co_dev_t *dev)
 	time->net = net;
 	time->dev = dev;
 
+	time->stopped = 1;
+
 	co_obj_t *obj_1012 = co_dev_find_obj(time->dev, 0x1012);
 	if (!obj_1012) {
 		errc = errnum2c(ERRNUM_NOSYS);
 		goto error_obj_1012;
 	}
-
-	time->stopped = 1;
 
 	time->cobid = 0;
 
