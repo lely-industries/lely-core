@@ -30,7 +30,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/can/buf.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 TEST_GROUP(CAN_BufInit) {
   can_buf buf = CAN_BUF_INIT;

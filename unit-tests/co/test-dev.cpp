@@ -35,7 +35,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/val.h>
 #include <lely/co/tpdo.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include "override/lelyco-val.hpp"
 

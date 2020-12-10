@@ -30,7 +30,7 @@
 
 #include "util.h"
 #include <lely/compat/stddef.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/fiber.h>
 #if !_WIN32
 #include <lely/util/mkjmp.h>

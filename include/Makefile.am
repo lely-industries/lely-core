@@ -47,9 +47,6 @@ endif
 if !NO_CXX
 inc += lely/util/error.hpp
 endif
-if !NO_CXX
-inc += lely/util/exception.hpp
-endif
 inc += lely/util/fiber.h
 if !NO_CXX
 inc += lely/util/fiber.hpp
@@ -81,7 +78,7 @@ inc += lely/util/config.h
 inc += lely/util/diag.h
 inc += lely/util/dllist.h
 inc += lely/util/endian.h
-inc += lely/util/errnum.h
+inc += lely/util/error.h
 inc += lely/util/lex.h
 inc += lely/util/membuf.h
 inc += lely/util/pheap.h

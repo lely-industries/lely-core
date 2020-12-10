@@ -33,7 +33,7 @@
 #include <lely/co/obj.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"

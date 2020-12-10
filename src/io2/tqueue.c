@@ -28,7 +28,7 @@
 #include <lely/ev/exec.h>
 #include <lely/io2/ctx.h>
 #include <lely/io2/tqueue.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/time.h>
 #include <lely/util/util.h>
 

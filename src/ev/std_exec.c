@@ -4,7 +4,7 @@
  *
  * @see lely/ev/std_exec.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -25,7 +25,7 @@
 #include <lely/ev/exec.h>
 #include <lely/ev/std_exec.h>
 #include <lely/ev/task.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

@@ -24,7 +24,7 @@
 #include "can.h"
 #define LELY_CAN_BUF_INLINE extern inline
 #include <lely/can/buf.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #if !LELY_NO_MALLOC

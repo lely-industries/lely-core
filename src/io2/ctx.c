@@ -26,7 +26,7 @@
 #include <lely/compat/threads.h>
 #endif
 #include <lely/io2/ctx.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

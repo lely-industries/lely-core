@@ -26,7 +26,7 @@
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #if !LELY_NO_MALLOC

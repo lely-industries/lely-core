@@ -26,7 +26,7 @@
 #include <lely/compat/stdatomic.h>
 #include <lely/compat/threads.h>
 #endif
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/stop.h>
 #include <lely/util/util.h>
 

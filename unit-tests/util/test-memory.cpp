@@ -27,7 +27,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/memory.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 TEST_GROUP(Util_MemoryDefaultAllocator) {
   void* ptr = nullptr;

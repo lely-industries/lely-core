@@ -29,7 +29,7 @@
 #include <cstring>
 
 #include <lely/util/membuf.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 TEST_GROUP(Util_MemBuf_Init) {
   membuf buf_;

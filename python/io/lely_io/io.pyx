@@ -6,7 +6,7 @@ from lely_io.file cimport IOFile_new
 from lely_io.serial cimport IOSerial_new
 from lely_io.sock cimport IOSock_new
 
-cdef extern from "lely/util/errnum.h":
+cdef extern from "lely/util/error.h":
     int get_errc() nogil
     const char* errc2str(int errc) nogil
 

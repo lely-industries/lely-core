@@ -1,6 +1,6 @@
 #include "test.h"
 #include <lely/compat/threads.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/spscring.h>
 #include <lely/util/time.h>
 

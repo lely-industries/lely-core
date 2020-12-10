@@ -53,8 +53,8 @@
  * limitations under the License.
  */
 
-#ifndef LELY_UTIL_ERRNUM_H_
-#define LELY_UTIL_ERRNUM_H_
+#ifndef LELY_UTIL_ERROR_H_
+#define LELY_UTIL_ERROR_H_
 
 #include <lely/compat/features.h>
 
@@ -67,8 +67,8 @@
 #include <netdb.h>
 #endif
 
-#ifndef LELY_UTIL_ERRNUM_INLINE
-#define LELY_UTIL_ERRNUM_INLINE static inline
+#ifndef LELY_UTIL_ERROR_INLINE
+#define LELY_UTIL_ERROR_INLINE static inline
 #endif
 
 /// The platform-independent error numbers.
@@ -341,7 +341,7 @@ void set_errc(int errc);
  *
  * @see set_errnum()
  */
-LELY_UTIL_ERRNUM_INLINE errnum_t get_errnum(void);
+LELY_UTIL_ERROR_INLINE errnum_t get_errnum(void);
 
 /**
  * Sets the current (thread-specific) platform-independent error number to
@@ -349,7 +349,7 @@ LELY_UTIL_ERRNUM_INLINE errnum_t get_errnum(void);
  *
  * @see get_errnum()
  */
-LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
+LELY_UTIL_ERROR_INLINE void set_errnum(errnum_t errnum);
 
 /**
  * Returns a string describing a standard C error number. This is equivalent to
@@ -358,7 +358,7 @@ LELY_UTIL_ERRNUM_INLINE void set_errnum(errnum_t errnum);
  *
  * @see errno2str_r()
  */
-LELY_UTIL_ERRNUM_INLINE const char *errno2str(int errnum);
+LELY_UTIL_ERROR_INLINE const char *errno2str(int errnum);
 
 /**
  * Returns a string describing a standard C error number. The string is copied
@@ -377,7 +377,7 @@ LELY_UTIL_ERRNUM_INLINE const char *errno2str(int errnum);
 const char *errno2str_r(int errnum, char *strerrbuf, size_t buflen);
 
 /// Returns a string describing a native error code. @see errc2str_r()
-LELY_UTIL_ERRNUM_INLINE const char *errc2str(int errc);
+LELY_UTIL_ERROR_INLINE const char *errc2str(int errc);
 
 /**
  * Returns a string describing a native error code. The string is copied to a
@@ -401,7 +401,7 @@ const char *errc2str_r(int errc, char *strerrbuf, size_t buflen);
  *
  * @see errnum2str_r()
  */
-LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
+LELY_UTIL_ERROR_INLINE const char *errnum2str(errnum_t errnum);
 
 /**
  * Returns a string describing a platform-independent error number. This is
@@ -409,40 +409,40 @@ LELY_UTIL_ERRNUM_INLINE const char *errnum2str(errnum_t errnum);
  *
  * @see errnum2str()
  */
-LELY_UTIL_ERRNUM_INLINE const char *errnum2str_r(
+LELY_UTIL_ERROR_INLINE const char *errnum2str_r(
 		errnum_t errnum, char *strerrbuf, size_t buflen);
 
-LELY_UTIL_ERRNUM_INLINE errnum_t
+LELY_UTIL_ERROR_INLINE errnum_t
 get_errnum(void)
 {
 	return errc2num(get_errc());
 }
 
-LELY_UTIL_ERRNUM_INLINE void
+LELY_UTIL_ERROR_INLINE void
 set_errnum(errnum_t errnum)
 {
 	set_errc(errnum2c(errnum));
 }
 
-LELY_UTIL_ERRNUM_INLINE const char *
+LELY_UTIL_ERROR_INLINE const char *
 errno2str(int errnum)
 {
 	return errno2str_r(errnum, NULL, 0);
 }
 
-LELY_UTIL_ERRNUM_INLINE const char *
+LELY_UTIL_ERROR_INLINE const char *
 errc2str(int errc)
 {
 	return errc2str_r(errc, NULL, 0);
 }
 
-LELY_UTIL_ERRNUM_INLINE const char *
+LELY_UTIL_ERROR_INLINE const char *
 errnum2str(errnum_t errnum)
 {
 	return errc2str(errnum2c(errnum));
 }
 
-LELY_UTIL_ERRNUM_INLINE const char *
+LELY_UTIL_ERROR_INLINE const char *
 errnum2str_r(errnum_t errnum, char *strerrbuf, size_t buflen)
 {
 	return errc2str_r(errnum2c(errnum), strerrbuf, buflen);
@@ -452,4 +452,4 @@ errnum2str_r(errnum_t errnum, char *strerrbuf, size_t buflen)
 }
 #endif
 
-#endif // !LELY_UTIL_ERRNUM_H_
+#endif // !LELY_UTIL_ERROR_H_

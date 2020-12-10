@@ -48,7 +48,7 @@
 #include <CppUTest/TestHarness.h>
 
 /* Project's headers */
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 /* --------------- sample test code --------------- */
 struct param_struct {

@@ -25,7 +25,7 @@
 #include <lely/io/addr.h>
 #include <lely/io/sock.h>
 #include <lely/util/cmp.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #include <string.h>

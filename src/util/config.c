@@ -4,7 +4,7 @@
  *
  * @see lely/util/config.h
  *
- * @copyright 2014-2019 Lely Industries N.V.
+ * @copyright 2014-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -24,7 +24,7 @@
 #include "util.h"
 #include <lely/util/cmp.h>
 #include <lely/util/config.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/rbtree.h>
 
 #include <assert.h>

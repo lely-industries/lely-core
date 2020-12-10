@@ -42,7 +42,7 @@
 
 #include <lely/can/vci.h>
 #include <lely/util/endian.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include <assert.h>
 #include <string.h>

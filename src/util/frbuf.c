@@ -28,7 +28,7 @@
 #endif
 
 #include "util.h"
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/frbuf.h>
 
 #include <assert.h>

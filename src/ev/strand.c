@@ -29,7 +29,7 @@
 #include <lely/ev/exec.h>
 #include <lely/ev/strand.h>
 #include <lely/ev/task.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

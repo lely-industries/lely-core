@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/sigset.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -29,7 +29,7 @@
 #include <lely/io2/ctx.h>
 #include <lely/io2/sys/sigset.h>
 #include <lely/io2/win32/poll.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

@@ -26,7 +26,7 @@
 #if LELY_HAVE_SOCKET_CAN
 
 #include <lely/can/socket.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 #include <lely/util/util.h>
 
 #include <assert.h>

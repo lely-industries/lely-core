@@ -29,7 +29,7 @@
 #endif
 
 #include <lely/can/msg.h>
-#include <lely/util/errnum.h>
+#include <lely/util/error.h>
 
 #include "override/libc-stdio.hpp"
 
