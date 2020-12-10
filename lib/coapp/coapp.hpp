@@ -27,8 +27,8 @@
 
 #include <lely/compat/features.h>
 
-#if LELY_NO_MALLOC
-#error This file requires dynamic memory allocation.
+#if LELY_NO_ERRNO || LELY_NO_MALLOC
+#error This file requires errno and/or dynamic memory allocation.
 #endif
 
 namespace lely {
