@@ -7,7 +7,7 @@ import sys
 
 import dcf
 
-from .cdevice import CDevice
+from .cdevice import CDevice, CDataType
 
 
 @contextlib.contextmanager
@@ -18,6 +18,20 @@ def open_or_stdout(filename):
     else:
         with os.fdopen(os.dup(sys.stdout.fileno()), "w") as out:
             yield out
+
+
+def parse_time_scet(value: str):
+    if not value:
+        value = "0 0"
+    seconds, subseconds = value.split()
+    return (int(seconds, 0), int(subseconds, 0))
+
+
+def parse_time_sutc(value: str):
+    if not value:
+        value = "0 0 0"
+    days, ms, usec = value.split()
+    return (int(days, 0), int(ms, 0), int(usec, 0))
 
 
 def read_device_from_dcf(filename):
@@ -49,6 +63,20 @@ def main():
         action="store_true",
         help="generate header file with function prototype",
     )
+    parser.add_argument(
+        "--deftype-time-scet",
+        metavar="INDEX",
+        nargs=1,
+        type=int,
+        help="use INDEX for the ECSS SCET time data type",
+    )
+    parser.add_argument(
+        "--deftype-time-sutc",
+        metavar="INDEX",
+        nargs=1,
+        type=int,
+        help="use INDEX for the ECSS SUTC time data type",
+    )
     parser.add_argument("filename", nargs=1, help="the name of the EDS/DCF file")
     parser.add_argument(
         "name",
@@ -58,6 +86,19 @@ def main():
         help="the variable name of the generated device description",
     )
     args = parser.parse_args()
+
+    if args.deftype_time_scet:
+        index = args.deftype_time_scet[0]
+        dcf.DataType.add_custom(index, "TIME_SCET", parse_time_scet)
+        CDataType.add_custom(
+            index, "scet", "{{ .subseconds = {0[1]:d}, .seconds = {0[0]:d} }}"
+        )
+    if args.deftype_time_sutc:
+        index = args.deftype_time_sutc[0]
+        dcf.DataType.add_custom(index, "TIME_SUTC", parse_time_sutc)
+        CDataType.add_custom(
+            index, "sutc", "{{ .usec = {0[2]:d}, .ms = {0[1]:d}, .days = {0[0]:d} }}"
+        )
 
     if args.header:
         dev = None

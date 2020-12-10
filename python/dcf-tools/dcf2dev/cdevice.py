@@ -19,30 +19,7 @@ class CDevice:
             self.vendor_name = section.get("VendorName", "")
             self.product_name = section.get("ProductName", "")
             self.order_code = section.get("OrderCode", "")
-            if bool(int(section.get("BaudRate_10", "0"), 2)):
-                self.baud += " | CO_BAUD_10"
-                self.rate = 10
-            if bool(int(section.get("BaudRate_20", "0"), 2)):
-                self.baud += " | CO_BAUD_20"
-                self.rate = 20
-            if bool(int(section.get("BaudRate_50", "0"), 2)):
-                self.baud += " | CO_BAUD_50"
-                self.rate = 50
-            if bool(int(section.get("BaudRate_125", "0"), 2)):
-                self.baud += " | CO_BAUD_125"
-                self.rate = 125
-            if bool(int(section.get("BaudRate_250", "0"), 2)):
-                self.baud += " | CO_BAUD_250"
-                self.rate = 250
-            if bool(int(section.get("BaudRate_500", "0"), 2)):
-                self.baud += " | CO_BAUD_500"
-                self.rate = 500
-            if bool(int(section.get("BaudRate_800", "0"), 2)):
-                self.baud += " | CO_BAUD_800"
-                self.rate = 800
-            if bool(int(section.get("BaudRate_1000", "0"), 2)):
-                self.baud += " | CO_BAUD_1000"
-                self.rate = 1000
+            self.__parse_baud_rate(section)
             if "LSS_Supported" in section:
                 self.lss = int(section["LSS_Supported"])
         if "DeviceComissioning" in dev.cfg:
@@ -56,6 +33,32 @@ class CDevice:
 
         for obj in dev.values():
             obj.c = CObject(obj)
+
+    def __parse_baud_rate(self, section: dict):
+        if bool(int(section.get("BaudRate_10", "0"), 2)):
+            self.baud += " | CO_BAUD_10"
+            self.rate = 10
+        if bool(int(section.get("BaudRate_20", "0"), 2)):
+            self.baud += " | CO_BAUD_20"
+            self.rate = 20
+        if bool(int(section.get("BaudRate_50", "0"), 2)):
+            self.baud += " | CO_BAUD_50"
+            self.rate = 50
+        if bool(int(section.get("BaudRate_125", "0"), 2)):
+            self.baud += " | CO_BAUD_125"
+            self.rate = 125
+        if bool(int(section.get("BaudRate_250", "0"), 2)):
+            self.baud += " | CO_BAUD_250"
+            self.rate = 250
+        if bool(int(section.get("BaudRate_500", "0"), 2)):
+            self.baud += " | CO_BAUD_500"
+            self.rate = 500
+        if bool(int(section.get("BaudRate_800", "0"), 2)):
+            self.baud += " | CO_BAUD_800"
+            self.rate = 800
+        if bool(int(section.get("BaudRate_1000", "0"), 2)):
+            self.baud += " | CO_BAUD_1000"
+            self.rate = 1000
 
 
 class CObject:
@@ -129,7 +132,7 @@ class CSubObject:
             subobj.value.c = CValue(subobj.value, subobj.env)
 
 
-class CValue:
+class CDataType:
     __format = {
         0x0001: "{:d}",  # BOOLEAN
         0x0002: "{:d}",  # INTEGER8
@@ -186,16 +189,17 @@ class CValue:
         0x001B: "u64",  # UNSIGNED64
     }
 
-    def __init__(self, val: dcf.Value, env: dict = {}, value=""):
-        self.typename = "co_" + val.data_type.name().lower() + "_t"
-        self.member = CValue.__member[val.data_type.index]
-
-        if not value:
-            value = CValue.print(val, env)
-        self.value = value
+    def __init__(self, data_type: dcf.DataType):
+        self.typename = "co_" + data_type.name().lower() + "_t"
+        self.member = CDataType.__member[data_type.index]
 
     @staticmethod
-    def print(val: dcf.Value, env: dict = {}):
+    def add_custom(index: int, member: str, format_spec: str):
+        CDataType.__member[index] = member
+        CDataType.__format[index] = format_spec
+
+    @staticmethod
+    def print_value(val: dcf.Value, env: dict = {}):
         value = val.parse(env)
         if val.data_type.is_basic():
             if value == val.data_type.min() and value != 0:
@@ -220,7 +224,19 @@ class CValue:
             elif val.data_type.index == 0x000F:  # DOMAIN
                 u8 = list(value)
                 value = ", ".join("0x{:02x}".format(x) for x in u8)
-        return CValue.__format[val.data_type.index].format(value)
+        return CDataType.__format[val.data_type.index].format(value)
+
+
+class CValue:
+    def __init__(self, val: dcf.Value, env: dict = None, value=""):
+        if env is None:
+            env = {}
+
+        val.data_type.c = CDataType(val.data_type)
+
+        if not value:
+            value = CDataType.print_value(val, env)
+        self.value = value
 
     @classmethod
     def from_visible_string(cls, filename: str) -> "CValue":
