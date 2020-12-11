@@ -11,8 +11,10 @@ main(void)
 {
 	tap_plan(6);
 
+#if !LELY_NO_STDIO && !LELY_NO_DIAG
 	diag_set_handler(&co_test_diag_handler, NULL);
 	diag_at_set_handler(&co_test_diag_at_handler, NULL);
+#endif
 
 	can_net_t *net = can_net_create();
 	tap_assert(net);

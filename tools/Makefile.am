@@ -21,18 +21,19 @@ AM_CPPFLAGS =
 bin =
 etc =
 
-if !ECSS_COMPLIANCE
-
 if PLATFORM_LINUX
+if !NO_STDIO
 if !NO_CO_WTM
 bin += can2udp
 can2udp_SOURCES = can2udp.c
 can2udp_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
 endif # !NO_CO_WTM
+endif # !NO_STDIO
 endif # PLATFORM_LINUX
 
 if PLATFORM_LINUX
 if !NO_THREADS
+if !NO_STDIO
 if !NO_CO_DCF
 if !NO_CO_GW_TXT
 bin += coctl
@@ -41,18 +42,22 @@ coctl_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
 etc += coctl.dcf
 endif # !NO_CO_GW_TXT
 endif # !NO_CO_DCF
+endif # !NO_STDIO
 endif # !NO_THREADS
 endif # PLATFORM_LINUX
 
 if PLATFORM_LINUX
 if !NO_THREADS
+if !NO_STDIO
 bin += cocat
 cocat_SOURCES = cocat.c
 cocat_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
+endif # !NO_STDIO
 endif # !NO_THREADS
 endif # PLATFORM_LINUX
 
 if PLATFORM_LINUX
+if !NO_STDIO
 if !NO_CO_DCF
 if !NO_CO_TPDO
 bin += cocatd
@@ -62,10 +67,10 @@ etc += cocatd.dcf
 AM_CPPFLAGS += -DCOCATD_DCF="\"$(sysconfdir)/cocatd.dcf\""
 endif # !NO_CO_TPDO
 endif # !NO_CO_DCF
+endif # !NO_STDIO
 endif # PLATFORM_LINUX
 
-endif # !ECSS_COMPLIANCE
-
+if !NO_STDIO
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
@@ -76,6 +81,7 @@ nodist_dcf2c_SOURCES = version.dcf2c.rc
 endif # PLATFORM_WIN32
 endif # !NO_CO_SDEV
 endif # !NO_CO_DCF
+endif # !NO_STDIO
 
 bin_PROGRAMS = $(bin)
 dist_sysconf_DATA = $(etc)

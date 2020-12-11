@@ -22,6 +22,9 @@
  */
 
 #include "io2.h"
+
+#if !LELY_NO_MALLOC
+
 #include <lely/can/net.h>
 #include <lely/io2/can_net.h>
 #include <lely/io2/ctx.h>
@@ -1131,3 +1134,5 @@ default_on_can_error_func(int error, void *arg)
 		diag(DIAG_WARNING, 0,
 				"one or more unknown errors detected on CAN bus");
 }
+
+#endif // !LELY_NO_MALLOC

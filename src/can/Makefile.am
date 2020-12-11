@@ -3,14 +3,14 @@ src += buf.c
 src += can.h
 src += msg.c
 src += net.c
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 if HAVE_SOCKET_CAN
 src += socket.c
 endif
 if HAVE_VCI
 src += vci.c
 endif
-endif
+endif # !NO_STDIO
 if PLATFORM_WIN32
 src += version.rc
 endif

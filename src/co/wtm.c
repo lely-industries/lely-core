@@ -33,7 +33,9 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -1119,8 +1121,12 @@ default_wtm_diag_ac_ind(co_wtm_t *wtm, uint_least32_t ac, void *data)
 	(void)wtm;
 	(void)data;
 
+#if LELY_NO_STDIO
+	(void)ac;
+#else
 	diag(DIAG_WARNING, 0, "received WTM abort code %08" PRIX32 ": %s", ac,
 			co_wtm_ac_str(ac));
+#endif
 }
 
 static uint_least32_t

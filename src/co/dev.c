@@ -726,7 +726,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	return 0;
 }
 
-#if !LELY_NO_CO_DCF
+#if !LELY_NO_STDIO
 int
 co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
 		co_unsigned16_t *pmax, const char *filename)
@@ -800,7 +800,7 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 	return 0;
 }
 
-#if !LELY_NO_CO_DCF
+#if !LELY_NO_STDIO
 int
 co_dev_write_dcf_file(const co_dev_t *dev, co_unsigned16_t min,
 		co_unsigned16_t max, const char *filename)

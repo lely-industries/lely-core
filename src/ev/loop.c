@@ -22,6 +22,9 @@
  */
 
 #include "ev.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #include <lely/libc/threads.h>
@@ -771,8 +774,6 @@ ev_loop_ctx_wait_one(
 	return n;
 }
 
-#include <stdio.h>
-
 static size_t
 ev_loop_ctx_wait_one_until(struct ev_loop_ctx **pctx, ev_loop_t *loop,
 		ev_future_t *future, const struct timespec *abs_time)
@@ -1119,3 +1120,5 @@ ev_loop_kill_any(ev_loop_t *loop, int polling)
 	}
 	return 0;
 }
+
+#endif // !LELY_NO_MALLOC

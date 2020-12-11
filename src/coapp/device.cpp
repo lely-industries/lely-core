@@ -23,7 +23,10 @@
 
 #include "coapp.hpp"
 #include <lely/co/csdo.h>
+#if !LELY_NO_CO_DCF
 #include <lely/co/dcf.h>
+#endif
+#include <lely/co/dev.h>
 #include <lely/co/obj.h>
 #include <lely/co/pdo.h>
 #include <lely/co/val.h>
@@ -50,8 +53,10 @@ struct Device::Impl_ : util::BasicLockable {
     }
   };
 
+#if !LELY_NO_CO_DCF
   Impl_(Device* self, const ::std::string& dcf_txt,
         const ::std::string& dcf_bin, uint8_t id, util::BasicLockable* mutex);
+#endif
   virtual ~Impl_() = default;
 
   void
@@ -138,9 +143,11 @@ struct Device::Impl_ : util::BasicLockable {
   ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write;
 };
 
+#if !LELY_NO_CO_DCF
 Device::Device(const ::std::string& dcf_txt, const ::std::string& dcf_bin,
                uint8_t id, util::BasicLockable* mutex)
     : impl_(new Impl_(this, dcf_txt, dcf_bin, id, mutex)) {}
+#endif
 
 Device::~Device() = default;
 
@@ -513,6 +520,7 @@ Device::WriteDcf(const char* path) {
   if (ec) throw_sdo_error(id(), 0, 0, ec, "WriteDcf");
 }
 
+#if !LELY_NO_STDIO
 void
 Device::WriteDcf(const char* path, ::std::error_code& ec) {
   int errsv = get_errc();
@@ -530,6 +538,7 @@ Device::WriteDcf(const char* path, ::std::error_code& ec) {
   if (dom) co_val_fini(CO_DEFTYPE_DOMAIN, &dom);
   set_errc(errsv);
 }
+#endif
 
 void
 Device::WriteEvent(uint16_t idx, uint8_t subidx) {
@@ -1649,6 +1658,7 @@ Device::UpdateTpdoMapping() {
   }
 }
 
+#if !LELY_NO_CO_DCF
 Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
                      const ::std::string& dcf_bin, uint8_t id,
                      util::BasicLockable* mutex_)
@@ -1684,6 +1694,7 @@ Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
         static_cast<void*>(this));
   }
 }
+#endif  // !LELY_NO_CO_DCF
 
 void
 Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {

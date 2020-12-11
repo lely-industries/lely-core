@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef __linux__
+#if !LELY_NO_STDIO && defined(__linux__)
 
 #include <lely/io2/linux/can.h>
 #include <lely/util/util.h>
@@ -360,4 +360,4 @@ io_can_ctrl_impl_from_ctrl(const io_can_ctrl_t *ctrl)
 	return structof(ctrl, struct io_can_ctrl_impl, ctrl_vptr);
 }
 
-#endif // __linux__
+#endif // !LELY_NO_STDIO && __linux__

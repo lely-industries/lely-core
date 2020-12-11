@@ -6,13 +6,15 @@ endif
 SUBDIRS += util
 SUBDIRS += can
 SUBDIRS += co
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 if PLATFORM_LINUX
 SUBDIRS += io
 endif
 if PLATFORM_WIN32
 SUBDIRS += io
 endif
+endif # !NO_STDIO
+if !ECSS_COMPLIANCE
 SUBDIRS += ev
 SUBDIRS += io2
 if !NO_CXX

@@ -115,6 +115,15 @@ AS_IF([test "$enable_malloc" == "no"], [
 	AC_DEFINE([LELY_NO_MALLOC], [1], [Define to 1 if dynamic memory allocation is disabled.])
 ])
 
+AM_CONDITIONAL([NO_STDIO], [false])
+AC_ARG_ENABLE([stdio],
+	AS_HELP_STRING([--disable-stdio], [disable standard I/O]))
+AS_IF([test "$enable_malloc" == "no"], [enable_stdio=no])
+AS_IF([test "$enable_stdio" == "no"], [
+	AM_CONDITIONAL([NO_STDIO], [true])
+	AC_DEFINE([LELY_NO_STDIO], [1], [Define to 1 if standard I/O is disabled.])
+])
+
 AM_CONDITIONAL([NO_CXX], [false])
 AC_ARG_ENABLE([cxx],
 	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
@@ -127,7 +136,7 @@ AS_IF([test "$enable_cxx" == "no"], [
 AM_CONDITIONAL([NO_DAEMON], [false])
 AC_ARG_ENABLE([daemon],
 	AS_HELP_STRING([--disable-daemon], [disable daemon support]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_daemon=no])
+AS_IF([test "$enable_stdio" == "no"], [enable_daemon=no])
 AS_IF([test "$enable_daemon" == "no"], [
 	AM_CONDITIONAL([NO_DAEMON], [true])
 	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
@@ -155,6 +164,7 @@ AM_CONDITIONAL([NO_CO_DCF], [false])
 AC_ARG_ENABLE([dcf],
 	AS_HELP_STRING([--disable-dcf], [disable EDS/DCF support]))
 AS_IF([test "$enable_malloc" == "no"], [enable_dcf=no])
+AS_IF([test "$enable_stdio" == "no"], [enable_dcf=no])
 AS_IF([test "$enable_dcf" == "no"], [
 	AM_CONDITIONAL([NO_CO_DCF], [true])
 	AC_DEFINE([LELY_NO_CO_DCF], [1], [Define to 1 if EDS/DCF support is disabled.])
@@ -179,7 +189,7 @@ AS_IF([test "$enable_obj_default" == "no"], [
 AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
 AC_ARG_ENABLE([obj-file],
 	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
-AS_IF([test "$enable_ecss_compliance" == "no"], [enable_obj_file=no])
+AS_IF([test "$enable_stdio" == "no"], [enable_obj_file=no])
 AS_IF([test "$enable_obj_file" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
@@ -307,6 +317,7 @@ AS_IF([test "$enable_gw" == "no"], [
 AM_CONDITIONAL([NO_CO_GW_TXT], [false])
 AC_ARG_ENABLE([gw-txt],
 	AS_HELP_STRING([--disable-gw-txt], [disable ASCII gateway support]))
+AS_IF([test "$enable_stdio" == "no"], [enable_gw_txt=no])
 AS_IF([test "$enable_gw" == "no"], [enable_gw_txt=no])
 AS_IF([test "$enable_gw_txt" == "no"], [
 	AM_CONDITIONAL([NO_CO_GW_TXT], [true])
@@ -535,7 +546,7 @@ AS_IF([test "$enable_python3" != "no"], [
 AM_CONDITIONAL([NO_CYTHON], [false])
 AC_ARG_ENABLE([cython],
 	AS_HELP_STRING([--disable-cython], [do not generate Python bindings with Cython]))
-AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes" -o "$enable_malloc" == "no" -o "enable_python" == "no"], [
+AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes" -o "$enable_malloc" == "no" -o "$enable_stdio" == "no" -o "enable_python" == "no"], [
 	enable_cython=no
 ])
 AS_IF([test "$enable_cython" == "no"], [

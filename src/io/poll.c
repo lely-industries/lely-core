@@ -22,6 +22,9 @@
  */
 
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/poll.h>
 #include <lely/util/cmp.h>
 #include <lely/util/errnum.h>
@@ -656,3 +659,5 @@ _poll(struct pollfd *fds, nfds_t nfds, int timeout)
 	return poll(fds, nfds, timeout);
 }
 #endif
+
+#endif // !LELY_NO_STDIO

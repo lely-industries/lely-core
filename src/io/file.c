@@ -27,11 +27,15 @@
 #define _LARGEFILE64_SOURCE 1
 #endif
 
-#include "default.h"
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/file.h>
 
 #include <assert.h>
+
+#include "default.h"
 
 #if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
@@ -499,3 +503,5 @@ error_CreateEvent:
 #endif // _WIN32
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#endif // !LELY_NO_STDIO

@@ -22,6 +22,9 @@
  */
 
 #include "io2.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/libc/threads.h>
 #endif
@@ -223,3 +226,5 @@ io_ctx_shutdown(io_ctx_t *ctx)
 	mtx_unlock(&ctx->mtx);
 #endif
 }
+
+#endif // !LELY_NO_MALLOC

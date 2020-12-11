@@ -21,6 +21,9 @@
  */
 
 #include "libc.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/libc/stdio.h>
 
 #include <assert.h>
@@ -139,3 +142,5 @@ vasprintf(char **strp, const char *fmt, va_list ap)
 }
 
 #endif // !_GNU_SOURCE
+
+#endif // !LELY_NO_STDIO

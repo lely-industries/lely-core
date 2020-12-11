@@ -35,7 +35,9 @@
 #include <lely/util/diag.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 #include <stdlib.h>
 
 #ifndef LELY_CO_NMT_CFG_RESET_TIMEOUT
@@ -708,17 +710,21 @@ co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
 	co_sdo_req_clear(req);
 	cfg->ac = co_sub_up_ind(sub, req);
 	if (cfg->ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" on upload request of object 1F20:%02X (Store DCF): %s",
 				cfg->ac, cfg->id, co_sdo_ac2str(cfg->ac));
+#endif
 		return co_nmt_cfg_abort_state;
 	}
 
 	if (!co_sdo_req_first(req) || !co_sdo_req_last(req)) {
+#if !LELY_NO_STDIO
 		diag(DIAG_WARNING, 0,
 				"object 1F20:%02X (Store DCF) unusable for configuration request",
 				cfg->id);
+#endif
 		return co_nmt_cfg_store_1f22_state;
 	}
 
@@ -831,10 +837,12 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 	co_sdo_req_clear(req);
 	cfg->ac = co_sub_up_ind(sub, req);
 	if (cfg->ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" on upload request of object 1F22:%02X (Concise DCF): %s",
 				cfg->ac, cfg->id, co_sdo_ac2str(cfg->ac));
+#endif
 		return co_nmt_cfg_abort_state;
 	}
 

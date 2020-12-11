@@ -22,6 +22,9 @@
  */
 
 #include "io2.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/libc/threads.h>
 #endif
@@ -900,3 +903,5 @@ io_can_rt_async_shutdown_func(struct ev_task *task)
 	ev_promise_set(async_shutdown->promise, NULL);
 	ev_promise_release(async_shutdown->promise);
 }
+
+#endif // !LELY_NO_MALLOC

@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_STDIO
+
 #define LELY_UTIL_PRINT_INLINE extern inline
 #include <lely/libc/stdio.h>
 #include <lely/libc/uchar.h>
@@ -304,3 +307,5 @@ print_base64(char **pbegin, char *end, const void *ptr, size_t n)
 
 	return chars;
 }
+
+#endif // !LELY_NO_STDIO

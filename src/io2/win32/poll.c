@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _WIN32
+#if !LELY_NO_STDIO && _WIN32
 
 #include <lely/ev/task.h>
 #include <lely/io2/win32/poll.h>
@@ -340,4 +340,4 @@ io_poll_from_poll(const ev_poll_t *poll)
 	return structof(poll, io_poll_t, poll_vptr);
 }
 
-#endif // _WIN32
+#endif // !LELY_NO_STDIO && _WIN32

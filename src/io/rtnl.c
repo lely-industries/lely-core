@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef HAVE_LINUX_RTNETLINK_H
+#if !LELY_NO_STDIO && defined(HAVE_LINUX_RTNETLINK_H)
 
 #include "rtnl.h"
 
@@ -347,4 +347,4 @@ io_rtnl_send_newlink(int fd, __u32 seq, __u32 pid, int ifi_index,
 	return io_rtnl_send(fd, iov, sizeof(iov) / sizeof(*iov));
 }
 
-#endif // #HAVE_LINUX_RTNETLINK_H
+#endif // !LELY_NO_STDIO && HAVE_LINUX_RTNETLINK_H

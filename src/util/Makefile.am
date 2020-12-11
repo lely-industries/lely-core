@@ -6,20 +6,6 @@ src += sllist.c
 src += spscring.c
 endif # !ECSS_COMPLIANCE
 
-if !NO_CO_OBJ_FILE
-src += frbuf.c
-src += fwbuf.c
-endif
-
-if !NO_CO_GW_TXT
-if !NO_CO_SDEV
-if !NO_CO_DCF
-src += lex.c
-endif
-src += print.c
-endif
-endif
-
 src += bits.c
 if !NO_MALLOC
 src += bitset.c
@@ -27,7 +13,9 @@ endif
 src += cmp.c
 if !NO_MALLOC
 src += config.c
+if !NO_STDIO
 src += config_ini.c
+endif
 endif # !NO_MALLOC
 if !NO_DAEMON
 src += daemon.c
@@ -42,8 +30,18 @@ endif
 if !NO_MALLOC
 src += fiber.c
 endif
+if !NO_STDIO
+src += frbuf.c
+src += fwbuf.c
+endif
+if !NO_STDIO
+src += lex.c
+endif
 src += membuf.c
 src += pheap.c
+if !NO_STDIO
+src += print.c
+endif
 src += rbtree.c
 if !NO_MALLOC
 src += stop.c

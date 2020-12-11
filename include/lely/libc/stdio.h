@@ -22,6 +22,10 @@
 #ifndef LELY_LIBC_STDIO_H_
 #define LELY_LIBC_STDIO_H_
 
+#include <lely/features.h>
+
+#if !LELY_NO_STDIO
+
 #include <lely/libc/sys/types.h>
 
 #include <stdarg.h>
@@ -99,5 +103,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // !LELY_NO_STDIO
 
 #endif // !LELY_LIBC_STDIO_H_

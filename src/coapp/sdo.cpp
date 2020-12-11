@@ -73,6 +73,7 @@ struct Sdo::Impl_ {
 
 namespace detail {
 
+#if !LELY_NO_STDIO
 void
 SdoDownloadDcfRequestBase::Read(const char* path) {
   begin = nullptr;
@@ -89,6 +90,7 @@ SdoDownloadDcfRequestBase::Read(const char* path) {
       static_cast<const uint8_t*>(co_val_addressof(CO_DEFTYPE_DOMAIN, &dom_));
   end = begin + co_val_sizeof(CO_DEFTYPE_DOMAIN, &dom_);
 }
+#endif
 
 SdoDownloadDcfRequestBase::~SdoDownloadDcfRequestBase() {
   if (dom_) co_val_fini(CO_DEFTYPE_DOMAIN, &dom_);

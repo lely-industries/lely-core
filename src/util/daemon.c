@@ -23,6 +23,11 @@
 
 #include "util.h"
 
+#if LELY_NO_STDIO
+#undef LELY_NO_DAEMON
+#define LELY_NO_DAEMON 1
+#endif
+
 #if !LELY_NO_DAEMON
 
 #if !LELY_NO_THREADS

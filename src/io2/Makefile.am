@@ -1,5 +1,6 @@
 src =
 src += can/msg.c
+if !NO_STDIO
 if PLATFORM_LINUX
 src += linux/can_attr.h
 src += linux/can_chan.c
@@ -12,7 +13,7 @@ src += linux/io.h
 src += linux/poll.c
 src += linux/rtnl.h
 src += linux/timer.c
-endif
+endif # PLATFORM_LINUX
 if PLATFORM_POSIX
 src += posix/fd.c
 src += posix/fd.h
@@ -25,10 +26,16 @@ src += posix/sigset.c
 if !PLATFORM_LINUX
 src += posix/timer.c
 endif
-endif
+endif # PLATFORM_POSIX
+endif # !NO_STDIO
 src += sys/clock.c
+src += sys/io.c
+src += sys/io.h
+if !NO_MALLOC
 src += user/can.c
 src += user/timer.c
+endif
+if !NO_STDIO
 if PLATFORM_WIN32
 src += win32/io.c
 src += win32/io.h
@@ -39,21 +46,28 @@ endif
 src += win32/poll.c
 src += win32/sigset.c
 src += win32/timer.c
-endif
+endif # PLATFORM_WIN32
+endif # !NO_STDIO
 src += can.c
 src += can.h
+if !NO_MALLOC
 src += can_net.c
 src += can_rt.c
+endif
 src += clock.c
+if !NO_MALLOC
 src += ctx.c
+endif
 src += dev.c
 src += io2.h
 src += sigset.c
 src += sigset.h
 src += timer.c
 src += timer.h
+if !NO_MALLOC
 src += tqueue.c
 src += vcan.c
+endif
 
 lib_LTLIBRARIES = liblely-io2.la
 liblely_io2_la_CPPFLAGS = -I$(top_srcdir)/include

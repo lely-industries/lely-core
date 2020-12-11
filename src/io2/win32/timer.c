@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _WIN32
+#if !LELY_NO_STDIO && _WIN32
 
 #include "../timer.h"
 #include <lely/io2/ctx.h>
@@ -585,4 +585,4 @@ io_timer_impl_pop(struct io_timer_impl *impl, struct sllist *queue,
 #endif
 }
 
-#endif // _WIN32
+#endif // !LELY_NO_STDIO && _WIN32

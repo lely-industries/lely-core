@@ -32,7 +32,9 @@
 #include <lely/util/errnum.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 #include <stdlib.h>
 #if LELY_NO_MALLOC
 #include <string.h>
@@ -1614,7 +1616,9 @@ co_ssdo_abort_ind(co_ssdo_t *sdo)
 static co_ssdo_state_t *
 co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
+#if !LELY_NO_STDIO
 	trace("SSDO: abort code %08" PRIX32 " (%s)", ac, co_sdo_ac2str(ac));
+#endif
 	co_ssdo_send_abort(sdo, ac);
 	return co_ssdo_abort_ind(sdo);
 }

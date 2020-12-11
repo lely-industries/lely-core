@@ -22,6 +22,9 @@
  */
 
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/errnum.h>
 #if !LELY_NO_CAN && defined(__linux__) && HAVE_LINUX_CAN_H
 #include <lely/can/socket.h>
@@ -862,3 +865,5 @@ can_setattr(int fd, __u32 seq, __u32 pid, int ifi_index, unsigned int ifi_flags,
 #endif // HAVE_LINUX_CAN_NETLINK_H && HAVE_LINUX_RTNETLINK_H
 
 #endif // __linux__ && HAVE_LINUX_CAN_H
+
+#endif // !LELY_NO_STDIO

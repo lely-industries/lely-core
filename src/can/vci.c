@@ -38,7 +38,7 @@
 #undef CAN_ERROR_STUFF
 #undef CAN_ERROR_BIT
 
-#if LELY_HAVE_VCI
+#if !LELY_NO_STDIO && LELY_HAVE_VCI
 
 #include <lely/can/vci.h>
 #include <lely/util/endian.h>
@@ -150,4 +150,4 @@ can_msg2CANMSG(const struct can_msg *src, void *dst)
 	return 0;
 }
 
-#endif // LELY_HAVE_VCI
+#endif // !LELY_NO_STDIO && LELY_HAVE_VCI

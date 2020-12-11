@@ -30,21 +30,18 @@
 #include <lely/util/cmp.h>
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
-#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_STDIO
 #include <lely/util/frbuf.h>
 #include <lely/util/fwbuf.h>
+#include <lely/util/lex.h>
+#include <lely/util/print.h>
 #endif
 #include <lely/util/ustring.h>
 
-#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
-#if !LELY_NO_CO_DCF
-#include <lely/util/lex.h>
-#endif
-#include <lely/util/print.h>
-#endif
-
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 #if !LELY_NO_MALLOC
 #include <stdlib.h>
 #endif
@@ -668,7 +665,7 @@ co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 	}
 }
 
-#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_STDIO
 
 size_t
 co_val_read_file(co_unsigned16_t type, void *val, const char *filename)
@@ -764,7 +761,7 @@ co_val_read_frbuf(co_unsigned16_t type, void *val, frbuf_t *buf)
 	}
 }
 
-#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#endif // !LELY_NO_STDIO
 
 co_unsigned32_t
 co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
@@ -936,7 +933,7 @@ co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 	}
 }
 
-#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_STDIO
 
 size_t
 co_val_write_file(co_unsigned16_t type, const void *val, const char *filename)
@@ -1005,9 +1002,6 @@ co_val_write_fwbuf(co_unsigned16_t type, const void *val, fwbuf_t *buf)
 	}
 }
 
-#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
-
-#if !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 size_t
 co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 		struct floc *at)
@@ -1399,9 +1393,7 @@ co_val_lex(co_unsigned16_t type, void *val, const char *begin, const char *end,
 
 	return floc_lex(at, begin, cp);
 }
-#endif // !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 
-#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 size_t
 co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 {
@@ -1497,7 +1489,8 @@ co_val_print(co_unsigned16_t type, const void *val, char **pbegin, char *end)
 		}
 	}
 }
-#endif // !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
+
+#endif // !LELY_NO_STDIO
 
 static inline struct co_array_hdr *
 co_array_get_hdr(const void *val)

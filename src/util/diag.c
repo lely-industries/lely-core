@@ -25,7 +25,9 @@
 #if LELY_NO_DIAG
 #define LELY_UTIL_DIAG_INLINE extern inline
 #endif
+#if !LELY_NO_STDIO
 #include <lely/libc/stdio.h>
+#endif
 #include <lely/util/diag.h>
 
 #include <assert.h>
@@ -56,6 +58,8 @@ static diag_at_handler_t *diag_at_handler = &default_diag_at_handler;
 static void *diag_at_handle;
 
 #endif // !LELY_NO_DIAG
+
+#if !LELY_NO_STDIO
 
 size_t
 floc_lex(struct floc *at, const char *begin, const char *end)
@@ -126,6 +130,8 @@ snprintf_floc(char *s, size_t n, const struct floc *at)
 
 	return t;
 }
+
+#endif // !LELY_NO_STDIO
 
 #if !LELY_NO_DIAG
 
@@ -226,6 +232,12 @@ default_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 {
 	(void)handle;
 
+#if LELY_NO_STDIO
+	(void)errc;
+	(void)at;
+	(void)format;
+	(void)ap;
+#else
 	int errsv = errno;
 	char *s = NULL;
 	if (vasprintf_diag_at(&s, severity, errc, at, format, ap) >= 0) {
@@ -234,10 +246,13 @@ default_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	}
 	free(s);
 	errno = errsv;
+#endif
 
 	if (severity == DIAG_FATAL)
 		abort();
 }
+
+#if !LELY_NO_STDIO
 
 void
 cmd_diag_handler(void *handle, enum diag_severity severity, int errc,
@@ -511,6 +526,8 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 	*ps = s;
 	return n;
 }
+
+#endif // !LELY_NO_STDIO
 
 #endif // !LELY_NO_DIAG
 

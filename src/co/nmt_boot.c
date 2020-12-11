@@ -33,7 +33,9 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 #include <stdlib.h>
 
 #ifndef LELY_CO_NMT_BOOT_WAIT_TIMEOUT
@@ -1194,10 +1196,12 @@ co_nmt_boot_chk_device_type_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 			return co_nmt_boot_abort_state;
 		return NULL;
 	} else if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of object 1000 (Device type) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1241,11 +1245,13 @@ co_nmt_boot_chk_vendor_id_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:01 (Vendor-ID) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	if (ac || !co_nmt_boot_chk(boot, 0x1f85, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
@@ -1280,11 +1286,13 @@ co_nmt_boot_chk_product_code_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:02 (Product code) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	if (ac || !co_nmt_boot_chk(boot, 0x1f86, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
@@ -1319,11 +1327,13 @@ co_nmt_boot_chk_revision_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:03 (Revision number) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	if (ac || !co_nmt_boot_chk(boot, 0x1f87, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
@@ -1358,11 +1368,13 @@ co_nmt_boot_chk_serial_nr_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1018:04 (Serial number) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	if (ac || !co_nmt_boot_chk(boot, 0x1f88, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
@@ -1522,10 +1534,12 @@ co_nmt_boot_chk_sw_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 			return co_nmt_boot_abort_state;
 		return NULL;
 	} else if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1561,16 +1575,22 @@ co_nmt_boot_stop_prog_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_stop_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
+#if LELY_NO_STDIO
+	(void)boot;
+#else
 	assert(boot);
+#endif
 
 	// The download SDO request may be unconfirmed on some devices since it
 	// stops the program on the slave (and may cause a restart of the
 	// bootloader). We therefore ignore timeouts.
 	if (ac && ac != CO_SDO_AC_TIMEOUT) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1632,10 +1652,12 @@ co_nmt_boot_clear_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 			return co_nmt_boot_abort_state;
 		return NULL;
 	} else if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1656,11 +1678,13 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 	co_sdo_req_clear(req);
 	co_unsigned32_t ac = co_sub_up_ind(sub, req);
 	if (ac || !co_sdo_req_first(req) || !co_sdo_req_last(req)) {
+#if !LELY_NO_STDIO
 		if (ac)
 			diag(DIAG_ERROR, 0,
 					"SDO abort code %08" PRIX32
 					" on upload request of object 1F58:%02X (Program data): %s",
 					ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1728,10 +1752,12 @@ co_nmt_boot_dn_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 			return co_nmt_boot_abort_state;
 		return NULL;
 	} else if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F50:01 (Program data) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1767,6 +1793,10 @@ static co_nmt_boot_state_t *
 co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 		const void *ptr, size_t n)
 {
+#if LELY_NO_STDIO
+	(void)boot;
+	(void)ac;
+#else
 	assert(boot);
 
 	if (ac)
@@ -1774,6 +1804,7 @@ co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F57:01 (Flash status indication) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	// If the flash status indication is not valid, try again.
 	co_unsigned32_t val = 0;
@@ -1827,11 +1858,13 @@ co_nmt_boot_wait_flash_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 				st);
 		break;
 	default:
+#if !LELY_NO_STDIO
 		if (st > 63)
 			diag(DIAG_ERROR, 0,
 					"flash status identification %d: Manufacturer-specific error: 0x%08" PRIX32
 					"",
 					st, (val >> 16) & 0xffff);
+#endif
 		break;
 	}
 
@@ -1857,11 +1890,13 @@ co_nmt_boot_chk_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F56:01 (Program software identification) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	if (ac || !co_nmt_boot_chk(boot, 0x1f55, boot->id, ptr, n))
 		return co_nmt_boot_abort_state;
@@ -1888,13 +1923,19 @@ co_nmt_boot_start_prog_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_start_prog_on_dn_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
+#if LELY_NO_STDIO
+	(void)boot;
+#else
 	assert(boot);
+#endif
 
 	if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on download request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -1942,10 +1983,12 @@ co_nmt_boot_wait_prog_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 			return co_nmt_boot_abort_state;
 		return NULL;
 	} else if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1F51:01 (Program control) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 
@@ -2000,11 +2043,13 @@ co_nmt_boot_chk_cfg_date_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 		if (co_nmt_boot_up(boot, 0x1020, 0x01) == -1)
 			return co_nmt_boot_abort_state;
 		return NULL;
+#if !LELY_NO_STDIO
 	} else if (ac) {
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1020:01 (Configuration date) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 	}
 
 	// If the configuration date does not match the expected value, skip
@@ -2025,11 +2070,13 @@ co_nmt_boot_chk_cfg_time_on_up_con(co_nmt_boot_t *boot, co_unsigned32_t ac,
 {
 	assert(boot);
 
+#if !LELY_NO_STDIO
 	if (ac)
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received on upload request of sub-object 1020:02 (Configuration time) to node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 
 	// If the configuration time does not match the expected value, proceed
 	// to 'update configuration'.
@@ -2058,13 +2105,19 @@ co_nmt_boot_up_cfg_on_enter(co_nmt_boot_t *boot)
 static co_nmt_boot_state_t *
 co_nmt_boot_up_cfg_on_cfg_con(co_nmt_boot_t *boot, co_unsigned32_t ac)
 {
+#if LELY_NO_STDIO
+	(void)boot;
+#else
 	assert(boot);
+#endif
 
 	if (ac) {
+#if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
 				"SDO abort code %08" PRIX32
 				" received while updating the configuration of node %02X: %s",
 				ac, boot->id, co_sdo_ac2str(ac));
+#endif
 		return co_nmt_boot_abort_state;
 	}
 

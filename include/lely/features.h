@@ -331,6 +331,12 @@
 #endif
 #endif // !LELY_NO_ATOMICS
 
+#if LELY_NO_MALLOC
+// Disable standard I/O if dynamic memory allocation is disabled.
+#undef LELY_NO_STDIO
+#define LELY_NO_STDIO 1
+#endif
+
 #define LELY_INGORE_EMPTY_TRANSLATION_UNIT \
 	typedef int lely_ignore_empty_translation_unit__;
 

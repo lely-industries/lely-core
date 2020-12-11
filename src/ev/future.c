@@ -22,6 +22,9 @@
  */
 
 #include "ev.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #endif
@@ -735,3 +738,5 @@ ev_future_when_any_func(struct ev_task *task)
 	ev_promise_set(when->promise, &when->idx);
 	ev_promise_release(when->promise);
 }
+
+#endif // !LELY_NO_MALLOC

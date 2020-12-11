@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_STDIO
+
 #define LELY_UTIL_LEX_INLINE extern inline
 #include <lely/libc/string.h>
 #include <lely/libc/uchar.h>
@@ -793,3 +796,5 @@ lex_base64(const char *begin, const char *end, struct floc *at, void *ptr,
 
 	return floc_lex(at, begin, cp);
 }
+
+#endif // !LELY_NO_STDIO
