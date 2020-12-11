@@ -141,8 +141,9 @@ build:configure:
     matrix:
       - CONFIGURE_OPTIONS:
         - --disable-canfd
-        - --disable-cxx
+        - --disable-malloc
         - --disable-master
+        - --disable-stdio
         - --enable-ecss-compliance
 
 test:configure:disable-canfd:
@@ -150,15 +151,20 @@ test:configure:disable-canfd:
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--disable-canfd]"]
 
-test:configure:disable-cxx:
+test:configure:disable-malloc:
   extends: .test
   image: $REGISTRY/gcc:10
-  needs: ["build:configure: [--disable-cxx]"]
+  needs: ["build:configure: [--disable-malloc]"]
 
 test:configure:disable-master:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--disable-master]"]
+
+test:configure:disable-stdio:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--disable-stdio]"]
 
 test:configure:enable-ecss-compliance:
   extends: .test
