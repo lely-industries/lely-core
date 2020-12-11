@@ -27,6 +27,7 @@ ForEachMacros:
 IndentCaseLabels: false
 IndentWidth: 8
 KeepEmptyLinesAtTheStartOfBlocks: false
+ReflowComments: false
 SpacesInContainerLiterals: false
 UseTab: Always
 ...
