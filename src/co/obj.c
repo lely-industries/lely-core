@@ -101,7 +101,7 @@ __co_obj_fini(struct __co_obj *obj)
 	co_obj_clear(obj);
 #endif
 
-#if !LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 	free(obj->name);
 #endif
 }
@@ -262,7 +262,6 @@ co_obj_last_sub(const co_obj_t *obj)
 }
 
 #if !LELY_NO_CO_OBJ_NAME
-
 const char *
 co_obj_get_name(const co_obj_t *obj)
 {
@@ -270,7 +269,9 @@ co_obj_get_name(const co_obj_t *obj)
 
 	return obj->name;
 }
+#endif
 
+#if !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 int
 co_obj_set_name(co_obj_t *obj, const char *name)
 {
@@ -292,8 +293,7 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 
 	return 0;
 }
-
-#endif // !LELY_NO_CO_OBJ_NAME
+#endif // !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 
 co_unsigned8_t
 co_obj_get_code(const co_obj_t *obj)
@@ -480,7 +480,7 @@ __co_sub_fini(struct __co_sub *sub)
 	co_val_fini(sub->type, &sub->min);
 #endif
 
-#if !LELY_NO_CO_OBJ_NAME
+#if !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 	free(sub->name);
 #endif
 }
@@ -558,7 +558,6 @@ co_sub_get_subidx(const co_sub_t *sub)
 }
 
 #if !LELY_NO_CO_OBJ_NAME
-
 const char *
 co_sub_get_name(const co_sub_t *sub)
 {
@@ -566,7 +565,9 @@ co_sub_get_name(const co_sub_t *sub)
 
 	return sub->name;
 }
+#endif
 
+#if !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 int
 co_sub_set_name(co_sub_t *sub, const char *name)
 {
@@ -588,8 +589,7 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 
 	return 0;
 }
-
-#endif // !LELY_NO_CO_OBJ_NAME
+#endif // !LELY_NO_MALLOC && !LELY_NO_CO_OBJ_NAME
 
 co_unsigned16_t
 co_sub_get_type(const co_sub_t *sub)

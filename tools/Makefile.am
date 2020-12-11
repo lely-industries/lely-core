@@ -1,49 +1,81 @@
+LELY_LIBC_LIBS =
+if CODE_COVERAGE_ENABLED
+LELY_LIBC_LIBS += $(CODE_COVERAGE_LIBS)
+endif
+LELY_LIBC_LIBS += $(top_builddir)/src/libc/liblely-libc.la
+
+LELY_UTIL_LIBS = $(LELY_LIBC_LIBS)
+LELY_UTIL_LIBS += $(top_builddir)/src/util/liblely-util.la
+
+LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
+LELY_CAN_LIBS += $(top_builddir)/src/can/liblely-can.la
+
+LELY_IO_LIBS = $(LELY_CAN_LIBS)
+LELY_IO_LIBS += $(top_builddir)/src/io/liblely-io.la
+
+LELY_CO_LIBS = $(LELY_CAN_LIBS)
+LELY_CO_LIBS += $(top_builddir)/src/co/liblely-co.la
+
 AM_CPPFLAGS =
 
 bin =
 etc =
+
 if !ECSS_COMPLIANCE
-if !NO_CO_WTM
+
 if PLATFORM_LINUX
+if !NO_CO_WTM
 bin += can2udp
 can2udp_SOURCES = can2udp.c
-endif
-endif
-if !NO_CO_GW_TXT
-if !NO_CO_DCF
-if !NO_THREADS
+can2udp_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
+endif # !NO_CO_WTM
+endif # PLATFORM_LINUX
+
 if PLATFORM_LINUX
+if !NO_THREADS
+if !NO_CO_DCF
+if !NO_CO_GW_TXT
 bin += coctl
 coctl_SOURCES = coctl.c
+coctl_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
 etc += coctl.dcf
-endif
-endif
-endif
-endif
+endif # !NO_CO_GW_TXT
+endif # !NO_CO_DCF
+endif # !NO_THREADS
+endif # PLATFORM_LINUX
+
 if PLATFORM_LINUX
 if !NO_THREADS
 bin += cocat
 cocat_SOURCES = cocat.c
-endif
-if !NO_CO_TPDO
+cocat_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
+endif # !NO_THREADS
+endif # PLATFORM_LINUX
+
+if PLATFORM_LINUX
 if !NO_CO_DCF
+if !NO_CO_TPDO
 bin += cocatd
 cocatd_SOURCES = cocatd.c
+cocatd_LDADD = $(LELY_IO_LIBS) $(LELY_CO_LIBS)
 etc += cocatd.dcf
 AM_CPPFLAGS += -DCOCATD_DCF="\"$(sysconfdir)/cocatd.dcf\""
-endif
-endif
-endif
-endif
+endif # !NO_CO_TPDO
+endif # !NO_CO_DCF
+endif # PLATFORM_LINUX
+
+endif # !ECSS_COMPLIANCE
+
 if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += dcf2c
 dcf2c_SOURCES = dcf2c.c
+dcf2c_LDADD = $(LELY_CO_LIBS)
 if PLATFORM_WIN32
 nodist_dcf2c_SOURCES = version.dcf2c.rc
-endif
-endif
-endif
+endif # PLATFORM_WIN32
+endif # !NO_CO_SDEV
+endif # !NO_CO_DCF
 
 bin_PROGRAMS = $(bin)
 dist_sysconf_DATA = $(etc)
@@ -56,19 +88,6 @@ endif
 AM_CFLAGS =
 if CODE_COVERAGE_ENABLED
 AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
-endif
-
-LDADD =
-LDADD += $(top_builddir)/src/libc/liblely-libc.la
-LDADD += $(top_builddir)/src/tap/liblely-tap.la
-LDADD += $(top_builddir)/src/util/liblely-util.la
-LDADD += $(top_builddir)/src/can/liblely-can.la
-if !ECSS_COMPLIANCE
-LDADD += $(top_builddir)/src/io/liblely-io.la
-endif
-LDADD += $(top_builddir)/src/co/liblely-co.la
-if CODE_COVERAGE_ENABLED
-LDADD += $(CODE_COVERAGE_LIBS)
 endif
 
 if PLATFORM_WIN32

@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/libc/stdatomic.h>
 #include <lely/libc/threads.h>
@@ -491,3 +494,5 @@ stop_source_destroy(stop_source_t *source)
 		stop_source_free(source);
 	}
 }
+
+#endif // !LELY_NO_MALLOC

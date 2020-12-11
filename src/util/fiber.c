@@ -29,6 +29,9 @@
 #endif
 
 #include "util.h"
+
+#if !LELY_NO_MALLOC
+
 #include <lely/libc/stddef.h>
 #include <lely/util/errnum.h>
 #include <lely/util/fiber.h>
@@ -632,3 +635,5 @@ fiber_start(void *arg)
 	for (;;)
 		fiber = fiber_resume(fiber);
 }
+
+#endif // !LELY_NO_MALLOC

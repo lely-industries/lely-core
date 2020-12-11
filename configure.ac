@@ -62,62 +62,6 @@ AS_IF([test "$host_cpu" != "$build_cpu"], [
 	AC_CHECK_PROGS([BINFMT_EXEC], [qemu-$host_cpu qemu-$host_cpu-static])
 ])
 
-AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
-AC_ARG_ENABLE([ecss-compliance],
-	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [
-	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
-])
-
-AM_CONDITIONAL([NO_DIAG], [false])
-AC_ARG_ENABLE([diag],
-	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_diag=no])
-AS_IF([test "$enable_diag" == "no"], [
-	AM_CONDITIONAL([NO_DIAG], [true])
-	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
-])
-
-AM_CONDITIONAL([NO_TOOLS], [false])
-AC_ARG_ENABLE([tools],
-	AS_HELP_STRING([--disable-tools], [disable tools]))
-AS_IF([test "$enable_diag" == "no"], [enable_tools=no])
-AS_IF([test "$enable_tools" == "no"], [
-	AM_CONDITIONAL([NO_TOOLS], [true])
-])
-
-AM_CONDITIONAL([NO_TESTS], [false])
-AC_ARG_ENABLE([tests],
-	AS_HELP_STRING([--disable-tests], [disable tests]))
-AS_IF([test "$enable_tests" == "no"], [
-	AM_CONDITIONAL([NO_TESTS], [true])
-])
-
-m4_ifdef([PKG_CHECK_MODULES], [
-	PKG_CHECK_MODULES([CPPUTEST], [cpputest >= 4], [with_cpputest=yes], [with_cpputest=no])
-], [
-	AC_MSG_WARN(pkg-config not installed - unit tests will not be available!)
-	with_cpputest=no
-])
-AC_SUBST([CPPUTEST_CFLAGS])
-AC_SUBST([CPPUTEST_LIBS])
-
-AM_CONDITIONAL([NO_UNIT_TESTS], [false])
-AC_ARG_ENABLE([unit-tests],
-	AS_HELP_STRING([--disable-unit-tests], [disable unit tests]))
-AS_IF([test "$with_cpputest" == "no"], [enable_unit_tests=no])
-AS_IF([test "$enable_unit_tests" == "no"], [
-	AM_CONDITIONAL([NO_UNIT_TESTS], [true])
-])
-
-AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [false])
-AC_ARG_ENABLE([unit-tests-memleak],
-	AS_HELP_STRING([--disable-unit-tests-memleak], [disable unit tests memory leak detection]))
-AS_IF([test "$enable_unit_tests" == "no"], [enable_unit_tests_memleak=no])
-AS_IF([test "$enable_unit_tests_memleak" == "no"], [
-	AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [true])
-])
-
 RT_LIBS=
 AM_CONDITIONAL([NO_RT], [false])
 AC_ARG_ENABLE([rt],
@@ -155,13 +99,11 @@ AS_IF([test "$enable_threads" == "no"], [
 
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
-AM_CONDITIONAL([NO_CXX], [false])
-AC_ARG_ENABLE([cxx],
-	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_cxx=no])
-AS_IF([test "$enable_cxx" == "no"], [
-	AM_CONDITIONAL([NO_CXX], [true])
-	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
+AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
+AC_ARG_ENABLE([ecss-compliance],
+	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [
+	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
 ])
 
 AM_CONDITIONAL([NO_MALLOC], [false])
@@ -173,12 +115,31 @@ AS_IF([test "$enable_malloc" == "no"], [
 	AC_DEFINE([LELY_NO_MALLOC], [1], [Define to 1 if dynamic memory allocation is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CXX], [false])
+AC_ARG_ENABLE([cxx],
+	AS_HELP_STRING([--disable-cxx], [disable C++ support]))
+AS_IF([test "$enable_malloc" == "no"], [enable_cxx=no])
+AS_IF([test "$enable_cxx" == "no"], [
+	AM_CONDITIONAL([NO_CXX], [true])
+	AC_DEFINE([LELY_NO_CXX], [1], [Define to 1 if C++ support is disabled.])
+])
+
 AM_CONDITIONAL([NO_DAEMON], [false])
 AC_ARG_ENABLE([daemon],
 	AS_HELP_STRING([--disable-daemon], [disable daemon support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_daemon=no])
 AS_IF([test "$enable_daemon" == "no"], [
 	AM_CONDITIONAL([NO_DAEMON], [true])
 	AC_DEFINE([LELY_NO_DAEMON], [1], [Define to 1 if daemon support is disabled.])
+])
+
+AM_CONDITIONAL([NO_DIAG], [false])
+AC_ARG_ENABLE([diag],
+	AS_HELP_STRING([--disable-diag], [disable diagnostic functions]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_diag=no])
+AS_IF([test "$enable_diag" == "no"], [
+	AM_CONDITIONAL([NO_DIAG], [true])
+	AC_DEFINE([LELY_NO_DIAG], [1], [Define to 1 if diagnostic functions are disabled.])
 ])
 
 AM_CONDITIONAL([NO_CANFD], [false])
@@ -218,7 +179,7 @@ AS_IF([test "$enable_obj_default" == "no"], [
 AM_CONDITIONAL([NO_CO_OBJ_FILE], [false])
 AC_ARG_ENABLE([obj-file],
 	AS_HELP_STRING([--disable-obj-file], [disable UploadFile/DownloadFile support for the object dictionary]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_obj_file=no])
+AS_IF([test "$enable_ecss_compliance" == "no"], [enable_obj_file=no])
 AS_IF([test "$enable_obj_file" == "no"], [
 	AM_CONDITIONAL([NO_CO_OBJ_FILE], [true])
 	AC_DEFINE([LELY_NO_CO_OBJ_FILE], [1], [Define to 1 if UploadFile/DownloadFile support is disabled for the object dictionary.])
@@ -293,6 +254,7 @@ AS_IF([test "$enable_sync" == "no"], [
 AM_CONDITIONAL([NO_CO_TIME], [false])
 AC_ARG_ENABLE([time],
 	AS_HELP_STRING([--disable-time], [disable time stamp (TIME) object support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_time=no])
 AS_IF([test "$enable_time" == "no"], [
 	AM_CONDITIONAL([NO_CO_TIME], [true])
 	AC_DEFINE([LELY_NO_CO_TIME], [1], [Define to 1 if time stamp (TIME) object support is disabled.])
@@ -309,6 +271,7 @@ AS_IF([test "$enable_emcy" == "no"], [
 AM_CONDITIONAL([NO_CO_LSS], [false])
 AC_ARG_ENABLE([lss],
 	AS_HELP_STRING([--disable-lss], [disable Layer Setting Services (LSS) and protocols support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_lss=no])
 AS_IF([test "$enable_lss" == "no"], [
 	AM_CONDITIONAL([NO_CO_LSS], [true])
 	AC_DEFINE([LELY_NO_CO_LSS], [1], [Define to 1 if Layer Setting Services (LSS) and protocols support is disabled.])
@@ -317,7 +280,7 @@ AS_IF([test "$enable_lss" == "no"], [
 AM_CONDITIONAL([NO_CO_WTM], [false])
 AC_ARG_ENABLE([wtm],
 	AS_HELP_STRING([--disable-wtm], [disable Wireless Transmission Media (WTM) support]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_wtm=no])
+AS_IF([test "$enable_malloc" == "no"], [enable_wtm=no])
 AS_IF([test "$enable_wtm" == "no"], [
 	AM_CONDITIONAL([NO_CO_WTM], [true])
 	AC_DEFINE([LELY_NO_CO_WTM], [1], [Define to 1 if Wireless Transmission Media (WTM) support is disabled.])
@@ -367,6 +330,47 @@ AS_IF([test "$enable_cxx" == "no"], [enable_coapp_slave=no])
 AS_IF([test "$enable_coapp_slave" == "no"], [
 	AM_CONDITIONAL([NO_COAPP_SLAVE], [true])
 	AC_DEFINE([LELY_NO_COAPP_SLAVE], [1], [Define to 1 if C++ CANopen application slave support is disabled.])
+])
+
+AM_CONDITIONAL([NO_TOOLS], [false])
+AC_ARG_ENABLE([tools],
+	AS_HELP_STRING([--disable-tools], [disable tools]))
+AS_IF([test "$enable_diag" == "no"], [enable_tools=no])
+AS_IF([test "$enable_tools" == "no"], [
+	AM_CONDITIONAL([NO_TOOLS], [true])
+])
+
+AM_CONDITIONAL([NO_TESTS], [false])
+AC_ARG_ENABLE([tests],
+	AS_HELP_STRING([--disable-tests], [disable tests]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_tests=no])
+AS_IF([test "$enable_tests" == "no"], [
+	AM_CONDITIONAL([NO_TESTS], [true])
+])
+
+m4_ifdef([PKG_CHECK_MODULES], [
+	PKG_CHECK_MODULES([CPPUTEST], [cpputest >= 4], [with_cpputest=yes], [with_cpputest=no])
+], [
+	AC_MSG_WARN(pkg-config not installed - unit tests will not be available!)
+	with_cpputest=no
+])
+AC_SUBST([CPPUTEST_CFLAGS])
+AC_SUBST([CPPUTEST_LIBS])
+
+AM_CONDITIONAL([NO_UNIT_TESTS], [false])
+AC_ARG_ENABLE([unit-tests],
+	AS_HELP_STRING([--disable-unit-tests], [disable unit tests]))
+AS_IF([test "$with_cpputest" == "no"], [enable_unit_tests=no])
+AS_IF([test "$enable_unit_tests" == "no"], [
+	AM_CONDITIONAL([NO_UNIT_TESTS], [true])
+])
+
+AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [false])
+AC_ARG_ENABLE([unit-tests-memleak],
+	AS_HELP_STRING([--disable-unit-tests-memleak], [disable unit tests memory leak detection]))
+AS_IF([test "$enable_unit_tests" == "no"], [enable_unit_tests_memleak=no])
+AS_IF([test "$enable_unit_tests_memleak" == "no"], [
+	AM_CONDITIONAL([NO_UNIT_TESTS_MEMLEAK], [true])
 ])
 
 AC_CHECK_HEADER([valgrind/valgrind.h], [
@@ -531,7 +535,7 @@ AS_IF([test "$enable_python3" != "no"], [
 AM_CONDITIONAL([NO_CYTHON], [false])
 AC_ARG_ENABLE([cython],
 	AS_HELP_STRING([--disable-cython], [do not generate Python bindings with Cython]))
-AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes" -o "$enable_ecss_compliance" == "yes" -o "enable_python" == "no"], [
+AS_IF([test "$enable_shared" == "no" -o "$platform_win32" == "yes" -o "$enable_malloc" == "no" -o "enable_python" == "no"], [
 	enable_cython=no
 ])
 AS_IF([test "$enable_cython" == "no"], [

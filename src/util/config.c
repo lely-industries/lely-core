@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_MALLOC
+
 #include <lely/util/cmp.h>
 #include <lely/util/config.h>
 #include <lely/util/errnum.h>
@@ -393,3 +396,5 @@ config_entry_destroy(struct rbnode *node)
 	free(entry->value);
 	free(entry);
 }
+
+#endif // !LELY_NO_MALLOC
