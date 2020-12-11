@@ -5,7 +5,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/io2/tqueue.hpp
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -40,7 +40,7 @@ class CoTimerQueueWait : public io_tqueue_wait, public util::Coroutine {
   /// Constructs a wait operation.
   explicit CoTimerQueueWait(ev_exec_t* exec) noexcept
       : io_tqueue_wait
-        IO_TQUEUE_WAIT_INIT(0, 0, exec, [](ev_task * task) noexcept {
+        IO_TQUEUE_WAIT_INIT(0, 0, exec, [](ev_task* task) noexcept {
           auto wait = io_tqueue_wait_from_task(task);
           ::std::error_code ec = util::make_error_code(wait->errc);
           auto self = static_cast<CoTimerQueueWait*>(wait);

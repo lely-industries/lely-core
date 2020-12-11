@@ -4,7 +4,7 @@
  *
  * @see lely/util/coroutine.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -51,25 +51,46 @@ class Coroutine {
    * Resets the stackless coroutine so the next invocation starts at the
    * beginning.
    */
-  void restart() noexcept { co_restart(this); }
+  void
+  restart() noexcept {
+    co_restart(this);
+  }
 
   /// Returns true if the stackless coroutine has finished.
-  bool is_ready() const noexcept { return ctx_.label == -1; }
+  bool
+  is_ready() const noexcept {
+    return ctx_.label == -1;
+  }
 
   /// Returns true if the stackless coroutine is the parent of a fork.
-  bool is_parent() const noexcept { return !is_child(); }
+  bool
+  is_parent() const noexcept {
+    return !is_child();
+  }
 
   /// Returns true if the stackless coroutine is the child of a fork.
-  bool is_child() const noexcept { return ctx_.label < -1; }
+  bool
+  is_child() const noexcept {
+    return ctx_.label < -1;
+  }
 
  private:
   co_ctx_t ctx_ CO_CTX_INIT;
 
-  friend co_ctx_t* to_co_ctx(Coroutine* coro) noexcept { return &coro->ctx_; }
-  friend co_ctx_t* to_co_ctx(Coroutine& coro) noexcept { return &coro.ctx_; }
+  friend co_ctx_t*
+  to_co_ctx(Coroutine* coro) noexcept {
+    return &coro->ctx_;
+  }
+  friend co_ctx_t*
+  to_co_ctx(Coroutine& coro) noexcept {
+    return &coro.ctx_;
+  }
 };
 
-inline co_ctx_t* to_co_ctx(co_ctx_t* ctx) noexcept { return ctx; }
+inline co_ctx_t*
+to_co_ctx(co_ctx_t* ctx) noexcept {
+  return ctx;
+}
 
 }  // namespace util
 }  // namespace lely

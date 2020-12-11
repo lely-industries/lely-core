@@ -5,7 +5,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/io2/can.hpp
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -43,7 +43,7 @@ class CoCanChannelRead : public io_can_chan_read, public util::Coroutine {
                             ev_exec_t* exec = nullptr) noexcept
       : io_can_chan_read IO_CAN_CHAN_READ_INIT(
             msg, err, dp ? &ts_ : nullptr, exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto read = io_can_chan_read_from_task(task);
               auto result = read->r.result;
               ::std::error_code ec;
@@ -88,7 +88,7 @@ class CoCanChannelWrite : public io_can_chan_write, public util::Coroutine {
   /// Constructs a write operation.
   CoCanChannelWrite(const can_msg* msg, ev_exec_t* exec = nullptr) noexcept
       : io_can_chan_write
-        IO_CAN_CHAN_WRITE_INIT(msg, exec, [](ev_task * task) noexcept {
+        IO_CAN_CHAN_WRITE_INIT(msg, exec, [](ev_task* task) noexcept {
           auto write = io_can_chan_write_from_task(task);
           ::std::error_code ec = util::make_error_code(write->errc);
           auto self = static_cast<CoCanChannelWrite*>(write);

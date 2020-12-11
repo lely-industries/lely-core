@@ -5,7 +5,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/io2/can_rt.hpp
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,7 +41,7 @@ class CoCanRouterReadFrame : public io_can_rt_read_msg, public util::Coroutine {
   explicit CoCanRouterReadFrame(uint_least32_t id,
                                 CanFlag flags = CanFlag::NONE) noexcept
       : io_can_rt_read_msg IO_CAN_RT_READ_MSG_INIT(
-            id, static_cast<uint_least8_t>(flags), [](ev_task * task) noexcept {
+            id, static_cast<uint_least8_t>(flags), [](ev_task* task) noexcept {
               auto read_msg = io_can_rt_read_msg_from_task(task);
               auto msg = read_msg->r.msg;
               ::std::error_code ec;
@@ -81,7 +81,7 @@ class CoCanRouterReadError : public io_can_rt_read_err, public util::Coroutine {
  public:
   /// Constructs a CAN error frame read operation.
   explicit CoCanRouterReadError() noexcept
-      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task * task) noexcept {
+      : io_can_rt_read_err IO_CAN_RT_READ_ERR_INIT([](ev_task* task) noexcept {
           auto read_err = io_can_rt_read_err_from_task(task);
           auto err = read_err->r.err;
           ::std::error_code ec;

@@ -377,7 +377,8 @@ clz32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_clzl)
 	return (x != 0) ? __builtin_clzl(x) : 32;
 #else
-	return ((x >> 16) != 0) ? clz16(x >> 16) : (clz16((uint_least16_t)x) + 16);
+	return ((x >> 16) != 0) ? clz16(x >> 16)
+				: (clz16((uint_least16_t)x) + 16);
 #endif
 }
 
@@ -399,7 +400,8 @@ clz64(uint_least64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_clzll)
 	return (x != 0) ? __builtin_clzll(x) : 64;
 #else
-	return ((x >> 32) != 0) ? clz32(x >> 32) : (clz32((uint_least32_t)x) + 32);
+	return ((x >> 32) != 0) ? clz32(x >> 32)
+				: (clz32((uint_least32_t)x) + 32);
 #endif
 }
 
@@ -439,7 +441,8 @@ ctz16(uint_least16_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ctz)
 	return (x != 0) ? __builtin_ctz(x) : 16;
 #else
-	return ((x & UINT8_C(0xff)) != 0) ? ctz8((uint_least8_t)x) : ctz8(x >> 8) + 8;
+	return ((x & UINT8_C(0xff)) != 0) ? ctz8((uint_least8_t)x)
+					  : ctz8(x >> 8) + 8;
 #endif
 }
 

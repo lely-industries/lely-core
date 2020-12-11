@@ -558,8 +558,8 @@ size_t co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n);
 const void *co_sub_addressof_def(const co_sub_t *sub);
 
 /**
- * Returns size (in bytes) of the default value of a CANopen sub-object. In the
- * case of strings or domains, this is the number of bytes in the array.
+ * Returns the size (in bytes) of the default value of a CANopen sub-object. In
+ * the case of strings or domains, this is the number of bytes in the array.
  *
  * @see co_sub_addressof_def()
  */
@@ -599,8 +599,8 @@ size_t co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n);
 const void *co_sub_addressof_val(const co_sub_t *sub);
 
 /**
- * Returns size (in bytes) of the current value of a CANopen sub-object. In the
- * case of strings or domains, this is the number of bytes in the array.
+ * Returns the size (in bytes) of the current value of a CANopen sub-object. In
+ * the case of strings or domains, this is the number of bytes in the array.
  *
  * @see co_sub_addressof_val()
  */

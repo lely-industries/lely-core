@@ -11,8 +11,7 @@ main() {
   // On 32-bit platforms, either MinGW or Wine causes terminate to be called if
   // an exception is thrown from Fiber::resume(). This prevents the use of
   // fiber_unwind and therefore the proper destruction of fibers.
-  for (int i = 0; i < 3; i++)
-    tap_skip();
+  for (int i = 0; i < 3; i++) tap_skip();
 #else
   FiberThread thrd;
 

@@ -4,7 +4,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/io2/sigset.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,7 @@ class CoSignalSetWait : public io_sigset_wait, public util::Coroutine {
  public:
   /// Constructs a wait operation.
   explicit CoSignalSetWait(ev_exec_t* exec) noexcept
-      : io_sigset_wait IO_SIGSET_WAIT_INIT(exec, [](ev_task * task) noexcept {
+      : io_sigset_wait IO_SIGSET_WAIT_INIT(exec, [](ev_task* task) noexcept {
           auto wait = io_sigset_wait_from_task(task);
           auto signo = wait->signo;
           auto self = static_cast<CoSignalSetWait*>(wait);

@@ -201,9 +201,7 @@ daemon_init(int argc, char *argv[])
 			case 'D': break;
 			case 'f': filename = optarg; break;
 			case 'h': break;
-			case 'n':
-				id = strtoul(optarg, NULL, 0);
-				break;
+			case 'n': id = strtoul(optarg, NULL, 0); break;
 			}
 		}
 	}

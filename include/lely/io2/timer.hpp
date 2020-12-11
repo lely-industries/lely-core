@@ -42,7 +42,7 @@ class TimerWaitWrapper : public io_timer_wait {
   TimerWaitWrapper(ev_exec_t* exec, F&& f)
       : io_timer_wait IO_TIMER_WAIT_INIT(
             exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto wait = io_timer_wait_from_task(task);
               auto overrun = wait->r.result;
               ::std::error_code ec;
@@ -90,7 +90,7 @@ class TimerWait : public io_timer_wait {
   TimerWait(ev_exec_t* exec, F&& f)
       : io_timer_wait
         IO_TIMER_WAIT_INIT(exec,
-                           [](ev_task * task) noexcept {
+                           [](ev_task* task) noexcept {
                              auto wait = io_timer_wait_from_task(task);
                              auto self = static_cast<TimerWait*>(wait);
                              if (self->func_) {

@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can/err.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -65,7 +65,8 @@ operator~(CanError rhs) {
   return static_cast<CanError>(~static_cast<int>(rhs));
 }
 
-constexpr CanError operator&(CanError lhs, CanError rhs) {
+constexpr CanError
+operator&(CanError lhs, CanError rhs) {
   return static_cast<CanError>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 

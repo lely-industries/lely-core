@@ -4,7 +4,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/io2/timer.hpp
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -38,7 +38,7 @@ class CoTimerWait : public io_timer_wait, public util::Coroutine {
  public:
   /// Constructs a wait operation.
   explicit CoTimerWait(ev_exec_t* exec) noexcept
-      : io_timer_wait IO_TIMER_WAIT_INIT(exec, [](ev_task * task) noexcept {
+      : io_timer_wait IO_TIMER_WAIT_INIT(exec, [](ev_task* task) noexcept {
           auto wait = io_timer_wait_from_task(task);
           auto overrun = wait->r.result;
           ::std::error_code ec;
