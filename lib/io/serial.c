@@ -21,13 +21,17 @@
  * limitations under the License.
  */
 
-#include "attr.h"
-#include "default.h"
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/serial.h>
 
 #include <assert.h>
 #include <string.h>
+
+#include "attr.h"
+#include "default.h"
 
 #if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
@@ -305,3 +309,5 @@ serial_purge(struct io_handle *handle, int flags)
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#endif // !LELY_NO_STDIO

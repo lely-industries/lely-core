@@ -1,7 +1,7 @@
 /**@file
- * This is the internal header file of the POSIX-specific I/O declarations.
+ * This is the internal header file of the standard system I/O declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,9 +18,9 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO2_INTERN_POSIX_IO_H_
-#define LELY_IO2_INTERN_POSIX_IO_H_
+#ifndef LELY_IO2_INTERN_SYS_IO_H_
+#define LELY_IO2_INTERN_SYS_IO_H_
 
-#include "../sys/io.h"
+#include "../io2.h"
 
-#endif // !LELY_IO2_INTERN_POSIX_IO_H_
+#endif // !LELY_IO2_INTERN_SYS_IO_H_

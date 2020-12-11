@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _POSIX_C_SOURCE >= 200112L
+#if !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L
 
 #include "../sigset.h"
 #include "fd.h"
@@ -987,4 +987,4 @@ io_sigset_impl_do_abort_tasks(struct io_sigset_impl *impl)
 	return n;
 }
 
-#endif // _POSIX_C_SOURCE >= 200112L
+#endif // !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L

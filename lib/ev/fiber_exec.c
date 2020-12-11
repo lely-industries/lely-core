@@ -22,6 +22,9 @@
  */
 
 #include "ev.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
@@ -1138,3 +1141,5 @@ ev_fiber_cnd_wake(struct slnode *node)
 	if (task)
 		ev_exec_post(task->exec, task);
 }
+
+#endif // !LELY_NO_MALLOC

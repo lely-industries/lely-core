@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _POSIX_C_SOURCE >= 200112L
+#if !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L
 
 #include <lely/io2/posix/poll.h>
 #include <lely/util/dllist.h>
@@ -657,4 +657,4 @@ sig_ign(int signo)
 	(void)signo;
 }
 
-#endif // _POSIX_C_SOURCE >= 200112L
+#endif // !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L

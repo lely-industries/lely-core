@@ -36,8 +36,6 @@ inc += lely/util/coroutine.h
 if !NO_CXX
 inc += lely/util/coroutine.hpp
 endif
-inc += lely/util/frbuf.h
-inc += lely/util/fwbuf.h
 inc += lely/util/mkjmp.h
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
@@ -71,17 +69,25 @@ inc += lely/util/fiber.hpp
 endif
 endif # !NO_MALLOC
 inc += lely/util/float.h
+if !NO_STDIO
+inc += lely/util/frbuf.h
+inc += lely/util/fwbuf.h
+endif
 if !NO_CXX
 inc += lely/util/invoker.hpp
 endif
+if !NO_STDIO
 inc += lely/util/lex.h
+endif
 inc += lely/util/membuf.h
 inc += lely/util/memory.h
 if !NO_CXX
 inc += lely/util/mutex.hpp
 endif
 inc += lely/util/pheap.h
+if !NO_STDIO
 inc += lely/util/print.h
+endif
 inc += lely/util/rbtree.h
 if !NO_CXX
 inc += lely/util/result.hpp
@@ -100,16 +106,16 @@ inc += lely/can/buf.h
 inc += lely/can/err.h
 inc += lely/can/msg.h
 inc += lely/can/net.h
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 if HAVE_SOCKET_CAN
 inc += lely/can/socket.h
 endif
 if HAVE_VCI
 inc += lely/can/vci.h
 endif
-endif # !ECSS_COMPLIANCE
+endif # !NO_STDIO
 
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 inc += lely/io/addr.h
 inc += lely/io/attr.h
 inc += lely/io/can.h
@@ -120,7 +126,7 @@ inc += lely/io/pipe.h
 inc += lely/io/poll.h
 inc += lely/io/serial.h
 inc += lely/io/sock.h
-endif # !ECSS_COMPLIANCE
+endif # !NO_STDIO
 
 if !ECSS_COMPLIANCE
 if !NO_CXX
@@ -171,18 +177,20 @@ inc += lely/io2/can/msg.h
 if !NO_CXX
 inc += lely/io2/can/msg.hpp
 endif
+if !NO_STDIO
 if PLATFORM_LINUX
 inc += lely/io2/linux/can.h
 if !NO_CXX
 inc += lely/io2/linux/can.hpp
 endif
-endif
+endif # PLATFORM_LINUX
 if PLATFORM_POSIX
 inc += lely/io2/posix/poll.h
 if !NO_CXX
 inc += lely/io2/posix/poll.hpp
 endif
-endif
+endif # PLATFORM_POSIX
+endif # !NO_STDIO
 inc += lely/io2/sys/clock.h
 if !NO_CXX
 inc += lely/io2/sys/clock.hpp
@@ -191,6 +199,7 @@ inc += lely/io2/sys/io.h
 if !NO_CXX
 inc += lely/io2/sys/io.hpp
 endif
+if !NO_STDIO
 inc += lely/io2/sys/sigset.h
 if !NO_CXX
 inc += lely/io2/sys/sigset.hpp
@@ -199,6 +208,7 @@ inc += lely/io2/sys/timer.h
 if !NO_CXX
 inc += lely/io2/sys/timer.hpp
 endif
+endif # !NO_STDIO
 inc += lely/io2/user/can.h
 if !NO_CXX
 inc += lely/io2/user/can.hpp
@@ -207,6 +217,7 @@ inc += lely/io2/user/timer.h
 if !NO_CXX
 inc += lely/io2/user/timer.hpp
 endif
+if !NO_STDIO
 if PLATFORM_WIN32
 if HAVE_IXXAT
 inc += lely/io2/win32/ixxat.h
@@ -218,7 +229,8 @@ inc += lely/io2/win32/poll.h
 if !NO_CXX
 inc += lely/io2/win32/poll.hpp
 endif
-endif
+endif # PLATFORM_WIN32
+endif # !NO_STDIO
 inc += lely/io2/can.h
 if !NO_CXX
 inc += lely/io2/can.hpp

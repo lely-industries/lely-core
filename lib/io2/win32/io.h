@@ -1,7 +1,7 @@
 /**@file
  * This is the internal header file of the Windows-specific I/O declarations.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 #ifndef LELY_IO2_INTERN_WIN32_IO_H_
 #define LELY_IO2_INTERN_WIN32_IO_H_
 
-#include "../io2.h"
+#include "../sys/io.h"
 
 #if _WIN32
 

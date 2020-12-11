@@ -103,7 +103,7 @@ aligned_free(void *ptr)
 
 #endif // !(__STDC_VERSION__ >= 201112L) && !LELY_NO_MALLOC
 
-#if _WIN32
+#if _WIN32 && !LELY_NO_STDIO
 
 #include <lely/compat/stdio.h>
 

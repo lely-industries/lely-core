@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/io.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef _POSIX_C_SOURCE
+#if !LELY_NO_STDIO && defined(_POSIX_C_SOURCE)
 
 #include <lely/io2/sys/io.h>
 
@@ -40,4 +40,4 @@ io_fini(void)
 	// POSIX platforms do not require initialization or finalization.
 }
 
-#endif // _POSIX_C_SOURCE
+#endif // !LELY_NO_STDIO && _POSIX_C_SOURCE

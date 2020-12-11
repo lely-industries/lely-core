@@ -22,6 +22,9 @@
  */
 
 #include "io2.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
@@ -589,3 +592,5 @@ io_tqueue_async_wait_func(struct ev_task *task)
 	ev_promise_set(async_wait->promise, &wait->errc);
 	ev_promise_release(async_wait->promise);
 }
+
+#endif // !LELY_NO_MALLOC

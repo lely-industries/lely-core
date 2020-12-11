@@ -22,7 +22,7 @@ test_tap_LDADD = $(LELY_TAP_LIBS)
 LELY_UTIL_LIBS = $(LELY_TAP_LIBS)
 LELY_UTIL_LIBS += $(top_builddir)/lib/util/liblely-util.la
 
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 bin += test-util-config
 test_util_config_SOURCES = test.h util-config.c
 test_util_config_LDADD = $(LELY_UTIL_LIBS)
@@ -32,7 +32,7 @@ bin += test-util-endian
 test_util_endian_SOURCES = test.h util-endian.c
 test_util_endian_LDADD = $(LELY_UTIL_LIBS)
 
-if !NO_CO_OBJ_FILE
+if !NO_STDIO
 bin += test-util-fbuf
 test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
@@ -78,13 +78,13 @@ endif
 LELY_IO_LIBS = $(LELY_CAN_LIBS)
 LELY_IO_LIBS += $(top_builddir)/lib/io/liblely-io.la
 
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 
 bin += test-io-poll
 test_io_poll_SOURCES = test.h io-poll.c
 test_io_poll_LDADD = $(LELY_IO_LIBS)
 
-endif # !ECSS_COMPLIANCE
+endif # !NO_STDIO
 
 # Event library tests
 
@@ -114,7 +114,7 @@ endif
 LELY_IO2_LIBS = $(LELY_EV_LIBS)
 LELY_IO2_LIBS += $(top_builddir)/lib/io2/liblely-io2.la
 
-if !ECSS_COMPLIANCE
+if !NO_STDIO
 
 if !NO_CXX
 bin += test-io2-can_rt
@@ -142,13 +142,13 @@ test_io2_tqueue_SOURCES = test.h io2-tqueue.cpp
 test_io2_tqueue_LDADD = $(LELY_IO2_LIBS)
 endif
 
+endif # !NO_STDIO
+
 if !NO_CXX
 bin += test-io2-vcan
 test_io2_vcan_SOURCES = test.h io2-vcan.cpp
 test_io2_vcan_LDADD = $(LELY_IO2_LIBS)
 endif
-
-endif # !ECSS_COMPLIANCE
 
 # CANopen library tests
 
@@ -226,6 +226,8 @@ LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
 LELY_COAPP_LIBS += $(top_builddir)/lib/coapp/liblely-coapp.la
 
 if !NO_CXX
+if !NO_STDIO
+if !NO_CO_DCF
 
 if !NO_COAPP_MASTER
 bin += test-coapp-fiber
@@ -239,6 +241,8 @@ test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
 endif
 
+endif # !NO_CO_DCF
+endif # !NO_STDIO
 endif # !NO_CXX
 
 EXTRA_DIST =

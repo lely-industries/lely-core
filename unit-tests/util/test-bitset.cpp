@@ -28,6 +28,8 @@
 
 #include <lely/util/bitset.h>
 
+#if !LELY_NO_MALLOC
+
 TEST_GROUP(Util_BitsetInit) {
   bitset set;
   int GetSizeForBits(const int requested_size) {
@@ -263,3 +265,5 @@ TEST(Util_Bitset, BitsetFnz_OutOfBoundsIdx) {
   CHECK_EQUAL(0, bitset_fnz(&set, SET_SIZE));
   CHECK_EQUAL(1, bitset_fnz(&set, -1));
 }
+
+#endif  // !LELY_NO_MALLOC

@@ -1,12 +1,16 @@
 src =
 src += ev.h
 src += exec.c
+if !NO_MALLOC
 src += fiber_exec.c
 src += future.c
 src += loop.c
+endif
 src += poll.c
+if !NO_MALLOC
 src += std_exec.c
 src += strand.c
+endif
 src += task.c
 src += thrd_loop.c
 

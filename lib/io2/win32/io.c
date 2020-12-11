@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _WIN32
+#if !LELY_NO_STDIO && _WIN32
 
 #include <lely/io2/sys/io.h>
 
@@ -109,4 +109,4 @@ io_win32_ntdll_fini(void)
 	lpfnRtlNtStatusToDosError = NULL;
 }
 
-#endif // _WIN32
+#endif // !LELY_NO_STDIO && _WIN32

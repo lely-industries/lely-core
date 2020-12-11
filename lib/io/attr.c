@@ -21,11 +21,15 @@
  * limitations under the License.
  */
 
-#include "attr.h"
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/error.h>
 
 #include <assert.h>
+
+#include "attr.h"
 
 #if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
@@ -374,3 +378,5 @@ io_attr_set_char_size(io_attr_t *attr, int char_size)
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#endif // !LELY_NO_STDIO

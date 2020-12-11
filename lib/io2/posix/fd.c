@@ -2,7 +2,7 @@
  * This file is part of the I/O library; it contains the implementation of the
  * common file descriptor functions.
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -21,7 +21,7 @@
 
 #include "fd.h"
 
-#if _POSIX_C_SOURCE >= 200112L
+#if !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L
 
 #include <assert.h>
 #include <errno.h>
@@ -145,4 +145,4 @@ io_fd_sendmsg(int fd, const struct msghdr *msg, int flags, int timeout)
 	return result;
 }
 
-#endif // _POSIX_C_SOURCE >= 200112L
+#endif // !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200112L

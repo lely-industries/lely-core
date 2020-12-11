@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef __linux__
+#if !LELY_NO_STDIO && defined(__linux__)
 
 #include "../can.h"
 #include <lely/io2/ctx.h>
@@ -1631,4 +1631,4 @@ io_can_chan_impl_set_fd(struct io_can_chan_impl *impl, int fd, int flags)
 	return fd;
 }
 
-#endif // __linux__
+#endif // !LELY_NO_STDIO && __linux__

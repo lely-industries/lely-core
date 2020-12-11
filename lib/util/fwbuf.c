@@ -28,6 +28,9 @@
 #endif
 
 #include "util.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/compat/string.h>
 #include <lely/util/error.h>
 #include <lely/util/fwbuf.h>
@@ -1103,3 +1106,5 @@ done:
 	return result;
 #endif
 }
+
+#endif // !LELY_NO_STDIO

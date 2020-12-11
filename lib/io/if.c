@@ -22,6 +22,9 @@
  */
 
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/if.h>
 #include <lely/io/sock.h>
 #include <lely/util/error.h>
@@ -282,3 +285,5 @@ ConvertLengthToIpv6Mask(ULONG MaskLength, u_char Mask[16])
 	return NO_ERROR;
 }
 #endif
+
+#endif // !LELY_NO_STDIO

@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef __linux__
+#if !LELY_NO_STDIO && defined(__linux__)
 
 #include <lely/io2/posix/poll.h>
 #include <lely/util/util.h>
@@ -638,4 +638,4 @@ sig_ign(int signo)
 	(void)signo;
 }
 
-#endif // __linux__
+#endif // !LELY_NO_STDIO && __linux__

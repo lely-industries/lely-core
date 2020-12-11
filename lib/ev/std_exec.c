@@ -22,6 +22,9 @@
  */
 
 #include "ev.h"
+
+#if !LELY_NO_MALLOC
+
 #include <lely/ev/exec.h>
 #include <lely/ev/std_exec.h>
 #include <lely/ev/task.h>
@@ -319,3 +322,5 @@ ev_exec_find(const ev_exec_t *exec, struct ev_exec_node **pnode)
 		pnode = &(*pnode)->next;
 	return pnode;
 }
+
+#endif // !LELY_NO_MALLOC
