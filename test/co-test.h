@@ -83,7 +83,8 @@ co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 
 static void
 co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
-		const char *format, va_list ap) {
+		const char *format, va_list ap)
+{
 	(void)handle;
 	(void)severity;
 	(void)errc;
@@ -93,7 +94,8 @@ co_test_diag_handler(void *handle, enum diag_severity severity, int errc,
 
 static void
 co_test_diag_at_handler(void *handle, enum diag_severity severity, int errc,
-		const struct floc *at, const char *format, va_list ap) {
+		const struct floc *at, const char *format, va_list ap)
+{
 	(void)handle;
 	(void)severity;
 	(void)errc;

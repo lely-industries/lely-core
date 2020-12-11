@@ -40,7 +40,7 @@ class TimerQueueWaitWrapper : public io_tqueue_wait {
   TimerQueueWaitWrapper(ev_exec_t* exec, F&& f)
       : io_tqueue_wait IO_TQUEUE_WAIT_INIT(
             0, 0, exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto wait = io_tqueue_wait_from_task(task);
               ::std::error_code ec;
               if (wait->errc) ec = util::make_error_code(wait->errc);
@@ -89,7 +89,7 @@ class TimerQueueWait : public io_tqueue_wait {
   TimerQueueWait(ev_exec_t* exec, F&& f)
       : io_tqueue_wait
         IO_TQUEUE_WAIT_INIT(0, 0, exec,
-                            [](ev_task * task) noexcept {
+                            [](ev_task* task) noexcept {
                               auto wait = io_tqueue_wait_from_task(task);
                               auto self = static_cast<TimerQueueWait*>(wait);
                               if (self->func_) {

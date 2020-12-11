@@ -31,10 +31,10 @@
 #include <lely/co/sdo.h>
 #include <lely/co/tpdo.h>
 #include <lely/co/val.h>
+#include <lely/compat/unistd.h>
 #include <lely/io/can.h>
 #include <lely/io/pipe.h>
 #include <lely/io/poll.h>
-#include <lely/compat/unistd.h>
 #include <lely/util/daemon.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
@@ -201,9 +201,7 @@ daemon_init(int argc, char *argv[])
 			case 'D': break;
 			case 'f': filename = optarg; break;
 			case 'h': break;
-			case 'n':
-				id = strtoul(optarg, NULL, 0);
-				break;
+			case 'n': id = strtoul(optarg, NULL, 0); break;
 			}
 		}
 	}

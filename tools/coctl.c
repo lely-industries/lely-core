@@ -26,11 +26,11 @@
 #include <lely/co/dcf.h>
 #include <lely/co/gw_txt.h>
 #include <lely/co/nmt.h>
-#include <lely/io/can.h>
-#include <lely/io/poll.h>
 #include <lely/compat/stdio.h>
 #include <lely/compat/threads.h>
 #include <lely/compat/unistd.h>
+#include <lely/io/can.h>
+#include <lely/io/poll.h>
 #include <lely/util/diag.h>
 #include <lely/util/lex.h>
 #include <lely/util/time.h>

@@ -4,7 +4,7 @@
  *
  * @see lely/io2/watch.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -79,7 +79,8 @@ operator~(Event rhs) {
   return static_cast<Event>(~static_cast<int>(rhs));
 }
 
-constexpr Event operator&(Event lhs, Event rhs) {
+constexpr Event
+operator&(Event lhs, Event rhs) {
   return static_cast<Event>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 

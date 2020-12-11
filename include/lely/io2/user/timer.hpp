@@ -70,12 +70,13 @@ inline
                               UserTimer>::type
     make_user_timer(io_ctx_t* ctx, ev_exec_t* exec,
                     ::std::reference_wrapper<T> obj) {
-  return UserTimer(ctx, exec,
-                   [](const timespec* tp, void* arg) noexcept {
-                     auto* obj = static_cast<T*>(arg);
-                     (*obj)(tp);
-                   },
-                   static_cast<void*>(const_cast<U*>(&obj.get())));
+  return UserTimer(
+      ctx, exec,
+      [](const timespec* tp, void* arg) noexcept {
+        auto* obj = static_cast<T*>(arg);
+        (*obj)(tp);
+      },
+      static_cast<void*>(const_cast<U*>(&obj.get())));
 }
 
 template <class T, class U = typename ::std::decay<T>::type>
@@ -84,34 +85,37 @@ inline typename ::std::enable_if<
     UserTimer>::type
 make_user_timer(io_ctx_t* ctx, ev_exec_t* exec,
                 ::std::reference_wrapper<T> obj) {
-  return UserTimer(ctx, exec,
-                   [](const timespec* tp, void* arg) noexcept {
-                     auto* obj = static_cast<T*>(arg);
-                     (*obj)(UserTimer::time_point{util::from_timespec(*tp)});
-                   },
-                   static_cast<void*>(const_cast<U*>(&obj.get())));
+  return UserTimer(
+      ctx, exec,
+      [](const timespec* tp, void* arg) noexcept {
+        auto* obj = static_cast<T*>(arg);
+        (*obj)(UserTimer::time_point{util::from_timespec(*tp)});
+      },
+      static_cast<void*>(const_cast<U*>(&obj.get())));
 }
 
 template <class C, void (C::*M)(const timespec*)>
 inline UserTimer
 make_user_timer(io_ctx_t* ctx, ev_exec_t* exec, C* obj) {
-  return UserTimer(ctx, exec,
-                   [](const timespec* tp, void* arg) noexcept {
-                     auto obj = static_cast<C*>(arg);
-                     (obj->*M)(tp);
-                   },
-                   static_cast<void*>(obj));
+  return UserTimer(
+      ctx, exec,
+      [](const timespec* tp, void* arg) noexcept {
+        auto obj = static_cast<C*>(arg);
+        (obj->*M)(tp);
+      },
+      static_cast<void*>(obj));
 }
 
 template <class C, void (C::*M)(const UserTimer::time_point&)>
 inline UserTimer
 make_user_timer(io_ctx_t* ctx, ev_exec_t* exec, C* obj) {
-  return UserTimer(ctx, exec,
-                   [](const timespec* tp, void* arg) noexcept {
-                     auto obj = static_cast<C*>(arg);
-                     (obj->*M)(UserTimer::time_point{util::from_timespec(*tp)});
-                   },
-                   static_cast<void*>(obj));
+  return UserTimer(
+      ctx, exec,
+      [](const timespec* tp, void* arg) noexcept {
+        auto obj = static_cast<C*>(arg);
+        (obj->*M)(UserTimer::time_point{util::from_timespec(*tp)});
+      },
+      static_cast<void*>(obj));
 }
 
 }  // namespace io

@@ -83,7 +83,8 @@ operator~(FiberFlag rhs) {
   return static_cast<FiberFlag>(~static_cast<int>(rhs));
 }
 
-constexpr FiberFlag operator&(FiberFlag lhs, FiberFlag rhs) {
+constexpr FiberFlag
+operator&(FiberFlag lhs, FiberFlag rhs) {
   return static_cast<FiberFlag>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 

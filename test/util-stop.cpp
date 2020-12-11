@@ -40,6 +40,7 @@ main() {
           cond.notify_one();
         });
 #endif
+  // clang-format off
     token = {};
     tap_test(!token.stop_possible());
 #if !__MINGW32__
@@ -50,6 +51,7 @@ main() {
 #if !__MINGW32__
   }
   thr.join();
+// clang-format on
 #endif
 
 return 0;

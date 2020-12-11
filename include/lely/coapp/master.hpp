@@ -998,8 +998,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class F>
   void
-  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
-                 const uint8_t *end, F&& con) {
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                 const uint8_t* end, F&& con) {
     SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), GetTimeout());
   }
 
@@ -1010,8 +1010,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class F>
   void
-  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
-                 const uint8_t *end, F&& con, ::std::error_code& ec) {
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                 const uint8_t* end, F&& con, ::std::error_code& ec) {
     SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), GetTimeout(),
                    ec);
   }
@@ -1023,8 +1023,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class F>
   void
-  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
-                 const uint8_t *end, F&& con,
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                 const uint8_t* end, F&& con,
                  const ::std::chrono::milliseconds& timeout) {
     ::std::error_code ec;
     SubmitWriteDcf(exec, id, begin, end, ::std::forward<F>(con), timeout, ec);
@@ -1054,8 +1054,8 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class F>
   void
-  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t *begin,
-                 const uint8_t *end, F&& con,
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const uint8_t* begin,
+                 const uint8_t* end, F&& con,
                  const ::std::chrono::milliseconds& timeout,
                  ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);
@@ -1127,7 +1127,7 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   template <class F>
   void
-  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char *path, F&& con,
+  SubmitWriteDcf(ev_exec_t* exec, uint8_t id, const char* path, F&& con,
                  const ::std::chrono::milliseconds& timeout,
                  ::std::error_code& ec) {
     ::std::lock_guard<BasicLockable> lock(*this);

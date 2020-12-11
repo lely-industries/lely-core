@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can/msg.h
  *
- * @copyright 2019 Lely Industries N.V.
+ * @copyright 2019-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -69,7 +69,8 @@ operator~(CanFlag rhs) {
   return static_cast<CanFlag>(~static_cast<int>(rhs));
 }
 
-constexpr CanFlag operator&(CanFlag lhs, CanFlag rhs) {
+constexpr CanFlag
+operator&(CanFlag lhs, CanFlag rhs) {
   return static_cast<CanFlag>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
