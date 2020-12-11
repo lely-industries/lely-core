@@ -38,12 +38,10 @@ test_util_fbuf_SOURCES = test.h util-fbuf.c
 test_util_fbuf_LDADD = $(LELY_UTIL_LIBS)
 endif
 
-if !ECSS_COMPLIANCE
 if !NO_CXX
 bin += test-util-fiber
 test_util_fiber_SOURCES = test.h util-fiber.cpp
 test_util_fiber_LDADD = $(LELY_UTIL_LIBS)
-endif
 endif
 
 if !ECSS_COMPLIANCE
@@ -56,9 +54,11 @@ endif
 
 if !ECSS_COMPLIANCE
 if !NO_THREADS
+if !NO_CXX
 bin += test-util-stop
 test_util_stop_SOURCES = test.h util-stop.cpp
 test_util_stop_LDADD = $(LELY_UTIL_LIBS)
+endif
 endif
 endif
 
@@ -91,8 +91,6 @@ endif # !ECSS_COMPLIANCE
 LELY_EV_LIBS = $(LELY_UTIL_LIBS)
 LELY_EV_LIBS += $(top_builddir)/lib/ev/liblely-ev.la
 
-if !ECSS_COMPLIANCE
-
 if !NO_CXX
 bin += test-ev-fiber
 test_ev_fiber_SOURCES = test.h ev-fiber.cpp
@@ -110,8 +108,6 @@ bin += test-ev-loop
 test_ev_loop_SOURCES = test.h ev-loop.cpp
 test_ev_loop_LDADD = $(LELY_EV_LIBS)
 endif
-
-endif # !ECSS_COMPLIANCE
 
 # I/O library tests
 
@@ -160,7 +156,6 @@ LELY_CO_LIBS = $(LELY_CAN_LIBS)
 LELY_CO_LIBS += $(top_builddir)/lib/co/liblely-co.la
 
 if !NO_MALLOC
-
 if !NO_CO_DCF
 
 if !NO_CO_EMCY
@@ -190,7 +185,6 @@ endif
 endif
 
 if !NO_TOOLS
-if !NO_CO_DCF
 if !NO_CO_SDEV
 bin += test-co-sdev
 test_co_sdev_SOURCES = co-test.h co-sdev.c
@@ -201,7 +195,6 @@ if CODE_COVERAGE_ENABLED
 	EXEC_WRAPPER="$(EXEC)" TEST_NAME="test-co-sdev-dcf2c" $(LOG_COMPILER) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
 else
 	$(EXEC) $(top_builddir)/tools/dcf2c$(EXEEXT) $< test_co_sdev -o $@
-endif
 endif
 endif
 endif
@@ -225,7 +218,6 @@ test_co_time_LDADD = $(LELY_CO_LIBS)
 endif
 
 endif # !NO_CO_DCF
-
 endif # !NO_MALLOC
 
 # C++ CANopen application library tests
@@ -233,25 +225,21 @@ endif # !NO_MALLOC
 LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
 LELY_COAPP_LIBS += $(top_builddir)/lib/coapp/liblely-coapp.la
 
-if !ECSS_COMPLIANCE
-
 if !NO_CXX
+
 if !NO_COAPP_MASTER
 bin += test-coapp-fiber
 test_coapp_fiber_SOURCES = test.h coapp-fiber.cpp
 test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
 endif
-endif
 
-if !NO_CXX
 if !NO_COAPP_MASTER
 bin += test-coapp-lss
 test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
 endif
-endif
 
-endif # !ECSS_COMPLIANCE
+endif # !NO_CXX
 
 EXTRA_DIST =
 EXTRA_DIST += util-config.ini

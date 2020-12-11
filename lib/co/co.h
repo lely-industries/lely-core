@@ -34,6 +34,9 @@
 // Disable static device description support.
 #undef LELY_NO_CO_SDEV
 #define LELY_NO_CO_SDEV 1
+// Disable Wireless Transmission Media (WTM) support.
+#undef LELY_NO_CO_WTM
+#define LELY_NO_CO_WTM 1
 // Disable gateway support.
 #undef LELY_NO_CO_GW
 #define LELY_NO_CO_GW 1
