@@ -142,6 +142,7 @@ build:configure:
     matrix:
       - CONFIGURE_OPTIONS:
         - --disable-canfd
+        - --disable-errno
         - --disable-malloc
         - --disable-master
         - --disable-stdio
@@ -151,6 +152,11 @@ test:configure:disable-canfd:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--disable-canfd]"]
+
+test:configure:disable-errno:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--disable-errno]"]
 
 test:configure:disable-malloc:
   extends: .test
