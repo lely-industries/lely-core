@@ -58,7 +58,9 @@
 
 #include <lely/compat/features.h>
 
+#if !LELY_NO_ERRNO
 #include <errno.h>
+#endif
 #include <stddef.h>
 
 #if _WIN32
