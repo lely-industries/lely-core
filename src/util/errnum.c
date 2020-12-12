@@ -107,9 +107,9 @@ errno2num(int errnum)
 #ifdef EDESTADDRREQ
 	case EDESTADDRREQ: return ERRNUM_DESTADDRREQ;
 #endif
-	// clang-format off
+#ifdef EDOM
 	case EDOM: return ERRNUM_DOM;
-		// clang-format on
+#endif
 // Reserved by POSIX: EDQUOT
 #ifdef EEXIST
 	case EEXIST: return ERRNUM_EXIST;
@@ -126,7 +126,9 @@ errno2num(int errnum)
 #ifdef EIDRM
 	case EIDRM: return ERRNUM_IDRM;
 #endif
+#ifdef EILSEQ
 	case EILSEQ: return ERRNUM_ILSEQ;
+#endif
 #ifdef EINPROGRESS
 	case EINPROGRESS: return ERRNUM_INPROGRESS;
 #endif
@@ -261,7 +263,9 @@ errno2num(int errnum)
 #ifdef EPROTOTYPE
 	case EPROTOTYPE: return ERRNUM_PROTOTYPE;
 #endif
+#ifdef ERANGE
 	case ERANGE: return ERRNUM_RANGE;
+#endif
 #ifdef EROFS
 	case EROFS: return ERRNUM_ROFS;
 #endif
@@ -633,7 +637,7 @@ errnum2no(errnum_t errnum)
 #ifdef EIDRM
 	case ERRNUM_IDRM: return EIDRM;
 #endif
-#ifdef EILSED
+#ifdef EILSEQ
 	case ERRNUM_ILSEQ: return EILSEQ;
 #endif
 #ifdef EINPROGRESS
@@ -929,6 +933,8 @@ get_errc(void)
 {
 #if _WIN32
 	return GetLastError();
+#elif LELY_NO_ERRNO
+	return 0;
 #else
 	return errno;
 #endif
@@ -939,6 +945,8 @@ set_errc(int errc)
 {
 #if _WIN32
 	SetLastError(errc);
+#elif LELY_NO_ERRNO
+	(void)errc;
 #else
 	errno = errc;
 #endif
