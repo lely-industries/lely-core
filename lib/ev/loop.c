@@ -208,8 +208,10 @@ void *
 ev_loop_alloc(void)
 {
 	void *ptr = malloc(sizeof(ev_loop_t));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -490,7 +492,9 @@ ev_loop_ctx_alloc(void)
 
 	struct ev_loop_ctx *ctx = malloc(sizeof(*ctx));
 	if (!ctx) {
+#if !LELY_NO_ERRNO
 		errc = errno2c(errno);
+#endif
 		goto error_malloc_ctx;
 	}
 

@@ -49,8 +49,10 @@ void *
 co_obj_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct co_obj));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -285,7 +287,9 @@ co_obj_set_name(co_obj_t *obj, const char *name)
 
 	void *ptr = realloc(obj->name, strlen(name) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	obj->name = ptr;
@@ -407,8 +411,10 @@ void *
 co_sub_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct co_sub));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -581,7 +587,9 @@ co_sub_set_name(co_sub_t *sub, const char *name)
 
 	void *ptr = realloc(sub->name, strlen(name) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	sub->name = ptr;
@@ -1119,7 +1127,9 @@ co_obj_update(co_obj_t *obj)
 	if (size) {
 		val = calloc(1, size);
 		if (!val) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			return;
 		}
 	}

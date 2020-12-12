@@ -294,7 +294,9 @@ fiber_create(fiber_func_t *func, void *arg, int flags, size_t data_size,
 
 	fiber_t *fiber = malloc(size);
 	if (!fiber) {
+#if !LELY_NO_ERRNO
 		errc = errno2c(errno);
+#endif
 		goto error_malloc_fiber;
 	}
 

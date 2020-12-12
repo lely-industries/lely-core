@@ -55,7 +55,9 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
   ptr = mem_alloc(nullptr, alignment, sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 // given: default memory allocator
@@ -65,7 +67,9 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
   ptr = mem_alloc(nullptr, 0, sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+#endif
 }
 
 // given: default memory allocator in 'no malloc' mode
@@ -75,7 +79,9 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
   ptr = mem_alloc(nullptr, alignof(int), sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+#endif
 }
 
 // given: default memory allocator in 'no malloc' mode
