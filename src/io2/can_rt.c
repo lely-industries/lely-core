@@ -132,8 +132,10 @@ void *
 io_can_rt_alloc(void)
 {
 	void *ptr = malloc(sizeof(io_can_rt_t));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -156,7 +158,7 @@ io_can_rt_init(io_can_rt_t *rt, io_can_chan_t *chan, ev_exec_t *exec)
 		exec = io_dev_get_exec(dev);
 	assert(exec);
 
-	int errsv = 0;
+	int errc = 0;
 
 	rt->dev_vptr = &io_can_rt_dev_vtbl;
 
@@ -167,7 +169,7 @@ io_can_rt_init(io_can_rt_t *rt, io_can_chan_t *chan, ev_exec_t *exec)
 
 	rt->exec = ev_strand_create(exec);
 	if (!rt->exec) {
-		errsv = get_errc();
+		errc = get_errc();
 		goto error_create_strand;
 	}
 
@@ -180,7 +182,7 @@ io_can_rt_init(io_can_rt_t *rt, io_can_chan_t *chan, ev_exec_t *exec)
 
 #if !LELY_NO_THREADS
 	if (mtx_init(&rt->mtx, mtx_plain) != thrd_success) {
-		errsv = get_errc();
+		errc = get_errc();
 		goto error_init_mtx;
 	}
 #endif
@@ -201,7 +203,7 @@ error_init_mtx:
 #endif
 	ev_strand_destroy(rt->exec);
 error_create_strand:
-	errno = errsv;
+	set_errc(errc);
 	return NULL;
 }
 

@@ -292,7 +292,9 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew) {
 
 #if LELY_NO_MALLOC
   CHECK_EQUAL(0, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+#endif
   CHECK_EQUAL(0, membuf_capacity(buf));
 #else
   CHECK_COMPARE(ret, >=, REQUIRED_ADDITIONAL_SIZE);

@@ -315,8 +315,10 @@ void *
 __co_nmt_cfg_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_cfg));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

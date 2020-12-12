@@ -530,8 +530,10 @@ void *
 __co_ssdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_ssdo));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

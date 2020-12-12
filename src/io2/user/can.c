@@ -196,8 +196,10 @@ void *
 io_user_can_chan_alloc(void)
 {
 	struct io_user_can_chan *user = malloc(sizeof(*user));
+#if !LELY_NO_ERRNO
 	if (!user)
 		set_errc(errno2c(errno));
+#endif
 	// cppcheck-suppress memleak symbolName=user
 	return user ? &user->chan_vptr : NULL;
 }
@@ -275,7 +277,9 @@ io_user_can_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 	spscring_init(&user->rxring, rxlen);
 	user->rxbuf = calloc(rxlen, sizeof(struct io_user_can_frame));
 	if (!user->rxbuf) {
+#if !LELY_NO_ERRNO
 		errc = errno2c(errno);
+#endif
 		goto error_alloc_rxbuf;
 	}
 

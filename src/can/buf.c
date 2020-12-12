@@ -71,7 +71,9 @@ can_buf_reserve(struct can_buf *buf, size_t n)
 	struct can_msg *ptr =
 			realloc(buf->ptr, (size + 1) * sizeof(struct can_msg));
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return 0;
 	}
 	buf->ptr = ptr;

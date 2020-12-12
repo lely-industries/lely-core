@@ -205,8 +205,10 @@ void *
 __co_emcy_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_emcy));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -493,7 +495,9 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
 	if (!msgs) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	emcy->msgs = msgs;

@@ -97,21 +97,27 @@ TEST(CO_RpdoInit, CoRpdoInit_ZeroNum) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, 0);
 
   POINTERS_EQUAL(nullptr, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_InvalidNum) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_NoRPDOParameters) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_NoRPDOMappingParamRecord) {
@@ -120,7 +126,9 @@ TEST(CO_RpdoInit, CoRpdoInit_NoRPDOMappingParamRecord) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_NoRPDOCommParamRecord) {
@@ -129,7 +137,9 @@ TEST(CO_RpdoInit, CoRpdoInit_NoRPDOCommParamRecord) {
   const auto* ret = __co_rpdo_init(rpdo, net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_RpdoInit, CoRpdoInit_MinimalRPDO) {

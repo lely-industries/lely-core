@@ -4,7 +4,7 @@
  *
  * @see lely/can/net.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -118,8 +118,10 @@ void *
 __can_net_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_net));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -343,8 +345,10 @@ void *
 __can_timer_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_timer));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -498,8 +502,10 @@ void *
 __can_recv_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __can_recv));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

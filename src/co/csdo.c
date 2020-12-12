@@ -864,8 +864,10 @@ void *
 __co_csdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_csdo));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

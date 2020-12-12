@@ -162,10 +162,11 @@ TEST(CO_DevInit, CODevInit_InvalidId) {
   CHECK(dev != nullptr);
 
   POINTERS_EQUAL(nullptr, __co_dev_init(dev, CO_NUM_NODES + 1));
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 
   POINTERS_EQUAL(nullptr, __co_dev_init(dev, 0xff - 1));
-  CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 
   ReleaseCoDevT(dev);
 }
@@ -794,7 +795,9 @@ TEST(CO_Dev, CoDevSetVal_NotFound) {
   const auto ret = co_dev_set_val(dev, 0x0000, 0x00, nullptr, 0);
 
   CHECK_EQUAL(0, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \

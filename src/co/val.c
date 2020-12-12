@@ -1518,7 +1518,9 @@ co_array_alloc(void *val, size_t size)
 		// cppcheck-suppress AssignmentAddressToInteger
 		struct co_array_hdr *hdr = malloc(CO_ARRAY_HDR_OFFSET + size);
 		if (!hdr) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			return -1;
 		}
 		*hdr = (struct co_array_hdr){ size, 0 };

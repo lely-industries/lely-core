@@ -48,8 +48,10 @@ void *
 __co_dev_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_dev));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -323,7 +325,9 @@ co_dev_set_name(co_dev_t *dev, const char *name)
 
 	void *ptr = realloc(dev->name, strlen(name) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	dev->name = ptr;
@@ -353,7 +357,9 @@ co_dev_set_vendor_name(co_dev_t *dev, const char *vendor_name)
 
 	void *ptr = realloc(dev->vendor_name, strlen(vendor_name) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	dev->vendor_name = ptr;
@@ -403,7 +409,9 @@ co_dev_set_product_name(co_dev_t *dev, const char *product_name)
 
 	void *ptr = realloc(dev->product_name, strlen(product_name) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	dev->product_name = ptr;
@@ -469,7 +477,9 @@ co_dev_set_order_code(co_dev_t *dev, const char *order_code)
 
 	void *ptr = realloc(dev->order_code, strlen(order_code) + 1);
 	if (!ptr) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 	dev->order_code = ptr;

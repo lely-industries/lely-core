@@ -178,8 +178,10 @@ void *
 __co_tpdo_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_tpdo));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

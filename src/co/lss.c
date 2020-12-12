@@ -664,8 +664,10 @@ void *
 __co_lss_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_lss));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

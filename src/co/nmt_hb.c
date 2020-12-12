@@ -4,7 +4,7 @@
  *
  * @see src/nmt_ec.h
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -70,8 +70,10 @@ void *
 __co_nmt_hb_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_nmt_hb));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

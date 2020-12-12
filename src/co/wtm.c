@@ -217,8 +217,10 @@ void *
 __co_wtm_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __co_wtm));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

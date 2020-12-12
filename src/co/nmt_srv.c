@@ -4,7 +4,7 @@
  *
  * @see src/nmt_srv.h
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -239,7 +239,9 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		co_rpdo_t **rpdos =
 				realloc(srv->rpdos, (i + 1) * sizeof(*rpdos));
 		if (!rpdos) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			goto error;
 		}
 		srv->rpdos = rpdos;
@@ -269,7 +271,9 @@ co_nmt_srv_init_pdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		co_tpdo_t **tpdos =
 				realloc(srv->tpdos, (i + 1) * sizeof(*tpdos));
 		if (!tpdos) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			goto error;
 		}
 		srv->tpdos = tpdos;
@@ -353,7 +357,9 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		co_ssdo_t **ssdos =
 				realloc(srv->ssdos, (i + 1) * sizeof(*ssdos));
 		if (!ssdos) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			goto error;
 		}
 		srv->ssdos = ssdos;
@@ -380,7 +386,9 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv, can_net_t *net, co_dev_t *dev)
 		co_csdo_t **csdos =
 				realloc(srv->csdos, (i + 1) * sizeof(*csdos));
 		if (!csdos) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			goto error;
 		}
 		srv->csdos = csdos;

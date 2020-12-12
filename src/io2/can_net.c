@@ -203,8 +203,10 @@ void *
 io_can_net_alloc(void)
 {
 	void *ptr = aligned_alloc(_Alignof(io_can_net_t), sizeof(io_can_net_t));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

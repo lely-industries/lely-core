@@ -136,8 +136,10 @@ void *
 io_user_timer_alloc(void)
 {
 	struct io_user_timer *user = malloc(sizeof(*user));
+#if !LELY_NO_ERRNO
 	if (!user)
 		set_errc(errno2c(errno));
+#endif
 	// cppcheck-suppress memleak symbolName=user
 	return user ? &user->timer_vptr : NULL;
 }

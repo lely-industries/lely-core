@@ -70,7 +70,9 @@ membuf_reserve(struct membuf *buf, size_t size)
 
 	char *begin = realloc(buf->begin, buf_size);
 	if (!begin) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return 0;
 	}
 

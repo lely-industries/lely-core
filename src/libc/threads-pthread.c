@@ -25,6 +25,10 @@
 
 #if !LELY_NO_THREADS && LELY_HAVE_PTHREAD_H
 
+#if LELY_NO_ERRNO
+#error This file requires errno.
+#endif
+
 #include <errno.h>
 #include <stdint.h>
 
