@@ -33,15 +33,15 @@
 #include <lely/co/obj.h>
 #include <lely/co/ssdo.h>
 #include <lely/co/val.h>
+#if LELY_NO_MALLOC
+#include <lely/compat/string.h>
+#endif
 #include <lely/util/endian.h>
 #include <lely/util/error.h>
 
 #include <assert.h>
 #if !LELY_NO_STDIO
 #include <inttypes.h>
-#endif
-#if LELY_NO_MALLOC
-#include <string.h>
 #endif
 
 #if LELY_NO_MALLOC

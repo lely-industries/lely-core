@@ -24,31 +24,39 @@
 
 #include <lely/compat/sys/types.h>
 
+#if !LELY_NO_HOSTED
 #include <time.h>
+#endif
 
 #ifndef LELY_HAVE_ITIMERSPEC
-#if defined(_POSIX_C_SOURCE) || defined(_POSIX_TIMERS) \
-		|| defined(_TIMESPEC_DEFINED)
+#if !LELY_NO_HOSTED \
+		&& (defined(_POSIX_C_SOURCE) || defined(_POSIX_TIMERS) \
+				|| defined(_TIMESPEC_DEFINED))
 #define LELY_HAVE_ITIMERSPEC 1
 #endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC
-#if __STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
-		|| _POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
-		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined)
+#if !LELY_NO_HOSTED \
+		&& (__STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
+				|| _POSIX_C_SOURCE >= 199309L \
+				|| defined(__CYGWIN__) \
+				|| defined(_TIMESPEC_DEFINED) \
+				|| defined(__timespec_defined))
 #define LELY_HAVE_TIMESPEC 1
 #endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC_GET
-#if (__STDC_VERSION__ >= 201112L || __USE_ISOC11 || _MSC_VER >= 1900) \
+#if !LELY_NO_HOSTED \
+		&& (__STDC_VERSION__ >= 201112L || __USE_ISOC11 \
+				|| _MSC_VER >= 1900) \
 		&& defined(TIME_UTC)
 #define LELY_HAVE_TIMESPEC_GET 1
 #endif
 #endif
 
-#if !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
+#if !LELY_NO_HOSTED && !defined(_POSIX_C_SOURCE) && !defined(_POSIX_TIMERS) \
 		&& !defined(__MINGW32__)
 
 #ifndef CLOCK_REALTIME
@@ -80,7 +88,7 @@
 #define TIMER_ABSTIME 1
 #endif
 
-#endif // !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
+#endif // !LELY_NO_HOSTED && !_POSIX_C_SOURCE && !_POSIX_TIMERS && !__MINGW32__
 
 #if !LELY_HAVE_TIMESPEC
 
@@ -110,7 +118,7 @@ struct itimerspec {
 extern "C" {
 #endif
 
-#if !defined(_POSIX_TIMERS) && !defined(__MINGW32__)
+#if !LELY_NO_HOSTED && !defined(_POSIX_TIMERS) && !defined(__MINGW32__)
 
 /**
  * Obtains the resolution of a clock. Clock resolutions are
@@ -198,9 +206,9 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp);
  */
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
-#endif // !_POSIX_TIMERS && !__MINGW32__
+#endif // !_POSIX_TIMERS && !__MINGW32__ && !LELY_NO_HOSTED
 
-#if !LELY_HAVE_TIMESPEC_GET
+#if !LELY_NO_HOSTED && !LELY_HAVE_TIMESPEC_GET
 
 #ifndef TIME_UTC
 /// An integer constant greater than 0 that designates the UTC time base.
@@ -221,7 +229,7 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
  */
 int timespec_get(struct timespec *ts, int base);
 
-#endif // !LELY_HAVE_TIMESPEC_GET
+#endif // !LELY_NO_HOSTED && !LELY_HAVE_TIMESPEC_GET
 
 #ifdef __cplusplus
 }

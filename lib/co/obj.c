@@ -25,6 +25,7 @@
 #include <lely/co/detail/obj.h>
 #include <lely/co/dev.h>
 #include <lely/co/sdo.h>
+#include <lely/compat/string.h>
 #include <lely/util/cmp.h>
 #include <lely/util/error.h>
 
@@ -32,7 +33,6 @@
 #if !LELY_NO_MALLOC
 #include <stdlib.h>
 #endif
-#include <string.h>
 
 #if !LELY_NO_MALLOC
 

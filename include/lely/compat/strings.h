@@ -25,7 +25,7 @@
 #include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_STRINGS_H
-#if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))
+#if !LELY_NO_HOSTED && (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))
 #define LELY_HAVE_STRINGS_H 1
 #endif
 #endif
@@ -50,7 +50,7 @@ extern "C" {
  *
  * @returns the index of the first bit set, or 0 if <b>i</b> is 0.
  */
-#if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
+#if !LELY_NO_HOSTED && (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
 		&& !defined(__BSD_VISIBLE)
 LELY_COMPAT_STRINGS_INLINE int ffs(int i);
 

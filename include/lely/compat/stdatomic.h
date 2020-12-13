@@ -26,7 +26,8 @@
 #include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_STDATOMIC_H
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
+#if !LELY_NO_HOSTED && __STDC_VERSION__ >= 201112L \
+		&& !defined(__STDC_NO_ATOMICS__)
 #define LELY_HAVE_STDATOMIC_H 1
 #endif
 #endif // !LELY_HAVE_STDATOMIC_H

@@ -45,7 +45,7 @@
 #if _WIN32 || LELY_HAVE_MALLOC_USABLE_SIZE
 #include <malloc.h>
 #endif
-#endif
+#endif // !LELY_NO_MALLOC
 
 static void *default_mem_alloc(size_t alignment, size_t size);
 static void default_mem_free(void *ptr);

@@ -71,7 +71,7 @@
 
 #if _WIN32
 #include <winerror.h>
-#elif _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+#elif !LELY_NO_HOSTED && _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 #include <netdb.h>
 #endif
 
@@ -519,6 +519,7 @@ LELY_UTIL_ERROR_INLINE const char *errnum2str(errnum_t errnum);
  */
 LELY_UTIL_ERROR_INLINE const char *errnum2str_r(
 		errnum_t errnum, char *strerrbuf, size_t buflen);
+
 #endif // !LELY_NO_ERRNO
 
 LELY_UTIL_ERROR_INLINE errnum_t

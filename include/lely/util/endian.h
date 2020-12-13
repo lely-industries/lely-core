@@ -22,12 +22,11 @@
 #ifndef LELY_UTIL_ENDIAN_H_
 #define LELY_UTIL_ENDIAN_H_
 
+#include <lely/compat/string.h>
 #include <lely/util/bits.h>
 #include <lely/util/float.h>
 
-#include <string.h>
-
-#ifdef __linux__
+#if !LELY_NO_HOSTED && defined(__linux__)
 #include <endian.h>
 #define betoh16 be16toh
 #define letoh16 le16toh

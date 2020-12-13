@@ -28,7 +28,7 @@
 
 #include <ctype.h>
 
-#if !(defined(__GNUC__) || __has_builtin(__builtin_ffs))
+#if !LELY_NO_HOSTED && !(defined(__GNUC__) || __has_builtin(__builtin_ffs))
 
 #include <stdint.h>
 

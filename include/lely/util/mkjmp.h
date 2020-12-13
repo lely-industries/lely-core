@@ -43,6 +43,8 @@
 
 #include <lely/compat/features.h>
 
+#if !LELY_NO_HOSTED
+
 #include <setjmp.h>
 #include <stddef.h>
 
@@ -112,5 +114,7 @@ int sigmkjmp(sigjmp_buf env, int savemask, void (*func)(void *), void *arg,
 #ifdef __cplusplus
 }
 #endif
+
+#endif // !LELY_NO_HOSTED
 
 #endif // !LELY_UTIL_MKJMP_H_

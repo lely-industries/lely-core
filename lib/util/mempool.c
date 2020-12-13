@@ -20,15 +20,13 @@
  * limitations under the License.
  */
 
+#include <lely/compat/stddef.h>
+#include <lely/util/error.h>
 #include <lely/util/mempool.h>
+#include <lely/util/util.h>
 
 #include <assert.h>
 #include <stdint.h>
-
-#include <lely/util/error.h>
-#include <lely/util/util.h>
-
-#include <lely/compat/stddef.h>
 
 static inline struct mempool *
 mempool_from_alloc(alloc_t *const alloc)

@@ -27,6 +27,9 @@
 #endif
 
 #include "util.h"
+
+#if !LELY_NO_HOSTED
+
 #if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
@@ -207,3 +210,5 @@ sigctx_func(void)
 }
 
 #endif // _POSIX_C_SOURCE >= 200112L && (!__NEWLIB__ || __CYGWIN__)
+
+#endif // !LELY_NO_HOSTED

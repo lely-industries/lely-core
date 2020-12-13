@@ -11,8 +11,10 @@ endif
 inc += lely/compat/stdatomic.h
 inc += lely/compat/stddef.h
 inc += lely/compat/stdint.h
+if !NO_HOSTED
 inc += lely/compat/stdio.h
 inc += lely/compat/stdlib.h
+endif
 inc += lely/compat/string.h
 inc += lely/compat/strings.h
 if !NO_THREADS
@@ -36,7 +38,6 @@ inc += lely/util/coroutine.h
 if !NO_CXX
 inc += lely/util/coroutine.hpp
 endif
-inc += lely/util/mkjmp.h
 inc += lely/util/sllist.h
 inc += lely/util/spscring.h
 endif # !ECSS_COMPLIANCE
@@ -81,6 +82,9 @@ inc += lely/util/lex.h
 endif
 inc += lely/util/membuf.h
 inc += lely/util/memory.h
+if !NO_HOSTED
+inc += lely/util/mkjmp.h
+endif
 if !NO_CXX
 inc += lely/util/mutex.hpp
 endif

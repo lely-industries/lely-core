@@ -31,14 +31,15 @@
 #include <lely/co/obj.h>
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
+#if LELY_NO_MALLOC
+#include <lely/compat/string.h>
+#endif
 #include <lely/util/diag.h>
 #include <lely/util/endian.h>
 #include <lely/util/time.h>
 
 #include <assert.h>
-#if LELY_NO_MALLOC
-#include <string.h>
-#else
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
 #endif
 

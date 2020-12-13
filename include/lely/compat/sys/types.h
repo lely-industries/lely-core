@@ -26,7 +26,9 @@
 #include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_SYS_TYPES_H
-#if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)
+#if !LELY_NO_HOSTED \
+		&& (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) \
+				|| defined(__NEWLIB__))
 #define LELY_HAVE_SYS_TYPES_H 1
 #endif
 #endif
@@ -41,6 +43,11 @@ typedef int clockid_t;
 
 /// Used for a count of bytes or an error indication.
 typedef ptrdiff_t ssize_t;
+
+#if LELY_NO_HOSTED
+/// Used for time in seconds.
+typedef long time_t;
+#endif
 
 #endif // !LELY_HAVE_SYS_TYPES_H
 

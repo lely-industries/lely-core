@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can/msg.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,9 +22,8 @@
  */
 
 #include "../io2.h"
+#include <lely/compat/string.h>
 #include <lely/io2/can/msg.h>
-
-#include <string.h>
 
 int
 can_msg_cmp(const void *p1, const void *p2)

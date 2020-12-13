@@ -26,8 +26,7 @@
 
 #include <lely/compat/time.h>
 
-#if !LELY_HAVE_TIMESPEC_GET
-
+#if !LELY_NO_HOSTED && !LELY_HAVE_TIMESPEC_GET
 int
 timespec_get(struct timespec *ts, int base)
 {
@@ -35,7 +34,6 @@ timespec_get(struct timespec *ts, int base)
 		return 0;
 	return base;
 }
-
-#endif // !LELY_HAVE_TIMESPEC_GET
+#endif
 
 #endif // !LELY_NO_RT

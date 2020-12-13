@@ -22,14 +22,16 @@
 #ifndef LELY_UTIL_CMP_H_
 #define LELY_UTIL_CMP_H_
 
+#include <lely/compat/string.h>
 #include <lely/compat/strings.h>
 #include <lely/compat/uchar.h>
 #include <lely/util/util.h>
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#if !LELY_NO_HOSTED
 #include <wchar.h>
+#endif
 
 #ifndef LELY_UTIL_CMP_INLINE
 #define LELY_UTIL_CMP_INLINE static inline

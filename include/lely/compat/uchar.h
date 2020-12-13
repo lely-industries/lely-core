@@ -26,7 +26,7 @@
 
 #ifndef LELY_HAVE_UCHAR_H
 #if (__STDC_VERSION__ >= 201112L || __cplusplus >= 201103L) \
-		&& !defined(__NEWLIB__)
+		&& !defined(__NEWLIB__) && !LELY_NO_HOSTED
 #define LELY_HAVE_UCHAR_H 1
 #endif
 #endif
@@ -35,7 +35,9 @@
 #include <uchar.h>
 #else
 
+#if !LELY_NO_HOSTED
 #include <wchar.h>
+#endif
 
 #if __cplusplus >= 201103L
 // char16_t and char32_t are built-in types in C++11 and later.

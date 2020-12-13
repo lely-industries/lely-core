@@ -28,19 +28,21 @@
 #if !LELY_NO_STDIO
 #include <lely/compat/stdio.h>
 #endif
+#include <lely/compat/string.h>
+#include <lely/compat/time.h>
 #include <lely/util/diag.h>
 
 #include <assert.h>
+#if !LELY_NO_HOSTED
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#endif
 
 #if _WIN32
 #include <wtsapi32.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "wtsapi32.lib")
 #endif
-#elif _POSIX_C_SOURCE >= 200809L && !defined(__NEWLIB__)
+#elif !LELY_NO_STDIO && _POSIX_C_SOURCE >= 200809L && !defined(__NEWLIB__)
 #include <syslog.h>
 #endif
 
@@ -248,8 +250,12 @@ default_diag_at_handler(void *handle, enum diag_severity severity, int errc,
 	errno = errsv;
 #endif
 
+#if LELY_NO_HOSTED
+	(void)severity;
+#else
 	if (severity == DIAG_FATAL)
 		abort();
+#endif
 }
 
 #if !LELY_NO_STDIO

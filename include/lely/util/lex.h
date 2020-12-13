@@ -22,6 +22,10 @@
 #ifndef LELY_UTIL_LEX_H_
 #define LELY_UTIL_LEX_H_
 
+#include <lely/compat/features.h>
+
+#if !LELY_NO_STDIO
+
 #include <lely/compat/uchar.h>
 #include <lely/util/util.h>
 
@@ -438,5 +442,7 @@ ctox(int c)
 #ifdef __cplusplus
 }
 #endif
+
+#endif // !LELY_NO_STDIO
 
 #endif // !LELY_UTIL_LEX_H_

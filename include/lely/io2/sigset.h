@@ -26,7 +26,9 @@
 #include <lely/ev/task.h>
 #include <lely/io2/dev.h>
 
+#if !LELY_NO_HOSTED
 #include <signal.h>
+#endif
 
 #if _WIN32 && !defined(SIGHUP)
 #define SIGHUP 1

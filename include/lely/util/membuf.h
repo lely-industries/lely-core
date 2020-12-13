@@ -22,11 +22,11 @@
 #ifndef LELY_UTIL_MEMBUF_H_
 #define LELY_UTIL_MEMBUF_H_
 
+#include <lely/compat/string.h>
 #include <lely/util/util.h>
 
 #include <assert.h>
 #include <stddef.h>
-#include <string.h>
 
 #ifndef LELY_UTIL_MEMBUF_INLINE
 #define LELY_UTIL_MEMBUF_INLINE static inline
