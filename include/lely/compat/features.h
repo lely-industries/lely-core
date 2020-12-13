@@ -331,6 +331,20 @@
 #endif
 #endif // !LELY_NO_ATOMICS
 
+#if !_WIN32 && !__STDC_HOSTED__
+#undef LELY_NO_HOSTED
+#define LELY_NO_HOSTED 1
+#endif
+
+#if LELY_NO_HOSTED
+// Disable errno in a freestanding environment.
+#undef LELY_NO_ERRNO
+#define LELY_NO_ERRNO 1
+// Disable dynamic memory allocation in a freestanding environment.
+#undef LELY_NO_MALLOC
+#define LELY_NO_MALLOC 1
+#endif
+
 #if LELY_NO_ERRNO || LELY_NO_MALLOC
 // Disable standard I/O if errno and/or dynamic memory allocation are disabled.
 #undef LELY_NO_STDIO
@@ -338,6 +352,9 @@
 #endif
 
 #if _WIN32
+#if LELY_NO_HOSTED
+#error Windows requires a hosted environment.
+#endif
 #if LELY_NO_ERRNO
 #error Windows requires errno.
 #endif
