@@ -307,8 +307,8 @@ class CODev : public incomplete_c_type<__co_dev> {
   }
 
   int
-  writeDCF(co_unsigned16_t min, co_unsigned16_t max, const char* filename) const
-      noexcept {
+  writeDCF(co_unsigned16_t min, co_unsigned16_t max,
+           const char* filename) const noexcept {
     return co_dev_write_dcf_file(this, min, max, filename);
   }
 

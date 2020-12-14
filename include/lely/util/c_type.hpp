@@ -2,7 +2,7 @@
  * This header file is part of the utilities library; it contains the C to C++
  * interface declarations.
  *
- * @copyright 2017-2019 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -305,7 +305,7 @@ class incomplete_c_type {
   }
 
   void
-  operator delete(void* ptr, const ::std::nothrow_t&)noexcept {
+  operator delete(void* ptr, const ::std::nothrow_t&) noexcept {
     c_type_traits<T>::free(ptr);
   }
 
