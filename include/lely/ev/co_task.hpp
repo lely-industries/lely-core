@@ -4,7 +4,7 @@
  *
  * @see lely/util/coroutine.hpp, lely/ev/task.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -35,7 +35,7 @@ class CoTask : public ev_task, public util::Coroutine {
  public:
   /// Constructs a coroutine task with an associated executor (can be nullptr).
   explicit CoTask(ev_exec_t* exec) noexcept
-      : ev_task EV_TASK_INIT(exec, [](ev_task * task) noexcept {
+      : ev_task EV_TASK_INIT(exec, [](ev_task* task) noexcept {
           auto self = static_cast<CoTask*>(task);
           (*self)();
         }) {}

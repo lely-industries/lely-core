@@ -180,10 +180,10 @@ void co_obj_free(void *ptr);
 /**
  * Initializes a #co_obj_t instance.
  *
- * @param obj a pointer to an uninitialized #co_obj_t instance.
- * @param idx the object index.
- * @param val pointer to the memory to be used by the object and its sub-objects to
- * store values.
+ * @param obj  a pointer to an uninitialized #co_obj_t instance.
+ * @param idx  the object index.
+ * @param val  pointer to the memory to be used by the object and its
+ *             sub-objects to store values.
  * @param size size of the memory.
  *
  * @returns <b>obj</b>, or NULL on error. In the latter case, the error number
@@ -451,11 +451,12 @@ void co_sub_free(void *ptr);
 /**
  * Initializes a #co_sub_t instance.
  *
- * @param sub a pointer to an uninitialized #co_sub_t instance.
+ * @param sub    a pointer to an uninitialized #co_sub_t instance.
  * @param subidx the object sub-index.
  * @param type   the data type of the sub-object value (in the range [1..27]).
  *               This MUST be the object index of one of the static data types.
- * @param val pointer to the memory to be used by sub-object to store its value.
+ * @param val    pointer to the memory to be used by sub-object to store its
+ *               value.
  *
  * @returns <b>sub</b>, or NULL on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -635,8 +636,8 @@ size_t co_sub_set_max(co_sub_t *sub, const void *ptr, size_t n);
 const void *co_sub_addressof_def(const co_sub_t *sub);
 
 /**
- * Returns the size (in bytes) of the default value of a CANopen sub-object. In the
- * case of strings or domains, this is the number of bytes in the array.
+ * Returns the size (in bytes) of the default value of a CANopen sub-object. In
+ * the case of strings or domains, this is the number of bytes in the array.
  *
  * @see co_sub_addressof_def()
  */
@@ -676,8 +677,8 @@ size_t co_sub_set_def(co_sub_t *sub, const void *ptr, size_t n);
 const void *co_sub_addressof_val(const co_sub_t *sub);
 
 /**
- * Returns the size (in bytes) of the current value of a CANopen sub-object. In the
- * case of strings or domains, this is the number of bytes in the array.
+ * Returns the size (in bytes) of the current value of a CANopen sub-object. In
+ * the case of strings or domains, this is the number of bytes in the array.
  *
  * @see co_sub_addressof_val()
  */

@@ -23,11 +23,11 @@
 #endif
 
 #include <lely/co/wtm.h>
+#include <lely/compat/unistd.h>
 #include <lely/io/addr.h>
 #include <lely/io/can.h>
 #include <lely/io/poll.h>
 #include <lely/io/sock.h>
-#include <lely/compat/unistd.h>
 #include <lely/util/daemon.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>

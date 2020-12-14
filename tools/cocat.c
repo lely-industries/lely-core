@@ -24,10 +24,10 @@
 
 #include <lely/can/net.h>
 #include <lely/co/pdo.h>
-#include <lely/io/can.h>
-#include <lely/io/poll.h>
 #include <lely/compat/threads.h>
 #include <lely/compat/unistd.h>
+#include <lely/io/can.h>
+#include <lely/io/poll.h>
 #include <lely/util/diag.h>
 #include <lely/util/time.h>
 

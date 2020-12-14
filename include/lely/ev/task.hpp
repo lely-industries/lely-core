@@ -4,7 +4,7 @@
  *
  * @see lely/ev/task.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -43,7 +43,7 @@ class TaskWrapper : public ev_task {
   template <class F, class... Args>
   TaskWrapper(ev_exec_t* exec, F&& f, Args&&... args)
       : ev_task EV_TASK_INIT(exec,
-                             [](ev_task * task) noexcept {
+                             [](ev_task* task) noexcept {
                                auto self = static_cast<TaskWrapper*>(task);
                                self->invoker_();
                                delete self;
@@ -94,7 +94,7 @@ class Task : public ev_task {
   template <class F>
   Task(ev_exec_t* exec, F&& f)
       : ev_task EV_TASK_INIT(exec,
-                             [](ev_task * task) noexcept {
+                             [](ev_task* task) noexcept {
                                auto self = static_cast<Task*>(task);
                                if (self->func_) self->func_();
                              }),

@@ -42,14 +42,12 @@ main() {
 
   exec.post([&]() {
     tap_diag("2: before lock");
-    {
-      ::std::unique_lock<FiberMutex> lock(mtx);
-    }
+    { ::std::unique_lock<FiberMutex> lock(mtx); }
     tap_diag("2: after unlock, before yield");
     fiber_yield();
     tap_diag("2: after yield, before notify");
     {
-      ::std::unique_lock<FiberMutex> lock(mtx); // optional
+      ::std::unique_lock<FiberMutex> lock(mtx);  // optional
       cond.notify_one();
     }
     fiber_yield();

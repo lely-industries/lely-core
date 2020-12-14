@@ -55,7 +55,8 @@ operator~(CanBusFlag rhs) {
   return static_cast<CanBusFlag>(~static_cast<int>(rhs));
 }
 
-constexpr CanBusFlag operator&(CanBusFlag lhs, CanBusFlag rhs) {
+constexpr CanBusFlag
+operator&(CanBusFlag lhs, CanBusFlag rhs) {
   return static_cast<CanBusFlag>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 

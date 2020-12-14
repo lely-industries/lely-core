@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sigset.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -41,7 +41,7 @@ class SignalSetWaitWrapper : public io_sigset_wait {
   SignalSetWaitWrapper(ev_exec_t* exec, F&& f)
       : io_sigset_wait IO_SIGSET_WAIT_INIT(
             exec,
-            [](ev_task * task) noexcept {
+            [](ev_task* task) noexcept {
               auto wait = io_sigset_wait_from_task(task);
               auto signo = wait->signo;
               auto self = static_cast<SignalSetWaitWrapper*>(wait);
@@ -86,7 +86,7 @@ class SignalSetWait : public io_sigset_wait {
   SignalSetWait(ev_exec_t* exec, F&& f)
       : io_sigset_wait
         IO_SIGSET_WAIT_INIT(exec,
-                            [](ev_task * task) noexcept {
+                            [](ev_task* task) noexcept {
                               auto wait = io_sigset_wait_from_task(task);
                               auto self = static_cast<SignalSetWait*>(wait);
                               if (self->func_) {
