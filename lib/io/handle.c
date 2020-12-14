@@ -2,7 +2,7 @@
  * This file is part of the I/O library; it contains the implementation of the
  * I/O handle functions.
  *
- * @see src/handle.h
+ * @see lib/io/handle.h
  *
  * @copyright 2017-2020 Lely Industries N.V.
  *

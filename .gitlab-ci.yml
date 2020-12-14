@@ -298,7 +298,7 @@ cpplint:
         --quiet
         --extensions=cpp
         $(find include -name *.hpp)
-        $(find src -name *.cpp)
+        $(find lib -name *.cpp)
         $(find unit-tests -name *.cpp -o -name *.hpp)
 
 docker:clang-format:
@@ -319,7 +319,7 @@ clang-format:
         -n
         --Werror
         $(find include -name *.h)
-        $(find src -name *.c -o -name *.h)
+        $(find lib -name *.c -o -name *.h)
         $(find unit-tests -name *.cpp -o -name *.hpp)
 # TODO - enable C++ clang-format check
 
@@ -454,8 +454,8 @@ cppcheck-unix64:
         --std=c11 --std=c++11
         --library=std --library=gnu
         --suppressions-list=suppressions.txt
-        -isrc/io2/win32
-        include src unit-tests
+        -ilib/io2/win32
+        include lib unit-tests
   artifacts:
     paths:
       - cppcheck-rules.md
@@ -493,8 +493,8 @@ cppcheck-win64:
         --library=std --library=gnu --library=windows
         --suppress=va_list_usedBeforeStarted
         --suppressions-list=suppressions.txt
-        -isrc/io2/linux
-        include src unit-tests
+        -ilib/io2/linux
+        include lib unit-tests
   artifacts:
     paths:
       - cppcheck-rules.md
@@ -588,7 +588,7 @@ sonarcloud:
            -Dsonar.links.ci="${CI_PROJECT_URL}/pipelines"
            -Dsonar.links.scm="${CI_PROJECT_URL}"
            -Dsonar.links.issue="${CI_PROJECT_URL}/issues"
-           -Dsonar.sources=include,src,tools,python
+           -Dsonar.sources=include,lib,tools,python
            -Dsonar.tests=test,unit-tests
            -Dsonar.cfamily.build-wrapper-output=bw-output
            -Dsonar.cfamily.threads=1

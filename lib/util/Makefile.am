@@ -70,7 +70,7 @@ liblely_util_la_LDFLAGS += -Wl,--output-def,liblely-util-$(VERSION_MAJOR).def
 endif
 liblely_util_la_LDFLAGS += -Wl,--as-needed
 liblely_util_la_LIBADD =
-liblely_util_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
+liblely_util_la_LIBADD += $(top_builddir)/lib/compat/liblely-compat.la
 if !ECSS_COMPLIANCE
 liblely_util_la_LIBADD += -lm
 endif

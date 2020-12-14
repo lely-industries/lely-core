@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the NMT 'boot slave' functions.
  *
- * @see src/nmt_boot.h
+ * @see lib/co//nmt_boot.h
  *
  * @copyright 2020 Lely Industries N.V.
  *

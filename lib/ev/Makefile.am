@@ -29,8 +29,8 @@ liblely_ev_la_LDFLAGS += -Wl,--output-def,liblely-ev-$(VERSION_MAJOR).def
 endif
 liblely_ev_la_LDFLAGS += -Wl,--as-needed
 liblely_ev_la_LIBADD =
-liblely_ev_la_LIBADD += $(top_builddir)/src/compat/liblely-compat.la
-liblely_ev_la_LIBADD += $(top_builddir)/src/util/liblely-util.la
+liblely_ev_la_LIBADD += $(top_builddir)/lib/compat/liblely-compat.la
+liblely_ev_la_LIBADD += $(top_builddir)/lib/util/liblely-util.la
 if CODE_COVERAGE_ENABLED
 liblely_ev_la_LIBADD += $(CODE_COVERAGE_LIBS)
 endif

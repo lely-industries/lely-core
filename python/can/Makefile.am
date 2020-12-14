@@ -21,7 +21,7 @@ AM_CPPFLAGS = -I$(abs_top_srcdir)/include
 AM_CFLAGS = -shared -Wno-pedantic
 
 AM_LDFLAGS = -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro
-AM_LDFLAGS += -L$(abs_top_builddir)/src/can/.libs
+AM_LDFLAGS += -L$(abs_top_builddir)/lib/can/.libs
 
 CYTHON_ENV = \
 	CC="$(CC)" \

@@ -2,7 +2,7 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the Client-SDO functions.
  *
- * @see lely/co/csdo.h, src/sdo.h
+ * @see lely/co/csdo.h, lib/co/sdo.h
  *
  * @copyright 2020 Lely Industries N.V.
  *

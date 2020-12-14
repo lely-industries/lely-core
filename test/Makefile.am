@@ -6,8 +6,8 @@ LELY_COMPAT_LIBS =
 if CODE_COVERAGE_ENABLED
 LELY_COMPAT_LIBS += $(CODE_COVERAGE_LIBS)
 endif
-LELY_COMPAT_LIBS += $(top_builddir)/src/compat/liblely-compat.la
-LELY_COMPAT_LIBS += $(top_builddir)/src/tap/liblely-tap.la
+LELY_COMPAT_LIBS += $(top_builddir)/lib/compat/liblely-compat.la
+LELY_COMPAT_LIBS += $(top_builddir)/lib/tap/liblely-tap.la
 
 # Test Anything Protocol (TAP) library tests
 
@@ -20,7 +20,7 @@ test_tap_LDADD = $(LELY_TAP_LIBS)
 # Utilities library tests
 
 LELY_UTIL_LIBS = $(LELY_TAP_LIBS)
-LELY_UTIL_LIBS += $(top_builddir)/src/util/liblely-util.la
+LELY_UTIL_LIBS += $(top_builddir)/lib/util/liblely-util.la
 
 if !ECSS_COMPLIANCE
 bin += test-util-config
@@ -65,7 +65,7 @@ endif
 # CAN library tests
 
 LELY_CAN_LIBS = $(LELY_UTIL_LIBS)
-LELY_CAN_LIBS += $(top_builddir)/src/can/liblely-can.la
+LELY_CAN_LIBS += $(top_builddir)/lib/can/liblely-can.la
 
 if !NO_MALLOC
 bin += test-can-net
@@ -76,7 +76,7 @@ endif
 # I/O library tests
 
 LELY_IO_LIBS = $(LELY_CAN_LIBS)
-LELY_IO_LIBS += $(top_builddir)/src/io/liblely-io.la
+LELY_IO_LIBS += $(top_builddir)/lib/io/liblely-io.la
 
 if !ECSS_COMPLIANCE
 
@@ -89,7 +89,7 @@ endif # !ECSS_COMPLIANCE
 # Event library tests
 
 LELY_EV_LIBS = $(LELY_UTIL_LIBS)
-LELY_EV_LIBS += $(top_builddir)/src/ev/liblely-ev.la
+LELY_EV_LIBS += $(top_builddir)/lib/ev/liblely-ev.la
 
 if !ECSS_COMPLIANCE
 
@@ -116,7 +116,7 @@ endif # !ECSS_COMPLIANCE
 # I/O library tests
 
 LELY_IO2_LIBS = $(LELY_EV_LIBS)
-LELY_IO2_LIBS += $(top_builddir)/src/io2/liblely-io2.la
+LELY_IO2_LIBS += $(top_builddir)/lib/io2/liblely-io2.la
 
 if !ECSS_COMPLIANCE
 
@@ -157,7 +157,7 @@ endif # !ECSS_COMPLIANCE
 # CANopen library tests
 
 LELY_CO_LIBS = $(LELY_CAN_LIBS)
-LELY_CO_LIBS += $(top_builddir)/src/co/liblely-co.la
+LELY_CO_LIBS += $(top_builddir)/lib/co/liblely-co.la
 
 if !NO_MALLOC
 
@@ -231,7 +231,7 @@ endif # !NO_MALLOC
 # C++ CANopen application library tests
 
 LELY_COAPP_LIBS = $(LELY_IO2_LIBS) $(LELY_CO_LIBS)
-LELY_COAPP_LIBS += $(top_builddir)/src/coapp/liblely-coapp.la
+LELY_COAPP_LIBS += $(top_builddir)/lib/coapp/liblely-coapp.la
 
 if !ECSS_COMPLIANCE
 
