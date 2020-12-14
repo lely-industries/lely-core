@@ -138,11 +138,27 @@ struct co_nmt {
 	/// The pending node-ID.
 	co_unsigned8_t id;
 #if !LELY_NO_CO_DCF_RESTORE
-	/// The concise DCF of the application parameters.
-	void *dcf_node;
+	/**
+	 * A pointer to the first byte in the concise DCF backup of the
+	 * application parameters (object 2000-9FFF).
+	 */
+	uint_least8_t *dcf_node_begin;
+	/**
+	 * A pointer to one past the last byte in the concise DCF backup of the
+	 * application parameters,
+	 */
+	uint_least8_t *dcf_node_end;
 #endif
-	/// The concise DCF of the communication parameters.
-	void *dcf_comm;
+	/**
+	 * A pointer to the first byte in the concise DCF backup of the
+	 * communication parameters (object 1000-1FFF).
+	 */
+	uint_least8_t *dcf_comm_begin;
+	/**
+	 * A pointer to one past the last byte in the concise DCF backup of the
+	 * communication parameters,
+	 */
+	uint_least8_t *dcf_comm_end;
 	/// The current state.
 	co_nmt_state_t *state;
 	/// The NMT service manager.
@@ -2747,7 +2763,11 @@ co_nmt_reset_node_on_enter(co_nmt_t *nmt)
 
 #if !LELY_NO_CO_DCF_RESTORE
 	// Reset application parameters.
-	if (co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_node) == -1)
+	size_t size = nmt->dcf_node_end - nmt->dcf_node_begin;
+	// clang-format off
+	if (co_dev_read_dcf(nmt->dev, NULL, NULL, nmt->dcf_node_begin,
+			nmt->dcf_node_end) != size)
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(),
 				"unable to reset application parameters");
 #endif
@@ -2787,16 +2807,21 @@ co_nmt_reset_comm_on_enter(co_nmt_t *nmt)
 	can_recv_stop(nmt->recv_000);
 
 	// Reset communication parameters.
-	if (co_dev_read_dcf(nmt->dev, NULL, NULL, &nmt->dcf_comm) == -1)
+	size_t size = nmt->dcf_comm_end - nmt->dcf_comm_begin;
+	// clang-format off
+	if (co_dev_read_dcf(nmt->dev, NULL, NULL, nmt->dcf_comm_begin,
+			nmt->dcf_comm_end) != size)
+		// clang-format on
 		diag(DIAG_ERROR, get_errc(),
 				"unable to reset communication parameters");
 
 	// Update the node-ID if necessary.
 	if (nmt->id != co_dev_get_id(nmt->dev)) {
 		co_dev_set_id(nmt->dev, nmt->id);
-		co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
-		if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm)
-				== -1)
+		// clang-format off
+		if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff,
+				nmt->dcf_comm_begin, nmt->dcf_comm_end) != size)
+			// clang-format on
 			diag(DIAG_ERROR, get_errc(),
 					"unable to store communication parameters");
 	}
@@ -3412,6 +3437,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	assert(nmt);
 	assert(net);
 	assert(dev);
+	alloc_t *alloc = can_net_get_alloc(net);
 
 	int errc = 0;
 
@@ -3420,16 +3446,37 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	nmt->id = co_dev_get_id(nmt->dev);
 
+	size_t size;
 #if !LELY_NO_CO_DCF_RESTORE
 	// Store a concise DCF containing the application parameters.
-	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, &nmt->dcf_node) == -1) {
+	size = co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, NULL, NULL);
+	nmt->dcf_node_begin = mem_alloc(alloc, 1, size);
+	if (!nmt->dcf_node_begin) {
+		errc = get_errc();
+		goto error_alloc_dcf_node;
+	}
+	nmt->dcf_node_end = nmt->dcf_node_begin + size;
+	// clang-format off
+	if (co_dev_write_dcf(nmt->dev, 0x2000, 0x9fff, nmt->dcf_node_begin,
+			nmt->dcf_node_end) != size) {
+		// clang-format on
 		errc = get_errc();
 		goto error_write_dcf_node;
 	}
 #endif
 
 	// Store a concise DCF containing the communication parameters.
-	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, &nmt->dcf_comm) == -1) {
+	size = co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, NULL, NULL);
+	nmt->dcf_comm_begin = mem_alloc(alloc, 1, size);
+	if (!nmt->dcf_comm_begin) {
+		errc = get_errc();
+		goto error_alloc_dcf_comm;
+	}
+	nmt->dcf_comm_end = nmt->dcf_comm_begin + size;
+	// clang-format off
+	if (co_dev_write_dcf(nmt->dev, 0x1000, 0x1fff, nmt->dcf_comm_begin,
+			nmt->dcf_comm_end) != size) {
+		// clang-format on
 		errc = get_errc();
 		goto error_write_dcf_comm;
 	}
@@ -3447,7 +3494,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 	// Create the CAN frame receiver for NMT messages.
-	nmt->recv_000 = can_recv_create(co_nmt_get_alloc(nmt));
+	nmt->recv_000 = can_recv_create(alloc);
 	if (!nmt->recv_000) {
 		errc = get_errc();
 		goto error_create_recv_000;
@@ -3459,7 +3506,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 	// Create the CAN frame receiver for node guarding RTR and boot-up
 	// messages.
-	nmt->recv_700 = can_recv_create(co_nmt_get_alloc(nmt));
+	nmt->recv_700 = can_recv_create(alloc);
 	if (!nmt->recv_700) {
 		errc = get_errc();
 		goto error_create_recv_700;
@@ -3471,7 +3518,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->ng_data = NULL;
 #endif
 
-	nmt->ec_timer = can_timer_create(co_nmt_get_alloc(nmt));
+	nmt->ec_timer = can_timer_create(alloc);
 	if (!nmt->ec_timer) {
 		errc = get_errc();
 		goto error_create_ec_timer;
@@ -3523,7 +3570,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 	can_net_get_time(nmt->net, &nmt->inhibit);
-	nmt->cs_timer = can_timer_create(co_nmt_get_alloc(nmt));
+	nmt->cs_timer = can_timer_create(alloc);
 	if (!nmt->cs_timer) {
 		errc = get_errc();
 		goto error_create_cs_timer;
@@ -3568,14 +3615,14 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	for (co_unsigned8_t id = 1; id <= CO_NUM_NODES; id++) {
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
-		slave->recv = can_recv_create(co_nmt_get_alloc(nmt));
+		slave->recv = can_recv_create(alloc);
 		if (!slave->recv) {
 			errc = get_errc();
 			goto error_init_slave;
 		}
 		can_recv_set_func(slave->recv, &co_nmt_recv_700, nmt);
 
-		slave->timer = can_timer_create(co_nmt_get_alloc(nmt));
+		slave->timer = can_timer_create(alloc);
 		if (!slave->timer) {
 			errc = get_errc();
 			goto error_init_slave;
@@ -3731,11 +3778,13 @@ error_create_recv_700:
 error_create_recv_000:
 	co_nmt_srv_fini(&nmt->srv);
 error_init_srv:
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
 error_write_dcf_comm:
+	mem_free(alloc, nmt->dcf_comm_begin);
+error_alloc_dcf_comm:
 #if !LELY_NO_CO_DCF_RESTORE
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
 error_write_dcf_node:
+	mem_free(alloc, nmt->dcf_node_begin);
+error_alloc_dcf_node:
 #endif
 	set_errc(errc);
 	return NULL;
@@ -3745,6 +3794,7 @@ static void
 co_nmt_fini(co_nmt_t *nmt)
 {
 	assert(nmt);
+	alloc_t *alloc = co_nmt_get_alloc(nmt);
 
 #if !LELY_NO_CO_MASTER
 	// Remove the download indication function for the request NMT value.
@@ -3832,8 +3882,8 @@ co_nmt_fini(co_nmt_t *nmt)
 
 	co_nmt_srv_fini(&nmt->srv);
 
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_comm);
+	mem_free(alloc, nmt->dcf_comm_begin);
 #if !LELY_NO_CO_DCF_RESTORE
-	co_val_fini(CO_DEFTYPE_DOMAIN, &nmt->dcf_node);
+	mem_free(alloc, nmt->dcf_node_begin);
 #endif
 }

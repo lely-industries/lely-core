@@ -523,20 +523,21 @@ size_t co_dev_write_sub(const co_dev_t *dev, co_unsigned16_t idx,
  * DCF format, and stores them in the object dictionary of a CANopen device. If
  * an object does not exist, the value is discarded.
  *
- * @param dev  a pointer to a CANopen device.
- * @param pmin the address at which to store the minimum object index (can be
- *             NULL).
- * @param pmax the address at which to store the maximum object index (can be
- *             NULL).
- * @param ptr  the address of a pointer to a DOMAIN value.
+ * @param dev   a pointer to a CANopen device.
+ * @param pmin  the address at which to store the minimum object index (can be
+ *              NULL).
+ * @param pmax  the address at which to store the maximum object index (can be
+ *              NULL).
+ * @param begin a pointer to the start of the buffer.
+ * @param end   a pointer to one past the last byte in the buffer.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns the number of bytes read on success (at least 4), or 0 on error.
  *
  * @see co_dev_write_dcf()
  */
-int co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
-		void *const *ptr);
+size_t co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin,
+		co_unsigned16_t *pmax, const uint_least8_t *begin,
+		const uint_least8_t *end);
 
 /**
  * Reads the values of a range of objects from a file, in the concise DCF
@@ -562,19 +563,20 @@ int co_dev_read_dcf_file(co_dev_t *dev, co_unsigned16_t *pmin,
  * Loads the values of a range of objects in the object dictionary of a CANopen
  * device, and writes them to a memory buffer, in the concise DCF format.
  *
- * @param dev a pointer to a CANopen device.
- * @param min the minimum object index.
- * @param max the maximum object index.
- * @param ptr the address of a pointer. On success, *<b>ptr</b> points to a
- *            DOMAIN value.
+ * @param dev   a pointer to a CANopen device.
+ * @param min   the minimum object index.
+ * @param max   the maximum object index.
+ * @param begin a pointer to the start of the buffer. If <b>begin</b> is NULL,
+ *              nothing is written.
+ * @param end   a pointer to one past the last byte in the buffer.
  *
- * @returns 0 on success, or -1 on error. In the latter case, the error number
- * can be obtained with get_errc().
+ * @returns the number of bytes that would have been written had the buffer been
+ * sufficiently large, or 0 on error.
  *
  * @see co_dev_read_dcf()
  */
-int co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
-		co_unsigned16_t max, void **ptr);
+size_t co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min,
+		co_unsigned16_t max, uint_least8_t *begin, uint_least8_t *end);
 
 /**
  * Loads the values of a range of objects in the object dictionary of a CANopen

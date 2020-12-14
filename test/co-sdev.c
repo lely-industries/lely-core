@@ -68,21 +68,35 @@ main(void)
 	}
 	free(idx);
 
-	void *dev_dom = NULL;
-	void *sdev_dom = NULL;
+	size_t size = co_dev_write_dcf(dev, 0, 0xffff, NULL, NULL);
+	uint_least8_t *begin = NULL;
+	uint_least8_t *end = NULL;
 
-	tap_test(!co_dev_write_dcf(dev, 0, 0xffff, &dev_dom),
+	void *dev_dom = NULL;
+	tap_assert(!co_val_init_dom(&dev_dom, NULL, size));
+	begin = dev_dom;
+	end = begin + size;
+	tap_test(co_dev_write_dcf(dev, 0, 0xffff, begin, end) == size,
 			"!co_dev_write_dcf(<dev>, ...)");
-	tap_test(!co_dev_write_dcf(sdev, 0, 0xffff, &sdev_dom),
+
+	void *sdev_dom = NULL;
+	tap_assert(!co_val_init_dom(&sdev_dom, NULL, size));
+	begin = sdev_dom;
+	end = begin + size;
+	tap_test(co_dev_write_dcf(sdev, 0, 0xffff, begin, end) == size,
 			"!co_dev_write_dcf(<sdev>, ...)");
 
 	tap_test(!co_val_cmp(CO_DEFTYPE_DOMAIN, &dev_dom, &sdev_dom),
 			"!co_val_cmp(%04X, <dev>, <sdev>)", CO_DEFTYPE_DOMAIN);
 
-	tap_test(!co_dev_read_dcf(sdev, NULL, NULL, &sdev_dom),
+	tap_test(co_dev_read_dcf(sdev, NULL, NULL, begin, end) == size,
 			"!co_val_read_dcf(<sdev>, ...)");
+
 	co_val_fini(CO_DEFTYPE_DOMAIN, &sdev_dom);
-	tap_test(!co_dev_write_dcf(sdev, 0, 0xffff, &sdev_dom),
+	tap_assert(!co_val_init_dom(&sdev_dom, NULL, size));
+	begin = sdev_dom;
+	end = begin + size;
+	tap_test(co_dev_write_dcf(sdev, 0, 0xffff, begin, end) == size,
 			"!co_val_write_dcf(<sdev>, ...)");
 
 	tap_test(!co_val_cmp(CO_DEFTYPE_DOMAIN, &dev_dom, &sdev_dom),

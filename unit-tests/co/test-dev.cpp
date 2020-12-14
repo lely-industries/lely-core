@@ -1188,7 +1188,7 @@ TEST_GROUP(CO_DevDCF) {
   std::unique_ptr<CoSubTHolder> sub_holder;
   CoArrays arrays;
 
-  static const size_t BUF_SIZE = 13;
+  static const size_t BUF_SIZE = 13u;
   const uint_least8_t buf[BUF_SIZE] = {
       0x01, 0x00, 0x00, 0x00,  // number of sub-indexes
       // value 1
@@ -1197,6 +1197,7 @@ TEST_GROUP(CO_DevDCF) {
       0x02, 0x00, 0x00, 0x00,  // size
       0x87, 0x09               // value
   };
+  static const size_t MIN_RW_SIZE = 4u;
 
   TEST_SETUP() {
     dev_holder.reset(new CoDevTHolder(0x01));
@@ -1221,98 +1222,75 @@ TEST_GROUP(CO_DevDCF) {
 TEST(CO_DevDCF, CoDevReadDcf) {
   co_unsigned16_t pmin = 0x0000;
   co_unsigned16_t pmax = 0x0000;
-  auto ptr = arrays.Init<co_domain_t>();
-  co_val_init_dom(&ptr, NULL, BUF_SIZE);
-  memcpy(ptr, buf, BUF_SIZE);
 
-  const auto ret = co_dev_read_dcf(dev, &pmin, &pmax, &ptr);
+  const auto ret = co_dev_read_dcf(dev, &pmin, &pmax, buf, buf + BUF_SIZE);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(BUF_SIZE, ret);
   CHECK_EQUAL(0x0987, co_dev_get_val_i16(dev, 0x1234, 0xab));
   CHECK_EQUAL(0x1234, pmin);
   CHECK_EQUAL(0x1234, pmax);
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
 TEST(CO_DevDCF, CoDevReadDcf_NullMinMax) {
-  auto ptr = arrays.Init<co_domain_t>();
-  co_val_init_dom(&ptr, NULL, BUF_SIZE);
-  memcpy(ptr, buf, BUF_SIZE);
+  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, buf, buf + BUF_SIZE);
 
-  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
-
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(BUF_SIZE, ret);
   CHECK_EQUAL(0x0987, co_dev_get_val_i16(dev, 0x1234, 0xab));
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
 TEST(CO_DevDCF, CoDevReadDcf_InvalidNumberOfSubIndexes) {
-  auto ptr = arrays.Init<co_domain_t>();
-  co_val_init_dom(&ptr, NULL, 2);
+  const uint_least8_t empty[BUF_SIZE] = {0};
 
-  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
+  const auto ret =
+      co_dev_read_dcf(dev, nullptr, nullptr, empty, empty + BUF_SIZE);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(MIN_RW_SIZE, ret);
   CHECK_EQUAL(0x0000, co_dev_get_val_i16(dev, 0x1234, 0xab));
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
 TEST(CO_DevDCF, CoDevReadDcf_InvaildSubIdx) {
-  auto ptr = arrays.Init<co_domain_t>();
-  co_val_init_dom(&ptr, NULL, 7);
-  memcpy(ptr, buf, 7);
-
-  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
+  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, buf, buf + 7);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0x0000, co_dev_get_val_i16(dev, 0x1234, 0xab));
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
 }
 
 TEST(CO_DevDCF, CoDevWriteDcf) {
   co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
-  auto ptr = arrays.Init<co_domain_t>();
+  uint_least8_t tmp[BUF_SIZE] = {0};
 
-  const auto ret =
-      co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX, &ptr);
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
+                                    tmp, tmp + BUF_SIZE);
 
-  CHECK_EQUAL(0, ret);
-  CheckBuffers(static_cast<uint_least8_t*>(ptr), buf, BUF_SIZE);
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
+  CHECK_EQUAL(BUF_SIZE, ret);
+  CheckBuffers(tmp, buf, BUF_SIZE);
 }
 
 TEST(CO_DevDCF, CoDevWriteDcf_BeforeMin) {
-  auto ptr = arrays.Init<co_domain_t>();
+  uint_least8_t tmp[BUF_SIZE] = {0};
 
-  const auto ret = co_dev_write_dcf(dev, 0x1235, CO_UNSIGNED16_MAX, &ptr);
+  const auto ret =
+      co_dev_write_dcf(dev, 0x1235, CO_UNSIGNED16_MAX, tmp, tmp + BUF_SIZE);
 
-  CHECK_EQUAL(0, ret);
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
+  CHECK_EQUAL(MIN_RW_SIZE, ret);
 }
 
 TEST(CO_DevDCF, CoDevWriteDcf_AfterMax) {
-  auto ptr = arrays.Init<co_domain_t>();
+  uint_least8_t tmp[BUF_SIZE] = {0};
 
-  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
+  const auto ret =
+      co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, tmp, tmp + BUF_SIZE);
 
-  CHECK_EQUAL(0, ret);
-
-  co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
+  CHECK_EQUAL(MIN_RW_SIZE, ret);
 }
 
 #if LELY_NO_MALLOC
 TEST(CO_DevDCF, CoDevWriteDcf_Null) {
-  co_domain_t ptr = nullptr;
+  const auto ret =
+      co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, nullptr, nullptr);
 
-  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, &ptr);
-
-  CHECK_EQUAL(-1, ret);
+  CHECK_EQUAL(MIN_RW_SIZE,
+              ret);  // number of bytes that _would have_ been written
 }
 #endif
 
