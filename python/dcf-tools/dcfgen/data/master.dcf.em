@@ -644,7 +644,7 @@ CompactSubObj=127
 [1F86Value]
 NrOfEntries=@(sum(slave.product_code != 0 for slave in slaves.values()))
 @[for slave in slaves.values()]@
-@[if slave.product_code != 0]@
+@[if slave.product_code != 0 and 0x02 in slave[0x1018]]@
 @slave.node_id=@("0x{:08X}".format(slave.product_code))
 @[end if]@
 @[end for]@
