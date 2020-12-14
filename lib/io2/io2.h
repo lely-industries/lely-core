@@ -28,13 +28,12 @@
 #include <lely/io2/io2.h>
 
 #ifdef __cplusplus
-namespace lely
-{
+// clang-format off
+namespace lely {
 /// The global namespace for the I/O library.
-namespace io
-{
-}
-} // namespace lely
+namespace io {}
+}  // namespace lely
+// clang-format on
 #endif
 
 LELY_INGORE_EMPTY_TRANSLATION_UNIT

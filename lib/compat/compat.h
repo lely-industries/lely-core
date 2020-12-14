@@ -28,13 +28,12 @@
 #include <lely/compat/features.h>
 
 #ifdef __cplusplus
-namespace lely
-{
+// clang-format off
+namespace lely {
 /// The global namespace for the compatibility library.
-namespace compat
-{
-}
-} // namespace lely
+namespace compat {}
+}  // namespace lely
+// clang-format on
 #endif
 
 LELY_INGORE_EMPTY_TRANSLATION_UNIT
