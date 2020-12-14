@@ -143,6 +143,7 @@ build:configure:
       - CONFIGURE_OPTIONS:
         - --disable-canfd
         - --disable-errno
+        - --disable-hosted
         - --disable-malloc
         - --disable-master
         - --disable-stdio
@@ -157,6 +158,11 @@ test:configure:disable-errno:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--disable-errno]"]
+
+test:configure:disable-hosted:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--disable-hosted]"]
 
 test:configure:disable-malloc:
   extends: .test
