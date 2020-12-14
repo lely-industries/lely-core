@@ -51,10 +51,12 @@
 #endif
 
 #ifdef __cplusplus
+// clang-format off
 namespace lely {
 /// The global namespace for the utilities library.
 namespace util {}
 }  // namespace lely
+// clang-format on
 #endif
 
 #endif // !LELY_UTIL_INTERN_UTIL_H_
