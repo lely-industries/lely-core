@@ -51,6 +51,11 @@ def main():
         help="do not include optional strings in the output",
     )
     parser.add_argument(
+        "--include-config",
+        action="store_true",
+        help="add '#include <config.h>' snippet to the output",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         metavar="FILE",
@@ -108,8 +113,13 @@ def main():
         filename = "dev.c.em"
 
     with open_or_stdout(args.output) as output:
-        globals = {"no_strings": args.no_strings, "dev": dev, "name": args.name[0]}
-        interpreter = em.Interpreter(output=output, globals=globals)
+        params = {
+            "no_strings": args.no_strings,
+            "include_config": args.include_config,
+            "dev": dev,
+            "name": args.name[0],
+        }
+        interpreter = em.Interpreter(output=output, globals=params)
         try:
             filename = pkg_resources.resource_filename(__name__, "data/" + filename)
             interpreter.file(open(filename))

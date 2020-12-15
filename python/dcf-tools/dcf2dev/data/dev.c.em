@@ -1,3 +1,9 @@
+@[if include_config]@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+@[end if]@
 #if !LELY_NO_MALLOC
 #error Static object dictionaries are only supported when dynamic memory allocation is disabled.
 #endif
