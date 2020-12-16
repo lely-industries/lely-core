@@ -1441,8 +1441,8 @@ TEST(CO_Val, CoValRead_TIME_SCET) {
       co_val_read(CO_DEFTYPE_TIME_SCET, &val, buffer, buffer + type_size);
 
   CHECK_EQUAL(val_size, ret);
-  CHECK_EQUAL(ldle_u32(buffer) & UINT32_C(0x00ffffff), val.subseconds);
-  CHECK_EQUAL(ldle_u32(buffer + 3), val.seconds);
+  CHECK_EQUAL(ldle_u24(buffer), val.subseconds);
+  CHECK_EQUAL(ldle_u32(buffer + 3u), val.seconds);
 }
 #endif
 
@@ -1464,8 +1464,8 @@ TEST(CO_Val, CoValRead_TIME_SUTC) {
 
   CHECK_EQUAL(val_size, ret);
   CHECK_EQUAL(ldle_u16(buffer), val.usec);
-  CHECK_EQUAL(ldle_u32(buffer + 2), val.ms);
-  CHECK_EQUAL(ldle_u16(buffer + 6), val.days);
+  CHECK_EQUAL(ldle_u32(buffer + 2u), val.ms);
+  CHECK_EQUAL(ldle_u16(buffer + 6u), val.days);
 }
 #endif
 
@@ -1767,8 +1767,8 @@ TEST(CO_Val, CoValWrite_TIME_SCET) {
       co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer, buffer + MAX_VAL_SIZE);
 
   CHECK_EQUAL(val_size, ret);
-  CHECK_EQUAL(val.subseconds, ldle_u32(buffer) & UINT32_C(0x00ffffff));
-  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3));
+  CHECK_EQUAL(val.subseconds, ldle_u24(buffer));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3u));
 }
 
 TEST(CO_Val, CoValWrite_TIME_SCET_NoEnd) {
@@ -1784,8 +1784,8 @@ TEST(CO_Val, CoValWrite_TIME_SCET_NoEnd) {
   const auto ret = co_val_write(CO_DEFTYPE_TIME_SCET, &val, buffer, nullptr);
 
   CHECK_EQUAL(val_size, ret);
-  CHECK_EQUAL(val.subseconds, ldle_u32(buffer) & UINT32_C(0x00ffffff));
-  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3));
+  CHECK_EQUAL(val.subseconds, ldle_u24(buffer));
+  CHECK_EQUAL(val.seconds, ldle_u32(buffer + 3u));
 }
 #endif  // CO_DEFTYPE_TIME_SCET
 
@@ -1807,8 +1807,8 @@ TEST(CO_Val, CoValWrite_TIME_SUTC) {
 
   CHECK_EQUAL(val_size, ret);
   CHECK_EQUAL(val.usec, ldle_u16(buffer));
-  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2));
-  CHECK_EQUAL(val.days, ldle_u16(buffer + 6));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2u));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6u));
 }
 
 TEST(CO_Val, CoValWrite_TIME_SUTC_NoEnd) {
@@ -1826,8 +1826,8 @@ TEST(CO_Val, CoValWrite_TIME_SUTC_NoEnd) {
 
   CHECK_EQUAL(val_size, ret);
   CHECK_EQUAL(val.usec, ldle_u16(buffer));
-  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2));
-  CHECK_EQUAL(val.days, ldle_u16(buffer + 6));
+  CHECK_EQUAL(val.ms, ldle_u32(buffer + 2u));
+  CHECK_EQUAL(val.days, ldle_u16(buffer + 6u));
 }
 #endif  // CO_DEFTYPE_TIME_SUTC
 
