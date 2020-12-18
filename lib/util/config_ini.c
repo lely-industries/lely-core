@@ -4,7 +4,7 @@
  *
  * @see lely/util/config.h
  *
- * @copyright 2017-2018 Lely Industries N.V.
+ * @copyright 2017-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/config.h>
 #include <lely/util/diag.h>
 #include <lely/util/frbuf.h>
@@ -335,3 +338,5 @@ config_print_ini_func(const char *section, const char *key, const char *value,
 
 	ctx->chars = chars;
 }
+
+#endif // !LELY_NO_STDIO

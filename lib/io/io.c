@@ -22,10 +22,14 @@
  */
 
 #include "io.h"
-#include "handle.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/error.h>
 
 #include <assert.h>
+
+#include "handle.h"
 
 static int lely_io_ref;
 
@@ -196,3 +200,5 @@ io_flush(io_handle_t handle)
 
 	return handle->vtab->flush(handle);
 }
+
+#endif // !LELY_NO_STDIO

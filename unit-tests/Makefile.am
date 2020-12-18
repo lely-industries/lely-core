@@ -63,8 +63,12 @@ src_util_tests += util/test-time.cpp
 src_util_tests += util/test-ustring.cpp
 src_util_tests += util/test-util.cpp
 if !ECSS_COMPLIANCE
+if !NO_MALLOC
 src_util_tests += util/test-bitset.cpp
+endif
+if !NO_CXX
 src_util_tests += util/test-mutex.cpp
+endif
 src_util_tests += util/test-sllist.cpp
 src_util_tests += util/test-spscring.cpp
 endif

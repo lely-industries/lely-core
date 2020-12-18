@@ -38,6 +38,8 @@
 
 #include "override/libc-stdio.hpp"
 
+#if !LELY_NO_STDIO
+
 TEST_GROUP(Util_Diag_FlocLex) {
   floc location;
 
@@ -210,6 +212,8 @@ TEST(Util_Diag_Cmdname, Delimeters) {
   STRCMP_EQUAL("fourtytwo", cmd.data());
 }
 
+#endif  // !LELY_NO_STDIO
+
 #if !LELY_NO_DIAG
 
 TEST_GROUP(Util_Diag_Handler){
@@ -297,6 +301,8 @@ TEST(Util_Diag_Handler, DiagAtSetHandler_BothNull) {
   POINTERS_EQUAL(nullptr, phandler_at);
   POINTERS_EQUAL(nullptr, phandle);
 }
+
+#if !LELY_NO_STDIO
 
 TEST_BASE(Util_Diag_Stderrhandler) {
   const std::string stderr_filename = "stderr.txt";
@@ -797,5 +803,7 @@ TEST(Util_Diag_VasprintfDiagAt, SnprintfFailAfter6) {
   CHECK_EQUAL(-1, chars_written);
 }
 #endif  // HAVE_SNPRINTF_OVERRIDE
+
+#endif  // !LELY_NO_STDIO
 
 #endif  // !LELY_NO_DIAG

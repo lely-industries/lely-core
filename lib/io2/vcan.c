@@ -22,6 +22,9 @@
  */
 
 #include "can.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
@@ -1575,3 +1578,5 @@ io_vcan_chan_do_abort_tasks(struct io_vcan_chan *vcan)
 
 	return n;
 }
+
+#endif // !LELY_NO_MALLOC

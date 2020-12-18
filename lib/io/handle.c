@@ -21,12 +21,16 @@
  * limitations under the License.
  */
 
-#include "handle.h"
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/error.h>
 
 #include <assert.h>
 #include <stdlib.h>
+
+#include "handle.h"
 
 io_handle_t
 io_handle_acquire(io_handle_t handle)
@@ -152,3 +156,5 @@ io_handle_unlock(struct io_handle *handle)
 }
 
 #endif // !LELY_NO_THREADS
+
+#endif // !LELY_NO_STDIO

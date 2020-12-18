@@ -34,7 +34,9 @@
 #include <lely/util/time.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <inttypes.h>
+#endif
 
 /// A CANopen Receive-PDO.
 struct co_rpdo {
@@ -712,7 +714,7 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 	co_unsigned32_t ac =
 			co_pdo_dn(&pdo->map, pdo->dev, &pdo->req, msg->data, n);
 
-#ifndef NDEBUG
+#if defined(NDEBUG) && !LELY_NO_STDIO
 	if (ac)
 		trace("RPDO %d: PDO error %08" PRIX32 " (%s)", pdo->num, ac,
 				co_sdo_ac2str(ac));

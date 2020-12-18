@@ -22,11 +22,16 @@
  */
 
 #include "tap.h"
+#if _WIN32
 #include <lely/compat/stdio.h>
+#endif
 #include <lely/tap/tap.h>
 
 #include <assert.h>
 #include <stdarg.h>
+#if !_WIN32
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 
 #ifdef __MINGW32__

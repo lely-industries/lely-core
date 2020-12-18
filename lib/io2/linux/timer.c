@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#ifdef __linux__
+#if !LELY_NO_STDIO && defined(__linux__)
 
 #include "../timer.h"
 #include <lely/io2/ctx.h>
@@ -649,4 +649,4 @@ io_timer_impl_close(struct io_timer_impl *impl)
 	return result;
 }
 
-#endif // __linux__
+#endif // !LELY_NO_STDIO && __linux__

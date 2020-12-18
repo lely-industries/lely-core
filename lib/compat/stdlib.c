@@ -23,7 +23,7 @@
 #include "compat.h"
 #include <lely/compat/stdlib.h>
 
-#if !(__STDC_VERSION__ >= 201112L)
+#if !(__STDC_VERSION__ >= 201112L) && !LELY_NO_MALLOC
 
 #ifndef LELY_HAVE_POSIX_MEMALIGN
 #if _POSIX_C_SOURCE >= 200112L
@@ -101,9 +101,9 @@ aligned_free(void *ptr)
 
 #endif // !__USE_ISOC11
 
-#endif // !(__STDC_VERSION__ >= 201112L)
+#endif // !(__STDC_VERSION__ >= 201112L) && !LELY_NO_MALLOC
 
-#if _WIN32
+#if _WIN32 && !LELY_NO_STDIO
 
 #include <lely/compat/stdio.h>
 

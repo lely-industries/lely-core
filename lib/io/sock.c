@@ -21,14 +21,18 @@
  * limitations under the License.
  */
 
-#include "handle.h"
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/addr.h>
 #include <lely/io/sock.h>
 #include <lely/util/error.h>
 
 #include <assert.h>
 #include <string.h>
+
+#include "handle.h"
 
 #if _WIN32 || _POSIX_C_SOURCE >= 200112L
 
@@ -1753,3 +1757,5 @@ error_param:
 }
 
 #endif // _WIN32 || _POSIX_C_SOURCE >= 200112L
+
+#endif // !LELY_NO_STDIO

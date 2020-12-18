@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _WIN32 && LELY_HAVE_IXXAT
+#if !LELY_NO_STDIO && _WIN32 && LELY_HAVE_IXXAT
 
 // Rename error flags to avoid conflicts with definitions in <cantype.h>.
 #define CAN_ERROR_BIT LELY_IO_CAN_ERROR_BIT
@@ -1878,4 +1878,4 @@ io_ixxat_chan_set_handle(struct io_ixxat_chan *ixxat, HANDLE hCanChn, int flags,
 	return hCanChn;
 }
 
-#endif // _WIN32 && LELY_HAVE_IXXAT
+#endif // !LELY_NO_STDIO && _WIN32 && LELY_HAVE_IXXAT

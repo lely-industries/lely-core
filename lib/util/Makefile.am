@@ -1,55 +1,50 @@
 src =
 if !ECSS_COMPLIANCE
 src += bimap.c
-src += bitset.c
-src += config.c
-src += config_ini.c
-if !NO_DAEMON
-src += daemon.c
-endif
-src += fiber.c
 src += mkjmp.c
 src += sllist.c
 src += spscring.c
-src += stop.c
-endif
-
-if !NO_CO_OBJ_FILE
-src += frbuf.c
-src += fwbuf.c
-endif
-
-if !NO_CO_GW_TXT
-if !NO_CO_SDEV
-if !NO_CO_DCF
-src += lex.c
-endif
-src += print.c
-endif
-endif
-
-if !NO_DIAG
-src += diag.c
-else # !NO_DIAG
-if !NO_CO_DCF
-src += diag.c
-else # !NO_CO_DCF
-if !NO_CO_GW_TXT
-src += diag.c
-endif # !NO_CO_GW_TXT
-endif # !NO_CO_DCF
-endif # !NO_DIAG
+endif # !ECSS_COMPLIANCE
 
 src += bits.c
+if !NO_MALLOC
+src += bitset.c
+endif
 src += cmp.c
+if !NO_MALLOC
+src += config.c
+if !NO_STDIO
+src += config_ini.c
+endif
+endif # !NO_MALLOC
+if !NO_DAEMON
+src += daemon.c
+endif
+src += diag.c
 src += dllist.c
 src += endian.c
 src += error.c
+if !NO_MALLOC
+src += fiber.c
+endif
+if !NO_STDIO
+src += frbuf.c
+src += fwbuf.c
+endif
+if !NO_STDIO
+src += lex.c
+endif
 src += memory.c
 src += mempool.c
 src += membuf.c
 src += pheap.c
+if !NO_STDIO
+src += print.c
+endif
 src += rbtree.c
+if !NO_MALLOC
+src += stop.c
+endif
 src += time.c
 src += ustring.c
 src += util.h

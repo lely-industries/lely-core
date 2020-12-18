@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _WIN32
+#if !LELY_NO_STDIO && _WIN32
 
 #include "../sigset.h"
 #include <lely/io2/ctx.h>
@@ -651,4 +651,4 @@ io_sigset_impl_do_remove(struct io_sigset_impl *impl, int signo)
 	node->next = NULL;
 }
 
-#endif // _WIN32
+#endif // !LELY_NO_STDIO && _WIN32

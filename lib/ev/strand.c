@@ -22,6 +22,9 @@
  */
 
 #include "ev.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/compat/stdatomic.h>
 #include <lely/compat/threads.h>
@@ -333,3 +336,5 @@ ev_strand_from_exec(const ev_exec_t *exec)
 
 	return structof(exec, struct ev_strand, exec_vptr);
 }
+
+#endif // !LELY_NO_MALLOC

@@ -5,8 +5,14 @@ endif
 src += getopt.c
 src += compat.h
 src += stdatomic.c
+if !NO_STDIO
 src += stdio.c
+endif
+if !NO_MALLOC
+if !NO_STDIO
 src += stdlib.c
+endif
+endif
 src += string.c
 src += strings.c
 if !NO_RT

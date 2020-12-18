@@ -22,6 +22,9 @@
  */
 
 #include "io.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/io/addr.h>
 #include <lely/io/sock.h>
 #include <lely/util/cmp.h>
@@ -862,3 +865,5 @@ bachk(const char *str)
 }
 
 #endif // _WIN32
+
+#endif // !LELY_NO_STDIO

@@ -22,6 +22,9 @@
  */
 
 #include "util.h"
+
+#if !LELY_NO_MALLOC
+
 #include <lely/compat/strings.h>
 #include <lely/util/bitset.h>
 #include <lely/util/error.h>
@@ -223,3 +226,5 @@ bitset_fnz(const struct bitset *set, int n)
 	}
 	return 0;
 }
+
+#endif // !LELY_NO_MALLOC

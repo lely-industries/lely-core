@@ -22,6 +22,9 @@
  */
 
 #include "../timer.h"
+
+#if !LELY_NO_MALLOC
+
 #if !LELY_NO_THREADS
 #include <lely/compat/threads.h>
 #endif
@@ -568,3 +571,5 @@ timespec_valid(const struct timespec *tp)
 {
 	return tp->tv_sec >= 0 && tp->tv_nsec >= 0 && tp->tv_nsec < 1000000000l;
 }
+
+#endif // !LELY_NO_MALLOC

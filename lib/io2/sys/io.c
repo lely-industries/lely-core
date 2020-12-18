@@ -1,7 +1,10 @@
 /**@file
- * This is the internal header file of the POSIX-specific I/O declarations.
+ * This file is part of the I/O library; it contains the standard system
+ * implementation of the I/O initialization/finalization functions.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @see lely/io2/sys/io.h
+ *
+ * @copyright 2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -18,9 +21,21 @@
  * limitations under the License.
  */
 
-#ifndef LELY_IO2_INTERN_POSIX_IO_H_
-#define LELY_IO2_INTERN_POSIX_IO_H_
+#include "io.h"
 
-#include "../sys/io.h"
+#if LELY_NO_STDIO || (!_WIN32 && !defined(_POSIX_C_SOURCE))
 
-#endif // !LELY_IO2_INTERN_POSIX_IO_H_
+#include <lely/io2/sys/io.h>
+
+int
+io_init(void)
+{
+	return 0;
+}
+
+void
+io_fini(void)
+{
+}
+
+#endif // LELY_NO_STDIO || (!_WIN32 && !_POSIX_C_SOURCE)

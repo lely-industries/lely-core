@@ -28,6 +28,9 @@
 #endif
 
 #include "util.h"
+
+#if !LELY_NO_STDIO
+
 #include <lely/util/error.h>
 #include <lely/util/frbuf.h>
 
@@ -544,3 +547,5 @@ frbuf_unmap(frbuf_t *buf)
 
 	return result;
 }
+
+#endif // !LELY_NO_STDIO

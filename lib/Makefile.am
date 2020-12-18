@@ -1,14 +1,23 @@
-if ECSS_COMPLIANCE
-SUBDIRS = compat util can co
-else
-SUBDIRS = compat tap util can ev io2 co
+SUBDIRS =
+SUBDIRS += compat
+if !ECSS_COMPLIANCE
+SUBDIRS += tap
+endif
+SUBDIRS += util
+SUBDIRS += can
+SUBDIRS += co
+if !NO_STDIO
 if PLATFORM_LINUX
 SUBDIRS += io
 endif
 if PLATFORM_WIN32
 SUBDIRS += io
 endif
+endif # !NO_STDIO
+if !ECSS_COMPLIANCE
+SUBDIRS += ev
+SUBDIRS += io2
 if !NO_CXX
 SUBDIRS += coapp
 endif
-endif
+endif # !ECSS_COMPLIANCE

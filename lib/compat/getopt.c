@@ -27,7 +27,9 @@
 
 #include <assert.h>
 #include <stddef.h>
+#if !LELY_NO_STDIO
 #include <stdio.h>
+#endif
 
 char *optarg;
 int optind = 1;
@@ -80,9 +82,11 @@ getopt(int argc, char *const argv[], const char *optstring)
 		op++;
 	if (!*op) {
 		optopt = c;
+#if !LELY_NO_STDIO
 		if (opterr && *optstring != ':')
 			fprintf(stderr, "%s: illegal option -- %c\n", argv[0],
 					optopt);
+#endif
 		return '?';
 	}
 
@@ -100,11 +104,13 @@ getopt(int argc, char *const argv[], const char *optstring)
 		// ... otherwise, the next argument is used, if it exists.
 		if (optind > argc) {
 			optopt = c;
+#if !LELY_NO_STDIO
 			if (opterr && *optstring != ':')
 				fprintf(stderr,
 						"%s: option requires an "
 						"argument -- %c\n",
 						argv[0], optopt);
+#endif
 			return *optstring == ':' ? ':' : '?';
 		}
 		optarg = argv[optind - 1];

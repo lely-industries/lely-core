@@ -23,7 +23,7 @@
 
 #include "io.h"
 
-#if _POSIX_C_SOURCE >= 199309L
+#if !LELY_NO_STDIO && _POSIX_C_SOURCE >= 199309L
 
 #include "../timer.h"
 #include <lely/io2/ctx.h>
@@ -445,4 +445,4 @@ io_timer_impl_pop(struct io_timer_impl *impl, struct sllist *queue,
 #endif
 }
 
-#endif // _POSIX_C_SOURCE >= 199309L
+#endif // !LELY_NO_STDIO && _POSIX_C_SOURCE >= 199309L

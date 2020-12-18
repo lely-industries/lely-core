@@ -27,6 +27,10 @@
 
 #include <lely/compat/features.h>
 
+#if LELY_NO_MALLOC
+#error This file requires dynamic memory allocation.
+#endif
+
 namespace lely {
 /// The namespace for the C++ CANopen application library.
 namespace canopen {

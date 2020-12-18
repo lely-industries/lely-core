@@ -28,11 +28,13 @@
 #include <lely/util/util.h>
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 #include <stdio.h>
 // Include inttypes.h after stdio.h to enforce declarations of format specifiers
 // in Newlib.
 #include <inttypes.h>
 #include <stdlib.h>
+#endif
 
 /// Computes a bitwise CRC-15-CAN checksum of a single byte. @see can_crc()
 static uint_least16_t can_crc_bits(
@@ -178,6 +180,8 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 	return bits;
 }
 
+#if !LELY_NO_STDIO
+
 int
 snprintf_can_msg(char *s, size_t n, const struct can_msg *msg)
 {
@@ -267,6 +271,8 @@ asprintf_can_msg(char **ps, const struct can_msg *msg)
 	return n;
 }
 #endif // !LELY_NO_MALLOC
+
+#endif // !LELY_NO_STDIO
 
 uint_least16_t
 can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)

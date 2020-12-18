@@ -34,6 +34,9 @@
 // Disable static device description support.
 #undef LELY_NO_CO_SDEV
 #define LELY_NO_CO_SDEV 1
+// Disable Wireless Transmission Media (WTM) support.
+#undef LELY_NO_CO_WTM
+#define LELY_NO_CO_WTM 1
 // Disable gateway support.
 #undef LELY_NO_CO_GW
 #define LELY_NO_CO_GW 1
@@ -42,7 +45,19 @@
 #define LELY_NO_CO_GW_TXT 1
 #endif // LELY_NO_MALLOC
 
-#ifdef NDEBUG
+#if LELY_NO_STDIO
+// Disable EDS/DCF support.
+#undef LELY_NO_CO_DCF
+#define LELY_NO_CO_DCF 1
+// Disable UploadFile/DownloadFile support.
+#undef LELY_NO_CO_OBJ_FILE
+#define LELY_NO_CO_OBJ_FILE 1
+// Disable ASCII gateway support.
+#undef LELY_NO_CO_GW_TXT
+#define LELY_NO_CO_GW_TXT 1
+#endif
+
+#if defined(NDEBUG) && !LELY_NO_STDIO && !LELY_NO_DIAG
 #define trace(...)
 #else
 #include <lely/util/diag.h>

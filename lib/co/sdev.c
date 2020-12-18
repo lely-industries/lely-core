@@ -28,24 +28,30 @@
 #include <lely/co/sdev.h>
 #include <lely/compat/stdio.h>
 #include <lely/util/error.h>
+#if !LELY_NO_STDIO
 #include <lely/util/lex.h>
 #include <lely/util/print.h>
+#endif
 
 #include <assert.h>
+#if !LELY_NO_STDIO
 // Include inttypes.h after stdio.h to enforce declarations of format specifiers
 // in Newlib.
 #include <inttypes.h>
 #include <stdlib.h>
+#endif
 
 static int co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev);
 static int co_sobj_load(const struct co_sobj *sobj, co_obj_t *obj);
 static int co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub);
 
+#if !LELY_NO_STDIO
 static int snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj);
 static int snprintf_c99_ssub(char *s, size_t n, const co_sub_t *sub);
 static int snprintf_c99_sval(
 		char *s, size_t n, co_unsigned16_t type, const void *val);
 static int snprintf_c99_esc(char *s, size_t n, const char *esc);
+#endif
 
 co_dev_t *
 co_dev_init_from_sdev(co_dev_t *dev, const struct co_sdev *sdev)
@@ -103,6 +109,8 @@ error_alloc_dev:
 	set_errc(errc);
 	return NULL;
 }
+
+#if !LELY_NO_STDIO
 
 int
 snprintf_c99_sdev(char *s, size_t n, const co_dev_t *dev)
@@ -425,6 +433,8 @@ asprintf_c99_sdev(char **ps, const co_dev_t *dev)
 	return n;
 }
 
+#endif // !LELY_NO_STDIO
+
 static int
 co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 {
@@ -551,6 +561,8 @@ co_ssub_load(const struct co_ssub *ssub, co_sub_t *sub)
 
 	return 0;
 }
+
+#if !LELY_NO_STDIO
 
 static int
 snprintf_c99_sobj(char *s, size_t n, const co_obj_t *obj)
@@ -1263,5 +1275,7 @@ snprintf_c99_esc(char *s, size_t n, const char *esc)
 
 	return t;
 }
+
+#endif // !LELY_NO_STDIO
 
 #endif // !LELY_NO_CO_SDEV

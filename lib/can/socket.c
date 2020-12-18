@@ -23,7 +23,7 @@
 
 #include "can.h"
 
-#if LELY_HAVE_SOCKET_CAN
+#if !LELY_NO_STDIO && LELY_HAVE_SOCKET_CAN
 
 #include <lely/can/socket.h>
 #include <lely/util/error.h>
@@ -234,4 +234,4 @@ can_msg2canfd_frame(const struct can_msg *src, struct canfd_frame *dst)
 
 #endif // !LELY_NO_CANFD && CANFD_MTU
 
-#endif // LELY_HAVE_SOCKET_CAN
+#endif // !LELY_NO_STDIO && LELY_HAVE_SOCKET_CAN

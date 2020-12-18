@@ -319,6 +319,7 @@ TEST(CAN_MsgBits, CANExtended_ModeExact_3) {
 }
 
 /* util/bits/snprintf_can_msg() */
+#if !LELY_NO_STDIO
 
 TEST_GROUP(CAN_SNPrintfCanMsg) {
   static const size_t STRLEN = 256;
@@ -539,7 +540,9 @@ TEST(CAN_ASPrintfCanMsg, CANZeroMsg_SNPrintfErr_2) {
 }
 #endif  // HAVE_SNPRINTF_OVERRIDE
 
-#endif  // LELY_NO_MALLOC
+#endif  // !LELY_NO_MALLOC
+
+#endif  // !LELY_NO_STDIO
 
 /* util/bits/can_crc() */
 

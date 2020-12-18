@@ -30,9 +30,10 @@
 extern "C" {
 #endif
 
+#if !LELY_NO_MALLOC
+
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
-
 /**
  * Duplicates the string at <b>s</b>.
  *
@@ -40,11 +41,9 @@ extern "C" {
  * can be passed to free().
  */
 char *strdup(const char *s);
-
 #endif
 
 #if !(_POSIX_C_SOURCE >= 200809L)
-
 /**
  * Duplicates at most <b>size</b> characters (excluding the terminating null
  * byte) from the string at <b>s</b>. The resulting string is null-terminated.
@@ -53,12 +52,12 @@ char *strdup(const char *s);
  * can be passed to free().
  */
 char *strndup(const char *s, size_t size);
-
 #endif
+
+#endif // !LELY_NO_MALLOC
 
 #if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
 		&& !defined(__MINGW32__)
-
 /**
  * Computes the length of the string at <b>s</b>, not including the terminating
  * null byte. At most <b>maxlen</b> characters are examined.
@@ -67,7 +66,6 @@ char *strndup(const char *s, size_t size);
  * <b>maxlen</b>.
  */
 size_t strnlen(const char *s, size_t maxlen);
-
 #endif
 
 #ifdef __cplusplus
