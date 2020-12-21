@@ -102,7 +102,7 @@ static can_timer_t *can_timer_alloc(alloc_t *alloc);
 static void can_timer_free(can_timer_t *timer);
 
 /// Initializes the #can_timer_t structure.
-static can_timer_t *can_timer_init(can_timer_t *timer);
+static void can_timer_init(can_timer_t *timer);
 
 /// Finalizes the #can_timer_t structure.
 static void can_timer_fini(can_timer_t *timer);
@@ -353,26 +353,13 @@ can_timer_sizeof(void)
 can_timer_t *
 can_timer_create(alloc_t *alloc)
 {
-	int errc = 0;
-
 	can_timer_t *timer = can_timer_alloc(alloc);
-	if (!timer) {
-		errc = get_errc();
-		goto error_alloc_timer;
-	}
+	if (!timer)
+		return NULL;
 
-	if (!can_timer_init(timer)) {
-		errc = get_errc();
-		goto error_init_timer;
-	}
+	can_timer_init(timer);
 
 	return timer;
-
-error_init_timer:
-	can_timer_free(timer);
-error_alloc_timer:
-	set_errc(errc);
-	return NULL;
 }
 
 void
@@ -699,7 +686,7 @@ can_timer_free(can_timer_t *timer)
 	mem_free(timer->alloc, timer);
 }
 
-static can_timer_t *
+static void
 can_timer_init(can_timer_t *timer)
 {
 	assert(timer);
@@ -713,8 +700,6 @@ can_timer_init(can_timer_t *timer)
 
 	timer->func = NULL;
 	timer->data = NULL;
-
-	return timer;
 }
 
 static void
