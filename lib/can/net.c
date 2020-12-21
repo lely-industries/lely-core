@@ -153,7 +153,7 @@ static can_recv_t *can_recv_alloc(alloc_t *alloc);
 static void can_recv_free(can_recv_t *recv);
 
 /// Initializes the #can_recv_t structure.
-static can_recv_t *can_recv_init(can_recv_t *recv);
+static void can_recv_init(can_recv_t *recv);
 
 /// Finalizes the #can_recv_t structure.
 static void can_recv_fini(can_recv_t *recv);
@@ -476,26 +476,13 @@ can_recv_sizeof(void)
 can_recv_t *
 can_recv_create(alloc_t *alloc)
 {
-	int errc = 0;
-
 	can_recv_t *recv = can_recv_alloc(alloc);
-	if (!recv) {
-		errc = get_errc();
-		goto error_alloc_recv;
-	}
+	if (!recv)
+		return NULL;
 
-	if (!can_recv_init(recv)) {
-		errc = get_errc();
-		goto error_init_recv;
-	}
+	can_recv_init(recv);
 
 	return recv;
-
-error_init_recv:
-	can_recv_free(recv);
-error_alloc_recv:
-	set_errc(errc);
-	return NULL;
 }
 
 void
@@ -727,7 +714,7 @@ can_recv_free(can_recv_t *recv)
 	mem_free(recv->alloc, recv);
 }
 
-static can_recv_t *
+static void
 can_recv_init(can_recv_t *recv)
 {
 	assert(recv);
@@ -741,8 +728,6 @@ can_recv_init(can_recv_t *recv)
 
 	recv->func = NULL;
 	recv->data = NULL;
-
-	return recv;
 }
 
 static void
