@@ -439,6 +439,8 @@ TEST(CAN_NetTimer, CanTimerCreate) {
   can_timer_get_func(timer, &tfunc, &tdata);
   POINTERS_EQUAL(nullptr, tfunc);
   POINTERS_EQUAL(nullptr, tdata);
+
+  POINTERS_EQUAL(allocator.ToAllocT(), can_timer_get_alloc(timer));
 }
 
 TEST(CAN_NetTimer, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
