@@ -531,6 +531,8 @@ vasprintf_diag_at(char **ps, enum diag_severity severity, int errc,
 
 #endif // !LELY_NO_DIAG
 
+#if !LELY_NO_STDIO
+
 const char *
 cmdname(const char *path)
 {
@@ -547,3 +549,5 @@ cmdname(const char *path)
 		cmd--;
 	return ++cmd;
 }
+
+#endif // !LELY_NO_STDIO
