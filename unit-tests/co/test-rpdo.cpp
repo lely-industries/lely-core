@@ -40,6 +40,7 @@
 #include "holder/sub.hpp"
 
 #include "allocators/default.hpp"
+#include "allocators/limited.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -227,6 +228,19 @@ TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
   CHECK_EQUAL(0, comm->reserved);
   CHECK_EQUAL(0, comm->event);
   CHECK_EQUAL(0, comm->sync);
+}
+
+TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
+  CreateObj(obj1400, 0x1400u);
+  CreateObj(obj1600, 0x1600u);
+
+  rpdo = co_rpdo_create(net, dev, RPDO_NUM);
+  co_rpdo_start(rpdo);
+
+  const auto ret = co_rpdo_start(rpdo);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_rpdo_is_stopped(rpdo));
 }
 
 TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
@@ -494,7 +508,11 @@ TEST_GROUP_BASE(CO_Rpdo, CO_RpdoBase) {
     CHECK(rpdo != nullptr);
   }
 
-  void StartRpdo() { CHECK_EQUAL(0, co_rpdo_start(rpdo)); }
+  void StartRpdo() {
+    CHECK_EQUAL(1, co_rpdo_is_stopped(rpdo));
+    CHECK_EQUAL(0, co_rpdo_start(rpdo));
+    CHECK_EQUAL(0, co_rpdo_is_stopped(rpdo));
+  }
 
   TEST_SETUP() {
     TEST_BASE_SETUP();
@@ -1112,4 +1130,86 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   CHECK_EQUAL(0x8250u, CO_RpdoStatic::rpdo_err_args.eec);
   CHECK_EQUAL(0x10, CO_RpdoStatic::rpdo_err_args.er);
   POINTERS_EQUAL(&data, CO_RpdoStatic::rpdo_err_args.data);
+}
+
+TEST_GROUP_BASE(CO_RpdoAllocation, CO_RpdoBase) {
+  Allocators::Limited limitedAllocator;
+  co_rpdo_t* rpdo = nullptr;
+
+  void BasicConfiguration() {
+    CreateObj(obj1400, 0x1400u);
+    CreateObj(obj1600, 0x1600u);
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    can_net_destroy(net);
+    net = can_net_create(limitedAllocator.ToAllocT());
+
+    BasicConfiguration();
+  }
+
+  TEST_TEARDOWN() {
+    co_rpdo_destroy(rpdo);
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_NoMemoryAvailable) {
+  limitedAllocator.LimitAllocationTo(0u);
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdo) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndRecv) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndTimer) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_timer_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndRecvAndSingleTimer) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof() +
+                                     can_timer_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_MemoryOnlyForRpdoAndTwoTimers) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + 2 * can_timer_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, rpdo);
+}
+
+TEST(CO_RpdoAllocation, CoRpdoCreate_AllNecessaryMemoryIsAvailable) {
+  limitedAllocator.LimitAllocationTo(co_rpdo_sizeof() + can_recv_sizeof() +
+                                     2 * can_timer_sizeof());
+
+  rpdo = co_rpdo_create(net, dev, DEV_ID);
+
+  CHECK(rpdo != nullptr);
 }
