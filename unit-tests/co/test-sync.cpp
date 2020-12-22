@@ -33,6 +33,7 @@
 #include <lely/co/detail/obj.h>
 
 #include "allocators/default.hpp"
+#include "allocators/limited.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -358,6 +359,29 @@ TEST(CO_Sync, CoSyncStart) {
   CheckSubDnIndIsSet(0x1019u);
 }
 
+TEST(CO_Sync, CoSyncStart_AlreadyStarted) {
+  SetCobid(DEV_ID);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateSYNC();
+
+  co_sync_start(sync);
+  const auto ret = co_sync_start(sync);
+
+  CHECK_EQUAL(0, ret);
+}
+
+TEST(CO_Sync, CoSyncIsStopped) {
+  SetCobid(DEV_ID);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  CreateSYNC();
+
+  CHECK_EQUAL(1, co_sync_is_stopped(sync));
+  co_sync_start(sync);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+}
+
 TEST(CO_Sync, CoSyncUpdate_IsProducer) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateObj1006AndSetPeriod(0x01u);
@@ -641,4 +665,64 @@ TEST(CO_Sync, CoSyncTimer) {
   CHECK_EQUAL(0u, CanSend::msg.flags);
   CHECK_EQUAL(0u, CanSend::msg.len);
   CHECK_EQUAL(0u, CanSend::msg.data[0]);
+}
+
+TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
+  co_sync_t* sync;
+  Allocators::Limited limitedAllocator;
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    can_net_destroy(net);
+    net = can_net_create(limitedAllocator.ToAllocT());
+
+    CreateObjInDev(obj1005, 0x1005u);
+  }
+
+  TEST_TEARDOWN() {
+    co_sync_destroy(sync);
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+TEST(Co_SyncAllocation, CoSyncCreate_NoMoreMemory) {
+  limitedAllocator.LimitAllocationTo(0);
+
+  sync = co_sync_create(net, dev);
+
+  POINTERS_EQUAL(nullptr, sync);
+}
+
+TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncT) {
+  limitedAllocator.LimitAllocationTo(co_sync_sizeof());
+
+  sync = co_sync_create(net, dev);
+
+  POINTERS_EQUAL(nullptr, sync);
+}
+
+TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndRecv) {
+  limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_recv_sizeof());
+
+  sync = co_sync_create(net, dev);
+
+  POINTERS_EQUAL(nullptr, sync);
+}
+
+TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndTimer) {
+  limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_timer_sizeof());
+
+  sync = co_sync_create(net, dev);
+
+  POINTERS_EQUAL(nullptr, sync);
+}
+
+TEST(Co_SyncAllocation, CoSyncCreate_AllNecessaryMemoryAvailable) {
+  limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_recv_sizeof() +
+                                     can_timer_sizeof());
+
+  sync = co_sync_create(net, dev);
+
+  CHECK(sync != nullptr);
 }
