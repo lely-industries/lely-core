@@ -58,6 +58,16 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
 }
 
+// given: default memory allocator
+// when: trying to allocate bytes with "zero" (default) alignment
+// then: null pointer is returned and error is reported.
+TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
+  ptr = mem_alloc(nullptr, 0, sizeof(int));
+
+  POINTERS_EQUAL(nullptr, ptr);
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+}
+
 // given: default memory allocator in 'no malloc' mode
 // when: trying to allocate any memory
 // then: null pointer is returned and error is reported.
