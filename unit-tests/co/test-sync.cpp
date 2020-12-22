@@ -687,7 +687,7 @@ TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
 };
 
 TEST(Co_SyncAllocation, CoSyncCreate_NoMoreMemory) {
-  limitedAllocator.LimitAllocationTo(0);
+  limitedAllocator.LimitAllocationTo(0u);
 
   sync = co_sync_create(net, dev);
 
