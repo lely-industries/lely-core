@@ -41,6 +41,7 @@
 #include "holder/sub.hpp"
 
 #include "allocators/default.hpp"
+#include "allocators/limited.hpp"
 
 #include "lely-cpputest-ext.hpp"
 #include "lely-unit-test.hpp"
@@ -395,6 +396,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CHECK(tpdo != nullptr);
   CHECK_EQUAL(TPDO_NUM, co_tpdo_get_num(tpdo));
 
+  CHECK_EQUAL(1, co_tpdo_is_stopped(tpdo));
   const auto ret = co_tpdo_start(tpdo);
   CHECK_EQUAL(0, ret);
 
@@ -406,6 +408,7 @@ TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOCommParamRecord) {
   CHECK_EQUAL(0x00u, comm->reserved);
   CHECK_EQUAL(0x0004u, comm->event);
   CHECK_EQUAL(0x05u, comm->sync);
+  CHECK_EQUAL(0, co_tpdo_is_stopped(tpdo));
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_FullTPDOMappingParamRecord) {
@@ -485,6 +488,24 @@ TEST(CO_TpdoCreate, CoTpdoStart_EventDrivenTransmission) {
   CHECK_EQUAL(0u, comm->reserved);
   CHECK_EQUAL(0u, comm->event);
   CHECK_EQUAL(0u, comm->sync);
+}
+
+TEST(CO_TpdoCreate, CoTpdoStart_AlreadyStarted) {
+  CreateObjInDev(obj1800, 0x1800u);
+  SetComm00HighestSubidxSupported(0x06u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0x01u);
+  SetComm03InhibitTime(0x0002u);
+  SetComm04CompatibilityEntry();
+  SetComm05EventTimer(0x0004u);
+  SetComm06SyncStartValue(0x05u);
+  CreateObjInDev(obj1a00, 0x1a00u);
+
+  tpdo = co_tpdo_create(net, dev, TPDO_NUM);
+  co_tpdo_start(tpdo);
+
+  const auto ret = co_tpdo_start(tpdo);
+  CHECK_EQUAL(0, ret);
 }
 
 TEST(CO_TpdoCreate, CoTpdoStart_TimerSet) {
@@ -1335,4 +1356,94 @@ TEST(CO_Tpdo, CoTpdoRecv_NoRTRTransmission) {
   CHECK_EQUAL(0, ret);
   CHECK(!CoTpdoInd::called);
   CHECK(!CanSend::called);
+}
+
+TEST_GROUP_BASE(CO_TpdoAllocation, CO_TpdoBase) {
+  Allocators::Limited limitedAllocator;
+  co_tpdo_t* tpdo = nullptr;
+
+  void CompleteConfiguration() {
+    CreateObjInDev(obj1800, 0x1800u);
+    SetComm00HighestSubidxSupported(0x06u);
+    SetComm01CobId(DEV_ID);
+    SetComm02TransmissionType(0x01u);
+    SetComm03InhibitTime(0x0002u);
+    SetComm04CompatibilityEntry();
+    SetComm05EventTimer(0x0004u);
+    SetComm06SyncStartValue(0x05u);
+
+    CreateObjInDev(obj1a00, 0x1a00u);
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    can_net_destroy(net);
+    net = can_net_create(limitedAllocator.ToAllocT());
+
+    CompleteConfiguration();
+  }
+
+  TEST_TEARDOWN() {
+    co_tpdo_destroy(tpdo);
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_NoMemoryAvailable) {
+  limitedAllocator.LimitAllocationTo(0u);
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_MemoryOnlyForTpdo) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_MemoryOnlyForTpdoAndRecv) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof() + can_recv_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_MemoryOnlyForTpdoAndTimer) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof() + can_timer_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_MemoryOnlyForTpdoAndRecvAndSingleTimer) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof() + can_recv_sizeof() +
+                                     can_timer_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_MemoryOnlyForTpdoAndTwoTimers) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof() + 2 * can_timer_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  POINTERS_EQUAL(nullptr, tpdo);
+}
+
+TEST(CO_TpdoAllocation, CoTpdoCreate_AllNecessaryMemoryIsAvailable) {
+  limitedAllocator.LimitAllocationTo(co_tpdo_sizeof() + can_recv_sizeof() +
+                                     2 * can_timer_sizeof());
+
+  tpdo = co_tpdo_create(net, dev, DEV_ID);
+
+  CHECK(tpdo != nullptr);
 }
