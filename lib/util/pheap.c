@@ -134,10 +134,10 @@ pheap_contains(const struct pheap *heap, const struct pnode *node)
 static struct pnode *
 pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 {
+	assert(n2);
+
 	if (!n1)
 		return n2;
-	if (!n2)
-		return n1;
 
 	assert(cmp);
 	if (cmp(n1->key, n2->key) >= 0) {
@@ -156,7 +156,9 @@ pnode_merge(struct pnode *n1, struct pnode *n2, pheap_cmp_t *cmp)
 static struct pnode *
 pnode_merge_pairs(struct pnode *node, pheap_cmp_t *cmp)
 {
-	while (node && node->next) {
+	assert(node);
+
+	while (node->next) {
 		struct pnode *next = node->next->next;
 		node->next->next = NULL;
 		node = pnode_merge(node, node->next, cmp);
