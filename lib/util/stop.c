@@ -450,8 +450,10 @@ static void *
 stop_source_alloc(void)
 {
 	void *ptr = malloc(sizeof(stop_source_t));
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 

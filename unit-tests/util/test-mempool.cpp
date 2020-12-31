@@ -77,7 +77,9 @@ TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
   POINTERS_EQUAL(NULL, result);
   CHECK_EQUAL(0, mem_size(alloc));
   CHECK_EQUAL(POOL_SIZE, mem_capacity(alloc));
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
@@ -88,7 +90,9 @@ TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
   POINTERS_EQUAL(NULL, result);
   CHECK_EQUAL(0, mem_size(alloc));
   CHECK_EQUAL(POOL_SIZE, mem_capacity(alloc));
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+#endif
 }
 
 TEST(Util_MemPool, MemPool_Alloc_SizeZero) {

@@ -418,7 +418,9 @@ TEST(CO_Obj, CoObjSetCode_Invalid) {
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_OBJECT_VAR, co_obj_get_code(obj));
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_Obj, CoObjAddressofVal_Null) {
@@ -463,7 +465,9 @@ TEST(CO_Obj, CoObjSetVal_SubNotFound) {
   const auto ret = co_obj_set_val(obj, 0x00, &val, sizeof(val));
 
   CHECK_EQUAL(0, ret);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_ObjSub, CoObjSetVal) {
@@ -987,8 +991,6 @@ TEST(CO_ObjSub, CoSubSetVal) {
       CHECK_EQUAL(0x0, co_sub_set_val_b(sub.Get(), val)); \
     else /* NOLINT(whitespace/newline) */ \
       CHECK_EQUAL(0x0, co_sub_set_val_i16(sub.Get(), val)); \
-\
-    CHECK_EQUAL(ERRNUM_INVAL, get_errnum()); \
   } \
 \
   TEST(CO_Obj, CoSubSetVal_##a) { \
@@ -1074,7 +1076,9 @@ TEST(CO_Sub, CoSubSetAccess) {
 
 TEST(CO_Sub, CoSubSetAccess_Invalid) {
   CHECK_EQUAL(-1, co_sub_set_access(sub, 0xff));
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
+#endif
 }
 
 TEST(CO_Sub, CoSubSetPdoMapping) {

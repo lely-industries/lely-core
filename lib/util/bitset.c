@@ -44,7 +44,9 @@ bitset_init(struct bitset *set, int size)
 
 	unsigned int *bits = malloc(size * sizeof(unsigned int));
 	if (!bits && size) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return -1;
 	}
 
@@ -80,7 +82,9 @@ bitset_resize(struct bitset *set, int size)
 
 	unsigned int *bits = realloc(set->bits, size * sizeof(unsigned int));
 	if (!bits && size) {
+#if !LELY_NO_ERRNO
 		set_errc(errno2c(errno));
+#endif
 		return 0;
 	}
 

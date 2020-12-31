@@ -268,7 +268,9 @@ TEST(CAN_Buf, CanBufReserve_NoMemory) {
   const auto capacity = can_buf_reserve(&buf, 2 * BUF_SIZE);
 
   CHECK_EQUAL(0, capacity);
+#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
+#endif
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
   CHECK_EQUAL(0, can_buf_size(&buf));
 }

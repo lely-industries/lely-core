@@ -596,8 +596,10 @@ ev_promise_alloc(size_t size)
 {
 	// cppcheck-suppress AssignmentAddressToInteger
 	void *ptr = calloc(1, EV_PROMISE_SIZE + size);
+#if !LELY_NO_ERRNO
 	if (!ptr)
 		set_errc(errno2c(errno));
+#endif
 	return ptr;
 }
 
@@ -655,7 +657,9 @@ ev_future_when_all_nv(
 	} else {
 		ev_future_t **futures = malloc(n * sizeof(*futures));
 		if (!futures) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			return NULL;
 		}
 		for (size_t i = 0; i < n; i++) {
@@ -663,9 +667,13 @@ ev_future_when_all_nv(
 			future = va_arg(ap, ev_future_t *);
 		}
 		ev_future_t *result = ev_future_when_all_n(exec, n, futures);
+#if !LELY_NO_ERRNO
 		int errsv = errno;
+#endif
 		free(futures);
+#if !LELY_NO_ERRNO
 		errno = errsv;
+#endif
 		return result;
 	}
 }
@@ -713,7 +721,9 @@ ev_future_when_any_nv(
 	} else {
 		ev_future_t **futures = malloc(n * sizeof(*futures));
 		if (!futures) {
+#if !LELY_NO_ERRNO
 			set_errc(errno2c(errno));
+#endif
 			return NULL;
 		}
 		for (size_t i = 0; i < n; i++) {
@@ -721,9 +731,13 @@ ev_future_when_any_nv(
 			future = va_arg(ap, ev_future_t *);
 		}
 		ev_future_t *result = ev_future_when_any_n(exec, n, futures);
+#if !LELY_NO_ERRNO
 		int errsv = errno;
+#endif
 		free(futures);
+#if !LELY_NO_ERRNO
 		errno = errsv;
+#endif
 		return result;
 	}
 }

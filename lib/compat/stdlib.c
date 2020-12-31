@@ -37,7 +37,9 @@
 #if _WIN32
 #include <malloc.h>
 #elif LELY_HAVE_POSIX_MEMALIGN
+#if !LELY_NO_ERRNO
 #include <errno.h>
+#endif
 #else
 #include <stdint.h>
 #endif
@@ -51,9 +53,11 @@ aligned_alloc(size_t alignment, size_t size)
 	return _aligned_malloc(size, alignment);
 #elif LELY_HAVE_POSIX_MEMALIGN
 	void *ptr = NULL;
-	int errnum = posix_memalign(&ptr, alignment, size);
-	if (errnum) {
-		errno = errnum;
+	int errc = posix_memalign(&ptr, alignment, size);
+	if (errc) {
+#if !LELY_NO_ERRNO
+		errno = errc;
+#endif
 		return NULL;
 	}
 	return ptr;
