@@ -439,6 +439,8 @@ TEST(CAN_NetTimer, CanTimerCreate) {
   can_timer_get_func(timer, &tfunc, &tdata);
   POINTERS_EQUAL(nullptr, tfunc);
   POINTERS_EQUAL(nullptr, tdata);
+
+  POINTERS_EQUAL(allocator.ToAllocT(), can_timer_get_alloc(timer));
 }
 
 TEST(CAN_NetTimer, CanTimerDestroy_Null) { can_timer_destroy(nullptr); }
@@ -509,6 +511,17 @@ TEST_GROUP(CAN_NetRecv) {
 
   TEST_TEARDOWN() { can_recv_destroy(recv); }
 };
+
+TEST(CAN_NetRecv, CanRecvCreate) {
+  can_recv_func_t* out_ptr = nullptr;
+  void* out_data = nullptr;
+  can_recv_get_func(recv, &out_ptr, &out_data);
+
+  FUNCTIONPOINTERS_EQUAL(nullptr, out_ptr);
+  POINTERS_EQUAL(nullptr, out_data);
+
+  POINTERS_EQUAL(allocator.ToAllocT(), can_recv_get_alloc(recv));
+}
 
 TEST(CAN_NetRecv, CanRecvDestroy_Null) { can_recv_destroy(nullptr); }
 
