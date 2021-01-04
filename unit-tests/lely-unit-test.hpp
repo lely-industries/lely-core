@@ -40,11 +40,13 @@ namespace LelyUnitTest {
  */
 inline void
 DisableDiagnosticMessages() {
+#if LELY_NO_DIAG
+  // enforce coverage in NO_DIAG mode
+  diag(DIAG_DEBUG, 0, "Message suppressed");
+  diag_if(DIAG_DEBUG, 0, nullptr, "Message suppressed");
+#else
   diag_set_handler(nullptr, nullptr);
   diag_at_set_handler(nullptr, nullptr);
-#if LELY_NO_DIAG
-  diag(DIAG_DEBUG, 0,
-       "Message suppressed");  // enforce coverage in NO_DIAG mode
 #endif
 }
 }  // namespace LelyUnitTest
