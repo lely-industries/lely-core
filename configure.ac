@@ -10,10 +10,6 @@ AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
 AX_CODE_COVERAGE
-AS_IF([test "$enable_code_coverage" == "yes"], [
-	${CFLAGS=""}
-	${CXXFLAGS=""}
-])
 
 AX_VALGRIND_CHECK
 

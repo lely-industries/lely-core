@@ -411,6 +411,10 @@ lcov:
     - linux
   image: $REGISTRY/lcov:bullseye
   needs: []
+  variables:
+    # force empty so --enable-code-coverage will setup them correctly
+    CFLAGS: ""
+    CXXFLAGS: ""
   script:
     - autoreconf -i
     - ./configure --enable-code-coverage --disable-shared $LELY_CORE_ANALYSIS_CONFIGURE_OPTIONS
