@@ -4,7 +4,7 @@
  *
  * @see lely/co/nmt.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -3765,12 +3765,12 @@ error_init_slave:
 	}
 	can_timer_destroy(nmt->cs_timer);
 error_create_cs_timer:
+	can_buf_fini(&nmt->buf);
+#endif
 #if LELY_NO_MALLOC
 error_create_hb:
 	for (co_unsigned8_t i = 0; i < CO_NMT_MAX_NHB; i++)
 		co_nmt_hb_destroy(nmt->hbs[i]);
-#endif
-	can_buf_fini(&nmt->buf);
 #endif
 	can_timer_destroy(nmt->ec_timer);
 error_create_ec_timer:
