@@ -308,6 +308,15 @@ AS_IF([test "$enable_master" == "no"], [
 	AC_DEFINE([LELY_NO_CO_MASTER], [1], [Define to 1 if master support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_NG], [false])
+AC_ARG_ENABLE([ng],
+	AS_HELP_STRING([--disable-ng], [disable node guarding support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_ng=no])
+AS_IF([test "$enable_ng" == "no"], [
+	AM_CONDITIONAL([NO_CO_NG], [true])
+	AC_DEFINE([LELY_NO_CO_NG], [1], [Define to 1 if node guarding support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_GW], [false])
 AC_ARG_ENABLE([gw],
 	AS_HELP_STRING([--disable-gw], [disable gateway support]))

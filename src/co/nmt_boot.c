@@ -4,7 +4,7 @@
  *
  * @see src/nmt_boot.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -48,9 +48,11 @@
 #define LELY_CO_NMT_BOOT_SDO_RETRY 3
 #endif
 
+#if !LELY_NO_CO_NG
 #ifndef LELY_CO_NMT_BOOT_RTR_TIMEOUT
 /// The timeout (in milliseconds) after sending a node guarding RTR.
 #define LELY_CO_NMT_BOOT_RTR_TIMEOUT 100
+#endif
 #endif
 
 #ifndef LELY_CO_NMT_BOOT_RESET_TIMEOUT
@@ -781,12 +783,14 @@ static int co_nmt_boot_up(co_nmt_boot_t *boot, co_unsigned16_t idx,
 static int co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx,
 		co_unsigned8_t subidx, const void *ptr, size_t n);
 
+#if !LELY_NO_CO_NG
 /**
  * Sends a node guarding RTR to the slave.
  *
  * @returns 0 on success, or -1 on error.
  */
 static int co_nmt_boot_send_rtr(co_nmt_boot_t *boot);
+#endif
 
 void *
 __co_nmt_boot_alloc(void)
@@ -1393,14 +1397,18 @@ co_nmt_boot_chk_node_on_enter(co_nmt_boot_t *boot)
 	if (boot->assignment & 0x10) {
 		int ms;
 		if (boot->ms) {
-			ms = boot->ms;
 			boot->es = 'E';
+			ms = boot->ms;
 		} else {
-			ms = LELY_CO_NMT_BOOT_RTR_TIMEOUT;
 			boot->es = 'F';
+#if LELY_NO_CO_NG
+			return co_nmt_boot_abort_state;
+#else
+			ms = LELY_CO_NMT_BOOT_RTR_TIMEOUT;
 			// If we're not a heartbeat consumer, start node
 			// guarding by sending the first RTR.
 			co_nmt_boot_send_rtr(boot);
+#endif
 		}
 
 		// Start the CAN frame receiver for the heartbeat or node guard
@@ -2139,12 +2147,14 @@ co_nmt_boot_ec_on_enter(co_nmt_boot_t *boot)
 		// Wait for the first heartbeat indication.
 		can_timer_timeout(boot->timer, boot->net, boot->ms);
 		return NULL;
+#if !LELY_NO_CO_NG
 	} else if (boot->assignment & 0x01) {
 		// If the guard time is non-zero, start node guarding by sending
 		// the first RTR, but do not wait for the response.
 		co_unsigned16_t gt = (boot->assignment >> 16) & 0xffff;
 		if (gt)
 			co_nmt_boot_send_rtr(boot);
+#endif
 	}
 
 	boot->es = 0;
@@ -2217,6 +2227,7 @@ co_nmt_boot_chk(co_nmt_boot_t *boot, co_unsigned16_t idx, co_unsigned8_t subidx,
 	return !co_val_cmp(type, &val, co_sub_get_val(sub));
 }
 
+#if !LELY_NO_CO_NG
 static int
 co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 {
@@ -2228,5 +2239,6 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 
 	return can_net_send(boot->net, &msg);
 }
+#endif
 
 #endif // !LELY_NO_CO_MASTER
