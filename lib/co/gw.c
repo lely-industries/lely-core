@@ -4,7 +4,7 @@
  *
  * @see lely/co/gw.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -87,6 +87,7 @@ struct co_gw_net {
 	co_nmt_cs_ind_t *cs_ind;
 	/// A pointer to user-specified data for #cs_ind.
 	void *cs_data;
+#if !LELY_NO_CO_NG
 #if !LELY_NO_CO_MASTER
 	/// A pointer to the original node guarding event indication function.
 	co_nmt_ng_ind_t *ng_ind;
@@ -97,6 +98,7 @@ struct co_gw_net {
 	co_nmt_lg_ind_t *lg_ind;
 	/// A pointer to user-specified data for #lg_ind.
 	void *lg_data;
+#endif
 	/// A pointer to the original heartbeat event indication function.
 	co_nmt_hb_ind_t *hb_ind;
 	/// A pointer to user-specified data for #hb_ind.
@@ -147,6 +149,7 @@ static void co_gw_net_destroy(struct co_gw_net *net);
  * @see co_nmt_cs_ind_t
  */
 static void co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data);
+#if !LELY_NO_CO_NG
 #if !LELY_NO_CO_MASTER
 /**
  * The callback function invoked when a node guarding event occurs for a node on
@@ -164,6 +167,7 @@ static void co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  * @see co_nmt_lg_ind_t
  */
 static void co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data);
+#endif // !LELY_NO_CO_NG
 /**
  * The callback function invoked when a heartbeat event occurs for a node on a
  * CANopen network.
@@ -377,10 +381,12 @@ static int co_gw_recv_pdo_write(
 static int co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, co_unsigned8_t cs,
 		const struct co_gw_req *req);
+#if !LELY_NO_CO_NG
 /// Processes a 'Enable/Disable node guarding' request.
 static int co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
 #endif
+#endif // !LELY_NO_CO_MASTER
 /// Processes a 'Start/Disable heartbeat consumer' request.
 static int co_gw_recv_nmt_set_hb(co_gw_t *gw, co_unsigned16_t net,
 		co_unsigned8_t node, const struct co_gw_req *req);
@@ -767,6 +773,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 		trace("gateway: received 'Reset communication' request");
 		return co_gw_recv_nmt_cs(
 				gw, net, node, CO_NMT_CS_RESET_COMM, req);
+#if !LELY_NO_CO_NG
 	case CO_GW_SRV_NMT_NG_ENABLE:
 	case CO_GW_SRV_NMT_NG_DISABLE:
 		trace("gateway: received '%s node guarding' request",
@@ -775,6 +782,7 @@ co_gw_recv(co_gw_t *gw, const struct co_gw_req *req)
 						: "Disable");
 		return co_gw_recv_nmt_set_ng(gw, net, node, req);
 #endif
+#endif // !LELY_NO_CO_MASTER
 	case CO_GW_SRV_NMT_HB_ENABLE:
 	case CO_GW_SRV_NMT_HB_DISABLE:
 		trace("gateway: received '%s heartbeat consumer' request",
@@ -940,12 +948,14 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 
 	co_nmt_get_cs_ind(net->nmt, &net->cs_ind, &net->cs_data);
 	co_nmt_set_cs_ind(net->nmt, &co_gw_net_cs_ind, net);
+#if !LELY_NO_CO_NG
 #if !LELY_NO_CO_MASTER
 	co_nmt_get_ng_ind(net->nmt, &net->ng_ind, &net->ng_data);
 	co_nmt_set_ng_ind(net->nmt, &co_gw_net_ng_ind, net);
 #endif
 	co_nmt_get_lg_ind(net->nmt, &net->lg_ind, &net->lg_data);
 	co_nmt_set_lg_ind(net->nmt, &co_gw_net_lg_ind, net);
+#endif
 	co_nmt_get_hb_ind(net->nmt, &net->hb_ind, &net->hb_data);
 	co_nmt_set_hb_ind(net->nmt, &co_gw_net_hb_ind, net);
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
@@ -1025,9 +1035,11 @@ co_gw_net_destroy(struct co_gw_net *net)
 #endif
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
 		co_nmt_set_hb_ind(net->nmt, net->hb_ind, net->hb_data);
+#if !LELY_NO_CO_NG
 		co_nmt_set_lg_ind(net->nmt, net->lg_ind, net->lg_data);
 #if !LELY_NO_CO_MASTER
 		co_nmt_set_ng_ind(net->nmt, net->ng_ind, net->ng_data);
+#endif
 #endif
 		co_nmt_set_cs_ind(net->nmt, net->cs_ind, net->cs_data);
 
@@ -1106,6 +1118,8 @@ co_gw_net_cs_ind(co_nmt_t *nmt, co_unsigned8_t cs, void *data)
 		net->cs_ind(nmt, cs, net->cs_data);
 }
 
+#if !LELY_NO_CO_NG
+
 #if !LELY_NO_CO_MASTER
 static void
 co_gw_net_ng_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
@@ -1142,6 +1156,8 @@ co_gw_net_lg_ind(co_nmt_t *nmt, int state, void *data)
 	if (net->lg_ind)
 		net->lg_ind(nmt, state, net->lg_data);
 }
+
+#endif // !LELY_NO_CO_NG
 
 static void
 co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
@@ -2168,6 +2184,7 @@ co_gw_recv_nmt_cs(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 	return co_gw_send_con(gw, req, iec, 0);
 }
 
+#if !LELY_NO_CO_NG
 static int
 co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 		const struct co_gw_req *req)
@@ -2202,6 +2219,7 @@ co_gw_recv_nmt_set_ng(co_gw_t *gw, co_unsigned16_t net, co_unsigned8_t node,
 
 	return co_gw_send_con(gw, req, iec, 0);
 }
+#endif // !LELY_NO_CO_NG
 
 #endif // !LELY_NO_CO_MASTER
 
