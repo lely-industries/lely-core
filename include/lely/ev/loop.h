@@ -165,6 +165,10 @@ size_t ev_loop_wait_one(ev_loop_t *loop, ev_future_t *future);
  * outstanding work, ev_loop_stop() is invoked. Note that more than one task MAY
  * be executed if the task function invokes ev_exec_dispatch().
  *
+ * Note that <b>abs_time</b> MUST be specified relative to the C11 `TIME_UTC`
+ * time base. Depending on the platform, this base MAY be subject to clock
+ * changes while this function is executing.
+ *
  * @returns 1 if a task was executed, and 0 otherwise. If no task was executed
  * because of a timeout, get_errnum() returns #ERRNUM_TIMEDOUT.
  */
