@@ -453,13 +453,13 @@ static void
 co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 {
 	assert(pdo);
+	assert(pdo->comm.trans <= 0xf0);
 
 	can_timer_stop(pdo->timer_swnd);
 	// Ignore the synchronous window length unless the RPDO is valid and
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && pdo->comm.trans <= 0xf0
-			&& swnd) {
+	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && swnd) {
 		struct timespec start = { 0, 0 };
 		can_net_get_time(pdo->net, &start);
 		timespec_add_usec(&start, swnd);
