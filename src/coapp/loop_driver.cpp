@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/loop_driver.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -102,19 +102,12 @@ LoopDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
 
 void
 LoopDriver::USleep(uint_least64_t usec) {
-  ::std::error_code ec;
-  USleep(usec, ec);
-  if (ec) throw ::std::system_error(ec, "USleep");
+  Wait(AsyncWait(::std::chrono::microseconds(usec)));
 }
 
 void
-LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) noexcept {
-  GetLoop().run_for(::std::chrono::microseconds(usec), ec);
-  if (ec == ::std::errc::timed_out) {
-    ec = {};
-  } else if (!ec && GetLoop().stopped()) {
-    ec = ::std::make_error_code(::std::errc::operation_canceled);
-  }
+LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) {
+  Wait(AsyncWait(::std::chrono::microseconds(usec)), ec);
 }
 
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)
