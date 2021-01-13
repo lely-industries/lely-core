@@ -680,9 +680,14 @@ TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
                            co_unsigned32_t(DEV_ID));
   // 0x02 - transmission type
   obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xf1u));  // not synchronous
+                           co_unsigned8_t(0xf1u));  // reserved, not synchronous
 
   CreateRpdo();
+  StartRpdo();
+
+  can_msg msg = CAN_MSG_INIT;
+  msg.id = DEV_ID;
+  CHECK_EQUAL(0, can_net_recv(net, &msg));
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -721,6 +726,7 @@ TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
                            co_unsigned8_t(0x00u));  // synchronous
 
   CreateRpdo();
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -732,7 +738,7 @@ TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
   CHECK_EQUAL(0, ret);
 }
 
-TEST(CO_Rpdo, CoRpdoSync_NoErrFunc) {
+TEST(CO_Rpdo, CoRpdoSync_WithCallbacks) {
   // object 0x1400
   // 0x00 - highest sub-index supported
   obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
@@ -992,7 +998,7 @@ TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
 TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   // object 0x1400
   // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
 
   // 0x01 - COB-ID used by RPDO
   obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
@@ -1000,15 +1006,6 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   // 0x02 - transmission type
   obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
                            co_unsigned8_t(0x00u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0000u));  // n*100 us
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0001u));  // ms
 
   CreateObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
@@ -1018,17 +1015,23 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
-  const timespec tp1 = {0, 1000u};
+  StartRpdo();
 
-  const auto ret = can_net_set_time(net, &tp1);
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
+
+  // expire sync window
+  const timespec tp = {0, 1000u};
+  const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-
   const auto recv = can_net_recv(net, &msg);
-
   CHECK_EQUAL(0, recv);
+
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
+
+  // message was ignored as sync window expired when it was received
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 }
@@ -1065,8 +1068,9 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  const timespec tp = {0, 1000000u};  // 1 ms
+  StartRpdo();
 
+  const timespec tp = {0, 1000000u};  // 1 ms
   const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
@@ -1079,7 +1083,6 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
 
   const timespec tp2 = {0, 2000000u};  // 2 ms
-
   const auto ret2 = can_net_set_time(net, &tp2);
   CHECK_EQUAL(0, ret2);
 }
@@ -1115,9 +1118,9 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   int data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &data);
-  const timespec tp = {0, 1000000u};  // 1 ms
   StartRpdo();
 
+  const timespec tp = {0, 1000000u};  // 1 ms
   const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
@@ -1131,7 +1134,6 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 
   const timespec tp2 = {0, 2000000u};  // 2 ms
-
   const auto ret2 = can_net_set_time(net, &tp2);
   CHECK_EQUAL(0, ret2);
 
