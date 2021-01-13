@@ -41,6 +41,8 @@
 /.vscode/
 !/.vscode/c_cpp_properties.json
 !/.vscode/settings.json
+/.cache/clangd/
+compile_commands.json
 .deps
 .dirstamp
 .libs
