@@ -21,6 +21,7 @@
 /tools/dcf2c
 /aclocal.m4
 /compile
+/compile_commands.json
 /config.guess
 /config.h
 /config.h.in
@@ -38,11 +39,10 @@
 /missing
 /stamp-h1
 /tap-driver.sh
+/.cache/
 /.vscode/
 !/.vscode/c_cpp_properties.json
 !/.vscode/settings.json
-/.cache/clangd/
-compile_commands.json
 .deps
 .dirstamp
 .libs
