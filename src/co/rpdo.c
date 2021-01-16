@@ -834,6 +834,13 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 				// Generate an error message if the PDO length
 				// exceeds the mapping.
 				pdo->err(pdo, 0x8220, 0x10, pdo->err_data);
+#if !LELY_NO_CO_MPDO
+		} else if ((ac == CO_SDO_AC_NO_OBJ || ac == CO_SDO_AC_NO_SUB)
+				&& pdo->map.n == 0xff) {
+			// In case of a DAM-MPDO, generate an error message if
+			// the destination object does not exist.
+			pdo->err(pdo, 0x8230, 0x10, pdo->err_data);
+#endif
 		}
 	}
 
