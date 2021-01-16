@@ -1620,6 +1620,7 @@ Device::UpdateRpdoMapping() {
     if (!obj_5a00) continue;
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1600, 0);
+    if (!n || n > CO_PDO_NUM_MAPS) continue;
     if (n != co_obj_get_val_u8(obj_5a00, 0)) continue;
     for (int j = 1; j <= n; j++) {
       auto rmap = co_obj_get_val_u32(obj_1600, j);
@@ -1685,6 +1686,7 @@ Device::UpdateTpdoMapping() {
     if (!obj_5e00) continue;
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1a00, 0);
+    if (!n || n > CO_PDO_NUM_MAPS) continue;
     if (n != co_obj_get_val_u8(obj_5e00, 0)) continue;
     for (int j = 1; j <= n; j++) {
       auto tmap = co_obj_get_val_u32(obj_1a00, j);

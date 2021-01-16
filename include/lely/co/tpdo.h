@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Transmit-PDO
  * declarations.
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -189,7 +189,8 @@ void co_tpdo_set_sample_ind(
 
 /**
  * Triggers the transmission of an acyclic or event-driven PDO. This function
- * returns an error if the inhibit time has not yet elapsed.
+ * has no effect if the PDO is not valid, not event-driven or a multiplex PDO.
+ * An error is returned if the inhibit time has not yet elapsed.
  *
  * @returns 0 on success, or -1 on error. In the latter case, the error number
  * can be obtained with get_errc().
@@ -199,7 +200,8 @@ void co_tpdo_set_sample_ind(
 int co_tpdo_event(co_tpdo_t *pdo);
 
 /**
- * Triggers the transmission of a synchronous PDO.
+ * Triggers the transmission of a synchronous PDO. This function has no effect
+ * if the PDO is not valid or not SYNC-driven.
  *
  * @param pdo a pointer to a Transmit-PDO service.
  * @param cnt the counter value (in the range [0..240]).

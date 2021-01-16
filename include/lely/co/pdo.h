@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Process Data
  * Object (PDO) declarations.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -44,6 +44,18 @@
  * (1) CAN-ID.
  */
 #define CO_PDO_COBID_FRAME UINT32_C(0x20000000)
+
+/**
+ * The value of sub-index 0 of the PDO mapping parameter record indicating a
+ * a source address mode multiplex PDO (SAM-MPDO).
+ */
+#define CO_PDO_MAP_SAM_MPDO 0xfe
+
+/**
+ * The value of sub-index 0 of the PDO mapping parameter record indicating a
+ * a destination address mode multiplex PDO (DAM-MPDO).
+ */
+#define CO_PDO_MAP_DAM_MPDO 0xff
 
 /// The data type (and object index) of a PDO communication parameter record.
 #define CO_DEFSTRUCT_PDO_COMM_PAR 0x0020

@@ -270,11 +270,11 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 	assert(req);
 	assert(buf);
 
-	if (n > CAN_MAX_LEN)
+	if (par->n > CO_PDO_NUM_MAPS || n > CAN_MAX_LEN)
 		return CO_SDO_AC_PDO_LEN;
 
 	size_t offset = 0;
-	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
+	for (size_t i = 0; i < par->n; i++) {
 		co_unsigned32_t map = par->map[i];
 		if (!map)
 			continue;
@@ -323,8 +323,11 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	assert(dev);
 	assert(req);
 
+	if (par->n > CO_PDO_NUM_MAPS)
+		return CO_SDO_AC_PDO_LEN;
+
 	size_t offset = 0;
-	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
+	for (size_t i = 0; i < par->n; i++) {
 		co_unsigned32_t map = par->map[i];
 		if (!map)
 			continue;
@@ -448,15 +451,17 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	if (ac)
 		return ac;
 
-	// Copy the mapping parameters.
-	for (co_unsigned8_t i = 1; i <= par->n; i++) {
-		co_sub_t *sub = co_obj_find_sub(obj, i);
-		if (!sub)
-			return CO_SDO_AC_NO_SUB;
-		ac = co_sub_dn_ind_val(
-				sub, CO_DEFTYPE_UNSIGNED32, &par->map[i - 1]);
-		if (ac)
-			return ac;
+	if (par->n <= CO_PDO_NUM_MAPS) {
+		// Copy the mapping parameters.
+		for (co_unsigned8_t i = 1; i <= par->n; i++) {
+			co_sub_t *sub = co_obj_find_sub(obj, i);
+			if (!sub)
+				return CO_SDO_AC_NO_SUB;
+			ac = co_sub_dn_ind_val(sub, CO_DEFTYPE_UNSIGNED32,
+					&par->map[i - 1]);
+			if (ac)
+				return ac;
+		}
 	}
 
 	// Enable mapping.
