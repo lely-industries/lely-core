@@ -57,7 +57,7 @@
 #define LELY_NO_CO_GW_TXT 1
 #endif
 
-#if defined(NDEBUG) && !LELY_NO_STDIO && !LELY_NO_DIAG
+#if defined(NDEBUG) || LELY_NO_STDIO || LELY_NO_DIAG
 #define trace(...)
 #else
 #include <lely/util/diag.h>
