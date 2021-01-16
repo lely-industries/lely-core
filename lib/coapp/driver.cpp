@@ -159,11 +159,6 @@ BasicDriver::OnCommand(NmtCommand cs) noexcept {
 }
 
 void
-BasicDriver::OnNodeGuarding(bool occurred) noexcept {
-  for (const auto& it : *this) it.second->OnNodeGuarding(occurred);
-}
-
-void
 BasicDriver::OnHeartbeat(bool occurred) noexcept {
   for (const auto& it : *this) it.second->OnHeartbeat(occurred);
 }
@@ -171,6 +166,32 @@ BasicDriver::OnHeartbeat(bool occurred) noexcept {
 void
 BasicDriver::OnState(NmtState st) noexcept {
   for (const auto& it : *this) it.second->OnState(st);
+}
+
+void
+BasicDriver::OnSync(uint8_t cnt, const time_point& t) noexcept {
+  for (const auto& it : *this) it.second->OnSync(cnt, t);
+}
+
+void
+BasicDriver::OnSyncError(uint16_t eec, uint8_t er) noexcept {
+  for (const auto& it : *this) it.second->OnSyncError(eec, er);
+}
+
+void
+BasicDriver::OnTime(
+    const ::std::chrono::system_clock::time_point& abs_time) noexcept {
+  for (const auto& it : *this) it.second->OnTime(abs_time);
+}
+
+void
+BasicDriver::OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept {
+  for (const auto& it : *this) it.second->OnEmcy(eec, er, msef);
+}
+
+void
+BasicDriver::OnNodeGuarding(bool occurred) noexcept {
+  for (const auto& it : *this) it.second->OnNodeGuarding(occurred);
 }
 
 void
@@ -238,27 +259,6 @@ BasicDriver::OnDeconfig(
       res(e.code());
     }
   }
-}
-
-void
-BasicDriver::OnSync(uint8_t cnt, const time_point& t) noexcept {
-  for (const auto& it : *this) it.second->OnSync(cnt, t);
-}
-
-void
-BasicDriver::OnSyncError(uint16_t eec, uint8_t er) noexcept {
-  for (const auto& it : *this) it.second->OnSyncError(eec, er);
-}
-
-void
-BasicDriver::OnTime(
-    const ::std::chrono::system_clock::time_point& abs_time) noexcept {
-  for (const auto& it : *this) it.second->OnTime(abs_time);
-}
-
-void
-BasicDriver::OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept {
-  for (const auto& it : *this) it.second->OnEmcy(eec, er, msef);
 }
 
 }  // namespace canopen
