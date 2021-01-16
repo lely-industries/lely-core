@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the remote node driver interface declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -91,21 +91,6 @@ class DriverBase {
   virtual void OnCommand(NmtCommand cs) noexcept = 0;
 
   /**
-   * The function invoked when a node guarding timeout event occurs or is
-   * resolved for the remote node. Note that depending on the value of object
-   * 1029:01 (Error behavior object) in the object dictionary of the master, the
-   * occurrence of a node guarding event MAY trigger an NMT state transition on
-   * the master. If so, this function is called _after_ the state change
-   * completes.
-   *
-   * @param occurred `true` if the node guarding event occurred, `false` if it
-   *                 was resolved.
-   *
-   * @see BasicMaster::OnNodeGuarding()
-   */
-  virtual void OnNodeGuarding(bool occurred) noexcept = 0;
-
-  /**
    * The function invoked when a heartbeat timeout event occurs or is resolved
    * for the remote node. Note that depending on the value of object 1029:01
    * (Error behavior object) in the object dictionary of the master, the
@@ -131,6 +116,65 @@ class DriverBase {
    * @see BasicMaster::OnState()
    */
   virtual void OnState(NmtState st) noexcept = 0;
+
+  /**
+   * The function invoked when a SYNC message is sent/received by the master.
+   * Note that this function is called _after_ all PDOs are processed/sent.
+   *
+   * @param cnt the counter (in the range [1..240]), or 0 if the SYNC message is
+   *            empty.
+   * @param t   the time at which the SYNC message was sent/received.
+   *
+   * @see BasicMaster::OnSync()
+   */
+  virtual void OnSync(uint8_t cnt, const time_point& t) noexcept = 0;
+
+  /**
+   * The function invoked when the data length of a received SYNC message does
+   * not match.
+   *
+   * @param eec the emergency error code (0x8240).
+   * @param er  the error register (0x10).
+   *
+   * @see BasicMaster::OnSyncError()
+   */
+  virtual void OnSyncError(uint16_t eec, uint8_t er) noexcept = 0;
+
+  /**
+   * The function invoked when a TIME message is received by the master.
+   *
+   * @param abs_time a time point representing the received time stamp.
+   *
+   * @see BasicMaster::OnTime()
+   */
+  virtual void OnTime(
+      const ::std::chrono::system_clock::time_point& abs_time) noexcept = 0;
+
+  /**
+   * The function invoked when an EMCY message is received from the remote node.
+   *
+   * @param eec  the emergency error code.
+   * @param er   the error register.
+   * @param msef the manufacturer-specific error code.
+   *
+   * @see BasicMaster::OnEmcy()
+   */
+  virtual void OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept = 0;
+
+  /**
+   * The function invoked when a node guarding timeout event occurs or is
+   * resolved for the remote node. Note that depending on the value of object
+   * 1029:01 (Error behavior object) in the object dictionary of the master, the
+   * occurrence of a node guarding event MAY trigger an NMT state transition on
+   * the master. If so, this function is called _after_ the state change
+   * completes.
+   *
+   * @param occurred `true` if the node guarding event occurred, `false` if it
+   *                 was resolved.
+   *
+   * @see BasicMaster::OnNodeGuarding()
+   */
+  virtual void OnNodeGuarding(bool occurred) noexcept = 0;
 
   /**
    * The function invoked when the NMT 'boot slave' process completes for the
@@ -208,50 +252,6 @@ class DriverBase {
    */
   virtual void OnDeconfig(
       ::std::function<void(::std::error_code ec)> res) noexcept = 0;
-
-  /**
-   * The function invoked when a SYNC message is sent/received by the master.
-   * Note that this function is called _after_ all PDOs are processed/sent.
-   *
-   * @param cnt the counter (in the range [1..240]), or 0 if the SYNC message is
-   *            empty.
-   * @param t   the time at which the SYNC message was sent/received.
-   *
-   * @see BasicMaster::OnSync()
-   */
-  virtual void OnSync(uint8_t cnt, const time_point& t) noexcept = 0;
-
-  /**
-   * The function invoked when the data length of a received SYNC message does
-   * not match.
-   *
-   * @param eec the emergency error code (0x8240).
-   * @param er  the error register (0x10).
-   *
-   * @see BasicMaster::OnSyncError()
-   */
-  virtual void OnSyncError(uint16_t eec, uint8_t er) noexcept = 0;
-
-  /**
-   * The function invoked when a TIME message is received by the master.
-   *
-   * @param abs_time a time point representing the received time stamp.
-   *
-   * @see BasicMaster::OnTime()
-   */
-  virtual void OnTime(
-      const ::std::chrono::system_clock::time_point& abs_time) noexcept = 0;
-
-  /**
-   * The function invoked when an EMCY message is received from the remote node.
-   *
-   * @param eec  the emergency error code.
-   * @param er   the error register.
-   * @param msef the manufacturer-specific error code.
-   *
-   * @see BasicMaster::OnEmcy()
-   */
-  virtual void OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept = 0;
 };
 
 /// The abstract driver interface for a logical device on a remote CANopen node.
@@ -1137,13 +1137,6 @@ class BasicDriver : DriverBase,
   /**
    * The default implementation notifies all registered logical device drivers.
    *
-   * @see DriverBase::OnNodeGuarding()
-   */
-  void OnNodeGuarding(bool occurred) noexcept override;
-
-  /**
-   * The default implementation notifies all registered logical device drivers.
-   *
    * @see DriverBase::OnHeartbeat()
    */
   void OnHeartbeat(bool occurred) noexcept override;
@@ -1154,32 +1147,6 @@ class BasicDriver : DriverBase,
    * @see DriverBase::OnState()
    */
   void OnState(NmtState st) noexcept override;
-
-  /**
-   * The default implementation notifies all registered logical device drivers.
-   *
-   * @see DriverBase::OnBoot()
-   */
-  void OnBoot(NmtState st, char es,
-              const ::std::string& what) noexcept override;
-
-  /**
-   * The default implementation invokes AsyncConfig() to start the configuration
-   * process for all registered logical device drivers.
-   *
-   * @see DriverBase::OnConfig()
-   */
-  void OnConfig(
-      ::std::function<void(::std::error_code ec)> res) noexcept override;
-
-  /**
-   * The default implementation invokes AsyncDeconfig() to start the
-   * deconfiguration process for all registered logical device drivers.
-   *
-   * @see DriverBase::OnDeconfig()
-   */
-  void OnDeconfig(
-      ::std::function<void(::std::error_code ec)> res) noexcept override;
 
   /**
    * The default implementation notifies all registered logical device drivers.
@@ -1209,6 +1176,39 @@ class BasicDriver : DriverBase,
    * @see DriverBase::OnEmcy()
    */
   void OnEmcy(uint16_t eec, uint8_t er, uint8_t msef[5]) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnNodeGuarding()
+   */
+  void OnNodeGuarding(bool occurred) noexcept override;
+
+  /**
+   * The default implementation notifies all registered logical device drivers.
+   *
+   * @see DriverBase::OnBoot()
+   */
+  void OnBoot(NmtState st, char es,
+              const ::std::string& what) noexcept override;
+
+  /**
+   * The default implementation invokes AsyncConfig() to start the configuration
+   * process for all registered logical device drivers.
+   *
+   * @see DriverBase::OnConfig()
+   */
+  void OnConfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override;
+
+  /**
+   * The default implementation invokes AsyncDeconfig() to start the
+   * deconfiguration process for all registered logical device drivers.
+   *
+   * @see DriverBase::OnDeconfig()
+   */
+  void OnDeconfig(
+      ::std::function<void(::std::error_code ec)> res) noexcept override;
 
   /**
    * Invokes LogicalDriverBase::AsyncConfig() for the specified logical device

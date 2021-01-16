@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen master declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1647,6 +1647,68 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void Erase(DriverBase& driver);
 
+  /// @see Node::OnCanState()
+  void
+  OnCanState(::std::function<void(io::CanState, io::CanState)> on_can_state) {
+    Node::OnCanState(on_can_state);
+  }
+
+  /// @see Node::OnCanError()
+  void
+  OnCanError(::std::function<void(io::CanError)> on_can_error) {
+    Node::OnCanError(on_can_error);
+  }
+
+  /// @see Device::OnRpdoWrite()
+  void
+  OnRpdoWrite(::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write) {
+    Node::OnRpdoWrite(on_rpdo_write);
+  }
+
+  /// @see Node::OnCommand()
+  void
+  OnCommand(::std::function<void(NmtCommand)> on_command) {
+    Node::OnCommand(on_command);
+  }
+
+  /// @see Node::OnHeartbeat()
+  void
+  OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat) {
+    Node::OnHeartbeat(on_heartbeat);
+  }
+
+  /// @see Node::OnState()
+  void
+  OnState(::std::function<void(uint8_t, NmtState)> on_state) {
+    Node::OnState(on_state);
+  }
+
+  /// @see Node::OnSync()
+  void
+  OnSync(::std::function<void(uint8_t, const time_point&)> on_sync) {
+    Node::OnSync(on_sync);
+  }
+
+  /// @see Node::OnSyncError()
+  void
+  OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error) {
+    Node::OnSyncError(on_sync_error);
+  }
+
+  /// @see Node::OnTime()
+  void
+  OnTime(::std::function<void(const ::std::chrono::system_clock::time_point&)>
+             on_time) {
+    Node::OnTime(on_time);
+  }
+
+  /// @see Node::OnEmcy()
+  void
+  OnEmcy(
+      ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy) {
+    Node::OnEmcy(on_emcy);
+  }
+
   /**
    * Registers the function invoked when a node guarding timeout event occurs or
    * is resolved. Only a single function can be registered at any one time. If
@@ -1672,20 +1734,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   using MapType = ::std::map<uint8_t, DriverBase*>;
 
   /**
-   * Marks a remote note as ready or not ready.
-   *
-   * @post IsReady(id) returns <b>ready</b>.
-   */
-  void IsReady(uint8_t id, bool ready) noexcept;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnCanError(), DriverBase::OnCanError()
-   */
-  void OnCanError(io::CanError error) noexcept override;
-
-  /**
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * notifies each registered driver.
    *
@@ -1693,6 +1741,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
+
+  /**
+   * The default implementation notifies all registered drivers.
+   *
+   * @see Node::OnCanError(), DriverBase::OnCanError()
+   */
+  void OnCanError(io::CanError error) noexcept override;
 
   /**
    * The default implementation notifies the driver registered for node
@@ -1712,24 +1767,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   void OnCommand(NmtCommand cs) noexcept override;
 
   /**
-   * The function invoked when a node guarding timeout event occurs or is
-   * resolved. Note that depending on the value of object 1029:01 (Error
-   * behavior object), the occurrence of a node guarding event MAY trigger an
-   * NMT state transition. If so, this function is called _after_ the state
-   * change completes.
-   *
-   * The default implementation notifies the driver registered for node
-   * <b>id</b>.
-   *
-   * @param id       the node-ID (in the range [1..127]).
-   * @param occurred `true` if the node guarding event occurred, `false` if it
-   *                 was resolved.
-   *
-   * @see DriverBase::OnNodeGuarding()
-   */
-  virtual void OnNodeGuarding(uint8_t id, bool occurred) noexcept;
-
-  /**
    * The default implementation notifies the driver registered for node
    * <b>id</b>.
    *
@@ -1747,6 +1784,55 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @see Node::OnState(), DriverBase::OnState()
    */
   void OnState(uint8_t id, NmtState st) noexcept override;
+
+  /**
+   * The default implementation notifies all registered drivers.
+   *
+   * @see Node::OnSync(), DriverBase::OnSync()
+   */
+  void OnSync(uint8_t cnt, const time_point& t) noexcept override;
+
+  /**
+   * The default implementation notifies all registered drivers.
+   *
+   * @see Node::OnSyncError(), DriverBase::OnSyncError()
+   */
+  void OnSyncError(uint16_t eec, uint8_t er) noexcept override;
+
+  /**
+   * The default implementation notifies all registered drivers.
+   *
+   * @see Node::OnTime(), DriverBase::OnTime()
+   */
+  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
+      override;
+
+  /**
+   * The default implementation notifies the driver registered for node
+   * <b>id</b>.
+   *
+   * @see Node::OnEmcy(), DriverBase::OnEmcy()
+   */
+  void OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
+              uint8_t msef[5]) noexcept override;
+
+  /**
+   * The function invoked when a node guarding timeout event occurs or is
+   * resolved. Note that depending on the value of object 1029:01 (Error
+   * behavior object), the occurrence of a node guarding event MAY trigger an
+   * NMT state transition. If so, this function is called _after_ the state
+   * change completes.
+   *
+   * The default implementation notifies the driver registered for node
+   * <b>id</b>.
+   *
+   * @param id       the node-ID (in the range [1..127]).
+   * @param occurred `true` if the node guarding event occurred, `false` if it
+   *                 was resolved.
+   *
+   * @see DriverBase::OnNodeGuarding()
+   */
+  virtual void OnNodeGuarding(uint8_t id, bool occurred) noexcept;
 
   /**
    * The function invoked when the NMT 'boot slave' process completes.
@@ -1795,6 +1881,13 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
                       const ::std::string& what) noexcept;
 
   /**
+   * Marks a remote note as ready or not ready.
+   *
+   * @post IsReady(id) returns <b>ready</b>.
+   */
+  void IsReady(uint8_t id, bool ready) noexcept;
+
+  /**
    * The function invoked when the 'update configuration' step is reached during
    * the NMT 'boot slave' process. The 'boot slave' process is halted until the
    * result of the 'update configuration' step is communicated to the NMT
@@ -1815,37 +1908,6 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
    * @param ec the SDO abort code (0 on success).
    */
   void ConfigResult(uint8_t id, ::std::error_code ec) noexcept;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnSync(), DriverBase::OnSync()
-   */
-  void OnSync(uint8_t cnt, const time_point& t) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnSyncError(), DriverBase::OnSyncError()
-   */
-  void OnSyncError(uint16_t eec, uint8_t er) noexcept override;
-
-  /**
-   * The default implementation notifies all registered drivers.
-   *
-   * @see Node::OnTime(), DriverBase::OnTime()
-   */
-  void OnTime(const ::std::chrono::system_clock::time_point& abs_time) noexcept
-      override;
-
-  /**
-   * The default implementation notifies the driver registered for node
-   * <b>id</b>.
-   *
-   * @see Node::OnEmcy(), DriverBase::OnEmcy()
-   */
-  void OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
-              uint8_t msef[5]) noexcept override;
 
   /**
    * Returns true if the remote node is configuring (i.e., the 'update
@@ -1887,15 +1949,82 @@ class AsyncMaster : public BasicMaster {
  public:
   using BasicMaster::BasicMaster;
 
- protected:
-  /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see Node::OnCanError(), DriverBase::OnCanError()
-   */
-  void OnCanError(io::CanError error) noexcept override;
+  /// @see Node::OnCanState()
+  void
+  OnCanState(::std::function<void(io::CanState, io::CanState)> on_can_state) {
+    BasicMaster::OnCanState(on_can_state);
+  }
 
+  /// @see Node::OnCanError()
+  void
+  OnCanError(::std::function<void(io::CanError)> on_can_error) {
+    BasicMaster::OnCanError(on_can_error);
+  }
+
+  /// @see Device::OnRpdoWrite()
+  void
+  OnRpdoWrite(::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write) {
+    BasicMaster::OnRpdoWrite(on_rpdo_write);
+  }
+
+  /// @see Node::OnCommand()
+  void
+  OnCommand(::std::function<void(NmtCommand)> on_command) {
+    BasicMaster::OnCommand(on_command);
+  }
+
+  /// @see Node::OnHeartbeat()
+  void
+  OnHeartbeat(::std::function<void(uint8_t, bool)> on_heartbeat) {
+    BasicMaster::OnHeartbeat(on_heartbeat);
+  }
+
+  /// @see Node::OnState()
+  void
+  OnState(::std::function<void(uint8_t, NmtState)> on_state) {
+    BasicMaster::OnState(on_state);
+  }
+
+  /// @see Node::OnSync()
+  void
+  OnSync(::std::function<void(uint8_t, const time_point&)> on_sync) {
+    BasicMaster::OnSync(on_sync);
+  }
+
+  /// @see Node::OnSyncError()
+  void
+  OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error) {
+    BasicMaster::OnSyncError(on_sync_error);
+  }
+
+  /// @see Node::OnTime()
+  void
+  OnTime(::std::function<void(const ::std::chrono::system_clock::time_point&)>
+             on_time) {
+    BasicMaster::OnTime(on_time);
+  }
+
+  /// @see Node::OnEmcy()
+  void
+  OnEmcy(
+      ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy) {
+    BasicMaster::OnEmcy(on_emcy);
+  }
+
+  /// @see BasicMaster::OnNodeGuarding()
+  void
+  OnNodeGuarding(::std::function<void(uint8_t, bool)> on_node_guarding) {
+    BasicMaster::OnNodeGuarding(on_node_guarding);
+  }
+
+  /// @see BasicMaster::OnBoot()
+  void
+  OnBoot(::std::function<void(uint8_t, NmtState, char, const ::std::string&)>
+             on_boot) {
+    BasicMaster::OnBoot(on_boot);
+  }
+
+ protected:
   /**
    * The default implementation invokes #lely::canopen::Node::OnCanState() and
    * queues a notification for each registered driver.
@@ -1904,6 +2033,14 @@ class AsyncMaster : public BasicMaster {
    */
   void OnCanState(io::CanState new_state,
                   io::CanState old_state) noexcept override;
+
+  /**
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * @see Node::OnCanError(), DriverBase::OnCanError()
+   */
+  void OnCanError(io::CanError error) noexcept override;
 
   /**
    * The default implementation queues a notification for the driver registered
@@ -1923,14 +2060,6 @@ class AsyncMaster : public BasicMaster {
   void OnCommand(NmtCommand cs) noexcept override;
 
   /**
-   * The default implementation queues a notification for all registered
-   * drivers.
-   *
-   * @see BasicMaster::OnNodeGuarding(), DriverBase::OnNodeGuarding()
-   */
-  void OnNodeGuarding(uint8_t id, bool occurred) noexcept override;
-
-  /**
    * The default implementation queues a notification for the driver registered
    * for node <b>id</b>.
    *
@@ -1946,23 +2075,6 @@ class AsyncMaster : public BasicMaster {
    * @see Node::OnState(), DriverBase::OnState()
    */
   void OnState(uint8_t id, NmtState st) noexcept override;
-
-  /**
-   * The default implementation queues a notification for the driver registered
-   * for node <b>id</b>.
-   *
-   * @see BasicMaster::OnBoot(), DriverBase::OnBoot()
-   */
-  void OnBoot(uint8_t id, NmtState st, char es,
-              const ::std::string& what) noexcept override;
-
-  /**
-   * The default implementation queues a notification for the driver registered
-   * for node <b>id</b>.
-   *
-   * @see BasicMaster::OnConfig(), DriverBase::OnConfig()
-   */
-  void OnConfig(uint8_t id) noexcept override;
 
   /**
    * The default implementation queues a notification for all registered
@@ -1997,6 +2109,31 @@ class AsyncMaster : public BasicMaster {
    */
   void OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
               uint8_t msef[5]) noexcept override;
+
+  /**
+   * The default implementation queues a notification for all registered
+   * drivers.
+   *
+   * @see BasicMaster::OnNodeGuarding(), DriverBase::OnNodeGuarding()
+   */
+  void OnNodeGuarding(uint8_t id, bool occurred) noexcept override;
+
+  /**
+   * The default implementation queues a notification for the driver registered
+   * for node <b>id</b>.
+   *
+   * @see BasicMaster::OnBoot(), DriverBase::OnBoot()
+   */
+  void OnBoot(uint8_t id, NmtState st, char es,
+              const ::std::string& what) noexcept override;
+
+  /**
+   * The default implementation queues a notification for the driver registered
+   * for node <b>id</b>.
+   *
+   * @see BasicMaster::OnConfig(), DriverBase::OnConfig()
+   */
+  void OnConfig(uint8_t id) noexcept override;
 };
 
 }  // namespace canopen

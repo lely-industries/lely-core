@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the logical device driver interface declarations.
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -638,14 +638,28 @@ class BasicLogicalDriver<BasicDriver> : LogicalDriverBase {
 
   void
   // NOLINTNEXTLINE(readability/casting)
-  OnNodeGuarding(bool /*occurred*/) noexcept override {}
-
-  void
-  // NOLINTNEXTLINE(readability/casting)
   OnHeartbeat(bool /*occurred*/) noexcept override {}
 
   void
   OnState(NmtState /*st*/) noexcept override {}
+
+  void
+  OnSync(uint8_t /*cnt*/, const time_point& /*t*/) noexcept override {}
+
+  void
+  OnSyncError(uint16_t /*eec*/, uint8_t /*er*/) noexcept override {}
+
+  void
+  OnTime(const ::std::chrono::system_clock::time_point& /*abs_time*/) noexcept
+      override {}
+
+  void
+  OnEmcy(uint16_t /*eec*/, uint8_t /*er*/,
+         uint8_t /*msef*/[5]) noexcept override {}
+
+  void
+  // NOLINTNEXTLINE(readability/casting)
+  OnNodeGuarding(bool /*occurred*/) noexcept override {}
 
   void
   OnBoot(NmtState /*st*/, char /*es*/,
@@ -661,20 +675,6 @@ class BasicLogicalDriver<BasicDriver> : LogicalDriverBase {
       ::std::function<void(::std::error_code ec)> res) noexcept override {
     res(::std::error_code{});
   }
-
-  void
-  OnSync(uint8_t /*cnt*/, const time_point& /*t*/) noexcept override {}
-
-  void
-  OnSyncError(uint16_t /*eec*/, uint8_t /*er*/) noexcept override {}
-
-  void
-  OnTime(const ::std::chrono::system_clock::time_point& /*abs_time*/) noexcept
-      override {}
-
-  void
-  OnEmcy(uint16_t /*eec*/, uint8_t /*er*/,
-         uint8_t /*msef*/[5]) noexcept override {}
 
   /**
    * Converts an object index, if it is part of the standardized profile area,
