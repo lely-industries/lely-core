@@ -231,6 +231,39 @@ int co_tpdo_sample_res(co_tpdo_t *pdo, co_unsigned32_t ac);
 /// Retrieves the time at which the next event-driven TPDO may be sent.
 void co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp);
 
+/**
+ * Triggers the transmission of a DAM-MPDO. This function has no effect if the
+ * PDO is not a valid DAM-MPDO. An error is returned if the inhibit time has not
+ * yet elapsed.
+ *
+ * @param pdo    a pointer to a Transmit-PDO service.
+ * @param id     the node-ID of the MPDO consumer (0 for all nodes, [1..127] for
+ *               a specific node).
+ * @param idx    the remote object index.
+ * @param subidx the remote object sub-index.
+ * @param data   the bytes to be transmitted.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_dam_mpdo_event(co_tpdo_t *pdo, co_unsigned8_t id, co_unsigned16_t idx,
+		co_unsigned8_t subidx, const co_unsigned8_t data[4]);
+
+/**
+ * Triggers the transmission of a DAM-MPDO. This function has no effect if the
+ * PDO is not a valid SAM-MPDO. An error is returned if the inhibit time has not
+ * yet elapsed.
+ *
+ * @param pdo    a pointer to a Transmit-PDO service.
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_sam_mpdo_event(
+		co_tpdo_t *pdo, co_unsigned16_t idx, co_unsigned8_t subidx);
+
 #ifdef __cplusplus
 }
 #endif
