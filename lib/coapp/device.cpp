@@ -84,16 +84,22 @@ struct Device::Impl_ : util::BasicLockable {
   ::std::tuple<uint16_t, uint8_t>
   RpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
+    (void)id;
+#if !LELY_NO_CO_RPDO
     auto it = rpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
                                 (static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != rpdo_mapping.end()) {
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_RPDO
     }
+#endif
     return ::std::make_tuple(idx, subidx);
   }
 
@@ -101,16 +107,21 @@ struct Device::Impl_ : util::BasicLockable {
   RpdoMapping(uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
     uint8_t id = 0;
+#if !LELY_NO_CO_RPDO
     auto it = rpdo_mapping.find((static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != rpdo_mapping.end()) {
       id = (it->second >> 24) & 0xff;
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_RPDO
     }
+#endif
     return ::std::make_tuple(id, idx, subidx);
   }
 
@@ -136,11 +147,15 @@ struct Device::Impl_ : util::BasicLockable {
 
   ::std::unique_ptr<co_dev_t, DeviceDeleter> dev;
 
+#if !LELY_NO_CO_RPDO
   ::std::map<uint32_t, uint32_t> rpdo_mapping;
+#endif
   ::std::map<uint32_t, uint32_t> tpdo_mapping;
 
   ::std::function<void(uint16_t, uint8_t)> on_write;
+#if !LELY_NO_CO_LSS
   ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write;
+#endif
 };
 
 #if !LELY_NO_CO_DCF
@@ -785,8 +800,12 @@ Device::OnWrite(::std::function<void(uint16_t, uint8_t)> on_write) {
 void
 Device::OnRpdoWrite(
     ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write) {
+#if LELY_NO_CO_RPDO
+  (void)on_rpdo_write;
+#else
   ::std::lock_guard<Impl_> lock(*impl_);
   impl_->on_rpdo_write = on_rpdo_write;
+#endif
 }
 
 co_dev_t*
@@ -1329,7 +1348,9 @@ Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept {
     return;
   }
 
+#if !LELY_NO_CO_TPDO
   co_dev_tpdo_event(dev(), idx, subidx);
+#endif
 }
 
 template <class T>
@@ -1546,6 +1567,7 @@ Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx,
 
 void
 Device::UpdateRpdoMapping() {
+#if !LELY_NO_CO_RPDO
   impl_->rpdo_mapping.clear();
 
   for (int i = 0; i < 512; i++) {
@@ -1601,6 +1623,7 @@ Device::UpdateRpdoMapping() {
       impl_->rpdo_mapping[rmap] = tmap;
     }
   }
+#endif  // !LELY_NO_CO_RPDO
 }
 
 void
@@ -1706,6 +1729,7 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
     f(idx, subidx);
   }
 
+#if !LELY_NO_CO_RPDO
   uint8_t id = 0;
   ::std::error_code ec;
   ::std::tie(id, idx, subidx) = RpdoMapping(idx, subidx, ec);
@@ -1718,6 +1742,7 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
       f(id, idx, subidx);
     }
   }
+#endif
 }
 
 }  // namespace canopen
