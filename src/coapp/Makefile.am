@@ -6,7 +6,9 @@ src += driver.cpp
 src += fiber_driver.cpp
 src += logical_driver.cpp
 src += loop_driver.cpp
+if !NO_CO_LSS
 src += lss_master.cpp
+endif
 src += master.cpp
 endif
 src += node.cpp

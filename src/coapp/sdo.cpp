@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/sdo.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,9 @@
 
 #include "coapp.hpp"
 
+#if !LELY_NO_CO_CSDO
 #include <lely/co/csdo.h>
+#endif
 #include <lely/co/val.h>
 #include <lely/coapp/sdo.hpp>
 
@@ -41,8 +43,8 @@ namespace canopen {
 
 /// The internal implementation of the Client-SDO queue.
 struct Sdo::Impl_ {
-  Impl_(can_net_t* net, co_dev_t* dev, uint8_t num);
-  Impl_(co_csdo_t* sdo, int timeout);
+  Impl_(__can_net* net, __co_dev* dev, uint8_t num);
+  Impl_(__co_csdo* sdo, int timeout);
   Impl_(const Impl_&) = delete;
   Impl_& operator=(const Impl_&) = delete;
   ~Impl_();
@@ -51,6 +53,7 @@ struct Sdo::Impl_ {
   ::std::size_t Cancel(detail::SdoRequestBase* req, SdoErrc ac);
   ::std::size_t Abort(detail::SdoRequestBase* req);
 
+#if !LELY_NO_CO_CSDO
   bool Pop(detail::SdoRequestBase* req, sllist& queue);
 
   template <class T>
@@ -59,16 +62,17 @@ struct Sdo::Impl_ {
   template <class T>
   void OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept;
 
-  void OnDnCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
+  void OnDnCon(__co_csdo*, uint16_t idx, uint8_t subidx, uint32_t ac) noexcept;
   template <class T>
-  void OnUpCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac,
+  void OnUpCon(__co_csdo*, uint16_t idx, uint8_t subidx, uint32_t ac,
                const void* ptr, size_t n) noexcept;
 
   void OnCompletion(detail::SdoRequestBase& req) noexcept;
 
-  ::std::shared_ptr<co_csdo_t> sdo;
+  ::std::shared_ptr<__co_csdo> sdo;
 
   sllist queue;
+#endif
 };
 
 namespace detail {
@@ -112,7 +116,11 @@ SdoDownloadRequestWrapper<T>::operator()() noexcept {
 template <class T>
 void
 SdoDownloadRequestWrapper<T>::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
+#endif
 }
 
 void
@@ -129,7 +137,11 @@ SdoDownloadDcfRequestWrapper::operator()() noexcept {
 
 void
 SdoDownloadDcfRequestWrapper::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnDownloadDcf(*this);
+#endif
 }
 
 template <class T>
@@ -149,7 +161,11 @@ SdoUploadRequestWrapper<T>::operator()() noexcept {
 template <class T>
 void
 SdoUploadRequestWrapper<T>::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnUpload(*this);
+#endif
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -237,7 +253,11 @@ SdoDownloadRequest<T>::operator()() noexcept {
 template <class T>
 void
 SdoDownloadRequest<T>::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnDownload(*this);
+#endif
 }
 
 void
@@ -247,7 +267,11 @@ SdoDownloadDcfRequest::operator()() noexcept {
 
 void
 SdoDownloadDcfRequest::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnDownloadDcf(*this);
+#endif
 }
 
 template <class T>
@@ -260,7 +284,11 @@ SdoUploadRequest<T>::operator()() noexcept {
 template <class T>
 void
 SdoUploadRequest<T>::OnRequest(void* data) noexcept {
+#if LELY_NO_CO_CSDO
+  (void)data;
+#else
   static_cast<Sdo::Impl_*>(data)->OnUpload(*this);
+#endif
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -339,12 +367,19 @@ template class SdoUploadRequest<uint64_t>;
 
 Sdo::Sdo() = default;
 
-Sdo::Sdo(can_net_t* net, uint8_t id) : Sdo(net, nullptr, id) {}
+Sdo::Sdo(__can_net* net, uint8_t id) : Sdo(net, nullptr, id) {}
 
-Sdo::Sdo(can_net_t* net, co_dev_t* dev, uint8_t num)
+Sdo::Sdo(__can_net* net, __co_dev* dev, uint8_t num)
     : impl_(new Impl_(net, dev, num)) {}
 
-Sdo::Sdo(co_csdo_t* sdo) : impl_(new Impl_(sdo, co_csdo_get_timeout(sdo))) {}
+Sdo::Sdo(__co_csdo* sdo)
+#if LELY_NO_CO_CSDO
+    : impl_(new Impl_(sdo, 0))
+#else
+    : impl_(new Impl_(sdo, co_csdo_get_timeout(sdo)))
+#endif
+{
+}
 
 Sdo& Sdo::operator=(Sdo&&) = default;
 
@@ -411,16 +446,29 @@ Sdo::AbortAll() {
   return impl_->Abort(nullptr);
 }
 
-Sdo::Impl_::Impl_(can_net_t* net, co_dev_t* dev, uint8_t num)
+Sdo::Impl_::Impl_(__can_net* net, __co_dev* dev, uint8_t num)
+#if LELY_NO_CO_CSDO
+{
+  (void)net;
+  (void)dev;
+  (void)num;
+#else
     : sdo(co_csdo_create(net, dev, num),
-          [=](co_csdo_t* sdo) noexcept { co_csdo_destroy(sdo); }) {
+          [=](__co_csdo* sdo) noexcept { co_csdo_destroy(sdo); }) {
   sllist_init(&queue);
+#endif
 }
 
-Sdo::Impl_::Impl_(co_csdo_t* sdo_, int timeout)
+Sdo::Impl_::Impl_(__co_csdo* sdo_, int timeout)
+#if LELY_NO_CO_CSDO
+{
+  (void)sdo_;
+  (void)timeout;
+#else
     : sdo(sdo_,
-          [=](co_csdo_t* sdo) noexcept { co_csdo_set_timeout(sdo, timeout); }) {
+          [=](__co_csdo* sdo) noexcept { co_csdo_set_timeout(sdo, timeout); }) {
   sllist_init(&queue);
+#endif
 }
 
 Sdo::Impl_::~Impl_() { Cancel(nullptr, SdoErrc::NO_SDO); }
@@ -430,11 +478,14 @@ Sdo::Impl_::Submit(detail::SdoRequestBase& req) {
   assert(req.exec);
   ev::Executor exec(req.exec);
 
+#if !LELY_NO_CO_CSDO
   exec.on_task_init();
   if (!sdo) {
+#endif
     req.id = 0;
     req.ec = SdoErrc::NO_SDO;
     exec.post(req);
+#if !LELY_NO_CO_CSDO
     exec.on_task_fini();
   } else {
     req.id = co_csdo_get_par(sdo.get())->id;
@@ -442,10 +493,17 @@ Sdo::Impl_::Submit(detail::SdoRequestBase& req) {
     sllist_push_back(&queue, &req._node);
     if (first) req.OnRequest(this);
   }
+#endif
 }
 
 ::std::size_t
 Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
+#if LELY_NO_CO_CSDO
+  (void)req;
+  (void)ac;
+
+  return 0;
+#else
   sllist queue;
   sllist_init(&queue);
 
@@ -467,10 +525,16 @@ Sdo::Impl_::Cancel(detail::SdoRequestBase* req, SdoErrc ac) {
     n += n < ::std::numeric_limits<::std::size_t>::max();
   }
   return n;
+#endif
 }
 
 ::std::size_t
 Sdo::Impl_::Abort(detail::SdoRequestBase* req) {
+#if LELY_NO_CO_CSDO
+  (void)req;
+
+  return 0;
+#else
   sllist queue;
   sllist_init(&queue);
 
@@ -478,7 +542,10 @@ Sdo::Impl_::Abort(detail::SdoRequestBase* req) {
   Pop(req, queue);
 
   return ev_task_queue_abort(&queue);
+#endif
 }
+
+#if !LELY_NO_CO_CSDO
 
 bool
 Sdo::Impl_::Pop(detail::SdoRequestBase* req, sllist& queue) {
@@ -515,7 +582,7 @@ Sdo::Impl_::OnDownload(detail::SdoDownloadRequestBase<T>& req) noexcept {
 
     co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
 
-    auto con = [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+    auto con = [](__co_csdo* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
                   void* data) noexcept {
       static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
     };
@@ -544,7 +611,7 @@ Sdo::Impl_::OnDownloadDcf(detail::SdoDownloadDcfRequestBase& req) noexcept {
   co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
   if (co_csdo_dn_dcf_req(
           sdo.get(), req.begin, req.end,
-          [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+          [](__co_csdo* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
              void* data) noexcept {
             static_cast<Impl_*>(data)->OnDnCon(sdo, idx, subidx, ac);
           },
@@ -566,7 +633,7 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
 
   co_csdo_set_timeout(sdo.get(), detail::to_sdo_timeout(req.timeout));
 
-  auto con = [](co_csdo_t* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
+  auto con = [](__co_csdo* sdo, uint16_t idx, uint8_t subidx, uint32_t ac,
                 const void* ptr, size_t n, void* data) noexcept {
     static_cast<Impl_*>(data)->OnUpCon<T>(sdo, idx, subidx, ac, ptr, n);
   };
@@ -583,7 +650,7 @@ Sdo::Impl_::OnUpload(detail::SdoUploadRequestBase<T>& req) noexcept {
 }
 
 void
-Sdo::Impl_::OnDnCon(co_csdo_t*, uint16_t idx, uint8_t subidx,
+Sdo::Impl_::OnDnCon(__co_csdo*, uint16_t idx, uint8_t subidx,
                     uint32_t ac) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   assert(task);
@@ -598,7 +665,7 @@ Sdo::Impl_::OnDnCon(co_csdo_t*, uint16_t idx, uint8_t subidx,
 
 template <class T>
 void
-Sdo::Impl_::OnUpCon(co_csdo_t*, uint16_t idx, uint8_t subidx, uint32_t ac,
+Sdo::Impl_::OnUpCon(__co_csdo*, uint16_t idx, uint8_t subidx, uint32_t ac,
                     const void* ptr, size_t n) noexcept {
   using traits = canopen_traits<T>;
   using c_type = typename traits::c_type;
@@ -636,6 +703,8 @@ Sdo::Impl_::OnCompletion(detail::SdoRequestBase& req) noexcept {
   auto task = ev_task_from_node(sllist_first(&queue));
   if (task) static_cast<detail::SdoRequestBase*>(task)->OnRequest(this);
 }
+
+#endif  // !LELY_NO_CO_CSDO
 
 }  // namespace canopen
 

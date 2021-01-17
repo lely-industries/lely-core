@@ -429,7 +429,9 @@ inc += lely/coapp/driver.hpp
 inc += lely/coapp/fiber_driver.hpp
 inc += lely/coapp/logical_driver.hpp
 inc += lely/coapp/loop_driver.hpp
+if !NO_CO_LSS
 inc += lely/coapp/lss_master.hpp
+endif
 inc += lely/coapp/master.hpp
 endif
 inc += lely/coapp/node.hpp
