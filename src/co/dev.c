@@ -4,7 +4,7 @@
  *
  * @see lely/co/dev.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -99,6 +99,11 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 	dev->lss = 0;
 
 	dev->dummy = 0;
+
+#if !LELY_NO_CO_TPDO
+	dev->tpdo_event_ind = NULL;
+	dev->tpdo_event_data = NULL;
+#endif
 
 	return dev;
 }
