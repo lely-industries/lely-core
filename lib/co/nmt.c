@@ -477,7 +477,7 @@ static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 
 #endif
 
-#ifndef LELY_CO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 /// The Transmit-PDO event indication function. @see co_dev_tpdo_event_ind_t
 static void co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data);
 #endif
@@ -2750,7 +2750,7 @@ co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 
 #endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
-#ifndef LELY_CO_CO_TPDO
+#if !LELY_NO_CO_TPDO
 static void
 co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data)
 {
