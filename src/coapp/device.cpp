@@ -31,6 +31,7 @@
 #include <lely/co/pdo.h>
 #include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
+#include <lely/util/bits.h>
 #include <lely/util/error.hpp>
 
 #include <map>
@@ -1570,9 +1571,14 @@ Device::UpdateRpdoMapping() {
 #if !LELY_NO_CO_RPDO
   impl_->rpdo_mapping.clear();
 
-  for (int i = 0; i < 512; i++) {
-    auto obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
-    if (!obj_1400) continue;
+  co_obj_t* obj_1400 = nullptr;
+
+  // Loop over all RPDOs.
+  for (int i = 0; !obj_1400 && i < 512; i++)
+    obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
+  for (; obj_1400; obj_1400 = co_obj_next(obj_1400)) {
+    int i = co_obj_get_idx(obj_1400) - 0x1400;
+    if (i >= 512) break;
     // Skip invalid PDOs.
     auto cobid = co_obj_get_val_u32(obj_1400, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
@@ -1606,9 +1612,9 @@ Device::UpdateRpdoMapping() {
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1600, 0);
     if (n != co_obj_get_val_u8(obj_5a00, 0)) continue;
-    for (int i = 1; i <= n; i++) {
-      auto rmap = co_obj_get_val_u32(obj_1600, i);
-      auto tmap = co_obj_get_val_u32(obj_5a00, i);
+    for (int j = 1; j <= n; j++) {
+      auto rmap = co_obj_get_val_u32(obj_1600, j);
+      auto tmap = co_obj_get_val_u32(obj_5a00, j);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
@@ -1616,7 +1622,7 @@ Device::UpdateRpdoMapping() {
       rmap >>= 8;
       tmap >>= 8;
       // Skip dummy-mapped objects.
-      if (co_type_is_basic((rmap >> 8) & 0xffff) && !(rmap & 0xff)) continue;
+      if (co_type_is_basic((rmap >> 8) & 0xffff)) continue;
       tmap |= static_cast<uint32_t>(id) << 24;
       impl_->rpdo_mapping[tmap] = rmap;
       // Store the reverse mapping for OnRpdoWrite().
@@ -1630,9 +1636,14 @@ void
 Device::UpdateTpdoMapping() {
   impl_->tpdo_mapping.clear();
 
-  for (int i = 0; i < 512; i++) {
-    auto obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
-    if (!obj_1800) continue;
+  co_obj_t* obj_1800 = nullptr;
+
+  // Loop over all TPDOs.
+  for (int i = 0; !obj_1800 && i < 512; i++)
+    obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
+  for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
+    int i = co_obj_get_idx(obj_1800) - 0x1800;
+    if (i >= 512) break;
     // Skip invalid PDOs.
     auto cobid = co_obj_get_val_u32(obj_1800, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
@@ -1666,9 +1677,9 @@ Device::UpdateTpdoMapping() {
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1a00, 0);
     if (n != co_obj_get_val_u8(obj_5e00, 0)) continue;
-    for (int i = 1; i <= n; i++) {
-      auto tmap = co_obj_get_val_u32(obj_1a00, i);
-      auto rmap = co_obj_get_val_u32(obj_5e00, i);
+    for (int j = 1; j <= n; j++) {
+      auto tmap = co_obj_get_val_u32(obj_1a00, j);
+      auto rmap = co_obj_get_val_u32(obj_5e00, j);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
