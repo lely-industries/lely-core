@@ -31,9 +31,14 @@
 #include <lely/co/pdo.h>
 #include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
+#if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
 #include <lely/util/bits.h>
+#endif
 #include <lely/util/error.hpp>
 
+#if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
+#include <algorithm>
+#endif
 #if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 #include <map>
 #endif
@@ -1639,6 +1644,60 @@ Device::UpdateRpdoMapping() {
       impl_->rpdo_mapping[rmap] = tmap;
     }
   }
+
+#if !LELY_NO_CO_MPDO
+  // Check if at least one RPDO is a SAM-MPDO consumer.
+  bool has_sam_mpdo = false;
+  // Loop over all RPDOs.
+  obj_1400 = nullptr;
+  for (int i = 0; !obj_1400 && i < CO_NUM_PDOS; i++)
+    obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
+  for (; !has_sam_mpdo && obj_1400; obj_1400 = co_obj_next(obj_1400)) {
+    int i = co_obj_get_idx(obj_1400) - 0x1400;
+    if (i >= CO_NUM_PDOS) break;
+    // Skip invalid PDOs.
+    if (co_obj_get_val_u32(obj_1400, 1) & CO_PDO_COBID_VALID) continue;
+    // SAM-MPDOs MUST be event-driven.
+    if (co_obj_get_val_u8(obj_1400, 2) < 0xfe) continue;
+    // Check if the PDO is a SAM-MPDO.
+    if (co_dev_get_val_u8(dev(), 0x1600 + i, 0) != CO_PDO_MAP_SAM_MPDO)
+      continue;
+    has_sam_mpdo = true;
+  }
+
+  if (has_sam_mpdo) {
+    // Loop over the object dispatching list (object 1FD0..1FFF).
+    co_obj_t* obj_1fd0 = nullptr;
+    for (int i = 0; !obj_1fd0 && i < 48; i++)
+      obj_1fd0 = co_dev_find_obj(dev(), 0x1fd0 + i);
+    for (; obj_1fd0; obj_1fd0 = co_obj_next(obj_1fd0)) {
+      if (co_obj_get_idx(obj_1fd0) > 0x1fff) break;
+      auto n = co_obj_get_val_u8(obj_1fd0, 0);
+      if (!n) continue;
+      auto sub = co_sub_next(co_obj_first_sub(obj_1fd0));
+      for (; sub && co_sub_get_subidx(sub) <= n; sub = co_sub_next(sub)) {
+        auto val = co_sub_get_val_u64(sub);
+        if (!val) continue;
+        // Extract the mapping.
+        uint32_t rmap = (val << 8) >> 40;
+        uint32_t tmap = ror32(val, 8);
+        // Skip dummy-mapped objects.
+        if (co_type_is_basic((rmap >> 8) & 0xffff)) continue;
+        // Extract the block of sub-indices.
+        uint8_t min = (val >> 8) & 0xff;
+        uint8_t max = min;
+        uint8_t blk = (val >> 56) & 0xff;
+        if (blk) max += ::std::min(blk - 1, 0xff - min);
+        // Store the (reverse) mapping for each of the sub-indices.
+        for (int j = 0; j <= max - min; j++) {
+          // Ignore out-of-range sub-indices.
+          if (static_cast<uint8_t>(j) > 0xff - (rmap & 0xff)) break;
+          impl_->rpdo_mapping[tmap + j] = rmap + j;
+        }
+      }
+    }
+  }
+#endif  // !LELY_NO_CO_MPDO
 #endif  // !LELY_NO_CO_RPDO
 }
 
@@ -1704,6 +1763,23 @@ Device::UpdateTpdoMapping() {
 #endif  // !LELY_NO_CO_TPDO
 }
 
+void
+Device::RpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx) {
+#if LELY_NO_CO_RPDO
+  (void)id;
+  (void)idx;
+  (void)subidx;
+#else
+  OnRpdoWrite(id, idx, subidx);
+
+  if (impl_->on_rpdo_write) {
+    auto f = impl_->on_rpdo_write;
+    util::UnlockGuard<Impl_> unlock(*impl_);
+    f(id, idx, subidx);
+  }
+#endif
+}
+
 #if !LELY_NO_CO_DCF
 Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
                      const ::std::string& dcf_bin, uint8_t id,
@@ -1756,15 +1832,7 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
   uint8_t id = 0;
   ::std::error_code ec;
   ::std::tie(id, idx, subidx) = RpdoMapping(idx, subidx, ec);
-  if (!ec) {
-    self->OnRpdoWrite(id, idx, subidx);
-
-    if (on_rpdo_write) {
-      auto f = on_rpdo_write;
-      util::UnlockGuard<Impl_> unlock(*this);
-      f(id, idx, subidx);
-    }
-  }
+  if (!ec) self->RpdoWrite(id, idx, subidx);
 #endif
 }
 

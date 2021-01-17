@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the CANopen device description declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -1017,6 +1017,16 @@ class Device {
    */
   virtual void
   OnRpdoWrite(uint8_t /*id*/, uint16_t /*idx*/, uint8_t /*subidx*/) noexcept {}
+
+  /**
+   * Invokes OnRpdoWrite() _as if_ a value was written to an RPDO-mapped object
+   * in the local object dictionary.
+   *
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   */
+  void RpdoWrite(uint8_t id, uint16_t idx, uint8_t subidx);
 
  private:
   struct Impl_;

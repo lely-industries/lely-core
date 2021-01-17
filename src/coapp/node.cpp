@@ -43,6 +43,9 @@
 #include <lely/co/tpdo.h>
 #endif
 #include <lely/coapp/node.hpp>
+#if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
+#include <lely/util/endian.h>
+#endif
 
 #include <memory>
 #include <string>
@@ -675,6 +678,19 @@ Node::Impl_::OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept {
 void
 Node::Impl_::OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
+#if !LELY_NO_CO_MPDO
+  assert(ptr || !n);
+
+  if (!ac) {
+    // Check if this is a SAM-MPDO.
+    auto par = co_rpdo_get_map_par(pdo);
+    assert(par);
+    auto buf = static_cast<const uint8_t*>(ptr);
+    if (par->n == CO_PDO_MAP_SAM_MPDO && n == CAN_MAX_LEN && !(buf[0] & 0x80))
+      self->RpdoWrite(buf[0], ldle_u16(buf + 1), buf[3]);
+  }
+#endif
+
   int num = co_rpdo_get_num(pdo);
   self->OnRpdo(num, static_cast<SdoErrc>(ac), ptr, n);
 
