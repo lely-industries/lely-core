@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/device.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -34,7 +34,9 @@
 #include <lely/util/bits.h>
 #include <lely/util/error.hpp>
 
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 #include <map>
+#endif
 #include <memory>
 #include <string>
 #include <tuple>
@@ -129,16 +131,22 @@ struct Device::Impl_ : util::BasicLockable {
   ::std::tuple<uint16_t, uint8_t>
   TpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
+    (void)id;
+#if !LELY_NO_CO_TPDO
     auto it = tpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
                                 (static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != tpdo_mapping.end()) {
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_TPDO
     }
+#endif
     return ::std::make_tuple(idx, subidx);
   }
 
@@ -151,7 +159,9 @@ struct Device::Impl_ : util::BasicLockable {
 #if !LELY_NO_CO_RPDO
   ::std::map<uint32_t, uint32_t> rpdo_mapping;
 #endif
+#if !LELY_NO_CO_TPDO
   ::std::map<uint32_t, uint32_t> tpdo_mapping;
+#endif
 
   ::std::function<void(uint16_t, uint8_t)> on_write;
 #if !LELY_NO_CO_LSS
@@ -1571,9 +1581,8 @@ Device::UpdateRpdoMapping() {
 #if !LELY_NO_CO_RPDO
   impl_->rpdo_mapping.clear();
 
-  co_obj_t* obj_1400 = nullptr;
-
   // Loop over all RPDOs.
+  co_obj_t* obj_1400 = nullptr;
   for (int i = 0; !obj_1400 && i < 512; i++)
     obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
   for (; obj_1400; obj_1400 = co_obj_next(obj_1400)) {
@@ -1634,11 +1643,11 @@ Device::UpdateRpdoMapping() {
 
 void
 Device::UpdateTpdoMapping() {
+#if !LELY_NO_CO_TPDO
   impl_->tpdo_mapping.clear();
 
-  co_obj_t* obj_1800 = nullptr;
-
   // Loop over all TPDOs.
+  co_obj_t* obj_1800 = nullptr;
   for (int i = 0; !obj_1800 && i < 512; i++)
     obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
   for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
@@ -1690,6 +1699,7 @@ Device::UpdateTpdoMapping() {
       impl_->tpdo_mapping[rmap] = tmap;
     }
   }
+#endif  // !LELY_NO_CO_TPDO
 }
 
 #if !LELY_NO_CO_DCF
