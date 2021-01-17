@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the network
  * management (NMT) declarations.
  *
- * @copyright 2018 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -699,6 +699,21 @@ void co_nmt_on_tpdo_event_lock(co_nmt_t *nmt);
  * possibly triggers the transmission of postponed PDOs.
  */
 void co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt);
+
+/**
+ * Implements the default behavior when an event is indicated for a source
+ * address mode multiplex PDO by triggering the transmission of the PDO with
+ * co_sam_mpdo_event().
+ *
+ * @param nmt    a pointer to an NMT master/slave service.
+ * @param n      the PDO number (in the range [1..512]).
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ *
+ * @see co_dev_sam_mpdo_event_ind_t
+ */
+void co_nmt_on_sam_mpdo_event(co_nmt_t *nmt, co_unsigned16_t n,
+		co_unsigned16_t idx, co_unsigned8_t subidx);
 
 /// Returns the pending node-ID. @see co_nmt_set_id()
 co_unsigned8_t co_nmt_get_id(const co_nmt_t *nmt);
