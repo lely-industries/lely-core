@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the CANopen
  * value declarations.
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -745,7 +745,7 @@ int co_val_cmp(co_unsigned16_t type, const void *v1, const void *v2);
 size_t co_val_read(co_unsigned16_t type, void *val, const uint_least8_t *begin,
 		const uint_least8_t *end);
 
-#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_STDIO
 
 /**
  * Reads a value of the specified data type from a file.
@@ -786,7 +786,7 @@ size_t co_val_read_file(co_unsigned16_t type, void *val, const char *filename);
  */
 size_t co_val_read_frbuf(co_unsigned16_t type, void *val, struct __frbuf *buf);
 
-#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#endif // !LELY_NO_STDIO
 
 /**
  * Reads a value of the specified data type from an SDO buffer.
@@ -831,7 +831,7 @@ co_unsigned32_t co_val_read_sdo(
 size_t co_val_write(co_unsigned16_t type, const void *val, uint_least8_t *begin,
 		uint_least8_t *end);
 
-#if !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
+#if !LELY_NO_STDIO
 
 /**
  * Writes a value of the specified data type to a file.
@@ -868,9 +868,6 @@ size_t co_val_write_file(
 size_t co_val_write_fwbuf(
 		co_unsigned16_t type, const void *val, struct __fwbuf *buf);
 
-#endif // !LELY_NO_CO_DCF || !LELY_NO_CO_OBJ_FILE
-
-#if !LELY_NO_CO_DCF && !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 /**
  * Lexes a value of the specified data type from a memory buffer.
  *
@@ -893,9 +890,7 @@ size_t co_val_write_fwbuf(
  */
 size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
 		const char *end, struct floc *at);
-#endif
 
-#if !LELY_NO_CO_GW_TXT && !LELY_NO_CO_SDEV
 /**
  * Prints a value of the specified data type to a memory buffer.
  *
@@ -916,7 +911,8 @@ size_t co_val_lex(co_unsigned16_t type, void *val, const char *begin,
  */
 size_t co_val_print(co_unsigned16_t type, const void *val, char **pbegin,
 		char *end);
-#endif
+
+#endif // !LELY_NO_STDIO
 
 #if LELY_NO_MALLOC
 static inline void
