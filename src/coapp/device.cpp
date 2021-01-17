@@ -1366,7 +1366,10 @@ Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept {
 
 #if !LELY_NO_CO_TPDO
   co_dev_tpdo_event(dev(), idx, subidx);
+#if !LELYY_NO_CO_MPDO
+  co_dev_sam_mpdo_event(dev(), idx, subidx);
 #endif
+#endif  // !LELY_NO_CO_TPDO
 }
 
 template <class T>
