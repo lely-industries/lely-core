@@ -3,7 +3,7 @@
  *
  * @see lely/co/dev.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -67,7 +67,13 @@ struct __co_dev {
 	co_dev_tpdo_event_ind_t *tpdo_event_ind;
 	/// A pointer to user-specified data for #tpdo_event_ind.
 	void *tpdo_event_data;
+#if !LELY_NO_CO_MPDO
+	/// A pointer to the SAM-MPDO event indication function.
+	co_dev_sam_mpdo_event_ind_t *sam_mpdo_event_ind;
+	/// A pointer to user-specified data for #sam_mpdo_event_ind.
+	void *sam_mpdo_event_data;
 #endif
+#endif // !LELY_NO_CO_TPDO
 };
 
 #endif // LELY_CO_DETAIL_DEV_H_

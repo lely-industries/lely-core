@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the device
  * description declarations.
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -95,6 +95,19 @@ extern "C" {
  * @param data a pointer to user-specified data.
  */
 typedef void co_dev_tpdo_event_ind_t(co_unsigned16_t num, void *data);
+
+/**
+ * The type of a CANopen source address mode multiplex PDO event indication
+ * function, invoked by co_dev_sam_mpdo_event() when an event is indicated for
+ * (a sub-object mapped into) a SAM-MPDO.
+ *
+ * @param num    the PDO number (in the range [1..512]).
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ * @param data   a pointer to user-specified data.
+ */
+typedef void co_dev_sam_mpdo_event_ind_t(co_unsigned16_t num,
+		co_unsigned16_t idx, co_unsigned8_t subidx, void *data);
 
 #if !LELY_NO_MALLOC
 void *__co_dev_alloc(void);
@@ -601,6 +614,51 @@ void co_dev_set_tpdo_event_ind(
  * @see co_dev_tpdo_event_ind_t
  */
 void co_dev_tpdo_event(
+		co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx);
+
+/**
+ * Retrieves the indication function invoked by co_dev_sam_mpdo_event() when an
+ * event is indicated for (a sub-object mapped into) a SAM-MPDO.
+ *
+ * @param dev   a pointer to a CANopen device.
+ * @param pind  the address at which to store a pointer to the indication
+ *              function (can be NULL).
+ * @param pdata the address at which to store a pointer to user-specified data
+ *              (can be NULL).
+ *
+ * @see co_dev_set_sam_mpdo_event_ind()
+ */
+void co_dev_get_sam_mpdo_event_ind(const co_dev_t *dev,
+		co_dev_sam_mpdo_event_ind_t **pind, void **pdata);
+
+/**
+ * Sets the indication function invoked by co_dev_sam_mpdo_event() when an event is
+ * indicated for (a sub-object mapped into) a SAM-MPDO.
+ *
+ * @param dev  a pointer to a CANopen device.
+ * @param ind  a pointer to the function to be invoked.
+ * @param data a pointer to user-specified data (can be NULL). <b>data</b> is
+ *             passed as the last parameter to <b>ind</b>.
+ *
+ * @see co_dev_get_sam_mpdo_event_ind()
+ */
+void co_dev_set_sam_mpdo_event_ind(
+		co_dev_t *dev, co_dev_sam_mpdo_event_ind_t *ind, void *data);
+
+/**
+ * Checks if the specified sub-object in the object dictionary of a CANopen
+ * device can be mapped into a source address mode multiplex PDO and, if so,
+ * issues an indication for the SAM-MPDO prdoucer Transmit-PDO, if any, by
+ * invoking the user-defined callback function set with
+ * co_dev_set_sam_mpdo_event_ind().
+ *
+ * @param dev    a pointer to a CANopen device.
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ *
+ * @see co_dev_sam_mpdo_event_ind_t
+ */
+void co_dev_sam_mpdo_event(
 		co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx);
 
 #ifdef __cplusplus
