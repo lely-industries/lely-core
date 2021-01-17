@@ -864,9 +864,8 @@ co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
 	assert(dev);
 
-	// Check if the specified sub-object can be mapped into a PDO.
-	const co_sub_t *sub = co_dev_find_sub(dev, idx, subidx);
-	if (!sub || !co_sub_get_pdo_mapping(sub))
+	// Check if the specified sub-object can be mapped into a TPDO.
+	if (co_dev_chk_tpdo(dev, idx, subidx))
 		return;
 
 	const co_obj_t *obj_1800 = NULL;
