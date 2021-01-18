@@ -39,7 +39,7 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=9
+SupportedObjects=12
 1=0x1005
 2=0x1014
 3=0x1016
@@ -47,14 +47,18 @@ SupportedObjects=9
 5=0x1400
 6=0x1600
 7=0x1800
-8=0x1A00
-9=0x1F80
+8=0x1801
+9=0x1A00
+10=0x1A01
+11=0x1F80
+12=0x1FA0
 
 [ManufacturerObjects]
-SupportedObjects=3
+SupportedObjects=4
 1=0x2000
 2=0x2001
 3=0x2002
+4=0x2003
 
 [1000]
 ParameterName=Device type
@@ -184,6 +188,29 @@ DataType=0x0005
 AccessType=rw
 DefaultValue=0x01
 
+[1801]
+SubNumber=3
+ParameterName=TPDO communication parameter
+ObjectType=0x09
+
+[1801sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x02
+
+[1801sub1]
+ParameterName=COB-ID used by TPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=$NODEID+0x280
+
+[1801sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFF
+
 [1A00]
 ParameterName=TPDO mapping parameter
 ObjectType=0x09
@@ -195,11 +222,33 @@ CompactSubObj=1
 NrOfEntries=1
 1=0x20020020
 
+[1A01]
+SubNumber=1
+ParameterName=TPDO mapping parameter
+ObjectType=0x09
+
+[1A01sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFE
+
 [1F80]
 ParameterName=NMT startup
 DataType=0x0007
 AccessType=rw
 ParameterValue=0x00000004
+
+[1FA0]
+ParameterName=Object scanner list
+ObjectType=0x08
+DataType=0x0007
+AccessType=rw
+CompactSubObj=1
+
+[1FA0Value]
+NrOfEntries=1
+1=0x00200300
 
 [2000]
 ParameterName=VISIBLE_STRING
@@ -214,6 +263,12 @@ PDOMapping=1
 
 [2002]
 ParameterName=TPDO test
+DataType=0x0007
+AccessType=rw
+PDOMapping=1
+
+[2003]
+ParameterName=SAM-MPDO producer test
 DataType=0x0007
 AccessType=rw
 PDOMapping=1

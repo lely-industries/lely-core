@@ -39,27 +39,31 @@ SupportedObjects=3
 3=0x1018
 
 [OptionalObjects]
-SupportedObjects=11
+SupportedObjects=14
 1=0x1005
 2=0x1006
 3=0x1014
 4=0x1016
 5=0x1017
 6=0x1400
-7=0x1600
-8=0x1800
-9=0x1A00
-10=0x1F80
-11=0x1F81
+7=0x1401
+8=0x1600
+9=0x1601
+10=0x1800
+11=0x1A00
+12=0x1F80
+13=0x1F81
+14=0x1FD0
 
 [ManufacturerObjects]
-SupportedObjects=6
-1=0x2001
-2=0x2002
-3=0x5800
-4=0x5A00
-5=0x5C00
-6=0x5E00
+SupportedObjects=7
+1=0x2000
+2=0x2200
+3=0x2400
+4=0x5800
+5=0x5A00
+6=0x5C00
+7=0x5E00
 
 [1000]
 ParameterName=Device type
@@ -160,6 +164,29 @@ DataType=0x0005
 AccessType=rw
 DefaultValue=0x01
 
+[1401]
+SubNumber=3
+ParameterName=RPDO communication parameter
+ObjectType=0x09
+
+[1401sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=0x02
+
+[1401sub1]
+ParameterName=COB-ID used by RPDO
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x2FF
+
+[1401sub2]
+ParameterName=Transmission type
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFF
+
 [1600]
 ParameterName=RPDO mapping parameter
 ObjectType=0x09
@@ -169,7 +196,18 @@ CompactSubObj=1
 
 [1600Value]
 NrOfEntries=1
-1=0x20020020
+1=0x20000120
+
+[1601]
+SubNumber=1
+ParameterName=RPDO mapping parameter
+ObjectType=0x09
+
+[1601sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=rw
+DefaultValue=0xFE
 
 [1800]
 SubNumber=3
@@ -203,7 +241,7 @@ CompactSubObj=1
 
 [1A00Value]
 NrOfEntries=1
-1=0x20010020
+1=0x22000120
 
 [1F80]
 ParameterName=NMT startup
@@ -222,27 +260,77 @@ CompactSubObj=127
 NrOfEntries=1
 127=0x00000005
 
-[2001]
-ParameterName=TPDO test
-DataType=0x0007
+[1FD0]
+ParameterName=Object dispatching list
+ObjectType=0x08
+DataType=0x001B
 AccessType=rw
+CompactSubObj=1
+
+[1FD0Value]
+NrOfEntries=1
+1=0x002400012003007F
+
+[2000]
+SubNumber=2
+ParameterName=Mapped application objects for RPDO 1
+ObjectType=0x09
+
+[2000sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[2000sub1]
+ParameterName=slave: TPDO test
+DataType=0x0007
+AccessType=rww
 PDOMapping=1
 
-[2002]
-ParameterName=RPDO test
+[2200]
+SubNumber=2
+ParameterName=Mapped application objects for TPDO 1
+ObjectType=0x09
+
+[2200sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[2200sub1]
+ParameterName=slave: RPDO test
 DataType=0x0007
-AccessType=rw
+AccessType=rwr
+PDOMapping=1
+
+[2400]
+SubNumber=2
+ParameterName=Mapped application objects for SAM-MPDOs
+ObjectType=0x09
+
+[2400sub0]
+ParameterName=Highest sub-index supported
+DataType=0x0005
+AccessType=const
+DefaultValue=1
+
+[2400sub1]
+ParameterName=slave: SAM-MPDO producer test
+DataType=0x0007
+AccessType=rww
 PDOMapping=1
 
 [5800]
 ParameterName=Remote TPDO number and node-ID
 DataType=0x0007
 AccessType=rw
-DefaultValue=0x0000017f
+DefaultValue=0x0000017F
 
 [5A00]
-ParameterName=Remote TPDO mapping
-ObjectType=0x09
+ParameterName=Remote TPDO mapping parameter
+ObjectType=0x08
 DataType=0x0007
 AccessType=rw
 CompactSubObj=1
@@ -255,11 +343,11 @@ NrOfEntries=1
 ParameterName=Remote RPDO number and node-ID
 DataType=0x0007
 AccessType=rw
-DefaultValue=0x0000017f
+DefaultValue=0x0000017F
 
 [5E00]
-ParameterName=Remote RPDO mapping
-ObjectType=0x09
+ParameterName=Remote RPDO mapping parameter
+ObjectType=0x08
 DataType=0x0007
 AccessType=rw
 CompactSubObj=1
