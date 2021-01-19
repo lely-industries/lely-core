@@ -46,7 +46,9 @@ struct BasicMaster::Impl_ {
 
   ev::Future<void> AsyncDeconfig(DriverBase* driver);
 
+#if !LELY_NO_CO_NG
   void OnNgInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+#endif
   void OnBootInd(co_nmt_t* nmt, uint8_t id, uint8_t st, char es) noexcept;
   void OnCfgInd(co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo) noexcept;
 
@@ -608,6 +610,7 @@ AsyncMaster::OnConfig(uint8_t id) noexcept {
 }
 
 BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
+#if !LELY_NO_CO_NG
   co_nmt_set_ng_ind(
       nmt,
       [](co_nmt_t* nmt, uint8_t id, int state, int reason,
@@ -615,6 +618,7 @@ BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
         static_cast<Impl_*>(data)->OnNgInd(nmt, id, state, reason);
       },
       this);
+#endif
 
   co_nmt_set_boot_ind(
       nmt,
@@ -641,6 +645,7 @@ BasicMaster::Impl_::AsyncDeconfig(DriverBase* driver) {
   return p.get_future();
 }
 
+#if !LELY_NO_CO_NG
 void
 BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
                             int reason) noexcept {
@@ -658,6 +663,7 @@ BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
     f(id, occurred);
   }
 }
+#endif
 
 void
 BasicMaster::Impl_::OnBootInd(co_nmt_t*, uint8_t id, uint8_t st,
