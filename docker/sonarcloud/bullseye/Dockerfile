@@ -4,7 +4,7 @@ FROM ${REGISTRY}/build:bullseye
 
 ARG SONAR_HOST_URL
 ARG SONAR_TOKEN
-ARG SONAR_SCANNER_VERSION=4.2.0.1873-linux
+ARG SONAR_SCANNER_VERSION=6.16.0.26112-linux
 
 RUN apt-get update -q \
         && DEBIAN_FRONTEND=noninteractive apt-get install -qy --no-install-recommends \
