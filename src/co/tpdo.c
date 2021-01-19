@@ -787,7 +787,12 @@ co_tpdo_timer_event(const struct timespec *tp, void *data)
 	co_tpdo_t *pdo = data;
 	assert(pdo);
 
-	co_tpdo_event(pdo);
+	int errsv = get_errc();
+	if (co_tpdo_event(pdo) == -1) {
+		// Restart the event timer, even if we failed to send a PDO.
+		co_tpdo_init_timer_event(pdo);
+		set_errc(errsv);
+	}
 
 	return 0;
 }
