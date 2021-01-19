@@ -641,7 +641,7 @@ TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
 TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0xf1u); // not synchronous
+  SetComm02TransmissionType(0xf1u);  // not synchronous
 
   CreateRpdo();
   StartRpdo();
@@ -849,7 +849,7 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
 TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
-  SetComm02TransmissionType(0xf1u); // reserved
+  SetComm02TransmissionType(0xf1u);  // reserved
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
