@@ -223,16 +223,18 @@ class Slave(dcf.Device):
         if "heartbeat_consumer" in cfg:
             slave.heartbeat_consumer = bool(cfg["heartbeat_consumer"])
 
+        if 0x1017 in slave:
+            slave.heartbeat_producer = slave[0x1017][0].parse_value()
+
         if "heartbeat_producer" in cfg:
-            slave.heartbeat_producer = int(cfg["heartbeat_producer"])
-            if 0x1017 in slave:
-                subobj = slave[0x1017][0]
-                heartbeat_producer = subobj.parse_value()
-                if heartbeat_producer != slave.heartbeat_producer:
-                    sdo = slave.concise_value(0x1017, 0, slave.heartbeat_producer)
+            heartbeat_producer = int(cfg["heartbeat_producer"])
+            if slave.heartbeat_producer != heartbeat_producer:
+                if 0x1017 in slave:
+                    sdo = slave.concise_value(0x1017, 0, heartbeat_producer)
                     slave.sdo.append(sdo)
-            elif slave.heartbeat_producer != 0:
-                warnings.warn(name + ": object 0x1017 does not exist", stacklevel=2)
+                else:
+                    warnings.warn(name + ": object 0x1017 does not exist", stacklevel=2)
+            slave.heartbeat_producer = heartbeat_producer
 
         if "error_behavior" in cfg:
             for sub_index, value in cfg["error_behavior"].items():
