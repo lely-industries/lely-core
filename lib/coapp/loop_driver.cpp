@@ -34,6 +34,8 @@
 #include <thread>
 #endif
 
+#include <cassert>
+
 namespace lely {
 
 namespace canopen {
@@ -102,12 +104,18 @@ LoopDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
 
 void
 LoopDriver::USleep(uint_least64_t usec) {
-  Wait(AsyncWait(::std::chrono::microseconds(usec)));
+  ::std::error_code ec;
+  USleep(usec, ec);
+  if (ec) throw ::std::system_error(ec, "USleep");
 }
 
 void
 LoopDriver::USleep(uint_least64_t usec, ::std::error_code& ec) {
-  Wait(AsyncWait(::std::chrono::microseconds(usec)), ec);
+  io_tqueue_wait* wait = nullptr;
+  auto f = master.AsyncWait(::std::chrono::microseconds(usec), &wait);
+  assert(wait);
+  Wait(f, ec);
+  if (!f.is_ready()) master.CancelWait(*wait);
 }
 
 LoopDriver::Impl_::Impl_(LoopDriver* self_, io::ContextBase ctx_)

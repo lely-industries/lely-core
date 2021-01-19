@@ -5,7 +5,7 @@
  *
  * @see lely/coapp/fiber_driver.hpp
  *
- * @copyright 2019-2020 Lely Industries N.V.
+ * @copyright 2019-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -65,12 +65,18 @@ FiberDriver::Wait(SdoFuture<void> f, ::std::error_code& ec) {
 
 void
 FiberDriver::USleep(uint_least64_t usec) {
-  Wait(AsyncWait(::std::chrono::microseconds(usec)));
+  ::std::error_code ec;
+  USleep(usec, ec);
+  if (ec) throw ::std::system_error(ec, "USleep");
 }
 
 void
 FiberDriver::USleep(uint_least64_t usec, ::std::error_code& ec) {
-  Wait(AsyncWait(::std::chrono::microseconds(usec)), ec);
+  io_tqueue_wait* wait = nullptr;
+  auto f = master.AsyncWait(::std::chrono::microseconds(usec), &wait);
+  assert(wait);
+  Wait(f, ec);
+  if (!f.is_ready()) master.CancelWait(*wait);
 }
 
 }  // namespace canopen
