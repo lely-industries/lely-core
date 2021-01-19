@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/slave.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -56,7 +56,9 @@ struct BasicSlave::Impl_ {
     return co_dev_get_id(self->dev());
   }
 
+#if !LELY_NO_CO_NG
   void OnLgInd(co_nmt_t* nmt, int state) noexcept;
+#endif
 
   static constexpr uint32_t Key(uint16_t idx, uint8_t subidx) noexcept;
   static uint32_t Key(const co_sub_t* sub) noexcept;
@@ -625,14 +627,19 @@ BasicSlave::OnLifeGuarding(::std::function<void(bool)> on_life_guarding) {
 }
 
 BasicSlave::Impl_::Impl_(BasicSlave* self_, co_nmt_t* nmt) : self(self_) {
+#if LELY_NO_CO_NG
+  (void)nmt;
+#else
   co_nmt_set_lg_ind(
       nmt,
       [](co_nmt_t* nmt, int state, void* data) noexcept {
         static_cast<Impl_*>(data)->OnLgInd(nmt, state);
       },
       this);
+#endif
 }
 
+#if !LELY_NO_CO_NG
 void
 BasicSlave::Impl_::OnLgInd(co_nmt_t* nmt, int state) noexcept {
   // Invoke the default behavior before notifying the implementation.
@@ -646,6 +653,7 @@ BasicSlave::Impl_::OnLgInd(co_nmt_t* nmt, int state) noexcept {
     f(occurred);
   }
 }
+#endif
 
 constexpr uint32_t
 BasicSlave::Impl_::Key(uint16_t idx, uint8_t subidx) noexcept {
