@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can_rt.h
  *
- * @copyright 2015-2019 Lely Industries N.V.
+ * @copyright 2015-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -363,6 +363,7 @@ io_can_rt_async_read_msg(io_can_rt_t *rt, uint_least32_t id,
 			sizeof(struct io_can_rt_async_read_msg), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_can_rt_async_read_msg *async_read_msg =
 			ev_promise_data(promise);
@@ -377,7 +378,7 @@ io_can_rt_async_read_msg(io_can_rt_t *rt, uint_least32_t id,
 	if (pread_msg)
 		*pread_msg = &async_read_msg->read_msg;
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 void
@@ -465,6 +466,7 @@ io_can_rt_async_read_err(io_can_rt_t *rt, struct io_can_rt_read_err **pread_err)
 			sizeof(struct io_can_rt_async_read_err), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_can_rt_async_read_err *async_read_err =
 			ev_promise_data(promise);
@@ -479,7 +481,7 @@ io_can_rt_async_read_err(io_can_rt_t *rt, struct io_can_rt_read_err **pread_err)
 	if (pread_err)
 		*pread_err = &async_read_err->read_err;
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 ev_future_t *
@@ -489,6 +491,7 @@ io_can_rt_async_shutdown(io_can_rt_t *rt)
 			sizeof(struct io_can_rt_async_shutdown), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_can_rt_async_shutdown *async_shutdown =
 			ev_promise_data(promise);
@@ -499,7 +502,7 @@ io_can_rt_async_shutdown(io_can_rt_t *rt)
 	io_can_rt_svc_shutdown(&rt->svc);
 	ev_exec_post(async_shutdown->task.exec, &async_shutdown->task);
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 struct io_can_rt_read_msg *
