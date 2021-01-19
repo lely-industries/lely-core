@@ -680,14 +680,10 @@ TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
                            co_unsigned32_t(DEV_ID));
   // 0x02 - transmission type
   obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xf1u));  // reserved, not synchronous
+                           co_unsigned8_t(0xf1u));  // not synchronous
 
   CreateRpdo();
   StartRpdo();
-
-  can_msg msg = CAN_MSG_INIT;
-  msg.id = DEV_ID;
-  CHECK_EQUAL(0, can_net_recv(net, &msg));
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -949,6 +945,7 @@ TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -1017,6 +1014,7 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
   StartRpdo();
 
+  // start sync timer
   CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
 
   // expire sync window
@@ -1031,7 +1029,7 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
 
   CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
 
-  // message was ignored as sync window expired when it was received
+  // message was ignored as sync window had already expired when it was received
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 }
