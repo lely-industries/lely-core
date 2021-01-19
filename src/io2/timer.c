@@ -43,6 +43,7 @@ io_timer_async_wait(io_timer_t *timer, ev_exec_t *exec,
 			sizeof(struct io_timer_async_wait), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_timer_async_wait *async_wait = ev_promise_data(promise);
 	async_wait->promise = promise;
@@ -54,7 +55,7 @@ io_timer_async_wait(io_timer_t *timer, ev_exec_t *exec,
 	if (pwait)
 		*pwait = &async_wait->wait;
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 struct io_timer_wait *
