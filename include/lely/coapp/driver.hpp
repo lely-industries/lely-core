@@ -387,6 +387,23 @@ class BasicDriver : DriverBase,
   }
 
   /**
+   * Triggers the transmission of a destination address mode multiplex PDO
+   * (DAM-MPDO).
+   *
+   * @param num    the Transmit-PDO number (in the range [1..512]).
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be transmitted.
+   *
+   * @see Node::DamMpdoEvent()
+   */
+  template <class T>
+  void
+  DamMpdoEvent(int num, uint16_t idx, uint8_t subidx, T value) {
+    master.DamMpdoEvent(num, id(), idx, subidx, value);
+  }
+
+  /**
    * Submits a wait operation. The completion task is submitted for execution
    * once the specified absolute timeout expires.
    *
