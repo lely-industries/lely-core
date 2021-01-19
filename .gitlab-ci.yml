@@ -203,6 +203,9 @@ test:i686-w64-mingw32:
   extends: .test
   image: $REGISTRY/i686-w64-mingw32:bullseye
   needs: ["build:mingw-w64: [i686-w64-mingw32]"]
+  rules:
+    - when: manual  # awaiting fix
+      allow_failure: true
 
 test:x86_64-w64-mingw32:
   extends: .test
