@@ -68,7 +68,10 @@ TEST_GROUP(CO_SyncSdo) {
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
+  void RestartSYNC() {
+    co_sync_stop(sync);
+    CHECK_EQUAL(0, co_sync_start(sync));
+  }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -97,6 +100,8 @@ TEST_GROUP(CO_SyncSdo) {
     CHECK(sync != nullptr);
 
     CoCsdoDnCon::Clear();
+
+    CHECK_EQUAL(0, co_sync_start(sync));
   }
 
   TEST_TEARDOWN() {
@@ -111,8 +116,6 @@ TEST_GROUP(CO_SyncSdo) {
 // when: co_1005_dn_ind()
 // then: CO_SDO_AC_TYPE_LEN_LO abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_TypeLenTooLow) {
-  RestartSYNC();
-
   const co_unsigned8_t num_of_mappings = 1u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED8,
@@ -145,8 +148,6 @@ TEST(CO_SyncSdo, Co1005Dn_InvalidSubobject) {
 // when: co_1005_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_SameAsPrevious) {
-  RestartSYNC();
-
   const co_unsigned32_t cobid = DEV_ID;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -162,7 +163,6 @@ TEST(CO_SyncSdo, Co1005Dn_SameAsPrevious) {
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_NewCanId) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  RestartSYNC();
 
   const co_unsigned32_t cobid = (DEV_ID + 1u) | CO_SYNC_COBID_PRODUCER;
   const auto ret =
@@ -179,7 +179,6 @@ TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_NewCanId) {
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_SameCanId_NewCobid) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  RestartSYNC();
 
   const co_unsigned32_t cobid =
       DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME;
@@ -196,8 +195,6 @@ TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_SameCanId_NewCobid) {
 // when: co_1005_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ConsumerToProducer_SameCanId) {
-  RestartSYNC();
-
   const co_unsigned32_t cobid = DEV_ID | CO_SYNC_COBID_PRODUCER;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -212,8 +209,6 @@ TEST(CO_SyncSdo, Co1005Dn_ConsumerToProducer_SameCanId) {
 // when: co_1005_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ExtendedId_NoFrameBit) {
-  RestartSYNC();
-
   const co_unsigned32_t cobid = DEV_ID | (1u << 28u);
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -228,8 +223,6 @@ TEST(CO_SyncSdo, Co1005Dn_ExtendedId_NoFrameBit) {
 // when: co_1005_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_FrameBit) {
-  RestartSYNC();
-
   const co_unsigned32_t cobid = DEV_ID | CO_SYNC_COBID_FRAME;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -244,8 +237,6 @@ TEST(CO_SyncSdo, Co1005Dn_FrameBit) {
 // when: co_1006_dn_ind()
 // then: CO_SDO_AC_TYPE_LEN_LO abort code is returned
 TEST(CO_SyncSdo, Co1006Dn_TypeLenTooLow) {
-  RestartSYNC();
-
   const co_unsigned16_t period = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1006, 0x00u, CO_DEFTYPE_UNSIGNED16, &period,
@@ -278,8 +269,6 @@ TEST(CO_SyncSdo, Co1006Dn_InvalidSubobject) {
 // when: co_1006_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1006Dn_SameAsPrevious) {
-  RestartSYNC();
-
   const co_unsigned32_t period = 0;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1006, 0x00u, CO_DEFTYPE_UNSIGNED32, &period,
@@ -294,8 +283,6 @@ TEST(CO_SyncSdo, Co1006Dn_SameAsPrevious) {
 // when: co_1006_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1006Dn) {
-  RestartSYNC();
-
   const co_unsigned32_t period = 231u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1006, 0x00u, CO_DEFTYPE_UNSIGNED32, &period,
@@ -310,8 +297,6 @@ TEST(CO_SyncSdo, Co1006Dn) {
 // when: co_1019_dn_ind()
 // then: CO_SDO_AC_TYPE_LEN_HI abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_TypeLenTooHigh) {
-  RestartSYNC();
-
   const co_unsigned16_t data = 0u;
   const auto ret =
       co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED16, &data,
@@ -343,8 +328,6 @@ TEST(CO_SyncSdo, Co1019Dn_InvalidSubobject) {
 // when: co_1019_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_SameAsPrevious) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 0u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
@@ -375,8 +358,6 @@ TEST(CO_SyncSdo, Co1019Dn_CommCyclePeriodNotZero) {
 // when: co_1019_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_OverflowEveryTime) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 1u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
@@ -390,8 +371,6 @@ TEST(CO_SyncSdo, Co1019Dn_OverflowEveryTime) {
 // when: co_1019_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_OverflowMoreThanMax) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 241u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
@@ -405,8 +384,6 @@ TEST(CO_SyncSdo, Co1019Dn_OverflowMoreThanMax) {
 // when: co_1019_dn_ind()
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1019Dn) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 32u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
