@@ -518,6 +518,7 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 		pdo->swnd = 0;
 
 		co_rpdo_init_recv(pdo);
+		co_rpdo_init_timer_event(pdo);
 		can_timer_stop(pdo->timer_swnd);
 		break;
 	}
