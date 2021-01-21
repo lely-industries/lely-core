@@ -301,7 +301,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-/// \Given pointer to device with started valid RPDO with event timer set to 1 ms
+/// \Given pointer to device with started valid RPDO with event timer set
+///        to 1 ms
 ///
 /// \When co_dev_dn_val_req is called with invalid COB-ID
 ///
@@ -329,7 +330,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_StopsEventTimer) {
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
 }
 
-/// \Given pointer to device with started invalid RPDO with event timer set to 10 ms
+/// \Given pointer to device with started invalid RPDO with event timer set
+///        to 10 ms
 ///
 /// \When co_dev_dn_val_req is called with valid COB-ID
 ///
