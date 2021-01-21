@@ -638,6 +638,19 @@ TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
   CHECK_EQUAL(-1, ret);
 }
 
+TEST(CO_Rpdo, CoRpdoSync_RPDONotValid) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
+  SetComm02SynchronousTransmission();
+
+  CreateRpdo();
+  StartRpdo();
+
+  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+
+  CHECK_EQUAL(0, ret);
+}
+
 TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
