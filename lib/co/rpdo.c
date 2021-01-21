@@ -401,6 +401,10 @@ co_rpdo_sync(co_rpdo_t *pdo, co_unsigned8_t cnt)
 		return -1;
 	}
 
+	// Check whether the PDO exists and is valid.
+	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
+		return 0;
+
 	// Ignore SYNC objects if the transmission type is not synchronous.
 	if (pdo->comm.trans > 0xf0)
 		return 0;
@@ -454,12 +458,13 @@ co_rpdo_init_timer_swnd(co_rpdo_t *pdo)
 {
 	assert(pdo);
 	assert(pdo->comm.trans <= 0xf0);
+	assert(!(pdo->comm.cobid & CO_PDO_COBID_VALID));
 
 	can_timer_stop(pdo->timer_swnd);
 	// Ignore the synchronous window length unless the RPDO is valid and
 	// synchronous.
 	co_unsigned32_t swnd = co_dev_get_val_u32(pdo->dev, 0x1007, 0x00);
-	if (!(pdo->comm.cobid & CO_PDO_COBID_VALID) && swnd) {
+	if (swnd) {
 		struct timespec start = { 0, 0 };
 		can_net_get_time(pdo->net, &start);
 		timespec_add_usec(&start, swnd);
