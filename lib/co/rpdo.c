@@ -560,6 +560,8 @@ co_1400_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return 0;
 
 		pdo->comm.event = event;
+
+		co_rpdo_init_timer_event(pdo);
 		break;
 	}
 	default: return CO_SDO_AC_NO_SUB;
