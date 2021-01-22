@@ -514,6 +514,65 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
+/// \Given pointer to device with started RPDO with event timer set to 10 ms
+///
+/// \When co_dev_dn_val_req is called with 20ms event timer
+///
+/// \Then 0 is returned, event timer is restarted and handled 20 ms after that
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_RestartsEventTimer) {
+  SetPdoCommEventTimer(10u);
+  RestartRPDO();
+
+  ReceiveMessage();  // timer started
+  SetCurrentTimeMS(5u);
+
+  const co_unsigned16_t event_timer = 20u;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMS(24u);
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
+
+  SetCurrentTimeMS(25u);
+  CHECK(CO_SdoRpdo1400Static::rpdo_err_func_called);
+  CHECK_EQUAL(0x8250u, CO_SdoRpdo1400Static::rpdo_err_func_eec);
+  CHECK_EQUAL(0x10u, CO_SdoRpdo1400Static::rpdo_err_func_er);
+}
+
+/// \Given pointer to device with started RPDO with event timer set to 10 ms
+///
+/// \When co_dev_dn_val_req is called with 0ms event timer
+///
+/// \Then 0 is returned, event timer is stopped and not handled after
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_StopsEventTimerIfZero) {
+  SetPdoCommEventTimer(10u);
+  RestartRPDO();
+
+  ReceiveMessage();  // timer started
+  SetCurrentTimeMS(5u);
+
+  const co_unsigned16_t event_timer = 0u;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMS(100u);
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
+}
+
 TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {
   std::unique_ptr<CoObjTHolder> obj2021;
 
