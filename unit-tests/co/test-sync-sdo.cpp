@@ -68,7 +68,10 @@ TEST_GROUP(CO_SyncSdo) {
     co_sub_set_val_u32(sub_comm_cobid, cobid);
   }
 
-  void RestartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
+  void RestartSYNC() {
+    co_sync_stop(sync);
+    CHECK_EQUAL(0, co_sync_start(sync));
+  }
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -97,6 +100,8 @@ TEST_GROUP(CO_SyncSdo) {
     CHECK(sync != nullptr);
 
     CoCsdoDnCon::Clear();
+
+    CHECK_EQUAL(0, co_sync_start(sync));
   }
 
   TEST_TEARDOWN() {
@@ -158,7 +163,6 @@ TEST(CO_SyncSdo, Co1005Dn_SameAsPrevious) {
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_NewCanId) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  RestartSYNC();
 
   const co_unsigned32_t cobid = (DEV_ID + 1u) | CO_SYNC_COBID_PRODUCER;
   const auto ret =
@@ -175,7 +179,6 @@ TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_NewCanId) {
 // then: 0 abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ProducerToProducer_SameCanId_NewCobid) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  RestartSYNC();
 
   const co_unsigned32_t cobid =
       DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME;
@@ -206,8 +209,6 @@ TEST(CO_SyncSdo, Co1005Dn_ConsumerToProducer_SameCanId) {
 // when: co_1005_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1005Dn_ExtendedId_NoFrameBit) {
-  RestartSYNC();
-
   const co_unsigned32_t cobid = DEV_ID | (1u << 28u);
   const auto ret =
       co_dev_dn_val_req(dev, 0x1005, 0x00u, CO_DEFTYPE_UNSIGNED32, &cobid,
@@ -357,8 +358,6 @@ TEST(CO_SyncSdo, Co1019Dn_CommCyclePeriodNotZero) {
 // when: co_1019_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_OverflowEveryTime) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 1u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
@@ -372,8 +371,6 @@ TEST(CO_SyncSdo, Co1019Dn_OverflowEveryTime) {
 // when: co_1019_dn_ind()
 // then: CO_SDO_AC_PARAM_VAL abort code is returned
 TEST(CO_SyncSdo, Co1019Dn_OverflowMoreThanMax) {
-  RestartSYNC();
-
   const co_unsigned8_t cnt = 241u;
   const auto ret = co_dev_dn_val_req(dev, 0x1019u, 0x00u, CO_DEFTYPE_UNSIGNED8,
                                      &cnt, nullptr, CoCsdoDnCon::func, nullptr);
