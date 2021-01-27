@@ -772,11 +772,15 @@ co_val_read_sdo(co_unsigned16_t type, void *val, const void *ptr, size_t n)
 	const uint_least8_t *begin = ptr;
 	const uint_least8_t *end = begin ? begin + n : NULL;
 	if (n && !co_val_read(type, val, begin, end)) {
+#if LELY_NO_ERRNO
+		ac = CO_SDO_AC_ERROR;
+#else
 		// clang-format off
 		ac = get_errnum() == ERRNUM_NOMEM
 				? CO_SDO_AC_NO_MEM
 				: CO_SDO_AC_ERROR;
 		// clang-format on
+#endif
 		set_errc(errc);
 	}
 
