@@ -145,10 +145,15 @@ co_sdo_req_dn(struct co_sdo_req *req, const void **pptr, size_t *pnbyte,
 	switch (co_sdo_req_dn_buf(req, pptr, pnbyte)) {
 	default:
 		// Convert the error number to an SDO abort code.
+#if LELY_NO_ERRNO
+		ac = CO_SDO_AC_ERROR;
+#else
 		// clang-format off
 		ac = get_errnum() == ERRNUM_NOMEM
-				? CO_SDO_AC_NO_MEM : CO_SDO_AC_ERROR;
+				? CO_SDO_AC_NO_MEM
+				: CO_SDO_AC_ERROR;
 		// clang-format on
+#endif
 		set_errc(errc);
 	// ...falls through ...
 	case 0:
