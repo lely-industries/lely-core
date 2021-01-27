@@ -1261,6 +1261,16 @@ TEST(CO_DevDCF, CoDevReadDcf_InvaildSubIdx) {
   CHECK_EQUAL(0x0000, co_dev_get_val_i16(dev, 0x1234, 0xab));
 }
 
+#if HAVE_LELY_OVERRIDE
+TEST(CO_DevDCF, CoDevReadDcf_FailedToReadNumberOfSubIndexes) {
+  LelyOverride::co_val_read(Override::NoneCallsValid);
+
+  const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, buf, buf + BUF_SIZE);
+
+  CHECK_EQUAL(0, ret);
+}
+#endif
+
 TEST(CO_DevDCF, CoDevWriteDcf) {
   co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
   uint_least8_t tmp[BUF_SIZE] = {0};
@@ -1292,11 +1302,47 @@ TEST(CO_DevDCF, CoDevWriteDcf_AfterMax) {
 
 #if LELY_NO_MALLOC
 TEST(CO_DevDCF, CoDevWriteDcf_Null) {
-  const auto ret =
-      co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, 0x1233, nullptr, nullptr);
+  co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
 
-  CHECK_EQUAL(MIN_RW_SIZE,
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
+                                    nullptr, nullptr);
+
+  CHECK_EQUAL(MIN_RW_SIZE + sizeof(co_unsigned16_t) + 2 + 1 + 4,
               ret);  // number of bytes that _would have_ been written
+}
+#endif
+
+#if HAVE_LELY_OVERRIDE
+TEST(CO_DevDCF, CoDevWriteDcf_FailedToReserveSpaceForSubIndexes) {
+  uint_least8_t buf[BUF_SIZE] = {0};
+
+  LelyOverride::co_val_write(Override::NoneCallsValid);
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
+                                    buf, buf + BUF_SIZE);
+
+  CHECK_EQUAL(0, ret);
+}
+
+TEST(CO_DevDCF, CoDevWriteDcf_FailedToWriteSubObject) {
+  co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
+  uint_least8_t buf[BUF_SIZE] = {0};
+
+  LelyOverride::co_val_write(1);
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
+                                    buf, buf + BUF_SIZE);
+
+  CHECK_EQUAL(0, ret);
+}
+
+TEST(CO_DevDCF, CoDevWriteDcf_FailedToWriteTotalNumberOfSubIndexes) {
+  co_dev_set_val_i16(dev, 0x1234, 0xab, 0x0987);
+  uint_least8_t buf[BUF_SIZE] = {0};
+
+  LelyOverride::co_val_write(6);
+  const auto ret = co_dev_write_dcf(dev, CO_UNSIGNED16_MIN, CO_UNSIGNED16_MAX,
+                                    buf, buf + BUF_SIZE);
+
+  CHECK_EQUAL(0, ret);
 }
 #endif
 
