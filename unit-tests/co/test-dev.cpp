@@ -27,6 +27,7 @@
 #include <cstring>
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <CppUTest/TestHarness.h>
 
@@ -43,6 +44,8 @@
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 #include "holder/array-init.hpp"
+
+#include "lely-cpputest-ext.hpp"
 
 static void
 CheckBuffers(const uint_least8_t* buf1, const uint_least8_t* buf2,
@@ -1371,32 +1374,41 @@ TEST(CO_DevDCF, CoDevWriteDcf_FailedToWriteTotalNumberOfSubIndexes) {
 #if !LELY_NO_CO_TPDO
 namespace CO_DevTPDO_Static {
 static unsigned int tpdo_event_ind_counter = 0;
+static co_unsigned16_t tpdo_event_ind_last_pdo_num = 0;
 }  // namespace CO_DevTPDO_Static
 
-TEST_GROUP(CO_DevTPDO) {
+TEST_BASE(CO_DevTpdoBase) {
+  TEST_BASE_SUPER(CO_DevTpdoBase);
+
+  const co_unsigned8_t DEV_ID = 0x01u;
   std::unique_ptr<CoDevTHolder> dev_holder;
   co_dev_t* dev = nullptr;
 
-  static void tpdo_event_ind(co_unsigned16_t, void*) {
+  static void tpdo_event_ind(co_unsigned16_t pdo_num, void*) {
     ++CO_DevTPDO_Static::tpdo_event_ind_counter;
+    CO_DevTPDO_Static::tpdo_event_ind_last_pdo_num = pdo_num;
   }
 
   TEST_SETUP() {
-    dev_holder.reset(new CoDevTHolder(0x01));
+    dev_holder.reset(new CoDevTHolder(DEV_ID));
     dev = dev_holder->Get();
     CHECK(dev != nullptr);
 
     CO_DevTPDO_Static::tpdo_event_ind_counter = 0;
+    CO_DevTPDO_Static::tpdo_event_ind_last_pdo_num = 0;
   }
 
   TEST_TEARDOWN() { dev_holder.reset(); }
 };
 
-TEST(CO_DevTPDO, CoDevGetTpdoEventInd_Null) {
+
+TEST_GROUP_BASE(CO_DevTpdoEventInd, CO_DevTpdoBase){};
+
+TEST(CO_DevTpdoEventInd, CoDevGetTpdoEventInd_Null) {
   co_dev_get_tpdo_event_ind(dev, nullptr, nullptr);
 }
 
-TEST(CO_DevTPDO, CoDevSetTpdoEventInd) {
+TEST(CO_DevTpdoEventInd, CoDevSetTpdoEventInd) {
   int data = 42;
   co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, &data);
 
@@ -1407,32 +1419,195 @@ TEST(CO_DevTPDO, CoDevSetTpdoEventInd) {
   POINTERS_EQUAL(&data, data_ptr);
 }
 
-TEST(CO_DevTPDO, CoDevTpdoEvent_Empty) { co_dev_tpdo_event(dev, 0x0000, 0x00); }
 
-TEST(CO_DevTPDO, CoDevTpdoEvent_OnlySubNoMapping) {
-  CoObjTHolder obj(0x1234);
-  CoSubTHolder sub(0xab, CO_DEFTYPE_INTEGER16);
-  CHECK(obj.InsertSub(sub) != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
-  co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
+TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
+  const co_unsigned16_t OBJ_IDX = 0x1234u;
+  const co_unsigned16_t SUB_IDX = 0xabu;
 
-  co_dev_tpdo_event(dev, 0x1234, 0xab);
+  std::unique_ptr<CoObjTHolder> obj_holder;
+  std::unique_ptr<CoSubTHolder> sub_holder;
+  co_sub_t* sub = nullptr;
+
+  std::vector<std::unique_ptr<CoObjTHolder>> tpdo_objects;
+  std::vector<std::unique_ptr<CoObjTHolder>> tpdo_mappings;
+
+  void CreateCustomTpdo(co_unsigned32_t cobid, co_unsigned8_t transmission,
+                        co_unsigned16_t offset = 0) {
+    std::unique_ptr<CoObjTHolder> obj1800(new CoObjTHolder(0x1800u + offset));
+    obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
+                             co_unsigned8_t(0x02u));
+    obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
+    obj1800->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, transmission);
+
+    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800->Take()));
+
+    tpdo_objects.push_back(std::move(obj1800));
+  }
+
+  void CreateSynchronousTpdo(co_unsigned16_t offset = 0) {
+    CreateCustomTpdo(DEV_ID, 0x00u, offset);
+  }
+
+  void CreateSingleEntryMapping(co_unsigned32_t mapping, co_unsigned16_t offset = 0) {
+    std::unique_ptr<CoObjTHolder> obj1a00(new CoObjTHolder(0x1a00u + offset));
+    obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+    obj1a00->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, mapping);
+    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00->Take()));
+
+    tpdo_mappings.push_back(std::move(obj1a00));
+  }
+
+  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx, co_unsigned8_t sub_idx,
+                                co_unsigned8_t num_bits) {
+    co_unsigned32_t encoding = 0;
+
+    encoding |= obj_idx << 16;
+    encoding |= sub_idx << 8;
+    encoding |= num_bits;
+
+    return encoding;
+  }
+
+  void CreateTestObject() {
+    obj_holder.reset(new CoObjTHolder(OBJ_IDX));
+    sub_holder.reset(new CoSubTHolder(SUB_IDX, CO_DEFTYPE_INTEGER16));
+
+    sub = obj_holder->InsertSub(*sub_holder);
+    CHECK(sub != nullptr);
+
+    co_sub_set_pdo_mapping(sub, 1);
+
+    CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    CreateTestObject();
+    co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
+  }
+
+  TEST_TEARDOWN() {
+    tpdo_objects.clear();
+    tpdo_mappings.clear();
+    sub_holder.reset();
+    obj_holder.reset();
+
+    TEST_BASE_TEARDOWN();
+  }
+};
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidIndices) {
+  co_dev_tpdo_event(dev, 0x0000, 0x00);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_OnlySubNoMapping) {
+  co_sub_set_pdo_mapping(sub, 0);
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTPDO, CoDevTpdoEvent_MappingPossibleButNoMapping) {
-  CoObjTHolder obj(0x1234);
-  CoSubTHolder sub_holder(0xab, CO_DEFTYPE_INTEGER16);
-  auto* const sub = obj.InsertSub(sub_holder);
-  CHECK(sub != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj.Take()));
-  co_sub_set_pdo_mapping(sub, 1);
-  co_dev_set_tpdo_event_ind(dev, tpdo_event_ind, nullptr);
-
-  co_dev_tpdo_event(dev, 0x1234, 0xab);
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_MappingPossibleButNoMapping) {
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-// TODO(tph): missing co_dev_tpdo_event() tests
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
+  CoObjTHolder obj1800(0x1800u);
+  obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
+  CreateCustomTpdo(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
+  CreateCustomTpdo(DEV_ID, 0xf1u);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
+  CreateSynchronousTpdo();
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
+  CreateSynchronousTpdo();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
+  CreateSynchronousTpdo();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
+  CreateSynchronousTpdo();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  co_dev_set_tpdo_event_ind(dev, nullptr, nullptr);
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
+  CreateSynchronousTpdo();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
+  CreateCustomTpdo(DEV_ID, 0xfeu);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
+}
+
+TEST(CO_DevTpdoEvent, CoDevTpdEvent_CallsIndicationFunctionWithMatchedTpdoNumber) {
+  CreateSynchronousTpdo(10);
+  CreateSynchronousTpdo(20);
+  CreateSynchronousTpdo(30);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10, 16u), 10);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u), 20);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, 16u), 30);
+
+  co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
+
+  CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
+  CHECK_EQUAL(21, CO_DevTPDO_Static::tpdo_event_ind_last_pdo_num);  // one-based
+}
 
 #endif  // !LELY_NO_CO_TPDO
