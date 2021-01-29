@@ -25,8 +25,9 @@
 #endif
 
 #include <cstring>
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <CppUTest/TestHarness.h>
