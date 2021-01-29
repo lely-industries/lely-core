@@ -351,6 +351,28 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
+TEST(CO_Dev, CoDevSetId_DoesNotModifySubValue_IfItHasNonBasicType) {
+  CoObjTHolder obj_holder(0x1234);
+  CoSubTHolder sub_holder(0x01, CO_DEFTYPE_TIME_OF_DAY);
+  co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
+  CHECK(sub != nullptr);
+  co_obj_t* const obj = obj_holder.Take();
+  const co_time_of_day value = {1000, 2000};
+  CHECK_EQUAL(sizeof(value), co_sub_set_val(sub, &value, sizeof(value)));
+  co_sub_set_flags(sub, CO_OBJ_FLAGS_VAL_NODEID);
+  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
+
+  const co_unsigned8_t new_id = 0x40;
+  CHECK_EQUAL(0, co_dev_set_id(dev, new_id));
+  CHECK_EQUAL(new_id, co_dev_get_id(dev));
+
+  const void* val = co_sub_get_val(sub);
+  CHECK(val != nullptr);
+  auto* u = (co_val*) val;
+  CHECK_EQUAL(value.ms, u->t.ms);
+  CHECK_EQUAL(value.days, u->t.days);
+}
+
 TEST(CO_Dev, CoDevSetId_Unconfigured) {
   const auto ret = co_dev_set_id(dev, 0xff);
 
