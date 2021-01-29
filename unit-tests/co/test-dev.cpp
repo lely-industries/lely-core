@@ -371,7 +371,7 @@ TEST(CO_Dev, CoDevSetId_DoesNotModifySubValue_IfItHasNonBasicType) {
 
   const void* val = co_sub_get_val(sub);
   CHECK(val != nullptr);
-  auto* u = (co_val*) val;
+  auto* u = reinterpret_cast<const co_val*>(val);
   CHECK_EQUAL(value.ms, u->t.ms);
   CHECK_EQUAL(value.days, u->t.days);
 }
