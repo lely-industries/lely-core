@@ -1401,7 +1401,6 @@ TEST_BASE(CO_DevTpdoBase) {
   TEST_TEARDOWN() { dev_holder.reset(); }
 };
 
-
 TEST_GROUP_BASE(CO_DevTpdoEventInd, CO_DevTpdoBase){};
 
 TEST(CO_DevTpdoEventInd, CoDevGetTpdoEventInd_Null) {
@@ -1418,7 +1417,6 @@ TEST(CO_DevTpdoEventInd, CoDevSetTpdoEventInd) {
   FUNCTIONPOINTERS_EQUAL(tpdo_event_ind, ind_ptr);
   POINTERS_EQUAL(&data, data_ptr);
 }
-
 
 TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
   const co_unsigned16_t OBJ_IDX = 0x1234u;
@@ -1448,9 +1446,11 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     CreateCustomTpdo(DEV_ID, 0x00u, offset);
   }
 
-  void CreateSingleEntryMapping(co_unsigned32_t mapping, co_unsigned16_t offset = 0) {
+  void CreateSingleEntryMapping(co_unsigned32_t mapping,
+                                co_unsigned16_t offset = 0) {
     std::unique_ptr<CoObjTHolder> obj1a00(new CoObjTHolder(0x1a00u + offset));
-    obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x01u));
+    obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
+                             co_unsigned8_t(0x01u));
     obj1a00->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, mapping);
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1a00->Take()));
 
@@ -1596,7 +1596,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
   CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTpdoEvent, CoDevTpdEvent_CallsIndicationFunctionWithMatchedTpdoNumber) {
+TEST(CO_DevTpdoEvent,
+     CoDevTpdEvent_CallsIndicationFunctionWithMatchedTpdoNumber) {
   CreateSynchronousTpdo(10);
   CreateSynchronousTpdo(20);
   CreateSynchronousTpdo(30);
