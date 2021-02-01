@@ -85,6 +85,12 @@ using current directory as working directory.
 For this command to succeed, the current directory should be
 the root folder of the repository checkout.
 
+To use some features of the library setting up the environment variables is required. It can be achieved by creating a file named, for example, `env-variables.var` containing the entries in the following format:
+```
+VARIABLE_NAME1=VALUE1
+VARIABLE_NAME2=VALUE2
+```
+After that the option `--env-file env-variables.var` can be added to the `docker run` command to load these values into the container.
 
 ## Building image locally
 
