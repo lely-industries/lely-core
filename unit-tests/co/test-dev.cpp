@@ -372,7 +372,7 @@ TEST(CO_Dev, CoDevSetId_DoesNotModifySubValue_IfItHasNonBasicType) {
 
   const void* val = co_sub_get_val(sub);
   CHECK(val != nullptr);
-  auto* u = reinterpret_cast<const co_val*>(val);
+  auto* u = static_cast<const co_val*>(val);
   CHECK_EQUAL(value.ms, u->t.ms);
   CHECK_EQUAL(value.days, u->t.days);
 }
@@ -1430,9 +1430,9 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
   std::vector<std::unique_ptr<CoObjTHolder>> tpdo_objects;
   std::vector<std::unique_ptr<CoObjTHolder>> tpdo_mappings;
 
-  void CreateCustomTpdo(co_unsigned32_t cobid, co_unsigned8_t transmission,
-                        co_unsigned16_t offset = 0) {
-    std::unique_ptr<CoObjTHolder> obj1800(new CoObjTHolder(0x1800u + offset));
+  void CreateTpdoCommObject(co_unsigned32_t cobid, co_unsigned8_t transmission,
+                            co_unsigned16_t tpdo_num = 0) {
+    std::unique_ptr<CoObjTHolder> obj1800(new CoObjTHolder(0x1800u + tpdo_num));
     obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x02u));
     obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
@@ -1443,13 +1443,13 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_objects.push_back(std::move(obj1800));
   }
 
-  void CreateSynchronousTpdo(co_unsigned16_t offset = 0) {
-    CreateCustomTpdo(DEV_ID, 0x00u, offset);
+  void CreateSynchronousTpdoCommObject(co_unsigned16_t tpdo_num = 0) {
+    CreateTpdoCommObject(DEV_ID, 0x00u, tpdo_num);
   }
 
   void CreateSingleEntryMapping(co_unsigned32_t mapping,
-                                co_unsigned16_t offset = 0) {
-    std::unique_ptr<CoObjTHolder> obj1a00(new CoObjTHolder(0x1a00u + offset));
+                                co_unsigned16_t tpdo_num = 0) {
+    std::unique_ptr<CoObjTHolder> obj1a00(new CoObjTHolder(0x1a00u + tpdo_num));
     obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x01u));
     obj1a00->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, mapping);
@@ -1458,13 +1458,12 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_mappings.push_back(std::move(obj1a00));
   }
 
-  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx, co_unsigned8_t sub_idx,
-                                co_unsigned8_t num_bits) {
+  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx,
+                                co_unsigned8_t sub_idx) {
     co_unsigned32_t encoding = 0;
 
     encoding |= obj_idx << 16;
     encoding |= sub_idx << 8;
-    encoding |= num_bits;
 
     return encoding;
   }
@@ -1518,7 +1517,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
   CoObjTHolder obj1800(0x1800u);
   obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1526,8 +1525,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
-  CreateCustomTpdo(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateTpdoCommObject(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1535,8 +1534,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
-  CreateCustomTpdo(DEV_ID, 0xf1u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateTpdoCommObject(DEV_ID, 0xf1u);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1544,7 +1543,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
-  CreateSynchronousTpdo();
+  CreateSynchronousTpdoCommObject();
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1552,8 +1551,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
-  CreateSynchronousTpdo();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX, 16u));
+  CreateSynchronousTpdoCommObject();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1561,8 +1560,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
-  CreateSynchronousTpdo();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, 16u));
+  CreateSynchronousTpdoCommObject();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1570,8 +1569,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
-  CreateSynchronousTpdo();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateSynchronousTpdoCommObject();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
   co_dev_set_tpdo_event_ind(dev, nullptr, nullptr);
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
@@ -1580,8 +1579,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
-  CreateSynchronousTpdo();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateSynchronousTpdoCommObject();
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1589,8 +1588,8 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
-  CreateCustomTpdo(DEV_ID, 0xfeu);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u));
+  CreateTpdoCommObject(DEV_ID, 0xfeu);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1599,12 +1598,12 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
 
 TEST(CO_DevTpdoEvent,
      CoDevTpdEvent_CallsIndicationFunctionWithMatchedTpdoNumber) {
-  CreateSynchronousTpdo(10);
-  CreateSynchronousTpdo(20);
-  CreateSynchronousTpdo(30);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10, 16u), 10);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, 16u), 20);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, 16u), 30);
+  CreateSynchronousTpdoCommObject(10);
+  CreateSynchronousTpdoCommObject(20);
+  CreateSynchronousTpdoCommObject(30);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10), 10);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX), 20);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10), 30);
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
