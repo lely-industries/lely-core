@@ -261,7 +261,11 @@ TAB_SIZE               = 8
 # commands \{ and \} for these it is advised to use the version @{ and @} or use
 # a double escape (\\{ and \\})
 
-ALIASES                =
+ALIASES                = "Given=<b>Given</b> "
+ALIASES               += "When=<b>When</b> "
+ALIASES               += "Then=<b>Then</b> "
+ALIASES               += "Calls=<br>calls "
+ALIASES               += "IfCalls{2}=<br>if \1: calls \2"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
@@ -833,6 +837,7 @@ INPUT                  =
 INPUT                  += @top_srcdir@/README.md
 INPUT                  += @top_srcdir@/include
 INPUT                  += @top_srcdir@/lib
+INPUT                  += @top_srcdir@/unit-tests
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
