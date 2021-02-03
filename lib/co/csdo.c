@@ -2597,7 +2597,7 @@ co_csdo_init(co_csdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 
 	int errc = 0;
 
-	if (!num || num > (dev ? 128 : CO_NUM_NODES)) {
+	if (!num || num > (dev ? CO_NUM_SDOS : CO_NUM_NODES)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -2684,7 +2684,7 @@ static void
 co_csdo_fini(co_csdo_t *sdo)
 {
 	assert(sdo);
-	assert(sdo->num >= 1 && sdo->num <= 128);
+	assert(sdo->num >= 1 && sdo->num <= CO_NUM_SDOS);
 
 	co_csdo_stop(sdo);
 
