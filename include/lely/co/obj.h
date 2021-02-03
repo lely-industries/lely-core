@@ -253,7 +253,7 @@ co_unsigned16_t co_obj_get_idx(const co_obj_t *obj);
  * @param obj       a pointer to a CANopen object.
  * @param maxsubidx the maximum number of sub-indices to return.
  * @param subidx    an array of at least <b>maxsubidx</b> indices (can be NULL).
- *                  On success, *<b>idx</b> contains the sub-indices.
+ *                  On success, *<b>subidx</b> contains the sub-indices.
  *
  * @returns the total number of sub-indices in the object (which may be
  * different from <b>maxsubidx</b>).
