@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, src/sdo.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -886,7 +886,7 @@ __co_csdo_init(struct __co_csdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (!num || num > (dev ? 128 : CO_NUM_NODES)) {
+	if (!num || num > (dev ? CO_NUM_SDOS : CO_NUM_NODES)) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -982,7 +982,7 @@ void
 __co_csdo_fini(struct __co_csdo *sdo)
 {
 	assert(sdo);
-	assert(sdo->num >= 1 && sdo->num <= 128);
+	assert(sdo->num >= 1 && sdo->num <= CO_NUM_SDOS);
 
 	co_csdo_stop(sdo);
 

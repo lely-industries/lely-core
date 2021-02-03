@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Service Data
  * Object (SDO) declarations.
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -173,6 +173,9 @@ struct co_sdo_par {
 
 /// SDO abort code: No data available.
 #define CO_SDO_AC_NO_DATA UINT32_C(0x08000024)
+
+/// The maximum number of Client/Server-SDOs.
+#define CO_NUM_SDOS 128
 
 /// A CANopen SDO upload/download request.
 struct co_sdo_req {

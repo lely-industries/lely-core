@@ -553,7 +553,7 @@ __co_ssdo_init(struct __co_ssdo *sdo, can_net_t *net, co_dev_t *dev,
 
 	int errc = 0;
 
-	if (!num || num > 128) {
+	if (!num || num > CO_NUM_SDOS) {
 		errc = errnum2c(ERRNUM_INVAL);
 		goto error_param;
 	}
@@ -636,7 +636,7 @@ void
 __co_ssdo_fini(struct __co_ssdo *sdo)
 {
 	assert(sdo);
-	assert(sdo->num >= 1 && sdo->num <= 128);
+	assert(sdo->num >= 1 && sdo->num <= CO_NUM_SDOS);
 
 	co_ssdo_stop(sdo);
 
