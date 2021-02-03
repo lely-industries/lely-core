@@ -125,9 +125,6 @@ static int co_nmt_srv_start_lss(struct co_nmt_srv *srv);
 static void co_nmt_srv_stop_lss(struct co_nmt_srv *srv);
 #endif
 
-/// The maximum number of Client/Server-SDOs.
-#define CO_NUM_SDO 128
-
 struct co_nmt_srv *
 co_nmt_srv_init(struct co_nmt_srv *srv, co_nmt_t *nmt)
 {
@@ -554,7 +551,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 	co_dev_t *dev = co_nmt_get_dev(srv->nmt);
 
 	size_t nssdo = 0;
-	for (co_unsigned8_t i = 0; i < CO_NUM_SDO; i++) {
+	for (co_unsigned8_t i = 0; i < CO_NUM_SDOS; i++) {
 		co_obj_t *obj_1200 = co_dev_find_obj(dev, 0x1200 + i);
 		// The default Server-SDO does not have to exist in the object
 		// dictionary.
@@ -588,7 +585,7 @@ co_nmt_srv_init_sdo(struct co_nmt_srv *srv)
 	assert(!srv->ncsdo);
 
 	size_t ncsdo = 0;
-	for (co_unsigned8_t i = 0; i < CO_NUM_SDO; i++) {
+	for (co_unsigned8_t i = 0; i < CO_NUM_SDOS; i++) {
 		co_obj_t *obj_1280 = co_dev_find_obj(dev, 0x1280 + i);
 		if (!obj_1280)
 			continue;

@@ -185,6 +185,9 @@ struct co_sdo_par {
 #endif
 #endif
 
+/// The maximum number of Client/Server-SDOs.
+#define CO_NUM_SDOS 128
+
 /// A CANopen SDO upload/download request.
 struct co_sdo_req {
 	/**
