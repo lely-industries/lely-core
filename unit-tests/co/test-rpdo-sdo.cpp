@@ -301,12 +301,12 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-/// \Given pointer to device with started valid RPDO with event timer set
-///        to 1 ms
+/// \Given pointer to a device with started valid RPDO with event timer set
 ///
-/// \When co_dev_dn_val_req is called with invalid COB-ID
+/// \When RPDO communication parameters object's sub-object 0x01 is changed to
+///       invalid COB-ID using SDO
 ///
-/// \Then 0 is returned, event timer is stopped and not handled after 2 ms
+/// \Then 0 is returned, event timer is stopped and not triggered later
 ///       \Calls co_dev_find_sub()
 ///       \Calls co_sub_set_val()
 ///       \Calls co_rpdo_stop()
@@ -330,12 +330,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_StopsEventTimer) {
   CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
 }
 
-/// \Given pointer to device with started invalid RPDO with event timer set
-///        to 10 ms
+/// \Given pointer to a device with started invalid RPDO with event timer set
 ///
-/// \When co_dev_dn_val_req is called with valid COB-ID
+/// \When RPDO communication parameters object's sub-object 0x01 is changed to
+///       valid COB-ID using SDO
 ///
-/// \Then 0 is returned, event timer is started and handled 10 ms after that
+/// \Then 0 is returned, event timer is started and triggered after sufficent
+///       time passes after COB-ID change
 ///       \Calls co_dev_find_sub()
 ///       \Calls co_sub_set_val()
 ///       \Calls co_rpdo_stop()
@@ -514,11 +515,13 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
 }
 
-/// \Given pointer to device with started RPDO with event timer set to 10 ms
+/// \Given pointer to a device with started RPDO with event timer set
 ///
-/// \When co_dev_dn_val_req is called with 20ms event timer
+/// \When RPDO communication parameters object's sub-object 0x05 is changed to
+///       a new event timer value
 ///
-/// \Then 0 is returned, event timer is restarted and handled 20 ms after that
+/// \Then 0 is returned, event timer is restarted and triggered after sufficent
+///       time passes after event timer change
 ///       \Calls co_dev_find_sub()
 ///       \Calls co_sub_set_val()
 ///       \Calls co_rpdo_stop()
@@ -546,11 +549,12 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_RestartsEventTimer) {
   CHECK_EQUAL(0x10u, CO_SdoRpdo1400Static::rpdo_err_func_er);
 }
 
-/// \Given pointer to device with started RPDO with event timer set to 10 ms
+/// \Given pointer to a device with started RPDO with event timer set
 ///
-/// \When co_dev_dn_val_req is called with 0ms event timer
+/// \When RPDO communication parameters object's sub-object 0x05 is changed to
+///       zero
 ///
-/// \Then 0 is returned, event timer is stopped and not handled after
+/// \Then 0 is returned, event timer is stopped and not triggered later
 ///       \Calls co_dev_find_sub()
 ///       \Calls co_sub_set_val()
 ///       \Calls co_rpdo_stop()
