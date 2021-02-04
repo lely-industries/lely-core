@@ -361,7 +361,7 @@ TEST(CO_Dev, CoDevSetId_CoType_NonBasic) {
   co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
   CHECK(sub != nullptr);
   co_obj_t* const obj = obj_holder.Take();
-  const co_time_of_day value = {1000, 2000};
+  const co_time_of_day value = {1000u, 2000u};
   CHECK_EQUAL(sizeof(value), co_sub_set_val(sub, &value, sizeof(value)));
   co_sub_set_flags(sub, CO_OBJ_FLAGS_VAL_NODEID);
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj));
