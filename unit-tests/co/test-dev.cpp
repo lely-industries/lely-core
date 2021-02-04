@@ -1424,7 +1424,7 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_objects.push_back(std::move(obj1800));
   }
 
-  void CreateSynchronousTpdoCommObject(co_unsigned16_t tpdo_num = 1) {
+  void CreateAcyclicTpdoCommObject(co_unsigned16_t tpdo_num = 1) {
     CreateTpdoCommObject(DEV_ID, 0x00u, tpdo_num);
   }
 
@@ -1526,7 +1526,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
-  CreateSynchronousTpdoCommObject();
+  CreateAcyclicTpdoCommObject();
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1534,7 +1534,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
-  CreateSynchronousTpdoCommObject();
+  CreateAcyclicTpdoCommObject();
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
@@ -1543,7 +1543,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
-  CreateSynchronousTpdoCommObject();
+  CreateAcyclicTpdoCommObject();
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
@@ -1552,7 +1552,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
-  CreateSynchronousTpdoCommObject();
+  CreateAcyclicTpdoCommObject();
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
   co_dev_set_tpdo_event_ind(dev, nullptr, nullptr);
 
@@ -1562,7 +1562,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidAcyclicTpdo) {
-  CreateSynchronousTpdoCommObject();
+  CreateAcyclicTpdoCommObject();
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
@@ -1580,10 +1580,10 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidEventDrivenTpdo) {
 }
 
 TEST(CO_DevTpdoEvent, CoDevTpdEvent_CallsIndicationFunction_ForMatchedTpdos) {
-  CreateSynchronousTpdoCommObject(10);
-  CreateSynchronousTpdoCommObject(20);
-  CreateSynchronousTpdoCommObject(30);
-  CreateSynchronousTpdoCommObject(40);
+  CreateAcyclicTpdoCommObject(10);
+  CreateAcyclicTpdoCommObject(20);
+  CreateAcyclicTpdoCommObject(30);
+  CreateAcyclicTpdoCommObject(40);
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10, SUB_SIZE), 10);
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE), 20);
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE), 30);
