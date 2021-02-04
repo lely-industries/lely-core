@@ -372,9 +372,9 @@ TEST(CO_Dev, CoDevSetId_CoType_NonBasic) {
 
   const void* val = co_sub_get_val(sub);
   CHECK(val != nullptr);
-  auto* u = static_cast<const co_val*>(val);
-  CHECK_EQUAL(value.ms, u->t.ms);
-  CHECK_EQUAL(value.days, u->t.days);
+  const auto* const val_ret = static_cast<const co_val*>(val);
+  CHECK_EQUAL(value.ms, val_ret->t.ms);
+  CHECK_EQUAL(value.days, val_ret->t.days);
 }
 
 TEST(CO_Dev, CoDevSetId_Unconfigured) {
@@ -1507,7 +1507,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobId) {
   CreateTpdoCommObject(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
@@ -1561,7 +1561,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
   CHECK_EQUAL(0, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidAcyclicTpdo) {
   CreateSynchronousTpdoCommObject();
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
@@ -1570,7 +1570,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
   CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
+TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ValidEventDrivenTpdo) {
   CreateTpdoCommObject(DEV_ID, 0xfeu);
   CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
