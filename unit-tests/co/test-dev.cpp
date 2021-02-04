@@ -355,7 +355,7 @@ TEST(CO_Dev, CoDevSetId_CheckObj) {
 #include <lely/co/def/basic.def>
 #undef LELY_CO_DEFINE_TYPE
 
-TEST(CO_Dev, CoDevSetId_DoesNotModifySubValue_IfItHasNonBasicType) {
+TEST(CO_Dev, CoDevSetId_CoType_NonBasic) {
   CoObjTHolder obj_holder(0x1234);
   CoSubTHolder sub_holder(0x01, CO_DEFTYPE_TIME_OF_DAY);
   co_sub_t* const sub = obj_holder.InsertSub(sub_holder);
@@ -1401,6 +1401,7 @@ TEST(CO_DevTpdoEventInd, CoDevSetTpdoEventInd) {
 TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
   const co_unsigned16_t OBJ_IDX = 0x1234u;
   const co_unsigned16_t SUB_IDX = 0xabu;
+  const co_unsigned8_t SUB_SIZE = 16u;
 
   std::unique_ptr<CoObjTHolder> obj_holder;
   std::unique_ptr<CoSubTHolder> sub_holder;
@@ -1410,8 +1411,9 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
   std::vector<std::unique_ptr<CoObjTHolder>> tpdo_mappings;
 
   void CreateTpdoCommObject(co_unsigned32_t cobid, co_unsigned8_t transmission,
-                            co_unsigned16_t tpdo_num = 0) {
-    std::unique_ptr<CoObjTHolder> obj1800(new CoObjTHolder(0x1800u + tpdo_num));
+                            co_unsigned16_t tpdo_num = 1) {
+    std::unique_ptr<CoObjTHolder> obj1800(
+        new CoObjTHolder(0x1800u + tpdo_num - 1));
     obj1800->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x02u));
     obj1800->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
@@ -1422,13 +1424,14 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_objects.push_back(std::move(obj1800));
   }
 
-  void CreateSynchronousTpdoCommObject(co_unsigned16_t tpdo_num = 0) {
+  void CreateSynchronousTpdoCommObject(co_unsigned16_t tpdo_num = 1) {
     CreateTpdoCommObject(DEV_ID, 0x00u, tpdo_num);
   }
 
   void CreateSingleEntryMapping(co_unsigned32_t mapping,
-                                co_unsigned16_t tpdo_num = 0) {
-    std::unique_ptr<CoObjTHolder> obj1a00(new CoObjTHolder(0x1a00u + tpdo_num));
+                                co_unsigned16_t tpdo_num = 1) {
+    std::unique_ptr<CoObjTHolder> obj1a00(
+        new CoObjTHolder(0x1a00u + tpdo_num - 1));
     obj1a00->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8,
                              co_unsigned8_t(0x01u));
     obj1a00->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, mapping);
@@ -1437,12 +1440,13 @@ TEST_GROUP_BASE(CO_DevTpdoEvent, CO_DevTpdoBase) {
     tpdo_mappings.push_back(std::move(obj1a00));
   }
 
-  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx,
-                                co_unsigned8_t sub_idx) {
+  co_unsigned32_t EncodeMapping(co_unsigned16_t obj_idx, co_unsigned8_t sub_idx,
+                                co_unsigned8_t num_bits) {
     co_unsigned32_t encoding = 0;
 
     encoding |= obj_idx << 16;
     encoding |= sub_idx << 8;
+    encoding |= num_bits;
 
     return encoding;
   }
@@ -1496,7 +1500,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
   CoObjTHolder obj1800(0x1800u);
   obj1800.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
   CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1800.Take()));
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1505,7 +1509,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoMaxSubIndex) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
   CreateTpdoCommObject(DEV_ID | CO_PDO_COBID_VALID, 0x00u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1514,7 +1518,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_InvalidTpdoCobID) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_ReservedTransmissionType) {
   CreateTpdoCommObject(DEV_ID, 0xf1u);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1531,7 +1535,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoTpdoMapping) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
   CreateSynchronousTpdoCommObject();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX - 0x100, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1540,7 +1544,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentObjectIndexInMapping) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
   CreateSynchronousTpdoCommObject();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1549,7 +1553,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_DifferentSubIndexInMapping) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
   CreateSynchronousTpdoCommObject();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
   co_dev_set_tpdo_event_ind(dev, nullptr, nullptr);
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
@@ -1559,7 +1563,7 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_NoIndicationFunction) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
   CreateSynchronousTpdoCommObject();
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
@@ -1568,26 +1572,27 @@ TEST(CO_DevTpdoEvent, CoDevTpdoEvent_SynchronousTpdoTransmission) {
 
 TEST(CO_DevTpdoEvent, CoDevTpdoEvent_EventDrivenTpdoTransmission) {
   CreateTpdoCommObject(DEV_ID, 0xfeu);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX));
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE));
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
   CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
 }
 
-TEST(CO_DevTpdoEvent,
-     CoDevTpdEvent_CallsIndicationFunctionWithMatchedTpdoNumber) {
+TEST(CO_DevTpdoEvent, CoDevTpdEvent_CallsIndicationFunction_ForMatchedTpdos) {
   CreateSynchronousTpdoCommObject(10);
   CreateSynchronousTpdoCommObject(20);
   CreateSynchronousTpdoCommObject(30);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10), 10);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX), 20);
-  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10), 30);
+  CreateSynchronousTpdoCommObject(40);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX - 10, SUB_SIZE), 10);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE), 20);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX, SUB_SIZE), 30);
+  CreateSingleEntryMapping(EncodeMapping(OBJ_IDX, SUB_IDX + 10, SUB_SIZE), 40);
 
   co_dev_tpdo_event(dev, OBJ_IDX, SUB_IDX);
 
-  CHECK_EQUAL(1, CO_DevTPDO_Static::tpdo_event_ind_counter);
-  CHECK_EQUAL(21, CO_DevTPDO_Static::tpdo_event_ind_last_pdo_num);  // one-based
+  CHECK_EQUAL(2, CO_DevTPDO_Static::tpdo_event_ind_counter);
+  CHECK_EQUAL(30, CO_DevTPDO_Static::tpdo_event_ind_last_pdo_num);
 }
 
 #endif  // !LELY_NO_CO_TPDO
