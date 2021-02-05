@@ -317,6 +317,24 @@ AS_IF([test "$enable_ng" == "no"], [
 	AC_DEFINE([LELY_NO_CO_NG], [1], [Define to 1 if node guarding support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_NMT_BOOT], [false])
+AC_ARG_ENABLE([nmt-boot],
+	AS_HELP_STRING([--disable-nmt-boot], [disable NMT boot slave support]))
+AS_IF([test "$enable_master" == "no"], [enable_nmt_boot=no])
+AS_IF([test "$enable_nmt_boot" == "no"], [
+	AM_CONDITIONAL([NO_CO_NMT_BOOT], [true])
+	AC_DEFINE([LELY_NO_CO_NMT_BOOT], [1], [Define to 1 if NMT boot slave support is disabled.])
+])
+
+AM_CONDITIONAL([NO_CO_NMT_CFG], [false])
+AC_ARG_ENABLE([nmt-cfg],
+	AS_HELP_STRING([--disable-nmt-cfg], [disable NMT configuration request support]))
+AS_IF([test "$enable_master" == "no"], [enable_nmt_cfg=no])
+AS_IF([test "$enable_nmt_cfg" == "no"], [
+	AM_CONDITIONAL([NO_CO_NMT_CFG], [true])
+	AC_DEFINE([LELY_NO_CO_NMT_CFG], [1], [Define to 1 if NMT configuration request support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_GW], [false])
 AC_ARG_ENABLE([gw],
 	AS_HELP_STRING([--disable-gw], [disable gateway support]))
