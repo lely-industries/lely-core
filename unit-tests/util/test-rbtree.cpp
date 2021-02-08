@@ -54,6 +54,54 @@ TEST(Util_RbtreeCmpInts, RbtreeCmpInts) {
   CHECK_COMPARE(0, <, rbtree_cmp_ints(&b, &a));
 }
 
+TEST_GROUP(Util_RbtreeInit){};
+
+/// @name rbtree_init()
+///@{
+
+/// \Given an uninitialized instance of a red-black tree (rbtree)
+///
+/// \When rbtree_init() is called with a pointer to a comparator function
+///
+/// \Then tree is initialized, has zero nodes, null pointer to root and
+///       requested comparator function set
+TEST(Util_RbtreeInit, RbtreeInit) {
+  rbtree tree;
+
+  rbtree_init(&tree, rbtree_cmp_ints);
+
+  POINTERS_EQUAL(nullptr, tree.root);
+  POINTERS_EQUAL(rbtree_cmp_ints, tree.cmp);
+  CHECK_EQUAL(0u, tree.num_nodes);
+}
+
+///@}
+
+/// @name rbnode_init()
+///@{
+
+/// \Given an uninitialized instance of a red-black tree node (rbnode) and some
+///        key
+///
+/// \When rbnode_init() is called with a pointer to that key
+///
+/// \Then node is initialized, has null pointers to left and right children
+///       nodes, zeroed parent pointer with black color encoded and pointer to
+///       requested key set
+TEST(Util_RbtreeInit, RbnodeInit) {
+  rbnode node;
+  const int key = 42;
+
+  rbnode_init(&node, &key);
+
+  POINTERS_EQUAL(&key, node.key);
+  POINTERS_EQUAL(nullptr, node.left);
+  POINTERS_EQUAL(nullptr, node.right);
+  CHECK_EQUAL(0u, node.parent);
+}
+
+///@}
+
 TEST_GROUP(Util_Rbtree) {
   rbtree tree;
   static const size_t NODES_NUMBER = 10;
