@@ -68,10 +68,22 @@ TEST_GROUP(Util_Rbtree) {
   }
 };
 
-TEST(Util_Rbtree, RbtreeInit) {
-  CHECK_EQUAL(0, rbtree_size(&tree));
-  POINTERS_EQUAL(nullptr, rbtree_root(&tree));
+/// @name rbtree_size()
+///@{
+
+TEST(Util_Rbtree, RbtreeSize_EmptyTree) { CHECK_EQUAL(0, rbtree_size(&tree)); }
+
+TEST(Util_Rbtree, RbtreeSize_TwoNodes) {
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  CHECK_EQUAL(2u, rbtree_size(&tree));
 }
+
+///@}
+
+/// @name rbtree_empty()
+///@{
 
 TEST(Util_Rbtree, RbtreeEmpty_IsEmpty) { CHECK_EQUAL(1, rbtree_empty(&tree)); }
 
@@ -81,14 +93,19 @@ TEST(Util_Rbtree, RbtreeEmpty_RootAdded) {
   CHECK_EQUAL(0, rbtree_empty(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeEmpty_LeaveAdded) {
+TEST(Util_Rbtree, RbtreeEmpty_LeafAdded) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
   CHECK_EQUAL(0, rbtree_empty(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeInsert_Empty) {
+///@}
+
+/// @name rbtree_insert()
+///@{
+
+TEST(Util_Rbtree, RbtreeInsert_EmptyTree) {
   rbtree_insert(&tree, &nodes[0]);
 
   rbnode* root_ptr = rbtree_root(&tree);
@@ -151,6 +168,11 @@ TEST(Util_Rbtree, RbnodeInsert_RightRotateAtGrandparent) {
   CHECK_EQUAL(7U, rbtree_size(&tree));
 }
 
+///@}
+
+/// @name rbnode_prev()
+///@{
+
 TEST(Util_Rbtree, RbnodePrev_NodeIsRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -175,12 +197,53 @@ TEST(Util_Rbtree, RbnodePrev_NodeHasRightSubtree) {
   POINTERS_EQUAL(&nodes[2], rbnode_prev(&nodes[3]));
 }
 
+///@}
+
+/// @name rbnode_next()
+///@{
+
+TEST(Util_Rbtree, RbnodeNext_OnlyRootNode) {
+  rbtree_insert(&tree, &nodes[0]);
+
+  POINTERS_EQUAL(nullptr, rbnode_next(rbtree_root(&tree)));
+}
+
+TEST(Util_Rbtree, RbnodeNext_NodeHasRightSubtree) {
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[3]);
+
+  POINTERS_EQUAL(&nodes[3], rbnode_next(&nodes[2]));
+}
+
+TEST(Util_Rbtree, RbnodeNext_NodeDoesNotHaveRightSubtree) {
+  //      4
+  //   2     6
+  //  1 3   5 7
+
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[6]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[7]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[5]);
+
+  POINTERS_EQUAL(&nodes[4], rbnode_next(&nodes[3]));
+}
+
+///@}
+
+/// @name rbtree_remove()
+///@{
+
 TEST(Util_Rbtree, RbtreeRemove_OnlyHead) {
   rbtree_insert(&tree, &nodes[0]);
 
   rbtree_remove(&tree, &nodes[0]);
 
   POINTERS_EQUAL(nullptr, rbtree_first(&tree));
+  CHECK_EQUAL(0u, rbtree_size(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeRemove_HeadOneAdded) {
@@ -190,6 +253,7 @@ TEST(Util_Rbtree, RbtreeRemove_HeadOneAdded) {
   rbtree_remove(&tree, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[1], rbtree_first(&tree));
+  POINTERS_EQUAL(&nodes[1], rbtree_last(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeRemove_ElementOneAdded) {
@@ -199,6 +263,7 @@ TEST(Util_Rbtree, RbtreeRemove_ElementOneAdded) {
   rbtree_remove(&tree, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[0], rbtree_first(&tree));
+  POINTERS_EQUAL(&nodes[0], rbtree_last(&tree));
 }
 
 TEST(Util_Rbtree, RbtreeRemove_BothLeftAndRightSubtree) {
@@ -290,6 +355,11 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
   CHECK_EQUAL(0U, rbtree_size(&tree));
 }
 
+///@}
+
+/// @name rbtree_contains()
+///@{
+
 TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNull) {
   CHECK_EQUAL(0, rbtree_contains(&tree, nullptr));
 }
@@ -324,7 +394,46 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
   CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[3]));
 }
 
-TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {
+///@}
+
+/// @name rbtree_find()
+///@{
+
+TEST(Util_Rbtree, RbtreeFind_EmptyTree) {
+  const int key = 42;
+  POINTERS_EQUAL(nullptr, rbtree_find(&tree, &key));
+}
+
+TEST(Util_Rbtree, RbtreeFind_RootOnly) {
+  rbtree_insert(&tree, &nodes[3]);
+
+  POINTERS_EQUAL(&nodes[3], rbtree_find(&tree, &keys[3]));
+}
+
+TEST(Util_Rbtree, RbtreeFind_LeftChild) {
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  POINTERS_EQUAL(&nodes[1], rbtree_find(&tree, &keys[1]));
+}
+
+TEST(Util_Rbtree, RbtreeFind_RightChild) {
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[2]);
+
+  POINTERS_EQUAL(&nodes[2], rbtree_find(&tree, &keys[2]));
+}
+
+///@}
+
+/// @name rbtree_root()
+///@{
+
+TEST(Util_Rbtree, RbtreeRoot_EmptyTree) {
+  POINTERS_EQUAL(nullptr, rbtree_root(&tree));
+}
+
+TEST(Util_Rbtree, RbtreeRoot_ParentNotNull) {
   rbtree_insert(&tree, &nodes[7]);
   rbtree_insert(&tree, &nodes[6]);
   rbtree_insert(&tree, &nodes[5]);
@@ -338,6 +447,11 @@ TEST(Util_Rbtree, RbtreeRor_ParentNotNull) {
   CHECK_EQUAL(8U, rbtree_size(&tree));
 }
 
+///@}
+
+/// @name rbtree_last()
+///@{
+
 TEST(Util_Rbtree, RbtreeLast_EmptyTree) {
   POINTERS_EQUAL(nullptr, rbtree_last(&tree));
 }
@@ -348,34 +462,39 @@ TEST(Util_Rbtree, RbtreeLast_OnlyRoot) {
   POINTERS_EQUAL(&nodes[0], rbtree_last(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeLast_ElementAddedRightSubtree) {
-  rbtree_insert(&tree, &nodes[0]);
+TEST(Util_Rbtree, RbtreeLast_LargerTree) {
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[2]);
   rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[4]);
 
-  POINTERS_EQUAL(&nodes[1], rbtree_last(&tree));
+  POINTERS_EQUAL(&nodes[5], rbtree_last(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeLast_ElementAddedLeftSubtree) {
-  rbtree_insert(&tree, &nodes[1]);
-  rbtree_insert(&tree, &nodes[0]);
+///@}
 
-  POINTERS_EQUAL(&nodes[1], rbtree_last(&tree));
+/// @name rbtree_first()
+///@{
+
+TEST(Util_Rbtree, RbtreeFirst_EmptyTree) {
+  POINTERS_EQUAL(nullptr, rbtree_first(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeLast_RemovedHead) {
-  rbtree_insert(&tree, &nodes[1]);
+TEST(Util_Rbtree, RbtreeFirst_OnlyRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
-  rbtree_remove(&tree, &nodes[1]);
-
-  POINTERS_EQUAL(&nodes[0], rbtree_last(&tree));
+  POINTERS_EQUAL(&nodes[0], rbtree_first(&tree));
 }
 
-TEST(Util_Rbtree, RbtreeLast_RemovedLastAddedHead) {
+TEST(Util_Rbtree, RbtreeFirst_LargerTree) {
+  rbtree_insert(&tree, &nodes[5]);
+  rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[1]);
-  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[2]);
 
-  rbtree_remove(&tree, &nodes[0]);
-
-  POINTERS_EQUAL(&nodes[1], rbtree_last(&tree));
+  POINTERS_EQUAL(&nodes[1], rbtree_first(&tree));
 }
+
+///@}
