@@ -181,7 +181,7 @@ TEST(Util_Rbtree, RbtreeEmpty_LeafAdded) {
 
 /// \Given an empty red-black tree
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node
+/// \When rbtree_insert() is called with a pointer to an initialized node
 ///
 /// \Then that node is a new root and sole node of the tree
 TEST(Util_Rbtree, RbtreeInsert_EmptyTree) {
@@ -194,11 +194,11 @@ TEST(Util_Rbtree, RbtreeInsert_EmptyTree) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node with
+/// \When rbtree_insert() is called with a pointer to an initialized node with
 ///       a key higher than root node's
 ///
 /// \Then that node is added to the tree and is root node's right child
-TEST(Util_Rbtree, RbnodeInsert_OneAdded) {
+TEST(Util_Rbtree, RbtreeInsert_OneAdded) {
   rbtree_insert(&tree, &nodes[0]);
 
   rbtree_insert(&tree, &nodes[1]);
@@ -210,12 +210,12 @@ TEST(Util_Rbtree, RbnodeInsert_OneAdded) {
 
 /// \Given a red-black tree with two nodes, a root and its right child
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node with
+/// \When rbtree_insert() is called with a pointer to an initialized node with
 ///       a key higher than that of existing nodes
 ///
 /// \Then that node is added to the tree, tree is rebalanced and newly added
 ///       node is new root's right child
-TEST(Util_Rbtree, RbnodeInsert_ManyAdded) {
+TEST(Util_Rbtree, RbtreeInsert_ManyAdded) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
 
@@ -227,11 +227,11 @@ TEST(Util_Rbtree, RbnodeInsert_ManyAdded) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node with
+/// \When rbtree_insert() is called with a pointer to an initialized node with
 ///       a key higher than that of existing nodes
 ///
 /// \Then that node is added to the tree, tree is rebalanced and recolored
-TEST(Util_Rbtree, RbnodeInsert_ManyAddedRedAndBlackNodes) {
+TEST(Util_Rbtree, RbtreeInsert_ManyAddedRedAndBlackNodes) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[2]);
@@ -246,10 +246,10 @@ TEST(Util_Rbtree, RbnodeInsert_ManyAddedRedAndBlackNodes) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node
+/// \When rbtree_insert() is called with a pointer to an initialized node
 ///
 /// \Then that node is added to the tree, tree is rebalanced and recolored
-TEST(Util_Rbtree, RbnodeInsert_NodeHasRedUncle) {
+TEST(Util_Rbtree, RbtreeInsert_NodeHasRedUncle) {
   rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[2]);
   rbtree_insert(&tree, &nodes[1]);
@@ -261,10 +261,10 @@ TEST(Util_Rbtree, RbnodeInsert_NodeHasRedUncle) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_insert() is called with a pointer to an initialized node
+/// \When rbtree_insert() is called with a pointer to an initialized node
 ///
 /// \Then that node is added to the tree, tree is rebalanced and recolored
-TEST(Util_Rbtree, RbnodeInsert_RightRotateAtGrandparent) {
+TEST(Util_Rbtree, RbtreeInsert_RightRotateAtGrandparent) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[2]);
@@ -387,7 +387,7 @@ TEST(Util_Rbtree, RbnodeNext_NodeDoesNotHaveRightNeighbor) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbnode_remove() is called with a pointer to that sole node
+/// \When rbtree_remove() is called with a pointer to that sole node
 ///
 /// \Then that node is removed from the tree, tree is empty
 TEST(Util_Rbtree, RbtreeRemove_OnlyHead) {
@@ -401,7 +401,7 @@ TEST(Util_Rbtree, RbtreeRemove_OnlyHead) {
 
 /// \Given a red-black tree with two nodes, a root and its right child
 ///
-/// \When rbnode_remove() is called with a pointer to the root node
+/// \When rbtree_remove() is called with a pointer to the root node
 ///
 /// \Then that node is removed from the tree, remaining node is the new root
 TEST(Util_Rbtree, RbtreeRemove_HeadOneAdded) {
@@ -416,7 +416,7 @@ TEST(Util_Rbtree, RbtreeRemove_HeadOneAdded) {
 
 /// \Given a red-black tree with two nodes, a root and its right child
 ///
-/// \When rbnode_remove() is called with a pointer to the leaf node
+/// \When rbtree_remove() is called with a pointer to the leaf node
 ///
 /// \Then that node is removed from the tree, tree's original root node is the
 ///       only node in tree
@@ -432,7 +432,7 @@ TEST(Util_Rbtree, RbtreeRemove_ElementOneAdded) {
 
 /// \Given a balanced red-black tree with multiple nodes
 ///
-/// \When rbnode_remove() is called multiple times with pointers to all nodes
+/// \When rbtree_remove() is called multiple times with pointers to all nodes
 ///       in tree
 ///
 /// \Then all nodes are removed from the tree, tree is empty
@@ -459,7 +459,7 @@ TEST(Util_Rbtree, RbtreeRemove_BothLeftAndRightSubtree) {
 
 /// \Given a red-black tree with a root node and its left and right children
 ///
-/// \When rbnode_remove() is called with a pointer to the root node
+/// \When rbtree_remove() is called with a pointer to the root node
 ///
 /// \Then root node is removed from the tree, original root's successor is the
 ///       new root of the tree, tree has 2 nodes
@@ -476,7 +476,7 @@ TEST(Util_Rbtree, RbtreeRemove_NextIsRootNode) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_remove() is called with a pointer to one of the nodes
+/// \When rbtree_remove() is called with a pointer to one of the nodes
 ///
 /// \Then that node is removed, tree is rebalanced and recolored
 TEST(Util_Rbtree, RbtreeRemove_FixViolations) {
@@ -499,7 +499,7 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolations) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_remove() is called with a pointer to one of the nodes
+/// \When rbtree_remove() is called with a pointer to one of the nodes
 ///
 /// \Then that node is removed, tree is rebalanced and recolored
 TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase2ConditionFalseOnLeftSubtree) {
@@ -522,7 +522,7 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase2ConditionFalseOnLeftSubtree) {
 
 /// \Given a red-black tree with multiple nodes
 ///
-/// \When rbnode_remove() is called with a pointer to one of the nodes
+/// \When rbtree_remove() is called with a pointer to one of the nodes
 ///
 /// \Then that node is removed, tree is rebalanced and recolored
 TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
