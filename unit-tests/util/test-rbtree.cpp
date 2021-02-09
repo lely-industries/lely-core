@@ -61,10 +61,10 @@ TEST_GROUP(Util_RbtreeInit){};
 
 /// \Given an uninitialized instance of a red-black tree (rbtree)
 ///
-/// \When rbtree_init() is called with a pointer to a comparator function
+/// \When rbtree_init() is called with a pointer to a comparison function
 ///
 /// \Then tree is initialized, has zero nodes, null pointer to root and
-///       requested comparator function set
+///       requested comparison function set
 TEST(Util_RbtreeInit, RbtreeInit) {
   rbtree tree;
 
@@ -123,14 +123,14 @@ TEST_GROUP(Util_Rbtree) {
 ///
 /// \When rbtree_size() is called
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeSize_EmptyTree) { CHECK_EQUAL(0, rbtree_size(&tree)); }
 
 /// \Given a red-black tree with multiple nodes
 ///
 /// \When rbtree_size() is called
 ///
-/// \Then number of nodes in tree is returned, nothing is changed
+/// \Then number of nodes in tree is returned
 TEST(Util_Rbtree, RbtreeSize_MultipleNodes) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
@@ -148,14 +148,14 @@ TEST(Util_Rbtree, RbtreeSize_MultipleNodes) {
 ///
 /// \When rbtree_empty() is called
 ///
-/// \Then 1 is returned, nothing is changed
+/// \Then 1 is returned
 TEST(Util_Rbtree, RbtreeEmpty_IsEmpty) { CHECK_EQUAL(1, rbtree_empty(&tree)); }
 
 /// \Given a red-black tree with exactly one node
 ///
 /// \When rbtree_empty() is called
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeEmpty_RootAdded) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -166,7 +166,7 @@ TEST(Util_Rbtree, RbtreeEmpty_RootAdded) {
 ///
 /// \When rbtree_empty() is called
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeEmpty_LeafAdded) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
@@ -284,9 +284,9 @@ TEST(Util_Rbtree, RbtreeInsert_RightRotateAtGrandparent) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbnode_prev() is called with a pointer to that sole node
+/// \When rbnode_prev() is called with a pointer to that node
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbnodePrev_NodeIsRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -297,7 +297,7 @@ TEST(Util_Rbtree, RbnodePrev_NodeIsRoot) {
 ///
 /// \When rbnode_prev() is called with a pointer to the root node
 ///
-/// \Then a pointer to the left child node is returned, nothing is changed
+/// \Then a pointer to the left child node is returned
 TEST(Util_Rbtree, RbnodePrev_NodeHasLeftSubtree) {
   rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[2]);
@@ -312,7 +312,7 @@ TEST(Util_Rbtree, RbnodePrev_NodeHasLeftSubtree) {
 /// \When rbnode_prev() is called with a pointer to the node with lowest key
 ///       in the right sub-tree
 ///
-/// \Then a pointer to the root node is returned, nothing is changed
+/// \Then a pointer to the root node is returned
 TEST(Util_Rbtree, RbnodePrev_NodeDoesNotHaveLeftNeighbor) {
   //      4
   //   2     6
@@ -336,9 +336,9 @@ TEST(Util_Rbtree, RbnodePrev_NodeDoesNotHaveLeftNeighbor) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbnode_next() is called with a pointer to that sole node
+/// \When rbnode_next() is called with a pointer to that node
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbnodeNext_OnlyRootNode) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -349,7 +349,7 @@ TEST(Util_Rbtree, RbnodeNext_OnlyRootNode) {
 ///
 /// \When rbnode_next() is called with a pointer to the root node
 ///
-/// \Then a pointer to the right child node is returned, nothing is changed
+/// \Then a pointer to the right child node is returned
 TEST(Util_Rbtree, RbnodeNext_NodeHasRightSubtree) {
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[2]);
@@ -363,7 +363,7 @@ TEST(Util_Rbtree, RbnodeNext_NodeHasRightSubtree) {
 /// \When rbnode_next() is called with a pointer to the node with highest key
 ///       in the left sub-tree
 ///
-/// \Then a pointer to the root node is returned, nothing is changed
+/// \Then a pointer to the root node is returned
 TEST(Util_Rbtree, RbnodeNext_NodeDoesNotHaveRightNeighbor) {
   //      4
   //   2     6
@@ -387,7 +387,7 @@ TEST(Util_Rbtree, RbnodeNext_NodeDoesNotHaveRightNeighbor) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbtree_remove() is called with a pointer to that sole node
+/// \When rbtree_remove() is called with a pointer to that node
 ///
 /// \Then that node is removed from the tree, tree is empty
 TEST(Util_Rbtree, RbtreeRemove_OnlyHead) {
@@ -555,16 +555,17 @@ TEST(Util_Rbtree, RbtreeRemove_FixViolationsCase3And4OnLeftSubtree) {
 ///
 /// \When rbtree_contains() is called with a null pointer
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNull) {
   CHECK_EQUAL(0, rbtree_contains(&tree, nullptr));
 }
 
 /// \Given an empty red-black tree
 ///
-/// \When rbtree_contains() is called with a pointer to a node not in the tree
+/// \When rbtree_contains() is called with a pointer to a node not present in
+///       the tree
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNotNull) {
   CHECK_EQUAL(0, rbtree_contains(&tree, &nodes[0]));
 }
@@ -573,7 +574,7 @@ TEST(Util_Rbtree, RbtreeContains_EmptyTreeContainsNotNull) {
 ///
 /// \When rbtree_contains() is called with a pointer to that node in the tree
 ///
-/// \Then 1 is returned, nothing is changed
+/// \Then 1 is returned
 TEST(Util_Rbtree, RbtreeContains_TreeWithOneContains) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -582,9 +583,10 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithOneContains) {
 
 /// \Given a red-black tree with exactly one node
 ///
-/// \When rbtree_contains() is called with a pointer to a node not in the tree
+/// \When rbtree_contains() is called with a pointer to a node not present in
+///       the tree
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_TreeWithOneDoesNotContain) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -595,7 +597,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithOneDoesNotContain) {
 ///
 /// \When rbtree_contains() is called with a pointer to any node in the tree
 ///
-/// \Then 1 is returned, nothing is changed
+/// \Then 1 is returned
 TEST(Util_Rbtree, RbtreeContains_TreeWithManyContains) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
@@ -605,9 +607,10 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyContains) {
 
 /// \Given a red-black tree with two nodes
 ///
-/// \When rbtree_contains() is called with a pointer to a node not in the tree
+/// \When rbtree_contains() is called with a pointer to a node not present in
+///       the tree
 ///
-/// \Then 0 is returned, nothing is changed
+/// \Then 0 is returned
 TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
   rbtree_insert(&tree, &nodes[0]);
   rbtree_insert(&tree, &nodes[1]);
@@ -624,7 +627,7 @@ TEST(Util_Rbtree, RbtreeContains_TreeWithManyDoesNotContain) {
 ///
 /// \When rbtree_find() is called with any key
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeFind_EmptyTree) {
   const int key = 42;
   POINTERS_EQUAL(nullptr, rbtree_find(&tree, &key));
@@ -634,7 +637,7 @@ TEST(Util_Rbtree, RbtreeFind_EmptyTree) {
 ///
 /// \When rbtree_find() is called with the key of that node
 ///
-/// \Then pointer to the sole node is returned, nothing is changed
+/// \Then pointer to the sole node is returned
 TEST(Util_Rbtree, RbtreeFind_RootOnly) {
   rbtree_insert(&tree, &nodes[3]);
 
@@ -645,7 +648,7 @@ TEST(Util_Rbtree, RbtreeFind_RootOnly) {
 ///
 /// \When rbtree_find() is called with the key of the left child node
 ///
-/// \Then pointer to the left child node is returned, nothing is changed
+/// \Then pointer to the left child node is returned
 TEST(Util_Rbtree, RbtreeFind_LeftChild) {
   rbtree_insert(&tree, &nodes[2]);
   rbtree_insert(&tree, &nodes[1]);
@@ -657,7 +660,7 @@ TEST(Util_Rbtree, RbtreeFind_LeftChild) {
 ///
 /// \When rbtree_find() is called with the key of the right child node
 ///
-/// \Then pointer to the right child node is returned, nothing is changed
+/// \Then pointer to the right child node is returned
 TEST(Util_Rbtree, RbtreeFind_RightChild) {
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[2]);
@@ -669,7 +672,7 @@ TEST(Util_Rbtree, RbtreeFind_RightChild) {
 ///
 /// \When rbtree_find() is called with a key value that's not stored in the tree
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeFind_KeyNotInTree) {
   rbtree_insert(&tree, &nodes[1]);
   rbtree_insert(&tree, &nodes[2]);
@@ -688,7 +691,7 @@ TEST(Util_Rbtree, RbtreeFind_KeyNotInTree) {
 ///
 /// \When rbtree_root() is called
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeRoot_EmptyTree) {
   POINTERS_EQUAL(nullptr, rbtree_root(&tree));
 }
@@ -697,7 +700,7 @@ TEST(Util_Rbtree, RbtreeRoot_EmptyTree) {
 ///
 /// \When rbtree_root() is called
 ///
-/// \Then pointer to the sole node is returned, nothing is changed
+/// \Then pointer to the sole node is returned
 TEST(Util_Rbtree, RbtreeRoot_OneNode) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -709,7 +712,7 @@ TEST(Util_Rbtree, RbtreeRoot_OneNode) {
 /// \When rbtree_root() is called
 ///
 /// \Then a pointer to the node that's at the root of the red-black tree is
-///       returned, nothing is changed
+///       returned
 TEST(Util_Rbtree, RbtreeRoot_LargerTree) {
   rbtree_insert(&tree, &nodes[7]);
   rbtree_insert(&tree, &nodes[6]);
@@ -734,7 +737,7 @@ TEST(Util_Rbtree, RbtreeRoot_LargerTree) {
 ///
 /// \When rbtree_last() is called
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeLast_EmptyTree) {
   POINTERS_EQUAL(nullptr, rbtree_last(&tree));
 }
@@ -743,7 +746,7 @@ TEST(Util_Rbtree, RbtreeLast_EmptyTree) {
 ///
 /// \When rbtree_last() is called
 ///
-/// \Then pointer to the sole root node is returned, nothing is changed
+/// \Then pointer to the root node is returned
 TEST(Util_Rbtree, RbtreeLast_OnlyRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -754,7 +757,7 @@ TEST(Util_Rbtree, RbtreeLast_OnlyRoot) {
 ///
 /// \When rbtree_last() is called
 ///
-/// \Then pointer to the node with greatest key is returned, nothing is changed
+/// \Then pointer to the node with greatest key is returned
 TEST(Util_Rbtree, RbtreeLast_LargerTree) {
   rbtree_insert(&tree, &nodes[3]);
   rbtree_insert(&tree, &nodes[5]);
@@ -774,7 +777,7 @@ TEST(Util_Rbtree, RbtreeLast_LargerTree) {
 ///
 /// \When rbtree_first() is called
 ///
-/// \Then null pointer is returned, nothing is changed
+/// \Then null pointer is returned
 TEST(Util_Rbtree, RbtreeFirst_EmptyTree) {
   POINTERS_EQUAL(nullptr, rbtree_first(&tree));
 }
@@ -783,7 +786,7 @@ TEST(Util_Rbtree, RbtreeFirst_EmptyTree) {
 ///
 /// \When rbtree_first() is called
 ///
-/// \Then pointer to the sole root node is returned, nothing is changed
+/// \Then pointer to the root node is returned
 TEST(Util_Rbtree, RbtreeFirst_OnlyRoot) {
   rbtree_insert(&tree, &nodes[0]);
 
@@ -794,7 +797,7 @@ TEST(Util_Rbtree, RbtreeFirst_OnlyRoot) {
 ///
 /// \When rbtree_first() is called
 ///
-/// \Then pointer to the node with lowest key is returned, nothing is changed
+/// \Then pointer to the node with lowest key is returned
 TEST(Util_Rbtree, RbtreeFirst_LargerTree) {
   rbtree_insert(&tree, &nodes[5]);
   rbtree_insert(&tree, &nodes[3]);
