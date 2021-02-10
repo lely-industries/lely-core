@@ -760,14 +760,14 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 {
 	assert(dev);
 
-	uint_least8_t *cp = begin;
+	uint_least8_t *bp = begin;
+
+	// Reserve space for the number of sub-indices (32-bit).
+	size_t bytes = 4;
+	if (bp)
+		bp += bytes;
 
 	co_unsigned32_t n = 0;
-	// Reserve space for the number of sub-indices.
-	if (co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin ? cp : NULL, end)
-			!= 4)
-		return 0;
-	cp += 4;
 
 	// Write the sub-objects.
 	for (co_obj_t *obj = co_dev_first_obj(dev); obj;
@@ -780,19 +780,20 @@ co_dev_write_dcf(const co_dev_t *dev, co_unsigned16_t min, co_unsigned16_t max,
 		for (co_sub_t *sub = co_obj_first_sub(obj); sub;
 				sub = co_sub_next(sub), n++) {
 			co_unsigned8_t subidx = co_sub_get_subidx(sub);
-			size_t size = co_dev_write_sub(dev, idx, subidx,
-					begin ? cp : NULL, end);
+			size_t size = co_dev_write_sub(
+					dev, idx, subidx, bp, end);
 			if (!size)
 				return 0;
-			cp += size;
+			if (bp)
+				bp += size;
+			bytes += size;
 		}
 	}
 
-	// Write the total number of sub-indices.
-	if (co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end) != 4)
-		return 0;
+	// Write the total number of sub-indices at begin.
+	co_val_write(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
 
-	return cp - begin;
+	return bytes;
 }
 
 #if !LELY_NO_STDIO
