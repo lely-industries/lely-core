@@ -42,8 +42,10 @@
 #include <lely/co/tpdo.h>
 #endif
 #include <lely/co/val.h>
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 #include "nmt_boot.h"
+#endif
+#if !LELY_NO_CO_NMT_CFG
 #include "nmt_cfg.h"
 #endif
 #include "nmt_hb.h"
@@ -98,25 +100,33 @@ struct co_nmt_slave {
 	co_unsigned8_t est;
 	/// The received state of the slave (including the toggle bit).
 	co_unsigned8_t rst;
+#if !LELY_NO_CO_NMT_BOOT
 	/// The error status of the 'boot slave' process.
 	char es;
 	/// A flag specifying whether the 'boot slave' process is in progress.
 	unsigned booting : 1;
+#endif
+#if !LELY_NO_CO_NMT_CFG
 	/**
 	 * A flag specifying whether an NMT 'configuration request' is in
 	 * progress.
 	 */
 	unsigned configuring : 1;
+#endif
+#if !LELY_NO_CO_NMT_BOOT
 	/// A flag specifying whether the 'boot slave' process has ended.
 	unsigned booted : 1;
 	/// A pointer to the NMT 'boot slave' service.
 	co_nmt_boot_t *boot;
+#endif
+#if !LELY_NO_CO_NMT_CFG
 	/// A pointer to the NMT 'update configuration' service.
 	co_nmt_cfg_t *cfg;
 	/// A pointer to the NMT 'configuration request' confirmation function.
 	co_nmt_cfg_con_t *cfg_con;
 	/// A pointer to user-specified data for #cfg_con.
 	void *cfg_data;
+#endif
 #if !LELY_NO_CO_NG
 	/// The guard time (in milliseconds).
 	co_unsigned16_t gt;
@@ -253,19 +263,25 @@ struct co_nmt {
 	int halt;
 	/// An array containing the state of each NMT slave.
 	struct co_nmt_slave slaves[CO_NUM_NODES];
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 	/**
 	 * The default SDO timeout (in milliseconds) used during the NMT
 	 * 'boot slave' and 'check configuration' processes.
 	 */
 	int timeout;
+#endif
+#if !LELY_NO_CO_NMT_BOOT
 	/// A pointer to the NMT 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
 	/// A pointer to user-specified data for #boot_ind.
 	void *boot_data;
+#endif
+#if !LELY_NO_CO_NMT_CFG
 	/// A pointer to the NMT 'configuration request' indication function.
 	co_nmt_cfg_ind_t *cfg_ind;
 	/// A pointer to user-specified data for #cfg_ind.
 	void *cfg_data;
+#endif
 	/// A pointer to the SDO download progress indication function.
 	co_nmt_sdo_ind_t *dn_ind;
 	/// A pointer to user-specified data for #dn_ind.
@@ -344,7 +360,7 @@ static co_unsigned32_t co_1016_dn_ind(
 static co_unsigned32_t co_1017_dn_ind(
 		co_sub_t *sub, struct co_sdo_req *req, void *data);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_CFG
 /**
  * The download indication function for (all sub-objects of) CANopen object 1F25
  * (Configuration request).
@@ -449,7 +465,7 @@ static void default_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
 static void default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st,
 		void *data);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 /// The SDO download progress indication function. @see co_csdo_ind_t
 static void co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
@@ -483,7 +499,7 @@ static void co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next);
  */
 static inline void co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 /**
  * Invokes the 'boot slave completed' transition function of the current state
  * of an NMT master service.
@@ -513,7 +529,7 @@ struct co_nmt_state {
 	 * @returns a pointer to the next state.
 	 */
 	co_nmt_state_t *(*on_cs)(co_nmt_t *nmt, co_unsigned8_t cs);
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 	/**
 	 * A pointer to the transition function invoked when an 'boot slave'
 	 * process completes.
@@ -536,7 +552,7 @@ struct co_nmt_state {
 #define LELY_CO_DEFINE_STATE(name, ...) \
 	static co_nmt_state_t *const name = &(co_nmt_state_t){ __VA_ARGS__ };
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 /// The default 'boot slave completed' transition function.
 static co_nmt_state_t *co_nmt_default_on_boot(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es);
@@ -603,7 +619,7 @@ static co_nmt_state_t *co_nmt_preop_on_enter(co_nmt_t *nmt);
  */
 static co_nmt_state_t *co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 /**
  * The 'boot slave completed' transition function of the 'pre-operational'
  * state.
@@ -614,7 +630,7 @@ static co_nmt_state_t *co_nmt_preop_on_boot(
 
 /// The NMT 'pre-operational' state.
 // clang-format off
-#if LELY_NO_CO_MASTER
+#if LELY_NO_CO_NMT_BOOT
 LELY_CO_DEFINE_STATE(co_nmt_preop_state,
 	.on_enter = &co_nmt_preop_on_enter,
 	.on_cs = &co_nmt_preop_on_cs
@@ -636,7 +652,7 @@ static co_nmt_state_t *co_nmt_start_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'operational' state.
 // clang-format off
-#if LELY_NO_CO_MASTER
+#if LELY_NO_CO_NMT_BOOT
 LELY_CO_DEFINE_STATE(co_nmt_start_state,
 	.on_enter = &co_nmt_start_on_enter,
 	.on_cs = &co_nmt_start_on_cs
@@ -658,7 +674,7 @@ static co_nmt_state_t *co_nmt_stop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs);
 
 /// The NMT 'stopped' state.
 // clang-format off
-#if LELY_NO_CO_MASTER
+#if LELY_NO_CO_NMT_BOOT
 LELY_CO_DEFINE_STATE(co_nmt_stop_state,
 	.on_enter = &co_nmt_stop_on_enter,
 	.on_cs = &co_nmt_stop_on_cs
@@ -717,9 +733,11 @@ static void co_nmt_hb_fini(co_nmt_t *nmt);
 
 #if !LELY_NO_CO_MASTER
 
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 /// Find the heartbeat consumer for the specified node.
 static co_nmt_hb_t *co_nmt_hb_find(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t *pms);
+#endif
 
 /// Initializes NMT slave management. @see co_nmt_slaves_fini()
 static void co_nmt_slaves_init(co_nmt_t *nmt);
@@ -727,6 +745,7 @@ static void co_nmt_slaves_init(co_nmt_t *nmt);
 /// Finalizes NMT slave management. @see co_nmt_slaves_fini()
 static void co_nmt_slaves_fini(co_nmt_t *nmt);
 
+#if !LELY_NO_CO_NMT_BOOT
 /**
  * Starts the NMT 'boot slave' processes.
  *
@@ -734,6 +753,7 @@ static void co_nmt_slaves_fini(co_nmt_t *nmt);
  * mandatory slaves, or -1 if an error occurred for a mandatory slave.
  */
 static int co_nmt_slaves_boot(co_nmt_t *nmt);
+#endif
 
 #endif
 
@@ -1052,7 +1072,7 @@ co_nmt_on_st(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st)
 	if (!id || id > CO_NUM_NODES)
 		return;
 
-#if LELY_NO_CO_MASTER
+#if LELY_NO_CO_NMT_BOOT
 	(void)nmt;
 	(void)st;
 #else
@@ -1090,6 +1110,8 @@ co_nmt_set_lss_req(co_nmt_t *nmt, co_nmt_lss_req_t *ind, void *data)
 
 #endif
 
+#if !LELY_NO_CO_NMT_BOOT
+
 void
 co_nmt_get_boot_ind(const co_nmt_t *nmt, co_nmt_boot_ind_t **pind, void **pdata)
 {
@@ -1110,6 +1132,10 @@ co_nmt_set_boot_ind(co_nmt_t *nmt, co_nmt_boot_ind_t *ind, void *data)
 	nmt->boot_data = data;
 }
 
+#endif // !LELY_NO_CO_NMT_BOOT
+
+#if !LELY_NO_CO_NMT_CFG
+
 void
 co_nmt_get_cfg_ind(const co_nmt_t *nmt, co_nmt_cfg_ind_t **pind, void **pdata)
 {
@@ -1129,6 +1155,8 @@ co_nmt_set_cfg_ind(co_nmt_t *nmt, co_nmt_cfg_ind_t *ind, void *data)
 	nmt->cfg_ind = ind;
 	nmt->cfg_data = data;
 }
+
+#endif // !LELY_NO_CO_NMT_CFG
 
 void
 co_nmt_get_dn_ind(const co_nmt_t *nmt, co_nmt_sdo_ind_t **pind, void **pdata)
@@ -1359,6 +1387,8 @@ co_nmt_is_master(const co_nmt_t *nmt)
 
 #if !LELY_NO_CO_MASTER
 
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
+
 int
 co_nmt_get_timeout(const co_nmt_t *nmt)
 {
@@ -1374,6 +1404,8 @@ co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
 
 	nmt->timeout = timeout;
 }
+
+#endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 int
 co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
@@ -1437,6 +1469,8 @@ co_nmt_lss_con(co_nmt_t *nmt)
 	return 0;
 }
 #endif
+
+#if !LELY_NO_CO_NMT_BOOT
 
 int
 co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout)
@@ -1518,6 +1552,10 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 
 	return !!nmt->slaves[id - 1].boot;
 }
+
+#endif // !LELY_NO_CO_NMT_BOOT
+
+#if !LELY_NO_CO_NMT_CFG
 
 int
 co_nmt_cfg_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout,
@@ -1606,6 +1644,8 @@ co_nmt_cfg_res(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 
 	return co_nmt_cfg_cfg_res(nmt->slaves[id - 1].cfg, ac);
 }
+
+#endif // !LELY_NO_CO_NMT_CFG
 
 #if !LELY_NO_CO_NG
 int
@@ -1843,8 +1883,7 @@ co_nmt_get_lss(const co_nmt_t *nmt)
 #endif
 }
 
-#if !LELY_NO_CO_MASTER
-
+#if !LELY_NO_CO_NMT_BOOT
 void
 co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 {
@@ -1921,7 +1960,9 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 
 	co_nmt_emit_boot(nmt, id, st, es);
 }
+#endif
 
+#if !LELY_NO_CO_NMT_CFG
 void
 co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo)
 {
@@ -1962,8 +2003,7 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	if (slave->cfg_con)
 		slave->cfg_con(nmt, id, ac, slave->cfg_data);
 }
-
-#endif // !LELY_NO_CO_MASTER
+#endif
 
 void
 co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
@@ -2099,10 +2139,14 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			if (id_i == id && ms_i)
 				return CO_SDO_AC_PARAM;
 		}
-#if !LELY_NO_CO_MASTER
 		// Disable heartbeat consumption for booting slaves or slaves
 		// that are being configured.
-		if (nmt->slaves[id - 1].boot || nmt->slaves[id - 1].cfg)
+#if !LELY_NO_CO_NMT_BOOT
+		if (nmt->slaves[id - 1].boot)
+			ms = 0;
+#endif
+#if !LELY_NO_CO_NMT_CFG
+		if (nmt->slaves[id - 1].cfg)
 			ms = 0;
 #endif
 	}
@@ -2147,7 +2191,7 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	return 0;
 }
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_CFG
 static co_unsigned32_t
 co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 {
@@ -2218,7 +2262,7 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 	return 0;
 }
-#endif // !LELY_NO_CO_MASTER
+#endif // !LELY_NO_CO_NMT_CFG
 
 static co_unsigned32_t
 co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
@@ -2431,8 +2475,14 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 
 		// Ignore messages from booting slaves or slaves that are being
 		// configured.
-		if (slave->booting || slave->configuring)
+#if !LELY_NO_CO_NMT_BOOT
+		if (slave->booting)
 			return 0;
+#endif
+#if !LELY_NO_CO_NMT_CFG
+		if (slave->configuring)
+			return 0;
+#endif
 
 #if !LELY_NO_CO_NG
 		// Ignore messages if node guarding is disabled.
@@ -2672,7 +2722,7 @@ default_st_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, void *data)
 	co_nmt_on_st(nmt, id, st);
 }
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 static void
 co_nmt_dn_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
@@ -2698,7 +2748,7 @@ co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 				nmt->up_data);
 }
 
-#endif
+#endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 #ifndef LELY_CO_CO_TPDO
 static void
@@ -2737,7 +2787,7 @@ co_nmt_emit_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	co_nmt_enter(nmt, nmt->state->on_cs(nmt, cs));
 }
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 
 static inline void
 co_nmt_emit_boot(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
@@ -2761,7 +2811,7 @@ co_nmt_default_on_boot(
 	return NULL;
 }
 
-#endif // !LELY_NO_CO_MASTER
+#endif // !LELY_NO_CO_NMT_BOOT
 
 static co_nmt_state_t *
 co_nmt_init_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
@@ -2985,7 +3035,7 @@ co_nmt_preop_on_cs(co_nmt_t *nmt, co_unsigned8_t cs)
 	}
 }
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 static co_nmt_state_t *
 co_nmt_preop_on_boot(
 		co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
@@ -3032,7 +3082,7 @@ co_nmt_start_on_enter(co_nmt_t *nmt)
 	nmt->st = CO_NMT_ST_START | (nmt->st & CO_NMT_ST_TOGGLE);
 	co_nmt_st_ind(nmt, co_dev_get_id(nmt->dev), nmt->st);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 	// If we're the master and bit 3 of the NMT startup value is 0 and bit 1
 	// is 1, send the NMT start remote node command to all nodes (see Fig. 2
 	// in CiA 302-2 version 4.1.0).
@@ -3168,6 +3218,7 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, 0);
 	}
 
+#if !LELY_NO_CO_NMT_BOOT
 	// Start the 'boot slave' processes.
 	switch (co_nmt_slaves_boot(nmt)) {
 	case -1:
@@ -3181,6 +3232,9 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		trace("NMT: waiting for mandatory slaves to start");
 		return NULL;
 	}
+#else
+	return co_nmt_startup_slave(nmt);
+#endif
 }
 #endif
 
@@ -3349,6 +3403,7 @@ co_nmt_hb_fini(co_nmt_t *nmt)
 
 #if !LELY_NO_CO_MASTER
 
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 static co_nmt_hb_t *
 co_nmt_hb_find(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t *pms)
 {
@@ -3369,6 +3424,7 @@ co_nmt_hb_find(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t *pms)
 	}
 	return NULL;
 }
+#endif
 
 static void
 co_nmt_slaves_init(co_nmt_t *nmt)
@@ -3408,10 +3464,9 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->assignment = 0;
 		slave->est = 0;
 		slave->rst = 0;
-		slave->es = 0;
 
+#if !LELY_NO_CO_NMT_BOOT
 		slave->booting = 0;
-		slave->configuring = 0;
 		slave->booted = 0;
 
 		if (slave->boot)
@@ -3420,6 +3475,11 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		co_nmt_boot_destroy(slave->boot);
 		slave->boot = NULL;
 #endif
+#endif
+
+#if !LELY_NO_CO_NMT_CFG
+		slave->es = 0;
+		slave->configuring = 0;
 
 		if (slave->cfg)
 			co_nmt_cfg_abort_req(slave->cfg);
@@ -3429,6 +3489,7 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 #endif
 		slave->cfg_con = NULL;
 		slave->cfg_data = NULL;
+#endif
 
 #if !LELY_NO_CO_NG
 		slave->gt = 0;
@@ -3439,6 +3500,7 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 	}
 }
 
+#if !LELY_NO_CO_NMT_BOOT
 static int
 co_nmt_slaves_boot(co_nmt_t *nmt)
 {
@@ -3467,6 +3529,7 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 	}
 	return res;
 }
+#endif
 
 #endif // !LELY_NO_CO_MASTER
 
@@ -3656,17 +3719,22 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		slave->assignment = 0;
 		slave->est = 0;
 		slave->rst = 0;
-		slave->es = 0;
 
+#if !LELY_NO_CO_NMT_BOOT
 		slave->booting = 0;
-		slave->configuring = 0;
 		slave->booted = 0;
 
 		slave->boot = NULL;
+#endif
+
+#if !LELY_NO_CO_NMT_CFG
+		slave->es = 0;
+		slave->configuring = 0;
 
 		slave->cfg = NULL;
 		slave->cfg_con = NULL;
 		slave->cfg_data = NULL;
+#endif
 
 #if !LELY_NO_CO_NG
 		slave->gt = 0;
@@ -3703,26 +3771,35 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		if (!(assignment & 0x01))
 			continue;
 
+#if !LELY_NO_CO_NMT_BOOT
 		slave->boot = co_nmt_boot_create(nmt->net, nmt->dev, nmt, id);
 		if (!slave->boot) {
 			errc = get_errc();
 			goto error_init_slave;
 		}
-
+#endif
+#if !LELY_NO_CO_NMT_CFG
 		slave->cfg = co_nmt_cfg_create(nmt->net, nmt->dev, nmt, id);
 		if (!slave->cfg) {
 			errc = get_errc();
 			goto error_init_slave;
 		}
 #endif
+#endif
 	}
 
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 	nmt->timeout = LELY_CO_NMT_TIMEOUT;
+#endif
 
+#if !LELY_NO_CO_NMT_BOOT
 	nmt->boot_ind = NULL;
 	nmt->boot_data = NULL;
+#endif
+#if !LELY_NO_CO_NMT_CFG
 	nmt->cfg_ind = NULL;
 	nmt->cfg_data = NULL;
+#endif
 	nmt->dn_ind = NULL;
 	nmt->dn_data = NULL;
 	nmt->up_ind = NULL;
@@ -3761,7 +3838,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	if (obj_1017)
 		co_obj_set_dn_ind(obj_1017, &co_1017_dn_ind, nmt);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_CFG
 	// Set the download indication function for the configuration request
 	// value.
 	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
@@ -3825,8 +3902,12 @@ error_init_slave:
 		struct co_nmt_slave *slave = &nmt->slaves[id - 1];
 
 #if LELY_NO_MALLOC
+#if !LELY_NO_CO_NMT_CFG
 		co_nmt_cfg_destroy(slave->cfg);
+#endif
+#if !LELY_NO_CO_NMT_BOOT
 		co_nmt_boot_destroy(slave->boot);
+#endif
 #endif
 		can_recv_destroy(slave->recv);
 #if !LELY_NO_CO_NG
