@@ -21,9 +21,11 @@ if !NO_CO_LSS
 src += lss.c
 endif
 src += nmt.c
-if !NO_CO_MASTER
+if !NO_CO_NMT_BOOT
 src += nmt_boot.c
 src += nmt_boot.h
+endif
+if !NO_CO_NMT_CFG
 src += nmt_cfg.c
 src += nmt_cfg.h
 endif
