@@ -2,6 +2,11 @@
  * This file is part of the CANopen library; it contains the implementation of
  * the Server-SDO functions.
  *
+ * The implementation follows CiA 301 version 4.2.0. See section 7.2.4 for the
+ * definition of the SDO services and protocols. The following objects determine
+ * the behavior of SSDOs:
+ * - 1200..127F: SDO server parameter
+ *
  * @see lely/co/ssdo.h, lib/co/sdo.h
  *
  * @copyright 2016-2020 Lely Industries N.V.
@@ -47,6 +52,9 @@
  * maximum block size used by SDO block transfer.
  */
 #define CO_SSDO_MEMBUF_SIZE (CO_SDO_MAX_SEQNO * 7)
+#endif
+#if CO_SSDO_MEMBUF_SIZE < 7
+#error "CO_SSDO_MEMBUF_SIZE must have at least 7 bytes!"
 #endif
 #endif
 
@@ -123,10 +131,8 @@ static void co_ssdo_fini(co_ssdo_t *sdo);
 /**
  * Updates and (de)activates a Server-SDO service. This function is invoked when
  * one of the SDO server parameters (objects 1200..127F) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_ssdo_update(co_ssdo_t *sdo);
+static void co_ssdo_update(co_ssdo_t *sdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -608,14 +614,9 @@ co_ssdo_start(co_ssdo_t *sdo)
 		co_obj_set_dn_ind(obj_1200, &co_1200_dn_ind, sdo);
 	}
 
-	if (co_ssdo_update(sdo) == -1)
-		goto error_update;
+	co_ssdo_update(sdo);
 
 	return 0;
-
-error_update:
-	co_ssdo_stop(sdo);
-	return -1;
 }
 
 void
@@ -708,7 +709,7 @@ co_ssdo_set_timeout(co_ssdo_t *sdo, int timeout)
 	sdo->timeout = MAX(0, timeout);
 }
 
-static int
+static void
 co_ssdo_update(co_ssdo_t *sdo)
 {
 	assert(sdo);
@@ -732,7 +733,7 @@ co_ssdo_update(co_ssdo_t *sdo)
 		can_recv_stop(sdo->recv);
 	}
 
-	return 0;
+	return;
 }
 
 static co_unsigned32_t
@@ -825,12 +826,9 @@ static int
 co_ssdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	assert(!(msg->flags & CAN_FLAG_RTR));
 	co_ssdo_t *sdo = data;
 	assert(sdo);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
 
 #if !LELY_NO_CANFD
 	// Ignore CAN FD format frames.
@@ -1072,8 +1070,14 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 
 	if (sdo->req.size && sdo->req.size <= 4) {
 		// Perform an expedited transfer.
-		if ((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0)
+		ac = co_ssdo_up_buf(sdo, sdo->req.size);
+#if LELY_NO_MALLOC
+		assert(!ac);
+#else
+		if (ac != 0)
 			return co_ssdo_abort_res(sdo, ac);
+#endif
+
 		co_ssdo_send_up_exp_res(sdo);
 		return co_ssdo_abort_ind(sdo);
 	} else {
@@ -1217,8 +1221,14 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	co_unsigned8_t seqno = cs & ~CO_SDO_SEQ_LAST;
 	int last = !!(cs & CO_SDO_SEQ_LAST);
 
-	if (!seqno || seqno > sdo->blksize)
+	if (!seqno)
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
+#if CO_SSDO_MAX_SEQNO < 127
+	if (seqno > sdo->blksize)
+		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
+#else
+	assert(seqno <= sdo->blksize);
+#endif
 
 	// Only accept sequential segments. Dropped segments will be resent
 	// after the confirmation message.
@@ -1240,8 +1250,14 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 		// Copy the new frame to the SDO request.
 		membuf_clear(&sdo->buf);
-		if (!membuf_reserve(&sdo->buf, n))
+		size_t capacity = membuf_reserve(&sdo->buf, n);
+#if LELY_NO_MALLOC
+		assert(capacity);
+		(void)capacity;
+#else
+		if (!capacity)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
+#endif // LELY_NO_MALLOC
 		membuf_write(&sdo->buf, msg->data + 1, n);
 		sdo->req.buf = membuf_begin(&sdo->buf);
 		sdo->req.offset += sdo->req.nbyte;
@@ -1370,8 +1386,14 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// than or equal to the PST, switch to the SDO upload protocol.
 		if (sdo->req.size <= 4) {
 			// Perform an expedited transfer.
-			if ((ac = co_ssdo_up_buf(sdo, sdo->req.size)) != 0)
+			ac = co_ssdo_up_buf(sdo, sdo->req.size);
+#if LELY_NO_MALLOC
+			assert(!ac);
+#else
+			if (ac != 0)
 				return co_ssdo_abort_res(sdo, ac);
+#endif
+
 			co_ssdo_send_up_exp_res(sdo);
 			return co_ssdo_abort_ind(sdo);
 		} else {
