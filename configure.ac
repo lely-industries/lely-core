@@ -320,6 +320,7 @@ AS_IF([test "$enable_ng" == "no"], [
 AM_CONDITIONAL([NO_CO_NMT_BOOT], [false])
 AC_ARG_ENABLE([nmt-boot],
 	AS_HELP_STRING([--disable-nmt-boot], [disable NMT boot slave support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_nmt_boot=no])
 AS_IF([test "$enable_master" == "no"], [enable_nmt_boot=no])
 AS_IF([test "$enable_nmt_boot" == "no"], [
 	AM_CONDITIONAL([NO_CO_NMT_BOOT], [true])
@@ -329,6 +330,7 @@ AS_IF([test "$enable_nmt_boot" == "no"], [
 AM_CONDITIONAL([NO_CO_NMT_CFG], [false])
 AC_ARG_ENABLE([nmt-cfg],
 	AS_HELP_STRING([--disable-nmt-cfg], [disable NMT configuration request support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_nmt_cfg=no])
 AS_IF([test "$enable_master" == "no"], [enable_nmt_cfg=no])
 AS_IF([test "$enable_nmt_cfg" == "no"], [
 	AM_CONDITIONAL([NO_CO_NMT_CFG], [true])
