@@ -70,17 +70,17 @@ TEST_BASE(CO_RpdoBase) {
   }
 
   // obj 0x1400, sub 0x00 - highest sub-index supported
-  void SetComm00HighestSubidxSupported(co_unsigned8_t max_subidx) {
+  void SetComm00HighestSubidxSupported(const co_unsigned8_t max_subidx) {
     obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, max_subidx);
   }
 
   // obj 0x1400, sub 0x01 - COB-ID used by RPDO
-  void SetComm01CobId(co_unsigned32_t cobid) {
+  void SetComm01CobId(const co_unsigned32_t cobid) {
     obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
   }
 
   // obj 0x1400, sub 0x02 - transmission type
-  void SetComm02TransmissionType(co_unsigned8_t type) {
+  void SetComm02TransmissionType(const co_unsigned8_t type) {
     obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, type);
   }
 
@@ -88,22 +88,22 @@ TEST_BASE(CO_RpdoBase) {
   void SetComm02EventDrivenTransmission() { SetComm02TransmissionType(0xfeu); }
 
   // obj 0x1400, sub 0x03 - inhibit time, in multiples of 100 microseconds
-  void SetComm03InhibitTime(co_unsigned16_t inhibit_time) {
+  void SetComm03InhibitTime(const co_unsigned16_t inhibit_time) {
     obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, inhibit_time);
   }
 
   // obj 0x1400, sub 0x04 - compatibility entry, reserved and unused
-  void SetComm04CompatibilityEntry(co_unsigned8_t compat_entry) {
+  void SetComm04CompatibilityEntry(const co_unsigned8_t compat_entry) {
     obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, compat_entry);
   }
 
   // obj 0x1400, sub 0x05 - event-timer, in milliseconds
-  void SetComm05EventTimer(co_unsigned16_t timer) {
+  void SetComm05EventTimer(const co_unsigned16_t timer) {
     obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, timer);
   }
 
   // obj 0x1400, sub 0x06 - SYNC start value, not used
-  void SetComm06SyncStartValue(co_unsigned8_t sync_start) {
+  void SetComm06SyncStartValue(const co_unsigned8_t sync_start) {
     obj1400->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, sync_start);
   }
 
