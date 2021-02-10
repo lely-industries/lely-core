@@ -1367,7 +1367,6 @@ TEST(CO_ObjSub, CoSubNext_Nominal) {
   POINTERS_EQUAL(sub2, co_sub_next(sub));
 }
 
-/// \Given a pointer to the sub-object (co_sub_t) which was not inserted into
 /// \Given a pointer to the sub-object (co_sub_t) not inserted into any object
 ///
 /// \When co_sub_next() is called

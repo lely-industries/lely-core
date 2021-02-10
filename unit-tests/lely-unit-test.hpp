@@ -57,7 +57,7 @@ struct CoCsdoDnCon {
   static co_unsigned8_t subidx;
   static co_unsigned32_t ac;
   static void* data;
-  static bool called;
+  static unsigned int num_called;
 
   static inline void
   func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
@@ -67,44 +67,80 @@ struct CoCsdoDnCon {
     subidx = subidx_;
     ac = ac_;
     data = data_;
-    called = true;
+    num_called++;
   }
 
-  static void inline Clear() {
+  static inline void
+  Clear() {
     sdo = nullptr;
     idx = 0;
     subidx = 0;
     ac = 0;
     data = nullptr;
 
-    called = false;
+    num_called = 0;
+  }
+
+  static inline bool
+  called() {
+    return num_called > 0;
   }
 };
 
 struct CanSend {
+ private:
+  static size_t buf_size;
+
+ public:
   static int ret;
   static void* data;
+  static unsigned int num_called;
   static can_msg msg;
-  static bool called;
+  static can_msg* msg_buf;
 
   static inline int
   func(const can_msg* msg_, void* data_) {
     assert(msg_);
-
-    called = true;
+    assert(num_called < buf_size);
 
     msg = *msg_;
     data = data_;
 
+    if (num_called < buf_size) {
+      msg_buf[num_called] = *msg_;
+    }
+    num_called++;
+
     return ret;
   }
 
-  static void inline Clear() {
+  static inline bool
+  called() {
+    return num_called > 0;
+  }
+
+  static inline void
+  Clear() {
     msg = CAN_MSG_INIT;
     data = nullptr;
 
     ret = 0;
-    called = false;
+    num_called = 0;
+
+    buf_size = 1u;
+    msg_buf = &msg;
+  }
+
+  /**
+   * Set a message buffer.
+   * 
+   * @param buf a pointer to a message buffer.
+   * @param size the number of frames available at <b>buf</b>.
+   */
+  static inline void
+  SetMsgBuf(can_msg* const buf, const size_t size) {
+    buf_size = size;
+    msg_buf = buf;
   }
 };
 
