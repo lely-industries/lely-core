@@ -305,7 +305,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
 ///        timer set
 ///
 /// \When RPDO COB-ID object entry (idx: 0x1400, subidx: 0x01) is changed to
-///       invalid COB-ID using SDO
+///       COB-ID with valid bit set using SDO
 ///
 /// \Then 0 is returned, event timer is stopped and not triggered later
 ///       \Calls co_dev_find_sub()
