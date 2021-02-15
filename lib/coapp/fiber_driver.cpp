@@ -28,6 +28,8 @@
 
 #include <lely/coapp/fiber_driver.hpp>
 
+#include <cassert>
+
 namespace lely {
 
 namespace canopen {
