@@ -431,22 +431,28 @@ co_sdev_load(const struct co_sdev *sdev, co_dev_t *dev)
 	assert(sdev);
 	assert(dev);
 
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_dev_set_name(dev, sdev->name) == -1)
 		return -1;
 
 	if (co_dev_set_vendor_name(dev, sdev->vendor_name) == -1)
 		return -1;
+#endif
 
 	co_dev_set_vendor_id(dev, sdev->vendor_id);
 
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_dev_set_product_name(dev, sdev->product_name) == -1)
 		return -1;
+#endif
 
 	co_dev_set_product_code(dev, sdev->product_code);
 	co_dev_set_revision(dev, sdev->revision);
 
+#if !LELY_NO_CO_OBJ_NAME
 	if (co_dev_set_order_code(dev, sdev->order_code) == -1)
 		return -1;
+#endif
 
 	co_dev_set_baud(dev, sdev->baud);
 	co_dev_set_rate(dev, sdev->rate);
