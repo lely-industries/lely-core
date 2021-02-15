@@ -319,7 +319,7 @@ int co_csdo_is_valid(const co_csdo_t *sdo);
 
 /**
  * Returns 1 if the specified Client-SDO service is idle, and 0 if a transfer is
- * ongoing.
+ * ongoing. It returns 0 when the service is stopped.
  */
 int co_csdo_is_idle(const co_csdo_t *sdo);
 

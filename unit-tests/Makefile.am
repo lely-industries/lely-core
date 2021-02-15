@@ -111,6 +111,7 @@ bin += unit-test-co
 
 src_co_tests =
 src_co_tests += co/test-crc.cpp
+src_co_tests += co/test-csdo.cpp
 src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
 src_co_tests += co/test-pdo.cpp

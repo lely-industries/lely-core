@@ -151,10 +151,8 @@ static void co_csdo_fini(co_csdo_t *sdo);
 /**
  * Updates and (de)activates a Client-SDO service. This function is invoked when
  * one of the SDO client parameters (objects 1280..12FF) is updated.
- *
- * @returns 0 on success, or -1 on error.
  */
-static int co_csdo_update(co_csdo_t *sdo);
+static void co_csdo_update(co_csdo_t *sdo);
 
 /**
  * The download indication function for (all sub-objects of) CANopen objects
@@ -960,14 +958,9 @@ co_csdo_start(co_csdo_t *sdo)
 
 	co_csdo_enter(sdo, co_csdo_wait_state);
 
-	if (co_csdo_update(sdo) == -1)
-		goto error_update;
+	co_csdo_update(sdo);
 
 	return 0;
-
-error_update:
-	co_csdo_stop(sdo);
-	return -1;
 }
 
 void
@@ -1265,7 +1258,7 @@ co_csdo_blk_up_req(co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 	return 0;
 }
 
-static int
+static void
 co_csdo_update(co_csdo_t *sdo)
 {
 	assert(sdo);
@@ -1286,8 +1279,6 @@ co_csdo_update(co_csdo_t *sdo)
 	} else {
 		can_recv_stop(sdo->recv);
 	}
-
-	return 0;
 }
 
 static co_unsigned32_t
@@ -1380,18 +1371,13 @@ static int
 co_csdo_recv(const struct can_msg *msg, void *data)
 {
 	assert(msg);
+	// Ignore remote frames.
+	assert(!(msg->flags & CAN_FLAG_RTR));
+#if !LELY_NO_CANFD
+	assert(!(msg->flags & CAN_FLAG_EDL));
+#endif
 	co_csdo_t *sdo = data;
 	assert(sdo);
-
-	// Ignore remote frames.
-	if (msg->flags & CAN_FLAG_RTR)
-		return 0;
-
-#if !LELY_NO_CANFD
-	// Ignore CAN FD format frames.
-	if (msg->flags & CAN_FLAG_EDL)
-		return 0;
-#endif
 
 	co_csdo_emit_recv(sdo, msg);
 
