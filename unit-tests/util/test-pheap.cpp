@@ -43,9 +43,9 @@ pheap_cmp_ints(const void* p1, const void* p2) noexcept {
     return -1;
 }
 
-TEST_GROUP(Util_PheapCmpInts){};
+TEST_GROUP(PheapCmpInts){};
 
-TEST(Util_PheapCmpInts, PheapCmpInts) {
+TEST(PheapCmpInts, PheapCmpInts) {
   int a = 2;
   int b = 3;
   int c = 2;
@@ -55,7 +55,7 @@ TEST(Util_PheapCmpInts, PheapCmpInts) {
   CHECK_COMPARE(0, <, pheap_cmp_ints(&b, &a));
 }
 
-TEST_GROUP(Util_Pheap) {
+TEST_BASE(Util_PheapBase) {
   pheap heap;
   static const size_t NODES_NUM = 10;
 
@@ -63,11 +63,55 @@ TEST_GROUP(Util_Pheap) {
   int keys[NODES_NUM] = {-32454, -2431, 0,     273,   332,
                          3244,   4444,  13444, 17895, 21995};
 
-  void FillHeap(const int how_many) {
-    for (int i = 0; i < how_many; i++) {
+  void FillHeap(const size_t how_many) {
+    assert(how_many <= NODES_NUM);
+
+    for (size_t i = 0; i < how_many; i++) {
       pheap_insert(&heap, &nodes[i]);
     }
   }
+};
+
+TEST_GROUP_BASE(Util_PheapInit, Util_PheapBase){};
+
+/// @name pheap_init()
+///@{
+
+/// \Given an uninitialized pairing heap (pheap)
+///
+/// \When pheap_init() is called with a pointer to the integer comparison
+///       function
+///
+/// \Then the heap size is zero, the first node pointer is null and
+///       the comparison function is set
+TEST(Util_PheapInit, EmptyWhenInitialized) {
+  pheap_init(&heap, pheap_cmp_ints);
+
+  CHECK_EQUAL(0, pheap_size(&heap));
+  POINTERS_EQUAL(nullptr, pheap_first(&heap));
+  FUNCTIONPOINTERS_EQUAL(pheap_cmp_ints, heap.cmp);
+}
+
+///@}
+
+/// @name pnode_init()
+///@{
+
+/// \Given a pointer to the uninitialized node (pnode)
+///
+/// \When pnode_init() is called with a pointer to the key value
+///
+/// \Then the node is initialized with the given value
+TEST(Util_PheapInit, PnodeInit) {
+  pnode_init(&nodes[0], &keys[0]);
+
+  CHECK_EQUAL(keys[0], *static_cast<const int*>(nodes[0].key));
+}
+
+///@}
+
+TEST_GROUP_BASE(Util_Pheap, Util_PheapBase) {
+  int data = 0;  // clang-format fix
 
   TEST_SETUP() {
     pheap_init(&heap, pheap_cmp_ints);
@@ -78,137 +122,315 @@ TEST_GROUP(Util_Pheap) {
   }
 };
 
-TEST(Util_Pheap, PheapInit_EmptyWhenInitialized) {
-  CHECK_EQUAL(0, pheap_size(&heap));
-  POINTERS_EQUAL(nullptr, pheap_first(&heap));
-}
+/// @name pnode_next()
+///@{
 
-TEST(Util_Pheap, PnodeInit) {
-  CHECK_EQUAL(keys[0], *static_cast<const int*>(nodes[0].key));
-  CHECK_EQUAL(keys[1], *static_cast<const int*>(nodes[1].key));
-  CHECK_EQUAL(keys[NODES_NUM - 1],
-              *static_cast<const int*>(nodes[NODES_NUM - 1].key));
-}
-
+/// \Given a pairing heap (pheap) with a single node (pnode) inserted
+///
+/// \When pnode_next() is called
+///
+/// \Then a null pointer is returned
 TEST(Util_Pheap, PnodeNext_Null) {
   pheap_insert(&heap, &nodes[1]);
 
-  POINTERS_EQUAL(nullptr, pnode_next(&nodes[1]));
+  const auto* ret = pnode_next(&nodes[1]);
+
+  POINTERS_EQUAL(nullptr, ret);
 }
 
+/// \Given a pairing heap (pheap) with nodes inserted (node 1 is a child
+///        of node 0)
+///
+/// \When pnode_next() is called for the node 0
+///
+/// \Then the address of the node 1 is returned
 TEST(Util_Pheap, PnodeNext_Child) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[1]);
 
   POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[0]));
-  POINTERS_EQUAL(&nodes[2], pnode_next(&nodes[1]));
-  POINTERS_EQUAL(nullptr, pnode_next(&nodes[2]));
 }
 
-TEST(Util_Pheap, PnodeNext_ReplaceRoot) {
+/// \Given a pairing heap (pheap) with nodes inserted (node 1 has no child
+///        and no next node)
+///
+/// \When pnode_next() is called for the node 1
+///
+/// \Then the address of the parent's next node (null pointer) is returned
+TEST(Util_Pheap, PnodeNext_Parent) {
   pheap_insert(&heap, &nodes[1]);
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[2]);
 
-  POINTERS_EQUAL(&nodes[2], pnode_next(&nodes[0]));
   POINTERS_EQUAL(nullptr, pnode_next(&nodes[1]));
-  POINTERS_EQUAL(&nodes[1], pnode_next(&nodes[2]));
 }
 
+///@}
+
+/// @name pheap_empty()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_empty() is called
+///
+/// \Then 1 is returned
+///       \Calls pheap_size()
 TEST(Util_Pheap, PheapEmpty_IsEmpty) { CHECK_EQUAL(1, pheap_empty(&heap)); }
 
+/// \Given a non-empty pairing heap (pheap)
+///
+/// \When pheap_empty() is called
+///
+/// \Then 0 is returned
+///       \Calls pheap_size()
 TEST(Util_Pheap, PheapEmpty_IsNotEmpty) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(0, pheap_empty(&heap));
 }
 
+///@}
+
+/// @name pheap_size()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_size() is called
+///
+/// \Then 0 is returned
 TEST(Util_Pheap, PheapSize_IsEmpty) { CHECK_EQUAL(0, pheap_size(&heap)); }
 
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_size() is called
+///
+/// \Then 1 is returned
 TEST(Util_Pheap, PheapSize_HasOneElement) {
   pheap_insert(&heap, &nodes[0]);
 
-  CHECK_EQUAL(1UL, pheap_size(&heap));
+  CHECK_EQUAL(1uL, pheap_size(&heap));
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes inserted
+///
+/// \When pheap_size() is called
+///
+/// \Then the number of nodes is returned
 TEST(Util_Pheap, PheapSize_HasMultipleElements) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
-  CHECK_EQUAL(2UL, pheap_size(&heap));
+  CHECK_EQUAL(2uL, pheap_size(&heap));
 }
 
+///@}
+
+/// @name pheap_insert()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_insert() is called with a node (pnode) address
+///
+/// \Then the node is inserted, heap size is one
 TEST(Util_Pheap, PheapInsert_WhenEmpty) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(&nodes[0], pheap_first(&heap));
+  CHECK_EQUAL(1u, pheap_size(&heap));
 }
 
-TEST(Util_Pheap, PheapRemove_NodeIsParentAndIsOnlyElement) {
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_insert() is called with a node address
+///
+/// \Then the node is inserted, heap size is two
+TEST(Util_Pheap, PheapInsert_OneInserted) {
+  pheap_insert(&heap, &nodes[0]);
+
+  pheap_insert(&heap, &nodes[1]);
+
+  CHECK_EQUAL(&nodes[1], pheap_find(&heap, &keys[1]));
+  CHECK_EQUAL(2u, pheap_size(&heap));
+}
+
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_insert() is called with a node address
+///
+/// \Then the node is inserted, heap size has increased by one
+TEST(Util_Pheap, PheapInsert_MultipleInserted) {
+  pheap_insert(&heap, &nodes[0]);
+  pheap_insert(&heap, &nodes[1]);
+
+  pheap_insert(&heap, &nodes[2]);
+
+  CHECK_EQUAL(&nodes[2], pheap_find(&heap, &keys[2]));
+  CHECK_EQUAL(3u, pheap_size(&heap));
+}
+
+///@}
+
+/// @name pheap_remove()
+///@{
+
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_remove() is called with the node address
+///
+/// \Then the node is removed and the pairing heap is empty
+TEST(Util_Pheap, PheapRemove_NodeIsOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
 
   pheap_remove(&heap, &nodes[0]);
 
-  CHECK_EQUAL(0UL, pheap_size(&heap));
+  CHECK_EQUAL(0uL, pheap_size(&heap));
+  CHECK_EQUAL(1, pheap_empty(&heap));
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_remove() is called with the non-parent node address
+///
+/// \Then the node is removed
 TEST(Util_Pheap, PheapRemove_NodeIsNotParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
   pheap_remove(&heap, &nodes[0]);
 
-  CHECK_EQUAL(1UL, pheap_size(&heap));
+  CHECK_EQUAL(1uL, pheap_size(&heap));
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_remove() is called with the parent node address
+///
+/// \Then the node is removed
 TEST(Util_Pheap, PheapRemove_NodeIsParentAndIsNotOnlyElement) {
   pheap_insert(&heap, &nodes[0]);
   pheap_insert(&heap, &nodes[1]);
 
   pheap_remove(&heap, &nodes[1]);
 
-  CHECK_EQUAL(1UL, pheap_size(&heap));
+  CHECK_EQUAL(1uL, pheap_size(&heap));
 }
 
-TEST(Util_Pheap, PheapRemove_NodeFromTheMiddleThatHasNext) {
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_remove() is called with the address of the node which has
+///       a child node
+///
+/// \Then the node is removed
+TEST(Util_Pheap, PheapRemove_NodeFromTheMiddleThatHasChild) {
   pheap_insert(&heap, &nodes[3]);
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[4]);
   pheap_insert(&heap, &nodes[1]);
 
   pheap_remove(&heap, &nodes[2]);
-  CHECK_EQUAL(3UL, pheap_size(&heap));
+
+  CHECK_EQUAL(3uL, pheap_size(&heap));
 }
 
-TEST(Util_Pheap, PheapFind_WhenEmpty) {
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_remove() is called with the address of the node which has
+///       both parent and sibling nodes
+///
+/// \Then the node is removed
+TEST(Util_Pheap, PheapRemove_NodeWithParentAndSibling) {
+  pheap_insert(&heap, &nodes[3]);
+  pheap_insert(&heap, &nodes[2]);
+  pheap_insert(&heap, &nodes[4]);
+  pheap_insert(&heap, &nodes[1]);
+
+  pheap_remove(&heap, &nodes[3]);
+
+  CHECK_EQUAL(3uL, pheap_size(&heap));
+}
+
+///@}
+
+/// @name pheap_find()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_find() is called with an address of any key
+///
+/// \Then null pointer is returned
+TEST(Util_Pheap, PheapFind_Empty) {
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[0]));
 }
 
-TEST(Util_Pheap, PheapFind_WhenNotEmpty) {
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_find() is called with an address of key of one of the inserted
+//        nodes
+///
+/// \Then an address of the node with the key is returned
+TEST(Util_Pheap, PheapFind_NotEmpty) {
   pheap_insert(&heap, &nodes[1]);
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[3]);
   pheap_insert(&heap, &nodes[0]);
 
-  POINTERS_EQUAL(&nodes[0], pheap_find(&heap, &keys[0]));
-  POINTERS_EQUAL(&nodes[1], pheap_find(&heap, &keys[1]));
   POINTERS_EQUAL(&nodes[2], pheap_find(&heap, &keys[2]));
-  POINTERS_EQUAL(&nodes[3], pheap_find(&heap, &keys[3]));
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_find() is called with an address of a key which is not
+///       present in any of the nodes stored in the heap
+///
+/// \Then null pointer is returned
 TEST(Util_Pheap, PheapFind_FindNotPresentWhenMultipleElements) {
   FillHeap(3);
 
   POINTERS_EQUAL(nullptr, pheap_find(&heap, &keys[3]));
 }
 
-TEST(Util_Pheap, PheapFirst) {
+///@}
+
+/// @name pheap_first()
+///@{
+
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_first() is called
+///
+/// \Then the node address is returned
+TEST(Util_Pheap, PheapFirst_OneInserted) {
   pheap_insert(&heap, &nodes[0]);
 
   POINTERS_EQUAL(&nodes[0], pheap_first(&heap));
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_first() is called
+///
+/// \Then the address of the node with a minimum key value is returned
+TEST(Util_Pheap, PheapFirst_MultipleInserted) {
+  FillHeap(6u);
+  pheap_remove(&heap, &nodes[0]);
+
+  POINTERS_EQUAL(&nodes[1], pheap_first(&heap));
+}
+
+///@}
+
+/// @name pnode_foreach()
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pnode_foreach() is used with heap's root node
+///
+/// \Then body of the loop was not executed
 TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
   int node_counter = 0;
 
@@ -217,6 +439,11 @@ TEST(Util_Pheap, PnodeForeach_EmptyHeap) {
   CHECK_EQUAL(0, node_counter);
 }
 
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pnode_foreach() is used with heap's root node
+///
+/// \Then body of the loop is executed once
 TEST(Util_Pheap, PnodeForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
@@ -229,6 +456,12 @@ TEST(Util_Pheap, PnodeForeach_OnlyHead) {
   CHECK_EQUAL(1, node_counter);
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pnode_foreach() is used with heap's root node
+///
+/// \Then body of the loop is executed once for each node
+///       \Calls pnode_next()
 TEST(Util_Pheap, PnodeForeach_MultipleElements) {
   int node_counter = 0;
   FillHeap(NODES_NUM);
@@ -243,6 +476,17 @@ TEST(Util_Pheap, PnodeForeach_MultipleElements) {
   CHECK_EQUAL(NODES_NUM, visited_keys.size());
 }
 
+///@}
+
+/// @name pheap_foreach()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_foreach() is used
+///
+/// \Then body of the loop was not executed
+///       \Calls pheap_first()
 TEST(Util_Pheap, PheapForeach_EmptyHeap) {
   int node_counter = 0;
 
@@ -251,6 +495,12 @@ TEST(Util_Pheap, PheapForeach_EmptyHeap) {
   CHECK_EQUAL(0, node_counter);
 }
 
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_foreach() is used
+///
+/// \Then body of the loop is executed once
+///       \Calls pheap_first()
 TEST(Util_Pheap, PheapForeach_OnlyHead) {
   int node_counter = 0;
   FillHeap(1);
@@ -263,6 +513,13 @@ TEST(Util_Pheap, PheapForeach_OnlyHead) {
   CHECK_EQUAL(1, node_counter);
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_foreach() is used
+///
+/// \Then body of the loop is executed once for each node
+///       \Calls pheap_first()
+///       \Calls pnode_next()
 TEST(Util_Pheap, PheapForeach_MultipleElements) {
   int node_counter = 0;
   FillHeap(NODES_NUM);
@@ -277,55 +534,95 @@ TEST(Util_Pheap, PheapForeach_MultipleElements) {
   CHECK_EQUAL(NODES_NUM, visited_keys.size());
 }
 
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_foreach() is used and one of the nodes is removed
+///
+/// \Then body of the loop is executed once for each node and the removed node
+///       is not present in the heap
+///       \Calls pheap_first()
+///       \Calls pnode_next()
 TEST(Util_Pheap, PheapForeach_MultiElementsRemoveCurrent) {
-  int node_counter = 0;
+  int iteration_counter = 0;
   FillHeap(NODES_NUM);
-  std::set<int> visited_keys;
 
   pheap_foreach(&heap, node) {
-    if (node_counter != 2) {
-      visited_keys.insert(*static_cast<const int*>(node->key));
-    } else {
-      pheap_remove(&heap, node);
-    }
-    node_counter++;
+    if (iteration_counter == 2) pheap_remove(&heap, node);
+    iteration_counter++;
   }
 
-  CHECK_EQUAL(NODES_NUM, node_counter);
-  CHECK_EQUAL(NODES_NUM - 1, visited_keys.size());
+  CHECK_EQUAL(NODES_NUM, iteration_counter);
+  CHECK_EQUAL(NODES_NUM - 1, pheap_size(&heap));
 }
 
+///@}
+
+/// @name pheap_contains()
+///@{
+
+/// \Given an empty pairing heap (pheap)
+///
+/// \When pheap_contains() is called with a node address
+///
+/// \Then 0 is returned
 TEST(Util_Pheap, PheapContains_HeapEmpty) {
   CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
   CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
   CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
 }
 
-TEST(Util_Pheap, PheapContains_ContainsAsRoot) {
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_contains() is called with the node address
+///
+/// \Then 1 is returned
+TEST(Util_Pheap, PheapContains_OneInserted_Contains) {
   pheap_insert(&heap, &nodes[0]);
 
   CHECK_EQUAL(1, pheap_contains(&heap, &nodes[0]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
 }
 
-TEST(Util_Pheap, PheapContains_ContainsAsParentsChild) {
+/// \Given a pairing heap (pheap) with one node (pnode) inserted
+///
+/// \When pheap_contains() is called with address of the node which is not
+///       present in the heap
+///
+/// \Then 0 is returned
+TEST(Util_Pheap, PheapContains_OneInserted_NotContain) {
   pheap_insert(&heap, &nodes[0]);
+
+  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[1]));
+}
+
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_contains() is called with address of the node which is
+///       present in the heap
+///
+/// \Then 1 is returned
+TEST(Util_Pheap, PheapContains_Many_Contains) {
+  pheap_insert(&heap, &nodes[3]);
+  pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[1]);
 
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[0]));
   CHECK_EQUAL(1, pheap_contains(&heap, &nodes[1]));
-  CHECK_EQUAL(0, pheap_contains(&heap, &nodes[2]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[2]));
+  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[3]));
 }
 
-TEST(Util_Pheap, PheapContains_ContainsMany) {
+/// \Given a pairing heap (pheap) with multiple nodes (pnode) inserted
+///
+/// \When pheap_contains() is called with address of the node which is not
+///       present in the heap
+///
+/// \Then 0 is returned
+TEST(Util_Pheap, PheapContains_Many_NotContain) {
   pheap_insert(&heap, &nodes[3]);
   pheap_insert(&heap, &nodes[2]);
   pheap_insert(&heap, &nodes[1]);
 
   CHECK_EQUAL(0, pheap_contains(&heap, &nodes[0]));
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[1]));
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[2]));
-  CHECK_EQUAL(1, pheap_contains(&heap, &nodes[3]));
   CHECK_EQUAL(0, pheap_contains(&heap, &nodes[4]));
 }
+
+///@}
