@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -35,9 +35,13 @@ TEST_GROUP(Util_MemoryDefaultAllocator) {
   TEST_TEARDOWN() { mem_free(nullptr, ptr); }
 };
 
-// given: default memory allocator
-// when: trying to allocate 0 bytes
-// then: null pointer is returned
+/// @name mem_alloc()
+///@{
+
+/// \Given N/A
+/// \When mem_alloc() is called with null pointer to allocator, any alignment
+///       value and zero size
+/// \Then null pointer is returned
 TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroSize) {
   ptr = mem_alloc(nullptr, 0, 0);
 
@@ -46,9 +50,11 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroSize) {
 
 #if LELY_NO_MALLOC
 
-// given: default memory allocator
-// when: trying to allocate miss-aligned bytes
-// then: null pointer is returned and error is reported.
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_alloc() is called with null pointer to allocator, non-zero
+///       alignment that's not a power of 2 and non-zero size
+/// \Then null pointer is returned;
+///       if !LELY_NO_ERRNO invalid argument error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
   const size_t alignment = 3u;
 
@@ -60,9 +66,11 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
 #endif
 }
 
-// given: default memory allocator
-// when: trying to allocate bytes with "zero" (default) alignment
-// then: null pointer is returned and error is reported.
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_alloc() is called with null pointer to allocator, zero (default)
+///       alignment and non-zero size
+/// \Then null pointer is returned;
+///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
   ptr = mem_alloc(nullptr, 0, sizeof(int));
 
@@ -72,9 +80,11 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
 #endif
 }
 
-// given: default memory allocator in 'no malloc' mode
-// when: trying to allocate any memory
-// then: null pointer is returned and error is reported.
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_alloc() is called with null pointer to allocator, non-zero
+///       alignment and non-zero size
+/// \Then null pointer is returned;
+///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
   ptr = mem_alloc(nullptr, alignof(int), sizeof(int));
 
@@ -84,22 +94,50 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
 #endif
 }
 
-// given: default memory allocator in 'no malloc' mode
-// when: trying to retrieve allocated memory size
-// then: zero is returned
+///@}
+
+/// @name mem_size()
+///@{
+
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_size() is called with null pointer to allocator
+/// \Then zero is returned
 TEST(Util_MemoryDefaultAllocator, MemSize) {
   const auto ret = mem_size(nullptr);
 
   CHECK_EQUAL(0, ret);
 }
 
-// given: default memory allocator in 'no malloc' mode
-// when: trying to retrieve memory capacity
-// then: zero is returned
+///@}
+
+/// @name mem_capacity()
+///@{
+
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_capacity() is called with null pointer to allocator
+/// \Then zero is returned
 TEST(Util_MemoryDefaultAllocator, MemCapacity) {
   const auto ret = mem_capacity(nullptr);
 
   CHECK_EQUAL(0, ret);
 }
+
+///@}
+
+TEST_GROUP(Util_MemoryDefaultAllocatorFree){};
+
+/// @name mem_free()
+///@{
+
+/// \Given LELY_NO_MALLOC enabled
+/// \When mem_free() is called with null pointer to allocator and any pointer to
+///       be freed
+/// \Then nothing happens
+TEST(Util_MemoryDefaultAllocatorFree, MemFree) {
+  int data = 42;
+  mem_free(nullptr, &data);
+}
+
+///@}
 
 #endif  // LELY_NO_MALLOC
