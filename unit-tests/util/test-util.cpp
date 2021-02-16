@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -29,6 +29,14 @@
 
 TEST_GROUP(Util_Util){};
 
+/// @name ABS()
+///@{
+
+/// \Given N/A
+///
+/// \When ABS() is used with an integer
+///
+/// \Then macro evaluates to the absolute value of the integer
 TEST(Util_Util, Abs_Ints) {
   CHECK_EQUAL(0, ABS(0));
   CHECK_EQUAL(0, ABS(-0));
@@ -42,6 +50,11 @@ TEST(Util_Util, Abs_Ints) {
   CHECK_EQUAL(INT_MAX, ABS(-INT_MAX));
 }
 
+/// \Given N/A
+///
+/// \When ABS() is used with a long integer
+///
+/// \Then macro evaluates to the absolute value of the integer
 TEST(Util_Util, Abs_LongInts) {
   CHECK_EQUAL(0L, ABS(0L));
   CHECK_EQUAL(0L, ABS(-0L));
@@ -51,6 +64,11 @@ TEST(Util_Util, Abs_LongInts) {
   CHECK_EQUAL(LONG_MAX, ABS(-LONG_MAX));
 }
 
+/// \Given N/A
+///
+/// \When ABS() is used with a long long integer
+///
+/// \Then macro evaluates to the absolute value of the integer
 TEST(Util_Util, Abs_LongLongInts) {
   CHECK_EQUAL(0LL, ABS(0LL));
   CHECK_EQUAL(0LL, ABS(-0LL));
@@ -60,6 +78,11 @@ TEST(Util_Util, Abs_LongLongInts) {
   CHECK_EQUAL(LONG_LONG_MAX, ABS(-LONG_LONG_MAX));
 }
 
+/// \Given N/A
+///
+/// \When ABS() is used with a double-precision floating-point number
+///
+/// \Then the macro evaluates to the absolute value of the number
 TEST(Util_Util, Abs_Doubles) {
   CHECK_EQUAL(DBL_MIN, ABS(-DBL_MIN));
   CHECK_EQUAL(DBL_MIN, ABS(DBL_MIN));
@@ -71,6 +94,11 @@ TEST(Util_Util, Abs_Doubles) {
   CHECK_EQUAL(DBL_MAX, ABS(-DBL_MAX));
 }
 
+/// \Given N/A
+///
+/// \When ABS() is used with a single-precision floating-point number
+///
+/// \Then the macro evaluates to the absolute value of the number
 TEST(Util_Util, Abs_Floats) {
   CHECK_EQUAL(FLT_MIN, ABS(FLT_MIN));
   CHECK_EQUAL(FLT_MIN, ABS(-FLT_MIN));
@@ -82,32 +110,20 @@ TEST(Util_Util, Abs_Floats) {
   CHECK_EQUAL(FLT_MAX, ABS(-FLT_MAX));
 }
 
-TEST(Util_Util, Align_Base2BigNegatives) {
-  int base = 2;
+///@}
 
-  CHECK_EQUAL(-LONG_LONG_MAX + 1, ALIGN(-LONG_LONG_MAX, base));
-  CHECK_EQUAL(-LONG_MAX + 1, ALIGN(-LONG_MAX, base));
-  CHECK_EQUAL(-INT_MAX + 1, ALIGN(-INT_MAX, base));
-  CHECK_EQUAL(-SHRT_MAX + 1, ALIGN(-SHRT_MAX, base));
-  CHECK_EQUAL(-CHAR_MAX + 1, ALIGN(-CHAR_MAX, base));
-  CHECK_EQUAL(-2133254542ULL, ALIGN(-2133254543ULL, base));
-  CHECK_EQUAL(-21332544UL, ALIGN(-21332545UL, base));
-  CHECK_EQUAL(-21332524LL, ALIGN(-21332525LL, base));
-  CHECK_EQUAL(-213324L, ALIGN(-213325L, base));
-  CHECK_EQUAL(-31536, ALIGN(-31536, base));
-}
+/// @name ALIGN()
+///@{
 
+/// \Given N/A
+///
+/// \When ALIGN() is used with a small integer and a base 2
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
 TEST(Util_Util, Align_Base2SmallInts) {
   int base = 2;
 
-  CHECK_EQUAL(-31534, ALIGN(-31535, base));
-  CHECK_EQUAL(-6, ALIGN(-7, base));
-  CHECK_EQUAL(-6, ALIGN(-6, base));
-  CHECK_EQUAL(-4, ALIGN(-5, base));
-  CHECK_EQUAL(-4, ALIGN(-4, base));
-  CHECK_EQUAL(-2, ALIGN(-3, base));
-  CHECK_EQUAL(-2, ALIGN(-2, base));
-  CHECK_EQUAL(0, ALIGN(-1, base));
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(2, ALIGN(1, base));
   CHECK_EQUAL(2, ALIGN(2, base));
@@ -118,7 +134,13 @@ TEST(Util_Util, Align_Base2SmallInts) {
   CHECK_EQUAL(31536, ALIGN(31536, base));
 }
 
-TEST(Util_Util, Align_Base2BigPositives) {
+/// \Given N/A
+///
+/// \When ALIGN() is used with a big positive number and a base 2
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
+TEST(Util_Util, Align_Base2BigInts) {
   int base = 2;
 
   CHECK_EQUAL(213326L, ALIGN(213325L, base));
@@ -137,31 +159,25 @@ TEST(Util_Util, Align_Base2BigPositives) {
               ALIGN(static_cast<char>(CHAR_MAX - 2), base));
 }
 
-TEST(Util_Util, Align_Base0BigNegatives) {
-  int base = 0;
-
-  CHECK_EQUAL(0LL, ALIGN(-LONG_LONG_MAX, base));
-  CHECK_EQUAL(0L, ALIGN(-LONG_MAX, base));
-  CHECK_EQUAL(0, ALIGN(-INT_MAX, base));
-  CHECK_EQUAL(0, ALIGN(-SHRT_MAX, base));
-  CHECK_EQUAL(0, ALIGN(-CHAR_MAX, base));
-  CHECK_EQUAL(0ULL, ALIGN(-2133254543ULL, base));
-  CHECK_EQUAL(0UL, ALIGN(-21332545UL, base));
-  CHECK_EQUAL(0LL, ALIGN(-21332525LL, base));
-  CHECK_EQUAL(0L, ALIGN(-213325L, base));
-}
-
+/// \Given N/A
+///
+/// \When ALIGN() is used with a small integer and a base 0
+///
+/// \Then the number is 0
 TEST(Util_Util, Align_Base0SmallInts) {
   int base = 0;
 
-  CHECK_EQUAL(0, ALIGN(-31535, base));
-  CHECK_EQUAL(0, ALIGN(-1, base));
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(0, ALIGN(1, base));
   CHECK_EQUAL(0, ALIGN(31536, base));
 }
 
-TEST(Util_Util, Align_Base0BigPositives) {
+/// \Given N/A
+///
+/// \When ALIGN() is used with a big positive number and a base 0
+///
+/// \Then the number is 0
+TEST(Util_Util, Align_Base0BigInts) {
   int base = 0;
 
   CHECK_EQUAL(0L, ALIGN(213325L, base));
@@ -180,32 +196,15 @@ TEST(Util_Util, Align_Base0BigPositives) {
               ALIGN(static_cast<char>(CHAR_MAX - 2), base));
 }
 
-TEST(Util_Util, Align_Base4BigNegatives) {
-  int base = 4;
-
-  CHECK_EQUAL(-LONG_LONG_MAX + 3, ALIGN(-LONG_LONG_MAX, base));
-  CHECK_EQUAL(-LONG_MAX + 3, ALIGN(-LONG_MAX, base));
-  CHECK_EQUAL(-INT_MAX + 3, ALIGN(-INT_MAX, base));
-  CHECK_EQUAL(-SHRT_MAX + 3, ALIGN(-SHRT_MAX, base));
-  CHECK_EQUAL(-CHAR_MAX + 3, ALIGN(-CHAR_MAX, base));
-  CHECK_EQUAL(-2133254540ULL, ALIGN(-2133254543ULL, base));
-  CHECK_EQUAL(-21332544UL, ALIGN(-21332545UL, base));
-  CHECK_EQUAL(-21332524LL, ALIGN(-21332525LL, base));
-  CHECK_EQUAL(-213324L, ALIGN(-213325L, base));
-  CHECK_EQUAL(-31536, ALIGN(-31536, base));
-}
-
+/// \Given N/A
+///
+/// \When ALIGN() is used with a small integer and a base 4
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
 TEST(Util_Util, Align_Base4SmallInts) {
   int base = 4;
 
-  CHECK_EQUAL(-31532, ALIGN(-31535, base));
-  CHECK_EQUAL(-4, ALIGN(-7, base));
-  CHECK_EQUAL(-4, ALIGN(-6, base));
-  CHECK_EQUAL(-4, ALIGN(-5, base));
-  CHECK_EQUAL(-4, ALIGN(-4, base));
-  CHECK_EQUAL(0, ALIGN(-3, base));
-  CHECK_EQUAL(0, ALIGN(-2, base));
-  CHECK_EQUAL(0, ALIGN(-1, base));
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(4, ALIGN(1, base));
   CHECK_EQUAL(4, ALIGN(2, base));
@@ -216,7 +215,13 @@ TEST(Util_Util, Align_Base4SmallInts) {
   CHECK_EQUAL(31536, ALIGN(31536, base));
 }
 
-TEST(Util_Util, Align_Base4BigPositives) {
+/// \Given N/A
+///
+/// \When ALIGN() is used with a big positive number and a base 4
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
+TEST(Util_Util, Align_Base4BigInts) {
   int base = 4;
 
   CHECK_EQUAL(213328L, ALIGN(213325L, base));
@@ -235,33 +240,28 @@ TEST(Util_Util, Align_Base4BigPositives) {
               ALIGN(static_cast<char>(CHAR_MAX - 5), base));
 }
 
-TEST(Util_Util, Align_BigBaseBigNegatives) {
-  int base = 4096;
-
-  CHECK_EQUAL(-LONG_LONG_MAX + 4095, ALIGN(-LONG_LONG_MAX, base));
-  CHECK_EQUAL(-LONG_MAX + 4095, ALIGN(-LONG_MAX, base));
-  CHECK_EQUAL(-INT_MAX + 4095, ALIGN(-INT_MAX, base));
-  CHECK_EQUAL(-SHRT_MAX + 4095, ALIGN(-SHRT_MAX, base));
-  CHECK_EQUAL(0, ALIGN(-CHAR_MAX, base));
-  CHECK_EQUAL(-21331968LL, ALIGN(-21332525LL, base));
-  CHECK_EQUAL(-212992L, ALIGN(-213325L, base));
-  CHECK_EQUAL(-28672, ALIGN(-31536, base));
-}
-
+/// \Given N/A
+///
+/// \When ALIGN() is used with a small integer and base 4096
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
 TEST(Util_Util, Align_BigBaseSmallInts) {
   int base = 4096;
 
-  CHECK_EQUAL(-28672, ALIGN(-31535, base));
-  CHECK_EQUAL(0, ALIGN(-7, base));
-  CHECK_EQUAL(0, ALIGN(-2, base));
-  CHECK_EQUAL(0, ALIGN(-1, base));
   CHECK_EQUAL(0, ALIGN(0, base));
   CHECK_EQUAL(4096, ALIGN(1, base));
   CHECK_EQUAL(4096, ALIGN(2, base));
   CHECK_EQUAL(32768, ALIGN(31536, base));
 }
 
-TEST(Util_Util, Align_BigBaseBigPositives) {
+/// \Given N/A
+///
+/// \When ALIGN() is used with a big positive number and a base 4096
+///
+/// \Then the macro evaluates to the nearest multiple of base greater or equal
+///       to the number
+TEST(Util_Util, Align_BigBaseBigInts) {
   int base = 4096;
 
   CHECK_EQUAL(217088L, ALIGN(213325L, base));
@@ -278,153 +278,16 @@ TEST(Util_Util, Align_BigBaseBigPositives) {
               ALIGN(static_cast<int16_t>(SHRT_MAX - 4097), base));
 }
 
-TEST(Util_Util, AlignMask_Mask0x01BigNegatives) {
-  int mask = 0x01;
+///@}
 
-  CHECK_EQUAL(-LONG_LONG_MAX + 1, ALIGN_MASK(-LONG_LONG_MAX, mask));
-  CHECK_EQUAL(-LONG_MAX + 1, ALIGN_MASK(-LONG_MAX, mask));
-  CHECK_EQUAL(-INT_MAX + 1, ALIGN_MASK(-INT_MAX, mask));
-  CHECK_EQUAL(-SHRT_MAX + 1, ALIGN_MASK(-SHRT_MAX, mask));
-  CHECK_EQUAL(-CHAR_MAX + 1, ALIGN_MASK(-CHAR_MAX, mask));
-  CHECK_EQUAL(-21332524LL, ALIGN_MASK(-21332525LL, mask));
-  CHECK_EQUAL(-213324L, ALIGN_MASK(-213325L, mask));
-  CHECK_EQUAL(-31536, ALIGN_MASK(-31536, mask));
-}
+/// @name MIN()
+///@{
 
-TEST(Util_Util, AlignMask_Mask0x01SmallInts) {
-  int mask = 0x01;
-
-  CHECK_EQUAL(-31534, ALIGN_MASK(-31535, mask));
-  CHECK_EQUAL(-6, ALIGN_MASK(-7, mask));
-  CHECK_EQUAL(-6, ALIGN_MASK(-6, mask));
-  CHECK_EQUAL(-4, ALIGN_MASK(-5, mask));
-  CHECK_EQUAL(-4, ALIGN_MASK(-4, mask));
-  CHECK_EQUAL(-2, ALIGN_MASK(-3, mask));
-  CHECK_EQUAL(-2, ALIGN_MASK(-2, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(-1, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(0, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(1, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(2, mask));
-  CHECK_EQUAL(4, ALIGN_MASK(3, mask));
-  CHECK_EQUAL(4, ALIGN_MASK(4, mask));
-  CHECK_EQUAL(6, ALIGN_MASK(5, mask));
-  CHECK_EQUAL(6, ALIGN_MASK(6, mask));
-  CHECK_EQUAL(31536, ALIGN_MASK(31536, mask));
-}
-
-TEST(Util_Util, AlignMask_Mask0x01BigPositives) {
-  int mask = 0x01;
-
-  CHECK_EQUAL(213326L, ALIGN_MASK(213325L, mask));
-  CHECK_EQUAL(21332526LL, ALIGN_MASK(21332525LL, mask));
-  CHECK_EQUAL(21332546UL, ALIGN_MASK(21332545UL, mask));
-  CHECK_EQUAL(2133254544ULL, ALIGN_MASK(2133254543ULL, mask));
-  CHECK_EQUAL(LONG_LONG_MAX - 3, ALIGN_MASK(LONG_LONG_MAX - 4, mask));
-  CHECK_EQUAL(ULONG_LONG_MAX - 3, ALIGN_MASK(ULONG_LONG_MAX - 4, mask));
-  CHECK_EQUAL(LONG_MAX - 3, ALIGN_MASK(LONG_MAX - 4, mask));
-  CHECK_EQUAL(ULONG_MAX - 3, ALIGN_MASK(ULONG_MAX - 4, mask));
-  CHECK_EQUAL(INT_MAX - 3, ALIGN_MASK(INT_MAX - 4, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(UINT_MAX, mask));
-  CHECK_EQUAL(static_cast<int16_t>(SHRT_MAX - 5),
-              ALIGN_MASK(static_cast<int16_t>(SHRT_MAX - 5), mask));
-  CHECK_EQUAL(static_cast<char>(CHAR_MAX - 5),
-              ALIGN_MASK(static_cast<char>(CHAR_MAX - 5), mask));
-}
-
-TEST(Util_Util, AlignMask_Mask0x04BigNegatives) {
-  int mask = 0x04;
-
-  CHECK_EQUAL(-LONG_LONG_MAX, ALIGN_MASK(-LONG_LONG_MAX, mask));
-  CHECK_EQUAL(-LONG_MAX, ALIGN_MASK(-LONG_MAX, mask));
-  CHECK_EQUAL(-INT_MAX, ALIGN_MASK(-INT_MAX, mask));
-  CHECK_EQUAL(-SHRT_MAX, ALIGN_MASK(-SHRT_MAX, mask));
-  CHECK_EQUAL(-CHAR_MAX, ALIGN_MASK(-CHAR_MAX, mask));
-  CHECK_EQUAL(-21332525LL, ALIGN_MASK(-21332525LL, mask));
-  CHECK_EQUAL(-213325L, ALIGN_MASK(-213325L, mask));
-  CHECK_EQUAL(-31536, ALIGN_MASK(-31536, mask));
-}
-
-TEST(Util_Util, AlignMask_Mask0x04SmallInts) {
-  int mask = 0x04;
-
-  CHECK_EQUAL(-31535, ALIGN_MASK(-31535, mask));
-  CHECK_EQUAL(-7, ALIGN_MASK(-7, mask));
-  CHECK_EQUAL(-6, ALIGN_MASK(-6, mask));
-  CHECK_EQUAL(-5, ALIGN_MASK(-5, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(-4, mask));
-  CHECK_EQUAL(1, ALIGN_MASK(-3, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(-2, mask));
-  CHECK_EQUAL(3, ALIGN_MASK(-1, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(0, mask));
-  CHECK_EQUAL(1, ALIGN_MASK(1, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(2, mask));
-  CHECK_EQUAL(3, ALIGN_MASK(3, mask));
-  CHECK_EQUAL(8, ALIGN_MASK(4, mask));
-  CHECK_EQUAL(9, ALIGN_MASK(5, mask));
-  CHECK_EQUAL(10, ALIGN_MASK(6, mask));
-  CHECK_EQUAL(31536, ALIGN_MASK(31536, mask));
-}
-
-TEST(Util_Util, AlignMask_Mask0x04BigPositives) {
-  int mask = 0x04;
-
-  CHECK_EQUAL(213329L, ALIGN_MASK(213325L, mask));
-  CHECK_EQUAL(21332529LL, ALIGN_MASK(21332525LL, mask));
-  CHECK_EQUAL(21332545UL, ALIGN_MASK(21332545UL, mask));
-  CHECK_EQUAL(2133254547ULL, ALIGN_MASK(2133254543ULL, mask));
-  CHECK_EQUAL(LONG_LONG_MAX - 4, ALIGN_MASK(LONG_LONG_MAX - 4, mask));
-  CHECK_EQUAL(ULONG_LONG_MAX - 4, ALIGN_MASK(ULONG_LONG_MAX - 4, mask));
-  CHECK_EQUAL(LONG_MAX - 4, ALIGN_MASK(LONG_MAX - 4, mask));
-  CHECK_EQUAL(ULONG_MAX - 4, ALIGN_MASK(ULONG_MAX - 4, mask));
-  CHECK_EQUAL(INT_MAX - 4, ALIGN_MASK(INT_MAX - 4, mask));
-  CHECK_EQUAL(3, ALIGN_MASK(UINT_MAX, mask));
-  CHECK_EQUAL(static_cast<int16_t>(SHRT_MAX - 5),
-              ALIGN_MASK(static_cast<int16_t>(SHRT_MAX - 5), mask));
-  CHECK_EQUAL(static_cast<char>(CHAR_MAX - 5),
-              ALIGN_MASK(static_cast<char>(CHAR_MAX - 5), mask));
-}
-
-TEST(Util_Util, AlignMask_BigMaskBigNegatives) {
-  int mask = 0xABD9;
-
-  CHECK_EQUAL(-LONG_LONG_MAX + 1, ALIGN_MASK(-LONG_LONG_MAX, mask));
-  CHECK_EQUAL(-LONG_MAX + 1, ALIGN_MASK(-LONG_MAX, mask));
-  CHECK_EQUAL(-INT_MAX + 1, ALIGN_MASK(-INT_MAX, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(-SHRT_MAX, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(-CHAR_MAX, mask));
-  CHECK_EQUAL(-21299164LL, ALIGN_MASK(-21332525LL, mask));
-  CHECK_EQUAL(-180221L, ALIGN(-213325L, mask));
-  CHECK_EQUAL(4128, ALIGN(-31536, mask));
-}
-
-TEST(Util_Util, AlignMask_BigMaskSmallInts) {
-  int mask = 0xABD9;
-
-  CHECK_EQUAL(4130, ALIGN_MASK(-31535, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(-7, mask));
-  CHECK_EQUAL(6, ALIGN_MASK(-2, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(-1, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(0, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(1, mask));
-  CHECK_EQUAL(2, ALIGN_MASK(2, mask));
-  CHECK_EQUAL(66560, ALIGN_MASK(31536, mask));
-}
-
-TEST(Util_Util, AlignMask_BigMaskBigPositives) {
-  int mask = 0xABD9;
-
-  CHECK_EQUAL(214054L, ALIGN_MASK(213325L, mask));
-  CHECK_EQUAL(21365766LL, ALIGN_MASK(21332525LL, mask));
-  CHECK_EQUAL(21365762UL, ALIGN_MASK(21332545UL, mask));
-  CHECK_EQUAL(2133263392ULL, ALIGN_MASK(2133254543ULL, mask));
-  CHECK_EQUAL(-LONG_LONG_MAX + 4101, ALIGN_MASK(LONG_LONG_MAX - 4097, mask));
-  CHECK_EQUAL(4102, ALIGN_MASK(ULONG_LONG_MAX - 4097, mask));
-  CHECK_EQUAL(-LONG_MAX + 4101, ALIGN_MASK(LONG_MAX - 4097, mask));
-  CHECK_EQUAL(4102, ALIGN_MASK(ULONG_MAX - 4097, mask));
-  CHECK_EQUAL(-INT_MAX + 4101, ALIGN_MASK(INT_MAX - 4097, mask));
-  CHECK_EQUAL(0, ALIGN_MASK(UINT_MAX, mask));
-}
-
+/// \Given N/A
+///
+/// \When MIN() is used with two numbers
+///
+/// \Then macro evaluates to the lower of the numbers
 TEST(Util_Util, Min) {
   CHECK_EQUAL(0, MIN(0, 0));
   CHECK_EQUAL(0, MIN(-0, 0));
@@ -448,6 +311,16 @@ TEST(Util_Util, Min) {
   CHECK_EQUAL(-FLT_MAX, MIN(-FLT_MAX, FLT_MAX));
 }
 
+///@}
+
+/// @name MAX()
+///@{
+
+/// \Given N/A
+///
+/// \When MAX() is used with two numbers
+///
+/// \Then macro evaluates to the greater of the numbers
 TEST(Util_Util, Max) {
   CHECK_EQUAL(0, MAX(0, 0));
   CHECK_EQUAL(0, MAX(-0, 0));
@@ -471,6 +344,32 @@ TEST(Util_Util, Max) {
   CHECK_EQUAL(FLT_MAX, MAX(-FLT_MAX, FLT_MAX));
 }
 
+/// \Given N/A
+///
+/// \When MAX() is used with two equal numbers, MIN() is used with same
+///       numbers
+///
+/// \Then both macros evaluate to different variables
+TEST(Util_Util, MinMaxDifferentAddresses) {
+  const int a = 42;
+  const int b = 42;
+
+  const int* const min = &(MIN(a, b));
+  const int* const max = &(MAX(a, b));
+
+  CHECK(min != max);
+}
+
+///@}
+
+/// @name countof()
+///@{
+
+/// \Given N/A
+///
+/// \When countof() is used with an array
+///
+/// \Then macro evaluates to the number of elements in the array
 TEST(Util_Util, Countof) {
   int a[1];
   CHECK_EQUAL(1, countof(a));
@@ -480,6 +379,16 @@ TEST(Util_Util, Countof) {
   CHECK_EQUAL(128, countof(c));
 }
 
+///@}
+
+/// @name powerof2
+///@{
+
+/// \Given N/A
+///
+/// \When powerof2() is used with an integer
+///
+/// \Then if the integer is a power of 2: macro evaluates to 1, else to 0
 TEST(Util_Util, Powerof2) {
   CHECK_EQUAL(0, powerof2(-3342));
   CHECK_EQUAL(0, powerof2(-2));
@@ -493,16 +402,14 @@ TEST(Util_Util, Powerof2) {
   CHECK_EQUAL(0, powerof2(6));
   CHECK_EQUAL(1, powerof2(8));
   CHECK_EQUAL(0, powerof2(3243));
-}
-
-TEST(Util_Util, Powerof2_NearBounds) {
   CHECK_EQUAL(0, powerof2(-INT_MAX));
   CHECK_EQUAL(0, powerof2(-SHRT_MAX - 1));
-
   CHECK_EQUAL(1, powerof2(SHRT_MAX + 1));
   CHECK_EQUAL(0, powerof2(INT_MAX));
   CHECK_EQUAL(1, powerof2(static_cast<int64_t>(INT_MAX) + 1L));
 }
+
+///@}
 
 TEST(Util_Util, Structof_Example) {
   struct TestNode {
@@ -521,6 +428,15 @@ TEST(Util_Util, Structof_Example) {
   POINTERS_EQUAL(&test_object, structof(test_node_ptr, TestObject, node));
 }
 
+/// @name structof()
+///@{
+
+/// \Given N/A
+///
+/// \When structof() is used with a pointer to member, struct name and member
+///       name
+///
+/// \Then the macro evaluates to the address of the member's parent structure
 TEST(Util_Util, Structof_General) {
   struct TestStruct {
     int a;
@@ -534,3 +450,5 @@ TEST(Util_Util, Structof_General) {
   POINTERS_EQUAL(&test_instance, structof(a_ptr, TestStruct, a));
   POINTERS_EQUAL(&test_instance, structof(b_ptr, TestStruct, b));
 }
+
+///@}
