@@ -31,7 +31,7 @@
 #include <lely/util/mempool.h>
 #include <lely/util/error.h>
 
-TEST_GROUP(Util_MemPoolInit) {};
+TEST_GROUP(Util_MemPoolInit){};
 
 /// @name mempool_init()
 ///@{
