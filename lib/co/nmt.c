@@ -263,13 +263,11 @@ struct co_nmt {
 	int halt;
 	/// An array containing the state of each NMT slave.
 	struct co_nmt_slave slaves[CO_NUM_NODES];
-#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 	/**
 	 * The default SDO timeout (in milliseconds) used during the NMT
 	 * 'boot slave' and 'check configuration' processes.
 	 */
 	int timeout;
-#endif
 #if !LELY_NO_CO_NMT_BOOT
 	/// A pointer to the NMT 'boot slave' indication function.
 	co_nmt_boot_ind_t *boot_ind;
@@ -1387,8 +1385,6 @@ co_nmt_is_master(const co_nmt_t *nmt)
 
 #if !LELY_NO_CO_MASTER
 
-#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
-
 int
 co_nmt_get_timeout(const co_nmt_t *nmt)
 {
@@ -1404,8 +1400,6 @@ co_nmt_set_timeout(co_nmt_t *nmt, int timeout)
 
 	nmt->timeout = timeout;
 }
-
-#endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 int
 co_nmt_cs_req(co_nmt_t *nmt, co_unsigned8_t cs, co_unsigned8_t id)
@@ -1960,9 +1954,10 @@ co_nmt_boot_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es)
 
 	co_nmt_emit_boot(nmt, id, st, es);
 }
-#endif
+#endif // !LELY_NO_CO_NMT_BOOT
 
 #if !LELY_NO_CO_NMT_CFG
+
 void
 co_nmt_cfg_ind(co_nmt_t *nmt, co_unsigned8_t id, co_csdo_t *sdo)
 {
@@ -1991,19 +1986,24 @@ co_nmt_cfg_con(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned32_t ac)
 	slave->cfg = NULL;
 #endif
 
+#if !LELY_NO_CO_NMT_BOOT
 	// Re-enable the heartbeat consumer for the node, if necessary.
 	if (!slave->booting) {
+#endif
 		co_unsigned16_t ms = 0;
 		co_nmt_hb_t *hb = co_nmt_hb_find(nmt, id, &ms);
 		if (hb)
 			co_nmt_hb_set_1016(hb, id, ms);
+#if !LELY_NO_CO_NMT_BOOT
 	}
+#endif
 
 	trace("NMT: update configuration process completed for slave %d", id);
 	if (slave->cfg_con)
 		slave->cfg_con(nmt, id, ac, slave->cfg_data);
 }
-#endif
+
+#endif // !LELY_NO_CO_NMT_BOOT
 
 void
 co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
@@ -2554,10 +2554,12 @@ co_nmt_ng_timer(const struct timespec *tp, void *data)
 	// Reset the timer for the next RTR.
 	can_timer_timeout(slave->timer, nmt->net, slave->gt);
 
+#if !LELY_NO_CO_NMT_BOOT
 	// Do not send node guarding RTRs to slaves that have not finished
 	// booting.
 	if (!slave->booted)
 		return 0;
+#endif
 
 	// Notify the application once of the occurrence of a node guarding
 	// timeout.
@@ -3218,7 +3220,9 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, 0);
 	}
 
-#if !LELY_NO_CO_NMT_BOOT
+#if LELY_NO_CO_NMT_BOOT
+	return co_nmt_startup_slave(nmt);
+#else
 	// Start the 'boot slave' processes.
 	switch (co_nmt_slaves_boot(nmt)) {
 	case -1:
@@ -3232,8 +3236,6 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		trace("NMT: waiting for mandatory slaves to start");
 		return NULL;
 	}
-#else
-	return co_nmt_startup_slave(nmt);
 #endif
 }
 #endif
@@ -3879,7 +3881,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 // #endif
 // 	if (obj_1f80)
 // 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
-// #if !LELY_NO_CO_MASTER
+// #if !LELY_NO_CO_NMT_CFG
 // 	if (obj_1f25)
 // 		co_obj_set_dn_ind(obj_1f25, NULL, NULL);
 // #endif

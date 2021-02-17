@@ -49,14 +49,20 @@ struct BasicMaster::Impl_ {
 #if !LELY_NO_CO_NG
   void OnNgInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
 #endif
+#if !LELY_NO_CO_NMT_BOOT
   void OnBootInd(co_nmt_t* nmt, uint8_t id, uint8_t st, char es) noexcept;
+#endif
+#if !LELY_NO_CO_NMT_CFG
   void OnCfgInd(co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo) noexcept;
+#endif
 
   BasicMaster* self;
   ::std::function<void(uint8_t, bool)> on_node_guarding;
   ::std::function<void(uint8_t, NmtState, char, const ::std::string&)> on_boot;
   ::std::array<bool, CO_NUM_NODES> ready{{false}};
+#if !LELY_NO_CO_NMT_CFG
   ::std::array<bool, CO_NUM_NODES> config{{false}};
+#endif
   ::std::map<uint8_t, Sdo> sdos;
 };
 
@@ -85,6 +91,9 @@ bool
 BasicMaster::Boot(uint8_t id) {
   if (!id || id > CO_NUM_NODES) return false;
 
+#if LELY_NO_CO_NMT_BOOT
+  return false;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
 
   if (co_nmt_is_booting(nmt(), id)) return false;
@@ -101,6 +110,7 @@ BasicMaster::Boot(uint8_t id) {
   }
 
   return true;
+#endif
 }
 
 bool
@@ -409,6 +419,9 @@ BasicMaster::IsReady(uint8_t id, bool ready) noexcept {
 
 void
 BasicMaster::OnConfig(uint8_t id) noexcept {
+#if LELY_NO_CO_NMT_CFG
+  ConfigResult(id, ::std::error_code());
+#else
   auto it = find(id);
   // If no remote interface is registered for this node, the 'update
   // configuration' process is considered complete.
@@ -423,24 +436,37 @@ BasicMaster::OnConfig(uint8_t id) noexcept {
     // Report the result of the 'update configuration' process.
     ConfigResult(id, ec);
   });
+#endif
 }
 
 void
 BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
   assert(id && id <= CO_NUM_NODES);
+
+#if LELY_NO_CO_NMT_CFG
+  (void)id;
+  (void)ec;
+#else
   impl_->config[id - 1] = false;
+#if !LELY_NO_CO_NMT_BOOT
   if (co_nmt_is_booting(nmt(), id))
     // Destroy the Client-SDO, since it will be taken over by the master.
     impl_->sdos.erase(id);
+#endif
   // Ignore any errors, since we cannot handle them here.
   co_nmt_cfg_res(nmt(), id, static_cast<uint32_t>(sdo_errc(ec)));
+#endif
 }
 
 bool
 BasicMaster::IsConfig(uint8_t id) const {
   if (!id || id > CO_NUM_NODES) return false;
 
+#if LELY_NO_CO_NMT_CFG
+  return false;
+#else
   return impl_->config[id - 1];
+#endif
 }
 
 Sdo*
@@ -455,9 +481,11 @@ BasicMaster::GetSdo(uint8_t id) {
   // Client-SDO queue may be available.
   auto it = impl_->sdos.find(id);
   if (it != impl_->sdos.end()) return &it->second;
+#if !LELY_NO_CO_NMT_BOOT
   // The master needs the Client-SDO service during the NMT 'boot slave'
   // process.
   if (co_nmt_is_booting(nmt(), id)) return nullptr;
+#endif
   // Return a Client-SDO queue for the default SDO.
   return &(impl_->sdos[id] = Sdo(co_nmt_get_net(nmt()), id));
 }
@@ -620,19 +648,23 @@ BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
       this);
 #endif
 
+#if !LELY_NO_CO_NMT_BOOT
   co_nmt_set_boot_ind(
       nmt,
       [](co_nmt_t* nmt, uint8_t id, uint8_t st, char es, void* data) noexcept {
         static_cast<Impl_*>(data)->OnBootInd(nmt, id, st, es);
       },
       this);
+#endif
 
+#if !LELY_NO_CO_NMT_CFG
   co_nmt_set_cfg_ind(
       nmt,
       [](co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo, void* data) noexcept {
         static_cast<Impl_*>(data)->OnCfgInd(nmt, id, sdo);
       },
       this);
+#endif
 }
 
 ev::Future<void>
@@ -665,6 +697,7 @@ BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
 }
 #endif
 
+#if !LELY_NO_CO_NMT_BOOT
 void
 BasicMaster::Impl_::OnBootInd(co_nmt_t*, uint8_t id, uint8_t st,
                               char es) noexcept {
@@ -677,7 +710,9 @@ BasicMaster::Impl_::OnBootInd(co_nmt_t*, uint8_t id, uint8_t st,
     f(id, static_cast<NmtState>(st), es, what);
   }
 }
+#endif
 
+#if !LELY_NO_CO_NMT_CFG
 void
 BasicMaster::Impl_::OnCfgInd(co_nmt_t*, uint8_t id, co_csdo_t* sdo) noexcept {
   // Create a Client-SDO for the 'update configuration' process.
@@ -690,6 +725,7 @@ BasicMaster::Impl_::OnCfgInd(co_nmt_t*, uint8_t id, co_csdo_t* sdo) noexcept {
   config[id - 1] = true;
   self->OnConfig(id);
 }
+#endif
 
 }  // namespace canopen
 
