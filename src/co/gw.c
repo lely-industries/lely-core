@@ -172,7 +172,7 @@ static void co_gw_net_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state,
  */
 static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, void *data);
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 /**
  * The callback function invoked when the 'boot slave' process completes for a
  * node on a CANopen network.
@@ -181,6 +181,8 @@ static void co_gw_net_st_ind(co_nmt_t *nmt, co_unsigned8_t id,
  */
 static void co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id,
 		co_unsigned8_t st, char es, void *data);
+#endif
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 /**
  * The callback function invoked to notify the user of the progress of an SDO
  * download request during the 'boot slave' process of a node on a CANopen
@@ -994,9 +996,11 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 	co_nmt_set_hb_ind(net->nmt, &co_gw_net_hb_ind, net);
 	co_nmt_get_st_ind(net->nmt, &net->st_ind, &net->st_data);
 	co_nmt_set_st_ind(net->nmt, &co_gw_net_st_ind, net);
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 	co_nmt_get_boot_ind(net->nmt, &net->boot_ind, &net->boot_data);
 	co_nmt_set_boot_ind(net->nmt, &co_gw_net_boot_ind, net);
+#endif
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 	co_nmt_get_dn_ind(net->nmt, &net->dn_ind, &net->dn_data);
 	co_nmt_set_dn_ind(net->nmt, &co_gw_net_dn_ind, net);
 	co_nmt_get_dn_ind(net->nmt, &net->up_ind, &net->up_data);
@@ -1064,7 +1068,7 @@ co_gw_net_destroy(struct co_gw_net *net)
 			co_sync_set_ind(sync, NULL, NULL);
 #endif
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_BOOT
 		co_nmt_set_boot_ind(net->nmt, net->boot_ind, net->boot_data);
 #endif
 		co_nmt_set_st_ind(net->nmt, net->st_ind, net->st_data);
@@ -1236,8 +1240,7 @@ co_gw_net_st_ind(
 		net->st_ind(nmt, id, st, net->st_data);
 }
 
-#if !LELY_NO_CO_MASTER
-
+#if !LELY_NO_CO_NMT_BOOT
 static void
 co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
 		void *data)
@@ -1256,6 +1259,9 @@ co_gw_net_boot_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned8_t st, char es,
 	if (net->boot_ind)
 		net->boot_ind(nmt, id, st, es, net->boot_data);
 }
+#endif
+
+#if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 static void
 co_gw_net_dn_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
@@ -1299,7 +1305,7 @@ co_gw_net_up_ind(co_nmt_t *nmt, co_unsigned8_t id, co_unsigned16_t idx,
 		net->up_ind(nmt, id, idx, subidx, size, nbyte, net->up_data);
 }
 
-#endif // !LELY_NO_CO_MASTER
+#endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 #if !LELY_NO_CO_SYNC
 static void

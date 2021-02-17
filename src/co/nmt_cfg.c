@@ -4,7 +4,7 @@
  *
  * @see src/nmt_cfg.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG
 
 #include "nmt_cfg.h"
 #if !LELY_NO_MALLOC
@@ -908,4 +908,4 @@ co_nmt_cfg_user_on_res(co_nmt_cfg_t *cfg, co_unsigned32_t ac)
 	return co_nmt_cfg_abort_state;
 }
 
-#endif // !LELY_NO_CO_MASTER
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_CFG

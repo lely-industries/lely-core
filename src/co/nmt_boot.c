@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT
 
 #include "nmt_boot.h"
 #include <lely/co/dev.h>
@@ -2241,4 +2241,4 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 }
 #endif
 
-#endif // !LELY_NO_CO_MASTER
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT
