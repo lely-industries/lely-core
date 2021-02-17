@@ -141,6 +141,8 @@ TEST_GROUP(Util_MemBuf) {
   static const size_t CAPACITY = 16u;  // default capacity in membuf.c
 #if LELY_NO_MALLOC
   char memory[CAPACITY];
+#else
+  void* memory;
 #endif
 
   TEST_SETUP() {
@@ -150,8 +152,9 @@ TEST_GROUP(Util_MemBuf) {
 #else
     membuf_init(buf, nullptr, 0);
     membuf_reserve(buf, CAPACITY);
+    memory = membuf_begin(buf);
 #endif
-    memset(membuf_begin(buf), 0xddu, CAPACITY);
+    memset(memory, 0xddu, CAPACITY);
   }
 
   TEST_TEARDOWN() { membuf_fini(buf); }
