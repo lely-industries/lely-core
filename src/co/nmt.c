@@ -1809,7 +1809,6 @@ co_nmt_lss_con(co_nmt_t *nmt)
 }
 #endif
 
-
 #if !LELY_NO_CO_NMT_BOOT
 
 int
