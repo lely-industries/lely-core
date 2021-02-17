@@ -118,7 +118,8 @@ class Slave(dcf.Device):
 
             map_idx = comm_idx + 0x200
             if "mapping" in cfg:
-                if len(pdo.mapping) > 0:
+                if pdo.n > 0:
+                    pdo.n = 0
                     pdo.mapping = {}
                     sdo.append(self.concise_value(map_idx, 0, 0))
 
@@ -165,8 +166,9 @@ class Slave(dcf.Device):
                         stacklevel=3,
                     )
 
-                if len(pdo.mapping) > 0:
-                    sdo.append(self.concise_value(map_idx, 0, len(pdo.mapping)))
+                pdo.n = len(pdo.mapping)
+                if pdo.n > 0:
+                    sdo.append(self.concise_value(map_idx, 0, pdo.n))
 
             if bool(cfg.get("enabled", "true")):
                 sdo.append(self.concise_value(comm_idx, 1, pdo.cob_id))

@@ -577,6 +577,7 @@ class PDO:
         self.event_timer = 0
         self.event_deadline = 0
         self.sync_start_value = 0
+        self.n = 0
         self.mapping = {}
 
     @classmethod
@@ -604,10 +605,9 @@ class PDO:
             pdo.sync_start_value = pdo_comm[6].parse_value()
 
         pdo_mapping = dev[index + 0x200]
-        n = 64
         if 0 in pdo_mapping:
-            n = pdo_mapping[0].parse_value()
-        for i in range(1, n + 1):
+            pdo.n = pdo_mapping[0].parse_value()
+        for i in range(1, pdo.n + 1):
             if i in pdo_mapping:
                 value = pdo_mapping[i].parse_value()
                 if value == 0:
