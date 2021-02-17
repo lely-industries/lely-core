@@ -717,7 +717,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 	co_unsigned32_t n;
 	size = co_val_read(CO_DEFTYPE_UNSIGNED32, &n, begin, end);
 	if (size != 4)
-		return 0;
+		return -1;
 	begin += size;
 
 	for (size_t i = 0; i < n; i++) {
@@ -725,7 +725,7 @@ co_dev_read_dcf(co_dev_t *dev, co_unsigned16_t *pmin, co_unsigned16_t *pmax,
 		co_unsigned16_t idx;
 		size = co_dev_read_sub(dev, &idx, NULL, begin, end);
 		if (!size)
-			return 0;
+			return -1;
 		begin += size;
 
 		// Keep track of the index range.
