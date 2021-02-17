@@ -1257,7 +1257,7 @@ TEST(CO_DevDCF, CoDevReadDcf_InvalidNumberOfSubIndexes) {
 
   const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0x0000, co_dev_get_val_i16(dev, 0x1234, 0xab));
 
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
@@ -1270,7 +1270,7 @@ TEST(CO_DevDCF, CoDevReadDcf_InvaildSubIdx) {
 
   const auto ret = co_dev_read_dcf(dev, nullptr, nullptr, &ptr);
 
-  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(0x0000, co_dev_get_val_i16(dev, 0x1234, 0xab));
 
   co_val_fini(CO_DEFTYPE_DOMAIN, &ptr);
