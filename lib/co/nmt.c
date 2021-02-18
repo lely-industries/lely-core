@@ -3468,6 +3468,8 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->rst = 0;
 
 #if !LELY_NO_CO_NMT_BOOT
+		slave->es = 0;
+
 		slave->booting = 0;
 		slave->booted = 0;
 
@@ -3480,7 +3482,6 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 #endif
 
 #if !LELY_NO_CO_NMT_CFG
-		slave->es = 0;
 		slave->configuring = 0;
 
 		if (slave->cfg)
@@ -3723,6 +3724,8 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 		slave->rst = 0;
 
 #if !LELY_NO_CO_NMT_BOOT
+		slave->es = 0;
+
 		slave->booting = 0;
 		slave->booted = 0;
 
@@ -3730,7 +3733,6 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 #if !LELY_NO_CO_NMT_CFG
-		slave->es = 0;
 		slave->configuring = 0;
 
 		slave->cfg = NULL;
