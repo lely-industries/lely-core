@@ -99,9 +99,9 @@ struct co_nmt_slave {
 	co_unsigned8_t est;
 	/// The received state of the slave (including the toggle bit).
 	co_unsigned8_t rst;
+#if !LELY_NO_CO_NMT_BOOT
 	/// The error status of the 'boot slave' process.
 	char es;
-#if !LELY_NO_CO_NMT_BOOT
 	/// A flag specifying whether the 'boot slave' process is in progress.
 	unsigned booting : 1;
 #endif
@@ -952,6 +952,8 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 		slave->rst = 0;
 
 #if !LELY_NO_CO_NMT_BOOT
+		slave->es = 0;
+
 		slave->booting = 0;
 		slave->booted = 0;
 
@@ -959,7 +961,6 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 #endif
 
 #if !LELY_NO_CO_NMT_CFG
-		slave->es = 0;
 		slave->configuring = 0;
 
 		slave->cfg = NULL;
@@ -3739,6 +3740,8 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->rst = 0;
 
 #if !LELY_NO_CO_NMT_BOOT
+		slave->es = 0;
+
 		slave->booting = 0;
 		slave->booted = 0;
 
@@ -3747,7 +3750,6 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 #endif
 
 #if !LELY_NO_CO_NMT_CFG
-		slave->es = 0;
 		slave->configuring = 0;
 
 		co_nmt_cfg_destroy(slave->cfg);
