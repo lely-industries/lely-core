@@ -44,8 +44,10 @@ TEST_GROUP(Util_MemBuf_Init) {
 ///@{
 
 /// \Given a pointer to uninitialized memory buffer (membuf)
+///
 /// \When membuf_init() is called with a null pointer to memory region and zero
 ///       size
+///
 /// \Then buffer is initialized, has zero size and capacity and its pointer to
 ///       first byte of the buffer is null
 TEST(Util_MemBuf_Init, MemBuf_Init) {
@@ -62,7 +64,9 @@ TEST(Util_MemBuf_Init, MemBuf_Init) {
 ///@{
 
 /// \Given a pointer to uninitialized memory buffer (membuf)
+///
 /// \When MEMBUF_INIT is used to initialize buffer
+///
 /// \Then buffer is initialized, has zero size and capacity and its pointer to
 ///       first byte of the buffer is null
 TEST(Util_MemBuf_Init, MemBuf_InitMacro_Properties) {
@@ -74,7 +78,9 @@ TEST(Util_MemBuf_Init, MemBuf_InitMacro_Properties) {
 }
 
 /// \Given a pointer to uninitialized memory buffer (membuf)
+///
 /// \When MEMBUF_INIT is used to initialize buffer
+///
 /// \Then all buffer fields are initialized to null pointers
 TEST(Util_MemBuf_Init, MemBuf_InitMacro_Fields) {
   *buf = MEMBUF_INIT;
@@ -91,7 +97,9 @@ TEST(Util_MemBuf_Init, MemBuf_InitMacro_Fields) {
 
 /// \Given a pointer to uninitialized memory buffer (membuf) and some memory
 ///        region
+///
 /// \When membuf_init() is called with a pointer to the region and its size
+///
 /// \Then buffer is initialized, has zero size, capacity equal to memory region
 ///       size and its pointer to first byte of the buffer points to provided
 ///       memory region
@@ -118,7 +126,9 @@ TEST(Util_MemBuf_Init, MemBuf_Init_ExistingMemory) {
 #if !LELY_NO_MALLOC
 /// \Given LElY_NO_MALLOC disabled; a pointer to memory buffer (membuf)
 ///        initialized with null pointer to memory region and size zero
+///
 /// \When membuf_reserve() is called with a non zero capacity
+///
 /// \Then new capacity larger than zero is returned, memory area the buffer is
 ///       based on is no longer null
 TEST(Util_MemBuf_Init, MemBuf_Reserve_InitialReserve) {
@@ -164,7 +174,9 @@ TEST_GROUP(Util_MemBuf) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_alloc() is called with a pointer to non-zero size variable
+///
 /// \Then a pointer to reserved memory at buffer's beginning is returned, passed
 ///       size variable is not modified, the buffer's current position indicator
 ///       is moved by requested size and capacity is reduced by the same value
@@ -181,7 +193,9 @@ TEST(Util_MemBuf, MemBuf_Alloc_InEmpty) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some memory already used
+///
 /// \When membuf_alloc() is called with a pointer to non-zero size variable
+///
 /// \Then a pointer to reserved memory in the buffer directly after end of
 ///       previous allocation is returned, passed size variable is not modified,
 ///       the buffer's current position indicator is moved by requested size and
@@ -204,8 +218,10 @@ TEST(Util_MemBuf, MemBuf_Alloc_InNotEmpty) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with half memory already used
+///
 /// \When membuf_alloc() is called with a pointer to size variable equal to
 ///       remaining buffer capacity
+///
 /// \Then a pointer to reserved memory in the buffer directly after end of
 ///       previous allocation is returned, passed size variable is not modified,
 ///       the buffer's current position indicator is moved to the end of buffer
@@ -225,8 +241,10 @@ TEST(Util_MemBuf, MemBuf_Alloc_AllCapacity) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with most memory already used
+///
 /// \When membuf_alloc() is called with a pointer to size variable greater than
 ///       remaining buffer capacity
+///
 /// \Then a pointer to reserved memory in the buffer directly after end of
 ///       previous allocation is returned, passed size variable is changed to
 ///       space size available before the call, the buffer's current position
@@ -253,7 +271,9 @@ TEST(Util_MemBuf, MemBuf_Alloc_NotEnoughSpace) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_clear() is called
+///
 /// \Then nothing is changed
 TEST(Util_MemBuf, MemBuf_Clear_Empty) {
   membuf_clear(buf);
@@ -263,7 +283,9 @@ TEST(Util_MemBuf, MemBuf_Clear_Empty) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some memory already used
+///
 /// \When membuf_clear() is called()
+///
 /// \Then the buffer's current position indicator is moved to the beginning and
 ///       full capacity is available
 TEST(Util_MemBuf, MemBuf_Clear_NotEmpty) {
@@ -282,8 +304,10 @@ TEST(Util_MemBuf, MemBuf_Clear_NotEmpty) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_seek() is called with some positive offset less than
 ///       remaining buffer's capacity
+///
 /// \Then requested offset value is returned; the buffer's current position
 ///       indicator is moved by requested offset and capacity is reduced by the
 ///       same value
@@ -298,8 +322,10 @@ TEST(Util_MemBuf, MemBuf_Seek_Forward) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some memory already used
+///
 /// \When membuf_seek() is called with a negative offset of absolute value equal
 ///       to already allocated size
+///
 /// \Then requested negative offset value is returned; the buffer is rewound to
 ///       its beginning and full capacity is available
 TEST(Util_MemBuf, MemBuf_Seek_Backward) {
@@ -315,8 +341,10 @@ TEST(Util_MemBuf, MemBuf_Seek_Backward) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some memory already used
+///
 /// \When membuf_seek() is called with some positive offset value greater than
 ///       left buffer capacity
+///
 /// \Then remaining capacity from before the call is returned; the buffer's
 ///       current position indicator is moved to the end of buffer and there is
 ///       no more capacity left
@@ -332,8 +360,10 @@ TEST(Util_MemBuf, MemBuf_Seek_ForwardTooFar) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some memory already used
+///
 /// \When membuf_seek() is called with a negative offset of absolute value
 ///                     greater than already allocated size
+///
 /// \Then allocated size from before the call is returned; buffer is rewound to
 ///       its beginning and full capacity is available
 TEST(Util_MemBuf, MemBuf_Seek_BackwardTooFar) {
@@ -353,8 +383,10 @@ TEST(Util_MemBuf, MemBuf_Seek_BackwardTooFar) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_write() is called with a non-null pointer to some data and size
 ///       equal zero
+///
 /// \Then zero is returned, nothing is changed
 TEST(Util_MemBuf, MemBuf_Write_Zero) {
   const char DUMMY[] =
@@ -368,8 +400,10 @@ TEST(Util_MemBuf, MemBuf_Write_Zero) {
 }
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_write() is called with a non-null pointer to some data and
 ///       data's size
+///
 /// \Then requested data size is returned; requested data was written to the
 ///       buffer and the buffer's current position indicator is moved by
 ///       requested size and capacity is reduced by the same value
@@ -385,8 +419,10 @@ TEST(Util_MemBuf, MemBuf_Write_Few) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some data already written
+///
 /// \When membuf_write() is called with a non-null pointer to some data and
 ///       data's size
+///
 /// \Then requested data size is returned; requested data was written to the
 ///       buffer directly after previously written data; buffer's current
 ///       position indicator points at one past just written data
@@ -404,8 +440,10 @@ TEST(Util_MemBuf, MemBuf_Write_Append) {
 }
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_write() is called with a non-null pointer to some data and its
 ///       size, both exceeding the buffer's capacity
+///
 /// \Then the buffer's remaining capacity from before the call is returned, data
 ///       was written into the buffer until its end, rest was discarded and
 ///       there is no space left in the buffer
@@ -426,8 +464,10 @@ TEST(Util_MemBuf, MemBuf_Write_TooBig) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf) with some data already written
+///
 /// \When membuf_reserve() is called with a non zero capacity less than or equal
 ///       to remaining buffer capacity
+///
 /// \Then buffer's initial capacity is returned, nothing is changed
 TEST(Util_MemBuf, MemBuf_Reserve_EnoughAlready) {
   const char TEST[] = "01234";
@@ -445,7 +485,9 @@ TEST(Util_MemBuf, MemBuf_Reserve_EnoughAlready) {
 #if !LELY_NO_MALLOC
 /// \Given LELY_NO_MALLOC disabled; a pointer to memory buffer (membuf) with no
 ///        remaining capacity
+///
 /// \When membuf_reserve() is called with some non-zero capacity
+///
 /// \Then a value greater than or equal to requested additional capacity is
 ///       returned, same value is the new buffer's capacity, buffer's current
 ///       position indicator was not changed and data already written is left
@@ -467,7 +509,9 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_MallocMode) {
 #if LELY_NO_MALLOC
 /// \Given LELY_NO_MALLOC enabled; a pointer to memory buffer (membuf) with no
 ///        remaining capacity
+///
 /// \When membuf_reserve() is called with some non-zero capacity
+///
 /// \Then 0 is returned, nothing is changed;
 ///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
@@ -493,7 +537,9 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_flush() is called with some size
+///
 /// \Then nothing is changed
 TEST(Util_MemBuf, MemBuf_Flush_Empty) {
   membuf_flush(buf, CAPACITY);
@@ -502,8 +548,10 @@ TEST(Util_MemBuf, MemBuf_Flush_Empty) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some data already written
+///
 /// \When membuf_flush() is called with size greater than or equal to the size
 ///       of already written data
+///
 /// \Then already written data is removed, the buffer is empty and at full
 ///       capacity
 TEST(Util_MemBuf, MemBuf_Flush_All) {
@@ -517,8 +565,10 @@ TEST(Util_MemBuf, MemBuf_Flush_All) {
 }
 
 /// \Given a pointer to memory buffer (membuf) with some data already written
+///
 /// \When membuf_flush() is called with non-zero size less than the size of
 ///       already written data
+///
 /// \Then part of already written data after requested flush size is moved to
 ///       the beginning of the buffer, remaining capacity is increased by
 ///       requested flush size
@@ -540,7 +590,9 @@ TEST(Util_MemBuf, MemBuf_Flush_Part) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_begin() is called before and after writing some data to it
+///
 /// \Then a pointer to the buffer's beginning is returned from both calls
 TEST(Util_MemBuf, MemBuf_Begin) {
   const void* const expected_begin = memory;
@@ -559,7 +611,9 @@ TEST(Util_MemBuf, MemBuf_Begin) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_size() is called before and after writing some data to it
+///
 /// \Then zero is returned from the first call and written data size from the
 ///       second call
 TEST(Util_MemBuf, MemBuf_Size) {
@@ -577,7 +631,9 @@ TEST(Util_MemBuf, MemBuf_Size) {
 ///@{
 
 /// \Given a pointer to memory buffer (membuf)
+///
 /// \When membuf_capacity() is called before and after writing some data to it
+///
 /// \Then the buffer's full capacity is returned from the first call and then
 ///       reduced by written data size from the second call
 TEST(Util_MemBuf, MemBuf_Capacity) {
