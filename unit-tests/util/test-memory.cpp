@@ -39,8 +39,10 @@ TEST_GROUP(Util_MemoryDefaultAllocator) {
 ///@{
 
 /// \Given N/A
+///
 /// \When mem_alloc() is called with null pointer to allocator, any alignment
 ///       value and zero size
+///
 /// \Then null pointer is returned
 TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroSize) {
   ptr = mem_alloc(nullptr, 0, 0);
@@ -51,8 +53,10 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroSize) {
 #if LELY_NO_MALLOC
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_alloc() is called with null pointer to allocator, non-zero
 ///       alignment that's not a power of 2 and non-zero size
+///
 /// \Then null pointer is returned;
 ///       if !LELY_NO_ERRNO invalid argument error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
@@ -67,8 +71,10 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
 }
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_alloc() is called with null pointer to allocator, zero (default)
 ///       alignment and non-zero size
+///
 /// \Then null pointer is returned;
 ///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
@@ -81,8 +87,10 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
 }
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_alloc() is called with null pointer to allocator, non-zero
 ///       alignment and non-zero size
+///
 /// \Then null pointer is returned;
 ///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
@@ -100,7 +108,9 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
 ///@{
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_size() is called with null pointer to allocator
+///
 /// \Then zero is returned
 TEST(Util_MemoryDefaultAllocator, MemSize) {
   const auto ret = mem_size(nullptr);
@@ -114,7 +124,9 @@ TEST(Util_MemoryDefaultAllocator, MemSize) {
 ///@{
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_capacity() is called with null pointer to allocator
+///
 /// \Then zero is returned
 TEST(Util_MemoryDefaultAllocator, MemCapacity) {
   const auto ret = mem_capacity(nullptr);
@@ -130,8 +142,10 @@ TEST_GROUP(Util_MemoryDefaultAllocatorFree){};
 ///@{
 
 /// \Given LELY_NO_MALLOC enabled
+///
 /// \When mem_free() is called with null pointer to allocator and any pointer to
 ///       be freed
+///
 /// \Then nothing happens
 TEST(Util_MemoryDefaultAllocatorFree, MemFree) {
   int data = 42;

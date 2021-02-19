@@ -37,8 +37,10 @@ TEST_GROUP(Util_MemPoolInit){};
 ///@{
 
 /// \Given an uninitialized memory pool and a memory buffer
+///
 /// \When mempool_init() is called with a pointer to the pool, the memory buffer
 ///       and its size
+///
 /// \Then a pointer to an abstract allocator (alloc_t) is returned with non-null
 ///       function pointers, memory pool is initialized with the memory buffer
 ///       and points at it beginning
@@ -75,7 +77,9 @@ TEST_GROUP(Util_MemPool) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_size() is called
+///
 /// \Then zero is returned
 TEST(Util_MemPool, MemPool_Size) { CHECK_EQUAL(0, mem_size(alloc)); }
 
@@ -85,7 +89,9 @@ TEST(Util_MemPool, MemPool_Size) { CHECK_EQUAL(0, mem_size(alloc)); }
 ///@{
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool
+///
 /// \When mem_capacity() is called
+///
 /// \Then total memory pool size is returned
 TEST(Util_MemPool, MemPool_Capacity) {
   CHECK_EQUAL(POOL_SIZE, mem_capacity(alloc));
@@ -97,7 +103,9 @@ TEST(Util_MemPool, MemPool_Capacity) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_alloc() is called with zero alignment and non-zero allocation size
+///
 /// \Then a pointer pointing to memory pool's buffer first byte is returned;
 ///       mem_size() returns requested allocation size, remaining capacity
 ///       returned by mem_capacity() is lower by requested size
@@ -113,8 +121,10 @@ TEST(Util_MemPool, MemPool_Alloc) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_alloc() is called twice with non-zero alignment and non-zero size
 ///       that's not a multiple of alignment's value
+///
 /// \Then both calls return non-null pointers that point into memory pool's
 ///       buffer and are apart by requested allocation size rounded up to a
 ///       multiple of requested alignment; mem_size() returns twice the
@@ -135,8 +145,10 @@ TEST(Util_MemPool, MemPool_Alloc_RespectsAlignment) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_alloc() is called with non-zero alignment that's not a power of 2
 ///       and non-zero size
+///
 /// \Then a null pointer is returned, nothing is changed;
 ///       if !LELY_NO_ERRNO invalid argument error is reported
 TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
@@ -154,8 +166,10 @@ TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_alloc() is called with zero alignment and size that's greater than
 ///       memory pool's buffer size
+///
 /// \Then a null pointer is returned, nothing is changed;
 ///       if !LELY_NO_ERRNO no memory error is reported
 TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
@@ -173,7 +187,9 @@ TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
 ///        prior allocations
+///
 /// \When mem_alloc() is called with zero alignment and zero size
+///
 /// \Then a null pointer is returned, nothing is changed;
 ///       no error is reported
 TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
@@ -193,7 +209,9 @@ TEST(Util_MemPool, MemPool_Alloc_SizeZero) {
 
 /// \Given pointers to an allocator (alloc_t) based on memory pool and some
 ///        allocated memory
+///
 /// \When mem_free() is called with a pointer to allocated memory
+///
 /// \Then nothing is changed
 TEST(Util_MemPool, MemPool_Free_DoeaNothing) {
   const size_t allocationSize = 10u;
