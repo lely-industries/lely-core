@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -22,6 +22,7 @@
 
 #include <CppUTest/TestHarness.h>
 
+#include <CppUTest/UtestMacros.h>
 #include <lely/util/endian.h>
 
 TEST_GROUP(Util_Endian_Bcpy) {
@@ -59,6 +60,14 @@ TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
   CHECK_EQUAL(0xe6u, *dst);
 }
 
+/// @name bcpyle()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
   const int dstbit = 3;
   const int srcbit = 2;
@@ -69,6 +78,11 @@ TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
   CHECK_EQUAL(0x9fu, *dst);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -79,6 +93,11 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
   CHECK_EQUAL(0xcfu, *dst);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -89,6 +108,11 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
   CHECK_EQUAL(0xcfu, *dst);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
   const int dstbit = 6;
   const int srcbit = 6;
@@ -99,6 +123,11 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
   CHECK_EQUAL(0xffu, *dst);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -108,6 +137,8 @@ TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
 
   CHECK_EQUAL(*src, *dst);
 }
+
+///@}
 
 TEST_GROUP(Util_Endian_BcpyOutOfRange) {
   uint_least8_t dst_array[4u] = {0xffu, 0xffu, 0xffu, 0xffu};
@@ -299,6 +330,14 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_SrcbitOffsetLowerThan0) {
   CHECK_EQUAL(0x7fu, *dst);
 }
 
+/// @name bcpyle()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
   const int dstbit = -1;
   const int srcbit = -1;
@@ -309,6 +348,11 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
   CHECK_EQUAL(0xfcu, *dst);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_SrcbitOffsetLowerThan0) {
   const int dstbit = 0;
   const int srcbit = -1;
@@ -318,6 +362,8 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_SrcbitOffsetLowerThan0) {
 
   CHECK_EQUAL(0xfeu, *dst);
 }
+
+///@}
 
 TEST_GROUP(Util_Endian){};
 
@@ -339,6 +385,14 @@ TEST(Util_Endian, Betoh16) {
 #endif
 }
 
+/// @name htole16()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Htole16) {
   CHECK_EQUAL(0x0000u, htole16(0x0000u));
 #if LELY_LITTLE_ENDIAN
@@ -348,6 +402,16 @@ TEST(Util_Endian, Htole16) {
 #endif
 }
 
+///@}
+
+/// @name letoh16()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Letoh16) {
   CHECK_EQUAL(0x0000u, letoh16(0x0000u));
 #if LELY_LITTLE_ENDIAN
@@ -356,6 +420,8 @@ TEST(Util_Endian, Letoh16) {
   CHECK_EQUAL(0x3412u, letoh16(0x1234u));
 #endif
 }
+
+///@}
 
 TEST(Util_Endian, Htobe32) {
   CHECK_EQUAL(0x00000000u, htobe32(0x00000000u));
@@ -375,6 +441,14 @@ TEST(Util_Endian, Betoh32) {
 #endif
 }
 
+/// @name htole32()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Htole32) {
   CHECK_EQUAL(0x00000000u, htole32(0x00000000u));
 #if LELY_LITTLE_ENDIAN
@@ -384,6 +458,16 @@ TEST(Util_Endian, Htole32) {
 #endif
 }
 
+///@}
+
+/// @name letoh32()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Letoh32) {
   CHECK_EQUAL(0x00000000u, letoh32(0x00000000u));
 #if LELY_LITTLE_ENDIAN
@@ -392,6 +476,8 @@ TEST(Util_Endian, Letoh32) {
   CHECK_EQUAL(0x78563412u, letoh32(0x12345678u));
 #endif
 }
+
+///@}
 
 TEST(Util_Endian, Htobe64) {
   CHECK_EQUAL(0x0000000000000000u, htobe64(0x0000000000000000u));
@@ -411,6 +497,14 @@ TEST(Util_Endian, Betoh64) {
 #endif
 }
 
+/// @name htole64()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Htole64) {
   CHECK_EQUAL(0x0000000000000000u, htole64(0x0000000000000000u));
 #if LELY_LITTLE_ENDIAN
@@ -420,6 +514,16 @@ TEST(Util_Endian, Htole64) {
 #endif
 }
 
+///@}
+
+/// @name letoh64()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, Letoh64) {
   CHECK_EQUAL(0x0000000000000000u, letoh64(0x0000000000000000u));
 #if LELY_LITTLE_ENDIAN
@@ -428,6 +532,8 @@ TEST(Util_Endian, Letoh64) {
   CHECK_EQUAL(0xefcdab8967452301u, letoh64(0x0123456789abcdefu));
 #endif
 }
+
+///@}
 
 TEST(Util_Endian, StbeI16_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u};
@@ -493,6 +599,14 @@ TEST(Util_Endian, LdbeU16_Nonzero) {
   CHECK_EQUAL(0x1234u, ldbe_u16(src));
 }
 
+/// @name stle_i16()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI16_Zero) {
   uint_least8_t dst[] = {0x34u, 0x12u};
   const int_least16_t x = 0x0000;
@@ -503,6 +617,11 @@ TEST(Util_Endian, StleI16_Zero) {
   CHECK_EQUAL(0x00u, dst[1]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const int_least16_t x = 0x1234;
@@ -513,18 +632,44 @@ TEST(Util_Endian, StleI16_Nonzero) {
   CHECK_EQUAL(0x12u, dst[1]);
 }
 
+///@}
+
+/// @name ldle_i16()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_i16() is called with 2 bytes, all equal 0
+///
+/// \Then signed integer at least 2 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleI16_Zero) {
   const uint_least8_t src[] = {0x00, 0x00};
 
   CHECK_EQUAL(0x0000, ldle_i16(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_i16() is called with 2 bytes
+///
+/// \Then signed integer at least 2 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleI16_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u};
 
   CHECK_EQUAL(0x3412, ldle_i16(src));
 }
 
+///@}
+
+/// @name stle_u16()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU16_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u};
   const uint_least16_t x = 0x0000u;
@@ -535,6 +680,11 @@ TEST(Util_Endian, StleU16_Zero) {
   CHECK_EQUAL(0x00u, dst[1]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const uint_least16_t x = 0x1234u;
@@ -545,17 +695,35 @@ TEST(Util_Endian, StleU16_Nonzero) {
   CHECK_EQUAL(0x12u, dst[1]);
 }
 
+///@}
+
+/// @name ldle_u16()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_u16() is called with 2 bytes, all equal 0
+///
+/// \Then unsigned integer at least 2 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleU16_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u};
 
   CHECK_EQUAL(0x0000u, ldle_u16(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_u16() is called with 2 bytes
+///
+/// \Then unsigned integer at least 2 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleU16_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u};
 
   CHECK_EQUAL(0x3412u, ldle_u16(src));
 }
+
+///@}
 
 TEST(Util_Endian, StbeI32_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u, 0x78u};
@@ -629,6 +797,14 @@ TEST(Util_Endian, LdbeU32_Nonzero) {
   CHECK_EQUAL(0x12345678u, ldbe_u32(src));
 }
 
+/// @name stle_i32()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI32_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u, 0x78u};
   const int_least32_t x = 0x0000000000;
@@ -641,6 +817,11 @@ TEST(Util_Endian, StleI32_Zero) {
   CHECK_EQUAL(0x00u, dst[3]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const int_least32_t x = 0x12345678;
@@ -653,18 +834,44 @@ TEST(Util_Endian, StleI32_Nonzero) {
   CHECK_EQUAL(0x12u, dst[3]);
 }
 
+///@}
+
+/// @name ldle_i32()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_i32() is called with 4 bytes, all equal 0
+///
+/// \Then signed integer at least 4 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleI32_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
   CHECK_EQUAL(0x00000000, ldle_i32(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_i32() is called with 3 bytes
+///
+/// \Then signed integer at least 4 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleI32_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u, 0x78u};
 
   CHECK_EQUAL(0x78563412, ldle_i32(src));
 }
 
+///@}
+
+/// @name stle_u32()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU32_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u, 0x78u};
   const uint_least32_t x = 0x0000000000u;
@@ -677,6 +884,11 @@ TEST(Util_Endian, StleU32_Zero) {
   CHECK_EQUAL(0x00u, dst[3]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x12345678u;
@@ -689,17 +901,35 @@ TEST(Util_Endian, StleU32_Nonzero) {
   CHECK_EQUAL(0x12u, dst[3]);
 }
 
+///@}
+
+/// @name ldle_u32()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_u32() is called with 4 bytes, all equal 0
+///
+/// \Then unsigned integer at least 4 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleU32_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
   CHECK_EQUAL(0x00000000u, ldle_u32(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_u32() is called with 4 bytes
+///
+/// \Then unsigned integer at least 4 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleU32_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u, 0x78u};
 
   CHECK_EQUAL(0x78563412u, ldle_u32(src));
 }
+
+///@}
 
 TEST(Util_Endian, StbeI64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
@@ -735,6 +965,14 @@ TEST(Util_Endian, StbeI64_Nonzero) {
   CHECK_EQUAL(0xefu, dst[7]);
 }
 
+/// @name ldle_i64()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_i64() is called with 8 bytes, all equal 0
+///
+/// \Then signed integer at least 8 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleI64_Zero) {
   uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -742,12 +980,20 @@ TEST(Util_Endian, LdleI64_Zero) {
   CHECK_EQUAL(0x0000000000000000L, ldle_i64(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_i64() is called with 8 bytes
+///
+/// \Then signed integer at least 8 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleI64_Nonzero) {
   const uint_least8_t src[] = {0xefu, 0xcdu, 0xabu, 0x89u,
                                0x67u, 0x45u, 0x23u, 0x01u};
 
   CHECK_EQUAL(0x0123456789abcdefL, ldle_i64(src));
 }
+
+///@}
 
 TEST(Util_Endian, StbeU64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
@@ -797,6 +1043,14 @@ TEST(Util_Endian, LdbeU64_Nonzero) {
   CHECK_EQUAL(0x0123456789abcdefuL, ldbe_u64(src));
 }
 
+/// @name stle_i64()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
                          0x89u, 0xabu, 0xcdu, 0xefu};
@@ -814,6 +1068,11 @@ TEST(Util_Endian, StleI64_Zero) {
   CHECK_EQUAL(0x00u, dst[7]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleI64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -831,6 +1090,8 @@ TEST(Util_Endian, StleI64_Nonzero) {
   CHECK_EQUAL(0x01u, dst[7]);
 }
 
+///@}
+
 TEST(Util_Endian, LdbeI64_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
                                0x00u, 0x00u, 0x00u, 0x00u};
@@ -845,6 +1106,14 @@ TEST(Util_Endian, LdbeI64_Nonzero) {
   CHECK_EQUAL(0x0123456789abcdefL, ldbe_i64(src));
 }
 
+/// @name stle_u64()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
                          0x89u, 0xabu, 0xcdu, 0xefu};
@@ -862,6 +1131,11 @@ TEST(Util_Endian, StleU64_Zero) {
   CHECK_EQUAL(0x00u, dst[7]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -879,6 +1153,16 @@ TEST(Util_Endian, StleU64_Nonzero) {
   CHECK_EQUAL(0x01u, dst[7]);
 }
 
+///@}
+
+/// @name ldle_u64()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_u64() is called with 8 bytes, all equal 0
+///
+/// \Then unsigned integer at least 8 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleU64_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
                                0x00u, 0x00u, 0x00u, 0x00u};
@@ -886,6 +1170,12 @@ TEST(Util_Endian, LdleU64_Zero) {
   CHECK_EQUAL(0x0000000000000000uL, ldle_u64(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_u64() is called with 8 bytes
+///
+/// \Then unsigned integer at least 8 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleU64_Nonzero) {
   const uint_least8_t src[] = {0x01u, 0x23u, 0x45u, 0x67u,
                                0x89u, 0xabu, 0xcdu, 0xefu};
@@ -893,6 +1183,16 @@ TEST(Util_Endian, LdleU64_Nonzero) {
   CHECK_EQUAL(0xefcdab8967452301uL, ldle_u64(src));
 }
 
+///@}
+
+/// @name stle_u24()
+///@{
+
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU24_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u};
   const uint_least32_t x = 0;
@@ -904,6 +1204,11 @@ TEST(Util_Endian, StleU24_Zero) {
   CHECK_EQUAL(0x00u, dst[2]);
 }
 
+/// \Given TODO
+///
+/// \When TODO
+///
+/// \Then TODO
 TEST(Util_Endian, StleU24_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x123456u;
@@ -915,17 +1220,35 @@ TEST(Util_Endian, StleU24_Nonzero) {
   CHECK_EQUAL(0x12u, dst[2]);
 }
 
+///@}
+
+/// @name ldle_u24()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_u24() is called with 3 bytes, all equal 0
+///
+/// \Then unsigned integer at least 4 bytes long equal to 0 is returned
 TEST(Util_Endian, LdleU24_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u};
 
   CHECK_EQUAL(0, ldle_u24(src));
 }
 
+/// \Given N/A
+///
+/// \When ldle_u24() is called with 3 bytes
+///
+/// \Then unsigned integer at least 4 bytes long reconstructed from input bytes
+///       in little-endian byte order is returned
 TEST(Util_Endian, LdleU24_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u};
 
   CHECK_EQUAL(0x563412u, ldle_u24(src));
 }
+
+///@}
 
 TEST(Util_Endian, StbeFlt32_Zero) {
   const flt32_t x = 0.0;
@@ -967,8 +1290,17 @@ TEST(Util_Endian, LdbeFlt32) {
   LONGS_EQUAL(128.5, x);
 }
 
+/// @name stle_flt32()
+///@{
+
+/// \Given a memory area 4 bytes large
+///
+/// \When stle_flt32() is called with a pointer to the memory area and an IEEE
+///       754 single precision floating point number equal 0.0f
+///
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleFlt32_Zero) {
-  const flt32_t x = 0.0;
+  const flt32_t x = 0.0f;
   uint_least8_t dst[] = {0xffu, 0xffu, 0xffu, 0xffu};
 
   stle_flt32(dst, x);
@@ -979,14 +1311,13 @@ TEST(Util_Endian, StleFlt32_Zero) {
   CHECK_EQUAL(0x00u, dst[3]);
 }
 
-TEST(Util_Endian, LdleFlt32_Zero) {
-  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
-
-  const flt32_t x = ldle_flt32(src);
-
-  LONGS_EQUAL(0.0, x);
-}
-
+/// \Given a memory area 4 bytes large
+///
+/// \When stle_flt632() is called with a pointer to the memory area and an IEEE
+///       754 single precision floating point number
+///
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleFlt32) {
   const flt32_t x = 128.5;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
@@ -999,14 +1330,51 @@ TEST(Util_Endian, StleFlt32) {
   CHECK_EQUAL(0x43u, dst[3]);
 }
 
+///@}
+
+/// @name ldle_flt32()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_flt32() is called with 4 bytes, all equal 0
+///
+/// \Then an IEEE 754 single precision floating point number representing 0.0 is
+///       returned
+TEST(Util_Endian, LdleFlt32_Zero) {
+  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
+
+  const flt32_t x = ldle_flt32(src);
+
+  DOUBLES_EQUAL(0.0f, x, 0.001f);
+}
+
+/// \Given N/A
+///
+/// \When ldle_flt32() is called with 4 bytes representing an IEEE 754 single
+///       precision floating point number in little-endian byte order
+///
+/// \Then an IEEE 754 single precision floating point number matching the input
+///       byte representation is returned
 TEST(Util_Endian, LdleFlt32) {
   const uint_least8_t src[] = {0x00u, 0x80u, 0x00u, 0x43u};
 
   const flt32_t x = ldle_flt32(src);
 
-  LONGS_EQUAL(128.5, x);
+  DOUBLES_EQUAL(128.5f, x, 0.00001f);
 }
 
+///@}
+
+/// @name stle_flt64()
+///@{
+
+/// \Given a memory area 8 bytes large
+///
+/// \When stle_flt64() is called with a pointer to the memory area and an IEEE
+///       754 double precision floating point number equal 0.0
+///
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleFlt64_Zero) {
   const flt64_t x = 0.0;
   uint_least8_t dst[] = {0xffu, 0xffu, 0xffu, 0xffu,
@@ -1024,15 +1392,13 @@ TEST(Util_Endian, StleFlt64_Zero) {
   CHECK_EQUAL(0x00u, dst[7]);
 }
 
-TEST(Util_Endian, LdleFlt64_Zero) {
-  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
-                               0x00u, 0x00u, 0x00u, 0x00u};
-
-  const flt64_t x = ldle_flt64(src);
-
-  LONGS_EQUAL(0.0, x);
-}
-
+/// \Given a memory area 8 bytes large
+///
+/// \When stle_flt64() is called with a pointer to the memory area and an IEEE
+///       754 double precision floating point number
+///
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleFlt64) {
   const flt32_t x = 128.6780905;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
@@ -1050,14 +1416,43 @@ TEST(Util_Endian, StleFlt64) {
   CHECK_EQUAL(0x40u, dst[7]);
 }
 
+///@}
+
+/// @name ldle_flt64()
+///@{
+
+/// \Given N/A
+///
+/// \When ldle_flt64() is called with 8 bytes, all equal 0
+///
+/// \Then an IEEE 754 double precision floating point number representing 0.0 is
+///       returned
+TEST(Util_Endian, LdleFlt64_Zero) {
+  const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
+                               0x00u, 0x00u, 0x00u, 0x00u};
+
+  const flt64_t x = ldle_flt64(src);
+
+  DOUBLES_EQUAL(0.0, x, 0.0);
+}
+
+/// \Given N/A
+///
+/// \When ldle_flt64() is called with 8 bytes representing an IEEE 754 double
+///       precision floating point number in little-endian byte order
+///
+/// \Then an IEEE 754 double precision floating point number matching the input
+///       byte representation is returned
 TEST(Util_Endian, LdleFlt64) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0xe0u,
                                0xb2u, 0x15u, 0x60u, 0x40u};
 
   const flt64_t x = ldle_flt64(src);
 
-  LONGS_EQUAL(128.6780905, x);
+  DOUBLES_EQUAL(128.67808532714844, x, 0.00000000001);
 }
+
+///@}
 
 TEST(Util_Endian, StbeFlt64_Zero) {
   const flt64_t x = 0.0;
