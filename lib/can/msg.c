@@ -107,9 +107,10 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		*bp++ = (id >> 1) & 0xff; // Identifier (extension)
 		bits += 8;
 
-		*bp++ = ((id << 7) & 0x80) // Identifier (extension)
-				| (!!(msg->flags & CAN_FLAG_RTR) << 6) // RTR
-				| (msg->len & 0x0f); // R1 = 0, R0 = 0, DLC
+		*bp++ = ((id << 7) & 0x80u) // Identifier (extension)
+				| (((msg->flags & CAN_FLAG_RTR) ? 1u : 0u)
+						<< 6) // RTR
+				| (msg->len & 0x0fu); // R1 = 0, R0 = 0, DLC
 		bits += 8;
 	} else {
 		// s = SOF, B = (base) Identifier, R = RTR, I = IDE, 0 = R0,
@@ -126,9 +127,10 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		*bp++ = (id >> 1) & 0xff; // base (Indentifier)
 		bits += 8;
 
-		*bp++ = ((id << 7) & 0x80) // base (Indentifier)
-				| (!!(msg->flags & CAN_FLAG_RTR) << 6) // RTR
-				| (msg->len & 0x0f); // IDE = 0, R0 = 0, DLC
+		*bp++ = ((id << 7) & 0x80u) // base (Indentifier)
+				| (((msg->flags & CAN_FLAG_RTR) ? 1u : 0u)
+						<< 6) // RTR
+				| (msg->len & 0x0fu); // IDE = 0, R0 = 0, DLC
 		bits += 8;
 	}
 
@@ -139,13 +141,13 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 
 	uint_least16_t crc = can_crc(0, data, off, bits);
 	assert(!((off + bits) % 8));
-	*bp++ = (crc >> 7) & 0xff;
-	*bp++ = (crc << 1) & 0xff;
+	*bp++ = (crc >> 7) & 0xffu;
+	*bp++ = (crc << 1) & 0xffu;
 	bits += 15;
 
 	// Count the stuffed bits.
 	int stuff = 0;
-	uint_least8_t mask = 0x1f;
+	uint_least8_t mask = 0x1fu;
 	uint_least8_t same = mask;
 	for (int i = off; i < off + bits;) {
 		// Alternate between looking for a series of zeros and ones.
@@ -155,7 +157,7 @@ can_msg_bits(const struct can_msg *msg, enum can_msg_bits_mode mode)
 		uint_least8_t five = (((uint_least16_t)data[i / 8] << 8)
 				| data[i / 8 + 1]) >> (16 - 5 - i % 8);
 		// clang-format on
-		int n = clz8((five & mask) ^ same) - 3;
+		int n = clz8((uint_least8_t)(five & mask) ^ same) - 3;
 		i += n;
 		if (n < 5) {
 			// No bit stuffing needed. Check the next 5 bits.
@@ -289,7 +291,8 @@ can_crc(uint_least16_t crc, const void *ptr, int off, size_t bits)
 
 	if (off && bits) {
 		int n = MIN((size_t)(8 - off), bits);
-		crc = can_crc_bits(crc, *bp++, off, n);
+		crc = can_crc_bits(crc, *bp, off, n);
+		bp++;
 		bits -= n;
 	}
 
@@ -312,12 +315,12 @@ can_crc_bits(uint_least16_t crc, uint_least8_t byte, int off, int bits)
 	assert(off + bits <= 8);
 
 	for (byte <<= off; bits--; byte <<= 1) {
-		if ((byte ^ (crc >> 7)) & 0x80)
-			crc = (crc << 1) ^ 0x4599;
+		if ((uint_least8_t)(byte ^ (uint_least8_t)(crc >> 7)) & 0x80u)
+			crc = (uint_least16_t)(crc << 1) ^ 0x4599u;
 		else
 			crc <<= 1;
 	}
-	return crc & 0x7fff;
+	return crc & 0x7fffu;
 }
 
 static uint_least16_t
@@ -377,7 +380,12 @@ can_crc_bytes(uint_least16_t crc, const unsigned char *bp, size_t n)
 	};
 	// clang-format on
 
-	while (n--)
-		crc = (tab[(*bp++ ^ (crc >> 7)) & 0xff] ^ (crc << 8)) & 0x7fff;
+	while (n--) {
+		const uint_least8_t index = *bp ^ (uint_least8_t)(crc >> 7);
+		const uint_least16_t lookup = tab[index & 0xffu];
+		crc = (uint_least16_t)(lookup ^ (uint_least16_t)(crc << 8))
+				& 0x7fffu;
+		bp++;
+	}
 	return crc;
 }
