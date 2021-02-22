@@ -388,11 +388,12 @@ TEST(Util_Endian, Betoh16) {
 /// @name htole16()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When htole16() is called with a 16-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Htole16) {
   CHECK_EQUAL(0x0000u, htole16(0x0000u));
 #if LELY_LITTLE_ENDIAN
@@ -407,11 +408,12 @@ TEST(Util_Endian, Htole16) {
 /// @name letoh16()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When letoh16() is called with a 16-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Letoh16) {
   CHECK_EQUAL(0x0000u, letoh16(0x0000u));
 #if LELY_LITTLE_ENDIAN
@@ -444,11 +446,12 @@ TEST(Util_Endian, Betoh32) {
 /// @name htole32()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When htole32() is called with a 32-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Htole32) {
   CHECK_EQUAL(0x00000000u, htole32(0x00000000u));
 #if LELY_LITTLE_ENDIAN
@@ -463,11 +466,12 @@ TEST(Util_Endian, Htole32) {
 /// @name letoh32()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When letoh32() is called with a 32-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Letoh32) {
   CHECK_EQUAL(0x00000000u, letoh32(0x00000000u));
 #if LELY_LITTLE_ENDIAN
@@ -500,11 +504,12 @@ TEST(Util_Endian, Betoh64) {
 /// @name htole64()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When htole64() is called with a 64-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Htole64) {
   CHECK_EQUAL(0x0000000000000000u, htole64(0x0000000000000000u));
 #if LELY_LITTLE_ENDIAN
@@ -519,11 +524,12 @@ TEST(Util_Endian, Htole64) {
 /// @name letoh64()
 ///@{
 
-/// \Given TODO
+/// \Given N/A
 ///
-/// \When TODO
+/// \When letoh64() is called with a 64-bit unsigned integer
 ///
-/// \Then TODO
+/// \Then if target platform is little-endian, same value is returned; otherwise
+///       a copy of the input value with its bytes in reversed order is returned
 TEST(Util_Endian, Letoh64) {
   CHECK_EQUAL(0x0000000000000000u, letoh64(0x0000000000000000u));
 #if LELY_LITTLE_ENDIAN
@@ -602,11 +608,12 @@ TEST(Util_Endian, LdbeU16_Nonzero) {
 /// @name stle_i16()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 8 bytes large
 ///
-/// \When TODO
+/// \When stle_i16() is called with a pointer to the memory area and an signed
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleI16_Zero) {
   uint_least8_t dst[] = {0x34u, 0x12u};
   const int_least16_t x = 0x0000;
@@ -617,11 +624,13 @@ TEST(Util_Endian, StleI16_Zero) {
   CHECK_EQUAL(0x00u, dst[1]);
 }
 
-/// \Given TODO
+/// \Given a memory area 2 bytes large
 ///
-/// \When TODO
+/// \When stle_i16() is called with a pointer to the memory area and a 16-bit
+///       signed integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleI16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const int_least16_t x = 0x1234;
@@ -665,11 +674,12 @@ TEST(Util_Endian, LdleI16_Nonzero) {
 /// @name stle_u16()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 2 bytes large
 ///
-/// \When TODO
+/// \When stle_u16() is called with a pointer to the memory area and an unsigned
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleU16_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u};
   const uint_least16_t x = 0x0000u;
@@ -680,11 +690,13 @@ TEST(Util_Endian, StleU16_Zero) {
   CHECK_EQUAL(0x00u, dst[1]);
 }
 
-/// \Given TODO
+/// \Given a memory area 2 bytes large
 ///
-/// \When TODO
+/// \When stle_u16() is called with a pointer to the memory area and a 16-bit
+///       unsigned integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleU16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const uint_least16_t x = 0x1234u;
@@ -800,11 +812,12 @@ TEST(Util_Endian, LdbeU32_Nonzero) {
 /// @name stle_i32()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 4 bytes large
 ///
-/// \When TODO
+/// \When stle_i32() is called with a pointer to the memory area and an unsigned
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleI32_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u, 0x78u};
   const int_least32_t x = 0x0000000000;
@@ -817,11 +830,13 @@ TEST(Util_Endian, StleI32_Zero) {
   CHECK_EQUAL(0x00u, dst[3]);
 }
 
-/// \Given TODO
+/// \Given a memory area 4 bytes large
 ///
-/// \When TODO
+/// \When stle_i32() is called with a pointer to the memory area and a 32-bit
+///       signed integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleI32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const int_least32_t x = 0x12345678;
@@ -867,11 +882,12 @@ TEST(Util_Endian, LdleI32_Nonzero) {
 /// @name stle_u32()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 4 bytes large
 ///
-/// \When TODO
+/// \When stle_u32() is called with a pointer to the memory area and an unsigned
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleU32_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u, 0x78u};
   const uint_least32_t x = 0x0000000000u;
@@ -884,11 +900,13 @@ TEST(Util_Endian, StleU32_Zero) {
   CHECK_EQUAL(0x00u, dst[3]);
 }
 
-/// \Given TODO
+/// \Given a memory area 4 bytes large
 ///
-/// \When TODO
+/// \When stle_u32() is called with a pointer to the memory area and a 32-bit
+///       unsigned integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleU32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x12345678u;
@@ -1046,11 +1064,12 @@ TEST(Util_Endian, LdbeU64_Nonzero) {
 /// @name stle_i64()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 8 bytes large
 ///
-/// \When TODO
+/// \When stle_i64() is called with a pointer to the memory area and an integer
+///       value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleI64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
                          0x89u, 0xabu, 0xcdu, 0xefu};
@@ -1068,11 +1087,13 @@ TEST(Util_Endian, StleI64_Zero) {
   CHECK_EQUAL(0x00u, dst[7]);
 }
 
-/// \Given TODO
+/// \Given a memory area 8 bytes large
 ///
-/// \When TODO
+/// \When stle_i64() is called with a pointer to the memory area and a 64-bit
+///       signed integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleI64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -1109,11 +1130,12 @@ TEST(Util_Endian, LdbeI64_Nonzero) {
 /// @name stle_u64()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 8 bytes large
 ///
-/// \When TODO
+/// \When stle_u64() is called with a pointer to the memory area and an unsigned
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleU64_Zero) {
   uint_least8_t dst[] = {0x01u, 0x23u, 0x45u, 0x67u,
                          0x89u, 0xabu, 0xcdu, 0xefu};
@@ -1131,11 +1153,13 @@ TEST(Util_Endian, StleU64_Zero) {
   CHECK_EQUAL(0x00u, dst[7]);
 }
 
-/// \Given TODO
+/// \Given a memory area 8 bytes large
 ///
-/// \When TODO
+/// \When stle_u64() is called with a pointer to the memory area and a 64-bit
+///       unsigned integer number
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleU64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -1188,11 +1212,12 @@ TEST(Util_Endian, LdleU64_Nonzero) {
 /// @name stle_u24()
 ///@{
 
-/// \Given TODO
+/// \Given a memory area 3 bytes large
 ///
-/// \When TODO
+/// \When stle_u24() is called with a pointer to the memory area and an unsigned
+///       integer value equal 0
 ///
-/// \Then TODO
+/// \Then the memory area is zeroed
 TEST(Util_Endian, StleU24_Zero) {
   uint_least8_t dst[] = {0x12u, 0x34u, 0x56u};
   const uint_least32_t x = 0;
@@ -1204,11 +1229,13 @@ TEST(Util_Endian, StleU24_Zero) {
   CHECK_EQUAL(0x00u, dst[2]);
 }
 
-/// \Given TODO
+/// \Given a memory area 3 bytes large
 ///
-/// \When TODO
+/// \When stle_u24() is called with a pointer to the memory area and an unsigned
+///       integer number less than 2^24 - 1
 ///
-/// \Then TODO
+/// \Then the memory area stores the binary representation of the requested
+///       number in little-endian byte order
 TEST(Util_Endian, StleU24_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x123456u;
@@ -1313,7 +1340,7 @@ TEST(Util_Endian, StleFlt32_Zero) {
 
 /// \Given a memory area 4 bytes large
 ///
-/// \When stle_flt632() is called with a pointer to the memory area and an IEEE
+/// \When stle_flt32() is called with a pointer to the memory area and an IEEE
 ///       754 single precision floating point number
 ///
 /// \Then the memory area stores the binary representation of the requested
