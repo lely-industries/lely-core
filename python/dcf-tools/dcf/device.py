@@ -162,11 +162,11 @@ class Object(dict):
 
 
 class SubObject:
-    def __init__(self, cfg: dict, index: int, sub_index: int, env: dict = {}):
+    def __init__(self, cfg: dict, index: int, sub_index: int, env: dict = None):
         self.cfg = cfg
         self.index = index
         self.sub_index = sub_index
-        self.env = env
+        self.env = env if env is not None else {}
 
     def parse_value(self):
         return self.value.parse(self.env)

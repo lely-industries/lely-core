@@ -10,7 +10,7 @@ import dcf
 
 
 class Slave(dcf.Device):
-    def __init__(self, cfg: dict, env: dict = {}):
+    def __init__(self, cfg: dict, env: dict = None):
         super().__init__(cfg, env)
 
         self.name = ""
@@ -174,7 +174,7 @@ class Slave(dcf.Device):
         return sdo
 
     @classmethod
-    def from_dcf(cls, filename: str, env: dict = {}, args=None) -> "Slave":
+    def from_dcf(cls, filename: str, env: dict = None, args=None) -> "Slave":
         cfg = dcf.parse_file(filename)
 
         no_strict = getattr(args, "no_strict", False)
@@ -323,7 +323,7 @@ class Slave(dcf.Device):
 
 
 class Master:
-    def __init__(self, slaves: dict = {}):
+    def __init__(self, slaves: dict = None):
         self.node_id = 255
         self.baudrate = 1000
         self.vendor_id = 0
@@ -346,7 +346,7 @@ class Master:
         self.stop_all_nodes = False
         self.boot_time = 0
         self.sdo = []
-        self.slaves = slaves
+        self.slaves = slaves if slaves is not None else {}
 
     def write_dcf(self, directory: str, remote_pdo: bool = False):
         with open(os.path.join(directory, "master.dcf"), "w") as output:
