@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -147,15 +147,39 @@ TEST_BASE(CO_SyncBase) {
 };
 co_dev_t* CO_SyncBase::dev = nullptr;
 
-TEST_GROUP_BASE(CO_SyncInit, CO_SyncBase){};
+TEST_GROUP_BASE(CO_SyncCreate, CO_SyncBase){};
 
-TEST(CO_SyncInit, CoSyncInit_NoObj1005) {
+/// @name co_sync_create()
+///@{
+
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then a null pointer is returned and a SYNC service is not created
+///       \Calls co_dev_find_obj()
+///       \Calls set_errc() with ERROR_CALL_NOT_IMPLEMENTED
+TEST(CO_SyncCreate, CoSyncCreate_NoObj1005) {
   const auto ret = co_sync_create(net, dev);
 
   POINTERS_EQUAL(nullptr, ret);
 }
 
-TEST(CO_SyncInit, CoSyncInit) {
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t),
+///        the 0x1005 object with COB-ID SYNC set present in the object
+///        dictionary
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then a pointer to newly created SYNC service (co_sync_t) is returned, it
+///       has pointers to network and device set properly, indication function
+///       is not set
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
+TEST(CO_SyncCreate, CoSyncCreate_Nominal) {
   CreateObjInDev(obj1005, 0x1005u);
   SetCobid(DEV_ID);
 
@@ -173,30 +197,32 @@ TEST(CO_SyncInit, CoSyncInit) {
   co_sync_destroy(sync);
 }
 
-TEST(CO_SyncInit, CoSyncCreate_InitError) {
-  const auto ret = co_sync_create(net, dev);
+///@}
 
-  POINTERS_EQUAL(nullptr, ret);
-}
+/// @name co_sync_destroy()
+///@{
 
-TEST(CO_SyncInit, CoSyncCreate) {
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///
+/// \When co_sync_destroy() is called with a null pointer
+///
+/// \Then nothing is changed
+TEST(CO_SyncCreate, CoSyncDestroy_DestroyNull) { co_sync_destroy(nullptr); }
+
+/// \Given pointers to the initialized device (co_dev_t), network (co_net_t) and
+///        SYNC service (co_sync_t)
+///
+/// \When co_sync_destroy() is called
+///
+/// \Then the SYNC service is destroyed
+TEST(CO_SyncCreate, CoSyncDestroy_Nominal) {
   CreateObjInDev(obj1005, 0x1005u);
-
   const auto sync = co_sync_create(net, dev);
-
-  CHECK(sync != nullptr);
-  POINTERS_EQUAL(net, co_sync_get_net(sync));
-  POINTERS_EQUAL(dev, co_sync_get_dev(sync));
-  co_sync_ind_t* ind = SyncInd::func;
-  void* data = nullptr;
-  co_sync_get_ind(sync, &ind, &data);
-  POINTERS_EQUAL(nullptr, ind);
-  POINTERS_EQUAL(nullptr, data);
 
   co_sync_destroy(sync);
 }
 
-TEST(CO_SyncInit, CoSyncDestroy_DestroyNull) { co_sync_destroy(nullptr); }
+///@}
 
 TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
   static co_sync_t* sync;
@@ -249,11 +275,6 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     co_sync_set_ind(sync, ind, nullptr);
   }
 
-  void CreateSYNC() {
-    sync = co_sync_create(net, dev);
-    CHECK(sync != nullptr);
-  }
-
   void StartSYNC() { CHECK_EQUAL(0, co_sync_start(sync)); }
 
   TEST_SETUP() {
@@ -264,6 +285,9 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
     SyncErr::Clear();
     SyncInd::Clear();
     CanSend::Clear();
+
+    sync = co_sync_create(net, dev);
+    CHECK(sync != nullptr);
   }
 
   TEST_TEARDOWN() {
@@ -275,26 +299,49 @@ TEST_GROUP_BASE(CO_Sync, CO_SyncBase) {
 };
 co_sync_t* TEST_GROUP_CppUTestGroupCO_Sync::sync = nullptr;
 
-TEST(CO_Sync, CoSyncGetInd_PointersNull) {
-  CreateSYNC();
+/// @name co_sync_get_ind()
+///@{
 
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_get_ind() is called with no memory area to store the results
+///
+/// \Then nothing is changed
+TEST(CO_Sync, CoSyncGetInd_PointersNull) {
   co_sync_get_ind(sync, nullptr, nullptr);
 }
 
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_get_ind() is called with pointers to store indication function
+///       and user-specified data
+///
+/// \Then passed pointers to indication function and data are set to null
 TEST(CO_Sync, CoSyncGetInd) {
-  CreateSYNC();
   co_sync_ind_t* ind = SyncInd::func;
-  void* data = nullptr;
+  int data = 42;
+  void* dataptr = &data;
 
-  co_sync_get_ind(sync, &ind, &data);
+  co_sync_get_ind(sync, &ind, &dataptr);
 
   POINTERS_EQUAL(nullptr, ind);
-  POINTERS_EQUAL(nullptr, data);
+  POINTERS_EQUAL(nullptr, dataptr);
 }
 
+///@}
+
+/// @name co_sync_set_ind()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_set_ind() is called with custom indication function and a
+///       non-null pointer to user-specified data
+///
+/// \Then indication function and pointer to user-specified data have requested
+///       values and can be obtained using co_sync_get_ind()
 TEST(CO_Sync, CoSyncSetInd) {
-  CreateSYNC();
-  void* data = nullptr;
+  int data = 42;
 
   co_sync_set_ind(sync, SyncInd::func, &data);
 
@@ -305,26 +352,51 @@ TEST(CO_Sync, CoSyncSetInd) {
   POINTERS_EQUAL(&data, ret_pdata);
 }
 
-TEST(CO_Sync, CoSyncGetErr_PointersNull) {
-  CreateSYNC();
+///@}
 
+/// @name co_sync_get_err()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_get_err() is called with no memory area to store the results
+///
+/// \Then nothing is changed
+TEST(CO_Sync, CoSyncGetErr_PointersNull) {
   co_sync_get_err(sync, nullptr, nullptr);
 }
 
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_get_err() is called with pointers to store error handling
+///       function and user-specified data
+///
+/// \Then passed pointers to error handling function and data are set to null
 TEST(CO_Sync, CoSyncGetErr) {
-  CreateSYNC();
   co_sync_err_t* err = SyncErr::func;
-  void* data = nullptr;
+  int data = 42;
+  void* dataptr = &data;
 
-  co_sync_get_err(sync, &err, &data);
+  co_sync_get_err(sync, &err, &dataptr);
 
   POINTERS_EQUAL(nullptr, err);
-  POINTERS_EQUAL(nullptr, data);
+  POINTERS_EQUAL(nullptr, dataptr);
 }
 
+///@}
+
+/// @name co_sync_set_err()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t)
+///
+/// \When co_sync_set_err() is called with custom error handling function and
+///       a non-null pointer to user-specified data
+///
+/// \Then error handling function and pointer to user-specified data have
+///       requested values and can be obtained using co_sync_get_err()
 TEST(CO_Sync, CoSyncSetErr) {
-  CreateSYNC();
-  void* data = nullptr;
+  int data = 42;
 
   co_sync_set_err(sync, SyncErr::func, &data);
 
@@ -335,35 +407,71 @@ TEST(CO_Sync, CoSyncSetErr) {
   POINTERS_EQUAL(&data, ret_pdata);
 }
 
+///@}
+
+/// @name co_sync_start()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t), the 0x1005 object with
+///        COB-ID SYNC set and present in the object dictionary, but with 0x1006
+///        and 0x1019 objects missing
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, the SYNC service is started and download indication
+///       function for the 0x1005 object is set
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+///       \Calls can_timer_stop()
 TEST(CO_Sync, CoSyncStart_NoObj1006NoObj1019) {
   SetCobid(DEV_ID);
-  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
 }
 
-TEST(CO_Sync, CoSyncStart) {
+/// \Given a pointer to the SYNC service (co_sync_t), with the 0x1005, 0x1006
+///        and 0x1019 objects present in the object dictionary
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, the SYNC service is started and download indication
+///       functions for the 0x1005, 0x1006 and 0x1019 objects are set
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_obj_get_val_u8()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+///       \Calls can_timer_stop()
+TEST(CO_Sync, CoSyncStart_Nominal) {
   SetCobid(DEV_ID);
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
-  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
   CheckSubDnIndIsSet(0x1019u);
 }
 
+/// \Given a pointer to already started SYNC service (co_sync_t), with the
+///        0x1005, 0x1006 and 0x1019 objects present in the object dictionary
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, nothing is chnaged
 TEST(CO_Sync, CoSyncStart_AlreadyStarted) {
   SetCobid(DEV_ID);
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
-  CreateSYNC();
 
   co_sync_start(sync);
   const auto ret = co_sync_start(sync);
@@ -371,67 +479,164 @@ TEST(CO_Sync, CoSyncStart_AlreadyStarted) {
   CHECK_EQUAL(0, ret);
 }
 
-TEST(CO_Sync, CoSyncIsStopped) {
+///@}
+
+/// @name co_sync_is_stopped()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t), with the 0x1005, 0x1006
+///        and 0x1019 objects present in the object dictionary
+///
+/// \When co_sync_is_stopped() is called before and after a call to
+///       co_sync_start()
+///
+/// \Then 1 is returned in case of the first call (before co_sync_start()),
+///       0 is returned in case of the second call (after co_sync_start())
+TEST(CO_Sync, CoSyncIsStopped_BeforeAfterStart) {
   SetCobid(DEV_ID);
   CreateObj1006AndSetPeriod(0x01u);
   CreateObj1019AndSetCntOverflow(0x01u);
-  CreateSYNC();
 
   CHECK_EQUAL(1, co_sync_is_stopped(sync));
   co_sync_start(sync);
   CHECK_EQUAL(0, co_sync_is_stopped(sync));
 }
 
-TEST(CO_Sync, CoSyncUpdate_IsProducer) {
+///@}
+
+/// @name co_sync_start()
+///@{
+
+/// \Given a pointer to the SYNC service (co_sync_t), the 0x1005 object with
+///        COB-ID SYNC with CO_SYNC_COBID_PRODUCER bit set and the 0x1006 object
+///        with the communication cycle period set to 1 us
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, the SYNC service is started, download indication
+///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
+///       started cycle period timer and disabled network receiver
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
+///       \Calls can_timer_start()
+TEST(CO_Sync, CoSyncStart_IsProducer) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateObj1006AndSetPeriod(0x01u);
-  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
 }
 
-TEST(CO_Sync, CoSyncUpdate_FrameBitSet) {
+/// \Given a pointer to the SYNC service (co_sync_t), the 0x1005 object with
+///        COB-ID SYNC with CO_SYNC_COBID_FRAME bit set and the 0x1006 object
+///        with the communication cycle period set to 1 us
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, the SYNC service is started, download indication
+///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
+///       started receiving SYNC messages using the CAN Extended Format 29-bit
+///       identifier
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_start()
+///       \Calls can_timer_stop()
+TEST(CO_Sync, CoSyncStart_FrameBitSet) {
   SetCobid(DEV_ID | CO_SYNC_COBID_FRAME);
   CreateObj1006AndSetPeriod(0x01u);
-  CreateSYNC();
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
 }
 
-TEST(CO_Sync, CoSyncUpdate_PeriodValueZero) {
+/// \Given a pointer to the SYNC service (co_sync_t), the 0x1005 object with
+///        COB-ID SYNC with CO_SYNC_COBID_PRODUCER bit set and the 0x1006 object
+///        with the communication cycle period set to zero
+///
+/// \When co_sync_start() is called
+///
+/// \Then 0 is returned, the SYNC service is started, download indication
+///       functions for the 0x1005 and 0x1006 objects are set, SYNC service has
+///       disabled cycle period timer and disabled network receiver i.e. cannot
+///       produce SYNC messages
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_get_val_u32()
+///       \Calls co_obj_set_dn_ind()
+///       \Calls can_recv_stop()
+///       \Calls can_timer_stop()
+TEST(CO_Sync, CoSyncStart_PeriodValueZero) {
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
   CreateObj1006AndSetPeriod(0x00u);
-  CreateSYNC();
+  SyncSetSendSetInd(CanSend::func, nullptr);
 
   const auto ret = co_sync_start(sync);
 
   CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
   CheckSubDnIndIsSet(0x1005u);
   CheckSubDnIndIsSet(0x1006u);
+
+  const timespec tp = {10L, 0L};
+  CHECK_EQUAL(0, can_net_set_time(net, &tp));
+  CHECK(!CanSend::called());
 }
 
+///@}
+
+/// @name co_sync_stop()
+///@{
+
+/// \Given a pointer to not started SYNC service (co_sync_t)
+///
+/// \When co_sync_stop() is called
+///
+/// \Then nothing is changed
+TEST(CO_Sync, CoSyncStop_NotStarted) { co_sync_stop(sync); }
+
+/// \Given a pointer to started SYNC service (co_sync_t), the 0x1005 object with
+///        COB-ID SYNC set and present in the object dictionary, but with 0x1006
+///        and 0x1019 objects missing
+///
+/// \When co_sync_stop() is called
+///
+/// \Then the SYNC service is stopped and download indication function for the
+///       0x1005 object is set to default
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
 TEST(CO_Sync, CoSyncStop_NoObj1019NoObj1006) {
   SetCobid(DEV_ID);
-  CreateSYNC();
+  StartSYNC();
 
   co_sync_stop(sync);
 
   CheckSubDnIndDefault(0x1005u);
 }
 
-TEST(CO_Sync, CoSyncStop) {
+/// \Given a pointer to started SYNC service (co_sync_t), with the 0x1005,
+///        0x1006 and 0x1019 objects present in the object dictionary
+///
+/// \When co_sync_stop() is called
+///
+/// \Then the SYNC service is stopped and download indication functions for the
+///       0x1005, 0x1006 and 0x1019 objects are set to default
+///       \Calls co_dev_find_obj()
+///       \Calls co_obj_set_dn_ind()
+TEST(CO_Sync, CoSyncStop_Nominal) {
   SetCobid(DEV_ID);
   CreateObj1019AndSetCntOverflow(0x01u);
   CreateObj1006AndSetPeriod(0x00000001u);
-  CreateSYNC();
+  StartSYNC();
 
   co_sync_stop(sync);
 
@@ -440,9 +645,44 @@ TEST(CO_Sync, CoSyncStop) {
   CheckSubDnIndDefault(0x1019u);
 }
 
+///@}
+
+/// @name co_sync_is_stopped()
+///@{
+
+/// \Given a pointer to started SYNC service (co_sync_t), with the 0x1005,
+///        0x1006 and 0x1019 objects present in the object dictionary
+///
+/// \When co_sync_is_stopped() is called before and after a call to
+///       co_sync_stop()
+///
+/// \Then 0 is returned in case of the first call (before co_sync_stop()),
+///       1 is returned in case of the second call (after co_sync_stop())
+TEST(CO_Sync, CoSyncIsStopped_BeforeAfterStop) {
+  SetCobid(DEV_ID);
+  CreateObj1006AndSetPeriod(0x01u);
+  CreateObj1019AndSetCntOverflow(0x01u);
+  StartSYNC();
+
+  CHECK_EQUAL(0, co_sync_is_stopped(sync));
+  co_sync_stop(sync);
+  CHECK_EQUAL(1, co_sync_is_stopped(sync));
+}
+
+///@}
+
+/// @name SYNC message receiver
+///@{
+
+/// \Given a pointer to started SYNC service (co_sync_t), configured without
+///        indication nor error handling functions
+///
+/// \When SYNC message is received
+///
+/// \Then nothing is changed
 TEST(CO_Sync, CoSyncRecv_NoErrFuncNoIndFunc) {
   SetCobid(DEV_ID);
-  CreateSYNC();
+  StartSYNC();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -454,9 +694,16 @@ TEST(CO_Sync, CoSyncRecv_NoErrFuncNoIndFunc) {
   CHECK_EQUAL(0, ret);
 }
 
-TEST(CO_Sync, CoSyncRecv_Err) {
+/// \Given a pointer to started SYNC service (co_sync_t), configured without
+///        indication function but with error handling function, with the 0x1019
+///        object not present in the object dictionary
+///
+/// \When SYNC message with unexpected data length of 1 is received
+///
+/// \Then error handling function is called with 0x8240 emergency error code,
+///       0x10 error register and a pointer to the SYNC service
+TEST(CO_Sync, CoSyncRecv_ErrHandlerOnly_NoIndFunc) {
   SetCobid(DEV_ID);
-  CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, nullptr);
   StartSYNC();
 
@@ -475,9 +722,16 @@ TEST(CO_Sync, CoSyncRecv_Err) {
   CHECK_EQUAL(sync, SyncErr::sync);
 }
 
-TEST(CO_Sync, CoSyncRecv_NoErrHandlerWhenNeeded) {
+/// \Given a pointer to started SYNC service (co_sync_t), configured with
+///        indication function but without error handling function, with the
+///        0x1019 object not present in the object dictionary
+///
+/// \When SYNC message with unexpected data length of 1 is received
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+//        counter set to 0
+TEST(CO_Sync, CoSyncRecv_IndFuncOnly_NoErrHandler) {
   SetCobid(DEV_ID);
-  CreateSYNC();
   SyncSetErrSetInd(nullptr, SyncInd::func);
   StartSYNC();
 
@@ -495,10 +749,19 @@ TEST(CO_Sync, CoSyncRecv_NoErrHandlerWhenNeeded) {
   POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
+/// \Given a pointer to started SYNC service (co_sync_t), configured with both
+///        indication function and error handling function, the object 0x1019
+///        with counter overflow value set to 1
+///
+/// \When SYNC message with unexpected data length of 0 is received
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+///       counter set to 0;
+///       error handling function is called with 0x8240 emergency error code,
+///       0x10 error register and a pointer to the SYNC service
 TEST(CO_Sync, CoSyncRecv_OverflowSetToOne) {
   SetCobid(DEV_ID);
   CreateObj1019AndSetCntOverflow(0x01u);
-  CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
   StartSYNC();
 
@@ -521,10 +784,18 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOne) {
   POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
+/// \Given a pointer to started SYNC service (co_sync_t), configured with both
+///        indication function and error handling function, the object 0x1019
+///        with counter overflow value set to 1
+///
+/// \When SYNC message with data length of 1 is received
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+///       counter set to what was received in the SYNC message;
+///       error handling function is not called
 TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
   SetCobid(DEV_ID);
   CreateObj1019AndSetCntOverflow(0x01u);
-  CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
   StartSYNC();
 
@@ -532,6 +803,7 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
   msg.id = DEV_ID;
   msg.flags = 0u;
   msg.len = 1u;
+  msg.data[0] = 0x42u;
 
   const auto ret = can_net_recv(net, &msg);
 
@@ -539,13 +811,21 @@ TEST(CO_Sync, CoSyncRecv_OverflowSetToOneEqualToMsgLen) {
   CHECK(!SyncErr::called);
   CHECK(SyncInd::called);
   POINTERS_EQUAL(nullptr, SyncInd::data);
-  CHECK_EQUAL(0, SyncInd::cnt);
+  CHECK_EQUAL(0x42u, SyncInd::cnt);
   POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
-TEST(CO_Sync, CoSyncRecv) {
+/// \Given a pointer to started SYNC service (co_sync_t), configured with both
+///        indication function and error handling function, with the 0x1019
+///        object not present in the object dictionary
+///
+/// \When SYNC message with data length of 0 is received
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+///       counter set to 0;
+///       error handling function is not called
+TEST(CO_Sync, CoSyncRecv_Nominal) {
   SetCobid(DEV_ID);
-  CreateSYNC();
   SyncSetErrSetInd(SyncErr::func, SyncInd::func);
   StartSYNC();
 
@@ -564,10 +844,26 @@ TEST(CO_Sync, CoSyncRecv) {
   POINTERS_EQUAL(sync, SyncInd::sync);
 }
 
+///@}
+
+/// @name SYNC message producer
+///@{
+
+/// \Given a pointer to started producer SYNC service (co_sync_t), configured
+///        with indication function, communication cycle period set to some
+///        non-zero value and COB-ID with CAN Extended Format set, with the
+///        0x1019 object not present in the object dictionary
+///
+/// \When communication cycle period has passed
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+///       counter set to 0;
+///       SYNC message with data length of 0 and Identifier Extension flag is
+///       sent
+///       \Calls can_net_send()
 TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER | CO_SYNC_COBID_FRAME);
-  CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
   StartSYNC();
   const timespec tp = {0L, 600000L};
@@ -586,10 +882,18 @@ TEST(CO_Sync, CoSyncTimer_ExtendedCANID) {
   CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }
 
+/// \Given a pointer to started producer SYNC service (co_sync_t), configured
+///        without indication function, communication cycle period set to some
+///        non-zero value, without counter overflow value in the 0x1019 object
+///
+/// \When communication cycle period has passed
+///
+/// \Then indication function is not called;
+///       SYNC message with data length of 0 and no additional flags is sent
+///       \Calls can_net_send()
 TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  CreateSYNC();
   SyncSetSendSetInd(CanSend::func, nullptr);
   StartSYNC();
   const timespec tp = {0L, 600000L};
@@ -604,11 +908,21 @@ TEST(CO_Sync, CoSyncTimer_NoIndMaxCntNotSet) {
   CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }
 
+/// \Given a pointer to started producer SYNC service (co_sync_t), configured
+///        with indication function, communication cycle period set to some
+///        non-zero value, with counter overflow value set to 2
+///
+/// \When communication cycle period has passed twice
+///
+/// \Then indication function is called twice with a pointer to the SYNC service
+///       and counter set to 1 and 2, two SYNC messages with data length of 1
+///       and with counter values equal to 1 and 2, respectively, are sent after
+///       first and second time communication cycle period has passed
+///       \Calls can_net_send()
 TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   CreateObj1006AndSetPeriod(500u);
   CreateObj1019AndSetCntOverflow(0x02u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
   StartSYNC();
   const timespec tp[2] = {{0L, 600000L}, {0L, 1200000L}};
@@ -645,10 +959,19 @@ TEST(CO_Sync, CoSyncTimer_MaxCntSet) {
   CHECK_EQUAL(2u, CanSend::msg.data[0]);
 }
 
+/// \Given a pointer to started producer SYNC service (co_sync_t), configured
+///        with indication function, the communication cycle period set to some
+///        non-zero value, without counter overflow value in the 0x1019 object
+///
+/// \When communication cycle period has passed
+///
+/// \Then indication function is called with a pointer to the SYNC service and
+///       counter set to 0;
+///       SYNC message with data length of 0 and no additional flags is sent
+///       \Calls can_net_send()
 TEST(CO_Sync, CoSyncTimer) {
   CreateObj1006AndSetPeriod(500u);
   SetCobid(DEV_ID | CO_SYNC_COBID_PRODUCER);
-  CreateSYNC();
   SyncSetSendSetInd(CanSend::func, SyncInd::func);
   StartSYNC();
   const timespec tp = {0L, 600000L};
@@ -666,6 +989,8 @@ TEST(CO_Sync, CoSyncTimer) {
   CHECK_EQUAL(0u, CanSend::msg.len);
   CHECK_EQUAL(0u, CanSend::msg.data[0]);
 }
+
+///@}
 
 TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
   co_sync_t* sync;
@@ -686,6 +1011,15 @@ TEST_GROUP_BASE(Co_SyncAllocation, CO_SyncBase) {
   }
 };
 
+/// @name co_sync_create()
+///@{
+
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///        with memory allocator limited to 0 bytes
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then null pointer is returned and SYNC service is not created
 TEST(Co_SyncAllocation, CoSyncCreate_NoMoreMemory) {
   limitedAllocator.LimitAllocationTo(0u);
 
@@ -694,6 +1028,15 @@ TEST(Co_SyncAllocation, CoSyncCreate_NoMoreMemory) {
   POINTERS_EQUAL(nullptr, sync);
 }
 
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///        with memory allocator limited to only create the SYNC service
+///        instance
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then null pointer is returned and SYNC service is not created
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_create()
 TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncT) {
   limitedAllocator.LimitAllocationTo(co_sync_sizeof());
 
@@ -702,6 +1045,17 @@ TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncT) {
   POINTERS_EQUAL(nullptr, sync);
 }
 
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///        with memory allocator limited to create the SYNC service and
+///        frame receiver (can_recv_t) instances
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then null pointer is returned and SYNC service is not created
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
 TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndRecv) {
   limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_recv_sizeof());
 
@@ -710,6 +1064,17 @@ TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndRecv) {
   POINTERS_EQUAL(nullptr, sync);
 }
 
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///        with memory allocator limited to create the SYNC service and
+///        timer (can_timer_t) instances
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then null pointer is returned and SYNC service is not created
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
 TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndTimer) {
   limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_timer_sizeof());
 
@@ -718,6 +1083,18 @@ TEST(Co_SyncAllocation, CoSyncCreate_MemoryOnlyForSyncTAndTimer) {
   POINTERS_EQUAL(nullptr, sync);
 }
 
+/// \Given pointers to the initialized device (co_dev_t) and network (co_net_t)
+///        with memory allocator limited to create the SYNC service, frame
+///        receiver (can_recv_t) and timer (can_timer_t) instances
+///
+/// \When co_sync_create() is called with pointers to the network and the device
+///
+/// \Then a pointer to newly created SYNC service (co_sync_t) is returned
+///       \Calls co_dev_find_obj()
+///       \Calls can_recv_create()
+///       \Calls can_recv_set_func()
+///       \Calls can_timer_create()
+///       \Calls can_timer_set_func()
 TEST(Co_SyncAllocation, CoSyncCreate_AllNecessaryMemoryAvailable) {
   limitedAllocator.LimitAllocationTo(co_sync_sizeof() + can_recv_sizeof() +
                                      can_timer_sizeof());
@@ -726,3 +1103,5 @@ TEST(Co_SyncAllocation, CoSyncCreate_AllNecessaryMemoryAvailable) {
 
   CHECK(sync != nullptr);
 }
+
+///@}
