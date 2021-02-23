@@ -113,6 +113,12 @@
 /// The current object value is of the form `$NODEID { "+" number }`.
 #define CO_OBJ_FLAGS_VAL_NODEID 0x80
 
+/**
+ * The current object value was explicitly set with the `ParamaterValue`
+ * attribute in the EDS/DCF file.
+ */
+#define CO_OBJ_FLAGS_PARAMETER_VALUE 0x100
+
 // The memory buffer struct from <lely/util/membuf.h>.
 struct membuf;
 

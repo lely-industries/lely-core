@@ -50,7 +50,9 @@ def __add_compact_rpdo(cfg: dict):
     if "DeviceInfo" not in cfg:
         return
     section = cfg["DeviceInfo"]
-    compact_pdo = int(section.get("CompactPDO", "0"), 0)
+    compact_pdo = 0
+    if "CompactPDO" in section and section["CompactPDO"]:
+        compact_pdo = int(section["CompactPDO"], 0)
     if compact_pdo == 0:
         return
     # Count the number of explicit Receive-PDOs.
@@ -59,7 +61,9 @@ def __add_compact_rpdo(cfg: dict):
         if "{:04X}".format(0x1400 + i) in cfg:
             npdo += 1
     # Create implicit Receive-PDOs, if necessary.
-    nr_of_rx_pdo = int(section.get("NrOfRxPDO", "0"), 0)
+    nr_of_rx_pdo = 0
+    if "NrOfRxPDO" in section and section["NrOfRxPDO"]:
+        nr_of_rx_pdo = int(section["NrOfRxPDO"], 0)
     for i in range(512):
         if nr_of_rx_pdo <= npdo:
             break
@@ -165,7 +169,9 @@ def __add_compact_tpdo(cfg: dict):
     if "DeviceInfo" not in cfg:
         return
     section = cfg["DeviceInfo"]
-    compact_pdo = int(section.get("CompactPDO", "0"), 0)
+    compact_pdo = 0
+    if "CompactPDO" in section and section["CompactPDO"]:
+        compact_pdo = int(section["CompactPDO"], 0)
     if compact_pdo == 0:
         return
     # Count the number of explicit Transmit-PDOs.
@@ -174,7 +180,9 @@ def __add_compact_tpdo(cfg: dict):
         if "{:04X}".format(0x1800 + i) in cfg:
             npdo += 1
     # Create implicit Transmit-PDOs, if necessary.
-    nr_of_tx_pdo = int(section.get("NrOfTxPDO", "0"), 0)
+    nr_of_tx_pdo = 0
+    if "NrOfTxPDO" in section and section["NrOfTxPDO"]:
+        nr_of_tx_pdo = int(section["NrOfTxPDO"], 0)
     for i in range(512):
         if nr_of_tx_pdo <= npdo:
             break

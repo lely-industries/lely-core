@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/node.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,13 +23,25 @@
 
 #include "coapp.hpp"
 #include <lely/co/dev.h>
+#if !LELY_NO_CO_EMCY
 #include <lely/co/emcy.h>
+#endif
+#if !LELY_NO_CO_LSS
 #include <lely/co/lss.h>
+#endif
 #include <lely/co/nmt.h>
+#if !LELY_NO_CO_RPDO
 #include <lely/co/rpdo.h>
+#endif
+#if !LELY_NO_CO_SYNC
 #include <lely/co/sync.h>
+#endif
+#if !LELY_NO_CO_TIME
 #include <lely/co/time.h>
+#endif
+#if !LELY_NO_CO_TPDO
 #include <lely/co/tpdo.h>
+#endif
 #include <lely/coapp/node.hpp>
 
 #include <memory>
@@ -56,25 +68,39 @@ struct Node::Impl_ {
   void OnHbInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
   void OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept;
 
+#if !LELY_NO_CO_RPDO
   void OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
                  size_t n) noexcept;
   void OnRpdoErr(co_rpdo_t* pdo, uint16_t eec, uint8_t er) noexcept;
+#endif
 
+#if !LELY_NO_CO_TPDO
   void OnTpdoInd(co_tpdo_t* pdo, uint32_t ac, const void* ptr,
                  size_t n) noexcept;
+#endif
 
+#if !LELY_NO_CO_SYNC
   void OnSyncInd(co_nmt_t* nmt, uint8_t cnt) noexcept;
   void OnSyncErr(co_sync_t* sync, uint16_t eec, uint8_t er) noexcept;
+#endif
 
+#if !LELY_NO_CO_TIME
   void OnTimeInd(co_time_t* time, const timespec* tp) noexcept;
+#endif
 
+#if !LELY_NO_CO_EMCY
   void OnEmcyInd(co_emcy_t* emcy, uint8_t id, uint16_t ec, uint8_t er,
                  uint8_t msef[5]) noexcept;
+#endif
 
+#if !LELY_NO_CO_LSS
   void OnRateInd(co_lss_t*, uint16_t rate, int delay) noexcept;
   int OnStoreInd(co_lss_t*, uint8_t id, uint16_t rate) noexcept;
+#endif
 
+#if !LELY_NO_CO_RPDO
   void RpdoRtr(int num) noexcept;
+#endif
 
   Node* self{nullptr};
 
@@ -86,16 +112,28 @@ struct Node::Impl_ {
   ::std::function<void(NmtCommand)> on_command;
   ::std::function<void(uint8_t, bool)> on_heartbeat;
   ::std::function<void(uint8_t, NmtState)> on_state;
+#if !LELY_NO_CO_RPDO
   ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
       on_rpdo;
   ::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error;
+#endif
+#if !LELY_NO_CO_TPDO
   ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
       on_tpdo;
+#endif
+#if !LELY_NO_CO_SYNC
   ::std::function<void(uint8_t, const time_point&)> on_sync;
   ::std::function<void(uint16_t, uint8_t)> on_sync_error;
+#endif
+#if !LELY_NO_CO_TIME
   ::std::function<void(const ::std::chrono::system_clock::time_point&)> on_time;
+#endif
+#if !LELY_NO_CO_EMCY
   ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy;
+#endif
+#if !LELY_NO_CO_LSS
   ::std::function<void(int, ::std::chrono::milliseconds)> on_switch_bitrate;
+#endif
 };
 
 Node::Node(ev_exec_t* exec, io::TimerBase& timer, io::CanChannelBase& chan,
@@ -265,66 +303,102 @@ void
 Node::OnRpdo(
     ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
         on_rpdo) {
+#if LELY_NO_CO_RPDO
+  (void)on_rpdo;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_rpdo = on_rpdo;
+#endif
 }
 
 void
 Node::OnRpdoError(::std::function<void(int, uint16_t, uint8_t)> on_rpdo_error) {
+#if LELY_NO_CO_RPDO
+  (void)on_rpdo_error;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_rpdo_error = on_rpdo_error;
+#endif
 }
 
 void
 Node::OnTpdo(
     ::std::function<void(int, ::std::error_code, const void*, ::std::size_t)>
         on_tpdo) {
+#if LELY_NO_CO_TPDO
+  (void)on_tpdo;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_tpdo = on_tpdo;
+#endif
 }
 
 void
 Node::OnSync(::std::function<void(uint8_t, const time_point&)> on_sync) {
+#if LELY_NO_CO_SYNC
+  (void)on_sync;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_sync = on_sync;
+#endif
 }
 
 void
 Node::OnSyncError(::std::function<void(uint16_t, uint8_t)> on_sync_error) {
+#if LELY_NO_CO_SYNC
+  (void)on_sync_error;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_sync_error = on_sync_error;
+#endif
 }
 
 void
 Node::OnTime(
     ::std::function<void(const ::std::chrono::system_clock::time_point&)>
         on_time) {
+#if LELY_NO_CO_TIME
+  (void)on_time;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_time = on_time;
+#endif
 }
 
 void
 Node::OnEmcy(
     ::std::function<void(uint8_t, uint16_t, uint8_t, uint8_t[5])> on_emcy) {
+#if LELY_NO_CO_EMCY
+  (void)on_emcy;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_emcy = on_emcy;
+#endif
 }
 
 void
 Node::OnSwitchBitrate(
     ::std::function<void(int, ::std::chrono::milliseconds)> on_switch_bitrate) {
+#if LELY_NO_CO_LSS
+  (void)on_switch_bitrate;
+#else
   ::std::lock_guard<util::BasicLockable> lock(*this);
   impl_->on_switch_bitrate = on_switch_bitrate;
+#endif
 }
 
 void
 Node::TpdoEventMutex::lock() {
+#if !LELY_NO_CO_TPDO
   co_nmt_on_tpdo_event_lock(node->nmt());
+#endif
 }
 
 void
 Node::TpdoEventMutex::unlock() {
+#if !LELY_NO_CO_TPDO
   co_nmt_on_tpdo_event_unlock(node->nmt());
+#endif
 }
 
 can_net_t*
@@ -363,16 +437,24 @@ Node::Error(uint16_t eec, uint8_t er, const uint8_t msef[5]) noexcept {
 
 void
 Node::RpdoRtr(int num) noexcept {
+#if LELY_NO_CO_RPDO
+  (void)num;
+#else
   if (num) {
     impl_->RpdoRtr(num);
   } else {
     for (num = 1; num <= 512; num++) impl_->RpdoRtr(num);
   }
+#endif
 }
 
 void
 Node::TpdoEvent(int num) noexcept {
+#if LELY_NO_CO_TPDO
+  (void)num;
+#else
   co_nmt_on_tpdo_event(nmt(), num);
+#endif
 }
 
 void
@@ -424,17 +506,22 @@ Node::Impl_::Impl_(Node* self_, can_net_t* net, co_dev_t* dev)
       },
       this);
 
+#if !LELY_NO_CO_SYNC
   co_nmt_set_sync_ind(
       nmt.get(),
       [](co_nmt_t* nmt, uint8_t cnt, void* data) noexcept {
         static_cast<Impl_*>(data)->OnSyncInd(nmt, cnt);
       },
       this);
+#endif
 }
 
 void
 Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
+  (void)nmt;
+
   if (cs == CO_NMT_CS_RESET_COMM) {
+#if !LELY_NO_CO_LSS
     auto lss = co_nmt_get_lss(nmt);
     if (lss) {
       co_lss_set_rate_ind(
@@ -451,8 +538,10 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
           },
           this);
     }
+#endif
   }
 
+#if !LELY_NO_CO_SYNC
   if (cs == CO_NMT_CS_START || cs == CO_NMT_CS_ENTER_PREOP) {
     auto sync = co_nmt_get_sync(nmt);
     if (sync) {
@@ -463,7 +552,9 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
           },
           this);
     }
+#endif
 
+#if !LELY_NO_CO_TIME
     auto time = co_nmt_get_time(nmt);
     if (time) {
       co_time_set_ind(
@@ -473,7 +564,9 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
           },
           this);
     }
+#endif
 
+#if !LELY_NO_CO_EMCY
     auto emcy = co_nmt_get_emcy(nmt);
     if (emcy) {
       co_emcy_set_ind(
@@ -485,8 +578,10 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
           this);
     }
   }
+#endif
 
   if (cs == CO_NMT_CS_START) {
+#if !LELY_NO_CO_RPDO
     for (int i = 1; i <= 512; i++) {
       auto pdo = co_nmt_get_rpdo(nmt, i);
       if (pdo) {
@@ -506,6 +601,8 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
             this);
       }
     }
+#endif
+#if !LELY_NO_CO_TPDO
     for (int i = 1; i <= 512; i++) {
       auto pdo = co_nmt_get_tpdo(nmt, i);
       if (pdo) {
@@ -518,11 +615,16 @@ Node::Impl_::OnCsInd(co_nmt_t* nmt, uint8_t cs) noexcept {
             this);
       }
     }
+#endif
   }
 
   if (cs != CO_NMT_CS_RESET_NODE && cs != CO_NMT_CS_RESET_COMM) {
+#if !LELY_NO_CO_RPDO
     self->UpdateRpdoMapping();
+#endif
+#if !LELY_NO_CO_TPDO
     self->UpdateTpdoMapping();
+#endif
   }
 
   self->OnCommand(static_cast<NmtCommand>(cs));
@@ -568,6 +670,8 @@ Node::Impl_::OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept {
   }
 }
 
+#if !LELY_NO_CO_RPDO
+
 void
 Node::Impl_::OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
@@ -593,6 +697,9 @@ Node::Impl_::OnRpdoErr(co_rpdo_t* pdo, uint16_t eec, uint8_t er) noexcept {
   }
 }
 
+#endif  // !LELY_NO_CO_RPDO
+
+#if !LELY_NO_CO_TPDO
 void
 Node::Impl_::OnTpdoInd(co_tpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
@@ -605,6 +712,9 @@ Node::Impl_::OnTpdoInd(co_tpdo_t* pdo, uint32_t ac, const void* ptr,
     f(num, static_cast<SdoErrc>(ac), ptr, n);
   }
 }
+#endif
+
+#if !LELY_NO_CO_SYNC
 
 void
 Node::Impl_::OnSyncInd(co_nmt_t*, uint8_t cnt) noexcept {
@@ -629,6 +739,9 @@ Node::Impl_::OnSyncErr(co_sync_t*, uint16_t eec, uint8_t er) noexcept {
   }
 }
 
+#endif  // !LELY_NO_CO_SYNC
+
+#if !LELY_NO_CO_TIME
 void
 Node::Impl_::OnTimeInd(co_time_t*, const timespec* tp) noexcept {
   assert(tp);
@@ -641,7 +754,9 @@ Node::Impl_::OnTimeInd(co_time_t*, const timespec* tp) noexcept {
     f(abs_time);
   }
 }
+#endif
 
+#if !LELY_NO_CO_EMCY
 void
 Node::Impl_::OnEmcyInd(co_emcy_t*, uint8_t id, uint16_t ec, uint8_t er,
                        uint8_t msef[5]) noexcept {
@@ -653,6 +768,9 @@ Node::Impl_::OnEmcyInd(co_emcy_t*, uint8_t id, uint16_t ec, uint8_t er,
     f(id, ec, er, msef);
   }
 }
+#endif
+
+#if !LELY_NO_CO_LSS
 
 void
 Node::Impl_::OnRateInd(co_lss_t*, uint16_t rate, int delay) noexcept {
@@ -675,6 +793,9 @@ Node::Impl_::OnStoreInd(co_lss_t*, uint8_t id, uint16_t rate) noexcept {
   }
 }
 
+#endif  // !LELY_NO_CO_LSS
+
+#if !LELY_NO_CO_RPDO
 void
 Node::Impl_::RpdoRtr(int num) noexcept {
   auto pdo = co_nmt_get_rpdo(nmt.get(), num);
@@ -684,6 +805,7 @@ Node::Impl_::RpdoRtr(int num) noexcept {
     set_errc(errsv);
   }
 }
+#endif
 
 }  // namespace canopen
 

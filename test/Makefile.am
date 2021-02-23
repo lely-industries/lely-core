@@ -236,9 +236,11 @@ test_coapp_fiber_LDADD = $(LELY_COAPP_LIBS)
 endif
 
 if !NO_COAPP_MASTER
+if !NO_CO_LSS
 bin += test-coapp-lss
 test_coapp_lss_SOURCES = test.h coapp-lss.cpp
 test_coapp_lss_LDADD = $(LELY_COAPP_LIBS)
+endif
 endif
 
 endif # !NO_CO_DCF

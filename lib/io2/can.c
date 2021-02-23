@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -51,6 +51,7 @@ io_can_chan_async_read(io_can_chan_t *chan, ev_exec_t *exec,
 			sizeof(struct io_can_chan_async_read), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_can_chan_async_read *async_read = ev_promise_data(promise);
 	async_read->promise = promise;
@@ -62,7 +63,7 @@ io_can_chan_async_read(io_can_chan_t *chan, ev_exec_t *exec,
 	if (pread)
 		*pread = &async_read->read;
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 ev_future_t *
@@ -73,6 +74,7 @@ io_can_chan_async_write(io_can_chan_t *chan, ev_exec_t *exec,
 			sizeof(struct io_can_chan_async_write), NULL);
 	if (!promise)
 		return NULL;
+	ev_future_t *future = ev_promise_get_future(promise);
 
 	struct io_can_chan_async_write *async_write = ev_promise_data(promise);
 	async_write->promise = promise;
@@ -84,7 +86,7 @@ io_can_chan_async_write(io_can_chan_t *chan, ev_exec_t *exec,
 	if (pwrite)
 		*pwrite = &async_write->write;
 
-	return ev_promise_get_future(promise);
+	return future;
 }
 
 struct io_can_chan_read *

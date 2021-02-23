@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/lss_master.hpp
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2020-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,6 +22,9 @@
  */
 
 #include "coapp.hpp"
+
+#if !LELY_NO_CO_LSS
+
 #include <lely/coapp/lss_master.hpp>
 
 #include <lely/co/lss.h>
@@ -1189,3 +1192,5 @@ LssMaster::Impl_::OnCompletion(detail::LssRequestBase& req) noexcept {
 }  // namespace canopen
 
 }  // namespace lely
+
+#endif  // !LELY_NO_CO_LSS

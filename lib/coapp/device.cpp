@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/device.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -31,9 +31,12 @@
 #include <lely/co/pdo.h>
 #include <lely/co/val.h>
 #include <lely/coapp/device.hpp>
+#include <lely/util/bits.h>
 #include <lely/util/error.hpp>
 
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
 #include <map>
+#endif
 #include <memory>
 #include <string>
 #include <tuple>
@@ -84,16 +87,22 @@ struct Device::Impl_ : util::BasicLockable {
   ::std::tuple<uint16_t, uint8_t>
   RpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
+    (void)id;
+#if !LELY_NO_CO_RPDO
     auto it = rpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
                                 (static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != rpdo_mapping.end()) {
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_RPDO
     }
+#endif
     return ::std::make_tuple(idx, subidx);
   }
 
@@ -101,32 +110,43 @@ struct Device::Impl_ : util::BasicLockable {
   RpdoMapping(uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
     uint8_t id = 0;
+#if !LELY_NO_CO_RPDO
     auto it = rpdo_mapping.find((static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != rpdo_mapping.end()) {
       id = (it->second >> 24) & 0xff;
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_RPDO
     }
+#endif
     return ::std::make_tuple(id, idx, subidx);
   }
 
   ::std::tuple<uint16_t, uint8_t>
   TpdoMapping(uint8_t id, uint16_t idx, uint8_t subidx,
               ::std::error_code& ec) const noexcept {
+    (void)id;
+#if !LELY_NO_CO_TPDO
     auto it = tpdo_mapping.find((static_cast<uint32_t>(id) << 24) |
                                 (static_cast<uint32_t>(idx) << 8) | subidx);
     if (it != tpdo_mapping.end()) {
       idx = (it->second >> 8) & 0xffff;
       subidx = it->second & 0xff;
+      ec.clear();
     } else {
-      ec = SdoErrc::NO_PDO;
+#endif
       idx = 0;
       subidx = 0;
+      ec = SdoErrc::NO_PDO;
+#if !LELY_NO_CO_TPDO
     }
+#endif
     return ::std::make_tuple(idx, subidx);
   }
 
@@ -136,11 +156,17 @@ struct Device::Impl_ : util::BasicLockable {
 
   ::std::unique_ptr<co_dev_t, DeviceDeleter> dev;
 
+#if !LELY_NO_CO_RPDO
   ::std::map<uint32_t, uint32_t> rpdo_mapping;
+#endif
+#if !LELY_NO_CO_TPDO
   ::std::map<uint32_t, uint32_t> tpdo_mapping;
+#endif
 
   ::std::function<void(uint16_t, uint8_t)> on_write;
+#if !LELY_NO_CO_LSS
   ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write;
+#endif
 };
 
 #if !LELY_NO_CO_DCF
@@ -785,8 +811,12 @@ Device::OnWrite(::std::function<void(uint16_t, uint8_t)> on_write) {
 void
 Device::OnRpdoWrite(
     ::std::function<void(uint8_t, uint16_t, uint8_t)> on_rpdo_write) {
+#if LELY_NO_CO_RPDO
+  (void)on_rpdo_write;
+#else
   ::std::lock_guard<Impl_> lock(*impl_);
   impl_->on_rpdo_write = on_rpdo_write;
+#endif
 }
 
 co_dev_t*
@@ -1329,7 +1359,9 @@ Device::SetEvent(uint16_t idx, uint8_t subidx, ::std::error_code& ec) noexcept {
     return;
   }
 
+#if !LELY_NO_CO_TPDO
   co_dev_tpdo_event(dev(), idx, subidx);
+#endif
 }
 
 template <class T>
@@ -1546,11 +1578,16 @@ Device::TpdoSetEvent(uint8_t id, uint16_t idx, uint8_t subidx,
 
 void
 Device::UpdateRpdoMapping() {
+#if !LELY_NO_CO_RPDO
   impl_->rpdo_mapping.clear();
 
-  for (int i = 0; i < 512; i++) {
-    auto obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
-    if (!obj_1400) continue;
+  // Loop over all RPDOs.
+  co_obj_t* obj_1400 = nullptr;
+  for (int i = 0; !obj_1400 && i < 512; i++)
+    obj_1400 = co_dev_find_obj(dev(), 0x1400 + i);
+  for (; obj_1400; obj_1400 = co_obj_next(obj_1400)) {
+    int i = co_obj_get_idx(obj_1400) - 0x1400;
+    if (i >= 512) break;
     // Skip invalid PDOs.
     auto cobid = co_obj_get_val_u32(obj_1400, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
@@ -1584,9 +1621,9 @@ Device::UpdateRpdoMapping() {
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1600, 0);
     if (n != co_obj_get_val_u8(obj_5a00, 0)) continue;
-    for (int i = 1; i <= n; i++) {
-      auto rmap = co_obj_get_val_u32(obj_1600, i);
-      auto tmap = co_obj_get_val_u32(obj_5a00, i);
+    for (int j = 1; j <= n; j++) {
+      auto rmap = co_obj_get_val_u32(obj_1600, j);
+      auto tmap = co_obj_get_val_u32(obj_5a00, j);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
@@ -1594,22 +1631,28 @@ Device::UpdateRpdoMapping() {
       rmap >>= 8;
       tmap >>= 8;
       // Skip dummy-mapped objects.
-      if (co_type_is_basic((rmap >> 8) & 0xffff) && !(rmap & 0xff)) continue;
+      if (co_type_is_basic((rmap >> 8) & 0xffff)) continue;
       tmap |= static_cast<uint32_t>(id) << 24;
       impl_->rpdo_mapping[tmap] = rmap;
       // Store the reverse mapping for OnRpdoWrite().
       impl_->rpdo_mapping[rmap] = tmap;
     }
   }
+#endif  // !LELY_NO_CO_RPDO
 }
 
 void
 Device::UpdateTpdoMapping() {
+#if !LELY_NO_CO_TPDO
   impl_->tpdo_mapping.clear();
 
-  for (int i = 0; i < 512; i++) {
-    auto obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
-    if (!obj_1800) continue;
+  // Loop over all TPDOs.
+  co_obj_t* obj_1800 = nullptr;
+  for (int i = 0; !obj_1800 && i < 512; i++)
+    obj_1800 = co_dev_find_obj(dev(), 0x1800 + i);
+  for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
+    int i = co_obj_get_idx(obj_1800) - 0x1800;
+    if (i >= 512) break;
     // Skip invalid PDOs.
     auto cobid = co_obj_get_val_u32(obj_1800, 1);
     if (cobid & CO_PDO_COBID_VALID) continue;
@@ -1643,9 +1686,9 @@ Device::UpdateTpdoMapping() {
     // Check if the number of mapped objects is the same.
     auto n = co_obj_get_val_u8(obj_1a00, 0);
     if (n != co_obj_get_val_u8(obj_5e00, 0)) continue;
-    for (int i = 1; i <= n; i++) {
-      auto tmap = co_obj_get_val_u32(obj_1a00, i);
-      auto rmap = co_obj_get_val_u32(obj_5e00, i);
+    for (int j = 1; j <= n; j++) {
+      auto tmap = co_obj_get_val_u32(obj_1a00, j);
+      auto rmap = co_obj_get_val_u32(obj_5e00, j);
       // Ignore empty mapping entries.
       if (!rmap && !tmap) continue;
       // Check if the mapped objects have the same length.
@@ -1656,6 +1699,7 @@ Device::UpdateTpdoMapping() {
       impl_->tpdo_mapping[rmap] = tmap;
     }
   }
+#endif  // !LELY_NO_CO_TPDO
 }
 
 #if !LELY_NO_CO_DCF
@@ -1706,6 +1750,7 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
     f(idx, subidx);
   }
 
+#if !LELY_NO_CO_RPDO
   uint8_t id = 0;
   ::std::error_code ec;
   ::std::tie(id, idx, subidx) = RpdoMapping(idx, subidx, ec);
@@ -1718,6 +1763,7 @@ Device::Impl_::OnWrite(uint16_t idx, uint8_t subidx) {
       f(id, idx, subidx);
     }
   }
+#endif
 }
 
 }  // namespace canopen
