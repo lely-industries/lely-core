@@ -22,7 +22,6 @@
 
 #include <CppUTest/TestHarness.h>
 
-#include <CppUTest/UtestMacros.h>
 #include <lely/util/endian.h>
 
 TEST_GROUP(Util_Endian_Bcpy) {
