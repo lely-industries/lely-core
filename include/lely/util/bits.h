@@ -464,10 +464,8 @@ ctz32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ctzl)
 	return (x != 0) ? __builtin_ctzl(x) : 32;
 #else
-	// clang-format off
-	return (x & UINT16_C(0xffff))
-			? ctz16((uint_least16_t)x) : ctz16(x >> 16) + 16;
-	// clang-format on
+	return (x & UINT16_C(0xffff)) ? (ctz16((uint_least16_t)x))
+				      : (ctz16(x >> 16) + 16);
 #endif
 }
 
@@ -486,10 +484,8 @@ ctz64(uint_least64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ctzll)
 	return (x != 0) ? __builtin_ctzll(x) : 64;
 #else
-	// clang-format off
-	return (x & UINT32_C(0xffffffff))
-			? ctz32((uint_least32_t)x) : ctz32(x >> 32) + 32;
-	// clang-format on
+	return (x & UINT32_C(0xffffffff)) ? (ctz32((uint_least32_t)x))
+					  : (ctz32(x >> 32) + 32);
 #endif
 }
 
@@ -523,10 +519,9 @@ ffs16(uint_least16_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffs)
 	return __builtin_ffs(x);
 #else
-	// clang-format off
-	return (x != 0) ? ((x & UINT8_C(0xff))
-			? ffs8((uint_least8_t)x) : ffs8(x >> 8) + 8) : 0;
-	// clang-format on
+	return (x != 0) ? ((x & UINT8_C(0xff)) ? (ffs8((uint_least8_t)x))
+					       : (ffs8(x >> 8) + 8))
+			: 0;
 #endif
 }
 
@@ -548,10 +543,9 @@ ffs32(uint_least32_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffsl)
 	return __builtin_ffsl(x);
 #else
-	// clang-format off
-	return (x != 0) ? ((x & UINT16_C(0xffff))
-			? ffs16((uint_least16_t)x) : ffs16(x >> 16) + 16) : 0;
-	// clang-format on
+	return (x != 0) ? ((x & UINT16_C(0xffff)) ? (ffs16((uint_least16_t)x))
+						  : (ffs16(x >> 16) + 16))
+			: 0;
 #endif
 }
 
@@ -573,10 +567,10 @@ ffs64(uint_least64_t x)
 #elif defined(__GNUC__) || __has_builtin(__builtin_ffsll)
 	return __builtin_ffsll(x);
 #else
-	// clang-format off
 	return (x != 0) ? ((x & UINT32_C(0xffffffff))
-			? ffs32((uint_least32_t)x) : ffs32(x >> 32) + 32) : 0;
-	// clang-format on
+					       ? (ffs32((uint_least32_t)x))
+					       : (ffs32(x >> 32) + 32))
+			: 0;
 #endif
 }
 
@@ -686,7 +680,9 @@ rol8(uint_least8_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl8(x, n);
 #else
-	return (n != 0) ? (uint_least8_t)((x << n) | (x >> (8U - n))) : x;
+	return (n != 0) ? ((uint_least8_t)(x << n)
+			       | (uint_least8_t)(x >> (8u - n)))
+			: x;
 #endif
 }
 
@@ -698,7 +694,9 @@ ror8(uint_least8_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr8(x, n);
 #else
-	return (n != 0) ? (uint_least8_t)((x >> n) | (x << (8U - n))) : x;
+	return (n != 0) ? ((uint_least8_t)(x >> n)
+			       | (uint_least8_t)(x << (8u - n)))
+			: x;
 #endif
 }
 
@@ -710,7 +708,9 @@ rol16(uint_least16_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl16(x, n);
 #else
-	return (n != 0) ? (uint_least16_t)((x << n) | (x >> (16U - n))) : x;
+	return (n != 0) ? ((uint_least16_t)(x << n)
+			       | (uint_least16_t)(x >> (16u - n)))
+			: x;
 #endif
 }
 
@@ -722,7 +722,9 @@ ror16(uint_least16_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr16(x, n);
 #else
-	return (n != 0) ? (uint_least16_t)((x >> n) | (x << (16U - n))) : x;
+	return (n != 0) ? ((uint_least16_t)(x >> n)
+			       | (uint_least16_t)(x << (16u - n)))
+			: x;
 #endif
 }
 
@@ -734,7 +736,9 @@ rol32(uint_least32_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl(x, n);
 #else
-	return (n != 0) ? (uint_least32_t)((x << n) | (x >> (32U - n))) : x;
+	return (n != 0) ? ((uint_least32_t)(x << n)
+			       | (uint_least32_t)(x >> (32u - n)))
+			: x;
 #endif
 }
 
@@ -746,7 +750,9 @@ ror32(uint_least32_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr(x, n);
 #else
-	return (n != 0) ? (uint_least32_t)((x >> n) | (x << (32U - n))) : x;
+	return (n != 0) ? ((uint_least32_t)(x >> n)
+			       | (uint_least32_t)(x << (32u - n)))
+			: x;
 #endif
 }
 
@@ -758,7 +764,9 @@ rol64(uint_least64_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotl64(x, n);
 #else
-	return (n != 0) ? (uint_least64_t)((x << n) | (x >> (64U - n))) : x;
+	return (n != 0) ? ((uint_least64_t)(x << n)
+			       | (uint_least64_t)(x >> (64u - n)))
+			: x;
 #endif
 }
 
@@ -770,7 +778,9 @@ ror64(uint_least64_t x, unsigned int n)
 #ifdef _MSC_VER
 	return _rotr64(x, n);
 #else
-	return (n != 0) ? (uint_least64_t)((x >> n) | (x << (64U - n))) : x;
+	return (n != 0) ? ((uint_least64_t)(x >> n)
+			       | (uint_least64_t)(x << (64u - n)))
+			: x;
 #endif
 }
 
