@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen application library; it contains
  * the declarations for the remote node driver containing an event loop.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -174,18 +174,16 @@ class LoopDriver : detail::LoopDriverBase, public BasicDriver {
   void Wait(SdoFuture<void> f, ::std::error_code& ec);
 
   /**
-   * Runs the event loop for <b>usec</b> microseconds.
-   *
-   * @throws std::system_error on error or if the event loop is stopped.
+   * Runs the event loop for <b>usec</b> microseconds. This function is
+   * equivalent to `Wait(AsyncWait(::std::chrono::microseconds(usec)))`.
    */
   void USleep(uint_least64_t usec);
 
   /**
-   * Runs the event loop for <b>usec</b> microseconds. The error code (0 on
-   * success) is stored in <b>ec</b>. If the event loop is stopped, the error
-   * code equals `std::errc::operation_canceled`.
+   * Runs the event loop for <b>usec</b> microseconds. This function is
+   * equivalent to `Wait(AsyncWait(::std::chrono::microseconds(usec)), ec)`.
    */
-  void USleep(uint_least64_t usec, ::std::error_code& ec) noexcept;
+  void USleep(uint_least64_t usec, ::std::error_code& ec);
 
   /**
    * Equivalent to

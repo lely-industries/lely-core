@@ -4,7 +4,7 @@
  *
  * @see lely/coapp/master.hpp
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -46,7 +46,9 @@ struct BasicMaster::Impl_ {
 
   ev::Future<void> AsyncDeconfig(DriverBase* driver);
 
+#if !LELY_NO_CO_NG
   void OnNgInd(co_nmt_t* nmt, uint8_t id, int state, int reason) noexcept;
+#endif
   void OnBootInd(co_nmt_t* nmt, uint8_t id, uint8_t st, char es) noexcept;
   void OnCfgInd(co_nmt_t* nmt, uint8_t id, co_csdo_t* sdo) noexcept;
 
@@ -286,8 +288,12 @@ BasicMaster::OnBoot(
 }
 
 void
-BasicMaster::IsReady(uint8_t id, bool ready) noexcept {
-  if (id && id <= CO_NUM_NODES) impl_->ready[id - 1] = ready;
+BasicMaster::OnCanState(io::CanState new_state,
+                        io::CanState old_state) noexcept {
+  for (const auto& it : *this) {
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    it.second->OnCanState(new_state, old_state);
+  }
 }
 
 void
@@ -295,15 +301,6 @@ BasicMaster::OnCanError(io::CanError error) noexcept {
   for (const auto& it : *this) {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnCanError(error);
-  }
-}
-
-void
-BasicMaster::OnCanState(io::CanState new_state,
-                        io::CanState old_state) noexcept {
-  for (const auto& it : *this) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it.second->OnCanState(new_state, old_state);
   }
 }
 
@@ -324,15 +321,6 @@ BasicMaster::OnCommand(NmtCommand cs) noexcept {
   for (const auto& it : *this) {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
     it.second->OnCommand(cs);
-  }
-}
-
-void
-BasicMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
-  auto it = find(id);
-  if (it != end()) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it->second->OnNodeGuarding(occurred);
   }
 }
 
@@ -358,45 +346,6 @@ BasicMaster::OnState(uint8_t id, NmtState st) noexcept {
     util::UnlockGuard<util::BasicLockable> unlock(*this);
     it->second->OnState(st);
   }
-}
-
-void
-BasicMaster::OnBoot(uint8_t id, NmtState st, char es,
-                    const ::std::string& what) noexcept {
-  auto it = find(id);
-  if (it != end()) {
-    util::UnlockGuard<util::BasicLockable> unlock(*this);
-    it->second->OnBoot(st, es, what);
-  }
-}
-
-void
-BasicMaster::OnConfig(uint8_t id) noexcept {
-  auto it = find(id);
-  // If no remote interface is registered for this node, the 'update
-  // configuration' process is considered complete.
-  if (it == end()) {
-    ConfigResult(id, ::std::error_code());
-    return;
-  }
-  // Let the driver perform the configuration update.
-  util::UnlockGuard<util::BasicLockable> unlock(*this);
-  it->second->OnConfig([this, id](::std::error_code ec) {
-    ::std::lock_guard<util::BasicLockable> lock(*this);
-    // Report the result of the 'update configuration' process.
-    ConfigResult(id, ec);
-  });
-}
-
-void
-BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
-  assert(id && id <= CO_NUM_NODES);
-  impl_->config[id - 1] = false;
-  if (co_nmt_is_booting(nmt(), id))
-    // Destroy the Client-SDO, since it will be taken over by the master.
-    impl_->sdos.erase(id);
-  // Ignore any errors, since we cannot handle them here.
-  co_nmt_cfg_res(nmt(), id, static_cast<uint32_t>(sdo_errc(ec)));
 }
 
 void
@@ -434,6 +383,59 @@ BasicMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
   }
 }
 
+void
+BasicMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    it->second->OnNodeGuarding(occurred);
+  }
+}
+
+void
+BasicMaster::OnBoot(uint8_t id, NmtState st, char es,
+                    const ::std::string& what) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    util::UnlockGuard<util::BasicLockable> unlock(*this);
+    it->second->OnBoot(st, es, what);
+  }
+}
+
+void
+BasicMaster::IsReady(uint8_t id, bool ready) noexcept {
+  if (id && id <= CO_NUM_NODES) impl_->ready[id - 1] = ready;
+}
+
+void
+BasicMaster::OnConfig(uint8_t id) noexcept {
+  auto it = find(id);
+  // If no remote interface is registered for this node, the 'update
+  // configuration' process is considered complete.
+  if (it == end()) {
+    ConfigResult(id, ::std::error_code());
+    return;
+  }
+  // Let the driver perform the configuration update.
+  util::UnlockGuard<util::BasicLockable> unlock(*this);
+  it->second->OnConfig([this, id](::std::error_code ec) {
+    ::std::lock_guard<util::BasicLockable> lock(*this);
+    // Report the result of the 'update configuration' process.
+    ConfigResult(id, ec);
+  });
+}
+
+void
+BasicMaster::ConfigResult(uint8_t id, ::std::error_code ec) noexcept {
+  assert(id && id <= CO_NUM_NODES);
+  impl_->config[id - 1] = false;
+  if (co_nmt_is_booting(nmt(), id))
+    // Destroy the Client-SDO, since it will be taken over by the master.
+    impl_->sdos.erase(id);
+  // Ignore any errors, since we cannot handle them here.
+  co_nmt_cfg_res(nmt(), id, static_cast<uint32_t>(sdo_errc(ec)));
+}
+
 bool
 BasicMaster::IsConfig(uint8_t id) const {
   if (!id || id > CO_NUM_NODES) return false;
@@ -469,20 +471,20 @@ BasicMaster::CancelSdo(uint8_t id) {
 }
 
 void
-AsyncMaster::OnCanError(io::CanError error) noexcept {
-  for (const auto& it : *this) {
-    DriverBase* driver = it.second;
-    driver->GetExecutor().post([=]() { driver->OnCanError(error); });
-  }
-}
-
-void
 AsyncMaster::OnCanState(io::CanState new_state,
                         io::CanState old_state) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
     driver->GetExecutor().post(
         [=]() { driver->OnCanState(new_state, old_state); });
+  }
+}
+
+void
+AsyncMaster::OnCanError(io::CanError error) noexcept {
+  for (const auto& it : *this) {
+    DriverBase* driver = it.second;
+    driver->GetExecutor().post([=]() { driver->OnCanError(error); });
   }
 }
 
@@ -503,15 +505,6 @@ AsyncMaster::OnCommand(NmtCommand cs) noexcept {
   for (const auto& it : *this) {
     DriverBase* driver = it.second;
     driver->GetExecutor().post([=]() { driver->OnCommand(cs); });
-  }
-}
-
-void
-AsyncMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
-  auto it = find(id);
-  if (it != end()) {
-    DriverBase* driver = it->second;
-    driver->GetExecutor().post([=]() { driver->OnNodeGuarding(occurred); });
   }
 }
 
@@ -537,36 +530,6 @@ AsyncMaster::OnState(uint8_t id, NmtState st) noexcept {
     DriverBase* driver = it->second;
     driver->GetExecutor().post([=]() { driver->OnState(st); });
   }
-}
-
-void
-AsyncMaster::OnBoot(uint8_t id, NmtState st, char es,
-                    const ::std::string& what) noexcept {
-  auto it = find(id);
-  if (it != end()) {
-    DriverBase* driver = it->second;
-    driver->GetExecutor().post([=]() { driver->OnBoot(st, es, what); });
-  }
-}
-
-void
-AsyncMaster::OnConfig(uint8_t id) noexcept {
-  auto it = find(id);
-  // If no remote interface is registered for this node, the 'update
-  // configuration' process is considered complete.
-  if (it == end()) {
-    ConfigResult(id, ::std::error_code());
-    return;
-  }
-
-  // Let the driver perform the configuration update.
-  DriverBase* driver = it->second;
-  driver->GetExecutor().post([this, id, driver]() {
-    driver->OnConfig([this, id](::std::error_code ec) {
-      ::std::lock_guard<util::BasicLockable> lock(*this);
-      ConfigResult(id, ec);
-    });
-  });
 }
 
 void
@@ -607,7 +570,47 @@ AsyncMaster::OnEmcy(uint8_t id, uint16_t eec, uint8_t er,
   }
 }
 
+void
+AsyncMaster::OnNodeGuarding(uint8_t id, bool occurred) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    driver->GetExecutor().post([=]() { driver->OnNodeGuarding(occurred); });
+  }
+}
+
+void
+AsyncMaster::OnBoot(uint8_t id, NmtState st, char es,
+                    const ::std::string& what) noexcept {
+  auto it = find(id);
+  if (it != end()) {
+    DriverBase* driver = it->second;
+    driver->GetExecutor().post([=]() { driver->OnBoot(st, es, what); });
+  }
+}
+
+void
+AsyncMaster::OnConfig(uint8_t id) noexcept {
+  auto it = find(id);
+  // If no remote interface is registered for this node, the 'update
+  // configuration' process is considered complete.
+  if (it == end()) {
+    ConfigResult(id, ::std::error_code());
+    return;
+  }
+
+  // Let the driver perform the configuration update.
+  DriverBase* driver = it->second;
+  driver->GetExecutor().post([this, id, driver]() {
+    driver->OnConfig([this, id](::std::error_code ec) {
+      ::std::lock_guard<util::BasicLockable> lock(*this);
+      ConfigResult(id, ec);
+    });
+  });
+}
+
 BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
+#if !LELY_NO_CO_NG
   co_nmt_set_ng_ind(
       nmt,
       [](co_nmt_t* nmt, uint8_t id, int state, int reason,
@@ -615,6 +618,7 @@ BasicMaster::Impl_::Impl_(BasicMaster* self_, co_nmt_t* nmt) : self(self_) {
         static_cast<Impl_*>(data)->OnNgInd(nmt, id, state, reason);
       },
       this);
+#endif
 
   co_nmt_set_boot_ind(
       nmt,
@@ -641,6 +645,7 @@ BasicMaster::Impl_::AsyncDeconfig(DriverBase* driver) {
   return p.get_future();
 }
 
+#if !LELY_NO_CO_NG
 void
 BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
                             int reason) noexcept {
@@ -658,6 +663,7 @@ BasicMaster::Impl_::OnNgInd(co_nmt_t* nmt, uint8_t id, int state,
     f(id, occurred);
   }
 }
+#endif
 
 void
 BasicMaster::Impl_::OnBootInd(co_nmt_t*, uint8_t id, uint8_t st,

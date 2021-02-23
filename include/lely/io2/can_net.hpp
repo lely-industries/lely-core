@@ -4,7 +4,7 @@
  *
  * @see lely/io2/can_net.h
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -230,7 +230,7 @@ class CanNet : protected util::BasicLockable {
   }
 
   static void
-  on_can_state_(int old_state, int new_state, void* arg) noexcept {
+  on_can_state_(int new_state, int old_state, void* arg) noexcept {
     static_cast<CanNet*>(arg)->on_can_state(static_cast<CanState>(new_state),
                                             static_cast<CanState>(old_state));
   }

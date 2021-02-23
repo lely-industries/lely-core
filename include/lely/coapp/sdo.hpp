@@ -2,7 +2,7 @@
  * This header file is part of the C++ CANopen master library; it contains the
  * Client-SDO queue declarations.
  *
- * @copyright 2018-2020 Lely Industries N.V.
+ * @copyright 2018-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -431,7 +431,7 @@ class SdoDownloadDcfRequestWrapper : public SdoDownloadDcfRequestBase {
   SdoDownloadDcfRequestWrapper(ev_exec_t* exec, const ::std::string& path,
                                F&& con,
                                const ::std::chrono::milliseconds& timeout)
-      : SdoDownloadDcfRequestBase(exec, path, timeout),
+      : SdoDownloadDcfRequestBase(exec, path.c_str(), timeout),
         con_(::std::forward<F>(con)) {}
 
  private:
