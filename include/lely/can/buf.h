@@ -254,7 +254,8 @@ can_buf_write(struct can_buf *buf, const struct can_msg *ptr, size_t n)
 		if (!((begin - end - 1) & buf->size))
 			return i;
 
-		buf->ptr[end++ & buf->size] = ptr[i];
+		buf->ptr[end & buf->size] = ptr[i];
+		end++;
 
 		buf->end = end;
 	}
