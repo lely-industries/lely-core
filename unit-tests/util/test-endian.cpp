@@ -26,8 +26,8 @@
 #include <lely/util/endian.h>
 
 TEST_GROUP(Util_Endian_Bcpy) {
-  uint_least8_t dst[1u] = {0xffu};
-  const uint_least8_t src[1u] = {0xccu};
+  uint_least8_t dst[3u] = {0xffu, 0xffu, 0xffu};
+  const uint_least8_t src[3u] = {0xccu, 0xccu, 0xccu};
 };
 
 TEST(Util_Endian_Bcpy, Bcpybe_CopyZero) {
@@ -37,7 +37,7 @@ TEST(Util_Endian_Bcpy, Bcpybe_CopyZero) {
 
   bcpybe(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xffu, *dst);
+  CHECK_EQUAL(0xffu, dst[0]);
 }
 
 TEST(Util_Endian_Bcpy, Bcpybe_DstbitPlusNMoreThan8) {
@@ -47,7 +47,7 @@ TEST(Util_Endian_Bcpy, Bcpybe_DstbitPlusNMoreThan8) {
 
   bcpybe(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xe6u, *dst);
+  CHECK_EQUAL(0xe6u, dst[0]);
 }
 
 TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
@@ -57,17 +57,19 @@ TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
 
   bcpybe(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xe6u, *dst);
+  CHECK_EQUAL(0xe6u, dst[0]);
 }
 
 /// @name bcpyle()
 ///@{
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the destination buffer,
+///       destination bit offset equal 3, a pointer to the source buffer, source
+///       bit offset equal 2 and 5 bits to be copied
 ///
-/// \Then TODO
+/// \Then requested 5 bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
   const int dstbit = 3;
   const int srcbit = 2;
@@ -78,11 +80,13 @@ TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
   CHECK_EQUAL(0x9fu, *dst);
 }
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer, both at least 3 bytes long
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the destination buffer,
+///       destination bit offset equal 2, a pointer to the source buffer, source
+///       bit offset equal 2 and 17 bits to be copied
 ///
-/// \Then TODO
+/// \Then requested 17 bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -90,14 +94,18 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
 
   bcpyle(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xcfu, *dst);
+  CHECK_EQUAL(0xcfu, dst[0]);
+  CHECK_EQUAL(src[1], dst[1]);
+  CHECK_EQUAL(0xfcu, dst[2]);
 }
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer, both at least 3 bytes long
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the destination buffer,
+///       destination bit offset equal 2, a pointer to the source buffer, source
+///       bit offset equal 2 and 22 bits to be copied
 ///
-/// \Then TODO
+/// \Then requested 22 bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -105,29 +113,36 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
 
   bcpyle(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xcfu, *dst);
+  CHECK_EQUAL(0xcfu, dst[0]);
+  CHECK_EQUAL(src[1], dst[1]);
+  CHECK_EQUAL(src[2], dst[2]);
 }
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the destination buffer,
+///       destination bit offset equal 6, a pointer to the source buffer, source
+///       bit offset equal 6 and just 1 bit to be copied
 ///
-/// \Then TODO
+/// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
   const int dstbit = 6;
   const int srcbit = 6;
   const size_t n = 1u;
 
+  dst[0] = 0xbfu;
   bcpyle(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(0xffu, *dst);
+  CHECK_EQUAL(0xffu, dst[0]);
 }
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the destination buffer,
+///       destination bit offset equal 0, a pointer to the source buffer, source
+///       bit offset equal 0 and 8 bits to be copied
 ///
-/// \Then TODO
+/// \Then requested 8 bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -135,14 +150,14 @@ TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
 
   bcpyle(dst, dstbit, src, srcbit, n);
 
-  CHECK_EQUAL(*src, *dst);
+  CHECK_EQUAL(src[0], dst[0]);
 }
 
 ///@}
 
 TEST_GROUP(Util_Endian_BcpyOutOfRange) {
   uint_least8_t dst_array[4u] = {0xffu, 0xffu, 0xffu, 0xffu};
-  const uint_least8_t src_array[4u] = {0x00u, 0xccu, 0x00u, 0x00u};
+  const uint_least8_t src_array[5u] = {0x00u, 0xccu, 0x00u, 0x00u, 0x00u};
   uint_least8_t* const dst = &dst_array[1u];
   const uint_least8_t* const src = &src_array[1u];
 };
@@ -239,6 +254,17 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_CopyAll) {
   CHECK_EQUAL(*src, *dst);
 }
 
+/// @name bcpyle()
+///@{
+
+/// \Given a destination buffer and a source buffer, both at least 3 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 0, a pointer to the
+///       second byte of the source buffer, source bit offset equal 0 and 9 bits
+///       to be copied
+///
+/// \Then requested 9 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -247,8 +273,18 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0xccu, *dst);
+  CHECK_EQUAL(0xfeu, *(dst + 1));
 }
 
+/// \Given a destination buffer at least 2 bytes long and a source buffer at
+///        least 3 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 3, a pointer to the
+///       second byte of the source buffer, source bit offset equal 4 and 5 bits
+///       to be copied
+///
+/// \Then requested 5 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
   const int dstbit = 3;
   const int srcbit = 4;
@@ -257,8 +293,18 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0x67u, *dst);
+  CHECK_EQUAL(0xffu, *(dst + 1));
 }
 
+/// \Given a destination buffer at least 2 bytes long and a source buffer at
+///        least 3 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 1, a pointer to the
+///       second byte of the source buffer, source bit offset equal 2 and 7 bits
+///       to be copied
+///
+/// \Then requested 7 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
   const int dstbit = 1;
   const int srcbit = 2;
@@ -267,8 +313,17 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0x67u, *dst);
+  CHECK_EQUAL(0xffu, *(dst + 1));
 }
 
+/// \Given a destination buffer and a source buffer, both at least 4 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 2, a pointer to the
+///       second byte of the source buffer, source bit offset equal 3 and 17
+///       bits to be copied
+///
+/// \Then requested 17 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
   const int dstbit = 2;
   const int srcbit = 3;
@@ -277,8 +332,19 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0x67u, *dst);
+  CHECK_EQUAL(0x00u, *(dst + 1));
+  CHECK_EQUAL(0xf8u, *(dst + 2));
 }
 
+/// \Given a destination buffer at least 4 bytes long and a source buffer at
+///        least 5 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 2, a pointer to the
+///       second byte of the source buffer, source bit offset equal 3 and 22
+///       bits to be copied
+///
+/// \Then requested 22 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange,
      Bcpyle_NegativeShiftDstbitPlusNMoreThan8LastIsZero) {
   const int dstbit = 2;
@@ -288,8 +354,18 @@ TEST(Util_Endian_BcpyOutOfRange,
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0x67u, *dst);
+  CHECK_EQUAL(0x00u, *(dst + 1));
+  CHECK_EQUAL(0x00u, *(dst + 2));
 }
 
+/// \Given a destination buffer and source buffer, both at least 2 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 0, a pointer to the
+///       second byte of the source buffer, source bit offset equal 0 and 0 bits
+///       to be copied
+///
+/// \Then nothing is changed
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_CopyZero) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -300,6 +376,15 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_CopyZero) {
   CHECK_EQUAL(0xffu, *dst);
 }
 
+/// \Given a destination buffer at least 3 bytes long and a source buffer at
+///        least 2 bytes long
+///
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 3, a pointer to the
+///       second byte of the source buffer, source bit offset equal 2 and 6 bits
+///       to be copied
+///
+/// \Then requested 6 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitPlusNMoreThan8) {
   const int dstbit = 3;
   const int srcbit = 2;
@@ -308,7 +393,10 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitPlusNMoreThan8) {
   bcpyle(dst, dstbit, src, srcbit, n);
 
   CHECK_EQUAL(0x9fu, *dst);
+  CHECK_EQUAL(0xffu, *(dst + 1));
 }
+
+///@}
 
 TEST(Util_Endian_BcpyOutOfRange, Bcpybe_OffsetsLowerThan0) {
   const int dstbit = -1;
@@ -333,11 +421,14 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_SrcbitOffsetLowerThan0) {
 /// @name bcpyle()
 ///@{
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer, both at least 2 bytes long
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal -1, a pointer to the
+///       second byte of the source buffer, source bit offset equal -1 and 4
+///       bits to be copied
 ///
-/// \Then TODO
+/// \Then requested 4 bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
   const int dstbit = -1;
   const int srcbit = -1;
@@ -345,14 +436,18 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
 
   bcpyle(dst, dstbit, src, srcbit, n);
 
+  CHECK_EQUAL(0x7fu, *(dst - 1));
   CHECK_EQUAL(0xfcu, *dst);
 }
 
-/// \Given TODO
+/// \Given a destination buffer and a source buffer, both at least 2 bytes long
 ///
-/// \When TODO
+/// \When bcpyle() is called with a pointer to the second byte of the
+///       destination buffer, destination bit offset equal 0, a pointer to the
+///       second byte of the source buffer, source bit offset equal -1 and 1
+///       bits to be copied
 ///
-/// \Then TODO
+/// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_SrcbitOffsetLowerThan0) {
   const int dstbit = 0;
   const int srcbit = -1;
