@@ -302,8 +302,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
 /// \Given a pointer to a device with started RPDO with valid COB-ID and event
 ///        timer set
 ///
-/// \When RPDO COB-ID object entry (idx: 0x1400, subidx: 0x01) is changed to
-///       COB-ID with valid bit set using SDO
+/// \When a new COB-ID with valid bit set is downloaded to the RPDO COB-ID
+///       object entry (idx: 0x1400, subidx: 0x01)
 ///
 /// \Then 0 is returned, event timer is stopped and not triggered later
 ///       \Calls co_dev_find_sub()
@@ -312,7 +312,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
 ///       \Calls co_rpdo_start()
 ///       \Calls can_net_recv()
 ///       \Calls can_net_set_time()
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_StopsEventTimer) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_DisableEventTimer) {
   SetPdoCommEventTimer(1u);
   RestartRPDO();
 
@@ -332,8 +332,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_StopsEventTimer) {
 /// \Given a pointer to a device with started RPDO with invalid COB-ID and with
 ///        event timer set
 ///
-/// \When RPDO COB-ID object entry (idx: 0x1400, subidx: 0x01) is changed to
-///       valid COB-ID using SDO
+/// \When a valid COB-ID is downloaded to the RPDO COB-ID object entry (idx:
+///       0x1400, subidx: 0x01)
 ///
 /// \Then 0 is returned, event timer is started and triggered after required
 ///       time passes after COB-ID change
@@ -343,7 +343,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_StopsEventTimer) {
 ///       \Calls co_rpdo_start()
 ///       \Calls can_net_recv()
 ///       \Calls can_net_set_time()
-TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_RestartsEventTimer) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_ReenableEventTimer) {
   SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
   SetPdoCommEventTimer(10u);
   RestartRPDO();
@@ -517,8 +517,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
 
 /// \Given a pointer to a device with started RPDO with event timer set
 ///
-/// \When RPDO event timer object entry (idx: 0x1400, subidx: 0x05) is changed
-///       to a new event timer value using SDO
+/// \When a new non-zero event timer value is downloaded to the RPDO event timer
+///       object entry (idx: 0x1400, subidx: 0x05)
 ///
 /// \Then 0 is returned, event timer is restarted and triggered after required
 ///       time passes after event timer change
@@ -528,7 +528,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
 ///       \Calls co_rpdo_start()
 ///       \Calls can_net_recv()
 ///       \Calls can_net_set_time()
-TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_RestartsEventTimer) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToNonZero_ReenableEventTimer) {
   SetPdoCommEventTimer(10u);
   RestartRPDO();
 
@@ -551,8 +551,8 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_RestartsEventTimer) {
 
 /// \Given a pointer to a device with started RPDO with event timer set
 ///
-/// \When RPDO event timer object entry (idx: 0x1400, subidx: 0x05) is changed
-///       to zero using SDO
+/// \When a new event timer value of zero is downloaded to the RPDO event timer
+///       object entry (idx: 0x1400, subidx: 0x05)
 ///
 /// \Then 0 is returned, event timer is stopped and not triggered later
 ///       \Calls co_dev_find_sub()
@@ -561,7 +561,7 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_RestartsEventTimer) {
 ///       \Calls co_rpdo_start()
 ///       \Calls can_net_recv()
 ///       \Calls can_net_set_time()
-TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerChange_StopsEventTimerIfZero) {
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToZero_DisableEventTimer) {
   SetPdoCommEventTimer(10u);
   RestartRPDO();
 
