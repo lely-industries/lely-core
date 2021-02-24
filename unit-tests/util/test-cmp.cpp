@@ -33,9 +33,9 @@ TEST_GROUP(Util_Cmp){};
 ///
 /// \When ptr_cmp() is called with two comparable pointers
 ///
-/// \Then if first argument precedes the second one then -1 is returned; if both
-///       arguments point to the same entity then 0 is returned; if second
-///       argument precedes the first one then 1 is returned
+/// \Then -1 is returned if the first argument precedes the second one; 0 is
+///       returned if both arguments point to the same entity; 1 is returned if
+///       the second argument precedes the first one
 TEST(Util_Cmp, PtrCmp) {
   const int tab[2] = {0};
   const int* const p1 = &tab[0];
