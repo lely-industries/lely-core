@@ -209,7 +209,7 @@ TEST(Util_Cmp, StrCaseCmp_StrMoreChar) {
 
 /// \Given N/A
 ///
-/// \When str_cas_cmp() is called with two pointers to different character
+/// \When str_case_cmp() is called with two pointers to different character
 ///       arrays of different lengths, the shorter array is a case insensitive
 ///       prefix of the longer one and the longer array is passed as first
 ///       argument
@@ -238,7 +238,7 @@ TEST(Util_Cmp, StrCaseCmp_StrLessChar) {
 
 /// \Given N/A
 ///
-/// \When str_cas_cmp() is called with two pointers to different character
+/// \When str_case_cmp() is called with two pointers to different character
 ///       arrays of different lengths, the shorter array is a case insensitive
 ///       prefix of the longer one and the longer array is passed as second
 ///       argument
