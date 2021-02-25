@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -33,43 +33,74 @@
 #include <lely/util/error.h>
 
 TEST_GROUP(CAN_BufInit) {
-  can_buf buf = CAN_BUF_INIT;
+  can_buf buf_;
+  can_buf* buf;
 
-  TEST_TEARDOWN() { can_buf_fini(&buf); }
+  TEST_SETUP() { buf = &buf_; }
+  TEST_TEARDOWN() { can_buf_fini(buf); }
 };
 
-// given: statically initialized buffer
-// when: inspecting its contents
-// then: all fields are initialized properly
+/// @name CAN_BUF_INIT
+///@{
+
+/// \Given a pointer to an uninitialized CAN frame buffer (can_buf)
+///
+/// \When CAN_BUF_INIT is used to initialize the buffer
+///
+/// \Then the buffer is initialized, has a null pointer for frame storage,
+///       zeroed size and offsets
 TEST(CAN_BufInit, StaticInitializer) {
-  POINTERS_EQUAL(nullptr, buf.ptr);
-  CHECK_EQUAL(0, buf.size);
-  CHECK_EQUAL(0, buf.begin);
-  CHECK_EQUAL(0, buf.end);
+  *buf = CAN_BUF_INIT;
+
+  POINTERS_EQUAL(nullptr, buf->ptr);
+  CHECK_EQUAL(0, buf->size);
+  CHECK_EQUAL(0, buf->begin);
+  CHECK_EQUAL(0, buf->end);
 }
 
-// given: statically initialized buffer
-// when: checking it size
-// then: zero is returned
-TEST(CAN_BufInit, SizeZero) {
-  can_buf_init(&buf, nullptr, 0);
+///@}
 
-  CHECK_EQUAL(0, buf.size);
+/// @name can_buf_init()
+///@{
+
+/// \Given a pointer to an uninitialized CAN frame buffer (can_buf)
+///
+/// \When can_buf_init() is called with a null pointer to memory region and zero
+///       size
+///
+/// \Then the buffer is initialized, has a null pointer for frame storage,
+///       zeroed size and offsets
+TEST(CAN_BufInit, CanBufInit_NullAndZero) {
+  can_buf_init(buf, nullptr, 0);
+
+  POINTERS_EQUAL(nullptr, buf->ptr);
+  CHECK_EQUAL(0, buf->size);
+  CHECK_EQUAL(0, buf->begin);
+  CHECK_EQUAL(0, buf->end);
 }
 
 #if LELY_NO_MALLOC
-// given: buffer
-// when: initializing it with array
-// then: it size is reported as array size minus one
+/// \Given a pointer to an uninitialized CAN frame buffer (can_buf) and some
+///        memory region for storing frames
+///
+/// \When can_buf_init() is called with a pointer to the region and its size
+///
+/// \Then the buffer is initialized, has size equal to the memory region's size
+///       minus 1, pointer to requested region and is empty
 TEST(CAN_BufInit, CanBufInit) {
   const size_t BUFFER_SIZE = 32;
   can_msg memory[BUFFER_SIZE];
 
-  can_buf_init(&buf, memory, BUFFER_SIZE);
+  can_buf_init(buf, memory, BUFFER_SIZE);
 
-  CHECK_EQUAL(BUFFER_SIZE - 1, buf.size);
+  CHECK_EQUAL(BUFFER_SIZE - 1, buf->size);
+  CHECK_EQUAL(memory, buf->ptr);
+  CHECK_EQUAL(0, buf->begin);
+  CHECK_EQUAL(0, buf->end);
 }
 #endif  // LELY_NO_MALLOC
+
+///@}
 
 TEST_GROUP(CAN_Buf) {
   static const size_t BUF_SIZE = 15;
@@ -109,9 +140,15 @@ TEST_GROUP(CAN_Buf) {
   }
 };
 
-// given: initialized buffer
-// when: writing zero frames to it
-// then: its size and capacity are not changed
+/// @name can_buf_write()
+///@{
+
+/// \Given a pointer to a CAN frame buffer (can_buf)
+///
+/// \When can_buf_write() is called with a null pointer to storage and 0 frames
+///       to write
+///
+/// \Then 0 is returned, nothing is changed
 TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
   const auto frames_written = can_buf_write(&buf, nullptr, 0);
 
@@ -120,9 +157,13 @@ TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
-// given: initialized buffer
-// when: writing single frame to it
-// then: its size and capacity are changed and frame is stored in it.
+/// \Given a pointer to an empty CAN frame buffer (can_buf)
+///
+/// \When can_buf_write() is called with a pointer to a single CAN frame and
+///       number of frames to write equal to 1
+///
+/// \Then 1 is returned, the frame was written to the buffer, buffer's remaining
+///       capacity got decreased by 1 and size increased by 1
 TEST(CAN_Buf, CanBufWrite_OneFrame) {
   can_msg msg = CAN_MSG_INIT;
   FillCanMsg(msg, 0x77, 5, 0xaa);
@@ -139,9 +180,14 @@ TEST(CAN_Buf, CanBufWrite_OneFrame) {
   CheckCanMsgTabs(&msg, out_tab, 1);
 }
 
-// given: initialized buffer
-// when: writing multiple frames to it
-// then: its size and capacity are changed and frames are stored in it.
+/// \Given a pointer to an empty CAN frame buffer (can_buf) and an array of CAN
+///        frames of size less than or equal to the buffer's capacity
+///
+/// \When can_buf_write() is called with the array and its size
+///
+/// \Then size of the array is returned, all requested frames were written to
+///       the buffer, buffer's remaining capacity got decreased by number of
+///       frames written and size increased by the same value
 TEST(CAN_Buf, CanBufWrite_ManyFrames) {
   const size_t MSG_SIZE = 3;
   can_msg msg_tab[MSG_SIZE];
@@ -163,9 +209,14 @@ TEST(CAN_Buf, CanBufWrite_ManyFrames) {
   CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
 }
 
-// given: initialized buffer
-// when: writing more frames than buffer's capacity can hold
-// then: only capacity count of frames is stored in the buffer
+/// \Given a pointer to a CAN frame buffer (can_buf) and an array of CAN frames
+///        of size greater than the buffer's capacity
+///
+/// \When can_buf_write() is called with the array and its size
+///
+/// \Then the buffer's capacity from before the call is returned, same number of
+///       frames were written to the buffer, there is no space left in the
+///       buffer
 TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
   const size_t MSG_SIZE = BUF_SIZE + 1;
   can_msg msg_tab[MSG_SIZE];
@@ -187,10 +238,29 @@ TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
   CheckCanMsgTabs(msg_tab, out_tab, 15);
 }
 
-// given: buffer with some frames in it
-// when: clearing it
-// then: its size and capacity are restored to initial values
-TEST(CAN_Buf, CanBufClear) {
+///@}
+
+/// @name can_buf_clear()
+///@{
+
+/// \Given a pointer to an empty CAN frame buffer (can_buf)
+///
+/// \When can_buf_clear() is called
+///
+/// \Then nothing is changed
+TEST(CAN_Buf, CanBufClear_Empty) {
+  can_buf_clear(&buf);
+
+  CHECK_EQUAL(0, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+}
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_clear() is called
+///
+/// \Then the buffer is empty and at full capacity
+TEST(CAN_Buf, CanBufClear_NonEmpty) {
   const size_t MSG_SIZE = 5;
   can_msg msg_tab[MSG_SIZE];
 
@@ -203,9 +273,17 @@ TEST(CAN_Buf, CanBufClear) {
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
 }
 
-// given: buffer with some frames in it
-// when: trying to peek messages from it using null target array
-// then: no frames are peeked
+///@}
+
+/// @name can_buf_peak()
+///@{
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_peek() is called with a null pointer to storage and a number
+///       of frames requested less than or equal to the number of frames stored
+///
+/// \Then number of requested frames is returned, nothing is changed
 TEST(CAN_Buf, CanBufPeek_NullPtr) {
   const size_t MSG_SIZE = 4;
   can_msg msg_tab[MSG_SIZE];
@@ -219,11 +297,69 @@ TEST(CAN_Buf, CanBufPeek_NullPtr) {
   CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
 }
 
-// given: full buffer
-// when: reserving space for more frames
-// then: its size and capacity are not changed in 'no malloc' mode
-//       but is updated with dynamic allocation enabled
-TEST(CAN_Buf, CanBufReserve_Enlarge) {
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_peek() is called with a null pointer to storage and a number
+///       of frames requested greater than the number of frames stored
+///
+/// \Then number of stored frames is returned, nothing is changed
+TEST(CAN_Buf, CanBufPeek_NullPtr_ManyFrames) {
+  const size_t MSG_SIZE = 4;
+  can_msg msg_tab[MSG_SIZE];
+
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  const auto frames_read = can_buf_peek(&buf, nullptr, MSG_SIZE + 1);
+
+  CHECK_EQUAL(MSG_SIZE, frames_read);
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+}
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored and
+///        a memory area of size greater than or equal to the frame buffer's
+///        size
+///
+/// \When can_buf_peek() is called with a pointer to the memory area and its
+///       size
+///
+/// \Then number of stored frames is returned, the memory area contains all read
+///       frames, the buffer's state is not changed
+TEST(CAN_Buf, CanBufPeek_ManyFrames) {
+  const size_t MSG_SIZE = 3;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  FillCanMsg(msg_tab[0], 0x1d, 6, 0xa2);
+  FillCanMsg(msg_tab[1], 0x2c, 3, 0xb4);
+  FillCanMsg(msg_tab[2], 0x3b, 1, 0xc8);
+  CHECK_EQUAL(MSG_SIZE, can_buf_write(&buf, msg_tab, MSG_SIZE));
+
+  can_msg out_tab[BUF_SIZE + 1];
+  std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
+  const auto frames_read = can_buf_peek(&buf, out_tab, BUF_SIZE + 1);
+
+  CHECK_EQUAL(MSG_SIZE, frames_read);
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
+  CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
+}
+
+///@}
+
+/// @name can_buf_reserve()
+///@{
+
+#if !LELY_NO_MALLOC
+/// \Given LELY_NO_MALLOC disabled; a pointer to a CAN frame buffer (can_buf)
+///        with some frames stored
+///
+/// \When can_buf_reserve() is called with value greater than buffer's remaining
+///       capacity
+///
+/// \Then a value greater than original capacity is returned, new space in the
+///       buffer is allocated, remaining capacity is increased and already
+///       stored frames are preserved
+TEST(CAN_Buf, CanBufReserve_Enlarge_MallocMode) {
   const size_t MSG_SIZE = 8;
   can_msg msg_tab[MSG_SIZE];
 
@@ -232,20 +368,45 @@ TEST(CAN_Buf, CanBufReserve_Enlarge) {
 
   const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_SIZE + 1);
 
-#if LELY_NO_MALLOC
-  CHECK_EQUAL(0, capacity);
-  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
-  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
-#else
   CHECK_EQUAL(31 - MSG_SIZE, capacity);  // (new_buffer_size - MSG_SIZE)
   CHECK_EQUAL(31 - MSG_SIZE, can_buf_capacity(&buf));
   CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+}
+#endif
+
+#if LELY_NO_MALLOC
+/// \Given LELY_NO_MALLOC enabled; a pointer to a CAN frame buffer (can_buf)
+///        with some frames stored
+///
+/// \When can_buf_reserve() is called with value greater than buffer's remaining
+///       capacity
+///
+/// \Then 0 is returned, nothing is changed;
+///       if !LELY_NO_ERRNO no memory error is reported
+TEST(CAN_Buf, CanBufReserve_Enlarge_NoMallocMode) {
+  const size_t MSG_SIZE = 8;
+  can_msg msg_tab[MSG_SIZE];
+
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_SIZE + 1);
+
+  CHECK_EQUAL(0, capacity);
+  CHECK_EQUAL(BUF_SIZE - MSG_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_SIZE, can_buf_size(&buf));
+#if !LELY_NO_ERRNO
+  CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
 #endif
 }
+#endif
 
-// given: buffer with some frames
-// when: reserving space for frames count lesser than buffers capacity
-// then: its capacity is not changed
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_reserve() is called with value less than or equal to buffer's
+///       remaining capacity
+///
+/// \Then buffer capacity is returned, nothing is changed
 TEST(CAN_Buf, CanBufReserve_BigEnough) {
   const size_t MSG_SIZE = 8;
   can_msg msg_tab[MSG_SIZE];
@@ -261,9 +422,14 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
 }
 
 #if LELY_NO_MALLOC
-// given: buffer
-// when: reserving space for more frames
-// then: its size and capacity are not changed in 'no malloc' mode
+/// \Given LELY_NO_MALLOC enabled; a pointer to an empty CAN frame buffer
+///        (can_buf)
+///
+/// \When can_buf_reserve() is called with value greater than buffer's remaining
+///       capacity
+///
+/// \Then 0 is returned, nothing is changed;
+///       if !LELY_NO_ERRNO no memory error is reported
 TEST(CAN_Buf, CanBufReserve_NoMemory) {
   const auto capacity = can_buf_reserve(&buf, 2 * BUF_SIZE);
 
@@ -275,9 +441,16 @@ TEST(CAN_Buf, CanBufReserve_NoMemory) {
   CHECK_EQUAL(0, can_buf_size(&buf));
 }
 #else
-// given: buffer with some frames in it and some frames already read
-// when: reserving space for more frames
-// then: its size and capacity are properly changed and stored frames "wrapped"
+/// \Given LELY_NO_MALLOC disabled; a pointer to a CAN frame buffer (can_buf)
+///        with some frames stored and some already read
+///
+/// \When can_buf_reserve() is called with value greater than buffer's remaining
+///       capacity
+///
+/// \Then a value greater than original capacity is returned, new space in the
+///       buffer is allocated, remaining capacity is increased, already stored
+///       frames are preserved and all unread frames can be read in order as
+///       they were originally written
 TEST(CAN_Buf, CanBufReserve_Wrapping) {
   const size_t MSG_SIZE = 15;
   can_msg msg_tab[MSG_SIZE];
@@ -306,18 +479,31 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
 }
 #endif  // LELY_NO_MALLOC
 
-// given: buffer
-// when: reading zero frames from it
-// then: zero frames are read
+///@}
+
+/// @name can_buf_read()
+///@{
+
+/// \Given a pointer to a CAN frame buffer (can_buf)
+///
+/// \When can_buf_read() is called with a null pointer to storage and zero
+///       frames requested
+///
+/// \Then 0 is returned, nothing is changed
 TEST(CAN_Buf, CanBufRead_ZeroFrames) {
   const auto frames_read = can_buf_read(&buf, nullptr, 0);
 
   CHECK_EQUAL(0, frames_read);
 }
 
-// given: buffer with frame in it
-// when: reading single frame to it
-// then: frame is read and size is reduced
+/// \Given a pointer to a CAN frame buffer (can_buf) with one frame stored and a
+///        memory area to store read frames
+///
+/// \When can_buf_read() is called with a pointer to the memory area and its
+///       size
+///
+/// \Then 1 is returned, there are no more frames in the buffer to be read, the
+///       memory area contains the read frame
 TEST(CAN_Buf, CanBufRead_OneFrame) {
   can_msg msg = CAN_MSG_INIT;
   FillCanMsg(msg, 0x77, 5, 0xaa);
@@ -332,9 +518,16 @@ TEST(CAN_Buf, CanBufRead_OneFrame) {
   CheckCanMsgTabs(&msg, out_tab, 1);
 }
 
-// given: buffer with some frames in it
-// when: reading multiple frames from it
-// then: its size and capacity are changed and frames are read.
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored and
+///        a memory area of size greater than or equal to the frame buffer's
+///        size
+///
+/// \When can_buf_read() is called with a pointer to the memory area and its
+///       size
+///
+/// \Then number of stored frames is returned, there are no more frames in the
+///       buffer to be read, buffer is at full capacity, the memory area
+///       contains all read frames
 TEST(CAN_Buf, CanBufRead_ManyFrames) {
   const size_t MSG_SIZE = 3;
   can_msg msg_tab[MSG_SIZE];
@@ -354,9 +547,13 @@ TEST(CAN_Buf, CanBufRead_ManyFrames) {
   CheckCanMsgTabs(msg_tab, out_tab, MSG_SIZE);
 }
 
-// given: buffer with some frames in it
-// when: trying to read messages from it using null target array
-// then: frames are removed but not stored in target
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_read() is called with a null pointer to storage and a number
+///       of frames requested less than or equal to the number of frames stored
+///
+/// \Then number of requested frames is returned, those frames are removed from
+///       the buffer
 TEST(CAN_Buf, CanBufRead_NullPtr) {
   const size_t MSG_SIZE = 4;
   can_msg msg_tab[MSG_SIZE];
@@ -368,3 +565,87 @@ TEST(CAN_Buf, CanBufRead_NullPtr) {
   CHECK_EQUAL(3, frames_read);
   CHECK_EQUAL(MSG_SIZE - frames_read, can_buf_size(&buf));
 }
+
+///@}
+
+/// @name can_buf_size()
+///@{
+
+/// \Given a pointer to an empty CAN frame buffer (can_buf)
+///
+/// \When can_buf_size() is called
+///
+/// \Then 0 is returned
+TEST(CAN_Buf, CanBufSize_Empty) { CHECK_EQUAL(0, can_buf_size(&buf)); }
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_size() is called
+///
+/// \Then number of frames stored is returned
+TEST(CAN_Buf, CanBufSize_ManyFrames) {
+  const size_t MSG_SIZE = 4u;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  CHECK_EQUAL(4u, can_buf_size(&buf));
+}
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with no space left
+///
+/// \When can_buf_size() is called
+///
+/// \Then full initial buffer capacity is returned
+TEST(CAN_Buf, CanBufSize_Full) {
+  const size_t MSG_SIZE = BUF_SIZE + 1;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  CHECK_EQUAL(BUF_SIZE, can_buf_size(&buf));
+}
+
+///@}
+
+/// @name can_buf_capacity()
+///@{
+
+/// \Given a pointer to an empty CAN frame buffer (can_buf)
+///
+/// \When can_buf_capacity() is called
+///
+/// \Then full buffer capacity is returned
+TEST(CAN_Buf, CanBufCapacity_Empty) {
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+}
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
+///
+/// \When can_buf_capacity() is called
+///
+/// \Then full buffer capacity decreased by number of frames stored is returned
+TEST(CAN_Buf, CanBufCapacity_ManyFrames) {
+  const size_t MSG_SIZE = 4u;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  CHECK_EQUAL(BUF_SIZE - 4u, can_buf_capacity(&buf));
+}
+
+/// \Given a pointer to a CAN frame buffer (can_buf) with no space left
+///
+/// \When can_buf_capacity() is called
+///
+/// \Then 0 is returned
+TEST(CAN_Buf, CanBufCapacity_Full) {
+  const size_t MSG_SIZE = BUF_SIZE + 1;
+  can_msg msg_tab[MSG_SIZE];
+  std::fill_n(msg_tab, MSG_SIZE, can_msg(CAN_MSG_INIT));
+  can_buf_write(&buf, msg_tab, MSG_SIZE);
+
+  CHECK_EQUAL(0u, can_buf_capacity(&buf));
+}
+
+///@}
