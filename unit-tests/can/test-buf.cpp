@@ -33,10 +33,9 @@
 #include <lely/util/error.h>
 
 TEST_GROUP(CAN_BufInit) {
-  can_buf buf_;
-  can_buf* buf;
+  can_buf buf_;  // default-initialized (indeterminate value)
+  can_buf* buf = &buf_;
 
-  TEST_SETUP() { buf = &buf_; }
   TEST_TEARDOWN() { can_buf_fini(buf); }
 };
 
