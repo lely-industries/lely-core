@@ -20,6 +20,8 @@
  * limitations under the License.
  */
 
+#include <cfloat>
+
 #include <CppUTest/TestHarness.h>
 
 #include <lely/util/endian.h>
@@ -68,7 +70,7 @@ TEST(Util_Endian_Bcpy, Bcpybe_LastIsZero) {
 ///       destination bit offset equal 3, a pointer to the source buffer, source
 ///       bit offset equal 2 and 5 bits to be copied
 ///
-/// \Then requested 5 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
   const int dstbit = 3;
   const int srcbit = 2;
@@ -85,7 +87,7 @@ TEST(Util_Endian_Bcpy, Bcpyle_LastIsZero) {
 ///       destination bit offset equal 2, a pointer to the source buffer, source
 ///       bit offset equal 2 and 17 bits to be copied
 ///
-/// \Then requested 17 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -104,7 +106,7 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8) {
 ///       destination bit offset equal 2, a pointer to the source buffer, source
 ///       bit offset equal 2 and 22 bits to be copied
 ///
-/// \Then requested 22 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNMoreThan8LastZero) {
   const int dstbit = 2;
   const int srcbit = 2;
@@ -141,7 +143,7 @@ TEST(Util_Endian_Bcpy, Bcpyle_NoShiftDstbitPlusNLessThan8LastNotZero) {
 ///       destination bit offset equal 0, a pointer to the source buffer, source
 ///       bit offset equal 0 and 8 bits to be copied
 ///
-/// \Then requested 8 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_Bcpy, Bcpyle_CopyAll) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -263,7 +265,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_CopyAll) {
 ///       second byte of the source buffer, source bit offset equal 0 and 9 bits
 ///       to be copied
 ///
-/// \Then requested 9 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
   const int dstbit = 0;
   const int srcbit = 0;
@@ -283,7 +285,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitIsZeroCopyMoreThan8) {
 ///       second byte of the source buffer, source bit offset equal 4 and 5 bits
 ///       to be copied
 ///
-/// \Then requested 5 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
   const int dstbit = 3;
   const int srcbit = 4;
@@ -303,7 +305,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_PositiveShift) {
 ///       second byte of the source buffer, source bit offset equal 2 and 7 bits
 ///       to be copied
 ///
-/// \Then requested 7 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
   const int dstbit = 1;
   const int srcbit = 2;
@@ -322,7 +324,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftSrcbitPlusNMoreThan8) {
 ///       second byte of the source buffer, source bit offset equal 3 and 17
 ///       bits to be copied
 ///
-/// \Then requested 17 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
   const int dstbit = 2;
   const int srcbit = 3;
@@ -343,7 +345,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_NegativeShiftDstbitPlusNMoreThan8) {
 ///       second byte of the source buffer, source bit offset equal 3 and 22
 ///       bits to be copied
 ///
-/// \Then requested 22 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange,
      Bcpyle_NegativeShiftDstbitPlusNMoreThan8LastIsZero) {
   const int dstbit = 2;
@@ -383,7 +385,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_CopyZero) {
 ///       second byte of the source buffer, source bit offset equal 2 and 6 bits
 ///       to be copied
 ///
-/// \Then requested 6 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_DstbitPlusNMoreThan8) {
   const int dstbit = 3;
   const int srcbit = 2;
@@ -427,7 +429,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpybe_SrcbitOffsetLowerThan0) {
 ///       second byte of the source buffer, source bit offset equal -1 and 4
 ///       bits to be copied
 ///
-/// \Then requested 4 bits are copied from source to destination buffer
+/// \Then requested bits are copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
   const int dstbit = -1;
   const int srcbit = -1;
@@ -444,7 +446,7 @@ TEST(Util_Endian_BcpyOutOfRange, Bcpyle_OffsetsLowerThan0) {
 /// \When bcpyle() is called with a pointer to the second byte of the
 ///       destination buffer, destination bit offset equal 0, a pointer to the
 ///       second byte of the source buffer, source bit offset equal -1 and 1
-///       bits to be copied
+///       bit to be copied
 ///
 /// \Then requested single bit is copied from source to destination buffer
 TEST(Util_Endian_BcpyOutOfRange, Bcpyle_SrcbitOffsetLowerThan0) {
@@ -702,10 +704,10 @@ TEST(Util_Endian, LdbeU16_Nonzero) {
 /// @name stle_i16()
 ///@{
 
-/// \Given a memory area 8 bytes large
+/// \Given a memory area 2 bytes large
 ///
-/// \When stle_i16() is called with a pointer to the memory area and an signed
-///       integer value equal 0
+/// \When stle_i16() is called with a pointer to the memory area and a signed
+///       integer equal 0
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleI16_Zero) {
@@ -721,10 +723,10 @@ TEST(Util_Endian, StleI16_Zero) {
 /// \Given a memory area 2 bytes large
 ///
 /// \When stle_i16() is called with a pointer to the memory area and a 16-bit
-///       signed integer number
+///       signed integer
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleI16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const int_least16_t x = 0x1234;
@@ -744,7 +746,7 @@ TEST(Util_Endian, StleI16_Nonzero) {
 ///
 /// \When ldle_i16() is called with 2 bytes, all equal 0
 ///
-/// \Then signed integer at least 2 bytes long equal to 0 is returned
+/// \Then a signed 16-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI16_Zero) {
   const uint_least8_t src[] = {0x00, 0x00};
 
@@ -755,8 +757,8 @@ TEST(Util_Endian, LdleI16_Zero) {
 ///
 /// \When ldle_i16() is called with 2 bytes
 ///
-/// \Then signed integer at least 2 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then a signed 16-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleI16_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u};
 
@@ -771,7 +773,7 @@ TEST(Util_Endian, LdleI16_Nonzero) {
 /// \Given a memory area 2 bytes large
 ///
 /// \When stle_u16() is called with a pointer to the memory area and an unsigned
-///       integer value equal 0
+///       integer equal 0
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleU16_Zero) {
@@ -787,10 +789,10 @@ TEST(Util_Endian, StleU16_Zero) {
 /// \Given a memory area 2 bytes large
 ///
 /// \When stle_u16() is called with a pointer to the memory area and a 16-bit
-///       unsigned integer number
+///       unsigned integer
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleU16_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u};
   const uint_least16_t x = 0x1234u;
@@ -810,7 +812,7 @@ TEST(Util_Endian, StleU16_Nonzero) {
 ///
 /// \When ldle_u16() is called with 2 bytes, all equal 0
 ///
-/// \Then unsigned integer at least 2 bytes long equal to 0 is returned
+/// \Then an unsigned 16-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU16_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u};
 
@@ -821,8 +823,8 @@ TEST(Util_Endian, LdleU16_Zero) {
 ///
 /// \When ldle_u16() is called with 2 bytes
 ///
-/// \Then unsigned integer at least 2 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then an unsigned 16-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleU16_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u};
 
@@ -909,7 +911,7 @@ TEST(Util_Endian, LdbeU32_Nonzero) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_i32() is called with a pointer to the memory area and an unsigned
-///       integer value equal 0
+///       integer equal 0
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleI32_Zero) {
@@ -927,10 +929,10 @@ TEST(Util_Endian, StleI32_Zero) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_i32() is called with a pointer to the memory area and a 32-bit
-///       signed integer number
+///       signed integer
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleI32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const int_least32_t x = 0x12345678;
@@ -952,7 +954,7 @@ TEST(Util_Endian, StleI32_Nonzero) {
 ///
 /// \When ldle_i32() is called with 4 bytes, all equal 0
 ///
-/// \Then signed integer at least 4 bytes long equal to 0 is returned
+/// \Then a signed 32-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI32_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
@@ -963,8 +965,8 @@ TEST(Util_Endian, LdleI32_Zero) {
 ///
 /// \When ldle_i32() is called with 3 bytes
 ///
-/// \Then signed integer at least 4 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then a signed 32-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleI32_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u, 0x78u};
 
@@ -979,7 +981,7 @@ TEST(Util_Endian, LdleI32_Nonzero) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_u32() is called with a pointer to the memory area and an unsigned
-///       integer value equal 0
+///       integer equal 0
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleU32_Zero) {
@@ -997,10 +999,10 @@ TEST(Util_Endian, StleU32_Zero) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_u32() is called with a pointer to the memory area and a 32-bit
-///       unsigned integer number
+///       unsigned integer value
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleU32_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x12345678u;
@@ -1022,7 +1024,7 @@ TEST(Util_Endian, StleU32_Nonzero) {
 ///
 /// \When ldle_u32() is called with 4 bytes, all equal 0
 ///
-/// \Then unsigned integer at least 4 bytes long equal to 0 is returned
+/// \Then an unsigned 32-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU32_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
@@ -1033,8 +1035,8 @@ TEST(Util_Endian, LdleU32_Zero) {
 ///
 /// \When ldle_u32() is called with 4 bytes
 ///
-/// \Then unsigned integer at least 4 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then an unsigned 32-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleU32_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u, 0x78u};
 
@@ -1084,7 +1086,7 @@ TEST(Util_Endian, StbeI64_Nonzero) {
 ///
 /// \When ldle_i64() is called with 8 bytes, all equal 0
 ///
-/// \Then signed integer at least 8 bytes long equal to 0 is returned
+/// \Then a signed 64-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI64_Zero) {
   uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -1096,8 +1098,8 @@ TEST(Util_Endian, LdleI64_Zero) {
 ///
 /// \When ldle_i64() is called with 8 bytes
 ///
-/// \Then signed integer at least 8 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then a signed 64-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleI64_Nonzero) {
   const uint_least8_t src[] = {0xefu, 0xcdu, 0xabu, 0x89u,
                                0x67u, 0x45u, 0x23u, 0x01u};
@@ -1184,10 +1186,10 @@ TEST(Util_Endian, StleI64_Zero) {
 /// \Given a memory area 8 bytes large
 ///
 /// \When stle_i64() is called with a pointer to the memory area and a 64-bit
-///       signed integer number
+///       signed integer value
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleI64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -1250,10 +1252,10 @@ TEST(Util_Endian, StleU64_Zero) {
 /// \Given a memory area 8 bytes large
 ///
 /// \When stle_u64() is called with a pointer to the memory area and a 64-bit
-///       unsigned integer number
+///       unsigned integer value
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleU64_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
@@ -1280,7 +1282,7 @@ TEST(Util_Endian, StleU64_Nonzero) {
 ///
 /// \When ldle_u64() is called with 8 bytes, all equal 0
 ///
-/// \Then unsigned integer at least 8 bytes long equal to 0 is returned
+/// \Then an unsigned 64-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU64_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
                                0x00u, 0x00u, 0x00u, 0x00u};
@@ -1292,8 +1294,8 @@ TEST(Util_Endian, LdleU64_Zero) {
 ///
 /// \When ldle_u64() is called with 8 bytes
 ///
-/// \Then unsigned integer at least 8 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then an unsigned 64-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleU64_Nonzero) {
   const uint_least8_t src[] = {0x01u, 0x23u, 0x45u, 0x67u,
                                0x89u, 0xabu, 0xcdu, 0xefu};
@@ -1326,10 +1328,10 @@ TEST(Util_Endian, StleU24_Zero) {
 /// \Given a memory area 3 bytes large
 ///
 /// \When stle_u24() is called with a pointer to the memory area and an unsigned
-///       integer number less than 2^24 - 1
+///       integer value that can be represented with 24 bits.
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleU24_Nonzero) {
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u};
   const uint_least32_t x = 0x123456u;
@@ -1350,7 +1352,7 @@ TEST(Util_Endian, StleU24_Nonzero) {
 ///
 /// \When ldle_u24() is called with 3 bytes, all equal 0
 ///
-/// \Then unsigned integer at least 4 bytes long equal to 0 is returned
+/// \Then an unsigned 24-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU24_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u};
 
@@ -1361,8 +1363,8 @@ TEST(Util_Endian, LdleU24_Zero) {
 ///
 /// \When ldle_u24() is called with 3 bytes
 ///
-/// \Then unsigned integer at least 4 bytes long reconstructed from input bytes
-///       in little-endian byte order is returned
+/// \Then an unsigned 24-bit integer value reconstructed from input bytes in
+///       little-endian byte order is returned
 TEST(Util_Endian, LdleU24_Nonzero) {
   const uint_least8_t src[] = {0x12u, 0x34u, 0x56u};
 
@@ -1372,7 +1374,7 @@ TEST(Util_Endian, LdleU24_Nonzero) {
 ///@}
 
 TEST(Util_Endian, StbeFlt32_Zero) {
-  const flt32_t x = 0.0;
+  const flt32_t x = 0.0f;
   uint_least8_t dst[] = {0xffu, 0xffu, 0xffu, 0xffu};
 
   stbe_flt32(dst, x);
@@ -1388,11 +1390,11 @@ TEST(Util_Endian, LdbeFlt32_Zero) {
 
   const flt32_t x = ldbe_flt32(src);
 
-  LONGS_EQUAL(0.0, x);
+  DOUBLES_EQUAL(0.0f, x, FLT_EPSILON);
 }
 
 TEST(Util_Endian, StbeFlt32) {
-  const flt32_t x = 128.5;
+  const flt32_t x = 128.5f;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
   stbe_flt32(dst, x);
@@ -1408,7 +1410,7 @@ TEST(Util_Endian, LdbeFlt32) {
 
   const flt32_t x = ldbe_flt32(src);
 
-  LONGS_EQUAL(128.5, x);
+  DOUBLES_EQUAL(128.5f, x, FLT_EPSILON);
 }
 
 /// @name stle_flt32()
@@ -1417,7 +1419,7 @@ TEST(Util_Endian, LdbeFlt32) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_flt32() is called with a pointer to the memory area and an IEEE
-///       754 single precision floating point number equal 0.0f
+///       754 single-precision floating point number equal 0.0f
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleFlt32_Zero) {
@@ -1435,12 +1437,12 @@ TEST(Util_Endian, StleFlt32_Zero) {
 /// \Given a memory area 4 bytes large
 ///
 /// \When stle_flt32() is called with a pointer to the memory area and an IEEE
-///       754 single precision floating point number
+///       754 single-precision floating point number
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleFlt32) {
-  const flt32_t x = 128.5;
+  const flt32_t x = 128.5f;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
   stle_flt32(dst, x);
@@ -1460,14 +1462,14 @@ TEST(Util_Endian, StleFlt32) {
 ///
 /// \When ldle_flt32() is called with 4 bytes, all equal 0
 ///
-/// \Then an IEEE 754 single precision floating point number representing 0.0 is
+/// \Then an IEEE 754 single-precision floating point number representing 0.0 is
 ///       returned
 TEST(Util_Endian, LdleFlt32_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u};
 
   const flt32_t x = ldle_flt32(src);
 
-  DOUBLES_EQUAL(0.0f, x, 0.001f);
+  DOUBLES_EQUAL(0.0f, x, FLT_EPSILON);
 }
 
 /// \Given N/A
@@ -1475,14 +1477,14 @@ TEST(Util_Endian, LdleFlt32_Zero) {
 /// \When ldle_flt32() is called with 4 bytes representing an IEEE 754 single
 ///       precision floating point number in little-endian byte order
 ///
-/// \Then an IEEE 754 single precision floating point number matching the input
+/// \Then an IEEE 754 single-precision floating point number matching the input
 ///       byte representation is returned
 TEST(Util_Endian, LdleFlt32) {
   const uint_least8_t src[] = {0x00u, 0x80u, 0x00u, 0x43u};
 
   const flt32_t x = ldle_flt32(src);
 
-  DOUBLES_EQUAL(128.5f, x, 0.00001f);
+  DOUBLES_EQUAL(128.5f, x, FLT_EPSILON);
 }
 
 ///@}
@@ -1493,7 +1495,7 @@ TEST(Util_Endian, LdleFlt32) {
 /// \Given a memory area 8 bytes large
 ///
 /// \When stle_flt64() is called with a pointer to the memory area and an IEEE
-///       754 double precision floating point number equal 0.0
+///       754 double-precision floating point number equal 0.0
 ///
 /// \Then the memory area is zeroed
 TEST(Util_Endian, StleFlt64_Zero) {
@@ -1516,12 +1518,12 @@ TEST(Util_Endian, StleFlt64_Zero) {
 /// \Given a memory area 8 bytes large
 ///
 /// \When stle_flt64() is called with a pointer to the memory area and an IEEE
-///       754 double precision floating point number
+///       754 double-precision floating point number
 ///
-/// \Then the memory area stores the binary representation of the requested
-///       number in little-endian byte order
+/// \Then the binary representation of the requested number is stored in the
+///       memory area in little-endian byte order
 TEST(Util_Endian, StleFlt64) {
-  const flt32_t x = 128.6780905;
+  const flt64_t x = 128.67808532714844;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
 
@@ -1546,7 +1548,7 @@ TEST(Util_Endian, StleFlt64) {
 ///
 /// \When ldle_flt64() is called with 8 bytes, all equal 0
 ///
-/// \Then an IEEE 754 double precision floating point number representing 0.0 is
+/// \Then an IEEE 754 double-precision floating point number representing 0.0 is
 ///       returned
 TEST(Util_Endian, LdleFlt64_Zero) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0x00u,
@@ -1554,7 +1556,7 @@ TEST(Util_Endian, LdleFlt64_Zero) {
 
   const flt64_t x = ldle_flt64(src);
 
-  DOUBLES_EQUAL(0.0, x, 0.0);
+  DOUBLES_EQUAL(0.0, x, DBL_EPSILON);
 }
 
 /// \Given N/A
@@ -1562,7 +1564,7 @@ TEST(Util_Endian, LdleFlt64_Zero) {
 /// \When ldle_flt64() is called with 8 bytes representing an IEEE 754 double
 ///       precision floating point number in little-endian byte order
 ///
-/// \Then an IEEE 754 double precision floating point number matching the input
+/// \Then an IEEE 754 double-precision floating point number matching the input
 ///       byte representation is returned
 TEST(Util_Endian, LdleFlt64) {
   const uint_least8_t src[] = {0x00u, 0x00u, 0x00u, 0xe0u,
@@ -1570,7 +1572,7 @@ TEST(Util_Endian, LdleFlt64) {
 
   const flt64_t x = ldle_flt64(src);
 
-  DOUBLES_EQUAL(128.67808532714844, x, 0.00000000001);
+  DOUBLES_EQUAL(128.67808532714844, x, DBL_EPSILON);
 }
 
 ///@}
@@ -1598,11 +1600,11 @@ TEST(Util_Endian, LdbeFlt64_Zero) {
 
   const flt64_t x = ldbe_flt64(src);
 
-  LONGS_EQUAL(0.0, x);
+  DOUBLES_EQUAL(0.0, x, DBL_EPSILON);
 }
 
 TEST(Util_Endian, StbeFlt64) {
-  const flt32_t x = 128.6780905;
+  const flt64_t x = 128.67808532714844;
   uint_least8_t dst[] = {0x00u, 0x00u, 0x00u, 0x00u,
                          0x00u, 0x00u, 0x00u, 0x00u};
 
@@ -1624,5 +1626,5 @@ TEST(Util_Endian, LdbeFlt64) {
 
   const flt64_t x = ldbe_flt64(src);
 
-  LONGS_EQUAL(128.6780905, x);
+  DOUBLES_EQUAL(128.67808532714844, x, DBL_EPSILON);
 }
