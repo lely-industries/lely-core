@@ -744,7 +744,8 @@ TEST(Util_Endian, StleI16_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i16() is called with 2 bytes, all equal 0
+/// \When ldle_i16() is called with a pointer to a memory area 2 bytes large
+///       with zeroed contents
 ///
 /// \Then a signed 16-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI16_Zero) {
@@ -755,7 +756,7 @@ TEST(Util_Endian, LdleI16_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i16() is called with 2 bytes
+/// \When ldle_i16() is called with a pointer to a memory area 2 bytes large
 ///
 /// \Then a signed 16-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -810,7 +811,8 @@ TEST(Util_Endian, StleU16_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u16() is called with 2 bytes, all equal 0
+/// \When ldle_u16() is called with a pointer to a memory area 2 bytes large
+///       with zeroed contents
 ///
 /// \Then an unsigned 16-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU16_Zero) {
@@ -821,7 +823,7 @@ TEST(Util_Endian, LdleU16_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u16() is called with 2 bytes
+/// \When ldle_u16() is called with a pointer to a memory area 2 bytes large
 ///
 /// \Then an unsigned 16-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -952,7 +954,8 @@ TEST(Util_Endian, StleI32_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i32() is called with 4 bytes, all equal 0
+/// \When ldle_i32() is called with a pointer to a memory area 4 bytes large
+///       with zeroed contents
 ///
 /// \Then a signed 32-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI32_Zero) {
@@ -963,7 +966,7 @@ TEST(Util_Endian, LdleI32_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i32() is called with 3 bytes
+/// \When ldle_i32() is called with a pointer to a memory area 4 bytes large
 ///
 /// \Then a signed 32-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -1022,7 +1025,8 @@ TEST(Util_Endian, StleU32_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u32() is called with 4 bytes, all equal 0
+/// \When ldle_u32() is called with a pointer to a memory area 4 bytes large
+///       with zeroed contents
 ///
 /// \Then an unsigned 32-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU32_Zero) {
@@ -1033,7 +1037,7 @@ TEST(Util_Endian, LdleU32_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u32() is called with 4 bytes
+/// \When ldle_u32() is called with a pointer to a memory area 4 bytes large
 ///
 /// \Then an unsigned 32-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -1084,7 +1088,8 @@ TEST(Util_Endian, StbeI64_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i64() is called with 8 bytes, all equal 0
+/// \When ldle_i64() is called with a pointer to a memory area 8 bytes large
+///       with zeroed contents
 ///
 /// \Then a signed 64-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleI64_Zero) {
@@ -1096,7 +1101,7 @@ TEST(Util_Endian, LdleI64_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_i64() is called with 8 bytes
+/// \When ldle_i64() is called with a pointer to a memory area 8 bytes large
 ///
 /// \Then a signed 64-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -1280,7 +1285,8 @@ TEST(Util_Endian, StleU64_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u64() is called with 8 bytes, all equal 0
+/// \When ldle_u64() is called with a pointer to a memory area 8 bytes large
+///       with zeroed contents
 ///
 /// \Then an unsigned 64-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU64_Zero) {
@@ -1292,7 +1298,7 @@ TEST(Util_Endian, LdleU64_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u64() is called with 8 bytes
+/// \When ldle_u64() is called with a pointer to a memory area 8 bytes large
 ///
 /// \Then an unsigned 64-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -1328,7 +1334,7 @@ TEST(Util_Endian, StleU24_Zero) {
 /// \Given a memory area 3 bytes large
 ///
 /// \When stle_u24() is called with a pointer to the memory area and an unsigned
-///       integer value that can be represented with 24 bits.
+///       integer value that can be represented with 24 bits
 ///
 /// \Then the binary representation of the requested number is stored in the
 ///       memory area in little-endian byte order
@@ -1350,7 +1356,8 @@ TEST(Util_Endian, StleU24_Nonzero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u24() is called with 3 bytes, all equal 0
+/// \When ldle_u24() is called with a pointer to a memory area 3 bytes large
+///       with zeroed contents
 ///
 /// \Then an unsigned 24-bit integer value equal to 0 is returned
 TEST(Util_Endian, LdleU24_Zero) {
@@ -1361,7 +1368,7 @@ TEST(Util_Endian, LdleU24_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_u24() is called with 3 bytes
+/// \When ldle_u24() is called with a pointer to a memory area 3 bytes large
 ///
 /// \Then an unsigned 24-bit integer value reconstructed from input bytes in
 ///       little-endian byte order is returned
@@ -1460,7 +1467,8 @@ TEST(Util_Endian, StleFlt32) {
 
 /// \Given N/A
 ///
-/// \When ldle_flt32() is called with 4 bytes, all equal 0
+/// \When ldle_flt32() is called with a pointer to a memory area 4 bytes large
+///       with zeroed contents
 ///
 /// \Then an IEEE 754 single-precision floating point number representing 0.0 is
 ///       returned
@@ -1474,8 +1482,9 @@ TEST(Util_Endian, LdleFlt32_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_flt32() is called with 4 bytes representing an IEEE 754 single
-///       precision floating point number in little-endian byte order
+/// \When ldle_flt32() is called with a pointer to a memory area 4 bytes large
+///       representing an IEEE 754 single-precision floating point number in
+///       little-endian byte order
 ///
 /// \Then an IEEE 754 single-precision floating point number matching the input
 ///       byte representation is returned
@@ -1546,7 +1555,8 @@ TEST(Util_Endian, StleFlt64) {
 
 /// \Given N/A
 ///
-/// \When ldle_flt64() is called with 8 bytes, all equal 0
+/// \When ldle_flt64() is called with a pointer to a memory area 8 bytes large
+///       with zeroed contents
 ///
 /// \Then an IEEE 754 double-precision floating point number representing 0.0 is
 ///       returned
@@ -1561,8 +1571,9 @@ TEST(Util_Endian, LdleFlt64_Zero) {
 
 /// \Given N/A
 ///
-/// \When ldle_flt64() is called with 8 bytes representing an IEEE 754 double
-///       precision floating point number in little-endian byte order
+/// \When ldle_flt64() is called with a pointer to a memory area 8 bytes large
+///       representing an IEEE 754 double-precision floating point number in
+///       little-endian byte order
 ///
 /// \Then an IEEE 754 double-precision floating point number matching the input
 ///       byte representation is returned
