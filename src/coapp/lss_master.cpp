@@ -553,7 +553,7 @@ LssMaster::SetTime() {
 LssMaster::Impl_::Impl_(LssMaster* self_, ev_exec_t* exec_, Node& node_,
                         io::CanControllerBase* ctrl_, CONMT* nmt_)
     : self(self_),
-      exec(exec_ ? exec_ : static_cast<ev_exec_t*>(node.GetExecutor())),
+      exec(exec_ ? exec_ : static_cast<ev_exec_t*>(node_.GetExecutor())),
       node(node_),
       ctrl(ctrl_),
       nmt(nmt_),
