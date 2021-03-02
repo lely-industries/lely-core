@@ -28,9 +28,11 @@
 
 #include <CppUTest/TestHarness.h>
 
+#include <lely/can/net.h>
 #include <lely/co/csdo.h>
 #include <lely/co/rpdo.h>
 #include <lely/co/sdo.h>
+#include <lely/util/time.h>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
@@ -109,8 +111,39 @@ TEST_BASE(CO_SdoRpdoBase) {
   }
 };
 
+namespace CO_SdoRpdo1400Static {
+static bool rpdo_err_func_called = false;
+static co_unsigned16_t rpdo_err_func_eec = 0u;
+static co_unsigned8_t rpdo_err_func_er = 0u;
+}  // namespace CO_SdoRpdo1400Static
+
 TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   int clang_format_fix = 0;  // unused
+
+  static void rpdo_err_func(co_rpdo_t*, co_unsigned16_t eec, co_unsigned8_t er,
+                            void*) {
+    CO_SdoRpdo1400Static::rpdo_err_func_called = true;
+    CO_SdoRpdo1400Static::rpdo_err_func_eec = eec;
+    CO_SdoRpdo1400Static::rpdo_err_func_er = er;
+  }
+
+  void SetPdoCommEventTimer(const co_unsigned16_t milliseconds) {
+    co_sub_t* const sub = co_dev_find_sub(dev, 0x1400u, 0x05u);
+    CHECK(sub != nullptr);
+    co_sub_set_val_u16(sub, milliseconds);
+  }
+
+  void ReceiveMessage() {
+    can_msg msg = CAN_MSG_INIT;
+    msg.id = DEV_ID;
+    CHECK_EQUAL(0, can_net_recv(net, &msg));
+  }
+
+  void SetCurrentTimeMs(uint_least64_t ms) {
+    timespec tp = {0, 0u};
+    timespec_add_msec(&tp, ms);
+    CHECK_EQUAL(0, can_net_set_time(net, &tp));
+  }
 
   void Insert1400Values() {
     // adjust highest subindex supported
@@ -132,7 +165,12 @@ TEST_GROUP_BASE(CO_SdoRpdo1400, CO_SdoRpdoBase) {
   TEST_SETUP() {
     TEST_BASE_SETUP();
 
+    CO_SdoRpdo1400Static::rpdo_err_func_called = false;
+    CO_SdoRpdo1400Static::rpdo_err_func_eec = 0u;
+    CO_SdoRpdo1400Static::rpdo_err_func_er = 0u;
+
     Insert1400Values();
+    co_rpdo_set_err(rpdo, &rpdo_err_func, nullptr);
     co_rpdo_start(rpdo);
   }
 
@@ -259,6 +297,72 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid) {
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
+}
+
+/// \Given a pointer to a device with started RPDO with valid COB-ID and event
+///        timer set
+///
+/// \When a new COB-ID with valid bit set is downloaded to the RPDO COB-ID
+///       object entry (idx: 0x1400, subidx: 0x01)
+///
+/// \Then 0 is returned, event timer is stopped and not triggered later
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_CobidValidToInvalid_DisableEventTimer) {
+  SetPdoCommEventTimer(1u);
+  RestartRPDO();
+
+  ReceiveMessage();  // timer started
+
+  const co_unsigned32_t cobid = DEV_ID | CO_PDO_COBID_VALID;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+                           nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMs(2u);
+
+  // event timer handler was not called
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
+}
+
+/// \Given a pointer to a device with started RPDO with invalid COB-ID and with
+///        event timer set
+///
+/// \When a valid COB-ID is downloaded to the RPDO COB-ID object entry (idx:
+///       0x1400, subidx: 0x01)
+///
+/// \Then 0 is returned, event timer is started and triggered after required
+///       time passes after COB-ID change
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_CobidInvalidToValid_ReenableEventTimer) {
+  SetPdoCommCobid(DEV_ID | CO_PDO_COBID_VALID);
+  SetPdoCommEventTimer(10u);
+  RestartRPDO();
+
+  SetCurrentTimeMs(9u);
+
+  const co_unsigned32_t cobid = DEV_ID;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x01u, CO_DEFTYPE_UNSIGNED32, &cobid,
+                           nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMs(18u);
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
+
+  SetCurrentTimeMs(20u);
+
+  CHECK(CO_SdoRpdo1400Static::rpdo_err_func_called);
+  CHECK_EQUAL(0x8250u, CO_SdoRpdo1400Static::rpdo_err_func_eec);
+  CHECK_EQUAL(0x10u, CO_SdoRpdo1400Static::rpdo_err_func_er);
 }
 
 // given: valid RPDO
@@ -409,6 +513,68 @@ TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimer) {
   CHECK_EQUAL(0, ret);
   CHECK(CoCsdoDnCon::called());
   CHECK_EQUAL(0, CoCsdoDnCon::ac);
+}
+
+/// \Given a pointer to a device with started RPDO with event timer set
+///
+/// \When a new non-zero event timer value is downloaded to the RPDO event timer
+///       object entry (idx: 0x1400, subidx: 0x05)
+///
+/// \Then 0 is returned, event timer is restarted and triggered after required
+///       time passes after event timer change
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToNonZero_ReenableEventTimer) {
+  SetPdoCommEventTimer(10u);
+  RestartRPDO();
+
+  ReceiveMessage();  // timer started
+  SetCurrentTimeMs(5u);
+
+  const co_unsigned16_t event_timer = 20u;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMs(24u);
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
+
+  SetCurrentTimeMs(25u);
+  CHECK(CO_SdoRpdo1400Static::rpdo_err_func_called);
+  CHECK_EQUAL(0x8250u, CO_SdoRpdo1400Static::rpdo_err_func_eec);
+  CHECK_EQUAL(0x10u, CO_SdoRpdo1400Static::rpdo_err_func_er);
+}
+
+/// \Given a pointer to a device with started RPDO with event timer set
+///
+/// \When a new event timer value of zero is downloaded to the RPDO event timer
+///       object entry (idx: 0x1400, subidx: 0x05)
+///
+/// \Then 0 is returned, event timer is stopped and not triggered later
+///       \Calls co_dev_find_sub()
+///       \Calls co_sub_set_val()
+///       \Calls co_rpdo_stop()
+///       \Calls co_rpdo_start()
+///       \Calls can_net_recv()
+///       \Calls can_net_set_time()
+TEST(CO_SdoRpdo1400, Co1400DnInd_EventTimerSetToZero_DisableEventTimer) {
+  SetPdoCommEventTimer(10u);
+  RestartRPDO();
+
+  ReceiveMessage();  // timer started
+  SetCurrentTimeMs(5u);
+
+  const co_unsigned16_t event_timer = 0u;
+  CHECK_EQUAL(
+      0, co_dev_dn_val_req(dev, 0x1400u, 0x05u, CO_DEFTYPE_UNSIGNED16,
+                           &event_timer, nullptr, CoCsdoDnCon::func, nullptr));
+
+  SetCurrentTimeMs(100u);
+  CHECK(!CO_SdoRpdo1400Static::rpdo_err_func_called);
 }
 
 TEST_GROUP_BASE(CO_SdoRpdo1600, CO_SdoRpdoBase) {

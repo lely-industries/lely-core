@@ -69,6 +69,44 @@ TEST_BASE(CO_RpdoBase) {
     CHECK_EQUAL(0, co_dev_insert_obj(dev, obj_holder->Take()));
   }
 
+  // obj 0x1400, sub 0x00 - highest sub-index supported
+  void SetComm00HighestSubidxSupported(const co_unsigned8_t max_subidx) {
+    obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, max_subidx);
+  }
+
+  // obj 0x1400, sub 0x01 - COB-ID used by RPDO
+  void SetComm01CobId(const co_unsigned32_t cobid) {
+    obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32, cobid);
+  }
+
+  // obj 0x1400, sub 0x02 - transmission type
+  void SetComm02TransmissionType(const co_unsigned8_t type) {
+    obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8, type);
+  }
+
+  void SetComm02SynchronousTransmission() { SetComm02TransmissionType(0x00); }
+  void SetComm02EventDrivenTransmission() { SetComm02TransmissionType(0xfeu); }
+
+  // obj 0x1400, sub 0x03 - inhibit time, in multiples of 100 microseconds
+  void SetComm03InhibitTime(const co_unsigned16_t inhibit_time) {
+    obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16, inhibit_time);
+  }
+
+  // obj 0x1400, sub 0x04 - compatibility entry, reserved and unused
+  void SetComm04CompatibilityEntry(const co_unsigned8_t compat_entry) {
+    obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, compat_entry);
+  }
+
+  // obj 0x1400, sub 0x05 - event-timer, in milliseconds
+  void SetComm05EventTimer(const co_unsigned16_t timer) {
+    obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16, timer);
+  }
+
+  // obj 0x1400, sub 0x06 - SYNC start value, not used
+  void SetComm06SyncStartValue(const co_unsigned8_t sync_start) {
+    obj1400->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, sync_start);
+  }
+
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
     net = can_net_create(allocator.ToAllocT());
@@ -211,15 +249,9 @@ TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDOMaxNum) {
 
 TEST(CO_RpdoCreate, CoRpdoStart_ExtendedFrame) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(CO_PDO_COBID_FRAME | DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CO_PDO_COBID_FRAME | DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateObj(obj1600, 0x1600u);
 
@@ -255,15 +287,9 @@ TEST(CO_RpdoCreate, CoRpdoStart_AlreadyStarted) {
 
 TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(CO_PDO_COBID_VALID | DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateObj(obj1600, 0x1600u);
 
@@ -286,26 +312,13 @@ TEST(CO_RpdoCreate, CoRpdoStart_InvalidBit) {
 
 TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOCommParamRecord) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x06u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x01u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0002u));  // n*100 us
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0004u));  // ms
-  // 0x06 - SYNC start value (not used)
-  obj1400->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  SetComm00HighestSubidxSupported(0x06u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0x01u);
+  SetComm03InhibitTime(0x0002u);
+  SetComm04CompatibilityEntry(0x03u);
+  SetComm05EventTimer(0x0004u);
+  SetComm06SyncStartValue(0x05u);
 
   CreateObj(obj1600, 0x1600u);
 
@@ -352,26 +365,14 @@ TEST(CO_RpdoCreate, CoRpdoCreate_FullRPDOMappingParamRecord) {
 
 TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x07u));
 
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x01u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0002u));  // n*100 us
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x03u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0004u));  // ms
-  // 0x06 - SYNC start value (not used)
-  obj1400->InsertAndSetSub(0x06u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  SetComm00HighestSubidxSupported(0x07u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0x01u);
+  SetComm03InhibitTime(0x0002u);
+  SetComm04CompatibilityEntry(0x03u);
+  SetComm05EventTimer(0x0004u);
+  SetComm06SyncStartValue(0x05u);
 
   // 0x07 - illegal sub-object
   obj1400->InsertAndSetSub(0x07u, CO_DEFTYPE_UNSIGNED32, co_unsigned32_t(0));
@@ -397,15 +398,9 @@ TEST(CO_RpdoCreate, CoRpdoCreate_OversizedRPDOCommParamRecord) {
 
 TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xfeu));  // event-driven
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02EventDrivenTransmission();
 
   CreateObj(obj1600, 0x1600u);
 
@@ -428,15 +423,9 @@ TEST(CO_RpdoCreate, CoRpdoCreate_EventDrivenTransmission) {
 
 TEST(CO_RpdoCreate, CoRpdoCreate_TimerSet) {
   CreateObj(obj1400, 0x1400u);
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateObj(obj1600, 0x1600u);
 
@@ -592,16 +581,9 @@ TEST(CO_Rpdo, CoRpdoSetErr) {
 }
 
 TEST(CO_Rpdo, CoRpdoRtr_RPDONotValid) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(CO_PDO_COBID_VALID | DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
   StartRpdo();
@@ -614,16 +596,9 @@ TEST(CO_Rpdo, CoRpdoRtr_RPDONotValid) {
 TEST(CO_Rpdo, CoRpdoRtr) {
   can_net_set_send_func(net, can_send_func, nullptr);
 
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(CAN_MASK_EID));  // all bits set
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CAN_MASK_EID);  // all bits set
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
   StartRpdo();
@@ -639,16 +614,9 @@ TEST(CO_Rpdo, CoRpdoRtr) {
 TEST(CO_Rpdo, CoRpdoRtr_ExtendedFrame) {
   can_net_set_send_func(net, can_send_func, nullptr);
 
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(CAN_MASK_EID | CO_PDO_COBID_FRAME));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CAN_MASK_EID | CO_PDO_COBID_FRAME);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
   StartRpdo();
@@ -670,19 +638,26 @@ TEST(CO_Rpdo, CoRpdoSync_CounterOverLimit) {
   CHECK_EQUAL(-1, ret);
 }
 
-TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xf1u));  // not synchronous
+TEST(CO_Rpdo, CoRpdoSync_RPDONotValid) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(CO_PDO_COBID_VALID | DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
+  StartRpdo();
+
+  const auto ret = co_rpdo_sync(rpdo, 0x00u);
+
+  CHECK_EQUAL(0, ret);
+}
+
+TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0xf1u);  // not synchronous
+
+  CreateRpdo();
+  StartRpdo();
 
   const auto ret = co_rpdo_sync(rpdo, 0x00u);
 
@@ -690,16 +665,9 @@ TEST(CO_Rpdo, CoRpdoSync_TransmissionNotSynchronous) {
 }
 
 TEST(CO_Rpdo, CoRpdoSync_NoFrame) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
 
@@ -709,18 +677,12 @@ TEST(CO_Rpdo, CoRpdoSync_NoFrame) {
 }
 
 TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -732,17 +694,10 @@ TEST(CO_Rpdo, CoRpdoSync_NoCallbacks) {
   CHECK_EQUAL(0, ret);
 }
 
-TEST(CO_Rpdo, CoRpdoSync_NoErrFunc) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+TEST(CO_Rpdo, CoRpdoSync_WithCallbacks) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateRpdo();
   int data = 0;
@@ -770,16 +725,9 @@ TEST(CO_Rpdo, CoRpdoSync_NoErrFunc) {
 }
 
 TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
@@ -815,17 +763,9 @@ TEST(CO_Rpdo, CoRpdoSync_BadMapping) {
 }
 
 TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
@@ -871,17 +811,9 @@ TEST(CO_Rpdo, CoRpdoSync_BadMappingLength) {
 }
 
 TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   // object 0x1600
   // 0x00 - number of mapped application objects in PDO
@@ -928,21 +860,14 @@ TEST(CO_Rpdo, CoRpdoSync_RPDOLengthExceedsMapping) {
 }
 
 TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xf1u));  // reserved
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0xf1u);  // reserved
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
+  StartRpdo();
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
@@ -955,16 +880,9 @@ TEST(CO_Rpdo, CoRpdoRecv_ReservedTransmissionRPDO) {
 }
 
 TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x02u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0xfeu));  // event-driven
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02EventDrivenTransmission();
 
   CreateRpdo();
   int data = 0;
@@ -990,25 +908,9 @@ TEST(CO_Rpdo, CoRpdoRecv_EventDrivenRPDO) {
 }
 
 TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0000u));  // n*100 us
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0001u));  // ms
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
 
   CreateObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
@@ -1018,55 +920,46 @@ TEST(CO_Rpdo, CoRpdoRecv_ExpiredSyncWindow) {
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   co_rpdo_set_err(rpdo, rpdo_err_func, nullptr);
-  const timespec tp1 = {0, 1000u};
+  StartRpdo();
 
-  const auto ret = can_net_set_time(net, &tp1);
+  // start sync timer
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
+
+  // expire sync window
+  const timespec tp = {0, 1000u};
+  const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
   can_msg msg = CAN_MSG_INIT;
   msg.id = DEV_ID;
-
   const auto recv = can_net_recv(net, &msg);
-
   CHECK_EQUAL(0, recv);
+
+  CHECK_EQUAL(0, co_rpdo_sync(rpdo, 0x00u));
+
+  // message was ignored as sync window had already expired when it was received
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 }
 
 TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
+  SetComm00HighestSubidxSupported(0x05u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
+  SetComm03InhibitTime(0x0000u);
+  SetComm04CompatibilityEntry(0x00u);
+  SetComm05EventTimer(0x0001u);
 
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0000u));  // n*100 us
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0001u));  // ms
-
-  // object 0x1007
-  CoObjTHolder obj1007(0x1007u);
-  CHECK(obj1007.Get() != nullptr);
-  CHECK_EQUAL(0, co_dev_insert_obj(dev, obj1007.Take()));
-
+  CreateObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
-  obj1007.InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
-                          co_unsigned32_t(0x00000001u));  // us
+  obj1007->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED32,
+                           co_unsigned32_t(0x00000001u));  // us
 
   CreateRpdo();
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
-  const timespec tp = {0, 1000000u};  // 1 ms
+  StartRpdo();
 
+  const timespec tp = {0, 1000000u};  // 1 ms
   const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
@@ -1079,32 +972,17 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow_NoErrFunc) {
   CHECK(!CO_RpdoStatic::rpdo_ind_func_called);
 
   const timespec tp2 = {0, 2000000u};  // 2 ms
-
   const auto ret2 = can_net_set_time(net, &tp2);
   CHECK_EQUAL(0, ret2);
 }
 
 TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
-  // object 0x1400
-  // 0x00 - highest sub-index supported
-  obj1400->InsertAndSetSub(0x00u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x05u));
-
-  // 0x01 - COB-ID used by RPDO
-  obj1400->InsertAndSetSub(0x01u, CO_DEFTYPE_UNSIGNED32,
-                           co_unsigned32_t(DEV_ID));
-  // 0x02 - transmission type
-  obj1400->InsertAndSetSub(0x02u, CO_DEFTYPE_UNSIGNED8,
-                           co_unsigned8_t(0x00u));  // synchronous
-  // 0x03 - inhibit time
-  obj1400->InsertAndSetSub(0x03u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0000u));  // n*100 us
-
-  // 0x04 - reserved (compatibility entry)
-  obj1400->InsertAndSetSub(0x04u, CO_DEFTYPE_UNSIGNED8, co_unsigned8_t(0x00u));
-
-  // 0x05 - event-timer
-  obj1400->InsertAndSetSub(0x05u, CO_DEFTYPE_UNSIGNED16,
-                           co_unsigned16_t(0x0001u));  // ms
+  SetComm00HighestSubidxSupported(0x05u);
+  SetComm01CobId(DEV_ID);
+  SetComm02SynchronousTransmission();
+  SetComm03InhibitTime(0x0000u);
+  SetComm04CompatibilityEntry(0x00u);
+  SetComm05EventTimer(0x0001u);
 
   CreateObj(obj1007, 0x1007u);
   // 0x00 - synchronous window length
@@ -1115,9 +993,9 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   co_rpdo_set_ind(rpdo, rpdo_ind_func, nullptr);
   int data = 0;
   co_rpdo_set_err(rpdo, rpdo_err_func, &data);
-  const timespec tp = {0, 1000000u};  // 1 ms
   StartRpdo();
 
+  const timespec tp = {0, 1000000u};  // 1 ms
   const auto ret = can_net_set_time(net, &tp);
   CHECK_EQUAL(0, ret);
 
@@ -1131,7 +1009,6 @@ TEST(CO_Rpdo, CoRpdoRecv_NoPDOInSyncWindow) {
   CHECK(!CO_RpdoStatic::rpdo_err_func_called);
 
   const timespec tp2 = {0, 2000000u};  // 2 ms
-
   const auto ret2 = can_net_set_time(net, &tp2);
   CHECK_EQUAL(0, ret2);
 
