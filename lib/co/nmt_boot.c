@@ -23,7 +23,7 @@
 
 #include "co.h"
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT
 
 #include "nmt_boot.h"
 #include <lely/co/dev.h>
@@ -2196,8 +2196,6 @@ co_nmt_boot_send_rtr(co_nmt_boot_t *boot)
 }
 #endif
 
-#endif // !LELY_NO_CO_MASTER
-
 static void *
 co_nmt_boot_alloc(can_net_t *net)
 {
@@ -2301,3 +2299,5 @@ co_nmt_boot_fini(co_nmt_boot_t *boot)
 	can_timer_destroy(boot->timer);
 	can_recv_destroy(boot->recv);
 }
+
+#endif // !LELY_NO_CO_MASTER && !LELY_NO_CO_NMT_BOOT

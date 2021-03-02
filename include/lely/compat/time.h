@@ -33,11 +33,12 @@
 #endif
 #endif
 
-#undef LELY_HAVE_TIMESPEC
+#ifndef LELY_HAVE_TIMESPEC
 #if __STDC_VERSION__ >= 201112L || _MSC_VER >= 1900 \
 		|| _POSIX_C_SOURCE >= 199309L || defined(__CYGWIN__) \
 		|| defined(_TIMESPEC_DEFINED) || defined(__timespec_defined)
 #define LELY_HAVE_TIMESPEC 1
+#endif
 #endif
 
 #ifndef LELY_HAVE_TIMESPEC_GET

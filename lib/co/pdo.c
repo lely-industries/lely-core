@@ -4,7 +4,7 @@
  *
  * @see lely/co/pdo.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -23,6 +23,8 @@
 
 #include "co.h"
 
+#if !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
+
 #include <lely/can/msg.h>
 #include <lely/co/dev.h>
 #include <lely/co/obj.h>
@@ -37,6 +39,8 @@ static co_unsigned32_t co_dev_cfg_pdo_comm(const co_dev_t *dev,
 
 static co_unsigned32_t co_dev_cfg_pdo_map(const co_dev_t *dev,
 		co_unsigned16_t num, const struct co_pdo_map_par *par);
+
+#if !LELY_NO_CO_RPDO
 
 co_unsigned32_t
 co_dev_chk_rpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
@@ -113,6 +117,10 @@ co_dev_cfg_rpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 	return co_dev_cfg_pdo_map(dev, 0x1600 + num - 1, par);
 }
 
+#endif // !LELY_NO_CO_RPDO
+
+#if !LELY_NO_CO_TPDO
+
 co_unsigned32_t
 co_dev_chk_tpdo(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 {
@@ -182,6 +190,8 @@ co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 	return co_dev_cfg_pdo_map(dev, 0x1a00 + num - 1, par);
 }
 
+#endif // !LELY_NO_CO_TPDO
+
 co_unsigned32_t
 co_pdo_map(const struct co_pdo_map_par *par, const co_unsigned64_t *val,
 		co_unsigned8_t n, uint_least8_t *buf, size_t *pn)
@@ -250,6 +260,7 @@ co_pdo_unmap(const struct co_pdo_map_par *par, const uint_least8_t *buf,
 	return 0;
 }
 
+#if !LELY_NO_CO_RPDO
 co_unsigned32_t
 co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		struct co_sdo_req *req, const uint_least8_t *buf, size_t n)
@@ -261,8 +272,6 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 
 	if (n > CAN_MAX_LEN)
 		return CO_SDO_AC_PDO_LEN;
-
-	co_unsigned32_t ac = 0;
 
 	size_t offset = 0;
 	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
@@ -278,9 +287,9 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		if (offset + len > n * 8)
 			return CO_SDO_AC_PDO_LEN;
 
-		// Check whether the sub-object exists and can be mapped into a
-		// PDO (or is a valid dummy entry).
-		ac = co_dev_chk_rpdo(dev, idx, subidx);
+		// Check whether the sub-object exists and can be mapped into an
+		// RPDO (or is a valid dummy entry).
+		co_unsigned32_t ac = co_dev_chk_rpdo(dev, idx, subidx);
 		if (ac)
 			return ac;
 
@@ -301,9 +310,11 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		offset += len;
 	}
 
-	return ac;
+	return 0;
 }
+#endif // !LELY_NO_CO_RPDO
 
+#if !LELY_NO_CO_TPDO
 co_unsigned32_t
 co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn)
@@ -311,8 +322,6 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	assert(par);
 	assert(dev);
 	assert(req);
-
-	co_unsigned32_t ac = 0;
 
 	size_t offset = 0;
 	for (size_t i = 0; i < MIN(par->n, CO_PDO_NUM_MAPS); i++) {
@@ -329,8 +338,8 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 			return CO_SDO_AC_PDO_LEN;
 
 		// Check whether the sub-object exists and can be mapped into a
-		// PDO.
-		ac = co_dev_chk_tpdo(dev, idx, subidx);
+		// TPDO.
+		co_unsigned32_t ac = co_dev_chk_tpdo(dev, idx, subidx);
 		if (ac)
 			return ac;
 
@@ -350,8 +359,9 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 	if (pn)
 		*pn = (offset + 7) / 8;
 
-	return ac;
+	return 0;
 }
+#endif // !LELY_NO_CO_TPDO
 
 static co_unsigned32_t
 co_dev_cfg_pdo_comm(const co_dev_t *dev, co_unsigned16_t idx,
@@ -435,6 +445,7 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	co_sub_t *sub_00 = co_obj_find_sub(obj, 0x00);
 	if (!sub_00)
 		return CO_SDO_AC_NO_SUB;
+
 	// Disable mapping by setting subindex 0x00 to zero.
 	ac = co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8,
 			&(co_unsigned8_t){ 0 }, NULL);
@@ -455,3 +466,5 @@ co_dev_cfg_pdo_map(const co_dev_t *dev, co_unsigned16_t idx,
 	// Enable mapping.
 	return co_sub_dn_ind_val(sub_00, CO_DEFTYPE_UNSIGNED8, &par->n, NULL);
 }
+
+#endif // !LELY_NO_CO_RPDO || !LELY_NO_CO_TPDO
