@@ -55,14 +55,14 @@ struct LoopDriver::Impl_ : io_svc {
 
   LoopDriver* self{nullptr};
   io::ContextBase ctx{nullptr};
-  ::std::atomic_flag shutdown;
+  ::std::atomic_flag shutdown{false};
   ev::Promise<void, void> stopped;
 #ifdef __MINGW32__
   thrd_t thr;
 #else
   ::std::thread thread;
 #endif
-  ::std::atomic_flag joined;
+  ::std::atomic_flag joined{false};
 };
 
 // clang-format off
