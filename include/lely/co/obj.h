@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the object
  * dictionary declarations.
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -138,12 +138,13 @@ extern "C" {
  * @param req  a pointer to a CANopen SDO download request. The <b>size</b>,
  *             <b>buf</b>, <b>nbyte</b> and <b>offset</b> members of *<b>req</b>
  *             are set by the caller.
+ * @param ac   the SDO abort code, in case of an error during an SDO request.
  * @param data a pointer to user-specified data.
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-typedef co_unsigned32_t co_sub_dn_ind_t(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+typedef co_unsigned32_t co_sub_dn_ind_t(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The type of a CANopen sub-object upload indication function, invoked by an
@@ -153,12 +154,13 @@ typedef co_unsigned32_t co_sub_dn_ind_t(
  * @param req  a pointer to a CANopen SDO upload request. On the first
  *             invocation, the <b>size</b> member of *<b>req</b> is set to 0.
  *             All members MUST be initialized by the indication function.
+ * @param ac   the SDO abort code, in case of an error during an SDO request.
  * @param data a pointer to user-specified data.
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-typedef co_unsigned32_t co_sub_up_ind_t(
-		const co_sub_t *sub, struct co_sdo_req *req, void *data);
+typedef co_unsigned32_t co_sub_up_ind_t(const co_sub_t *sub,
+		struct co_sdo_req *req, co_unsigned32_t ac, void *data);
 
 #if !LELY_NO_MALLOC
 

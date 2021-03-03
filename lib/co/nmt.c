@@ -329,16 +329,16 @@ static void co_nmt_fini(co_nmt_t *nmt);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_100c_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The download indication function for CANopen object 100D (Life time factor).
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_100d_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 #endif // !LELY_NO_CO_NG
 
@@ -348,8 +348,8 @@ static co_unsigned32_t co_100d_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1016_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The download indication function for CANopen object 1017 (Producer heartbeat
@@ -357,8 +357,8 @@ static co_unsigned32_t co_1016_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1017_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 #if !LELY_NO_CO_NMT_CFG
 /**
@@ -367,8 +367,8 @@ static co_unsigned32_t co_1017_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f25_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 #endif
 
 /**
@@ -377,8 +377,8 @@ static co_unsigned32_t co_1f25_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f80_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 #if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
 /**
@@ -387,8 +387,8 @@ static co_unsigned32_t co_1f80_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f81_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 #endif
 
 #if !LELY_NO_CO_MASTER
@@ -398,8 +398,8 @@ static co_unsigned32_t co_1f81_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1f82_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 #endif
 
 /// The CAN receive callback function for NMT messages. @see can_recv_func_t
@@ -2065,7 +2065,8 @@ co_nmt_hb_ind(co_nmt_t *nmt, co_unsigned8_t id, int state, int reason,
 #if !LELY_NO_CO_NG
 
 static co_unsigned32_t
-co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x100c);
@@ -2076,8 +2077,10 @@ co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2099,7 +2102,8 @@ co_100c_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 static co_unsigned32_t
-co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x100d);
@@ -2110,8 +2114,10 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2135,7 +2141,8 @@ co_100d_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 #endif // !LELY_NO_CO_NG
 
 static co_unsigned32_t
-co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1016);
@@ -2146,8 +2153,10 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2199,7 +2208,8 @@ co_1016_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 static co_unsigned32_t
-co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1017);
@@ -2210,8 +2220,10 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2234,7 +2246,8 @@ co_1017_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 #if !LELY_NO_CO_NMT_CFG
 static co_unsigned32_t
-co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f25);
@@ -2245,8 +2258,10 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2306,7 +2321,8 @@ co_1f25_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 #endif // !LELY_NO_CO_NMT_CFG
 
 static co_unsigned32_t
-co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f80);
@@ -2316,8 +2332,10 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2341,7 +2359,8 @@ co_1f80_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 #if !LELY_NO_CO_MASTER && !LELY_NO_MALLOC
 static co_unsigned32_t
-co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f81);
@@ -2352,8 +2371,10 @@ co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2383,7 +2404,8 @@ co_1f81_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 
 #if !LELY_NO_CO_MASTER
 static co_unsigned32_t
-co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f82);
@@ -2394,8 +2416,10 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -2430,7 +2454,7 @@ co_1f82_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	default: ac = CO_SDO_AC_PARAM_VAL; break;
 	}
 
-	return 0;
+	return ac;
 }
 #endif // !LELY_NO_CO_MASTER
 

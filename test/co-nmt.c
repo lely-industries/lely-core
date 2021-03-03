@@ -30,8 +30,8 @@ void scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id,
 		void *data);
 #endif
 
-co_unsigned32_t co_1f51_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+co_unsigned32_t co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 co_dev_t *mdev;
 co_nmt_t *master;
@@ -288,7 +288,8 @@ scan_ind(co_lss_t *lss, co_unsigned8_t cs, const struct co_id *id, void *data)
 #endif // !LELY_NO_CO_LSS
 
 co_unsigned32_t
-co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	tap_assert(sub);
 	tap_assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1f51);
@@ -296,9 +297,11 @@ co_1f51_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_dev_t *dev = data;
 	tap_assert(dev);
 
-	co_unsigned32_t ac = 0;
-
 	co_unsigned16_t type = co_sub_get_type(sub);
+
+	if (ac)
+		return ac;
+
 	union co_val val;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;

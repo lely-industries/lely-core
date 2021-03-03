@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -186,12 +186,15 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
   co_obj_t* obj = nullptr;
   co_sub_t* sub = nullptr;
 
-  static co_unsigned32_t dn_ind_func(co_sub_t*, struct co_sdo_req*, void*) {
+  static co_unsigned32_t dn_ind_func(co_sub_t*, struct co_sdo_req*,
+                                     co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     ++CO_ObjSub_Static::dn_ind_func_counter;
     return 0;
   }
   static co_unsigned32_t up_ind_func(const co_sub_t*, struct co_sdo_req*,
-                                     void*) {
+                                     co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     ++CO_ObjSub_Static::up_ind_func_counter;
     return 0;
   }

@@ -9,7 +9,7 @@
  *
  * @see lely/co/ssdo.h, lib/co/sdo.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -140,8 +140,8 @@ static void co_ssdo_update(co_ssdo_t *sdo);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1200_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The CAN receive callback function for a Server-SDO service.
@@ -737,7 +737,8 @@ co_ssdo_update(co_ssdo_t *sdo)
 }
 
 static co_unsigned32_t
-co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(req);
@@ -748,7 +749,9 @@ co_1200_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
-	co_unsigned32_t ac = 0;
+	if (ac)
+		return ac;
+
 	union co_val val;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;

@@ -3,7 +3,7 @@
  * object 1026 (OS prompt) by connecting the StdIn, StdOut and StdErr
  * sub-objects to `stdin`, `stdout` and `stderr` of a user-specified process.
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -70,10 +70,10 @@ int can_timer(const struct timespec *tp, void *data);
 
 void can_err(io_handle_t handle, int *pst, co_nmt_t *nmt);
 
-co_unsigned32_t co_1026_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
-co_unsigned32_t co_1026_up_ind(
-		const co_sub_t *sub, struct co_sdo_req *req, void *data);
+co_unsigned32_t co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
+co_unsigned32_t co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 #define FLAG_HELP 0x01
 #define FLAG_NO_DAEMON 0x02
@@ -670,7 +670,8 @@ can_err(io_handle_t handle, int *pst, co_nmt_t *nmt)
 }
 
 co_unsigned32_t
-co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	(void)sub;
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1026);
@@ -679,9 +680,11 @@ co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(req);
 	io_handle_t handle = (io_handle_t)data;
 
+	if (ac)
+		return ac;
+
 	co_unsigned8_t val = 0;
 
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac) == -1)
 		return ac;
 
@@ -692,7 +695,8 @@ co_1026_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 co_unsigned32_t
-co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	(void)sub;
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1026);
@@ -702,11 +706,13 @@ co_1026_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
 	assert(req);
 	io_handle_t handle = (io_handle_t)data;
 
+	if (ac)
+		return ac;
+
 	co_unsigned8_t val = 0;
 	if (io_read(handle, &val, 1) != 1)
 		return CO_SDO_AC_NO_DATA;
 
-	co_unsigned32_t ac = 0;
 	co_sdo_req_up_val(req, CO_DEFTYPE_UNSIGNED8, &val, &ac);
 	return ac;
 }

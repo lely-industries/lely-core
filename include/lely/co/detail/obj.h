@@ -3,7 +3,7 @@
  *
  * @see lely/co/obj.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -98,12 +98,12 @@ extern "C" {
 #endif
 
 /// The default download indication function. @see co_sub_dn_ind_t
-co_unsigned32_t co_sub_default_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+co_unsigned32_t co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /// The default upload indication function. @see co_sub_up_ind_t
-co_unsigned32_t co_sub_default_up_ind(
-		const co_sub_t *sub, struct co_sdo_req *req, void *data);
+co_unsigned32_t co_sub_default_up_ind(const co_sub_t *sub,
+		struct co_sdo_req *req, co_unsigned32_t ac, void *data);
 
 #ifdef __cplusplus
 }
