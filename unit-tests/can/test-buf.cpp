@@ -107,18 +107,24 @@ TEST_GROUP(CAN_Buf) {
 #if LELY_NO_MALLOC
   can_msg memory[BUF_SIZE + 1];
 #endif
-  can_buf buf = CAN_BUF_INIT;
+  can_buf buf_ = CAN_BUF_INIT;
+  can_buf* buf = &buf_;
 
   TEST_SETUP() {
+    buf = &buf_;
+
 #if LELY_NO_MALLOC
-    can_buf_init(&buf, memory, BUF_SIZE + 1);  // +1 to make it power of 2
+    can_buf_init(buf, memory, BUF_SIZE + 1);  // +1 to make it power of 2
 #else
-    can_buf_init(&buf, nullptr, 0);
-    CHECK_EQUAL(BUF_SIZE, can_buf_reserve(&buf, BUF_SIZE));
+    can_buf_init(buf, nullptr, 0);
+    CHECK_EQUAL(BUF_SIZE, can_buf_reserve(buf, BUF_SIZE));
 #endif
   }
 
-  TEST_TEARDOWN() { can_buf_fini(&buf); }
+  TEST_TEARDOWN() {
+    can_buf_fini(buf);
+    buf = nullptr;
+  }
 
   static void FillCanMsg(can_msg & msg, const uint_least32_t id,
                          const uint_least8_t len, const uint_least8_t val) {
@@ -150,11 +156,11 @@ TEST_GROUP(CAN_Buf) {
 ///
 /// \Then 0 is returned, nothing is changed
 TEST(CAN_Buf, CanBufWrite_ZeroFrames) {
-  const auto frames_written = can_buf_write(&buf, nullptr, 0);
+  const auto frames_written = can_buf_write(buf, nullptr, 0);
 
   CHECK_EQUAL(0, frames_written);
-  CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
 }
 
 /// \Given a pointer to an empty CAN frame buffer (can_buf)
@@ -168,15 +174,15 @@ TEST(CAN_Buf, CanBufWrite_OneFrame) {
   can_msg msg = CAN_MSG_INIT;
   FillCanMsg(msg, 0x77, 5, 0xaa);
 
-  const auto frames_written = can_buf_write(&buf, &msg, 1);
+  const auto frames_written = can_buf_write(buf, &msg, 1);
 
   CHECK_EQUAL(1, frames_written);
-  CHECK_EQUAL(1, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE - 1, can_buf_capacity(&buf));
+  CHECK_EQUAL(1, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE - 1, can_buf_capacity(buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(1, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));
+  CHECK_EQUAL(1, can_buf_peek(buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(&msg, out_tab, 1);
 }
 
@@ -197,15 +203,15 @@ TEST(CAN_Buf, CanBufWrite_ManyFrames) {
   FillCanMsg(msg_arr[1], 0x2c, 3, 0xb4);
   FillCanMsg(msg_arr[2], 0x3b, 1, 0xc8);
 
-  const auto frames_written = can_buf_write(&buf, msg_arr, MSG_NUM);
+  const auto frames_written = can_buf_write(buf, msg_arr, MSG_NUM);
 
   CHECK_EQUAL(MSG_NUM, frames_written);
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(MSG_NUM, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));
+  CHECK_EQUAL(MSG_NUM, can_buf_peek(buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_arr, out_tab, MSG_NUM);
 }
 
@@ -226,15 +232,15 @@ TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
   FillCanMsg(msg_arr[14], 0x26, 7, 0xb0);
   FillCanMsg(msg_arr[15], 0x81, 4, 0x08);
 
-  const auto frames_written = can_buf_write(&buf, msg_arr, MSG_NUM);
+  const auto frames_written = can_buf_write(buf, msg_arr, MSG_NUM);
 
   CHECK_EQUAL(BUF_SIZE, frames_written);
-  CHECK_EQUAL(BUF_SIZE, can_buf_size(&buf));
-  CHECK_EQUAL(0, can_buf_capacity(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_size(buf));
+  CHECK_EQUAL(0, can_buf_capacity(buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(BUF_SIZE, can_buf_peek(&buf, out_tab, BUF_SIZE + 1));
+  CHECK_EQUAL(BUF_SIZE, can_buf_peek(buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_arr, out_tab, 15);
 }
 
@@ -249,10 +255,10 @@ TEST(CAN_Buf, CanBufWrite_TooManyFrames) {
 ///
 /// \Then nothing is changed
 TEST(CAN_Buf, CanBufClear_Empty) {
-  can_buf_clear(&buf);
+  can_buf_clear(buf);
 
-  CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
@@ -265,12 +271,12 @@ TEST(CAN_Buf, CanBufClear_NonEmpty) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  can_buf_clear(&buf);
+  can_buf_clear(buf);
 
-  CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
 }
 
 ///@}
@@ -289,12 +295,12 @@ TEST(CAN_Buf, CanBufPeek_NullPtr) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto frames_read = can_buf_peek(&buf, nullptr, 3);
+  const auto frames_read = can_buf_peek(buf, nullptr, 3);
 
   CHECK_EQUAL(3, frames_read);
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
@@ -308,12 +314,12 @@ TEST(CAN_Buf, CanBufPeek_NullPtr_ManyFrames) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto frames_read = can_buf_peek(&buf, nullptr, MSG_NUM + 1);
+  const auto frames_read = can_buf_peek(buf, nullptr, MSG_NUM + 1);
 
   CHECK_EQUAL(MSG_NUM, frames_read);
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored and
@@ -332,15 +338,15 @@ TEST(CAN_Buf, CanBufPeek_ManyFrames) {
   FillCanMsg(msg_arr[0], 0x1d, 6, 0xa2);
   FillCanMsg(msg_arr[1], 0x2c, 3, 0xb4);
   FillCanMsg(msg_arr[2], 0x3b, 1, 0xc8);
-  CHECK_EQUAL(MSG_NUM, can_buf_write(&buf, msg_arr, MSG_NUM));
+  CHECK_EQUAL(MSG_NUM, can_buf_write(buf, msg_arr, MSG_NUM));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  const auto frames_read = can_buf_peek(&buf, out_tab, BUF_SIZE + 1);
+  const auto frames_read = can_buf_peek(buf, out_tab, BUF_SIZE + 1);
 
   CHECK_EQUAL(MSG_NUM, frames_read);
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(&buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(buf));
   CheckCanMsgTabs(msg_arr, out_tab, MSG_NUM);
 }
 
@@ -364,13 +370,13 @@ TEST(CAN_Buf, CanBufReserve_Enlarge_MallocMode) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_NUM + 1);
+  const auto capacity = can_buf_reserve(buf, BUF_SIZE - MSG_NUM + 1);
 
   CHECK_EQUAL(31 - MSG_NUM, capacity);  // (new_buffer_size - MSG_NUM)
-  CHECK_EQUAL(31 - MSG_NUM, can_buf_capacity(&buf));
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(31 - MSG_NUM, can_buf_capacity(buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
 }
 #endif
 
@@ -388,13 +394,13 @@ TEST(CAN_Buf, CanBufReserve_Enlarge_NoMallocMode) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_NUM + 1);
+  const auto capacity = can_buf_reserve(buf, BUF_SIZE - MSG_NUM + 1);
 
   CHECK_EQUAL(0, capacity);
-  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(&buf));
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
 #if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
 #endif
@@ -412,13 +418,13 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
   can_msg msg_arr[MSG_NUM];
 
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - MSG_NUM);
+  const auto capacity = can_buf_reserve(buf, BUF_SIZE - MSG_NUM);
 
   CHECK_EQUAL(BUF_SIZE - MSG_NUM, capacity);
-  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(&buf));
-  CHECK_EQUAL(MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(buf));
+  CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
 }
 
 #if LELY_NO_MALLOC
@@ -431,14 +437,14 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
 /// \Then 0 is returned, nothing is changed;
 ///       if !LELY_NO_ERRNO no memory error is reported
 TEST(CAN_Buf, CanBufReserve_NoMemory) {
-  const auto capacity = can_buf_reserve(&buf, 2 * BUF_SIZE);
+  const auto capacity = can_buf_reserve(buf, 2 * BUF_SIZE);
 
   CHECK_EQUAL(0, capacity);
 #if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
 #endif
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
-  CHECK_EQUAL(0, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
 }
 #else
 /// \Given LELY_NO_MALLOC disabled; a pointer to a CAN frame buffer (can_buf)
@@ -460,20 +466,20 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
   FillCanMsg(msg_arr[5], 0x8a, 5, 0xf8);
   FillCanMsg(msg_arr[10], 0xef, 7, 0x34);
 
-  can_buf_write(&buf, msg_arr, MSG_NUM);
-  can_buf_read(&buf, nullptr, 10);
-  can_buf_write(&buf, msg_arr, 6);
+  can_buf_write(buf, msg_arr, MSG_NUM);
+  can_buf_read(buf, nullptr, 10);
+  can_buf_write(buf, msg_arr, 6);
   const size_t NEW_MSG_NUM = MSG_NUM - 10 + 6;
 
-  const auto capacity = can_buf_reserve(&buf, BUF_SIZE - NEW_MSG_NUM + 1);
+  const auto capacity = can_buf_reserve(buf, BUF_SIZE - NEW_MSG_NUM + 1);
 
   CHECK_EQUAL(31 - NEW_MSG_NUM, capacity);  // (new_buffer_size - NEW_MSG_NUM)
-  CHECK_EQUAL(31 - NEW_MSG_NUM, can_buf_capacity(&buf));
-  CHECK_EQUAL(NEW_MSG_NUM, can_buf_size(&buf));
+  CHECK_EQUAL(31 - NEW_MSG_NUM, can_buf_capacity(buf));
+  CHECK_EQUAL(NEW_MSG_NUM, can_buf_size(buf));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  CHECK_EQUAL(NEW_MSG_NUM, can_buf_read(&buf, out_tab, BUF_SIZE + 1));
+  CHECK_EQUAL(NEW_MSG_NUM, can_buf_read(buf, out_tab, BUF_SIZE + 1));
   CheckCanMsgTabs(msg_arr + 10, out_tab, 5);
   CheckCanMsgTabs(msg_arr, out_tab + 5, 6);
 }
@@ -491,7 +497,7 @@ TEST(CAN_Buf, CanBufReserve_Wrapping) {
 ///
 /// \Then 0 is returned, nothing is changed
 TEST(CAN_Buf, CanBufRead_ZeroFrames) {
-  const auto frames_read = can_buf_read(&buf, nullptr, 0);
+  const auto frames_read = can_buf_read(buf, nullptr, 0);
 
   CHECK_EQUAL(0, frames_read);
 }
@@ -507,14 +513,14 @@ TEST(CAN_Buf, CanBufRead_ZeroFrames) {
 TEST(CAN_Buf, CanBufRead_OneFrame) {
   can_msg msg = CAN_MSG_INIT;
   FillCanMsg(msg, 0x77, 5, 0xaa);
-  CHECK_EQUAL(1, can_buf_write(&buf, &msg, 1));
+  CHECK_EQUAL(1, can_buf_write(buf, &msg, 1));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  const auto frames_read = can_buf_read(&buf, out_tab, BUF_SIZE + 1);
+  const auto frames_read = can_buf_read(buf, out_tab, BUF_SIZE + 1);
 
   CHECK_EQUAL(1, frames_read);
-  CHECK_EQUAL(0, can_buf_size(&buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
   CheckCanMsgTabs(&msg, out_tab, 1);
 }
 
@@ -535,15 +541,15 @@ TEST(CAN_Buf, CanBufRead_ManyFrames) {
   FillCanMsg(msg_arr[0], 0x1d, 6, 0xa2);
   FillCanMsg(msg_arr[1], 0x2c, 3, 0xb4);
   FillCanMsg(msg_arr[2], 0x3b, 1, 0xc8);
-  CHECK_EQUAL(MSG_NUM, can_buf_write(&buf, msg_arr, MSG_NUM));
+  CHECK_EQUAL(MSG_NUM, can_buf_write(buf, msg_arr, MSG_NUM));
 
   can_msg out_tab[BUF_SIZE + 1];
   std::fill_n(out_tab, BUF_SIZE + 1, can_msg(CAN_MSG_INIT));
-  const auto frames_read = can_buf_read(&buf, out_tab, BUF_SIZE + 1);
+  const auto frames_read = can_buf_read(buf, out_tab, BUF_SIZE + 1);
 
   CHECK_EQUAL(MSG_NUM, frames_read);
-  CHECK_EQUAL(0, can_buf_size(&buf));
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(0, can_buf_size(buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
   CheckCanMsgTabs(msg_arr, out_tab, MSG_NUM);
 }
 
@@ -558,12 +564,12 @@ TEST(CAN_Buf, CanBufRead_NullPtr) {
   const size_t MSG_NUM = 4;
   can_msg msg_arr[MSG_NUM];
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  const auto frames_read = can_buf_read(&buf, nullptr, 3);
+  const auto frames_read = can_buf_read(buf, nullptr, 3);
 
   CHECK_EQUAL(3, frames_read);
-  CHECK_EQUAL(MSG_NUM - frames_read, can_buf_size(&buf));
+  CHECK_EQUAL(MSG_NUM - frames_read, can_buf_size(buf));
 }
 
 ///@}
@@ -576,7 +582,7 @@ TEST(CAN_Buf, CanBufRead_NullPtr) {
 /// \When can_buf_size() is called
 ///
 /// \Then 0 is returned
-TEST(CAN_Buf, CanBufSize_Empty) { CHECK_EQUAL(0, can_buf_size(&buf)); }
+TEST(CAN_Buf, CanBufSize_Empty) { CHECK_EQUAL(0, can_buf_size(buf)); }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
 ///
@@ -587,9 +593,9 @@ TEST(CAN_Buf, CanBufSize_ManyFrames) {
   const size_t MSG_NUM = 4u;
   can_msg msg_arr[MSG_NUM];
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  CHECK_EQUAL(4u, can_buf_size(&buf));
+  CHECK_EQUAL(4u, can_buf_size(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with no space left
@@ -601,9 +607,9 @@ TEST(CAN_Buf, CanBufSize_Full) {
   const size_t MSG_NUM = BUF_SIZE + 1;
   can_msg msg_arr[MSG_NUM];
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  CHECK_EQUAL(BUF_SIZE, can_buf_size(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_size(buf));
 }
 
 ///@}
@@ -617,7 +623,7 @@ TEST(CAN_Buf, CanBufSize_Full) {
 ///
 /// \Then full buffer capacity is returned
 TEST(CAN_Buf, CanBufCapacity_Empty) {
-  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(&buf));
+  CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with some frames stored
@@ -629,9 +635,9 @@ TEST(CAN_Buf, CanBufCapacity_ManyFrames) {
   const size_t MSG_NUM = 4u;
   can_msg msg_arr[MSG_NUM];
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  CHECK_EQUAL(BUF_SIZE - 4u, can_buf_capacity(&buf));
+  CHECK_EQUAL(BUF_SIZE - 4u, can_buf_capacity(buf));
 }
 
 /// \Given a pointer to a CAN frame buffer (can_buf) with no space left
@@ -643,9 +649,9 @@ TEST(CAN_Buf, CanBufCapacity_Full) {
   const size_t MSG_NUM = BUF_SIZE + 1;
   can_msg msg_arr[MSG_NUM];
   std::fill_n(msg_arr, MSG_NUM, can_msg(CAN_MSG_INIT));
-  can_buf_write(&buf, msg_arr, MSG_NUM);
+  can_buf_write(buf, msg_arr, MSG_NUM);
 
-  CHECK_EQUAL(0u, can_buf_capacity(&buf));
+  CHECK_EQUAL(0u, can_buf_capacity(buf));
 }
 
 ///@}
