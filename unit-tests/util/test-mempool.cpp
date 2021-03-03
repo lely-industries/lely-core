@@ -149,8 +149,8 @@ TEST(Util_MemPool, MemPool_Alloc_RespectsAlignment) {
 /// \When mem_alloc() is called with non-zero alignment that's not a power of 2
 ///       and non-zero size
 ///
-/// \Then a null pointer is returned, nothing is changed;
-///       if !LELY_NO_ERRNO invalid argument error is reported
+/// \Then a null pointer is returned, nothing is changed,
+///       ERRNUM_INVAL error number is set
 TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
   const size_t allocationSize = 10u;
 
@@ -159,9 +159,7 @@ TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
   POINTERS_EQUAL(nullptr, result);
   CHECK_EQUAL(0, mem_size(alloc));
   CHECK_EQUAL(POOL_SIZE, mem_capacity(alloc));
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no
@@ -170,8 +168,8 @@ TEST(Util_MemPool, MemPool_Alloc_IncorrectAlignment) {
 /// \When mem_alloc() is called with zero alignment and size that's greater than
 ///       memory pool's buffer size
 ///
-/// \Then a null pointer is returned, nothing is changed;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then a null pointer is returned, nothing is changed,
+///       ERRNUM_NOMEM error number is set
 TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
   const size_t allocationSize = POOL_SIZE + 1u;
 
@@ -180,9 +178,7 @@ TEST(Util_MemPool, MemPool_Alloc_OutOfMemory) {
   POINTERS_EQUAL(nullptr, result);
   CHECK_EQUAL(0, mem_size(alloc));
   CHECK_EQUAL(POOL_SIZE, mem_capacity(alloc));
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
 }
 
 /// \Given a pointer to an allocator (alloc_t) based on memory pool, with no

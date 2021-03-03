@@ -512,8 +512,7 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_MallocMode) {
 ///
 /// \When membuf_reserve() is called with some non-zero capacity
 ///
-/// \Then 0 is returned, nothing is changed;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then 0 is returned, nothing is changed, ERRNUM_NOMEM error number is set
 TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
   const char TEST[] = "0123456789ABCDEF__________________";
   membuf_write(buf, TEST, sizeof(TEST));
@@ -522,9 +521,7 @@ TEST(Util_MemBuf, MemBuf_Reserve_AddNew_NoMallocMode) {
   const auto ret = membuf_reserve(buf, REQUIRED_ADDITIONAL_SIZE);
 
   CHECK_EQUAL(0, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
   CHECK_EQUAL(0, membuf_capacity(buf));
   CHECK_EQUAL(CAPACITY, membuf_size(buf));
   STRNCMP_EQUAL(TEST, reinterpret_cast<char*>(membuf_begin(buf)), CAPACITY);

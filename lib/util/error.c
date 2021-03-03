@@ -4,7 +4,7 @@
  *
  * @see lely/util/error.h
  *
- * @copyright 2013-2020 Lely Industries N.V.
+ * @copyright 2013-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -26,7 +26,7 @@
 #include <lely/util/error.h>
 #include <lely/util/util.h>
 
-#if !NO_CXX
+#if !LELY_NO_CXX
 #include <stdlib.h>
 #endif
 #include <string.h>
@@ -41,11 +41,27 @@
 
 #endif // _WIN32
 
-#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+#if !LELY_NO_ERRNO && _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 static const char *gai_strerror_r(int ecode, char *strerrbuf, size_t buflen);
 #endif
 
-#if !NO_CXX
+static void default_set_errc_handler(int errc, void *data);
+static int default_get_errc_handler(void *data);
+
+#if LELY_NO_ERRNO
+#if LELY_NO_THREADS
+static int noerrno_default_errc;
+#else
+static _Thread_local int noerrno_default_errc;
+#endif
+#endif
+
+static set_errc_handler_t *set_errc_handler = &default_set_errc_handler;
+static get_errc_handler_t *get_errc_handler = &default_get_errc_handler;
+static void *set_errc_data = NULL;
+static void *get_errc_data = NULL;
+
+#if !LELY_NO_CXX
 _Noreturn void
 throw_or_abort_impl(const char *what)
 {
@@ -55,6 +71,39 @@ throw_or_abort_impl(const char *what)
 }
 #endif
 
+void
+get_errc_get_handler(get_errc_handler_t **phandler, void **pdata)
+{
+	if (phandler)
+		*phandler = get_errc_handler;
+	if (pdata)
+		*pdata = get_errc_data;
+}
+
+void
+set_errc_get_handler(set_errc_handler_t **phandler, void **pdata)
+{
+	if (phandler)
+		*phandler = set_errc_handler;
+	if (pdata)
+		*pdata = set_errc_data;
+}
+
+void
+get_errc_set_handler(get_errc_handler_t *handler, void *data)
+{
+	get_errc_handler = handler;
+	get_errc_data = data;
+}
+
+void
+set_errc_set_handler(set_errc_handler_t *handler, void *data)
+{
+	set_errc_handler = handler;
+	set_errc_data = data;
+}
+
+#if !LELY_NO_ERRNO
 int
 errno2c(int errnum)
 {
@@ -318,9 +367,14 @@ errc2no(int errc)
 #endif
 }
 
+#endif // !LELY_NO_ERRNO
+
 errnum_t
 errc2num(int errc)
 {
+#if LELY_NO_ERRNO
+	return errc;
+#else
 #if _WIN32
 	switch (errc) {
 	case ERROR_ACCESS_DENIED: return ERRNUM_ACCES;
@@ -555,7 +609,7 @@ errc2num(int errc)
 	case WSANO_RECOVERY: return ERRNUM_AI_FAIL;
 	case WSATRY_AGAIN: return ERRNUM_AI_AGAIN;
 	case WSATYPE_NOT_FOUND: return ERRNUM_AI_SERVICE;
-	default: return 0;
+	default: return ERRNUM_SUCCESS;
 	}
 #else
 #if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
@@ -574,7 +628,10 @@ errc2num(int errc)
 #endif
 	return errno2num(errc);
 #endif // _WIN32
+#endif // !LELY_NO_ERRNO
 }
+
+#if !LELY_NO_ERRNO
 
 int
 errnum2no(errnum_t errnum)
@@ -815,13 +872,18 @@ errnum2no(errnum_t errnum)
 #ifdef EXDEV
 	case ERRNUM_XDEV: return EXDEV;
 #endif
-	default: return 0;
+	default: return ERRNUM_SUCCESS;
 	}
 }
+
+#endif // !LELY_NO_ERRNO
 
 int
 errnum2c(errnum_t errnum)
 {
+#if LELY_NO_ERRNO
+	return errnum;
+#else
 #if _WIN32
 	switch (errnum) {
 	case ERRNUM_2BIG: return ERROR_BAD_ENVIRONMENT;
@@ -939,31 +1001,43 @@ errnum2c(errnum_t errnum)
 #endif
 	return errnum2no(errnum);
 #endif // _WIN32
+#endif // LELY_NO_ERRNO
 }
 
 int
 get_errc(void)
 {
-#if _WIN32
-	return GetLastError();
-#elif LELY_NO_ERRNO
-	return 0;
-#else
-	return errno;
-#endif
+	return get_errc_handler ? get_errc_handler(get_errc_data) : 0;
 }
 
 void
 set_errc(int errc)
 {
-#if _WIN32
-	SetLastError(errc);
-#elif LELY_NO_ERRNO
-	(void)errc;
+	if (set_errc_handler)
+		set_errc_handler(errc, set_errc_data);
+}
+
+int
+get_errc_from_errno(void)
+{
+#if LELY_NO_ERRNO
+	return 0;
 #else
-	errno = errc;
+	return errno2c(errno);
 #endif
 }
+
+void
+set_errc_from_errno(void)
+{
+#if LELY_NO_ERRNO
+	set_errc(0);
+#else
+	set_errc(errno2c(errno));
+#endif
+}
+
+#if !LELY_NO_ERRNO
 
 const char *
 errno2str_r(int errnum, char *strerrbuf, size_t buflen)
@@ -1064,3 +1138,31 @@ gai_strerror_r(int ecode, char *strerrbuf, size_t buflen)
 	return gai_strerror(ecode);
 }
 #endif
+
+#endif // !LELY_NO_ERRNO
+
+static void
+default_set_errc_handler(int errc, void *data)
+{
+	(void)data;
+#if _WIN32
+	SetLastError(errc);
+#elif LELY_NO_ERRNO
+	noerrno_default_errc = errc;
+#else
+	errno = errc;
+#endif
+}
+
+static int
+default_get_errc_handler(void *data)
+{
+	(void)data;
+#if _WIN32
+	return GetLastError();
+#elif LELY_NO_ERRNO
+	return noerrno_default_errc;
+#else
+	return errno;
+#endif
+}

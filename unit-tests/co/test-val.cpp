@@ -253,9 +253,7 @@ TEST(CO_Val, CoValInit_Invalid) {
   const auto ret = co_val_init(INVALID_TYPE, &val);
 
   CHECK_EQUAL(-1, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 #define LELY_CO_DEFINE_TYPE(a, b, c, d) \
@@ -402,9 +400,7 @@ TEST(CO_Val, CoValInitMax_DOMAIN) {
 TEST(CO_Val, CoValInitMin_Invalid) {
   char val;
   CHECK_EQUAL(-1, co_val_init_min(INVALID_TYPE, &val));
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_Val, CoValInitMax_Invalid) {
@@ -413,9 +409,7 @@ TEST(CO_Val, CoValInitMax_Invalid) {
   const auto ret = co_val_init_max(INVALID_TYPE, &val);
 
   CHECK_EQUAL(-1, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_Val, CoValInitVs) {
@@ -736,9 +730,7 @@ TEST(CO_Val, CoValMake_ArrayType_NullValue) {
   const auto ret = co_val_make(CO_DEFTYPE_VISIBLE_STRING, &val, buf, 0);
 
   CHECK_EQUAL(0, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
 }
 #endif
 
@@ -1607,9 +1599,7 @@ TEST(CO_Val, CoValRead_INVALID_TYPE) {
   const auto ret = co_val_read(INVALID_TYPE, nullptr, &buffer, &buffer);
 
   CHECK_EQUAL(0, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_Val, CoValReadSdo) {
@@ -1656,19 +1646,13 @@ TEST(CO_Val, CoValReadSdo_ToTooSmall) {
   array.hdr.capacity = 1;
   co_visible_string_t val;
   co_val_init_array(&val, &array);
-#if !LELY_NO_ERRNO
   set_errnum(42);
-#endif
 
   const auto ret =
       co_val_read_sdo(CO_DEFTYPE_VISIBLE_STRING, &val, buffer, sizeof(buffer));
 
-#if LELY_NO_ERRNO
-  CHECK_EQUAL(CO_SDO_AC_ERROR, ret);
-#else
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ret);
   CHECK_EQUAL(42, get_errnum());
-#endif
 }
 #endif
 
@@ -2020,9 +2004,7 @@ TEST(CO_Val, CoValWrite_INVALID_TYPE) {
   const auto ret = co_val_write(INVALID_TYPE, &val, buffer, buffer);
 
   CHECK_EQUAL(0, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 #if LELY_NO_MALLOC

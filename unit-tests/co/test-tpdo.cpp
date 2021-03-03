@@ -233,27 +233,21 @@ TEST(CO_TpdoCreate, CoTpdoCreate_ZeroNum) {
   tpdo = co_tpdo_create(net, dev, 0u);
 
   POINTERS_EQUAL(nullptr, tpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_InvalidNum) {
   tpdo = co_tpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, tpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOParameters) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
   POINTERS_EQUAL(nullptr, tpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOMappingParamRecord) {
@@ -262,9 +256,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOMappingParamRecord) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
   POINTERS_EQUAL(nullptr, tpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOCommParamRecord) {
@@ -273,9 +265,7 @@ TEST(CO_TpdoCreate, CoTpdoCreate_NoTPDOCommParamRecord) {
   tpdo = co_tpdo_create(net, dev, TPDO_NUM);
 
   POINTERS_EQUAL(nullptr, tpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_TpdoCreate, CoTpdoCreate_MinimalTPDO) {
@@ -729,9 +719,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimeNotPassed) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_AGAIN, get_errnum());
-#endif
   CHECK(!CoTpdoInd::called);
   CHECK(!CanSend::called());
 }
@@ -749,9 +737,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_InhibitTimePassedNoSendFunc) {
   const auto ret = co_tpdo_event(tpdo);
 
   CHECK_EQUAL(-1, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOSYS, get_errnum());
-#endif
 
   CHECK(CoTpdoInd::called);
   POINTERS_EQUAL(tpdo, CoTpdoInd::pdo);
@@ -884,9 +870,7 @@ TEST(CO_Tpdo, CoTpdoSync_CounterOverLimit) {
   const auto ret = co_tpdo_sync(tpdo, 241);
 
   CHECK_EQUAL(-1, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
   CHECK(!CoTpdoSampleInd::called);
 }
 

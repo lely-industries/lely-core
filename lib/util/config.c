@@ -73,10 +73,8 @@ void *
 __config_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct __config));
-#if !LELY_NO_ERRNO
 	if (ptr)
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 	return ptr;
 }
 
@@ -263,9 +261,7 @@ config_section_create(config_t *config, const char *name)
 
 	struct config_section *section = malloc(sizeof(*section));
 	if (!section) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_section;
 	}
 
@@ -273,9 +269,7 @@ config_section_create(config_t *config, const char *name)
 
 	node->key = malloc(strlen(name) + 1);
 	if (!node->key) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_key;
 	}
 	strcpy((char *)node->key, name);
@@ -357,9 +351,7 @@ config_entry_create(struct config_section *section, const char *key,
 
 	struct config_entry *entry = malloc(sizeof(*entry));
 	if (!entry) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_entry;
 	}
 
@@ -367,18 +359,14 @@ config_entry_create(struct config_section *section, const char *key,
 
 	node->key = malloc(strlen(key) + 1);
 	if (!node->key) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_key;
 	}
 	strcpy((char *)node->key, key);
 
 	entry->value = malloc(strlen(value) + 1);
 	if (!entry->value) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_value;
 	}
 	strcpy(entry->value, value);

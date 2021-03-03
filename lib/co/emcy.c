@@ -400,9 +400,7 @@ co_emcy_push(co_emcy_t *emcy, co_unsigned16_t eec, co_unsigned8_t er,
 	struct co_emcy_msg *msgs = realloc(emcy->msgs,
 			(emcy->nmsg + 1) * sizeof(struct co_emcy_msg));
 	if (!msgs) {
-#if !LELY_NO_ERRNO
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 		return -1;
 	}
 	emcy->msgs = msgs;

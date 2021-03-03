@@ -1171,10 +1171,8 @@ static void *
 co_wtm_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct co_wtm));
-#if !LELY_NO_ERRNO
 	if (!ptr)
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 	return ptr;
 }
 

@@ -52,9 +52,7 @@ TEST(CAN_MsgBits, InvalidFDFFlag) {
       can_msg_bits(&msg, can_msg_bits_mode::CAN_MSG_BITS_MODE_EXACT);
 
   CHECK_EQUAL(-1, frameSize);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 #endif
 
@@ -62,9 +60,7 @@ TEST(CAN_MsgBits, InvalidMode) {
   const auto frameSize = can_msg_bits(&msg, (can_msg_bits_mode)(-1));
 
   CHECK_EQUAL(-1, frameSize);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CAN_MsgBits, InvalidMsgLength) {
@@ -74,9 +70,7 @@ TEST(CAN_MsgBits, InvalidMsgLength) {
       can_msg_bits(&msg, can_msg_bits_mode::CAN_MSG_BITS_MODE_EXACT);
 
   CHECK_EQUAL(-1, frameSize);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CAN_MsgBits, CANBasic_ModeNoStuff_RTR) {

@@ -366,11 +366,7 @@ TEST(CO_Sdo, CoSdoReqDnBuf_NoMem) {
   const auto ret = co_sdo_req_dn(&req, nullptr, &nbyte, &ac);
 
   CHECK_EQUAL(-1, ret);
-#if LELY_NO_ERRNO
-  CHECK_EQUAL(CO_SDO_AC_ERROR, ac);
-#else
   CHECK_EQUAL(CO_SDO_AC_NO_MEM, ac);
-#endif
 }
 #else
 // given: SDO request
