@@ -46,8 +46,8 @@ TEST_GROUP(CAN_BufInit) {
 ///
 /// \When CAN_BUF_INIT is used to initialize the buffer
 ///
-/// \Then the buffer is initialized, has a null pointer for frame storage,
-///       zeroed size and offsets
+/// \Then the buffer is initialized, has a null pointer to memory region, zeroed
+///       size and offsets
 TEST(CAN_BufInit, StaticInitializer) {
   *buf = CAN_BUF_INIT;
 
@@ -67,8 +67,8 @@ TEST(CAN_BufInit, StaticInitializer) {
 /// \When can_buf_init() is called with a null pointer to memory region and zero
 ///       size
 ///
-/// \Then the buffer is initialized, has a null pointer for frame storage,
-///       zeroed size and offsets
+/// \Then the buffer is initialized, has a null pointer to memory region, zeroed
+///       size and offsets
 TEST(CAN_BufInit, CanBufInit_NullAndZero) {
   can_buf_init(buf, nullptr, 0);
 
@@ -283,7 +283,7 @@ TEST(CAN_Buf, CanBufClear_NonEmpty) {
 /// \When can_buf_peek() is called with a null pointer to storage and a number
 ///       of frames requested less than or equal to the number of frames stored
 ///
-/// \Then number of requested frames is returned, nothing is changed
+/// \Then the number of requested frames is returned, nothing is changed
 TEST(CAN_Buf, CanBufPeek_NullPtr) {
   const size_t MSG_NUM = 4;
   can_msg msg_arr[MSG_NUM];
@@ -302,7 +302,7 @@ TEST(CAN_Buf, CanBufPeek_NullPtr) {
 /// \When can_buf_peek() is called with a null pointer to storage and a number
 ///       of frames requested greater than the number of frames stored
 ///
-/// \Then number of stored frames is returned, nothing is changed
+/// \Then the number of stored frames is returned, nothing is changed
 TEST(CAN_Buf, CanBufPeek_NullPtr_ManyFrames) {
   const size_t MSG_NUM = 4;
   can_msg msg_arr[MSG_NUM];
@@ -323,8 +323,8 @@ TEST(CAN_Buf, CanBufPeek_NullPtr_ManyFrames) {
 /// \When can_buf_peek() is called with a pointer to the memory region and its
 ///       size
 ///
-/// \Then number of stored frames is returned, the memory region contains all
-///       read frames, the buffer's state is not changed
+/// \Then the number of stored frames is returned, the memory region contains
+///       all read frames, the buffer's state is not changed
 TEST(CAN_Buf, CanBufPeek_ManyFrames) {
   const size_t MSG_NUM = 3;
   can_msg msg_arr[MSG_NUM];
@@ -525,9 +525,9 @@ TEST(CAN_Buf, CanBufRead_OneFrame) {
 /// \When can_buf_read() is called with a pointer to the memory region and its
 ///       size
 ///
-/// \Then number of stored frames is returned, there are no more frames in the
-///       buffer to be read, buffer is at full capacity, the memory region
-///       contains all read frames
+/// \Then the number of stored frames is returned, there are no more frames in
+///       the buffer to be read, the buffer is at full capacity, the memory
+///       region contains all read frames
 TEST(CAN_Buf, CanBufRead_ManyFrames) {
   const size_t MSG_NUM = 3;
   can_msg msg_arr[MSG_NUM];
@@ -552,8 +552,8 @@ TEST(CAN_Buf, CanBufRead_ManyFrames) {
 /// \When can_buf_read() is called with a null pointer to storage and a number
 ///       of frames requested less than or equal to the number of frames stored
 ///
-/// \Then number of requested frames is returned, those frames are removed from
-///       the buffer
+/// \Then the number of requested frames is returned, those frames are removed
+///       from the buffer
 TEST(CAN_Buf, CanBufRead_NullPtr) {
   const size_t MSG_NUM = 4;
   can_msg msg_arr[MSG_NUM];
@@ -582,7 +582,7 @@ TEST(CAN_Buf, CanBufSize_Empty) { CHECK_EQUAL(0, can_buf_size(&buf)); }
 ///
 /// \When can_buf_size() is called
 ///
-/// \Then number of frames stored is returned
+/// \Then the number of stored frames is returned
 TEST(CAN_Buf, CanBufSize_ManyFrames) {
   const size_t MSG_NUM = 4u;
   can_msg msg_arr[MSG_NUM];
