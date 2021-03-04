@@ -287,7 +287,7 @@ can_net_recv(can_net_t *net, const struct can_msg *msg)
 	if (node) {
 		// Loop over all matching receivers.
 		can_recv_t *recv = structof(node, can_recv_t, node);
-		dlnode_foreach (&recv->list, node) {
+		dlnode_foreach (&recv->list, node) { // LCOV_EXCL_BR_LINE
 			recv = structof(node, can_recv_t, list);
 			// Invoke the callback function and check the result.
 			if (recv->func && recv->func(msg, recv->data)
@@ -645,7 +645,7 @@ can_net_fini(can_net_t *net)
 
 	rbtree_foreach (&net->recv_tree, node) {
 		can_recv_t *recv = structof(node, can_recv_t, node);
-		dlnode_foreach (&recv->list, node)
+		dlnode_foreach (&recv->list, node) // LCOV_EXCL_BR_LINE
 			can_recv_stop(structof(node, can_recv_t, list));
 	}
 
