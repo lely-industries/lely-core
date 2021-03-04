@@ -41,20 +41,20 @@ extern "C" {
 #endif
 
 /// A pointer to the argument of the current option.
-char *optarg;
+extern char *optarg;
 
 /// The index of the next argument to be parsed by getopt().
-int optind;
+extern int optind;
 
 /**
  * A flag indicating whether a diagnostic message should be printed if an
  * unknown option character or missing argument is detected by getopt(). The
  * default value is 1.
  */
-int opterr;
+extern int opterr;
 
 /// The last option character to cause an error.
-int optopt;
+extern int optopt;
 
 /**
  * Parses options passed as arguments to `main()`.
