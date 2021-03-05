@@ -2315,7 +2315,7 @@ TEST(CO_Sub, CoSubDnInd_NoSub) {
   co_sub_t* const sub = nullptr;
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_dn_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_dn_ind(sub, req, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t) with read-only access
@@ -2326,7 +2326,7 @@ TEST(CO_Sub, CoSubDnInd_NoSub) {
 TEST(CO_Sub, CoSubDnInd_NoWriteAccess) {
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
 
-  CHECK_EQUAL(CO_SDO_AC_NO_WRITE, co_sub_dn_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_NO_WRITE, co_sub_dn_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t)
@@ -2337,7 +2337,7 @@ TEST(CO_Sub, CoSubDnInd_NoWriteAccess) {
 TEST(CO_Sub, CoSubDnInd_NoReq) {
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_dn_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_dn_ind(sub, req, 0));
 }
 
 /// \Given a pointer to sub-object (co_sub_t) with a custom download indication
@@ -2351,7 +2351,7 @@ TEST(CO_ObjSub, CoSubDnInd_Nominal) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_dn_ind(sub, dn_ind_func, nullptr);
 
-  const auto ret = co_sub_dn_ind(sub, &req);
+  const auto ret = co_sub_dn_ind(sub, &req, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CO_ObjSub_Static::dn_ind_func_counter);
@@ -2468,7 +2468,7 @@ TEST(CO_Sub, CoSubUpInd_NoSub) {
   co_sub_t* const sub = nullptr;
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_up_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_up_ind(sub, req, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t) with write-only access
@@ -2479,7 +2479,7 @@ TEST(CO_Sub, CoSubUpInd_NoSub) {
 TEST(CO_Sub, CoSubUpInd_NoReadAccess) {
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
 
-  CHECK_EQUAL(CO_SDO_AC_NO_READ, co_sub_up_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_NO_READ, co_sub_up_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t)
@@ -2488,7 +2488,7 @@ TEST(CO_Sub, CoSubUpInd_NoReadAccess) {
 ///
 /// \Then CO_SDO_AC_ERROR abort code is returned
 TEST(CO_Sub, CoSubUpInd_NoReq) {
-  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_up_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_up_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to sub-object (co_sub_t) with a custom upload indication
@@ -2502,7 +2502,7 @@ TEST(CO_ObjSub, CoSubUpInd_Nominal) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_up_ind(sub, up_ind_func, nullptr);
 
-  const auto ret = co_sub_up_ind(sub, &req);
+  const auto ret = co_sub_up_ind(sub, &req, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CO_ObjSub_Static::up_ind_func_counter);

@@ -678,7 +678,7 @@ co_nmt_cfg_store_1f20_on_enter(co_nmt_cfg_t *cfg)
 	// Upload the DCF.
 	struct co_sdo_req *req = &cfg->req;
 	co_sdo_req_clear(req);
-	cfg->ac = co_sub_up_ind(sub, req);
+	cfg->ac = co_sub_up_ind(sub, req, 0);
 	if (cfg->ac) {
 #if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,
@@ -805,7 +805,7 @@ co_nmt_cfg_store_1f22_on_enter(co_nmt_cfg_t *cfg)
 	// Upload the concise DCF.
 	struct co_sdo_req *req = &cfg->req;
 	co_sdo_req_clear(req);
-	cfg->ac = co_sub_up_ind(sub, req);
+	cfg->ac = co_sub_up_ind(sub, req, 0);
 	if (cfg->ac) {
 #if !LELY_NO_STDIO
 		diag(DIAG_ERROR, 0,

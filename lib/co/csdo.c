@@ -693,7 +693,7 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	}
 
 	co_sdo_req_up(&req, ptr, n);
-	ac = co_sub_dn_ind(sub, &req);
+	ac = co_sub_dn_ind(sub, &req, 0);
 
 done:
 	if (con)
@@ -732,7 +732,7 @@ co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (co_sdo_req_up_val(&req, type, val, &ac) == -1)
 		goto done;
 
-	ac = co_sub_dn_ind(sub, &req);
+	ac = co_sub_dn_ind(sub, &req, 0);
 
 done:
 	if (con)
@@ -801,7 +801,7 @@ co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
 		co_sdo_req_clear(&req);
 		co_sdo_req_up(&req, begin, size);
 		// cppcheck-suppress redundantAssignment
-		ac = co_sub_dn_ind(sub, &req);
+		ac = co_sub_dn_ind(sub, &req, 0);
 
 		begin += size;
 	}
@@ -857,7 +857,7 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		goto done;
 	}
 
-	if ((ac = co_sub_up_ind(sub, &req)))
+	if ((ac = co_sub_up_ind(sub, &req, 0)))
 		goto done;
 
 	if (req.buf != buf) {
@@ -868,7 +868,7 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		while (!ac && membuf_size(buf) < req.size) {
 			membuf_write(buf, req.buf, req.nbyte);
 			if (!co_sdo_req_last(&req))
-				ac = co_sub_up_ind(sub, &req);
+				ac = co_sub_up_ind(sub, &req, 0);
 		}
 	} else if (!co_sdo_req_last(&req)) {
 		// The upload indication function was not able to complete the

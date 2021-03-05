@@ -886,12 +886,14 @@ int co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac);
  *            *<b>req</b>, except <b>membuf</b>, MUST be set by the caller. The
  *            <b>membuf</b> MUST be initialized before the first invocation and
  *            MUST only be used by the indication function.
+ * @param ac  the SDO abort code.
  *
  * @returns 0 on success, or an SDO abort code on error.
  *
  * @see co_sub_dn_ind_val()
  */
-co_unsigned32_t co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_dn_ind(
+		co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac);
 
 /**
  * Invokes the download indication function of a CANopen sub-object, registered
@@ -990,10 +992,12 @@ int co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req,
  * @param req a pointer to a CANopen SDO upload request. The <b>size</b> member
  *            of *<b>req</b> MUST be set to 0 on the first invocation. All
  *            members MUST be initialized by the indication function.
+ * @param ac  the SDO abort code.
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-co_unsigned32_t co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req);
+co_unsigned32_t co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac);
 
 #ifdef __cplusplus
 }

@@ -455,7 +455,7 @@ static co_ssdo_state_t *co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-static co_unsigned32_t co_ssdo_dn_ind(co_ssdo_t *sdo);
+static co_unsigned32_t co_ssdo_dn_ind(co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /**
  * Processes an upload indication of a Server-SDO by checking access to the
@@ -463,7 +463,7 @@ static co_unsigned32_t co_ssdo_dn_ind(co_ssdo_t *sdo);
  *
  * @returns 0 on success, or an SDO abort code on error.
  */
-static co_unsigned32_t co_ssdo_up_ind(co_ssdo_t *sdo);
+static co_unsigned32_t co_ssdo_up_ind(co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /**
  * Copies at most <b>nbyte</b> bytes from a CANopen SDO upload request,
@@ -966,7 +966,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// Perform an expedited transfer.
 		sdo->req.buf = msg->data + 4;
 		sdo->req.nbyte = sdo->req.size;
-		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+		co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		// Finalize the transfer.
@@ -1031,7 +1031,7 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	if (last && !co_sdo_req_last(&sdo->req))
 		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 
-	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+	co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1067,7 +1067,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	co_sdo_req_init(&sdo->req, NULL);
 
 	// Perform access checks and start serializing the value.
-	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
+	co_unsigned32_t ac = co_ssdo_up_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1242,7 +1242,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			sdo->crc = co_crc(
 					sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		// Pass the previous frame to the download indication function.
-		co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+		co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		// Determine the number of bytes to copy.
@@ -1330,7 +1330,7 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
-	co_unsigned32_t ac = co_ssdo_dn_ind(sdo);
+	co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1380,7 +1380,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	co_sdo_req_init(&sdo->req, NULL);
 
 	// Perform access checks and start serializing the value.
-	co_unsigned32_t ac = co_ssdo_up_ind(sdo);
+	co_unsigned32_t ac = co_ssdo_up_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1570,7 +1570,7 @@ co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac)
 }
 
 static co_unsigned32_t
-co_ssdo_dn_ind(co_ssdo_t *sdo)
+co_ssdo_dn_ind(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
 	assert(sdo);
 
@@ -1584,11 +1584,11 @@ co_ssdo_dn_ind(co_ssdo_t *sdo)
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
-	return co_sub_dn_ind(sub, &sdo->req);
+	return co_sub_dn_ind(sub, &sdo->req, ac);
 }
 
 static co_unsigned32_t
-co_ssdo_up_ind(co_ssdo_t *sdo)
+co_ssdo_up_ind(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
 	assert(sdo);
 
@@ -1608,7 +1608,7 @@ co_ssdo_up_ind(co_ssdo_t *sdo)
 		return CO_SDO_AC_NO_DATA;
 
 	sdo->nbyte = 0;
-	return co_sub_up_ind(sub, &sdo->req);
+	return co_sub_up_ind(sub, &sdo->req, ac);
 }
 
 static co_unsigned32_t
@@ -1622,7 +1622,7 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 	while (nbyte) {
 		if (sdo->nbyte >= sdo->req.nbyte) {
 			if (co_sdo_req_last(&sdo->req)
-					|| (ac = co_ssdo_up_ind(sdo)))
+					|| (ac = co_ssdo_up_ind(sdo, 0)))
 				break;
 			sdo->nbyte = 0;
 		}
