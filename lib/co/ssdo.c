@@ -96,10 +96,15 @@ struct co_ssdo {
 	co_unsigned8_t blksize;
 	/// The sequence number of the last successfully received segment.
 	co_unsigned8_t ackseq;
-	/// A flag indicating whether a CRC should be generated.
-	unsigned gencrc : 1;
 	/// The generated CRC.
 	co_unsigned16_t crc;
+	/// A flag indicating whether a CRC should be generated.
+	unsigned gencrc : 1;
+	/**
+	 * A flag indicating whether the download indication function has been
+	 * invoked at least once for the ongoing request.
+	 */
+	unsigned dn_ind : 1;
 	/// The SDO request.
 	struct co_sdo_req req;
 	/// The buffer.
@@ -448,6 +453,34 @@ static co_ssdo_state_t *co_ssdo_abort_ind(co_ssdo_t *sdo);
  * @see co_ssdo_send_abort()
  */
 static co_ssdo_state_t *co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac);
+
+/**
+ * Sends an abort transfer request and aborts the ongoing download request by
+ * invoking co_ssdo_dn_ind() and co_ssdo_abort_ind().
+ *
+ * @param sdo a pointer to a Server-SDO service.
+ * @param ac  the SDO abort code.
+ *
+ * @returns #co_ssdo_wait_state
+ *
+ * @see co_ssdo_abort_res()
+ */
+static co_ssdo_state_t *co_ssdo_abort_dn_res(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
+
+/**
+ * Sends an abort transfer request and aborts the ongoing upload request by
+ * invoking co_ssdo_up_ind() and co_ssdo_abort_ind().
+ *
+ * @param sdo a pointer to a Server-SDO service.
+ * @param ac  the SDO abort code.
+ *
+ * @returns #co_ssdo_wait_state
+ *
+ * @see co_ssdo_abort_res()
+ */
+static co_ssdo_state_t *co_ssdo_abort_up_res(
+		co_ssdo_t *sdo, co_unsigned32_t ac);
 
 /**
  * Processes a download indication of a Server-SDO by checking access to the
@@ -983,7 +1016,7 @@ co_ssdo_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_dn_seg_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	return co_ssdo_abort_res(sdo, ac);
+	return co_ssdo_abort_dn_res(sdo, ac);
 }
 
 static co_ssdo_state_t *
@@ -991,7 +1024,7 @@ co_ssdo_dn_seg_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
 	(void)tp;
 
-	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
+	return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TIMEOUT);
 }
 
 static co_ssdo_state_t *
@@ -1000,15 +1033,27 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
+	co_unsigned32_t ac = 0;
+
 	if (msg->len < 1)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	co_unsigned8_t cs = msg->data[0];
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_DN_SEG_REQ: break;
-	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CS_ABORT:
+		// Only report an error if the indication function has been
+		// invoked at least once for this request.
+		if (sdo->dn_ind) {
+			// clang-format off
+			ac = msg->len < 8 ? CO_SDO_AC_ERROR
+					: ldle_u32(msg->data + 4);
+			// clang-format on
+			co_ssdo_dn_ind(sdo, ac);
+		}
+		return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the value of the toggle bit.
@@ -1018,20 +1063,20 @@ co_ssdo_dn_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	// Obtain the size of the segment.
 	size_t n = CO_SDO_SEG_SIZE_GET(cs);
 	if (msg->len < 1 + n)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	int last = !!(cs & CO_SDO_SEG_LAST);
 
 	if (sdo->req.offset + sdo->req.nbyte + n > sdo->req.size)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 
 	sdo->req.buf = msg->data + 1;
 	sdo->req.offset += sdo->req.nbyte;
 	sdo->req.nbyte = n;
 
 	if (last && !co_sdo_req_last(&sdo->req))
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 
-	co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
+	ac = co_ssdo_dn_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1078,7 +1123,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		assert(!ac);
 #else
 		if (ac != 0)
-			return co_ssdo_abort_res(sdo, ac);
+			return co_ssdo_abort_up_res(sdo, ac);
 #endif
 
 		co_ssdo_send_up_exp_res(sdo);
@@ -1094,7 +1139,7 @@ co_ssdo_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_up_seg_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	return co_ssdo_abort_res(sdo, ac);
+	return co_ssdo_abort_up_res(sdo, ac);
 }
 
 static co_ssdo_state_t *
@@ -1102,7 +1147,7 @@ co_ssdo_up_seg_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
 	(void)tp;
 
-	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
+	return co_ssdo_abort_up_res(sdo, CO_SDO_AC_TIMEOUT);
 }
 
 static co_ssdo_state_t *
@@ -1111,23 +1156,28 @@ co_ssdo_up_seg_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
+	co_unsigned32_t ac = 0;
+
 	if (msg->len < 1)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	co_unsigned8_t cs = msg->data[0];
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_UP_SEG_REQ: break;
-	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CS_ABORT:
+		ac = msg->len < 8 ? CO_SDO_AC_ERROR : ldle_u32(msg->data + 4);
+		co_ssdo_up_ind(sdo, ac);
+		return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the value of the toggle bit.
 	if ((cs & CO_SDO_SEG_TOGGLE) != sdo->toggle)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_TOGGLE);
+		return co_ssdo_abort_up_res(sdo, CO_SDO_AC_TOGGLE);
 
 	membuf_clear(&sdo->buf);
-	co_unsigned32_t ac = co_ssdo_up_buf(sdo, 7);
+	ac = co_ssdo_up_buf(sdo, 7);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1197,7 +1247,7 @@ co_ssdo_blk_dn_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_blk_dn_sub_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	return co_ssdo_abort_res(sdo, ac);
+	return co_ssdo_abort_dn_res(sdo, ac);
 }
 
 static co_ssdo_state_t *
@@ -1205,7 +1255,7 @@ co_ssdo_blk_dn_sub_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
 	(void)tp;
 
-	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
+	return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TIMEOUT);
 }
 
 static co_ssdo_state_t *
@@ -1214,21 +1264,33 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
+	co_unsigned32_t ac = 0;
+
 	if (msg->len < 1)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	co_unsigned8_t cs = msg->data[0];
 
-	if (cs == CO_SDO_CS_ABORT)
+	if (cs == CO_SDO_CS_ABORT) {
+		// Only report an error if the indication function has been
+		// invoked at least once for this request.
+		if (sdo->dn_ind) {
+			// clang-format off
+			ac = msg->len < 8 ? CO_SDO_AC_ERROR
+					: ldle_u32(msg->data + 4);
+			// clang-format on
+			co_ssdo_dn_ind(sdo, ac);
+		}
 		return co_ssdo_abort_ind(sdo);
+	}
 
 	co_unsigned8_t seqno = cs & ~CO_SDO_SEQ_LAST;
 	int last = !!(cs & CO_SDO_SEQ_LAST);
 
 	if (!seqno)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_BLK_SEQ);
 #if CO_SSDO_MAX_SEQNO < 127
 	if (seqno > sdo->blksize)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_BLK_SEQ);
 #else
 	assert(seqno <= sdo->blksize);
 #endif
@@ -1242,7 +1304,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 			sdo->crc = co_crc(
 					sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		// Pass the previous frame to the download indication function.
-		co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
+		ac = co_ssdo_dn_ind(sdo, 0);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		// Determine the number of bytes to copy.
@@ -1250,7 +1312,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		size_t n = MIN(sdo->req.size - sdo->req.offset - sdo->req.nbyte,
 				7);
 		if (!last && n < 7)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
+			return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TYPE_LEN_HI);
 		// Copy the new frame to the SDO request.
 		membuf_clear(&sdo->buf);
 		size_t capacity = membuf_reserve(&sdo->buf, n);
@@ -1259,7 +1321,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		(void)capacity;
 #else
 		if (!capacity)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
+			return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_MEM);
 #endif // LELY_NO_MALLOC
 		membuf_write(&sdo->buf, msg->data + 1, n);
 		sdo->req.buf = membuf_begin(&sdo->buf);
@@ -1281,7 +1343,7 @@ co_ssdo_blk_dn_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_blk_dn_end_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	return co_ssdo_abort_res(sdo, ac);
+	return co_ssdo_abort_dn_res(sdo, ac);
 }
 
 static co_ssdo_state_t *
@@ -1289,7 +1351,7 @@ co_ssdo_blk_dn_end_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
 	(void)tp;
 
-	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
+	return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TIMEOUT);
 }
 
 static co_ssdo_state_t *
@@ -1298,39 +1360,45 @@ co_ssdo_blk_dn_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
+	co_unsigned32_t ac = 0;
+
 	if (msg->len < 1)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	co_unsigned8_t cs = msg->data[0];
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_BLK_DN_REQ: break;
-	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CS_ABORT:
+		assert(sdo->dn_ind);
+		ac = msg->len < 8 ? CO_SDO_AC_ERROR : ldle_u32(msg->data + 4);
+		co_ssdo_dn_ind(sdo, ac);
+		return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
 	if ((cs & CO_SDO_SC_MASK) != CO_SDO_SC_END_BLK)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check the total length.
 	if (sdo->req.size != sdo->req.offset + sdo->req.nbyte)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_TYPE_LEN_LO);
 
 	// Check the number of bytes in the last segment.
 	co_unsigned8_t n = sdo->req.size ? (sdo->req.size - 1) % 7 + 1 : 0;
 	if (CO_SDO_BLK_SIZE_GET(cs) != n)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_NO_CS);
 
 	// Check the CRC.
 	if (sdo->gencrc) {
 		sdo->crc = co_crc(sdo->crc, sdo->req.buf, sdo->req.nbyte);
 		co_unsigned16_t crc = ldle_u16(msg->data + 1);
 		if (sdo->crc != crc)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_CRC);
+			return co_ssdo_abort_dn_res(sdo, CO_SDO_AC_BLK_CRC);
 	}
 
-	co_unsigned32_t ac = co_ssdo_dn_ind(sdo, 0);
+	ac = co_ssdo_dn_ind(sdo, 0);
 	if (ac)
 		return co_ssdo_abort_res(sdo, ac);
 
@@ -1417,7 +1485,7 @@ co_ssdo_blk_up_ini_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 static co_ssdo_state_t *
 co_ssdo_blk_up_sub_on_abort(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
-	return co_ssdo_abort_res(sdo, ac);
+	return co_ssdo_abort_up_res(sdo, ac);
 }
 
 static co_ssdo_state_t *
@@ -1425,7 +1493,7 @@ co_ssdo_blk_up_sub_on_time(co_ssdo_t *sdo, const struct timespec *tp)
 {
 	(void)tp;
 
-	return co_ssdo_abort_res(sdo, CO_SDO_AC_TIMEOUT);
+	return co_ssdo_abort_up_res(sdo, CO_SDO_AC_TIMEOUT);
 }
 
 static co_ssdo_state_t *
@@ -1434,25 +1502,30 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	assert(sdo);
 	assert(msg);
 
+	co_unsigned32_t ac = 0;
+
 	if (msg->len < 1)
-		return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+		return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	co_unsigned8_t cs = msg->data[0];
 
 	// Check the client command specifier.
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_BLK_UP_REQ: break;
-	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	case CO_SDO_CS_ABORT:
+		ac = msg->len < 8 ? CO_SDO_AC_ERROR : ldle_u32(msg->data + 4);
+		co_ssdo_up_ind(sdo, ac);
+		return co_ssdo_abort_ind(sdo);
+	default: return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
 	switch (cs & CO_SDO_SC_MASK) {
 	case CO_SDO_SC_BLK_RES:
 		if (co_sdo_req_first(&sdo->req) && !sdo->nbyte)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 
 		if (msg->len < 3)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SEQ);
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_BLK_SEQ);
 
 		// Flush the successfully sent segments from the buffer.
 		co_unsigned8_t ackseq = msg->data[1];
@@ -1461,21 +1534,21 @@ co_ssdo_blk_up_sub_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 		// Read the number of segments in the next block.
 		sdo->blksize = msg->data[2];
 		if (!sdo->blksize || sdo->blksize > CO_SSDO_MAX_SEQNO)
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_BLK_SIZE);
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_BLK_SIZE);
 
 		break;
 	case CO_SDO_SC_START_UP:
 		if (!(co_sdo_req_first(&sdo->req) && !sdo->nbyte))
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 		break;
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	default: return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	ptrdiff_t n = sdo->blksize * 7 - membuf_size(&sdo->buf);
 	if (n > 0) {
 		if (!membuf_reserve(&sdo->buf, n))
-			return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_MEM);
-		co_unsigned32_t ac = co_ssdo_up_buf(sdo, n);
+			return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_MEM);
+		ac = co_ssdo_up_buf(sdo, n);
 		if (ac)
 			return co_ssdo_abort_res(sdo, ac);
 		sdo->blksize = (co_unsigned8_t)(
@@ -1524,7 +1597,7 @@ co_ssdo_blk_up_end_on_recv(co_ssdo_t *sdo, const struct can_msg *msg)
 	switch (cs & CO_SDO_CS_MASK) {
 	case CO_SDO_CCS_BLK_UP_REQ: break;
 	case CO_SDO_CS_ABORT: return co_ssdo_abort_ind(sdo);
-	default: return co_ssdo_abort_res(sdo, CO_SDO_AC_NO_CS);
+	default: return co_ssdo_abort_up_res(sdo, CO_SDO_AC_NO_CS);
 	}
 
 	// Check the client subcommand.
@@ -1548,8 +1621,9 @@ co_ssdo_abort_ind(co_ssdo_t *sdo)
 	sdo->toggle = 0;
 	sdo->blksize = 0;
 	sdo->ackseq = 0;
-	sdo->gencrc = 0;
 	sdo->crc = 0;
+	sdo->gencrc = 0;
+	sdo->dn_ind = 0;
 
 	co_sdo_req_fini(&sdo->req);
 	co_sdo_req_init(&sdo->req, NULL);
@@ -1569,6 +1643,28 @@ co_ssdo_abort_res(co_ssdo_t *sdo, co_unsigned32_t ac)
 	return co_ssdo_abort_ind(sdo);
 }
 
+static co_ssdo_state_t *
+co_ssdo_abort_dn_res(co_ssdo_t *sdo, co_unsigned32_t ac)
+{
+	// Only report an error if the indication function has been invoked at
+	// least once for the ongoing request.
+	if (sdo->dn_ind)
+		co_ssdo_dn_ind(sdo, ac);
+
+	return co_ssdo_abort_res(sdo, ac);
+}
+
+static co_ssdo_state_t *
+co_ssdo_abort_up_res(co_ssdo_t *sdo, co_unsigned32_t ac)
+{
+	// Only report an error if the indication function needs to be invoked
+	// at least once more for the ongoing request.
+	if (!co_sdo_req_last(&sdo->req))
+		co_ssdo_up_ind(sdo, ac);
+
+	return co_ssdo_abort_res(sdo, ac);
+}
+
 static co_unsigned32_t
 co_ssdo_dn_ind(co_ssdo_t *sdo, co_unsigned32_t ac)
 {
@@ -1584,6 +1680,7 @@ co_ssdo_dn_ind(co_ssdo_t *sdo, co_unsigned32_t ac)
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
 
+	sdo->dn_ind = 1;
 	return co_sub_dn_ind(sub, &sdo->req, ac);
 }
 
@@ -1616,8 +1713,11 @@ co_ssdo_up_buf(co_ssdo_t *sdo, size_t nbyte)
 {
 	co_unsigned32_t ac = 0;
 
-	if (nbyte && !membuf_reserve(&sdo->buf, nbyte))
-		return CO_SDO_AC_NO_MEM;
+	if (nbyte && !membuf_reserve(&sdo->buf, nbyte)) {
+		ac = CO_SDO_AC_NO_MEM;
+		co_ssdo_up_ind(sdo, ac);
+		return ac;
+	}
 
 	while (nbyte) {
 		if (sdo->nbyte >= sdo->req.nbyte) {
@@ -1937,8 +2037,9 @@ co_ssdo_init(co_ssdo_t *sdo, can_net_t *net, co_dev_t *dev, co_unsigned8_t num)
 	sdo->toggle = 0;
 	sdo->blksize = 0;
 	sdo->ackseq = 0;
-	sdo->gencrc = 0;
 	sdo->crc = 0;
+	sdo->gencrc = 0;
+	sdo->dn_ind = 0;
 
 	co_sdo_req_init(&sdo->req, NULL);
 #if LELY_NO_MALLOC

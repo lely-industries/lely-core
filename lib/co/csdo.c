@@ -863,8 +863,10 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (req.buf != buf) {
 		// If the upload indication function is using a different memory
 		// buffer we need to copy the bytes.
-		if (!ac && req.size && !membuf_reserve(buf, req.size))
+		if (!ac && req.size && !membuf_reserve(buf, req.size)) {
 			ac = CO_SDO_AC_NO_MEM;
+			co_sub_up_ind(sub, &req, ac);
+		}
 		while (!ac && membuf_size(buf) < req.size) {
 			membuf_write(buf, req.buf, req.nbyte);
 			if (!co_sdo_req_last(&req))
@@ -874,6 +876,7 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		// The upload indication function was not able to complete the
 		// request with the supplied buffer.
 		ac = CO_SDO_AC_NO_MEM;
+		co_sub_up_ind(sub, &req, ac);
 	}
 
 done:
