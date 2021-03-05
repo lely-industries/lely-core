@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -806,6 +806,114 @@ TEST(Util_Rbtree, RbtreeFirst_LargerTree) {
   rbtree_insert(&tree, &nodes[2]);
 
   POINTERS_EQUAL(&nodes[1], rbtree_first(&tree));
+}
+
+///@}
+
+/// @name rbnode_foreach()
+///@{
+
+/// \Given N/A
+///
+/// \When rbnode_foreach() is used with a null pointer
+///
+/// \Then no loop iterations are performed
+TEST(Util_Rbtree, RbnodeForeach_Null) {
+  unsigned node_counter = 0;
+
+  rbnode_foreach(nullptr, current_node) { ++node_counter; }
+
+  CHECK_EQUAL(0u, node_counter);
+}
+
+/// \Given a red-black tree with multiple nodes
+///
+/// \When rbnode_foreach() is used with a pointer to a node from the tree with
+///       non-extreme key value
+///
+/// \Then body of the loop is executed for requested node and all its successors
+///       in order
+TEST(Util_Rbtree, RbnodeForeach_NodeWithMiddleKeyValue) {
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[1]);
+  rbtree_insert(&tree, &nodes[5]);
+  unsigned node_counter = 0;
+
+  unsigned i = 2;
+  rbnode_foreach(&nodes[2], current_node) {
+    POINTERS_EQUAL(&nodes[i], current_node);
+
+    ++node_counter;
+    ++i;
+  }
+
+  CHECK_EQUAL(4u, node_counter);
+}
+
+///@}
+
+/// @name rbtree_foreach()
+///@{
+
+/// \Given an empty red-black tree
+///
+/// \When rbtree_foreach() is used
+///
+/// \Then no loop iterations are performed
+TEST(Util_Rbtree, RbtreeForeach_EmptyTree) {
+  unsigned node_counter = 0;
+
+  rbtree_foreach(&tree, current_node) { ++node_counter; }
+
+  CHECK_EQUAL(0u, node_counter);
+}
+
+/// \Given a red-black tree with multiple nodes
+///
+/// \When rbtree_foreach() is used
+///
+/// \Then body of the loop is executed for all nodes from the tree in order of
+///       increasing node key values
+TEST(Util_Rbtree, RbtreeForeach_TreeWithMany) {
+  rbtree_insert(&tree, &nodes[4]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[1]);
+  unsigned node_counter = 0;
+
+  rbtree_foreach(&tree, current_node) {
+    POINTERS_EQUAL(&nodes[node_counter], current_node);
+    ++node_counter;
+  }
+
+  CHECK_EQUAL(rbtree_size(&tree), node_counter);
+}
+
+/// \Given a red-black tree with multiple nodes
+///
+/// \When rbtree_foreach() is used and one of the nodes is removed
+///
+/// \Then body of the loop is executed for all nodes from the tree and the
+///       removed node is not present in the tree
+TEST(Util_Rbtree, RbtreeForeach_TreeWithManyRemoveCurrent) {
+  rbtree_insert(&tree, &nodes[3]);
+  rbtree_insert(&tree, &nodes[2]);
+  rbtree_insert(&tree, &nodes[0]);
+  rbtree_insert(&tree, &nodes[1]);
+
+  unsigned iteration_counter = 0;
+  rbtree_foreach(&tree, current_node) {
+    if (current_node->key == &keys[1]) rbtree_remove(&tree, current_node);
+
+    ++iteration_counter;
+  }
+
+  CHECK_EQUAL(4u, iteration_counter);
+  CHECK_EQUAL(3u, rbtree_size(&tree));
 }
 
 ///@}
