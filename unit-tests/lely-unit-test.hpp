@@ -26,6 +26,8 @@
 #include <config.h>
 #endif
 
+#include <CppUTest/TestHarness.h>
+
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
 #include <lely/util/diag.h>
@@ -79,6 +81,17 @@ struct CoCsdoDnCon {
     data = nullptr;
 
     num_called = 0;
+  }
+
+  static inline void
+  Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
+        const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
+        const void* data_) {
+    POINTERS_EQUAL(sdo_, sdo);
+    CHECK_EQUAL(idx_, idx);
+    CHECK_EQUAL(subidx_, subidx);
+    CHECK_EQUAL(ac_, ac);
+    POINTERS_EQUAL(data_, data);
   }
 
   static inline bool
