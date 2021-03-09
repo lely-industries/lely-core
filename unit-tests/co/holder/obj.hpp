@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -78,48 +78,8 @@ class CoObjTHolder : public Holder<co_obj_t> {
     if (co_obj_insert_sub(Get(), sub_holder.Get()) != 0) return nullptr;
 
     auto* const taken_sub = sub_holder.Take();
+    UpdateSubValues();
 
-#if LELY_NO_MALLOC
-    // Calculate capacity needed for sub-object values.
-    size_t size = 0;
-    rbtree_foreach(&Get()->tree, node) {
-      co_sub_t* sub = structof(node, co_sub_t, node);
-      co_unsigned16_t type = co_sub_get_type(sub);
-      size = ALIGN(size, co_type_alignof(type));
-      size += co_type_sizeof(type);
-    }
-    assert(size <= PREALLOCATED_OBJ_SIZE);
-
-    // Make a copy of all values' data.
-    char old_data[PREALLOCATED_OBJ_SIZE] = {0};
-    memcpy(old_data, val_data, PREALLOCATED_OBJ_SIZE);
-    memset(val_data, 0, PREALLOCATED_OBJ_SIZE);
-
-    // Rearrange values in the value data memory.
-    size = 0;
-    rbtree_foreach(&Get()->tree, node) {
-      co_sub_t* sub = structof(node, co_sub_t, node);
-      co_unsigned16_t type = co_sub_get_type(sub);
-
-      // Compute the offset of the sub-object.
-      size = ALIGN(size, co_type_alignof(type));
-
-      // Move the old value, if it exists.
-      char* src = static_cast<char*>(sub->val);
-      sub->val = val_data + size;
-      if (src != nullptr) {
-        const int DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
-        int offset = src - val_data;
-        // If value was located within 'val_data', update the 'src' pointer
-        // as value has been moved to 'old_data'.
-        if (offset >= 0 && offset < DATA_MAX_OFFSET) src = old_data + offset;
-
-        co_val_move(type, sub->val, src);
-      }
-      size += co_type_sizeof(type);
-    }
-    Get()->size = size;
-#endif
     return taken_sub;
   }
 
@@ -163,6 +123,67 @@ class CoObjTHolder : public Holder<co_obj_t> {
   co_sub_t*
   GetLastSub() {
     return sub_holders.back()->Get();
+  }
+
+  /**
+   * Remove the last added sub-object
+   */
+  bool
+  RemoveAndDestroyLastSub() {
+    const auto ret = co_obj_remove_sub(Get(), GetLastSub());
+    if (ret != 0) return false;
+
+    sub_holders.back()->Reclaim();
+    sub_holders.pop_back();
+    UpdateSubValues();
+
+    return true;
+  }
+
+ protected:
+  void
+  UpdateSubValues() {
+#if LELY_NO_MALLOC
+    // Calculate capacity needed for sub-object values.
+    size_t size = 0;
+    rbtree_foreach(&Get()->tree, node) {
+      co_sub_t* sub = structof(node, co_sub_t, node);
+      co_unsigned16_t type = co_sub_get_type(sub);
+      size = ALIGN(size, co_type_alignof(type));
+      size += co_type_sizeof(type);
+    }
+    assert(size <= PREALLOCATED_OBJ_SIZE);
+
+    // Make a copy of all values' data.
+    char old_data[PREALLOCATED_OBJ_SIZE] = {0};
+    memcpy(old_data, val_data, PREALLOCATED_OBJ_SIZE);
+    memset(val_data, 0, PREALLOCATED_OBJ_SIZE);
+
+    // Rearrange values in the value data memory.
+    size = 0;
+    rbtree_foreach(&Get()->tree, node) {
+      co_sub_t* sub = structof(node, co_sub_t, node);
+      co_unsigned16_t type = co_sub_get_type(sub);
+
+      // Compute the offset of the sub-object.
+      size = ALIGN(size, co_type_alignof(type));
+
+      // Move the old value, if it exists.
+      char* src = static_cast<char*>(sub->val);
+      sub->val = val_data + size;
+      if (src != nullptr) {
+        const int DATA_MAX_OFFSET = PREALLOCATED_OBJ_SIZE;
+        int offset = src - val_data;
+        // If value was located within 'val_data', update the 'src' pointer
+        // as value has been moved to 'old_data'.
+        if (offset >= 0 && offset < DATA_MAX_OFFSET) src = old_data + offset;
+
+        co_val_move(type, sub->val, src);
+      }
+      size += co_type_sizeof(type);
+    }
+    Get()->size = size;
+#endif
   }
 
  private:

@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -286,7 +286,7 @@ TEST(CO_CsdoInit, CoCsdoStart_NoDev) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1, co_csdo_is_idle(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -306,7 +306,7 @@ TEST(CO_CsdoInit, CoCsdoStart_AlreadyStarted) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1, co_csdo_is_idle(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -326,7 +326,7 @@ TEST(CO_CsdoInit, CoCsdoStart_DefaultCSDO_WithObj1280) {
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(0, co_csdo_is_stopped(csdo));
-  CHECK_EQUAL(1, co_csdo_is_idle(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_idle(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -350,7 +350,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnCreated) {
 
   co_csdo_stop(csdo);
 
-  CHECK_EQUAL(1, co_csdo_is_stopped(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_stopped(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -370,7 +370,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
 
   co_csdo_stop(csdo);
 
-  CHECK_EQUAL(1, co_csdo_is_stopped(csdo));
+  CHECK_EQUAL(1u, co_csdo_is_stopped(csdo));
 
   co_csdo_destroy(csdo);
 }
@@ -378,6 +378,7 @@ TEST(CO_CsdoInit, CoCsdoStop_OnStarted) {
 ///@}
 
 TEST_BASE(CO_Csdo) {
+  TEST_BASE_SUPER(CO_Csdo);
   static const co_unsigned8_t CSDO_NUM = 0x01u;
   static const co_unsigned8_t DEV_ID = 0x01u;
   co_csdo_t* csdo = nullptr;
@@ -447,6 +448,8 @@ TEST_BASE(CO_Csdo) {
     SetCli02CobidRes(0x580u + DEV_ID);
     csdo = co_csdo_create(net, dev, CSDO_NUM);
     CHECK(csdo != nullptr);
+
+    CoCsdoDnCon::Clear();
   }
 
   TEST_TEARDOWN() {
@@ -708,6 +711,428 @@ TEST(CoCsdoSetGet, CoCsdoSetTimeout_UpdateTimeout) {
   co_csdo_set_timeout(csdo, 4);
 
   CHECK_EQUAL(4, co_csdo_get_timeout(csdo));
+}
+
+///@}
+
+TEST_GROUP_BASE(CoCsdo, CO_Csdo) {
+  using sub_type = co_unsigned16_t;
+  const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
+
+  static constexpr size_t ConciseDcfEntrySize(const size_t type_size) {
+    return sizeof(co_unsigned16_t)    // index
+           + sizeof(co_unsigned8_t)   // subidx
+           + sizeof(co_unsigned32_t)  // data size of parameter
+           + type_size;
+  }
+
+  static constexpr size_t ConciseDcfSize(size_t entries_size) {
+    return sizeof(co_unsigned32_t) + entries_size;
+  }
+
+  const co_unsigned32_t IDX = 0x2020u;
+  const co_unsigned8_t SUBIDX = 0x00u;
+  const co_unsigned32_t INVALID_IDX = 0xffffu;
+  const co_unsigned8_t INVALID_SUBIDX = 0xffu;
+  const co_unsigned16_t VAL = 0xabcdu;
+  std::unique_ptr<CoObjTHolder> obj2020;
+
+  static co_unsigned32_t co_sub_failing_dn_ind(co_sub_t*, co_sdo_req*, void*) {
+    return CO_SDO_AC_ERROR;
+  }
+
+  TEST_SETUP() {
+    TEST_BASE_SETUP();
+
+    CreateObjInDev(obj2020, IDX);
+    obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
+  }
+
+  TEST_TEARDOWN() { TEST_BASE_TEARDOWN(); }
+};
+
+/// @name co_dev_dn_req()
+///@{
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index and a sub-index of
+///       a non-existing entry, a pointer to a value, a length of the value
+///       and a pointer to a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an invalid index, an invalid sub-index, CO_SDO_AC_NO_OBJ and
+///       a null pointer
+TEST(CoCsdo, CoDevDnReq_NoObj) {
+  const auto ret = co_dev_dn_req(dev, INVALID_IDX, INVALID_SUBIDX, &VAL,
+                                 sizeof(VAL), CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, INVALID_IDX, INVALID_SUBIDX, CO_SDO_AC_NO_OBJ,
+                     nullptr);
+}
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index of the existing object and
+///       sub-index of a non-existing entry, pointer to a value, length of
+///       the value and a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, invalid sub-index, CO_SDO_AC_NO_SUB and
+///       a null pointer
+TEST(CoCsdo, CoDevDnReq_NoSub) {
+  const auto ret = co_dev_dn_req(dev, IDX, INVALID_SUBIDX, &VAL, sizeof(VAL),
+                                 CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, INVALID_SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
+}
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index of the existing object and
+///       sub-index of an existing entry, pointer to a value, length of
+///       the value and no download confirmation function
+///
+/// \Then 0 is returned, the requested value is set
+TEST(CoCsdo, CoDevDnReq_NoCsdoDnConFunc) {
+  const auto ret =
+      co_dev_dn_req(dev, IDX, SUBIDX, &VAL, sizeof(VAL), nullptr, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index of the existing object and
+///       sub-index of an existing entry, pointer to a value, length of
+///       the value and a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, 0 as an abort code and a null pointer
+///       and the requested value is set
+TEST(CoCsdo, CoDevDnReq_Nominal) {
+  const auto ret = co_dev_dn_req(dev, IDX, SUBIDX, &VAL, sizeof(VAL),
+                                 CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0u, nullptr);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+///@}
+
+/// @name co_dev_dn_val_req()
+///@{
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_val_req() is called with an index and sub-index of
+///       a non-existing entry, pointer to a value, a type of the value,
+///       no memory buffer and a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an invalid index, an invalid sub-index, CO_SDO_AC_NO_OBJ and
+///       a null pointer
+TEST(CoCsdo, CoDevDnValReq_NoObj) {
+  const auto ret = co_dev_dn_val_req(dev, INVALID_IDX, INVALID_SUBIDX, SUB_TYPE,
+                                     &VAL, nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, INVALID_IDX, INVALID_SUBIDX, CO_SDO_AC_NO_OBJ,
+                     nullptr);
+}
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index of the existing object and
+///       sub-index of a non-existing entry, pointer to a value, a type of the
+///       value, no memory buffer and a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, invalid sub-index, CO_SDO_AC_NO_SUB and
+///       a null pointer
+TEST(CoCsdo, CoDevDnValReq_NoSub) {
+  const auto ret = co_dev_dn_val_req(dev, IDX, INVALID_SUBIDX, SUB_TYPE, &VAL,
+                                     nullptr, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, INVALID_SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
+}
+
+#if LELY_NO_MALLOC
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index and sub-index of an existing
+///       entry, pointer to a value, 64-bit type, no memory buffer and
+///       a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, CO_SDO_AC_NO_MEM and a null pointer,
+///       the requested value is not set
+TEST(CoCsdo, CoDevDnValReq_DnTooLong) {
+  const uint_least64_t data = 0xffffffffu;
+  membuf mbuf_zero = MEMBUF_INIT;
+
+  const auto ret =
+      co_dev_dn_val_req(dev, IDX, SUBIDX, CO_DEFTYPE_UNSIGNED64, &data,
+                        &mbuf_zero, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_MEM, nullptr);
+  CHECK_EQUAL(0u, co_dev_get_val_u8(dev, IDX, SUBIDX));
+}
+#endif  // LELY_NO_MALLOC
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index and sub-index of an existing
+///       entry, pointer to a value, a type of the value, no memory buffer and
+///       no download confirmation function
+///
+/// \Then 0 is returned, the requested value is set.
+TEST(CoCsdo, CoDevDnValReq_NoCsdoDnConFunc) {
+  const auto ret = co_dev_dn_val_req(dev, IDX, SUBIDX, SUB_TYPE, &VAL, nullptr,
+                                     nullptr, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_dev_dn_req() is called with an index and sub-index of an existing
+///       entry, pointer to a value, a type of the value, no memory buffer and
+///       a download confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, 0 as an abort code and a null pointer,
+///       the requested value is set
+TEST(CoCsdo, CoDevDnValReq_Nominal) {
+  const auto ret = co_dev_dn_val_req(dev, IDX, SUBIDX, SUB_TYPE, &VAL, nullptr,
+                                     CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0u, nullptr);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+///@}
+
+/// @name co_dev_dn_dcf_req()
+///@{
+
+/// \Given a pointer to the device (co_dev_t), a too short concise DCF buffer
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer and a confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, 0, 0, CO_SDO_AC_TYPE_LEN_LO and a null pointer, the requested
+///       value is not changed
+TEST(CoCsdo, CoDevDnDcfReq_ConciseBufTooShort) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+  for (size_t concise_buf_size = 3u;
+       concise_buf_size < CONCISE_DCF_SUB_TYPE_SIZE - sizeof(sub_type);
+       concise_buf_size++) {
+    uint_least8_t* const begin = concise_dcf;
+    uint_least8_t* const end = concise_dcf + concise_buf_size;
+    CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+                co_dev_write_dcf(dev, IDX, IDX, begin, end));
+
+    const auto ret =
+        co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+
+    CHECK_EQUAL(0, ret);
+    CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+    CoCsdoDnCon::Check(nullptr, 0, 0, CO_SDO_AC_TYPE_LEN_LO, nullptr);
+    CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
+
+    CoCsdoDnCon::Clear();
+  }
+}
+
+/// \Given a pointer to the device (co_dev_t), an invalid concise DCF buffer
+///        that is too small for a declared entry value
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer and a confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, CO_SDO_AC_TYPE_LEN_LO and a null
+///       pointer, the requested value is not changed
+TEST(CoCsdo, CoDevDnDcfReq_DatasizeMismatch) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+
+  obj2020->RemoveAndDestroyLastSub();
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
+
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
+  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+
+  obj2020->RemoveAndDestroyLastSub();
+  obj2020->InsertAndSetSub(SUBIDX, SUB_TYPE, sub_type(0));
+
+  const auto ret =
+      co_dev_dn_dcf_req(dev, begin, end - 1u, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_TYPE_LEN_LO, nullptr);
+  CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the device (co_dev_t), a concise DCF buffer with
+///        an index of an object which is not present in a device
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer and a confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, index of a non-existing object, a sub-index, CO_SDO_AC_NO_OBJ
+///       and a null pointer
+TEST(CoCsdo, CoDevDnDcfReq_NoObj) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
+  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  CHECK_EQUAL(0, co_dev_remove_obj(dev, obj2020->Get()));
+  obj2020->Reclaim();
+
+  const auto ret =
+      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_OBJ, nullptr);
+}
+
+/// \Given a pointer to the device (co_dev_t), a concise DCF buffer with
+///        an existing object index but non-existing sub-index
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer with concise DCF and a confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, the index, the sub-index, CO_SDO_AC_NO_SUB and
+///       a null pointer
+TEST(CoCsdo, CoDevDnDcfReq_NoSub) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
+  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  obj2020->RemoveAndDestroyLastSub();
+
+  const auto ret =
+      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_NO_SUB, nullptr);
+}
+
+/// \Given a pointer to the device (co_dev_t), a concise DCF with many entries
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer and a confirmation function but download indication
+///       function returns an abort code
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, CO_SDO_AC_ERROR and
+///       a null pointer, the requested value is not set
+TEST(CoCsdo, CoDevDnDcfReq_ManyEntriesButDnIndFail) {
+  const size_t CONCISE_DCF_COMBINED_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)) +
+                     ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_COMBINED_SIZE] = {0};
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_COMBINED_SIZE;
+  std::unique_ptr<CoObjTHolder> obj2021;
+  CreateObjInDev(obj2021, IDX + 1u);
+  obj2021->InsertAndSetSub(0x00u, SUB_TYPE, sub_type(0));
+  CHECK_EQUAL(CONCISE_DCF_COMBINED_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX + 1u, begin, end));
+
+  co_sub_set_dn_ind(obj2020->GetLastSub(), co_sub_failing_dn_ind, nullptr);
+  const auto ret =
+      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, CO_SDO_AC_ERROR, nullptr);
+  CHECK_EQUAL(0, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the device (co_dev_t), a concise DCF buffer
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and the
+///       end of the buffer and no confirmation function
+///
+/// \Then 0 is returned and the requested value is changed
+TEST(CoCsdo, CoDevDnDcfReq_NoCoCsdoDnCon) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
+  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
+  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  co_sub_set_val_u16(obj2020->GetLastSub(), 0);
+
+  const auto ret = co_dev_dn_dcf_req(dev, begin, end, nullptr, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
+}
+
+/// \Given a pointer to the device (co_dev_t), a concise DCF buffer
+///
+/// \When co_dev_dn_dcf_req() is called with pointers to the beginning and
+///       the end of the buffer and a confirmation function
+///
+/// \Then 0 is returned, the confirmation function is called once with a null
+///       pointer, an index, a sub-index, 0 as an abort code and a null pointer,
+///       the requested value is set
+TEST(CoCsdo, CoDevDnDcfReq_Nominal) {
+  const size_t CONCISE_DCF_SUB_TYPE_SIZE =
+      ConciseDcfSize(ConciseDcfEntrySize(sizeof(sub_type)));
+  uint_least8_t concise_dcf[CONCISE_DCF_SUB_TYPE_SIZE] = {0};
+  uint_least8_t* const begin = concise_dcf;
+  uint_least8_t* const end = concise_dcf + CONCISE_DCF_SUB_TYPE_SIZE;
+  co_sub_set_val_u16(obj2020->GetLastSub(), VAL);
+  CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
+              co_dev_write_dcf(dev, IDX, IDX, begin, end));
+  co_sub_set_val_u16(obj2020->GetLastSub(), 0);
+
+  const auto ret =
+      co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
+
+  CHECK_EQUAL(0, ret);
+  CHECK_EQUAL(1u, CoCsdoDnCon::num_called);
+  CoCsdoDnCon::Check(nullptr, IDX, SUBIDX, 0, nullptr);
+  CHECK_EQUAL(VAL, co_dev_get_val_u16(dev, IDX, SUBIDX));
 }
 
 ///@}
