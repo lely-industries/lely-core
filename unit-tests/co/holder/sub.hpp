@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -48,7 +48,7 @@ class CoSubTHolder : public Holder<co_sub_t> {
  private:
   co_val value;
   co_array array = CO_ARRAY_INIT;
-#else   // !LELY_NO_MALLOC
+#else  // !LELY_NO_MALLOC
 
  public:
   explicit CoSubTHolder(co_unsigned8_t subidx, co_unsigned16_t type)
@@ -57,6 +57,7 @@ class CoSubTHolder : public Holder<co_sub_t> {
   ~CoSubTHolder() {
     if (!taken) co_sub_destroy(Get());
   }
+
 #endif  // LELY_NO_MALLOC
 };      // class CoSubTHolder
 
