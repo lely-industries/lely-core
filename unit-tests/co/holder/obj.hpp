@@ -133,7 +133,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
     const auto ret = co_obj_remove_sub(Get(), GetLastSub());
     if (ret != 0) return false;
 
-    sub_holders.back()->Reclaim();
+    POINTERS_EQUAL(GetLastSub(), sub_holders.back()->Reclaim());
     sub_holders.pop_back();
     UpdateSubValues();
 
