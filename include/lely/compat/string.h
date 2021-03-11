@@ -172,8 +172,14 @@ char *strndup(const char *s, size_t size);
 
 #endif // !LELY_NO_MALLOC
 
-#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
-		&& !defined(__MINGW32__)
+#if LELY_NO_HOSTED \
+		|| (!(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
+				&& !defined(__MINGW32__))
+
+#ifndef strnlen
+#define strnlen lely_compat_strnlen
+#endif
+
 /**
  * Computes the length of the string at <b>s</b>, not including the terminating
  * null byte. At most <b>maxlen</b> characters are examined.
@@ -181,7 +187,7 @@ char *strndup(const char *s, size_t size);
  * @returns the smaller of the length of the string at <b>s</b> or
  * <b>maxlen</b>.
  */
-size_t strnlen(const char *s, size_t maxlen);
+size_t lely_compat_strnlen(const char *s, size_t maxlen);
 #endif
 
 #ifdef __cplusplus

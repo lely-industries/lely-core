@@ -143,10 +143,11 @@ strndup(const char *s, size_t size)
 
 #endif // !LELY_NO_MALLOC
 
-#if !(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
-		&& !defined(__MINGW32__)
+#if LELY_NO_HOSTED \
+		|| (!(_MSC_VER >= 1400) && !(_POSIX_C_SOURCE >= 200809L) \
+				&& !defined(__MINGW32__))
 size_t
-strnlen(const char *s, size_t maxlen)
+lely_compat_strnlen(const char *s, size_t maxlen)
 {
 	size_t size = 0;
 	while (size < maxlen && *s++)
