@@ -74,25 +74,6 @@ AS_IF([test "$enable_rt" != "no"], [
 ])
 AC_SUBST([RT_LIBS])
 
-AM_CONDITIONAL([NO_THREADS], [false])
-AM_CONDITIONAL([HAVE_PTHREAD], [false])
-AC_ARG_ENABLE([threads],
-	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
-AS_IF([test "$enable_threads" != "no"], [
-	AX_PTHREAD([
-		AM_CONDITIONAL([HAVE_PTHREAD], [true])
-		CC="$PTHREAD_CC"
-		CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
-		LIBS="$PTHREAD_LIBS $LIBS"
-	], [
-		enable_threads=no
-	])
-])
-AS_IF([test "$enable_threads" == "no"], [
-	AM_CONDITIONAL([NO_THREADS], [true])
-	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
-])
-
 CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
 
 AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
@@ -109,6 +90,26 @@ AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_hosted=no])
 AS_IF([test "$enable_hosted" == "no"], [
 	AM_CONDITIONAL([NO_HOSTED], [true])
 	AC_DEFINE([LELY_NO_HOSTED], [1], [Define to 1 if a freestanding instead of a hosted environment is used.])
+])
+
+AM_CONDITIONAL([NO_THREADS], [false])
+AM_CONDITIONAL([HAVE_PTHREAD], [false])
+AC_ARG_ENABLE([threads],
+	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
+AS_IF([test "$enable_hosted" == "no"], [enable_threads=no])
+AS_IF([test "$enable_threads" != "no"], [
+	AX_PTHREAD([
+		AM_CONDITIONAL([HAVE_PTHREAD], [true])
+		CC="$PTHREAD_CC"
+		CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+		LIBS="$PTHREAD_LIBS $LIBS"
+	], [
+		enable_threads=no
+	])
+])
+AS_IF([test "$enable_threads" == "no"], [
+	AM_CONDITIONAL([NO_THREADS], [true])
+	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
 AC_ARG_ENABLE([errno],

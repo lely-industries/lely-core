@@ -302,6 +302,26 @@
 #define LEVEL1_DCACHE_LINESIZE 64
 #endif
 
+#if !_WIN32 && !__STDC_HOSTED__
+#undef LELY_NO_HOSTED
+#define LELY_NO_HOSTED 1
+#endif
+
+#if LELY_NO_HOSTED
+// Disable errno in a freestanding environment.
+#undef LELY_NO_ERRNO
+#define LELY_NO_ERRNO 1
+// Disable dynamic memory allocation in a freestanding environment.
+#undef LELY_NO_MALLOC
+#define LELY_NO_MALLOC 1
+// Disable thread support in a freestanding environment.
+#undef LELY_NO_THREADS
+#define LELY_NO_THREADS 1
+// Disable atomic support in a freestanding environment.
+#undef LELY_NO_ATOMICS
+#define LELY_NO_ATOMICS 1
+#endif
+
 #if !LELY_NO_THREADS
 #if defined(__cplusplus)
 // <thread> (C++11 thread support library) is available.
@@ -330,20 +350,6 @@
 #define LELY_NO_ATOMICS 1
 #endif
 #endif // !LELY_NO_ATOMICS
-
-#if !_WIN32 && !__STDC_HOSTED__
-#undef LELY_NO_HOSTED
-#define LELY_NO_HOSTED 1
-#endif
-
-#if LELY_NO_HOSTED
-// Disable errno in a freestanding environment.
-#undef LELY_NO_ERRNO
-#define LELY_NO_ERRNO 1
-// Disable dynamic memory allocation in a freestanding environment.
-#undef LELY_NO_MALLOC
-#define LELY_NO_MALLOC 1
-#endif
 
 #if LELY_NO_ERRNO || LELY_NO_MALLOC
 // Disable standard I/O if errno and/or dynamic memory allocation are disabled.
