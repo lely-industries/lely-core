@@ -1015,7 +1015,7 @@ TEST(CoCsdo, CoDevDnDcfReq_NoObj) {
   CHECK_EQUAL(CONCISE_DCF_SUB_TYPE_SIZE,
               co_dev_write_dcf(dev, IDX, IDX, begin, end));
   CHECK_EQUAL(0, co_dev_remove_obj(dev, obj2020->Get()));
-  obj2020->Reclaim();
+  POINTERS_EQUAL(obj2020->Get(), obj2020->Reclaim());
 
   const auto ret =
       co_dev_dn_dcf_req(dev, begin, end, CoCsdoDnCon::func, nullptr);
