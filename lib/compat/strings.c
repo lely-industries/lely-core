@@ -69,32 +69,34 @@ ffs(int i)
 #endif
 
 int
-strcasecmp(const char *s1, const char *s2)
+lely_compat_strcasecmp(const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return 0;
 
-	int result;
-	// clang-format off
-	while ((result = tolower((unsigned char)*s1)
-			- tolower((unsigned char)*s2++)) == 0 && *s1++)
-		// clang-format on
-		;
+	int result = 0;
+	for (; !result; s1++, s2++) {
+		result = tolower((unsigned char)*s1)
+				- tolower((unsigned char)*s2);
+		if (!*s1)
+			break;
+	}
 	return result;
 }
 
 int
-strncasecmp(const char *s1, const char *s2, size_t n)
+lely_compat_strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	if (s1 == s2 || !n)
 		return 0;
 
-	int result;
-	// clang-format off
-	while ((result = tolower((unsigned char)*s1)
-			- tolower((unsigned char)*s2++)) == 0 && --n && *s1++)
-		// clang-format on
-		;
+	int result = 0;
+	for (; !result && n; s1++, s2++, n--) {
+		result = tolower((unsigned char)*s1)
+				- tolower((unsigned char)*s2);
+		if (!*s1)
+			break;
+	}
 	return result;
 }
 

@@ -70,7 +70,11 @@ int ffs(int i);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int strcasecmp(const char *s1, const char *s2);
+int lely_compat_strcasecmp(const char *s1, const char *s2);
+
+#ifndef strcasecmp
+#define strcasecmp lely_compat_strcasecmp
+#endif
 
 /**
  * Compares at most <b>n</b> characters from the the string at <b>s1</b> to the
@@ -79,7 +83,11 @@ int strcasecmp(const char *s1, const char *s2);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int strncasecmp(const char *s1, const char *s2, size_t n);
+int lely_compat_strncasecmp(const char *s1, const char *s2, size_t n);
+
+#ifndef strncasecmp
+#define strncasecmp lely_compat_strncasecmp
+#endif
 
 #ifdef __cplusplus
 }

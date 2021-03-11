@@ -654,6 +654,7 @@ AC_CONFIG_FILES([
 	unit-tests/cpputest/Makefile
 	unit-tests/can/Makefile
 	unit-tests/co/Makefile
+	unit-tests/compat/Makefile
 	unit-tests/util/Makefile
 	exec-wrapper.sh
 	lcov-wrapper.sh
