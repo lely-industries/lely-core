@@ -2,8 +2,10 @@ src =
 if !NO_RT
 src += clock.c
 endif
-src += getopt.c
 src += compat.h
+if !ECSS_COMPLIANCE
+src += getopt.c
+endif
 src += stdatomic.c
 if !NO_STDIO
 src += stdio.c
