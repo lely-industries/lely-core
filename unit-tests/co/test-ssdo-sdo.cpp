@@ -45,7 +45,7 @@ TEST_GROUP(CO_SsdoDnInd) {
   Allocators::Default allocator;
 
   static const co_unsigned8_t DEV_ID = 0x01u;
-  static const co_unsigned8_t SSDO_NUM = 0x01u;
+  static const co_unsigned8_t SDO_NUM = 0x01u;
   static const co_unsigned32_t CAN_ID = DEV_ID;
   static const co_unsigned32_t CAN_ID_EXT =
       co_unsigned32_t(DEV_ID) | 0x10000000u;
@@ -132,7 +132,7 @@ TEST_GROUP(CO_SsdoDnInd) {
     SetSrv02CobidRes(CAN_ID);
     SetSrv03NodeId(0);
 
-    ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+    ssdo = co_ssdo_create(net, dev, SDO_NUM);
     CHECK(ssdo != nullptr);
     co_ssdo_start(ssdo);
 

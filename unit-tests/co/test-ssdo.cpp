@@ -29,7 +29,7 @@
 #include <CppUTest/TestHarness.h>
 
 #include <lely/can/net.h>
-#include "lely/co/crc.h"
+#include <lely/co/crc.h>
 #include <lely/co/csdo.h>
 #include <lely/co/sdo.h>
 #include <lely/co/ssdo.h>
@@ -100,7 +100,7 @@ TEST_GROUP(CO_SsdoInit) {
   std::unique_ptr<CoDevTHolder> dev_holder;
   Allocators::Default defaultAllocator;
   Allocators::Limited limitedAllocator;
-  const co_unsigned8_t SSDO_NUM = 0x01u;
+  const co_unsigned8_t SDO_NUM = 0x01u;
 
   TEST_SETUP() {
     LelyUnitTest::DisableDiagnosticMessages();
@@ -123,6 +123,14 @@ TEST_GROUP(CO_SsdoInit) {
   }
 };
 
+/// @name co_ssdo_alignof()
+///@{
+
+/// \Given N/A
+///
+/// \When co_ssdo_alignof() is called
+///
+/// \Then if \__MINGW32__ and !__MINGW64__: 4 is returned; else 8 is returned
 TEST(CO_SsdoInit, CoSsdoAlignof_Nominal) {
   const auto ret = co_ssdo_alignof();
 
@@ -133,6 +141,18 @@ TEST(CO_SsdoInit, CoSsdoAlignof_Nominal) {
 #endif
 }
 
+///@}
+
+/// @name co_ssdo_sizeof()
+///@{
+
+/// \Given N/A
+///
+/// \When co_ssdo_sizeof() is called
+///
+/// \Then if LELY_NO_MALLOC: 1088 is returned;
+///       else if \__MINGW32__ and !__MINGW64__: 108 is returned;
+///       else 184 is returned
 TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
   const auto ret = co_ssdo_sizeof();
 
@@ -147,98 +167,185 @@ TEST(CO_SsdoInit, CoSsdoSizeof_Nominal) {
 #endif  // LELY_NO_MALLOC
 }
 
+///@}
+
+/// @name co_ssdo_create()
+///@{
+
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
+///       with a failing allocator, the pointer to the device and an SDO number
+///       but SSDO service allocation fails
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_FailSsdoAlloc) {
-  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SDO_NUM);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
+///       the pointer to the device and an SDO number equal zero
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_NumZero) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, 0x00u);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
+///       the pointer to the device and an SDO number higher than CO_NUM_SDOS
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_NumTooHigh) {
   co_ssdo_t* const ssdo = co_ssdo_create(net, dev, CO_NUM_SDOS + 1u);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t) without server parameter object
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
+///       the pointer to the device and an SDO number of a non-default SSDO
+///       service
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_NoServerParameterObj) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, 2u);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM + 1u);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
+///       with a failing allocator, the pointer to the device and an SDO number
+///       but can_recv_create() fails
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_RecvCreateFail) {
   limitedAllocator.LimitAllocationTo(co_ssdo_sizeof());
 
-  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SDO_NUM);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t)
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t)
+///       with a failing allocator, the pointer to the device and an SDO number
+///       but can_timer_create() fails
+///
+/// \Then a null pointer is returned
 TEST(CO_SsdoInit, CoSsdoCreate_TimerCreateFail) {
   limitedAllocator.LimitAllocationTo(co_ssdo_sizeof() + can_recv_sizeof());
 
-  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(failing_net, dev, SDO_NUM);
 
   POINTERS_EQUAL(nullptr, ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t) without any object inserted
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
+///       the pointer to the device and an SDO number of the default SSDO
+///       service
+///
+/// \Then a pointer to the created SSDO service is returned, the service has
+///       default values set
 TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_NoObj1200) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   CHECK(ssdo != nullptr);
   POINTERS_EQUAL(net, co_ssdo_get_net(ssdo));
   POINTERS_EQUAL(dev, co_ssdo_get_dev(ssdo));
-  CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
+  CHECK_EQUAL(SDO_NUM, co_ssdo_get_num(ssdo));
   const co_sdo_par* par = co_ssdo_get_par(ssdo);
   CHECK_EQUAL(3u, par->n);
-  CHECK_EQUAL(SSDO_NUM, par->id);
-  CHECK_EQUAL(0x600u + SSDO_NUM, par->cobid_req);
-  CHECK_EQUAL(0x580u + SSDO_NUM, par->cobid_res);
+  CHECK_EQUAL(SDO_NUM, par->id);
+  CHECK_EQUAL(0x600u + SDO_NUM, par->cobid_req);
+  CHECK_EQUAL(0x580u + SDO_NUM, par->cobid_res);
   CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
   POINTERS_EQUAL(can_net_get_alloc(net), co_ssdo_get_alloc(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
 
+/// \Given a pointer to the device (co_dev_t) with 0x1200 object inserted
+///
+/// \When co_ssdo_create() is called with a pointer to the network (can_net_t),
+///       the pointer to the device and an SDO number of the default SSDO
+///       service
+///
+/// \Then a pointer to the created SSDO service is returned, the service has
+///       default values set
 TEST(CO_SsdoInit, CoSsdoCreate_DefaultSsdo_WithObj1200) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
 
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   CHECK(ssdo != nullptr);
   POINTERS_EQUAL(net, co_ssdo_get_net(ssdo));
   POINTERS_EQUAL(dev, co_ssdo_get_dev(ssdo));
-  CHECK_EQUAL(SSDO_NUM, co_ssdo_get_num(ssdo));
+  CHECK_EQUAL(SDO_NUM, co_ssdo_get_num(ssdo));
   const co_sdo_par* par = co_ssdo_get_par(ssdo);
   CHECK_EQUAL(3u, par->n);
-  CHECK_EQUAL(SSDO_NUM, par->id);
-  CHECK_EQUAL(0x600u + SSDO_NUM, par->cobid_req);
-  CHECK_EQUAL(0x580u + SSDO_NUM, par->cobid_res);
+  CHECK_EQUAL(SDO_NUM, par->id);
+  CHECK_EQUAL(0x600u + SDO_NUM, par->cobid_req);
+  CHECK_EQUAL(0x580u + SDO_NUM, par->cobid_res);
   CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
 
   co_ssdo_destroy(ssdo);
 }
 
+///@}
+
+/// @name co_ssdo_destroy()
+///@{
+
+/// \Given a null pointer to an SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_destroy() is called
+///
+/// \Then nothing is changed
 TEST(CO_SsdoInit, CoSsdoDestroy_Nullptr) {
   co_ssdo_t* const ssdo = nullptr;
 
   co_ssdo_destroy(ssdo);
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_destroy() is called
+///
+/// \Then the SSDO service is destroyed
 TEST(CO_SsdoInit, CoSsdoDestroy_Nominal) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   co_ssdo_destroy(ssdo);
 }
 
+///@}
+
+/// @name co_ssdo_start()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t) without any object
+///        inserted
+///
+/// \When co_ssdo_start() is called
+///
+/// \Then 0 is returned, the service is not stopped
 TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   const auto ret = co_ssdo_start(ssdo);
 
@@ -248,10 +355,15 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_NoObj1200) {
   co_ssdo_destroy(ssdo);
 }
 
+/// \Given a pointer to the started SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_start() is called
+///
+/// \Then 0 is returned, the service is not stopped
 TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
   CHECK_EQUAL(0, co_ssdo_start(ssdo));
 
   const auto ret = co_ssdo_start(ssdo);
@@ -262,10 +374,16 @@ TEST(CO_SsdoInit, CoSsdoStart_AlreadyStarted) {
   co_ssdo_destroy(ssdo);
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with 0x1200 object
+///        inserted
+///
+/// \When co_ssdo_start() is called
+///
+/// \Then 0 is returned, the service is not stopped
 TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithObj1200) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   const auto ret = co_ssdo_start(ssdo);
 
@@ -275,19 +393,21 @@ TEST(CO_SsdoInit, CoSsdoStart_DefaultSsdo_WithObj1200) {
   co_ssdo_destroy(ssdo);
 }
 
-TEST(CO_SsdoInit, CoSsdoStop_NoObj1200) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+///@}
 
-  co_ssdo_stop(ssdo);
-  CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
+/// @name co_ssdo_stop()
+///@{
 
-  co_ssdo_destroy(ssdo);
-}
-
-TEST(CO_SsdoInit, CoSsdoStop_WithObj1200) {
+/// \Given a pointer to the SSDO service (co_ssdo_t) with 0x1200 object
+///        inserted
+///
+/// \When co_ssdo_stop() is called
+///
+/// \Then the service is stopped
+TEST(CO_SsdoInit, CoSsdoStop_OnCreated) {
   std::unique_ptr<CoObjTHolder> obj1200(new CoObjTHolder(0x1200u));
   co_dev_insert_obj(dev, obj1200->Take());
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
 
   co_ssdo_stop(ssdo);
   CHECK_EQUAL(1, co_ssdo_is_stopped(ssdo));
@@ -295,8 +415,13 @@ TEST(CO_SsdoInit, CoSsdoStop_WithObj1200) {
   co_ssdo_destroy(ssdo);
 }
 
-TEST(CO_SsdoInit, CoSsdoStop_AfterStart) {
-  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+/// \Given a pointer to the started SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_stop() is called
+///
+/// \Then the service is stopped
+TEST(CO_SsdoInit, CoSsdoStop_OnStarted) {
+  co_ssdo_t* const ssdo = co_ssdo_create(net, dev, SDO_NUM);
   co_ssdo_start(ssdo);
 
   co_ssdo_stop(ssdo);
@@ -304,6 +429,8 @@ TEST(CO_SsdoInit, CoSsdoStop_AfterStart) {
 
   co_ssdo_destroy(ssdo);
 }
+
+///@}
 
 TEST_BASE(CO_Ssdo) {
   static const co_unsigned16_t SUB_TYPE = CO_DEFTYPE_UNSIGNED16;
@@ -318,7 +445,7 @@ TEST_BASE(CO_Ssdo) {
   static const co_unsigned16_t IDX = 0x2020u;
   static const co_unsigned8_t SUBIDX = 0x00u;
   static const size_t MSG_BUF_SIZE = 32u;
-  const co_unsigned8_t SSDO_NUM = 0x01u;
+  const co_unsigned8_t SDO_NUM = 0x01u;
   can_net_t* net = nullptr;
   co_dev_t* dev = nullptr;
   std::unique_ptr<CoDevTHolder> dev_holder;
@@ -344,7 +471,7 @@ TEST_BASE(CO_Ssdo) {
   can_msg CreateDefaultCanMsg(const co_unsigned16_t idx = IDX,
                               const co_unsigned8_t subidx = SUBIDX) {
     can_msg msg = CAN_MSG_INIT;
-    msg.id = 0x600u + SSDO_NUM;
+    msg.id = 0x600u + SDO_NUM;
     stle_u16(msg.data + 1u, idx);
     msg.data[3] = subidx;
     msg.len = CO_SDO_MSG_SIZE;
@@ -410,7 +537,7 @@ TEST_BASE(CO_Ssdo) {
     SetSrv00HighestSubidxSupported(0x02u);
     SetSrv01CobidReq(0x600u + DEV_ID);
     SetSrv02CobidRes(0x580u + DEV_ID);
-    ssdo = co_ssdo_create(net, dev, SSDO_NUM);
+    ssdo = co_ssdo_create(net, dev, SDO_NUM);
     CHECK(ssdo != nullptr);
 
     can_net_set_send_func(net, CanSend::func, nullptr);
@@ -430,52 +557,120 @@ TEST_BASE(CO_Ssdo) {
 
 TEST_GROUP_BASE(CoSsdoSetGet, CO_Ssdo){};
 
+/// @name co_ssdo_get_net()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_get_net() is called
+///
+/// \Then a pointer to the network (can_net_t) of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetNet_Nominal) {
   const auto* ret = co_ssdo_get_net(ssdo);
 
   POINTERS_EQUAL(net, ret);
 }
 
+///@}
+
+/// @name co_ssdo_get_dev()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_get_dev() is called
+///
+/// \Then a pointer to the device (co_dev_t) of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetDev_Nominal) {
   const auto* ret = co_ssdo_get_dev(ssdo);
 
   POINTERS_EQUAL(dev, ret);
 }
 
+///@}
+
+/// @name co_ssdo_get_num()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_get_num() is called
+///
+/// \Then the service's SDO number is returned
 TEST(CoSsdoSetGet, CoSsdoGetNum_Nominal) {
   const auto ret = co_ssdo_get_num(ssdo);
 
-  CHECK_EQUAL(SSDO_NUM, ret);
+  CHECK_EQUAL(SDO_NUM, ret);
 }
 
+///@}
+
+/// @name co_ssdo_get_par()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_get_par() is called
+///
+/// \Then a pointer to the parameter object of the SSDO service is returned
 TEST(CoSsdoSetGet, CoSsdoGetPar_Nominal) {
   const auto* ret = co_ssdo_get_par(ssdo);
 
   CHECK(ret != nullptr);
   CHECK_EQUAL(3u, ret->n);
-  CHECK_EQUAL(SSDO_NUM, ret->id);
-  CHECK_EQUAL(0x580u + SSDO_NUM, ret->cobid_res);
-  CHECK_EQUAL(0x600u + SSDO_NUM, ret->cobid_req);
+  CHECK_EQUAL(SDO_NUM, ret->id);
+  CHECK_EQUAL(0x580u + SDO_NUM, ret->cobid_res);
+  CHECK_EQUAL(0x600u + SDO_NUM, ret->cobid_req);
 }
 
+///@}
+
+/// @name co_ssdo_get_timeout()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_get_timeout() is called
+///
+/// \Then default service's timeout value of zero is returned
 TEST(CoSsdoSetGet, CoSsdoGetTimeout_Nominal) {
   const auto ret = co_ssdo_get_timeout(ssdo);
 
   CHECK_EQUAL(0u, ret);
 }
 
-TEST(CoSsdoSetGet, CoSsdoSetTimeout_Nominal) {
+///@}
+
+/// @name co_ssdo_set_timeout()
+///@{
+
+/// \Given a pointer to the SSDO service (co_ssdo_t)
+///
+/// \When co_ssdo_set_timeout() is called with a valid timeout value
+///
+/// \Then the requested timeout is set
+TEST(CoSsdoSetGet, CoSsdoSetTimeout_ValidTimeout) {
   co_ssdo_set_timeout(ssdo, 1);
 
   CHECK_EQUAL(1, co_ssdo_get_timeout(ssdo));
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with no timeout set
+///
+/// \When co_ssdo_set_timeout() is called with an invalid timeout value
+///
+/// \Then the timeout is not set
 TEST(CoSsdoSetGet, CoSsdoSetTimeout_InvalidTimeout) {
   co_ssdo_set_timeout(ssdo, -1);
 
   CHECK_EQUAL(0, co_ssdo_get_timeout(ssdo));
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with a timeout set
+///
+/// \When co_ssdo_set_timeout() is called with a zero timeout value
+///
+/// \Then the timeout is disabled
 TEST(CoSsdoSetGet, CoSsdoSetTimeout_DisableTimeout) {
   co_ssdo_set_timeout(ssdo, 1);
 
@@ -484,6 +679,11 @@ TEST(CoSsdoSetGet, CoSsdoSetTimeout_DisableTimeout) {
   CHECK_EQUAL(0, co_ssdo_get_timeout(ssdo));
 }
 
+/// \Given a pointer to the SSDO service (co_ssdo_t) with a timeout set
+///
+/// \When co_ssdo_set_timeout() is called with a different timeout value
+///
+/// \Then the timeout is updated to the requested value
 TEST(CoSsdoSetGet, CoSsdoSetTimeout_UpdateTimeout) {
   co_ssdo_set_timeout(ssdo, 1);
 
@@ -492,7 +692,12 @@ TEST(CoSsdoSetGet, CoSsdoSetTimeout_UpdateTimeout) {
   CHECK_EQUAL(4, co_ssdo_get_timeout(ssdo));
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoUpdate, CO_Ssdo){};
+
+/// @name update of the SSDO parameters
+///@{
 
 TEST(CoSsdoUpdate, ReqCobidValid_ResCobidInvalid) {
   const co_unsigned32_t new_cobid_res = CAN_ID | CO_SDO_COBID_VALID;
@@ -542,7 +747,12 @@ TEST(CoSsdoUpdate, ReqResCobidsValid_CobidFrameSet) {
   CHECK_EQUAL(new_cobid_res, GetSrv02CobidRes());
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoTimer, CO_Ssdo){};
+
+/// @name SSDO timer
+///@{
 
 TEST(CoSsdoTimer, Timeout) {
   co_ssdo_set_timeout(ssdo, 1u);  // 1 ms
@@ -573,7 +783,12 @@ TEST(CoSsdoTimer, Timeout) {
   CHECK_AC_CAN_MSG(CO_SDO_AC_TIMEOUT, CanSend::msg.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoWaitOnRecv, CO_Ssdo){};
+
+/// @name SSDO wait on receive
+///@{
 
 TEST(CoSsdoWaitOnRecv, DnIniReq) {
   StartSSDO();
@@ -698,6 +913,8 @@ TEST(CoSsdoWaitOnRecv, NoCS) {
   CHECK_AC_CAN_MSG(CO_SDO_AC_NO_CS, CanSend::msg.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoDnIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -715,6 +932,9 @@ TEST_GROUP_BASE(CoSsdoDnIniOnRecv, CO_Ssdo) {
     return msg;
   }
 };
+
+/// @name SSDO download initiate
+///@{
 
 TEST(CoSsdoDnIniOnRecv, NoIdxSpecified) {
   StartSSDO();
@@ -825,6 +1045,8 @@ TEST(CoSsdoDnIniOnRecv, Expedited) {
   CHECK_EQUAL(ldle_u16(val2dn), co_sub_get_val_u16(sub));
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -851,6 +1073,9 @@ TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
     return msg;
   }
 };
+
+/// @name SSDO upload initiate
+///@{
 
 TEST(CoSsdoUpIniOnRecv, NoIdxSpecified) {
   StartSSDO();
@@ -976,6 +1201,8 @@ TEST(CoSsdoUpIniOnRecv, Expedited) {
   CHECK_VAL_CAN_MSG(0xabcdu, CanSend::msg.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoBlkDnIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -994,6 +1221,9 @@ TEST_GROUP_BASE(CoSsdoBlkDnIniOnRecv, CO_Ssdo) {
     return msg;
   }
 };
+
+/// @name SSDO block download initiate on receive
+///@{
 
 TEST(CoSsdoBlkDnIniOnRecv, NoIdxSpecified) {
   StartSSDO();
@@ -1115,6 +1345,8 @@ TEST(CoSsdoBlkDnIniOnRecv, Nominal) {
   CHECK_VAL_CAN_MSG(127u, CanSend::msg.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -1130,6 +1362,9 @@ TEST_GROUP_BASE(CoSsdoBlkUpIniOnRecv, CO_Ssdo) {
     return msg;
   }
 };
+
+/// @name SSDO block upload initiate on receive
+///@{
 
 TEST(CoSsdoBlkUpIniOnRecv, InvalidSC) {
   CreateObjInDev(obj2020, IDX);
@@ -1428,6 +1663,8 @@ TEST(CoSsdoBlkUpIniOnRecv, Nominal) {
   CHECK_VAL_CAN_MSG(2u, CanSend::msg.data);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -1464,6 +1701,9 @@ TEST_GROUP_BASE(CoSsdoDnSegOnRecv, CO_Ssdo) {
     ResetCanSend();
   }
 };
+
+/// @name SSDO download segment on receive
+///@{
 
 TEST(CoSsdoDnSegOnRecv, NoCS) {
   CreateObjInDev(obj2020, IDX);
@@ -1723,6 +1963,8 @@ TEST(CoSsdoDnSegOnRecv, Nominal) {
   CHECK_EQUAL(0xefcdab8967452301u, val_u64);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -1781,6 +2023,9 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
     ResetCanSend();
   }
 };
+
+/// @name SSDO upload segment on receive
+///@{
 
 TEST(CoSsdoUpSegOnRecv, NoCS) {
   CreateObjInDev(obj2020, IDX);
@@ -2079,15 +2324,11 @@ TEST(CoSsdoUpSegOnRecv, IndReqSizeLonger) {
   CHECK_EQUAL(0x54u, CanSend::msg.data[7]);
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
-  /**
-   * create block download subobject request
-   *
-   * @param seqno sequence number
-   * @param last  is this the last segment?
-   */
   can_msg CreateBlkDnSubReq(const co_unsigned8_t seqno,
                             const co_unsigned8_t last = 0) {
     can_msg msg = CreateDefaultCanMsg();
@@ -2096,11 +2337,6 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     return msg;
   }
 
-  /**
-   * create block download end message
-   *
-   * @param crc cyclic redundancy check (checksum) value
-   */
   can_msg CreateBlkDnEndCanMsg(const co_unsigned16_t crc,
                                const co_unsigned8_t cs_flags = 0) {
     can_msg msg = CreateDefaultCanMsg();
@@ -2110,12 +2346,6 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     return msg;
   }
 
-  /**
-   * Initiate block download subobject
-   *
-   * @param size     size of data to download
-   * @param cs_flags additional flags for command specifier
-   */
   void InitBlkDn2020Sub00(const co_unsigned32_t size,
                           const co_unsigned8_t cs_flags = CO_SDO_BLK_CRC) {
     can_msg msg = CreateDefaultCanMsg();
@@ -2136,12 +2366,6 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     ResetCanSend();
   }
 
-  /**
-   * End block download
-   *
-   * @param crc cyclic redundancy check (checksum) value
-   * @param size how many bytes were sent in a last segment
-   */
   void EndBlkDn(const co_unsigned16_t crc, const size_t size = 0) {
     can_msg msg_end = CAN_MSG_INIT;
     if (size != 0)
@@ -2161,9 +2385,6 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     ResetCanSend();
   }
 
-  /**
-   * Change state of the SSDO service to blk_dn_sub_end
-   */
   void ChangeStateToEnd() {
     can_msg msg_first_blk = CreateBlkDnSubReq(1u);
     msg_first_blk.data[1] = 0x01u;
@@ -2193,6 +2414,9 @@ TEST_GROUP_BASE(CoSsdoBlkDn, CO_Ssdo) {
     ResetCanSend();
   }
 };
+
+/// @name SSDO block download
+///@{
 
 TEST(CoSsdoBlkDn, Sub_NoCS) {
   CreateObjInDev(obj2020, IDX);
@@ -2790,6 +3014,8 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
   CHECK_EQUAL(0, co_sub_get_val_u64(sub));
 }
 
+///@}
+
 TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
@@ -2820,12 +3046,6 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     return ac;
   }
 
-  /**
-   * Initiate block upload request
-   * 
-   * @param subidx  size of data to upload
-   * @param blksize block size (number of segments client is able to receive)
-   */
   void InitBlkUp2020Req(const co_unsigned8_t subidx = SUBIDX,
                         const co_unsigned8_t blksize = CO_SDO_MAX_SEQNO) {
     can_msg msg = CreateDefaultCanMsg();
@@ -2838,12 +3058,6 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     CHECK_EQUAL(0, can_net_recv(net, &msg));
   }
 
-  /**
-   * check initiate block upload response
-   * 
-   * @param subidx  expected subindex
-   * @param size expected data size
-   */
   void CheckInitBlkUp2020ResData(const co_unsigned8_t subidx,
                                  const size_t size) {
     CHECK_EQUAL(1u, CanSend::num_called);
@@ -2909,6 +3123,9 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
     ResetCanSend();
   }
 };
+
+/// @name SSDO block upload
+///@{
 
 TEST(CoSsdoBlkUp, Sub_Nominal) {
   CreateObjInDev(obj2020, IDX);
@@ -3702,3 +3919,5 @@ TEST(CoSsdoBlkUp, EndOnRecv_CSAbort) {
 
   CHECK_EQUAL(0, CanSend::num_called);
 }
+
+///@}
