@@ -802,6 +802,18 @@ int co_nmt_boot_req(co_nmt_t *nmt, co_unsigned8_t id, int timeout);
 int co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id);
 
 /**
+ * Checks if a boot-up message has been received from the specified node(s).
+ *
+ * @param nmt a pointer to an NMT master service.
+ * @param id  the node-ID (0 for all mandatory nodes, [1..127] for a specific
+ *            slave).
+ *
+ * @returns 1 if a boot-up message was received, 0 if not, or -1 on error. In
+ * the latter case, the error number can be obtained with get_errc().
+ */
+int co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id);
+
+/**
  * Issues the NMT 'configuration request' for the specified node. The function
  * specified to co_nmt_set_cfg_ind() is invoked to complete the request.
  *
