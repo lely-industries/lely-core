@@ -254,9 +254,7 @@ io_vcan_ctrl_alloc(void)
 {
 	struct io_vcan_ctrl *vcan = malloc(sizeof(*vcan));
 	if (!vcan) {
-#if !LELY_NO_ERRNO
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 		return NULL;
 	}
 	// cppcheck-suppress memleak symbolName=vcan
@@ -432,9 +430,7 @@ io_vcan_chan_alloc(void)
 {
 	struct io_vcan_chan *vcan = malloc(sizeof(*vcan));
 	if (!vcan) {
-#if !LELY_NO_ERRNO
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 		return NULL;
 	}
 	// cppcheck-suppress memleak symbolName=vcan
@@ -477,9 +473,7 @@ io_vcan_chan_init(io_can_chan_t *chan, io_ctx_t *ctx, ev_exec_t *exec,
 	spscring_init(&vcan->rxring, rxlen);
 	vcan->rxbuf = calloc(rxlen, sizeof(struct io_vcan_frame));
 	if (!vcan->rxbuf) {
-#if !LELY_NO_ERRNO
-		errc = errno2c(errno);
-#endif
+		errc = get_errc_from_errno();
 		goto error_alloc_rxbuf;
 	}
 

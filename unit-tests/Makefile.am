@@ -62,6 +62,7 @@ src_util_tests += util/test-rbtree.cpp
 src_util_tests += util/test-time.cpp
 src_util_tests += util/test-ustring.cpp
 src_util_tests += util/test-util.cpp
+src_util_tests += util/test-error.cpp
 if !ECSS_COMPLIANCE
 if !NO_MALLOC
 src_util_tests += util/test-bitset.cpp

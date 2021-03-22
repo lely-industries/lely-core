@@ -143,27 +143,21 @@ TEST(CO_RpdoCreate, CoRpdoCreate_ZeroNum) {
   rpdo = co_rpdo_create(net, dev, 0);
 
   POINTERS_EQUAL(nullptr, rpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_InvalidNum) {
   rpdo = co_rpdo_create(net, dev, CO_NUM_PDOS + 1u);
 
   POINTERS_EQUAL(nullptr, rpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOParameters) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
@@ -172,9 +166,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOMappingParamRecord) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
@@ -183,9 +175,7 @@ TEST(CO_RpdoCreate, CoRpdoCreate_NoRPDOCommParamRecord) {
   rpdo = co_rpdo_create(net, dev, RPDO_NUM);
 
   POINTERS_EQUAL(nullptr, rpdo);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 TEST(CO_RpdoCreate, CoRpdoCreate_MinimalRPDO) {

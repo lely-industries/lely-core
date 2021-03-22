@@ -36,7 +36,13 @@
  * and platform-independent error numbers can be  done with errc2num() and
  * errnum2c().
  *
- * @copyright 2013-2020 Lely Industries N.V.
+ * If `LELY_NO_ERRNO` is defined, `<errno.h>` is not included and `errno` is not
+ * used. Instead, `set_errnum()` and `get_errnum()` store and retrieve the
+ * platform-independent error number in a static variable (thread-local
+ * if supported). This behavior can be overridden with `set_errc_set_handler()`
+ * and `get_errc_set_handler()`.
+ *
+ * @copyright 2013-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -75,8 +81,10 @@
 
 /// The platform-independent error numbers.
 enum errnum {
+	/// No error reported.
+	ERRNUM_SUCCESS = 0,
 	/// Argument list too long.
-	ERRNUM_2BIG = 0,
+	ERRNUM_2BIG,
 	/// Permission denied.
 	ERRNUM_ACCES,
 	/// Address in use.
@@ -271,6 +279,76 @@ extern "C" {
 #endif
 
 /**
+ * The function type of a handler for get_errc().
+ *
+ * The default implementation uses `GetLastError()` on Windows and `errno`
+ * on other platforms.
+ *
+ * @param data the extra argument specified to set_errnum_get_handler().
+ *
+ * @returns most recently set error code
+ */
+typedef int get_errc_handler_t(void *data);
+
+/**
+ * The function type of a handler for set_errc().
+ *
+ * The default implementation uses `SetLastError()` on Windows and `errno`
+ * on other platforms.
+ *
+ * @param errc the most recent error code to be set.
+ * @param data the extra argument specified to set_errnum_set_handler().
+ */
+typedef void set_errc_handler_t(int errc, void *handle);
+
+/**
+ * Retrieves the handler function for get_errc().
+ *
+ * @param phandler the address at which to store a pointer to the handler
+ *                 function (can be NULL).
+ * @param pdata    the address at which to store the pointer to the extra
+ *                 argument for the handler function (can be NULL).
+ *
+ * @see set_errc_get_handler()
+ */
+void get_errc_get_handler(get_errc_handler_t **phandler, void **pdata);
+
+/**
+ * Retrieves the handler function for set_errc().
+ *
+ * @param phandler the address at which to store a pointer to the handler
+ *                 function (can be NULL).
+ * @param pdata    the address at which to store the pointer to the extra
+ *                 argument for the handler function (can be NULL).
+ *
+ * @see set_errc_set_handler()
+ */
+void set_errc_get_handler(set_errc_handler_t **phandler, void **pdata);
+
+/**
+ * Sets the get_errc() handler.
+ *
+ * If set to NULL, `get_errc()` will always return 0.
+ *
+ * @param handler handler to be used with get_errc() (can be NULL).
+ * @param data    an optional pointer to an extra argument for the handler
+ *                function (can be NULL).
+ */
+void get_errc_set_handler(get_errc_handler_t *handler, void *data);
+
+/**
+ * Sets the set_errc() handler.
+ *
+ * If set to NULL, `set_errc()` will not store the error code.
+ *
+ * @param handler handler to be used with set_errc() (can be NULL).
+ * @param data    an optional pointer to an extra argument for the handler
+ *                function (can be NULL).
+*/
+void set_errc_set_handler(set_errc_handler_t *handler, void *data);
+
+#if !LELY_NO_ERRNO
+/**
  * Transforms a standard C error number to a native error code. This is
  * equivalent to `errnum2c(errno2num(errnum))` on Windows, or `errnum` on other
  * platforms.
@@ -295,6 +373,8 @@ errnum_t errno2num(int errnum);
  */
 int errc2no(int errc);
 
+#endif // !LELY_NO_ERRNO
+
 /**
  * Transforms a native error code to a platform-independent error number.
  *
@@ -302,12 +382,14 @@ int errc2no(int errc);
  */
 errnum_t errc2num(int errc);
 
+#if !LELY_NO_ERRNO
 /**
  * Transforms a platform-independent error number to a standard C error number.
  *
  * @see errno2num()
  */
 int errnum2no(errnum_t errnum);
+#endif // !LELY_NO_ERRNO
 
 /**
  * Transforms a platform-independent error number to a native error code.
@@ -317,9 +399,13 @@ int errnum2no(errnum_t errnum);
 int errnum2c(errnum_t errnum);
 
 /**
- * Returns the last (thread-specific) native error code set by a system call or
- * library function. This is equivalent to `GetLastError()`/`WSAGetLastError()`
- * on Windows, or `errno` on other platforms.
+ * Returns the last native error code set by `set_errc()` by invoking the
+ * handler set by `set_errc_get_handler()`.
+ *
+ * The default implementation returns the last (thread-specific) native error
+ * code set by a system call or library function. This is equivalent to
+ * `GetLastError()`/`WSAGetLastError()` on Windows, or `errno` on other
+ * platforms.
  *
  * This function returns the thread-specific error number.
  *
@@ -328,18 +414,35 @@ int errnum2c(errnum_t errnum);
 int get_errc(void);
 
 /**
- * Sets the current (thread-specific) native error code to <b>errc</b>. This is
- * equivalent to `SetLastError(errc)`/`WSASetLastError(errc)` on Windows, or
- * `errno = errc` on other platforms.
+ * Sets the current native error code to <b>errc</b> by invoking the handler
+ * set by `set_errc_set_handler()`.
+ *
+ * In case of the default implementation. this is equivalent to
+ * `SetLastError(errc)`/`WSASetLastError(errc)` on Windows, or `errno = errc` on
+ * other platforms.
  *
  * @see get_errc()
  */
 void set_errc(int errc);
 
 /**
+ * Returns the native error code to the value corresponding to `errno`, if
+ * available. This is equivalent to `errno2c(errno)`. If `LELY_NO_ERRNO`, this
+ * functions returns 0.
+ */
+int get_errc_from_errno(void);
+
+/**
+ * Sets the native error code to the value corresponding to `errno`, if
+ * available. This is equivalent to `set_errc(errno2c(errno))`. If
+ * `LELY_NO_ERRNO` is defined, the native error code is set to 0.
+ */
+void set_errc_from_errno(void);
+
+/**
  * Returns the last (thread-specific) platform-independent error number set by a
  * system call or library function. This is equivalent to
- * `errc2num(get_errc())`.
+ * `errc2num(get_errc())` (or `get_errc()` if `LELY_NO_ERRNO` is defined).
  *
  * @see set_errnum()
  */
@@ -347,11 +450,14 @@ LELY_UTIL_ERROR_INLINE errnum_t get_errnum(void);
 
 /**
  * Sets the current (thread-specific) platform-independent error number to
- * <b>errnum</b>. This is equivalent to `set_errc(errnum2c(errnum))`.
+ * <b>errnum</b>. This is equivalent to `set_errc(errnum2c(errnum))` (or
+ * `set_errnum(errnum)` if `LELY_NO_ERRNO` is defined).
  *
  * @see get_errnum()
  */
 LELY_UTIL_ERROR_INLINE void set_errnum(errnum_t errnum);
+
+#if !LELY_NO_ERRNO
 
 /**
  * Returns a string describing a standard C error number. This is equivalent to
@@ -413,6 +519,7 @@ LELY_UTIL_ERROR_INLINE const char *errnum2str(errnum_t errnum);
  */
 LELY_UTIL_ERROR_INLINE const char *errnum2str_r(
 		errnum_t errnum, char *strerrbuf, size_t buflen);
+#endif // !LELY_NO_ERRNO
 
 LELY_UTIL_ERROR_INLINE errnum_t
 get_errnum(void)
@@ -425,6 +532,8 @@ set_errnum(errnum_t errnum)
 {
 	set_errc(errnum2c(errnum));
 }
+
+#if !LELY_NO_ERRNO
 
 LELY_UTIL_ERROR_INLINE const char *
 errno2str(int errnum)
@@ -449,6 +558,8 @@ errnum2str_r(errnum_t errnum, char *strerrbuf, size_t buflen)
 {
 	return errc2str_r(errnum2c(errnum), strerrbuf, buflen);
 }
+
+#endif // !LELY_NO_ERRNO
 
 #ifdef __cplusplus
 }

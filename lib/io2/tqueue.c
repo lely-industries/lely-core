@@ -101,10 +101,8 @@ void *
 io_tqueue_alloc(void)
 {
 	void *ptr = malloc(sizeof(io_tqueue_t));
-#if !LELY_NO_ERRNO
 	if (!ptr)
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 	return ptr;
 }
 

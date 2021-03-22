@@ -715,16 +715,13 @@ TEST(CO_Obj, CoObjSetCode_Nominal) {
 ///
 /// \When co_obj_set_code() is called with an invalid code
 ///
-/// \Then -1 is returned
-///       \IfCalls{!LELY_NO_ERRNO, ERRNUM_INVAL error code set}
+/// \Then -1 is returned, ERRNUM_INVAL error number set
 TEST(CO_Obj, CoObjSetCode_Invalid) {
   auto const ret = co_obj_set_code(obj, 0xffu);
 
   CHECK_EQUAL(-1, ret);
   CHECK_EQUAL(CO_OBJECT_VAR, co_obj_get_code(obj));
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 ///@}
@@ -842,16 +839,14 @@ TEST(CO_Obj, CoObjGetVal_SubNotFound) {
 ///
 /// \Then 0 is returned and the value is not set
 ///       \Calls co_obj_find_sub()
-///       \IfCalls{!LELY_NO_ERRNO, set_errnum()}
+///       \Calls set_errnum()
 TEST(CO_Obj, CoObjSetVal_SubNotFound) {
   const sub_type val = 0x4242u;
 
   const auto ret = co_obj_set_val(obj, 0x00u, &val, sizeof(val));
 
   CHECK_EQUAL(0, ret);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 /// \Given a pointer to the object (co_obj_t) containing a sub-object
@@ -1454,7 +1449,7 @@ TEST(CO_Sub, CoSubSetName_Null) {
 /// \When co_sub_set_name() is called with an empty string
 ///
 /// \Then 0 is returned and the sub-object name is set to a null pointer
-///       \IfCalls{!LELY_NO_ERRNO, set_errc()}
+///       \Calls set_errc()
 TEST(CO_Sub, CoSubSetName_Empty) {
   const auto ret = co_sub_set_name(sub, "");
 
@@ -1467,7 +1462,7 @@ TEST(CO_Sub, CoSubSetName_Empty) {
 /// \When co_sub_set_name() is called with a string
 ///
 /// \Then 0 is returned and the sub-object name is set to the string
-///       \IfCalls{!LELY_NO_ERRNO, set_errc()}
+///       \Calls set_errc()
 TEST(CO_Sub, CoSubSetName_Nominal) {
   const auto ret = co_sub_set_name(sub, TEST_STR);
 
@@ -2074,16 +2069,14 @@ TEST(CO_Sub, CoSubSetAccess_Nominal) {
 ///
 /// \When co_sub_set_access() is called with an invalid access type
 ///
-/// \Then -1 is returned
-///       \IfCalls{!LELY_NO_ERRNO, set_errnum()}
+/// \Then -1 is returned, ERRNUM_INVAL error number is set
+///       \Calls set_errnum()
 TEST(CO_Sub, CoSubSetAccess_Invalid) {
   const auto ret = co_sub_set_access(sub, 0xff);
 
   CHECK_EQUAL(-1, ret);
 
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 ///@}

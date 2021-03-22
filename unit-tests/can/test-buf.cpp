@@ -387,8 +387,7 @@ TEST(CAN_Buf, CanBufReserve_Enlarge_MallocMode) {
 /// \When can_buf_reserve() is called with a value greater than the buffer's
 ///       remaining capacity
 ///
-/// \Then 0 is returned, nothing is changed;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then 0 is returned, nothing is changed; ERRNUM_NOMEM error number is set
 TEST(CAN_Buf, CanBufReserve_Enlarge_NoMallocMode) {
   const size_t MSG_NUM = 8;
   can_msg msg_arr[MSG_NUM];
@@ -401,9 +400,7 @@ TEST(CAN_Buf, CanBufReserve_Enlarge_NoMallocMode) {
   CHECK_EQUAL(0, capacity);
   CHECK_EQUAL(BUF_SIZE - MSG_NUM, can_buf_capacity(buf));
   CHECK_EQUAL(MSG_NUM, can_buf_size(buf));
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
 }
 #endif
 
@@ -434,15 +431,12 @@ TEST(CAN_Buf, CanBufReserve_BigEnough) {
 /// \When can_buf_reserve() is called with a value greater than the buffer's
 ///       remaining capacity
 ///
-/// \Then 0 is returned, nothing is changed;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then 0 is returned, nothing is changed; ERRNUM_NOMEM error number is set
 TEST(CAN_Buf, CanBufReserve_NoMemory) {
   const auto capacity = can_buf_reserve(buf, 2 * BUF_SIZE);
 
   CHECK_EQUAL(0, capacity);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
   CHECK_EQUAL(BUF_SIZE, can_buf_capacity(buf));
   CHECK_EQUAL(0, can_buf_size(buf));
 }

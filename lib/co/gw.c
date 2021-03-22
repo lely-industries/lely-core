@@ -924,9 +924,7 @@ co_gw_net_create(co_gw_t *gw, co_unsigned16_t id, co_nmt_t *nmt)
 
 	struct co_gw_net *net = malloc(sizeof(*net));
 	if (!net) {
-#if !LELY_NO_ERRNO
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 		return NULL;
 	}
 
@@ -1339,9 +1337,7 @@ co_gw_job_create(struct co_gw_job **pself, struct co_gw_net *net, void *data,
 
 	*pself = malloc(CO_GW_JOB_SIZE + req->size);
 	if (!*pself) {
-#if !LELY_NO_ERRNO
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 		return NULL;
 	}
 
@@ -3200,10 +3196,8 @@ static void *
 co_gw_alloc(void)
 {
 	void *ptr = malloc(sizeof(struct co_gw));
-#if !LELY_NO_ERRNO
 	if (!ptr)
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 	return ptr;
 }
 

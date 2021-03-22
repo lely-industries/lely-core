@@ -3359,9 +3359,7 @@ co_nmt_hb_init(co_nmt_t *nmt)
 #else // !LELY_NO_MALLOC
 		nmt->hbs = calloc(nmt->nhb, sizeof(*nmt->hbs));
 		if (!nmt->hbs && nmt->nhb) {
-#if !LELY_NO_ERRNO
-			set_errc(errno2c(errno));
-#endif
+			set_errc_from_errno();
 #endif // !LELY_NO_MALLOC
 			diag(DIAG_ERROR, get_errc(),
 					"unable to create heartbeat consumers");

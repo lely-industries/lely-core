@@ -596,10 +596,8 @@ ev_promise_alloc(size_t size)
 {
 	// cppcheck-suppress AssignmentAddressToInteger
 	void *ptr = calloc(1, EV_PROMISE_SIZE + size);
-#if !LELY_NO_ERRNO
 	if (!ptr)
-		set_errc(errno2c(errno));
-#endif
+		set_errc_from_errno();
 	return ptr;
 }
 
@@ -657,9 +655,7 @@ ev_future_when_all_nv(
 	} else {
 		ev_future_t **futures = malloc(n * sizeof(*futures));
 		if (!futures) {
-#if !LELY_NO_ERRNO
-			set_errc(errno2c(errno));
-#endif
+			set_errc_from_errno();
 			return NULL;
 		}
 		for (size_t i = 0; i < n; i++) {
@@ -721,9 +717,7 @@ ev_future_when_any_nv(
 	} else {
 		ev_future_t **futures = malloc(n * sizeof(*futures));
 		if (!futures) {
-#if !LELY_NO_ERRNO
-			set_errc(errno2c(errno));
-#endif
+			set_errc_from_errno();
 			return NULL;
 		}
 		for (size_t i = 0; i < n; i++) {

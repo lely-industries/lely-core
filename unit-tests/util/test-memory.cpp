@@ -57,17 +57,14 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroSize) {
 /// \When mem_alloc() is called with null pointer to allocator, non-zero
 ///       alignment that's not a power of 2 and non-zero size
 ///
-/// \Then null pointer is returned;
-///       if !LELY_NO_ERRNO invalid argument error is reported
+/// \Then null pointer is returned, ERRNUM_INVAL error number is set
 TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
   const size_t alignment = 3u;
 
   ptr = mem_alloc(nullptr, alignment, sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_INVAL, get_errnum());
-#endif
 }
 
 /// \Given LELY_NO_MALLOC enabled
@@ -75,15 +72,12 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_BadAlignment) {
 /// \When mem_alloc() is called with null pointer to allocator, zero (default)
 ///       alignment and non-zero size
 ///
-/// \Then null pointer is returned;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then null pointer is returned, ERRNUM_NOMEM error number is set
 TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
   ptr = mem_alloc(nullptr, 0, sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
 }
 
 /// \Given LELY_NO_MALLOC enabled
@@ -91,15 +85,12 @@ TEST(Util_MemoryDefaultAllocator, MemAlloc_ZeroAlignment) {
 /// \When mem_alloc() is called with null pointer to allocator, non-zero
 ///       alignment and non-zero size
 ///
-/// \Then null pointer is returned;
-///       if !LELY_NO_ERRNO no memory error is reported
+/// \Then null pointer is returned and ERRNUM_NOMEM error number is set
 TEST(Util_MemoryDefaultAllocator, MemAlloc_AnyAllocationFails) {
   ptr = mem_alloc(nullptr, alignof(int), sizeof(int));
 
   POINTERS_EQUAL(nullptr, ptr);
-#if !LELY_NO_ERRNO
   CHECK_EQUAL(ERRNUM_NOMEM, get_errnum());
-#endif
 }
 
 ///@}
