@@ -113,6 +113,8 @@ struct co_nmt_slave {
 	 */
 	unsigned configuring : 1;
 #endif
+	/// A flag specifying whether NMT boot-up message was received from a slave.
+	unsigned bootup : 1;
 #if !LELY_NO_CO_NMT_BOOT
 	/// A flag specifying whether the 'boot slave' process has ended.
 	unsigned booted : 1;
@@ -752,6 +754,13 @@ static void co_nmt_slaves_fini(co_nmt_t *nmt);
  */
 static int co_nmt_slaves_boot(co_nmt_t *nmt);
 #endif
+
+/**
+ * Checks if boot-up messages have been received from all mandatory slaves.
+ *
+ * @returns 1 if all boot-up messages were received, 0 if not.
+ */
+static int co_nmt_chk_bootup_slaves(const co_nmt_t *nmt);
 
 #endif
 
@@ -1548,6 +1557,38 @@ co_nmt_is_booting(const co_nmt_t *nmt, co_unsigned8_t id)
 }
 
 #endif // !LELY_NO_CO_NMT_BOOT
+
+#if !LELY_NO_CO_MASTER
+int
+co_nmt_chk_bootup(const co_nmt_t *nmt, co_unsigned8_t id)
+{
+	assert(nmt);
+
+	if (!nmt->master) {
+		set_errnum(ERRNUM_PERM);
+		return -1;
+	}
+
+	if (id > CO_NUM_NODES) {
+		set_errnum(ERRNUM_INVAL);
+		return -1;
+	}
+
+	if (id == co_dev_get_id(nmt->dev)) {
+		switch (co_nmt_get_st(nmt)) {
+		case CO_NMT_ST_STOP:
+		case CO_NMT_ST_START:
+		case CO_NMT_ST_PREOP: return 1;
+		default: return 0;
+		}
+	}
+
+	if (id == 0)
+		return co_nmt_chk_bootup_slaves(nmt);
+	else
+		return !!nmt->slaves[id - 1].bootup;
+}
+#endif
 
 #if !LELY_NO_CO_NMT_CFG
 
@@ -2468,6 +2509,9 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 			// The expected state after a boot-up event is
 			// pre-operational.
 			slave->est = CO_NMT_ST_PREOP;
+			// Record the reception of the boot-up message.
+			slave->bootup = 1;
+
 			// Inform the application of the boot-up event.
 			co_nmt_st_ind(nmt, id, st);
 			return 0;
@@ -3200,6 +3244,12 @@ co_nmt_startup_master(co_nmt_t *nmt)
 	// Enable NMT slave management.
 	co_nmt_slaves_init(nmt);
 
+#if LELY_NO_CO_NMT_BOOT
+	// Send the NMT 'reset communication' command to all slaves.
+	co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, 0);
+
+	return co_nmt_startup_slave(nmt);
+#else
 	// Check if any node has the keep-alive bit set.
 	int keep = 0;
 	for (co_unsigned8_t id = 1; !keep && id <= CO_NUM_NODES; id++)
@@ -3220,9 +3270,6 @@ co_nmt_startup_master(co_nmt_t *nmt)
 		co_nmt_cs_req(nmt, CO_NMT_CS_RESET_COMM, 0);
 	}
 
-#if LELY_NO_CO_NMT_BOOT
-	return co_nmt_startup_slave(nmt);
-#else
 	// Start the 'boot slave' processes.
 	switch (co_nmt_slaves_boot(nmt)) {
 	case -1:
@@ -3478,6 +3525,7 @@ co_nmt_slaves_fini(co_nmt_t *nmt)
 		slave->boot = NULL;
 #endif
 #endif
+		slave->bootup = 0;
 
 #if !LELY_NO_CO_NMT_CFG
 		slave->configuring = 0;
@@ -3531,6 +3579,25 @@ co_nmt_slaves_boot(co_nmt_t *nmt)
 	return res;
 }
 #endif
+
+static int
+co_nmt_chk_bootup_slaves(const co_nmt_t *nmt)
+{
+	for (co_unsigned8_t node_id = 1; node_id <= CO_NUM_NODES; node_id++) {
+		const struct co_nmt_slave *const slave =
+				&nmt->slaves[node_id - 1];
+		// Skip those slaves that are not in the network list (bit 0).
+		if ((slave->assignment & 0x01) != 0x01)
+			continue;
+		// Skip non-mandatory slaves (bit 3).
+		if ((slave->assignment & 0x08) != 0x08)
+			continue;
+		// Check if we have received a boot-up message from a slave.
+		if (!slave->bootup)
+			return 0;
+	}
+	return 1;
+}
 
 #endif // !LELY_NO_CO_MASTER
 
@@ -3729,6 +3796,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 
 		slave->boot = NULL;
 #endif
+		slave->bootup = 0;
 
 #if !LELY_NO_CO_NMT_CFG
 		slave->configuring = 0;
