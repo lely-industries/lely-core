@@ -33,14 +33,12 @@
 #include <lely/co/sdo.h>
 #include <lely/co/val.h>
 
+#include <libtest/allocators/default.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
+
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
-
-#include "allocators/default.hpp"
-
-#include "lely-cpputest-ext.hpp"
-#include "lely-unit-test.hpp"
-#include "override/lelyco-val.hpp"
 
 TEST_GROUP(CO_SyncSdo) {
   Allocators::Default allocator;

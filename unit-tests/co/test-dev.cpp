@@ -39,14 +39,13 @@
 #include <lely/co/tpdo.h>
 #include <lely/util/error.h>
 
-#include "override/lelyco-val.hpp"
+#include <libtest/override/lelyco-val.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
 #include "holder/array-init.hpp"
-
-#include "lely-cpputest-ext.hpp"
 
 static void
 CheckBuffers(const uint_least8_t* buf1, const uint_least8_t* buf2,

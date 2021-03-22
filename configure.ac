@@ -638,6 +638,13 @@ AC_CONFIG_FILES([
 	test/co-nmt-master.dcf
 	test/Makefile
 	unit-tests/Makefile
+	unit-tests/libtest/Makefile
+	unit-tests/libtest/override/Makefile
+	unit-tests/libtest/tools/Makefile
+	unit-tests/cpputest/Makefile
+	unit-tests/can/Makefile
+	unit-tests/co/Makefile
+	unit-tests/util/Makefile
 	exec-wrapper.sh
 	lcov-wrapper.sh
 	Makefile

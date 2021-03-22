@@ -20,18 +20,18 @@
  * limitations under the License.
  */
 
-#include <cstring>
-
-#include <CppUTest/TestHarness.h>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <cstring>
+
+#include <CppUTest/TestHarness.h>
+
 #include <lely/can/msg.h>
 #include <lely/util/error.h>
 
-#include "override/libc-stdio.hpp"
+#include <libtest/override/libc-stdio.hpp>
 
 TEST_GROUP(CAN_MsgInit) {
   can_msg msg;  // default-initialized (indeterminate value)

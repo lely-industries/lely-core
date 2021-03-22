@@ -34,8 +34,8 @@
 #include <lely/co/val.h>
 #include <lely/util/diag.h>
 
-#include "lely-unit-test.hpp"
-#include "override/lelyco-val.hpp"
+#include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/override/lelyco-val.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
