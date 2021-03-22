@@ -33,16 +33,14 @@
 #include <lely/co/sdo.h>
 #include <lely/util/endian.h>
 
-#include "allocators/default.hpp"
-#include "allocators/limited.hpp"
+#include <libtest/allocators/default.hpp>
+#include <libtest/allocators/limited.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/array-init.hpp"
-
-#include "lely-unit-test.hpp"
-#include "lely-cpputest-ext.hpp"
-#include "override/lelyco-val.hpp"
 
 TEST_GROUP(CO_CsdoInit) {
   const co_unsigned8_t CSDO_NUM = 0x01u;

@@ -36,15 +36,14 @@
 #include <lely/co/val.h>
 #include <lely/util/error.h>
 
+#include <libtest/allocators/default.hpp>
+#include <libtest/allocators/limited.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
+
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
 #include "holder/sub.hpp"
-
-#include "allocators/default.hpp"
-#include "allocators/limited.hpp"
-
-#include "lely-cpputest-ext.hpp"
-#include "lely-unit-test.hpp"
 
 // TPDO indication function
 struct CoTpdoInd {

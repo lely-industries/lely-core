@@ -20,6 +20,10 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <climits>
 #include <set>
 #include <string>

@@ -37,7 +37,7 @@
 #include <lely/co/type.h>
 #include <lely/util/diag.h>
 
-#include "lely-unit-test.hpp"
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"

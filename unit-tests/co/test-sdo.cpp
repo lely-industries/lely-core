@@ -31,9 +31,10 @@
 #include <lely/util/endian.h>
 #include <lely/util/ustring.h>
 
+#include <libtest/tools/lely-unit-test.hpp>
+#include <libtest/override/lelyco-val.hpp>
+
 #include "holder/array-init.hpp"
-#include "lely-unit-test.hpp"
-#include "override/lelyco-val.hpp"
 
 TEST_GROUP(CO_Sdo) {
 #ifndef CO_SDO_REQ_MEMBUF_SIZE

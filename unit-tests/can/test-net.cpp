@@ -20,12 +20,16 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <CppUTest/TestHarness.h>
 
 #include <lely/can/net.h>
 
-#include "allocators/default.hpp"
-#include "allocators/limited.hpp"
+#include <libtest/allocators/default.hpp>
+#include <libtest/allocators/limited.hpp>
 
 namespace CAN_Net_Static {
 static unsigned int tfunc_empty_counter = 0;

@@ -1,0 +1,60 @@
+
+bin =
+
+if PLATFORM_WIN32
+CPPUTEST_LIBS += -lpthread
+endif
+
+# CppUTest library self-test
+
+bin += test-cpputest
+test_cpputest_SOURCES = test-cpputest.cpp
+test_cpputest_LDADD = $(CPPUTEST_LIBS)
+
+# Compilation flags
+
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS += -DTEST_SRCDIR=\"${srcdir}\"
+if ENABLE_SHARED
+AM_CPPFLAGS += -DLELY_ENABLE_SHARED=1
+endif
+AM_CPPFLAGS += $(CPPUTEST_CFLAGS)
+
+if NO_UNIT_TESTS_MEMLEAK
+AM_CPPFLAGS += -DCPPUTEST_MEM_LEAK_DETECTION_DISABLED
+endif
+
+if CODE_COVERAGE_ENABLED
+AM_CPPFLAGS += $(CODE_COVERAGE_CPPFLAGS)
+endif
+
+AM_CFLAGS =
+if CODE_COVERAGE_ENABLED
+AM_CFLAGS += $(CODE_COVERAGE_CFLAGS)
+endif
+
+AM_CXXFLAGS =
+if CODE_COVERAGE_ENABLED
+AM_CXXFLAGS += $(CODE_COVERAGE_CXXFLAGS)
+endif
+
+AM_LDFLAGS =
+if PLATFORM_WIN32
+AM_LDFLAGS += -all-static
+endif
+
+check_PROGRAMS = $(bin)
+
+TESTS = $(check_PROGRAMS)
+EXEC = $(SHELL) $(top_builddir)/exec-wrapper.sh
+
+if CODE_COVERAGE_ENABLED
+LOG_COMPILER = $(SHELL) $(top_builddir)/lcov-wrapper.sh
+AM_TESTS_ENVIRONMENT = EXEC_WRAPPER="$(EXEC)"
+AM_TESTS_ENVIRONMENT += ;
+@CODE_COVERAGE_RULES@
+else
+LOG_COMPILER = $(EXEC)
+endif
+
+@VALGRIND_CHECK_RULES@

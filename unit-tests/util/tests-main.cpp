@@ -1,7 +1,7 @@
-/**
+/**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -20,40 +20,9 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <CppUTest/CommandLineTestRunner.h>
 
-#include <CppUTest/TestHarness.h>
-
-#include <lely/util/mutex.hpp>
-
-#if !LELY_NO_CXX
-
-TEST_GROUP(Util_Mutex) {
-  class Mutex : lely::util::BasicLockable {
-   public:
-    bool lock_was_called = false;
-    bool unlock_was_called = false;
-
-    void
-    lock() override {
-      lock_was_called = true;
-    }
-    void
-    unlock() override {
-      unlock_was_called = true;
-    }
-  };
-
-  Mutex m;
-};
-
-TEST(Util_Mutex, UnlockGuard_LocksAndUnlocksMutex) {
-  { lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m); }
-
-  CHECK_EQUAL(true, m.lock_was_called);
-  CHECK_EQUAL(true, m.unlock_was_called);
+int
+main(int ac, char** av) {
+  return RUN_ALL_TESTS(ac, av);
 }
-
-#endif  // !LELY_NO_CXX

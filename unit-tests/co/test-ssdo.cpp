@@ -35,15 +35,13 @@
 #include <lely/co/ssdo.h>
 #include <lely/util/endian.h>
 
-#include "allocators/default.hpp"
-#include "allocators/limited.hpp"
+#include <libtest/allocators/default.hpp>
+#include <libtest/allocators/limited.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"
-
-#include "lely-unit-test.hpp"
-#include "lely-cpputest-ext.hpp"
-#include "override/lelyco-val.hpp"
 
 // values described in CiA 301, section 7.2.4.3 SDO protocols
 #define CO_SDO_CCS_DN_SEG_REQ 0x00u

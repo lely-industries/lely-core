@@ -21,13 +21,17 @@
  */
 
 #include <CppUTest/CommandLineTestRunner.h>
-#include <CppUTest/TestRegistry.h>
 
-#include "override/override-test-plugin.hpp"
+#if !defined(__MINGW32__)
+#include <CppUTest/TestRegistry.h>
+#include <libtest/override/override-test-plugin.hpp>
+#endif
 
 int
 main(int ac, char** av) {
+#if !defined(__MINGW32__)
   Override::OverridePlugin plugin;
   TestRegistry::getCurrentRegistry()->installPlugin(&plugin);
+#endif
   return RUN_ALL_TESTS(ac, av);
 }

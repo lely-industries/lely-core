@@ -36,7 +36,7 @@
 
 #include <lely/util/diag.h>
 
-#include "override/libc-stdio.hpp"
+#include <libtest/override/libc-stdio.hpp>
 
 #if !LELY_NO_STDIO
 

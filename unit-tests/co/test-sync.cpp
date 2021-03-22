@@ -32,11 +32,10 @@
 #include <lely/co/sync.h>
 #include <lely/co/detail/obj.h>
 
-#include "allocators/default.hpp"
-#include "allocators/limited.hpp"
-
-#include "lely-cpputest-ext.hpp"
-#include "lely-unit-test.hpp"
+#include <libtest/allocators/default.hpp>
+#include <libtest/allocators/limited.hpp>
+#include <libtest/tools/lely-cpputest-ext.hpp>
+#include <libtest/tools/lely-unit-test.hpp>
 
 #include "holder/dev.hpp"
 #include "holder/obj.hpp"

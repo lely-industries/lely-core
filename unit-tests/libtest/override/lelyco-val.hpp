@@ -23,7 +23,7 @@
 #ifndef LELY_OVERRIDE_LELY_CO_VAL_H_
 #define LELY_OVERRIDE_LELY_CO_VAL_H_
 
-#include "override/lely-defs.hpp"
+#include "lely-defs.hpp"
 
 #ifdef HAVE_LELY_OVERRIDE
 
