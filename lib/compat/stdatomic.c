@@ -21,5 +21,8 @@
  */
 
 #include "compat.h"
+
+#if !LELY_NO_ATOMICS
 #define LELY_COMPAT_STDATOMIC_INLINE extern inline
 #include <lely/compat/stdatomic.h>
+#endif
