@@ -58,7 +58,8 @@
 #endif
 #endif
 
-#if LELY_NO_MALLOC
+#if LELY_NO_MALLOC && (CO_SDO_MAX_SEQNO != (CO_SSDO_MEMBUF_SIZE / 7))
+// check used to suppress cppcheck warnings when MIN(a, a) extends to (x ? a : a)
 #define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SSDO_MEMBUF_SIZE / 7))
 #else
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO
