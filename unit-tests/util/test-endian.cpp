@@ -28,6 +28,19 @@
 
 #include <CppUTest/TestHarness.h>
 
+// undefines to ensure test will use methods from endian.h
+#undef htobe16
+#undef betoh16
+#undef htole16
+#undef letoh16
+#undef htobe32
+#undef betoh32
+#undef htole32
+#undef letoh32
+#undef htobe64
+#undef betoh64
+#undef htole64
+#undef letoh64
 #include <lely/util/endian.h>
 
 TEST_GROUP(Util_Endian_Bcpy) {
