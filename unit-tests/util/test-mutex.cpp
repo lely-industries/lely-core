@@ -1,7 +1,7 @@
-/**
+/**file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -49,11 +49,26 @@ TEST_GROUP(Util_Mutex) {
   Mutex m;
 };
 
+/// @name unlock guard creation and destruction
+///@{
+
+/// \Given a mutex conforming to the BasicLockable concept
+///
+/// \When UnlockGuard<Mutex> is created with the mutex and destroyed
+///
+/// \Then unlock is called after the creation, lock is called after
+///       the destruction
 TEST(Util_Mutex, UnlockGuard_LocksAndUnlocksMutex) {
-  { lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m); }
+  {
+    lely::util::UnlockGuard<Mutex> unlock_guard_mutex(m);
+
+    CHECK_EQUAL(true, m.unlock_was_called);
+    CHECK_EQUAL(false, m.lock_was_called);
+  }
 
   CHECK_EQUAL(true, m.lock_was_called);
-  CHECK_EQUAL(true, m.unlock_was_called);
 }
+
+///@}
 
 #endif  // !LELY_NO_CXX
