@@ -76,7 +76,7 @@ workflow:
     when: on_failure
     paths:
       - test/test-*.log
-      - unit-tests/test-*.log
+      - unit-tests/*/unit-test-*.log
     expire_in: 1 week
 
 .docker-gcc:
