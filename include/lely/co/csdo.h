@@ -444,6 +444,30 @@ int co_csdo_blk_dn_req(co_csdo_t *sdo, co_unsigned16_t idx,
 		co_csdo_dn_con_t *con, void *data);
 
 /**
+ * Submits a block download request to a remote Server-SDO. This requests the
+ * server to download the value and is equivalent to a write operation into a
+ * remote object dictionary. Note that the request will fail if another transfer
+ * is in progress (see co_csdo_is_idle()).
+ *
+ * @param sdo    a pointer to a Client-SDO service.
+ * @param idx    the remote object index.
+ * @param subidx the remote object sub-index.
+ * @param type   the data type (in the range [1..27]). This MUST be the object
+ *               index of one of the static data types.
+ * @param val    the address of the value to be written. In case of string or
+ *               domains, this MUST be the address of pointer.
+ * @param con    a pointer to the confirmation function (can be NULL).
+ * @param data   a pointer to user-specified data (can be NULL). <b>data</b> is
+ *               passed as the last parameter to <b>con</b>.
+ *
+ * @returns 0 on success, or -1 on error. In the latter case, the error number
+ * can be obtained with get_errc().
+ */
+int co_csdo_blk_dn_val_req(co_csdo_t *sdo, co_unsigned16_t idx,
+		co_unsigned8_t subidx, co_unsigned16_t type, const void *val,
+		co_csdo_dn_con_t *con, void *data);
+
+/**
  * Submits a block upload request to a remote Server-SDO. This requests the
  * server to upload the value and is equivalent to a read operation from a
  * remote object dictionary. Note that the request will fail if another transfer
