@@ -122,6 +122,14 @@ TEST(CO_DevInit, CODevInit) {
 
   CHECK_EQUAL(0, co_dev_get_dummy(dev));
 
+#if !LELY_NO_CO_TPDO
+  co_dev_tpdo_event_ind_t* ind_ptr = nullptr;
+  void* data_ptr = nullptr;
+  co_dev_get_tpdo_event_ind(dev, &ind_ptr, &data_ptr);
+  FUNCTIONPOINTERS_EQUAL(nullptr, ind_ptr);
+  POINTERS_EQUAL(nullptr, data_ptr);
+#endif
+
   DestroyCoDevT(dev);
 }
 
