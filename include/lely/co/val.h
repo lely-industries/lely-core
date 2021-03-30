@@ -654,7 +654,12 @@ int co_val_init_us_n(char16_t **val, const char16_t *us, size_t n);
 int co_val_init_dom(void **val, const void *dom, size_t n);
 
 #if LELY_NO_MALLOC
-/// Initializes a value to point to the specified CANopen array.
+/* Initializes an array value to point to the specified CANopen array.
+ *
+ * @param val   the address of the value to be initialized. This MUST be the
+ *              address of a pointer to a string or a domain.
+ * @param array the address of a CANopen array object.
+ */
 static inline void co_val_init_array(void *val, struct co_array *array);
 #endif
 
