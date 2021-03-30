@@ -152,9 +152,10 @@ BasicSlave::OnRead(uint16_t idx, uint8_t subidx,
     };
     co_sub_set_up_ind(
         sub,
-        [](const co_sub_t* sub, co_sdo_req* req,
+        [](const co_sub_t* sub, co_sdo_req* req, uint32_t ac,
            void* data) noexcept -> uint32_t {
           auto self = static_cast<Impl_*>(data);
+          if (ac) return ac;
           auto it = self->up_ind.find(self->Key(sub));
           if (it == self->up_ind.end()) return 0;
           return it->second(sub, req);
@@ -279,8 +280,10 @@ BasicSlave::OnWrite(uint16_t idx, uint8_t subidx,
     };
     co_sub_set_dn_ind(
         sub,
-        [](co_sub_t* sub, co_sdo_req* req, void* data) noexcept -> uint32_t {
+        [](co_sub_t* sub, co_sdo_req* req, uint32_t ac,
+           void* data) noexcept -> uint32_t {
           auto self = static_cast<Impl_*>(data);
+          if (ac) return ac;
           auto it = self->dn_ind.find(self->Key(sub));
           if (it == self->dn_ind.end()) return 0;
           return it->second(sub, req);

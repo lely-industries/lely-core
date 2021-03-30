@@ -4,7 +4,7 @@
  *
  * @see lely/co/csdo.h, lib/co/sdo.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -160,8 +160,8 @@ static void co_csdo_update(co_csdo_t *sdo);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1280_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The CAN receive callback function for a Client-SDO service.
@@ -693,7 +693,7 @@ co_dev_dn_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	}
 
 	co_sdo_req_up(&req, ptr, n);
-	ac = co_sub_dn_ind(sub, &req);
+	ac = co_sub_dn_ind(sub, &req, 0);
 
 done:
 	if (con)
@@ -732,7 +732,7 @@ co_dev_dn_val_req(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 	if (co_sdo_req_up_val(&req, type, val, &ac) == -1)
 		goto done;
 
-	ac = co_sub_dn_ind(sub, &req);
+	ac = co_sub_dn_ind(sub, &req, 0);
 
 done:
 	if (con)
@@ -801,7 +801,7 @@ co_dev_dn_dcf_req(co_dev_t *dev, const uint_least8_t *begin,
 		co_sdo_req_clear(&req);
 		co_sdo_req_up(&req, begin, size);
 		// cppcheck-suppress redundantAssignment
-		ac = co_sub_dn_ind(sub, &req);
+		ac = co_sub_dn_ind(sub, &req, 0);
 
 		begin += size;
 	}
@@ -857,23 +857,26 @@ co_dev_up_req(const co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx,
 		goto done;
 	}
 
-	if ((ac = co_sub_up_ind(sub, &req)))
+	if ((ac = co_sub_up_ind(sub, &req, 0)))
 		goto done;
 
 	if (req.buf != buf) {
 		// If the upload indication function is using a different memory
 		// buffer we need to copy the bytes.
-		if (!ac && req.size && !membuf_reserve(buf, req.size))
+		if (!ac && req.size && !membuf_reserve(buf, req.size)) {
 			ac = CO_SDO_AC_NO_MEM;
+			co_sub_up_ind(sub, &req, ac);
+		}
 		while (!ac && membuf_size(buf) < req.size) {
 			membuf_write(buf, req.buf, req.nbyte);
 			if (!co_sdo_req_last(&req))
-				ac = co_sub_up_ind(sub, &req);
+				ac = co_sub_up_ind(sub, &req, 0);
 		}
 	} else if (!co_sdo_req_last(&req)) {
 		// The upload indication function was not able to complete the
 		// request with the supplied buffer.
 		ac = CO_SDO_AC_NO_MEM;
+		co_sub_up_ind(sub, &req, ac);
 	}
 
 done:
@@ -1306,7 +1309,8 @@ co_csdo_update(co_csdo_t *sdo)
 }
 
 static co_unsigned32_t
-co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(req);
@@ -1317,8 +1321,10 @@ co_1280_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 

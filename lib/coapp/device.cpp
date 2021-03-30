@@ -1725,10 +1725,11 @@ Device::Impl_::Impl_(Device* self_, const ::std::string& dcf_txt,
     if (co_obj_get_idx(obj) >= 0xC000) break;
     co_obj_set_dn_ind(
         obj,
-        [](co_sub_t* sub, co_sdo_req* req, void* data) -> uint32_t {
+        [](co_sub_t* sub, co_sdo_req* req, uint32_t ac,
+           void* data) -> uint32_t {
           // Implement the default behavior, but do not issue a notification for
           // incomplete or failed writes.
-          uint32_t ac = 0;
+          if (ac) return ac;
           if (co_sub_on_dn(sub, req, &ac) == -1 || ac) return ac;
           auto impl_ = static_cast<Impl_*>(data);
           impl_->OnWrite(co_obj_get_idx(co_sub_get_obj(sub)),

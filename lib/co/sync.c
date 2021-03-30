@@ -4,7 +4,7 @@
  *
  * @see lely/co/sync.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -90,8 +90,8 @@ static void co_sync_update(co_sync_t *sync);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1005_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1006
@@ -99,8 +99,8 @@ static co_unsigned32_t co_1005_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1006_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1019
@@ -108,8 +108,8 @@ static co_unsigned32_t co_1006_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1019_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The CAN receive callback function for a SYNC consumer service.
@@ -356,7 +356,8 @@ co_sync_update(co_sync_t *sync)
 }
 
 static co_unsigned32_t
-co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1005);
@@ -367,8 +368,10 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -404,7 +407,8 @@ co_1005_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 static co_unsigned32_t
-co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1006);
@@ -415,8 +419,10 @@ co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -438,7 +444,8 @@ co_1006_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 static co_unsigned32_t
-co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1019);
@@ -449,8 +456,10 @@ co_1019_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 

@@ -735,7 +735,8 @@ TEST_GROUP_BASE(CoCsdo, CO_Csdo) {
   const co_unsigned16_t VAL = 0xabcdu;
   std::unique_ptr<CoObjTHolder> obj2020;
 
-  static co_unsigned32_t co_sub_failing_dn_ind(co_sub_t*, co_sdo_req*, void*) {
+  static co_unsigned32_t co_sub_failing_dn_ind(co_sub_t*, co_sdo_req*,
+                                               co_unsigned32_t, void*) {
     return CO_SDO_AC_ERROR;
   }
 

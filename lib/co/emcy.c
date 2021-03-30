@@ -4,7 +4,7 @@
  *
  * @see lely/co/emcy.h
  *
- * @copyright 2017-2020 Lely Industries N.V.
+ * @copyright 2017-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -157,8 +157,8 @@ static int co_emcy_set_1003(co_emcy_t *emcy);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1003_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The download indication function for (all sub-objects of) CANopen object 1014
@@ -166,8 +166,8 @@ static co_unsigned32_t co_1003_dn_ind(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1014_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * Sets the value of CANopen object 1028 (Emergency consumer object).
@@ -185,8 +185,8 @@ static void co_emcy_set_1028(
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1028_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The CAN timer callback function for an EMCY service.
@@ -565,7 +565,8 @@ co_emcy_set_1003(co_emcy_t *emcy)
 }
 
 static co_unsigned32_t
-co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1003);
@@ -576,8 +577,10 @@ co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -598,7 +601,8 @@ co_1003_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 }
 
 static co_unsigned32_t
-co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1014);
@@ -608,8 +612,10 @@ co_1014_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 
@@ -665,7 +671,8 @@ co_emcy_set_1028(co_emcy_t *emcy, co_unsigned8_t id, co_unsigned32_t cobid)
 }
 
 static co_unsigned32_t
-co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1028);
@@ -676,8 +683,10 @@ co_1028_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 

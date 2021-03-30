@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -186,12 +186,15 @@ TEST_GROUP_BASE(CO_ObjSub, CO_ObjBase) {
   co_obj_t* obj = nullptr;
   co_sub_t* sub = nullptr;
 
-  static co_unsigned32_t dn_ind_func(co_sub_t*, struct co_sdo_req*, void*) {
+  static co_unsigned32_t dn_ind_func(co_sub_t*, struct co_sdo_req*,
+                                     co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     ++CO_ObjSub_Static::dn_ind_func_counter;
     return 0;
   }
   static co_unsigned32_t up_ind_func(const co_sub_t*, struct co_sdo_req*,
-                                     void*) {
+                                     co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     ++CO_ObjSub_Static::up_ind_func_counter;
     return 0;
   }
@@ -2312,7 +2315,7 @@ TEST(CO_Sub, CoSubDnInd_NoSub) {
   co_sub_t* const sub = nullptr;
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_dn_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_dn_ind(sub, req, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t) with read-only access
@@ -2323,7 +2326,7 @@ TEST(CO_Sub, CoSubDnInd_NoSub) {
 TEST(CO_Sub, CoSubDnInd_NoWriteAccess) {
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_RO));
 
-  CHECK_EQUAL(CO_SDO_AC_NO_WRITE, co_sub_dn_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_NO_WRITE, co_sub_dn_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t)
@@ -2334,7 +2337,7 @@ TEST(CO_Sub, CoSubDnInd_NoWriteAccess) {
 TEST(CO_Sub, CoSubDnInd_NoReq) {
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_dn_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_dn_ind(sub, req, 0));
 }
 
 /// \Given a pointer to sub-object (co_sub_t) with a custom download indication
@@ -2348,7 +2351,7 @@ TEST(CO_ObjSub, CoSubDnInd_Nominal) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_dn_ind(sub, dn_ind_func, nullptr);
 
-  const auto ret = co_sub_dn_ind(sub, &req);
+  const auto ret = co_sub_dn_ind(sub, &req, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1, CO_ObjSub_Static::dn_ind_func_counter);
@@ -2465,7 +2468,7 @@ TEST(CO_Sub, CoSubUpInd_NoSub) {
   co_sub_t* const sub = nullptr;
   co_sdo_req* const req = nullptr;
 
-  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_up_ind(sub, req));
+  CHECK_EQUAL(CO_SDO_AC_NO_SUB, co_sub_up_ind(sub, req, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t) with write-only access
@@ -2476,7 +2479,7 @@ TEST(CO_Sub, CoSubUpInd_NoSub) {
 TEST(CO_Sub, CoSubUpInd_NoReadAccess) {
   CHECK_EQUAL(0, co_sub_set_access(sub, CO_ACCESS_WO));
 
-  CHECK_EQUAL(CO_SDO_AC_NO_READ, co_sub_up_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_NO_READ, co_sub_up_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to the sub-object (co_sub_t)
@@ -2485,7 +2488,7 @@ TEST(CO_Sub, CoSubUpInd_NoReadAccess) {
 ///
 /// \Then CO_SDO_AC_ERROR abort code is returned
 TEST(CO_Sub, CoSubUpInd_NoReq) {
-  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_up_ind(sub, nullptr));
+  CHECK_EQUAL(CO_SDO_AC_ERROR, co_sub_up_ind(sub, nullptr, 0));
 }
 
 /// \Given a pointer to sub-object (co_sub_t) with a custom upload indication
@@ -2499,7 +2502,7 @@ TEST(CO_ObjSub, CoSubUpInd_Nominal) {
   co_sdo_req req = CO_SDO_REQ_INIT(req);
   co_sub_set_up_ind(sub, up_ind_func, nullptr);
 
-  const auto ret = co_sub_up_ind(sub, &req);
+  const auto ret = co_sub_up_ind(sub, &req, 0);
 
   CHECK_EQUAL(0, ret);
   CHECK_EQUAL(1u, CO_ObjSub_Static::up_ind_func_counter);

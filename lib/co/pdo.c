@@ -302,7 +302,7 @@ co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 			req->size = (len + 7) / 8;
 			req->buf = tmp;
 			req->nbyte = req->size;
-			ac = co_sub_dn_ind(sub, req);
+			ac = co_sub_dn_ind(sub, req, 0);
 			if (ac)
 				return ac;
 		}
@@ -345,7 +345,7 @@ co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 
 		// Upload the value of the sub-object and copy the value.
 		co_sdo_req_clear(req);
-		ac = co_sub_up_ind(co_dev_find_sub(dev, idx, subidx), req);
+		ac = co_sub_up_ind(co_dev_find_sub(dev, idx, subidx), req, 0);
 		if (ac)
 			return ac;
 		if (!co_sdo_req_first(req) || !co_sdo_req_last(req))

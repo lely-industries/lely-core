@@ -1638,7 +1638,7 @@ co_nmt_boot_blk_dn_prog_on_enter(co_nmt_boot_t *boot)
 	// Upload the program data.
 	struct co_sdo_req *req = &boot->req;
 	co_sdo_req_clear(req);
-	co_unsigned32_t ac = co_sub_up_ind(sub, req);
+	co_unsigned32_t ac = co_sub_up_ind(sub, req, 0);
 	if (ac || !co_sdo_req_first(req) || !co_sdo_req_last(req)) {
 #if !LELY_NO_STDIO
 		if (ac)

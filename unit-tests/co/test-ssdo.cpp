@@ -455,7 +455,9 @@ TEST_BASE(CO_Ssdo) {
 
   can_msg msg_buf[MSG_BUF_SIZE];
 
-  static co_unsigned32_t sub_dn_failing_ind(co_sub_t*, co_sdo_req*, void*) {
+  static co_unsigned32_t sub_dn_failing_ind(co_sub_t*, co_sdo_req*,
+                                            co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     return CO_SDO_AC_NO_READ;
   }
 
@@ -1049,10 +1051,11 @@ TEST_GROUP_BASE(CoSsdoUpIniOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
   static co_unsigned32_t up_ind_size_zero(const co_sub_t* sub, co_sdo_req* req,
-                                          void* data) {
+                                          co_unsigned32_t ac, void* data) {
     (void)data;
 
-    co_unsigned32_t ac = 0;
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
     req->size = 0;
 
@@ -1967,10 +1970,11 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
   static co_unsigned32_t up_ind_failing(const co_sub_t* sub, co_sdo_req* req,
-                                        void* data) {
+                                        co_unsigned32_t ac, void* data) {
     (void)data;
 
-    co_unsigned32_t ac = 0;
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
     req->size = 10u;
 
@@ -1981,11 +1985,12 @@ TEST_GROUP_BASE(CoSsdoUpSegOnRecv, CO_Ssdo) {
     return ac;
   }
 
-  static co_unsigned32_t up_ind_size_longer(const co_sub_t* sub,
-                                            co_sdo_req* req, void* data) {
+  static co_unsigned32_t up_ind_size_longer(
+      const co_sub_t* sub, co_sdo_req* req, co_unsigned32_t ac, void* data) {
     (void)data;
 
-    co_unsigned32_t ac = 0;
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
     req->size = 10u;
 
@@ -3017,9 +3022,10 @@ TEST(CoSsdoBlkDn, EndRecv_FailingDnInd) {
 TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
   int ignore = 0;  // clang-format fix
 
-  static co_unsigned32_t up_ind_inc_req_offset(const co_sub_t* sub,
-                                               co_sdo_req* req, void*) {
-    co_unsigned32_t ac = 0;
+  static co_unsigned32_t up_ind_inc_req_offset(
+      const co_sub_t* sub, co_sdo_req* req, co_unsigned32_t ac, void*) {
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
     req->offset++;
 
@@ -3027,16 +3033,18 @@ TEST_GROUP_BASE(CoSsdoBlkUp, CO_Ssdo) {
   }
 
   static co_unsigned32_t up_ind_ret_err(const co_sub_t* sub, co_sdo_req* req,
-                                        void*) {
-    co_unsigned32_t ac = 0;
+                                        co_unsigned32_t ac, void*) {
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
 
     return CO_SDO_AC_DATA;
   }
 
   static co_unsigned32_t up_ind_big_reqsiz(const co_sub_t* sub, co_sdo_req* req,
-                                           void*) {
-    co_unsigned32_t ac = 0;
+                                           co_unsigned32_t ac, void*) {
+    if (ac) return ac;
+
     co_sub_on_up(sub, req, &ac);
     req->size = 3u;
     req->offset = 1u;

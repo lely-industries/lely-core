@@ -4,7 +4,7 @@
  *
  * @see lely/co/time.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -85,8 +85,8 @@ static void co_time_update(co_time_t *time);
  *
  * @see co_sub_dn_ind_t
  */
-static co_unsigned32_t co_1012_dn_ind(
-		co_sub_t *sub, struct co_sdo_req *req, void *data);
+static co_unsigned32_t co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data);
 
 /**
  * The CAN receive callback function for a TIME consumer service.
@@ -343,7 +343,8 @@ co_time_update(co_time_t *time)
 }
 
 static co_unsigned32_t
-co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	assert(sub);
 	assert(co_obj_get_idx(co_sub_get_obj(sub)) == 0x1012);
@@ -354,8 +355,10 @@ co_1012_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 	co_unsigned16_t type = co_sub_get_type(sub);
 	assert(!co_type_is_array(type));
 
+	if (ac)
+		return ac;
+
 	union co_val val;
-	co_unsigned32_t ac = 0;
 	if (co_sdo_req_dn_val(req, type, &val, &ac) == -1)
 		return ac;
 

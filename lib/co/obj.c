@@ -4,7 +4,7 @@
  *
  * @see lely/co/obj.h, lely/co/detail/obj.h
  *
- * @copyright 2020 Lely Industries N.V.
+ * @copyright 2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -947,7 +947,7 @@ co_sub_on_dn(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 }
 
 co_unsigned32_t
-co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
+co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac)
 {
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
@@ -959,7 +959,7 @@ co_sub_dn_ind(co_sub_t *sub, struct co_sdo_req *req)
 		return CO_SDO_AC_ERROR;
 
 	assert(sub->dn_ind);
-	return sub->dn_ind(sub, req, sub->dn_data);
+	return sub->dn_ind(sub, req, ac, sub->dn_data);
 }
 
 co_unsigned32_t
@@ -978,7 +978,7 @@ co_sub_dn_ind_val(co_sub_t *sub, co_unsigned16_t type, const void *val,
 	if (co_sdo_req_up_val(&req, type, val, &ac) == -1)
 		goto error;
 
-	ac = co_sub_dn_ind(sub, &req);
+	ac = co_sub_dn_ind(sub, &req, 0);
 
 error:
 	co_sdo_req_fini(&req);
@@ -1057,7 +1057,7 @@ co_sub_on_up(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t *pac)
 }
 
 co_unsigned32_t
-co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
+co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac)
 {
 	if (!sub)
 		return CO_SDO_AC_NO_SUB;
@@ -1069,29 +1069,35 @@ co_sub_up_ind(const co_sub_t *sub, struct co_sdo_req *req)
 		return CO_SDO_AC_ERROR;
 
 #if LELY_NO_CO_OBJ_UPLOAD
-	return co_sub_default_up_ind(sub, req, NULL);
+	return co_sub_default_up_ind(sub, req, ac, NULL);
 #else
 	assert(sub->up_ind);
-	return sub->up_ind(sub, req, sub->up_data);
+	return sub->up_ind(sub, req, ac, sub->up_data);
 #endif
 }
 
 co_unsigned32_t
-co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_sub_default_dn_ind(co_sub_t *sub, struct co_sdo_req *req, co_unsigned32_t ac,
+		void *data)
 {
 	(void)data;
 
-	co_unsigned32_t ac = 0;
+	if (ac)
+		return ac;
+
 	co_sub_on_dn(sub, req, &ac);
 	return ac;
 }
 
 co_unsigned32_t
-co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req, void *data)
+co_sub_default_up_ind(const co_sub_t *sub, struct co_sdo_req *req,
+		co_unsigned32_t ac, void *data)
 {
 	(void)data;
 
-	co_unsigned32_t ac = 0;
+	if (ac)
+		return ac;
+
 	co_sub_on_up(sub, req, &ac);
 	return ac;
 }

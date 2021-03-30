@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -1278,10 +1278,13 @@ TEST_GROUP_BASE(CoPdo_CoPdoDn, CO_PdoBase) {
   static bool co_sub_dn_ind_called;
 
   static co_unsigned32_t co_sub_dn_ind_error(co_sub_t*, struct co_sdo_req*,
-                                             void*) {
+                                             co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     return CO_SDO_AC_PARAM_VAL;
   }
-  static co_unsigned32_t co_sub_dn_ind_ok(co_sub_t*, co_sdo_req*, void*) {
+  static co_unsigned32_t co_sub_dn_ind_ok(co_sub_t*, co_sdo_req*,
+                                          co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     co_sub_dn_ind_called = true;
     return 0u;
   }
@@ -1399,29 +1402,35 @@ TEST_GROUP_BASE(CoPdo_CoPdoUp, CO_PdoBase) {
   static co_unsigned8_t reqbuf[];
 
   static co_unsigned32_t sub_ind_not_req_first(const co_sub_t*, co_sdo_req* req,
-                                               void*) {
+                                               co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     req->offset = 1u;
     return 0u;
   }
   static co_unsigned32_t sub_ind_not_req_last(const co_sub_t*, co_sdo_req* req,
-                                              void*) {
+                                              co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     req->offset = 1u;
     req->nbyte = 1u;
     req->size = 4u;
     return 0u;
   }
   static co_unsigned32_t sub_ind_req_last(const co_sub_t*, co_sdo_req* req,
-                                          void*) {
+                                          co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     req->offset = 0u;
     req->nbyte = 1u;
     req->size = 4u;
     return 0u;
   }
   static co_unsigned32_t sub_ind_req_error(const co_sub_t*, co_sdo_req*,
-                                           void*) {
+                                           co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     return CO_SDO_AC_ERROR;
   }
-  static co_unsigned32_t sub_up_ind(const co_sub_t*, co_sdo_req* req, void*) {
+  static co_unsigned32_t sub_up_ind(const co_sub_t*, co_sdo_req* req,
+                                    co_unsigned32_t ac, void*) {
+    if (ac) return ac;
     sub_up_ind_called = true;
     req->buf = reqbuf;
     return 0u;
