@@ -824,7 +824,7 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven) {
   POINTERS_EQUAL(&ind_data, CoTpdoInd::data);
 }
 
-TEST(CO_Tpdo, CoTpdoEvent_EventDriven_TriggerEventTimer) {
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer) {
   SetComm00HighestSubidxSupported(0x02u);
   SetComm01CobId(DEV_ID);
   SetComm02TransmissionType(0xffu);
@@ -854,6 +854,31 @@ TEST(CO_Tpdo, CoTpdoEvent_EventDriven_TriggerEventTimer) {
   CHECK(CoTpdoInd::ptr != nullptr);
   CHECK_EQUAL(0, CoTpdoInd::n);
   POINTERS_EQUAL(&ind_data, CoTpdoInd::data);
+}
+
+TEST(CO_Tpdo, CoTpdoEvent_EventDriven_EventTimer_InhibitTimeNotElapsed) {
+  SetComm00HighestSubidxSupported(0x02u);
+  SetComm01CobId(DEV_ID);
+  SetComm02TransmissionType(0xffu);
+  SetComm03InhibitTime(11u);
+  SetComm04CompatibilityEntry();
+  SetComm05EventTimer(1);  // 1 ms
+
+  CreateTpdo();
+
+  CHECK_EQUAL(0, co_tpdo_event(tpdo));
+  CHECK(CanSend::called());
+  CHECK(CoTpdoInd::called);
+  CHECK_EQUAL(0, CoTpdoInd::ac);
+
+  CanSend::Clear();
+  CoTpdoInd::Clear();
+
+  const timespec ts = {0, 1000000u};  // 1 ms
+  CHECK_EQUAL(0, can_net_set_time(net, &ts));
+
+  CHECK(!CanSend::called());
+  CHECK(!CoTpdoInd::called);
 }
 
 TEST(CO_Tpdo, CoTpdoGetNext_Null) {
