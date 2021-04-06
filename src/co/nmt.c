@@ -440,7 +440,12 @@ static void co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx,
 #if !LELY_NO_CO_TPDO
 /// The Transmit-PDO event indication function. @see co_dev_tpdo_event_ind_t
 static void co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data);
+#if !LELY_NO_CO_MPDO
+/// The SAM-MPDO event indication function. @see co_dev_sam_mpdo_event_ind_t
+static void co_nmt_sam_mpdo_event_ind(co_unsigned16_t n, co_unsigned16_t idx,
+		co_unsigned8_t subidx, void *data);
 #endif
+#endif // !LELY_NO_CO_TPDO
 
 /**
  * Enters the specified state of an NMT master/slave service and invokes the
@@ -1030,7 +1035,13 @@ __co_nmt_init(struct __co_nmt *nmt, can_net_t *net, co_dev_t *dev)
 
 	// Set the Transmit-PDO event indication function.
 	co_dev_set_tpdo_event_ind(nmt->dev, &co_nmt_tpdo_event_ind, nmt);
+
+#if !LELY_NO_CO_MPDO
+	// Set the SAM-MPDO event indication function.
+	co_dev_set_sam_mpdo_event_ind(
+			nmt->dev, &co_nmt_sam_mpdo_event_ind, nmt);
 #endif
+#endif // !LELY_NO_CO_TPDO
 
 #if !LELY_NO_CO_NG
 	// Set the download indication function for the guard time.
@@ -1690,6 +1701,19 @@ co_nmt_on_tpdo_event_unlock(co_nmt_t *nmt)
 	}
 	set_errc(errsv);
 }
+
+#if !LELY_NO_CO_MPDO
+void
+co_nmt_on_sam_mpdo_event(co_nmt_t *nmt, co_unsigned16_t n, co_unsigned16_t idx,
+		co_unsigned8_t subidx)
+{
+	assert(nmt);
+
+	co_tpdo_t *pdo = co_nmt_get_tpdo(nmt, n);
+	if (pdo)
+		co_sam_mpdo_event(pdo, idx, subidx);
+}
+#endif
 
 #endif // !LELY_NO_CO_TPDO
 
@@ -3079,6 +3103,7 @@ co_nmt_up_ind(const co_csdo_t *sdo, co_unsigned16_t idx, co_unsigned8_t subidx,
 #endif // !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
 
 #if !LELY_NO_CO_TPDO
+
 static void
 co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data)
 {
@@ -3087,7 +3112,20 @@ co_nmt_tpdo_event_ind(co_unsigned16_t n, void *data)
 
 	co_nmt_on_tpdo_event(nmt, n);
 }
+
+#if !LELY_NO_CO_MPDO
+static void
+co_nmt_sam_mpdo_event_ind(co_unsigned16_t n, co_unsigned16_t idx,
+		co_unsigned8_t subidx, void *data)
+{
+	co_nmt_t *nmt = data;
+	assert(nmt);
+
+	co_nmt_on_sam_mpdo_event(nmt, n, idx, subidx);
+}
 #endif
+
+#endif // !LELY_NO_CO_TPDO
 
 static void
 co_nmt_enter(co_nmt_t *nmt, co_nmt_state_t *next)

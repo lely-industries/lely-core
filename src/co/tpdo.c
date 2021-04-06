@@ -13,7 +13,7 @@
  *
  * @see lely/co/tpdo.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -39,11 +39,17 @@
 #include <lely/co/sdo.h>
 #include <lely/co/tpdo.h>
 #include <lely/co/val.h>
+#if !LELY_NO_CO_MPDO
+#include <lely/util/endian.h>
+#endif
 #include <lely/util/errnum.h>
 #include <lely/util/time.h>
 
 #include <assert.h>
 #include <stdlib.h>
+#if !LELY_NO_CO_MPDO
+#include <string.h>
+#endif
 
 /// A CANopen Transmit-PDO.
 struct __co_tpdo {
@@ -497,6 +503,10 @@ co_tpdo_event(co_tpdo_t *pdo)
 	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
 		return 0;
 
+	// Check whether this is an MPDO.
+	if (pdo->map.n > 0x40)
+		return 0;
+
 	// See table 72 (Description of TPDO transmission type) in CiA 301.
 	switch (pdo->comm.trans) {
 	case 0x00: pdo->event = 1; break;
@@ -523,12 +533,12 @@ co_tpdo_event(co_tpdo_t *pdo)
 		if (co_tpdo_send_frame(pdo, &pdo->msg) == -1)
 			return -1;
 
-		if (pdo->comm.inhibit) {
+		// Update the inhibit time if the PDO was transmitted successfully.
+		if (pdo->comm.inhibit)
 			// The inhibit time value is defined as a multiple of
 			// 100 microseconds.
 			timespec_add_usec(
 					&pdo->inhibit, pdo->comm.inhibit * 100);
-		}
 		break;
 	default:
 		// Ignore events if the transmission type is synchronous.
@@ -605,6 +615,10 @@ co_tpdo_sample_res(co_tpdo_t *pdo, co_unsigned32_t ac)
 			&& pdo->comm.trans != 0xfd)
 		return 0;
 
+	// Check whether this is an MPDO.
+	if (pdo->map.n > 0x40)
+		return 0;
+
 	// Check if the synchronous window expired.
 	if (!ac && pdo->comm.trans != 0xfd && pdo->swnd)
 		ac = CO_SDO_AC_TIMEOUT;
@@ -634,6 +648,144 @@ co_tpdo_get_next(const co_tpdo_t *pdo, struct timespec *tp)
 	if (tp)
 		*tp = pdo->inhibit;
 }
+
+#if !LELY_NO_CO_MPDO
+
+int
+co_dam_mpdo_event(co_tpdo_t *pdo, co_unsigned8_t id, co_unsigned16_t idx,
+		co_unsigned8_t subidx, const co_unsigned8_t data[4])
+{
+	assert(pdo);
+	assert(data);
+	struct can_msg *msg = &pdo->msg;
+
+	// Check whether the PDO exists and is valid.
+	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
+		return 0;
+
+	// Check whether the PDO is event-driven.
+	if (pdo->comm.trans < 0xfe)
+		return 0;
+
+	// Check whether this is a DAM-MPDO.
+	if (pdo->map.n != CO_PDO_MAP_DAM_MPDO)
+		return 0;
+
+	// Check wether the node-ID is valid (0 indicates all nodes).
+	if (id > CO_NUM_NODES)
+		return 0;
+
+	if (pdo->comm.inhibit) {
+		// Check whether the inhibit time has passed.
+		struct timespec now;
+		can_net_get_time(pdo->net, &now);
+		if (timespec_cmp(&now, &pdo->inhibit) < 0) {
+			set_errnum(ERRNUM_AGAIN);
+			return -1;
+		}
+		pdo->inhibit = now;
+	}
+
+	*msg = (struct can_msg)CAN_MSG_INIT;
+
+	msg->id = pdo->comm.cobid;
+	if (pdo->comm.cobid & CO_PDO_COBID_FRAME) {
+		msg->id &= CAN_MASK_EID;
+		msg->flags |= CAN_FLAG_IDE;
+	} else {
+		msg->id &= CAN_MASK_BID;
+	}
+
+	msg->len = CAN_MAX_LEN;
+	msg->data[0] = id | 0x80;
+	stle_u16(msg->data + 1, idx);
+	msg->data[3] = subidx;
+
+	memcpy(msg->data + 4, data, 4);
+
+	if (co_tpdo_send_frame(pdo, &pdo->msg) == -1)
+		return -1;
+
+	// Update the inhibit time if the PDO was transmitted successfully.
+	if (pdo->comm.inhibit)
+		// The inhibit time value is defined as a multiple of 100
+		// microseconds.
+		timespec_add_usec(&pdo->inhibit, pdo->comm.inhibit * 100);
+
+	return 0;
+}
+
+int
+co_sam_mpdo_event(co_tpdo_t *pdo, co_unsigned16_t idx, co_unsigned8_t subidx)
+{
+	assert(pdo);
+	struct can_msg *msg = &pdo->msg;
+
+	// Check whether the PDO exists and is valid.
+	if (pdo->comm.cobid & CO_PDO_COBID_VALID)
+		return 0;
+
+	// Check whether the PDO is event-driven.
+	if (pdo->comm.trans < 0xfe)
+		return 0;
+
+	// Check whether this is a SAM-MPDO.
+	if (pdo->map.n != CO_PDO_MAP_SAM_MPDO)
+		return 0;
+
+	// Check whether the node-ID is valid.
+	co_unsigned8_t id = co_dev_get_id(pdo->dev);
+	if (!id || id > CO_NUM_NODES)
+		return 0;
+
+	if (pdo->comm.inhibit) {
+		// Check whether the inhibit time has passed.
+		struct timespec now;
+		can_net_get_time(pdo->net, &now);
+		if (timespec_cmp(&now, &pdo->inhibit) < 0) {
+			set_errnum(ERRNUM_AGAIN);
+			return -1;
+		}
+		pdo->inhibit = now;
+	}
+
+	*msg = (struct can_msg)CAN_MSG_INIT;
+
+	msg->id = pdo->comm.cobid;
+	if (pdo->comm.cobid & CO_PDO_COBID_FRAME) {
+		msg->id &= CAN_MASK_EID;
+		msg->flags |= CAN_FLAG_IDE;
+	} else {
+		msg->id &= CAN_MASK_BID;
+	}
+
+	msg->len = CAN_MAX_LEN;
+	msg->data[0] = id;
+	stle_u16(msg->data + 1, idx);
+	msg->data[3] = subidx;
+
+	// Copy the value if the object exists and can be mapped to a SAM-MPDO.
+	co_unsigned32_t ac = co_sam_mpdo_up(
+			pdo->dev, idx, subidx, &pdo->req, msg->data + 4);
+	if (ac) {
+		if (pdo->ind)
+			pdo->ind(pdo, ac, NULL, 0, pdo->data);
+		return -1;
+	}
+
+	if (co_tpdo_send_frame(pdo, &pdo->msg) == -1)
+		return -1;
+
+	// Update the inhibit time if the PDO was transmitted successfully.
+	if (pdo->comm.inhibit)
+		// The inhibit time value is defined as a multiple of 100
+		// microseconds.
+		timespec_add_usec(&pdo->inhibit, pdo->comm.inhibit * 100);
+
+	return 0;
+}
+
+#endif // !LELY_NO_CO_MPDO
 
 static void
 co_tpdo_init_recv(co_tpdo_t *pdo)
@@ -848,28 +1000,41 @@ co_1a00_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > CO_PDO_NUM_MAPS)
+		if (valid)
 			return CO_SDO_AC_PARAM_VAL;
 
-		size_t bits = 0;
-		for (size_t i = 1; i <= n; i++) {
-			co_unsigned32_t map = pdo->map.map[i - 1];
-			if (!map)
-				continue;
+		if (n <= CO_PDO_NUM_MAPS) {
+			size_t bits = 0;
+			for (size_t i = 1; i <= n; i++) {
+				co_unsigned32_t map = pdo->map.map[i - 1];
+				if (!map)
+					continue;
 
-			// See figure 73 (Structure of TPDO mapping) in CiA 301.
-			co_unsigned16_t idx = (map >> 16) & 0xffff;
-			co_unsigned8_t subidx = (map >> 8) & 0xff;
-			co_unsigned8_t len = map & 0xff;
+				// See figure 73 (Structure of TPDO mapping) in
+				// CiA 301.
+				co_unsigned16_t idx = (map >> 16) & 0xffff;
+				co_unsigned8_t subidx = (map >> 8) & 0xff;
+				co_unsigned8_t len = map & 0xff;
 
-			// Check the PDO length (in bits).
-			if ((bits += len) > CAN_MAX_LEN * 8)
-				return CO_SDO_AC_PDO_LEN;
+				// Check the PDO length (in bits).
+				if ((bits += len) > CAN_MAX_LEN * 8)
+					return CO_SDO_AC_PDO_LEN;
 
-			// Check whether the sub-object exists and can be mapped
-			// into a PDO.
-			if ((ac = co_dev_chk_tpdo(pdo->dev, idx, subidx)))
-				return ac;
+				// Check whether the sub-object exists and can
+				// be mapped into a PDO.
+				// clang-format off
+				if ((ac = co_dev_chk_tpdo(
+						pdo->dev, idx, subidx)))
+					// clang-format on
+					return ac;
+			}
+#if LELY_NO_CO_MPDO
+		} else {
+#else
+		} else if (n != CO_PDO_MAP_SAM_MPDO
+				&& n != CO_PDO_MAP_DAM_MPDO) {
+#endif
+			return CO_SDO_AC_PARAM_VAL;
 		}
 
 		pdo->map.n = n;
@@ -976,9 +1141,11 @@ static int
 co_tpdo_init_frame(co_tpdo_t *pdo, struct can_msg *msg)
 {
 	assert(pdo);
+	assert(pdo->map.n <= 0x40);
 	assert(msg);
 
 	*msg = (struct can_msg)CAN_MSG_INIT;
+
 	msg->id = pdo->comm.cobid;
 	if (pdo->comm.cobid & CO_PDO_COBID_FRAME) {
 		msg->id &= CAN_MASK_EID;

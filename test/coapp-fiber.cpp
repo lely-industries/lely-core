@@ -34,6 +34,12 @@ class MySlave : public BasicSlave {
     tap_diag("slave: received PDO with value %d", val);
     // Echo the value back to the master on the next SYNC.
     (*this)[0x2002][0] = val;
+
+#if !LELY_NO_CO_MPDO
+    // Send the value with a SAM-MPDO.
+    (*this)[0x2003][0] = val;
+    (*this)[0x2003][0].SetEvent();
+#endif
   }
 };
 
@@ -44,9 +50,20 @@ class MyDriver : public FiberDriver {
  private:
   void
   OnRpdoWrite(uint16_t idx, uint8_t subidx) noexcept override {
-    tap_test(idx == 0x2002 && subidx == 0, "master: received object 2002:00");
-    uint32_t val = rpdo_mapped[idx][subidx];
-    tap_test(val == (n_ > 3 ? n_ - 3 : 0));
+    switch (idx) {
+      case 0x2002: {
+        tap_test(subidx == 0, "master: received object 2002:00");
+        uint32_t val = rpdo_mapped[idx][subidx];
+        tap_test(val == (n_ > 3 ? n_ - 3 : 0));
+        break;
+      }
+#if !LELY_NO_CO_MPDO
+      case 0x2003:
+        uint32_t val = rpdo_mapped[idx][subidx];
+        tap_diag("master: received object 2003:00: %d", val);
+        break;
+#endif
+    }
   }
 
   void

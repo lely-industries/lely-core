@@ -256,6 +256,15 @@ AS_IF([test "$enable_tpdo" == "no"], [
 	AC_DEFINE([LELY_NO_CO_TPDO], [1], [Define to 1 if Transmit-PDO support is disabled.])
 ])
 
+AM_CONDITIONAL([NO_CO_MPDO], [false])
+AC_ARG_ENABLE([mpdo],
+	AS_HELP_STRING([--disable-mpdo], [disable Multiplex PDO support]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_mpdo=no])
+AS_IF([test "$enable_mpdo" == "no"], [
+	AM_CONDITIONAL([NO_CO_MPDO], [true])
+	AC_DEFINE([LELY_NO_CO_MPDO], [1], [Define to 1 if Multiplex PDO support is disabled.])
+])
+
 AM_CONDITIONAL([NO_CO_SYNC], [false])
 AC_ARG_ENABLE([sync],
 	AS_HELP_STRING([--disable-sync], [disable synchronization (SYNC) object support]))

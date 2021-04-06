@@ -547,6 +547,21 @@ class Node : public io::CanNet, public Device {
   void TpdoEvent(int num = 0) noexcept;
 
   /**
+   * Triggers the transmission of a destination address mode multiplex PDO
+   * (DAM-MPDO).
+   *
+   * @param num    the Transmit-PDO number (in the range [1..512]).
+   * @param id     the node-ID.
+   * @param idx    the remote object index.
+   * @param subidx the remote object sub-index.
+   * @param value  the value to be transmitted.
+   */
+  template <class T>
+  typename ::std::enable_if<is_canopen_basic<T>::value && sizeof(T) <= 4,
+                            void>::type
+  DamMpdoEvent(int num, uint8_t id, uint16_t idx, uint8_t subidx, T value);
+
+  /**
    * The recursive mutex used to postpone the transmission of acyclic and
    * event-driven PDOs triggered by TpdoWriteEvent() or WriteEvent().
    */

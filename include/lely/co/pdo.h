@@ -2,7 +2,7 @@
  * This header file is part of the CANopen library; it contains the Process Data
  * Object (PDO) declarations.
  *
- * @copyright 2016-2019 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -44,6 +44,18 @@
  * (1) CAN-ID.
  */
 #define CO_PDO_COBID_FRAME UINT32_C(0x20000000)
+
+/**
+ * The value of sub-index 0 of the PDO mapping parameter record indicating a
+ * a source address mode multiplex PDO (SAM-MPDO).
+ */
+#define CO_PDO_MAP_SAM_MPDO 0xfe
+
+/**
+ * The value of sub-index 0 of the PDO mapping parameter record indicating a
+ * a destination address mode multiplex PDO (DAM-MPDO).
+ */
+#define CO_PDO_MAP_DAM_MPDO 0xff
 
 /// The data type (and object index) of a PDO communication parameter record.
 #define CO_DEFSTRUCT_PDO_COMM_PAR 0x0020
@@ -225,6 +237,46 @@ co_unsigned32_t co_dev_cfg_tpdo_map(const co_dev_t *dev, co_unsigned16_t num,
 		const struct co_pdo_map_par *par);
 
 /**
+ * Checks if the specified object is part of the object scanner list (objects
+ * 1FA0..1FCF) and can be transmitted with a SAM-MPDO. Note that this function
+ * does _not_ check if the object is valid and can be mapped into a TPDO.
+ *
+ * @param dev    a pointer to a CANopen device.
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ *
+ * @returns 1 if the object was found in the object scanner list, and 0 if not.
+ *
+ * @see co_dev_chk_tpdo()
+ */
+int co_dev_chk_sam_mpdo(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx);
+
+/**
+ * Checks if the specified remote object is part of the object dispatching list
+ * (objects 1FD0..1FFF) and can be mapped to a local object with a SAM-MPDO.
+ * Note that this function does not check if the local object is valid and can
+ * be mapped to an RPDO.
+ *
+ * @param dev     a pointer to a CANopen device.
+ * @param id      the remote node-ID (in the range [1..127]).
+ * @param idx     the remote object index.
+ * @param subidx  the remote object sub-index.
+ * @param pidx    the address at which to store the local object index (can be
+ *                NULL).
+ * @param psubidx the address at which to store the object sub-index (can be
+ *                NULL).
+ *
+ * @returns 1 if the remote object was found in the object dispatching list, and
+ * 0 if not.
+ *
+ * @see co_dev_chk_rpdo()
+ */
+int co_dev_map_sam_mpdo(const co_dev_t *dev, co_unsigned8_t id,
+		co_unsigned16_t idx, co_unsigned8_t subidx,
+		co_unsigned16_t *pidx, co_unsigned8_t *psubidx);
+
+/**
  * Maps values into a PDO.
  *
  * @param par a pointer to the PDO mapping parameters.
@@ -276,13 +328,16 @@ co_unsigned32_t co_pdo_unmap(const struct co_pdo_map_par *par,
  * @param n   the number of bytes at <b>buf</b>.
  *
  * @returns 0 on success, or an SDO abort code on error.
+ *
+ * @see co_dev_chk_rpdo(), co_dev_map_sam_mpdo()
  */
 co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
 		struct co_sdo_req *req, const uint_least8_t *buf, size_t n);
 
 /**
  * Reads mapped PDO values from the object dictionary through a local SDO upload
- * request.
+ * request. Note that this function does _not_ support multiplex PDOs (see
+ * co_sam_mpdo_up()).
  *
  * @param par a pointer to the PDO mapping parameters.
  * @param dev a pointer to a CANopen device.
@@ -295,9 +350,30 @@ co_unsigned32_t co_pdo_dn(const struct co_pdo_map_par *par, co_dev_t *dev,
  *            written had the buffer at <b>buf</b> been sufficiently large.
  *
  * @returns 0 on success, or an SDO abort code on error.
+ *
+ * @see co_dev_chk_tpdo()
  */
 co_unsigned32_t co_pdo_up(const struct co_pdo_map_par *par, const co_dev_t *dev,
 		struct co_sdo_req *req, uint_least8_t *buf, size_t *pn);
+
+/**
+ * Reads the value of the specified SAM-MPDO-mapped object from the local object
+ * dictionary through a local SDO upload request.
+ *
+ * @param dev    a pointer to a CANopen device.
+ * @param idx    the object index.
+ * @param subidx the object sub-index.
+ * @param req    a pointer to the CANopen SDO upload request used for reading
+ *               from the object dictionary.
+ * @param buf    the address at which to store the mapped value (can be NULL).
+
+ * @returns 0 on success, or an SDO abort code on error.
+ *
+ * @see co_dev_chk_tpdo(), co_dev_chk_sam_mpdo()
+ */
+co_unsigned32_t co_sam_mpdo_up(const co_dev_t *dev, co_unsigned16_t idx,
+		co_unsigned8_t subidx, struct co_sdo_req *req,
+		uint_least8_t buf[4]);
 
 #ifdef __cplusplus
 }

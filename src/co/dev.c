@@ -103,7 +103,11 @@ __co_dev_init(struct __co_dev *dev, co_unsigned8_t id)
 #if !LELY_NO_CO_TPDO
 	dev->tpdo_event_ind = NULL;
 	dev->tpdo_event_data = NULL;
+#if !LELY_NO_CO_MPDO
+	dev->sam_mpdo_event_ind = NULL;
+	dev->sam_mpdo_event_data = NULL;
 #endif
+#endif // !LELY_NO_CO_TPDO
 
 	return dev;
 }
@@ -903,6 +907,79 @@ co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 		}
 	}
 }
+
+#if !LELY_NO_CO_MPDO
+
+void
+co_dev_get_sam_mpdo_event_ind(const co_dev_t *dev,
+		co_dev_sam_mpdo_event_ind_t **pind, void **pdata)
+{
+	assert(dev);
+
+	if (pind)
+		*pind = dev->sam_mpdo_event_ind;
+	if (pdata)
+		*pdata = dev->sam_mpdo_event_data;
+}
+
+void
+co_dev_set_sam_mpdo_event_ind(
+		co_dev_t *dev, co_dev_sam_mpdo_event_ind_t *ind, void *data)
+{
+	assert(dev);
+
+	dev->sam_mpdo_event_ind = ind;
+	dev->sam_mpdo_event_data = data;
+}
+
+void
+co_dev_sam_mpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
+{
+	assert(dev);
+
+	// Check whether the sub-object can be mapped into a SAM-MPDO.
+	if (!co_dev_chk_sam_mpdo(dev, idx, subidx))
+		return;
+
+	// Check if the specified sub-object can be mapped into a TPDO.
+	if (co_dev_chk_tpdo(dev, idx, subidx))
+		return;
+
+	const co_obj_t *obj_1800 = NULL;
+	// Find the first TPDO.
+	for (co_unsigned16_t i = 0; i < CO_NUM_PDOS && !obj_1800; i++)
+		obj_1800 = co_dev_find_obj(dev, 0x1800 + i);
+	for (; obj_1800; obj_1800 = co_obj_next(obj_1800)) {
+		co_unsigned16_t i = co_obj_get_idx(obj_1800) - 0x1800;
+		if (i >= CO_NUM_PDOS)
+			break;
+		// Check if this is a valid event-driven PDO.
+		const struct co_pdo_comm_par *comm =
+				co_obj_addressof_val(obj_1800);
+		assert(comm);
+		if (comm->n < 2 || (comm->cobid & CO_PDO_COBID_VALID)
+				|| comm->trans < 0xfe)
+			continue;
+		// Check if this is a SAM-MPDO.
+		const co_obj_t *obj_1a00 = co_dev_find_obj(dev, 0x1a00 + i);
+		if (!obj_1a00)
+			continue;
+		const struct co_pdo_map_par *map =
+				co_obj_addressof_val(obj_1a00);
+		assert(map);
+		if (map->n != CO_PDO_MAP_SAM_MPDO)
+			continue;
+		// Issue an indication for this PDO.
+		if (dev->sam_mpdo_event_ind)
+			dev->sam_mpdo_event_ind(i + 1, idx, subidx,
+					dev->sam_mpdo_event_data);
+		// Only a single SAM-MPDO producer per CANopen device is
+		// allowed.
+		break;
+	}
+}
+
+#endif // !LELY_NO_CO_MPDO
 
 #endif // !LELY_NO_CO_TPDO
 

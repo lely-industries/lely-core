@@ -41,8 +41,14 @@
 #endif
 #if !LELY_NO_CO_TPDO
 #include <lely/co/tpdo.h>
+#if !LELY_NO_CO_MPDO
+#include <lely/co/val.h>
 #endif
+#endif  // !LELY_NO_CO_TPDO
 #include <lely/coapp/node.hpp>
+#if !LELY_NO_CO_RPDO && !LELY_NO_CO_MPDO
+#include <lely/util/endian.h>
+#endif
 
 #include <memory>
 #include <string>
@@ -457,6 +463,78 @@ Node::TpdoEvent(int num) noexcept {
 #endif
 }
 
+template <class T>
+typename ::std::enable_if<is_canopen_basic<T>::value && sizeof(T) <= 4,
+                          void>::type
+Node::DamMpdoEvent(int num, uint8_t id, uint16_t idx, uint8_t subidx, T value) {
+#if LELY_NO_CO_MPDO
+  (void)num;
+  (void)id;
+  (void)idx;
+  (void)subidx;
+  (void)value;
+#else
+  auto pdo = co_nmt_get_tpdo(nmt(), num);
+  if (pdo) {
+    uint8_t buf[4] = {0};
+    co_val_write(canopen_traits<T>::index, &value, buf, buf + 4);
+    co_dam_mpdo_event(pdo, id, idx, subidx, buf);
+  }
+#endif
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+// BOOLEAN
+template void Node::DamMpdoEvent<bool>(int, uint8_t, uint16_t, uint8_t, bool);
+
+// INTEGER8
+template void Node::DamMpdoEvent<int8_t>(int, uint8_t, uint16_t, uint8_t,
+                                         int8_t);
+
+// INTEGER16
+template void Node::DamMpdoEvent<int16_t>(int, uint8_t, uint16_t, uint8_t,
+                                          int16_t);
+
+// INTEGER32
+template void Node::DamMpdoEvent<int32_t>(int, uint8_t, uint16_t, uint8_t,
+                                          int32_t);
+
+// UNSIGNED8
+template void Node::DamMpdoEvent<uint8_t>(int, uint8_t, uint16_t, uint8_t,
+                                          uint8_t);
+
+// UNSIGNED16
+template void Node::DamMpdoEvent<uint16_t>(int, uint8_t, uint16_t, uint8_t,
+                                           uint16_t);
+
+// UNSIGNED32
+template void Node::DamMpdoEvent<uint32_t>(int, uint8_t, uint16_t, uint8_t,
+                                           uint32_t);
+
+// REAL32
+template void Node::DamMpdoEvent<float>(int, uint8_t, uint16_t, uint8_t, float);
+
+// VISIBLE_STRING
+// OCTET_STRING
+// UNICODE_STRING
+// TIME_OF_DAY
+// TIME_DIFFERENCE
+// DOMAIN
+// INTEGER24
+// REAL64
+// INTEGER40
+// INTEGER48
+// INTEGER56
+// INTEGER64
+// UNSIGNED24
+// UNSIGNED40
+// UNSIGNED48
+// UNSIGNED56
+// UNSIGNED64
+
+#endif  // !DOXYGEN_SHOULD_SKIP_THIS
+
 void
 Node::on_can_state(io::CanState new_state, io::CanState old_state) noexcept {
   OnCanState(new_state, old_state);
@@ -675,6 +753,19 @@ Node::Impl_::OnStInd(co_nmt_t* nmt, uint8_t id, uint8_t st) noexcept {
 void
 Node::Impl_::OnRpdoInd(co_rpdo_t* pdo, uint32_t ac, const void* ptr,
                        size_t n) noexcept {
+#if !LELY_NO_CO_MPDO
+  assert(ptr || !n);
+
+  if (!ac) {
+    // Check if this is a SAM-MPDO.
+    auto par = co_rpdo_get_map_par(pdo);
+    assert(par);
+    auto buf = static_cast<const uint8_t*>(ptr);
+    if (par->n == CO_PDO_MAP_SAM_MPDO && n == CAN_MAX_LEN && !(buf[0] & 0x80))
+      self->RpdoWrite(buf[0], ldle_u16(buf + 1), buf[3]);
+  }
+#endif
+
   int num = co_rpdo_get_num(pdo);
   self->OnRpdo(num, static_cast<SdoErrc>(ac), ptr, n);
 

@@ -735,6 +735,15 @@ class BasicMaster : public Node, protected ::std::map<uint8_t, DriverBase*> {
   /// @see Node::TpdoEvent()
   void TpdoEvent(int num = 0) noexcept;
 
+  /// @see Node::DamMpdoEvent()
+  template <class T>
+  void
+  DamMpdoEvent(int num, uint8_t id, uint16_t idx, uint8_t subidx, T value) {
+    ::std::lock_guard<BasicLockable> lock(*this);
+
+    Node::DamMpdoEvent(num, id, idx, subidx, value);
+  }
+
   /**
    * Returns the SDO timeout used during the NMT 'boot slave' and 'check
    * configuration' processes.

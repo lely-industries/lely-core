@@ -4,7 +4,7 @@
  *
  * @see lely/co/rpdo.h
  *
- * @copyright 2016-2020 Lely Industries N.V.
+ * @copyright 2016-2021 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -676,27 +676,40 @@ co_1600_dn_ind(co_sub_t *sub, struct co_sdo_req *req, void *data)
 			return 0;
 
 		// The PDO mapping cannot be changed when the PDO is valid.
-		if (valid || n > CO_PDO_NUM_MAPS)
+		if (valid)
 			return CO_SDO_AC_PARAM_VAL;
 
-		size_t bits = 0;
-		for (size_t i = 1; i <= n; i++) {
-			co_unsigned32_t map = pdo->map.map[i - 1];
-			if (!map)
-				continue;
+		if (n <= CO_PDO_NUM_MAPS) {
+			size_t bits = 0;
+			for (size_t i = 1; i <= n; i++) {
+				co_unsigned32_t map = pdo->map.map[i - 1];
+				if (!map)
+					continue;
 
-			co_unsigned16_t idx = (map >> 16) & 0xffff;
-			co_unsigned8_t subidx = (map >> 8) & 0xff;
-			co_unsigned8_t len = map & 0xff;
+				co_unsigned16_t idx = (map >> 16) & 0xffff;
+				co_unsigned8_t subidx = (map >> 8) & 0xff;
+				co_unsigned8_t len = map & 0xff;
 
-			// Check the PDO length.
-			if ((bits += len) > CAN_MAX_LEN * 8)
-				return CO_SDO_AC_PDO_LEN;
+				// Check the PDO length.
+				if ((bits += len) > CAN_MAX_LEN * 8)
+					return CO_SDO_AC_PDO_LEN;
 
-			// Check whether the sub-object exists and can be mapped
-			// into a PDO (or is a valid dummy entry).
-			if ((ac = co_dev_chk_rpdo(pdo->dev, idx, subidx)))
-				return ac;
+				// Check whether the sub-object exists and can
+				// be mapped into a PDO (or is a valid dummy
+				// entry).
+				// clang-format off
+				if ((ac = co_dev_chk_rpdo(
+						pdo->dev, idx, subidx)))
+					// clang-format on
+					return ac;
+			}
+#if LELY_NO_CO_MPDO
+		} else {
+#else
+		} else if (n != CO_PDO_MAP_SAM_MPDO
+				&& n != CO_PDO_MAP_DAM_MPDO) {
+#endif
+			return CO_SDO_AC_PARAM_VAL;
 		}
 
 		pdo->map.n = n;
@@ -813,15 +826,21 @@ co_rpdo_read_frame(co_rpdo_t *pdo, const struct can_msg *msg)
 			// Generate an error message if the PDO was not
 			// processed because too few bytes were available.
 			pdo->err(pdo, 0x8210, 0x10, pdo->err_data);
-		} else if (!ac) {
+		} else if (!ac && pdo->map.n <= CO_PDO_NUM_MAPS) {
 			size_t offset = 0;
-			for (size_t i = 0; i < MIN(pdo->map.n, CO_PDO_NUM_MAPS);
-					i++)
+			for (size_t i = 0; i < pdo->map.n; i++)
 				offset += (pdo->map.map[i]) & 0xff;
 			if ((offset + 7) / 8 < n)
 				// Generate an error message if the PDO length
 				// exceeds the mapping.
 				pdo->err(pdo, 0x8220, 0x10, pdo->err_data);
+#if !LELY_NO_CO_MPDO
+		} else if ((ac == CO_SDO_AC_NO_OBJ || ac == CO_SDO_AC_NO_SUB)
+				&& pdo->map.n == 0xff) {
+			// In case of a DAM-MPDO, generate an error message if
+			// the destination object does not exist.
+			pdo->err(pdo, 0x8230, 0x10, pdo->err_data);
+#endif
 		}
 	}
 
