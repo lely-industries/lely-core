@@ -25,7 +25,9 @@
 #include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_UNISTD_H
-#if defined(_POSIX_C_SOURCE) || defined(__MINGW32__) || defined(__NEWLIB__)
+#if !LELY_NO_HOSTED \
+		&& (defined(_POSIX_C_SOURCE) || defined(__MINGW32__) \
+				|| defined(__NEWLIB__))
 #define LELY_HAVE_UNISTD_H 1
 #endif
 #endif
@@ -39,20 +41,20 @@ extern "C" {
 #endif
 
 /// A pointer to the argument of the current option.
-char *optarg;
+extern char *optarg;
 
 /// The index of the next argument to be parsed by getopt().
-int optind;
+extern int optind;
 
 /**
  * A flag indicating whether a diagnostic message should be printed if an
  * unknown option character or missing argument is detected by getopt(). The
  * default value is 1.
  */
-int opterr;
+extern int opterr;
 
 /// The last option character to cause an error.
-int optopt;
+extern int optopt;
 
 /**
  * Parses options passed as arguments to `main()`.
@@ -72,6 +74,7 @@ int optopt;
  */
 int getopt(int argc, char *const argv[], const char *optstring);
 
+#if !LELY_NO_HOSTED
 /**
  * Sleeps until the specified number of realtime seconds has elapsed or the
  * calling thread is interrupted.
@@ -82,6 +85,7 @@ int getopt(int argc, char *const argv[], const char *optstring);
  * @see nanosleep()
  */
 unsigned sleep(unsigned seconds);
+#endif
 
 #ifdef __cplusplus
 }

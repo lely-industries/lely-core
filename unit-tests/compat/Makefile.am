@@ -7,38 +7,35 @@ endif
 
 LELY_COMPAT_LIBS += $(top_builddir)/lib/compat/liblely-compat.la
 
+LELY_UNIT_TEST_COMPAT_LDFLGS =
+
 if PLATFORM_WIN32
+LELY_UNIT_TEST_COMPAT_LDFLGS += -all-static
 CPPUTEST_LIBS += -lpthread
 endif
 
-LELY_UNIT_TEST_LIBS = $(top_builddir)/unit-tests/libtest/tools/liblely-unit-test.la
-
-LELY_UNIT_TEST_CAN_COMMON_LIBS =
-LELY_UNIT_TEST_CAN_COMMON_LIBS += $(LELY_CAN_LIBS)
-LELY_UNIT_TEST_CAN_COMMON_LIBS += $(LELY_UTIL_LIBS)
-LELY_UNIT_TEST_CAN_COMMON_LIBS += $(LELY_COMPAT_LIBS)
-LELY_UNIT_TEST_CAN_COMMON_LIBS += $(LELY_UNIT_TEST_LIBS)
-LELY_UNIT_TEST_CAN_COMMON_LIBS += $(CPPUTEST_LIBS)
+LELY_UNIT_TEST_COMPAT_COMMON_LIBS =
+LELY_UNIT_TEST_COMPAT_COMMON_LIBS += $(LELY_COMPAT_LIBS)
+LELY_UNIT_TEST_COMPAT_COMMON_LIBS += $(CPPUTEST_LIBS)
 
 src_common =
 src_common += tests-main.cpp
 
-# CAN library tests
+# CANopen library tests
 
-LELY_UTIL_LIBS = $(top_builddir)/lib/util/liblely-util.la
-LELY_CAN_LIBS = $(top_builddir)/lib/can/liblely-can.la
+# Compatibility library tests
 
-bin += unit-test-can-buf
-unit_test_can_buf_SOURCES = $(src_common) test-buf.cpp
-unit_test_can_buf_LDADD = $(LELY_UNIT_TEST_CAN_COMMON_LIBS)
+if NO_HOSTED
+bin += unit-test-compat-string
+unit_test_compat_string_SOURCES = $(src_common) test-string.cpp
+unit_test_compat_string_LDADD = $(LELY_UNIT_TEST_COMPAT_COMMON_LIBS)
+unit_test_compat_string_LDFLAGS = $(LELY_UNIT_TEST_COMPAT_LDFLGS)
+endif NO_HOSTED
 
-bin += unit-test-can-msg
-unit_test_can_msg_SOURCES = $(src_common) test-msg.cpp
-unit_test_can_msg_LDADD = $(LELY_UNIT_TEST_CAN_COMMON_LIBS)
-
-bin += unit-test-can-net
-unit_test_can_net_SOURCES = $(src_common) test-net.cpp
-unit_test_can_net_LDADD = $(LELY_UNIT_TEST_CAN_COMMON_LIBS)
+bin += unit-test-compat-strings
+unit_test_compat_strings_SOURCES = $(src_common) test-strings.cpp
+unit_test_compat_strings_LDADD = $(LELY_UNIT_TEST_COMPAT_COMMON_LIBS)
+unit_test_compat_strings_LDFLAGS = $(LELY_UNIT_TEST_COMPAT_LDFLGS)
 
 # Compilation flags
 

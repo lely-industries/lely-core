@@ -33,15 +33,15 @@
 #include <lely/co/obj.h>
 #include <lely/co/ssdo.h>
 #include <lely/co/val.h>
+#if LELY_NO_MALLOC
+#include <lely/compat/string.h>
+#endif
 #include <lely/util/endian.h>
 #include <lely/util/error.h>
 
 #include <assert.h>
 #if !LELY_NO_STDIO
 #include <inttypes.h>
-#endif
-#if LELY_NO_MALLOC
-#include <string.h>
 #endif
 
 #if LELY_NO_MALLOC
@@ -58,7 +58,8 @@
 #endif
 #endif
 
-#if LELY_NO_MALLOC
+#if LELY_NO_MALLOC && (CO_SDO_MAX_SEQNO != (CO_SSDO_MEMBUF_SIZE / 7))
+// check used to suppress cppcheck warnings when MIN(a, a) extends to (x ? a : a)
 #define CO_SSDO_MAX_SEQNO MIN(CO_SDO_MAX_SEQNO, (CO_SSDO_MEMBUF_SIZE / 7))
 #else
 #define CO_SSDO_MAX_SEQNO CO_SDO_MAX_SEQNO

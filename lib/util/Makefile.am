@@ -1,7 +1,6 @@
 src =
 if !ECSS_COMPLIANCE
 src += bimap.c
-src += mkjmp.c
 src += sllist.c
 src += spscring.c
 endif # !ECSS_COMPLIANCE
@@ -37,6 +36,9 @@ endif
 src += memory.c
 src += mempool.c
 src += membuf.c
+if !NO_HOSTED
+src += mkjmp.c
+endif
 src += pheap.c
 if !NO_STDIO
 src += print.c

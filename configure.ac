@@ -74,10 +74,29 @@ AS_IF([test "$enable_rt" != "no"], [
 ])
 AC_SUBST([RT_LIBS])
 
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
+
+AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
+AC_ARG_ENABLE([ecss-compliance],
+	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [
+	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
+])
+
+AM_CONDITIONAL([NO_HOSTED], [false])
+AC_ARG_ENABLE([hosted],
+	AS_HELP_STRING([--disable-hosted], [use a freestanding instead of a hosted environment]))
+AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_hosted=no])
+AS_IF([test "$enable_hosted" == "no"], [
+	AM_CONDITIONAL([NO_HOSTED], [true])
+	AC_DEFINE([LELY_NO_HOSTED], [1], [Define to 1 if a freestanding instead of a hosted environment is used.])
+])
+
 AM_CONDITIONAL([NO_THREADS], [false])
 AM_CONDITIONAL([HAVE_PTHREAD], [false])
 AC_ARG_ENABLE([threads],
 	AS_HELP_STRING([--disable-threads], [disable multithreading support]))
+AS_IF([test "$enable_hosted" == "no"], [enable_threads=no])
 AS_IF([test "$enable_threads" != "no"], [
 	AX_PTHREAD([
 		AM_CONDITIONAL([HAVE_PTHREAD], [true])
@@ -93,18 +112,9 @@ AS_IF([test "$enable_threads" == "no"], [
 	AC_DEFINE([LELY_NO_THREADS], [1], [Define to 1 if multithreading support is disabled.])
 ])
 
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -Werror"
-
-AM_CONDITIONAL([ECSS_COMPLIANCE], [false])
-AC_ARG_ENABLE([ecss-compliance],
-	AS_HELP_STRING([--enable-ecss-compliance], [enable ECSS compliant build]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [
-	AM_CONDITIONAL([ECSS_COMPLIANCE], [true])
-])
-
 AC_ARG_ENABLE([errno],
 	AS_HELP_STRING([--disable-errno], [disable errno]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_errno=no])
+AS_IF([test "$enable_hosted" == "no"], [enable_errno=no])
 AS_IF([test "$enable_errno" == "no"], [
 	AC_DEFINE([LELY_NO_ERRNO], [1], [Define to 1 if errno is disabled.])
 ])
@@ -112,7 +122,7 @@ AS_IF([test "$enable_errno" == "no"], [
 AM_CONDITIONAL([NO_MALLOC], [false])
 AC_ARG_ENABLE([malloc],
 	AS_HELP_STRING([--disable-malloc], [disable dynamic memory allocation]))
-AS_IF([test "$enable_ecss_compliance" == "yes"], [enable_malloc=no])
+AS_IF([test "$enable_hosted" == "no"], [enable_malloc=no])
 AS_IF([test "$enable_malloc" == "no"], [
 	AM_CONDITIONAL([NO_MALLOC], [true])
 	AC_DEFINE([LELY_NO_MALLOC], [1], [Define to 1 if dynamic memory allocation is disabled.])
@@ -644,6 +654,7 @@ AC_CONFIG_FILES([
 	unit-tests/cpputest/Makefile
 	unit-tests/can/Makefile
 	unit-tests/co/Makefile
+	unit-tests/compat/Makefile
 	unit-tests/util/Makefile
 	exec-wrapper.sh
 	lcov-wrapper.sh

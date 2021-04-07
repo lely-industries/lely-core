@@ -41,6 +41,8 @@ LELY_UTIL_DEFINE_TYPE(uintmax, uintmax_t)
 // From uchar.h:
 LELY_UTIL_DEFINE_TYPE(char16, char16_t)
 LELY_UTIL_DEFINE_TYPE(char32, char32_t)
+#if !LELY_NO_HOSTED
 // From wchar.h:
 LELY_UTIL_DEFINE_TYPE(wint, wint_t)
+#endif
 // LCOV_EXCL_STOP

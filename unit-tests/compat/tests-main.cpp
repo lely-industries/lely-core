@@ -1,11 +1,11 @@
 /**@file
- * This file is part of the C11 and POSIX compatibility library.
+ * This file is part of the CANopen Library Unit Test Suite.
  *
- * @see lely/compat/time.h
+ * @copyright 2021 N7 Space Sp. z o.o.
  *
- * @copyright 2013-2020 Lely Industries N.V.
+ * Unit Test Suite was developed under a programme of,
+ * and funded by, the European Space Agency.
  *
- * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,9 @@
  * limitations under the License.
  */
 
-#include "compat.h"
+#include <CppUTest/CommandLineTestRunner.h>
 
-#if !LELY_NO_RT
-
-#include <lely/compat/time.h>
-
-#if !LELY_NO_HOSTED && !LELY_HAVE_TIMESPEC_GET
 int
-timespec_get(struct timespec *ts, int base)
-{
-	if (base != TIME_UTC || clock_gettime(CLOCK_REALTIME, ts) == -1)
-		return 0;
-	return base;
+main(int ac, char** av) {
+  return RUN_ALL_TESTS(ac, av);
 }
-#endif
-
-#endif // !LELY_NO_RT

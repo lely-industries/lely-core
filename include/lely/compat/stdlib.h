@@ -24,6 +24,8 @@
 
 #include <lely/compat/features.h>
 
+#if !LELY_NO_HOSTED
+
 #include <stdlib.h>
 
 #if __STDC_VERSION__ >= 201112L || defined(__USE_ISOC11)
@@ -80,5 +82,7 @@ void aligned_free(void *ptr);
 int setenv(const char *envname, const char *envval, int overwrite);
 
 #endif // !(_POSIX_C_SOURCE > 200112L)
+
+#endif // !LELY_NO_HOSTED
 
 #endif // !LELY_COMPAT_STDLIB_H_

@@ -25,7 +25,7 @@
 #include <lely/compat/features.h>
 
 #ifndef LELY_HAVE_STRINGS_H
-#if (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))
+#if !LELY_NO_HOSTED && (_POSIX_C_SOURCE >= 200112L || defined(__NEWLIB__))
 #define LELY_HAVE_STRINGS_H 1
 #endif
 #endif
@@ -50,7 +50,7 @@ extern "C" {
  *
  * @returns the index of the first bit set, or 0 if <b>i</b> is 0.
  */
-#if (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
+#if !LELY_NO_HOSTED && (defined(__GNUC__) || __has_builtin(__builtin_ffs)) \
 		&& !defined(__BSD_VISIBLE)
 LELY_COMPAT_STRINGS_INLINE int ffs(int i);
 
@@ -70,7 +70,11 @@ int ffs(int i);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int strcasecmp(const char *s1, const char *s2);
+int lely_compat_strcasecmp(const char *s1, const char *s2);
+
+#ifndef strcasecmp
+#define strcasecmp lely_compat_strcasecmp
+#endif
 
 /**
  * Compares at most <b>n</b> characters from the the string at <b>s1</b> to the
@@ -79,7 +83,11 @@ int strcasecmp(const char *s1, const char *s2);
  * @returns an integer greater than, equal to, or less than 0 if the string at
  * <b>s1</b> is greater than, equal to, or less than the string at <b>s2</b>.
  */
-int strncasecmp(const char *s1, const char *s2, size_t n);
+int lely_compat_strncasecmp(const char *s1, const char *s2, size_t n);
+
+#ifndef strncasecmp
+#define strncasecmp lely_compat_strncasecmp
+#endif
 
 #ifdef __cplusplus
 }

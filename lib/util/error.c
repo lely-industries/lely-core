@@ -22,6 +22,7 @@
  */
 
 #include "util.h"
+#include <lely/compat/string.h>
 #define LELY_UTIL_ERROR_INLINE extern inline
 #include <lely/util/error.h>
 #include <lely/util/util.h>
@@ -29,7 +30,6 @@
 #if !LELY_NO_CXX
 #include <stdlib.h>
 #endif
-#include <string.h>
 
 #if _WIN32
 
@@ -612,7 +612,7 @@ errc2num(int errc)
 	default: return ERRNUM_SUCCESS;
 	}
 #else
-#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+#if !LELY_NO_HOSTED && _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errc) {
 	case -ABS(EAI_AGAIN): return ERRNUM_AI_AGAIN;
 	case -ABS(EAI_BADFLAGS): return ERRNUM_AI_BADFLAGS;
@@ -985,7 +985,7 @@ errnum2c(errnum_t errnum)
 	default: return 0;
 	}
 #else
-#if _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
+#if !LELY_NO_HOSTED && _POSIX_C_SOURCE >= 200112L && !defined(__NEWLIB__)
 	switch (errnum) {
 	case ERRNUM_AI_AGAIN: return -ABS(EAI_AGAIN);
 	case ERRNUM_AI_BADFLAGS: return -ABS(EAI_BADFLAGS);

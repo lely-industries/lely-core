@@ -29,7 +29,7 @@
 
 #if _WIN32
 #include <windows.h>
-#elif defined(_POSIX_C_SOURCE)
+#elif !LELY_NO_HOSTED && defined(_POSIX_C_SOURCE)
 #include <unistd.h>
 #endif
 

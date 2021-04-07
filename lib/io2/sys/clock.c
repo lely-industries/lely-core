@@ -4,7 +4,7 @@
  *
  * @see lely/io2/sys/clock.h
  *
- * @copyright 2018-2019 Lely Industries N.V.
+ * @copyright 2018-2020 Lely Industries N.V.
  *
  * @author J. S. Seldenthuis <jseldenthuis@lely.com>
  *
@@ -22,6 +22,9 @@
  */
 
 #include "../io2.h"
+
+#if !LELY_NO_HOSTED
+
 #include <lely/io2/sys/clock.h>
 
 #ifdef CLOCK_REALTIME
@@ -123,3 +126,5 @@ io_clock_monotonic_settime(io_clock_t *clock, const struct timespec *tp)
 }
 
 #endif // CLOCK_MONOTONIC
+
+#endif // !LELY_NO_HOSTED

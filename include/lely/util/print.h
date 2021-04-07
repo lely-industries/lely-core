@@ -22,6 +22,10 @@
 #ifndef LELY_UTIL_PRINT_H_
 #define LELY_UTIL_PRINT_H_
 
+#include <lely/compat/features.h>
+
+#if !LELY_NO_STDIO
+
 #include <lely/compat/uchar.h>
 #include <lely/util/util.h>
 
@@ -305,5 +309,7 @@ print_char(char **pbegin, char *end, int c)
 #ifdef __cplusplus
 }
 #endif
+
+#endif // !LELY_NO_STDIO
 
 #endif // !LELY_UTIL_PRINT_H_

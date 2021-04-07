@@ -22,11 +22,10 @@
  */
 
 #include "co.h"
-#include <lely/util/diag.h>
+
 #if !LELY_NO_CO_MASTER
 #include <lely/can/buf.h>
 #include <lely/co/csdo.h>
-#include <lely/util/time.h>
 #endif
 #include <lely/co/dev.h>
 #if !LELY_NO_CO_EMCY
@@ -42,6 +41,14 @@
 #include <lely/co/tpdo.h>
 #endif
 #include <lely/co/val.h>
+#if LELY_NO_MALLOC
+#include <lely/compat/string.h>
+#endif
+#include <lely/util/diag.h>
+#if !LELY_NO_CO_MASTER
+#include <lely/util/time.h>
+#endif
+
 #if !LELY_NO_CO_NMT_BOOT
 #include "nmt_boot.h"
 #endif
@@ -52,9 +59,7 @@
 #include "nmt_srv.h"
 
 #include <assert.h>
-#if LELY_NO_MALLOC
-#include <string.h>
-#else
+#if !LELY_NO_MALLOC
 #include <stdlib.h>
 #endif
 
