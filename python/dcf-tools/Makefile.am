@@ -8,6 +8,7 @@ src += dcf/parse.py
 src += dcf/print.py
 
 src += dcf2dev/data/dev.c.em
+src += dcf2dev/data/dev.h.em
 src += dcf2dev/__init__.py
 src += dcf2dev/cdevice.py
 src += dcf2dev/cli.py

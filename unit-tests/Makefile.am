@@ -12,8 +12,16 @@ CPPUTEST_LIBS += -lpthread
 endif
 
 src_common =
-src_common += tests-shared-main.cpp
+src_common += override/call-wrapper.hpp
+src_common += override/defs.hpp
+src_common += override/lely-defs.hpp
+src_common += override/libc-defs.hpp
+src_common += override/libc-stdio.hpp
+src_common += override/override-test-plugin.hpp
 src_common += override/override-test-plugin.cpp
+src_common += lely-cpputest-ext.hpp
+src_common += lely-unit-test.hpp
+src_common += tests-shared-main.cpp
 
 # CppUTest library self-test
 
@@ -28,6 +36,7 @@ LELY_OVERRIDE_CO_VAL_LIB =
 if !PLATFORM_WIN32
 if ENABLE_SHARED
 liblelyco_val_override_src =
+liblelyco_val_override_src += override/lelyco-val.hpp
 liblelyco_val_override_src += override/lelyco-val.cpp
 
 lib_LTLIBRARIES = liblelyco_val_override.la
@@ -107,6 +116,11 @@ LELY_CO_LIBS = $(top_builddir)/src/co/liblely-co.la
 bin += unit-test-co
 
 src_co_tests =
+src_co_tests += co/holder/array-init.hpp
+src_co_tests += co/holder/dev.hpp
+src_co_tests += co/holder/holder.hpp
+src_co_tests += co/holder/obj.hpp
+src_co_tests += co/holder/sub.hpp
 src_co_tests += co/test-crc.cpp
 src_co_tests += co/test-dev.cpp
 src_co_tests += co/test-obj.cpp
