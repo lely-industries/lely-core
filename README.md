@@ -47,10 +47,10 @@ in root directory of the project. This step only has to be repeated if
 
 First, configure the build system by running
 
-    $ ./configure --disable-python
+    $ ./configure --disable-cython
 
 If you do not want to clutter the source directories with object files, you can
-run `configure` from another directory. `--disable-python` disables the
+run `configure` from another directory. `--disable-cython` disables the
 deprecated Python bindings. The `configure` script supports many other options.
 The full list can be shown with
 
@@ -80,13 +80,13 @@ Finally, install the binaries, headers and documentation by running
 as root.
 
 Click [here](https://opensource.lely.com/canopen/docs/installation/) for more
-information about building the Lely-core libraries from source, as well as
+information about building the lely-core libraries from source, as well as
 instructions for cross-compilation.
 
 For more details on setup and tools used for the development of the library,
 you can check the `docker/` folder for all images used by the Continuous
-Integration system [configuration](./.gitlab-ci.yml).
-See [docker/README.md](./docker/README.md) more for details.
+Integration system [configuration](./.gitlab-ci.yml). See
+[docker/README.md](docker/README.md) more for details.
 
 ## Documentation
 
@@ -95,7 +95,7 @@ found [here](http://lely_industries.gitlab.io/lely-core/doxygen/).
 
 ## Licensing
 
-Copyright 2013-2020 [Lely Industries N.V.](http://www.lely.com)
+Copyright 2013-2021 [Lely Industries N.V.](http://www.lely.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
