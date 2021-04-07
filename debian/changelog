@@ -25,7 +25,7 @@ lely-core (2.3.0) UNRELEASED; urgency=low
   * Add start()/stop()/is_stopped() methods to all CANopen services
   * Support explicit requests for SDO block transfers
   * Add co_nmt_chk_bootup() to check if (mandatory) slaves sent a boot-up message
-  * Allow bare `$NODEID` values in EDS/DCF files
+  * Allow bare $NODEID values in EDS/DCF files
   * Ignore keys with empty values in EDS/DCF files
   * Support custom data types in EDS/DCF tools
   * Fix object 1018h handing in dcfgen
@@ -33,7 +33,7 @@ lely-core (2.3.0) UNRELEASED; urgency=low
   * Check C and C++ code style with clang-format in CI/CD jobs
   * Check Python code style with Black and Flake8 in CI/CD jobs
 
- -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 08 Apr 2021 15:40:34 +0200
+ -- J. S. Seldenthuis <jseldenthuis@lely.com>  Thu, 08 Apr 2021 16:15:09 +0200
 
 lely-core (2.2.6) UNRELEASED; urgency=low
 
