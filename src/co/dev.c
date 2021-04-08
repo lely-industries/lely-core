@@ -894,6 +894,9 @@ co_dev_tpdo_event(co_dev_t *dev, co_unsigned16_t idx, co_unsigned8_t subidx)
 		const struct co_pdo_map_par *map =
 				co_obj_addressof_val(obj_1a00);
 		assert(map);
+		// Check whether this is an MPDO.
+		if (map->n > 0x40)
+			continue;
 		for (size_t j = 0; j < map->n; j++) {
 			if (((map->map[j] >> 16) & 0xffff) != idx)
 				continue;
