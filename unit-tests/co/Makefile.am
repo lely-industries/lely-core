@@ -66,6 +66,11 @@ unit_test_co_dev_SOURCES = $(src_common) test-dev.cpp
 unit_test_co_dev_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
 unit_test_co_dev_LDFLAGS = $(LELY_OVERRIDE_CO_VAL_LDFLGS) $(LELY_UNIT_TEST_CO_LDFLGS)
 
+bin += unit-test-co-emcy
+unit_test_co_emcy_SOURCES = $(src_common) test-emcy.cpp
+unit_test_co_emcy_LDADD = $(LELY_UNIT_TEST_CO_COMMON_LIBS)
+unit_test_co_emcy_LDFLAGS = $(LELY_UNIT_TEST_CO_LDFLGS)
+
 bin += unit-test-co-obj
 unit_test_co_obj_SOURCES = $(src_common) test-obj.cpp
 unit_test_co_obj_LDADD = $(LELY_OVERRIDE_CO_VAL_LIB) $(LELY_UNIT_TEST_CO_COMMON_LIBS)
