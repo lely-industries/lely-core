@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #else // !LELY_HAVE_SYS_TYPES_H
 #include <stddef.h>
+#include <stdint.h>
 
 /// Used for clock ID type in the clock and timer functions.
 typedef int clockid_t;
@@ -46,7 +47,7 @@ typedef ptrdiff_t ssize_t;
 
 #if LELY_NO_HOSTED
 /// Used for time in seconds.
-typedef long time_t;
+typedef int_least64_t time_t;
 #endif
 
 #endif // !LELY_HAVE_SYS_TYPES_H
