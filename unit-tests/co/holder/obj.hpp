@@ -47,7 +47,7 @@ class CoObjTHolder : public Holder<co_obj_t> {
     co_obj_init(Get(), idx, val_data, 0);
   }
 
-  static const size_t PREALLOCATED_OBJ_SIZE = 320;
+  static const size_t PREALLOCATED_OBJ_SIZE = 512;
 
  private:
   char val_data[PREALLOCATED_OBJ_SIZE] = {0};

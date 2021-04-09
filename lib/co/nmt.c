@@ -2498,6 +2498,8 @@ co_nmt_recv_700(const struct can_msg *msg, void *data)
 	co_nmt_t *nmt = data;
 	assert(nmt);
 
+	(void)nmt;
+
 	if (msg->flags & CAN_FLAG_RTR) {
 #if !LELY_NO_CO_NG
 		assert(nmt->gt && nmt->ltf);
@@ -3884,7 +3886,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 			goto error_init_slave;
 		}
 #endif
-#endif
+#endif // LELY_NO_MALLOC
 	}
 
 #if !LELY_NO_CO_NMT_BOOT || !LELY_NO_CO_NMT_CFG
@@ -3903,7 +3905,7 @@ co_nmt_init(co_nmt_t *nmt, can_net_t *net, co_dev_t *dev)
 	nmt->dn_data = NULL;
 	nmt->up_ind = NULL;
 	nmt->up_data = NULL;
-#endif
+#endif // !LELY_NO_CO_MASTER
 	nmt->sync_ind = NULL;
 	nmt->sync_data = NULL;
 
