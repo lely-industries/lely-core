@@ -148,6 +148,7 @@ build:configure:
         - --disable-master
         - --disable-stdio
         - --enable-ecss-compliance
+        - --enable-ecss-compliance --disable-master
 
 test:configure:disable-canfd:
   extends: .test
@@ -183,6 +184,11 @@ test:configure:enable-ecss-compliance:
   extends: .test
   image: $REGISTRY/gcc:10
   needs: ["build:configure: [--enable-ecss-compliance]"]
+
+test:configure:enable-ecss-compliance-no-master:
+  extends: .test
+  image: $REGISTRY/gcc:10
+  needs: ["build:configure: [--enable-ecss-compliance --disable-master]"]
 
 docker:mingw-w64:
   extends: .docker1

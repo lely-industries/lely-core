@@ -23,8 +23,11 @@
 #ifndef LELY_ALLOCATORS_LIMITED_H
 #define LELY_ALLOCATORS_LIMITED_H
 
+#include <cassert>
 #include <cstddef>
 #include <limits>
+
+#include <lely/util/error.h>
 
 #include "default.hpp"
 
@@ -42,7 +45,15 @@ class Limited {
 
   void
   LimitAllocationTo(size_t limit) {
+#if LELY_NO_MALLOC
+    assert(limit <= POOL_SIZE);
+#endif
     allocationLimit = limit;
+  }
+
+  size_t
+  GetAllocationLimit() {
+    return allocationLimit;
   }
 
   alloc_t*
@@ -54,9 +65,15 @@ class Limited {
   static void*
   Alloc(alloc_t* alloc, size_t alignment, size_t size) {
     auto this_ = Cast(alloc);
-    if (this_->allocationLimit < size) return nullptr;
-    this_->allocationLimit -= size;
-    return mem_alloc(Inner(alloc), alignment, size);
+    if (this_->allocationLimit < size) {
+      set_errnum(ERRNUM_NOMEM);
+      return nullptr;
+    }
+
+    auto* const ret = mem_alloc(Inner(alloc), alignment, size);
+    if (ret != nullptr) this_->allocationLimit -= size;
+
+    return ret;
   }
 
   static void
