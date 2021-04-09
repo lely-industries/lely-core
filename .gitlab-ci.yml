@@ -387,7 +387,7 @@ valgrind:
     when: on_failure
     paths:
       - test/test-*.log
-      - unit-tests/test-*.log
+      - unit-tests/*/test-*.log
     expire_in: 1 week
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
@@ -413,7 +413,7 @@ valgrind:ecss:
     when: on_failure
     paths:
       - test/test-*.log
-      - unit-tests/test-*.log
+      - unit-tests/*/test-*.log
     expire_in: 1 week
 
 docker:lcov:
