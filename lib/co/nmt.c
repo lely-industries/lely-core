@@ -4070,7 +4070,7 @@ co_nmt_fini(co_nmt_t *nmt)
 	if (obj_1f80)
 		co_obj_set_dn_ind(obj_1f80, NULL, NULL);
 
-#if !LELY_NO_CO_MASTER
+#if !LELY_NO_CO_NMT_CFG
 	// Remove the download indication function for the configuration request
 	// value.
 	co_obj_t *obj_1f25 = co_dev_find_obj(nmt->dev, 0x1f25);
@@ -4090,6 +4090,7 @@ co_nmt_fini(co_nmt_t *nmt)
 	if (obj_1016)
 		co_obj_set_dn_ind(obj_1016, NULL, NULL);
 
+#if !LELY_NO_CO_NG
 	// Remove the download indication function for the life time factor.
 	co_obj_t *obj_100d = co_dev_find_obj(nmt->dev, 0x100d);
 	if (obj_100d)
@@ -4099,6 +4100,7 @@ co_nmt_fini(co_nmt_t *nmt)
 	co_obj_t *obj_100c = co_dev_find_obj(nmt->dev, 0x100c);
 	if (obj_100c)
 		co_obj_set_dn_ind(obj_100c, NULL, NULL);
+#endif
 
 #if !LELY_NO_CO_TPDO
 	// Remove the Transmit-PDO event indication function.

@@ -1,4 +1,6 @@
 
+LELY_UTIL_LIBS = $(top_builddir)/lib/util/liblely-util.la
+
 # lely-unit-test library
 
 lib_LTLIBRARIES =
@@ -10,6 +12,7 @@ lib_LTLIBRARIES += liblely-unit-test.la
 
 liblely_unit_test_la_CPPFLAGS = -I$(top_srcdir)/include $(CPPUTEST_CFLAGS)
 liblely_unit_test_la_SOURCES = $(liblely_unit_test_src)
+liblely_unit_test_la_LIBADD = $(LELY_UTIL_LIBS)
 
 # Compilation flags
 
