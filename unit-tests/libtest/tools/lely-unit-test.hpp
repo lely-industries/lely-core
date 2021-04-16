@@ -1,7 +1,7 @@
 /**@file
  * This file is part of the CANopen Library Unit Test Suite.
  *
- * @copyright 2020 N7 Space Sp. z o.o.
+ * @copyright 2020-2021 N7 Space Sp. z o.o.
  *
  * Unit Test Suite was developed under a programme of,
  * and funded by, the European Space Agency.
@@ -22,17 +22,8 @@
 #ifndef LELY_UNIT_TEST_HPP_
 #define LELY_UNIT_TEST_HPP_
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <CppUTest/TestHarness.h>
-
 #include <lely/can/msg.h>
 #include <lely/co/type.h>
-#include <lely/util/diag.h>
-
-#include <cassert>
 
 namespace LelyUnitTest {
 /**
@@ -40,17 +31,20 @@ namespace LelyUnitTest {
  *
  * @see diag_set_handler(), diag_at_set_handler()
  */
-inline void
-DisableDiagnosticMessages() {
-#if LELY_NO_DIAG
-  // enforce coverage in NO_DIAG mode
-  diag(DIAG_DEBUG, 0, "Message suppressed");
-  diag_if(DIAG_DEBUG, 0, nullptr, "Message suppressed");
-#else
-  diag_set_handler(nullptr, nullptr);
-  diag_at_set_handler(nullptr, nullptr);
-#endif
-}
+void DisableDiagnosticMessages();
+
+/**
+ * Checks if a download indication function is set (not null) for
+ * a sub-object with the given user-specifed data pointer.
+ */
+void CheckSubDnIndIsSet(const co_dev_t* dev, co_unsigned16_t idx,
+                        const void* data);
+/**
+ * Checks if sub-object has a default download indication function and
+ * user-specified data set.
+ */
+void CheckSubDnIndIsDefault(const co_dev_t* dev, co_unsigned16_t idx);
+
 }  // namespace LelyUnitTest
 
 struct CoCsdoDnCon {
@@ -61,43 +55,19 @@ struct CoCsdoDnCon {
   static void* data;
   static unsigned int num_called;
 
-  static inline void
-  func(co_csdo_t* sdo_, co_unsigned16_t idx_, co_unsigned8_t subidx_,
-       co_unsigned32_t ac_, void* data_) {
-    sdo = sdo_;
-    idx = idx_;
-    subidx = subidx_;
-    ac = ac_;
-    data = data_;
-    num_called++;
-  }
+  static void func(co_csdo_t* sdo_, co_unsigned16_t idx_,
+                   co_unsigned8_t subidx_, co_unsigned32_t ac_, void* data_);
 
-  static inline void
-  Clear() {
-    sdo = nullptr;
-    idx = 0;
-    subidx = 0;
-    ac = 0;
-    data = nullptr;
-
-    num_called = 0;
-  }
-
-  static inline void
-  Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
-        const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
-        const void* data_) {
-    POINTERS_EQUAL(sdo_, sdo);
-    CHECK_EQUAL(idx_, idx);
-    CHECK_EQUAL(subidx_, subidx);
-    CHECK_EQUAL(ac_, ac);
-    POINTERS_EQUAL(data_, data);
-  }
-
+  // FIXME: should be named "Called()"
   static inline bool
   called() {
     return num_called > 0;
   }
+
+  static void Clear();
+  static void Check(const co_csdo_t* sdo_, const co_unsigned16_t idx_,
+                    const co_unsigned8_t subidx_, const co_unsigned32_t ac_,
+                    const void* data_);
 };
 
 struct CanSend {
@@ -111,37 +81,12 @@ struct CanSend {
   static can_msg msg;
   static can_msg* msg_buf;
 
-  static inline int
-  func(const can_msg* msg_, void* data_) {
-    assert(msg_);
-    assert(num_called < buf_size);
+  static int func(const can_msg* msg_, void* data_);
 
-    msg = *msg_;
-    data = data_;
-
-    if (num_called < buf_size) {
-      msg_buf[num_called] = *msg_;
-    }
-    num_called++;
-
-    return ret;
-  }
-
+  // FIXME: should be named "Called()"
   static inline bool
   called() {
     return num_called > 0;
-  }
-
-  static inline void
-  Clear() {
-    msg = CAN_MSG_INIT;
-    data = nullptr;
-
-    ret = 0;
-    num_called = 0;
-
-    buf_size = 1u;
-    msg_buf = &msg;
   }
 
   /**
@@ -150,11 +95,13 @@ struct CanSend {
    * @param buf a pointer to a message buffer.
    * @param size the number of frames available at <b>buf</b>.
    */
-  static inline void
+  static void
   SetMsgBuf(can_msg* const buf, const size_t size) {
     buf_size = size;
     msg_buf = buf;
   }
+
+  static void Clear();
 };
 
 #endif  // LELY_UNIT_TEST_HPP_
