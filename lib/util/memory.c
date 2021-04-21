@@ -50,10 +50,12 @@
 static void *default_mem_alloc(size_t alignment, size_t size);
 static void default_mem_free(void *ptr);
 
+#if !LELY_NO_MALLOC
 #if LELY_NO_THREADS || LELY_NO_ATOMICS
 static size_t default_mem_size;
 #else
 static atomic_size_t default_mem_size;
+#endif
 #endif
 
 void *
@@ -85,7 +87,9 @@ mem_size(const alloc_t *alloc)
 		assert((*alloc)->size);
 		return (*alloc)->size(alloc);
 	} else {
-#if LELY_NO_THREADS || LELY_NO_ATOMICS
+#if LELY_NO_MALLOC
+		return 0;
+#elif LELY_NO_THREADS || LELY_NO_ATOMICS
 		return default_mem_size;
 #else
 		return atomic_load_explicit(
