@@ -102,7 +102,7 @@ TEST(CO_CsdoInit, CoCsdoAlignof_Nominal) {
 /// \When co_csdo_sizeof() is called
 ///
 /// \Then if LELY_NO_MALLOC or \__MINGW64__: 256 is returned;
-///       else if \__MINGW32__ and !__MINGW64__: 108 is returned;
+///       else if \__MINGW32__ and !__MINGW64__: 144 is returned;
 ///       else: 248 is returned
 TEST(CO_CsdoInit, CoCsdoSizeof_Nominal) {
   const auto ret = co_csdo_sizeof();
@@ -111,7 +111,7 @@ TEST(CO_CsdoInit, CoCsdoSizeof_Nominal) {
   CHECK_EQUAL(256u, ret);
 #else
 #if defined(__MINGW32__) && !defined(__MINGW64__)
-  CHECK_EQUAL(108u, ret);
+  CHECK_EQUAL(144u, ret);
 #else
   CHECK_EQUAL(248u, ret);
 #endif
