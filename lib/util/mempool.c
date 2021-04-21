@@ -84,7 +84,7 @@ mempool_free(alloc_t *const alloc, void *const ptr)
 	(void)ptr;
 }
 
-static struct alloc_vtbl mempool_vtbl = {
+static const struct alloc_vtbl mempool_vtbl = {
 	.alloc = mempool_alloc,
 	.free = mempool_free,
 	.size = mempool_size,
